@@ -279,16 +279,18 @@ export interface ExtractedTemplateConfigsArrayFactory {
 }
 
 /**
- * A `{ type, flow }` task-handler config (either a variable binding or an object-literal element).
+ * A typed `{ type, flow }` task-handler config declaration
+ * (`const <name>: NotificationTaskServiceTaskHandlerConfig<...> = { type, ... }`), one per declaration: two configs that
+ * share a binding name (in two functions of one file, or in two files) are two entries.
  */
 export interface ExtractedTaskHandlerEntry {
   readonly typeIdentifier: string;
   /**
    * Variable binding name when the literal is bound to a typed
    * `const <name>: NotificationTaskServiceTaskHandlerConfig<...> = { ... }` (the annotation's type (by name, through an `@dereekb/*` import alias, or as an `@dereekb/*` namespace member)).
-   * Used by the cross-file reachability trace to match the call-site
-   * identifier in `notificationTaskService({ handlers })` against the
-   * declared literal. `undefined` for inline / anonymous literals.
+   * Shown in findings; reachability is matched by declaration
+   * ({@link ExtractedTaskServiceCall.reachedTaskHandlerEntries}), not by this
+   * name. `undefined` for inline / anonymous literals.
    */
   readonly bindingName: string | undefined;
   readonly flowStepCount: number | undefined;
@@ -324,9 +326,9 @@ export interface ExtractedTaskServiceCall {
    * reached. A local holding an arrow function or function expression that
    * returns from one place is followed through its return, like a function,
    * and parentheses, `!`, `as` / `<T>` casts and `satisfies` around a value
-   * are seen through. The rules pass intersects this set with the
-   * {@link ExtractedTaskHandlerEntry.bindingName} field to compute
-   * which declared handlers are actually wired.
+   * are seen through. Which declared handler configs are wired is read from
+   * {@link reachedTaskHandlerEntries}, by declaration; these names only
+   * excuse an unresolved name that a resolved binding shares.
    */
   readonly resolvedHandlerBindings: readonly string[];
   /**
@@ -407,6 +409,14 @@ export interface ExtractedTaskServiceCall {
    * `const` holding one of those.
    */
   readonly reachedUpstreamHandlerCalls: readonly ExtractedUpstreamHandlerCall[];
+  /**
+   * The declared handler configs ({@link ExtractedAppNotifications.taskHandlerEntries}) the `handlers:` trace reached, one
+   * per declaration, in trace order. The rules read the task types `handlers` registers from these
+   * (`NOTIF_TASK_HANDLER_NAME_MISMATCH`, `NOTIF_TASK_NOT_REGISTERED_IN_SERVICE`), so reaching one config doesn't vouch for
+   * another of the same name. A reached typed config whose `type:` isn't an identifier has no entry; its name is still in
+   * {@link resolvedHandlerBindings}.
+   */
+  readonly reachedTaskHandlerEntries: readonly ExtractedTaskHandlerEntry[];
   /**
    * Whether the call's `handlers` property is missing (`absent`), an array literal the extractor read (`resolved`), or
    * something else (`unresolved`).
@@ -519,6 +529,10 @@ export interface ExtractedAppNotifications {
   readonly templateConfigsArrayWiring: ExtractedTemplateConfigsArrayWiring | undefined;
   readonly templateHandlerEntries: readonly ExtractedTemplateHandlerEntry[];
   readonly taskServiceCalls: readonly ExtractedTaskServiceCall[];
+  /**
+   * Every typed `NotificationTaskServiceTaskHandlerConfig` declared in the scanned API files, reachable or not, one per
+   * declaration. Which ones a task service reaches is {@link ExtractedTaskServiceCall.reachedTaskHandlerEntries}.
+   */
   readonly taskHandlerEntries: readonly ExtractedTaskHandlerEntry[];
   /**
    * Every upstream handler-factory call in the scanned API files, reachable or not; used to point at an unreachable handler.

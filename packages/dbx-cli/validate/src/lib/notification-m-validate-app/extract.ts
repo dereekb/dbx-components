@@ -15,7 +15,9 @@
  *
  * The handlers trace resolves an identifier to the local variable
  * declaration in scope where it is used (`resolveLocalVariable`); a name
- * with more than one declaration in scope there is opaque.
+ * with more than one declaration in scope there is opaque. It records each
+ * typed handler config declaration it reaches (`reachedTaskHandlerEntries`),
+ * so the rules match declared configs by declaration, not by binding name.
  * It strips parentheses, `!`, `as` / `<T>` casts and `satisfies` around a
  * value (`unwrapOuterExpressions`), and follows a local holding an arrow
  * function or function expression that returns from one place
@@ -928,6 +930,7 @@ function extractTaskServiceCalls(input: ExtractTaskServiceCallsInput): readonly 
         nestedUpstreamValidateListings: nested.listings,
         opaqueNestedValidateValues: nested.opaque,
         reachedUpstreamHandlerCalls: handlers.reachedUpstreamHandlerCalls,
+        reachedTaskHandlerEntries: handlers.reachedTaskHandlerEntries,
         handlersStatus,
         opaqueHandlerValues: handlers.opaqueHandlerValues,
         sourceFile: rel
@@ -1131,6 +1134,7 @@ interface HandlersArrayElements {
   readonly resolvedBindings: string[];
   readonly unresolvedBindings: string[];
   readonly reachedUpstreamHandlerCalls: ExtractedUpstreamHandlerCall[];
+  readonly reachedTaskHandlerEntries: ExtractedTaskHandlerEntry[];
   readonly opaqueHandlerValues: string[];
 }
 
@@ -1153,14 +1157,15 @@ function collectHandlersArrayElements(options: CollectHandlersArrayElementsOptio
   const resolvedBindings: string[] = [];
   const unresolvedBindings: string[] = [];
   const reachedUpstreamHandlerCalls: ExtractedUpstreamHandlerCall[] = [];
+  const reachedTaskHandlerEntries: ExtractedTaskHandlerEntry[] = [];
   const opaqueHandlerValues: string[] = [];
   if (handlersArr) {
     const outcomes = new Map<Node, boolean>();
     for (const el of handlersArr.getElements()) {
-      consumeHandlersArrayElement(el, { index, trustedExternal, imports, unresolvedSpreads, resolvedBindings, unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, outcomes });
+      consumeHandlersArrayElement(el, { index, trustedExternal, imports, unresolvedSpreads, resolvedBindings, unresolvedBindings, reachedUpstreamHandlerCalls, reachedTaskHandlerEntries, opaqueHandlerValues, outcomes });
     }
   }
-  return { handlerTypes, unresolvedSpreads, resolvedBindings, unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues };
+  return { handlerTypes, unresolvedSpreads, resolvedBindings, unresolvedBindings, reachedUpstreamHandlerCalls, reachedTaskHandlerEntries, opaqueHandlerValues };
 }
 
 function consumeHandlersArrayElement(el: Node, options: Omit<ConsumeHandlersSpreadElementOptions, 'inner'>): void {
@@ -1178,8 +1183,8 @@ function consumeHandlersArrayElement(el: Node, options: Omit<ConsumeHandlersSpre
     }
     return;
   }
-  const { index, trustedExternal, imports, resolvedBindings, unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, outcomes } = options;
-  collectHandlerBindingsFromIdentifier({ identifier, index, trustedExternal, imports, resolved: resolvedBindings, unresolved: unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, outcomes });
+  const { index, trustedExternal, imports, resolvedBindings, unresolvedBindings, reachedUpstreamHandlerCalls, reachedTaskHandlerEntries, opaqueHandlerValues, outcomes } = options;
+  collectHandlerBindingsFromIdentifier({ identifier, index, trustedExternal, imports, resolved: resolvedBindings, unresolved: unresolvedBindings, reachedUpstreamHandlerCalls, reachedTaskHandlerEntries, opaqueHandlerValues, outcomes });
 }
 
 /**
@@ -1211,6 +1216,7 @@ interface ConsumeHandlersSpreadElementOptions {
   readonly resolvedBindings: string[];
   readonly unresolvedBindings: string[];
   readonly reachedUpstreamHandlerCalls: ExtractedUpstreamHandlerCall[];
+  readonly reachedTaskHandlerEntries: ExtractedTaskHandlerEntry[];
   readonly opaqueHandlerValues: string[];
   readonly outcomes: Map<Node, boolean>;
 }
@@ -1224,7 +1230,7 @@ interface ConsumeHandlersSpreadElementOptions {
  * @param options - The spread inner expression and the buckets to populate.
  */
 function consumeHandlersSpreadElement(options: ConsumeHandlersSpreadElementOptions): void {
-  const { inner, index, trustedExternal, imports, unresolvedSpreads, resolvedBindings, unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, outcomes } = options;
+  const { inner, index, trustedExternal, imports, unresolvedSpreads, resolvedBindings, unresolvedBindings, reachedUpstreamHandlerCalls, reachedTaskHandlerEntries, opaqueHandlerValues, outcomes } = options;
   const identifier = readHandlerEntryIdentifier(inner);
   if (identifier !== undefined) {
     unresolvedSpreads.push(identifier.getText());
@@ -1234,7 +1240,7 @@ function consumeHandlersSpreadElement(options: ConsumeHandlersSpreadElementOptio
     opaqueHandlerValues.push(opaqueSnippet(inner));
     return;
   }
-  collectHandlerBindingsFromIdentifier({ identifier, index, trustedExternal, imports, resolved: resolvedBindings, unresolved: unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, outcomes });
+  collectHandlerBindingsFromIdentifier({ identifier, index, trustedExternal, imports, resolved: resolvedBindings, unresolved: unresolvedBindings, reachedUpstreamHandlerCalls, reachedTaskHandlerEntries, opaqueHandlerValues, outcomes });
 }
 
 /**
@@ -1254,6 +1260,11 @@ interface HandlerBindingCollectorContext {
    * Receives every upstream handler-factory call (`UPSTREAM_NOTIFICATION_TASK_HANDLERS`) the trace reaches.
    */
   readonly reachedUpstreamHandlerCalls: ExtractedUpstreamHandlerCall[];
+  /**
+   * Receives the entry (see `tryReadTaskHandlerEntry`) of every typed handler config declaration the trace reaches, once per
+   * declaration. The rules read the task types `handlers` registers from these, not from the names in `resolved`.
+   */
+  readonly reachedTaskHandlerEntries: ExtractedTaskHandlerEntry[];
   /**
    * Receives every value the trace can't see through (see `ExtractedTaskServiceCall.opaqueHandlerValues`). Recording one
    * ends that branch of the trace with `true`.
@@ -1382,8 +1393,8 @@ function collectHandlerBindingsFromIdentifier(options: CollectHandlerBindingsFro
 
 /**
  * Follows {@link CollectHandlerBindingsFromIdentifierOptions.identifier} to the local variable declaration in scope where it
- * is used (`resolveLocalVariable`). A typed `NotificationTaskServiceTaskHandlerConfig` object literal lands in `resolved`. An
- * arrow function or function expression that returns from one place (`findSoleReturnExpression`) is a wrapper, like a
+ * is used (`resolveLocalVariable`). A typed `NotificationTaskServiceTaskHandlerConfig` object literal lands in `resolved`,
+ * and its entry (`tryReadTaskHandlerEntry`) in `reachedTaskHandlerEntries`. An arrow function or function expression that returns from one place (`findSoleReturnExpression`) is a wrapper, like a
  * function declaration: the trace walks the value it returns (`collectHandlerBindingsFromFunction`). Any other initializer
  * is walked as a value, so a function that can return from more than one place stays opaque. A name with more than one declaration in scope there is opaque: the scan can't tell
  * which one it means.
@@ -1395,7 +1406,7 @@ function collectHandlerBindingsFromIdentifier(options: CollectHandlerBindingsFro
  *   nowhere.
  */
 function tryResolveLocalHandlerBinding(options: CollectHandlerBindingsFromIdentifierOptions): boolean {
-  const { identifier, imports, outcomes, resolved, opaqueHandlerValues } = options;
+  const { identifier, imports, outcomes, resolved, reachedTaskHandlerEntries, opaqueHandlerValues } = options;
   const resolution = resolveLocalVariable(identifier, imports);
   let result = false;
   if (resolution.kind === 'ambiguous') {
@@ -1408,6 +1419,10 @@ function tryResolveLocalHandlerBinding(options: CollectHandlerBindingsFromIdenti
       let walked: boolean;
       if (isHandlerConfigLeafDecl(declaration, imports)) {
         resolved.push(declaration.getName());
+        const entry = tryReadTaskHandlerEntry(declaration, imports);
+        if (entry) {
+          reachedTaskHandlerEntries.push(entry);
+        }
         walked = true;
       } else if ((Node.isArrowFunction(init) || Node.isFunctionExpression(init)) && findSoleReturnExpression(init) !== undefined) {
         // a local holding a function that returns from one place is a wrapper, like a function declaration: walk that value
@@ -1551,12 +1566,19 @@ function opaqueSnippet(node: Node): string {
 }
 
 // MARK: Task handler entries
+/**
+ * Reads every typed handler config in the API files ({@link tryReadTaskHandlerEntry}), one entry per declaration: two
+ * configs that share a binding name (in two functions of one file, or in two files) are two entries.
+ *
+ * @param sources - The API source files.
+ * @param imports - The per-file `@dereekb/*` import bindings.
+ * @returns The entries, in source order.
+ */
 function extractTaskHandlerEntries(sources: readonly SourceFile[], imports: DereekbImportIndex): readonly ExtractedTaskHandlerEntry[] {
   const out: ExtractedTaskHandlerEntry[] = [];
-  const seenSymbols = new Set<string>();
   for (const sf of sources) {
     for (const decl of sf.getDescendantsOfKind(SyntaxKind.VariableDeclaration)) {
-      const entry = tryReadTaskHandlerEntry(decl, imports, seenSymbols);
+      const entry = tryReadTaskHandlerEntry(decl, imports);
       if (entry) {
         out.push(entry);
       }
@@ -1565,7 +1587,16 @@ function extractTaskHandlerEntries(sources: readonly SourceFile[], imports: Dere
   return out;
 }
 
-function tryReadTaskHandlerEntry(decl: VariableDeclaration, imports: DereekbImportIndex, seenSymbols: Set<string>): ExtractedTaskHandlerEntry | undefined {
+/**
+ * Reads {@link decl} as a task handler config entry: a `NotificationTaskServiceTaskHandlerConfig<...>`-typed object literal
+ * whose `type:` is an identifier. The entries pass and the `handlers` trace both read entries here, so a declaration the
+ * trace reaches and its entry agree.
+ *
+ * @param decl - A variable declaration.
+ * @param imports - The per-file `@dereekb/*` import bindings.
+ * @returns The entry, or `undefined` when {@link decl} is not such a config.
+ */
+function tryReadTaskHandlerEntry(decl: VariableDeclaration, imports: DereekbImportIndex): ExtractedTaskHandlerEntry | undefined {
   const typeNode = decl.getTypeNode();
   if (!typeNode || readTypeReferenceName(typeNode, imports) !== NOTIF_TASK_SERVICE_HANDLER_CONFIG) return undefined;
   const obj = asObjectLiteral(decl.getInitializer());
@@ -1573,9 +1604,6 @@ function tryReadTaskHandlerEntry(decl: VariableDeclaration, imports: DereekbImpo
   const typeIdent = readIdentifierProperty(obj, 'type');
   if (!typeIdent) return undefined;
   const sourceFile = apiRelPath(decl.getSourceFile());
-  const key = `${sourceFile}::${decl.getName()}`;
-  if (seenSymbols.has(key)) return undefined;
-  seenSymbols.add(key);
   const flowCount = readFlowStepCount(obj);
   const { dataArg, checkpointArg } = readHandlerTypeArguments(typeNode);
   const entry: ExtractedTaskHandlerEntry = {

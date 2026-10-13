@@ -202,7 +202,7 @@ export enum NotificationMValidateAppCode {
    * A declared `*_NOTIFICATION_TASK_TYPE` is not reachable from any `notificationTaskService({ handlers })` call.
    *
    * @dbxRuleSeverity error
-   * @dbxRuleApplies Every declared task-type constant.
+   * @dbxRuleApplies Every declared task-type constant that no typed `NotificationTaskServiceTaskHandlerConfig` in the scanned API files declares as its `type:`. A declared config that no `handlers` element leads to is `NOTIF_TASK_HANDLER_NAME_MISMATCH` instead.
    * @dbxRuleNotApplies Task-type constants whose handler is provided by an upstream module (covered by the trust list).
    * @dbxRuleFix Add a `NotificationTaskServiceTaskHandlerConfig<...>` for the task and include its binding in `notificationTaskService({ handlers: [...] })`.
    * @dbxRuleSeeAlso artifact:notification-task
@@ -221,12 +221,12 @@ export enum NotificationMValidateAppCode {
   NOTIF_TASK_HANDLER_ORPHAN = 'NOTIF_TASK_HANDLER_ORPHAN',
 
   /**
-   * A `NotificationTaskServiceTaskHandlerConfig`'s binding name doesn't match its handler-array reference.
+   * A typed `NotificationTaskServiceTaskHandlerConfig` is declared for a task type, but no `notificationTaskService({ handlers })` element leads to it.
    *
    * @dbxRuleSeverity error
-   * @dbxRuleApplies When the handler is bound to a typed const but the local-variable name diverges from the array element name in `notificationTaskService({ handlers })`.
-   * @dbxRuleNotApplies Inline / anonymous handler literals (no binding name to check against).
-   * @dbxRuleFix Rename the binding to match the handler-array element, or update the array reference to match the binding.
+   * @dbxRuleApplies Every declared task-type constant whose typed handler configs (`const <name>: NotificationTaskServiceTaskHandlerConfig<...> = { type: <constant>, ... }`) are all unreached: no `handlers` element leads to one, through the local variable it names or a function's return. The declaration is matched, not its name, so a reached config doesn't count for another config of the same name (in another function of the file, or in another file). Usually a rename drift (the element names something else) or a wrapper call missing from `handlers`.
+   * @dbxRuleNotApplies Inline / anonymous handler literals (no binding to reach). A task type with no typed handler config at all (that is `NOTIF_TASK_NOT_REGISTERED_IN_SERVICE`).
+   * @dbxRuleFix Reference the handler config from `notificationTaskService({ handlers: [...] })`, directly or through the function that returns it: add the missing element or wrapper call, or rename the element or the binding so they agree.
    */
   NOTIF_TASK_HANDLER_NAME_MISMATCH = 'NOTIF_TASK_HANDLER_NAME_MISMATCH',
 

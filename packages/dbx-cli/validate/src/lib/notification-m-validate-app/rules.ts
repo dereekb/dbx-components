@@ -358,7 +358,7 @@ function checkTasks(extracted: ExtractedAppNotifications, violations: Violation[
 
   const lenientHandlerTypeIdentifiers = flagOrphanTaskHandlers(extracted, violations);
   const reachableBindings = collectReachableHandlerBindings(extracted);
-  flagTaskHandlerCoverage({ extracted, violations, reachableBindings });
+  flagTaskHandlerCoverage(extracted, violations);
   flagUnresolvedHandlerIdentifiers({ extracted, violations, reachableBindings });
   flagValidateWithoutHandler({ extracted, violations, lenientHandlerTypeIdentifiers });
 }
@@ -416,7 +416,9 @@ function flagOrphanTaskHandlers(extracted: ExtractedAppNotifications, violations
 
 /**
  * Collects the union of every binding name resolved from
- * `notificationTaskService({ handlers })` array elements.
+ * `notificationTaskService({ handlers })` array elements, for the
+ * unresolved-name warning. Which declared configs are wired is matched by
+ * declaration instead (`collectReachableTypeIdentifiers`).
  *
  * @param extracted - The validator extraction.
  * @returns The reachable-binding set.
@@ -429,21 +431,17 @@ function collectReachableHandlerBindings(extracted: ExtractedAppNotifications): 
   return reachableBindings;
 }
 
-interface FlagTaskHandlerCoverageOptions {
-  readonly extracted: ExtractedAppNotifications;
-  readonly violations: Violation[];
-  readonly reachableBindings: Set<string>;
-}
-
 /**
  * Flags each declared task type whose handler config is either missing or
- * present-but-unreachable (binding-name mismatch).
+ * present-but-unreachable. A config is reachable when a `handlers` trace
+ * reached its declaration (`ExtractedTaskServiceCall.reachedTaskHandlerEntries`),
+ * so a reached config doesn't vouch for an unreached one of the same name.
  *
- * @param options - Extraction, violations buffer, and reachable bindings set.
+ * @param extracted - The validator extraction.
+ * @param violations - The mutable violations buffer to append to.
  */
-function flagTaskHandlerCoverage(options: FlagTaskHandlerCoverageOptions): void {
-  const { extracted, violations, reachableBindings } = options;
-  const reachableTypeIdentifiers = collectReachableTypeIdentifiers(extracted, reachableBindings);
+function flagTaskHandlerCoverage(extracted: ExtractedAppNotifications, violations: Violation[]): void {
+  const reachableTypeIdentifiers = collectReachableTypeIdentifiers(extracted);
   const entriesByType = groupTaskHandlerEntriesByType(extracted.taskHandlerEntries);
 
   for (const constant of extracted.taskTypeConstants) {
@@ -452,12 +450,17 @@ function flagTaskHandlerCoverage(options: FlagTaskHandlerCoverageOptions): void 
   }
 }
 
-function collectReachableTypeIdentifiers(extracted: ExtractedAppNotifications, reachableBindings: Set<string>): Set<string> {
+/**
+ * The task types the `handlers` traces register: the `type:` of every declared handler config a trace reached
+ * (`ExtractedTaskServiceCall.reachedTaskHandlerEntries`).
+ *
+ * @param extracted - The validator extraction.
+ * @returns The reachable task-type identifiers.
+ */
+function collectReachableTypeIdentifiers(extracted: ExtractedAppNotifications): Set<string> {
   const reachableTypeIdentifiers = new Set<string>();
-  for (const entry of extracted.taskHandlerEntries) {
-    if (entry.bindingName && reachableBindings.has(entry.bindingName)) {
-      reachableTypeIdentifiers.add(entry.typeIdentifier);
-    }
+  for (const call of extracted.taskServiceCalls) {
+    for (const entry of call.reachedTaskHandlerEntries) reachableTypeIdentifiers.add(entry.typeIdentifier);
   }
   return reachableTypeIdentifiers;
 }
@@ -481,7 +484,7 @@ function flagUnreachableTaskType(constant: { readonly symbolName: string; readon
     const bindingHint = entry.bindingName ? `\`${entry.bindingName}\`` : '<anonymous>';
     pushViolation(violations, {
       code: 'NOTIF_TASK_HANDLER_NAME_MISMATCH',
-      message: `Handler ${bindingHint} in \`${entry.sourceFile}\` declares \`type: ${constant.symbolName}\` but is not reachable from \`notificationTaskService({ handlers })\` because no array element resolves to that binding name. The cross-file tracer matches by identifier name through function returns — when a factory function ships a task-handler config, its inner variable name must match the call-site binding name (and the array element / spread that references it).`,
+      message: `Handler ${bindingHint} (${entry.sourceFile}:${entry.line}) declares \`type: ${constant.symbolName}\` but is not reachable from \`notificationTaskService({ handlers })\`: no \`handlers\` element leads to this declaration. The trace follows each element through the local variable it names and through function returns; a reached handler config of the same name elsewhere doesn't count.`,
       side: 'api',
       file: entry.sourceFile
     });

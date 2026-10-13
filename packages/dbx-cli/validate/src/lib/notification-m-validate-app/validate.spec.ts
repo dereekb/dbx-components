@@ -732,6 +732,92 @@ export function demoSecondTaskHandlers(context): NotificationTaskServiceTaskHand
   });
 });
 
+// MARK: typed handler configs that share a binding name
+const SAME_NAMED_HANDLER_IMPORTS = `import { type NotificationTaskServiceTaskHandlerConfig } from '@dereekb/firebase-server/model';
+import { EXAMPLE_NOTIFICATION_TASK_TYPE, SECOND_NOTIFICATION_TASK_TYPE } from 'demo-firebase';`;
+
+// Each wrapper keeps its typed handler config in a local of the same name, `handler`.
+const SAME_NAMED_EXAMPLE_WRAPPER = `export function demoExampleTaskHandler(context) {
+  const handler: NotificationTaskServiceTaskHandlerConfig<any> = {
+    type: EXAMPLE_NOTIFICATION_TASK_TYPE,
+    flow: [{ checkpoint: 'part_a', fn: async () => null }]
+  };
+  return handler;
+}`;
+
+const SAME_NAMED_SECOND_WRAPPER = `export function demoSecondTaskHandler(context) {
+  const handler: NotificationTaskServiceTaskHandlerConfig<any> = {
+    type: SECOND_NOTIFICATION_TASK_TYPE,
+    flow: [{ checkpoint: 'part_x', fn: async () => null }]
+  };
+  return handler;
+}`;
+
+interface SameNamedHandlerWrappersOptions {
+  /**
+   * Both wrappers in one handler file, else one file each.
+   */
+  readonly oneFile: boolean;
+  /**
+   * The wrapper calls the task service's `handlers` lists.
+   */
+  readonly elements: string;
+}
+
+// Adds SECOND_NOTIFICATION_TASK_TYPE, writes the two wrappers, and swaps the service's inline handler for `elements`.
+function useSameNamedHandlerWrappers({ component, api }: NotificationFixtureParts, options: SameNamedHandlerWrappersOptions): void {
+  const servicePath = 'src/app/common/model/notification/notification.task.service.ts';
+  const handlersDir = 'src/app/common/model/notification/handlers';
+  addSecondTaskType(component);
+  replaceInFile({ files: api, relPath: servicePath, from: /const exampleNotificationTaskHandler: NotificationTaskServiceTaskHandlerConfig[\s\S]*?\};/, to: '' });
+  replaceInFile({ files: api, relPath: servicePath, from: '[exampleNotificationTaskHandler]', to: `[${options.elements}]` });
+  if (options.oneFile) {
+    replaceInFile({ files: api, relPath: servicePath, from: "} from 'demo-firebase';", to: "} from 'demo-firebase';\nimport { demoExampleTaskHandler, demoSecondTaskHandler } from './handlers/task.handler.typed';" });
+    api.push({ relPath: `${handlersDir}/task.handler.typed.ts`, text: `${SAME_NAMED_HANDLER_IMPORTS}\n\n${SAME_NAMED_EXAMPLE_WRAPPER}\n\n${SAME_NAMED_SECOND_WRAPPER}\n` });
+  } else {
+    replaceInFile({ files: api, relPath: servicePath, from: "} from 'demo-firebase';", to: "} from 'demo-firebase';\nimport { demoExampleTaskHandler } from './handlers/task.handler.example';\nimport { demoSecondTaskHandler } from './handlers/task.handler.second';" });
+    api.push({ relPath: `${handlersDir}/task.handler.example.ts`, text: `${SAME_NAMED_HANDLER_IMPORTS}\n\n${SAME_NAMED_EXAMPLE_WRAPPER}\n` }, { relPath: `${handlersDir}/task.handler.second.ts`, text: `${SAME_NAMED_HANDLER_IMPORTS}\n\n${SAME_NAMED_SECOND_WRAPPER}\n` });
+  }
+}
+
+describe('validateAppNotifications — typed handler configs that share a binding name', () => {
+  const layouts: [string, boolean][] = [
+    ['in one file', true],
+    ['in two files', false]
+  ];
+
+  it.each(layouts)('reads and reaches both same-named configs %s', (_layout, oneFile) => {
+    const modify = (parts: NotificationFixtureParts) => useSameNamedHandlerWrappers(parts, { oneFile, elements: 'demoExampleTaskHandler(context), demoSecondTaskHandler(context)' });
+    expect(runWith(modify).violations).toEqual([]);
+    const extracted = extractAppNotifications(inspectionWith(modify));
+    expect(extracted.taskHandlerEntries.map((x) => [x.bindingName, x.typeIdentifier])).toEqual([
+      ['handler', 'EXAMPLE_NOTIFICATION_TASK_TYPE'],
+      ['handler', 'SECOND_NOTIFICATION_TASK_TYPE']
+    ]);
+    const [call] = extracted.taskServiceCalls;
+    expect(call.resolvedHandlerBindings).toEqual(['handler', 'handler']);
+    expect(call.reachedTaskHandlerEntries.map((x) => x.typeIdentifier)).toEqual(['EXAMPLE_NOTIFICATION_TASK_TYPE', 'SECOND_NOTIFICATION_TASK_TYPE']);
+  });
+
+  it.each([
+    { missing: 'EXAMPLE_NOTIFICATION_TASK_TYPE', layout: 'in one file', oneFile: true, elements: 'demoSecondTaskHandler(context)', kept: 'SECOND_NOTIFICATION_TASK_TYPE' },
+    { missing: 'SECOND_NOTIFICATION_TASK_TYPE', layout: 'in one file', oneFile: true, elements: 'demoExampleTaskHandler(context)', kept: 'EXAMPLE_NOTIFICATION_TASK_TYPE' },
+    { missing: 'EXAMPLE_NOTIFICATION_TASK_TYPE', layout: 'in two files', oneFile: false, elements: 'demoSecondTaskHandler(context)', kept: 'SECOND_NOTIFICATION_TASK_TYPE' },
+    { missing: 'SECOND_NOTIFICATION_TASK_TYPE', layout: 'in two files', oneFile: false, elements: 'demoExampleTaskHandler(context)', kept: 'EXAMPLE_NOTIFICATION_TASK_TYPE' }
+  ])('reports only $missing when its wrapper leaves handlers, $layout', ({ missing, oneFile, elements, kept }) => {
+    const modify = (parts: NotificationFixtureParts) => useSameNamedHandlerWrappers(parts, { oneFile, elements });
+    const { violations } = runWith(modify);
+    expect(
+      violations.map((v) => v.code),
+      JSON.stringify(violations, null, 2)
+    ).toEqual(['NOTIF_TASK_HANDLER_NAME_MISMATCH']);
+    const missingEntry = extractAppNotifications(inspectionWith(modify)).taskHandlerEntries.find((x) => x.typeIdentifier === missing);
+    expect(violations[0].message).toContain(`type: ${missing}`);
+    expect(violations[0].message).toContain(`${missingEntry?.sourceFile}:${missingEntry?.line}`);
+    expect(violations[0].message).not.toContain(kept);
+  });
+});
+
 describe('validateAppNotifications — warnings', () => {
   it('warns NOTIF_TEMPLATE_TYPE_CODE_DUPLICATE when two template consts share a string value', () => {
     const result = runWith(({ component }) => {
