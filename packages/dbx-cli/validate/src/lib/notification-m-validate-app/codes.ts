@@ -238,7 +238,7 @@ export enum NotificationMValidateAppCode {
    *
    * @dbxRuleSeverity warning
    * @dbxRuleApplies When `notificationTaskService({ handlers: [...spread] })` spreads an identifier that isn't a typed `NotificationTaskServiceTaskHandlerConfig[]` binding or trusted external.
-   * @dbxRuleNotApplies Spreads from trust-listed `@dereekb/*` modules (e.g. `storageFileProcessingNotificationTaskHandler`).
+   * @dbxRuleNotApplies Identifiers from trust-listed `@dereekb/*` modules (e.g. `storageFileProcessingNotificationTaskHandler`), and values the scanner can't see through (a conditional, a property read, `obj.fn(...)`, `fn(...)(...)`, a namespace call into a module other than `@dereekb/*`), including the locals and functions that lead to them. Such a value only makes the upstream handler checks skip the service.
    * @dbxRuleFix Declare the spread as `const <name>: NotificationTaskServiceTaskHandlerConfig<...>[] = [...]` or import it from a trusted module.
    */
   NOTIF_TASK_HANDLER_SPREAD_UNRESOLVED = 'NOTIF_TASK_HANDLER_SPREAD_UNRESOLVED',

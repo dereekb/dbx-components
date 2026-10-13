@@ -314,11 +314,11 @@ export interface ExtractedTaskServiceCall {
    */
   readonly resolvedHandlerBindings: readonly string[];
   /**
-   * Identifiers that the handler-array trace could not bind to a local
-   * declaration or function. The rules pass cross-checks them against
-   * the trust-list before warning, so upstream factory calls (e.g.
-   * `storageFileProcessingNotificationTaskHandler` from
-   * `@dereekb/firebase-server/model`) do not produce noise.
+   * Identifiers the `handlers:` trace could not follow: a name with no local declaration, function or `@dereekb/*` import
+   * behind it, plus each local or function whose value leads only to such names (or to an object literal that isn't a
+   * typed handler config, or an empty array). A local or function whose value ends at an upstream handler factory call or
+   * at an opaque value ({@link opaqueHandlerValues}) is not listed. The rules pass warns
+   * (`NOTIF_TASK_HANDLER_SPREAD_UNRESOLVED`) for each name that is neither trust-listed nor a resolved binding.
    */
   readonly unresolvedHandlerBindings: readonly string[];
   /**
@@ -363,8 +363,9 @@ export interface ExtractedTaskServiceCall {
    * helper that is not an upstream handler factory, or an upstream handler factory passed along as a value or held in a
    * variable the scan can't pin to one `const`), a call whose callee is neither an identifier nor an `@dereekb/*`
    * namespace member (`obj.fn(...)`, `fn(...)(...)`), and any expression other than an identifier, call, array or object
-   * literal (a conditional, `satisfies`, a parenthesized or non-null expression, …). The text is collapsed and truncated. When the list is non-empty, the upstream handler checks skip
-   * the service.
+   * literal (a conditional, `satisfies`, a parenthesized or non-null expression, …). The text is collapsed and truncated.
+   * An opaque value ends the trace: the locals and functions that lead to it are not listed in
+   * {@link unresolvedHandlerBindings}. When the list is non-empty, the upstream handler checks skip the service.
    */
   readonly opaqueHandlerValues: readonly string[];
   readonly sourceFile: string;

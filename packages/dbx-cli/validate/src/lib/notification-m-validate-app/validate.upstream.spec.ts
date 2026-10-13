@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { isHandlersTraceComplete } from './extract.upstream.js';
 import { extractAppNotifications, validateAppNotifications } from './index.js';
 import type { AppNotificationsInspection, InspectedFile, ValidationResult, ViolationCode } from './types.js';
 
@@ -959,5 +960,67 @@ describe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED — aliased and namespaced 
     );
     expect(found).toHaveLength(1);
     expect(found[0].message).toContain('`demoStorageFileProcessingNotificationTaskHandler` builds');
+  });
+});
+
+describe('NOTIF_TASK_HANDLER_SPREAD_UNRESOLVED — an opaque value ends the handlers trace', () => {
+  // `storageFileHandler` stays in `handlers` in every case, and the trace meets a value it can't see through behind it. That
+  // value makes the upstream checks skip the service; the wrapper and the local that lead to it are not unresolved.
+  it.each<[string, (parts: FixtureParts) => void, string]>([
+    [
+      'a namespace call into a non-@dereekb/* module',
+      (p) => {
+        replaceInFile(p.api, SF_HANDLER_FILE, SF_FACTORY_IMPORT, "import * as lib from 'some-app-lib';");
+        replaceInFile(p.api, SF_HANDLER_FILE, SF_FACTORY_RETURN, 'return lib.storageFileProcessingNotificationTaskHandler(');
+      },
+      'lib.storageFileProcessingNotificationTaskHandler('
+    ],
+    [
+      'a call through a shadowed @dereekb/* namespace',
+      (p) => {
+        namespaceStorageFileFactory(p);
+        replaceInFile(p.api, SF_HANDLER_FILE, 'demoStorageFileProcessingNotificationTaskHandler(context) {', 'demoStorageFileProcessingNotificationTaskHandler(context, serverModel = context.handlerFactories) {');
+      },
+      'serverModel.storageFileProcessingNotificationTaskHandler('
+    ],
+    ['a call through a property access', (p) => replaceInFile(p.api, SF_HANDLER_FILE, SF_FACTORY_RETURN, 'return context.handlerFactories.storageFile('), 'context.handlerFactories.storageFile('],
+    ['a call of a call', (p) => replaceInFile(p.api, SF_HANDLER_FILE, SF_FACTORY_RETURN, 'return makeStorageFileHandler(context)('), 'makeStorageFileHandler(context)('],
+    [
+      'a call of a non-factory @dereekb/* namespace member',
+      (p) => {
+        replaceInFile(p.api, SF_HANDLER_FILE, SF_FACTORY_IMPORT, "import * as serverModel from '@dereekb/firebase-server/model';");
+        replaceInFile(p.api, SF_HANDLER_FILE, SF_FACTORY_RETURN, 'return serverModel.someOtherHelper(');
+      },
+      'serverModel.someOtherHelper('
+    ],
+    ['a conditional local', (p) => replaceInFile(p.api, TASK_SERVICE_FILE, SF_LOCAL, 'const storageFileHandler = context.useStorageFiles ? demoStorageFileProcessingNotificationTaskHandler(context) : undefined;'), 'context.useStorageFiles ?'],
+    ['a local read from a property', (p) => replaceInFile(p.api, TASK_SERVICE_FILE, SF_LOCAL, 'const storageFileHandler = context.storageFileHandler;'), 'context.storageFileHandler']
+  ])('does not report the wrapper or local behind %s', (_label, modify, opaqueValue) => {
+    const [call] = extractAppNotifications(inspectionOf(modify)).taskServiceCalls;
+    expect(call.opaqueHandlerValues).toEqual([expect.stringContaining(opaqueValue)]);
+    expect(call.unresolvedHandlerBindings).toEqual([]);
+    expect(call.reachedUpstreamHandlerCalls.map((x) => x.factory)).not.toContain('storageFileProcessingNotificationTaskHandler');
+    expect(isHandlersTraceComplete(call)).toBe(false);
+    expect(runWith(modify).violations).toEqual([]);
+  });
+
+  it('still skips the upstream check when an opaque value could be the missing handler', () => {
+    const result = runWith((p) => {
+      replaceInFile(p.api, TASK_SERVICE_FILE, SF_LOCAL, 'const registryHandler = context.handlerRegistry.build(context);');
+      replaceInFile(p.api, TASK_SERVICE_FILE, ', storageFileHandler, ', ', registryHandler, ');
+    });
+    expect(result.violations).toEqual([]);
+  });
+
+  it('still reports an unresolved identifier next to an opaque value', () => {
+    const modify = (p: FixtureParts) => {
+      replaceInFile(p.api, SF_HANDLER_FILE, SF_FACTORY_RETURN, 'return context.handlerFactories.storageFile(');
+      replaceInFile(p.api, TASK_SERVICE_FILE, ', formSpaceHandler]', ', formSpaceHandler, mysteryHandler]');
+    };
+    const [call] = extractAppNotifications(inspectionOf(modify)).taskServiceCalls;
+    expect(call.unresolvedHandlerBindings).toEqual(['mysteryHandler']);
+    const found = findingsOf(runWith(modify), 'NOTIF_TASK_HANDLER_SPREAD_UNRESOLVED');
+    expect(found).toHaveLength(1);
+    expect(found[0].message).toContain('`mysteryHandler`');
   });
 });

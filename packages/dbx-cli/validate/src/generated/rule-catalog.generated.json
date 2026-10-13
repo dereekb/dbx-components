@@ -2173,7 +2173,7 @@
     "title": "The `handlers:` array spreads an identifier that doesn't resolve to a declared array binding",
     "whatItFlags": "The `handlers:` array spreads an identifier that doesn't resolve to a declared array binding.\nAn unresolved identifier also skips `NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED` (and `NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED`) for that task service.",
     "whenItApplies": "When `notificationTaskService({ handlers: [...spread] })` spreads an identifier that isn't a typed `NotificationTaskServiceTaskHandlerConfig[]` binding or trusted external.",
-    "whenItDoesNotApply": "Spreads from trust-listed `@dereekb/*` modules (e.g. `storageFileProcessingNotificationTaskHandler`).",
+    "whenItDoesNotApply": "Identifiers from trust-listed `@dereekb/*` modules (e.g. `storageFileProcessingNotificationTaskHandler`), and values the scanner can't see through (a conditional, a property read, `obj.fn(...)`, `fn(...)(...)`, a namespace call into a module other than `@dereekb/*`), including the locals and functions that lead to them. Such a value only makes the upstream handler checks skip the service.",
     "canonicalFix": "Declare the spread as `const <name>: NotificationTaskServiceTaskHandlerConfig<...>[] = [...]` or import it from a trusted module."
   },
   {

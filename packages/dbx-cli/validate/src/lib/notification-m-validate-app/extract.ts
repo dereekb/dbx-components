@@ -1137,24 +1137,6 @@ function consumeHandlersSpreadElement(options: ConsumeHandlersSpreadElementOptio
 }
 
 /**
- * Walks a value-position node looking for a typed
- * `NotificationTaskServiceTaskHandlerConfig<...>` object literal. When
- * one is reached via a local-variable binding, the variable's name is
- * pushed to {@link resolved}. Identifiers and call expressions that
- * cannot be followed (upstream imports, unbound names, non-handler
- * intermediate types) end up in {@link unresolved} for the rules pass
- * to cross-check against the trust-list.
- *
- * @param node - the value-position node to inspect
- * @param sf - the source file the node belongs to
- * @param index - the api function lookup index for chasing chained calls
- * @param trustedExternal - set of identifiers that downstream rules consider safe upstream re-exports
- * @param resolved - mutable buffer that receives in-file resolved binding names
- * @param unresolved - mutable buffer that receives identifiers the trace could not follow locally
- * @param visited - cycle-guard set for recursive identifier traversal
- * @returns `true` when a handler binding (resolved or unresolved) was recorded
- */
-/**
  * Context for collecting notification-task handler bindings reachable from a
  * given identifier or expression.
  */
@@ -1173,7 +1155,8 @@ interface HandlerBindingCollectorContext {
    */
   readonly reachedUpstreamHandlerCalls: ExtractedUpstreamHandlerCall[];
   /**
-   * Receives every value the trace can't see through (see `ExtractedTaskServiceCall.opaqueHandlerValues`).
+   * Receives every value the trace can't see through (see `ExtractedTaskServiceCall.opaqueHandlerValues`). Recording one
+   * ends that branch of the trace with `true`.
    */
   readonly opaqueHandlerValues: string[];
   readonly visited: Set<string>;
@@ -1186,6 +1169,17 @@ interface CollectHandlerBindingsFromValueOptions extends HandlerBindingCollector
   readonly node: Node | undefined;
 }
 
+/**
+ * Walks a value-position node of the `handlers` trace. A typed `NotificationTaskServiceTaskHandlerConfig<...>` object
+ * literal reached through a local binding lands in `resolved`, an upstream handler factory call in
+ * `reachedUpstreamHandlerCalls`, and a value the trace can't see through in `opaqueHandlerValues`.
+ *
+ * @param options - The node and the collector context.
+ * @returns `true` when the trace ended at a value it recorded: a typed handler config binding, an upstream handler
+ *   factory call, or an opaque value. `false` when it reached nothing it could record: an identifier it can't follow
+ *   (which lists itself in `unresolved`), an object literal that isn't a typed binding, or an array with no recorded
+ *   element. The identifier that led to a `false` lists its own name in `unresolved` as well.
+ */
 function collectHandlerBindingsFromValue(options: CollectHandlerBindingsFromValueOptions): boolean {
   const inner = unwrapAsExpressions(options.node);
   let result = false;
@@ -1198,6 +1192,7 @@ function collectHandlerBindingsFromValue(options: CollectHandlerBindingsFromValu
       result = collectHandlerBindingsFromArrayLiteral(inner, options);
     } else if (!Node.isObjectLiteralExpression(inner)) {
       options.opaqueHandlerValues.push(opaqueSnippet(inner));
+      result = true;
     }
   }
   return result;
@@ -1212,7 +1207,10 @@ function collectHandlerBindingsFromCallExpression(call: Node, options: CollectHa
   } else if (Node.isIdentifier(callee)) {
     result = collectHandlerBindingsFromIdentifier({ ...options, name: callee.getText() });
   } else {
+    // An opaque call ends the trace like an upstream factory call: it is recorded once, and the wrapper and local that
+    // lead here are not unresolved.
     options.opaqueHandlerValues.push(opaqueSnippet(call));
+    result = true;
   }
   return result;
 }

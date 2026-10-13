@@ -1061,3 +1061,57 @@ describe('validateAppNotifications — aliased and namespaced @dereekb factory c
     expectExtraction(extractAppNotifications(inspectionWith(modify)));
   });
 });
+
+// MARK: values the handlers trace can't see through
+const TASK_SERVICE_HANDLERS = 'const handlers: NotificationTaskServiceTaskHandlerConfig<any>[] = [exampleNotificationTaskHandler];';
+const TASK_SERVICE_FACTORY_START = 'export function demoNotificationTaskServiceFactory';
+
+interface OpaqueHandlerCase {
+  /**
+   * Declarations added above the task service factory.
+   */
+  readonly prelude?: string;
+  /**
+   * A local declared just before `handlers`.
+   */
+  readonly local?: string;
+  /**
+   * The element added to `handlers` after `exampleNotificationTaskHandler`.
+   */
+  readonly element: string;
+}
+
+function addHandlerElement(api: InspectedFile[], handlerCase: OpaqueHandlerCase): void {
+  const { prelude, local, element } = handlerCase;
+  if (prelude !== undefined) {
+    replaceInFile({ files: api, relPath: TASK_SERVICE_PATH, from: TASK_SERVICE_FACTORY_START, to: `${prelude}\n\n${TASK_SERVICE_FACTORY_START}` });
+  }
+  const localLine = local === undefined ? '' : `${local}\n  `;
+  replaceInFile({ files: api, relPath: TASK_SERVICE_PATH, from: TASK_SERVICE_HANDLERS, to: `${localLine}const handlers: NotificationTaskServiceTaskHandlerConfig<any>[] = [exampleNotificationTaskHandler, ${element}];` });
+}
+
+describe('validateAppNotifications — values the handlers trace cannot see through', () => {
+  // `exampleNotificationTaskHandler` stays in `handlers`, so the rest of the fixture is clean.
+  it.each<[string, OpaqueHandlerCase, string]>([
+    ['a local built by a call through a property access', { local: 'const registryHandler = context.handlerRegistry.build(context);', element: 'registryHandler' }, 'context.handlerRegistry.build(context)'],
+    ['a local holding a conditional', { local: 'const registryHandler = context.useV2 ? context.v2Handler : context.v1Handler;', element: 'registryHandler' }, 'context.useV2 ? context.v2Handler : context.v1Handler'],
+    ['a factory returning a call of a call', { prelude: "function demoRegistryTaskHandler(context) {\n  return context.handlerRegistry.lookup('example')(context);\n}", local: 'const registryHandler = demoRegistryTaskHandler(context);', element: 'registryHandler' }, "context.handlerRegistry.lookup('example')(context)"],
+    ['a spread factory returning an array of an opaque call', { prelude: 'function demoRegistryTaskHandlers(context) {\n  return [context.handlerRegistry.build(context)];\n}', element: '...demoRegistryTaskHandlers(context)' }, 'context.handlerRegistry.build(context)']
+  ])('does not warn NOTIF_TASK_HANDLER_SPREAD_UNRESOLVED for %s', (_label, handlerCase, opaqueValue) => {
+    const modify = ({ api }: NotificationFixtureParts) => addHandlerElement(api, handlerCase);
+    const [call] = extractAppNotifications(inspectionWith(modify)).taskServiceCalls;
+    expect(call.opaqueHandlerValues).toEqual([opaqueValue]);
+    expect(call.unresolvedHandlerBindings).toEqual([]);
+    expect(call.resolvedHandlerBindings).toEqual(['exampleNotificationTaskHandler']);
+    expect(runWith(modify).violations).toEqual([]);
+  });
+
+  it('still warns for an unresolved identifier returned next to an opaque value', () => {
+    const modify = ({ api }: NotificationFixtureParts) => addHandlerElement(api, { prelude: 'function demoRegistryTaskHandlers(context) {\n  return [context.handlerRegistry.build(context), mysteryHandler];\n}', element: '...demoRegistryTaskHandlers(context)' });
+    const [call] = extractAppNotifications(inspectionWith(modify)).taskServiceCalls;
+    expect(call.unresolvedHandlerBindings).toEqual(['mysteryHandler']);
+    const warnings = runWith(modify).violations.filter((v) => v.code === 'NOTIF_TASK_HANDLER_SPREAD_UNRESOLVED');
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0].message).toContain('`mysteryHandler`');
+  });
+});
