@@ -295,8 +295,11 @@ export type NotificationTaskBotEnsureSchedule = 'ifIdle' | 'now' | Date | false;
  *   (a new entry is then created with no run), so the owner's group toggle holds as entries come and go;
  * - an entry whose script no longer allows owner opt-out has its `oat` cleared, since neither the owner nor an admin
  *   could otherwise reach it.
+ *
+ * @template D - entry data type
+ * @template HD - history item data type
  */
-export interface NotificationTaskBotEnsureChange<D extends NotificationTaskBotEntryData = NotificationTaskBotEntryData> {
+export interface NotificationTaskBotEnsureChange<D extends NotificationTaskBotEntryData = NotificationTaskBotEntryData, HD extends NotificationTaskBotEntryData = NotificationTaskBotEntryData> {
   readonly type: 'ensure';
   readonly entryId: NotificationTaskBotEntryId;
   readonly scriptType: NotificationTaskBotScriptType;
@@ -320,7 +323,7 @@ export interface NotificationTaskBotEnsureChange<D extends NotificationTaskBotEn
   /**
    * Values the entry is created with. Ignored when the entry already exists, so a migration can be re-run safely.
    */
-  readonly seed?: Maybe<NotificationTaskBotEntrySeed>;
+  readonly seed?: Maybe<NotificationTaskBotEntrySeed<HD>>;
   /**
    * Caps the seeded history. Defaults to {@link DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_HISTORY_LIMIT}. The server fills
    * it from the script registry.

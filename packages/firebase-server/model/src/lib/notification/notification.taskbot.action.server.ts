@@ -202,8 +202,11 @@ export function applyNotificationTaskBotChangesFactory(context: NotificationTask
 // MARK: Library Helpers
 /**
  * Input for ensuring an entry exists on the bot attached to a model.
+ *
+ * @template D - entry data type
+ * @template HD - history item data type of the seeded history
  */
-export interface EnsureNotificationTaskBotEntryInput<D extends NotificationTaskBotEntryData = NotificationTaskBotEntryData> {
+export interface EnsureNotificationTaskBotEntryInput<D extends NotificationTaskBotEntryData = NotificationTaskBotEntryData, HD extends NotificationTaskBotEntryData = NotificationTaskBotEntryData> {
   /**
    * Key of the model the bot is attached to. The bot is created when it does not exist.
    */
@@ -231,7 +234,7 @@ export interface EnsureNotificationTaskBotEntryInput<D extends NotificationTaskB
    * Values the entry is created with, for carrying over the state of an earlier, app-specific bot. Ignored when the
    * entry already exists, so a migration can be re-run safely. Seeded history is capped to the script's history limit.
    */
-  readonly seed?: Maybe<NotificationTaskBotEntrySeed>;
+  readonly seed?: Maybe<NotificationTaskBotEntrySeed<HD>>;
   /**
    * When provided, sets the bot's owner key. Pass the key the attached model's NotificationBox uses (e.g. `'pr/<uid>'`)
    * on every ensure so the owner stays in sync. Null clears it.
@@ -243,7 +246,8 @@ export interface EnsureNotificationTaskBotEntryInput<D extends NotificationTaskB
 /**
  * Input for {@link ensureNotificationTaskBotEntryInTransactionFactory}.
  */
-export interface EnsureNotificationTaskBotEntryInTransactionInput<D extends NotificationTaskBotEntryData = NotificationTaskBotEntryData> extends EnsureNotificationTaskBotEntryInput<D>, Pick<ApplyNotificationTaskBotChangesInTransactionInput, 'transaction' | 'bot'> {}
+export interface EnsureNotificationTaskBotEntryInTransactionInput<D extends NotificationTaskBotEntryData = NotificationTaskBotEntryData, HD extends NotificationTaskBotEntryData = NotificationTaskBotEntryData>
+  extends EnsureNotificationTaskBotEntryInput<D, HD>, Pick<ApplyNotificationTaskBotChangesInTransactionInput, 'transaction' | 'bot'> {}
 
 /**
  * Creates a function that ensures an entry exists inside an existing transaction.
@@ -255,7 +259,7 @@ export function ensureNotificationTaskBotEntryInTransactionFactory(context: Noti
   const { appNotificationTaskBotScriptConfigService } = context;
   const applyInTransaction = applyNotificationTaskBotChangesInTransactionFactory(context);
 
-  return (input: EnsureNotificationTaskBotEntryInTransactionInput) => {
+  return <D extends NotificationTaskBotEntryData = NotificationTaskBotEntryData, HD extends NotificationTaskBotEntryData = NotificationTaskBotEntryData>(input: EnsureNotificationTaskBotEntryInTransactionInput<D, HD>) => {
     const { transaction, bot, model, entryId, scriptType, data, state, schedule, explicit, seed, owner, now } = input;
     const historyLimit = appNotificationTaskBotScriptConfigService.configForScriptType(scriptType).historyLimit; // caps the seeded history
     return applyInTransaction({ transaction, bot, model, now, changes: [{ type: 'ensure', entryId, scriptType, data, state, schedule, explicit, seed, historyLimit, owner }] });
@@ -271,7 +275,7 @@ export function ensureNotificationTaskBotEntryInTransactionFactory(context: Noti
 export function ensureNotificationTaskBotEntryFactory(context: NotificationTaskBotServerActionsContext) {
   const { firestoreContext } = context;
   const ensureInTransaction = ensureNotificationTaskBotEntryInTransactionFactory(context);
-  return (input: EnsureNotificationTaskBotEntryInput) => firestoreContext.runTransaction((transaction) => ensureInTransaction({ ...input, transaction }));
+  return <D extends NotificationTaskBotEntryData = NotificationTaskBotEntryData, HD extends NotificationTaskBotEntryData = NotificationTaskBotEntryData>(input: EnsureNotificationTaskBotEntryInput<D, HD>) => firestoreContext.runTransaction((transaction) => ensureInTransaction<D, HD>({ ...input, transaction }));
 }
 
 /**

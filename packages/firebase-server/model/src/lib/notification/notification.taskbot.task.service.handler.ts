@@ -195,8 +195,9 @@ export type NotificationTaskBotScriptProcessorConfig<D extends NotificationTaskB
 export interface NotificationTaskBotRunNotificationTaskHandlerConfig extends Omit<NotificationTaskSubtaskNotificationTaskHandlerConfig<NotificationTaskBotRunSubtaskInput, NotificationTaskBotRunCleanupInstructions, NotificationTaskBotRunNotificationTaskData>, 'processors'> {
   readonly processors: NotificationTaskBotScriptProcessorConfig[];
   /**
-   * The NotificationTaskBot context. Its optional script config service supplies each script's history limit,
-   * minimum run interval and failure budget.
+   * The NotificationTaskBot context. Its script registry is required: handler creation throws unless the processors
+   * match it both ways (every registered script type has a processor, and every processor target is registered). The
+   * registry also supplies each script's history limit, minimum run interval and failure budget.
    */
   readonly notificationTaskBotContext: NotificationTaskBotServerActionsContext;
 }
