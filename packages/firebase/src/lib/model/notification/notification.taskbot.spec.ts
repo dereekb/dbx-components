@@ -80,6 +80,14 @@ describe('notificationTaskBotConverter', () => {
     expect(restored.e[0].rpr).toBe('limit');
   });
 
+  it('should round-trip the entry and bot stalled dates', () => {
+    const stalled: NotificationTaskBot = { ...model, e: [{ ...model.e[0], stl: runAt }], stl: runAt };
+    const restored = notificationTaskBotConverter.mapFunctions.from(notificationTaskBotConverter.mapFunctions.to(stalled));
+
+    expect(restored.e[0].stl).toEqual(runAt);
+    expect(restored.stl).toEqual(runAt);
+  });
+
   it('should not store unset optional entry fields', () => {
     const data = notificationTaskBotConverter.mapFunctions.to({ cat: createdAt, m: 'profile/abc', rc: 0, e: [{ i: 'a', t: 't', s: NotificationTaskBotEntryState.ENABLED, cat: createdAt, sc: 0, fc: 0, h: [] }] }) as any;
     const entry = data.e[0];
@@ -89,7 +97,9 @@ describe('notificationTaskBotConverter', () => {
     expect(entry.oat).toBeUndefined();
     expect(entry.pu).toBeUndefined();
     expect(entry.rpr).toBeUndefined();
+    expect(entry.stl).toBeUndefined();
     expect(data.o).toBeNull(); // top-level optional fields store null, unlike sub-object fields
+    expect(data.stl).toBeNull();
   });
 });
 

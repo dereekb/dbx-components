@@ -626,10 +626,18 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
         tsType: 'Maybe<Date>',
         optional: true,
         description: 'The soonest {@link NotificationTaskBotEmbeddedScriptEntry.nat} among entries with a live run. Kept for the repair query and for display.'
+      },
+      {
+        name: 'stl',
+        longName: 'stalledAt',
+        converter: 'optionalFirestoreDate()',
+        tsType: 'Maybe<Date>',
+        optional: true,
+        description: 'The earliest {@link NotificationTaskBotEmbeddedScriptEntry.stl} among entries with a live run. Set means at least one entry is stalled. Entries are embedded, so this is the field to query stalled bots by (see `notificationTaskBotsStalledQuery()`).'
       }
     ],
     enums: [],
-    detectionHints: ['m', 'rc', 'e', 'nat'],
+    detectionHints: ['m', 'rc', 'e', 'nat', 'stl'],
     description: 'A generic per-model bot. Attaches to any model and holds embedded script entries that each run as a series of unique NotificationTasks, fenced by run number.',
     collectionKind: 'root',
     compositeKey: {

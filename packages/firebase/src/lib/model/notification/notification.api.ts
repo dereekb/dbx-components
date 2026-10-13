@@ -786,7 +786,8 @@ export interface UpdateNotificationTaskBotEntryResult {
    * Status of the entry after the update.
    *
    * A resume, enable or reschedule that could not take effect because the owner opted out of the entry's group reports
-   * `opted_out`. Admins can't undo an owner's opt-out.
+   * `opted_out`. Admins can't undo an owner's opt-out. An entry whose live run the repair sweep marked stalled (see the
+   * entry's `stl`) reports `stalled`.
    */
   readonly status: NotificationTaskBotEntryStatus;
   /**
@@ -805,11 +806,17 @@ export interface UpdateNotificationTaskBotEntryResult {
  * The live run is superseded by a new run due now. Disabled, paused and opted-out entries are refused; an entry is opted
  * out when the bot's owner turned off its script group, which only the owner can undo.
  *
+ * The one exception: a FORCED run resumes an entry paused with the `'failed'` reason (its failure budget is spent, or a
+ * run was lost under `lostRunPolicy: 'stop'`). That resume resets `fc` and stamps `rpr: 'failed'`.
+ *
+ * A stalled entry's run is superseded like any other live run: its task is deleted, and the new run clears `stl`.
+ *
  * @dbxModelApiParams
  */
 export interface RunNotificationTaskBotEntryParams extends NotificationTaskBotEntryTargetParams {
   /**
-   * MANUAL runs still apply the script's due check; FORCED runs skip it. Defaults to MANUAL.
+   * MANUAL runs still apply the script's due check. FORCED runs skip it, and also resume an entry paused with the
+   * `'failed'` reason. Defaults to MANUAL.
    */
   readonly trigger?: Maybe<NotificationTaskBotRunTrigger.MANUAL | NotificationTaskBotRunTrigger.FORCED>;
   /**
@@ -901,11 +908,19 @@ export interface RepairAllNotificationTaskBotsResult {
    */
   readonly botsChecked: number;
   /**
-   * Number of overdue entries whose run was still pending, and only had their `nat` synced.
+   * Number of overdue entries whose run task was still pending. Their `nat` was synced to the task, and they were marked
+   * stalled when the task had failed attempts or had not been picked up.
    */
   readonly entriesSynced: number;
   /**
-   * Number of overdue entries whose run was lost and was rescheduled or paused.
+   * Number of overdue entries this sweep newly marked stalled (`stl`). A subset of {@link entriesSynced}.
+   *
+   * Log or alert on it; `notificationTaskBotsStalledQuery()` finds every stalled bot.
+   */
+  readonly entriesStalled: number;
+  /**
+   * Number of overdue entries whose run was lost (its task missing, or finished without cleanup). Each was recorded LOST,
+   * then paused, left idle or relaunched per its script's `lostRunPolicy`.
    */
   readonly entriesRepaired: number;
 }
@@ -968,11 +983,12 @@ export type NotificationBoxModelCrudFunctionsConfig = {
       /**
        * Admin-only. Enables/disables, pauses/resumes, reschedules or patches the data of a single entry. A data patch must
        * satisfy the script's `dataType`, and scripts without one refuse it. Reports `opted_out` when the owner opted out
-       * of the entry's group, which only the owner can undo.
+       * of the entry's group, which only the owner can undo, and `stalled` when the entry's live run is stalled.
        */
       entry: [UpdateNotificationTaskBotEntryParams, UpdateNotificationTaskBotEntryResult];
       /**
-       * Admin-only. Runs a single entry on demand. Refused for disabled, paused and opted-out entries.
+       * Admin-only. Runs a single entry on demand. Refused for disabled, paused and opted-out entries; FORCED resumes an
+       * entry paused with `'failed'`. Supersedes a stalled run.
        */
       run: [RunNotificationTaskBotEntryParams, RunNotificationTaskBotEntryResult];
       /**

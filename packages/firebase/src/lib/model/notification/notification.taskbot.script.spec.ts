@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { type } from 'arktype';
-import { appNotificationTaskBotScriptConfigService, notificationTaskBotScriptConfigRecord } from './notification.taskbot.script';
+import { appNotificationTaskBotScriptConfigService, DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_LOST_RUN_POLICY, notificationTaskBotScriptConfigRecord } from './notification.taskbot.script';
 
 describe('notificationTaskBotScriptConfigRecord()', () => {
   it('should index the configs by script type', () => {
@@ -66,6 +66,12 @@ describe('appNotificationTaskBotScriptConfigService()', () => {
     const dataType = type({ 'c?': 'number' });
     const dataTypeService = appNotificationTaskBotScriptConfigService(notificationTaskBotScriptConfigRecord([{ scriptType: 'a', dataType }]));
     expect(dataTypeService.configForScriptType('a').dataType).toBe(dataType);
+  });
+
+  it("should return the declared lostRunPolicy, which defaults to 'stop'", () => {
+    const policyService = appNotificationTaskBotScriptConfigService(notificationTaskBotScriptConfigRecord([{ scriptType: 'a', lostRunPolicy: 'idle' }]));
+    expect(policyService.configForScriptType('a').lostRunPolicy).toBe('idle');
+    expect(DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_LOST_RUN_POLICY).toBe('stop');
   });
 });
 

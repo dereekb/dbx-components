@@ -29,6 +29,26 @@ export const DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MAX_CONSECUTIVE_FAILURES = 3;
 export const DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MINIMUM_RUN_INTERVAL: Milliseconds = 5 * MS_IN_MINUTE;
 
 /**
+ * What the repair sweep does with a LOST run: one whose task went missing, or finished without its cleanup.
+ *
+ * Every lost run is recorded as LOST in the entry's history and adds 1 to its failure count (`fc`). Then:
+ * - `'stop'`: pauses the entry with the `'failed'` reason. No new run starts until an admin resumes the entry
+ *   (`update:entry` with `pause: false`) or forces a run (`update:run` with FORCED).
+ * - `'idle'`: leaves the entry idle, so the app's next `ensure` (schedule `'ifIdle'`) re-arms it. For apps that re-arm
+ *   their bots on their own schedule.
+ * - `'retry'`: issues a new run due now.
+ *
+ * Under `'idle'` and `'retry'`, the entry is paused with `'failed'` instead once its failure count reaches the script's
+ * `maxConsecutiveFailures`.
+ */
+export type NotificationTaskBotLostRunPolicy = 'stop' | 'idle' | 'retry';
+
+/**
+ * Default for {@link NotificationTaskBotScriptConfig.lostRunPolicy}.
+ */
+export const DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_LOST_RUN_POLICY: NotificationTaskBotLostRunPolicy = 'stop';
+
+/**
  * A topic that groups NotificationTaskBot scripts, e.g. "Email reminders".
  *
  * The bot's owner opts out of a group at once, which stops every entry in the group whose script sets
@@ -90,8 +110,15 @@ export interface NotificationTaskBotScriptConfig {
    * Number of consecutive failures before the entry is paused with the `'failed'` reason. Counts runs whose cleanup
    * reports FAILED, as well as lost runs found by the repair sweep. Defaults to
    * {@link DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MAX_CONSECUTIVE_FAILURES}.
+   *
+   * Under `lostRunPolicy: 'stop'` a lost run pauses the entry at once.
    */
   readonly maxConsecutiveFailures?: Maybe<number>;
+  /**
+   * What the repair sweep does when a run's task goes missing or finishes without its cleanup. Defaults to
+   * {@link DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_LOST_RUN_POLICY} (`'stop'`). See {@link NotificationTaskBotLostRunPolicy}.
+   */
+  readonly lostRunPolicy?: Maybe<NotificationTaskBotLostRunPolicy>;
   /**
    * The group (topic) this script belongs to.
    */

@@ -37,6 +37,7 @@ import {
   type NotificationTaskBotRunNumber,
   NotificationTaskBotRunTrigger,
   type NotificationTaskBotScriptType,
+  NOTIFICATION_TASK_BOT_PAUSE_REASON_FAILED,
   NOTIFICATION_TASK_BOT_PAUSE_REASON_MANUAL,
   notificationTaskBotIdForModel,
   notificationTaskBotRunNotificationTaskTemplate,
@@ -551,6 +552,10 @@ export function updateNotificationTaskBotEntryFactory(context: NotificationTaskB
  * Creates the `runNotificationTaskBotEntry` API action: supersedes an entry's live run with a MANUAL or FORCED run due
  * now, and runs it immediately after the transaction commits.
  *
+ * Disabled, paused and opted-out entries are refused, except that a FORCED run resumes an entry paused with the
+ * `'failed'` reason first (stamping `rpr: 'failed'` and resetting `fc`). A stalled run is superseded like any other live
+ * run: its task is deleted, and the new run clears `stl`.
+ *
  * @param context - The API context.
  * @returns The transform-and-validate action.
  */
@@ -567,16 +572,21 @@ export function runNotificationTaskBotEntryFactory(context: NotificationTaskBotA
         const botDocumentInTransaction = notificationTaskBotCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(botDocument);
         const bot = await getDocumentSnapshotData(botDocumentInTransaction);
         const entry = notificationTaskBotEntry(bot, entryId);
+        // FORCED is how an admin restarts an entry the bot stopped: it clears a 'failed' pause first
+        const resumeFailedPause = trigger === NotificationTaskBotRunTrigger.FORCED && entry?.pat != null && entry.pr === NOTIFICATION_TASK_BOT_PAUSE_REASON_FAILED;
 
         if (!bot || !entry) {
           throw notificationTaskBotEntryDoesNotExistError(botDocument.key, entryId);
         } else if (entry.oat != null) {
           throw notificationTaskBotEntryOptedOutError(botDocument.key, entryId, entry.oat);
-        } else if (!isNotificationTaskBotEntryRunnable(entry)) {
+        } else if (!isNotificationTaskBotEntryRunnable(resumeFailedPause ? { ...entry, pat: null } : entry)) {
           throw notificationTaskBotEntryNotRunnableError(botDocument.key, entryId);
         }
 
-        return applyInTransaction({ transaction, model: bot.m, bot, changes: [{ type: 'schedule', entryId, trigger }] });
+        const scheduleChange: NotificationTaskBotChange = { type: 'schedule', entryId, trigger };
+        const changes: NotificationTaskBotChange[] = resumeFailedPause ? [{ type: 'pause', entryId, pause: false, reschedule: false }, scheduleChange] : [scheduleChange];
+
+        return applyInTransaction({ transaction, model: bot.m, bot, changes });
       });
 
       const taskKey = result.createRuns[0].taskKey;
@@ -683,20 +693,29 @@ export interface RepairAllNotificationTaskBotsParams {
   readonly now?: Maybe<Date>;
   /**
    * How long past its `nat` an entry must be before it is inspected. Defaults to one hour.
+   *
+   * Also the stall threshold: a pending run task whose send time is this far in the past has not been picked up, and its
+   * entry is marked stalled.
    */
   readonly overdueThreshold?: Maybe<Milliseconds>;
 }
 
 /**
- * Default for {@link RepairAllNotificationTaskBotsParams.overdueThreshold}.
+ * Default for {@link RepairAllNotificationTaskBotsParams.overdueThreshold}, which is also the stall threshold.
  */
 export const DEFAULT_NOTIFICATION_TASK_BOT_REPAIR_OVERDUE_THRESHOLD: Milliseconds = MS_IN_HOUR;
 
 /**
  * Creates the repair sweep. Call it from the app's notification cron, after `sendQueuedNotifications`.
  *
- * For every entry whose `nat` is overdue, the run task is read: a pending task only syncs `nat`; a missing or finished
- * task is recorded as LOST and rescheduled, or paused once the script's maximum consecutive failures is reached.
+ * For every entry whose `nat` is overdue, the run task is read:
+ * - a pending task syncs `nat`, and marks the entry stalled (`stl`) when the task has failed attempts or its send time is
+ *   past the overdue threshold (nothing has picked it up);
+ * - a missing or finished task is recorded as LOST, then the script's `lostRunPolicy` applies: `'stop'` (the default)
+ *   pauses the entry with `'failed'`, `'idle'` leaves it idle, and `'retry'` issues a new run. Under `'idle'` and
+ *   `'retry'` the entry is paused instead once the script's maximum consecutive failures is reached.
+ *
+ * The result counts the entries newly marked stalled (`entriesStalled`), for the cron to log or alert on.
  *
  * @param context - The NotificationTaskBot context.
  * @returns The repair function.
@@ -710,6 +729,7 @@ export function repairAllNotificationTaskBotsFactory(context: NotificationTaskBo
     const overdueBefore = addMilliseconds(now, -(params?.overdueThreshold ?? DEFAULT_NOTIFICATION_TASK_BOT_REPAIR_OVERDUE_THRESHOLD));
 
     let entriesSynced = 0;
+    let entriesStalled = 0;
     let entriesRepaired = 0;
 
     const iterateResult = await iterateFirestoreDocumentSnapshotPairs({
@@ -729,6 +749,7 @@ export function repairAllNotificationTaskBotsFactory(context: NotificationTaskBo
           const overdueEntries = bot?.e.filter((x) => x.rn != null && x.nat != null && x.nat.getTime() <= overdueBefore.getTime()) ?? [];
 
           let synced = 0;
+          let stalled = 0;
           let repaired = 0;
 
           if (bot && overdueEntries.length > 0) {
@@ -751,19 +772,26 @@ export function repairAllNotificationTaskBotsFactory(context: NotificationTaskBo
                 entryId: entry.i,
                 runNumber: entry.rn as NotificationTaskBotRunNumber,
                 pendingTaskSendAt,
+                pendingTaskAttempts: task?.a,
+                stalledBefore: overdueBefore,
+                lostRunPolicy: scriptConfig.lostRunPolicy,
                 trigger: (task?.n.d as Maybe<NotificationTaskBotRunNotificationTaskData>)?.tr,
                 maxConsecutiveFailures: scriptConfig.maxConsecutiveFailures,
                 historyLimit: scriptConfig.historyLimit
               };
             });
 
-            await applyInTransaction({ transaction, model: bot.m, bot, changes, now });
+            // the pure apply is the only judge of a stall, so count the entries it newly marked
+            const stalledEntryIds = new Set(bot.e.filter((x) => x.stl != null).map((x) => x.i));
+            const applied = await applyInTransaction({ transaction, model: bot.m, bot, changes, now });
+            stalled = applied.bot?.e.filter((x) => x.stl != null && !stalledEntryIds.has(x.i)).length ?? 0;
           }
 
-          return { synced, repaired };
+          return { synced, stalled, repaired };
         });
 
         entriesSynced += result.synced;
+        entriesStalled += result.stalled;
         entriesRepaired += result.repaired;
       }
     });
@@ -771,6 +799,7 @@ export function repairAllNotificationTaskBotsFactory(context: NotificationTaskBo
     return {
       botsChecked: iterateResult.totalSnapshotsVisited,
       entriesSynced,
+      entriesStalled,
       entriesRepaired
     };
   };

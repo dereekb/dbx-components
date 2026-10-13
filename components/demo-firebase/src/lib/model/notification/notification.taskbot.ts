@@ -48,7 +48,7 @@ export interface DemoPingNotificationTaskBotEntryData {
    */
   readonly pa?: Maybe<number>;
   /**
-   * When true, the ping step reports a failure instead of pinging. Shows how a failed step is retried, then lost and repaired.
+   * When true, the ping step reports a failure instead of pinging. Shows how a failed step is retried (the run shows as stalled), then lost and paused with `'failed'`.
    */
   readonly f?: Maybe<boolean>;
 }

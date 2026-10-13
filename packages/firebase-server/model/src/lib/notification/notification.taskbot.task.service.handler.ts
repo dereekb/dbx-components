@@ -61,8 +61,10 @@ import { applyNotificationTaskBotChangesInTransactionFactory, type NotificationT
  *
  * Failures. A step that returns a failed result (`notificationTaskFailed()`) is a real failure: the handler throws
  * {@link NotificationTaskBotRunStepFailedError}, so the attempt is counted and the task is retried after the failure
- * delay. Once the task runs out of attempts it is deleted, and the repair sweep records the run as LOST, which counts
- * toward the script's `maxConsecutiveFailures`. A cleanup that reports a FAILED outcome counts toward it as well.
+ * delay. While the task retries, the repair sweep marks the run stalled (`stl`). Once the task runs out of attempts it is
+ * deleted, and the repair sweep records the run as LOST, which counts toward the script's `maxConsecutiveFailures`, and
+ * applies the script's `lostRunPolicy` (by default `'stop'`, which pauses the entry with `'failed'`). A cleanup that
+ * reports a FAILED outcome counts toward `maxConsecutiveFailures` as well.
  *
  * Resume side effects. Every resume stamps the cleared pause reason on the entry (`rpr`) until the next run completes.
  * In its first step, a script checks `entry.rpr` and undoes what its own pause did inside
@@ -172,8 +174,10 @@ export interface NotificationTaskBotRunCleanupInstructions<D extends Notificatio
 /**
  * Server-side processor for a single NotificationTaskBot script. The `target` is the script type.
  *
- * A step that returns a failed result (`notificationTaskFailed()`) is a real failure: the attempt is counted, the run
- * is retried after the failure delay, and once the task runs out of attempts the repair sweep records the run as LOST.
+ * A step that returns a failed result (`notificationTaskFailed()`) is a real failure: the attempt is counted and the run
+ * is retried after the failure delay. While it retries, the repair sweep marks the run stalled (`stl`). Once the task
+ * runs out of attempts the repair sweep records the run as LOST and applies the script's `lostRunPolicy` (by default
+ * `'stop'`, which pauses the entry with `'failed'`).
  * On a failed step, `updateMetadata` and `removeFromCompletedCheckpoints` are ignored and the same step retries. A step
  * reads `input.notificationTask.totalSendAttempts` to see how many times this run has failed.
  */
@@ -228,7 +232,9 @@ function notificationTaskBotRunNotificationTaskHandlerUnknownScriptCleanup(input
  * Thrown by the NotificationTaskBot run handler when a script step returns a failed result (`notificationTaskFailed()`).
  *
  * The send runner counts it as a failed attempt: the attempt count goes up and the task is retried after the failure
- * delay. Once the task runs out of attempts it is deleted, and the repair sweep records the run as LOST.
+ * delay, and the repair sweep marks the run stalled (`stl`) meanwhile. Once the task runs out of attempts it is deleted,
+ * and the repair sweep records the run as LOST and applies the script's `lostRunPolicy` (by default `'stop'`, which
+ * pauses the entry with `'failed'`).
  */
 export class NotificationTaskBotRunStepFailedError extends BaseError {
   readonly scriptType: NotificationTaskBotScriptType;

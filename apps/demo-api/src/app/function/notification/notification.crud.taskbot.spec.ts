@@ -15,7 +15,9 @@ import {
   NOTIFICATION_TASK_BOT_ENTRY_OPTED_OUT_ERROR_CODE,
   NOTIFICATION_TASK_BOT_OPT_OUT_NOT_ALLOWED_ERROR_CODE,
   NOTIFICATION_TASK_BOT_OPT_OUT_REQUIRES_OWNER_ERROR_CODE,
+  NOTIFICATION_TASK_BOT_PAUSE_REASON_FAILED,
   NOTIFICATION_TASK_BOT_PAUSE_REASON_MANUAL,
+  NotificationTaskBotRunOutcome,
   type NotificationTaskBotEntryId,
   notificationTaskBotEntry,
   NotificationTaskBotEntryState,
@@ -70,7 +72,26 @@ demoApiFunctionContextFactory((f) => {
               return notificationTaskBotEntry(bot, entryId)!;
             }
 
+            // loses the live run, so the repair sweep (default lostRunPolicy 'stop') pauses the entry with 'failed'
+            async function pauseWithFailed() {
+              const entry = await loadEntry();
+              await f.demoFirestoreCollections.notificationCollectionGroup
+                .documentAccessor()
+                .loadDocumentForKey(entry.nk as string)
+                .accessor.delete();
+              await f.notificationServerActions.repairAllNotificationTaskBots({ now: addHours(new Date(), 2) });
+              expect((await loadEntry()).pr).toBe(NOTIFICATION_TASK_BOT_PAUSE_REASON_FAILED);
+            }
+
             describe('update/entry', () => {
+              it('should report stalled for an entry whose run is stalled', async () => {
+                // nothing picks up the fresh run, so the repair sweep marks it stalled
+                await f.notificationServerActions.repairAllNotificationTaskBots({ now: addHours(new Date(), 2) });
+
+                const result = await callUpdate({ lsat: addHours(new Date(), -1) });
+                expect(result.status).toBe(NotificationTaskBotEntryStatus.STALLED);
+              });
+
               it('should pause the entry and delete its pending run', async () => {
                 const before = await loadEntry();
                 expect(before.nk).toBeDefined();
@@ -306,6 +327,37 @@ demoApiFunctionContextFactory((f) => {
                 expect(result.runResult?.success).toBe(true);
                 expect(entry.sc).toBe(1);
                 expect(entry.h[entry.h.length - 1].tr).toBe(NotificationTaskBotRunTrigger.FORCED);
+              });
+
+              it("should resume an entry paused with 'failed' and run it with FORCED", async () => {
+                await pauseWithFailed();
+
+                const result = await callRun({ trigger: NotificationTaskBotRunTrigger.FORCED });
+                const entry = await loadEntry();
+                const last = entry.h[entry.h.length - 1];
+
+                expect(result.runResult?.success).toBe(true);
+                expect(entry.pat).toBeFalsy();
+                expect(entry.sc).toBe(1);
+                expect(entry.fc).toBe(0);
+                expect(last.tr).toBe(NotificationTaskBotRunTrigger.FORCED);
+                expect(last.o).toBe(NotificationTaskBotRunOutcome.SUBMITTED);
+              });
+
+              itShouldFail("for a MANUAL run on an entry paused with 'failed'", async () => {
+                await pauseWithFailed();
+                await expectFail(() => callRun({ trigger: NotificationTaskBotRunTrigger.MANUAL }), expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_TASK_BOT_ENTRY_NOT_RUNNABLE_ERROR_CODE));
+              });
+
+              itShouldFail('for a FORCED run on a manually paused entry', async () => {
+                await callUpdate({ pause: true });
+                await expectFail(() => callRun({ trigger: NotificationTaskBotRunTrigger.FORCED }), expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_TASK_BOT_ENTRY_NOT_RUNNABLE_ERROR_CODE));
+              });
+
+              itShouldFail("for a FORCED run on a disabled entry paused with 'failed'", async () => {
+                await pauseWithFailed();
+                await callUpdate({ s: NotificationTaskBotEntryState.DISABLED });
+                await expectFail(() => callRun({ trigger: NotificationTaskBotRunTrigger.FORCED }), expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_TASK_BOT_ENTRY_NOT_RUNNABLE_ERROR_CODE));
               });
 
               itShouldFail('for a paused entry', async () => {

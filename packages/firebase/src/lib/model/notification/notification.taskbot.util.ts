@@ -24,6 +24,18 @@
  *
  * Resuming. Every resume stamps the cleared pause reason on the entry (`rpr`) until the next run completes, so a
  * script can undo its own pause's side effects (e.g. reset a counter) in its first step.
+ *
+ * Stalled runs. The repair sweep reads the task of every live run that is overdue past its threshold. When the task is
+ * still pending but has failed attempts, or its send time is past the threshold (nothing has picked it up), the entry is
+ * marked stalled (`stl`, see {@link isNotificationTaskBotRunTaskStalled}). The stamp is kept until the run ends:
+ * issuing a new run clears it, as does the run completing or being cancelled, superseded, removed or lost. A stalled
+ * entry keeps its run fence, so nothing starts a new run by itself; an admin supersedes it. The bot keeps the earliest
+ * entry `stl` as its own `stl` ({@link notificationTaskBotStalledAt}), the field to query stalled bots by.
+ *
+ * Lost runs. When the repair sweep finds a live run's task missing, or finished without its cleanup, the run is recorded
+ * as LOST and adds 1 to the entry's `fc`. The script's `lostRunPolicy` then decides what happens: `'stop'` (the default)
+ * pauses the entry with `'failed'`, `'idle'` leaves it idle for the app's next `ensure`, and `'retry'` issues a new run.
+ * Under `'idle'` and `'retry'` the entry is paused with `'failed'` instead once `fc` reaches `maxConsecutiveFailures`.
  */
 import { type } from 'arktype';
 import { addMilliseconds, type Maybe, type Milliseconds, stripObject, takeLast } from '@dereekb/util';
@@ -44,7 +56,14 @@ import {
   NotificationTaskBotRunTrigger,
   type NotificationTaskBotScriptType
 } from './notification.taskbot';
-import { DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_HISTORY_LIMIT, DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MAX_CONSECUTIVE_FAILURES, DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MINIMUM_RUN_INTERVAL, type NotificationTaskBotScriptConfig } from './notification.taskbot.script';
+import {
+  DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_HISTORY_LIMIT,
+  DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_LOST_RUN_POLICY,
+  DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MAX_CONSECUTIVE_FAILURES,
+  DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MINIMUM_RUN_INTERVAL,
+  type NotificationTaskBotLostRunPolicy,
+  type NotificationTaskBotScriptConfig
+} from './notification.taskbot.script';
 import { notificationTaskBotRunNotificationTaskKey } from './notification.taskbot.task';
 
 // MARK: Entry Utilities
@@ -62,12 +81,13 @@ export function notificationTaskBotEntry<D extends NotificationTaskBotEntryData 
 /**
  * Computes the status of an entry.
  *
- * A paused entry reports PAUSED even while it holds its resume run (see {@link NotificationTaskBotEmbeddedScriptEntry.pu}).
+ * A paused entry reports PAUSED even while it holds its resume run (see {@link NotificationTaskBotEmbeddedScriptEntry.pu}),
+ * and even when that resume run is stalled.
  *
  * @param entry - The entry.
- * @returns OPTED_OUT, DISABLED, PAUSED, SCHEDULED (has a live run) or IDLE.
+ * @returns OPTED_OUT, DISABLED, PAUSED, IDLE, STALLED (has a live run marked stalled, see {@link NotificationTaskBotEmbeddedScriptEntry.stl}) or SCHEDULED (has a live run).
  */
-export function notificationTaskBotEntryStatus(entry: Pick<NotificationTaskBotEmbeddedScriptEntry, 's' | 'pat' | 'rn' | 'oat'>): NotificationTaskBotEntryStatus {
+export function notificationTaskBotEntryStatus(entry: Pick<NotificationTaskBotEmbeddedScriptEntry, 's' | 'pat' | 'rn' | 'oat' | 'stl'>): NotificationTaskBotEntryStatus {
   let status: NotificationTaskBotEntryStatus;
 
   if (entry.oat != null) {
@@ -78,8 +98,10 @@ export function notificationTaskBotEntryStatus(entry: Pick<NotificationTaskBotEm
     status = NotificationTaskBotEntryStatus.PAUSED;
   } else if (entry.rn == null) {
     status = NotificationTaskBotEntryStatus.IDLE;
-  } else {
+  } else if (entry.stl == null) {
     status = NotificationTaskBotEntryStatus.SCHEDULED;
+  } else {
+    status = NotificationTaskBotEntryStatus.STALLED;
   }
 
   return status;
@@ -103,6 +125,59 @@ export function isNotificationTaskBotEntryRunnable(entry: Pick<NotificationTaskB
  */
 export function notificationTaskBotNextRunAt(entries: Pick<NotificationTaskBotEmbeddedScriptEntry, 'rn' | 'nat'>[]): Maybe<Date> {
   return earliestDate(entries.map((x) => (x.rn == null ? undefined : x.nat)));
+}
+
+/**
+ * Returns the earliest `stl` among entries with a live run. Kept on the bot as its `stl`.
+ *
+ * @param entries - The bot's entries.
+ * @returns The earliest stalled date, or undefined when no entry with a live run is stalled.
+ *
+ * @example
+ * ```ts
+ * notificationTaskBotStalledAt([{ rn: 1, stl: a }, { rn: 2, stl: b }, { rn: null, stl: c }]); // the earlier of a and b
+ * ```
+ */
+export function notificationTaskBotStalledAt(entries: Pick<NotificationTaskBotEmbeddedScriptEntry, 'rn' | 'stl'>[]): Maybe<Date> {
+  return earliestDate(entries.map((x) => (x.rn == null ? undefined : x.stl)));
+}
+
+/**
+ * Input for {@link isNotificationTaskBotRunTaskStalled}.
+ */
+export interface IsNotificationTaskBotRunTaskStalledInput {
+  /**
+   * The pending run task's send time (`sat`).
+   */
+  readonly sendAt: Date;
+  /**
+   * The pending run task's failed attempt count (`a`).
+   */
+  readonly attempts?: Maybe<number>;
+  /**
+   * A task whose send time is at or before this time has not been picked up. Usually now minus the repair sweep's
+   * overdue threshold. When unset, only failed attempts count.
+   */
+  readonly stalledBefore?: Maybe<Date>;
+}
+
+/**
+ * Returns true if a live run's PENDING task is stalled: it has failed attempts, or its send time is at or before
+ * `stalledBefore`. A pending task with no failed attempts and a later send time is waiting on purpose (a delay or a poll).
+ *
+ * @param input - The pending task's facts.
+ * @returns True if the run is stalled.
+ *
+ * @example
+ * ```ts
+ * isNotificationTaskBotRunTaskStalled({ sendAt: inThreeHours, attempts: 1 }); // true, it failed once
+ * isNotificationTaskBotRunTaskStalled({ sendAt: twoHoursAgo, attempts: 0, stalledBefore: oneHourAgo }); // true, nothing picked it up
+ * isNotificationTaskBotRunTaskStalled({ sendAt: inThreeHours, attempts: 0, stalledBefore: oneHourAgo }); // false, it waits on purpose
+ * ```
+ */
+export function isNotificationTaskBotRunTaskStalled(input: IsNotificationTaskBotRunTaskStalledInput): boolean {
+  const { sendAt, attempts, stalledBefore } = input;
+  return (attempts ?? 0) > 0 || (stalledBefore != null && sendAt.getTime() <= stalledBefore.getTime());
 }
 
 /**
@@ -370,7 +445,7 @@ export interface NotificationTaskBotCompleteRunHistory<HD extends NotificationTa
  *
  * Applies, in order: the data update and history, `disable`, `pause`, a `'failed'` pause when a FAILED outcome spends
  * the failure budget, then the next run. A disabled entry never gets a resume run, and a paused one never gets a next
- * run. Clears `rpr`: the run had its chance to react to the resume.
+ * run. Clears `rpr` and `stl`: the run had its chance to react to the resume, and it is no longer stalled.
  */
 export interface NotificationTaskBotCompleteRunChange<D extends NotificationTaskBotEntryData = NotificationTaskBotEntryData, HD extends NotificationTaskBotEntryData = NotificationTaskBotEntryData> {
   readonly type: 'completeRun';
@@ -425,8 +500,8 @@ export interface NotificationTaskBotCompleteRunChange<D extends NotificationTask
  * number.
  *
  * Used when the due check finds a MANUAL run not due yet, so the run that later goes ahead on cadence records
- * SCHEDULED. The failure count and `rpr` are kept. The deferred run's own task is marked done by the handler, never
- * deleted here.
+ * SCHEDULED. The failure count and `rpr` are kept, and `stl` is cleared with the deferred run. The deferred run's own
+ * task is marked done by the handler, never deleted here.
  */
 export interface NotificationTaskBotDeferRunChange {
   readonly type: 'deferRun';
@@ -469,9 +544,12 @@ export interface NotificationTaskBotSyncNextRunAtChange {
 /**
  * Repairs an overdue entry after its run task was inspected. Fenced on the run number.
  *
- * - When the task is still pending, the entry's `nat` is synced to the task's send time.
- * - When the task is missing or done, the run is recorded as LOST, the failure count goes up, and a new run due now is
- *   scheduled, unless the failure count reached the maximum, in which case the entry is paused with the `'failed'` reason.
+ * - When the task is still pending, the entry's `nat` is synced to the task's send time. The run is marked stalled
+ *   (`stl = now`, once) when {@link isNotificationTaskBotRunTaskStalled} is true.
+ * - When the task is missing or done, the run is recorded as LOST and the failure count goes up. Then `lostRunPolicy`
+ *   applies: `'stop'` (the default) pauses the entry with the `'failed'` reason, `'idle'` leaves it idle for the app's
+ *   next `ensure`, and `'retry'` schedules a new run due now. Under `'idle'` and `'retry'` the entry is paused with the
+ *   `'failed'` reason instead once the failure count reaches the maximum.
  * - When the missing run was the resume run of an entry paused until a time, the resume run is re-issued instead. A lost
  *   resume run is not a script failure: nothing is recorded and the failure count is unchanged.
  */
@@ -483,6 +561,19 @@ export interface NotificationTaskBotRepairChange {
    * The pending task's send time, or null/undefined when the task is missing or done.
    */
   readonly pendingTaskSendAt?: Maybe<Date>;
+  /**
+   * The pending task's failed attempt count (`a`). Ignored when the task is missing or done.
+   */
+  readonly pendingTaskAttempts?: Maybe<number>;
+  /**
+   * A pending task whose send time is at or before this time is stalled: nothing has picked it up. The repair sweep passes
+   * now minus its overdue threshold. When unset, only failed attempts mark the run stalled.
+   */
+  readonly stalledBefore?: Maybe<Date>;
+  /**
+   * Defaults to {@link DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_LOST_RUN_POLICY}.
+   */
+  readonly lostRunPolicy?: Maybe<NotificationTaskBotLostRunPolicy>;
   /**
    * The trigger of the lost run. Defaults to SCHEDULED.
    */
@@ -683,20 +774,34 @@ export function applyNotificationTaskBotChange(input: ApplyNotificationTaskBotCh
     }
   }
 
+  // ends the live run without deleting its task
+  function clearRun(x: NotificationTaskBotEmbeddedScriptEntry) {
+    x.rn = null;
+    x.nk = null;
+    x.nat = null;
+
+    if (x.stl != null) {
+      x.stl = null; // stl belongs to the run
+    }
+
+    changed = true;
+  }
+
   function cancelRun(x: NotificationTaskBotEmbeddedScriptEntry) {
     if (x.nk) {
       deleteTaskKeys.push(x.nk);
     }
 
-    x.rn = null;
-    x.nk = null;
-    x.nat = null;
-    changed = true;
+    clearRun(x);
   }
 
   function issueRun(x: NotificationTaskBotEmbeddedScriptEntry, trigger: NotificationTaskBotRunTrigger, at: Maybe<Date>, explicit: boolean) {
     if (x.nk) {
       deleteTaskKeys.push(x.nk);
+    }
+
+    if (x.stl != null) {
+      x.stl = null; // a new run is never stalled
     }
 
     rc += 1;
@@ -918,10 +1023,7 @@ export function applyNotificationTaskBotChange(input: ApplyNotificationTaskBotCh
         break;
       case 'completeRun':
         if (x.rn === change.runNumber) {
-          x.rn = null;
-          x.nk = null; // the run's own task is marked done by the handler, never deleted here
-          x.nat = null;
-          changed = true;
+          clearRun(x); // the run's own task is marked done by the handler, never deleted here
 
           if (change.remove) {
             removed = true;
@@ -969,10 +1071,7 @@ export function applyNotificationTaskBotChange(input: ApplyNotificationTaskBotCh
       case 'deferRun':
         if (x.rn === change.runNumber) {
           // clear the fence first, so issueRun does not delete the deferred run's own task
-          x.rn = null;
-          x.nk = null;
-          x.nat = null;
-          changed = true;
+          clearRun(x);
 
           if (isNotificationTaskBotEntryRunnable(x)) {
             issueRun(x, NotificationTaskBotRunTrigger.SCHEDULED, change.at, false);
@@ -1010,27 +1109,36 @@ export function applyNotificationTaskBotChange(input: ApplyNotificationTaskBotCh
         if (x.rn !== change.runNumber) {
           fenced = true;
         } else if (change.pendingTaskSendAt == null) {
-          x.rn = null;
-          x.nk = null; // the task is already missing or done
-          x.nat = null;
-          changed = true;
+          clearRun(x); // the task is already missing or done
 
           if (x.pat == null) {
             appendHistory(x, { rn: change.runNumber, tr: change.trigger ?? NotificationTaskBotRunTrigger.SCHEDULED, o: NotificationTaskBotRunOutcome.LOST }, change.historyLimit);
             x.fc = (x.fc ?? 0) + 1;
 
-            if (x.fc >= (change.maxConsecutiveFailures ?? DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MAX_CONSECUTIVE_FAILURES)) {
+            const lostRunPolicy = change.lostRunPolicy ?? DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_LOST_RUN_POLICY;
+            const failureBudgetSpent = x.fc >= (change.maxConsecutiveFailures ?? DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MAX_CONSECUTIVE_FAILURES);
+            const waitForAdmin = failureBudgetSpent || (lostRunPolicy !== 'idle' && lostRunPolicy !== 'retry'); // 'stop', or an unknown policy
+
+            if (waitForAdmin) {
               applyPause(x, { reason: NOTIFICATION_TASK_BOT_PAUSE_REASON_FAILED });
-            } else if (isNotificationTaskBotEntryRunnable(x)) {
+            } else if (lostRunPolicy === 'retry' && isNotificationTaskBotEntryRunnable(x)) {
               issueRun(x, NotificationTaskBotRunTrigger.SCHEDULED, undefined, false);
             }
+            // 'idle' within the budget: the entry stays idle until the app's next ensure re-arms it
           } else {
             // a lost resume run is not a script failure
             issueResumeRunIfNeeded(x);
           }
-        } else if (!isSameDate(x.nat, change.pendingTaskSendAt)) {
-          x.nat = change.pendingTaskSendAt;
-          changed = true;
+        } else {
+          if (!isSameDate(x.nat, change.pendingTaskSendAt)) {
+            x.nat = change.pendingTaskSendAt;
+            changed = true;
+          }
+
+          if (x.stl == null && isNotificationTaskBotRunTaskStalled({ sendAt: change.pendingTaskSendAt, attempts: change.pendingTaskAttempts, stalledBefore: change.stalledBefore })) {
+            x.stl = now;
+            changed = true;
+          }
         }
         break;
       case 'optOut':
@@ -1077,7 +1185,7 @@ export function applyNotificationTaskBotChange(input: ApplyNotificationTaskBotCh
     }
 
     const base: NotificationTaskBot = createBot || !inputBot ? { cat: now, m: model, rc: 0, e: [] } : inputBot;
-    const nextBot: NotificationTaskBot = { ...base, rc, e: entries, nat: notificationTaskBotNextRunAt(entries) ?? null };
+    const nextBot: NotificationTaskBot = { ...base, rc, e: entries, nat: notificationTaskBotNextRunAt(entries) ?? null, stl: notificationTaskBotStalledAt(entries) ?? null };
 
     if (ownerChanged) {
       nextBot.o = owner ?? null;

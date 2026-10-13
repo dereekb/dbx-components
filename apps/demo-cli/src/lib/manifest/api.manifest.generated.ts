@@ -422,7 +422,8 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     resultTypeName: 'UpdateNotificationTaskBotEntryResult',
     groupName: 'NotificationBox',
     sourceFile: 'packages/firebase/src/lib/model/notification/notification.api.ts',
-    description: "Admin-only. Enables/disables, pauses/resumes, reschedules or patches the data of a single entry. A data patch must\nsatisfy the script's `dataType`, and scripts without one refuse it. Reports `opted_out` when the owner opted out\nof the entry's group, which only the owner can undo.",
+    description:
+      "Admin-only. Enables/disables, pauses/resumes, reschedules or patches the data of a single entry. A data patch must\nsatisfy the script's `dataType`, and scripts without one refuse it. Reports `opted_out` when the owner opted out\nof the entry's group, which only the owner can undo, and `stalled` when the entry's live run is stalled.",
     paramsTypeDescription: 'Used for updating the state, schedule and data of a single entry on a {@link NotificationTaskBot}.\n\nAll changes apply in one transaction, in this order: data, state, pause, last submitted at, schedule. A refused data\npatch refuses the whole request.',
     paramsFields: [
       { name: 's', typeText: 'Maybe<NotificationTaskBotEntryState>', description: 'Enables or disables the entry. Disabling cancels the live run.' },
@@ -446,7 +447,12 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     ],
     resultTypeDescription: 'Result of updating a {@link NotificationTaskBot} entry.',
     resultFields: [
-      { name: 'status', typeText: 'NotificationTaskBotEntryStatus', description: "Status of the entry after the update.\n\nA resume, enable or reschedule that could not take effect because the owner opted out of the entry's group reports\n`opted_out`. Admins can't undo an owner's opt-out." },
+      {
+        name: 'status',
+        typeText: 'NotificationTaskBotEntryStatus',
+        description:
+          "Status of the entry after the update.\n\nA resume, enable or reschedule that could not take effect because the owner opted out of the entry's group reports\n`opted_out`. Admins can't undo an owner's opt-out. An entry whose live run the repair sweep marked stalled (see the\nentry's `stl`) reports `stalled`."
+      },
       { name: 'taskKey', typeText: 'Maybe<NotificationTaskKey>', description: "Key of the entry's live run task, if it has one." },
       { name: 'runResult', typeText: 'Maybe<SendNotificationResult>', description: 'Result of running the live run immediately, if requested.' }
     ]
@@ -479,10 +485,11 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     resultTypeName: 'RunNotificationTaskBotEntryResult',
     groupName: 'NotificationBox',
     sourceFile: 'packages/firebase/src/lib/model/notification/notification.api.ts',
-    description: 'Admin-only. Runs a single entry on demand. Refused for disabled, paused and opted-out entries.',
-    paramsTypeDescription: "Used for running a single entry on a {@link NotificationTaskBot} on demand.\n\nThe live run is superseded by a new run due now. Disabled, paused and opted-out entries are refused; an entry is opted\nout when the bot's owner turned off its script group, which only the owner can undo.",
+    description: "Admin-only. Runs a single entry on demand. Refused for disabled, paused and opted-out entries; FORCED resumes an\nentry paused with `'failed'`. Supersedes a stalled run.",
+    paramsTypeDescription:
+      "Used for running a single entry on a {@link NotificationTaskBot} on demand.\n\nThe live run is superseded by a new run due now. Disabled, paused and opted-out entries are refused; an entry is opted\nout when the bot's owner turned off its script group, which only the owner can undo.\n\nThe one exception: a FORCED run resumes an entry paused with the `'failed'` reason (its failure budget is spent, or a\nrun was lost under `lostRunPolicy: 'stop'`). That resume resets `fc` and stamps `rpr: 'failed'`.\n\nA stalled entry's run is superseded like any other live run: its task is deleted, and the new run clears `stl`.",
     paramsFields: [
-      { name: 'trigger', typeText: 'Maybe<NotificationTaskBotRunTrigger.MANUAL | NotificationTaskBotRunTrigger.FORCED>', description: "MANUAL runs still apply the script's due check; FORCED runs skip it. Defaults to MANUAL." },
+      { name: 'trigger', typeText: 'Maybe<NotificationTaskBotRunTrigger.MANUAL | NotificationTaskBotRunTrigger.FORCED>', description: "MANUAL runs still apply the script's due check. FORCED runs skip it, and also resume an entry paused with the\n`'failed'` reason. Defaults to MANUAL." },
       { name: 'runImmediately', typeText: 'Maybe<boolean>', description: 'Whether to run the new run immediately. Defaults to true.' }
     ],
     resultTypeDescription: 'Result of running a {@link NotificationTaskBot} entry.',
@@ -1586,11 +1593,24 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
           { name: 'rn', longName: 'runNumber', tsType: 'Maybe<NotificationTaskBotRunNumber>', optional: true, description: 'Run number of the live run. This is the fence: only a run with this number may write back. Null when idle.' },
           { name: 'nk', longName: 'runTaskKey', tsType: 'Maybe<NotificationTaskKey>', optional: true, description: "Key of the live run's NotificationTask." },
           { name: 'nat', longName: 'nextRunAt', tsType: 'Maybe<Date>', optional: true, description: 'When the live run is next due to run.' },
+          {
+            name: 'stl',
+            longName: 'stalledAt',
+            tsType: 'Maybe<Date>',
+            optional: true,
+            description: "When the repair sweep found the live run stalled: its task is still pending, but it has failed attempts or its send time is more than the sweep's overdue threshold in the past (nothing has picked it up). Set means stalled."
+          },
           { name: 'lat', longName: 'lastRunAt', tsType: 'Maybe<Date>', optional: true, description: 'When the last run finished.' },
           { name: 'lsat', longName: 'lastSubmittedAt', tsType: 'Maybe<Date>', optional: true, description: 'When the last submission happened. The cadence anchor for scripts.' },
           { name: 'lsr', longName: 'lastSubmittedRunNumber', tsType: 'Maybe<NotificationTaskBotRunNumber>', optional: true, description: 'Run number of the last submission. Used as an idempotency marker so a re-run step never submits twice.' },
           { name: 'sc', longName: 'submissionCount', tsType: 'number', optional: false, description: 'Lifetime submission count.' },
-          { name: 'fc', longName: 'failureCount', tsType: 'number', optional: false, description: 'Consecutive failure count. Goes up for each lost run (found by repair) and each run whose cleanup reports FAILED, and is reset by a run that completes with any other outcome, or by a resume.' },
+          {
+            name: 'fc',
+            longName: 'failureCount',
+            tsType: 'number',
+            optional: false,
+            description: "Consecutive failure count. Goes up for each lost run (found by repair) and each run whose cleanup reports FAILED, and is reset by a run that completes with any other outcome, or by a resume. Under `lostRunPolicy: 'stop'` (the default) a single lost run already pauses the entry."
+          },
           {
             name: 'h',
             longName: 'history',
@@ -1609,7 +1629,14 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
         ],
         nestedIsArray: true
       },
-      { name: 'nat', longName: 'nextRunAt', tsType: 'Maybe<Date>', optional: true, description: 'The soonest {@link NotificationTaskBotEmbeddedScriptEntry.nat} among entries with a live run. Kept for the repair query and for display.' }
+      { name: 'nat', longName: 'nextRunAt', tsType: 'Maybe<Date>', optional: true, description: 'The soonest {@link NotificationTaskBotEmbeddedScriptEntry.nat} among entries with a live run. Kept for the repair query and for display.' },
+      {
+        name: 'stl',
+        longName: 'stalledAt',
+        tsType: 'Maybe<Date>',
+        optional: true,
+        description: 'The earliest {@link NotificationTaskBotEmbeddedScriptEntry.stl} among entries with a live run. Set means at least one entry is stalled. Entries are embedded, so this is the field to query stalled bots by (see `notificationTaskBotsStalledQuery()`).'
+      }
     ],
     read: 'admin-only',
     serviceFactory: { exportName: 'notificationTaskBotFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' },
@@ -2065,7 +2092,7 @@ export const DEMO_CLI_ENUM_MANIFEST: CliEnumManifest = {
       { name: 'SUPPRESSED', value: 2, description: 'The run decided a submission should be suppressed.' },
       { name: 'SKIPPED', value: 3, description: 'The run was skipped. Also recorded for an entry whose script has no processor.' },
       { name: 'FAILED', value: 4, description: "The run failed. Counts toward the script's `maxConsecutiveFailures`, the same as a LOST run." },
-      { name: 'LOST', value: 5, description: "The run's task went missing before it could finish (found by the repair sweep)." }
+      { name: 'LOST', value: 5, description: "The run's task went missing before it could finish (found by the repair sweep). What happens next depends on the script's `lostRunPolicy`." }
     ],
     description: "Outcome of a single run, recorded in the entry's history."
   },

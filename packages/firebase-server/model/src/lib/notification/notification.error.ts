@@ -336,7 +336,7 @@ export function notificationTaskBotEntryDoesNotExistError(key: FirestoreModelKey
  */
 export function notificationTaskBotEntryNotRunnableError(key: FirestoreModelKey, entryId: NotificationTaskBotEntryId) {
   return preconditionConflictError({
-    message: `The NotificationTaskBot "${key}" entry "${entryId}" is disabled or paused and cannot run.`,
+    message: `The NotificationTaskBot "${key}" entry "${entryId}" is disabled or paused and cannot run. Only a FORCED run may resume an entry paused with the 'failed' reason.`,
     code: NOTIFICATION_TASK_BOT_ENTRY_NOT_RUNNABLE_ERROR_CODE,
     data: { key, entryId }
   });

@@ -158,7 +158,8 @@ export enum NotificationTaskBotRunOutcome {
    */
   FAILED = 4,
   /**
-   * The run's task went missing before it could finish (found by the repair sweep).
+   * The run's task went missing before it could finish (found by the repair sweep). What happens next depends on the
+   * script's `lostRunPolicy`.
    */
   LOST = 5
 }
@@ -173,6 +174,11 @@ export enum NotificationTaskBotEntryStatus {
   OPTED_OUT = 'opted_out',
   DISABLED = 'disabled',
   PAUSED = 'paused',
+  /**
+   * The entry's live run is stalled (see {@link NotificationTaskBotEmbeddedScriptEntry.stl}). A paused entry reports
+   * PAUSED even when its resume run is stalled.
+   */
+  STALLED = 'stalled',
   SCHEDULED = 'scheduled',
   IDLE = 'idle'
 }
@@ -335,6 +341,17 @@ export interface NotificationTaskBotEmbeddedScriptEntry<D extends NotificationTa
    */
   nat?: Maybe<Date>;
   /**
+   * When the repair sweep found the live run stalled: its task is still pending, but it has failed attempts or its send
+   * time is more than the sweep's overdue threshold in the past (nothing has picked it up). Set means stalled.
+   *
+   * Stamped once per run. Issuing a new run clears it, and so does the run ending: completed, cancelled, superseded,
+   * removed or lost. Progress inside the run (a due-check delay, a submission) does not. A stalled entry keeps its run
+   * fence, so no new run starts by itself. Supersede the run with `update:run` to start over now.
+   *
+   * @dbxModelVariable stalledAt
+   */
+  stl?: Maybe<Date>;
+  /**
    * When the last run finished.
    *
    * @dbxModelVariable lastRunAt
@@ -360,7 +377,8 @@ export interface NotificationTaskBotEmbeddedScriptEntry<D extends NotificationTa
   sc: number;
   /**
    * Consecutive failure count. Goes up for each lost run (found by repair) and each run whose cleanup reports FAILED,
-   * and is reset by a run that completes with any other outcome, or by a resume.
+   * and is reset by a run that completes with any other outcome, or by a resume. Under `lostRunPolicy: 'stop'` (the
+   * default) a single lost run already pauses the entry.
    *
    * @dbxModelVariable failureCount
    */
@@ -392,6 +410,7 @@ export const firestoreNotificationTaskBotEmbeddedScriptEntry = firestoreSubObjec
       rn: optionalFirestoreNumber(),
       nk: optionalFirestoreString(),
       nat: optionalFirestoreDate(),
+      stl: optionalFirestoreDate(),
       lat: optionalFirestoreDate(),
       lsat: optionalFirestoreDate(),
       lsr: optionalFirestoreNumber(),
@@ -461,6 +480,14 @@ export interface NotificationTaskBot {
    * @dbxModelVariable nextRunAt
    */
   nat?: Maybe<Date>;
+  /**
+   * The earliest {@link NotificationTaskBotEmbeddedScriptEntry.stl} among entries with a live run. Set means at least one
+   * entry is stalled. Entries are embedded, so this is the field to query stalled bots by (see
+   * `notificationTaskBotsStalledQuery()`).
+   *
+   * @dbxModelVariable stalledAt
+   */
+  stl?: Maybe<Date>;
 }
 
 /**
@@ -500,7 +527,8 @@ export const notificationTaskBotConverter = snapshotConverterFunctions<Notificat
     o: optionalFirestoreString(),
     rc: firestoreNumber({ default: 0 }),
     e: firestoreObjectArray({ objectField: firestoreNotificationTaskBotEmbeddedScriptEntry }),
-    nat: optionalFirestoreDate()
+    nat: optionalFirestoreDate(),
+    stl: optionalFirestoreDate()
   }
 });
 

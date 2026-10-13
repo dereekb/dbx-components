@@ -64,7 +64,7 @@ export function demoPingNotificationTaskBotScriptProcessor(demoFirebaseServerAct
           let result: NotificationTaskBotRunSubtaskResult;
 
           if (input.entry.d?.f) {
-            // a failed step is retried after the failure delay, then lost and repaired
+            // a failed step is retried after the failure delay (the run shows as stalled), then lost and paused with 'failed'
             result = notificationTaskFailed();
           } else {
             await runNotificationTaskBotEntryTransaction<void, DemoPingNotificationTaskBotEntryData>(input, async ({ transaction, entry, alreadySubmitted, markSubmitted, updateEntryData }) => {

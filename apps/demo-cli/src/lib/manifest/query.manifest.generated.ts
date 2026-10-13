@@ -17,6 +17,7 @@ import {
   notificationsReadyForCleanupQuery,
   notificationSummariesFlaggedForNeedsInitializationQuery,
   notificationTaskBotsDueForRepairQuery,
+  notificationTaskBotsStalledQuery,
   notificationUserHasExclusionQuery,
   notificationUsersFlaggedForNeedsSyncQuery,
   notificationUsersWithStoppedTextPhoneNumberQuery,
@@ -255,6 +256,25 @@ export const DEMO_CLI_FIRESTORE_QUERY_MANIFEST: CliFirestoreQueryManifest = [
     queryMode: 'model',
     rules: { list: 'allowed', collectionGroup: false },
     factory: notificationTaskBotsDueForRepairQuery
+  },
+  {
+    slug: 'notification-task-bots-stalled-query',
+    name: 'notificationTaskBotsStalledQuery',
+    module: '@dereekb/firebase',
+    subpath: 'model/notification/notification.query',
+    model: 'NotificationTaskBot',
+    collection: 'ntb',
+    isNested: false,
+    scope: 'COLLECTION',
+    signature: 'notificationTaskBotsStalledQuery(stalledBefore?: Date): FirestoreQueryConstraint[]',
+    params: [{ name: 'stalledBefore', type: 'Date', description: '- Bots whose earliest stalled entry was marked at or before this time are returned. Defaults to now.', optional: true }],
+    description:
+      "Query constraints for finding {@link NotificationTaskBot} documents with a stalled entry: their `stl` (the earliest\nentry `stl`) is at or before the given time.\n\nThe repair sweep marks a live run stalled when its task keeps failing or nothing picks it up. Pass an earlier time to\nfind the bots that have been stalled at least that long. Use it for an admin list (`NotificationTaskBotCollectionStore`)\nor an alerting cron. Firestore's automatic single-field index covers it.",
+    category: 'lookup',
+    tags: ['lookup', 'notificationtaskbot', 'notification', 'task', 'bots', 'stalled', 'query', 'notificationtaskbotsstalledquery', 'bot', 'constraints', 'finding', 'link', 'documents', 'entry', 'their', 'stl', 'earliest'],
+    queryMode: 'model',
+    rules: { list: 'allowed', collectionGroup: false },
+    factory: notificationTaskBotsStalledQuery
   },
   {
     slug: 'notification-user-has-exclusion-query',

@@ -2,17 +2,19 @@ import { describe, expect, it } from 'vitest';
 import { type } from 'arktype';
 import { type Maybe } from '@dereekb/util';
 import { type NotificationTaskBot, type NotificationTaskBotEmbeddedScriptEntry, NotificationTaskBotEntryState, NotificationTaskBotEntryStatus, NotificationTaskBotRunOutcome, NotificationTaskBotRunTrigger } from './notification.taskbot';
-import { DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MINIMUM_RUN_INTERVAL } from './notification.taskbot.script';
+import { DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MINIMUM_RUN_INTERVAL, type NotificationTaskBotLostRunPolicy } from './notification.taskbot.script';
 import {
   appendNotificationTaskBotEntryHistoryItem,
   applyNotificationTaskBotChange,
   assertNotificationTaskBotEntryDataPatchAllowed,
   applyNotificationTaskBotChanges,
   type NotificationTaskBotChange,
+  isNotificationTaskBotRunTaskStalled,
   mergeNotificationTaskBotEntryData,
   notificationTaskBotEntry,
   notificationTaskBotEntryStatus,
-  notificationTaskBotNextRunAt
+  notificationTaskBotNextRunAt,
+  notificationTaskBotStalledAt
 } from './notification.taskbot.util';
 
 const model = 'profile/abc';
@@ -289,6 +291,7 @@ describe('applyNotificationTaskBotChange()', () => {
         expect(result.entry?.h).toHaveLength(0);
         expect(result.entry?.fc).toBe(0);
         expect(result.entry?.pat).toEqual(now);
+        expect(result.entry?.pr).toBe('manual');
         expect(result.createRuns[0]).toMatchObject({ runNumber: 3, sendAt: later });
         expect(result.deleteTaskKeys).toHaveLength(0);
       });
@@ -583,11 +586,45 @@ describe('applyNotificationTaskBotChange()', () => {
 
       expect(result.entry?.nat).toEqual(later);
       expect(result.entry?.rn).toBe(1);
+      expect(result.entry?.stl).toBeUndefined();
       expect(result.createRuns).toHaveLength(0);
     });
 
-    it('should record a lost run and reschedule', () => {
+    it("should record a lost run and pause the entry by default ('stop')", () => {
       const result = apply(ensured(), { type: 'repair', entryId: 'ping', runNumber: 1 });
+
+      expect(result.entry?.h[0].o).toBe(NotificationTaskBotRunOutcome.LOST);
+      expect(result.entry?.fc).toBe(1);
+      expect(result.entry?.pr).toBe('failed');
+      expect(result.entry?.pat).toEqual(now);
+      expect(result.entry?.rn).toBeNull();
+      expect(result.createRuns).toHaveLength(0);
+      expect(notificationTaskBotEntryStatus(result.entry!)).toBe(NotificationTaskBotEntryStatus.PAUSED);
+    });
+
+    it("should leave a lost run idle with 'idle'", () => {
+      const result = apply(ensured(), { type: 'repair', entryId: 'ping', runNumber: 1, lostRunPolicy: 'idle' });
+
+      expect(result.entry?.h[0].o).toBe(NotificationTaskBotRunOutcome.LOST);
+      expect(result.entry?.fc).toBe(1);
+      expect(result.entry?.pat ?? null).toBeNull();
+      expect(result.entry?.rn).toBeNull();
+      expect(result.createRuns).toHaveLength(0);
+      expect(notificationTaskBotEntryStatus(result.entry!)).toBe(NotificationTaskBotEntryStatus.IDLE);
+
+      const rearmed = apply(result.bot as NotificationTaskBot, { type: 'ensure', entryId: 'ping', scriptType: 'demo_ping' });
+      expect(rearmed.createRuns[0].runNumber).toBe(2);
+    });
+
+    it("should pause an 'idle' entry once the failure budget is spent", () => {
+      const result = apply(ensured(), { type: 'repair', entryId: 'ping', runNumber: 1, lostRunPolicy: 'idle', maxConsecutiveFailures: 1 });
+
+      expect(result.entry?.pr).toBe('failed');
+      expect(result.createRuns).toHaveLength(0);
+    });
+
+    it("should record a lost run and reschedule it under 'retry'", () => {
+      const result = apply(ensured(), { type: 'repair', entryId: 'ping', runNumber: 1, lostRunPolicy: 'retry' });
 
       expect(result.entry?.h[0].o).toBe(NotificationTaskBotRunOutcome.LOST);
       expect(result.entry?.fc).toBe(1);
@@ -596,10 +633,166 @@ describe('applyNotificationTaskBotChange()', () => {
     });
 
     it('should pause with the failed reason once the failure budget is spent', () => {
-      const result = apply(ensured(), { type: 'repair', entryId: 'ping', runNumber: 1, maxConsecutiveFailures: 1 });
+      const result = apply(ensured(), { type: 'repair', entryId: 'ping', runNumber: 1, lostRunPolicy: 'retry', maxConsecutiveFailures: 1 });
 
       expect(result.entry?.pr).toBe('failed');
       expect(result.createRuns).toHaveLength(0);
+    });
+  });
+
+  describe('stalled runs', () => {
+    function deepFreeze<T>(value: T): T {
+      if (value != null && typeof value === 'object' && !(value instanceof Date)) {
+        Object.values(value).forEach(deepFreeze);
+        Object.freeze(value);
+      }
+
+      return value;
+    }
+
+    function stalled(input: { readonly bot?: NotificationTaskBot; readonly entryId?: string; readonly runNumber?: number; readonly at?: Date } = {}) {
+      const { bot = ensured(), entryId = 'ping', runNumber = 1, at = now } = input;
+      return apply(bot, { type: 'repair', entryId, runNumber, pendingTaskSendAt: later, pendingTaskAttempts: 1 }, at);
+    }
+
+    function stalledBot() {
+      return deepFreeze(stalled().bot as NotificationTaskBot);
+    }
+
+    it('isNotificationTaskBotRunTaskStalled() should return true for a pending task with failed attempts or one nothing picked up', () => {
+      expect(isNotificationTaskBotRunTaskStalled({ sendAt: later, attempts: 1 })).toBe(true);
+      expect(isNotificationTaskBotRunTaskStalled({ sendAt: now, attempts: 0, stalledBefore: now })).toBe(true);
+      expect(isNotificationTaskBotRunTaskStalled({ sendAt: later, attempts: 0, stalledBefore: now })).toBe(false);
+      expect(isNotificationTaskBotRunTaskStalled({ sendAt: now, attempts: 0 })).toBe(false);
+    });
+
+    it('should mark a pending run with failed attempts stalled', () => {
+      const result = stalled({ bot: deepFreeze(ensured()) });
+
+      expect(result.entry?.stl).toEqual(now);
+      expect(result.bot?.stl).toEqual(now);
+      expect(result.entry?.nat).toEqual(later);
+      expect(result.entry?.rn).toBe(1);
+      expect(result.createRuns).toHaveLength(0);
+      expect(result.deleteTaskKeys).toHaveLength(0);
+      expect(notificationTaskBotEntryStatus(result.entry!)).toBe(NotificationTaskBotEntryStatus.STALLED);
+    });
+
+    it('should mark a pending run nothing picked up stalled', () => {
+      const result = apply(deepFreeze(ensured()), { type: 'repair', entryId: 'ping', runNumber: 1, pendingTaskSendAt: now, pendingTaskAttempts: 0, stalledBefore: now });
+
+      expect(result.entry?.stl).toEqual(now);
+      expect(result.bot?.stl).toEqual(now);
+    });
+
+    it('should not mark a pending run that waits on purpose', () => {
+      const result = apply(deepFreeze(ensured()), { type: 'repair', entryId: 'ping', runNumber: 1, pendingTaskSendAt: later, pendingTaskAttempts: 0, stalledBefore: now });
+
+      expect(result.entry?.stl).toBeUndefined();
+      expect(result.bot?.stl).toBeNull();
+      expect(result.entry?.nat).toEqual(later);
+    });
+
+    it('should keep the first stall time', () => {
+      const result = apply(stalledBot(), { type: 'repair', entryId: 'ping', runNumber: 1, pendingTaskSendAt: later, pendingTaskAttempts: 2 }, later);
+
+      expect(result.changed).toBe(false);
+      expect(notificationTaskBotEntry(result.bot, 'ping')?.stl).toEqual(now);
+    });
+
+    it('should keep the run fence of a stalled entry', () => {
+      const changes: NotificationTaskBotChange[] = [
+        { type: 'ensure', entryId: 'ping', scriptType: 'demo_ping' },
+        { type: 'schedule', entryId: 'ping', ifIdle: true }
+      ];
+
+      changes.forEach((change) => {
+        const result = apply(stalledBot(), change);
+        expect(result.createRuns).toHaveLength(0);
+        expect(notificationTaskBotEntry(result.bot, 'ping')?.stl).toEqual(now);
+      });
+    });
+
+    it('should clear stl when a new run is issued', () => {
+      const changes: NotificationTaskBotChange[] = [
+        { type: 'schedule', entryId: 'ping', trigger: NotificationTaskBotRunTrigger.MANUAL },
+        { type: 'ensure', entryId: 'ping', scriptType: 'demo_ping', schedule: 'now' },
+        { type: 'ensure', entryId: 'ping', scriptType: 'demo_ping', schedule: later }
+      ];
+
+      changes.forEach((change) => {
+        const result = apply(stalledBot(), change);
+        expect(result.entry?.stl).toBeNull();
+        expect(result.bot?.stl).toBeNull();
+        expect(result.createRuns).toHaveLength(1);
+        expect(result.deleteTaskKeys).toEqual(['nb/profile_abc/nbn/profile_abc_ping_r1']);
+      });
+    });
+
+    it('should clear stl when the run ends', () => {
+      const changes: NotificationTaskBotChange[] = [
+        { type: 'completeRun', entryId: 'ping', runNumber: 1, trigger: NotificationTaskBotRunTrigger.SCHEDULED },
+        { type: 'completeRun', entryId: 'ping', runNumber: 1, trigger: NotificationTaskBotRunTrigger.SCHEDULED, nextRunAt: later },
+        { type: 'cancel', entryId: 'ping' },
+        { type: 'pause', entryId: 'ping', pause: { reason: 'manual' } },
+        { type: 'state', entryId: 'ping', state: NotificationTaskBotEntryState.DISABLED },
+        { type: 'deferRun', entryId: 'ping', runNumber: 1, at: later }
+      ];
+
+      changes.forEach((change) => {
+        const result = apply(stalledBot(), change);
+        expect(result.entry?.stl ?? null).toBeNull();
+        expect(result.bot?.stl).toBeNull();
+      });
+
+      expect(apply(stalledBot(), { type: 'remove', entryId: 'ping' }).bot?.stl).toBeNull();
+    });
+
+    it('should clear stl when the stalled run is lost', () => {
+      const policies: NotificationTaskBotLostRunPolicy[] = ['stop', 'idle', 'retry'];
+
+      policies.forEach((lostRunPolicy) => {
+        const result = apply(stalledBot(), { type: 'repair', entryId: 'ping', runNumber: 1, lostRunPolicy });
+        expect(result.entry?.stl).toBeNull();
+        expect(result.bot?.stl).toBeNull();
+      });
+    });
+
+    it('should keep stl through progress inside the run', () => {
+      const changes: NotificationTaskBotChange[] = [
+        { type: 'syncNat', entryId: 'ping', runNumber: 1, nat: now },
+        { type: 'markSubmitted', entryId: 'ping', runNumber: 1 },
+        { type: 'data', entryId: 'ping', data: { a: 1 } },
+        { type: 'lsat', entryId: 'ping', lsat: now }
+      ];
+
+      changes.forEach((change) => {
+        const result = apply(stalledBot(), change);
+        expect(result.entry?.stl).toEqual(now);
+        expect(result.bot?.stl).toEqual(now);
+      });
+    });
+
+    it('should keep the earliest entry stl on the bot', () => {
+      const both = applyNotificationTaskBotChanges({
+        bot: undefined,
+        model,
+        now,
+        changes: [
+          { type: 'ensure', entryId: 'a', scriptType: 'demo_ping' },
+          { type: 'ensure', entryId: 'b', scriptType: 'demo_ping' }
+        ]
+      }).bot as NotificationTaskBot;
+
+      const stalledA = stalled({ bot: both, entryId: 'a', runNumber: 1, at: now }).bot as NotificationTaskBot;
+      const stalledAB = stalled({ bot: stalledA, entryId: 'b', runNumber: 2, at: later }).bot as NotificationTaskBot;
+      expect(stalledAB.stl).toEqual(now);
+
+      const completedA = apply(stalledAB, { type: 'completeRun', entryId: 'a', runNumber: 1, trigger: NotificationTaskBotRunTrigger.SCHEDULED }).bot as NotificationTaskBot;
+      expect(completedA.stl).toEqual(later);
+
+      const cancelledB = apply(completedA, { type: 'cancel', entryId: 'b' }).bot as NotificationTaskBot;
+      expect(cancelledB.stl).toBeNull();
     });
   });
 
@@ -647,6 +840,24 @@ describe('utilities', () => {
         { rn: null, nat: new Date(0) }
       ])
     ).toEqual(now);
+  });
+
+  it('notificationTaskBotStalledAt() should return the earliest stl among live runs', () => {
+    expect(
+      notificationTaskBotStalledAt([
+        { rn: 1, stl: later },
+        { rn: 2, stl: now },
+        { rn: 3, stl: null },
+        { rn: null, stl: new Date(0) }
+      ])
+    ).toEqual(now);
+    expect(notificationTaskBotStalledAt([{ rn: 1 }, { rn: null, stl: now }])).toBeUndefined();
+  });
+
+  it('notificationTaskBotEntryStatus() should report stalled only for a live, unpaused run', () => {
+    expect(notificationTaskBotEntryStatus({ s: NotificationTaskBotEntryState.ENABLED, rn: 1, stl: now })).toBe(NotificationTaskBotEntryStatus.STALLED);
+    expect(notificationTaskBotEntryStatus({ s: NotificationTaskBotEntryState.ENABLED, rn: 1, stl: now, pat: now })).toBe(NotificationTaskBotEntryStatus.PAUSED);
+    expect(notificationTaskBotEntryStatus({ s: NotificationTaskBotEntryState.ENABLED, rn: null, stl: now })).toBe(NotificationTaskBotEntryStatus.IDLE);
   });
 
   it('mergeNotificationTaskBotEntryData() should return undefined when no keys remain', () => {
@@ -888,7 +1099,7 @@ describe('owner opt-outs', () => {
       // an entry with a live run whose oat was set out of band, which repair must never revive
       const bot = groupBot();
       const corrupted: NotificationTaskBot = { ...bot, e: bot.e.map((x) => (x.i === 'a' ? { ...x, oat: later } : x)) };
-      const result = applyWith(corrupted, { type: 'repair', entryId: 'a', runNumber: 1 });
+      const result = applyWith(corrupted, { type: 'repair', entryId: 'a', runNumber: 1, lostRunPolicy: 'retry' });
 
       expect(result.changed).toBe(true);
       expect(result.createRuns).toHaveLength(0);

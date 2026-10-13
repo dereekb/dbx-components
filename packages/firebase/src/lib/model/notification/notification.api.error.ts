@@ -86,7 +86,8 @@ export const NOTIFICATION_USER_HEALTH_CHECK_AUTOFIX_NOT_ALLOWED_ERROR_CODE = 'NO
 export const NOTIFICATION_TASK_BOT_ENTRY_DOES_NOT_EXIST_ERROR_CODE = 'NOTIFICATION_TASK_BOT_ENTRY_DOES_NOT_EXIST';
 
 /**
- * Thrown when a NotificationTaskBot entry is asked to run while it is disabled or paused.
+ * Thrown when a NotificationTaskBot entry is asked to run while it is disabled or paused. A FORCED run is the one
+ * exception: it resumes an entry paused with the `'failed'` reason and runs it.
  */
 export const NOTIFICATION_TASK_BOT_ENTRY_NOT_RUNNABLE_ERROR_CODE = 'NOTIFICATION_TASK_BOT_ENTRY_NOT_RUNNABLE';
 

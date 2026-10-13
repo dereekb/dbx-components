@@ -1107,6 +1107,63 @@
       "derivedFieldOverrides": []
     },
     {
+      "slug": "notification-task-bots-stalled-query",
+      "name": "notificationTaskBotsStalledQuery",
+      "module": "@dereekb/firebase",
+      "subpath": "model/notification/notification.query",
+      "signature": "notificationTaskBotsStalledQuery(stalledBefore?: Date): FirestoreQueryConstraint[]",
+      "description": "Query constraints for finding {@link NotificationTaskBot} documents with a stalled entry: their `stl` (the earliest\nentry `stl`) is at or before the given time.\n\nThe repair sweep marks a live run stalled when its task keeps failing or nothing picks it up. Pass an earlier time to\nfind the bots that have been stalled at least that long. Use it for an admin list (`NotificationTaskBotCollectionStore`)\nor an alerting cron. Firestore's automatic single-field index covers it.",
+      "model": "NotificationTaskBot",
+      "collection": "ntb",
+      "isNested": false,
+      "scope": "COLLECTION",
+      "manual": false,
+      "skip": false,
+      "category": "lookup",
+      "params": [
+        {
+          "name": "stalledBefore",
+          "type": "Date",
+          "description": "- Bots whose earliest stalled entry was marked at or before this time are returned. Defaults to now.",
+          "optional": true
+        }
+      ],
+      "returns": "Array of Firestore query constraints filtering for stalled bots.",
+      "tags": [
+        "lookup",
+        "notificationtaskbot",
+        "notification",
+        "task",
+        "bots",
+        "stalled",
+        "query",
+        "notificationtaskbotsstalledquery",
+        "bot",
+        "constraints",
+        "finding",
+        "link",
+        "documents",
+        "entry",
+        "their",
+        "stl",
+        "earliest"
+      ],
+      "constraintSequences": [
+        {
+          "pathLabel": "all",
+          "entries": [
+            {
+              "kind": "where",
+              "fieldPath": "stl",
+              "operator": "<="
+            }
+          ]
+        }
+      ],
+      "derivedComposites": [],
+      "derivedFieldOverrides": []
+    },
+    {
       "slug": "oidc-entries-with-type-query",
       "name": "oidcEntriesWithTypeQuery",
       "module": "@dereekb/firebase",

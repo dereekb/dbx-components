@@ -48,8 +48,10 @@ but two changes require an update in every app that implements the notification 
   script type needs a processor, and every processor's target must be a registered script type. At runtime, an entry
   whose script has no processor (e.g. a removed script) records a SKIPPED run and goes idle.
 - **Repair cron:** call `notificationActions.repairAllNotificationTaskBots()` from your notification schedule, after
-  `sendQueuedNotifications`.
-- **Firestore index:** `notificationTaskBotsDueForRepairQuery` queries `ntb` by `nat`; regenerate your indexes.
+  `sendQueuedNotifications`. Log or alert on its `entriesStalled`.
+- **Firestore index:** `notificationTaskBotsDueForRepairQuery` queries `ntb` by `nat` (for repair), and
+  `notificationTaskBotsStalledQuery` queries it by `stl` (for stalled bots). Both are single-field queries; regenerate
+  your indexes.
 - **Client:** `NotificationTaskBotDocumentStore` / `NotificationTaskBotCollectionStore` (and their directives) are
   available in `@dereekb/dbx-firebase`. The admin store also has `readOptOuts` / `updateOptOut`.
 - **Run timing.** Every run has a scheduled time (`sa`), and no run except a FORCED one starts its first step before
@@ -78,11 +80,41 @@ but two changes require an update in every app that implements the notification 
   resumes the entry when it starts. The status stays `paused` meanwhile and `update:run` stays refused. Disabling or
   opting out cancels the resume run; enabling, opting in, `ensure` and the repair sweep re-issue it.
 - **Failures.** A step that returns `notificationTaskFailed()` is now a real failure: the attempt is counted, the run
-  retries after the failure delay, and once the task runs out of attempts the repair sweep records the run as LOST. On
+  retries after the failure delay, and once the task runs out of attempts the repair sweep records the run as LOST and
+  applies the script's `lostRunPolicy`. While the task is still retrying, the run shows as stalled. On
   a failed step, `updateMetadata` and `removeFromCompletedCheckpoints` are ignored and the same step retries; read
   `input.notificationTask.totalSendAttempts` to see how many times the run has failed. A cleanup that reports
   `outcome: FAILED` now adds 1 to the entry's `fc` (any other outcome resets it) and pauses the entry with `'failed'` at
   the script's `maxConsecutiveFailures`, unless the cleanup requested its own pause.
+- **Stalled runs (`stl`).** The repair sweep now also checks a run that is still pending. It marks the entry stalled
+  (`stl`, `stalledAt`) when the run's task has failed attempts, or its send time is more than `overdueThreshold` (1
+  hour) in the past, meaning nothing has picked it up. A pending task with no failed attempts and a future send time
+  (a delay or a poll) is not stalled; repair only syncs `nat` for it, as before.
+  - `stl` is stamped once and kept until the run ends. A newly issued run clears it: a schedule or supersede, cleanup's
+    next run, a repair retry, a resume run, `update:run`. So does the run completing, being cancelled, removed or lost.
+  - The computed status is the new `stalled` (`NotificationTaskBotEntryStatus.STALLED`). A paused entry still reports
+    `paused`.
+  - A stalled entry keeps its run fence, so nothing starts a new run by itself. An admin supersedes it with `update:run`
+    (MANUAL or FORCED), which deletes the stuck task.
+- **Querying stalled bots.** Entries are embedded, so query the bot-level `stl`: the earliest entry `stl`, kept like
+  `nat`. Use `notificationTaskBotsStalledQuery(stalledBefore?)`, for example with `NotificationTaskBotCollectionStore`
+  for an admin list. Firestore's automatic single-field index covers it.
+- **Lost runs (`lostRunPolicy`).** `NotificationTaskBotScriptConfig.lostRunPolicy` decides what the repair sweep does
+  when a run's task is missing, or finished without its cleanup. Every lost run is recorded as LOST and adds 1 to `fc`.
+  Then:
+  - `'stop'` (the default, `DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_LOST_RUN_POLICY`) pauses the entry with `'failed'`, so
+    the bot never relaunches a lost run by itself;
+  - `'idle'` leaves the entry idle, so your next `ensure` (`schedule: 'ifIdle'`) re-arms it. Use it if your app re-arms
+    its bots on its own schedule;
+  - `'retry'` issues a new run due now (the behavior before this change).
+
+  Under `'idle'` and `'retry'`, reaching `maxConsecutiveFailures` pauses the entry with `'failed'` instead.
+- **`update:run` FORCED clears a `'failed'` pause.** A FORCED run on an entry paused with `'failed'` resumes it and
+  runs; the resume resets `fc` and stamps `rpr: 'failed'`. MANUAL runs and every other pause reason are still refused
+  with `NOTIFICATION_TASK_BOT_ENTRY_NOT_RUNNABLE`.
+- **Repair result.** `RepairAllNotificationTaskBotsResult` gains `entriesStalled`: the entries the sweep newly marked
+  stalled, a subset of `entriesSynced`. Log or alert on it from your cron.
+- **Client.** `NotificationTaskBotDocumentStore` gains `stalledAt$`, `stalled$` and `entryStatus$(entryId)`.
 - **Resume side effects.** Every resume stamps the cleared pause reason on the entry's `rpr` (`resumedPauseReason`)
   until the next run completes. Enabling a disabled entry and an owner opt-in do not stamp it. In the first step, check
   `entry.rpr` and undo what the pause did inside `runNotificationTaskBotEntryTransaction()` (e.g. reset a counter with

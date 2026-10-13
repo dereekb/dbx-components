@@ -3,8 +3,10 @@ import { demoApiFunctionContextFactory, demoAuthorizedUserContext, demoNotificat
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { assertSnapshotData } from '@dereekb/firebase-server';
 import {
+  appNotificationTaskBotScriptConfigService,
   createNotificationDocument,
   getDocumentSnapshotData,
+  NOTIFICATION_TASK_BOT_PAUSE_REASON_FAILED,
   NOTIFICATION_TASK_BOT_PAUSE_REASON_MANUAL,
   NOTIFICATION_TASK_TYPE_MAX_SEND_ATTEMPTS,
   notificationBoxIdForModel,
@@ -19,10 +21,14 @@ import {
   NotificationTaskBotRunOutcome,
   notificationTaskBotRunNotificationTaskTemplate,
   NotificationTaskBotRunTrigger,
-  type NotificationTaskKey
+  type NotificationTaskBotScriptConfig,
+  notificationTaskBotScriptConfigRecord,
+  notificationTaskBotsStalledQuery,
+  type NotificationTaskKey,
+  type RunNotificationTaskBotEntryParams
 } from '@dereekb/firebase';
-import { applyNotificationTaskBotChangesFactory, ensureNotificationTaskBotEntryFactory, removeNotificationTaskBotEntryFactory, scheduleNotificationTaskBotEntryFactory } from '@dereekb/firebase-server/model';
-import { DEMO_PING_NOTIFICATION_TASK_BOT_ENTRY_ID, DEMO_PING_NOTIFICATION_TASK_BOT_GROUP, DEMO_PING_NOTIFICATION_TASK_BOT_PAUSE_REASON_LIMIT, DEMO_PING_NOTIFICATION_TASK_BOT_SCRIPT_TYPE } from 'demo-firebase';
+import { applyNotificationTaskBotChangesFactory, ensureNotificationTaskBotEntryFactory, removeNotificationTaskBotEntryFactory, repairAllNotificationTaskBotsFactory, scheduleNotificationTaskBotEntryFactory } from '@dereekb/firebase-server/model';
+import { DEMO_NOTIFICATION_TASK_BOT_SCRIPT_CONFIGS, DEMO_PING_NOTIFICATION_TASK_BOT_ENTRY_ID, DEMO_PING_NOTIFICATION_TASK_BOT_GROUP, DEMO_PING_NOTIFICATION_TASK_BOT_PAUSE_REASON_LIMIT, DEMO_PING_NOTIFICATION_TASK_BOT_SCRIPT_TYPE } from 'demo-firebase';
 import { type Maybe, MS_IN_HOUR, MS_IN_MINUTE } from '@dereekb/util';
 
 const entryId = DEMO_PING_NOTIFICATION_TASK_BOT_ENTRY_ID;
@@ -60,6 +66,36 @@ demoApiFunctionContextFactory((f) => {
 
           async function sendLiveRun() {
             return sendRun((await loadEntry()).nk as NotificationTaskKey);
+          }
+
+          function repairAt(hours: number) {
+            return f.notificationServerActions.repairAllNotificationTaskBots({ now: addHours(new Date(), hours) });
+          }
+
+          // a repair sweep whose registry overrides every demo script's config, e.g. its lostRunPolicy
+          function repairWithScriptConfig(update: Pick<NotificationTaskBotScriptConfig, 'lostRunPolicy' | 'maxConsecutiveFailures'>) {
+            const scriptConfigService = appNotificationTaskBotScriptConfigService(notificationTaskBotScriptConfigRecord(DEMO_NOTIFICATION_TASK_BOT_SCRIPT_CONFIGS.map((x) => ({ ...x, ...update }))));
+            return repairAllNotificationTaskBotsFactory({ ...f.serverActionsContext, appNotificationTaskBotScriptConfigService: scriptConfigService });
+          }
+
+          async function loseLiveRun() {
+            const entry = await loadEntry();
+            await taskAccessor()
+              .loadDocumentForKey(entry.nk as string)
+              .accessor.delete();
+            return entry;
+          }
+
+          // update:run, through the same server action the callable uses
+          async function runEntry(params: Omit<RunNotificationTaskBotEntryParams, 'key' | 'i'>) {
+            const run = await f.notificationServerActions.runNotificationTaskBotEntry({ key: ntb.documentKey, i: entryId, ...params });
+            return run(ntb.document);
+          }
+
+          // repair stamps stl with its own now (2h ahead in these specs), so query past it
+          async function stalledBotKeys() {
+            const docs = await f.demoFirestoreCollections.notificationTaskBotCollection.queryDocument(...notificationTaskBotsStalledQuery(addHours(new Date(), 3))).getDocs();
+            return docs.map((x) => x.key);
           }
 
           describe('ensure', () => {
@@ -272,12 +308,14 @@ demoApiFunctionContextFactory((f) => {
               await sendRun(entry.nk as string);
               expect(await loadTask(entry.nk as string)).toBeUndefined();
 
-              await f.notificationServerActions.repairAllNotificationTaskBots({ now: addHours(new Date(), 2) });
+              await repairAt(2);
 
+              // the default lostRunPolicy ('stop') pauses the entry instead of relaunching it
               const repaired = await loadEntry();
               expect(repaired.h[0].o).toBe(NotificationTaskBotRunOutcome.LOST);
               expect(repaired.fc).toBe(1);
-              expect(repaired.rn).toBe((entry.rn as number) + 1);
+              expect(repaired.pr).toBe(NOTIFICATION_TASK_BOT_PAUSE_REASON_FAILED);
+              expect(repaired.rn).toBeFalsy();
             });
 
             it('should record SKIPPED for an entry whose script has no processor', async () => {
@@ -514,8 +552,9 @@ demoApiFunctionContextFactory((f) => {
               await ensure({ iv: MS_IN_HOUR });
               await optOut(true);
 
-              const result = await f.notificationServerActions.repairAllNotificationTaskBots({ now: addHours(new Date(), 2) });
+              const result = await repairAt(2);
               expect(result.entriesRepaired).toBe(0);
+              expect(result.entriesStalled).toBe(0);
 
               const entry = await loadEntry();
               expect(entry.rn).toBeFalsy();
@@ -537,35 +576,172 @@ demoApiFunctionContextFactory((f) => {
             });
           });
 
-          describe('repair', () => {
-            it('should record a lost run and reschedule it', async () => {
-              await ensure({ iv: MS_IN_HOUR });
+          describe('stalled', () => {
+            it('should mark a failing run stalled, keep its fence, and clear it when the run completes', async () => {
+              await ensure({ iv: MS_IN_HOUR, f: true });
               const entry = await loadEntry();
-              await taskAccessor()
-                .loadDocumentForKey(entry.nk as string)
-                .accessor.delete();
+              await sendLiveRun(); // the ping step fails, so the task retries in 3h
 
-              const result = await f.notificationServerActions.repairAllNotificationTaskBots({ now: addHours(new Date(), 2) });
+              const result = await repairAt(2);
+              expect(result.entriesSynced).toBe(1);
+              expect(result.entriesStalled).toBe(1);
+              expect(result.entriesRepaired).toBe(0);
+
+              const stalled = await loadEntry();
+              const task = await loadTask(entry.nk as string);
+              expect(stalled.stl).toBeDefined();
+              expect(notificationTaskBotEntryStatus(stalled)).toBe(NotificationTaskBotEntryStatus.STALLED);
+              expect(stalled.rn).toBe(entry.rn);
+              expect(stalled.nat?.getTime()).toBe(task?.sat.getTime());
+              expect((await assertSnapshotData(ntb.document)).stl?.getTime()).toBe(stalled.stl?.getTime());
+
+              // the fence holds
+              const ensured = await ensure();
+              expect(ensured.createRuns).toHaveLength(0);
+              expect((await loadEntry()).stl?.getTime()).toBe(stalled.stl?.getTime());
+
+              // a later sweep keeps the first stamp
+              const later = await repairAt(5);
+              expect(later.entriesStalled).toBe(0);
+              expect((await loadEntry()).stl?.getTime()).toBe(stalled.stl?.getTime());
+
+              // recover
+              await applyChanges([{ type: 'data', entryId, data: { f: null } }]);
+              await sendLiveRun();
+
+              const recovered = await loadEntry();
+              expect(recovered.stl).toBeFalsy();
+              expect((await assertSnapshotData(ntb.document)).stl).toBeFalsy();
+              expect(recovered.h[0].o).toBe(NotificationTaskBotRunOutcome.SUBMITTED);
+              expect(recovered.fc).toBe(0);
+              expect(notificationTaskBotEntryStatus(recovered)).toBe(NotificationTaskBotEntryStatus.SCHEDULED);
+            });
+
+            it('should mark a run that nothing picks up stalled, and find its bot with notificationTaskBotsStalledQuery()', async () => {
+              await ensure({ iv: MS_IN_HOUR });
+
+              const result = await repairAt(2);
+              expect(result.entriesStalled).toBe(1);
+              expect(await stalledBotKeys()).toContain(ntb.documentKey);
+            });
+
+            it('should supersede a stalled run with update:run', async () => {
+              await ensure({ iv: MS_IN_HOUR });
+              await repairAt(2);
+              const stalled = await loadEntry();
+              expect(stalled.stl).toBeDefined();
+
+              const result = await runEntry({ runImmediately: false });
+              const entry = await loadEntry();
+
+              expect(await loadTask(stalled.nk as string)).toBeUndefined();
+              expect(entry.rn).toBeGreaterThan(stalled.rn as number);
+              expect(entry.stl).toBeFalsy();
+              expect((await assertSnapshotData(ntb.document)).stl).toBeFalsy();
+              expect(notificationTaskBotEntryStatus(entry)).toBe(NotificationTaskBotEntryStatus.SCHEDULED);
+              expect(result.taskKey).toBe(entry.nk);
+              expect(await stalledBotKeys()).not.toContain(ntb.documentKey);
+            });
+          });
+
+          describe('repair', () => {
+            it("should record a lost run and pause the entry by default ('stop')", async () => {
+              await ensure({ iv: MS_IN_HOUR });
+              await loseLiveRun();
+
+              const result = await repairAt(2);
               expect(result.entriesRepaired).toBe(1);
 
               const after = await loadEntry();
               expect(after.h[0].o).toBe(NotificationTaskBotRunOutcome.LOST);
               expect(after.fc).toBe(1);
-              expect(after.rn).toBe((entry.rn as number) + 1);
-              expect(await loadTask(after.nk as string)).toBeDefined();
+              expect(after.pr).toBe(NOTIFICATION_TASK_BOT_PAUSE_REASON_FAILED);
+              expect(after.rn).toBeFalsy();
+              expect(notificationTaskBotEntryStatus(after)).toBe(NotificationTaskBotEntryStatus.PAUSED);
+              expect((await assertSnapshotData(ntb.document)).nat).toBeFalsy();
             });
 
-            it('should only sync nat for a run that is still pending', async () => {
+            it("should leave the entry idle for the app to re-arm ('idle')", async () => {
+              await ensure({ iv: MS_IN_HOUR });
+              await loseLiveRun();
+
+              await repairWithScriptConfig({ lostRunPolicy: 'idle' })({ now: addHours(new Date(), 2) });
+
+              const after = await loadEntry();
+              expect(after.h[0].o).toBe(NotificationTaskBotRunOutcome.LOST);
+              expect(after.fc).toBe(1);
+              expect(after.pat).toBeFalsy();
+              expect(after.rn).toBeFalsy();
+              expect(notificationTaskBotEntryStatus(after)).toBe(NotificationTaskBotEntryStatus.IDLE);
+
+              const rearmed = await ensure();
+              expect(rearmed.createRuns).toHaveLength(1);
+            });
+
+            it("should relaunch until the failure budget is spent ('retry')", async () => {
+              const repair = repairWithScriptConfig({ lostRunPolicy: 'retry', maxConsecutiveFailures: 2 });
+              await ensure({ iv: MS_IN_HOUR });
+
+              const first = await loseLiveRun();
+              await repair({ now: addHours(new Date(), 2) });
+
+              const relaunched = await loadEntry();
+              expect(relaunched.h[0].o).toBe(NotificationTaskBotRunOutcome.LOST);
+              expect(relaunched.fc).toBe(1);
+              expect(relaunched.rn).toBeGreaterThan(first.rn as number);
+              expect(await loadTask(relaunched.nk as string)).toBeDefined();
+
+              // the retry run was issued at the first sweep's now, so the second sweep runs later
+              await loseLiveRun();
+              await repair({ now: addHours(new Date(), 4) });
+
+              const stopped = await loadEntry();
+              expect(stopped.h.filter((x) => x.o === NotificationTaskBotRunOutcome.LOST)).toHaveLength(2);
+              expect(stopped.fc).toBe(2);
+              expect(stopped.pr).toBe(NOTIFICATION_TASK_BOT_PAUSE_REASON_FAILED);
+              expect(stopped.rn).toBeFalsy();
+            });
+
+            it("should resume a 'failed' pause with a FORCED update:run", async () => {
+              await ensure({ iv: MS_IN_HOUR });
+              await loseLiveRun();
+              await repairAt(2);
+              expect((await loadEntry()).pr).toBe(NOTIFICATION_TASK_BOT_PAUSE_REASON_FAILED);
+
+              const result = await runEntry({ trigger: NotificationTaskBotRunTrigger.FORCED, runImmediately: false });
+              const resumed = await loadEntry();
+
+              expect(resumed.pat).toBeFalsy();
+              expect(resumed.pr).toBeFalsy();
+              expect(resumed.rpr).toBe(NOTIFICATION_TASK_BOT_PAUSE_REASON_FAILED);
+              expect(resumed.fc).toBe(0);
+              expect(taskData(await loadTask(result.taskKey))?.tr).toBe(NotificationTaskBotRunTrigger.FORCED);
+
+              await sendLiveRun();
+
+              const ran = await loadEntry();
+              const last = ran.h[ran.h.length - 1];
+              expect(last.o).toBe(NotificationTaskBotRunOutcome.SUBMITTED);
+              expect(last.tr).toBe(NotificationTaskBotRunTrigger.FORCED);
+              expect(ran.rpr).toBeFalsy();
+            });
+
+            it('should only sync nat for a pending run that waits on purpose', async () => {
               await ensure({ iv: MS_IN_HOUR });
               const entry = await loadEntry();
+              await taskAccessor()
+                .loadDocumentForKey(entry.nk as string)
+                .update({ sat: addHours(new Date(), 3) });
 
-              const result = await f.notificationServerActions.repairAllNotificationTaskBots({ now: addHours(new Date(), 2) });
+              const result = await repairAt(2);
               expect(result.entriesSynced).toBe(1);
+              expect(result.entriesStalled).toBe(0);
 
               const after = await loadEntry();
               const task = await loadTask(entry.nk as string);
               expect(after.rn).toBe(entry.rn);
               expect(after.nat?.getTime()).toBe(task?.sat.getTime());
+              expect(after.stl).toBeFalsy();
               expect(after.h).toHaveLength(0);
             });
           });
