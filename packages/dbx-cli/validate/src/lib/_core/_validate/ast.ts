@@ -583,10 +583,12 @@ const MAX_LOCAL_CONST_HOPS = 4;
  */
 export interface LocalBinding {
   /**
-   * Where the binding is visible. Exact for an `@dereekb/*` import (the source file) and for the `const` statement (the
-   * block, module block, case block or source file that holds it). Every other binding of the name (a `let` or `var`,
-   * parameter, binding element, function, class, enum, namespace, other import, type parameter, type alias or
-   * interface) is widened to its enclosing function, or the source file, so it can only block more.
+   * Where the binding is visible. Exact for an `@dereekb/*` import (the source file), the `const` statement (the block,
+   * module block, case block or source file that holds it), a parameter (its function or signature) and a function- or
+   * class-expression name (the expression). Every other binding of the name (a `let`, `var` or other `const`, binding
+   * element, function, class, enum, namespace, other import, type parameter, type alias or interface) is widened to its
+   * enclosing function, the `namespace` body that holds it unless the namespace exports it, or the source file, so it can
+   * only block more.
    */
   readonly scope: Node;
   /**
@@ -760,6 +762,48 @@ function isWithinScope(node: Node, scope: Node): boolean {
 }
 
 /**
+ * Whether {@link statement} is a member a `namespace` exports: a statement of a namespace body (a module block) with the
+ * `export` keyword, or any statement of an ambient namespace (`declare namespace …`, `declare module …`,
+ * `declare global`), whose members can be exported without the keyword. Namespace declarations of one name merge, and an
+ * exported member is visible in every body of the merged namespace, so its names reach past the body that holds it.
+ *
+ * @param statement - A statement, or a declaration that may be one.
+ * @returns `true` when the statement sits directly in a namespace body and the namespace exports it.
+ */
+function isNamespaceExport(statement: Node): boolean {
+  const block = statement.getParent();
+  const namespace = block?.getParent();
+  return Node.isModuleBlock(block) && Node.isModuleDeclaration(namespace) && ((Node.isExportable(statement) && statement.hasExportKeyword()) || namespace.isAmbient());
+}
+
+/**
+ * Where a blocking binding of {@link identifier} is visible (see {@link LocalBinding.scope}). It always contains the
+ * binding's real scope:
+ * - a parameter: the function, method, accessor, constructor or signature that declares it, exactly;
+ * - a function- or class-expression name: the expression, exactly;
+ * - any other declaration: the nearest of its enclosing function, the `namespace` body that holds it (passed over when
+ *   the namespace exports the statement that holds it, see {@link isNamespaceExport}) or the source file. A block-scoped
+ *   declaration is widened to it, so it can only block more.
+ *
+ * @param identifier - A declaration's name.
+ * @returns The binding's scope.
+ */
+function blockingScopeOf(identifier: Identifier): Node {
+  const declaration = identifier.getParentOrThrow();
+  let result: Node;
+  if (Node.isParameterDeclaration(declaration)) {
+    result = declaration.getParentOrThrow();
+  } else if (Node.isFunctionExpression(declaration) || Node.isClassExpression(declaration)) {
+    result = declaration;
+  } else {
+    const ancestors = declaration.getAncestors();
+    // ts-morph 28's isFunctionLikeDeclaration does not cover FunctionExpression
+    result = ancestors.find((x, i) => Node.isFunctionLikeDeclaration(x) || Node.isFunctionExpression(x) || (Node.isModuleBlock(x) && !isNamespaceExport(i === 0 ? declaration : ancestors[i - 1]))) ?? declaration.getSourceFile();
+  }
+  return result;
+}
+
+/**
  * Reads the followable reference a `const` declaration holds: its initializer, `as` casts unwrapped, when that is an
  * identifier or `ns.member` with an identifier `ns`.
  *
@@ -781,12 +825,12 @@ function readHeldReference(decl: VariableDeclaration): Identifier | PropertyAcce
  *
  * @param decl - The declaration to read.
  * @returns The binding, scoped to the block, module block, case block or source file that holds the statement, or
- *   `undefined` for any other declaration (a `let` or `var`, a catch-clause, for-loop or destructured declaration, or an
- *   initializer that is not a followable reference).
+ *   `undefined` for any other declaration (a `let` or `var`, a catch-clause, for-loop or destructured declaration, a
+ *   `const` a `namespace` exports, which its other bodies see too, or an initializer that is not a followable reference).
  */
 function readConstBinding(decl: VariableDeclaration): LocalBinding | undefined {
   const statement = decl.getVariableStatement(); // undefined for catch-clause and for-loop declarations
-  const scope = statement?.getDeclarationKind() === VariableDeclarationKind.Const ? lexicalScopeOf(statement) : undefined;
+  const scope = statement?.getDeclarationKind() === VariableDeclarationKind.Const && !isNamespaceExport(statement) ? lexicalScopeOf(statement) : undefined;
   const reference = readHeldReference(decl);
   let result: LocalBinding | undefined;
   if (scope && Node.isIdentifier(decl.getNameNode()) && reference) {
@@ -796,8 +840,8 @@ function readConstBinding(decl: VariableDeclaration): LocalBinding | undefined {
 }
 
 /**
- * Reads the blocking binding a declaration's name adds to {@link DereekbImportBindings.localBindings}, its scope widened
- * to the enclosing function or the source file.
+ * Reads the blocking binding a declaration's name adds to {@link DereekbImportBindings.localBindings}, scoped by
+ * {@link blockingScopeOf}.
  *
  * @param identifier - The identifier to read.
  * @returns A value binding, a type-only binding (a type parameter, type alias or interface), or `undefined` when the
@@ -807,7 +851,7 @@ function readBlockingBinding(identifier: Identifier): LocalBinding | undefined {
   const isValueBinding = isValueDeclarationName(identifier) || isImportedName(identifier);
   let result: LocalBinding | undefined;
   if (isValueBinding || isTypeDeclarationName(identifier)) {
-    result = { scope: functionScopeOf(identifier.getParentOrThrow()), typeOnly: !isValueBinding };
+    result = { scope: blockingScopeOf(identifier), typeOnly: !isValueBinding };
   }
   return result;
 }
