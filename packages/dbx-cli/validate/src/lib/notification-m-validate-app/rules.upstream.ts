@@ -14,7 +14,7 @@
 
 import { isHandlersTraceComplete, reachedUpstreamHandlerCallsOf, selectUpstreamTaskTypesNotInValidate, UPSTREAM_NOTIFICATION_TASK_HANDLERS, upstreamTaskTypesListings, type UpstreamNotificationTaskHandlerContract, type UpstreamTaskTypesListing, type UpstreamTaskTypesNotInValidate } from './extract.upstream.js';
 import type { ExtractedAppNotifications, ExtractedTaskServiceCall, ExtractedUpstreamHandlerFactoryCall, Violation } from './types.js';
-import { pushViolation, SCANNED_API_FOLDERS } from './violation.js';
+import { addToValidateFixText, pushViolation, SCANNED_API_FOLDERS, taskServiceValidateText } from './violation.js';
 
 /**
  * Runs both upstream task handler rules over every task service call. Table rows with `dedicatedCodes` are reported by their
@@ -68,7 +68,8 @@ function pushUpstreamHandlerNotRegistered(input: PushUpstreamHandlerNotRegistere
   const { call, contract, listings, built, violations } = input;
   const [first] = listings;
   const codes = taskTypeCodesText(contract);
-  const chain = first.nested?.via.map((x) => '`...' + x + '`').join(' → ');
+  // `validate: ALL_NOTIFICATION_TASK_TYPES` names the head of the chain instead of spreading it
+  const chain = first.nested?.via.map((x, i) => (i === 0 && call.validateAggregate !== undefined ? '`' + x + '`' : '`...' + x + '`')).join(' → ');
   const listedIn = first.nested ? `in \`validate\` through ${chain} (${first.nested.sourceFile}:${first.nested.line})` : 'in `validate`';
   const remove = listings.map((x) => `\`${x.text}\` from ${listingPlaceText(x)}`).join(' and ');
   const genericFix = `Add the ${contract.label} handler (e.g. \`${contract.exampleWrapper}\`, built with \`${contract.handlerFactory}(${contract.handlerFactoryConfigHint})\` from \`@dereekb/firebase-server/model\`) to \`handlers\`, or remove ${remove}.`;
@@ -118,7 +119,7 @@ function pushUpstreamTaskTypesNotInValidate(finding: UpstreamTaskTypesNotInValid
   pushViolation(violations, {
     code: 'NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE',
     severity: 'warning',
-    message: `\`notificationTaskService(...)\` in ${call.sourceFile} registers the ${contract.label} handler (\`${contract.handlerFactory}(...)\` at ${handlerCall.sourceFile}:${handlerCall.line}), but its \`validate\` does not list \`...${contract.aggregate}\` (${taskTypeCodesText(contract)}). Add it (from \`@dereekb/firebase\`), so \`notificationTaskService()\` fails at startup if the handler is ever removed.`,
+    message: `\`notificationTaskService(...)\` in ${call.sourceFile} registers the ${contract.label} handler (\`${contract.handlerFactory}(...)\` at ${handlerCall.sourceFile}:${handlerCall.line}), but its ${taskServiceValidateText(call)} does not list \`...${contract.aggregate}\` (${taskTypeCodesText(contract)}). ${addToValidateFixText(call, contract.aggregate)}, so \`notificationTaskService()\` fails at startup if the handler is ever removed.`,
     side: 'api',
     file: call.sourceFile
   });

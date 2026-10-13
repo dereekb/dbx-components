@@ -26,6 +26,11 @@
  * (`firebaseModel.NotificationTaskType`). Aggregate arrays are read through
  * `readArrayElementTypeNode` (`T[]`, `readonly T[]`, `Array<T>`,
  * `ReadonlyArray<T>`).
+ *
+ * A `notificationTaskService({ validate })` that names one of the app's
+ * component aggregates directly (`validate: ALL_NOTIFICATION_TASK_TYPES`,
+ * imported by name from the component) is read as
+ * `[...ALL_NOTIFICATION_TASK_TYPES]`.
  */
 
 import { Node, SyntaxKind, type ArrayLiteralExpression, type ObjectLiteralExpression, type SourceFile, type TypeNode, type VariableDeclaration } from 'ts-morph';
@@ -40,10 +45,12 @@ import {
   findLocalVariable,
   findReturnExpression,
   getPropertyInitializer,
+  isDereekbModuleSpecifier,
   readArrayElementTypeNode,
   readBooleanProperty,
   readCalleeName,
   readIdentifierProperty,
+  readImportedIdentifier,
   readStringLiteralInitializer,
   readStringProperty,
   readTypeReferenceName,
@@ -861,7 +868,8 @@ interface ExtractTaskServiceCallsInput {
   readonly trustedExternal: ReadonlySet<string>;
   readonly imports: DereekbImportIndex;
   /**
-   * The component index; `validate` spreads of the app's own task-type aggregates are expanded through it.
+   * The component index. `validate` spreads of the app's own task-type aggregates are expanded through it, and a
+   * `validate` that names one directly is read through it.
    */
   readonly componentIndex: ComponentAggregateIndex;
 }
@@ -877,10 +885,12 @@ function extractTaskServiceCalls(input: ExtractTaskServiceCallsInput): readonly 
       const first = args[0] ? asObjectLiteral(args[0]) : undefined;
       if (!first) continue;
       const validateArr = resolveArrayLiteralProperty(first, 'validate', sf);
+      const validateAggregate = validateArr ? undefined : readValidateComponentAggregate(first, componentIndex);
       const handlersArr = resolveArrayLiteralProperty(first, 'handlers', sf);
-      const validate = collectTaskTypeListElements(validateArr);
+      // `validate: ALL_NOTIFICATION_TASK_TYPES` reads as `validate: [...ALL_NOTIFICATION_TASK_TYPES]`
+      const validate: TaskTypeListElements = validateAggregate ? { ids: [], spreads: [validateAggregate.symbolName], opaque: [] } : collectTaskTypeListElements(validateArr);
       const handlers = collectHandlersArrayElements({ handlersArr, sf, index, trustedExternal, imports });
-      const validateStatus = readTaskServiceListStatus(first, 'validate', validateArr);
+      const validateStatus = validateAggregate ? 'resolved' : readTaskServiceListStatus(first, 'validate', validateArr);
       const handlersStatus = readTaskServiceListStatus(first, 'handlers', handlersArr);
       const nested = expandComponentValidateSpreads({ validateSpreads: validate.spreads, componentIndex, trustedExternal });
       out.push({
@@ -891,6 +901,7 @@ function extractTaskServiceCalls(input: ExtractTaskServiceCallsInput): readonly 
         resolvedHandlerBindings: handlers.resolvedBindings,
         unresolvedHandlerBindings: handlers.unresolvedBindings,
         validateStatus,
+        validateAggregate,
         opaqueValidateValues: validate.opaque,
         nestedValidateIdentifiers: nested.identifiers,
         nestedUpstreamValidateListings: nested.listings,
@@ -921,6 +932,29 @@ function readTaskServiceListStatus(config: ObjectLiteralExpression, name: string
     status = 'resolved';
   }
   return status;
+}
+
+/**
+ * Reads a `notificationTaskService({ validate })` value that is not an array literal as one of the app's component
+ * task-type aggregates, as in `validate: ALL_NOTIFICATION_TASK_TYPES`. The caller then reads it as
+ * `[...ALL_NOTIFICATION_TASK_TYPES]`. Every condition must hold. Otherwise `validate` stays `unresolved`: a miss, never a
+ * false finding.
+ * - The value (after `as` casts) is an identifier the call's file imports by name: unaliased, not type-only, and declared
+ *   nowhere else in the file (`readImportedIdentifier`).
+ * - The import is a package outside `@dereekb/*` (in practice the app's `-firebase` component), not a relative path. So an
+ *   upstream aggregate, or an API-side array of the same name, is never mistaken for the component's.
+ * - The name is not an upstream aggregate name. A component aggregate that reuses one would be matched as the upstream
+ *   aggregate by the name-based `validate` checks.
+ * - The component declares an `ALL_*_NOTIFICATION_TASK_TYPES` / `NotificationTaskType[]` array literal of that name.
+ *
+ * @param config - The `notificationTaskService(...)` config object literal.
+ * @param componentIndex - The component index.
+ * @returns The component aggregate `validate` names, or `undefined`.
+ */
+function readValidateComponentAggregate(config: ObjectLiteralExpression, componentIndex: ComponentAggregateIndex): ExtractedTaskTypeAggregateArray | undefined {
+  const imported = readImportedIdentifier(getPropertyInitializer(config, 'validate'));
+  const isPinned = imported !== undefined && !isDereekbModuleSpecifier(imported.moduleSpecifier) && !imported.moduleSpecifier.startsWith('.') && !UPSTREAM_NOTIFICATION_TASK_AGGREGATES.has(imported.name);
+  return isPinned ? componentIndex.taskAllTypesAggregates.get(imported.name) : undefined;
 }
 
 interface TaskTypeListElements {
@@ -954,7 +988,7 @@ function collectTaskTypeListElements(arr: ArrayLiteralExpression | undefined): T
 
 interface ExpandComponentValidateSpreadsInput {
   /**
-   * Identifiers the call's `validate` literal spreads.
+   * Identifiers the call's `validate` spreads, or the component aggregate it names directly.
    */
   readonly validateSpreads: readonly string[];
   readonly componentIndex: ComponentAggregateIndex;
@@ -971,7 +1005,7 @@ interface ExpandedComponentValidateSpreads {
 }
 
 /**
- * Follows every component `ALL_*_NOTIFICATION_TASK_TYPES` aggregate a `validate` literal spreads, and every component
+ * Follows every component `ALL_*_NOTIFICATION_TASK_TYPES` aggregate a `validate` spreads (or names directly), and every component
  * aggregate those spread in turn. Each aggregate is visited once, which also stops a cycle. For each one it records:
  * - its element identifiers (`identifiers`): the app's task types and any other name written there, for the checks that
  *   read the task types `validate` lists (`NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER`, the list report's `inValidateList`);

@@ -321,6 +321,16 @@ describe('dbx_notification_m_list_app NotificationTaskBot section', () => {
     expect(report.taskBot.taskTypesInTaskServiceValidate).toBe(true);
   });
 
+  it('reports taskTypesInTaskServiceValidate for task types held by a validate aggregate named directly', () => {
+    const report = listWith((p) => {
+      replaceInFile(p.component, 'src/lib/model/notification/notification.task.ts', "import { type NotificationTaskType } from '@dereekb/firebase';", "import { ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES, type NotificationTaskType } from '@dereekb/firebase';");
+      replaceInFile(p.component, 'src/lib/model/notification/notification.task.ts', '[EXAMPLE_NOTIFICATION_TASK_TYPE]', '[EXAMPLE_NOTIFICATION_TASK_TYPE, ...ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES]');
+      replaceInFile(p.api, TASK_SERVICE_FILE, ', ...ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES', '');
+      replaceInFile(p.api, TASK_SERVICE_FILE, 'validate: [...ALL_NOTIFICATION_TASK_TYPES]', 'validate: ALL_NOTIFICATION_TASK_TYPES');
+    });
+    expect(report.taskBot.taskTypesInTaskServiceValidate).toBe(true);
+  });
+
   it('shows an empty, not-in-use section for an app without bots', () => {
     const report = listWith((p) => {
       removeFile(p.component, TASKBOT_FILE);

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { SyntaxKind } from 'ts-morph';
-import { buildDereekbImportIndex, buildInMemoryProject, readArrayElementTypeNode, readCalleeName, readTypeReferenceName } from './ast.js';
+import { buildDereekbImportIndex, buildInMemoryProject, isDereekbModuleSpecifier, readArrayElementTypeNode, readCalleeName, readImportedIdentifier, readTypeReferenceName, type ImportedIdentifier } from './ast.js';
 
 /**
  * Reads the resolved callee name of every call in a one-file project, in source order.
@@ -12,6 +12,17 @@ function calleeNamesOf(text: string): (string | undefined)[] {
   const { apiSources } = buildInMemoryProject({ component: { files: [] }, api: { files: [{ relPath: 'a.ts', text }] } });
   const imports = buildDereekbImportIndex(apiSources);
   return apiSources[0].getDescendantsOfKind(SyntaxKind.CallExpression).map((call) => readCalleeName(call, imports));
+}
+
+/**
+ * Reads the initializer of the top-level `probe` variable of a one-file project with {@link readImportedIdentifier}.
+ *
+ * @param text - The file's source text.
+ * @returns The {@link readImportedIdentifier} result.
+ */
+function importedIdentifierOf(text: string): ImportedIdentifier | undefined {
+  const { apiSources } = buildInMemoryProject({ component: { files: [] }, api: { files: [{ relPath: 'a.ts', text }] } });
+  return readImportedIdentifier(apiSources[0].getVariableDeclarationOrThrow('probe').getInitializer());
 }
 
 describe('readCalleeName()', () => {
@@ -171,5 +182,37 @@ describe('readArrayElementTypeNode()', () => {
 
   it('reads other types as undefined', () => {
     expect(arrayElementNamesOf(`const a: TaskType = 'a';\nconst b: Set<TaskType> = new Set();\nconst c: [TaskType] = ['c'];\nconst d: keyof TaskType[] = 0;\nconst e: (TaskType | undefined)[] = [];\nconst f = [];`)).toEqual([undefined, undefined, undefined, undefined, undefined, undefined]);
+  });
+});
+
+describe('readImportedIdentifier()', () => {
+  const IMPORT = "import { ALL_NOTIFICATION_TASK_TYPES } from 'demo-firebase';\n";
+
+  it('reads an unaliased named import with its module', () => {
+    expect(importedIdentifierOf(`${IMPORT}const probe = ALL_NOTIFICATION_TASK_TYPES;`)).toEqual({ name: 'ALL_NOTIFICATION_TASK_TYPES', moduleSpecifier: 'demo-firebase' });
+  });
+
+  it('strips an `as` cast', () => {
+    expect(importedIdentifierOf(`${IMPORT}const probe = ALL_NOTIFICATION_TASK_TYPES as string[];`)).toEqual({ name: 'ALL_NOTIFICATION_TASK_TYPES', moduleSpecifier: 'demo-firebase' });
+  });
+
+  it('reads an @dereekb/* import too; the caller filters it', () => {
+    expect(importedIdentifierOf(`import { ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES } from '@dereekb/firebase';\nconst probe = ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES;`)).toEqual({ name: 'ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES', moduleSpecifier: '@dereekb/firebase' });
+  });
+
+  it.each([
+    ['a name the file does not import', `const probe = ALL_NOTIFICATION_TASK_TYPES;`],
+    ['an aliased import', `import { ALL_NOTIFICATION_TASK_TYPES as TASK_TYPES } from 'demo-firebase';\nconst probe = TASK_TYPES;`],
+    ['a type-only import', `import { type ALL_NOTIFICATION_TASK_TYPES } from 'demo-firebase';\nconst probe = ALL_NOTIFICATION_TASK_TYPES;`],
+    ['a namespace member', `import * as demoFirebase from 'demo-firebase';\nconst probe = demoFirebase.ALL_NOTIFICATION_TASK_TYPES;`],
+    ['an import shadowed by a parameter', `${IMPORT}function f(ALL_NOTIFICATION_TASK_TYPES: string[]) { return ALL_NOTIFICATION_TASK_TYPES; }\nconst probe = ALL_NOTIFICATION_TASK_TYPES;`],
+    ['an import shadowed by a local const', `${IMPORT}function f() { const ALL_NOTIFICATION_TASK_TYPES: string[] = []; return ALL_NOTIFICATION_TASK_TYPES; }\nconst probe = ALL_NOTIFICATION_TASK_TYPES;`],
+    ['a value that is not an identifier', `${IMPORT}const probe = [...ALL_NOTIFICATION_TASK_TYPES];`]
+  ])('reads %s as undefined', (_label, text) => {
+    expect(importedIdentifierOf(text)).toBeUndefined();
+  });
+
+  it('tells @dereekb/* modules apart', () => {
+    expect([isDereekbModuleSpecifier('@dereekb/firebase'), isDereekbModuleSpecifier('demo-firebase'), isDereekbModuleSpecifier('./notification.task')]).toEqual([true, false, false]);
   });
 });

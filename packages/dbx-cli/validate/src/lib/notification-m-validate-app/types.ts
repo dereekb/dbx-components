@@ -307,6 +307,10 @@ export interface ExtractedTaskServiceCall {
    * aggregates are in {@link nestedValidateIdentifiers}.
    */
   readonly validateIdentifiers: readonly string[];
+  /**
+   * Identifiers `validate` spreads (`...X`). When `validate` names a component aggregate directly ({@link validateAggregate}),
+   * this holds that aggregate's name, as if `validate` were `[...X]`.
+   */
   readonly spreadValidateIdentifiers: readonly string[];
   readonly handlerTypeIdentifiers: readonly string[];
   readonly unresolvedHandlerSpreadIdentifiers: readonly string[];
@@ -329,10 +333,19 @@ export interface ExtractedTaskServiceCall {
    */
   readonly unresolvedHandlerBindings: readonly string[];
   /**
-   * Whether the call's `validate` property is missing (`absent`), an array literal the extractor read (`resolved`), or
-   * something else (`unresolved`).
+   * Whether the call's `validate` property is missing (`absent`), read (`resolved`: an array literal, inline or a local
+   * array variable, or a component aggregate it names directly, see {@link validateAggregate}), or something else
+   * (`unresolved`).
    */
   readonly validateStatus: ExtractedTaskServiceValidateStatus;
+  /**
+   * The component task-type aggregate `validate` names directly, as in `validate: ALL_NOTIFICATION_TASK_TYPES` with
+   * `ALL_NOTIFICATION_TASK_TYPES` imported by name from the app's `-firebase` component. The extractor reads such a
+   * `validate` as `[...ALL_NOTIFICATION_TASK_TYPES]`, so every task check treats both forms alike. `undefined` for an array
+   * literal (inline or a local array variable), and for a value the scan can't pin to a component aggregate (that one stays
+   * `unresolved`).
+   */
+  readonly validateAggregate: ExtractedTaskTypeAggregateArray | undefined;
   /**
    * Values in the `validate:` array the extractor can't read: a spread of anything but an identifier, or an element that is
    * not an identifier (a string literal, a call, a property access, …). The text is collapsed and truncated. When the list
@@ -344,18 +357,18 @@ export interface ExtractedTaskServiceCall {
    * spreads, followed through any nesting (each aggregate once, so a cycle ends), in `validate` order: depth first, an
    * aggregate's spreads before its own elements. Holds the app's task types and any other name written in those
    * aggregates (an upstream task-type constant, a constant from elsewhere); each reader applies its own filters. A name
-   * two aggregates hold appears twice. Empty when `validate` spreads no component aggregate.
+   * two aggregates hold appears twice. Empty when `validate` spreads (or names) no component aggregate.
    */
   readonly nestedValidateIdentifiers: readonly string[];
   /**
    * Upstream task types `validate` lists through the app's own component aggregates (see
    * {@link ExtractedNestedUpstreamValidateListing}), in `validate` order. Only names imported from `@dereekb/*` and not
-   * declared by the component count, and only identifier spreads are followed. Empty when `validate` spreads no component
-   * aggregate that holds one.
+   * declared by the component count, and only identifier spreads are followed. Empty when `validate` spreads (or names) no
+   * component aggregate that holds one.
    */
   readonly nestedUpstreamValidateListings: readonly ExtractedNestedUpstreamValidateListing[];
   /**
-   * Values inside the component aggregates `validate` spreads (followed through nesting) that the expansion can't place:
+   * Values inside the component aggregates `validate` spreads or names (followed through nesting) that the expansion can't place:
    * an element the extractor can't read, a spread of a name that is neither a component aggregate nor an upstream
    * aggregate imported from `@dereekb/*`, or an upstream task-type constant that is not imported from `@dereekb/*`. When
    * the list is non-empty, the `*_TASK_TYPES_NOT_IN_VALIDATE` checks skip the service, like

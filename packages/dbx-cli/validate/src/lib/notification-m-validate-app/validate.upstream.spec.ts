@@ -193,6 +193,25 @@ function holdStorageFileFactoryInLocalConst(parts: FixtureParts, callee: string)
   replaceInFile(parts.api, SF_HANDLER_FILE, `return ${callee}(`, `const create = ${callee};\n  return create(`);
 }
 
+const VALIDATE_LITERAL = 'validate: [...ALL_NOTIFICATION_TASK_TYPES, ...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES, ...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES]';
+const DEMO_FIREBASE_IMPORT = "import { ALL_NOTIFICATION_TASK_TYPES, EXAMPLE_NOTIFICATION_TASK_TYPE, type ExampleNotificationTaskData } from 'demo-firebase';";
+
+// Replaces the task service's `validate` literal with `validate: <ref>`, by default the component's `ALL_NOTIFICATION_TASK_TYPES`.
+function nameValidateAggregate(parts: FixtureParts, ref = 'ALL_NOTIFICATION_TASK_TYPES'): void {
+  replaceInFile(parts.api, TASK_SERVICE_FILE, VALIDATE_LITERAL, `validate: ${ref}`);
+}
+
+// Moves both upstream aggregates into the component's `ALL_NOTIFICATION_TASK_TYPES` (still on line 9).
+function nestBothUpstreamAggregates(parts: FixtureParts): void {
+  addToAppAggregate(parts, 'ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES, ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES', '...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES, ...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES');
+}
+
+// Moves both upstream aggregates into the component's `ALL_NOTIFICATION_TASK_TYPES`, then names it as `validate`.
+function nameValidateAggregateHoldingUpstream(parts: FixtureParts): void {
+  nestBothUpstreamAggregates(parts);
+  nameValidateAggregate(parts);
+}
+
 // A module-level `const create = formSpaceSubmissionNotificationTaskHandler;` in the SF wrapper's file.
 function addModuleLevelFormSpaceConst(parts: FixtureParts): void {
   replaceInFile(parts.api, SF_HANDLER_FILE, SF_FACTORY_IMPORT, "import { formSpaceSubmissionNotificationTaskHandler, storageFileProcessingNotificationTaskHandler } from '@dereekb/firebase-server/model';\n\nconst create = formSpaceSubmissionNotificationTaskHandler;");
@@ -922,6 +941,141 @@ describe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED — nested in a component a
     expect(call.nestedUpstreamValidateListings).toEqual([]);
     expect(call.opaqueNestedValidateValues).toEqual([]);
     expect(findingsOf(runWith(modify))).toEqual([]);
+  });
+});
+
+describe('notificationTaskService validate naming a component aggregate (validate: ALL_NOTIFICATION_TASK_TYPES)', () => {
+  const AGGREGATE_AT = `${COMPONENT_TASK_FILE}:9`;
+  const NOT_IN_VALIDATE: ViolationCode = 'NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE';
+
+  it('accepts a validate naming the component aggregate that holds both upstream aggregates', () => {
+    expect(runWith(nameValidateAggregateHoldingUpstream).violations).toEqual([]);
+  });
+
+  it('reads the named aggregate as a spread of it', () => {
+    const [call] = extractAppNotifications(inspectionOf(nameValidateAggregateHoldingUpstream)).taskServiceCalls;
+    expect(call).toMatchObject({ validateStatus: 'resolved', validateIdentifiers: [], spreadValidateIdentifiers: ['ALL_NOTIFICATION_TASK_TYPES'], opaqueValidateValues: [], opaqueNestedValidateValues: [] });
+    expect(call.validateAggregate).toMatchObject({ symbolName: 'ALL_NOTIFICATION_TASK_TYPES', sourceFile: COMPONENT_TASK_FILE, line: 9 });
+    expect(call.nestedUpstreamValidateListings.map((x) => [x.identifier, x.via])).toEqual([
+      ['ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES', ['ALL_NOTIFICATION_TASK_TYPES']],
+      ['ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES', ['ALL_NOTIFICATION_TASK_TYPES']]
+    ]);
+    expect(extractAppNotifications(inspectionOf()).taskServiceCalls[0].validateAggregate).toBeUndefined();
+  });
+
+  it.each([
+    { label: 'StorageFile', drop: dropStorageFileHandler, spread: '...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES', code: '`SFP`' },
+    { label: 'FormSpace', drop: dropFormSpaceHandler, spread: '...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES', code: '`FSPS`' }
+  ])('reports the $label aggregate held by the named aggregate when its handler leaves handlers', ({ drop, spread, code }) => {
+    const found = findingsOf(
+      runWith((p) => {
+        nameValidateAggregateHoldingUpstream(p);
+        drop(p);
+      })
+    );
+    expect(found).toHaveLength(1);
+    expect(found[0]).toMatchObject({ severity: 'error', side: 'api', file: TASK_SERVICE_FILE });
+    expect(found[0].message).toContain(`lists \`${spread}\``);
+    expect(found[0].message).toContain(code);
+    expect(found[0].message).toContain(`in \`validate\` through \`ALL_NOTIFICATION_TASK_TYPES\` (${AGGREGATE_AT}), but`);
+    expect(found[0].message).not.toContain('`...ALL_NOTIFICATION_TASK_TYPES`');
+    expect(found[0].message).toContain(`or remove \`${spread}\` from \`ALL_NOTIFICATION_TASK_TYPES\` (${AGGREGATE_AT}).`);
+  });
+
+  it('follows a component aggregate nested in the named one', () => {
+    const found = findingsOf(
+      runWith((p) => {
+        p.component.push({ relPath: NESTED_SF_TASK_FILE, text: COMPONENT_NESTED_SF_TASK });
+        addSpreadToAppAggregateFrom(p, '...ALL_APP_STORAGE_FILE_NOTIFICATION_TASK_TYPES', './notification.storagefile.task');
+        nameValidateAggregate(p);
+        dropStorageFileHandler(p);
+      })
+    );
+    expect(found).toHaveLength(1);
+    expect(found[0].message).toContain(`through \`ALL_NOTIFICATION_TASK_TYPES\` → \`...ALL_APP_STORAGE_FILE_NOTIFICATION_TASK_TYPES\` (${NESTED_SF_TASK_FILE}:3)`);
+  });
+
+  it('warns for each upstream handler whose aggregate the named aggregate leaves out', () => {
+    const result = runWith(nameValidateAggregate);
+    expect(result.violations.map((v) => v.code)).toEqual([NOT_IN_VALIDATE, NOT_IN_VALIDATE]);
+    const [sf, fs] = result.violations;
+    expect(sf.message).toContain(`its \`validate\` (\`ALL_NOTIFICATION_TASK_TYPES\`, ${AGGREGATE_AT}) does not list \`...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES\` (\`SFP\`)`);
+    expect(sf.message).toContain('Add it (from `@dereekb/firebase`) to `ALL_NOTIFICATION_TASK_TYPES`, or write `validate: [...ALL_NOTIFICATION_TASK_TYPES, ...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES]`, so ');
+    expect(fs.message).toContain('`...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES`');
+  });
+
+  it('skips the reverse check when the named aggregate holds a value it cannot read', () => {
+    const result = runWith((p) => {
+      addToAppAggregate(p, 'ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES', '...(useSf ? ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES : [])');
+      nameValidateAggregate(p);
+    });
+    expect(findingsOf(result, NOT_IN_VALIDATE)).toEqual([]);
+  });
+
+  // The StorageFile handler leaves `handlers` in every case, so a read of `validate` would raise
+  // NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED; the guard under test is all that stands between these and a false error.
+  it.each<[string, (parts: FixtureParts) => void]>([
+    [
+      'an aggregate imported under an alias',
+      (p) => {
+        replaceInFile(p.api, TASK_SERVICE_FILE, DEMO_FIREBASE_IMPORT, "import { ALL_NOTIFICATION_TASK_TYPES as TASK_TYPES, EXAMPLE_NOTIFICATION_TASK_TYPE, type ExampleNotificationTaskData } from 'demo-firebase';");
+        nameValidateAggregate(p, 'TASK_TYPES');
+      }
+    ],
+    [
+      'an aggregate imported from @dereekb/*',
+      (p) => {
+        replaceInFile(p.api, TASK_SERVICE_FILE, DEMO_FIREBASE_IMPORT, "import { EXAMPLE_NOTIFICATION_TASK_TYPE, type ExampleNotificationTaskData } from 'demo-firebase';\nimport { ALL_NOTIFICATION_TASK_TYPES } from '@dereekb/firebase';");
+        nameValidateAggregate(p);
+      }
+    ],
+    [
+      'an aggregate imported from a relative path',
+      (p) => {
+        replaceInFile(p.api, TASK_SERVICE_FILE, DEMO_FIREBASE_IMPORT, "import { EXAMPLE_NOTIFICATION_TASK_TYPE, type ExampleNotificationTaskData } from 'demo-firebase';\nimport { ALL_NOTIFICATION_TASK_TYPES } from './notification.task.types';");
+        nameValidateAggregate(p);
+      }
+    ],
+    [
+      'a name the file also declares',
+      (p) => {
+        nameValidateAggregate(p);
+        replaceInFile(p.api, TASK_SERVICE_FILE, 'export function demoNotificationTaskServiceFactory', 'function unrelated(ALL_NOTIFICATION_TASK_TYPES: string[]) {\n  return ALL_NOTIFICATION_TASK_TYPES;\n}\n\nexport function demoNotificationTaskServiceFactory');
+      }
+    ],
+    [
+      'a name the component does not declare as an aggregate',
+      (p) => {
+        replaceInFile(p.api, TASK_SERVICE_FILE, DEMO_FIREBASE_IMPORT, "import { ALL_NOTIFICATION_TASK_TYPES, OTHER_NOTIFICATION_TASK_TYPES, EXAMPLE_NOTIFICATION_TASK_TYPE, type ExampleNotificationTaskData } from 'demo-firebase';");
+        nameValidateAggregate(p, 'OTHER_NOTIFICATION_TASK_TYPES');
+      }
+    ],
+    [
+      'a namespace member',
+      (p) => {
+        addTaskServiceImport(p, "import * as demoFirebase from 'demo-firebase';");
+        nameValidateAggregate(p, 'demoFirebase.ALL_NOTIFICATION_TASK_TYPES');
+      }
+    ],
+    [
+      'a local alias of the aggregate',
+      (p) => {
+        nameValidateAggregate(p, 'taskTypes');
+        replaceInFile(p.api, TASK_SERVICE_FILE, '  return notificationTaskService(', '  const taskTypes = ALL_NOTIFICATION_TASK_TYPES;\n  return notificationTaskService(');
+      }
+    ]
+  ])('leaves validate unread when it names %s', (_label, modify) => {
+    const fullModify = (p: FixtureParts) => {
+      nestBothUpstreamAggregates(p);
+      dropStorageFileHandler(p);
+      modify(p);
+    };
+    const result = runWith(fullModify);
+    expect(findingsOf(result)).toEqual([]);
+    expect(findingsOf(result, NOT_IN_VALIDATE)).toEqual([]);
+    const [call] = extractAppNotifications(inspectionOf(fullModify)).taskServiceCalls;
+    expect(call.validateStatus).toBe('unresolved');
+    expect(call.validateAggregate).toBeUndefined();
   });
 });
 

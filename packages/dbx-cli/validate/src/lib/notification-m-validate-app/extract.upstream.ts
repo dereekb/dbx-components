@@ -19,7 +19,9 @@
  * The `validate` expansion in `extract.ts` also records the upstream names an app nests in its own component
  * `ALL_*_NOTIFICATION_TASK_TYPES` aggregates (`ExtractedTaskServiceCall.nestedUpstreamValidateListings`), so
  * {@link upstreamTaskTypesListings} sees `validate: [...ALL_NOTIFICATION_TASK_TYPES]` whose component aggregate spreads
- * `...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`.
+ * `...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`. A `validate` that names a component aggregate directly
+ * (`validate: ALL_NOTIFICATION_TASK_TYPES`) is read as `[...ALL_NOTIFICATION_TASK_TYPES]` first, so it goes through the
+ * same expansion.
  *
  * Names are mirrored as strings, not imported; `handlers.upstream.spec.ts` guards them against the upstream sources.
  */
@@ -197,7 +199,8 @@ export function upstreamTaskTypesListings(call: ExtractedTaskServiceCall, contra
 
 /**
  * Whether {@link upstreamTaskTypesListings} can be trusted when it finds nothing. That holds when all of these are true:
- * - the call's `validate` resolved to an array literal;
+ * - the call's `validate` was read: an array literal, or a component aggregate it names directly
+ *   (`ExtractedTaskServiceCall.validateAggregate`);
  * - every element is an identifier or a spread of one;
  * - every spread names an upstream aggregate from {@link UPSTREAM_NOTIFICATION_TASK_HANDLERS}, or one of the app's own
  *   `ALL_*_NOTIFICATION_TASK_TYPES`;

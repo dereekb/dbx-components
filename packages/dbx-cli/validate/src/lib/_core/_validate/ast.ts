@@ -409,6 +409,56 @@ export function collectTrustedExternalIdentifiers(sources: readonly SourceFile[]
 }
 
 /**
+ * Whether a module specifier names an `@dereekb/*` package.
+ *
+ * @param specifier - The module specifier, e.g. `'@dereekb/firebase'`.
+ * @returns `true` for an `@dereekb/*` package.
+ */
+export function isDereekbModuleSpecifier(specifier: string): boolean {
+  return specifier.startsWith(DEREEKB_MODULE_PREFIX);
+}
+
+/**
+ * An identifier read as the unaliased named import that binds it (`import { NAME } from 'module'`).
+ */
+export interface ImportedIdentifier {
+  /**
+   * The identifier, which is also the name the module exports.
+   */
+  readonly name: string;
+  /**
+   * The import's module specifier.
+   */
+  readonly moduleSpecifier: string;
+}
+
+/**
+ * Reads a value node, after stripping `as` casts, as an identifier its source file binds with an unaliased value import:
+ * `import { NAME } from 'module'`. Anything else reads as `undefined`:
+ * - a node that is not an identifier, or a name the file doesn't import;
+ * - an aliased (`import { x as NAME }`), type-only, default or namespace import;
+ * - a name the file also declares as a value (a variable, parameter, binding element, function, class, enum or
+ *   namespace), which could shadow the import where the node sits.
+ *
+ * @param node - The value node, e.g. a property initializer.
+ * @returns The identifier and its module, or `undefined`.
+ */
+export function readImportedIdentifier(node: Node | undefined): ImportedIdentifier | undefined {
+  const inner = unwrapAsExpressions(node);
+  let result: ImportedIdentifier | undefined;
+  if (inner !== undefined && Node.isIdentifier(inner)) {
+    const name = inner.getText();
+    const sf = inner.getSourceFile();
+    const declaration = sf.getImportDeclarations().find((imp) => !imp.isTypeOnly() && imp.getNamedImports().some((x) => !x.isTypeOnly() && x.getAliasNode() === undefined && x.getName() === name));
+    const shadowed = declaration !== undefined && sf.getDescendantsOfKind(SyntaxKind.Identifier).some((x) => x.getText() === name && isValueDeclarationName(x));
+    if (declaration !== undefined && !shadowed) {
+      result = { name, moduleSpecifier: declaration.getModuleSpecifierValue() };
+    }
+  }
+  return result;
+}
+
+/**
  * Hop limit for {@link readCalleeName} following one local `const` to the next (`const a = x; const b = a; b(...)`).
  */
 const MAX_LOCAL_CONST_HOPS = 4;

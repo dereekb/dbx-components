@@ -19,7 +19,7 @@ import {
 import { isHandlersTraceComplete, selectUpstreamTaskTypesNotInValidate } from './extract.upstream.js';
 import { selectTaskBotRegistry, selectTaskBotRunHandlerCalls } from './select.taskbot.js';
 import type { ExtractedAppNotificationTaskBot, ExtractedAppNotifications, ExtractedTaskBotRegistry, ExtractedTaskBotRunHandlerCall, ExtractedTaskBotScriptConfig, ExtractedTaskBotScriptTypeRef, Violation } from './types.js';
-import { pushViolation, SCANNED_API_FOLDERS } from './violation.js';
+import { addToValidateFixText, pushViolation, SCANNED_API_FOLDERS, taskServiceValidateText } from './violation.js';
 
 const DEFAULT_REGISTRY_FILE = 'src/lib/model/notification/notification.taskbot.ts';
 
@@ -129,7 +129,7 @@ function checkTaskTypesInValidate(extracted: ExtractedAppNotifications, violatio
       pushViolation(violations, {
         code: 'NOTIF_TASK_BOT_TASK_TYPES_NOT_IN_VALIDATE',
         severity: 'warning',
-        message: `\`notificationTaskService(...)\` in ${call.sourceFile} registers the NTBR handler, but its \`validate\` does not list \`...${ALL_NOTIFICATION_TASK_BOT_TASK_TYPES}\`. Add it (from \`@dereekb/firebase\`), so startup fails if the handler is ever removed.`,
+        message: `\`notificationTaskService(...)\` in ${call.sourceFile} registers the NTBR handler, but its ${taskServiceValidateText(call)} does not list \`...${ALL_NOTIFICATION_TASK_BOT_TASK_TYPES}\`. ${addToValidateFixText(call, ALL_NOTIFICATION_TASK_BOT_TASK_TYPES)}, so startup fails if the handler is ever removed.`,
         side: 'api',
         file: call.sourceFile
       });

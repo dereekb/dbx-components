@@ -367,6 +367,24 @@ export function demoExampleHandledNotificationTaskHandler(context) {
     expect(violation?.message).toContain('OTHER_NOTIFICATION_TASK_TYPE');
     expect(result.errorCount).toBeGreaterThanOrEqual(1);
   });
+
+  it('passes the happy fixture with validate naming ALL_NOTIFICATION_TASK_TYPES directly', () => {
+    const result = runWith(({ api }) => {
+      replaceInFile({ files: api, relPath: 'src/app/common/model/notification/notification.task.service.ts', from: 'validate: [...ALL_NOTIFICATION_TASK_TYPES]', to: 'validate: ALL_NOTIFICATION_TASK_TYPES' });
+    });
+    expect(result.errorCount).toBe(0);
+    expect(result.warningCount).toBe(0);
+  });
+
+  it('flags NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER for a task type in a validate aggregate named directly', () => {
+    const result = runWith(({ component, api }) => {
+      addSecondTaskType(component);
+      replaceInFile({ files: api, relPath: 'src/app/common/model/notification/notification.task.service.ts', from: 'validate: [...ALL_NOTIFICATION_TASK_TYPES]', to: 'validate: ALL_NOTIFICATION_TASK_TYPES' });
+    });
+    const violation = result.violations.find((v) => v.code === 'NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER');
+    expect(violation?.severity).toBe('error');
+    expect(violation?.message).toContain('SECOND_NOTIFICATION_TASK_TYPE');
+  });
 });
 
 // MARK: factory-of-array tracer regression suite — exercises the

@@ -4,7 +4,8 @@
  * NotificationTaskBot wiring each raise their `NOTIF_TASK_BOT_*` code, and that a scaffolded bot script round-trips
  * through the checks once its wiring is applied. It also covers the upstream StorageFile and FormSpace handler checks
  * (`NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED` and `NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE`) against the demo's
- * task service, with the upstream task types listed directly in `validate` and moved into `ALL_NOTIFICATION_TASK_TYPES`.
+ * task service, with the upstream task types listed directly in `validate`, moved into `ALL_NOTIFICATION_TASK_TYPES`, or
+ * moved there with `validate` naming that aggregate directly.
  *
  * The mutation helper throws when the text it replaces is gone, so a refactor of the demo's bot wiring fails here
  * loudly instead of silently passing.
@@ -206,6 +207,11 @@ describe('dbx_notification_m_validate_app — demo pair upstream task types nest
     replaceIn(m.api, TASK_SERVICE_FILE, DEMO_VALIDATE, 'validate: [...ALL_NOTIFICATION_TASK_TYPES]');
   }
 
+  // Names `ALL_NOTIFICATION_TASK_TYPES` as the demo's `validate` (after `nestDemoUpstreamTaskTypes` has reduced it to `[...ALL_NOTIFICATION_TASK_TYPES]`).
+  function nameDemoValidateAggregate(m: MutableInspection): void {
+    replaceIn(m.api, TASK_SERVICE_FILE, 'validate: [...ALL_NOTIFICATION_TASK_TYPES]', 'validate: ALL_NOTIFICATION_TASK_TYPES');
+  }
+
   it('accepts the demo with its upstream task types nested in ALL_NOTIFICATION_TASK_TYPES', () => {
     const result = validateWith((m) => nestDemoUpstreamTaskTypes(m));
     expect(upstreamFindings(result)).toEqual([]);
@@ -232,6 +238,39 @@ describe('dbx_notification_m_validate_app — demo pair upstream task types nest
     expect(found).toHaveLength(1);
     expect(found[0]).toMatchObject({ code: 'NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE', severity: 'warning' });
     expect(found[0].message).toContain('`...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES`');
+  });
+
+  it('accepts the demo with validate: ALL_NOTIFICATION_TASK_TYPES holding its upstream task types', () => {
+    const result = validateWith((m) => {
+      nestDemoUpstreamTaskTypes(m);
+      nameDemoValidateAggregate(m);
+    });
+    expect(upstreamFindings(result)).toEqual([]);
+    expect(taskBotFindings(result)).toEqual([]);
+    expect(result.errorCount).toBe(0);
+    expect(result.warningCount).toBe(validateWith().warningCount);
+  });
+
+  it('reports NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED through validate: ALL_NOTIFICATION_TASK_TYPES when the StorageFile handler leaves handlers', () => {
+    const found = upstreamFindings(
+      validateWith((m) => {
+        nestDemoUpstreamTaskTypes(m);
+        nameDemoValidateAggregate(m);
+        replaceIn(m.api, TASK_SERVICE_FILE, ', storageFileHandler, ', ', ');
+      })
+    );
+    expect(found).toHaveLength(1);
+    expect(found[0].code).toBe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED');
+    expect(found[0].message).toContain('through `ALL_NOTIFICATION_TASK_TYPES` (');
+    expect(found[0].message).toContain(`${COMPONENT_TASK_FILE}:`);
+    expect(found[0].message).not.toContain('`...ALL_NOTIFICATION_TASK_TYPES`');
+  });
+
+  it('warns for the upstream task types validate: ALL_NOTIFICATION_TASK_TYPES leaves out', () => {
+    const result = validateWith((m) => replaceIn(m.api, TASK_SERVICE_FILE, DEMO_VALIDATE, 'validate: ALL_NOTIFICATION_TASK_TYPES'));
+    expect(upstreamFindings(result).map((v) => v.code)).toEqual(['NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE', 'NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE']);
+    expect(taskBotFindings(result).map((v) => v.code)).toEqual(['NOTIF_TASK_BOT_TASK_TYPES_NOT_IN_VALIDATE']);
+    expect(result.errorCount).toBe(0);
   });
 });
 

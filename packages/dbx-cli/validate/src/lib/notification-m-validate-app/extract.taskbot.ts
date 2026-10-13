@@ -176,7 +176,7 @@ export function extractAppNotificationTaskBot(input: ExtractAppNotificationTaskB
  * Whether a `notificationTaskService({ validate })` call lists the NotificationTaskBot task types.
  *
  * @param call - The extracted task service call.
- * @returns `true` when `validate` spreads `ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES` or lists `NOTIFICATION_TASK_BOT_RUN_NOTIFICATION_TASK_TYPE`, directly or through a component aggregate it spreads.
+ * @returns `true` when `validate` spreads `ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES` or lists `NOTIFICATION_TASK_BOT_RUN_NOTIFICATION_TASK_TYPE`, directly or through a component aggregate it spreads or names.
  */
 export function taskServiceCallListsTaskBotTypes(call: ExtractedTaskServiceCall): boolean {
   return (

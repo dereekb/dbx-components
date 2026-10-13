@@ -136,6 +136,14 @@ describe('listAppNotifications', () => {
     expect(report.tasks[0].handlerFlowStepCount).toBeUndefined();
   });
 
+  it('reads a validate that names the task aggregate directly', () => {
+    const inspection = happyInspection();
+    const apiFiles = inspection.api.files.map((f) => (f.relPath.endsWith('notification.task.service.ts') ? { ...f, text: API_TASK_SERVICE.replace('validate: [...ALL_NOTIFICATION_TASK_TYPES]', 'validate: ALL_NOTIFICATION_TASK_TYPES') } : f));
+    const patched: AppNotificationsInspection = { ...inspection, api: { ...inspection.api, files: apiFiles } };
+    const report = listAppNotifications(patched, { componentDir: 'components/demo-firebase', apiDir: 'apps/demo-api' });
+    expect(report.tasks[0].inValidateList).toBe(true);
+  });
+
   it('handles a missing aggregator record gracefully', () => {
     const inspection = happyInspection();
     const componentFiles = inspection.component.files.map((f) => (f.relPath.endsWith('notification.ts') ? { ...f, text: COMPONENT_MAIN.replace(/export const DEMO_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD[\s\S]*?;/, '') } : f));
