@@ -1,6 +1,6 @@
 import { Logger, Module } from '@nestjs/common';
 import { DownloadApiService, FirebaseServerEnvService } from '@dereekb/firebase-server';
-import { McpModuleConfig, mcpModuleMetadata, MCP_AUTH_ROLE_READER, MCP_CLI_TOKEN_MINTER, MCP_MODEL_ROLES_TARGET_UID_PREDICATE, type McpAuthRoleReader, type McpCliTokenMinter, type McpModelRolesTargetUidPredicate } from '@dereekb/firebase-server/mcp';
+import { McpModuleConfig, mcpAdditionalTool, mcpModuleMetadata, MCP_ADDITIONAL_TOOLS, MCP_AUTH_ROLE_READER, MCP_CLI_TOKEN_MINTER, MCP_MODEL_ROLES_TARGET_UID_PREDICATE, type McpAdditionalTools, type McpAuthRoleReader, type McpCliTokenMinter, type McpModelRolesTargetUidPredicate } from '@dereekb/firebase-server/mcp';
 import { OidcCliTokenService, OidcModuleConfig } from '@dereekb/firebase-server/oidc';
 import { CLI_TOKEN_OIDC_SCOPE, FIRESTORE_SESSION_OIDC_SCOPE, SERVICE_TOKEN_OIDC_SCOPE } from '@dereekb/firebase';
 import { AUTH_ADMIN_ROLE, type AuthClaims } from '@dereekb/util';
@@ -8,6 +8,7 @@ import { DEMO_AUTH_CLAIMS_SERVICE } from 'demo-firebase';
 import { DemoApiOidcModule } from '../../api/oidc/oidc.module';
 import { DemoModelApiModule } from '../model/model.module';
 import { DemoDownloadApiModule } from '../download/download.module';
+import { DemoDocsApiModule } from '../docs/docs.module';
 import { resolveDistArtifactPath } from '../dist.path';
 import packageJson from '../../../../package.json';
 
@@ -63,9 +64,54 @@ export function demoMcpModuleConfigFactory(envService: FirebaseServerEnvService,
     serverInstructions: 'Demo API MCP tools for the dbx-components guestbook/profile sample models. Generated from the callModel _apiDetails tree.',
     mcpManifestPath: MCP_MANIFEST_PATH,
     mcpRouteManifestPath: ROUTE_MANIFEST_PATH,
-    // Keeps the legacy per-method surface until the demo adopts the compact surface alongside it.
-    tools: { compact: false, methodTools: true }
+    // The compact tools are `demo_mcp_search` / `demo_mcp_details` / `demo_mcp_read` / `demo_mcp_write` /
+    // `demo_mcp_token` and `search_demo_documentation`.
+    toolNamePrefix: 'demo',
+    // BOTH surfaces: the compact tools (the default) plus every method as its own legacy tool. Per-method tools
+    // carry no `anthropic/alwaysLoad` hint, so a client with tool search keeps them deferred.
+    tools: { methodTools: true }
   };
+}
+
+/**
+ * Name of the demo's sample app-supplied MCP tool.
+ */
+export const DEMO_MCP_API_STATUS_TOOL_NAME = 'demo_api_status';
+
+/**
+ * Output of the {@link DEMO_MCP_API_STATUS_TOOL_NAME} tool.
+ */
+export interface DemoMcpApiStatus {
+  readonly app: string;
+  readonly version: string;
+  readonly production: boolean;
+  /**
+   * The calling user's uid.
+   */
+  readonly uid?: string;
+}
+
+/**
+ * Builds the demo's app-supplied MCP tools for {@link MCP_ADDITIONAL_TOOLS}.
+ *
+ * `demo_api_status` is the sample: a read-only tool exposed as BOTH its own listed tool and a method reachable
+ * through `demo_mcp_search` / `demo_mcp_read`. It goes through the same scope, role and read-only filtering as the
+ * generated tools.
+ *
+ * @param envService - The Firebase server environment service, used to report whether this is a deployed environment.
+ * @returns The additional tools.
+ */
+export function demoMcpAdditionalToolsFactory(envService: FirebaseServerEnvService): McpAdditionalTools {
+  return [
+    mcpAdditionalTool({
+      name: DEMO_MCP_API_STATUS_TOOL_NAME,
+      description: 'Report the Demo API version, whether it is a production deployment, and the calling user.',
+      readOnly: true,
+      expose: 'both',
+      visibility: { requireAuthenticated: true },
+      handler: (_args, ctx): DemoMcpApiStatus => ({ app: 'demo-api', version: serverVersion, production: envService.isProduction, ...(ctx.auth?.uid == null ? undefined : { uid: ctx.auth.uid }) })
+    })
+  ];
 }
 
 /**
@@ -145,9 +191,11 @@ export function demoMcpCliTokenMinterFactory(cliTokenService: OidcCliTokenServic
  * Imports + re-exports {@link DemoApiOidcModule} so {@link OidcModuleConfig} is available
  * to the MCP config factory and its `OidcProviderConfigService` export propagates to the
  * `McpWellKnownController` (which reads the provider's `clientRequestableScopesSupported`).
+ * Imports + re-exports {@link DemoDocsApiModule}: the factory injects `DocsApiService` as an
+ * `@Optional()` dependency, so without the re-export the documentation tools silently vanish.
  */
 @Module({
-  imports: [DemoApiOidcModule, DemoModelApiModule, DemoDownloadApiModule],
+  imports: [DemoApiOidcModule, DemoModelApiModule, DemoDownloadApiModule, DemoDocsApiModule],
   providers: [
     {
       provide: McpModuleConfig,
@@ -166,9 +214,14 @@ export function demoMcpCliTokenMinterFactory(cliTokenService: OidcCliTokenServic
       provide: MCP_CLI_TOKEN_MINTER,
       useFactory: demoMcpCliTokenMinterFactory,
       inject: [OidcCliTokenService, DownloadApiService]
+    },
+    {
+      provide: MCP_ADDITIONAL_TOOLS,
+      useFactory: demoMcpAdditionalToolsFactory,
+      inject: [FirebaseServerEnvService]
     }
   ],
-  exports: [McpModuleConfig, MCP_AUTH_ROLE_READER, MCP_MODEL_ROLES_TARGET_UID_PREDICATE, MCP_CLI_TOKEN_MINTER, DemoModelApiModule, DemoApiOidcModule]
+  exports: [McpModuleConfig, MCP_AUTH_ROLE_READER, MCP_MODEL_ROLES_TARGET_UID_PREDICATE, MCP_CLI_TOKEN_MINTER, MCP_ADDITIONAL_TOOLS, DemoModelApiModule, DemoApiOidcModule, DemoDocsApiModule]
 })
 export class DemoMcpDependencyModule {}
 

@@ -58,6 +58,10 @@ export const notificationUserResync: DemoUpdateModelFunction<ResyncNotificationU
  *
  * Requires only `read` on the NotificationUser, so a user can diagnose their own delivery without
  * being able to change anything. Dispatching a test message is opt-in via `sendProbe`.
+ *
+ * Deliberately NOT `mcp.readOnly`: every run persists the result to the user's `hc` field (and spends
+ * the user's run allowance), and `sendProbe` dispatches a real test message. It stays a write method,
+ * so an agent reaches it through `demo_mcp_write`, never the auto-approvable read tool.
  */
 export const notificationUserHealthCheck: DemoInvokeModelFunction<NotificationUserHealthCheckParams, NotificationUserHealthCheckResult> = withApiDetails({
   inputType: notificationUserHealthCheckParamsType,

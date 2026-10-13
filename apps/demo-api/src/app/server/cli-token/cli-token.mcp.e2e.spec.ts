@@ -9,7 +9,7 @@ import { DEMO_CLI_OIDC_CLIENT_ID_ENV_KEY } from '../../api/oidc/oidc.module';
 import { DEMO_CLI_NAME, DEMO_CLI_SECURE_ASSET_PATH } from '../mcp/mcp.module';
 import { DEMO_SECURE_ASSETS_ROOT } from '../download/download.module';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext } from '../../../test/fixture';
-import { callMcpTool, listMcpTools } from '../../../test/mcp';
+import { callMcpTool, listMcpTools, mcpCompactToolNames } from '../../../test/mcp';
 import { binaryParser } from '../../../test/http';
 
 vi.setConfig({ hookTimeout: 40000, testTimeout: 40000 });
@@ -26,6 +26,10 @@ const CLI_ARTIFACT_CONTENT = '#!/usr/bin/env node\n// demo-cli stand-in for the 
 /**
  * Coverage for the CLI handoff as an MCP client actually experiences it — through demo-api's
  * `demo-api-mcp` surface rather than through `POST /oidc/cli-token` directly.
+ *
+ * The tool's name is RESOLVED from the factory (`demo_mcp_token` on the compact surface), never spelled
+ * as a literal: every negative below (`not.toContain`, "Unknown tool") would pass vacuously against a
+ * stale name, so each describe block that has one also carries a positive control.
  *
  * `cli-token.api.e2e.spec.ts` proves the mint endpoint's own gates and algebra. What only this spec
  * reaches is everything demo-api wires AROUND that endpoint, none of which the HTTP path touches:
@@ -45,6 +49,15 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   describe('cli-token MCP tool', () => {
     const cliArtifactPath = path.join(DEMO_SECURE_ASSETS_ROOT, DEMO_CLI_SECURE_ASSET_PATH);
     let wroteCliArtifact = false;
+
+    /**
+     * The token tool's resolved name. Read per test: the fixture builds the Nest instance in its own beforeEach.
+     *
+     * @returns The token tool's name on this server.
+     */
+    function tokenToolName(): string {
+      return mcpCompactToolNames(f).token;
+    }
 
     // Written BEFORE the fixture builds its instance: `DemoDownloadApiModule`'s config factory only
     // supplies `secureAssetsRoot` when the directory exists, and that factory runs while the Nest
@@ -93,14 +106,20 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         });
 
         async function mintThroughMcp(args: Record<string, unknown> = {}): Promise<CliTokenToolOutput> {
-          const result = await callMcpTool({ f, u, name: CLI_TOKEN_TOOL_NAME, args, scopes: CALLER_SCOPES });
+          const result = await callMcpTool({ f, u, name: tokenToolName(), args, scopes: CALLER_SCOPES });
           expect(result.isError).toBeUndefined();
           return result.structuredContent as unknown as CliTokenToolOutput;
         }
 
         describe('tools/list', () => {
-          it('advertises cli-token as a WRITE tool carrying the injected reason parameter', async () => {
-            const tool = (await listMcpTools(f, u, CALLER_SCOPES)).find((t) => t.name === CLI_TOKEN_TOOL_NAME);
+          it('names the token tool from the configured prefix on the compact surface', () => {
+            // `cli-token` is the legacy-mode name only; the compact surface renames it.
+            expect(tokenToolName()).toBe('demo_mcp_token');
+            expect(tokenToolName()).not.toBe(CLI_TOKEN_TOOL_NAME);
+          });
+
+          it('advertises the token tool as a WRITE tool carrying the injected reason parameter', async () => {
+            const tool = (await listMcpTools(f, u, CALLER_SCOPES)).find((t) => t.name === tokenToolName());
 
             expect(tool).toBeDefined();
             // minting a credential is not a read — the annotation is what stops a read-only client offering it
@@ -112,13 +131,17 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             expect(inputSchema.required).toContain('reason');
           });
 
-          it('HIDES cli-token from the same admin when the session never carried token.cli', async () => {
+          it('HIDES the token tool from the same admin when the session never carried token.cli', async () => {
             const scopes = CALLER_SCOPES.replace(` ${CLI_TOKEN_OIDC_SCOPE}`, '');
+            const withScope = (await listMcpTools(f, u, CALLER_SCOPES)).map((t) => t.name);
             const names = (await listMcpTools(f, u, scopes)).map((t) => t.name);
 
+            // positive control: the same admin, holding token.cli, IS offered the tool under this exact name
+            expect(withScope).toContain(tokenToolName());
             // the scope filter, not the role rule — this caller IS an admin
+            expect(names).not.toContain(tokenToolName());
             expect(names).not.toContain(CLI_TOKEN_TOOL_NAME);
-            expect(names.length).toBeGreaterThan(0);
+            expect(names).toContain(mcpCompactToolNames(f).search);
           });
         });
 
@@ -208,15 +231,27 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
     describe('non-admin caller', () => {
       demoAuthorizedUserContext({ f }, (u) => {
-        it('never sees cli-token, even holding the token.cli scope', async () => {
+        it('is offered the rest of the compact surface (positive control)', async () => {
+          const names = (await listMcpTools(f, u, CALLER_SCOPES)).map((t) => t.name);
+          const compactNames = mcpCompactToolNames(f);
+
+          // The same server, same scopes: the compact tools ARE listed, so the token tool's absence below is the
+          // role rule at work, not a name that matches nothing.
+          expect(names).toContain(compactNames.search);
+          expect(names).toContain(compactNames.read);
+          expect(compactNames.token).toBe('demo_mcp_token');
+        });
+
+        it('never sees the token tool, even holding the token.cli scope', async () => {
           // The role rule is a SECOND, independent gate: this caller's scopes would satisfy the
           // filter, so a regression that dropped `requiredRoles` would surface here and nowhere else.
           const names = (await listMcpTools(f, u, CALLER_SCOPES)).map((t) => t.name);
+          expect(names).not.toContain(tokenToolName());
           expect(names).not.toContain(CLI_TOKEN_TOOL_NAME);
         });
 
-        it('cannot call cli-token by name — it is not in this caller’s dispatch map at all', async () => {
-          const result = await callMcpTool({ f, u, name: CLI_TOKEN_TOOL_NAME, args: {}, scopes: CALLER_SCOPES });
+        it('cannot call the token tool by name — it is not in this caller’s dispatch map at all', async () => {
+          const result = await callMcpTool({ f, u, name: tokenToolName(), args: {}, scopes: CALLER_SCOPES });
 
           // the filter builds the per-request dispatch map, so a hidden tool is genuinely UNKNOWN
           // here rather than reaching the minter and being refused by its admin predicate

@@ -4,6 +4,7 @@ import { DemoModelApiModule } from './model/model.module';
 import { DemoMcpModule } from './mcp/mcp.module';
 import { DemoSessionApiModule } from './session/session.module';
 import { DemoDownloadApiModule } from './download/download.module';
+import { DemoDocsApiModule } from './docs/docs.module';
 import { DemoExternalConnectionTokenApiModule } from './externaltoken/externaltoken.module';
 
 /**
@@ -12,6 +13,6 @@ import { DemoExternalConnectionTokenApiModule } from './externaltoken/externalto
  * These modules may build on top of the shared firebase functions modules.
  */
 @Module({
-  imports: [DemoApiOidcModule, DemoModelApiModule, DemoMcpModule, DemoSessionApiModule, DemoDownloadApiModule, DemoExternalConnectionTokenApiModule]
+  imports: [DemoApiOidcModule, DemoModelApiModule, DemoMcpModule, DemoSessionApiModule, DemoDownloadApiModule, DemoDocsApiModule, DemoExternalConnectionTokenApiModule]
 })
 export class DemoApiServerModule {}

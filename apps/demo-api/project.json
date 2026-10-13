@@ -10,9 +10,9 @@
     "build": {
       "executor": "nx:noop",
       "outputs": [],
-      "dependsOn": ["build-base", "copy-cli-artifact", "generate-mcp-manifest", "generate-route-manifest", "generate-notification-manifest"],
+      "dependsOn": ["build-base", "copy-cli-artifact", "generate-mcp-manifest", "generate-route-manifest", "generate-notification-manifest", "generate-docs-manifest"],
       "metadata": {
-        "description": "The app is assembled entirely by its dependsOn entries, so `build` itself has nothing left to run: it is a pure aggregation node (`nx:noop` -- a bare dependsOn with no executor is invalid, createTask throws). It used to shell out to `npx nx run demo-api:build-base` and then `npx nx run demo-api:copy-cli-artifact` under parallel:false; each of those was a separate Nx process with its own task graph, so nothing deduped the ~80-task ^build chain they share. As edges they resolve in ONE graph.  Ordering is NOT this list -- dependsOn does not order its own entries. build-base -> copy-cli-artifact is enforced by copy-cli-artifact's own dependsOn (build-base's asset copy would otherwise clobber assets/secure); the three manifests write dist/apps/demo-api/*.manifest.json, which no other task in this target touches, so they are genuinely order-free.  `outputs` is empty on purpose: every file under dist/apps/demo-api is written -- and cached, and restored -- by one of the five dependencies. Declaring them here would make a second task own the same paths, which is exactly the one-writer-per-output-directory invariant this whole conversion exists to preserve.  There is no `production` configuration any more: it only existed to swap in `build-base:production`, nothing ever invoked `demo-api:build:production`, and TargetDependencyConfig has no `configuration` field. The production path is `ci-deploy`, which calls `demo-api:build-base:production` directly."
+        "description": "The app is assembled entirely by its dependsOn entries, so `build` itself has nothing left to run: it is a pure aggregation node (`nx:noop` -- a bare dependsOn with no executor is invalid, createTask throws). It used to shell out to `npx nx run demo-api:build-base` and then `npx nx run demo-api:copy-cli-artifact` under parallel:false; each of those was a separate Nx process with its own task graph, so nothing deduped the ~80-task ^build chain they share. As edges they resolve in ONE graph.  Ordering is NOT this list -- dependsOn does not order its own entries. build-base -> copy-cli-artifact is enforced by copy-cli-artifact's own dependsOn (build-base's asset copy would otherwise clobber assets/secure); the four manifests write dist/apps/demo-api/*.manifest.json, which no other task in this target touches, so they are genuinely order-free.  `outputs` is empty on purpose: every file under dist/apps/demo-api is written -- and cached, and restored -- by one of the six dependencies. Declaring them here would make a second task own the same paths, which is exactly the one-writer-per-output-directory invariant this whole conversion exists to preserve.  There is no `production` configuration any more: it only existed to swap in `build-base:production`, nothing ever invoked `demo-api:build:production`, and TargetDependencyConfig has no `configuration` field. The production path is `ci-deploy`, which calls `demo-api:build-base:production` directly."
       }
     },
     "copy-cli-artifact": {
@@ -88,6 +88,24 @@
       },
       "metadata": {
         "description": "Build-time notification wiring check. Runs the dbx_notification_m_validate_app rules over the same extraction as dbx_notification_m_list_app, writes notification.manifest.json and exits non-zero on a validator error, so `build` (and ci-deploy, which depends on build through nx.json targetDefaults) fails before deploy. The runtime startup checks in @dereekb/firebase-server/model stay as the backstop. Not read at runtime, so `serve` does not depend on it. Not cached, like the sibling generate-* targets."
+      }
+    },
+    "generate-docs-manifest": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/apps/demo-api/docs.manifest.json"],
+      "dependsOn": [
+        {
+          "projects": ["dbx-cli"],
+          "target": "build"
+        }
+      ],
+      "inputs": ["{workspaceRoot}/apps/demo-api/src/assets/docs/**/*", "{workspaceRoot}/dist/packages/dbx-cli/generate-docs-manifest/main.js"],
+      "options": {
+        "command": "node dist/packages/dbx-cli/generate-docs-manifest/main.js --docs-dir=apps/demo-api/src/assets/docs --output=dist/apps/demo-api/docs.manifest.json --app=demo-api --audiences=admin,user --strict",
+        "cwd": "{workspaceRoot}"
+      },
+      "metadata": {
+        "description": "Builds docs.manifest.json for the audience-gated docs under src/assets/docs (served by /api/docs and the MCP documentation tools). The docs themselves reach dist/apps/demo-api/assets/docs through build-base's own assets glob; the manifest is written next to mcp.manifest.json, OUTSIDE build-base's outputs, so no build-base run or cache restore touches it. Read at runtime, so serve depends on it too. --strict fails the build on any frontmatter warning."
       }
     },
     "build-base": {
@@ -174,7 +192,7 @@
     "serve": {
       "//": "Routed through the task graph rather than nested `npx nx` calls. Previously `nx build demo-api --watch`: run-commands forwards unknown args to EVERY command (forwardAllArgs defaults true), so --watch went to both commands, the first never exited, and with parallel:false copy-cli-artifact never ran -- serving never produced dist/apps/demo-api/assets/secure/demo-cli. Now the manifests and the build+CLI-copy chain are dependsOn entries resolved in ONE task graph, build-watch (continuous) is the rebuild leg, and the emulator loop is invoked as a plain script: any nested `npx nx` here inherits NX_INVOCATION_ROOT_PID and deadlocks against the running serve task.",
       "executor": "nx:run-commands",
-      "dependsOn": ["generate-mcp-manifest", "generate-route-manifest", "build-watch"],
+      "dependsOn": ["generate-mcp-manifest", "generate-route-manifest", "generate-docs-manifest", "build-watch"],
       "options": {
         "command": "./watch-emulators.sh"
       },

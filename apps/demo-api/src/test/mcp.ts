@@ -1,6 +1,6 @@
 import { type Request as ExpressRequest } from 'express';
 import { CLIENT_CAPABILITIES_META_KEY, CLIENT_INFO_META_KEY, PROTOCOL_VERSION_META_KEY, createMcpHandler, type CallToolResult, type Tool } from '@modelcontextprotocol/server';
-import { McpServerFactoryService } from '@dereekb/firebase-server/mcp';
+import { McpServerFactoryService, type McpCompactDetailsResult, type McpCompactSearchResult, type McpCompactToolNames, type McpMethodKind } from '@dereekb/firebase-server/mcp';
 import { type FirebaseServerAuthData } from '@dereekb/firebase-server';
 import { createTestFunctionContextAuthData } from '@dereekb/firebase-server/test';
 import { type DemoApiAuthorizedUserTestContextFixture, type DemoApiFunctionContextFixture } from './fixture';
@@ -190,4 +190,141 @@ export async function listMcpTools(f: DemoApiFunctionContextFixture, u: DemoApiA
   const auth = await loadAuthData(u, scopes);
   const result = (await dispatchMcpRequest({ factory, auth, method: 'tools/list', params: {} })) as { tools: ReadonlyArray<Tool> };
   return result.tools;
+}
+
+// MARK: Compact Surface
+/**
+ * Returns the compact tool names the demo's MCP server resolved at boot (`demo_mcp_search`, `demo_mcp_read`, …).
+ *
+ * Specs resolve names here instead of spelling them as literals: a renamed tool then fails the positive assertions
+ * loudly, rather than turning every `not.toContain(name)` into a vacuous pass.
+ *
+ * @param f - Demo-api function fixture providing the Nest module.
+ * @returns The resolved compact tool names.
+ */
+export function mcpCompactToolNames(f: DemoApiFunctionContextFixture): McpCompactToolNames {
+  return f.instance.nest.get(McpServerFactoryService).compactToolNames;
+}
+
+/**
+ * Parameters for {@link callMcpMethod}.
+ */
+export interface CallMcpMethodParams {
+  readonly f: DemoApiFunctionContextFixture;
+  readonly u: DemoApiAuthorizedUserTestContextFixture;
+  /**
+   * Which compact router to call through: `read` (`demo_mcp_read`) or `write` (`demo_mcp_write`).
+   */
+  readonly kind: McpMethodKind;
+  /**
+   * The method id (`guestbook.create`, `guestbookEntry.invoke.entryDetails`, `model-get`, …) or one of its aliases.
+   */
+  readonly method: string;
+  /**
+   * The method's arguments, sent as the router's `params`.
+   */
+  readonly params?: unknown;
+  /**
+   * Extra top-level router arguments (e.g. a `reason`, or a stray key to prove it is rejected).
+   */
+  readonly extraArgs?: Record<string, unknown>;
+  /**
+   * Optional space-delimited OIDC scope string. See {@link CallMcpToolParams.scopes}.
+   */
+  readonly scopes?: string;
+}
+
+/**
+ * Runs one method through the compact `read` / `write` router tool.
+ *
+ * @param params - Config object with `{ f, u, kind, method, params }`.
+ * @returns The router's `CallToolResult` — the method's normal result, or `isError` for an unknown, hidden or wrong-kind method.
+ */
+export async function callMcpMethod(params: CallMcpMethodParams): Promise<CallToolResult> {
+  const { f, u, kind, method, params: methodParams, extraArgs, scopes } = params;
+  const name = mcpCompactToolNames(f)[kind];
+  return callMcpTool({ f, u, name, args: { method, ...(methodParams === undefined ? undefined : { params: methodParams }), ...extraArgs }, scopes });
+}
+
+/**
+ * Parameters for {@link searchMcpMethods}.
+ */
+export interface SearchMcpMethodsParams {
+  readonly f: DemoApiFunctionContextFixture;
+  readonly u: DemoApiAuthorizedUserTestContextFixture;
+  readonly query: string;
+  /**
+   * Only methods of this model type.
+   */
+  readonly model?: string;
+  /**
+   * Only read or only write methods.
+   */
+  readonly kind?: McpMethodKind;
+  readonly limit?: number;
+  /**
+   * Optional space-delimited OIDC scope string. See {@link CallMcpToolParams.scopes}.
+   */
+  readonly scopes?: string;
+}
+
+/**
+ * Searches the caller's visible methods through the compact `search` tool.
+ *
+ * @param params - Config object with `{ f, u, query }` plus optional filters.
+ * @returns The ranked search result.
+ */
+export async function searchMcpMethods(params: SearchMcpMethodsParams): Promise<McpCompactSearchResult> {
+  const { f, u, query, model, kind, limit, scopes } = params;
+  const name = mcpCompactToolNames(f).search;
+  const result = await callMcpTool({ f, u, name, args: { query, ...(model == null ? undefined : { model }), ...(kind == null ? undefined : { kind }), ...(limit == null ? undefined : { limit }) }, scopes });
+
+  if (result.isError) {
+    throw new Error(`${name} failed: ${JSON.stringify(result.content)}`);
+  }
+
+  return result.structuredContent as unknown as McpCompactSearchResult;
+}
+
+/**
+ * Parameters for {@link describeMcpMethod}.
+ */
+export interface DescribeMcpMethodParams {
+  readonly f: DemoApiFunctionContextFixture;
+  readonly u: DemoApiAuthorizedUserTestContextFixture;
+  /**
+   * The method id or alias.
+   */
+  readonly method: string;
+  /**
+   * Optional space-delimited OIDC scope string. See {@link CallMcpToolParams.scopes}.
+   */
+  readonly scopes?: string;
+}
+
+/**
+ * Result of {@link describeMcpMethod}.
+ */
+export interface DescribeMcpMethodResult {
+  /**
+   * The raw `CallToolResult` (`isError` for an unknown or hidden method).
+   */
+  readonly result: CallToolResult;
+  /**
+   * The method's details, when the call succeeded.
+   */
+  readonly details?: McpCompactDetailsResult;
+}
+
+/**
+ * Reads one method's parameter and output schema through the compact `details` tool.
+ *
+ * @param params - Config object with `{ f, u, method }`.
+ * @returns The raw result plus the parsed details on success.
+ */
+export async function describeMcpMethod(params: DescribeMcpMethodParams): Promise<DescribeMcpMethodResult> {
+  const { f, u, method, scopes } = params;
+  const name = mcpCompactToolNames(f).details;
+  const result = await callMcpTool({ f, u, name, args: { method }, scopes });
+  return { result, ...(result.isError ? undefined : { details: result.structuredContent as unknown as McpCompactDetailsResult }) };
 }

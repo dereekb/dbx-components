@@ -35,6 +35,9 @@ export const guestbookEntryAllPublishedEntries: DemoInvokeModelFunction<AllPubli
   // (Firebase ID-token) callers are unaffected. Demonstrates the per-function `requiredScope` feature.
   requiredScope: LMS_OIDC_SCOPE,
   mcp: {
+    // Only queries: no writes, no external calls. Classifies the invoke as a READ method, so it runs through
+    // `demo_mcp_read` and stays listed in read-only mode.
+    readOnly: true,
     // Strip the potentially large `entries` array for MCP clients — see AllPublishedGuestbookEntriesMcpResult.
     mapSuccessfulResult: (result): AllPublishedGuestbookEntriesMcpResult => ({ count: result.count, hitLimit: result.hitLimit })
   },
@@ -99,6 +102,10 @@ export const guestbookEntryAllPublishedEntries: DemoInvokeModelFunction<AllPubli
  */
 export const guestbookEntryEntryDetails: DemoInvokeModelFunction<EntryDetailsGuestbookEntryParams, EntryDetailsGuestbookEntryResult> = withApiDetails({
   inputType: entryDetailsGuestbookEntryParamsType,
+  mcp: {
+    // Reads one entry and computes a projection; nothing is written.
+    readOnly: true
+  },
   fn: async (request) => {
     const { nest, data } = request;
 
