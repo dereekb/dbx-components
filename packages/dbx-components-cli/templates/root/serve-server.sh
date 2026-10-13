@@ -1,6 +1,12 @@
 #!/bin/bash
 echo "Running server in docker container with emulators with continuous build enabled..."
 
+# Started this way the server is unsupervised: if demo-api:build-watch dies, Nx keeps serve running on a
+# dist that never rebuilds. `dbx-claude docker serve` (configured in .dbx-claude/dbx-claude.json) watches
+# that task and rebuilds on the host and restarts the container when it dies.
+echo "Note: this server is UNSUPERVISED -- if demo-api:build-watch dies it keeps serving a stale build."
+echo "      Use \`dbx-claude docker serve\` to have it rebuilt and restarted automatically."
+
 # Nx keys its recursive-task-invocation guard on (root_pid, task_id) rows in the SQLite db under
 # .nx/workspace-data/, which is bind-mounted into the container via ./:/code and therefore shared
 # across container runs. Container PID namespaces start low and repeat, so a run whose root PID

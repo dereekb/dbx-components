@@ -151,7 +151,7 @@
       }
     },
     "build-watch": {
-      "//": "The watch leg of `serve`. A separate target rather than `build-base --watch` because serve must not shell out to a nested `npx nx`: build-base carries dependsOn ^build, so a nested invocation re-derives and re-runs the whole 23-task chain in its own process. As a real target it joins serve's single task graph, where the ^build deps are already satisfied via copy-cli-artifact and get deduped. In watch mode the executor also holds Nx daemon file watchers (@nx/js copyAssets + copyPackageJson), which exit the process with 'Failed to reconnect to daemon after multiple attempts' once their daemon is evicted -- un-nesting never prevented that, because the daemon's identity file (.nx/workspace-data/d/server-process.json) lives in the bind-mounted checkout, so a daemon started on the host or in another container evicts this one. serve's watch-emulators.sh stops the container when this task exits. Options mirror build-base; keep them in sync -- only `watch` differs.",
+      "//": "The watch leg of `serve`. A separate target rather than `build-base --watch` because serve must not shell out to a nested `npx nx`: build-base carries dependsOn ^build, so a nested invocation re-derives and re-runs the whole 23-task chain in its own process. As a real target it joins serve's single task graph, where the ^build deps are already satisfied via copy-cli-artifact and get deduped. In watch mode the executor also holds Nx daemon file watchers (@nx/js copyAssets + copyPackageJson), which exit the process with 'Failed to reconnect to daemon after multiple attempts' once their daemon is evicted -- un-nesting never prevented that, because the daemon's identity file (.nx/workspace-data/d/server-process.json) lives in the bind-mounted checkout, so a daemon started on the host or in another container evicts this one. `dbx-claude docker serve` watches this task and rebuilds and restarts the container when it exits. Options mirror build-base; keep them in sync -- only `watch` differs.",
       "executor": "@nx/esbuild:esbuild",
       "continuous": true,
       "dependsOn": ["copy-cli-artifact"],
@@ -198,11 +198,11 @@
       "continuous": true
     },
     "serve": {
-      "//": "Routed through the task graph rather than nested `npx nx` calls. Previously `nx build demo-api --watch`: run-commands forwards unknown args to EVERY command (forwardAllArgs defaults true), so --watch went to both commands, the first never exited, and with parallel:false copy-cli-artifact never ran -- serving never produced dist/apps/demo-api/assets/secure/demo-cli. Now the manifests and the build+CLI-copy chain are dependsOn entries resolved in ONE task graph, build-watch (continuous) is the rebuild leg, and the emulator loop is invoked as a plain script: any nested `npx nx` here inherits NX_INVOCATION_ROOT_PID and deadlocks against the running serve task. The script is handed `demo-api:build-watch` to supervise: Nx keeps serve running when a continuous dependency exits, so a dead watch leg used to leave the emulators serving a dist that never rebuilt -- now the container stops instead (see watch-emulators.sh).",
+      "//": "Routed through the task graph rather than nested `npx nx` calls. Previously `nx build demo-api --watch`: run-commands forwards unknown args to EVERY command (forwardAllArgs defaults true), so --watch went to both commands, the first never exited, and with parallel:false copy-cli-artifact never ran -- serving never produced dist/apps/demo-api/assets/secure/demo-cli. Now the manifests and the build+CLI-copy chain are dependsOn entries resolved in ONE task graph, build-watch (continuous) is the rebuild leg, and the emulator loop is invoked as a plain script: any nested `npx nx` here inherits NX_INVOCATION_ROOT_PID and deadlocks against the running serve task. Nx keeps serve running when a continuous dependency exits, so a dead watch leg leaves the emulators serving a dist that never rebuilds. `dbx-claude docker serve` supervises build-watch (.dbx-claude/dbx-claude.json docker.options.serve.supervise) and rebuilds on the host and restarts the container when it dies.",
       "executor": "nx:run-commands",
       "dependsOn": ["generate-mcp-manifest", "generate-route-manifest", "generate-docs-manifest", "build-watch"],
       "options": {
-        "command": "./watch-emulators.sh demo-api:build-watch"
+        "command": "./watch-emulators.sh"
       },
       "continuous": true
     },

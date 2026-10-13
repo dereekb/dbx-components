@@ -52,6 +52,32 @@
         }
       }
     },
+    "build-watch": {
+      "//": "The watch leg of `serve`: a real continuous target rather than a nested `npx nx build-base --watch`, so it joins serve's single task graph and its ^build deps are deduped. Options mirror build-base; keep them in sync -- only `watch` differs. `dbx-claude docker serve` supervises this task (.dbx-claude/dbx-claude.json docker.options.serve.supervise) and rebuilds and restarts the container if it exits.",
+      "executor": "@nx/esbuild:esbuild",
+      "continuous": true,
+      "dependsOn": ["^build"],
+      "outputs": ["{options.outputPath}/main.js", "{options.outputPath}/package.json", "{options.outputPath}/package-lock.json", "{options.outputPath}/assets"],
+      "options": {
+        "outputPath": "API_APP_DIST_FOLDER",
+        "main": "API_APP_FOLDER/src/main.ts",
+        "tsConfig": "API_APP_FOLDER/tsconfig.app.json",
+        "assets": [{ "glob": "**/*", "input": "API_APP_FOLDER/src/assets", "output": "assets" }],
+        "generatePackageJson": true,
+        "platform": "node",
+        "target": "node24",
+        "format": ["cjs"],
+        "bundle": true,
+        "thirdParty": false,
+        "declaration": false,
+        "skipTypeCheck": false,
+        "deleteOutputPath": false,
+        "minify": false,
+        "sourcemap": false,
+        "esbuildConfig": "API_APP_FOLDER/esbuild.config.js",
+        "watch": true
+      }
+    },
     "run-emulators": {
       "executor": "nx:run-commands",
       "options": {
@@ -61,22 +87,18 @@
     "watch-emulators": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "echo 'starting server in 5...'; sleep 5; while sleep 2; do find API_APP_DIST_FOLDER | entr -n -r -s './wait-for-ports.sh && npx env-cmd -f .env.local --use-shell npx firebase --project=default emulators:start --import=/root/data/emulators --export-on-exit'; done"
-      }
+        "command": "./watch-emulators.sh"
+      },
+      "continuous": true
     },
     "serve": {
+      "//": "build-watch (continuous) is the rebuild leg, resolved in serve's own task graph, and the emulator loop runs as a plain script: a nested `npx nx` here inherits NX_INVOCATION_ROOT_PID and can deadlock against the running serve task.",
       "executor": "nx:run-commands",
+      "dependsOn": ["build-watch"],
       "options": {
-        "commands": [
-          {
-            "command": "npx nx build-base API_APP_NAME --watch"
-          },
-          {
-            "command": "npx nx run API_APP_NAME:watch-emulators"
-          }
-        ],
-        "parallel": true
-      }
+        "command": "./watch-emulators.sh"
+      },
+      "continuous": true
     },
     "lint": {
       "executor": "@nx/eslint:eslint",

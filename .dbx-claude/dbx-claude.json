@@ -52,6 +52,9 @@
           "exec": {
             "command": ["npx", "firebase", "--project=default", "emulators:exec", "--only", "auth,firestore,storage"],
             "joinCommand": true
+          },
+          "supervise": {
+            "tasks": ["demo-api:build-watch"]
           }
         }
       }
