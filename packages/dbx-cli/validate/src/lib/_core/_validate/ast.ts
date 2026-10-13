@@ -15,7 +15,7 @@
  * convention.
  */
 
-import { Node, Project, SyntaxKind, type ArrayLiteralExpression, type CallExpression, type ImportDeclaration, type ObjectLiteralExpression, type SourceFile, type TypeNode, type VariableDeclaration } from 'ts-morph';
+import { Node, Project, SyntaxKind, VariableDeclarationKind, type ArrayLiteralExpression, type CallExpression, type Identifier, type ImportDeclaration, type ObjectLiteralExpression, type PropertyAccessExpression, type SourceFile, type TypeNode, type VariableDeclaration } from 'ts-morph';
 import type { InspectedFile } from './inspection.types.js';
 
 const COMPONENT_VIRTUAL_PREFIX = '__component__/';
@@ -409,10 +409,33 @@ export function collectTrustedExternalIdentifiers(sources: readonly SourceFile[]
 }
 
 /**
- * The `@dereekb/*` import aliases and namespace imports of one source file, used to read a call's callee back to the
- * name the upstream package exports. Aliases and namespaces whose local name the file also declares elsewhere (a
- * parameter, variable, binding element, function or class) are left out: the scan can't tell which binding a
- * reference means.
+ * Hop limit for {@link readCalleeName} following one local `const` to the next (`const a = x; const b = a; b(...)`).
+ */
+const MAX_LOCAL_CONST_HOPS = 4;
+
+/**
+ * One value binding of a name that a `const <name> = <reference>;` statement of the file declares
+ * (see {@link DereekbImportBindings.localConstBindings}).
+ */
+export interface LocalConstBinding {
+  /**
+   * Where the binding is visible. Exact for the `const` statement: the block, module block, case block or source file
+   * that holds it. Every other binding of the name (a `let` or `var`, parameter, binding element, function, class, enum,
+   * namespace or import) is widened to its enclosing function, or the source file, so it can only block more.
+   */
+  readonly scope: Node;
+  /**
+   * The `const` statement's initializer, `as` casts unwrapped: an identifier, or `ns.member` with an identifier `ns`.
+   * `undefined` for every other binding, which is never followed.
+   */
+  readonly reference: Identifier | PropertyAccessExpression | undefined;
+}
+
+/**
+ * The `@dereekb/*` import aliases and namespace imports of one source file, plus the local `const` references that
+ * point at them, used to read a call's callee back to the name the upstream package exports. Aliases and namespaces
+ * whose local name the file also declares elsewhere (a parameter, variable, binding element, function, class, enum or
+ * namespace) are left out: the scan can't tell which binding a reference means.
  */
 export interface DereekbImportBindings {
   /**
@@ -424,6 +447,12 @@ export interface DereekbImportBindings {
    * `import * as local from '@dereekb/...'`: the local names.
    */
   readonly namespaces: ReadonlySet<string>;
+  /**
+   * The local `const` references {@link readCalleeName} follows, by name: each `const <name> = <reference>;` statement,
+   * plus every other value binding of the same name in the file, which blocks it wherever its scope reaches. Names no
+   * such `const` declares are left out.
+   */
+  readonly localConstBindings: ReadonlyMap<string, readonly LocalConstBinding[]>;
 }
 
 /**
@@ -434,8 +463,102 @@ export interface DereekbImportIndex {
 }
 
 /**
+ * Whether {@link identifier} is the name a declaration binds in value space: a variable (including catch-clause and loop
+ * variables), parameter, binding element, function, class, enum or namespace. Imports are not counted.
+ *
+ * @param identifier - The identifier to check.
+ * @returns `true` when the identifier is a declaration's name.
+ */
+function isValueDeclarationName(identifier: Node): boolean {
+  const parent = identifier.getParent();
+  let result: boolean;
+  if (Node.isModuleDeclaration(parent)) {
+    // ts-morph 28 has no getNameNode() here; a module declaration's only identifier children are its name segments
+    result = true;
+  } else {
+    const isNamed = Node.isVariableDeclaration(parent) || Node.isParameterDeclaration(parent) || Node.isBindingElement(parent) || Node.isFunctionDeclaration(parent) || Node.isFunctionExpression(parent) || Node.isClassDeclaration(parent) || Node.isClassExpression(parent) || Node.isEnumDeclaration(parent);
+    result = isNamed && parent.getNameNode() === identifier;
+  }
+  return result;
+}
+
+/**
+ * Whether {@link identifier} is the local name an import binds: a named import (or its alias), a default import, a
+ * namespace import or `import x = ...`.
+ *
+ * @param identifier - The identifier to check.
+ * @returns `true` when the identifier is an import's local name.
+ */
+function isImportedName(identifier: Node): boolean {
+  const parent = identifier.getParent();
+  let result = false;
+  if (Node.isImportSpecifier(parent)) {
+    result = (parent.getAliasNode() ?? parent.getNameNode()) === identifier;
+  } else if (Node.isImportClause(parent)) {
+    result = parent.getDefaultImport() === identifier;
+  } else if (Node.isNamespaceImport(parent) || Node.isImportEqualsDeclaration(parent)) {
+    result = parent.getNameNode() === identifier;
+  }
+  return result;
+}
+
+/**
+ * Reads the followable reference a `const` declaration holds: its initializer, `as` casts unwrapped, when that is an
+ * identifier or `ns.member` with an identifier `ns`.
+ *
+ * @param decl - The declaration to read.
+ * @returns The held reference, or `undefined` for any other initializer.
+ */
+function readHeldReference(decl: VariableDeclaration): Identifier | PropertyAccessExpression | undefined {
+  const initializer = unwrapAsExpressions(decl.getInitializer());
+  let result: Identifier | PropertyAccessExpression | undefined;
+  if (Node.isIdentifier(initializer) || (Node.isPropertyAccessExpression(initializer) && Node.isIdentifier(initializer.getExpression()))) {
+    result = initializer;
+  }
+  return result;
+}
+
+/**
+ * Reads the local `const` references of a source file for {@link DereekbImportBindings.localConstBindings}.
+ *
+ * @param sf - The source file to read.
+ * @returns Each followable `const` statement by name, with every other value binding the file declares for that name.
+ */
+function readLocalConstBindings(sf: SourceFile): Map<string, LocalConstBinding[]> {
+  const bindings = new Map<string, LocalConstBinding[]>();
+  const constDeclarations = new Set<Node>();
+  for (const decl of sf.getDescendantsOfKind(SyntaxKind.VariableDeclaration)) {
+    const statement = decl.getVariableStatement(); // undefined for catch-clause and for-loop declarations
+    const holder = statement?.getParent();
+    const isBlockLike = Node.isBlock(holder) || Node.isSourceFile(holder) || Node.isModuleBlock(holder) || Node.isCaseClause(holder) || Node.isDefaultClause(holder);
+    const reference = readHeldReference(decl);
+    if (isBlockLike && statement?.getDeclarationKind() === VariableDeclarationKind.Const && Node.isIdentifier(decl.getNameNode()) && reference) {
+      // a case clause's declarations are scoped to the whole case block
+      const scope = Node.isCaseClause(holder) || Node.isDefaultClause(holder) ? holder.getParentOrThrow() : holder;
+      const named = bindings.get(decl.getName()) ?? [];
+      named.push({ scope, reference });
+      bindings.set(decl.getName(), named);
+      constDeclarations.add(decl);
+    }
+  }
+
+  if (bindings.size > 0) {
+    for (const identifier of sf.getDescendantsOfKind(SyntaxKind.Identifier)) {
+      const declaration = identifier.getParentOrThrow();
+      const named = bindings.get(identifier.getText());
+      if (named && !constDeclarations.has(declaration) && (isValueDeclarationName(identifier) || isImportedName(identifier))) {
+        named.push({ scope: declaration.getFirstAncestor((x) => Node.isFunctionLikeDeclaration(x) || Node.isFunctionExpression(x)) ?? sf, reference: undefined });
+      }
+    }
+  }
+
+  return bindings;
+}
+
+/**
  * Reads the `@dereekb/*` import aliases and namespace imports of a source file, leaving out every local name the file
- * also declares as a parameter, variable, binding element, function or class.
+ * also declares as a parameter, variable, binding element, function, class, enum or namespace, and the file's local
+ * `const` references (see {@link DereekbImportBindings.localConstBindings}).
  *
  * @param sf - The source file to read.
  * @returns The file's resolvable `@dereekb/*` import bindings.
@@ -460,23 +583,17 @@ export function readDereekbImportBindings(sf: SourceFile): DereekbImportBindings
   }
 
   // Shadow guard: a local declaration of the same name makes every reference ambiguous.
-  function isDeclarationName(identifier: Node): boolean {
-    const parent = identifier.getParent();
-    const isDeclaration = Node.isVariableDeclaration(parent) || Node.isParameterDeclaration(parent) || Node.isBindingElement(parent) || Node.isFunctionDeclaration(parent) || Node.isClassDeclaration(parent);
-    return isDeclaration && parent.getNameNode() === identifier;
-  }
-
   if (aliases.size > 0 || namespaces.size > 0) {
     for (const identifier of sf.getDescendantsOfKind(SyntaxKind.Identifier)) {
       const name = identifier.getText();
-      if ((aliases.has(name) || namespaces.has(name)) && isDeclarationName(identifier)) {
+      if ((aliases.has(name) || namespaces.has(name)) && isValueDeclarationName(identifier)) {
         aliases.delete(name);
         namespaces.delete(name);
       }
     }
   }
 
-  const result: DereekbImportBindings = { aliases, namespaces };
+  const result: DereekbImportBindings = { aliases, namespaces, localConstBindings: readLocalConstBindings(sf) };
   return result;
 }
 
@@ -498,26 +615,41 @@ export function buildDereekbImportIndex(sources: readonly SourceFile[]): Dereekb
 }
 
 /**
- * Reads the name a call's callee refers to. An identifier that is an `@dereekb/*` import alias reads as the exported
- * name; any other identifier reads as written (the validators' exact-name convention). `ns.name` reads as `name` when
- * `ns` is an `@dereekb/*` namespace import of the call's file. Anything else (`obj.fn(...)`, `fn(...)(...)`, a
- * namespace or alias the file shadows, a namespace of another module) reads as `undefined`.
+ * Reads the name a call's callee refers to. An identifier bound to a local `const` that holds a reference
+ * (`const create = sfHandler;`) reads as that reference does, when the `const` is the only binding of the name in scope
+ * at the call; chains are followed up to {@link MAX_LOCAL_CONST_HOPS} hops. An identifier that is an `@dereekb/*`
+ * import alias reads as the exported name; any other identifier reads as written (the validators' exact-name
+ * convention), including one bound to a `let`, a parameter or a shadowed `const`. `ns.name` reads as `name` when `ns`
+ * is an `@dereekb/*` namespace import of the call's file. Anything else (`obj.fn(...)`, `fn(...)(...)`, a namespace or
+ * alias the file shadows, a namespace of another module) reads as `undefined`.
  *
  * @param call - The call expression to read.
  * @param imports - The per-file `@dereekb/*` import bindings.
  * @returns The resolved callee name, or `undefined` when the callee isn't a resolvable name.
  */
 export function readCalleeName(call: CallExpression, imports: DereekbImportIndex): string | undefined {
-  const callee = call.getExpression();
-  const bindings = imports.bindingsByFilePath.get(call.getSourceFile().getFilePath());
+  return readReferenceName(call.getExpression(), imports.bindingsByFilePath.get(call.getSourceFile().getFilePath()), 0);
+}
+
+/**
+ * Reads the name {@link node} refers to, for {@link readCalleeName}.
+ *
+ * @param node - A callee, or the reference a followed local `const` holds.
+ * @param bindings - The bindings of the node's file.
+ * @param hops - How many local `const`s were followed to get here.
+ * @returns The resolved name, or `undefined` when {@link node} isn't a resolvable name.
+ */
+function readReferenceName(node: Node, bindings: DereekbImportBindings | undefined, hops: number): string | undefined {
   let result: string | undefined;
-  if (Node.isIdentifier(callee)) {
-    const name = callee.getText();
-    result = bindings?.aliases.get(name) ?? name;
-  } else if (Node.isPropertyAccessExpression(callee)) {
-    const target = callee.getExpression();
+  if (Node.isIdentifier(node)) {
+    const name = node.getText();
+    const visible = hops < MAX_LOCAL_CONST_HOPS ? (bindings?.localConstBindings.get(name) ?? []).filter((x) => x.scope.getPos() <= node.getPos() && node.getEnd() <= x.scope.getEnd()) : [];
+    const held = visible.length === 1 ? visible[0].reference : undefined;
+    result = held ? readReferenceName(held, bindings, hops + 1) : (bindings?.aliases.get(name) ?? name);
+  } else if (Node.isPropertyAccessExpression(node)) {
+    const target = node.getExpression();
     if (Node.isIdentifier(target) && bindings?.namespaces.has(target.getText())) {
-      result = callee.getName();
+      result = node.getName();
     }
   }
   return result;

@@ -12,8 +12,9 @@
  * (`NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE`, through {@link selectUpstreamTaskTypesNotInValidate} and guarded by
  * {@link isValidateListingConclusive}). `rules.taskbot.ts` reports the NotificationTaskBot row of both directions.
  *
- * The factory match resolves `@dereekb/*` import aliases and namespace imports per file (`readCalleeName`), so
- * `sfHandler(...)` and `serverModel.storageFileProcessingNotificationTaskHandler(...)` count as factory calls.
+ * The factory match resolves `@dereekb/*` import aliases, namespace imports and local `const` references per file
+ * (`readCalleeName`), so `sfHandler(...)`, `serverModel.storageFileProcessingNotificationTaskHandler(...)` and
+ * `create(...)` after `const create = storageFileProcessingNotificationTaskHandler` count as factory calls.
  *
  * The `validate` expansion in `extract.ts` also records the upstream names an app nests in its own component
  * `ALL_*_NOTIFICATION_TASK_TYPES` aggregates (`ExtractedTaskServiceCall.nestedUpstreamValidateListings`), so
@@ -132,8 +133,8 @@ export const UPSTREAM_NOTIFICATION_TASK_AGGREGATES: ReadonlySet<string> = new Se
 export const UPSTREAM_NOTIFICATION_TASK_TYPE_CONSTANTS: ReadonlySet<string> = new Set(UPSTREAM_NOTIFICATION_TASK_HANDLERS.flatMap((x) => x.taskTypes.map((y) => y.constant)));
 
 /**
- * Returns the upstream handler factory {@link node} calls: called directly, through an `@dereekb/*` import alias, or as a
- * member of an `@dereekb/*` namespace import.
+ * Returns the upstream handler factory {@link node} calls: called directly, through an `@dereekb/*` import alias, as a
+ * member of an `@dereekb/*` namespace import, or through a local `const` holding one of those.
  *
  * @param node - Any node.
  * @param imports - The per-file `@dereekb/*` import bindings.

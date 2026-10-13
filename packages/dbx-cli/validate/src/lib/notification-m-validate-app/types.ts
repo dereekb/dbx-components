@@ -349,7 +349,8 @@ export interface ExtractedTaskServiceCall {
   readonly opaqueNestedValidateValues: readonly string[];
   /**
    * Every upstream handler-factory call (StorageFile, FormSpace, NotificationTaskBot) the `handlers:` trace reached,
-   * called directly, through an `@dereekb/*` import alias, or as an `@dereekb/*` namespace member.
+   * called directly, through an `@dereekb/*` import alias, as an `@dereekb/*` namespace member, or through a local
+   * `const` holding one of those.
    */
   readonly reachedUpstreamHandlerCalls: readonly ExtractedUpstreamHandlerCall[];
   /**
@@ -359,10 +360,10 @@ export interface ExtractedTaskServiceCall {
   readonly handlersStatus: ExtractedTaskServiceValidateStatus;
   /**
    * Values in the `handlers:` trace that the extractor can't see through: a `@dereekb/*` identifier reached as a value (a
-   * helper that is not an upstream handler factory, or an upstream handler factory held in a variable), a call whose
-   * callee is neither an identifier nor an `@dereekb/*` namespace member (`obj.fn(...)`, `fn(...)(...)`), and any expression
-   * other than an identifier, call, array or object literal (a conditional, `satisfies`, a parenthesized or non-null
-   * expression, …). The text is collapsed and truncated. When the list is non-empty, the upstream handler checks skip
+   * helper that is not an upstream handler factory, or an upstream handler factory passed along as a value or held in a
+   * variable the scan can't pin to one `const`), a call whose callee is neither an identifier nor an `@dereekb/*`
+   * namespace member (`obj.fn(...)`, `fn(...)(...)`), and any expression other than an identifier, call, array or object
+   * literal (a conditional, `satisfies`, a parenthesized or non-null expression, …). The text is collapsed and truncated. When the list is non-empty, the upstream handler checks skip
    * the service.
    */
   readonly opaqueHandlerValues: readonly string[];
@@ -388,7 +389,7 @@ export interface ExtractedSourceLocation {
  */
 export interface ExtractedUpstreamHandlerCall extends ExtractedSourceLocation {
   /**
-   * The factory's exported name (an import alias or namespace member is resolved).
+   * The factory's exported name (an import alias, a namespace member or a local `const` is resolved).
    */
   readonly factory: string;
 }
@@ -619,7 +620,7 @@ export interface ExtractedTaskBotProcessor extends ExtractedSourceLocation {
 
 /**
  * A `notificationTaskBotRunNotificationTaskHandler(...)` call in the API (called directly, through an `@dereekb/*` import
- * alias, or as an `@dereekb/*` namespace member).
+ * alias, as an `@dereekb/*` namespace member, or through a local `const` holding one of those).
  */
 export interface ExtractedTaskBotRunHandlerCall extends ExtractedSourceLocation {
   /**

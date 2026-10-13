@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { extractAppNotifications, validateAppNotifications } from './index.js';
+import { selectTaskBotRunHandlerCalls } from './select.taskbot.js';
 import type { AppNotificationsInspection, AppNotificationsWorkspaceFiles, InspectedFile, ValidationResult, ViolationCode } from './types.js';
 
 // MARK: Fixture — a demo-shaped NotificationTaskBot app
@@ -191,6 +192,14 @@ function aliasRunHandlerFactory(parts: FixtureParts): void {
 function namespaceRunHandlerFactory(parts: FixtureParts): void {
   replaceInFile(parts.api, HANDLER_FILE, NTB_FACTORY_IMPORT, "import { type NotificationTaskBotScriptProcessorConfig } from '@dereekb/firebase-server/model';\nimport * as serverModel from '@dereekb/firebase-server/model';");
   replaceInFile(parts.api, HANDLER_FILE, NTB_FACTORY_RETURN, 'return serverModel.notificationTaskBotRunNotificationTaskHandler(');
+}
+
+function localConstRunHandlerFactory(parts: FixtureParts): void {
+  replaceInFile(parts.api, HANDLER_FILE, NTB_FACTORY_RETURN, 'const run = notificationTaskBotRunNotificationTaskHandler;\n  return run(');
+}
+
+function localConstScriptConfigRecord(parts: FixtureParts): void {
+  replaceInFile(parts.component, TASKBOT_FILE, 'export const DEMO_FIREBASE_NOTIFICATION_TASK_BOT_SCRIPT_CONFIG_RECORD = notificationTaskBotScriptConfigRecord(', 'const makeRecord = notificationTaskBotScriptConfigRecord;\n\nexport const DEMO_FIREBASE_NOTIFICATION_TASK_BOT_SCRIPT_CONFIG_RECORD = makeRecord(');
 }
 
 function namespaceScriptConfigRecord(parts: FixtureParts): void {
@@ -514,10 +523,11 @@ describe('NotificationTaskBot checks — repair, rules and index', () => {
   });
 });
 
-describe('NotificationTaskBot checks — aliased and namespaced factories', () => {
+describe('NotificationTaskBot checks — aliased, namespaced and const-held factories', () => {
   const variants: [string, (parts: FixtureParts) => void][] = [
     ['an aliased factory import', aliasRunHandlerFactory],
-    ['a namespace factory call', namespaceRunHandlerFactory]
+    ['a namespace factory call', namespaceRunHandlerFactory],
+    ['a factory held in a local const', localConstRunHandlerFactory]
   ];
 
   it.each(variants)('passes with %s', (_label, modify) => {
@@ -567,10 +577,40 @@ describe('NotificationTaskBot checks — aliased and namespaced factories', () =
         namespaceRunHandlerFactory(p);
       }
     ],
+    ['a script-config record factory held in a local const', localConstScriptConfigRecord],
+    [
+      'a script-config service held in a local const',
+      (p) => {
+        replaceInFile(p.api, ACTION_MODULE_FILE, 'export const demoFirebaseServerActionsContextFactory', 'const scriptConfigService = appNotificationTaskBotScriptConfigService;\n\nexport const demoFirebaseServerActionsContextFactory');
+        replaceInFile(p.api, ACTION_MODULE_FILE, 'appNotificationTaskBotScriptConfigService: appNotificationTaskBotScriptConfigService(', 'appNotificationTaskBotScriptConfigService: scriptConfigService(');
+      }
+    ],
+    [
+      'a repair factory held in a local const',
+      (p) => {
+        replaceInFile(p.api, SCHEDULE_FILE, 'export const notificationHourlyUpdateSchedule', "import { repairAllNotificationTaskBotsFactory } from '@dereekb/firebase-server/model';\n\nconst repairBots = repairAllNotificationTaskBotsFactory;\n\nexport const notificationHourlyUpdateSchedule");
+        replaceInFile(p.api, SCHEDULE_FILE, 'await request.nest.notificationActions.repairAllNotificationTaskBots();', 'await repairBots(request.nest.notificationActions)();');
+      }
+    ],
+    [
+      'a const-held record and a const-held NTBR handler together',
+      (p) => {
+        localConstScriptConfigRecord(p);
+        localConstRunHandlerFactory(p);
+      }
+    ],
     ['an aliased task service', aliasTaskService],
     ['a namespaced task service', namespaceTaskService]
   ])('accepts %s', (_label, modify) => {
     expect(taskBotCodes(runWith(modify))).toEqual([]);
+  });
+
+  // The validate-level cases alone don't prove the pairing: an unpaired call still gets its processors checked.
+  it("pairs the trace's const-held NTBR call with the run handler scan", () => {
+    const { reachable } = selectTaskBotRunHandlerCalls(extractAppNotifications(inspectionOf(localConstRunHandlerFactory)));
+    expect(reachable).toHaveLength(1);
+    expect(reachable[0]).toEqual(expect.objectContaining({ sourceFile: HANDLER_FILE, processorsResolved: true }));
+    expect(reachable[0].processors).toHaveLength(2);
   });
 
   it.each<[string, (parts: FixtureParts) => void]>([

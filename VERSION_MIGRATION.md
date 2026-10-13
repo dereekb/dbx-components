@@ -96,9 +96,9 @@ but two changes require an update in every app that implements the notification 
   `...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES` (directly, or inside one of the app's own `ALL_*_NOTIFICATION_TASK_TYPES`
   arrays it spreads) but its `handlers` don't reach `storageFileProcessingNotificationTaskHandler(...)` /
   `formSpaceSubmissionNotificationTaskHandler(...)`. Such an app already throws at startup; the check moves that failure to
-  build time. It follows `@dereekb/*` import aliases and namespace imports, and is skipped for a service whose `handlers`
-  the scanner can't follow completely. It also warns (`NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE`) the other way
-  round. If the handler is reachable but `validate` doesn't list its aggregate, startup would no longer fail when the
+  build time. It follows `@dereekb/*` import aliases, namespace imports and a factory held in a local `const`, and is
+  skipped for a service whose `handlers` the scanner can't follow completely. It also warns
+  (`NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE`) the other way round. If the handler is reachable but `validate` doesn't list its aggregate, startup would no longer fail when the
   handler is removed; add the aggregate to `validate`. A warning only fails the build under `--strict` /
   `--max-warnings`, and `--allow-warning` tolerates it.
 

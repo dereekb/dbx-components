@@ -10,13 +10,15 @@
  * cross into upstream packages. The upstream task handlers in
  * `extract.upstream.ts` are the exception: the handlers trace records
  * their factory calls, called directly, through an `@dereekb/*` import
- * alias, or as an `@dereekb/*` namespace member.
+ * alias, as an `@dereekb/*` namespace member, or through a local `const`
+ * holding one of those.
  *
  * Upstream factory calls (`notificationTemplateTypeInfoRecord`,
  * `appNotificationTemplateTypeInfoRecordService`, `notificationTaskService`,
  * the upstream task handler factories and the NotificationTaskBot factories)
- * are matched by name, through an `@dereekb/*` import alias, or as an
- * `@dereekb/*` namespace member (`readCalleeName`).
+ * are matched by name, through an `@dereekb/*` import alias, as an
+ * `@dereekb/*` namespace member, or through a local `const` holding one of
+ * those (`readCalleeName`).
  */
 
 import { Node, SyntaxKind, type ArrayLiteralExpression, type ObjectLiteralExpression, type SourceFile, type TypeNode, type VariableDeclaration } from 'ts-morph';
@@ -1249,10 +1251,11 @@ function collectHandlerBindingsFromIdentifier(options: CollectHandlerBindingsFro
 
   // A `@dereekb/*` name reached as a value can't be seen through: a helper
   // can hide a handler in its arguments (`...filterMaybeArrayValues([sfHandler])`),
-  // and an upstream handler factory held in a variable
-  // (`const create = storageFileProcessingNotificationTaskHandler`) may be
-  // called anywhere. Upstream handler factory calls never get here; they end
-  // the trace in `noteUpstreamHandlerCall`.
+  // and an upstream handler factory passed along as a value, or held in a
+  // variable the scan can't pin to one `const` (a `let`, a parameter, a
+  // shadowed name), may be called anywhere. Upstream handler factory calls
+  // (direct, aliased, namespaced, or through a local `const`) never get here;
+  // they end the trace in `noteUpstreamHandlerCall`.
   let result: boolean;
   if (resolvedAny) {
     result = true;
@@ -1305,9 +1308,9 @@ function tryResolveFunctionHandlerBinding(options: CollectHandlerBindingsFromIde
 
 /**
  * Records {@link node} when it calls an upstream handler factory from `UPSTREAM_NOTIFICATION_TASK_HANDLERS` (directly,
- * through an `@dereekb/*` import alias, or as an `@dereekb/*` namespace member), so the rules know which upstream
- * handlers are reachable from `notificationTaskService({ handlers })`. The call ends the trace: it builds exactly one
- * handler config, so there is nothing behind it to follow.
+ * through an `@dereekb/*` import alias, as an `@dereekb/*` namespace member, or through a local `const` holding one of
+ * those), so the rules know which upstream handlers are reachable from `notificationTaskService({ handlers })`. The call
+ * ends the trace: it builds exactly one handler config, so there is nothing behind it to follow.
  *
  * @param node - A value-position node the handlers trace visits.
  * @param context - The import bindings and the bucket that receives the call's factory and location.

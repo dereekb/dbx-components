@@ -187,6 +187,16 @@ function namespaceStorageFileFactory(parts: FixtureParts): void {
   replaceInFile(parts.api, SF_HANDLER_FILE, SF_FACTORY_RETURN, 'return serverModel.storageFileProcessingNotificationTaskHandler(');
 }
 
+// `const create = <callee>;` before the SF wrapper's return, which then calls `create(`.
+function holdStorageFileFactoryInLocalConst(parts: FixtureParts, callee: string): void {
+  replaceInFile(parts.api, SF_HANDLER_FILE, `return ${callee}(`, `const create = ${callee};\n  return create(`);
+}
+
+// A module-level `const create = formSpaceSubmissionNotificationTaskHandler;` in the SF wrapper's file.
+function addModuleLevelFormSpaceConst(parts: FixtureParts): void {
+  replaceInFile(parts.api, SF_HANDLER_FILE, SF_FACTORY_IMPORT, "import { formSpaceSubmissionNotificationTaskHandler, storageFileProcessingNotificationTaskHandler } from '@dereekb/firebase-server/model';\n\nconst create = formSpaceSubmissionNotificationTaskHandler;");
+}
+
 describe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED', () => {
   it('passes the demo-shaped fixture with no findings', () => {
     expect(runWith().violations).toEqual([]);
@@ -584,22 +594,158 @@ describe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED — aliased and namespaced 
   });
 });
 
+describe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED — factories held in a local const', () => {
+  const SF_FACTORY = 'storageFileProcessingNotificationTaskHandler';
+  const FS_FACTORY = 'formSpaceSubmissionNotificationTaskHandler';
+  const localConstVariants: [string, (parts: FixtureParts) => void][] = [
+    ['the factory', (p) => holdStorageFileFactoryInLocalConst(p, SF_FACTORY)],
+    [
+      'an aliased factory',
+      (p) => {
+        aliasStorageFileFactory(p);
+        holdStorageFileFactoryInLocalConst(p, 'sfHandler');
+      }
+    ],
+    [
+      'a namespace member',
+      (p) => {
+        namespaceStorageFileFactory(p);
+        holdStorageFileFactoryInLocalConst(p, `serverModel.${SF_FACTORY}`);
+      }
+    ]
+  ];
+
+  // Both wrappers in the SF file, each with its own `const create`.
+  const holdBothWrappersInOneFile = (p: FixtureParts) => {
+    const bothWrappers = `import { ${FS_FACTORY}, ${SF_FACTORY} } from '@dereekb/firebase-server/model';
+
+export function demoStorageFileProcessingNotificationTaskHandler(context) {
+  const processors = [];
+  const create = ${SF_FACTORY};
+  return create({ processors, storageFileFirestoreCollections: context, storageAccessor: context.storageService });
+}
+
+export function demoFormSpaceSubmissionNotificationTaskHandler(context) {
+  const create = ${FS_FACTORY};
+  return create({ processors: [], validate: [], formSpaceFirestoreCollections: context });
+}
+`;
+    replaceInFile(p.api, SF_HANDLER_FILE, API_SF_HANDLER, bothWrappers);
+    removeFile(p.api, FS_HANDLER_FILE);
+    replaceInFile(p.api, TASK_SERVICE_FILE, "'./handlers/formspace/task.handler.formspace.submission'", "'./handlers/task.handler.storagefile'");
+  };
+
+  it.each(localConstVariants)('follows %s held in a local const', (_label, modify) => {
+    const extracted = extractAppNotifications(inspectionOf(modify));
+    const [call] = extracted.taskServiceCalls;
+    expect(call.opaqueHandlerValues).toEqual([]);
+    expect(call.unresolvedHandlerBindings).toEqual([]);
+    expect(call.reachedUpstreamHandlerCalls.map((x) => x.factory)).toEqual([SF_FACTORY, FS_FACTORY]);
+    const reached = call.reachedUpstreamHandlerCalls.find((x) => x.factory === SF_FACTORY);
+    const built = extracted.upstreamHandlerCalls.find((x) => x.factory === SF_FACTORY);
+    expect(reached?.sourceFile).toBe(SF_HANDLER_FILE);
+    expect(built).toEqual(expect.objectContaining({ sourceFile: SF_HANDLER_FILE, line: reached?.line, enclosingFunction: 'demoStorageFileProcessingNotificationTaskHandler' }));
+    expect(runWith(modify).violations).toEqual([]);
+  });
+
+  it.each(localConstVariants)('reports the StorageFile aggregate when the handler built through %s held in a local const leaves handlers', (_label, modify) => {
+    const found = findingsOf(
+      runWith((p) => {
+        modify(p);
+        dropStorageFileHandler(p);
+      })
+    );
+    expect(found).toHaveLength(1);
+    expect(found[0].message).toContain('`demoStorageFileProcessingNotificationTaskHandler` builds');
+    expect(found[0].message).toContain('handlers/task.handler.storagefile.ts:');
+  });
+
+  it('warns NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE for a const-held handler whose aggregate leaves validate', () => {
+    const result = runWith((p) => {
+      holdStorageFileFactoryInLocalConst(p, SF_FACTORY);
+      replaceInFile(p.api, TASK_SERVICE_FILE, SF_SPREAD, '');
+    });
+    expect(result.violations.map((x) => x.code)).toEqual(['NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE']);
+  });
+
+  it.each<[string, (parts: FixtureParts) => void, string]>([
+    [
+      'a module-level const',
+      (p) => {
+        replaceInFile(p.api, SF_HANDLER_FILE, SF_FACTORY_IMPORT, `${SF_FACTORY_IMPORT}\n\nconst create = ${SF_FACTORY};`);
+        replaceInFile(p.api, SF_HANDLER_FILE, SF_FACTORY_RETURN, 'return create(');
+      },
+      SF_HANDLER_FILE
+    ],
+    [
+      'a chain of local consts',
+      (p) => {
+        replaceInFile(p.api, SF_HANDLER_FILE, SF_FACTORY_RETURN, `const factory = ${SF_FACTORY};\n  const create = factory;\n  return create(`);
+      },
+      SF_HANDLER_FILE
+    ],
+    [
+      'a const in the task service, called inline in handlers',
+      (p) => {
+        replaceInFile(p.api, TASK_SERVICE_FILE, `  ${HANDLERS_LINE}`, `  const create = ${SF_FACTORY};\n  ${HANDLERS_LINE}`);
+        replaceInFile(p.api, TASK_SERVICE_FILE, ', storageFileHandler, ', `, create(${SF_INLINE_CONFIG}), `);
+        addTaskServiceImport(p, SF_FACTORY_IMPORT);
+      },
+      TASK_SERVICE_FILE
+    ],
+    ['both wrappers in one file, each with its own const create', holdBothWrappersInOneFile, SF_HANDLER_FILE],
+    [
+      'a same-named parameter in another function of the file',
+      (p) => {
+        replaceInFile(p.api, SF_HANDLER_FILE, SF_WRAPPER, `${SF_WRAPPER}\n\nexport function demoUnrelatedHelper(create: boolean) { return create; }`);
+        holdStorageFileFactoryInLocalConst(p, SF_FACTORY);
+      },
+      SF_HANDLER_FILE
+    ]
+  ])('accepts %s', (_label, modify, sourceFile) => {
+    const [call] = extractAppNotifications(inspectionOf(modify)).taskServiceCalls;
+    expect(call.opaqueHandlerValues).toEqual([]);
+    expect(call.reachedUpstreamHandlerCalls).toContainEqual(expect.objectContaining({ factory: SF_FACTORY, sourceFile }));
+    expect(runWith(modify).violations).toEqual([]);
+  });
+
+  it('reaches both factories when both wrappers share one file', () => {
+    const [call] = extractAppNotifications(inspectionOf(holdBothWrappersInOneFile)).taskServiceCalls;
+    expect(call.reachedUpstreamHandlerCalls.map((x) => x.factory)).toEqual([SF_FACTORY, FS_FACTORY]);
+  });
+});
+
 describe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED — values the trace still skips', () => {
   // `storageFileHandler` stays in `handlers` in every case, so a finding would be a false error.
   it.each<[string, (parts: FixtureParts) => void]>([
     [
-      'the factory held in a local constant',
+      'the factory held in a let',
       (p) => {
-        replaceInFile(p.api, SF_HANDLER_FILE, 'const processors = [];', 'const processors = [];\n  const create = storageFileProcessingNotificationTaskHandler;');
+        replaceInFile(p.api, SF_HANDLER_FILE, SF_FACTORY_RETURN, 'let create = storageFileProcessingNotificationTaskHandler;\n  return create(');
+      }
+    ],
+    [
+      // a naive resolver would record the module-level FormSpace const
+      'a local const shadowed by a parameter',
+      (p) => {
+        addModuleLevelFormSpaceConst(p);
+        replaceInFile(p.api, SF_HANDLER_FILE, 'demoStorageFileProcessingNotificationTaskHandler(context) {', 'demoStorageFileProcessingNotificationTaskHandler(context, create = storageFileProcessingNotificationTaskHandler) {');
         replaceInFile(p.api, SF_HANDLER_FILE, SF_FACTORY_RETURN, 'return create(');
       }
     ],
     [
-      'an aliased factory held in a local constant',
+      // a naive first-match resolver would record the module-level FormSpace const
+      'two consts of the name in scope',
       (p) => {
-        aliasStorageFileFactory(p);
-        replaceInFile(p.api, SF_HANDLER_FILE, 'const processors = [];', 'const processors = [];\n  const create = sfHandler;');
-        replaceInFile(p.api, SF_HANDLER_FILE, 'return sfHandler(', 'return create(');
+        addModuleLevelFormSpaceConst(p);
+        holdStorageFileFactoryInLocalConst(p, 'storageFileProcessingNotificationTaskHandler');
+      }
+    ],
+    [
+      'the const passed to a helper instead of called',
+      (p) => {
+        replaceInFile(p.api, SF_HANDLER_FILE, SF_FACTORY_IMPORT, `${SF_FACTORY_IMPORT}\nimport { buildUpstreamHandler } from '@dereekb/firebase-server/model';`);
+        replaceInFile(p.api, SF_HANDLER_FILE, SF_FACTORY_RETURN, 'const create = storageFileProcessingNotificationTaskHandler;\n  return buildUpstreamHandler(create, ');
       }
     ],
     [
@@ -621,6 +767,7 @@ describe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED — values the trace still 
     const [call] = extractAppNotifications(inspectionOf(modify)).taskServiceCalls;
     expect(call.opaqueHandlerValues).not.toEqual([]);
     expect(call.reachedUpstreamHandlerCalls.map((x) => x.factory)).not.toContain('storageFileProcessingNotificationTaskHandler');
+    expect(call.reachedUpstreamHandlerCalls.filter((x) => x.sourceFile === SF_HANDLER_FILE)).toEqual([]);
   });
 });
 

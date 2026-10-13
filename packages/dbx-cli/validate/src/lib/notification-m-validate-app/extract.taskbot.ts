@@ -8,7 +8,7 @@
  *
  * Names from `@dereekb/firebase` / `@dereekb/firebase-server` are mirrored as strings, not imported; the drift spec
  * (`taskbot.upstream.spec.ts`) fails when one is renamed upstream. Upstream factory callees resolve `@dereekb/*` import
- * aliases and namespace imports (`readCalleeName`).
+ * aliases, namespace imports and local `const` references (`readCalleeName`).
  */
 
 import { Node, SyntaxKind, type ArrayLiteralExpression, type CallExpression, type ObjectLiteralExpression, type SourceFile, type VariableDeclaration } from 'ts-morph';
