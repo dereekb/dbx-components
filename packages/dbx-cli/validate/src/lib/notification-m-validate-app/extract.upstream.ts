@@ -19,9 +19,10 @@
  * The `validate` expansion in `extract.ts` also records the upstream names an app nests in its own component
  * `ALL_*_NOTIFICATION_TASK_TYPES` aggregates (`ExtractedTaskServiceCall.nestedUpstreamValidateListings`), so
  * {@link upstreamTaskTypesListings} sees `validate: [...ALL_NOTIFICATION_TASK_TYPES]` whose component aggregate spreads
- * `...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`. A `validate` that names a component aggregate directly
- * (`validate: ALL_NOTIFICATION_TASK_TYPES`) is read as `[...ALL_NOTIFICATION_TASK_TYPES]` first, so it goes through the
- * same expansion.
+ * `...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`. A `validate` that names an aggregate directly
+ * (`validate: ALL_NOTIFICATION_TASK_TYPES`, or an upstream one, `validate: ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`; by
+ * name, under an alias, as a namespace member or through a local `const`) is read as a spread of it first, so it goes
+ * through the same expansion.
  *
  * Names are mirrored as strings, not imported; `handlers.upstream.spec.ts` guards them against the upstream sources.
  */
@@ -158,9 +159,15 @@ export function upstreamHandlerFactoryOf(node: Node, imports: DereekbImportIndex
  */
 export interface UpstreamTaskTypesListing {
   /**
-   * The listing as written: `...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`, or a member constant.
+   * The listing: `...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`, a member constant as written, or, for a `validate` that
+   * names the aggregate directly ({@link bare}), the aggregate's name without `...`.
    */
   readonly text: string;
+  /**
+   * Set when `validate` is the upstream aggregate itself, named directly instead of spread
+   * (`validate: ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`, see `ExtractedTaskServiceCall.validateUpstreamAggregate`).
+   */
+  readonly bare?: boolean;
   /**
    * Set when `validate` reaches it through the app's own component aggregates.
    */
@@ -169,8 +176,9 @@ export interface UpstreamTaskTypesListing {
 
 /**
  * Returns every way a `notificationTaskService(...)` call's `validate` lists {@link contract}'s task types. The direct
- * listing comes first: the aggregate spread (`...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`), or else the first member
- * constant written in the literal. Then come the listings it reaches through the app's own component aggregates
+ * listing comes first: the aggregate spread (`...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`), the aggregate `validate`
+ * names directly (`validate: ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`, {@link UpstreamTaskTypesListing.bare}), or else
+ * the first member constant written in the literal. Then come the listings it reaches through the app's own component aggregates
  * (`ExtractedTaskServiceCall.nestedUpstreamValidateListings`). An empty result means the call does not list them.
  *
  * @param call - The task service call.
@@ -180,7 +188,10 @@ export interface UpstreamTaskTypesListing {
 export function upstreamTaskTypesListings(call: ExtractedTaskServiceCall, contract: UpstreamNotificationTaskHandlerContract): readonly UpstreamTaskTypesListing[] {
   const result: UpstreamTaskTypesListing[] = [];
   const constants = new Set(contract.taskTypes.map((x) => x.constant));
-  if (call.spreadValidateIdentifiers.includes(contract.aggregate)) {
+  if (call.validateUpstreamAggregate === contract.aggregate) {
+    // `validate: ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES` names the aggregate instead of spreading it
+    result.push({ text: contract.aggregate, bare: true });
+  } else if (call.spreadValidateIdentifiers.includes(contract.aggregate)) {
     result.push({ text: `...${contract.aggregate}` });
   } else {
     const constant = contract.taskTypes.find((x) => call.validateIdentifiers.includes(x.constant))?.constant;
@@ -199,8 +210,8 @@ export function upstreamTaskTypesListings(call: ExtractedTaskServiceCall, contra
 
 /**
  * Whether {@link upstreamTaskTypesListings} can be trusted when it finds nothing. That holds when all of these are true:
- * - the call's `validate` was read: an array literal, or a component aggregate it names directly
- *   (`ExtractedTaskServiceCall.validateAggregate`);
+ * - the call's `validate` was read: an array literal, or an aggregate it names directly
+ *   (`ExtractedTaskServiceCall.validateAggregate` / `validateUpstreamAggregate`);
  * - every element is an identifier or a spread of one;
  * - every spread names an upstream aggregate from {@link UPSTREAM_NOTIFICATION_TASK_HANDLERS}, or one of the app's own
  *   `ALL_*_NOTIFICATION_TASK_TYPES`;

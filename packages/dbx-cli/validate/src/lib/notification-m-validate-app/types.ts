@@ -308,8 +308,8 @@ export interface ExtractedTaskServiceCall {
    */
   readonly validateIdentifiers: readonly string[];
   /**
-   * Identifiers `validate` spreads (`...X`). When `validate` names a component aggregate directly ({@link validateAggregate}),
-   * this holds that aggregate's name, as if `validate` were `[...X]`.
+   * Identifiers `validate` spreads (`...X`). When `validate` names an aggregate directly ({@link validateAggregate},
+   * {@link validateUpstreamAggregate}), this holds that aggregate's exported name, as if `validate` were `[...X]`.
    */
   readonly spreadValidateIdentifiers: readonly string[];
   readonly handlerTypeIdentifiers: readonly string[];
@@ -343,18 +343,35 @@ export interface ExtractedTaskServiceCall {
   readonly unresolvedHandlerBindings: readonly string[];
   /**
    * Whether the call's `validate` property is missing (`absent`), read (`resolved`: an array literal, inline or a local
-   * array variable, or a component aggregate it names directly, see {@link validateAggregate}), or something else
-   * (`unresolved`).
+   * array variable, or an aggregate it names directly, see {@link validateAggregate} and
+   * {@link validateUpstreamAggregate}), or something else (`unresolved`).
    */
   readonly validateStatus: ExtractedTaskServiceValidateStatus;
   /**
    * The component task-type aggregate `validate` names directly, as in `validate: ALL_NOTIFICATION_TASK_TYPES` with
-   * `ALL_NOTIFICATION_TASK_TYPES` imported by name from the app's `-firebase` component. The extractor reads such a
-   * `validate` as `[...ALL_NOTIFICATION_TASK_TYPES]`, so every task check treats both forms alike. `undefined` for an array
-   * literal (inline or a local array variable), and for a value the scan can't pin to a component aggregate (that one stays
-   * `unresolved`).
+   * `ALL_NOTIFICATION_TASK_TYPES` imported from the app's `-firebase` component: by name, under an alias
+   * (`validate: TASK_TYPES`), as a namespace member (`validate: demoFirebase.ALL_NOTIFICATION_TASK_TYPES`), or through a
+   * local `const` that holds one of those ({@link validateReferenceText} is how the file writes it). The extractor reads such
+   * a `validate` as `[...ALL_NOTIFICATION_TASK_TYPES]`, so every task check treats both forms alike. `undefined` for an
+   * array literal (inline or a local array variable), an upstream aggregate ({@link validateUpstreamAggregate}), and a value
+   * the scan can't pin (that one stays `unresolved`).
    */
   readonly validateAggregate: ExtractedTaskTypeAggregateArray | undefined;
+  /**
+   * The upstream aggregate from `UPSTREAM_NOTIFICATION_TASK_HANDLERS` that `validate` names directly, imported from
+   * `@dereekb/*` (`validate: ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`; also under an alias, as a namespace member, or
+   * through a local `const`). Read as `[...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES]`, like {@link validateAggregate}.
+   * `undefined` otherwise.
+   */
+  readonly validateUpstreamAggregate: string | undefined;
+  /**
+   * How the task service's file refers to the aggregate `validate` names directly ({@link validateAggregate} or
+   * {@link validateUpstreamAggregate}), valid anywhere in that file: the import's local name (`ALL_NOTIFICATION_TASK_TYPES`,
+   * or `TASK_TYPES` for `import { ALL_NOTIFICATION_TASK_TYPES as TASK_TYPES }`) or the namespace member
+   * (`demoFirebase.ALL_NOTIFICATION_TASK_TYPES`). A local `const` that holds it is followed, so this names what the `const`
+   * holds. Messages write their "`validate: [...]`" fix with it. `undefined` when `validate` names no aggregate.
+   */
+  readonly validateReferenceText: string | undefined;
   /**
    * Values in the `validate:` array the extractor can't read: a spread of anything but an identifier, or an element that is
    * not an identifier (a string literal, a call, a property access, …). The text is collapsed and truncated. When the list

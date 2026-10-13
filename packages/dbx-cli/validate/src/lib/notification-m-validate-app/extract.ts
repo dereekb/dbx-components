@@ -35,10 +35,14 @@
  * `readArrayElementTypeNode` (`T[]`, `readonly T[]`, `Array<T>`,
  * `ReadonlyArray<T>`).
  *
- * A `notificationTaskService({ validate })` that names one of the app's
- * component aggregates directly (`validate: ALL_NOTIFICATION_TASK_TYPES`,
- * imported by name from the component) is read as
- * `[...ALL_NOTIFICATION_TASK_TYPES]`.
+ * A `notificationTaskService({ validate })` that names an aggregate
+ * directly instead of an array literal is read as a spread of it
+ * (`validate: ALL_NOTIFICATION_TASK_TYPES` as
+ * `[...ALL_NOTIFICATION_TASK_TYPES]`). That covers one of the app's component
+ * aggregates, or an upstream aggregate from `@dereekb/firebase`
+ * (`validate: ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`). It may be imported
+ * by name, under an alias or as a namespace member, and written directly or
+ * through a local `const` (`readImportedReference`).
  */
 
 import { Node, SyntaxKind, type ArrayLiteralExpression, type ArrowFunction, type FunctionDeclaration, type FunctionExpression, type Identifier, type ObjectLiteralExpression, type SourceFile, type TypeNode, type VariableDeclaration } from 'ts-morph';
@@ -59,7 +63,7 @@ import {
   readBooleanProperty,
   readCalleeName,
   readIdentifierProperty,
-  readImportedIdentifier,
+  readImportedReference,
   readStringLiteralInitializer,
   readStringProperty,
   readTypeReferenceName,
@@ -877,6 +881,10 @@ interface ExtractTaskServiceCallsInput {
   readonly sources: readonly SourceFile[];
   readonly index: ApiFunctionIndex;
   readonly trustedExternal: ReadonlySet<string>;
+  /**
+   * The per-file bindings: they match the `notificationTaskService(...)` callee, drive the handlers trace, and follow a
+   * `validate` that names an aggregate through an alias, a namespace or a local `const`.
+   */
   readonly imports: DereekbImportIndex;
   /**
    * The component index. `validate` spreads of the app's own task-type aggregates are expanded through it, and a
@@ -896,12 +904,12 @@ function extractTaskServiceCalls(input: ExtractTaskServiceCallsInput): readonly 
       const first = args[0] ? asObjectLiteral(args[0]) : undefined;
       if (!first) continue;
       const validateArr = resolveArrayLiteralProperty(first, 'validate', sf);
-      const validateAggregate = validateArr ? undefined : readValidateComponentAggregate(first, componentIndex);
+      const named = validateArr ? undefined : readValidateNamedAggregate(first, input);
       const handlersArr = resolveArrayLiteralProperty(first, 'handlers', sf);
-      // `validate: ALL_NOTIFICATION_TASK_TYPES` reads as `validate: [...ALL_NOTIFICATION_TASK_TYPES]`
-      const validate: TaskTypeListElements = validateAggregate ? { ids: [], spreads: [validateAggregate.symbolName], opaque: [] } : collectTaskTypeListElements(validateArr);
+      // `validate: ALL_NOTIFICATION_TASK_TYPES` (also `TASK_TYPES`, `ns.ALL_…`, or a local `const`) reads as `validate: [...ALL_NOTIFICATION_TASK_TYPES]`
+      const validate: TaskTypeListElements = named ? { ids: [], spreads: [named.symbolName], opaque: [] } : collectTaskTypeListElements(validateArr);
       const handlers = collectHandlersArrayElements({ handlersArr, index, trustedExternal, imports });
-      const validateStatus = validateAggregate ? 'resolved' : readTaskServiceListStatus(first, 'validate', validateArr);
+      const validateStatus = named ? 'resolved' : readTaskServiceListStatus(first, 'validate', validateArr);
       const handlersStatus = readTaskServiceListStatus(first, 'handlers', handlersArr);
       const nested = expandComponentValidateSpreads({ validateSpreads: validate.spreads, componentIndex, trustedExternal });
       out.push({
@@ -912,7 +920,9 @@ function extractTaskServiceCalls(input: ExtractTaskServiceCallsInput): readonly 
         resolvedHandlerBindings: handlers.resolvedBindings,
         unresolvedHandlerBindings: handlers.unresolvedBindings,
         validateStatus,
-        validateAggregate,
+        validateAggregate: named?.component,
+        validateUpstreamAggregate: named && !named.component ? named.symbolName : undefined,
+        validateReferenceText: named?.referenceText,
         opaqueValidateValues: validate.opaque,
         nestedValidateIdentifiers: nested.identifiers,
         nestedUpstreamValidateListings: nested.listings,
@@ -946,26 +956,59 @@ function readTaskServiceListStatus(config: ObjectLiteralExpression, name: string
 }
 
 /**
- * Reads a `notificationTaskService({ validate })` value that is not an array literal as one of the app's component
- * task-type aggregates, as in `validate: ALL_NOTIFICATION_TASK_TYPES`. The caller then reads it as
- * `[...ALL_NOTIFICATION_TASK_TYPES]`. Every condition must hold. Otherwise `validate` stays `unresolved`: a miss, never a
- * false finding.
- * - The value (after `as` casts) is an identifier the call's file imports by name: unaliased, not type-only, and declared
- *   nowhere else in the file (`readImportedIdentifier`).
- * - The import is a package outside `@dereekb/*` (in practice the app's `-firebase` component), not a relative path. So an
- *   upstream aggregate, or an API-side array of the same name, is never mistaken for the component's.
- * - The name is not an upstream aggregate name. A component aggregate that reuses one would be matched as the upstream
- *   aggregate by the name-based `validate` checks.
- * - The component declares an `ALL_*_NOTIFICATION_TASK_TYPES` / `NotificationTaskType[]` array literal of that name.
+ * An aggregate a `notificationTaskService({ validate })` names directly, from {@link readValidateNamedAggregate}.
+ */
+interface ValidateNamedAggregate {
+  /**
+   * The aggregate's exported name. The caller reads `validate` as a spread of it.
+   */
+  readonly symbolName: string;
+  /**
+   * How the call's file refers to it (`ImportedReference.text`).
+   */
+  readonly referenceText: string;
+  /**
+   * The app's component aggregate, or `undefined` for an upstream aggregate.
+   */
+  readonly component: ExtractedTaskTypeAggregateArray | undefined;
+}
+
+/**
+ * Reads a `notificationTaskService({ validate })` value that is not an array literal as an aggregate it names directly:
+ * one of the app's component aggregates (`validate: ALL_NOTIFICATION_TASK_TYPES`), or an upstream aggregate
+ * (`validate: ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`). The caller then reads it as `[...X]`. Every condition must hold.
+ * Otherwise `validate` stays `unresolved`: a miss, never a false finding.
+ * - The value reads back to a value import of the call's file (`readImportedReference`): by name, under an alias, or as a
+ *   namespace member, written directly or through a local `const` that is the only binding of its name in scope, with
+ *   the import's local name declared nowhere else in the file.
+ * - A component aggregate: the module is a package outside `@dereekb/*` (in practice the app's `-firebase` component), not
+ *   a relative path, so an API-side array of the same name is never mistaken for the component's; the name is not an
+ *   upstream aggregate name (a component aggregate that reuses one would be matched as the upstream aggregate by the
+ *   name-based checks); and the component declares an `ALL_*_NOTIFICATION_TASK_TYPES` / `NotificationTaskType[]` array
+ *   literal of that name.
+ * - An upstream aggregate: the module is an `@dereekb/*` package, the name is an aggregate from
+ *   `UPSTREAM_NOTIFICATION_TASK_HANDLERS`, and the component declares no aggregate of that name (the `validate` expansion
+ *   would follow the component's instead).
  *
  * @param config - The `notificationTaskService(...)` config object literal.
- * @param componentIndex - The component index.
- * @returns The component aggregate `validate` names, or `undefined`.
+ * @param input - The component index and the per-file bindings.
+ * @returns The aggregate `validate` names, or `undefined`.
  */
-function readValidateComponentAggregate(config: ObjectLiteralExpression, componentIndex: ComponentAggregateIndex): ExtractedTaskTypeAggregateArray | undefined {
-  const imported = readImportedIdentifier(getPropertyInitializer(config, 'validate'));
-  const isPinned = imported !== undefined && !isDereekbModuleSpecifier(imported.moduleSpecifier) && !imported.moduleSpecifier.startsWith('.') && !UPSTREAM_NOTIFICATION_TASK_AGGREGATES.has(imported.name);
-  return isPinned ? componentIndex.taskAllTypesAggregates.get(imported.name) : undefined;
+function readValidateNamedAggregate(config: ObjectLiteralExpression, input: Pick<ExtractTaskServiceCallsInput, 'componentIndex' | 'imports'>): ValidateNamedAggregate | undefined {
+  const imported = readImportedReference(getPropertyInitializer(config, 'validate'), input.imports);
+  let result: ValidateNamedAggregate | undefined;
+  if (imported) {
+    const { name, moduleSpecifier, text } = imported;
+    const component = input.componentIndex.taskAllTypesAggregates.get(name);
+    const isUpstreamName = UPSTREAM_NOTIFICATION_TASK_AGGREGATES.has(name);
+    const isDereekbModule = isDereekbModuleSpecifier(moduleSpecifier);
+    const isUpstreamAggregate = isDereekbModule && isUpstreamName && component === undefined;
+    const isComponentAggregate = !isDereekbModule && !moduleSpecifier.startsWith('.') && !isUpstreamName && component !== undefined;
+    if (isUpstreamAggregate || isComponentAggregate) {
+      result = { symbolName: name, referenceText: text, component };
+    }
+  }
+  return result;
 }
 
 interface TaskTypeListElements {
@@ -999,7 +1042,7 @@ function collectTaskTypeListElements(arr: ArrayLiteralExpression | undefined): T
 
 interface ExpandComponentValidateSpreadsInput {
   /**
-   * Identifiers the call's `validate` spreads, or the component aggregate it names directly.
+   * Identifiers the call's `validate` spreads, or the aggregate it names directly.
    */
   readonly validateSpreads: readonly string[];
   readonly componentIndex: ComponentAggregateIndex;

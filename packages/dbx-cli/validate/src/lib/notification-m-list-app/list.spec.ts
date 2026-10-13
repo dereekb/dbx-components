@@ -144,6 +144,18 @@ describe('listAppNotifications', () => {
     expect(report.tasks[0].inValidateList).toBe(true);
   });
 
+  it.each<[string, (text: string) => string]>([
+    ['under an alias', (text) => text.replace('import { ALL_NOTIFICATION_TASK_TYPES, EXAMPLE_NOTIFICATION_TASK_TYPE,', 'import { ALL_NOTIFICATION_TASK_TYPES as TASK_TYPES, EXAMPLE_NOTIFICATION_TASK_TYPE,').replace('validate: [...ALL_NOTIFICATION_TASK_TYPES]', 'validate: TASK_TYPES')],
+    ['as a namespace member', (text) => text.replace('export function demoNotificationTaskServiceFactory', "import * as demoFirebase from 'demo-firebase';\n\nexport function demoNotificationTaskServiceFactory").replace('validate: [...ALL_NOTIFICATION_TASK_TYPES]', 'validate: demoFirebase.ALL_NOTIFICATION_TASK_TYPES')],
+    ['through a local const', (text) => text.replace('validate: [...ALL_NOTIFICATION_TASK_TYPES]', 'validate: taskTypes').replace('  return notificationTaskService(', '  const taskTypes = ALL_NOTIFICATION_TASK_TYPES;\n  return notificationTaskService(')]
+  ])('reads a validate that names the task aggregate %s', (_label, reshape) => {
+    const inspection = happyInspection();
+    const apiFiles = inspection.api.files.map((f) => (f.relPath.endsWith('notification.task.service.ts') ? { ...f, text: reshape(API_TASK_SERVICE) } : f));
+    const patched: AppNotificationsInspection = { ...inspection, api: { ...inspection.api, files: apiFiles } };
+    const report = listAppNotifications(patched, { componentDir: 'components/demo-firebase', apiDir: 'apps/demo-api' });
+    expect(report.tasks[0].inValidateList).toBe(true);
+  });
+
   it('handles a missing aggregator record gracefully', () => {
     const inspection = happyInspection();
     const componentFiles = inspection.component.files.map((f) => (f.relPath.endsWith('notification.ts') ? { ...f, text: COMPONENT_MAIN.replace(/export const DEMO_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD[\s\S]*?;/, '') } : f));

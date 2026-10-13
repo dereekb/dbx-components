@@ -5,7 +5,8 @@
  * through the checks once its wiring is applied. It also covers the upstream StorageFile and FormSpace handler checks
  * (`NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED` and `NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE`) against the demo's
  * task service, with the upstream task types listed directly in `validate`, moved into `ALL_NOTIFICATION_TASK_TYPES`, or
- * moved there with `validate` naming that aggregate directly.
+ * moved there with `validate` naming that aggregate directly (by name, under an alias, as a namespace member or through a
+ * local `const`), or with `validate` naming the StorageFile aggregate itself.
  *
  * The mutation helper throws when the text it replaces is gone, so a refactor of the demo's bot wiring fails here
  * loudly instead of silently passing.
@@ -271,6 +272,79 @@ describe('dbx_notification_m_validate_app — demo pair upstream task types nest
     expect(upstreamFindings(result).map((v) => v.code)).toEqual(['NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE', 'NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE']);
     expect(taskBotFindings(result).map((v) => v.code)).toEqual(['NOTIF_TASK_BOT_TASK_TYPES_NOT_IN_VALIDATE']);
     expect(result.errorCount).toBe(0);
+  });
+
+  const DEMO_IMPORT_ANCHOR = "import { toJsDate } from '@dereekb/date';";
+  const DEMO_SERVICE_CALL = '  const notificationSendService: NotificationTaskService = notificationTaskService({';
+
+  // Ways to name `ALL_NOTIFICATION_TASK_TYPES` as the demo's `validate`, applied after `nestDemoUpstreamTaskTypes`.
+  const DEMO_NAMED_SHAPES: [string, (m: MutableInspection) => void][] = [
+    [
+      'under an alias',
+      (m) => {
+        replaceIn(m.api, TASK_SERVICE_FILE, DEMO_IMPORT_ANCHOR, `${DEMO_IMPORT_ANCHOR}\nimport { ALL_NOTIFICATION_TASK_TYPES as DEMO_TASK_TYPES } from 'demo-firebase';`);
+        replaceIn(m.api, TASK_SERVICE_FILE, 'validate: [...ALL_NOTIFICATION_TASK_TYPES]', 'validate: DEMO_TASK_TYPES');
+      }
+    ],
+    [
+      'as a namespace member',
+      (m) => {
+        replaceIn(m.api, TASK_SERVICE_FILE, DEMO_IMPORT_ANCHOR, `${DEMO_IMPORT_ANCHOR}\nimport * as demoFirebase from 'demo-firebase';`);
+        replaceIn(m.api, TASK_SERVICE_FILE, 'validate: [...ALL_NOTIFICATION_TASK_TYPES]', 'validate: demoFirebase.ALL_NOTIFICATION_TASK_TYPES');
+      }
+    ],
+    [
+      'through a local const',
+      (m) => {
+        replaceIn(m.api, TASK_SERVICE_FILE, DEMO_SERVICE_CALL, `  const taskTypes = ALL_NOTIFICATION_TASK_TYPES;\n${DEMO_SERVICE_CALL}`);
+        replaceIn(m.api, TASK_SERVICE_FILE, 'validate: [...ALL_NOTIFICATION_TASK_TYPES]', 'validate: taskTypes');
+      }
+    ]
+  ];
+
+  it.each(DEMO_NAMED_SHAPES)('accepts the demo with validate naming ALL_NOTIFICATION_TASK_TYPES %s', (_label, shape) => {
+    const result = validateWith((m) => {
+      nestDemoUpstreamTaskTypes(m);
+      shape(m);
+    });
+    expect(upstreamFindings(result)).toEqual([]);
+    expect(taskBotFindings(result)).toEqual([]);
+    expect(result.errorCount).toBe(0);
+    expect(result.warningCount).toBe(validateWith().warningCount);
+  });
+
+  it.each(DEMO_NAMED_SHAPES)('reports NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED through validate naming ALL_NOTIFICATION_TASK_TYPES %s', (_label, shape) => {
+    const found = upstreamFindings(
+      validateWith((m) => {
+        nestDemoUpstreamTaskTypes(m);
+        shape(m);
+        replaceIn(m.api, TASK_SERVICE_FILE, ', storageFileHandler, ', ', ');
+      })
+    );
+    expect(found).toHaveLength(1);
+    expect(found[0].code).toBe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED');
+    expect(found[0].message).toContain('through `ALL_NOTIFICATION_TASK_TYPES` (');
+  });
+
+  it('warns for the FormSpace and NotificationTaskBot handlers when validate names ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES directly', () => {
+    const result = validateWith((m) => replaceIn(m.api, TASK_SERVICE_FILE, DEMO_VALIDATE, 'validate: ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES'));
+    const found = upstreamFindings(result);
+    expect(found.map((v) => v.code)).toEqual(['NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE']);
+    expect(found[0].message).toContain('its `validate` (`ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`) does not list `...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES`');
+    expect(taskBotFindings(result).map((v) => v.code)).toEqual(['NOTIF_TASK_BOT_TASK_TYPES_NOT_IN_VALIDATE']);
+    expect(result.errorCount).toBe(0);
+  });
+
+  it('reports NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED when validate names ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES and the StorageFile handler leaves handlers', () => {
+    const found = upstreamFindings(
+      validateWith((m) => {
+        replaceIn(m.api, TASK_SERVICE_FILE, DEMO_VALIDATE, 'validate: ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES');
+        replaceIn(m.api, TASK_SERVICE_FILE, ', storageFileHandler, ', ', ');
+      })
+    );
+    expect(found.map((v) => v.code)).toEqual(['NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED', 'NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE']);
+    expect(found[0].message).toContain('passes `ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES` (StorageFile processing: `SFP`) as its `validate`');
+    expect(found[0].message).toContain('or stop passing `ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES` as `validate`.');
   });
 });
 

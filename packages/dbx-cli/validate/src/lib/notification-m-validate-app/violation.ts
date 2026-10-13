@@ -32,28 +32,43 @@ export function pushViolation(buffer: Violation[], violation: Omit<Violation, 's
 }
 
 /**
- * Names a task service's `validate` in a message: `` `validate` ``. When `validate` names one of the app's component
- * aggregates directly, the aggregate and its location follow:
- * `` `validate` (`ALL_NOTIFICATION_TASK_TYPES`, src/lib/model/notification/notification.task.ts:9) ``.
+ * Names a task service's `validate` in a message: `` `validate` ``. When `validate` names an aggregate directly, the
+ * aggregate follows: a component aggregate with its location,
+ * `` `validate` (`ALL_NOTIFICATION_TASK_TYPES`, src/lib/model/notification/notification.task.ts:9) ``, an upstream one by
+ * name, `` `validate` (`ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`) ``.
  *
  * @param call - The task service call.
  * @returns The code-formatted text.
  */
 export function taskServiceValidateText(call: ExtractedTaskServiceCall): string {
-  const aggregate = call.validateAggregate;
-  return aggregate ? `\`validate\` (\`${aggregate.symbolName}\`, ${aggregate.sourceFile}:${aggregate.line})` : '`validate`';
+  const { validateAggregate: aggregate, validateUpstreamAggregate: upstream } = call;
+  let result = '`validate`';
+  if (aggregate) {
+    result = `\`validate\` (\`${aggregate.symbolName}\`, ${aggregate.sourceFile}:${aggregate.line})`;
+  } else if (upstream) {
+    result = `\`validate\` (\`${upstream}\`)`;
+  }
+  return result;
 }
 
 /**
  * The fix for an upstream aggregate a task service's `validate` doesn't list: `` Add it (from `@dereekb/firebase`) ``. When
- * `validate` names a component aggregate directly, it also says where: in that aggregate, or next to it in a `validate`
- * literal.
+ * `validate` names an aggregate directly, it also says where. For a component aggregate, that is in that aggregate, or next
+ * to it in a `validate` literal. For an upstream aggregate, only the literal. The literal is written the way the task
+ * service's file refers to the named aggregate (`ExtractedTaskServiceCall.validateReferenceText`).
  *
  * @param call - The task service call.
  * @param aggregate - The missing upstream aggregate, e.g. `ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`.
  * @returns The fix, without its closing "so …" clause.
  */
 export function addToValidateFixText(call: ExtractedTaskServiceCall, aggregate: string): string {
-  const named = call.validateAggregate?.symbolName;
-  return named ? `Add it (from \`@dereekb/firebase\`) to \`${named}\`, or write \`validate: [...${named}, ...${aggregate}]\`` : 'Add it (from `@dereekb/firebase`)';
+  const { validateAggregate: named, validateReferenceText: written } = call;
+  const literal = written === undefined ? undefined : `write \`validate: [...${written}, ...${aggregate}]\``;
+  let result = 'Add it (from `@dereekb/firebase`)';
+  if (named && literal) {
+    result = `${result} to \`${named.symbolName}\`, or ${literal}`;
+  } else if (literal) {
+    result = `${result}: ${literal}`;
+  }
+  return result;
 }

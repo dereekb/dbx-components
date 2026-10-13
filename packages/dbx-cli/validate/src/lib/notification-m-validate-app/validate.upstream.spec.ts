@@ -212,6 +212,19 @@ function nameValidateAggregateHoldingUpstream(parts: FixtureParts): void {
   nameValidateAggregate(parts);
 }
 
+const DEMO_FIREBASE_ALIAS_IMPORT = "import { ALL_NOTIFICATION_TASK_TYPES as TASK_TYPES, EXAMPLE_NOTIFICATION_TASK_TYPE, type ExampleNotificationTaskData } from 'demo-firebase';";
+const TASK_SERVICE_RETURN = '  return notificationTaskService(';
+
+// Declares `line` (a local `const` or `let`) right before the task service's `return notificationTaskService(...)`.
+function addBeforeTaskServiceCall(parts: FixtureParts, line: string): void {
+  replaceInFile(parts.api, TASK_SERVICE_FILE, TASK_SERVICE_RETURN, `  ${line}\n${TASK_SERVICE_RETURN}`);
+}
+
+// Adds `declaration` (e.g. a function whose parameter reuses a name) right before the task service factory.
+function addBeforeTaskServiceFactory(parts: FixtureParts, declaration: string): void {
+  replaceInFile(parts.api, TASK_SERVICE_FILE, 'export function demoNotificationTaskServiceFactory', `${declaration}\n\nexport function demoNotificationTaskServiceFactory`);
+}
+
 // A module-level `const create = formSpaceSubmissionNotificationTaskHandler;` in the SF wrapper's file.
 function addModuleLevelFormSpaceConst(parts: FixtureParts): void {
   replaceInFile(parts.api, SF_HANDLER_FILE, SF_FACTORY_IMPORT, "import { formSpaceSubmissionNotificationTaskHandler, storageFileProcessingNotificationTaskHandler } from '@dereekb/firebase-server/model';\n\nconst create = formSpaceSubmissionNotificationTaskHandler;");
@@ -1178,16 +1191,93 @@ describe('notificationTaskService validate naming a component aggregate (validat
     expect(findingsOf(result, NOT_IN_VALIDATE)).toEqual([]);
   });
 
-  // The StorageFile handler leaves `handlers` in every case, so a read of `validate` would raise
-  // NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED; the guard under test is all that stands between these and a false error.
-  it.each<[string, (parts: FixtureParts) => void]>([
+  // Each shape names `ALL_NOTIFICATION_TASK_TYPES` as `validate` in a way the scan follows; the third column is how the task
+  // service's file refers to it (`validateReferenceText`).
+  const READ_SHAPES: [string, (parts: FixtureParts) => void, string][] = [
     [
       'an aggregate imported under an alias',
       (p) => {
-        replaceInFile(p.api, TASK_SERVICE_FILE, DEMO_FIREBASE_IMPORT, "import { ALL_NOTIFICATION_TASK_TYPES as TASK_TYPES, EXAMPLE_NOTIFICATION_TASK_TYPE, type ExampleNotificationTaskData } from 'demo-firebase';");
+        replaceInFile(p.api, TASK_SERVICE_FILE, DEMO_FIREBASE_IMPORT, DEMO_FIREBASE_ALIAS_IMPORT);
         nameValidateAggregate(p, 'TASK_TYPES');
-      }
+      },
+      'TASK_TYPES'
     ],
+    [
+      'a namespace member',
+      (p) => {
+        addTaskServiceImport(p, "import * as demoFirebase from 'demo-firebase';");
+        nameValidateAggregate(p, 'demoFirebase.ALL_NOTIFICATION_TASK_TYPES');
+      },
+      'demoFirebase.ALL_NOTIFICATION_TASK_TYPES'
+    ],
+    [
+      'a local alias of the aggregate',
+      (p) => {
+        nameValidateAggregate(p, 'taskTypes');
+        addBeforeTaskServiceCall(p, 'const taskTypes = ALL_NOTIFICATION_TASK_TYPES;');
+      },
+      'ALL_NOTIFICATION_TASK_TYPES'
+    ],
+    [
+      'a shorthand validate held in a local const',
+      (p) => {
+        replaceInFile(p.api, TASK_SERVICE_FILE, VALIDATE_LITERAL, 'validate');
+        addBeforeTaskServiceCall(p, 'const validate = ALL_NOTIFICATION_TASK_TYPES;');
+      },
+      'ALL_NOTIFICATION_TASK_TYPES'
+    ],
+    [
+      'a module-level const',
+      (p) => {
+        nameValidateAggregate(p, 'DEMO_TASK_TYPES');
+        addBeforeTaskServiceFactory(p, 'const DEMO_TASK_TYPES = ALL_NOTIFICATION_TASK_TYPES;');
+      },
+      'ALL_NOTIFICATION_TASK_TYPES'
+    ],
+    [
+      'a local const holding an aliased import',
+      (p) => {
+        replaceInFile(p.api, TASK_SERVICE_FILE, DEMO_FIREBASE_IMPORT, DEMO_FIREBASE_ALIAS_IMPORT);
+        nameValidateAggregate(p, 'taskTypes');
+        addBeforeTaskServiceCall(p, 'const taskTypes = TASK_TYPES;');
+      },
+      'TASK_TYPES'
+    ],
+    [
+      'a local const holding a namespace member',
+      (p) => {
+        addTaskServiceImport(p, "import * as demoFirebase from 'demo-firebase';");
+        nameValidateAggregate(p, 'taskTypes');
+        addBeforeTaskServiceCall(p, 'const taskTypes = demoFirebase.ALL_NOTIFICATION_TASK_TYPES;');
+      },
+      'demoFirebase.ALL_NOTIFICATION_TASK_TYPES'
+    ]
+  ];
+
+  it.each(READ_SHAPES)('reads validate naming the component aggregate through %s', (_label, modify, referenceText) => {
+    const fullModify = (p: FixtureParts) => {
+      nestBothUpstreamAggregates(p);
+      dropStorageFileHandler(p);
+      modify(p);
+    };
+    const found = findingsOf(runWith(fullModify));
+    expect(found).toHaveLength(1);
+    expect(found[0].message).toContain(`in \`validate\` through \`ALL_NOTIFICATION_TASK_TYPES\` (${AGGREGATE_AT}), but`);
+    const [call] = extractAppNotifications(inspectionOf(fullModify)).taskServiceCalls;
+    expect(call).toMatchObject({ validateStatus: 'resolved', spreadValidateIdentifiers: ['ALL_NOTIFICATION_TASK_TYPES'], validateUpstreamAggregate: undefined, validateReferenceText: referenceText });
+    expect(call.validateAggregate).toMatchObject({ symbolName: 'ALL_NOTIFICATION_TASK_TYPES', sourceFile: COMPONENT_TASK_FILE, line: 9 });
+  });
+
+  it.each(READ_SHAPES)('writes the fix the way the file refers to the aggregate, through %s', (_label, modify, referenceText) => {
+    const result = runWith(modify);
+    expect(result.violations.map((v) => v.code)).toEqual([NOT_IN_VALIDATE, NOT_IN_VALIDATE]);
+    expect(result.violations[0].message).toContain(`its \`validate\` (\`ALL_NOTIFICATION_TASK_TYPES\`, ${AGGREGATE_AT}) does not list \`...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES\``);
+    expect(result.violations[0].message).toContain(`Add it (from \`@dereekb/firebase\`) to \`ALL_NOTIFICATION_TASK_TYPES\`, or write \`validate: [...${referenceText}, ...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES]\`, so `);
+  });
+
+  // The StorageFile handler leaves `handlers` in every case, so a read of `validate` would raise
+  // NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED; the guard under test is all that stands between these and a false error.
+  it.each<[string, (parts: FixtureParts) => void]>([
     [
       'an aggregate imported from @dereekb/*',
       (p) => {
@@ -1203,10 +1293,33 @@ describe('notificationTaskService validate naming a component aggregate (validat
       }
     ],
     [
+      'a namespace member of a relative module',
+      (p) => {
+        addTaskServiceImport(p, "import * as taskTypes from './notification.task.types';");
+        nameValidateAggregate(p, 'taskTypes.ALL_NOTIFICATION_TASK_TYPES');
+      }
+    ],
+    [
       'a name the file also declares',
       (p) => {
         nameValidateAggregate(p);
-        replaceInFile(p.api, TASK_SERVICE_FILE, 'export function demoNotificationTaskServiceFactory', 'function unrelated(ALL_NOTIFICATION_TASK_TYPES: string[]) {\n  return ALL_NOTIFICATION_TASK_TYPES;\n}\n\nexport function demoNotificationTaskServiceFactory');
+        addBeforeTaskServiceFactory(p, 'function unrelated(ALL_NOTIFICATION_TASK_TYPES: string[]) {\n  return ALL_NOTIFICATION_TASK_TYPES;\n}');
+      }
+    ],
+    [
+      'an alias the file also declares',
+      (p) => {
+        replaceInFile(p.api, TASK_SERVICE_FILE, DEMO_FIREBASE_IMPORT, DEMO_FIREBASE_ALIAS_IMPORT);
+        nameValidateAggregate(p, 'TASK_TYPES');
+        addBeforeTaskServiceFactory(p, 'function unrelated(TASK_TYPES: string[]) {\n  return TASK_TYPES;\n}');
+      }
+    ],
+    [
+      'a namespace the file also declares',
+      (p) => {
+        addTaskServiceImport(p, "import * as demoFirebase from 'demo-firebase';");
+        nameValidateAggregate(p, 'demoFirebase.ALL_NOTIFICATION_TASK_TYPES');
+        addBeforeTaskServiceFactory(p, 'function unrelated(demoFirebase: object) {\n  return demoFirebase;\n}');
       }
     ],
     [
@@ -1217,17 +1330,18 @@ describe('notificationTaskService validate naming a component aggregate (validat
       }
     ],
     [
-      'a namespace member',
+      'a let holding the aggregate',
       (p) => {
-        addTaskServiceImport(p, "import * as demoFirebase from 'demo-firebase';");
-        nameValidateAggregate(p, 'demoFirebase.ALL_NOTIFICATION_TASK_TYPES');
+        nameValidateAggregate(p, 'taskTypes');
+        addBeforeTaskServiceCall(p, 'let taskTypes = ALL_NOTIFICATION_TASK_TYPES;');
       }
     ],
     [
-      'a local alias of the aggregate',
+      'a module-level const a parameter shadows',
       (p) => {
         nameValidateAggregate(p, 'taskTypes');
-        replaceInFile(p.api, TASK_SERVICE_FILE, '  return notificationTaskService(', '  const taskTypes = ALL_NOTIFICATION_TASK_TYPES;\n  return notificationTaskService(');
+        addBeforeTaskServiceFactory(p, 'const taskTypes = ALL_NOTIFICATION_TASK_TYPES;');
+        replaceInFile(p.api, TASK_SERVICE_FILE, 'demoNotificationTaskServiceFactory(context)', 'demoNotificationTaskServiceFactory(context, taskTypes)');
       }
     ]
   ])('leaves validate unread when it names %s', (_label, modify) => {
@@ -1242,6 +1356,148 @@ describe('notificationTaskService validate naming a component aggregate (validat
     const [call] = extractAppNotifications(inspectionOf(fullModify)).taskServiceCalls;
     expect(call.validateStatus).toBe('unresolved');
     expect(call.validateAggregate).toBeUndefined();
+    expect(call.validateReferenceText).toBeUndefined();
+  });
+});
+
+describe('notificationTaskService validate naming an upstream aggregate (validate: ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES)', () => {
+  const NOT_IN_VALIDATE: ViolationCode = 'NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE';
+  const SF = 'ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES';
+  const FS = 'ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES';
+
+  // Each shape names the StorageFile aggregate as `validate`; the third column is how the task service's file refers to it.
+  const SHAPES: [string, (parts: FixtureParts) => void, string][] = [
+    ['by name', (p) => nameValidateAggregate(p, SF), SF],
+    [
+      'under an alias',
+      (p) => {
+        addTaskServiceImport(p, `import { ${SF} as SF_TASK_TYPES } from '@dereekb/firebase';`);
+        nameValidateAggregate(p, 'SF_TASK_TYPES');
+      },
+      'SF_TASK_TYPES'
+    ],
+    [
+      'as a namespace member',
+      (p) => {
+        addTaskServiceImport(p, "import * as firebase from '@dereekb/firebase';");
+        nameValidateAggregate(p, `firebase.${SF}`);
+      },
+      `firebase.${SF}`
+    ],
+    [
+      'through a local const',
+      (p) => {
+        nameValidateAggregate(p, 'taskTypes');
+        addBeforeTaskServiceCall(p, `const taskTypes = ${SF};`);
+      },
+      SF
+    ],
+    [
+      'through a shorthand validate',
+      (p) => {
+        replaceInFile(p.api, TASK_SERVICE_FILE, VALIDATE_LITERAL, 'validate');
+        addBeforeTaskServiceCall(p, `const validate = ${SF};`);
+      },
+      SF
+    ]
+  ];
+
+  it.each(SHAPES)('reads the aggregate named %s as a spread of it', (_label, modify, referenceText) => {
+    const [call] = extractAppNotifications(inspectionOf(modify)).taskServiceCalls;
+    expect(call).toMatchObject({
+      validateStatus: 'resolved',
+      validateIdentifiers: [],
+      spreadValidateIdentifiers: [SF],
+      opaqueValidateValues: [],
+      nestedUpstreamValidateListings: [],
+      opaqueNestedValidateValues: [],
+      validateAggregate: undefined,
+      validateUpstreamAggregate: SF,
+      validateReferenceText: referenceText
+    });
+  });
+
+  it.each(SHAPES)('warns for the FormSpace handler the aggregate named %s leaves out', (_label, modify, referenceText) => {
+    const result = runWith(modify);
+    expect(result.violations.map((v) => v.code)).toEqual([NOT_IN_VALIDATE]);
+    expect(result.violations[0].message).toContain(`its \`validate\` (\`${SF}\`) does not list \`...${FS}\` (\`FSPS\`). Add it (from \`@dereekb/firebase\`): write \`validate: [...${referenceText}, ...${FS}]\`, so `);
+  });
+
+  it.each(SHAPES)('reports the aggregate named %s when its handler leaves handlers', (_label, modify) => {
+    const found = findingsOf(
+      runWith((p) => {
+        modify(p);
+        dropStorageFileHandler(p);
+      })
+    );
+    expect(found).toHaveLength(1);
+    expect(found[0]).toMatchObject({ severity: 'error', side: 'api', file: TASK_SERVICE_FILE });
+    expect(found[0].message).toContain(`passes \`${SF}\` (StorageFile processing: \`SFP\`) as its \`validate\`, but the handler \`demoStorageFileProcessingNotificationTaskHandler\` builds`);
+    expect(found[0].message).toContain(`Add \`demoStorageFileProcessingNotificationTaskHandler(...)\` to \`handlers\`, or stop passing \`${SF}\` as \`validate\`.`);
+    expect(found[0].message).not.toContain(`\`...${SF}\``);
+  });
+
+  it('accepts validate naming the StorageFile aggregate once the FormSpace handler is gone', () => {
+    const result = runWith((p) => {
+      nameValidateAggregate(p, SF);
+      dropFormSpaceHandler(p);
+    });
+    expect(result.violations).toEqual([]);
+  });
+
+  it('says no factory call was found for an upstream aggregate named as validate that the app never builds', () => {
+    const found = findingsOf(
+      runWith((p) => {
+        removeFile(p.api, SF_HANDLER_FILE);
+        replaceInFile(p.api, TASK_SERVICE_FILE, SF_IMPORT, '');
+        replaceInFile(p.api, TASK_SERVICE_FILE, `  ${SF_LOCAL}\n`, '');
+        dropStorageFileHandler(p);
+        nameValidateAggregate(p, SF);
+      })
+    );
+    expect(found).toHaveLength(1);
+    expect(found[0].message).toContain('no `storageFileProcessingNotificationTaskHandler(...)` call was found');
+    expect(found[0].message).toContain(`to \`handlers\`, or stop passing \`${SF}\` as \`validate\`.`);
+  });
+
+  // The StorageFile handler leaves `handlers` in every case, so a read would raise NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED.
+  it.each<[string, (parts: FixtureParts) => void]>([
+    [
+      'imported from outside @dereekb/*',
+      (p) => {
+        addTaskServiceImport(p, `import { ${SF} as SF_TASK_TYPES } from 'demo-firebase';`);
+        nameValidateAggregate(p, 'SF_TASK_TYPES');
+      }
+    ],
+    [
+      'under a type-only import',
+      (p) => {
+        addTaskServiceImport(p, `import { type ${SF} as SF_TASK_TYPES } from '@dereekb/firebase';`);
+        nameValidateAggregate(p, 'SF_TASK_TYPES');
+      }
+    ],
+    [
+      'whose name the file also declares',
+      (p) => {
+        nameValidateAggregate(p, SF);
+        addBeforeTaskServiceFactory(p, `function unrelated(${SF}: string[]) {\n  return ${SF};\n}`);
+      }
+    ],
+    [
+      'that the component also declares as its own aggregate',
+      (p) => {
+        replaceInFile(p.component, COMPONENT_TASK_FILE, `${COMPONENT_AGGREGATE};`, `${COMPONENT_AGGREGATE};\n\nexport const ${SF}: NotificationTaskType[] = [EXAMPLE_NOTIFICATION_TASK_TYPE];`);
+        nameValidateAggregate(p, SF);
+      }
+    ]
+  ])('leaves validate unread when it names an upstream aggregate %s', (_label, modify) => {
+    const fullModify = (p: FixtureParts) => {
+      modify(p);
+      dropStorageFileHandler(p);
+    };
+    expect(findingsOf(runWith(fullModify))).toEqual([]);
+    const [call] = extractAppNotifications(inspectionOf(fullModify)).taskServiceCalls;
+    expect(call).toMatchObject({ validateStatus: 'unresolved', validateUpstreamAggregate: undefined, validateReferenceText: undefined });
   });
 });
 

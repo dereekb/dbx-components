@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { extractAppNotifications, validateAppNotifications } from './index.js';
+import { extractAppNotifications, taskServiceCallListsTaskBotTypes, validateAppNotifications } from './index.js';
 import { selectTaskBotRunHandlerCalls } from './select.taskbot.js';
 import type { AppNotificationsInspection, AppNotificationsWorkspaceFiles, InspectedFile, ValidationResult, ViolationCode } from './types.js';
 
@@ -433,6 +433,91 @@ describe('NotificationTaskBot checks — handler', () => {
     ]
   ])('accepts the NTBR handler written %s', (_label, modify) => {
     expect(taskBotCodes(runWith(modify))).toEqual([]);
+  });
+});
+
+describe('NotificationTaskBot checks — validate naming an aggregate directly', () => {
+  const TASK_SERVICE_VALIDATE = 'validate: [...ALL_NOTIFICATION_TASK_TYPES, ...ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES]';
+
+  // `validate` is the NotificationTaskBot aggregate itself.
+  function nameTaskBotAggregateAsValidate(parts: FixtureParts): void {
+    replaceInFile(parts.api, TASK_SERVICE_FILE, TASK_SERVICE_VALIDATE, 'validate: ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES');
+  }
+
+  // Leaves the named `validate` as the only bot signal: no script registry, no NTBR handler, no registry service.
+  function dropEveryOtherBotSignal(parts: FixtureParts): void {
+    removeFile(parts.component, TASKBOT_FILE);
+    removeFile(parts.api, HANDLER_FILE);
+    removeFile(parts.api, ACTION_MODULE_FILE);
+    replaceInFile(parts.api, TASK_SERVICE_FILE, ', notificationTaskBotHandler]', ']');
+    replaceInFile(parts.api, TASK_SERVICE_FILE, 'const notificationTaskBotHandler = demoNotificationTaskBotRunNotificationTaskHandler(context);', '');
+  }
+
+  it('counts the NTB task types when validate names ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES directly', () => {
+    expect(taskBotCodes(runWith(nameTaskBotAggregateAsValidate))).toEqual([]);
+    expect(taskServiceCallListsTaskBotTypes(extractAppNotifications(inspectionOf(nameTaskBotAggregateAsValidate)).taskServiceCalls[0])).toBe(true);
+  });
+
+  it('says the service throws at startup when validate names the NTB aggregate and the handler leaves handlers', () => {
+    const result = runWith((p) => {
+      nameTaskBotAggregateAsValidate(p);
+      replaceInFile(p.api, TASK_SERVICE_FILE, ', notificationTaskBotHandler]', ']');
+    });
+    const found = findingsOf(result, 'NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED');
+    expect(found).toHaveLength(1);
+    expect(found[0].message).toContain('also throws at startup');
+  });
+
+  it('runs the NotificationTaskBot checks when validate naming the NTB aggregate is the only bot signal', () => {
+    const result = runWith((p) => {
+      dropEveryOtherBotSignal(p);
+      nameTaskBotAggregateAsValidate(p);
+    });
+    expect(taskBotCodes(result)).toEqual(['NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED']);
+  });
+
+  it('warns NOTIF_TASK_BOT_TASK_TYPES_NOT_IN_VALIDATE with the literal fix when validate names another upstream aggregate', () => {
+    const result = runWith((p) => {
+      replaceInFile(p.api, TASK_SERVICE_FILE, "import { ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES } from '@dereekb/firebase';", "import { ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES } from '@dereekb/firebase';");
+      replaceInFile(p.api, TASK_SERVICE_FILE, TASK_SERVICE_VALIDATE, 'validate: ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES');
+    });
+    expect(taskBotCodes(result)).toEqual(['NOTIF_TASK_BOT_TASK_TYPES_NOT_IN_VALIDATE']);
+    expect(findingsOf(result, 'NOTIF_TASK_BOT_TASK_TYPES_NOT_IN_VALIDATE')[0].message).toContain(
+      'its `validate` (`ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`) does not list `...ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES`. Add it (from `@dereekb/firebase`): write `validate: [...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES, ...ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES]`, so startup fails'
+    );
+    // nothing builds the StorageFile handler, so the named aggregate's own pair is reported too
+    expect(findingsOf(result, 'NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED')[0].message).toContain('or stop passing `ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES` as `validate`.');
+  });
+
+  it.each<[string, (parts: FixtureParts) => void]>([
+    [
+      'under an alias',
+      (p) => {
+        replaceInFile(p.api, TASK_SERVICE_FILE, 'import { ALL_NOTIFICATION_TASK_TYPES, EXAMPLE_NOTIFICATION_TASK_TYPE,', 'import { ALL_NOTIFICATION_TASK_TYPES as TASK_TYPES, EXAMPLE_NOTIFICATION_TASK_TYPE,');
+        replaceInFile(p.api, TASK_SERVICE_FILE, 'validate: [...ALL_NOTIFICATION_TASK_TYPES]', 'validate: TASK_TYPES');
+      }
+    ],
+    [
+      'as a namespace member',
+      (p) => {
+        replaceInFile(p.api, TASK_SERVICE_FILE, "import { ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES } from '@dereekb/firebase';", "import { ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES } from '@dereekb/firebase';\nimport * as demoFirebase from 'demo-firebase';");
+        replaceInFile(p.api, TASK_SERVICE_FILE, 'validate: [...ALL_NOTIFICATION_TASK_TYPES]', 'validate: demoFirebase.ALL_NOTIFICATION_TASK_TYPES');
+      }
+    ],
+    [
+      'through a local const',
+      (p) => {
+        replaceInFile(p.api, TASK_SERVICE_FILE, 'validate: [...ALL_NOTIFICATION_TASK_TYPES]', 'validate: taskTypes');
+        replaceInFile(p.api, TASK_SERVICE_FILE, '  return notificationTaskService(', '  const taskTypes = ALL_NOTIFICATION_TASK_TYPES;\n  return notificationTaskService(');
+      }
+    ]
+  ])('runs the NotificationTaskBot checks when the component aggregate validate names %s is the only bot signal', (_label, modify) => {
+    const result = runWith((p) => {
+      dropEveryOtherBotSignal(p);
+      nestTaskBotTaskTypes(p);
+      modify(p);
+    });
+    expect(taskBotCodes(result)).toEqual(['NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED']);
   });
 });
 

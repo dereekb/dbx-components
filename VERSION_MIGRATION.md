@@ -93,16 +93,18 @@ but two changes require an update in every app that implements the notification 
 - **The notification build check now covers upstream task types.** `dbx_notification_m_validate_app` and
   `dbx-cli-generate-notification-manifest` now error (`NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED`) when a
   `notificationTaskService({ validate })` lists `...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES` or
-  `...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES` (directly, or inside one of the app's own `ALL_*_NOTIFICATION_TASK_TYPES`
-  arrays it spreads or names, as in `validate: ALL_NOTIFICATION_TASK_TYPES`) but its `handlers` don't reach `storageFileProcessingNotificationTaskHandler(...)` /
+  `...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES` (directly, as `validate` itself, or inside one of the app's own
+  `ALL_*_NOTIFICATION_TASK_TYPES` arrays it spreads or names, as in `validate: ALL_NOTIFICATION_TASK_TYPES`) but its `handlers` don't reach `storageFileProcessingNotificationTaskHandler(...)` /
   `formSpaceSubmissionNotificationTaskHandler(...)`. Such an app already throws at startup; the check moves that failure to
   build time. It follows `@dereekb/*` import aliases, namespace imports and a factory held in a local `const`, and is
   skipped for a service whose `handlers` the scanner can't follow completely. It also warns
   (`NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE`) the other way round. If the handler is reachable but `validate` doesn't list its aggregate, startup would no longer fail when the
   handler is removed; add the aggregate to `validate`. A warning only fails the build under `--strict` /
-  `--max-warnings`, and `--allow-warning` tolerates it. A `validate` that names one of the app's component aggregates
-  directly is now read like `[...ALL_NOTIFICATION_TASK_TYPES]` by every task check, so an app written that way can see
-  these findings, and `NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER`, for the first time.
+  `--max-warnings`, and `--allow-warning` tolerates it. A `validate` that names an aggregate instead of an array
+  literal is now read like `[...X]` by every task check. That covers one of the app's component aggregates, or an upstream
+  aggregate such as `validate: ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`, imported by name, under an alias or as a
+  namespace member, and written directly or through a local `const`. So an app written that way can see these findings,
+  and `NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER`, for the first time.
 
 ### Optional (to use bots)
 - **Firestore rules:** `match /ntb/{id} { allow get, list: if userClaimsIsSysAdmin(); }` (or add `notificationTaskBot`

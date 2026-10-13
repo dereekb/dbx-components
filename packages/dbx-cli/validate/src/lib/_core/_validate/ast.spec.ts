@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Node, SyntaxKind, type Identifier } from 'ts-morph';
-import { buildDereekbImportIndex, buildInMemoryProject, findSoleReturnExpression, isDereekbModuleSpecifier, readArrayElementTypeNode, readCalleeName, readImportedIdentifier, readTypeReferenceName, resolveLocalVariable, unwrapOuterExpressions, type ImportedIdentifier } from './ast.js';
+import { buildDereekbImportIndex, buildInMemoryProject, findSoleReturnExpression, isDereekbModuleSpecifier, readArrayElementTypeNode, readCalleeName, readImportedReference, readTypeReferenceName, resolveLocalVariable, unwrapOuterExpressions, type ImportedReference } from './ast.js';
 
 /**
  * Reads the resolved callee name of every call in a one-file project, in source order.
@@ -12,17 +12,6 @@ function calleeNamesOf(text: string): (string | undefined)[] {
   const { apiSources } = buildInMemoryProject({ component: { files: [] }, api: { files: [{ relPath: 'a.ts', text }] } });
   const imports = buildDereekbImportIndex(apiSources);
   return apiSources[0].getDescendantsOfKind(SyntaxKind.CallExpression).map((call) => readCalleeName(call, imports));
-}
-
-/**
- * Reads the initializer of the top-level `probe` variable of a one-file project with {@link readImportedIdentifier}.
- *
- * @param text - The file's source text.
- * @returns The {@link readImportedIdentifier} result.
- */
-function importedIdentifierOf(text: string): ImportedIdentifier | undefined {
-  const { apiSources } = buildInMemoryProject({ component: { files: [] }, api: { files: [{ relPath: 'a.ts', text }] } });
-  return readImportedIdentifier(apiSources[0].getVariableDeclarationOrThrow('probe').getInitializer());
 }
 
 describe('readCalleeName()', () => {
@@ -213,31 +202,63 @@ describe('readArrayElementTypeNode()', () => {
   });
 });
 
-describe('readImportedIdentifier()', () => {
+/**
+ * Reads the initializer of the first variable named `probe` in a one-file project with {@link readImportedReference}.
+ *
+ * @param text - The file's source text.
+ * @returns The {@link readImportedReference} result.
+ */
+function importedReferenceOf(text: string): ImportedReference | undefined {
+  const { apiSources } = buildInMemoryProject({ component: { files: [] }, api: { files: [{ relPath: 'a.ts', text }] } });
+  const probe = apiSources[0].getDescendantsOfKind(SyntaxKind.VariableDeclaration).find((x) => x.getName() === 'probe');
+  return readImportedReference(probe?.getInitializer(), buildDereekbImportIndex(apiSources));
+}
+
+describe('readImportedReference()', () => {
   const IMPORT = "import { ALL_NOTIFICATION_TASK_TYPES } from 'demo-firebase';\n";
+  const ALIAS_IMPORT = "import { ALL_NOTIFICATION_TASK_TYPES as TASK_TYPES } from 'demo-firebase';\n";
+  const NAMESPACE_IMPORT = "import * as demoFirebase from 'demo-firebase';\n";
+  const NAMED: ImportedReference = { name: 'ALL_NOTIFICATION_TASK_TYPES', moduleSpecifier: 'demo-firebase', text: 'ALL_NOTIFICATION_TASK_TYPES' };
+  const ALIASED: ImportedReference = { ...NAMED, text: 'TASK_TYPES' };
+  const NAMESPACED: ImportedReference = { ...NAMED, text: 'demoFirebase.ALL_NOTIFICATION_TASK_TYPES' };
 
-  it('reads an unaliased named import with its module', () => {
-    expect(importedIdentifierOf(`${IMPORT}const probe = ALL_NOTIFICATION_TASK_TYPES;`)).toEqual({ name: 'ALL_NOTIFICATION_TASK_TYPES', moduleSpecifier: 'demo-firebase' });
-  });
-
-  it('strips an `as` cast', () => {
-    expect(importedIdentifierOf(`${IMPORT}const probe = ALL_NOTIFICATION_TASK_TYPES as string[];`)).toEqual({ name: 'ALL_NOTIFICATION_TASK_TYPES', moduleSpecifier: 'demo-firebase' });
-  });
-
-  it('reads an @dereekb/* import too; the caller filters it', () => {
-    expect(importedIdentifierOf(`import { ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES } from '@dereekb/firebase';\nconst probe = ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES;`)).toEqual({ name: 'ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES', moduleSpecifier: '@dereekb/firebase' });
+  it.each<[string, string, ImportedReference]>([
+    ['an unaliased named import with its module', `${IMPORT}const probe = ALL_NOTIFICATION_TASK_TYPES;`, NAMED],
+    ['past an `as` cast', `${IMPORT}const probe = ALL_NOTIFICATION_TASK_TYPES as string[];`, NAMED],
+    ['an aliased import as the exported name', `${ALIAS_IMPORT}const probe = TASK_TYPES;`, ALIASED],
+    ['a namespace member as the member name', `${NAMESPACE_IMPORT}const probe = demoFirebase.ALL_NOTIFICATION_TASK_TYPES;`, NAMESPACED],
+    [
+      'an @dereekb/* import too; the caller filters it',
+      "import { ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES } from '@dereekb/firebase';\nconst probe = ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES;",
+      { name: 'ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES', moduleSpecifier: '@dereekb/firebase', text: 'ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES' }
+    ],
+    ['through a local const', `${IMPORT}const local = ALL_NOTIFICATION_TASK_TYPES;\nconst probe = local;`, NAMED],
+    ['through a chain of four local consts', `${IMPORT}const a = ALL_NOTIFICATION_TASK_TYPES;\nconst b = a;\nconst c = b;\nconst d = c;\nconst probe = d;`, NAMED],
+    ['through a local const holding an aliased import', `${ALIAS_IMPORT}const local = TASK_TYPES;\nconst probe = local;`, ALIASED],
+    ['through a local const holding a namespace member', `${NAMESPACE_IMPORT}const local = demoFirebase.ALL_NOTIFICATION_TASK_TYPES;\nconst probe = local;`, NAMESPACED],
+    ['through a local const of the function around the value', `${IMPORT}function f() {\n  const local = ALL_NOTIFICATION_TASK_TYPES;\n  const probe = local;\n  return probe;\n}`, NAMED],
+    ['through the local const in scope, past a same-named const in another function', `${IMPORT}function f() {\n  const local = [];\n  return local;\n}\nconst local = ALL_NOTIFICATION_TASK_TYPES;\nconst probe = local;`, NAMED]
+  ])('reads %s', (_label, text, expected) => {
+    expect(importedReferenceOf(text)).toEqual(expected);
   });
 
   it.each([
     ['a name the file does not import', `const probe = ALL_NOTIFICATION_TASK_TYPES;`],
-    ['an aliased import', `import { ALL_NOTIFICATION_TASK_TYPES as TASK_TYPES } from 'demo-firebase';\nconst probe = TASK_TYPES;`],
     ['a type-only import', `import { type ALL_NOTIFICATION_TASK_TYPES } from 'demo-firebase';\nconst probe = ALL_NOTIFICATION_TASK_TYPES;`],
-    ['a namespace member', `import * as demoFirebase from 'demo-firebase';\nconst probe = demoFirebase.ALL_NOTIFICATION_TASK_TYPES;`],
+    ['a member of a type-only namespace import', `import type * as demoFirebase from 'demo-firebase';\nconst probe = demoFirebase.ALL_NOTIFICATION_TASK_TYPES;`],
+    ['a member of a default import', `import demoFirebase from 'demo-firebase';\nconst probe = demoFirebase.ALL_NOTIFICATION_TASK_TYPES;`],
+    ['a member of a namespace member', `${NAMESPACE_IMPORT}const probe = demoFirebase.inner.ALL_NOTIFICATION_TASK_TYPES;`],
     ['an import shadowed by a parameter', `${IMPORT}function f(ALL_NOTIFICATION_TASK_TYPES: string[]) { return ALL_NOTIFICATION_TASK_TYPES; }\nconst probe = ALL_NOTIFICATION_TASK_TYPES;`],
     ['an import shadowed by a local const', `${IMPORT}function f() { const ALL_NOTIFICATION_TASK_TYPES: string[] = []; return ALL_NOTIFICATION_TASK_TYPES; }\nconst probe = ALL_NOTIFICATION_TASK_TYPES;`],
+    ['an alias the file also declares', `${ALIAS_IMPORT}function f(TASK_TYPES: string[]) { return TASK_TYPES; }\nconst probe = TASK_TYPES;`],
+    ['a namespace the file also declares', `${NAMESPACE_IMPORT}function f(demoFirebase: object) { return demoFirebase; }\nconst probe = demoFirebase.ALL_NOTIFICATION_TASK_TYPES;`],
+    ['a let', `${IMPORT}let local = ALL_NOTIFICATION_TASK_TYPES;\nconst probe = local;`],
+    ['a local const with another declaration of its name in scope', `${IMPORT}const local = ALL_NOTIFICATION_TASK_TYPES;\nfunction f(local: string[]) {\n  const probe = local;\n  return probe;\n}`],
+    ['a local const holding a call', `${IMPORT}const local = ALL_NOTIFICATION_TASK_TYPES.slice();\nconst probe = local;`],
+    ['a chain of five local consts, past the hop limit', `${IMPORT}const a = ALL_NOTIFICATION_TASK_TYPES;\nconst b = a;\nconst c = b;\nconst d = c;\nconst e = d;\nconst probe = e;`],
     ['a value that is not an identifier', `${IMPORT}const probe = [...ALL_NOTIFICATION_TASK_TYPES];`]
   ])('reads %s as undefined', (_label, text) => {
-    expect(importedIdentifierOf(text)).toBeUndefined();
+    expect(importedReferenceOf(text)).toBeUndefined();
   });
 
   it('tells @dereekb/* modules apart', () => {

@@ -2,8 +2,8 @@
  * Upstream task handler rules (`NOTIF_TASK_UPSTREAM_*`) for `dbx_notification_m_validate_app`.
  *
  * Checks every `notificationTaskService(...)` call against `UPSTREAM_NOTIFICATION_TASK_HANDLERS`, in both directions:
- * - `NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED` (error): when `validate` lists an upstream aggregate, directly or through
- *   the app's own component aggregates, its upstream handler factory must be reachable from that call's `handlers`. Only fires when the call's `handlers` trace is complete, so it
+ * - `NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED` (error): when `validate` lists an upstream aggregate, directly (spread,
+ *   or named as `validate` itself) or through the app's own component aggregates, its upstream handler factory must be reachable from that call's `handlers`. Only fires when the call's `handlers` trace is complete, so it
  *   never raises a false error; the runtime startup check stays the backstop.
  * - `NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE` (warning): when an upstream handler is reachable, `validate` should list
  *   its aggregate, so startup fails if the handler is ever removed. Only fires when the scanner read every value of
@@ -70,14 +70,23 @@ function pushUpstreamHandlerNotRegistered(input: PushUpstreamHandlerNotRegistere
   const codes = taskTypeCodesText(contract);
   // `validate: ALL_NOTIFICATION_TASK_TYPES` names the head of the chain instead of spreading it
   const chain = first.nested?.via.map((x, i) => (i === 0 && call.validateAggregate !== undefined ? '`' + x + '`' : '`...' + x + '`')).join(' → ');
-  const listedIn = first.nested ? `in \`validate\` through ${chain} (${first.nested.sourceFile}:${first.nested.line})` : 'in `validate`';
+  let listed: string;
+  if (first.bare) {
+    // `validate: ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`: the aggregate is the whole of `validate`
+    listed = `passes \`${first.text}\` (${contract.label}: ${codes}) as its \`validate\``;
+  } else if (first.nested) {
+    listed = `lists \`${first.text}\` (${contract.label}: ${codes}) in \`validate\` through ${chain} (${first.nested.sourceFile}:${first.nested.line})`;
+  } else {
+    listed = `lists \`${first.text}\` (${contract.label}: ${codes}) in \`validate\``;
+  }
   const remove = listings.map((x) => `\`${x.text}\` from ${listingPlaceText(x)}`).join(' and ');
-  const genericFix = `Add the ${contract.label} handler (e.g. \`${contract.exampleWrapper}\`, built with \`${contract.handlerFactory}(${contract.handlerFactoryConfigHint})\` from \`@dereekb/firebase-server/model\`) to \`handlers\`, or remove ${remove}.`;
+  const removeFix = first.bare ? `stop passing \`${first.text}\` as \`validate\`` : `remove ${remove}`;
+  const genericFix = `Add the ${contract.label} handler (e.g. \`${contract.exampleWrapper}\`, built with \`${contract.handlerFactory}(${contract.handlerFactoryConfigHint})\` from \`@dereekb/firebase-server/model\`) to \`handlers\`, or ${removeFix}.`;
   let problem: string;
   let fix: string;
   if (built?.enclosingFunction !== undefined) {
     problem = `the handler \`${built.enclosingFunction}\` builds (${built.sourceFile}:${built.line}) is not reachable from its \`handlers\``;
-    fix = `Add \`${built.enclosingFunction}(...)\` to \`handlers\`, or remove ${remove}.`;
+    fix = `Add \`${built.enclosingFunction}(...)\` to \`handlers\`, or ${removeFix}.`;
   } else if (built === undefined) {
     problem = `no \`${contract.handlerFactory}(...)\` call was found in ${SCANNED_API_FOLDERS}`;
     fix = genericFix;
@@ -87,7 +96,7 @@ function pushUpstreamHandlerNotRegistered(input: PushUpstreamHandlerNotRegistere
   }
   pushViolation(violations, {
     code: 'NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED',
-    message: `\`notificationTaskService(...)\` in ${call.sourceFile} lists \`${first.text}\` (${contract.label}: ${codes}) ${listedIn}, but ${problem}. \`notificationTaskService()\` throws at startup for this. ${fix}`,
+    message: `\`notificationTaskService(...)\` in ${call.sourceFile} ${listed}, but ${problem}. \`notificationTaskService()\` throws at startup for this. ${fix}`,
     side: 'api',
     file: call.sourceFile
   });

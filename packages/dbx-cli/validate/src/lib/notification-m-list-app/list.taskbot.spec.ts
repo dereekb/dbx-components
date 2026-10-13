@@ -331,6 +331,11 @@ describe('dbx_notification_m_list_app NotificationTaskBot section', () => {
     expect(report.taskBot.taskTypesInTaskServiceValidate).toBe(true);
   });
 
+  it('reports taskTypesInTaskServiceValidate when validate names ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES directly', () => {
+    const report = listWith((p) => replaceInFile(p.api, TASK_SERVICE_FILE, 'validate: [...ALL_NOTIFICATION_TASK_TYPES, ...ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES]', 'validate: ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES'));
+    expect(report.taskBot.taskTypesInTaskServiceValidate).toBe(true);
+  });
+
   it('shows an empty, not-in-use section for an app without bots', () => {
     const report = listWith((p) => {
       removeFile(p.component, TASKBOT_FILE);

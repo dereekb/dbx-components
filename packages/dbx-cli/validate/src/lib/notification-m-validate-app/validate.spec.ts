@@ -385,6 +385,47 @@ export function demoExampleHandledNotificationTaskHandler(context) {
     expect(violation?.severity).toBe('error');
     expect(violation?.message).toContain('SECOND_NOTIFICATION_TASK_TYPE');
   });
+
+  // Each shape names the component's `ALL_NOTIFICATION_TASK_TYPES` as `validate` in a way the scan follows.
+  const NAMED_VALIDATE_SHAPES: [string, (api: InspectedFile[]) => void][] = [
+    [
+      'under an alias',
+      (api) => {
+        replaceInFile({ files: api, relPath: TASK_SERVICE_PATH, from: 'import { ALL_NOTIFICATION_TASK_TYPES, EXAMPLE_NOTIFICATION_TASK_TYPE,', to: 'import { ALL_NOTIFICATION_TASK_TYPES as TASK_TYPES, EXAMPLE_NOTIFICATION_TASK_TYPE,' });
+        replaceInFile({ files: api, relPath: TASK_SERVICE_PATH, from: 'validate: [...ALL_NOTIFICATION_TASK_TYPES]', to: 'validate: TASK_TYPES' });
+      }
+    ],
+    [
+      'as a namespace member',
+      (api) => {
+        replaceInFile({ files: api, relPath: TASK_SERVICE_PATH, from: 'export function demoNotificationTaskServiceFactory', to: "import * as demoFirebase from 'demo-firebase';\n\nexport function demoNotificationTaskServiceFactory" });
+        replaceInFile({ files: api, relPath: TASK_SERVICE_PATH, from: 'validate: [...ALL_NOTIFICATION_TASK_TYPES]', to: 'validate: demoFirebase.ALL_NOTIFICATION_TASK_TYPES' });
+      }
+    ],
+    [
+      'through a local const',
+      (api) => {
+        replaceInFile({ files: api, relPath: TASK_SERVICE_PATH, from: 'validate: [...ALL_NOTIFICATION_TASK_TYPES]', to: 'validate: taskTypes' });
+        replaceInFile({ files: api, relPath: TASK_SERVICE_PATH, from: '  return notificationTaskService(', to: '  const taskTypes = ALL_NOTIFICATION_TASK_TYPES;\n  return notificationTaskService(' });
+      }
+    ]
+  ];
+
+  it.each(NAMED_VALIDATE_SHAPES)('passes the happy fixture with validate naming ALL_NOTIFICATION_TASK_TYPES %s', (_label, shape) => {
+    const result = runWith(({ api }) => shape(api));
+    expect(result.errorCount).toBe(0);
+    expect(result.warningCount).toBe(0);
+  });
+
+  it.each(NAMED_VALIDATE_SHAPES)('flags NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER for a task type in a validate aggregate named %s', (_label, shape) => {
+    const result = runWith(({ component, api }) => {
+      addSecondTaskType(component);
+      shape(api);
+    });
+    const violation = result.violations.find((v) => v.code === 'NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER');
+    expect(violation?.severity).toBe('error');
+    expect(violation?.message).toContain('SECOND_NOTIFICATION_TASK_TYPE');
+  });
 });
 
 // MARK: factory-of-array tracer regression suite — exercises the
