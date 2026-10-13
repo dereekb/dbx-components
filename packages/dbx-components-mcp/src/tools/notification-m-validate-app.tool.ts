@@ -3,13 +3,19 @@
  *
  * Cross-file verifier for downstream app notifications. Reads the
  * component package's `src/lib/model/notification/` and the API app's
- * `src/app/common/model/notification/`, then asserts every declared
+ * `src/app/common/model/notification/`, `src/app/common/firebase/` and
+ * `src/app/function/notification/`, then asserts every declared
  * `NotificationTemplateType` / `NotificationTaskType` is wired through
- * BOTH the info-record aggregator path and the handler-factory path.
+ * BOTH the info-record aggregator path and the handler-factory path, and
+ * (for apps that use bots) that the NotificationTaskBot wiring is complete.
  *
  * Accepts two required inputs:
  *   - `componentDir`: relative path to the `-firebase` component package.
  *   - `apiDir`: relative path to the API app.
+ *
+ * And two optional workspace files (defaulting to the workspace root's):
+ *   - `rulesFile`: `firestore.rules`.
+ *   - `indexesFile`: `firestore.indexes.json`.
  *
  * Paths escaping the cwd are rejected.
  */
@@ -25,7 +31,9 @@ const DBX_NOTIFICATION_M_VALIDATE_APP_TOOL: Tool = {
   description: [
     'Validate that every notification template + notification task declared in a `-firebase` component package is wired through the two registration paths in the API app: the info-record aggregator (`<APP>_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD` → `appNotificationTemplateTypeInfoRecordService(...)`) AND the handler factory (`<app>NotificationTemplateServiceConfigsArrayFactory` for templates, `notificationTaskService({ handlers })` for tasks).',
     '',
-    'Cross-file tracing follows direct calls and spread (`...fooNotifications(context)` / `...ALL_X_NOTIFICATION_TEMPLATE_TYPE_INFOS`) through every `.ts` file under `src/lib/model/notification/` on the component side and `src/app/common/model/notification/` on the API side.',
+    'Cross-file tracing follows direct calls and spread (`...fooNotifications(context)` / `...ALL_X_NOTIFICATION_TEMPLATE_TYPE_INFOS`) through every `.ts` file under `src/lib/model/notification/` on the component side and `src/app/common/model/notification/`, `src/app/common/firebase/` and `src/app/function/notification/` on the API side.',
+    '',
+    'NotificationTaskBot checks (`NOTIF_TASK_BOT_*`, only for apps that use bots): the script registry (`notificationTaskBotScriptConfigRecord`) is declared and passed to `appNotificationTaskBotScriptConfigService(...)`; the NTBR handler (`notificationTaskBotRunNotificationTaskHandler`) is reachable from `notificationTaskService({ handlers })` and `validate` lists `...ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES`; every registered or validated script has a processor and every processor target is registered; the notification schedule calls `repairAllNotificationTaskBots()`; `firestore.rules` has a `match /ntb/{...}` block; and `firestore.indexes.json` does not exempt `ntb.nat`. Scaffold a new bot script with `dbx_artifact_scaffold` `notification-task-bot-script`.',
     '',
     'External identifiers imported from `@dereekb/*` are trusted — spreads and handler `type:` references that resolve into upstream packages do not produce orphan/unresolved errors.',
     '',
@@ -34,6 +42,10 @@ const DBX_NOTIFICATION_M_VALIDATE_APP_TOOL: Tool = {
     'Provide both:',
     '- `componentDir`: relative path to the `-firebase` component package (e.g. `components/demo-firebase`).',
     '- `apiDir`: relative path to the API app (e.g. `apps/demo-api`).',
+    '',
+    'Optional:',
+    '- `rulesFile`: relative path to the Firestore rules (default `firestore.rules`).',
+    '- `indexesFile`: relative path to the Firestore indexes (default `firestore.indexes.json`).',
     '',
     'Paths escaping the server cwd are rejected.'
   ].join('\n'),
@@ -47,6 +59,14 @@ const DBX_NOTIFICATION_M_VALIDATE_APP_TOOL: Tool = {
       apiDir: {
         type: 'string',
         description: 'Relative path to the API app (e.g. `apps/demo-api`).'
+      },
+      rulesFile: {
+        type: 'string',
+        description: 'Relative path to the workspace Firestore rules, read for the NotificationTaskBot `ntb` rule check. Defaults to `firestore.rules`.'
+      },
+      indexesFile: {
+        type: 'string',
+        description: 'Relative path to the workspace Firestore indexes, read for the NotificationTaskBot `ntb.nat` index check. Defaults to `firestore.indexes.json`.'
       }
     },
     required: ['componentDir', 'apiDir']
@@ -55,8 +75,9 @@ const DBX_NOTIFICATION_M_VALIDATE_APP_TOOL: Tool = {
 
 export const notificationMValidateAppTool: DbxTool = createTwoSideValidateTool({
   definition: DBX_NOTIFICATION_M_VALIDATE_APP_TOOL,
-  inspectAndValidate: async ({ componentAbs, componentRel, apiAbs, apiRel }) => {
-    const inspection = await inspectAppNotifications(componentAbs, apiAbs);
+  workspaceFileArgs: { rulesFile: 'firestore.rules', indexesFile: 'firestore.indexes.json' },
+  inspectAndValidate: async ({ componentAbs, componentRel, apiAbs, apiRel, workspaceAbs, workspaceFiles }) => {
+    const inspection = await inspectAppNotifications(componentAbs, apiAbs, { firestoreRulesPath: workspaceFiles['rulesFile'], firestoreIndexesPath: workspaceFiles['indexesFile'], workspaceDir: workspaceAbs });
     return validateAppNotifications(inspection, { componentDir: componentRel, apiDir: apiRel });
   },
   format: formatResult

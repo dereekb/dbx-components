@@ -3,7 +3,19 @@ import { runArtifactFileConvention } from '../artifact-file-convention.tool.js';
 import { FILE_CONVENTIONS, formatSpec, getFileConventionSpec, listArtifactKinds } from './index.js';
 import type { ArtifactKind } from './types.js';
 
-const EXPECTED_KINDS: readonly ArtifactKind[] = ['firestore-model', 'storagefile-purpose', 'storagefile-upload-handler', 'storagefile-processor', 'storagefile-processor-subtask', 'notification-template', 'notification-task', 'nestjs-model-module', 'nestjs-function-module', 'nestjs-app-module'];
+const EXPECTED_KINDS: readonly ArtifactKind[] = [
+  'firestore-model',
+  'storagefile-purpose',
+  'storagefile-upload-handler',
+  'storagefile-processor',
+  'storagefile-processor-subtask',
+  'notification-template',
+  'notification-task',
+  'notification-task-bot-script',
+  'nestjs-model-module',
+  'nestjs-function-module',
+  'nestjs-app-module'
+];
 
 describe('FILE_CONVENTIONS catalog', () => {
   it('exposes one spec per supported artifact kind', () => {
@@ -65,7 +77,7 @@ describe('formatSpec — placeholder substitution', () => {
   });
 
   it('adds the build-time notification check step to both notification specs', () => {
-    for (const artifact of ['notification-template', 'notification-task'] as const) {
+    for (const artifact of ['notification-template', 'notification-task', 'notification-task-bot-script'] as const) {
       const spec = getFileConventionSpec(artifact);
       if (!spec) throw new Error('expected spec');
       const md = formatSpec(spec, { componentDir: 'components/demo-firebase', apiDir: 'apps/demo-api', name: 'worker-paid' });
@@ -73,7 +85,22 @@ describe('formatSpec — placeholder substitution', () => {
       expect(md).toContain('apps/demo-api/project.json');
       expect(md).toContain('npx dbx-cli-generate-notification-manifest --component-dir=components/demo-firebase --api-dir=apps/demo-api --output=dist/apps/demo-api/notification.manifest.json');
       expect(md).toContain('generate-notification-manifest` runs the same checks the build does');
+      expect(md).toContain('{workspaceRoot}/apps/demo-api/src/app/function/notification/**/*.ts');
+      expect(md).toContain('{workspaceRoot}/firestore.rules');
+      expect(md).toContain('{workspaceRoot}/firestore.indexes.json');
     }
+  });
+
+  it('renders the notification-task-bot-script spec against the demo dirs', () => {
+    const spec = getFileConventionSpec('notification-task-bot-script');
+    if (!spec) throw new Error('expected spec');
+    const md = formatSpec(spec, { componentDir: 'components/demo-firebase', apiDir: 'apps/demo-api', name: 'follow-up' });
+    expect(md).toContain('components/demo-firebase/src/lib/model/notification/notification.taskbot.ts');
+    expect(md).toContain('apps/demo-api/src/app/common/model/notification/handlers/taskbot/task.handler.taskbot.ts');
+    expect(md).toContain('NOTIF_TASK_BOT_');
+    expect(md).toContain('repairAllNotificationTaskBots');
+    expect(md).toContain('match /ntb/');
+    expect(getFileConventionSpec('notification-task')?.seeAlso).toContain('notification-task-bot-script');
   });
 
   it('names notificationModelIdentity (the NotificationTemplateTypeInfo field) in the notification-template spec', () => {

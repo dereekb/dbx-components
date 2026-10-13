@@ -104,9 +104,20 @@ but two changes require an update in every app that implements the notification 
   whose script has no processor (e.g. a removed script) records a SKIPPED run and goes idle.
 - **Repair cron:** call `notificationActions.repairAllNotificationTaskBots()` from your notification schedule, after
   `sendQueuedNotifications`. Log or alert on its `entriesStalled`.
-- **Firestore index:** `notificationTaskBotsDueForRepairQuery` queries `ntb` by `nat` (for repair), and
-  `notificationTaskBotsStalledQuery` queries it by `stl` (for stalled bots). Both are single-field queries; regenerate
-  your indexes.
+- **Firestore index:** no `firestore.indexes.json` entry is needed. `notificationTaskBotsDueForRepairQuery` queries
+  `ntb` by `nat` (for repair), and `notificationTaskBotsStalledQuery` queries it by `stl` (for stalled bots); both are
+  single-field queries that Firestore's automatic single-field indexes serve. Don't exempt `ntb.nat` (or `ntb.stl`) in
+  `fieldOverrides`.
+- **Scaffold and checks:** `dbx_artifact_scaffold` `notification-task-bot-script` emits a bot script end-to-end (the
+  script config with its `dataType`, the processor, and for the first script the registry and the NTBR handler), plus
+  the wiring steps. `dbx_notification_m_validate_app`, the `notification_m` cluster of `dbx_app_validate` and
+  `dbx-cli-generate-notification-manifest` now check the bot wiring (`NOTIF_TASK_BOT_*`: registry declared and wired,
+  NTBR handler registered and in `validate`, scripts and processors matching both ways, the repair cron, the `ntb` rule,
+  the `ntb.nat` index). The checks only run for apps that use bots; the errors fail the manifest build.
+- **Generator inputs:** `dbx-cli-generate-notification-manifest` now also reads `src/app/function/notification/**`,
+  `firestore.rules` and `firestore.indexes.json` (`--rules-file` / `--indexes-file`, defaulting to the workspace-root
+  files). Add `{workspaceRoot}/apps/<app>-api/src/app/function/notification/**/*.ts`, `{workspaceRoot}/firestore.rules`
+  and `{workspaceRoot}/firestore.indexes.json` to the `generate-notification-manifest` target's `inputs`.
 - **Client:** `NotificationTaskBotDocumentStore` / `NotificationTaskBotCollectionStore` (and their directives) are
   available in `@dereekb/dbx-firebase`. The admin store also has `readOptOuts` / `updateOptOut`.
 - **Run timing.** Every run has a scheduled time (`sa`), and no run except a FORCED one starts its first step before

@@ -6,7 +6,9 @@
 
 import { pushIoViolations, type IoViolationCodes, type IoViolationMessages } from '../_core/_validate/io-violations.js';
 import { attachRemediation } from '../_core/rule-catalog/index.js';
-import type { AppNotificationsInspection, ExtractedAppNotifications, ExtractedTaskHandlerEntry, ExtractedTemplateHandlerEntry, ExtractedTemplateTypeInfo, NotificationDeliveryMethodName, Violation, ViolationCode, ViolationSeverity } from './types.js';
+import type { AppNotificationsInspection, ExtractedAppNotifications, ExtractedTaskHandlerEntry, ExtractedTemplateHandlerEntry, ExtractedTemplateTypeInfo, NotificationDeliveryMethodName, Violation, ViolationCode } from './types.js';
+import { pushViolation } from './violation.js';
+import { checkTaskBots } from './rules.taskbot.js';
 
 const IO_VIOLATION_CODES: IoViolationCodes<ViolationCode> = {
   componentDirNotFound: 'NOTIF_COMPONENT_DIR_NOT_FOUND',
@@ -49,6 +51,7 @@ export function runRules(inspection: AppNotificationsInspection, extracted: Extr
   checkTemplateDeliveryMethods(extracted, violations);
   checkTemplateForcedDeliveryMethods(extracted, violations);
   checkTasks(extracted, violations);
+  checkTaskBots(extracted, violations);
   checkDuplicates(extracted, violations);
 
   return violations;
@@ -616,19 +619,6 @@ function pascalize(screaming: string): string {
     out += p.charAt(0).toUpperCase() + p.slice(1).toLowerCase();
   }
   return out;
-}
-
-function pushViolation(buffer: Violation[], violation: Omit<Violation, 'severity' | 'remediation'> & { readonly severity?: ViolationSeverity }): void {
-  const severity: ViolationSeverity = violation.severity ?? 'error';
-  const filled: Violation = {
-    code: violation.code,
-    severity,
-    message: violation.message,
-    side: violation.side,
-    file: violation.file,
-    remediation: attachRemediation(violation.code)
-  };
-  buffer.push(filled);
 }
 
 function buildIoViolation(code: ViolationCode, message: string, side: 'component' | 'api'): Violation {

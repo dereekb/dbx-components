@@ -10,7 +10,7 @@
  * cross into upstream packages.
  */
 
-import { Node, SyntaxKind, type ArrayLiteralExpression, type ArrowFunction, type FunctionDeclaration, type FunctionExpression, type ObjectLiteralExpression, type SourceFile, type TypeNode, type VariableDeclaration } from 'ts-morph';
+import { Node, SyntaxKind, type ArrayLiteralExpression, type ObjectLiteralExpression, type SourceFile, type TypeNode, type VariableDeclaration } from 'ts-morph';
 import {
   apiRelPath,
   asArrayLiteral,
@@ -25,6 +25,7 @@ import {
   readIdentifierProperty,
   readStringLiteralInitializer,
   readStringProperty,
+  resolveArrayLiteralProperty,
   typeAnnotationText,
   unwrapAsExpressions
 } from '../_core/_validate/ast.js';
@@ -34,7 +35,9 @@ import type {
   ExtractedTaskCheckpointAlias,
   ExtractedTaskDataInterface,
   ExtractedTaskHandlerEntry,
+  ExtractedSourceLocation,
   ExtractedTaskServiceCall,
+  ExtractedTaskServiceValidateStatus,
   ExtractedTaskTypeAggregateArray,
   ExtractedTaskTypeConstant,
   ExtractedTemplateConfigsArrayFactory,
@@ -48,6 +51,8 @@ import type {
   NotificationDeliveryMethodName,
   UserConfigurableDeliveryMethodsSource
 } from './types.js';
+import { type ApiFunctionIndex, buildApiFunctionIndex } from './extract.function-index.js';
+import { extractAppNotificationTaskBot, NOTIFICATION_TASK_BOT_RUN_HANDLER_FACTORY } from './extract.taskbot.js';
 
 const NOTIF_TEMPLATE_TYPE = 'NotificationTemplateType';
 const NOTIF_TEMPLATE_TYPE_INFO = 'NotificationTemplateTypeInfo';
@@ -108,16 +113,6 @@ interface ComponentAggregateIndex {
   readonly taskAllTypesAggregates: ReadonlyMap<string, ExtractedTaskTypeAggregateArray>;
 }
 
-interface ApiFunctionEntry {
-  readonly node: FunctionDeclaration | ArrowFunction | FunctionExpression;
-  readonly sourceFile: SourceFile;
-  readonly relPath: string;
-}
-
-interface ApiFunctionIndex {
-  readonly functionsByName: ReadonlyMap<string, ApiFunctionEntry>;
-}
-
 /**
  * Builds a ts-morph project from the prepared inspection and extracts every
  * fact the notification rules need — template/task type constants, info
@@ -150,6 +145,7 @@ export function extractAppNotifications(inspection: AppNotificationsInspection):
   const templateHandlerEntries = extractTemplateHandlerEntries(templateConfigsArrayFactory, apiFunctionIndex);
   const taskServiceCalls = extractTaskServiceCalls(apiSources, apiFunctionIndex, trustedExternalIdentifiers);
   const taskHandlerEntries = extractTaskHandlerEntries(apiSources);
+  const taskBot = extractAppNotificationTaskBot({ componentSources, apiSources, functionIndex: apiFunctionIndex, trustedExternalIdentifiers, taskServiceCalls, workspace: inspection.workspace });
 
   const result: ExtractedAppNotifications = {
     templateTypeConstants,
@@ -166,6 +162,7 @@ export function extractAppNotifications(inspection: AppNotificationsInspection):
     templateHandlerEntries,
     taskServiceCalls,
     taskHandlerEntries,
+    taskBot,
     trustedExternalIdentifiers
   };
   return result;
@@ -578,38 +575,6 @@ function extractTemplateConfigsArrayWiring(sources: readonly SourceFile[]): Extr
   return result;
 }
 
-function buildApiFunctionIndex(sources: readonly SourceFile[]): ApiFunctionIndex {
-  const map = new Map<string, ApiFunctionEntry>();
-  for (const sf of sources) {
-    const rel = apiRelPath(sf);
-    indexFunctionDeclarations(sf, rel, map);
-    indexFunctionVariableDeclarations(sf, rel, map);
-  }
-  const result: ApiFunctionIndex = { functionsByName: map };
-  return result;
-}
-
-function indexFunctionDeclarations(sf: SourceFile, rel: string, map: Map<string, ApiFunctionEntry>): void {
-  for (const fn of sf.getFunctions()) {
-    const name = fn.getName();
-    if (name) {
-      map.set(name, { node: fn, sourceFile: sf, relPath: rel });
-    }
-  }
-}
-
-function indexFunctionVariableDeclarations(sf: SourceFile, rel: string, map: Map<string, ApiFunctionEntry>): void {
-  for (const stmt of sf.getVariableStatements()) {
-    for (const decl of stmt.getDeclarations()) {
-      const initializer = unwrapAsExpressions(decl.getInitializer());
-      if (!initializer) continue;
-      if (Node.isArrowFunction(initializer) || Node.isFunctionExpression(initializer)) {
-        map.set(decl.getName(), { node: initializer, sourceFile: sf, relPath: rel });
-      }
-    }
-  }
-}
-
 function extractTemplateConfigsArrayFactory(sources: readonly SourceFile[], index: ApiFunctionIndex): ExtractedTemplateConfigsArrayFactory | undefined {
   let result: ExtractedTemplateConfigsArrayFactory | undefined;
   for (const sf of sources) {
@@ -868,10 +833,16 @@ function extractTaskServiceCalls(sources: readonly SourceFile[], index: ApiFunct
       const args = call.getArguments();
       const first = args[0] ? asObjectLiteral(args[0]) : undefined;
       if (!first) continue;
-      const validateArr = resolveArrayFromProperty(first, 'validate', sf);
-      const handlersArr = resolveArrayFromProperty(first, 'handlers', sf);
+      const validateArr = resolveArrayLiteralProperty(first, 'validate', sf);
+      const handlersArr = resolveArrayLiteralProperty(first, 'handlers', sf);
       const validate = collectValidateArrayElements(validateArr);
       const handlers = collectHandlersArrayElements({ handlersArr, sf, index, trustedExternal });
+      let validateStatus: ExtractedTaskServiceValidateStatus = 'unresolved';
+      if (getPropertyInitializer(first, 'validate') === undefined) {
+        validateStatus = 'absent';
+      } else if (validateArr) {
+        validateStatus = 'resolved';
+      }
       out.push({
         validateIdentifiers: validate.ids,
         spreadValidateIdentifiers: validate.spreads,
@@ -879,6 +850,8 @@ function extractTaskServiceCalls(sources: readonly SourceFile[], index: ApiFunct
         unresolvedHandlerSpreadIdentifiers: handlers.unresolvedSpreads,
         resolvedHandlerBindings: handlers.resolvedBindings,
         unresolvedHandlerBindings: handlers.unresolvedBindings,
+        validateStatus,
+        reachedTaskBotRunHandlerCalls: handlers.reachedTaskBotRunHandlerCalls,
         sourceFile: rel
       });
     }
@@ -927,6 +900,7 @@ interface HandlersArrayElements {
   readonly unresolvedSpreads: string[];
   readonly resolvedBindings: string[];
   readonly unresolvedBindings: string[];
+  readonly reachedTaskBotRunHandlerCalls: ExtractedSourceLocation[];
 }
 
 /**
@@ -947,13 +921,14 @@ function collectHandlersArrayElements(options: CollectHandlersArrayElementsOptio
   const unresolvedSpreads: string[] = [];
   const resolvedBindings: string[] = [];
   const unresolvedBindings: string[] = [];
+  const reachedTaskBotRunHandlerCalls: ExtractedSourceLocation[] = [];
   if (handlersArr) {
     const visited = new Set<string>();
     for (const el of handlersArr.getElements()) {
-      consumeHandlersArrayElement(el, { sf, index, trustedExternal, unresolvedSpreads, resolvedBindings, unresolvedBindings, visited });
+      consumeHandlersArrayElement(el, { sf, index, trustedExternal, unresolvedSpreads, resolvedBindings, unresolvedBindings, reachedTaskBotRunHandlerCalls, visited });
     }
   }
-  return { handlerTypes, unresolvedSpreads, resolvedBindings, unresolvedBindings };
+  return { handlerTypes, unresolvedSpreads, resolvedBindings, unresolvedBindings, reachedTaskBotRunHandlerCalls };
 }
 
 function consumeHandlersArrayElement(el: Node, options: Omit<ConsumeHandlersSpreadElementOptions, 'inner'>): void {
@@ -963,10 +938,11 @@ function consumeHandlersArrayElement(el: Node, options: Omit<ConsumeHandlersSpre
   }
   const inner = unwrapAsExpressions(el);
   if (!inner) return;
+  noteTaskBotRunHandlerCall(inner, options.reachedTaskBotRunHandlerCalls);
   const identifierName = readHandlerEntryIdentifierName(inner);
   if (identifierName === undefined) return;
-  const { sf, index, trustedExternal, resolvedBindings, unresolvedBindings, visited } = options;
-  collectHandlerBindingsFromIdentifier({ name: identifierName, sf, index, trustedExternal, resolved: resolvedBindings, unresolved: unresolvedBindings, visited });
+  const { sf, index, trustedExternal, resolvedBindings, unresolvedBindings, reachedTaskBotRunHandlerCalls, visited } = options;
+  collectHandlerBindingsFromIdentifier({ name: identifierName, sf, index, trustedExternal, resolved: resolvedBindings, unresolved: unresolvedBindings, reachedTaskBotRunHandlerCalls, visited });
 }
 
 function readHandlerEntryIdentifierName(inner: Node): string | undefined {
@@ -990,6 +966,7 @@ interface ConsumeHandlersSpreadElementOptions {
   readonly unresolvedSpreads: string[];
   readonly resolvedBindings: string[];
   readonly unresolvedBindings: string[];
+  readonly reachedTaskBotRunHandlerCalls: ExtractedSourceLocation[];
   readonly visited: Set<string>;
 }
 
@@ -1002,11 +979,12 @@ interface ConsumeHandlersSpreadElementOptions {
  * @param options - The spread inner expression and the buckets to populate.
  */
 function consumeHandlersSpreadElement(options: ConsumeHandlersSpreadElementOptions): void {
-  const { inner, sf, index, trustedExternal, unresolvedSpreads, resolvedBindings, unresolvedBindings, visited } = options;
+  const { inner, sf, index, trustedExternal, unresolvedSpreads, resolvedBindings, unresolvedBindings, reachedTaskBotRunHandlerCalls, visited } = options;
+  noteTaskBotRunHandlerCall(inner, reachedTaskBotRunHandlerCalls);
   const name = readHandlerEntryIdentifierName(inner);
   if (name === undefined) return;
   unresolvedSpreads.push(name);
-  collectHandlerBindingsFromIdentifier({ name, sf, index, trustedExternal, resolved: resolvedBindings, unresolved: unresolvedBindings, visited });
+  collectHandlerBindingsFromIdentifier({ name, sf, index, trustedExternal, resolved: resolvedBindings, unresolved: unresolvedBindings, reachedTaskBotRunHandlerCalls, visited });
 }
 
 /**
@@ -1037,6 +1015,10 @@ interface HandlerBindingCollectorContext {
   readonly trustedExternal: ReadonlySet<string>;
   readonly resolved: string[];
   readonly unresolved: string[];
+  /**
+   * Receives every `notificationTaskBotRunNotificationTaskHandler(...)` call the trace reaches.
+   */
+  readonly reachedTaskBotRunHandlerCalls: ExtractedSourceLocation[];
   readonly visited: Set<string>;
 }
 
@@ -1064,6 +1046,7 @@ function collectHandlerBindingsFromValue(options: CollectHandlerBindingsFromValu
 
 function collectHandlerBindingsFromCallExpression(call: Node, options: CollectHandlerBindingsFromValueOptions): boolean {
   if (!Node.isCallExpression(call)) return false;
+  noteTaskBotRunHandlerCall(call, options.reachedTaskBotRunHandlerCalls);
   const callee = call.getExpression();
   let result = false;
   if (Node.isIdentifier(callee)) {
@@ -1158,29 +1141,19 @@ function tryResolveFunctionHandlerBinding(options: CollectHandlerBindingsFromIde
 }
 
 /**
- * Resolve an array-literal argument passed to a `{ validate, handlers }`
- * property — either directly `validate: [...]` or as `validate: foo`
- * where `foo` is a local array-literal binding.
+ * Records {@link node} when it is a `notificationTaskBotRunNotificationTaskHandler(...)` call, so the NotificationTaskBot
+ * rules know the NTBR handler is reachable from `notificationTaskService({ handlers })`.
  *
- * @param obj - The object literal carrying the property.
- * @param name - The property name to resolve.
- * @param sf - The source file scope used to chase identifier indirection.
- * @returns The resolved array literal, or `undefined` when the property is missing or non-array.
+ * @param node - A value-position node the handlers trace visits.
+ * @param out - The bucket that receives the call's location.
  */
-function resolveArrayFromProperty(obj: ObjectLiteralExpression, name: string, sf: SourceFile): ArrayLiteralExpression | undefined {
-  const init = unwrapAsExpressions(getPropertyInitializer(obj, name));
-  if (!init) return undefined;
-  if (Node.isArrayLiteralExpression(init)) return init;
-  if (Node.isIdentifier(init)) {
-    const declNode = findLocalVariable(sf, init.getText());
-    if (declNode) {
-      const declInit = unwrapAsExpressions(declNode.getInitializer());
-      if (declInit && Node.isArrayLiteralExpression(declInit)) {
-        return declInit;
-      }
+function noteTaskBotRunHandlerCall(node: Node, out: ExtractedSourceLocation[]): void {
+  if (Node.isCallExpression(node)) {
+    const callee = node.getExpression();
+    if (Node.isIdentifier(callee) && callee.getText() === NOTIFICATION_TASK_BOT_RUN_HANDLER_FACTORY) {
+      out.push({ sourceFile: apiRelPath(node.getSourceFile()), line: node.getStartLineNumber() });
     }
   }
-  return undefined;
 }
 
 // MARK: Task handler entries

@@ -13,7 +13,7 @@
  * `name` input.
  */
 
-export type ArtifactKind = 'storagefile-purpose' | 'notification-template' | 'notification-task';
+export type ArtifactKind = 'storagefile-purpose' | 'notification-template' | 'notification-task' | 'notification-task-bot-script';
 
 /**
  * Camel/Pascal/Screaming-Snake/Kebab/Snake variants of the input name.
@@ -87,6 +87,21 @@ export interface WiringStep {
    * Optional code snippet to splice in.
    */
   readonly snippet?: string;
+  /**
+   * Keep the step only when the emitted file at `path` ended with `status` after
+   * {@link applyIdempotency} — e.g. a "extend the existing registry" step that
+   * only applies when the registry file already exists. Unset keeps the step
+   * unconditionally.
+   */
+  readonly when?: WiringStepCondition;
+}
+
+/**
+ * Condition on an emitted file's final status, used by {@link WiringStep.when}.
+ */
+export interface WiringStepCondition {
+  readonly path: string;
+  readonly status: 'new' | 'exists-skipped';
 }
 
 export interface ScaffoldArtifactResult {

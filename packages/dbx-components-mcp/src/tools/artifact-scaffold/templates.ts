@@ -71,6 +71,10 @@ export interface TemplateContext {
   readonly componentPackageName: string;
   readonly appPascal: string;
   readonly appCamel: string;
+  /**
+   * SCREAMING_SNAKE application stem (`DEMO` for `demo-firebase`), or `APP` when the stem is empty.
+   */
+  readonly appScreaming: string;
   readonly contextTypeName: string;
   readonly contextVarName: string;
 }
@@ -95,6 +99,7 @@ export function buildTemplateContext(input: { readonly tokens: NameTokens; reado
   const appLower = appStemParts.map((p) => p.toLowerCase());
   const appPascal = appLower.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join('');
   const appCamel = appLower.map((p, i) => (i === 0 ? p : p.charAt(0).toUpperCase() + p.slice(1))).join('');
+  const appScreaming = appLower.length > 0 ? appLower.join('_').toUpperCase() : 'APP';
   const contextTypeName = `${appPascal}FirebaseServerActionsContext`;
   const contextVarName = appCamel ? `${appCamel}FirebaseServerActionsContext` : 'context';
   const result: TemplateContext = {
@@ -104,6 +109,7 @@ export function buildTemplateContext(input: { readonly tokens: NameTokens; reado
     componentPackageName,
     appPascal,
     appCamel,
+    appScreaming,
     contextTypeName,
     contextVarName
   };
@@ -136,6 +142,7 @@ export function applyTokens(template: string, ctx: TemplateContext): string {
   result = result.split('<<contextVarName>>').join(ctx.contextVarName);
   result = result.split('<<AppPascal>>').join(ctx.appPascal);
   result = result.split('<<appCamel>>').join(ctx.appCamel);
+  result = result.split('<<AppScreaming>>').join(ctx.appScreaming);
   result = result.split('<<camel>>').join(ctx.tokens.camel);
   result = result.split('<<Pascal>>').join(ctx.tokens.pascal);
   result = result.split('<<SCREAMING>>').join(ctx.tokens.screaming);
@@ -449,4 +456,279 @@ const handlers: NotificationTaskServiceTaskHandlerConfig<any>[] = [/* ... */, <<
 // Also add the new task type to ALL_NOTIFICATION_TASK_TYPES in
 // components/<<componentPackageName>>/src/lib/model/notification/notification.task.ts:
 //   export const ALL_NOTIFICATION_TASK_TYPES: NotificationTaskType[] = [..., <<SCREAMING>>_NOTIFICATION_TASK_TYPE];
+`;
+
+// MARK: notification-task-bot-script templates
+//
+// Modeled after the demo's ping scripts:
+// `components/demo-firebase/src/lib/model/notification/notification.taskbot.ts` (script type, entry id, data + its
+// arktype `dataType`, script config, registry) and
+// `apps/demo-api/src/app/common/model/notification/handlers/taskbot/task.handler.taskbot.ts` (processor + NTBR handler).
+
+/**
+ * Component-side script file: script type, entry id, default interval, entry data, its `dataType` and the script config.
+ */
+export const NOTIFICATION_TASK_BOT_SCRIPT_COMPONENT_TEMPLATE = `import { type, type Type } from 'arktype';
+import { type NotificationTaskBotEntryId, type NotificationTaskBotScriptConfig, type NotificationTaskBotScriptType } from '@dereekb/firebase';
+import { type Maybe, type Milliseconds, MS_IN_HOUR } from '@dereekb/util';
+
+// MARK: <<Pascal>>
+/**
+ * Script type of the <<Pascal>> NotificationTaskBot script.
+ *
+ * TODO: describe what one run of the script does, and which model the bot is attached to.
+ */
+export const <<SCREAMING>>_NOTIFICATION_TASK_BOT_SCRIPT_TYPE: NotificationTaskBotScriptType = '<<snake>>';
+
+/**
+ * Entry id the <<Pascal>> script uses on a bot. Must match \`^[a-z0-9-]+$\`, at most 40 characters.
+ */
+export const <<SCREAMING>>_NOTIFICATION_TASK_BOT_ENTRY_ID: NotificationTaskBotEntryId = '<<kebab>>';
+
+/**
+ * Default time between <<Pascal>> runs.
+ */
+export const DEFAULT_<<SCREAMING>>_NOTIFICATION_TASK_BOT_INTERVAL: Milliseconds = MS_IN_HOUR; // TODO: choose the cadence
+
+/**
+ * Permanent data stored on a <<Pascal>> entry. Keep it small: every bot write rewrites the whole entries array.
+ */
+export interface <<Pascal>>NotificationTaskBotEntryData {
+  /**
+   * Interval between runs. Defaults to {@link DEFAULT_<<SCREAMING>>_NOTIFICATION_TASK_BOT_INTERVAL}.
+   */
+  readonly iv?: Maybe<Milliseconds>;
+  // TODO: add the entry's durable fields (counters, flags)
+}
+
+/**
+ * arktype type of {@link <<Pascal>>NotificationTaskBotEntryData}. Set as the script's \`dataType\`, so an admin (or the MCP) can patch an
+ * entry's data through \`update:entry\`. Unknown keys are refused. Keep it in step with the interface.
+ */
+export const <<camel>>NotificationTaskBotEntryDataType = type({
+  'iv?': 'number.integer > 0'
+}).onUndeclaredKey('reject') as Type<<<Pascal>>NotificationTaskBotEntryData>;
+
+/**
+ * Script config for the <<Pascal>> script. Add it to the app's NotificationTaskBot script registry.
+ */
+export const <<SCREAMING>>_NOTIFICATION_TASK_BOT_SCRIPT_CONFIG: NotificationTaskBotScriptConfig = {
+  scriptType: <<SCREAMING>>_NOTIFICATION_TASK_BOT_SCRIPT_TYPE,
+  name: '<<Pascal>>',
+  description: 'TODO: describe the <<Pascal>> script.',
+  dataType: <<camel>>NotificationTaskBotEntryDataType
+  // To let the bot's owner turn this script off, add a \`group\` and \`allowOwnerOptOut: true\`. Declare the
+  // NotificationTaskBotScriptGroup in its own file (not notification.taskbot.ts) to avoid an import cycle with the registry.
+};
+`;
+
+/**
+ * Component-side registry file. Emitted only for an app's first script.
+ */
+export const NOTIFICATION_TASK_BOT_REGISTRY_TEMPLATE = `import { type NotificationTaskBotScriptConfig, notificationTaskBotScriptConfigRecord } from '@dereekb/firebase';
+import { <<SCREAMING>>_NOTIFICATION_TASK_BOT_SCRIPT_CONFIG } from './notification.taskbot.<<kebab>>';
+
+// MARK: Registry
+/**
+ * All <<AppPascal>> NotificationTaskBot script configs. Every script needs a processor in the API's NTBR handler.
+ */
+export const <<AppScreaming>>_NOTIFICATION_TASK_BOT_SCRIPT_CONFIGS: NotificationTaskBotScriptConfig[] = [<<SCREAMING>>_NOTIFICATION_TASK_BOT_SCRIPT_CONFIG];
+
+/**
+ * The <<AppPascal>> app's NotificationTaskBot script registry. The API passes it to \`appNotificationTaskBotScriptConfigService()\` on its server actions context.
+ */
+export const <<AppScreaming>>_FIREBASE_NOTIFICATION_TASK_BOT_SCRIPT_CONFIG_RECORD = notificationTaskBotScriptConfigRecord(<<AppScreaming>>_NOTIFICATION_TASK_BOT_SCRIPT_CONFIGS);
+`;
+
+/**
+ * API-side script processor file.
+ */
+export const NOTIFICATION_TASK_BOT_SCRIPT_PROCESSOR_TEMPLATE = `import { type NotificationTaskBotScriptProcessorConfig, notificationTaskBotDelayUntilDue, runNotificationTaskBotEntryTransaction } from '@dereekb/firebase-server/model';
+import { addMilliseconds } from '@dereekb/util';
+import { DEFAULT_<<SCREAMING>>_NOTIFICATION_TASK_BOT_INTERVAL, <<SCREAMING>>_NOTIFICATION_TASK_BOT_SCRIPT_TYPE, type <<Pascal>>NotificationTaskBotEntryData } from '<<componentPackageName>>';
+import { type <<ContextTypeName>> } from '../../../../firebase/action.context';
+
+/**
+ * Subtask of the <<Pascal>> script that waits until the run is due.
+ */
+export const <<SCREAMING>>_NOTIFICATION_TASK_BOT_WAIT_SUBTASK = 'wait';
+
+/**
+ * Subtask of the <<Pascal>> script that performs the run.
+ */
+export const <<SCREAMING>>_NOTIFICATION_TASK_BOT_RUN_SUBTASK = 'run';
+
+/**
+ * Builds the processor for the <<Pascal>> NotificationTaskBot script. Add it to the NTBR handler's \`processors\`.
+ *
+ * - wait: delays the run until \`lsat + iv\`, unless the run is FORCED or explicit.
+ * - run: creates the run's side effect in a fenced transaction and marks the run submitted, so a re-run step never submits twice.
+ * - cleanup: schedules the next run after \`iv\`.
+ *
+ * @param _context - Server actions context. Rename it to \`context\` once the run step uses it.
+ * @returns The script processor.
+ */
+export function <<appCamel>><<Pascal>>NotificationTaskBotScriptProcessor(_context: <<ContextTypeName>>): NotificationTaskBotScriptProcessorConfig<<<Pascal>>NotificationTaskBotEntryData> {
+  return {
+    target: <<SCREAMING>>_NOTIFICATION_TASK_BOT_SCRIPT_TYPE,
+    flow: [
+      {
+        subtask: <<SCREAMING>>_NOTIFICATION_TASK_BOT_WAIT_SUBTASK,
+        fn: async (input) => {
+          const { lsat, d } = input.entry;
+          const due = addMilliseconds(lsat, d?.iv ?? DEFAULT_<<SCREAMING>>_NOTIFICATION_TASK_BOT_INTERVAL);
+          return (await notificationTaskBotDelayUntilDue(input, due)) ?? { completion: <<SCREAMING>>_NOTIFICATION_TASK_BOT_WAIT_SUBTASK };
+        }
+      },
+      {
+        subtask: <<SCREAMING>>_NOTIFICATION_TASK_BOT_RUN_SUBTASK,
+        fn: async (input) => {
+          await runNotificationTaskBotEntryTransaction<void, <<Pascal>>NotificationTaskBotEntryData>(input, async ({ alreadySubmitted, markSubmitted }) => {
+            // a re-run of this step finds the run already submitted, and does not submit twice
+            if (!alreadySubmitted) {
+              // TODO: create the run's side effect with the context's \`transaction\`, e.g.
+              // createNotificationDocument({ context, transaction, template: <yourTemplate>({ ... }) })
+              markSubmitted();
+            }
+          });
+
+          return { completion: <<SCREAMING>>_NOTIFICATION_TASK_BOT_RUN_SUBTASK };
+        }
+      }
+    ],
+    cleanup: (input) => ({ nextRunAt: addMilliseconds(new Date(), input.entry.d?.iv ?? DEFAULT_<<SCREAMING>>_NOTIFICATION_TASK_BOT_INTERVAL) })
+  };
+}
+`;
+
+/**
+ * API-side NTBR handler file. Emitted only for an app's first script.
+ */
+export const NOTIFICATION_TASK_BOT_RUN_HANDLER_TEMPLATE = `import { type NotificationTaskBotRunNotificationTaskData } from '@dereekb/firebase';
+import { type NotificationTaskServiceTaskHandlerConfig, notificationTaskBotRunNotificationTaskHandler } from '@dereekb/firebase-server/model';
+import { <<AppScreaming>>_NOTIFICATION_TASK_BOT_SCRIPT_CONFIGS } from '<<componentPackageName>>';
+import { type <<ContextTypeName>> } from '../../../../firebase/action.context';
+import { <<appCamel>><<Pascal>>NotificationTaskBotScriptProcessor } from './task.handler.taskbot.<<kebab>>';
+
+/**
+ * Builds the handler config for the \`NTBR\` NotificationTaskBot run task. Register it in \`notificationTaskService({ handlers })\`
+ * and add \`...ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES\` to its \`validate\` list.
+ *
+ * Every script in the registry needs a processor here, and every processor's target must be registered; the handler throws at startup otherwise.
+ *
+ * @param <<contextVarName>> - Server actions context providing the NotificationTaskBot collections and script registry.
+ * @returns The task-handler config registered into \`NotificationTaskService\`.
+ */
+export function <<appCamel>>NotificationTaskBotRunNotificationTaskHandler(<<contextVarName>>: <<ContextTypeName>>): NotificationTaskServiceTaskHandlerConfig<NotificationTaskBotRunNotificationTaskData> {
+  return notificationTaskBotRunNotificationTaskHandler({
+    processors: [<<appCamel>><<Pascal>>NotificationTaskBotScriptProcessor(<<contextVarName>>)],
+    validate: <<AppScreaming>>_NOTIFICATION_TASK_BOT_SCRIPT_CONFIGS.map((x) => x.scriptType),
+    notificationTaskBotContext: <<contextVarName>>
+  });
+}
+`;
+
+/**
+ * W1 — export the new script file from the component's notification barrel.
+ */
+export const NOTIFICATION_TASK_BOT_W1_BARREL_SCRIPT_SNIPPET = `export * from './notification.taskbot.<<kebab>>';
+`;
+
+/**
+ * W2 — export the new registry file from the component's notification barrel (first script only).
+ */
+export const NOTIFICATION_TASK_BOT_W2_BARREL_REGISTRY_SNIPPET = `export * from './notification.taskbot';
+`;
+
+/**
+ * W3 — add the new config to an existing registry.
+ */
+export const NOTIFICATION_TASK_BOT_W3_REGISTRY_SNIPPET = `import { <<SCREAMING>>_NOTIFICATION_TASK_BOT_SCRIPT_CONFIG } from './notification.taskbot.<<kebab>>';
+
+export const <<AppScreaming>>_NOTIFICATION_TASK_BOT_SCRIPT_CONFIGS: NotificationTaskBotScriptConfig[] = [
+  // ...existing script configs,
+  <<SCREAMING>>_NOTIFICATION_TASK_BOT_SCRIPT_CONFIG
+];
+`;
+
+/**
+ * W4 — add the new processor to an existing NTBR handler.
+ */
+export const NOTIFICATION_TASK_BOT_W4_HANDLER_SNIPPET = `import { <<appCamel>><<Pascal>>NotificationTaskBotScriptProcessor } from './task.handler.taskbot.<<kebab>>';
+
+  return notificationTaskBotRunNotificationTaskHandler({
+    processors: [
+      // ...existing processors,
+      <<appCamel>><<Pascal>>NotificationTaskBotScriptProcessor(<<contextVarName>>)
+    ],
+    validate: <<AppScreaming>>_NOTIFICATION_TASK_BOT_SCRIPT_CONFIGS.map((x) => x.scriptType),
+    notificationTaskBotContext: <<contextVarName>>
+  });
+`;
+
+/**
+ * W5 — set the script registry on the server actions context (first script only).
+ */
+export const NOTIFICATION_TASK_BOT_W5_CONTEXT_SNIPPET = `// action.context.ts
+import { type AppNotificationTaskBotScriptConfigService, type AppNotificationTaskBotScriptConfigServiceRef } from '@dereekb/firebase';
+
+export abstract class <<ContextTypeName>> implements FirebaseServerActionsContext, AppNotificationTaskBotScriptConfigServiceRef /* , ...existing refs */ {
+  abstract readonly appNotificationTaskBotScriptConfigService: AppNotificationTaskBotScriptConfigService;
+  // ...existing members
+}
+
+// action.module.ts — in the context factory
+import { appNotificationTaskBotScriptConfigService } from '@dereekb/firebase';
+import { <<AppScreaming>>_FIREBASE_NOTIFICATION_TASK_BOT_SCRIPT_CONFIG_RECORD } from '<<componentPackageName>>';
+
+    appNotificationTaskBotScriptConfigService: appNotificationTaskBotScriptConfigService(<<AppScreaming>>_FIREBASE_NOTIFICATION_TASK_BOT_SCRIPT_CONFIG_RECORD),
+`;
+
+/**
+ * W6 — register the NTBR handler in the task service (first script only).
+ */
+export const NOTIFICATION_TASK_BOT_W6_TASK_SERVICE_SNIPPET = `import { ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES } from '@dereekb/firebase';
+import { <<appCamel>>NotificationTaskBotRunNotificationTaskHandler } from './handlers/taskbot/task.handler.taskbot';
+
+  const notificationTaskBotHandler = <<appCamel>>NotificationTaskBotRunNotificationTaskHandler(<<contextVarName>>);
+
+  return notificationTaskService({
+    validate: [...ALL_NOTIFICATION_TASK_TYPES, ...ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES],
+    handlers: [/* ...existing handlers, */ notificationTaskBotHandler]
+  });
+`;
+
+/**
+ * W7 — run the repair sweep from the notification schedule (first script only).
+ */
+export const NOTIFICATION_TASK_BOT_W7_SCHEDULE_SNIPPET = `    // repair NotificationTaskBot entries whose run went missing, after the queue had its chance to run them
+    repairAllNotificationTaskBots: async () => {
+      const repairAllNotificationTaskBotsResult = await request.nest.notificationActions.repairAllNotificationTaskBots();
+      return { repairAllNotificationTaskBotsResult };
+    }
+`;
+
+/**
+ * W8 — the admin-only `ntb` Firestore rule (first script only).
+ */
+export const NOTIFICATION_TASK_BOT_W8_RULES_SNIPPET = `    // NotificationTaskBot: admin-only. Owners read and change their opt-outs through the read:optOuts / update:optOut callables.
+    match /ntb/{notificationTaskBot} {
+      allow get, list: if userClaimsIsSysAdmin();
+    }
+`;
+
+/**
+ * W9 — ensure the entry from the attached model's lifecycle.
+ */
+export const NOTIFICATION_TASK_BOT_W9_ENSURE_SNIPPET = `import { ensureNotificationTaskBotEntryFactory } from '@dereekb/firebase-server/model';
+import { <<SCREAMING>>_NOTIFICATION_TASK_BOT_ENTRY_ID, <<SCREAMING>>_NOTIFICATION_TASK_BOT_SCRIPT_TYPE } from '<<componentPackageName>>';
+
+// where the attached model is created or enabled:
+await ensureNotificationTaskBotEntryFactory(<<contextVarName>>)({
+  model: modelDocument.key,
+  entryId: <<SCREAMING>>_NOTIFICATION_TASK_BOT_ENTRY_ID,
+  scriptType: <<SCREAMING>>_NOTIFICATION_TASK_BOT_SCRIPT_TYPE,
+  data: {},
+  owner: modelDocument.key // pass the owner on every call; it keys the owner's opt-outs (the demo uses the model key, as its NotificationBox does)
+});
 `;

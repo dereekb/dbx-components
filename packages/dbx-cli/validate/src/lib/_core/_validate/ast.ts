@@ -304,6 +304,55 @@ export function findLocalVariable(sf: SourceFile, name: string): VariableDeclara
 }
 
 /**
+ * Resolves a call argument to an object literal — either the literal itself, or an identifier bound to a local
+ * object-literal variable in the same source file.
+ *
+ * @param node - The argument node.
+ * @param sf - The source file used to chase identifier indirection.
+ * @returns The resolved object literal, or `undefined` when the argument is neither shape.
+ */
+export function resolveObjectLiteralArgument(node: Node | undefined, sf: SourceFile): ObjectLiteralExpression | undefined {
+  const inner = unwrapAsExpressions(node);
+  let result: ObjectLiteralExpression | undefined;
+  if (inner && Node.isObjectLiteralExpression(inner)) {
+    result = inner;
+  } else if (inner && Node.isIdentifier(inner)) {
+    result = asObjectLiteral(findLocalVariable(sf, inner.getText())?.getInitializer());
+  }
+  return result;
+}
+
+/**
+ * Resolves an array-literal property on an object literal — either written inline (`validate: [...]`), or as an
+ * identifier bound to a local array-literal variable in the same source file (`validate: foo`).
+ *
+ * @param obj - The object literal carrying the property.
+ * @param name - The property name to resolve.
+ * @param sf - The source file used to chase identifier indirection.
+ * @returns The resolved array literal, or `undefined` when the property is missing or not an array.
+ */
+export function resolveArrayLiteralProperty(obj: ObjectLiteralExpression, name: string, sf: SourceFile): ArrayLiteralExpression | undefined {
+  const init = unwrapAsExpressions(getPropertyInitializer(obj, name));
+  let result: ArrayLiteralExpression | undefined;
+  if (init && Node.isArrayLiteralExpression(init)) {
+    result = init;
+  } else if (init && Node.isIdentifier(init)) {
+    result = asArrayLiteral(findLocalVariable(sf, init.getText())?.getInitializer());
+  }
+  return result;
+}
+
+/**
+ * Which side of a {@link buildInMemoryProject} project a source file came from, read from its virtual path prefix.
+ *
+ * @param sf - A source file created by {@link buildInMemoryProject}.
+ * @returns `'component'` for component files, otherwise `'api'`.
+ */
+export function sourceSideOf(sf: SourceFile): 'component' | 'api' {
+  return sf.getFilePath().startsWith(`/${COMPONENT_VIRTUAL_PREFIX}`) ? 'component' : 'api';
+}
+
+/**
  * Pushes the names of every `typeof X` query inside a type node onto
  * {@link out}.
  *

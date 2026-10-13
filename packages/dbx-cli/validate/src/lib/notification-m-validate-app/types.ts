@@ -55,7 +55,37 @@ export interface ValidationResult extends TwoSideResult {
 export type { InspectedFile, SideInspection, SideStatus } from '../_core/_validate/inspection.types.js';
 import type { TwoSideInspectionInput } from '../_core/_validate/inspection.types.js';
 
-export type AppNotificationsInspection = TwoSideInspectionInput;
+/**
+ * A workspace-level file read for the NotificationTaskBot checks (`firestore.rules`, `firestore.indexes.json`).
+ */
+export interface InspectedWorkspaceFile {
+  /**
+   * Workspace-relative path, used as the `file` of findings about this file.
+   */
+  readonly path: string;
+  /**
+   * The file's contents, or `undefined` when it is missing or unreadable.
+   */
+  readonly text: string | undefined;
+}
+
+/**
+ * Workspace-level files the NotificationTaskBot checks read. Each check is skipped when its file is absent.
+ */
+export interface AppNotificationsWorkspaceFiles {
+  readonly firestoreRules?: InspectedWorkspaceFile;
+  readonly firestoreIndexes?: InspectedWorkspaceFile;
+}
+
+/**
+ * The component + api file snapshot, plus the optional workspace files the NotificationTaskBot checks read.
+ */
+export interface AppNotificationsInspection extends TwoSideInspectionInput {
+  /**
+   * When absent, the `ntb` Firestore rule and `ntb.nat` index checks are skipped.
+   */
+  readonly workspace?: AppNotificationsWorkspaceFiles;
+}
 
 // MARK: Delivery methods
 /**
@@ -276,7 +306,29 @@ export interface ExtractedTaskServiceCall {
    * `@dereekb/firebase-server/model`) do not produce noise.
    */
   readonly unresolvedHandlerBindings: readonly string[];
+  /**
+   * Whether the call's `validate` property is missing (`absent`), an array literal the extractor read (`resolved`), or
+   * something else (`unresolved`).
+   */
+  readonly validateStatus: ExtractedTaskServiceValidateStatus;
+  /**
+   * Every `notificationTaskBotRunNotificationTaskHandler(...)` call the `handlers:` trace reached, by location.
+   */
+  readonly reachedTaskBotRunHandlerCalls: readonly ExtractedSourceLocation[];
   readonly sourceFile: string;
+}
+
+/**
+ * How a `notificationTaskService({ validate })` (or NTBR handler `validate`) list was read.
+ */
+export type ExtractedTaskServiceValidateStatus = 'absent' | 'resolved' | 'unresolved';
+
+/**
+ * A location in a scanned file.
+ */
+export interface ExtractedSourceLocation {
+  readonly sourceFile: string;
+  readonly line: number;
 }
 
 /**
@@ -315,6 +367,187 @@ export interface ExtractedAppNotifications {
   readonly templateHandlerEntries: readonly ExtractedTemplateHandlerEntry[];
   readonly taskServiceCalls: readonly ExtractedTaskServiceCall[];
   readonly taskHandlerEntries: readonly ExtractedTaskHandlerEntry[];
+  // NotificationTaskBot wiring (both sides plus the workspace files).
+  readonly taskBot: ExtractedAppNotificationTaskBot;
   // Trust-list for external imports (suppresses *_UNRESOLVED / ORPHAN warnings).
   readonly trustedExternalIdentifiers: ReadonlySet<string>;
+}
+
+// MARK: NotificationTaskBot
+/**
+ * The side a NotificationTaskBot fact was declared on.
+ */
+export type ExtractedTaskBotSide = 'component' | 'api';
+
+/**
+ * A located NotificationTaskBot fact.
+ */
+export interface ExtractedTaskBotLocation extends ExtractedSourceLocation {
+  readonly side: ExtractedTaskBotSide;
+}
+
+/**
+ * A reference to a NotificationTaskBot script type: a config's `scriptType`, a processor's `target`, or a `validate`
+ * entry.
+ */
+export interface ExtractedTaskBotScriptTypeRef {
+  /**
+   * The constant the reference names, when it names one.
+   */
+  readonly identifier?: string;
+  /**
+   * The script type's literal code, when known.
+   */
+  readonly code?: string;
+  /**
+   * Whether the reference is a string literal, a declared `NotificationTaskBotScriptType` constant, or a trust-listed
+   * `@dereekb/*` import. Only declared references take part in the registry ↔ processor check.
+   */
+  readonly declared: boolean;
+}
+
+/**
+ * A `const X: NotificationTaskBotScriptType = '...'` declaration.
+ */
+export interface ExtractedTaskBotScriptTypeConstant extends ExtractedTaskBotLocation {
+  readonly symbolName: string;
+  readonly typeCode: string | undefined;
+}
+
+/**
+ * A `NotificationTaskBotScriptConfig` object literal — a typed constant, or an inline element of a registry or
+ * aggregate.
+ */
+export interface ExtractedTaskBotScriptConfig extends ExtractedTaskBotLocation {
+  readonly symbolName: string | undefined;
+  /**
+   * The config's `scriptType`, or `undefined` when the property is missing.
+   */
+  readonly scriptType: ExtractedTaskBotScriptTypeRef | undefined;
+}
+
+/**
+ * A `notificationTaskBotScriptConfigRecord(...)` call with its configs resolved.
+ */
+export interface ExtractedTaskBotRegistry extends ExtractedTaskBotLocation {
+  /**
+   * The variable the record is assigned to; `undefined` for an inline record.
+   */
+  readonly symbolName: string | undefined;
+  readonly configs: readonly ExtractedTaskBotScriptConfig[];
+  /**
+   * Elements the extractor could not resolve to a config or a config array (source text).
+   */
+  readonly unresolvedReferences: readonly string[];
+  /**
+   * Elements imported from a trust-listed `@dereekb/*` module.
+   */
+  readonly trustedReferences: readonly string[];
+}
+
+/**
+ * What an `appNotificationTaskBotScriptConfigService(...)` call passes:
+ *
+ * - `identifier` — a variable, named by `recordIdentifier`.
+ * - `inline` — a `notificationTaskBotScriptConfigRecord(...)` call written in place.
+ * - `empty` — no argument, so the registry is empty.
+ * - `other` — anything else.
+ */
+export type ExtractedTaskBotRegistryWiringKind = 'identifier' | 'inline' | 'empty' | 'other';
+
+/**
+ * An `appNotificationTaskBotScriptConfigService(...)` call in the API.
+ */
+export interface ExtractedTaskBotRegistryWiring extends ExtractedSourceLocation {
+  readonly kind: ExtractedTaskBotRegistryWiringKind;
+  readonly recordIdentifier: string | undefined;
+}
+
+/**
+ * One element of an NTBR handler's `processors`.
+ */
+export interface ExtractedTaskBotProcessor extends ExtractedSourceLocation {
+  /**
+   * Short source text of the element, for messages.
+   */
+  readonly label: string;
+  /**
+   * The processor's `target`, when it resolved.
+   */
+  readonly target: ExtractedTaskBotScriptTypeRef | undefined;
+  /**
+   * Why `target` did not resolve. `undefined` when it resolved, or when the processor is a trust-listed import.
+   */
+  readonly unresolvedReason: string | undefined;
+  /**
+   * The processor is built by a trust-listed `@dereekb/*` import, so its target is unknown but not reported.
+   */
+  readonly trusted: boolean;
+}
+
+/**
+ * A `notificationTaskBotRunNotificationTaskHandler(...)` call in the API.
+ */
+export interface ExtractedTaskBotRunHandlerCall extends ExtractedSourceLocation {
+  /**
+   * Whether the `processors` array itself could be read.
+   */
+  readonly processorsResolved: boolean;
+  readonly processors: readonly ExtractedTaskBotProcessor[];
+  readonly validateStatus: ExtractedTaskServiceValidateStatus;
+  /**
+   * The script types `validate` lists, when it resolved and does not defer to the registry.
+   */
+  readonly validate: readonly ExtractedTaskBotScriptTypeRef[];
+  /**
+   * `validate` is `<registry>.getAllKnownScriptTypes()`, so it lists exactly the registry's script types.
+   */
+  readonly validateUsesRegistry: boolean;
+  /**
+   * Why `validate` did not resolve.
+   */
+  readonly validateUnresolvedReason: string | undefined;
+}
+
+/**
+ * The workspace `firestore.rules` facts.
+ */
+export interface ExtractedTaskBotFirestoreRules {
+  readonly path: string;
+  readonly readable: boolean;
+  /**
+   * The file has an uncommented `match /ntb/{...}` (or `match /{path=**}/ntb/{...}`) block.
+   */
+  readonly hasNotificationTaskBotMatch: boolean;
+}
+
+/**
+ * The workspace `firestore.indexes.json` facts.
+ */
+export interface ExtractedTaskBotFirestoreIndexes {
+  readonly path: string;
+  readonly parsed: boolean;
+  /**
+   * A `fieldOverrides` entry for `ntb.nat` drops the COLLECTION / ASCENDING single-field index.
+   */
+  readonly natIndexExempted: boolean;
+}
+
+/**
+ * Everything the NotificationTaskBot rules consume.
+ */
+export interface ExtractedAppNotificationTaskBot {
+  /**
+   * The app uses bots: a script config, a registry, a registry service with an argument, an NTBR handler call, or the
+   * NotificationTaskBot task types in a task service's `validate`. Every `NOTIF_TASK_BOT_*` rule is skipped otherwise.
+   */
+  readonly taskBotInUse: boolean;
+  readonly scriptTypeConstants: readonly ExtractedTaskBotScriptTypeConstant[];
+  readonly scriptConfigs: readonly ExtractedTaskBotScriptConfig[];
+  readonly registries: readonly ExtractedTaskBotRegistry[];
+  readonly registryWirings: readonly ExtractedTaskBotRegistryWiring[];
+  readonly runHandlerCalls: readonly ExtractedTaskBotRunHandlerCall[];
+  readonly repairCalls: readonly ExtractedSourceLocation[];
+  readonly firestoreRules: ExtractedTaskBotFirestoreRules | undefined;
+  readonly firestoreIndexes: ExtractedTaskBotFirestoreIndexes | undefined;
 }

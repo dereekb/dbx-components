@@ -331,7 +331,130 @@ export enum NotificationMValidateAppCode {
    * @dbxRuleFix Remove `forcedDeliveryMethods`, or remove `onlySendToExplicitlyEnabledRecipients` from the info.
    * @dbxRuleSeeAlso artifact:notification-template
    */
-  NOTIF_TEMPLATE_FORCED_DELIVERY_METHOD_EXPLICIT_OPT_IN = 'NOTIF_TEMPLATE_FORCED_DELIVERY_METHOD_EXPLICIT_OPT_IN'
+  NOTIF_TEMPLATE_FORCED_DELIVERY_METHOD_EXPLICIT_OPT_IN = 'NOTIF_TEMPLATE_FORCED_DELIVERY_METHOD_EXPLICIT_OPT_IN',
+
+  // MARK: NotificationTaskBot
+  /**
+   * The app uses NotificationTaskBots but declares no `notificationTaskBotScriptConfigRecord([...])` script registry.
+   *
+   * @dbxRuleSeverity error
+   * @dbxRuleApplies Apps with a `NotificationTaskBotScriptConfig`, or an NTBR handler (`notificationTaskBotRunNotificationTaskHandler`) that has processors.
+   * @dbxRuleNotApplies Apps without bots. A registry built inline in `appNotificationTaskBotScriptConfigService(notificationTaskBotScriptConfigRecord([...]))` counts as declared.
+   * @dbxRuleFix Declare `export const <APP>_FIREBASE_NOTIFICATION_TASK_BOT_SCRIPT_CONFIG_RECORD = notificationTaskBotScriptConfigRecord(<APP>_NOTIFICATION_TASK_BOT_SCRIPT_CONFIGS);` in `src/lib/model/notification/notification.taskbot.ts`.
+   * @dbxRuleSeeAlso artifact:notification-task-bot-script
+   */
+  NOTIF_TASK_BOT_REGISTRY_MISSING = 'NOTIF_TASK_BOT_REGISTRY_MISSING',
+
+  /**
+   * The NotificationTaskBot script registry is not passed to `appNotificationTaskBotScriptConfigService(...)`: there is no call, the call has no argument (an empty registry), or it passes another identifier. `notificationServerActions()` then falls back to an empty registry, and the NTBR handler throws at startup.
+   *
+   * @dbxRuleSeverity error
+   * @dbxRuleApplies Apps that declare a `notificationTaskBotScriptConfigRecord(...)` registry.
+   * @dbxRuleNotApplies Wirings that pass a registry identifier imported from a trust-listed `@dereekb/*` module.
+   * @dbxRuleFix Add `AppNotificationTaskBotScriptConfigServiceRef` to the server actions context class, and set `appNotificationTaskBotScriptConfigService: appNotificationTaskBotScriptConfigService(<RECORD>)` in its factory (e.g. `action.module.ts`).
+   * @dbxRuleSeeAlso artifact:notification-task-bot-script
+   */
+  NOTIF_TASK_BOT_REGISTRY_NOT_WIRED = 'NOTIF_TASK_BOT_REGISTRY_NOT_WIRED',
+
+  /**
+   * The app uses NotificationTaskBots, but no `notificationTaskBotRunNotificationTaskHandler(...)` is reachable from `notificationTaskService({ handlers })`. Every `NTBR` run fails until its task is deleted; when `validate` lists the NotificationTaskBot task types, `notificationTaskService()` also throws at startup.
+   *
+   * @dbxRuleSeverity error
+   * @dbxRuleApplies Every app that uses bots (a script config, a registry, a registry service with an argument, an NTBR handler call, or the NotificationTaskBot task types in `validate`).
+   * @dbxRuleNotApplies Apps without bots.
+   * @dbxRuleFix Add the handler (e.g. `<app>NotificationTaskBotRunNotificationTaskHandler(context)`) to the `handlers` of `notificationTaskService(...)`.
+   * @dbxRuleSeeAlso artifact:notification-task-bot-script
+   */
+  NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED = 'NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED',
+
+  /**
+   * The NTBR handler is registered, but that `notificationTaskService({ validate })` does not list `...ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES`, so startup no longer fails if the handler is ever removed.
+   *
+   * @dbxRuleSeverity warning
+   * @dbxRuleApplies Task services that reach the NTBR handler and have a `validate` array the scanner can read.
+   * @dbxRuleNotApplies Task services without `validate` (it is optional), or with a `validate` the scanner cannot read.
+   * @dbxRuleFix Add `...ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES` (from `@dereekb/firebase`) to `validate`.
+   * @dbxRuleSeeAlso artifact:notification-task-bot-script
+   */
+  NOTIF_TASK_BOT_TASK_TYPES_NOT_IN_VALIDATE = 'NOTIF_TASK_BOT_TASK_TYPES_NOT_IN_VALIDATE',
+
+  /**
+   * A NotificationTaskBot script type that is registered in the script registry, or listed in the NTBR handler's `validate`, has no processor in the handler's `processors`. The handler throws at startup.
+   *
+   * @dbxRuleSeverity error
+   * @dbxRuleApplies Every registered or validated script type, when every processor in that handler resolves to a declared script type.
+   * @dbxRuleNotApplies Handlers with a processor the scanner cannot resolve — that gap is reported as `NOTIF_TASK_BOT_SCRIPT_TRACE_UNRESOLVED` instead.
+   * @dbxRuleFix Add a processor with `target: <SCRIPT_TYPE>` (`dbx_artifact_scaffold` `notification-task-bot-script` emits one), or remove the script.
+   * @dbxRuleSeeAlso artifact:notification-task-bot-script
+   */
+  NOTIF_TASK_BOT_SCRIPT_WITHOUT_PROCESSOR = 'NOTIF_TASK_BOT_SCRIPT_WITHOUT_PROCESSOR',
+
+  /**
+   * An NTBR handler processor targets a script type that is not in the script registry. The handler throws at startup.
+   *
+   * @dbxRuleSeverity error
+   * @dbxRuleApplies Every resolved processor, when the registry resolves fully.
+   * @dbxRuleNotApplies Registries holding entries the scanner cannot resolve, or configs imported from `@dereekb/*`.
+   * @dbxRuleFix Add a `NotificationTaskBotScriptConfig` for the script to `<APP>_NOTIFICATION_TASK_BOT_SCRIPT_CONFIGS`, or remove the processor.
+   * @dbxRuleSeeAlso artifact:notification-task-bot-script
+   */
+  NOTIF_TASK_BOT_PROCESSOR_NOT_REGISTERED = 'NOTIF_TASK_BOT_PROCESSOR_NOT_REGISTERED',
+
+  /**
+   * A NotificationTaskBot registry entry, a processor's `target` or the NTBR handler's `validate` can't be resolved statically, so the registry ↔ processor check skips it. The handler's runtime check at startup still applies.
+   *
+   * @dbxRuleSeverity warning
+   * @dbxRuleApplies Any unresolved registry entry, config `scriptType`, processor or handler `validate`.
+   * @dbxRuleNotApplies Configs, processors and script types imported from `@dereekb/*`.
+   * @dbxRuleFix Declare script types and configs under `src/lib/model/notification/`. Give each processor `target: <SCRIPT_TYPE_CONSTANT>`, or a parameter that defaults to one. Build `validate` as `<CONFIGS>.map((x) => x.scriptType)`.
+   * @dbxRuleSeeAlso artifact:notification-task-bot-script
+   */
+  NOTIF_TASK_BOT_SCRIPT_TRACE_UNRESOLVED = 'NOTIF_TASK_BOT_SCRIPT_TRACE_UNRESOLVED',
+
+  /**
+   * Two processors in one NTBR handler target the same script type. Processors are indexed by target, so only the last one runs.
+   *
+   * @dbxRuleSeverity warning
+   * @dbxRuleApplies Resolved processors in the same `notificationTaskBotRunNotificationTaskHandler(...)` call.
+   * @dbxRuleNotApplies Processors whose target the scanner cannot resolve.
+   * @dbxRuleFix Remove the duplicate, or merge the two processors.
+   */
+  NOTIF_TASK_BOT_PROCESSOR_DUPLICATE_TARGET = 'NOTIF_TASK_BOT_PROCESSOR_DUPLICATE_TARGET',
+
+  /**
+   * Nothing in the scanned API folders calls `repairAllNotificationTaskBots()`. Lost runs are never noticed, and their entries stall.
+   *
+   * @dbxRuleSeverity warning
+   * @dbxRuleApplies Apps that use bots. The scan accepts `<x>.repairAllNotificationTaskBots(...)` and `repairAllNotificationTaskBotsFactory(...)`.
+   * @dbxRuleNotApplies Apps that run the repair from outside `src/app/common/model/notification/`, `src/app/common/firebase/` and `src/app/function/notification/` — allow the warning (`--allow-warning`) or move the call.
+   * @dbxRuleFix Call `request.nest.notificationActions.repairAllNotificationTaskBots()` from the notification schedule, after `sendQueuedNotifications`.
+   * @dbxRuleSeeAlso artifact:notification-task-bot-script
+   */
+  NOTIF_TASK_BOT_REPAIR_NOT_SCHEDULED = 'NOTIF_TASK_BOT_REPAIR_NOT_SCHEDULED',
+
+  /**
+   * `firestore.rules` has no `match /ntb/{...}` block for the NotificationTaskBot collection, or the file could not be read.
+   *
+   * @dbxRuleSeverity warning
+   * @dbxRuleApplies Apps that use bots, when a rules file is given (the tool and the manifest generator default to the workspace's `firestore.rules`).
+   * @dbxRuleNotApplies Bots that are deliberately server-only: allowlist `notificationTaskBot` in `require-firestore-rule-for-service-model` and allow this warning.
+   * @dbxRuleFix Add `match /ntb/{notificationTaskBot} { allow get, list: if userClaimsIsSysAdmin(); }`. Keep it admin-only; owners read their opt-outs through `read:optOuts`.
+   * @dbxRuleSeeAlso artifact:notification-task-bot-script
+   * @dbxRuleSeeAlso tool:dbx_firestore_rules_scan
+   */
+  NOTIF_TASK_BOT_FIRESTORE_RULE_MISSING = 'NOTIF_TASK_BOT_FIRESTORE_RULE_MISSING',
+
+  /**
+   * `firestore.indexes.json` has a `fieldOverrides` entry for `ntb.nat` that drops its COLLECTION / ASCENDING single-field index. The repair sweep's `notificationTaskBotsDueForRepairQuery` then fails with FAILED_PRECONDITION.
+   *
+   * @dbxRuleSeverity error
+   * @dbxRuleApplies Apps that use bots, when the indexes file is given and parses.
+   * @dbxRuleNotApplies Indexes files without an `ntb.nat` override (the automatic single-field index covers the query), and missing or invalid files (the firebase_index cluster reports invalid JSON).
+   * @dbxRuleFix Remove that `fieldOverrides` entry, or add `{ "queryScope": "COLLECTION", "order": "ASCENDING" }` to its `indexes`.
+   * @dbxRuleSeeAlso artifact:notification-task-bot-script
+   * @dbxRuleSeeAlso tool:dbx_model_firebase_index_validate_app
+   */
+  NOTIF_TASK_BOT_NAT_INDEX_MISSING = 'NOTIF_TASK_BOT_NAT_INDEX_MISSING'
 }
 
 /**

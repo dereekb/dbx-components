@@ -29,7 +29,7 @@ const DBX_NOTIFICATION_M_LIST_APP_TOOL: Tool = {
     '',
     'Its JSON is the report part of the `notification.manifest.json` that `dbx-cli-generate-notification-manifest` writes at build time; this tool always scans the current source.',
     '',
-    'Cross-file resolution mirrors `dbx_notification_m_validate_app` — spreads and factory composition are traced through every `.ts` file under `src/lib/model/notification/` on the component side and `src/app/common/model/notification/` + `src/app/common/firebase/` on the API side.',
+    'Cross-file resolution mirrors `dbx_notification_m_validate_app` — spreads and factory composition are traced through every `.ts` file under `src/lib/model/notification/` on the component side and `src/app/common/model/notification/`, `src/app/common/firebase/` and `src/app/function/notification/` on the API side.',
     '',
     'Provide:',
     '- `componentDir`: relative path to the `-firebase` component package (e.g. `components/demo-firebase`).',

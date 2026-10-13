@@ -214,7 +214,10 @@ const NOTIFICATION_BUILD_TIME_CHECK_STEP: FileConventionStep = {
     '  "inputs": [',
     '    "{workspaceRoot}/<componentDir>/src/lib/model/notification/**/*.ts",',
     '    "{workspaceRoot}/<apiDir>/src/app/common/model/notification/**/*.ts",',
-    '    "{workspaceRoot}/<apiDir>/src/app/common/firebase/**/*.ts"',
+    '    "{workspaceRoot}/<apiDir>/src/app/common/firebase/**/*.ts",',
+    '    "{workspaceRoot}/<apiDir>/src/app/function/notification/**/*.ts",',
+    '    "{workspaceRoot}/firestore.rules",',
+    '    "{workspaceRoot}/firestore.indexes.json"',
     '  ],',
     '  "options": {',
     '    "command": "npx dbx-cli-generate-notification-manifest --component-dir=<componentDir> --api-dir=<apiDir> --output=dist/<apiDir>/notification.manifest.json",',
@@ -310,8 +313,81 @@ const NOTIFICATION_TASK: FileConventionSpec = {
     },
     NOTIFICATION_BUILD_TIME_CHECK_STEP
   ],
-  seeAlso: ['notification-template'],
+  seeAlso: ['notification-template', 'notification-task-bot-script'],
   verify: 'Run `dbx_notification_m_validate_app` to confirm `inAllArray: true` + `hasHandler: true` for the new task type, then `npx nx run <api-project>:generate-notification-manifest` runs the same checks the build does.'
+};
+
+const NOTIFICATION_TASK_BOT_SCRIPT: FileConventionSpec = {
+  artifact: 'notification-task-bot-script',
+  title: 'NotificationTaskBot script',
+  summary: 'Add a recurring NotificationTaskBot script end-to-end — component script config + registry, API script processor + NTBR handler, task-service wiring, repair cron, `ntb` rule, and the entry ensure call. `dbx_artifact_scaffold` `notification-task-bot-script` emits the bodies.',
+  steps: [
+    {
+      heading: 'Component script',
+      path: '<componentDir>/src/lib/model/notification/notification.taskbot.<name>.ts',
+      altPaths: ['<componentDir>/src/lib/model/notification/notification.taskbot.ts (single-file workspaces, like the demo)'],
+      body: [
+        '**Required exports:**',
+        "- `<NAME>_NOTIFICATION_TASK_BOT_SCRIPT_TYPE: NotificationTaskBotScriptType = '<snake_code>'`.",
+        "- `<NAME>_NOTIFICATION_TASK_BOT_ENTRY_ID: NotificationTaskBotEntryId = '<kebab-id>'` (`^[a-z0-9-]+$`, at most 40 characters).",
+        "- `<Name>NotificationTaskBotEntryData` interface, plus its arktype `dataType` (`.onUndeclaredKey('reject')`, cast `as Type<<Name>NotificationTaskBotEntryData>`) — setting `dataType` opts the script in to admin and MCP data patches through `update:entry`.",
+        '- `<NAME>_NOTIFICATION_TASK_BOT_SCRIPT_CONFIG: NotificationTaskBotScriptConfig` with `{ scriptType, name, description, dataType }` (add `group` + `allowOwnerOptOut: true` to let the owner turn it off; declare the group in its own file).',
+        '',
+        '**Barrel:** Re-export from `<componentDir>/src/lib/model/notification/index.ts`.'
+      ].join('\n')
+    },
+    {
+      heading: 'Component registry',
+      path: '<componentDir>/src/lib/model/notification/notification.taskbot.ts',
+      body: 'Add the config to `<APP>_NOTIFICATION_TASK_BOT_SCRIPT_CONFIGS: NotificationTaskBotScriptConfig[]`, and build `<APP>_FIREBASE_NOTIFICATION_TASK_BOT_SCRIPT_CONFIG_RECORD = notificationTaskBotScriptConfigRecord(<APP>_NOTIFICATION_TASK_BOT_SCRIPT_CONFIGS)` (`NOTIF_TASK_BOT_REGISTRY_MISSING`).'
+    },
+    {
+      heading: 'Registry service',
+      path: '<apiDir>/src/app/common/firebase/action.module.ts',
+      altPaths: ['<apiDir>/src/app/common/firebase/action.context.ts (the `AppNotificationTaskBotScriptConfigServiceRef` member)'],
+      body: 'Add `AppNotificationTaskBotScriptConfigServiceRef` to the server actions context class, and set `appNotificationTaskBotScriptConfigService: appNotificationTaskBotScriptConfigService(<APP>_FIREBASE_NOTIFICATION_TASK_BOT_SCRIPT_CONFIG_RECORD)` in its factory (`NOTIF_TASK_BOT_REGISTRY_NOT_WIRED`).'
+    },
+    {
+      heading: 'API script processor',
+      path: '<apiDir>/src/app/common/model/notification/handlers/taskbot/task.handler.taskbot.<name>.ts',
+      altPaths: ['<apiDir>/src/app/common/model/notification/handlers/taskbot/task.handler.taskbot.ts (single-file workspaces)'],
+      body: [
+        '**Required shape:** a function returning `NotificationTaskBotScriptProcessorConfig<<Name>NotificationTaskBotEntryData>` with `target: <NAME>_NOTIFICATION_TASK_BOT_SCRIPT_TYPE` (or a parameter defaulting to it), a `flow` whose first step is a due check (`notificationTaskBotDelayUntilDue`) and whose side effect runs in `runNotificationTaskBotEntryTransaction` with `markSubmitted()`, and a `cleanup` returning the next run (`nextRunAt`).'
+      ].join('\n')
+    },
+    {
+      heading: 'NTBR handler',
+      path: '<apiDir>/src/app/common/model/notification/handlers/taskbot/task.handler.taskbot.ts',
+      body: 'Add the processor to `notificationTaskBotRunNotificationTaskHandler({ processors, validate: <APP>_NOTIFICATION_TASK_BOT_SCRIPT_CONFIGS.map((x) => x.scriptType), notificationTaskBotContext })`. Every registered script needs a processor and every processor target must be registered; the handler throws at startup otherwise (`NOTIF_TASK_BOT_SCRIPT_WITHOUT_PROCESSOR`, `NOTIF_TASK_BOT_PROCESSOR_NOT_REGISTERED`).'
+    },
+    {
+      heading: 'Wire into task service',
+      path: '<apiDir>/src/app/common/model/notification/notification.task.service.ts',
+      body: 'Add the NTBR handler to `notificationTaskService({ handlers })` and `...ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES` to its `validate` (`NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED`, `NOTIF_TASK_BOT_TASK_TYPES_NOT_IN_VALIDATE`).'
+    },
+    {
+      heading: 'Repair cron',
+      path: '<apiDir>/src/app/function/notification/notification.schedule.ts',
+      body: 'Call `request.nest.notificationActions.repairAllNotificationTaskBots()` from the notification schedule, after `sendQueuedNotifications` (`NOTIF_TASK_BOT_REPAIR_NOT_SCHEDULED`).'
+    },
+    {
+      heading: 'Firestore rules',
+      path: 'firestore.rules',
+      body: 'Add `match /ntb/{notificationTaskBot} { allow get, list: if userClaimsIsSysAdmin(); }`. Keep it admin-only; owners read their opt-outs through `read:optOuts` (`NOTIF_TASK_BOT_FIRESTORE_RULE_MISSING`).'
+    },
+    {
+      heading: 'Firestore index',
+      path: 'firestore.indexes.json',
+      body: 'No entry is needed: the repair query (`where nat <= …` on `ntb`) uses the automatic single-field index. Do not exempt `ntb.nat` in `fieldOverrides` (`NOTIF_TASK_BOT_NAT_INDEX_MISSING`).'
+    },
+    {
+      heading: 'Start the bot',
+      body: 'Where the attached model is created or enabled, call `ensureNotificationTaskBotEntryFactory(context)({ model, entryId: <NAME>_NOTIFICATION_TASK_BOT_ENTRY_ID, scriptType: <NAME>_NOTIFICATION_TASK_BOT_SCRIPT_TYPE, data, owner })`, passing `owner` on every call.'
+    },
+    NOTIFICATION_BUILD_TIME_CHECK_STEP
+  ],
+  seeAlso: ['notification-task'],
+  verify: 'Run `dbx_notification_m_validate_app`; the `NOTIF_TASK_BOT_*` checks (registry, NTBR handler, processors, repair cron, `ntb` rule, `nat` index) should pass. `npx nx run <api-project>:generate-notification-manifest` runs the same checks the build does.'
 };
 
 const NESTJS_MODEL_MODULE: FileConventionSpec = {
@@ -400,4 +476,4 @@ const NESTJS_APP_MODULE: FileConventionSpec = {
   seeAlso: ['nestjs-model-module', 'nestjs-function-module']
 };
 
-export const FILE_CONVENTIONS: readonly FileConventionSpec[] = [FIRESTORE_MODEL, STORAGEFILE_PURPOSE, STORAGEFILE_UPLOAD_HANDLER, STORAGEFILE_PROCESSOR, STORAGEFILE_PROCESSOR_SUBTASK, NOTIFICATION_TEMPLATE, NOTIFICATION_TASK, NESTJS_MODEL_MODULE, NESTJS_FUNCTION_MODULE, NESTJS_APP_MODULE];
+export const FILE_CONVENTIONS: readonly FileConventionSpec[] = [FIRESTORE_MODEL, STORAGEFILE_PURPOSE, STORAGEFILE_UPLOAD_HANDLER, STORAGEFILE_PROCESSOR, STORAGEFILE_PROCESSOR_SUBTASK, NOTIFICATION_TEMPLATE, NOTIFICATION_TASK, NOTIFICATION_TASK_BOT_SCRIPT, NESTJS_MODEL_MODULE, NESTJS_FUNCTION_MODULE, NESTJS_APP_MODULE];

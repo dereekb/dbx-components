@@ -625,6 +625,7 @@ It runs the same rules as the `dbx_notification_m_validate_app` MCP tool, over t
 | A task type in `validate` has no handler | `NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER`, `NOTIF_TASK_NOT_REGISTERED_IN_SERVICE`, `NOTIF_TASK_HANDLER_NAME_MISMATCH` | error |
 | A factory returns `emailContent` / `textContent` / `notificationSummaryContent` for a delivery method the info's explicit `userConfigurableDeliveryMethods` and `forcedDeliveryMethods` leave out (an info that only forces methods is only sent by them) | `NOTIF_TEMPLATE_FACTORY_UNLISTED_DELIVERY_METHOD` | warning |
 | An info forces texts, or forces a method while `onlySendToExplicitlyEnabledRecipients` is `true` | `NOTIF_TEMPLATE_FORCED_TEXT_DELIVERY_METHOD`, `NOTIF_TEMPLATE_FORCED_DELIVERY_METHOD_EXPLICIT_OPT_IN` | error |
+| A NotificationTaskBot wiring gap: the script registry, the NTBR handler, scripts vs. processors, the repair cron, the `ntb` rule, the `nat` index (only checked for apps that use bots) | `NOTIF_TASK_BOT_*` | error / warning |
 
 …plus the rest of the `dbx_notification_m_validate_app` rule set (`dbx_explain_rule <CODE>` describes any
 code). The delivery-method check is a heuristic: it scans the factory's own source plus the function
@@ -638,7 +639,11 @@ indirection the tracer can't follow.
 ### What it scans
 
 - component: `<component-dir>/src/lib/model/notification/**`
-- API: `<api-dir>/src/app/common/model/notification/**` and `<api-dir>/src/app/common/firebase/**`
+- API: `<api-dir>/src/app/common/model/notification/**`, `<api-dir>/src/app/common/firebase/**` and
+  `<api-dir>/src/app/function/notification/**` (where the notification schedule runs the
+  NotificationTaskBot repair sweep)
+- workspace: `firestore.rules` and `firestore.indexes.json`, for the NotificationTaskBot `ntb` rule
+  and `ntb.nat` index checks (see `--rules-file` / `--indexes-file`)
 
 Only non-spec `.ts` files are read.
 
@@ -652,6 +657,8 @@ Only non-spec `.ts` files are read.
 | `--cli-output=<file.ts>` | optional; also emit the TypeScript notification manifest the CLI's [notification commands](#notifications) read |
 | `--project=<name>` | optional, for `--cli-output`; names the emitted constants (`demo-cli` → `DEMO_CLI_NOTIFICATION_MANIFEST`, default `CLI_`) |
 | `--app=<name>` | optional; stamped as `app.name`, defaults to the basename of `--api-dir` |
+| `--rules-file=<path>` | optional; the Firestore rules read for the NotificationTaskBot `ntb` rule check, default `firestore.rules` |
+| `--indexes-file=<path>` | optional; the Firestore indexes read for the NotificationTaskBot `ntb.nat` index check, default `firestore.indexes.json` |
 | `--strict` | treat every warning as blocking |
 | `--allow-warning=<CODE>` | repeatable; never block on that warning code (error codes can't be allowed) |
 | `--max-warnings=<N>` | block when the non-allowed warnings exceed N |
@@ -687,7 +694,10 @@ Add an nx target to the API project and list it in `build.dependsOn`:
   "inputs": [
     "{workspaceRoot}/components/<app>-firebase/src/lib/model/notification/**/*.ts",
     "{workspaceRoot}/apps/<app>-api/src/app/common/model/notification/**/*.ts",
-    "{workspaceRoot}/apps/<app>-api/src/app/common/firebase/**/*.ts"
+    "{workspaceRoot}/apps/<app>-api/src/app/common/firebase/**/*.ts",
+    "{workspaceRoot}/apps/<app>-api/src/app/function/notification/**/*.ts",
+    "{workspaceRoot}/firestore.rules",
+    "{workspaceRoot}/firestore.indexes.json"
   ],
   "options": {
     "command": "npx dbx-cli-generate-notification-manifest --component-dir=components/<app>-firebase --api-dir=apps/<app>-api --output=dist/apps/<app>-api/notification.manifest.json",

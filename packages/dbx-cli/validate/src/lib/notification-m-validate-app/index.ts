@@ -69,13 +69,30 @@ export function validateAppNotifications(inspection: AppNotificationsInspection,
 
 export { extractAppNotifications } from './extract.js';
 export { formatResult } from './format.js';
-export { inspectAppNotifications } from './inspect.js';
+export { inspectAppNotifications, type InspectAppNotificationsOptions } from './inspect.js';
+export { NOTIFICATION_TASK_BOT_UPSTREAM_NAMES } from './extract.taskbot.js';
 export type {
   AppNotificationsInspection,
+  AppNotificationsWorkspaceFiles,
+  ExtractedAppNotificationTaskBot,
   ExtractedAppNotifications,
+  ExtractedSourceLocation,
   ExtractedTaskCheckpointAlias,
   ExtractedTaskDataInterface,
+  ExtractedTaskBotFirestoreIndexes,
+  ExtractedTaskBotFirestoreRules,
+  ExtractedTaskBotLocation,
+  ExtractedTaskBotProcessor,
+  ExtractedTaskBotRegistry,
+  ExtractedTaskBotRegistryWiring,
+  ExtractedTaskBotRegistryWiringKind,
+  ExtractedTaskBotRunHandlerCall,
+  ExtractedTaskBotScriptConfig,
+  ExtractedTaskBotScriptTypeConstant,
+  ExtractedTaskBotScriptTypeRef,
+  ExtractedTaskBotSide,
   ExtractedTaskHandlerEntry,
+  ExtractedTaskServiceValidateStatus,
   ExtractedTaskTypeConstant,
   ExtractedTemplateConfigsArrayFactory,
   ExtractedTemplateConfigsArrayWiring,
@@ -86,6 +103,7 @@ export type {
   ExtractedTemplateTypeInfo,
   ForcedDeliveryMethodsSource,
   InspectedFile,
+  InspectedWorkspaceFile,
   NotificationDeliveryMethodName,
   SideInspection,
   UserConfigurableDeliveryMethodsSource,
