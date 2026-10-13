@@ -13,7 +13,10 @@ services:
     ports:
       # - '9229:9229' # node-inspect debug port. Can be disabled if not being used.
       - '9900-9908:9900-9908' # expose for browser access
-    command: npx nx run demo-api:serve
+    # Not `npx nx run demo-api:serve` directly: serve-in-container.sh first gives serve an Nx daemon,
+    # task DB and cache of its own, so a daemon started on the host or in a test container cannot evict
+    # the one demo-api:build-watch depends on. See its header.
+    command: ./serve-in-container.sh
     tty: true
     environment:
       # disable GCE Metadata retrieval.
