@@ -222,6 +222,38 @@ function addUnrelatedHelperWithParameter(parts: FixtureParts, name: string): voi
   replaceInFile(parts.api, SF_HANDLER_FILE, SF_WRAPPER, `${SF_WRAPPER}\n\nexport function demoUnrelatedHelper(${name}: boolean) { return ${name}; }`);
 }
 
+const BOTH_FACTORIES_IMPORT = "import { formSpaceSubmissionNotificationTaskHandler, storageFileProcessingNotificationTaskHandler } from '@dereekb/firebase-server/model';";
+
+// Each wrapper keeps the handler it builds in a local of the same name, `handler`.
+const SF_WRAPPER_HANDLER_LOCAL = `export function demoStorageFileProcessingNotificationTaskHandler(context) {
+  const handler = storageFileProcessingNotificationTaskHandler(${SF_INLINE_CONFIG});
+  return handler;
+}`;
+
+const FS_WRAPPER_HANDLER_LOCAL = `export function demoFormSpaceSubmissionNotificationTaskHandler(context) {
+  const handler = formSpaceSubmissionNotificationTaskHandler({ processors: [], validate: [], formSpaceFirestoreCollections: context });
+  return handler;
+}`;
+
+// The same wrappers, each holding a helper's result: `const handler = buildStorageFileHandler(context)`.
+const WRAPPER_HELPERS = `function buildStorageFileHandler(context) {
+  return storageFileProcessingNotificationTaskHandler(${SF_INLINE_CONFIG});
+}
+
+function buildFormSpaceHandler(context) {
+  return formSpaceSubmissionNotificationTaskHandler({ processors: [], validate: [], formSpaceFirestoreCollections: context });
+}`;
+
+const SF_WRAPPER_HELPER_LOCAL = SF_WRAPPER_HANDLER_LOCAL.replace(`storageFileProcessingNotificationTaskHandler(${SF_INLINE_CONFIG})`, 'buildStorageFileHandler(context)');
+const FS_WRAPPER_HELPER_LOCAL = FS_WRAPPER_HANDLER_LOCAL.replace('formSpaceSubmissionNotificationTaskHandler({ processors: [], validate: [], formSpaceFirestoreCollections: context })', 'buildFormSpaceHandler(context)');
+
+// Replaces the SF wrapper's file with `body` (after an import of both factories) and points the task service's FS import at it.
+function writeBothWrappersInOneFile(parts: FixtureParts, body: string): void {
+  replaceInFile(parts.api, SF_HANDLER_FILE, API_SF_HANDLER, `${BOTH_FACTORIES_IMPORT}\n\n${body}\n`);
+  removeFile(parts.api, FS_HANDLER_FILE);
+  replaceInFile(parts.api, TASK_SERVICE_FILE, "'./handlers/formspace/task.handler.formspace.submission'", "'./handlers/task.handler.storagefile'");
+}
+
 describe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED', () => {
   it('passes the demo-shaped fixture with no findings', () => {
     expect(runWith().violations).toEqual([]);
@@ -784,6 +816,77 @@ export function demoFormSpaceSubmissionNotificationTaskHandler(context) {
   });
 });
 
+describe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED — same-named locals in one file', () => {
+  const SF_FACTORY = 'storageFileProcessingNotificationTaskHandler';
+  const FS_FACTORY = 'formSpaceSubmissionNotificationTaskHandler';
+  const sameNamedLocalVariants: [string, (parts: FixtureParts) => void][] = [
+    ['`const handler = <factory>(...)`', (p) => writeBothWrappersInOneFile(p, `${SF_WRAPPER_HANDLER_LOCAL}\n\n${FS_WRAPPER_HANDLER_LOCAL}`)],
+    ['`const handler = someHelper(context)`', (p) => writeBothWrappersInOneFile(p, `${WRAPPER_HELPERS}\n\n${SF_WRAPPER_HELPER_LOCAL}\n\n${FS_WRAPPER_HELPER_LOCAL}`)]
+  ];
+
+  it.each(sameNamedLocalVariants)('follows each wrapper to its own %s', (_label, modify) => {
+    const extracted = extractAppNotifications(inspectionOf(modify));
+    const [call] = extracted.taskServiceCalls;
+    expect(call.opaqueHandlerValues).toEqual([]);
+    expect(call.unresolvedHandlerBindings).toEqual([]);
+    expect(call.reachedUpstreamHandlerCalls.map((x) => x.factory)).toEqual([SF_FACTORY, FS_FACTORY]);
+    for (const reached of call.reachedUpstreamHandlerCalls) {
+      expect(extracted.upstreamHandlerCalls.find((x) => x.factory === reached.factory)).toEqual(expect.objectContaining({ sourceFile: SF_HANDLER_FILE, line: reached.line }));
+    }
+    expect(runWith(modify).violations).toEqual([]);
+  });
+
+  it.each(sameNamedLocalVariants)('accepts the second wrapper of the file on its own, with %s', (_label, modify) => {
+    const onlyFormSpace = (p: FixtureParts) => {
+      modify(p);
+      dropStorageFileHandler(p);
+      replaceInFile(p.api, TASK_SERVICE_FILE, SF_SPREAD, '');
+    };
+    const [call] = extractAppNotifications(inspectionOf(onlyFormSpace)).taskServiceCalls;
+    expect(call.reachedUpstreamHandlerCalls.map((x) => x.factory)).toEqual([FS_FACTORY]);
+    expect(runWith(onlyFormSpace).violations).toEqual([]);
+  });
+
+  it('accepts the first wrapper of the file on its own when the FormSpace wrapper comes first', () => {
+    const onlyStorageFile = (p: FixtureParts) => {
+      writeBothWrappersInOneFile(p, `${FS_WRAPPER_HANDLER_LOCAL}\n\n${SF_WRAPPER_HANDLER_LOCAL}`);
+      dropFormSpaceHandler(p);
+      replaceInFile(p.api, TASK_SERVICE_FILE, FS_SPREAD, '');
+    };
+    const [call] = extractAppNotifications(inspectionOf(onlyStorageFile)).taskServiceCalls;
+    expect(call.reachedUpstreamHandlerCalls.map((x) => x.factory)).toEqual([SF_FACTORY]);
+    expect(runWith(onlyStorageFile).violations).toEqual([]);
+  });
+
+  it.each(sameNamedLocalVariants)('reports the StorageFile aggregate, not FormSpace, when the first wrapper leaves handlers, with %s', (_label, modify) => {
+    const found = findingsOf(
+      runWith((p) => {
+        modify(p);
+        dropStorageFileHandler(p);
+      })
+    );
+    expect(found).toHaveLength(1);
+    expect(found[0].message).toContain('lists `...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`');
+    expect(found[0].message).not.toContain('FORM_SPACE');
+  });
+
+  it('does not follow a same-named local of another function to a parameter', () => {
+    const modify = (p: FixtureParts) => {
+      replaceInFile(
+        p.api,
+        SF_HANDLER_FILE,
+        API_SF_HANDLER,
+        `${BOTH_FACTORIES_IMPORT}\n\nexport function demoStorageFileProcessingNotificationTaskHandler(context, handler = storageFileProcessingNotificationTaskHandler(${SF_INLINE_CONFIG})) {\n  return handler;\n}\n\n${FS_WRAPPER_HANDLER_LOCAL.replace('demoFormSpaceSubmissionNotificationTaskHandler', 'demoUnrelatedFormSpaceHelper')}\n`
+      );
+    };
+    expect(findingsOf(runWith(modify))).toEqual([]);
+    const [call] = extractAppNotifications(inspectionOf(modify)).taskServiceCalls;
+    expect(call.reachedUpstreamHandlerCalls.filter((x) => x.sourceFile === SF_HANDLER_FILE)).toEqual([]);
+    expect(call.unresolvedHandlerBindings).toContain('handler');
+    expect(isHandlersTraceComplete(call)).toBe(false);
+  });
+});
+
 describe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED — values the trace still skips', () => {
   // `storageFileHandler` stays in `handlers` in every case, so a finding would be a false error.
   it.each<[string, (parts: FixtureParts) => void]>([
@@ -808,6 +911,13 @@ describe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED — values the trace still 
       (p) => {
         addModuleLevelFormSpaceConst(p);
         holdStorageFileFactoryInLocalConst(p, 'storageFileProcessingNotificationTaskHandler');
+      }
+    ],
+    [
+      // a first-match resolver would follow the module-level FormSpace local from inside the StorageFile wrapper
+      'a local shadowed by a module-level local of the same name',
+      (p) => {
+        replaceInFile(p.api, SF_HANDLER_FILE, API_SF_HANDLER, `${BOTH_FACTORIES_IMPORT}\n\nconst handler = formSpaceSubmissionNotificationTaskHandler({ processors: [], validate: [], formSpaceFirestoreCollections: undefined });\n\n${SF_WRAPPER_HANDLER_LOCAL}\n`);
       }
     ],
     [

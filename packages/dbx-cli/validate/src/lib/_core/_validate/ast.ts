@@ -15,7 +15,7 @@
  * convention.
  */
 
-import { Node, Project, SyntaxKind, VariableDeclarationKind, type ArrayLiteralExpression, type CallExpression, type Identifier, type ImportDeclaration, type ObjectLiteralExpression, type PropertyAccessExpression, type SourceFile, type TypeNode, type VariableDeclaration } from 'ts-morph';
+import { Node, Project, SyntaxKind, VariableDeclarationKind, type ArrayLiteralExpression, type CallExpression, type Identifier, type ImportDeclaration, type ObjectLiteralExpression, type PropertyAccessExpression, type SourceFile, type TypeNode, type VariableDeclaration, type VariableStatement } from 'ts-morph';
 import type { InspectedFile } from './inspection.types.js';
 
 const COMPONENT_VIRTUAL_PREFIX = '__component__/';
@@ -288,6 +288,9 @@ export function findReturnExpression(fn: Node): Node | undefined {
  * source file, scanning top-level statements first and then any
  * descendant declarations (function-scoped or block-scoped).
  *
+ * It ignores scope: with two declarations of the name it returns whichever comes first. {@link resolveLocalVariable}
+ * resolves a reference to the declaration in scope where it sits.
+ *
  * @param sf - The source file to scan.
  * @param name - The variable name to match.
  * @returns The matching declaration, or `undefined` when none is found.
@@ -496,8 +499,37 @@ export interface LocalBinding {
 }
 
 /**
+ * One value binding of a name that a variable statement of the file declares (see
+ * {@link DereekbImportBindings.localVariableBindings}), for {@link resolveLocalVariable}.
+ */
+export interface LocalVariableBinding {
+  /**
+   * Where the binding is visible. Exact for the variable statement: a `const`, `let` or `using` is visible in the block,
+   * module block, case block or source file that holds it, a `var` in its function or the source file. Every other binding
+   * of the name (a parameter, binding element, catch-clause or loop variable, function, class, enum, namespace or import)
+   * is widened to its enclosing function, or the source file, so it can only block more.
+   */
+  readonly scope: Node;
+  /**
+   * The variable statement's declaration of a plain identifier, which a reference can resolve to. `undefined` for every
+   * other binding, which only blocks.
+   */
+  readonly declaration: VariableDeclaration | undefined;
+}
+
+/**
+ * How {@link resolveLocalVariable} reads a reference:
+ * - `variable`: the one binding of its name in scope there is a variable statement's declaration, and the reference means it;
+ * - `ambiguous`: more than one binding of its name is in scope there, so the scan can't tell which one it means;
+ * - `none`: no binding of its name is in scope there, or the one that is can't be followed (a parameter, binding element,
+ *   catch-clause or loop variable, function, class, enum, namespace or import).
+ */
+export type LocalVariableResolution = { readonly kind: 'variable'; readonly declaration: VariableDeclaration } | { readonly kind: 'ambiguous' } | { readonly kind: 'none' };
+
+/**
  * The `@dereekb/*` import aliases and namespace imports of one source file, plus the local `const` references that
- * point at them, used to read a call's callee, or a type annotation, back to the name the upstream package exports.
+ * point at them, used to read a call's callee, or a type annotation, back to the name the upstream package exports, and
+ * the local variable bindings {@link resolveLocalVariable} resolves references against.
  */
 export interface DereekbImportBindings {
   /**
@@ -508,6 +540,12 @@ export interface DereekbImportBindings {
    * Names none of those declare are left out.
    */
   readonly localBindings: ReadonlyMap<string, readonly LocalBinding[]>;
+  /**
+   * The variable declarations {@link resolveLocalVariable} resolves references to, by name: each variable statement's
+   * declaration of a plain identifier, plus every other value binding of the same name in the file, which blocks it
+   * wherever its scope reaches. Names no variable statement declares are left out.
+   */
+  readonly localVariableBindings: ReadonlyMap<string, readonly LocalVariableBinding[]>;
 }
 
 /**
@@ -571,6 +609,48 @@ function isImportedName(identifier: Node): boolean {
 }
 
 /**
+ * Where the bindings of a `const`, `let` or `using` statement are visible: the block, module block, case block or source
+ * file that holds it.
+ *
+ * @param statement - The variable statement.
+ * @returns The scope, or `undefined` when the statement sits anywhere else (only a `var` can).
+ */
+function lexicalScopeOf(statement: VariableStatement): Node | undefined {
+  const holder = statement.getParent();
+  let result: Node | undefined;
+  if (Node.isCaseClause(holder) || Node.isDefaultClause(holder)) {
+    result = holder.getParentOrThrow(); // a case clause's declarations are scoped to the whole case block
+  } else if (Node.isBlock(holder) || Node.isSourceFile(holder) || Node.isModuleBlock(holder)) {
+    result = holder;
+  }
+  return result;
+}
+
+/**
+ * The function around {@link node}, or its source file: the real scope of a `var` or a parameter, and the scope every other
+ * binding the scope readers can't place exactly is widened to, so it can only block more.
+ *
+ * @param node - A declaration.
+ * @returns The nearest enclosing function (arrow function, method, accessor, constructor, function declaration or
+ *   function expression), or the source file.
+ */
+function functionScopeOf(node: Node): Node {
+  // ts-morph 28's isFunctionLikeDeclaration does not cover FunctionExpression
+  return node.getFirstAncestor((x) => Node.isFunctionLikeDeclaration(x) || Node.isFunctionExpression(x)) ?? node.getSourceFile();
+}
+
+/**
+ * Whether {@link node} sits inside {@link scope}.
+ *
+ * @param node - A reference.
+ * @param scope - A binding's scope.
+ * @returns `true` when the scope contains the node.
+ */
+function isWithinScope(node: Node, scope: Node): boolean {
+  return scope.getPos() <= node.getPos() && node.getEnd() <= scope.getEnd();
+}
+
+/**
  * Reads the followable reference a `const` declaration holds: its initializer, `as` casts unwrapped, when that is an
  * identifier or `ns.member` with an identifier `ns`.
  *
@@ -597,13 +677,10 @@ function readHeldReference(decl: VariableDeclaration): Identifier | PropertyAcce
  */
 function readConstBinding(decl: VariableDeclaration): LocalBinding | undefined {
   const statement = decl.getVariableStatement(); // undefined for catch-clause and for-loop declarations
-  const holder = statement?.getParent();
-  const isBlockLike = Node.isBlock(holder) || Node.isSourceFile(holder) || Node.isModuleBlock(holder) || Node.isCaseClause(holder) || Node.isDefaultClause(holder);
+  const scope = statement?.getDeclarationKind() === VariableDeclarationKind.Const ? lexicalScopeOf(statement) : undefined;
   const reference = readHeldReference(decl);
   let result: LocalBinding | undefined;
-  if (isBlockLike && statement?.getDeclarationKind() === VariableDeclarationKind.Const && Node.isIdentifier(decl.getNameNode()) && reference) {
-    // a case clause's declarations are scoped to the whole case block
-    const scope = Node.isCaseClause(holder) || Node.isDefaultClause(holder) ? holder.getParentOrThrow() : holder;
+  if (scope && Node.isIdentifier(decl.getNameNode()) && reference) {
     result = { scope, reference };
   }
   return result;
@@ -614,15 +691,14 @@ function readConstBinding(decl: VariableDeclaration): LocalBinding | undefined {
  * to the enclosing function or the source file.
  *
  * @param identifier - The identifier to read.
- * @param sf - The identifier's source file.
  * @returns A value binding, a type-only binding (a type parameter, type alias or interface), or `undefined` when the
  *   identifier is not a declaration's name.
  */
-function readBlockingBinding(identifier: Identifier, sf: SourceFile): LocalBinding | undefined {
+function readBlockingBinding(identifier: Identifier): LocalBinding | undefined {
   const isValueBinding = isValueDeclarationName(identifier) || isImportedName(identifier);
   let result: LocalBinding | undefined;
   if (isValueBinding || isTypeDeclarationName(identifier)) {
-    result = { scope: identifier.getParentOrThrow().getFirstAncestor((x) => Node.isFunctionLikeDeclaration(x) || Node.isFunctionExpression(x)) ?? sf, typeOnly: !isValueBinding };
+    result = { scope: functionScopeOf(identifier.getParentOrThrow()), typeOnly: !isValueBinding };
   }
   return result;
 }
@@ -670,7 +746,7 @@ function readLocalBindings(sf: SourceFile): Map<string, LocalBinding[]> {
   if (bindings.size > 0) {
     for (const identifier of sf.getDescendantsOfKind(SyntaxKind.Identifier)) {
       const named = bindings.get(identifier.getText());
-      const blocking = named && !resolvable.has(identifier.getParentOrThrow()) ? readBlockingBinding(identifier, sf) : undefined;
+      const blocking = named && !resolvable.has(identifier.getParentOrThrow()) ? readBlockingBinding(identifier) : undefined;
       if (named && blocking) {
         named.push(blocking);
       }
@@ -681,14 +757,54 @@ function readLocalBindings(sf: SourceFile): Map<string, LocalBinding[]> {
 }
 
 /**
+ * Reads the variable bindings of a source file for {@link DereekbImportBindings.localVariableBindings}.
+ *
+ * @param sf - The source file to read.
+ * @returns Each variable statement's declaration of a plain identifier by name, with every other value binding the file
+ *   declares for that name.
+ */
+function readLocalVariableBindings(sf: SourceFile): Map<string, LocalVariableBinding[]> {
+  const bindings = new Map<string, LocalVariableBinding[]>();
+  const declarations = new Set<Node>(); // the declarations recorded below; the blocking pass skips them
+  for (const decl of sf.getDescendantsOfKind(SyntaxKind.VariableDeclaration)) {
+    const statement = decl.getVariableStatement(); // undefined for catch-clause and for-loop declarations
+    let scope: Node | undefined;
+    if (statement?.getDeclarationKind() === VariableDeclarationKind.Var) {
+      scope = functionScopeOf(decl);
+    } else if (statement) {
+      scope = lexicalScopeOf(statement);
+    }
+    if (scope && Node.isIdentifier(decl.getNameNode())) {
+      const named = bindings.get(decl.getName()) ?? [];
+      named.push({ scope, declaration: decl });
+      bindings.set(decl.getName(), named);
+      declarations.add(decl);
+    }
+  }
+
+  if (bindings.size > 0) {
+    for (const identifier of sf.getDescendantsOfKind(SyntaxKind.Identifier)) {
+      const declaration = identifier.getParentOrThrow();
+      const named = bindings.get(identifier.getText());
+      if (named && !declarations.has(declaration) && (isValueDeclarationName(identifier) || isImportedName(identifier))) {
+        named.push({ scope: functionScopeOf(declaration), declaration: undefined });
+      }
+    }
+  }
+
+  return bindings;
+}
+
+/**
  * Reads the `@dereekb/*` import aliases and namespace imports of a source file and its local `const` references, each
- * with every other binding of its name (see {@link DereekbImportBindings.localBindings}).
+ * with every other binding of its name (see {@link DereekbImportBindings.localBindings}), and the file's local variable
+ * bindings (see {@link DereekbImportBindings.localVariableBindings}).
  *
  * @param sf - The source file to read.
  * @returns The file's `@dereekb/*` import bindings.
  */
 export function readDereekbImportBindings(sf: SourceFile): DereekbImportBindings {
-  const result: DereekbImportBindings = { localBindings: readLocalBindings(sf) };
+  const result: DereekbImportBindings = { localBindings: readLocalBindings(sf), localVariableBindings: readLocalVariableBindings(sf) };
   return result;
 }
 
@@ -762,8 +878,33 @@ function readReferenceName(node: Node, bindings: DereekbImportBindings | undefin
  * @returns The binding, or `undefined` when no binding or more than one binding of the name is in scope there.
  */
 function findVisibleBinding(identifier: Identifier, bindings: DereekbImportBindings | undefined, space: 'value' | 'type'): LocalBinding | undefined {
-  const visible = (bindings?.localBindings.get(identifier.getText()) ?? []).filter((x) => (space === 'type' || !x.typeOnly) && x.scope.getPos() <= identifier.getPos() && identifier.getEnd() <= x.scope.getEnd());
+  const visible = (bindings?.localBindings.get(identifier.getText()) ?? []).filter((x) => (space === 'type' || !x.typeOnly) && isWithinScope(identifier, x.scope));
   return visible.length === 1 ? visible[0] : undefined;
+}
+
+/**
+ * Resolves {@link reference} to the variable declaration it means: the one binding of its name in scope where it sits
+ * (see {@link LocalVariableBinding.scope}). Same file only. Unlike {@link findLocalVariable}, which returns the first
+ * declaration of the name anywhere in the file, two functions that each declare the name read their own; a name with more
+ * than one declaration in scope reads as `ambiguous`, never as a guess.
+ *
+ * @param reference - An identifier in value position.
+ * @param imports - The per-file bindings.
+ * @returns The resolution.
+ */
+export function resolveLocalVariable(reference: Identifier, imports: DereekbImportIndex): LocalVariableResolution {
+  const bindings = imports.bindingsByFilePath.get(reference.getSourceFile().getFilePath())?.localVariableBindings.get(reference.getText()) ?? [];
+  const visible = bindings.filter((x) => isWithinScope(reference, x.scope));
+  const declaration = visible.length === 1 ? visible[0].declaration : undefined;
+  let result: LocalVariableResolution;
+  if (visible.length > 1) {
+    result = { kind: 'ambiguous' };
+  } else if (declaration) {
+    result = { kind: 'variable', declaration };
+  } else {
+    result = { kind: 'none' };
+  }
+  return result;
 }
 
 /**

@@ -13,6 +13,10 @@
  * alias, as an `@dereekb/*` namespace member, or through a local `const`
  * holding one of those.
  *
+ * The handlers trace resolves an identifier to the local variable
+ * declaration in scope where it is used (`resolveLocalVariable`); a name
+ * with more than one declaration in scope there is opaque.
+ *
  * Upstream factory calls (`notificationTemplateTypeInfoRecord`,
  * `appNotificationTemplateTypeInfoRecordService`, `notificationTaskService`,
  * the upstream task handler factories and the NotificationTaskBot factories)
@@ -33,7 +37,7 @@
  * `[...ALL_NOTIFICATION_TASK_TYPES]`.
  */
 
-import { Node, SyntaxKind, type ArrayLiteralExpression, type ObjectLiteralExpression, type SourceFile, type TypeNode, type VariableDeclaration } from 'ts-morph';
+import { Node, SyntaxKind, type ArrayLiteralExpression, type Identifier, type ObjectLiteralExpression, type SourceFile, type TypeNode, type VariableDeclaration } from 'ts-morph';
 import {
   apiRelPath,
   asArrayLiteral,
@@ -55,6 +59,7 @@ import {
   readStringProperty,
   readTypeReferenceName,
   resolveArrayLiteralProperty,
+  resolveLocalVariable,
   unwrapAsExpressions,
   type DereekbImportIndex
 } from '../_core/_validate/ast.js';
@@ -889,7 +894,7 @@ function extractTaskServiceCalls(input: ExtractTaskServiceCallsInput): readonly 
       const handlersArr = resolveArrayLiteralProperty(first, 'handlers', sf);
       // `validate: ALL_NOTIFICATION_TASK_TYPES` reads as `validate: [...ALL_NOTIFICATION_TASK_TYPES]`
       const validate: TaskTypeListElements = validateAggregate ? { ids: [], spreads: [validateAggregate.symbolName], opaque: [] } : collectTaskTypeListElements(validateArr);
-      const handlers = collectHandlersArrayElements({ handlersArr, sf, index, trustedExternal, imports });
+      const handlers = collectHandlersArrayElements({ handlersArr, index, trustedExternal, imports });
       const validateStatus = validateAggregate ? 'resolved' : readTaskServiceListStatus(first, 'validate', validateArr);
       const handlersStatus = readTaskServiceListStatus(first, 'handlers', handlersArr);
       const nested = expandComponentValidateSpreads({ validateSpreads: validate.spreads, componentIndex, trustedExternal });
@@ -1066,7 +1071,6 @@ function expandComponentValidateSpreads(input: ExpandComponentValidateSpreadsInp
 
 interface CollectHandlersArrayElementsOptions {
   readonly handlersArr: ArrayLiteralExpression | undefined;
-  readonly sf: SourceFile;
   readonly index: ApiFunctionIndex;
   readonly trustedExternal: ReadonlySet<string>;
   readonly imports: DereekbImportIndex;
@@ -1089,12 +1093,12 @@ interface HandlersArrayElements {
  * elsewhere; the binding tracer still walks them so the rules pass can match
  * resolved bindings against the trust list.
  *
- * @param options - The array literal, source file, function index, and
- *   trust-listed identifier set.
+ * @param options - The array literal, function index, trust-listed
+ *   identifier set and import bindings.
  * @returns The per-call buckets used to populate the task-service-call record.
  */
 function collectHandlersArrayElements(options: CollectHandlersArrayElementsOptions): HandlersArrayElements {
-  const { handlersArr, sf, index, trustedExternal, imports } = options;
+  const { handlersArr, index, trustedExternal, imports } = options;
   const handlerTypes: string[] = [];
   const unresolvedSpreads: string[] = [];
   const resolvedBindings: string[] = [];
@@ -1102,9 +1106,9 @@ function collectHandlersArrayElements(options: CollectHandlersArrayElementsOptio
   const reachedUpstreamHandlerCalls: ExtractedUpstreamHandlerCall[] = [];
   const opaqueHandlerValues: string[] = [];
   if (handlersArr) {
-    const visited = new Set<string>();
+    const visited = new Set<Node>();
     for (const el of handlersArr.getElements()) {
-      consumeHandlersArrayElement(el, { sf, index, trustedExternal, imports, unresolvedSpreads, resolvedBindings, unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, visited });
+      consumeHandlersArrayElement(el, { index, trustedExternal, imports, unresolvedSpreads, resolvedBindings, unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, visited });
     }
   }
   return { handlerTypes, unresolvedSpreads, resolvedBindings, unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues };
@@ -1118,26 +1122,33 @@ function consumeHandlersArrayElement(el: Node, options: Omit<ConsumeHandlersSpre
   const inner = unwrapAsExpressions(el);
   if (!inner) return;
   if (noteUpstreamHandlerCall(inner, options)) return;
-  const identifierName = readHandlerEntryIdentifierName(inner);
-  if (identifierName === undefined) {
+  const identifier = readHandlerEntryIdentifier(inner);
+  if (identifier === undefined) {
     // An inline handler config can't be an upstream handler.
     if (!Node.isObjectLiteralExpression(inner)) {
       options.opaqueHandlerValues.push(opaqueSnippet(inner));
     }
     return;
   }
-  const { sf, index, trustedExternal, imports, resolvedBindings, unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, visited } = options;
-  collectHandlerBindingsFromIdentifier({ name: identifierName, sf, index, trustedExternal, imports, resolved: resolvedBindings, unresolved: unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, visited });
+  const { index, trustedExternal, imports, resolvedBindings, unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, visited } = options;
+  collectHandlerBindingsFromIdentifier({ identifier, index, trustedExternal, imports, resolved: resolvedBindings, unresolved: unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, visited });
 }
 
-function readHandlerEntryIdentifierName(inner: Node): string | undefined {
-  let result: string | undefined;
+/**
+ * Returns the identifier a `handlers` element names: the element itself, or the callee of a call. The trace resolves it
+ * where it sits.
+ *
+ * @param inner - The element, `as` casts unwrapped, or a spread's expression.
+ * @returns The identifier, or `undefined` for any other shape.
+ */
+function readHandlerEntryIdentifier(inner: Node): Identifier | undefined {
+  let result: Identifier | undefined;
   if (Node.isIdentifier(inner)) {
-    result = inner.getText();
+    result = inner;
   } else if (Node.isCallExpression(inner)) {
     const callee = inner.getExpression();
     if (Node.isIdentifier(callee)) {
-      result = callee.getText();
+      result = callee;
     }
   }
   return result;
@@ -1145,7 +1156,6 @@ function readHandlerEntryIdentifierName(inner: Node): string | undefined {
 
 interface ConsumeHandlersSpreadElementOptions {
   readonly inner: Node;
-  readonly sf: SourceFile;
   readonly index: ApiFunctionIndex;
   readonly trustedExternal: ReadonlySet<string>;
   readonly imports: DereekbImportIndex;
@@ -1154,7 +1164,7 @@ interface ConsumeHandlersSpreadElementOptions {
   readonly unresolvedBindings: string[];
   readonly reachedUpstreamHandlerCalls: ExtractedUpstreamHandlerCall[];
   readonly opaqueHandlerValues: string[];
-  readonly visited: Set<string>;
+  readonly visited: Set<Node>;
 }
 
 /**
@@ -1166,17 +1176,17 @@ interface ConsumeHandlersSpreadElementOptions {
  * @param options - The spread inner expression and the buckets to populate.
  */
 function consumeHandlersSpreadElement(options: ConsumeHandlersSpreadElementOptions): void {
-  const { inner, sf, index, trustedExternal, imports, unresolvedSpreads, resolvedBindings, unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, visited } = options;
-  const name = readHandlerEntryIdentifierName(inner);
-  if (name !== undefined) {
-    unresolvedSpreads.push(name);
+  const { inner, index, trustedExternal, imports, unresolvedSpreads, resolvedBindings, unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, visited } = options;
+  const identifier = readHandlerEntryIdentifier(inner);
+  if (identifier !== undefined) {
+    unresolvedSpreads.push(identifier.getText());
   }
   if (noteUpstreamHandlerCall(inner, options)) return;
-  if (name === undefined) {
+  if (identifier === undefined) {
     opaqueHandlerValues.push(opaqueSnippet(inner));
     return;
   }
-  collectHandlerBindingsFromIdentifier({ name, sf, index, trustedExternal, imports, resolved: resolvedBindings, unresolved: unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, visited });
+  collectHandlerBindingsFromIdentifier({ identifier, index, trustedExternal, imports, resolved: resolvedBindings, unresolved: unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, visited });
 }
 
 /**
@@ -1184,7 +1194,6 @@ function consumeHandlersSpreadElement(options: ConsumeHandlersSpreadElementOptio
  * given identifier or expression.
  */
 interface HandlerBindingCollectorContext {
-  readonly sf: SourceFile;
   readonly index: ApiFunctionIndex;
   readonly trustedExternal: ReadonlySet<string>;
   /**
@@ -1202,7 +1211,11 @@ interface HandlerBindingCollectorContext {
    * ends that branch of the trace with `true`.
    */
   readonly opaqueHandlerValues: string[];
-  readonly visited: Set<string>;
+  /**
+   * The local variable declarations and functions the trace has entered, so each is followed once; a revisit reads as
+   * not followed. Two declarations of one name are separate entries.
+   */
+  readonly visited: Set<Node>;
 }
 
 /**
@@ -1230,7 +1243,7 @@ function collectHandlerBindingsFromValue(options: CollectHandlerBindingsFromValu
     if (Node.isCallExpression(inner)) {
       result = collectHandlerBindingsFromCallExpression(inner, options);
     } else if (Node.isIdentifier(inner)) {
-      result = collectHandlerBindingsFromIdentifier({ ...options, name: inner.getText() });
+      result = collectHandlerBindingsFromIdentifier({ ...options, identifier: inner });
     } else if (Node.isArrayLiteralExpression(inner)) {
       result = collectHandlerBindingsFromArrayLiteral(inner, options);
     } else if (!Node.isObjectLiteralExpression(inner)) {
@@ -1248,7 +1261,7 @@ function collectHandlerBindingsFromCallExpression(call: Node, options: CollectHa
   if (noteUpstreamHandlerCall(call, options)) {
     result = true;
   } else if (Node.isIdentifier(callee)) {
-    result = collectHandlerBindingsFromIdentifier({ ...options, name: callee.getText() });
+    result = collectHandlerBindingsFromIdentifier({ ...options, identifier: callee });
   } else {
     // An opaque call ends the trace like an upstream factory call: it is recorded once, and the wrapper and local that
     // lead here are not unresolved.
@@ -1281,11 +1294,15 @@ function collectHandlerBindingsFromArrayLiteral(arr: Node, options: CollectHandl
  * Options for collecting handler bindings starting from an identifier name.
  */
 interface CollectHandlerBindingsFromIdentifierOptions extends HandlerBindingCollectorContext {
-  readonly name: string;
+  /**
+   * The identifier to follow. Where it sits decides which declaration of its name it means (`resolveLocalVariable`).
+   */
+  readonly identifier: Identifier;
 }
 
 function collectHandlerBindingsFromIdentifier(options: CollectHandlerBindingsFromIdentifierOptions): boolean {
-  const { name, trustedExternal, unresolved } = options;
+  const { identifier, trustedExternal, unresolved } = options;
+  const name = identifier.getText();
   const localResolved = tryResolveLocalHandlerBinding(options);
   const fnResolved = tryResolveFunctionHandlerBinding(options);
   const resolvedAny = localResolved || fnResolved;
@@ -1310,20 +1327,36 @@ function collectHandlerBindingsFromIdentifier(options: CollectHandlerBindingsFro
   return result;
 }
 
+/**
+ * Follows {@link CollectHandlerBindingsFromIdentifierOptions.identifier} to the local variable declaration in scope where it
+ * is used (`resolveLocalVariable`). A typed `NotificationTaskServiceTaskHandlerConfig` object literal lands in `resolved`;
+ * any other initializer is walked. A name with more than one declaration in scope there is opaque: the scan can't tell
+ * which one it means.
+ *
+ * @param options - The identifier and the collector context.
+ * @returns `true` when the name was opaque, or the declaration's value ended at something the trace recorded. `false` when
+ *   no followable declaration is in scope (a parameter, an import, a name only another function declares), the
+ *   declaration was already entered, or its value led nowhere.
+ */
 function tryResolveLocalHandlerBinding(options: CollectHandlerBindingsFromIdentifierOptions): boolean {
-  const { name, sf, visited, resolved } = options;
-  const localKey = `${sf.getFilePath()}::${name}`;
-  if (visited.has(localKey)) return false;
-  visited.add(localKey);
-  const localDecl = findLocalVariable(sf, name);
-  if (!localDecl) return false;
-  if (isHandlerConfigLeafDecl(localDecl, options.imports)) {
-    resolved.push(localDecl.getName());
-    return true;
+  const { identifier, imports, visited, resolved, opaqueHandlerValues } = options;
+  const resolution = resolveLocalVariable(identifier, imports);
+  let result = false;
+  if (resolution.kind === 'ambiguous') {
+    opaqueHandlerValues.push(identifier.getText());
+    result = true;
+  } else if (resolution.kind === 'variable' && !visited.has(resolution.declaration)) {
+    const { declaration } = resolution;
+    visited.add(declaration);
+    if (isHandlerConfigLeafDecl(declaration, imports)) {
+      resolved.push(declaration.getName());
+      result = true;
+    } else {
+      const init = unwrapAsExpressions(declaration.getInitializer());
+      result = init !== undefined && collectHandlerBindingsFromValue({ ...options, node: init });
+    }
   }
-  const declInit = unwrapAsExpressions(localDecl.getInitializer());
-  if (!declInit) return false;
-  return collectHandlerBindingsFromValue({ ...options, node: declInit });
+  return result;
 }
 
 function isHandlerConfigLeafDecl(decl: VariableDeclaration, imports: DereekbImportIndex): boolean {
@@ -1331,16 +1364,23 @@ function isHandlerConfigLeafDecl(decl: VariableDeclaration, imports: DereekbImpo
   return readTypeReferenceName(decl.getTypeNode(), imports) === NOTIF_TASK_SERVICE_HANDLER_CONFIG && declInit !== undefined && Node.isObjectLiteralExpression(declInit);
 }
 
+/**
+ * Follows {@link CollectHandlerBindingsFromIdentifierOptions.identifier} to the API function of that name and walks its
+ * return value. The function is looked up by name across the API files; each function is entered once.
+ *
+ * @param options - The identifier and the collector context.
+ * @returns `true` when the function's return value ended at something the trace recorded.
+ */
 function tryResolveFunctionHandlerBinding(options: CollectHandlerBindingsFromIdentifierOptions): boolean {
-  const { name, index, visited } = options;
-  const fnKey = `fn::${name}`;
-  if (visited.has(fnKey)) return false;
-  visited.add(fnKey);
-  const fnEntry = index.functionsByName.get(name);
-  if (!fnEntry) return false;
-  const ret = findReturnExpression(fnEntry.node);
-  if (!ret) return false;
-  return collectHandlerBindingsFromValue({ ...options, node: ret, sf: fnEntry.sourceFile });
+  const { identifier, index, visited } = options;
+  const fnEntry = index.functionsByName.get(identifier.getText());
+  let result = false;
+  if (fnEntry && !visited.has(fnEntry.node)) {
+    visited.add(fnEntry.node);
+    const ret = findReturnExpression(fnEntry.node);
+    result = ret !== undefined && collectHandlerBindingsFromValue({ ...options, node: ret });
+  }
+  return result;
 }
 
 /**

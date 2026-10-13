@@ -647,6 +647,48 @@ export function demoInlineTaskHandlers(context): NotificationTaskServiceTaskHand
     expectCodes(codes, ['NOTIF_TASK_NOT_REGISTERED_IN_SERVICE']);
     expect(codes).not.toContain('NOTIF_TASK_HANDLER_NAME_MISMATCH');
   });
+
+  it('resolves two factories in one file that each return their own `handlers` local', () => {
+    const HANDLER_FILE = `import { type NotificationTaskServiceTaskHandlerConfig } from '@dereekb/firebase-server/model';
+import { EXAMPLE_NOTIFICATION_TASK_TYPE, SECOND_NOTIFICATION_TASK_TYPE, type ExampleNotificationTaskData, type ExampleNotificationTaskCheckpoint, type SecondNotificationTaskData, type SecondNotificationTaskCheckpoint } from 'demo-firebase';
+
+export function demoExampleTaskHandlers(context): NotificationTaskServiceTaskHandlerConfig<any>[] {
+  const exampleHandler: NotificationTaskServiceTaskHandlerConfig<ExampleNotificationTaskData, ExampleNotificationTaskCheckpoint> = {
+    type: EXAMPLE_NOTIFICATION_TASK_TYPE,
+    flow: [{ checkpoint: 'part_a', fn: async () => null }]
+  };
+  const handlers = [exampleHandler];
+  return handlers;
+}
+
+export function demoSecondTaskHandlers(context): NotificationTaskServiceTaskHandlerConfig<any>[] {
+  const secondHandler: NotificationTaskServiceTaskHandlerConfig<SecondNotificationTaskData, SecondNotificationTaskCheckpoint> = {
+    type: SECOND_NOTIFICATION_TASK_TYPE,
+    flow: [{ checkpoint: 'part_x', fn: async () => null }]
+  };
+  const handlers = [secondHandler];
+  return handlers;
+}
+`;
+    const modify = ({ component, api }: { component: InspectedFile[]; api: InspectedFile[] }) => {
+      addSecondTaskType(component);
+      swapServiceHandlerForFactorySpread(api, {
+        factoryImport: "import { demoExampleTaskHandlers, demoSecondTaskHandlers } from './handlers/task.handler.lists';",
+        factoryCall: 'demoExampleTaskHandlers(context)',
+        spreadVar: 'exampleHandlers'
+      });
+      replaceInFile({ files: api, relPath: 'src/app/common/model/notification/notification.task.service.ts', from: '[...exampleHandlers]', to: '[...exampleHandlers, ...demoSecondTaskHandlers(context)]' });
+      api.push({ relPath: 'src/app/common/model/notification/handlers/task.handler.lists.ts', text: HANDLER_FILE });
+    };
+    const result = runWith(modify);
+    const codes = result.violations.map((v) => v.code);
+    expect(codes, JSON.stringify(result.violations, null, 2)).not.toContain('NOTIF_TASK_HANDLER_NAME_MISMATCH');
+    expect(codes).not.toContain('NOTIF_TASK_NOT_REGISTERED_IN_SERVICE');
+    expect(codes).not.toContain('NOTIF_TASK_HANDLER_SPREAD_UNRESOLVED');
+    const [call] = extractAppNotifications(inspectionWith(modify)).taskServiceCalls;
+    expect(call.resolvedHandlerBindings).toEqual(['exampleHandler', 'secondHandler']);
+    expect(call.unresolvedHandlerBindings).toEqual([]);
+  });
 });
 
 describe('validateAppNotifications — warnings', () => {

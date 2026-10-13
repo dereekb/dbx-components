@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { SyntaxKind } from 'ts-morph';
-import { buildDereekbImportIndex, buildInMemoryProject, isDereekbModuleSpecifier, readArrayElementTypeNode, readCalleeName, readImportedIdentifier, readTypeReferenceName, type ImportedIdentifier } from './ast.js';
+import { Node, SyntaxKind, type Identifier } from 'ts-morph';
+import { buildDereekbImportIndex, buildInMemoryProject, isDereekbModuleSpecifier, readArrayElementTypeNode, readCalleeName, readImportedIdentifier, readTypeReferenceName, resolveLocalVariable, type ImportedIdentifier } from './ast.js';
 
 /**
  * Reads the resolved callee name of every call in a one-file project, in source order.
@@ -242,5 +242,47 @@ describe('readImportedIdentifier()', () => {
 
   it('tells @dereekb/* modules apart', () => {
     expect([isDereekbModuleSpecifier('@dereekb/firebase'), isDereekbModuleSpecifier('demo-firebase'), isDereekbModuleSpecifier('./notification.task')]).toEqual([true, false, false]);
+  });
+});
+
+/**
+ * Resolves the identifier of every `return <identifier>;` in a one-file project, in source order.
+ *
+ * @param text - The file's source text.
+ * @returns The resolved declaration's initializer text, or `ambiguous` / `none`.
+ */
+function resolutionsOf(text: string): (string | undefined)[] {
+  const { apiSources } = buildInMemoryProject({ component: { files: [] }, api: { files: [{ relPath: 'a.ts', text }] } });
+  const imports = buildDereekbImportIndex(apiSources);
+  return apiSources[0]
+    .getDescendantsOfKind(SyntaxKind.ReturnStatement)
+    .map((x) => x.getExpression())
+    .filter((x): x is Identifier => x !== undefined && Node.isIdentifier(x))
+    .map((reference) => {
+      const resolution = resolveLocalVariable(reference, imports);
+      return resolution.kind === 'variable' ? resolution.declaration.getInitializer()?.getText() : resolution.kind;
+    });
+}
+
+describe('resolveLocalVariable()', () => {
+  it.each<[string, string, (string | undefined)[]]>([
+    ['reads each function its own const', `function f() { const h = a(); return h; }\nfunction g() { const h = b(); return h; }`, ['a()', 'b()']],
+    ['resolves a module-level const', `const h = a();\nfunction f() { return h; }`, ['a()']],
+    ['resolves a let, and a var from outside its block', `function f() { let h = a(); return h; }\nfunction g(x: boolean) { if (x) { var h = b(); } return h; }`, ['a()', 'b()']],
+    ['resolves a const in a switch case', `function f(x: number) { switch (x) { case 1: const h = a(); return h; } return null; }`, ['a()']],
+    ['resolves a const declared after the reference in its block', `function f() { const g = () => { return h; }; const h = a(); return g; }`, ['a()', '() => { return h; }']],
+    ['ignores an arrow parameter of the same name elsewhere in the function', `function f(list: unknown[]) { const h = a(); list.forEach((h) => h); return h; }`, ['a()']],
+    ['does not resolve a const out of its block', `function f(x: boolean) { if (x) { const h = a(); } return h; }`, ['none']],
+    ['does not resolve a const out of its function', `function f() { const h = a(); return null; }\nfunction g() { return h; }`, ['none']],
+    ['reads a parameter as none, even with a same-named const in another function', `function f() { const h = a(); return h; }\nfunction g(h: unknown) { return h; }`, ['a()', 'none']],
+    ['reads a name the file only imports as none', `import { h } from 'x';\nfunction f() { return h; }`, ['none']],
+    ['reads a destructured or for-of name as none', `function f(o: any) { const { h } = o; return h; }\nfunction g(list: unknown[]) { for (const h of list) { return h; } return null; }`, ['none', 'none']],
+    ['reads two consts in scope as ambiguous', `const h = a();\nfunction f() { const h = b(); return h; }`, ['ambiguous']],
+    ['reads a const shadowed by a parameter as ambiguous', `const h = a();\nfunction f(h: unknown) { return h; }`, ['ambiguous']],
+    ['reads a const shadowed by an import as ambiguous', `import { h } from 'x';\nfunction f() { const h = a(); return h; }`, ['ambiguous']],
+    ['reads a const shadowed by a catch variable as ambiguous', `const h = a();\nfunction f() { try { return null; } catch (h) { return h; } }`, ['ambiguous']],
+    ['reads a const next to a same-named function declaration as ambiguous', `function h() { return null; }\nfunction f() { const h = a(); return h; }`, ['ambiguous']]
+  ])('%s', (_label, text, expected) => {
+    expect(resolutionsOf(text)).toEqual(expected);
   });
 });

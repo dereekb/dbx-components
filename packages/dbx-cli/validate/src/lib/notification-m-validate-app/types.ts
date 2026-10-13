@@ -317,15 +317,18 @@ export interface ExtractedTaskServiceCall {
   /**
    * Binding names (variable identifiers) reachable through the
    * `handlers:` array — direct elements, spreads, and chains followed
-   * through local-variable initializers and function returns until a
-   * typed `NotificationTaskServiceTaskHandlerConfig<...>` object literal
-   * is reached. The rules pass intersects this set with the
+   * through function returns and through the initializer of the local
+   * variable each identifier means (the one declaration of its name in
+   * scope where it is used) until a typed
+   * `NotificationTaskServiceTaskHandlerConfig<...>` object literal is
+   * reached. The rules pass intersects this set with the
    * {@link ExtractedTaskHandlerEntry.bindingName} field to compute
    * which declared handlers are actually wired.
    */
   readonly resolvedHandlerBindings: readonly string[];
   /**
-   * Identifiers the `handlers:` trace could not follow: a name with no local declaration, function or `@dereekb/*` import
+   * Identifiers the `handlers:` trace could not follow: a name with no local variable declaration in scope where it is used
+   * (a parameter, a destructured name, or a name only another function declares), and no function or `@dereekb/*` import
    * behind it, plus each local or function whose value leads only to such names (or to an object literal that isn't a
    * typed handler config, or an empty array). A local or function whose value ends at an upstream handler factory call or
    * at an opaque value ({@link opaqueHandlerValues}) is not listed. The rules pass warns
@@ -391,7 +394,9 @@ export interface ExtractedTaskServiceCall {
    * helper that is not an upstream handler factory, or an upstream handler factory passed along as a value or held in a
    * variable the scan can't pin to one `const`), a call whose callee is neither an identifier nor an `@dereekb/*`
    * namespace member (`obj.fn(...)`, `fn(...)(...)`), and any expression other than an identifier, call, array or object
-   * literal (a conditional, `satisfies`, a parenthesized or non-null expression, …). The text is collapsed and truncated.
+   * literal (a conditional, `satisfies`, a parenthesized or non-null expression, …), and a name with more than one
+   * declaration in scope where it is used (a local plus a same-named parameter, import or outer local), so the scan can't
+   * tell which one it means. The text is collapsed and truncated.
    * An opaque value ends the trace: the locals and functions that lead to it are not listed in
    * {@link unresolvedHandlerBindings}. When the list is non-empty, the upstream handler checks skip the service.
    */
