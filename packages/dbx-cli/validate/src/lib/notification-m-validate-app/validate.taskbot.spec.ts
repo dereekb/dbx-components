@@ -753,3 +753,10 @@ describe('NotificationTaskBot checks — handlers reached twice', () => {
     expect(taskBotCodes(result)).toEqual(['NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED']);
   });
 });
+
+describe('NotificationTaskBot checks — handlers the trace sees through', () => {
+  it('reports NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED when the handler leaves handlers that hold a non-null element', () => {
+    const result = runWith((p) => replaceInFile(p.api, TASK_SERVICE_FILE, '[exampleNotificationTaskHandler, notificationTaskBotHandler]', '[exampleNotificationTaskHandler!]'));
+    expect(taskBotCodes(result)).toEqual(['NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED']);
+  });
+});

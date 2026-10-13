@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Node, SyntaxKind, type Identifier } from 'ts-morph';
-import { buildDereekbImportIndex, buildInMemoryProject, isDereekbModuleSpecifier, readArrayElementTypeNode, readCalleeName, readImportedIdentifier, readTypeReferenceName, resolveLocalVariable, type ImportedIdentifier } from './ast.js';
+import { buildDereekbImportIndex, buildInMemoryProject, findSoleReturnExpression, isDereekbModuleSpecifier, readArrayElementTypeNode, readCalleeName, readImportedIdentifier, readTypeReferenceName, resolveLocalVariable, unwrapOuterExpressions, type ImportedIdentifier } from './ast.js';
 
 /**
  * Reads the resolved callee name of every call in a one-file project, in source order.
@@ -284,5 +284,66 @@ describe('resolveLocalVariable()', () => {
     ['reads a const next to a same-named function declaration as ambiguous', `function h() { return null; }\nfunction f() { const h = a(); return h; }`, ['ambiguous']]
   ])('%s', (_label, text, expected) => {
     expect(resolutionsOf(text)).toEqual(expected);
+  });
+});
+
+/**
+ * Unwraps the initializer of the top-level `probe` variable of a one-file project with {@link unwrapOuterExpressions}.
+ *
+ * @param text - The file's source text.
+ * @returns The unwrapped expression's text.
+ */
+function unwrappedProbeOf(text: string): string | undefined {
+  const { apiSources } = buildInMemoryProject({ component: { files: [] }, api: { files: [{ relPath: 'a.ts', text }] } });
+  return unwrapOuterExpressions(apiSources[0].getVariableDeclarationOrThrow('probe').getInitializer())?.getText();
+}
+
+describe('unwrapOuterExpressions()', () => {
+  it.each<[string, string]>([
+    ['(h)', 'h'],
+    ['h!', 'h'],
+    ['h as unknown as X', 'h'],
+    ['h satisfies X', 'h'],
+    ['<X>h', 'h'],
+    ['((h as X)!) satisfies Y', 'h'],
+    ['(a ? b : c)!', 'a ? b : c'],
+    ['f(h!)', 'f(h!)']
+  ])('unwraps `%s` to `%s`', (initializer, expected) => {
+    expect(unwrappedProbeOf(`const probe = ${initializer};`)).toBe(expected);
+  });
+
+  it('returns undefined for undefined', () => {
+    expect(unwrapOuterExpressions(undefined)).toBeUndefined();
+  });
+});
+
+/**
+ * Reads {@link findSoleReturnExpression} for the `probe` function of a one-file project: a function declaration, or the
+ * function a `probe` variable holds.
+ *
+ * @param text - The file's source text.
+ * @returns The returned expression's text, or `undefined`.
+ */
+function soleReturnOf(text: string): string | undefined {
+  const { apiSources } = buildInMemoryProject({ component: { files: [] }, api: { files: [{ relPath: 'a.ts', text }] } });
+  const sf = apiSources[0];
+  const fn = sf.getFunction('probe') ?? sf.getVariableDeclarationOrThrow('probe').getInitializerOrThrow();
+  return findSoleReturnExpression(fn)?.getText();
+}
+
+describe('findSoleReturnExpression()', () => {
+  it.each<[string, string, string | undefined]>([
+    ['a concise arrow body', 'const probe = (c) => build(c);', 'build(c)'],
+    ['the only return of a block body', 'const probe = (c) => { const p = []; return build(c, p); };', 'build(c, p)'],
+    ['the only return of a function expression', 'const probe = function (c) { return build(c); };', 'build(c)'],
+    ['the only return of a function declaration', 'function probe(c) { return build(c); }', 'build(c)'],
+    ['past the returns of a nested function', 'const probe = (c) => { const inner = () => { return other(); }; return build(c, inner); };', 'build(c, inner)'],
+    ['nothing for a function that returns from two places', 'const probe = (c) => { if (c) { return undefined; } return build(c); };', undefined],
+    ['nothing for a function that returns only from inside a branch', 'const probe = (c) => { if (c) { return a(c); } else { return b(c); } };', undefined],
+    ['nothing for a function with no return', 'const probe = (c) => { build(c); };', undefined],
+    ['nothing for a bare return', 'const probe = (c) => { build(c); return; };', undefined],
+    ['nothing for a value that is not a function', 'const probe = build;', undefined]
+  ])('reads %s', (_label, text, expected) => {
+    expect(soleReturnOf(text)).toBe(expected);
   });
 });

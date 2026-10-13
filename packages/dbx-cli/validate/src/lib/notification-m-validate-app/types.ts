@@ -321,7 +321,10 @@ export interface ExtractedTaskServiceCall {
    * variable each identifier means (the one declaration of its name in
    * scope where it is used) until a typed
    * `NotificationTaskServiceTaskHandlerConfig<...>` object literal is
-   * reached. The rules pass intersects this set with the
+   * reached. A local holding an arrow function or function expression that
+   * returns from one place is followed through its return, like a function,
+   * and parentheses, `!`, `as` / `<T>` casts and `satisfies` around a value
+   * are seen through. The rules pass intersects this set with the
    * {@link ExtractedTaskHandlerEntry.bindingName} field to compute
    * which declared handlers are actually wired.
    */
@@ -396,10 +399,11 @@ export interface ExtractedTaskServiceCall {
    * Values in the `handlers:` trace that the extractor can't see through: a `@dereekb/*` identifier reached as a value (a
    * helper that is not an upstream handler factory, or an upstream handler factory passed along as a value or held in a
    * variable the scan can't pin to one `const`), a call whose callee is neither an identifier nor an `@dereekb/*`
-   * namespace member (`obj.fn(...)`, `fn(...)(...)`), and any expression other than an identifier, call, array or object
-   * literal (a conditional, `satisfies`, a parenthesized or non-null expression, …), and a name with more than one
-   * declaration in scope where it is used (a local plus a same-named parameter, import or outer local), so the scan can't
-   * tell which one it means. The text is collapsed and truncated.
+   * namespace member (`obj.fn(...)`, `fn(...)(...)`), any expression other than an identifier, call, array or object
+   * literal once parentheses, `!`, `as` / `<T>` casts and `satisfies` are stripped (a conditional, a property read, an
+   * arrow function written inline, …), a function held in a local that can return from more than one place, and a name
+   * with more than one declaration in scope where it is used (a local plus a same-named parameter, import or outer
+   * local), so the scan can't tell which one it means. The text is collapsed and truncated.
    * An opaque value ends the trace: the locals and functions that lead to it are not listed in
    * {@link unresolvedHandlerBindings}. When the list is non-empty, the upstream handler checks skip the service.
    */

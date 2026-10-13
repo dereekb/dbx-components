@@ -16,6 +16,10 @@
  * The handlers trace resolves an identifier to the local variable
  * declaration in scope where it is used (`resolveLocalVariable`); a name
  * with more than one declaration in scope there is opaque.
+ * It strips parentheses, `!`, `as` / `<T>` casts and `satisfies` around a
+ * value (`unwrapOuterExpressions`), and follows a local holding an arrow
+ * function or function expression that returns from one place
+ * (`findSoleReturnExpression`) like a function declaration.
  *
  * Upstream factory calls (`notificationTemplateTypeInfoRecord`,
  * `appNotificationTemplateTypeInfoRecordService`, `notificationTaskService`,
@@ -37,7 +41,7 @@
  * `[...ALL_NOTIFICATION_TASK_TYPES]`.
  */
 
-import { Node, SyntaxKind, type ArrayLiteralExpression, type Identifier, type ObjectLiteralExpression, type SourceFile, type TypeNode, type VariableDeclaration } from 'ts-morph';
+import { Node, SyntaxKind, type ArrayLiteralExpression, type ArrowFunction, type FunctionDeclaration, type FunctionExpression, type Identifier, type ObjectLiteralExpression, type SourceFile, type TypeNode, type VariableDeclaration } from 'ts-morph';
 import {
   apiRelPath,
   asArrayLiteral,
@@ -48,6 +52,7 @@ import {
   componentRelPath,
   findLocalVariable,
   findReturnExpression,
+  findSoleReturnExpression,
   getPropertyInitializer,
   isDereekbModuleSpecifier,
   readArrayElementTypeNode,
@@ -61,6 +66,7 @@ import {
   resolveArrayLiteralProperty,
   resolveLocalVariable,
   unwrapAsExpressions,
+  unwrapOuterExpressions,
   type DereekbImportIndex
 } from '../_core/_validate/ast.js';
 import type {
@@ -1116,11 +1122,10 @@ function collectHandlersArrayElements(options: CollectHandlersArrayElementsOptio
 
 function consumeHandlersArrayElement(el: Node, options: Omit<ConsumeHandlersSpreadElementOptions, 'inner'>): void {
   if (Node.isSpreadElement(el)) {
-    consumeHandlersSpreadElement({ ...options, inner: el.getExpression() });
+    consumeHandlersSpreadElement({ ...options, inner: unwrapOuterExpressions(el.getExpression()) });
     return;
   }
-  const inner = unwrapAsExpressions(el);
-  if (!inner) return;
+  const inner = unwrapOuterExpressions(el);
   if (noteUpstreamHandlerCall(inner, options)) return;
   const identifier = readHandlerEntryIdentifier(inner);
   if (identifier === undefined) {
@@ -1138,7 +1143,7 @@ function consumeHandlersArrayElement(el: Node, options: Omit<ConsumeHandlersSpre
  * Returns the identifier a `handlers` element names: the element itself, or the callee of a call. The trace resolves it
  * where it sits.
  *
- * @param inner - The element, `as` casts unwrapped, or a spread's expression.
+ * @param inner - The element or a spread's expression, parentheses, `!`, casts and `satisfies` stripped.
  * @returns The identifier, or `undefined` for any other shape.
  */
 function readHandlerEntryIdentifier(inner: Node): Identifier | undefined {
@@ -1226,7 +1231,8 @@ interface CollectHandlerBindingsFromValueOptions extends HandlerBindingCollector
 }
 
 /**
- * Walks a value-position node of the `handlers` trace. A typed `NotificationTaskServiceTaskHandlerConfig<...>` object
+ * Walks a value-position node of the `handlers` trace. Parentheses, `!`, `as` / `<T>` casts and `satisfies` around the
+ * node are stripped first (`unwrapOuterExpressions`). A typed `NotificationTaskServiceTaskHandlerConfig<...>` object
  * literal reached through a local binding lands in `resolved`, an upstream handler factory call in
  * `reachedUpstreamHandlerCalls`, and a value the trace can't see through in `opaqueHandlerValues`. Each local and
  * function is walked once per trace, and reaching one again returns what that walk returned (`traceHandlerBindingOnce`).
@@ -1238,7 +1244,7 @@ interface CollectHandlerBindingsFromValueOptions extends HandlerBindingCollector
  *   element. The identifier that led to a `false` lists its own name in `unresolved` as well.
  */
 function collectHandlerBindingsFromValue(options: CollectHandlerBindingsFromValueOptions): boolean {
-  const inner = unwrapAsExpressions(options.node);
+  const inner = unwrapOuterExpressions(options.node);
   let result = false;
   if (inner) {
     if (Node.isCallExpression(inner)) {
@@ -1333,8 +1339,10 @@ function collectHandlerBindingsFromIdentifier(options: CollectHandlerBindingsFro
 
 /**
  * Follows {@link CollectHandlerBindingsFromIdentifierOptions.identifier} to the local variable declaration in scope where it
- * is used (`resolveLocalVariable`). A typed `NotificationTaskServiceTaskHandlerConfig` object literal lands in `resolved`;
- * any other initializer is walked. A name with more than one declaration in scope there is opaque: the scan can't tell
+ * is used (`resolveLocalVariable`). A typed `NotificationTaskServiceTaskHandlerConfig` object literal lands in `resolved`. An
+ * arrow function or function expression that returns from one place (`findSoleReturnExpression`) is a wrapper, like a
+ * function declaration: the trace walks the value it returns (`collectHandlerBindingsFromFunction`). Any other initializer
+ * is walked as a value, so a function that can return from more than one place stays opaque. A name with more than one declaration in scope there is opaque: the scan can't tell
  * which one it means.
  *
  * @param options - The identifier and the collector context.
@@ -1353,12 +1361,15 @@ function tryResolveLocalHandlerBinding(options: CollectHandlerBindingsFromIdenti
   } else if (resolution.kind === 'variable') {
     const { declaration } = resolution;
     const walk = (): boolean => {
+      const init = unwrapOuterExpressions(declaration.getInitializer());
       let walked: boolean;
       if (isHandlerConfigLeafDecl(declaration, imports)) {
         resolved.push(declaration.getName());
         walked = true;
+      } else if ((Node.isArrowFunction(init) || Node.isFunctionExpression(init)) && findSoleReturnExpression(init) !== undefined) {
+        // a local holding a function that returns from one place is a wrapper, like a function declaration: walk that value
+        walked = collectHandlerBindingsFromFunction({ ...options, fn: init });
       } else {
-        const init = unwrapAsExpressions(declaration.getInitializer());
         walked = init !== undefined && collectHandlerBindingsFromValue({ ...options, node: init });
       }
       return walked;
@@ -1369,31 +1380,59 @@ function tryResolveLocalHandlerBinding(options: CollectHandlerBindingsFromIdenti
 }
 
 function isHandlerConfigLeafDecl(decl: VariableDeclaration, imports: DereekbImportIndex): boolean {
-  const declInit = unwrapAsExpressions(decl.getInitializer());
+  const declInit = unwrapOuterExpressions(decl.getInitializer());
   return readTypeReferenceName(decl.getTypeNode(), imports) === NOTIF_TASK_SERVICE_HANDLER_CONFIG && declInit !== undefined && Node.isObjectLiteralExpression(declInit);
 }
 
 /**
  * Follows {@link CollectHandlerBindingsFromIdentifierOptions.identifier} to the API function of that name and walks its
- * return value. The function is looked up by name across the API files; each function is walked once.
+ * return value (`collectHandlerBindingsFromFunction`). The function is looked up by name across the API files. Each
+ * function is walked once per trace, whether this path or a local that holds it reaches it first.
  *
  * @param options - The identifier and the collector context.
  * @returns `true` when the function's return value ended at something the trace recorded.
  */
 function tryResolveFunctionHandlerBinding(options: CollectHandlerBindingsFromIdentifierOptions): boolean {
-  const { identifier, index, outcomes } = options;
+  const { identifier, index } = options;
   const name = identifier.getText();
   const fnEntry = index.functionsByName.get(name);
-  let result = false;
-  if (fnEntry) {
-    const walk = (): boolean => {
-      const ret = findReturnExpression(fnEntry.node);
-      return ret !== undefined && collectHandlerBindingsFromValue({ ...options, node: ret });
-    };
-    // the index keeps the last function of the name, which a revisit may not mean
-    result = traceHandlerBindingOnce({ outcomes, key: fnEntry.node, isAmbiguous: () => index.ambiguousNames.has(name), walk });
-  }
-  return result;
+  // the index keeps the last function of the name, which a revisit may not mean
+  return fnEntry !== undefined && collectHandlerBindingsFromFunction({ ...options, fn: fnEntry.node, isAmbiguous: () => index.ambiguousNames.has(name) });
+}
+
+/**
+ * Options for walking a function the handlers trace reached.
+ */
+interface CollectHandlerBindingsFromFunctionOptions extends HandlerBindingCollectorContext {
+  /**
+   * A function of the API function index, or one a local variable holds.
+   */
+  readonly fn: ArrowFunction | FunctionDeclaration | FunctionExpression;
+  /**
+   * Whether the function may not be the one a revisit means (see `traceHandlerBindingOnce`). The function index passes it,
+   * since it reads a function by name; a local omits it, since `resolveLocalVariable` already pinned its declaration.
+   */
+  readonly isAmbiguous?: () => boolean;
+}
+
+/**
+ * Walks what {@link CollectHandlerBindingsFromFunctionOptions.fn} returns: a concise arrow body, or the expression of
+ * the first `return` statement of its body. Each function is walked once per trace (`traceHandlerBindingOnce`), whichever
+ * path reaches it first: the function index (`tryResolveFunctionHandlerBinding`) or a local that holds it
+ * (`tryResolveLocalHandlerBinding`).
+ *
+ * @param options - The function and the collector context.
+ * @returns `true` when the function's return value ended at something the trace recorded, or, on a revisit, when the
+ *   first walk did and the name isn't ambiguous.
+ */
+function collectHandlerBindingsFromFunction(options: CollectHandlerBindingsFromFunctionOptions): boolean {
+  // isAmbiguous is this function's own: a local or function reached through its return value is keyed separately
+  const { fn, isAmbiguous, ...context } = options;
+  const walk = (): boolean => {
+    const ret = findReturnExpression(fn);
+    return ret !== undefined && collectHandlerBindingsFromValue({ ...context, node: ret });
+  };
+  return traceHandlerBindingOnce({ outcomes: context.outcomes, key: fn, isAmbiguous, walk });
 }
 
 interface TraceHandlerBindingOnceInput {

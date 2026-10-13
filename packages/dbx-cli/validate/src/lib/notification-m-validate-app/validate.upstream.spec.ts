@@ -1566,3 +1566,118 @@ function demoExtraTaskHandlers(context) {
     expect(findingsOf(runWith(modify))).toEqual([]);
   });
 });
+
+// MARK: Values the handlers trace sees through
+const SF_ARROW_WRAPPER = `(context) => storageFileProcessingNotificationTaskHandler(${SF_INLINE_CONFIG})`;
+
+// Replaces the StorageFile wrapper's file with `const demoStorageFileProcessingNotificationTaskHandler = <value>;` above the
+// task service factory, so the trace reaches the wrapper through a local of the task service file.
+function declareStorageFileWrapperInTaskService(parts: FixtureParts, value: string): void {
+  removeFile(parts.api, SF_HANDLER_FILE);
+  replaceInFile(parts.api, TASK_SERVICE_FILE, SF_IMPORT, '');
+  addTaskServiceImport(parts, SF_FACTORY_IMPORT);
+  replaceInFile(parts.api, TASK_SERVICE_FILE, 'export function demoNotificationTaskServiceFactory', `const demoStorageFileProcessingNotificationTaskHandler = ${value};\n\nexport function demoNotificationTaskServiceFactory`);
+}
+
+// Replaces the `storageFileHandler` element of `handlers` with `element`.
+function replaceStorageFileElement(parts: FixtureParts, element: string): void {
+  replaceInFile(parts.api, TASK_SERVICE_FILE, ', storageFileHandler, ', `, ${element}, `);
+}
+
+describe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED — values the handlers trace sees through', () => {
+  const SF_FACTORY = 'storageFileProcessingNotificationTaskHandler';
+  const FS_FACTORY = 'formSpaceSubmissionNotificationTaskHandler';
+  // Each shape used to land in `opaqueHandlerValues`, which skipped the upstream checks for the service.
+  const seeThroughVariants: [string, (parts: FixtureParts) => void][] = [
+    ['a same-file arrow-function wrapper', (p) => declareStorageFileWrapperInTaskService(p, SF_ARROW_WRAPPER)],
+    ['a same-file function-expression wrapper', (p) => declareStorageFileWrapperInTaskService(p, `function (context) {\n  return storageFileProcessingNotificationTaskHandler(${SF_INLINE_CONFIG});\n}`)],
+    ['a same-file arrow wrapper behind `satisfies`', (p) => declareStorageFileWrapperInTaskService(p, `(${SF_ARROW_WRAPPER}) satisfies (context: unknown) => unknown`)],
+    [
+      'an arrow wrapper declared inside the task service factory',
+      (p) => {
+        removeFile(p.api, SF_HANDLER_FILE);
+        replaceInFile(p.api, TASK_SERVICE_FILE, SF_IMPORT, '');
+        addTaskServiceImport(p, SF_FACTORY_IMPORT);
+        replaceInFile(p.api, TASK_SERVICE_FILE, SF_LOCAL, `const makeStorageFileHandler = ${SF_ARROW_WRAPPER};\n  const storageFileHandler = makeStorageFileHandler(context);`);
+      }
+    ],
+    ['a same-file arrow helper the wrapper returns', (p) => replaceInFile(p.api, SF_HANDLER_FILE, SF_WRAPPER, `const buildStorageFileHandler = ${SF_ARROW_WRAPPER};\n\nexport function demoStorageFileProcessingNotificationTaskHandler(context) {\n  return buildStorageFileHandler(context);\n}`)],
+    ['a parenthesized element', (p) => replaceStorageFileElement(p, '(storageFileHandler)')],
+    ['a non-null element', (p) => replaceStorageFileElement(p, 'storageFileHandler!')],
+    ['an element behind `satisfies`', (p) => replaceStorageFileElement(p, 'storageFileHandler satisfies NotificationTaskServiceTaskHandlerConfig<any>')],
+    ['an element behind an angle-bracket cast', (p) => replaceStorageFileElement(p, '<NotificationTaskServiceTaskHandlerConfig<any>>storageFileHandler')],
+    ['a non-null local', (p) => replaceInFile(p.api, TASK_SERVICE_FILE, SF_LOCAL, 'const storageFileHandler = demoStorageFileProcessingNotificationTaskHandler(context)!;')],
+    ['a parenthesized local', (p) => replaceInFile(p.api, TASK_SERVICE_FILE, SF_LOCAL, 'const storageFileHandler = (demoStorageFileProcessingNotificationTaskHandler(context));')],
+    ['a wrapper return behind `satisfies`', (p) => replaceInFile(p.api, SF_HANDLER_FILE, 'context.storageService });\n}', 'context.storageService }) satisfies object;\n}')],
+    [
+      'a non-null spread',
+      (p) => {
+        replaceInFile(p.api, TASK_SERVICE_FILE, 'export function demoNotificationTaskServiceFactory', 'function storageFileHandlers(context) {\n  return [demoStorageFileProcessingNotificationTaskHandler(context)];\n}\n\nexport function demoNotificationTaskServiceFactory');
+        replaceStorageFileElement(p, '...storageFileHandlers(context)!');
+      }
+    ]
+  ];
+
+  it.each(seeThroughVariants)('follows %s, and the handlers trace is complete', (_label, modify) => {
+    const [call] = extractAppNotifications(inspectionOf(modify)).taskServiceCalls;
+    expect(call.opaqueHandlerValues).toEqual([]);
+    expect(call.unresolvedHandlerBindings).toEqual([]);
+    expect(call.reachedUpstreamHandlerCalls.map((x) => x.factory)).toEqual([SF_FACTORY, FS_FACTORY]);
+    expect(isHandlersTraceComplete(call)).toBe(true);
+    expect(runWith(modify).violations).toEqual([]);
+  });
+
+  it.each(seeThroughVariants)('reports the FormSpace aggregate when its handler leaves handlers, with %s', (_label, modify) => {
+    const found = findingsOf(
+      runWith((p) => {
+        modify(p);
+        dropFormSpaceHandler(p);
+      })
+    );
+    expect(found).toHaveLength(1);
+    expect(found[0].message).toContain('ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES');
+  });
+
+  it('warns NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE for a handler it reaches through a non-null element', () => {
+    const result = runWith((p) => {
+      replaceStorageFileElement(p, 'storageFileHandler!');
+      replaceInFile(p.api, TASK_SERVICE_FILE, SF_SPREAD, '');
+    });
+    expect(result.violations.map((v) => v.code)).toEqual(['NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE']);
+  });
+
+  it('does not report a wrapper the trace reaches through the function index first, then through its own local', () => {
+    const modify = (p: FixtureParts) => {
+      replaceInFile(p.api, SF_HANDLER_FILE, SF_WRAPPER, `export const demoStorageFileProcessingNotificationTaskHandler = ${SF_ARROW_WRAPPER};\n\nexport function demoStorageFileHandlers(context) {\n  return [demoStorageFileProcessingNotificationTaskHandler(context)];\n}`);
+      replaceInFile(p.api, TASK_SERVICE_FILE, SF_IMPORT, "import { demoStorageFileHandlers, demoStorageFileProcessingNotificationTaskHandler } from './handlers/task.handler.storagefile';\n");
+      replaceStorageFileElement(p, 'storageFileHandler, ...demoStorageFileHandlers(context)');
+    };
+    const [call] = extractAppNotifications(inspectionOf(modify)).taskServiceCalls;
+    expect(call.unresolvedHandlerBindings).toEqual([]);
+    expect(isHandlersTraceComplete(call)).toBe(true);
+    expect(runWith(modify).violations).toEqual([]);
+  });
+
+  // A function that can return from more than one place returns a conditional value, which the trace doesn't see through.
+  it.each<[string, (parts: FixtureParts) => void]>([
+    [
+      'an arrow function written inline',
+      (p) => {
+        replaceStorageFileElement(p, SF_ARROW_WRAPPER);
+        addTaskServiceImport(p, SF_FACTORY_IMPORT);
+      }
+    ],
+    ['a same-file wrapper that returns from two places', (p) => declareStorageFileWrapperInTaskService(p, `(context) => {\n  if (!context.storageService) {\n    return undefined;\n  }\n  return storageFileProcessingNotificationTaskHandler(${SF_INLINE_CONFIG});\n}`)],
+    ['a same-file wrapper that returns only from inside a branch', (p) => declareStorageFileWrapperInTaskService(p, `(context) => {\n  if (context.storageService) {\n    return storageFileProcessingNotificationTaskHandler(${SF_INLINE_CONFIG});\n  } else {\n    return undefined;\n  }\n}`)],
+    ['an element behind `??`', (p) => replaceStorageFileElement(p, 'storageFileHandler ?? formSpaceHandler')]
+  ])('still skips a service whose handlers hold %s', (_label, modify) => {
+    const withoutFormSpace = (p: FixtureParts) => {
+      modify(p);
+      dropFormSpaceHandler(p);
+    };
+    expect(findingsOf(runWith(withoutFormSpace))).toEqual([]);
+    const [call] = extractAppNotifications(inspectionOf(withoutFormSpace)).taskServiceCalls;
+    expect(call.opaqueHandlerValues).not.toEqual([]);
+    expect(isHandlersTraceComplete(call)).toBe(false);
+  });
+});

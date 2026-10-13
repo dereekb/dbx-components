@@ -103,6 +103,8 @@ export function componentRelPath(sourceFile: SourceFile): string {
  * Strips any number of `as` casts off a node and returns the inner
  * expression. Useful when extractors want to unwrap
  * `STATUS as StatusType` style declarations before pattern-matching.
+ * {@link unwrapOuterExpressions} also strips parentheses, `<T>` casts,
+ * `satisfies` and `!`.
  *
  * @param node - The node to unwrap.
  * @returns The innermost non-as expression, or `undefined` when the
@@ -111,6 +113,24 @@ export function componentRelPath(sourceFile: SourceFile): string {
 export function unwrapAsExpressions(node: Node | undefined): Node | undefined {
   let current: Node | undefined = node;
   while (current && Node.isAsExpression(current)) {
+    current = current.getExpression();
+  }
+  return current;
+}
+
+/**
+ * Strips every wrapper that leaves an expression's runtime value unchanged, any number of times and in any order:
+ * parentheses, `as` and `<T>` casts, `satisfies` checks and `!` non-null assertions. {@link unwrapAsExpressions} strips
+ * `as` casts only.
+ *
+ * @param node - The node to unwrap.
+ * @returns The innermost expression, or `undefined` when the input was `undefined`.
+ */
+export function unwrapOuterExpressions(node: Node): Node;
+export function unwrapOuterExpressions(node: Node | undefined): Node | undefined;
+export function unwrapOuterExpressions(node: Node | undefined): Node | undefined {
+  let current: Node | undefined = node;
+  while (current && (Node.isAsExpression(current) || Node.isSatisfiesExpression(current) || Node.isTypeAssertion(current) || Node.isParenthesizedExpression(current) || Node.isNonNullExpression(current))) {
     current = current.getExpression();
   }
   return current;
@@ -281,6 +301,30 @@ export function findReturnExpression(fn: Node): Node | undefined {
     return undefined;
   }
   return body;
+}
+
+/**
+ * Returns the one value a function returns, when it returns from one place only: a concise arrow body, or the expression
+ * of the body's only `return` statement (nested functions aside) when that statement is one of the body's own statements.
+ * Unlike {@link findReturnExpression}, which reads the first `return` among the body's own statements, a function that
+ * can return from more than one place, or only from inside a branch, reads as `undefined`: its value depends on which
+ * `return` runs.
+ *
+ * @param fn - The function/arrow node.
+ * @returns The returned expression, or `undefined`.
+ */
+export function findSoleReturnExpression(fn: Node): Node | undefined {
+  let result: Node | undefined;
+  if (Node.isArrowFunction(fn) || Node.isFunctionDeclaration(fn) || Node.isFunctionExpression(fn)) {
+    const body = fn.getBody();
+    if (Node.isBlock(body)) {
+      const returns = body.getDescendantsOfKind(SyntaxKind.ReturnStatement).filter((x) => functionScopeOf(x) === fn);
+      result = returns.length === 1 && returns[0].getParent() === body ? returns[0].getExpression() : undefined;
+    } else {
+      result = body;
+    }
+  }
+  return result;
 }
 
 /**
