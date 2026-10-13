@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { validateAppStorageFiles } from './index.js';
+import { extractAppStorageFiles, validateAppStorageFiles } from './index.js';
 import type { AppStorageFilesInspection, InspectedFile, ViolationCode } from './types.js';
 
 // MARK: Fixture — mimics the demo-firebase + demo-api shape with a single component file
@@ -81,18 +81,21 @@ function happyInspection(): AppStorageFilesInspection {
   return result;
 }
 
-function runWith(modify: (parts: { component: InspectedFile[]; api: InspectedFile[] }) => void): ReturnType<typeof validateAppStorageFiles> {
+function inspectionWith(modify: (parts: { component: InspectedFile[]; api: InspectedFile[] }) => void): AppStorageFilesInspection {
   const inspection = happyInspection();
   const component = [...inspection.component.files];
   const api = [...inspection.api.files];
   modify({ component, api });
-  const result = validateAppStorageFiles(
-    {
-      component: { ...inspection.component, files: component },
-      api: { ...inspection.api, files: api }
-    },
-    { componentDir: inspection.component.rootDir, apiDir: inspection.api.rootDir }
-  );
+  const result: AppStorageFilesInspection = {
+    component: { ...inspection.component, files: component },
+    api: { ...inspection.api, files: api }
+  };
+  return result;
+}
+
+function runWith(modify: (parts: { component: InspectedFile[]; api: InspectedFile[] }) => void): ReturnType<typeof validateAppStorageFiles> {
+  const inspection = inspectionWith(modify);
+  const result = validateAppStorageFiles(inspection, { componentDir: inspection.component.rootDir, apiDir: inspection.api.rootDir });
   return result;
 }
 
@@ -112,8 +115,11 @@ interface ReplaceInFileOptions {
 function replaceInFile(options: ReplaceInFileOptions): void {
   const { files, relPath, from, to } = options;
   const i = files.findIndex((f) => f.relPath === relPath);
-  const next = files[i].text.replace(from, to);
-  files[i] = { ...files[i], text: next };
+  const text = i < 0 ? undefined : files[i].text;
+  if (text === undefined || !(typeof from === 'string' ? text.includes(from) : from.test(text))) {
+    throw new Error(`replaceInFile: \`${String(from)}\` not found in ${relPath}`);
+  }
+  files[i] = { ...files[i], text: text.replace(from, to) };
 }
 
 describe('validateAppStorageFiles — happy path', () => {
@@ -355,5 +361,99 @@ describe('validateAppStorageFiles — I/O rules', () => {
       result.violations.map((v) => v.code),
       ['STORAGEFILE_API_FOLDER_MISSING']
     );
+  });
+});
+
+// MARK: Aliased and namespaced @dereekb factory calls
+const UPLOAD_SERVICE_PATH = 'src/app/common/model/storagefile/storagefile.upload.service.ts';
+const PROCESSING_PATH = 'src/app/common/model/notification/notification.task.service.ts';
+
+type StorageFileFixtureParts = { component: InspectedFile[]; api: InspectedFile[] };
+type StorageFileFixtureVariant = readonly [string, (parts: StorageFileFixtureParts) => void];
+
+function aliasProcessingHandlerFactory({ api }: StorageFileFixtureParts): void {
+  replaceInFile({ files: api, relPath: PROCESSING_PATH, from: 'import { storageFileProcessingNotificationTaskHandler, ', to: 'import { storageFileProcessingNotificationTaskHandler as sfHandler, ' });
+  replaceInFile({ files: api, relPath: PROCESSING_PATH, from: 'return storageFileProcessingNotificationTaskHandler({ processors });', to: 'return sfHandler({ processors });' });
+}
+
+function namespaceProcessingHandlerFactory({ api }: StorageFileFixtureParts): void {
+  replaceInFile({
+    files: api,
+    relPath: PROCESSING_PATH,
+    from: 'import { storageFileProcessingNotificationTaskHandler, type StorageFileProcessingPurposeSubtaskProcessorConfig } from',
+    to: "import * as serverModel from '@dereekb/firebase-server/model';\nimport { type StorageFileProcessingPurposeSubtaskProcessorConfig } from"
+  });
+  replaceInFile({ files: api, relPath: PROCESSING_PATH, from: 'return storageFileProcessingNotificationTaskHandler({ processors });', to: 'return serverModel.storageFileProcessingNotificationTaskHandler({ processors });' });
+}
+
+function aliasUploadServiceFactory({ api }: StorageFileFixtureParts): void {
+  replaceInFile({ files: api, relPath: UPLOAD_SERVICE_PATH, from: 'storageFileInitializeFromUploadService }', to: 'storageFileInitializeFromUploadService as uploadService }' });
+  replaceInFile({ files: api, relPath: UPLOAD_SERVICE_PATH, from: 'return storageFileInitializeFromUploadService(config);', to: 'return uploadService(config);' });
+}
+
+function namespaceUploadServiceFactory({ api }: StorageFileFixtureParts): void {
+  replaceInFile({ files: api, relPath: UPLOAD_SERVICE_PATH, from: ", storageFileInitializeFromUploadService } from '@dereekb/firebase-server/model';", to: " } from '@dereekb/firebase-server/model';\nimport * as serverModel from '@dereekb/firebase-server/model';" });
+  replaceInFile({ files: api, relPath: UPLOAD_SERVICE_PATH, from: 'return storageFileInitializeFromUploadService(config);', to: 'return serverModel.storageFileInitializeFromUploadService(config);' });
+}
+
+describe('validateAppStorageFiles — aliased and namespaced @dereekb factory calls', () => {
+  const uploadVariants: readonly StorageFileFixtureVariant[] = [
+    ['an aliased storageFileInitializeFromUploadService', aliasUploadServiceFactory],
+    ['a namespaced storageFileInitializeFromUploadService', namespaceUploadServiceFactory]
+  ];
+  const variants: readonly StorageFileFixtureVariant[] = [['an aliased storageFileProcessingNotificationTaskHandler', aliasProcessingHandlerFactory], ['a namespaced storageFileProcessingNotificationTaskHandler', namespaceProcessingHandlerFactory], ...uploadVariants];
+
+  it.each(variants)('passes with %s', (_label, modify) => {
+    expect(runWith(modify).violations).toEqual([]);
+    const extracted = extractAppStorageFiles(inspectionWith(modify));
+    expect(extracted.processingHandlerCalls).toHaveLength(1);
+    expect(extracted.processingHandlerCalls[0].directProcessorReferences).toEqual(['testFileProcessorConfig']);
+    expect(extracted.uploadServiceCalls).toHaveLength(1);
+    expect(extracted.uploadServiceCalls[0].enclosingFactoryName).toBe('demoStorageFileUploadServiceFactory');
+    expect(extracted.uploadServiceCalls[0].resolvedInitializerBindings).toEqual(['userTestFileInitializer', 'userAvatarInitializer']);
+  });
+
+  it.each(uploadVariants)('checks the initializers of %s', (_label, modify) => {
+    const result = runWith((parts) => {
+      modify(parts);
+      replaceInFile({ files: parts.api, relPath: UPLOAD_SERVICE_PATH, from: /const userAvatarInitializer: StorageFileInitializeFromUploadServiceInitializer = \{[\s\S]*?\};\s*/, to: '' });
+      replaceInFile({ files: parts.api, relPath: UPLOAD_SERVICE_PATH, from: '[userTestFileInitializer, userAvatarInitializer]', to: '[userTestFileInitializer]' });
+    });
+    const codes = result.violations.map((v) => v.code);
+    expectCodes(codes, ['STORAGEFILE_PURPOSE_NOT_IN_UPLOAD_SERVICE']);
+    expect(codes).not.toContain('STORAGEFILE_UPLOAD_SERVICE_FACTORY_MISSING');
+  });
+
+  // Forms that stay unrecognized are pinned at the extraction level: the call is not extracted, so the
+  // "missing" rules then report exactly as they do for any unrecognized call.
+  const pins: readonly (readonly [string, (parts: StorageFileFixtureParts) => void, (extracted: ReturnType<typeof extractAppStorageFiles>) => void])[] = [
+    [
+      'a processing-handler alias the file redeclares as a parameter',
+      (parts) => {
+        aliasProcessingHandlerFactory(parts);
+        replaceInFile({ files: parts.api, relPath: PROCESSING_PATH, from: 'demoStorageFileProcessingNotificationTaskHandler(context)', to: 'demoStorageFileProcessingNotificationTaskHandler(context, sfHandler = context.sfHandler)' });
+      },
+      (extracted) => expect(extracted.processingHandlerCalls).toEqual([])
+    ],
+    [
+      'a processing-handler call through a namespace of a non-@dereekb module',
+      ({ api }) => {
+        replaceInFile({ files: api, relPath: PROCESSING_PATH, from: 'import { storageFileProcessingNotificationTaskHandler, type StorageFileProcessingPurposeSubtaskProcessorConfig } from', to: "import * as lib from 'some-app-lib';\nimport { type StorageFileProcessingPurposeSubtaskProcessorConfig } from" });
+        replaceInFile({ files: api, relPath: PROCESSING_PATH, from: 'return storageFileProcessingNotificationTaskHandler({ processors });', to: 'return lib.storageFileProcessingNotificationTaskHandler({ processors });' });
+      },
+      (extracted) => expect(extracted.processingHandlerCalls).toEqual([])
+    ],
+    [
+      'an upload-service alias the file redeclares as a parameter',
+      (parts) => {
+        aliasUploadServiceFactory(parts);
+        replaceInFile({ files: parts.api, relPath: UPLOAD_SERVICE_PATH, from: 'demoStorageFileUploadServiceFactory(context)', to: 'demoStorageFileUploadServiceFactory(context, uploadService = context.uploadService)' });
+      },
+      (extracted) => expect(extracted.uploadServiceCalls).toEqual([])
+    ]
+  ];
+
+  it.each(pins)('does not resolve %s', (_label, modify, expectExtraction) => {
+    expectExtraction(extractAppStorageFiles(inspectionWith(modify)));
   });
 });

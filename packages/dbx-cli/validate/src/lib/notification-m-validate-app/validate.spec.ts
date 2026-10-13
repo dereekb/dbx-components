@@ -118,12 +118,18 @@ function happyInspection(): AppNotificationsInspection {
   return result;
 }
 
-function runWith(modify: (parts: { component: InspectedFile[]; api: InspectedFile[] }) => void): ReturnType<typeof validateAppNotifications> {
+function inspectionWith(modify: (parts: { component: InspectedFile[]; api: InspectedFile[] }) => void): AppNotificationsInspection {
   const inspection = happyInspection();
   const component = [...inspection.component.files];
   const api = [...inspection.api.files];
   modify({ component, api });
-  const result = validateAppNotifications({ component: { ...inspection.component, files: component }, api: { ...inspection.api, files: api } }, { componentDir: inspection.component.rootDir, apiDir: inspection.api.rootDir });
+  const result: AppNotificationsInspection = { component: { ...inspection.component, files: component }, api: { ...inspection.api, files: api } };
+  return result;
+}
+
+function runWith(modify: (parts: { component: InspectedFile[]; api: InspectedFile[] }) => void): ReturnType<typeof validateAppNotifications> {
+  const inspection = inspectionWith(modify);
+  const result = validateAppNotifications(inspection, { componentDir: inspection.component.rootDir, apiDir: inspection.api.rootDir });
   return result;
 }
 
@@ -143,8 +149,11 @@ interface ReplaceInFileOptions {
 function replaceInFile(options: ReplaceInFileOptions): void {
   const { files, relPath, from, to } = options;
   const i = files.findIndex((f) => f.relPath === relPath);
-  const next = files[i].text.replace(from, to);
-  files[i] = { ...files[i], text: next };
+  const text = i < 0 ? undefined : files[i].text;
+  if (text === undefined || !(typeof from === 'string' ? text.includes(from) : from.test(text))) {
+    throw new Error(`replaceInFile: \`${String(from)}\` not found in ${relPath}`);
+  }
+  files[i] = { ...files[i], text: text.replace(from, to) };
 }
 
 describe('validateAppNotifications — happy path', () => {
@@ -901,5 +910,154 @@ describe('validateAppNotifications — I/O rules', () => {
     expect(v).toBeDefined();
     expect(v?.remediation).toBeDefined();
     expect(v?.remediation?.fix).toBeTruthy();
+  });
+});
+
+// MARK: Aliased and namespaced @dereekb factory calls
+const ACTION_MODULE_PATH = 'src/app/common/firebase/action.module.ts';
+const TASK_SERVICE_PATH = 'src/app/common/model/notification/notification.task.service.ts';
+
+type NotificationFixtureParts = { component: InspectedFile[]; api: InspectedFile[] };
+type NotificationFixtureVariant = readonly [string, (parts: NotificationFixtureParts) => void];
+
+function aliasTemplateInfoRecord({ component }: NotificationFixtureParts): void {
+  replaceInFile({ files: component, relPath: COMPONENT_MAIN_PATH, from: 'import { notificationTemplateTypeInfoRecord, type ', to: 'import { notificationTemplateTypeInfoRecord as infoRecord, type ' });
+  replaceInFile({ files: component, relPath: COMPONENT_MAIN_PATH, from: '= notificationTemplateTypeInfoRecord([', to: '= infoRecord([' });
+}
+
+function namespaceTemplateInfoRecord({ component }: NotificationFixtureParts): void {
+  replaceInFile({ files: component, relPath: COMPONENT_MAIN_PATH, from: 'import { notificationTemplateTypeInfoRecord, type ', to: "import * as firebaseModel from '@dereekb/firebase';\nimport { type " });
+  replaceInFile({ files: component, relPath: COMPONENT_MAIN_PATH, from: '= notificationTemplateTypeInfoRecord([', to: '= firebaseModel.notificationTemplateTypeInfoRecord([' });
+}
+
+function aliasTemplateInfoRecordService({ api }: NotificationFixtureParts): void {
+  replaceInFile({ files: api, relPath: ACTION_MODULE_PATH, from: "import { appNotificationTemplateTypeInfoRecordService } from '@dereekb/firebase';", to: "import { appNotificationTemplateTypeInfoRecordService as recordService } from '@dereekb/firebase';" });
+  replaceInFile({ files: api, relPath: ACTION_MODULE_PATH, from: 'appNotificationTemplateTypeInfoRecordService: appNotificationTemplateTypeInfoRecordService(', to: 'appNotificationTemplateTypeInfoRecordService: recordService(' });
+}
+
+function namespaceTemplateInfoRecordService({ api }: NotificationFixtureParts): void {
+  replaceInFile({ files: api, relPath: ACTION_MODULE_PATH, from: "import { appNotificationTemplateTypeInfoRecordService } from '@dereekb/firebase';", to: "import * as firebaseModel from '@dereekb/firebase';" });
+  replaceInFile({ files: api, relPath: ACTION_MODULE_PATH, from: 'appNotificationTemplateTypeInfoRecordService: appNotificationTemplateTypeInfoRecordService(', to: 'appNotificationTemplateTypeInfoRecordService: firebaseModel.appNotificationTemplateTypeInfoRecordService(' });
+}
+
+function aliasTaskService({ api }: NotificationFixtureParts): void {
+  replaceInFile({ files: api, relPath: TASK_SERVICE_PATH, from: ", notificationTaskService } from '@dereekb/firebase-server/model';", to: ", notificationTaskService as createNotificationTaskService } from '@dereekb/firebase-server/model';" });
+  replaceInFile({ files: api, relPath: TASK_SERVICE_PATH, from: 'return notificationTaskService(', to: 'return createNotificationTaskService(' });
+}
+
+function namespaceTaskService({ api }: NotificationFixtureParts): void {
+  replaceInFile({ files: api, relPath: TASK_SERVICE_PATH, from: ", notificationTaskService } from '@dereekb/firebase-server/model';", to: " } from '@dereekb/firebase-server/model';\nimport * as serverModel from '@dereekb/firebase-server/model';" });
+  replaceInFile({ files: api, relPath: TASK_SERVICE_PATH, from: 'return notificationTaskService(', to: 'return serverModel.notificationTaskService(' });
+}
+
+describe('validateAppNotifications — aliased and namespaced @dereekb factory calls', () => {
+  const recordVariants: readonly NotificationFixtureVariant[] = [
+    ['an aliased notificationTemplateTypeInfoRecord', aliasTemplateInfoRecord],
+    ['a namespaced notificationTemplateTypeInfoRecord', namespaceTemplateInfoRecord]
+  ];
+  const serviceVariants: readonly NotificationFixtureVariant[] = [
+    ['an aliased appNotificationTemplateTypeInfoRecordService', aliasTemplateInfoRecordService],
+    ['a namespaced appNotificationTemplateTypeInfoRecordService', namespaceTemplateInfoRecordService]
+  ];
+  const taskServiceVariants: readonly NotificationFixtureVariant[] = [
+    ['an aliased notificationTaskService', aliasTaskService],
+    ['a namespaced notificationTaskService', namespaceTaskService]
+  ];
+  const variants: readonly NotificationFixtureVariant[] = [
+    ...recordVariants,
+    ...serviceVariants,
+    ...taskServiceVariants,
+    [
+      'all three factories namespaced together',
+      (parts) => {
+        namespaceTemplateInfoRecord(parts);
+        namespaceTemplateInfoRecordService(parts);
+        namespaceTaskService(parts);
+      }
+    ]
+  ];
+
+  it.each(variants)('passes with %s', (_label, modify) => {
+    expect(runWith(modify).violations).toEqual([]);
+    const extracted = extractAppNotifications(inspectionWith(modify));
+    expect(extracted.templateInfoRecord?.symbolName).toBe('DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD');
+    expect(extracted.templateInfoRecord?.resolvedInfoIdentifiers).toEqual(expect.arrayContaining(['TEST_NOTIFICATIONS_TEMPLATE_TYPE_INFO', 'GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE_INFO']));
+    expect(extracted.templateInfoRecordWiring?.recordIdentifier).toBe('DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD');
+    expect(extracted.taskServiceCalls).toHaveLength(1);
+    expect(extracted.taskServiceCalls[0].spreadValidateIdentifiers).toEqual(['ALL_NOTIFICATION_TASK_TYPES']);
+    expect(extracted.taskServiceCalls[0].resolvedHandlerBindings).toContain('exampleNotificationTaskHandler');
+  });
+
+  it.each(recordVariants)('reads the record built with %s', (_label, modify) => {
+    const result = runWith((parts) => {
+      modify(parts);
+      replaceInFile({ files: parts.component, relPath: COMPONENT_MAIN_PATH, from: '([TEST_NOTIFICATIONS_TEMPLATE_TYPE_INFO, ...ALL_GUESTBOOK_NOTIFICATION_TEMPLATE_TYPE_INFOS])', to: '([...ALL_GUESTBOOK_NOTIFICATION_TEMPLATE_TYPE_INFOS])' });
+    });
+    const notInRecord = result.violations.filter((v) => v.code === 'NOTIF_TEMPLATE_INFO_NOT_IN_RECORD');
+    expect(notInRecord.map((v) => v.message).join('\n')).toContain('TEST_NOTIFICATIONS_TEMPLATE_TYPE_INFO');
+    expect(result.violations.map((v) => v.code)).not.toContain('NOTIF_TEMPLATE_RECORD_MISSING');
+  });
+
+  it.each(serviceVariants)('reads the wiring of %s', (_label, modify) => {
+    const result = runWith((parts) => {
+      modify(parts);
+      replaceInFile({ files: parts.api, relPath: ACTION_MODULE_PATH, from: '(DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD)', to: '(OTHER_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD)' });
+    });
+    const notWired = result.violations.filter((v) => v.code === 'NOTIF_TEMPLATE_RECORD_NOT_WIRED');
+    expect(notWired).toHaveLength(1);
+    expect(notWired[0].message).toContain('API wires `appNotificationTemplateTypeInfoRecordService(OTHER_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD)`');
+  });
+
+  it.each(taskServiceVariants)('checks validate and handlers of %s', (_label, modify) => {
+    const result = runWith((parts) => {
+      modify(parts);
+      replaceInFile({ files: parts.api, relPath: TASK_SERVICE_PATH, from: 'export function demoNotificationTaskServiceFactory', to: "const OTHER_NOTIFICATION_TASK_TYPE = 'O';\n\nexport function demoNotificationTaskServiceFactory" });
+      replaceInFile({ files: parts.api, relPath: TASK_SERVICE_PATH, from: 'validate: [...ALL_NOTIFICATION_TASK_TYPES]', to: 'validate: [...ALL_NOTIFICATION_TASK_TYPES, OTHER_NOTIFICATION_TASK_TYPE]' });
+    });
+    const codes = result.violations.map((v) => v.code);
+    const violation = result.violations.find((v) => v.code === 'NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER');
+    expect(violation?.message).toContain('OTHER_NOTIFICATION_TASK_TYPE');
+    expect(codes).not.toContain('NOTIF_TASK_SERVICE_FACTORY_MISSING');
+  });
+
+  // Forms that stay unrecognized are pinned at the extraction level: the call is not extracted, so the
+  // "missing" / "not wired" rules then report exactly as they do for any unrecognized call.
+  const pins: readonly (readonly [string, (parts: NotificationFixtureParts) => void, (extracted: ReturnType<typeof extractAppNotifications>) => void])[] = [
+    [
+      'a task-service alias the file redeclares as a parameter',
+      (parts) => {
+        aliasTaskService(parts);
+        replaceInFile({ files: parts.api, relPath: TASK_SERVICE_PATH, from: 'demoNotificationTaskServiceFactory(context)', to: 'demoNotificationTaskServiceFactory(context, createNotificationTaskService = context.createNotificationTaskService)' });
+      },
+      (extracted) => expect(extracted.taskServiceCalls).toEqual([])
+    ],
+    [
+      'a task-service call through a namespace of a non-@dereekb module',
+      ({ api }) => {
+        replaceInFile({ files: api, relPath: TASK_SERVICE_PATH, from: ", notificationTaskService } from '@dereekb/firebase-server/model';", to: " } from '@dereekb/firebase-server/model';\nimport * as lib from 'some-app-lib';" });
+        replaceInFile({ files: api, relPath: TASK_SERVICE_PATH, from: 'return notificationTaskService(', to: 'return lib.notificationTaskService(' });
+      },
+      (extracted) => expect(extracted.taskServiceCalls).toEqual([])
+    ],
+    [
+      'a record namespace the file redeclares as a parameter',
+      (parts) => {
+        namespaceTemplateInfoRecord(parts);
+        replaceInFile({ files: parts.component, relPath: COMPONENT_MAIN_PATH, from: '...ALL_GUESTBOOK_NOTIFICATION_TEMPLATE_TYPE_INFOS]);\n', to: '...ALL_GUESTBOOK_NOTIFICATION_TEMPLATE_TYPE_INFOS]);\n\nexport function demoShadowFirebaseModel(firebaseModel: unknown) {\n  return firebaseModel;\n}\n' });
+      },
+      (extracted) => expect(extracted.templateInfoRecord).toBeUndefined()
+    ],
+    [
+      'a record-service alias the file redeclares as a parameter',
+      (parts) => {
+        aliasTemplateInfoRecordService(parts);
+        replaceInFile({ files: parts.api, relPath: ACTION_MODULE_PATH, from: 'demoFirebaseServerActionsContextFactory = (context) => {', to: 'demoFirebaseServerActionsContextFactory = (context, recordService = context.recordService) => {' });
+      },
+      (extracted) => expect(extracted.templateInfoRecordWiring).toBeUndefined()
+    ]
+  ];
+
+  it.each(pins)('does not resolve %s', (_label, modify, expectExtraction) => {
+    expectExtraction(extractAppNotifications(inspectionWith(modify)));
   });
 });

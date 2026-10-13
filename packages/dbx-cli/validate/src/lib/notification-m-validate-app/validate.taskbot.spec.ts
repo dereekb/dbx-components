@@ -199,6 +199,16 @@ function namespaceScriptConfigRecord(parts: FixtureParts): void {
   replaceInFile(parts.component, TASKBOT_FILE, '= notificationTaskBotScriptConfigRecord(DEMO_NOTIFICATION_TASK_BOT_SCRIPT_CONFIGS)', '= firebaseModel.notificationTaskBotScriptConfigRecord(DEMO_NOTIFICATION_TASK_BOT_SCRIPT_CONFIGS)');
 }
 
+function aliasTaskService(parts: FixtureParts): void {
+  replaceInFile(parts.api, TASK_SERVICE_FILE, ", notificationTaskService } from '@dereekb/firebase-server/model';", ", notificationTaskService as createNotificationTaskService } from '@dereekb/firebase-server/model';");
+  replaceInFile(parts.api, TASK_SERVICE_FILE, 'return notificationTaskService(', 'return createNotificationTaskService(');
+}
+
+function namespaceTaskService(parts: FixtureParts): void {
+  replaceInFile(parts.api, TASK_SERVICE_FILE, ", notificationTaskService } from '@dereekb/firebase-server/model';", " } from '@dereekb/firebase-server/model';\nimport * as serverModel from '@dereekb/firebase-server/model';");
+  replaceInFile(parts.api, TASK_SERVICE_FILE, 'return notificationTaskService(', 'return serverModel.notificationTaskService(');
+}
+
 describe('NotificationTaskBot checks — happy path and gating', () => {
   it('passes the demo-shaped fixture with no findings', () => {
     const result = runWith();
@@ -556,8 +566,24 @@ describe('NotificationTaskBot checks — aliased and namespaced factories', () =
         namespaceScriptConfigRecord(p);
         namespaceRunHandlerFactory(p);
       }
-    ]
+    ],
+    ['an aliased task service', aliasTaskService],
+    ['a namespaced task service', namespaceTaskService]
   ])('accepts %s', (_label, modify) => {
     expect(taskBotCodes(runWith(modify))).toEqual([]);
+  });
+
+  it.each<[string, (parts: FixtureParts) => void]>([
+    ['an aliased task service', aliasTaskService],
+    ['a namespaced task service', namespaceTaskService]
+  ])('reports the unreachable NTBR handler, not a missing task service, for %s', (_label, modify) => {
+    const result = runWith((p) => {
+      modify(p);
+      replaceInFile(p.api, TASK_SERVICE_FILE, ', notificationTaskBotHandler]', ']');
+    });
+    const found = findingsOf(result, 'NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED');
+    expect(found).toHaveLength(1);
+    expect(found[0].message).toContain(`the NTBR handler built at ${HANDLER_FILE}:`);
+    expect(found[0].message).not.toContain('no `notificationTaskService(...)` call was found');
   });
 });

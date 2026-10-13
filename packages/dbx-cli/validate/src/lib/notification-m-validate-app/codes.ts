@@ -103,7 +103,7 @@ export enum NotificationMValidateAppCode {
    * No top-level `notificationTemplateTypeInfoRecord([...])` call was found.
    *
    * @dbxRuleSeverity error
-   * @dbxRuleApplies Components that declare at least one `NotificationTemplateTypeInfo`.
+   * @dbxRuleApplies Components that declare at least one `NotificationTemplateType` constant. The `notificationTemplateTypeInfoRecord(...)` call is matched by name, through an `@dereekb/*` import alias (`import { x as y }`), or as a member of an `@dereekb/*` namespace import (`ns.x(...)`).
    * @dbxRuleNotApplies Components whose record is provided by an upstream `@dereekb/*` module (rare — convention is one record per app).
    * @dbxRuleFix Declare `export const <APP>_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD = notificationTemplateTypeInfoRecord([...]);` covering every template info.
    */
@@ -113,7 +113,7 @@ export enum NotificationMValidateAppCode {
    * The metadata record exists but is not wired through `appNotificationTemplateTypeInfoRecordService(...)` in the API.
    *
    * @dbxRuleSeverity error
-   * @dbxRuleApplies When `appNotificationTemplateTypeInfoRecordService(...)` is missing or its argument doesn't resolve to the declared record.
+   * @dbxRuleApplies When `appNotificationTemplateTypeInfoRecordService(...)` is missing or its argument doesn't resolve to the declared record. The `appNotificationTemplateTypeInfoRecordService(...)` call is matched by name, through an `@dereekb/*` import alias (`import { x as y }`), or as a member of an `@dereekb/*` namespace import (`ns.x(...)`).
    * @dbxRuleNotApplies APIs that wire the record indirectly through an imported app-module (rare — extend the scanner's subpaths if so).
    * @dbxRuleFix Add `appNotificationTemplateTypeInfoRecordService(<APP>_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD)` to the API's notification module.
    */
@@ -226,7 +226,7 @@ export enum NotificationMValidateAppCode {
    * No `notificationTaskService({ ... })` call was found in the API.
    *
    * @dbxRuleSeverity error
-   * @dbxRuleApplies APIs that declare at least one `*_NOTIFICATION_TASK_TYPE`.
+   * @dbxRuleApplies Apps whose component declares at least one `NotificationTaskType` constant. The `notificationTaskService(...)` call is matched by name, through an `@dereekb/*` import alias (`import { x as y }`), or as a member of an `@dereekb/*` namespace import (`ns.x(...)`).
    * @dbxRuleNotApplies APIs whose task service is provided by an upstream module (rare — extend the scanner's subpaths if so).
    * @dbxRuleFix Add `notificationTaskService({ validate: [...], handlers: [...] })` and bind it through the notification module.
    */
@@ -298,7 +298,7 @@ export enum NotificationMValidateAppCode {
    * Multiple `notificationTaskService({ ... })` calls were found.
    *
    * @dbxRuleSeverity warning
-   * @dbxRuleApplies When more than one task-service factory exists in the API.
+   * @dbxRuleApplies When more than one `notificationTaskService(...)` call exists in the API, counting aliased and namespaced calls (see `NOTIF_TASK_SERVICE_FACTORY_MISSING`).
    * @dbxRuleNotApplies Apps that intentionally compose multiple task services (rare — only the first call's config takes effect at runtime).
    * @dbxRuleFix Consolidate the calls into one — the second call's handlers are unused at runtime.
    */
@@ -364,7 +364,7 @@ export enum NotificationMValidateAppCode {
    * The app uses NotificationTaskBots, but no `notificationTaskBotRunNotificationTaskHandler(...)` is reachable from `notificationTaskService({ handlers })`. Every `NTBR` run fails until its task is deleted; when `validate` lists the NotificationTaskBot task types, `notificationTaskService()` also throws at startup.
    *
    * @dbxRuleSeverity error
-   * @dbxRuleApplies Every app that uses bots (a script config, a registry, a registry service with an argument, an NTBR handler call, or the NotificationTaskBot task types in `validate`, directly or through a component aggregate).
+   * @dbxRuleApplies Every app that uses bots (a script config, a registry, a registry service with an argument, an NTBR handler call, or the NotificationTaskBot task types in `validate`, directly or through a component aggregate). The `notificationTaskService(...)` and `notificationTaskBotRunNotificationTaskHandler(...)` calls are matched by name, through an `@dereekb/*` import alias, or as an `@dereekb/*` namespace member.
    * @dbxRuleNotApplies Apps without bots. Task services whose `handlers` the scanner can't follow completely (see `NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED`). The handler could be hidden there, and `notificationTaskService()`'s startup check still applies.
    * @dbxRuleFix Add the handler (e.g. `<app>NotificationTaskBotRunNotificationTaskHandler(context)`) to the `handlers` of `notificationTaskService(...)`.
    * @dbxRuleSeeAlso artifact:notification-task-bot-script

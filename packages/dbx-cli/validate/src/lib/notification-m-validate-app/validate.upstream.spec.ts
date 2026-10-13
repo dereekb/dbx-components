@@ -776,3 +776,41 @@ describe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED — nested in a component a
     expect(findingsOf(runWith(modify))).toEqual([]);
   });
 });
+
+describe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED — aliased and namespaced task services', () => {
+  const variants: [string, (parts: FixtureParts) => void][] = [
+    [
+      'an aliased notificationTaskService',
+      (p) => {
+        replaceInFile(p.api, TASK_SERVICE_FILE, ", notificationTaskService } from '@dereekb/firebase-server/model';", ", notificationTaskService as createNotificationTaskService } from '@dereekb/firebase-server/model';");
+        replaceInFile(p.api, TASK_SERVICE_FILE, 'return notificationTaskService(', 'return createNotificationTaskService(');
+      }
+    ],
+    [
+      'a namespaced notificationTaskService',
+      (p) => {
+        replaceInFile(p.api, TASK_SERVICE_FILE, ", notificationTaskService } from '@dereekb/firebase-server/model';", " } from '@dereekb/firebase-server/model';\nimport * as serverModel from '@dereekb/firebase-server/model';");
+        replaceInFile(p.api, TASK_SERVICE_FILE, 'return notificationTaskService(', 'return serverModel.notificationTaskService(');
+      }
+    ]
+  ];
+
+  it.each(variants)('passes with %s', (_label, modify) => {
+    expect(runWith(modify).violations).toEqual([]);
+    const calls = extractAppNotifications(inspectionOf(modify)).taskServiceCalls;
+    expect(calls).toHaveLength(1);
+    expect(calls[0].opaqueHandlerValues).toEqual([]);
+    expect(calls[0].unresolvedHandlerBindings).toEqual([]);
+  });
+
+  it.each(variants)('checks the handlers of %s', (_label, modify) => {
+    const found = findingsOf(
+      runWith((p) => {
+        modify(p);
+        dropStorageFileHandler(p);
+      })
+    );
+    expect(found).toHaveLength(1);
+    expect(found[0].message).toContain('`demoStorageFileProcessingNotificationTaskHandler` builds');
+  });
+});

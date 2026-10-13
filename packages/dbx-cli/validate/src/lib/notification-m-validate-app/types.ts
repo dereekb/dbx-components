@@ -212,7 +212,7 @@ export interface ExtractedTaskTypeAggregateArray {
 }
 
 /**
- * The top-level `notificationTemplateTypeInfoRecord([...])` call result.
+ * The top-level `notificationTemplateTypeInfoRecord([...])` call result (called directly, through an `@dereekb/*` import alias, or as an `@dereekb/*` namespace member).
  */
 export interface ExtractedTemplateInfoRecord {
   readonly symbolName: string;
@@ -296,7 +296,7 @@ export interface ExtractedTaskHandlerEntry {
 }
 
 /**
- * The `notificationTaskService({ validate, handlers })` call.
+ * The `notificationTaskService({ validate, handlers })` call (called directly, through an `@dereekb/*` import alias, or as an `@dereekb/*` namespace member).
  */
 export interface ExtractedTaskServiceCall {
   readonly validateIdentifiers: readonly string[];
@@ -426,7 +426,7 @@ export interface ExtractedNestedUpstreamValidateListing extends ExtractedSourceL
 }
 
 /**
- * The `appNotificationTemplateTypeInfoRecordService(X)` call in the API.
+ * The `appNotificationTemplateTypeInfoRecordService(X)` call in the API (called directly, through an `@dereekb/*` import alias, or as an `@dereekb/*` namespace member).
  */
 export interface ExtractedTemplateInfoRecordWiring {
   readonly recordIdentifier: string;

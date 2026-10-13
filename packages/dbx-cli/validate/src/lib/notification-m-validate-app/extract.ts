@@ -11,6 +11,12 @@
  * `extract.upstream.ts` are the exception: the handlers trace records
  * their factory calls, called directly, through an `@dereekb/*` import
  * alias, or as an `@dereekb/*` namespace member.
+ *
+ * Upstream factory calls (`notificationTemplateTypeInfoRecord`,
+ * `appNotificationTemplateTypeInfoRecordService`, `notificationTaskService`,
+ * the upstream task handler factories and the NotificationTaskBot factories)
+ * are matched by name, through an `@dereekb/*` import alias, or as an
+ * `@dereekb/*` namespace member (`readCalleeName`).
  */
 
 import { Node, SyntaxKind, type ArrayLiteralExpression, type ObjectLiteralExpression, type SourceFile, type TypeNode, type VariableDeclaration } from 'ts-morph';
@@ -26,6 +32,7 @@ import {
   findReturnExpression,
   getPropertyInitializer,
   readBooleanProperty,
+  readCalleeName,
   readIdentifierProperty,
   readStringLiteralInitializer,
   readStringProperty,
@@ -143,10 +150,10 @@ export function extractAppNotifications(inspection: AppNotificationsInspection):
   const taskCheckpointAliases = extractTaskCheckpointAliases(componentSources);
   const taskDataInterfaces = extractTaskDataInterfaces(componentSources);
   const componentIndex = buildComponentAggregateIndex({ templateTypeConstants, templateTypeInfos, templateInfoAggregates, taskTypeConstants, taskAllTypesAggregates });
-  const templateInfoRecord = extractTemplateInfoRecord(componentSources, componentIndex);
+  const templateInfoRecord = extractTemplateInfoRecord(componentSources, { index: componentIndex, imports: dereekbImports });
 
   // API pass
-  const templateInfoRecordWiring = extractTemplateInfoRecordWiring(apiSources);
+  const templateInfoRecordWiring = extractTemplateInfoRecordWiring(apiSources, dereekbImports);
   const templateConfigsArrayWiring = extractTemplateConfigsArrayWiring(apiSources);
   const apiFunctionIndex = buildApiFunctionIndex(apiSources);
   const templateConfigsArrayFactory = extractTemplateConfigsArrayFactory(apiSources, apiFunctionIndex);
@@ -454,12 +461,20 @@ function buildComponentAggregateIndex(parts: {
   return result;
 }
 
-function extractTemplateInfoRecord(sources: readonly SourceFile[], index: ComponentAggregateIndex): ExtractedTemplateInfoRecord | undefined {
+interface TemplateInfoRecordContext {
+  readonly index: ComponentAggregateIndex;
+  /**
+   * The per-file `@dereekb/*` import bindings, used to match an aliased or namespaced `notificationTemplateTypeInfoRecord(...)`.
+   */
+  readonly imports: DereekbImportIndex;
+}
+
+function extractTemplateInfoRecord(sources: readonly SourceFile[], context: TemplateInfoRecordContext): ExtractedTemplateInfoRecord | undefined {
   for (const sf of sources) {
     const rel = componentRelPath(sf);
     for (const stmt of sf.getVariableStatements()) {
       for (const decl of stmt.getDeclarations()) {
-        const record = tryReadTemplateInfoRecord(decl, rel, index);
+        const record = tryReadTemplateInfoRecord(decl, rel, context);
         if (record) {
           return record;
         }
@@ -472,17 +487,20 @@ function extractTemplateInfoRecord(sources: readonly SourceFile[], index: Compon
 /**
  * Inspects a single variable declaration and returns a populated
  * {@link ExtractedTemplateInfoRecord} when the initializer is a call to the
- * `notificationTemplateTypeInfoRecord` factory; otherwise `undefined`.
+ * `notificationTemplateTypeInfoRecord` factory (called directly, through an
+ * `@dereekb/*` import alias, or as an `@dereekb/*` namespace member);
+ * otherwise `undefined`.
  *
  * @param decl - The variable declaration to inspect.
  * @param rel - The relative source file path used in the result record.
- * @param index - The component aggregate index used to resolve spread aggregates.
+ * @param context - The component aggregate index used to resolve spread aggregates, and the import bindings used to match the factory.
  * @returns The extracted record or `undefined` when this declaration is not the factory call.
  */
-function tryReadTemplateInfoRecord(decl: VariableDeclaration, rel: string, index: ComponentAggregateIndex): ExtractedTemplateInfoRecord | undefined {
+function tryReadTemplateInfoRecord(decl: VariableDeclaration, rel: string, context: TemplateInfoRecordContext): ExtractedTemplateInfoRecord | undefined {
+  const { index, imports } = context;
   const initializer = unwrapAsExpressions(decl.getInitializer());
   if (!initializer || !Node.isCallExpression(initializer)) return undefined;
-  if (initializer.getExpression().getText() !== TEMPLATE_INFO_RECORD_FACTORY) return undefined;
+  if (readCalleeName(initializer, imports) !== TEMPLATE_INFO_RECORD_FACTORY) return undefined;
   const args = initializer.getArguments();
   const arr = args[0] ? asArrayLiteral(args[0]) : undefined;
   const direct: string[] = [];
@@ -549,12 +567,12 @@ function resolveTemplateInfoSpreads(direct: readonly string[], spreads: readonly
 }
 
 // MARK: API wiring
-function extractTemplateInfoRecordWiring(sources: readonly SourceFile[]): ExtractedTemplateInfoRecordWiring | undefined {
+function extractTemplateInfoRecordWiring(sources: readonly SourceFile[], imports: DereekbImportIndex): ExtractedTemplateInfoRecordWiring | undefined {
   let result: ExtractedTemplateInfoRecordWiring | undefined;
   outer: for (const sf of sources) {
     const rel = apiRelPath(sf);
     for (const call of sf.getDescendantsOfKind(SyntaxKind.CallExpression)) {
-      if (call.getExpression().getText() !== TEMPLATE_INFO_RECORD_SERVICE) continue;
+      if (readCalleeName(call, imports) !== TEMPLATE_INFO_RECORD_SERVICE) continue;
       const args = call.getArguments();
       const first = args[0];
       if (!first) continue;
@@ -851,8 +869,7 @@ function extractTaskServiceCalls(input: ExtractTaskServiceCallsInput): readonly 
   for (const sf of sources) {
     const rel = apiRelPath(sf);
     for (const call of sf.getDescendantsOfKind(SyntaxKind.CallExpression)) {
-      const expr = call.getExpression();
-      if (!Node.isIdentifier(expr) || expr.getText() !== TASK_SERVICE_FACTORY) continue;
+      if (readCalleeName(call, imports) !== TASK_SERVICE_FACTORY) continue;
       const args = call.getArguments();
       const first = args[0] ? asObjectLiteral(args[0]) : undefined;
       if (!first) continue;

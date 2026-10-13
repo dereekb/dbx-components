@@ -134,7 +134,7 @@ export interface ExtractedUploadInitializerEntry {
 }
 
 /**
- * A `storageFileInitializeFromUploadService({ initializer })` call.
+ * A `storageFileInitializeFromUploadService({ initializer })` call (called directly, through an `@dereekb/*` import alias, or as an `@dereekb/*` namespace member).
  */
 export interface ExtractedUploadServiceCall {
   /**
@@ -185,7 +185,7 @@ export interface ExtractedProcessingConfig {
 }
 
 /**
- * A `storageFileProcessingNotificationTaskHandler({ processors })` call.
+ * A `storageFileProcessingNotificationTaskHandler({ processors })` call (called directly, through an `@dereekb/*` import alias, or as an `@dereekb/*` namespace member).
  */
 export interface ExtractedProcessingHandlerCall {
   /**

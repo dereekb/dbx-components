@@ -2026,7 +2026,8 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
       'The app uses NotificationTaskBots, but no `notificationTaskBotRunNotificationTaskHandler(...)` is reachable from `notificationTaskService({ handlers })`. Every `NTBR` run fails until its task is deleted; when `validate` lists the NotificationTaskBot task types, `notificationTaskService()` also throws at startup',
     whatItFlags:
       'The app uses NotificationTaskBots, but no `notificationTaskBotRunNotificationTaskHandler(...)` is reachable from `notificationTaskService({ handlers })`. Every `NTBR` run fails until its task is deleted; when `validate` lists the NotificationTaskBot task types, `notificationTaskService()` also throws at startup.',
-    whenItApplies: 'Every app that uses bots (a script config, a registry, a registry service with an argument, an NTBR handler call, or the NotificationTaskBot task types in `validate`, directly or through a component aggregate).',
+    whenItApplies:
+      'Every app that uses bots (a script config, a registry, a registry service with an argument, an NTBR handler call, or the NotificationTaskBot task types in `validate`, directly or through a component aggregate). The `notificationTaskService(...)` and `notificationTaskBotRunNotificationTaskHandler(...)` calls are matched by name, through an `@dereekb/*` import alias, or as an `@dereekb/*` namespace member.',
     whenItDoesNotApply: "Apps without bots. Task services whose `handlers` the scanner can't follow completely (see `NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED`). The handler could be hidden there, and `notificationTaskService()`'s startup check still applies.",
     canonicalFix: 'Add the handler (e.g. `<app>NotificationTaskBotRunNotificationTaskHandler(context)`) to the `handlers` of `notificationTaskService(...)`.',
     seeAlso: [
@@ -2227,7 +2228,7 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     severity: 'warning',
     title: 'Multiple `notificationTaskService({ ... })` calls were found',
     whatItFlags: 'Multiple `notificationTaskService({ ... })` calls were found.',
-    whenItApplies: 'When more than one task-service factory exists in the API.',
+    whenItApplies: 'When more than one `notificationTaskService(...)` call exists in the API, counting aliased and namespaced calls (see `NOTIF_TASK_SERVICE_FACTORY_MISSING`).',
     whenItDoesNotApply: "Apps that intentionally compose multiple task services (rare — only the first call's config takes effect at runtime).",
     canonicalFix: "Consolidate the calls into one — the second call's handlers are unused at runtime."
   },
@@ -2267,7 +2268,7 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     severity: 'error',
     title: 'No `notificationTaskService({ ... })` call was found in the API',
     whatItFlags: 'No `notificationTaskService({ ... })` call was found in the API.',
-    whenItApplies: 'APIs that declare at least one `*_NOTIFICATION_TASK_TYPE`.',
+    whenItApplies: 'Apps whose component declares at least one `NotificationTaskType` constant. The `notificationTaskService(...)` call is matched by name, through an `@dereekb/*` import alias (`import { x as y }`), or as a member of an `@dereekb/*` namespace import (`ns.x(...)`).',
     whenItDoesNotApply: "APIs whose task service is provided by an upstream module (rare — extend the scanner's subpaths if so).",
     canonicalFix: 'Add `notificationTaskService({ validate: [...], handlers: [...] })` and bind it through the notification module.'
   },
@@ -2506,7 +2507,7 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     severity: 'error',
     title: 'No top-level `notificationTemplateTypeInfoRecord([...])` call was found',
     whatItFlags: 'No top-level `notificationTemplateTypeInfoRecord([...])` call was found.',
-    whenItApplies: 'Components that declare at least one `NotificationTemplateTypeInfo`.',
+    whenItApplies: 'Components that declare at least one `NotificationTemplateType` constant. The `notificationTemplateTypeInfoRecord(...)` call is matched by name, through an `@dereekb/*` import alias (`import { x as y }`), or as a member of an `@dereekb/*` namespace import (`ns.x(...)`).',
     whenItDoesNotApply: 'Components whose record is provided by an upstream `@dereekb/*` module (rare — convention is one record per app).',
     canonicalFix: 'Declare `export const <APP>_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD = notificationTemplateTypeInfoRecord([...]);` covering every template info.'
   },
@@ -2516,7 +2517,8 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     severity: 'error',
     title: 'The metadata record exists but is not wired through `appNotificationTemplateTypeInfoRecordService(...)` in the API',
     whatItFlags: 'The metadata record exists but is not wired through `appNotificationTemplateTypeInfoRecordService(...)` in the API.',
-    whenItApplies: "When `appNotificationTemplateTypeInfoRecordService(...)` is missing or its argument doesn't resolve to the declared record.",
+    whenItApplies:
+      "When `appNotificationTemplateTypeInfoRecordService(...)` is missing or its argument doesn't resolve to the declared record. The `appNotificationTemplateTypeInfoRecordService(...)` call is matched by name, through an `@dereekb/*` import alias (`import { x as y }`), or as a member of an `@dereekb/*` namespace import (`ns.x(...)`).",
     whenItDoesNotApply: "APIs that wire the record indirectly through an imported app-module (rare — extend the scanner's subpaths if so).",
     canonicalFix: "Add `appNotificationTemplateTypeInfoRecordService(<APP>_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD)` to the API's notification module."
   },
@@ -2801,7 +2803,8 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     severity: 'error',
     title: 'The component declares purposes with subtasks but no',
     whatItFlags: 'The component declares purposes with subtasks but no\n`storageFileProcessingNotificationTaskHandler({ processors })` call\nis present in the API.',
-    whenItApplies: 'When at least one purpose declares a `*ProcessingSubtask` union and `*_PROCESSING_SUBTASK` constants.',
+    whenItApplies:
+      'When at least one purpose declares a `*ProcessingSubtask` union and `*_PROCESSING_SUBTASK` constants. The `storageFileProcessingNotificationTaskHandler(...)` call is matched by name, through an `@dereekb/*` import alias (`import { x as y }`), or as a member of an `@dereekb/*` namespace import (`ns.x(...)`).',
     whenItDoesNotApply: 'Purposes that store a file but do not need processing.',
     canonicalFix: 'Add a `storageFileProcessingNotificationTaskHandler({ processors: [...] })` call and wire it into the notification-task service.',
     seeAlso: [
@@ -2895,7 +2898,8 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     severity: 'error',
     title: 'No `storageFileInitializeFromUploadService(...)` call was found in',
     whatItFlags: 'No `storageFileInitializeFromUploadService(...)` call was found in\nthe API.',
-    whenItApplies: 'APIs that declare at least one `UploadedFileTypeIdentifier` and therefore need to wire the upload service.',
+    whenItApplies:
+      'Apps whose component declares at least one `UploadedFileTypeIdentifier` constant, and so must wire the upload service. The `storageFileInitializeFromUploadService(...)` call is matched by name, through an `@dereekb/*` import alias (`import { x as y }`), or as a member of an `@dereekb/*` namespace import (`ns.x(...)`).',
     whenItDoesNotApply: 'APIs whose upload service is provided by an upstream module (and the call lives outside the scanned subpaths — extend the scanner if so).',
     canonicalFix: 'Add a factory whose return value is built from `storageFileInitializeFromUploadService({ initializer: [...] })` and bind it as a NestJS provider.',
     seeAlso: [
@@ -2911,7 +2915,7 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     severity: 'warning',
     title: 'Multiple `storageFileInitializeFromUploadService(...)` calls were',
     whatItFlags: 'Multiple `storageFileInitializeFromUploadService(...)` calls were\nfound.',
-    whenItApplies: 'When more than one upload-service factory exists in the API.',
+    whenItApplies: 'When more than one `storageFileInitializeFromUploadService(...)` call exists in the API, counting aliased and namespaced calls.',
     whenItDoesNotApply: 'Apps that intentionally compose multiple factories (rare — only the first one runs).',
     canonicalFix: "Consolidate the factories into one — only the first call's config takes effect at runtime."
   },
