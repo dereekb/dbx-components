@@ -413,6 +413,18 @@ describe('validateAppStorageFiles — aliased and namespaced @dereekb factory ca
     expect(extracted.uploadServiceCalls[0].resolvedInitializerBindings).toEqual(['userTestFileInitializer', 'userAvatarInitializer']);
   });
 
+  it.each<[string, (parts: StorageFileFixtureParts) => void, string]>([
+    ['an aliased storageFileProcessingNotificationTaskHandler', aliasProcessingHandlerFactory, 'sfHandler'],
+    ['a namespaced storageFileProcessingNotificationTaskHandler', namespaceProcessingHandlerFactory, 'serverModel']
+  ])('passes with %s past a same-named parameter in another function of the file', (_label, modify, name) => {
+    const withHelper = (parts: StorageFileFixtureParts) => {
+      replaceInFile({ files: parts.api, relPath: PROCESSING_PATH, from: 'export function demoStorageFileProcessingNotificationTaskHandler', to: `export function demoUnrelatedHelper(${name}: boolean) {\n  return ${name};\n}\n\nexport function demoStorageFileProcessingNotificationTaskHandler` });
+      modify(parts);
+    };
+    expect(runWith(withHelper).violations).toEqual([]);
+    expect(extractAppStorageFiles(inspectionWith(withHelper)).processingHandlerCalls).toHaveLength(1);
+  });
+
   it.each(uploadVariants)('checks the initializers of %s', (_label, modify) => {
     const result = runWith((parts) => {
       modify(parts);

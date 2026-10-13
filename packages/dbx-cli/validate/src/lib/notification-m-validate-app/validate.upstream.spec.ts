@@ -217,6 +217,11 @@ function addModuleLevelFormSpaceConst(parts: FixtureParts): void {
   replaceInFile(parts.api, SF_HANDLER_FILE, SF_FACTORY_IMPORT, "import { formSpaceSubmissionNotificationTaskHandler, storageFileProcessingNotificationTaskHandler } from '@dereekb/firebase-server/model';\n\nconst create = formSpaceSubmissionNotificationTaskHandler;");
 }
 
+// An unrelated function after the SF wrapper whose parameter is named `name`. Call it before the wrapper is rewritten.
+function addUnrelatedHelperWithParameter(parts: FixtureParts, name: string): void {
+  replaceInFile(parts.api, SF_HANDLER_FILE, SF_WRAPPER, `${SF_WRAPPER}\n\nexport function demoUnrelatedHelper(${name}: boolean) { return ${name}; }`);
+}
+
 describe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED', () => {
   it('passes the demo-shaped fixture with no findings', () => {
     expect(runWith().violations).toEqual([]);
@@ -612,6 +617,50 @@ describe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED — aliased and namespaced 
     expect(call.reachedUpstreamHandlerCalls).toContainEqual(expect.objectContaining({ factory: 'storageFileProcessingNotificationTaskHandler', sourceFile: TASK_SERVICE_FILE }));
     expect(runWith(modify).violations).toEqual([]);
   });
+
+  // The alias or namespace name is also a parameter of an unrelated function in the wrapper's file.
+  const unrelatedParameterVariants: [string, (parts: FixtureParts) => void][] = [
+    [
+      'an aliased factory import',
+      (p) => {
+        addUnrelatedHelperWithParameter(p, 'sfHandler');
+        aliasStorageFileFactory(p);
+      }
+    ],
+    [
+      'a namespace factory call',
+      (p) => {
+        addUnrelatedHelperWithParameter(p, 'serverModel');
+        namespaceStorageFileFactory(p);
+      }
+    ]
+  ];
+
+  it.each(unrelatedParameterVariants)('follows %s past a same-named parameter in another function of the file', (_label, modify) => {
+    const [call] = extractAppNotifications(inspectionOf(modify)).taskServiceCalls;
+    expect(call.opaqueHandlerValues).toEqual([]);
+    expect(call.reachedUpstreamHandlerCalls.map((x) => x.factory)).toEqual(['storageFileProcessingNotificationTaskHandler', 'formSpaceSubmissionNotificationTaskHandler']);
+    expect(runWith(modify).violations).toEqual([]);
+  });
+
+  it.each(unrelatedParameterVariants)('reports the FormSpace aggregate when its handler leaves handlers, with %s past a same-named parameter', (_label, modify) => {
+    const found = findingsOf(
+      runWith((p) => {
+        modify(p);
+        dropFormSpaceHandler(p);
+      })
+    );
+    expect(found).toHaveLength(1);
+    expect(found[0].message).toContain('ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES');
+  });
+
+  it.each(unrelatedParameterVariants)('warns NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE through %s past a same-named parameter', (_label, modify) => {
+    const result = runWith((p) => {
+      modify(p);
+      replaceInFile(p.api, TASK_SERVICE_FILE, SF_SPREAD, '');
+    });
+    expect(result.violations.map((x) => x.code)).toEqual(['NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE']);
+  });
 });
 
 describe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED — factories held in a local const', () => {
@@ -766,6 +815,13 @@ describe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED — values the trace still 
       (p) => {
         replaceInFile(p.api, SF_HANDLER_FILE, SF_FACTORY_IMPORT, `${SF_FACTORY_IMPORT}\nimport { buildUpstreamHandler } from '@dereekb/firebase-server/model';`);
         replaceInFile(p.api, SF_HANDLER_FILE, SF_FACTORY_RETURN, 'const create = storageFileProcessingNotificationTaskHandler;\n  return buildUpstreamHandler(create, ');
+      }
+    ],
+    [
+      'an alias shadowed by a parameter',
+      (p) => {
+        aliasStorageFileFactory(p);
+        replaceInFile(p.api, SF_HANDLER_FILE, 'demoStorageFileProcessingNotificationTaskHandler(context) {', 'demoStorageFileProcessingNotificationTaskHandler(context, sfHandler = context.handlerFactories) {');
       }
     ],
     [

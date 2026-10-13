@@ -92,6 +92,34 @@ describe('readCalleeName() — local const references', () => {
   });
 });
 
+describe('readCalleeName() — alias and namespace scopes', () => {
+  const SF = 'storageFileProcessingNotificationTaskHandler';
+  const FS = 'formSpaceSubmissionNotificationTaskHandler';
+  const ALIAS = `import { ${SF} as sfHandler } from '@dereekb/firebase-server/model';\n`;
+  const NAMESPACE = `import * as serverModel from '@dereekb/firebase-server/model';\n`;
+
+  it.each<[string, string, (string | undefined)[]]>([
+    ['resolves an alias past a same-named parameter in another function', `${ALIAS}function f(sfHandler: () => void) { return sfHandler(); }\nfunction g() { return sfHandler({}); }`, ['sfHandler', SF]],
+    ['resolves an alias past a same-named arrow parameter', `${ALIAS}function f(list: (() => void)[]) { list.map((sfHandler) => sfHandler()); return sfHandler({}); }`, [undefined, 'sfHandler', SF]],
+    ['resolves an alias past same-named locals in another function', `${ALIAS}function f(x: { sfHandler: () => void }) { let a = 0; { let sfHandler = 1; } try { a = 1; } catch (sfHandler) { a = 2; } const { sfHandler: y } = x; return a; }\nfunction g() { return sfHandler({}); }`, [SF]],
+    ['resolves an alias past a same-named function in another function', `${ALIAS}function f() { function sfHandler() { return 0; } return sfHandler(); }\nfunction g() { return sfHandler({}); }`, ['sfHandler', SF]],
+    ['resolves an alias past a same-named method parameter', `${ALIAS}class A { m(sfHandler: () => void) { return sfHandler(); } n() { return sfHandler({}); } }`, ['sfHandler', SF]],
+    ['resolves a namespace past a same-named const in another function', `${NAMESPACE}function f() { const serverModel = { ${SF}: () => 0 }; return serverModel.${SF}(); }\nfunction g() { return serverModel.${SF}({}); }`, [undefined, SF]],
+    ['resolves a namespace past a same-named parameter in another function', `${NAMESPACE}function f(serverModel: { ${SF}: () => void }) { return serverModel.${SF}(); }\nfunction g() { return serverModel.${SF}({}); }`, [undefined, SF]],
+    ['follows a const holding an alias past a same-named parameter in another function', `${ALIAS}function f(sfHandler: () => void) { return sfHandler(); }\nfunction g() { const create = sfHandler; return create({}); }`, ['sfHandler', SF]],
+    ['follows a const holding a namespace member past a same-named parameter in another function', `${NAMESPACE}function f(serverModel: unknown) { return serverModel; }\nfunction g() { const create = serverModel.${SF}; return create({}); }`, [SF]],
+    ['does not resolve an alias shadowed by a parameter of an enclosing function', `${ALIAS}function f(sfHandler: () => void) { return () => sfHandler(); }`, ['sfHandler']],
+    ['does not resolve an alias where a same-named const is also in scope', `${ALIAS}function f() { const sfHandler = ${FS}; return sfHandler({}); }\nfunction g() { return sfHandler({}); }`, ['sfHandler', SF]],
+    ['does not resolve a namespace where a same-named const is also in scope', `${NAMESPACE}function f(other: unknown) { const serverModel = other; return serverModel.${SF}({}); }\nfunction g() { return serverModel.${SF}({}); }`, [undefined, SF]],
+    ['does not follow a const holding an alias shadowed where the const holds it', `${ALIAS}function g(sfHandler: () => void) { const create = sfHandler; return create({}); }`, ['sfHandler']],
+    ['widens a block-scoped shadow to its whole function', `${ALIAS}function f(x: boolean) { if (x) { let sfHandler = 0; } return sfHandler({}); }`, ['sfHandler']],
+    ['ignores same-named type parameters and interfaces for a callee', `${ALIAS}function f<sfHandler>() { type T = sfHandler; return sfHandler({}); }\nfunction g() { interface sfHandler { x: 1 } return sfHandler({}); }`, [SF, SF]],
+    ['ignores member, property and type names', `${ALIAS}const o = { sfHandler() { return 0; } };\nclass A { sfHandler = 1; }\ninterface X { sfHandler: number }\nfunction h<sfHandler>() { return 0; }\nfunction g() { return sfHandler({}); }`, [SF]]
+  ])('%s', (_label, text, expected) => {
+    expect(calleeNamesOf(text)).toEqual(expected);
+  });
+});
+
 /**
  * Reads the resolved type-annotation name of every variable declaration in a one-file project, in source order.
  *
@@ -144,19 +172,19 @@ describe('readTypeReferenceName()', () => {
     expect(annotationNamesOf(`import { type NotificationTaskType as TaskType } from 'some-lib';\nimport type * as lib from 'some-lib';\nconst a: TaskType = 'a';\nconst b: lib.NotificationTaskType = 'b';`)).toEqual(['TaskType', undefined]);
   });
 
-  it('does not resolve an alias the file also declares as a type parameter, type alias or interface', () => {
-    expect(annotationNamesOf(`${TASK_TYPE_ALIAS_IMPORT}function f<TaskType>(x: TaskType) { return x; }\nconst a: TaskType = 'a';`)).toEqual(['TaskType']);
-    expect(annotationNamesOf(`${TASK_TYPE_ALIAS_IMPORT}function f() { type TaskType = number; const x: TaskType = 1; return x; }\nconst a: TaskType = 'a';`)).toEqual(['TaskType', 'TaskType']);
-    expect(annotationNamesOf(`${TASK_TYPE_ALIAS_IMPORT}function f() { interface TaskType { x: 1 } const y: TaskType = { x: 1 }; return y; }\nconst a: TaskType = 'a';`)).toEqual(['TaskType', 'TaskType']);
+  it('reads an alias as written only where a same-named type parameter, type alias or interface is in scope', () => {
+    expect(annotationNamesOf(`${TASK_TYPE_ALIAS_IMPORT}function f<TaskType>(x: TaskType) { const y: TaskType = x; return y; }\nconst a: TaskType = 'a';`)).toEqual(['TaskType', 'NotificationTaskType']);
+    expect(annotationNamesOf(`${TASK_TYPE_ALIAS_IMPORT}function f() { type TaskType = number; const x: TaskType = 1; return x; }\nconst a: TaskType = 'a';`)).toEqual(['TaskType', 'NotificationTaskType']);
+    expect(annotationNamesOf(`${TASK_TYPE_ALIAS_IMPORT}function f() { interface TaskType { x: 1 } const y: TaskType = { x: 1 }; return y; }\nconst a: TaskType = 'a';`)).toEqual(['TaskType', 'NotificationTaskType']);
   });
 
-  it('does not resolve an alias the file also declares as a value', () => {
-    expect(annotationNamesOf(`${TASK_TYPE_ALIAS_IMPORT}function f(TaskType: string) { return TaskType; }\nconst a: TaskType = 'a';`)).toEqual(['TaskType']);
+  it('reads an alias as written only where a same-named value is in scope', () => {
+    expect(annotationNamesOf(`${TASK_TYPE_ALIAS_IMPORT}function f(TaskType: string) { const x: TaskType = TaskType; return x; }\nconst a: TaskType = 'a';`)).toEqual(['TaskType', 'NotificationTaskType']);
   });
 
-  it('does not resolve a namespace the file also declares as a type parameter or enum', () => {
-    expect(annotationNamesOf(`${TASK_TYPE_NAMESPACE_IMPORT}function f<firebaseModel>(x: firebaseModel) { return x; }\nconst a: firebaseModel.NotificationTaskType = 'a';`)).toEqual([undefined]);
-    expect(annotationNamesOf(`${TASK_TYPE_NAMESPACE_IMPORT}function f() { enum firebaseModel { A } return firebaseModel.A; }\nconst a: firebaseModel.NotificationTaskType = 'a';`)).toEqual([undefined]);
+  it('reads a namespace member as undefined only where a same-named type parameter or enum is in scope', () => {
+    expect(annotationNamesOf(`${TASK_TYPE_NAMESPACE_IMPORT}function f<firebaseModel>(x: firebaseModel) { const y: firebaseModel.NotificationTaskType = 'a'; return [x, y]; }\nconst a: firebaseModel.NotificationTaskType = 'a';`)).toEqual([undefined, 'NotificationTaskType']);
+    expect(annotationNamesOf(`${TASK_TYPE_NAMESPACE_IMPORT}function f() { enum firebaseModel { A } const y: firebaseModel.NotificationTaskType = 'a'; return [firebaseModel.A, y]; }\nconst a: firebaseModel.NotificationTaskType = 'a';`)).toEqual([undefined, 'NotificationTaskType']);
   });
 
   it('reads a deeper qualified name and a non-reference type as undefined', () => {

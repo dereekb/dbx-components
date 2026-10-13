@@ -1038,6 +1038,15 @@ describe('validateAppNotifications — aliased and namespaced @dereekb factory c
     expect(codes).not.toContain('NOTIF_TASK_SERVICE_FACTORY_MISSING');
   });
 
+  it('reads a record namespace past a same-named parameter in another function of the file', () => {
+    const modify = (parts: NotificationFixtureParts) => {
+      namespaceTemplateInfoRecord(parts);
+      replaceInFile({ files: parts.component, relPath: COMPONENT_MAIN_PATH, from: '...ALL_GUESTBOOK_NOTIFICATION_TEMPLATE_TYPE_INFOS]);\n', to: '...ALL_GUESTBOOK_NOTIFICATION_TEMPLATE_TYPE_INFOS]);\n\nexport function demoShadowFirebaseModel(firebaseModel: unknown) {\n  return firebaseModel;\n}\n' });
+    };
+    expect(runWith(modify).violations).toEqual([]);
+    expect(extractAppNotifications(inspectionWith(modify)).templateInfoRecord?.symbolName).toBe('DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD');
+  });
+
   // Forms that stay unrecognized are pinned at the extraction level: the call is not extracted, so the
   // "missing" / "not wired" rules then report exactly as they do for any unrecognized call.
   const pins: readonly (readonly [string, (parts: NotificationFixtureParts) => void, (extracted: ReturnType<typeof extractAppNotifications>) => void])[] = [
@@ -1056,14 +1065,6 @@ describe('validateAppNotifications — aliased and namespaced @dereekb factory c
         replaceInFile({ files: api, relPath: TASK_SERVICE_PATH, from: 'return notificationTaskService(', to: 'return lib.notificationTaskService(' });
       },
       (extracted) => expect(extracted.taskServiceCalls).toEqual([])
-    ],
-    [
-      'a record namespace the file redeclares as a parameter',
-      (parts) => {
-        namespaceTemplateInfoRecord(parts);
-        replaceInFile({ files: parts.component, relPath: COMPONENT_MAIN_PATH, from: '...ALL_GUESTBOOK_NOTIFICATION_TEMPLATE_TYPE_INFOS]);\n', to: '...ALL_GUESTBOOK_NOTIFICATION_TEMPLATE_TYPE_INFOS]);\n\nexport function demoShadowFirebaseModel(firebaseModel: unknown) {\n  return firebaseModel;\n}\n' });
-      },
-      (extracted) => expect(extracted.templateInfoRecord).toBeUndefined()
     ],
     [
       'a record-service alias the file redeclares as a parameter',
@@ -1347,6 +1348,15 @@ describe('validateAppNotifications — aliased and namespaced @dereekb type anno
     ]
   ];
 
+  it('reads a handler-config alias past a same-named type parameter in another function', () => {
+    const modify = (parts: NotificationFixtureParts) => {
+      aliasHandlerConfigAnnotations(parts);
+      replaceInFile({ files: parts.api, relPath: TASK_SERVICE_PATH, from: 'export function demoNotificationTaskServiceFactory', to: 'export function identityOf<HandlerConfig>(x: HandlerConfig): HandlerConfig {\n  return x;\n}\n\nexport function demoNotificationTaskServiceFactory' });
+    };
+    expect(runWith(modify).violations).toEqual([]);
+    expect(extractAppNotifications(inspectionWith(modify)).taskHandlerEntries.map((x) => x.bindingName)).toEqual(['exampleNotificationTaskHandler']);
+  });
+
   it.each(variants)('passes with %s', (_label, modify) => {
     expect(runWith(modify).violations).toEqual([]);
     const extracted = extractAppNotifications(inspectionWith(modify));
@@ -1439,14 +1449,6 @@ describe('validateAppNotifications — aliased and namespaced @dereekb type anno
         expect(extracted.taskHandlerEntries).toEqual([]);
         expect(extracted.taskServiceCalls[0].unresolvedHandlerBindings).toContain('exampleNotificationTaskHandler');
       }
-    ],
-    [
-      'a handler-config alias the file also declares as a type parameter',
-      (parts) => {
-        aliasHandlerConfigAnnotations(parts);
-        replaceInFile({ files: parts.api, relPath: TASK_SERVICE_PATH, from: 'export function demoNotificationTaskServiceFactory', to: 'export function identityOf<HandlerConfig>(x: HandlerConfig): HandlerConfig {\n  return x;\n}\n\nexport function demoNotificationTaskServiceFactory' });
-      },
-      (extracted) => expect(extracted.taskHandlerEntries).toEqual([])
     ],
     [
       'task types through a namespace of a module outside @dereekb/*',
