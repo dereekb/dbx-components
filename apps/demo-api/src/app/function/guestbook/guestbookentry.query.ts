@@ -1,16 +1,21 @@
-import { publishedGuestbookEntriesQuery, type GuestbookEntry, type QueryAllGuestbookEntriesParams, type QueryGuestbookEntriesParams } from 'demo-firebase';
+import { publishedGuestbookEntriesQuery, queryGuestbookEntriesParamsType, type GuestbookEntry, type QueryAllGuestbookEntriesParams, type QueryGuestbookEntriesParams } from 'demo-firebase';
 import { type OnCallQueryModelResult } from '@dereekb/firebase';
-import { executeOnCallQuery, resolveAdminOnlyValue, withApiDetails, type OnCallQueryModelRequest } from '@dereekb/firebase-server';
+import { assertValidParams, executeOnCallQuery, resolveAdminOnlyValue, withApiDetails, type OnCallQueryModelRequest } from '@dereekb/firebase-server';
 import { type DemoQueryModelFunction, type DemoApiNestContext } from '../function.context';
+import { guestbookDocumentForParam } from './guestbook.util';
 
 export const guestbookEntryQuery: DemoQueryModelFunction<QueryGuestbookEntriesParams, OnCallQueryModelResult<GuestbookEntry>> = withApiDetails({
+  inputType: queryGuestbookEntriesParamsType,
   mcp: { visibility: true },
   fn: async (request: OnCallQueryModelRequest<DemoApiNestContext, QueryGuestbookEntriesParams>) => {
-    const { nest, data } = request;
+    const { nest } = request;
+
+    // nothing else validates a query's params
+    const params = assertValidParams(queryGuestbookEntriesParamsType, request.data);
 
     const published = resolveAdminOnlyValue({
       request,
-      value: data.published,
+      value: params.published,
       defaultValue: true,
       isAdminOnlyValue: (v) => v !== true,
       messageOrError: { message: 'Users can only search published guestbook entries.' }
@@ -19,7 +24,7 @@ export const guestbookEntryQuery: DemoQueryModelFunction<QueryGuestbookEntriesPa
     // Assert that the user can read the parent guestbook
     const guestbookDoc = await nest.useModel('guestbook', {
       request,
-      key: data.guestbook,
+      key: guestbookDocumentForParam(nest, params.guestbook).key,
       roles: 'read',
       use: (x) => x.document
     });
@@ -27,7 +32,7 @@ export const guestbookEntryQuery: DemoQueryModelFunction<QueryGuestbookEntriesPa
     const entryCollection = nest.demoFirestoreCollections.guestbookEntryCollectionFactory(guestbookDoc);
 
     return executeOnCallQuery<GuestbookEntry>({
-      params: data,
+      params,
       collection: entryCollection,
       loadCursorDocument: async (key) => {
         const doc = await nest.useModel('guestbookEntry', {

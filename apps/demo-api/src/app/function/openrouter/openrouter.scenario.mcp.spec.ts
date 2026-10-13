@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { type Maybe } from '@dereekb/util';
 import { type OnCallQueryModelResult } from '@dereekb/firebase';
 import { mcpMethodIdForDispatch } from '@dereekb/firebase-server/mcp';
 import { OpenRouterApi } from '@dereekb/nestjs/openrouter';
@@ -6,7 +7,7 @@ import { openRouterGeneration } from '@dereekb/openrouter';
 import { type CreateOpenRouterPromptVersionResult, type OpenRouterPrompt, OpenRouterPromptState, OpenRouterRunTaskState, openRouterPromptIdentity, openRouterPromptVersionId, openRouterPromptVersionIdentity } from '@dereekb/openrouter/firebase';
 import { openRouterRunTaskSweep } from '@dereekb/openrouter/firebase-server';
 import { DEMO_API_TEST_OPENROUTER_MODEL_CONFIG, demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoOpenRouterPromptContext } from '../../../test/fixture';
-import { callMcpMethod, searchMcpMethods } from '../../../test/mcp';
+import { callMcpMethod, describeMcpMethod, searchMcpMethods } from '../../../test/mcp';
 
 /**
  * Closes the plan's last verification bullet: the prompt registry driven through the callModel MCP
@@ -18,8 +19,9 @@ import { callMcpMethod, searchMcpMethods } from '../../../test/mcp';
  * every hop between an MCP client and the action (manifest entry, generated tool, dispatch, role gate)
  * lives in the app, and each one is a place the surface can be silently absent. `openRouterPrompt.query`
  * was exactly that until this app registered `OpenRouterPromptModelFunctions` in its functions config:
- * the handler carries no `inputType`, so with no manifest entry to supply the schema the tool was
- * dropped at generation time and nothing failed.
+ * the handler carried no `inputType` then, so with no manifest entry to supply the schema the tool was
+ * dropped at generation time and nothing failed. The handler now declares `inputType`, so the query no
+ * longer depends on the generated manifest.
  *
  * Everything here dispatches through `McpServerFactoryService` — the same chain `McpController` serves,
  * minus the HTTP transport.
@@ -77,9 +79,32 @@ demoApiFunctionContextFactory((f) => {
         expect(names.has(promptUpdateMethod)).toBe(true);
         expect(names.has(versionCreateMethod)).toBe(true);
         expect(names.has(versionUpdateMethod)).toBe(true);
-        // The one with no `inputType` on its handler, and therefore the one that only exists because the
-        // app's generated MCP manifest carries a schema for it.
+        // The one that once had no `inputType` on its handler, and so only existed because the app's
+        // generated MCP manifest carried a schema for it. The handler now declares `inputType`.
         expect(names.has(promptQueryMethod)).toBe(true);
+      });
+    });
+
+    describe('openRouterPrompt.query state', () => {
+      it('should refuse a state name, listing the allowed values', async () => {
+        const result = await callMcpMethod({ f, u: au, kind: 'read', method: promptQueryMethod, params: { state: 'ACTIVE' } });
+        expect(result.isError).toBe(true);
+
+        const text = result.content.map((x) => (x.type === 'text' ? x.text : '')).join('\n');
+        expect(text).toContain('state must be 0, 1, 2');
+        expect(text).toContain('(was "ACTIVE")');
+      });
+
+      it('should advertise the allowed state values and the pagination params', async () => {
+        const { details } = await describeMcpMethod({ f, u: au, method: promptQueryMethod });
+        const inputSchema = details?.inputSchema as Maybe<{ readonly properties?: Record<string, { readonly enum?: unknown[]; readonly anyOf?: { readonly const?: unknown }[] }> }>;
+        const properties = inputSchema?.properties;
+        const state = properties?.['state'];
+        const stateValues = state?.enum ?? (state?.anyOf ?? []).map((x) => x.const).filter((x) => x !== undefined);
+
+        expect(stateValues).toEqual([OpenRouterPromptState.DRAFT, OpenRouterPromptState.ACTIVE, OpenRouterPromptState.ARCHIVED]);
+        expect(properties?.['limit']).toBeDefined();
+        expect(properties?.['cursorDocumentKey']).toBeDefined();
       });
     });
 

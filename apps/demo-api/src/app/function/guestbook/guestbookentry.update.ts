@@ -1,9 +1,9 @@
-import { type InsertGuestbookEntryParams, type LikeGuestbookEntryParams, insertGuestbookEntryParamsType, likeGuestbookEntryParamsType } from 'demo-firebase';
+import { type InsertGuestbookEntryParams, type InsertGuestbookEntryResult, type LikeGuestbookEntryParams, insertGuestbookEntryParamsType, likeGuestbookEntryParamsType } from 'demo-firebase';
 import { type DemoUpdateModelFunction } from '../function.context';
 import { guestbookEntryForUser } from './guestbook.util';
 import { withApiDetails } from '@dereekb/firebase-server';
 
-export const guestbookEntryInsert: DemoUpdateModelFunction<InsertGuestbookEntryParams> = withApiDetails({
+export const guestbookEntryInsert: DemoUpdateModelFunction<InsertGuestbookEntryParams, InsertGuestbookEntryResult> = withApiDetails({
   inputType: insertGuestbookEntryParamsType,
   mcp: {
     // Additive: upserts the caller's own entry.
@@ -11,13 +11,12 @@ export const guestbookEntryInsert: DemoUpdateModelFunction<InsertGuestbookEntryP
   },
   fn: async (request) => {
     const { nest, auth, data } = request;
-    const guestbookEntryInsertEntry = await nest.guestbookActions.insertGuestbookEntry(data);
+    const insertGuestbookEntry = await nest.guestbookActions.insertGuestbookEntry(data);
 
-    const uid = auth.uid;
-    const { guestbook: guestbookId } = guestbookEntryInsertEntry.params;
+    const guestbookEntryDocument = guestbookEntryForUser(nest, insertGuestbookEntry.params.guestbook, auth.uid);
+    await insertGuestbookEntry(guestbookEntryDocument);
 
-    const guestbookEntryDocument = guestbookEntryForUser(nest, guestbookId, uid);
-    await guestbookEntryInsertEntry(guestbookEntryDocument);
+    return { modelKeys: [guestbookEntryDocument.key] };
   }
 });
 

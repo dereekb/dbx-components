@@ -1,6 +1,6 @@
-import { assertIsAdminInRequest, executeOnCallQuery, withApiDetails, type OnCallQueryModelRequest } from '@dereekb/firebase-server';
+import { assertIsAdminInRequest, assertValidParams, executeOnCallQuery, withApiDetails, type OnCallQueryModelRequest } from '@dereekb/firebase-server';
 import { type OnCallQueryModelResult } from '@dereekb/firebase';
-import { type OpenRouterPrompt, type QueryOpenRouterPromptsParams, openRouterPromptsWithStateQuery } from '@dereekb/openrouter/firebase';
+import { type OpenRouterPrompt, type QueryOpenRouterPromptsParams, openRouterPromptsWithStateQuery, queryOpenRouterPromptsParamsType } from '@dereekb/openrouter/firebase';
 import { type DemoApiNestContext, type DemoQueryModelFunction } from '../function.context';
 
 /**
@@ -14,13 +14,17 @@ import { type DemoApiNestContext, type DemoQueryModelFunction } from '../functio
  * to — it is operational configuration for the whole app.
  */
 export const openRouterPromptQuery: DemoQueryModelFunction<QueryOpenRouterPromptsParams, OnCallQueryModelResult<OpenRouterPrompt>> = withApiDetails({
+  inputType: queryOpenRouterPromptsParamsType,
   fn: async (request: OnCallQueryModelRequest<DemoApiNestContext, QueryOpenRouterPromptsParams>) => {
-    const { nest, data } = request;
+    const { nest } = request;
 
     assertIsAdminInRequest(request);
 
+    // nothing else validates a query's params, so an unknown state would otherwise quietly match no prompt
+    const params = assertValidParams(queryOpenRouterPromptsParamsType, request.data);
+
     return executeOnCallQuery<OpenRouterPrompt>({
-      params: data,
+      params,
       collection: nest.demoFirestoreCollections.openRouterPromptCollection,
       loadCursorDocument: async (key) => {
         const document = await nest.useModel('openRouterPrompt', {
@@ -32,7 +36,7 @@ export const openRouterPromptQuery: DemoQueryModelFunction<QueryOpenRouterPrompt
 
         return document.accessor.get();
       },
-      buildConstraints: () => (data.state == null ? [] : openRouterPromptsWithStateQuery({ state: data.state }))
+      buildConstraints: () => (params.state == null ? [] : openRouterPromptsWithStateQuery({ state: params.state }))
     });
   }
 });

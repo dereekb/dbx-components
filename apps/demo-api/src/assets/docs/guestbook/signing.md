@@ -15,6 +15,11 @@ admin) can change it.
 Create or update your entry with `guestbookEntry.update.insert`. Set a `message` and the name you `signed` with, and
 set `published` when it should be shown to everyone. Each user has one entry per guestbook.
 
+Pass the guestbook as `guestbook`: its id or its full `gb/<id>` key both work. The call returns your entry's key in
+`modelKeys`.
+
+Remove your entry with `guestbookEntry.delete`, passing the same `guestbook`.
+
 ## Checking an entry
 
 `guestbookEntry.invoke.entryDetails` is a read method: it returns the message and signature lengths, the like count and

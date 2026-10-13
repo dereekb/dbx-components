@@ -48,7 +48,7 @@ import {
   updateStorageFileGroupParamsType,
   updateStorageFileParamsType
 } from '@dereekb/firebase';
-import { createOpenRouterPromptVersionParamsType, readOpenRouterPromptParamsType, updateOpenRouterPromptParamsType, updateOpenRouterPromptVersionParamsType } from '@dereekb/openrouter/firebase';
+import { createOpenRouterPromptVersionParamsType, queryOpenRouterPromptsParamsType, readOpenRouterPromptParamsType, updateOpenRouterPromptParamsType, updateOpenRouterPromptVersionParamsType } from '@dereekb/openrouter/firebase';
 import {
   allPublishedGuestbookEntriesParamsType,
   createGuestbookParamsType,
@@ -63,6 +63,7 @@ import {
   profileCreateTestNotificationParamsType,
   profileCreateTestNotificationTaskBotParamsType,
   publishGuestbookParamsType,
+  queryGuestbookEntriesParamsType,
   resetProfilePasswordParamsType,
   setProfileUsernameParamsType,
   subscribeToGuestbookNotificationsParamsType,
@@ -224,7 +225,15 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     paramsTypeDescription: 'Parameters for the `guestbook / update / publish` call. One-way publish of the targeted guestbook.'
   },
   { model: 'guestbook', verb: 'update', specifier: 'subscribeToNotifications', paramsTypeName: 'SubscribeToGuestbookNotificationsParams', paramsValidator: subscribeToGuestbookNotificationsParamsType, groupName: 'Guestbook', sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts' },
-  { model: 'guestbookEntry', verb: 'delete', paramsTypeName: 'GuestbookEntryParams', paramsValidator: guestbookEntryParamsType, groupName: 'Guestbook', sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts', paramsFields: [{ name: 'guestbook', typeText: 'string' }] },
+  {
+    model: 'guestbookEntry',
+    verb: 'delete',
+    paramsTypeName: 'GuestbookEntryParams',
+    paramsValidator: guestbookEntryParamsType,
+    groupName: 'Guestbook',
+    sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts',
+    paramsFields: [{ name: 'guestbook', typeText: 'GuestbookId | GuestbookKey', description: 'The guestbook the entry is in: its id (`abc123`) or its full key (`gb/abc123`).' }]
+  },
   {
     model: 'guestbookEntry',
     verb: 'invoke',
@@ -276,12 +285,13 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     verb: 'query',
     specifier: '_',
     paramsTypeName: 'QueryGuestbookEntriesParams',
+    paramsValidator: queryGuestbookEntriesParamsType,
     resultTypeName: 'OnCallQueryModelResult',
     groupName: 'Guestbook',
     sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts',
     paramsTypeDescription: 'Query parameters for searching guestbook entries for one guestbook.\n\nUsed with the default `guestbookEntry.query._` specifier — for cross-guestbook\ncollection-group queries, see {@link QueryAllGuestbookEntriesParams}.',
     paramsFields: [
-      { name: 'guestbook', typeText: 'GuestbookKey', description: 'Key of the parent guestbook to query entries from. Required.' },
+      { name: 'guestbook', typeText: 'GuestbookId | GuestbookKey', description: 'The guestbook to query entries from: its id (`abc123`) or its full key (`gb/abc123`). Required.' },
       { name: 'published', typeText: 'boolean', description: 'Filter by published status. When omitted, returns all entries.' }
     ]
   },
@@ -302,13 +312,16 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     specifier: 'insert',
     paramsTypeName: 'InsertGuestbookEntryParams',
     paramsValidator: insertGuestbookEntryParamsType,
+    resultTypeName: 'InsertGuestbookEntryResult',
     groupName: 'Guestbook',
     sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts',
     paramsFields: [
       { name: 'message', typeText: 'string' },
       { name: 'signed', typeText: 'string' },
       { name: 'published', typeText: 'boolean' }
-    ]
+    ],
+    resultTypeDescription: 'Result of the `guestbookEntry / update / insert` call.',
+    resultFields: [{ name: 'modelKeys', typeText: '[GuestbookEntryKey]', description: "Key of the caller's entry: the one just created, or the existing one that was updated." }]
   },
   { model: 'guestbookEntry', verb: 'update', specifier: 'like', paramsTypeName: 'LikeGuestbookEntryParams', paramsValidator: likeGuestbookEntryParamsType, groupName: 'Guestbook', sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts' },
   {
@@ -685,6 +698,7 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     model: 'openRouterPrompt',
     verb: 'query',
     paramsTypeName: 'QueryOpenRouterPromptsParams',
+    paramsValidator: queryOpenRouterPromptsParamsType,
     resultTypeName: 'OnCallQueryModelResult',
     groupName: 'OpenRouterPrompt',
     sourceFile: 'packages/openrouter/firebase/src/lib/openrouter.api.ts',
