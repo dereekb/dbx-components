@@ -213,7 +213,8 @@ export interface CallMcpMethodParams {
   readonly f: DemoApiFunctionContextFixture;
   readonly u: DemoApiAuthorizedUserTestContextFixture;
   /**
-   * Which compact router to call through: `read` (`demo_mcp_read`) or `write` (`demo_mcp_write`).
+   * Which compact router to call through: `read` (`demo_mcp_read`), `write` (`demo_mcp_write`) or `destructive`
+   * (`demo_mcp_destructive`).
    */
   readonly kind: McpMethodKind;
   /**
@@ -235,7 +236,7 @@ export interface CallMcpMethodParams {
 }
 
 /**
- * Runs one method through the compact `read` / `write` router tool.
+ * Runs one method through the compact `read` / `write` / `destructive` router tool.
  *
  * @param params - Config object with `{ f, u, kind, method, params }`.
  * @returns The router's `CallToolResult` — the method's normal result, or `isError` for an unknown, hidden or wrong-kind method.
@@ -266,7 +267,7 @@ export interface CallMcpMethodAnonymousParams {
 }
 
 /**
- * Runs one method through the compact `read` / `write` router tool with no auth context — used to prove the router
+ * Runs one method through the compact `read` / `write` / `destructive` router tool with no auth context — used to prove the router
  * still rejects unauthenticated callers.
  *
  * @param params - Config object with `{ f, kind, method, params }`.
@@ -290,7 +291,7 @@ export interface SearchMcpMethodsParams {
    */
   readonly model?: string;
   /**
-   * Only read or only write methods.
+   * Only read, write or destructive methods. `destructive` also matches a method a param can make destructive.
    */
   readonly kind?: McpMethodKind;
   readonly limit?: number;

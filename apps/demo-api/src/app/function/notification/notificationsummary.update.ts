@@ -4,6 +4,10 @@ import { type DemoUpdateModelFunction } from '../function.context';
 
 export const notificationSummaryUpdate: DemoUpdateModelFunction<UpdateNotificationSummaryParams> = withApiDetails({
   inputType: updateNotificationSummaryParamsType,
+  mcp: {
+    // Additive: only sets the read-at time.
+    destructive: false
+  },
   fn: async (request) => {
     const { nest, data } = request;
 

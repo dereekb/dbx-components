@@ -15,6 +15,10 @@ import { type DemoCreateModelFunction } from '../function.context';
  */
 export const openRouterPromptVersionCreate: DemoCreateModelFunction<CreateOpenRouterPromptVersionParams, CreateOpenRouterPromptVersionResult> = withApiDetails({
   inputType: createOpenRouterPromptVersionParamsType,
+  mcp: {
+    // Appends a version; `activate` switches the live prompt for every unpinned caller.
+    escalatingParams: { activate: { destructive: true } }
+  },
   fn: async (request) => {
     const { nest, data } = request;
 

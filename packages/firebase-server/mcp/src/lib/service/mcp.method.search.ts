@@ -1,7 +1,7 @@
 import { buildRankedSearchEntries, rankSearchEntries, RANKED_SEARCH_NAME_WEIGHTS, RANKED_SEARCH_SLUG_WEIGHTS, RANKED_SEARCH_TAG_WEIGHTS, RANKED_SEARCH_TEXT_WEIGHTS, type Maybe, type RankedSearchEntry } from '@dereekb/util';
 import { type McpManifestModelEntry } from './mcp.manifest';
-import { type McpMethod, type McpMethodKind, type McpMethodView } from './mcp.method';
-import { MCP_WRITE_TOOL_DESCRIPTION_PREFIX } from './mcp.tool-generator';
+import { mcpMethodKinds, type McpMethod, type McpMethodKind, type McpMethodView } from './mcp.method';
+import { MCP_DESTRUCTIVE_TOOL_DESCRIPTION_PREFIX, MCP_WRITE_TOOL_DESCRIPTION_PREFIX } from './mcp.tool-generator';
 
 /**
  * Default number of results returned by the compact `search` tool.
@@ -19,14 +19,15 @@ export const MAX_MCP_METHOD_SEARCH_LIMIT = 50;
 export type McpMethodSearchEntries = readonly RankedSearchEntry<McpMethod>[];
 
 /**
- * Returns the method's description with the `[WRITE] ` marker stripped.
+ * Returns the method's description with the `[WRITE] ` or `[DESTRUCTIVE] ` marker stripped.
  *
  * @param method - The method.
  * @returns The plain description.
  */
 export function mcpMethodPlainDescription(method: McpMethod): string {
   const description = method.definition.description;
-  return description.startsWith(MCP_WRITE_TOOL_DESCRIPTION_PREFIX) ? description.slice(MCP_WRITE_TOOL_DESCRIPTION_PREFIX.length) : description;
+  const marker = [MCP_WRITE_TOOL_DESCRIPTION_PREFIX, MCP_DESTRUCTIVE_TOOL_DESCRIPTION_PREFIX].find((prefix) => description.startsWith(prefix));
+  return marker == null ? description : description.slice(marker.length);
 }
 
 /**
@@ -99,7 +100,8 @@ export interface SearchMcpMethodsInput {
    */
   readonly model?: Maybe<string>;
   /**
-   * Restricts results to one method kind. With an empty query, lists every visible method of that kind.
+   * Restricts results to one method kind: a method's base kind or any kind an escalating param raises a call to. With an
+   * empty query, lists every visible method of that kind.
    */
   readonly kind?: Maybe<McpMethodKind>;
   readonly limit?: Maybe<number>;
@@ -131,7 +133,7 @@ export function searchMcpMethods(input: SearchMcpMethodsInput): SearchMcpMethods
   const limit = Math.min(Math.max(1, input.limit ?? DEFAULT_MCP_METHOD_SEARCH_LIMIT), MAX_MCP_METHOD_SEARCH_LIMIT);
   const modelKey = model?.trim().toLowerCase();
   const hasModelFilter = modelKey != null && modelKey.length > 0;
-  const filter = (method: McpMethod) => view.has(method) && (kind == null || method.kind === kind) && (!hasModelFilter || method.modelType?.toLowerCase() === modelKey);
+  const filter = (method: McpMethod) => view.has(method) && (kind == null || mcpMethodKinds(method).includes(kind)) && (!hasModelFilter || method.modelType?.toLowerCase() === modelKey);
   let matches: McpMethod[];
 
   if (query.trim().length === 0) {

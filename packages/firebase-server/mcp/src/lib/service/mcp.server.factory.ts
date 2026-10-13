@@ -27,11 +27,11 @@ import { ROUTE_MANIFEST_VERSION, type RouteManifest } from './mcp.route-manifest
 import { formatMcpToolErrorResponse, formatMcpToolResponse } from './mcp.response-formatter';
 import { generateMcpToolDefinitions, MCP_TOOL_NAME_MAX_LENGTH, type McpToolDefinition, type McpToolGenerationNamingOptions, type McpToolGenerationResult, type McpToolGenerationSkip, type McpToolGenerationWarning, type McpToolListEntry, type McpStaticToolHandler } from './mcp.tool-generator';
 import { MCP_ALWAYS_LOAD_META_KEY, MCP_COMPACT_TOOL_KEYS, buildMcpCompactInstructions, planMcpToolSurface, resolveMcpCompactToolNames, resolveMcpToolNamePrefix, type McpToolSurfacePlan } from './mcp.compact';
-import { type McpMethod, type McpMethodKind, type McpMethodView } from './mcp.method';
+import { mcpMethodKindForCall, mcpMethodKinds, type McpMethod, type McpMethodKind, type McpMethodView } from './mcp.method';
 import { buildMcpMethodSearchEntries, suggestMcpMethods, type McpMethodSearchEntries } from './mcp.method.search';
 import { createMcpCompactSearchTool } from './tools/mcp.tool.compact-search';
 import { createMcpCompactDetailsTool } from './tools/mcp.tool.compact-details';
-import { createMcpCompactRouterTool } from './tools/mcp.tool.compact-router';
+import { createMcpCompactRouterTool, describeMcpCompactRouterMismatch } from './tools/mcp.tool.compact-router';
 import { createModelGetTool } from './tools/mcp.tool.model-get';
 import { createModelRolesTool } from './tools/mcp.tool.model-roles';
 import { createModelInfoTool } from './tools/mcp.tool.model-info';
@@ -219,12 +219,14 @@ export class McpServerFactoryService {
 
       if (compact) {
         routerTools = {
-          read: createMcpCompactRouterTool({ name: compactNames.read, kind: 'read', app: prefix, otherName: compactNames.write }),
-          write: createMcpCompactRouterTool({ name: compactNames.write, kind: 'write', app: prefix, otherName: compactNames.read })
+          read: createMcpCompactRouterTool({ name: compactNames.read, kind: 'read', app: prefix, names: compactNames }),
+          write: createMcpCompactRouterTool({ name: compactNames.write, kind: 'write', app: prefix, names: compactNames }),
+          destructive: createMcpCompactRouterTool({ name: compactNames.destructive, kind: 'destructive', app: prefix, names: compactNames })
         };
 
         routerKindByName.set(compactNames.read, 'read');
         routerKindByName.set(compactNames.write, 'write');
+        routerKindByName.set(compactNames.destructive, 'destructive');
 
         for (const key of MCP_COMPACT_TOOL_KEYS) {
           metaByName.set(compactNames[key], { [MCP_ALWAYS_LOAD_META_KEY]: true, ...toolsConfig?.meta?.[key] });
@@ -239,7 +241,7 @@ export class McpServerFactoryService {
 
       if (compact && toolsConfig?.instructions !== false) {
         const builtinReadMethods = builtins.filter((tool) => tool.filterMetadata.effectiveReadOnly === true).map((tool) => tool.name);
-        instructions = `${instructions}\n\n${buildMcpCompactInstructions({ app: prefix, names: compactNames, builtinReadMethods, hasDocumentation: listedDocsSearchTool != null, hasToken: token != null, methodToolsListed: plan.promoted.size > 0 })}`;
+        instructions = `${instructions}\n\n${buildMcpCompactInstructions({ app: prefix, names: compactNames, builtinReadMethods, hasDocumentation: listedDocsSearchTool != null, hasToken: token != null, methodToolsListed: plan.promoted.size > 0, readOnly: this.mcpConfig.readOnly === true })}`;
       }
 
       catalog = {
@@ -325,7 +327,8 @@ export class McpServerFactoryService {
 
   /**
    * Builds the request-scoped compact tools: `search` and `details` over the caller's visible methods, plus the
-   * `read` / `write` routers when at least one method of that kind is visible.
+   * `read` / `write` / `destructive` routers when at least one visible method can produce a call of that kind (its base
+   * kind or an escalating param's kind). Outside `readOnly` mode only: the `write` and `destructive` routers.
    *
    * @param input - The catalog, the caller's visible view, and the request context.
    * @param input.catalog - The resolved catalog.
@@ -342,13 +345,11 @@ export class McpServerFactoryService {
 
     if (view.methods.length > 0) {
       tools.push(
-        createMcpCompactSearchTool({ name: names.search, app, detailsName: names.details, readName: names.read, writeName: names.write, entries, view }),
+        createMcpCompactSearchTool({ name: names.search, app, names, entries, view }),
         createMcpCompactDetailsTool({
           name: names.details,
           app,
-          searchName: names.search,
-          readName: names.read,
-          writeName: names.write,
+          names,
           entries,
           view,
           models: this._cachedManifestModels,
@@ -359,12 +360,19 @@ export class McpServerFactoryService {
     }
 
     if (routerTools != null) {
-      if (view.methods.some((method) => method.kind === 'read')) {
+      const kinds = new Set(view.methods.flatMap((method) => mcpMethodKinds(method)));
+      const readOnly = this.mcpConfig.readOnly === true;
+
+      if (kinds.has('read')) {
         tools.push(routerTools.read);
       }
 
-      if (this.mcpConfig.readOnly !== true && view.methods.some((method) => method.kind === 'write')) {
+      if (!readOnly && kinds.has('write')) {
         tools.push(routerTools.write);
+      }
+
+      if (!readOnly && kinds.has('destructive')) {
+        tools.push(routerTools.destructive);
       }
     }
 
@@ -450,6 +458,8 @@ export class McpServerFactoryService {
       this._logger.error(`Dropped MCP tool ${skip.toolName} — its name is ${skip.toolName.length} chars, over the ${MCP_TOOL_NAME_MAX_LENGTH}-char limit. Shorten the model/specifier, hide it (mcp.visibility: false), or set an mcp.name override.`);
     } else if (skip.reason === 'duplicate_name') {
       this._logger.error(`Dropped MCP tool ${skip.toolName} — another visible tool already resolved to this name. Give one an mcp.name override to disambiguate.`);
+    } else if (skip.reason === 'escalating_params_on_read_only') {
+      this._logger.error(`Dropped MCP tool ${skip.toolName} — it is read-only but declares mcp.escalatingParams; a param can't turn a read into a write yet. Set mcp.readOnly: false or remove escalatingParams.`);
     } else {
       this._logger.warn(`Skipped MCP tool ${skip.toolName} (${skip.reason})${errorSuffix}`);
     }
@@ -1029,8 +1039,9 @@ export class McpServerFactoryService {
   }
 
   /**
-   * Runs a call to a compact `read` / `write` router: validates the arguments, resolves the method in the caller's
-   * visible view, checks its kind, then runs it like a direct call with `params` as its arguments.
+   * Runs a call to a compact `read` / `write` / `destructive` router: validates the arguments, resolves the method in
+   * the caller's visible view, checks the call's kind (the method's base kind raised by any escalating param the params
+   * set) against the router, then runs it like a direct call with `params` as its arguments.
    *
    * @param input - The router kind, the reason-stripped router arguments, and the request state.
    * @param input.kind - The router's kind.
@@ -1046,6 +1057,7 @@ export class McpServerFactoryService {
     let params: unknown = args['params'];
     let errorMessage: Maybe<string>;
     let method: Maybe<McpMethod>;
+    let inner: Maybe<ReturnType<typeof extractMcpReasonFromArgs>>;
 
     if (typeof params === 'string') {
       try {
@@ -1071,22 +1083,27 @@ export class McpServerFactoryService {
           const quoted = suggestions.map((x) => `\`${x}\``).join(', ');
           const hint = suggestions.length > 0 ? ` Did you mean: ${quoted}?` : ` Use \`${catalog.compactNames.search}\` to find methods.`;
           errorMessage = `Unknown method: ${requestedMethod}.${hint}`;
-        } else if (method.kind !== kind) {
-          errorMessage = `\`${method.id}\` is a ${method.kind} method; call \`${catalog.compactNames[method.kind]}\`.`;
-          method = undefined;
+        } else {
+          // A stray params-level reason is used as a fallback analytics reason, unless the method owns that field.
+          // Extracted before the kind check so it sees exactly the args the handler would get.
+          const reasonConfig = this._resolveReasonConfig();
+          const declaresOwn = mcpSchemaDeclaresProperty(method.definition.inputSchema, reasonConfig.parameterName);
+          inner = extractMcpReasonFromArgs((params ?? {}) as Record<string, unknown>, reasonConfig, declaresOwn);
+          const call = mcpMethodKindForCall(method, inner.args);
+
+          if (call.kind !== kind) {
+            errorMessage = describeMcpCompactRouterMismatch({ method, call, names: catalog.compactNames });
+            method = undefined;
+          }
         }
       }
     }
 
     let result: McpRoutedCallResult;
 
-    if (method == null) {
+    if (method == null || inner == null) {
       result = { outcome: { response: formatMcpToolErrorResponse(new Error(errorMessage ?? `Unknown method: ${requestedMethod}`)) as CallToolResult }, requestedMethod, params: {} };
     } else {
-      // A stray params-level reason is used as a fallback analytics reason, unless the method owns that field.
-      const reasonConfig = this._resolveReasonConfig();
-      const declaresOwn = mcpSchemaDeclaresProperty(method.definition.inputSchema, reasonConfig.parameterName);
-      const inner = extractMcpReasonFromArgs((params ?? {}) as Record<string, unknown>, reasonConfig, declaresOwn);
       const target = method.definition;
       const outcome = target.staticHandler == null ? await this._handleCallModelToolCall(target, inner.args, ctx) : await this._handleStaticToolCall(target.staticHandler, inner.args, ctx);
       result = { outcome, method, requestedMethod, params: inner.args, innerReason: inner.reason };
@@ -1144,11 +1161,12 @@ export class McpServerFactoryService {
 }
 
 /**
- * The `read` / `write` router shells, built once at boot.
+ * The `read` / `write` / `destructive` router shells, built once at boot.
  */
 interface McpCompactRouterTools {
   readonly read: McpToolDefinition;
   readonly write: McpToolDefinition;
+  readonly destructive: McpToolDefinition;
 }
 
 /**

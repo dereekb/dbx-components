@@ -1,14 +1,46 @@
 import { type Maybe } from '@dereekb/util';
+import { type McpEscalatingParamHints } from '@dereekb/firebase-server';
 import { mcpManifestKey } from './mcp.manifest';
 import { type McpToolDefinition, type McpToolDispatchTarget } from './mcp.tool-generator';
+import { mergeMcpToolHints, type McpToolHints } from './mcp.visibility';
 
 /**
- * Which compact tool may run a method.
+ * Which compact tool may run a method, or one call of it.
  *
- * `read` iff the method's effective read-only classification is `true` (the same fail-safe that drives
- * `readOnlyHint` and the module `readOnly` mode); everything else, including an unmarked `invoke`, is a `write`.
+ * - `read` — the effective read-only classification is `true` (the same fail-safe that drives `readOnlyHint` and the
+ *   module `readOnly` mode).
+ * - `destructive` — the method may delete or overwrite data, or is open-world. An unmarked `invoke` or custom verb lands
+ *   here (fail-safe).
+ * - `write` — everything else that changes data.
  */
-export type McpMethodKind = 'read' | 'write';
+export type McpMethodKind = 'read' | 'write' | 'destructive';
+
+/**
+ * Every {@link McpMethodKind}, from least to most risky.
+ */
+export const MCP_METHOD_KINDS: readonly McpMethodKind[] = ['read', 'write', 'destructive'];
+
+/**
+ * Whether a value is a {@link McpMethodKind}.
+ *
+ * @param value - The value to check.
+ * @returns `true` when the value is one of {@link MCP_METHOD_KINDS}.
+ */
+export function isMcpMethodKind(value: unknown): value is McpMethodKind {
+  return (MCP_METHOD_KINDS as readonly unknown[]).includes(value);
+}
+
+/**
+ * One escalating param of a method, resolved at boot.
+ */
+export interface McpMethodEscalatingParam {
+  readonly param: string;
+  /**
+   * The kind of a call that sets this param.
+   */
+  readonly kind: McpMethodKind;
+  readonly hints: McpEscalatingParamHints;
+}
 
 /**
  * Where a method came from.
@@ -32,11 +64,18 @@ export interface McpMethodSummary {
    * Alternate names that also resolve to this method: the legacy per-method tool name and the manifest-key form.
    */
   readonly aliases: readonly string[];
+  /**
+   * The kind of a call that sets none of {@link escalatingParams}.
+   */
   readonly kind: McpMethodKind;
   readonly source: McpMethodSource;
   readonly modelType?: string;
   readonly call?: string;
   readonly specifier?: string;
+  /**
+   * The params that change a call's kind when set, in declaration order. Omitted when the method has none.
+   */
+  readonly escalatingParams?: readonly McpMethodEscalatingParam[];
 }
 
 /**
@@ -80,13 +119,107 @@ export function normalizeMcpMethodId(input: string): string {
 }
 
 /**
- * Returns the {@link McpMethodKind} of a tool definition.
+ * Returns the base hints of a tool definition: those of a call that sets no escalating param.
  *
  * @param definition - The tool definition.
- * @returns `read` when the definition is effectively read-only, otherwise `write`.
+ * @returns The hints read from the definition's filter metadata.
+ */
+export function mcpToolBaseHints(definition: McpToolDefinition): McpToolHints {
+  const { effectiveReadOnly, effectiveDestructive, openWorld } = definition.filterMetadata;
+  return { readOnly: effectiveReadOnly, destructive: effectiveDestructive, openWorld };
+}
+
+/**
+ * Returns the {@link McpMethodKind} for resolved hints.
+ *
+ * @param hints - The hints of a method or one call of it.
+ * @returns `read` when read-only; `destructive` when destructive (or unclassified) or open-world; otherwise `write`.
+ */
+export function mcpMethodKindForHints(hints: McpToolHints): McpMethodKind {
+  let kind: McpMethodKind;
+
+  if (hints.readOnly === true) {
+    kind = 'read';
+  } else if (hints.destructive !== false || hints.openWorld === true) {
+    kind = 'destructive';
+  } else {
+    kind = 'write';
+  }
+
+  return kind;
+}
+
+/**
+ * Returns the {@link McpMethodKind} of a tool definition, for a call that sets no escalating param.
+ *
+ * @param definition - The tool definition.
+ * @returns The definition's base kind.
  */
 export function mcpMethodKindForDefinition(definition: McpToolDefinition): McpMethodKind {
-  return definition.filterMetadata.effectiveReadOnly === true ? 'read' : 'write';
+  return mcpMethodKindForHints(mcpToolBaseHints(definition));
+}
+
+/**
+ * Returns every kind a call of the method can have: its base kind plus each escalating param's kind.
+ *
+ * @param method - The method.
+ * @returns The unique kinds, in {@link MCP_METHOD_KINDS} order.
+ */
+export function mcpMethodKinds(method: McpMethodSummary): McpMethodKind[] {
+  const kinds = new Set<McpMethodKind>([method.kind, ...(method.escalatingParams ?? []).map((x) => x.kind)]);
+  return MCP_METHOD_KINDS.filter((kind) => kinds.has(kind));
+}
+
+/**
+ * Whether an escalating param counts as set: any value other than `undefined`, `null` or `false`. `''`, `0` and `[]`
+ * count as set.
+ *
+ * @param value - The param value.
+ * @returns `true` when the param is set.
+ */
+export function isMcpEscalatingParamSet(value: unknown): boolean {
+  return value != null && value !== false;
+}
+
+/**
+ * The kind of one call of a method, from {@link mcpMethodKindForCall}.
+ */
+export interface McpMethodCallKind {
+  readonly kind: McpMethodKind;
+  /**
+   * The set escalating params that raised the call above the method's base kind, in declaration order.
+   */
+  readonly escalatedBy: readonly string[];
+}
+
+/**
+ * Returns the kind of one call of a method: its base kind, raised by any escalating param the call sets.
+ *
+ * Only own properties of `params` are read, so a param named after an `Object.prototype` member is never set by
+ * inheritance.
+ *
+ * @param method - The method being called.
+ * @param params - The call's params.
+ * @returns The call's kind and the params that raised it.
+ */
+export function mcpMethodKindForCall(method: McpMethodSummary, params: Maybe<Readonly<Record<string, unknown>>>): McpMethodCallKind {
+  const baseRank = MCP_METHOD_KINDS.indexOf(method.kind);
+  const escalatedBy: string[] = [];
+  let kind = method.kind;
+
+  for (const escalation of method.escalatingParams ?? []) {
+    const rank = MCP_METHOD_KINDS.indexOf(escalation.kind);
+
+    if (rank > baseRank && params != null && Object.hasOwn(params, escalation.param) && isMcpEscalatingParamSet(params[escalation.param])) {
+      escalatedBy.push(escalation.param);
+
+      if (rank > MCP_METHOD_KINDS.indexOf(kind)) {
+        kind = escalation.kind;
+      }
+    }
+  }
+
+  return { kind, escalatedBy };
 }
 
 /**
@@ -159,16 +292,19 @@ export interface McpMethodRegistry {
  */
 function buildMcpMethod(entry: McpMethodRegistryInputEntry): McpMethod {
   const { definition, source } = entry;
-  const kind = mcpMethodKindForDefinition(definition);
+  const baseHints = mcpToolBaseHints(definition);
+  const kind = mcpMethodKindForHints(baseHints);
+  const escalatingParamEntries = Object.entries(definition.escalatingParams ?? {});
+  const escalatingParams = escalatingParamEntries.length > 0 ? { escalatingParams: escalatingParamEntries.map(([param, hints]): McpMethodEscalatingParam => ({ param, kind: mcpMethodKindForHints(mergeMcpToolHints(baseHints, [hints])), hints })) } : undefined;
   let result: McpMethod;
 
   if (source === 'callModel') {
     const { modelType, call, specifier } = definition.dispatch;
     const id = mcpMethodIdForDispatch(definition.dispatch);
     const aliases = [definition.name, mcpManifestKey(modelType, call, specifier)].filter((alias) => alias !== id);
-    result = { id, aliases, kind, source, modelType, call, ...(specifier == null ? undefined : { specifier }), definition };
+    result = { id, aliases, kind, source, modelType, call, ...(specifier == null ? undefined : { specifier }), ...escalatingParams, definition };
   } else {
-    result = { id: definition.name, aliases: [], kind, source, definition };
+    result = { id: definition.name, aliases: [], kind, source, ...escalatingParams, definition };
   }
 
   return result;

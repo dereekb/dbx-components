@@ -88,7 +88,7 @@ demoApiFunctionContextFactory((f) => {
       // an operator — so the document is staged and everything that follows goes over MCP.
       demoOpenRouterPromptContext({ f, key: 'mcp-prompt' }, (p) => {
         it('should publish, edit, promote and list a prompt entirely over MCP', async () => {
-          const published = await callMcpMethod({ f, u: au, kind: 'write', method: versionCreateMethod, params: { prompt: p.documentKey, instructions: 'You are a test.', config: DEMO_API_TEST_OPENROUTER_MODEL_CONFIG as unknown as Record<string, unknown>, activate: true } });
+          const published = await callMcpMethod({ f, u: au, kind: 'destructive', method: versionCreateMethod, params: { prompt: p.documentKey, instructions: 'You are a test.', config: DEMO_API_TEST_OPENROUTER_MODEL_CONFIG as unknown as Record<string, unknown>, activate: true } });
           expect(published.isError).toBeUndefined();
 
           const created = published.structuredContent as unknown as CreateOpenRouterPromptVersionResult;
@@ -98,10 +98,10 @@ demoApiFunctionContextFactory((f) => {
           expect(created.modelKeys[0]).toContain(openRouterPromptVersionId(1));
 
           const versionKey = created.modelKeys[0];
-          const edited = await callMcpMethod({ f, u: au, kind: 'write', method: versionUpdateMethod, params: { key: versionKey, instructions: 'You are an edited test.', notes: 'Reworded over MCP.' } });
+          const edited = await callMcpMethod({ f, u: au, kind: 'destructive', method: versionUpdateMethod, params: { key: versionKey, instructions: 'You are an edited test.', notes: 'Reworded over MCP.' } });
           expect(edited.isError).toBeUndefined();
 
-          const renamed = await callMcpMethod({ f, u: au, kind: 'write', method: promptUpdateMethod, params: { key: p.documentKey, name: 'Renamed over MCP', tags: ['mcp'], activeVersion: 1 } });
+          const renamed = await callMcpMethod({ f, u: au, kind: 'destructive', method: promptUpdateMethod, params: { key: p.documentKey, name: 'Renamed over MCP', tags: ['mcp'], activeVersion: 1 } });
           expect(renamed.isError).toBeUndefined();
 
           const prompt = await p.loadPrompt();
@@ -140,7 +140,7 @@ demoApiFunctionContextFactory((f) => {
          * @param config - Model config to publish with.
          */
         async function publishOverMcp(config: Record<string, unknown>): Promise<void> {
-          const result = await callMcpMethod({ f, u: au, kind: 'write', method: versionCreateMethod, params: { prompt: p.documentKey, instructions: 'You are a test.', config, activate: true } });
+          const result = await callMcpMethod({ f, u: au, kind: 'destructive', method: versionCreateMethod, params: { prompt: p.documentKey, instructions: 'You are a test.', config, activate: true } });
           expect(result.isError, JSON.stringify(result.content)).toBeUndefined();
         }
 

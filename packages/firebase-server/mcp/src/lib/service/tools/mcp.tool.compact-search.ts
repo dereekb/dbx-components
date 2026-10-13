@@ -1,7 +1,8 @@
 import { type CallToolResult } from '@modelcontextprotocol/server';
+import { type McpCompactToolNames } from '../../mcp.config';
 import { MCP_COMPACT_SEARCH_INPUT_SCHEMA } from '../mcp.compact';
 import { mcpMethodInputPropertyNames, mcpMethodPlainDescription, searchMcpMethods, type McpMethodSearchEntries } from '../mcp.method.search';
-import { type McpMethod, type McpMethodKind, type McpMethodView } from '../mcp.method';
+import { isMcpMethodKind, type McpMethod, type McpMethodKind, type McpMethodView } from '../mcp.method';
 import { buildStaticToolDefinition, type McpToolDefinition } from '../mcp.tool-generator';
 
 /**
@@ -19,6 +20,9 @@ export const MCP_COMPACT_DISPATCH_MODEL_TYPE = 'mcp';
  */
 export interface McpCompactSearchResultEntry {
   readonly method: string;
+  /**
+   * The kind of a call that sets none of {@link escalatingParams}.
+   */
   readonly kind: McpMethodKind;
   readonly model?: string;
   readonly summary: string;
@@ -26,6 +30,10 @@ export interface McpCompactSearchResultEntry {
    * The top-level parameter names. Call `details` for the full schema.
    */
   readonly params: readonly string[];
+  /**
+   * The params that change a call's kind when set, mapped to that kind. Present only when the method has any.
+   */
+  readonly escalatingParams?: Readonly<Record<string, McpMethodKind>>;
 }
 
 /**
@@ -42,9 +50,10 @@ export interface McpCompactSearchResult {
 export interface CreateMcpCompactSearchToolDeps {
   readonly name: string;
   readonly app: string;
-  readonly detailsName: string;
-  readonly readName: string;
-  readonly writeName: string;
+  /**
+   * The resolved compact tool names, referenced in the description.
+   */
+  readonly names: McpCompactToolNames;
   readonly entries: McpMethodSearchEntries;
   /**
    * The caller's visible methods. Results never leave this view.
@@ -72,11 +81,11 @@ export function mcpMethodOneLineSummary(method: McpMethod): string {
  * @returns The tool definition.
  */
 export function createMcpCompactSearchTool(deps: CreateMcpCompactSearchToolDeps): McpToolDefinition {
-  const { name, app, detailsName, readName, writeName, entries, view } = deps;
+  const { name, app, names, entries, view } = deps;
 
   return buildStaticToolDefinition({
     name,
-    description: `Search the ${app} API for methods by keyword. Returns method ids with their kind (read/write), model and a one-line summary. Next: \`${detailsName}\` for parameters, then \`${readName}\` / \`${writeName}\`.`,
+    description: `Search the ${app} API for methods by keyword. Returns method ids with their kind (read/write/destructive), model and a one-line summary. Next: \`${names.details}\` for parameters, then \`${names.read}\` / \`${names.write}\` / \`${names.destructive}\`.`,
     inputSchema: MCP_COMPACT_SEARCH_INPUT_SCHEMA,
     dispatch: { call: MCP_COMPACT_SEARCH_DISPATCH_CALL, modelType: MCP_COMPACT_DISPATCH_MODEL_TYPE },
     effectiveReadOnly: true,
@@ -84,7 +93,7 @@ export function createMcpCompactSearchTool(deps: CreateMcpCompactSearchToolDeps)
     staticHandler: async (args) => {
       const query = typeof args['query'] === 'string' ? args['query'] : '';
       const model = typeof args['model'] === 'string' ? args['model'] : undefined;
-      const kind = args['kind'] === 'read' || args['kind'] === 'write' ? args['kind'] : undefined;
+      const kind = isMcpMethodKind(args['kind']) ? args['kind'] : undefined;
       const limit = typeof args['limit'] === 'number' ? args['limit'] : undefined;
       const found = searchMcpMethods({ entries, view, query, model, kind, limit });
 
@@ -95,7 +104,8 @@ export function createMcpCompactSearchTool(deps: CreateMcpCompactSearchToolDeps)
           kind: method.kind,
           ...(method.modelType == null ? undefined : { model: method.modelType }),
           summary: mcpMethodOneLineSummary(method),
-          params: mcpMethodInputPropertyNames(method)
+          params: mcpMethodInputPropertyNames(method),
+          ...(method.escalatingParams == null ? undefined : { escalatingParams: Object.fromEntries(method.escalatingParams.map((x) => [x.param, x.kind])) })
         }))
       };
 

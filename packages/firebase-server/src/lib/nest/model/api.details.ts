@@ -148,6 +148,34 @@ export interface McpToolDetailsBuilderResult {
  */
 export type McpToolDetailsBuilder = (input: McpToolDetailsBuilderInput) => McpToolDetailsBuilderResult;
 
+// MARK: MCP Hints
+/**
+ * The hints a call gains when the caller sets one of its escalating params. Each field can only raise the call's risk.
+ *
+ * Reserved for the read/write split, not supported yet: `readOnly: false`, for a param that turns a read-only call into a write.
+ */
+export interface McpEscalatingParamHints {
+  /**
+   * Setting the param lets the call delete or overwrite data.
+   */
+  readonly destructive?: true;
+  /**
+   * Setting the param makes the call send a real message or change state in a third-party service.
+   */
+  readonly openWorld?: true;
+}
+
+/**
+ * Maps a handler's top-level input params to the hints a call gains when the caller sets that param to anything other than
+ * `null`, `undefined` or `false`.
+ *
+ * @example
+ * ```ts
+ * escalatingParams: { sendProbe: { openWorld: true } }
+ * ```
+ */
+export type McpEscalatingParams = Readonly<Record<string, McpEscalatingParamHints>>;
+
 // MARK: Handler-Level API Details
 /**
  * Context object passed as the second argument to the {@link OnCallModelFunctionMcpDetails}
@@ -198,8 +226,39 @@ export interface OnCallModelFunctionMcpDetailsCommon {
    * When unset, the framework infers from the call type: `read` and `query` → true,
    * `create`/`update`/`delete` → false, anything else → undefined (treated as a write
    * for fail-safe filtering when `McpModuleConfig.readOnly` is on).
+   *
+   * A call that is not read-only is further classified by {@link destructive} / {@link openWorld}.
    */
   readonly readOnly?: boolean;
+  /**
+   * Explicit override for whether this handler's call may delete or overwrite data. Ignored when the call is read-only.
+   *
+   * When unset, the framework infers it from the call type: `create` → false (additive), everything else (`update`, `delete`,
+   * `invoke`, custom verbs) → true (fail-safe). Advertised as the MCP `destructiveHint`. On the compact surface a destructive
+   * call runs only through `<app>_mcp_destructive`; set `false` on an additive update or invoke (an append, a like, a
+   * reversible preference, a recompute of derived data) to keep it on `<app>_mcp_write`.
+   */
+  readonly destructive?: boolean;
+  /**
+   * Whether this handler's call reaches outside this app.
+   *
+   * On a call that changes data, set it when the call exists to send a real message (email, SMS or push, now or queued) or
+   * to change state in a third-party service. A notification the app's own pipeline sends to subscribers because data
+   * changed doesn't count, and neither does reading from a third-party service. Such a call runs only through
+   * `<app>_mcp_destructive`, like a destructive one. On a read-only call it is only advertised.
+   *
+   * Advertised as the MCP `openWorldHint`; nothing is advertised when unset.
+   */
+  readonly openWorld?: boolean;
+  /**
+   * Params that raise a call's hints when the caller sets them, e.g. `{ sendProbe: { openWorld: true } }` for a health check
+   * that only sends a real test message when asked to. See {@link McpEscalatingParams}.
+   *
+   * A call that sets one runs through the router for its raised kind, and the compact `details` tool marks the param. The
+   * handler's advertised annotations are the worst case over every escalation. Not supported on a read-only call: the tool is
+   * dropped at boot with an error, since a param can't turn a read into a write yet.
+   */
+  readonly escalatingParams?: McpEscalatingParams;
   /**
    * Optional per-request builder that produces enriched tool description / inputSchema
    * for `tools/list`. See {@link McpToolDetailsBuilder}.

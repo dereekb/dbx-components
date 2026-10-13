@@ -30,7 +30,7 @@ export const MCP_ALWAYS_LOAD_META_KEY = 'anthropic/alwaysLoad';
 /**
  * Every compact tool key, in listing order.
  */
-export const MCP_COMPACT_TOOL_KEYS: readonly McpCompactToolKey[] = ['search', 'details', 'read', 'write', 'token', 'documentation'];
+export const MCP_COMPACT_TOOL_KEYS: readonly McpCompactToolKey[] = ['search', 'details', 'read', 'write', 'destructive', 'token', 'documentation'];
 
 /**
  * Derives the compact tool-name prefix from a server name.
@@ -95,6 +95,7 @@ export function resolveMcpCompactToolNames(input: ResolveMcpCompactToolNamesInpu
     details: names?.details ?? `${prefix}_mcp_details`,
     read: names?.read ?? `${prefix}_mcp_read`,
     write: names?.write ?? `${prefix}_mcp_write`,
+    destructive: names?.destructive ?? `${prefix}_mcp_destructive`,
     token: names?.token ?? `${prefix}_mcp_token`,
     documentation: names?.documentation ?? `search_${prefix}_documentation`
   };
@@ -127,7 +128,7 @@ export const MCP_COMPACT_SEARCH_INPUT_SCHEMA = Object.freeze({
   properties: {
     query: { type: 'string', description: "Keywords, e.g. 'create' or 'update status'. May be empty when `model` or `kind` is set to list the matching methods." },
     model: { type: 'string', description: 'Optional model type to restrict results to, e.g. `worker`.' },
-    kind: { type: 'string', enum: ['read', 'write'], description: 'Optional method kind filter.' },
+    kind: { type: 'string', enum: ['read', 'write', 'destructive'], description: 'Optional method kind filter. `destructive` also matches a method that a param can make destructive.' },
     limit: { type: 'integer', minimum: 1, maximum: 50, description: 'Maximum results (default 8).' }
   },
   required: ['query']
@@ -178,6 +179,10 @@ export interface BuildMcpCompactInstructionsInput {
   readonly hasDocumentation: boolean;
   readonly hasToken: boolean;
   readonly methodToolsListed: boolean;
+  /**
+   * Whether the module runs in `readOnly` mode, where only the `read` router is listed.
+   */
+  readonly readOnly?: boolean;
 }
 
 /**
@@ -187,10 +192,12 @@ export interface BuildMcpCompactInstructionsInput {
  * @returns The usage block.
  */
 export function buildMcpCompactInstructions(input: BuildMcpCompactInstructionsInput): string {
-  const { app, names, builtinReadMethods, hasDocumentation, hasToken, methodToolsListed } = input;
-  const parts = [
-    `Use these tools to work with the ${app} API. 1) \`${names.search}\` finds API methods by keyword ('reopen timesheet', 'create worker'). 2) \`${names.details}\` returns a method's parameter schema. 3) Call it with \`${names.read}\` (read-only methods) or \`${names.write}\` (methods that change data), passing \`{ method, params }\`. Method ids look like \`worker.update.schedule\` (model.call.specifier).`
-  ];
+  const { app, names, builtinReadMethods, hasDocumentation, hasToken, methodToolsListed, readOnly } = input;
+  const callStep =
+    readOnly === true
+      ? `3) Call it with \`${names.read}\`, passing \`{ method, params }\`.`
+      : `3) Call it with \`${names.read}\` (read-only methods), \`${names.write}\` (methods that add or change data) or \`${names.destructive}\` (methods that delete or overwrite data, or send real messages), passing \`{ method, params }\`; \`${names.details}\` says which, and which params make a call destructive.`;
+  const parts = [`Use these tools to work with the ${app} API. 1) \`${names.search}\` finds API methods by keyword ('reopen timesheet', 'create worker'). 2) \`${names.details}\` returns a method's parameter schema. ${callStep} Method ids look like \`worker.update.schedule\` (model.call.specifier).`];
 
   if (builtinReadMethods.length > 0) {
     const quoted = builtinReadMethods.map((x) => `\`${x}\``).join(', ');
@@ -351,7 +358,7 @@ export function planMcpToolSurface(input: PlanMcpToolSurfaceInput): McpToolSurfa
     alwaysLoad.add(additional.definition);
   }
 
-  const batchPromoted = batchName != null && isSelected({ id: batchName, aliases: [], kind: 'write', source: 'builtin' });
+  const batchPromoted = batchName != null && isSelected({ id: batchName, aliases: [], kind: 'destructive', source: 'builtin' });
   const methodCandidates = registry.methods.map((x) => x.definition);
 
   return { methodCandidates, standaloneTools, registry, promoted, alwaysLoad, batchPromoted, errors, warnings };
@@ -479,9 +486,19 @@ export interface McpAdditionalToolConfig<I = Record<string, unknown>> {
   readonly inputSchema?: object;
   readonly outputSchema?: object;
   /**
-   * Whether the tool only reads. Decides whether it runs through `read` or `write` and its annotations.
+   * Whether the tool only reads. A tool that is not read-only runs through `destructive`, unless it declares
+   * `destructive: false` and is not `openWorld`, in which case it runs through `write`.
    */
   readonly readOnly: boolean;
+  /**
+   * Whether a tool that is not read-only may delete or overwrite data. Unset leaves it unclassified: advertised
+   * `destructiveHint: true` and routed through `destructive` (fail-safe).
+   */
+  readonly destructive?: boolean;
+  /**
+   * Whether the tool sends real messages or changes state in a third-party service. Advertised as `openWorldHint` when set.
+   */
+  readonly openWorld?: boolean;
   readonly visibility?: McpVisibilityRule;
   readonly requiredScopeTerms?: readonly OidcScopeTerm[];
   readonly expose: McpAdditionalToolExpose;
@@ -500,7 +517,7 @@ export interface McpAdditionalToolConfig<I = Record<string, unknown>> {
  * ```
  */
 export function mcpAdditionalTool<I = Record<string, unknown>>(config: McpAdditionalToolConfig<I>): McpAdditionalTool {
-  const { name, description, inputType, outputSchema, readOnly, visibility, requiredScopeTerms, expose, handler } = config;
+  const { name, description, inputType, outputSchema, readOnly, destructive, openWorld, visibility, requiredScopeTerms, expose, handler } = config;
   const inputSchema = config.inputSchema ?? (inputType == null ? { type: 'object' } : (arktypeToJsonSchemaForExport(inputType as unknown as Type<unknown>) as object));
   const dispatch = { call: name, modelType: 'app' };
 
@@ -511,6 +528,8 @@ export function mcpAdditionalTool<I = Record<string, unknown>>(config: McpAdditi
     outputSchema,
     dispatch,
     effectiveReadOnly: readOnly,
+    destructive,
+    openWorld,
     rule: visibility,
     requiredScopeTerms,
     staticHandler: async (args, ctx) => {

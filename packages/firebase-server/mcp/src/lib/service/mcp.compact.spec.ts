@@ -1,8 +1,9 @@
 import { buildMcpCompactInstructions, MCP_CLIENT_TEXT_MAX_LENGTH, MCP_TOOL_NAME_PREFIX_MAX_LENGTH, mcpAdditionalTool, planMcpToolSurface, resolveMcpCompactToolNames, resolveMcpToolNamePrefix } from './mcp.compact';
 import { buildStaticToolDefinition, type McpToolDefinition } from './mcp.tool-generator';
 
-function makeTool(name: string, readOnly = true, dispatch?: { call: string; modelType: string; specifier?: string }): McpToolDefinition {
-  return buildStaticToolDefinition({ name, description: name, inputSchema: { type: 'object' }, dispatch: dispatch ?? { call: name, modelType: 'builtin' }, effectiveReadOnly: readOnly, staticHandler: async () => ({ content: [] }) });
+function makeTool(name: string, readOnly = true, target?: { call: string; modelType: string; specifier?: string; destructive?: boolean }): McpToolDefinition {
+  const { destructive, ...dispatch } = target ?? { call: name, modelType: 'builtin' };
+  return buildStaticToolDefinition({ name, description: name, inputSchema: { type: 'object' }, dispatch, effectiveReadOnly: readOnly, destructive, staticHandler: async () => ({ content: [] }) });
 }
 
 describe('resolveMcpToolNamePrefix()', () => {
@@ -20,7 +21,7 @@ describe('resolveMcpToolNamePrefix()', () => {
 
 describe('resolveMcpCompactToolNames()', () => {
   it('should resolve the default names', () => {
-    expect(resolveMcpCompactToolNames({ prefix: 'demo' })).toEqual({ search: 'demo_mcp_search', details: 'demo_mcp_details', read: 'demo_mcp_read', write: 'demo_mcp_write', token: 'demo_mcp_token', documentation: 'search_demo_documentation' });
+    expect(resolveMcpCompactToolNames({ prefix: 'demo' })).toEqual({ search: 'demo_mcp_search', details: 'demo_mcp_details', read: 'demo_mcp_read', write: 'demo_mcp_write', destructive: 'demo_mcp_destructive', token: 'demo_mcp_token', documentation: 'search_demo_documentation' });
   });
 
   it('should apply overrides', () => {
@@ -42,6 +43,7 @@ describe('resolveMcpCompactToolNames()', () => {
 
   it('should throw for a duplicate override', () => {
     expect(() => resolveMcpCompactToolNames({ prefix: 'demo', names: { read: 'demo_mcp_write' } })).toThrow();
+    expect(() => resolveMcpCompactToolNames({ prefix: 'demo', names: { destructive: 'demo_mcp_write' } })).toThrow();
   });
 });
 
@@ -51,15 +53,25 @@ describe('buildMcpCompactInstructions()', () => {
     const text = buildMcpCompactInstructions({ app: 'a'.repeat(MCP_TOOL_NAME_PREFIX_MAX_LENGTH), names, builtinReadMethods: ['model-get', 'model-roles', 'url-models', 'model-info', 'model-decode', 'enum-info', 'whoami', 'docs-read'], hasDocumentation: true, hasToken: true, methodToolsListed: true });
     expect(text.length).toBeLessThan(MCP_CLIENT_TEXT_MAX_LENGTH);
     expect(text).toContain(names.search);
+    expect(text).toContain(names.destructive);
     expect(text).toContain(names.documentation);
     expect(text).toContain('Per-method tools are also listed.');
+  });
+
+  it('should only name the read router in readOnly mode', () => {
+    const names = resolveMcpCompactToolNames({ prefix: 'demo' });
+    const text = buildMcpCompactInstructions({ app: 'demo', names, builtinReadMethods: [], hasDocumentation: false, hasToken: false, methodToolsListed: false, readOnly: true });
+    expect(text).toContain(names.read);
+    expect(text).not.toContain(names.write);
+    expect(text).not.toContain(names.destructive);
   });
 });
 
 describe('planMcpToolSurface()', () => {
   const compactNames = resolveMcpCompactToolNames({ prefix: 'demo' });
   const generatedRead = makeTool('guestbook-read', true, { call: 'read', modelType: 'guestbook' });
-  const generatedCreate = makeTool('guestbook-create', false, { call: 'create', modelType: 'guestbook' });
+  const generatedCreate = makeTool('guestbook-create', false, { call: 'create', modelType: 'guestbook', destructive: false });
+  const unclassifiedWrite = makeTool('guestbook-sync', false, { call: 'invoke', modelType: 'guestbook', specifier: 'sync' });
   const builtin = makeTool('model-get');
 
   it('should promote nothing by default', () => {
@@ -86,6 +98,18 @@ describe('planMcpToolSurface()', () => {
   it('should promote by predicate', () => {
     const plan = planMcpToolSurface({ compact: true, methodTools: (method) => method.kind === 'write', compactNames, generated: [generatedRead, generatedCreate], builtins: [builtin] });
     expect([...plan.promoted]).toEqual([generatedCreate]);
+  });
+
+  it('should select an unclassified write with a destructive predicate', () => {
+    const plan = planMcpToolSurface({ compact: true, methodTools: (method) => method.kind === 'destructive', compactNames, generated: [generatedRead, generatedCreate, unclassifiedWrite], builtins: [builtin] });
+    expect([...plan.promoted]).toEqual([unclassifiedWrite]);
+  });
+
+  it('should treat the batch tool as destructive for a predicate', () => {
+    const destructivePlan = planMcpToolSurface({ compact: true, methodTools: (method) => method.kind === 'destructive', compactNames, generated: [], builtins: [], batchName: 'batch-execute' });
+    const writePlan = planMcpToolSurface({ compact: true, methodTools: (method) => method.kind === 'write', compactNames, generated: [], builtins: [], batchName: 'batch-execute' });
+    expect(destructivePlan.batchPromoted).toBe(true);
+    expect(writePlan.batchPromoted).toBe(false);
   });
 
   it('should not promote a built-in whose name collides with a generated tool in legacy mode', () => {
@@ -117,10 +141,20 @@ describe('planMcpToolSurface()', () => {
       const collidesWithMethod = mcpAdditionalTool({ name: 'guestbook.read', description: 'x', readOnly: true, expose: 'tool', handler });
       const collidesWithAlias = mcpAdditionalTool({ name: 'guestbook-read', description: 'x', readOnly: true, expose: 'tool', handler });
       const collidesWithCompact = mcpAdditionalTool({ name: 'demo_mcp_read', description: 'x', readOnly: true, expose: 'tool', handler });
-      const plan = planMcpToolSurface({ compact: true, methodTools: undefined, compactNames, generated: [generatedRead], builtins: [], additional: [dotted, collidesWithMethod, collidesWithAlias, collidesWithCompact] });
+      const collidesWithDestructive = mcpAdditionalTool({ name: 'demo_mcp_destructive', description: 'x', readOnly: false, expose: 'tool', handler });
+      const plan = planMcpToolSurface({ compact: true, methodTools: undefined, compactNames, generated: [generatedRead], builtins: [], additional: [dotted, collidesWithMethod, collidesWithAlias, collidesWithCompact, collidesWithDestructive] });
 
       expect(plan.standaloneTools).toEqual([]);
-      expect(plan.errors.length).toBe(4);
+      expect(plan.errors.length).toBe(5);
+    });
+
+    it('should classify a write tool as destructive unless it declares destructive: false', () => {
+      const unclassified = mcpAdditionalTool({ name: 'demo_recount', description: 'Recount.', readOnly: false, expose: 'tool', handler });
+      const additive = mcpAdditionalTool({ name: 'demo_tally', description: 'Tally.', readOnly: false, destructive: false, expose: 'tool', handler });
+
+      expect(unclassified.definition.annotations).toEqual({ readOnlyHint: false, destructiveHint: true });
+      expect(unclassified.definition.description).toBe('[WRITE] Recount.');
+      expect(additive.definition.annotations).toEqual({ readOnlyHint: false, destructiveHint: false });
     });
 
     it('should format handler results like a callModel result', async () => {

@@ -59,7 +59,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             });
 
             it('patches entry data through the entry method', async () => {
-              const result = await callMcpMethod({ f, u: au, kind: 'write', method: entryMethod, params: { key: ntb.documentKey, i: DEMO_PING_NOTIFICATION_TASK_BOT_ENTRY_ID, updateData: { pa: 5 } } });
+              const result = await callMcpMethod({ f, u: au, kind: 'destructive', method: entryMethod, params: { key: ntb.documentKey, i: DEMO_PING_NOTIFICATION_TASK_BOT_ENTRY_ID, updateData: { pa: 5 } } });
               const entry = await ntb.assertEntry();
 
               expect(result.isError).toBeUndefined();
@@ -67,7 +67,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             });
 
             it('reports a refused patch as a tool error naming the problem', async () => {
-              const result = await callMcpMethod({ f, u: au, kind: 'write', method: entryMethod, params: { key: ntb.documentKey, i: DEMO_PING_NOTIFICATION_TASK_BOT_ENTRY_ID, updateData: { iv: -5 } } });
+              const result = await callMcpMethod({ f, u: au, kind: 'destructive', method: entryMethod, params: { key: ntb.documentKey, i: DEMO_PING_NOTIFICATION_TASK_BOT_ENTRY_ID, updateData: { iv: -5 } } });
 
               expect(result.isError).toBe(true);
               expect(JSON.stringify(result.content)).toContain('iv');

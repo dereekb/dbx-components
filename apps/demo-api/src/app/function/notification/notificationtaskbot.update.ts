@@ -38,6 +38,8 @@ export const notificationTaskBotUpdateEntry: DemoUpdateModelFunction<UpdateNotif
 export const notificationTaskBotUpdateRun: DemoUpdateModelFunction<RunNotificationTaskBotEntryParams, RunNotificationTaskBotEntryResult> = withApiDetails({
   inputType: runNotificationTaskBotEntryParamsType,
   mcp: {
+    // Open-world: runs the ping script now by default.
+    openWorld: true,
     visibility: { requiredRoles: [AUTH_ADMIN_ROLE] }
   },
   fn: async (request) => {
@@ -74,6 +76,10 @@ export const notificationTaskBotReadOptOuts: DemoReadModelFunction<ReadNotificat
 
 export const notificationTaskBotUpdateOptOut: DemoUpdateModelFunction<UpdateNotificationTaskBotOptOutParams, NotificationTaskBotOptOutsResult> = withApiDetails({
   inputType: updateNotificationTaskBotOptOutParamsType,
+  mcp: {
+    // Additive: the owner's reversible preference.
+    destructive: false
+  },
   fn: async (request) => {
     const { nest, data } = request;
 

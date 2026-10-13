@@ -33,6 +33,10 @@ export const storageFileCreate: DemoCreateModelFunction<CreateStorageFileParams>
 
 export const storageFileFromUpload: DemoCreateModelFunction<InitializeStorageFileFromUploadParams> = withApiDetails({
   inputType: initializeStorageFileFromUploadParamsType,
+  mcp: {
+    // Destructive: replaces the resume / slot file and flags the previous one for delete.
+    destructive: true
+  },
   fn: async (request) => {
     const { nest, data } = request;
 
@@ -48,6 +52,10 @@ export const storageFileFromUpload: DemoCreateModelFunction<InitializeStorageFil
 
 export const storageFileAllFromUpload: DemoCreateModelFunction<InitializeAllStorageFilesFromUploadsParams, InitializeAllStorageFilesFromUploadsResult> = withApiDetails({
   inputType: initializeAllStorageFilesFromUploadsParamsType,
+  mcp: {
+    // Destructive: the admin bulk form of fromUpload, which replaces files.
+    destructive: true
+  },
   fn: async (request) => {
     const { nest, data } = request;
 

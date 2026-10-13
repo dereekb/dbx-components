@@ -261,7 +261,7 @@ export abstract class McpModuleConfig {
 /**
  * Keys of the compact MCP tools.
  */
-export type McpCompactToolKey = 'search' | 'details' | 'read' | 'write' | 'token' | 'documentation';
+export type McpCompactToolKey = 'search' | 'details' | 'read' | 'write' | 'destructive' | 'token' | 'documentation';
 
 /**
  * Resolved compact tool names, keyed by {@link McpCompactToolKey}.
@@ -273,7 +273,7 @@ export type McpCompactToolNames = Readonly<Record<McpCompactToolKey, string>>;
  */
 export interface McpToolsConfig {
   /**
-   * Advertise the compact, Stripe-like surface: `search` → `details` → `read` / `write` over every visible
+   * Advertise the compact, Stripe-like surface: `search` → `details` → `read` / `write` / `destructive` over every visible
    * method, plus the `token` and `documentation` tools when available.
    *
    * Defaults to `true`.
@@ -295,7 +295,7 @@ export interface McpToolsConfig {
   readonly names?: Partial<Record<McpCompactToolKey, string>>;
   /**
    * `_meta` merged onto each compact tool's `tools/list` entry, e.g.
-   * `{ token: { 'anthropic/requiresUserInteraction': true } }`.
+   * `{ destructive: { 'anthropic/requiresUserInteraction': true } }`.
    */
   readonly meta?: Partial<Record<McpCompactToolKey, Record<string, unknown>>>;
   /**
@@ -308,7 +308,7 @@ export interface McpToolsConfig {
  * How an app-supplied tool is exposed.
  *
  * - `tool` — listed as its own tool next to the compact tools.
- * - `method` — reachable only as a method through `search` / `details` / `read` / `write`.
+ * - `method` — reachable only as a method through `search` / `details` / `read` / `write` / `destructive`.
  * - `both` — listed as a tool and reachable as a method.
  */
 export type McpAdditionalToolExpose = 'tool' | 'method' | 'both';

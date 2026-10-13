@@ -1,6 +1,7 @@
 import { CLIENT_CAPABILITIES_META_KEY, CLIENT_INFO_META_KEY, PROTOCOL_VERSION_META_KEY, createMcpHandler } from '@modelcontextprotocol/server';
 import { type Request as ExpressRequest } from 'express';
 import { type FirebaseServerAuthData } from '@dereekb/firebase-server';
+import { type McpMethodKind } from './mcp.method';
 import { type McpServerFactoryService } from './mcp.server.factory';
 
 /**
@@ -181,7 +182,7 @@ export interface DispatchMcpMethodCallInput {
   /**
    * Which compact router to call through.
    */
-  readonly kind: 'read' | 'write';
+  readonly kind: McpMethodKind;
   /**
    * The method id or alias.
    */
@@ -197,7 +198,7 @@ export interface DispatchMcpMethodCallInput {
 }
 
 /**
- * Builds a server and runs one method through the compact `read` / `write` router.
+ * Builds a server and runs one method through the compact `read` / `write` / `destructive` router.
  *
  * @param input - The factory, context, router kind, method, and params.
  * @returns The `CallToolResult` payload, shaped by the caller.

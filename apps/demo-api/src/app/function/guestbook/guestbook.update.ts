@@ -5,6 +5,10 @@ import { AUTH_ADMIN_ROLE } from '@dereekb/util';
 
 export const guestbookSubscribeToNotifications: DemoUpdateModelFunction<SubscribeToGuestbookNotificationsParams> = withApiDetails({
   inputType: subscribeToGuestbookNotificationsParamsType,
+  mcp: {
+    // Additive: inserts a notification box recipient and never overwrites one.
+    destructive: false
+  },
   fn: async (request) => {
     const { nest, auth, data: inputData } = request;
 

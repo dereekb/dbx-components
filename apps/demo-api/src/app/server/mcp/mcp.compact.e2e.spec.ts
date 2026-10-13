@@ -59,7 +59,8 @@ async function searchDocIds(f: DemoApiFunctionContextFixture, u: DemoApiAuthoriz
 
 /**
  * End-to-end coverage for demo-api's compact, Stripe-like MCP surface (`toolNamePrefix: 'demo'`, compact only):
- * `demo_mcp_search` → `demo_mcp_details` → `demo_mcp_read` / `demo_mcp_write`, the token and documentation tools, and
+ * `demo_mcp_search` → `demo_mcp_details` → `demo_mcp_read` / `demo_mcp_write` / `demo_mcp_destructive`, the token and
+ * documentation tools, and
  * the app-supplied `demo_api_status` tool, all driven through the real dispatch chain.
  *
  * The security invariant under test: the compact tools resolve methods against the caller's VISIBLE view only. A
@@ -85,16 +86,18 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             expect(names.details).toBe('demo_mcp_details');
             expect(names.read).toBe('demo_mcp_read');
             expect(names.write).toBe('demo_mcp_write');
+            expect(names.destructive).toBe('demo_mcp_destructive');
             expect(names.documentation).toBe('search_demo_documentation');
 
-            for (const name of [names.search, names.details, names.read, names.write]) {
+            for (const name of [names.search, names.details, names.read, names.write, names.destructive]) {
               const tool = byName.get(name);
               expect(tool).toBeDefined();
               expect((tool as { readonly _meta?: Record<string, unknown> })._meta?.[MCP_ALWAYS_LOAD_META_KEY]).toBe(true);
             }
 
             expect(byName.get(names.read)?.annotations?.readOnlyHint).toBe(true);
-            expect(byName.get(names.write)?.annotations?.readOnlyHint).not.toBe(true);
+            expect(byName.get(names.write)?.annotations).toEqual({ readOnlyHint: false, destructiveHint: false });
+            expect(byName.get(names.destructive)?.annotations).toEqual({ readOnlyHint: false, destructiveHint: true, openWorldHint: true });
           });
 
           it('never lists a method as its own legacy tool (compact only)', () => {
@@ -178,7 +181,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           });
         });
 
-        describe('read / write permission boundary', () => {
+        describe('read / write / destructive permission boundary', () => {
           it('rejects a write method called through the read tool, naming the write tool', async () => {
             const result = await callMcpMethod({ f, u, kind: 'read', method: 'guestbook.create', params: { name: 'neverCreated' } });
 
@@ -195,6 +198,44 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             expect(resultText(result)).toContain(mcpCompactToolNames(f).read);
           });
 
+          it('rejects a destructive method called through the write tool before dispatch, naming the destructive tool', async () => {
+            const result = await callMcpMethod({ f, u, kind: 'write', method: 'profile.delete', params: { key: 'profile/none' } });
+
+            expect(result.isError).toBe(true);
+            expect(resultText(result)).toContain('is a destructive method');
+            expect(resultText(result)).toContain(mcpCompactToolNames(f).destructive);
+          });
+
+          it('rejects a write method called through the destructive tool, naming the write tool', async () => {
+            const result = await callMcpMethod({ f, u, kind: 'destructive', method: 'guestbook.create', params: { name: 'neverCreated' } });
+
+            expect(result.isError).toBe(true);
+            expect(resultText(result)).toContain('is a write method');
+            expect(resultText(result)).toContain(mcpCompactToolNames(f).write);
+          });
+
+          it('refuses a call that sets an escalating param through the write tool, naming the param', async () => {
+            const names = mcpCompactToolNames(f);
+            const probe = await callMcpMethod({ f, u, kind: 'write', method: 'notificationUser.invoke.healthCheck', params: { key: `notificationUser/${u.uid}`, sendProbe: true } });
+            const restart = await callMcpMethod({ f, u, kind: 'write', method: 'storageFile.update.process', params: { key: 'storageFile/missing', forceRestartProcessing: true } });
+
+            expect(probe.isError).toBe(true);
+            expect(resultText(probe)).toContain('`sendProbe`');
+            expect(resultText(probe)).toContain(names.destructive);
+            expect(restart.isError).toBe(true);
+            expect(resultText(restart)).toContain('`forceRestartProcessing`');
+          });
+
+          it('lists destructive methods, including one a param makes destructive', async () => {
+            const found = await searchMcpMethods({ f, u, query: '', kind: 'destructive', limit: 50 });
+            const ids = found.methods.map((x) => x.method);
+            const healthCheck = found.methods.find((x) => x.method === 'notificationUser.invoke.healthCheck');
+
+            expect(ids).toContain('profile.delete');
+            expect(ids).not.toContain('guestbook.create');
+            expect(healthCheck?.escalatingParams).toEqual({ sendProbe: 'destructive' });
+          });
+
           it('classifies the mcp.readOnly invokes as read methods', async () => {
             const entryDetails = await describeMcpMethod({ f, u, method: 'guestbookEntry.invoke.entryDetails' });
             const allPublished = await describeMcpMethod({ f, u, method: LMS_GATED_METHOD });
@@ -204,9 +245,16 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             expect(allPublished.details?.kind).toBe('read');
           });
 
-          it('keeps notificationUser.invoke.healthCheck a write method (it persists its result and can send a probe)', async () => {
+          it('keeps notificationUser.invoke.healthCheck a write method whose `sendProbe` makes a call destructive', async () => {
+            const names = mcpCompactToolNames(f);
             const { details } = await describeMcpMethod({ f, u, method: 'notificationUser.invoke.healthCheck' });
+            const sendProbeSchema = (details?.inputSchema as { readonly properties?: Record<string, { readonly description?: string }> } | undefined)?.properties?.['sendProbe'];
+
             expect(details?.kind).toBe('write');
+            expect(details?.invokeWith).toBe(names.write);
+            expect(details?.escalatingParams?.['sendProbe']).toEqual({ kind: 'destructive', invokeWith: names.destructive, hints: { openWorld: true } });
+            expect(sendProbeSchema?.description).toContain(names.destructive);
+            expect(details?.annotations).toEqual({ readOnlyHint: false, destructiveHint: false, openWorldHint: true });
           });
 
           describe('readOnly invoke through the read tool', () => {
@@ -233,7 +281,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             for (const method of ADMIN_ONLY_TASKBOT_METHODS) {
               expect(ids).toContain(method);
               const { details } = await describeMcpMethod({ f, u, method });
-              expect(details?.kind).toBe('write');
+              expect(details?.kind).toBe('destructive');
             }
           });
 
@@ -292,13 +340,14 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
     describe('non-admin caller', () => {
       demoAuthorizedUserContext({ f }, (u) => {
-        it('is offered the compact read and write tools (positive control)', async () => {
+        it('is offered the compact read, write and destructive tools (positive control)', async () => {
           const names = new Set((await listMcpTools(f, u)).map((x) => x.name));
           const compactNames = mcpCompactToolNames(f);
 
           expect(names.has(compactNames.search)).toBe(true);
           expect(names.has(compactNames.read)).toBe(true);
           expect(names.has(compactNames.write)).toBe(true);
+          expect(names.has(compactNames.destructive)).toBe(true);
         });
 
         it('never finds the admin-only taskbot methods through search', async () => {
@@ -323,12 +372,12 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           }
         });
 
-        it('cannot run an admin-only method through the write tool', async () => {
-          const result = await callMcpMethod({ f, u, kind: 'write', method: 'notificationTaskBot.update.run', params: { key: 'notificationTaskBot/missing' } });
+        it('cannot run an admin-only method through the destructive tool', async () => {
+          const result = await callMcpMethod({ f, u, kind: 'destructive', method: 'notificationTaskBot.update.run', params: { key: 'notificationTaskBot/missing' } });
 
           expect(result.isError).toBe(true);
           expect(resultText(result)).toContain('Unknown method');
-          expect(resultText(result)).not.toContain('is a write method');
+          expect(resultText(result)).not.toContain('is a destructive method');
         });
 
         describe('documentation tool', () => {
