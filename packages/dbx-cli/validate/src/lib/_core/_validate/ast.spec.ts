@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Node, SyntaxKind, type Identifier } from 'ts-morph';
-import { buildDereekbImportIndex, buildInMemoryProject, findSoleReturnExpression, isDereekbModuleSpecifier, readArrayElementTypeNode, readCalleeName, readImportedReference, readTypeReferenceName, resolveLocalVariable, unwrapOuterExpressions, type ImportedReference } from './ast.js';
+import { buildDereekbImportIndex, buildInMemoryProject, findSoleReturnExpression, isDereekbModuleSpecifier, readArrayElementTypeNode, readCalleeName, readImportedReference, readTypeReferenceName, resolveLocalValue, resolveLocalVariable, unwrapOuterExpressions, type ImportedReference } from './ast.js';
 
 /**
  * Reads the resolved callee name of every call in a one-file project, in source order.
@@ -411,5 +411,58 @@ describe('findSoleReturnExpression()', () => {
     ['nothing for a value that is not a function', 'const probe = build;', undefined]
   ])('reads %s', (_label, text, expected) => {
     expect(soleReturnOf(text)).toBe(expected);
+  });
+});
+
+/**
+ * Resolves the identifier of every `return <identifier>;` in a one-file project through {@link resolveLocalValue}, in source
+ * order.
+ *
+ * @param text - The file's source text.
+ * @returns What each reference is bound to: `variable <initializer>`, `function at line <n>`, `import <name> from <module>`,
+ *   or `ambiguous` / `none`.
+ */
+function bindingsOf(text: string): string[] {
+  const { apiSources } = buildInMemoryProject({ component: { files: [] }, api: { files: [{ relPath: 'a.ts', text }] } });
+  const imports = buildDereekbImportIndex(apiSources);
+  return apiSources[0]
+    .getDescendantsOfKind(SyntaxKind.ReturnStatement)
+    .map((x) => x.getExpression())
+    .filter((x): x is Identifier => x !== undefined && Node.isIdentifier(x))
+    .map((reference) => {
+      const resolution = resolveLocalValue(reference, imports);
+      let result: string = resolution.kind;
+      if (resolution.kind === 'variable') {
+        result = `variable ${resolution.declaration.getInitializer()?.getText()}`;
+      } else if (resolution.kind === 'function') {
+        result = `function at line ${resolution.declaration.getStartLineNumber()}`;
+      } else if (resolution.kind === 'import') {
+        const { declaration } = resolution;
+        const name = Node.isImportSpecifier(declaration) ? declaration.getName() : 'default';
+        result = `import ${name} from ${declaration.getFirstAncestorByKindOrThrow(SyntaxKind.ImportDeclaration).getModuleSpecifierValue()}`;
+      }
+      return result;
+    });
+}
+
+describe('resolveLocalValue()', () => {
+  it.each<[string, string, string[]]>([
+    ['reads a top-level function declared after the reference', `function f() { return h; }\nfunction h() { return null; }`, ['function at line 2']],
+    ['reads an overloaded function as its implementation', `function h(a: string): string;\nfunction h(a: number): number;\nfunction h(a: any) { return a; }\nfunction f() { return h; }`, ['none', 'function at line 3']],
+    ['reads a named or default import, aliased or not', `import { h } from './h';\nimport { x as k } from './x';\nimport d from './d';\nfunction f() { return h; }\nfunction g() { return k; }\nfunction m() { return d; }`, ['import h from ./h', 'import x from ./x', 'import default from ./d']],
+    ['reads a const holding a function as a variable', `const h = () => a();\nfunction f() { return h; }`, ['variable () => a()']],
+    ['reads a nested function declaration as none', `function f() { function h() { return null; } return h; }`, ['none']],
+    ['reads a bodiless function as none', `declare function h(): void;\nfunction f() { return h; }`, ['none']],
+    ['reads a namespace or type-only import as none', `import * as n from './n';\nimport type { t } from './t';\nimport { type u } from './u';\nfunction g() { return n; }\nfunction k() { return t; }\nfunction m() { return u; }`, ['none', 'none', 'none']],
+    ['reads a name the file never binds as none', `function f() { return h; }`, ['none']],
+    ['reads a parameter that shadows a top-level function as ambiguous', `function h() { return null; }\nfunction f(h: unknown) { return h; }`, ['ambiguous']],
+    ['reads a parameter that shadows an import as ambiguous', `import { h } from './h';\nfunction f(h: unknown) { return h; }`, ['ambiguous']],
+    ['reads a const that shadows a top-level function as ambiguous', `function h() { return null; }\nfunction f() { const h = a(); return h; }`, ['ambiguous']]
+  ])('%s', (_label, text, expected) => {
+    expect(bindingsOf(text)).toEqual(expected);
+  });
+
+  it('reads a parameter that shadows a top-level function as ambiguous through resolveLocalVariable too', () => {
+    expect(resolutionsOf(`function h() { return null; }\nfunction f(h: unknown) { return h; }`)).toEqual(['ambiguous']);
   });
 });

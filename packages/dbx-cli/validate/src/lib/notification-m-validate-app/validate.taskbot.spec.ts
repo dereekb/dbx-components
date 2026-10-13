@@ -429,10 +429,12 @@ describe('NotificationTaskBot checks — handler', () => {
       (p: FixtureParts) => {
         replaceInFile(p.api, TASK_SERVICE_FILE, ', notificationTaskBotHandler]', ', ...taskBotHandlers(context)]');
         replaceInFile(p.api, HANDLER_FILE, 'export function demoNotificationTaskBotRunNotificationTaskHandler', 'export function taskBotHandlers(context) {\n  return [demoNotificationTaskBotRunNotificationTaskHandler(context)];\n}\n\nexport function demoNotificationTaskBotRunNotificationTaskHandler');
+        replaceInFile(p.api, TASK_SERVICE_FILE, '{ demoNotificationTaskBotRunNotificationTaskHandler }', '{ demoNotificationTaskBotRunNotificationTaskHandler, taskBotHandlers }');
       }
     ]
   ])('accepts the NTBR handler written %s', (_label, modify) => {
     expect(taskBotCodes(runWith(modify))).toEqual([]);
+    expect(selectTaskBotRunHandlerCalls(extractAppNotifications(inspectionOf(modify))).reachable).toHaveLength(1);
   });
 });
 

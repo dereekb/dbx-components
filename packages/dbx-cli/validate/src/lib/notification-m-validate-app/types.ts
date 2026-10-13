@@ -319,9 +319,11 @@ export interface ExtractedTaskServiceCall {
   /**
    * Binding names (variable identifiers) reachable through the
    * `handlers:` array — direct elements, spreads, and chains followed
-   * through function returns and through the initializer of the local
-   * variable each identifier means (the one declaration of its name in
-   * scope where it is used) until a typed
+   * through the return of the API function each identifier is bound to
+   * where it is used (a function its file declares, or a top-level `const`
+   * of the file holds, or one it imports from another API file) and through
+   * the initializer of the local variable it means there (the one
+   * declaration of its name in scope) until a typed
    * `NotificationTaskServiceTaskHandlerConfig<...>` object literal is
    * reached. A local holding an arrow function or function expression that
    * returns from one place is followed through its return, like a function,
@@ -332,15 +334,14 @@ export interface ExtractedTaskServiceCall {
    */
   readonly resolvedHandlerBindings: readonly string[];
   /**
-   * Identifiers the `handlers:` trace could not follow, each listed once: a name with no local variable declaration in scope
-   * where it is used (a parameter, a destructured name, or a name only another function declares), and no function or
-   * `@dereekb/*` import behind it, plus each local or function whose value leads only to such names (or to an object
-   * literal that isn't a typed handler config, or an empty array). A local or function whose value ends at an upstream
-   * handler factory call or at an opaque value ({@link opaqueHandlerValues}) is not listed. The trace walks each local and
-   * function once, and reaching one again reads what that walk found. Two revisits are listed anyway: one while the walk
-   * is still running (a cycle), and one of a function name more than one API function declares (it may mean another of
-   * them). The rules pass warns (`NOTIF_TASK_HANDLER_SPREAD_UNRESOLVED`) for each name that is neither trust-listed nor a
-   * resolved binding.
+   * Identifiers the `handlers:` trace could not follow, each listed once: a name bound, where it is used, to no local
+   * variable, API function or `@dereekb/*` import (a parameter, a destructured name, a name only another function or file
+   * declares, or an import the scan can't pin to one API function), plus each local or function whose value leads only to
+   * such names (or to an object literal that isn't a typed handler config, or an empty array). A local or function whose
+   * value ends at an upstream handler factory call or at an opaque value ({@link opaqueHandlerValues}) is not listed. The
+   * trace walks each local and function once, and reaching one again reads what that walk found, except while the walk is
+   * still running (a cycle), which is listed. The rules pass warns (`NOTIF_TASK_HANDLER_SPREAD_UNRESOLVED`) for each name
+   * that is neither trust-listed nor a resolved binding.
    */
   readonly unresolvedHandlerBindings: readonly string[];
   /**
@@ -429,8 +430,8 @@ export interface ExtractedTaskServiceCall {
    * namespace member (`obj.fn(...)`, `fn(...)(...)`), any expression other than an identifier, call, array or object
    * literal once parentheses, `!`, `as` / `<T>` casts and `satisfies` are stripped (a conditional, a property read, an
    * arrow function written inline, …), a function held in a local that can return from more than one place, and a name
-   * with more than one declaration in scope where it is used (a local plus a same-named parameter, import or outer
-   * local), so the scan can't tell which one it means. The text is collapsed and truncated.
+   * with more than one declaration in scope where it is used (a local or function plus a same-named parameter, import or
+   * outer local), so the scan can't tell which one it means. The text is collapsed and truncated.
    * An opaque value ends the trace: the locals and functions that lead to it are not listed in
    * {@link unresolvedHandlerBindings}. When the list is non-empty, the upstream handler checks skip the service.
    */

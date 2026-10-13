@@ -3,7 +3,8 @@
  *
  * All component + API files land in a single in-memory ts-morph
  * `Project`; extraction resolves spreads and factory-call references by
- * symbol-name lookup inside that project — no language service.
+ * symbol-name lookup inside that project (the handlers trace by binding,
+ * below) — no language service.
  *
  * External imports (`@dereekb/*`) are tracked in a trust-list so rules
  * can suppress "unresolved" / "orphan" diagnostics for identifiers that
@@ -15,9 +16,13 @@
  *
  * The handlers trace resolves an identifier to the local variable
  * declaration in scope where it is used (`resolveLocalVariable`); a name
- * with more than one declaration in scope there is opaque. It records each
- * typed handler config declaration it reaches (`reachedTaskHandlerEntries`),
- * so the rules match declared configs by declaration, not by binding name.
+ * with more than one declaration in scope there is opaque. It follows a
+ * call or reference to the API function the name is bound to there
+ * (`resolveApiFunctionReference`): a function its file declares, or one it
+ * imports from another API file, never a same-named function elsewhere.
+ * It records each typed handler config declaration it reaches
+ * (`reachedTaskHandlerEntries`), so the rules match declared configs by
+ * declaration, not by binding name.
  * It strips parentheses, `!`, `as` / `<T>` casts and `satisfies` around a
  * value (`unwrapOuterExpressions`), and follows a local holding an arrow
  * function or function expression that returns from one place
@@ -98,7 +103,7 @@ import type {
   NotificationDeliveryMethodName,
   UserConfigurableDeliveryMethodsSource
 } from './types.js';
-import { type ApiFunctionIndex, buildApiFunctionIndex } from './extract.function-index.js';
+import { type ApiFunctionIndex, buildApiFunctionIndex, resolveApiFunctionReference } from './extract.function-index.js';
 import { extractAppNotificationTaskBot } from './extract.taskbot.js';
 import { extractUpstreamHandlerCalls, UPSTREAM_NOTIFICATION_TASK_AGGREGATES, UPSTREAM_NOTIFICATION_TASK_TYPE_CONSTANTS, upstreamHandlerFactoryOf } from './extract.upstream.js';
 
@@ -1356,7 +1361,8 @@ function collectHandlerBindingsFromArrayLiteral(arr: Node, options: CollectHandl
  */
 interface CollectHandlerBindingsFromIdentifierOptions extends HandlerBindingCollectorContext {
   /**
-   * The identifier to follow. Where it sits decides which declaration of its name it means (`resolveLocalVariable`).
+   * The identifier to follow. Where it sits decides which declaration of its name it means (`resolveLocalVariable`,
+   * `resolveApiFunctionReference`).
    */
   readonly identifier: Identifier;
 }
@@ -1443,19 +1449,19 @@ function isHandlerConfigLeafDecl(decl: VariableDeclaration, imports: DereekbImpo
 }
 
 /**
- * Follows {@link CollectHandlerBindingsFromIdentifierOptions.identifier} to the API function of that name and walks its
- * return value (`collectHandlerBindingsFromFunction`). The function is looked up by name across the API files. Each
- * function is walked once per trace, whether this path or a local that holds it reaches it first.
+ * Follows {@link CollectHandlerBindingsFromIdentifierOptions.identifier} to the API function it is bound to where it is
+ * used (`resolveApiFunctionReference`) and walks its return value (`collectHandlerBindingsFromFunction`). Each function
+ * is walked once per trace, whether this path or a local that holds it reaches it first. A name bound to more than one
+ * declaration in scope is the local lookup's to record (`tryResolveLocalHandlerBinding`), so it is not followed here.
  *
  * @param options - The identifier and the collector context.
- * @returns `true` when the function's return value ended at something the trace recorded.
+ * @returns `true` when the function's return value ended at something the trace recorded. `false` when the name is bound
+ *   to no API function there (a parameter, a variable that holds no function, an import the scan can't pin to one API
+ *   function), or the function's value led nowhere.
  */
 function tryResolveFunctionHandlerBinding(options: CollectHandlerBindingsFromIdentifierOptions): boolean {
-  const { identifier, index } = options;
-  const name = identifier.getText();
-  const fnEntry = index.functionsByName.get(name);
-  // the index keeps the last function of the name, which a revisit may not mean
-  return fnEntry !== undefined && collectHandlerBindingsFromFunction({ ...options, fn: fnEntry.node, isAmbiguous: () => index.ambiguousNames.has(name) });
+  const resolution = resolveApiFunctionReference({ reference: options.identifier, index: options.index, imports: options.imports });
+  return resolution.kind === 'function' && collectHandlerBindingsFromFunction({ ...options, fn: resolution.entry.node });
 }
 
 /**
@@ -1463,47 +1469,37 @@ function tryResolveFunctionHandlerBinding(options: CollectHandlerBindingsFromIde
  */
 interface CollectHandlerBindingsFromFunctionOptions extends HandlerBindingCollectorContext {
   /**
-   * A function of the API function index, or one a local variable holds.
+   * The API function a reference is bound to, or one a local variable holds.
    */
   readonly fn: ArrowFunction | FunctionDeclaration | FunctionExpression;
-  /**
-   * Whether the function may not be the one a revisit means (see `traceHandlerBindingOnce`). The function index passes it,
-   * since it reads a function by name; a local omits it, since `resolveLocalVariable` already pinned its declaration.
-   */
-  readonly isAmbiguous?: () => boolean;
 }
 
 /**
  * Walks what {@link CollectHandlerBindingsFromFunctionOptions.fn} returns: a concise arrow body, or the expression of
  * the first `return` statement of its body. Each function is walked once per trace (`traceHandlerBindingOnce`), whichever
- * path reaches it first: the function index (`tryResolveFunctionHandlerBinding`) or a local that holds it
- * (`tryResolveLocalHandlerBinding`).
+ * path reaches it first: the function a reference is bound to (`tryResolveFunctionHandlerBinding`) or a local that holds
+ * it (`tryResolveLocalHandlerBinding`).
  *
  * @param options - The function and the collector context.
  * @returns `true` when the function's return value ended at something the trace recorded, or, on a revisit, when the
- *   first walk did and the name isn't ambiguous.
+ *   first walk did.
  */
 function collectHandlerBindingsFromFunction(options: CollectHandlerBindingsFromFunctionOptions): boolean {
-  // isAmbiguous is this function's own: a local or function reached through its return value is keyed separately
-  const { fn, isAmbiguous, ...context } = options;
+  const { fn, ...context } = options;
   const walk = (): boolean => {
     const ret = findReturnExpression(fn);
     return ret !== undefined && collectHandlerBindingsFromValue({ ...context, node: ret });
   };
-  return traceHandlerBindingOnce({ outcomes: context.outcomes, key: fn, isAmbiguous, walk });
+  return traceHandlerBindingOnce({ outcomes: context.outcomes, key: fn, walk });
 }
 
 interface TraceHandlerBindingOnceInput {
   readonly outcomes: Map<Node, boolean>;
   /**
-   * The local variable declaration or the function the walk reads.
+   * The local variable declaration or the function the walk reads: the one a reference is bound to, so a revisit can't
+   * mean another.
    */
   readonly key: Node;
-  /**
-   * Whether the key may not be the declaration a revisit means. Asked only on a revisit of a key whose walk returned
-   * `true`. Locals omit it: `resolveLocalVariable` already pins each reference to one declaration.
-   */
-  readonly isAmbiguous?: () => boolean;
   /**
    * Walks the local or function and returns its outcome (see `collectHandlerBindingsFromValue`).
    */
@@ -1514,10 +1510,9 @@ interface TraceHandlerBindingOnceInput {
  * Walks the local or function behind a key at most once per `handlers` trace, and returns its outcome. The first visit
  * stores what the walk returned and a revisit returns it: the first walk already recorded everything behind the key, so a
  * wrapper or local reached twice is not listed in `unresolved` the second time. A revisit returns `false` while the walk
- * is still running (a cycle), and when the key's name is ambiguous: it may mean another declaration than the one the
- * first walk read.
+ * is still running (a cycle).
  *
- * @param input - The trace's outcomes, the key, the ambiguity check and the walk.
+ * @param input - The trace's outcomes, the key and the walk.
  * @returns The key's outcome.
  */
 function traceHandlerBindingOnce(input: TraceHandlerBindingOnceInput): boolean {
@@ -1529,7 +1524,7 @@ function traceHandlerBindingOnce(input: TraceHandlerBindingOnceInput): boolean {
     result = input.walk();
     outcomes.set(key, result);
   } else {
-    result = stored && !input.isAmbiguous?.();
+    result = stored;
   }
   return result;
 }

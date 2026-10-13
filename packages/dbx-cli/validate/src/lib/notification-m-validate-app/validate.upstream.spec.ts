@@ -1937,3 +1937,148 @@ describe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED — values the handlers tra
     expect(isHandlersTraceComplete(call)).toBe(false);
   });
 });
+
+// MARK: same-named functions in different files
+const FS_FACTORY_IMPORT = "import { formSpaceSubmissionNotificationTaskHandler } from '@dereekb/firebase-server/model';";
+const FS_INLINE_CONFIG = '{ processors: [], validate: [], formSpaceFirestoreCollections: context }';
+
+// Each wrapper calls a non-exported `buildHandler` its own file declares, which builds that file's upstream handler.
+const SF_BUILD_HANDLER_FILE = `${SF_FACTORY_IMPORT}
+
+function buildHandler(context) {
+  return storageFileProcessingNotificationTaskHandler(${SF_INLINE_CONFIG});
+}
+
+export function demoStorageFileProcessingNotificationTaskHandler(context) {
+  return buildHandler(context);
+}
+`;
+
+const FS_BUILD_HANDLER_FILE = `${FS_FACTORY_IMPORT}
+
+function buildHandler(context) {
+  return formSpaceSubmissionNotificationTaskHandler(${FS_INLINE_CONFIG});
+}
+
+export function demoFormSpaceSubmissionNotificationTaskHandler(context) {
+  return buildHandler(context);
+}
+`;
+
+const SF_BUILD_FILE = 'src/app/common/model/notification/handlers/task.handler.storagefile.build.ts';
+
+function buildEachHandlerInItsOwnFile(parts: FixtureParts): void {
+  replaceInFile(parts.api, SF_HANDLER_FILE, API_SF_HANDLER, SF_BUILD_HANDLER_FILE);
+  replaceInFile(parts.api, FS_HANDLER_FILE, API_FS_HANDLER, FS_BUILD_HANDLER_FILE);
+}
+
+// Leaves only the StorageFile wrapper in `handlers` and `validate`.
+function keepOnlyStorageFile(parts: FixtureParts): void {
+  dropFormSpaceHandler(parts);
+  replaceInFile(parts.api, TASK_SERVICE_FILE, FS_SPREAD, '');
+}
+
+describe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED — same-named functions in different files', () => {
+  const SF_FACTORY = 'storageFileProcessingNotificationTaskHandler';
+  const FS_FACTORY = 'formSpaceSubmissionNotificationTaskHandler';
+
+  it('follows each wrapper to the `buildHandler` its own file declares', () => {
+    const extracted = extractAppNotifications(inspectionOf(buildEachHandlerInItsOwnFile));
+    const [call] = extracted.taskServiceCalls;
+    expect(call.opaqueHandlerValues).toEqual([]);
+    expect(call.unresolvedHandlerBindings).toEqual([]);
+    expect(call.reachedUpstreamHandlerCalls.map((x) => [x.factory, x.sourceFile])).toEqual([
+      [SF_FACTORY, SF_HANDLER_FILE],
+      [FS_FACTORY, FS_HANDLER_FILE]
+    ]);
+    expect(runWith(buildEachHandlerInItsOwnFile).violations).toEqual([]);
+  });
+
+  it('accepts the StorageFile wrapper on its own', () => {
+    const modify = (p: FixtureParts) => {
+      buildEachHandlerInItsOwnFile(p);
+      keepOnlyStorageFile(p);
+    };
+    const [call] = extractAppNotifications(inspectionOf(modify)).taskServiceCalls;
+    expect(call.reachedUpstreamHandlerCalls.map((x) => [x.factory, x.sourceFile])).toEqual([[SF_FACTORY, SF_HANDLER_FILE]]);
+    expect(runWith(modify).violations).toEqual([]);
+  });
+
+  it('reports the FormSpace aggregate, not StorageFile, when the FormSpace wrapper leaves handlers', () => {
+    const found = findingsOf(
+      runWith((p) => {
+        buildEachHandlerInItsOwnFile(p);
+        dropFormSpaceHandler(p);
+      })
+    );
+    expect(found).toHaveLength(1);
+    expect(found[0].message).toContain('lists `...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES`');
+    expect(found[0].message).not.toContain('STORAGE_FILE');
+  });
+
+  it('follows an import of `buildHandler` to the file it names, past a same-named helper of another file', () => {
+    const modify = (p: FixtureParts) => {
+      buildEachHandlerInItsOwnFile(p);
+      replaceInFile(p.api, SF_HANDLER_FILE, SF_BUILD_HANDLER_FILE, `import { buildHandler } from './task.handler.storagefile.build';\n\nexport function demoStorageFileProcessingNotificationTaskHandler(context) {\n  return buildHandler(context);\n}\n`);
+      p.api.push({ relPath: SF_BUILD_FILE, text: `${SF_FACTORY_IMPORT}\n\nexport function buildHandler(context) {\n  return storageFileProcessingNotificationTaskHandler(${SF_INLINE_CONFIG});\n}\n` });
+    };
+    const [call] = extractAppNotifications(inspectionOf(modify)).taskServiceCalls;
+    expect(call.unresolvedHandlerBindings).toEqual([]);
+    expect(call.reachedUpstreamHandlerCalls.map((x) => [x.factory, x.sourceFile])).toEqual([
+      [SF_FACTORY, SF_BUILD_FILE],
+      [FS_FACTORY, FS_HANDLER_FILE]
+    ]);
+    expect(runWith(modify).violations).toEqual([]);
+  });
+
+  it.each<[string, string]>([
+    ['a parameter', 'export function demoStorageFileProcessingNotificationTaskHandler(context, buildHandler) {\n  return buildHandler(context);\n}'],
+    ['a local that holds no function', 'export function demoStorageFileProcessingNotificationTaskHandler(context) {\n  const buildHandler = context.handlerFactories.storageFile;\n  return buildHandler(context);\n}']
+  ])('does not follow %s to a same-named function of another file', (_label, wrapper) => {
+    const modify = (p: FixtureParts) => {
+      replaceInFile(p.api, FS_HANDLER_FILE, API_FS_HANDLER, FS_BUILD_HANDLER_FILE);
+      replaceInFile(p.api, SF_HANDLER_FILE, SF_WRAPPER, wrapper);
+      keepOnlyStorageFile(p);
+    };
+    const result = runWith(modify);
+    expect(findingsOf(result)).toEqual([]);
+    expect(findingsOf(result, 'NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE')).toEqual([]);
+    const [call] = extractAppNotifications(inspectionOf(modify)).taskServiceCalls;
+    expect(call.reachedUpstreamHandlerCalls).toEqual([]);
+    expect(isHandlersTraceComplete(call)).toBe(false);
+  });
+
+  it.each<[string, (parts: FixtureParts) => void]>([
+    [
+      'through a barrel that re-exports it',
+      (p) => {
+        replaceInFile(p.api, TASK_SERVICE_FILE, "from './handlers/task.handler.storagefile'", "from './handlers'");
+        p.api.push({ relPath: 'src/app/common/model/notification/handlers/index.ts', text: "export * from './task.handler.storagefile';\n" });
+      }
+    ],
+    ['through a path alias the scan cannot read', (p) => replaceInFile(p.api, TASK_SERVICE_FILE, "from './handlers/task.handler.storagefile'", "from '@demo/api/notification'")]
+  ])('reads an import %s as the one API function exported under its name', (_label, modify) => {
+    const [call] = extractAppNotifications(inspectionOf(modify)).taskServiceCalls;
+    expect(call.reachedUpstreamHandlerCalls.map((x) => [x.factory, x.sourceFile])).toEqual([
+      [SF_FACTORY, SF_HANDLER_FILE],
+      [FS_FACTORY, FS_HANDLER_FILE]
+    ]);
+    expect(runWith(modify).violations).toEqual([]);
+  });
+
+  it('does not guess between two API functions exported under the name of an import it cannot read', () => {
+    const modify = (p: FixtureParts) => {
+      buildEachHandlerInItsOwnFile(p);
+      replaceInFile(p.api, SF_HANDLER_FILE, SF_BUILD_HANDLER_FILE, `import { buildHandler } from '@demo/api/notification';\n\nexport function demoStorageFileProcessingNotificationTaskHandler(context) {\n  return buildHandler(context);\n}\n`);
+      replaceInFile(p.api, FS_HANDLER_FILE, 'function buildHandler', 'export function buildHandler');
+      p.api.push({ relPath: SF_BUILD_FILE, text: `${SF_FACTORY_IMPORT}\n\nexport function buildHandler(context) {\n  return storageFileProcessingNotificationTaskHandler(${SF_INLINE_CONFIG});\n}\n` });
+      keepOnlyStorageFile(p);
+    };
+    const result = runWith(modify);
+    expect(findingsOf(result)).toEqual([]);
+    expect(findingsOf(result, 'NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE')).toEqual([]);
+    const [call] = extractAppNotifications(inspectionOf(modify)).taskServiceCalls;
+    expect(call.reachedUpstreamHandlerCalls).toEqual([]);
+    expect(call.unresolvedHandlerBindings).toContain('buildHandler');
+  });
+});
