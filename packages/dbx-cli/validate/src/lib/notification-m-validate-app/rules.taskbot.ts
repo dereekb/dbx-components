@@ -16,9 +16,9 @@ import {
   scriptTypeRefLabel,
   taskServiceCallListsTaskBotTypes
 } from './extract.taskbot.js';
-import { isHandlersTraceComplete, reachedUpstreamHandlerCallsOf } from './extract.upstream.js';
+import { isHandlersTraceComplete, selectUpstreamTaskTypesNotInValidate } from './extract.upstream.js';
 import { selectTaskBotRegistry, selectTaskBotRunHandlerCalls } from './select.taskbot.js';
-import type { ExtractedAppNotificationTaskBot, ExtractedAppNotifications, ExtractedTaskBotRegistry, ExtractedTaskBotRunHandlerCall, ExtractedTaskBotScriptConfig, ExtractedTaskBotScriptTypeRef, ExtractedTaskServiceCall, Violation } from './types.js';
+import type { ExtractedAppNotificationTaskBot, ExtractedAppNotifications, ExtractedTaskBotRegistry, ExtractedTaskBotRunHandlerCall, ExtractedTaskBotScriptConfig, ExtractedTaskBotScriptTypeRef, Violation } from './types.js';
 import { pushViolation, SCANNED_API_FOLDERS } from './violation.js';
 
 const DEFAULT_REGISTRY_FILE = 'src/lib/model/notification/notification.taskbot.ts';
@@ -26,7 +26,7 @@ const DEFAULT_REGISTRY_FILE = 'src/lib/model/notification/notification.taskbot.t
 /**
  * Runs every `NOTIF_TASK_BOT_*` rule.
  *
- * @param extracted - The full extraction; only its `taskBot`, `taskServiceCalls` and trust list are read.
+ * @param extracted - The full extraction; only its `taskBot`, `taskServiceCalls`, `taskAllTypesAggregates` and trust list are read.
  * @param violations - The mutable violation buffer.
  */
 export function checkTaskBots(extracted: ExtractedAppNotifications, violations: Violation[]): void {
@@ -41,7 +41,7 @@ export function checkTaskBots(extracted: ExtractedAppNotifications, violations: 
 
   const { reachedKeys, considered } = selectTaskBotRunHandlerCalls(extracted);
   checkHandlerRegistered(extracted, reachedKeys.size > 0, violations);
-  checkTaskTypesInValidate(extracted.taskServiceCalls, violations);
+  checkTaskTypesInValidate(extracted, violations);
 
   for (const call of considered) {
     checkRunHandlerCall(call, registry, violations);
@@ -123,9 +123,9 @@ function checkHandlerRegistered(extracted: ExtractedAppNotifications, handlerRea
   });
 }
 
-function checkTaskTypesInValidate(taskServiceCalls: readonly ExtractedTaskServiceCall[], violations: Violation[]): void {
-  for (const call of taskServiceCalls) {
-    if (reachedUpstreamHandlerCallsOf(call, NOTIFICATION_TASK_BOT_RUN_HANDLER_FACTORY).length > 0 && call.validateStatus === 'resolved' && !taskServiceCallListsTaskBotTypes(call)) {
+function checkTaskTypesInValidate(extracted: ExtractedAppNotifications, violations: Violation[]): void {
+  for (const { call, contract } of selectUpstreamTaskTypesNotInValidate(extracted)) {
+    if (contract.handlerFactory === NOTIFICATION_TASK_BOT_RUN_HANDLER_FACTORY) {
       pushViolation(violations, {
         code: 'NOTIF_TASK_BOT_TASK_TYPES_NOT_IN_VALIDATE',
         severity: 'warning',

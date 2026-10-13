@@ -61,6 +61,14 @@ export function demoSecondaryNotificationTaskServiceFactory() {
 }
 `;
 
+const API_SECONDARY_TASK_SERVICE_WITH_HANDLER = `import { notificationTaskService } from '@dereekb/firebase-server/model';
+import { demoStorageFileProcessingNotificationTaskHandler } from './handlers/task.handler.storagefile';
+
+export function demoSecondaryNotificationTaskServiceFactory(context) {
+  return notificationTaskService({ validate: [], handlers: [demoStorageFileProcessingNotificationTaskHandler(context)] });
+}
+`;
+
 const COMPONENT_TASK_FILE = 'src/lib/model/notification/notification.task.ts';
 const TASK_SERVICE_FILE = 'src/app/common/model/notification/notification.task.service.ts';
 const SECONDARY_TASK_SERVICE_FILE = 'src/app/common/model/notification/notification.task.service.secondary.ts';
@@ -71,6 +79,10 @@ const FIREBASE_IMPORT = "import { ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES, ALL_ST
 const HANDLERS_LINE = 'const handlers: NotificationTaskServiceTaskHandlerConfig<any>[] = [exampleNotificationTaskHandler, storageFileHandler, formSpaceHandler];';
 const SF_LOCAL = 'const storageFileHandler = demoStorageFileProcessingNotificationTaskHandler(context);';
 const SF_IMPORT = "import { demoStorageFileProcessingNotificationTaskHandler } from './handlers/task.handler.storagefile';\n";
+const SF_SPREAD = ', ...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES';
+const FS_SPREAD = ', ...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES';
+const COMPONENT_FIREBASE_IMPORT = "import { type NotificationTaskType } from '@dereekb/firebase';";
+const COMPONENT_AGGREGATE = '[EXAMPLE_NOTIFICATION_TASK_TYPE]';
 
 interface FixtureParts {
   readonly component: InspectedFile[];
@@ -127,6 +139,12 @@ function dropStorageFileHandler(parts: FixtureParts): void {
 
 function addTaskServiceImport(parts: FixtureParts, line: string): void {
   replaceInFile(parts.api, TASK_SERVICE_FILE, FIREBASE_IMPORT, `${FIREBASE_IMPORT}\n${line}`);
+}
+
+// Adds `member` (an upstream aggregate spread or task-type constant) to the component's `ALL_NOTIFICATION_TASK_TYPES`.
+function addToAppAggregate(parts: FixtureParts, importName: string, member: string): void {
+  replaceInFile(parts.component, COMPONENT_TASK_FILE, COMPONENT_FIREBASE_IMPORT, `import { ${importName}, type NotificationTaskType } from '@dereekb/firebase';`);
+  replaceInFile(parts.component, COMPONENT_TASK_FILE, COMPONENT_AGGREGATE, `[EXAMPLE_NOTIFICATION_TASK_TYPE, ${member}]`);
 }
 
 function aliasStorageFileFactory(parts: FixtureParts): void {
@@ -200,10 +218,10 @@ describe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED', () => {
 
   it('reports nothing when validate does not list the aggregate', () => {
     const result = runWith((p) => {
-      replaceInFile(p.api, TASK_SERVICE_FILE, ', ...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES', '');
+      replaceInFile(p.api, TASK_SERVICE_FILE, SF_SPREAD, '');
       dropStorageFileHandler(p);
     });
-    expect(findingsOf(result)).toEqual([]);
+    expect(result.violations).toEqual([]);
   });
 
   it.each<[string, (parts: FixtureParts) => void]>([
@@ -329,8 +347,135 @@ describe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED', () => {
     const [call] = extracted.taskServiceCalls;
     expect(call.handlersStatus).toBe('resolved');
     expect(call.opaqueHandlerValues).toEqual([]);
+    expect(call.opaqueValidateValues).toEqual([]);
     expect(call.reachedUpstreamHandlerCalls.map((x) => x.factory)).toEqual(['storageFileProcessingNotificationTaskHandler', 'formSpaceSubmissionNotificationTaskHandler']);
     expect(extracted.upstreamHandlerCalls[0].enclosingFunction).toBe('demoStorageFileProcessingNotificationTaskHandler');
+    expect(extracted.taskAllTypesAggregates[0]).toMatchObject({ spreadIdentifiers: [], opaqueValues: [] });
+  });
+});
+
+describe('NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE', () => {
+  const CODE: ViolationCode = 'NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE';
+
+  it('warns when validate drops the StorageFile aggregate while its handler stays', () => {
+    const result = runWith((p) => replaceInFile(p.api, TASK_SERVICE_FILE, SF_SPREAD, ''));
+    expect(result.violations.map((v) => v.code)).toEqual([CODE]);
+    const [found] = findingsOf(result, CODE);
+    expect(found).toMatchObject({ severity: 'warning', side: 'api', file: TASK_SERVICE_FILE });
+    expect(found.message).toContain('`...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`');
+    expect(found.message).toContain('`SFP`');
+    expect(found.message).toContain(`\`storageFileProcessingNotificationTaskHandler(...)\` at ${SF_HANDLER_FILE}:`);
+    expect(found.message).toContain('fails at startup if the handler is ever removed');
+  });
+
+  it('warns for the FormSpace aggregate', () => {
+    const found = findingsOf(
+      runWith((p) => replaceInFile(p.api, TASK_SERVICE_FILE, FS_SPREAD, '')),
+      CODE
+    );
+    expect(found).toHaveLength(1);
+    expect(found[0].message).toContain('ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES');
+    expect(found[0].message).toContain('`FSPS`');
+    expect(found[0].message).toContain('handlers/formspace/task.handler.formspace.submission.ts:');
+  });
+
+  it('warns for both aggregates, in table order', () => {
+    const found = findingsOf(
+      runWith((p) => {
+        replaceInFile(p.api, TASK_SERVICE_FILE, SF_SPREAD, '');
+        replaceInFile(p.api, TASK_SERVICE_FILE, FS_SPREAD, '');
+      }),
+      CODE
+    );
+    expect(found).toHaveLength(2);
+    expect(found[0].message).toContain('ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES');
+    expect(found[1].message).toContain('ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES');
+  });
+
+  it('accepts a task-type constant listed directly in validate', () => {
+    const result = runWith((p) => {
+      replaceInFile(p.api, TASK_SERVICE_FILE, FIREBASE_IMPORT, "import { ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES, STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_TYPE } from '@dereekb/firebase';");
+      replaceInFile(p.api, TASK_SERVICE_FILE, '...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES', 'STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_TYPE');
+    });
+    expect(result.violations).toEqual([]);
+  });
+
+  it('accepts the aggregate nested in the app aggregate', () => {
+    const result = runWith((p) => {
+      addToAppAggregate(p, 'ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES', '...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES');
+      replaceInFile(p.api, TASK_SERVICE_FILE, SF_SPREAD, '');
+    });
+    expect(result.violations).toEqual([]);
+  });
+
+  it('accepts a task-type constant held by the app aggregate', () => {
+    const result = runWith((p) => {
+      addToAppAggregate(p, 'STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_TYPE', 'STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_TYPE');
+      replaceInFile(p.api, TASK_SERVICE_FILE, SF_SPREAD, '');
+    });
+    expect(result.violations).toEqual([]);
+  });
+
+  // StorageFile's handler stays in `handlers` in every case, so a finding would be a false warning.
+  it.each<[string, (parts: FixtureParts) => void]>([
+    [
+      'an aggregate it does not know',
+      (p) => {
+        replaceInFile(p.api, TASK_SERVICE_FILE, '...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES', '...SHARED_NOTIFICATION_TASK_TYPES');
+        addTaskServiceImport(p, "import { SHARED_NOTIFICATION_TASK_TYPES } from 'some-shared-lib';");
+      }
+    ],
+    [
+      'an aliased import of the aggregate',
+      (p) => {
+        replaceInFile(p.api, TASK_SERVICE_FILE, FIREBASE_IMPORT, "import { ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES, ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES as SF_TASK_TYPES } from '@dereekb/firebase';");
+        replaceInFile(p.api, TASK_SERVICE_FILE, '...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES', '...SF_TASK_TYPES');
+      }
+    ],
+    ['a string-literal task type', (p) => replaceInFile(p.api, TASK_SERVICE_FILE, '...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES', "'SFP'")],
+    ['a spread of a call', (p) => replaceInFile(p.api, TASK_SERVICE_FILE, '...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES', '...upstreamTaskTypes()')],
+    ['a value that is not an array literal', (p) => replaceInFile(p.api, TASK_SERVICE_FILE, 'validate: [...ALL_NOTIFICATION_TASK_TYPES, ...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES, ...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES]', 'validate: taskTypes')],
+    [
+      // Tripwire: StorageFile really is missing here, but the listing can't see inside the app aggregate yet. Once nested
+      // aggregates are followed, this row becomes a "warns" case.
+      'an app aggregate that holds a spread (nested aggregates are not followed yet)',
+      (p) => {
+        addToAppAggregate(p, 'ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES', '...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES');
+        replaceInFile(p.api, TASK_SERVICE_FILE, SF_SPREAD, '');
+      }
+    ]
+  ])('skips a service whose validate holds %s', (_label, modify) => {
+    expect(findingsOf(runWith(modify), CODE)).toEqual([]);
+  });
+
+  it('does not warn when the task service has no validate', () => {
+    const result = runWith((p) => replaceInFile(p.api, TASK_SERVICE_FILE, 'validate: [...ALL_NOTIFICATION_TASK_TYPES, ...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES, ...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES], ', ''));
+    expect(findingsOf(result, CODE)).toEqual([]);
+  });
+
+  it('stays quiet when the handler is not reachable', () => {
+    const result = runWith(dropStorageFileHandler);
+    expect(findingsOf(result)).toHaveLength(1);
+    expect(findingsOf(result, CODE)).toEqual([]);
+  });
+
+  it('checks each task service on its own', () => {
+    const result = runWith((p) => p.api.push({ relPath: SECONDARY_TASK_SERVICE_FILE, text: API_SECONDARY_TASK_SERVICE_WITH_HANDLER }));
+    const found = findingsOf(result, CODE);
+    expect(found).toHaveLength(1);
+    expect(found[0].file).toBe(SECONDARY_TASK_SERVICE_FILE);
+    expect(result.violations.filter((v) => v.code !== 'NOTIF_TASK_MULTIPLE_SERVICES' && v.code !== CODE)).toEqual([]);
+  });
+
+  it('extracts what validate holds that it cannot read, and the app aggregate spreads', () => {
+    const extracted = extractAppNotifications(
+      inspectionOf((p) => {
+        replaceInFile(p.api, TASK_SERVICE_FILE, '...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES', "'SFP'");
+        addToAppAggregate(p, 'ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES', '...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES');
+      })
+    );
+    expect(extracted.taskServiceCalls[0].opaqueValidateValues).toEqual(["'SFP'"]);
+    expect(extracted.taskAllTypesAggregates[0]).toMatchObject({ taskTypeIdentifiers: ['EXAMPLE_NOTIFICATION_TASK_TYPE'], spreadIdentifiers: ['ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES'], opaqueValues: [] });
   });
 });
 

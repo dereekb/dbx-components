@@ -374,7 +374,8 @@ function tryExtractTaskAllTypesAggregate(decl: VariableDeclaration, rel: string,
   if (!nameMatches && !typeMatches) return;
   const arr = asArrayLiteral(decl.getInitializer());
   if (!arr) return;
-  out.push({ symbolName: name, taskTypeIdentifiers: collectIdentifierElements(arr), sourceFile: rel });
+  const { ids, spreads, opaque } = collectTaskTypeListElements(arr);
+  out.push({ symbolName: name, taskTypeIdentifiers: ids, spreadIdentifiers: spreads, opaqueValues: opaque, sourceFile: rel });
 }
 
 // MARK: Checkpoint aliases + data interfaces
@@ -852,7 +853,7 @@ function extractTaskServiceCalls(input: ExtractTaskServiceCallsInput): readonly 
       if (!first) continue;
       const validateArr = resolveArrayLiteralProperty(first, 'validate', sf);
       const handlersArr = resolveArrayLiteralProperty(first, 'handlers', sf);
-      const validate = collectValidateArrayElements(validateArr);
+      const validate = collectTaskTypeListElements(validateArr);
       const handlers = collectHandlersArrayElements({ handlersArr, sf, index, trustedExternal, imports });
       const validateStatus = readTaskServiceListStatus(first, 'validate', validateArr);
       const handlersStatus = readTaskServiceListStatus(first, 'handlers', handlersArr);
@@ -864,6 +865,7 @@ function extractTaskServiceCalls(input: ExtractTaskServiceCallsInput): readonly 
         resolvedHandlerBindings: handlers.resolvedBindings,
         unresolvedHandlerBindings: handlers.unresolvedBindings,
         validateStatus,
+        opaqueValidateValues: validate.opaque,
         reachedUpstreamHandlerCalls: handlers.reachedUpstreamHandlerCalls,
         handlersStatus,
         opaqueHandlerValues: handlers.opaqueHandlerValues,
@@ -892,33 +894,33 @@ function readTaskServiceListStatus(config: ObjectLiteralExpression, name: string
   return status;
 }
 
-interface ValidateArrayElements {
+interface TaskTypeListElements {
   readonly ids: string[];
   readonly spreads: string[];
+  readonly opaque: string[];
 }
 
 /**
- * Splits the elements of the `validate: [...]` array into direct identifier
- * names and spread identifier names.
+ * Splits a task-type list — the `validate: [...]` array or an `ALL_*_NOTIFICATION_TASK_TYPES` aggregate — into direct
+ * identifier names, spread identifier names, and the values the extractor can't read.
  *
- * @param validateArr - The resolved `validate` array literal, or `undefined`
- *   when the property is absent.
- * @returns The direct identifier names and spread identifier names.
+ * @param arr - The array literal, or `undefined` when the property is absent.
+ * @returns The identifiers, the spread identifiers and the unreadable values (collapsed and truncated).
  */
-function collectValidateArrayElements(validateArr: ArrayLiteralExpression | undefined): ValidateArrayElements {
+function collectTaskTypeListElements(arr: ArrayLiteralExpression | undefined): TaskTypeListElements {
   const ids: string[] = [];
   const spreads: string[] = [];
-  if (!validateArr) return { ids, spreads };
-  for (const el of validateArr.getElements()) {
-    if (Node.isSpreadElement(el)) {
-      const inner = el.getExpression();
-      if (Node.isIdentifier(inner)) spreads.push(inner.getText());
-      continue;
+  const opaque: string[] = [];
+  for (const el of arr?.getElements() ?? []) {
+    const isSpread = Node.isSpreadElement(el);
+    const inner = isSpread ? el.getExpression() : unwrapAsExpressions(el);
+    if (inner !== undefined && Node.isIdentifier(inner)) {
+      (isSpread ? spreads : ids).push(inner.getText());
+    } else {
+      opaque.push(opaqueSnippet(el));
     }
-    const inner = unwrapAsExpressions(el);
-    if (inner && Node.isIdentifier(inner)) ids.push(inner.getText());
   }
-  return { ids, spreads };
+  return { ids, spreads, opaque };
 }
 
 interface CollectHandlersArrayElementsOptions {

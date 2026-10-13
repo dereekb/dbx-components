@@ -193,6 +193,15 @@ export interface ExtractedTemplateInfoAggregateArray {
 export interface ExtractedTaskTypeAggregateArray {
   readonly symbolName: string;
   readonly taskTypeIdentifiers: readonly string[];
+  /**
+   * Identifiers spread into the aggregate (`...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`). Recorded, not followed yet:
+   * `isValidateListingConclusive` treats a `validate` that spreads such an aggregate as inconclusive.
+   */
+  readonly spreadIdentifiers: readonly string[];
+  /**
+   * Elements the extractor can't read (see {@link ExtractedTaskServiceCall.opaqueValidateValues}).
+   */
+  readonly opaqueValues: readonly string[];
   readonly sourceFile: string;
 }
 
@@ -311,6 +320,12 @@ export interface ExtractedTaskServiceCall {
    * something else (`unresolved`).
    */
   readonly validateStatus: ExtractedTaskServiceValidateStatus;
+  /**
+   * Values in the `validate:` array the extractor can't read: a spread of anything but an identifier, or an element that is
+   * not an identifier (a string literal, a call, a property access, …). The text is collapsed and truncated. When the list
+   * is non-empty, the `*_TASK_TYPES_NOT_IN_VALIDATE` checks skip the service, because the task types could be in there.
+   */
+  readonly opaqueValidateValues: readonly string[];
   /**
    * Every upstream handler-factory call (StorageFile, FormSpace, NotificationTaskBot) the `handlers:` trace reached,
    * called directly, through an `@dereekb/*` import alias, or as an `@dereekb/*` namespace member.

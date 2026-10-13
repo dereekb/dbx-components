@@ -3,7 +3,8 @@
  * and the workspace's `firestore.rules` / `firestore.indexes.json`, then checks that targeted mutations of the demo's
  * NotificationTaskBot wiring each raise their `NOTIF_TASK_BOT_*` code, and that a scaffolded bot script round-trips
  * through the checks once its wiring is applied. It also covers the upstream StorageFile and FormSpace handler checks
- * (`NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED`) against the demo's task service.
+ * (`NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED` and `NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE`) against the demo's
+ * task service.
  *
  * The mutation helper throws when the text it replaces is gone, so a refactor of the demo's bot wiring fails here
  * loudly instead of silently passing.
@@ -166,6 +167,24 @@ describe('dbx_notification_m_validate_app — demo pair upstream task handlers',
   it('reports the NTBR handler only as NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED', () => {
     const result = validateWith((m) => replaceIn(m.api, TASK_SERVICE_FILE, ', notificationTaskBotHandler]', ']'));
     expect(result.violations.map((v) => v.code)).toContain('NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED');
+    expect(upstreamFindings(result)).toEqual([]);
+  });
+
+  it.each<[string, string, readonly string[]]>([
+    ['the StorageFile aggregate', ', ...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES', ['`...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`', '`SFP`', '`storageFileProcessingNotificationTaskHandler(...)`', 'notification.task.service.ts:']],
+    ['the FormSpace aggregate', ', ...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES', ['`...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES`', '`FSPS`', '`formSpaceSubmissionNotificationTaskHandler(...)`', 'handlers/formspace/task.handler.formspace.submission.ts:']]
+  ])('warns NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE when validate drops %s', (_label, from, messageParts) => {
+    const found = upstreamFindings(validateWith((m) => replaceIn(m.api, TASK_SERVICE_FILE, from, '')));
+    expect(found).toHaveLength(1);
+    expect(found[0]).toMatchObject({ code: 'NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE', severity: 'warning', file: TASK_SERVICE_FILE });
+    for (const part of messageParts) {
+      expect(found[0].message).toContain(part);
+    }
+  });
+
+  it('reports the NTB task types only as NOTIF_TASK_BOT_TASK_TYPES_NOT_IN_VALIDATE', () => {
+    const result = validateWith((m) => replaceIn(m.api, TASK_SERVICE_FILE, ', ...ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES', ''));
+    expect(result.violations.map((v) => v.code)).toContain('NOTIF_TASK_BOT_TASK_TYPES_NOT_IN_VALIDATE');
     expect(upstreamFindings(result)).toEqual([]);
   });
 });

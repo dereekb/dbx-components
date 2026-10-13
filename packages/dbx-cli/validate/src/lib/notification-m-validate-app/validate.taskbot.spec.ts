@@ -106,6 +106,7 @@ service cloud.firestore {
 
 const INDEXES = JSON.stringify({ indexes: [], fieldOverrides: [] });
 
+const COMPONENT_TASK_FILE = 'src/lib/model/notification/notification.task.ts';
 const TASKBOT_FILE = 'src/lib/model/notification/notification.taskbot.ts';
 const ACTION_MODULE_FILE = 'src/app/common/firebase/action.module.ts';
 const TASK_SERVICE_FILE = 'src/app/common/model/notification/notification.task.service.ts';
@@ -122,7 +123,7 @@ function happyParts(): FixtureParts {
   return {
     component: [
       { relPath: TASKBOT_FILE, text: COMPONENT_TASKBOT },
-      { relPath: 'src/lib/model/notification/notification.task.ts', text: COMPONENT_TASK }
+      { relPath: COMPONENT_TASK_FILE, text: COMPONENT_TASK }
     ],
     api: [
       { relPath: ACTION_MODULE_FILE, text: API_ACTION_MODULE },
@@ -298,6 +299,24 @@ describe('NotificationTaskBot checks — handler', () => {
     const result = runWith((p) => replaceInFile(p.api, TASK_SERVICE_FILE, ', ...ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES', ''));
     expect(taskBotCodes(result)).toEqual(['NOTIF_TASK_BOT_TASK_TYPES_NOT_IN_VALIDATE']);
     expect(findingsOf(result, 'NOTIF_TASK_BOT_TASK_TYPES_NOT_IN_VALIDATE')[0].severity).toBe('warning');
+    expect(result.violations.map((v) => v.code)).not.toContain('NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE');
+  });
+
+  it('skips NOTIF_TASK_BOT_TASK_TYPES_NOT_IN_VALIDATE when validate spreads an aggregate the scanner does not know', () => {
+    const result = runWith((p) => {
+      replaceInFile(p.api, TASK_SERVICE_FILE, '...ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES]', '...SHARED_NOTIFICATION_TASK_TYPES]');
+      replaceInFile(p.api, TASK_SERVICE_FILE, "import { ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES } from '@dereekb/firebase';", "import { SHARED_NOTIFICATION_TASK_TYPES } from 'some-shared-lib';");
+    });
+    expect(taskBotCodes(result)).toEqual([]);
+  });
+
+  it('does not warn NOTIF_TASK_BOT_TASK_TYPES_NOT_IN_VALIDATE when the NTB aggregate is nested in the app aggregate', () => {
+    const result = runWith((p) => {
+      replaceInFile(p.component, COMPONENT_TASK_FILE, "import { type NotificationTaskType } from '@dereekb/firebase';", "import { ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES, type NotificationTaskType } from '@dereekb/firebase';");
+      replaceInFile(p.component, COMPONENT_TASK_FILE, '[EXAMPLE_NOTIFICATION_TASK_TYPE]', '[EXAMPLE_NOTIFICATION_TASK_TYPE, ...ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES]');
+      replaceInFile(p.api, TASK_SERVICE_FILE, ', ...ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES', '');
+    });
+    expect(taskBotCodes(result)).toEqual([]);
   });
 
   it('does not warn NOTIF_TASK_BOT_TASK_TYPES_NOT_IN_VALIDATE when the task service has no validate', () => {

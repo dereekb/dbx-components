@@ -2170,8 +2170,9 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     severity: 'warning',
     title: 'The NTBR handler is registered, but that `notificationTaskService({ validate })` does not list `...ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES`, so startup no longer fails if the handler is ever removed',
     whatItFlags: 'The NTBR handler is registered, but that `notificationTaskService({ validate })` does not list `...ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES`, so startup no longer fails if the handler is ever removed.',
-    whenItApplies: 'Task services that reach the NTBR handler and have a `validate` array the scanner can read.',
-    whenItDoesNotApply: 'Task services without `validate` (it is optional), or with a `validate` the scanner cannot read.',
+    whenItApplies: 'Task services that reach the NTBR handler and whose `validate` the scanner can read completely (the same guard as `NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE`, which runs this check for the StorageFile and FormSpace task types).',
+    whenItDoesNotApply:
+      "Task services without `validate` (it is optional), or whose `validate` the scanner can't read completely: a value that is not an array literal, an element that is not an identifier, a spread of an aggregate it doesn't know, or a spread of one of the app's own aggregates that holds a spread or an upstream task-type constant.",
     canonicalFix: 'Add `...ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES` (from `@dereekb/firebase`) to `validate`.',
     seeAlso: [
       {
@@ -2294,6 +2295,34 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
       "Task services whose `handlers` the scanner can't follow completely: an unreadable `handlers` value, an identifier it can't resolve (reported as `NOTIF_TASK_HANDLER_SPREAD_UNRESOLVED`), or a value it can't see through (a conditional, a call through a property access that is not an `@dereekb/*` namespace member, a `@dereekb/*` helper that is not an upstream handler factory, or an upstream handler factory held in a variable and called through it). `notificationTaskService()`'s own startup check still applies. Aggregates nested inside an app's own `ALL_*_NOTIFICATION_TASK_TYPES` are not detected. The NotificationTaskBot task types are reported by `NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED` instead.",
     canonicalFix:
       'Add the upstream handler to `handlers`: e.g. `<app>StorageFileProcessingNotificationTaskHandler(context)`, built with `storageFileProcessingNotificationTaskHandler({ processors, storageFileFirestoreCollections, storageAccessor })`, or `<app>FormSpaceSubmissionNotificationTaskHandler(context)`, built with `formSpaceSubmissionNotificationTaskHandler({ processors, validate, formSpaceFirestoreCollections })` (both from `@dereekb/firebase-server/model`). Or remove the aggregate from `validate`.',
+    seeAlso: [
+      {
+        kind: 'artifact',
+        target: 'storagefile-processor'
+      },
+      {
+        kind: 'artifact',
+        target: 'notification-task'
+      },
+      {
+        kind: 'doc',
+        target: 'dbx-formspace'
+      }
+    ]
+  },
+  {
+    code: 'NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE',
+    source: 'dbx_notification_m_validate_app',
+    severity: 'warning',
+    title:
+      "A `notificationTaskService(...)` call's `handlers` reach an upstream handler (`storageFileProcessingNotificationTaskHandler(...)` or `formSpaceSubmissionNotificationTaskHandler(...)`), but its `validate` does not list that feature's task types (`...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES` or `...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES`), so startup no longer fails if the handler is ever removed",
+    whatItFlags:
+      "A `notificationTaskService(...)` call's `handlers` reach an upstream handler (`storageFileProcessingNotificationTaskHandler(...)` or `formSpaceSubmissionNotificationTaskHandler(...)`), but its `validate` does not list that feature's task types (`...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES` or `...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES`), so startup no longer fails if the handler is ever removed.",
+    whenItApplies:
+      "Task services whose `handlers` reach an upstream handler factory from the validator's upstream handler table and whose `validate` the scanner can read completely: an array literal of identifiers and spreads of known aggregates (the upstream ones, and the app's own `ALL_*_NOTIFICATION_TASK_TYPES`). A spread of the aggregate, or one of its task-type constants written directly in `validate`, counts as listed.",
+    whenItDoesNotApply:
+      "Task services without `validate` (it is optional), or whose `validate` the scanner can't read completely, because the task types could be in a value it doesn't see. That covers a value that is not an array literal, an element that is not an identifier (a string literal, a call, a property access, …), a spread of an aggregate it doesn't know (one from another library, or imported under an alias), and a spread of one of the app's own aggregates that holds a spread or an upstream task-type constant (the scanner does not follow nested aggregates yet). The NotificationTaskBot task types are reported by `NOTIF_TASK_BOT_TASK_TYPES_NOT_IN_VALIDATE` instead.",
+    canonicalFix: "Add the aggregate (`...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES` or `...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES`, from `@dereekb/firebase`) to that call's `validate`.",
     seeAlso: [
       {
         kind: 'artifact',

@@ -8,6 +8,10 @@
  * its handler factory, the handlers trace in `extract.ts` records every reached factory call, and `rules.upstream.ts`
  * (plus `rules.taskbot.ts` for the NotificationTaskBot row) reports a listed aggregate whose handler is not reachable.
  *
+ * `rules.upstream.ts` also reports the reverse case: a reachable handler whose aggregate `validate` doesn't list
+ * (`NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE`, through {@link selectUpstreamTaskTypesNotInValidate} and guarded by
+ * {@link isValidateListingConclusive}). `rules.taskbot.ts` reports the NotificationTaskBot row of both directions.
+ *
  * The factory match resolves `@dereekb/*` import aliases and namespace imports per file (`readCalleeName`), so
  * `sfHandler(...)` and `serverModel.storageFileProcessingNotificationTaskHandler(...)` count as factory calls.
  *
@@ -17,7 +21,7 @@
 import { Node, SyntaxKind, type SourceFile } from 'ts-morph';
 import { apiRelPath, readCalleeName, type DereekbImportIndex } from '../_core/_validate/ast.js';
 import { ALL_NOTIFICATION_TASK_BOT_TASK_TYPES, NOTIFICATION_TASK_BOT_RUN_HANDLER_FACTORY, NOTIFICATION_TASK_BOT_RUN_TASK_TYPE } from './extract.taskbot.js';
-import type { ExtractedTaskServiceCall, ExtractedUpstreamHandlerCall, ExtractedUpstreamHandlerFactoryCall, ViolationCode } from './types.js';
+import type { ExtractedAppNotifications, ExtractedTaskServiceCall, ExtractedTaskTypeAggregateArray, ExtractedUpstreamHandlerCall, ExtractedUpstreamHandlerFactoryCall, ViolationCode } from './types.js';
 
 /**
  * An upstream task type: its constant and its runtime code.
@@ -25,6 +29,21 @@ import type { ExtractedTaskServiceCall, ExtractedUpstreamHandlerCall, ExtractedU
 export interface UpstreamNotificationTaskType {
   readonly constant: string;
   readonly code: string;
+}
+
+/**
+ * The codes a table row reports under when its feature has rules of its own (`rules.taskbot.ts` for the NotificationTaskBot
+ * row). The generic `NOTIF_TASK_UPSTREAM_*` rules skip such a row.
+ */
+export interface UpstreamNotificationTaskHandlerDedicatedCodes {
+  /**
+   * Reported instead of `NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED`.
+   */
+  readonly handlerNotRegistered: ViolationCode;
+  /**
+   * Reported instead of `NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE`.
+   */
+  readonly taskTypesNotInValidate: ViolationCode;
 }
 
 /**
@@ -56,9 +75,9 @@ export interface UpstreamNotificationTaskHandlerContract {
    */
   readonly exampleWrapper: string;
   /**
-   * When set, this rule reports the pair instead of `NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED`.
+   * When set, the feature's own rules report this row under these codes, and the generic `NOTIF_TASK_UPSTREAM_*` rules skip it.
    */
-  readonly dedicatedCode?: ViolationCode;
+  readonly dedicatedCodes?: UpstreamNotificationTaskHandlerDedicatedCodes;
 }
 
 /**
@@ -88,7 +107,7 @@ export const UPSTREAM_NOTIFICATION_TASK_HANDLERS: readonly UpstreamNotificationT
     handlerFactory: NOTIFICATION_TASK_BOT_RUN_HANDLER_FACTORY,
     handlerFactoryConfigHint: '{ processors, validate, notificationTaskBotContext }',
     exampleWrapper: '<app>NotificationTaskBotRunNotificationTaskHandler(context)',
-    dedicatedCode: 'NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED'
+    dedicatedCodes: { handlerNotRegistered: 'NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED', taskTypesNotInValidate: 'NOTIF_TASK_BOT_TASK_TYPES_NOT_IN_VALIDATE' }
   }
 ];
 
@@ -96,6 +115,16 @@ export const UPSTREAM_NOTIFICATION_TASK_HANDLERS: readonly UpstreamNotificationT
  * The handler factory names from {@link UPSTREAM_NOTIFICATION_TASK_HANDLERS}.
  */
 export const UPSTREAM_NOTIFICATION_TASK_HANDLER_FACTORIES: ReadonlySet<string> = new Set(UPSTREAM_NOTIFICATION_TASK_HANDLERS.map((x) => x.handlerFactory));
+
+/**
+ * The aggregates from {@link UPSTREAM_NOTIFICATION_TASK_HANDLERS}.
+ */
+const UPSTREAM_NOTIFICATION_TASK_AGGREGATES: ReadonlySet<string> = new Set(UPSTREAM_NOTIFICATION_TASK_HANDLERS.map((x) => x.aggregate));
+
+/**
+ * Every task-type constant from {@link UPSTREAM_NOTIFICATION_TASK_HANDLERS}.
+ */
+const UPSTREAM_NOTIFICATION_TASK_TYPE_CONSTANTS: ReadonlySet<string> = new Set(UPSTREAM_NOTIFICATION_TASK_HANDLERS.flatMap((x) => x.taskTypes.map((y) => y.constant)));
 
 /**
  * Returns the upstream handler factory {@link node} calls: called directly, through an `@dereekb/*` import alias, or as a
@@ -132,6 +161,65 @@ export function upstreamTaskTypesListing(call: ExtractedTaskServiceCall, contrac
     result = contract.taskTypes.find((x) => call.validateIdentifiers.includes(x.constant))?.constant;
   }
   return result;
+}
+
+/**
+ * Whether {@link upstreamTaskTypesListing} can be trusted when it finds nothing. That holds when all of these are true:
+ * - the call's `validate` resolved to an array literal;
+ * - every element is an identifier or a spread of one;
+ * - every spread names an upstream aggregate from {@link UPSTREAM_NOTIFICATION_TASK_HANDLERS}, or one of the app's own
+ *   `ALL_*_NOTIFICATION_TASK_TYPES` that holds nothing upstream: no spread, no unreadable value, no upstream task-type
+ *   constant.
+ *
+ * The listing helper doesn't look inside the app's aggregates yet. An upstream task type held there, or in a spread the
+ * scanner doesn't know (an aggregate from another library, an aliased import), would read as missing.
+ *
+ * @param call - The task service call.
+ * @param appAggregates - The app's own task-type aggregates (`ExtractedAppNotifications.taskAllTypesAggregates`).
+ * @returns `true` when a missing listing is real.
+ */
+export function isValidateListingConclusive(call: ExtractedTaskServiceCall, appAggregates: readonly ExtractedTaskTypeAggregateArray[]): boolean {
+  const plainAppAggregates = new Set(appAggregates.filter((x) => x.spreadIdentifiers.length === 0 && x.opaqueValues.length === 0 && !x.taskTypeIdentifiers.some((id) => UPSTREAM_NOTIFICATION_TASK_TYPE_CONSTANTS.has(id))).map((x) => x.symbolName));
+  return call.validateStatus === 'resolved' && call.opaqueValidateValues.length === 0 && call.spreadValidateIdentifiers.every((name) => UPSTREAM_NOTIFICATION_TASK_AGGREGATES.has(name) || plainAppAggregates.has(name));
+}
+
+/**
+ * A task service whose `handlers` reach a table row's handler while its `validate` doesn't list the row's task types.
+ */
+export interface UpstreamTaskTypesNotInValidate {
+  readonly call: ExtractedTaskServiceCall;
+  readonly contract: UpstreamNotificationTaskHandlerContract;
+  /**
+   * The first reached call of the row's handler factory.
+   */
+  readonly handlerCall: ExtractedUpstreamHandlerCall;
+}
+
+/**
+ * Selects every task service and table row where an upstream handler is reachable but `validate` lists neither the row's
+ * aggregate nor one of its task-type constants ({@link upstreamTaskTypesListing}), which is the reverse of
+ * `NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED`. Only services whose listing is conclusive count
+ * ({@link isValidateListingConclusive}). Rows with `dedicatedCodes` are included; each rule keeps its own rows.
+ *
+ * A reached call is strong evidence that the handler is registered, so the `handlers` trace doesn't need to be complete:
+ * an incomplete trace only hides handlers, which means fewer findings, never false ones.
+ *
+ * @param extracted - The extraction; only its `taskServiceCalls` and `taskAllTypesAggregates` are read.
+ * @returns One entry per service and row, in source and table order.
+ */
+export function selectUpstreamTaskTypesNotInValidate(extracted: Pick<ExtractedAppNotifications, 'taskServiceCalls' | 'taskAllTypesAggregates'>): readonly UpstreamTaskTypesNotInValidate[] {
+  const out: UpstreamTaskTypesNotInValidate[] = [];
+  for (const call of extracted.taskServiceCalls) {
+    if (isValidateListingConclusive(call, extracted.taskAllTypesAggregates)) {
+      for (const contract of UPSTREAM_NOTIFICATION_TASK_HANDLERS) {
+        const handlerCall = call.reachedUpstreamHandlerCalls.find((x) => x.factory === contract.handlerFactory);
+        if (handlerCall !== undefined && upstreamTaskTypesListing(call, contract) === undefined) {
+          out.push({ call, contract, handlerCall });
+        }
+      }
+    }
+  }
+  return out;
 }
 
 /**
