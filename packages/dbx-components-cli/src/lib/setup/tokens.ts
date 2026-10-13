@@ -141,9 +141,6 @@ function buildPerFileTokens(naming: SetupNaming, options: SetupTokenOptions): Re
     { search: 'demo-api', replace: naming.apiAppName }
   ]);
 
-  // serve-in-container.sh — the dev-server container's entry point (docker-compose.yml `command:`)
-  map.set('root/serve-in-container.sh', [{ search: 'demo-api', replace: naming.apiAppName }]);
-
   // serve-web.sh (script line 422)
   map.set('root/serve-web.sh', [{ search: 'demo', replace: naming.angularAppName }]);
 
