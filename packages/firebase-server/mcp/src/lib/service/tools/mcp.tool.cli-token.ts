@@ -31,6 +31,11 @@ export interface CreateCliTokenToolDeps {
    * The app-supplied minter. The tool is only ever built when one is wired.
    */
   readonly minter: McpCliTokenMinter;
+  /**
+   * The advertised tool name. Defaults to {@link CLI_TOKEN_TOOL_NAME}; the compact MCP surface names
+   * it `<prefix>_mcp_token`.
+   */
+  readonly name?: string;
 }
 
 /**
@@ -80,7 +85,7 @@ export function createCliTokenTool(deps: CreateCliTokenToolDeps): McpToolDefinit
   const handler: McpStaticToolHandler = (args, ctx) => cliTokenToolHandler(args, ctx, deps);
 
   return buildStaticToolDefinition({
-    name: CLI_TOKEN_TOOL_NAME,
+    name: deps.name ?? CLI_TOKEN_TOOL_NAME,
     description:
       'Mints a short-lived CLI login credential for YOU (the calling session) and returns a one-time claim code plus, when available, a signed download URL for the CLI binary. The credential is capped at one hour, carries no more privilege than this session (never `token.cli` or `token.service`), and expires with this session if that is sooner. The refresh token is never returned here — redeem the claim code with `<cli> auth handoff <code>` within two minutes.',
     inputSchema: CLI_TOKEN_INPUT_SCHEMA,

@@ -1,5 +1,8 @@
 export * from './analytics';
+export * from './mcp.compact';
 export * from './mcp.manifest';
+export * from './mcp.method';
+export * from './mcp.method.search';
 export * from './mcp.reason';
 export * from './mcp.route-manifest';
 export * from './mcp.response-formatter';
@@ -14,3 +17,7 @@ export * from './tools/mcp.tool.enum-info';
 export * from './tools/mcp.tool.url-models';
 export * from './tools/mcp.tool.batch-execute';
 export * from './tools/mcp.tool.cli-token';
+export * from './tools/mcp.tool.whoami';
+export * from './tools/mcp.tool.compact-search';
+export * from './tools/mcp.tool.compact-details';
+export * from './tools/mcp.tool.compact-router';

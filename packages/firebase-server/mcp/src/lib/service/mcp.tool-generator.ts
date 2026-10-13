@@ -26,6 +26,10 @@ export interface McpToolListEntry {
    * classification; see {@link resolveMcpToolAnnotations}.
    */
   readonly annotations?: ToolAnnotations;
+  /**
+   * Client hints such as `anthropic/alwaysLoad`, added per request by the server factory.
+   */
+  readonly _meta?: Record<string, unknown>;
 }
 
 /**
@@ -109,6 +113,11 @@ export interface McpToolDefinition {
    * registered tools.
    */
   readonly toolDetailsBuilder?: McpToolDetailsBuilder;
+  /**
+   * When `true`, the auto-injected reason parameter is never added to this tool's advertised input
+   * schema. Used by the compact discovery tools (`search`, `details`) that only read the catalog.
+   */
+  readonly omitReasonParameter?: boolean;
 }
 
 /**
@@ -253,7 +262,10 @@ export interface McpToolGenerationResult {
 }
 
 // MARK: Wire Entry
-interface BuildStaticWireEntryInput {
+/**
+ * Input for {@link buildStaticWireEntry}.
+ */
+export interface BuildStaticWireEntryInput {
   readonly name: string;
   readonly description: string;
   readonly inputSchema?: object;
@@ -332,6 +344,10 @@ export interface BuildStaticToolDefinitionInput {
    * `token.cli`). Omitted ⇒ no scope requirement, which is right for every read-only built-in.
    */
   readonly requiredScopeTerms?: readonly OidcScopeTerm[];
+  /**
+   * When `true`, the auto-injected reason parameter is never added to this tool's input schema.
+   */
+  readonly omitReasonParameter?: boolean;
 }
 
 /**
@@ -350,7 +366,7 @@ export interface BuildStaticToolDefinitionInput {
  * @returns A statically-registered {@link McpToolDefinition} to append to the MCP server factory's tool registry.
  */
 export function buildStaticToolDefinition(input: BuildStaticToolDefinitionInput): McpToolDefinition {
-  const { name, inputSchema, outputSchema, dispatch, staticHandler, effectiveReadOnly, rule, requiredScopeTerms } = input;
+  const { name, inputSchema, outputSchema, dispatch, staticHandler, effectiveReadOnly, rule, requiredScopeTerms, omitReasonParameter } = input;
   const annotations = resolveMcpToolAnnotations(effectiveReadOnly);
   const description = applyWriteMarker(input.description, annotations);
 
@@ -363,7 +379,8 @@ export function buildStaticToolDefinition(input: BuildStaticToolDefinitionInput)
     dispatch,
     staticHandler,
     filterMetadata: { visibilityKind: 'declarative', rule: rule ?? {}, effectiveReadOnly, ...(requiredScopeTerms == null ? undefined : { requiredScopeTerms }) },
-    staticWireEntry: buildStaticWireEntry({ name, description, inputSchema, outputSchema, annotations })
+    staticWireEntry: buildStaticWireEntry({ name, description, inputSchema, outputSchema, annotations }),
+    ...(omitReasonParameter === true ? { omitReasonParameter } : undefined)
   };
 }
 

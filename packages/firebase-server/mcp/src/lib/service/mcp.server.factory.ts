@@ -6,22 +6,41 @@ import { oidcScopeTermsSatisfied, type OnCallTypedModelParams } from '@dereekb/f
 import { getOidcScopesFromRequest } from '@dereekb/firebase-server/oidc';
 import { authRolesSetHasRoles, type AuthClaims, type AuthRoleSet, type Maybe } from '@dereekb/util';
 import { ModelApiCallModelDispatchService, ModelApiGetService, FirebaseServerStorageService, type FirebaseServerAuthData } from '@dereekb/firebase-server';
-import { McpModuleConfig, DEFAULT_MCP_SERVER_NAME, DEFAULT_MCP_SERVER_INSTRUCTIONS, MCP_AUTH_ROLE_READER, type McpAuthRoleReader, MCP_CLI_TOKEN_MINTER, type McpCliTokenMinter, MCP_MODEL_ROLES_TARGET_UID_PREDICATE, type McpModelRolesTargetUidPredicate } from '../mcp.config';
+import {
+  McpModuleConfig,
+  DEFAULT_MCP_SERVER_NAME,
+  DEFAULT_MCP_SERVER_INSTRUCTIONS,
+  MCP_AUTH_ROLE_READER,
+  type McpAuthRoleReader,
+  MCP_CLI_TOKEN_MINTER,
+  type McpCliTokenMinter,
+  MCP_MODEL_ROLES_TARGET_UID_PREDICATE,
+  type McpModelRolesTargetUidPredicate,
+  MCP_ADDITIONAL_TOOLS,
+  type McpAdditionalTools,
+  type McpCompactToolNames
+} from '../mcp.config';
 import { applyMcpReasonParameterToSchema, extractMcpReasonFromArgs, mcpSchemaDeclaresProperty, resolveMcpReasonParameterConfig, type ResolvedMcpReasonParameterConfig } from './mcp.reason';
 import { MCP_ANALYTICS_SERVICE, noopMcpAnalyticsService, type McpAnalyticsEvent, type McpAnalyticsService } from './analytics/mcp.analytics.handler';
 import { MCP_MANIFEST_VERSION, type McpManifest, type McpManifestAuth, type McpManifestEnum, type McpManifestModelEntry, type McpManifestToolEntry } from './mcp.manifest';
 import { ROUTE_MANIFEST_VERSION, type RouteManifest } from './mcp.route-manifest';
 import { formatMcpToolErrorResponse, formatMcpToolResponse } from './mcp.response-formatter';
 import { generateMcpToolDefinitions, MCP_TOOL_NAME_MAX_LENGTH, type McpToolDefinition, type McpToolGenerationNamingOptions, type McpToolGenerationResult, type McpToolGenerationSkip, type McpToolGenerationWarning, type McpToolListEntry, type McpStaticToolHandler } from './mcp.tool-generator';
+import { MCP_ALWAYS_LOAD_META_KEY, MCP_COMPACT_TOOL_KEYS, buildMcpCompactInstructions, planMcpToolSurface, resolveMcpCompactToolNames, resolveMcpToolNamePrefix, type McpToolSurfacePlan } from './mcp.compact';
+import { type McpMethod, type McpMethodKind, type McpMethodView } from './mcp.method';
+import { buildMcpMethodSearchEntries, suggestMcpMethods, type McpMethodSearchEntries } from './mcp.method.search';
+import { createMcpCompactSearchTool } from './tools/mcp.tool.compact-search';
+import { createMcpCompactDetailsTool } from './tools/mcp.tool.compact-details';
+import { createMcpCompactRouterTool } from './tools/mcp.tool.compact-router';
 import { createModelGetTool } from './tools/mcp.tool.model-get';
 import { createModelRolesTool } from './tools/mcp.tool.model-roles';
 import { createModelInfoTool } from './tools/mcp.tool.model-info';
 import { createModelDecodeTool } from './tools/mcp.tool.model-decode';
 import { createEnumInfoTool } from './tools/mcp.tool.enum-info';
 import { createWhoamiTool } from './tools/mcp.tool.whoami';
-import { createCliTokenTool } from './tools/mcp.tool.cli-token';
+import { CLI_TOKEN_TOOL_NAME, createCliTokenTool } from './tools/mcp.tool.cli-token';
 import { createUrlModelsTool } from './tools/mcp.tool.url-models';
-import { createBatchExecuteTool, batchOperationCoordKey, type BatchOperationAuthorization } from './tools/mcp.tool.batch-execute';
+import { BATCH_EXECUTE_TOOL_NAME, createBatchExecuteTool, batchOperationCoordKey, type BatchOperationAuthorization } from './tools/mcp.tool.batch-execute';
 
 /**
  * Optional per-request context passed when invoking the MCP server through a
@@ -48,7 +67,7 @@ export class McpServerFactoryService {
   private readonly _logger = new Logger(McpServerFactoryService.name);
 
   private _cachedTools: McpToolGenerationResult | undefined;
-  private _cachedStaticTools: ReadonlyArray<McpToolDefinition> | undefined;
+  private _catalog: McpToolCatalog | undefined;
   private _cachedManifest: ReadonlyMap<string, McpManifestToolEntry> | undefined;
   private _cachedManifestModels: ReadonlyArray<McpManifestModelEntry> | undefined;
   private _cachedManifestEnums: { readonly [name: string]: McpManifestEnum } | undefined;
@@ -70,7 +89,8 @@ export class McpServerFactoryService {
     @Optional() @Inject(MCP_ANALYTICS_SERVICE) analyticsService?: McpAnalyticsService,
     @Optional() @Inject(FirebaseServerStorageService) private readonly storageService?: FirebaseServerStorageService,
     @Optional() @Inject(MCP_MODEL_ROLES_TARGET_UID_PREDICATE) private readonly modelRolesTargetUidPredicate?: McpModelRolesTargetUidPredicate,
-    @Optional() @Inject(MCP_CLI_TOKEN_MINTER) private readonly cliTokenMinter?: McpCliTokenMinter
+    @Optional() @Inject(MCP_CLI_TOKEN_MINTER) private readonly cliTokenMinter?: McpCliTokenMinter,
+    @Optional() @Inject(MCP_ADDITIONAL_TOOLS) private readonly additionalTools?: McpAdditionalTools
   ) {
     this._analyticsService = analyticsService ?? noopMcpAnalyticsService();
   }
@@ -82,6 +102,7 @@ export class McpServerFactoryService {
    * @returns A configured MCP server ready to be `connect()`-ed to a transport.
    */
   createServer(ctx: McpRequestContext): McpServer {
+    const catalog = this._resolveCatalog();
     const baseServerName = this.mcpConfig.serverName ?? DEFAULT_MCP_SERVER_NAME;
     const serverName = this.mcpConfig.readOnly === true ? `${baseServerName} (read-only)` : baseServerName;
 
@@ -91,41 +112,212 @@ export class McpServerFactoryService {
         version: this.mcpConfig.serverVersion ?? '0.0.0'
       },
       {
-        instructions: this.mcpConfig.serverInstructions ?? DEFAULT_MCP_SERVER_INSTRUCTIONS
+        instructions: catalog.instructions
       }
     );
 
     server.server.registerCapabilities({ tools: {} });
 
-    const toolGeneration = this._resolveToolDefinitions();
-    const staticTools = this._resolveStaticTools();
     const scopes = this._resolveScopes(ctx);
     const authRoles = this._resolveAuthRoles(ctx);
-    const combinedTools: ReadonlyArray<McpToolDefinition> = [...toolGeneration.tools, ...staticTools];
-    const visibleTools = this._filterToolsForRequest(combinedTools, { ctx, scopes, authRoles });
-    const definitionsByName = new Map<string, McpToolDefinition>(visibleTools.map((tool) => [tool.name, tool]));
+    const filterContext = { ctx, scopes, authRoles };
+    const { plan, compact } = catalog;
+    const visible = this._filterToolsForRequest(plan.methodCandidates, filterContext);
+    const promotedVisible = visible.filter((tool) => plan.promoted.has(tool));
 
-    // The batch tool is request-scoped: it authorizes each batched operation against this caller's
-    // resolved visible tool set, so it can't be cached like the other static tools.
-    const batchTool = this._resolveBatchTool(ctx, definitionsByName);
-    let listedTools: ReadonlyArray<McpToolDefinition> = visibleTools;
-
-    if (batchTool != null) {
-      definitionsByName.set(batchTool.name, batchTool);
-      listedTools = [...visibleTools, batchTool];
-    }
+    // The batch tool is request-scoped: it authorizes each batched operation against the callModel methods this
+    // caller may run directly (every visible method in compact mode; the listed ones in legacy mode).
+    const batchTool = this._resolveBatchTool(ctx, compact ? visible : promotedVisible);
+    const batchListed: McpToolDefinition[] = batchTool != null && plan.batchPromoted ? [batchTool] : [];
+    const view = plan.registry.view(batchTool == null ? visible : [...visible, batchTool]);
+    const standalone = this._filterToolsForRequest(plan.standaloneTools, filterContext);
+    const listedAsTools = new Set<McpToolDefinition>([...promotedVisible, ...batchListed]);
+    const compactTools = compact ? this._buildCompactTools({ catalog, view, ctx, scopes, listedAsTools }) : [];
+    const listedTools: ReadonlyArray<McpToolDefinition> = compact ? [...compactTools, ...standalone, ...promotedVisible, ...batchListed] : [...promotedVisible, ...standalone, ...batchListed];
+    const definitionsByName = new Map<string, McpToolDefinition>(listedTools.map((tool) => [tool.name, tool]));
+    const state: McpRequestToolState = { ctx, catalog, view, definitionsByName };
 
     server.server.setRequestHandler('tools/list', async () => ({
       // McpToolListEntry types its schemas as opaque `object`: they are read from a manifest file
       // or produced by arktype's JSON Schema export, so the `type: 'object'` root the SDK's wire
       // type mandates holds at runtime but cannot be proven statically. Every schema reaching here
       // either came from arktypeToJsonSchemaForExport or defaulted to `{ type: 'object' }`.
-      tools: listedTools.map((tool) => this._buildToolListEntry(tool, ctx, scopes)) as Tool[]
+      tools: listedTools.map((tool) => this._buildToolListEntry(tool, { ctx, scopes }, catalog.metaByName.get(tool.name))) as Tool[]
     }));
 
-    server.server.setRequestHandler('tools/call', async (request) => this._handleToolCall(request, definitionsByName, ctx));
+    server.server.setRequestHandler('tools/call', async (request) => {
+      const result = await this._handleToolCall(request, state);
+      // Routed calls advertise no output schema of their own, so their (possibly array or primitive) results are
+      // projected without one. A no-op on the 2026-07-28 era.
+      const listed = catalog.routerKindByName.has(request.params.name) ? undefined : definitionsByName.get(request.params.name);
+      return server.server.projectCallToolResult(result, (listed?.outputSchema as Maybe<Readonly<Record<string, unknown>>>) ?? undefined);
+    });
 
     return server;
+  }
+
+  /**
+   * The resolved compact tool names. `token` is the CLI token tool's name in either mode (`cli-token` when the
+   * compact surface is off).
+   *
+   * @returns The resolved names.
+   */
+  get compactToolNames(): McpCompactToolNames {
+    return this._resolveCatalog().compactNames;
+  }
+
+  /**
+   * Builds the boot-time tool catalog once: generated tools, built-in methods, the token tool, app-supplied tools,
+   * the method registry, the surface plan, and the instructions.
+   *
+   * @returns The cached catalog.
+   * @throws {Error} When the compact surface is on and the tool-name prefix or a compact tool name is invalid.
+   */
+  private _resolveCatalog(): McpToolCatalog {
+    let catalog = this._catalog;
+
+    if (catalog == null) {
+      const generation = this._resolveToolDefinitions();
+      const toolsConfig = this.mcpConfig.tools;
+      const compact = toolsConfig?.compact !== false;
+      const methodTools = toolsConfig?.methodTools ?? false;
+      const baseServerName = this.mcpConfig.serverName ?? DEFAULT_MCP_SERVER_NAME;
+      let resolvedNames: McpCompactToolNames;
+      let prefix: string;
+
+      try {
+        prefix = this.mcpConfig.toolNamePrefix ?? resolveMcpToolNamePrefix(baseServerName);
+        resolvedNames = resolveMcpCompactToolNames({ prefix, names: toolsConfig?.names });
+      } catch (error) {
+        // Legacy mode never advertises the compact names, so a server name they can't be derived from is fine there.
+        if (compact) {
+          throw error;
+        }
+
+        prefix = 'mcp';
+        resolvedNames = resolveMcpCompactToolNames({ prefix });
+      }
+
+      const compactNames: McpCompactToolNames = compact ? resolvedNames : { ...resolvedNames, token: CLI_TOKEN_TOOL_NAME };
+      const builtins = this._resolveBuiltinMethodTools();
+      const token = this.cliTokenMinter == null ? undefined : createCliTokenTool({ minter: this.cliTokenMinter, name: compactNames.token });
+      const batchName = this.storageService == null ? undefined : BATCH_EXECUTE_TOOL_NAME;
+      const plan = planMcpToolSurface({ compact, methodTools, compactNames, generated: generation.tools, builtins, token, additional: this.additionalTools, batchName });
+
+      plan.errors.forEach((line) => this._logger.error(line));
+      plan.warnings.forEach((line) => this._logger.warn(line));
+
+      const routerKindByName = new Map<string, McpMethodKind>();
+      const metaByName = new Map<string, Record<string, unknown>>();
+      let routerTools: Maybe<McpCompactRouterTools>;
+
+      if (compact) {
+        routerTools = {
+          read: createMcpCompactRouterTool({ name: compactNames.read, kind: 'read', app: prefix, otherName: compactNames.write }),
+          write: createMcpCompactRouterTool({ name: compactNames.write, kind: 'write', app: prefix, otherName: compactNames.read })
+        };
+
+        routerKindByName.set(compactNames.read, 'read');
+        routerKindByName.set(compactNames.write, 'write');
+
+        for (const key of MCP_COMPACT_TOOL_KEYS) {
+          metaByName.set(compactNames[key], { [MCP_ALWAYS_LOAD_META_KEY]: true, ...toolsConfig?.meta?.[key] });
+        }
+      }
+
+      for (const definition of plan.alwaysLoad) {
+        metaByName.set(definition.name, { [MCP_ALWAYS_LOAD_META_KEY]: true });
+      }
+
+      let instructions = this.mcpConfig.serverInstructions ?? DEFAULT_MCP_SERVER_INSTRUCTIONS;
+
+      if (compact && toolsConfig?.instructions !== false) {
+        const builtinReadMethods = builtins.filter((tool) => tool.filterMetadata.effectiveReadOnly === true).map((tool) => tool.name);
+        instructions = `${instructions}\n\n${buildMcpCompactInstructions({ app: prefix, names: compactNames, builtinReadMethods, hasDocumentation: false, hasToken: token != null, methodToolsListed: plan.promoted.size > 0 })}`;
+      }
+
+      catalog = {
+        compact,
+        prefix,
+        compactNames,
+        plan,
+        searchEntries: buildMcpMethodSearchEntries(plan.registry.methods, this._cachedManifestModels),
+        routerTools,
+        routerKindByName,
+        metaByName,
+        instructions
+      };
+
+      this._catalog = catalog;
+      this._logSurfaceSummary(catalog);
+    }
+
+    return catalog;
+  }
+
+  /**
+   * Logs one line describing the advertised surface, so a flipped default or a missing optional injection is visible.
+   *
+   * @param catalog - The resolved catalog.
+   */
+  private _logSurfaceSummary(catalog: McpToolCatalog): void {
+    const { plan, compact, prefix } = catalog;
+    const methods = plan.registry.methods;
+    const callModelCount = methods.filter((x) => x.source === 'callModel').length;
+    const additionalCount = (this.additionalTools ?? []).length;
+    const methodTools = this.mcpConfig.tools?.methodTools;
+    const methodToolsLabel = methodTools == null || methodTools === false ? 'off' : `on (${plan.promoted.size} listed)`;
+    const compactLabel = compact ? `on (prefix "${prefix}")` : 'off';
+    const unsetHint = this.mcpConfig.tools == null ? ' McpModuleConfig.tools is unset, so the compact surface is the default; set tools: { compact: false, methodTools: true } for the legacy per-method tools.' : '';
+    this._logger.log(`MCP tool surface: compact=${compactLabel}, methodTools=${methodToolsLabel}, ${methods.length} methods (${callModelCount} callModel), ${additionalCount} additional tools, token=${this.cliTokenMinter == null ? 'off' : 'on'}, docs=off.${unsetHint}`);
+  }
+
+  /**
+   * Builds the request-scoped compact tools: `search` and `details` over the caller's visible methods, plus the
+   * `read` / `write` routers when at least one method of that kind is visible.
+   *
+   * @param input - The catalog, the caller's visible view, and the request context.
+   * @param input.catalog - The resolved catalog.
+   * @param input.view - The caller's visible methods.
+   * @param input.ctx - The per-request context.
+   * @param input.scopes - The caller's granted OIDC scopes.
+   * @param input.listedAsTools - The method definitions also listed as their own tools for this request.
+   * @returns The compact tools to list, in order.
+   */
+  private _buildCompactTools(input: { readonly catalog: McpToolCatalog; readonly view: McpMethodView; readonly ctx: McpRequestContext; readonly scopes: Maybe<ReadonlySet<string>>; readonly listedAsTools: ReadonlySet<McpToolDefinition> }): McpToolDefinition[] {
+    const { catalog, view, scopes, listedAsTools } = input;
+    const { compactNames: names, prefix: app, searchEntries: entries, routerTools } = catalog;
+    const tools: McpToolDefinition[] = [];
+
+    if (view.methods.length > 0) {
+      tools.push(
+        createMcpCompactSearchTool({ name: names.search, app, detailsName: names.details, readName: names.read, writeName: names.write, entries, view }),
+        createMcpCompactDetailsTool({
+          name: names.details,
+          app,
+          searchName: names.search,
+          readName: names.read,
+          writeName: names.write,
+          entries,
+          view,
+          models: this._cachedManifestModels,
+          isListedAsTool: (method) => listedAsTools.has(method.definition),
+          resolveWireEntry: (definition, ctx) => this._resolveToolWireEntry(definition, { auth: ctx.auth, rawRequest: ctx.rawRequest }, scopes)
+        })
+      );
+    }
+
+    if (routerTools != null) {
+      if (view.methods.some((method) => method.kind === 'read')) {
+        tools.push(routerTools.read);
+      }
+
+      if (this.mcpConfig.readOnly !== true && view.methods.some((method) => method.kind === 'write')) {
+        tools.push(routerTools.write);
+      }
+    }
+
+    return tools;
   }
 
   /**
@@ -232,120 +424,93 @@ export class McpServerFactoryService {
   }
 
   /**
-   * Builds the list of statically-registered (non-callModel) MCP tools.
+   * Builds the built-in (non-callModel) method tools, in legacy listing order.
    *
-   * Includes `model-get` whenever {@link ModelApiGetService} is available, plus
-   * `model-info` and `model-decode` whenever the boot-time MCP manifest provided
-   * a non-empty `models` catalog. The list is cached for the lifetime of the
-   * process since static tools share the same boot-time inputs as the
-   * auto-generated ones.
+   * Includes `model-get` and `model-roles` whenever {@link ModelApiGetService} is available (plus `url-models` when a
+   * route manifest was loaded), `model-info` and `model-decode` whenever the boot-time MCP manifest provided a
+   * non-empty `models` catalog, `enum-info` for a non-empty `enums` block, and `whoami` for an `auth` block. The
+   * CLI token tool is not a method; the catalog builds it separately.
    *
-   * @returns The cached array of static tool definitions, filtered for collisions with generated tools.
+   * @returns The built-in method tool definitions.
    */
-  private _resolveStaticTools(): ReadonlyArray<McpToolDefinition> {
-    let result = this._cachedStaticTools;
+  private _resolveBuiltinMethodTools(): McpToolDefinition[] {
+    // Ensure the manifest has been loaded so its `models` array is available for the catalog tools.
+    this._resolveManifest();
 
-    if (result == null) {
-      // Ensure the manifest has been loaded so its `models` array is available for the catalog tools.
-      this._resolveManifest();
+    const builtins: McpToolDefinition[] = [];
+    const getService = this.modelApiGetService;
+    const modelManifest = this._cachedManifestModels;
+    const enumManifest = this._cachedManifestEnums;
 
-      const staticTools: McpToolDefinition[] = [];
-      const getService = this.modelApiGetService;
-      const modelManifest = this._cachedManifestModels;
-      const enumManifest = this._cachedManifestEnums;
+    if (getService != null) {
+      builtins.push(
+        createModelGetTool({
+          readDocuments: (modelType, keys, auth) => getService.readDocuments(modelType, keys, auth),
+          resolveIdentity: (modelType, auth) => getService.getModelIdentity(modelType, auth),
+          ...(modelManifest == null ? {} : { manifest: modelManifest })
+        }),
+        createModelRolesTool({
+          readRoleMaps: (params) => getService.readRoleMaps(params),
+          resolveIdentity: (modelType, auth) => getService.getModelIdentity(modelType, auth),
+          canTargetOtherUids: this.modelRolesTargetUidPredicate
+        })
+      );
 
-      if (getService != null) {
-        staticTools.push(
-          createModelGetTool({
+      // `url-models` reuses the model-get read/identity path, so it is only offered when the get
+      // service is wired AND a route manifest with at least one state was loaded.
+      const routeManifest = this._resolveRouteManifest();
+
+      if (routeManifest != null && routeManifest.states.length > 0) {
+        builtins.push(
+          createUrlModelsTool({
+            routeManifest,
             readDocuments: (modelType, keys, auth) => getService.readDocuments(modelType, keys, auth),
-            resolveIdentity: (modelType, auth) => getService.getModelIdentity(modelType, auth),
-            ...(modelManifest == null ? {} : { manifest: modelManifest })
-          }),
-          createModelRolesTool({
-            readRoleMaps: (params) => getService.readRoleMaps(params),
-            resolveIdentity: (modelType, auth) => getService.getModelIdentity(modelType, auth),
-            canTargetOtherUids: this.modelRolesTargetUidPredicate
+            resolveIdentity: (modelType, auth) => getService.getModelIdentity(modelType, auth)
           })
         );
-
-        // `url-models` reuses the model-get read/identity path, so it is only offered when the get
-        // service is wired AND a route manifest with at least one state was loaded.
-        const routeManifest = this._resolveRouteManifest();
-
-        if (routeManifest != null && routeManifest.states.length > 0) {
-          staticTools.push(
-            createUrlModelsTool({
-              routeManifest,
-              readDocuments: (modelType, keys, auth) => getService.readDocuments(modelType, keys, auth),
-              resolveIdentity: (modelType, auth) => getService.getModelIdentity(modelType, auth)
-            })
-          );
-        }
       }
-
-      if (modelManifest != null && modelManifest.length > 0) {
-        staticTools.push(createModelInfoTool({ manifest: modelManifest, ...(enumManifest == null ? {} : { enums: enumManifest }) }), createModelDecodeTool({ manifest: modelManifest }));
-      }
-
-      // `enum-info` only needs the enum value tables — register it whenever the manifest carries a
-      // non-empty `enums` block, independent of the model catalog.
-      if (enumManifest != null && Object.keys(enumManifest).length > 0) {
-        staticTools.push(createEnumInfoTool({ enums: enumManifest }));
-      }
-
-      const authManifest = this._cachedManifestAuth;
-
-      if (authManifest != null) {
-        staticTools.push(createWhoamiTool({ auth: authManifest, roleReader: this.roleReader }));
-      }
-
-      // `cli-token` only exists when the app wires a minter — the mint needs the OIDC provider,
-      // which this package deliberately does not depend on.
-      if (this.cliTokenMinter != null) {
-        staticTools.push(createCliTokenTool({ minter: this.cliTokenMinter }));
-      }
-
-      // Guard against the auto-generated tools accidentally claiming a static tool name. The first
-      // dispatch wins via Map.set order, so a collision would silently shadow one side.
-      const generatedNames = new Set(this._cachedTools?.tools.map((t) => t.name) ?? []);
-      const filtered: McpToolDefinition[] = [];
-
-      for (const tool of staticTools) {
-        if (generatedNames.has(tool.name)) {
-          this._logger.warn(`Static MCP tool "${tool.name}" collides with an auto-generated tool of the same name; the auto-generated tool will win.`);
-        } else {
-          filtered.push(tool);
-        }
-      }
-
-      result = filtered;
-      this._cachedStaticTools = result;
     }
 
-    return result;
+    if (modelManifest != null && modelManifest.length > 0) {
+      builtins.push(createModelInfoTool({ manifest: modelManifest, ...(enumManifest == null ? {} : { enums: enumManifest }) }), createModelDecodeTool({ manifest: modelManifest }));
+    }
+
+    // `enum-info` only needs the enum value tables — register it whenever the manifest carries a
+    // non-empty `enums` block, independent of the model catalog.
+    if (enumManifest != null && Object.keys(enumManifest).length > 0) {
+      builtins.push(createEnumInfoTool({ enums: enumManifest }));
+    }
+
+    const authManifest = this._cachedManifestAuth;
+
+    if (authManifest != null) {
+      builtins.push(createWhoamiTool({ auth: authManifest, roleReader: this.roleReader }));
+    }
+
+    return builtins;
   }
 
   /**
    * Builds the per-request `batch-execute` tool, or `undefined` when it should not be offered.
    *
-   * Unlike the cached static tools this is rebuilt per request, because it closes over the caller's
-   * resolved visible tool set: each batched operation is authorized against exactly the callModel
-   * tools this caller may invoke directly. Offered only when a storage service is wired (it reads
+   * Unlike the cached built-ins this is rebuilt per request, because it closes over the caller's
+   * callable methods: each batched operation is authorized against exactly the callModel methods
+   * this caller may invoke directly. Offered only when a storage service is wired (it reads
    * the uploaded operations file), the caller is authenticated, and the server is not in read-only
    * mode (the tool performs writes).
    *
    * @param ctx - The per-request context (auth, raw request) forwarded to dispatched operations.
-   * @param definitionsByName - The caller's visible tool definitions, keyed by name.
+   * @param callable - The method definitions this caller may run directly.
    * @returns The batch tool definition, or `undefined` when unavailable for this request.
    */
-  private _resolveBatchTool(ctx: McpRequestContext, definitionsByName: ReadonlyMap<string, McpToolDefinition>): Maybe<McpToolDefinition> {
+  private _resolveBatchTool(ctx: McpRequestContext, callable: Iterable<McpToolDefinition>): Maybe<McpToolDefinition> {
     let result: Maybe<McpToolDefinition>;
     const storageService = this.storageService;
 
     if (storageService != null && ctx.auth != null && this.mcpConfig.readOnly !== true) {
       const authorizedCoords = new Set<string>();
 
-      for (const definition of definitionsByName.values()) {
+      for (const definition of callable) {
         // Only callModel tools are re-dispatchable; static tools (model-get, whoami) have synthetic
         // dispatch identities the callModel chain can't resolve.
         if (definition.staticHandler == null) {
@@ -622,40 +787,25 @@ export class McpServerFactoryService {
   }
 
   /**
-   * Resolves the wire-shape `tools/list` entry for a single tool.
+   * Resolves the wire-shape entry for a single tool, without the reason parameter.
    *
-   * Hot-path short-circuit: tools without a `toolDetailsBuilder` reuse the precomputed,
-   * frozen {@link McpToolDefinition.staticWireEntry} verbatim — zero allocations per
-   * request for the common case. When the auto-injected reason parameter is enabled (the
-   * default), the entry is no longer returned frozen-verbatim: its `inputSchema` is wrapped
-   * with the reason property per request (`tools/list` is low-frequency, so the allocation is
-   * acceptable). Tools that already declare the parameter name are still reused verbatim.
+   * Hot-path short-circuit: tools without a `toolDetailsBuilder` reuse the precomputed, frozen
+   * {@link McpToolDefinition.staticWireEntry} verbatim — zero allocations per request for the common case.
    *
-   * Tools that opted in to {@link McpToolDetailsBuilder} get a fresh wire entry built
-   * from the builder's overrides. If the builder throws, the framework falls back to
-   * the static defaults and logs a warning (fail-soft, matching `_passesVisibility`).
+   * Tools that opted in to {@link McpToolDetailsBuilder} get a fresh wire entry built from the builder's
+   * overrides. If the builder throws, the framework falls back to the static defaults and logs a warning
+   * (fail-soft, matching `_passesVisibility`). The compact `details` tool reuses this path.
    *
    * @param tool - The tool definition whose wire entry is being resolved.
    * @param ctx - The per-request context forwarded to any dynamic details builder.
    * @param scopes - The caller's granted OIDC scopes forwarded to any dynamic details builder.
-   * @returns The wire-shape entry to emit for this tool on `tools/list`.
+   * @returns The wire-shape entry for this tool.
    */
-  private _buildToolListEntry(tool: McpToolDefinition, ctx: McpRequestContext, scopes: Maybe<ReadonlySet<string>>): McpToolListEntry {
-    const reasonConfig = this._resolveReasonConfig();
+  private _resolveToolWireEntry(tool: McpToolDefinition, ctx: McpRequestContext, scopes: Maybe<ReadonlySet<string>>): McpToolListEntry {
     let result: McpToolListEntry;
 
     if (tool.toolDetailsBuilder == null) {
       result = tool.staticWireEntry;
-
-      if (reasonConfig.enabled) {
-        const reasoned = applyMcpReasonParameterToSchema(tool.staticWireEntry.inputSchema, reasonConfig);
-
-        // applyMcpReasonParameterToSchema self-skips (returns the same reference) on collision, so the
-        // frozen-verbatim hot path still holds for tools that already declare the parameter name.
-        if (reasoned !== tool.staticWireEntry.inputSchema) {
-          result = { ...tool.staticWireEntry, inputSchema: reasoned };
-        }
-      }
     } else {
       let description = tool.description;
       let inputSchema: object | undefined = tool.inputSchema;
@@ -680,16 +830,10 @@ export class McpServerFactoryService {
         this._logger.warn(`MCP tool ${tool.name} toolDetails builder threw; falling back to defaults: ${(error as Error).message}`);
       }
 
-      let resolvedInputSchema: object = inputSchema ?? { type: 'object' };
-
-      if (reasonConfig.enabled) {
-        resolvedInputSchema = applyMcpReasonParameterToSchema(resolvedInputSchema, reasonConfig);
-      }
-
       const wire: { name: string; description: string; inputSchema: object; outputSchema?: object; annotations?: ToolAnnotations } = {
         name: tool.name,
         description,
-        inputSchema: resolvedInputSchema
+        inputSchema: inputSchema ?? { type: 'object' }
       };
 
       if (tool.outputSchema != null) {
@@ -707,20 +851,56 @@ export class McpServerFactoryService {
   }
 
   /**
-   * Central dispatch point for every MCP tool call. Runs the underlying handler — callModel,
-   * static, or unknown-tool — then emits a single analytics event on completion so every call
+   * Resolves the `tools/list` entry for a single tool: the wire entry from {@link _resolveToolWireEntry}, with the
+   * auto-injected reason parameter and any `_meta` hints applied.
+   *
+   * When the reason parameter is enabled (the default), the entry is no longer returned frozen-verbatim: its
+   * `inputSchema` is wrapped with the reason property per request (`tools/list` is low-frequency, so the allocation
+   * is acceptable). Tools that already declare the parameter name, or that set `omitReasonParameter`, are reused verbatim.
+   *
+   * @param tool - The tool definition whose wire entry is being resolved.
+   * @param request - The per-request context and OIDC scopes forwarded to any dynamic details builder.
+   * @param request.ctx - The per-request context.
+   * @param request.scopes - The caller's granted OIDC scopes.
+   * @param meta - Optional `_meta` hints for the entry.
+   * @returns The wire-shape entry to emit for this tool on `tools/list`.
+   */
+  private _buildToolListEntry(tool: McpToolDefinition, request: { readonly ctx: McpRequestContext; readonly scopes: Maybe<ReadonlySet<string>> }, meta?: Maybe<Record<string, unknown>>): McpToolListEntry {
+    const reasonConfig = this._resolveReasonConfig();
+    let result = this._resolveToolWireEntry(tool, request.ctx, request.scopes);
+
+    if (reasonConfig.enabled && tool.omitReasonParameter !== true) {
+      const reasoned = applyMcpReasonParameterToSchema(result.inputSchema, reasonConfig);
+
+      // applyMcpReasonParameterToSchema self-skips (returns the same reference) on collision, so the
+      // frozen-verbatim hot path still holds for tools that already declare the parameter name.
+      if (reasoned !== result.inputSchema) {
+        result = { ...result, inputSchema: reasoned };
+      }
+    }
+
+    if (meta != null) {
+      result = { ...result, _meta: meta };
+    }
+
+    return result;
+  }
+
+  /**
+   * Central dispatch point for every MCP tool call. Runs the underlying handler — a routed compact `read` / `write`
+   * call, callModel, static, or unknown-tool — then emits a single analytics event on completion so every call
    * is tracked uniformly.
    *
    * Success vs error is decided by the resolved outcome: an outcome that carries a thrown
    * error, or a response flagged `isError`, counts as a failure. The original thrown error
-   * (when present) is forwarded on the event.
+   * (when present) is forwarded on the event. For routed calls the event describes the executed method.
    *
    * @param request - The `tools/call` request carrying the tool name and arguments.
-   * @param definitionsByName - The visible tool definitions keyed by name for this request.
-   * @param ctx - The per-request context (auth, raw request) forwarded to the handler.
+   * @param state - The per-request tool state (listed definitions, visible methods, context).
    * @returns The MCP tool response.
    */
-  private async _handleToolCall(request: McpCallToolRequest, definitionsByName: Map<string, McpToolDefinition>, ctx: McpRequestContext): Promise<CallToolResult> {
+  private async _handleToolCall(request: McpCallToolRequest, state: McpRequestToolState): Promise<CallToolResult> {
+    const { ctx, catalog, view, definitionsByName } = state;
     const toolName = request.params.name;
     const definition = definitionsByName.get(toolName);
     const rawArgs = request.params.arguments ?? {};
@@ -732,11 +912,18 @@ export class McpServerFactoryService {
     const reasonConfig = this._resolveReasonConfig();
     const declaresOwn = mcpSchemaDeclaresProperty(definition?.inputSchema, reasonConfig.parameterName);
     const { reason, args } = extractMcpReasonFromArgs(rawArgs, reasonConfig, declaresOwn);
+    const routerKind = definition == null ? undefined : catalog.routerKindByName.get(toolName);
 
     let outcome: McpToolCallOutcome;
+    let executed: Maybe<McpToolDefinition> = definition;
+    let routed: Maybe<McpRoutedCallResult>;
 
     if (definition == null) {
-      outcome = { response: formatMcpToolErrorResponse(new Error(`Unknown tool: ${toolName}`)) as CallToolResult };
+      outcome = { response: formatMcpToolErrorResponse(new Error(this._describeUnknownTool(toolName, catalog, view))) as CallToolResult };
+    } else if (routerKind != null) {
+      routed = await this._handleRoutedToolCall({ kind: routerKind, args, state });
+      outcome = routed.outcome;
+      executed = routed.method?.definition;
     } else if (definition.staticHandler == null) {
       outcome = await this._handleCallModelToolCall(definition, args, ctx);
     } else {
@@ -746,26 +933,109 @@ export class McpServerFactoryService {
     const isSuccessful = outcome.error == null && outcome.response.isError !== true;
 
     // Unknown tools never reached a handler; classify as 'static' since no callModel dispatch occurred.
-    const toolKind: McpAnalyticsEvent['toolKind'] = definition != null && definition.staticHandler == null ? 'callModel' : 'static';
+    const toolKind: McpAnalyticsEvent['toolKind'] = executed != null && executed.staticHandler == null ? 'callModel' : 'static';
 
     this._emitMcpAnalytics({
       event: toolName,
       toolName,
       toolKind,
-      call: definition?.dispatch.call,
-      modelType: definition?.dispatch.modelType,
-      specifier: definition?.dispatch.specifier,
+      call: executed?.dispatch.call,
+      modelType: executed?.dispatch.modelType,
+      specifier: executed?.dispatch.specifier,
       uid: ctx.auth?.uid,
       auth: ctx.auth,
       readOnly: this.mcpConfig.readOnly === true,
-      args,
-      reason,
+      args: routed == null ? args : routed.params,
+      reason: reason ?? routed?.innerReason,
       isSuccessful,
       error: outcome.error,
-      durationMs: Date.now() - startedAt
+      durationMs: Date.now() - startedAt,
+      ...(routed == null ? undefined : { routed: true, method: routed.method?.id, ...(routed.method == null ? { requestedMethod: routed.requestedMethod } : undefined) })
     });
 
     return outcome.response;
+  }
+
+  /**
+   * Describes an unknown tool. When the compact surface is on and the name resolves to a visible method (a stale
+   * client calling a legacy per-method tool name), the message says which compact tool to call instead.
+   *
+   * @param toolName - The requested tool name.
+   * @param catalog - The resolved catalog.
+   * @param view - The caller's visible methods.
+   * @returns The error message.
+   */
+  private _describeUnknownTool(toolName: string, catalog: McpToolCatalog, view: McpMethodView): string {
+    const method = catalog.compact ? view.resolve(toolName) : undefined;
+    const routerName = method == null ? undefined : catalog.compactNames[method.kind];
+    return method == null ? `Unknown tool: ${toolName}` : `Unknown tool: ${toolName}. It is now a method: call \`${routerName}\` with \`method: '${method.id}'\`.`;
+  }
+
+  /**
+   * Runs a call to a compact `read` / `write` router: validates the arguments, resolves the method in the caller's
+   * visible view, checks its kind, then runs it like a direct call with `params` as its arguments.
+   *
+   * @param input - The router kind, the reason-stripped router arguments, and the request state.
+   * @param input.kind - The router's kind.
+   * @param input.args - The router arguments, outer reason already stripped.
+   * @param input.state - The per-request tool state.
+   * @returns The outcome plus the resolved method and its params.
+   */
+  private async _handleRoutedToolCall(input: { readonly kind: McpMethodKind; readonly args: Record<string, unknown>; readonly state: McpRequestToolState }): Promise<McpRoutedCallResult> {
+    const { kind, args, state } = input;
+    const { catalog, view, ctx } = state;
+    const requestedMethod = typeof args['method'] === 'string' ? args['method'] : undefined;
+    const extraKeys = Object.keys(args).filter((key) => key !== 'method' && key !== 'params');
+    let params: unknown = args['params'];
+    let errorMessage: Maybe<string>;
+    let method: Maybe<McpMethod>;
+
+    if (typeof params === 'string') {
+      try {
+        params = JSON.parse(params);
+      } catch {
+        errorMessage = '`params` must be an object (or a JSON object string).';
+      }
+    }
+
+    if (errorMessage == null) {
+      if (requestedMethod == null || requestedMethod.trim().length === 0) {
+        errorMessage = `\`method\` is required: pass a method id from \`${catalog.compactNames.search}\`, e.g. \`{ method: 'worker.create', params: { … } }\`.`;
+      } else if (extraKeys.length > 0) {
+        const quoted = extraKeys.map((x) => `\`${x}\``).join(', ');
+        errorMessage = `Unexpected argument(s) ${quoted}: put the method's arguments in \`params\`.`;
+      } else if (params != null && (typeof params !== 'object' || Array.isArray(params))) {
+        errorMessage = '`params` must be an object (or a JSON object string).';
+      } else {
+        method = view.resolve(requestedMethod);
+
+        if (method == null) {
+          const suggestions = suggestMcpMethods({ entries: catalog.searchEntries, view, name: requestedMethod });
+          const quoted = suggestions.map((x) => `\`${x}\``).join(', ');
+          const hint = suggestions.length > 0 ? ` Did you mean: ${quoted}?` : ` Use \`${catalog.compactNames.search}\` to find methods.`;
+          errorMessage = `Unknown method: ${requestedMethod}.${hint}`;
+        } else if (method.kind !== kind) {
+          errorMessage = `\`${method.id}\` is a ${method.kind} method; call \`${catalog.compactNames[method.kind]}\`.`;
+          method = undefined;
+        }
+      }
+    }
+
+    let result: McpRoutedCallResult;
+
+    if (method == null) {
+      result = { outcome: { response: formatMcpToolErrorResponse(new Error(errorMessage ?? `Unknown method: ${requestedMethod}`)) as CallToolResult }, requestedMethod, params: {} };
+    } else {
+      // A stray params-level reason is used as a fallback analytics reason, unless the method owns that field.
+      const reasonConfig = this._resolveReasonConfig();
+      const declaresOwn = mcpSchemaDeclaresProperty(method.definition.inputSchema, reasonConfig.parameterName);
+      const inner = extractMcpReasonFromArgs((params ?? {}) as Record<string, unknown>, reasonConfig, declaresOwn);
+      const target = method.definition;
+      const outcome = target.staticHandler == null ? await this._handleCallModelToolCall(target, inner.args, ctx) : await this._handleStaticToolCall(target.staticHandler, inner.args, ctx);
+      result = { outcome, method, requestedMethod, params: inner.args, innerReason: inner.reason };
+    }
+
+    return result;
   }
 
   /**
@@ -814,6 +1084,65 @@ export class McpServerFactoryService {
 
     return outcome;
   }
+}
+
+/**
+ * The `read` / `write` router shells, built once at boot.
+ */
+interface McpCompactRouterTools {
+  readonly read: McpToolDefinition;
+  readonly write: McpToolDefinition;
+}
+
+/**
+ * Boot-time tool catalog, built once by `_resolveCatalog`.
+ */
+interface McpToolCatalog {
+  readonly compact: boolean;
+  readonly prefix: string;
+  readonly compactNames: McpCompactToolNames;
+  readonly plan: McpToolSurfacePlan;
+  readonly searchEntries: McpMethodSearchEntries;
+  readonly routerTools: Maybe<McpCompactRouterTools>;
+  /**
+   * Router tool names to their kind. Only routers are routed; every other listed tool runs directly.
+   */
+  readonly routerKindByName: ReadonlyMap<string, McpMethodKind>;
+  /**
+   * `_meta` hints per listed tool name.
+   */
+  readonly metaByName: ReadonlyMap<string, Record<string, unknown>>;
+  readonly instructions: string;
+}
+
+/**
+ * Per-request state shared by the `tools/call` handler.
+ */
+interface McpRequestToolState {
+  readonly ctx: McpRequestContext;
+  readonly catalog: McpToolCatalog;
+  /**
+   * The caller's visible methods. Routed calls resolve only within this view.
+   */
+  readonly view: McpMethodView;
+  readonly definitionsByName: ReadonlyMap<string, McpToolDefinition>;
+}
+
+/**
+ * Result of a routed compact `read` / `write` call.
+ */
+interface McpRoutedCallResult {
+  readonly outcome: McpToolCallOutcome;
+  /**
+   * The resolved method, or `undefined` when it could not be resolved or was the wrong kind.
+   */
+  readonly method?: McpMethod;
+  readonly requestedMethod?: string;
+  /**
+   * The method arguments (the inner `params`, reason stripped).
+   */
+  readonly params: Record<string, unknown>;
+  readonly innerReason?: Maybe<string>;
 }
 
 /**

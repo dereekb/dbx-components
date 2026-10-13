@@ -1,6 +1,8 @@
 import { type AuthClaims, type AuthRoleSet, type Maybe, type PromiseOrValue } from '@dereekb/util';
 import { type FirebaseServerAuthData } from '@dereekb/firebase-server';
 import { type FirestoreModelType, type OidcModelScopeRequirement, type OidcScope, type OidcScopeTerm } from '@dereekb/firebase';
+import { type McpMethodToolSelector } from './service/mcp.method';
+import { type McpToolDefinition } from './service/mcp.tool-generator';
 
 /**
  * Default path the MCP Streamable HTTP transport is mounted at.
@@ -239,7 +241,97 @@ export abstract class McpModuleConfig {
    * confine a subset client apply identically to the advertised tool list.
    */
   readonly modelRequiredScopes?: Record<FirestoreModelType, OidcModelScopeRequirement>;
+
+  /**
+   * Prefix for the compact tool names (`<prefix>_mcp_search`, `search_<prefix>_documentation`, …).
+   *
+   * Defaults to one derived from the base {@link serverName}: lowercased, runs of non-alphanumerics replaced
+   * with `_`, then a trailing `_mcp` and a trailing `_api` stripped (`hellosubs-api-mcp` → `hellosubs`).
+   * At most {@link MCP_TOOL_NAME_PREFIX_MAX_LENGTH} characters.
+   */
+  readonly toolNamePrefix?: string;
+  /**
+   * Selects the advertised tool surface. Defaults to the compact surface only.
+   *
+   * Pass `{ compact: false, methodTools: true }` to keep the legacy one-tool-per-method surface exactly.
+   */
+  readonly tools?: McpToolsConfig;
 }
+
+/**
+ * Keys of the compact MCP tools.
+ */
+export type McpCompactToolKey = 'search' | 'details' | 'read' | 'write' | 'token' | 'documentation';
+
+/**
+ * Resolved compact tool names, keyed by {@link McpCompactToolKey}.
+ */
+export type McpCompactToolNames = Readonly<Record<McpCompactToolKey, string>>;
+
+/**
+ * Configures which tools the MCP server advertises. See {@link McpModuleConfig.tools}.
+ */
+export interface McpToolsConfig {
+  /**
+   * Advertise the compact, Stripe-like surface: `search` → `details` → `read` / `write` over every visible
+   * method, plus the `token` and `documentation` tools when available.
+   *
+   * Defaults to `true`.
+   */
+  readonly compact?: boolean;
+  /**
+   * Also advertise methods as their own (legacy, per-method) tools.
+   *
+   * - `true` promotes every visible method under its legacy tool name. These tools carry no
+   *   `anthropic/alwaysLoad` hint, so clients with tool search keep them deferred.
+   * - A {@link McpMethodToolSelector} promotes the selected methods and marks them `anthropic/alwaysLoad`.
+   *
+   * Defaults to `false`.
+   */
+  readonly methodTools?: boolean | McpMethodToolSelector;
+  /**
+   * Full-name overrides per compact tool. Each name must be a valid MCP tool name; an invalid one throws at boot.
+   */
+  readonly names?: Partial<Record<McpCompactToolKey, string>>;
+  /**
+   * `_meta` merged onto each compact tool's `tools/list` entry, e.g.
+   * `{ token: { 'anthropic/requiresUserInteraction': true } }`.
+   */
+  readonly meta?: Partial<Record<McpCompactToolKey, Record<string, unknown>>>;
+  /**
+   * Append the compact usage block to the server instructions. Defaults to `true`.
+   */
+  readonly instructions?: boolean;
+}
+
+/**
+ * How an app-supplied tool is exposed.
+ *
+ * - `tool` — listed as its own tool next to the compact tools.
+ * - `method` — reachable only as a method through `search` / `details` / `read` / `write`.
+ * - `both` — listed as a tool and reachable as a method.
+ */
+export type McpAdditionalToolExpose = 'tool' | 'method' | 'both';
+
+/**
+ * One app-supplied MCP tool. Build the definition with `mcpAdditionalTool()` or `buildStaticToolDefinition()`.
+ */
+export interface McpAdditionalTool {
+  readonly definition: McpToolDefinition;
+  readonly expose: McpAdditionalToolExpose;
+}
+
+/**
+ * The app-supplied tools provided through {@link MCP_ADDITIONAL_TOOLS}.
+ */
+export type McpAdditionalTools = readonly McpAdditionalTool[];
+
+/**
+ * NestJS injection token for the optional {@link McpAdditionalTools} array.
+ *
+ * NestJS has no multi-providers, so provide a single array; merge several contributors in one `useFactory`.
+ */
+export const MCP_ADDITIONAL_TOOLS = 'MCP_ADDITIONAL_TOOLS';
 
 /**
  * Signature for the optional role reader the MCP module uses when evaluating

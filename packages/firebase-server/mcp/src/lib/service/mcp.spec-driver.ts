@@ -165,3 +165,45 @@ export async function dispatchMcpToolCall<T>(input: DispatchMcpToolCallInput): P
 export async function dispatchMcpDiscover(factory: McpServerFactoryService, ctx: McpSpecDriverContext = {}): Promise<{ readonly instructions?: string; readonly capabilities?: Record<string, unknown>; readonly supportedVersions?: ReadonlyArray<string> }> {
   return (await dispatchMcp({ factory, ctx, method: 'server/discover', params: {} })) as { instructions?: string; capabilities?: Record<string, unknown>; supportedVersions?: ReadonlyArray<string> };
 }
+
+/**
+ * Input for {@link dispatchMcpMethodCall}.
+ */
+export interface DispatchMcpMethodCallInput {
+  /**
+   * The factory under test.
+   */
+  readonly factory: McpServerFactoryService;
+  /**
+   * Auth and raw-request context the server is built from.
+   */
+  readonly ctx: McpSpecDriverContext;
+  /**
+   * Which compact router to call through.
+   */
+  readonly kind: 'read' | 'write';
+  /**
+   * The method id or alias.
+   */
+  readonly method: string;
+  /**
+   * The method parameters.
+   */
+  readonly params?: unknown;
+  /**
+   * Extra top-level router arguments (e.g. a `reason`).
+   */
+  readonly extraArgs?: Record<string, unknown>;
+}
+
+/**
+ * Builds a server and runs one method through the compact `read` / `write` router.
+ *
+ * @param input - The factory, context, router kind, method, and params.
+ * @returns The `CallToolResult` payload, shaped by the caller.
+ */
+export async function dispatchMcpMethodCall<T>(input: DispatchMcpMethodCallInput): Promise<T> {
+  const { factory, ctx, kind, method, params, extraArgs } = input;
+  const name = factory.compactToolNames[kind];
+  return dispatchMcpToolCall<T>({ factory, ctx, name, args: { method, ...(params === undefined ? undefined : { params }), ...extraArgs } });
+}

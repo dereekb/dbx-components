@@ -62,7 +62,9 @@ export function demoMcpModuleConfigFactory(envService: FirebaseServerEnvService,
     serverVersion,
     serverInstructions: 'Demo API MCP tools for the dbx-components guestbook/profile sample models. Generated from the callModel _apiDetails tree.',
     mcpManifestPath: MCP_MANIFEST_PATH,
-    mcpRouteManifestPath: ROUTE_MANIFEST_PATH
+    mcpRouteManifestPath: ROUTE_MANIFEST_PATH,
+    // Keeps the legacy per-method surface until the demo adopts the compact surface alongside it.
+    tools: { compact: false, methodTools: true }
   };
 }
 

@@ -81,6 +81,22 @@ export interface McpAnalyticsEvent {
    * Wall-clock duration in milliseconds from dispatch start to completion.
    */
   readonly durationMs?: Maybe<number>;
+  /**
+   * The resolved method id when the call was routed through a compact `read` / `write` tool
+   * (e.g. `worker.create`). For routed calls {@link toolName} is the compact wire tool, while
+   * {@link toolKind}, {@link call}, {@link modelType}, {@link specifier}, and {@link args} describe the
+   * executed method.
+   */
+  readonly method?: Maybe<string>;
+  /**
+   * `true` when the call was routed through a compact `read` / `write` tool.
+   */
+  readonly routed?: Maybe<boolean>;
+  /**
+   * The method the caller asked for when a routed call could not be resolved (unknown, hidden, or
+   * the wrong kind for the tool used).
+   */
+  readonly requestedMethod?: Maybe<string>;
 }
 
 /**
