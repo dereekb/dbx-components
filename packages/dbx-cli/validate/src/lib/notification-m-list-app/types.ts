@@ -67,6 +67,10 @@ export interface TaskSummary {
   readonly dataInterfaceName: string | undefined;
   readonly checkpoints: readonly string[];
   readonly inAllArray: boolean;
+  /**
+   * Listed by a `notificationTaskService({ validate })` call, directly or inside one of the app's own
+   * `ALL_*_NOTIFICATION_TASK_TYPES` aggregates it spreads (followed through any nesting).
+   */
   readonly inValidateList: boolean;
   readonly hasHandler: boolean;
   readonly handlerFlowStepCount: number | undefined;

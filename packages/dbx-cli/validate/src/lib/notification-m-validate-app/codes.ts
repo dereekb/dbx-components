@@ -278,8 +278,8 @@ export enum NotificationMValidateAppCode {
    * `notificationTaskService()` throws at startup for this.
    *
    * @dbxRuleSeverity error
-   * @dbxRuleApplies When `notificationTaskService({ validate, handlers })` lists a task type in `validate:` that the `handlers:` traversal doesn't reach.
-   * @dbxRuleNotApplies Task types from upstream `@dereekb/*` modules. The StorageFile and FormSpace aggregates are checked by `NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED`, the NotificationTaskBot types by `NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED`; other upstream types are trusted.
+   * @dbxRuleApplies When the first `notificationTaskService({ validate, handlers })` call lists a task type in `validate:`, directly or inside one of the app's own `ALL_*_NOTIFICATION_TASK_TYPES` aggregates it spreads (component aggregates nested in it are followed too), and no `NotificationTaskServiceTaskHandlerConfig` in the scanned API files declares it as its `type:`.
+   * @dbxRuleNotApplies Task types from upstream `@dereekb/*` modules. The StorageFile and FormSpace aggregates are checked by `NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED`, the NotificationTaskBot types by `NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED`; other upstream types are trusted. A task type whose handler config is declared but not reachable from `handlers:` (for the component's own task types that is `NOTIF_TASK_HANDLER_NAME_MISMATCH`). Values the scanner can't read: a `validate` that is not an array literal, an element or spread that is not an identifier, and component aggregates outside `src/lib/model/notification/`. Task services after the first, and apps whose component declares no `NotificationTaskType` constant.
    * @dbxRuleFix Add the matching `NotificationTaskServiceTaskHandlerConfig` for the task and include it in `handlers:`.
    */
   NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER = 'NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER',

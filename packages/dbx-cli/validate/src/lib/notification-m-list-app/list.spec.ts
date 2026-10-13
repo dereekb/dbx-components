@@ -216,3 +216,67 @@ describe('listAppNotifications', () => {
     expect(md).toContain('_None found._');
   });
 });
+
+// MARK: inValidateList through nested component aggregates
+const LIST_OPTIONS = { componentDir: 'components/demo-firebase', apiDir: 'apps/demo-api' };
+const APP_TASK_AGGREGATE_ELEMENTS = '= [EXAMPLE_NOTIFICATION_TASK_TYPE];';
+const NESTED_TASK_TYPE_DECLARATION = "export const NESTED_NOTIFICATION_TASK_TYPE: NotificationTaskType = 'N';";
+
+// Returns the happy inspection with `files` added to the component and `elements` appended to ALL_NOTIFICATION_TASK_TYPES.
+function inspectionWithComponentAggregates(files: readonly InspectedFile[], elements: string | undefined): AppNotificationsInspection {
+  const inspection = happyInspection();
+  const component = inspection.component.files.map((f) => {
+    let result = f;
+    if (elements !== undefined && f.relPath.endsWith('notification.task.ts')) {
+      if (!f.text.includes(APP_TASK_AGGREGATE_ELEMENTS)) throw new Error(`\`${APP_TASK_AGGREGATE_ELEMENTS}\` not found in ${f.relPath}`);
+      result = { ...f, text: f.text.replace(APP_TASK_AGGREGATE_ELEMENTS, `= [EXAMPLE_NOTIFICATION_TASK_TYPE, ${elements}];`) };
+    }
+    return result;
+  });
+  const result: AppNotificationsInspection = { ...inspection, component: { ...inspection.component, files: [...component, ...files] } };
+  return result;
+}
+
+function taskAggregateFile(level: string, declarations: string, elements: string): InspectedFile {
+  return { relPath: `src/lib/model/notification/notification.${level}.task.ts`, text: `import { type NotificationTaskType } from '@dereekb/firebase';\n${declarations}\nexport const ALL_${level.toUpperCase()}_NOTIFICATION_TASK_TYPES: NotificationTaskType[] = [${elements}];\n` };
+}
+
+// Declares NESTED_NOTIFICATION_TASK_TYPE `depth` component aggregates below `validate`: in the deepest of `depth - 1`
+// files `ALL_LEVEL<k>_NOTIFICATION_TASK_TYPES`, each spreading the next. With `spread` the outermost is spread into
+// ALL_NOTIFICATION_TASK_TYPES.
+function nestedTaskInspection(depth: number, spread = true): AppNotificationsInspection {
+  const files: InspectedFile[] = [];
+  for (let level = 2; level <= depth; level += 1) {
+    const deepest = level === depth;
+    files.push(taskAggregateFile(`level${level}`, deepest ? NESTED_TASK_TYPE_DECLARATION : '', deepest ? 'NESTED_NOTIFICATION_TASK_TYPE' : `...ALL_LEVEL${level + 1}_NOTIFICATION_TASK_TYPES`));
+  }
+  return inspectionWithComponentAggregates(files, spread ? '...ALL_LEVEL2_NOTIFICATION_TASK_TYPES' : undefined);
+}
+
+function taskSummaryOf(inspection: AppNotificationsInspection, symbolName: string) {
+  return listAppNotifications(inspection, LIST_OPTIONS).tasks.find((t) => t.symbolName === symbolName);
+}
+
+describe('listAppNotifications — inValidateList through nested component aggregates', () => {
+  it.each([2, 3])('reports inValidateList for a task type %i component aggregates below validate', (depth) => {
+    const inspection = nestedTaskInspection(depth);
+    expect(taskSummaryOf(inspection, 'NESTED_NOTIFICATION_TASK_TYPE')).toMatchObject({ inAllArray: true, inValidateList: true, hasHandler: false });
+    expect(taskSummaryOf(inspection, 'EXAMPLE_NOTIFICATION_TASK_TYPE')).toMatchObject({ inValidateList: true });
+  });
+
+  it('reports inValidateList false for a task type in a component aggregate validate never reaches', () => {
+    expect(taskSummaryOf(nestedTaskInspection(2, false), 'NESTED_NOTIFICATION_TASK_TYPE')).toMatchObject({ inAllArray: true, inValidateList: false });
+  });
+
+  it('terminates on component aggregates that spread each other', () => {
+    const inspection = inspectionWithComponentAggregates([taskAggregateFile('cycle', NESTED_TASK_TYPE_DECLARATION, '...ALL_NOTIFICATION_TASK_TYPES, NESTED_NOTIFICATION_TASK_TYPE')], '...ALL_CYCLE_NOTIFICATION_TASK_TYPES');
+    const report = listAppNotifications(inspection, LIST_OPTIONS);
+    expect(report.tasks.map((t) => [t.symbolName, t.inValidateList])).toEqual(
+      expect.arrayContaining([
+        ['EXAMPLE_NOTIFICATION_TASK_TYPE', true],
+        ['NESTED_NOTIFICATION_TASK_TYPE', true]
+      ])
+    );
+    expect(report.tasks).toHaveLength(2);
+  });
+});

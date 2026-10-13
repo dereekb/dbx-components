@@ -199,8 +199,8 @@ export interface ExtractedTaskTypeAggregateArray {
   readonly taskTypeIdentifiers: readonly string[];
   /**
    * Identifiers spread (`...X`) into the aggregate: another of the app's aggregates, or an upstream aggregate such as
-   * `ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`. The `validate` expansion
-   * ({@link ExtractedTaskServiceCall.nestedUpstreamValidateListings}) follows them.
+   * `ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`. The `validate` expansion follows them
+   * ({@link ExtractedTaskServiceCall.nestedValidateIdentifiers}, {@link ExtractedTaskServiceCall.nestedUpstreamValidateListings}).
    */
   readonly spreadIdentifiers: readonly string[];
   /**
@@ -299,6 +299,10 @@ export interface ExtractedTaskHandlerEntry {
  * The `notificationTaskService({ validate, handlers })` call (called directly, through an `@dereekb/*` import alias, or as an `@dereekb/*` namespace member).
  */
 export interface ExtractedTaskServiceCall {
+  /**
+   * Identifiers written as elements of the `validate` literal. The task types it lists through the app's own component
+   * aggregates are in {@link nestedValidateIdentifiers}.
+   */
   readonly validateIdentifiers: readonly string[];
   readonly spreadValidateIdentifiers: readonly string[];
   readonly handlerTypeIdentifiers: readonly string[];
@@ -332,6 +336,14 @@ export interface ExtractedTaskServiceCall {
    * is non-empty, the `*_TASK_TYPES_NOT_IN_VALIDATE` checks skip the service, because the task types could be in there.
    */
   readonly opaqueValidateValues: readonly string[];
+  /**
+   * Every identifier element of the app's own component `ALL_*_NOTIFICATION_TASK_TYPES` aggregates that `validate`
+   * spreads, followed through any nesting (each aggregate once, so a cycle ends), in `validate` order: depth first, an
+   * aggregate's spreads before its own elements. Holds the app's task types and any other name written in those
+   * aggregates (an upstream task-type constant, a constant from elsewhere); each reader applies its own filters. A name
+   * two aggregates hold appears twice. Empty when `validate` spreads no component aggregate.
+   */
+  readonly nestedValidateIdentifiers: readonly string[];
   /**
    * Upstream task types `validate` lists through the app's own component aggregates (see
    * {@link ExtractedNestedUpstreamValidateListing}), in `validate` order. Only names imported from `@dereekb/*` and not

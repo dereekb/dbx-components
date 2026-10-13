@@ -1115,3 +1115,122 @@ describe('validateAppNotifications — values the handlers trace cannot see thro
     expect(warnings[0].message).toContain('`mysteryHandler`');
   });
 });
+
+// MARK: Task types validate lists through nested component aggregates
+const COMPONENT_TASK_PATH = 'src/lib/model/notification/notification.task.ts';
+const APP_TASK_AGGREGATE_ELEMENTS = '= [EXAMPLE_NOTIFICATION_TASK_TYPE]';
+const OTHER_TASK_TYPE_DECLARATION = "const OTHER_NOTIFICATION_TASK_TYPE = 'O';";
+
+interface TaskAggregateFileOptions {
+  /**
+   * `nested` gives `notification.nested.task.ts` declaring `ALL_NESTED_NOTIFICATION_TASK_TYPES`.
+   */
+  readonly stem: string;
+  readonly elements: string;
+  readonly declarations?: string;
+}
+
+// Pushes a component file declaring `ALL_<STEM>_NOTIFICATION_TASK_TYPES = [elements]` and returns the aggregate's name.
+function pushTaskAggregateFile(parts: NotificationFixtureParts, options: TaskAggregateFileOptions): string {
+  const { stem, elements, declarations = '' } = options;
+  const aggregate = `ALL_${stem.toUpperCase()}_NOTIFICATION_TASK_TYPES`;
+  parts.component.push({ relPath: `src/lib/model/notification/notification.${stem}.task.ts`, text: `import { type NotificationTaskType } from '@dereekb/firebase';\n${declarations}\nexport const ${aggregate}: NotificationTaskType[] = [${elements}];\n` });
+  return aggregate;
+}
+
+// Appends `elements` to the app's ALL_NOTIFICATION_TASK_TYPES, which `validate` spreads.
+function addToAppTaskAggregate(parts: NotificationFixtureParts, elements: string): void {
+  replaceInFile({ files: parts.component, relPath: COMPONENT_TASK_PATH, from: APP_TASK_AGGREGATE_ELEMENTS, to: `= [EXAMPLE_NOTIFICATION_TASK_TYPE, ${elements}]` });
+}
+
+// Puts OTHER_NOTIFICATION_TASK_TYPE (not a declared NotificationTaskType, so only this rule can see it, like the
+// task-rules case) `depth` aggregates below `validate`; depth 1 is ALL_NOTIFICATION_TASK_TYPES itself.
+function placeOtherTaskType(parts: NotificationFixtureParts, depth: number): void {
+  let element = 'OTHER_NOTIFICATION_TASK_TYPE';
+  let declarations = OTHER_TASK_TYPE_DECLARATION;
+  for (let level = depth; level > 1; level -= 1) {
+    element = `...${pushTaskAggregateFile(parts, { stem: `level${level}`, elements: element, declarations })}`;
+    declarations = '';
+  }
+  if (depth === 1) {
+    replaceInFile({ files: parts.component, relPath: COMPONENT_TASK_PATH, from: '// MARK: All Tasks', to: `${OTHER_TASK_TYPE_DECLARATION}\n\n// MARK: All Tasks` });
+  }
+  addToAppTaskAggregate(parts, element);
+}
+
+// Declares NESTED_NOTIFICATION_TASK_TYPE ('N') in ALL_NESTED_NOTIFICATION_TASK_TYPES, spreads that into
+// ALL_NOTIFICATION_TASK_TYPES, and with `withHandler` adds a typed handler config for it to `handlers`.
+function nestDeclaredTaskType(parts: NotificationFixtureParts, withHandler: boolean): void {
+  const aggregate = pushTaskAggregateFile(parts, { stem: 'nested', elements: 'NESTED_NOTIFICATION_TASK_TYPE', declarations: "export const NESTED_NOTIFICATION_TASK_TYPE: NotificationTaskType = 'N';" });
+  addToAppTaskAggregate(parts, `...${aggregate}`);
+  if (withHandler) {
+    addHandlerElement(parts.api, { local: "const nestedNotificationTaskHandler: NotificationTaskServiceTaskHandlerConfig<any> = { type: NESTED_NOTIFICATION_TASK_TYPE, flow: [{ checkpoint: 'part_a', fn: async () => null }] };", element: 'nestedNotificationTaskHandler' });
+  }
+}
+
+describe('validateAppNotifications — NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER through nested component aggregates', () => {
+  const CODE: ViolationCode = 'NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER';
+  const codesOf = (modify: (parts: NotificationFixtureParts) => void) => runWith(modify).violations.map((v) => v.code);
+  const nestedIdentifiersOf = (modify: (parts: NotificationFixtureParts) => void) => extractAppNotifications(inspectionWith(modify)).taskServiceCalls[0].nestedValidateIdentifiers;
+
+  it('passes when a handled task type sits in a component aggregate nested in ALL_NOTIFICATION_TASK_TYPES', () => {
+    expect(runWith((p) => nestDeclaredTaskType(p, true)).violations).toEqual([]);
+  });
+
+  it('reports a nested component task type without a handler, like one listed directly', () => {
+    expectCodes(
+      codesOf((p) => nestDeclaredTaskType(p, false)),
+      ['NOTIF_TASK_NOT_REGISTERED_IN_SERVICE', CODE]
+    );
+  });
+
+  it.each([1, 2, 3])('reports a task type %i aggregate(s) below validate that no handler declares', (depth) => {
+    const result = runWith((p) => placeOtherTaskType(p, depth));
+    expect(result.violations.map((v) => v.code)).toEqual([CODE]);
+    expect(result.violations[0]).toMatchObject({ severity: 'error', side: 'api', file: TASK_SERVICE_PATH });
+    expect(result.violations[0].message).toContain('`OTHER_NOTIFICATION_TASK_TYPE`');
+  });
+
+  it('reports a name once when two nested aggregates reach it', () => {
+    const modify = (p: NotificationFixtureParts) => {
+      const shared = pushTaskAggregateFile(p, { stem: 'shared', elements: 'OTHER_NOTIFICATION_TASK_TYPE', declarations: OTHER_TASK_TYPE_DECLARATION });
+      const left = pushTaskAggregateFile(p, { stem: 'left', elements: `...${shared}` });
+      const right = pushTaskAggregateFile(p, { stem: 'right', elements: `...${shared}, OTHER_NOTIFICATION_TASK_TYPE` });
+      addToAppTaskAggregate(p, `...${left}, ...${right}`);
+    };
+    expect(codesOf(modify)).toEqual([CODE]);
+    expect(nestedIdentifiersOf(modify)).toEqual(['OTHER_NOTIFICATION_TASK_TYPE', 'OTHER_NOTIFICATION_TASK_TYPE', 'EXAMPLE_NOTIFICATION_TASK_TYPE']);
+  });
+
+  it('terminates on component aggregates that spread each other', () => {
+    const modify = (p: NotificationFixtureParts) => {
+      const cycle = pushTaskAggregateFile(p, { stem: 'cycle', elements: '...ALL_NOTIFICATION_TASK_TYPES, OTHER_NOTIFICATION_TASK_TYPE', declarations: OTHER_TASK_TYPE_DECLARATION });
+      addToAppTaskAggregate(p, `...${cycle}`);
+    };
+    expect(codesOf(modify)).toEqual([CODE]);
+    expect(nestedIdentifiersOf(modify)).toEqual(['OTHER_NOTIFICATION_TASK_TYPE', 'EXAMPLE_NOTIFICATION_TASK_TYPE']);
+  });
+
+  it('leaves a trusted upstream constant nested two levels deep to NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED', () => {
+    const modify = (p: NotificationFixtureParts) => {
+      const storageFile = pushTaskAggregateFile(p, { stem: 'storagefile', elements: 'STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_TYPE', declarations: "import { STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_TYPE } from '@dereekb/firebase';" });
+      addToAppTaskAggregate(p, `...${storageFile}`);
+    };
+    expect(codesOf(modify)).toEqual(['NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED']);
+  });
+
+  it('ignores a component aggregate validate never reaches', () => {
+    const result = runWith((p) => {
+      pushTaskAggregateFile(p, { stem: 'unreached', elements: 'OTHER_NOTIFICATION_TASK_TYPE', declarations: OTHER_TASK_TYPE_DECLARATION });
+    });
+    expect(result.violations).toEqual([]);
+  });
+
+  it('records nestedValidateIdentifiers depth first, spreads before own elements', () => {
+    expect(nestedIdentifiersOf(() => undefined)).toEqual(['EXAMPLE_NOTIFICATION_TASK_TYPE']);
+    expect(nestedIdentifiersOf((p) => nestDeclaredTaskType(p, false))).toEqual(['NESTED_NOTIFICATION_TASK_TYPE', 'EXAMPLE_NOTIFICATION_TASK_TYPE']);
+    const [direct] = extractAppNotifications(inspectionWith(({ api }) => replaceInFile({ files: api, relPath: TASK_SERVICE_PATH, from: 'validate: [...ALL_NOTIFICATION_TASK_TYPES]', to: 'validate: [EXAMPLE_NOTIFICATION_TASK_TYPE]' }))).taskServiceCalls;
+    expect(direct.validateIdentifiers).toEqual(['EXAMPLE_NOTIFICATION_TASK_TYPE']);
+    expect(direct.nestedValidateIdentifiers).toEqual([]);
+  });
+});

@@ -14,7 +14,7 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { notificationValidateApp } from '@dereekb/dbx-cli/validate';
+import { notificationListApp, notificationValidateApp } from '@dereekb/dbx-cli/validate';
 import { applyIdempotency, scaffoldArtifact } from './artifact-scaffold/index.js';
 import { notificationMValidateAppTool } from './notification-m-validate-app.tool.js';
 
@@ -72,7 +72,7 @@ function removeFrom(files: InspectedFile[], relPath: string): void {
   files.splice(i, 1);
 }
 
-function validateWith(modify?: (m: MutableInspection) => void) {
+function inspectionWith(modify?: (m: MutableInspection) => void): Inspection {
   const m: MutableInspection = { component: [...base.component.files], api: [...base.api.files], rules: base.workspace?.firestoreRules?.text, indexes: base.workspace?.firestoreIndexes?.text };
   modify?.(m);
   const inspection: Inspection = {
@@ -80,7 +80,11 @@ function validateWith(modify?: (m: MutableInspection) => void) {
     api: { ...base.api, files: m.api },
     workspace: { firestoreRules: { path: 'firestore.rules', text: m.rules }, firestoreIndexes: { path: 'firestore.indexes.json', text: m.indexes } }
   };
-  return notificationValidateApp.validateAppNotifications(inspection, { componentDir: COMPONENT_DIR, apiDir: API_DIR });
+  return inspection;
+}
+
+function validateWith(modify?: (m: MutableInspection) => void) {
+  return notificationValidateApp.validateAppNotifications(inspectionWith(modify), { componentDir: COMPONENT_DIR, apiDir: API_DIR });
 }
 
 function taskBotFindings(result: ReturnType<typeof validateWith>) {
@@ -228,6 +232,49 @@ describe('dbx_notification_m_validate_app — demo pair upstream task types nest
     expect(found).toHaveLength(1);
     expect(found[0]).toMatchObject({ code: 'NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE', severity: 'warning' });
     expect(found[0].message).toContain('`...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES`');
+  });
+});
+
+// MARK: Demo task types two component aggregates below validate
+const WRAPPER_FILE = 'src/lib/model/notification/notification.task.all.ts';
+const DEMO_VALIDATE_HEAD = 'validate: [...ALL_NOTIFICATION_TASK_TYPES,';
+
+interface DemoWrapperExtra {
+  readonly declarations: string;
+  readonly elements: string;
+}
+
+// Wraps the demo's ALL_NOTIFICATION_TASK_TYPES in ALL_DEMO_NOTIFICATION_TASK_TYPES (plus `extra.elements`) and points
+// `validate` at the wrapper, so every demo task type sits two component aggregates below `validate`.
+function wrapDemoTaskTypes(m: MutableInspection, extra: DemoWrapperExtra = { declarations: '', elements: '' }): void {
+  m.component.push({
+    relPath: WRAPPER_FILE,
+    text: `import { type NotificationTaskType } from '@dereekb/firebase';\nimport { ALL_NOTIFICATION_TASK_TYPES } from './notification.task';\n${extra.declarations}\nexport const ALL_DEMO_NOTIFICATION_TASK_TYPES: NotificationTaskType[] = [...ALL_NOTIFICATION_TASK_TYPES${extra.elements}];\n`
+  });
+  replaceIn(m.api, TASK_SERVICE_FILE, DEMO_VALIDATE_HEAD, 'validate: [...ALL_DEMO_NOTIFICATION_TASK_TYPES,');
+}
+
+describe('dbx_notification_m_validate_app — demo pair task types two component aggregates below validate', () => {
+  it('accepts the demo with ALL_NOTIFICATION_TASK_TYPES wrapped in another component aggregate, and lists every task as in validate', () => {
+    expect(validateWith((m) => wrapDemoTaskTypes(m)).violations).toEqual(validateWith().violations);
+    const report = notificationListApp.listAppNotifications(
+      inspectionWith((m) => wrapDemoTaskTypes(m)),
+      { componentDir: COMPONENT_DIR, apiDir: API_DIR }
+    );
+    expect(report.tasks.length).toBeGreaterThan(0);
+    expect(report.tasks.filter((t) => !t.inValidateList).map((t) => t.symbolName)).toEqual([]);
+  });
+
+  it('reports NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER for a task type two aggregates deep that no handler declares', () => {
+    const baseline = new Set(validateWith().violations.map((v) => v.message));
+    const extra: DemoWrapperExtra = {
+      declarations: "const DEMO_UNHANDLED_NOTIFICATION_TASK_TYPE = 'DU';\nexport const ALL_DEMO_EXTRA_NOTIFICATION_TASK_TYPES: NotificationTaskType[] = [DEMO_UNHANDLED_NOTIFICATION_TASK_TYPE];\n",
+      elements: ', ...ALL_DEMO_EXTRA_NOTIFICATION_TASK_TYPES'
+    };
+    const added = validateWith((m) => wrapDemoTaskTypes(m, extra)).violations.filter((v) => !baseline.has(v.message));
+    expect(added).toHaveLength(1);
+    expect(added[0]).toMatchObject({ code: 'NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER', severity: 'error', file: TASK_SERVICE_FILE });
+    expect(added[0].message).toContain('`DEMO_UNHANDLED_NOTIFICATION_TASK_TYPE`');
   });
 });
 

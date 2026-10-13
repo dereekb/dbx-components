@@ -891,6 +891,7 @@ function extractTaskServiceCalls(input: ExtractTaskServiceCallsInput): readonly 
         unresolvedHandlerBindings: handlers.unresolvedBindings,
         validateStatus,
         opaqueValidateValues: validate.opaque,
+        nestedValidateIdentifiers: nested.identifiers,
         nestedUpstreamValidateListings: nested.listings,
         opaqueNestedValidateValues: nested.opaque,
         reachedUpstreamHandlerCalls: handlers.reachedUpstreamHandlerCalls,
@@ -960,27 +961,33 @@ interface ExpandComponentValidateSpreadsInput {
 }
 
 interface ExpandedComponentValidateSpreads {
+  /**
+   * Every element identifier of the aggregates the walk visits.
+   */
+  readonly identifiers: string[];
   readonly listings: ExtractedNestedUpstreamValidateListing[];
   readonly opaque: string[];
 }
 
 /**
  * Follows every component `ALL_*_NOTIFICATION_TASK_TYPES` aggregate a `validate` literal spreads, and every component
- * aggregate those spread in turn, and records each upstream aggregate spread or upstream task-type constant from
- * `UPSTREAM_NOTIFICATION_TASK_HANDLERS` they hold. A name counts only when it is imported from `@dereekb/*` (the trust
- * list) and the component does not declare it as its own task type, so a look-alike never raises an upstream error.
- * Each aggregate is visited once, which also stops a cycle.
+ * aggregate those spread in turn. Each aggregate is visited once, which also stops a cycle. For each one it records:
+ * - its element identifiers (`identifiers`): the app's task types and any other name written there, for the checks that
+ *   read the task types `validate` lists (`NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER`, the list report's `inValidateList`);
+ * - each upstream aggregate spread or upstream task-type constant from `UPSTREAM_NOTIFICATION_TASK_HANDLERS` it holds
+ *   (`listings`). A name counts only when it is imported from `@dereekb/*` (the trust list) and the component does not
+ *   declare it as its own task type, so a look-alike never raises an upstream error.
  *
  * Values the walk can't place are collected as opaque: an unreadable element, a spread of a name that is neither a
- * component aggregate nor a trusted upstream aggregate, and an upstream task-type constant that is not trusted. Other
- * element identifiers are the app's own task types (or task types from elsewhere) and are skipped.
+ * component aggregate nor a trusted upstream aggregate, and an upstream task-type constant that is not trusted.
  *
  * @param input - The call's `validate` spreads, the component index and the trust list.
- * @returns The nested listings in `validate` order (depth first, an aggregate's spreads before its constants), and the
- *   opaque values.
+ * @returns The element identifiers and the nested listings, both in `validate` order (depth first, an aggregate's
+ *   spreads before its own elements), and the opaque values.
  */
 function expandComponentValidateSpreads(input: ExpandComponentValidateSpreadsInput): ExpandedComponentValidateSpreads {
   const { validateSpreads, componentIndex, trustedExternal } = input;
+  const identifiers: string[] = [];
   const listings: ExtractedNestedUpstreamValidateListing[] = [];
   const opaque: string[] = [];
   const visited = new Set<string>();
@@ -1002,6 +1009,7 @@ function expandComponentValidateSpreads(input: ExpandComponentValidateSpreadsInp
         opaque.push(`...${name}`);
       }
     }
+    identifiers.push(...aggregate.taskTypeIdentifiers);
     for (const name of aggregate.taskTypeIdentifiers) {
       if (UPSTREAM_NOTIFICATION_TASK_TYPE_CONSTANTS.has(name) && !isOwnTaskType(name)) {
         if (trustedExternal.has(name)) {
@@ -1018,7 +1026,7 @@ function expandComponentValidateSpreads(input: ExpandComponentValidateSpreadsInp
       visit(aggregate, []);
     }
   }
-  return { listings, opaque };
+  return { identifiers, listings, opaque };
 }
 
 interface CollectHandlersArrayElementsOptions {

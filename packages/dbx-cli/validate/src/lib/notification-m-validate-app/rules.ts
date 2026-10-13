@@ -532,9 +532,10 @@ interface FlagValidateWithoutHandlerOptions {
 
 /**
  * Emits the validate-vs-handlers parity error for the first
- * `notificationTaskService` call. `notificationTaskService()` throws at
- * startup when a `validate` type has no handler, so this is an error. Uses the lenient handler-type set so a
- * declared-but-unreachable handler still counts as "exists" here; strict
+ * `notificationTaskService` call: every task type its `validate` lists, directly or through the app's own component
+ * aggregates (followed through any nesting, `ExtractedTaskServiceCall.nestedValidateIdentifiers`), needs a handler.
+ * `notificationTaskService()` throws at startup when a `validate` type has no handler, so this is an error. Uses the
+ * lenient handler-type set so a declared-but-unreachable handler still counts as "exists" here; strict
  * reachability is covered separately.
  *
  * @param options - Extraction, violations buffer, and lenient handler-type set.
@@ -543,13 +544,7 @@ function flagValidateWithoutHandler(options: FlagValidateWithoutHandlerOptions):
   const { extracted, violations, lenientHandlerTypeIdentifiers } = options;
   const call = extracted.taskServiceCalls[0];
   if (!call) return;
-  const validateNames = new Set<string>(call.validateIdentifiers);
-  for (const spread of call.spreadValidateIdentifiers) {
-    const agg = extracted.taskAllTypesAggregates.find((a) => a.symbolName === spread);
-    if (agg) {
-      for (const id of agg.taskTypeIdentifiers) validateNames.add(id);
-    }
-  }
+  const validateNames = new Set<string>([...call.validateIdentifiers, ...call.nestedValidateIdentifiers]);
   for (const name of validateNames) {
     if (!lenientHandlerTypeIdentifiers.has(name) && !extracted.trustedExternalIdentifiers.has(name)) {
       pushViolation(violations, {
