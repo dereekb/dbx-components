@@ -1,12 +1,11 @@
 import { demoCallModel } from '../model/crud.functions';
 import { addHours } from 'date-fns';
 import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoNotificationTaskBotContext, demoProfileContext } from '../../../test/fixture';
-import { describeCallableRequestTest, expectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
+import { describeCallableRequestTest, expectFailAssertHttpErrorServerErrorCode, notificationTaskBotRunTaskData } from '@dereekb/firebase-server/test';
 import { assertSnapshotData, FIREBASE_SERVER_VALIDATION_ERROR_CODE } from '@dereekb/firebase-server';
 import {
   FORBIDDEN_ERROR_CODE,
   firestoreModelKey,
-  getDocumentSnapshotData,
   MODEL_NOT_AVAILABLE_ERROR_CODE,
   NOTIFICATION_TASK_BOT_ENTRY_DATA_PATCH_INVALID_ERROR_CODE,
   NOTIFICATION_TASK_BOT_ENTRY_DATA_PATCH_NOT_ALLOWED_ERROR_CODE,
@@ -25,7 +24,6 @@ import {
   notificationTaskBotIdentity,
   notificationTaskBotKeyForModel,
   type NotificationTaskBotOptOutsResult,
-  type NotificationTaskBotRunNotificationTaskData,
   NotificationTaskBotRunTrigger,
   onCallReadModelParams,
   onCallUpdateModelParams,
@@ -38,7 +36,7 @@ import {
 } from '@dereekb/firebase';
 import { DEMO_PING_NOTIFICATION_TASK_BOT_ENTRY_ID, DEMO_PING_NOTIFICATION_TASK_BOT_GROUP, DEMO_PING_NOTIFICATION_TASK_BOT_PAUSE_REASON_LIMIT, DEMO_PING_NOTIFICATION_TASK_BOT_SCRIPT_TYPE, DEMO_PING_REQUIRED_NOTIFICATION_TASK_BOT_SCRIPT_TYPE, profileIdentity } from 'demo-firebase';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
-import { type Maybe, MS_IN_HOUR } from '@dereekb/util';
+import { MS_IN_HOUR } from '@dereekb/util';
 
 const entryId = DEMO_PING_NOTIFICATION_TASK_BOT_ENTRY_ID;
 const pingEntries = [{ entryId, scriptType: DEMO_PING_NOTIFICATION_TASK_BOT_SCRIPT_TYPE, data: { iv: MS_IN_HOUR } }];
@@ -57,8 +55,6 @@ demoApiFunctionContextFactory((f) => {
       demoAuthorizedUserAdminContext({ f }, (u) => {
         demoProfileContext({ f, u }, (p) => {
           demoNotificationTaskBotContext({ f, for: p, entries: pingEntries }, (ntb) => {
-            const loadTask = (key: string) => getDocumentSnapshotData(f.demoFirestoreCollections.notificationCollectionGroup.documentAccessor().loadDocumentForKey(key));
-
             function callUpdate(params: Omit<UpdateNotificationTaskBotEntryParams, 'key' | 'i'> & Partial<Pick<UpdateNotificationTaskBotEntryParams, 'i'>>): Promise<UpdateNotificationTaskBotEntryResult> {
               return u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationTaskBotIdentity, { key: ntb.documentKey, i: entryId, ...params }, 'entry')) as Promise<UpdateNotificationTaskBotEntryResult>;
             }
@@ -67,61 +63,53 @@ demoApiFunctionContextFactory((f) => {
               return u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationTaskBotIdentity, { key: ntb.documentKey, i: entryId, ...params }, 'run')) as Promise<RunNotificationTaskBotEntryResult>;
             }
 
-            async function loadEntry() {
-              const bot = await assertSnapshotData(ntb.document);
-              return notificationTaskBotEntry(bot, entryId)!;
-            }
-
             // loses the live run, so the repair sweep (default lostRunPolicy 'stop') pauses the entry with 'failed'
             async function pauseWithFailed() {
-              const entry = await loadEntry();
-              await f.demoFirestoreCollections.notificationCollectionGroup
-                .documentAccessor()
-                .loadDocumentForKey(entry.nk as string)
-                .accessor.delete();
-              await f.notificationServerActions.repairAllNotificationTaskBots({ now: addHours(new Date(), 2) });
-              expect((await loadEntry()).pr).toBe(NOTIFICATION_TASK_BOT_PAUSE_REASON_FAILED);
+              const entry = await ntb.assertEntry();
+              await ntb.loadRunTaskDocument(entry.nk as string).accessor.delete();
+              await ntb.repairAt();
+              expect((await ntb.assertEntry()).pr).toBe(NOTIFICATION_TASK_BOT_PAUSE_REASON_FAILED);
             }
 
             describe('update/entry', () => {
               it('should report stalled for an entry whose run is stalled', async () => {
                 // nothing picks up the fresh run, so the repair sweep marks it stalled
-                await f.notificationServerActions.repairAllNotificationTaskBots({ now: addHours(new Date(), 2) });
+                await ntb.repairAt();
 
                 const result = await callUpdate({ lsat: addHours(new Date(), -1) });
                 expect(result.status).toBe(NotificationTaskBotEntryStatus.STALLED);
               });
 
               it('should pause the entry and delete its pending run', async () => {
-                const before = await loadEntry();
+                const before = await ntb.assertEntry();
                 expect(before.nk).toBeDefined();
 
                 const result = await callUpdate({ pause: true });
-                const entry = await loadEntry();
+                const entry = await ntb.assertEntry();
 
                 expect(result.taskKey).toBeFalsy();
                 expect(entry.pat).toBeDefined();
                 expect(entry.pr).toBe(NOTIFICATION_TASK_BOT_PAUSE_REASON_MANUAL);
                 expect(entry.rn).toBeFalsy();
-                expect(await loadTask(before.nk as string)).toBeUndefined();
+                expect(await ntb.loadRunTask(before.nk as string)).toBeUndefined();
               });
 
               it('should resume a paused entry and schedule a new run', async () => {
                 await callUpdate({ pause: true });
                 const result = await callUpdate({ pause: false });
-                const entry = await loadEntry();
+                const entry = await ntb.assertEntry();
 
                 expect(entry.pat).toBeFalsy();
                 expect(entry.rpr).toBe(NOTIFICATION_TASK_BOT_PAUSE_REASON_MANUAL);
                 expect(result.taskKey).toBe(entry.nk);
-                expect(await loadTask(result.taskKey as string)).toBeDefined();
+                expect(await ntb.loadRunTask(result.taskKey as string)).toBeDefined();
               });
 
               it('should pause the entry until a time', async () => {
                 const pauseUntil = addHours(new Date(), 2);
                 const result = await callUpdate({ pauseUntil });
-                const entry = await loadEntry();
-                const task = await loadTask(result.taskKey as string);
+                const entry = await ntb.assertEntry();
+                const task = await ntb.loadRunTask(result.taskKey as string);
 
                 expect(result.status).toBe(NotificationTaskBotEntryStatus.PAUSED);
                 expect(entry.pr).toBe(NOTIFICATION_TASK_BOT_PAUSE_REASON_MANUAL);
@@ -133,21 +121,21 @@ demoApiFunctionContextFactory((f) => {
               it('should resume a paused-until entry early', async () => {
                 const paused = await callUpdate({ pauseUntil: addHours(new Date(), 2) });
                 const result = await callUpdate({ pause: false });
-                const entry = await loadEntry();
-                const task = await loadTask(result.taskKey as string);
+                const entry = await ntb.assertEntry();
+                const task = await ntb.loadRunTask(result.taskKey as string);
 
                 expect(result.status).toBe(NotificationTaskBotEntryStatus.SCHEDULED);
                 expect(entry.pat).toBeFalsy();
                 expect(entry.pu).toBeFalsy();
                 expect(entry.rpr).toBe(NOTIFICATION_TASK_BOT_PAUSE_REASON_MANUAL);
-                expect(await loadTask(paused.taskKey as string)).toBeUndefined();
+                expect(await ntb.loadRunTask(paused.taskKey as string)).toBeUndefined();
                 expect(result.taskKey).not.toBe(paused.taskKey);
                 expect(task?.sat.getTime()).toBeLessThanOrEqual(Date.now());
               });
 
               it('should disable the entry', async () => {
                 await callUpdate({ s: NotificationTaskBotEntryState.DISABLED });
-                const entry = await loadEntry();
+                const entry = await ntb.assertEntry();
 
                 expect(entry.s).toBe(NotificationTaskBotEntryState.DISABLED);
                 expect(entry.rn).toBeFalsy();
@@ -156,30 +144,30 @@ demoApiFunctionContextFactory((f) => {
               it('should schedule a not-before run at nextRunAt', async () => {
                 const nextRunAt = addHours(new Date(), 5);
                 const result = await callUpdate({ nextRunAt });
-                const entry = await loadEntry();
-                const task = await loadTask(result.taskKey as string);
+                const entry = await ntb.assertEntry();
+                const task = await ntb.loadRunTask(result.taskKey as string);
 
                 expect(entry.nat?.getTime()).toBe(nextRunAt.getTime());
                 expect(task?.sat.getTime()).toBe(nextRunAt.getTime());
-                expect((task?.n.d as Maybe<NotificationTaskBotRunNotificationTaskData>)?.x).toBeFalsy();
+                expect(notificationTaskBotRunTaskData(task)?.x).toBeFalsy();
               });
 
               it('should reschedule the entry at an explicit time', async () => {
                 const nextRunAtExplicit = addHours(new Date(), 5);
                 const result = await callUpdate({ nextRunAtExplicit });
-                const entry = await loadEntry();
-                const task = await loadTask(result.taskKey as string);
+                const entry = await ntb.assertEntry();
+                const task = await ntb.loadRunTask(result.taskKey as string);
 
                 expect(entry.nat?.getTime()).toBe(nextRunAtExplicit.getTime());
                 expect(task?.sat.getTime()).toBe(nextRunAtExplicit.getTime());
-                expect((task?.n.d as Maybe<NotificationTaskBotRunNotificationTaskData>)?.x).toBe(true);
+                expect(notificationTaskBotRunTaskData(task)?.x).toBe(true);
               });
 
               it('should not run a run scheduled in the future immediately', async () => {
                 const nextRunAtExplicit = addHours(new Date(), 5);
                 const result = await callUpdate({ nextRunAtExplicit, runImmediately: true });
-                const entry = await loadEntry();
-                const task = await loadTask(result.taskKey as string);
+                const entry = await ntb.assertEntry();
+                const task = await ntb.loadRunTask(result.taskKey as string);
 
                 expect(result.runResult).toBeFalsy();
                 expect(entry.sc).toBe(0);
@@ -190,10 +178,10 @@ demoApiFunctionContextFactory((f) => {
               it('should set and clear the last submitted at time', async () => {
                 const lsat = addHours(new Date(), -1);
                 await callUpdate({ lsat });
-                expect((await loadEntry()).lsat?.getTime()).toBe(lsat.getTime());
+                expect((await ntb.assertEntry()).lsat?.getTime()).toBe(lsat.getTime());
 
                 await callUpdate({ lsat: null });
-                expect((await loadEntry()).lsat).toBeFalsy();
+                expect((await ntb.assertEntry()).lsat).toBeFalsy();
               });
 
               itShouldFail('for an unknown entry', async () => {
@@ -206,9 +194,9 @@ demoApiFunctionContextFactory((f) => {
 
               describe('data patch', () => {
                 it('should merge a data patch without touching the live run', async () => {
-                  const before = await loadEntry();
+                  const before = await ntb.assertEntry();
                   const result = await callUpdate({ updateData: { pa: 5 } });
-                  const entry = await loadEntry();
+                  const entry = await ntb.assertEntry();
 
                   expect(entry.d).toEqual({ iv: MS_IN_HOUR, pa: 5 });
                   expect(entry.rn).toBe(before.rn);
@@ -220,7 +208,7 @@ demoApiFunctionContextFactory((f) => {
                 it('should delete a data key set to null', async () => {
                   await callUpdate({ updateData: { pa: 5 } });
                   await callUpdate({ updateData: { pa: null, c: 2 } });
-                  const entry = await loadEntry();
+                  const entry = await ntb.assertEntry();
 
                   expect(entry.d).toEqual({ iv: MS_IN_HOUR, c: 2 });
                 });
@@ -228,7 +216,7 @@ demoApiFunctionContextFactory((f) => {
                 it('should patch a disabled entry without scheduling a run', async () => {
                   await callUpdate({ s: NotificationTaskBotEntryState.DISABLED });
                   const result = await callUpdate({ updateData: { c: 0 } });
-                  const entry = await loadEntry();
+                  const entry = await ntb.assertEntry();
 
                   expect(entry.s).toBe(NotificationTaskBotEntryState.DISABLED);
                   expect(entry.rn).toBeFalsy();
@@ -239,27 +227,27 @@ demoApiFunctionContextFactory((f) => {
                 it('should patch the data and resume in one request', async () => {
                   await callUpdate({ pause: true });
                   const result = await callUpdate({ updateData: { c: 0 }, pause: false });
-                  const entry = await loadEntry();
+                  const entry = await ntb.assertEntry();
 
                   expect(entry.pat).toBeFalsy();
                   expect(entry.d?.c).toBe(0);
                   expect(result.taskKey).toBe(entry.nk);
-                  expect(await loadTask(result.taskKey as string)).toBeDefined();
+                  expect(await ntb.loadRunTask(result.taskKey as string)).toBeDefined();
                 });
 
                 it('should patch the data and reschedule in one request', async () => {
-                  const before = await loadEntry();
+                  const before = await ntb.assertEntry();
                   await callUpdate({ updateData: { iv: 2 * MS_IN_HOUR }, nextRunAt: null });
-                  const entry = await loadEntry();
+                  const entry = await ntb.assertEntry();
 
                   expect(entry.rn).toBeGreaterThan(before.rn as number);
-                  expect(await loadTask(before.nk as string)).toBeUndefined();
+                  expect(await ntb.loadRunTask(before.nk as string)).toBeUndefined();
                   expect(entry.d?.iv).toBe(2 * MS_IN_HOUR);
                 });
 
                 it('should run the live run with the patched data', async () => {
                   const result = await callUpdate({ updateData: { pa: 1 }, runImmediately: true });
-                  const entry = await loadEntry();
+                  const entry = await ntb.assertEntry();
 
                   expect(result.runResult?.success).toBe(true);
                   expect(entry.sc).toBe(1);
@@ -268,9 +256,9 @@ demoApiFunctionContextFactory((f) => {
                 });
 
                 itShouldFail('with DATA_PATCH_INVALID for data the script refuses', async () => {
-                  const before = await loadEntry();
+                  const before = await ntb.assertEntry();
                   await expectFail(() => callUpdate({ updateData: { iv: -5 } }), expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_TASK_BOT_ENTRY_DATA_PATCH_INVALID_ERROR_CODE));
-                  const entry = await loadEntry();
+                  const entry = await ntb.assertEntry();
 
                   expect(entry.d).toEqual(before.d);
                 });
@@ -280,9 +268,9 @@ demoApiFunctionContextFactory((f) => {
                 });
 
                 itShouldFail('with DATA_PATCH_INVALID and apply nothing else in the request', async () => {
-                  const before = await loadEntry();
+                  const before = await ntb.assertEntry();
                   await expectFail(() => callUpdate({ updateData: { iv: -5 }, pause: true }), expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_TASK_BOT_ENTRY_DATA_PATCH_INVALID_ERROR_CODE));
-                  const entry = await loadEntry();
+                  const entry = await ntb.assertEntry();
 
                   expect(entry.pat).toBeFalsy();
                   expect(entry.nk).toBe(before.nk);
@@ -296,32 +284,32 @@ demoApiFunctionContextFactory((f) => {
 
             describe('update/run', () => {
               it('should supersede the pending run with a MANUAL run', async () => {
-                const before = await loadEntry();
+                const before = await ntb.assertEntry();
                 const result = await callRun({ runImmediately: false });
-                const entry = await loadEntry();
-                const task = await loadTask(result.taskKey);
+                const entry = await ntb.assertEntry();
+                const task = await ntb.loadRunTask(result.taskKey);
 
                 expect(result.taskKey).toBe(entry.nk);
                 expect(entry.rn).toBeGreaterThan(before.rn as number);
-                expect((task?.n.d as Maybe<NotificationTaskBotRunNotificationTaskData>)?.tr).toBe(NotificationTaskBotRunTrigger.MANUAL);
-                expect(await loadTask(before.nk as string)).toBeUndefined();
+                expect(notificationTaskBotRunTaskData(task)?.tr).toBe(NotificationTaskBotRunTrigger.MANUAL);
+                expect(await ntb.loadRunTask(before.nk as string)).toBeUndefined();
               });
 
               it('should hand a MANUAL run that is not due over to a SCHEDULED run', async () => {
                 await callRun({ trigger: NotificationTaskBotRunTrigger.FORCED }); // sets lsat
                 const result = await callRun({});
-                const entry = await loadEntry();
-                const liveTask = await loadTask(entry.nk as string);
+                const entry = await ntb.assertEntry();
+                const liveTask = await ntb.loadRunTask(entry.nk as string);
 
                 expect(result.runResult?.success).toBe(true);
                 expect(entry.h).toHaveLength(1);
                 expect(entry.nk).not.toBe(result.taskKey);
-                expect((liveTask?.n.d as Maybe<NotificationTaskBotRunNotificationTaskData>)?.tr).toBe(NotificationTaskBotRunTrigger.SCHEDULED);
+                expect(notificationTaskBotRunTaskData(liveTask)?.tr).toBe(NotificationTaskBotRunTrigger.SCHEDULED);
               });
 
               it('should create and run a FORCED run', async () => {
                 const result = await callRun({ trigger: NotificationTaskBotRunTrigger.FORCED });
-                const entry = await loadEntry();
+                const entry = await ntb.assertEntry();
 
                 expect(result.taskKey).toBeDefined();
                 expect(result.runResult?.success).toBe(true);
@@ -333,7 +321,7 @@ demoApiFunctionContextFactory((f) => {
                 await pauseWithFailed();
 
                 const result = await callRun({ trigger: NotificationTaskBotRunTrigger.FORCED });
-                const entry = await loadEntry();
+                const entry = await ntb.assertEntry();
                 const last = entry.h[entry.h.length - 1];
 
                 expect(result.runResult?.success).toBe(true);
@@ -403,21 +391,16 @@ demoApiFunctionContextFactory((f) => {
                 return u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationTaskBotIdentity, { key: ntb.documentKey, i: unknownScriptEntryId, ...params }, 'entry')) as Promise<UpdateNotificationTaskBotEntryResult>;
               }
 
-              async function loadEntry() {
-                const bot = await assertSnapshotData(ntb.document);
-                return notificationTaskBotEntry(bot, unknownScriptEntryId)!;
-              }
-
               itShouldFail('with DATA_PATCH_NOT_ALLOWED for a script without a dataType', async () => {
                 await expectFail(() => callUpdate({ updateData: { a: 2 } }), expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_TASK_BOT_ENTRY_DATA_PATCH_NOT_ALLOWED_ERROR_CODE));
-                const entry = await loadEntry();
+                const entry = await ntb.assertEntry();
 
                 expect(entry.d).toEqual({ a: 1 });
               });
 
               it('should ignore an empty patch', async () => {
                 const result = await callUpdate({ updateData: {} });
-                const entry = await loadEntry();
+                const entry = await ntb.assertEntry();
 
                 expect(result.status).toBe(NotificationTaskBotEntryStatus.IDLE);
                 expect(entry.d).toEqual({ a: 1 });
@@ -431,19 +414,12 @@ demoApiFunctionContextFactory((f) => {
         demoAuthorizedUserContext({ f }, (u) => {
           demoProfileContext({ f, u }, (p) => {
             demoNotificationTaskBotContext({ f, for: p, owner: p, entries: ownedEntries }, (ntb) => {
-              const loadTask = (key: string) => getDocumentSnapshotData(f.demoFirestoreCollections.notificationCollectionGroup.documentAccessor().loadDocumentForKey(key));
-
               function callReadOptOuts(caller: typeof u = u, params?: Partial<ReadNotificationTaskBotOptOutsParams>): Promise<NotificationTaskBotOptOutsResult> {
                 return caller.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(notificationTaskBotIdentity, { key: ntb.documentKey, ...params }, 'optOuts')) as Promise<NotificationTaskBotOptOutsResult>;
               }
 
               function callUpdateOptOut(params: Omit<UpdateNotificationTaskBotOptOutParams, 'key'>, caller: typeof u = u): Promise<NotificationTaskBotOptOutsResult> {
                 return caller.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationTaskBotIdentity, { key: ntb.documentKey, ...params }, 'optOut')) as Promise<NotificationTaskBotOptOutsResult>;
-              }
-
-              async function loadEntry(i: NotificationTaskBotEntryId) {
-                const bot = await assertSnapshotData(ntb.document);
-                return notificationTaskBotEntry(bot, i)!;
               }
 
               it('should store the owner key on the bot', async () => {
@@ -461,34 +437,34 @@ demoApiFunctionContextFactory((f) => {
                 });
 
                 it('should opt out of the group, stopping only the opt-out-able entry', async () => {
-                  const pingBefore = await loadEntry(entryId);
-                  const requiredBefore = await loadEntry(requiredEntryId);
+                  const pingBefore = await ntb.assertEntry(entryId);
+                  const requiredBefore = await ntb.assertEntry(requiredEntryId);
                   expect(pingBefore.nk).toBeDefined();
                   expect(requiredBefore.nk).toBeDefined();
 
                   const result = await callUpdateOptOut({ optOut: [pingGroupKey] });
-                  const ping = await loadEntry(entryId);
-                  const required = await loadEntry(requiredEntryId);
+                  const ping = await ntb.assertEntry(entryId);
+                  const required = await ntb.assertEntry(requiredEntryId);
 
                   expect(result.groups[0].optOutAt).toBeDefined();
                   expect(ping.oat).toBeDefined();
                   expect(ping.rn).toBeFalsy();
-                  expect(await loadTask(pingBefore.nk as string)).toBeUndefined();
+                  expect(await ntb.loadRunTask(pingBefore.nk as string)).toBeUndefined();
 
                   expect(required.oat).toBeFalsy();
                   expect(required.nk).toBe(requiredBefore.nk);
-                  expect(await loadTask(required.nk as string)).toBeDefined();
+                  expect(await ntb.loadRunTask(required.nk as string)).toBeDefined();
                 });
 
                 it('should opt back into the group and reschedule the entry', async () => {
                   await callUpdateOptOut({ optOut: [pingGroupKey] });
                   const result = await callUpdateOptOut({ optIn: [pingGroupKey] });
-                  const ping = await loadEntry(entryId);
+                  const ping = await ntb.assertEntry(entryId);
 
                   expect(result.groups[0].optOutAt).toBeFalsy();
                   expect(ping.oat).toBeFalsy();
                   expect(ping.nk).toBeDefined();
-                  expect(await loadTask(ping.nk as string)).toBeDefined();
+                  expect(await ntb.loadRunTask(ping.nk as string)).toBeDefined();
                 });
 
                 itShouldFail('with NOT_ALLOWED for a group it is not listed', async () => {
@@ -524,7 +500,7 @@ demoApiFunctionContextFactory((f) => {
                     await callUpdateOptOut({ optOut: [pingGroupKey] });
 
                     const result = await callAdminUpdate({ pause: false });
-                    const ping = await loadEntry(entryId);
+                    const ping = await ntb.assertEntry(entryId);
 
                     expect(result.status).toBe(NotificationTaskBotEntryStatus.OPTED_OUT);
                     expect(result.taskKey).toBeFalsy();

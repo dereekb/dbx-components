@@ -1,5 +1,4 @@
-import { notificationTaskBotEntry, notificationTaskBotIdentity } from '@dereekb/firebase';
-import { assertSnapshotData } from '@dereekb/firebase-server';
+import { notificationTaskBotIdentity } from '@dereekb/firebase';
 import { buildMcpToolName, MODEL_ROLES_TOOL_NAME } from '@dereekb/firebase-server/mcp';
 import { MS_IN_HOUR } from '@dereekb/util';
 import { DEMO_PING_NOTIFICATION_TASK_BOT_ENTRY_ID, DEMO_PING_NOTIFICATION_TASK_BOT_SCRIPT_TYPE } from 'demo-firebase';
@@ -40,11 +39,6 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
         demoAuthorizedUserAdminContext({ f }, (au) => {
           describe('entry tool data patch', () => {
-            async function loadEntry() {
-              const bot = await assertSnapshotData(ntb.document);
-              return notificationTaskBotEntry(bot, DEMO_PING_NOTIFICATION_TASK_BOT_ENTRY_ID)!;
-            }
-
             it('advertises updateData on the entry tool', async () => {
               const tool = (await listMcpTools(f, au)).find((t) => t.name === entryToolName);
               const inputSchema = tool?.inputSchema as { readonly properties?: Record<string, unknown> };
@@ -54,7 +48,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
             it('patches entry data through the entry tool', async () => {
               const result = await callMcpTool({ f, u: au, name: entryToolName, args: { key: ntb.documentKey, i: DEMO_PING_NOTIFICATION_TASK_BOT_ENTRY_ID, updateData: { pa: 5 } } });
-              const entry = await loadEntry();
+              const entry = await ntb.assertEntry();
 
               expect(result.isError).toBeUndefined();
               expect(entry.d?.pa).toBe(5);

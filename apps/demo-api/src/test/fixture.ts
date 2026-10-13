@@ -29,6 +29,10 @@ import {
   modelTestContextFactory,
   ModelTestContextFixture,
   ModelTestContextInstance,
+  notificationTaskBotTestContextFactory,
+  NotificationTaskBotTestContextFixture,
+  NotificationTaskBotTestContextInstance,
+  type NotificationTaskBotTestContextParams,
   oAuthAuthorizedSuperTestContextFactory,
   setupFirebaseAdminFunctionTestSingleton
 } from '@dereekb/firebase-server/test';
@@ -113,15 +117,7 @@ import {
   CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
   type SyncCalendarResult,
   type SyncAllFlaggedCalendarsResult,
-  type RotateCalendarIcsResult,
-  type NotificationTaskBot,
-  type NotificationTaskBotDocument,
-  type NotificationTaskBotFirestoreCollection,
-  type NotificationTaskBotEntryData,
-  type NotificationTaskBotEntryId,
-  type NotificationTaskBotEnsureSchedule,
-  type NotificationTaskBotScriptType,
-  type FirebaseAuthOwnershipKey
+  type RotateCalendarIcsResult
 } from '@dereekb/firebase';
 import { type YearWeekCode, yearWeekCode } from '@dereekb/date';
 import { objectHasKeys, type ContentTypeMimeType, type SlashPathFile, type Maybe, type AsyncGetterOrValue, getValueFromGetter, type AsyncFactory, type Milliseconds, MS_IN_MINUTE, waitForMs } from '@dereekb/util';
@@ -151,8 +147,7 @@ import {
   type UserExternalConnectionReaderProviderInstance,
   type UserExternalConnectionRefreshCredentialsInput,
   UserExternalConnectionServerActions,
-  UserExternalConnectionServerFirestoreCollections,
-  ensureNotificationTaskBotEntryFactory
+  UserExternalConnectionServerFirestoreCollections
 } from '@dereekb/firebase-server/model';
 import { UserExternalConnectionCalcomUserContextService } from '@dereekb/firebase-server/calcom';
 import { type OpenRouterModelConfig, type OpenRouterPromptDefinition, type OpenRouterPromptKey, type OpenRouterPromptVersionNumber } from '@dereekb/openrouter';
@@ -1346,71 +1341,25 @@ export const demoNotificationBoxContextFactory = () =>
 export const demoNotificationBoxContext = demoNotificationBoxContextFactory();
 
 // MARK: NotificationTaskBot
-export interface DemoApiNotificationTaskBotTestContextEntryParams {
-  readonly entryId: NotificationTaskBotEntryId;
-  readonly scriptType: NotificationTaskBotScriptType;
-  readonly data?: Maybe<NotificationTaskBotEntryData>;
-  /**
-   * Defaults to `'ifIdle'`.
-   */
-  readonly schedule?: Maybe<NotificationTaskBotEnsureSchedule>;
-}
+export type DemoApiNotificationTaskBotTestContextParams = NotificationTaskBotTestContextParams;
 
-export interface DemoApiNotificationTaskBotTestContextParams {
-  /**
-   * The model the bot is attached to.
-   */
-  readonly for: ModelTestContextFixture<any, any, any, any, any>;
-  /**
-   * Entries to ensure on the bot. The bot is only created when at least one entry is provided.
-   */
-  readonly entries?: Maybe<DemoApiNotificationTaskBotTestContextEntryParams[]>;
-  /**
-   * The bot's owner key, set on every ensured entry. Pass the attached profile's key (`pr/<uid>`) to let that user opt out.
-   */
-  readonly owner?: Maybe<FirebaseAuthOwnershipKey | ModelTestContextFixture<any, any, any, any, any>>;
-}
-
-export class DemoApiNotificationTaskBotTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<
-  NotificationTaskBot,
-  NotificationTaskBotDocument,
+export class DemoApiNotificationTaskBotTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends NotificationTaskBotTestContextFixture<
   DemoApiFunctionContextFixtureInstance<F>,
   DemoApiFunctionContextFixture<F>,
   DemoApiNotificationTaskBotTestContextInstance<F>
 > {}
 
-export class DemoApiNotificationTaskBotTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<NotificationTaskBot, NotificationTaskBotDocument, DemoApiFunctionContextFixtureInstance<F>> {}
+export class DemoApiNotificationTaskBotTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends NotificationTaskBotTestContextInstance<DemoApiFunctionContextFixtureInstance<F>> {}
 
 export const demoNotificationTaskBotContextFactory = () =>
-  modelTestContextFactory<
-    NotificationTaskBot,
-    NotificationTaskBotDocument,
-    DemoApiNotificationTaskBotTestContextParams,
+  notificationTaskBotTestContextFactory<
     DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>,
     DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>,
     DemoApiNotificationTaskBotTestContextInstance<FirebaseAdminFunctionTestContextInstance>,
-    DemoApiNotificationTaskBotTestContextFixture<FirebaseAdminFunctionTestContextInstance>,
-    NotificationTaskBotFirestoreCollection
+    DemoApiNotificationTaskBotTestContextFixture<FirebaseAdminFunctionTestContextInstance>
   >({
     makeFixture: (f) => new DemoApiNotificationTaskBotTestContextFixture(f),
-    getCollection: (fi) => fi.demoFirestoreCollections.notificationTaskBotCollection,
-    makeInstance: (delegate, ref, testInstance) => new DemoApiNotificationTaskBotTestContextInstance(delegate, ref, testInstance),
-    makeRef: async (collection, params, _p) => {
-      const flatModelKey = params.for.documentTwoWayFlatKey;
-      return collection.documentAccessor().loadDocumentForId(flatModelKey).documentRef;
-    },
-    initDocument: async (instance, params) => {
-      const entries = params.entries ?? [];
-
-      if (entries.length > 0) {
-        const ensureEntry = ensureNotificationTaskBotEntryFactory(instance.testContext.serverActionsContext);
-        const owner = params.owner == null ? undefined : typeof params.owner === 'string' ? params.owner : params.owner.documentKey;
-
-        for (const entry of entries) {
-          await ensureEntry({ model: params.for.documentKey, entryId: entry.entryId, scriptType: entry.scriptType, data: entry.data, schedule: entry.schedule, owner });
-        }
-      }
-    }
+    makeInstance: (config) => new DemoApiNotificationTaskBotTestContextInstance(config)
   });
 
 export const demoNotificationTaskBotContext = demoNotificationTaskBotContextFactory();

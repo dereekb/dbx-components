@@ -136,6 +136,47 @@ but two changes require an update in every app that implements the notification 
   });
   ```
 
+### Optional (testing bots)
+`@dereekb/firebase-server/test` ships a NotificationTaskBot test context and helpers that drive bot runs. The package
+now imports `@dereekb/firebase-server/model`, which every app with notifications already loads.
+- **Fixture:** subclass the library pair and register it, like the authorized-user family. The parent instance needs
+  `serverActionsContext` (with the NotificationTaskBot collection and the script registry) and
+  `notificationServerActions`; an app function context that exposes both fits as-is.
+  ```ts
+  // MARK: NotificationTaskBot
+  export type MyApiNotificationTaskBotTestContextParams = NotificationTaskBotTestContextParams;
+
+  export class MyApiNotificationTaskBotTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends NotificationTaskBotTestContextFixture<MyApiFunctionContextFixtureInstance<F>, MyApiFunctionContextFixture<F>, MyApiNotificationTaskBotTestContextInstance<F>> {}
+
+  export class MyApiNotificationTaskBotTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends NotificationTaskBotTestContextInstance<MyApiFunctionContextFixtureInstance<F>> {}
+
+  export const myNotificationTaskBotContextFactory = () =>
+    notificationTaskBotTestContextFactory<MyApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, MyApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, MyApiNotificationTaskBotTestContextInstance<FirebaseAdminFunctionTestContextInstance>, MyApiNotificationTaskBotTestContextFixture<FirebaseAdminFunctionTestContextInstance>>({
+      makeFixture: (f) => new MyApiNotificationTaskBotTestContextFixture(f),
+      makeInstance: (config) => new MyApiNotificationTaskBotTestContextInstance(config)
+    });
+
+  export const myNotificationTaskBotContext = myNotificationTaskBotContextFactory();
+  ```
+  Nest it in the attached model's context: `myNotificationTaskBotContext({ f, for: p, owner: p, entries: [{ entryId, scriptType, data }] }, (ntb) => …)`.
+  `entries` are ensured in order (no entries, no bot); `entryId` (default: the first entry's) is the helpers' default entry.
+- **`ntb.sendRun()`** sends the entry's live run once, ignoring the send-at throttle (`taskKey` sends another task).
+  `untilDone: true` keeps sending while the run progresses, until it is done or waits (a delay, the due check or a
+  poll). `schedule: true` (or `{ trigger, at, explicit }`) first supersedes the live run with one due now, since the
+  run start gate holds a run that is not due yet.
+- **A lost run:** `ntb.exhaustRun()` drives the live run's task to deletion, then `ntb.repairAt()` runs the repair sweep
+  two hours ahead (pass `now` to pick the time), which records the run as LOST.
+- **A stalled run (`stl`):** `ntb.stallRun()` gives the live run's task a failed attempt (`mode: 'unpicked'` leaves it
+  as if nothing picked it up), then runs the sweep far enough ahead that it marks the entry stalled.
+- **Expectations:** `ntb.expectStatus(status)` / `ntb.expectHistory([NotificationTaskBotRunOutcome.SUBMITTED, { tr }])`
+  load the entry and assert; `expectNotificationTaskBotEntryStatus(entry, status)` and
+  `expectNotificationTaskBotEntryHistory(entry, expected)` check an entry you already hold.
+- **Plumbing:** `ntb.ensure()`, `ntb.applyChanges()`, `ntb.schedule()`, `ntb.assertEntry()`, `ntb.loadRunTask()`,
+  `ntb.loadRunTaskDocument()` and `ntb.sendQueuedNotifications()` fill in the attached model and the default entry.
+- **Without the fixture:** the standalone forms take `{ context, model, entryId }`, where `context` is the app's function
+  test context: `sendNotificationTaskBotRun()`, `exhaustNotificationTaskBotRun()`, `repairNotificationTaskBotsAt()`,
+  `stallNotificationTaskBotRun()`, `assertNotificationTaskBotEntry()` and `loadNotificationTaskBotRunTask()`.
+
 ### Optional (owner opt-outs)
 The bot's **owner** can turn off groups of scripts, which stops those bots entirely (not just their notifications).
 - **Owner key:** a bot has an owner key `o`, the same ownership key the attached model's `NotificationBox.o` uses

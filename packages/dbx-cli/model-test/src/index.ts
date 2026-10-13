@@ -42,4 +42,4 @@ export { formatListAsMarkdown, formatLookupAsMarkdown } from './lib/fixture/form
 export { renderFixtureScaffold, type RenderFixtureScaffoldInput, type RenderedFixtureScaffold, type RenderedInsertion, type ScaffoldParamsDependency } from './lib/fixture/scaffold.js';
 export { renderForwarders, type RenderForwardersInput, type RenderedForwarder, type RenderedForwarders } from './lib/fixture/forward.js';
 export type { AppFixturesExtraction, FactoryCall, FixtureArchetype, FixtureEntry, FixtureKind, FixtureMethod, FixtureParamsField, FixtureParamsType } from './lib/fixture/types.js';
-export { KNOWN_NON_MODEL_FIXTURE_FAMILIES, NON_MODEL_JSDOC_TAG, findFamilyByBaseClass, findFamilyByFactoryName, type FrameworkNonModelFixtureFamily } from './lib/fixture/framework-fixtures.js';
+export { KNOWN_MODEL_FIXTURE_FAMILIES, KNOWN_NON_MODEL_FIXTURE_FAMILIES, NON_MODEL_JSDOC_TAG, findFamilyByBaseClass, findFamilyByFactoryName, findModelFamilyByBaseClass, findModelFamilyByFactoryName, type FrameworkModelFixtureFamily, type FrameworkNonModelFixtureFamily } from './lib/fixture/framework-fixtures.js';

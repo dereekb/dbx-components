@@ -8,6 +8,7 @@
     "@dereekb/date": "14.16.0",
     "@dereekb/firebase": "14.16.0",
     "@dereekb/firebase-server": "14.16.0",
+    "@dereekb/firebase-server/model": "14.16.0",
     "@dereekb/firebase-server/oidc": "14.16.0",
     "@dereekb/model": "14.16.0",
     "@dereekb/nestjs": "14.16.0",
