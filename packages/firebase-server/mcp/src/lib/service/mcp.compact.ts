@@ -125,7 +125,7 @@ export function resolveMcpCompactToolNames(input: ResolveMcpCompactToolNamesInpu
 export const MCP_COMPACT_SEARCH_INPUT_SCHEMA = Object.freeze({
   type: 'object',
   properties: {
-    query: { type: 'string', description: "Keywords, e.g. 'reopen timesheet' or 'create worker'. May be empty when `model` is set to list that model's methods." },
+    query: { type: 'string', description: "Keywords, e.g. 'create' or 'update status'. May be empty when `model` or `kind` is set to list the matching methods." },
     model: { type: 'string', description: 'Optional model type to restrict results to, e.g. `worker`.' },
     kind: { type: 'string', enum: ['read', 'write'], description: 'Optional method kind filter.' },
     limit: { type: 'integer', minimum: 1, maximum: 50, description: 'Maximum results (default 8).' }

@@ -98,6 +98,9 @@ export interface SearchMcpMethodsInput {
    * Restricts results to one model type (case-insensitive). With an empty query, lists that model's methods.
    */
   readonly model?: Maybe<string>;
+  /**
+   * Restricts results to one method kind. With an empty query, lists every visible method of that kind.
+   */
   readonly kind?: Maybe<McpMethodKind>;
   readonly limit?: Maybe<number>;
   /**
@@ -127,11 +130,13 @@ export function searchMcpMethods(input: SearchMcpMethodsInput): SearchMcpMethods
   const { entries, view, query, model, kind, mode } = input;
   const limit = Math.min(Math.max(1, input.limit ?? DEFAULT_MCP_METHOD_SEARCH_LIMIT), MAX_MCP_METHOD_SEARCH_LIMIT);
   const modelKey = model?.trim().toLowerCase();
-  const filter = (method: McpMethod) => view.has(method) && (kind == null || method.kind === kind) && (modelKey == null || modelKey.length === 0 || method.modelType?.toLowerCase() === modelKey);
+  const hasModelFilter = modelKey != null && modelKey.length > 0;
+  const filter = (method: McpMethod) => view.has(method) && (kind == null || method.kind === kind) && (!hasModelFilter || method.modelType?.toLowerCase() === modelKey);
   let matches: McpMethod[];
 
   if (query.trim().length === 0) {
-    matches = modelKey != null && modelKey.length > 0 ? view.methods.filter(filter) : [];
+    // An empty query only lists when a model or kind narrows it, so it never dumps the whole catalog.
+    matches = hasModelFilter || kind != null ? view.methods.filter(filter) : [];
   } else {
     matches = rankSearchEntries({ entries, query, mode, filter }).map((x) => x.value);
 

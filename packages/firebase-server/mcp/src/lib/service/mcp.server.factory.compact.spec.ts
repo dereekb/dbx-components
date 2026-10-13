@@ -146,6 +146,36 @@ describe('McpServerFactoryService compact surface', () => {
       expect(result.methods.map((x) => x.method)).toEqual(['guestbook.read', 'guestbook.query']);
     });
 
+    it('should list every visible method of a kind with an empty query and only kind', async () => {
+      const factory = makeFactory();
+      const reads = await search(factory, USER, { query: '', kind: 'read', limit: 50 });
+      const readIds = reads.methods.map((x) => x.method);
+      expect(readIds).toEqual(expect.arrayContaining(['guestbook.read', 'guestbook.query']));
+      expect(reads.methods.every((x) => x.kind === 'read')).toBe(true);
+      expect(reads.total).toBe(reads.methods.length);
+
+      const writes = await search(factory, USER, { query: '', kind: 'write', limit: 50 });
+      const writeIds = writes.methods.map((x) => x.method);
+      expect(writeIds).toEqual(expect.arrayContaining(['guestbook.create', 'guestbook.update.reopen']));
+      expect(writeIds).not.toContain('secretLedger.update.rebalance');
+      expect(writes.methods.every((x) => x.kind === 'write')).toBe(true);
+    });
+
+    it('should count every match in total when the kind listing is limited', async () => {
+      const factory = makeFactory();
+      const all = await search(factory, USER, { query: '', kind: 'read', limit: 50 });
+      const limited = await search(factory, USER, { query: '', kind: 'read', limit: 1 });
+      expect(limited.methods).toHaveLength(1);
+      expect(limited.total).toBe(all.total);
+      expect(limited.total).toBeGreaterThan(1);
+    });
+
+    it('should return nothing for an empty query without a model or kind', async () => {
+      const result = await search(makeFactory(), USER, { query: '' });
+      expect(result.total).toBe(0);
+      expect(result.methods).toEqual([]);
+    });
+
     it('should return the details of a method by alias', async () => {
       const factory = makeFactory();
       const result = await dispatchMcpToolCall<ToolResult>({ factory, ctx: USER, name: 'demo_mcp_details', args: { method: 'guestbook-create' } });
