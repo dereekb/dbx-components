@@ -236,8 +236,18 @@ export const guestbookFunctionTypeConfigMap: FirebaseFunctionTypeConfigMap<Guest
 
 export type GuestbookModelCrudFunctionsConfig = {
   guestbook: {
+    /**
+     * Creates a guestbook owned by the caller.
+     *
+     * It starts unlocked, and unpublished unless `published` is set. Returns the new guestbook's key in `modelKeys`.
+     */
     create: CreateGuestbookParams;
     update: {
+      /**
+       * Subscribes a user to the notifications of the guestbook targeted by `key`.
+       *
+       * `uid` defaults to the caller. Only an admin can subscribe another user; anyone else always subscribes themselves.
+       */
       subscribeToNotifications: SubscribeToGuestbookNotificationsParams;
       publish: PublishGuestbookParams;
     };
@@ -245,9 +255,26 @@ export type GuestbookModelCrudFunctionsConfig = {
   };
   guestbookEntry: {
     update: {
+      /**
+       * Creates or updates the caller's entry in a guestbook. Each user has one entry per guestbook.
+       *
+       * Pass the guestbook as `guestbook`: its id or its full key. Fails when the guestbook is locked. Returns the entry's
+       * key in `modelKeys`.
+       */
       insert: [InsertGuestbookEntryParams, InsertGuestbookEntryResult];
+      /**
+       * Adds one like to the published guestbook entry targeted by `key`, the entry's own key (`gb/<guestbookId>/gbe/<uid>`).
+       *
+       * Fails when the entry is not published.
+       */
       like: LikeGuestbookEntryParams;
     };
+    /**
+     * Deletes the caller's own entry in a guestbook.
+     *
+     * Pass the guestbook as `guestbook` (its id or its full key), not the entry's key. An entry's id is its author's uid, so
+     * this always targets the caller's entry. Succeeds without changing anything when the caller has no entry.
+     */
     delete: GuestbookEntryParams;
     query: {
       _: [QueryGuestbookEntriesParams, OnCallQueryModelResult<GuestbookEntry>];

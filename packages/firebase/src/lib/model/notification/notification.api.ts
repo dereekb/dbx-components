@@ -944,6 +944,12 @@ export type NotificationBoxModelCrudFunctionsConfig = {
     create: CreateNotificationUserParams;
     update: {
       _: UpdateNotificationUserParams;
+      /**
+       * Re-syncs the box configs of the NotificationUser targeted by `key` into their NotificationBoxes.
+       *
+       * Each config flagged as needing a sync is merged back into its NotificationBox's recipient list, and stale box
+       * references are cleaned up. Returns how many NotificationBoxes were updated.
+       */
       resync: [ResyncNotificationUserParams, ResyncNotificationUserResult];
     };
     invoke: {

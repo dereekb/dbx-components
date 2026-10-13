@@ -65,6 +65,16 @@ third-party service, runs only through `<p>_mcp_destructive`; an additive one ru
 - Legacy per-method tools now carry a `[DESTRUCTIVE] ` marker and `destructiveHint: true` per method; creates advertise
   `destructiveHint: false` with the `[WRITE] ` marker.
 
+### Review: method descriptions
+A method's MCP tool description (and its CLI command help) comes from the JSDoc summary on its member in the
+`<Group>ModelCrudFunctionsConfig` type, plus the summary on its params interface. With neither, MCP shows only the
+generic `Performs the "<verb>" call on the "<model>" model.`, so agents have to guess what the method does and what its
+params mean.
+
+`dbx_model_api_validate_app` (and `dbx_app_validate`) now warn with `MISSING_DESCRIPTION` for every declared entry that
+has neither. Add a JSDoc summary above the config member saying what the call does and what it acts on. Keep its first
+line a complete sentence, since the CLI's one-line help shows only that line.
+
 ### Optional: audience-gated docs
 `@dereekb/firebase-server` adds a docs API (`GET /api/docs`, `/api/docs/search`, `/api/docs/read`) and the MCP
 documentation tools over a folder of markdown plus a generated manifest:

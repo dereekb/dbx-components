@@ -74,7 +74,7 @@ describe('reconcile() severities', () => {
 
   it('keeps the reconciliation and naming codes errors', () => {
     const result = reconcile({
-      declared: [{ model: 'thing', verb: 'update', specifier: 'x', paramsTypeName: undefined, resultTypeName: undefined, sourceFile: 'thing.api.ts', line: 1 }],
+      declared: [{ model: 'thing', verb: 'update', specifier: 'x', paramsTypeName: undefined, resultTypeName: undefined, description: 'Updates the thing.', sourceFile: 'thing.api.ts', line: 1 }],
       handlers: [{ model: 'thing', verb: 'invoke', specifier: 'check', handlerName: 'wrongName', sourceFile: 'crud.functions.ts', line: 2 }]
     });
     expect(result.issues.map((x) => `${x.code}:${x.severity}`).sort()).toEqual(['HANDLER_NAMING_MISMATCH:error', 'MISSING_HANDLER:error', 'ORPHAN_HANDLER:error']);

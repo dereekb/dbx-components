@@ -214,6 +214,22 @@
     "canonicalFix": "Rename the handler (or its verb-map binding) to one of the accepted names so the model/verb/specifier triplet is recoverable from the identifier alone."
   },
   {
+    "code": "MISSING_DESCRIPTION",
+    "source": "dbx_model_api_validate_app",
+    "severity": "warning",
+    "title": "A declared CRUD entry has no description, so its MCP tool and CLI command say nothing about what the call does",
+    "whatItFlags": "A declared CRUD entry has no description, so its MCP tool and CLI command say nothing about what the call does.\nThe description is built from two JSDoc summaries: the one on the entry's member in the\n`<Group>ModelCrudFunctionsConfig` type and the one on its params interface. With neither, MCP falls back to the\ngeneric `Performs the \"<verb>\" call on the \"<model>\" model.`, and an agent has to guess what the params mean\n(for example, that `guestbookEntry.delete` takes the guestbook and always removes the caller's own entry).",
+    "whenItApplies": "Every declared `<model>.<verb>.<specifier>` cell whose config member and params interface both lack a JSDoc summary. A JSDoc block holding only tags (such as `@dbxModelApiMcpResult`) has no summary. A params interface declared in another file is not read, the same as when the manifests are generated.",
+    "whenItDoesNotApply": "Standalone `<Group>FunctionTypeMap` entries, which are not reconciled.",
+    "canonicalFix": "Add a JSDoc summary above the entry's member in the `<Group>ModelCrudFunctionsConfig` type saying what the call does and what it acts on. The CLI's one-line command help reads only this one. A summary on the params interface also counts.",
+    "seeAlso": [
+      {
+        "kind": "tool",
+        "target": "dbx_model_api_lookup"
+      }
+    ]
+  },
+  {
     "code": "MISSING_HANDLER",
     "source": "dbx_model_api_validate_app",
     "severity": "error",

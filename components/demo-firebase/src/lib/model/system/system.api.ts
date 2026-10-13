@@ -23,6 +23,9 @@ export const systemStateFunctionTypeConfigMap: FirebaseFunctionTypeConfigMap<Sys
 export type SystemStateModelCrudFunctionsConfig = {
   systemState: {
     read: {
+      /**
+       * Example read that echoes `message` back with `read: true`. Hidden from MCP.
+       */
       exampleread: [ExampleReadParams, ExampleReadResponse];
     };
   };

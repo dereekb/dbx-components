@@ -198,6 +198,7 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     paramsValidator: createGuestbookParamsType,
     groupName: 'Guestbook',
     sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts',
+    description: "Creates a guestbook owned by the caller.\n\nIt starts unlocked, and unpublished unless `published` is set. Returns the new guestbook's key in `modelKeys`.",
     paramsFields: [
       { name: 'name', typeText: 'string' },
       { name: 'published', typeText: 'Maybe<boolean>' },
@@ -224,7 +225,16 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts',
     paramsTypeDescription: 'Parameters for the `guestbook / update / publish` call. One-way publish of the targeted guestbook.'
   },
-  { model: 'guestbook', verb: 'update', specifier: 'subscribeToNotifications', paramsTypeName: 'SubscribeToGuestbookNotificationsParams', paramsValidator: subscribeToGuestbookNotificationsParamsType, groupName: 'Guestbook', sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts' },
+  {
+    model: 'guestbook',
+    verb: 'update',
+    specifier: 'subscribeToNotifications',
+    paramsTypeName: 'SubscribeToGuestbookNotificationsParams',
+    paramsValidator: subscribeToGuestbookNotificationsParamsType,
+    groupName: 'Guestbook',
+    sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts',
+    description: 'Subscribes a user to the notifications of the guestbook targeted by `key`.\n\n`uid` defaults to the caller. Only an admin can subscribe another user; anyone else always subscribes themselves.'
+  },
   {
     model: 'guestbookEntry',
     verb: 'delete',
@@ -232,6 +242,7 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     paramsValidator: guestbookEntryParamsType,
     groupName: 'Guestbook',
     sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts',
+    description: "Deletes the caller's own entry in a guestbook.\n\nPass the guestbook as `guestbook` (its id or its full key), not the entry's key. An entry's id is its author's uid, so\nthis always targets the caller's entry. Succeeds without changing anything when the caller has no entry.",
     paramsFields: [{ name: 'guestbook', typeText: 'GuestbookId | GuestbookKey', description: 'The guestbook the entry is in: its id (`abc123`) or its full key (`gb/abc123`).' }]
   },
   {
@@ -315,6 +326,7 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     resultTypeName: 'InsertGuestbookEntryResult',
     groupName: 'Guestbook',
     sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts',
+    description: "Creates or updates the caller's entry in a guestbook. Each user has one entry per guestbook.\n\nPass the guestbook as `guestbook`: its id or its full key. Fails when the guestbook is locked. Returns the entry's\nkey in `modelKeys`.",
     paramsFields: [
       { name: 'message', typeText: 'string' },
       { name: 'signed', typeText: 'string' },
@@ -323,7 +335,16 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     resultTypeDescription: 'Result of the `guestbookEntry / update / insert` call.',
     resultFields: [{ name: 'modelKeys', typeText: '[GuestbookEntryKey]', description: "Key of the caller's entry: the one just created, or the existing one that was updated." }]
   },
-  { model: 'guestbookEntry', verb: 'update', specifier: 'like', paramsTypeName: 'LikeGuestbookEntryParams', paramsValidator: likeGuestbookEntryParamsType, groupName: 'Guestbook', sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts' },
+  {
+    model: 'guestbookEntry',
+    verb: 'update',
+    specifier: 'like',
+    paramsTypeName: 'LikeGuestbookEntryParams',
+    paramsValidator: likeGuestbookEntryParamsType,
+    groupName: 'Guestbook',
+    sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts',
+    description: "Adds one like to the published guestbook entry targeted by `key`, the entry's own key (`gb/<guestbookId>/gbe/<uid>`).\n\nFails when the entry is not published."
+  },
   {
     model: 'notification',
     verb: 'update',
@@ -639,6 +660,7 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     resultTypeName: 'ResyncNotificationUserResult',
     groupName: 'NotificationBox',
     sourceFile: 'packages/firebase/src/lib/model/notification/notification.api.ts',
+    description: "Re-syncs the box configs of the NotificationUser targeted by `key` into their NotificationBoxes.\n\nEach config flagged as needing a sync is merged back into its NotificationBox's recipient list, and stale box\nreferences are cleaned up. Returns how many NotificationBoxes were updated.",
     resultFields: [{ name: 'notificationBoxesUpdated', typeText: 'number' }]
   },
   {
@@ -693,7 +715,17 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     sourceFile: 'packages/firebase/src/lib/model/oidcmodel/oidcmodel.api.ts',
     paramsTypeDescription: 'Parameters for updating an existing OAuth client.\n\nUses {@link UpdateOidcClientFieldParams} — `token_endpoint_auth_method` is immutable.'
   },
-  { model: 'oidcEntry', verb: 'update', specifier: 'rotateClientSecret', paramsTypeName: 'RotateOidcClientSecretParams', paramsValidator: rotateOidcClientSecretParamsType, resultTypeName: 'RotateOidcClientSecretResult', groupName: 'Oidc', sourceFile: 'packages/firebase/src/lib/model/oidcmodel/oidcmodel.api.ts' },
+  {
+    model: 'oidcEntry',
+    verb: 'update',
+    specifier: 'rotateClientSecret',
+    paramsTypeName: 'RotateOidcClientSecretParams',
+    paramsValidator: rotateOidcClientSecretParamsType,
+    resultTypeName: 'RotateOidcClientSecretResult',
+    groupName: 'Oidc',
+    sourceFile: 'packages/firebase/src/lib/model/oidcmodel/oidcmodel.api.ts',
+    description: "Replaces the secret of the OAuth client targeted by `key` with a newly generated one.\n\nReturns the `client_id` and the new `client_secret`, which is only returned this once. Fails for a public PKCE client\n(`token_endpoint_auth_method: 'none'`), which has no secret."
+  },
   {
     model: 'openRouterPrompt',
     verb: 'query',
@@ -1211,6 +1243,7 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     resultTypeName: 'ExampleReadResponse',
     groupName: 'SystemState',
     sourceFile: 'components/demo-firebase/src/lib/model/system/system.api.ts',
+    description: 'Example read that echoes `message` back with `read: true`. Hidden from MCP.',
     paramsFields: [{ name: 'message', typeText: 'string' }],
     resultFields: [
       { name: 'read', typeText: 'boolean' },

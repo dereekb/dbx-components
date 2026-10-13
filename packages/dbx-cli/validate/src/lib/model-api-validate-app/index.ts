@@ -19,8 +19,9 @@ export interface ValidateAppOptions {
 /**
  * Reconciles declarations from the firebase-component package (and any
  * upstream `@dereekb/*` package it depends on) against the handlers wired
- * in the app's `crud.functions.ts`, and checks that every `invoke` /
- * custom-verb handler declares its MCP read/write classification.
+ * in the app's `crud.functions.ts`, checks that every `invoke` /
+ * custom-verb handler declares its MCP read/write classification, and
+ * that every declared entry has a description.
  *
  * @param options - Resolved paths and optional model filter.
  * @returns The populated validation report.

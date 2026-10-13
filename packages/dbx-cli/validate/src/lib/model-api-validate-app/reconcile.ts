@@ -7,6 +7,7 @@ import type { DeclaredEntry, HandlerEntry, ModelSummary, ReconciledEntry, Valida
 import type { CrudVerb } from '@dereekb/dbx-cli/manifest-extract';
 import { checkHandlerNaming } from './naming.js';
 import { checkHandlerMcpReadOnly } from './mcp-read-only.js';
+import { checkDeclaredDescription } from './description.js';
 
 export interface ReconcileInput {
   readonly declared: readonly DeclaredEntry[];
@@ -110,7 +111,8 @@ function flagOrphanHandlers(input: FlagOrphanHandlersInput): void {
  * Reconciles declared CRUD entries against discovered handlers, producing
  * per-model summaries, per-cell statuses, `MISSING_HANDLER` /
  * `ORPHAN_HANDLER` errors, plus the per-handler `HANDLER_NAMING_MISMATCH`
- * errors and `HANDLER_MCP_READ_ONLY_UNSET` warnings.
+ * errors and `HANDLER_MCP_READ_ONLY_UNSET` warnings, and the per-declaration
+ * `MISSING_DESCRIPTION` warnings.
  *
  * @param input - Declared entries, handler entries, and an optional model filter.
  * @returns The reconciled entries, summaries, issues, and aggregate counts.
@@ -133,6 +135,10 @@ export function reconcile(input: ReconcileInput): ReconcileResult {
     if (namingIssue) issues.push(namingIssue);
     const mcpReadOnlyIssue = checkHandlerMcpReadOnly(h);
     if (mcpReadOnlyIssue) issues.push(mcpReadOnlyIssue);
+  }
+  for (const d of declaredFiltered) {
+    const descriptionIssue = checkDeclaredDescription(d);
+    if (descriptionIssue) issues.push(descriptionIssue);
   }
   entries.sort(compareEntries);
   issues.sort((a, b) => a.model.localeCompare(b.model) || (a.verb ?? '').localeCompare(b.verb ?? '') || (a.specifier ?? '').localeCompare(b.specifier ?? ''));

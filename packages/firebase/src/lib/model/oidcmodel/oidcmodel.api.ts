@@ -147,6 +147,12 @@ export type OidcModelCrudFunctionsConfig = {
     };
     update: {
       client: UpdateOidcClientParams;
+      /**
+       * Replaces the secret of the OAuth client targeted by `key` with a newly generated one.
+       *
+       * Returns the `client_id` and the new `client_secret`, which is only returned this once. Fails for a public PKCE client
+       * (`token_endpoint_auth_method: 'none'`), which has no secret.
+       */
       rotateClientSecret: [RotateOidcClientSecretParams, RotateOidcClientSecretResult];
     };
     delete: {

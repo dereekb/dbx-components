@@ -73,7 +73,7 @@ const TOOL: Tool = {
     '',
     'The `manifest` cluster walks the merged model manifest (`@dereekb/firebase` upstream plus every discovered `*-firebase` component) and flags duplicate `firestoreModelIdentity` declarations: `MODEL_IDENTITY_COLLECTION_NAME_DUPLICATE` when two identities share their `collectionName` arg, and `MODEL_IDENTITY_MODEL_TYPE_DUPLICATE` when they share their `modelName` arg.',
     '',
-    'The `model_api` cluster reconciles CRUD declarations from `<componentDir>/src/lib/**/*.api.ts` against the handler map wired in `<apiDir>/src/app/function/model/crud.functions.ts`, emitting `MISSING_HANDLER`, `ORPHAN_HANDLER`, and `HANDLER_NAMING_MISMATCH`.',
+    'The `model_api` cluster reconciles CRUD declarations from `<componentDir>/src/lib/**/*.api.ts` against the handler map wired in `<apiDir>/src/app/function/model/crud.functions.ts`, emitting `MISSING_HANDLER`, `ORPHAN_HANDLER`, and `HANDLER_NAMING_MISMATCH`, plus the `HANDLER_MCP_READ_ONLY_UNSET` and `MISSING_DESCRIPTION` warnings.',
     '',
     "The `firebase_index` cluster diffs the component's `@dbxModelFirebaseIndex`-tagged factories against the committed `firestore.indexes.json`. `MODEL_FIREBASE_INDEX_COMPOSITE_ADDED` / `..._FIELD_OVERRIDE_ADDED` fire when JSON is missing required entries; the `*_REMOVED` codes warn on stale entries with no factory backing them.",
     '',

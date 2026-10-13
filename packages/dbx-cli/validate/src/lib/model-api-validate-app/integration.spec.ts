@@ -135,6 +135,20 @@ describe('HANDLER_MCP_READ_ONLY_UNSET (demo-firebase + demo-api)', () => {
   });
 });
 
+describe('MISSING_DESCRIPTION (demo-firebase + demo-api)', () => {
+  it('finds a description on every demo entry, including the upstream @dereekb/firebase ones', async () => {
+    const report = await validateAppModelApi({ componentAbs: COMPONENT_ABS, componentDir: COMPONENT_DIR, apiAbs: API_ABS, apiDir: API_DIR });
+    expect(report.issues.filter((x) => x.code === 'MISSING_DESCRIPTION').map((x) => `${x.model}.${x.verb}.${x.specifier ?? '_'} @ ${x.source}`)).toEqual([]);
+  });
+
+  it('reads the config member and params interface summaries off the declarations', async () => {
+    const report = await validateAppModelApi({ componentAbs: COMPONENT_ABS, componentDir: COMPONENT_DIR, apiAbs: API_ABS, apiDir: API_DIR });
+    const declaredFor = (model: string, verb: string, specifier?: string) => report.entries.find((e) => e.model === model && e.verb === verb && e.specifier === specifier)?.declared;
+    expect(declaredFor('guestbookEntry', 'delete')?.description).toContain("caller's own entry");
+    expect(declaredFor('guestbookEntry', 'query', '_')?.paramsTypeDescription).toContain('guestbook entries');
+  });
+});
+
 describe('reconcile (synthetic)', () => {
   const baseDeclared = [
     { model: 'profile', verb: 'update' as const, specifier: 'username', paramsTypeName: 'SetProfileUsernameParams', resultTypeName: undefined, sourceFile: 'src/lib/model/profile/profile.api.ts', line: 96 },

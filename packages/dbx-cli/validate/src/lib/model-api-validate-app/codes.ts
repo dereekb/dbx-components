@@ -11,8 +11,10 @@
  * defined in the API app's `<app>FunctionMap` / `<app>CrudFunctionsConfig`.
  * Two reconciliation gaps fire (`MISSING_HANDLER` / `ORPHAN_HANDLER`),
  * plus a naming-convention check on every wired handler
- * (`HANDLER_NAMING_MISMATCH`) and an MCP read/write check on every
- * `invoke` / custom-verb handler (`HANDLER_MCP_READ_ONLY_UNSET`, a warning).
+ * (`HANDLER_NAMING_MISMATCH`), an MCP read/write check on every
+ * `invoke` / custom-verb handler (`HANDLER_MCP_READ_ONLY_UNSET`, a warning)
+ * and a description check on every declared entry (`MISSING_DESCRIPTION`,
+ * a warning).
  */
 export enum ModelApiValidateAppCode {
   /**
@@ -67,7 +69,22 @@ export enum ModelApiValidateAppCode {
    * @dbxRuleSeeAlso doc:dbx__guide__invoke-mcp-builder
    * @dbxRuleSeeAlso tool:dbx_model_api_lookup
    */
-  HANDLER_MCP_READ_ONLY_UNSET = 'HANDLER_MCP_READ_ONLY_UNSET'
+  HANDLER_MCP_READ_ONLY_UNSET = 'HANDLER_MCP_READ_ONLY_UNSET',
+
+  /**
+   * A declared CRUD entry has no description, so its MCP tool and CLI command say nothing about what the call does.
+   * The description is built from two JSDoc summaries: the one on the entry's member in the
+   * `<Group>ModelCrudFunctionsConfig` type and the one on its params interface. With neither, MCP falls back to the
+   * generic `Performs the "<verb>" call on the "<model>" model.`, and an agent has to guess what the params mean
+   * (for example, that `guestbookEntry.delete` takes the guestbook and always removes the caller's own entry).
+   *
+   * @dbxRuleSeverity warning
+   * @dbxRuleApplies Every declared `<model>.<verb>.<specifier>` cell whose config member and params interface both lack a JSDoc summary. A JSDoc block holding only tags (such as `@dbxModelApiMcpResult`) has no summary. A params interface declared in another file is not read, the same as when the manifests are generated.
+   * @dbxRuleNotApplies Standalone `<Group>FunctionTypeMap` entries, which are not reconciled.
+   * @dbxRuleFix Add a JSDoc summary above the entry's member in the `<Group>ModelCrudFunctionsConfig` type saying what the call does and what it acts on. The CLI's one-line command help reads only this one. A summary on the params interface also counts.
+   * @dbxRuleSeeAlso tool:dbx_model_api_lookup
+   */
+  MISSING_DESCRIPTION = 'MISSING_DESCRIPTION'
 }
 
 /**

@@ -25,6 +25,14 @@ export interface DeclaredEntry {
   readonly specifier: string | undefined;
   readonly paramsTypeName: string | undefined;
   readonly resultTypeName: string | undefined;
+  /**
+   * JSDoc summary on the entry's member in the `<Group>ModelCrudFunctionsConfig` type.
+   */
+  readonly description?: Maybe<string>;
+  /**
+   * JSDoc summary on the entry's params interface, when it is declared in the same file.
+   */
+  readonly paramsTypeDescription?: Maybe<string>;
   readonly sourceFile: string;
   readonly line: number;
 }
