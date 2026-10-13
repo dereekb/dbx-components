@@ -37,7 +37,11 @@ const SF_WRAPPER = `export function demoStorageFileProcessingNotificationTaskHan
   return storageFileProcessingNotificationTaskHandler({ processors, storageFileFirestoreCollections: context, storageAccessor: context.storageService });
 }`;
 
-const API_SF_HANDLER = `import { storageFileProcessingNotificationTaskHandler } from '@dereekb/firebase-server/model';
+const SF_FACTORY_IMPORT = "import { storageFileProcessingNotificationTaskHandler } from '@dereekb/firebase-server/model';";
+const SF_FACTORY_RETURN = 'return storageFileProcessingNotificationTaskHandler(';
+const SF_INLINE_CONFIG = '{ processors: [], storageFileFirestoreCollections: context, storageAccessor: context.storageService }';
+
+const API_SF_HANDLER = `${SF_FACTORY_IMPORT}
 
 ${SF_WRAPPER}
 `;
@@ -125,6 +129,16 @@ function addTaskServiceImport(parts: FixtureParts, line: string): void {
   replaceInFile(parts.api, TASK_SERVICE_FILE, FIREBASE_IMPORT, `${FIREBASE_IMPORT}\n${line}`);
 }
 
+function aliasStorageFileFactory(parts: FixtureParts): void {
+  replaceInFile(parts.api, SF_HANDLER_FILE, SF_FACTORY_IMPORT, "import { storageFileProcessingNotificationTaskHandler as sfHandler } from '@dereekb/firebase-server/model';");
+  replaceInFile(parts.api, SF_HANDLER_FILE, SF_FACTORY_RETURN, 'return sfHandler(');
+}
+
+function namespaceStorageFileFactory(parts: FixtureParts): void {
+  replaceInFile(parts.api, SF_HANDLER_FILE, SF_FACTORY_IMPORT, "import * as serverModel from '@dereekb/firebase-server/model';");
+  replaceInFile(parts.api, SF_HANDLER_FILE, SF_FACTORY_RETURN, 'return serverModel.storageFileProcessingNotificationTaskHandler(');
+}
+
 describe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED', () => {
   it('passes the demo-shaped fixture with no findings', () => {
     expect(runWith().violations).toEqual([]);
@@ -196,8 +210,8 @@ describe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED', () => {
     [
       'the factory written inline in handlers',
       (p) => {
-        replaceInFile(p.api, TASK_SERVICE_FILE, ', storageFileHandler, ', ', storageFileProcessingNotificationTaskHandler({ processors: [], storageFileFirestoreCollections: context, storageAccessor: context.storageService }), ');
-        addTaskServiceImport(p, "import { storageFileProcessingNotificationTaskHandler } from '@dereekb/firebase-server/model';");
+        replaceInFile(p.api, TASK_SERVICE_FILE, ', storageFileHandler, ', `, storageFileProcessingNotificationTaskHandler(${SF_INLINE_CONFIG}), `);
+        addTaskServiceImport(p, SF_FACTORY_IMPORT);
       }
     ],
     [
@@ -237,7 +251,7 @@ describe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED', () => {
     expect(extracted.upstreamHandlerCalls[0].enclosingFunction).toBe('demoStorageFileProcessingNotificationTaskHandler');
   });
 
-  // Each case drops `storageFileHandler` from `handlers` (except the alias, which keeps it) and adds a value the trace can't follow.
+  // Each case drops `storageFileHandler` from `handlers` and adds a value the trace can't follow.
   it.each<[string, (parts: FixtureParts) => void, ViolationCode | undefined]>([
     [
       'an element imported from a non-upstream module',
@@ -274,10 +288,11 @@ describe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED', () => {
       undefined
     ],
     [
-      'an aliased factory import',
+      'a spread of an unknown @dereekb/* namespace helper',
       (p) => {
-        replaceInFile(p.api, SF_HANDLER_FILE, "import { storageFileProcessingNotificationTaskHandler } from '@dereekb/firebase-server/model';", "import { storageFileProcessingNotificationTaskHandler as sfHandler } from '@dereekb/firebase-server/model';");
-        replaceInFile(p.api, SF_HANDLER_FILE, 'return storageFileProcessingNotificationTaskHandler(', 'return sfHandler(');
+        dropStorageFileHandler(p);
+        replaceInFile(p.api, TASK_SERVICE_FILE, ', formSpaceHandler]', ', formSpaceHandler, ...serverModel.someUpstreamHandlers(context)]');
+        addTaskServiceImport(p, "import * as serverModel from '@dereekb/firebase-server/model';");
       },
       undefined
     ]
@@ -316,5 +331,89 @@ describe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED', () => {
     expect(call.opaqueHandlerValues).toEqual([]);
     expect(call.reachedUpstreamHandlerCalls.map((x) => x.factory)).toEqual(['storageFileProcessingNotificationTaskHandler', 'formSpaceSubmissionNotificationTaskHandler']);
     expect(extracted.upstreamHandlerCalls[0].enclosingFunction).toBe('demoStorageFileProcessingNotificationTaskHandler');
+  });
+});
+
+describe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED — aliased and namespaced factories', () => {
+  const variants: [string, (parts: FixtureParts) => void][] = [
+    ['an aliased factory import', aliasStorageFileFactory],
+    ['a namespace factory call', namespaceStorageFileFactory]
+  ];
+
+  it.each(variants)('follows %s in the wrapper', (_label, modify) => {
+    const inspection = inspectionOf(modify);
+    const extracted = extractAppNotifications(inspection);
+    const [call] = extracted.taskServiceCalls;
+    expect(call.opaqueHandlerValues).toEqual([]);
+    expect(call.unresolvedHandlerBindings).toEqual([]);
+    expect(call.reachedUpstreamHandlerCalls.map((x) => x.factory)).toEqual(['storageFileProcessingNotificationTaskHandler', 'formSpaceSubmissionNotificationTaskHandler']);
+    expect(extracted.upstreamHandlerCalls).toContainEqual(expect.objectContaining({ factory: 'storageFileProcessingNotificationTaskHandler', sourceFile: SF_HANDLER_FILE, enclosingFunction: 'demoStorageFileProcessingNotificationTaskHandler' }));
+    expect(runWith(modify).violations).toEqual([]);
+  });
+
+  it.each(variants)('reports the StorageFile aggregate when the handler built through %s leaves handlers', (_label, modify) => {
+    const found = findingsOf(
+      runWith((p) => {
+        modify(p);
+        dropStorageFileHandler(p);
+      })
+    );
+    expect(found).toHaveLength(1);
+    expect(found[0].message).toContain('`demoStorageFileProcessingNotificationTaskHandler` builds');
+    expect(found[0].message).toContain('handlers/task.handler.storagefile.ts:');
+  });
+
+  it.each<[string, string, string]>([
+    ['an aliased factory import', `, sfHandler(${SF_INLINE_CONFIG}), `, "import { storageFileProcessingNotificationTaskHandler as sfHandler } from '@dereekb/firebase-server/model';"],
+    ['a namespace factory call', `, serverModel.storageFileProcessingNotificationTaskHandler(${SF_INLINE_CONFIG}), `, "import * as serverModel from '@dereekb/firebase-server/model';"]
+  ])('follows %s written inline in handlers', (_label, element, importLine) => {
+    const modify = (p: FixtureParts) => {
+      replaceInFile(p.api, TASK_SERVICE_FILE, ', storageFileHandler, ', element);
+      addTaskServiceImport(p, importLine);
+    };
+    const [call] = extractAppNotifications(inspectionOf(modify)).taskServiceCalls;
+    expect(call.opaqueHandlerValues).toEqual([]);
+    expect(call.reachedUpstreamHandlerCalls).toContainEqual(expect.objectContaining({ factory: 'storageFileProcessingNotificationTaskHandler', sourceFile: TASK_SERVICE_FILE }));
+    expect(runWith(modify).violations).toEqual([]);
+  });
+});
+
+describe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED — values the trace still skips', () => {
+  // `storageFileHandler` stays in `handlers` in every case, so a finding would be a false error.
+  it.each<[string, (parts: FixtureParts) => void]>([
+    [
+      'the factory held in a local constant',
+      (p) => {
+        replaceInFile(p.api, SF_HANDLER_FILE, 'const processors = [];', 'const processors = [];\n  const create = storageFileProcessingNotificationTaskHandler;');
+        replaceInFile(p.api, SF_HANDLER_FILE, SF_FACTORY_RETURN, 'return create(');
+      }
+    ],
+    [
+      'an aliased factory held in a local constant',
+      (p) => {
+        aliasStorageFileFactory(p);
+        replaceInFile(p.api, SF_HANDLER_FILE, 'const processors = [];', 'const processors = [];\n  const create = sfHandler;');
+        replaceInFile(p.api, SF_HANDLER_FILE, 'return sfHandler(', 'return create(');
+      }
+    ],
+    [
+      'a namespace shadowed by a parameter',
+      (p) => {
+        namespaceStorageFileFactory(p);
+        replaceInFile(p.api, SF_HANDLER_FILE, 'demoStorageFileProcessingNotificationTaskHandler(context) {', 'demoStorageFileProcessingNotificationTaskHandler(context, serverModel = context.handlerFactories) {');
+      }
+    ],
+    [
+      'a namespace import from a non-@dereekb/* module',
+      (p) => {
+        replaceInFile(p.api, SF_HANDLER_FILE, SF_FACTORY_IMPORT, "import * as lib from 'some-app-lib';");
+        replaceInFile(p.api, SF_HANDLER_FILE, SF_FACTORY_RETURN, 'return lib.storageFileProcessingNotificationTaskHandler(');
+      }
+    ]
+  ])('skips %s', (_label, modify) => {
+    expect(findingsOf(runWith(modify))).toEqual([]);
+    const [call] = extractAppNotifications(inspectionOf(modify)).taskServiceCalls;
+    expect(call.opaqueHandlerValues).not.toEqual([]);
+    expect(call.reachedUpstreamHandlerCalls.map((x) => x.factory)).not.toContain('storageFileProcessingNotificationTaskHandler');
   });
 });

@@ -15,11 +15,12 @@
  * convention.
  */
 
-import { Node, Project, SyntaxKind, type ArrayLiteralExpression, type ImportDeclaration, type ObjectLiteralExpression, type SourceFile, type TypeNode, type VariableDeclaration } from 'ts-morph';
+import { Node, Project, SyntaxKind, type ArrayLiteralExpression, type CallExpression, type ImportDeclaration, type ObjectLiteralExpression, type SourceFile, type TypeNode, type VariableDeclaration } from 'ts-morph';
 import type { InspectedFile } from './inspection.types.js';
 
 const COMPONENT_VIRTUAL_PREFIX = '__component__/';
 const API_VIRTUAL_PREFIX = '__api__/';
+const DEREEKB_MODULE_PREFIX = '@dereekb/';
 
 /**
  * In-memory ts-morph project plus pre-collected source files for each
@@ -377,7 +378,7 @@ export function collectTypeofReferences(node: TypeNode, out: string[]): void {
  */
 function collectTrustedIdentifiersFromImport(imp: ImportDeclaration, out: Set<string>): void {
   const spec = imp.getModuleSpecifierValue();
-  if (!spec.startsWith('@dereekb/')) return;
+  if (!spec.startsWith(DEREEKB_MODULE_PREFIX)) return;
   for (const named of imp.getNamedImports()) {
     const alias = named.getAliasNode();
     out.add(alias ? alias.getText() : named.getNameNode().getText());
@@ -405,4 +406,119 @@ export function collectTrustedExternalIdentifiers(sources: readonly SourceFile[]
     }
   }
   return out;
+}
+
+/**
+ * The `@dereekb/*` import aliases and namespace imports of one source file, used to read a call's callee back to the
+ * name the upstream package exports. Aliases and namespaces whose local name the file also declares elsewhere (a
+ * parameter, variable, binding element, function or class) are left out: the scan can't tell which binding a
+ * reference means.
+ */
+export interface DereekbImportBindings {
+  /**
+   * `import { exported as local } from '@dereekb/...'`: local name → exported name. Plain named imports are left out,
+   * since their local name already is the exported name.
+   */
+  readonly aliases: ReadonlyMap<string, string>;
+  /**
+   * `import * as local from '@dereekb/...'`: the local names.
+   */
+  readonly namespaces: ReadonlySet<string>;
+}
+
+/**
+ * The {@link DereekbImportBindings} of every source file of an in-memory project, by file path.
+ */
+export interface DereekbImportIndex {
+  readonly bindingsByFilePath: ReadonlyMap<string, DereekbImportBindings>;
+}
+
+/**
+ * Reads the `@dereekb/*` import aliases and namespace imports of a source file, leaving out every local name the file
+ * also declares as a parameter, variable, binding element, function or class.
+ *
+ * @param sf - The source file to read.
+ * @returns The file's resolvable `@dereekb/*` import bindings.
+ */
+export function readDereekbImportBindings(sf: SourceFile): DereekbImportBindings {
+  const aliases = new Map<string, string>();
+  const namespaces = new Set<string>();
+  for (const imp of sf.getImportDeclarations()) {
+    if (imp.getModuleSpecifierValue().startsWith(DEREEKB_MODULE_PREFIX)) {
+      for (const named of imp.getNamedImports()) {
+        const alias = named.getAliasNode()?.getText();
+        const exported = named.getName();
+        if (alias && alias !== exported) {
+          aliases.set(alias, exported);
+        }
+      }
+      const namespace = imp.getNamespaceImport();
+      if (namespace) {
+        namespaces.add(namespace.getText());
+      }
+    }
+  }
+
+  // Shadow guard: a local declaration of the same name makes every reference ambiguous.
+  function isDeclarationName(identifier: Node): boolean {
+    const parent = identifier.getParent();
+    const isDeclaration = Node.isVariableDeclaration(parent) || Node.isParameterDeclaration(parent) || Node.isBindingElement(parent) || Node.isFunctionDeclaration(parent) || Node.isClassDeclaration(parent);
+    return isDeclaration && parent.getNameNode() === identifier;
+  }
+
+  if (aliases.size > 0 || namespaces.size > 0) {
+    for (const identifier of sf.getDescendantsOfKind(SyntaxKind.Identifier)) {
+      const name = identifier.getText();
+      if ((aliases.has(name) || namespaces.has(name)) && isDeclarationName(identifier)) {
+        aliases.delete(name);
+        namespaces.delete(name);
+      }
+    }
+  }
+
+  const result: DereekbImportBindings = { aliases, namespaces };
+  return result;
+}
+
+/**
+ * Builds the {@link DereekbImportIndex} of the supplied sources.
+ *
+ * @param sources - The source files to index.
+ * @returns The per-file `@dereekb/*` import bindings.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function buildDereekbImportIndex(sources: readonly SourceFile[]): DereekbImportIndex {
+  const bindingsByFilePath = new Map<string, DereekbImportBindings>();
+  for (const sf of sources) {
+    bindingsByFilePath.set(sf.getFilePath(), readDereekbImportBindings(sf));
+  }
+  const result: DereekbImportIndex = { bindingsByFilePath };
+  return result;
+}
+
+/**
+ * Reads the name a call's callee refers to. An identifier that is an `@dereekb/*` import alias reads as the exported
+ * name; any other identifier reads as written (the validators' exact-name convention). `ns.name` reads as `name` when
+ * `ns` is an `@dereekb/*` namespace import of the call's file. Anything else (`obj.fn(...)`, `fn(...)(...)`, a
+ * namespace or alias the file shadows, a namespace of another module) reads as `undefined`.
+ *
+ * @param call - The call expression to read.
+ * @param imports - The per-file `@dereekb/*` import bindings.
+ * @returns The resolved callee name, or `undefined` when the callee isn't a resolvable name.
+ */
+export function readCalleeName(call: CallExpression, imports: DereekbImportIndex): string | undefined {
+  const callee = call.getExpression();
+  const bindings = imports.bindingsByFilePath.get(call.getSourceFile().getFilePath());
+  let result: string | undefined;
+  if (Node.isIdentifier(callee)) {
+    const name = callee.getText();
+    result = bindings?.aliases.get(name) ?? name;
+  } else if (Node.isPropertyAccessExpression(callee)) {
+    const target = callee.getExpression();
+    if (Node.isIdentifier(target) && bindings?.namespaces.has(target.getText())) {
+      result = callee.getName();
+    }
+  }
+  return result;
 }

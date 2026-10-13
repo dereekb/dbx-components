@@ -7,7 +7,8 @@
  * and `firestore.indexes.json` facts. Pure: works on the in-memory project `extract.ts` builds.
  *
  * Names from `@dereekb/firebase` / `@dereekb/firebase-server` are mirrored as strings, not imported; the drift spec
- * (`taskbot.upstream.spec.ts`) fails when one is renamed upstream.
+ * (`taskbot.upstream.spec.ts`) fails when one is renamed upstream. Upstream factory callees resolve `@dereekb/*` import
+ * aliases and namespace imports (`readCalleeName`).
  */
 
 import { Node, SyntaxKind, type ArrayLiteralExpression, type CallExpression, type ObjectLiteralExpression, type SourceFile, type VariableDeclaration } from 'ts-morph';
@@ -20,12 +21,14 @@ import {
   getPropertyInitializer,
   readBooleanProperty,
   readStringLiteralInitializer,
+  readCalleeName,
   readStringProperty,
   resolveArrayLiteralProperty,
   resolveObjectLiteralArgument,
   sourceSideOf,
   typeAnnotationText,
-  unwrapAsExpressions
+  unwrapAsExpressions,
+  type DereekbImportIndex
 } from '../_core/_validate/ast.js';
 import type { ApiFunctionEntry, ApiFunctionIndex } from './extract.function-index.js';
 import type {
@@ -107,6 +110,10 @@ export interface ExtractAppNotificationTaskBotInput {
   readonly apiSources: readonly SourceFile[];
   readonly functionIndex: ApiFunctionIndex;
   readonly trustedExternalIdentifiers: ReadonlySet<string>;
+  /**
+   * The per-file `@dereekb/*` import bindings, used to match aliased and namespaced upstream factory calls.
+   */
+  readonly dereekbImports: DereekbImportIndex;
   readonly taskServiceCalls: readonly ExtractedTaskServiceCall[];
   readonly workspace: AppNotificationsWorkspaceFiles | undefined;
 }
@@ -121,6 +128,7 @@ interface TaskBotIndex {
   readonly groupKeys: ReadonlyMap<string, string | undefined>;
   readonly functionIndex: ApiFunctionIndex;
   readonly trusted: ReadonlySet<string>;
+  readonly imports: DereekbImportIndex;
 }
 
 /**
@@ -130,20 +138,20 @@ interface TaskBotIndex {
  * @returns The NotificationTaskBot extraction.
  */
 export function extractAppNotificationTaskBot(input: ExtractAppNotificationTaskBotInput): ExtractedAppNotificationTaskBot {
-  const { componentSources, apiSources, functionIndex, trustedExternalIdentifiers: trusted, taskServiceCalls, workspace } = input;
+  const { componentSources, apiSources, functionIndex, trustedExternalIdentifiers: trusted, dereekbImports: imports, taskServiceCalls, workspace } = input;
   const allSources = [...componentSources, ...apiSources];
 
   const scriptTypeConstants = extractScriptTypeConstants(allSources);
   const constants = new Map(scriptTypeConstants.map((c) => [c.symbolName, c]));
   const groupKeys = extractScriptGroupKeys(allSources);
-  const partialIndex = { constants, configs: new Map<string, ExtractedTaskBotScriptConfig>(), aggregates: new Map<string, VariableDeclaration>(), groupKeys, functionIndex, trusted };
+  const partialIndex = { constants, configs: new Map<string, ExtractedTaskBotScriptConfig>(), aggregates: new Map<string, VariableDeclaration>(), groupKeys, functionIndex, trusted, imports };
   const scriptConfigs = extractScriptConfigs(allSources, partialIndex);
   const index: TaskBotIndex = partialIndex;
 
   const registries = extractRegistries(allSources, index);
-  const registryWirings = extractRegistryWirings(apiSources);
+  const registryWirings = extractRegistryWirings(apiSources, imports);
   const runHandlerCalls = extractRunHandlerCalls(apiSources, index);
-  const repairCalls = extractRepairCalls(apiSources);
+  const repairCalls = extractRepairCalls(apiSources, imports);
 
   const taskServiceListsTaskBotTypes = taskServiceCalls.some((call) => taskServiceCallListsTaskBotTypes(call));
   const taskBotInUse = scriptConfigs.length > 0 || registries.length > 0 || registryWirings.some((w) => w.kind !== 'empty') || runHandlerCalls.length > 0 || taskServiceListsTaskBotTypes;
@@ -410,7 +418,7 @@ function extractRegistries(sources: readonly SourceFile[], index: TaskBotIndex):
   const out: ExtractedTaskBotRegistry[] = [];
   for (const sf of sources) {
     for (const call of sf.getDescendantsOfKind(SyntaxKind.CallExpression)) {
-      if (calleeName(call) === NOTIFICATION_TASK_BOT_SCRIPT_CONFIG_RECORD_FACTORY) {
+      if (readCalleeName(call, index.imports) === NOTIFICATION_TASK_BOT_SCRIPT_CONFIG_RECORD_FACTORY) {
         out.push(readRegistry(call, index));
       }
     }
@@ -435,26 +443,26 @@ function calleeName(call: CallExpression): string | undefined {
 }
 
 // MARK: Registry wirings
-function extractRegistryWirings(sources: readonly SourceFile[]): ExtractedTaskBotRegistryWiring[] {
+function extractRegistryWirings(sources: readonly SourceFile[], imports: DereekbImportIndex): ExtractedTaskBotRegistryWiring[] {
   const out: ExtractedTaskBotRegistryWiring[] = [];
   for (const sf of sources) {
     for (const call of sf.getDescendantsOfKind(SyntaxKind.CallExpression)) {
-      if (calleeName(call) === NOTIFICATION_TASK_BOT_SCRIPT_CONFIG_SERVICE_FACTORY) {
-        out.push({ ...readRegistryWiringArgument(call.getArguments()[0]), ...locationOf(call) });
+      if (readCalleeName(call, imports) === NOTIFICATION_TASK_BOT_SCRIPT_CONFIG_SERVICE_FACTORY) {
+        out.push({ ...readRegistryWiringArgument(call.getArguments()[0], imports), ...locationOf(call) });
       }
     }
   }
   return out;
 }
 
-function readRegistryWiringArgument(arg: Node | undefined): Pick<ExtractedTaskBotRegistryWiring, 'kind' | 'recordIdentifier'> {
+function readRegistryWiringArgument(arg: Node | undefined, imports: DereekbImportIndex): Pick<ExtractedTaskBotRegistryWiring, 'kind' | 'recordIdentifier'> {
   const inner = unwrapAsExpressions(arg);
   let result: Pick<ExtractedTaskBotRegistryWiring, 'kind' | 'recordIdentifier'>;
   if (!inner) {
     result = { kind: 'empty', recordIdentifier: undefined };
   } else if (Node.isIdentifier(inner)) {
     result = { kind: 'identifier', recordIdentifier: inner.getText() };
-  } else if (Node.isCallExpression(inner) && calleeName(inner) === NOTIFICATION_TASK_BOT_SCRIPT_CONFIG_RECORD_FACTORY) {
+  } else if (Node.isCallExpression(inner) && readCalleeName(inner, imports) === NOTIFICATION_TASK_BOT_SCRIPT_CONFIG_RECORD_FACTORY) {
     result = { kind: 'inline', recordIdentifier: undefined };
   } else {
     result = { kind: 'other', recordIdentifier: undefined };
@@ -534,7 +542,7 @@ function extractRunHandlerCalls(sources: readonly SourceFile[], index: TaskBotIn
   const out: ExtractedTaskBotRunHandlerCall[] = [];
   for (const sf of sources) {
     for (const call of sf.getDescendantsOfKind(SyntaxKind.CallExpression)) {
-      if (calleeName(call) === NOTIFICATION_TASK_BOT_RUN_HANDLER_FACTORY) {
+      if (readCalleeName(call, index.imports) === NOTIFICATION_TASK_BOT_RUN_HANDLER_FACTORY) {
         out.push(readRunHandlerCall(call, index));
       }
     }
@@ -803,13 +811,13 @@ function isScriptTypeMapper(node: Node | undefined): boolean {
 }
 
 // MARK: Repair calls
-function extractRepairCalls(sources: readonly SourceFile[]): ExtractedSourceLocation[] {
+function extractRepairCalls(sources: readonly SourceFile[], imports: DereekbImportIndex): ExtractedSourceLocation[] {
   const out: ExtractedSourceLocation[] = [];
   for (const sf of sources) {
     for (const call of sf.getDescendantsOfKind(SyntaxKind.CallExpression)) {
       const callee = call.getExpression();
       const isRepairMethod = Node.isPropertyAccessExpression(callee) && callee.getName() === NOTIFICATION_TASK_BOT_REPAIR_METHOD;
-      const isRepairFactory = Node.isIdentifier(callee) && callee.getText() === NOTIFICATION_TASK_BOT_REPAIR_FACTORY;
+      const isRepairFactory = readCalleeName(call, imports) === NOTIFICATION_TASK_BOT_REPAIR_FACTORY;
       if (isRepairMethod || isRepairFactory) {
         out.push(locationOf(call));
       }

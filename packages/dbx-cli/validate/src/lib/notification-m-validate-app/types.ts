@@ -312,7 +312,8 @@ export interface ExtractedTaskServiceCall {
    */
   readonly validateStatus: ExtractedTaskServiceValidateStatus;
   /**
-   * Every upstream handler-factory call (StorageFile, FormSpace, NotificationTaskBot) the `handlers:` trace reached.
+   * Every upstream handler-factory call (StorageFile, FormSpace, NotificationTaskBot) the `handlers:` trace reached,
+   * called directly, through an `@dereekb/*` import alias, or as an `@dereekb/*` namespace member.
    */
   readonly reachedUpstreamHandlerCalls: readonly ExtractedUpstreamHandlerCall[];
   /**
@@ -321,8 +322,9 @@ export interface ExtractedTaskServiceCall {
    */
   readonly handlersStatus: ExtractedTaskServiceValidateStatus;
   /**
-   * Values in the `handlers:` trace that the extractor can't see through: a `@dereekb/*` identifier that is not a known
-   * upstream handler factory, a call whose callee is not an identifier (`ns.fn(...)`, `fn(...)(...)`), and any expression
+   * Values in the `handlers:` trace that the extractor can't see through: a `@dereekb/*` identifier reached as a value (a
+   * helper that is not an upstream handler factory, or an upstream handler factory held in a variable), a call whose
+   * callee is neither an identifier nor an `@dereekb/*` namespace member (`obj.fn(...)`, `fn(...)(...)`), and any expression
    * other than an identifier, call, array or object literal (a conditional, `satisfies`, a parenthesized or non-null
    * expression, …). The text is collapsed and truncated. When the list is non-empty, the upstream handler checks skip
    * the service.
@@ -349,6 +351,9 @@ export interface ExtractedSourceLocation {
  * A call of an upstream handler factory from `UPSTREAM_NOTIFICATION_TASK_HANDLERS` (e.g. `storageFileProcessingNotificationTaskHandler(...)`).
  */
 export interface ExtractedUpstreamHandlerCall extends ExtractedSourceLocation {
+  /**
+   * The factory's exported name (an import alias or namespace member is resolved).
+   */
   readonly factory: string;
 }
 
@@ -555,7 +560,8 @@ export interface ExtractedTaskBotProcessor extends ExtractedSourceLocation {
 }
 
 /**
- * A `notificationTaskBotRunNotificationTaskHandler(...)` call in the API.
+ * A `notificationTaskBotRunNotificationTaskHandler(...)` call in the API (called directly, through an `@dereekb/*` import
+ * alias, or as an `@dereekb/*` namespace member).
  */
 export interface ExtractedTaskBotRunHandlerCall extends ExtractedSourceLocation {
   /**

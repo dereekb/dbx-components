@@ -9,7 +9,8 @@
  * can suppress "unresolved" / "orphan" diagnostics for identifiers that
  * cross into upstream packages. The upstream task handlers in
  * `extract.upstream.ts` are the exception: the handlers trace records
- * their factory calls.
+ * their factory calls, called directly, through an `@dereekb/*` import
+ * alias, or as an `@dereekb/*` namespace member.
  */
 
 import { Node, SyntaxKind, type ArrayLiteralExpression, type ObjectLiteralExpression, type SourceFile, type TypeNode, type VariableDeclaration } from 'ts-morph';
@@ -17,6 +18,7 @@ import {
   apiRelPath,
   asArrayLiteral,
   asObjectLiteral,
+  buildDereekbImportIndex,
   buildInMemoryProject,
   collectTrustedExternalIdentifiers,
   componentRelPath,
@@ -29,7 +31,8 @@ import {
   readStringProperty,
   resolveArrayLiteralProperty,
   typeAnnotationText,
-  unwrapAsExpressions
+  unwrapAsExpressions,
+  type DereekbImportIndex
 } from '../_core/_validate/ast.js';
 import type {
   AppNotificationsInspection,
@@ -55,7 +58,7 @@ import type {
 } from './types.js';
 import { type ApiFunctionIndex, buildApiFunctionIndex } from './extract.function-index.js';
 import { extractAppNotificationTaskBot } from './extract.taskbot.js';
-import { extractUpstreamHandlerCalls, upstreamHandlerFactoryOf, UPSTREAM_NOTIFICATION_TASK_HANDLER_FACTORIES } from './extract.upstream.js';
+import { extractUpstreamHandlerCalls, upstreamHandlerFactoryOf } from './extract.upstream.js';
 
 const NOTIF_TEMPLATE_TYPE = 'NotificationTemplateType';
 const NOTIF_TEMPLATE_TYPE_INFO = 'NotificationTemplateTypeInfo';
@@ -128,6 +131,7 @@ interface ComponentAggregateIndex {
 export function extractAppNotifications(inspection: AppNotificationsInspection): ExtractedAppNotifications {
   const { componentSources, apiSources } = buildInMemoryProject(inspection);
   const trustedExternalIdentifiers = collectTrustedExternalIdentifiers([...componentSources, ...apiSources]);
+  const dereekbImports = buildDereekbImportIndex([...componentSources, ...apiSources]);
 
   // Component pass
   const templateTypeConstants = extractTemplateTypeConstants(componentSources);
@@ -146,10 +150,10 @@ export function extractAppNotifications(inspection: AppNotificationsInspection):
   const apiFunctionIndex = buildApiFunctionIndex(apiSources);
   const templateConfigsArrayFactory = extractTemplateConfigsArrayFactory(apiSources, apiFunctionIndex);
   const templateHandlerEntries = extractTemplateHandlerEntries(templateConfigsArrayFactory, apiFunctionIndex);
-  const taskServiceCalls = extractTaskServiceCalls(apiSources, apiFunctionIndex, trustedExternalIdentifiers);
+  const taskServiceCalls = extractTaskServiceCalls({ sources: apiSources, index: apiFunctionIndex, trustedExternal: trustedExternalIdentifiers, imports: dereekbImports });
   const taskHandlerEntries = extractTaskHandlerEntries(apiSources);
-  const upstreamHandlerCalls = extractUpstreamHandlerCalls(apiSources);
-  const taskBot = extractAppNotificationTaskBot({ componentSources, apiSources, functionIndex: apiFunctionIndex, trustedExternalIdentifiers, taskServiceCalls, workspace: inspection.workspace });
+  const upstreamHandlerCalls = extractUpstreamHandlerCalls(apiSources, dereekbImports);
+  const taskBot = extractAppNotificationTaskBot({ componentSources, apiSources, functionIndex: apiFunctionIndex, trustedExternalIdentifiers, dereekbImports, taskServiceCalls, workspace: inspection.workspace });
 
   const result: ExtractedAppNotifications = {
     templateTypeConstants,
@@ -828,7 +832,15 @@ function scanContentDeliveryMethods(node: Node, found: Set<NotificationDeliveryM
 }
 
 // MARK: Task service calls
-function extractTaskServiceCalls(sources: readonly SourceFile[], index: ApiFunctionIndex, trustedExternal: ReadonlySet<string>): readonly ExtractedTaskServiceCall[] {
+interface ExtractTaskServiceCallsInput {
+  readonly sources: readonly SourceFile[];
+  readonly index: ApiFunctionIndex;
+  readonly trustedExternal: ReadonlySet<string>;
+  readonly imports: DereekbImportIndex;
+}
+
+function extractTaskServiceCalls(input: ExtractTaskServiceCallsInput): readonly ExtractedTaskServiceCall[] {
+  const { sources, index, trustedExternal, imports } = input;
   const out: ExtractedTaskServiceCall[] = [];
   for (const sf of sources) {
     const rel = apiRelPath(sf);
@@ -841,7 +853,7 @@ function extractTaskServiceCalls(sources: readonly SourceFile[], index: ApiFunct
       const validateArr = resolveArrayLiteralProperty(first, 'validate', sf);
       const handlersArr = resolveArrayLiteralProperty(first, 'handlers', sf);
       const validate = collectValidateArrayElements(validateArr);
-      const handlers = collectHandlersArrayElements({ handlersArr, sf, index, trustedExternal });
+      const handlers = collectHandlersArrayElements({ handlersArr, sf, index, trustedExternal, imports });
       const validateStatus = readTaskServiceListStatus(first, 'validate', validateArr);
       const handlersStatus = readTaskServiceListStatus(first, 'handlers', handlersArr);
       out.push({
@@ -914,6 +926,7 @@ interface CollectHandlersArrayElementsOptions {
   readonly sf: SourceFile;
   readonly index: ApiFunctionIndex;
   readonly trustedExternal: ReadonlySet<string>;
+  readonly imports: DereekbImportIndex;
 }
 
 interface HandlersArrayElements {
@@ -938,7 +951,7 @@ interface HandlersArrayElements {
  * @returns The per-call buckets used to populate the task-service-call record.
  */
 function collectHandlersArrayElements(options: CollectHandlersArrayElementsOptions): HandlersArrayElements {
-  const { handlersArr, sf, index, trustedExternal } = options;
+  const { handlersArr, sf, index, trustedExternal, imports } = options;
   const handlerTypes: string[] = [];
   const unresolvedSpreads: string[] = [];
   const resolvedBindings: string[] = [];
@@ -948,7 +961,7 @@ function collectHandlersArrayElements(options: CollectHandlersArrayElementsOptio
   if (handlersArr) {
     const visited = new Set<string>();
     for (const el of handlersArr.getElements()) {
-      consumeHandlersArrayElement(el, { sf, index, trustedExternal, unresolvedSpreads, resolvedBindings, unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, visited });
+      consumeHandlersArrayElement(el, { sf, index, trustedExternal, imports, unresolvedSpreads, resolvedBindings, unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, visited });
     }
   }
   return { handlerTypes, unresolvedSpreads, resolvedBindings, unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues };
@@ -961,7 +974,7 @@ function consumeHandlersArrayElement(el: Node, options: Omit<ConsumeHandlersSpre
   }
   const inner = unwrapAsExpressions(el);
   if (!inner) return;
-  noteUpstreamHandlerCall(inner, options.reachedUpstreamHandlerCalls);
+  if (noteUpstreamHandlerCall(inner, options)) return;
   const identifierName = readHandlerEntryIdentifierName(inner);
   if (identifierName === undefined) {
     // An inline handler config can't be an upstream handler.
@@ -970,8 +983,8 @@ function consumeHandlersArrayElement(el: Node, options: Omit<ConsumeHandlersSpre
     }
     return;
   }
-  const { sf, index, trustedExternal, resolvedBindings, unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, visited } = options;
-  collectHandlerBindingsFromIdentifier({ name: identifierName, sf, index, trustedExternal, resolved: resolvedBindings, unresolved: unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, visited });
+  const { sf, index, trustedExternal, imports, resolvedBindings, unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, visited } = options;
+  collectHandlerBindingsFromIdentifier({ name: identifierName, sf, index, trustedExternal, imports, resolved: resolvedBindings, unresolved: unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, visited });
 }
 
 function readHandlerEntryIdentifierName(inner: Node): string | undefined {
@@ -992,6 +1005,7 @@ interface ConsumeHandlersSpreadElementOptions {
   readonly sf: SourceFile;
   readonly index: ApiFunctionIndex;
   readonly trustedExternal: ReadonlySet<string>;
+  readonly imports: DereekbImportIndex;
   readonly unresolvedSpreads: string[];
   readonly resolvedBindings: string[];
   readonly unresolvedBindings: string[];
@@ -1009,15 +1023,17 @@ interface ConsumeHandlersSpreadElementOptions {
  * @param options - The spread inner expression and the buckets to populate.
  */
 function consumeHandlersSpreadElement(options: ConsumeHandlersSpreadElementOptions): void {
-  const { inner, sf, index, trustedExternal, unresolvedSpreads, resolvedBindings, unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, visited } = options;
-  noteUpstreamHandlerCall(inner, reachedUpstreamHandlerCalls);
+  const { inner, sf, index, trustedExternal, imports, unresolvedSpreads, resolvedBindings, unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, visited } = options;
   const name = readHandlerEntryIdentifierName(inner);
+  if (name !== undefined) {
+    unresolvedSpreads.push(name);
+  }
+  if (noteUpstreamHandlerCall(inner, options)) return;
   if (name === undefined) {
     opaqueHandlerValues.push(opaqueSnippet(inner));
     return;
   }
-  unresolvedSpreads.push(name);
-  collectHandlerBindingsFromIdentifier({ name, sf, index, trustedExternal, resolved: resolvedBindings, unresolved: unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, visited });
+  collectHandlerBindingsFromIdentifier({ name, sf, index, trustedExternal, imports, resolved: resolvedBindings, unresolved: unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, visited });
 }
 
 /**
@@ -1046,6 +1062,10 @@ interface HandlerBindingCollectorContext {
   readonly sf: SourceFile;
   readonly index: ApiFunctionIndex;
   readonly trustedExternal: ReadonlySet<string>;
+  /**
+   * The per-file `@dereekb/*` import bindings, used to match aliased and namespaced upstream handler factory calls.
+   */
+  readonly imports: DereekbImportIndex;
   readonly resolved: string[];
   readonly unresolved: string[];
   /**
@@ -1085,10 +1105,11 @@ function collectHandlerBindingsFromValue(options: CollectHandlerBindingsFromValu
 
 function collectHandlerBindingsFromCallExpression(call: Node, options: CollectHandlerBindingsFromValueOptions): boolean {
   if (!Node.isCallExpression(call)) return false;
-  noteUpstreamHandlerCall(call, options.reachedUpstreamHandlerCalls);
   const callee = call.getExpression();
   let result = false;
-  if (Node.isIdentifier(callee)) {
+  if (noteUpstreamHandlerCall(call, options)) {
+    result = true;
+  } else if (Node.isIdentifier(callee)) {
     result = collectHandlerBindingsFromIdentifier({ ...options, name: callee.getText() });
   } else {
     options.opaqueHandlerValues.push(opaqueSnippet(call));
@@ -1128,19 +1149,17 @@ function collectHandlerBindingsFromIdentifier(options: CollectHandlerBindingsFro
   const fnResolved = tryResolveFunctionHandlerBinding(options);
   const resolvedAny = localResolved || fnResolved;
 
-  // Chain ends at an upstream-imported identifier — treat as resolved so
-  // the rules pass does not warn for legitimate upstream factory calls
-  // (e.g. `storageFileProcessingNotificationTaskHandler` from
-  // `@dereekb/firebase-server/model`). An upstream name that is not a known
-  // upstream handler factory is opaque: it can hide a handler in its
-  // arguments (e.g. `...filterMaybeArrayValues([sfHandler])`).
+  // A `@dereekb/*` name reached as a value can't be seen through: a helper
+  // can hide a handler in its arguments (`...filterMaybeArrayValues([sfHandler])`),
+  // and an upstream handler factory held in a variable
+  // (`const create = storageFileProcessingNotificationTaskHandler`) may be
+  // called anywhere. Upstream handler factory calls never get here; they end
+  // the trace in `noteUpstreamHandlerCall`.
   let result: boolean;
   if (resolvedAny) {
     result = true;
   } else if (trustedExternal.has(name)) {
-    if (!UPSTREAM_NOTIFICATION_TASK_HANDLER_FACTORIES.has(name)) {
-      options.opaqueHandlerValues.push(name);
-    }
+    options.opaqueHandlerValues.push(name);
     result = true;
   } else {
     unresolved.push(name);
@@ -1187,17 +1206,21 @@ function tryResolveFunctionHandlerBinding(options: CollectHandlerBindingsFromIde
 }
 
 /**
- * Records {@link node} when it calls an upstream handler factory from `UPSTREAM_NOTIFICATION_TASK_HANDLERS`, so the rules
- * know which upstream handlers are reachable from `notificationTaskService({ handlers })`.
+ * Records {@link node} when it calls an upstream handler factory from `UPSTREAM_NOTIFICATION_TASK_HANDLERS` (directly,
+ * through an `@dereekb/*` import alias, or as an `@dereekb/*` namespace member), so the rules know which upstream
+ * handlers are reachable from `notificationTaskService({ handlers })`. The call ends the trace: it builds exactly one
+ * handler config, so there is nothing behind it to follow.
  *
  * @param node - A value-position node the handlers trace visits.
- * @param out - The bucket that receives the call's factory and location.
+ * @param context - The import bindings and the bucket that receives the call's factory and location.
+ * @returns `true` when {@link node} is an upstream handler factory call.
  */
-function noteUpstreamHandlerCall(node: Node, out: ExtractedUpstreamHandlerCall[]): void {
-  const factory = upstreamHandlerFactoryOf(node);
+function noteUpstreamHandlerCall(node: Node, context: Pick<HandlerBindingCollectorContext, 'imports' | 'reachedUpstreamHandlerCalls'>): boolean {
+  const factory = upstreamHandlerFactoryOf(node, context.imports);
   if (factory !== undefined) {
-    out.push({ factory, sourceFile: apiRelPath(node.getSourceFile()), line: node.getStartLineNumber() });
+    context.reachedUpstreamHandlerCalls.push({ factory, sourceFile: apiRelPath(node.getSourceFile()), line: node.getStartLineNumber() });
   }
+  return factory !== undefined;
 }
 
 const OPAQUE_SNIPPET_MAX_LENGTH = 60;

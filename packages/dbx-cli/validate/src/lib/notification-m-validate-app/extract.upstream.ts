@@ -8,11 +8,14 @@
  * its handler factory, the handlers trace in `extract.ts` records every reached factory call, and `rules.upstream.ts`
  * (plus `rules.taskbot.ts` for the NotificationTaskBot row) reports a listed aggregate whose handler is not reachable.
  *
+ * The factory match resolves `@dereekb/*` import aliases and namespace imports per file (`readCalleeName`), so
+ * `sfHandler(...)` and `serverModel.storageFileProcessingNotificationTaskHandler(...)` count as factory calls.
+ *
  * Names are mirrored as strings, not imported; `handlers.upstream.spec.ts` guards them against the upstream sources.
  */
 
 import { Node, SyntaxKind, type SourceFile } from 'ts-morph';
-import { apiRelPath } from '../_core/_validate/ast.js';
+import { apiRelPath, readCalleeName, type DereekbImportIndex } from '../_core/_validate/ast.js';
 import { ALL_NOTIFICATION_TASK_BOT_TASK_TYPES, NOTIFICATION_TASK_BOT_RUN_HANDLER_FACTORY, NOTIFICATION_TASK_BOT_RUN_TASK_TYPE } from './extract.taskbot.js';
 import type { ExtractedTaskServiceCall, ExtractedUpstreamHandlerCall, ExtractedUpstreamHandlerFactoryCall, ViolationCode } from './types.js';
 
@@ -95,18 +98,19 @@ export const UPSTREAM_NOTIFICATION_TASK_HANDLERS: readonly UpstreamNotificationT
 export const UPSTREAM_NOTIFICATION_TASK_HANDLER_FACTORIES: ReadonlySet<string> = new Set(UPSTREAM_NOTIFICATION_TASK_HANDLERS.map((x) => x.handlerFactory));
 
 /**
- * Returns the upstream handler factory {@link node} calls. The callee must be an identifier with the factory's exact name;
- * import aliases are not resolved.
+ * Returns the upstream handler factory {@link node} calls: called directly, through an `@dereekb/*` import alias, or as a
+ * member of an `@dereekb/*` namespace import.
  *
  * @param node - Any node.
- * @returns The factory name, or `undefined` when {@link node} is not an upstream handler factory call.
+ * @param imports - The per-file `@dereekb/*` import bindings.
+ * @returns The factory's exported name, or `undefined` when {@link node} is not an upstream handler factory call.
  */
-export function upstreamHandlerFactoryOf(node: Node): string | undefined {
+export function upstreamHandlerFactoryOf(node: Node, imports: DereekbImportIndex): string | undefined {
   let result: string | undefined;
   if (Node.isCallExpression(node)) {
-    const callee = node.getExpression();
-    if (Node.isIdentifier(callee) && UPSTREAM_NOTIFICATION_TASK_HANDLER_FACTORIES.has(callee.getText())) {
-      result = callee.getText();
+    const name = readCalleeName(node, imports);
+    if (name !== undefined && UPSTREAM_NOTIFICATION_TASK_HANDLER_FACTORIES.has(name)) {
+      result = name;
     }
   }
   return result;
@@ -160,14 +164,15 @@ export function isHandlersTraceComplete(call: ExtractedTaskServiceCall): boolean
  * Records every upstream handler factory call in the API sources, reachable or not, with the named function that builds it.
  *
  * @param apiSources - The API source files.
+ * @param imports - The per-file `@dereekb/*` import bindings.
  * @returns One entry per call, in source order.
  */
-export function extractUpstreamHandlerCalls(apiSources: readonly SourceFile[]): readonly ExtractedUpstreamHandlerFactoryCall[] {
+export function extractUpstreamHandlerCalls(apiSources: readonly SourceFile[], imports: DereekbImportIndex): readonly ExtractedUpstreamHandlerFactoryCall[] {
   const out: ExtractedUpstreamHandlerFactoryCall[] = [];
   for (const sf of apiSources) {
     const sourceFile = apiRelPath(sf);
     for (const call of sf.getDescendantsOfKind(SyntaxKind.CallExpression)) {
-      const factory = upstreamHandlerFactoryOf(call);
+      const factory = upstreamHandlerFactoryOf(call, imports);
       if (factory !== undefined) {
         out.push({ factory, sourceFile, line: call.getStartLineNumber(), enclosingFunction: enclosingFunctionName(call) });
       }

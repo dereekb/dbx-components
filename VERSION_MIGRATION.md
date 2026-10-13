@@ -95,7 +95,8 @@ but two changes require an update in every app that implements the notification 
   `notificationTaskService({ validate })` lists `...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES` or
   `...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES` but its `handlers` don't reach `storageFileProcessingNotificationTaskHandler(...)` /
   `formSpaceSubmissionNotificationTaskHandler(...)`. Such an app already throws at startup; the check moves that failure to
-  build time. It is skipped for a service whose `handlers` the scanner can't follow completely.
+  build time. It follows `@dereekb/*` import aliases and namespace imports, and is skipped for a service whose `handlers`
+  the scanner can't follow completely.
 
 ### Optional (to use bots)
 - **Firestore rules:** `match /ntb/{id} { allow get, list: if userClaimsIsSysAdmin(); }` (or add `notificationTaskBot`

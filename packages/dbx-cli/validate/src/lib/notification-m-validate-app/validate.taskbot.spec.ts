@@ -63,8 +63,11 @@ export function demoNotificationTaskServiceFactory(context): NotificationTaskSer
 }
 `;
 
+const NTB_FACTORY_IMPORT = "import { type NotificationTaskBotScriptProcessorConfig, notificationTaskBotRunNotificationTaskHandler } from '@dereekb/firebase-server/model';";
+const NTB_FACTORY_RETURN = 'return notificationTaskBotRunNotificationTaskHandler(';
+
 const API_TASKBOT_HANDLER = `import { type NotificationTaskBotScriptType } from '@dereekb/firebase';
-import { type NotificationTaskBotScriptProcessorConfig, notificationTaskBotRunNotificationTaskHandler } from '@dereekb/firebase-server/model';
+${NTB_FACTORY_IMPORT}
 import { DEMO_NOTIFICATION_TASK_BOT_SCRIPT_CONFIGS, DEMO_PING_NOTIFICATION_TASK_BOT_SCRIPT_TYPE, DEMO_PING_REQUIRED_NOTIFICATION_TASK_BOT_SCRIPT_TYPE } from 'demo-firebase';
 
 export function demoPingNotificationTaskBotScriptProcessor(context, target: NotificationTaskBotScriptType = DEMO_PING_NOTIFICATION_TASK_BOT_SCRIPT_TYPE): NotificationTaskBotScriptProcessorConfig {
@@ -167,6 +170,22 @@ function taskBotCodes(result: ValidationResult): ViolationCode[] {
 
 function findingsOf(result: ValidationResult, code: ViolationCode) {
   return result.violations.filter((v) => v.code === code);
+}
+
+function aliasRunHandlerFactory(parts: FixtureParts): void {
+  replaceInFile(parts.api, HANDLER_FILE, NTB_FACTORY_IMPORT, "import { type NotificationTaskBotScriptProcessorConfig, notificationTaskBotRunNotificationTaskHandler as runHandler } from '@dereekb/firebase-server/model';");
+  replaceInFile(parts.api, HANDLER_FILE, NTB_FACTORY_RETURN, 'return runHandler(');
+}
+
+function namespaceRunHandlerFactory(parts: FixtureParts): void {
+  replaceInFile(parts.api, HANDLER_FILE, NTB_FACTORY_IMPORT, "import { type NotificationTaskBotScriptProcessorConfig } from '@dereekb/firebase-server/model';\nimport * as serverModel from '@dereekb/firebase-server/model';");
+  replaceInFile(parts.api, HANDLER_FILE, NTB_FACTORY_RETURN, 'return serverModel.notificationTaskBotRunNotificationTaskHandler(');
+}
+
+function namespaceScriptConfigRecord(parts: FixtureParts): void {
+  replaceInFile(parts.component, TASKBOT_FILE, 'type NotificationTaskBotScriptType, notificationTaskBotScriptConfigRecord } from', 'type NotificationTaskBotScriptType } from');
+  replaceInFile(parts.component, TASKBOT_FILE, "from '@dereekb/firebase';", "from '@dereekb/firebase';\nimport * as firebaseModel from '@dereekb/firebase';");
+  replaceInFile(parts.component, TASKBOT_FILE, '= notificationTaskBotScriptConfigRecord(DEMO_NOTIFICATION_TASK_BOT_SCRIPT_CONFIGS)', '= firebaseModel.notificationTaskBotScriptConfigRecord(DEMO_NOTIFICATION_TASK_BOT_SCRIPT_CONFIGS)');
 }
 
 describe('NotificationTaskBot checks — happy path and gating', () => {
@@ -434,5 +453,63 @@ describe('NotificationTaskBot checks — repair, rules and index', () => {
       p.workspace = { ...p.workspace, firestoreIndexes: { path: 'firestore.indexes.json', text: '{ not json' } };
     });
     expect(taskBotCodes(result)).toEqual([]);
+  });
+});
+
+describe('NotificationTaskBot checks — aliased and namespaced factories', () => {
+  const variants: [string, (parts: FixtureParts) => void][] = [
+    ['an aliased factory import', aliasRunHandlerFactory],
+    ['a namespace factory call', namespaceRunHandlerFactory]
+  ];
+
+  it.each(variants)('passes with %s', (_label, modify) => {
+    expect(runWith(modify).violations).toEqual([]);
+  });
+
+  it.each(variants)('reports NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED when the handler built with %s leaves handlers', (_label, modify) => {
+    const result = runWith((p) => {
+      modify(p);
+      replaceInFile(p.api, TASK_SERVICE_FILE, ', notificationTaskBotHandler]', ']');
+    });
+    const found = findingsOf(result, 'NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED');
+    expect(found).toHaveLength(1);
+    expect(found[0].message).toContain(`the NTBR handler built at ${HANDLER_FILE}:`);
+  });
+
+  it.each(variants)('checks the processors of the handler built with %s', (_label, modify) => {
+    const result = runWith((p) => {
+      modify(p);
+      replaceInFile(p.api, HANDLER_FILE, ', demoPingNotificationTaskBotScriptProcessor(context, DEMO_PING_REQUIRED_NOTIFICATION_TASK_BOT_SCRIPT_TYPE)]', ']');
+    });
+    const found = findingsOf(result, 'NOTIF_TASK_BOT_SCRIPT_WITHOUT_PROCESSOR');
+    expect(found).toHaveLength(1);
+    expect(found[0].message).toContain('DEMO_PING_REQUIRED_NOTIFICATION_TASK_BOT_SCRIPT_TYPE');
+  });
+
+  it.each<[string, (parts: FixtureParts) => void]>([
+    ['a namespaced script-config record', namespaceScriptConfigRecord],
+    [
+      'an aliased script-config service',
+      (p) => {
+        replaceInFile(p.api, ACTION_MODULE_FILE, "import { appNotificationTaskBotScriptConfigService } from '@dereekb/firebase';", "import { appNotificationTaskBotScriptConfigService as scriptConfigService } from '@dereekb/firebase';");
+        replaceInFile(p.api, ACTION_MODULE_FILE, 'appNotificationTaskBotScriptConfigService: appNotificationTaskBotScriptConfigService(', 'appNotificationTaskBotScriptConfigService: scriptConfigService(');
+      }
+    ],
+    [
+      'an aliased repair factory',
+      (p) => {
+        replaceInFile(p.api, SCHEDULE_FILE, 'export const notificationHourlyUpdateSchedule', "import { repairAllNotificationTaskBotsFactory as repairBots } from '@dereekb/firebase-server/model';\n\nexport const notificationHourlyUpdateSchedule");
+        replaceInFile(p.api, SCHEDULE_FILE, 'await request.nest.notificationActions.repairAllNotificationTaskBots();', 'await repairBots(request.nest.notificationActions)();');
+      }
+    ],
+    [
+      'a namespaced record and a namespaced NTBR handler together',
+      (p) => {
+        namespaceScriptConfigRecord(p);
+        namespaceRunHandlerFactory(p);
+      }
+    ]
+  ])('accepts %s', (_label, modify) => {
+    expect(taskBotCodes(runWith(modify))).toEqual([]);
   });
 });
