@@ -1,18 +1,19 @@
-import { cleanSubscription, DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { Component, type ElementRef, type Type, signal } from '@angular/core';
+import { cleanSubscription, DbxInjectionComponent, type DbxInjectionComponentConfig, mergeStaticProviders } from '@dereekb/dbx-core';
+import { Component, DOCUMENT, ElementRef, type Type, inject, signal } from '@angular/core';
 import { type NgPopoverRef } from 'ng-overlay-container';
 import { type Observable, map, skip, first, defaultIfEmpty } from 'rxjs';
 import { AbstractPopoverDirective } from '../popover/abstract.popover.directive';
 import { type DbxPopoverService } from '../popover/popover.service';
 import { type FilterSource, filterMaybe } from '@dereekb/rxjs';
 import { type DbxPopoverKey } from '../popover/popover';
-import { type Maybe } from '@dereekb/util';
+import { type DestroyFunction, type Maybe } from '@dereekb/util';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { type DbxFilterComponentConfig } from './filter.config';
 import { DbxPopoverInteractionModule } from '../popover';
 import { DbxButtonComponent } from '../../button/button.component';
 import { DbxButtonSpacerDirective } from '../../button/button.spacer.directive';
 import { type DbxButtonStyle } from '../../button/button';
+import { type DbxFilterPopoverApplyPendingFunction, DbxFilterPopoverPendingChanges, DbxFilterPopoverPendingChangesInstance } from './filter.popover.pending';
 
 /**
  * Configuration for opening a filter popover, extending the base filter config with origin positioning.
@@ -44,6 +45,10 @@ export const DEFAULT_FILTER_POPOVER_CLOSE_BUTTON_STYLE: DbxButtonStyle = { type:
  *
  * Use the static `openPopover` method to programmatically open the filter popover.
  *
+ * Provides itself as {@link DbxFilterPopoverPendingChanges} to the filter content. While content has a function registered,
+ * this component owns its popover's `getClosingValueFn`: before closing on the close button, on a filter change or on a
+ * click outside, it blurs the focused element inside the popover (committing typed input) and awaits the registered functions.
+ *
  * @example
  * ```ts
  * DbxFilterPopoverComponent.openPopover(popoverService, {
@@ -57,7 +62,11 @@ export const DEFAULT_FILTER_POPOVER_CLOSE_BUTTON_STYLE: DbxButtonStyle = { type:
   templateUrl: './filter.popover.component.html',
   imports: [DbxPopoverInteractionModule, DbxInjectionComponent, DbxButtonComponent, DbxButtonSpacerDirective]
 })
-export class DbxFilterPopoverComponent<F extends object> extends AbstractPopoverDirective<unknown, DbxFilterComponentConfig<F>> {
+export class DbxFilterPopoverComponent<F extends object> extends AbstractPopoverDirective<unknown, DbxFilterComponentConfig<F>> implements DbxFilterPopoverPendingChanges {
+  private readonly _elementRef = inject(ElementRef<HTMLElement>);
+  private readonly _document = inject(DOCUMENT);
+  private readonly _pendingChanges = new DbxFilterPopoverPendingChangesInstance();
+
   readonly config: DbxFilterComponentConfig<F> = this.popover.data as DbxFilterComponentConfig<F>;
 
   readonly icon = this.config.icon ?? 'filter_list';
@@ -95,6 +104,7 @@ export class DbxFilterPopoverComponent<F extends object> extends AbstractPopover
       const config: DbxInjectionComponentConfig<FilterSource<F>> = {
         ...baseConfig,
         componentClass,
+        providers: mergeStaticProviders(baseConfig?.providers, { provide: DbxFilterPopoverPendingChanges, useValue: this }),
         init: (filterSource) => {
           // NOTE: the source is seeded before it is connected, as connecting subscribes to filter$ immediately.
           // A source that carries a default filter would otherwise emit that default at connect time, so merely opening the popover would reset the filter to the default.
@@ -139,6 +149,7 @@ export class DbxFilterPopoverComponent<F extends object> extends AbstractPopover
       connector,
       initialFilterObs,
       closeOnFilterChange,
+      closeOnTransition,
       customizeButtonText,
       presetsButtonText,
       showCloseButton,
@@ -155,6 +166,7 @@ export class DbxFilterPopoverComponent<F extends object> extends AbstractPopover
       width,
       height,
       isResizable,
+      closeOnTransition: closeOnTransition ?? closeOnFilterChange ?? true,
       data: {
         header,
         icon,
@@ -196,6 +208,36 @@ export class DbxFilterPopoverComponent<F extends object> extends AbstractPopover
 
     this.showPresetSignal.set(showPreset);
   }
+
+  /**
+   * Registers a function that is awaited before the popover closes. See {@link DbxFilterPopoverPendingChanges}.
+   *
+   * @param applyPending - Function that applies the pending change.
+   * @returns Removes the registration when called.
+   */
+  registerApplyPending(applyPending: DbxFilterPopoverApplyPendingFunction): DestroyFunction {
+    const unregister = this._pendingChanges.registerApplyPending(applyPending);
+    this.popover.getClosingValueFn = this._applyPendingBeforeClose;
+
+    return () => {
+      unregister();
+
+      if (!this._pendingChanges.hasApplyPending && this.popover.getClosingValueFn === this._applyPendingBeforeClose) {
+        this.popover.getClosingValueFn = undefined;
+      }
+    };
+  }
+
+  private readonly _applyPendingBeforeClose = (): Promise<undefined> => {
+    const active = this._document.activeElement;
+
+    // blurring commits input that is applied on blur, such as a typed date
+    if (active && this._elementRef.nativeElement.contains(active)) {
+      (active as HTMLElement).blur?.();
+    }
+
+    return this._pendingChanges.applyPending().then(() => undefined);
+  };
 
   showPresets() {
     this.showPresetSignal.set(true);

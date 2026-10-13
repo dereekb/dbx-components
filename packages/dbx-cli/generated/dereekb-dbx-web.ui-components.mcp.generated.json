@@ -989,6 +989,45 @@
       "minimalExample": "<div dbxDialogContent>Body</div>"
     },
     {
+      "slug": "filter-popover-button",
+      "category": "overlay",
+      "kind": "component",
+      "selector": "dbx-filter-popover-button",
+      "className": "DbxFilterPopoverButtonComponent",
+      "module": "@dereekb/dbx-web",
+      "description": "Renders an icon button that opens a filter popover when clicked.\n\nThe popover closes when the filter changes unless `closeOnFilterChange` is false, and closes on a route transition unless\n`closeOnTransition` (which defaults to `closeOnFilterChange`) is false — so a popover editing a filter that is written to the\nURL stays open while it is edited. The popover always closes when this button is destroyed, such as when leaving the page.\nA `dbx-filter-wrapper` without its own Apply button applies its last change before the popover closes on its close button\nor a click outside.",
+      "inputs": [
+        {
+          "name": "disabled",
+          "type": "Maybe<boolean>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "buttonDisplayStyle",
+          "type": "Maybe<DbxButtonDisplayStylePair>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "config",
+          "type": "Maybe<DbxFilterComponentConfig<F, any, any, any>>",
+          "description": "",
+          "required": false,
+          "default": "undefined"
+        }
+      ],
+      "outputs": [],
+      "relatedSlugs": [
+        "popover"
+      ],
+      "skillRefs": [
+        "dbx__ref__dbx-component-patterns"
+      ],
+      "example": "<dbx-filter-popover-button [config]=\"filterConfig\" [buttonDisplayStyle]=\"{ display: { icon: 'filter_alt' } }\"></dbx-filter-popover-button>",
+      "minimalExample": "<dbx-filter-popover-button [config]=\"filterConfig\"></dbx-filter-popover-button>"
+    },
+    {
       "slug": "popover",
       "category": "overlay",
       "kind": "component",

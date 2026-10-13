@@ -12,9 +12,24 @@ const DEFAULT_FILTER_POPOVER_BUTTON_DISPLAY_CONTENT: DbxButtonDisplay = {
 /**
  * Renders an icon button that opens a filter popover when clicked.
  *
+ * The popover closes when the filter changes unless `closeOnFilterChange` is false, and closes on a route transition unless
+ * `closeOnTransition` (which defaults to `closeOnFilterChange`) is false — so a popover editing a filter that is written to the
+ * URL stays open while it is edited. The popover always closes when this button is destroyed, such as when leaving the page.
+ * A `dbx-filter-wrapper` without its own Apply button applies its last change before the popover closes on its close button
+ * or a click outside.
+ *
+ * @dbxWebComponent
+ * @dbxWebSlug filter-popover-button
+ * @dbxWebCategory overlay
+ * @dbxWebRelated popover
+ * @dbxWebSkillRefs dbx__ref__dbx-component-patterns
+ * @dbxWebMinimalExample ```html
+ * <dbx-filter-popover-button [config]="filterConfig"></dbx-filter-popover-button>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-filter-popover-button [config]="filterConfig" [buttonDisplay]="{ icon: 'filter_alt' }"></dbx-filter-popover-button>
+ * <dbx-filter-popover-button [config]="filterConfig" [buttonDisplayStyle]="{ display: { icon: 'filter_alt' } }"></dbx-filter-popover-button>
  * ```
  */
 @Component({
