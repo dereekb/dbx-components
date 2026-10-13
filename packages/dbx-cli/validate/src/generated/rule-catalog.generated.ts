@@ -2027,7 +2027,7 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     whatItFlags:
       'The app uses NotificationTaskBots, but no `notificationTaskBotRunNotificationTaskHandler(...)` is reachable from `notificationTaskService({ handlers })`. Every `NTBR` run fails until its task is deleted; when `validate` lists the NotificationTaskBot task types, `notificationTaskService()` also throws at startup.',
     whenItApplies: 'Every app that uses bots (a script config, a registry, a registry service with an argument, an NTBR handler call, or the NotificationTaskBot task types in `validate`).',
-    whenItDoesNotApply: 'Apps without bots.',
+    whenItDoesNotApply: "Apps without bots. Task services whose `handlers` the scanner can't follow completely (see `NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED`). The handler could be hidden there, and `notificationTaskService()`'s startup check still applies.",
     canonicalFix: 'Add the handler (e.g. `<app>NotificationTaskBotRunNotificationTaskHandler(context)`) to the `handlers` of `notificationTaskService(...)`.',
     seeAlso: [
       {
@@ -2205,7 +2205,7 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     source: 'dbx_notification_m_validate_app',
     severity: 'warning',
     title: "The `handlers:` array spreads an identifier that doesn't resolve to a declared array binding",
-    whatItFlags: "The `handlers:` array spreads an identifier that doesn't resolve to a declared array binding.",
+    whatItFlags: "The `handlers:` array spreads an identifier that doesn't resolve to a declared array binding.\nAn unresolved identifier also skips `NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED` (and `NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED`) for that task service.",
     whenItApplies: "When `notificationTaskService({ handlers: [...spread] })` spreads an identifier that isn't a typed `NotificationTaskServiceTaskHandlerConfig[]` binding or trusted external.",
     whenItDoesNotApply: 'Spreads from trust-listed `@dereekb/*` modules (e.g. `storageFileProcessingNotificationTaskHandler`).',
     canonicalFix: 'Declare the spread as `const <name>: NotificationTaskServiceTaskHandlerConfig<...>[] = [...]` or import it from a trusted module.'
@@ -2217,7 +2217,7 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     title: 'A task type appears in `validate:` but has no matching `handlers:` registration',
     whatItFlags: 'A task type appears in `validate:` but has no matching `handlers:` registration.\n`notificationTaskService()` throws at startup for this.',
     whenItApplies: "When `notificationTaskService({ validate, handlers })` lists a task type in `validate:` that the `handlers:` traversal doesn't reach.",
-    whenItDoesNotApply: 'Tasks whose handler is provided by an upstream module (covered by the trust list).',
+    whenItDoesNotApply: 'Task types from upstream `@dereekb/*` modules. The StorageFile and FormSpace aggregates are checked by `NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED`, the NotificationTaskBot types by `NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED`; other upstream types are trusted.',
     canonicalFix: 'Add the matching `NotificationTaskServiceTaskHandlerConfig` for the task and include it in `handlers:`.'
   },
   {
@@ -2279,6 +2279,34 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     whenItApplies: "When more than one task-type constant resolves to the same `'<value>'` literal.",
     whenItDoesNotApply: 'Constants intentionally aliased — but this defeats runtime task discrimination, so almost always a copy-paste.',
     canonicalFix: 'Rename one of the literals so each task code is unique.'
+  },
+  {
+    code: 'NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED',
+    source: 'dbx_notification_m_validate_app',
+    severity: 'error',
+    title:
+      "`notificationTaskService({ validate })` lists an upstream task-type aggregate (`...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES` or `...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES`, or one of their task-type constants), but its upstream handler (`storageFileProcessingNotificationTaskHandler(...)` or `formSpaceSubmissionNotificationTaskHandler(...)`) is not reachable from that call's `handlers`. `notificationTaskService()` throws at startup for this",
+    whatItFlags:
+      "`notificationTaskService({ validate })` lists an upstream task-type aggregate (`...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES` or `...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES`, or one of their task-type constants), but its upstream handler (`storageFileProcessingNotificationTaskHandler(...)` or `formSpaceSubmissionNotificationTaskHandler(...)`) is not reachable from that call's `handlers`. `notificationTaskService()` throws at startup for this.",
+    whenItApplies: "Every `notificationTaskService({ validate, handlers })` call whose `validate` literal spreads an upstream aggregate from the validator's upstream handler table (or lists one of its task-type constants), when the scanner can follow every value of its `handlers`.",
+    whenItDoesNotApply:
+      "Task services whose `handlers` the scanner can't follow completely: an unreadable `handlers` value, an identifier it can't resolve (reported as `NOTIF_TASK_HANDLER_SPREAD_UNRESOLVED`), or a value it can't see through (a conditional, a call through a property access or an aliased import, a `@dereekb/*` helper that is not an upstream handler factory). `notificationTaskService()`'s own startup check still applies. Aggregates nested inside an app's own `ALL_*_NOTIFICATION_TASK_TYPES` are not detected. The NotificationTaskBot task types are reported by `NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED` instead.",
+    canonicalFix:
+      'Add the upstream handler to `handlers`: e.g. `<app>StorageFileProcessingNotificationTaskHandler(context)`, built with `storageFileProcessingNotificationTaskHandler({ processors, storageFileFirestoreCollections, storageAccessor })`, or `<app>FormSpaceSubmissionNotificationTaskHandler(context)`, built with `formSpaceSubmissionNotificationTaskHandler({ processors, validate, formSpaceFirestoreCollections })` (both from `@dereekb/firebase-server/model`). Or remove the aggregate from `validate`.',
+    seeAlso: [
+      {
+        kind: 'artifact',
+        target: 'storagefile-processor'
+      },
+      {
+        kind: 'artifact',
+        target: 'notification-task'
+      },
+      {
+        kind: 'doc',
+        target: 'dbx-formspace'
+      }
+    ]
   },
   {
     code: 'NOTIF_TEMPLATE_FACTORY_ARRAY_MISSING',

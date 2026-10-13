@@ -2,7 +2,8 @@
  * Runs `dbx_notification_m_validate_app` against the real demo pair (`components/demo-firebase` + `apps/demo-api`)
  * and the workspace's `firestore.rules` / `firestore.indexes.json`, then checks that targeted mutations of the demo's
  * NotificationTaskBot wiring each raise their `NOTIF_TASK_BOT_*` code, and that a scaffolded bot script round-trips
- * through the checks once its wiring is applied.
+ * through the checks once its wiring is applied. It also covers the upstream StorageFile and FormSpace handler checks
+ * (`NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED`) against the demo's task service.
  *
  * The mutation helper throws when the text it replaces is gone, so a refactor of the demo's bot wiring fails here
  * loudly instead of silently passing.
@@ -84,6 +85,10 @@ function taskBotFindings(result: ReturnType<typeof validateWith>) {
   return result.violations.filter((v) => v.code.startsWith('NOTIF_TASK_BOT_'));
 }
 
+function upstreamFindings(result: ReturnType<typeof validateWith>) {
+  return result.violations.filter((v) => v.code.startsWith('NOTIF_TASK_UPSTREAM_'));
+}
+
 describe('dbx_notification_m_validate_app — demo pair', () => {
   it('passes the demo with no NotificationTaskBot findings, reading the workspace rules and indexes by default', async () => {
     const result = await notificationMValidateAppTool.run({ componentDir: COMPONENT_DIR, apiDir: API_DIR });
@@ -93,6 +98,7 @@ describe('dbx_notification_m_validate_app — demo pair', () => {
     expect(text).not.toContain('NOTIF_TASK_BOT_');
     expect(base.workspace?.firestoreRules?.text).toBeDefined();
     expect(taskBotFindings(validateWith())).toEqual([]);
+    expect(upstreamFindings(validateWith())).toEqual([]);
   });
 
   it('rejects a rulesFile that escapes the cwd', async () => {
@@ -141,6 +147,26 @@ describe('dbx_notification_m_validate_app — demo pair', () => {
     if (messagePart) {
       expect(found[0].message).toContain(messagePart);
     }
+  });
+});
+
+describe('dbx_notification_m_validate_app — demo pair upstream task handlers', () => {
+  it.each<[string, string, readonly string[]]>([
+    ['the StorageFile handler', ', storageFileHandler, ', ['ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES', '`demoStorageFileProcessingNotificationTaskHandler` builds', 'notification.task.service.ts:']],
+    ['the FormSpace handler', ', formSpaceHandler, ', ['ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES', 'demoFormSpaceSubmissionNotificationTaskHandler', 'handlers/formspace/task.handler.formspace.submission.ts:']]
+  ])('reports NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED when %s leaves handlers', (_label, from, messageParts) => {
+    const found = upstreamFindings(validateWith((m) => replaceIn(m.api, TASK_SERVICE_FILE, from, ', ')));
+    expect(found).toHaveLength(1);
+    expect(found[0].code).toBe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED');
+    for (const part of messageParts) {
+      expect(found[0].message).toContain(part);
+    }
+  });
+
+  it('reports the NTBR handler only as NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED', () => {
+    const result = validateWith((m) => replaceIn(m.api, TASK_SERVICE_FILE, ', notificationTaskBotHandler]', ']'));
+    expect(result.violations.map((v) => v.code)).toContain('NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED');
+    expect(upstreamFindings(result)).toEqual([]);
   });
 });
 

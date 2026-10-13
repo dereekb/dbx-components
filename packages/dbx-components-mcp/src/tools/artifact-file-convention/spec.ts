@@ -164,7 +164,7 @@ const STORAGEFILE_PROCESSOR: FileConventionSpec = {
       heading: 'Wire into processing handler',
       path: '<apiDir>/src/app/common/model/notification/handlers/task.handler.storagefile.ts',
       body: [
-        'Push the new processor config into the `processors: [...]` array passed to `storageFileProcessingNotificationTaskHandler({ processors })`. The surrounding handler is itself wired into `notificationTaskService({ handlers })` — already covered by the notification-task plumbing, so no further wiring needed here.'
+        'Push the new processor config into the `processors: [...]` array passed to `storageFileProcessingNotificationTaskHandler({ processors })`. The surrounding handler is itself wired into `notificationTaskService({ handlers })` — already covered by the notification-task plumbing, so no further wiring needed here. `dbx_notification_m_validate_app` reports `NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED` when `validate` lists `...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES` but this handler is not reachable from `handlers`.'
       ].join('\n')
     }
   ],

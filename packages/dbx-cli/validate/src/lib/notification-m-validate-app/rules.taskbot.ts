@@ -16,11 +16,11 @@ import {
   scriptTypeRefLabel,
   taskServiceCallListsTaskBotTypes
 } from './extract.taskbot.js';
+import { isHandlersTraceComplete, reachedUpstreamHandlerCallsOf } from './extract.upstream.js';
 import { selectTaskBotRegistry, selectTaskBotRunHandlerCalls } from './select.taskbot.js';
 import type { ExtractedAppNotificationTaskBot, ExtractedAppNotifications, ExtractedTaskBotRegistry, ExtractedTaskBotRunHandlerCall, ExtractedTaskBotScriptConfig, ExtractedTaskBotScriptTypeRef, ExtractedTaskServiceCall, Violation } from './types.js';
-import { pushViolation } from './violation.js';
+import { pushViolation, SCANNED_API_FOLDERS } from './violation.js';
 
-const SCANNED_API_FOLDERS = '`src/app/common/model/notification/`, `src/app/common/firebase/` and `src/app/function/notification/`';
 const DEFAULT_REGISTRY_FILE = 'src/lib/model/notification/notification.taskbot.ts';
 
 /**
@@ -101,6 +101,10 @@ function checkHandlerRegistered(extracted: ExtractedAppNotifications, handlerRea
     return;
   }
   const { taskBot, taskServiceCalls } = extracted;
+  // The NTBR handler may be hidden behind a value the scanner can't follow; the startup check stays the backstop.
+  if (taskServiceCalls.some((call) => !isHandlersTraceComplete(call))) {
+    return;
+  }
   const firstHandler = taskBot.runHandlerCalls[0];
   let problem: string;
   if (taskServiceCalls.length === 0) {
@@ -121,7 +125,7 @@ function checkHandlerRegistered(extracted: ExtractedAppNotifications, handlerRea
 
 function checkTaskTypesInValidate(taskServiceCalls: readonly ExtractedTaskServiceCall[], violations: Violation[]): void {
   for (const call of taskServiceCalls) {
-    if (call.reachedTaskBotRunHandlerCalls.length > 0 && call.validateStatus === 'resolved' && !taskServiceCallListsTaskBotTypes(call)) {
+    if (reachedUpstreamHandlerCallsOf(call, NOTIFICATION_TASK_BOT_RUN_HANDLER_FACTORY).length > 0 && call.validateStatus === 'resolved' && !taskServiceCallListsTaskBotTypes(call)) {
       pushViolation(violations, {
         code: 'NOTIF_TASK_BOT_TASK_TYPES_NOT_IN_VALIDATE',
         severity: 'warning',

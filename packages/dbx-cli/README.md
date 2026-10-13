@@ -623,6 +623,7 @@ It runs the same rules as the `dbx_notification_m_validate_app` MCP tool, over t
 | A template type has a message factory but no info (or the info isn't in the info record) | `NOTIF_TEMPLATE_FACTORY_ORPHAN`, `NOTIF_TEMPLATE_INFO_MISSING`, `NOTIF_TEMPLATE_INFO_NOT_IN_RECORD`, `NOTIF_TEMPLATE_RECORD_MISSING` / `_NOT_WIRED` | error |
 | A template type has an info but no message factory | `NOTIF_TEMPLATE_FACTORY_MISSING`, `NOTIF_TEMPLATE_FACTORY_ARRAY_MISSING`, `NOTIF_TEMPLATE_FACTORY_NOT_WIRED` | error |
 | A task type in `validate` has no handler | `NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER`, `NOTIF_TASK_NOT_REGISTERED_IN_SERVICE`, `NOTIF_TASK_HANDLER_NAME_MISMATCH` | error |
+| An upstream task-type aggregate in `validate` (`...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`, `...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES`) has no reachable upstream handler (`storageFileProcessingNotificationTaskHandler(...)`, `formSpaceSubmissionNotificationTaskHandler(...)`) | `NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED` | error |
 | A factory returns `emailContent` / `textContent` / `notificationSummaryContent` for a delivery method the info's explicit `userConfigurableDeliveryMethods` and `forcedDeliveryMethods` leave out (an info that only forces methods is only sent by them) | `NOTIF_TEMPLATE_FACTORY_UNLISTED_DELIVERY_METHOD` | warning |
 | An info forces texts, or forces a method while `onlySendToExplicitlyEnabledRecipients` is `true` | `NOTIF_TEMPLATE_FORCED_TEXT_DELIVERY_METHOD`, `NOTIF_TEMPLATE_FORCED_DELIVERY_METHOD_EXPLICIT_OPT_IN` | error |
 | A NotificationTaskBot wiring gap: the script registry, the NTBR handler, scripts vs. processors, the repair cron, the `ntb` rule, the `nat` index (only checked for apps that use bots) | `NOTIF_TASK_BOT_*` | error / warning |
@@ -632,7 +633,8 @@ code). The delivery-method check is a heuristic: it scans the factory's own sour
 its `factory:` names, so content built in a shared helper is missed.
 
 The runtime startup checks in `@dereekb/firebase-server/model` stay in place as the backstop. They
-also cover what a static scan can't see: types from upstream `@dereekb/*` packages, factories
+also cover what a static scan can't see: upstream task types other than the StorageFile, FormSpace and
+NotificationTaskBot ones, task services whose `handlers` the tracer can't follow completely, factories
 registered through `NOTIFICATION_TEMPLATE_SERVICE_DEFAULTS_OVERRIDE_TOKEN`, and wiring built through
 indirection the tracer can't follow.
 

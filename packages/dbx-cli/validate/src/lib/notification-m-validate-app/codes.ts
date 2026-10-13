@@ -18,6 +18,9 @@
  *      `<app>NotificationTemplateServiceConfigsArrayFactory`; for tasks,
  *      a `NotificationTaskServiceTaskHandlerConfig` reachable from
  *      `notificationTaskService({ handlers })`.
+ *   3. **Upstream task types** — an upstream `ALL_*_NOTIFICATION_TASK_TYPES`
+ *      aggregate in `validate` needs the upstream handler factory that
+ *      handles it reachable from `handlers` (see `extract.upstream.ts`).
  */
 export enum NotificationMValidateAppCode {
   /**
@@ -231,6 +234,7 @@ export enum NotificationMValidateAppCode {
 
   /**
    * The `handlers:` array spreads an identifier that doesn't resolve to a declared array binding.
+   * An unresolved identifier also skips `NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED` (and `NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED`) for that task service.
    *
    * @dbxRuleSeverity warning
    * @dbxRuleApplies When `notificationTaskService({ handlers: [...spread] })` spreads an identifier that isn't a typed `NotificationTaskServiceTaskHandlerConfig[]` binding or trusted external.
@@ -275,7 +279,7 @@ export enum NotificationMValidateAppCode {
    *
    * @dbxRuleSeverity error
    * @dbxRuleApplies When `notificationTaskService({ validate, handlers })` lists a task type in `validate:` that the `handlers:` traversal doesn't reach.
-   * @dbxRuleNotApplies Tasks whose handler is provided by an upstream module (covered by the trust list).
+   * @dbxRuleNotApplies Task types from upstream `@dereekb/*` modules. The StorageFile and FormSpace aggregates are checked by `NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED`, the NotificationTaskBot types by `NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED`; other upstream types are trusted.
    * @dbxRuleFix Add the matching `NotificationTaskServiceTaskHandlerConfig` for the task and include it in `handlers:`.
    */
   NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER = 'NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER',
@@ -361,7 +365,7 @@ export enum NotificationMValidateAppCode {
    *
    * @dbxRuleSeverity error
    * @dbxRuleApplies Every app that uses bots (a script config, a registry, a registry service with an argument, an NTBR handler call, or the NotificationTaskBot task types in `validate`).
-   * @dbxRuleNotApplies Apps without bots.
+   * @dbxRuleNotApplies Apps without bots. Task services whose `handlers` the scanner can't follow completely (see `NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED`). The handler could be hidden there, and `notificationTaskService()`'s startup check still applies.
    * @dbxRuleFix Add the handler (e.g. `<app>NotificationTaskBotRunNotificationTaskHandler(context)`) to the `handlers` of `notificationTaskService(...)`.
    * @dbxRuleSeeAlso artifact:notification-task-bot-script
    */
@@ -454,7 +458,21 @@ export enum NotificationMValidateAppCode {
    * @dbxRuleSeeAlso artifact:notification-task-bot-script
    * @dbxRuleSeeAlso tool:dbx_model_firebase_index_validate_app
    */
-  NOTIF_TASK_BOT_NAT_INDEX_MISSING = 'NOTIF_TASK_BOT_NAT_INDEX_MISSING'
+  NOTIF_TASK_BOT_NAT_INDEX_MISSING = 'NOTIF_TASK_BOT_NAT_INDEX_MISSING',
+
+  // MARK: Upstream task handlers
+  /**
+   * `notificationTaskService({ validate })` lists an upstream task-type aggregate (`...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES` or `...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES`, or one of their task-type constants), but its upstream handler (`storageFileProcessingNotificationTaskHandler(...)` or `formSpaceSubmissionNotificationTaskHandler(...)`) is not reachable from that call's `handlers`. `notificationTaskService()` throws at startup for this.
+   *
+   * @dbxRuleSeverity error
+   * @dbxRuleApplies Every `notificationTaskService({ validate, handlers })` call whose `validate` literal spreads an upstream aggregate from the validator's upstream handler table (or lists one of its task-type constants), when the scanner can follow every value of its `handlers`.
+   * @dbxRuleNotApplies Task services whose `handlers` the scanner can't follow completely: an unreadable `handlers` value, an identifier it can't resolve (reported as `NOTIF_TASK_HANDLER_SPREAD_UNRESOLVED`), or a value it can't see through (a conditional, a call through a property access or an aliased import, a `@dereekb/*` helper that is not an upstream handler factory). `notificationTaskService()`'s own startup check still applies. Aggregates nested inside an app's own `ALL_*_NOTIFICATION_TASK_TYPES` are not detected. The NotificationTaskBot task types are reported by `NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED` instead.
+   * @dbxRuleFix Add the upstream handler to `handlers`: e.g. `<app>StorageFileProcessingNotificationTaskHandler(context)`, built with `storageFileProcessingNotificationTaskHandler({ processors, storageFileFirestoreCollections, storageAccessor })`, or `<app>FormSpaceSubmissionNotificationTaskHandler(context)`, built with `formSpaceSubmissionNotificationTaskHandler({ processors, validate, formSpaceFirestoreCollections })` (both from `@dereekb/firebase-server/model`). Or remove the aggregate from `validate`.
+   * @dbxRuleSeeAlso artifact:storagefile-processor
+   * @dbxRuleSeeAlso artifact:notification-task
+   * @dbxRuleSeeAlso doc:dbx-formspace
+   */
+  NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED = 'NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED'
 }
 
 /**

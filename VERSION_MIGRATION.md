@@ -90,6 +90,12 @@ but two changes require an update in every app that implements the notification 
 - **Subtask handlers now enforce `validate`.** The StorageFile, FormSpace and NotificationTaskBot subtask handlers
   (anything built on `notificationTaskSubtaskNotificationTaskHandlerFactory()`) now throw at creation when a target
   listed in their `validate` list has no processor. Before, the list was never read. Fix the list or add the processor.
+- **The notification build check now covers upstream task types.** `dbx_notification_m_validate_app` and
+  `dbx-cli-generate-notification-manifest` now error (`NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED`) when a
+  `notificationTaskService({ validate })` lists `...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES` or
+  `...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES` but its `handlers` don't reach `storageFileProcessingNotificationTaskHandler(...)` /
+  `formSpaceSubmissionNotificationTaskHandler(...)`. Such an app already throws at startup; the check moves that failure to
+  build time. It is skipped for a service whose `handlers` the scanner can't follow completely.
 
 ### Optional (to use bots)
 - **Firestore rules:** `match /ntb/{id} { allow get, list: if userClaimsIsSysAdmin(); }` (or add `notificationTaskBot`

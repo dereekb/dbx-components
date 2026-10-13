@@ -1,9 +1,15 @@
 /**
- * Shared violation builder for the `dbx_notification_m_validate_app` rule files (`rules.ts`, `rules.taskbot.ts`).
+ * Shared violation builder and message fragments for the `dbx_notification_m_validate_app` rule files (`rules.ts`,
+ * `rules.taskbot.ts`, `rules.upstream.ts`).
  */
 
 import { attachRemediation } from '../_core/rule-catalog/index.js';
 import type { Violation, ViolationSeverity } from './types.js';
+
+/**
+ * The API folders the notification scan reads, for "not found" messages.
+ */
+export const SCANNED_API_FOLDERS = '`src/app/common/model/notification/`, `src/app/common/firebase/` and `src/app/function/notification/`';
 
 /**
  * Appends a violation to the buffer, defaulting its severity to `error` and attaching the rule catalog's remediation

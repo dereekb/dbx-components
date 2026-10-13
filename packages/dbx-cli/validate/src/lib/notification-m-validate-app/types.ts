@@ -312,14 +312,27 @@ export interface ExtractedTaskServiceCall {
    */
   readonly validateStatus: ExtractedTaskServiceValidateStatus;
   /**
-   * Every `notificationTaskBotRunNotificationTaskHandler(...)` call the `handlers:` trace reached, by location.
+   * Every upstream handler-factory call (StorageFile, FormSpace, NotificationTaskBot) the `handlers:` trace reached.
    */
-  readonly reachedTaskBotRunHandlerCalls: readonly ExtractedSourceLocation[];
+  readonly reachedUpstreamHandlerCalls: readonly ExtractedUpstreamHandlerCall[];
+  /**
+   * Whether the call's `handlers` property is missing (`absent`), an array literal the extractor read (`resolved`), or
+   * something else (`unresolved`).
+   */
+  readonly handlersStatus: ExtractedTaskServiceValidateStatus;
+  /**
+   * Values in the `handlers:` trace that the extractor can't see through: a `@dereekb/*` identifier that is not a known
+   * upstream handler factory, a call whose callee is not an identifier (`ns.fn(...)`, `fn(...)(...)`), and any expression
+   * other than an identifier, call, array or object literal (a conditional, `satisfies`, a parenthesized or non-null
+   * expression, …). The text is collapsed and truncated. When the list is non-empty, the upstream handler checks skip
+   * the service.
+   */
+  readonly opaqueHandlerValues: readonly string[];
   readonly sourceFile: string;
 }
 
 /**
- * How a `notificationTaskService({ validate })` (or NTBR handler `validate`) list was read.
+ * How a `notificationTaskService` (or NTBR handler) `validate` or `handlers` list was read.
  */
 export type ExtractedTaskServiceValidateStatus = 'absent' | 'resolved' | 'unresolved';
 
@@ -330,6 +343,23 @@ export type ExtractedTaskServiceValidateStatus = 'absent' | 'resolved' | 'unreso
 export interface ExtractedSourceLocation {
   readonly sourceFile: string;
   readonly line: number;
+}
+
+/**
+ * A call of an upstream handler factory from `UPSTREAM_NOTIFICATION_TASK_HANDLERS` (e.g. `storageFileProcessingNotificationTaskHandler(...)`).
+ */
+export interface ExtractedUpstreamHandlerCall extends ExtractedSourceLocation {
+  readonly factory: string;
+}
+
+/**
+ * An upstream handler factory call anywhere in the scanned API files, with the function that builds it.
+ */
+export interface ExtractedUpstreamHandlerFactoryCall extends ExtractedUpstreamHandlerCall {
+  /**
+   * The enclosing named function (e.g. `demoStorageFileProcessingNotificationTaskHandler`), or `undefined` at module scope.
+   */
+  readonly enclosingFunction: string | undefined;
 }
 
 /**
@@ -368,6 +398,10 @@ export interface ExtractedAppNotifications {
   readonly templateHandlerEntries: readonly ExtractedTemplateHandlerEntry[];
   readonly taskServiceCalls: readonly ExtractedTaskServiceCall[];
   readonly taskHandlerEntries: readonly ExtractedTaskHandlerEntry[];
+  /**
+   * Every upstream handler-factory call in the scanned API files, reachable or not; used to point at an unreachable handler.
+   */
+  readonly upstreamHandlerCalls: readonly ExtractedUpstreamHandlerFactoryCall[];
   // NotificationTaskBot wiring (both sides plus the workspace files).
   readonly taskBot: ExtractedAppNotificationTaskBot;
   // Trust-list for external imports (suppresses *_UNRESOLVED / ORPHAN warnings).

@@ -248,6 +248,15 @@ describe('NotificationTaskBot checks — handler', () => {
     expect(found).toHaveLength(1);
     expect(found[0].message).toContain('is not reachable');
     expect(found[0].message).toContain('throws at startup');
+    expect(result.violations.map((v) => v.code)).not.toContain('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED');
+  });
+
+  it("skips NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED when handlers hold a value the scanner can't follow", () => {
+    const result = runWith((p) => {
+      replaceInFile(p.api, TASK_SERVICE_FILE, ', notificationTaskBotHandler]', ', ...filterMaybeArrayValues([notificationTaskBotHandler])]');
+      replaceInFile(p.api, TASK_SERVICE_FILE, "import { ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES } from '@dereekb/firebase';", "import { ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES } from '@dereekb/firebase';\nimport { filterMaybeArrayValues } from '@dereekb/util';");
+    });
+    expect(taskBotCodes(result)).toEqual([]);
   });
 
   it('reports NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED with the startup throw when the NTBR handler file is gone', () => {

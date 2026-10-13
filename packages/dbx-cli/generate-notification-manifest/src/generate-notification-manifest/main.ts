@@ -21,8 +21,9 @@
  *
  * Each finding is logged with a severity-aware prefix. Validator `error`
  * findings (a template type without a message factory, a factory without an
- * info, a `validate` task type without a handler, a wrong `--component-dir` /
- * `--api-dir`, ...) fail generation (exit 1) and delete any manifest an earlier,
+ * info, a `validate` task type without a handler, an upstream task-type
+ * aggregate in `validate` whose upstream handler isn't registered, a wrong
+ * `--component-dir` / `--api-dir`, ...) fail generation (exit 1) and delete any manifest an earlier,
  * passing run left behind, so the build fails before deploy. `warning` findings
  * are written into the manifest's `findings` and do not fail it unless
  * `--strict` / `--max-warnings` say so. The runtime startup checks in

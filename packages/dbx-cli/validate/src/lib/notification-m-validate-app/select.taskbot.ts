@@ -3,6 +3,8 @@
  * `dbx_notification_m_list_app` NotificationTaskBot section, so both pick the same registry and handlers.
  */
 
+import { NOTIFICATION_TASK_BOT_RUN_HANDLER_FACTORY } from './extract.taskbot.js';
+import { reachedUpstreamHandlerCallsOf } from './extract.upstream.js';
 import type { ExtractedAppNotificationTaskBot, ExtractedAppNotifications, ExtractedSourceLocation, ExtractedTaskBotRegistry, ExtractedTaskBotRegistryWiring, ExtractedTaskBotRunHandlerCall } from './types.js';
 
 /**
@@ -72,7 +74,7 @@ export interface TaskBotRunHandlerCallSelection {
  */
 export function selectTaskBotRunHandlerCalls(extracted: Pick<ExtractedAppNotifications, 'taskBot' | 'taskServiceCalls'>): TaskBotRunHandlerCallSelection {
   const { runHandlerCalls } = extracted.taskBot;
-  const reachedKeys = new Set(extracted.taskServiceCalls.flatMap((call) => call.reachedTaskBotRunHandlerCalls.map((x) => taskBotLocationKey(x))));
+  const reachedKeys = new Set(extracted.taskServiceCalls.flatMap((call) => reachedUpstreamHandlerCallsOf(call, NOTIFICATION_TASK_BOT_RUN_HANDLER_FACTORY).map((x) => taskBotLocationKey(x))));
   const reachable = runHandlerCalls.filter((call) => reachedKeys.has(taskBotLocationKey(call)));
   return { reachedKeys, reachable, considered: reachable.length > 0 ? reachable : runHandlerCalls };
 }

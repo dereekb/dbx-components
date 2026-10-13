@@ -24,7 +24,8 @@
  *      `target:` references the purpose constant must be reachable
  *      from a `storageFileProcessingNotificationTaskHandler({ processors })`
  *      call. Wiring of the surrounding `notificationTaskService(...)`
- *      handler is verified by the notification validator and is not
+ *      handler is verified by the notification validator
+ *      (`NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED`) and is not
  *      re-checked here.
  *
  * Both paths are traced across multiple files using a single
