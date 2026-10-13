@@ -1,6 +1,24 @@
 import { describe, expect, it } from 'vitest';
 import { Node, SyntaxKind, type Identifier } from 'ts-morph';
-import { buildDereekbImportIndex, buildInMemoryProject, findSoleReturnExpression, isDereekbModuleSpecifier, readArrayElementTypeNode, readCalleeName, readImportedReference, readTypeReferenceName, resolveLocalValue, resolveLocalVariable, unwrapOuterExpressions, type ImportedReference } from './ast.js';
+import {
+  buildDereekbImportIndex,
+  buildInMemoryProject,
+  findSoleReturnExpression,
+  isDereekbModuleSpecifier,
+  readArrayElementTypeNode,
+  readCalleeName,
+  readImportedReference,
+  readOwnExportedDeclarations,
+  readStaticProperty,
+  readTypeReferenceName,
+  resolveLocalObjectLiteral,
+  resolveLocalValue,
+  resolveLocalVariable,
+  resolveRelativeModulePath,
+  unwrapOuterExpressions,
+  type ImportedReference,
+  type StaticPropertyRead
+} from './ast.js';
 
 /**
  * Reads the resolved callee name of every call in a one-file project, in source order.
@@ -464,5 +482,121 @@ describe('resolveLocalValue()', () => {
 
   it('reads a parameter that shadows a top-level function as ambiguous through resolveLocalVariable too', () => {
     expect(resolutionsOf(`function h() { return null; }\nfunction f(h: unknown) { return h; }`)).toEqual(['ambiguous']);
+  });
+});
+
+/**
+ * Reads a property of the first object literal in a one-file project.
+ *
+ * @param text - The file's source text.
+ * @param name - The property name.
+ * @returns The read, with a found value rendered as its text.
+ */
+function staticPropertyOf(text: string, name: string): string {
+  const { apiSources } = buildInMemoryProject({ component: { files: [] }, api: { files: [{ relPath: 'a.ts', text }] } });
+  const read: StaticPropertyRead = readStaticProperty(apiSources[0].getFirstDescendantByKindOrThrow(SyntaxKind.ObjectLiteralExpression), name);
+  return read.kind === 'found' ? `found:${read.value.getText()}` : read.kind;
+}
+
+describe('readStaticProperty()', () => {
+  it.each<[string, string, string]>([
+    ['finds a property', 'const o = { mcp: 1 };', 'found:1'],
+    ['reads a missing property as absent', 'const o = { other: 1 };', 'absent'],
+    ['reads the explicit property after a spread', 'const o = { ...base, mcp: 1 };', 'found:1'],
+    ['reads a spread after the property as unknown', 'const o = { mcp: 1, ...base };', 'unknown'],
+    ['reads a spread with no property as unknown', 'const o = { ...base };', 'unknown'],
+    ['reads a computed key as unknown', 'const o = { [k]: 1 };', 'unknown'],
+    ['matches a string-literal key', "const o = { 'mcp': 1 };", 'found:1'],
+    ['reads a shorthand as its name node', 'const o = { mcp };', 'found:mcp'],
+    ['reads a method as unknown', 'const o = { mcp() { return 1; } };', 'unknown'],
+    ['reads a getter as unknown', 'const o = { get mcp() { return 1; } };', 'unknown'],
+    ['reads the last property of the name', 'const o = { mcp: 1, mcp: 2 };', 'found:2']
+  ])('%s', (_label, text, expected) => {
+    expect(staticPropertyOf(text, 'mcp')).toBe(expected);
+  });
+});
+
+describe('resolveLocalObjectLiteral()', () => {
+  /**
+   * Resolves the argument of every `use(...)` call in a one-file project.
+   *
+   * @param text - The file's source text.
+   * @returns The resolved literal's text of each call, or `undefined`.
+   */
+  function literalsOf(text: string): (string | undefined)[] {
+    const { apiSources } = buildInMemoryProject({ component: { files: [] }, api: { files: [{ relPath: 'a.ts', text }] } });
+    const imports = buildDereekbImportIndex(apiSources);
+    return apiSources[0]
+      .getDescendantsOfKind(SyntaxKind.CallExpression)
+      .filter((x) => x.getExpression().getText() === 'use')
+      .map((x) => resolveLocalObjectLiteral(x.getArguments()[0], imports)?.getText());
+  }
+
+  it('reads an inline literal', () => {
+    expect(literalsOf('use({ a: 1 });')).toEqual(['{ a: 1 }']);
+  });
+
+  it('reads an as-const local const', () => {
+    expect(literalsOf('const C = { a: 1 } as const;\nuse(C);')).toEqual(['{ a: 1 }']);
+  });
+
+  it('does not read a let or a parameter', () => {
+    expect(literalsOf('let C = { a: 1 };\nuse(C);\nfunction f(p: object) { return use(p); }')).toEqual([undefined, undefined]);
+  });
+
+  it('reads the const of each function that declares the name', () => {
+    expect(literalsOf('function f() { const C = { a: 1 }; return use(C); }\nfunction g() { const C = { b: 2 }; return use(C); }')).toEqual(['{ a: 1 }', '{ b: 2 }']);
+  });
+
+  it('does not guess between a function-local const and the module const it shadows', () => {
+    expect(literalsOf('const C = { a: 1 };\nfunction f() { const C = { b: 2 }; return use(C); }')).toEqual([undefined]);
+  });
+});
+
+describe('resolveRelativeModulePath()', () => {
+  const PATHS = new Set(['/api/src/x.ts', '/api/src/dir/index.ts']);
+  const resolveFrom = (moduleSpecifier: string) => resolveRelativeModulePath({ fromFilePath: '/api/src/sub/a.ts', moduleSpecifier, hasPath: (x) => PATHS.has(x) });
+
+  it('resolves a sibling .ts file, dropping a .js extension', () => {
+    expect(resolveFrom('../x')).toBe('/api/src/x.ts');
+    expect(resolveFrom('../x.js')).toBe('/api/src/x.ts');
+  });
+
+  it('resolves a folder to its index.ts', () => {
+    expect(resolveFrom('../dir')).toBe('/api/src/dir/index.ts');
+  });
+
+  it('does not resolve a non-relative or missing specifier', () => {
+    expect(resolveFrom('@dereekb/util')).toBeUndefined();
+    expect(resolveFrom('./missing')).toBeUndefined();
+  });
+});
+
+describe('readOwnExportedDeclarations()', () => {
+  /**
+   * Reads a one-file project's own exports as `name → declaration start line`.
+   *
+   * @param text - The file's source text.
+   * @returns Each exported name with its declaration's line.
+   */
+  function exportsOf(text: string): Record<string, number> {
+    const { apiSources } = buildInMemoryProject({ component: { files: [] }, api: { files: [{ relPath: 'a.ts', text }] } });
+    return Object.fromEntries(Array.from(readOwnExportedDeclarations(apiSources[0]), ([name, declaration]) => [name, declaration.getStartLineNumber()]));
+  }
+
+  it('reads export on declarations, export lists and export default', () => {
+    expect(exportsOf('export const a = 1;\nexport function b() {}\nexport default function c() {}\nconst d = 1;\nexport { d as e };')).toEqual({ a: 1, b: 2, default: 3, e: 4 });
+  });
+
+  it('reads export default of a name', () => {
+    expect(exportsOf('const x = 1;\nexport default x;')).toEqual({ default: 1 });
+  });
+
+  it('leaves out re-exports, classes and type-only exports', () => {
+    expect(exportsOf("export { a } from './a';\nexport * from './b';\nexport class C {}\nconst t = 1;\nexport type { t };")).toEqual({});
+  });
+
+  it('reads the later of two var declarations of a name', () => {
+    expect(exportsOf('export var v = 1;\nexport var v = 2;')).toEqual({ v: 2 });
   });
 });

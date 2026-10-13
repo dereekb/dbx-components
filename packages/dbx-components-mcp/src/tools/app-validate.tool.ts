@@ -414,7 +414,7 @@ async function runModelApi(ctx: ComponentApiCtx): Promise<void> {
     const report = await validateAppModelApi({ componentAbs: ctx.componentAbs, componentDir: ctx.componentRel, apiAbs: ctx.apiAbs, apiDir: ctx.apiRel });
     for (const issue of report.issues) {
       const { file, line } = splitSource(issue.source);
-      ctx.findings.push(toFinding({ cluster: 'model_api', code: issue.code, severity: 'error', message: issue.message, file, line }));
+      ctx.findings.push(toFinding({ cluster: 'model_api', code: issue.code, severity: issue.severity, message: issue.message, file, line }));
     }
   } catch (err) {
     ctx.clusterErrors.push({ cluster: 'model_api', message: err instanceof Error ? err.message : String(err) });

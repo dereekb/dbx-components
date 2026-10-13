@@ -184,6 +184,26 @@
     ]
   },
   {
+    "code": "HANDLER_MCP_READ_ONLY_UNSET",
+    "source": "dbx_model_api_validate_app",
+    "severity": "warning",
+    "title": "An `invoke` or custom-verb handler leaves `mcp.readOnly` unset, so MCP treats it as a write",
+    "whatItFlags": "An `invoke` or custom-verb handler leaves `mcp.readOnly` unset, so MCP treats it as a write.\nOnly `read`/`query` (read) and `create`/`update`/`delete` (write) infer the classification from\nthe call type. Every other call type resolves to \"unknown\", which the MCP module fails safe to a\nwrite: the method is only callable through the write tool (`<p>_mcp_write`), is advertised\n`destructiveHint: true`, and is dropped when the MCP module runs in `readOnly` mode. A pure-read\ninvoke that forgets the flag silently disappears from the read tool.",
+    "whenItApplies": "Every handler wired in the app's `invoke` (or custom-verb) map whose `withApiDetails({ ... })` declaration has no `mcp` block, or an `mcp` block without `readOnly`.",
+    "whenItDoesNotApply": "Handlers under `read`/`query`/`create`/`update`/`delete`, whose call type decides. Handlers the scan cannot follow back to a literal `withApiDetails({ ... })` — imported from an `@dereekb/*` package or from outside `src/app/function/`, built by a factory or inline, or whose config / `mcp` comes from a spread or a non-literal — are listed as not checked instead. Plain-function handlers without `withApiDetails` never become MCP tools.",
+    "canonicalFix": "Declare `mcp: { readOnly: true }` when the handler only reads, or `mcp: { readOnly: false }` when it writes (persists, sends, or calls out), with a short comment saying why.",
+    "seeAlso": [
+      {
+        "kind": "doc",
+        "target": "dbx__guide__invoke-mcp-builder"
+      },
+      {
+        "kind": "tool",
+        "target": "dbx_model_api_lookup"
+      }
+    ]
+  },
+  {
     "code": "HANDLER_NAMING_MISMATCH",
     "source": "dbx_model_api_validate_app",
     "severity": "error",

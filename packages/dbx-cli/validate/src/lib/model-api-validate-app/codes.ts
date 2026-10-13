@@ -11,7 +11,8 @@
  * defined in the API app's `<app>FunctionMap` / `<app>CrudFunctionsConfig`.
  * Two reconciliation gaps fire (`MISSING_HANDLER` / `ORPHAN_HANDLER`),
  * plus a naming-convention check on every wired handler
- * (`HANDLER_NAMING_MISMATCH`).
+ * (`HANDLER_NAMING_MISMATCH`) and an MCP read/write check on every
+ * `invoke` / custom-verb handler (`HANDLER_MCP_READ_ONLY_UNSET`, a warning).
  */
 export enum ModelApiValidateAppCode {
   /**
@@ -49,7 +50,24 @@ export enum ModelApiValidateAppCode {
    * @dbxRuleNotApplies Handlers intentionally aliased to satisfy backwards-compatibility on a public re-export — colocate the alias in the verb-map by name to keep the cell aligned.
    * @dbxRuleFix Rename the handler (or its verb-map binding) to one of the accepted names so the model/verb/specifier triplet is recoverable from the identifier alone.
    */
-  HANDLER_NAMING_MISMATCH = 'HANDLER_NAMING_MISMATCH'
+  HANDLER_NAMING_MISMATCH = 'HANDLER_NAMING_MISMATCH',
+
+  /**
+   * An `invoke` or custom-verb handler leaves `mcp.readOnly` unset, so MCP treats it as a write.
+   * Only `read`/`query` (read) and `create`/`update`/`delete` (write) infer the classification from
+   * the call type. Every other call type resolves to "unknown", which the MCP module fails safe to a
+   * write: the method is only callable through the write tool (`<p>_mcp_write`), is advertised
+   * `destructiveHint: true`, and is dropped when the MCP module runs in `readOnly` mode. A pure-read
+   * invoke that forgets the flag silently disappears from the read tool.
+   *
+   * @dbxRuleSeverity warning
+   * @dbxRuleApplies Every handler wired in the app's `invoke` (or custom-verb) map whose `withApiDetails({ ... })` declaration has no `mcp` block, or an `mcp` block without `readOnly`.
+   * @dbxRuleNotApplies Handlers under `read`/`query`/`create`/`update`/`delete`, whose call type decides. Handlers the scan cannot follow back to a literal `withApiDetails({ ... })` — imported from an `@dereekb/*` package or from outside `src/app/function/`, built by a factory or inline, or whose config / `mcp` comes from a spread or a non-literal — are listed as not checked instead. Plain-function handlers without `withApiDetails` never become MCP tools.
+   * @dbxRuleFix Declare `mcp: { readOnly: true }` when the handler only reads, or `mcp: { readOnly: false }` when it writes (persists, sends, or calls out), with a short comment saying why.
+   * @dbxRuleSeeAlso doc:dbx__guide__invoke-mcp-builder
+   * @dbxRuleSeeAlso tool:dbx_model_api_lookup
+   */
+  HANDLER_MCP_READ_ONLY_UNSET = 'HANDLER_MCP_READ_ONLY_UNSET'
 }
 
 /**

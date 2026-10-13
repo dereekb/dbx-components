@@ -2,7 +2,8 @@
  * Shared ts-morph leaf helpers and in-memory project builder used by
  * the two-side validate-app extractors
  * (`storagefile-m-validate-app/extract.ts`,
- * `notification-m-validate-app/extract.ts`).
+ * `notification-m-validate-app/extract.ts`) and the handler walk of
+ * `model-api-validate-app/extract-handlers.ts`.
  *
  * Every helper here is pure node-walking — no domain type names, no
  * per-validator branching. Callers wrap these in domain-specific
@@ -15,6 +16,7 @@
  * convention.
  */
 
+import { posix } from 'node:path';
 import {
   Node,
   Project,
@@ -27,6 +29,7 @@ import {
   type ImportClause,
   type ImportDeclaration,
   type ImportSpecifier,
+  type ObjectLiteralElementLike,
   type ObjectLiteralExpression,
   type PropertyAccessExpression,
   type SourceFile,
@@ -237,6 +240,72 @@ export function getPropertyInitializer(obj: ObjectLiteralExpression, name: strin
     return prop.getNameNode();
   }
   return undefined;
+}
+
+/**
+ * How {@link readStaticProperty} reads a property of an object literal:
+ * - `found`: the property's value node (an initializer, or a shorthand's name node);
+ * - `absent`: the literal has no property of the name, and no spread or computed key that could supply one;
+ * - `unknown`: a spread or computed key after the property (or anywhere, when there is no explicit property) may supply
+ *   or replace it, or the name is a method or accessor.
+ */
+export type StaticPropertyRead = { readonly kind: 'found'; readonly value: Node } | { readonly kind: 'absent' } | { readonly kind: 'unknown' };
+
+/**
+ * Reads a property of an object literal the way the runtime builds the object: the **last** property of the name wins,
+ * and a spread or computed key after it may supply or replace it. The spread-aware counterpart of
+ * {@link getPropertyInitializer}, which can't tell "absent" from "may come from a spread". Names written as
+ * identifiers, string literals or numeric literals match.
+ *
+ * @param obj - The object literal to read.
+ * @param name - The property name to look up.
+ * @returns The read: `found` with the value node, `absent` or `unknown`.
+ */
+export function readStaticProperty(obj: ObjectLiteralExpression, name: string): StaticPropertyRead {
+  let result: StaticPropertyRead = { kind: 'absent' };
+  for (const property of obj.getProperties()) {
+    const propertyName = readStaticPropertyName(property);
+    if (propertyName === undefined) {
+      result = { kind: 'unknown' };
+    } else if (propertyName === name) {
+      result = readStaticPropertyValue(property);
+    }
+  }
+  return result;
+}
+
+/**
+ * Reads the static name of an object literal member.
+ *
+ * @param property - The member.
+ * @returns The name, or `undefined` for a spread or a computed key.
+ */
+function readStaticPropertyName(property: ObjectLiteralElementLike): string | undefined {
+  const nameNode = Node.isSpreadAssignment(property) ? undefined : property.getNameNode();
+  let result: string | undefined;
+  if (nameNode && Node.isIdentifier(nameNode)) {
+    result = nameNode.getText();
+  } else if (nameNode && (Node.isStringLiteral(nameNode) || Node.isNoSubstitutionTemplateLiteral(nameNode) || Node.isNumericLiteral(nameNode))) {
+    result = nameNode.getLiteralText();
+  }
+  return result;
+}
+
+/**
+ * Reads the value of a statically named object literal member, for {@link readStaticProperty}.
+ *
+ * @param property - The member.
+ * @returns `found` for a property assignment or shorthand, `unknown` for a method or accessor.
+ */
+function readStaticPropertyValue(property: ObjectLiteralElementLike): StaticPropertyRead {
+  let result: StaticPropertyRead = { kind: 'unknown' };
+  if (Node.isPropertyAssignment(property)) {
+    const value = property.getInitializer();
+    result = value ? { kind: 'found', value } : { kind: 'unknown' };
+  } else if (Node.isShorthandPropertyAssignment(property)) {
+    result = { kind: 'found', value: property.getNameNode() };
+  }
+  return result;
 }
 
 /**
@@ -1154,6 +1223,31 @@ export function resolveLocalValue(reference: Identifier, imports: DereekbImportI
 }
 
 /**
+ * Resolves a node to the object literal it holds: an inline literal, or an identifier bound where it sits
+ * ({@link resolveLocalVariable}) to a `const` initialized with a literal. Wrappers that leave the value unchanged
+ * (`as const`, parentheses, …) are unwrapped. The scope-aware, `const`-only counterpart of
+ * {@link resolveObjectLiteralArgument}; a `let` / `var`, a parameter, an import or a call reads as `undefined`.
+ *
+ * @param node - The node to resolve.
+ * @param imports - The per-file bindings (the node's file must be indexed).
+ * @returns The object literal, or `undefined` when the node does not resolve to one.
+ */
+export function resolveLocalObjectLiteral(node: Node | undefined, imports: DereekbImportIndex): ObjectLiteralExpression | undefined {
+  const inner = unwrapOuterExpressions(node);
+  let result: ObjectLiteralExpression | undefined;
+  if (inner && Node.isObjectLiteralExpression(inner)) {
+    result = inner;
+  } else if (inner && Node.isIdentifier(inner)) {
+    const binding = resolveLocalVariable(inner, imports);
+    if (binding.kind === 'variable' && binding.declaration.getVariableStatement()?.getDeclarationKind() === VariableDeclarationKind.Const) {
+      const initializer = unwrapOuterExpressions(binding.declaration.getInitializer());
+      result = initializer && Node.isObjectLiteralExpression(initializer) ? initializer : undefined;
+    }
+  }
+  return result;
+}
+
+/**
  * Reads the name a type reference refers to: the type-position counterpart of {@link readCalleeName}. A name reads
  * through one of its file's bindings ({@link DereekbImportBindings.localBindings}) only when that binding is the only
  * one of the name in scope there, counting type parameters, type aliases and interfaces too: an identifier bound to an
@@ -1205,6 +1299,91 @@ export function readArrayElementTypeNode(node: Node | undefined): TypeNode | und
     const typeArguments = inner.getTypeArguments();
     if (Node.isIdentifier(typeName) && ARRAY_TYPE_NAMES.has(typeName.getText()) && typeArguments.length === 1) {
       result = typeArguments[0];
+    }
+  }
+  return result;
+}
+
+/**
+ * The suffixes a relative module specifier is tried with, in order: as written, as a `.ts` file, and as a folder's
+ * `index.ts`. A `.js` extension is dropped first.
+ */
+const RELATIVE_MODULE_SUFFIXES: readonly string[] = ['', '.ts', '/index.ts'];
+
+/**
+ * Input to {@link resolveRelativeModulePath}.
+ */
+export interface ResolveRelativeModulePathInput {
+  /**
+   * Path of the source file the specifier is written in.
+   */
+  readonly fromFilePath: string;
+  readonly moduleSpecifier: string;
+  /**
+   * Whether a scanned source file exists at a path.
+   */
+  readonly hasPath: (path: string) => boolean;
+}
+
+/**
+ * Resolves a relative module specifier (`./x`, `../x.js`, `./dir`) to the scanned source file it names: as written, as a
+ * `.ts` file, then as a folder's `index.ts`, with a `.js` extension dropped first.
+ *
+ * @param input - The importing file's path, the specifier and the scanned-path check.
+ * @returns The scanned file's path, or `undefined` for a non-relative specifier or one that names no scanned file.
+ */
+export function resolveRelativeModulePath(input: ResolveRelativeModulePathInput): string | undefined {
+  const { fromFilePath, moduleSpecifier, hasPath } = input;
+  let result: string | undefined;
+  if (moduleSpecifier.startsWith('.')) {
+    const base = posix.join(posix.dirname(fromFilePath), moduleSpecifier.replace(/\.js$/, ''));
+    result = RELATIVE_MODULE_SUFFIXES.map((x) => `${base}${x}`).find(hasPath);
+  }
+  return result;
+}
+
+/**
+ * Reads what a file exports from its own top-level declarations, by exported name: `export` on a function declaration
+ * (`export default function` reads as `default`) or variable statement, an `export { … }` list without a module
+ * specifier, and `export default <name>`. Only names bound to a top-level named function or a variable statement's
+ * identifier-named declaration are kept; a name declared by both reads as the variable, and a variable declared twice as
+ * the later one. Re-exports (`export … from`), classes, enums and type-only exports are left out.
+ *
+ * @param sf - The source file to read.
+ * @returns Each exported name's declaration.
+ */
+export function readOwnExportedDeclarations(sf: SourceFile): ReadonlyMap<string, FunctionDeclaration | VariableDeclaration> {
+  const locals = new Map<string, FunctionDeclaration | VariableDeclaration>(); // each top-level function and variable by name
+  const exportedLocals = new Map<string, string>(); // each exported name: the local name it exports
+  for (const fn of sf.getFunctions()) {
+    const name = fn.getName();
+    if (name !== undefined) {
+      locals.set(name, fn);
+      if (fn.hasExportKeyword()) {
+        exportedLocals.set(fn.hasDefaultKeyword() ? 'default' : name, name);
+      }
+    }
+  }
+  for (const stmt of sf.getVariableStatements()) {
+    for (const decl of stmt.getDeclarations().filter((x) => Node.isIdentifier(x.getNameNode()))) {
+      locals.set(decl.getName(), decl);
+      if (stmt.hasExportKeyword()) {
+        exportedLocals.set(decl.getName(), decl.getName());
+      }
+    }
+  }
+  const exportLists = sf.getExportDeclarations().filter((x) => !x.hasModuleSpecifier() && !x.isTypeOnly());
+  for (const specifier of exportLists.flatMap((x) => x.getNamedExports()).filter((x) => !x.isTypeOnly())) {
+    exportedLocals.set(specifier.getAliasNode()?.getText() ?? specifier.getName(), specifier.getName());
+  }
+  for (const assignment of sf.getExportAssignments().filter((x) => !x.isExportEquals())) {
+    exportedLocals.set('default', assignment.getExpression().getText());
+  }
+  const result = new Map<string, FunctionDeclaration | VariableDeclaration>();
+  for (const [exported, local] of exportedLocals) {
+    const declaration = locals.get(local);
+    if (declaration) {
+      result.set(exported, declaration);
     }
   }
   return result;

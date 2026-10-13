@@ -59,12 +59,16 @@ export const notificationUserResync: DemoUpdateModelFunction<ResyncNotificationU
  * Requires only `read` on the NotificationUser, so a user can diagnose their own delivery without
  * being able to change anything. Dispatching a test message is opt-in via `sendProbe`.
  *
- * Deliberately NOT `mcp.readOnly`: every run persists the result to the user's `hc` field (and spends
- * the user's run allowance), and `sendProbe` dispatches a real test message. It stays a write method,
- * so an agent reaches it through `demo_mcp_write`, never the auto-approvable read tool.
+ * Deliberately declared `mcp: { readOnly: false }`: every run persists the result to the user's `hc`
+ * field (and spends the user's run allowance), and `sendProbe` dispatches a real test message. It stays
+ * a write method, so an agent reaches it through `demo_mcp_write`, never the auto-approvable read tool.
  */
 export const notificationUserHealthCheck: DemoInvokeModelFunction<NotificationUserHealthCheckParams, NotificationUserHealthCheckResult> = withApiDetails({
   inputType: notificationUserHealthCheckParamsType,
+  mcp: {
+    // A write: each run persists its result to the user's `hc` field, and `sendProbe` sends a real test message.
+    readOnly: false
+  },
   fn: async (request) => {
     const { nest, auth: _auth, data } = request;
 
@@ -95,6 +99,8 @@ export const notificationUserHealthCheck: DemoInvokeModelFunction<NotificationUs
 export const notificationUserHealthCheckAutofix: DemoInvokeModelFunction<NotificationUserHealthCheckAutofixParams, NotificationUserHealthCheckAutofixResult> = withApiDetails({
   inputType: notificationUserHealthCheckAutofixParamsType,
   mcp: {
+    // A write: a fix changes state at the delivery provider, and the re-check persists its result to `hc`.
+    readOnly: false,
     visibility: { requiredRoles: [AUTH_ADMIN_ROLE] }
   },
   fn: async (request) => {

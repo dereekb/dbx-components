@@ -4,9 +4,8 @@
  * function it is bound to where it sits.
  */
 
-import { posix } from 'node:path';
 import { Node, SyntaxKind, type ArrowFunction, type FunctionDeclaration, type FunctionExpression, type Identifier, type ImportClause, type ImportSpecifier, type SourceFile } from 'ts-morph';
-import { apiRelPath, isDereekbModuleSpecifier, resolveLocalValue, unwrapAsExpressions, type DereekbImportIndex } from '../_core/_validate/ast.js';
+import { apiRelPath, isDereekbModuleSpecifier, readOwnExportedDeclarations, resolveLocalValue, resolveRelativeModulePath, unwrapAsExpressions, type DereekbImportIndex } from '../_core/_validate/ast.js';
 
 /**
  * A named function declared in an API source file — a function declaration, or a variable initialized with an arrow
@@ -111,37 +110,11 @@ function indexFunctionVariableDeclarations(sf: SourceFile, rel: string, add: (na
  * @returns The exported names.
  */
 function readOwnExports(sf: SourceFile, functionsByNode: ReadonlyMap<Node, ApiFunctionEntry>): Map<string, ApiFunctionEntry | undefined> {
-  const locals = new Map<string, ApiFunctionEntry | undefined>(); // each top-level function and variable by name: its indexed function, or undefined
-  const exportedLocals = new Map<string, string>(); // each exported name: the local name it exports
-  for (const fn of sf.getFunctions()) {
-    const name = fn.getName();
-    if (name !== undefined) {
-      locals.set(name, functionsByNode.get(fn));
-      if (fn.hasExportKeyword()) {
-        exportedLocals.set(fn.hasDefaultKeyword() ? 'default' : name, name);
-      }
-    }
-  }
-  for (const stmt of sf.getVariableStatements()) {
-    for (const decl of stmt.getDeclarations().filter((x) => Node.isIdentifier(x.getNameNode()))) {
-      const initializer = unwrapAsExpressions(decl.getInitializer());
-      locals.set(decl.getName(), initializer ? functionsByNode.get(initializer) : undefined);
-      if (stmt.hasExportKeyword()) {
-        exportedLocals.set(decl.getName(), decl.getName());
-      }
-    }
-  }
-  const exportLists = sf.getExportDeclarations().filter((x) => !x.hasModuleSpecifier() && !x.isTypeOnly());
-  for (const specifier of exportLists.flatMap((x) => x.getNamedExports()).filter((x) => !x.isTypeOnly())) {
-    exportedLocals.set(specifier.getAliasNode()?.getText() ?? specifier.getName(), specifier.getName());
-  }
-  for (const assignment of sf.getExportAssignments().filter((x) => !x.isExportEquals())) {
-    exportedLocals.set('default', assignment.getExpression().getText());
-  }
   return new Map(
-    Array.from(exportedLocals)
-      .filter(([, local]) => locals.has(local))
-      .map(([exported, local]) => [exported, locals.get(local)])
+    Array.from(readOwnExportedDeclarations(sf), ([exported, declaration]): [string, ApiFunctionEntry | undefined] => {
+      const node = Node.isFunctionDeclaration(declaration) ? declaration : unwrapAsExpressions(declaration.getInitializer());
+      return [exported, node ? functionsByNode.get(node) : undefined];
+    })
   );
 }
 
@@ -200,12 +173,6 @@ function asFunctionResolution(entry: ApiFunctionEntry | undefined): ApiFunctionR
 }
 
 /**
- * The suffixes a relative module specifier is tried with, in order: as written, as a `.ts` file, and as a folder's
- * `index.ts`. A `.js` extension is dropped first.
- */
-const RELATIVE_MODULE_SUFFIXES: readonly string[] = ['', '.ts', '/index.ts'];
-
-/**
  * Resolves an import binding to the API function it imports, for {@link resolveApiFunctionReference}.
  *
  * @param binding - A named import's specifier, or a default import's clause.
@@ -217,10 +184,9 @@ function resolveImportedApiFunction(binding: ImportSpecifier | ImportClause, ind
   const moduleSpecifier = declaration.getModuleSpecifierValue();
   const exportedName = Node.isImportSpecifier(binding) ? binding.getName() : 'default';
   let moduleExports: ReadonlyMap<string, ApiFunctionEntry | undefined> | undefined;
-  if (moduleSpecifier.startsWith('.')) {
-    const base = posix.join(posix.dirname(declaration.getSourceFile().getFilePath()), moduleSpecifier.replace(/\.js$/, ''));
-    const path = RELATIVE_MODULE_SUFFIXES.map((x) => `${base}${x}`).find((x) => index.exportsByFilePath.has(x));
-    moduleExports = path === undefined ? undefined : index.exportsByFilePath.get(path);
+  const path = resolveRelativeModulePath({ fromFilePath: declaration.getSourceFile().getFilePath(), moduleSpecifier, hasPath: (x) => index.exportsByFilePath.has(x) });
+  if (path !== undefined) {
+    moduleExports = index.exportsByFilePath.get(path);
   }
   let result: ApiFunctionResolution;
   if (isDereekbModuleSpecifier(moduleSpecifier)) {

@@ -57,6 +57,7 @@ export function checkHandlerNaming(handler: HandlerEntry): ValidateIssue | undef
   const accepted = expected.map((n) => `\`${n}\``).join(' or ');
   return {
     code: 'HANDLER_NAMING_MISMATCH',
+    severity: 'error',
     model: handler.model,
     verb: handler.verb,
     specifier: handler.specifier,

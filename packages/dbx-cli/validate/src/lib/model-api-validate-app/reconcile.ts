@@ -6,6 +6,7 @@
 import type { DeclaredEntry, HandlerEntry, ModelSummary, ReconciledEntry, ValidateIssue } from './types.js';
 import type { CrudVerb } from '@dereekb/dbx-cli/manifest-extract';
 import { checkHandlerNaming } from './naming.js';
+import { checkHandlerMcpReadOnly } from './mcp-read-only.js';
 
 export interface ReconcileInput {
   readonly declared: readonly DeclaredEntry[];
@@ -32,10 +33,7 @@ function keyOf(cell: CellKey): string {
 }
 
 /**
- * Reconciles declared CRUD entries against discovered handlers, producing per-model summaries, per-cell statuses, and `MISSING_HANDLER` / `ORPHAN_HANDLER` issues.
- *
- * @param input - Declared entries, handler entries, and an optional model filter.
- * @returns The reconciled entries, summaries, issues, and aggregate counts.
+ * Input to {@link reconcileDeclared}.
  */
 interface ReconcileDeclaredInput {
   readonly declared: readonly DeclaredEntry[];
@@ -63,6 +61,7 @@ function reconcileDeclared(input: ReconcileDeclaredInput): void {
       const specifierSuffix = d.specifier ? `.${d.specifier}` : '';
       issues.push({
         code: 'MISSING_HANDLER',
+        severity: 'error',
         model: d.model,
         verb: d.verb,
         specifier: d.specifier,
@@ -97,6 +96,7 @@ function flagOrphanHandlers(input: FlagOrphanHandlersInput): void {
     const specifierSuffix = h.specifier ? `.${h.specifier}` : '';
     issues.push({
       code: 'ORPHAN_HANDLER',
+      severity: 'error',
       model: h.model,
       verb: h.verb,
       specifier: h.specifier,
@@ -108,8 +108,9 @@ function flagOrphanHandlers(input: FlagOrphanHandlersInput): void {
 
 /**
  * Reconciles declared CRUD entries against discovered handlers, producing
- * per-model summaries, per-cell statuses, and
- * `MISSING_HANDLER` / `ORPHAN_HANDLER` issues.
+ * per-model summaries, per-cell statuses, `MISSING_HANDLER` /
+ * `ORPHAN_HANDLER` errors, plus the per-handler `HANDLER_NAMING_MISMATCH`
+ * errors and `HANDLER_MCP_READ_ONLY_UNSET` warnings.
  *
  * @param input - Declared entries, handler entries, and an optional model filter.
  * @returns The reconciled entries, summaries, issues, and aggregate counts.
@@ -130,19 +131,21 @@ export function reconcile(input: ReconcileInput): ReconcileResult {
   for (const h of handlersFiltered) {
     const namingIssue = checkHandlerNaming(h);
     if (namingIssue) issues.push(namingIssue);
+    const mcpReadOnlyIssue = checkHandlerMcpReadOnly(h);
+    if (mcpReadOnlyIssue) issues.push(mcpReadOnlyIssue);
   }
   entries.sort(compareEntries);
   issues.sort((a, b) => a.model.localeCompare(b.model) || (a.verb ?? '').localeCompare(b.verb ?? '') || (a.specifier ?? '').localeCompare(b.specifier ?? ''));
   const summaries = buildSummaries(entries, issues);
-  const errorCount = issues.length;
-  const warningCount = 0;
+  const warningCount = issues.filter((x) => x.severity === 'warning').length;
+  const errorCount = issues.length - warningCount;
   return { entries, issues, summaries, errorCount, warningCount };
 }
 
 function buildSummaries(entries: readonly ReconciledEntry[], issues: readonly ValidateIssue[]): readonly ModelSummary[] {
-  const byModel = new Map<string, { declaredCount: number; handledCount: number; matchedCount: number; errorCount: number }>();
+  const byModel = new Map<string, { declaredCount: number; handledCount: number; matchedCount: number; errorCount: number; warningCount: number }>();
   for (const e of entries) {
-    const summary = byModel.get(e.model) ?? { declaredCount: 0, handledCount: 0, matchedCount: 0, errorCount: 0 };
+    const summary = byModel.get(e.model) ?? { declaredCount: 0, handledCount: 0, matchedCount: 0, errorCount: 0, warningCount: 0 };
     if (e.declared) summary.declaredCount += 1;
     if (e.handler) summary.handledCount += 1;
     if (e.declared && e.handler) summary.matchedCount += 1;
@@ -150,7 +153,11 @@ function buildSummaries(entries: readonly ReconciledEntry[], issues: readonly Va
   }
   for (const issue of issues) {
     const summary = byModel.get(issue.model);
-    if (summary) summary.errorCount += 1;
+    if (summary && issue.severity === 'warning') {
+      summary.warningCount += 1;
+    } else if (summary) {
+      summary.errorCount += 1;
+    }
   }
   return Array.from(byModel.entries())
     .map(([model, s]) => ({ model, ...s }))

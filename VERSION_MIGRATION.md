@@ -37,6 +37,10 @@ In compact mode the read/write split is a permission boundary: only methods with
 marked. Review read-like invokes for side effects (sync triggers, recomputes, analytics writes) before marking them
 `mcp: { readOnly: true }`.
 
+`dbx_model_api_validate_app` (and `dbx_app_validate`) now warn with `HANDLER_MCP_READ_ONLY_UNSET` for every `invoke` /
+custom-verb handler whose `withApiDetails({ ... })` leaves `mcp.readOnly` unset. Mark reads `mcp: { readOnly: true }`
+and writes `mcp: { readOnly: false }`, each with a short comment saying why, so every classification is a decision.
+
 ### Optional: audience-gated docs
 `@dereekb/firebase-server` adds a docs API (`GET /api/docs`, `/api/docs/search`, `/api/docs/read`) and the MCP
 documentation tools over a folder of markdown plus a generated manifest:
