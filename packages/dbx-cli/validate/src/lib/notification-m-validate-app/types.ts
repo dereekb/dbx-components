@@ -324,7 +324,8 @@ export interface ExtractedTaskServiceCall {
 export type ExtractedTaskServiceValidateStatus = 'absent' | 'resolved' | 'unresolved';
 
 /**
- * A location in a scanned file.
+ * A location in a scanned file. Also written into the `dbx_notification_m_list_app` report and
+ * `notification.manifest.json` (`taskBot`); keep changes additive.
  */
 export interface ExtractedSourceLocation {
   readonly sourceFile: string;
@@ -388,7 +389,8 @@ export interface ExtractedTaskBotLocation extends ExtractedSourceLocation {
 
 /**
  * A reference to a NotificationTaskBot script type: a config's `scriptType`, a processor's `target`, or a `validate`
- * entry.
+ * entry. Also written into the `dbx_notification_m_list_app` report and `notification.manifest.json` (`taskBot`); keep
+ * changes additive.
  */
 export interface ExtractedTaskBotScriptTypeRef {
   /**
@@ -415,6 +417,16 @@ export interface ExtractedTaskBotScriptTypeConstant extends ExtractedTaskBotLoca
 }
 
 /**
+ * Whether a NotificationTaskBot script config sets `dataType`:
+ *
+ * - `declared` — the property is present and not an `undefined` / `null` literal (a shorthand `{ dataType }` counts).
+ * - `none` — the property is absent (and the object spreads nothing), or is `undefined` / `null`. `update:entry` refuses
+ *   every data patch for such a script.
+ * - `unresolved` — the property is absent, but the object spreads another object that may set it.
+ */
+export type ExtractedTaskBotScriptConfigDataTypeSource = 'declared' | 'none' | 'unresolved';
+
+/**
  * A `NotificationTaskBotScriptConfig` object literal — a typed constant, or an inline element of a registry or
  * aggregate.
  */
@@ -424,6 +436,27 @@ export interface ExtractedTaskBotScriptConfig extends ExtractedTaskBotLocation {
    * The config's `scriptType`, or `undefined` when the property is missing.
    */
   readonly scriptType: ExtractedTaskBotScriptTypeRef | undefined;
+  /**
+   * The config's `name` string literal.
+   */
+  readonly humanName: string | undefined;
+  /**
+   * The config's `description` string literal.
+   */
+  readonly description: string | undefined;
+  /**
+   * The `key` of the config's `group`, when `group` is an object literal or a `NotificationTaskBotScriptGroup` constant
+   * with a string-literal `key`.
+   */
+  readonly groupKey: string | undefined;
+  /**
+   * The config's `allowOwnerOptOut`, when set to a boolean literal.
+   */
+  readonly allowOwnerOptOut: boolean | undefined;
+  /**
+   * Whether the config sets `dataType`.
+   */
+  readonly dataTypeSource: ExtractedTaskBotScriptConfigDataTypeSource;
 }
 
 /**
@@ -456,7 +489,8 @@ export interface ExtractedTaskBotRegistry extends ExtractedTaskBotLocation {
 export type ExtractedTaskBotRegistryWiringKind = 'identifier' | 'inline' | 'empty' | 'other';
 
 /**
- * An `appNotificationTaskBotScriptConfigService(...)` call in the API.
+ * An `appNotificationTaskBotScriptConfigService(...)` call in the API. Also written into the
+ * `dbx_notification_m_list_app` report and `notification.manifest.json` (`taskBot`); keep changes additive.
  */
 export interface ExtractedTaskBotRegistryWiring extends ExtractedSourceLocation {
   readonly kind: ExtractedTaskBotRegistryWiringKind;
@@ -464,7 +498,8 @@ export interface ExtractedTaskBotRegistryWiring extends ExtractedSourceLocation 
 }
 
 /**
- * One element of an NTBR handler's `processors`.
+ * One element of an NTBR handler's `processors`. Also written into the `dbx_notification_m_list_app` report and
+ * `notification.manifest.json` (`taskBot`); keep changes additive.
  */
 export interface ExtractedTaskBotProcessor extends ExtractedSourceLocation {
   /**

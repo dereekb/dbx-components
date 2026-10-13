@@ -126,7 +126,7 @@ async function main(): Promise<void> {
     await writeFile(tmpPath, serialized);
     await rename(tmpPath, outputPath);
 
-    console.log(`[wrote] ${toDisplayPath(outputPath)} — ${manifest.templates.length} templates, ${manifest.tasks.length} tasks, ${manifest.warningCount} warning(s)`);
+    console.log(`[wrote] ${toDisplayPath(outputPath)} — ${manifest.templates.length} templates, ${manifest.tasks.length} tasks, ${manifest.taskBot.scripts.length} bot scripts, ${manifest.warningCount} warning(s)`);
   }
 
   if (flags.cliOutput != null) {

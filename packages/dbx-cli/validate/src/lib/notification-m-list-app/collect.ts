@@ -1,10 +1,12 @@
 /**
  * Consumes an {@link ExtractedAppNotifications} from the validator's
  * cross-file extractor and reshapes it into an
- * {@link AppNotificationsReport} — no AST walk happens here.
+ * {@link AppNotificationsReport} — templates, tasks and the NotificationTaskBot
+ * section (`collect.taskbot.ts`) — no AST walk happens here.
  */
 
 import type { ExtractedAppNotifications, ExtractedTemplateHandlerEntry, ExtractedTemplateTypeInfo, NotificationDeliveryMethodName } from '../notification-m-validate-app/index.js';
+import { buildTaskBotSummary } from './collect.taskbot.js';
 import type { AppNotificationsReport, TaskSummary, TemplateSummary } from './types.js';
 
 export interface CollectOptions {
@@ -35,7 +37,8 @@ export function collectAppNotifications(extracted: ExtractedAppNotifications, op
     templateConfigsArrayWiredInApi: Boolean(extracted.templateConfigsArrayWiring && extracted.templateConfigsArrayWiring.useFactoryIdentifier === extracted.templateConfigsArrayFactory?.symbolName),
     taskServiceCallCount: extracted.taskServiceCalls.length,
     templates,
-    tasks
+    tasks,
+    taskBot: buildTaskBotSummary(extracted)
   };
   return result;
 }

@@ -11,7 +11,22 @@
  */
 
 import { Node, SyntaxKind, type ArrayLiteralExpression, type CallExpression, type ObjectLiteralExpression, type SourceFile, type VariableDeclaration } from 'ts-morph';
-import { apiRelPath, asArrayLiteral, asObjectLiteral, findLocalVariable, findReturnExpression, getPropertyInitializer, readStringLiteralInitializer, resolveArrayLiteralProperty, resolveObjectLiteralArgument, sourceSideOf, typeAnnotationText, unwrapAsExpressions } from '../_core/_validate/ast.js';
+import {
+  apiRelPath,
+  asArrayLiteral,
+  asObjectLiteral,
+  findLocalVariable,
+  findReturnExpression,
+  getPropertyInitializer,
+  readBooleanProperty,
+  readStringLiteralInitializer,
+  readStringProperty,
+  resolveArrayLiteralProperty,
+  resolveObjectLiteralArgument,
+  sourceSideOf,
+  typeAnnotationText,
+  unwrapAsExpressions
+} from '../_core/_validate/ast.js';
 import type { ApiFunctionEntry, ApiFunctionIndex } from './extract.function-index.js';
 import type {
   AppNotificationsWorkspaceFiles,
@@ -24,6 +39,7 @@ import type {
   ExtractedTaskBotRegistryWiring,
   ExtractedTaskBotRunHandlerCall,
   ExtractedTaskBotScriptConfig,
+  ExtractedTaskBotScriptConfigDataTypeSource,
   ExtractedTaskBotScriptTypeConstant,
   ExtractedTaskBotScriptTypeRef,
   ExtractedTaskServiceCall,
@@ -33,6 +49,10 @@ import type {
 // MARK: Upstream names
 export const NOTIFICATION_TASK_BOT_SCRIPT_TYPE = 'NotificationTaskBotScriptType';
 export const NOTIFICATION_TASK_BOT_SCRIPT_CONFIG = 'NotificationTaskBotScriptConfig';
+export const NOTIFICATION_TASK_BOT_SCRIPT_GROUP = 'NotificationTaskBotScriptGroup';
+export const NOTIFICATION_TASK_BOT_SCRIPT_CONFIG_GROUP_FIELD = 'group';
+export const NOTIFICATION_TASK_BOT_SCRIPT_CONFIG_ALLOW_OWNER_OPT_OUT_FIELD = 'allowOwnerOptOut';
+export const NOTIFICATION_TASK_BOT_SCRIPT_CONFIG_DATA_TYPE_FIELD = 'dataType';
 export const NOTIFICATION_TASK_BOT_SCRIPT_CONFIG_RECORD_FACTORY = 'notificationTaskBotScriptConfigRecord';
 export const NOTIFICATION_TASK_BOT_SCRIPT_CONFIG_SERVICE_FACTORY = 'appNotificationTaskBotScriptConfigService';
 export const NOTIFICATION_TASK_BOT_SCRIPT_PROCESSOR_CONFIG = 'NotificationTaskBotScriptProcessorConfig';
@@ -51,6 +71,10 @@ export const NOTIFICATION_TASK_BOT_NEXT_AT_FIELD = 'nat';
 export const NOTIFICATION_TASK_BOT_UPSTREAM_NAMES: readonly string[] = [
   NOTIFICATION_TASK_BOT_SCRIPT_TYPE,
   NOTIFICATION_TASK_BOT_SCRIPT_CONFIG,
+  NOTIFICATION_TASK_BOT_SCRIPT_GROUP,
+  NOTIFICATION_TASK_BOT_SCRIPT_CONFIG_GROUP_FIELD,
+  NOTIFICATION_TASK_BOT_SCRIPT_CONFIG_ALLOW_OWNER_OPT_OUT_FIELD,
+  NOTIFICATION_TASK_BOT_SCRIPT_CONFIG_DATA_TYPE_FIELD,
   NOTIFICATION_TASK_BOT_SCRIPT_CONFIG_RECORD_FACTORY,
   NOTIFICATION_TASK_BOT_SCRIPT_CONFIG_SERVICE_FACTORY,
   NOTIFICATION_TASK_BOT_SCRIPT_PROCESSOR_CONFIG,
@@ -91,6 +115,10 @@ interface TaskBotIndex {
   readonly constants: ReadonlyMap<string, ExtractedTaskBotScriptTypeConstant>;
   readonly configs: ReadonlyMap<string, ExtractedTaskBotScriptConfig>;
   readonly aggregates: ReadonlyMap<string, VariableDeclaration>;
+  /**
+   * The string-literal `key` of every typed `NotificationTaskBotScriptGroup` constant, by name.
+   */
+  readonly groupKeys: ReadonlyMap<string, string | undefined>;
   readonly functionIndex: ApiFunctionIndex;
   readonly trusted: ReadonlySet<string>;
 }
@@ -107,7 +135,8 @@ export function extractAppNotificationTaskBot(input: ExtractAppNotificationTaskB
 
   const scriptTypeConstants = extractScriptTypeConstants(allSources);
   const constants = new Map(scriptTypeConstants.map((c) => [c.symbolName, c]));
-  const partialIndex = { constants, configs: new Map<string, ExtractedTaskBotScriptConfig>(), aggregates: new Map<string, VariableDeclaration>(), functionIndex, trusted };
+  const groupKeys = extractScriptGroupKeys(allSources);
+  const partialIndex = { constants, configs: new Map<string, ExtractedTaskBotScriptConfig>(), aggregates: new Map<string, VariableDeclaration>(), groupKeys, functionIndex, trusted };
   const scriptConfigs = extractScriptConfigs(allSources, partialIndex);
   const index: TaskBotIndex = partialIndex;
 
@@ -198,6 +227,22 @@ function extractScriptTypeConstants(sources: readonly SourceFile[]): ExtractedTa
   return out;
 }
 
+// MARK: Script groups
+function extractScriptGroupKeys(sources: readonly SourceFile[]): Map<string, string | undefined> {
+  const out = new Map<string, string | undefined>();
+  for (const sf of sources) {
+    for (const stmt of sf.getVariableStatements()) {
+      for (const decl of stmt.getDeclarations()) {
+        const obj = asObjectLiteral(decl.getInitializer());
+        if (typeAnnotationText(decl) === NOTIFICATION_TASK_BOT_SCRIPT_GROUP && obj) {
+          out.set(decl.getName(), readStringProperty(obj, 'key'));
+        }
+      }
+    }
+  }
+  return out;
+}
+
 // MARK: Script configs
 function isConfigArrayType(typeText: string | undefined): boolean {
   const normalized = typeText?.replace(/^readonly\s+/, '');
@@ -233,7 +278,58 @@ function readScriptConfig(obj: ObjectLiteralExpression, symbolName: string | und
   const scriptTypeNode = getPropertyInitializer(obj, 'scriptType');
   const scriptType = scriptTypeNode ? (resolveScriptTypeExpression(scriptTypeNode, plainScope(obj.getSourceFile(), index), 0).ref ?? undeclaredRef(scriptTypeNode)) : undefined;
   const sf = obj.getSourceFile();
-  return { symbolName, scriptType, side: sourceSideOf(sf), sourceFile: relPathOf(sf), line: obj.getStartLineNumber() };
+  return {
+    symbolName,
+    scriptType,
+    humanName: readStringProperty(obj, 'name'),
+    description: readStringProperty(obj, 'description'),
+    groupKey: readScriptGroupKey(obj, index),
+    allowOwnerOptOut: readBooleanProperty(obj, NOTIFICATION_TASK_BOT_SCRIPT_CONFIG_ALLOW_OWNER_OPT_OUT_FIELD),
+    dataTypeSource: readScriptDataTypeSource(obj),
+    side: sourceSideOf(sf),
+    sourceFile: relPathOf(sf),
+    line: obj.getStartLineNumber()
+  };
+}
+
+/**
+ * Whether a script config sets `dataType`. See {@link ExtractedTaskBotScriptConfigDataTypeSource}.
+ *
+ * @param obj - The script config object literal.
+ * @returns How the config's `dataType` was read.
+ */
+function readScriptDataTypeSource(obj: ObjectLiteralExpression): ExtractedTaskBotScriptConfigDataTypeSource {
+  const prop = obj.getProperty(NOTIFICATION_TASK_BOT_SCRIPT_CONFIG_DATA_TYPE_FIELD);
+  let result: ExtractedTaskBotScriptConfigDataTypeSource;
+  if (prop) {
+    const init = unwrapAsExpressions(getPropertyInitializer(obj, NOTIFICATION_TASK_BOT_SCRIPT_CONFIG_DATA_TYPE_FIELD));
+    const isNullish = init !== undefined && (init.getKind() === SyntaxKind.NullKeyword || (Node.isIdentifier(init) && init.getText() === 'undefined'));
+    result = isNullish ? 'none' : 'declared';
+  } else {
+    result = obj.getProperties().some((p) => Node.isSpreadAssignment(p)) ? 'unresolved' : 'none';
+  }
+  return result;
+}
+
+/**
+ * The `key` of a script config's `group`: an object literal, or a `NotificationTaskBotScriptGroup` constant (indexed, or
+ * local to the config's file), with a string-literal `key`.
+ *
+ * @param obj - The script config object literal.
+ * @param index - The extraction index.
+ * @returns The group key, or `undefined` when it can't be read.
+ */
+function readScriptGroupKey(obj: ObjectLiteralExpression, index: TaskBotIndex): string | undefined {
+  const init = unwrapAsExpressions(getPropertyInitializer(obj, NOTIFICATION_TASK_BOT_SCRIPT_CONFIG_GROUP_FIELD));
+  let result: string | undefined;
+  if (init && Node.isObjectLiteralExpression(init)) {
+    result = readStringProperty(init, 'key');
+  } else if (init && Node.isIdentifier(init)) {
+    const name = init.getText();
+    const localGroup = index.groupKeys.has(name) ? undefined : asObjectLiteral(findLocalVariable(obj.getSourceFile(), name)?.getInitializer());
+    result = index.groupKeys.get(name) ?? (localGroup ? readStringProperty(localGroup, 'key') : undefined);
+  }
+  return result;
 }
 
 function undeclaredRef(node: Node): ExtractedTaskBotScriptTypeRef {

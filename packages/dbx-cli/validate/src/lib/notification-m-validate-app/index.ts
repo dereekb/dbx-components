@@ -70,7 +70,8 @@ export function validateAppNotifications(inspection: AppNotificationsInspection,
 export { extractAppNotifications } from './extract.js';
 export { formatResult } from './format.js';
 export { inspectAppNotifications, type InspectAppNotificationsOptions } from './inspect.js';
-export { NOTIFICATION_TASK_BOT_UPSTREAM_NAMES } from './extract.taskbot.js';
+export { NOTIFICATION_TASK_BOT_UPSTREAM_NAMES, scriptTypeRefKey, scriptTypeRefLabel, taskServiceCallListsTaskBotTypes } from './extract.taskbot.js';
+export { isTaskBotRegistryWired, selectTaskBotRegistry, selectTaskBotRunHandlerCalls, taskBotLocationKey, type TaskBotRunHandlerCallSelection } from './select.taskbot.js';
 export type {
   AppNotificationsInspection,
   AppNotificationsWorkspaceFiles,
@@ -88,6 +89,7 @@ export type {
   ExtractedTaskBotRegistryWiringKind,
   ExtractedTaskBotRunHandlerCall,
   ExtractedTaskBotScriptConfig,
+  ExtractedTaskBotScriptConfigDataTypeSource,
   ExtractedTaskBotScriptTypeConstant,
   ExtractedTaskBotScriptTypeRef,
   ExtractedTaskBotSide,

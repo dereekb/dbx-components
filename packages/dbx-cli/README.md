@@ -679,7 +679,12 @@ registration state), then `errorCount`, `warningCount` and `findings`
 (`{ code, severity, message, side, file }`). Template entries include
 `notificationModelIdentity`, `targetModelIdentity`, `userConfigurableDeliveryMethods` (with a
 `default` / `declared` / `unresolved` source), `forcedDeliveryMethods` (with the same kind of source) and
-`factoryContentDeliveryMethods`. Type it with
+`factoryContentDeliveryMethods`. The `taskBot` section lists the NotificationTaskBot wiring: the
+script registries (with `wired`), the `appNotificationTaskBotScriptConfigService(...)` calls, the NTBR
+handlers (with `reachable`, their processors and `validate`), `taskTypesInTaskServiceValidate`,
+`repairCalls`, and one entry per script type with its config, `dataTypeSource`, `inRegistry`,
+`inHandlerValidate` and processors; apps without bots get `inUse: false` and empty lists. The
+`--cli-output` module does not include it. Type it with
 `notificationManifest.NotificationManifest` from `@dereekb/dbx-cli/validate`. Nothing reads it at
 runtime.
 

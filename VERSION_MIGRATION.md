@@ -114,6 +114,8 @@ but two changes require an update in every app that implements the notification 
   `dbx-cli-generate-notification-manifest` now check the bot wiring (`NOTIF_TASK_BOT_*`: registry declared and wired,
   NTBR handler registered and in `validate`, scripts and processors matching both ways, the repair cron, the `ntb` rule,
   the `ntb.nat` index). The checks only run for apps that use bots; the errors fail the manifest build.
+  `dbx_notification_m_list_app` and `notification.manifest.json` list the bot wiring in a `taskBot` section, and mark
+  scripts without a `dataType` (`update:entry` refuses their data patches).
 - **Generator inputs:** `dbx-cli-generate-notification-manifest` now also reads `src/app/function/notification/**`,
   `firestore.rules` and `firestore.indexes.json` (`--rules-file` / `--indexes-file`, defaulting to the workspace-root
   files). Add `{workspaceRoot}/apps/<app>-api/src/app/function/notification/**/*.ts`, `{workspaceRoot}/firestore.rules`

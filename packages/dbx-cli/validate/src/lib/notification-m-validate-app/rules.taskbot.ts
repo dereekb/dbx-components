@@ -16,6 +16,7 @@ import {
   scriptTypeRefLabel,
   taskServiceCallListsTaskBotTypes
 } from './extract.taskbot.js';
+import { selectTaskBotRegistry, selectTaskBotRunHandlerCalls } from './select.taskbot.js';
 import type { ExtractedAppNotificationTaskBot, ExtractedAppNotifications, ExtractedTaskBotRegistry, ExtractedTaskBotRunHandlerCall, ExtractedTaskBotScriptConfig, ExtractedTaskBotScriptTypeRef, ExtractedTaskServiceCall, Violation } from './types.js';
 import { pushViolation } from './violation.js';
 
@@ -34,16 +35,15 @@ export function checkTaskBots(extracted: ExtractedAppNotifications, violations: 
     return;
   }
 
-  const registry = selectRegistry(taskBot);
+  const registry = selectTaskBotRegistry(taskBot);
   checkRegistryDeclared(taskBot, violations);
   checkRegistryWired(taskBot, extracted.trustedExternalIdentifiers, violations);
 
-  const reachedKeys = new Set(extracted.taskServiceCalls.flatMap((call) => call.reachedTaskBotRunHandlerCalls.map((x) => locationKey(x))));
-  const reachable = taskBot.runHandlerCalls.filter((call) => reachedKeys.has(locationKey(call)));
+  const { reachedKeys, considered } = selectTaskBotRunHandlerCalls(extracted);
   checkHandlerRegistered(extracted, reachedKeys.size > 0, violations);
   checkTaskTypesInValidate(extracted.taskServiceCalls, violations);
 
-  for (const call of reachable.length > 0 ? reachable : taskBot.runHandlerCalls) {
+  for (const call of considered) {
     checkRunHandlerCall(call, registry, violations);
   }
 
@@ -51,23 +51,6 @@ export function checkTaskBots(extracted: ExtractedAppNotifications, violations: 
   checkRepairScheduled(taskBot, violations);
   checkFirestoreRule(taskBot, violations);
   checkNatIndex(taskBot, violations);
-}
-
-function locationKey(x: { readonly sourceFile: string; readonly line: number }): string {
-  return `${x.sourceFile}:${x.line}`;
-}
-
-/**
- * The registry the app wires: the record a wiring passes, else an inline wired record, else the first record.
- *
- * @param taskBot - The NotificationTaskBot extraction.
- * @returns The selected registry, or `undefined` when the app declares none.
- */
-function selectRegistry(taskBot: ExtractedAppNotificationTaskBot): ExtractedTaskBotRegistry | undefined {
-  const { registries, registryWirings } = taskBot;
-  const passed = registries.find((r) => r.symbolName !== undefined && registryWirings.some((w) => w.kind === 'identifier' && w.recordIdentifier === r.symbolName));
-  const inline = registries.find((r) => r.symbolName === undefined && registryWirings.some((w) => w.kind === 'inline' && w.sourceFile === r.sourceFile));
-  return passed ?? inline ?? registries[0];
 }
 
 // MARK: Registry

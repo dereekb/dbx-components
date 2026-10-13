@@ -387,7 +387,8 @@ const NOTIFICATION_TASK_BOT_SCRIPT: FileConventionSpec = {
     NOTIFICATION_BUILD_TIME_CHECK_STEP
   ],
   seeAlso: ['notification-task'],
-  verify: 'Run `dbx_notification_m_validate_app`; the `NOTIF_TASK_BOT_*` checks (registry, NTBR handler, processors, repair cron, `ntb` rule, `nat` index) should pass. `npx nx run <api-project>:generate-notification-manifest` runs the same checks the build does.'
+  verify:
+    'Run `dbx_notification_m_validate_app`; the `NOTIF_TASK_BOT_*` checks (registry, NTBR handler, processors, repair cron, `ntb` rule, `nat` index) should pass. Then run `dbx_notification_m_list_app` to confirm the new script appears in the NotificationTaskBot section with `inRegistry`, `hasProcessor` and `dataTypeSource: declared`. `npx nx run <api-project>:generate-notification-manifest` runs the same checks the build does.'
 };
 
 const NESTJS_MODEL_MODULE: FileConventionSpec = {

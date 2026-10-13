@@ -100,6 +100,7 @@ describe('formatSpec — placeholder substitution', () => {
     expect(md).toContain('NOTIF_TASK_BOT_');
     expect(md).toContain('repairAllNotificationTaskBots');
     expect(md).toContain('match /ntb/');
+    expect(md).toContain('dbx_notification_m_list_app');
     expect(getFileConventionSpec('notification-task')?.seeAlso).toContain('notification-task-bot-script');
   });
 
