@@ -174,10 +174,15 @@ export function extractAppNotificationTaskBot(input: ExtractAppNotificationTaskB
  * Whether a `notificationTaskService({ validate })` call lists the NotificationTaskBot task types.
  *
  * @param call - The extracted task service call.
- * @returns `true` when `validate` spreads `ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES` or lists `NOTIFICATION_TASK_BOT_RUN_NOTIFICATION_TASK_TYPE`.
+ * @returns `true` when `validate` spreads `ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES` or lists `NOTIFICATION_TASK_BOT_RUN_NOTIFICATION_TASK_TYPE`, directly or through a component aggregate it spreads.
  */
 export function taskServiceCallListsTaskBotTypes(call: ExtractedTaskServiceCall): boolean {
-  return call.spreadValidateIdentifiers.includes(ALL_NOTIFICATION_TASK_BOT_TASK_TYPES) || call.validateIdentifiers.includes(NOTIFICATION_TASK_BOT_RUN_TASK_TYPE) || call.validateIdentifiers.includes(ALL_NOTIFICATION_TASK_BOT_TASK_TYPES);
+  return (
+    call.spreadValidateIdentifiers.includes(ALL_NOTIFICATION_TASK_BOT_TASK_TYPES) ||
+    call.validateIdentifiers.includes(NOTIFICATION_TASK_BOT_RUN_TASK_TYPE) ||
+    call.validateIdentifiers.includes(ALL_NOTIFICATION_TASK_BOT_TASK_TYPES) ||
+    call.nestedUpstreamValidateListings.some((x) => x.identifier === ALL_NOTIFICATION_TASK_BOT_TASK_TYPES || x.identifier === NOTIFICATION_TASK_BOT_RUN_TASK_TYPE)
+  );
 }
 
 /**

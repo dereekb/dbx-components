@@ -81,6 +81,7 @@ export type {
   ExtractedSourceLocation,
   ExtractedUpstreamHandlerCall,
   ExtractedUpstreamHandlerFactoryCall,
+  ExtractedNestedUpstreamValidateListing,
   ExtractedTaskCheckpointAlias,
   ExtractedTaskDataInterface,
   ExtractedTaskBotFirestoreIndexes,

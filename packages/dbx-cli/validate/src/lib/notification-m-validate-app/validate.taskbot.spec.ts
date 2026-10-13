@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { validateAppNotifications } from './index.js';
+import { extractAppNotifications, validateAppNotifications } from './index.js';
 import type { AppNotificationsInspection, AppNotificationsWorkspaceFiles, InspectedFile, ValidationResult, ViolationCode } from './types.js';
 
 // MARK: Fixture — a demo-shaped NotificationTaskBot app
@@ -138,15 +138,18 @@ function happyParts(): FixtureParts {
   };
 }
 
-function runWith(modify?: (parts: FixtureParts) => void): ValidationResult {
+function inspectionOf(modify?: (parts: FixtureParts) => void): AppNotificationsInspection {
   const parts = happyParts();
   modify?.(parts);
-  const inspection: AppNotificationsInspection = {
+  return {
     component: { rootDir: 'components/demo-firebase', folder: 'src/lib/model/notification', status: 'ok', files: parts.component },
     api: { rootDir: 'apps/demo-api', folder: 'src/app/common/model/notification', status: 'ok', files: parts.api },
     workspace: parts.workspace as AppNotificationsWorkspaceFiles | undefined
   };
-  return validateAppNotifications(inspection, { componentDir: 'components/demo-firebase', apiDir: 'apps/demo-api' });
+}
+
+function runWith(modify?: (parts: FixtureParts) => void): ValidationResult {
+  return validateAppNotifications(inspectionOf(modify), { componentDir: 'components/demo-firebase', apiDir: 'apps/demo-api' });
 }
 
 function replaceInFile(files: InspectedFile[], relPath: string, from: string, to: string): void {
@@ -171,6 +174,13 @@ function taskBotCodes(result: ValidationResult): ViolationCode[] {
 
 function findingsOf(result: ValidationResult, code: ViolationCode) {
   return result.violations.filter((v) => v.code === code);
+}
+
+// Moves the NotificationTaskBot task types from `validate` into the component's `ALL_NOTIFICATION_TASK_TYPES`.
+function nestTaskBotTaskTypes(parts: FixtureParts): void {
+  replaceInFile(parts.component, COMPONENT_TASK_FILE, "import { type NotificationTaskType } from '@dereekb/firebase';", "import { ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES, type NotificationTaskType } from '@dereekb/firebase';");
+  replaceInFile(parts.component, COMPONENT_TASK_FILE, '[EXAMPLE_NOTIFICATION_TASK_TYPE]', '[EXAMPLE_NOTIFICATION_TASK_TYPE, ...ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES]');
+  replaceInFile(parts.api, TASK_SERVICE_FILE, ', ...ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES', '');
 }
 
 function aliasRunHandlerFactory(parts: FixtureParts): void {
@@ -311,12 +321,31 @@ describe('NotificationTaskBot checks — handler', () => {
   });
 
   it('does not warn NOTIF_TASK_BOT_TASK_TYPES_NOT_IN_VALIDATE when the NTB aggregate is nested in the app aggregate', () => {
-    const result = runWith((p) => {
-      replaceInFile(p.component, COMPONENT_TASK_FILE, "import { type NotificationTaskType } from '@dereekb/firebase';", "import { ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES, type NotificationTaskType } from '@dereekb/firebase';");
-      replaceInFile(p.component, COMPONENT_TASK_FILE, '[EXAMPLE_NOTIFICATION_TASK_TYPE]', '[EXAMPLE_NOTIFICATION_TASK_TYPE, ...ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES]');
-      replaceInFile(p.api, TASK_SERVICE_FILE, ', ...ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES', '');
-    });
+    const result = runWith(nestTaskBotTaskTypes);
     expect(taskBotCodes(result)).toEqual([]);
+    expect(extractAppNotifications(inspectionOf(nestTaskBotTaskTypes)).taskServiceCalls[0].nestedUpstreamValidateListings.map((x) => x.identifier)).toEqual(['ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES']);
+  });
+
+  it('says the service throws at startup when the nested task types lose their handler', () => {
+    const result = runWith((p) => {
+      nestTaskBotTaskTypes(p);
+      replaceInFile(p.api, TASK_SERVICE_FILE, ', notificationTaskBotHandler]', ']');
+    });
+    const found = findingsOf(result, 'NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED');
+    expect(found).toHaveLength(1);
+    expect(found[0].message).toContain('also throws at startup');
+  });
+
+  it('runs the NotificationTaskBot checks when the nested task types are the only bot signal', () => {
+    const result = runWith((p) => {
+      removeFile(p.component, TASKBOT_FILE);
+      removeFile(p.api, HANDLER_FILE);
+      removeFile(p.api, ACTION_MODULE_FILE);
+      replaceInFile(p.api, TASK_SERVICE_FILE, ', notificationTaskBotHandler]', ']');
+      replaceInFile(p.api, TASK_SERVICE_FILE, 'const notificationTaskBotHandler = demoNotificationTaskBotRunNotificationTaskHandler(context);', '');
+      nestTaskBotTaskTypes(p);
+    });
+    expect(taskBotCodes(result)).toEqual(['NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED']);
   });
 
   it('does not warn NOTIF_TASK_BOT_TASK_TYPES_NOT_IN_VALIDATE when the task service has no validate', () => {

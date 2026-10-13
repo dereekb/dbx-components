@@ -37,6 +37,7 @@ import {
 import type {
   AppNotificationsInspection,
   ExtractedAppNotifications,
+  ExtractedNestedUpstreamValidateListing,
   ExtractedTaskCheckpointAlias,
   ExtractedTaskDataInterface,
   ExtractedTaskHandlerEntry,
@@ -58,7 +59,7 @@ import type {
 } from './types.js';
 import { type ApiFunctionIndex, buildApiFunctionIndex } from './extract.function-index.js';
 import { extractAppNotificationTaskBot } from './extract.taskbot.js';
-import { extractUpstreamHandlerCalls, upstreamHandlerFactoryOf } from './extract.upstream.js';
+import { extractUpstreamHandlerCalls, UPSTREAM_NOTIFICATION_TASK_AGGREGATES, UPSTREAM_NOTIFICATION_TASK_TYPE_CONSTANTS, upstreamHandlerFactoryOf } from './extract.upstream.js';
 
 const NOTIF_TEMPLATE_TYPE = 'NotificationTemplateType';
 const NOTIF_TEMPLATE_TYPE_INFO = 'NotificationTemplateTypeInfo';
@@ -150,7 +151,7 @@ export function extractAppNotifications(inspection: AppNotificationsInspection):
   const apiFunctionIndex = buildApiFunctionIndex(apiSources);
   const templateConfigsArrayFactory = extractTemplateConfigsArrayFactory(apiSources, apiFunctionIndex);
   const templateHandlerEntries = extractTemplateHandlerEntries(templateConfigsArrayFactory, apiFunctionIndex);
-  const taskServiceCalls = extractTaskServiceCalls({ sources: apiSources, index: apiFunctionIndex, trustedExternal: trustedExternalIdentifiers, imports: dereekbImports });
+  const taskServiceCalls = extractTaskServiceCalls({ sources: apiSources, index: apiFunctionIndex, trustedExternal: trustedExternalIdentifiers, imports: dereekbImports, componentIndex });
   const taskHandlerEntries = extractTaskHandlerEntries(apiSources);
   const upstreamHandlerCalls = extractUpstreamHandlerCalls(apiSources, dereekbImports);
   const taskBot = extractAppNotificationTaskBot({ componentSources, apiSources, functionIndex: apiFunctionIndex, trustedExternalIdentifiers, dereekbImports, taskServiceCalls, workspace: inspection.workspace });
@@ -375,7 +376,7 @@ function tryExtractTaskAllTypesAggregate(decl: VariableDeclaration, rel: string,
   const arr = asArrayLiteral(decl.getInitializer());
   if (!arr) return;
   const { ids, spreads, opaque } = collectTaskTypeListElements(arr);
-  out.push({ symbolName: name, taskTypeIdentifiers: ids, spreadIdentifiers: spreads, opaqueValues: opaque, sourceFile: rel });
+  out.push({ symbolName: name, taskTypeIdentifiers: ids, spreadIdentifiers: spreads, opaqueValues: opaque, sourceFile: rel, line: decl.getStartLineNumber() });
 }
 
 // MARK: Checkpoint aliases + data interfaces
@@ -838,10 +839,14 @@ interface ExtractTaskServiceCallsInput {
   readonly index: ApiFunctionIndex;
   readonly trustedExternal: ReadonlySet<string>;
   readonly imports: DereekbImportIndex;
+  /**
+   * The component index; `validate` spreads of the app's own task-type aggregates are expanded through it.
+   */
+  readonly componentIndex: ComponentAggregateIndex;
 }
 
 function extractTaskServiceCalls(input: ExtractTaskServiceCallsInput): readonly ExtractedTaskServiceCall[] {
-  const { sources, index, trustedExternal, imports } = input;
+  const { sources, index, trustedExternal, imports, componentIndex } = input;
   const out: ExtractedTaskServiceCall[] = [];
   for (const sf of sources) {
     const rel = apiRelPath(sf);
@@ -857,6 +862,7 @@ function extractTaskServiceCalls(input: ExtractTaskServiceCallsInput): readonly 
       const handlers = collectHandlersArrayElements({ handlersArr, sf, index, trustedExternal, imports });
       const validateStatus = readTaskServiceListStatus(first, 'validate', validateArr);
       const handlersStatus = readTaskServiceListStatus(first, 'handlers', handlersArr);
+      const nested = expandComponentValidateSpreads({ validateSpreads: validate.spreads, componentIndex, trustedExternal });
       out.push({
         validateIdentifiers: validate.ids,
         spreadValidateIdentifiers: validate.spreads,
@@ -866,6 +872,8 @@ function extractTaskServiceCalls(input: ExtractTaskServiceCallsInput): readonly 
         unresolvedHandlerBindings: handlers.unresolvedBindings,
         validateStatus,
         opaqueValidateValues: validate.opaque,
+        nestedUpstreamValidateListings: nested.listings,
+        opaqueNestedValidateValues: nested.opaque,
         reachedUpstreamHandlerCalls: handlers.reachedUpstreamHandlerCalls,
         handlersStatus,
         opaqueHandlerValues: handlers.opaqueHandlerValues,
@@ -921,6 +929,77 @@ function collectTaskTypeListElements(arr: ArrayLiteralExpression | undefined): T
     }
   }
   return { ids, spreads, opaque };
+}
+
+interface ExpandComponentValidateSpreadsInput {
+  /**
+   * Identifiers the call's `validate` literal spreads.
+   */
+  readonly validateSpreads: readonly string[];
+  readonly componentIndex: ComponentAggregateIndex;
+  readonly trustedExternal: ReadonlySet<string>;
+}
+
+interface ExpandedComponentValidateSpreads {
+  readonly listings: ExtractedNestedUpstreamValidateListing[];
+  readonly opaque: string[];
+}
+
+/**
+ * Follows every component `ALL_*_NOTIFICATION_TASK_TYPES` aggregate a `validate` literal spreads, and every component
+ * aggregate those spread in turn, and records each upstream aggregate spread or upstream task-type constant from
+ * `UPSTREAM_NOTIFICATION_TASK_HANDLERS` they hold. A name counts only when it is imported from `@dereekb/*` (the trust
+ * list) and the component does not declare it as its own task type, so a look-alike never raises an upstream error.
+ * Each aggregate is visited once, which also stops a cycle.
+ *
+ * Values the walk can't place are collected as opaque: an unreadable element, a spread of a name that is neither a
+ * component aggregate nor a trusted upstream aggregate, and an upstream task-type constant that is not trusted. Other
+ * element identifiers are the app's own task types (or task types from elsewhere) and are skipped.
+ *
+ * @param input - The call's `validate` spreads, the component index and the trust list.
+ * @returns The nested listings in `validate` order (depth first, an aggregate's spreads before its constants), and the
+ *   opaque values.
+ */
+function expandComponentValidateSpreads(input: ExpandComponentValidateSpreadsInput): ExpandedComponentValidateSpreads {
+  const { validateSpreads, componentIndex, trustedExternal } = input;
+  const listings: ExtractedNestedUpstreamValidateListing[] = [];
+  const opaque: string[] = [];
+  const visited = new Set<string>();
+  const isOwnTaskType = (name: string) => componentIndex.taskTypeConstants.has(name);
+  const visit = (aggregate: ExtractedTaskTypeAggregateArray, via: readonly string[]): void => {
+    visited.add(aggregate.symbolName);
+    const chain = [...via, aggregate.symbolName];
+    const location = { via: chain, sourceFile: aggregate.sourceFile, line: aggregate.line };
+    opaque.push(...aggregate.opaqueValues);
+    for (const name of aggregate.spreadIdentifiers) {
+      const inner = componentIndex.taskAllTypesAggregates.get(name);
+      if (inner) {
+        if (!visited.has(name)) {
+          visit(inner, chain);
+        }
+      } else if (UPSTREAM_NOTIFICATION_TASK_AGGREGATES.has(name) && trustedExternal.has(name) && !isOwnTaskType(name)) {
+        listings.push({ identifier: name, spread: true, ...location });
+      } else {
+        opaque.push(`...${name}`);
+      }
+    }
+    for (const name of aggregate.taskTypeIdentifiers) {
+      if (UPSTREAM_NOTIFICATION_TASK_TYPE_CONSTANTS.has(name) && !isOwnTaskType(name)) {
+        if (trustedExternal.has(name)) {
+          listings.push({ identifier: name, spread: false, ...location });
+        } else {
+          opaque.push(name);
+        }
+      }
+    }
+  };
+  for (const name of validateSpreads) {
+    const aggregate = componentIndex.taskAllTypesAggregates.get(name);
+    if (aggregate && !visited.has(name)) {
+      visit(aggregate, []);
+    }
+  }
+  return { listings, opaque };
 }
 
 interface CollectHandlersArrayElementsOptions {

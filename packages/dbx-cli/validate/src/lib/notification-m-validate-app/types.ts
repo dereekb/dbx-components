@@ -192,10 +192,15 @@ export interface ExtractedTemplateInfoAggregateArray {
  */
 export interface ExtractedTaskTypeAggregateArray {
   readonly symbolName: string;
+  /**
+   * Identifiers that are direct elements of the array literal: the app's task-type constants, plus any upstream constant
+   * written directly (e.g. `STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_TYPE`).
+   */
   readonly taskTypeIdentifiers: readonly string[];
   /**
-   * Identifiers spread into the aggregate (`...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`). Recorded, not followed yet:
-   * `isValidateListingConclusive` treats a `validate` that spreads such an aggregate as inconclusive.
+   * Identifiers spread (`...X`) into the aggregate: another of the app's aggregates, or an upstream aggregate such as
+   * `ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`. The `validate` expansion
+   * ({@link ExtractedTaskServiceCall.nestedUpstreamValidateListings}) follows them.
    */
   readonly spreadIdentifiers: readonly string[];
   /**
@@ -203,6 +208,7 @@ export interface ExtractedTaskTypeAggregateArray {
    */
   readonly opaqueValues: readonly string[];
   readonly sourceFile: string;
+  readonly line: number;
 }
 
 /**
@@ -327,6 +333,21 @@ export interface ExtractedTaskServiceCall {
    */
   readonly opaqueValidateValues: readonly string[];
   /**
+   * Upstream task types `validate` lists through the app's own component aggregates (see
+   * {@link ExtractedNestedUpstreamValidateListing}), in `validate` order. Only names imported from `@dereekb/*` and not
+   * declared by the component count, and only identifier spreads are followed. Empty when `validate` spreads no component
+   * aggregate that holds one.
+   */
+  readonly nestedUpstreamValidateListings: readonly ExtractedNestedUpstreamValidateListing[];
+  /**
+   * Values inside the component aggregates `validate` spreads (followed through nesting) that the expansion can't place:
+   * an element the extractor can't read, a spread of a name that is neither a component aggregate nor an upstream
+   * aggregate imported from `@dereekb/*`, or an upstream task-type constant that is not imported from `@dereekb/*`. When
+   * the list is non-empty, the `*_TASK_TYPES_NOT_IN_VALIDATE` checks skip the service, like
+   * {@link opaqueValidateValues}.
+   */
+  readonly opaqueNestedValidateValues: readonly string[];
+  /**
    * Every upstream handler-factory call (StorageFile, FormSpace, NotificationTaskBot) the `handlers:` trace reached,
    * called directly, through an `@dereekb/*` import alias, or as an `@dereekb/*` namespace member.
    */
@@ -380,6 +401,28 @@ export interface ExtractedUpstreamHandlerFactoryCall extends ExtractedUpstreamHa
    * The enclosing named function (e.g. `demoStorageFileProcessingNotificationTaskHandler`), or `undefined` at module scope.
    */
   readonly enclosingFunction: string | undefined;
+}
+
+/**
+ * An upstream task-type aggregate or constant (`UPSTREAM_NOTIFICATION_TASK_HANDLERS`) that a
+ * `notificationTaskService({ validate })` call lists through the app's own component aggregates, e.g.
+ * `validate: [...ALL_NOTIFICATION_TASK_TYPES]` where the component declares
+ * `ALL_NOTIFICATION_TASK_TYPES = [..., ...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES]`. The location is the component
+ * aggregate that holds it (component-relative path).
+ */
+export interface ExtractedNestedUpstreamValidateListing extends ExtractedSourceLocation {
+  /**
+   * The upstream name as written in the component aggregate.
+   */
+  readonly identifier: string;
+  /**
+   * `true` for a spread aggregate (`...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`), `false` for a task-type constant element.
+   */
+  readonly spread: boolean;
+  /**
+   * The component aggregates from the one `validate` spreads down to the one that holds {@link identifier}, outermost first.
+   */
+  readonly via: readonly string[];
 }
 
 /**

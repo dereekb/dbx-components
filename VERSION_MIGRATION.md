@@ -93,7 +93,8 @@ but two changes require an update in every app that implements the notification 
 - **The notification build check now covers upstream task types.** `dbx_notification_m_validate_app` and
   `dbx-cli-generate-notification-manifest` now error (`NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED`) when a
   `notificationTaskService({ validate })` lists `...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES` or
-  `...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES` but its `handlers` don't reach `storageFileProcessingNotificationTaskHandler(...)` /
+  `...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES` (directly, or inside one of the app's own `ALL_*_NOTIFICATION_TASK_TYPES`
+  arrays it spreads) but its `handlers` don't reach `storageFileProcessingNotificationTaskHandler(...)` /
   `formSpaceSubmissionNotificationTaskHandler(...)`. Such an app already throws at startup; the check moves that failure to
   build time. It follows `@dereekb/*` import aliases and namespace imports, and is skipped for a service whose `handlers`
   the scanner can't follow completely. It also warns (`NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE`) the other way

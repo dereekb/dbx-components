@@ -15,13 +15,18 @@
  * The factory match resolves `@dereekb/*` import aliases and namespace imports per file (`readCalleeName`), so
  * `sfHandler(...)` and `serverModel.storageFileProcessingNotificationTaskHandler(...)` count as factory calls.
  *
+ * The `validate` expansion in `extract.ts` also records the upstream names an app nests in its own component
+ * `ALL_*_NOTIFICATION_TASK_TYPES` aggregates (`ExtractedTaskServiceCall.nestedUpstreamValidateListings`), so
+ * {@link upstreamTaskTypesListings} sees `validate: [...ALL_NOTIFICATION_TASK_TYPES]` whose component aggregate spreads
+ * `...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`.
+ *
  * Names are mirrored as strings, not imported; `handlers.upstream.spec.ts` guards them against the upstream sources.
  */
 
 import { Node, SyntaxKind, type SourceFile } from 'ts-morph';
 import { apiRelPath, readCalleeName, type DereekbImportIndex } from '../_core/_validate/ast.js';
 import { ALL_NOTIFICATION_TASK_BOT_TASK_TYPES, NOTIFICATION_TASK_BOT_RUN_HANDLER_FACTORY, NOTIFICATION_TASK_BOT_RUN_TASK_TYPE } from './extract.taskbot.js';
-import type { ExtractedAppNotifications, ExtractedTaskServiceCall, ExtractedTaskTypeAggregateArray, ExtractedUpstreamHandlerCall, ExtractedUpstreamHandlerFactoryCall, ViolationCode } from './types.js';
+import type { ExtractedAppNotifications, ExtractedNestedUpstreamValidateListing, ExtractedTaskServiceCall, ExtractedTaskTypeAggregateArray, ExtractedUpstreamHandlerCall, ExtractedUpstreamHandlerFactoryCall, ViolationCode } from './types.js';
 
 /**
  * An upstream task type: its constant and its runtime code.
@@ -119,12 +124,12 @@ export const UPSTREAM_NOTIFICATION_TASK_HANDLER_FACTORIES: ReadonlySet<string> =
 /**
  * The aggregates from {@link UPSTREAM_NOTIFICATION_TASK_HANDLERS}.
  */
-const UPSTREAM_NOTIFICATION_TASK_AGGREGATES: ReadonlySet<string> = new Set(UPSTREAM_NOTIFICATION_TASK_HANDLERS.map((x) => x.aggregate));
+export const UPSTREAM_NOTIFICATION_TASK_AGGREGATES: ReadonlySet<string> = new Set(UPSTREAM_NOTIFICATION_TASK_HANDLERS.map((x) => x.aggregate));
 
 /**
  * Every task-type constant from {@link UPSTREAM_NOTIFICATION_TASK_HANDLERS}.
  */
-const UPSTREAM_NOTIFICATION_TASK_TYPE_CONSTANTS: ReadonlySet<string> = new Set(UPSTREAM_NOTIFICATION_TASK_HANDLERS.flatMap((x) => x.taskTypes.map((y) => y.constant)));
+export const UPSTREAM_NOTIFICATION_TASK_TYPE_CONSTANTS: ReadonlySet<string> = new Set(UPSTREAM_NOTIFICATION_TASK_HANDLERS.flatMap((x) => x.taskTypes.map((y) => y.constant)));
 
 /**
  * Returns the upstream handler factory {@link node} calls: called directly, through an `@dereekb/*` import alias, or as a
@@ -146,41 +151,69 @@ export function upstreamHandlerFactoryOf(node: Node, imports: DereekbImportIndex
 }
 
 /**
- * Returns how a `notificationTaskService(...)` call's `validate` lists {@link contract}'s task types: the aggregate spread
- * (`...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`) or the first member constant written directly.
+ * One way a `notificationTaskService(...)` call's `validate` lists an upstream pair's task types.
+ */
+export interface UpstreamTaskTypesListing {
+  /**
+   * The listing as written: `...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`, or a member constant.
+   */
+  readonly text: string;
+  /**
+   * Set when `validate` reaches it through the app's own component aggregates.
+   */
+  readonly nested?: ExtractedNestedUpstreamValidateListing;
+}
+
+/**
+ * Returns every way a `notificationTaskService(...)` call's `validate` lists {@link contract}'s task types. The direct
+ * listing comes first: the aggregate spread (`...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`), or else the first member
+ * constant written in the literal. Then come the listings it reaches through the app's own component aggregates
+ * (`ExtractedTaskServiceCall.nestedUpstreamValidateListings`). An empty result means the call does not list them.
  *
  * @param call - The task service call.
  * @param contract - The upstream pair.
- * @returns The listing as written in `validate`, or `undefined` when the call does not list the task types.
+ * @returns The listings, direct first.
  */
-export function upstreamTaskTypesListing(call: ExtractedTaskServiceCall, contract: UpstreamNotificationTaskHandlerContract): string | undefined {
-  let result: string | undefined;
+export function upstreamTaskTypesListings(call: ExtractedTaskServiceCall, contract: UpstreamNotificationTaskHandlerContract): readonly UpstreamTaskTypesListing[] {
+  const result: UpstreamTaskTypesListing[] = [];
+  const constants = new Set(contract.taskTypes.map((x) => x.constant));
   if (call.spreadValidateIdentifiers.includes(contract.aggregate)) {
-    result = `...${contract.aggregate}`;
+    result.push({ text: `...${contract.aggregate}` });
   } else {
-    result = contract.taskTypes.find((x) => call.validateIdentifiers.includes(x.constant))?.constant;
+    const constant = contract.taskTypes.find((x) => call.validateIdentifiers.includes(x.constant))?.constant;
+    if (constant !== undefined) {
+      result.push({ text: constant });
+    }
+  }
+  for (const nested of call.nestedUpstreamValidateListings) {
+    const matches = nested.spread ? nested.identifier === contract.aggregate : constants.has(nested.identifier);
+    if (matches) {
+      result.push({ text: nested.spread ? `...${nested.identifier}` : nested.identifier, nested });
+    }
   }
   return result;
 }
 
 /**
- * Whether {@link upstreamTaskTypesListing} can be trusted when it finds nothing. That holds when all of these are true:
+ * Whether {@link upstreamTaskTypesListings} can be trusted when it finds nothing. That holds when all of these are true:
  * - the call's `validate` resolved to an array literal;
  * - every element is an identifier or a spread of one;
  * - every spread names an upstream aggregate from {@link UPSTREAM_NOTIFICATION_TASK_HANDLERS}, or one of the app's own
- *   `ALL_*_NOTIFICATION_TASK_TYPES` that holds nothing upstream: no spread, no unreadable value, no upstream task-type
- *   constant.
+ *   `ALL_*_NOTIFICATION_TASK_TYPES`;
+ * - the expansion of the app's aggregates placed every value it found (`ExtractedTaskServiceCall.opaqueNestedValidateValues`
+ *   is empty): no unreadable value, no spread it doesn't know, no upstream task-type constant or aggregate that isn't
+ *   imported from `@dereekb/*`.
  *
- * The listing helper doesn't look inside the app's aggregates yet. An upstream task type held there, or in a spread the
- * scanner doesn't know (an aggregate from another library, an aliased import), would read as missing.
+ * An upstream task type held in a spread the scanner doesn't know (an aggregate from another library, an aliased import)
+ * would read as missing; those cases are inconclusive.
  *
  * @param call - The task service call.
  * @param appAggregates - The app's own task-type aggregates (`ExtractedAppNotifications.taskAllTypesAggregates`).
  * @returns `true` when a missing listing is real.
  */
 export function isValidateListingConclusive(call: ExtractedTaskServiceCall, appAggregates: readonly ExtractedTaskTypeAggregateArray[]): boolean {
-  const plainAppAggregates = new Set(appAggregates.filter((x) => x.spreadIdentifiers.length === 0 && x.opaqueValues.length === 0 && !x.taskTypeIdentifiers.some((id) => UPSTREAM_NOTIFICATION_TASK_TYPE_CONSTANTS.has(id))).map((x) => x.symbolName));
-  return call.validateStatus === 'resolved' && call.opaqueValidateValues.length === 0 && call.spreadValidateIdentifiers.every((name) => UPSTREAM_NOTIFICATION_TASK_AGGREGATES.has(name) || plainAppAggregates.has(name));
+  const appAggregateNames = new Set(appAggregates.map((x) => x.symbolName));
+  return call.validateStatus === 'resolved' && call.opaqueValidateValues.length === 0 && call.opaqueNestedValidateValues.length === 0 && call.spreadValidateIdentifiers.every((name) => UPSTREAM_NOTIFICATION_TASK_AGGREGATES.has(name) || appAggregateNames.has(name));
 }
 
 /**
@@ -197,7 +230,8 @@ export interface UpstreamTaskTypesNotInValidate {
 
 /**
  * Selects every task service and table row where an upstream handler is reachable but `validate` lists neither the row's
- * aggregate nor one of its task-type constants ({@link upstreamTaskTypesListing}), which is the reverse of
+ * aggregate nor one of its task-type constants, directly or through the app's own aggregates
+ * ({@link upstreamTaskTypesListings}), which is the reverse of
  * `NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED`. Only services whose listing is conclusive count
  * ({@link isValidateListingConclusive}). Rows with `dedicatedCodes` are included; each rule keeps its own rows.
  *
@@ -213,7 +247,7 @@ export function selectUpstreamTaskTypesNotInValidate(extracted: Pick<ExtractedAp
     if (isValidateListingConclusive(call, extracted.taskAllTypesAggregates)) {
       for (const contract of UPSTREAM_NOTIFICATION_TASK_HANDLERS) {
         const handlerCall = call.reachedUpstreamHandlerCalls.find((x) => x.factory === contract.handlerFactory);
-        if (handlerCall !== undefined && upstreamTaskTypesListing(call, contract) === undefined) {
+        if (handlerCall !== undefined && upstreamTaskTypesListings(call, contract).length === 0) {
           out.push({ call, contract, handlerCall });
         }
       }

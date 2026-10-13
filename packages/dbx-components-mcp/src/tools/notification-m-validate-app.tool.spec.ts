@@ -4,7 +4,7 @@
  * NotificationTaskBot wiring each raise their `NOTIF_TASK_BOT_*` code, and that a scaffolded bot script round-trips
  * through the checks once its wiring is applied. It also covers the upstream StorageFile and FormSpace handler checks
  * (`NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED` and `NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE`) against the demo's
- * task service.
+ * task service, with the upstream task types listed directly in `validate` and moved into `ALL_NOTIFICATION_TASK_TYPES`.
  *
  * The mutation helper throws when the text it replaces is gone, so a refactor of the demo's bot wiring fails here
  * loudly instead of silently passing.
@@ -30,6 +30,7 @@ const HANDLER_FILE = 'src/app/common/model/notification/handlers/taskbot/task.ha
 const TASK_SERVICE_FILE = 'src/app/common/model/notification/notification.task.service.ts';
 const ACTION_MODULE_FILE = 'src/app/common/firebase/action.module.ts';
 const SCHEDULE_FILE = 'src/app/function/notification/notification.schedule.ts';
+const COMPONENT_TASK_FILE = 'src/lib/model/notification/notification.task.ts';
 
 interface MutableInspection {
   component: InspectedFile[];
@@ -186,6 +187,47 @@ describe('dbx_notification_m_validate_app — demo pair upstream task handlers',
     const result = validateWith((m) => replaceIn(m.api, TASK_SERVICE_FILE, ', ...ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES', ''));
     expect(result.violations.map((v) => v.code)).toContain('NOTIF_TASK_BOT_TASK_TYPES_NOT_IN_VALIDATE');
     expect(upstreamFindings(result)).toEqual([]);
+  });
+});
+
+describe('dbx_notification_m_validate_app — demo pair upstream task types nested in ALL_NOTIFICATION_TASK_TYPES', () => {
+  const DEMO_TASK_AGGREGATE = 'export const ALL_NOTIFICATION_TASK_TYPES: NotificationTaskType[] = [EXAMPLE_NOTIFICATION_TASK_TYPE, EXAMPLE_UNIQUE_NOTIFICATION_TASK_TYPE, EXAMPLE_HANDLED_NOTIFICATION_TASK_TYPE];';
+  const DEMO_VALIDATE = 'validate: [...ALL_NOTIFICATION_TASK_TYPES, ...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES, ...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES, ...ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES]';
+  const UPSTREAM_AGGREGATES = ['ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES', 'ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES', 'ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES'];
+
+  // Moves the upstream spreads from the demo's `validate` into its `ALL_NOTIFICATION_TASK_TYPES`.
+  function nestDemoUpstreamTaskTypes(m: MutableInspection, aggregates: readonly string[] = UPSTREAM_AGGREGATES): void {
+    replaceIn(m.component, COMPONENT_TASK_FILE, 'import { type CreateNotificationTaskTemplate,', `import { ${aggregates.join(', ')}, type CreateNotificationTaskTemplate,`);
+    replaceIn(m.component, COMPONENT_TASK_FILE, DEMO_TASK_AGGREGATE, DEMO_TASK_AGGREGATE.replace('];', `, ${aggregates.map((x) => `...${x}`).join(', ')}];`));
+    replaceIn(m.api, TASK_SERVICE_FILE, DEMO_VALIDATE, 'validate: [...ALL_NOTIFICATION_TASK_TYPES]');
+  }
+
+  it('accepts the demo with its upstream task types nested in ALL_NOTIFICATION_TASK_TYPES', () => {
+    const result = validateWith((m) => nestDemoUpstreamTaskTypes(m));
+    expect(upstreamFindings(result)).toEqual([]);
+    expect(taskBotFindings(result)).toEqual([]);
+    expect(result.errorCount).toBe(0);
+  });
+
+  it('reports NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED for the nested StorageFile aggregate when its handler leaves handlers', () => {
+    const found = upstreamFindings(
+      validateWith((m) => {
+        nestDemoUpstreamTaskTypes(m);
+        replaceIn(m.api, TASK_SERVICE_FILE, ', storageFileHandler, ', ', ');
+      })
+    );
+    expect(found).toHaveLength(1);
+    expect(found[0].code).toBe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED');
+    expect(found[0].message).toContain('through `...ALL_NOTIFICATION_TASK_TYPES`');
+    expect(found[0].message).toContain(`${COMPONENT_TASK_FILE}:`);
+    expect(found[0].message).toContain('`demoStorageFileProcessingNotificationTaskHandler` builds');
+  });
+
+  it('warns NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE when the nested aggregates leave out FormSpace', () => {
+    const found = upstreamFindings(validateWith((m) => nestDemoUpstreamTaskTypes(m, ['ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES', 'ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES'])));
+    expect(found).toHaveLength(1);
+    expect(found[0]).toMatchObject({ code: 'NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE', severity: 'warning' });
+    expect(found[0].message).toContain('`...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES`');
   });
 });
 
