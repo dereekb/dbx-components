@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { SyntaxKind } from 'ts-morph';
-import { buildDereekbImportIndex, buildInMemoryProject, readCalleeName } from './ast.js';
+import { buildDereekbImportIndex, buildInMemoryProject, readArrayElementTypeNode, readCalleeName, readTypeReferenceName } from './ast.js';
 
 /**
  * Reads the resolved callee name of every call in a one-file project, in source order.
@@ -42,6 +42,10 @@ describe('readCalleeName()', () => {
   it('reads a property-access callee and a call-result callee as undefined', () => {
     expect(calleeNamesOf(`const obj = { fn: () => () => 0 };\nobj.fn();\nobj.fn()();`)).toEqual([undefined, undefined, undefined]);
   });
+
+  it('still resolves a callee whose alias the file also declares as a type parameter', () => {
+    expect(calleeNamesOf(`import { storageFileProcessingNotificationTaskHandler as sfHandler } from '@dereekb/firebase-server/model';\nfunction f<sfHandler>(x: sfHandler) { return x; }\nsfHandler();`)).toEqual(['storageFileProcessingNotificationTaskHandler']);
+  });
 });
 
 describe('readCalleeName() — local const references', () => {
@@ -74,5 +78,98 @@ describe('readCalleeName() — local const references', () => {
     ['counts a function-expression name in the alias guard', `import { ${SF} as sfHandler } from '@dereekb/firebase-server/model';\nconst g = function sfHandler() { return sfHandler(); };`, ['sfHandler']]
   ])('%s', (_label, text, expected) => {
     expect(calleeNamesOf(`${IMPORTS}${text}`)).toEqual(expected);
+  });
+});
+
+/**
+ * Reads the resolved type-annotation name of every variable declaration in a one-file project, in source order.
+ *
+ * @param text - The file's source text.
+ * @returns The {@link readTypeReferenceName} result of each declaration's annotation.
+ */
+function annotationNamesOf(text: string): (string | undefined)[] {
+  const { apiSources } = buildInMemoryProject({ component: { files: [] }, api: { files: [{ relPath: 'a.ts', text }] } });
+  const imports = buildDereekbImportIndex(apiSources);
+  return apiSources[0].getDescendantsOfKind(SyntaxKind.VariableDeclaration).map((decl) => readTypeReferenceName(decl.getTypeNode(), imports));
+}
+
+/**
+ * Reads the resolved array element type name of every variable declaration in a one-file project, in source order.
+ *
+ * @param text - The file's source text.
+ * @returns The {@link readTypeReferenceName} result of each annotation's {@link readArrayElementTypeNode}.
+ */
+function arrayElementNamesOf(text: string): (string | undefined)[] {
+  const { apiSources } = buildInMemoryProject({ component: { files: [] }, api: { files: [{ relPath: 'a.ts', text }] } });
+  const imports = buildDereekbImportIndex(apiSources);
+  return apiSources[0].getDescendantsOfKind(SyntaxKind.VariableDeclaration).map((decl) => readTypeReferenceName(readArrayElementTypeNode(decl.getTypeNode()), imports));
+}
+
+describe('readTypeReferenceName()', () => {
+  const TASK_TYPE_ALIAS_IMPORT = `import { type NotificationTaskType as TaskType } from '@dereekb/firebase';\n`;
+  const TASK_TYPE_NAMESPACE_IMPORT = `import type * as firebaseModel from '@dereekb/firebase';\n`;
+
+  it('reads an @dereekb/* type import alias as the exported name', () => {
+    expect(annotationNamesOf(`${TASK_TYPE_ALIAS_IMPORT}const a: TaskType = 'a';`)).toEqual(['NotificationTaskType']);
+    expect(annotationNamesOf(`import type { NotificationTaskType as TaskType } from '@dereekb/firebase';\nconst a: TaskType = 'a';`)).toEqual(['NotificationTaskType']);
+  });
+
+  it('reads an @dereekb/* namespace member type as the member name', () => {
+    expect(annotationNamesOf(`${TASK_TYPE_NAMESPACE_IMPORT}const a: firebaseModel.NotificationTaskType = 'a';`)).toEqual(['NotificationTaskType']);
+    expect(annotationNamesOf(`import * as firebaseModel from '@dereekb/firebase';\nconst a: firebaseModel.NotificationTaskType = 'a';`)).toEqual(['NotificationTaskType']);
+  });
+
+  it('reads the name of a generic reference, aliased or namespaced', () => {
+    expect(
+      annotationNamesOf(`import { type NotificationTaskServiceTaskHandlerConfig as HandlerConfig } from '@dereekb/firebase-server/model';\nimport type * as serverModel from '@dereekb/firebase-server/model';\nconst a: HandlerConfig<D, S> = {};\nconst b: serverModel.NotificationTaskServiceTaskHandlerConfig<D> = {};`)
+    ).toEqual(['NotificationTaskServiceTaskHandlerConfig', 'NotificationTaskServiceTaskHandlerConfig']);
+  });
+
+  it('reads a plain identifier as written, imported or not', () => {
+    expect(annotationNamesOf(`import { type NotificationTaskType } from '@dereekb/firebase';\nconst a: NotificationTaskType = 'a';\nconst b: LocalType = 'b';`)).toEqual(['NotificationTaskType', 'LocalType']);
+  });
+
+  it('does not resolve an alias or namespace of a module outside @dereekb/*', () => {
+    expect(annotationNamesOf(`import { type NotificationTaskType as TaskType } from 'some-lib';\nimport type * as lib from 'some-lib';\nconst a: TaskType = 'a';\nconst b: lib.NotificationTaskType = 'b';`)).toEqual(['TaskType', undefined]);
+  });
+
+  it('does not resolve an alias the file also declares as a type parameter, type alias or interface', () => {
+    expect(annotationNamesOf(`${TASK_TYPE_ALIAS_IMPORT}function f<TaskType>(x: TaskType) { return x; }\nconst a: TaskType = 'a';`)).toEqual(['TaskType']);
+    expect(annotationNamesOf(`${TASK_TYPE_ALIAS_IMPORT}function f() { type TaskType = number; const x: TaskType = 1; return x; }\nconst a: TaskType = 'a';`)).toEqual(['TaskType', 'TaskType']);
+    expect(annotationNamesOf(`${TASK_TYPE_ALIAS_IMPORT}function f() { interface TaskType { x: 1 } const y: TaskType = { x: 1 }; return y; }\nconst a: TaskType = 'a';`)).toEqual(['TaskType', 'TaskType']);
+  });
+
+  it('does not resolve an alias the file also declares as a value', () => {
+    expect(annotationNamesOf(`${TASK_TYPE_ALIAS_IMPORT}function f(TaskType: string) { return TaskType; }\nconst a: TaskType = 'a';`)).toEqual(['TaskType']);
+  });
+
+  it('does not resolve a namespace the file also declares as a type parameter or enum', () => {
+    expect(annotationNamesOf(`${TASK_TYPE_NAMESPACE_IMPORT}function f<firebaseModel>(x: firebaseModel) { return x; }\nconst a: firebaseModel.NotificationTaskType = 'a';`)).toEqual([undefined]);
+    expect(annotationNamesOf(`${TASK_TYPE_NAMESPACE_IMPORT}function f() { enum firebaseModel { A } return firebaseModel.A; }\nconst a: firebaseModel.NotificationTaskType = 'a';`)).toEqual([undefined]);
+  });
+
+  it('reads a deeper qualified name and a non-reference type as undefined', () => {
+    expect(annotationNamesOf(`${TASK_TYPE_NAMESPACE_IMPORT}const a: firebaseModel.inner.NotificationTaskType = 'a';\nconst b: NotificationTaskType | undefined = 'b';\nconst c: NotificationTaskType[] = [];\nconst d: typeof x = x;\nconst e: 'e' = 'e';\nconst f = 'f';`)).toEqual([
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined
+    ]);
+  });
+});
+
+describe('readArrayElementTypeNode()', () => {
+  it('reads the element type of T[], readonly T[], Array<T> and ReadonlyArray<T>', () => {
+    expect(
+      arrayElementNamesOf(
+        `import { type NotificationTaskType as TaskType } from '@dereekb/firebase';\nimport type * as firebaseModel from '@dereekb/firebase';\nconst a: TaskType[] = [];\nconst b: readonly TaskType[] = [];\nconst c: Array<TaskType> = [];\nconst d: ReadonlyArray<firebaseModel.NotificationTaskType> = [];\nconst e: firebaseModel.NotificationTaskType[] = [];`
+      )
+    ).toEqual(['NotificationTaskType', 'NotificationTaskType', 'NotificationTaskType', 'NotificationTaskType', 'NotificationTaskType']);
+  });
+
+  it('reads other types as undefined', () => {
+    expect(arrayElementNamesOf(`const a: TaskType = 'a';\nconst b: Set<TaskType> = new Set();\nconst c: [TaskType] = ['c'];\nconst d: keyof TaskType[] = 0;\nconst e: (TaskType | undefined)[] = [];\nconst f = [];`)).toEqual([undefined, undefined, undefined, undefined, undefined, undefined]);
   });
 });

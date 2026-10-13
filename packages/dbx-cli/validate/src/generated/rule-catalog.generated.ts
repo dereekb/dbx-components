@@ -2139,7 +2139,8 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     severity: 'warning',
     title: "A NotificationTaskBot registry entry, a processor's `target` or the NTBR handler's `validate` can't be resolved statically, so the registry ↔ processor check skips it. The handler's runtime check at startup still applies",
     whatItFlags: "A NotificationTaskBot registry entry, a processor's `target` or the NTBR handler's `validate` can't be resolved statically, so the registry ↔ processor check skips it. The handler's runtime check at startup still applies.",
-    whenItApplies: 'Any unresolved registry entry, config `scriptType`, processor or handler `validate`.',
+    whenItApplies:
+      'Any unresolved registry entry, config `scriptType`, processor or handler `validate`. Script types, script configs (and arrays of them) and script groups are recognized by their `NotificationTaskBotScriptType`, `NotificationTaskBotScriptConfig` and `NotificationTaskBotScriptGroup` annotations, matched by name, through an `@dereekb/*` import alias (`import { type X as Y }`), or as a member of an `@dereekb/*` namespace import (`ns.X`).',
     whenItDoesNotApply: 'Configs, processors and script types imported from `@dereekb/*`.',
     canonicalFix: 'Declare script types and configs under `src/lib/model/notification/`. Give each processor `target: <SCRIPT_TYPE_CONSTANT>`, or a parameter that defaults to one. Build `validate` as `<CONFIGS>.map((x) => x.scriptType)`.',
     seeAlso: [
@@ -2208,7 +2209,8 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     severity: 'warning',
     title: "The `handlers:` array spreads an identifier that doesn't resolve to a declared array binding",
     whatItFlags: "The `handlers:` array spreads an identifier that doesn't resolve to a declared array binding.\nAn unresolved identifier also skips `NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED` (and `NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED`) for that task service.",
-    whenItApplies: "When `notificationTaskService({ handlers: [...spread] })` spreads an identifier that isn't a typed `NotificationTaskServiceTaskHandlerConfig[]` binding or trusted external.",
+    whenItApplies:
+      "When `notificationTaskService({ handlers: [...spread] })` spreads an identifier that isn't a typed `NotificationTaskServiceTaskHandlerConfig[]` binding or trusted external. A handler config counts when its `NotificationTaskServiceTaskHandlerConfig<...>` annotation is matched by name, through an `@dereekb/*` import alias (`import { type X as Y }`), or as a member of an `@dereekb/*` namespace import (`ns.X`).",
     whenItDoesNotApply:
       "Identifiers from trust-listed `@dereekb/*` modules (e.g. `storageFileProcessingNotificationTaskHandler`), and values the scanner can't see through (a conditional, a property read, `obj.fn(...)`, `fn(...)(...)`, a namespace call into a module other than `@dereekb/*`), including the locals and functions that lead to them. Such a value only makes the upstream handler checks skip the service.",
     canonicalFix: 'Declare the spread as `const <name>: NotificationTaskServiceTaskHandlerConfig<...>[] = [...]` or import it from a trusted module.'
@@ -2241,7 +2243,8 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     severity: 'error',
     title: 'A declared `*_NOTIFICATION_TASK_TYPE` is not present in any `ALL_*_NOTIFICATION_TASK_TYPES` aggregate array',
     whatItFlags: 'A declared `*_NOTIFICATION_TASK_TYPE` is not present in any `ALL_*_NOTIFICATION_TASK_TYPES` aggregate array.',
-    whenItApplies: 'Every declared task-type constant.',
+    whenItApplies:
+      'Every declared task-type constant (annotated `NotificationTaskType`). An array counts as an aggregate when it is named `ALL_*_NOTIFICATION_TASK_TYPES` or annotated `NotificationTaskType[]` (also `readonly …[]`, `Array<…>` or `ReadonlyArray<…>`); both annotations are matched by name, through an `@dereekb/*` import alias (`import { type X as Y }`), or as a member of an `@dereekb/*` namespace import (`ns.X`).',
     whenItDoesNotApply: 'Task-type constants intentionally held outside any aggregate (rare — most apps centralise the list).',
     canonicalFix: 'Add the constant to `ALL_<NAME>_NOTIFICATION_TASK_TYPES: NotificationTaskType[]` so the aggregate stays comprehensive.'
   },
@@ -2531,7 +2534,8 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     severity: 'error',
     title: "The metadata record's `[...]` array spreads an identifier that doesn't resolve to a declared aggregate",
     whatItFlags: "The metadata record's `[...]` array spreads an identifier that doesn't resolve to a declared aggregate.",
-    whenItApplies: "When `notificationTemplateTypeInfoRecord([...])` spreads a name that isn't a `ALL_*_NOTIFICATION_TEMPLATE_TYPE_INFOS` aggregate or trusted external.",
+    whenItApplies:
+      "When `notificationTemplateTypeInfoRecord([...])` spreads a name that isn't a `ALL_*_NOTIFICATION_TEMPLATE_TYPE_INFOS` aggregate or trusted external. The aggregate's `NotificationTemplateTypeInfo[]` annotation (also `readonly …[]`, `Array<…>` or `ReadonlyArray<…>`) is matched by name, through an `@dereekb/*` import alias (`import { type X as Y }`), or as a member of an `@dereekb/*` namespace import (`ns.X`).",
     whenItDoesNotApply: 'Spreads from trust-listed `@dereekb/*` modules.',
     canonicalFix: 'Declare the aggregate as `export const ALL_<NAME>_NOTIFICATION_TEMPLATE_TYPE_INFOS: NotificationTemplateTypeInfo[] = [...]` or import it from a trusted module.'
   },

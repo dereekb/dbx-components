@@ -627,3 +627,78 @@ describe('NotificationTaskBot checks — aliased, namespaced and const-held fact
     expect(found[0].message).not.toContain('no `notificationTaskService(...)` call was found');
   });
 });
+
+// MARK: Aliased and namespaced type annotations
+const SCRIPT_NAMES = ['DEMO_PING', 'DEMO_PING_REQUIRED'];
+
+/**
+ * Rewrites the script type, script config and config array annotations of the component taskbot file.
+ *
+ * @param parts - The fixture parts.
+ * @param names - The replacements.
+ * @param names.scriptType - The `NotificationTaskBotScriptType` replacement.
+ * @param names.scriptConfig - The `NotificationTaskBotScriptConfig` replacement.
+ * @param names.scriptConfigArray - The `NotificationTaskBotScriptConfig[]` replacement.
+ */
+function rewriteScriptAnnotations(parts: FixtureParts, names: { readonly scriptType: string; readonly scriptConfig: string; readonly scriptConfigArray: string }): void {
+  for (const name of SCRIPT_NAMES) {
+    replaceInFile(parts.component, TASKBOT_FILE, `${name}_NOTIFICATION_TASK_BOT_SCRIPT_TYPE: NotificationTaskBotScriptType =`, `${name}_NOTIFICATION_TASK_BOT_SCRIPT_TYPE: ${names.scriptType} =`);
+    replaceInFile(parts.component, TASKBOT_FILE, `${name}_NOTIFICATION_TASK_BOT_SCRIPT_CONFIG: NotificationTaskBotScriptConfig =`, `${name}_NOTIFICATION_TASK_BOT_SCRIPT_CONFIG: ${names.scriptConfig} =`);
+  }
+  replaceInFile(parts.component, TASKBOT_FILE, ': NotificationTaskBotScriptConfig[] =', `: ${names.scriptConfigArray} =`);
+}
+
+function aliasScriptAnnotations(parts: FixtureParts): void {
+  replaceInFile(parts.component, TASKBOT_FILE, 'type NotificationTaskBotScriptConfig, type NotificationTaskBotScriptType,', 'type NotificationTaskBotScriptConfig as ScriptConfig, type NotificationTaskBotScriptType as ScriptType,');
+  rewriteScriptAnnotations(parts, { scriptType: 'ScriptType', scriptConfig: 'ScriptConfig', scriptConfigArray: 'ScriptConfig[]' });
+}
+
+function namespaceScriptAnnotations(parts: FixtureParts): void {
+  replaceInFile(parts.component, TASKBOT_FILE, 'import { type NotificationTaskBotScriptConfig, type NotificationTaskBotScriptType, notificationTaskBotScriptConfigRecord }', "import type * as firebaseModel from '@dereekb/firebase';\nimport { notificationTaskBotScriptConfigRecord }");
+  rewriteScriptAnnotations(parts, { scriptType: 'firebaseModel.NotificationTaskBotScriptType', scriptConfig: 'firebaseModel.NotificationTaskBotScriptConfig', scriptConfigArray: 'ReadonlyArray<firebaseModel.NotificationTaskBotScriptConfig>' });
+}
+
+function aliasScriptGroupInAnotherFile(parts: FixtureParts): void {
+  parts.component.push({ relPath: 'src/lib/model/notification/notification.taskbot.group.ts', text: "import { type NotificationTaskBotScriptGroup as ScriptGroup } from '@dereekb/firebase';\n\nexport const DEMO_PING_NOTIFICATION_TASK_BOT_SCRIPT_GROUP: ScriptGroup = { key: 'demo_pings', name: 'Demo pings' };\n" });
+  replaceInFile(parts.component, TASKBOT_FILE, "notificationTaskBotScriptConfigRecord } from '@dereekb/firebase';", "notificationTaskBotScriptConfigRecord } from '@dereekb/firebase';\nimport { DEMO_PING_NOTIFICATION_TASK_BOT_SCRIPT_GROUP } from './notification.taskbot.group';");
+  replaceInFile(parts.component, TASKBOT_FILE, "  name: 'Demo Ping',", "  name: 'Demo Ping',\n  group: DEMO_PING_NOTIFICATION_TASK_BOT_SCRIPT_GROUP,\n  allowOwnerOptOut: true,");
+}
+
+describe('NotificationTaskBot checks — aliased and namespaced type annotations', () => {
+  const variants: readonly (readonly [string, (parts: FixtureParts) => void])[] = [
+    ['aliased script annotations', aliasScriptAnnotations],
+    ['namespaced script annotations', namespaceScriptAnnotations]
+  ];
+
+  it.each(variants)('passes with %s', (_label, modify) => {
+    expect(runWith(modify).violations).toEqual([]);
+    const { taskBot } = extractAppNotifications(inspectionOf(modify));
+    expect(taskBot.scriptTypeConstants.map((x) => x.symbolName)).toEqual(['DEMO_PING_NOTIFICATION_TASK_BOT_SCRIPT_TYPE', 'DEMO_PING_REQUIRED_NOTIFICATION_TASK_BOT_SCRIPT_TYPE']);
+    expect(taskBot.scriptConfigs.map((x) => x.scriptType?.code)).toEqual(['demo_ping', 'demo_ping_required']);
+    expect(taskBot.registries[0].unresolvedReferences).toEqual([]);
+  });
+
+  it.each(variants)('checks the processors against the configs typed with %s', (_label, modify) => {
+    const result = runWith((parts) => {
+      modify(parts);
+      replaceInFile(parts.api, HANDLER_FILE, ', demoPingNotificationTaskBotScriptProcessor(context, DEMO_PING_REQUIRED_NOTIFICATION_TASK_BOT_SCRIPT_TYPE)]', ']');
+    });
+    expect(taskBotCodes(result)).toEqual(['NOTIF_TASK_BOT_SCRIPT_WITHOUT_PROCESSOR']);
+    expect(findingsOf(result, 'NOTIF_TASK_BOT_SCRIPT_WITHOUT_PROCESSOR')[0].message).toContain('DEMO_PING_REQUIRED_NOTIFICATION_TASK_BOT_SCRIPT_TYPE');
+  });
+
+  it('reads the group key of a group typed through an alias in another file', () => {
+    expect(runWith(aliasScriptGroupInAnotherFile).violations).toEqual([]);
+    const config = extractAppNotifications(inspectionOf(aliasScriptGroupInAnotherFile)).taskBot.scriptConfigs.find((x) => x.symbolName === 'DEMO_PING_NOTIFICATION_TASK_BOT_SCRIPT_CONFIG');
+    expect(config?.groupKey).toBe('demo_pings');
+  });
+
+  it('does not resolve a script-config alias from a module outside @dereekb/*', () => {
+    const modify = (parts: FixtureParts) => {
+      replaceInFile(parts.component, TASKBOT_FILE, 'type NotificationTaskBotScriptConfig, type NotificationTaskBotScriptType,', 'type NotificationTaskBotScriptType,');
+      replaceInFile(parts.component, TASKBOT_FILE, "notificationTaskBotScriptConfigRecord } from '@dereekb/firebase';", "notificationTaskBotScriptConfigRecord } from '@dereekb/firebase';\nimport { type NotificationTaskBotScriptConfig as ScriptConfig } from 'some-app-lib';");
+      rewriteScriptAnnotations(parts, { scriptType: 'NotificationTaskBotScriptType', scriptConfig: 'ScriptConfig', scriptConfigArray: 'ScriptConfig[]' });
+    };
+    expect(extractAppNotifications(inspectionOf(modify)).taskBot.scriptConfigs).toEqual([]);
+  });
+});

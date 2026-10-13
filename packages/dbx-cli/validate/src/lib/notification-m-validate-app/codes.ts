@@ -21,6 +21,14 @@
  *   3. **Upstream task types** — an upstream `ALL_*_NOTIFICATION_TASK_TYPES`
  *      aggregate in `validate` needs the upstream handler factory that
  *      handles it reachable from `handlers` (see `extract.upstream.ts`).
+ *
+ * Declarations are recognized by their type annotation: `NotificationTemplateType`,
+ * `NotificationTemplateTypeInfo` (and `…[]` aggregates), `NotificationTaskType` (and `…[]`),
+ * `NotificationTaskServiceTaskHandlerConfig<…>`, and the NotificationTaskBot
+ * `NotificationTaskBotScriptType`, `NotificationTaskBotScriptConfig` (and `…[]`) and
+ * `NotificationTaskBotScriptGroup`. Each is matched by name, through an `@dereekb/*` import
+ * alias (`import { type X as Y }`), or as a member of an `@dereekb/*` namespace import
+ * (`ns.X`). Arrays may be written `T[]`, `readonly T[]`, `Array<T>` or `ReadonlyArray<T>`.
  */
 export enum NotificationMValidateAppCode {
   /**
@@ -123,7 +131,7 @@ export enum NotificationMValidateAppCode {
    * The metadata record's `[...]` array spreads an identifier that doesn't resolve to a declared aggregate.
    *
    * @dbxRuleSeverity error
-   * @dbxRuleApplies When `notificationTemplateTypeInfoRecord([...])` spreads a name that isn't a `ALL_*_NOTIFICATION_TEMPLATE_TYPE_INFOS` aggregate or trusted external.
+   * @dbxRuleApplies When `notificationTemplateTypeInfoRecord([...])` spreads a name that isn't a `ALL_*_NOTIFICATION_TEMPLATE_TYPE_INFOS` aggregate or trusted external. The aggregate's `NotificationTemplateTypeInfo[]` annotation (also `readonly …[]`, `Array<…>` or `ReadonlyArray<…>`) is matched by name, through an `@dereekb/*` import alias (`import { type X as Y }`), or as a member of an `@dereekb/*` namespace import (`ns.X`).
    * @dbxRuleNotApplies Spreads from trust-listed `@dereekb/*` modules.
    * @dbxRuleFix Declare the aggregate as `export const ALL_<NAME>_NOTIFICATION_TEMPLATE_TYPE_INFOS: NotificationTemplateTypeInfo[] = [...]` or import it from a trusted module.
    */
@@ -184,7 +192,7 @@ export enum NotificationMValidateAppCode {
    * A declared `*_NOTIFICATION_TASK_TYPE` is not present in any `ALL_*_NOTIFICATION_TASK_TYPES` aggregate array.
    *
    * @dbxRuleSeverity error
-   * @dbxRuleApplies Every declared task-type constant.
+   * @dbxRuleApplies Every declared task-type constant (annotated `NotificationTaskType`). An array counts as an aggregate when it is named `ALL_*_NOTIFICATION_TASK_TYPES` or annotated `NotificationTaskType[]` (also `readonly …[]`, `Array<…>` or `ReadonlyArray<…>`); both annotations are matched by name, through an `@dereekb/*` import alias (`import { type X as Y }`), or as a member of an `@dereekb/*` namespace import (`ns.X`).
    * @dbxRuleNotApplies Task-type constants intentionally held outside any aggregate (rare — most apps centralise the list).
    * @dbxRuleFix Add the constant to `ALL_<NAME>_NOTIFICATION_TASK_TYPES: NotificationTaskType[]` so the aggregate stays comprehensive.
    */
@@ -237,7 +245,7 @@ export enum NotificationMValidateAppCode {
    * An unresolved identifier also skips `NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED` (and `NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED`) for that task service.
    *
    * @dbxRuleSeverity warning
-   * @dbxRuleApplies When `notificationTaskService({ handlers: [...spread] })` spreads an identifier that isn't a typed `NotificationTaskServiceTaskHandlerConfig[]` binding or trusted external.
+   * @dbxRuleApplies When `notificationTaskService({ handlers: [...spread] })` spreads an identifier that isn't a typed `NotificationTaskServiceTaskHandlerConfig[]` binding or trusted external. A handler config counts when its `NotificationTaskServiceTaskHandlerConfig<...>` annotation is matched by name, through an `@dereekb/*` import alias (`import { type X as Y }`), or as a member of an `@dereekb/*` namespace import (`ns.X`).
    * @dbxRuleNotApplies Identifiers from trust-listed `@dereekb/*` modules (e.g. `storageFileProcessingNotificationTaskHandler`), and values the scanner can't see through (a conditional, a property read, `obj.fn(...)`, `fn(...)(...)`, a namespace call into a module other than `@dereekb/*`), including the locals and functions that lead to them. Such a value only makes the upstream handler checks skip the service.
    * @dbxRuleFix Declare the spread as `const <name>: NotificationTaskServiceTaskHandlerConfig<...>[] = [...]` or import it from a trusted module.
    */
@@ -408,7 +416,7 @@ export enum NotificationMValidateAppCode {
    * A NotificationTaskBot registry entry, a processor's `target` or the NTBR handler's `validate` can't be resolved statically, so the registry ↔ processor check skips it. The handler's runtime check at startup still applies.
    *
    * @dbxRuleSeverity warning
-   * @dbxRuleApplies Any unresolved registry entry, config `scriptType`, processor or handler `validate`.
+   * @dbxRuleApplies Any unresolved registry entry, config `scriptType`, processor or handler `validate`. Script types, script configs (and arrays of them) and script groups are recognized by their `NotificationTaskBotScriptType`, `NotificationTaskBotScriptConfig` and `NotificationTaskBotScriptGroup` annotations, matched by name, through an `@dereekb/*` import alias (`import { type X as Y }`), or as a member of an `@dereekb/*` namespace import (`ns.X`).
    * @dbxRuleNotApplies Configs, processors and script types imported from `@dereekb/*`.
    * @dbxRuleFix Declare script types and configs under `src/lib/model/notification/`. Give each processor `target: <SCRIPT_TYPE_CONSTANT>`, or a parameter that defaults to one. Build `validate` as `<CONFIGS>.map((x) => x.scriptType)`.
    * @dbxRuleSeeAlso artifact:notification-task-bot-script

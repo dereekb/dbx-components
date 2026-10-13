@@ -1024,3 +1024,41 @@ describe('NOTIF_TASK_HANDLER_SPREAD_UNRESOLVED — an opaque value ends the hand
     expect(found[0].message).toContain('`mysteryHandler`');
   });
 });
+
+// MARK: Handler configs typed through an alias or namespace
+const HANDLER_CONFIG_IMPORT = 'import { type NotificationTaskService, type NotificationTaskServiceTaskHandlerConfig, notificationTaskService }';
+
+/**
+ * Rewrites the task service's handler config import, then both handler config annotations, to the given type name.
+ *
+ * @param parts - The fixture parts.
+ * @param importLine - The replacement for the `@dereekb/firebase-server/model` import's opening.
+ * @param name - The `NotificationTaskServiceTaskHandlerConfig` replacement.
+ */
+function rewriteHandlerConfigAnnotations(parts: FixtureParts, importLine: string, name: string): void {
+  replaceInFile(parts.api, TASK_SERVICE_FILE, HANDLER_CONFIG_IMPORT, importLine);
+  replaceInFile(parts.api, TASK_SERVICE_FILE, 'exampleNotificationTaskHandler: NotificationTaskServiceTaskHandlerConfig<', `exampleNotificationTaskHandler: ${name}<`);
+  replaceInFile(parts.api, TASK_SERVICE_FILE, 'const handlers: NotificationTaskServiceTaskHandlerConfig<any>[]', `const handlers: ${name}<any>[]`);
+}
+
+describe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED — handler configs typed through an alias or namespace', () => {
+  const variants: readonly (readonly [string, (parts: FixtureParts) => void])[] = [
+    ['an aliased handler config', (p) => rewriteHandlerConfigAnnotations(p, 'import { type NotificationTaskService, type NotificationTaskServiceTaskHandlerConfig as HandlerConfig, notificationTaskService }', 'HandlerConfig')],
+    ['a namespaced handler config', (p) => rewriteHandlerConfigAnnotations(p, "import type * as serverModel from '@dereekb/firebase-server/model';\nimport { type NotificationTaskService, notificationTaskService }", 'serverModel.NotificationTaskServiceTaskHandlerConfig')]
+  ];
+
+  it.each(variants)('passes with %s, and the handlers trace is complete', (_label, modify) => {
+    expect(runWith(modify).violations).toEqual([]);
+    const [call] = extractAppNotifications(inspectionOf(modify)).taskServiceCalls;
+    expect(call.unresolvedHandlerBindings).toEqual([]);
+    expect(call.opaqueHandlerValues).toEqual([]);
+  });
+
+  it.each(variants)('checks the handlers of a service whose handler config uses %s', (_label, modify) => {
+    const result = runWith((p) => {
+      modify(p);
+      dropStorageFileHandler(p);
+    });
+    expect(result.violations.map((v) => v.code)).toEqual(['NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED']);
+  });
+});

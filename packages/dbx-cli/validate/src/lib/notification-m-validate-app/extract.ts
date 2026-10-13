@@ -19,6 +19,13 @@
  * are matched by name, through an `@dereekb/*` import alias, as an
  * `@dereekb/*` namespace member, or through a local `const` holding one of
  * those (`readCalleeName`).
+ *
+ * Declarations are recognized by their `@dereekb/*` type annotation, read
+ * with `readTypeReferenceName`: written by name, through an `@dereekb/*`
+ * import alias, or as an `@dereekb/*` namespace member
+ * (`firebaseModel.NotificationTaskType`). Aggregate arrays are read through
+ * `readArrayElementTypeNode` (`T[]`, `readonly T[]`, `Array<T>`,
+ * `ReadonlyArray<T>`).
  */
 
 import { Node, SyntaxKind, type ArrayLiteralExpression, type ObjectLiteralExpression, type SourceFile, type TypeNode, type VariableDeclaration } from 'ts-morph';
@@ -33,13 +40,14 @@ import {
   findLocalVariable,
   findReturnExpression,
   getPropertyInitializer,
+  readArrayElementTypeNode,
   readBooleanProperty,
   readCalleeName,
   readIdentifierProperty,
   readStringLiteralInitializer,
   readStringProperty,
+  readTypeReferenceName,
   resolveArrayLiteralProperty,
-  typeAnnotationText,
   unwrapAsExpressions,
   type DereekbImportIndex
 } from '../_core/_validate/ast.js';
@@ -72,9 +80,7 @@ import { extractUpstreamHandlerCalls, UPSTREAM_NOTIFICATION_TASK_AGGREGATES, UPS
 
 const NOTIF_TEMPLATE_TYPE = 'NotificationTemplateType';
 const NOTIF_TEMPLATE_TYPE_INFO = 'NotificationTemplateTypeInfo';
-const NOTIF_TEMPLATE_TYPE_INFO_ARRAY = 'NotificationTemplateTypeInfo[]';
 const NOTIF_TASK_TYPE = 'NotificationTaskType';
-const NOTIF_TASK_TYPE_ARRAY = 'NotificationTaskType[]';
 const NOTIF_TASK_SERVICE_HANDLER_CONFIG = 'NotificationTaskServiceTaskHandlerConfig';
 const TEMPLATE_INFO_SUFFIX = '_NOTIFICATION_TEMPLATE_TYPE_INFO';
 const ALL_TEMPLATE_INFO_ARRAY_SUFFIX = '_NOTIFICATION_TEMPLATE_TYPE_INFOS';
@@ -144,11 +150,11 @@ export function extractAppNotifications(inspection: AppNotificationsInspection):
   const dereekbImports = buildDereekbImportIndex([...componentSources, ...apiSources]);
 
   // Component pass
-  const templateTypeConstants = extractTemplateTypeConstants(componentSources);
-  const templateTypeInfos = extractTemplateTypeInfos(componentSources);
-  const templateInfoAggregates = extractTemplateInfoAggregates(componentSources);
-  const taskTypeConstants = extractTaskTypeConstants(componentSources);
-  const taskAllTypesAggregates = extractTaskAllTypesAggregates(componentSources);
+  const templateTypeConstants = extractTemplateTypeConstants(componentSources, dereekbImports);
+  const templateTypeInfos = extractTemplateTypeInfos(componentSources, dereekbImports);
+  const templateInfoAggregates = extractTemplateInfoAggregates(componentSources, dereekbImports);
+  const taskTypeConstants = extractTaskTypeConstants(componentSources, dereekbImports);
+  const taskAllTypesAggregates = extractTaskAllTypesAggregates(componentSources, dereekbImports);
   const taskCheckpointAliases = extractTaskCheckpointAliases(componentSources);
   const taskDataInterfaces = extractTaskDataInterfaces(componentSources);
   const componentIndex = buildComponentAggregateIndex({ templateTypeConstants, templateTypeInfos, templateInfoAggregates, taskTypeConstants, taskAllTypesAggregates });
@@ -161,7 +167,7 @@ export function extractAppNotifications(inspection: AppNotificationsInspection):
   const templateConfigsArrayFactory = extractTemplateConfigsArrayFactory(apiSources, apiFunctionIndex);
   const templateHandlerEntries = extractTemplateHandlerEntries(templateConfigsArrayFactory, apiFunctionIndex);
   const taskServiceCalls = extractTaskServiceCalls({ sources: apiSources, index: apiFunctionIndex, trustedExternal: trustedExternalIdentifiers, imports: dereekbImports, componentIndex });
-  const taskHandlerEntries = extractTaskHandlerEntries(apiSources);
+  const taskHandlerEntries = extractTaskHandlerEntries(apiSources, dereekbImports);
   const upstreamHandlerCalls = extractUpstreamHandlerCalls(apiSources, dereekbImports);
   const taskBot = extractAppNotificationTaskBot({ componentSources, apiSources, functionIndex: apiFunctionIndex, trustedExternalIdentifiers, dereekbImports, taskServiceCalls, workspace: inspection.workspace });
 
@@ -188,14 +194,13 @@ export function extractAppNotifications(inspection: AppNotificationsInspection):
 }
 
 // MARK: Template type constants
-function extractTemplateTypeConstants(sources: readonly SourceFile[]): readonly ExtractedTemplateTypeConstant[] {
+function extractTemplateTypeConstants(sources: readonly SourceFile[], imports: DereekbImportIndex): readonly ExtractedTemplateTypeConstant[] {
   const out: ExtractedTemplateTypeConstant[] = [];
   for (const sf of sources) {
     const rel = componentRelPath(sf);
     for (const stmt of sf.getVariableStatements()) {
       for (const decl of stmt.getDeclarations()) {
-        const typeText = typeAnnotationText(decl);
-        if (typeText !== NOTIF_TEMPLATE_TYPE) continue;
+        if (readTypeReferenceName(decl.getTypeNode(), imports) !== NOTIF_TEMPLATE_TYPE) continue;
         const name = decl.getName();
         if (name.endsWith(TEMPLATE_INFO_SUFFIX)) continue;
         const entry: ExtractedTemplateTypeConstant = {
@@ -212,16 +217,15 @@ function extractTemplateTypeConstants(sources: readonly SourceFile[]): readonly 
 }
 
 // MARK: Template type infos
-function extractTemplateTypeInfos(sources: readonly SourceFile[]): readonly ExtractedTemplateTypeInfo[] {
+function extractTemplateTypeInfos(sources: readonly SourceFile[], imports: DereekbImportIndex): readonly ExtractedTemplateTypeInfo[] {
   const out: ExtractedTemplateTypeInfo[] = [];
   for (const sf of sources) {
     const rel = componentRelPath(sf);
     for (const stmt of sf.getVariableStatements()) {
       for (const decl of stmt.getDeclarations()) {
-        const typeText = typeAnnotationText(decl);
         const name = decl.getName();
         const nameMatches = name.endsWith(TEMPLATE_INFO_SUFFIX);
-        const typeMatches = typeText === NOTIF_TEMPLATE_TYPE_INFO;
+        const typeMatches = readTypeReferenceName(decl.getTypeNode(), imports) === NOTIF_TEMPLATE_TYPE_INFO;
         if (!nameMatches && !typeMatches) continue;
         const obj = asObjectLiteral(decl.getInitializer());
         if (!obj) continue;
@@ -309,26 +313,25 @@ function isNullishLiteral(node: Node | undefined): boolean {
 }
 
 // MARK: Template info aggregates
-function extractTemplateInfoAggregates(sources: readonly SourceFile[]): readonly ExtractedTemplateInfoAggregateArray[] {
+function extractTemplateInfoAggregates(sources: readonly SourceFile[], imports: DereekbImportIndex): readonly ExtractedTemplateInfoAggregateArray[] {
   const out: ExtractedTemplateInfoAggregateArray[] = [];
   for (const sf of sources) {
-    const rel = componentRelPath(sf);
     for (const stmt of sf.getVariableStatements()) {
       for (const decl of stmt.getDeclarations()) {
-        tryExtractTemplateInfoAggregate(decl, rel, out);
+        tryExtractTemplateInfoAggregate(decl, imports, out);
       }
     }
   }
   return out;
 }
 
-function tryExtractTemplateInfoAggregate(decl: VariableDeclaration, rel: string, out: ExtractedTemplateInfoAggregateArray[]): void {
+function tryExtractTemplateInfoAggregate(decl: VariableDeclaration, imports: DereekbImportIndex, out: ExtractedTemplateInfoAggregateArray[]): void {
   const name = decl.getName();
   if (!name.startsWith('ALL_') || !name.endsWith(ALL_TEMPLATE_INFO_ARRAY_SUFFIX)) return;
-  if (typeAnnotationText(decl) !== NOTIF_TEMPLATE_TYPE_INFO_ARRAY) return;
+  if (readTypeReferenceName(readArrayElementTypeNode(decl.getTypeNode()), imports) !== NOTIF_TEMPLATE_TYPE_INFO) return;
   const arr = asArrayLiteral(decl.getInitializer());
   if (!arr) return;
-  out.push({ symbolName: name, infoIdentifiers: collectIdentifierElements(arr), sourceFile: rel });
+  out.push({ symbolName: name, infoIdentifiers: collectIdentifierElements(arr), sourceFile: componentRelPath(decl.getSourceFile()) });
 }
 
 function collectIdentifierElements(arr: ArrayLiteralExpression): string[] {
@@ -343,14 +346,13 @@ function collectIdentifierElements(arr: ArrayLiteralExpression): string[] {
 }
 
 // MARK: Task type constants
-function extractTaskTypeConstants(sources: readonly SourceFile[]): readonly ExtractedTaskTypeConstant[] {
+function extractTaskTypeConstants(sources: readonly SourceFile[], imports: DereekbImportIndex): readonly ExtractedTaskTypeConstant[] {
   const out: ExtractedTaskTypeConstant[] = [];
   for (const sf of sources) {
     const rel = componentRelPath(sf);
     for (const stmt of sf.getVariableStatements()) {
       for (const decl of stmt.getDeclarations()) {
-        const typeText = typeAnnotationText(decl);
-        if (typeText !== NOTIF_TASK_TYPE) continue;
+        if (readTypeReferenceName(decl.getTypeNode(), imports) !== NOTIF_TASK_TYPE) continue;
         const name = decl.getName();
         out.push({
           symbolName: name,
@@ -364,28 +366,27 @@ function extractTaskTypeConstants(sources: readonly SourceFile[]): readonly Extr
   return out;
 }
 
-function extractTaskAllTypesAggregates(sources: readonly SourceFile[]): readonly ExtractedTaskTypeAggregateArray[] {
+function extractTaskAllTypesAggregates(sources: readonly SourceFile[], imports: DereekbImportIndex): readonly ExtractedTaskTypeAggregateArray[] {
   const out: ExtractedTaskTypeAggregateArray[] = [];
   for (const sf of sources) {
-    const rel = componentRelPath(sf);
     for (const stmt of sf.getVariableStatements()) {
       for (const decl of stmt.getDeclarations()) {
-        tryExtractTaskAllTypesAggregate(decl, rel, out);
+        tryExtractTaskAllTypesAggregate(decl, imports, out);
       }
     }
   }
   return out;
 }
 
-function tryExtractTaskAllTypesAggregate(decl: VariableDeclaration, rel: string, out: ExtractedTaskTypeAggregateArray[]): void {
+function tryExtractTaskAllTypesAggregate(decl: VariableDeclaration, imports: DereekbImportIndex, out: ExtractedTaskTypeAggregateArray[]): void {
   const name = decl.getName();
   const nameMatches = name.startsWith('ALL_') && name.endsWith(ALL_TASK_TYPES_ARRAY_SUFFIX);
-  const typeMatches = typeAnnotationText(decl) === NOTIF_TASK_TYPE_ARRAY;
+  const typeMatches = readTypeReferenceName(readArrayElementTypeNode(decl.getTypeNode()), imports) === NOTIF_TASK_TYPE;
   if (!nameMatches && !typeMatches) return;
   const arr = asArrayLiteral(decl.getInitializer());
   if (!arr) return;
   const { ids, spreads, opaque } = collectTaskTypeListElements(arr);
-  out.push({ symbolName: name, taskTypeIdentifiers: ids, spreadIdentifiers: spreads, opaqueValues: opaque, sourceFile: rel, line: decl.getStartLineNumber() });
+  out.push({ symbolName: name, taskTypeIdentifiers: ids, spreadIdentifiers: spreads, opaqueValues: opaque, sourceFile: componentRelPath(decl.getSourceFile()), line: decl.getStartLineNumber() });
 }
 
 // MARK: Checkpoint aliases + data interfaces
@@ -1282,7 +1283,7 @@ function tryResolveLocalHandlerBinding(options: CollectHandlerBindingsFromIdenti
   visited.add(localKey);
   const localDecl = findLocalVariable(sf, name);
   if (!localDecl) return false;
-  if (isHandlerConfigLeafDecl(localDecl)) {
+  if (isHandlerConfigLeafDecl(localDecl, options.imports)) {
     resolved.push(localDecl.getName());
     return true;
   }
@@ -1291,13 +1292,9 @@ function tryResolveLocalHandlerBinding(options: CollectHandlerBindingsFromIdenti
   return collectHandlerBindingsFromValue({ ...options, node: declInit });
 }
 
-function isHandlerConfigLeafDecl(decl: VariableDeclaration): boolean {
-  const typeNode = decl.getTypeNode();
-  const typeText = typeNode ? typeNode.getText() : undefined;
-  const isHandlerConfigTyped = typeText !== undefined && (typeText === NOTIF_TASK_SERVICE_HANDLER_CONFIG || typeText.startsWith(`${NOTIF_TASK_SERVICE_HANDLER_CONFIG}<`));
-  if (!isHandlerConfigTyped) return false;
+function isHandlerConfigLeafDecl(decl: VariableDeclaration, imports: DereekbImportIndex): boolean {
   const declInit = unwrapAsExpressions(decl.getInitializer());
-  return declInit !== undefined && Node.isObjectLiteralExpression(declInit);
+  return readTypeReferenceName(decl.getTypeNode(), imports) === NOTIF_TASK_SERVICE_HANDLER_CONFIG && declInit !== undefined && Node.isObjectLiteralExpression(declInit);
 }
 
 function tryResolveFunctionHandlerBinding(options: CollectHandlerBindingsFromIdentifierOptions): boolean {
@@ -1344,13 +1341,12 @@ function opaqueSnippet(node: Node): string {
 }
 
 // MARK: Task handler entries
-function extractTaskHandlerEntries(sources: readonly SourceFile[]): readonly ExtractedTaskHandlerEntry[] {
+function extractTaskHandlerEntries(sources: readonly SourceFile[], imports: DereekbImportIndex): readonly ExtractedTaskHandlerEntry[] {
   const out: ExtractedTaskHandlerEntry[] = [];
   const seenSymbols = new Set<string>();
   for (const sf of sources) {
-    const rel = apiRelPath(sf);
     for (const decl of sf.getDescendantsOfKind(SyntaxKind.VariableDeclaration)) {
-      const entry = tryReadTaskHandlerEntry(decl, rel, seenSymbols);
+      const entry = tryReadTaskHandlerEntry(decl, imports, seenSymbols);
       if (entry) {
         out.push(entry);
       }
@@ -1359,15 +1355,14 @@ function extractTaskHandlerEntries(sources: readonly SourceFile[]): readonly Ext
   return out;
 }
 
-function tryReadTaskHandlerEntry(decl: VariableDeclaration, sourceFile: string, seenSymbols: Set<string>): ExtractedTaskHandlerEntry | undefined {
+function tryReadTaskHandlerEntry(decl: VariableDeclaration, imports: DereekbImportIndex, seenSymbols: Set<string>): ExtractedTaskHandlerEntry | undefined {
   const typeNode = decl.getTypeNode();
-  if (!typeNode) return undefined;
-  const typeText = typeNode.getText();
-  if (!typeText.startsWith(`${NOTIF_TASK_SERVICE_HANDLER_CONFIG}<`) && typeText !== NOTIF_TASK_SERVICE_HANDLER_CONFIG) return undefined;
+  if (!typeNode || readTypeReferenceName(typeNode, imports) !== NOTIF_TASK_SERVICE_HANDLER_CONFIG) return undefined;
   const obj = asObjectLiteral(decl.getInitializer());
   if (!obj) return undefined;
   const typeIdent = readIdentifierProperty(obj, 'type');
   if (!typeIdent) return undefined;
+  const sourceFile = apiRelPath(decl.getSourceFile());
   const key = `${sourceFile}::${decl.getName()}`;
   if (seenSymbols.has(key)) return undefined;
   seenSymbols.add(key);

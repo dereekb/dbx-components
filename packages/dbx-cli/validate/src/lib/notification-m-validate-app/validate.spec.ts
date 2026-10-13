@@ -1234,3 +1234,214 @@ describe('validateAppNotifications — NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER th
     expect(direct.nestedValidateIdentifiers).toEqual([]);
   });
 });
+
+// MARK: Aliased and namespaced @dereekb type annotations
+const COMPONENT_GUESTBOOK_PATH = 'src/lib/model/notification/notification.guestbook.ts';
+const COMPONENT_OTHER_TASK_PATH = 'src/lib/model/notification/notification.task.other.ts';
+
+/**
+ * Rewrites the template constant and info annotations of a component file to the given type names.
+ *
+ * @param files - The component files.
+ * @param relPath - The file to rewrite.
+ * @param names - The `NotificationTemplateType` and `NotificationTemplateTypeInfo` replacements.
+ * @param names.templateType - The `NotificationTemplateType` replacement.
+ * @param names.templateTypeInfo - The `NotificationTemplateTypeInfo` replacement.
+ */
+function rewriteTemplateAnnotations(files: InspectedFile[], relPath: string, names: { readonly templateType: string; readonly templateTypeInfo: string }): void {
+  replaceInFile({ files, relPath, from: '_TEMPLATE_TYPE: NotificationTemplateType =', to: `_TEMPLATE_TYPE: ${names.templateType} =` });
+  replaceInFile({ files, relPath, from: '_TEMPLATE_TYPE_INFO: NotificationTemplateTypeInfo =', to: `_TEMPLATE_TYPE_INFO: ${names.templateTypeInfo} =` });
+}
+
+/**
+ * Rewrites both `NotificationTaskServiceTaskHandlerConfig` annotations of the task service file to the given type name.
+ *
+ * @param api - The API files.
+ * @param name - The `NotificationTaskServiceTaskHandlerConfig` replacement.
+ */
+function rewriteHandlerConfigAnnotations(api: InspectedFile[], name: string): void {
+  replaceInFile({ files: api, relPath: TASK_SERVICE_PATH, from: 'exampleNotificationTaskHandler: NotificationTaskServiceTaskHandlerConfig<', to: `exampleNotificationTaskHandler: ${name}<` });
+  replaceInFile({ files: api, relPath: TASK_SERVICE_PATH, from: 'handlers: NotificationTaskServiceTaskHandlerConfig<any>[]', to: `handlers: ${name}<any>[]` });
+}
+
+function aliasTemplateAnnotations({ component }: NotificationFixtureParts): void {
+  const names = { templateType: 'TemplateType', templateTypeInfo: 'TemplateTypeInfo' };
+  for (const relPath of [COMPONENT_MAIN_PATH, COMPONENT_GUESTBOOK_PATH]) {
+    replaceInFile({ files: component, relPath, from: 'type NotificationTemplateType, type NotificationTemplateTypeInfo }', to: 'type NotificationTemplateType as TemplateType, type NotificationTemplateTypeInfo as TemplateTypeInfo }' });
+    rewriteTemplateAnnotations(component, relPath, names);
+  }
+  replaceInFile({ files: component, relPath: COMPONENT_GUESTBOOK_PATH, from: ': NotificationTemplateTypeInfo[] =', to: ': TemplateTypeInfo[] =' });
+}
+
+function namespaceTemplateAnnotations({ component }: NotificationFixtureParts): void {
+  const names = { templateType: 'firebaseModel.NotificationTemplateType', templateTypeInfo: 'firebaseModel.NotificationTemplateTypeInfo' };
+  replaceInFile({ files: component, relPath: COMPONENT_MAIN_PATH, from: 'import { notificationTemplateTypeInfoRecord, type NotificationTemplateType, type NotificationTemplateTypeInfo }', to: "import type * as firebaseModel from '@dereekb/firebase';\nimport { notificationTemplateTypeInfoRecord }" });
+  replaceInFile({ files: component, relPath: COMPONENT_GUESTBOOK_PATH, from: 'import { type NotificationTemplateType, type NotificationTemplateTypeInfo }', to: 'import type * as firebaseModel' });
+  rewriteTemplateAnnotations(component, COMPONENT_MAIN_PATH, names);
+  rewriteTemplateAnnotations(component, COMPONENT_GUESTBOOK_PATH, names);
+  replaceInFile({ files: component, relPath: COMPONENT_GUESTBOOK_PATH, from: ': NotificationTemplateTypeInfo[] =', to: ': firebaseModel.NotificationTemplateTypeInfo[] =' });
+}
+
+function aliasTaskAnnotations({ component }: NotificationFixtureParts): void {
+  replaceInFile({ files: component, relPath: COMPONENT_TASK_PATH, from: 'import { type NotificationTaskType }', to: 'import { type NotificationTaskType as TaskType }' });
+  replaceInFile({ files: component, relPath: COMPONENT_TASK_PATH, from: ': NotificationTaskType =', to: ': TaskType =' });
+  replaceInFile({ files: component, relPath: COMPONENT_TASK_PATH, from: ': NotificationTaskType[] =', to: ': TaskType[] =' });
+}
+
+function namespaceTaskAnnotations({ component }: NotificationFixtureParts): void {
+  replaceInFile({ files: component, relPath: COMPONENT_TASK_PATH, from: 'import { type NotificationTaskType }', to: 'import type * as firebaseModel' });
+  replaceInFile({ files: component, relPath: COMPONENT_TASK_PATH, from: ': NotificationTaskType =', to: ': firebaseModel.NotificationTaskType =' });
+  replaceInFile({ files: component, relPath: COMPONENT_TASK_PATH, from: ': NotificationTaskType[] =', to: ': firebaseModel.NotificationTaskType[] =' });
+}
+
+function aliasHandlerConfigAnnotations({ api }: NotificationFixtureParts): void {
+  replaceInFile({ files: api, relPath: TASK_SERVICE_PATH, from: 'type NotificationTaskServiceTaskHandlerConfig, notificationTaskService }', to: 'type NotificationTaskServiceTaskHandlerConfig as HandlerConfig, notificationTaskService }' });
+  rewriteHandlerConfigAnnotations(api, 'HandlerConfig');
+}
+
+function namespaceHandlerConfigAnnotations({ api }: NotificationFixtureParts): void {
+  replaceInFile({
+    files: api,
+    relPath: TASK_SERVICE_PATH,
+    from: 'import { type NotificationTaskService, type NotificationTaskServiceTaskHandlerConfig, notificationTaskService }',
+    to: "import type * as serverModel from '@dereekb/firebase-server/model';\nimport { type NotificationTaskService, notificationTaskService }"
+  });
+  rewriteHandlerConfigAnnotations(api, 'serverModel.NotificationTaskServiceTaskHandlerConfig');
+}
+
+describe('validateAppNotifications — aliased and namespaced @dereekb type annotations', () => {
+  const variants: readonly NotificationFixtureVariant[] = [
+    ['aliased template annotations', aliasTemplateAnnotations],
+    ['namespaced template annotations', namespaceTemplateAnnotations],
+    ['aliased task-type annotations', aliasTaskAnnotations],
+    ['namespaced task-type annotations', namespaceTaskAnnotations],
+    ['an aliased handler config annotation', aliasHandlerConfigAnnotations],
+    ['a namespaced handler config annotation', namespaceHandlerConfigAnnotations],
+    ['a readonly template info aggregate', ({ component }) => replaceInFile({ files: component, relPath: COMPONENT_GUESTBOOK_PATH, from: ': NotificationTemplateTypeInfo[] =', to: ': readonly NotificationTemplateTypeInfo[] =' })],
+    ['an Array<> template info aggregate', ({ component }) => replaceInFile({ files: component, relPath: COMPONENT_GUESTBOOK_PATH, from: ': NotificationTemplateTypeInfo[] =', to: ': Array<NotificationTemplateTypeInfo> =' })],
+    [
+      'every annotation aliased or namespaced',
+      (parts) => {
+        aliasTemplateAnnotations(parts);
+        namespaceTaskAnnotations(parts);
+        aliasHandlerConfigAnnotations(parts);
+      }
+    ]
+  ];
+
+  it.each(variants)('passes with %s', (_label, modify) => {
+    expect(runWith(modify).violations).toEqual([]);
+    const extracted = extractAppNotifications(inspectionWith(modify));
+    expect(extracted.templateTypeConstants.map((x) => x.symbolName)).toEqual(['TEST_NOTIFICATIONS_TEMPLATE_TYPE', 'GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE']);
+    expect(extracted.templateTypeInfos.map((x) => x.symbolName)).toEqual(['TEST_NOTIFICATIONS_TEMPLATE_TYPE_INFO', 'GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE_INFO']);
+    expect(extracted.templateInfoAggregates.map((x) => x.symbolName)).toEqual(['ALL_GUESTBOOK_NOTIFICATION_TEMPLATE_TYPE_INFOS']);
+    expect(extracted.taskTypeConstants.map((x) => x.symbolName)).toEqual(['EXAMPLE_NOTIFICATION_TASK_TYPE']);
+    expect(extracted.taskHandlerEntries.map((x) => [x.bindingName, x.dataTypeArgument, x.checkpointTypeArgument])).toEqual([['exampleNotificationTaskHandler', 'ExampleNotificationTaskData', 'ExampleNotificationTaskCheckpoint']]);
+    expect(extracted.taskServiceCalls[0].resolvedHandlerBindings).toEqual(['exampleNotificationTaskHandler']);
+    expect(extracted.taskServiceCalls[0].unresolvedHandlerBindings).toEqual([]);
+  });
+
+  it.each([
+    ['through a namespace', 'firebaseModel.NotificationTaskType[]'],
+    ['as readonly', 'readonly NotificationTaskType[]']
+  ])('reads a task-type aggregate typed %s under a name outside the ALL_* convention', (_label, annotation) => {
+    const modify = ({ component, api }: NotificationFixtureParts) => {
+      replaceInFile({ files: component, relPath: COMPONENT_TASK_PATH, from: "import { type NotificationTaskType } from '@dereekb/firebase';", to: "import { type NotificationTaskType } from '@dereekb/firebase';\nimport type * as firebaseModel from '@dereekb/firebase';" });
+      replaceInFile({ files: component, relPath: COMPONENT_TASK_PATH, from: 'export const ALL_NOTIFICATION_TASK_TYPES: NotificationTaskType[] =', to: `export const DEMO_TASK_TYPES: ${annotation} =` });
+      replaceInFile({ files: api, relPath: TASK_SERVICE_PATH, from: 'import { ALL_NOTIFICATION_TASK_TYPES,', to: 'import { DEMO_TASK_TYPES,' });
+      replaceInFile({ files: api, relPath: TASK_SERVICE_PATH, from: '[...ALL_NOTIFICATION_TASK_TYPES]', to: '[...DEMO_TASK_TYPES]' });
+    };
+    expect(runWith(modify).violations).toEqual([]);
+    expect(extractAppNotifications(inspectionWith(modify)).taskAllTypesAggregates.map((x) => x.symbolName)).toEqual(['DEMO_TASK_TYPES']);
+  });
+
+  it('reads a second task type typed through an alias in its own file', () => {
+    const modify = ({ component, api }: NotificationFixtureParts) => {
+      component.push({ relPath: COMPONENT_OTHER_TASK_PATH, text: "import { type NotificationTaskType as TaskType } from '@dereekb/firebase';\n\nexport const OTHER_NOTIFICATION_TASK_TYPE: TaskType = 'O';\n" });
+      replaceInFile({ files: component, relPath: COMPONENT_TASK_PATH, from: "import { type NotificationTaskType } from '@dereekb/firebase';", to: "import { type NotificationTaskType } from '@dereekb/firebase';\nimport { OTHER_NOTIFICATION_TASK_TYPE } from './notification.task.other';" });
+      replaceInFile({ files: component, relPath: COMPONENT_TASK_PATH, from: APP_TASK_AGGREGATE_ELEMENTS, to: '= [EXAMPLE_NOTIFICATION_TASK_TYPE, OTHER_NOTIFICATION_TASK_TYPE]' });
+      replaceInFile({ files: api, relPath: TASK_SERVICE_PATH, from: 'EXAMPLE_NOTIFICATION_TASK_TYPE, ', to: 'EXAMPLE_NOTIFICATION_TASK_TYPE, OTHER_NOTIFICATION_TASK_TYPE, ' });
+      replaceInFile({ files: api, relPath: TASK_SERVICE_PATH, from: '  const handlers:', to: '  const otherNotificationTaskHandler: NotificationTaskServiceTaskHandlerConfig<ExampleNotificationTaskData> = { type: OTHER_NOTIFICATION_TASK_TYPE, flow: [{ fn: async () => null }] };\n  const handlers:' });
+      replaceInFile({ files: api, relPath: TASK_SERVICE_PATH, from: '= [exampleNotificationTaskHandler];', to: '= [exampleNotificationTaskHandler, otherNotificationTaskHandler];' });
+    };
+    expect(runWith(modify).violations).toEqual([]);
+    expect(extractAppNotifications(inspectionWith(modify)).taskTypeConstants.map((x) => x.symbolName)).toEqual(['EXAMPLE_NOTIFICATION_TASK_TYPE', 'OTHER_NOTIFICATION_TASK_TYPE']);
+  });
+
+  it('checks the template infos against constants typed through an alias', () => {
+    const result = runWith((parts) => {
+      aliasTemplateAnnotations(parts);
+      replaceInFile({ files: parts.component, relPath: COMPONENT_MAIN_PATH, from: '  type: TEST_NOTIFICATIONS_TEMPLATE_TYPE,', to: '  type: PHANTOM_TEMPLATE_TYPE,' });
+    });
+    const codes = result.violations.map((v) => v.code);
+    expect(result.violations.find((v) => v.code === 'NOTIF_TEMPLATE_INFO_TYPE_MISMATCH')?.message).toContain('PHANTOM_TEMPLATE_TYPE');
+    expect(result.violations.find((v) => v.code === 'NOTIF_TEMPLATE_INFO_MISSING')?.message).toContain('TEST_NOTIFICATIONS_TEMPLATE_TYPE');
+    expect(codes).not.toContain('NOTIF_TEMPLATE_SPREAD_UNRESOLVED');
+  });
+
+  it('checks the handlers of task types typed through an alias', () => {
+    const result = runWith((parts) => {
+      aliasTaskAnnotations(parts);
+      replaceInFile({ files: parts.api, relPath: TASK_SERVICE_PATH, from: '= [exampleNotificationTaskHandler];', to: '= [];' });
+    });
+    expectCodes(
+      result.violations.map((v) => v.code),
+      ['NOTIF_TASK_HANDLER_NAME_MISMATCH']
+    );
+  });
+
+  it('checks validate against handler configs typed through an alias', () => {
+    const result = runWith((parts) => {
+      aliasHandlerConfigAnnotations(parts);
+      replaceInFile({ files: parts.api, relPath: TASK_SERVICE_PATH, from: 'export function demoNotificationTaskServiceFactory', to: `${OTHER_TASK_TYPE_DECLARATION}\n\nexport function demoNotificationTaskServiceFactory` });
+      replaceInFile({ files: parts.api, relPath: TASK_SERVICE_PATH, from: 'validate: [...ALL_NOTIFICATION_TASK_TYPES]', to: 'validate: [...ALL_NOTIFICATION_TASK_TYPES, OTHER_NOTIFICATION_TASK_TYPE]' });
+    });
+    const codes = result.violations.map((v) => v.code);
+    const withoutHandler = result.violations.filter((v) => v.code === 'NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER');
+    expect(withoutHandler).toHaveLength(1);
+    expect(withoutHandler[0].message).toContain('OTHER_NOTIFICATION_TASK_TYPE');
+    expect(codes).not.toContain('NOTIF_TASK_NOT_REGISTERED_IN_SERVICE');
+    expect(codes).not.toContain('NOTIF_TASK_HANDLER_SPREAD_UNRESOLVED');
+  });
+
+  // The rules then report these declarations as they do for any unrecognized annotation.
+  const pins: readonly (readonly [string, (parts: NotificationFixtureParts) => void, (extracted: ReturnType<typeof extractAppNotifications>) => void])[] = [
+    [
+      'a handler-config alias from a module outside @dereekb/*',
+      ({ api }) => {
+        replaceInFile({
+          files: api,
+          relPath: TASK_SERVICE_PATH,
+          from: 'import { type NotificationTaskService, type NotificationTaskServiceTaskHandlerConfig, notificationTaskService }',
+          to: "import { type NotificationTaskServiceTaskHandlerConfig as HandlerConfig } from 'some-app-lib';\nimport { type NotificationTaskService, notificationTaskService }"
+        });
+        rewriteHandlerConfigAnnotations(api, 'HandlerConfig');
+      },
+      (extracted) => {
+        expect(extracted.taskHandlerEntries).toEqual([]);
+        expect(extracted.taskServiceCalls[0].unresolvedHandlerBindings).toContain('exampleNotificationTaskHandler');
+      }
+    ],
+    [
+      'a handler-config alias the file also declares as a type parameter',
+      (parts) => {
+        aliasHandlerConfigAnnotations(parts);
+        replaceInFile({ files: parts.api, relPath: TASK_SERVICE_PATH, from: 'export function demoNotificationTaskServiceFactory', to: 'export function identityOf<HandlerConfig>(x: HandlerConfig): HandlerConfig {\n  return x;\n}\n\nexport function demoNotificationTaskServiceFactory' });
+      },
+      (extracted) => expect(extracted.taskHandlerEntries).toEqual([])
+    ],
+    [
+      'task types through a namespace of a module outside @dereekb/*',
+      ({ component }) => {
+        replaceInFile({ files: component, relPath: COMPONENT_TASK_PATH, from: "import { type NotificationTaskType } from '@dereekb/firebase';", to: "import type * as lib from 'some-app-lib';" });
+        replaceInFile({ files: component, relPath: COMPONENT_TASK_PATH, from: ': NotificationTaskType =', to: ': lib.NotificationTaskType =' });
+        replaceInFile({ files: component, relPath: COMPONENT_TASK_PATH, from: ': NotificationTaskType[] =', to: ': lib.NotificationTaskType[] =' });
+      },
+      (extracted) => expect(extracted.taskTypeConstants).toEqual([])
+    ]
+  ];
+
+  it.each(pins)('does not resolve %s', (_label, modify, check) => {
+    check(extractAppNotifications(inspectionWith(modify)));
+  });
+});

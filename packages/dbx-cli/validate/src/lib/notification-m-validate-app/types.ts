@@ -111,7 +111,7 @@ export type ForcedDeliveryMethodsSource = UserConfigurableDeliveryMethodsSource;
 
 // MARK: Extracted structures
 /**
- * An exported `*_NOTIFICATION_TEMPLATE_TYPE` constant.
+ * A top-level component constant annotated `NotificationTemplateType` (by name, through an `@dereekb/*` import alias, or as an `@dereekb/*` namespace member).
  */
 export interface ExtractedTemplateTypeConstant {
   readonly symbolName: string;
@@ -121,7 +121,8 @@ export interface ExtractedTemplateTypeConstant {
 }
 
 /**
- * An exported `NotificationTemplateTypeInfo` object literal.
+ * A `NotificationTemplateTypeInfo` object literal: a constant named `*_NOTIFICATION_TEMPLATE_TYPE_INFO`, or annotated
+ * `NotificationTemplateTypeInfo` (by name, through an `@dereekb/*` import alias, or as an `@dereekb/*` namespace member).
  */
 export interface ExtractedTemplateTypeInfo {
   readonly symbolName: string;
@@ -149,7 +150,7 @@ export interface ExtractedTemplateTypeInfo {
 }
 
 /**
- * An exported `*_NOTIFICATION_TASK_TYPE` constant.
+ * A top-level component constant annotated `NotificationTaskType` (by name, through an `@dereekb/*` import alias, or as an `@dereekb/*` namespace member).
  */
 export interface ExtractedTaskTypeConstant {
   readonly symbolName: string;
@@ -176,7 +177,8 @@ export interface ExtractedTaskDataInterface {
 }
 
 /**
- * An aggregate `ALL_*_NOTIFICATION_TEMPLATE_TYPE_INFOS: NotificationTemplateTypeInfo[]`.
+ * An aggregate `ALL_*_NOTIFICATION_TEMPLATE_TYPE_INFOS: NotificationTemplateTypeInfo[]` (also `readonly …[]`, `Array<…>`,
+ * `ReadonlyArray<…>`; the element type (by name, through an `@dereekb/*` import alias, or as an `@dereekb/*` namespace member)).
  */
 export interface ExtractedTemplateInfoAggregateArray {
   readonly symbolName: string;
@@ -188,7 +190,8 @@ export interface ExtractedTemplateInfoAggregateArray {
 }
 
 /**
- * An aggregate `ALL_*_NOTIFICATION_TASK_TYPES: NotificationTaskType[]`.
+ * An aggregate named `ALL_*_NOTIFICATION_TASK_TYPES`, or annotated `NotificationTaskType[]` (also `readonly …[]`,
+ * `Array<…>`, `ReadonlyArray<…>`; the element type (by name, through an `@dereekb/*` import alias, or as an `@dereekb/*` namespace member)).
  */
 export interface ExtractedTaskTypeAggregateArray {
   readonly symbolName: string;
@@ -282,7 +285,7 @@ export interface ExtractedTaskHandlerEntry {
   readonly typeIdentifier: string;
   /**
    * Variable binding name when the literal is bound to a typed
-   * `const <name>: NotificationTaskServiceTaskHandlerConfig<...> = { ... }`.
+   * `const <name>: NotificationTaskServiceTaskHandlerConfig<...> = { ... }` (the annotation's type (by name, through an `@dereekb/*` import alias, or as an `@dereekb/*` namespace member)).
    * Used by the cross-file reachability trace to match the call-site
    * identifier in `notificationTaskService({ handlers })` against the
    * declared literal. `undefined` for inline / anonymous literals.
@@ -520,7 +523,7 @@ export interface ExtractedTaskBotScriptTypeRef {
 }
 
 /**
- * A `const X: NotificationTaskBotScriptType = '...'` declaration.
+ * A `const X: NotificationTaskBotScriptType = '...'` declaration (the type (by name, through an `@dereekb/*` import alias, or as an `@dereekb/*` namespace member)).
  */
 export interface ExtractedTaskBotScriptTypeConstant extends ExtractedTaskBotLocation {
   readonly symbolName: string;
@@ -538,8 +541,8 @@ export interface ExtractedTaskBotScriptTypeConstant extends ExtractedTaskBotLoca
 export type ExtractedTaskBotScriptConfigDataTypeSource = 'declared' | 'none' | 'unresolved';
 
 /**
- * A `NotificationTaskBotScriptConfig` object literal — a typed constant, or an inline element of a registry or
- * aggregate.
+ * A `NotificationTaskBotScriptConfig` object literal — a typed constant (annotated `NotificationTaskBotScriptConfig`
+ * (by name, through an `@dereekb/*` import alias, or as an `@dereekb/*` namespace member)), or an inline element of a registry or aggregate.
  */
 export interface ExtractedTaskBotScriptConfig extends ExtractedTaskBotLocation {
   readonly symbolName: string | undefined;

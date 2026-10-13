@@ -433,7 +433,7 @@ export interface LocalConstBinding {
 
 /**
  * The `@dereekb/*` import aliases and namespace imports of one source file, plus the local `const` references that
- * point at them, used to read a call's callee back to the name the upstream package exports. Aliases and namespaces
+ * point at them, used to read a call's callee, or a type annotation, back to the name the upstream package exports. Aliases and namespaces
  * whose local name the file also declares elsewhere (a parameter, variable, binding element, function, class, enum or
  * namespace) are left out: the scan can't tell which binding a reference means.
  */
@@ -447,6 +447,12 @@ export interface DereekbImportBindings {
    * `import * as local from '@dereekb/...'`: the local names.
    */
   readonly namespaces: ReadonlySet<string>;
+  /**
+   * Names from {@link aliases} and {@link namespaces} that the file also declares in type space only: a type parameter,
+   * type alias or interface. A type position can't tell which binding such a name means, so {@link readTypeReferenceName}
+   * reads it as written; a call's callee (value space) still resolves it.
+   */
+  readonly typeShadowed: ReadonlySet<string>;
   /**
    * The local `const` references {@link readCalleeName} follows, by name: each `const <name> = <reference>;` statement,
    * plus every other value binding of the same name in the file, which blocks it wherever its scope reaches. Names no
@@ -480,6 +486,19 @@ function isValueDeclarationName(identifier: Node): boolean {
     result = isNamed && parent.getNameNode() === identifier;
   }
   return result;
+}
+
+/**
+ * Whether {@link identifier} is the name a declaration binds in type space only: a type parameter, type alias or
+ * interface. Classes, enums and namespaces also bind a type, but {@link isValueDeclarationName} already counts them.
+ *
+ * @param identifier - The identifier to check.
+ * @returns `true` when the identifier is a type-only declaration's name.
+ */
+function isTypeDeclarationName(identifier: Node): boolean {
+  const parent = identifier.getParent();
+  const isNamed = Node.isTypeParameterDeclaration(parent) || Node.isTypeAliasDeclaration(parent) || Node.isInterfaceDeclaration(parent);
+  return isNamed && parent.getNameNode() === identifier;
 }
 
 /**
@@ -557,8 +576,9 @@ function readLocalConstBindings(sf: SourceFile): Map<string, LocalConstBinding[]
 
 /**
  * Reads the `@dereekb/*` import aliases and namespace imports of a source file, leaving out every local name the file
- * also declares as a parameter, variable, binding element, function, class, enum or namespace, and the file's local
- * `const` references (see {@link DereekbImportBindings.localConstBindings}).
+ * also declares as a parameter, variable, binding element, function, class, enum or namespace, listing the names it also
+ * declares only as a type parameter, type alias or interface in `typeShadowed`, and the file's local `const` references
+ * (see {@link DereekbImportBindings.localConstBindings}).
  *
  * @param sf - The source file to read.
  * @returns The file's resolvable `@dereekb/*` import bindings.
@@ -566,6 +586,7 @@ function readLocalConstBindings(sf: SourceFile): Map<string, LocalConstBinding[]
 export function readDereekbImportBindings(sf: SourceFile): DereekbImportBindings {
   const aliases = new Map<string, string>();
   const namespaces = new Set<string>();
+  const typeShadowed = new Set<string>();
   for (const imp of sf.getImportDeclarations()) {
     if (imp.getModuleSpecifierValue().startsWith(DEREEKB_MODULE_PREFIX)) {
       for (const named of imp.getNamedImports()) {
@@ -586,14 +607,18 @@ export function readDereekbImportBindings(sf: SourceFile): DereekbImportBindings
   if (aliases.size > 0 || namespaces.size > 0) {
     for (const identifier of sf.getDescendantsOfKind(SyntaxKind.Identifier)) {
       const name = identifier.getText();
-      if ((aliases.has(name) || namespaces.has(name)) && isValueDeclarationName(identifier)) {
-        aliases.delete(name);
-        namespaces.delete(name);
+      if (aliases.has(name) || namespaces.has(name)) {
+        if (isValueDeclarationName(identifier)) {
+          aliases.delete(name);
+          namespaces.delete(name);
+        } else if (isTypeDeclarationName(identifier)) {
+          typeShadowed.add(name);
+        }
       }
     }
   }
 
-  const result: DereekbImportBindings = { aliases, namespaces, localConstBindings: readLocalConstBindings(sf) };
+  const result: DereekbImportBindings = { aliases, namespaces, typeShadowed, localConstBindings: readLocalConstBindings(sf) };
   return result;
 }
 
@@ -650,6 +675,63 @@ function readReferenceName(node: Node, bindings: DereekbImportBindings | undefin
     const target = node.getExpression();
     if (Node.isIdentifier(target) && bindings?.namespaces.has(target.getText())) {
       result = node.getName();
+    }
+  }
+  return result;
+}
+
+/**
+ * Reads the name a type reference refers to: the type-position counterpart of {@link readCalleeName}. An identifier that
+ * is an `@dereekb/*` import alias reads as the exported name; any other identifier reads as written (the validators'
+ * exact-name convention). `ns.Name` reads as `Name` when `ns` is an `@dereekb/*` namespace import of the node's file.
+ * Type arguments don't change the name (`Cfg<D, S>` reads as `Cfg` does). Anything else (a deeper qualified name, a
+ * namespace or alias the file shadows, a namespace of another module, a type that is not a reference) reads as
+ * `undefined`.
+ *
+ * @param node - The type node to read, usually a declaration's `getTypeNode()`.
+ * @param imports - The per-file `@dereekb/*` import bindings.
+ * @returns The resolved type name, or `undefined` when the node isn't a resolvable type reference.
+ */
+export function readTypeReferenceName(node: Node | undefined, imports: DereekbImportIndex): string | undefined {
+  let result: string | undefined;
+  if (node && Node.isTypeReference(node)) {
+    const bindings = imports.bindingsByFilePath.get(node.getSourceFile().getFilePath());
+    const typeName = node.getTypeName();
+    if (Node.isIdentifier(typeName)) {
+      const name = typeName.getText();
+      result = (bindings?.typeShadowed.has(name) ? undefined : bindings?.aliases.get(name)) ?? name;
+    } else {
+      const left = typeName.getLeft();
+      const namespace = Node.isIdentifier(left) ? left.getText() : undefined;
+      if (namespace !== undefined && bindings?.namespaces.has(namespace) && !bindings.typeShadowed.has(namespace)) {
+        result = typeName.getRight().getText();
+      }
+    }
+  }
+  return result;
+}
+
+/**
+ * The generic array types {@link readArrayElementTypeNode} reads.
+ */
+const ARRAY_TYPE_NAMES: ReadonlySet<string> = new Set(['Array', 'ReadonlyArray']);
+
+/**
+ * Returns the element type node of an array type: `T[]`, `readonly T[]`, `Array<T>` or `ReadonlyArray<T>`.
+ *
+ * @param node - The type node to read, usually a declaration's `getTypeNode()`.
+ * @returns The element type node, or `undefined` when the node is not one of those array forms.
+ */
+export function readArrayElementTypeNode(node: Node | undefined): TypeNode | undefined {
+  const inner = node && Node.isTypeOperatorTypeNode(node) && node.getOperator() === SyntaxKind.ReadonlyKeyword ? node.getTypeNode() : node;
+  let result: TypeNode | undefined;
+  if (inner && Node.isArrayTypeNode(inner)) {
+    result = inner.getElementTypeNode();
+  } else if (inner && Node.isTypeReference(inner)) {
+    const typeName = inner.getTypeName();
+    const typeArguments = inner.getTypeArguments();
+    if (Node.isIdentifier(typeName) && ARRAY_TYPE_NAMES.has(typeName.getText()) && typeArguments.length === 1) {
+      result = typeArguments[0];
     }
   }
   return result;

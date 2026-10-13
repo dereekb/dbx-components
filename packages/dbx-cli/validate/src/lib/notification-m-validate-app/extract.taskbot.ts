@@ -8,7 +8,8 @@
  *
  * Names from `@dereekb/firebase` / `@dereekb/firebase-server` are mirrored as strings, not imported; the drift spec
  * (`taskbot.upstream.spec.ts`) fails when one is renamed upstream. Upstream factory callees resolve `@dereekb/*` import
- * aliases, namespace imports and local `const` references (`readCalleeName`).
+ * aliases, namespace imports and local `const` references (`readCalleeName`); script type, config and group
+ * annotations resolve `@dereekb/*` import aliases and namespace imports too (`readTypeReferenceName`).
  */
 
 import { Node, SyntaxKind, type ArrayLiteralExpression, type CallExpression, type ObjectLiteralExpression, type SourceFile, type VariableDeclaration } from 'ts-morph';
@@ -19,14 +20,15 @@ import {
   findLocalVariable,
   findReturnExpression,
   getPropertyInitializer,
+  readArrayElementTypeNode,
   readBooleanProperty,
   readStringLiteralInitializer,
   readCalleeName,
   readStringProperty,
+  readTypeReferenceName,
   resolveArrayLiteralProperty,
   resolveObjectLiteralArgument,
   sourceSideOf,
-  typeAnnotationText,
   unwrapAsExpressions,
   type DereekbImportIndex
 } from '../_core/_validate/ast.js';
@@ -141,9 +143,9 @@ export function extractAppNotificationTaskBot(input: ExtractAppNotificationTaskB
   const { componentSources, apiSources, functionIndex, trustedExternalIdentifiers: trusted, dereekbImports: imports, taskServiceCalls, workspace } = input;
   const allSources = [...componentSources, ...apiSources];
 
-  const scriptTypeConstants = extractScriptTypeConstants(allSources);
+  const scriptTypeConstants = extractScriptTypeConstants(allSources, imports);
   const constants = new Map(scriptTypeConstants.map((c) => [c.symbolName, c]));
-  const groupKeys = extractScriptGroupKeys(allSources);
+  const groupKeys = extractScriptGroupKeys(allSources, imports);
   const partialIndex = { constants, configs: new Map<string, ExtractedTaskBotScriptConfig>(), aggregates: new Map<string, VariableDeclaration>(), groupKeys, functionIndex, trusted, imports };
   const scriptConfigs = extractScriptConfigs(allSources, partialIndex);
   const index: TaskBotIndex = partialIndex;
@@ -226,12 +228,12 @@ function shortText(node: Node): string {
 }
 
 // MARK: Script type constants
-function extractScriptTypeConstants(sources: readonly SourceFile[]): ExtractedTaskBotScriptTypeConstant[] {
+function extractScriptTypeConstants(sources: readonly SourceFile[], imports: DereekbImportIndex): ExtractedTaskBotScriptTypeConstant[] {
   const out: ExtractedTaskBotScriptTypeConstant[] = [];
   for (const sf of sources) {
     for (const stmt of sf.getVariableStatements()) {
       for (const decl of stmt.getDeclarations()) {
-        if (typeAnnotationText(decl) === NOTIFICATION_TASK_BOT_SCRIPT_TYPE) {
+        if (readTypeReferenceName(decl.getTypeNode(), imports) === NOTIFICATION_TASK_BOT_SCRIPT_TYPE) {
           out.push({ symbolName: decl.getName(), typeCode: readStringLiteralInitializer(decl), side: sourceSideOf(sf), sourceFile: relPathOf(sf), line: decl.getStartLineNumber() });
         }
       }
@@ -241,13 +243,13 @@ function extractScriptTypeConstants(sources: readonly SourceFile[]): ExtractedTa
 }
 
 // MARK: Script groups
-function extractScriptGroupKeys(sources: readonly SourceFile[]): Map<string, string | undefined> {
+function extractScriptGroupKeys(sources: readonly SourceFile[], imports: DereekbImportIndex): Map<string, string | undefined> {
   const out = new Map<string, string | undefined>();
   for (const sf of sources) {
     for (const stmt of sf.getVariableStatements()) {
       for (const decl of stmt.getDeclarations()) {
         const obj = asObjectLiteral(decl.getInitializer());
-        if (typeAnnotationText(decl) === NOTIFICATION_TASK_BOT_SCRIPT_GROUP && obj) {
+        if (readTypeReferenceName(decl.getTypeNode(), imports) === NOTIFICATION_TASK_BOT_SCRIPT_GROUP && obj) {
           out.set(decl.getName(), readStringProperty(obj, 'key'));
         }
       }
@@ -257,10 +259,6 @@ function extractScriptGroupKeys(sources: readonly SourceFile[]): Map<string, str
 }
 
 // MARK: Script configs
-function isConfigArrayType(typeText: string | undefined): boolean {
-  const normalized = typeText?.replace(/^readonly\s+/, '');
-  return normalized === `${NOTIFICATION_TASK_BOT_SCRIPT_CONFIG}[]` || normalized === `Array<${NOTIFICATION_TASK_BOT_SCRIPT_CONFIG}>` || normalized === `ReadonlyArray<${NOTIFICATION_TASK_BOT_SCRIPT_CONFIG}>`;
-}
 
 interface MutableTaskBotIndex extends TaskBotIndex {
   readonly configs: Map<string, ExtractedTaskBotScriptConfig>;
@@ -272,13 +270,13 @@ function extractScriptConfigs(sources: readonly SourceFile[], index: MutableTask
   for (const sf of sources) {
     for (const stmt of sf.getVariableStatements()) {
       for (const decl of stmt.getDeclarations()) {
-        const typeText = typeAnnotationText(decl);
+        const typeNode = decl.getTypeNode();
         const obj = asObjectLiteral(decl.getInitializer());
-        if (typeText === NOTIFICATION_TASK_BOT_SCRIPT_CONFIG && obj) {
+        if (readTypeReferenceName(typeNode, index.imports) === NOTIFICATION_TASK_BOT_SCRIPT_CONFIG && obj) {
           const config = readScriptConfig(obj, decl.getName(), index);
           index.configs.set(decl.getName(), config);
           out.push(config);
-        } else if (isConfigArrayType(typeText)) {
+        } else if (readTypeReferenceName(readArrayElementTypeNode(typeNode), index.imports) === NOTIFICATION_TASK_BOT_SCRIPT_CONFIG) {
           index.aggregates.set(decl.getName(), decl);
         }
       }
