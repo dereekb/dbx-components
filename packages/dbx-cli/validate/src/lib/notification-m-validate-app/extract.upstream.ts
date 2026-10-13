@@ -273,8 +273,12 @@ export function reachedUpstreamHandlerCallsOf(call: ExtractedTaskServiceCall, fa
 
 /**
  * Whether the scanner followed every value of the call's `handlers`: the property resolved to an array literal, every
- * unresolved identifier is a revisit of an already-resolved one, and no value was opaque. Only then can a missing
+ * identifier was followed (`unresolvedHandlerBindings` is empty), and no value was opaque. Only then can a missing
  * upstream handler be reported without risking a false error.
+ *
+ * Reaching a local or function twice doesn't make the trace incomplete: the second visit reads what the first walk found.
+ * A name the trace can't pin to one declaration keeps it incomplete, even when another declaration of that name
+ * resolved.
  *
  * `unresolvedHandlerSpreadIdentifiers` is not checked: it lists every spread name by design.
  *
@@ -282,8 +286,7 @@ export function reachedUpstreamHandlerCallsOf(call: ExtractedTaskServiceCall, fa
  * @returns `true` when the trace is complete.
  */
 export function isHandlersTraceComplete(call: ExtractedTaskServiceCall): boolean {
-  const resolved = new Set(call.resolvedHandlerBindings);
-  return call.handlersStatus === 'resolved' && call.opaqueHandlerValues.length === 0 && call.unresolvedHandlerBindings.every((name) => resolved.has(name));
+  return call.handlersStatus === 'resolved' && call.opaqueHandlerValues.length === 0 && call.unresolvedHandlerBindings.length === 0;
 }
 
 /**

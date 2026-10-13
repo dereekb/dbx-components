@@ -1507,3 +1507,50 @@ describe('validateAppNotifications — aliased and namespaced @dereekb type anno
     check(extractAppNotifications(inspectionWith(modify)));
   });
 });
+
+// MARK: handlers that reach a local or function twice
+const EXAMPLE_HANDLERS_PATH = 'src/app/common/model/notification/handlers/task.handler.example.ts';
+
+describe('validateAppNotifications — a handler reached twice', () => {
+  it('resolves a typed handler config two factories share', () => {
+    const HANDLER_FILE = `import { type NotificationTaskServiceTaskHandlerConfig } from '@dereekb/firebase-server/model';
+import { EXAMPLE_NOTIFICATION_TASK_TYPE, type ExampleNotificationTaskData, type ExampleNotificationTaskCheckpoint } from 'demo-firebase';
+
+const exampleHandler: NotificationTaskServiceTaskHandlerConfig<ExampleNotificationTaskData, ExampleNotificationTaskCheckpoint> = {
+  type: EXAMPLE_NOTIFICATION_TASK_TYPE,
+  flow: [{ checkpoint: 'part_a', fn: async () => null }]
+};
+
+export function demoExampleTaskHandlers(context): NotificationTaskServiceTaskHandlerConfig<any>[] {
+  return [exampleHandler];
+}
+
+export function demoMoreExampleTaskHandlers(context): NotificationTaskServiceTaskHandlerConfig<any>[] {
+  return [exampleHandler];
+}
+`;
+    const modify = ({ api }: NotificationFixtureParts) => {
+      swapServiceHandlerForFactorySpread(api, { factoryImport: "import { demoExampleTaskHandlers, demoMoreExampleTaskHandlers } from './handlers/task.handler.example';", factoryCall: 'demoExampleTaskHandlers(context)', spreadVar: 'exampleHandlers' });
+      replaceInFile({ files: api, relPath: TASK_SERVICE_PATH, from: '[...exampleHandlers]', to: '[...exampleHandlers, ...demoMoreExampleTaskHandlers(context)]' });
+      api.push({ relPath: EXAMPLE_HANDLERS_PATH, text: HANDLER_FILE });
+    };
+    const [call] = extractAppNotifications(inspectionWith(modify)).taskServiceCalls;
+    expect(call.resolvedHandlerBindings).toEqual(['exampleHandler']);
+    expect(call.unresolvedHandlerBindings).toEqual([]);
+    expect(runWith(modify).violations).toEqual([]);
+  });
+
+  it('warns once per name for a wrapper it cannot follow, reached twice', () => {
+    const modify = ({ api }: NotificationFixtureParts) =>
+      addHandlerElement(api, {
+        prelude: 'function demoMysteryTaskHandler(context) {\n  return mysteryFactory(context);\n}',
+        local: 'const mysteryHandler = demoMysteryTaskHandler(context);\n  const mysteryHandlerAgain = demoMysteryTaskHandler(context);',
+        element: 'mysteryHandler, mysteryHandlerAgain'
+      });
+    const names = ['mysteryFactory', 'demoMysteryTaskHandler', 'mysteryHandler', 'mysteryHandlerAgain'];
+    const [call] = extractAppNotifications(inspectionWith(modify)).taskServiceCalls;
+    expect(call.unresolvedHandlerBindings).toEqual(names);
+    const warnings = runWith(modify).violations.filter((v) => v.code === 'NOTIF_TASK_HANDLER_SPREAD_UNRESOLVED');
+    expect(warnings.map((v) => v.message.match(/Identifier `([^`]+)`/)?.[1])).toEqual(names);
+  });
+});

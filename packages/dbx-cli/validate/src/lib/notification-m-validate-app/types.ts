@@ -327,12 +327,15 @@ export interface ExtractedTaskServiceCall {
    */
   readonly resolvedHandlerBindings: readonly string[];
   /**
-   * Identifiers the `handlers:` trace could not follow: a name with no local variable declaration in scope where it is used
-   * (a parameter, a destructured name, or a name only another function declares), and no function or `@dereekb/*` import
-   * behind it, plus each local or function whose value leads only to such names (or to an object literal that isn't a
-   * typed handler config, or an empty array). A local or function whose value ends at an upstream handler factory call or
-   * at an opaque value ({@link opaqueHandlerValues}) is not listed. The rules pass warns
-   * (`NOTIF_TASK_HANDLER_SPREAD_UNRESOLVED`) for each name that is neither trust-listed nor a resolved binding.
+   * Identifiers the `handlers:` trace could not follow, each listed once: a name with no local variable declaration in scope
+   * where it is used (a parameter, a destructured name, or a name only another function declares), and no function or
+   * `@dereekb/*` import behind it, plus each local or function whose value leads only to such names (or to an object
+   * literal that isn't a typed handler config, or an empty array). A local or function whose value ends at an upstream
+   * handler factory call or at an opaque value ({@link opaqueHandlerValues}) is not listed. The trace walks each local and
+   * function once, and reaching one again reads what that walk found. Two revisits are listed anyway: one while the walk
+   * is still running (a cycle), and one of a function name more than one API function declares (it may mean another of
+   * them). The rules pass warns (`NOTIF_TASK_HANDLER_SPREAD_UNRESOLVED`) for each name that is neither trust-listed nor a
+   * resolved binding.
    */
   readonly unresolvedHandlerBindings: readonly string[];
   /**

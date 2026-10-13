@@ -743,3 +743,13 @@ describe('NotificationTaskBot checks — aliased and namespaced type annotations
     expect(extractAppNotifications(inspectionOf(modify)).taskBot.scriptConfigs).toEqual([]);
   });
 });
+
+describe('NotificationTaskBot checks — handlers reached twice', () => {
+  it('reports NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED when handlers reach a local twice and leave the handler out', () => {
+    const result = runWith((p) => {
+      replaceInFile(p.api, TASK_SERVICE_FILE, 'const notificationTaskBotHandler = demoNotificationTaskBotRunNotificationTaskHandler(context);', 'const exampleHandlerAlias = exampleNotificationTaskHandler;');
+      replaceInFile(p.api, TASK_SERVICE_FILE, '[exampleNotificationTaskHandler, notificationTaskBotHandler]', '[exampleNotificationTaskHandler, exampleHandlerAlias]');
+    });
+    expect(taskBotCodes(result)).toEqual(['NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED']);
+  });
+});

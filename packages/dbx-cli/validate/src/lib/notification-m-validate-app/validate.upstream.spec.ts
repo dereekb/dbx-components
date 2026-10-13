@@ -1382,3 +1382,187 @@ describe('NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED — handler configs typed t
     expect(result.violations.map((v) => v.code)).toEqual(['NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED']);
   });
 });
+
+describe('the handlers trace — a local or function reached twice', () => {
+  // A second visit reads what the first visit found, so the local or function isn't listed in `unresolvedHandlerBindings`.
+  const SF_AGAIN_LOCAL = 'const storageFileHandlerAgain = demoStorageFileProcessingNotificationTaskHandler(context);';
+
+  const setHandlers = (p: FixtureParts, elements: string) => replaceInFile(p.api, TASK_SERVICE_FILE, '[exampleNotificationTaskHandler, storageFileHandler, formSpaceHandler]', `[${elements}]`);
+  const addLocal = (p: FixtureParts, line: string) => replaceInFile(p.api, TASK_SERVICE_FILE, SF_LOCAL, `${SF_LOCAL}\n  ${line}`);
+  const addFunction = (p: FixtureParts, text: string) => replaceInFile(p.api, TASK_SERVICE_FILE, 'export function demoNotificationTaskServiceFactory', `${text}\n\nexport function demoNotificationTaskServiceFactory`);
+  const opaqueStorageFileWrapper = (p: FixtureParts) => replaceInFile(p.api, SF_HANDLER_FILE, SF_FACTORY_RETURN, 'return context.handlerFactories.storageFile(');
+  const reachStorageFileWrapperTwice = (p: FixtureParts, elements: string) => {
+    addLocal(p, SF_AGAIN_LOCAL);
+    setHandlers(p, elements);
+  };
+
+  it.each<[string, (parts: FixtureParts) => void]>([
+    ['the exact-factory wrapper, from a second local', (p) => reachStorageFileWrapperTwice(p, 'exampleNotificationTaskHandler, storageFileHandler, formSpaceHandler, storageFileHandlerAgain')],
+    ['the same local, listed twice', (p) => setHandlers(p, 'exampleNotificationTaskHandler, storageFileHandler, storageFileHandler, formSpaceHandler')],
+    ['the wrapper, called inline twice', (p) => setHandlers(p, 'exampleNotificationTaskHandler, demoStorageFileProcessingNotificationTaskHandler(context), demoStorageFileProcessingNotificationTaskHandler(context), formSpaceHandler')],
+    [
+      'the wrapper, again from a spread function',
+      (p) => {
+        addFunction(p, 'function upstreamHandlers(context) {\n  return [demoStorageFileProcessingNotificationTaskHandler(context), demoFormSpaceSubmissionNotificationTaskHandler(context)];\n}');
+        setHandlers(p, 'exampleNotificationTaskHandler, storageFileHandler, ...upstreamHandlers(context)');
+      }
+    ],
+    [
+      'a local, through another local that holds it',
+      (p) => {
+        addLocal(p, 'const storageFileHandlerAlias = storageFileHandler;');
+        setHandlers(p, 'exampleNotificationTaskHandler, storageFileHandler, storageFileHandlerAlias, formSpaceHandler');
+      }
+    ],
+    ['the typed handler config, listed twice', (p) => setHandlers(p, 'exampleNotificationTaskHandler, exampleNotificationTaskHandler, storageFileHandler, formSpaceHandler')]
+  ])('follows %s', (_label, modify) => {
+    const [call] = extractAppNotifications(inspectionOf(modify)).taskServiceCalls;
+    expect(call.unresolvedHandlerBindings).toEqual([]);
+    expect(call.reachedUpstreamHandlerCalls.map((x) => x.factory)).toEqual(['storageFileProcessingNotificationTaskHandler', 'formSpaceSubmissionNotificationTaskHandler']);
+    expect(isHandlersTraceComplete(call)).toBe(true);
+    expect(runWith(modify).violations).toEqual([]);
+  });
+
+  it('reads an opaque wrapper the same way both times', () => {
+    const modify = (p: FixtureParts) => {
+      opaqueStorageFileWrapper(p);
+      reachStorageFileWrapperTwice(p, 'exampleNotificationTaskHandler, storageFileHandler, formSpaceHandler, storageFileHandlerAgain');
+    };
+    const [call] = extractAppNotifications(inspectionOf(modify)).taskServiceCalls;
+    expect(call.opaqueHandlerValues).toEqual([expect.stringContaining('context.handlerFactories.storageFile(')]);
+    expect(call.unresolvedHandlerBindings).toEqual([]);
+    expect(isHandlersTraceComplete(call)).toBe(false);
+    expect(runWith(modify).violations).toEqual([]);
+  });
+
+  it('checks a service whose handlers reach the wrapper twice', () => {
+    const result = runWith((p) => reachStorageFileWrapperTwice(p, 'exampleNotificationTaskHandler, storageFileHandler, storageFileHandlerAgain'));
+    expect(result.violations.map((v) => v.code)).toEqual(['NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED']);
+    expect(findingsOf(result)[0].message).toContain('ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES');
+  });
+
+  it('still skips that service when the wrapper it reaches twice is opaque', () => {
+    const result = runWith((p) => {
+      opaqueStorageFileWrapper(p);
+      reachStorageFileWrapperTwice(p, 'exampleNotificationTaskHandler, storageFileHandler, storageFileHandlerAgain');
+    });
+    expect(result.violations).toEqual([]);
+  });
+
+  it.each<[string, (parts: FixtureParts) => void, string[]]>([
+    [
+      'two functions that return each other',
+      (p) => {
+        addFunction(p, 'function cycleA(context) {\n  return cycleB(context);\n}\n\nfunction cycleB(context) {\n  return cycleA(context);\n}');
+        setHandlers(p, 'exampleNotificationTaskHandler, storageFileHandler, formSpaceHandler, cycleA(context)');
+      },
+      ['cycleA', 'cycleB']
+    ],
+    [
+      'a local that spreads itself',
+      (p) => {
+        addLocal(p, 'const selfHandlers = [...selfHandlers];');
+        setHandlers(p, 'exampleNotificationTaskHandler, storageFileHandler, formSpaceHandler, ...selfHandlers');
+      },
+      ['selfHandlers']
+    ]
+  ])('ends a cycle through %s and lists each name in it once', (_label, modify, unresolved) => {
+    const [call] = extractAppNotifications(inspectionOf(modify)).taskServiceCalls;
+    expect(call.unresolvedHandlerBindings).toEqual(unresolved);
+    expect(isHandlersTraceComplete(call)).toBe(false);
+    expect(findingsOf(runWith(modify), 'NOTIF_TASK_HANDLER_SPREAD_UNRESOLVED')).toHaveLength(unresolved.length);
+  });
+
+  // The scan reads a name by itself, so when a name has more than one declaration, its second visit may mean another
+  // declaration than the first visit read. The trace stays incomplete, and the upstream checks skip the service. Each case
+  // registers both upstream handlers, so a finding would be a false error.
+  const BOTH_WRAPPERS_WITH_CONST_HANDLER = `import { formSpaceSubmissionNotificationTaskHandler, storageFileProcessingNotificationTaskHandler } from '@dereekb/firebase-server/model';
+
+export function demoStorageFileProcessingNotificationTaskHandler(context) {
+  const handler = storageFileProcessingNotificationTaskHandler({ processors: [], storageFileFirestoreCollections: context, storageAccessor: context.storageService });
+  return handler;
+}
+
+export function demoFormSpaceSubmissionNotificationTaskHandler(context) {
+  const handler = formSpaceSubmissionNotificationTaskHandler({ processors: [], validate: [], formSpaceFirestoreCollections: context });
+  return handler;
+}
+`;
+
+  const SF_HANDLER_THROUGH_BUILD = `${SF_FACTORY_IMPORT}
+
+function build(context) {
+  return storageFileProcessingNotificationTaskHandler({ processors: [], storageFileFirestoreCollections: context, storageAccessor: context.storageService });
+}
+
+export function demoStorageFileProcessingNotificationTaskHandler(context) {
+  return build(context);
+}
+`;
+
+  const FS_HANDLER_THROUGH_BUILD = `import { formSpaceSubmissionNotificationTaskHandler } from '@dereekb/firebase-server/model';
+
+function build(context) {
+  return formSpaceSubmissionNotificationTaskHandler({ processors: [], validate: [], formSpaceFirestoreCollections: context });
+}
+
+export function demoFormSpaceSubmissionNotificationTaskHandler(context) {
+  return build(context);
+}
+`;
+
+  const SF_HANDLER_WITH_SHADOWED_CONST = `${SF_FACTORY_IMPORT}
+
+const handler = storageFileProcessingNotificationTaskHandler({ processors: [], storageFileFirestoreCollections: {}, storageAccessor: {} });
+
+export function demoStorageFileProcessingNotificationTaskHandler(context) {
+  return handler;
+}
+
+export function passThrough(handler) {
+  return handler;
+}
+`;
+
+  // Declared after the task service factory, so the factory's typed exampleNotificationTaskHandler is the first one.
+  const EXTRA_TASK_HANDLERS = `
+function demoExtraTaskHandlers(context) {
+  const exampleNotificationTaskHandler = demoFormSpaceSubmissionNotificationTaskHandler(context);
+  return [exampleNotificationTaskHandler, demoStorageFileProcessingNotificationTaskHandler(context)];
+}
+`;
+
+  it.each<[string, (parts: FixtureParts) => void]>([
+    [
+      'two wrappers of one file each declare `const handler`',
+      (p) => {
+        replaceInFile(p.api, SF_HANDLER_FILE, API_SF_HANDLER, BOTH_WRAPPERS_WITH_CONST_HANDLER);
+        removeFile(p.api, FS_HANDLER_FILE);
+        replaceInFile(p.api, TASK_SERVICE_FILE, "'./handlers/formspace/task.handler.formspace.submission'", "'./handlers/task.handler.storagefile'");
+      }
+    ],
+    [
+      'two API files each declare `function build`',
+      (p) => {
+        replaceInFile(p.api, SF_HANDLER_FILE, API_SF_HANDLER, SF_HANDLER_THROUGH_BUILD);
+        replaceInFile(p.api, FS_HANDLER_FILE, API_FS_HANDLER, FS_HANDLER_THROUGH_BUILD);
+      }
+    ],
+    [
+      'a parameter shadows a module-level `const handler`',
+      (p) => {
+        replaceInFile(p.api, SF_HANDLER_FILE, API_SF_HANDLER, SF_HANDLER_WITH_SHADOWED_CONST);
+        setHandlers(p, 'exampleNotificationTaskHandler, storageFileHandler, passThrough(formSpaceHandler)');
+      }
+    ],
+    [
+      'another function of the task service file declares a local named like the typed handler config',
+      (p) => {
+        replaceInFile(p.api, TASK_SERVICE_FILE, API_TASK_SERVICE, `${API_TASK_SERVICE}${EXTRA_TASK_HANDLERS}`);
+        setHandlers(p, 'exampleNotificationTaskHandler, ...demoExtraTaskHandlers(context)');
+      }
+    ]
+  ])('does not report a handler as missing when %s', (_label, modify) => {
+    expect(findingsOf(runWith(modify))).toEqual([]);
+  });
+});

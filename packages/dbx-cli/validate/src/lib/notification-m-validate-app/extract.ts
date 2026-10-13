@@ -1106,9 +1106,9 @@ function collectHandlersArrayElements(options: CollectHandlersArrayElementsOptio
   const reachedUpstreamHandlerCalls: ExtractedUpstreamHandlerCall[] = [];
   const opaqueHandlerValues: string[] = [];
   if (handlersArr) {
-    const visited = new Set<Node>();
+    const outcomes = new Map<Node, boolean>();
     for (const el of handlersArr.getElements()) {
-      consumeHandlersArrayElement(el, { index, trustedExternal, imports, unresolvedSpreads, resolvedBindings, unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, visited });
+      consumeHandlersArrayElement(el, { index, trustedExternal, imports, unresolvedSpreads, resolvedBindings, unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, outcomes });
     }
   }
   return { handlerTypes, unresolvedSpreads, resolvedBindings, unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues };
@@ -1130,8 +1130,8 @@ function consumeHandlersArrayElement(el: Node, options: Omit<ConsumeHandlersSpre
     }
     return;
   }
-  const { index, trustedExternal, imports, resolvedBindings, unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, visited } = options;
-  collectHandlerBindingsFromIdentifier({ identifier, index, trustedExternal, imports, resolved: resolvedBindings, unresolved: unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, visited });
+  const { index, trustedExternal, imports, resolvedBindings, unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, outcomes } = options;
+  collectHandlerBindingsFromIdentifier({ identifier, index, trustedExternal, imports, resolved: resolvedBindings, unresolved: unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, outcomes });
 }
 
 /**
@@ -1164,7 +1164,7 @@ interface ConsumeHandlersSpreadElementOptions {
   readonly unresolvedBindings: string[];
   readonly reachedUpstreamHandlerCalls: ExtractedUpstreamHandlerCall[];
   readonly opaqueHandlerValues: string[];
-  readonly visited: Set<Node>;
+  readonly outcomes: Map<Node, boolean>;
 }
 
 /**
@@ -1176,7 +1176,7 @@ interface ConsumeHandlersSpreadElementOptions {
  * @param options - The spread inner expression and the buckets to populate.
  */
 function consumeHandlersSpreadElement(options: ConsumeHandlersSpreadElementOptions): void {
-  const { inner, index, trustedExternal, imports, unresolvedSpreads, resolvedBindings, unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, visited } = options;
+  const { inner, index, trustedExternal, imports, unresolvedSpreads, resolvedBindings, unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, outcomes } = options;
   const identifier = readHandlerEntryIdentifier(inner);
   if (identifier !== undefined) {
     unresolvedSpreads.push(identifier.getText());
@@ -1186,7 +1186,7 @@ function consumeHandlersSpreadElement(options: ConsumeHandlersSpreadElementOptio
     opaqueHandlerValues.push(opaqueSnippet(inner));
     return;
   }
-  collectHandlerBindingsFromIdentifier({ identifier, index, trustedExternal, imports, resolved: resolvedBindings, unresolved: unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, visited });
+  collectHandlerBindingsFromIdentifier({ identifier, index, trustedExternal, imports, resolved: resolvedBindings, unresolved: unresolvedBindings, reachedUpstreamHandlerCalls, opaqueHandlerValues, outcomes });
 }
 
 /**
@@ -1212,10 +1212,10 @@ interface HandlerBindingCollectorContext {
    */
   readonly opaqueHandlerValues: string[];
   /**
-   * The local variable declarations and functions the trace has entered, so each is followed once; a revisit reads as
-   * not followed. Two declarations of one name are separate entries.
+   * The outcome of every local variable declaration and function the trace has walked, by declaration (see
+   * `traceHandlerBindingOnce`). Two declarations of one name are separate entries.
    */
-  readonly visited: Set<Node>;
+  readonly outcomes: Map<Node, boolean>;
 }
 
 /**
@@ -1228,7 +1228,8 @@ interface CollectHandlerBindingsFromValueOptions extends HandlerBindingCollector
 /**
  * Walks a value-position node of the `handlers` trace. A typed `NotificationTaskServiceTaskHandlerConfig<...>` object
  * literal reached through a local binding lands in `resolved`, an upstream handler factory call in
- * `reachedUpstreamHandlerCalls`, and a value the trace can't see through in `opaqueHandlerValues`.
+ * `reachedUpstreamHandlerCalls`, and a value the trace can't see through in `opaqueHandlerValues`. Each local and
+ * function is walked once per trace, and reaching one again returns what that walk returned (`traceHandlerBindingOnce`).
  *
  * @param options - The node and the collector context.
  * @returns `true` when the trace ended at a value it recorded: a typed handler config binding, an upstream handler
@@ -1321,7 +1322,10 @@ function collectHandlerBindingsFromIdentifier(options: CollectHandlerBindingsFro
     options.opaqueHandlerValues.push(name);
     result = true;
   } else {
-    unresolved.push(name);
+    // a name reached again (a cycle, or a local or function its first walk couldn't follow) is listed once
+    if (!unresolved.includes(name)) {
+      unresolved.push(name);
+    }
     result = false;
   }
   return result;
@@ -1336,25 +1340,30 @@ function collectHandlerBindingsFromIdentifier(options: CollectHandlerBindingsFro
  * @param options - The identifier and the collector context.
  * @returns `true` when the name was opaque, or the declaration's value ended at something the trace recorded. `false` when
  *   no followable declaration is in scope (a parameter, an import, a name only another function declares), the
- *   declaration was already entered, or its value led nowhere.
+ *   declaration was already walked and its walk returned `false` (or is still running: a cycle), or its value led
+ *   nowhere.
  */
 function tryResolveLocalHandlerBinding(options: CollectHandlerBindingsFromIdentifierOptions): boolean {
-  const { identifier, imports, visited, resolved, opaqueHandlerValues } = options;
+  const { identifier, imports, outcomes, resolved, opaqueHandlerValues } = options;
   const resolution = resolveLocalVariable(identifier, imports);
   let result = false;
   if (resolution.kind === 'ambiguous') {
     opaqueHandlerValues.push(identifier.getText());
     result = true;
-  } else if (resolution.kind === 'variable' && !visited.has(resolution.declaration)) {
+  } else if (resolution.kind === 'variable') {
     const { declaration } = resolution;
-    visited.add(declaration);
-    if (isHandlerConfigLeafDecl(declaration, imports)) {
-      resolved.push(declaration.getName());
-      result = true;
-    } else {
-      const init = unwrapAsExpressions(declaration.getInitializer());
-      result = init !== undefined && collectHandlerBindingsFromValue({ ...options, node: init });
-    }
+    const walk = (): boolean => {
+      let walked: boolean;
+      if (isHandlerConfigLeafDecl(declaration, imports)) {
+        resolved.push(declaration.getName());
+        walked = true;
+      } else {
+        const init = unwrapAsExpressions(declaration.getInitializer());
+        walked = init !== undefined && collectHandlerBindingsFromValue({ ...options, node: init });
+      }
+      return walked;
+    };
+    result = traceHandlerBindingOnce({ outcomes, key: declaration, walk });
   }
   return result;
 }
@@ -1366,19 +1375,64 @@ function isHandlerConfigLeafDecl(decl: VariableDeclaration, imports: DereekbImpo
 
 /**
  * Follows {@link CollectHandlerBindingsFromIdentifierOptions.identifier} to the API function of that name and walks its
- * return value. The function is looked up by name across the API files; each function is entered once.
+ * return value. The function is looked up by name across the API files; each function is walked once.
  *
  * @param options - The identifier and the collector context.
  * @returns `true` when the function's return value ended at something the trace recorded.
  */
 function tryResolveFunctionHandlerBinding(options: CollectHandlerBindingsFromIdentifierOptions): boolean {
-  const { identifier, index, visited } = options;
-  const fnEntry = index.functionsByName.get(identifier.getText());
+  const { identifier, index, outcomes } = options;
+  const name = identifier.getText();
+  const fnEntry = index.functionsByName.get(name);
   let result = false;
-  if (fnEntry && !visited.has(fnEntry.node)) {
-    visited.add(fnEntry.node);
-    const ret = findReturnExpression(fnEntry.node);
-    result = ret !== undefined && collectHandlerBindingsFromValue({ ...options, node: ret });
+  if (fnEntry) {
+    const walk = (): boolean => {
+      const ret = findReturnExpression(fnEntry.node);
+      return ret !== undefined && collectHandlerBindingsFromValue({ ...options, node: ret });
+    };
+    // the index keeps the last function of the name, which a revisit may not mean
+    result = traceHandlerBindingOnce({ outcomes, key: fnEntry.node, isAmbiguous: () => index.ambiguousNames.has(name), walk });
+  }
+  return result;
+}
+
+interface TraceHandlerBindingOnceInput {
+  readonly outcomes: Map<Node, boolean>;
+  /**
+   * The local variable declaration or the function the walk reads.
+   */
+  readonly key: Node;
+  /**
+   * Whether the key may not be the declaration a revisit means. Asked only on a revisit of a key whose walk returned
+   * `true`. Locals omit it: `resolveLocalVariable` already pins each reference to one declaration.
+   */
+  readonly isAmbiguous?: () => boolean;
+  /**
+   * Walks the local or function and returns its outcome (see `collectHandlerBindingsFromValue`).
+   */
+  readonly walk: () => boolean;
+}
+
+/**
+ * Walks the local or function behind a key at most once per `handlers` trace, and returns its outcome. The first visit
+ * stores what the walk returned and a revisit returns it: the first walk already recorded everything behind the key, so a
+ * wrapper or local reached twice is not listed in `unresolved` the second time. A revisit returns `false` while the walk
+ * is still running (a cycle), and when the key's name is ambiguous: it may mean another declaration than the one the
+ * first walk read.
+ *
+ * @param input - The trace's outcomes, the key, the ambiguity check and the walk.
+ * @returns The key's outcome.
+ */
+function traceHandlerBindingOnce(input: TraceHandlerBindingOnceInput): boolean {
+  const { outcomes, key } = input;
+  const stored = outcomes.get(key);
+  let result: boolean;
+  if (stored === undefined) {
+    outcomes.set(key, false); // what a revisit reads while the walk runs: a cycle
+    result = input.walk();
+    outcomes.set(key, result);
+  } else {
+    result = stored && !input.isAmbiguous?.();
   }
   return result;
 }
