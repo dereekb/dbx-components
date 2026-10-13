@@ -1,63 +1,57 @@
 import { type CreateGuestbookParams, guestbookIdentity, guestbookEntryIdentity, type AllPublishedGuestbookEntriesParams } from 'demo-firebase';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext, demoGuestbookContext, demoGuestbookEntryContext } from '../../../test/fixture';
-import { callMcpTool, callMcpToolAnonymous, listMcpTools } from '../../../test/mcp';
+import { callMcpMethod, callMcpMethodAnonymous, describeMcpMethod, searchMcpMethods } from '../../../test/mcp';
 import { AUTH_ADMIN_ROLE } from '@dereekb/util';
-import { buildMcpToolName } from '@dereekb/firebase-server/mcp';
+import { mcpMethodIdForDispatch } from '@dereekb/firebase-server/mcp';
 
 vi.setConfig({ hookTimeout: 30000, testTimeout: 30000 });
 
 /**
  * Exercises the demo-api MCP surface end-to-end through `McpServerFactoryService.createServer()`.
  *
- * Tests dispatch each tool in-process — the same dispatch chain the live `McpController`
- * runs, minus the Streamable HTTP transport. Asserts both the `CallToolResult` envelope
- * and the Firestore side-effect so a regression in either layer is caught.
- *
- * Only tools generated from handlers that declare an `inputType` are exposed by
- * `generateMcpToolDefinitions` — at present that's `guestbook-create` (no specifier)
- * and `guestbookEntry-allPublishedEntries` (named specifiers drop the call-type segment).
- * Update/query handlers in this model group are skipped until their `withApiDetails`
- * calls grow an `inputType`.
+ * Tests run each method in-process through the compact `demo_mcp_read` / `demo_mcp_write` routers — the same
+ * dispatch chain the live `McpController` runs, minus the Streamable HTTP transport. Asserts both the
+ * `CallToolResult` envelope and the Firestore side-effect so a regression in either layer is caught.
  */
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
-  const guestbookCreateToolName = buildMcpToolName(guestbookIdentity.modelType, 'create');
-  const guestbookEntryAllPublishedEntriesToolName = buildMcpToolName(guestbookEntryIdentity.modelType, 'invoke', 'allPublishedEntries');
+  const guestbookCreateMethod = mcpMethodIdForDispatch({ modelType: guestbookIdentity.modelType, call: 'create' });
+  const allPublishedEntriesMethod = mcpMethodIdForDispatch({ modelType: guestbookEntryIdentity.modelType, call: 'invoke', specifier: 'allPublishedEntries' });
 
   demoAuthorizedUserContext({ f }, (u) => {
-    describe('McpServerFactoryService tools/list', () => {
-      it('exposes the guestbook-create and guestbookEntry-invoke-allPublishedEntries tools', async () => {
-        const tools = await listMcpTools(f, u);
-        const names = new Set(tools.map((t) => t.name));
-        expect(names.has(guestbookCreateToolName)).toBe(true);
-        expect(names.has(guestbookEntryAllPublishedEntriesToolName)).toBe(true);
+    describe('compact search', () => {
+      it('finds the guestbook.create and guestbookEntry.invoke.allPublishedEntries methods', async () => {
+        const found = await searchMcpMethods({ f, u, query: 'guestbook', limit: 50 });
+        const methods = new Set(found.methods.map((x) => x.method));
+        expect(methods.has(guestbookCreateMethod)).toBe(true);
+        expect(methods.has(allPublishedEntriesMethod)).toBe(true);
       });
     });
 
     // guestbookEntryAllPublishedEntries declares requiredScope: 'lms', so an OIDC caller needs both the
     // per-verb model.invoke scope AND lms to see or call it. A plain Firebase caller (above) bypasses.
     describe('per-function requiredScope (lms) scope gating', () => {
-      it('hides the lms-gated tool from an OIDC caller holding model.invoke but not lms', async () => {
-        const tools = await listMcpTools(f, u, 'model.invoke');
-        const names = new Set(tools.map((t) => t.name));
-        expect(names.has(guestbookEntryAllPublishedEntriesToolName)).toBe(false);
+      it('hides the lms-gated method from an OIDC caller holding model.invoke but not lms', async () => {
+        const { result, details } = await describeMcpMethod({ f, u, method: allPublishedEntriesMethod, scopes: 'model.invoke' });
+        expect(result.isError).toBe(true);
+        expect(details).toBeUndefined();
       });
 
-      it('lists the lms-gated tool for an OIDC caller holding both model.invoke and lms', async () => {
-        const tools = await listMcpTools(f, u, 'model.invoke lms');
-        const names = new Set(tools.map((t) => t.name));
-        expect(names.has(guestbookEntryAllPublishedEntriesToolName)).toBe(true);
+      it('describes the lms-gated method for an OIDC caller holding both model.invoke and lms', async () => {
+        const { details } = await describeMcpMethod({ f, u, method: allPublishedEntriesMethod, scopes: 'model.invoke lms' });
+        expect(details?.method).toBe(allPublishedEntriesMethod);
+        expect(details?.kind).toBe('read');
       });
 
-      it('rejects a tools/call for the lms-gated tool when the OIDC caller lacks lms', async () => {
-        const result = await callMcpTool({ f, u, name: guestbookEntryAllPublishedEntriesToolName, args: { limit: 10 }, scopes: 'model.invoke' });
+      it('rejects a read call for the lms-gated method when the OIDC caller lacks lms', async () => {
+        const result = await callMcpMethod({ f, u, kind: 'read', method: allPublishedEntriesMethod, params: { limit: 10 }, scopes: 'model.invoke' });
         expect(result.isError).toBe(true);
       });
     });
 
-    describe(guestbookCreateToolName, () => {
+    describe(guestbookCreateMethod, () => {
       it('creates a guestbook and persists it to Firestore', async () => {
         const params: CreateGuestbookParams = { name: 'mcpCreate' };
-        const result = await callMcpTool({ f, u, name: guestbookCreateToolName, args: params as unknown as Record<string, unknown> });
+        const result = await callMcpMethod({ f, u, kind: 'write', method: guestbookCreateMethod, params: params as unknown as Record<string, unknown> });
 
         expect(result.isError).toBeUndefined();
 
@@ -76,7 +70,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
       });
     });
 
-    describe(guestbookEntryAllPublishedEntriesToolName, () => {
+    describe(allPublishedEntriesMethod, () => {
       demoGuestbookContext({ f, name: 'AllPublishedBook', published: true }, (g) => {
         demoGuestbookEntryContext({ f, u, g, published: true }, (_e) => {
           beforeEach(async () => {
@@ -87,7 +81,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
           it('returns the MCP-mapped aggregate projection (entries stripped) for the seeded published entry', async () => {
             const params: AllPublishedGuestbookEntriesParams = { limit: 10 };
-            const result = await callMcpTool({ f, u, name: guestbookEntryAllPublishedEntriesToolName, args: params as unknown as Record<string, unknown> });
+            const result = await callMcpMethod({ f, u, kind: 'read', method: allPublishedEntriesMethod, params: params as unknown as Record<string, unknown> });
 
             expect(result.isError).toBeUndefined();
 
@@ -106,7 +100,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
     describe('unauthenticated dispatch', () => {
       it('returns isError when allPublishedEntries is called without auth', async () => {
-        const result = await callMcpToolAnonymous({ f, name: guestbookEntryAllPublishedEntriesToolName, args: { limit: 10 } });
+        const result = await callMcpMethodAnonymous({ f, kind: 'read', method: allPublishedEntriesMethod, params: { limit: 10 } });
         expect(result.isError).toBe(true);
       });
     });

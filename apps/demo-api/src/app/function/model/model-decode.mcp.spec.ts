@@ -1,19 +1,19 @@
 import { MODEL_DECODE_TOOL_NAME } from '@dereekb/firebase-server/mcp';
 import { guestbookIdentity, guestbookEntryIdentity } from 'demo-firebase';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';
-import { callMcpTool, callMcpToolAnonymous, listMcpTools } from '../../../test/mcp';
+import { callMcpMethod, callMcpMethodAnonymous, describeMcpMethod } from '../../../test/mcp';
 
 vi.setConfig({ hookTimeout: 30000, testTimeout: 30000 });
 
 /**
- * Integration coverage for the built-in `model-decode` MCP tool in apps/demo-api.
+ * Integration coverage for the built-in `model-decode` MCP method in apps/demo-api.
  *
  * The tool itself lives in `@dereekb/firebase-server/mcp` but the prefix map it walks
  * is sourced from the build-time MCP manifest JSON loaded by {@link McpServerFactoryService}
  * at boot. These tests exercise the full path (manifest-on-disk → factory cache →
- * tools/list + tools/call) against the live demo Nest module:
+ * details + the compact read tool) against the live demo Nest module:
  *
- * - tools/list exposes `model-decode`.
+ * - `details` describes `model-decode`.
  * - Root keys resolve to the matching model with no ancestors.
  * - Subcollection keys resolve the leaf + parent in order.
  * - Unknown prefixes are surfaced via `unresolvedPrefixes` without throwing.
@@ -22,10 +22,9 @@ vi.setConfig({ hookTimeout: 30000, testTimeout: 30000 });
  */
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   demoAuthorizedUserContext({ f }, (u) => {
-    describe('tools/list', () => {
+    describe('details', () => {
       it('exposes model-decode with decode description', async () => {
-        const tools = await listMcpTools(f, u);
-        const tool = tools.find((t) => t.name === MODEL_DECODE_TOOL_NAME);
+        const { details: tool } = await describeMcpMethod({ f, u, method: MODEL_DECODE_TOOL_NAME });
         expect(tool).toBeDefined();
         expect(tool?.description).toContain('Decode');
         expect(tool?.inputSchema).toMatchObject({ type: 'object' });
@@ -34,7 +33,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
     describe(MODEL_DECODE_TOOL_NAME, () => {
       it('resolves a root key against the registered manifest', async () => {
-        const result = await callMcpTool({ f, u, name: MODEL_DECODE_TOOL_NAME, args: { key: `${guestbookIdentity.collectionName}/abc` } });
+        const result = await callMcpMethod({ f, u, kind: 'read', method: MODEL_DECODE_TOOL_NAME, params: { key: `${guestbookIdentity.collectionName}/abc` } });
 
         expect(result.isError).toBeUndefined();
         const structured = result.structuredContent as {
@@ -52,7 +51,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
       it('resolves a subcollection key with the parent in ancestors', async () => {
         const key = `${guestbookIdentity.collectionName}/parent/${guestbookEntryIdentity.collectionName}/child`;
-        const result = await callMcpTool({ f, u, name: MODEL_DECODE_TOOL_NAME, args: { key } });
+        const result = await callMcpMethod({ f, u, kind: 'read', method: MODEL_DECODE_TOOL_NAME, params: { key } });
 
         expect(result.isError).toBeUndefined();
         const structured = result.structuredContent as {
@@ -67,7 +66,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
       });
 
       it('reports unresolved prefixes without throwing', async () => {
-        const result = await callMcpTool({ f, u, name: MODEL_DECODE_TOOL_NAME, args: { key: 'not-a-prefix/abc' } });
+        const result = await callMcpMethod({ f, u, kind: 'read', method: MODEL_DECODE_TOOL_NAME, params: { key: 'not-a-prefix/abc' } });
 
         expect(result.isError).toBeUndefined();
         const structured = result.structuredContent as { readonly leaf: { readonly modelType?: string }; readonly unresolvedPrefixes: ReadonlyArray<string> };
@@ -76,7 +75,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
       });
 
       it('returns isError for a malformed key with an odd number of segments', async () => {
-        const result = await callMcpTool({ f, u, name: MODEL_DECODE_TOOL_NAME, args: { key: 'gb' } });
+        const result = await callMcpMethod({ f, u, kind: 'read', method: MODEL_DECODE_TOOL_NAME, params: { key: 'gb' } });
 
         expect(result.isError).toBe(true);
         expect((result.content[0] as { text: string }).text).toContain('Expected an even number of segments');
@@ -84,8 +83,8 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
     });
 
     describe('unauthenticated dispatch', () => {
-      it('is hidden from tools/list and isError when called anonymously', async () => {
-        const result = await callMcpToolAnonymous({ f, name: MODEL_DECODE_TOOL_NAME, args: { key: `${guestbookIdentity.collectionName}/abc` } });
+      it('is isError when called anonymously through the read tool', async () => {
+        const result = await callMcpMethodAnonymous({ f, kind: 'read', method: MODEL_DECODE_TOOL_NAME, params: { key: `${guestbookIdentity.collectionName}/abc` } });
         expect(result.isError).toBe(true);
       });
     });

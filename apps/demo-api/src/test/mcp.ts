@@ -117,7 +117,7 @@ export interface CallMcpToolParams {
    */
   readonly u: DemoApiAuthorizedUserTestContextFixture;
   /**
-   * MCP tool name (e.g. `'guestbookEntry-invoke-recomputeLikes'`).
+   * MCP tool name (e.g. `'demo_mcp_read'`). Run a method through {@link callMcpMethod} instead.
    */
   readonly name: string;
   /**
@@ -244,6 +244,38 @@ export async function callMcpMethod(params: CallMcpMethodParams): Promise<CallTo
   const { f, u, kind, method, params: methodParams, extraArgs, scopes } = params;
   const name = mcpCompactToolNames(f)[kind];
   return callMcpTool({ f, u, name, args: { method, ...(methodParams === undefined ? undefined : { params: methodParams }), ...extraArgs }, scopes });
+}
+
+/**
+ * Parameters for {@link callMcpMethodAnonymous}.
+ */
+export interface CallMcpMethodAnonymousParams {
+  readonly f: DemoApiFunctionContextFixture;
+  /**
+   * Which compact router to call through. See {@link CallMcpMethodParams.kind}.
+   */
+  readonly kind: McpMethodKind;
+  /**
+   * The method id or one of its aliases.
+   */
+  readonly method: string;
+  /**
+   * The method's arguments, sent as the router's `params`.
+   */
+  readonly params?: unknown;
+}
+
+/**
+ * Runs one method through the compact `read` / `write` router tool with no auth context — used to prove the router
+ * still rejects unauthenticated callers.
+ *
+ * @param params - Config object with `{ f, kind, method, params }`.
+ * @returns The router's `CallToolResult` (expected to have `isError: true`).
+ */
+export async function callMcpMethodAnonymous(params: CallMcpMethodAnonymousParams): Promise<CallToolResult> {
+  const { f, kind, method, params: methodParams } = params;
+  const name = mcpCompactToolNames(f)[kind];
+  return callMcpToolAnonymous({ f, name, args: { method, ...(methodParams === undefined ? undefined : { params: methodParams }) } });
 }
 
 /**

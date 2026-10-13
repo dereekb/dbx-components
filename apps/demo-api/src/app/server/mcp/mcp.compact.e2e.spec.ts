@@ -58,7 +58,7 @@ async function searchDocIds(f: DemoApiFunctionContextFixture, u: DemoApiAuthoriz
 }
 
 /**
- * End-to-end coverage for demo-api's compact, Stripe-like MCP surface (`toolNamePrefix: 'demo'`, BOTH mode):
+ * End-to-end coverage for demo-api's compact, Stripe-like MCP surface (`toolNamePrefix: 'demo'`, compact only):
  * `demo_mcp_search` → `demo_mcp_details` → `demo_mcp_read` / `demo_mcp_write`, the token and documentation tools, and
  * the app-supplied `demo_api_status` tool, all driven through the real dispatch chain.
  *
@@ -97,12 +97,20 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             expect(byName.get(names.write)?.annotations?.readOnlyHint).not.toBe(true);
           });
 
-          it('also lists every method as its own legacy tool (BOTH mode), without alwaysLoad', () => {
-            const legacy = tools.find((x) => x.name === buildMcpToolName(guestbookIdentity.modelType, 'create'));
+          it('never lists a method as its own legacy tool (compact only)', () => {
+            const names = new Set(tools.map((x) => x.name));
 
-            expect(legacy).toBeDefined();
-            expect((legacy as { readonly _meta?: Record<string, unknown> })._meta?.[MCP_ALWAYS_LOAD_META_KEY]).toBeUndefined();
-            expect(tools.some((x) => x.name === MODEL_GET_TOOL_NAME)).toBe(true);
+            expect(names.has(buildMcpToolName(guestbookIdentity.modelType, 'create'))).toBe(false);
+            expect(names.has(MODEL_GET_TOOL_NAME)).toBe(false);
+          });
+
+          it('answers a call to a legacy tool name with the compact method to use instead', async () => {
+            const result = await callMcpTool({ f, u, name: buildMcpToolName(guestbookIdentity.modelType, 'create'), args: { name: 'neverCreated' } });
+
+            expect(result.isError).toBe(true);
+            expect(resultText(result)).toContain('It is now a method');
+            expect(resultText(result)).toContain(mcpCompactToolNames(f).write);
+            expect(resultText(result)).toContain('guestbook.create');
           });
 
           it('lists the documentation tool and the app-supplied demo_api_status tool', () => {
@@ -129,14 +137,14 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             expect(entry?.params).toContain('name');
           });
 
-          it('describes guestbook.create with its schema, router and legacy tool name', async () => {
+          it('describes guestbook.create with its schema, router and legacy alias', async () => {
             const { result, details } = await describeMcpMethod({ f, u, method: 'guestbook.create' });
             const legacyName = buildMcpToolName(guestbookIdentity.modelType, 'create');
 
             expect(result.isError).toBeUndefined();
             expect(details?.kind).toBe('write');
             expect(details?.invokeWith).toBe(mcpCompactToolNames(f).write);
-            expect(details?.tool).toBe(legacyName);
+            expect(details?.tool).toBeUndefined();
             expect(details?.aliases).toContain(legacyName);
             expect(details?.inputSchema).toMatchObject({ properties: { name: expect.anything() } });
           });
@@ -228,6 +236,15 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
               expect(details?.kind).toBe('write');
             }
           });
+
+          it('describes the run trigger param of notificationTaskBot.update.run', async () => {
+            const { details } = await describeMcpMethod({ f, u, method: 'notificationTaskBot.update.run' });
+            const inputSchema = details?.inputSchema as { readonly properties?: Record<string, unknown>; readonly required?: readonly string[] };
+
+            expect(details?.model?.type).toBe('notificationTaskBot');
+            expect(inputSchema.required).toEqual(expect.arrayContaining(['i', 'key']));
+            expect(inputSchema.properties?.['trigger']).toBeDefined();
+          });
         });
 
         describe('app-supplied tool', () => {
@@ -256,6 +273,11 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
             expect(ids.has('admin/managing-guestbooks')).toBe(true);
             expect(ids.has('guestbook/signing')).toBe(true);
+          });
+
+          it('finds the user-audience task bot doc', async () => {
+            const ids = await searchDocIds(f, u, 'task bot opt out');
+            expect(ids.has('notification/task-bots')).toBe(true);
           });
 
           it('reads an admin doc through docs-read on the read tool', async () => {
@@ -317,6 +339,11 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             expect(ids.has('admin/managing-guestbooks')).toBe(false);
           });
 
+          it('finds the user-audience task bot doc', async () => {
+            const ids = await searchDocIds(f, u, 'task bot opt out');
+            expect(ids.has('notification/task-bots')).toBe(true);
+          });
+
           it('refuses to read the admin doc exactly as it refuses a missing doc', async () => {
             const hidden = await callMcpMethod({ f, u, kind: 'read', method: MCP_DOCS_READ_TOOL_NAME, params: { id: 'admin/managing-guestbooks' } });
             const missing = await callMcpMethod({ f, u, kind: 'read', method: MCP_DOCS_READ_TOOL_NAME, params: { id: 'admin/does-not-exist' } });
@@ -366,6 +393,11 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           expect(ids.has('getting-started')).toBe(true);
           expect(ids.has('guestbook/signing')).toBe(false);
           expect(ids.has('admin/managing-guestbooks')).toBe(false);
+        });
+
+        it('never finds the user-audience task bot doc', async () => {
+          const ids = await searchDocIds(f, u, 'task bot opt out');
+          expect(ids.has('notification/task-bots')).toBe(false);
         });
       });
     });

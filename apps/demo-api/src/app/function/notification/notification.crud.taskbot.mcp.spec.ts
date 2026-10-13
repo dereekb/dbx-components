@@ -1,9 +1,9 @@
 import { notificationTaskBotIdentity } from '@dereekb/firebase';
-import { buildMcpToolName, MODEL_ROLES_TOOL_NAME } from '@dereekb/firebase-server/mcp';
+import { mcpMethodIdForDispatch, MODEL_ROLES_TOOL_NAME } from '@dereekb/firebase-server/mcp';
 import { MS_IN_HOUR } from '@dereekb/util';
 import { DEMO_PING_NOTIFICATION_TASK_BOT_ENTRY_ID, DEMO_PING_NOTIFICATION_TASK_BOT_SCRIPT_TYPE } from 'demo-firebase';
-import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoNotificationTaskBotContext, demoProfileContext } from '../../../test/fixture';
-import { callMcpTool, listMcpTools } from '../../../test/mcp';
+import { type DemoApiAuthorizedUserTestContextFixture, type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoNotificationTaskBotContext, demoProfileContext } from '../../../test/fixture';
+import { callMcpMethod, describeMcpMethod, searchMcpMethods } from '../../../test/mcp';
 
 vi.setConfig({ hookTimeout: 30000, testTimeout: 30000 });
 
@@ -15,22 +15,34 @@ interface RolesResponse {
 }
 
 /**
- * MCP coverage for the NotificationTaskBot owner opt-outs and the admin entry tool's data patch.
+ * MCP coverage for the NotificationTaskBot owner opt-outs and the admin entry method's data patch.
  *
- * The bot's owner is granted ONLY the `optOut` role (never `read`), and the admin-only `update:entry` / `update:run`
- * tools are hidden from non-admins, while the owner-facing `read:optOuts` / `update:optOut` tools stay listed.
+ * The bot's owner is granted ONLY the `optOut` role (never `read`), and the admin-only `update.entry` / `update.run`
+ * methods are hidden from non-admins, while the owner-facing `read.optOuts` / `update.optOut` methods stay visible.
  */
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
-  const entryToolName = buildMcpToolName(notificationTaskBotIdentity.modelType, 'update', 'entry');
-  const runToolName = buildMcpToolName(notificationTaskBotIdentity.modelType, 'update', 'run');
-  const readOptOutsToolName = buildMcpToolName(notificationTaskBotIdentity.modelType, 'read', 'optOuts');
-  const updateOptOutToolName = buildMcpToolName(notificationTaskBotIdentity.modelType, 'update', 'optOut');
+  const modelType = notificationTaskBotIdentity.modelType;
+  const entryMethod = mcpMethodIdForDispatch({ modelType, call: 'update', specifier: 'entry' });
+  const runMethod = mcpMethodIdForDispatch({ modelType, call: 'update', specifier: 'run' });
+  const readOptOutsMethod = mcpMethodIdForDispatch({ modelType, call: 'read', specifier: 'optOuts' });
+  const updateOptOutMethod = mcpMethodIdForDispatch({ modelType, call: 'update', specifier: 'optOut' });
+
+  /**
+   * Returns the notificationTaskBot method ids visible to the caller through the compact search tool.
+   *
+   * @param u - The calling user.
+   * @returns The visible method ids.
+   */
+  async function visibleTaskBotMethods(u: DemoApiAuthorizedUserTestContextFixture): Promise<Set<string>> {
+    const found = await searchMcpMethods({ f, u, query: '', model: modelType, limit: 50 });
+    return new Set(found.methods.map((x) => x.method));
+  }
 
   demoAuthorizedUserContext({ f }, (u) => {
     demoProfileContext({ f, u }, (p) => {
       demoNotificationTaskBotContext({ f, for: p, owner: p, entries: [{ entryId: DEMO_PING_NOTIFICATION_TASK_BOT_ENTRY_ID, scriptType: DEMO_PING_NOTIFICATION_TASK_BOT_SCRIPT_TYPE, data: { iv: MS_IN_HOUR } }] }, (ntb) => {
         it('grants the owner exactly the optOut role', async () => {
-          const result = await callMcpTool({ f, u, name: MODEL_ROLES_TOOL_NAME, args: { modelType: notificationTaskBotIdentity.modelType, keys: [ntb.documentKey] } });
+          const result = await callMcpMethod({ f, u, kind: 'read', method: MODEL_ROLES_TOOL_NAME, params: { modelType: notificationTaskBotIdentity.modelType, keys: [ntb.documentKey] } });
 
           expect(result.isError).toBeUndefined();
           const structured = result.structuredContent as unknown as RolesResponse;
@@ -38,16 +50,16 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         });
 
         demoAuthorizedUserAdminContext({ f }, (au) => {
-          describe('entry tool data patch', () => {
-            it('advertises updateData on the entry tool', async () => {
-              const tool = (await listMcpTools(f, au)).find((t) => t.name === entryToolName);
-              const inputSchema = tool?.inputSchema as { readonly properties?: Record<string, unknown> };
+          describe('entry method data patch', () => {
+            it('advertises updateData on the entry method', async () => {
+              const { details } = await describeMcpMethod({ f, u: au, method: entryMethod });
+              const inputSchema = details?.inputSchema as { readonly properties?: Record<string, unknown> };
 
               expect(inputSchema.properties?.['updateData']).toBeDefined();
             });
 
-            it('patches entry data through the entry tool', async () => {
-              const result = await callMcpTool({ f, u: au, name: entryToolName, args: { key: ntb.documentKey, i: DEMO_PING_NOTIFICATION_TASK_BOT_ENTRY_ID, updateData: { pa: 5 } } });
+            it('patches entry data through the entry method', async () => {
+              const result = await callMcpMethod({ f, u: au, kind: 'write', method: entryMethod, params: { key: ntb.documentKey, i: DEMO_PING_NOTIFICATION_TASK_BOT_ENTRY_ID, updateData: { pa: 5 } } });
               const entry = await ntb.assertEntry();
 
               expect(result.isError).toBeUndefined();
@@ -55,7 +67,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             });
 
             it('reports a refused patch as a tool error naming the problem', async () => {
-              const result = await callMcpTool({ f, u: au, name: entryToolName, args: { key: ntb.documentKey, i: DEMO_PING_NOTIFICATION_TASK_BOT_ENTRY_ID, updateData: { iv: -5 } } });
+              const result = await callMcpMethod({ f, u: au, kind: 'write', method: entryMethod, params: { key: ntb.documentKey, i: DEMO_PING_NOTIFICATION_TASK_BOT_ENTRY_ID, updateData: { iv: -5 } } });
 
               expect(result.isError).toBe(true);
               expect(JSON.stringify(result.content)).toContain('iv');
@@ -64,23 +76,23 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         });
       });
 
-      describe('tools/list', () => {
-        it('lists the opt-out tools but hides the admin-only entry and run tools from a non-admin', async () => {
-          const names = new Set((await listMcpTools(f, u)).map((t) => t.name));
+      describe('compact search', () => {
+        it('finds the opt-out methods but hides the admin-only entry and run methods from a non-admin', async () => {
+          const names = await visibleTaskBotMethods(u);
 
-          expect(names.has(readOptOutsToolName)).toBe(true);
-          expect(names.has(updateOptOutToolName)).toBe(true);
-          expect(names.has(entryToolName)).toBe(false);
-          expect(names.has(runToolName)).toBe(false);
+          expect(names.has(readOptOutsMethod)).toBe(true);
+          expect(names.has(updateOptOutMethod)).toBe(true);
+          expect(names.has(entryMethod)).toBe(false);
+          expect(names.has(runMethod)).toBe(false);
         });
 
         demoAuthorizedUserAdminContext({ f }, (au) => {
-          it('lists the entry and run tools for an admin', async () => {
-            const names = new Set((await listMcpTools(f, au)).map((t) => t.name));
+          it('finds the entry and run methods for an admin', async () => {
+            const names = await visibleTaskBotMethods(au);
 
-            expect(names.has(entryToolName)).toBe(true);
-            expect(names.has(runToolName)).toBe(true);
-            expect(names.has(readOptOutsToolName)).toBe(true);
+            expect(names.has(entryMethod)).toBe(true);
+            expect(names.has(runMethod)).toBe(true);
+            expect(names.has(readOptOutsMethod)).toBe(true);
           });
         });
       });

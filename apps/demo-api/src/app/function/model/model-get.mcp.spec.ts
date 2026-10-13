@@ -1,13 +1,13 @@
 import { MODEL_GET_TOOL_NAME } from '@dereekb/firebase-server/mcp';
 import { guestbookIdentity, guestbookEntryIdentity } from 'demo-firebase';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext, demoGuestbookContext, demoGuestbookEntryContext } from '../../../test/fixture';
-import { callMcpTool, callMcpToolAnonymous, listMcpTools } from '../../../test/mcp';
+import { callMcpMethod, callMcpMethodAnonymous, describeMcpMethod } from '../../../test/mcp';
 import { AUTH_ADMIN_ROLE } from '@dereekb/util';
 
 vi.setConfig({ hookTimeout: 30000, testTimeout: 30000 });
 
 /**
- * Integration coverage for the built-in `model-get` MCP tool in apps/demo-api.
+ * Integration coverage for the built-in `model-get` MCP method in apps/demo-api.
  *
  * The tool itself lives in `@dereekb/firebase-server/mcp` but it pulls registered identities
  * and per-key permission checks from the live demo Nest module, so we exercise the full path
@@ -25,13 +25,14 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
       await f.instance.authService.userContext(u.uid).addRoles([AUTH_ADMIN_ROLE]);
     });
 
-    describe('tools/list', () => {
+    describe('details', () => {
       it('exposes model-get with readOnly metadata', async () => {
-        const tools = await listMcpTools(f, u);
-        const tool = tools.find((t) => t.name === MODEL_GET_TOOL_NAME);
+        const { details: tool } = await describeMcpMethod({ f, u, method: MODEL_GET_TOOL_NAME });
         expect(tool).toBeDefined();
+        expect(tool?.kind).toBe('read');
         expect(tool?.description).toContain('Fetch');
         expect(tool?.inputSchema).toMatchObject({ type: 'object' });
+        expect(tool?.annotations).toMatchObject({ readOnlyHint: true });
       });
     });
 
@@ -39,11 +40,12 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
       demoGuestbookContext({ f, name: 'ModelGetA', published: true }, (gA) => {
         demoGuestbookContext({ f, name: 'ModelGetB', published: true }, (gB) => {
           it('returns a seeded guestbook fetched by full key', async () => {
-            const result = await callMcpTool({
+            const result = await callMcpMethod({
               f,
               u,
-              name: MODEL_GET_TOOL_NAME,
-              args: { modelType: guestbookIdentity.modelType, keys: [gA.documentKey] }
+              kind: 'read',
+              method: MODEL_GET_TOOL_NAME,
+              params: { modelType: guestbookIdentity.modelType, keys: [gA.documentKey] }
             });
 
             expect(result.isError).toBeUndefined();
@@ -55,11 +57,12 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           });
 
           it('auto-promotes a bare id to <collectionName>/<id> for a root model', async () => {
-            const result = await callMcpTool({
+            const result = await callMcpMethod({
               f,
               u,
-              name: MODEL_GET_TOOL_NAME,
-              args: { modelType: guestbookIdentity.modelType, keys: [gA.documentId] }
+              kind: 'read',
+              method: MODEL_GET_TOOL_NAME,
+              params: { modelType: guestbookIdentity.modelType, keys: [gA.documentId] }
             });
 
             expect(result.isError).toBeUndefined();
@@ -69,11 +72,12 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           });
 
           it('fetches a batch with mixed full keys and bare ids', async () => {
-            const result = await callMcpTool({
+            const result = await callMcpMethod({
               f,
               u,
-              name: MODEL_GET_TOOL_NAME,
-              args: { modelType: guestbookIdentity.modelType, keys: [gA.documentKey, gB.documentId] }
+              kind: 'read',
+              method: MODEL_GET_TOOL_NAME,
+              params: { modelType: guestbookIdentity.modelType, keys: [gA.documentKey, gB.documentId] }
             });
 
             expect(result.isError).toBeUndefined();
@@ -85,11 +89,12 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           });
 
           it('surfaces unknown keys in the errors array without throwing', async () => {
-            const result = await callMcpTool({
+            const result = await callMcpMethod({
               f,
               u,
-              name: MODEL_GET_TOOL_NAME,
-              args: { modelType: guestbookIdentity.modelType, keys: [gA.documentKey, 'gb/definitely-missing'] }
+              kind: 'read',
+              method: MODEL_GET_TOOL_NAME,
+              params: { modelType: guestbookIdentity.modelType, keys: [gA.documentKey, 'gb/definitely-missing'] }
             });
 
             expect(result.isError).toBeUndefined();
@@ -101,11 +106,12 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
         demoGuestbookEntryContext({ f, u, g: gA, published: true }, (entry) => {
           it('rejects bare ids for subcollection model types', async () => {
-            const result = await callMcpTool({
+            const result = await callMcpMethod({
               f,
               u,
-              name: MODEL_GET_TOOL_NAME,
-              args: { modelType: guestbookEntryIdentity.modelType, keys: [entry.documentId] }
+              kind: 'read',
+              method: MODEL_GET_TOOL_NAME,
+              params: { modelType: guestbookEntryIdentity.modelType, keys: [entry.documentId] }
             });
 
             expect(result.isError).toBe(true);
@@ -114,11 +120,12 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           });
 
           it('accepts a full subcollection key', async () => {
-            const result = await callMcpTool({
+            const result = await callMcpMethod({
               f,
               u,
-              name: MODEL_GET_TOOL_NAME,
-              args: { modelType: guestbookEntryIdentity.modelType, keys: [entry.documentKey] }
+              kind: 'read',
+              method: MODEL_GET_TOOL_NAME,
+              params: { modelType: guestbookEntryIdentity.modelType, keys: [entry.documentKey] }
             });
 
             expect(result.isError).toBeUndefined();
@@ -130,11 +137,12 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
       });
 
       it('returns isError when an unknown modelType is requested', async () => {
-        const result = await callMcpTool({
+        const result = await callMcpMethod({
           f,
           u,
-          name: MODEL_GET_TOOL_NAME,
-          args: { modelType: 'not-a-real-model', keys: ['something/abc'] }
+          kind: 'read',
+          method: MODEL_GET_TOOL_NAME,
+          params: { modelType: 'not-a-real-model', keys: ['something/abc'] }
         });
 
         expect(result.isError).toBe(true);
@@ -143,11 +151,12 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
     });
 
     describe('unauthenticated dispatch', () => {
-      it('is hidden from tools/list and isError when called anonymously', async () => {
-        const result = await callMcpToolAnonymous({
+      it('is isError when called anonymously through the read tool', async () => {
+        const result = await callMcpMethodAnonymous({
           f,
-          name: MODEL_GET_TOOL_NAME,
-          args: { modelType: guestbookIdentity.modelType, keys: ['gb/abc'] }
+          kind: 'read',
+          method: MODEL_GET_TOOL_NAME,
+          params: { modelType: guestbookIdentity.modelType, keys: ['gb/abc'] }
         });
 
         expect(result.isError).toBe(true);

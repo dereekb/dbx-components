@@ -65,11 +65,9 @@ export function demoMcpModuleConfigFactory(envService: FirebaseServerEnvService,
     mcpManifestPath: MCP_MANIFEST_PATH,
     mcpRouteManifestPath: ROUTE_MANIFEST_PATH,
     // The compact tools are `demo_mcp_search` / `demo_mcp_details` / `demo_mcp_read` / `demo_mcp_write` /
-    // `demo_mcp_token` and `search_demo_documentation`.
-    toolNamePrefix: 'demo',
-    // BOTH surfaces: the compact tools (the default) plus every method as its own legacy tool. Per-method tools
-    // carry no `anthropic/alwaysLoad` hint, so a client with tool search keeps them deferred.
-    tools: { methodTools: true }
+    // `demo_mcp_token` and `search_demo_documentation`. `tools` is left unset, so only the compact surface is
+    // advertised: every method is reached through those tools rather than listed as its own tool.
+    toolNamePrefix: 'demo'
   };
 }
 
