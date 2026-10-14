@@ -55,6 +55,10 @@
           },
           "supervise": {
             "tasks": ["demo-api:build-watch"]
+          },
+          "preLaunch": ["npx", "nx", "reset", "--onlyWorkspaceData"],
+          "healthCheck": {
+            "url": "http://localhost:9900/"
           }
         }
       }

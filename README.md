@@ -50,7 +50,7 @@ It will talk with the firebase development server by default.
 ### Firebase Emulator
 The firebase emulator is run within a docker container. This is to allow consistent configuration described in the Dockerfile.
 
-Run `./serve-server.sh` to start the firebase development server.
+Run `dbx-claude serve server` to start the firebase development server (Ctrl+C stops it). Without dbx-claude, run `./serve-server.sh`, which delegates to `dbx-claude serve server` when it is installed and otherwise starts the container unsupervised.
 
 ### Development Server Notes
 - `demo-api`'s `watch-emulators` nx target uses [entr](http://eradman.com/entrproject/) to watch for changes in the demo-api's dist directory and restart the emulators automatically. The firebase emulator suite does not support hot-reload of functions.
@@ -69,7 +69,7 @@ Run `./serve-server.sh` to start the firebase development server.
 
 **Both development servers must be running.** The endpoint itself is served by the Firebase hosting emulator on `:9901`, but it is guarded by the app's OIDC provider, whose issuer is derived from `appUrl` (`http://localhost:9010`) — so the browser login leg is served by the Angular dev server:
 
-1. `./serve-server.sh` — the emulator suite (hosting on `:9901`, functions on `:9902`).
+1. `dbx-claude serve server` (or `./serve-server.sh` without dbx-claude) — the emulator suite (hosting on `:9901`, functions on `:9902`).
 2. `./serve-web.sh` — the Angular dev server on `:9010`, which hosts the OIDC issuer at `/oidc`.
 
 Then run `/mcp` in Claude Code, select `demo-api-mcp-dev`, and choose *Authenticate*. A browser window opens for the OIDC login; the client registers itself dynamically (DCR is enabled outside production).

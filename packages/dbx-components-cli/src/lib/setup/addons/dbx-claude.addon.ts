@@ -23,10 +23,13 @@ const DBX_CLAUDE_MARKER_FILE = 'dbx-claude.json';
  * baseline `capabilities` mirror the markers in the dbx-components workspace and
  * downstream projects (e.g. joinfoodflip).
  *
- * The `docker.options.serve` block points `dbx-claude docker serve` / `exec` at the API's
- * `<api>-server` compose service, and `supervise` has dbx-claude watch the API's continuous
- * `build-watch` task: when it dies, dbx-claude rebuilds on the host and restarts the container
- * instead of leaving the emulators serving a dist that never rebuilds.
+ * The `docker.options.serve` block points `dbx-claude serve server` (and `dbx-claude docker serve` /
+ * `exec`) at the API's `<api>-server` compose service, and `supervise` has dbx-claude watch the API's
+ * continuous `build-watch` task: when it dies, dbx-claude rebuilds on the host and restarts the container
+ * instead of leaving the emulators serving a dist that never rebuilds. `preLaunch` clears the stale Nx
+ * task rows a killed container leaves in the bind-mounted `.nx/workspace-data` before every launch (what
+ * `serve-server.sh` does by hand), and `healthCheck` probes the Emulator UI port: the UI is the last
+ * emulator to start, and the hub port is not published by `docker-compose.yml`.
  *
  * @param naming - The project naming (project name, API app, docker container).
  * @returns The serialized marker JSON (trailing newline included).
@@ -50,6 +53,10 @@ function buildDbxClaudeMarker(naming: SetupNaming): string {
             },
             supervise: {
               tasks: [`${naming.apiAppName}:build-watch`]
+            },
+            preLaunch: ['npx', 'nx', 'reset', '--onlyWorkspaceData'],
+            healthCheck: {
+              url: `http://localhost:${naming.emulatorUiPort}/`
             }
           }
         }

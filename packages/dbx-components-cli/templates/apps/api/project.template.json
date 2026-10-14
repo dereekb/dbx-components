@@ -53,7 +53,7 @@
       }
     },
     "build-watch": {
-      "//": "The watch leg of `serve`: a real continuous target rather than a nested `npx nx build-base --watch`, so it joins serve's single task graph and its ^build deps are deduped. Options mirror build-base; keep them in sync -- only `watch` differs. `dbx-claude docker serve` supervises this task (.dbx-claude/dbx-claude.json docker.options.serve.supervise) and rebuilds and restarts the container if it exits.",
+      "//": "The watch leg of `serve`: a real continuous target rather than a nested `npx nx build-base --watch`, so it joins serve's single task graph and its ^build deps are deduped. Options mirror build-base; keep them in sync -- only `watch` differs. `dbx-claude serve server` supervises this task (.dbx-claude/dbx-claude.json docker.options.serve.supervise) and rebuilds and restarts the container if it exits.",
       "executor": "@nx/esbuild:esbuild",
       "continuous": true,
       "dependsOn": ["^build"],

@@ -53,12 +53,14 @@ describe('dbx-claude add-on', () => {
 
   it('points docker serve at the API server container and supervises its build-watch task', () => {
     const plan = SETUP_ADDONS['dbx-claude'].buildScaffoldPlan(contextWith(BASE_MANIFEST));
-    const marker = JSON.parse(plan[0].literal as string) as { capabilityConfig: { docker: { options: { serve: { service: string; containerName: string; exec: { joinCommand: boolean }; supervise: { tasks: string[] } } } } } };
+    const marker = JSON.parse(plan[0].literal as string) as { capabilityConfig: { docker: { options: { serve: { service: string; containerName: string; exec: { joinCommand: boolean }; supervise: { tasks: string[] }; preLaunch: string[]; healthCheck: { url: string } } } } } };
     const serve = marker.capabilityConfig.docker.options.serve;
     expect(serve.service).toBe('testproj-api-server');
     expect(serve.containerName).toBe('testproj-api-server');
     expect(serve.exec.joinCommand).toBe(true);
     expect(serve.supervise.tasks).toEqual(['testproj-api:build-watch']);
+    expect(serve.preLaunch).toEqual(['npx', 'nx', 'reset', '--onlyWorkspaceData']);
+    expect(serve.healthCheck.url).toBe('http://localhost:9300/');
   });
 });
 
