@@ -1,3 +1,42 @@
+## Migration to v14.18.x — CLI handoff bearer credentials
+
+The `cli-token` MCP tool now hands the CLI a **bearer access token** by default instead of a refresh token. The CLI
+uses it directly and never calls `/oidc/token`, so it never authenticates as the app's CLI OAuth client. A refresh
+handoff only worked when the CLI could present that client's exact identity (including a secret, if it had one).
+
+### What changed
+- **MCP default is `bearer`.** `McpCliTokenMintInput` gains `credentialType` (already defaulted to `bearer` by the
+  tool), and the tool accepts a `credentialType: 'bearer' | 'refresh'` argument. `POST /oidc/cli-token` is unchanged:
+  with no `credentialType` it still mints `refresh`. An unknown value returns 400 `CLI_TOKEN_INVALID_CREDENTIAL_TYPE_ERROR`.
+- **`CliTokenHandoffBundle`**: `credentialType`, `accessToken` and `tokenType` are new, and `refreshToken` is now
+  optional (present for `refresh` only). `CliTokenMintResult` gains `credentialType`. The mint still returns only the
+  one-time claim code; the credential comes only from `POST /oidc/cli-token/claim`.
+- **A bearer credential never carries `offline_access`.** It still gets its own child Grant owned by the CLI client,
+  so userinfo, the `dbx_session_expires_at` bound and grant revocation all work. It does not cascade-revoke with
+  the parent session (unchanged).
+- **Narrowing keeps identity scopes.** With `scopes`, the mint now keeps every scope the provider's `claims` config
+  maps to at least one claim (`openid`, `profile`, `email` and the app's claims scope), so a narrowed credential keeps
+  the caller's role claims. Override with `CliTokenApiModuleConfig.retainedScopes` (`[]` restores the old behavior).
+- **The model API error `code` is specific.** `ModelApiController` now returns `error.details.code` (e.g.
+  `CALL_MODEL_MISSING_OIDC_SCOPE`) instead of the generic `permission-denied`.
+- **`OidcAuthData.oidcValidatedToken.grantId`** is set for opaque access tokens.
+- **dbx-cli**: a bearer handoff entry (`handoff: true`, no refresh token) is used until it expires and then fails
+  `AUTH_HANDOFF_EXPIRED` with a re-mint suggestion. `auth status` / `show` / `check`, `doctor` and
+  `auth logout --revoke` handle it. API 401/403 responses throw `CliHttpError`, and the suggestion now tells a missing
+  scope apart from a missing role and from an expired credential.
+
+### Required
+- **Forward `credentialType` in your `McpCliTokenMinter`**, or the mint falls back to `refresh`:
+  ```ts
+  cliTokenService.mintCliToken(input.auth, { scopes: input.scopes, ttlSeconds: input.ttlSeconds, credentialType: input.credentialType }, { requestIp: input.requestIp });
+  ```
+- Update tests that read `bundle.refreshToken` as required.
+
+### Check
+- A CLI that predates bearer support rejects a bearer claim with `AUTH_HANDOFF_FAILED`, and the code is used up. Ship
+  the matching CLI (the tool's `installCommand`), or mint with `credentialType: 'refresh'`.
+- Set `retainedScopes` if your role claims hang off a scope whose `claims` entry is `[]`.
+
 ## Migration to v14.18.x — MCP tool examples and built-in tools
 
 The MCP tool text no longer names HelloSubs or demo models. Examples now come from the app itself, and several

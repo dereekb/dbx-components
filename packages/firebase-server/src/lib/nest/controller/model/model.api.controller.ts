@@ -197,7 +197,9 @@ export class ModelApiController {
       const status = error?.status ?? error?.httpErrorCode?.status ?? HttpStatus.INTERNAL_SERVER_ERROR;
       const message = error?.message ?? 'Internal server error';
 
-      result = new HttpException({ statusCode: status, message, code: error?.code }, status);
+      // an HttpsError's own `code` is the generic category (e.g. `permission-denied`); the specific
+      // server code (e.g. `CALL_MODEL_MISSING_OIDC_SCOPE`) rides in its details
+      result = new HttpException({ statusCode: status, message, code: error?.details?.code ?? error?.code }, status);
     }
 
     return result;

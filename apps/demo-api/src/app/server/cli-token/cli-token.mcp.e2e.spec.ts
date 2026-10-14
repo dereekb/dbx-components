@@ -127,6 +127,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
             const inputSchema = tool!.inputSchema as { readonly properties?: Record<string, unknown>; readonly required?: readonly string[] };
             expect(inputSchema.properties).toHaveProperty('scopes');
+            expect(inputSchema.properties).toHaveProperty('credentialType');
             // the per-tool reason parameter is injected into the wire schema of STATIC tools too
             expect(inputSchema.required).toContain('reason');
           });
@@ -146,7 +147,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         });
 
         describe('tools/call', () => {
-          it('returns a claim code and a runnable handoff command, never the refresh token', async () => {
+          it('returns a claim code and a runnable handoff command, never the credential', async () => {
             const output = await mintThroughMcp();
 
             expect(typeof output.claimCode).toBe('string');
@@ -159,8 +160,11 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             expect(output.envName).toBe('dev-mcp');
             expect(output.handoffCommand).toBe(`${DEMO_CLI_NAME} auth handoff ${output.claimCode} --env dev-mcp`);
             expect(new Date(output.claimExpiresAt).getTime()).toBeGreaterThan(Date.now());
-            // the tool's output reaches an MCP transcript — a refresh token must not
+            // the tool's output reaches an MCP transcript — a credential must not
             expect(JSON.stringify(output)).not.toContain('refreshToken');
+            expect(JSON.stringify(output)).not.toContain('accessToken');
+            // the tool defaults to a bearer credential the CLI uses directly
+            expect(output.credentialType).toBe('bearer');
           });
 
           it('grants the caller’s own scopes minus the deny-list, capped at one hour', async () => {
@@ -169,7 +173,8 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             const lifetimeSeconds = (new Date(output.expiresAt).getTime() - Date.now()) / 1000;
 
             expect(granted.has('model.read')).toBe(true);
-            expect(granted.has('offline_access')).toBe(true);
+            // a bearer credential cannot be refreshed, so it never claims offline_access
+            expect(granted.has('offline_access')).toBe(false);
             // no chaining, no escalation
             expect(granted.has(CLI_TOKEN_OIDC_SCOPE)).toBe(false);
             expect(granted.has(SERVICE_TOKEN_OIDC_SCOPE)).toBe(false);
@@ -183,6 +188,24 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             // requested through the tool, but the calling session never held it
             expect(granted.has('model.delete')).toBe(false);
             expect(granted.has('model.query')).toBe(false);
+            // narrowing keeps the identity scopes, and with them the caller's role claims
+            expect(granted.has('openid')).toBe(true);
+            expect(granted.has('demo')).toBe(true);
+          });
+
+          it('still mints a refresh credential on request, which exchanges at the token endpoint', async () => {
+            const app = await f.loadInitializedNestApplication();
+            const output = await mintThroughMcp({ credentialType: 'refresh' });
+
+            expect(output.credentialType).toBe('refresh');
+            expect(new Set(output.scope.split(' ')).has('offline_access')).toBe(true);
+
+            const bundle = (await request(app.getHttpServer()).post(FIREBASE_SERVER_CLI_TOKEN_CLAIM_PATH).send({ code: output.claimCode }).expect(201)).body as CliTokenHandoffBundle;
+            expect(bundle.credentialType).toBe('refresh');
+            expect(bundle.accessToken).toBeUndefined();
+
+            const res = await request(app.getHttpServer()).post('/oidc/token').type('form').send({ grant_type: 'refresh_token', refresh_token: bundle.refreshToken, client_id: bundle.clientId }).expect(200);
+            expect(typeof res.body.access_token).toBe('string');
           });
 
           it('omits the download URL when the agent opts out with includeDownloadUrl:false', async () => {
@@ -224,7 +247,12 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             expect(bundle.uid).toBe(u.uid);
             expect(bundle.clientId).toBe(process.env[DEMO_CLI_OIDC_CLIENT_ID_ENV_KEY]);
             expect(bundle.scope).toBe(output.scope);
-            expect(bundle.refreshToken.length).toBeGreaterThan(0);
+            expect(bundle.credentialType).toBe('bearer');
+            expect(bundle.refreshToken).toBeUndefined();
+
+            // the bearer works directly — no token-endpoint exchange, so no client authentication
+            const session = await request(app.getHttpServer()).get('/oidc/session').set('Authorization', `Bearer ${bundle.accessToken}`).expect(200);
+            expect(session.body.sub).toBe(u.uid);
 
             const replayed = await request(app.getHttpServer()).post(FIREBASE_SERVER_CLI_TOKEN_CLAIM_PATH).send({ code: output.claimCode }).expect(404);
             expect(replayed.body.code).toBe(CLI_TOKEN_CLAIM_INVALID_ERROR_CODE);

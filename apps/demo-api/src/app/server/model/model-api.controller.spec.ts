@@ -1,5 +1,7 @@
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory } from '../../../test/fixture';
-import { ModelApiCallModelDispatchService, type ModelApiDispatchConfig, type ModelApiGetService, MAX_MODEL_ACCESS_MULTI_READ_KEYS, getModelApiDetails, ModelApiController } from '@dereekb/firebase-server';
+import { ModelApiCallModelDispatchService, type ModelApiDispatchConfig, type ModelApiGetService, MAX_MODEL_ACCESS_MULTI_READ_KEYS, getModelApiDetails, ModelApiController, forbiddenError } from '@dereekb/firebase-server';
+import { CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE } from '@dereekb/firebase';
+import { HttpException } from '@nestjs/common';
 import { demoCallModelFn } from '../../function/model/crud.functions';
 import { mapDemoApiNestContext } from '../../function/function.context';
 
@@ -189,6 +191,17 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         const req = _mockRequest('DELETE', { uid: 'test-user' }, { path: 'profile/update' });
 
         await expect(controller.handleDispatchRequest(req)).rejects.toThrow();
+      });
+
+      it('should surface the specific server error code of a rejected dispatch', async () => {
+        vi.mocked(mockDispatchService.dispatch).mockRejectedValueOnce(forbiddenError({ code: CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE, message: 'missing scope' }));
+        const req = _mockRequest('POST', { uid: 'test-user' }, { path: 'profile/update' });
+
+        const error = await controller.handleDispatchRequest(req).catch((e: unknown) => e);
+
+        expect(error).toBeInstanceOf(HttpException);
+        expect((error as HttpException).getStatus()).toBe(403);
+        expect(((error as HttpException).getResponse() as { code?: string }).code).toBe(CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE);
       });
 
       it('should throw 405 for GET method', async () => {

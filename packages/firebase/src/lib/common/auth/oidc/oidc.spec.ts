@@ -1,4 +1,4 @@
-import { oidcScopeTermSatisfied, oidcScopeTermsSatisfied, resolveEffectiveOidcScopeTerms, resolveOidcModelScopeRequirement, type OidcModelScopeRequirement } from './oidc';
+import { isCliTokenCredentialType, oidcScopeTermSatisfied, oidcScopeTermsSatisfied, resolveEffectiveOidcScopeTerms, resolveOidcModelScopeRequirement, type OidcModelScopeRequirement } from './oidc';
 
 const granted = (...scopes: string[]) => new Set(scopes);
 
@@ -96,5 +96,18 @@ describe('resolveEffectiveOidcScopeTerms', () => {
 
   it('drops an empty OR-group group term', () => {
     expect(resolveEffectiveOidcScopeTerms({ perVerbScope: 'model.read', requiredScope: [], call: 'read' })).toEqual(['model.read']);
+  });
+});
+
+describe('isCliTokenCredentialType', () => {
+  it('should accept the known credential types', () => {
+    expect(isCliTokenCredentialType('bearer')).toBe(true);
+    expect(isCliTokenCredentialType('refresh')).toBe(true);
+  });
+
+  it('should reject anything else', () => {
+    expect(isCliTokenCredentialType('access')).toBe(false);
+    expect(isCliTokenCredentialType(undefined)).toBe(false);
+    expect(isCliTokenCredentialType(1)).toBe(false);
   });
 });

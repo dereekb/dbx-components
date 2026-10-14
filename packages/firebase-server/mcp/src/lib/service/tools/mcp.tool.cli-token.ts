@@ -1,6 +1,6 @@
 import type { CallToolResult } from '@modelcontextprotocol/server';
 import { AUTH_ADMIN_ROLE, type Maybe } from '@dereekb/util';
-import { CLI_TOKEN_OIDC_SCOPE } from '@dereekb/firebase';
+import { type CliTokenCredentialType, CLI_TOKEN_BEARER_CREDENTIAL_TYPE, CLI_TOKEN_OIDC_SCOPE, isCliTokenCredentialType } from '@dereekb/firebase';
 import { requestClientIp } from '@dereekb/firebase-server';
 import { type McpCliTokenMinter, type McpCliTokenMintResult } from '../../mcp.config';
 import { buildStaticToolDefinition, type McpToolDefinition, type McpStaticToolHandler, type McpStaticToolHandlerContext } from '../mcp.tool-generator';
@@ -22,6 +22,15 @@ export const CLI_TOKEN_DISPATCH_CALL = 'create';
  */
 export const CLI_TOKEN_DISPATCH_MODEL_TYPE = 'auth';
 
+/**
+ * Credential type the tool mints when the caller names none.
+ *
+ * `bearer`: the CLI uses the access token directly and never authenticates as the app's CLI client, so
+ * the handoff works whatever that client's registration is. The HTTP mint keeps `refresh` as its own
+ * default for older callers.
+ */
+export const DEFAULT_MCP_CLI_TOKEN_CREDENTIAL_TYPE: CliTokenCredentialType = CLI_TOKEN_BEARER_CREDENTIAL_TYPE;
+
 // MARK: Types
 /**
  * Constructor dependencies for {@link createCliTokenTool}.
@@ -41,14 +50,19 @@ export interface CreateCliTokenToolDeps {
 /**
  * Output payload for the `cli-token` tool.
  *
- * Deliberately does NOT carry the refresh token: the claim code is a one-time, short-lived pointer
- * at it, which is what makes the tool's output safe to leave in a transcript.
+ * Deliberately does NOT carry the credential: the claim code is a one-time, short-lived pointer at
+ * it, which is what makes the tool's output safe to leave in a transcript.
  */
 export interface CliTokenToolOutput {
   readonly claimCode: string;
   readonly claimExpiresAt: string;
   readonly expiresAt: string;
   readonly scope: string;
+  /**
+   * The kind of credential the claim code redeems to, when the minter reported it. A minter that does
+   * not forward the requested type mints the service default and reports `refresh`.
+   */
+  readonly credentialType?: CliTokenCredentialType;
   readonly cliName?: string;
   readonly downloadUrl?: string;
   readonly downloadSha256?: string;
@@ -98,7 +112,7 @@ export function createCliTokenTool(deps: CreateCliTokenToolDeps): McpToolDefinit
   return buildStaticToolDefinition({
     name: deps.name ?? CLI_TOKEN_TOOL_NAME,
     description:
-      'Mints a short-lived CLI login credential for YOU (the calling session) and returns a one-time claim code plus, when available, a signed download URL for the CLI binary. The credential is capped at one hour, carries no more privilege than this session (never `token.cli` or `token.service`), and expires with this session if that is sooner. The refresh token is never returned here — redeem the claim code with `<cli> auth handoff <code>` within two minutes. Download with `installCommand`: it saves the CLI under its own name, and Node will not run the single-file ES-module CLI under an unrecognized extension.',
+      'Mints a short-lived CLI login credential for YOU (the calling session) and returns a one-time claim code plus, when available, a signed download URL for the CLI binary. The credential is capped at one hour, carries no more privilege than this session (never `token.cli` or `token.service`), and expires with this session if that is sooner. By default it is a bearer access token the CLI uses directly; it cannot be refreshed, so re-mint rather than refresh when it lapses. The credential itself is never returned here — redeem the claim code with `<cli> auth handoff <code>` within two minutes. Download with `installCommand`: it saves the CLI under its own name, and Node will not run the single-file ES-module CLI under an unrecognized extension.',
     inputSchema: CLI_TOKEN_INPUT_SCHEMA,
     outputSchema: CLI_TOKEN_OUTPUT_SCHEMA,
     dispatch: {
@@ -118,6 +132,7 @@ async function cliTokenToolHandler(args: Record<string, unknown>, ctx: McpStatic
     auth: ctx.auth,
     scopes: parseScopes(args['scopes']),
     ttlSeconds: parseTtlSeconds(args['ttlSeconds']),
+    credentialType: parseCredentialType(args['credentialType']) ?? DEFAULT_MCP_CLI_TOKEN_CREDENTIAL_TYPE,
     includeDownloadUrl: args['includeDownloadUrl'] !== false,
     // resolved from the tool call's raw request so an MCP mint records the same address an HTTP mint
     // does — see McpCliTokenMintInput.requestIp
@@ -155,6 +170,7 @@ function buildOutput(minted: McpCliTokenMintResult): CliTokenToolOutput {
     claimExpiresAt: minted.claimExpiresAt,
     expiresAt: minted.expiresAt,
     scope: minted.scope,
+    ...(minted.credentialType == null ? {} : { credentialType: minted.credentialType }),
     handoffCommand: `${cliName} auth handoff ${minted.claimCode}${envArgument}`,
     ...(minted.cliName == null ? {} : { cliName: minted.cliName }),
     ...(minted.downloadUrl == null ? {} : { downloadUrl: minted.downloadUrl }),
@@ -181,6 +197,26 @@ function parseTtlSeconds(value: unknown): Maybe<number> {
   return typeof value === 'number' && Number.isFinite(value) && value > 0 ? Math.floor(value) : undefined;
 }
 
+// Reads the optional `credentialType` input, ignoring anything that is not a known type (the tool then uses its default).
+function parseCredentialType(value: unknown): Maybe<CliTokenCredentialType> {
+  return isCliTokenCredentialType(value) ? value : undefined;
+}
+
+function describeCredentialType(credentialType: Maybe<CliTokenCredentialType>): Maybe<string> {
+  let result: Maybe<string>;
+
+  switch (credentialType) {
+    case 'bearer':
+      result = 'bearer access token — the CLI uses it directly and cannot refresh it';
+      break;
+    case 'refresh':
+      result = 'refresh token bound to the CLI’s OAuth client';
+      break;
+  }
+
+  return result;
+}
+
 function renderText(output: CliTokenToolOutput): string {
   const lines: string[] = ['# CLI credential minted', ''];
 
@@ -196,17 +232,15 @@ function renderText(output: CliTokenToolOutput): string {
     lines.push('## 2. Log it in', '');
   }
 
-  lines.push(
-    '```sh',
-    `./${output.handoffCommand}`,
-    '```',
-    '',
-    `- **claim code expires:** ${output.claimExpiresAt} (one-time use)`,
-    `- **credential expires:** ${output.expiresAt}`,
-    `- **scopes:** \`${output.scope}\``,
-    '',
-    '_The claim code is single-use and short-lived; the credential it unwraps is capped at one hour. Re-run this tool for a fresh one rather than trying to extend either._'
-  );
+  const credentialDescription = describeCredentialType(output.credentialType);
+
+  lines.push('```sh', `./${output.handoffCommand}`, '```', '', `- **claim code expires:** ${output.claimExpiresAt} (one-time use)`);
+
+  if (credentialDescription != null) {
+    lines.push(`- **credential:** ${credentialDescription}`);
+  }
+
+  lines.push(`- **credential expires:** ${output.expiresAt}`, `- **scopes:** \`${output.scope}\``, '', '_The claim code is single-use and short-lived; the credential it unwraps is capped at one hour. Re-run this tool for a fresh one rather than trying to extend either._');
 
   return lines.join('\n');
 }
@@ -218,7 +252,14 @@ const CLI_TOKEN_INPUT_SCHEMA = {
     scopes: {
       type: 'array',
       items: { type: 'string' },
-      description: 'Optional subset of YOUR OWN scopes to grant the credential. May only narrow — a scope you do not hold is ignored, and `token.cli` / `token.service` are always stripped. Defaults to every scope this session holds.'
+      description:
+        'Optional subset of YOUR OWN scopes to grant the credential. Narrows the verb and capability scopes (such as `model.read`). The identity scopes are always kept when you hold them — `openid`, `profile`, `email`, and the app’s own claims scope, which carries your roles — so a narrowed credential is still you, with your roles. Scopes you do not hold are ignored, and `token.cli` / `token.service` are always stripped. Defaults to every scope this session holds.'
+    },
+    credentialType: {
+      type: 'string',
+      enum: ['bearer', 'refresh'],
+      description:
+        'The kind of credential to mint. `bearer` (the default) is an access token the CLI uses directly, with no client authentication; it cannot be refreshed, so mint again when it lapses. `refresh` is only for a CLI that predates bearer handoffs, and only works when the CLI can authenticate as the app’s CLI OAuth client.'
     },
     ttlSeconds: {
       type: 'integer',
@@ -235,12 +276,13 @@ const CLI_TOKEN_INPUT_SCHEMA = {
 const CLI_TOKEN_OUTPUT_SCHEMA = {
   type: 'object',
   required: ['claimCode', 'claimExpiresAt', 'expiresAt', 'scope', 'handoffCommand'],
-  description: 'The one-time claim code and the minted credential’s metadata. The refresh token itself is never returned here.',
+  description: 'The one-time claim code and the minted credential’s metadata. The credential itself is never returned here.',
   properties: {
     claimCode: { type: 'string' },
     claimExpiresAt: { type: 'string' },
     expiresAt: { type: 'string' },
     scope: { type: 'string' },
+    credentialType: { type: 'string', enum: ['bearer', 'refresh'], description: 'The kind of credential the claim code redeems to. A bearer credential cannot be refreshed — mint again when it lapses.' },
     cliName: { type: 'string' },
     downloadUrl: { type: 'string' },
     downloadSha256: { type: 'string' },

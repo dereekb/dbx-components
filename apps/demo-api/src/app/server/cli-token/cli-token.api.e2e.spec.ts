@@ -1,19 +1,21 @@
 import request from 'supertest';
-import { CLI_TOKEN_OIDC_SCOPE, SERVICE_TOKEN_OIDC_SCOPE, type CreateOidcClientParams } from '@dereekb/firebase';
+import { CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE, CLI_TOKEN_OIDC_SCOPE, SERVICE_TOKEN_OIDC_SCOPE, type CreateOidcClientParams } from '@dereekb/firebase';
 import { MISSING_ENDPOINT_OIDC_SCOPE_ERROR_CODE } from '@dereekb/firebase-server';
 import {
   CLI_TOKEN_CLAIM_INVALID_ERROR_CODE,
   CLI_TOKEN_FORBIDDEN_ERROR_CODE,
+  CLI_TOKEN_INVALID_CREDENTIAL_TYPE_ERROR_CODE,
   CliTokenApiModuleConfig,
   FIREBASE_SERVER_CLI_TOKEN_API_PROTECTED_PATH,
   FIREBASE_SERVER_CLI_TOKEN_CLAIM_PATH,
   MAX_CLI_TOKEN_TTL_SECONDS,
   OidcClientService,
+  OidcService,
   type CliTokenHandoffBundle,
   type CliTokenMintResult
 } from '@dereekb/firebase-server/oidc';
 import { oAuthAuthorizedSuperTestContextFactory, performOAuthFlow } from '@dereekb/firebase-server/test';
-import { CLI_HANDOFF_OIDC_PROVIDER_PROFILE_KEY } from 'demo-firebase';
+import { CLI_HANDOFF_OIDC_PROVIDER_PROFILE_KEY, guestbookIdentity } from 'demo-firebase';
 import { DEMO_CLI_OIDC_CLIENT_ID_ENV_KEY } from '../../api/oidc/oidc.module';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoOAuthAuthorizedSuperTestContext } from '../../../test/fixture';
 
@@ -130,8 +132,10 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             const bundle = first.body as CliTokenHandoffBundle;
 
             expect(bundle.uid).toBe(u.uid);
+            expect(bundle.credentialType).toBe('refresh');
             expect(typeof bundle.refreshToken).toBe('string');
-            expect(bundle.refreshToken.length).toBeGreaterThan(0);
+            expect(bundle.refreshToken!.length).toBeGreaterThan(0);
+            expect(bundle.accessToken).toBeUndefined();
             expect(bundle.clientId).toBe(process.env[DEMO_CLI_OIDC_CLIENT_ID_ENV_KEY]);
             expect(bundle.scope).toBe(minted.scope);
 
@@ -150,6 +154,176 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             expect(typeof res.body.access_token).toBe('string');
             // the exchanged token carries exactly the scopes the mint granted — no more
             expect(new Set((res.body.scope as string).split(' '))).toEqual(new Set(bundle.scope.split(' ')));
+          });
+
+          it('returns 400 for an unknown credentialType', async () => {
+            const res = await oauth.authRequest('post', FIREBASE_SERVER_CLI_TOKEN_API_PROTECTED_PATH).send({ credentialType: 'garbage' }).expect(400);
+
+            expect(res.body.code).toBe(CLI_TOKEN_INVALID_CREDENTIAL_TYPE_ERROR_CODE);
+          });
+
+          // Bearer mode hands the CLI an access token it uses DIRECTLY — no token-endpoint exchange,
+          // so no client authentication — which is what decouples the handoff from the CLI client's
+          // registration (a secret-based client broke the refresh handoff in production).
+          describe('bearer credentials', () => {
+            async function mintBearer(body: Record<string, unknown> = {}): Promise<{ readonly minted: CliTokenMintResult; readonly mintJson: string; readonly bundle: CliTokenHandoffBundle }> {
+              const res = await oauth
+                .authRequest('post', FIREBASE_SERVER_CLI_TOKEN_API_PROTECTED_PATH)
+                .send({ credentialType: 'bearer', ...body })
+                .expect(201);
+              const minted = res.body as CliTokenMintResult;
+              const bundle = (await claim(minted.claimCode, 201)).body as CliTokenHandoffBundle;
+              return { minted, mintJson: JSON.stringify(res.body), bundle };
+            }
+
+            async function getSession(accessToken: string, expectStatus: number): Promise<request.Response> {
+              const app = await f.loadInitializedNestApplication();
+              return request(app.getHttpServer()).get('/oidc/session').set('Authorization', `Bearer ${accessToken}`).expect(expectStatus);
+            }
+
+            async function setRetainedScopes(retainedScopes: string[] | undefined): Promise<void> {
+              const app = await f.loadInitializedNestApplication();
+              (app.get(CliTokenApiModuleConfig) as { retainedScopes?: string[] }).retainedScopes = retainedScopes;
+            }
+
+            afterEach(async () => {
+              await setRetainedScopes(undefined);
+            });
+
+            it('returns only the claim code from the mint, never the credential', async () => {
+              const { minted, mintJson, bundle } = await mintBearer();
+
+              expect(minted.credentialType).toBe('bearer');
+              expect(mintJson).not.toContain('accessToken');
+              expect(mintJson).not.toContain('refreshToken');
+              expect(mintJson).not.toContain(bundle.accessToken!);
+              expect(new Set(minted.scope.split(' ')).has('offline_access')).toBe(false);
+            });
+
+            it('redeems to a bearer token that works directly, with no token-endpoint exchange', async () => {
+              const { bundle } = await mintBearer();
+
+              expect(bundle.credentialType).toBe('bearer');
+              expect(bundle.tokenType).toBe('Bearer');
+              expect(typeof bundle.accessToken).toBe('string');
+              expect(bundle.refreshToken).toBeUndefined();
+              expect((new Date(bundle.expiresAt).getTime() - Date.now()) / 1000).toBeLessThanOrEqual(MAX_CLI_TOKEN_TTL_SECONDS + 5);
+
+              // the session bound follows the CHILD grant (≤1h), not the parent's ~30 days
+              const session = await getSession(bundle.accessToken!, 200);
+              expect(session.body.sub).toBe(u.uid);
+              expect(session.body.expiresAt * 1000 - Date.now()).toBeLessThanOrEqual((MAX_CLI_TOKEN_TTL_SECONDS + 5) * 1000);
+
+              // userinfo accepts it: the grant + client binding satisfies the provider's grant check
+              const app = await f.loadInitializedNestApplication();
+              const userinfo = await request(app.getHttpServer()).get('/oidc/me').set('Authorization', `Bearer ${bundle.accessToken}`).expect(200);
+              expect(userinfo.body.sub).toBe(u.uid);
+            });
+
+            it('cannot chain: the bearer is accepted but lacks token.cli', async () => {
+              const { bundle } = await mintBearer();
+              const app = await f.loadInitializedNestApplication();
+
+              // 403 (not 401) proves the bearer middleware accepted the token
+              const res = await request(app.getHttpServer()).post(FIREBASE_SERVER_CLI_TOKEN_API_PROTECTED_PATH).set('Authorization', `Bearer ${bundle.accessToken}`).send({ credentialType: 'bearer' }).expect(403);
+              expect(res.body.code).toBe(MISSING_ENDPOINT_OIDC_SCOPE_ERROR_CODE);
+            });
+
+            it('works with a confidential CLI client, which a refresh credential cannot use without its secret', async () => {
+              const app = await f.loadInitializedNestApplication();
+              const confidential = await app.get(OidcClientService).createClient({
+                client_name: 'demo-cli confidential (e2e)',
+                redirect_uris: ['http://127.0.0.1:0/callback'],
+                token_endpoint_auth_method: 'client_secret_post'
+              } as CreateOidcClientParams);
+              process.env[DEMO_CLI_OIDC_CLIENT_ID_ENV_KEY] = confidential.client_id;
+
+              const { bundle } = await mintBearer();
+              expect(bundle.clientId).toBe(confidential.client_id);
+              const session = await getSession(bundle.accessToken!, 200);
+              expect(session.body.sub).toBe(u.uid);
+
+              // the refresh handoff conveys no secret, so its first exchange fails client authentication
+              const refreshMinted = await mint({ credentialType: 'refresh' });
+              const refreshBundle = (await claim(refreshMinted.claimCode, 201)).body as CliTokenHandoffBundle;
+              const exchange = await request(app.getHttpServer()).post('/oidc/token').type('form').send({ grant_type: 'refresh_token', refresh_token: refreshBundle.refreshToken, client_id: refreshBundle.clientId });
+
+              expect(exchange.status).toBeGreaterThanOrEqual(400);
+              expect(exchange.body.error).toBe('invalid_client');
+            });
+
+            it('dies when its child grant is revoked', async () => {
+              const { bundle } = await mintBearer();
+              const app = await f.loadInitializedNestApplication();
+              const oidcService = app.get(OidcService);
+
+              const verified = await oidcService.verifyAccessToken(bundle.accessToken!);
+              const grantId = verified?.oidcValidatedToken.grantId;
+              expect(typeof grantId).toBe('string');
+
+              await oidcService.revokeGrant(grantId!);
+              await getSession(bundle.accessToken!, 401);
+            });
+
+            it('dies when revoked through RFC 7009 by the public CLI client', async () => {
+              const { bundle } = await mintBearer();
+              const app = await f.loadInitializedNestApplication();
+
+              await request(app.getHttpServer()).post('/oidc/token/revocation').type('form').send({ token: bundle.accessToken, token_type_hint: 'access_token', client_id: bundle.clientId }).expect(200);
+              await getSession(bundle.accessToken!, 401);
+            });
+
+            // The advisorey regression: narrowing to a verb scope used to drop the app's claims scope,
+            // and with it every role claim.
+            describe('narrowed scopes', () => {
+              async function seedUnpublishedForeignGuestbook(): Promise<string> {
+                const document = f.instance.demoFirestoreCollections.guestbookCollection.documentAccessor().newDocument();
+                await document.create({ name: 'PrivateBook', published: false, locked: false, cby: 'some-other-uid' });
+                return document.key;
+              }
+
+              async function readGuestbook(accessToken: string, key: string): Promise<request.Response> {
+                const app = await f.loadInitializedNestApplication();
+                return request(app.getHttpServer())
+                  .get(`/api/model/${guestbookIdentity.modelType}/get?key=${encodeURIComponent(key)}`)
+                  .set('Authorization', `Bearer ${accessToken}`);
+              }
+
+              it('keeps the identity scopes, and with them the admin role', async () => {
+                const key = await seedUnpublishedForeignGuestbook();
+                const { minted, bundle } = await mintBearer({ scopes: ['model.read'] });
+                const granted = new Set(minted.scope.split(' '));
+
+                expect(granted.has('openid')).toBe(true);
+                expect(granted.has('demo')).toBe(true);
+                expect(granted.has('model.read')).toBe(true);
+                expect(granted.has('model.query')).toBe(false);
+
+                const res = await readGuestbook(bundle.accessToken!, key);
+                expect(res.status).toBe(200);
+              });
+
+              it('loses the role when retention is disabled — the role, not the scope, is what is missing', async () => {
+                await setRetainedScopes([]);
+                const key = await seedUnpublishedForeignGuestbook();
+                const { minted, bundle } = await mintBearer({ scopes: ['model.read'] });
+
+                expect(new Set(minted.scope.split(' ')).has('demo')).toBe(false);
+
+                const res = await readGuestbook(bundle.accessToken!, key);
+                expect(res.status).toBe(403);
+                expect(res.body.code).not.toBe(CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE);
+              });
+
+              it('surfaces the specific missing-scope code when the verb scope was narrowed away', async () => {
+                const key = await seedUnpublishedForeignGuestbook();
+                const { bundle } = await mintBearer({ scopes: ['model.query'] });
+
+                const res = await readGuestbook(bundle.accessToken!, key);
+                expect(res.status).toBe(403);
+                expect(res.body.code).toBe(CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE);
+              });
+            });
           });
 
           // `bindClaimToMintIp` binds a claim code to the address that minted it. DEFAULT OFF, and

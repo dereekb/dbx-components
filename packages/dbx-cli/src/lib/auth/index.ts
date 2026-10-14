@@ -1,3 +1,4 @@
+export * from './auth-failure.hint';
 export * from './auth.command.factory';
 export * from './cli-handoff.client';
 export * from './oidc.client';

@@ -1,6 +1,6 @@
 import { type AuthClaims, type AuthRoleSet, type Maybe, type PromiseOrValue, type WebsiteUrl } from '@dereekb/util';
 import { type FirebaseServerAuthData } from '@dereekb/firebase-server';
-import { type FirestoreModelKey, type FirestoreModelType, type OidcModelScopeRequirement, type OidcScope, type OidcScopeTerm } from '@dereekb/firebase';
+import { type CliTokenCredentialType, type FirestoreModelKey, type FirestoreModelType, type OidcModelScopeRequirement, type OidcScope, type OidcScopeTerm } from '@dereekb/firebase';
 import { type McpMethodToolSelector } from './service/mcp.method';
 import { type McpToolDefinition } from './service/mcp.tool-generator';
 
@@ -449,17 +449,28 @@ export interface McpCliTokenMintInput {
    * path and not the other — a gate that looks enabled while doing nothing is worse than none.
    */
   readonly requestIp?: Maybe<string>;
+  /**
+   * The kind of credential to mint. The tool has already defaulted it to `bearer`.
+   *
+   * A minter MUST forward it to the mint (`OidcCliTokenService.mintCliToken`), or the mint falls back
+   * to the service default (`refresh`) and the handoff stays coupled to the CLI client's registration.
+   */
+  readonly credentialType?: Maybe<CliTokenCredentialType>;
 }
 
 /**
- * What an {@link McpCliTokenMinter} returns. Carries the one-time claim code and NEVER the refresh
- * token — the tool's output reaches an MCP transcript, and a refresh token must not.
+ * What an {@link McpCliTokenMinter} returns. Carries the one-time claim code and NEVER the credential
+ * — the tool's output reaches an MCP transcript, and a credential must not.
  */
 export interface McpCliTokenMintResult {
   readonly claimCode: string;
   readonly claimExpiresAt: string;
   readonly expiresAt: string;
   readonly scope: string;
+  /**
+   * The kind of credential the claim code redeems to, as reported by the mint.
+   */
+  readonly credentialType?: Maybe<CliTokenCredentialType>;
   /**
    * The CLI's binary name, used to render the exact `<cli> auth handoff <code>` command.
    */

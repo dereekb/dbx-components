@@ -28,6 +28,7 @@ vi.mock('../config/env.resolve', () => ({
 // here would replace the module for every OTHER spec that shares the registry.
 import { getCliContext, setCliContext } from '../context/cli.context';
 import { createAuthMiddleware } from './auth.middleware';
+import { CLI_EXIT_CODE_AUTH, CliError } from '../util/output';
 
 const COMPLETE_ENV = { apiBaseUrl: 'http://x/api', oidcIssuer: 'http://x/oidc', clientId: 'id', clientSecret: 'secret', redirectUri: 'urn:cb' };
 const REFRESH_TOKEN_ENV_KEY = 'DEMO_CLI_REFRESH_TOKEN';
@@ -138,5 +139,73 @@ describe('createAuthMiddleware token resolution', () => {
     expect(first?.envName).toBe('dev');
     expect(second).not.toBe(first);
     expect(second?.envName).toBe('prod');
+  });
+
+  describe('bearer handoff credentials', () => {
+    function captureExit() {
+      const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+      const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+      return {
+        exitSpy,
+        output: () => logSpy.mock.calls.map((call) => String(call[0])).join('\n'),
+        restore: () => {
+          exitSpy.mockRestore();
+          logSpy.mockRestore();
+        }
+      };
+    }
+
+    it('uses a live bearer directly, with no refresh, and records it as not refreshable', async () => {
+      const expiresAt = Date.now() + 600_000;
+      h.getMock.mockResolvedValue({ accessToken: 'bearer-access', expiresAt, handoff: true });
+
+      await runMiddleware();
+
+      expect(h.refreshMock).not.toHaveBeenCalled();
+      expect(getCliContext()?.accessToken).toBe('bearer-access');
+      expect(getCliContext()?.credential).toEqual({ handoff: true, refreshable: false, expiresAt });
+    });
+
+    it('still uses a bearer 30s from expiry — the non-refreshable buffer is 5s', async () => {
+      h.getMock.mockResolvedValue({ accessToken: 'bearer-access', expiresAt: Date.now() + 30_000, handoff: true });
+
+      await runMiddleware();
+
+      expect(h.refreshMock).not.toHaveBeenCalled();
+      expect(getCliContext()?.accessToken).toBe('bearer-access');
+    });
+
+    it('fails an expired bearer with AUTH_HANDOFF_EXPIRED and the auth exit code, never refreshing', async () => {
+      h.getMock.mockResolvedValue({ accessToken: 'bearer-access', expiresAt: Date.now() - 10_000, handoff: true });
+      const capture = captureExit();
+
+      try {
+        await runMiddleware();
+
+        expect(h.refreshMock).not.toHaveBeenCalled();
+        expect(capture.exitSpy).toHaveBeenCalledWith(CLI_EXIT_CODE_AUTH);
+        expect(capture.output()).toContain('AUTH_HANDOFF_EXPIRED');
+        expect(capture.output()).toContain('auth handoff');
+      } finally {
+        capture.restore();
+      }
+    });
+
+    it('suggests re-minting when a handoff refresh credential can no longer refresh', async () => {
+      h.getMock.mockResolvedValue({ accessToken: '', refreshToken: 'handoff-refresh', expiresAt: 0, handoff: true });
+      h.refreshMock.mockRejectedValue(new CliError({ message: 'invalid grant', code: 'TOKEN_INVALID_GRANT', suggestion: 'Re-run auth login.' }));
+      const capture = captureExit();
+
+      try {
+        await runMiddleware();
+
+        expect(capture.exitSpy).toHaveBeenCalledWith(CLI_EXIT_CODE_AUTH);
+        expect(capture.output()).toContain('TOKEN_INVALID_GRANT');
+        expect(capture.output()).toContain('auth handoff');
+        expect(capture.output()).not.toContain('auth login');
+      } finally {
+        capture.restore();
+      }
+    });
   });
 });

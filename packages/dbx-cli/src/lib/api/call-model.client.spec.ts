@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { callModelOverHttp, getModelOverHttp, getMultipleModelsOverHttp, MAX_MODEL_ACCESS_MULTI_READ_KEYS } from './call-model.client';
+import { CliHttpError } from '../util/output';
 
 describe('callModelOverHttp', () => {
   it('POSTs to <apiBaseUrl>/model/call with bearer header and JSON body, returns parsed body', async () => {
@@ -179,5 +180,15 @@ describe('getMultipleModelsOverHttp', () => {
         fetcher
       })
     ).rejects.toMatchObject({ code: 'AUTH_FORBIDDEN' });
+  });
+
+  it('throws a CliHttpError carrying the status and the server code on 403', async () => {
+    const fetcher = (async () => new Response(JSON.stringify({ message: 'missing scope', code: 'CALL_MODEL_MISSING_OIDC_SCOPE' }), { status: 403 })) as typeof fetch;
+
+    const error = await getModelOverHttp({ apiBaseUrl: 'http://localhost/api', accessToken: 'token', modelType: 'guestbook', key: 'gb/a', fetcher }).catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(CliHttpError);
+    expect(error).toMatchObject({ status: 403, serverCode: 'CALL_MODEL_MISSING_OIDC_SCOPE', code: 'AUTH_FORBIDDEN' });
+    expect((error as CliHttpError).suggestion).not.toContain('auth login');
   });
 });

@@ -459,6 +459,23 @@ export class CliError extends Error {
 }
 
 /**
+ * A {@link CliError} raised for a non-OK HTTP response, carrying the response status and the server's
+ * error code (the body's `code`, when present) so an error mapper can tailor the suggestion — e.g. tell
+ * a credential that lacks a scope apart from one that expired.
+ */
+export class CliHttpError extends CliError {
+  readonly status: number;
+  readonly serverCode?: string;
+
+  constructor(input: { readonly message: string; readonly code: string; readonly suggestion?: string; readonly status: number; readonly serverCode?: string }) {
+    super(input);
+    this.name = 'CliHttpError';
+    this.status = input.status;
+    this.serverCode = input.serverCode;
+  }
+}
+
+/**
  * Converts an arbitrary thrown value into a {@link CliErrorOutput} envelope.
  *
  * Order of resolution:

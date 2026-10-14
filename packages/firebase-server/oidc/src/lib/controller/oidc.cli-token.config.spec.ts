@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CLI_TOKEN_OIDC_SCOPE, FIRESTORE_SESSION_OIDC_SCOPE, OFFLINE_ACCESS_OIDC_SCOPE, SERVICE_TOKEN_OIDC_SCOPE, type OidcScope } from '@dereekb/firebase';
-import { CLI_TOKEN_CLAIM_TTL_SECONDS, DEFAULT_CLI_TOKEN_TTL_SECONDS, MAX_CLI_TOKEN_TTL_SECONDS, resolveCliTokenClientId, resolveCliTokenScopes, resolveCliTokenTtlSeconds } from './oidc.cli-token.config';
+import { CLI_TOKEN_CLAIM_TTL_SECONDS, cliTokenRetainedScopesForProviderClaims, DEFAULT_CLI_TOKEN_TTL_SECONDS, MAX_CLI_TOKEN_TTL_SECONDS, resolveCliTokenClientId, resolveCliTokenScopes, resolveCliTokenTtlSeconds } from './oidc.cli-token.config';
 
 function scopeSet(...scopes: string[]): ReadonlySet<OidcScope> {
   return new Set(scopes);
@@ -11,6 +11,56 @@ function granted(result: string): Set<string> {
 }
 
 describe('resolveCliTokenScopes()', () => {
+  describe('bearer credentials', () => {
+    it('never carries offline_access, even when the caller holds it or names it', () => {
+      const result = granted(resolveCliTokenScopes({ callerScopes: scopeSet('openid', 'demo', OFFLINE_ACCESS_OIDC_SCOPE), requestedScopes: [OFFLINE_ACCESS_OIDC_SCOPE, 'openid'], credentialType: 'bearer' }));
+
+      expect(result).toEqual(new Set(['openid']));
+    });
+
+    it('inherits the caller’s scopes minus offline_access', () => {
+      const result = granted(resolveCliTokenScopes({ callerScopes: scopeSet('openid', 'demo', 'model.read', OFFLINE_ACCESS_OIDC_SCOPE), credentialType: 'bearer' }));
+
+      expect(result).toEqual(new Set(['openid', 'demo', 'model.read']));
+    });
+  });
+
+  describe('refresh credentials', () => {
+    it('still unions offline_access when asked for explicitly', () => {
+      const result = granted(resolveCliTokenScopes({ callerScopes: scopeSet('openid'), credentialType: 'refresh' }));
+
+      expect(result).toEqual(new Set(['openid', OFFLINE_ACCESS_OIDC_SCOPE]));
+    });
+  });
+
+  describe('retained scopes', () => {
+    const retainedScopes = ['openid', 'profile', 'email', 'demo'];
+
+    it('keeps the retained scopes the caller holds when narrowing', () => {
+      const result = granted(resolveCliTokenScopes({ callerScopes: scopeSet('openid', 'email', 'demo', 'model.read', 'model.query'), requestedScopes: ['model.read'], retainedScopes, credentialType: 'bearer' }));
+
+      expect(result).toEqual(new Set(['openid', 'email', 'demo', 'model.read']));
+    });
+
+    it('never widens — a retained scope the caller lacks stays out', () => {
+      const result = granted(resolveCliTokenScopes({ callerScopes: scopeSet('openid', 'model.read'), requestedScopes: ['model.read'], retainedScopes, credentialType: 'bearer' }));
+
+      expect(result).toEqual(new Set(['openid', 'model.read']));
+    });
+
+    it('still strips a retained token.cli', () => {
+      const result = granted(resolveCliTokenScopes({ callerScopes: scopeSet('openid', CLI_TOKEN_OIDC_SCOPE, 'model.read'), requestedScopes: ['model.read'], retainedScopes: ['openid', CLI_TOKEN_OIDC_SCOPE], credentialType: 'bearer' }));
+
+      expect(result).toEqual(new Set(['openid', 'model.read']));
+    });
+
+    it('has no effect when nothing is requested', () => {
+      const result = granted(resolveCliTokenScopes({ callerScopes: scopeSet('openid', 'model.read', 'model.query'), retainedScopes, credentialType: 'bearer' }));
+
+      expect(result).toEqual(new Set(['openid', 'model.read', 'model.query']));
+    });
+  });
+
   it('inherits the caller’s scopes and always adds offline_access', () => {
     const result = granted(resolveCliTokenScopes({ callerScopes: scopeSet('openid', 'demo', 'model.read') }));
 
@@ -131,5 +181,26 @@ describe('CLI_TOKEN_CLAIM_TTL_SECONDS', () => {
   // whole life, and the MCP tool's own description quotes this window to the agent.
   it('is two minutes', () => {
     expect(CLI_TOKEN_CLAIM_TTL_SECONDS).toBe(120);
+  });
+});
+
+describe('cliTokenRetainedScopesForProviderClaims()', () => {
+  it('retains every scope mapped to at least one claim', () => {
+    const result = cliTokenRetainedScopesForProviderClaims({
+      openid: ['sub'],
+      profile: ['name', 'picture'],
+      email: ['email', 'email_verified'],
+      demo: ['o', 'fr'],
+      'model.read': [],
+      'model.query': [],
+      offline_access: [],
+      'token.cli': []
+    });
+
+    expect(new Set(result)).toEqual(new Set(['openid', 'profile', 'email', 'demo']));
+  });
+
+  it('returns nothing for an empty claims map', () => {
+    expect(cliTokenRetainedScopesForProviderClaims({})).toEqual([]);
   });
 });

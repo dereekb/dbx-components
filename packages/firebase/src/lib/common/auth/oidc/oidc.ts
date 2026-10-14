@@ -225,9 +225,11 @@ export const FIRESTORE_SESSION_OIDC_SCOPE_DETAILS: LabeledValueWithDescription<F
 
 // MARK: CLI Token Scope
 /**
- * Custom OIDC scope that lets a session mint ONE short-lived CLI login credential for itself — a
- * refresh token bound to the app's CLI OAuth client, carrying no more privilege than the session
- * that minted it and capped at one hour.
+ * Custom OIDC scope that lets a session mint ONE short-lived CLI login credential for itself,
+ * carrying no more privilege than the session that minted it and capped at one hour. The credential is
+ * either a bearer access token the CLI uses directly (no token-endpoint exchange, so no client
+ * authentication), or a refresh token bound to the app's CLI OAuth client — see
+ * {@link CliTokenCredentialType}.
  *
  * Exists so an agent already holding a valid, admin-scoped MCP session can bring a
  * `@dereekb/dbx-cli`-based CLI up unattended, instead of a human running `auth login` through a
@@ -256,6 +258,38 @@ export const CLI_TOKEN_OIDC_SCOPE_DETAILS: LabeledValueWithDescription<CliTokenO
   value: CLI_TOKEN_OIDC_SCOPE,
   description: 'Admin-only: mint a short-lived CLI login credential from this session'
 };
+
+/**
+ * The kind of credential a CLI handoff mint produces.
+ *
+ * - `bearer` — an opaque access token the CLI sends as-is until it expires. The CLI never calls the
+ *   token endpoint, so it never authenticates as the CLI OAuth client and works whatever that client's
+ *   `token_endpoint_auth_method` is. It cannot be refreshed: when it lapses, mint again.
+ * - `refresh` — a refresh token bound to the app's CLI OAuth client. The CLI exchanges it at the token
+ *   endpoint, which requires it to authenticate as exactly that client (including a secret, if the
+ *   client has one). Kept for CLIs that predate bearer handoffs.
+ */
+export type CliTokenCredentialType = 'bearer' | 'refresh';
+
+/**
+ * {@link CliTokenCredentialType} for a bearer access token used directly by the CLI.
+ */
+export const CLI_TOKEN_BEARER_CREDENTIAL_TYPE: CliTokenCredentialType = 'bearer';
+
+/**
+ * {@link CliTokenCredentialType} for a refresh token bound to the app's CLI OAuth client.
+ */
+export const CLI_TOKEN_REFRESH_CREDENTIAL_TYPE: CliTokenCredentialType = 'refresh';
+
+/**
+ * Whether the input is a known {@link CliTokenCredentialType}.
+ *
+ * @param value - The value to check.
+ * @returns True when the value is `'bearer'` or `'refresh'`.
+ */
+export function isCliTokenCredentialType(value: unknown): value is CliTokenCredentialType {
+  return value === CLI_TOKEN_BEARER_CREDENTIAL_TYPE || value === CLI_TOKEN_REFRESH_CREDENTIAL_TYPE;
+}
 
 // MARK: External Connection Token Scope
 /**

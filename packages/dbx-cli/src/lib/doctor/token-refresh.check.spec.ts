@@ -93,4 +93,49 @@ describe('createTokenRefreshDoctorCheck()', () => {
     expect(result.name).toBe(TOKEN_REFRESH_DOCTOR_CHECK_NAME);
     expect(result.ok).toBe(false);
   });
+
+  describe('bearer handoff credentials', () => {
+    function buildBearerCheck(input: { readonly store: ReturnType<typeof fakeTokenStore>; readonly sessionError?: Error }) {
+      let refreshCalls = 0;
+      const check = createTokenRefreshDoctorCheck({
+        tokenStoreForCli: () => input.store.cache,
+        discoverOidcMetadata: (async () => ({ token_endpoint: 'https://issuer.example/oidc/token' })) as never,
+        refreshAccessToken: (async () => {
+          refreshCalls += 1;
+          throw new Error('a bearer credential must never be refreshed');
+        }) as never,
+        fetchSessionInfo: (async () => {
+          if (input.sessionError) {
+            throw input.sessionError;
+          }
+          return { sub: 'uid-1', expiresAt: 2000 };
+        }) as never
+      });
+
+      return { check, refreshCalls: () => refreshCalls };
+    }
+
+    it('verifies a live bearer directly and passes with a warning, never refreshing', async () => {
+      const store = fakeTokenStore({ accessToken: 'bearer', expiresAt: Date.now() + 600_000, handoff: true });
+      const { check, refreshCalls } = buildBearerCheck({ store });
+
+      const result = await check(CHECK_INPUT);
+
+      expect(result).toMatchObject({ name: TOKEN_REFRESH_DOCTOR_CHECK_NAME, ok: true, warning: true, detail: { refreshable: false, verified: true } });
+      expect(result.suggestion).toContain('auth handoff');
+      expect(refreshCalls()).toBe(0);
+    });
+
+    it('fails an expired bearer with the re-mint suggestion', async () => {
+      const store = fakeTokenStore({ accessToken: 'bearer', expiresAt: Date.now() - 10_000, handoff: true });
+      const { check, refreshCalls } = buildBearerCheck({ store });
+
+      const result = await check(CHECK_INPUT);
+
+      expect(result.ok).toBe(false);
+      expect(result.suggestion).toContain('auth handoff');
+      expect(result.suggestion).not.toContain('auth login');
+      expect(refreshCalls()).toBe(0);
+    });
+  });
 });

@@ -1,6 +1,7 @@
-import { discoverOidcMetadata, refreshAccessToken } from '../auth/oidc.client';
+import { buildOidcSessionEndpoint, discoverOidcMetadata, fetchSessionInfo, refreshAccessToken } from '../auth/oidc.client';
+import { cliHandoffRemintSuggestion } from '../auth/auth-failure.hint';
 import { buildCliPaths } from '../config/paths';
-import { type CliTokenCacheStore, createCliTokenCacheStore, didRotateRefreshToken, mergeRefreshedTokenEntry } from '../config/token.cache';
+import { type CliTokenCacheStore, createCliTokenCacheStore, didRotateRefreshToken, isCliTokenEntryExpired, mergeRefreshedTokenEntry } from '../config/token.cache';
 import { type DoctorCheck } from './doctor.command.factory';
 
 /**
@@ -17,6 +18,7 @@ export interface TokenRefreshDoctorCheckOverrides {
   readonly tokenStoreForCli?: (cliName: string) => CliTokenCacheStore;
   readonly discoverOidcMetadata?: typeof discoverOidcMetadata;
   readonly refreshAccessToken?: typeof refreshAccessToken;
+  readonly fetchSessionInfo?: typeof fetchSessionInfo;
 }
 
 /**
@@ -29,6 +31,10 @@ export interface TokenRefreshDoctorCheckOverrides {
  * maximally confusing because the session dies only AFTER the cached access token lapses, so the
  * damage surfaces well away from the `doctor` run that caused it.
  *
+ * A bearer handoff credential has no refresh token to round-trip. A live one is verified directly
+ * against `GET /oidc/session` and passes with a warning naming when it lapses; an expired one fails
+ * with the re-mint suggestion.
+ *
  * @param overrides - Optional test seams; production passes none.
  * @returns The {@link DoctorCheck}.
  * @__NO_SIDE_EFFECTS__
@@ -36,6 +42,7 @@ export interface TokenRefreshDoctorCheckOverrides {
 export function createTokenRefreshDoctorCheck(overrides: TokenRefreshDoctorCheckOverrides = {}): DoctorCheck {
   const discoverMetadata = overrides.discoverOidcMetadata ?? discoverOidcMetadata;
   const refresh = overrides.refreshAccessToken ?? refreshAccessToken;
+  const loadSessionInfo = overrides.fetchSessionInfo ?? fetchSessionInfo;
   const tokenStoreForCli = overrides.tokenStoreForCli ?? ((cliName: string) => createCliTokenCacheStore({ tokenCachePath: buildCliPaths({ cliName }).tokenCachePath }));
 
   return async ({ cliName, envName, env }) => {
@@ -65,7 +72,29 @@ export function createTokenRefreshDoctorCheck(overrides: TokenRefreshDoctorCheck
 
           result = { name: TOKEN_REFRESH_DOCTOR_CHECK_NAME, ok: true, detail: { rotated: didRotateRefreshToken({ entry, refreshed }) } };
         } catch (e) {
-          result = { name: TOKEN_REFRESH_DOCTOR_CHECK_NAME, ok: false, detail: { error: e instanceof Error ? e.message : String(e) }, suggestion: `Run \`${cliName} auth login --env ${envName}\`.` };
+          // a handoff refresh credential is recovered by re-minting, not by `auth login`
+          const suggestion = entry.handoff ? cliHandoffRemintSuggestion({ cliName, envName }) : `Run \`${cliName} auth login --env ${envName}\`.`;
+          result = { name: TOKEN_REFRESH_DOCTOR_CHECK_NAME, ok: false, detail: { error: e instanceof Error ? e.message : String(e) }, suggestion };
+        }
+      } else if (entry?.accessToken) {
+        const expiresAt = entry.expiresAt;
+        const recovery = entry.handoff ? cliHandoffRemintSuggestion({ cliName, envName }) : `Run \`${cliName} auth login --env ${envName}\`.`;
+
+        if (isCliTokenEntryExpired(entry)) {
+          result = { name: TOKEN_REFRESH_DOCTOR_CHECK_NAME, ok: false, detail: { refreshable: false, expired: true, expiresAt }, suggestion: `The credential expired at ${new Date(expiresAt).toISOString()} and cannot be refreshed. ${recovery}` };
+        } else {
+          try {
+            await loadSessionInfo({ sessionEndpoint: buildOidcSessionEndpoint(env.oidcIssuer), accessToken: entry.accessToken });
+            result = {
+              name: TOKEN_REFRESH_DOCTOR_CHECK_NAME,
+              ok: true,
+              warning: true,
+              detail: { refreshable: false, verified: true, expiresAt },
+              suggestion: `Bearer credential verified; it cannot be refreshed and lapses at ${new Date(expiresAt).toISOString()}. ${recovery}`
+            };
+          } catch (e) {
+            result = { name: TOKEN_REFRESH_DOCTOR_CHECK_NAME, ok: false, detail: { refreshable: false, error: e instanceof Error ? e.message : String(e) }, suggestion: recovery };
+          }
         }
       } else {
         result = {

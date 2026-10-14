@@ -14,7 +14,15 @@ const h = vi.hoisted(() => ({
   loadConfigMock: vi.fn(),
   mergeConfigMock: vi.fn(),
   promptLineMock: vi.fn(),
-  claimHandoffMock: vi.fn()
+  claimHandoffMock: vi.fn(),
+  refreshMock: vi.fn(),
+  revokeMock: vi.fn(),
+  firestoreSessionRemoveMock: vi.fn()
+}));
+
+// mocked so `handoff` / `login` / `logout` clearing the cached Firestore session never touches ~/.demo-cli
+vi.mock('../config/firestore-session.cache', () => ({
+  createCliFirestoreSessionCacheStore: () => ({ get: vi.fn(), set: vi.fn(), remove: h.firestoreSessionRemoveMock })
 }));
 
 vi.mock('../config/token.cache', async (orig) => {
@@ -23,12 +31,13 @@ vi.mock('../config/token.cache', async (orig) => {
 });
 
 vi.mock('./oidc.client', () => ({
-  discoverOidcMetadata: vi.fn(async () => ({ issuer: 'http://x/oidc', userinfo_endpoint: 'http://x/oidc/me' })),
+  discoverOidcMetadata: vi.fn(async () => ({ issuer: 'http://x/oidc', userinfo_endpoint: 'http://x/oidc/me', token_endpoint: 'http://x/oidc/token', revocation_endpoint: 'http://x/oidc/token/revocation' })),
+  buildOidcSessionEndpoint: (issuer: string) => `${issuer}/session`,
   fetchUserInfo: h.userInfoMock,
   fetchSessionInfo: h.sessionInfoMock,
   exchangeAuthorizationCode: vi.fn(),
-  refreshAccessToken: vi.fn(),
-  revokeToken: vi.fn()
+  refreshAccessToken: h.refreshMock,
+  revokeToken: h.revokeMock
 }));
 
 vi.mock('../util/output', async (orig) => {
@@ -47,7 +56,10 @@ vi.mock('../config/cli.config', async (orig) => {
 
 vi.mock('../util/interactive', () => ({ promptLine: h.promptLineMock }));
 
-vi.mock('./cli-handoff.client', () => ({ claimCliHandoff: h.claimHandoffMock }));
+vi.mock('./cli-handoff.client', async (orig) => {
+  const actual = (await orig()) as Record<string, unknown>;
+  return { ...actual, claimCliHandoff: h.claimHandoffMock };
+});
 
 import { cliIssuersMatch, createAuthCommand, DEFAULT_HANDOFF_ENV_NAME } from './auth.command.factory';
 
@@ -332,7 +344,31 @@ describe('createAuthCommand handoff', () => {
     // NOT fromEnv: a public PKCE client rotates its refresh token, and a rotation that is not
     // written back trips oidc-provider's reuse detection and kills the grant
     expect(entry.fromEnv).toBeUndefined();
+    expect(entry.handoff).toBe(true);
     expect(entry.sessionExpiresAt).toBe(Math.floor(new Date(HANDOFF_EXPIRES_AT).getTime() / 1000));
+  });
+
+  it('persists a bearer bundle as a live, non-refreshable entry', async () => {
+    h.claimHandoffMock.mockResolvedValue(handoffBundle({ credentialType: 'bearer', accessToken: 'bearer-token-value', tokenType: 'Bearer', refreshToken: undefined, scope: 'openid demo' }));
+
+    await runHandoff({ oidcIssuer: 'http://x/oidc' });
+
+    const [, entry] = h.setMock.mock.calls[0];
+    expect(entry).toMatchObject({ accessToken: 'bearer-token-value', tokenType: 'Bearer', expiresAt: Date.parse(HANDOFF_EXPIRES_AT), handoff: true });
+    expect(entry.refreshToken).toBeUndefined();
+    expect(entry.fromEnv).toBeUndefined();
+
+    const result = h.outputResultMock.mock.calls[0][0];
+    expect(result).toMatchObject({ credentialType: 'bearer', refreshable: false });
+    expect(JSON.stringify(result)).not.toContain('bearer-token-value');
+  });
+
+  it('clears the cached direct-Firestore session for the env', async () => {
+    h.firestoreSessionRemoveMock.mockReset();
+
+    await runHandoff({ oidcIssuer: 'http://x/oidc' });
+
+    expect(h.firestoreSessionRemoveMock).toHaveBeenCalledWith('prod');
   });
 
   it('uses the stored env\u2019s issuer when no flag is passed', async () => {
@@ -415,5 +451,102 @@ describe('cliIssuersMatch()', () => {
 describe('DEFAULT_HANDOFF_ENV_NAME', () => {
   it('is a neutral name, so a bare redeem never has to burn the one-time code for lack of one', () => {
     expect(DEFAULT_HANDOFF_ENV_NAME).toBe('default');
+  });
+});
+
+// MARK: bearer handoff credentials
+const BEARER_ENTRY_LIVE = () => ({ accessToken: 'bearer-access', tokenType: 'Bearer', scope: 'openid demo model.read', expiresAt: Date.now() + 600_000, sessionExpiresAt: Math.floor((Date.now() + 600_000) / 1000), handoff: true });
+const BEARER_ENTRY_EXPIRED = () => ({ accessToken: 'bearer-access', tokenType: 'Bearer', scope: 'openid demo model.read', expiresAt: Date.now() - 10_000, sessionExpiresAt: Math.floor((Date.now() - 10_000) / 1000), handoff: true });
+
+function runAuthSubcommand(name: string, argv: Record<string, unknown> = {}): Promise<void> {
+  const command = readAuthSubcommand(name);
+  return (command.handler as (argv: unknown) => Promise<void>)({ _: ['auth', name], env: 'prod', ...argv });
+}
+
+describe('createAuthCommand with a bearer handoff credential', () => {
+  beforeEach(() => {
+    h.getMock.mockReset();
+    h.userInfoMock.mockReset();
+    h.sessionInfoMock.mockReset();
+    h.refreshMock.mockReset();
+    h.revokeMock.mockReset();
+    h.removeMock.mockReset();
+    h.outputResultMock.mockReset();
+    h.outputErrorMock.mockReset();
+    h.resolveEnvMock.mockReset();
+    h.resolveEnvMock.mockResolvedValue({ envName: 'prod', env: COMPLETE_ENV });
+    h.userInfoMock.mockResolvedValue({ sub: 'uid-1' });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  describe('status', () => {
+    it('reports a live bearer as authenticated and not refreshable', async () => {
+      const entry = BEARER_ENTRY_LIVE();
+      h.getMock.mockResolvedValue(entry);
+      h.sessionInfoMock.mockResolvedValue({ expiresAt: entry.sessionExpiresAt, rotationDisabled: false });
+
+      await runStatus();
+
+      const result = h.outputResultMock.mock.calls[0][0];
+      expect(result).toMatchObject({ authenticated: true, refreshable: false, handoff: true });
+      expect(result.session).toContain('not refreshable');
+    });
+
+    it('suggests re-minting an expired bearer, never an automatic refresh', async () => {
+      h.getMock.mockResolvedValue(BEARER_ENTRY_EXPIRED());
+
+      await runStatus();
+
+      const result = h.outputResultMock.mock.calls[0][0];
+      expect(result.authenticated).toBe(false);
+      expect(result.suggestion).toContain('auth handoff');
+      expect(result.suggestion).not.toContain('refreshes automatically');
+      // an expired, non-refreshable credential is certain to be rejected
+      expect(h.sessionInfoMock).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('check', () => {
+    it('verifies a live bearer directly, never refreshing', async () => {
+      h.getMock.mockResolvedValue(BEARER_ENTRY_LIVE());
+      h.sessionInfoMock.mockResolvedValue({ sub: 'uid-1', expiresAt: SESSION_EXPIRES_AT_SECONDS });
+
+      await runAuthSubcommand('check');
+
+      expect(h.refreshMock).not.toHaveBeenCalled();
+      expect(h.sessionInfoMock).toHaveBeenCalledWith({ sessionEndpoint: 'http://x/oidc/session', accessToken: 'bearer-access' });
+      expect(h.outputResultMock.mock.calls[0][0]).toMatchObject({ verified: true, refreshed: false, refreshable: false, sub: 'uid-1' });
+    });
+
+    it('fails an expired bearer with AUTH_HANDOFF_EXPIRED', async () => {
+      h.getMock.mockResolvedValue(BEARER_ENTRY_EXPIRED());
+      const exitSpy = vi.spyOn(process, 'exit').mockImplementation(((code?: string | number | null) => {
+        throw new Error(`process.exit:${code ?? 0}`);
+      }) as never);
+
+      try {
+        await expect(runAuthSubcommand('check')).rejects.toThrow('process.exit');
+      } finally {
+        exitSpy.mockRestore();
+      }
+
+      expect(h.refreshMock).not.toHaveBeenCalled();
+      expect(h.outputErrorMock.mock.calls[0][0]).toMatchObject({ code: 'AUTH_HANDOFF_EXPIRED' });
+    });
+  });
+
+  describe('logout --revoke', () => {
+    it('revokes the bearer access token with the access_token hint', async () => {
+      h.getMock.mockResolvedValue(BEARER_ENTRY_LIVE());
+      h.revokeMock.mockResolvedValue(undefined);
+
+      await runAuthSubcommand('logout', { revoke: true });
+
+      expect(h.revokeMock).toHaveBeenCalledWith(expect.objectContaining({ token: 'bearer-access', tokenTypeHint: 'access_token' }));
+      expect(h.removeMock).toHaveBeenCalledWith('prod');
+    });
   });
 });

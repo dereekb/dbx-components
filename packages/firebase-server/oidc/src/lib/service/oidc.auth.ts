@@ -17,6 +17,11 @@ export interface OidcAuthData extends FirebaseServerAuthData {
     readonly sub: string;
     readonly scope?: string;
     readonly client_id?: OidcEntryClientId;
+    /**
+     * The id of the Grant the access token was issued against. Set for opaque tokens only — the JWT
+     * format carries no grant id.
+     */
+    readonly grantId?: string;
     [key: string]: unknown;
   };
 }

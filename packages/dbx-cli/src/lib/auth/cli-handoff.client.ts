@@ -1,4 +1,5 @@
 import { type ISO8601DateString, type Maybe } from '@dereekb/util';
+import { type CliTokenCredentialType, CLI_TOKEN_BEARER_CREDENTIAL_TYPE, CLI_TOKEN_REFRESH_CREDENTIAL_TYPE } from '@dereekb/firebase';
 import { CliError, tracedFetch } from '../util/output';
 
 /**
@@ -24,10 +25,42 @@ export interface CliHandoffBundle {
    * it is what lets the rendered one-line handoff command work on a machine with no config at all.
    */
   readonly envName?: string;
+  /**
+   * The CLI OAuth client the credential's grant belongs to. A refresh credential must be refreshed as
+   * this client; a bearer credential only records it in the env.
+   */
   readonly clientId: string;
-  readonly refreshToken: string;
+  /**
+   * The kind of credential the bundle carries. Absent from a server that predates bearer handoffs,
+   * whose bundles are always refresh credentials — see {@link cliHandoffBundleCredentialType}.
+   */
+  readonly credentialType?: CliTokenCredentialType;
+  /**
+   * The bearer access token, for a bearer credential. Used directly; cannot be refreshed.
+   */
+  readonly accessToken?: string;
+  /**
+   * The token type of {@link CliHandoffBundle.accessToken}.
+   */
+  readonly tokenType?: string;
+  /**
+   * The refresh token, for a refresh credential.
+   */
+  readonly refreshToken?: string;
   readonly scope: string;
   readonly expiresAt: ISO8601DateString;
+}
+
+/**
+ * Reads a bundle's credential type, treating a bundle with no `credentialType` (from a server that
+ * predates bearer handoffs) as a refresh credential.
+ *
+ * @param bundle - The redeemed bundle.
+ * @returns The bundle's credential type.
+ * @__NO_SIDE_EFFECTS__
+ */
+export function cliHandoffBundleCredentialType(bundle: Pick<CliHandoffBundle, 'credentialType'>): CliTokenCredentialType {
+  return bundle.credentialType === CLI_TOKEN_BEARER_CREDENTIAL_TYPE ? CLI_TOKEN_BEARER_CREDENTIAL_TYPE : CLI_TOKEN_REFRESH_CREDENTIAL_TYPE;
 }
 
 /**
@@ -97,7 +130,7 @@ export async function claimCliHandoff(input: ClaimCliHandoffInput): Promise<CliH
 
   const bundle = (await readJsonSafely(response)) as Maybe<CliHandoffBundle>;
 
-  if (!bundle?.refreshToken || !bundle.clientId || !bundle.issuer) {
+  if (!bundle || !isUsableCliHandoffBundle(bundle)) {
     throw new CliError({
       message: 'The CLI handoff response did not carry a usable credential.',
       code: 'AUTH_HANDOFF_FAILED'
@@ -105,6 +138,20 @@ export async function claimCliHandoff(input: ClaimCliHandoffInput): Promise<CliH
   }
 
   return bundle;
+}
+
+// A bundle is usable when it names its client and issuer and carries the secret its type calls for.
+// A bearer credential also needs a parseable expiry, since nothing can refresh it.
+function isUsableCliHandoffBundle(bundle: CliHandoffBundle): boolean {
+  let hasCredential: boolean;
+
+  if (cliHandoffBundleCredentialType(bundle) === CLI_TOKEN_BEARER_CREDENTIAL_TYPE) {
+    hasCredential = Boolean(bundle.accessToken) && Number.isFinite(Date.parse(bundle.expiresAt));
+  } else {
+    hasCredential = Boolean(bundle.refreshToken);
+  }
+
+  return hasCredential && Boolean(bundle.clientId) && Boolean(bundle.issuer);
 }
 
 async function readJsonSafely(response: Response): Promise<unknown> {
