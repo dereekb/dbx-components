@@ -2,9 +2,9 @@
 
 v14.17 changes the default tool surface of `@dereekb/firebase-server/mcp`. Instead of one tool per callModel
 (model, call, specifier) plus the built-ins, the server now lists a few **compact tools** named from a prefix:
-`<p>_mcp_search` (find methods by keyword), `<p>_mcp_details` (a method's parameter schema), `<p>_mcp_read` /
-`<p>_mcp_write` / `<p>_mcp_destructive` (call a read / additive write / destructive method with `{ method, params }`),
-`<p>_mcp_token` (the old `cli-token`) and, when the docs module is wired, `search_<p>_documentation`. Generation, visibility, scopes and dispatch are unchanged;
+`<p>_api_search` (find methods by keyword), `<p>_api_details` (a method's parameter schema), `<p>_api_read` /
+`<p>_api_write` / `<p>_api_destructive` (call a read / additive write / destructive method with `{ method, params }`),
+`<p>_cli_token` (the old `cli-token`) and, when the docs module is wired, `search_<p>_documentation`. Generation, visibility, scopes and dispatch are unchanged;
 the compact tools only ever resolve methods the caller could see before.
 
 ### Required (pick one)
@@ -14,28 +14,28 @@ the compact tools only ever resolve methods the caller could see before.
   ```
   This reproduces the old `tools/list` exactly (names, order and instructions).
 - **Adopt the compact surface.** Set `toolNamePrefix: '<app>'` (otherwise it is derived from `serverName`:
-  `hellosubs-api-mcp` → `hellosubs`) and, to also keep the per-method tools listed next to the compact ones (BOTH
+  `demo-api-mcp` → `demo`) and, to also keep the per-method tools listed next to the compact ones (BOTH
   mode), `tools: { methodTools: true }`. The boot log prints one `MCP tool surface: ...` line describing what is listed.
 
 ### What changes for callers
 - **Tool name → method id.** A method is addressed by its id, `modelType.call[.specifier]` (`worker.create`,
   `jobWorkerTimesheet.update.reopen`), or by its old tool name (`guestbook-create`), which stays an alias. Built-ins
   keep their names as ids (`model-get`, `model-info`, `whoami`, `batch-execute`, ...). `cli-token` is the
-  `<p>_mcp_token` tool. A client calling an old tool name that is no longer listed gets an error naming the compact
+  `<p>_cli_token` tool. A client calling an old tool name that is no longer listed gets an error naming the compact
   call to make instead.
 - **Claude Code permission rules.** `mcp__<server>__<old-tool>` rules no longer match. Allow
-  `mcp__<server>__<p>_mcp_search`, `..._details` and `..._read`. `..._write` only runs additive changes, so it may be
+  `mcp__<server>__<p>_api_search`, `..._details` and `..._read`. `..._write` only runs additive changes, so it may be
   allowed where those are acceptable. Never allow `..._destructive`: one "always allow" on it covers every call that
   deletes or overwrites data or sends real messages. `tools.meta` can add `'anthropic/requiresUserInteraction': true`
   to `destructive`, `write` or `token`.
-- **Analytics.** The Segment `tool` property is now the wire tool name (`<p>_mcp_write`, or `<p>_mcp_destructive` for a
+- **Analytics.** The Segment `tool` property is now the wire tool name (`<p>_api_write`, or `<p>_api_destructive` for a
   destructive call). The executed method is in the
   new `method` property (plus `routed`), and `call` / `modelType` / `specifier` / `toolKind` / `args` describe the
   executed method, so breakdowns by model and call keep working.
 
 ### Review: `readOnly` on invokes
 In compact mode the read/write split is a permission boundary: only methods with `mcp.readOnly: true` (or a
-`read`/`query` call) run through `<p>_mcp_read`, which clients tend to auto-approve. Every `invoke` is a write unless
+`read`/`query` call) run through `<p>_api_read`, which clients tend to auto-approve. Every `invoke` is a write unless
 marked. Review read-like invokes for side effects (sync triggers, recomputes, analytics writes) before marking them
 `mcp: { readOnly: true }`.
 
@@ -45,22 +45,22 @@ and writes `mcp: { readOnly: false }`, each with a short comment saying why, so 
 
 ### Review: `destructive` on updates, deletes and invokes
 Writes are split into two tiers. A call that may delete or overwrite data, or that sends real messages or changes a
-third-party service, runs only through `<p>_mcp_destructive`; an additive one runs through `<p>_mcp_write`.
+third-party service, runs only through `<p>_api_destructive`; an additive one runs through `<p>_api_write`.
 
-- Every `update` / `delete` / `invoke` / custom-verb method now runs through `<p>_mcp_destructive` unless it declares
+- Every `update` / `delete` / `invoke` / custom-verb method now runs through `<p>_api_destructive` unless it declares
   `mcp: { destructive: false }`. Declare it on additive updates and invokes (an append, a like, a reversible
-  preference, a recompute of derived data) to keep them on `<p>_mcp_write`.
-- `create` methods stay on `<p>_mcp_write` unless they declare `destructive: true` (e.g. an upload that replaces an
+  preference, a recompute of derived data) to keep them on `<p>_api_write`.
+- `create` methods stay on `<p>_api_write` unless they declare `destructive: true` (e.g. an upload that replaces an
   existing file).
 - Declare `mcp: { openWorld: true }` on calls that exist to send real messages (email / SMS / push, now or queued) or
-  change third-party state. They run through `<p>_mcp_destructive` and advertise `openWorldHint`.
+  change third-party state. They run through `<p>_api_destructive` and advertise `openWorldHint`.
 - For a param that makes one call riskier, declare `mcp: { escalatingParams: { sendProbe: { openWorld: true } } }` (or
   `{ destructive: true }`). A call that sets the param (to anything but `null` / `undefined` / `false`) must go through
-  `<p>_mcp_destructive`; a call without it stays on the method's own tool. `<p>_mcp_details` marks such params.
+  `<p>_api_destructive`; a call without it stays on the method's own tool. `<p>_api_details` marks such params.
   `escalatingParams` on a read-only handler drops the tool at boot with an error.
 - A `methodTools` predicate on `kind === 'write'` no longer selects destructive methods; use `kind === 'destructive'`
   too.
-- Additional tools (`mcpAdditionalTool`) that are not read-only run through `<p>_mcp_destructive` unless they declare
+- Additional tools (`mcpAdditionalTool`) that are not read-only run through `<p>_api_destructive` unless they declare
   `destructive: false`. `batch-execute` is destructive.
 - Legacy per-method tools now carry a `[DESTRUCTIVE] ` marker and `destructiveHint: true` per method; creates advertise
   `destructiveHint: false` with the `[WRITE] ` marker.

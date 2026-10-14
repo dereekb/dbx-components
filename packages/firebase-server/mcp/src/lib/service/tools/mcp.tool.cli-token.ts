@@ -33,7 +33,7 @@ export interface CreateCliTokenToolDeps {
   readonly minter: McpCliTokenMinter;
   /**
    * The advertised tool name. Defaults to {@link CLI_TOKEN_TOOL_NAME}; the compact MCP surface names
-   * it `<prefix>_mcp_token`.
+   * it `<prefix>_cli_token`.
    */
   readonly name?: string;
 }

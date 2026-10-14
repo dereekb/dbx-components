@@ -117,7 +117,7 @@ export interface CallMcpToolParams {
    */
   readonly u: DemoApiAuthorizedUserTestContextFixture;
   /**
-   * MCP tool name (e.g. `'demo_mcp_read'`). Run a method through {@link callMcpMethod} instead.
+   * MCP tool name (e.g. `'demo_api_read'`). Run a method through {@link callMcpMethod} instead.
    */
   readonly name: string;
   /**
@@ -194,7 +194,7 @@ export async function listMcpTools(f: DemoApiFunctionContextFixture, u: DemoApiA
 
 // MARK: Compact Surface
 /**
- * Returns the compact tool names the demo's MCP server resolved at boot (`demo_mcp_search`, `demo_mcp_read`, …).
+ * Returns the compact tool names the demo's MCP server resolved at boot (`demo_api_search`, `demo_api_read`, …).
  *
  * Specs resolve names here instead of spelling them as literals: a renamed tool then fails the positive assertions
  * loudly, rather than turning every `not.toContain(name)` into a vacuous pass.
@@ -213,8 +213,8 @@ export interface CallMcpMethodParams {
   readonly f: DemoApiFunctionContextFixture;
   readonly u: DemoApiAuthorizedUserTestContextFixture;
   /**
-   * Which compact router to call through: `read` (`demo_mcp_read`), `write` (`demo_mcp_write`) or `destructive`
-   * (`demo_mcp_destructive`).
+   * Which compact router to call through: `read` (`demo_api_read`), `write` (`demo_api_write`) or `destructive`
+   * (`demo_api_destructive`).
    */
   readonly kind: McpMethodKind;
   /**

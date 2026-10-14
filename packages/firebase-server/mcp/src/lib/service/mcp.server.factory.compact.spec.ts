@@ -106,21 +106,21 @@ async function search(factory: McpServerFactoryService, ctx: McpSpecDriverContex
 describe('McpServerFactoryService compact surface', () => {
   describe('tools/list', () => {
     it('should list only the compact tools by default', async () => {
-      expect(await listNames(makeFactory())).toEqual(['demo_mcp_search', 'demo_mcp_details', 'demo_mcp_read', 'demo_mcp_write', 'demo_mcp_destructive']);
+      expect(await listNames(makeFactory())).toEqual(['demo_api_search', 'demo_api_details', 'demo_api_read', 'demo_api_write', 'demo_api_destructive']);
     });
 
     it('should mark the compact tools alwaysLoad and merge meta overrides', async () => {
       const factory = makeFactory({ config: { tools: { meta: { write: { 'anthropic/requiresUserInteraction': true }, destructive: { 'test/flag': true } } } } });
       const entries = await dispatchMcpToolsList<WireToolEntry>(factory, USER);
       expect(entries.every((x) => x._meta?.['anthropic/alwaysLoad'] === true)).toBe(true);
-      expect(entries.find((x) => x.name === 'demo_mcp_write')?._meta?.['anthropic/requiresUserInteraction']).toBe(true);
-      expect(entries.find((x) => x.name === 'demo_mcp_destructive')?._meta?.['test/flag']).toBe(true);
+      expect(entries.find((x) => x.name === 'demo_api_write')?._meta?.['anthropic/requiresUserInteraction']).toBe(true);
+      expect(entries.find((x) => x.name === 'demo_api_destructive')?._meta?.['test/flag']).toBe(true);
     });
 
     it('should annotate and mark the write and destructive routers', async () => {
       const entries = await dispatchMcpToolsList<WireToolEntry>(makeFactory(), USER);
-      const write = entries.find((x) => x.name === 'demo_mcp_write');
-      const destructive = entries.find((x) => x.name === 'demo_mcp_destructive');
+      const write = entries.find((x) => x.name === 'demo_api_write');
+      const destructive = entries.find((x) => x.name === 'demo_api_destructive');
       expect(write?.annotations).toEqual({ readOnlyHint: false, destructiveHint: false });
       expect(write?.description.startsWith('[WRITE] ')).toBe(true);
       expect(destructive?.annotations).toEqual({ readOnlyHint: false, destructiveHint: true, openWorldHint: true });
@@ -129,39 +129,39 @@ describe('McpServerFactoryService compact surface', () => {
 
     it('should only list the routers a visible method can use', async () => {
       const createsOnly = makeFactory({ apiDetails: makeApiDetails([{ model: 'guestbook', call: 'create' }]) });
-      expect(await listNames(createsOnly)).not.toContain('demo_mcp_destructive');
-      expect(await listNames(createsOnly)).toContain('demo_mcp_write');
+      expect(await listNames(createsOnly)).not.toContain('demo_api_destructive');
+      expect(await listNames(createsOnly)).toContain('demo_api_write');
 
       const readsOnly = makeFactory({ apiDetails: makeApiDetails([{ model: 'guestbook', call: 'read' }]) });
-      expect(await listNames(readsOnly)).toEqual(['demo_mcp_search', 'demo_mcp_details', 'demo_mcp_read']);
+      expect(await listNames(readsOnly)).toEqual(['demo_api_search', 'demo_api_details', 'demo_api_read']);
 
       const escalatingOnly = makeFactory({ apiDetails: makeApiDetails([CHECK_ENTRY]) });
-      expect(await listNames(escalatingOnly)).toEqual(['demo_mcp_search', 'demo_mcp_details', 'demo_mcp_write', 'demo_mcp_destructive']);
+      expect(await listNames(escalatingOnly)).toEqual(['demo_api_search', 'demo_api_details', 'demo_api_write', 'demo_api_destructive']);
     });
 
     it('should omit the reason parameter only from search and details', async () => {
       const entries = await dispatchMcpToolsList<WireToolEntry>(makeFactory(), USER);
       const byName = new Map(entries.map((x) => [x.name, x]));
-      expect(byName.get('demo_mcp_search')?.inputSchema.properties?.['reason']).toBeUndefined();
-      expect(byName.get('demo_mcp_details')?.inputSchema.properties?.['reason']).toBeUndefined();
-      expect(byName.get('demo_mcp_read')?.inputSchema.properties?.['reason']).toBeDefined();
-      expect(byName.get('demo_mcp_write')?.inputSchema.properties?.['reason']).toBeDefined();
-      expect(byName.get('demo_mcp_destructive')?.inputSchema.properties?.['reason']).toBeDefined();
+      expect(byName.get('demo_api_search')?.inputSchema.properties?.['reason']).toBeUndefined();
+      expect(byName.get('demo_api_details')?.inputSchema.properties?.['reason']).toBeUndefined();
+      expect(byName.get('demo_api_read')?.inputSchema.properties?.['reason']).toBeDefined();
+      expect(byName.get('demo_api_write')?.inputSchema.properties?.['reason']).toBeDefined();
+      expect(byName.get('demo_api_destructive')?.inputSchema.properties?.['reason']).toBeDefined();
     });
 
     it('should drop the write tool in read-only mode', async () => {
-      expect(await listNames(makeFactory({ config: { readOnly: true } }))).toEqual(['demo_mcp_search', 'demo_mcp_details', 'demo_mcp_read']);
+      expect(await listNames(makeFactory({ config: { readOnly: true } }))).toEqual(['demo_api_search', 'demo_api_details', 'demo_api_read']);
     });
 
     it('should use the configured prefix and name overrides', async () => {
       const factory = makeFactory({ config: { toolNamePrefix: 'app', tools: { names: { search: 'find_app_methods' } } } });
-      expect(await listNames(factory)).toEqual(['find_app_methods', 'app_mcp_details', 'app_mcp_read', 'app_mcp_write', 'app_mcp_destructive']);
+      expect(await listNames(factory)).toEqual(['find_app_methods', 'app_api_details', 'app_api_read', 'app_api_write', 'app_api_destructive']);
     });
 
     it('should list the compact tools and the per-method tools in BOTH mode without duplicates', async () => {
       const entries = await dispatchMcpToolsList<WireToolEntry>(makeFactory({ config: { tools: { methodTools: true } } }), USER);
       const names = entries.map((x) => x.name);
-      expect(names.slice(0, 5)).toEqual(['demo_mcp_search', 'demo_mcp_details', 'demo_mcp_read', 'demo_mcp_write', 'demo_mcp_destructive']);
+      expect(names.slice(0, 5)).toEqual(['demo_api_search', 'demo_api_details', 'demo_api_read', 'demo_api_write', 'demo_api_destructive']);
       expect(names).toContain('guestbook-create');
       expect(new Set(names).size).toBe(names.length);
       expect(entries.find((x) => x.name === 'guestbook-create')?._meta).toBeUndefined();
@@ -176,7 +176,7 @@ describe('McpServerFactoryService compact surface', () => {
     it('should append the usage block to the instructions', async () => {
       const discover = await dispatchMcpDiscover(makeFactory({ config: { serverInstructions: 'Custom.' } }), USER);
       expect(discover.instructions?.startsWith('Custom.\n\n')).toBe(true);
-      expect(discover.instructions).toContain('demo_mcp_search');
+      expect(discover.instructions).toContain('demo_api_search');
     });
 
     it('should skip the usage block when instructions is false', async () => {
@@ -294,30 +294,30 @@ describe('McpServerFactoryService compact surface', () => {
 
     it('should return the details of a method by alias', async () => {
       const factory = makeFactory();
-      const result = await dispatchMcpToolCall<ToolResult>({ factory, ctx: USER, name: 'demo_mcp_details', args: { method: 'guestbook-create' } });
+      const result = await dispatchMcpToolCall<ToolResult>({ factory, ctx: USER, name: 'demo_api_details', args: { method: 'guestbook-create' } });
       expect(result.structuredContent.method).toBe('guestbook.create');
-      expect(result.structuredContent.invokeWith).toBe('demo_mcp_write');
+      expect(result.structuredContent.invokeWith).toBe('demo_api_write');
       expect(result.structuredContent.tool).toBeUndefined();
       expect(result.structuredContent.inputSchema.properties.reason).toBeUndefined();
     });
 
     it('should point a destructive method at the destructive router', async () => {
-      const result = await dispatchMcpToolCall<ToolResult>({ factory: makeFactory(), ctx: USER, name: 'demo_mcp_details', args: { method: 'guestbook.update.reopen' } });
+      const result = await dispatchMcpToolCall<ToolResult>({ factory: makeFactory(), ctx: USER, name: 'demo_api_details', args: { method: 'guestbook.update.reopen' } });
       expect(result.structuredContent.kind).toBe('destructive');
-      expect(result.structuredContent.invokeWith).toBe('demo_mcp_destructive');
+      expect(result.structuredContent.invokeWith).toBe('demo_api_destructive');
       expect(result.structuredContent.escalatingParams).toBeUndefined();
     });
 
     it('should describe and mark escalating params', async () => {
       const factory = makeFactory({ apiDetails: ESCALATING_API_DETAILS });
-      const first = await dispatchMcpToolCall<ToolResult>({ factory, ctx: USER, name: 'demo_mcp_details', args: { method: 'guestbook.invoke.check' } });
-      const second = await dispatchMcpToolCall<ToolResult>({ factory, ctx: USER, name: 'demo_mcp_details', args: { method: 'guestbook.invoke.check' } });
+      const first = await dispatchMcpToolCall<ToolResult>({ factory, ctx: USER, name: 'demo_api_details', args: { method: 'guestbook.invoke.check' } });
+      const second = await dispatchMcpToolCall<ToolResult>({ factory, ctx: USER, name: 'demo_api_details', args: { method: 'guestbook.invoke.check' } });
       const details = first.structuredContent;
       expect(details.kind).toBe('write');
-      expect(details.invokeWith).toBe('demo_mcp_write');
-      expect(details.escalatingParams).toEqual({ probe: { kind: 'destructive', invokeWith: 'demo_mcp_destructive', hints: { openWorld: true } } });
+      expect(details.invokeWith).toBe('demo_api_write');
+      expect(details.escalatingParams).toEqual({ probe: { kind: 'destructive', invokeWith: 'demo_api_destructive', hints: { openWorld: true } } });
       expect(details.inputSchema.properties.probe.description.startsWith('Send a real probe. ')).toBe(true);
-      expect(details.inputSchema.properties.probe.description.endsWith('call `demo_mcp_destructive` when it is set.')).toBe(true);
+      expect(details.inputSchema.properties.probe.description.endsWith('call `demo_api_destructive` when it is set.')).toBe(true);
       expect(details.inputSchema.properties.name.description).toBe('guestbook name');
       expect(details.annotations).toEqual({ readOnlyHint: false, destructiveHint: false, openWorldHint: true });
       expect(second.content[0].text).toBe(first.content[0].text);
@@ -326,7 +326,7 @@ describe('McpServerFactoryService compact surface', () => {
     it('should run the details builder without the reason parameter', async () => {
       const toolDetails: McpToolDetailsBuilder = () => ({ description: 'Built per request.' });
       const factory = makeFactory({ apiDetails: makeApiDetails([{ model: 'widget', call: 'read', mcp: { toolDetails } }]) });
-      const result = await dispatchMcpToolCall<ToolResult>({ factory, ctx: USER, name: 'demo_mcp_details', args: { method: 'widget.read' } });
+      const result = await dispatchMcpToolCall<ToolResult>({ factory, ctx: USER, name: 'demo_api_details', args: { method: 'widget.read' } });
       expect(result.structuredContent.description).toBe('Built per request.');
       expect(result.structuredContent.inputSchema.properties.reason).toBeUndefined();
     });
@@ -365,7 +365,7 @@ describe('McpServerFactoryService compact surface', () => {
     it('should refuse a write method through read', async () => {
       const result = await dispatchMcpMethodCall<ToolResult>({ factory: makeFactory(), ctx: USER, kind: 'read', method: 'guestbook.create', params: {} });
       expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain('call `demo_mcp_write`');
+      expect(result.content[0].text).toContain('call `demo_api_write`');
     });
 
     it('should run a destructive method only through destructive', async () => {
@@ -376,14 +376,14 @@ describe('McpServerFactoryService compact surface', () => {
       for (const kind of ['write', 'read'] as const) {
         const refused = await dispatchMcpMethodCall<ToolResult>({ factory, ctx: USER, kind, method: 'guestbook.update.reopen', params: {} });
         expect(refused.isError).toBe(true);
-        expect(refused.content[0].text).toContain('`guestbook.update.reopen` is a destructive method; call `demo_mcp_destructive`.');
+        expect(refused.content[0].text).toContain('`guestbook.update.reopen` is a destructive method; call `demo_api_destructive`.');
       }
     });
 
     it('should refuse a write method through destructive', async () => {
       const result = await dispatchMcpMethodCall<ToolResult>({ factory: makeFactory(), ctx: USER, kind: 'destructive', method: 'guestbook.create', params: {} });
       expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain('is a write method; call `demo_mcp_write`');
+      expect(result.content[0].text).toContain('is a write method; call `demo_api_write`');
     });
 
     describe('escalating params', () => {
@@ -403,7 +403,7 @@ describe('McpServerFactoryService compact surface', () => {
         const { factory, received } = makeEscalatingFactory();
         const result = await dispatchMcpMethodCall<ToolResult>({ factory, ctx: USER, kind: 'write', method: 'guestbook.invoke.check', params: { probe: true } });
         expect(result.isError).toBe(true);
-        expect(result.content[0].text).toContain('Setting `probe` makes this call destructive; call `demo_mcp_destructive`.');
+        expect(result.content[0].text).toContain('Setting `probe` makes this call destructive; call `demo_api_destructive`.');
         expect(received).toHaveLength(0);
       });
 
@@ -426,7 +426,7 @@ describe('McpServerFactoryService compact surface', () => {
         const { factory, received } = makeEscalatingFactory();
         const result = await dispatchMcpMethodCall<ToolResult>({ factory, ctx: USER, kind: 'destructive', method: 'guestbook.invoke.check', params: {} });
         expect(result.isError).toBe(true);
-        expect(result.content[0].text).toContain('`guestbook.invoke.check` is a write method unless `probe` is set; call `demo_mcp_write`.');
+        expect(result.content[0].text).toContain('`guestbook.invoke.check` is a write method unless `probe` is set; call `demo_api_write`.');
         expect(received).toHaveLength(0);
       });
 
@@ -455,13 +455,13 @@ describe('McpServerFactoryService compact surface', () => {
     it('should hint the compact call for a legacy tool name', async () => {
       const result = await dispatchMcpToolCall<ToolResult>({ factory: makeFactory(), ctx: USER, name: 'guestbook-create' });
       expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain("call `demo_mcp_write` with `method: 'guestbook.create'`");
+      expect(result.content[0].text).toContain("call `demo_api_write` with `method: 'guestbook.create'`");
     });
 
     it('should hint the destructive router for a legacy tool name of a destructive method', async () => {
       const result = await dispatchMcpToolCall<ToolResult>({ factory: makeFactory(), ctx: USER, name: 'guestbook-reopen' });
       expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain("call `demo_mcp_destructive` with `method: 'guestbook.update.reopen'`");
+      expect(result.content[0].text).toContain("call `demo_api_destructive` with `method: 'guestbook.update.reopen'`");
     });
   });
 
@@ -482,7 +482,7 @@ describe('McpServerFactoryService compact surface', () => {
         expect(result.content[0].text).not.toContain(' method; call ');
       }
 
-      const details = await dispatchMcpToolCall<ToolResult>({ factory, ctx: USER, name: 'demo_mcp_details', args: { method: 'secretLedger.update.rebalance' } });
+      const details = await dispatchMcpToolCall<ToolResult>({ factory, ctx: USER, name: 'demo_api_details', args: { method: 'secretLedger.update.rebalance' } });
       expect(details.isError).toBe(true);
 
       const found = await search(factory, USER, { query: 'rebalance ledger', mode: 'any' });
@@ -498,7 +498,7 @@ describe('McpServerFactoryService compact surface', () => {
       await dispatchMcpMethodCall<ToolResult>({ factory, ctx: USER, kind: 'write', method: 'guestbook-create', params: { name: 'x', reason: 'inner' } });
 
       expect(events).toHaveLength(1);
-      expect(events[0]).toMatchObject({ toolName: 'demo_mcp_write', toolKind: 'callModel', call: 'create', modelType: 'guestbook', method: 'guestbook.create', routed: true, args: { name: 'x' }, reason: 'inner', isSuccessful: true });
+      expect(events[0]).toMatchObject({ toolName: 'demo_api_write', toolKind: 'callModel', call: 'create', modelType: 'guestbook', method: 'guestbook.create', routed: true, args: { name: 'x' }, reason: 'inner', isSuccessful: true });
     });
 
     it('should name the destructive router for a destructive call', async () => {
@@ -506,7 +506,7 @@ describe('McpServerFactoryService compact surface', () => {
       const factory = makeFactory({ events });
       await dispatchMcpMethodCall<ToolResult>({ factory, ctx: USER, kind: 'destructive', method: 'guestbook.update.reopen', params: {} });
 
-      expect(events[0]).toMatchObject({ toolName: 'demo_mcp_destructive', method: 'guestbook.update.reopen', routed: true, isSuccessful: true });
+      expect(events[0]).toMatchObject({ toolName: 'demo_api_destructive', method: 'guestbook.update.reopen', routed: true, isSuccessful: true });
     });
 
     it('should prefer the outer reason and record an unresolved method', async () => {
@@ -514,7 +514,7 @@ describe('McpServerFactoryService compact surface', () => {
       const factory = makeFactory({ events });
       await dispatchMcpMethodCall<ToolResult>({ factory, ctx: USER, kind: 'write', method: 'nope.create', params: {}, extraArgs: { reason: 'outer' } });
 
-      expect(events[0]).toMatchObject({ toolName: 'demo_mcp_write', toolKind: 'static', routed: true, requestedMethod: 'nope.create', reason: 'outer', isSuccessful: false });
+      expect(events[0]).toMatchObject({ toolName: 'demo_api_write', toolKind: 'static', routed: true, requestedMethod: 'nope.create', reason: 'outer', isSuccessful: false });
       expect(events[0].method).toBeUndefined();
     });
   });
@@ -528,7 +528,7 @@ describe('McpServerFactoryService compact surface', () => {
 
     it('should list tool exposures and route method exposures', async () => {
       const factory = makeFactory({ additional });
-      expect(await listNames(factory)).toEqual(['demo_mcp_search', 'demo_mcp_details', 'demo_mcp_read', 'demo_mcp_write', 'demo_mcp_destructive', 'demo_report']);
+      expect(await listNames(factory)).toEqual(['demo_api_search', 'demo_api_details', 'demo_api_read', 'demo_api_write', 'demo_api_destructive', 'demo_report']);
 
       const report = await dispatchMcpToolCall<ToolResult>({ factory, ctx: USER, name: 'demo_report' });
       expect(report.structuredContent).toEqual({ total: 3 });
@@ -574,7 +574,7 @@ describe('McpServerFactoryService compact surface', () => {
     it('should list the documentation tool for callers who can see a doc', async () => {
       const factory = makeFactory({ docs: makeDocsService() });
       expect(factory.compactToolNames.documentation).toBe('search_demo_documentation');
-      expect(await listNames(factory)).toEqual(['demo_mcp_search', 'demo_mcp_details', 'demo_mcp_read', 'demo_mcp_write', 'demo_mcp_destructive', 'search_demo_documentation']);
+      expect(await listNames(factory)).toEqual(['demo_api_search', 'demo_api_details', 'demo_api_read', 'demo_api_write', 'demo_api_destructive', 'search_demo_documentation']);
       expect(await listNames(factory, { auth: firebaseAuth({ noDocs: true }) })).not.toContain('search_demo_documentation');
     });
 

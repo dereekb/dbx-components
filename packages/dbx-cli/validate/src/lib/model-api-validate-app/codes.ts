@@ -58,7 +58,7 @@ export enum ModelApiValidateAppCode {
    * An `invoke` or custom-verb handler leaves `mcp.readOnly` unset, so MCP treats it as a write.
    * Only `read`/`query` (read) and `create`/`update`/`delete` (write) infer the classification from
    * the call type. Every other call type resolves to "unknown", which the MCP module fails safe to a
-   * write: the method is only callable through the write tool (`<p>_mcp_write`), is advertised
+   * write: the method is only callable through the write tool (`<p>_api_write`), is advertised
    * `destructiveHint: true`, and is dropped when the MCP module runs in `readOnly` mode. A pure-read
    * invoke that forgets the flag silently disappears from the read tool.
    *

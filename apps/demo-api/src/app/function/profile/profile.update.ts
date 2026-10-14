@@ -125,7 +125,7 @@ export const profileUpdateResetPassword: DemoUpdateModelFunction<ResetProfilePas
 export const profileUpdateCreateTestNotification: DemoUpdateModelFunction<ProfileCreateTestNotificationParams> = withApiDetails({
   inputType: profileCreateTestNotificationParamsType,
   mcp: {
-    // Additive, but it exists to send the caller a real message, so it runs through demo_mcp_destructive.
+    // Additive, but it exists to send the caller a real message, so it runs through demo_api_destructive.
     destructive: false,
     openWorld: true
   },
@@ -170,7 +170,7 @@ export const profileUpdateCreateTestCalendarEvent: DemoUpdateModelFunction<Profi
 export const profileUpdateCreateTestNotificationTaskBot: DemoUpdateModelFunction<ProfileCreateTestNotificationTaskBotParams> = withApiDetails({
   inputType: profileCreateTestNotificationTaskBotParamsType,
   mcp: {
-    // Additive, but it starts recurring real pings, so it runs through demo_mcp_destructive.
+    // Additive, but it starts recurring real pings, so it runs through demo_api_destructive.
     destructive: false,
     openWorld: true
   },

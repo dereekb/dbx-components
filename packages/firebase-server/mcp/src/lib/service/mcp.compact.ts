@@ -36,7 +36,7 @@ export const MCP_COMPACT_TOOL_KEYS: readonly McpCompactToolKey[] = ['search', 'd
  * Derives the compact tool-name prefix from a server name.
  *
  * Lowercases, replaces runs of non-alphanumerics with `_`, trims leading/trailing `_`, then strips a trailing `_mcp`
- * and a trailing `_api`.
+ * and a trailing `_api`, so `demo-api-mcp` names its tools `demo_api_search` rather than `demo_api_api_search`.
  *
  * @param serverName - The base server name (never the ` (read-only)`-suffixed form).
  * @returns The prefix.
@@ -44,7 +44,7 @@ export const MCP_COMPACT_TOOL_KEYS: readonly McpCompactToolKey[] = ['search', 'd
  *
  * @example
  * ```ts
- * resolveMcpToolNamePrefix('hellosubs-api-mcp'); // 'hellosubs'
+ * resolveMcpToolNamePrefix('demo-api-mcp'); // 'demo'
  * ```
  */
 export function resolveMcpToolNamePrefix(serverName: string): string {
@@ -91,12 +91,12 @@ export function resolveMcpCompactToolNames(input: ResolveMcpCompactToolNamesInpu
   }
 
   const resolved: McpCompactToolNames = {
-    search: names?.search ?? `${prefix}_mcp_search`,
-    details: names?.details ?? `${prefix}_mcp_details`,
-    read: names?.read ?? `${prefix}_mcp_read`,
-    write: names?.write ?? `${prefix}_mcp_write`,
-    destructive: names?.destructive ?? `${prefix}_mcp_destructive`,
-    token: names?.token ?? `${prefix}_mcp_token`,
+    search: names?.search ?? `${prefix}_api_search`,
+    details: names?.details ?? `${prefix}_api_details`,
+    read: names?.read ?? `${prefix}_api_read`,
+    write: names?.write ?? `${prefix}_api_write`,
+    destructive: names?.destructive ?? `${prefix}_api_destructive`,
+    token: names?.token ?? `${prefix}_cli_token`,
     documentation: names?.documentation ?? `search_${prefix}_documentation`
   };
 

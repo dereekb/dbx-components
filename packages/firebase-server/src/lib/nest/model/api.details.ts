@@ -235,8 +235,8 @@ export interface OnCallModelFunctionMcpDetailsCommon {
    *
    * When unset, the framework infers it from the call type: `create` → false (additive), everything else (`update`, `delete`,
    * `invoke`, custom verbs) → true (fail-safe). Advertised as the MCP `destructiveHint`. On the compact surface a destructive
-   * call runs only through `<app>_mcp_destructive`; set `false` on an additive update or invoke (an append, a like, a
-   * reversible preference, a recompute of derived data) to keep it on `<app>_mcp_write`.
+   * call runs only through `<app>_api_destructive`; set `false` on an additive update or invoke (an append, a like, a
+   * reversible preference, a recompute of derived data) to keep it on `<app>_api_write`.
    */
   readonly destructive?: boolean;
   /**
@@ -245,7 +245,7 @@ export interface OnCallModelFunctionMcpDetailsCommon {
    * On a call that changes data, set it when the call exists to send a real message (email, SMS or push, now or queued) or
    * to change state in a third-party service. A notification the app's own pipeline sends to subscribers because data
    * changed doesn't count, and neither does reading from a third-party service. Such a call runs only through
-   * `<app>_mcp_destructive`, like a destructive one. On a read-only call it is only advertised.
+   * `<app>_api_destructive`, like a destructive one. On a read-only call it is only advertised.
    *
    * Advertised as the MCP `openWorldHint`; nothing is advertised when unset.
    */

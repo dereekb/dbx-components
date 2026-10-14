@@ -17,7 +17,7 @@ export const DEFAULT_MCP_PATH = '/mcp';
  * Default name advertised by the MCP server on the JSON-RPC `initialize` handshake.
  *
  * Apps may override this via {@link McpModuleConfig.serverName} to identify their
- * deployment (e.g., `demo-api-mcp`, `hellosubs-api-mcp`).
+ * deployment (e.g., `demo-api-mcp`).
  */
 export const DEFAULT_MCP_SERVER_NAME = 'dbx-firebase-server-mcp';
 
@@ -243,10 +243,10 @@ export abstract class McpModuleConfig {
   readonly modelRequiredScopes?: Record<FirestoreModelType, OidcModelScopeRequirement>;
 
   /**
-   * Prefix for the compact tool names (`<prefix>_mcp_search`, `search_<prefix>_documentation`, …).
+   * Prefix for the compact tool names (`<prefix>_api_search`, `search_<prefix>_documentation`, …).
    *
    * Defaults to one derived from the base {@link serverName}: lowercased, runs of non-alphanumerics replaced
-   * with `_`, then a trailing `_mcp` and a trailing `_api` stripped (`hellosubs-api-mcp` → `hellosubs`).
+   * with `_`, then a trailing `_mcp` and a trailing `_api` stripped (`demo-api-mcp` → `demo`).
    * At most {@link MCP_TOOL_NAME_PREFIX_MAX_LENGTH} characters.
    */
   readonly toolNamePrefix?: string;

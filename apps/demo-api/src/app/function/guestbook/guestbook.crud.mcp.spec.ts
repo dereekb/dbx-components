@@ -11,7 +11,7 @@ vi.setConfig({ hookTimeout: 30000, testTimeout: 30000 });
 /**
  * Exercises the demo-api MCP surface end-to-end through `McpServerFactoryService.createServer()`.
  *
- * Tests run each method in-process through the compact `demo_mcp_read` / `demo_mcp_write` routers — the same
+ * Tests run each method in-process through the compact `demo_api_read` / `demo_api_write` routers — the same
  * dispatch chain the live `McpController` runs, minus the Streamable HTTP transport. Asserts both the
  * `CallToolResult` envelope and the Firestore side-effect so a regression in either layer is caught.
  */

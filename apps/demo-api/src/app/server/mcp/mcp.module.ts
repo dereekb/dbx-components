@@ -64,8 +64,8 @@ export function demoMcpModuleConfigFactory(envService: FirebaseServerEnvService,
     serverInstructions: 'Demo API MCP tools for the dbx-components guestbook/profile sample models. Generated from the callModel _apiDetails tree.',
     mcpManifestPath: MCP_MANIFEST_PATH,
     mcpRouteManifestPath: ROUTE_MANIFEST_PATH,
-    // The compact tools are `demo_mcp_search` / `demo_mcp_details` / `demo_mcp_read` / `demo_mcp_write` /
-    // `demo_mcp_destructive` / `demo_mcp_token` and `search_demo_documentation`. `tools` is left unset, so only the compact surface is
+    // The compact tools are `demo_api_search` / `demo_api_details` / `demo_api_read` / `demo_api_write` /
+    // `demo_api_destructive` / `demo_cli_token` and `search_demo_documentation`. `tools` is left unset, so only the compact surface is
     // advertised: every method is reached through those tools rather than listed as its own tool.
     toolNamePrefix: 'demo'
   };
@@ -93,7 +93,7 @@ export interface DemoMcpApiStatus {
  * Builds the demo's app-supplied MCP tools for {@link MCP_ADDITIONAL_TOOLS}.
  *
  * `demo_api_status` is the sample: a read-only tool exposed as BOTH its own listed tool and a method reachable
- * through `demo_mcp_search` / `demo_mcp_read`. It goes through the same scope, role and read-only filtering as the
+ * through `demo_api_search` / `demo_api_read`. It goes through the same scope, role and read-only filtering as the
  * generated tools.
  *
  * @param envService - The Firebase server environment service, used to report whether this is a deployed environment.

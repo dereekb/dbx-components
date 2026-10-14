@@ -101,9 +101,9 @@ function joinMcpParamNames(params: readonly string[], conjunction: string): stri
  *
  * @example
  * ```ts
- * // "Setting `sendProbe` makes this call destructive; call `demo_mcp_destructive`."
- * // "`profile.delete` is a destructive method; call `demo_mcp_destructive`."
- * // "`notificationUser.invoke.healthCheck` is a write method unless `sendProbe` is set; call `demo_mcp_write`."
+ * // "Setting `sendProbe` makes this call destructive; call `demo_api_destructive`."
+ * // "`profile.delete` is a destructive method; call `demo_api_destructive`."
+ * // "`notificationUser.invoke.healthCheck` is a write method unless `sendProbe` is set; call `demo_api_write`."
  * ```
  */
 export function describeMcpCompactRouterMismatch(input: DescribeMcpCompactRouterMismatchInput): string {

@@ -64,8 +64,8 @@ export const notificationUserResync: DemoUpdateModelFunction<ResyncNotificationU
  * Deliberately declared `mcp: { readOnly: false }`: every run persists the result to the user's `hc`
  * field (and spends the user's run allowance), and `sendProbe` dispatches a real test message. It stays
  * a write method, so an agent never reaches it through the auto-approvable read tool. A plain run is
- * additive (`destructive: false`) and goes through `demo_mcp_write`; a run that sets `sendProbe` is
- * open-world and goes through `demo_mcp_destructive`.
+ * additive (`destructive: false`) and goes through `demo_api_write`; a run that sets `sendProbe` is
+ * open-world and goes through `demo_api_destructive`.
  */
 export const notificationUserHealthCheck: DemoInvokeModelFunction<NotificationUserHealthCheckParams, NotificationUserHealthCheckResult> = withApiDetails({
   inputType: notificationUserHealthCheckParamsType,
@@ -74,7 +74,7 @@ export const notificationUserHealthCheck: DemoInvokeModelFunction<NotificationUs
     readOnly: false,
     // Additive: a plain run only reads the providers and records the result.
     destructive: false,
-    // A real test message reaches outside the app, so a probe run goes through demo_mcp_destructive.
+    // A real test message reaches outside the app, so a probe run goes through demo_api_destructive.
     escalatingParams: { sendProbe: { openWorld: true } }
   },
   fn: async (request) => {

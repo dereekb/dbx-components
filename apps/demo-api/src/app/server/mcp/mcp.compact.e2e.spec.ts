@@ -59,7 +59,7 @@ async function searchDocIds(f: DemoApiFunctionContextFixture, u: DemoApiAuthoriz
 
 /**
  * End-to-end coverage for demo-api's compact, Stripe-like MCP surface (`toolNamePrefix: 'demo'`, compact only):
- * `demo_mcp_search` → `demo_mcp_details` → `demo_mcp_read` / `demo_mcp_write` / `demo_mcp_destructive`, the token and
+ * `demo_api_search` → `demo_api_details` → `demo_api_read` / `demo_api_write` / `demo_api_destructive`, the token and
  * documentation tools, and
  * the app-supplied `demo_api_status` tool, all driven through the real dispatch chain.
  *
@@ -82,11 +82,11 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             const names = mcpCompactToolNames(f);
             const byName = new Map(tools.map((x) => [x.name, x]));
 
-            expect(names.search).toBe('demo_mcp_search');
-            expect(names.details).toBe('demo_mcp_details');
-            expect(names.read).toBe('demo_mcp_read');
-            expect(names.write).toBe('demo_mcp_write');
-            expect(names.destructive).toBe('demo_mcp_destructive');
+            expect(names.search).toBe('demo_api_search');
+            expect(names.details).toBe('demo_api_details');
+            expect(names.read).toBe('demo_api_read');
+            expect(names.write).toBe('demo_api_write');
+            expect(names.destructive).toBe('demo_api_destructive');
             expect(names.documentation).toBe('search_demo_documentation');
 
             for (const name of [names.search, names.details, names.read, names.write, names.destructive]) {

@@ -37,7 +37,7 @@ export interface CreateMcpDocsSearchToolDeps {
   readonly name: string;
   readonly app: string;
   /**
-   * How to read a result, e.g. "`demo_mcp_read` with `method: \"docs-read\"`".
+   * How to read a result, e.g. "`demo_api_read` with `method: \"docs-read\"`".
    */
   readonly readHint: string;
   readonly docsService: McpDocsService;

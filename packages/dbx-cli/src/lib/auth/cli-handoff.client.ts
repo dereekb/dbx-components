@@ -39,7 +39,7 @@ export interface ClaimCliHandoffInput {
    */
   readonly oidcIssuer: string;
   /**
-   * The one-time claim code an MCP session's CLI token tool (`<prefix>_mcp_token`) produced.
+   * The one-time claim code an MCP session's CLI token tool (`<prefix>_cli_token`) produced.
    */
   readonly code: string;
 }
@@ -91,7 +91,7 @@ export async function claimCliHandoff(input: ClaimCliHandoffInput): Promise<CliH
       code: 'AUTH_HANDOFF_FAILED',
       // the tool's prefix belongs to the MCP server that minted the code, which this CLI cannot see —
       // so name the pattern rather than guess one spelling of it
-      suggestion: "Mint a fresh one with the MCP server's CLI token tool (`<prefix>_mcp_token`) and redeem it right away."
+      suggestion: "Mint a fresh one with the MCP server's CLI token tool (`<prefix>_cli_token`) and redeem it right away."
     });
   }
 

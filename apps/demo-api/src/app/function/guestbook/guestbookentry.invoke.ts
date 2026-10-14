@@ -36,7 +36,7 @@ export const guestbookEntryAllPublishedEntries: DemoInvokeModelFunction<AllPubli
   requiredScope: LMS_OIDC_SCOPE,
   mcp: {
     // Only queries: no writes, no external calls. Classifies the invoke as a READ method, so it runs through
-    // `demo_mcp_read` and stays listed in read-only mode.
+    // `demo_api_read` and stays listed in read-only mode.
     readOnly: true,
     // Strip the potentially large `entries` array for MCP clients — see AllPublishedGuestbookEntriesMcpResult.
     mapSuccessfulResult: (result): AllPublishedGuestbookEntriesMcpResult => ({ count: result.count, hitLimit: result.hitLimit })

@@ -8,7 +8,6 @@ function makeTool(name: string, readOnly = true, target?: { call: string; modelT
 
 describe('resolveMcpToolNamePrefix()', () => {
   it('should strip trailing mcp and api segments', () => {
-    expect(resolveMcpToolNamePrefix('hellosubs-api-mcp')).toBe('hellosubs');
     expect(resolveMcpToolNamePrefix('demo-api-mcp')).toBe('demo');
     expect(resolveMcpToolNamePrefix('joinfoodflip-api-mcp')).toBe('joinfoodflip');
     expect(resolveMcpToolNamePrefix('dbx-firebase-server-mcp')).toBe('dbx_firebase_server');
@@ -21,7 +20,7 @@ describe('resolveMcpToolNamePrefix()', () => {
 
 describe('resolveMcpCompactToolNames()', () => {
   it('should resolve the default names', () => {
-    expect(resolveMcpCompactToolNames({ prefix: 'demo' })).toEqual({ search: 'demo_mcp_search', details: 'demo_mcp_details', read: 'demo_mcp_read', write: 'demo_mcp_write', destructive: 'demo_mcp_destructive', token: 'demo_mcp_token', documentation: 'search_demo_documentation' });
+    expect(resolveMcpCompactToolNames({ prefix: 'demo' })).toEqual({ search: 'demo_api_search', details: 'demo_api_details', read: 'demo_api_read', write: 'demo_api_write', destructive: 'demo_api_destructive', token: 'demo_cli_token', documentation: 'search_demo_documentation' });
   });
 
   it('should apply overrides', () => {
@@ -42,8 +41,8 @@ describe('resolveMcpCompactToolNames()', () => {
   });
 
   it('should throw for a duplicate override', () => {
-    expect(() => resolveMcpCompactToolNames({ prefix: 'demo', names: { read: 'demo_mcp_write' } })).toThrow();
-    expect(() => resolveMcpCompactToolNames({ prefix: 'demo', names: { destructive: 'demo_mcp_write' } })).toThrow();
+    expect(() => resolveMcpCompactToolNames({ prefix: 'demo', names: { read: 'demo_api_write' } })).toThrow();
+    expect(() => resolveMcpCompactToolNames({ prefix: 'demo', names: { destructive: 'demo_api_write' } })).toThrow();
   });
 });
 
@@ -140,8 +139,8 @@ describe('planMcpToolSurface()', () => {
       const dotted = mcpAdditionalTool({ name: 'demo.report', description: 'x', readOnly: true, expose: 'tool', handler });
       const collidesWithMethod = mcpAdditionalTool({ name: 'guestbook.read', description: 'x', readOnly: true, expose: 'tool', handler });
       const collidesWithAlias = mcpAdditionalTool({ name: 'guestbook-read', description: 'x', readOnly: true, expose: 'tool', handler });
-      const collidesWithCompact = mcpAdditionalTool({ name: 'demo_mcp_read', description: 'x', readOnly: true, expose: 'tool', handler });
-      const collidesWithDestructive = mcpAdditionalTool({ name: 'demo_mcp_destructive', description: 'x', readOnly: false, expose: 'tool', handler });
+      const collidesWithCompact = mcpAdditionalTool({ name: 'demo_api_read', description: 'x', readOnly: true, expose: 'tool', handler });
+      const collidesWithDestructive = mcpAdditionalTool({ name: 'demo_api_destructive', description: 'x', readOnly: false, expose: 'tool', handler });
       const plan = planMcpToolSurface({ compact: true, methodTools: undefined, compactNames, generated: [generatedRead], builtins: [], additional: [dotted, collidesWithMethod, collidesWithAlias, collidesWithCompact, collidesWithDestructive] });
 
       expect(plan.standaloneTools).toEqual([]);

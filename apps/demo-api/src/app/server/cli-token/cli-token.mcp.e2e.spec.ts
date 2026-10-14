@@ -27,7 +27,7 @@ const CLI_ARTIFACT_CONTENT = '#!/usr/bin/env node\n// demo-cli stand-in for the 
  * Coverage for the CLI handoff as an MCP client actually experiences it — through demo-api's
  * `demo-api-mcp` surface rather than through `POST /oidc/cli-token` directly.
  *
- * The tool's name is RESOLVED from the factory (`demo_mcp_token` on the compact surface), never spelled
+ * The tool's name is RESOLVED from the factory (`demo_cli_token` on the compact surface), never spelled
  * as a literal: every negative below (`not.toContain`, "Unknown tool") would pass vacuously against a
  * stale name, so each describe block that has one also carries a positive control.
  *
@@ -114,7 +114,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         describe('tools/list', () => {
           it('names the token tool from the configured prefix on the compact surface', () => {
             // `cli-token` is the legacy-mode name only; the compact surface renames it.
-            expect(tokenToolName()).toBe('demo_mcp_token');
+            expect(tokenToolName()).toBe('demo_cli_token');
             expect(tokenToolName()).not.toBe(CLI_TOKEN_TOOL_NAME);
           });
 
@@ -243,7 +243,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           // role rule at work, not a name that matches nothing.
           expect(names).toContain(compactNames.search);
           expect(names).toContain(compactNames.read);
-          expect(compactNames.token).toBe('demo_mcp_token');
+          expect(compactNames.token).toBe('demo_cli_token');
         });
 
         it('never sees the token tool, even holding the token.cli scope', async () => {
