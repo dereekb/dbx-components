@@ -24,9 +24,9 @@ const ZOHO_TOKEN_PATH = `/api${userExternalConnectionTokenApiPath(ZOHO)}`;
  * OAuth fixture shaped like demo-cli's dedicated `external-token` env: a client assigned the admin-only
  * `external-token` provider profile, requesting `openid offline_access token.external` and nothing else.
  *
- * Both halves are required: the scope is unlocked ONLY by that profile (so the client has to carry it),
- * and the test flow's default "all registered scopes" resolution excludes assignment-only scopes (so
- * it has to be spelled out).
+ * The profile is assigned explicitly even though a test run is non-production, where it is also a
+ * default profile: that keeps the fixture shaped like the production gate. The scopes are spelled out
+ * because the test flow's default "all registered scopes" resolution excludes admin-only scopes.
  */
 const demoOAuthSuperTestContextWithExternalTokenScope = oAuthAuthorizedSuperTestContextFactory({
   clientName: 'demo-external-token-oauth-context',

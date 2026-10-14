@@ -110,6 +110,10 @@ describe('zohoOAuthScopesFromScopeString()', () => {
     expect(zohoOAuthScopesFromScopeString('AaaServer.profile.READ,ZohoCRM.modules.READ')).toEqual(['AaaServer.profile.READ', 'ZohoCRM.modules.READ']);
   });
 
+  it('should split the space-delimited scope string a token response returns', () => {
+    expect(zohoOAuthScopesFromScopeString('ZohoCRM.modules.ALL ZohoRecruit.modules.ALL  Desk.tickets.ALL')).toEqual(['ZohoCRM.modules.ALL', 'ZohoRecruit.modules.ALL', 'Desk.tickets.ALL']);
+  });
+
   it('should return undefined for an empty or absent scope string', () => {
     expect(zohoOAuthScopesFromScopeString('')).toBeUndefined();
     expect(zohoOAuthScopesFromScopeString(null)).toBeUndefined();

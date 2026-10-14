@@ -52,6 +52,10 @@ export function demoMcpModuleConfigFactory(envService: FirebaseServerEnvService,
     // builder withholds it from any client without the `cli-handoff` profile, which lands it in the
     // submit's `rejected` set rather than failing the authorization. Assigning that profile is
     // therefore the switch that selects which clients can actually obtain it.
+    //
+    // token.external is NOT added back: outside production its `external-token` profile is a default
+    // profile, so it is already in the base list and an agent's connector requests it; in a deployed
+    // environment it stays unadvertised and only demo-cli's dedicated `external-token` env asks for it.
     scopesSupported: (allScopes) => {
       const base = allScopes.filter((scope) => scope !== SERVICE_TOKEN_OIDC_SCOPE && scope !== FIRESTORE_SESSION_OIDC_SCOPE);
       // Already present outside production, where `cli-handoff` is a default profile and `token.cli`

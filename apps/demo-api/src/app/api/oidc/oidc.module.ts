@@ -102,7 +102,7 @@ export const DEMO_OIDC_PROVIDER_CONFIG: OidcProviderConfig<DemoOidcScope> = {
  * Builds the demo app's OIDC provider config for the running environment.
  *
  * Identical to {@link DEMO_OIDC_PROVIDER_CONFIG} except for the provider profiles, whose CLI-handoff
- * entry becomes a default profile outside production.
+ * and external-token entries become default profiles outside production.
  *
  * @param envService - The Firebase server environment service, read for {@link FirebaseServerEnvService.isProduction}.
  * @returns The provider config to supply to the OidcAccountService delegate.
@@ -114,9 +114,14 @@ export function demoOidcProviderConfigForEnv(envService: FirebaseServerEnvServic
   // `adminOnly`, so a non-admin is refused at the consent gate exactly as in production; only the
   // per-client assignment goes away.
   //
+  // The admin-only `external-token` profile is lifted the same way, so that connector can also request
+  // `token.external` and the CLI credential it mints can run `demo-cli external-token`. Its 8-hour
+  // `maxSessionTtl` still caps any grant that carries the scope.
+  //
   // `isProduction` (not `!isTestingEnv`) is the right check: it is false for both a local emulator
   // serve and a test run, and true for staging, so a deployed environment keeps the assignment gate.
-  return { ...DEMO_OIDC_PROVIDER_CONFIG, providerProfiles: demoOidcProviderProfiles({ unlockCliHandoffByDefault: !envService.isProduction }) };
+  const unlockByDefault = !envService.isProduction;
+  return { ...DEMO_OIDC_PROVIDER_CONFIG, providerProfiles: demoOidcProviderProfiles({ unlockCliHandoffByDefault: unlockByDefault, unlockExternalTokenByDefault: unlockByDefault }) };
 }
 
 /**

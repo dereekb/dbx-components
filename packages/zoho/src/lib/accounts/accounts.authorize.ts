@@ -13,12 +13,18 @@ export const ZOHO_ACCOUNTS_AUTHORIZE_PATH = '/oauth/v2/auth';
 export const ZOHO_ACCOUNTS_TOKEN_PATH = '/oauth/v2/token';
 
 /**
- * The delimiter Zoho joins and returns granted scopes with.
+ * The delimiter Zoho's authorize request joins requested scopes with.
  *
- * A comma, NOT the space OAuth 2.0 specifies. Both halves of the round trip use this: the authorize
- * request joins on it, and the granted `scope` string comes back split on it.
+ * A comma, NOT the space OAuth 2.0 specifies. The granted `scope` string a token response returns is
+ * space-delimited though, so {@link zohoOAuthScopesFromScopeString} splits on both.
  */
 export const ZOHO_OAUTH_SCOPE_DELIMITER = ',';
+
+/**
+ * Matches the separators a Zoho scope string may use: {@link ZOHO_OAUTH_SCOPE_DELIMITER} on the
+ * authorize request, whitespace on a token response's granted `scope`.
+ */
+export const ZOHO_OAUTH_SCOPE_STRING_SEPARATOR_REGEX = /[\s,]+/;
 
 /**
  * The `response_type` used by the authorization-code flow.
@@ -154,7 +160,10 @@ export function zohoAccountsAuthorizeUrlFactory(config: ZohoAccountsAuthorizeUrl
 }
 
 /**
- * Splits a granted Zoho `scope` string on the same delimiter the authorize request joins with.
+ * Splits a Zoho `scope` string on commas and whitespace.
+ *
+ * A token response returns its granted scopes space-delimited, while the authorize request (and
+ * strings re-joined with {@link ZOHO_OAUTH_SCOPE_DELIMITER}) use commas, so both are accepted.
  *
  * @param scope - The granted scope string returned on a token response.
  * @returns The granted scopes, or undefined when none were granted.
@@ -162,6 +171,6 @@ export function zohoAccountsAuthorizeUrlFactory(config: ZohoAccountsAuthorizeUrl
  * @__NO_SIDE_EFFECTS__
  */
 export function zohoOAuthScopesFromScopeString(scope: Maybe<string>): Maybe<ZohoOAuthScope[]> {
-  const scopes = scope ? scope.split(ZOHO_OAUTH_SCOPE_DELIMITER).filter((x) => x.length > 0) : undefined;
+  const scopes = scope ? scope.split(ZOHO_OAUTH_SCOPE_STRING_SEPARATOR_REGEX).filter((x) => x.length > 0) : undefined;
   return scopes?.length ? scopes : undefined;
 }
