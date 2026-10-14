@@ -17,6 +17,12 @@
  *      on each, and pick the file whose abstract `*Functions` class name
  *      matches the entry's class identifier.
  *
+ *   3b. With `--api-dir`, read the app's registered callModel handler map
+ *      (`<api-dir>/src/app/function/model/crud.functions.ts`) and drop entries
+ *      it never wires. Each drop is logged as `[unregistered]`. Without the
+ *      flag every declared call is emitted, including calls the app never
+ *      registered (the server answers those with `Invalid type to …`).
+ *
  *   4. For each CRUD entry with a `paramsTypeName`, derive the canonical
  *      arktype validator name (lowercaseFirst + `Type`) and confirm it is
  *      exported from the package's barrel chain. Warn on miss; the entry is
@@ -47,6 +53,11 @@
  *                                (defaults to "<cli>"). Also used to derive
  *                                the manifest namespace (e.g. "demo-cli" ->
  *                                DEMO_CLI_API_MANIFEST).
+ *   --api-dir=<path>            Path to the API app root whose handler map
+ *                                decides which declared calls are emitted.
+ *                                Absolute or workspace-relative. Exits 1 when
+ *                                the handler map is missing or declares no
+ *                                verb maps.
  *   --only=<model[,model]>      Filter the emitted entries to those models.
  *   --strict                    Exit 1 if any validator is missing.
  *   --emit-models               Opt in to emitting `<NAMESPACE>_MODEL_MANIFEST`.
@@ -74,8 +85,9 @@ import { findModelFiles } from './find-model-files';
 import { assembleModels, collectModelEnums } from './assemble-models';
 import { deriveValidatorName, isExportedFromPackage } from './bind-validators';
 import { renderManifest } from './emit';
+import { isRegisteredCall, readRegisteredCalls } from './registered-calls';
 import packageJson from '../../package.json' with { type: 'json' };
-import type { CollectedEntry, ModelExtractionSource, PackageRef } from './types';
+import type { CollectedEntry, ModelExtractionSource, PackageRef, RegisteredCalls } from './types';
 
 interface Flags {
   readonly only: ReadonlySet<string> | undefined;
@@ -83,6 +95,7 @@ interface Flags {
   readonly functionsConfig: string | undefined;
   readonly output: string | undefined;
   readonly project: string | undefined;
+  readonly apiDir: string | undefined;
   readonly emitModels: boolean;
   readonly emitModelConverters: boolean;
 }
@@ -112,6 +125,9 @@ async function main(): Promise<void> {
     throw new Error(`No function groups discovered in ${relPath(WORKSPACE_ROOT, functionsConfigPath)}.`);
   }
 
+  const registeredCalls = flags.apiDir ? readRegisteredCalls({ workspaceRoot: WORKSPACE_ROOT, apiDir: resolveWorkspacePath(flags.apiDir) }) : undefined;
+  logRegisteredCalls(registeredCalls);
+
   const packageCache = new Map<string, PackageRef>();
   const apiFilesCache = new Map<string, ReturnType<typeof findApiFiles>>();
   const collected: CollectedEntry[] = [];
@@ -119,6 +135,7 @@ async function main(): Promise<void> {
   const modelPackagesScanned = new Set<string>();
   let missingValidators = 0;
   let skippedGroups = 0;
+  let unregisteredDropped = 0;
 
   for (const group of groups) {
     const pkg = resolveModuleToPackage({ workspaceRoot: WORKSPACE_ROOT, importingFile: functionsConfigPath, moduleSpecifier: group.importedFromModule });
@@ -162,6 +179,14 @@ async function main(): Promise<void> {
       if (flags.only && !flags.only.has(entry.model)) continue;
       if (entry.verb === 'standalone') continue; // dispatched outside /model/call
 
+      const specPart = entry.specifier ? '/' + entry.specifier : '';
+
+      if (registeredCalls && !isRegisteredCall(registeredCalls, entry)) {
+        unregisteredDropped++;
+        console.warn(`[unregistered] ${pkg.packageName} · ${entry.model}/${entry.verb}${specPart} → not wired in ${registeredCalls.handlerMapFile}`);
+        continue;
+      }
+
       const enriched: CollectedEntry & { packageName?: string; validatorName?: string } = { entry: { ...entry, groupName, sourceFile: sourceFileRel } };
 
       if (entry.paramsTypeName) {
@@ -173,12 +198,10 @@ async function main(): Promise<void> {
           enriched.validatorName = validatorName;
         } else {
           missingValidators++;
-          const specPart = entry.specifier ? '/' + entry.specifier : '';
           console.warn(`[no-validator] ${pkg.packageName} · ${entry.model}/${entry.verb}${specPart} → ${validatorName} not exported`);
         }
 
         if (entry.paramsHasApiParamsTag === false) {
-          const specPart = entry.specifier ? '/' + entry.specifier : '';
           console.warn(`[no-api-params-tag] ${pkg.packageName} · ${entry.model}/${entry.verb}${specPart} → ${entry.paramsTypeName} missing @dbxModelApiParams`);
         }
       }
@@ -187,7 +210,6 @@ async function main(): Promise<void> {
       // interface is not declared in the same `.api.ts` — the MCP output schema then silently falls
       // back to the raw result type.
       if (entry.mcpResultTypeName && entry.mcpResultFields == null && entry.mcpResultTypeDescription == null) {
-        const specPart = entry.specifier ? '/' + entry.specifier : '';
         console.warn(`[mcp-result-type-unresolved] ${pkg.packageName} · ${entry.model}/${entry.verb}${specPart} → @dbxModelApiMcpResult ${entry.mcpResultTypeName} not declared in the same .api.ts file`);
       }
 
@@ -218,12 +240,32 @@ async function main(): Promise<void> {
   console.log(`[${outcome}] ${relative(WORKSPACE_ROOT, outputFile)}`);
 
   const groupCount = packageCache.size === 0 ? 0 : new Set(collected.map((c) => c.entry.groupName)).size;
+  const unregisteredSummary = registeredCalls ? ` · ${unregisteredDropped} unregistered dropped` : '';
   const modelSummary = flags.emitModels ? ` · ${filteredModelEntries.length} models · ${Object.keys(enumEntries).length} enums` : '';
-  console.log(`Summary: ${groupCount} groups · ${collected.length} entries · ${collected.length - missingValidators} validators bound · ${missingValidators} missing · ${skippedGroups} skipped${modelSummary}`);
+  console.log(`Summary: ${groupCount} groups · ${collected.length} entries · ${collected.length - missingValidators} validators bound · ${missingValidators} missing · ${skippedGroups} skipped${unregisteredSummary}${modelSummary}`);
 
   if (flags.strict && missingValidators > 0) {
     console.error(`[strict] ${missingValidators} validator(s) missing — failing build.`);
     process.exit(1);
+  }
+}
+
+/**
+ * Logs what `--api-dir` read, or the one-line notice that no filtering runs without it.
+ *
+ * @param registeredCalls - The app's registered calls, when `--api-dir` was passed.
+ */
+function logRegisteredCalls(registeredCalls: RegisteredCalls | undefined): void {
+  if (registeredCalls) {
+    const { handlerMapFile, callKeys, verbsFound, opaque } = registeredCalls;
+    console.log(`[handler-map] ${handlerMapFile} · ${callKeys.size} registered calls · verbs ${verbsFound.join(', ') || '(none)'}`);
+
+    for (const x of opaque) {
+      const modelPart = x.model ? ` · ${x.model}` : '';
+      console.warn(`[handler-map-opaque] ${x.verb}${modelPart}: ${x.reason} (${handlerMapFile}:${x.line}) — keeping its entries`);
+    }
+  } else {
+    console.log('[no-handler-map] --api-dir not passed: every declared call is emitted, including calls the app never registered.');
   }
 }
 
@@ -267,6 +309,7 @@ function parseFlags(argv: readonly string[]): Flags {
   let functionsConfig: string | undefined;
   let output: string | undefined;
   let project: string | undefined;
+  let apiDir: string | undefined;
   let emitModels = false;
   let emitModelConverters = false;
 
@@ -290,10 +333,12 @@ function parseFlags(argv: readonly string[]): Flags {
       output = arg.slice('--output='.length);
     } else if (arg.startsWith('--project=')) {
       project = arg.slice('--project='.length);
+    } else if (arg.startsWith('--api-dir=')) {
+      apiDir = arg.slice('--api-dir='.length);
     }
   }
 
-  return { only, strict, functionsConfig, output, project, emitModels, emitModelConverters };
+  return { only, strict, functionsConfig, output, project, apiDir, emitModels, emitModelConverters };
 }
 
 function printUsageAndExit(): void {
@@ -304,7 +349,7 @@ Usage:
     --project=<name> \
     --functions-config=<path-to-functions.ts> \
     --output=<path-to-manifest.generated.ts> \
-    [--only=model[,model]] [--strict]
+    [--api-dir=<path-to-api-app>] [--only=model[,model]] [--strict]
 
 Required flags:
   --functions-config=<path>  Path to the app's functions.ts (workspace-relative ok).
@@ -312,6 +357,9 @@ Required flags:
 
 Optional:
   --project=<name>           Project name to show in the regenerate banner.
+  --api-dir=<path>           API app root (workspace-relative ok). Reads its callModel handler map
+                             (src/app/function/model/crud.functions.ts) and drops every declared call
+                             the app never wires. Without it every declared call is emitted.
   --only=<csv>               Filter to listed model names.
   --strict                   Fail when any validator binding is missing.
   --emit-models              Opt in to emitting <NAMESPACE>_MODEL_MANIFEST. Off by default —

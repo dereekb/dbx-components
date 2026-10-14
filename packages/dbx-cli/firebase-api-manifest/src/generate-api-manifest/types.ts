@@ -13,7 +13,7 @@
  * importing them by their local name.
  */
 
-import type { CrudEntry, CrudExtraction, ModelExtraction } from '@dereekb/dbx-cli/manifest-extract';
+import type { CallModelHandlerMapOpaque, CrudEntry, CrudExtraction, CrudVerb, ModelExtraction } from '@dereekb/dbx-cli/manifest-extract';
 
 // eslint-disable-next-line dereekb-util/no-sister-re-export -- intentional facade so the firebase-api-manifest pipeline can keep importing extractor types by their local name
 export type { CrudEntry, CrudEntryDocField, CrudExtraction } from '@dereekb/dbx-cli/manifest-extract';
@@ -50,4 +50,31 @@ export interface ModelExtractionSource {
   readonly sourcePackage: string;
   readonly sourceFile: string;
   readonly extraction: ModelExtraction;
+}
+
+/**
+ * The calls an API app's callModel handler map registers, read by `--api-dir`.
+ *
+ * Entries the map never wires are dropped from the manifest; verbs / models the scan could not read
+ * keep every entry (fail open).
+ */
+export interface RegisteredCalls {
+  /**
+   * Workspace-relative handler-map path, for log lines.
+   */
+  readonly handlerMapFile: string;
+  /**
+   * `mcpManifestKey(model, verb, specifier)` of every registered cell — the key the MCP runtime joins on.
+   */
+  readonly callKeys: ReadonlySet<string>;
+  /**
+   * Verbs whose whole model set could not be read.
+   */
+  readonly opaqueVerbs: ReadonlySet<CrudVerb>;
+  /**
+   * `<verb>:<model>` pairs whose specifiers could not be read.
+   */
+  readonly opaqueModelCalls: ReadonlySet<string>;
+  readonly opaque: readonly CallModelHandlerMapOpaque[];
+  readonly verbsFound: readonly CrudVerb[];
 }
