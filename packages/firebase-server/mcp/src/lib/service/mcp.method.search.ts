@@ -1,4 +1,4 @@
-import { buildRankedSearchEntries, rankSearchEntries, RANKED_SEARCH_NAME_WEIGHTS, RANKED_SEARCH_SLUG_WEIGHTS, RANKED_SEARCH_TAG_WEIGHTS, RANKED_SEARCH_TEXT_WEIGHTS, type Maybe, type RankedSearchEntry } from '@dereekb/util';
+import { buildRankedSearchEntries, buildRankedSearchSynonyms, rankSearchEntries, RANKED_SEARCH_ENGLISH_STOP_WORDS, RANKED_SEARCH_NAME_WEIGHTS, RANKED_SEARCH_SLUG_WEIGHTS, RANKED_SEARCH_TAG_WEIGHTS, RANKED_SEARCH_TEXT_WEIGHTS, type Maybe, type RankedSearchEntry, type RankedSearchSynonyms } from '@dereekb/util';
 import { type McpManifestModelEntry } from './mcp.manifest';
 import { mcpMethodKinds, type McpMethod, type McpMethodKind, type McpMethodView } from './mcp.method';
 import { MCP_DESTRUCTIVE_TOOL_DESCRIPTION_PREFIX, MCP_WRITE_TOOL_DESCRIPTION_PREFIX } from './mcp.tool-generator';
@@ -12,6 +12,23 @@ export const DEFAULT_MCP_METHOD_SEARCH_LIMIT = 8;
  * Maximum number of results the compact `search` tool returns.
  */
 export const MAX_MCP_METHOD_SEARCH_LIMIT = 50;
+
+/**
+ * Groups of interchangeable verbs for method search, so a query word finds a method named with another word of its group
+ * (`remove entry` finds `guestbookEntry.delete`).
+ */
+export const MCP_METHOD_SEARCH_SYNONYM_GROUPS: readonly (readonly string[])[] = [
+  ['delete', 'remove', 'erase', 'destroy'],
+  ['create', 'add', 'new', 'make'],
+  ['update', 'edit', 'change', 'modify'],
+  ['query', 'list', 'find', 'search'],
+  ['read', 'get', 'fetch', 'show', 'view']
+];
+
+/**
+ * The {@link MCP_METHOD_SEARCH_SYNONYM_GROUPS} as a synonym map.
+ */
+export const MCP_METHOD_SEARCH_SYNONYMS: RankedSearchSynonyms = buildRankedSearchSynonyms(MCP_METHOD_SEARCH_SYNONYM_GROUPS);
 
 /**
  * Pre-tokenized search entries for every registered method. Built once per process.
@@ -106,7 +123,7 @@ export interface SearchMcpMethodsInput {
   readonly kind?: Maybe<McpMethodKind>;
   readonly limit?: Maybe<number>;
   /**
-   * Defaults to `all`; suggestions use `any`.
+   * Defaults to `all`, which falls back to `any` when no method matches every query word; suggestions use `any`.
    */
   readonly mode?: 'all' | 'any';
 }
@@ -120,27 +137,41 @@ export interface SearchMcpMethodsResult {
    * Total matches before the limit was applied.
    */
   readonly total: number;
+  /**
+   * True when no method matched every query word, so {@link methods} match only some of them.
+   */
+  readonly partial: boolean;
 }
 
 /**
  * Searches the caller's visible methods.
  *
+ * Query words are matched as keywords: English filler words are dropped ({@link RANKED_SEARCH_ENGLISH_STOP_WORDS}) and
+ * common verbs also match their synonyms ({@link MCP_METHOD_SEARCH_SYNONYMS}).
+ *
  * @param input - The entries, visible view, query, and filters.
- * @returns The ranked visible methods and the total match count.
+ * @returns The ranked visible methods, the total match count, and whether the matches are partial.
  */
 export function searchMcpMethods(input: SearchMcpMethodsInput): SearchMcpMethodsResult {
-  const { entries, view, query, model, kind, mode } = input;
+  const { entries, view, query, model, kind, mode = 'all' } = input;
   const limit = Math.min(Math.max(1, input.limit ?? DEFAULT_MCP_METHOD_SEARCH_LIMIT), MAX_MCP_METHOD_SEARCH_LIMIT);
   const modelKey = model?.trim().toLowerCase();
   const hasModelFilter = modelKey != null && modelKey.length > 0;
   const filter = (method: McpMethod) => view.has(method) && (kind == null || mcpMethodKinds(method).includes(kind)) && (!hasModelFilter || method.modelType?.toLowerCase() === modelKey);
   let matches: McpMethod[];
+  let partial = false;
 
   if (query.trim().length === 0) {
     // An empty query only lists when a model or kind narrows it, so it never dumps the whole catalog.
     matches = hasModelFilter || kind != null ? view.methods.filter(filter) : [];
   } else {
-    matches = rankSearchEntries({ entries, query, mode, filter }).map((x) => x.value);
+    const rankInput = { entries, query, filter, stopWords: RANKED_SEARCH_ENGLISH_STOP_WORDS, synonyms: MCP_METHOD_SEARCH_SYNONYMS };
+    matches = rankSearchEntries({ ...rankInput, mode }).map((x) => x.value);
+
+    if (matches.length === 0 && mode === 'all') {
+      matches = rankSearchEntries({ ...rankInput, mode: 'any' }).map((x) => x.value);
+      partial = matches.length > 0;
+    }
 
     // Methods built per request (e.g. batch-execute) are not in the boot index; match them by id.
     const lowerQuery = query.trim().toLowerCase();
@@ -152,7 +183,7 @@ export function searchMcpMethods(input: SearchMcpMethodsInput): SearchMcpMethods
     }
   }
 
-  return { methods: matches.slice(0, limit), total: matches.length };
+  return { methods: matches.slice(0, limit), total: matches.length, partial };
 }
 
 /**

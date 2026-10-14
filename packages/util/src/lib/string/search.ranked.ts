@@ -36,6 +36,96 @@ export function tokenizeSearchQuery(query: string): string[] {
   return Array.from(new Set(splitSearchIdentifierWords(query)));
 }
 
+// MARK: Query Words
+/**
+ * Common English filler words, for the `stopWords` of {@link rankSearchEntries}.
+ *
+ * Only words that never carry meaning in an identifier search are listed, so a sentence-like query such as
+ * "remove my entry from the guestbook" searches for `remove entry guestbook`.
+ */
+export const RANKED_SEARCH_ENGLISH_STOP_WORDS: ReadonlySet<string> = new Set([
+  'a',
+  'an',
+  'the',
+  'i',
+  'me',
+  'my',
+  'we',
+  'our',
+  'you',
+  'your',
+  'it',
+  'its',
+  'this',
+  'that',
+  'these',
+  'those',
+  'to',
+  'from',
+  'of',
+  'for',
+  'in',
+  'into',
+  'on',
+  'onto',
+  'with',
+  'by',
+  'at',
+  'and',
+  'or',
+  'is',
+  'are',
+  'be',
+  'do',
+  'does',
+  'how',
+  'can',
+  'could',
+  'would',
+  'want',
+  'please'
+]);
+
+/**
+ * Maps a lowercase word to the words that can stand in for it in a search. Build one with {@link buildRankedSearchSynonyms}.
+ */
+export type RankedSearchSynonyms = ReadonlyMap<string, readonly string[]>;
+
+/**
+ * Builds a {@link RankedSearchSynonyms} map from groups of interchangeable words.
+ *
+ * Every word of a group stands in for every other word of that group. A word listed in several groups gets the union.
+ *
+ * @param groups - The groups of interchangeable words.
+ * @returns The lowercase synonym map.
+ *
+ * @example
+ * ```ts
+ * const synonyms = buildRankedSearchSynonyms([['delete', 'remove']]);
+ * synonyms.get('remove'); // ['delete']
+ * ```
+ */
+export function buildRankedSearchSynonyms(groups: readonly (readonly string[])[]): RankedSearchSynonyms {
+  const synonyms = new Map<string, Set<string>>();
+
+  for (const group of groups) {
+    const words = group.map((x) => x.toLowerCase());
+
+    for (const word of words) {
+      const others = synonyms.get(word) ?? new Set<string>();
+      words.filter((x) => x !== word).forEach((x) => others.add(x));
+      synonyms.set(word, others);
+    }
+  }
+
+  return new Map(Array.from(synonyms, ([word, others]) => [word, Array.from(others)]));
+}
+
+/**
+ * Fraction of a field's exact weight that a synonym match scores, so a literal match outranks a synonym match.
+ */
+export const RANKED_SEARCH_SYNONYM_FACTOR = 0.5;
+
 // MARK: Scoring
 /**
  * Per-field match weights used by {@link rankSearchEntries}.
@@ -203,6 +293,17 @@ export interface RankSearchEntriesInput<T> {
    * Optional pre-filter. Entries it rejects are never scored.
    */
   readonly filter?: Maybe<(value: T) => boolean>;
+  /**
+   * Query words dropped before matching, e.g. {@link RANKED_SEARCH_ENGLISH_STOP_WORDS}. A query made only of stop words keeps
+   * them all.
+   */
+  readonly stopWords?: Maybe<ReadonlySet<string>>;
+  /**
+   * Words that can stand in for a query word. A synonym counts only as an exact word of a field and scores
+   * {@link RANKED_SEARCH_SYNONYM_FACTOR} of that field's exact weight; a token uses whichever of its literal or synonym score
+   * is higher.
+   */
+  readonly synonyms?: Maybe<RankedSearchSynonyms>;
 }
 
 /**
@@ -220,9 +321,10 @@ export interface RankedSearchResult<T> {
  *
  * Each token scores the sum of its best match in every field (see {@link scoreRankedSearchFieldToken}); an entry's score is the
  * sum over tokens, plus each field's exact weight when the whole query equals one of that field's values. Ties keep input order.
- * An empty query matches nothing.
+ * An empty query matches nothing. Optional `stopWords` are dropped from the query first, and optional `synonyms` let a token
+ * match a field through another word.
  *
- * @param input - The entries, query, match mode, limit, and optional filter.
+ * @param input - The entries, query, match mode, limit, optional filter, stop words, and synonyms.
  * @returns The matching entries, best first.
  *
  * @example
@@ -232,15 +334,17 @@ export interface RankedSearchResult<T> {
  * ```
  */
 export function rankSearchEntries<T>(input: RankSearchEntriesInput<T>): RankedSearchResult<T>[] {
-  const { entries, query, mode = 'all', limit, filter } = input;
-  const tokens = tokenizeSearchQuery(query);
+  const { entries, query, mode = 'all', limit, filter, stopWords, synonyms } = input;
+  const queryTokens = tokenizeSearchQuery(query);
+  const keptTokens = stopWords == null ? queryTokens : queryTokens.filter((token) => !stopWords.has(token));
+  const tokens = keptTokens.length > 0 ? keptTokens : queryTokens;
   const wholeQuery = query.trim().toLowerCase();
   const scored: (RankedSearchResult<T> & { readonly index: number })[] = [];
   let index = 0;
 
   if (tokens.length > 0) {
     for (const entry of entries) {
-      const score = filter == null || filter(entry.value) ? scoreRankedSearchEntry({ entry, tokens, wholeQuery, mode }) : undefined;
+      const score = filter == null || filter(entry.value) ? scoreRankedSearchEntry({ entry, tokens, wholeQuery, mode, synonyms }) : undefined;
 
       if (score != null) {
         scored.push({ value: entry.value, score, index });
@@ -271,21 +375,34 @@ export interface ScoreRankedSearchEntryInput<T> {
    */
   readonly wholeQuery: string;
   readonly mode: RankedSearchMatchMode;
+  /**
+   * Words that can stand in for a token. See {@link RankSearchEntriesInput.synonyms}.
+   */
+  readonly synonyms?: Maybe<RankedSearchSynonyms>;
 }
 
 /**
  * Scores one entry against the query tokens.
  *
- * @param input - The entry, tokens, whole query, and match mode.
+ * @param input - The entry, tokens, whole query, match mode, and optional synonyms.
  * @returns The entry's score, or `undefined` when it does not match under the mode.
  */
 export function scoreRankedSearchEntry<T>(input: ScoreRankedSearchEntryInput<T>): Maybe<number> {
-  const { entry, tokens, wholeQuery, mode } = input;
+  const { entry, tokens, wholeQuery, mode, synonyms } = input;
   let score = 0;
   let matchedTokens = 0;
 
   for (const token of tokens) {
-    const tokenScore = entry.fields.reduce((sum, field) => sum + scoreRankedSearchFieldToken(field, token), 0);
+    const literalScore = entry.fields.reduce((sum, field) => sum + scoreRankedSearchFieldToken(field, token), 0);
+    const synonymScore = (synonyms?.get(token) ?? []).reduce(
+      (best, synonym) =>
+        Math.max(
+          best,
+          entry.fields.reduce((sum, field) => sum + (field.words.includes(synonym) ? field.weights.exact * RANKED_SEARCH_SYNONYM_FACTOR : 0), 0)
+        ),
+      0
+    );
+    const tokenScore = Math.max(literalScore, synonymScore);
 
     if (tokenScore > 0) {
       matchedTokens += 1;

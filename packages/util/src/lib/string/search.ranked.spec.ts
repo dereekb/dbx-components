@@ -1,4 +1,4 @@
-import { buildRankedSearchEntries, rankSearchEntries, RANKED_SEARCH_NAME_WEIGHTS, RANKED_SEARCH_TEXT_WEIGHTS, splitSearchIdentifierWords, tokenizeSearchQuery } from './search.ranked';
+import { buildRankedSearchEntries, buildRankedSearchSynonyms, rankSearchEntries, RANKED_SEARCH_ENGLISH_STOP_WORDS, RANKED_SEARCH_NAME_WEIGHTS, RANKED_SEARCH_TEXT_WEIGHTS, splitSearchIdentifierWords, tokenizeSearchQuery } from './search.ranked';
 
 describe('splitSearchIdentifierWords()', () => {
   it('should split dots, dashes, and camelCase', () => {
@@ -66,5 +66,60 @@ describe('rankSearchEntries()', () => {
 
   it('should return nothing for an empty query', () => {
     expect(rankSearchEntries({ entries, query: '' })).toEqual([]);
+  });
+
+  describe('stopWords', () => {
+    it('should drop stop words from the query', () => {
+      expect(rankSearchEntries({ entries, query: 'reopen the timesheet' })).toEqual([]);
+      expect(rankSearchEntries({ entries, query: 'reopen the timesheet', stopWords: RANKED_SEARCH_ENGLISH_STOP_WORDS }).map((x) => x.value.id)).toEqual(['jobWorkerTimesheet.update.reopen']);
+    });
+
+    it('should keep every word of a query made only of stop words', () => {
+      expect(rankSearchEntries({ entries, query: 'by', stopWords: RANKED_SEARCH_ENGLISH_STOP_WORDS }).map((x) => x.value.id)).toEqual(['model-get']);
+    });
+  });
+
+  describe('synonyms', () => {
+    const synonymMethods: TestMethod[] = [{ id: 'worker.delete', description: 'Deletes a worker.' }, { id: 'worker.update.removeShift', description: 'Removes one shift from a worker.' }, { id: 'cache.clear', description: 'Removes stale entries.' }, { id: 'worker.create' }];
+    const synonymEntries = buildRankedSearchEntries(synonymMethods, [
+      { read: (x) => x.id, weights: RANKED_SEARCH_NAME_WEIGHTS },
+      { read: (x) => x.description, weights: RANKED_SEARCH_TEXT_WEIGHTS }
+    ]);
+    const synonyms = buildRankedSearchSynonyms([
+      ['delete', 'remove'],
+      ['remove', 'purge']
+    ]);
+
+    it('should match a word through its synonym', () => {
+      expect(rankSearchEntries({ entries: synonymEntries, query: 'remove worker' }).map((x) => x.value.id)).toEqual(['worker.update.removeShift']);
+      expect(rankSearchEntries({ entries: synonymEntries, query: 'remove worker', synonyms }).map((x) => x.value.id)).toEqual(['worker.update.removeShift', 'worker.delete']);
+    });
+
+    it('should rank a literal match above a synonym match', () => {
+      const results = rankSearchEntries({ entries: synonymEntries, query: 'delete worker', synonyms });
+      expect(results.map((x) => x.value.id)).toEqual(['worker.delete', 'worker.update.removeShift']);
+      expect(results[0].score).toBeGreaterThan(results[1].score);
+    });
+
+    it('should match a synonym only as an exact word', () => {
+      expect(rankSearchEntries({ entries: synonymEntries, query: 'purge', synonyms }).map((x) => x.value.id)).toEqual(['worker.update.removeShift']);
+    });
+  });
+});
+
+describe('buildRankedSearchSynonyms()', () => {
+  it('should map every word of a group to the others', () => {
+    const synonyms = buildRankedSearchSynonyms([['Delete', 'remove', 'erase']]);
+    expect(synonyms.get('delete')).toEqual(['remove', 'erase']);
+    expect(synonyms.get('erase')).toEqual(['delete', 'remove']);
+  });
+
+  it('should union the groups a word appears in', () => {
+    const synonyms = buildRankedSearchSynonyms([
+      ['delete', 'remove'],
+      ['remove', 'purge']
+    ]);
+    expect(synonyms.get('remove')).toEqual(['delete', 'purge']);
+    expect(synonyms.get('purge')).toEqual(['remove']);
   });
 });

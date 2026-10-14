@@ -9,6 +9,7 @@ import { type McpAnalyticsEvent } from './analytics/mcp.analytics.handler';
 import { mcpAdditionalTool } from './mcp.compact';
 import { MCP_MANIFEST_VERSION } from './mcp.manifest';
 import { McpServerFactoryService } from './mcp.server.factory';
+import { MCP_COMPACT_SEARCH_NO_MATCH_HINT, MCP_COMPACT_SEARCH_PARTIAL_HINT } from './tools/mcp.tool.compact-search';
 import { dispatchMcpDiscover, dispatchMcpMethodCall, dispatchMcpToolCall, dispatchMcpToolsList, type McpSpecDriverContext } from './mcp.spec-driver';
 
 type WireToolEntry = { name: string; description: string; inputSchema: { properties?: Record<string, unknown> }; annotations?: { readOnlyHint?: boolean; destructiveHint?: boolean; openWorldHint?: boolean }; _meta?: Record<string, unknown> };
@@ -51,6 +52,19 @@ const ESCALATING_API_DETAILS = makeApiDetails([
   CHECK_ENTRY
 ]);
 
+/**
+ * Methods named like the demo guestbook ones, for the keyword-search cases.
+ */
+const SEARCH_API_DETAILS = makeApiDetails([
+  { model: 'guestbook', call: 'create' },
+  { model: 'guestbook', call: 'query' },
+  { model: 'guestbook', call: 'update', specifier: 'subscribeToNotifications' },
+  { model: 'guestbookEntry', call: 'delete' },
+  { model: 'guestbookEntry', call: 'update', specifier: 'insert' },
+  { model: 'guestbookEntry', call: 'update', specifier: 'like' },
+  { model: 'secretLedger', call: 'delete', mcp: { visibility: ADMIN_ONLY } }
+]);
+
 const roleReader: McpAuthRoleReader = (claims) => new Set<string>(claims['a'] === true ? [AUTH_ADMIN_ROLE] : []);
 
 interface MakeFactoryOptions {
@@ -84,7 +98,7 @@ async function listNames(factory: McpServerFactoryService, ctx: McpSpecDriverCon
   return (await dispatchMcpToolsList<WireToolEntry>(factory, ctx)).map((x) => x.name);
 }
 
-async function search(factory: McpServerFactoryService, ctx: McpSpecDriverContext, args: Record<string, unknown>): Promise<{ total: number; methods: { method: string; kind: string; params: string[]; escalatingParams?: Record<string, string> }[] }> {
+async function search(factory: McpServerFactoryService, ctx: McpSpecDriverContext, args: Record<string, unknown>): Promise<{ total: number; partial?: true; hint?: string; methods: { method: string; kind: string; params: string[]; escalatingParams?: Record<string, string> }[] }> {
   const result = await dispatchMcpToolCall<ToolResult>({ factory, ctx, name: factory.compactToolNames.search, args });
   return result.structuredContent;
 }
@@ -177,6 +191,53 @@ describe('McpServerFactoryService compact surface', () => {
       expect(result.methods.map((x) => x.method)).toEqual(['guestbook.update.reopen']);
       expect(result.methods[0].kind).toBe('destructive');
       expect(result.methods[0].params).toEqual(['name']);
+    });
+
+    describe('keywords', () => {
+      const factory = makeFactory({ apiDetails: SEARCH_API_DETAILS });
+
+      it('should drop filler words from a sentence-like query', async () => {
+        const result = await search(factory, USER, { query: 'subscribe me to guestbook notifications' });
+        expect(result.methods.map((x) => x.method)).toEqual(['guestbook.update.subscribeToNotifications']);
+        expect(result.partial).toBeUndefined();
+        expect(result.hint).toBeUndefined();
+      });
+
+      it('should find a delete method by the word remove', async () => {
+        const result = await search(factory, USER, { query: 'remove my entry from guestbook' });
+        expect(result.methods.map((x) => x.method)).toEqual(['guestbookEntry.delete']);
+        expect(result.partial).toBeUndefined();
+      });
+
+      it('should rank the like method first for "like an entry"', async () => {
+        const result = await search(factory, USER, { query: 'like an entry' });
+        expect(result.methods[0].method).toBe('guestbookEntry.update.like');
+        expect(result.partial).toBeUndefined();
+      });
+
+      it('should fall back to methods matching some keywords, with a hint', async () => {
+        const result = await search(factory, USER, { query: 'like guestbook calendar' });
+        expect(result.partial).toBe(true);
+        expect(result.hint).toBe(MCP_COMPACT_SEARCH_PARTIAL_HINT);
+        expect(result.methods[0].method).toBe('guestbookEntry.update.like');
+      });
+
+      it('should hint when nothing matches', async () => {
+        const result = await search(factory, USER, { query: 'calendar' });
+        expect(result.total).toBe(0);
+        expect(result.partial).toBeUndefined();
+        expect(result.hint).toBe(MCP_COMPACT_SEARCH_NO_MATCH_HINT);
+      });
+
+      it('should never fall back to a hidden method', async () => {
+        const userResult = await search(factory, USER, { query: 'remove ledger' });
+        expect(userResult.partial).toBe(true);
+        expect(userResult.methods.map((x) => x.method)).toEqual(['guestbookEntry.delete']);
+
+        const adminResult = await search(factory, ADMIN, { query: 'remove ledger' });
+        expect(adminResult.partial).toBeUndefined();
+        expect(adminResult.methods.map((x) => x.method)).toEqual(['secretLedger.delete']);
+      });
     });
 
     it('should filter by kind and list a model with an empty query', async () => {

@@ -126,7 +126,7 @@ export function resolveMcpCompactToolNames(input: ResolveMcpCompactToolNamesInpu
 export const MCP_COMPACT_SEARCH_INPUT_SCHEMA = Object.freeze({
   type: 'object',
   properties: {
-    query: { type: 'string', description: "Keywords, e.g. 'create' or 'update status'. May be empty when `model` or `kind` is set to list the matching methods." },
+    query: { type: 'string', description: "One to three keywords, not a sentence, e.g. 'create worker' or 'update status'. May be empty when `model` or `kind` is set to list the matching methods." },
     model: { type: 'string', description: 'Optional model type to restrict results to, e.g. `worker`.' },
     kind: { type: 'string', enum: ['read', 'write', 'destructive'], description: 'Optional method kind filter. `destructive` also matches a method that a param can make destructive.' },
     limit: { type: 'integer', minimum: 1, maximum: 50, description: 'Maximum results (default 8).' }
@@ -197,7 +197,7 @@ export function buildMcpCompactInstructions(input: BuildMcpCompactInstructionsIn
     readOnly === true
       ? `3) Call it with \`${names.read}\`, passing \`{ method, params }\`.`
       : `3) Call it with \`${names.read}\` (read-only methods), \`${names.write}\` (methods that add or change data) or \`${names.destructive}\` (methods that delete or overwrite data, or send real messages), passing \`{ method, params }\`; \`${names.details}\` says which, and which params make a call destructive.`;
-  const parts = [`Use these tools to work with the ${app} API. 1) \`${names.search}\` finds API methods by keyword ('reopen timesheet', 'create worker'). 2) \`${names.details}\` returns a method's parameter schema. ${callStep} Method ids look like \`worker.update.schedule\` (model.call.specifier).`];
+  const parts = [`Use these tools to work with the ${app} API. 1) \`${names.search}\` finds API methods by keywords, not sentences ('reopen timesheet', 'create worker'). 2) \`${names.details}\` returns a method's parameter schema. ${callStep} Method ids look like \`worker.update.schedule\` (model.call.specifier).`];
 
   if (builtinReadMethods.length > 0) {
     const quoted = builtinReadMethods.map((x) => `\`${x}\``).join(', ');
