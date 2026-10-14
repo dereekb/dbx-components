@@ -4,7 +4,8 @@ import { filterMaybe } from '@dereekb/rxjs';
 import { BehaviorSubject, combineLatest, map, type Observable, shareReplay, switchMap } from 'rxjs';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { cleanSubscriptionWithLockSet, completeOnDestroy } from '../../../rxjs';
+import { clean, cleanSubscriptionWithLockSet, completeOnDestroy } from '../../../rxjs';
+import { type DbxActionValueGetterResult } from './action.value.trigger.instance';
 
 /**
  * Directive that provides a value (or value-producing function) to the action when triggered.
@@ -68,6 +69,18 @@ export class DbxActionValueDirective<T, O> {
         this.source.readyValue(value);
       })
     });
+
+    clean(this.source.registerValueSnapshot(() => this.valueSnapshot()));
+  }
+
+  /**
+   * Returns the value a trigger would ready right now, without triggering the action.
+   *
+   * @returns The current value, or undefined when no value is set.
+   */
+  valueSnapshot(): Maybe<DbxActionValueGetterResult<T>> {
+    const valueOrFunction = this._valueOrFunctionOverride.value ?? (this.valueOrFunction() as Maybe<GetterOrValue<T>>);
+    return valueOrFunction == null ? undefined : { value: getValueFromGetter(valueOrFunction) };
   }
 
   setValueOrFunction(value: Maybe<GetterOrValue<T>>) {

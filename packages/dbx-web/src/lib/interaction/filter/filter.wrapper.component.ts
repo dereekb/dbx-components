@@ -1,41 +1,13 @@
 import { Component, computed, effect, inject, input } from '@angular/core';
-import { AbstractDbxActionHandlerDirective, actionContextIsModifiedAndCanTrigger, FilterSourceDirective, isIdleActionState, provideActionStoreSource } from '@dereekb/dbx-core';
+import { AbstractDbxActionHandlerDirective, FilterSourceDirective, provideActionStoreSource } from '@dereekb/dbx-core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { DbxButtonModule } from '../../button/button.module';
 import { FlexLayoutModule } from '@ngbracket/ngx-layout';
 import { type WorkInstance } from '@dereekb/rxjs';
-import { type Maybe, type Milliseconds } from '@dereekb/util';
-import { filter, first, firstValueFrom, type Observable, of, switchMap, timer } from 'rxjs';
+import { areEqualPOJOValues, type Maybe } from '@dereekb/util';
+import { first } from 'rxjs';
 import { DbxFilterPopoverPendingChanges } from './filter.popover.pending';
-
-/**
- * How long the action state must stay unchanged before {@link DbxFilterWrapperComponent.applyPendingFilter} decides whether there is a change to apply.
- */
-export const DBX_FILTER_WRAPPER_APPLY_PENDING_SETTLE_TIME: Milliseconds = 100;
-
-/**
- * Emits the latest value once it has stayed the same for settleTime, measured by a timer that fired on time.
- *
- * A timer that fires late (behind a long task) restarts the wait, so the work queued behind that task runs first.
- *
- * @param value$ - Values to settle.
- * @param settleTime - How long a value must stay the same.
- * @returns Emits the settled value once, then completes.
- */
-function settledValue<T>(value$: Observable<T>, settleTime: Milliseconds): Observable<T> {
-  return value$.pipe(
-    switchMap((value) => {
-      const waitOnTime = (): Observable<T> => {
-        const startedAt = Date.now();
-        return timer(settleTime).pipe(switchMap(() => (Date.now() - startedAt > settleTime * 2 ? waitOnTime() : of(value))));
-      };
-
-      return waitOnTime();
-    }),
-    first()
-  );
-}
 
 /**
  * Wraps filter form content with apply/reset buttons, integrating with the action system.
@@ -104,27 +76,25 @@ export class DbxFilterWrapperComponent<F = unknown> extends AbstractDbxActionHan
   }
 
   /**
-   * Applies a change the action has not applied yet.
+   * Applies a change the action has not applied yet, synchronously.
    *
-   * Waits until the action state has settled, triggers the action if it is modified and can be triggered, then waits until the action is idle.
-   *
-   * @returns Resolves once the action is idle.
+   * Takes the value a trigger would ready right now from the action's value source (such as dbxActionForm) and sets it on the filter source
+   * when it differs from the current filter. It skips the action's trigger path and its delays, so it works right before the content is destroyed.
    */
-  applyPendingFilter(): Promise<void> {
-    const state$ = this.source.state$;
+  applyPendingFilter(): void {
+    const value = this.source.valueSnapshot()?.value;
 
-    const applied$ = settledValue(state$, DBX_FILTER_WRAPPER_APPLY_PENDING_SETTLE_TIME).pipe(
-      switchMap((state) => {
-        if (actionContextIsModifiedAndCanTrigger(state)) {
-          this.source.trigger();
-        }
+    if (value != null) {
+      let currentFilter: Maybe<F>;
+      this.filterSourceDirective.filter$
+        .pipe(first())
+        .subscribe((x) => (currentFilter = x))
+        .unsubscribe();
 
-        return state$.pipe(filter((x) => isIdleActionState(x.actionState)));
-      }),
-      first()
-    );
-
-    return firstValueFrom(applied$, { defaultValue: undefined }).then(() => undefined);
+      if (!areEqualPOJOValues<Maybe<F>>(value, currentFilter)) {
+        this.filterSourceDirective.setFilter(value);
+      }
+    }
   }
 
   applyFilter(): void {

@@ -1,5 +1,5 @@
-import { toReadableError, type Destroyable, type Initialized, type Maybe, type ReadableError } from '@dereekb/util';
-import { switchMap, map, catchError, of, BehaviorSubject, type Observable, shareReplay, combineLatestWith } from 'rxjs';
+import { toReadableError, type Destroyable, type DestroyFunction, type Initialized, type Maybe, type ReadableError } from '@dereekb/util';
+import { switchMap, map, catchError, of, first, BehaviorSubject, type Observable, shareReplay, combineLatestWith } from 'rxjs';
 import { type ObservableOrValue, SubscriptionObject, type IsModifiedFunction, asObservable, returnIfIs, filterMaybe, type IsEqualFunction, makeIsModifiedFunctionObservable } from '@dereekb/rxjs';
 import { type DbxActionContextStoreSourceInstance } from '../../action.store.source';
 
@@ -72,6 +72,7 @@ export class DbxActionValueGetterInstance<T> implements Initialized, Destroyable
   readonly source: DbxActionContextStoreSourceInstance<T, unknown>;
 
   private readonly _triggeredSub = new SubscriptionObject();
+  private _unregisterValueSnapshot: Maybe<DestroyFunction>;
 
   constructor(config: DbxActionValueGetterInstanceConfig<T>) {
     this.source = config.source;
@@ -94,29 +95,47 @@ export class DbxActionValueGetterInstance<T> implements Initialized, Destroyable
 
   init(): void {
     // Ready the value after the source is triggered. Do modified check one last time.
-    this._triggeredSub.subscription = this.source.triggered$
-      .pipe(
-        switchMap(() =>
-          this.valueGetterFunction$.pipe(
-            switchMap((valueGetter) => asObservable(valueGetter())),
-            combineLatestWith(this.isModifiedFunction$),
-            // If the value is not null/undefined and is considered modified, then pass the value.
-            switchMap(([value, isModifiedFunction]) => returnIfIs(isModifiedFunction, value, false).pipe(map((value) => ({ value })))),
-            // Catch unknown errors and pass them to reject.
-            catchError((reject) => of({ reject: toReadableError(reject) }))
-          )
-        )
-      )
-      .subscribe((result: DbxActionValueGetterResult<T>) => {
-        if (result.value == null) {
-          this.source.reject(result.reject);
-        } else {
-          this.source.readyValue(result.value);
-        }
-      });
+    this._triggeredSub.subscription = this.source.triggered$.pipe(switchMap(() => this._valueResult())).subscribe((result: DbxActionValueGetterResult<T>) => {
+      if (result.value == null) {
+        this.source.reject(result.reject);
+      } else {
+        this.source.readyValue(result.value);
+      }
+    });
+
+    this._unregisterValueSnapshot = this.source.registerValueSnapshot(() => this.valueSnapshot());
+  }
+
+  /**
+   * Returns the value a trigger would ready right now, without triggering the action.
+   *
+   * Runs the same value getter and modified check as a trigger.
+   *
+   * @returns The current result, or undefined when the value getter or the modified check does not resolve synchronously.
+   */
+  valueSnapshot(): Maybe<DbxActionValueGetterResult<T>> {
+    let snapshot: Maybe<DbxActionValueGetterResult<T>>;
+    this._valueResult()
+      .pipe(first())
+      .subscribe((result) => (snapshot = result))
+      .unsubscribe();
+    return snapshot;
+  }
+
+  private _valueResult(): Observable<DbxActionValueGetterResult<T>> {
+    return this.valueGetterFunction$.pipe(
+      switchMap((valueGetter) => asObservable(valueGetter())),
+      combineLatestWith(this.isModifiedFunction$),
+      // If the value is not null/undefined and is considered modified, then pass the value.
+      switchMap(([value, isModifiedFunction]) => returnIfIs(isModifiedFunction, value, false).pipe(map((value) => ({ value })))),
+      // Catch unknown errors and pass them to reject.
+      catchError((reject) => of({ reject: toReadableError(reject) }))
+    );
   }
 
   destroy(): void {
+    this._unregisterValueSnapshot?.();
+
     this.source.lockSet.onNextUnlock(() => {
       this._valueGetterFunction.complete();
       this._isModifiedFunction.complete();

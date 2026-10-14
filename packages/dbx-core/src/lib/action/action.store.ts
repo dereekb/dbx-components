@@ -1,10 +1,11 @@
 import { Injectable, type OnDestroy } from '@angular/core';
 import { ComponentStore } from '@ngrx/component-store';
 import { type Observable, distinctUntilChanged, filter, map, shareReplay, switchMap, startWith, of } from 'rxjs';
-import { type BooleanStringKeyArray, BooleanStringKeyArrayUtility, type Maybe, type ReadableError } from '@dereekb/util';
+import { type BooleanStringKeyArray, BooleanStringKeyArrayUtility, type DestroyFunction, type Maybe, type ReadableError } from '@dereekb/util';
 import { type LoadingStateType, idleLoadingState, errorResult, filterMaybe, type LoadingState, scanCount, successResult, beginLoading } from '@dereekb/rxjs';
 import { type DbxActionDisabledKey, type DbxActionRejectedPair, DbxActionState, type DbxActionSuccessPair, type DbxActionWorkOrWorkProgress, type DbxActionWorkProgress, DEFAULT_ACTION_DISABLED_KEY, isIdleActionState, loadingStateTypeForActionState } from './action';
 import { cleanLockSet } from '../rxjs';
+import { type DbxActionValueGetterResult } from './directive/state/action.value.trigger.instance';
 
 /**
  * Checks whether the action context is enabled (not disabled by any key).
@@ -224,6 +225,13 @@ const INITIAL_STATE: ActionContextState = {
 export const ACTION_CONTEXT_STORE_LOCKSET_DESTROY_DELAY_TIME = 2000;
 
 /**
+ * Returns the value a trigger would ready right now, without triggering the action.
+ *
+ * Returns undefined when the value is not available synchronously.
+ */
+export type DbxActionValueSnapshotFunction<T> = () => Maybe<DbxActionValueGetterResult<T>>;
+
+/**
  * NgRx ComponentStore that manages the reactive state machine for a single action lifecycle.
  *
  * This is the central state container for the action system. It tracks the full lifecycle
@@ -260,6 +268,8 @@ export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore
       delayTime: ACTION_CONTEXT_STORE_LOCKSET_DESTROY_DELAY_TIME
     }
   });
+
+  private _valueSnapshotFunction: Maybe<DbxActionValueSnapshotFunction<T>>;
 
   constructor() {
     super({ ...INITIAL_STATE } as ActionContextState<T, O>);
@@ -565,6 +575,37 @@ export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore
       map((x) => x[0] as ActionContextState<T, O>),
       shareReplay(1)
     );
+  }
+
+  // MARK: Value Snapshot
+  /**
+   * Registers the function that returns the value a trigger would ready right now. Registered by the action's value source, such as dbxActionValue or dbxActionForm.
+   *
+   * Only one function is kept, so a later registration replaces an earlier one.
+   *
+   * @param valueSnapshotFunction - Function that returns the current value.
+   * @returns Removes the registration when called, unless it was already replaced.
+   */
+  registerValueSnapshot(valueSnapshotFunction: DbxActionValueSnapshotFunction<T>): DestroyFunction {
+    this._valueSnapshotFunction = valueSnapshotFunction;
+
+    return () => {
+      if (this._valueSnapshotFunction === valueSnapshotFunction) {
+        this._valueSnapshotFunction = undefined;
+      }
+    };
+  }
+
+  /**
+   * Returns the value a trigger would ready right now, without triggering the action.
+   *
+   * Lets a change be applied synchronously when the action's own trigger path and its delays can no longer run, such as right before
+   * the content that holds the action is destroyed.
+   *
+   * @returns The current value, or undefined when no value source registered a snapshot or its value is not available synchronously.
+   */
+  valueSnapshot(): Maybe<DbxActionValueGetterResult<T>> {
+    return this._valueSnapshotFunction?.();
   }
 
   // MARK: Cleanup

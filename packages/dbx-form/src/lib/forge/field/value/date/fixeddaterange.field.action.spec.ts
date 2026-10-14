@@ -1,12 +1,13 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, inject } from '@angular/core';
+import { ApplicationRef, Component, inject } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { type FormConfig, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
 import { catchError, firstValueFrom, of, Subject, timeout } from 'rxjs';
 import { addDays, startOfDay } from 'date-fns';
 import { DateRangeType, type DateRange } from '@dereekb/date';
-import { DbxCoreActionModule, DbxActionHandlerDirective, completeOnDestroy } from '@dereekb/dbx-core';
+import { AbstractFilterSourceDirective, DbxCoreActionModule, DbxActionHandlerDirective, completeOnDestroy, provideFilterSourceDirective } from '@dereekb/dbx-core';
+import { DbxFilterPopoverPendingChanges, DbxFilterPopoverPendingChangesInstance, DbxFilterWrapperComponent } from '@dereekb/dbx-web';
 import { type Maybe, waitForMs } from '@dereekb/util';
 import { type WorkUsingObservable } from '@dereekb/rxjs';
 import { provideDbxForgeFormFieldDeclarations } from '../../../forge.providers';
@@ -48,6 +49,21 @@ class TestForgeFixedDateRangeActionHostComponent {
   };
 }
 
+// MARK: Filter Popover Host
+@Component({
+  template: `
+    <dbx-filter-wrapper dbxActionEnforceModified dbxActionAutoTrigger useInstantTriggerPreset [showButtons]="false">
+      <dbx-forge dbxActionForm></dbx-forge>
+    </dbx-filter-wrapper>
+  `,
+  imports: [DbxFilterWrapperComponent, DbxForgeFormComponent, DbxActionFormDirective, DbxCoreActionModule],
+  providers: [provideDbxForgeFormContext(), provideFilterSourceDirective(TestForgeFixedDateRangeFilterPopoverHostComponent), { provide: DbxFilterPopoverPendingChanges, useFactory: () => new DbxFilterPopoverPendingChangesInstance() }]
+})
+class TestForgeFixedDateRangeFilterPopoverHostComponent extends AbstractFilterSourceDirective<TestFixedDateRangeValue> {
+  readonly context = inject(DbxForgeFormContext);
+  readonly pendingChanges = inject(DbxFilterPopoverPendingChanges) as DbxFilterPopoverPendingChangesInstance;
+}
+
 const TEST_PROVIDERS = [provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }];
 
 function createNormalRangeConfig(): FormConfig {
@@ -65,7 +81,7 @@ function createNormalRangeConfig(): FormConfig {
   };
 }
 
-async function settle(fixture: ComponentFixture<TestForgeFixedDateRangeActionHostComponent>): Promise<void> {
+async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
   fixture.detectChanges();
   await waitForMs(500);
   fixture.detectChanges();
@@ -76,11 +92,11 @@ async function settle(fixture: ComponentFixture<TestForgeFixedDateRangeActionHos
   await firstValueFrom(getField(fixture).valueInSystemTimezone$);
 }
 
-function getField(fixture: ComponentFixture<TestForgeFixedDateRangeActionHostComponent>): DbxForgeFixedDateRangeFieldComponent {
+function getField(fixture: ComponentFixture<unknown>): DbxForgeFixedDateRangeFieldComponent {
   return fixture.debugElement.query(By.directive(DbxForgeFixedDateRangeFieldComponent)).componentInstance as DbxForgeFixedDateRangeFieldComponent;
 }
 
-function typeIntoInput(fixture: ComponentFixture<TestForgeFixedDateRangeActionHostComponent>, selector: string, date: Date): void {
+function typeIntoInput(fixture: ComponentFixture<unknown>, selector: string, date: Date): void {
   const input = fixture.debugElement.query(By.css(selector)).nativeElement as HTMLInputElement;
   input.value = `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
   input.dispatchEvent(new Event('input'));
@@ -163,6 +179,44 @@ describe('DbxForgeFixedDateRangeFieldComponent in an auto-triggered action form'
 
     const value = await handled;
     expect(value?.range?.start.getTime()).toBe(typedStart.getTime());
+
+    fixture.destroy();
+  });
+});
+
+describe('DbxForgeFixedDateRangeFieldComponent in a filter popover', () => {
+  const typedStart = addDays(startOfDay(new Date()), 3);
+  const typedEnd = addDays(startOfDay(new Date()), 6);
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [TestForgeFixedDateRangeFilterPopoverHostComponent],
+      providers: TEST_PROVIDERS
+    });
+  });
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
+  });
+
+  it('should apply committed typed dates synchronously when the popover applies pending changes before closing', async () => {
+    const fixture = TestBed.createComponent(TestForgeFixedDateRangeFilterPopoverHostComponent);
+    const host = fixture.componentInstance;
+    host.context.config = createNormalRangeConfig();
+    await settle(fixture);
+
+    const setFilter = vi.spyOn(host, 'setFilter');
+
+    typeIntoInput(fixture, 'input[matStartDate]', typedStart);
+    typeIntoInput(fixture, 'input[matEndDate]', typedEnd);
+
+    // what the filter popover does on Save: commit the input (blur), run pending effects, then apply pending changes; all synchronously
+    getField(fixture).commitTextInput();
+    TestBed.inject(ApplicationRef).tick();
+    host.pendingChanges.applyPending();
+
+    expect(setFilter).toHaveBeenCalledTimes(1);
+    expect(setFilter.mock.calls[0][0].range?.start.getTime()).toBe(typedStart.getTime());
 
     fixture.destroy();
   });

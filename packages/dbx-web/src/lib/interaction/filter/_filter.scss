@@ -4,6 +4,17 @@
 
 // MARK: Mixin
 @mixin core() {
+  /// @dbx-utility filter-popover-content-buttons
+  /// @intent filter popover buttons below the filter content — holds the same switch and close buttons as the header when `showButtonsBelowContent` is set
+  /// @role layout
+  /// @component DbxFilterPopoverComponent
+  /// @scope component-class
+  .dbx-filter-popover-content-buttons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--dbx-padding-2) var(--dbx-padding-3);
+  }
 }
 
 @mixin theme($theme-config) {

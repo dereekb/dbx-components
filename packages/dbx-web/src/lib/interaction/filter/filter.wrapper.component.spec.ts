@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, inject, signal, viewChild } from '@angular/core';
 import { AbstractFilterSourceDirective, DbxActionValueDirective, provideFilterSourceDirective } from '@dereekb/dbx-core';
-import { type Maybe, waitForMs } from '@dereekb/util';
-import { DbxFilterWrapperComponent, DBX_FILTER_WRAPPER_APPLY_PENDING_SETTLE_TIME } from './filter.wrapper.component';
+import { type Maybe } from '@dereekb/util';
+import { DbxFilterWrapperComponent } from './filter.wrapper.component';
 import { DbxFilterPopoverPendingChanges, DbxFilterPopoverPendingChangesInstance } from './filter.popover.pending';
 
 interface TestFilter {
@@ -15,7 +15,7 @@ const TEST_FILTER_VALUE: TestFilter = { name: 'test' };
 @Component({
   template: `
     <dbx-filter-wrapper [showButtons]="showButtons()" [applyOnClose]="applyOnClose()">
-      <ng-container [dbxActionValue]="value"></ng-container>
+      <ng-container [dbxActionValue]="value()"></ng-container>
     </dbx-filter-wrapper>
   `,
   imports: [DbxFilterWrapperComponent, DbxActionValueDirective],
@@ -28,7 +28,7 @@ class TestFilterWrapperHostComponent extends AbstractFilterSourceDirective<TestF
   readonly showButtons = signal<boolean>(true);
   readonly applyOnClose = signal<Maybe<boolean>>(undefined);
 
-  readonly value = TEST_FILTER_VALUE;
+  readonly value = signal<Maybe<TestFilter>>(TEST_FILTER_VALUE);
 }
 
 describe('DbxFilterWrapperComponent', () => {
@@ -53,36 +53,31 @@ describe('DbxFilterWrapperComponent', () => {
   }
 
   describe('applyPendingFilter()', () => {
-    it('should trigger a modified action and resolve after the filter is set', async () => {
+    it('should set the value the action would ready, synchronously', async () => {
       await render();
 
-      host.wrapper().source.setIsModified(true);
-      await host.wrapper().applyPendingFilter();
+      host.wrapper().applyPendingFilter();
 
       expect(host.setFilter).toHaveBeenCalledWith(TEST_FILTER_VALUE);
     });
 
-    it('should resolve without setting the filter when nothing is modified', async () => {
+    it('should not set the filter when it already equals the value', async () => {
       await render();
+      host.setFilter({ ...TEST_FILTER_VALUE });
+      vi.mocked(host.setFilter).mockClear();
 
-      await host.wrapper().applyPendingFilter();
+      host.wrapper().applyPendingFilter();
 
       expect(host.setFilter).not.toHaveBeenCalled();
     });
 
-    it('should restart the settle wait when the action state changes', async () => {
+    it('should not set the filter when the action has no value', async () => {
+      host.value.set(undefined);
       await render();
 
-      const startedAt = Date.now();
-      const applied = host.wrapper().applyPendingFilter();
+      host.wrapper().applyPendingFilter();
 
-      await waitForMs(DBX_FILTER_WRAPPER_APPLY_PENDING_SETTLE_TIME / 2);
-      host.wrapper().source.setIsModified(true);
-
-      await applied;
-
-      expect(host.setFilter).toHaveBeenCalledWith(TEST_FILTER_VALUE);
-      expect(Date.now() - startedAt).toBeGreaterThanOrEqual(DBX_FILTER_WRAPPER_APPLY_PENDING_SETTLE_TIME * 1.5 - 5);
+      expect(host.setFilter).not.toHaveBeenCalled();
     });
   });
 
@@ -93,8 +88,7 @@ describe('DbxFilterWrapperComponent', () => {
 
       expect(host.pendingChanges.hasApplyPending).toBe(true);
 
-      host.wrapper().source.setIsModified(true);
-      await host.pendingChanges.applyPending();
+      host.pendingChanges.applyPending();
 
       expect(host.setFilter).toHaveBeenCalledWith(TEST_FILTER_VALUE);
     });

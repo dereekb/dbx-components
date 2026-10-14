@@ -1,64 +1,54 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { DbxFilterPopoverPendingChangesInstance } from './filter.popover.pending';
 
 describe('DbxFilterPopoverPendingChangesInstance', () => {
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  it('should resolve immediately when nothing is registered', async () => {
+  it('should do nothing when nothing is registered', () => {
     const instance = new DbxFilterPopoverPendingChangesInstance();
     expect(instance.hasApplyPending).toBe(false);
-    await expect(instance.applyPending()).resolves.toBeUndefined();
+    expect(() => instance.applyPending()).not.toThrow();
   });
 
-  it('should wait for every registered function', async () => {
+  it('should call every registered function synchronously', () => {
     const instance = new DbxFilterPopoverPendingChangesInstance();
-    const finished: string[] = [];
+    const a = vi.fn();
+    const b = vi.fn();
 
-    instance.registerApplyPending(() => Promise.resolve().then(() => void finished.push('a')));
-    instance.registerApplyPending(() => new Promise<void>((resolve) => setTimeout(resolve, 10)).then(() => void finished.push('b')));
+    instance.registerApplyPending(a);
+    instance.registerApplyPending(b);
 
     expect(instance.hasApplyPending).toBe(true);
-    await instance.applyPending();
-    expect(finished.sort()).toEqual(['a', 'b']);
+    instance.applyPending();
+
+    expect(a).toHaveBeenCalledTimes(1);
+    expect(b).toHaveBeenCalledTimes(1);
   });
 
-  it('should not call a function whose registration was removed', async () => {
+  it('should not call a function whose registration was removed', () => {
     const instance = new DbxFilterPopoverPendingChangesInstance();
-    const applyPending = vi.fn(() => Promise.resolve());
+    const applyPending = vi.fn();
 
     const unregister = instance.registerApplyPending(applyPending);
     unregister();
 
     expect(instance.hasApplyPending).toBe(false);
-    await instance.applyPending();
+    instance.applyPending();
     expect(applyPending).not.toHaveBeenCalled();
   });
 
-  it('should count a rejecting function as finished', async () => {
-    const instance = new DbxFilterPopoverPendingChangesInstance();
-    instance.registerApplyPending(() => Promise.reject(new Error('failed')));
+  it('should keep calling the other functions when one throws, and pass the error to handleError', () => {
+    const handleError = vi.fn();
+    const instance = new DbxFilterPopoverPendingChangesInstance(handleError);
+    const error = new Error('failed');
+    const after = vi.fn();
 
-    await expect(instance.applyPending()).resolves.toBeUndefined();
-  });
-
-  it('should resolve after maxWait when a function never resolves', async () => {
-    vi.useFakeTimers();
-
-    const instance = new DbxFilterPopoverPendingChangesInstance(1000);
-    instance.registerApplyPending(() => new Promise<void>(() => undefined));
-
-    let resolved = false;
-    const result = instance.applyPending().then(() => {
-      resolved = true;
+    instance.registerApplyPending(() => {
+      throw error;
     });
 
-    await vi.advanceTimersByTimeAsync(999);
-    expect(resolved).toBe(false);
+    instance.registerApplyPending(after);
 
-    await vi.advanceTimersByTimeAsync(1);
-    await result;
-    expect(resolved).toBe(true);
+    expect(() => instance.applyPending()).not.toThrow();
+    expect(after).toHaveBeenCalledTimes(1);
+    expect(handleError).toHaveBeenCalledWith(error);
   });
 });

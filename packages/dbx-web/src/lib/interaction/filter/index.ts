@@ -8,6 +8,8 @@ export * from './filter.popover.button.component';
 export * from './filter.popover.button.directive';
 export * from './filter.popover.component';
 export * from './filter.popover.pending';
+export * from './filter.popover.switch.button.component';
+export * from './filter.popover.view';
 export * from './filter.wrapper.component';
 export * from './filter.preset.list.component';
 export * from './filter.preset.menu.component';
