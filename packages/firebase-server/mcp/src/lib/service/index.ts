@@ -1,5 +1,6 @@
 export * from './analytics';
 export * from './mcp.compact';
+export * from './mcp.examples';
 export * from './mcp.manifest';
 export * from './mcp.method';
 export * from './mcp.method.search';

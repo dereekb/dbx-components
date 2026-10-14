@@ -49,12 +49,28 @@ describe('resolveMcpCompactToolNames()', () => {
 describe('buildMcpCompactInstructions()', () => {
   it('should stay under the client text limit with every option on', () => {
     const names = resolveMcpCompactToolNames({ prefix: 'a'.repeat(MCP_TOOL_NAME_PREFIX_MAX_LENGTH) });
-    const text = buildMcpCompactInstructions({ app: 'a'.repeat(MCP_TOOL_NAME_PREFIX_MAX_LENGTH), names, builtinReadMethods: ['model-get', 'model-roles', 'url-models', 'model-info', 'model-decode', 'enum-info', 'whoami', 'docs-read'], hasDocumentation: true, hasToken: true, methodToolsListed: true });
+    const examples = { methodId: 'm'.repeat(64), methodIdByKind: {}, searchQueries: ['q'.repeat(40), 'r'.repeat(40)] };
+    const text = buildMcpCompactInstructions({ app: 'a'.repeat(MCP_TOOL_NAME_PREFIX_MAX_LENGTH), names, builtinReadMethods: ['model-get', 'model-roles', 'url-models', 'model-info', 'model-decode', 'enum-info', 'whoami', 'docs-read'], hasDocumentation: true, hasToken: true, methodToolsListed: true, examples });
     expect(text.length).toBeLessThan(MCP_CLIENT_TEXT_MAX_LENGTH);
     expect(text).toContain(names.search);
     expect(text).toContain(names.destructive);
     expect(text).toContain(names.documentation);
     expect(text).toContain('Per-method tools are also listed.');
+  });
+
+  it('should include the example method id and queries', () => {
+    const names = resolveMcpCompactToolNames({ prefix: 'demo' });
+    const text = buildMcpCompactInstructions({ app: 'demo', names, builtinReadMethods: [], hasDocumentation: false, hasToken: false, methodToolsListed: false, examples: { methodId: 'calendar.update.rotateIcs', methodIdByKind: {}, searchQueries: ['rotate calendar', 'create form space'] } });
+    expect(text).toContain('e.g. `calendar.update.rotateIcs`');
+    expect(text).toContain("('rotate calendar', 'create form space')");
+  });
+
+  it('should use generic wording without examples', () => {
+    const names = resolveMcpCompactToolNames({ prefix: 'demo' });
+    const text = buildMcpCompactInstructions({ app: 'demo', names, builtinReadMethods: [], hasDocumentation: false, hasToken: false, methodToolsListed: false });
+    expect(text).toContain('a verb and/or a model name');
+    expect(text).toContain('`model.call` or `model.call.specifier`');
+    expect(text).not.toContain('e.g.');
   });
 
   it('should only name the read router in readOnly mode', () => {

@@ -123,6 +123,12 @@ export interface SearchMcpMethodsInput {
   readonly kind?: Maybe<McpMethodKind>;
   readonly limit?: Maybe<number>;
   /**
+   * Number of ranked matches to skip before applying {@link limit}, for paging. Defaults to 0; negative or non-numeric values count as 0.
+   *
+   * Paging is stable for the same query and caller because ranking ties break on catalog order.
+   */
+  readonly offset?: Maybe<number>;
+  /**
    * Defaults to `all`, which falls back to `any` when no method matches every query word; suggestions use `any`.
    */
   readonly mode?: 'all' | 'any';
@@ -134,9 +140,13 @@ export interface SearchMcpMethodsInput {
 export interface SearchMcpMethodsResult {
   readonly methods: readonly McpMethod[];
   /**
-   * Total matches before the limit was applied.
+   * Total matches before the offset and limit were applied.
    */
   readonly total: number;
+  /**
+   * The offset that was applied.
+   */
+  readonly offset: number;
   /**
    * True when no method matched every query word, so {@link methods} match only some of them.
    */
@@ -149,12 +159,13 @@ export interface SearchMcpMethodsResult {
  * Query words are matched as keywords: English filler words are dropped ({@link RANKED_SEARCH_ENGLISH_STOP_WORDS}) and
  * common verbs also match their synonyms ({@link MCP_METHOD_SEARCH_SYNONYMS}).
  *
- * @param input - The entries, visible view, query, and filters.
- * @returns The ranked visible methods, the total match count, and whether the matches are partial.
+ * @param input - The entries, visible view, query, filters, and page.
+ * @returns The page of ranked visible methods, the total match count, the applied offset, and whether the matches are partial.
  */
 export function searchMcpMethods(input: SearchMcpMethodsInput): SearchMcpMethodsResult {
   const { entries, view, query, model, kind, mode = 'all' } = input;
   const limit = Math.min(Math.max(1, input.limit ?? DEFAULT_MCP_METHOD_SEARCH_LIMIT), MAX_MCP_METHOD_SEARCH_LIMIT);
+  const offset = typeof input.offset === 'number' && Number.isFinite(input.offset) ? Math.max(0, Math.floor(input.offset)) : 0;
   const modelKey = model?.trim().toLowerCase();
   const hasModelFilter = modelKey != null && modelKey.length > 0;
   const filter = (method: McpMethod) => view.has(method) && (kind == null || mcpMethodKinds(method).includes(kind)) && (!hasModelFilter || method.modelType?.toLowerCase() === modelKey);
@@ -183,7 +194,7 @@ export function searchMcpMethods(input: SearchMcpMethodsInput): SearchMcpMethods
     }
   }
 
-  return { methods: matches.slice(0, limit), total: matches.length, partial };
+  return { methods: matches.slice(offset, offset + limit), total: matches.length, offset, partial };
 }
 
 /**

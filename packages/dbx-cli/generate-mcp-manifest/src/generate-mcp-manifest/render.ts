@@ -25,6 +25,7 @@ import {
   validateMcpToolName
 } from '@dereekb/dbx-cli';
 import { arktypeToJsonSchemaForExport } from '@dereekb/model';
+import { jsDocInlineLinksToText } from '@dereekb/util';
 import { type Type } from 'arktype';
 
 type JsonObject = Record<string, unknown>;
@@ -110,14 +111,37 @@ export function renderMcpManifest(input: RenderMcpManifestInput, now: Date = new
   const auth = input.auth == null ? undefined : projectAuthSection(input.auth.registry, input.auth.app);
 
   const base: { version: typeof MCP_MANIFEST_VERSION; generatedAt: string; tools: Record<string, McpManifestToolEntry> } = { version: MCP_MANIFEST_VERSION, generatedAt: now.toISOString(), tools };
-  const manifest: McpManifest = {
+  const manifest: McpManifest = normalizeManifestDescriptions({
     ...base,
     ...(models == null ? {} : { models }),
     ...(enums == null ? {} : { enums }),
     ...(auth == null ? {} : { auth })
-  };
+  });
 
   return { manifest, warnings, errors };
+}
+
+/**
+ * Deep-copies the manifest, rendering JSDoc `{@link X}` tags as plain text in every string value under a key named
+ * `description` — tool descriptions, input/output schema property descriptions at any depth, and the model, field,
+ * enum, enum value, and auth claim descriptions.
+ *
+ * A schema property that is itself named `description` holds an object, not a string, so the walk recurses into it
+ * instead of converting it.
+ *
+ * @param value - The manifest, or a value within it.
+ * @returns The copy with every string `description` converted.
+ */
+function normalizeManifestDescriptions<T>(value: T): T {
+  let result: unknown = value;
+
+  if (Array.isArray(value)) {
+    result = value.map((x) => normalizeManifestDescriptions(x));
+  } else if (value != null && typeof value === 'object') {
+    result = Object.fromEntries(Object.entries(value).map(([key, x]) => [key, key === 'description' && typeof x === 'string' ? jsDocInlineLinksToText(x) : normalizeManifestDescriptions(x)]));
+  }
+
+  return result as T;
 }
 
 /**

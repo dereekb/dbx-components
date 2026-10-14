@@ -1,7 +1,8 @@
 import { type Maybe } from '@dereekb/util';
 import { type FirestoreModelIdentity, type FirestoreModelKey, type FirestoreModelType, flatFirestoreModelKey, twoWayFlatFirestoreModelKey } from '@dereekb/firebase';
 import type { CallToolResult } from '@modelcontextprotocol/server';
-import { type ModelAccessMultiReadResult, type FirebaseServerAuthData } from '@dereekb/firebase-server';
+import { type ModelAccessMultiReadResult, type ModelAccessReadError, type FirebaseServerAuthData, modelAccessReadErrorFromUseMultipleModelsFailure } from '@dereekb/firebase-server';
+import { type McpToolCatalogExamples, mcpToolExampleList } from '../mcp.examples';
 import { isCompositeKeyModelDerivedFrom, type McpManifestModelEntry } from '../mcp.manifest';
 import { formatMcpToolErrorResponse } from '../mcp.response-formatter';
 import { findModelEntry } from './mcp.tool.model-info';
@@ -51,6 +52,23 @@ export type McpModelGetReadDocuments = (modelType: FirestoreModelType, keys: Fir
 export type McpModelGetResolveIdentity = (modelType: FirestoreModelType, auth: Maybe<FirebaseServerAuthData>) => Maybe<FirestoreModelIdentity>;
 
 /**
+ * Lookup function that resolves a full model key to the registered {@link FirestoreModelIdentity} whose collection path
+ * exactly matches it (e.g. `gb/abc/gbe/x` → the `gb/gbe` identity). Returns `undefined` when no model matches. Typically
+ * `ModelApiGetService.getModelIdentityForKey`.
+ */
+export type McpModelGetResolveIdentityForKey = (key: FirestoreModelKey, auth: Maybe<FirebaseServerAuthData>) => Maybe<FirestoreModelIdentity>;
+
+/**
+ * Per-key error code for a bare id passed without `modelType`.
+ */
+export const MODEL_GET_MODEL_TYPE_REQUIRED_ERROR_CODE = 'MODEL_TYPE_REQUIRED';
+
+/**
+ * Per-key error code for a full key whose collection path matches no registered model.
+ */
+export const MODEL_GET_UNKNOWN_MODEL_KEY_ERROR_CODE = 'UNKNOWN_MODEL_KEY';
+
+/**
  * Constructor dependencies for {@link createModelGetTool}.
  */
 export interface CreateModelGetToolDeps {
@@ -67,17 +85,29 @@ export interface CreateModelGetToolDeps {
   /**
    * Frozen model catalog. When present, a key whose leaf model is a declared composite-key source of
    * the requested root model (`@dbxModelCompositeKey from=…`) is flattened into that model's id
-   * instead of being passed verbatim — e.g. `model-get jobDistrict` accepts a `District` key
-   * `rc/…/rcsrd/<id>` and reads `jd/<flattened district key>`. Omit to disable the rewrite.
+   * instead of being passed verbatim — e.g. a model whose id is the two-way flattened key of a
+   * `Profile` accepts `pr/abc` and reads `<collectionName>/pr_abc`. Omit to disable the rewrite.
    */
   readonly manifest?: readonly McpManifestModelEntry[];
+  /**
+   * Resolves a full key's model from its collection path. When wired, `modelType` becomes optional: each full key reads
+   * through its own model, and keys of different models may be mixed in one call.
+   */
+  readonly resolveIdentityForKey?: Maybe<McpModelGetResolveIdentityForKey>;
+  /**
+   * Examples shown in the tool text. Omit for generic wording.
+   */
+  readonly examples?: Maybe<Pick<McpToolCatalogExamples, 'modelTypes' | 'modelKey'>>;
 }
 
 /**
  * Shape of the `model-get` tool input.
  */
 export interface ModelGetToolInput {
-  readonly modelType: string;
+  /**
+   * The model type of the keys. Optional when the keys are full keys and a key resolver is wired.
+   */
+  readonly modelType?: Maybe<string>;
   readonly keys: ReadonlyArray<string>;
 }
 
@@ -106,12 +136,17 @@ export interface ModelGetToolInput {
 export function createModelGetTool(deps: CreateModelGetToolDeps): McpToolDefinition {
   const handler: McpStaticToolHandler = (args, ctx) => modelGetToolHandler(args, ctx, deps);
   const name = MODEL_GET_TOOL_NAME;
-  const description = `Fetch one or more Firestore model documents by key or bare id. Values containing \`/\` are treated as full keys; bare ids are auto-promoted to \`<collectionName>/<id>\` for root models. Subcollection models require full keys.${deps.manifest == null ? '' : ' For a root composite-key model (`@dbxModelCompositeKey`), a source model key is accepted in place of the flattened id and rewritten automatically.'}`;
+  const inferModels = deps.resolveIdentityForKey != null;
+  const hasCompositeModel = deps.manifest?.some((entry) => entry.compositeKey != null && entry.parentIdentityConst == null) === true;
+  const compositeSentence = hasCompositeModel ? ' With `modelType` set to a root composite-key model (`@dbxModelCompositeKey`), a key of its declared source model is accepted in place of the flattened id and rewritten automatically.' : '';
+  const description = inferModels
+    ? `Fetch one or more Firestore model documents by key. Each full key's collection path identifies its model, so \`modelType\` is optional and keys of different models may be mixed in one call. With \`modelType\`, bare ids are accepted for root models (promoted to \`<collectionName>/<id>\`); subcollection models always need full keys.${compositeSentence}`
+    : `Fetch one or more Firestore model documents by key or bare id. Values containing \`/\` are treated as full keys; bare ids are auto-promoted to \`<collectionName>/<id>\` for root models. Subcollection models require full keys.${compositeSentence}`;
 
   return buildStaticToolDefinition({
     name,
     description,
-    inputSchema: MODEL_GET_INPUT_SCHEMA,
+    inputSchema: buildModelGetInputSchema(inferModels, deps.examples),
     outputSchema: MODEL_GET_OUTPUT_SCHEMA,
     dispatch: {
       call: MODEL_GET_DISPATCH_CALL,
@@ -128,15 +163,21 @@ async function modelGetToolHandler(args: Record<string, unknown>, ctx: McpStatic
   let result: CallToolResult;
 
   try {
-    const input = parseModelGetInput(args);
-    const identity = deps.resolveIdentity(input.modelType, ctx.auth);
+    const input = parseModelGetInput(args, deps.resolveIdentityForKey != null);
+    let merged: ModelAccessMultiReadResult;
 
-    if (identity == null) {
-      throw new Error(`Unknown modelType: ${input.modelType}`);
+    if (input.modelType) {
+      const identity = deps.resolveIdentity(input.modelType, ctx.auth);
+
+      if (identity == null) {
+        throw new Error(`Unknown modelType: ${input.modelType}`);
+      }
+
+      const resolvedKeys = resolveKeys(input.keys, identity, deps.manifest);
+      merged = await readInChunks({ modelType: input.modelType, keys: resolvedKeys, auth: ctx.auth, readDocuments: deps.readDocuments });
+    } else {
+      merged = await readInferredModels({ keys: input.keys, auth: ctx.auth, deps, resolveIdentityForKey: deps.resolveIdentityForKey as McpModelGetResolveIdentityForKey });
     }
-
-    const resolvedKeys = resolveKeys(input.keys, identity, deps.manifest);
-    const merged = await readInChunks({ modelType: input.modelType, keys: resolvedKeys, auth: ctx.auth, readDocuments: deps.readDocuments });
 
     result = {
       content: [{ type: 'text', text: JSON.stringify(merged) }],
@@ -149,11 +190,74 @@ async function modelGetToolHandler(args: Record<string, unknown>, ctx: McpStatic
   return result;
 }
 
-function parseModelGetInput(args: Record<string, unknown>): ModelGetToolInput {
+interface ReadInferredModelsInput {
+  readonly keys: ReadonlyArray<string>;
+  readonly auth: Maybe<FirebaseServerAuthData>;
+  readonly deps: CreateModelGetToolDeps;
+  readonly resolveIdentityForKey: McpModelGetResolveIdentityForKey;
+}
+
+/**
+ * Reads keys of possibly different models, resolving each full key's model from its collection path.
+ *
+ * Results are grouped by model in first-seen order. Errors list the keys that could not be resolved (a bare id, or a
+ * path no model matches), followed by the read errors. A group whose read throws (e.g. a server-only or OIDC scope gate)
+ * becomes per-key errors for that group while the other groups still return.
+ *
+ * @param input - The keys, auth, deps, and key resolver.
+ * @returns The merged results and errors.
+ */
+async function readInferredModels(input: ReadInferredModelsInput): Promise<ModelAccessMultiReadResult> {
+  const { keys, auth, deps, resolveIdentityForKey } = input;
+  const resolutionErrors: ModelAccessReadError[] = [];
+  const groups = new Map<FirestoreModelType, FirestoreModelKey[]>();
+
+  for (const value of keys) {
+    const key = value.trim();
+
+    if (key.includes('/')) {
+      const identity = resolveIdentityForKey(key, auth);
+
+      if (identity == null) {
+        resolutionErrors.push({ key, code: MODEL_GET_UNKNOWN_MODEL_KEY_ERROR_CODE, message: `model-get: no model is registered for the collection path "${modelKeyCollectionPath(key)}". Check the key with model-decode.` });
+      } else {
+        const group = groups.get(identity.modelType) ?? [];
+        group.push(key);
+        groups.set(identity.modelType, group);
+      }
+    } else {
+      resolutionErrors.push({ key, code: MODEL_GET_MODEL_TYPE_REQUIRED_ERROR_CODE, message: 'model-get: a bare id needs "modelType"; pass it, or use a full key ("prefix/id").' });
+    }
+  }
+
+  const merged: ModelAccessMultiReadResult = { results: [], errors: [] };
+  const readErrors: ModelAccessReadError[] = [];
+
+  for (const [modelType, groupKeys] of groups) {
+    try {
+      const partial = await readInChunks({ modelType, keys: groupKeys, auth, readDocuments: deps.readDocuments });
+      merged.results.push(...partial.results);
+      readErrors.push(...partial.errors);
+    } catch (error) {
+      readErrors.push(...groupKeys.map((key) => modelAccessReadErrorFromUseMultipleModelsFailure({ key, error })));
+    }
+  }
+
+  merged.errors.push(...resolutionErrors, ...readErrors);
+  return merged;
+}
+
+function modelKeyCollectionPath(key: string): string {
+  const segments = key.split('/').filter((s) => s.length > 0);
+  return segments.length % 2 === 0 ? segments.filter((_, i) => i % 2 === 0).join('/') : key;
+}
+
+function parseModelGetInput(args: Record<string, unknown>, modelTypeOptional: boolean): ModelGetToolInput {
   const modelType = args['modelType'];
   const keys = args['keys'];
+  const hasModelType = typeof modelType === 'string' && modelType.length > 0;
 
-  if (typeof modelType !== 'string' || modelType.length === 0) {
+  if (!hasModelType && (!modelTypeOptional || (modelType != null && typeof modelType !== 'string'))) {
     throw new Error('model-get: "modelType" is required and must be a non-empty string.');
   }
 
@@ -168,7 +272,7 @@ function parseModelGetInput(args: Record<string, unknown>): ModelGetToolInput {
     return value;
   });
 
-  return { modelType, keys: normalizedKeys };
+  return { modelType: hasModelType ? modelType : undefined, keys: normalizedKeys };
 }
 
 function resolveKeys(keys: ReadonlyArray<string>, identity: FirestoreModelIdentity, manifest: Maybe<readonly McpManifestModelEntry[]>): FirestoreModelKey[] {
@@ -240,24 +344,30 @@ async function readInChunks(input: ReadInChunksInput): Promise<ModelAccessMultiR
 }
 
 // MARK: Schemas
-const MODEL_GET_INPUT_SCHEMA = {
-  type: 'object',
-  required: ['modelType', 'keys'],
-  properties: {
-    modelType: {
-      type: 'string',
-      minLength: 1,
-      description: 'Firestore model type to fetch (e.g. "guestbook", "profile").'
+function buildModelGetInputSchema(inferModels: boolean, examples: Maybe<Pick<McpToolCatalogExamples, 'modelTypes' | 'modelKey'>>) {
+  const modelTypeExamples = mcpToolExampleList(examples?.modelTypes);
+  const modelTypeExample = modelTypeExamples ? ` (e.g. ${modelTypeExamples})` : '';
+  const keyExample = examples?.modelKey ? `, e.g. "${examples.modelKey}"` : '';
+
+  return {
+    type: 'object',
+    required: inferModels ? ['keys'] : ['modelType', 'keys'],
+    properties: {
+      modelType: {
+        type: 'string',
+        minLength: 1,
+        description: inferModels ? `Model type of the keys${modelTypeExample}. Optional when every key is a full key: each key's collection path identifies its model. Required for bare ids and for the composite-key rewrite.` : `Firestore model type to fetch${modelTypeExample}.`
+      },
+      keys: {
+        type: 'array',
+        minItems: 1,
+        description: inferModels ? `Full keys ("prefix/id"${keyExample}), or bare ids when \`modelType\` names a root model. Keys of different models may be mixed when \`modelType\` is omitted.` : `Full keys ("prefix/id"${keyExample}) or bare ids (root models only).`,
+        items: { type: 'string', minLength: 1 }
+      }
     },
-    keys: {
-      type: 'array',
-      minItems: 1,
-      description: 'Full keys ("prefix/id") or bare ids (root models only). For a root composite-key model, the source model key (e.g. a District key for jobDistrict) is also accepted and flattened into the document id.',
-      items: { type: 'string', minLength: 1 }
-    }
-  },
-  additionalProperties: false
-} as const;
+    additionalProperties: false
+  };
+}
 
 const MODEL_GET_OUTPUT_SCHEMA = {
   type: 'object',

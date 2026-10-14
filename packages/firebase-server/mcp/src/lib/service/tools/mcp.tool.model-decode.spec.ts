@@ -73,7 +73,7 @@ describe('createModelDecodeTool', () => {
       }
 
       expect(tool.inputSchema).toMatchObject({ type: 'object', required: ['key'] });
-      expect(tool.outputSchema).toMatchObject({ type: 'object', required: ['key', 'leaf', 'ancestors', 'unresolvedPrefixes', 'derivedKeys'] });
+      expect(tool.outputSchema).toMatchObject({ type: 'object', required: ['key', 'valid', 'leaf', 'ancestors', 'unresolvedPrefixes', 'issues', 'derivedKeys'] });
     });
   });
 
@@ -88,6 +88,8 @@ describe('createModelDecodeTool', () => {
         { key: 'nb/gb_abc123', modelType: 'notificationBox', modelName: 'NotificationBox', collectionPrefix: 'nb', encoding: 'two-way' }
       ]);
       expect(output.compositeSource).toBeUndefined();
+      expect(output.valid).toBe(true);
+      expect(output.issues).toEqual([]);
     });
 
     it('flattens the full subcollection path for a derived key', async () => {
@@ -225,5 +227,87 @@ describe('decodeFirestoreModelKey', () => {
     const output = decodeFirestoreModelKey('gb/abc/gbe/xyz', MANIFEST);
     expect(output.ancestors.map((a) => a.prefix)).toEqual(['gb']);
     expect(output.leaf.prefix).toBe('gbe');
+  });
+});
+
+describe('decodeFirestoreModelKey() validity', () => {
+  const NESTED_UNDER_NOTIFICATION_BOX: McpManifestModelEntry = {
+    modelType: 'notificationBoxRecipient',
+    modelName: 'NotificationBoxRecipient',
+    identityConst: 'notificationBoxRecipientIdentity',
+    collectionPrefix: 'nbr',
+    parentIdentityConst: 'notificationBoxIdentity',
+    sourcePackage: '@dereekb/firebase',
+    sourceFile: 'packages/firebase/src/lib/model/notification/notification.ts',
+    fields: []
+  };
+
+  const VALIDITY_MANIFEST = [...MANIFEST, NESTED_UNDER_NOTIFICATION_BOX];
+
+  it('flags a root collection nested under an unknown parent and computes no derived keys', () => {
+    const output = decodeFirestoreModelKey('zzz/abc/gb/1', MANIFEST);
+
+    expect(output.valid).toBe(false);
+    expect(output.unresolvedPrefixes).toEqual(['zzz']);
+    expect(output.issues).toHaveLength(1);
+    expect(output.issues[0]).toMatchObject({ prefix: 'gb', code: 'NESTED_ROOT_COLLECTION' });
+    expect(output.issues[0].message).toContain('"gb/<id>"');
+    expect(output.derivedKeys).toEqual([]);
+    expect(output.compositeSource).toBeUndefined();
+  });
+
+  it('flags a subcollection without its parent path', () => {
+    const output = decodeFirestoreModelKey('gbe/x', MANIFEST);
+
+    expect(output.valid).toBe(false);
+    expect(output.issues[0]).toMatchObject({ prefix: 'gbe', code: 'MISSING_PARENT' });
+    expect(output.issues[0].message).toContain('gb/<parentId>/gbe/<id>');
+  });
+
+  it('accepts a subcollection under its declared parent', () => {
+    const output = decodeFirestoreModelKey('gb/1/gbe/2', MANIFEST);
+
+    expect(output.valid).toBe(true);
+    expect(output.issues).toEqual([]);
+  });
+
+  it('flags a subcollection under the wrong parent', () => {
+    const output = decodeFirestoreModelKey('gb/1/nbr/2', VALIDITY_MANIFEST);
+
+    expect(output.valid).toBe(false);
+    expect(output.issues[0]).toMatchObject({ prefix: 'nbr', code: 'WRONG_PARENT' });
+    expect(output.issues[0].message).toContain('"nb" (NotificationBox)');
+  });
+
+  it('does not flag a subcollection under an unresolved parent beyond the unresolved prefix', () => {
+    const output = decodeFirestoreModelKey('zzz/1/gbe/2', MANIFEST);
+
+    expect(output.valid).toBe(false);
+    expect(output.unresolvedPrefixes).toEqual(['zzz']);
+    expect(output.issues).toEqual([]);
+  });
+
+  it('marks an unresolved key invalid', () => {
+    expect(decodeFirestoreModelKey('zzz/1', MANIFEST).valid).toBe(false);
+  });
+
+  it('decodes a valid two-way composite source', () => {
+    const output = decodeFirestoreModelKey('nb/gb_abc', MANIFEST);
+
+    expect(output.valid).toBe(true);
+    expect(output.compositeSource).toMatchObject({ key: 'gb/abc', valid: true, issues: [] });
+  });
+});
+
+describe('createModelDecodeTool() text', () => {
+  it('uses no example key by default', () => {
+    const tool = createModelDecodeTool({ manifest: MANIFEST });
+    expect(tool.description).not.toContain('e.g.');
+    expect(JSON.stringify(tool.inputSchema)).not.toContain('e.g.');
+  });
+
+  it('uses the example key when given', () => {
+    const tool = createModelDecodeTool({ manifest: MANIFEST, examples: { modelKey: 'gb/abc123' } });
+    expect(tool.description).toContain('e.g. "gb/abc123"');
   });
 });

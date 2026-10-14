@@ -2,7 +2,8 @@ import { type CallToolResult, type ToolAnnotations } from '@modelcontextprotocol
 import { type Maybe } from '@dereekb/util';
 import { type McpEscalatingParamHints } from '@dereekb/firebase-server';
 import { type McpCompactToolNames } from '../../mcp.config';
-import { MCP_COMPACT_DETAILS_INPUT_SCHEMA } from '../mcp.compact';
+import { buildMcpCompactDetailsInputSchema } from '../mcp.compact';
+import { type McpToolMethodExamples } from '../mcp.examples';
 import { type McpManifestModelEntry } from '../mcp.manifest';
 import { MCP_METHOD_KINDS, type McpMethod, type McpMethodKind, type McpMethodView } from '../mcp.method';
 import { suggestMcpMethods, type McpMethodSearchEntries } from '../mcp.method.search';
@@ -82,6 +83,10 @@ export interface CreateMcpCompactDetailsToolDeps {
    * Resolves the method's wire entry (running its details builder, without the reason parameter).
    */
   readonly resolveWireEntry: (definition: McpToolDefinition, ctx: McpStaticToolHandlerContext) => McpToolListEntry;
+  /**
+   * Examples drawn from the caller's visible methods. Omit for generic wording.
+   */
+  readonly examples?: Maybe<McpToolMethodExamples>;
 }
 
 /**
@@ -131,13 +136,13 @@ function markEscalatingParams(inputSchema: object, method: McpMethod, names: Mcp
  * @returns The tool definition.
  */
 export function createMcpCompactDetailsTool(deps: CreateMcpCompactDetailsToolDeps): McpToolDefinition {
-  const { name, app, names, entries, view, models, isListedAsTool, resolveWireEntry } = deps;
+  const { name, app, names, entries, view, models, isListedAsTool, resolveWireEntry, examples } = deps;
   const modelsByType = new Map((models ?? []).map((model) => [model.modelType, model]));
 
   return buildStaticToolDefinition({
     name,
     description: `Get the input (parameter) and output JSON schema for one ${app} API method id returned by \`${names.search}\`.`,
-    inputSchema: MCP_COMPACT_DETAILS_INPUT_SCHEMA,
+    inputSchema: buildMcpCompactDetailsInputSchema(examples),
     dispatch: { call: MCP_COMPACT_DETAILS_DISPATCH_CALL, modelType: MCP_COMPACT_DISPATCH_MODEL_TYPE },
     effectiveReadOnly: true,
     omitReasonParameter: true,

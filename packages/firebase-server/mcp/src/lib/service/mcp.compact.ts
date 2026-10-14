@@ -5,6 +5,7 @@ import { arktypeToJsonSchemaForExport } from '@dereekb/model';
 import { type Type } from 'arktype';
 import { type CallToolResult } from '@modelcontextprotocol/server';
 import { type McpAdditionalTool, type McpAdditionalToolExpose, type McpAdditionalTools, type McpCompactToolKey, type McpCompactToolNames } from '../mcp.config';
+import { type McpToolMethodExamples } from './mcp.examples';
 import { mcpManifestKey } from './mcp.manifest';
 import { buildMcpMethodRegistry, mcpMethodIdForDispatch, mcpMethodSummary, type McpMethodRegistry, type McpMethodRegistryInputEntry, type McpMethodSummary, type McpMethodToolSelector } from './mcp.method';
 import { formatMcpToolResponse } from './mcp.response-formatter';
@@ -121,29 +122,55 @@ export function resolveMcpCompactToolNames(input: ResolveMcpCompactToolNamesInpu
 
 // MARK: Input Schemas
 /**
- * Input schema for the compact `search` tool.
+ * Builds the input schema for the compact `search` tool, with examples drawn from the caller's visible methods.
+ *
+ * @param examples - The method examples. Omit for generic wording.
+ * @returns The input schema.
  */
-export const MCP_COMPACT_SEARCH_INPUT_SCHEMA = Object.freeze({
-  type: 'object',
-  properties: {
-    query: { type: 'string', description: "One to three keywords, not a sentence, e.g. 'create worker' or 'update status'. May be empty when `model` or `kind` is set to list the matching methods." },
-    model: { type: 'string', description: 'Optional model type to restrict results to, e.g. `worker`.' },
-    kind: { type: 'string', enum: ['read', 'write', 'destructive'], description: 'Optional method kind filter. `destructive` also matches a method that a param can make destructive.' },
-    limit: { type: 'integer', minimum: 1, maximum: 50, description: 'Maximum results (default 8).' }
-  },
-  required: ['query']
-});
+export function buildMcpCompactSearchInputSchema(examples?: Maybe<McpToolMethodExamples>) {
+  const query = examples?.searchQueries[0];
+  const model = examples?.modelType;
+
+  return {
+    type: 'object',
+    properties: {
+      query: { type: 'string', description: `One to three keywords, not a sentence${query ? `, e.g. '${query}'` : ''}. May be empty when \`model\` or \`kind\` is set to list the matching methods.` },
+      model: { type: 'string', description: `Optional model type to restrict results to${model ? `, e.g. \`${model}\`` : ''}.` },
+      kind: { type: 'string', enum: ['read', 'write', 'destructive'], description: 'Optional method kind filter. `destructive` also matches a method that a param can make destructive.' },
+      limit: { type: 'integer', minimum: 1, maximum: 50, description: 'Maximum results (default 8, max 50).' },
+      offset: { type: 'integer', minimum: 0, description: "Number of matches to skip, for paging: pass the previous result's `nextOffset`. Defaults to 0." }
+    },
+    required: ['query']
+  };
+}
 
 /**
- * Input schema for the compact `details` tool.
+ * Generic input schema for the compact `search` tool, with no examples.
  */
-export const MCP_COMPACT_DETAILS_INPUT_SCHEMA = Object.freeze({
-  type: 'object',
-  properties: {
-    method: { type: 'string', description: 'A method id (or alias) returned by search, e.g. `worker.create`.' }
-  },
-  required: ['method']
-});
+export const MCP_COMPACT_SEARCH_INPUT_SCHEMA = Object.freeze(buildMcpCompactSearchInputSchema());
+
+/**
+ * Builds the input schema for the compact `details` tool, with an example drawn from the caller's visible methods.
+ *
+ * @param examples - The method examples. Omit for generic wording.
+ * @returns The input schema.
+ */
+export function buildMcpCompactDetailsInputSchema(examples?: Maybe<McpToolMethodExamples>) {
+  const methodId = examples?.methodId;
+
+  return {
+    type: 'object',
+    properties: {
+      method: { type: 'string', description: `A method id (or alias) returned by search${methodId ? `, e.g. \`${methodId}\`` : ''}.` }
+    },
+    required: ['method']
+  };
+}
+
+/**
+ * Generic input schema for the compact `details` tool, with no examples.
+ */
+export const MCP_COMPACT_DETAILS_INPUT_SCHEMA = Object.freeze(buildMcpCompactDetailsInputSchema());
 
 /**
  * Input schema for the compact `read` / `write` router tools.
@@ -151,7 +178,7 @@ export const MCP_COMPACT_DETAILS_INPUT_SCHEMA = Object.freeze({
 export const MCP_COMPACT_ROUTER_INPUT_SCHEMA = Object.freeze({
   type: 'object',
   properties: {
-    method: { type: 'string', description: 'The method id, e.g. `worker.create`.' },
+    method: { type: 'string', description: 'The method id returned by search (`model.call` or `model.call.specifier`).' },
     params: { type: 'object', description: "The method's parameters, matching the input schema from details.", additionalProperties: true }
   },
   required: ['method']
@@ -183,6 +210,10 @@ export interface BuildMcpCompactInstructionsInput {
    * Whether the module runs in `readOnly` mode, where only the `read` router is listed.
    */
   readonly readOnly?: boolean;
+  /**
+   * Examples drawn from the caller's visible methods. Omit for generic wording.
+   */
+  readonly examples?: Maybe<McpToolMethodExamples>;
 }
 
 /**
@@ -192,12 +223,15 @@ export interface BuildMcpCompactInstructionsInput {
  * @returns The usage block.
  */
 export function buildMcpCompactInstructions(input: BuildMcpCompactInstructionsInput): string {
-  const { app, names, builtinReadMethods, hasDocumentation, hasToken, methodToolsListed, readOnly } = input;
+  const { app, names, builtinReadMethods, hasDocumentation, hasToken, methodToolsListed, readOnly, examples } = input;
   const callStep =
     readOnly === true
       ? `3) Call it with \`${names.read}\`, passing \`{ method, params }\`.`
       : `3) Call it with \`${names.read}\` (read-only methods), \`${names.write}\` (methods that add or change data) or \`${names.destructive}\` (methods that delete or overwrite data, or send real messages), passing \`{ method, params }\`; \`${names.details}\` says which, and which params make a call destructive.`;
-  const parts = [`Use these tools to work with the ${app} API. 1) \`${names.search}\` finds API methods by keywords, not sentences ('reopen timesheet', 'create worker'). 2) \`${names.details}\` returns a method's parameter schema. ${callStep} Method ids look like \`worker.update.schedule\` (model.call.specifier).`];
+  const queries = examples?.searchQueries ?? [];
+  const searchExamples = queries.length > 0 ? ` (${queries.map((x) => `'${x}'`).join(', ')})` : ': a verb and/or a model name';
+  const methodIdExample = examples?.methodId ? `, e.g. \`${examples.methodId}\`` : '';
+  const parts = [`Use these tools to work with the ${app} API. 1) \`${names.search}\` finds API methods by one to three keywords, not sentences${searchExamples}. 2) \`${names.details}\` returns a method's parameter schema. ${callStep} Method ids are \`model.call\` or \`model.call.specifier\`${methodIdExample}.`];
 
   if (builtinReadMethods.length > 0) {
     const quoted = builtinReadMethods.map((x) => `\`${x}\``).join(', ');

@@ -2,6 +2,7 @@ import { IMPERSONATION_URL_QUERY_PARAM, type Maybe } from '@dereekb/util';
 import { type FirestoreModelIdentity, type FirestoreModelKey, type FirestoreModelType, inferKeyFromTwoWayFlatFirestoreModelKey } from '@dereekb/firebase';
 import type { CallToolResult } from '@modelcontextprotocol/server';
 import { type ModelAccessMultiReadResult } from '@dereekb/firebase-server';
+import { type McpToolCatalogExamples } from '../mcp.examples';
 import { formatMcpToolErrorResponse } from '../mcp.response-formatter';
 import { buildStaticToolDefinition, type McpToolDefinition, type McpStaticToolHandler, type McpStaticToolHandlerContext } from '../mcp.tool-generator';
 import { matchRouteManifestUrl, type RouteManifest, type RouteManifestModelEntry, type RouteManifestStateEntry, type RouteUrlMatch } from '../mcp.route-manifest';
@@ -115,6 +116,10 @@ export interface CreateUrlModelsToolDeps {
    * promoted to `<collectionName>/<id>` (shared with `model-get`).
    */
   readonly resolveIdentity: McpModelGetResolveIdentity;
+  /**
+   * Examples shown in the tool text. Omit for generic wording.
+   */
+  readonly examples?: Maybe<Pick<McpToolCatalogExamples, 'pageUrl'>>;
 }
 
 /**
@@ -154,13 +159,13 @@ export interface UrlModelsToolInput {
 export function createUrlModelsTool(deps: CreateUrlModelsToolDeps): McpToolDefinition {
   const handler: McpStaticToolHandler = (args, ctx) => urlModelsToolHandler(args, ctx, deps);
   const name = URL_MODELS_TOOL_NAME;
-  const description =
-    'Decode an app URL (or path) into the Firestore models its page renders. Pass a URL like `https://app.example.co/worker/abc/timesheets/list`; the tool matches it against the build-time route manifest and returns each model type plus the concrete key (route params + `{authUid}` substituted). A `?imp=<uid>` query param resolves `{authUid}` to that user (impersonation preview). Use `models` to filter to specific types, `keysOnly` for just the resolved keys, or `load: true` to fetch the documents via the same permission-checked path as `model-get` (cannot combine `load` with `keysOnly`).';
+  const pageUrl = deps.examples?.pageUrl;
+  const description = `Decode an app URL (or path) into the Firestore models its page renders. ${pageUrl ? `Pass a URL like \`${pageUrl}\`` : 'Pass the full URL of an app page, or its path'}; the tool matches it against the build-time route manifest and returns each model type plus the concrete key (route params + \`{authUid}\` substituted). A \`?imp=<uid>\` query param resolves \`{authUid}\` to that user (impersonation preview). Use \`models\` to filter to specific types, \`keysOnly\` for just the resolved keys, or \`load: true\` to fetch the documents via the same permission-checked path as \`model-get\` (cannot combine \`load\` with \`keysOnly\`).`;
 
   return buildStaticToolDefinition({
     name,
     description,
-    inputSchema: URL_MODELS_INPUT_SCHEMA,
+    inputSchema: buildUrlModelsInputSchema(pageUrl),
     outputSchema: URL_MODELS_OUTPUT_SCHEMA,
     dispatch: {
       call: URL_MODELS_DISPATCH_CALL,
@@ -458,22 +463,24 @@ async function readInChunks(input: ReadInChunksInput): Promise<ModelAccessMultiR
 }
 
 // MARK: Schemas
-const URL_MODELS_INPUT_SCHEMA = {
-  type: 'object',
-  required: ['url'],
-  properties: {
-    url: { type: 'string', minLength: 1, description: 'Full URL or pathname, e.g. "https://app.example.co/worker/abc/timesheets/list". A `?imp=<uid>` query resolves `{authUid}` to that user (impersonation preview).' },
-    models: { type: 'array', items: { type: 'string' }, description: 'Restrict the output to these model types.' },
-    keysOnly: { type: 'boolean', description: 'Return only the resolved keys (no descriptions or documents). Cannot combine with "load".' },
-    load: { type: 'boolean', description: 'Load each resolved document via the permission-checked read path. Cannot combine with "keysOnly".' },
-    currentUserUid: {
-      type: 'string',
-      minLength: 1,
-      description: "Override the uid used to fill `{authUid}` placeholders when resolving model keys (defaults to the authenticated caller). Use to preview the models another user would see on a page. A `?imp=<uid>` query on the url takes precedence over this. `load` still reads via the calling user's permissions."
-    }
-  },
-  additionalProperties: false
-} as const;
+function buildUrlModelsInputSchema(pageUrl: Maybe<string>) {
+  return {
+    type: 'object',
+    required: ['url'],
+    properties: {
+      url: { type: 'string', minLength: 1, description: `Full URL or pathname${pageUrl ? `, e.g. "${pageUrl}"` : ''}. A \`?imp=<uid>\` query resolves \`{authUid}\` to that user (impersonation preview).` },
+      models: { type: 'array', items: { type: 'string' }, description: 'Restrict the output to these model types.' },
+      keysOnly: { type: 'boolean', description: 'Return only the resolved keys (no descriptions or documents). Cannot combine with "load".' },
+      load: { type: 'boolean', description: 'Load each resolved document via the permission-checked read path. Cannot combine with "keysOnly".' },
+      currentUserUid: {
+        type: 'string',
+        minLength: 1,
+        description: "Override the uid used to fill `{authUid}` placeholders when resolving model keys (defaults to the authenticated caller). Use to preview the models another user would see on a page. A `?imp=<uid>` query on the url takes precedence over this. `load` still reads via the calling user's permissions."
+      }
+    },
+    additionalProperties: false
+  };
+}
 
 const URL_MODELS_OUTPUT_SCHEMA = {
   type: 'object',

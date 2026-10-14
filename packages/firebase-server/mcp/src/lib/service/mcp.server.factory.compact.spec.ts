@@ -491,6 +491,80 @@ describe('McpServerFactoryService compact surface', () => {
     });
   });
 
+  describe('examples', () => {
+    const HIDDEN_FIRST_API_DETAILS = makeApiDetails([
+      { model: 'secretLedger', call: 'update', specifier: 'rebalance', mcp: { visibility: ADMIN_ONLY } },
+      { model: 'guestbook', call: 'create' },
+      { model: 'guestbook', call: 'update', specifier: 'reopen' }
+    ]);
+
+    async function searchDescription(factory: McpServerFactoryService, ctx: McpSpecDriverContext): Promise<string> {
+      const tools = await dispatchMcpToolsList<WireToolEntry>(factory, ctx);
+      return tools.find((x) => x.name === factory.compactToolNames.search)?.description ?? '';
+    }
+
+    it('should never name a method the caller cannot see', async () => {
+      const factory = makeFactory({ apiDetails: HIDDEN_FIRST_API_DETAILS });
+      const userInstructions = (await dispatchMcpDiscover(factory, USER)).instructions ?? '';
+      const adminInstructions = (await dispatchMcpDiscover(factory, ADMIN)).instructions ?? '';
+
+      expect(userInstructions).toContain('e.g. `guestbook.update.reopen`');
+      expect(userInstructions).not.toMatch(/secretLedger|rebalance/i);
+      expect(await searchDescription(factory, USER)).not.toMatch(/secretLedger|rebalance/i);
+      expect(adminInstructions).toContain('e.g. `secretLedger.update.rebalance`');
+      expect(await searchDescription(factory, ADMIN)).toContain('rebalance');
+    });
+
+    it('should use the configured examples', async () => {
+      const factory = makeFactory({ config: { tools: { examples: { methodId: 'guestbook.create', searchQueries: ['make guestbook'] } } } });
+      const instructions = (await dispatchMcpDiscover(factory, USER)).instructions ?? '';
+      const tools = await dispatchMcpToolsList<WireToolEntry>(factory, USER);
+      const details = tools.find((x) => x.name === 'demo_api_details');
+
+      expect(instructions).toContain("('make guestbook')");
+      expect(instructions).toContain('e.g. `guestbook.create`');
+      expect(await searchDescription(factory, USER)).toContain("e.g. 'make guestbook'");
+      expect(JSON.stringify(details?.inputSchema)).toContain('e.g. `guestbook.create`');
+    });
+
+    it('should use generic wording when examples are off', async () => {
+      const factory = makeFactory({ config: { tools: { examples: false } } });
+      const instructions = (await dispatchMcpDiscover(factory, USER)).instructions ?? '';
+
+      expect(instructions).toContain('a verb and/or a model name');
+      expect(instructions).not.toContain('e.g.');
+      expect(await searchDescription(factory, USER)).not.toContain('e.g.');
+    });
+
+    it('should name a method of the router kind when method is missing', async () => {
+      const factory = makeFactory();
+      const write = await dispatchMcpToolCall<ToolResult>({ factory, ctx: USER, name: 'demo_api_write', args: {} });
+      const destructive = await dispatchMcpToolCall<ToolResult>({ factory, ctx: USER, name: 'demo_api_destructive', args: {} });
+
+      expect(write.isError).toBe(true);
+      expect(write.content[0].text).toContain("method: 'guestbook.create'");
+      expect(destructive.content[0].text).toContain("method: 'guestbook.update.reopen'");
+    });
+  });
+
+  describe('search paging', () => {
+    it('should page with offset and nextOffset', async () => {
+      const factory = makeFactory({ apiDetails: SEARCH_API_DETAILS });
+      const first = await search(factory, USER, { query: '', model: 'guestbookEntry', limit: 1 });
+      const second = await search(factory, USER, { query: '', model: 'guestbookEntry', limit: 1, offset: 1 });
+      const last = await search(factory, USER, { query: '', model: 'guestbookEntry', limit: 1, offset: 2 });
+      const past = await search(factory, USER, { query: '', model: 'guestbookEntry', limit: 1, offset: 5 });
+
+      expect([first.total, second.total, last.total, past.total]).toEqual([3, 3, 3, 3]);
+      expect((first as { nextOffset?: number }).nextOffset).toBe(1);
+      expect((second as { nextOffset?: number }).nextOffset).toBe(2);
+      expect(last).not.toHaveProperty('nextOffset');
+      expect(past).not.toHaveProperty('nextOffset');
+      expect(past.methods).toEqual([]);
+      expect(new Set([first.methods[0].method, second.methods[0].method, last.methods[0].method]).size).toBe(3);
+    });
+  });
+
   describe('analytics', () => {
     it('should describe the executed method and the inner reason', async () => {
       const events: McpAnalyticsEvent[] = [];

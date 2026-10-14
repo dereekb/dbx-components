@@ -79,7 +79,7 @@ export interface McpManifestModelEntry {
   readonly singleItemIdentifier?: string;
   /**
    * Example document key with the parent chain resolved and `<…Id>` placeholders for the ids a
-   * caller supplies (e.g. `bg/<billingGroupId>/bgis/bgbs`). Absent when some ancestor identity
+   * caller supplies (e.g. `gb/<guestbookId>/gbe/<guestbookEntryId>`). Absent when some ancestor identity
    * could not be resolved at generation time.
    */
   readonly exampleKey?: string;
@@ -117,6 +117,10 @@ export interface McpManifestModelEntry {
    * source model key in place of the flattened id.
    */
   readonly compositeKey?: McpManifestModelCompositeKey;
+  /**
+   * True when the model is declared server-only (`@dbxModelServerOnly`), so client callers cannot read it.
+   */
+  readonly serverOnly?: boolean;
 }
 
 /**

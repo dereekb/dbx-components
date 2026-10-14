@@ -500,3 +500,47 @@ describe('ModelApiGetService — server-only refusal on direct reads', () => {
     expect(useModel).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('ModelApiGetService — getModelIdentityForKey', () => {
+  const identities: Record<string, any> = {
+    guestbook: { modelType: 'guestbook', collectionName: 'guestbook', collectionType: 'gb' },
+    guestbookEntry: { modelType: 'guestbookEntry', collectionName: 'guestbookEntry', collectionType: 'gb/gbe' },
+    contactSettings: { modelType: 'contactSettings', collectionName: 'contactSettings', collectionType: 'cs' }
+  };
+
+  function buildService() {
+    const inContextService = Object.assign((type: string) => ({ getFirestoreCollection: () => ({ modelIdentity: identities[type] }) }), { allTypes: () => Object.keys(identities) });
+    const nestContext = { model: () => inContextService };
+
+    const config: ModelApiDispatchConfig = {
+      callModelFn: (() => undefined) as any,
+      makeNestContext: (() => nestContext) as any
+    };
+
+    return new ModelApiGetService(config, {} as any);
+  }
+
+  it('should resolve a root key', () => {
+    expect(buildService().getModelIdentityForKey('gb/abc', undefined)?.modelType).toBe('guestbook');
+  });
+
+  it('should resolve a nested key', () => {
+    expect(buildService().getModelIdentityForKey('gb/abc/gbe/x', undefined)?.modelType).toBe('guestbookEntry');
+  });
+
+  it('should return undefined for an unknown collection path', () => {
+    expect(buildService().getModelIdentityForKey('zzz/abc', undefined)).toBeUndefined();
+  });
+
+  it('should return undefined for a root collection nested under another root', () => {
+    expect(buildService().getModelIdentityForKey('gb/abc/cs/1', undefined)).toBeUndefined();
+  });
+
+  it('should return undefined for a bare id', () => {
+    expect(buildService().getModelIdentityForKey('abc', undefined)).toBeUndefined();
+  });
+
+  it('should still resolve by model type', () => {
+    expect(buildService().getModelIdentity('contactSettings', undefined)?.collectionType).toBe('cs');
+  });
+});

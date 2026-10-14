@@ -22,6 +22,19 @@ export const WHOAMI_DISPATCH_CALL = 'read';
  */
 export const WHOAMI_DISPATCH_MODEL_TYPE = 'auth';
 
+/**
+ * Standard token claim keys that are not app-specific custom claims. `whoami` reports them in `standardClaimKeys` rather
+ * than `unknownClaimKeys`, unless the app's manifest describes a claim of the same name.
+ *
+ * - RFC 7519 registered claims: `iss`, `sub`, `aud`, `exp`, `nbf`, `iat`, `jti`.
+ * - OIDC ID token claims: `auth_time`, `nonce`, `acr`, `amr`, `azp`, `at_hash`, `c_hash`, `sid`.
+ * - OAuth access token claims: `scope`, `scp`, `client_id`, `cnf`.
+ * - Firebase ID token and OIDC profile claims: `uid`, `user_id`, `firebase`, `name`, `picture`, `phone_number`.
+ */
+export const WHOAMI_STANDARD_CLAIM_KEYS: readonly string[] = Object.freeze(['iss', 'sub', 'aud', 'exp', 'nbf', 'iat', 'jti', 'auth_time', 'nonce', 'acr', 'amr', 'azp', 'at_hash', 'c_hash', 'sid', 'scope', 'scp', 'client_id', 'cnf', 'uid', 'user_id', 'firebase', 'name', 'picture', 'phone_number']);
+
+const WHOAMI_STANDARD_CLAIM_KEY_SET: ReadonlySet<string> = new Set(WHOAMI_STANDARD_CLAIM_KEYS);
+
 // MARK: Types
 /**
  * Constructor dependencies for {@link createWhoamiTool}.
@@ -80,8 +93,9 @@ export interface WhoamiToolOutput {
    */
   readonly roles?: readonly string[];
   /**
-   * Count of custom claim keys present on the live token, excluding the reserved
-   * `email` / `email_verified` keys. Present for authenticated callers.
+   * Count of custom claim keys present on the live token: the manifest-known claims plus the unknown ones. Excludes
+   * `email` / `email_verified` and the standard token claims ({@link WHOAMI_STANDARD_CLAIM_KEYS}). Present for
+   * authenticated callers.
    */
   readonly claimCount?: number;
   /**
@@ -95,7 +109,12 @@ export interface WhoamiToolOutput {
    */
   readonly claimDetails?: readonly WhoamiClaimDetail[];
   /**
-   * Token claim keys with no matching manifest entry. Included when `detail` is `full`.
+   * Standard JWT / OIDC / OAuth / Firebase token claim keys present on the token ({@link WHOAMI_STANDARD_CLAIM_KEYS}) that
+   * the manifest does not describe. Included when `detail` is `full`.
+   */
+  readonly standardClaimKeys?: readonly string[];
+  /**
+   * Custom token claim keys with no matching manifest entry. Included when `detail` is `full`.
    */
   readonly unknownClaimKeys?: readonly string[];
 }
@@ -156,12 +175,13 @@ function whoamiToolHandler(args: Record<string, unknown>, ctx: McpStaticToolHand
   }
 
   const claimDetails: WhoamiClaimDetail[] = [];
+  const standardClaimKeys: string[] = [];
   const unknownClaimKeys: string[] = [];
 
   for (const key of claimKeys) {
     const claim = claimsByKey.get(key);
     if (claim == null) {
-      unknownClaimKeys.push(key);
+      (WHOAMI_STANDARD_CLAIM_KEY_SET.has(key) ? standardClaimKeys : unknownClaimKeys).push(key);
     } else {
       claimDetails.push({
         key: claim.key,
@@ -178,12 +198,12 @@ function whoamiToolHandler(args: Record<string, unknown>, ctx: McpStaticToolHand
     authenticated: true,
     uid: auth.uid,
     roles,
-    claimCount: claimKeys.length,
+    claimCount: claimDetails.length + unknownClaimKeys.length,
     ...(deps.auth.app?.app == null ? {} : { app: deps.auth.app.app }),
     ...(token.email == null ? {} : { email: token.email }),
     ...(token.email_verified == null ? {} : { emailVerified: token.email_verified }),
     ...(detail === 'summary' ? {} : { claims: { ...token } }),
-    ...(detail === 'full' ? { claimDetails, unknownClaimKeys } : {})
+    ...(detail === 'full' ? { claimDetails, standardClaimKeys, unknownClaimKeys } : {})
   };
 
   const text = renderText(output, detail);
@@ -208,6 +228,7 @@ function renderText(output: WhoamiToolOutput, detail: WhoamiDetailLevel): string
   appendHeaderLines(lines, output);
   if (detail === 'full') {
     appendClaimDetailLines(lines, output.claimDetails ?? []);
+    appendStandardClaimLines(lines, output.standardClaimKeys ?? []);
     appendUnknownClaimLines(lines, output.unknownClaimKeys ?? []);
   }
   if (detail !== 'summary') {
@@ -263,6 +284,13 @@ function appendClaimDetailLines(lines: string[], claimDetails: readonly WhoamiCl
   }
 }
 
+function appendStandardClaimLines(lines: string[], standardClaimKeys: readonly string[]): void {
+  if (standardClaimKeys.length === 0) {
+    return;
+  }
+  lines.push('', '## Standard token claims', standardClaimKeys.map((key) => `\`${key}\``).join(', '));
+}
+
 function appendUnknownClaimLines(lines: string[], unknownClaimKeys: readonly string[]): void {
   if (unknownClaimKeys.length === 0) {
     return;
@@ -303,7 +331,7 @@ const WHOAMI_INPUT_SCHEMA = {
 const WHOAMI_OUTPUT_SCHEMA = {
   type: 'object',
   required: ['authenticated'],
-  description: 'Caller identity and decoded role set. Claim-bearing fields (claims, claimDetails, unknownClaimKeys) are present only at the detail level that requests them via the `detail` input.',
+  description: 'Caller identity and decoded role set. Claim-bearing fields (claims, claimDetails, standardClaimKeys, unknownClaimKeys) are present only at the detail level that requests them via the `detail` input.',
   properties: {
     authenticated: { type: 'boolean' },
     uid: { type: 'string' },
@@ -311,7 +339,7 @@ const WHOAMI_OUTPUT_SCHEMA = {
     emailVerified: { type: 'boolean' },
     app: { type: 'string' },
     roles: { type: 'array', items: { type: 'string' } },
-    claimCount: { type: 'integer' },
+    claimCount: { type: 'integer', description: 'Count of custom claims on the token (manifest-known plus unknown), excluding email and the standard token claims.' },
     claims: { type: 'object', additionalProperties: true },
     claimDetails: {
       type: 'array',
@@ -328,6 +356,7 @@ const WHOAMI_OUTPUT_SCHEMA = {
         }
       }
     },
-    unknownClaimKeys: { type: 'array', items: { type: 'string' } }
+    standardClaimKeys: { type: 'array', items: { type: 'string' }, description: 'Standard JWT/OIDC/OAuth/Firebase token claims present on the token.' },
+    unknownClaimKeys: { type: 'array', items: { type: 'string' }, description: 'Custom claims the manifest does not describe.' }
   }
 } as const;

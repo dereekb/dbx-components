@@ -1,4 +1,5 @@
 import { type CliApiManifestEntry, type CliEnumManifest, type CliModelManifest, type CliModelManifestEntry, MCP_MANIFEST_VERSION } from '@dereekb/dbx-cli';
+import { type Maybe } from '@dereekb/util';
 import { renderMcpManifest } from './render';
 
 const FIXED_NOW = new Date('2026-05-25T00:00:00.000Z');
@@ -340,6 +341,47 @@ describe('renderMcpManifest', () => {
       const result = renderMcpManifest({ apiManifest: [makeEntry({})], enumManifest: ENUMS }, FIXED_NOW).manifest;
       expect(result.enums).toEqual(ENUMS);
     });
+  });
+});
+
+describe('renderMcpManifest {@link} normalization', () => {
+  it('renders {@link} tags as text in every description', () => {
+    const enumManifest: CliEnumManifest = {
+      SampleState: { name: 'SampleState', description: 'State of a {@link Guestbook}.', values: [{ name: 'ACTIVE', value: 1, description: 'See {@link Guestbook.published}.' }] }
+    };
+    const modelManifest: CliModelManifest = [makeModelEntry({ description: 'A {@link Guestbook | guestbook}.', fields: [{ name: 'n', longName: 'name', optional: false, tsType: 'string', description: 'The {@link Guestbook} name.' }] })];
+    const result = renderMcpManifest(
+      {
+        apiManifest: [
+          makeEntry({
+            description: 'Queries {@link Guestbook}s.',
+            paramsFields: [{ name: 'cursor', typeText: 'string', description: 'From {@link QueryResult.cursor}.' }],
+            resultFields: [{ name: 'items', typeText: 'Guestbook[]', description: 'The {@link Guestbook} items.' }]
+          })
+        ],
+        modelManifest,
+        enumManifest
+      },
+      FIXED_NOW
+    ).manifest;
+
+    const tool = result.tools['guestbook.query._'];
+    expect(tool?.description).toBe('Queries Guestbooks.');
+    expect(JSON.stringify(tool?.inputSchema)).toContain('From QueryResult.cursor.');
+    expect(JSON.stringify(tool?.outputSchema)).toContain('The Guestbook items.');
+    expect(result.models?.[0].description).toBe('A guestbook.');
+    expect(result.models?.[0].fields[0].description).toBe('The Guestbook name.');
+    expect(result.enums?.['SampleState'].description).toBe('State of a Guestbook.');
+    expect(result.enums?.['SampleState'].values[0].description).toBe('See Guestbook.published.');
+    expect(JSON.stringify(result)).not.toContain('{@link');
+  });
+
+  it('leaves a schema property named description structurally intact', () => {
+    const result = render([makeEntry({ paramsFields: [{ name: 'description', typeText: 'string', description: 'The {@link Guestbook} description.' }] })]);
+    const inputSchema = result.tools['guestbook.query._']?.inputSchema as Maybe<{ properties: Record<string, unknown> }>;
+    const properties = inputSchema?.properties ?? {};
+
+    expect(properties['description']).toEqual({ description: 'The Guestbook description.', type: 'string' });
   });
 });
 

@@ -1,4 +1,4 @@
-import { MODEL_GET_TOOL_NAME } from '@dereekb/firebase-server/mcp';
+import { MODEL_GET_MODEL_TYPE_REQUIRED_ERROR_CODE, MODEL_GET_TOOL_NAME, MODEL_GET_UNKNOWN_MODEL_KEY_ERROR_CODE } from '@dereekb/firebase-server/mcp';
 import { guestbookIdentity, guestbookEntryIdentity } from 'demo-firebase';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext, demoGuestbookContext, demoGuestbookEntryContext } from '../../../test/fixture';
 import { callMcpMethod, callMcpMethodAnonymous, describeMcpMethod } from '../../../test/mcp';
@@ -132,6 +132,27 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             const structured = result.structuredContent as { readonly results: ReadonlyArray<{ readonly key: string }> };
             expect(structured.results).toHaveLength(1);
             expect(structured.results[0].key).toBe(entry.documentKey);
+          });
+
+          it('reads keys of different models in one call without modelType', async () => {
+            const result = await callMcpMethod({ f, u, kind: 'read', method: MODEL_GET_TOOL_NAME, params: { keys: [gA.documentKey, entry.documentKey] } });
+
+            expect(result.isError).toBeUndefined();
+            const structured = result.structuredContent as { readonly results: ReadonlyArray<{ readonly key: string }>; readonly errors: ReadonlyArray<unknown> };
+            expect(structured.results.map((r) => r.key)).toEqual([gA.documentKey, entry.documentKey]);
+            expect(structured.errors).toEqual([]);
+          });
+
+          it('reports an unknown path and a bare id as per-key errors without modelType', async () => {
+            const result = await callMcpMethod({ f, u, kind: 'read', method: MODEL_GET_TOOL_NAME, params: { keys: ['zzz/abc', entry.documentId, gA.documentKey] } });
+
+            expect(result.isError).toBeUndefined();
+            const structured = result.structuredContent as { readonly results: ReadonlyArray<{ readonly key: string }>; readonly errors: ReadonlyArray<{ readonly key: string; readonly code?: string }> };
+            expect(structured.results.map((r) => r.key)).toEqual([gA.documentKey]);
+            expect(structured.errors.map((e) => [e.key, e.code])).toEqual([
+              ['zzz/abc', MODEL_GET_UNKNOWN_MODEL_KEY_ERROR_CODE],
+              [entry.documentId, MODEL_GET_MODEL_TYPE_REQUIRED_ERROR_CODE]
+            ]);
           });
         });
       });

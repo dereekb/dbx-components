@@ -1,3 +1,48 @@
+## Migration to v14.18.x — MCP tool examples and built-in tools
+
+The MCP tool text no longer names HelloSubs or demo models. Examples now come from the app itself, and several
+built-in tools gained small features.
+
+### Optional
+- **`tools.examples`** on `McpModuleConfig` sets the examples shown in the usage block, tool descriptions and input
+  schemas: `searchQueries`, `methodId`, `modelType`, `modelKey`, `enumName`, `pageUrl`. Each omitted field is derived:
+  method examples per request from the methods the caller can see, catalog examples at boot from `mcp.manifest.json`
+  and `route.manifest.json`. Configured values are shown to every caller, so do not name a method some callers cannot see.
+  ```ts
+  tools: { examples: { searchQueries: ['create guestbook'], methodId: 'guestbook.update.subscribeToNotifications' } }
+  ```
+- **`tools: { examples: false }`** shows generic wording with no examples.
+- A configured `methodId` / `modelType` / `enumName` that does not resolve logs a boot warning, and the
+  `MCP tool surface: ...` line now ends with `examples=configured|derived|off`.
+
+### Changed text
+- The compact usage block, the `search` / `details` input schemas and the router `method` description were reworded.
+  Method ids are described as `model.call` or `model.call.specifier`. Tests that assert the old example strings
+  (`'reopen timesheet'`, `worker.update.schedule`) need updating.
+
+### Review
+- **`whoami`**: standard JWT / OIDC / OAuth / Firebase claims (`aud`, `iss`, `sub`, `iat`, `exp`, `auth_time`, `scope`,
+  `client_id`, `firebase`, `uid`, …, see `WHOAMI_STANDARD_CLAIM_KEYS`) move from `unknownClaimKeys` to a new
+  `standardClaimKeys` list at `detail: "full"`. `claimCount` now counts custom claims only.
+- **`model-decode`**: output gains `valid` and `issues` (`NESTED_ROOT_COLLECTION`, `MISSING_PARENT`, `WRONG_PARENT`).
+  `derivedKeys` and `compositeSource` are only computed for a valid key. The dbx-cli `model-decode`, `get` and
+  `get-many` commands apply the same check and refuse invalid keys.
+- **`EnumInfoToolOutput`** is now `EnumInfoToolLookupOutput | EnumInfoToolListOutput`; `resolveEnumInfoOutput` still
+  returns the lookup shape (plus a `hint` on misses).
+- **`ModelGetToolInput.modelType`** is optional.
+
+### New
+- **Search paging**: `search` accepts `offset` and returns `nextOffset` while more matches remain.
+- **`model-get` without `modelType`**: each full key resolves its own model by collection path
+  (`ModelApiGetService.getModelIdentityForKey`), so keys of different models can be mixed in one call. A bare id
+  reports `MODEL_TYPE_REQUIRED` and an unknown path `UNKNOWN_MODEL_KEY`, per key.
+- **`enum-info` with no arguments** lists the registered enum names.
+- **`@dereekb/util`**: `jsDocInlineLinksToText()` and `firstSentence()`.
+
+### Rebuild
+- Regenerate `mcp.manifest.json` (`generate-mcp-manifest`): JSDoc `{@link X}` tags now render as plain text in every
+  `description`. Search summaries use the first sentence of a description rather than its first line.
+
 ## Migration to v14.17.x — compact (Stripe-like) MCP surface
 
 v14.17 changes the default tool surface of `@dereekb/firebase-server/mcp`. Instead of one tool per callModel
@@ -18,8 +63,8 @@ the compact tools only ever resolve methods the caller could see before.
   mode), `tools: { methodTools: true }`. The boot log prints one `MCP tool surface: ...` line describing what is listed.
 
 ### What changes for callers
-- **Tool name → method id.** A method is addressed by its id, `modelType.call[.specifier]` (`worker.create`,
-  `jobWorkerTimesheet.update.reopen`), or by its old tool name (`guestbook-create`), which stays an alias. Built-ins
+- **Tool name → method id.** A method is addressed by its id, `modelType.call[.specifier]` (`guestbook.create`,
+  `guestbook.update.subscribeToNotifications`), or by its old tool name (`guestbook-create`), which stays an alias. Built-ins
   keep their names as ids (`model-get`, `model-info`, `whoami`, `batch-execute`, ...). `cli-token` is the
   `<p>_cli_token` tool. A client calling an old tool name that is no longer listed gets an error naming the compact
   call to make instead.

@@ -240,3 +240,35 @@ describe('renderDecodedKey()', () => {
     expect(source).not.toContain('Derived keys:');
   });
 });
+
+describe('decodeFirestoreModelKey() validity', () => {
+  it('flags a root collection nested under an unknown parent and computes no derived keys', () => {
+    const decoded = decodeFirestoreModelKey('zzz/abc/p/1', MANIFEST);
+    expect(decoded.valid).toBe(false);
+    expect(decoded.unresolvedPrefixes).toEqual(['zzz']);
+    expect(decoded.issues.map((x) => x.code)).toEqual(['NESTED_ROOT_COLLECTION']);
+    expect(decoded.derivedKeys).toEqual([]);
+  });
+
+  it('flags a subcollection without its parent', () => {
+    const decoded = decodeFirestoreModelKey('nbn/x', MANIFEST);
+    expect(decoded.valid).toBe(false);
+    expect(decoded.issues[0]).toMatchObject({ prefix: 'nbn', code: 'MISSING_PARENT' });
+  });
+
+  it('flags a subcollection under the wrong parent', () => {
+    const decoded = decodeFirestoreModelKey('p/1/nbn/2', MANIFEST);
+    expect(decoded.valid).toBe(false);
+    expect(decoded.issues[0]).toMatchObject({ prefix: 'nbn', code: 'WRONG_PARENT' });
+  });
+
+  it('accepts a valid nested key', () => {
+    const decoded = decodeFirestoreModelKey('nb/1/nbn/2', MANIFEST);
+    expect(decoded.valid).toBe(true);
+    expect(decoded.issues).toEqual([]);
+  });
+
+  it('renders the issues of an invalid key', () => {
+    expect(renderDecodedKey(decodeFirestoreModelKey('zzz/abc/p/1', MANIFEST))).toContain('Invalid key:');
+  });
+});
