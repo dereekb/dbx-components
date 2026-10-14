@@ -1,3 +1,47 @@
+## Migration to v14.18.x — callModel params are validated against their `inputType`
+
+A handler's declared `withApiDetails({ inputType })` is now a guard, not only MCP metadata. The callModel dispatch
+checks each request's `data` against the leaf handler's `inputType` right after the auth check (and the CRUD
+`preAssert`) and before the handler runs. One check covers HTTP callables, `/api/model` REST, MCP per-method tools,
+the compact `read` / `write` / `destructive` routers and every `batch-execute` operation.
+
+### What changed
+- **Validation is on by default (`'enforce'`).** Invalid data throws the same `VALIDATION_ERROR` bad request the
+  per-action transforms throw today (`details.data.message` carries the ArkType summary, one line per field). Any
+  `inputType` that implements Standard Schema (every ArkType `Type`) validates; a plain `{ toJsonSchema }` ref is skipped.
+- **Handlers still receive the raw data.** Per-action `firebaseServerActionTransformFunctionFactory` checks keep
+  parsing what they parse today; they are now redundant, not broken.
+- **Undeclared keys are allowed** (ArkType's default). A type opts into rejecting them with `.onUndeclaredKey('reject')`
+  (also exported as `additionalProperties: false`), or into stripping them under `'parse'` with `'delete'`.
+- **Missing data** (`null` / `undefined`) is checked as `{}`, so an all-optional params type accepts "no params".
+- **Built-in and app-supplied static MCP tools** (`whoami`, `model-get`, `docs-read`, …) check their args against their
+  own JSON-Schema `inputSchema` (`whoami { detail: true }` is now an error). The compact `search` / `details` tools are
+  exempt. Opt a tool out with `buildStaticToolDefinition({ validateInput: false })`.
+- **`mcpAdditionalTool({ inputType })`** validates the args with ArkType (even when `inputSchema` overrides the
+  advertised schema) and hands the handler the **parsed** output.
+- **The REST error body gains `details`.** `ModelApiController` adds the server error (`details.data.message` holds the
+  summary) next to the unchanged `statusCode`, `message` and `code`. dbx-cli appends the summary to the error message
+  and reports `VALIDATION_ERROR` instead of `API_ERROR`.
+
+### Rollout
+- **`'log'` mode first.** Downstream clients that send data their types reject (nulls into fields that are not
+  `clearable`, a required key the handler infers) start failing on upgrade. Roll out with:
+  ```ts
+  export const appCallModelFn = onCallModel(APP_CALL_MODEL_MAP, { inputValidation: 'log' });
+  ```
+  `'log'` `console.warn`s each failure (call, modelType, specifier and summary, never the data) and runs the handler.
+  Fix each offending client or type, then drop the option. `'off'` skips the check entirely.
+- **Per-handler escape hatch.** `withApiDetails({ inputValidation: 'off', ... })` skips the check for a handler that
+  validates itself or must accept data its type does not describe.
+- **`'parse'`.** `withApiDetails({ inputValidation: 'parse', ... })` hands the handler the type's output (morphs
+  applied, defaults filled). It replaces an `assertValidParams(type, data)` in a handler that reads `data` directly, and
+  is always enforced whatever the app mode. `withApiDetails` throws when `'parse'` is set without a validator `inputType`.
+
+### Review
+- Check that each handler's declared `inputType` matches what its clients send. A declared type that is wrong now
+  rejects valid traffic (the demo `profile.read.downloadArchive` declared a required `key` its handler infers).
+- Per-handler `assertValidParams(inputType, data)` calls that re-check the same type are now redundant.
+
 ## Migration to v14.18.x — CLI handoff bearer credentials
 
 The `cli-token` MCP tool now hands the CLI a **bearer access token** by default instead of a refresh token. The CLI

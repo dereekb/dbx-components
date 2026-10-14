@@ -123,6 +123,11 @@ export interface McpToolDefinition {
    * schema. Used by the compact discovery tools (`search`, `details`) that only read the catalog.
    */
   readonly omitReasonParameter?: boolean;
+  /**
+   * When `false`, a static tool's args are not checked against its {@link inputSchema} before its
+   * {@link staticHandler} runs. Only stored when `false`; static tools are checked by default.
+   */
+  readonly validateInput?: false;
 }
 
 /**
@@ -386,6 +391,14 @@ export interface BuildStaticToolDefinitionInput {
    * When `true`, the auto-injected reason parameter is never added to this tool's input schema.
    */
   readonly omitReasonParameter?: boolean;
+  /**
+   * Whether the server checks the call's args against {@link inputSchema} before running the
+   * {@link staticHandler}. A failure returns a `VALIDATION_ERROR` naming each failing field.
+   *
+   * Defaults to `true`. Set `false` for tools that parse lenient args themselves, or that check
+   * their args another way (e.g. an `mcpAdditionalTool` with an ArkType `inputType`).
+   */
+  readonly validateInput?: boolean;
 }
 
 /**
@@ -404,7 +417,7 @@ export interface BuildStaticToolDefinitionInput {
  * @returns A statically-registered {@link McpToolDefinition} to append to the MCP server factory's tool registry.
  */
 export function buildStaticToolDefinition(input: BuildStaticToolDefinitionInput): McpToolDefinition {
-  const { name, inputSchema, outputSchema, dispatch, staticHandler, effectiveReadOnly, rule, requiredScopeTerms, omitReasonParameter, openWorld } = input;
+  const { name, inputSchema, outputSchema, dispatch, staticHandler, effectiveReadOnly, rule, requiredScopeTerms, omitReasonParameter, openWorld, validateInput } = input;
   const effectiveDestructive = effectiveReadOnly ? undefined : input.destructive;
   const hints: McpToolHints = { readOnly: effectiveReadOnly, destructive: effectiveDestructive, openWorld };
   const annotations = resolveMcpToolAnnotations(hints);
@@ -420,7 +433,8 @@ export function buildStaticToolDefinition(input: BuildStaticToolDefinitionInput)
     staticHandler,
     filterMetadata: { visibilityKind: 'declarative', rule: rule ?? {}, effectiveReadOnly, ...(effectiveDestructive == null ? undefined : { effectiveDestructive }), ...(openWorld == null ? undefined : { openWorld }), ...(requiredScopeTerms == null ? undefined : { requiredScopeTerms }) },
     staticWireEntry: buildStaticWireEntry({ name, description, inputSchema, outputSchema, annotations }),
-    ...(omitReasonParameter === true ? { omitReasonParameter } : undefined)
+    ...(omitReasonParameter === true ? { omitReasonParameter } : undefined),
+    ...(validateInput === false ? { validateInput } : undefined)
   };
 }
 
@@ -474,7 +488,7 @@ export interface McpToolNameValidation {
  *
  * @example
  * ```ts
- * validateMcpToolName('worker-create'); // { name: 'worker-create', length: 13, level: 'ok' }
+ * validateMcpToolName('guestbook-create'); // { name: 'guestbook-create', length: 16, level: 'ok' }
  * ```
  */
 export function validateMcpToolName(name: string): McpToolNameValidation {
@@ -494,8 +508,8 @@ export function validateMcpToolName(name: string): McpToolNameValidation {
  * Builds the MCP tool name for a (modelSegment, callType, specifier) triple.
  *
  * The call-type segment is only emitted for the default (`_`) specifier, where it carries the
- * meaning (`worker-create`, `worker-update`). Named specifiers drop it — the specifier already
- * disambiguates (`worker-syncCheckHqEmployee`), which keeps names short and within the MCP
+ * meaning (`guestbook-create`, `guestbook-update`). Named specifiers drop it — the specifier already
+ * disambiguates (`guestbook-subscribeToNotifications`), which keeps names short and within the MCP
  * 64-character cap. Apps can override the whole name per handler via
  * {@link OnCallModelFunctionApiDetails.mcp.name}.
  *
@@ -511,8 +525,8 @@ export function validateMcpToolName(name: string): McpToolNameValidation {
  *
  * @example
  * ```ts
- * buildMcpToolName('worker', 'create'); // 'worker-create'
- * buildMcpToolName('worker', 'update', 'syncCheckHqEmployee'); // 'worker-syncCheckHqEmployee'
+ * buildMcpToolName('guestbook', 'create'); // 'guestbook-create'
+ * buildMcpToolName('guestbook', 'update', 'subscribeToNotifications'); // 'guestbook-subscribeToNotifications'
  * ```
  */
 export function buildMcpToolName(modelSegment: string, callType: string, specifier?: Maybe<string>): string {
@@ -560,7 +574,7 @@ export function abbreviateMcpCallType(callType: string): string {
  * used only when the preferred {@link buildMcpToolName} output collides with another visible tool.
  *
  * Named specifiers re-insert the call type, abbreviated, between the segment and specifier
- * (`worker-u-syncCheckHqEmployee`); since the two colliding tools differ only by call type, their
+ * (`guestbook-u-subscribeToNotifications`); since the two colliding tools differ only by call type, their
  * abbreviations differ and the names no longer clash. Default (`_`) specifiers already carry the
  * full call type, so they are returned in their {@link buildMcpToolName} form unchanged.
  *
@@ -571,8 +585,8 @@ export function abbreviateMcpCallType(callType: string): string {
  *
  * @example
  * ```ts
- * buildDisambiguatedMcpToolName('worker', 'update', 'syncCheckHqEmployee'); // 'worker-u-syncCheckHqEmployee'
- * buildDisambiguatedMcpToolName('worker', 'create'); // 'worker-create'
+ * buildDisambiguatedMcpToolName('guestbook', 'update', 'subscribeToNotifications'); // 'guestbook-u-subscribeToNotifications'
+ * buildDisambiguatedMcpToolName('guestbook', 'create'); // 'guestbook-create'
  * ```
  */
 export function buildDisambiguatedMcpToolName(modelSegment: string, callType: string, specifier?: Maybe<string>): string {

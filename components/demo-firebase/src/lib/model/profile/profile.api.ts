@@ -175,9 +175,12 @@ export const resetProfilePasswordParamsType = inferredTargetModelParamsType.merg
   'newPassword?': clearable('string')
 }) as Type<ResetProfilePasswordParams>;
 
-export interface DownloadProfileArchiveParams extends DownloadStorageFileParams {}
+/**
+ * Params for downloading a profile's archive. The `key` is optional: the caller's own profile is used when it is omitted.
+ */
+export interface DownloadProfileArchiveParams extends Omit<DownloadStorageFileParams, 'key'>, InferredTargetModelParams {}
 
-export const downloadProfileArchiveParamsType = downloadStorageFileParamsType as Type<DownloadProfileArchiveParams>;
+export const downloadProfileArchiveParamsType = inferredTargetModelParamsType.merge(downloadStorageFileParamsType.omit('key')) as Type<DownloadProfileArchiveParams>;
 
 export type DownloadProfileArchiveResult = DownloadStorageFileResult;
 

@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { type OnCallTypedModelParams } from '@dereekb/firebase';
 import { type FirebaseServerAuthData, type McpToolDetailsBuilder, type McpToolVisibility, type ModelApiDetailsResult } from '@dereekb/firebase-server';
 import { AUTH_ADMIN_ROLE, type Maybe } from '@dereekb/util';
+import { type } from 'arktype';
 import { type McpAdditionalTools, type McpAuthRoleReader, type McpModuleConfig } from '../mcp.config';
 import { type McpAnalyticsEvent } from './analytics/mcp.analytics.handler';
 import { mcpAdditionalTool } from './mcp.compact';
@@ -686,6 +687,78 @@ describe('McpServerFactoryService compact surface', () => {
       const names = await listNames(makeFactory({ docs: makeDocsService(), config: { tools: { compact: false, methodTools: true } } }));
       expect(names).toContain('search_demo_documentation');
       expect(names).toContain('docs-read');
+    });
+  });
+
+  describe('input validation', () => {
+    function makeAuthManifestFactory(config: Partial<McpModuleConfig> = {}): McpServerFactoryService {
+      const manifestPath = join(mkdtempSync(join(tmpdir(), 'mcp-validation-')), 'mcp.manifest.json');
+      writeFileSync(manifestPath, JSON.stringify({ version: MCP_MANIFEST_VERSION, generatedAt: '2026-10-14T00:00:00.000Z', tools: {}, auth: { apps: [], claims: [] } }));
+      return makeFactory({ config: { mcpManifestPath: manifestPath, ...config } });
+    }
+
+    it('should reject whoami args that do not match its schema through the read router', async () => {
+      const factory = makeAuthManifestFactory();
+
+      const invalid = await dispatchMcpMethodCall<ToolResult>({ factory, ctx: USER, kind: 'read', method: 'whoami', params: { detail: true } });
+      expect(invalid.isError).toBe(true);
+      expect(invalid.content[0].text).toContain('detail must be one of "summary", "claims", "full" (was true)');
+
+      const valid = await dispatchMcpMethodCall<ToolResult>({ factory, ctx: USER, kind: 'read', method: 'whoami', params: { detail: 'claims' } });
+      expect(valid.isError).toBeUndefined();
+    });
+
+    it('should reject whoami args that do not match its schema as a direct tool', async () => {
+      const factory = makeAuthManifestFactory({ tools: { compact: false, methodTools: true } });
+
+      const undeclared = await dispatchMcpToolCall<ToolResult>({ factory, ctx: USER, name: 'whoami', args: { bogus: 1 } });
+      expect(undeclared.isError).toBe(true);
+      expect(undeclared.content[0].text).toContain('bogus is not a parameter of this tool');
+
+      const valid = await dispatchMcpToolCall<ToolResult>({ factory, ctx: USER, name: 'whoami', args: { detail: 'summary' } });
+      expect(valid.isError).toBeUndefined();
+    });
+
+    it('should still run search without a query', async () => {
+      const result = await search(makeFactory(), USER, { model: 'guestbook' });
+      expect(result.methods.length).toBeGreaterThan(0);
+    });
+
+    it('should check an mcpAdditionalTool inputType with arktype and pass the parsed args', async () => {
+      let received: unknown;
+      const additional: McpAdditionalTools = [
+        mcpAdditionalTool({
+          name: 'demo_count',
+          description: 'Counts.',
+          inputType: type({ n: 'string.numeric.parse' }),
+          readOnly: true,
+          expose: 'tool',
+          handler: (args) => {
+            received = args;
+            return { ok: true };
+          }
+        })
+      ];
+
+      const factory = makeFactory({ additional });
+
+      const invalid = await dispatchMcpToolCall<ToolResult>({ factory, ctx: USER, name: 'demo_count', args: { n: 'abc' } });
+      expect(invalid.isError).toBe(true);
+      expect(invalid.content[0].text).toContain('n must be');
+      expect(received).toBeUndefined();
+
+      const valid = await dispatchMcpToolCall<ToolResult>({ factory, ctx: USER, name: 'demo_count', args: { n: '5' } });
+      expect(valid.isError).toBeUndefined();
+      expect(received).toEqual({ n: 5 });
+    });
+
+    it('should check an mcpAdditionalTool inputSchema with the JSON-Schema validator', async () => {
+      const additional: McpAdditionalTools = [mcpAdditionalTool({ name: 'demo_lookup', description: 'Looks up.', inputSchema: { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] }, readOnly: true, expose: 'tool', handler: () => ({ ok: true }) })];
+      const factory = makeFactory({ additional });
+
+      const invalid = await dispatchMcpToolCall<ToolResult>({ factory, ctx: USER, name: 'demo_lookup', args: {} });
+      expect(invalid.isError).toBe(true);
+      expect(invalid.content[0].text).toContain('id is required');
     });
   });
 

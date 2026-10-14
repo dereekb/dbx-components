@@ -5,7 +5,7 @@ import { type Request } from 'express';
 import { oidcScopeTermsSatisfied, type OnCallTypedModelParams } from '@dereekb/firebase';
 import { getOidcScopesFromRequest } from '@dereekb/firebase-server/oidc';
 import { authRolesSetHasRoles, type AuthClaims, type AuthRoleSet, type Maybe } from '@dereekb/util';
-import { DocsApiService, ModelApiCallModelDispatchService, ModelApiGetService, FirebaseServerStorageService, type FirebaseServerAuthData } from '@dereekb/firebase-server';
+import { DocsApiService, ModelApiCallModelDispatchService, ModelApiGetService, FirebaseServerStorageService, type FirebaseServerAuthData, firebaseServerValidationErrorForSummary } from '@dereekb/firebase-server';
 import {
   McpModuleConfig,
   DEFAULT_MCP_SERVER_NAME,
@@ -21,6 +21,7 @@ import {
   type McpCompactToolNames,
   type McpToolExamplesConfig
 } from '../mcp.config';
+import { mcpToolInputValidator } from './mcp.tool-input.validation';
 import { applyMcpReasonParameterToSchema, extractMcpReasonFromArgs, mcpSchemaDeclaresProperty, resolveMcpReasonParameterConfig, type ResolvedMcpReasonParameterConfig } from './mcp.reason';
 import { MCP_ANALYTICS_SERVICE, noopMcpAnalyticsService, type McpAnalyticsEvent, type McpAnalyticsService } from './analytics/mcp.analytics.handler';
 import { MCP_MANIFEST_VERSION, type McpManifest, type McpManifestAuth, type McpManifestEnum, type McpManifestModelEntry, type McpManifestToolEntry } from './mcp.manifest';
@@ -69,6 +70,7 @@ export interface McpRequestContext {
 @Injectable()
 export class McpServerFactoryService {
   private readonly _logger = new Logger(McpServerFactoryService.name);
+  private readonly _toolInputValidator = mcpToolInputValidator({ warn: (message) => this._logger.warn(message) });
 
   private _cachedTools: McpToolGenerationResult | undefined;
   private _catalog: McpToolCatalog | undefined;
@@ -1034,7 +1036,7 @@ export class McpServerFactoryService {
     } else if (definition.staticHandler == null) {
       outcome = await this._handleCallModelToolCall(definition, args, ctx);
     } else {
-      outcome = await this._handleStaticToolCall(definition.staticHandler, args, ctx);
+      outcome = await this._handleStaticToolCall(definition, args, ctx);
     }
 
     const isSuccessful = outcome.error == null && outcome.response.isError !== true;
@@ -1146,7 +1148,7 @@ export class McpServerFactoryService {
       result = { outcome: { response: formatMcpToolErrorResponse(new Error(errorMessage ?? `Unknown method: ${requestedMethod}`)) as CallToolResult }, requestedMethod, params: {} };
     } else {
       const target = method.definition;
-      const outcome = target.staticHandler == null ? await this._handleCallModelToolCall(target, inner.args, ctx) : await this._handleStaticToolCall(target.staticHandler, inner.args, ctx);
+      const outcome = target.staticHandler == null ? await this._handleCallModelToolCall(target, inner.args, ctx) : await this._handleStaticToolCall(target, inner.args, ctx);
       result = { outcome, method, requestedMethod, params: inner.args, innerReason: inner.reason };
     }
 
@@ -1168,10 +1170,29 @@ export class McpServerFactoryService {
     }
   }
 
-  private async _handleStaticToolCall(staticHandler: McpStaticToolHandler, args: Record<string, unknown>, ctx: McpRequestContext): Promise<McpToolCallOutcome> {
+  /**
+   * Runs a statically-registered tool's handler, first checking its args against the tool's
+   * `inputSchema` unless the tool opted out with `validateInput: false`. A failure returns the
+   * `VALIDATION_ERROR` naming each failing field, and the handler does not run.
+   *
+   * @param definition - The static tool definition; its `staticHandler` must be set.
+   * @param args - The call args, with the reason parameter already stripped.
+   * @param ctx - The per-request context.
+   * @returns The tool call outcome.
+   */
+  private async _handleStaticToolCall(definition: McpToolDefinition, args: Record<string, unknown>, ctx: McpRequestContext): Promise<McpToolCallOutcome> {
+    const staticHandler = definition.staticHandler as McpStaticToolHandler;
     let outcome: McpToolCallOutcome;
 
     try {
+      if (definition.validateInput !== false && definition.inputSchema != null) {
+        const summary = this._toolInputValidator.validate(definition.inputSchema, args);
+
+        if (summary != null) {
+          throw firebaseServerValidationErrorForSummary(summary);
+        }
+      }
+
       outcome = { response: await staticHandler(args, ctx) };
     } catch (error) {
       outcome = { response: formatMcpToolErrorResponse(error) as CallToolResult, error };

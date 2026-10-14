@@ -36,6 +36,15 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
       });
     });
 
+    describe('input validation', () => {
+      it('rejects params that do not match the tool inputSchema', async () => {
+        const result = await callMcpMethod({ f, u, kind: 'read', method: MODEL_GET_TOOL_NAME, params: { modelType: guestbookIdentity.modelType, keys: 'gb/x' } });
+
+        expect(result.isError).toBe(true);
+        expect((result.content[0] as { readonly text: string }).text).toContain('keys must be array');
+      });
+    });
+
     describe(MODEL_GET_TOOL_NAME, () => {
       demoGuestbookContext({ f, name: 'ModelGetA', published: true }, (gA) => {
         demoGuestbookContext({ f, name: 'ModelGetB', published: true }, (gB) => {

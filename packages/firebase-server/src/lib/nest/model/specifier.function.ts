@@ -4,6 +4,7 @@ import { type NestContextCallableRequestWithOptionalAuth, type NestContextCallab
 import { badRequestError } from '../../function/error';
 import { assertRequestRequiresAuthForFunction, type OnCallWithAuthAwareNestRequireAuthRef, type OnCallWithNestContext } from '../function/call';
 import { type OnCallApiDetailsRef, aggregateSpecifierApiDetails } from './api.details';
+import { type OnCallModelInputValidationRequestRef, validateOnCallModelFunctionInput } from './input.validation';
 
 /**
  * Request type for specifier-dispatched handlers that require authentication.
@@ -64,6 +65,8 @@ export type OnCallSpecifierHandlerConfig<N> = {
  *
  * Use this when a single model type + CRUD operation needs to support multiple behaviors
  * (e.g., a profile update that can either update the default fields or change a username).
+ * The selected handler's request data is checked against its declared `inputType` after its
+ * auth check (see {@link validateOnCallModelFunctionInput}).
  * The resulting function is marked `_requireAuth = false` because auth enforcement is
  * delegated to each individual specifier handler.
  *
@@ -85,13 +88,15 @@ export type OnCallSpecifierHandlerConfig<N> = {
 export function onCallSpecifierHandler<N, I = any, O = any>(config: OnCallSpecifierHandlerConfig<N>): OnCallWithNestContext<N, I, O> & OnCallWithAuthAwareNestRequireAuthRef & OnCallApiDetailsRef {
   const map = objectToMap(config);
 
-  const fn = (request: OnCallSpecifierHandlerNestContextRequestWithOptionalAuth<N, I>) => {
+  const fn = (request: OnCallSpecifierHandlerNestContextRequestWithOptionalAuth<N, I> & OnCallModelInputValidationRequestRef) => {
     const { specifier = DEFAULT_MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER } = request;
     const handler = map.get(specifier);
 
     if (handler != null) {
       assertRequestRequiresAuthForFunction(handler, request);
-      return handler(request as any) as PromiseOrValue<O>;
+      const data = validateOnCallModelFunctionInput({ handler: handler as OnCallApiDetailsRef, data: request.data, request });
+      const handlerRequest = data === request.data ? request : { ...request, data };
+      return handler(handlerRequest as any) as PromiseOrValue<O>;
     }
 
     throw unknownModelCrudFunctionSpecifierError(specifier);

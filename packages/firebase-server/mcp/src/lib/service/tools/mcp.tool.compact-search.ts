@@ -125,6 +125,8 @@ export function createMcpCompactSearchTool(deps: CreateMcpCompactSearchToolDeps)
     dispatch: { call: MCP_COMPACT_SEARCH_DISPATCH_CALL, modelType: MCP_COMPACT_DISPATCH_MODEL_TYPE },
     effectiveReadOnly: true,
     omitReasonParameter: true,
+    // lenient catalog lookups that coerce their own args; their schemas are rebuilt per request with examples
+    validateInput: false,
     staticHandler: async (args) => {
       const query = typeof args['query'] === 'string' ? args['query'] : '';
       const model = typeof args['model'] === 'string' ? args['model'] : undefined;

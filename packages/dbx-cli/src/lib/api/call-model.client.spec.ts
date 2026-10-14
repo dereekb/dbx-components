@@ -42,6 +42,22 @@ describe('callModelOverHttp', () => {
     ).rejects.toMatchObject({ code: 'AUTH_UNAUTHORIZED' });
   });
 
+  it('appends the validation summary and reports VALIDATION_ERROR for a 400 validation error', async () => {
+    const body = { statusCode: 400, message: 'One or more data/form validation errors occurred.', code: 'VALIDATION_ERROR', details: { code: 'VALIDATION_ERROR', message: 'One or more data/form validation errors occurred.', data: { message: 'key must be a string (was number)' } } };
+    const fetcher = (async () => new Response(JSON.stringify(body), { status: 400 })) as typeof fetch;
+
+    const error = await callModelOverHttp({
+      apiBaseUrl: 'http://localhost/api',
+      accessToken: 'token',
+      params: { modelType: 'profile', call: 'update', specifier: 'onboard', data: { key: 5 } },
+      fetcher
+    }).catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(CliHttpError);
+    expect((error as CliHttpError).code).toBe('VALIDATION_ERROR');
+    expect((error as CliHttpError).message.endsWith('key must be a string (was number)')).toBe(true);
+  });
+
   it('strips trailing slash from apiBaseUrl before appending /model/call', async () => {
     let url = '';
     const fetcher = (async (input: any) => {

@@ -3,6 +3,7 @@ import { type Request } from 'express';
 import { type OnCallTypedModelParams, type FirestoreModelKey } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { type FirebaseServerAuthenticatedRequest } from '../auth.context.server';
+import { firebaseServerErrorInfoServerErrorPair } from '../../../function/error';
 import { ModelApiCallModelDispatchService } from './model.api.dispatch';
 import { ModelApiGetService, MAX_MODEL_ACCESS_MULTI_READ_KEYS } from './model.api.get.service';
 
@@ -199,7 +200,12 @@ export class ModelApiController {
 
       // an HttpsError's own `code` is the generic category (e.g. `permission-denied`); the specific
       // server code (e.g. `CALL_MODEL_MISSING_OIDC_SCOPE`) rides in its details
-      result = new HttpException({ statusCode: status, message, code: error?.details?.code ?? error?.code }, status);
+      const code = error?.details?.code ?? error?.code;
+
+      // pass the server error details through (e.g. a VALIDATION_ERROR's per-field summary in details.data.message)
+      const [details] = firebaseServerErrorInfoServerErrorPair(error);
+      const body = details != null ? { statusCode: status, message, code, details } : { statusCode: status, message, code };
+      result = new HttpException(body, status);
     }
 
     return result;

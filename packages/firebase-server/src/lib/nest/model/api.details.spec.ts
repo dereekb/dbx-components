@@ -1,3 +1,4 @@
+import { type } from 'arktype';
 import {
   withApiDetails,
   readApiDetails,
@@ -42,6 +43,16 @@ describe('api.details', () => {
   // MARK: withApiDetails
 
   describe('withApiDetails()', () => {
+    it('should store inputValidation on _apiDetails', () => {
+      const handler = withApiDetails({ inputType: type({ a: 'string' }), inputValidation: 'parse', fn: mockHandler() });
+      expect(readApiDetails(handler as OnCallApiDetailsRef)).toMatchObject({ inputValidation: 'parse' });
+    });
+
+    it('should throw when inputValidation is parse without a validator inputType', () => {
+      expect(() => withApiDetails({ inputType: mockJsonSchemaRef('TestInput'), inputValidation: 'parse', fn: mockHandler() })).toThrow();
+      expect(() => withApiDetails({ inputValidation: 'parse', fn: mockHandler() })).toThrow();
+    });
+
     it('should attach _apiDetails to a function', () => {
       const inputType = mockJsonSchemaRef('TestInput');
       const handler = mockHandler();

@@ -647,6 +647,14 @@ demoApiFunctionContextFactory((f) => {
                                   expect(result.url).toBeDefined();
                                 });
 
+                                it('should allow the user to download their own zip file without a key', async () => {
+                                  const downloadProfileArchiveParams: DownloadProfileArchiveParams = {};
+                                  const result = (await au.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(profileIdentity, downloadProfileArchiveParams, 'downloadArchive'))) as DownloadProfileArchiveResult;
+
+                                  expect(result).toBeDefined();
+                                  expect(result.url).toBeDefined();
+                                });
+
                                 describe('updating display name via API', () => {
                                   it('should allow updating and clearing the display name of an embedded file', async () => {
                                     const newDisplayName = 'Updated Test File Name';

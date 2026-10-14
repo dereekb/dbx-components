@@ -146,6 +146,8 @@ export function createMcpCompactDetailsTool(deps: CreateMcpCompactDetailsToolDep
     dispatch: { call: MCP_COMPACT_DETAILS_DISPATCH_CALL, modelType: MCP_COMPACT_DISPATCH_MODEL_TYPE },
     effectiveReadOnly: true,
     omitReasonParameter: true,
+    // lenient catalog lookups that coerce their own args; their schemas are rebuilt per request with examples
+    validateInput: false,
     staticHandler: async (args, ctx) => {
       const requested = typeof args['method'] === 'string' ? args['method'] : '';
       const method = view.resolve(requested);

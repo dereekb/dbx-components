@@ -2,6 +2,7 @@ import { type AuthRole, type Configurable, type Maybe, type PromiseOrValue } fro
 import { type OnCallFunctionType, type OnCallTypedModelParams, type FirestoreModelType, type ModelFirebaseCrudFunctionSpecifier, type OidcScopeTerm } from '@dereekb/firebase';
 import { type FirebaseServerAuthData } from '../controller/auth.context.server';
 import { type OnCallModelFunctionAnalyticsDetails } from './analytics.details';
+import { isOnCallModelInputValidator, type OnCallModelFunctionInputValidation } from './input.validator';
 
 // MARK: JSON Schema
 /**
@@ -369,8 +370,23 @@ export type OnCallModelFunctionMcpDetails<R = unknown, M = unknown> = BaseOnCall
 export interface OnCallModelFunctionApiDetails<R = unknown, M = unknown> {
   /**
    * The input parameter type. Must implement toJsonSchema() for MCP tool input schema generation.
+   *
+   * When it implements Standard Schema — any ArkType `Type` — the callModel dispatch checks the request data against
+   * it before the handler runs. See {@link inputValidation}.
    */
   readonly inputType?: JsonSchemaRef;
+  /**
+   * How the callModel dispatch checks the request data against {@link inputType} before the handler runs.
+   *
+   * - 'validate' (default): reject invalid data with a `VALIDATION_ERROR`; the handler receives the raw data unchanged.
+   *   The app-level `OnCallModelConfig.inputValidation` mode can relax this to `'log'` or `'off'`.
+   * - 'parse': same check; the handler receives the schema's output (morphs applied, defaults filled, `'delete'` keys
+   *   removed). Always enforced, whatever the app mode. Requires an `inputType` that implements Standard Schema.
+   * - 'off': no check, for a handler that validates itself or must accept data its type does not describe.
+   *
+   * Undeclared keys pass through unless the type itself sets `.onUndeclaredKey('reject')` or `'delete'`.
+   */
+  readonly inputValidation?: OnCallModelFunctionInputValidation;
   /**
    * The output result type. Optional — many handlers return void or generic results.
    */
@@ -539,12 +555,17 @@ export interface WithApiDetailsConfig<F extends (...args: any[]) => any> extends
  * (same effect as optionalAuthContext). This avoids the composition issue where
  * optionalAuthContext(withApiDetails(...)) would lose the _apiDetails.
  *
+ * When `inputType` implements Standard Schema (any ArkType `Type`), the callModel dispatch checks the request data
+ * against it before `fn` runs, and rejects invalid data with a `VALIDATION_ERROR`. See
+ * {@link OnCallModelFunctionApiDetails.inputValidation}.
+ *
  * @param config - The API details configuration including the handler function.
  * @returns The handler function with _apiDetails attached.
+ * @throws {Error} When `inputValidation` is `'parse'` but `inputType` cannot validate.
  *
  * @example
  * ```typescript
- * // Handler with api details (auth required by default)
+ * // Handler with api details (auth required by default). The dispatch checks data against inputType before fn runs.
  * export const createGuestbook: DemoCreateModelFunction<CreateGuestbookParams> = withApiDetails({
  *   inputType: createGuestbookParamsType,
  *   fn: async (request) => {
@@ -552,6 +573,13 @@ export interface WithApiDetailsConfig<F extends (...args: any[]) => any> extends
  *     const result = await nest.guestbookActions.createGuestbook(data);
  *     return onCallCreateModelResultWithDocs(await result());
  *   }
+ * });
+ *
+ * // Handler that reads data directly and receives the parsed output of inputType
+ * export const guestbookEntryQuery: DemoQueryModelFunction<GuestbookEntryQueryParams> = withApiDetails({
+ *   inputType: guestbookEntryQueryParamsType,
+ *   inputValidation: 'parse',
+ *   fn: async (request) => { ... }
  * });
  *
  * // Handler with optional auth
@@ -563,6 +591,11 @@ export interface WithApiDetailsConfig<F extends (...args: any[]) => any> extends
  */
 export function withApiDetails<F extends (...args: any[]) => any>(config: WithApiDetailsConfig<F>): F & OnCallModelFunctionApiDetailsRef {
   const { optionalAuth, fn, ...apiDetails } = config;
+
+  if (apiDetails.inputValidation === 'parse' && !isOnCallModelInputValidator(apiDetails.inputType)) {
+    throw new Error(`withApiDetails(): inputValidation 'parse' requires an inputType that implements Standard Schema (such as an ArkType Type).`);
+  }
+
   // Stored as the unknown-result form; the narrower handler-result typing lives on the config for authoring only.
   (fn as Configurable<OnCallModelFunctionApiDetailsRef>)._apiDetails = apiDetails as OnCallModelFunctionApiDetails;
 

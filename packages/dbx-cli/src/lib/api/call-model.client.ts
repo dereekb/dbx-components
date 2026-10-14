@@ -223,9 +223,12 @@ async function requestJson<R>(input: RequestJsonInput): Promise<R> {
   if (!ok) {
     // the mapper registered by the runner (`cliAuthFailureErrorMapper`) rewrites the 401/403 suggestion
     // from the credential in context; this fallback is generic but correct without it
+    const validationSummary = extractValidationSummary(body);
+    const message = extractMessage(body, fallbackMessage, res);
+
     throw new CliHttpError({
-      message: `${input.errorPrefix}: ${extractMessage(body, fallbackMessage, res)}`,
-      code: codeForStatus(res.status),
+      message: `${input.errorPrefix}: ${validationSummary == null ? message : `${message}\n${validationSummary}`}`,
+      code: validationSummary == null ? codeForStatus(res.status) : 'VALIDATION_ERROR',
       suggestion: fallbackSuggestionForStatus(res.status),
       status: res.status,
       serverCode: extractServerCode(body)
@@ -271,6 +274,18 @@ function fallbackSuggestionForStatus(status: number): string | undefined {
 function extractServerCode(body: unknown): string | undefined {
   const code = typeof body === 'object' && body && 'code' in body ? (body as { code?: unknown }).code : undefined;
   return typeof code === 'string' ? code : undefined;
+}
+
+/**
+ * Reads the per-field summary a server `VALIDATION_ERROR` carries in its `details.data.message`.
+ *
+ * @param body - The parsed error response body.
+ * @returns The summary, or undefined when the body is not a validation error with a summary.
+ */
+function extractValidationSummary(body: unknown): string | undefined {
+  const details = typeof body === 'object' && body && 'details' in body ? (body as { details?: { code?: unknown; data?: { message?: unknown } } }).details : undefined;
+  const summary = details?.code === 'VALIDATION_ERROR' ? details.data?.message : undefined;
+  return typeof summary === 'string' && summary.length > 0 ? summary : undefined;
 }
 
 function extractMessage(body: unknown, fallback: string, res: Response): string {

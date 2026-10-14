@@ -1,6 +1,6 @@
 import { type Maybe, type PromiseOrValue } from '@dereekb/util';
 import { type OidcScopeTerm } from '@dereekb/firebase';
-import { type McpVisibilityRule } from '@dereekb/firebase-server';
+import { assertValidParams, type McpVisibilityRule } from '@dereekb/firebase-server';
 import { arktypeToJsonSchemaForExport } from '@dereekb/model';
 import { type Type } from 'arktype';
 import { type CallToolResult } from '@modelcontextprotocol/server';
@@ -511,11 +511,15 @@ export interface McpAdditionalToolConfig<I = Record<string, unknown>> {
   readonly name: string;
   readonly description: string;
   /**
-   * ArkType input type used to build the input schema. Ignored when {@link inputSchema} is set.
+   * ArkType input type. The tool's args are checked against it before the handler runs, and the handler receives
+   * its parsed output; invalid args return a `VALIDATION_ERROR` naming each failing field. Also used to build the
+   * advertised input schema unless {@link inputSchema} is set, in which case it still validates.
    */
   readonly inputType?: Type<I>;
   /**
    * Explicit input JSON schema. Defaults to the {@link inputType} export, or `{ type: 'object' }`.
+   *
+   * Without an {@link inputType}, the server checks the args against this schema before the handler runs.
    */
   readonly inputSchema?: object;
   readonly outputSchema?: object;
@@ -566,8 +570,11 @@ export function mcpAdditionalTool<I = Record<string, unknown>>(config: McpAdditi
     openWorld,
     rule: visibility,
     requiredScopeTerms,
+    // an inputType is checked with arktype in the handler below, which is stricter than its exported JSON Schema
+    ...(inputType == null ? undefined : { validateInput: false }),
     staticHandler: async (args, ctx) => {
-      const value = await handler(args as I, ctx);
+      const params = inputType == null ? (args as I) : assertValidParams(inputType, args);
+      const value = await handler(params, ctx);
       return (await formatMcpToolResponse(value, { ...dispatch, data: args }, undefined)) as CallToolResult;
     }
   });

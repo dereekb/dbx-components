@@ -9,6 +9,8 @@ import { type OnCallAnalyticsContext } from './analytics.details';
 import { type OnCallModelAnalyticsService, ON_CALL_MODEL_ANALYTICS_SERVICE, noopOnCallModelAnalyticsService } from './analytics.handler';
 import { callWithAnalytics } from './analytics.emit';
 import { ModuleRef } from '@nestjs/core';
+import { DEFAULT_ON_CALL_MODEL_INPUT_VALIDATION_MODE, type OnCallModelInputValidationMode } from './input.validator';
+import { type OnCallModelInputValidationRequestRef, validateOnCallModelFunctionInput } from './input.validation';
 
 // MARK: Function
 /**
@@ -41,6 +43,19 @@ export interface OnCallModelConfig {
    * Default: {@link ON_CALL_MODEL_ANALYTICS_SERVICE}
    */
   readonly analyticsToken?: string;
+  /**
+   * How the dispatch treats request data that fails its handler's declared `inputType`.
+   *
+   * - 'enforce' (default): throw a `VALIDATION_ERROR` bad request naming each failing field.
+   * - 'log': `console.warn` the failure (call, modelType, specifier and summary, never the data) and run the handler
+   *   with the raw data. Use while rolling validation out to an app whose clients may send off-shape data.
+   * - 'off': skip the check for handlers that use the default `'validate'` setting.
+   *
+   * Handlers set to `inputValidation: 'parse'` are always enforced, and handlers set to `'off'` are never checked.
+   *
+   * Default: {@link DEFAULT_ON_CALL_MODEL_INPUT_VALIDATION_MODE}
+   */
+  readonly inputValidation?: OnCallModelInputValidationMode;
 }
 
 /**
@@ -66,7 +81,8 @@ export interface OnCallModelConfig {
  * ```
  */
 export function onCallModel(map: OnCallModelMap, config: OnCallModelConfig = {}): OnCallWithNestContext<unknown, OnCallTypedModelParams> & OnCallApiDetailsRef {
-  const { preAssert = () => undefined, analyticsToken } = config;
+  const { preAssert = () => undefined, analyticsToken, inputValidation = DEFAULT_ON_CALL_MODEL_INPUT_VALIDATION_MODE } = config;
+  const forwardInputValidation = inputValidation !== DEFAULT_ON_CALL_MODEL_INPUT_VALIDATION_MODE;
 
   // Aggregate _apiDetails from CRUD handlers in the map (built once at setup, not per-request)
   const aggregatedApiDetails = aggregateModelApiDetails(map as { readonly [key: string]: OnCallApiDetailsRef | undefined });
@@ -119,14 +135,17 @@ export function onCallModel(map: OnCallModelMap, config: OnCallModelConfig = {})
 
     let result: PromiseOrValue<any>;
 
+    // Forward the app-level input validation mode to the dispatch leaf only when it is not the default
+    const callRequest: OnCallWithNestContextRequest<unknown, OnCallTypedModelParams> & OnCallModelInputValidationRequestRef = forwardInputValidation ? { ...request, onCallModelInputValidation: { mode: inputValidation, call, modelType, specifier } } : request;
+
     // Resolve analytics from _apiDetails tree — callWithAnalytics handles undefined details
     const analyticsService = getAnalyticsService(request);
     const analyticsDetails = resolveAnalyticsFromApiDetails(modelApiDetails, call, modelType, specifier);
 
     if (analyticsDetails) {
-      result = callWithAnalytics({ service: analyticsService, details: analyticsDetails, context, execute: () => callFn(request) });
+      result = callWithAnalytics({ service: analyticsService, details: analyticsDetails, context, execute: () => callFn(callRequest) });
     } else {
-      result = callFn(request);
+      result = callFn(callRequest);
     }
 
     return result;
@@ -220,7 +239,8 @@ export interface OnCallWithCallTypeModelConfig<N> {
  * Internal factory used by the CRUD-specific wrappers ({@link onCallCreateModel}, {@link onCallReadModel}, etc.).
  *
  * Dispatches to the correct model-type handler from the map, enforces auth requirements,
- * runs pre-assertions, and aggregates API details from all handlers for MCP introspection.
+ * runs pre-assertions, checks the request data against the handler's declared `inputType`
+ * (see {@link validateOnCallModelFunctionInput}), and aggregates API details from all handlers for MCP introspection.
  *
  * @param map - Maps model type strings to their handler functions.
  * @param config - Configuration including call type, crud type, and error factory.
@@ -231,7 +251,7 @@ export interface OnCallWithCallTypeModelConfig<N> {
 export function _onCallWithCallTypeFunction<N>(map: OnCallWithCallTypeModelMap<N>, config: OnCallWithCallTypeModelConfig<N>): OnCallWithAuthAwareNestContext<N, OnCallTypedModelParams, unknown> & OnCallApiDetailsRef {
   const { callType, preAssert = () => undefined, throwOnUnknownModelType } = config;
 
-  const fn = (request: OnCallWithNestContextRequest<N, OnCallTypedModelParams>) => {
+  const fn = (request: OnCallWithNestContextRequest<N, OnCallTypedModelParams> & OnCallModelInputValidationRequestRef) => {
     const modelType = request.data.modelType;
     const crudFn = map[modelType];
 
@@ -240,10 +260,13 @@ export function _onCallWithCallTypeFunction<N>(map: OnCallWithCallTypeModelMap<N
       assertRequestRequiresAuthForFunction(crudFn, request);
       preAssert({ call: callType, request, modelType, specifier });
 
+      // Specifier handlers carry aggregated details and are checked one level down, by onCallSpecifierHandler
+      const data = validateOnCallModelFunctionInput({ handler: crudFn as OnCallApiDetailsRef, data: request.data.data, request });
+
       return crudFn({
         ...request,
         specifier,
-        data: request.data.data
+        data
       });
     }
 
