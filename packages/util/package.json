@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/util",
-  "version": "14.16.0",
+  "version": "14.17.0",
   "type": "module",
   "sideEffects": false,
   "exports": {
