@@ -1,4 +1,5 @@
 import { type PrimativeKey, type ReadKeyFunction } from '../key';
+import { type MapFunction } from '../value/map';
 import { type Maybe } from '../value/maybe.type';
 
 /**
@@ -18,26 +19,81 @@ export function arrayToMap<T, V, K extends PrimativeKey = PrimativeKey>(values: 
 }
 
 /**
+ * Builds the {@link Error} thrown by {@link arrayToObject} when two values share a key, given the key and the later value.
+ */
+export type ArrayToObjectDuplicateKeyErrorFactory<T, K extends PrimativeKey = PrimativeKey> = (key: K, value: T) => Error;
+
+/**
+ * Config-object form of {@link arrayToObject}.
+ */
+export interface ArrayToObjectConfig<T, K extends PrimativeKey = PrimativeKey, V = T> {
+  /**
+   * Reads the key of each value. Values with a null/undefined key are left out of the record.
+   */
+  readonly readKey: ReadKeyFunction<T, K>;
+  /**
+   * Maps each value to the value stored in the record.
+   *
+   * Defaults to the value itself.
+   */
+  readonly readValue?: Maybe<MapFunction<T, V>>;
+  /**
+   * Whether two values sharing a key throws an error.
+   *
+   * - unset/false: the last value wins, the same as the positional form.
+   * - true: throws `arrayToObject(): duplicate key "<key>".`
+   * - a function: throws the {@link Error} it returns, so a registry can keep its own message.
+   *
+   * Duplicates are detected with an own-property check, so keys such as `toString` or `constructor` are not false duplicates.
+   */
+  readonly throwOnDuplicateKey?: Maybe<boolean | ArrayToObjectDuplicateKeyErrorFactory<T, K>>;
+}
+
+/**
  * Maps the values of the input array to a Record object, keyed by the result of a key function.
  * Items with undefined keys are omitted. Optionally transforms each value using a value function.
  *
+ * Also accepts an {@link ArrayToObjectConfig} as the second argument, which can throw when two values share a key instead of letting the last value win.
+ *
  * @param values - source array of items to map
- * @param keyFn - function to extract a key from each item
+ * @param keyFn - function to extract a key from each item, or an {@link ArrayToObjectConfig}
  * @param valueFn - optional function to transform each item into the desired record value
  * @returns a Record of keys to values derived from the input array
+ *
+ * @example
+ * ```ts
+ * const byId = arrayToObject([{ id: 'a' }, { id: 'b' }], (x) => x.id);
+ * // { a: { id: 'a' }, b: { id: 'b' } }
+ *
+ * const registry = arrayToObject(configs, {
+ *   readKey: (x) => x.type,
+ *   throwOnDuplicateKey: (type) => new Error(`duplicate type in registry: ${type}`)
+ * });
+ * ```
+ *
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilTags array, object, record, index, key, lookup, duplicate, unique, registry
+ * @dbxUtilRelated is-unique-keyed-function, key-value-map-factory
  */
 export function arrayToObject<T, V, K extends PrimativeKey = PrimativeKey>(values: T[], keyFn: ReadKeyFunction<T, K>, valueFn: (t: T) => V): Record<K, V>;
 export function arrayToObject<T, K extends PrimativeKey = PrimativeKey>(values: T[], keyFn: ReadKeyFunction<T, K>, valueFn: (t: T) => T): Record<K, T>;
 export function arrayToObject<T, K extends PrimativeKey = PrimativeKey>(values: T[], keyFn: ReadKeyFunction<T, K>): Record<K, T>;
-export function arrayToObject<T, V, K extends PrimativeKey = PrimativeKey>(values: T[], keyFn: ReadKeyFunction<T, K>, valueFn: (t: T) => V = (t) => t as unknown as V): Record<K, V> {
-  const record: Record<K, V> = {} as Record<K, V>;
+export function arrayToObject<T, K extends PrimativeKey = PrimativeKey, V = T>(values: T[], config: ArrayToObjectConfig<T, K, V>): Record<K, V>;
+export function arrayToObject<T, V, K extends PrimativeKey = PrimativeKey>(values: T[], keyFnOrConfig: ReadKeyFunction<T, K> | ArrayToObjectConfig<T, K, V>, valueFn?: (t: T) => V): Record<K, V> {
+  const config: ArrayToObjectConfig<T, K, V> = typeof keyFnOrConfig === 'function' ? { readKey: keyFnOrConfig, readValue: valueFn } : keyFnOrConfig;
+  const { readKey, readValue, throwOnDuplicateKey } = config;
+  const record = {} as Record<K, V>;
 
-  values.map((x) => {
-    const key = keyFn(x);
-    const value = valueFn(x);
+  values.forEach((x) => {
+    const key = readKey(x);
 
-    if (key != undefined) {
-      record[key] = value;
+    if (key != null) {
+      if (throwOnDuplicateKey && Object.hasOwn(record, key)) {
+        throw typeof throwOnDuplicateKey === 'function' ? throwOnDuplicateKey(key, x) : new Error(`arrayToObject(): duplicate key "${String(key)}".`);
+      }
+
+      record[key] = readValue ? readValue(x) : (x as unknown as V);
     }
   });
 

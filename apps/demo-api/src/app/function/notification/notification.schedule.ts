@@ -23,6 +23,17 @@ export const notificationHourlyUpdateSchedule: DemoScheduleFunction = async (req
       const sendQueuedNotifications = await request.nest.notificationActions.sendQueuedNotifications({});
       const sendQueuedNotificationsResult = await sendQueuedNotifications();
       return { sendQueuedNotificationsResult };
+    },
+    // repair NotificationTaskBot entries whose run went missing, after the queue had its chance to run them
+    repairAllNotificationTaskBots: async () => {
+      const repairAllNotificationTaskBotsResult = await request.nest.notificationActions.repairAllNotificationTaskBots();
+
+      if (repairAllNotificationTaskBotsResult.entriesStalled > 0) {
+        // an example of alerting on stalled runs; notificationTaskBotsStalledQuery() lists every stalled bot
+        console.warn(`notificationHourlyUpdateSchedule - ${repairAllNotificationTaskBotsResult.entriesStalled} NotificationTaskBot entries were newly marked stalled.`);
+      }
+
+      return { repairAllNotificationTaskBotsResult };
     }
   });
 

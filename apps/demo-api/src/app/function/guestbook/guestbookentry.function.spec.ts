@@ -1,4 +1,4 @@
-import { type GuestbookEntry, guestbookEntryIdentity, type InsertGuestbookEntryParams } from 'demo-firebase';
+import { type GuestbookEntry, guestbookEntryIdentity, type InsertGuestbookEntryParams, type InsertGuestbookEntryResult } from 'demo-firebase';
 import { demoGuestbookEntryContext, type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext, demoGuestbookContext } from '../../../test/fixture';
 import { isDate, isValid } from 'date-fns';
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
@@ -27,7 +27,8 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
               signed
             };
 
-            await u.callWrappedFunction(callGuestbookEntryWrappedFn, onCallUpdateModelParams(guestbookEntryIdentity, params, 'insert'));
+            const result = (await u.callWrappedFunction(callGuestbookEntryWrappedFn, onCallUpdateModelParams(guestbookEntryIdentity, params, 'insert'))) as InsertGuestbookEntryResult;
+            expect(result.modelKeys[0]).toBe(userGuestbookEntry.key);
 
             exists = await userGuestbookEntry.accessor.exists();
             expect(exists).toBe(true);

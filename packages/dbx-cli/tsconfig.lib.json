@@ -13,6 +13,7 @@
     "firebase-api-manifest/**",
     "firestore-indexes/**",
     "firestore-query-manifest/**",
+    "generate-docs-manifest/**",
     "generate-firestore-indexes/**",
     "generate-mcp-manifest/**",
     "generate-notification-manifest/**",

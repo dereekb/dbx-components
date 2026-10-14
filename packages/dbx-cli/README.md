@@ -622,23 +622,31 @@ It runs the same rules as the `dbx_notification_m_validate_app` MCP tool, over t
 |---|---|---|
 | A template type has a message factory but no info (or the info isn't in the info record) | `NOTIF_TEMPLATE_FACTORY_ORPHAN`, `NOTIF_TEMPLATE_INFO_MISSING`, `NOTIF_TEMPLATE_INFO_NOT_IN_RECORD`, `NOTIF_TEMPLATE_RECORD_MISSING` / `_NOT_WIRED` | error |
 | A template type has an info but no message factory | `NOTIF_TEMPLATE_FACTORY_MISSING`, `NOTIF_TEMPLATE_FACTORY_ARRAY_MISSING`, `NOTIF_TEMPLATE_FACTORY_NOT_WIRED` | error |
-| A task type in `validate` has no handler | `NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER`, `NOTIF_TASK_NOT_REGISTERED_IN_SERVICE`, `NOTIF_TASK_HANDLER_NAME_MISMATCH` | error |
+| A task type in `validate` (directly or inside the app's own `ALL_*_NOTIFICATION_TASK_TYPES` arrays it spreads or names, at any depth) has no handler | `NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER`, `NOTIF_TASK_NOT_REGISTERED_IN_SERVICE`, `NOTIF_TASK_HANDLER_NAME_MISMATCH` | error |
+| An upstream task-type aggregate in `validate` (`...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`, `...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES`, or one of them as `validate` itself), directly or inside one of the app's own `ALL_*_NOTIFICATION_TASK_TYPES` arrays it spreads or names (`validate: ALL_NOTIFICATION_TASK_TYPES`, also under an alias, as a namespace member or through a local `const`), has no reachable upstream handler (`storageFileProcessingNotificationTaskHandler(...)`, `formSpaceSubmissionNotificationTaskHandler(...)`) | `NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED` | error |
+| An upstream handler is reachable from `handlers`, but that service's `validate` doesn't list its aggregate, so startup no longer fails if the handler is removed (skipped when the scan can't read every value of `validate`) | `NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE` | warning |
 | A factory returns `emailContent` / `textContent` / `notificationSummaryContent` for a delivery method the info's explicit `userConfigurableDeliveryMethods` and `forcedDeliveryMethods` leave out (an info that only forces methods is only sent by them) | `NOTIF_TEMPLATE_FACTORY_UNLISTED_DELIVERY_METHOD` | warning |
 | An info forces texts, or forces a method while `onlySendToExplicitlyEnabledRecipients` is `true` | `NOTIF_TEMPLATE_FORCED_TEXT_DELIVERY_METHOD`, `NOTIF_TEMPLATE_FORCED_DELIVERY_METHOD_EXPLICIT_OPT_IN` | error |
+| A NotificationTaskBot wiring gap: the script registry, the NTBR handler, scripts vs. processors, the repair cron, the `ntb` rule, the `nat` index (only checked for apps that use bots) | `NOTIF_TASK_BOT_*` | error / warning |
 
 …plus the rest of the `dbx_notification_m_validate_app` rule set (`dbx_explain_rule <CODE>` describes any
 code). The delivery-method check is a heuristic: it scans the factory's own source plus the function
 its `factory:` names, so content built in a shared helper is missed.
 
 The runtime startup checks in `@dereekb/firebase-server/model` stay in place as the backstop. They
-also cover what a static scan can't see: types from upstream `@dereekb/*` packages, factories
-registered through `NOTIFICATION_TEMPLATE_SERVICE_DEFAULTS_OVERRIDE_TOKEN`, and wiring built through
+also cover what a static scan can't see: upstream task types other than the StorageFile, FormSpace and
+NotificationTaskBot ones, task services whose `handlers` the tracer can't follow completely, a `validate` that is
+neither an array literal nor an aggregate the scan can pin (one of the app's component aggregates or an upstream one, named directly, under an alias, as a namespace member or through a local `const`), factories registered through `NOTIFICATION_TEMPLATE_SERVICE_DEFAULTS_OVERRIDE_TOKEN`, and wiring built through
 indirection the tracer can't follow.
 
 ### What it scans
 
 - component: `<component-dir>/src/lib/model/notification/**`
-- API: `<api-dir>/src/app/common/model/notification/**` and `<api-dir>/src/app/common/firebase/**`
+- API: `<api-dir>/src/app/common/model/notification/**`, `<api-dir>/src/app/common/firebase/**` and
+  `<api-dir>/src/app/function/notification/**` (where the notification schedule runs the
+  NotificationTaskBot repair sweep)
+- workspace: `firestore.rules` and `firestore.indexes.json`, for the NotificationTaskBot `ntb` rule
+  and `ntb.nat` index checks (see `--rules-file` / `--indexes-file`)
 
 Only non-spec `.ts` files are read.
 
@@ -652,6 +660,8 @@ Only non-spec `.ts` files are read.
 | `--cli-output=<file.ts>` | optional; also emit the TypeScript notification manifest the CLI's [notification commands](#notifications) read |
 | `--project=<name>` | optional, for `--cli-output`; names the emitted constants (`demo-cli` → `DEMO_CLI_NOTIFICATION_MANIFEST`, default `CLI_`) |
 | `--app=<name>` | optional; stamped as `app.name`, defaults to the basename of `--api-dir` |
+| `--rules-file=<path>` | optional; the Firestore rules read for the NotificationTaskBot `ntb` rule check, default `firestore.rules` |
+| `--indexes-file=<path>` | optional; the Firestore indexes read for the NotificationTaskBot `ntb.nat` index check, default `firestore.indexes.json` |
 | `--strict` | treat every warning as blocking |
 | `--allow-warning=<CODE>` | repeatable; never block on that warning code (error codes can't be allowed) |
 | `--max-warnings=<N>` | block when the non-allowed warnings exceed N |
@@ -672,7 +682,12 @@ registration state), then `errorCount`, `warningCount` and `findings`
 (`{ code, severity, message, side, file }`). Template entries include
 `notificationModelIdentity`, `targetModelIdentity`, `userConfigurableDeliveryMethods` (with a
 `default` / `declared` / `unresolved` source), `forcedDeliveryMethods` (with the same kind of source) and
-`factoryContentDeliveryMethods`. Type it with
+`factoryContentDeliveryMethods`. The `taskBot` section lists the NotificationTaskBot wiring: the
+script registries (with `wired`), the `appNotificationTaskBotScriptConfigService(...)` calls, the NTBR
+handlers (with `reachable`, their processors and `validate`), `taskTypesInTaskServiceValidate`,
+`repairCalls`, and one entry per script type with its config, `dataTypeSource`, `inRegistry`,
+`inHandlerValidate` and processors; apps without bots get `inUse: false` and empty lists. The
+`--cli-output` module does not include it. Type it with
 `notificationManifest.NotificationManifest` from `@dereekb/dbx-cli/validate`. Nothing reads it at
 runtime.
 
@@ -687,7 +702,10 @@ Add an nx target to the API project and list it in `build.dependsOn`:
   "inputs": [
     "{workspaceRoot}/components/<app>-firebase/src/lib/model/notification/**/*.ts",
     "{workspaceRoot}/apps/<app>-api/src/app/common/model/notification/**/*.ts",
-    "{workspaceRoot}/apps/<app>-api/src/app/common/firebase/**/*.ts"
+    "{workspaceRoot}/apps/<app>-api/src/app/common/firebase/**/*.ts",
+    "{workspaceRoot}/apps/<app>-api/src/app/function/notification/**/*.ts",
+    "{workspaceRoot}/firestore.rules",
+    "{workspaceRoot}/firestore.indexes.json"
   ],
   "options": {
     "command": "npx dbx-cli-generate-notification-manifest --component-dir=components/<app>-firebase --api-dir=apps/<app>-api --output=dist/apps/<app>-api/notification.manifest.json",
@@ -708,3 +726,59 @@ cover `serve`. The dbx-components workspace itself runs the locally built bundle
 (`node dist/packages/dbx-cli/generate-notification-manifest/main.js`) with a `dependsOn` on
 `dbx-cli:build`; see `apps/demo-api/project.json`. `dbx_artifact_file_convention` for
 `notification-template` / `notification-task` shows the same target with your directories filled in.
+
+## Build-time docs manifest
+
+`dbx-cli-generate-docs-manifest` builds `docs.manifest.json` for an API app's audience-gated docs: the markdown under
+`apps/<app>-api/src/assets/docs/` that the `@dereekb/firebase-server` docs API (`/api/docs`) and the MCP documentation
+tools serve. The server only serves docs listed in the manifest, refuses any whose bytes no longer match it, and shows
+each doc only to callers holding one of its audiences.
+
+Each doc declares its audience in frontmatter. `any` means any authenticated caller; every other audience must be in
+`--audiences`:
+
+```md
+---
+title: Rotating keys
+description: How to rotate the signing keys.
+tags: [ops, security]
+audience: [admin]
+---
+# Rotating keys
+## Before you start
+```
+
+Sections are the H2/H3 headings (outside code fences), with slugged ids a client can read one at a time.
+
+### Flags and exit codes
+
+| Flag | |
+|---|---|
+| `--docs-dir=<path>` | (required) the docs folder |
+| `--output=<path>` | (required) the manifest to write. Put it next to `mcp.manifest.json`, never under `dist/.../assets/` |
+| `--audiences=<a,b>` | (required) the audience allow-list, recorded in the manifest |
+| `--app=<name>` | app name stamped onto the manifest |
+| `--default-audience=<a,b>` | audience for docs without one (there is no implicit default) |
+| `--strict` | treat warnings (unknown frontmatter keys, a missing title) as errors |
+| `--allow-empty` | allow a folder with no docs yet (the docs tools stay hidden) |
+
+A doc without an audience, an unknown audience, a non-`.md` file, a dotfile (Firebase drops `**/.*` at deploy) or a
+symlink that leaves the folder is an error: the generator exits 1 and deletes any stale manifest.
+
+### Adopting it in an app
+
+```json
+"generate-docs-manifest": {
+  "executor": "nx:run-commands",
+  "outputs": ["{workspaceRoot}/dist/apps/<app>-api/docs.manifest.json"],
+  "inputs": ["{workspaceRoot}/apps/<app>-api/src/assets/docs/**/*"],
+  "options": {
+    "command": "npx dbx-cli-generate-docs-manifest --docs-dir=apps/<app>-api/src/assets/docs --output=dist/apps/<app>-api/docs.manifest.json --app=<app>-api --audiences=admin,user",
+    "cwd": "{workspaceRoot}"
+  }
+}
+```
+
+List it in both `build.dependsOn` and `serve.dependsOn`: unlike the notification manifest, the server reads this one at
+runtime. Never point `docsRoot` at (or under) the download module's `secureAssetsRoot`, or every doc could be minted as a
+signed download regardless of its audience.

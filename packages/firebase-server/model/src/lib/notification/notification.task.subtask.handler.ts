@@ -278,6 +278,8 @@ export interface NotificationTaskSubtaskNotificationTaskHandlerConfig<
 > {
   /**
    * List of all target values for the app. Used for verifying that all target values are handled.
+   *
+   * The handler factory throws at creation when a target listed here has no processor in {@link processors}.
    */
   readonly validate?: NotificationTaskSubtaskTarget[];
   /**
@@ -317,7 +319,8 @@ export interface NotificationTaskSubtaskNotificationTaskHandlerConfig<
  * such as storage file processing or other async workflows.
  *
  * @param factoryConfig - Shared configuration including the input function, cleanup logic, and task type.
- * @returns A factory function that produces {@link NotificationTaskServiceTaskHandlerConfig} entries.
+ * @returns A factory function that produces {@link NotificationTaskServiceTaskHandlerConfig} entries. It throws when a
+ * target listed in `validate` has no processor, or a processor's flow is invalid.
  *
  * @example
  * ```ts
@@ -373,6 +376,12 @@ export function notificationTaskSubtaskNotificationTaskHandlerFactory<
       const { target } = processorConfig;
       processors[target] = processorFunctionForConfig(processorConfig);
     });
+
+    const missingProcessorTargets = (subtaskHandlerConfig.validate ?? []).filter((target) => processors[target] == null);
+
+    if (missingProcessorTargets.length) {
+      throw new Error(`${subtaskHandlerName}(): no processor is configured for these targets listed in validate: ${missingProcessorTargets.join(', ')}.`);
+    }
 
     /**
      * Structure is similar to notificationTaskService(), but contained to handle the subtasks.

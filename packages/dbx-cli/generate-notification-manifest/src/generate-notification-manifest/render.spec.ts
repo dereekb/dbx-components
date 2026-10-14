@@ -138,6 +138,7 @@ describe('renderNotificationManifest', () => {
           sourceFile: 'src/lib/model/notification/notification.task.ts'
         }
       ],
+      taskBot: { inUse: false, registries: [], registryWirings: [], handlers: [], taskTypesInTaskServiceValidate: false, repairCalls: [], scripts: [] },
       errorCount: 0,
       warningCount: 0,
       findings: []
@@ -173,6 +174,31 @@ describe('cliNotificationManifestFromManifest', () => {
     const { manifest } = render();
     const cliManifest = cliNotificationManifestFromManifest({ templates: [], tasks: [...manifest.tasks, { ...manifest.tasks[0], typeCode: undefined }] });
     expect(cliManifest.tasks.map((x) => x.type)).toEqual(['E']);
+  });
+
+  it('leaves the NotificationTaskBot section out of the CLI manifest', () => {
+    const { manifest } = render();
+    const script: notificationManifest.NotificationManifest['taskBot']['scripts'][number] = {
+      scriptType: 'demo_ping',
+      symbolName: 'DEMO_PING_NOTIFICATION_TASK_BOT_SCRIPT_TYPE',
+      side: 'component',
+      sourceFile: 'src/lib/model/notification/notification.taskbot.ts',
+      hasConfig: true,
+      configSymbolName: 'DEMO_PING_NOTIFICATION_TASK_BOT_SCRIPT_CONFIG',
+      humanName: 'Demo Ping',
+      description: undefined,
+      groupKey: undefined,
+      allowOwnerOptOut: undefined,
+      dataTypeSource: 'none',
+      inRegistry: true,
+      inHandlerValidate: true,
+      hasProcessor: true,
+      processorLabels: ['demoPingNotificationTaskBotScriptProcessor(context)']
+    };
+    const withBots: notificationManifest.NotificationManifest = { ...manifest, taskBot: { ...manifest.taskBot, inUse: true, scripts: [script] } };
+    const cliManifest = cliNotificationManifestFromManifest(withBots);
+    expect(Object.keys(cliManifest)).toEqual(['tasks', 'templates']);
+    expect(cliManifest).toEqual(cliNotificationManifestFromManifest(manifest));
   });
 });
 

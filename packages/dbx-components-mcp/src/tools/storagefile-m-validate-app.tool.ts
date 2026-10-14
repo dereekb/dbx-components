@@ -29,7 +29,7 @@ const DBX_STORAGEFILE_M_VALIDATE_APP_TOOL: Tool = {
     '',
     'For purposes that declare processing subtasks (a `<Foo>ProcessingSubtask` union alias and at least one `*_PROCESSING_SUBTASK` constant), the validator additionally verifies a `StorageFileProcessingPurposeSubtaskProcessorConfig` whose `target:` references the purpose, with a `flow:` array that covers every declared subtask, and that the surrounding `storageFileProcessingNotificationTaskHandler({ processors })` call exists.',
     '',
-    'Cross-file tracing follows direct entries and spread (`...workerFileInitializers`) through every `.ts` file under `src/lib/model/storagefile/` on the component side and `src/app/common/model/storagefile/` + `src/app/common/model/notification/` on the API side.',
+    'Cross-file tracing follows direct entries and spread (`...workerFileInitializers`) through every `.ts` file under `src/lib/model/storagefile/` on the component side and `src/app/common/model/storagefile/` + `src/app/common/model/notification/` on the API side. `storageFileInitializeFromUploadService(...)` and `storageFileProcessingNotificationTaskHandler(...)` are recognized when called directly, through an `@dereekb/*` import alias, or as an `@dereekb/*` namespace member.',
     '',
     'External identifiers imported from `@dereekb/*` are trusted — spreads and `type:` / `target:` references that resolve into upstream packages do not produce orphan/unresolved errors.',
     '',

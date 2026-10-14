@@ -97,7 +97,6 @@ import {
   type StorageFileGroupId,
   type UpdateStorageFileGroupParams,
   updateStorageFileGroupParamsType,
-  type StorageFileGroupEmbeddedFile,
   type DownloadStorageFileOptions,
   type CreateStorageFileSignedUploadUrlParams,
   type CreateStorageFileSignedUploadUrlResult,
@@ -131,7 +130,7 @@ import {
   createStorageFileGroupInputError,
   storageFileGroupQueuedForInitializationError
 } from './storagefile.error';
-import { addMilliseconds, type ContentTypeMimeType, expirationDetails, isPast, isThrottled, type Maybe, mergeSlashPaths, type Milliseconds, ModelRelationUtility, MS_IN_MINUTE, performAsyncTasks, runAsyncTasksForValues, type SlashPathFile, unixDateTimeSecondsNumberFromDate } from '@dereekb/util';
+import { addMilliseconds, type ContentTypeMimeType, expirationDetails, isPast, isThrottled, type Maybe, mergeSlashPaths, type Milliseconds, MS_IN_MINUTE, performAsyncTasks, runAsyncTasksForValues, type SlashPathFile, unixDateTimeSecondsNumberFromDate } from '@dereekb/util';
 import { type HttpsError } from 'firebase-functions/https';
 import { findMinDate } from '@dereekb/date';
 import { addDays } from 'date-fns';
@@ -655,7 +654,8 @@ export function updateStorageFileFactory(context: BaseStorageFileServerActionsCo
  * Factory for the `updateStorageFileGroup` action.
  *
  * Updates embedded file entries within a {@link StorageFileGroup} document inside a
- * Firestore transaction, merging display name changes into the existing entries.
+ * Firestore transaction, merging display name changes into the existing entries, and flags the group
+ * for content regeneration when a display name changes.
  *
  * @param context - The storage file server actions context.
  * @returns An async transform-and-validate function that updates a StorageFileGroup document.
@@ -671,26 +671,8 @@ export function updateStorageFileGroupFactory(context: StorageFileServerActionsC
         const storageFileGroupDocumentInTransaction = storageFileGroupCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(storageFileGroupDocument);
         const storageFileGroup = await assertSnapshotData(storageFileGroupDocumentInTransaction);
 
-        let f: Maybe<StorageFileGroupEmbeddedFile[]> = undefined;
-
-        // update entries
-        if (entries?.length) {
-          f = ModelRelationUtility.updateCollection(storageFileGroup.f, entries as StorageFileGroupEmbeddedFile[], {
-            readKey: (x) => x.s,
-            merge: (existing, update) => {
-              const n = update.n === undefined ? existing.n : update.n;
-
-              return {
-                ...existing,
-                n
-              };
-            }
-          });
-        }
-
-        const updateTemplate: Partial<StorageFileGroup> = {
-          f
-        };
+        // update entries. Flags regeneration when a display name changes.
+        const updateTemplate: Partial<StorageFileGroup> = entries?.length ? calculateStorageFileGroupEmbeddedFileUpdate({ storageFileGroup, update: entries }) : {};
 
         await storageFileGroupDocumentInTransaction.update(updateTemplate);
       });
@@ -1697,6 +1679,9 @@ export function syncAllFlaggedStorageFilesWithGroupsFactory(context: StorageFile
  * Regenerates the content of a single {@link StorageFileGroup}, including building a ZIP
  * archive from the group's embedded files and updating the group's content metadata.
  *
+ * The group's `re` flag is honored as a request and rebuilds the zip even if every embedded file was already zipped,
+ * while `force` rebuilds unconditionally. A request made while the zip is already being built stays flagged for the next run.
+ *
  * @param context - The storage file server actions context.
  * @returns An async transform-and-validate function that regenerates a StorageFileGroup's content.
  */
@@ -1741,7 +1726,12 @@ export function regenerateStorageFileGroupContentFactory(context: StorageFileSer
         if (regenerateZip) {
           // check that the storageFile exists, and if it doesn't, create a new one
           if (existingZipStorageFilePair?.data) {
-            // flag it for processing again
+            // a build that is already running may have read the embedded files before this request. Keep the request so the next regeneration rebuilds after it finishes.
+            if (existingZipStorageFilePair.data.ps === StorageFileProcessingState.PROCESSING) {
+              updateTemplate.re = true;
+            }
+
+            // flag it for processing again (also recovers a stuck build)
             await processStorageFileInTransaction({ params: { processAgainIfSuccessful: true }, storageFileDocument: existingZipStorageFilePair.document, storageFile: existingZipStorageFilePair.data }, transaction);
           } else {
             const zipStorageFile = storageService.file(storageFileGroupZipFileStoragePath(storageFileGroupDocument.id));

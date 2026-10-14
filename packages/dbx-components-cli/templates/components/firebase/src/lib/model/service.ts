@@ -45,6 +45,11 @@ import {
   type NotificationLoggedEventDayPageDocument,
   type NotificationLoggedEventDayPageDocumentData,
   notificationLoggedEventDayPageFirestoreCollectionGroup,
+  type NotificationTaskBotFirestoreCollection,
+  notificationTaskBotFirestoreCollection,
+  type NotificationTaskBot,
+  type NotificationTaskBotDocument,
+  type NotificationTaskBotRoles,
   type NotificationLoggedEventDayPageFirestoreCollectionGroup,
   type SystemState,
   type SystemStateDocument,
@@ -113,6 +118,7 @@ export abstract class APP_CODE_PREFIXFirestoreCollections implements FirestoreCo
   abstract readonly notificationLoggedEventDayCollectionGroup: NotificationLoggedEventDayFirestoreCollectionGroup;
   abstract readonly notificationLoggedEventDayPagedItemsCollectionFactory: NotificationLoggedEventDayPagedItemsFirestoreCollectionFactory;
   abstract readonly notificationLoggedEventDayPageCollectionGroup: NotificationLoggedEventDayPageFirestoreCollectionGroup;
+  abstract readonly notificationTaskBotCollection: NotificationTaskBotFirestoreCollection;
   abstract readonly storageFileCollection: StorageFileFirestoreCollection;
   abstract readonly storageFileGroupCollection: StorageFileGroupFirestoreCollection;
   // @dbx-addon:oidc:fb-service:abstract
@@ -137,6 +143,7 @@ export function makeAPP_CODE_PREFIXFirestoreCollections(firestoreContext: Firest
     notificationLoggedEventDayCollectionGroup: notificationLoggedEventDayFirestoreCollectionGroup(firestoreContext),
     notificationLoggedEventDayPagedItemsCollectionFactory: notificationLoggedEventDayPagedItemsCollectionFactory(firestoreContext),
     notificationLoggedEventDayPageCollectionGroup: notificationLoggedEventDayPageFirestoreCollectionGroup(firestoreContext),
+    notificationTaskBotCollection: notificationTaskBotFirestoreCollection(firestoreContext),
     storageFileCollection: storageFileFirestoreCollection(firestoreContext),
     storageFileGroupCollection: storageFileGroupFirestoreCollection(firestoreContext)
     // @dbx-addon:oidc:fb-service:factory
@@ -237,6 +244,13 @@ export const notificationLoggedEventDayPageFirebaseModelServiceFactory = firebas
   getFirestoreCollection: (c) => c.app.notificationLoggedEventDayPageCollectionGroup
 });
 
+export const notificationTaskBotFirebaseModelServiceFactory = firebaseModelServiceFactory<APP_CODE_PREFIXFirebaseContext, NotificationTaskBot, NotificationTaskBotDocument, NotificationTaskBotRoles>({
+  roleMapForModel: function (output: FirebasePermissionServiceModel<NotificationTaskBot, NotificationTaskBotDocument>, context: APP_CODE_PREFIXFirebaseContext, model: NotificationTaskBotDocument): PromiseOrValue<GrantedRoleMap<NotificationTaskBotRoles>> {
+    return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only
+  },
+  getFirestoreCollection: (c) => c.app.notificationTaskBotCollection
+});
+
 export const storageFileFirebaseModelServiceFactory = firebaseModelServiceFactory<APP_CODE_PREFIXFirebaseContext, StorageFile, StorageFileDocument, StorageFileRoles>({
   roleMapForModel: function (output: FirebasePermissionServiceModel<StorageFile, StorageFileDocument>, context: APP_CODE_PREFIXFirebaseContext, model: StorageFileDocument): PromiseOrValue<GrantedRoleMap<StorageFileRoles>> {
     return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only
@@ -273,6 +287,7 @@ export const APP_CODE_PREFIX_FIREBASE_MODEL_SERVICE_FACTORIES = {
   notificationWeek: notificationWeekFirebaseModelServiceFactory,
   notificationLoggedEventDay: notificationLoggedEventDayFirebaseModelServiceFactory,
   notificationLoggedEventDayPage: notificationLoggedEventDayPageFirebaseModelServiceFactory,
+  notificationTaskBot: notificationTaskBotFirebaseModelServiceFactory,
   storageFile: storageFileFirebaseModelServiceFactory,
   storageFileGroup: storageFileGroupFirebaseModelServiceFactory
   // @dbx-addon:oidc:fb-service:factories-map

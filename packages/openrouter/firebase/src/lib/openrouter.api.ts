@@ -12,12 +12,22 @@ import {
   type OnCallQueryModelRequestParams,
   type OnCallQueryModelResult,
   callModelFirebaseFunctionMapFactory,
-  inferredTargetModelParamsType
+  inferredTargetModelParamsType,
+  onCallQueryModelRequestParamsType
 } from '@dereekb/firebase';
 import { clearable } from '@dereekb/model';
 import { type Maybe } from '@dereekb/util';
 import { type OpenRouterPromptResolutionSource, type OpenRouterPromptVersionNumber, type OpenRouterResolvedPrompt } from '@dereekb/openrouter';
-import { type OpenRouterPrompt, type OpenRouterPromptState, type OpenRouterPromptTypes } from './openrouter.model';
+import { type OpenRouterPrompt, OpenRouterPromptState, type OpenRouterPromptTypes } from './openrouter.model';
+
+// MARK: State
+/**
+ * ArkType validator for {@link OpenRouterPromptState}.
+ *
+ * A state is stored and queried by its number, so a value outside the enum, such as the name `"ACTIVE"`, is refused with
+ * the allowed numbers listed rather than quietly matching no prompt.
+ */
+export const openRouterPromptStateType = /* @__PURE__ */ type.enumerated(OpenRouterPromptState.DRAFT, OpenRouterPromptState.ACTIVE, OpenRouterPromptState.ARCHIVED);
 
 // MARK: Update
 /**
@@ -58,7 +68,7 @@ export const updateOpenRouterPromptParamsType = /* @__PURE__ */ inferredTargetMo
     'name?': clearable('string'),
     'description?': clearable('string'),
     'tags?': clearable('string[]'),
-    'state?': clearable('number'),
+    'state?': clearable(openRouterPromptStateType),
     'activeVersion?': clearable('number'),
     'storeLocked?': clearable('boolean')
   })
@@ -239,6 +249,13 @@ export interface QueryOpenRouterPromptsParams extends OnCallQueryModelRequestPar
    */
   readonly state?: Maybe<OpenRouterPromptState>;
 }
+
+/**
+ * ArkType validator for {@link QueryOpenRouterPromptsParams}.
+ */
+export const queryOpenRouterPromptsParamsType = /* @__PURE__ */ onCallQueryModelRequestParamsType.merge({
+  'state?': clearable(openRouterPromptStateType)
+}) as Type<QueryOpenRouterPromptsParams>;
 
 // MARK: Read
 /**

@@ -33,6 +33,8 @@ function makeMcpConfig(overrides: Partial<McpModuleConfig> = {}): McpModuleConfi
     mcpUrl: 'https://example.test/mcp',
     serverName: 'test-mcp',
     serverVersion: '0.0.1',
+    // These specs pin the legacy per-method surface; mcp.server.factory.compact.spec.ts covers the compact one.
+    tools: { compact: false, methodTools: true },
     ...overrides
   };
 }
@@ -48,7 +50,7 @@ function makeFactory(apiDetails: ModelApiDetailsResult, options: { config?: Part
   return new McpServerFactoryService(makeMcpConfig(options.config), makeDispatchService(apiDetails, options.dispatch ?? (() => ({ ok: true }))), undefined, options.roleReader);
 }
 
-type WireToolEntry = { name: string; description: string; inputSchema: object; outputSchema?: object; annotations?: { readOnlyHint?: boolean; destructiveHint?: boolean } };
+type WireToolEntry = { name: string; description: string; inputSchema: object; outputSchema?: object; annotations?: { readOnlyHint?: boolean; destructiveHint?: boolean; openWorldHint?: boolean } };
 
 type McpTestContext = McpSpecDriverContext;
 
@@ -597,7 +599,8 @@ describe('McpServerFactoryService tool annotations', () => {
   it('advertises read/write annotations on the static tools/list wire path', async () => {
     const apiDetails = makeApiDetails([
       { model: 'guestbook', call: 'read' },
-      { model: 'guestbook', call: 'update' }
+      { model: 'guestbook', call: 'update' },
+      { model: 'guestbook', call: 'create' }
     ]);
     const tools = await listToolEntries(makeFactory(apiDetails));
 
@@ -607,7 +610,48 @@ describe('McpServerFactoryService tool annotations', () => {
 
     const updateTool = tools.find((t) => t.name === 'guestbook-update');
     expect(updateTool?.annotations).toEqual({ readOnlyHint: false, destructiveHint: true });
-    expect(updateTool?.description.startsWith('[WRITE] ')).toBe(true);
+    expect(updateTool?.description.startsWith('[DESTRUCTIVE] ')).toBe(true);
+
+    const createTool = tools.find((t) => t.name === 'guestbook-create');
+    expect(createTool?.annotations).toEqual({ readOnlyHint: false, destructiveHint: false });
+    expect(createTool?.description.startsWith('[WRITE] ')).toBe(true);
+  });
+
+  it('advertises the worst case over escalating params with the base marker', async () => {
+    const apiDetails = makeApiDetails([{ model: 'widget', call: 'invoke', specifier: 'check', mcp: { destructive: false, escalatingParams: { probe: { openWorld: true } } } }]);
+    const tools = await listToolEntries(makeFactory(apiDetails));
+    expect(tools[0]?.annotations).toEqual({ readOnlyHint: false, destructiveHint: false, openWorldHint: true });
+    expect(tools[0]?.description.startsWith('[WRITE] ')).toBe(true);
+  });
+
+  it('drops a read-only tool that declares escalating params with a boot error', async () => {
+    const errorSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+    const apiDetails = makeApiDetails([
+      { model: 'widget', call: 'read', mcp: { escalatingParams: { purge: { destructive: true } } } },
+      { model: 'widget', call: 'query' }
+    ]);
+    const tools = await listToolEntries(makeFactory(apiDetails));
+    expect(tools.map((t) => t.name)).not.toContain('widget-read');
+    expect(tools.map((t) => t.name)).toContain('widget-query');
+    expect(errorSpy.mock.calls.some((call) => String(call[0]).includes('Dropped MCP tool'))).toBe(true);
+    errorSpy.mockRestore();
+  });
+
+  it('keeps the token tool wire entry unchanged', async () => {
+    const minter = () => ({ claimCode: 'c', claimExpiresAt: '', expiresAt: '', scope: '' });
+    const factory = new McpServerFactoryService(
+      makeMcpConfig(),
+      makeDispatchService(makeApiDetails([{ model: 'widget', call: 'read' }]), () => ({ ok: true })),
+      undefined,
+      () => new Set([AUTH_ADMIN_ROLE]),
+      undefined,
+      undefined,
+      undefined,
+      minter as any
+    );
+    const token = (await listToolEntries(factory, { auth: { uid: 'user-1', token: { uid: 'user-1' } } as any })).find((t) => t.name === factory.compactToolNames.token);
+    expect(token?.description.startsWith('[WRITE] Mints')).toBe(true);
+    expect(token?.annotations).toEqual({ readOnlyHint: false, destructiveHint: true });
   });
 
   it('carries annotations through the dynamic toolDetails wire path', async () => {

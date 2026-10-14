@@ -35,6 +35,8 @@ export const notificationUserUpdate: DemoUpdateModelFunction<UpdateNotificationU
 export const notificationUserResync: DemoUpdateModelFunction<ResyncNotificationUserParams, ResyncNotificationUserResult> = withApiDetails({
   inputType: resyncNotificationUserParamsType,
   mcp: {
+    // Additive: re-syncs derived recipient data.
+    destructive: false,
     visibility: { requiredRoles: [AUTH_ADMIN_ROLE] }
   },
   fn: async (request) => {
@@ -58,9 +60,23 @@ export const notificationUserResync: DemoUpdateModelFunction<ResyncNotificationU
  *
  * Requires only `read` on the NotificationUser, so a user can diagnose their own delivery without
  * being able to change anything. Dispatching a test message is opt-in via `sendProbe`.
+ *
+ * Deliberately declared `mcp: { readOnly: false }`: every run persists the result to the user's `hc`
+ * field (and spends the user's run allowance), and `sendProbe` dispatches a real test message. It stays
+ * a write method, so an agent never reaches it through the auto-approvable read tool. A plain run is
+ * additive (`destructive: false`) and goes through `demo_api_write`; a run that sets `sendProbe` is
+ * open-world and goes through `demo_api_destructive`.
  */
 export const notificationUserHealthCheck: DemoInvokeModelFunction<NotificationUserHealthCheckParams, NotificationUserHealthCheckResult> = withApiDetails({
   inputType: notificationUserHealthCheckParamsType,
+  mcp: {
+    // A write: each run persists its result to the user's `hc` field, and `sendProbe` sends a real test message.
+    readOnly: false,
+    // Additive: a plain run only reads the providers and records the result.
+    destructive: false,
+    // A real test message reaches outside the app, so a probe run goes through demo_api_destructive.
+    escalatingParams: { sendProbe: { openWorld: true } }
+  },
   fn: async (request) => {
     const { nest, auth: _auth, data } = request;
 
@@ -91,6 +107,10 @@ export const notificationUserHealthCheck: DemoInvokeModelFunction<NotificationUs
 export const notificationUserHealthCheckAutofix: DemoInvokeModelFunction<NotificationUserHealthCheckAutofixParams, NotificationUserHealthCheckAutofixResult> = withApiDetails({
   inputType: notificationUserHealthCheckAutofixParamsType,
   mcp: {
+    // Open-world: a fix changes Mailgun suppression state, which can override a recipient's choice.
+    openWorld: true,
+    // A write: a fix changes state at the delivery provider, and the re-check persists its result to `hc`.
+    readOnly: false,
     visibility: { requiredRoles: [AUTH_ADMIN_ROLE] }
   },
   fn: async (request) => {

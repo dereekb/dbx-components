@@ -184,6 +184,26 @@
     ]
   },
   {
+    "code": "HANDLER_MCP_READ_ONLY_UNSET",
+    "source": "dbx_model_api_validate_app",
+    "severity": "warning",
+    "title": "An `invoke` or custom-verb handler leaves `mcp.readOnly` unset, so MCP treats it as a write",
+    "whatItFlags": "An `invoke` or custom-verb handler leaves `mcp.readOnly` unset, so MCP treats it as a write.\nOnly `read`/`query` (read) and `create`/`update`/`delete` (write) infer the classification from\nthe call type. Every other call type resolves to \"unknown\", which the MCP module fails safe to a\nwrite: the method is only callable through the write tool (`<p>_api_write`), is advertised\n`destructiveHint: true`, and is dropped when the MCP module runs in `readOnly` mode. A pure-read\ninvoke that forgets the flag silently disappears from the read tool.",
+    "whenItApplies": "Every handler wired in the app's `invoke` (or custom-verb) map whose `withApiDetails({ ... })` declaration has no `mcp` block, or an `mcp` block without `readOnly`.",
+    "whenItDoesNotApply": "Handlers under `read`/`query`/`create`/`update`/`delete`, whose call type decides. Handlers the scan cannot follow back to a literal `withApiDetails({ ... })` — imported from an `@dereekb/*` package or from outside `src/app/function/`, built by a factory or inline, or whose config / `mcp` comes from a spread or a non-literal — are listed as not checked instead. Plain-function handlers without `withApiDetails` never become MCP tools.",
+    "canonicalFix": "Declare `mcp: { readOnly: true }` when the handler only reads, or `mcp: { readOnly: false }` when it writes (persists, sends, or calls out), with a short comment saying why.",
+    "seeAlso": [
+      {
+        "kind": "doc",
+        "target": "dbx__guide__invoke-mcp-builder"
+      },
+      {
+        "kind": "tool",
+        "target": "dbx_model_api_lookup"
+      }
+    ]
+  },
+  {
     "code": "HANDLER_NAMING_MISMATCH",
     "source": "dbx_model_api_validate_app",
     "severity": "error",
@@ -192,6 +212,22 @@
     "whenItApplies": "Every wired handler whose identifier does not match either the full form (`guestbookEntryUpdateInsert`) or the verb-omitted shorthand (`guestbookEntryInsert`) for its cell.",
     "whenItDoesNotApply": "Handlers intentionally aliased to satisfy backwards-compatibility on a public re-export — colocate the alias in the verb-map by name to keep the cell aligned.",
     "canonicalFix": "Rename the handler (or its verb-map binding) to one of the accepted names so the model/verb/specifier triplet is recoverable from the identifier alone."
+  },
+  {
+    "code": "MISSING_DESCRIPTION",
+    "source": "dbx_model_api_validate_app",
+    "severity": "warning",
+    "title": "A declared CRUD entry has no description, so its MCP tool and CLI command say nothing about what the call does",
+    "whatItFlags": "A declared CRUD entry has no description, so its MCP tool and CLI command say nothing about what the call does.\nThe description is built from two JSDoc summaries: the one on the entry's member in the\n`<Group>ModelCrudFunctionsConfig` type and the one on its params interface. With neither, MCP falls back to the\ngeneric `Performs the \"<verb>\" call on the \"<model>\" model.`, and an agent has to guess what the params mean\n(for example, that `guestbookEntry.delete` takes the guestbook and always removes the caller's own entry).",
+    "whenItApplies": "Every declared `<model>.<verb>.<specifier>` cell whose config member and params interface both lack a JSDoc summary. A JSDoc block holding only tags (such as `@dbxModelApiMcpResult`) has no summary. A params interface declared in another file is not read, the same as when the manifests are generated.",
+    "whenItDoesNotApply": "Standalone `<Group>FunctionTypeMap` entries, which are not reconciled.",
+    "canonicalFix": "Add a JSDoc summary above the entry's member in the `<Group>ModelCrudFunctionsConfig` type saying what the call does and what it acts on. The CLI's one-line command help reads only this one. A summary on the params interface also counts.",
+    "seeAlso": [
+      {
+        "kind": "tool",
+        "target": "dbx_model_api_lookup"
+      }
+    ]
   },
   {
     "code": "MISSING_HANDLER",
@@ -1969,14 +2005,192 @@
     ]
   },
   {
+    "code": "NOTIF_TASK_BOT_FIRESTORE_RULE_MISSING",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "warning",
+    "title": "`firestore.rules` has no `match /ntb/{...}` block for the NotificationTaskBot collection, or the file could not be read",
+    "whatItFlags": "`firestore.rules` has no `match /ntb/{...}` block for the NotificationTaskBot collection, or the file could not be read.",
+    "whenItApplies": "Apps that use bots, when a rules file is given (the tool and the manifest generator default to the workspace's `firestore.rules`).",
+    "whenItDoesNotApply": "Bots that are deliberately server-only: allowlist `notificationTaskBot` in `require-firestore-rule-for-service-model` and allow this warning.",
+    "canonicalFix": "Add `match /ntb/{notificationTaskBot} { allow get, list: if userClaimsIsSysAdmin(); }`. Keep it admin-only; owners read their opt-outs through `read:optOuts`.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "notification-task-bot-script"
+      },
+      {
+        "kind": "tool",
+        "target": "dbx_firestore_rules_scan"
+      }
+    ]
+  },
+  {
+    "code": "NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "error",
+    "title": "The app uses NotificationTaskBots, but no `notificationTaskBotRunNotificationTaskHandler(...)` is reachable from `notificationTaskService({ handlers })`. Every `NTBR` run fails until its task is deleted; when `validate` lists the NotificationTaskBot task types, `notificationTaskService()` also throws at startup",
+    "whatItFlags": "The app uses NotificationTaskBots, but no `notificationTaskBotRunNotificationTaskHandler(...)` is reachable from `notificationTaskService({ handlers })`. Every `NTBR` run fails until its task is deleted; when `validate` lists the NotificationTaskBot task types, `notificationTaskService()` also throws at startup.",
+    "whenItApplies": "Every app that uses bots (a script config, a registry, a registry service with an argument, an NTBR handler call, or the NotificationTaskBot task types in `validate`, directly or through a component aggregate). The `notificationTaskService(...)` and `notificationTaskBotRunNotificationTaskHandler(...)` calls are matched by name, through an `@dereekb/*` import alias, or as an `@dereekb/*` namespace member.",
+    "whenItDoesNotApply": "Apps without bots. Task services whose `handlers` the scanner can't follow completely (see `NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED`). The handler could be hidden there, and `notificationTaskService()`'s startup check still applies.",
+    "canonicalFix": "Add the handler (e.g. `<app>NotificationTaskBotRunNotificationTaskHandler(context)`) to the `handlers` of `notificationTaskService(...)`.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "notification-task-bot-script"
+      }
+    ]
+  },
+  {
+    "code": "NOTIF_TASK_BOT_NAT_INDEX_MISSING",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "error",
+    "title": "`firestore.indexes.json` has a `fieldOverrides` entry for `ntb.nat` that drops its COLLECTION / ASCENDING single-field index. The repair sweep's `notificationTaskBotsDueForRepairQuery` then fails with FAILED_PRECONDITION",
+    "whatItFlags": "`firestore.indexes.json` has a `fieldOverrides` entry for `ntb.nat` that drops its COLLECTION / ASCENDING single-field index. The repair sweep's `notificationTaskBotsDueForRepairQuery` then fails with FAILED_PRECONDITION.",
+    "whenItApplies": "Apps that use bots, when the indexes file is given and parses.",
+    "whenItDoesNotApply": "Indexes files without an `ntb.nat` override (the automatic single-field index covers the query), and missing or invalid files (the firebase_index cluster reports invalid JSON).",
+    "canonicalFix": "Remove that `fieldOverrides` entry, or add `{ \"queryScope\": \"COLLECTION\", \"order\": \"ASCENDING\" }` to its `indexes`.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "notification-task-bot-script"
+      },
+      {
+        "kind": "tool",
+        "target": "dbx_model_firebase_index_validate_app"
+      }
+    ]
+  },
+  {
+    "code": "NOTIF_TASK_BOT_PROCESSOR_DUPLICATE_TARGET",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "warning",
+    "title": "Two processors in one NTBR handler target the same script type. Processors are indexed by target, so only the last one runs",
+    "whatItFlags": "Two processors in one NTBR handler target the same script type. Processors are indexed by target, so only the last one runs.",
+    "whenItApplies": "Resolved processors in the same `notificationTaskBotRunNotificationTaskHandler(...)` call.",
+    "whenItDoesNotApply": "Processors whose target the scanner cannot resolve.",
+    "canonicalFix": "Remove the duplicate, or merge the two processors."
+  },
+  {
+    "code": "NOTIF_TASK_BOT_PROCESSOR_NOT_REGISTERED",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "error",
+    "title": "An NTBR handler processor targets a script type that is not in the script registry. The handler throws at startup",
+    "whatItFlags": "An NTBR handler processor targets a script type that is not in the script registry. The handler throws at startup.",
+    "whenItApplies": "Every resolved processor, when the registry resolves fully.",
+    "whenItDoesNotApply": "Registries holding entries the scanner cannot resolve, or configs imported from `@dereekb/*`.",
+    "canonicalFix": "Add a `NotificationTaskBotScriptConfig` for the script to `<APP>_NOTIFICATION_TASK_BOT_SCRIPT_CONFIGS`, or remove the processor.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "notification-task-bot-script"
+      }
+    ]
+  },
+  {
+    "code": "NOTIF_TASK_BOT_REGISTRY_MISSING",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "error",
+    "title": "The app uses NotificationTaskBots but declares no `notificationTaskBotScriptConfigRecord([...])` script registry",
+    "whatItFlags": "The app uses NotificationTaskBots but declares no `notificationTaskBotScriptConfigRecord([...])` script registry.",
+    "whenItApplies": "Apps with a `NotificationTaskBotScriptConfig`, or an NTBR handler (`notificationTaskBotRunNotificationTaskHandler`) that has processors.",
+    "whenItDoesNotApply": "Apps without bots. A registry built inline in `appNotificationTaskBotScriptConfigService(notificationTaskBotScriptConfigRecord([...]))` counts as declared.",
+    "canonicalFix": "Declare `export const <APP>_FIREBASE_NOTIFICATION_TASK_BOT_SCRIPT_CONFIG_RECORD = notificationTaskBotScriptConfigRecord(<APP>_NOTIFICATION_TASK_BOT_SCRIPT_CONFIGS);` in `src/lib/model/notification/notification.taskbot.ts`.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "notification-task-bot-script"
+      }
+    ]
+  },
+  {
+    "code": "NOTIF_TASK_BOT_REGISTRY_NOT_WIRED",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "error",
+    "title": "The NotificationTaskBot script registry is not passed to `appNotificationTaskBotScriptConfigService(...)`: there is no call, the call has no argument (an empty registry), or it passes another identifier. `notificationServerActions()` then falls back to an empty registry, and the NTBR handler throws at startup",
+    "whatItFlags": "The NotificationTaskBot script registry is not passed to `appNotificationTaskBotScriptConfigService(...)`: there is no call, the call has no argument (an empty registry), or it passes another identifier. `notificationServerActions()` then falls back to an empty registry, and the NTBR handler throws at startup.",
+    "whenItApplies": "Apps that declare a `notificationTaskBotScriptConfigRecord(...)` registry.",
+    "whenItDoesNotApply": "Wirings that pass a registry identifier imported from a trust-listed `@dereekb/*` module.",
+    "canonicalFix": "Add `AppNotificationTaskBotScriptConfigServiceRef` to the server actions context class, and set `appNotificationTaskBotScriptConfigService: appNotificationTaskBotScriptConfigService(<RECORD>)` in its factory (e.g. `action.module.ts`).",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "notification-task-bot-script"
+      }
+    ]
+  },
+  {
+    "code": "NOTIF_TASK_BOT_REPAIR_NOT_SCHEDULED",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "warning",
+    "title": "Nothing in the scanned API folders calls `repairAllNotificationTaskBots()`. Lost runs are never noticed, and their entries stall",
+    "whatItFlags": "Nothing in the scanned API folders calls `repairAllNotificationTaskBots()`. Lost runs are never noticed, and their entries stall.",
+    "whenItApplies": "Apps that use bots. The scan accepts `<x>.repairAllNotificationTaskBots(...)` and `repairAllNotificationTaskBotsFactory(...)`, also through an `@dereekb/*` import alias, as an `@dereekb/*` namespace member, or through a local `const` holding one of those.",
+    "whenItDoesNotApply": "Apps that run the repair from outside `src/app/common/model/notification/`, `src/app/common/firebase/` and `src/app/function/notification/` — allow the warning (`--allow-warning`) or move the call.",
+    "canonicalFix": "Call `request.nest.notificationActions.repairAllNotificationTaskBots()` from the notification schedule, after `sendQueuedNotifications`.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "notification-task-bot-script"
+      }
+    ]
+  },
+  {
+    "code": "NOTIF_TASK_BOT_SCRIPT_TRACE_UNRESOLVED",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "warning",
+    "title": "A NotificationTaskBot registry entry, a processor's `target` or the NTBR handler's `validate` can't be resolved statically, so the registry ↔ processor check skips it. The handler's runtime check at startup still applies",
+    "whatItFlags": "A NotificationTaskBot registry entry, a processor's `target` or the NTBR handler's `validate` can't be resolved statically, so the registry ↔ processor check skips it. The handler's runtime check at startup still applies.",
+    "whenItApplies": "Any unresolved registry entry, config `scriptType`, processor or handler `validate`. Script types, script configs (and arrays of them) and script groups are recognized by their `NotificationTaskBotScriptType`, `NotificationTaskBotScriptConfig` and `NotificationTaskBotScriptGroup` annotations, matched by name, through an `@dereekb/*` import alias (`import { type X as Y }`), or as a member of an `@dereekb/*` namespace import (`ns.X`).",
+    "whenItDoesNotApply": "Configs, processors and script types imported from `@dereekb/*`.",
+    "canonicalFix": "Declare script types and configs under `src/lib/model/notification/`. Give each processor `target: <SCRIPT_TYPE_CONSTANT>`, or a parameter that defaults to one. Build `validate` as `<CONFIGS>.map((x) => x.scriptType)`.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "notification-task-bot-script"
+      }
+    ]
+  },
+  {
+    "code": "NOTIF_TASK_BOT_SCRIPT_WITHOUT_PROCESSOR",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "error",
+    "title": "A NotificationTaskBot script type that is registered in the script registry, or listed in the NTBR handler's `validate`, has no processor in the handler's `processors`. The handler throws at startup",
+    "whatItFlags": "A NotificationTaskBot script type that is registered in the script registry, or listed in the NTBR handler's `validate`, has no processor in the handler's `processors`. The handler throws at startup.",
+    "whenItApplies": "Every registered or validated script type, when every processor in that handler resolves to a declared script type.",
+    "whenItDoesNotApply": "Handlers with a processor the scanner cannot resolve — that gap is reported as `NOTIF_TASK_BOT_SCRIPT_TRACE_UNRESOLVED` instead.",
+    "canonicalFix": "Add a processor with `target: <SCRIPT_TYPE>` (`dbx_artifact_scaffold` `notification-task-bot-script` emits one), or remove the script.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "notification-task-bot-script"
+      }
+    ]
+  },
+  {
+    "code": "NOTIF_TASK_BOT_TASK_TYPES_NOT_IN_VALIDATE",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "warning",
+    "title": "The NTBR handler is registered, but that `notificationTaskService({ validate })` does not list `...ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES`, so startup no longer fails if the handler is ever removed",
+    "whatItFlags": "The NTBR handler is registered, but that `notificationTaskService({ validate })` does not list `...ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES`, so startup no longer fails if the handler is ever removed.",
+    "whenItApplies": "Task services that reach the NTBR handler and whose `validate` the scanner can read completely (the same guard as `NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE`, which runs this check for the StorageFile and FormSpace task types).",
+    "whenItDoesNotApply": "Task services without `validate` (it is optional), or whose `validate` the scanner can't read completely: a value that is neither an array literal nor an aggregate the scan can pin (see `NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED`), an element that is not an identifier, a spread of an aggregate it doesn't know, or a spread of one of the app's own aggregates that holds something it can't place (an unreadable value, a spread it doesn't know, or an upstream name not imported from `@dereekb/*`). A `validate` that lists them inside a component `ALL_*_NOTIFICATION_TASK_TYPES` aggregate it spreads or names directly counts as listing them, and so does `validate: ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES` itself.",
+    "canonicalFix": "Add `...ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES` (from `@dereekb/firebase`) to `validate`. When `validate` names a component aggregate, add it to that aggregate, or write `validate: [...ALL_NOTIFICATION_TASK_TYPES, ...ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES]`. When it names an upstream aggregate (`validate: ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`), write `validate: [...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES, ...ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES]`.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "notification-task-bot-script"
+      }
+    ]
+  },
+  {
     "code": "NOTIF_TASK_HANDLER_NAME_MISMATCH",
     "source": "dbx_notification_m_validate_app",
     "severity": "error",
-    "title": "A `NotificationTaskServiceTaskHandlerConfig`'s binding name doesn't match its handler-array reference",
-    "whatItFlags": "A `NotificationTaskServiceTaskHandlerConfig`'s binding name doesn't match its handler-array reference.",
-    "whenItApplies": "When the handler is bound to a typed const but the local-variable name diverges from the array element name in `notificationTaskService({ handlers })`.",
-    "whenItDoesNotApply": "Inline / anonymous handler literals (no binding name to check against).",
-    "canonicalFix": "Rename the binding to match the handler-array element, or update the array reference to match the binding."
+    "title": "A typed `NotificationTaskServiceTaskHandlerConfig` is declared for a task type, but no `notificationTaskService({ handlers })` element leads to it",
+    "whatItFlags": "A typed `NotificationTaskServiceTaskHandlerConfig` is declared for a task type, but no `notificationTaskService({ handlers })` element leads to it.",
+    "whenItApplies": "Every declared task-type constant whose typed handler configs (`const <name>: NotificationTaskServiceTaskHandlerConfig<...> = { type: <constant>, ... }`) are all unreached: no `handlers` element leads to one, through the local variable it names or a function's return. The declaration is matched, not its name, so a reached config doesn't count for another config of the same name (in another function of the file, or in another file). Usually a rename drift (the element names something else) or a wrapper call missing from `handlers`.",
+    "whenItDoesNotApply": "Inline / anonymous handler literals (no binding to reach). A task type with no typed handler config at all (that is `NOTIF_TASK_NOT_REGISTERED_IN_SERVICE`).",
+    "canonicalFix": "Reference the handler config from `notificationTaskService({ handlers: [...] })`, directly or through the function that returns it: add the missing element or wrapper call, or rename the element or the binding so they agree."
   },
   {
     "code": "NOTIF_TASK_HANDLER_ORPHAN",
@@ -1993,9 +2207,9 @@
     "source": "dbx_notification_m_validate_app",
     "severity": "warning",
     "title": "The `handlers:` array spreads an identifier that doesn't resolve to a declared array binding",
-    "whatItFlags": "The `handlers:` array spreads an identifier that doesn't resolve to a declared array binding.",
-    "whenItApplies": "When `notificationTaskService({ handlers: [...spread] })` spreads an identifier that isn't a typed `NotificationTaskServiceTaskHandlerConfig[]` binding or trusted external.",
-    "whenItDoesNotApply": "Spreads from trust-listed `@dereekb/*` modules (e.g. `storageFileProcessingNotificationTaskHandler`).",
+    "whatItFlags": "The `handlers:` array spreads an identifier that doesn't resolve to a declared array binding.\nAn unresolved identifier also skips `NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED` (and `NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED`) for that task service.",
+    "whenItApplies": "When `notificationTaskService({ handlers: [...spread] })` spreads an identifier that isn't a typed `NotificationTaskServiceTaskHandlerConfig[]` binding or trusted external. A handler config counts when its `NotificationTaskServiceTaskHandlerConfig<...>` annotation is matched by name, through an `@dereekb/*` import alias (`import { type X as Y }`), or as a member of an `@dereekb/*` namespace import (`ns.X`). Each name is reported once per task service. A name is followed through what it is bound to where it is used: a local, a function its file declares, or a function it imports from another scanned API file; a parameter, or a function only another file declares, is not.",
+    "whenItDoesNotApply": "Identifiers from trust-listed `@dereekb/*` modules (e.g. `storageFileProcessingNotificationTaskHandler`), and values the scanner can't see through (a conditional, a local holding a function that can return from more than one place, a name with more than one declaration in scope where it is used, a property read, `obj.fn(...)`, `fn(...)(...)`, a namespace call into a module other than `@dereekb/*`), including the locals and functions that lead to them. Such a value only makes the upstream handler checks skip the service. A local or function the scanner already followed, reached again: the second visit reads what the first one found.",
     "canonicalFix": "Declare the spread as `const <name>: NotificationTaskServiceTaskHandlerConfig<...>[] = [...]` or import it from a trusted module."
   },
   {
@@ -2004,8 +2218,8 @@
     "severity": "error",
     "title": "A task type appears in `validate:` but has no matching `handlers:` registration",
     "whatItFlags": "A task type appears in `validate:` but has no matching `handlers:` registration.\n`notificationTaskService()` throws at startup for this.",
-    "whenItApplies": "When `notificationTaskService({ validate, handlers })` lists a task type in `validate:` that the `handlers:` traversal doesn't reach.",
-    "whenItDoesNotApply": "Tasks whose handler is provided by an upstream module (covered by the trust list).",
+    "whenItApplies": "When the first `notificationTaskService({ validate, handlers })` call lists a task type in `validate:`, directly or inside one of the app's own `ALL_*_NOTIFICATION_TASK_TYPES` aggregates it spreads (component aggregates nested in it are followed too), and no `NotificationTaskServiceTaskHandlerConfig` in the scanned API files declares it as its `type:`. A `validate` that names one of the app's component aggregates directly is read as a spread of it: `validate: ALL_NOTIFICATION_TASK_TYPES` imported from the component by name, under an alias (`validate: TASK_TYPES`) or as a namespace member (`validate: demoFirebase.ALL_NOTIFICATION_TASK_TYPES`), written directly or through a local `const` (`const validate = ALL_NOTIFICATION_TASK_TYPES; notificationTaskService({ validate, handlers })`), reads as `[...ALL_NOTIFICATION_TASK_TYPES]`.",
+    "whenItDoesNotApply": "Task types from upstream `@dereekb/*` modules. The StorageFile and FormSpace aggregates are checked by `NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED`, the NotificationTaskBot types by `NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED`; other upstream types are trusted. A task type whose handler config is declared but not reachable from `handlers:` (for the component's own task types that is `NOTIF_TASK_HANDLER_NAME_MISMATCH`). Values the scanner can't read: a `validate` that is neither an array literal nor an aggregate the scan can pin (see `NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED`), an element or spread that is not an identifier, and component aggregates outside `src/lib/model/notification/`. Task services after the first, and apps whose component declares no `NotificationTaskType` constant.",
     "canonicalFix": "Add the matching `NotificationTaskServiceTaskHandlerConfig` for the task and include it in `handlers:`."
   },
   {
@@ -2014,7 +2228,7 @@
     "severity": "warning",
     "title": "Multiple `notificationTaskService({ ... })` calls were found",
     "whatItFlags": "Multiple `notificationTaskService({ ... })` calls were found.",
-    "whenItApplies": "When more than one task-service factory exists in the API.",
+    "whenItApplies": "When more than one `notificationTaskService(...)` call exists in the API, counting aliased and namespaced calls (see `NOTIF_TASK_SERVICE_FACTORY_MISSING`).",
     "whenItDoesNotApply": "Apps that intentionally compose multiple task services (rare — only the first call's config takes effect at runtime).",
     "canonicalFix": "Consolidate the calls into one — the second call's handlers are unused at runtime."
   },
@@ -2024,7 +2238,7 @@
     "severity": "error",
     "title": "A declared `*_NOTIFICATION_TASK_TYPE` is not present in any `ALL_*_NOTIFICATION_TASK_TYPES` aggregate array",
     "whatItFlags": "A declared `*_NOTIFICATION_TASK_TYPE` is not present in any `ALL_*_NOTIFICATION_TASK_TYPES` aggregate array.",
-    "whenItApplies": "Every declared task-type constant.",
+    "whenItApplies": "Every declared task-type constant (annotated `NotificationTaskType`). An array counts as an aggregate when it is named `ALL_*_NOTIFICATION_TASK_TYPES` or annotated `NotificationTaskType[]` (also `readonly …[]`, `Array<…>` or `ReadonlyArray<…>`); both annotations are matched by name, through an `@dereekb/*` import alias (`import { type X as Y }`), or as a member of an `@dereekb/*` namespace import (`ns.X`).",
     "whenItDoesNotApply": "Task-type constants intentionally held outside any aggregate (rare — most apps centralise the list).",
     "canonicalFix": "Add the constant to `ALL_<NAME>_NOTIFICATION_TASK_TYPES: NotificationTaskType[]` so the aggregate stays comprehensive."
   },
@@ -2034,7 +2248,7 @@
     "severity": "error",
     "title": "A declared `*_NOTIFICATION_TASK_TYPE` is not reachable from any `notificationTaskService({ handlers })` call",
     "whatItFlags": "A declared `*_NOTIFICATION_TASK_TYPE` is not reachable from any `notificationTaskService({ handlers })` call.",
-    "whenItApplies": "Every declared task-type constant.",
+    "whenItApplies": "Every declared task-type constant that no typed `NotificationTaskServiceTaskHandlerConfig` in the scanned API files declares as its `type:`. A declared config that no `handlers` element leads to is `NOTIF_TASK_HANDLER_NAME_MISMATCH` instead.",
     "whenItDoesNotApply": "Task-type constants whose handler is provided by an upstream module (covered by the trust list).",
     "canonicalFix": "Add a `NotificationTaskServiceTaskHandlerConfig<...>` for the task and include its binding in `notificationTaskService({ handlers: [...] })`.",
     "seeAlso": [
@@ -2054,7 +2268,7 @@
     "severity": "error",
     "title": "No `notificationTaskService({ ... })` call was found in the API",
     "whatItFlags": "No `notificationTaskService({ ... })` call was found in the API.",
-    "whenItApplies": "APIs that declare at least one `*_NOTIFICATION_TASK_TYPE`.",
+    "whenItApplies": "Apps whose component declares at least one `NotificationTaskType` constant. The `notificationTaskService(...)` call is matched by name, through an `@dereekb/*` import alias (`import { x as y }`), or as a member of an `@dereekb/*` namespace import (`ns.x(...)`).",
     "whenItDoesNotApply": "APIs whose task service is provided by an upstream module (rare — extend the scanner's subpaths if so).",
     "canonicalFix": "Add `notificationTaskService({ validate: [...], handlers: [...] })` and bind it through the notification module."
   },
@@ -2067,6 +2281,54 @@
     "whenItApplies": "When more than one task-type constant resolves to the same `'<value>'` literal.",
     "whenItDoesNotApply": "Constants intentionally aliased — but this defeats runtime task discrimination, so almost always a copy-paste.",
     "canonicalFix": "Rename one of the literals so each task code is unique."
+  },
+  {
+    "code": "NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "error",
+    "title": "`notificationTaskService({ validate })` lists an upstream task-type aggregate (`...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES` or `...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES`, or one of their task-type constants), directly or inside one of the app's own `ALL_*_NOTIFICATION_TASK_TYPES` aggregates it spreads (or names it as `validate` itself, `validate: ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`), but its upstream handler (`storageFileProcessingNotificationTaskHandler(...)` or `formSpaceSubmissionNotificationTaskHandler(...)`) is not reachable from that call's `handlers`. `notificationTaskService()` throws at startup for this",
+    "whatItFlags": "`notificationTaskService({ validate })` lists an upstream task-type aggregate (`...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES` or `...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES`, or one of their task-type constants), directly or inside one of the app's own `ALL_*_NOTIFICATION_TASK_TYPES` aggregates it spreads (or names it as `validate` itself, `validate: ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`), but its upstream handler (`storageFileProcessingNotificationTaskHandler(...)` or `formSpaceSubmissionNotificationTaskHandler(...)`) is not reachable from that call's `handlers`. `notificationTaskService()` throws at startup for this.",
+    "whenItApplies": "Every `notificationTaskService({ validate, handlers })` call whose `validate` spreads an upstream aggregate from the validator's upstream handler table (or lists one of its task-type constants, or is the aggregate itself: `validate: ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`, read as `[...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES]`), directly or inside a component `ALL_*_NOTIFICATION_TASK_TYPES` aggregate it spreads or names directly (`validate: ALL_NOTIFICATION_TASK_TYPES`, read as `[...ALL_NOTIFICATION_TASK_TYPES]`; component aggregates nested in it are followed too), when the scanner can follow every value of its `handlers`. An aggregate `validate` names directly is read by name, under an alias, as a namespace member, or through a local `const` that is the only declaration of its name in scope at the call. The upstream handler factory is matched by name, through an `@dereekb/*` import alias (`import { x as y }`), or as a member of an `@dereekb/*` namespace import (`ns.x(...)`), as long as no other declaration of `y` or `ns` is in scope at the call. It is also matched when one of those is held in a local `const` and called through it (`const create = x; create(...)`), as long as that `const` is the only declaration of the name in scope at the call. The scan sees through parentheses, `!`, `as` / `<T>` casts and `satisfies` around a value, and follows a local holding an arrow function or function expression that returns from one place (a concise body, or a single `return`) like a function declaration. Wrappers and helpers are followed to the function each name is bound to where it is used: one its file declares (or a top-level `const` of the file holds), or one another scanned API file exports to it through an import, so same-named functions of different files are told apart. An import of a module the scan can't read (a path alias, a file outside the scanned folders, a re-export) reads as the one scanned API function exported under that name.",
+    "whenItDoesNotApply": "Task services whose `handlers` the scanner can't follow completely: an unreadable `handlers` value, an identifier it can't resolve (a parameter, a name only another function or file declares, or an import it can't pin to one API function; reported as `NOTIF_TASK_HANDLER_SPREAD_UNRESOLVED`, unless it also names a resolved handler config), a cycle of locals or functions, or a value it can't see through (a conditional, a local holding a function that can return from more than one place, a name with more than one declaration in scope where it is used, a call through a property access that is not an `@dereekb/*` namespace member, a call through an `@dereekb/*` alias or namespace with another declaration of its name in scope, a `@dereekb/*` helper that is not an upstream handler factory, or an upstream handler factory passed along as a value, or held in a variable the scan can't pin to one `const` (a `let` or `var`, a parameter, a destructured name, a `const` a `namespace` exports, a `const` in another file, or a name with another declaration in scope) and called through it). `notificationTaskService()`'s own startup check still applies. Inside a component aggregate, only an upstream name imported from `@dereekb/*` and spread (or listed) by identifier counts. Component aggregates outside `src/lib/model/notification/` are not read. Nor is a `validate` that is neither an array literal nor an aggregate the scan can pin. That covers an import whose local name the file also declares as a value somewhere, an aggregate imported from a relative path (or an upstream name imported from outside `@dereekb/*`), a `const` in another file, a `let` or `var`, a local with another declaration of its name in scope, a call, a conditional, `satisfies`, … The NotificationTaskBot task types are reported by `NOTIF_TASK_BOT_HANDLER_NOT_REGISTERED` instead.",
+    "canonicalFix": "Add the upstream handler to `handlers`: e.g. `<app>StorageFileProcessingNotificationTaskHandler(context)`, built with `storageFileProcessingNotificationTaskHandler({ processors, storageFileFirestoreCollections, storageAccessor })`, or `<app>FormSpaceSubmissionNotificationTaskHandler(context)`, built with `formSpaceSubmissionNotificationTaskHandler({ processors, validate, formSpaceFirestoreCollections })` (both from `@dereekb/firebase-server/model`). Or remove the aggregate from `validate`, or from the component aggregate that holds it. When `validate` is the aggregate itself (`validate: ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`), add the handler or stop passing it as `validate`.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "storagefile-processor"
+      },
+      {
+        "kind": "artifact",
+        "target": "notification-task"
+      },
+      {
+        "kind": "doc",
+        "target": "dbx-formspace"
+      }
+    ]
+  },
+  {
+    "code": "NOTIF_TASK_UPSTREAM_TASK_TYPES_NOT_IN_VALIDATE",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "warning",
+    "title": "A `notificationTaskService(...)` call's `handlers` reach an upstream handler (`storageFileProcessingNotificationTaskHandler(...)` or `formSpaceSubmissionNotificationTaskHandler(...)`), but its `validate` does not list that feature's task types (`...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES` or `...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES`), so startup no longer fails if the handler is ever removed",
+    "whatItFlags": "A `notificationTaskService(...)` call's `handlers` reach an upstream handler (`storageFileProcessingNotificationTaskHandler(...)` or `formSpaceSubmissionNotificationTaskHandler(...)`), but its `validate` does not list that feature's task types (`...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES` or `...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES`), so startup no longer fails if the handler is ever removed.",
+    "whenItApplies": "Task services whose `handlers` reach an upstream handler factory from the validator's upstream handler table and whose `validate` the scanner can read completely: an array literal of identifiers and spreads of known aggregates (the upstream ones, and the app's own `ALL_*_NOTIFICATION_TASK_TYPES`, followed through any nesting), or an aggregate named directly, one of the app's own (`validate: ALL_NOTIFICATION_TASK_TYPES`) or an upstream one (`validate: ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`), by name, under an alias, as a namespace member or through a local `const`, read as a spread of it. A spread of the aggregate, or one of its task-type constants, written directly in `validate` or inside a component aggregate it spreads, counts as listed.",
+    "whenItDoesNotApply": "Task services without `validate` (it is optional), or whose `validate` the scanner can't read completely, because the task types could be in a value it doesn't see. That covers a value that is neither an array literal nor an aggregate the scan can pin (see `NOTIF_TASK_UPSTREAM_HANDLER_NOT_REGISTERED`), an element that is not an identifier (a string literal, a call, a property access, …), a spread of an aggregate it doesn't know (one from another library, or imported under an alias), and a spread of one of the app's own aggregates that holds something the scanner can't place (an unreadable value, a spread of an aggregate it doesn't know, or an upstream aggregate or task-type constant not imported from `@dereekb/*`). The NotificationTaskBot task types are reported by `NOTIF_TASK_BOT_TASK_TYPES_NOT_IN_VALIDATE` instead.",
+    "canonicalFix": "Add the aggregate (`...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES` or `...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES`, from `@dereekb/firebase`) to that call's `validate`. When `validate` names a component aggregate (`validate: ALL_NOTIFICATION_TASK_TYPES`), add it to that aggregate, or write `validate: [...ALL_NOTIFICATION_TASK_TYPES, ...<aggregate>]`. When it names an upstream aggregate, write `validate: [...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES, ...<aggregate>]`.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "storagefile-processor"
+      },
+      {
+        "kind": "artifact",
+        "target": "notification-task"
+      },
+      {
+        "kind": "doc",
+        "target": "dbx-formspace"
+      }
+    ]
   },
   {
     "code": "NOTIF_TEMPLATE_FACTORY_ARRAY_MISSING",
@@ -2234,7 +2496,7 @@
     "severity": "error",
     "title": "No top-level `notificationTemplateTypeInfoRecord([...])` call was found",
     "whatItFlags": "No top-level `notificationTemplateTypeInfoRecord([...])` call was found.",
-    "whenItApplies": "Components that declare at least one `NotificationTemplateTypeInfo`.",
+    "whenItApplies": "Components that declare at least one `NotificationTemplateType` constant. The `notificationTemplateTypeInfoRecord(...)` call is matched by name, through an `@dereekb/*` import alias (`import { x as y }`), or as a member of an `@dereekb/*` namespace import (`ns.x(...)`).",
     "whenItDoesNotApply": "Components whose record is provided by an upstream `@dereekb/*` module (rare — convention is one record per app).",
     "canonicalFix": "Declare `export const <APP>_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD = notificationTemplateTypeInfoRecord([...]);` covering every template info."
   },
@@ -2244,7 +2506,7 @@
     "severity": "error",
     "title": "The metadata record exists but is not wired through `appNotificationTemplateTypeInfoRecordService(...)` in the API",
     "whatItFlags": "The metadata record exists but is not wired through `appNotificationTemplateTypeInfoRecordService(...)` in the API.",
-    "whenItApplies": "When `appNotificationTemplateTypeInfoRecordService(...)` is missing or its argument doesn't resolve to the declared record.",
+    "whenItApplies": "When `appNotificationTemplateTypeInfoRecordService(...)` is missing or its argument doesn't resolve to the declared record. The `appNotificationTemplateTypeInfoRecordService(...)` call is matched by name, through an `@dereekb/*` import alias (`import { x as y }`), or as a member of an `@dereekb/*` namespace import (`ns.x(...)`).",
     "whenItDoesNotApply": "APIs that wire the record indirectly through an imported app-module (rare — extend the scanner's subpaths if so).",
     "canonicalFix": "Add `appNotificationTemplateTypeInfoRecordService(<APP>_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD)` to the API's notification module."
   },
@@ -2254,7 +2516,7 @@
     "severity": "error",
     "title": "The metadata record's `[...]` array spreads an identifier that doesn't resolve to a declared aggregate",
     "whatItFlags": "The metadata record's `[...]` array spreads an identifier that doesn't resolve to a declared aggregate.",
-    "whenItApplies": "When `notificationTemplateTypeInfoRecord([...])` spreads a name that isn't a `ALL_*_NOTIFICATION_TEMPLATE_TYPE_INFOS` aggregate or trusted external.",
+    "whenItApplies": "When `notificationTemplateTypeInfoRecord([...])` spreads a name that isn't a `ALL_*_NOTIFICATION_TEMPLATE_TYPE_INFOS` aggregate or trusted external. The aggregate's `NotificationTemplateTypeInfo[]` annotation (also `readonly …[]`, `Array<…>` or `ReadonlyArray<…>`) is matched by name, through an `@dereekb/*` import alias (`import { type X as Y }`), or as a member of an `@dereekb/*` namespace import (`ns.X`).",
     "whenItDoesNotApply": "Spreads from trust-listed `@dereekb/*` modules.",
     "canonicalFix": "Declare the aggregate as `export const ALL_<NAME>_NOTIFICATION_TEMPLATE_TYPE_INFOS: NotificationTemplateTypeInfo[] = [...]` or import it from a trusted module."
   },
@@ -2529,7 +2791,7 @@
     "severity": "error",
     "title": "The component declares purposes with subtasks but no",
     "whatItFlags": "The component declares purposes with subtasks but no\n`storageFileProcessingNotificationTaskHandler({ processors })` call\nis present in the API.",
-    "whenItApplies": "When at least one purpose declares a `*ProcessingSubtask` union and `*_PROCESSING_SUBTASK` constants.",
+    "whenItApplies": "When at least one purpose declares a `*ProcessingSubtask` union and `*_PROCESSING_SUBTASK` constants. The `storageFileProcessingNotificationTaskHandler(...)` call is matched by name, through an `@dereekb/*` import alias (`import { x as y }`), or as a member of an `@dereekb/*` namespace import (`ns.x(...)`).",
     "whenItDoesNotApply": "Purposes that store a file but do not need processing.",
     "canonicalFix": "Add a `storageFileProcessingNotificationTaskHandler({ processors: [...] })` call and wire it into the notification-task service.",
     "seeAlso": [
@@ -2623,7 +2885,7 @@
     "severity": "error",
     "title": "No `storageFileInitializeFromUploadService(...)` call was found in",
     "whatItFlags": "No `storageFileInitializeFromUploadService(...)` call was found in\nthe API.",
-    "whenItApplies": "APIs that declare at least one `UploadedFileTypeIdentifier` and therefore need to wire the upload service.",
+    "whenItApplies": "Apps whose component declares at least one `UploadedFileTypeIdentifier` constant, and so must wire the upload service. The `storageFileInitializeFromUploadService(...)` call is matched by name, through an `@dereekb/*` import alias (`import { x as y }`), or as a member of an `@dereekb/*` namespace import (`ns.x(...)`).",
     "whenItDoesNotApply": "APIs whose upload service is provided by an upstream module (and the call lives outside the scanned subpaths — extend the scanner if so).",
     "canonicalFix": "Add a factory whose return value is built from `storageFileInitializeFromUploadService({ initializer: [...] })` and bind it as a NestJS provider.",
     "seeAlso": [
@@ -2639,7 +2901,7 @@
     "severity": "warning",
     "title": "Multiple `storageFileInitializeFromUploadService(...)` calls were",
     "whatItFlags": "Multiple `storageFileInitializeFromUploadService(...)` calls were\nfound.",
-    "whenItApplies": "When more than one upload-service factory exists in the API.",
+    "whenItApplies": "When more than one `storageFileInitializeFromUploadService(...)` call exists in the API, counting aliased and namespaced calls.",
     "whenItDoesNotApply": "Apps that intentionally compose multiple factories (rare — only the first one runs).",
     "canonicalFix": "Consolidate the factories into one — only the first call's config takes effect at runtime."
   },

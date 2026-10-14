@@ -147,6 +147,23 @@ export const demoAuthorizedUserContext = demoAuthorizedUserContextFactory({});
     expect(result.diagnostics.find((d) => d.code === 'triplet-incomplete')).toBeUndefined();
   });
 
+  it('does not flag a library NotificationTaskBot pair', () => {
+    const extraction = fix(`
+export type DemoApiNotificationTaskBotTestContextParams = NotificationTaskBotTestContextParams;
+export class DemoApiNotificationTaskBotTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends NotificationTaskBotTestContextFixture<DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiNotificationTaskBotTestContextInstance<F>> {}
+export class DemoApiNotificationTaskBotTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends NotificationTaskBotTestContextInstance<DemoApiFunctionContextFixtureInstance<F>> {}
+export const demoNotificationTaskBotContextFactory = () =>
+  notificationTaskBotTestContextFactory<DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiNotificationTaskBotTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiNotificationTaskBotTestContextFixture<FirebaseAdminFunctionTestContextInstance>>({
+    makeFixture: (f) => new DemoApiNotificationTaskBotTestContextFixture(f),
+    makeInstance: (config) => new DemoApiNotificationTaskBotTestContextInstance(config)
+  });
+export const demoNotificationTaskBotContext = demoNotificationTaskBotContextFactory();
+`);
+    const result = validateAppFixtures(extraction);
+    expect(result.diagnostics.find((d) => d.code === 'triplet-incomplete')).toBeUndefined();
+    expect(result.diagnostics.find((d) => d.code === 'generics-misaligned')).toBeUndefined();
+  });
+
   it('does not fire triplet-incomplete on a pair tagged @dbxFixtureNotModel', () => {
     const extraction = fix(`
 /** @dbxFixtureNotModel */

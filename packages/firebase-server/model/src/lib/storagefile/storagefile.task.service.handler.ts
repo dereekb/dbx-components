@@ -31,10 +31,12 @@ import {
   type StorageFileDisplayName,
   type StorageFileGroupDocument,
   type StorageMetadata,
-  type FirebaseStorageAccessorFile
+  type FirebaseStorageAccessorFile,
+  type StorageFileId
 } from '@dereekb/firebase';
 import { type NotificationTaskServiceTaskHandlerConfig } from '../notification/notification.task.service.handler';
 import { cachedGetter, documentFileExtensionForMimeType, MAP_IDENTITY, MS_IN_HOUR, performAsyncTasks, type PromiseOrValue, pushArrayItemsIntoArray, slashPathDetails, useCallback, ZIP_FILE_MIME_TYPE, type Maybe } from '@dereekb/util';
+import { assertSnapshotData } from '@dereekb/firebase-server';
 import { markStorageFileForDeleteTemplate, type StorageFileQueueForDeleteTime } from './storagefile.util';
 import {
   type NotificationTaskSubtaskCleanupInstructions,
@@ -482,6 +484,9 @@ export function storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(
                 // pipe the archive to the upload stream
                 newArchive.pipe(uploadStream, { end: true });
 
+                // ids of the StorageFiles that were appended to the archive
+                const zippedStorageFileIds = new Set<StorageFileId>();
+
                 // upload each of the files to the archive
                 await performAsyncTasks(
                   storageFileDataPairsToZip,
@@ -539,6 +544,8 @@ export function storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(
                             // when the stream finishes, call back
                             fileStream.on('finish', () => x());
                           });
+
+                          zippedStorageFileIds.add(storageFile.id);
                         } else {
                           flagCleanFileAssociations = true;
                         }
@@ -590,10 +597,19 @@ export function storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(
                 // finalize the archive
                 await newArchive.finalize();
 
-                // update the StorageFileGroup
-                await storageFileGroupDocument.update({
-                  zat: finishedAt,
-                  c: flagCleanFileAssociations
+                // update the StorageFileGroup in a transaction so files synced/removed while the zip was built are not overwritten
+                await storageFileGroupCollection.firestoreContext.runTransaction(async (transaction) => {
+                  const storageFileGroupDocumentInTransaction = storageFileGroupCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(storageFileGroupDocument);
+                  const currentStorageFileGroup = await assertSnapshotData(storageFileGroupDocumentInTransaction);
+
+                  // stamp the first time each appended file was added to the zip. Do not modify re, so a request made during the build survives it.
+                  const f = currentStorageFileGroup.f.map((x) => (x.zat == null && zippedStorageFileIds.has(x.s) ? { ...x, zat: finishedAt } : x));
+
+                  await storageFileGroupDocumentInTransaction.update({
+                    f,
+                    zat: finishedAt,
+                    c: flagCleanFileAssociations
+                  });
                 });
 
                 // schedule/run the cleanup task

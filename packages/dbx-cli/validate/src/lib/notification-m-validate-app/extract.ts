@@ -3,38 +3,92 @@
  *
  * All component + API files land in a single in-memory ts-morph
  * `Project`; extraction resolves spreads and factory-call references by
- * symbol-name lookup inside that project — no language service.
+ * symbol-name lookup inside that project (the handlers trace by binding,
+ * below) — no language service.
  *
  * External imports (`@dereekb/*`) are tracked in a trust-list so rules
  * can suppress "unresolved" / "orphan" diagnostics for identifiers that
- * cross into upstream packages.
+ * cross into upstream packages. The upstream task handlers in
+ * `extract.upstream.ts` are the exception: the handlers trace records
+ * their factory calls, called directly, through an `@dereekb/*` import
+ * alias, as an `@dereekb/*` namespace member, or through a local `const`
+ * holding one of those.
+ *
+ * The handlers trace resolves an identifier to the local variable
+ * declaration in scope where it is used (`resolveLocalVariable`); a name
+ * with more than one declaration in scope there is opaque. It follows a
+ * call or reference to the API function the name is bound to there
+ * (`resolveApiFunctionReference`): a function its file declares, or one it
+ * imports from another API file, never a same-named function elsewhere.
+ * It records each typed handler config declaration it reaches
+ * (`reachedTaskHandlerEntries`), so the rules match declared configs by
+ * declaration, not by binding name.
+ * It strips parentheses, `!`, `as` / `<T>` casts and `satisfies` around a
+ * value (`unwrapOuterExpressions`), and follows a local holding an arrow
+ * function or function expression that returns from one place
+ * (`findSoleReturnExpression`) like a function declaration.
+ *
+ * Upstream factory calls (`notificationTemplateTypeInfoRecord`,
+ * `appNotificationTemplateTypeInfoRecordService`, `notificationTaskService`,
+ * the upstream task handler factories and the NotificationTaskBot factories)
+ * are matched by name, through an `@dereekb/*` import alias, as an
+ * `@dereekb/*` namespace member, or through a local `const` holding one of
+ * those (`readCalleeName`).
+ *
+ * Declarations are recognized by their `@dereekb/*` type annotation, read
+ * with `readTypeReferenceName`: written by name, through an `@dereekb/*`
+ * import alias, or as an `@dereekb/*` namespace member
+ * (`firebaseModel.NotificationTaskType`). Aggregate arrays are read through
+ * `readArrayElementTypeNode` (`T[]`, `readonly T[]`, `Array<T>`,
+ * `ReadonlyArray<T>`).
+ *
+ * A `notificationTaskService({ validate })` that names an aggregate
+ * directly instead of an array literal is read as a spread of it
+ * (`validate: ALL_NOTIFICATION_TASK_TYPES` as
+ * `[...ALL_NOTIFICATION_TASK_TYPES]`). That covers one of the app's component
+ * aggregates, or an upstream aggregate from `@dereekb/firebase`
+ * (`validate: ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`). It may be imported
+ * by name, under an alias or as a namespace member, and written directly or
+ * through a local `const` (`readImportedReference`).
  */
 
-import { Node, SyntaxKind, type ArrayLiteralExpression, type ArrowFunction, type FunctionDeclaration, type FunctionExpression, type ObjectLiteralExpression, type SourceFile, type TypeNode, type VariableDeclaration } from 'ts-morph';
+import { Node, SyntaxKind, type ArrayLiteralExpression, type ArrowFunction, type FunctionDeclaration, type FunctionExpression, type Identifier, type ObjectLiteralExpression, type SourceFile, type TypeNode, type VariableDeclaration } from 'ts-morph';
 import {
   apiRelPath,
   asArrayLiteral,
   asObjectLiteral,
+  buildDereekbImportIndex,
   buildInMemoryProject,
   collectTrustedExternalIdentifiers,
   componentRelPath,
   findLocalVariable,
   findReturnExpression,
+  findSoleReturnExpression,
   getPropertyInitializer,
+  isDereekbModuleSpecifier,
+  readArrayElementTypeNode,
   readBooleanProperty,
+  readCalleeName,
   readIdentifierProperty,
+  readImportedReference,
   readStringLiteralInitializer,
   readStringProperty,
-  typeAnnotationText,
-  unwrapAsExpressions
+  readTypeReferenceName,
+  resolveArrayLiteralProperty,
+  resolveLocalVariable,
+  unwrapAsExpressions,
+  unwrapOuterExpressions,
+  type DereekbImportIndex
 } from '../_core/_validate/ast.js';
 import type {
   AppNotificationsInspection,
   ExtractedAppNotifications,
+  ExtractedNestedUpstreamValidateListing,
   ExtractedTaskCheckpointAlias,
   ExtractedTaskDataInterface,
   ExtractedTaskHandlerEntry,
   ExtractedTaskServiceCall,
+  ExtractedTaskServiceValidateStatus,
   ExtractedTaskTypeAggregateArray,
   ExtractedTaskTypeConstant,
   ExtractedTemplateConfigsArrayFactory,
@@ -45,15 +99,17 @@ import type {
   ExtractedTemplateInfoRecordWiring,
   ExtractedTemplateTypeConstant,
   ExtractedTemplateTypeInfo,
+  ExtractedUpstreamHandlerCall,
   NotificationDeliveryMethodName,
   UserConfigurableDeliveryMethodsSource
 } from './types.js';
+import { type ApiFunctionIndex, buildApiFunctionIndex, resolveApiFunctionReference } from './extract.function-index.js';
+import { extractAppNotificationTaskBot } from './extract.taskbot.js';
+import { extractUpstreamHandlerCalls, UPSTREAM_NOTIFICATION_TASK_AGGREGATES, UPSTREAM_NOTIFICATION_TASK_TYPE_CONSTANTS, upstreamHandlerFactoryOf } from './extract.upstream.js';
 
 const NOTIF_TEMPLATE_TYPE = 'NotificationTemplateType';
 const NOTIF_TEMPLATE_TYPE_INFO = 'NotificationTemplateTypeInfo';
-const NOTIF_TEMPLATE_TYPE_INFO_ARRAY = 'NotificationTemplateTypeInfo[]';
 const NOTIF_TASK_TYPE = 'NotificationTaskType';
-const NOTIF_TASK_TYPE_ARRAY = 'NotificationTaskType[]';
 const NOTIF_TASK_SERVICE_HANDLER_CONFIG = 'NotificationTaskServiceTaskHandlerConfig';
 const TEMPLATE_INFO_SUFFIX = '_NOTIFICATION_TEMPLATE_TYPE_INFO';
 const ALL_TEMPLATE_INFO_ARRAY_SUFFIX = '_NOTIFICATION_TEMPLATE_TYPE_INFOS';
@@ -108,16 +164,6 @@ interface ComponentAggregateIndex {
   readonly taskAllTypesAggregates: ReadonlyMap<string, ExtractedTaskTypeAggregateArray>;
 }
 
-interface ApiFunctionEntry {
-  readonly node: FunctionDeclaration | ArrowFunction | FunctionExpression;
-  readonly sourceFile: SourceFile;
-  readonly relPath: string;
-}
-
-interface ApiFunctionIndex {
-  readonly functionsByName: ReadonlyMap<string, ApiFunctionEntry>;
-}
-
 /**
  * Builds a ts-morph project from the prepared inspection and extracts every
  * fact the notification rules need — template/task type constants, info
@@ -130,26 +176,29 @@ interface ApiFunctionIndex {
 export function extractAppNotifications(inspection: AppNotificationsInspection): ExtractedAppNotifications {
   const { componentSources, apiSources } = buildInMemoryProject(inspection);
   const trustedExternalIdentifiers = collectTrustedExternalIdentifiers([...componentSources, ...apiSources]);
+  const dereekbImports = buildDereekbImportIndex([...componentSources, ...apiSources]);
 
   // Component pass
-  const templateTypeConstants = extractTemplateTypeConstants(componentSources);
-  const templateTypeInfos = extractTemplateTypeInfos(componentSources);
-  const templateInfoAggregates = extractTemplateInfoAggregates(componentSources);
-  const taskTypeConstants = extractTaskTypeConstants(componentSources);
-  const taskAllTypesAggregates = extractTaskAllTypesAggregates(componentSources);
+  const templateTypeConstants = extractTemplateTypeConstants(componentSources, dereekbImports);
+  const templateTypeInfos = extractTemplateTypeInfos(componentSources, dereekbImports);
+  const templateInfoAggregates = extractTemplateInfoAggregates(componentSources, dereekbImports);
+  const taskTypeConstants = extractTaskTypeConstants(componentSources, dereekbImports);
+  const taskAllTypesAggregates = extractTaskAllTypesAggregates(componentSources, dereekbImports);
   const taskCheckpointAliases = extractTaskCheckpointAliases(componentSources);
   const taskDataInterfaces = extractTaskDataInterfaces(componentSources);
   const componentIndex = buildComponentAggregateIndex({ templateTypeConstants, templateTypeInfos, templateInfoAggregates, taskTypeConstants, taskAllTypesAggregates });
-  const templateInfoRecord = extractTemplateInfoRecord(componentSources, componentIndex);
+  const templateInfoRecord = extractTemplateInfoRecord(componentSources, { index: componentIndex, imports: dereekbImports });
 
   // API pass
-  const templateInfoRecordWiring = extractTemplateInfoRecordWiring(apiSources);
+  const templateInfoRecordWiring = extractTemplateInfoRecordWiring(apiSources, dereekbImports);
   const templateConfigsArrayWiring = extractTemplateConfigsArrayWiring(apiSources);
   const apiFunctionIndex = buildApiFunctionIndex(apiSources);
   const templateConfigsArrayFactory = extractTemplateConfigsArrayFactory(apiSources, apiFunctionIndex);
   const templateHandlerEntries = extractTemplateHandlerEntries(templateConfigsArrayFactory, apiFunctionIndex);
-  const taskServiceCalls = extractTaskServiceCalls(apiSources, apiFunctionIndex, trustedExternalIdentifiers);
-  const taskHandlerEntries = extractTaskHandlerEntries(apiSources);
+  const taskServiceCalls = extractTaskServiceCalls({ sources: apiSources, index: apiFunctionIndex, trustedExternal: trustedExternalIdentifiers, imports: dereekbImports, componentIndex });
+  const taskHandlerEntries = extractTaskHandlerEntries(apiSources, dereekbImports);
+  const upstreamHandlerCalls = extractUpstreamHandlerCalls(apiSources, dereekbImports);
+  const taskBot = extractAppNotificationTaskBot({ componentSources, apiSources, functionIndex: apiFunctionIndex, trustedExternalIdentifiers, dereekbImports, taskServiceCalls, workspace: inspection.workspace });
 
   const result: ExtractedAppNotifications = {
     templateTypeConstants,
@@ -166,20 +215,21 @@ export function extractAppNotifications(inspection: AppNotificationsInspection):
     templateHandlerEntries,
     taskServiceCalls,
     taskHandlerEntries,
+    upstreamHandlerCalls,
+    taskBot,
     trustedExternalIdentifiers
   };
   return result;
 }
 
 // MARK: Template type constants
-function extractTemplateTypeConstants(sources: readonly SourceFile[]): readonly ExtractedTemplateTypeConstant[] {
+function extractTemplateTypeConstants(sources: readonly SourceFile[], imports: DereekbImportIndex): readonly ExtractedTemplateTypeConstant[] {
   const out: ExtractedTemplateTypeConstant[] = [];
   for (const sf of sources) {
     const rel = componentRelPath(sf);
     for (const stmt of sf.getVariableStatements()) {
       for (const decl of stmt.getDeclarations()) {
-        const typeText = typeAnnotationText(decl);
-        if (typeText !== NOTIF_TEMPLATE_TYPE) continue;
+        if (readTypeReferenceName(decl.getTypeNode(), imports) !== NOTIF_TEMPLATE_TYPE) continue;
         const name = decl.getName();
         if (name.endsWith(TEMPLATE_INFO_SUFFIX)) continue;
         const entry: ExtractedTemplateTypeConstant = {
@@ -196,16 +246,15 @@ function extractTemplateTypeConstants(sources: readonly SourceFile[]): readonly 
 }
 
 // MARK: Template type infos
-function extractTemplateTypeInfos(sources: readonly SourceFile[]): readonly ExtractedTemplateTypeInfo[] {
+function extractTemplateTypeInfos(sources: readonly SourceFile[], imports: DereekbImportIndex): readonly ExtractedTemplateTypeInfo[] {
   const out: ExtractedTemplateTypeInfo[] = [];
   for (const sf of sources) {
     const rel = componentRelPath(sf);
     for (const stmt of sf.getVariableStatements()) {
       for (const decl of stmt.getDeclarations()) {
-        const typeText = typeAnnotationText(decl);
         const name = decl.getName();
         const nameMatches = name.endsWith(TEMPLATE_INFO_SUFFIX);
-        const typeMatches = typeText === NOTIF_TEMPLATE_TYPE_INFO;
+        const typeMatches = readTypeReferenceName(decl.getTypeNode(), imports) === NOTIF_TEMPLATE_TYPE_INFO;
         if (!nameMatches && !typeMatches) continue;
         const obj = asObjectLiteral(decl.getInitializer());
         if (!obj) continue;
@@ -293,26 +342,25 @@ function isNullishLiteral(node: Node | undefined): boolean {
 }
 
 // MARK: Template info aggregates
-function extractTemplateInfoAggregates(sources: readonly SourceFile[]): readonly ExtractedTemplateInfoAggregateArray[] {
+function extractTemplateInfoAggregates(sources: readonly SourceFile[], imports: DereekbImportIndex): readonly ExtractedTemplateInfoAggregateArray[] {
   const out: ExtractedTemplateInfoAggregateArray[] = [];
   for (const sf of sources) {
-    const rel = componentRelPath(sf);
     for (const stmt of sf.getVariableStatements()) {
       for (const decl of stmt.getDeclarations()) {
-        tryExtractTemplateInfoAggregate(decl, rel, out);
+        tryExtractTemplateInfoAggregate(decl, imports, out);
       }
     }
   }
   return out;
 }
 
-function tryExtractTemplateInfoAggregate(decl: VariableDeclaration, rel: string, out: ExtractedTemplateInfoAggregateArray[]): void {
+function tryExtractTemplateInfoAggregate(decl: VariableDeclaration, imports: DereekbImportIndex, out: ExtractedTemplateInfoAggregateArray[]): void {
   const name = decl.getName();
   if (!name.startsWith('ALL_') || !name.endsWith(ALL_TEMPLATE_INFO_ARRAY_SUFFIX)) return;
-  if (typeAnnotationText(decl) !== NOTIF_TEMPLATE_TYPE_INFO_ARRAY) return;
+  if (readTypeReferenceName(readArrayElementTypeNode(decl.getTypeNode()), imports) !== NOTIF_TEMPLATE_TYPE_INFO) return;
   const arr = asArrayLiteral(decl.getInitializer());
   if (!arr) return;
-  out.push({ symbolName: name, infoIdentifiers: collectIdentifierElements(arr), sourceFile: rel });
+  out.push({ symbolName: name, infoIdentifiers: collectIdentifierElements(arr), sourceFile: componentRelPath(decl.getSourceFile()) });
 }
 
 function collectIdentifierElements(arr: ArrayLiteralExpression): string[] {
@@ -327,14 +375,13 @@ function collectIdentifierElements(arr: ArrayLiteralExpression): string[] {
 }
 
 // MARK: Task type constants
-function extractTaskTypeConstants(sources: readonly SourceFile[]): readonly ExtractedTaskTypeConstant[] {
+function extractTaskTypeConstants(sources: readonly SourceFile[], imports: DereekbImportIndex): readonly ExtractedTaskTypeConstant[] {
   const out: ExtractedTaskTypeConstant[] = [];
   for (const sf of sources) {
     const rel = componentRelPath(sf);
     for (const stmt of sf.getVariableStatements()) {
       for (const decl of stmt.getDeclarations()) {
-        const typeText = typeAnnotationText(decl);
-        if (typeText !== NOTIF_TASK_TYPE) continue;
+        if (readTypeReferenceName(decl.getTypeNode(), imports) !== NOTIF_TASK_TYPE) continue;
         const name = decl.getName();
         out.push({
           symbolName: name,
@@ -348,27 +395,27 @@ function extractTaskTypeConstants(sources: readonly SourceFile[]): readonly Extr
   return out;
 }
 
-function extractTaskAllTypesAggregates(sources: readonly SourceFile[]): readonly ExtractedTaskTypeAggregateArray[] {
+function extractTaskAllTypesAggregates(sources: readonly SourceFile[], imports: DereekbImportIndex): readonly ExtractedTaskTypeAggregateArray[] {
   const out: ExtractedTaskTypeAggregateArray[] = [];
   for (const sf of sources) {
-    const rel = componentRelPath(sf);
     for (const stmt of sf.getVariableStatements()) {
       for (const decl of stmt.getDeclarations()) {
-        tryExtractTaskAllTypesAggregate(decl, rel, out);
+        tryExtractTaskAllTypesAggregate(decl, imports, out);
       }
     }
   }
   return out;
 }
 
-function tryExtractTaskAllTypesAggregate(decl: VariableDeclaration, rel: string, out: ExtractedTaskTypeAggregateArray[]): void {
+function tryExtractTaskAllTypesAggregate(decl: VariableDeclaration, imports: DereekbImportIndex, out: ExtractedTaskTypeAggregateArray[]): void {
   const name = decl.getName();
   const nameMatches = name.startsWith('ALL_') && name.endsWith(ALL_TASK_TYPES_ARRAY_SUFFIX);
-  const typeMatches = typeAnnotationText(decl) === NOTIF_TASK_TYPE_ARRAY;
+  const typeMatches = readTypeReferenceName(readArrayElementTypeNode(decl.getTypeNode()), imports) === NOTIF_TASK_TYPE;
   if (!nameMatches && !typeMatches) return;
   const arr = asArrayLiteral(decl.getInitializer());
   if (!arr) return;
-  out.push({ symbolName: name, taskTypeIdentifiers: collectIdentifierElements(arr), sourceFile: rel });
+  const { ids, spreads, opaque } = collectTaskTypeListElements(arr);
+  out.push({ symbolName: name, taskTypeIdentifiers: ids, spreadIdentifiers: spreads, opaqueValues: opaque, sourceFile: componentRelPath(decl.getSourceFile()), line: decl.getStartLineNumber() });
 }
 
 // MARK: Checkpoint aliases + data interfaces
@@ -446,12 +493,20 @@ function buildComponentAggregateIndex(parts: {
   return result;
 }
 
-function extractTemplateInfoRecord(sources: readonly SourceFile[], index: ComponentAggregateIndex): ExtractedTemplateInfoRecord | undefined {
+interface TemplateInfoRecordContext {
+  readonly index: ComponentAggregateIndex;
+  /**
+   * The per-file `@dereekb/*` import bindings, used to match an aliased or namespaced `notificationTemplateTypeInfoRecord(...)`.
+   */
+  readonly imports: DereekbImportIndex;
+}
+
+function extractTemplateInfoRecord(sources: readonly SourceFile[], context: TemplateInfoRecordContext): ExtractedTemplateInfoRecord | undefined {
   for (const sf of sources) {
     const rel = componentRelPath(sf);
     for (const stmt of sf.getVariableStatements()) {
       for (const decl of stmt.getDeclarations()) {
-        const record = tryReadTemplateInfoRecord(decl, rel, index);
+        const record = tryReadTemplateInfoRecord(decl, rel, context);
         if (record) {
           return record;
         }
@@ -464,17 +519,20 @@ function extractTemplateInfoRecord(sources: readonly SourceFile[], index: Compon
 /**
  * Inspects a single variable declaration and returns a populated
  * {@link ExtractedTemplateInfoRecord} when the initializer is a call to the
- * `notificationTemplateTypeInfoRecord` factory; otherwise `undefined`.
+ * `notificationTemplateTypeInfoRecord` factory (called directly, through an
+ * `@dereekb/*` import alias, or as an `@dereekb/*` namespace member);
+ * otherwise `undefined`.
  *
  * @param decl - The variable declaration to inspect.
  * @param rel - The relative source file path used in the result record.
- * @param index - The component aggregate index used to resolve spread aggregates.
+ * @param context - The component aggregate index used to resolve spread aggregates, and the import bindings used to match the factory.
  * @returns The extracted record or `undefined` when this declaration is not the factory call.
  */
-function tryReadTemplateInfoRecord(decl: VariableDeclaration, rel: string, index: ComponentAggregateIndex): ExtractedTemplateInfoRecord | undefined {
+function tryReadTemplateInfoRecord(decl: VariableDeclaration, rel: string, context: TemplateInfoRecordContext): ExtractedTemplateInfoRecord | undefined {
+  const { index, imports } = context;
   const initializer = unwrapAsExpressions(decl.getInitializer());
   if (!initializer || !Node.isCallExpression(initializer)) return undefined;
-  if (initializer.getExpression().getText() !== TEMPLATE_INFO_RECORD_FACTORY) return undefined;
+  if (readCalleeName(initializer, imports) !== TEMPLATE_INFO_RECORD_FACTORY) return undefined;
   const args = initializer.getArguments();
   const arr = args[0] ? asArrayLiteral(args[0]) : undefined;
   const direct: string[] = [];
@@ -541,12 +599,12 @@ function resolveTemplateInfoSpreads(direct: readonly string[], spreads: readonly
 }
 
 // MARK: API wiring
-function extractTemplateInfoRecordWiring(sources: readonly SourceFile[]): ExtractedTemplateInfoRecordWiring | undefined {
+function extractTemplateInfoRecordWiring(sources: readonly SourceFile[], imports: DereekbImportIndex): ExtractedTemplateInfoRecordWiring | undefined {
   let result: ExtractedTemplateInfoRecordWiring | undefined;
   outer: for (const sf of sources) {
     const rel = apiRelPath(sf);
     for (const call of sf.getDescendantsOfKind(SyntaxKind.CallExpression)) {
-      if (call.getExpression().getText() !== TEMPLATE_INFO_RECORD_SERVICE) continue;
+      if (readCalleeName(call, imports) !== TEMPLATE_INFO_RECORD_SERVICE) continue;
       const args = call.getArguments();
       const first = args[0];
       if (!first) continue;
@@ -576,38 +634,6 @@ function extractTemplateConfigsArrayWiring(sources: readonly SourceFile[]): Extr
     }
   }
   return result;
-}
-
-function buildApiFunctionIndex(sources: readonly SourceFile[]): ApiFunctionIndex {
-  const map = new Map<string, ApiFunctionEntry>();
-  for (const sf of sources) {
-    const rel = apiRelPath(sf);
-    indexFunctionDeclarations(sf, rel, map);
-    indexFunctionVariableDeclarations(sf, rel, map);
-  }
-  const result: ApiFunctionIndex = { functionsByName: map };
-  return result;
-}
-
-function indexFunctionDeclarations(sf: SourceFile, rel: string, map: Map<string, ApiFunctionEntry>): void {
-  for (const fn of sf.getFunctions()) {
-    const name = fn.getName();
-    if (name) {
-      map.set(name, { node: fn, sourceFile: sf, relPath: rel });
-    }
-  }
-}
-
-function indexFunctionVariableDeclarations(sf: SourceFile, rel: string, map: Map<string, ApiFunctionEntry>): void {
-  for (const stmt of sf.getVariableStatements()) {
-    for (const decl of stmt.getDeclarations()) {
-      const initializer = unwrapAsExpressions(decl.getInitializer());
-      if (!initializer) continue;
-      if (Node.isArrowFunction(initializer) || Node.isFunctionExpression(initializer)) {
-        map.set(decl.getName(), { node: initializer, sourceFile: sf, relPath: rel });
-      }
-    }
-  }
 }
 
 function extractTemplateConfigsArrayFactory(sources: readonly SourceFile[], index: ApiFunctionIndex): ExtractedTemplateConfigsArrayFactory | undefined {
@@ -858,20 +884,41 @@ function scanContentDeliveryMethods(node: Node, found: Set<NotificationDeliveryM
 }
 
 // MARK: Task service calls
-function extractTaskServiceCalls(sources: readonly SourceFile[], index: ApiFunctionIndex, trustedExternal: ReadonlySet<string>): readonly ExtractedTaskServiceCall[] {
+interface ExtractTaskServiceCallsInput {
+  readonly sources: readonly SourceFile[];
+  readonly index: ApiFunctionIndex;
+  readonly trustedExternal: ReadonlySet<string>;
+  /**
+   * The per-file bindings: they match the `notificationTaskService(...)` callee, drive the handlers trace, and follow a
+   * `validate` that names an aggregate through an alias, a namespace or a local `const`.
+   */
+  readonly imports: DereekbImportIndex;
+  /**
+   * The component index. `validate` spreads of the app's own task-type aggregates are expanded through it, and a
+   * `validate` that names one directly is read through it.
+   */
+  readonly componentIndex: ComponentAggregateIndex;
+}
+
+function extractTaskServiceCalls(input: ExtractTaskServiceCallsInput): readonly ExtractedTaskServiceCall[] {
+  const { sources, index, trustedExternal, imports, componentIndex } = input;
   const out: ExtractedTaskServiceCall[] = [];
   for (const sf of sources) {
     const rel = apiRelPath(sf);
     for (const call of sf.getDescendantsOfKind(SyntaxKind.CallExpression)) {
-      const expr = call.getExpression();
-      if (!Node.isIdentifier(expr) || expr.getText() !== TASK_SERVICE_FACTORY) continue;
+      if (readCalleeName(call, imports) !== TASK_SERVICE_FACTORY) continue;
       const args = call.getArguments();
       const first = args[0] ? asObjectLiteral(args[0]) : undefined;
       if (!first) continue;
-      const validateArr = resolveArrayFromProperty(first, 'validate', sf);
-      const handlersArr = resolveArrayFromProperty(first, 'handlers', sf);
-      const validate = collectValidateArrayElements(validateArr);
-      const handlers = collectHandlersArrayElements({ handlersArr, sf, index, trustedExternal });
+      const validateArr = resolveArrayLiteralProperty(first, 'validate', sf);
+      const named = validateArr ? undefined : readValidateNamedAggregate(first, input);
+      const handlersArr = resolveArrayLiteralProperty(first, 'handlers', sf);
+      // `validate: ALL_NOTIFICATION_TASK_TYPES` (also `TASK_TYPES`, `ns.ALL_…`, or a local `const`) reads as `validate: [...ALL_NOTIFICATION_TASK_TYPES]`
+      const validate: TaskTypeListElements = named ? { ids: [], spreads: [named.symbolName], opaque: [] } : collectTaskTypeListElements(validateArr);
+      const handlers = collectHandlersArrayElements({ handlersArr, index, trustedExternal, imports });
+      const validateStatus = named ? 'resolved' : readTaskServiceListStatus(first, 'validate', validateArr);
+      const handlersStatus = readTaskServiceListStatus(first, 'handlers', handlersArr);
+      const nested = expandComponentValidateSpreads({ validateSpreads: validate.spreads, componentIndex, trustedExternal });
       out.push({
         validateIdentifiers: validate.ids,
         spreadValidateIdentifiers: validate.spreads,
@@ -879,6 +926,18 @@ function extractTaskServiceCalls(sources: readonly SourceFile[], index: ApiFunct
         unresolvedHandlerSpreadIdentifiers: handlers.unresolvedSpreads,
         resolvedHandlerBindings: handlers.resolvedBindings,
         unresolvedHandlerBindings: handlers.unresolvedBindings,
+        validateStatus,
+        validateAggregate: named?.component,
+        validateUpstreamAggregate: named && !named.component ? named.symbolName : undefined,
+        validateReferenceText: named?.referenceText,
+        opaqueValidateValues: validate.opaque,
+        nestedValidateIdentifiers: nested.identifiers,
+        nestedUpstreamValidateListings: nested.listings,
+        opaqueNestedValidateValues: nested.opaque,
+        reachedUpstreamHandlerCalls: handlers.reachedUpstreamHandlerCalls,
+        reachedTaskHandlerEntries: handlers.reachedTaskHandlerEntries,
+        handlersStatus,
+        opaqueHandlerValues: handlers.opaqueHandlerValues,
         sourceFile: rel
       });
     }
@@ -886,40 +945,192 @@ function extractTaskServiceCalls(sources: readonly SourceFile[], index: ApiFunct
   return out;
 }
 
-interface ValidateArrayElements {
-  readonly ids: string[];
-  readonly spreads: string[];
+/**
+ * Reads how a `notificationTaskService({ ... })` list property was read: missing, an array literal, or something else.
+ *
+ * @param config - The `notificationTaskService(...)` config object literal.
+ * @param name - The property name (`validate` or `handlers`).
+ * @param arr - The array literal the property resolved to, if any.
+ * @returns The list status.
+ */
+function readTaskServiceListStatus(config: ObjectLiteralExpression, name: string, arr: ArrayLiteralExpression | undefined): ExtractedTaskServiceValidateStatus {
+  let status: ExtractedTaskServiceValidateStatus = 'unresolved';
+  if (getPropertyInitializer(config, name) === undefined) {
+    status = 'absent';
+  } else if (arr) {
+    status = 'resolved';
+  }
+  return status;
 }
 
 /**
- * Splits the elements of the `validate: [...]` array into direct identifier
- * names and spread identifier names.
- *
- * @param validateArr - The resolved `validate` array literal, or `undefined`
- *   when the property is absent.
- * @returns The direct identifier names and spread identifier names.
+ * An aggregate a `notificationTaskService({ validate })` names directly, from {@link readValidateNamedAggregate}.
  */
-function collectValidateArrayElements(validateArr: ArrayLiteralExpression | undefined): ValidateArrayElements {
+interface ValidateNamedAggregate {
+  /**
+   * The aggregate's exported name. The caller reads `validate` as a spread of it.
+   */
+  readonly symbolName: string;
+  /**
+   * How the call's file refers to it (`ImportedReference.text`).
+   */
+  readonly referenceText: string;
+  /**
+   * The app's component aggregate, or `undefined` for an upstream aggregate.
+   */
+  readonly component: ExtractedTaskTypeAggregateArray | undefined;
+}
+
+/**
+ * Reads a `notificationTaskService({ validate })` value that is not an array literal as an aggregate it names directly:
+ * one of the app's component aggregates (`validate: ALL_NOTIFICATION_TASK_TYPES`), or an upstream aggregate
+ * (`validate: ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES`). The caller then reads it as `[...X]`. Every condition must hold.
+ * Otherwise `validate` stays `unresolved`: a miss, never a false finding.
+ * - The value reads back to a value import of the call's file (`readImportedReference`): by name, under an alias, or as a
+ *   namespace member, written directly or through a local `const` that is the only binding of its name in scope, with
+ *   the import's local name declared nowhere else in the file.
+ * - A component aggregate: the module is a package outside `@dereekb/*` (in practice the app's `-firebase` component), not
+ *   a relative path, so an API-side array of the same name is never mistaken for the component's; the name is not an
+ *   upstream aggregate name (a component aggregate that reuses one would be matched as the upstream aggregate by the
+ *   name-based checks); and the component declares an `ALL_*_NOTIFICATION_TASK_TYPES` / `NotificationTaskType[]` array
+ *   literal of that name.
+ * - An upstream aggregate: the module is an `@dereekb/*` package, the name is an aggregate from
+ *   `UPSTREAM_NOTIFICATION_TASK_HANDLERS`, and the component declares no aggregate of that name (the `validate` expansion
+ *   would follow the component's instead).
+ *
+ * @param config - The `notificationTaskService(...)` config object literal.
+ * @param input - The component index and the per-file bindings.
+ * @returns The aggregate `validate` names, or `undefined`.
+ */
+function readValidateNamedAggregate(config: ObjectLiteralExpression, input: Pick<ExtractTaskServiceCallsInput, 'componentIndex' | 'imports'>): ValidateNamedAggregate | undefined {
+  const imported = readImportedReference(getPropertyInitializer(config, 'validate'), input.imports);
+  let result: ValidateNamedAggregate | undefined;
+  if (imported) {
+    const { name, moduleSpecifier, text } = imported;
+    const component = input.componentIndex.taskAllTypesAggregates.get(name);
+    const isUpstreamName = UPSTREAM_NOTIFICATION_TASK_AGGREGATES.has(name);
+    const isDereekbModule = isDereekbModuleSpecifier(moduleSpecifier);
+    const isUpstreamAggregate = isDereekbModule && isUpstreamName && component === undefined;
+    const isComponentAggregate = !isDereekbModule && !moduleSpecifier.startsWith('.') && !isUpstreamName && component !== undefined;
+    if (isUpstreamAggregate || isComponentAggregate) {
+      result = { symbolName: name, referenceText: text, component };
+    }
+  }
+  return result;
+}
+
+interface TaskTypeListElements {
+  readonly ids: string[];
+  readonly spreads: string[];
+  readonly opaque: string[];
+}
+
+/**
+ * Splits a task-type list — the `validate: [...]` array or an `ALL_*_NOTIFICATION_TASK_TYPES` aggregate — into direct
+ * identifier names, spread identifier names, and the values the extractor can't read.
+ *
+ * @param arr - The array literal, or `undefined` when the property is absent.
+ * @returns The identifiers, the spread identifiers and the unreadable values (collapsed and truncated).
+ */
+function collectTaskTypeListElements(arr: ArrayLiteralExpression | undefined): TaskTypeListElements {
   const ids: string[] = [];
   const spreads: string[] = [];
-  if (!validateArr) return { ids, spreads };
-  for (const el of validateArr.getElements()) {
-    if (Node.isSpreadElement(el)) {
-      const inner = el.getExpression();
-      if (Node.isIdentifier(inner)) spreads.push(inner.getText());
-      continue;
+  const opaque: string[] = [];
+  for (const el of arr?.getElements() ?? []) {
+    const isSpread = Node.isSpreadElement(el);
+    const inner = isSpread ? el.getExpression() : unwrapAsExpressions(el);
+    if (inner !== undefined && Node.isIdentifier(inner)) {
+      (isSpread ? spreads : ids).push(inner.getText());
+    } else {
+      opaque.push(opaqueSnippet(el));
     }
-    const inner = unwrapAsExpressions(el);
-    if (inner && Node.isIdentifier(inner)) ids.push(inner.getText());
   }
-  return { ids, spreads };
+  return { ids, spreads, opaque };
+}
+
+interface ExpandComponentValidateSpreadsInput {
+  /**
+   * Identifiers the call's `validate` spreads, or the aggregate it names directly.
+   */
+  readonly validateSpreads: readonly string[];
+  readonly componentIndex: ComponentAggregateIndex;
+  readonly trustedExternal: ReadonlySet<string>;
+}
+
+interface ExpandedComponentValidateSpreads {
+  /**
+   * Every element identifier of the aggregates the walk visits.
+   */
+  readonly identifiers: string[];
+  readonly listings: ExtractedNestedUpstreamValidateListing[];
+  readonly opaque: string[];
+}
+
+/**
+ * Follows every component `ALL_*_NOTIFICATION_TASK_TYPES` aggregate a `validate` spreads (or names directly), and every component
+ * aggregate those spread in turn. Each aggregate is visited once, which also stops a cycle. For each one it records:
+ * - its element identifiers (`identifiers`): the app's task types and any other name written there, for the checks that
+ *   read the task types `validate` lists (`NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER`, the list report's `inValidateList`);
+ * - each upstream aggregate spread or upstream task-type constant from `UPSTREAM_NOTIFICATION_TASK_HANDLERS` it holds
+ *   (`listings`). A name counts only when it is imported from `@dereekb/*` (the trust list) and the component does not
+ *   declare it as its own task type, so a look-alike never raises an upstream error.
+ *
+ * Values the walk can't place are collected as opaque: an unreadable element, a spread of a name that is neither a
+ * component aggregate nor a trusted upstream aggregate, and an upstream task-type constant that is not trusted.
+ *
+ * @param input - The call's `validate` spreads, the component index and the trust list.
+ * @returns The element identifiers and the nested listings, both in `validate` order (depth first, an aggregate's
+ *   spreads before its own elements), and the opaque values.
+ */
+function expandComponentValidateSpreads(input: ExpandComponentValidateSpreadsInput): ExpandedComponentValidateSpreads {
+  const { validateSpreads, componentIndex, trustedExternal } = input;
+  const identifiers: string[] = [];
+  const listings: ExtractedNestedUpstreamValidateListing[] = [];
+  const opaque: string[] = [];
+  const visited = new Set<string>();
+  const isOwnTaskType = (name: string) => componentIndex.taskTypeConstants.has(name);
+  const visit = (aggregate: ExtractedTaskTypeAggregateArray, via: readonly string[]): void => {
+    visited.add(aggregate.symbolName);
+    const chain = [...via, aggregate.symbolName];
+    const location = { via: chain, sourceFile: aggregate.sourceFile, line: aggregate.line };
+    opaque.push(...aggregate.opaqueValues);
+    for (const name of aggregate.spreadIdentifiers) {
+      const inner = componentIndex.taskAllTypesAggregates.get(name);
+      if (inner) {
+        if (!visited.has(name)) {
+          visit(inner, chain);
+        }
+      } else if (UPSTREAM_NOTIFICATION_TASK_AGGREGATES.has(name) && trustedExternal.has(name) && !isOwnTaskType(name)) {
+        listings.push({ identifier: name, spread: true, ...location });
+      } else {
+        opaque.push(`...${name}`);
+      }
+    }
+    identifiers.push(...aggregate.taskTypeIdentifiers);
+    for (const name of aggregate.taskTypeIdentifiers) {
+      if (UPSTREAM_NOTIFICATION_TASK_TYPE_CONSTANTS.has(name) && !isOwnTaskType(name)) {
+        if (trustedExternal.has(name)) {
+          listings.push({ identifier: name, spread: false, ...location });
+        } else {
+          opaque.push(name);
+        }
+      }
+    }
+  };
+  for (const name of validateSpreads) {
+    const aggregate = componentIndex.taskAllTypesAggregates.get(name);
+    if (aggregate && !visited.has(name)) {
+      visit(aggregate, []);
+    }
+  }
+  return { identifiers, listings, opaque };
 }
 
 interface CollectHandlersArrayElementsOptions {
   readonly handlersArr: ArrayLiteralExpression | undefined;
-  readonly sf: SourceFile;
   readonly index: ApiFunctionIndex;
   readonly trustedExternal: ReadonlySet<string>;
+  readonly imports: DereekbImportIndex;
 }
 
 interface HandlersArrayElements {
@@ -927,6 +1138,9 @@ interface HandlersArrayElements {
   readonly unresolvedSpreads: string[];
   readonly resolvedBindings: string[];
   readonly unresolvedBindings: string[];
+  readonly reachedUpstreamHandlerCalls: ExtractedUpstreamHandlerCall[];
+  readonly reachedTaskHandlerEntries: ExtractedTaskHandlerEntry[];
+  readonly opaqueHandlerValues: string[];
 }
 
 /**
@@ -937,46 +1151,62 @@ interface HandlersArrayElements {
  * elsewhere; the binding tracer still walks them so the rules pass can match
  * resolved bindings against the trust list.
  *
- * @param options - The array literal, source file, function index, and
- *   trust-listed identifier set.
+ * @param options - The array literal, function index, trust-listed
+ *   identifier set and import bindings.
  * @returns The per-call buckets used to populate the task-service-call record.
  */
 function collectHandlersArrayElements(options: CollectHandlersArrayElementsOptions): HandlersArrayElements {
-  const { handlersArr, sf, index, trustedExternal } = options;
+  const { handlersArr, index, trustedExternal, imports } = options;
   const handlerTypes: string[] = [];
   const unresolvedSpreads: string[] = [];
   const resolvedBindings: string[] = [];
   const unresolvedBindings: string[] = [];
+  const reachedUpstreamHandlerCalls: ExtractedUpstreamHandlerCall[] = [];
+  const reachedTaskHandlerEntries: ExtractedTaskHandlerEntry[] = [];
+  const opaqueHandlerValues: string[] = [];
   if (handlersArr) {
-    const visited = new Set<string>();
+    const outcomes = new Map<Node, boolean>();
     for (const el of handlersArr.getElements()) {
-      consumeHandlersArrayElement(el, { sf, index, trustedExternal, unresolvedSpreads, resolvedBindings, unresolvedBindings, visited });
+      consumeHandlersArrayElement(el, { index, trustedExternal, imports, unresolvedSpreads, resolvedBindings, unresolvedBindings, reachedUpstreamHandlerCalls, reachedTaskHandlerEntries, opaqueHandlerValues, outcomes });
     }
   }
-  return { handlerTypes, unresolvedSpreads, resolvedBindings, unresolvedBindings };
+  return { handlerTypes, unresolvedSpreads, resolvedBindings, unresolvedBindings, reachedUpstreamHandlerCalls, reachedTaskHandlerEntries, opaqueHandlerValues };
 }
 
 function consumeHandlersArrayElement(el: Node, options: Omit<ConsumeHandlersSpreadElementOptions, 'inner'>): void {
   if (Node.isSpreadElement(el)) {
-    consumeHandlersSpreadElement({ ...options, inner: el.getExpression() });
+    consumeHandlersSpreadElement({ ...options, inner: unwrapOuterExpressions(el.getExpression()) });
     return;
   }
-  const inner = unwrapAsExpressions(el);
-  if (!inner) return;
-  const identifierName = readHandlerEntryIdentifierName(inner);
-  if (identifierName === undefined) return;
-  const { sf, index, trustedExternal, resolvedBindings, unresolvedBindings, visited } = options;
-  collectHandlerBindingsFromIdentifier({ name: identifierName, sf, index, trustedExternal, resolved: resolvedBindings, unresolved: unresolvedBindings, visited });
+  const inner = unwrapOuterExpressions(el);
+  if (noteUpstreamHandlerCall(inner, options)) return;
+  const identifier = readHandlerEntryIdentifier(inner);
+  if (identifier === undefined) {
+    // An inline handler config can't be an upstream handler.
+    if (!Node.isObjectLiteralExpression(inner)) {
+      options.opaqueHandlerValues.push(opaqueSnippet(inner));
+    }
+    return;
+  }
+  const { index, trustedExternal, imports, resolvedBindings, unresolvedBindings, reachedUpstreamHandlerCalls, reachedTaskHandlerEntries, opaqueHandlerValues, outcomes } = options;
+  collectHandlerBindingsFromIdentifier({ identifier, index, trustedExternal, imports, resolved: resolvedBindings, unresolved: unresolvedBindings, reachedUpstreamHandlerCalls, reachedTaskHandlerEntries, opaqueHandlerValues, outcomes });
 }
 
-function readHandlerEntryIdentifierName(inner: Node): string | undefined {
-  let result: string | undefined;
+/**
+ * Returns the identifier a `handlers` element names: the element itself, or the callee of a call. The trace resolves it
+ * where it sits.
+ *
+ * @param inner - The element or a spread's expression, parentheses, `!`, casts and `satisfies` stripped.
+ * @returns The identifier, or `undefined` for any other shape.
+ */
+function readHandlerEntryIdentifier(inner: Node): Identifier | undefined {
+  let result: Identifier | undefined;
   if (Node.isIdentifier(inner)) {
-    result = inner.getText();
+    result = inner;
   } else if (Node.isCallExpression(inner)) {
     const callee = inner.getExpression();
     if (Node.isIdentifier(callee)) {
-      result = callee.getText();
+      result = callee;
     }
   }
   return result;
@@ -984,13 +1214,16 @@ function readHandlerEntryIdentifierName(inner: Node): string | undefined {
 
 interface ConsumeHandlersSpreadElementOptions {
   readonly inner: Node;
-  readonly sf: SourceFile;
   readonly index: ApiFunctionIndex;
   readonly trustedExternal: ReadonlySet<string>;
+  readonly imports: DereekbImportIndex;
   readonly unresolvedSpreads: string[];
   readonly resolvedBindings: string[];
   readonly unresolvedBindings: string[];
-  readonly visited: Set<string>;
+  readonly reachedUpstreamHandlerCalls: ExtractedUpstreamHandlerCall[];
+  readonly reachedTaskHandlerEntries: ExtractedTaskHandlerEntry[];
+  readonly opaqueHandlerValues: string[];
+  readonly outcomes: Map<Node, boolean>;
 }
 
 /**
@@ -1002,42 +1235,51 @@ interface ConsumeHandlersSpreadElementOptions {
  * @param options - The spread inner expression and the buckets to populate.
  */
 function consumeHandlersSpreadElement(options: ConsumeHandlersSpreadElementOptions): void {
-  const { inner, sf, index, trustedExternal, unresolvedSpreads, resolvedBindings, unresolvedBindings, visited } = options;
-  const name = readHandlerEntryIdentifierName(inner);
-  if (name === undefined) return;
-  unresolvedSpreads.push(name);
-  collectHandlerBindingsFromIdentifier({ name, sf, index, trustedExternal, resolved: resolvedBindings, unresolved: unresolvedBindings, visited });
+  const { inner, index, trustedExternal, imports, unresolvedSpreads, resolvedBindings, unresolvedBindings, reachedUpstreamHandlerCalls, reachedTaskHandlerEntries, opaqueHandlerValues, outcomes } = options;
+  const identifier = readHandlerEntryIdentifier(inner);
+  if (identifier !== undefined) {
+    unresolvedSpreads.push(identifier.getText());
+  }
+  if (noteUpstreamHandlerCall(inner, options)) return;
+  if (identifier === undefined) {
+    opaqueHandlerValues.push(opaqueSnippet(inner));
+    return;
+  }
+  collectHandlerBindingsFromIdentifier({ identifier, index, trustedExternal, imports, resolved: resolvedBindings, unresolved: unresolvedBindings, reachedUpstreamHandlerCalls, reachedTaskHandlerEntries, opaqueHandlerValues, outcomes });
 }
 
-/**
- * Walks a value-position node looking for a typed
- * `NotificationTaskServiceTaskHandlerConfig<...>` object literal. When
- * one is reached via a local-variable binding, the variable's name is
- * pushed to {@link resolved}. Identifiers and call expressions that
- * cannot be followed (upstream imports, unbound names, non-handler
- * intermediate types) end up in {@link unresolved} for the rules pass
- * to cross-check against the trust-list.
- *
- * @param node - the value-position node to inspect
- * @param sf - the source file the node belongs to
- * @param index - the api function lookup index for chasing chained calls
- * @param trustedExternal - set of identifiers that downstream rules consider safe upstream re-exports
- * @param resolved - mutable buffer that receives in-file resolved binding names
- * @param unresolved - mutable buffer that receives identifiers the trace could not follow locally
- * @param visited - cycle-guard set for recursive identifier traversal
- * @returns `true` when a handler binding (resolved or unresolved) was recorded
- */
 /**
  * Context for collecting notification-task handler bindings reachable from a
  * given identifier or expression.
  */
 interface HandlerBindingCollectorContext {
-  readonly sf: SourceFile;
   readonly index: ApiFunctionIndex;
   readonly trustedExternal: ReadonlySet<string>;
+  /**
+   * The per-file `@dereekb/*` import bindings, used to match aliased and namespaced upstream handler factory calls.
+   */
+  readonly imports: DereekbImportIndex;
   readonly resolved: string[];
   readonly unresolved: string[];
-  readonly visited: Set<string>;
+  /**
+   * Receives every upstream handler-factory call (`UPSTREAM_NOTIFICATION_TASK_HANDLERS`) the trace reaches.
+   */
+  readonly reachedUpstreamHandlerCalls: ExtractedUpstreamHandlerCall[];
+  /**
+   * Receives the entry (see `tryReadTaskHandlerEntry`) of every typed handler config declaration the trace reaches, once per
+   * declaration. The rules read the task types `handlers` registers from these, not from the names in `resolved`.
+   */
+  readonly reachedTaskHandlerEntries: ExtractedTaskHandlerEntry[];
+  /**
+   * Receives every value the trace can't see through (see `ExtractedTaskServiceCall.opaqueHandlerValues`). Recording one
+   * ends that branch of the trace with `true`.
+   */
+  readonly opaqueHandlerValues: string[];
+  /**
+   * The outcome of every local variable declaration and function the trace has walked, by declaration (see
+   * `traceHandlerBindingOnce`). Two declarations of one name are separate entries.
+   */
+  readonly outcomes: Map<Node, boolean>;
 }
 
 /**
@@ -1047,16 +1289,32 @@ interface CollectHandlerBindingsFromValueOptions extends HandlerBindingCollector
   readonly node: Node | undefined;
 }
 
+/**
+ * Walks a value-position node of the `handlers` trace. Parentheses, `!`, `as` / `<T>` casts and `satisfies` around the
+ * node are stripped first (`unwrapOuterExpressions`). A typed `NotificationTaskServiceTaskHandlerConfig<...>` object
+ * literal reached through a local binding lands in `resolved`, an upstream handler factory call in
+ * `reachedUpstreamHandlerCalls`, and a value the trace can't see through in `opaqueHandlerValues`. Each local and
+ * function is walked once per trace, and reaching one again returns what that walk returned (`traceHandlerBindingOnce`).
+ *
+ * @param options - The node and the collector context.
+ * @returns `true` when the trace ended at a value it recorded: a typed handler config binding, an upstream handler
+ *   factory call, or an opaque value. `false` when it reached nothing it could record: an identifier it can't follow
+ *   (which lists itself in `unresolved`), an object literal that isn't a typed binding, or an array with no recorded
+ *   element. The identifier that led to a `false` lists its own name in `unresolved` as well.
+ */
 function collectHandlerBindingsFromValue(options: CollectHandlerBindingsFromValueOptions): boolean {
-  const inner = unwrapAsExpressions(options.node);
+  const inner = unwrapOuterExpressions(options.node);
   let result = false;
   if (inner) {
     if (Node.isCallExpression(inner)) {
       result = collectHandlerBindingsFromCallExpression(inner, options);
     } else if (Node.isIdentifier(inner)) {
-      result = collectHandlerBindingsFromIdentifier({ ...options, name: inner.getText() });
+      result = collectHandlerBindingsFromIdentifier({ ...options, identifier: inner });
     } else if (Node.isArrayLiteralExpression(inner)) {
       result = collectHandlerBindingsFromArrayLiteral(inner, options);
+    } else if (!Node.isObjectLiteralExpression(inner)) {
+      options.opaqueHandlerValues.push(opaqueSnippet(inner));
+      result = true;
     }
   }
   return result;
@@ -1066,8 +1324,15 @@ function collectHandlerBindingsFromCallExpression(call: Node, options: CollectHa
   if (!Node.isCallExpression(call)) return false;
   const callee = call.getExpression();
   let result = false;
-  if (Node.isIdentifier(callee)) {
-    result = collectHandlerBindingsFromIdentifier({ ...options, name: callee.getText() });
+  if (noteUpstreamHandlerCall(call, options)) {
+    result = true;
+  } else if (Node.isIdentifier(callee)) {
+    result = collectHandlerBindingsFromIdentifier({ ...options, identifier: callee });
+  } else {
+    // An opaque call ends the trace like an upstream factory call: it is recorded once, and the wrapper and local that
+    // lead here are not unresolved.
+    options.opaqueHandlerValues.push(opaqueSnippet(call));
+    result = true;
   }
   return result;
 }
@@ -1095,102 +1360,220 @@ function collectHandlerBindingsFromArrayLiteral(arr: Node, options: CollectHandl
  * Options for collecting handler bindings starting from an identifier name.
  */
 interface CollectHandlerBindingsFromIdentifierOptions extends HandlerBindingCollectorContext {
-  readonly name: string;
+  /**
+   * The identifier to follow. Where it sits decides which declaration of its name it means (`resolveLocalVariable`,
+   * `resolveApiFunctionReference`).
+   */
+  readonly identifier: Identifier;
 }
 
 function collectHandlerBindingsFromIdentifier(options: CollectHandlerBindingsFromIdentifierOptions): boolean {
-  const { name, trustedExternal, unresolved } = options;
+  const { identifier, trustedExternal, unresolved } = options;
+  const name = identifier.getText();
   const localResolved = tryResolveLocalHandlerBinding(options);
   const fnResolved = tryResolveFunctionHandlerBinding(options);
   const resolvedAny = localResolved || fnResolved;
 
-  // Chain ends at an upstream-imported identifier — treat as resolved so
-  // the rules pass does not warn for legitimate upstream factory calls
-  // (e.g. `storageFileProcessingNotificationTaskHandler` from
-  // `@dereekb/firebase-server/model`).
+  // A `@dereekb/*` name reached as a value can't be seen through: a helper
+  // can hide a handler in its arguments (`...filterMaybeArrayValues([sfHandler])`),
+  // and an upstream handler factory passed along as a value, or held in a
+  // variable the scan can't pin to one `const` (a `let`, a parameter, a
+  // shadowed name), may be called anywhere. Upstream handler factory calls
+  // (direct, aliased, namespaced, or through a local `const`) never get here;
+  // they end the trace in `noteUpstreamHandlerCall`.
   let result: boolean;
   if (resolvedAny) {
     result = true;
   } else if (trustedExternal.has(name)) {
+    options.opaqueHandlerValues.push(name);
     result = true;
   } else {
-    unresolved.push(name);
+    // a name reached again (a cycle, or a local or function its first walk couldn't follow) is listed once
+    if (!unresolved.includes(name)) {
+      unresolved.push(name);
+    }
     result = false;
   }
   return result;
 }
 
+/**
+ * Follows {@link CollectHandlerBindingsFromIdentifierOptions.identifier} to the local variable declaration in scope where it
+ * is used (`resolveLocalVariable`). A typed `NotificationTaskServiceTaskHandlerConfig` object literal lands in `resolved`,
+ * and its entry (`tryReadTaskHandlerEntry`) in `reachedTaskHandlerEntries`. An arrow function or function expression that returns from one place (`findSoleReturnExpression`) is a wrapper, like a
+ * function declaration: the trace walks the value it returns (`collectHandlerBindingsFromFunction`). Any other initializer
+ * is walked as a value, so a function that can return from more than one place stays opaque. A name with more than one declaration in scope there is opaque: the scan can't tell
+ * which one it means.
+ *
+ * @param options - The identifier and the collector context.
+ * @returns `true` when the name was opaque, or the declaration's value ended at something the trace recorded. `false` when
+ *   no followable declaration is in scope (a parameter, an import, a name only another function declares), the
+ *   declaration was already walked and its walk returned `false` (or is still running: a cycle), or its value led
+ *   nowhere.
+ */
 function tryResolveLocalHandlerBinding(options: CollectHandlerBindingsFromIdentifierOptions): boolean {
-  const { name, sf, visited, resolved } = options;
-  const localKey = `${sf.getFilePath()}::${name}`;
-  if (visited.has(localKey)) return false;
-  visited.add(localKey);
-  const localDecl = findLocalVariable(sf, name);
-  if (!localDecl) return false;
-  if (isHandlerConfigLeafDecl(localDecl)) {
-    resolved.push(localDecl.getName());
-    return true;
+  const { identifier, imports, outcomes, resolved, reachedTaskHandlerEntries, opaqueHandlerValues } = options;
+  const resolution = resolveLocalVariable(identifier, imports);
+  let result = false;
+  if (resolution.kind === 'ambiguous') {
+    opaqueHandlerValues.push(identifier.getText());
+    result = true;
+  } else if (resolution.kind === 'variable') {
+    const { declaration } = resolution;
+    const walk = (): boolean => {
+      const init = unwrapOuterExpressions(declaration.getInitializer());
+      let walked: boolean;
+      if (isHandlerConfigLeafDecl(declaration, imports)) {
+        resolved.push(declaration.getName());
+        const entry = tryReadTaskHandlerEntry(declaration, imports);
+        if (entry) {
+          reachedTaskHandlerEntries.push(entry);
+        }
+        walked = true;
+      } else if ((Node.isArrowFunction(init) || Node.isFunctionExpression(init)) && findSoleReturnExpression(init) !== undefined) {
+        // a local holding a function that returns from one place is a wrapper, like a function declaration: walk that value
+        walked = collectHandlerBindingsFromFunction({ ...options, fn: init });
+      } else {
+        walked = init !== undefined && collectHandlerBindingsFromValue({ ...options, node: init });
+      }
+      return walked;
+    };
+    result = traceHandlerBindingOnce({ outcomes, key: declaration, walk });
   }
-  const declInit = unwrapAsExpressions(localDecl.getInitializer());
-  if (!declInit) return false;
-  return collectHandlerBindingsFromValue({ ...options, node: declInit });
+  return result;
 }
 
-function isHandlerConfigLeafDecl(decl: VariableDeclaration): boolean {
-  const typeNode = decl.getTypeNode();
-  const typeText = typeNode ? typeNode.getText() : undefined;
-  const isHandlerConfigTyped = typeText !== undefined && (typeText === NOTIF_TASK_SERVICE_HANDLER_CONFIG || typeText.startsWith(`${NOTIF_TASK_SERVICE_HANDLER_CONFIG}<`));
-  if (!isHandlerConfigTyped) return false;
-  const declInit = unwrapAsExpressions(decl.getInitializer());
-  return declInit !== undefined && Node.isObjectLiteralExpression(declInit);
-}
-
-function tryResolveFunctionHandlerBinding(options: CollectHandlerBindingsFromIdentifierOptions): boolean {
-  const { name, index, visited } = options;
-  const fnKey = `fn::${name}`;
-  if (visited.has(fnKey)) return false;
-  visited.add(fnKey);
-  const fnEntry = index.functionsByName.get(name);
-  if (!fnEntry) return false;
-  const ret = findReturnExpression(fnEntry.node);
-  if (!ret) return false;
-  return collectHandlerBindingsFromValue({ ...options, node: ret, sf: fnEntry.sourceFile });
+function isHandlerConfigLeafDecl(decl: VariableDeclaration, imports: DereekbImportIndex): boolean {
+  const declInit = unwrapOuterExpressions(decl.getInitializer());
+  return readTypeReferenceName(decl.getTypeNode(), imports) === NOTIF_TASK_SERVICE_HANDLER_CONFIG && declInit !== undefined && Node.isObjectLiteralExpression(declInit);
 }
 
 /**
- * Resolve an array-literal argument passed to a `{ validate, handlers }`
- * property — either directly `validate: [...]` or as `validate: foo`
- * where `foo` is a local array-literal binding.
+ * Follows {@link CollectHandlerBindingsFromIdentifierOptions.identifier} to the API function it is bound to where it is
+ * used (`resolveApiFunctionReference`) and walks its return value (`collectHandlerBindingsFromFunction`). Each function
+ * is walked once per trace, whether this path or a local that holds it reaches it first. A name bound to more than one
+ * declaration in scope is the local lookup's to record (`tryResolveLocalHandlerBinding`), so it is not followed here.
  *
- * @param obj - The object literal carrying the property.
- * @param name - The property name to resolve.
- * @param sf - The source file scope used to chase identifier indirection.
- * @returns The resolved array literal, or `undefined` when the property is missing or non-array.
+ * @param options - The identifier and the collector context.
+ * @returns `true` when the function's return value ended at something the trace recorded. `false` when the name is bound
+ *   to no API function there (a parameter, a variable that holds no function, an import the scan can't pin to one API
+ *   function), or the function's value led nowhere.
  */
-function resolveArrayFromProperty(obj: ObjectLiteralExpression, name: string, sf: SourceFile): ArrayLiteralExpression | undefined {
-  const init = unwrapAsExpressions(getPropertyInitializer(obj, name));
-  if (!init) return undefined;
-  if (Node.isArrayLiteralExpression(init)) return init;
-  if (Node.isIdentifier(init)) {
-    const declNode = findLocalVariable(sf, init.getText());
-    if (declNode) {
-      const declInit = unwrapAsExpressions(declNode.getInitializer());
-      if (declInit && Node.isArrayLiteralExpression(declInit)) {
-        return declInit;
-      }
-    }
+function tryResolveFunctionHandlerBinding(options: CollectHandlerBindingsFromIdentifierOptions): boolean {
+  const resolution = resolveApiFunctionReference({ reference: options.identifier, index: options.index, imports: options.imports });
+  return resolution.kind === 'function' && collectHandlerBindingsFromFunction({ ...options, fn: resolution.entry.node });
+}
+
+/**
+ * Options for walking a function the handlers trace reached.
+ */
+interface CollectHandlerBindingsFromFunctionOptions extends HandlerBindingCollectorContext {
+  /**
+   * The API function a reference is bound to, or one a local variable holds.
+   */
+  readonly fn: ArrowFunction | FunctionDeclaration | FunctionExpression;
+}
+
+/**
+ * Walks what {@link CollectHandlerBindingsFromFunctionOptions.fn} returns: a concise arrow body, or the expression of
+ * the first `return` statement of its body. Each function is walked once per trace (`traceHandlerBindingOnce`), whichever
+ * path reaches it first: the function a reference is bound to (`tryResolveFunctionHandlerBinding`) or a local that holds
+ * it (`tryResolveLocalHandlerBinding`).
+ *
+ * @param options - The function and the collector context.
+ * @returns `true` when the function's return value ended at something the trace recorded, or, on a revisit, when the
+ *   first walk did.
+ */
+function collectHandlerBindingsFromFunction(options: CollectHandlerBindingsFromFunctionOptions): boolean {
+  const { fn, ...context } = options;
+  const walk = (): boolean => {
+    const ret = findReturnExpression(fn);
+    return ret !== undefined && collectHandlerBindingsFromValue({ ...context, node: ret });
+  };
+  return traceHandlerBindingOnce({ outcomes: context.outcomes, key: fn, walk });
+}
+
+interface TraceHandlerBindingOnceInput {
+  readonly outcomes: Map<Node, boolean>;
+  /**
+   * The local variable declaration or the function the walk reads: the one a reference is bound to, so a revisit can't
+   * mean another.
+   */
+  readonly key: Node;
+  /**
+   * Walks the local or function and returns its outcome (see `collectHandlerBindingsFromValue`).
+   */
+  readonly walk: () => boolean;
+}
+
+/**
+ * Walks the local or function behind a key at most once per `handlers` trace, and returns its outcome. The first visit
+ * stores what the walk returned and a revisit returns it: the first walk already recorded everything behind the key, so a
+ * wrapper or local reached twice is not listed in `unresolved` the second time. A revisit returns `false` while the walk
+ * is still running (a cycle).
+ *
+ * @param input - The trace's outcomes, the key and the walk.
+ * @returns The key's outcome.
+ */
+function traceHandlerBindingOnce(input: TraceHandlerBindingOnceInput): boolean {
+  const { outcomes, key } = input;
+  const stored = outcomes.get(key);
+  let result: boolean;
+  if (stored === undefined) {
+    outcomes.set(key, false); // what a revisit reads while the walk runs: a cycle
+    result = input.walk();
+    outcomes.set(key, result);
+  } else {
+    result = stored;
   }
-  return undefined;
+  return result;
+}
+
+/**
+ * Records {@link node} when it calls an upstream handler factory from `UPSTREAM_NOTIFICATION_TASK_HANDLERS` (directly,
+ * through an `@dereekb/*` import alias, as an `@dereekb/*` namespace member, or through a local `const` holding one of
+ * those), so the rules know which upstream handlers are reachable from `notificationTaskService({ handlers })`. The call
+ * ends the trace: it builds exactly one handler config, so there is nothing behind it to follow.
+ *
+ * @param node - A value-position node the handlers trace visits.
+ * @param context - The import bindings and the bucket that receives the call's factory and location.
+ * @returns `true` when {@link node} is an upstream handler factory call.
+ */
+function noteUpstreamHandlerCall(node: Node, context: Pick<HandlerBindingCollectorContext, 'imports' | 'reachedUpstreamHandlerCalls'>): boolean {
+  const factory = upstreamHandlerFactoryOf(node, context.imports);
+  if (factory !== undefined) {
+    context.reachedUpstreamHandlerCalls.push({ factory, sourceFile: apiRelPath(node.getSourceFile()), line: node.getStartLineNumber() });
+  }
+  return factory !== undefined;
+}
+
+const OPAQUE_SNIPPET_MAX_LENGTH = 60;
+
+/**
+ * Returns {@link node}'s text with whitespace collapsed, truncated for messages.
+ *
+ * @param node - The opaque value.
+ * @returns The snippet.
+ */
+function opaqueSnippet(node: Node): string {
+  const text = node.getText().replaceAll(/\s+/g, ' ').trim();
+  return text.length > OPAQUE_SNIPPET_MAX_LENGTH ? `${text.slice(0, OPAQUE_SNIPPET_MAX_LENGTH)}…` : text;
 }
 
 // MARK: Task handler entries
-function extractTaskHandlerEntries(sources: readonly SourceFile[]): readonly ExtractedTaskHandlerEntry[] {
+/**
+ * Reads every typed handler config in the API files ({@link tryReadTaskHandlerEntry}), one entry per declaration: two
+ * configs that share a binding name (in two functions of one file, or in two files) are two entries.
+ *
+ * @param sources - The API source files.
+ * @param imports - The per-file `@dereekb/*` import bindings.
+ * @returns The entries, in source order.
+ */
+function extractTaskHandlerEntries(sources: readonly SourceFile[], imports: DereekbImportIndex): readonly ExtractedTaskHandlerEntry[] {
   const out: ExtractedTaskHandlerEntry[] = [];
-  const seenSymbols = new Set<string>();
   for (const sf of sources) {
-    const rel = apiRelPath(sf);
     for (const decl of sf.getDescendantsOfKind(SyntaxKind.VariableDeclaration)) {
-      const entry = tryReadTaskHandlerEntry(decl, rel, seenSymbols);
+      const entry = tryReadTaskHandlerEntry(decl, imports);
       if (entry) {
         out.push(entry);
       }
@@ -1199,18 +1582,23 @@ function extractTaskHandlerEntries(sources: readonly SourceFile[]): readonly Ext
   return out;
 }
 
-function tryReadTaskHandlerEntry(decl: VariableDeclaration, sourceFile: string, seenSymbols: Set<string>): ExtractedTaskHandlerEntry | undefined {
+/**
+ * Reads {@link decl} as a task handler config entry: a `NotificationTaskServiceTaskHandlerConfig<...>`-typed object literal
+ * whose `type:` is an identifier. The entries pass and the `handlers` trace both read entries here, so a declaration the
+ * trace reaches and its entry agree.
+ *
+ * @param decl - A variable declaration.
+ * @param imports - The per-file `@dereekb/*` import bindings.
+ * @returns The entry, or `undefined` when {@link decl} is not such a config.
+ */
+function tryReadTaskHandlerEntry(decl: VariableDeclaration, imports: DereekbImportIndex): ExtractedTaskHandlerEntry | undefined {
   const typeNode = decl.getTypeNode();
-  if (!typeNode) return undefined;
-  const typeText = typeNode.getText();
-  if (!typeText.startsWith(`${NOTIF_TASK_SERVICE_HANDLER_CONFIG}<`) && typeText !== NOTIF_TASK_SERVICE_HANDLER_CONFIG) return undefined;
+  if (!typeNode || readTypeReferenceName(typeNode, imports) !== NOTIF_TASK_SERVICE_HANDLER_CONFIG) return undefined;
   const obj = asObjectLiteral(decl.getInitializer());
   if (!obj) return undefined;
   const typeIdent = readIdentifierProperty(obj, 'type');
   if (!typeIdent) return undefined;
-  const key = `${sourceFile}::${decl.getName()}`;
-  if (seenSymbols.has(key)) return undefined;
-  seenSymbols.add(key);
+  const sourceFile = apiRelPath(decl.getSourceFile());
   const flowCount = readFlowStepCount(obj);
   const { dataArg, checkpointArg } = readHandlerTypeArguments(typeNode);
   const entry: ExtractedTaskHandlerEntry = {

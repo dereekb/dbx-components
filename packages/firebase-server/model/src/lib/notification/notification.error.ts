@@ -16,9 +16,20 @@ import {
   type NotificationDeliveryMethod,
   type NotificationHealthCheckIssueCode,
   NOTIFICATION_BOX_DOES_NOT_EXIST_ERROR_CODE,
-  NOTIFICATION_BOX_EXCLUSION_TARGET_INVALID_ERROR_CODE
+  NOTIFICATION_BOX_EXCLUSION_TARGET_INVALID_ERROR_CODE,
+  NOTIFICATION_TASK_BOT_ENTRY_DATA_PATCH_INVALID_ERROR_CODE,
+  NOTIFICATION_TASK_BOT_ENTRY_DATA_PATCH_NOT_ALLOWED_ERROR_CODE,
+  NOTIFICATION_TASK_BOT_ENTRY_DOES_NOT_EXIST_ERROR_CODE,
+  NOTIFICATION_TASK_BOT_ENTRY_NOT_RUNNABLE_ERROR_CODE,
+  NOTIFICATION_TASK_BOT_ENTRY_OPTED_OUT_ERROR_CODE,
+  NOTIFICATION_TASK_BOT_OPT_OUT_NOT_ALLOWED_ERROR_CODE,
+  NOTIFICATION_TASK_BOT_OPT_OUT_REQUIRES_OWNER_ERROR_CODE,
+  type NotificationTaskBotEntryId,
+  type NotificationTaskBotScriptGroupKey,
+  type NotificationTaskBotScriptType
 } from '@dereekb/firebase';
-import { preconditionConflictError } from '@dereekb/firebase-server';
+import { badRequestError, forbiddenError, notFoundError, preconditionConflictError } from '@dereekb/firebase-server';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Creates an error indicating that a required notification ID was missing during creation.
@@ -298,5 +309,140 @@ export function notificationUserLockedConfigFromBeingUpdatedError(uid: FirebaseA
     data: {
       uid
     }
+  });
+}
+
+/**
+ * Creates an error indicating that a {@link NotificationTaskBot} or one of its entries does not exist.
+ *
+ * @param key - The bot's model key.
+ * @param entryId - The entry id that was not found.
+ * @returns A not-found error with the entry does not exist error code.
+ */
+export function notificationTaskBotEntryDoesNotExistError(key: FirestoreModelKey, entryId: NotificationTaskBotEntryId) {
+  return notFoundError({
+    message: `The NotificationTaskBot "${key}" has no entry "${entryId}".`,
+    code: NOTIFICATION_TASK_BOT_ENTRY_DOES_NOT_EXIST_ERROR_CODE,
+    data: { key, entryId }
+  });
+}
+
+/**
+ * Creates an error indicating that a {@link NotificationTaskBot} entry cannot run because it is disabled or paused.
+ *
+ * @param key - The bot's model key.
+ * @param entryId - The entry id.
+ * @returns A precondition conflict error with the entry not runnable error code.
+ */
+export function notificationTaskBotEntryNotRunnableError(key: FirestoreModelKey, entryId: NotificationTaskBotEntryId) {
+  return preconditionConflictError({
+    message: `The NotificationTaskBot "${key}" entry "${entryId}" is disabled or paused and cannot run. Only a FORCED run may resume an entry paused with the 'failed' reason.`,
+    code: NOTIFICATION_TASK_BOT_ENTRY_NOT_RUNNABLE_ERROR_CODE,
+    data: { key, entryId }
+  });
+}
+
+/**
+ * Creates an error indicating that a {@link NotificationTaskBot} entry cannot run because the bot's owner opted out of
+ * its script group. Only the owner can undo the opt-out.
+ *
+ * @param key - The bot's model key.
+ * @param entryId - The entry id.
+ * @param oat - When the owner opted out.
+ * @returns A precondition conflict error with the entry opted out error code.
+ */
+export function notificationTaskBotEntryOptedOutError(key: FirestoreModelKey, entryId: NotificationTaskBotEntryId, oat: Date) {
+  return preconditionConflictError({
+    message: `The NotificationTaskBot "${key}" entry "${entryId}" was opted out by the bot's owner and cannot run.`,
+    code: NOTIFICATION_TASK_BOT_ENTRY_OPTED_OUT_ERROR_CODE,
+    data: { key, entryId, oat }
+  });
+}
+
+/**
+ * Creates an error indicating that a {@link NotificationTaskBot} opt-out update named groups the owner can't change.
+ *
+ * @param key - The bot's model key.
+ * @param groups - The groups that can't be changed.
+ * @returns A forbidden error with the opt-out not allowed error code.
+ */
+export function notificationTaskBotOptOutNotAllowedError(key: FirestoreModelKey, groups: NotificationTaskBotScriptGroupKey[]) {
+  return forbiddenError({
+    message: `The NotificationTaskBot "${key}" opt-out groups "${groups.join(', ')}" can't be changed.`,
+    code: NOTIFICATION_TASK_BOT_OPT_OUT_NOT_ALLOWED_ERROR_CODE,
+    data: { key, groups }
+  });
+}
+
+/**
+ * Creates an error indicating that someone other than the bot's owner tried to change a {@link NotificationTaskBot}'s
+ * opt-outs. Admins included, since an admin has no way to undo an owner's opt-out.
+ *
+ * @param key - The bot's model key.
+ * @returns A forbidden error with the opt-out requires owner error code.
+ */
+export function notificationTaskBotOptOutRequiresOwnerError(key: FirestoreModelKey) {
+  return forbiddenError({
+    message: `Only the owner of the NotificationTaskBot "${key}" can change its opt-outs.`,
+    code: NOTIFICATION_TASK_BOT_OPT_OUT_REQUIRES_OWNER_ERROR_CODE,
+    data: { key }
+  });
+}
+
+/**
+ * Input for {@link notificationTaskBotEntryDataPatchNotAllowedError} and {@link notificationTaskBotEntryDataPatchInvalidError}.
+ */
+export interface NotificationTaskBotEntryDataPatchErrorInput {
+  /**
+   * The bot's model key.
+   */
+  readonly key: FirestoreModelKey;
+  /**
+   * The entry id.
+   */
+  readonly entryId: NotificationTaskBotEntryId;
+  /**
+   * The entry's script type.
+   */
+  readonly scriptType: NotificationTaskBotScriptType;
+  /**
+   * arktype's summary of the problems. Used by the invalid error only.
+   */
+  readonly problems?: Maybe<string>;
+}
+
+/**
+ * Creates an error indicating that `update:entry` patched the data of a {@link NotificationTaskBot} entry whose script
+ * accepts no data patches, because its script config sets no `dataType`.
+ *
+ * @param input - The bot's key, the entry id and the entry's script type.
+ * @returns A precondition conflict error with the data patch not allowed error code.
+ */
+export function notificationTaskBotEntryDataPatchNotAllowedError(input: NotificationTaskBotEntryDataPatchErrorInput) {
+  const { key, entryId, scriptType } = input;
+
+  return preconditionConflictError({
+    message: `The NotificationTaskBot "${key}" entry "${entryId}" runs script "${scriptType}", which accepts no data patches (its script config sets no dataType).`,
+    code: NOTIFICATION_TASK_BOT_ENTRY_DATA_PATCH_NOT_ALLOWED_ERROR_CODE,
+    data: { key, entryId, scriptType }
+  });
+}
+
+/**
+ * Creates an error indicating that `update:entry` patched the data of a {@link NotificationTaskBot} entry and the data
+ * after the patch does not satisfy the script's `dataType`.
+ *
+ * The message includes the problems, so a CLI or MCP caller can see what to fix.
+ *
+ * @param input - The bot's key, the entry id, the entry's script type and the problems.
+ * @returns A bad request error with the data patch invalid error code.
+ */
+export function notificationTaskBotEntryDataPatchInvalidError(input: NotificationTaskBotEntryDataPatchErrorInput) {
+  const { key, entryId, scriptType, problems } = input;
+
+  return badRequestError({
+    message: `The data patch for NotificationTaskBot "${key}" entry "${entryId}" (script "${scriptType}") is invalid: ${problems}`,
+    code: NOTIFICATION_TASK_BOT_ENTRY_DATA_PATCH_INVALID_ERROR_CODE,
+    data: { key, entryId, scriptType, problems }
   });
 }

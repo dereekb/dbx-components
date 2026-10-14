@@ -1,6 +1,6 @@
 import { inspect } from 'node:util';
 import { type OnCallTypedModelParams } from '@dereekb/firebase';
-import { type McpToolResponseContent, type McpToolResponseContext, type OnCallModelFunctionApiDetails } from '@dereekb/firebase-server';
+import { type McpToolResponseContent, type McpToolResponseContext, type OnCallModelFunctionApiDetails, readFirebaseServerValidationErrorSummary } from '@dereekb/firebase-server';
 
 /**
  * Default structured value emitted by MCP when a handler returns `undefined`.
@@ -58,14 +58,20 @@ export async function formatMcpToolResponse(result: unknown, params: OnCallTyped
 /**
  * Converts an error thrown from the dispatch chain into the MCP error response shape.
  *
+ * A validation error's per-field summary is appended beneath its generic message, so the caller sees which fields failed
+ * and why, rather than only that something did.
+ *
  * @param error - The thrown error.
- * @returns An MCP tool response with `isError: true` and the error message as a text block.
+ * @returns An MCP tool response with `isError: true` and the error text.
  */
 export function formatMcpToolErrorResponse(error: unknown): McpToolResponseContent {
   const message = error instanceof Error ? error.message : String(error);
+  const summary = readFirebaseServerValidationErrorSummary(error);
+  const text = summary == null ? message : `${message}\n${summary}`;
+
   return {
     isError: true,
-    content: [{ type: 'text', text: message }]
+    content: [{ type: 'text', text }]
   };
 }
 

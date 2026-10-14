@@ -487,6 +487,28 @@ export function loadDocumentsForIds<T, D extends FirestoreDocument<T>>(accessor:
 }
 
 /**
+ * Loads the {@link FirestoreDocument} a document id or a full key refers to.
+ *
+ * A value containing `/` is a full key, loaded with `accessor.loadDocumentForKey()`, which refuses a key of another
+ * collection. Anything else is a document id, loaded relative to the accessor's collection with `accessor.loadDocumentForId()`.
+ * Resolving an id through the accessor, rather than prefixing a collection name onto it, keeps a subcollection's parent and
+ * a test driver's fuzzed collection names intact. No network calls are made.
+ *
+ * @param accessor - Accessor to load the document with (must have collection context to resolve an id).
+ * @param idOrKey - A document id (`abc123`) or a full key (`gb/abc123`).
+ * @returns The document instance.
+ * @throws {Error} When `idOrKey` is a key of a different collection.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory firestore
+ * @dbxUtilTags firestore, document, loader, accessor, id, key, path, either, promote
+ * @dbxUtilRelated load-documents-for-ids, load-documents-for-keys
+ */
+export function loadDocumentForIdOrKey<T, D extends FirestoreDocument<T>>(accessor: FirestoreDocumentAccessor<T, D>, idOrKey: FirestoreModelId | FirestoreModelKey): D {
+  return idOrKey.includes('/') ? accessor.loadDocumentForKey(idOrKey) : accessor.loadDocumentForId(idOrKey);
+}
+
+/**
  * Function type that loads {@link FirestoreDocument} instances from {@link DocumentReference}s.
  *
  * When a {@link Transaction} is provided, the returned documents are bound to that transaction's accessor,

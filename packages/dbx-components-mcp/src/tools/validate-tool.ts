@@ -241,6 +241,16 @@ export interface TwoSideInspectAndValidateInput {
    * Caller-supplied relative path to the API app root.
    */
   readonly apiRel: string;
+  /**
+   * Absolute workspace root (the server cwd).
+   */
+  readonly workspaceAbs: string;
+  /**
+   * Absolute paths of the workspace files the tool declared through
+   * {@link CreateTwoSideValidateToolConfig.workspaceFileArgs}, keyed by arg
+   * name. Empty for tools that declare none.
+   */
+  readonly workspaceFiles: Readonly<Record<string, string>>;
 }
 
 /**
@@ -254,6 +264,13 @@ export interface CreateTwoSideValidateToolConfig<TResult extends { readonly erro
    * MCP tool definition (name, description, inputSchema).
    */
   readonly definition: Tool;
+  /**
+   * Optional workspace-file args the tool accepts, as arg name → default path
+   * relative to the server cwd (e.g. `{ rulesFile: 'firestore.rules' }`). Each
+   * is validated as an optional string, rejected when it escapes the cwd, and
+   * resolved into {@link TwoSideInspectAndValidateInput.workspaceFiles}.
+   */
+  readonly workspaceFileArgs?: Readonly<Record<string, string>>;
   /**
    * Runs the domain inspection and validation. Receives the resolved
    * absolute and relative paths for both sides; returns the validation
@@ -275,17 +292,29 @@ export interface CreateTwoSideValidateToolConfig<TResult extends { readonly erro
  * @param parsed - The parsed-args envelope.
  * @param parsed.componentDir - The relative path to the component package root.
  * @param parsed.apiDir - The relative path to the API app root.
+ * @param workspaceFileArgs - Optional workspace-file args the tool declared (arg name → default path).
+ * @param rawArgs - The raw tool arguments, read for the workspace-file args.
  * @returns The absolute + relative quad, or an error `ToolResult`
  */
-function resolveTwoSideInput(parsed: { readonly componentDir: string; readonly apiDir: string }): TwoSideInspectAndValidateInput | ToolResult {
+function resolveTwoSideInput(parsed: { readonly componentDir: string; readonly apiDir: string }, workspaceFileArgs?: Readonly<Record<string, string>>, rawArgs?: unknown): TwoSideInspectAndValidateInput | ToolResult {
   const cwd = process.cwd();
   const componentRel = parsed.componentDir;
   const apiRel = parsed.apiDir;
   let result: TwoSideInspectAndValidateInput | ToolResult;
   let ensureError: string | undefined;
+  const workspaceFiles: Record<string, string> = {};
   try {
     ensurePathInsideCwd(componentRel, cwd);
     ensurePathInsideCwd(apiRel, cwd);
+    for (const [name, defaultPath] of Object.entries(workspaceFileArgs ?? {})) {
+      const value = rawArgs && typeof rawArgs === 'object' ? (rawArgs as Record<string, unknown>)[name] : undefined;
+      if (value !== undefined && typeof value !== 'string') {
+        throw new Error(`Invalid arguments: \`${name}\` must be a string.`);
+      }
+      const rel = value ?? defaultPath;
+      ensurePathInsideCwd(rel, cwd);
+      workspaceFiles[name] = resolve(cwd, rel);
+    }
   } catch (err) {
     ensureError = err instanceof Error ? err.message : String(err);
   }
@@ -294,7 +323,9 @@ function resolveTwoSideInput(parsed: { readonly componentDir: string; readonly a
       componentAbs: resolve(cwd, componentRel),
       componentRel,
       apiAbs: resolve(cwd, apiRel),
-      apiRel
+      apiRel,
+      workspaceAbs: cwd,
+      workspaceFiles
     };
   } else {
     result = toolError(ensureError);
@@ -317,7 +348,7 @@ function resolveTwoSideInput(parsed: { readonly componentDir: string; readonly a
  * @__NO_SIDE_EFFECTS__
  */
 export function createTwoSideValidateTool<TResult extends { readonly errorCount: number }>(config: CreateTwoSideValidateToolConfig<TResult>): DbxTool {
-  const { definition, inspectAndValidate, format } = config;
+  const { definition, workspaceFileArgs, inspectAndValidate, format } = config;
 
   async function run(rawArgs: unknown): Promise<ToolResult> {
     const parsed = TwoSideValidateArgsType(rawArgs);
@@ -325,7 +356,7 @@ export function createTwoSideValidateTool<TResult extends { readonly errorCount:
       return toolError(`Invalid arguments: ${parsed.summary}`);
     }
 
-    const resolved = resolveTwoSideInput(parsed);
+    const resolved = resolveTwoSideInput(parsed, workspaceFileArgs, rawArgs);
     if ('content' in resolved) {
       return resolved;
     }

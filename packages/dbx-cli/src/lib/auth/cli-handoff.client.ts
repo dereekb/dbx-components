@@ -39,7 +39,7 @@ export interface ClaimCliHandoffInput {
    */
   readonly oidcIssuer: string;
   /**
-   * The one-time claim code an MCP session's `cli-token` tool produced.
+   * The one-time claim code an MCP session's CLI token tool (`<prefix>_cli_token`) produced.
    */
   readonly code: string;
 }
@@ -89,7 +89,9 @@ export async function claimCliHandoff(input: ClaimCliHandoffInput): Promise<CliH
     throw new CliError({
       message: 'The claim code was rejected. Claim codes are single-use and expire within minutes.',
       code: 'AUTH_HANDOFF_FAILED',
-      suggestion: 'Mint a fresh one with the `cli-token` MCP tool and redeem it right away.'
+      // the tool's prefix belongs to the MCP server that minted the code, which this CLI cannot see —
+      // so name the pattern rather than guess one spelling of it
+      suggestion: "Mint a fresh one with the MCP server's CLI token tool (`<prefix>_cli_token`) and redeem it right away."
     });
   }
 

@@ -165,6 +165,30 @@ export const demoAuthorizedUserContext = demoAuthorizedUserContextFactory({});
     expect(entry?.singletonName).toBe('demoAuthorizedUserContext');
   });
 
+  it('normalizes a library NotificationTaskBot pair registered via notificationTaskBotTestContextFactory', () => {
+    const snippet = `
+export type DemoApiNotificationTaskBotTestContextParams = NotificationTaskBotTestContextParams;
+export class DemoApiNotificationTaskBotTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends NotificationTaskBotTestContextFixture<DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiNotificationTaskBotTestContextInstance<F>> {}
+export class DemoApiNotificationTaskBotTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends NotificationTaskBotTestContextInstance<DemoApiFunctionContextFixtureInstance<F>> {}
+export const demoNotificationTaskBotContextFactory = () =>
+  notificationTaskBotTestContextFactory<DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiNotificationTaskBotTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiNotificationTaskBotTestContextFixture<FirebaseAdminFunctionTestContextInstance>>({
+    makeFixture: (f) => new DemoApiNotificationTaskBotTestContextFixture(f),
+    makeInstance: (config) => new DemoApiNotificationTaskBotTestContextInstance(config)
+  });
+export const demoNotificationTaskBotContext = demoNotificationTaskBotContextFactory();
+`;
+    const extraction = extractAppFixturesFromText({ text: BASE_HEADER + snippet, fixturePath: 'fixture.ts' });
+    const entry = extraction.entries.find((e) => e.model === 'NotificationTaskBot');
+    expect(entry).toBeDefined();
+    expect(entry?.kind).toBe('firestore-model');
+    expect(entry?.nonModelFamily).toBeUndefined();
+    expect(entry?.factoryName).toBe('demoNotificationTaskBotContextFactory');
+    expect(entry?.singletonName).toBe('demoNotificationTaskBotContext');
+    expect(entry?.fixtureExtendsGenerics.slice(0, 2)).toEqual(['NotificationTaskBot', 'NotificationTaskBotDocument']);
+    expect(entry?.instanceExtendsGenerics.slice(0, 2)).toEqual(['NotificationTaskBot', 'NotificationTaskBotDocument']);
+    expect(entry?.factory?.genericArgs.slice(0, 2)).toEqual(['NotificationTaskBot', 'NotificationTaskBotDocument']);
+  });
+
   it('classifies a pair tagged @dbxFixtureNotModel as kind=non-model', () => {
     const snippet = `
 /**

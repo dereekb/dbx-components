@@ -10,15 +10,29 @@ import { type, type Type } from 'arktype';
 import { type TargetModelParams, type FirestoreModelKey, type FirebaseAuthUserId } from '../../common';
 import { firestoreModelIdType, firestoreModelKeyType } from '../../common/model/model/model.validator';
 import { targetModelParamsType } from '../../common/model/model/model.param';
-import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCreateFunction, type ModelFirebaseCrudFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap } from '../../client';
+import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCreateFunction, type ModelFirebaseCrudFunction, type ModelFirebaseReadFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap } from '../../client';
 import { type E164PhoneNumber, type EmailAddress, type IndexNumber, type Maybe } from '@dereekb/util';
 import { type NotificationTypes } from './notification';
 import { type NotificationUserDefaultNotificationBoxRecipientConfig, type NotificationBoxRecipientTemplateConfigArrayEntry, NotificationBoxRecipientFlag, NotificationDeliveryMethod } from './notification.config';
-import { type NotificationBoxId, type NotificationSummaryId, type NotificationTemplateType } from './notification.id';
+import {
+  NOTIFICATION_TASK_BOT_ENTRY_ID_MAX_LENGTH,
+  NOTIFICATION_TASK_BOT_ENTRY_ID_REGEX,
+  NOTIFICATION_TASK_BOT_SCRIPT_GROUP_KEY_MAX_LENGTH,
+  NOTIFICATION_TASK_BOT_SCRIPT_GROUP_KEY_REGEX,
+  type NotificationBoxId,
+  type NotificationSummaryId,
+  type NotificationTaskBotEntryId,
+  type NotificationTaskBotScriptGroupKey,
+  type NotificationTaskKey,
+  type NotificationTemplateType
+} from './notification.id';
 import { ARKTYPE_DATE_DTO_TYPE, clearable, e164PhoneNumberType } from '@dereekb/model';
 import { type NotificationHealthCheck, type NotificationHealthCheckIssueAutofixResult, type NotificationHealthCheckIssueCode } from './notification.healthcheck';
 import { type NotificationSendEmailMessagesResult, type NotificationSendTextMessagesResult, type NotificationSendNotificationSummaryMessagesResult } from './notification.send';
 import { type NotificationTaskServiceTaskHandlerCompletionType } from './notification.task';
+import { type NotificationTaskBotEntryData, NotificationTaskBotEntryState, type NotificationTaskBotEntryStatus, NotificationTaskBotRunTrigger } from './notification.taskbot';
+import { type NotificationTaskBotEntryDataUpdate } from './notification.taskbot.util';
+import { type NotificationTaskBotOwnerOptOutGroup } from './notification.taskbot.optout';
 
 export const NOTIFICATION_RECIPIENT_NAME_MIN_LENGTH = 0;
 export const NOTIFICATION_RECIPIENT_NAME_MAX_LENGTH = 42;
@@ -651,6 +665,266 @@ export interface CleanupOldNotificationLoggedEventDaysResult {
   readonly pagesDeleted: number;
 }
 
+// MARK: NotificationTaskBot
+/**
+ * arktype validator for a {@link NotificationTaskBotEntryId}.
+ *
+ * Built from {@link NOTIFICATION_TASK_BOT_ENTRY_ID_REGEX} and {@link NOTIFICATION_TASK_BOT_ENTRY_ID_MAX_LENGTH}, the same rules `isNotificationTaskBotEntryId()` checks.
+ */
+export const notificationTaskBotEntryIdType = /* @__PURE__ */ type(NOTIFICATION_TASK_BOT_ENTRY_ID_REGEX).atMostLength(NOTIFICATION_TASK_BOT_ENTRY_ID_MAX_LENGTH);
+
+/**
+ * arktype validator for a {@link NotificationTaskBotScriptGroupKey}.
+ *
+ * Built from {@link NOTIFICATION_TASK_BOT_SCRIPT_GROUP_KEY_REGEX} and {@link NOTIFICATION_TASK_BOT_SCRIPT_GROUP_KEY_MAX_LENGTH}, the same rules `isNotificationTaskBotScriptGroupKey()` checks.
+ */
+export const notificationTaskBotScriptGroupKeyType = /* @__PURE__ */ type(NOTIFICATION_TASK_BOT_SCRIPT_GROUP_KEY_REGEX).atMostLength(NOTIFICATION_TASK_BOT_SCRIPT_GROUP_KEY_MAX_LENGTH);
+
+/**
+ * arktype validator for a {@link NotificationTaskBotEntryDataUpdate}: a JSON object whose top-level keys are merged
+ * into an entry's data.
+ *
+ * Arrays are refused, since an array would merge in as numbered keys. The values are checked by the server against the
+ * script's `NotificationTaskBotScriptConfig.dataType`, not here.
+ */
+export const notificationTaskBotEntryDataUpdateType = /* @__PURE__ */ type('Record<string, unknown>').narrow((x, ctx) => !Array.isArray(x) || ctx.mustBe('an object'));
+
+/**
+ * Maximum number of group keys in each list of {@link UpdateNotificationTaskBotOptOutParams}.
+ */
+export const UPDATE_NOTIFICATION_TASK_BOT_OPT_OUT_MAX_GROUPS = 50;
+
+/**
+ * Base params targeting a single entry on a {@link NotificationTaskBot}.
+ */
+export interface NotificationTaskBotEntryTargetParams extends TargetModelParams {
+  /**
+   * The entry id.
+   */
+  readonly i: NotificationTaskBotEntryId;
+}
+
+export const notificationTaskBotEntryTargetParamsType = targetModelParamsType.merge({
+  i: notificationTaskBotEntryIdType
+}) as Type<NotificationTaskBotEntryTargetParams>;
+
+/**
+ * Used for updating the state, schedule and data of a single entry on a {@link NotificationTaskBot}.
+ *
+ * All changes apply in one transaction, in this order: data, state, pause, last submitted at, schedule. A refused data
+ * patch refuses the whole request.
+ *
+ * @dbxModelApiParams
+ */
+export interface UpdateNotificationTaskBotEntryParams<D extends NotificationTaskBotEntryData = NotificationTaskBotEntryData> extends NotificationTaskBotEntryTargetParams {
+  /**
+   * Enables or disables the entry. Disabling cancels the live run.
+   */
+  readonly s?: Maybe<NotificationTaskBotEntryState>;
+  /**
+   * True pauses the entry (reason `'manual'`) and cancels the live run. False resumes it (also when it was paused until
+   * a time) and schedules a run. False wins over {@link pauseUntil}.
+   */
+  readonly pause?: Maybe<boolean>;
+  /**
+   * Pauses the entry (reason `'manual'`) until this time; it then resumes on its own. A time in the past resumes it on
+   * the next queue pass. Null is ignored. `pause: false` in the same request wins and resumes the entry.
+   */
+  readonly pauseUntil?: Maybe<Date>;
+  /**
+   * Reschedules the entry. A date schedules a run that starts no sooner than that time, and the script's due check
+   * still applies; null schedules a run due now, letting the script compute the real due time.
+   */
+  readonly nextRunAt?: Maybe<Date>;
+  /**
+   * Reschedules the entry with an explicit run that starts at exactly this time and skips the script's due check. Wins
+   * over {@link nextRunAt}. Null is ignored.
+   */
+  readonly nextRunAtExplicit?: Maybe<Date>;
+  /**
+   * Sets the entry's last submitted at time. Null clears it.
+   */
+  readonly lsat?: Maybe<Date>;
+  /**
+   * Runs the entry's live run immediately after the update, if it has one.
+   *
+   * Skipped when this same request scheduled the live run in the future ({@link nextRunAt} or {@link nextRunAtExplicit}
+   * after now, or {@link pauseUntil} given); the result then has no `runResult`. Any other live run that is scheduled in
+   * the future still waits for its time. To re-evaluate an entry now, pass `nextRunAt: null` (optionally with
+   * `lsat: null`).
+   */
+  readonly runImmediately?: Maybe<boolean>;
+  /**
+   * Merges into the entry's script data (`d`). Only top-level keys merge: a key set to null is deleted, a key that is
+   * not listed is kept, and a nested object replaces the stored one. Null or an empty object is ignored.
+   *
+   * Only scripts that set `NotificationTaskBotScriptConfig.dataType` accept a patch, and the data after the patch must
+   * satisfy it. Otherwise the whole request is refused.
+   *
+   * A patch never issues, cancels or supersedes a run. A run already in progress may still use the data it read. To
+   * run again now with the new data, also pass `nextRunAt: null` and `runImmediately: true`.
+   */
+  readonly updateData?: Maybe<NotificationTaskBotEntryDataUpdate<D>>;
+}
+
+export const updateNotificationTaskBotEntryParamsType = notificationTaskBotEntryTargetParamsType.merge({
+  's?': clearable(type.enumerated(NotificationTaskBotEntryState.ENABLED, NotificationTaskBotEntryState.DISABLED)),
+  'pause?': clearable('boolean'),
+  'pauseUntil?': clearable(ARKTYPE_DATE_DTO_TYPE),
+  'nextRunAt?': clearable(ARKTYPE_DATE_DTO_TYPE),
+  'nextRunAtExplicit?': clearable(ARKTYPE_DATE_DTO_TYPE),
+  'lsat?': clearable(ARKTYPE_DATE_DTO_TYPE),
+  'runImmediately?': clearable('boolean'),
+  'updateData?': clearable(notificationTaskBotEntryDataUpdateType)
+}) as Type<UpdateNotificationTaskBotEntryParams>;
+
+/**
+ * Result of updating a {@link NotificationTaskBot} entry.
+ */
+export interface UpdateNotificationTaskBotEntryResult {
+  /**
+   * Status of the entry after the update.
+   *
+   * A resume, enable or reschedule that could not take effect because the owner opted out of the entry's group reports
+   * `opted_out`. Admins can't undo an owner's opt-out. An entry whose live run the repair sweep marked stalled (see the
+   * entry's `stl`) reports `stalled`.
+   */
+  readonly status: NotificationTaskBotEntryStatus;
+  /**
+   * Key of the entry's live run task, if it has one.
+   */
+  readonly taskKey?: Maybe<NotificationTaskKey>;
+  /**
+   * Result of running the live run immediately, if requested.
+   */
+  readonly runResult?: Maybe<SendNotificationResult>;
+}
+
+/**
+ * Used for running a single entry on a {@link NotificationTaskBot} on demand.
+ *
+ * The live run is superseded by a new run due now. Disabled, paused and opted-out entries are refused; an entry is opted
+ * out when the bot's owner turned off its script group, which only the owner can undo.
+ *
+ * The one exception: a FORCED run resumes an entry paused with the `'failed'` reason (its failure budget is spent, or a
+ * run was lost under `lostRunPolicy: 'stop'`). That resume resets `fc` and stamps `rpr: 'failed'`.
+ *
+ * A stalled entry's run is superseded like any other live run: its task is deleted, and the new run clears `stl`.
+ *
+ * @dbxModelApiParams
+ */
+export interface RunNotificationTaskBotEntryParams extends NotificationTaskBotEntryTargetParams {
+  /**
+   * MANUAL runs still apply the script's due check. FORCED runs skip it, and also resume an entry paused with the
+   * `'failed'` reason. Defaults to MANUAL.
+   */
+  readonly trigger?: Maybe<NotificationTaskBotRunTrigger.MANUAL | NotificationTaskBotRunTrigger.FORCED>;
+  /**
+   * Whether to run the new run immediately. Defaults to true.
+   */
+  readonly runImmediately?: Maybe<boolean>;
+}
+
+export const runNotificationTaskBotEntryParamsType = notificationTaskBotEntryTargetParamsType.merge({
+  'trigger?': clearable(type.enumerated(NotificationTaskBotRunTrigger.MANUAL, NotificationTaskBotRunTrigger.FORCED)),
+  'runImmediately?': clearable('boolean')
+}) as Type<RunNotificationTaskBotEntryParams>;
+
+/**
+ * Result of running a {@link NotificationTaskBot} entry.
+ */
+export interface RunNotificationTaskBotEntryResult {
+  /**
+   * Key of the new run task this call created.
+   *
+   * When the due check found a MANUAL run not due yet, that run handed over to a SCHEDULED run at the due time; the
+   * entry's live run (`nk`) is then that hand-over, not this task.
+   */
+  readonly taskKey: NotificationTaskKey;
+  /**
+   * Result of running the new run, if it was run immediately.
+   */
+  readonly runResult?: Maybe<SendNotificationResult>;
+}
+
+/**
+ * Used for reading the owner opt-outs of a {@link NotificationTaskBot}.
+ *
+ * The `key` is the bot's key (see `notificationTaskBotKeyForModel()`). Lists only the script groups the bot's owner can
+ * opt out of; the bot's entries and script types are never returned.
+ *
+ * Callable by the bot's owner and by admins (read-only for admins).
+ *
+ * @dbxModelApiParams
+ */
+export interface ReadNotificationTaskBotOptOutsParams extends TargetModelParams {}
+
+export const readNotificationTaskBotOptOutsParamsType = targetModelParamsType as Type<ReadNotificationTaskBotOptOutsParams>;
+
+/**
+ * Used for opting the bot's owner out of (or back into) script groups on a {@link NotificationTaskBot}.
+ *
+ * The `key` is the bot's key. Only groups listed by `read:optOuts` can change, and only the bot's owner can change
+ * them, in both directions. Admins can't: an admin has no way to undo an owner's opt-out. A group may not appear in
+ * both lists.
+ *
+ * Opting out stops every opt-out-able entry in the group and deletes its pending run. Opting back in schedules a run
+ * due now for each idle, enabled and unpaused entry, the same as an admin resume.
+ *
+ * @dbxModelApiParams
+ */
+export interface UpdateNotificationTaskBotOptOutParams extends TargetModelParams {
+  /**
+   * Groups to opt out of.
+   */
+  readonly optOut?: Maybe<NotificationTaskBotScriptGroupKey[]>;
+  /**
+   * Groups to opt back into.
+   */
+  readonly optIn?: Maybe<NotificationTaskBotScriptGroupKey[]>;
+}
+
+export const updateNotificationTaskBotOptOutParamsType = targetModelParamsType.merge({
+  'optOut?': clearable(notificationTaskBotScriptGroupKeyType.array().atMostLength(UPDATE_NOTIFICATION_TASK_BOT_OPT_OUT_MAX_GROUPS)),
+  'optIn?': clearable(notificationTaskBotScriptGroupKeyType.array().atMostLength(UPDATE_NOTIFICATION_TASK_BOT_OPT_OUT_MAX_GROUPS))
+}) as Type<UpdateNotificationTaskBotOptOutParams>;
+
+/**
+ * Result of reading or updating the owner opt-outs of a {@link NotificationTaskBot}.
+ */
+export interface NotificationTaskBotOptOutsResult {
+  /**
+   * The groups the owner can opt out of, with their opt-out state. A set `optOutAt` means the group is opted out.
+   */
+  readonly groups: NotificationTaskBotOwnerOptOutGroup[];
+}
+
+/**
+ * Aggregate result of the `repairAllNotificationTaskBots` action.
+ */
+export interface RepairAllNotificationTaskBotsResult {
+  /**
+   * Number of overdue bots that were checked.
+   */
+  readonly botsChecked: number;
+  /**
+   * Number of overdue entries whose run task was still pending. Their `nat` was synced to the task, and they were marked
+   * stalled when the task had failed attempts or had not been picked up.
+   */
+  readonly entriesSynced: number;
+  /**
+   * Number of overdue entries this sweep newly marked stalled (`stl`). A subset of {@link entriesSynced}.
+   *
+   * Log or alert on it; `notificationTaskBotsStalledQuery()` finds every stalled bot.
+   */
+  readonly entriesStalled: number;
+  /**
+   * Number of overdue entries whose run was lost (its task missing, or finished without cleanup). Each was recorded LOST,
+   * then paused, left idle or relaunched per its script's `lostRunPolicy`.
+   */
+  readonly entriesRepaired: number;
+}
+
 // MARK: Functions
 /**
  * Custom (non-CRUD) function type map for notifications. Currently empty — all operations use the CRUD pattern.
@@ -670,6 +944,12 @@ export type NotificationBoxModelCrudFunctionsConfig = {
     create: CreateNotificationUserParams;
     update: {
       _: UpdateNotificationUserParams;
+      /**
+       * Re-syncs the box configs of the NotificationUser targeted by `key` into their NotificationBoxes.
+       *
+       * Each config flagged as needing a sync is merged back into its NotificationBox's recipient list, and stale box
+       * references are cleaned up. Returns how many NotificationBoxes were updated.
+       */
       resync: [ResyncNotificationUserParams, ResyncNotificationUserResult];
     };
     invoke: {
@@ -696,13 +976,42 @@ export type NotificationBoxModelCrudFunctionsConfig = {
   readonly notificationWeek: null;
   readonly notificationLoggedEventDay: null;
   readonly notificationLoggedEventDayPage: null;
+  readonly notificationTaskBot: {
+    read: {
+      /**
+       * Lists the script groups the bot's owner can opt out of, with their opt-out state. Never returns entries.
+       *
+       * Callable by the bot's owner and by admins.
+       */
+      optOuts: [ReadNotificationTaskBotOptOutsParams, NotificationTaskBotOptOutsResult];
+    };
+    update: {
+      /**
+       * Admin-only. Enables/disables, pauses/resumes, reschedules or patches the data of a single entry. A data patch must
+       * satisfy the script's `dataType`, and scripts without one refuse it. Reports `opted_out` when the owner opted out
+       * of the entry's group, which only the owner can undo, and `stalled` when the entry's live run is stalled.
+       */
+      entry: [UpdateNotificationTaskBotEntryParams, UpdateNotificationTaskBotEntryResult];
+      /**
+       * Admin-only. Runs a single entry on demand. Refused for disabled, paused and opted-out entries; FORCED resumes an
+       * entry paused with `'failed'`. Supersedes a stalled run.
+       */
+      run: [RunNotificationTaskBotEntryParams, RunNotificationTaskBotEntryResult];
+      /**
+       * Owner-only. Opts the bot's owner out of (or back into) script groups listed by `read:optOuts`. Admins can't
+       * change an owner's opt-outs in either direction.
+       */
+      optOut: [UpdateNotificationTaskBotOptOutParams, NotificationTaskBotOptOutsResult];
+    };
+  };
 };
 
 export const NOTIFICATION_BOX_MODEL_CRUD_FUNCTIONS_CONFIG: ModelFirebaseCrudFunctionConfigMap<NotificationBoxModelCrudFunctionsConfig, NotificationTypes> = {
   notificationUser: ['create', 'update:_,resync', 'invoke:healthCheck,healthCheckAutofix'],
   notificationSummary: ['update:_'],
   notificationBox: ['update:_,recipient'],
-  notification: ['update:send']
+  notification: ['update:send'],
+  notificationTaskBot: ['read:optOuts', 'update:entry,run,optOut']
 };
 
 /**
@@ -737,6 +1046,16 @@ export abstract class NotificationFunctions implements ModelFirebaseFunctionMap<
   abstract notification: {
     updateNotification: {
       send: ModelFirebaseCrudFunction<SendNotificationParams, SendNotificationResult>;
+    };
+  };
+  abstract notificationTaskBot: {
+    readNotificationTaskBot: {
+      optOuts: ModelFirebaseReadFunction<ReadNotificationTaskBotOptOutsParams, NotificationTaskBotOptOutsResult>;
+    };
+    updateNotificationTaskBot: {
+      entry: ModelFirebaseCrudFunction<UpdateNotificationTaskBotEntryParams, UpdateNotificationTaskBotEntryResult>;
+      run: ModelFirebaseCrudFunction<RunNotificationTaskBotEntryParams, RunNotificationTaskBotEntryResult>;
+      optOut: ModelFirebaseCrudFunction<UpdateNotificationTaskBotOptOutParams, NotificationTaskBotOptOutsResult>;
     };
   };
 }

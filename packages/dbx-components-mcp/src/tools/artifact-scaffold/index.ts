@@ -55,7 +55,9 @@ export async function applyIdempotency(result: ScaffoldArtifactResult, exists: E
     }
     updated.push(next);
   }
-  const out: ScaffoldArtifactResult = { ...result, files: updated };
+  const finalStatusByPath = new Map(updated.map((f) => [f.path, f.status]));
+  const wiring = result.wiring.filter((step) => step.when === undefined || finalStatusByPath.get(step.when.path) === step.when.status);
+  const out: ScaffoldArtifactResult = { ...result, files: updated, wiring };
   return out;
 }
 
@@ -112,4 +114,4 @@ function formatStatusLabel(status: EmittedFile['status']): string {
 
 export { applyTokens, deriveNameTokens } from './templates.js';
 export { renderArtifact } from './render.js';
-export type { ArtifactKind, EmittedFile, EmittedFileStatus, NameTokens, ScaffoldArtifactInput, ScaffoldArtifactOptions, ScaffoldArtifactResult, WiringStep } from './types.js';
+export type { ArtifactKind, EmittedFile, EmittedFileStatus, NameTokens, ScaffoldArtifactInput, ScaffoldArtifactOptions, ScaffoldArtifactResult, WiringStep, WiringStepCondition } from './types.js';

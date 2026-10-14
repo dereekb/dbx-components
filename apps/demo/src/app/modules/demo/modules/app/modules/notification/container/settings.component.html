@@ -3,6 +3,9 @@
   <dbx-section header="Notification Settings" hint="Choose which notifications you receive, and how.">
     <dbx-firebase-notification-user-settings></dbx-firebase-notification-user-settings>
   </dbx-section>
+  <dbx-section header="Bot Settings" hint="Turn off the automatic messages your account's bots send you.">
+    <dbx-firebase-notification-task-bot-settings [modelKey]="profileKeySignal()"></dbx-firebase-notification-task-bot-settings>
+  </dbx-section>
   <dbx-section header="Delivery Check" hint="Check whether notifications can actually reach you.">
     <dbx-firebase-notification-healthcheck-view></dbx-firebase-notification-healthcheck-view>
   </dbx-section>

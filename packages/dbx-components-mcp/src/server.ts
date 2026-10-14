@@ -87,7 +87,7 @@ Tool clusters (each exposes lookup, search, examples, and/or scaffold/validate):
 - util         — utility functions/classes/factories/constants opted in via @dbxUtil JSDoc tags (search by intent: "expiration", "throttle", "memoize")
 - model_snapshot_field — Firestore snapshot-field factories + reusable consts (firestoreString, firestoreDate, firestoreObjectArray, …) tagged with @dbxModelSnapshotField; lookup/search by intent ("date", "encoded array"), plus list_app to see which fields a downstream component+app actually uses
 - semantic_type — semantic type aliases (string/number aliases) lookup and search
-- artifact     — body templates for storagefile-purpose, notification-template, notification-task; file-convention reporting
+- artifact     — body templates for storagefile-purpose, notification-template, notification-task, notification-task-bot-script; file-convention reporting
 - asset        — \`AssetPathRef\` constants in a \`-firebase\` component + \`provideDbxAssetLoader()\` wiring in the Angular app; list/scaffold/validate
 - color        — \`DbxColorConfigTemplate\` registry: list registered templates in an Angular app, smell-check duplicate inline \`DbxColorConfig\` literals that should be templates
 - auth         — Firebase Auth claims/roles/OIDC scopes catalog: claim_lookup (key or \`*ApiAuthClaims\` interface), scope_lookup (\`model.read\`, …), role_lookup (forward / by-tag / reverse), token_explain (decode JWT or claims object), list_app (per-app surface)

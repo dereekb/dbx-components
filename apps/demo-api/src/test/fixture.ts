@@ -29,6 +29,10 @@ import {
   modelTestContextFactory,
   ModelTestContextFixture,
   ModelTestContextInstance,
+  notificationTaskBotTestContextFactory,
+  NotificationTaskBotTestContextFixture,
+  NotificationTaskBotTestContextInstance,
+  type NotificationTaskBotTestContextParams,
   oAuthAuthorizedSuperTestContextFactory,
   setupFirebaseAdminFunctionTestSingleton
 } from '@dereekb/firebase-server/test';
@@ -1336,6 +1340,30 @@ export const demoNotificationBoxContextFactory = () =>
 
 export const demoNotificationBoxContext = demoNotificationBoxContextFactory();
 
+// MARK: NotificationTaskBot
+export type DemoApiNotificationTaskBotTestContextParams = NotificationTaskBotTestContextParams;
+
+export class DemoApiNotificationTaskBotTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends NotificationTaskBotTestContextFixture<
+  DemoApiFunctionContextFixtureInstance<F>,
+  DemoApiFunctionContextFixture<F>,
+  DemoApiNotificationTaskBotTestContextInstance<F>
+> {}
+
+export class DemoApiNotificationTaskBotTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends NotificationTaskBotTestContextInstance<DemoApiFunctionContextFixtureInstance<F>> {}
+
+export const demoNotificationTaskBotContextFactory = () =>
+  notificationTaskBotTestContextFactory<
+    DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiNotificationTaskBotTestContextInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiNotificationTaskBotTestContextFixture<FirebaseAdminFunctionTestContextInstance>
+  >({
+    makeFixture: (f) => new DemoApiNotificationTaskBotTestContextFixture(f),
+    makeInstance: (config) => new DemoApiNotificationTaskBotTestContextInstance(config)
+  });
+
+export const demoNotificationTaskBotContext = demoNotificationTaskBotContextFactory();
+
 // MARK: Notification
 export interface DemoApiNotificationTestContextParams {
   readonly template?: Maybe<AsyncGetterOrValue<CreateNotificationTemplate>>;
@@ -1903,8 +1931,8 @@ export class DemoApiStorageFileGroupTestContextFixture<F extends FirebaseAdminFu
     return this.instance.initializeStorageFileGroup();
   }
 
-  async regenerateStorageFileGroupContent(): Promise<RegenerateStorageFileGroupContentResult> {
-    return this.instance.regenerateStorageFileGroupContent();
+  async regenerateStorageFileGroupContent(force?: Maybe<boolean>): Promise<RegenerateStorageFileGroupContentResult> {
+    return this.instance.regenerateStorageFileGroupContent(force);
   }
 
   async regenerateAllFlaggedStorageFileGroupsContent(): Promise<RegenerateAllFlaggedStorageFileGroupsContentResult> {
@@ -1933,8 +1961,8 @@ export class DemoApiStorageFileGroupTestContextInstance<F extends FirebaseAdminF
     await initStorageFileGroup(this.document);
   }
 
-  async regenerateStorageFileGroupContent(): Promise<RegenerateStorageFileGroupContentResult> {
-    const instance = await this.testContext.storageFileServerActions.regenerateStorageFileGroupContent({ key: this.documentKey });
+  async regenerateStorageFileGroupContent(force?: Maybe<boolean>): Promise<RegenerateStorageFileGroupContentResult> {
+    const instance = await this.testContext.storageFileServerActions.regenerateStorageFileGroupContent({ key: this.documentKey, force });
     return instance(this.document);
   }
 

@@ -82,10 +82,12 @@ export const CLI_HANDOFF_OIDC_PROVIDER_PROFILE_KEY = 'cli-handoff';
  * Key of the admin-only provider profile that unlocks {@link EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE}.
  *
  * A PROFILE for the same reason as {@link CLI_HANDOFF_OIDC_PROVIDER_PROFILE_KEY}: only a client an admin
- * explicitly assigned it to can obtain `token.external`. Unlike `cli-handoff` it is NEVER a default
- * profile, not even outside production — the scope reaches a third-party account off-platform, so the
- * per-client assignment is part of the gate. demo-cli's dedicated `external-token` env requests the
- * scope on its own, so an everyday login never carries it.
+ * explicitly assigned it to can obtain `token.external`. In production it is NEVER a default profile —
+ * the scope reaches a third-party account off-platform, so the per-client assignment is part of the
+ * gate. Outside production it is a default profile (see
+ * {@link DemoOidcProviderProfilesConfig.unlockExternalTokenByDefault}), so an agent's self-registered
+ * MCP connector can request it. demo-cli's dedicated `external-token` env requests the scope on its
+ * own, so an everyday login never carries it.
  */
 export const EXTERNAL_TOKEN_OIDC_PROVIDER_PROFILE_KEY = 'external-token';
 
@@ -145,6 +147,9 @@ export const DEMO_OIDC_AVAILABLE_SCOPES: OidcScopeDetails<DemoOidcScope>[] = [..
  * - `cli-handoff`: unlocks the admin-only `token.cli` scope as optional.
  * - `external-token`: unlocks the admin-only `token.external` scope as optional, capping the grant at
  *   {@link DEMO_EXTERNAL_TOKEN_OIDC_MAX_SESSION_TTL}.
+ *
+ * This is the production shape. The running demo-api builds its registry with
+ * {@link demoOidcProviderProfiles}, which default-unlocks `cli-handoff` and `external-token` outside production.
  */
 export const DEMO_OIDC_PROVIDER_PROFILES: OidcProviderProfile<DemoOidcScope>[] = demoOidcProviderProfiles({ unlockCliHandoffByDefault: false });
 
@@ -167,17 +172,33 @@ export interface DemoOidcProviderProfilesConfig {
    * in advertised scope metadata on its own.
    */
   readonly unlockCliHandoffByDefault?: boolean;
+  /**
+   * When true, the {@link EXTERNAL_TOKEN_OIDC_PROVIDER_PROFILE_KEY} profile is marked
+   * {@link OidcProviderProfile.isDefault}, so every client resolves to it without an explicit
+   * assignment and can request {@link EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE}.
+   *
+   * Intended for non-production environments only, for the same reason as
+   * {@link unlockCliHandoffByDefault}: an agent's DCR-registered MCP connector then carries
+   * `token.external`, and the CLI credential it mints inherits it, so `demo-cli external-token` works
+   * without a human `auth login --env external-token`. The profile stays `adminOnly` and keeps its
+   * {@link DEMO_EXTERNAL_TOKEN_OIDC_MAX_SESSION_TTL} cap, so a non-admin is still refused and any grant
+   * that carries the scope (an admin's MCP connection included) still lasts at most 8 hours.
+   *
+   * Like {@link unlockCliHandoffByDefault}, the scope stops being assignment-only and is advertised in
+   * the MCP protected-resource document on its own.
+   */
+  readonly unlockExternalTokenByDefault?: boolean;
 }
 
 /**
  * Builds the demo app's OIDC provider profiles.
  *
- * @param config - Whether the admin-only CLI-handoff profile should be a default profile. Omitted
- * entirely, it yields the PRODUCTION shape: nothing is default-unlocked.
+ * @param config - Whether the admin-only CLI-handoff and external-token profiles should be default
+ * profiles. Omitted entirely, it yields the PRODUCTION shape: nothing is default-unlocked.
  * @returns The provider profile registry to supply as `OidcProviderConfig.providerProfiles`.
  */
 export function demoOidcProviderProfiles(config: DemoOidcProviderProfilesConfig = {}): OidcProviderProfile<DemoOidcScope>[] {
-  const { unlockCliHandoffByDefault = false } = config;
+  const { unlockCliHandoffByDefault = false, unlockExternalTokenByDefault = false } = config;
 
   return [
     { key: 'lms', label: 'LMS', description: 'Learning management system integration (unlocks + requires the lms scope)', scopes: [{ scope: LMS_OIDC_SCOPE, require: 'required' }] },
@@ -198,9 +219,10 @@ export function demoOidcProviderProfiles(config: DemoOidcProviderProfilesConfig 
       label: 'External connection tokens (admin)',
       description: 'Admin-only: mint short-lived access tokens for your own connected third-party accounts (e.g. for zoho-cli)',
       // admin-only through the profile, NOT `adminOnlyScopes`, for the same reason as `cli-handoff`: that
-      // array selects the 365-day service-token TTL tier. Never `isDefault` in any environment — the
-      // per-client assignment is part of the gate.
+      // array selects the 365-day service-token TTL tier. Never `isDefault` in production — the
+      // per-client assignment is part of the gate there.
       adminOnly: true,
+      ...(unlockExternalTokenByDefault ? { isDefault: true } : undefined),
       maxSessionTtl: DEMO_EXTERNAL_TOKEN_OIDC_MAX_SESSION_TTL,
       scopes: [{ scope: EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE, require: 'none' }]
     }

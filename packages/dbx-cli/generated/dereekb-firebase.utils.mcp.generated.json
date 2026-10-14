@@ -264,6 +264,74 @@
       ]
     },
     {
+      "slug": "form-space-submission-notification-task-key",
+      "name": "formSpaceSubmissionNotificationTaskKey",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "model/formspace/formspace.task",
+      "signature": "formSpaceSubmissionNotificationTaskKey(input: FormSpaceSubmissionNotificationTaskUniqueIdInput): NotificationTaskKey",
+      "description": "Returns the full key of the NotificationTask processing one SUBMISSION ATTEMPT of a FormSpace.\n\nThe task lives in the framework task box because {@link formSpaceSubmissionNotificationTaskTemplate} sets no notification model, and {@link uniqueNotificationTaskKey} applies the same default.",
+      "params": [
+        {
+          "name": "input",
+          "type": "FormSpaceSubmissionNotificationTaskUniqueIdInput",
+          "description": "- The FormSpace id and the attempt's reopen count.",
+          "optional": false
+        }
+      ],
+      "returns": "The unique notification task's full key.",
+      "tags": [
+        "formspace",
+        "notification",
+        "task",
+        "submission",
+        "attempt",
+        "key",
+        "firestore",
+        "form",
+        "space",
+        "formspacesubmissionnotificationtaskkey"
+      ],
+      "example": "formSpaceSubmissionNotificationTaskKey({ formSpaceId: 'abc' }); // 'nb/not_not/nbn/abc_FSPS'\nformSpaceSubmissionNotificationTaskKey({ formSpaceId: 'abc', reopenCount: 2 }); // 'nb/not_not/nbn/abc_FSPS_r2'",
+      "relatedSlugs": [
+        "unique-notification-task-key"
+      ]
+    },
+    {
+      "slug": "unique-notification-task-key",
+      "name": "uniqueNotificationTaskKey",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "model/notification/notification.create",
+      "signature": "uniqueNotificationTaskKey(input: UniqueNotificationTaskKeyInput): NotificationTaskKey",
+      "description": "Returns the key of a unique notification task: the notification with the unique id in the notification model's box.\n\nThis is the location {@link createNotificationDocumentPair} loads a unique task from when its accessor comes from `context`, so a key recorded with this function always points at the created task.",
+      "params": [
+        {
+          "name": "input",
+          "type": "UniqueNotificationTaskKeyInput",
+          "description": "- The notification model and the unique task id.",
+          "optional": false
+        }
+      ],
+      "returns": "The full key of the unique notification task.",
+      "tags": [
+        "notification",
+        "task",
+        "unique",
+        "key",
+        "notification-box",
+        "location",
+        "firestore",
+        "uniquenotificationtaskkey"
+      ],
+      "example": "uniqueNotificationTaskKey({ notificationModel: 'profile/abc', uniqueId: 'abc_T' }); // 'nb/profile_abc/nbn/abc_T'\nuniqueNotificationTaskKey({ uniqueId: 'abc_T' }); // 'nb/not_not/nbn/abc_T'",
+      "relatedSlugs": [
+        "form-space-submission-notification-task-key"
+      ]
+    },
+    {
       "slug": "is-nth-hour-of-day",
       "name": "isNthHourOfDay",
       "kind": "function",
@@ -1184,6 +1252,50 @@
         "load-documents-for-ids-from-values",
         "load-documents-for-keys",
         "load-documents-for-document-references"
+      ]
+    },
+    {
+      "slug": "load-document-for-id-or-key",
+      "name": "loadDocumentForIdOrKey",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "loadDocumentForIdOrKey(accessor: FirestoreDocumentAccessor<T, D>, idOrKey: FirestoreModelId | FirestoreModelKey): D",
+      "description": "Loads the {@link FirestoreDocument} a document id or a full key refers to.\n\nA value containing `/` is a full key, loaded with `accessor.loadDocumentForKey()`, which refuses a key of another\ncollection. Anything else is a document id, loaded relative to the accessor's collection with `accessor.loadDocumentForId()`.\nResolving an id through the accessor, rather than prefixing a collection name onto it, keeps a subcollection's parent and\na test driver's fuzzed collection names intact. No network calls are made.",
+      "params": [
+        {
+          "name": "accessor",
+          "type": "FirestoreDocumentAccessor<T, D>",
+          "description": "- Accessor to load the document with (must have collection context to resolve an id).",
+          "optional": false
+        },
+        {
+          "name": "idOrKey",
+          "type": "FirestoreModelId | FirestoreModelKey",
+          "description": "- A document id (`abc123`) or a full key (`gb/abc123`).",
+          "optional": false
+        }
+      ],
+      "returns": "The document instance.",
+      "tags": [
+        "firestore",
+        "document",
+        "loader",
+        "accessor",
+        "id",
+        "key",
+        "path",
+        "either",
+        "promote",
+        "load",
+        "for",
+        "or",
+        "loaddocumentforidorkey"
+      ],
+      "relatedSlugs": [
+        "load-documents-for-ids",
+        "load-documents-for-keys"
       ]
     },
     {

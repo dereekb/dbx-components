@@ -5,7 +5,7 @@ import { By } from '@angular/platform-browser';
 
 import { type FormConfig, type FormOptions, DynamicForm, EventDispatcher, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
 import { firstValueFrom, take, toArray } from 'rxjs';
-import { addDays, startOfDay } from 'date-fns';
+import { addDays, isSameDay, startOfDay } from 'date-fns';
 import { provideDbxForgeFormFieldDeclarations } from '../../../forge.providers';
 import { provideDbxFormConfiguration } from '../../../../form.providers';
 import { dbxForgeFixedDateRangeField } from './fixeddaterange.field';
@@ -44,6 +44,36 @@ async function settle(fixture: ComponentFixture<TestForgeFixedDateRangeHostCompo
   fixture.detectChanges();
   await delay(50);
   fixture.detectChanges();
+}
+
+function formatTypedDate(date: Date): string {
+  return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
+}
+
+function typeIntoInput(input: HTMLInputElement, text: string): void {
+  input.value = text;
+  input.dispatchEvent(new Event('input'));
+}
+
+function getTextInputs(fixture: ComponentFixture<TestForgeFixedDateRangeHostComponent>): { start: HTMLInputElement; end: HTMLInputElement } {
+  const start = fixture.debugElement.query(By.css('input[matStartDate]')).nativeElement as HTMLInputElement;
+  const end = fixture.debugElement.query(By.css('input[matEndDate]')).nativeElement as HTMLInputElement;
+  return { start, end };
+}
+
+function normalTypedRangeConfig(): FormConfig {
+  return {
+    fields: [
+      dbxForgeFixedDateRangeField({
+        key: 'range',
+        props: {
+          selectionMode: 'normal',
+          dateRangeInput: { type: DateRangeType.CALENDAR_MONTH, distance: 1 },
+          valueMode: DbxDateTimeValueMode.DATE
+        }
+      })
+    ]
+  };
 }
 
 function getComponent(fixture: ComponentFixture<TestForgeFixedDateRangeHostComponent>): Maybe<DbxForgeFixedDateRangeFieldComponent> {
@@ -342,6 +372,119 @@ describe('DbxForgeFixedDateRangeFieldComponent integration', () => {
       expect(range.end).toBeInstanceOf(Date);
       // Full boundary means end > start
       expect(range.end.getTime()).toBeGreaterThan(range.start.getTime());
+
+      fixture.destroy();
+    });
+  });
+
+  describe('typed text input', () => {
+    const typedStart = addDays(startOfDay(new Date()), 3);
+    const typedEnd = addDays(startOfDay(new Date()), 6);
+
+    function expectTypedRange(host: TestForgeFixedDateRangeHostComponent) {
+      const range = (host.formValue() as { range?: DateRange }).range;
+      expect(range).toBeDefined();
+      expect(isSameDay(range!.start, typedStart)).toBe(true);
+      expect(isSameDay(range!.end, typedEnd)).toBe(true);
+    }
+
+    function expectNoTypedRange(host: TestForgeFixedDateRangeHostComponent) {
+      const range = (host.formValue() as { range?: DateRange }).range;
+      expect(range != null && isSameDay(range.start, typedStart)).toBe(false);
+    }
+
+    it('should not apply typed dates before the typing debounce without a commit', async () => {
+      const fixture = TestBed.createComponent(TestForgeFixedDateRangeHostComponent);
+      const host = fixture.componentInstance;
+      host.config = normalTypedRangeConfig();
+      await settle(fixture);
+
+      const { start, end } = getTextInputs(fixture);
+      typeIntoInput(start, formatTypedDate(typedStart));
+      typeIntoInput(end, formatTypedDate(typedEnd));
+
+      await delay(20);
+      fixture.detectChanges();
+      expectNoTypedRange(host);
+
+      fixture.destroy();
+    });
+
+    it('should commit typed dates when an input loses focus', async () => {
+      const fixture = TestBed.createComponent(TestForgeFixedDateRangeHostComponent);
+      const host = fixture.componentInstance;
+      host.config = normalTypedRangeConfig();
+      await settle(fixture);
+
+      const { start, end } = getTextInputs(fixture);
+      typeIntoInput(start, formatTypedDate(typedStart));
+      typeIntoInput(end, formatTypedDate(typedEnd));
+      end.dispatchEvent(new Event('blur'));
+
+      await delay(20);
+      fixture.detectChanges();
+      expectTypedRange(host);
+
+      fixture.destroy();
+    });
+
+    it('should commit typed dates when Enter is pressed', async () => {
+      const fixture = TestBed.createComponent(TestForgeFixedDateRangeHostComponent);
+      const host = fixture.componentInstance;
+      host.config = normalTypedRangeConfig();
+      await settle(fixture);
+
+      const { start, end } = getTextInputs(fixture);
+      typeIntoInput(start, formatTypedDate(typedStart));
+      typeIntoInput(end, formatTypedDate(typedEnd));
+      end.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+
+      await delay(20);
+      fixture.detectChanges();
+      expectTypedRange(host);
+
+      fixture.destroy();
+    });
+
+    it('should ignore incomplete typed text on blur', async () => {
+      const fixture = TestBed.createComponent(TestForgeFixedDateRangeHostComponent);
+      const host = fixture.componentInstance;
+      host.config = normalTypedRangeConfig();
+      await settle(fixture);
+
+      const { start, end } = getTextInputs(fixture);
+      typeIntoInput(start, formatTypedDate(typedStart));
+      typeIntoInput(end, `${typedEnd.getMonth() + 1}/${typedEnd.getDate()}`);
+      end.dispatchEvent(new Event('blur'));
+
+      await delay(20);
+      fixture.detectChanges();
+      expectNoTypedRange(host);
+
+      fixture.destroy();
+    });
+  });
+
+  describe('picker limits', () => {
+    it('should apply the min limit right away', async () => {
+      const fixture = TestBed.createComponent(TestForgeFixedDateRangeHostComponent);
+      const host = fixture.componentInstance;
+
+      host.config = {
+        fields: [
+          dbxForgeFixedDateRangeField({
+            key: 'range',
+            props: {
+              selectionMode: 'normal',
+              pickerConfig: { limits: { min: 'today_start' } }
+            }
+          })
+        ]
+      };
+      await settle(fixture);
+
+      const comp = getComponent(fixture)!;
+      expect(comp.minDateSignal()).toBeInstanceOf(Date);
 
       fixture.destroy();
     });

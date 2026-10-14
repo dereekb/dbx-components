@@ -101,7 +101,8 @@ function tokenScopes(value: unknown): ZohoOAuthScope[] {
   let result: ZohoOAuthScope[];
 
   if (Array.isArray(value)) {
-    result = value.filter((x): x is string => typeof x === 'string' && x.length > 0);
+    // an element may itself be a joined scope string (a connection stored before its scopes were split)
+    result = value.flatMap((x) => (typeof x === 'string' ? (zohoOAuthScopesFromScopeString(x) ?? []) : []));
   } else if (typeof value === 'string') {
     result = zohoOAuthScopesFromScopeString(value) ?? [];
   } else {

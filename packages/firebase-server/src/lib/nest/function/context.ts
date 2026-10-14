@@ -1,7 +1,7 @@
-import { type ArkErrors } from 'arktype';
+import { type ArkErrors, type Type, type } from 'arktype';
 import { toTransformAndValidateFunctionResultFactory, type TransformAndValidateFunctionResultFactory, transformAndValidateObjectFactory, type TransformAndValidateObjectFactory } from '@dereekb/model';
-import { mapIdentityFunction } from '@dereekb/util';
-import { badRequestError } from '../../function/error';
+import { mapIdentityFunction, type Maybe } from '@dereekb/util';
+import { badRequestError, firebaseServerErrorInfoServerErrorPair } from '../../function/error';
 
 // MARK: Action Context
 /**
@@ -102,6 +102,16 @@ export function firebaseServerActionsTransformContext(options?: FirebaseServerAc
 export const FIREBASE_SERVER_VALIDATION_ERROR_CODE = 'VALIDATION_ERROR';
 
 /**
+ * The `data` a validation error built by {@link firebaseServerValidationServerError} carries.
+ */
+export interface FirebaseServerValidationErrorData {
+  /**
+   * The ArkType summary: one line per failing field, such as `name must be a string (was missing)`.
+   */
+  readonly message: string;
+}
+
+/**
  * Creates a structured server error object from ArkType validation errors.
  *
  * The returned object is suitable for embedding in HTTP error responses. Use {@link firebaseServerValidationError}
@@ -111,12 +121,14 @@ export const FIREBASE_SERVER_VALIDATION_ERROR_CODE = 'VALIDATION_ERROR';
  * @returns A plain object with a message, error code, and validation summary.
  */
 export function firebaseServerValidationServerError(validationErrors: ArkErrors) {
+  const data: FirebaseServerValidationErrorData = {
+    message: validationErrors.summary
+  };
+
   return {
     message: 'One or more data/form validation errors occurred.',
     code: FIREBASE_SERVER_VALIDATION_ERROR_CODE,
-    data: {
-      message: validationErrors.summary
-    }
+    data
   };
 }
 
@@ -131,6 +143,49 @@ export function firebaseServerValidationServerError(validationErrors: ArkErrors)
 export function firebaseServerValidationError(validationErrors: ArkErrors) {
   const serverError = firebaseServerValidationServerError(validationErrors);
   return badRequestError(serverError);
+}
+
+/**
+ * Validates request data against an ArkType schema and returns it.
+ *
+ * For handler code that reads its request data directly instead of passing it to a server action, typically a query
+ * handler. A mismatch throws the same {@link firebaseServerValidationError} a server action's transform throws, so the
+ * caller gets the standard `VALIDATION_ERROR` naming each failing field.
+ *
+ * @param schema - The ArkType schema to validate against.
+ * @param data - The raw request data.
+ * @returns The validated data.
+ * @throws {HttpsError} A bad-request validation error when the data does not match the schema.
+ */
+export function assertValidParams<T>(schema: Type<T>, data: unknown): T {
+  const result = schema(data);
+
+  if (result instanceof type.errors) {
+    throw firebaseServerValidationError(result);
+  }
+
+  return result as T;
+}
+
+/**
+ * Reads the per-field summary off an error built by {@link firebaseServerValidationError}.
+ *
+ * One line per failing field, such as `name must be a string (was missing)`. It travels in the error's
+ * `details.data.message`, beneath the generic top-level message.
+ *
+ * @param error - Any caught error.
+ * @returns The summary, or undefined when the error is not a validation error.
+ */
+export function readFirebaseServerValidationErrorSummary(error: unknown): Maybe<string> {
+  const [serverError] = firebaseServerErrorInfoServerErrorPair(error);
+  let summary: Maybe<string>;
+
+  if (serverError?.code === FIREBASE_SERVER_VALIDATION_ERROR_CODE) {
+    const message = (serverError.data as Maybe<Partial<FirebaseServerValidationErrorData>>)?.message;
+    summary = typeof message === 'string' && message.length > 0 ? message : undefined;
+  }
+
+  return summary;
 }
 
 /**

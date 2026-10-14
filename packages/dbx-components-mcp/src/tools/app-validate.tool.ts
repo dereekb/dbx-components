@@ -57,6 +57,7 @@ const AppValidateArgsType = type({
   apiDir: 'string',
   'webDir?': 'string',
   'indexesFile?': 'string',
+  'rulesFile?': 'string',
   'format?': "'markdown' | 'json'",
   'skip?': `(${Cluster})[]`
 });
@@ -72,7 +73,7 @@ const TOOL: Tool = {
     '',
     'The `manifest` cluster walks the merged model manifest (`@dereekb/firebase` upstream plus every discovered `*-firebase` component) and flags duplicate `firestoreModelIdentity` declarations: `MODEL_IDENTITY_COLLECTION_NAME_DUPLICATE` when two identities share their `collectionName` arg, and `MODEL_IDENTITY_MODEL_TYPE_DUPLICATE` when they share their `modelName` arg.',
     '',
-    'The `model_api` cluster reconciles CRUD declarations from `<componentDir>/src/lib/**/*.api.ts` against the handler map wired in `<apiDir>/src/app/function/model/crud.functions.ts`, emitting `MISSING_HANDLER`, `ORPHAN_HANDLER`, and `HANDLER_NAMING_MISMATCH`.',
+    'The `model_api` cluster reconciles CRUD declarations from `<componentDir>/src/lib/**/*.api.ts` against the handler map wired in `<apiDir>/src/app/function/model/crud.functions.ts`, emitting `MISSING_HANDLER`, `ORPHAN_HANDLER`, and `HANDLER_NAMING_MISMATCH`, plus the `HANDLER_MCP_READ_ONLY_UNSET` and `MISSING_DESCRIPTION` warnings.',
     '',
     "The `firebase_index` cluster diffs the component's `@dbxModelFirebaseIndex`-tagged factories against the committed `firestore.indexes.json`. `MODEL_FIREBASE_INDEX_COMPOSITE_ADDED` / `..._FIELD_OVERRIDE_ADDED` fire when JSON is missing required entries; the `*_REMOVED` codes warn on stale entries with no factory backing them.",
     '',
@@ -86,7 +87,8 @@ const TOOL: Tool = {
     '- `componentDir`: relative path to the `-firebase` component package (e.g. `components/demo-firebase`).',
     '- `apiDir`: relative path to the API app (e.g. `apps/demo-api`).',
     '- `webDir` (optional): relative path to the Angular front-end app (e.g. `apps/demo`). Required for the `asset` cluster.',
-    '- `indexesFile` (optional): relative path to `firestore.indexes.json` for the `firebase_index` cluster. Defaults to `firestore.indexes.json` at the workspace root.',
+    '- `indexesFile` (optional): relative path to `firestore.indexes.json` for the `firebase_index` cluster and the NotificationTaskBot `ntb.nat` index check. Defaults to `firestore.indexes.json` at the workspace root.',
+    '- `rulesFile` (optional): relative path to `firestore.rules` for the NotificationTaskBot `ntb` rule check in the `notification_m` cluster. Defaults to `firestore.rules` at the workspace root.',
     '- `format` (optional): `markdown` (default) or `json`.',
     '- `skip` (optional): clusters to opt out of (`storagefile_m`, `notification_m`, `model_folder`, `system_m`, `fixture`, `manifest`, `model_api`, `firebase_index`, `asset`, `model_test`).',
     '',
@@ -98,7 +100,8 @@ const TOOL: Tool = {
       componentDir: { type: 'string', description: 'Relative path to the component package.' },
       apiDir: { type: 'string', description: 'Relative path to the API app.' },
       webDir: { type: 'string', description: 'Relative path to the Angular front-end app (required for the `asset` cluster).' },
-      indexesFile: { type: 'string', description: 'Relative path to `firestore.indexes.json` for the `firebase_index` cluster. Defaults to `firestore.indexes.json` at the workspace root.' },
+      indexesFile: { type: 'string', description: 'Relative path to `firestore.indexes.json` for the `firebase_index` cluster and the NotificationTaskBot `ntb.nat` index check. Defaults to `firestore.indexes.json` at the workspace root.' },
+      rulesFile: { type: 'string', description: 'Relative path to `firestore.rules` for the NotificationTaskBot `ntb` rule check (`notification_m` cluster). Defaults to `firestore.rules` at the workspace root.' },
       format: { type: 'string', enum: ['markdown', 'json'], description: 'Output format. Defaults to markdown.' },
       skip: {
         type: 'array',
@@ -144,6 +147,7 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
   const webAbs = parsed.webDir === undefined ? undefined : resolve(cwd, parsed.webDir);
   const indexesRel = parsed.indexesFile ?? 'firestore.indexes.json';
   const indexesAbs = resolve(cwd, indexesRel);
+  const rulesAbs = resolve(cwd, parsed.rulesFile ?? 'firestore.rules');
   const skip = new Set<ClusterName>(parsed.skip ?? []);
 
   const findings: AggregatedFinding[] = [];
@@ -158,6 +162,7 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
     webAbs,
     indexesAbs,
     indexesRel,
+    rulesAbs,
     skip,
     skipped,
     findings,
@@ -177,12 +182,13 @@ interface ParsedAppValidateArgs {
   readonly apiDir: string;
   readonly webDir?: string;
   readonly indexesFile?: string;
+  readonly rulesFile?: string;
   readonly format?: 'markdown' | 'json';
   readonly skip?: readonly ClusterName[];
 }
 
 function ensureArgPaths(parsed: ParsedAppValidateArgs, cwd: string): ToolResult | undefined {
-  const candidates: (string | undefined)[] = [parsed.componentDir, parsed.apiDir, parsed.webDir, parsed.indexesFile];
+  const candidates: (string | undefined)[] = [parsed.componentDir, parsed.apiDir, parsed.webDir, parsed.indexesFile, parsed.rulesFile];
   let result: ToolResult | undefined;
   try {
     for (const candidate of candidates) {
@@ -202,6 +208,7 @@ interface RunAllClustersInput {
   readonly webAbs: string | undefined;
   readonly indexesAbs: string;
   readonly indexesRel: string;
+  readonly rulesAbs: string;
   readonly skip: ReadonlySet<ClusterName>;
   readonly skipped: ClusterName[];
   readonly findings: AggregatedFinding[];
@@ -209,12 +216,12 @@ interface RunAllClustersInput {
 }
 
 async function runAllClusters(input: RunAllClustersInput): Promise<void> {
-  const { parsed, cwd, componentAbs, apiAbs, webAbs, indexesAbs, indexesRel, skip, skipped, findings, clusterErrors } = input;
+  const { parsed, cwd, componentAbs, apiAbs, webAbs, indexesAbs, indexesRel, rulesAbs, skip, skipped, findings, clusterErrors } = input;
   const componentApiCtx: ComponentApiCtx = { componentAbs, apiAbs, componentRel: parsed.componentDir, apiRel: parsed.apiDir, skip, skipped, findings, clusterErrors };
   const componentOnlyCtx: ComponentOnlyCtx = { componentAbs, componentRel: parsed.componentDir, skip, skipped, findings, clusterErrors };
 
   await runStorageFileM(componentApiCtx);
-  await runNotificationM(componentApiCtx);
+  await runNotificationM({ ...componentApiCtx, workspaceAbs: cwd, rulesAbs, indexesAbs });
   await runFixture({ apiAbs, apiRel: parsed.apiDir, skip, skipped, findings, clusterErrors });
   await runModelFolders(componentOnlyCtx);
   await runSystemFolder(componentOnlyCtx);
@@ -255,13 +262,19 @@ async function runStorageFileM(ctx: ComponentApiCtx): Promise<void> {
   }
 }
 
-async function runNotificationM(ctx: ComponentApiCtx): Promise<void> {
+interface NotificationMCtx extends ComponentApiCtx {
+  readonly workspaceAbs: string;
+  readonly rulesAbs: string;
+  readonly indexesAbs: string;
+}
+
+async function runNotificationM(ctx: NotificationMCtx): Promise<void> {
   if (ctx.skip.has('notification_m')) {
     ctx.skipped.push('notification_m');
     return;
   }
   try {
-    const inspection = await inspectAppNotifications(ctx.componentAbs, ctx.apiAbs);
+    const inspection = await inspectAppNotifications(ctx.componentAbs, ctx.apiAbs, { firestoreRulesPath: ctx.rulesAbs, firestoreIndexesPath: ctx.indexesAbs, workspaceDir: ctx.workspaceAbs });
     const result = validateAppNotifications(inspection, { componentDir: ctx.componentRel, apiDir: ctx.apiRel });
     for (const v of result.violations) {
       ctx.findings.push(toFinding({ cluster: 'notification_m', code: v.code, severity: v.severity, message: v.message, file: v.file, line: undefined }));
@@ -401,7 +414,7 @@ async function runModelApi(ctx: ComponentApiCtx): Promise<void> {
     const report = await validateAppModelApi({ componentAbs: ctx.componentAbs, componentDir: ctx.componentRel, apiAbs: ctx.apiAbs, apiDir: ctx.apiRel });
     for (const issue of report.issues) {
       const { file, line } = splitSource(issue.source);
-      ctx.findings.push(toFinding({ cluster: 'model_api', code: issue.code, severity: 'error', message: issue.message, file, line }));
+      ctx.findings.push(toFinding({ cluster: 'model_api', code: issue.code, severity: issue.severity, message: issue.message, file, line }));
     }
   } catch (err) {
     ctx.clusterErrors.push({ cluster: 'model_api', message: err instanceof Error ? err.message : String(err) });

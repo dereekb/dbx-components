@@ -258,13 +258,35 @@ export async function extractModels(input: ExtractModelsInput): Promise<ExtractM
   const modelGroups: FirebaseModelGroup[] = [...assemblePass.modelGroups];
   const errors: ExtractError[] = [...parsePass.errors, ...assemblePass.errors];
 
-  const archetyped = applyArchetypePostPass(assembled);
+  const grouped = applyCrossFileModelGroupPostPass(assembled, modelGroups);
+  const archetyped = applyArchetypePostPass(grouped);
   const models = applyServiceFactoryPostPass(archetyped, serviceFactoryIndex);
 
   sortModels(models);
   modelGroups.sort((a, b) => a.name.localeCompare(b.name));
 
   return { models, modelGroups, errors };
+}
+
+/**
+ * Assigns `modelGroup` to models whose `@dbxModelGroup` container lives in a different
+ * file (e.g. `notification.taskbot.ts` models referenced by the container in
+ * `notification.ts`). The per-file assembly pass only sees containers in the model's own
+ * file, so those models arrive here without a group.
+ *
+ * @param models - Models produced by the assembly pass.
+ * @param modelGroups - Every model group found across the scanned files.
+ * @returns The models with `modelGroup` populated where a cross-file container references them.
+ */
+function applyCrossFileModelGroupPostPass(models: readonly FirebaseModel[], modelGroups: readonly FirebaseModelGroup[]): FirebaseModel[] {
+  const groupByModelName = new Map<string, string>();
+  for (const group of modelGroups) {
+    for (const modelName of group.modelNames) groupByModelName.set(modelName, group.name);
+  }
+  return models.map((model) => {
+    const groupName = model.modelGroup ? undefined : groupByModelName.get(model.name);
+    return groupName ? { ...model, modelGroup: groupName } : model;
+  });
 }
 
 /**

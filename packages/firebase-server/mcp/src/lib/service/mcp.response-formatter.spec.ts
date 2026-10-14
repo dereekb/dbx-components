@@ -1,6 +1,7 @@
 import { DEFAULT_VOID_MCP_SUCCESS_VALUE, formatMcpToolErrorResponse, formatMcpToolResponse } from './mcp.response-formatter';
 import { type OnCallInvokeModelParams } from '@dereekb/firebase';
-import { type McpToolResponseContext } from '@dereekb/firebase-server';
+import { badRequestError, firebaseServerValidationError, type McpToolResponseContext } from '@dereekb/firebase-server';
+import { type ArkErrors, type } from 'arktype';
 
 const PARAMS: OnCallInvokeModelParams = {
   call: 'invoke',
@@ -99,5 +100,16 @@ describe('formatMcpToolErrorResponse', () => {
     const response = formatMcpToolErrorResponse('plain string error');
     expect(response.isError).toBe(true);
     expect(response.content[0]).toEqual({ type: 'text', text: 'plain string error' });
+  });
+
+  it('appends the per-field summary of a validation error beneath its message', () => {
+    const response = formatMcpToolErrorResponse(firebaseServerValidationError(type({ name: 'string' })({}) as ArkErrors));
+    expect(response.isError).toBe(true);
+    expect(response.content[0]).toEqual({ type: 'text', text: 'One or more data/form validation errors occurred.\nname must be a string (was missing)' });
+  });
+
+  it('leaves a bad request error that is not a validation error unchanged', () => {
+    const response = formatMcpToolErrorResponse(badRequestError('nope'));
+    expect(response.content[0]).toEqual({ type: 'text', text: 'nope' });
   });
 });

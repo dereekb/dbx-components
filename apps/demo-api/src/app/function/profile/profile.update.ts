@@ -1,6 +1,7 @@
 import {
   type FinishOnboardingProfileParams,
   type ProfileCreateTestCalendarEventParams,
+  type ProfileCreateTestNotificationTaskBotParams,
   type ProfileCreateTestNotificationParams,
   type ProfileDocument,
   type ResetProfilePasswordParams,
@@ -8,6 +9,7 @@ import {
   type UpdateProfileParams,
   finishOnboardingProfileParamsType,
   profileCreateTestCalendarEventParamsType,
+  profileCreateTestNotificationTaskBotParamsType,
   profileCreateTestNotificationParamsType,
   profileIdentity,
   resetProfilePasswordParamsType,
@@ -49,6 +51,10 @@ export const profileUpdateUsername: DemoUpdateModelFunction<SetProfileUsernamePa
 
 export const profileUpdateOnboard: DemoUpdateModelFunction<FinishOnboardingProfileParams, boolean> = withApiDetails({
   inputType: finishOnboardingProfileParamsType,
+  mcp: {
+    // Additive: creates the profile if missing and adds roles; safe to repeat.
+    destructive: false
+  },
   fn: async (request) => {
     const { nest, auth, data: _data } = request;
     const uid = auth.uid;
@@ -65,6 +71,10 @@ export const profileUpdateOnboard: DemoUpdateModelFunction<FinishOnboardingProfi
 
 export const profileUpdateResetPassword: DemoUpdateModelFunction<ResetProfilePasswordParams> = withApiDetails({
   inputType: resetProfilePasswordParamsType,
+  mcp: {
+    // Destructive (overwrites a credential) and open-world: `requestReset` emails a code.
+    openWorld: true
+  },
   // The complete branch is meaningful only for a logged-out caller (the uid is encoded in the
   // oobCode), and the begin branch supports a logged-out forgot-password flow via `data.email`.
   // Both branches therefore opt out of the dispatch-level auth gate; per-branch checks below.
@@ -114,6 +124,11 @@ export const profileUpdateResetPassword: DemoUpdateModelFunction<ResetProfilePas
 
 export const profileUpdateCreateTestNotification: DemoUpdateModelFunction<ProfileCreateTestNotificationParams> = withApiDetails({
   inputType: profileCreateTestNotificationParamsType,
+  mcp: {
+    // Additive, but it exists to send the caller a real message, so it runs through demo_api_destructive.
+    destructive: false,
+    openWorld: true
+  },
   fn: async (request) => {
     const { nest, auth, data } = request;
     const uid = auth.uid;
@@ -132,6 +147,10 @@ export const profileUpdateCreateTestNotification: DemoUpdateModelFunction<Profil
 
 export const profileUpdateCreateTestCalendarEvent: DemoUpdateModelFunction<ProfileCreateTestCalendarEventParams> = withApiDetails({
   inputType: profileCreateTestCalendarEventParamsType,
+  mcp: {
+    // Additive: adds a calendar event with a fresh id.
+    destructive: false
+  },
   fn: async (request) => {
     const { nest, auth, data } = request;
     const uid = auth.uid;
@@ -145,5 +164,28 @@ export const profileUpdateCreateTestCalendarEvent: DemoUpdateModelFunction<Profi
 
     const createTestCalendarEvent = await nest.profileActions.createTestCalendarEvent(data);
     await createTestCalendarEvent(profileDocument);
+  }
+});
+
+export const profileUpdateCreateTestNotificationTaskBot: DemoUpdateModelFunction<ProfileCreateTestNotificationTaskBotParams> = withApiDetails({
+  inputType: profileCreateTestNotificationTaskBotParamsType,
+  mcp: {
+    // Additive, but it starts recurring real pings, so it runs through demo_api_destructive.
+    destructive: false,
+    openWorld: true
+  },
+  fn: async (request) => {
+    const { nest, auth, data } = request;
+    const uid = auth.uid;
+
+    const profileDocument = await nest.useModel('profile', {
+      request,
+      key: firestoreModelKey(profileIdentity, uid),
+      roles: 'owner',
+      use: (x) => x.document
+    });
+
+    const createTestNotificationTaskBot = await nest.profileActions.createTestNotificationTaskBot(data);
+    await createTestNotificationTaskBot(profileDocument);
   }
 });

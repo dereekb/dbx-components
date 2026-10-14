@@ -2,11 +2,11 @@ import { type Maybe } from '@dereekb/util';
 import { resolveEffectiveOidcScopeTerms, type FirestoreModelType, type KnownOnCallFunctionType, type OidcModelScopeRequirement, type OidcScopeTerm } from '@dereekb/firebase';
 import { type Type } from 'arktype';
 import { arktypeToJsonSchemaForExport } from '@dereekb/model';
-import { type ModelApiDetailsResult, type OnCallModelFunctionApiDetails, type FirebaseServerAuthData, type McpToolDetailsBuilder, type McpVisibilityRule } from '@dereekb/firebase-server';
+import { type ModelApiDetailsResult, type OnCallModelFunctionApiDetails, type FirebaseServerAuthData, type McpEscalatingParams, type McpToolDetailsBuilder, type McpVisibilityRule } from '@dereekb/firebase-server';
 import { type Request } from 'express';
 import type { CallToolResult, ToolAnnotations } from '@modelcontextprotocol/server';
 import { mcpManifestKey, type McpManifestToolEntry } from './mcp.manifest';
-import { classifyVisibility, resolveEffectiveReadOnly, resolveMcpToolAnnotations, resolveRequiredScope, type McpToolFilterMetadata } from './mcp.visibility';
+import { classifyVisibility, mergeMcpToolHints, resolveEffectiveDestructive, resolveEffectiveReadOnly, resolveMcpToolAnnotations, resolveRequiredScope, type McpToolFilterMetadata, type McpToolHints } from './mcp.visibility';
 
 /**
  * Frozen wire-shape entry returned on `tools/list`.
@@ -26,6 +26,10 @@ export interface McpToolListEntry {
    * classification; see {@link resolveMcpToolAnnotations}.
    */
   readonly annotations?: ToolAnnotations;
+  /**
+   * Client hints such as `anthropic/alwaysLoad`, added per request by the server factory.
+   */
+  readonly _meta?: Record<string, unknown>;
 }
 
 /**
@@ -109,6 +113,16 @@ export interface McpToolDefinition {
    * registered tools.
    */
   readonly toolDetailsBuilder?: McpToolDetailsBuilder;
+  /**
+   * The handler's escalating params, hoisted from `details.mcp.escalatingParams` once at boot like
+   * {@link toolDetailsBuilder}. Never set on a read-only tool.
+   */
+  readonly escalatingParams?: McpEscalatingParams;
+  /**
+   * When `true`, the auto-injected reason parameter is never added to this tool's advertised input
+   * schema. Used by the compact discovery tools (`search`, `details`) that only read the catalog.
+   */
+  readonly omitReasonParameter?: boolean;
 }
 
 /**
@@ -182,8 +196,11 @@ export const DEFAULT_JSON_SCHEMA_GENERATION_OPTIONS: JsonSchemaGenerationOptions
  *   would make remote clients reject the whole `tools/list` payload, so it is dropped.
  * - `duplicate_name` — another already-registered visible tool resolved to the same name (e.g. two
  *   specifiers collide once the call-type segment is dropped); the later tool is dropped.
+ * - `escalating_params_on_read_only` — the handler is read-only but declares `mcp.escalatingParams`. A param can't turn a
+ *   read into a write yet, and ignoring the params would let a call the app declared risky through the read tool, so the
+ *   tool is dropped (fails closed).
  */
-export type McpToolGenerationSkipReason = 'missing_input_type' | 'schema_generation_failed' | 'name_too_long' | 'duplicate_name';
+export type McpToolGenerationSkipReason = 'missing_input_type' | 'schema_generation_failed' | 'name_too_long' | 'duplicate_name' | 'escalating_params_on_read_only';
 
 /**
  * One tool that was skipped during generation.
@@ -253,7 +270,10 @@ export interface McpToolGenerationResult {
 }
 
 // MARK: Wire Entry
-interface BuildStaticWireEntryInput {
+/**
+ * Input for {@link buildStaticWireEntry}.
+ */
+export interface BuildStaticWireEntryInput {
   readonly name: string;
   readonly description: string;
   readonly inputSchema?: object;
@@ -288,19 +308,37 @@ export function buildStaticWireEntry(input: BuildStaticWireEntryInput): McpToolL
 /**
  * Description prefix prepended to a mutating tool's description so MCP clients that don't render
  * {@link ToolAnnotations} still surface the write signal in plain text.
+ *
+ * One of two markers: a tool known to be destructive or open-world gets {@link MCP_DESTRUCTIVE_TOOL_DESCRIPTION_PREFIX}
+ * instead.
  */
 export const MCP_WRITE_TOOL_DESCRIPTION_PREFIX = '[WRITE] ';
 
 /**
- * Prepends {@link MCP_WRITE_TOOL_DESCRIPTION_PREFIX} to a description when its annotations mark the
- * tool as a write (`readOnlyHint === false`). Read-only tools are returned unchanged.
+ * Description prefix prepended to the description of a tool known to delete or overwrite data, or to be open-world.
+ */
+export const MCP_DESTRUCTIVE_TOOL_DESCRIPTION_PREFIX = '[DESTRUCTIVE] ';
+
+/**
+ * Prepends a write marker to a description when its hints mark the tool as not read-only. Read-only tools are returned
+ * unchanged.
+ *
+ * A tool KNOWN to be destructive or open-world gets {@link MCP_DESTRUCTIVE_TOOL_DESCRIPTION_PREFIX}; every other write,
+ * including an unclassified one (`destructive` unset), gets {@link MCP_WRITE_TOOL_DESCRIPTION_PREFIX}.
  *
  * @param description - The base tool description.
- * @param annotations - The resolved MCP annotations for the tool.
- * @returns The description, prefixed with the write marker when the tool mutates.
+ * @param hints - The resolved MCP hints for the tool, without escalations.
+ * @returns The description, prefixed with the matching marker when the tool mutates.
  */
-export function applyWriteMarker(description: string, annotations: ToolAnnotations): string {
-  return annotations.readOnlyHint === false ? `${MCP_WRITE_TOOL_DESCRIPTION_PREFIX}${description}` : description;
+export function applyWriteMarker(description: string, hints: McpToolHints): string {
+  let result = description;
+
+  if (hints.readOnly !== true) {
+    const prefix = hints.destructive === true || hints.openWorld === true ? MCP_DESTRUCTIVE_TOOL_DESCRIPTION_PREFIX : MCP_WRITE_TOOL_DESCRIPTION_PREFIX;
+    result = `${prefix}${description}`;
+  }
+
+  return result;
 }
 
 // MARK: Static Tool Definition
@@ -320,6 +358,18 @@ export interface BuildStaticToolDefinitionInput {
    */
   readonly effectiveReadOnly: boolean;
   /**
+   * Whether a write tool may delete or overwrite data. Ignored on a read-only tool.
+   *
+   * Unset on a write tool leaves it unclassified: it is advertised `destructiveHint: true` and runs through the destructive
+   * router (fail-safe), but keeps the `[WRITE] ` marker.
+   */
+  readonly destructive?: boolean;
+  /**
+   * Whether the tool reaches outside the app (sends real messages or changes a third-party service). Advertised as
+   * `openWorldHint` when set; a write tool with `openWorld: true` runs through the destructive router.
+   */
+  readonly openWorld?: boolean;
+  /**
    * Declarative visibility rule checked per request. Defaults to `{}` (always visible) when omitted.
    */
   readonly rule?: McpVisibilityRule;
@@ -332,6 +382,10 @@ export interface BuildStaticToolDefinitionInput {
    * `token.cli`). Omitted ⇒ no scope requirement, which is right for every read-only built-in.
    */
   readonly requiredScopeTerms?: readonly OidcScopeTerm[];
+  /**
+   * When `true`, the auto-injected reason parameter is never added to this tool's input schema.
+   */
+  readonly omitReasonParameter?: boolean;
 }
 
 /**
@@ -350,9 +404,11 @@ export interface BuildStaticToolDefinitionInput {
  * @returns A statically-registered {@link McpToolDefinition} to append to the MCP server factory's tool registry.
  */
 export function buildStaticToolDefinition(input: BuildStaticToolDefinitionInput): McpToolDefinition {
-  const { name, inputSchema, outputSchema, dispatch, staticHandler, effectiveReadOnly, rule, requiredScopeTerms } = input;
-  const annotations = resolveMcpToolAnnotations(effectiveReadOnly);
-  const description = applyWriteMarker(input.description, annotations);
+  const { name, inputSchema, outputSchema, dispatch, staticHandler, effectiveReadOnly, rule, requiredScopeTerms, omitReasonParameter, openWorld } = input;
+  const effectiveDestructive = effectiveReadOnly ? undefined : input.destructive;
+  const hints: McpToolHints = { readOnly: effectiveReadOnly, destructive: effectiveDestructive, openWorld };
+  const annotations = resolveMcpToolAnnotations(hints);
+  const description = applyWriteMarker(input.description, hints);
 
   return {
     name,
@@ -362,8 +418,9 @@ export function buildStaticToolDefinition(input: BuildStaticToolDefinitionInput)
     annotations,
     dispatch,
     staticHandler,
-    filterMetadata: { visibilityKind: 'declarative', rule: rule ?? {}, effectiveReadOnly, ...(requiredScopeTerms == null ? undefined : { requiredScopeTerms }) },
-    staticWireEntry: buildStaticWireEntry({ name, description, inputSchema, outputSchema, annotations })
+    filterMetadata: { visibilityKind: 'declarative', rule: rule ?? {}, effectiveReadOnly, ...(effectiveDestructive == null ? undefined : { effectiveDestructive }), ...(openWorld == null ? undefined : { openWorld }), ...(requiredScopeTerms == null ? undefined : { requiredScopeTerms }) },
+    staticWireEntry: buildStaticWireEntry({ name, description, inputSchema, outputSchema, annotations }),
+    ...(omitReasonParameter === true ? { omitReasonParameter } : undefined)
   };
 }
 
@@ -748,10 +805,20 @@ function buildToolFromCandidate(context: BuildToolFromCandidateContext): void {
   const needsDisambiguation = isVisible && overrideName == null && (clashCounts.get(baseName) ?? 0) > 1;
   const name = needsDisambiguation ? buildDisambiguatedMcpToolName(modelSegment, callType, specifier) : baseName;
   const nameValidation = validateMcpToolName(name);
+  const mcp = handlerDetails.mcp;
+  const effectiveReadOnly = resolveEffectiveReadOnly(mcp?.readOnly, callType);
 
   // A name over the hard cap would make remote clients reject the whole tools/list payload — never advertise it.
   if (nameValidation.level === 'error') {
     outSkipped.push({ toolName: name, reason: 'name_too_long', dispatch });
+    return;
+  }
+
+  const hasEscalatingParams = Object.keys(mcp?.escalatingParams ?? {}).length > 0;
+
+  // A param can't turn a read into a write yet; fail closed rather than let a declared-risky param through the read tool.
+  if (effectiveReadOnly === true && hasEscalatingParams) {
+    outSkipped.push({ toolName: name, reason: 'escalating_params_on_read_only', dispatch });
     return;
   }
 
@@ -789,17 +856,26 @@ function buildToolFromCandidate(context: BuildToolFromCandidateContext): void {
     call: callType,
     defaultRequiredScope
   });
-  const effectiveReadOnly = resolveEffectiveReadOnly(handlerDetails.mcp?.readOnly, callType);
-  const annotations = resolveMcpToolAnnotations(effectiveReadOnly);
-  const description = applyWriteMarker(baseDescription, annotations);
+  const openWorld = mcp?.openWorld;
+  // The base hints describe a call that sets no escalating param; the advertised annotations are the worst case over every escalation.
+  const baseHints: McpToolHints = effectiveReadOnly === true ? { readOnly: true, openWorld } : { readOnly: effectiveReadOnly, destructive: resolveEffectiveDestructive(mcp?.destructive, callType), openWorld };
+  const escalatingParams = hasEscalatingParams ? mcp?.escalatingParams : undefined;
+  const annotations = resolveMcpToolAnnotations(mergeMcpToolHints(baseHints, Object.values(escalatingParams ?? {})));
+  const description = applyWriteMarker(baseDescription, baseHints);
+  const sharedFilterMetadata = {
+    requiredScopeTerms,
+    effectiveReadOnly,
+    ...(baseHints.destructive == null ? undefined : { effectiveDestructive: baseHints.destructive }),
+    ...(openWorld == null ? undefined : { openWorld })
+  };
   let filterMetadata: McpToolFilterMetadata;
 
   if (classified.visibilityKind === 'declarative') {
-    filterMetadata = { visibilityKind: 'declarative', rule: classified.rule, requiredScopeTerms, effectiveReadOnly };
+    filterMetadata = { visibilityKind: 'declarative', rule: classified.rule, ...sharedFilterMetadata };
   } else if (classified.visibilityKind === 'dynamic') {
-    filterMetadata = { visibilityKind: 'dynamic', visibilityFn: classified.visibilityFn, requiredScopeTerms, effectiveReadOnly };
+    filterMetadata = { visibilityKind: 'dynamic', visibilityFn: classified.visibilityFn, ...sharedFilterMetadata };
   } else {
-    filterMetadata = { visibilityKind: classified.visibilityKind, requiredScopeTerms, effectiveReadOnly };
+    filterMetadata = { visibilityKind: classified.visibilityKind, ...sharedFilterMetadata };
   }
 
   // Disambiguation has already separated the common dropped-call-type clash; this is the backstop for
@@ -827,7 +903,8 @@ function buildToolFromCandidate(context: BuildToolFromCandidateContext): void {
     dispatch,
     filterMetadata,
     staticWireEntry,
-    toolDetailsBuilder: handlerDetails.mcp?.toolDetails
+    toolDetailsBuilder: mcp?.toolDetails,
+    ...(escalatingParams == null ? undefined : { escalatingParams })
   };
 
   if (isVisible) {

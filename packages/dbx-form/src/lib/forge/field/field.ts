@@ -1,4 +1,5 @@
-import { type ArrayOrValue, type Building, type Maybe, type MaybeMap, type MaybeSo, type Milliseconds, NOOP_MODIFIER, asArray, filterNullAndUndefinedValues, filterUndefinedValues, filterUniqueValues, mapMaybeFunction, mergeArrays, objectHasNoKeys } from '@dereekb/util';
+import { type ArrayOrValue, type Building, type Maybe, type MaybeMap, type MaybeSo, type Milliseconds, NOOP_MODIFIER, asArray, filterUndefinedValues, filterUniqueValues, mapMaybeFunction, mergeArrays, objectHasNoKeys } from '@dereekb/util';
+import { mergeClearableObjectUpdate } from '@dereekb/model';
 import { type AsyncCustomValidator, type CustomFnConfig, type CustomValidator, type EvaluationContext, type FieldDef, type FieldMeta, type FieldWithValidation, type LogicConfig, type ValidationMessages, type ValidatorConfig, type WrapperConfig } from '@ng-forge/dynamic-forms';
 import { type DbxForgeFieldValidation } from './field.type';
 import { type DbxForgeField, type DbxForgeFieldFormConfig, mergeDbxForgeFieldFormConfig } from '../form/forge.form';
@@ -655,14 +656,7 @@ export function dbxForgeBuildFieldDef<C extends DbxForgeFieldFunctionDef<any>, F
 
     function insertMeta(meta?: Maybe<FieldMeta>): void {
       if (meta) {
-        const currentMeta = getMeta();
-
-        const nextMeta = filterNullAndUndefinedValues({
-          ...currentMeta,
-          ...filterUndefinedValues(meta)
-        });
-
-        setMeta(nextMeta);
+        setMeta(mergeClearableObjectUpdate<FieldMeta>(getMeta(), meta) as FieldMeta);
       }
     }
 

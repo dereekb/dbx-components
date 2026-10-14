@@ -56,7 +56,8 @@ describe('createBatchExecuteTool', () => {
       expect(tool.filterMetadata.effectiveReadOnly).toBe(false);
       expect(tool.annotations).toEqual({ readOnlyHint: false, destructiveHint: true });
       expect(tool.staticWireEntry.annotations).toEqual({ readOnlyHint: false, destructiveHint: true });
-      expect(tool.description.startsWith('[WRITE] ')).toBe(true);
+      expect(tool.description.startsWith('[DESTRUCTIVE] ')).toBe(true);
+      expect(tool.filterMetadata.effectiveDestructive).toBe(true);
       expect(tool.filterMetadata.visibilityKind).toBe('declarative');
 
       if (tool.filterMetadata.visibilityKind === 'declarative') {

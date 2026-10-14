@@ -1,8 +1,8 @@
 /**
  * Schema of `notification.manifest.json`, the build-time artifact written by
  * `dbx-cli-generate-notification-manifest`. It is the
- * `dbx_notification_m_list_app` report plus the `dbx_notification_m_validate_app`
- * findings, both computed from one extraction.
+ * `dbx_notification_m_list_app` report (including its NotificationTaskBot section)
+ * plus the `dbx_notification_m_validate_app` findings, both computed from one extraction.
  */
 
 import type { AppNotificationsReport } from '../notification-m-list-app/index.js';

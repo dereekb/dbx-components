@@ -48,6 +48,9 @@ export interface DbxFilterMapRouteParamsConfig<F> {
  * so writing them does not reload the state). Do not use it together with {@link DbxFilterMapStorageDirective} on the same key,
  * since both set the key's default filter.
  *
+ * A filter popover that edits the key should set `closeOnFilterChange: false` on its `DbxFilterComponentConfig`, which also keeps it
+ * open across the route transition each change causes (`closeOnTransition`).
+ *
  * @dbxFilter
  * @dbxFilterSlug map-route-params
  * @dbxFilterRelated map, map-storage, map-source-connector

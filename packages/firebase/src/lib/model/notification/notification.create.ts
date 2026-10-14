@@ -7,10 +7,10 @@
  * to the abbreviated Firestore fields, plus throttling support to avoid duplicate sends.
  */
 import { type Building, type Maybe, type Milliseconds, type ModelKey, MS_IN_HOUR, objectHasNoKeys, filterUndefinedValues, isThrottled } from '@dereekb/util';
-import { type Notification, type NotificationDocument, type NotificationFirestoreCollections, NotificationSendState, NotificationSendType } from './notification';
+import { type Notification, type NotificationDocument, type NotificationFirestoreCollections, notificationBoxIdentity, notificationIdentity, NotificationSendState, NotificationSendType } from './notification';
 import { type NotificationRecipientWithConfig } from './notification.config';
-import { notificationBoxIdForModel, type NotificationTaskType, notificationTaskUniqueId, type NotificationTaskUniqueId, type NotificationTemplateType } from './notification.id';
-import { type FirebaseAuthUserId, type FirestoreDocumentAccessor, type ReadFirestoreModelKeyInput, type Transaction, isFirestoreModelId, readFirestoreModelKey } from '../../common';
+import { DEFAULT_NOTIFICATION_TASK_NOTIFICATION_MODEL_KEY, notificationBoxIdForModel, type NotificationTaskKey, type NotificationTaskType, notificationTaskUniqueId, type NotificationTaskUniqueId, type NotificationTemplateType } from './notification.id';
+import { childFirestoreModelKey, type FirebaseAuthUserId, type FirestoreDocumentAccessor, firestoreModelKey, type FirestoreModelKey, type ReadFirestoreModelKeyInput, type Transaction, isFirestoreModelId, readFirestoreModelKey } from '../../common';
 import { type NotificationItem } from './notification.item';
 
 /**
@@ -209,6 +209,50 @@ export function createNotificationTemplate(input: CreateNotificationTemplateInpu
   return template;
 }
 
+// MARK: Unique Task Key
+/**
+ * Input for {@link uniqueNotificationTaskKey}.
+ */
+export interface UniqueNotificationTaskKeyInput {
+  /**
+   * Model whose notification box holds the task.
+   *
+   * Defaults to {@link DEFAULT_NOTIFICATION_TASK_NOTIFICATION_MODEL_KEY}, the same default {@link createNotificationTaskTemplate} applies.
+   */
+  readonly notificationModel?: Maybe<FirestoreModelKey>;
+  /**
+   * Unique id of the task within its notification box.
+   */
+  readonly uniqueId: NotificationTaskUniqueId;
+}
+
+/**
+ * Returns the key of a unique notification task: the notification with the unique id in the notification model's box.
+ *
+ * This is the location {@link createNotificationDocumentPair} loads a unique task from when its accessor comes from `context`, so a key recorded with this function always points at the created task.
+ *
+ * @param input - The notification model and the unique task id.
+ * @returns The full key of the unique notification task.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory firestore
+ * @dbxUtilTags notification, task, unique, key, notification-box, location
+ * @dbxUtilRelated form-space-submission-notification-task-key
+ *
+ * @example
+ * ```ts
+ * uniqueNotificationTaskKey({ notificationModel: 'profile/abc', uniqueId: 'abc_T' }); // 'nb/profile_abc/nbn/abc_T'
+ * uniqueNotificationTaskKey({ uniqueId: 'abc_T' }); // 'nb/not_not/nbn/abc_T'
+ * ```
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function uniqueNotificationTaskKey(input: UniqueNotificationTaskKeyInput): NotificationTaskKey {
+  const notificationModel = input.notificationModel ?? DEFAULT_NOTIFICATION_TASK_NOTIFICATION_MODEL_KEY;
+  const notificationBoxKey = firestoreModelKey(notificationBoxIdentity, notificationBoxIdForModel(notificationModel));
+  return childFirestoreModelKey(notificationBoxKey, notificationIdentity, input.uniqueId);
+}
+
 // MARK: Create
 /**
  * Input parameters controlling whether a notification should actually be created and sent.
@@ -306,7 +350,7 @@ export interface CreateNotificationDocumentPairResult extends Pick<CreateNotific
  *
  * Use {@link createNotificationDocument} to both create and save in one step.
  *
- * For unique task notifications, generates a deterministic document ID from the target model and task type.
+ * For unique task notifications, generates a deterministic document ID from the target model and task type. When the accessor comes from `context`, a unique task is loaded at {@link uniqueNotificationTaskKey}.
  *
  * @param input - The creation parameters including template, context, and accessor.
  * @returns The document reference and notification data pair, with `notificationCreated` set to false.
@@ -364,7 +408,9 @@ export function createNotificationDocumentPair(input: CreateNotificationDocument
       throw new Error('Must provide a target model when using unique=true for a notification task. The default result otherwise would be an unintended type-global unique notification task id.');
     }
 
-    notificationDocument = accessor.loadDocumentForId(uniqueId);
+    // An explicit accessor chooses the collection itself. Otherwise the task is loaded from uniqueNotificationTaskKey(), the
+    // key NotificationTaskBot records for its runs, so a recorded key and the created document cannot drift apart.
+    notificationDocument = inputAccessor ? inputAccessor.loadDocumentForId(uniqueId) : accessor.loadDocumentForKey(uniqueNotificationTaskKey({ notificationModel, uniqueId }));
   } else {
     notificationDocument = accessor.newDocument();
   }

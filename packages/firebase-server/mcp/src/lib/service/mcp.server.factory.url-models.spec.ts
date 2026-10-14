@@ -10,7 +10,7 @@ import { ROUTE_MANIFEST_VERSION, type RouteManifest } from './mcp.route-manifest
 import { type McpModuleConfig } from '../mcp.config';
 
 function makeMcpConfig(overrides: Partial<McpModuleConfig> = {}): McpModuleConfig {
-  return { oidcIssuer: 'https://example.test/oidc', mcpUrl: 'https://example.test/mcp', serverName: 'test-mcp', serverVersion: '0.0.1', ...overrides } as McpModuleConfig;
+  return { oidcIssuer: 'https://example.test/oidc', mcpUrl: 'https://example.test/mcp', serverName: 'test-mcp', serverVersion: '0.0.1', tools: { compact: false, methodTools: true }, ...overrides } as McpModuleConfig;
 }
 
 function makeDispatchService(): unknown {

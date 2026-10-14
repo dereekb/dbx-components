@@ -23,6 +23,9 @@ export const storageFileUpdate: DemoUpdateModelFunction<UpdateStorageFileParams>
 export const storageFileProcess: DemoUpdateModelFunction<ProcessStorageFileParams, ProcessStorageFileResult> = withApiDetails({
   inputType: processStorageFileParamsType,
   mcp: {
+    // Additive baseline: starts processing. Either flag drops or overwrites an existing result.
+    destructive: false,
+    escalatingParams: { forceRestartProcessing: { destructive: true }, processAgainIfSuccessful: { destructive: true } },
     toolDetails: storageFileProcessToolDetailsFactory()
   },
   fn: async (request) => {
@@ -42,6 +45,10 @@ export const storageFileProcess: DemoUpdateModelFunction<ProcessStorageFileParam
 
 export const storageFileSyncWithGroups: DemoUpdateModelFunction<SyncStorageFileWithGroupsParams, SyncStorageFileWithGroupsResult> = withApiDetails({
   inputType: syncStorageFileWithGroupsParamsType,
+  mcp: {
+    // Additive: only adds missing group memberships.
+    destructive: false
+  },
   fn: async (request) => {
     const { nest, data } = request;
 

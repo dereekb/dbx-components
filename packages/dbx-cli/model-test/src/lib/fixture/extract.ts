@@ -22,7 +22,7 @@
 
 import { Node, Project, SyntaxKind, type ArrowFunction, type ClassDeclaration, type FunctionExpression, type InterfaceDeclaration, type MethodDeclaration, type SourceFile, type TypeAliasDeclaration, type VariableDeclaration } from 'ts-morph';
 import { classifyFixtureArchetype } from './archetype.js';
-import { findFamilyByBaseClass, findFamilyByFactoryName, NON_MODEL_JSDOC_TAG, type FrameworkNonModelFixtureFamily } from './framework-fixtures.js';
+import { findFamilyByBaseClass, findFamilyByFactoryName, findModelFamilyByBaseClass, findModelFamilyByFactoryName, NON_MODEL_JSDOC_TAG, type FrameworkNonModelFixtureFamily } from './framework-fixtures.js';
 import type { AppFixturesExtraction, FactoryCall, FixtureEntry, FixtureKind, FixtureMethod, FixtureParamsField, FixtureParamsType } from './types.js';
 
 const FIXTURE_SUFFIX = 'TestContextFixture';
@@ -381,7 +381,8 @@ function collectFactories(sourceFile: SourceFile, prefix: string | undefined): {
 
 /**
  * Reads a single variable declaration whose initializer ultimately returns a
- * call to either `modelTestContextFactory<...>(...)` or one of the known
+ * call to either `modelTestContextFactory<...>(...)`, a known framework
+ * model-backed factory (its model generics are prefixed), or one of the known
  * framework non-model factories (see `framework-fixtures.ts`). Returns
  * `undefined` when the declaration doesn't match a recognized factory.
  *
@@ -395,12 +396,15 @@ function readContextFactory(decl: VariableDeclaration): { factory: FactoryCall; 
   const callee = bodyExpr.getExpression();
   if (!Node.isIdentifier(callee)) return undefined;
   const calleeName = callee.getText();
+  const modelFamily = calleeName === MODEL_FACTORY_NAME ? undefined : findModelFamilyByFactoryName(calleeName);
   let family: FrameworkNonModelFixtureFamily | undefined;
-  if (calleeName !== MODEL_FACTORY_NAME) {
+  if (calleeName !== MODEL_FACTORY_NAME && modelFamily === undefined) {
     family = findFamilyByFactoryName(calleeName);
     if (family === undefined) return undefined;
   }
-  const generics = bodyExpr.getTypeArguments().map((t) => t.getText());
+  const callGenerics = bodyExpr.getTypeArguments().map((t) => t.getText());
+  // a model-backed library factory fills in the model generics, so prefix them to line up with modelTestContextFactory
+  const generics = modelFamily ? [...modelFamily.modelGenerics, ...callGenerics] : callGenerics;
   const argInfo = readFactoryArgInfo(bodyExpr.getArguments());
   const factory: FactoryCall = {
     factoryName: decl.getName(),
@@ -506,6 +510,18 @@ function hasNonModelJsDoc(cls: ClassDeclaration): boolean {
  * @returns The matching framework family, or `undefined` if the class extends nothing recognized.
  */
 function familyFromExtends(cls: ClassDeclaration): FrameworkNonModelFixtureFamily | undefined {
+  const baseName = readExtendsBaseName(cls);
+  return baseName === undefined ? undefined : findFamilyByBaseClass(baseName);
+}
+
+/**
+ * Reads the base class name of a class's `extends` clause, e.g.
+ * `extends ModelTestContextFixture<A, B>` → `ModelTestContextFixture`.
+ *
+ * @param cls - The class declaration to inspect.
+ * @returns The base class name, or `undefined` if the class extends nothing.
+ */
+function readExtendsBaseName(cls: ClassDeclaration): string | undefined {
   const ext = cls.getExtends();
   if (!ext) return undefined;
   const expr = ext.getExpression();
@@ -517,8 +533,7 @@ function familyFromExtends(cls: ClassDeclaration): FrameworkNonModelFixtureFamil
     const match = /^([A-Za-z_$][\w$]*)/.exec(text);
     baseName = match ? match[1] : undefined;
   }
-  if (baseName === undefined) return undefined;
-  return findFamilyByBaseClass(baseName);
+  return baseName;
 }
 
 /**
@@ -744,6 +759,9 @@ function readVisibility(m: MethodDeclaration): 'public' | 'private' | 'protected
  * Reads the generic args of a class's `extends` clause, e.g.
  * `extends ModelTestContextFixture<A, B, C>` → `['A', 'B', 'C']`.
  *
+ * When the base is a framework model-backed family's library class, the
+ * family's model generics are prefixed, since the library class fills them in.
+ *
  * @param cls - The class declaration.
  * @returns The generic args (empty when no `extends` clause exists or it
  *   carries no type arguments)
@@ -751,7 +769,10 @@ function readVisibility(m: MethodDeclaration): 'public' | 'private' | 'protected
 function readExtendsGenerics(cls: ClassDeclaration): readonly string[] {
   const ext = cls.getExtends();
   if (!ext) return [];
-  return ext.getTypeArguments().map((t) => t.getText());
+  const generics = ext.getTypeArguments().map((t) => t.getText());
+  const baseName = readExtendsBaseName(cls);
+  const modelFamily = baseName === undefined ? undefined : findModelFamilyByBaseClass(baseName);
+  return modelFamily ? [...modelFamily.modelGenerics, ...generics] : generics;
 }
 
 /**

@@ -2,7 +2,7 @@
   "version": 1,
   "kind": "dbx-components",
   "project": "dbx-components",
-  "capabilities": ["audit", "dbx-components"],
+  "capabilities": ["audit", "dbx-components", "circleci"],
   "commit": {
     "autoCommit": {
       "enabled": true,
@@ -17,6 +17,32 @@
   },
   "capabilityConfig": {
     "block-nx-build": { "options": { "enabled": true } },
+    "circleci": {
+      "options": {
+        "projectSlug": "gh/dereekb/dbx-components",
+        "defaultBranch": "develop",
+        "triggers": {
+          "release": { "branch": "release", "description": "build + test, then run-release-and-push-to-main" },
+          "release-only": { "branch": "release", "parameters": { "run_build": false }, "description": "skip build/test; rerun only run-release-and-push-to-main" },
+          "main": { "branch": "main", "description": "main pipeline; publish + deploy workflows wait on approval" }
+        },
+        "approvals": ["hold-publish-npm", "hold-deploy-to-firebase"],
+        "rerunBranches": ["develop", "release", "main"]
+      }
+    },
+    "release": {
+      "options": {
+        "prepare": [
+          { "name": "regenerate dbx-components-mcp files", "command": ["./regenerate-dbx-components-mcp.sh"] },
+          { "name": "regenerate firestore.indexes.json", "command": ["./regenerate-firestore-indexes.sh"] },
+          { "name": "sync internal peer dependency versions", "command": ["node", "tools/scripts/sync-peer-deps.mjs"] },
+          { "name": "lint-fix", "command": ["./lint-fix-all.sh"], "allowFailure": true }
+        ],
+        "prepareCommitMessage": "build: lint fix + mcp regeneration + firestore indexes + peer dep sync",
+        "versionPreview": { "command": ["node", "tools/scripts/release.mjs", "--dry-run=true", "--skip-publish", "--verbose"] },
+        "pipeline": { "releasePreset": "release", "releaseOnlyPreset": "release-only", "mainPreset": "main" }
+      }
+    },
     "docker": {
       "options": {
         "serve": {
@@ -26,6 +52,13 @@
           "exec": {
             "command": ["npx", "firebase", "--project=default", "emulators:exec", "--only", "auth,firestore,storage"],
             "joinCommand": true
+          },
+          "supervise": {
+            "tasks": ["demo-api:build-watch"]
+          },
+          "preLaunch": ["npx", "nx", "reset", "--onlyWorkspaceData"],
+          "healthCheck": {
+            "url": "http://localhost:9900/"
           }
         }
       }

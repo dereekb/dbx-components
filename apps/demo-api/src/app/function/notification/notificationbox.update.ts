@@ -4,6 +4,10 @@ import { type DemoUpdateModelFunction } from '../function.context';
 
 export const notificationBoxUpdate: DemoUpdateModelFunction<UpdateNotificationBoxParams> = withApiDetails({
   inputType: updateNotificationBoxParamsType,
+  mcp: {
+    // Additive: the update action is a no-op placeholder.
+    destructive: false
+  },
   fn: async (request) => {
     const { nest, auth: _auth, data } = request;
 

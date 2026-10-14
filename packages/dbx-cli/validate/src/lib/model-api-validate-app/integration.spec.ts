@@ -4,6 +4,9 @@ import { describe, expect, it } from 'vitest';
 import { reconcile } from './reconcile.js';
 import { expectedHandlerNames } from './naming.js';
 import { validateAppModelApi, formatValidationAsMarkdown } from './index.js';
+import { collectTsFiles } from '../_core/_validate/inspect.js';
+import { extractHandlerEntriesFromFiles } from './extract-handlers.js';
+import type { HandlerMcpReadOnly } from './types.js';
 
 const WORKSPACE_ROOT = resolve(fileURLToPath(import.meta.url), '../../../../../../..');
 const COMPONENT_DIR = 'components/demo-firebase';
@@ -85,6 +88,64 @@ describe('validateAppModelApi (demo-firebase + demo-api)', () => {
       modelFilter: 'Profile'
     });
     expect(report.summaries.every((s) => s.model.toLowerCase() === 'profile')).toBe(true);
+  });
+});
+
+describe('HANDLER_MCP_READ_ONLY_UNSET (demo-firebase + demo-api)', () => {
+  const HEALTH_CHECK_REL = 'src/app/function/notification/notificationuser.update.ts';
+
+  function render(status: HandlerMcpReadOnly | undefined): string {
+    return status?.kind === 'declared' ? `declared(${status.value ?? '?'})` : (status?.kind ?? 'none');
+  }
+
+  it('reads every demo invoke handler as declared', async () => {
+    const report = await validateAppModelApi({ componentAbs: COMPONENT_ABS, componentDir: COMPONENT_DIR, apiAbs: API_ABS, apiDir: API_DIR });
+    const invokes = report.entries.filter((e) => e.verb === 'invoke').map((e) => `${e.model}.${e.specifier ?? '_'}: ${render(e.handler?.mcpReadOnly)}`);
+    expect(invokes).toEqual(['guestbookEntry.allPublishedEntries: declared(true)', 'guestbookEntry.entryDetails: declared(true)', 'notificationUser.healthCheck: declared(false)', 'notificationUser.healthCheckAutofix: declared(false)']);
+    expect(report.issues.filter((x) => x.code === 'HANDLER_MCP_READ_ONLY_UNSET')).toHaveLength(0);
+    expect(report.warningCount).toBe(0);
+    expect(report.errorCount).toBe(9);
+    expect(formatValidationAsMarkdown(report)).not.toContain('MCP read/write classification not checked');
+  });
+
+  it('flags exactly the two healthCheck handlers when they leave readOnly unset', async () => {
+    const files = await collectTsFiles(resolve(API_ABS, 'src/app/function'), API_ABS);
+    let replacements = 0;
+    const patched = files.map((file) => {
+      let result = file;
+      if (file.relPath === HEALTH_CHECK_REL) {
+        const text = file.text.replaceAll(/^[ \t]*readOnly: false,?\n/gm, () => {
+          replacements += 1;
+          return '';
+        });
+        result = { relPath: file.relPath, text };
+      }
+      return result;
+    });
+    expect(replacements).toBe(2);
+
+    const { entries } = extractHandlerEntriesFromFiles({ files: patched, apiAbs: API_ABS, apiDir: API_DIR });
+    const { issues } = reconcile({ declared: [], handlers: entries });
+    const patchedLines = (patched.find((x) => x.relPath === HEALTH_CHECK_REL)?.text ?? '').split('\n');
+    const lineOf = (name: string) => patchedLines.findIndex((x) => x.startsWith(`export const ${name}:`)) + 1;
+    expect(issues.filter((x) => x.code === 'HANDLER_MCP_READ_ONLY_UNSET').map((x) => `${x.model}.${x.verb}.${x.specifier} @ ${x.source}`)).toEqual([
+      `notificationUser.invoke.healthCheck @ ${API_DIR}/${HEALTH_CHECK_REL}:${lineOf('notificationUserHealthCheck')}`,
+      `notificationUser.invoke.healthCheckAutofix @ ${API_DIR}/${HEALTH_CHECK_REL}:${lineOf('notificationUserHealthCheckAutofix')}`
+    ]);
+  });
+});
+
+describe('MISSING_DESCRIPTION (demo-firebase + demo-api)', () => {
+  it('finds a description on every demo entry, including the upstream @dereekb/firebase ones', async () => {
+    const report = await validateAppModelApi({ componentAbs: COMPONENT_ABS, componentDir: COMPONENT_DIR, apiAbs: API_ABS, apiDir: API_DIR });
+    expect(report.issues.filter((x) => x.code === 'MISSING_DESCRIPTION').map((x) => `${x.model}.${x.verb}.${x.specifier ?? '_'} @ ${x.source}`)).toEqual([]);
+  });
+
+  it('reads the config member and params interface summaries off the declarations', async () => {
+    const report = await validateAppModelApi({ componentAbs: COMPONENT_ABS, componentDir: COMPONENT_DIR, apiAbs: API_ABS, apiDir: API_DIR });
+    const declaredFor = (model: string, verb: string, specifier?: string) => report.entries.find((e) => e.model === model && e.verb === verb && e.specifier === specifier)?.declared;
+    expect(declaredFor('guestbookEntry', 'delete')?.description).toContain("caller's own entry");
+    expect(declaredFor('guestbookEntry', 'query', '_')?.paramsTypeDescription).toContain('guestbook entries');
   });
 });
 

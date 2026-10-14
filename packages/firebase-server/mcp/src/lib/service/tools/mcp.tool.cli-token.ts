@@ -31,6 +31,11 @@ export interface CreateCliTokenToolDeps {
    * The app-supplied minter. The tool is only ever built when one is wired.
    */
   readonly minter: McpCliTokenMinter;
+  /**
+   * The advertised tool name. Defaults to {@link CLI_TOKEN_TOOL_NAME}; the compact MCP surface names
+   * it `<prefix>_cli_token`.
+   */
+  readonly name?: string;
 }
 
 /**
@@ -47,6 +52,17 @@ export interface CliTokenToolOutput {
   readonly cliName?: string;
   readonly downloadUrl?: string;
   readonly downloadSha256?: string;
+  /**
+   * The command that downloads the CLI to a file named {@link cliName} and marks it executable.
+   * Present with {@link downloadUrl}.
+   *
+   * In the structured output, not only the rendered text, because a client that surfaces
+   * `structuredContent` never shows the text — and the saved name matters: the CLI is a single
+   * ES-module file, and Node refuses to run an ES module whose file has an unrecognized extension
+   * (`demo-cli.download` fails with `ERR_UNKNOWN_FILE_EXTENSION`). Extensionless, `.mjs`, and `.js`
+   * all run.
+   */
+  readonly installCommand?: string;
   /**
    * Name of the CLI env the credential is redeemed into, when the app configured one.
    */
@@ -80,9 +96,9 @@ export function createCliTokenTool(deps: CreateCliTokenToolDeps): McpToolDefinit
   const handler: McpStaticToolHandler = (args, ctx) => cliTokenToolHandler(args, ctx, deps);
 
   return buildStaticToolDefinition({
-    name: CLI_TOKEN_TOOL_NAME,
+    name: deps.name ?? CLI_TOKEN_TOOL_NAME,
     description:
-      'Mints a short-lived CLI login credential for YOU (the calling session) and returns a one-time claim code plus, when available, a signed download URL for the CLI binary. The credential is capped at one hour, carries no more privilege than this session (never `token.cli` or `token.service`), and expires with this session if that is sooner. The refresh token is never returned here — redeem the claim code with `<cli> auth handoff <code>` within two minutes.',
+      'Mints a short-lived CLI login credential for YOU (the calling session) and returns a one-time claim code plus, when available, a signed download URL for the CLI binary. The credential is capped at one hour, carries no more privilege than this session (never `token.cli` or `token.service`), and expires with this session if that is sooner. The refresh token is never returned here — redeem the claim code with `<cli> auth handoff <code>` within two minutes. Download with `installCommand`: it saves the CLI under its own name, and Node will not run the single-file ES-module CLI under an unrecognized extension.',
     inputSchema: CLI_TOKEN_INPUT_SCHEMA,
     outputSchema: CLI_TOKEN_OUTPUT_SCHEMA,
     dispatch: {
@@ -131,6 +147,8 @@ async function cliTokenToolHandler(args: Record<string, unknown>, ctx: McpStatic
 function buildOutput(minted: McpCliTokenMintResult): CliTokenToolOutput {
   const cliName = minted.cliName ?? '<cli>';
   const envArgument = minted.envName == null ? '' : ` --env ${minted.envName}`;
+  // a real file name, never the `<cli>` placeholder — a shell would read that as a redirect
+  const binaryName = minted.cliName ?? 'cli';
 
   return {
     claimCode: minted.claimCode,
@@ -141,6 +159,7 @@ function buildOutput(minted: McpCliTokenMintResult): CliTokenToolOutput {
     ...(minted.cliName == null ? {} : { cliName: minted.cliName }),
     ...(minted.downloadUrl == null ? {} : { downloadUrl: minted.downloadUrl }),
     ...(minted.downloadSha256 == null ? {} : { downloadSha256: minted.downloadSha256 }),
+    ...(minted.downloadUrl == null ? {} : { installCommand: `curl -fsSL -o ${binaryName} "${minted.downloadUrl}" && chmod +x ${binaryName}` }),
     ...(minted.envName == null ? {} : { envName: minted.envName })
   };
 }
@@ -165,11 +184,10 @@ function parseTtlSeconds(value: unknown): Maybe<number> {
 function renderText(output: CliTokenToolOutput): string {
   const lines: string[] = ['# CLI credential minted', ''];
 
-  if (output.downloadUrl == null) {
+  if (output.installCommand == null) {
     lines.push('## Log in', '');
   } else {
-    const cliName = output.cliName ?? 'cli';
-    lines.push('## 1. Download the CLI', '', '```sh', `curl -fsSL -o ${cliName} "${output.downloadUrl}" && chmod +x ${cliName}`, '```', '');
+    lines.push('## 1. Download the CLI', '', '```sh', output.installCommand, '```', '');
 
     if (output.downloadSha256 != null) {
       lines.push(`SHA-256: \`${output.downloadSha256}\``, '');
@@ -226,6 +244,7 @@ const CLI_TOKEN_OUTPUT_SCHEMA = {
     cliName: { type: 'string' },
     downloadUrl: { type: 'string' },
     downloadSha256: { type: 'string' },
+    installCommand: { type: 'string', description: 'Downloads the CLI to a file named `cliName` and marks it executable. Keep that name: the CLI is a single ES-module file, and Node refuses to run it under an unrecognized extension.' },
     envName: { type: 'string' },
     handoffCommand: { type: 'string' }
   }

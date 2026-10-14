@@ -40,6 +40,7 @@ import {
   type PasswordString,
   isThrottled
 } from '@dereekb/util';
+import { mergeClearableObjectUpdate } from '@dereekb/model';
 import { assertIsContextWithAuthData, type CallableContextWithAuthData } from '../function/context';
 import { type AuthDataRef, firebaseAuthTokenFromDecodedIdToken } from './auth.context';
 import { hoursToMs, minutesToMs, toISODateString } from '@dereekb/date';
@@ -454,16 +455,8 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
   }
 
   async updateClaims<T extends AuthClaimsObject = AuthClaimsObject>(claims: AuthClaimsUpdate<T>): Promise<void> {
-    const currentClaims = await this.loadClaims();
-
-    let newClaims: AuthClaimsUpdate<T> = {
-      ...currentClaims,
-      ...filterUndefinedValues(claims, false)
-    };
-
-    newClaims = filterNullAndUndefinedValues(newClaims);
-
-    return this.setClaims(newClaims);
+    const currentClaims = await this.loadClaims<T>();
+    return this.setClaims<T>(mergeClearableObjectUpdate<AuthClaims<T>>(currentClaims, claims));
   }
 
   clearClaims(): Promise<void> {

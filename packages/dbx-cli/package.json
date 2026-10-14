@@ -1,10 +1,11 @@
 {
   "name": "@dereekb/dbx-cli",
-  "version": "14.16.0",
+  "version": "14.17.0",
   "type": "module",
   "sideEffects": false,
   "bin": {
     "dbx-cli-generate-firebase-api-manifest": "firebase-api-manifest/main.js",
+    "dbx-cli-generate-docs-manifest": "generate-docs-manifest/main.js",
     "dbx-cli-generate-firestore-indexes": "generate-firestore-indexes/main.js",
     "dbx-cli-generate-firestore-query-manifest": "firestore-query-manifest/main.js",
     "dbx-cli-generate-mcp-manifest": "generate-mcp-manifest/main.js",
@@ -23,6 +24,9 @@
     },
     "./firestore-query-manifest": {
       "default": "./firestore-query-manifest/main.js"
+    },
+    "./generate-docs-manifest": {
+      "default": "./generate-docs-manifest/main.js"
     },
     "./generate-firestore-indexes": {
       "default": "./generate-firestore-indexes/main.js"
@@ -64,12 +68,12 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/date": "14.16.0",
-    "@dereekb/firebase": "14.16.0",
-    "@dereekb/model": "14.16.0",
-    "@dereekb/nestjs": "14.16.0",
-    "@dereekb/oauth-resource": "14.16.0",
-    "@dereekb/util": "14.16.0",
+    "@dereekb/date": "14.17.0",
+    "@dereekb/firebase": "14.17.0",
+    "@dereekb/model": "14.17.0",
+    "@dereekb/nestjs": "14.17.0",
+    "@dereekb/oauth-resource": "14.17.0",
+    "@dereekb/util": "14.17.0",
     "@nestjs/common": "^12.0.1",
     "arktype": "^2.2.0",
     "firebase": "^12.18.0",

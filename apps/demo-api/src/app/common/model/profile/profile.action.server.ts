@@ -5,6 +5,11 @@ import {
   exampleNotificationTemplate,
   type ProfileCreateTestCalendarEventParams,
   profileCreateTestCalendarEventParamsType,
+  type ProfileCreateTestNotificationTaskBotParams,
+  profileCreateTestNotificationTaskBotParamsType,
+  DEMO_PING_NOTIFICATION_TASK_BOT_ENTRY_ID,
+  DEMO_PING_NOTIFICATION_TASK_BOT_SCRIPT_TYPE,
+  type DemoPingNotificationTaskBotEntryData,
   type ProfileCreateTestNotificationParams,
   profileCreateTestNotificationParamsType,
   type ProfileDocument,
@@ -16,8 +21,9 @@ import {
   type UpdateProfileParams,
   updateProfileParamsType
 } from 'demo-firebase';
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, MS_IN_MINUTE } from '@dereekb/util';
 import {
+  type AppNotificationTaskBotScriptConfigServiceRef,
   type CalendarEventItem,
   type CalendarFirestoreCollections,
   type CalendarRecurringEventItem,
@@ -30,12 +36,12 @@ import {
   updateCalendarEventsTemplate
 } from '@dereekb/firebase';
 import { usernameAlreadyTakenError } from './profile.error';
-import { type NotificationExpediteServiceRef } from '@dereekb/firebase-server/model';
+import { ensureNotificationTaskBotEntryFactory, type NotificationExpediteServiceRef } from '@dereekb/firebase-server/model';
 
 /**
  * FirebaseServerActionsContextt required for ProfileServerActions.
  */
-export interface ProfileServerActionsContext extends FirebaseServerActionsContext, ProfileFirestoreCollections, NotificationFirestoreCollections, CalendarFirestoreCollections, FirestoreContextReference, NotificationExpediteServiceRef {}
+export interface ProfileServerActionsContext extends FirebaseServerActionsContext, ProfileFirestoreCollections, NotificationFirestoreCollections, CalendarFirestoreCollections, FirestoreContextReference, NotificationExpediteServiceRef, AppNotificationTaskBotScriptConfigServiceRef {}
 
 /**
  * Server-only profile actions.
@@ -46,6 +52,7 @@ export abstract class ProfileServerActions {
   abstract setProfileUsername(params: SetProfileUsernameParams): AsyncProfileUpdateAction<SetProfileUsernameParams>;
   abstract createTestNotification(params: ProfileCreateTestNotificationParams): AsyncProfileUpdateAction<ProfileCreateTestNotificationParams>;
   abstract createTestCalendarEvent(params: ProfileCreateTestCalendarEventParams): AsyncProfileUpdateAction<ProfileCreateTestCalendarEventParams>;
+  abstract createTestNotificationTaskBot(params: ProfileCreateTestNotificationTaskBotParams): AsyncProfileUpdateAction<ProfileCreateTestNotificationTaskBotParams>;
 }
 
 /**
@@ -60,7 +67,8 @@ export function profileServerActions(context: ProfileServerActionsContext): Prof
     updateProfile: updateProfileFactory(context),
     setProfileUsername: setProfileUsernameFactory(context),
     createTestNotification: createTestNotificationFactory(context),
-    createTestCalendarEvent: createTestCalendarEventFactory(context)
+    createTestCalendarEvent: createTestCalendarEventFactory(context),
+    createTestNotificationTaskBot: createTestNotificationTaskBotFactory(context)
   };
 }
 
@@ -299,6 +307,49 @@ export function createTestCalendarEventFactory(context: ProfileServerActionsCont
             })
           );
         }
+      });
+
+      return document;
+    };
+  });
+}
+
+/**
+ * Default interval between pings of the test NotificationTaskBot.
+ */
+export const DEFAULT_TEST_NOTIFICATION_TASK_BOT_INTERVAL = MS_IN_MINUTE;
+
+/**
+ * Default number of pings before the test NotificationTaskBot pauses itself.
+ */
+export const DEFAULT_TEST_NOTIFICATION_TASK_BOT_PAUSE_AFTER = 3;
+
+/**
+ * Creates a factory that starts the demo ping NotificationTaskBot on a profile.
+ *
+ * Ensures the `demo_ping` entry on the profile's bot, with the profile's key as the bot's owner so the user can opt out
+ * of it. Idempotent: an existing entry keeps its data and live run.
+ *
+ * @param context - The server actions context providing the NotificationTaskBot collections and script registry.
+ * @returns A transform function that validates params and returns an async function accepting a ProfileDocument.
+ */
+export function createTestNotificationTaskBotFactory(context: ProfileServerActionsContext) {
+  const { firebaseServerActionTransformFunctionFactory } = context;
+  const ensureNotificationTaskBotEntry = ensureNotificationTaskBotEntryFactory(context);
+
+  return firebaseServerActionTransformFunctionFactory(profileCreateTestNotificationTaskBotParamsType, async (params) => {
+    const data: DemoPingNotificationTaskBotEntryData = {
+      iv: params.interval ?? DEFAULT_TEST_NOTIFICATION_TASK_BOT_INTERVAL,
+      pa: params.pauseAfter ?? DEFAULT_TEST_NOTIFICATION_TASK_BOT_PAUSE_AFTER
+    };
+
+    return async (document: ProfileDocument) => {
+      await ensureNotificationTaskBotEntry({
+        model: document.key,
+        entryId: DEMO_PING_NOTIFICATION_TASK_BOT_ENTRY_ID,
+        scriptType: DEMO_PING_NOTIFICATION_TASK_BOT_SCRIPT_TYPE,
+        data,
+        owner: document.key // the profile's NotificationBox uses the profile key (pr/<uid>) as its owner too
       });
 
       return document;

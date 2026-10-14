@@ -213,3 +213,76 @@ describe('applyIdempotency', () => {
     expect(second.files.map((f) => f.status)).toEqual(first.files.map((f) => f.status));
   });
 });
+
+describe('scaffoldArtifact — notification-task-bot-script body', () => {
+  const input: ScaffoldArtifactInput = { artifact: 'notification-task-bot-script', name: 'followUp', componentDir: 'components/demo-firebase', apiDir: 'apps/demo-api' };
+  const result = scaffoldArtifact(input);
+  const [scriptFile, registryFile, processorFile, handlerFile] = result.files;
+  const registryPath = 'components/demo-firebase/src/lib/model/notification/notification.taskbot.ts';
+  const handlerPath = 'apps/demo-api/src/app/common/model/notification/handlers/taskbot/task.handler.taskbot.ts';
+
+  it('emits the script, registry, processor and handler files', () => {
+    expect(result.files.map((f) => [f.path, f.status])).toEqual([
+      ['components/demo-firebase/src/lib/model/notification/notification.taskbot.follow-up.ts', 'new'],
+      [registryPath, 'new'],
+      ['apps/demo-api/src/app/common/model/notification/handlers/taskbot/task.handler.taskbot.follow-up.ts', 'new'],
+      [handlerPath, 'new']
+    ]);
+  });
+
+  it('renders the script config with its dataType', () => {
+    expect(scriptFile.content).toContain("FOLLOW_UP_NOTIFICATION_TASK_BOT_SCRIPT_TYPE: NotificationTaskBotScriptType = 'follow_up'");
+    expect(scriptFile.content).toContain("FOLLOW_UP_NOTIFICATION_TASK_BOT_ENTRY_ID: NotificationTaskBotEntryId = 'follow-up'");
+    expect(scriptFile.content).toContain('export interface FollowUpNotificationTaskBotEntryData');
+    expect(scriptFile.content).toContain("}).onUndeclaredKey('reject') as Type<FollowUpNotificationTaskBotEntryData>;");
+    expect(scriptFile.content).toContain('export const FOLLOW_UP_NOTIFICATION_TASK_BOT_SCRIPT_CONFIG: NotificationTaskBotScriptConfig = {');
+    expect(scriptFile.content).toContain('dataType: followUpNotificationTaskBotEntryDataType');
+  });
+
+  it('renders the registry with the app stem', () => {
+    expect(registryFile.content).toContain('export const DEMO_NOTIFICATION_TASK_BOT_SCRIPT_CONFIGS: NotificationTaskBotScriptConfig[] = [FOLLOW_UP_NOTIFICATION_TASK_BOT_SCRIPT_CONFIG];');
+    expect(registryFile.content).toContain('DEMO_FIREBASE_NOTIFICATION_TASK_BOT_SCRIPT_CONFIG_RECORD = notificationTaskBotScriptConfigRecord(');
+  });
+
+  it('renders the processor', () => {
+    expect(processorFile.content).toContain('demoFollowUpNotificationTaskBotScriptProcessor(_context: DemoFirebaseServerActionsContext): NotificationTaskBotScriptProcessorConfig<FollowUpNotificationTaskBotEntryData>');
+    expect(processorFile.content).toContain('target: FOLLOW_UP_NOTIFICATION_TASK_BOT_SCRIPT_TYPE');
+    expect(processorFile.content).toContain('notificationTaskBotDelayUntilDue');
+    expect(processorFile.content).toContain('markSubmitted()');
+    expect(processorFile.content).toContain("from 'demo-firebase'");
+    expect(processorFile.content).toContain("from '../../../../firebase/action.context'");
+  });
+
+  it('renders the NTBR handler', () => {
+    expect(handlerFile.content).toContain('demoNotificationTaskBotRunNotificationTaskHandler(');
+    expect(handlerFile.content).toContain('processors: [demoFollowUpNotificationTaskBotScriptProcessor(');
+    expect(handlerFile.content).toContain('validate: DEMO_NOTIFICATION_TASK_BOT_SCRIPT_CONFIGS.map((x) => x.scriptType)');
+  });
+
+  it('lists nine wiring steps before idempotency', () => {
+    expect(result.wiring).toHaveLength(9);
+  });
+
+  it('keeps the first-script steps when nothing exists', async () => {
+    const applied = await applyIdempotency(result, () => false);
+    const kept = applied.wiring.map((step) => result.wiring.indexOf(step) + 1);
+    expect(kept).toEqual([1, 2, 5, 6, 7, 8, 9]);
+  });
+
+  it('keeps the extend steps when the registry and handler exist', async () => {
+    const applied = await applyIdempotency(result, (path) => path === registryPath || path === handlerPath);
+    expect(applied.files.map((f) => f.status)).toEqual(['new', 'exists-skipped', 'new', 'exists-skipped']);
+    const kept = applied.wiring.map((step) => result.wiring.indexOf(step) + 1);
+    expect(kept).toEqual([1, 3, 4, 9]);
+  });
+
+  it('throws when the entry id is longer than 40 characters', () => {
+    expect(() => scaffoldArtifact({ ...input, name: 'aVeryLongNotificationTaskBotScriptNameThatOverflows' })).toThrow('Scaffold failed');
+  });
+
+  it('keeps every wiring step for existing artifacts', async () => {
+    const task = scaffoldArtifact({ artifact: 'notification-task', name: 'workerPaid', componentDir: 'components/demo-firebase', apiDir: 'apps/demo-api' });
+    const applied = await applyIdempotency(task, () => true);
+    expect(applied.wiring).toEqual(task.wiring);
+  });
+});

@@ -20,6 +20,10 @@ export const storageFileGroupUpdate: DemoUpdateModelFunction<UpdateStorageFileGr
 
 export const storageFileGroupRegenerateContent: DemoUpdateModelFunction<RegenerateStorageFileGroupContentParams, RegenerateStorageFileGroupContentResult> = withApiDetails({
   inputType: regenerateStorageFileGroupContentParamsType,
+  mcp: {
+    // Additive: rebuilds a derived zip.
+    destructive: false
+  },
   fn: async (request) => {
     const { nest, data } = request;
 

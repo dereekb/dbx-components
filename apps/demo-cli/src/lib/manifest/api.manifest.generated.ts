@@ -23,6 +23,7 @@ import {
   notificationUserHealthCheckParamsType,
   processStorageFileParamsType,
   readMultipleStorageFilesMetadataParamsType,
+  readNotificationTaskBotOptOutsParamsType,
   readStorageFileMetadataParamsType,
   readUserExternalConnectionAuthorizeStateParamsType,
   regenerateStorageFileGroupContentParamsType,
@@ -31,6 +32,7 @@ import {
   resyncNotificationUserParamsType,
   rotateCalendarIcsParamsType,
   rotateOidcClientSecretParamsType,
+  runNotificationTaskBotEntryParamsType,
   sendNotificationParamsType,
   submitFormSpaceParamsType,
   syncStorageFileWithGroupsParamsType,
@@ -39,12 +41,14 @@ import {
   updateNotificationBoxParamsType,
   updateNotificationBoxRecipientParamsType,
   updateNotificationSummaryParamsType,
+  updateNotificationTaskBotEntryParamsType,
+  updateNotificationTaskBotOptOutParamsType,
   updateNotificationUserParamsType,
   updateOidcClientParamsType,
   updateStorageFileGroupParamsType,
   updateStorageFileParamsType
 } from '@dereekb/firebase';
-import { createOpenRouterPromptVersionParamsType, readOpenRouterPromptParamsType, updateOpenRouterPromptParamsType, updateOpenRouterPromptVersionParamsType } from '@dereekb/openrouter/firebase';
+import { createOpenRouterPromptVersionParamsType, queryOpenRouterPromptsParamsType, readOpenRouterPromptParamsType, updateOpenRouterPromptParamsType, updateOpenRouterPromptVersionParamsType } from '@dereekb/openrouter/firebase';
 import {
   allPublishedGuestbookEntriesParamsType,
   createGuestbookParamsType,
@@ -57,7 +61,9 @@ import {
   likeGuestbookEntryParamsType,
   profileCreateTestCalendarEventParamsType,
   profileCreateTestNotificationParamsType,
+  profileCreateTestNotificationTaskBotParamsType,
   publishGuestbookParamsType,
+  queryGuestbookEntriesParamsType,
   resetProfilePasswordParamsType,
   setProfileUsernameParamsType,
   subscribeToGuestbookNotificationsParamsType,
@@ -65,7 +71,7 @@ import {
 } from 'demo-firebase';
 import { type CliApiManifest, type CliGeneratedManifestStamp, type CliModelManifest, type CliEnumManifest } from '@dereekb/dbx-cli';
 
-export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.15.0' };
+export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.16.0' };
 
 export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
   {
@@ -192,6 +198,7 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     paramsValidator: createGuestbookParamsType,
     groupName: 'Guestbook',
     sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts',
+    description: "Creates a guestbook owned by the caller.\n\nIt starts unlocked, and unpublished unless `published` is set. Returns the new guestbook's key in `modelKeys`.",
     paramsFields: [
       { name: 'name', typeText: 'string' },
       { name: 'published', typeText: 'Maybe<boolean>' },
@@ -218,8 +225,26 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts',
     paramsTypeDescription: 'Parameters for the `guestbook / update / publish` call. One-way publish of the targeted guestbook.'
   },
-  { model: 'guestbook', verb: 'update', specifier: 'subscribeToNotifications', paramsTypeName: 'SubscribeToGuestbookNotificationsParams', paramsValidator: subscribeToGuestbookNotificationsParamsType, groupName: 'Guestbook', sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts' },
-  { model: 'guestbookEntry', verb: 'delete', paramsTypeName: 'GuestbookEntryParams', paramsValidator: guestbookEntryParamsType, groupName: 'Guestbook', sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts', paramsFields: [{ name: 'guestbook', typeText: 'string' }] },
+  {
+    model: 'guestbook',
+    verb: 'update',
+    specifier: 'subscribeToNotifications',
+    paramsTypeName: 'SubscribeToGuestbookNotificationsParams',
+    paramsValidator: subscribeToGuestbookNotificationsParamsType,
+    groupName: 'Guestbook',
+    sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts',
+    description: 'Subscribes a user to the notifications of the guestbook targeted by `key`.\n\n`uid` defaults to the caller. Only an admin can subscribe another user; anyone else always subscribes themselves.'
+  },
+  {
+    model: 'guestbookEntry',
+    verb: 'delete',
+    paramsTypeName: 'GuestbookEntryParams',
+    paramsValidator: guestbookEntryParamsType,
+    groupName: 'Guestbook',
+    sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts',
+    description: "Deletes the caller's own entry in a guestbook.\n\nPass the guestbook as `guestbook` (its id or its full key), not the entry's key. An entry's id is its author's uid, so\nthis always targets the caller's entry. Succeeds without changing anything when the caller has no entry.",
+    paramsFields: [{ name: 'guestbook', typeText: 'GuestbookId | GuestbookKey', description: 'The guestbook the entry is in: its id (`abc123`) or its full key (`gb/abc123`).' }]
+  },
   {
     model: 'guestbookEntry',
     verb: 'invoke',
@@ -271,12 +296,13 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     verb: 'query',
     specifier: '_',
     paramsTypeName: 'QueryGuestbookEntriesParams',
+    paramsValidator: queryGuestbookEntriesParamsType,
     resultTypeName: 'OnCallQueryModelResult',
     groupName: 'Guestbook',
     sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts',
     paramsTypeDescription: 'Query parameters for searching guestbook entries for one guestbook.\n\nUsed with the default `guestbookEntry.query._` specifier — for cross-guestbook\ncollection-group queries, see {@link QueryAllGuestbookEntriesParams}.',
     paramsFields: [
-      { name: 'guestbook', typeText: 'GuestbookKey', description: 'Key of the parent guestbook to query entries from. Required.' },
+      { name: 'guestbook', typeText: 'GuestbookId | GuestbookKey', description: 'The guestbook to query entries from: its id (`abc123`) or its full key (`gb/abc123`). Required.' },
       { name: 'published', typeText: 'boolean', description: 'Filter by published status. When omitted, returns all entries.' }
     ]
   },
@@ -297,15 +323,28 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     specifier: 'insert',
     paramsTypeName: 'InsertGuestbookEntryParams',
     paramsValidator: insertGuestbookEntryParamsType,
+    resultTypeName: 'InsertGuestbookEntryResult',
     groupName: 'Guestbook',
     sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts',
+    description: "Creates or updates the caller's entry in a guestbook. Each user has one entry per guestbook.\n\nPass the guestbook as `guestbook`: its id or its full key. Fails when the guestbook is locked. Returns the entry's\nkey in `modelKeys`.",
     paramsFields: [
       { name: 'message', typeText: 'string' },
       { name: 'signed', typeText: 'string' },
       { name: 'published', typeText: 'boolean' }
-    ]
+    ],
+    resultTypeDescription: 'Result of the `guestbookEntry / update / insert` call.',
+    resultFields: [{ name: 'modelKeys', typeText: '[GuestbookEntryKey]', description: "Key of the caller's entry: the one just created, or the existing one that was updated." }]
   },
-  { model: 'guestbookEntry', verb: 'update', specifier: 'like', paramsTypeName: 'LikeGuestbookEntryParams', paramsValidator: likeGuestbookEntryParamsType, groupName: 'Guestbook', sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts' },
+  {
+    model: 'guestbookEntry',
+    verb: 'update',
+    specifier: 'like',
+    paramsTypeName: 'LikeGuestbookEntryParams',
+    paramsValidator: likeGuestbookEntryParamsType,
+    groupName: 'Guestbook',
+    sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts',
+    description: "Adds one like to the published guestbook entry targeted by `key`, the entry's own key (`gb/<guestbookId>/gbe/<uid>`).\n\nFails when the entry is not published."
+  },
   {
     model: 'notification',
     verb: 'update',
@@ -391,6 +430,106 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     paramsFields: [
       { name: 'flagAllRead', typeText: 'Maybe<boolean>' },
       { name: 'setReadAtTime', typeText: 'Maybe<Date>' }
+    ]
+  },
+  {
+    model: 'notificationTaskBot',
+    verb: 'read',
+    specifier: 'optOuts',
+    paramsTypeName: 'ReadNotificationTaskBotOptOutsParams',
+    paramsValidator: readNotificationTaskBotOptOutsParamsType,
+    resultTypeName: 'NotificationTaskBotOptOutsResult',
+    groupName: 'NotificationBox',
+    sourceFile: 'packages/firebase/src/lib/model/notification/notification.api.ts',
+    description: "Lists the script groups the bot's owner can opt out of, with their opt-out state. Never returns entries.\n\nCallable by the bot's owner and by admins.",
+    paramsTypeDescription:
+      "Used for reading the owner opt-outs of a {@link NotificationTaskBot}.\n\nThe `key` is the bot's key (see `notificationTaskBotKeyForModel()`). Lists only the script groups the bot's owner can\nopt out of; the bot's entries and script types are never returned.\n\nCallable by the bot's owner and by admins (read-only for admins).",
+    resultTypeDescription: 'Result of reading or updating the owner opt-outs of a {@link NotificationTaskBot}.',
+    resultFields: [{ name: 'groups', typeText: 'NotificationTaskBotOwnerOptOutGroup[]', description: 'The groups the owner can opt out of, with their opt-out state. A set `optOutAt` means the group is opted out.' }]
+  },
+  {
+    model: 'notificationTaskBot',
+    verb: 'update',
+    specifier: 'entry',
+    paramsTypeName: 'UpdateNotificationTaskBotEntryParams',
+    paramsValidator: updateNotificationTaskBotEntryParamsType,
+    resultTypeName: 'UpdateNotificationTaskBotEntryResult',
+    groupName: 'NotificationBox',
+    sourceFile: 'packages/firebase/src/lib/model/notification/notification.api.ts',
+    description:
+      "Admin-only. Enables/disables, pauses/resumes, reschedules or patches the data of a single entry. A data patch must\nsatisfy the script's `dataType`, and scripts without one refuse it. Reports `opted_out` when the owner opted out\nof the entry's group, which only the owner can undo, and `stalled` when the entry's live run is stalled.",
+    paramsTypeDescription: 'Used for updating the state, schedule and data of a single entry on a {@link NotificationTaskBot}.\n\nAll changes apply in one transaction, in this order: data, state, pause, last submitted at, schedule. A refused data\npatch refuses the whole request.',
+    paramsFields: [
+      { name: 's', typeText: 'Maybe<NotificationTaskBotEntryState>', description: 'Enables or disables the entry. Disabling cancels the live run.' },
+      { name: 'pause', typeText: 'Maybe<boolean>', description: "True pauses the entry (reason `'manual'`) and cancels the live run. False resumes it (also when it was paused until\na time) and schedules a run. False wins over {@link pauseUntil}." },
+      { name: 'pauseUntil', typeText: 'Maybe<Date>', description: "Pauses the entry (reason `'manual'`) until this time; it then resumes on its own. A time in the past resumes it on\nthe next queue pass. Null is ignored. `pause: false` in the same request wins and resumes the entry." },
+      { name: 'nextRunAt', typeText: 'Maybe<Date>', description: "Reschedules the entry. A date schedules a run that starts no sooner than that time, and the script's due check\nstill applies; null schedules a run due now, letting the script compute the real due time." },
+      { name: 'nextRunAtExplicit', typeText: 'Maybe<Date>', description: "Reschedules the entry with an explicit run that starts at exactly this time and skips the script's due check. Wins\nover {@link nextRunAt}. Null is ignored." },
+      { name: 'lsat', typeText: 'Maybe<Date>', description: "Sets the entry's last submitted at time. Null clears it." },
+      {
+        name: 'runImmediately',
+        typeText: 'Maybe<boolean>',
+        description:
+          "Runs the entry's live run immediately after the update, if it has one.\n\nSkipped when this same request scheduled the live run in the future ({@link nextRunAt} or {@link nextRunAtExplicit}\nafter now, or {@link pauseUntil} given); the result then has no `runResult`. Any other live run that is scheduled in\nthe future still waits for its time. To re-evaluate an entry now, pass `nextRunAt: null` (optionally with\n`lsat: null`)."
+      },
+      {
+        name: 'updateData',
+        typeText: 'Maybe<NotificationTaskBotEntryDataUpdate<D>>',
+        description:
+          "Merges into the entry's script data (`d`). Only top-level keys merge: a key set to null is deleted, a key that is\nnot listed is kept, and a nested object replaces the stored one. Null or an empty object is ignored.\n\nOnly scripts that set `NotificationTaskBotScriptConfig.dataType` accept a patch, and the data after the patch must\nsatisfy it. Otherwise the whole request is refused.\n\nA patch never issues, cancels or supersedes a run. A run already in progress may still use the data it read. To\nrun again now with the new data, also pass `nextRunAt: null` and `runImmediately: true`."
+      }
+    ],
+    resultTypeDescription: 'Result of updating a {@link NotificationTaskBot} entry.',
+    resultFields: [
+      {
+        name: 'status',
+        typeText: 'NotificationTaskBotEntryStatus',
+        description:
+          "Status of the entry after the update.\n\nA resume, enable or reschedule that could not take effect because the owner opted out of the entry's group reports\n`opted_out`. Admins can't undo an owner's opt-out. An entry whose live run the repair sweep marked stalled (see the\nentry's `stl`) reports `stalled`."
+      },
+      { name: 'taskKey', typeText: 'Maybe<NotificationTaskKey>', description: "Key of the entry's live run task, if it has one." },
+      { name: 'runResult', typeText: 'Maybe<SendNotificationResult>', description: 'Result of running the live run immediately, if requested.' }
+    ]
+  },
+  {
+    model: 'notificationTaskBot',
+    verb: 'update',
+    specifier: 'optOut',
+    paramsTypeName: 'UpdateNotificationTaskBotOptOutParams',
+    paramsValidator: updateNotificationTaskBotOptOutParamsType,
+    resultTypeName: 'NotificationTaskBotOptOutsResult',
+    groupName: 'NotificationBox',
+    sourceFile: 'packages/firebase/src/lib/model/notification/notification.api.ts',
+    description: "Owner-only. Opts the bot's owner out of (or back into) script groups listed by `read:optOuts`. Admins can't\nchange an owner's opt-outs in either direction.",
+    paramsTypeDescription:
+      "Used for opting the bot's owner out of (or back into) script groups on a {@link NotificationTaskBot}.\n\nThe `key` is the bot's key. Only groups listed by `read:optOuts` can change, and only the bot's owner can change\nthem, in both directions. Admins can't: an admin has no way to undo an owner's opt-out. A group may not appear in\nboth lists.\n\nOpting out stops every opt-out-able entry in the group and deletes its pending run. Opting back in schedules a run\ndue now for each idle, enabled and unpaused entry, the same as an admin resume.",
+    paramsFields: [
+      { name: 'optOut', typeText: 'Maybe<NotificationTaskBotScriptGroupKey[]>', description: 'Groups to opt out of.' },
+      { name: 'optIn', typeText: 'Maybe<NotificationTaskBotScriptGroupKey[]>', description: 'Groups to opt back into.' }
+    ],
+    resultTypeDescription: 'Result of reading or updating the owner opt-outs of a {@link NotificationTaskBot}.',
+    resultFields: [{ name: 'groups', typeText: 'NotificationTaskBotOwnerOptOutGroup[]', description: 'The groups the owner can opt out of, with their opt-out state. A set `optOutAt` means the group is opted out.' }]
+  },
+  {
+    model: 'notificationTaskBot',
+    verb: 'update',
+    specifier: 'run',
+    paramsTypeName: 'RunNotificationTaskBotEntryParams',
+    paramsValidator: runNotificationTaskBotEntryParamsType,
+    resultTypeName: 'RunNotificationTaskBotEntryResult',
+    groupName: 'NotificationBox',
+    sourceFile: 'packages/firebase/src/lib/model/notification/notification.api.ts',
+    description: "Admin-only. Runs a single entry on demand. Refused for disabled, paused and opted-out entries; FORCED resumes an\nentry paused with `'failed'`. Supersedes a stalled run.",
+    paramsTypeDescription:
+      "Used for running a single entry on a {@link NotificationTaskBot} on demand.\n\nThe live run is superseded by a new run due now. Disabled, paused and opted-out entries are refused; an entry is opted\nout when the bot's owner turned off its script group, which only the owner can undo.\n\nThe one exception: a FORCED run resumes an entry paused with the `'failed'` reason (its failure budget is spent, or a\nrun was lost under `lostRunPolicy: 'stop'`). That resume resets `fc` and stamps `rpr: 'failed'`.\n\nA stalled entry's run is superseded like any other live run: its task is deleted, and the new run clears `stl`.",
+    paramsFields: [
+      { name: 'trigger', typeText: 'Maybe<NotificationTaskBotRunTrigger.MANUAL | NotificationTaskBotRunTrigger.FORCED>', description: "MANUAL runs still apply the script's due check. FORCED runs skip it, and also resume an entry paused with the\n`'failed'` reason. Defaults to MANUAL." },
+      { name: 'runImmediately', typeText: 'Maybe<boolean>', description: 'Whether to run the new run immediately. Defaults to true.' }
+    ],
+    resultTypeDescription: 'Result of running a {@link NotificationTaskBot} entry.',
+    resultFields: [
+      { name: 'taskKey', typeText: 'NotificationTaskKey', description: "Key of the new run task this call created.\n\nWhen the due check found a MANUAL run not due yet, that run handed over to a SCHEDULED run at the due time; the\nentry's live run (`nk`) is then that hand-over, not this task." },
+      { name: 'runResult', typeText: 'Maybe<SendNotificationResult>', description: 'Result of running the new run, if it was run immediately.' }
     ]
   },
   {
@@ -521,6 +660,7 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     resultTypeName: 'ResyncNotificationUserResult',
     groupName: 'NotificationBox',
     sourceFile: 'packages/firebase/src/lib/model/notification/notification.api.ts',
+    description: "Re-syncs the box configs of the NotificationUser targeted by `key` into their NotificationBoxes.\n\nEach config flagged as needing a sync is merged back into its NotificationBox's recipient list, and stale box\nreferences are cleaned up. Returns how many NotificationBoxes were updated.",
     resultFields: [{ name: 'notificationBoxesUpdated', typeText: 'number' }]
   },
   {
@@ -575,11 +715,22 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     sourceFile: 'packages/firebase/src/lib/model/oidcmodel/oidcmodel.api.ts',
     paramsTypeDescription: 'Parameters for updating an existing OAuth client.\n\nUses {@link UpdateOidcClientFieldParams} — `token_endpoint_auth_method` is immutable.'
   },
-  { model: 'oidcEntry', verb: 'update', specifier: 'rotateClientSecret', paramsTypeName: 'RotateOidcClientSecretParams', paramsValidator: rotateOidcClientSecretParamsType, resultTypeName: 'RotateOidcClientSecretResult', groupName: 'Oidc', sourceFile: 'packages/firebase/src/lib/model/oidcmodel/oidcmodel.api.ts' },
+  {
+    model: 'oidcEntry',
+    verb: 'update',
+    specifier: 'rotateClientSecret',
+    paramsTypeName: 'RotateOidcClientSecretParams',
+    paramsValidator: rotateOidcClientSecretParamsType,
+    resultTypeName: 'RotateOidcClientSecretResult',
+    groupName: 'Oidc',
+    sourceFile: 'packages/firebase/src/lib/model/oidcmodel/oidcmodel.api.ts',
+    description: "Replaces the secret of the OAuth client targeted by `key` with a newly generated one.\n\nReturns the `client_id` and the new `client_secret`, which is only returned this once. Fails for a public PKCE client\n(`token_endpoint_auth_method: 'none'`), which has no secret."
+  },
   {
     model: 'openRouterPrompt',
     verb: 'query',
     paramsTypeName: 'QueryOpenRouterPromptsParams',
+    paramsValidator: queryOpenRouterPromptsParamsType,
     resultTypeName: 'OnCallQueryModelResult',
     groupName: 'OpenRouterPrompt',
     sourceFile: 'packages/openrouter/firebase/src/lib/openrouter.api.ts',
@@ -765,6 +916,21 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     paramsFields: [
       { name: 'skipSend', typeText: 'Maybe<boolean>', description: 'When true, the notification is created in the database but not enqueued\nfor sending. Useful for inspecting the persisted record without consuming\na delivery slot.' },
       { name: 'expediteSend', typeText: 'Maybe<boolean>', description: 'When true, the notification is sent immediately via the expedite service\nrather than waiting for the regular send window.' }
+    ]
+  },
+  {
+    model: 'profile',
+    verb: 'update',
+    specifier: 'createTestNotificationTaskBot',
+    paramsTypeName: 'ProfileCreateTestNotificationTaskBotParams',
+    paramsValidator: profileCreateTestNotificationTaskBotParamsType,
+    groupName: 'Profile',
+    sourceFile: 'components/demo-firebase/src/lib/model/profile/profile.api.ts',
+    description: "Starts the demo ping NotificationTaskBot on the current user's profile\n(`ntb/pr_<uid>`), owned by the profile so the user can opt out of it.\n\nIdempotent: an existing ping entry is left as-is.",
+    paramsTypeDescription: "Params for starting the demo ping NotificationTaskBot on the current user's profile.\n\nEnsures the `demo_ping` entry on `ntb/pr_<uid>`, owned by the profile (`pr/<uid>`), so the user can turn it off from\ntheir notification settings. Idempotent: an existing entry is left as-is.",
+    paramsFields: [
+      { name: 'interval', typeText: 'Maybe<Milliseconds>', description: 'Interval between pings, in milliseconds. Defaults to one minute. Only used when the entry is created.' },
+      { name: 'pauseAfter', typeText: 'Maybe<number>', description: 'Pauses the entry after this many pings. Defaults to 3. Only used when the entry is created.' }
     ]
   },
   {
@@ -1077,6 +1243,7 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     resultTypeName: 'ExampleReadResponse',
     groupName: 'SystemState',
     sourceFile: 'components/demo-firebase/src/lib/model/system/system.api.ts',
+    description: 'Example read that echoes `message` back with `read: true`. Hidden from MCP.',
     paramsFields: [{ name: 'message', typeText: 'string' }],
     resultFields: [
       { name: 'read', typeText: 'boolean' },
@@ -1437,6 +1604,89 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
     ],
     read: 'system',
     serviceFactory: { exportName: 'notificationSummaryFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' },
+    compositeKey: { from: '*', encoding: 'two-way' }
+  },
+  {
+    modelType: 'notificationTaskBot',
+    modelName: 'NotificationTaskBot',
+    identityConst: 'notificationTaskBotIdentity',
+    collectionPrefix: 'ntb',
+    exampleKey: 'ntb/<notificationTaskBotId>',
+    description: 'A generic per-model bot. Attaches to any model and holds embedded script entries that each run as a series of unique NotificationTasks, fenced by run number.',
+    sourcePackage: '@dereekb/firebase',
+    sourceFile: 'packages/firebase/src/lib/model/notification/notification.taskbot.ts',
+    fields: [
+      { name: 'cat', longName: 'createdAt', tsType: 'Date', optional: false, description: 'Creation date of this bot document.' },
+      { name: 'm', longName: 'modelKey', tsType: 'FirestoreModelKey', optional: false, description: 'Model key of the model this bot is attached to.' },
+      { name: 'o', longName: 'ownerKey', tsType: 'Maybe<FirebaseAuthOwnershipKey>', optional: true, description: "Ownership key of the bot's owner: the same key the attached model's NotificationBox uses (e.g. `'pr/<uid>'`)." },
+      { name: 'rc', longName: 'runCounter', tsType: 'number', optional: false, description: 'Run counter for the whole bot. Only ever goes up, so run ids and external keys never repeat, even when an entry is removed and re-added.' },
+      {
+        name: 'e',
+        longName: 'entries',
+        tsType: 'NotificationTaskBotEmbeddedScriptEntry[]',
+        optional: false,
+        description: "The bot's script entries.",
+        nestedFields: [
+          { name: 'i', longName: 'entryId', tsType: 'NotificationTaskBotEntryId', optional: false, description: 'Entry id, unique within the bot. Must match `NOTIFICATION_TASK_BOT_ENTRY_ID_REGEX`.' },
+          { name: 't', longName: 'scriptType', tsType: 'NotificationTaskBotScriptType', optional: false, description: 'Script type that runs this entry.' },
+          { name: 's', longName: 'state', tsType: 'NotificationTaskBotEntryState', optional: false, description: 'Enabled/disabled state.', enumRef: 'NotificationTaskBotEntryState' },
+          { name: 'cat', longName: 'createdAt', tsType: 'Date', optional: false, description: 'When the entry was created.' },
+          { name: 'd', longName: 'data', tsType: 'Maybe<D>', optional: true, description: 'Arbitrary permanent data owned by the script.' },
+          { name: 'pat', longName: 'pausedAt', tsType: 'Maybe<Date>', optional: true, description: 'When the entry was paused.' },
+          { name: 'pr', longName: 'pauseReason', tsType: 'Maybe<NotificationTaskBotPauseReason>', optional: true, description: 'Why the entry was paused.' },
+          { name: 'pu', longName: 'pausedUntil', tsType: 'Maybe<Date>', optional: true, description: 'When a paused entry resumes on its own. Only set together with {@link pat}.' },
+          { name: 'rpr', longName: 'resumedPauseReason', tsType: 'Maybe<NotificationTaskBotPauseReason>', optional: true, description: 'The pause reason the entry was last resumed from, kept until the next run completes.' },
+          { name: 'oat', longName: 'optOutAt', tsType: 'Maybe<Date>', optional: true, description: "When the bot's owner opted out of this entry's script group. Set means opted out; this is the only opt-out state." },
+          { name: 'rn', longName: 'runNumber', tsType: 'Maybe<NotificationTaskBotRunNumber>', optional: true, description: 'Run number of the live run. This is the fence: only a run with this number may write back. Null when idle.' },
+          { name: 'nk', longName: 'runTaskKey', tsType: 'Maybe<NotificationTaskKey>', optional: true, description: "Key of the live run's NotificationTask." },
+          { name: 'nat', longName: 'nextRunAt', tsType: 'Maybe<Date>', optional: true, description: 'When the live run is next due to run.' },
+          {
+            name: 'stl',
+            longName: 'stalledAt',
+            tsType: 'Maybe<Date>',
+            optional: true,
+            description: "When the repair sweep found the live run stalled: its task is still pending, but it has failed attempts or its send time is more than the sweep's overdue threshold in the past (nothing has picked it up). Set means stalled."
+          },
+          { name: 'lat', longName: 'lastRunAt', tsType: 'Maybe<Date>', optional: true, description: 'When the last run finished.' },
+          { name: 'lsat', longName: 'lastSubmittedAt', tsType: 'Maybe<Date>', optional: true, description: 'When the last submission happened. The cadence anchor for scripts.' },
+          { name: 'lsr', longName: 'lastSubmittedRunNumber', tsType: 'Maybe<NotificationTaskBotRunNumber>', optional: true, description: 'Run number of the last submission. Used as an idempotency marker so a re-run step never submits twice.' },
+          { name: 'sc', longName: 'submissionCount', tsType: 'number', optional: false, description: 'Lifetime submission count.' },
+          {
+            name: 'fc',
+            longName: 'failureCount',
+            tsType: 'number',
+            optional: false,
+            description: "Consecutive failure count. Goes up for each lost run (found by repair) and each run whose cleanup reports FAILED, and is reset by a run that completes with any other outcome, or by a resume. Under `lostRunPolicy: 'stop'` (the default) a single lost run already pauses the entry."
+          },
+          {
+            name: 'h',
+            longName: 'history',
+            tsType: 'NotificationTaskBotEntryHistoryItem<HD>[]',
+            optional: false,
+            description: 'Bounded run history, oldest first.',
+            nestedFields: [
+              { name: 'at', longName: 'at', tsType: 'Date', optional: false, description: 'When the run finished.' },
+              { name: 'rn', longName: 'runNumber', tsType: 'NotificationTaskBotRunNumber', optional: false, description: 'Run number of the run.' },
+              { name: 'tr', longName: 'trigger', tsType: 'NotificationTaskBotRunTrigger', optional: false, description: 'What triggered the run.', enumRef: 'NotificationTaskBotRunTrigger' },
+              { name: 'o', longName: 'outcome', tsType: 'NotificationTaskBotRunOutcome', optional: false, description: 'Outcome of the run.', enumRef: 'NotificationTaskBotRunOutcome' },
+              { name: 'd', longName: 'data', tsType: 'Maybe<HD>', optional: true, description: 'Script-specific data for the run. Keep it small: document size grows with entries × history.' }
+            ],
+            nestedIsArray: true
+          }
+        ],
+        nestedIsArray: true
+      },
+      { name: 'nat', longName: 'nextRunAt', tsType: 'Maybe<Date>', optional: true, description: 'The soonest {@link NotificationTaskBotEmbeddedScriptEntry.nat} among entries with a live run. Kept for the repair query and for display.' },
+      {
+        name: 'stl',
+        longName: 'stalledAt',
+        tsType: 'Maybe<Date>',
+        optional: true,
+        description: 'The earliest {@link NotificationTaskBotEmbeddedScriptEntry.stl} among entries with a live run. Set means at least one entry is stalled. Entries are embedded, so this is the field to query stalled bots by (see `notificationTaskBotsStalledQuery()`).'
+      }
+    ],
+    read: 'admin-only',
+    serviceFactory: { exportName: 'notificationTaskBotFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' },
     compositeKey: { from: '*', encoding: 'two-way' }
   },
   {
@@ -1872,6 +2122,35 @@ export const DEMO_CLI_ENUM_MANIFEST: CliEnumManifest = {
       { name: 'LOGGED_EVENT', value: 4, description: 'A write-only logged event notification.' }
     ],
     description: 'Controls how a {@link Notification} interacts with its parent {@link NotificationBox} during delivery.'
+  },
+  NotificationTaskBotEntryState: {
+    name: 'NotificationTaskBotEntryState',
+    values: [
+      { name: 'ENABLED', value: 0, description: 'The entry is enabled and runs on its schedule.' },
+      { name: 'DISABLED', value: 1, description: 'The entry is disabled and never runs.' }
+    ],
+    description: 'Stored enabled/disabled state of a {@link NotificationTaskBotEmbeddedScriptEntry}.'
+  },
+  NotificationTaskBotRunOutcome: {
+    name: 'NotificationTaskBotRunOutcome',
+    values: [
+      { name: 'COMPLETED', value: 0, description: 'The run completed without submitting anything.' },
+      { name: 'SUBMITTED', value: 1, description: 'The run submitted its side effect (e.g. sent an email).' },
+      { name: 'SUPPRESSED', value: 2, description: 'The run decided a submission should be suppressed.' },
+      { name: 'SKIPPED', value: 3, description: 'The run was skipped. Also recorded for an entry whose script has no processor.' },
+      { name: 'FAILED', value: 4, description: "The run failed. Counts toward the script's `maxConsecutiveFailures`, the same as a LOST run." },
+      { name: 'LOST', value: 5, description: "The run's task went missing before it could finish (found by the repair sweep). What happens next depends on the script's `lostRunPolicy`." }
+    ],
+    description: "Outcome of a single run, recorded in the entry's history."
+  },
+  NotificationTaskBotRunTrigger: {
+    name: 'NotificationTaskBotRunTrigger',
+    values: [
+      { name: 'SCHEDULED', value: 0, description: 'The run was scheduled by the bot itself.' },
+      { name: 'MANUAL', value: 1, description: "The run was requested manually. The script's due check still applies." },
+      { name: 'FORCED', value: 2, description: "The run was forced. The script's due check is skipped." }
+    ],
+    description: 'What triggered a single run.'
   },
   OpenRouterPromptState: {
     name: 'OpenRouterPromptState',

@@ -1,3 +1,70 @@
+# [14.17.0](https://github.com/dereekb/dbx-components/compare/v14.16.0-dev...v14.17.0) (2026-10-14)
+
+### Bug Fixes
+
+- **build:** give the demo-api serve container a private Nx daemon ([d46eee22](https://github.com/dereekb/dbx-components/commit/d46eee22943a76b5c90e2ef3ff31d36995b9da63))
+- **build:** keep the serve watchdog, drop its private Nx state ([f2e49134](https://github.com/dereekb/dbx-components/commit/f2e49134843eddf9af6ae626192cab58ec4fb2d5))
+- **dbx-cli,dbx-components-mcp:** follow aliases for more factory calls ([810914ae](https://github.com/dereekb/dbx-components/commit/810914aeb6fe5c8ff015f9bd78108c4ed7786a24))
+- **dbx-cli,dbx-components-mcp:** follow nested aggregates in validate ([cdbd3852](https://github.com/dereekb/dbx-components/commit/cdbd3852333cce3e788155cfc9c8f135fac30954))
+- **dbx-cli,dbx-components-mcp:** resolve aliased type annotations ([c3af54e7](https://github.com/dereekb/dbx-components/commit/c3af54e7ea812cba3eadaca0c8a01a5e4182b49a))
+- **dbx-cli,firebase,zoho:** fix develop CI test failures ([25d0a848](https://github.com/dereekb/dbx-components/commit/25d0a848d39f213868a4587bb4048aa54d929890))
+- **dbx-cli:** clarify CLI handoff, firestore session and help output ([af128541](https://github.com/dereekb/dbx-components/commit/af128541a92685394e08ed3a5fdf91083446e94e))
+- **dbx-cli:** exact LocalBinding blocker scopes where cheap ([a8121b0a](https://github.com/dereekb/dbx-components/commit/a8121b0a60ffcd7a033bb084db1197828ab7c435))
+- **dbx-cli:** match task handler configs by declaration, not name ([49cd0da5](https://github.com/dereekb/dbx-components/commit/49cd0da566ac2d68e75396b9e741e3df955800ba))
+- **dbx-cli:** memoize revisits in the notification handlers trace ([01a59e8b](https://github.com/dereekb/dbx-components/commit/01a59e8ba2a2097d62d4b435cad5d7b46e0c4094))
+- **dbx-cli:** resolve the handlers trace's function lookups by binding ([3ee43a08](https://github.com/dereekb/dbx-components/commit/3ee43a0888c5e20e9e675b4a7cb14d93aae95928))
+- **dbx-cli:** scope the @dereekb alias/namespace shadow guard ([dc7ae677](https://github.com/dereekb/dbx-components/commit/dc7ae677f6c34fb6d4dd8d0bc5c7c3e1076087c4))
+- **dbx-cli:** see through wrappers in the notification handlers trace ([c781ecfe](https://github.com/dereekb/dbx-components/commit/c781ecfe0d2a5794e8f6d345fd66df18ae0a1d3a))
+- **dbx-cli:** stop opaque handler values cascading as unresolved ([82853c30](https://github.com/dereekb/dbx-components/commit/82853c30caa0bbd8b11eb8d0e6025f50ee986fc1))
+- **demo-api:** fix five MCP bugs from the 2026-10-13 validation run ([b42dce82](https://github.com/dereekb/dbx-components/commit/b42dce82d1d90d0b50c51481b197bad051d6bfbf))
+- **firebase,firebase-server:** harden NotificationTaskBot for 14.17 ([3e8c412a](https://github.com/dereekb/dbx-components/commit/3e8c412a4a8d2c5a14295a52d9771e2a7f3e66e8)), closes [#1](https://github.com/dereekb/dbx-components/issues/1) [#2](https://github.com/dereekb/dbx-components/issues/2) [#3](https://github.com/dereekb/dbx-components/issues/3) [#4](https://github.com/dereekb/dbx-components/issues/4) [#5](https://github.com/dereekb/dbx-components/issues/5) [#6](https://github.com/dereekb/dbx-components/issues/6) [#7](https://github.com/dereekb/dbx-components/issues/7) [#9](https://github.com/dereekb/dbx-components/issues/9) [#10](https://github.com/dereekb/dbx-components/issues/10) [#11](https://github.com/dereekb/dbx-components/issues/11) [#8](https://github.com/dereekb/dbx-components/issues/8) [#12](https://github.com/dereekb/dbx-components/issues/12) [#13](https://github.com/dereekb/dbx-components/issues/13)
+- **firebase,firebase-server:** honor re and stamp per-file zip zat ([d382509e](https://github.com/dereekb/dbx-components/commit/d382509e2615bdbb697845f62331f82a91cde185))
+- **firebase,firebase-server:** type NotificationTaskBot ensure data ([24c737a4](https://github.com/dereekb/dbx-components/commit/24c737a4eb4951bb4b7d21e3bfcb3c8b24bf7b82))
+- **zoho:** split granted Zoho scope strings on whitespace too ([6ecfa3b0](https://github.com/dereekb/dbx-components/commit/6ecfa3b0662ddcf54077c982b37985553993f7b6))
+
+### Build System
+
+- configure dbx-claude release train options ([5a5fce81](https://github.com/dereekb/dbx-components/commit/5a5fce814bbc5fb686ac6eb977bd6eea15355a29))
+- lint fix + mcp regeneration + firestore indexes + peer dep sync ([84783152](https://github.com/dereekb/dbx-components/commit/847831521e45366ec5da80f06f55f44c762cc823))
+
+### Code Refactoring
+
+- configured circleci ([c379d609](https://github.com/dereekb/dbx-components/commit/c379d609fb3b176e287a0aa96b42581cb7e4c0fa))
+- **model,util:** move mergeClearableObjectUpdate to model ([f39323e6](https://github.com/dereekb/dbx-components/commit/f39323e61123a0d9e7be1839face943b3202bfcc))
+
+### Features
+
+- **build:** delegate serve-server.sh to dbx-claude serve server ([33a81f8a](https://github.com/dereekb/dbx-components/commit/33a81f8a51ea84164d69f5cfc491ddd65485704c))
+- **build:** supervise demo-api serve through dbx-claude docker serve ([a57d76b8](https://github.com/dereekb/dbx-components/commit/a57d76b8dcab1fe83a7363e6e5d307958ec32d49))
+- **dbx-cli,dbx-components-mcp,demo:** warn on unset mcp.readOnly ([42a694cf](https://github.com/dereekb/dbx-components/commit/42a694cfc410b3bb585a8eb57e3b78339afa0e1b))
+- **dbx-cli,dbx-components-mcp:** add taskbot list/manifest section ([14c4dc38](https://github.com/dereekb/dbx-components/commit/14c4dc38b4c914740ef42c7c396512b92cb6c66c))
+- **dbx-cli,dbx-components-mcp:** add taskbot scaffold and wiring checks ([4dc9831a](https://github.com/dereekb/dbx-components/commit/4dc9831ac5fda6a95f10a22f5b2e1fd8a7ed7fd1))
+- **dbx-cli,dbx-components-mcp:** check upstream task handler wiring ([bf0e6218](https://github.com/dereekb/dbx-components/commit/bf0e6218f2a86005ac2b42ecafd82f1f00c43d94))
+- **dbx-cli,dbx-components-mcp:** detect nested upstream task types ([bfa1cb55](https://github.com/dereekb/dbx-components/commit/bfa1cb55c9a7ba80269f7ab9a07ab0ed2b40528c))
+- **dbx-cli,dbx-components-mcp:** follow @dereekb aliases/namespaces ([9c873294](https://github.com/dereekb/dbx-components/commit/9c873294ef58fd358ae7dd6e9fcd2f12811e53f7))
+- **dbx-cli,dbx-components-mcp:** follow const-held upstream factories ([f81c2062](https://github.com/dereekb/dbx-components/commit/f81c2062f80a6c3939717aa863052471d77c8f12))
+- **dbx-cli,dbx-components-mcp:** read bare validate aggregates ([fd4f5073](https://github.com/dereekb/dbx-components/commit/fd4f507315f1166210927b244c85f556b87ba280))
+- **dbx-cli,dbx-components-mcp:** read more validate shapes ([0927bf4d](https://github.com/dereekb/dbx-components/commit/0927bf4d494e47825c5f664c15f3a65ef5485998))
+- **dbx-cli,dbx-components-mcp:** warn on unlisted upstream task types ([c56d2c6f](https://github.com/dereekb/dbx-components/commit/c56d2c6f3acbafc7e136a2cf0be9f314baaab19a))
+- **dbx-cli:** resolve local variable refs in validate ([a73216fc](https://github.com/dereekb/dbx-components/commit/a73216fcf09386fcf1bfd16a720c55d8bc328206))
+- **dbx-cli:** warn about CRUD methods that have no description ([e00fd426](https://github.com/dereekb/dbx-components/commit/e00fd4264d7c96cc14eba801576930d6c02595f7))
+- **dbx-web,dbx-form:** apply filter popover changes before closing ([a306db38](https://github.com/dereekb/dbx-components/commit/a306db38e32942fb2789192a39d10f8ffe3dcd9e))
+- **demo-api:** serve only the compact MCP tool surface ([21a4abc3](https://github.com/dereekb/dbx-components/commit/21a4abc35197ddf09dd89e73912b4a7a1a09c94a))
+- **demo:** adopt compact MCP surface and audience-gated docs ([c85b590b](https://github.com/dereekb/dbx-components/commit/c85b590b725e2e988a30cee00fbf6cbd8c3dd7dd))
+- **firebase-server,dbx-cli,demo-api:** add taskbot test helpers ([5d106b7b](https://github.com/dereekb/dbx-components/commit/5d106b7bb8206122ef6b9a9cbc456093cc6e60a2))
+- **firebase-server,dbx-cli:** add audience-gated docs API + MCP tools ([58de53e2](https://github.com/dereekb/dbx-components/commit/58de53e2da77973d20a8c507f070f9078978bb17))
+- **firebase-server,demo-api:** add the MCP destructive router tier ([e0149988](https://github.com/dereekb/dbx-components/commit/e0149988a4ec4539554309bdcf8fb4ddf7effe30))
+- **firebase-server:** list MCP methods by kind on an empty search query ([c0fe811f](https://github.com/dereekb/dbx-components/commit/c0fe811ff87dc57013cf6f5a3d1fbe39ab47dcf5))
+- **firebase-server:** make MCP method search keyword-friendly ([5b146445](https://github.com/dereekb/dbx-components/commit/5b1464454a80d98df24021929e2f374ec1cd5a31))
+- **firebase-server:** rename compact MCP tools to <prefix>_api_* ([006b6af6](https://github.com/dereekb/dbx-components/commit/006b6af66b913532bb197f4548813b1ef5806e85))
+- **firebase,firebase-server,dbx-firebase:** add taskbot owner opt-outs ([82c8bf01](https://github.com/dereekb/dbx-components/commit/82c8bf01eee44a1bf181f0751d68a6e230f21ed7))
+- **firebase,firebase-server,dbx-firebase:** add taskbot stalled status ([632034f8](https://github.com/dereekb/dbx-components/commit/632034f87b9615976930c34016e423b8e8e50f95))
+- **firebase,firebase-server,demo:** add taskbot entry data patches ([ea0dbeeb](https://github.com/dereekb/dbx-components/commit/ea0dbeeba217efb101df9fcef66a6580c1d3c1da))
+- **firebase:** add NotificationTaskBot generic per-model bot model ([66e47fbe](https://github.com/dereekb/dbx-components/commit/66e47fbef4ee98badec076ae9a4c91d67a3a03f4))
+- **util,firebase-server:** add compact stripe-like MCP tool surface ([cf420693](https://github.com/dereekb/dbx-components/commit/cf4206936c57b70f3713ff31b89a49be3bfaf10e))
+- **util,firebase,firebase-server,dbx-form,demo:** add clearable merge ([b9fcf6e6](https://github.com/dereekb/dbx-components/commit/b9fcf6e6aeb2ede59b936112b2ae4c162b43ac80))
+- **util,firebase,firebase-server:** consolidate type registries ([48d4c977](https://github.com/dereekb/dbx-components/commit/48d4c9777f80ea62e425758e563e96cada1bb6ea))
+
 # [14.16.0](https://github.com/dereekb/dbx-components/compare/v14.15.0-dev...v14.16.0) (2026-10-08)
 
 ### Bug Fixes

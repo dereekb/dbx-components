@@ -12,6 +12,12 @@
  *     firebase-component `*.api.ts` declares this CRUD entry.
  *   - `HANDLER_NAMING_MISMATCH` — handler name does not follow the
  *     `<model><Verb>[<Specifier>]` convention from `ModelFirebaseFunctionMap`.
+ *   - `HANDLER_MCP_READ_ONLY_UNSET` (warning) — an `invoke` / custom-verb
+ *     handler whose `withApiDetails({ ... })` leaves `mcp.readOnly` unset, so
+ *     MCP treats it as a write.
+ *   - `MISSING_DESCRIPTION` (warning) — a declared entry with no JSDoc
+ *     summary on its config member or its params interface, so its MCP tool
+ *     and CLI command fall back to a generic description.
  *
  * Mirrors the `dbx_model_fixture_validate_app` / `dbx_storagefile_m_validate_app`
  * pattern: a single tool that walks two sources and reports drift.
@@ -39,13 +45,15 @@ const TOOL: Tool = {
     '',
     'Walks two sources:',
     '- Declarations: `<componentDir>/src/lib/**/*.api.ts` — every CRUD leaf in `<Group>ModelCrudFunctionsConfig` (standalone `FunctionTypeMap` entries are excluded; they are reachable through `allAppFunctions(...)` in the app, not the verb-keyed maps).',
-    '- Handlers: `<apiDir>/src/app/function/model/crud.functions.ts` — the `<group><Verb>ModelMap` constants, with bare handler refs and `onCallSpecifierHandler({ ... })` literals expanded to specifier→handler pairs.',
+    '- Handlers: `<apiDir>/src/app/function/model/crud.functions.ts` — the `<group><Verb>ModelMap` constants, with bare handler refs and `onCallSpecifierHandler({ ... })` literals expanded to specifier→handler pairs. Each `invoke` / custom-verb handler is also followed to its `withApiDetails({ ... })` declaration under `<apiDir>/src/app/function/` to read its `mcp.readOnly`; handlers the scan cannot follow (upstream `@dereekb/*` imports, factory-built or inline handlers, spread or non-literal configs) are listed as "not checked" instead of flagged.',
     '',
     'For each `(model, verb, specifier)` cell the tool emits one of:',
     '- matched — declaration and handler agree.',
     '- `MISSING_HANDLER` — declared but the verb-map has no entry.',
     '- `ORPHAN_HANDLER` — handler is wired but no `*.api.ts` declares the entry.',
     '- `HANDLER_NAMING_MISMATCH` — handler name does not match the canonical `<model><Verb>[<Specifier>]` form (e.g. `guestbookEntryUpdateInsert`, with `guestbookEntryInsert` accepted as the verb-omitted shorthand).',
+    '- `HANDLER_MCP_READ_ONLY_UNSET` (warning) — an `invoke` / custom-verb handler whose `withApiDetails({ ... })` leaves `mcp.readOnly` unset, so MCP treats it as a write.',
+    '- `MISSING_DESCRIPTION` (warning) — a declared entry with no JSDoc summary on its `<Group>ModelCrudFunctionsConfig` member or its params interface, so its MCP tool and CLI command fall back to a generic "Performs the call" description.',
     '',
     'Inputs:',
     '- `componentDir`: relative path to the firebase-component package (e.g. `components/demo-firebase`).',

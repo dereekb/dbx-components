@@ -5,7 +5,7 @@ import { type CliContext } from '../context/cli.context';
 import { type CliModelManifest, type CliModelManifestEntry } from '../manifest/types';
 import { CliError } from '../util/output';
 import { type CliFirestoreModels } from './firestore.models';
-import { MODEL_IS_SERVER_ONLY_CODE, assertCliModelIsNotServerOnly, cliReadResultMeta, coerceCliReadVia, getModelOverFirestore, getMultipleModelsOverFirestore, resolveCliReadSource, type CliReadVia } from './firestore.read';
+import { MODEL_IS_SERVER_ONLY_CODE, assertCliModelIsNotServerOnly, cliReadResultMeta, coerceCliReadVia, getModelOverFirestore, getMultipleModelsOverFirestore, hasCliFirestoreSessionScope, resolveCliReadSource, type CliReadVia } from './firestore.read';
 
 const COMPLETE_FIREBASE = { apiKey: 'k', projectId: 'p', appId: 'a' };
 
@@ -56,6 +56,11 @@ interface BuildContextInput {
   readonly firebaseComplete?: boolean;
   readonly sessionError?: unknown;
   readonly models?: CliFirestoreModels;
+  readonly scope?: string;
+  /**
+   * Called whenever the context is asked to open the session, so a test can prove it never was.
+   */
+  readonly onSessionOpen?: () => void;
 }
 
 function buildContext(input: BuildContextInput = {}): CliContext {
@@ -67,6 +72,7 @@ function buildContext(input: BuildContextInput = {}): CliContext {
     envName: 'local',
     env: { apiBaseUrl: 'http://localhost/api', ...(input.firebaseComplete === false ? {} : { firebase: COMPLETE_FIREBASE }) } as CliEnvConfig,
     accessToken: 'token',
+    ...(input.scope === undefined ? {} : { scope: input.scope }),
     callModel: (async () => undefined) as never,
     getModel: (async (modelType: string, key: string) => ({ key, data: { over: 'api', modelType } })) as never,
     getMultipleModels: (async (_modelType: string, keys: readonly string[]) => ({ results: keys.map((key) => ({ key, data: { over: 'api' } })), errors: [] })) as never,
@@ -74,6 +80,7 @@ function buildContext(input: BuildContextInput = {}): CliContext {
     ...(withBinding
       ? {
           getFirestoreModels: async () => {
+            input.onSessionOpen?.();
             if (input.sessionError !== undefined) throw input.sessionError;
             return models;
           }
@@ -130,6 +137,21 @@ describe('assertCliModelIsNotServerOnly()', () => {
   });
 });
 
+describe('hasCliFirestoreSessionScope()', () => {
+  it('is true when the scope carries session.firestore', () => {
+    expect(hasCliFirestoreSessionScope('openid model.read session.firestore')).toBe(true);
+  });
+
+  it('is false when the scope is known and lacks it', () => {
+    expect(hasCliFirestoreSessionScope('openid model.read')).toBe(false);
+  });
+
+  it('is undefined when the scope is not known', () => {
+    expect(hasCliFirestoreSessionScope(undefined)).toBeUndefined();
+    expect(hasCliFirestoreSessionScope(null)).toBeUndefined();
+  });
+});
+
 describe('resolveCliReadSource()', () => {
   describe('with a session available', () => {
     it('goes direct under auto', async () => {
@@ -164,6 +186,33 @@ describe('resolveCliReadSource()', () => {
       const result = await resolveCliReadSource({ context: buildContext({ firebaseComplete: false }), via: 'auto', modelType: 'guestbook' });
       expect(result.source).toBe('api');
       expect(result.reason).toBe('firebase-config-incomplete');
+    });
+
+    it('goes to the api under auto WITHOUT opening a session when the grant lacks session.firestore', async () => {
+      let opened = false;
+      const context = buildContext({
+        scope: 'openid model.read',
+        onSessionOpen: () => {
+          opened = true;
+        }
+      });
+      const result = await resolveCliReadSource({ context, via: 'auto', modelType: 'guestbook' });
+      expect(result.source).toBe('api');
+      expect(result.reason).toBe('scope-not-granted');
+      // an expected state, not a fault — nothing to report on every read
+      expect(result.fallbackError).toBeUndefined();
+      expect(opened).toBe(false);
+    });
+
+    it('still tries the session under auto when the grant carries session.firestore', async () => {
+      const result = await resolveCliReadSource({ context: buildContext({ scope: 'openid model.read session.firestore' }), via: 'auto', modelType: 'guestbook' });
+      expect(result.source).toBe('firestore');
+      expect(result.reason).toBe('session-available');
+    });
+
+    it('lets the session refuse an explicit --via firestore even when the grant lacks the scope', async () => {
+      const context = buildContext({ scope: 'openid model.read', sessionError: new CliError({ message: 'missing session.firestore', code: 'AUTH_FORBIDDEN' }) });
+      await expect(resolveCliReadSource({ context, via: 'firestore', modelType: 'guestbook' })).rejects.toThrow('missing session.firestore');
     });
 
     it('falls back to the api under auto on a CAPABILITY failure', async () => {
@@ -208,6 +257,11 @@ describe('cliReadResultMeta()', () => {
   it('reports the source, the requested via, and the session-cache state for a direct read', async () => {
     const resolved = await resolveCliReadSource({ context: buildContext(), via: 'auto', modelType: 'guestbook' });
     expect(cliReadResultMeta(resolved)).toEqual({ source: 'firestore', via: 'auto', reason: 'session-available', sessionFromCache: true });
+  });
+
+  it('reports no fallback error for a grant that lacks session.firestore', async () => {
+    const resolved = await resolveCliReadSource({ context: buildContext({ scope: 'openid model.read' }), via: 'auto', modelType: 'guestbook' });
+    expect(cliReadResultMeta(resolved)).toEqual({ source: 'api', via: 'auto', reason: 'scope-not-granted' });
   });
 
   it('reports the fallback error for an auto read that degraded', async () => {

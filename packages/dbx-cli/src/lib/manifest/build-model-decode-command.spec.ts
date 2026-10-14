@@ -94,6 +94,15 @@ describe('buildModelDecodeCommand()', () => {
     exitSpy.mockRestore();
   });
 
+  it("draws its help example from the manifest's first plain root collection", () => {
+    expect(buildModelDecodeCommand(MANIFEST).describe).toContain('(e.g. "p/abc123")');
+  });
+
+  it('skips subcollection, singleton, and composite prefixes when choosing the help example', () => {
+    const manifest = MANIFEST.filter((entry) => entry.modelType !== 'profile' && entry.modelType !== 'notificationBox');
+    expect(buildModelDecodeCommand(manifest).describe).toContain('(e.g. "prefix/abc123")');
+  });
+
   it('decodes a top-level key into model + id', () => {
     runWith(['model-decode', 'p/abc123']);
     const output = stdout.join('');

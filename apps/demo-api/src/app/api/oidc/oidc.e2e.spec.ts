@@ -7,7 +7,7 @@ import { OidcModuleConfig, JwksServiceStorageConfig, type JwksService, type Oidc
 import { McpModuleConfig } from '@dereekb/firebase-server/mcp';
 import { unixDateTimeSecondsNumberForNow } from '@dereekb/util';
 import { callableRequestTest, performOAuthFlow } from '@dereekb/firebase-server/test';
-import { CLI_TOKEN_OIDC_SCOPE, type DeleteOidcTokenParams, firestoreModelKey, oidcEntriesByUidQuery, oidcEntryIdentity, onCallDeleteModelParams } from '@dereekb/firebase';
+import { CLI_TOKEN_OIDC_SCOPE, EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE, type DeleteOidcTokenParams, firestoreModelKey, oidcEntriesByUidQuery, oidcEntryIdentity, onCallDeleteModelParams } from '@dereekb/firebase';
 import { demoCallModel } from '../../function/model/crud.functions';
 
 vi.setConfig({ hookTimeout: 30000, testTimeout: 30000 });
@@ -163,6 +163,15 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         const res = await request(app.getHttpServer()).get('/.well-known/oauth-protected-resource').expect(200);
 
         expect(res.body.scopes_supported).toContain(CLI_TOKEN_OIDC_SCOPE);
+      });
+
+      // Not added back by the filter: outside production (which a test run is) the `external-token`
+      // profile is a default profile, so token.external is in the base list on its own and an agent's
+      // self-registered connector requests it. Still admin-only and capped at 8 hours at consent.
+      it('should advertise token.external outside production', async () => {
+        const res = await request(app.getHttpServer()).get('/.well-known/oauth-protected-resource').expect(200);
+
+        expect(res.body.scopes_supported).toContain(EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE);
       });
 
       // Dropped by the demo's own `scopesSupported` filter rather than the framework — the framework

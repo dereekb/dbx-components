@@ -127,6 +127,11 @@ service cloud.firestore {
       allow read: if twoWayKeyRelatedResourceIsOwnedByAuthUserProfile(); // users can read themselves
     }
 
+    match /ntb/{notificationTaskBot} {
+      // owners (`o`) deliberately can't read the bot: they see only their opt-out groups, through the read:optOuts callable
+      allow get, list: if userClaimsIsSysAdmin(); // system admins can read
+    }
+
     match /nb/{notificationBox} {
       allow read: if resourceIsOwnedByAuthOwnershipKey(); // owners can read
 

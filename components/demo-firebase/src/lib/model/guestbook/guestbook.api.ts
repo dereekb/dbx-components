@@ -12,14 +12,19 @@ import {
   type TargetModelParams,
   targetModelParamsType,
   callModelFirebaseFunctionMapFactory,
+  type OnCallCreateModelResult,
   type OnCallQueryModelRequestParams,
-  type OnCallQueryModelResult
+  type OnCallQueryModelResult,
+  firestoreModelIdsFromKey,
+  isFirestoreModelId,
+  isFirestoreModelKey,
+  onCallQueryModelRequestParamsType
 } from '@dereekb/firebase';
 import { type, type Type } from 'arktype';
-import { type Guestbook, type GuestbookEntry, type GuestbookTypes } from './guestbook';
+import { type Guestbook, type GuestbookEntry, type GuestbookTypes, guestbookIdentity } from './guestbook';
 import { type Maybe, type Milliseconds } from '@dereekb/util';
 import { clearable } from '@dereekb/model';
-import { type GuestbookKey } from './guestbook.id';
+import { type GuestbookEntryKey, type GuestbookId, type GuestbookKey } from './guestbook.id';
 import { type ProfileId } from '../profile';
 
 export const GUESTBOOK_NAME_MAX_LENGTH = 40;
@@ -38,12 +43,34 @@ export const createGuestbookParamsType = type({
   'published?': clearable('boolean')
 }) as Type<CreateGuestbookParams>;
 
+/**
+ * What a `guestbook` param accepts.
+ *
+ * ArkType reads a type's description as what a value "must be", so this one phrase is both the param's schema
+ * description and its validation message.
+ */
+export const GUESTBOOK_ID_OR_KEY_PARAM_DESCRIPTION = `a guestbook id ("abc123") or full key ("${guestbookIdentity.collectionName}/abc123")`;
+
+/**
+ * ArkType validator for a `guestbook` param: a {@link GuestbookId} or a full {@link GuestbookKey}.
+ *
+ * Only the shape is checked: a bare id, or a key with a single `collection/id` pair. That refuses a GuestbookEntry key
+ * here instead of letting it reach Firestore as a malformed path. The collection itself is checked when the param is
+ * loaded (`loadDocumentForIdOrKey`), against the accessor's real collection.
+ */
+export const guestbookIdOrKeyType = /* @__PURE__ */ type('string > 0')
+  .narrow((value, ctx) => isFirestoreModelId(value) || (isFirestoreModelKey(value) && firestoreModelIdsFromKey(value).length === 1) || ctx.mustBe(GUESTBOOK_ID_OR_KEY_PARAM_DESCRIPTION))
+  .describe(GUESTBOOK_ID_OR_KEY_PARAM_DESCRIPTION);
+
 export interface GuestbookEntryParams {
-  readonly guestbook: string; // ModelKey;
+  /**
+   * The guestbook the entry is in: its id (`abc123`) or its full key (`gb/abc123`).
+   */
+  readonly guestbook: GuestbookId | GuestbookKey;
 }
 
 export const guestbookEntryParamsType = type({
-  guestbook: 'string > 0'
+  guestbook: guestbookIdOrKeyType
 }) as Type<GuestbookEntryParams>;
 
 export interface InsertGuestbookEntryParams extends GuestbookEntryParams {
@@ -57,6 +84,16 @@ export const insertGuestbookEntryParamsType = guestbookEntryParamsType.merge({
   'signed?': clearable(`string > 0 & string <= ${GUESTBOOK_ENTRY_SIGNED_MAX_LENGTH}`),
   'published?': clearable('boolean')
 }) as Type<InsertGuestbookEntryParams>;
+
+/**
+ * Result of the `guestbookEntry / update / insert` call.
+ */
+export interface InsertGuestbookEntryResult extends OnCallCreateModelResult {
+  /**
+   * Key of the caller's entry: the one just created, or the existing one that was updated.
+   */
+  readonly modelKeys: [GuestbookEntryKey];
+}
 
 export interface LikeGuestbookEntryParams extends TargetModelParams {}
 
@@ -92,14 +129,22 @@ export interface QueryGuestbooksParams extends OnCallQueryModelRequestParams {
  */
 export interface QueryGuestbookEntriesParams extends OnCallQueryModelRequestParams {
   /**
-   * Key of the parent guestbook to query entries from. Required.
+   * The guestbook to query entries from: its id (`abc123`) or its full key (`gb/abc123`). Required.
    */
-  readonly guestbook: GuestbookKey;
+  readonly guestbook: GuestbookId | GuestbookKey;
   /**
    * Filter by published status. When omitted, returns all entries.
    */
   readonly published?: boolean;
 }
+
+/**
+ * ArkType validator for {@link QueryGuestbookEntriesParams}.
+ */
+export const queryGuestbookEntriesParamsType = /* @__PURE__ */ onCallQueryModelRequestParamsType.merge({
+  guestbook: guestbookIdOrKeyType,
+  'published?': clearable('boolean')
+}) as Type<QueryGuestbookEntriesParams>;
 
 /**
  * Query parameters for searching GuestbookEntry across all guestbooks via the collection group.
@@ -191,8 +236,18 @@ export const guestbookFunctionTypeConfigMap: FirebaseFunctionTypeConfigMap<Guest
 
 export type GuestbookModelCrudFunctionsConfig = {
   guestbook: {
+    /**
+     * Creates a guestbook owned by the caller.
+     *
+     * It starts unlocked, and unpublished unless `published` is set. Returns the new guestbook's key in `modelKeys`.
+     */
     create: CreateGuestbookParams;
     update: {
+      /**
+       * Subscribes a user to the notifications of the guestbook targeted by `key`.
+       *
+       * `uid` defaults to the caller. Only an admin can subscribe another user; anyone else always subscribes themselves.
+       */
       subscribeToNotifications: SubscribeToGuestbookNotificationsParams;
       publish: PublishGuestbookParams;
     };
@@ -200,9 +255,26 @@ export type GuestbookModelCrudFunctionsConfig = {
   };
   guestbookEntry: {
     update: {
-      insert: InsertGuestbookEntryParams;
+      /**
+       * Creates or updates the caller's entry in a guestbook. Each user has one entry per guestbook.
+       *
+       * Pass the guestbook as `guestbook`: its id or its full key. Fails when the guestbook is locked. Returns the entry's
+       * key in `modelKeys`.
+       */
+      insert: [InsertGuestbookEntryParams, InsertGuestbookEntryResult];
+      /**
+       * Adds one like to the published guestbook entry targeted by `key`, the entry's own key (`gb/<guestbookId>/gbe/<uid>`).
+       *
+       * Fails when the entry is not published.
+       */
       like: LikeGuestbookEntryParams;
     };
+    /**
+     * Deletes the caller's own entry in a guestbook.
+     *
+     * Pass the guestbook as `guestbook` (its id or its full key), not the entry's key. An entry's id is its author's uid, so
+     * this always targets the caller's entry. Succeeds without changing anything when the caller has no entry.
+     */
     delete: GuestbookEntryParams;
     query: {
       _: [QueryGuestbookEntriesParams, OnCallQueryModelResult<GuestbookEntry>];
@@ -236,7 +308,7 @@ export abstract class GuestbookFunctions implements ModelFirebaseFunctionMap<Gue
   };
   abstract guestbookEntry: {
     updateGuestbookEntry: {
-      insert: ModelFirebaseCrudFunction<InsertGuestbookEntryParams>;
+      insert: ModelFirebaseCrudFunction<InsertGuestbookEntryParams, InsertGuestbookEntryResult>;
       like: ModelFirebaseCrudFunction<LikeGuestbookEntryParams>;
     };
     deleteGuestbookEntry: ModelFirebaseCrudFunction<GuestbookEntryParams>;

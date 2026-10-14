@@ -1,10 +1,12 @@
 /**
  * Consumes an {@link ExtractedAppNotifications} from the validator's
  * cross-file extractor and reshapes it into an
- * {@link AppNotificationsReport} — no AST walk happens here.
+ * {@link AppNotificationsReport} — templates, tasks and the NotificationTaskBot
+ * section (`collect.taskbot.ts`) — no AST walk happens here.
  */
 
 import type { ExtractedAppNotifications, ExtractedTemplateHandlerEntry, ExtractedTemplateTypeInfo, NotificationDeliveryMethodName } from '../notification-m-validate-app/index.js';
+import { buildTaskBotSummary } from './collect.taskbot.js';
 import type { AppNotificationsReport, TaskSummary, TemplateSummary } from './types.js';
 
 export interface CollectOptions {
@@ -35,7 +37,8 @@ export function collectAppNotifications(extracted: ExtractedAppNotifications, op
     templateConfigsArrayWiredInApi: Boolean(extracted.templateConfigsArrayWiring && extracted.templateConfigsArrayWiring.useFactoryIdentifier === extracted.templateConfigsArrayFactory?.symbolName),
     taskServiceCallCount: extracted.taskServiceCalls.length,
     templates,
-    tasks
+    tasks,
+    taskBot: buildTaskBotSummary(extracted)
   };
   return result;
 }
@@ -169,14 +172,18 @@ function buildHandlerByTaskType(extracted: ExtractedAppNotifications): Map<strin
   return handlerByTaskType;
 }
 
+/**
+ * The task types any `notificationTaskService({ validate })` call lists, directly or through the app's own component
+ * aggregates (followed through any nesting, `ExtractedTaskServiceCall.nestedValidateIdentifiers`).
+ *
+ * @param extracted - The validator extraction.
+ * @returns The task-type identifiers in any `validate`.
+ */
 function collectValidateNames(extracted: ExtractedAppNotifications): Set<string> {
   const validateNames = new Set<string>();
   for (const call of extracted.taskServiceCalls) {
     for (const id of call.validateIdentifiers) validateNames.add(id);
-    for (const spread of call.spreadValidateIdentifiers) {
-      const agg = extracted.taskAllTypesAggregates.find((a) => a.symbolName === spread);
-      if (agg) for (const id of agg.taskTypeIdentifiers) validateNames.add(id);
-    }
+    for (const id of call.nestedValidateIdentifiers) validateNames.add(id);
   }
   return validateNames;
 }

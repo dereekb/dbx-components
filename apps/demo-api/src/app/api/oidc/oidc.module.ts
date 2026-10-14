@@ -18,7 +18,7 @@ import {
 } from '@dereekb/firebase-server/oidc';
 import { DemoApiAuthModule } from '../../common/firebase/auth.module';
 import { DemoApiAuthService, DemoApiFirestoreModule, DemoApiStorageModule } from '../../common/firebase';
-import { FIREBASE_SERVER_SESSION_API_PROTECTED_PATH, FirebaseServerEnvService, type FirebaseServerAuthUserContext, FirebaseServerStorageService } from '@dereekb/firebase-server';
+import { FIREBASE_SERVER_DOCS_API_PROTECTED_PATH, FIREBASE_SERVER_SESSION_API_PROTECTED_PATH, FirebaseServerEnvService, type FirebaseServerAuthUserContext, FirebaseServerStorageService } from '@dereekb/firebase-server';
 import { DEMO_APP_OAUTH_INTERACTION_PATH, DEMO_AUTH_CLAIMS_SERVICE, DEMO_OIDC_PROVIDER_PROFILES, DEMO_OIDC_TOKEN_ENDPOINT_AUTH_METHODS, demoOidcProviderProfiles, type DemoApiAuthClaims, type DemoOidcScope } from 'demo-firebase';
 
 /**
@@ -102,7 +102,7 @@ export const DEMO_OIDC_PROVIDER_CONFIG: OidcProviderConfig<DemoOidcScope> = {
  * Builds the demo app's OIDC provider config for the running environment.
  *
  * Identical to {@link DEMO_OIDC_PROVIDER_CONFIG} except for the provider profiles, whose CLI-handoff
- * entry becomes a default profile outside production.
+ * and external-token entries become default profiles outside production.
  *
  * @param envService - The Firebase server environment service, read for {@link FirebaseServerEnvService.isProduction}.
  * @returns The provider config to supply to the OidcAccountService delegate.
@@ -114,9 +114,14 @@ export function demoOidcProviderConfigForEnv(envService: FirebaseServerEnvServic
   // `adminOnly`, so a non-admin is refused at the consent gate exactly as in production; only the
   // per-client assignment goes away.
   //
+  // The admin-only `external-token` profile is lifted the same way, so that connector can also request
+  // `token.external` and the CLI credential it mints can run `demo-cli external-token`. Its 8-hour
+  // `maxSessionTtl` still caps any grant that carries the scope.
+  //
   // `isProduction` (not `!isTestingEnv`) is the right check: it is false for both a local emulator
   // serve and a test run, and true for staging, so a deployed environment keeps the assignment gate.
-  return { ...DEMO_OIDC_PROVIDER_CONFIG, providerProfiles: demoOidcProviderProfiles({ unlockCliHandoffByDefault: !envService.isProduction }) };
+  const unlockByDefault = !envService.isProduction;
+  return { ...DEMO_OIDC_PROVIDER_CONFIG, providerProfiles: demoOidcProviderProfiles({ unlockCliHandoffByDefault: unlockByDefault, unlockExternalTokenByDefault: unlockByDefault }) };
 }
 
 /**
@@ -292,8 +297,10 @@ export class DemoApiOidcDependencyModule {}
       suppressBodyParserWarning: true,
       // FIREBASE_SERVER_SESSION_API_PROTECTED_PATH ('/api/session') is required by
       // DemoSessionApiModule — the session controller reads `req.auth`, which only this bearer
-      // middleware populates.
-      protectedPaths: ['/api/model', '/mcp', FIREBASE_SERVER_SESSION_API_PROTECTED_PATH, FIREBASE_SERVER_CLI_TOKEN_API_PROTECTED_PATH],
+      // middleware populates. FIREBASE_SERVER_DOCS_API_PROTECTED_PATH ('/api/docs') likewise for
+      // DemoDocsApiModule: every doc is audience-gated on `req.auth`. (`/api/download` stays out —
+      // it carries its own signed token, and prefix matching never reaches it from '/api/docs'.)
+      protectedPaths: ['/api/model', '/mcp', FIREBASE_SERVER_SESSION_API_PROTECTED_PATH, FIREBASE_SERVER_CLI_TOKEN_API_PROTECTED_PATH, FIREBASE_SERVER_DOCS_API_PROTECTED_PATH],
       // `POST /oidc/cli-token/claim` is UNAUTHENTICATED BY DESIGN — the one-time claim code IS the
       // credential, and the machine redeeming it has none yet. Protection matches by prefix, so
       // without this exclusion the `/oidc/cli-token` entry above would 401 exactly the callers the

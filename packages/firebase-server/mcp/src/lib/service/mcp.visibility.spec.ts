@@ -1,4 +1,4 @@
-import { classifyVisibility, resolveEffectiveReadOnly, resolveMcpToolAnnotations, resolveRequiredScope } from './mcp.visibility';
+import { classifyVisibility, mergeMcpToolHints, resolveEffectiveDestructive, resolveEffectiveReadOnly, resolveMcpToolAnnotations, resolveRequiredScope } from './mcp.visibility';
 import { type McpVisibilityContext } from '@dereekb/firebase-server';
 
 describe('classifyVisibility', () => {
@@ -61,17 +61,72 @@ describe('resolveEffectiveReadOnly', () => {
   });
 });
 
+describe('resolveEffectiveDestructive', () => {
+  it('honors an explicit override regardless of call type', () => {
+    expect(resolveEffectiveDestructive(true, 'create')).toBe(true);
+    expect(resolveEffectiveDestructive(false, 'delete')).toBe(false);
+    expect(resolveEffectiveDestructive(false, 'invoke')).toBe(false);
+  });
+
+  it('infers false for create (additive)', () => {
+    expect(resolveEffectiveDestructive(undefined, 'create')).toBe(false);
+  });
+
+  it('infers true for update and delete', () => {
+    expect(resolveEffectiveDestructive(undefined, 'update')).toBe(true);
+    expect(resolveEffectiveDestructive(undefined, 'delete')).toBe(true);
+  });
+
+  it('fails safe to true for invoke and custom verbs', () => {
+    expect(resolveEffectiveDestructive(undefined, 'invoke')).toBe(true);
+    expect(resolveEffectiveDestructive(undefined, 'customVerb')).toBe(true);
+  });
+
+  it('treats a null override the same as undefined (re-infer)', () => {
+    expect(resolveEffectiveDestructive(null, 'create')).toBe(false);
+    expect(resolveEffectiveDestructive(null, 'update')).toBe(true);
+  });
+});
+
+describe('mergeMcpToolHints', () => {
+  it('raises destructive and openWorld from any escalation', () => {
+    expect(mergeMcpToolHints({ readOnly: false, destructive: false }, [{ openWorld: true }, { destructive: true }])).toEqual({ readOnly: false, destructive: true, openWorld: true });
+  });
+
+  it('never lowers a hint', () => {
+    expect(mergeMcpToolHints({ readOnly: false, destructive: true, openWorld: true }, [{}])).toEqual({ readOnly: false, destructive: true, openWorld: true });
+  });
+
+  it('passes readOnly through', () => {
+    expect(mergeMcpToolHints({ readOnly: undefined, destructive: false }, []).readOnly).toBeUndefined();
+    expect(mergeMcpToolHints({ readOnly: true }, []).readOnly).toBe(true);
+  });
+});
+
 describe('resolveMcpToolAnnotations', () => {
   it('maps a read-only classification to a readOnlyHint', () => {
-    expect(resolveMcpToolAnnotations(true)).toEqual({ readOnlyHint: true });
+    expect(resolveMcpToolAnnotations({ readOnly: true })).toEqual({ readOnlyHint: true });
   });
 
-  it('maps a known write to readOnlyHint:false + destructiveHint', () => {
-    expect(resolveMcpToolAnnotations(false)).toEqual({ readOnlyHint: false, destructiveHint: true });
+  it('advertises openWorldHint on a read-only tool when set', () => {
+    expect(resolveMcpToolAnnotations({ readOnly: true, openWorld: true })).toEqual({ readOnlyHint: true, openWorldHint: true });
   });
 
-  it('fails safe: maps an unclassified verb (undefined, e.g. invoke) to a destructive write', () => {
-    expect(resolveMcpToolAnnotations(undefined)).toEqual({ readOnlyHint: false, destructiveHint: true });
+  it('maps a known write without a destructive classification to readOnlyHint:false + destructiveHint', () => {
+    expect(resolveMcpToolAnnotations({ readOnly: false })).toEqual({ readOnlyHint: false, destructiveHint: true });
+  });
+
+  it('fails safe: maps an unclassified verb (e.g. invoke) to a destructive write', () => {
+    expect(resolveMcpToolAnnotations({})).toEqual({ readOnlyHint: false, destructiveHint: true });
+  });
+
+  it('maps an additive write to destructiveHint:false', () => {
+    expect(resolveMcpToolAnnotations({ readOnly: false, destructive: false })).toEqual({ readOnlyHint: false, destructiveHint: false });
+  });
+
+  it('advertises openWorldHint on a write when set', () => {
+    expect(resolveMcpToolAnnotations({ readOnly: false, destructive: false, openWorld: true })).toEqual({ readOnlyHint: false, destructiveHint: false, openWorldHint: true });
+    expect(resolveMcpToolAnnotations({ readOnly: false, destructive: true, openWorld: false })).toEqual({ readOnlyHint: false, destructiveHint: true, openWorldHint: false });
   });
 });
 

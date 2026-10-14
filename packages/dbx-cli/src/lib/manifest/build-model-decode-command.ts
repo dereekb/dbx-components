@@ -99,9 +99,13 @@ export interface DecodedKey extends DecodedKeySegments {
  */
 export function buildModelDecodeCommand(manifest: CliModelManifest, options?: BuildModelDecodeCommandOptions): CommandModule {
   const commandName = options?.commandName ?? DEFAULT_MODEL_DECODE_COMMAND_NAME;
+  // drawn from this CLI's own manifest so the example is a key the command actually decodes — a
+  // plain root collection, since a subcollection, singleton, or composite prefix alone is not a full key
+  const examplePrefix = manifest.find((entry) => entry.parentIdentityConst == null && entry.singleton !== true && entry.compositeKey == null)?.collectionPrefix ?? 'prefix';
+
   return {
     command: `${commandName} <key>`,
-    describe: `Decode a Firestore model key (e.g. "jwr/abc123") into model + id info using the registered manifest (${manifest.length} model${manifest.length === 1 ? '' : 's'}).`,
+    describe: `Decode a Firestore model key (e.g. "${examplePrefix}/abc123") into model + id info using the registered manifest (${manifest.length} model${manifest.length === 1 ? '' : 's'}).`,
     builder: (yargs: Argv) => {
       return yargs
         .positional('key', {

@@ -22,6 +22,8 @@ function makeMcpConfig(overrides: Partial<McpModuleConfig> = {}): McpModuleConfi
     mcpUrl: 'https://example.test/mcp',
     serverName: 'test-mcp',
     serverVersion: '0.0.1',
+    // These specs pin the legacy per-method surface; mcp.server.factory.compact.spec.ts covers the compact one.
+    tools: { compact: false, methodTools: true },
     ...overrides
   };
 }

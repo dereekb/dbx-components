@@ -1,3 +1,4 @@
+import { FIRESTORE_SESSION_OIDC_SCOPE, oidcScopesFromScopeClaim } from '@dereekb/firebase';
 import { performAsyncTasks, type Maybe } from '@dereekb/util';
 import { MAX_MODEL_ACCESS_MULTI_READ_KEYS, type GetModelOverHttpResult, type GetMultipleModelsOverHttpErrorEntry, type GetMultipleModelsOverHttpResult } from '../api/call-model.client';
 import { isCliFirebaseConfigComplete } from '../config/env';
@@ -88,6 +89,24 @@ export function assertCliModelIsNotServerOnly(input: { readonly manifest: Maybe<
   }
 }
 
+// MARK: Scope
+/**
+ * Whether a grant's space-separated OIDC `scope` carries {@link FIRESTORE_SESSION_OIDC_SCOPE}, the
+ * scope `GET /session/firestore` requires.
+ *
+ * `undefined` when the scope is not known (an env-supplied token with no `<PREFIX>_TOKEN_SCOPE`, or a
+ * cache entry that never recorded one) — callers then attempt the handshake and let the server decide,
+ * rather than reading "unknown" as "missing".
+ *
+ * @param scope - The grant's space-separated scope string, when known.
+ * @returns Whether the scope is granted, or `undefined` when the scope is not known.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function hasCliFirestoreSessionScope(scope: Maybe<string>): Maybe<boolean> {
+  return oidcScopesFromScopeClaim(scope)?.has(FIRESTORE_SESSION_OIDC_SCOPE);
+}
+
 // MARK: Resolve source
 /**
  * Why {@link resolveCliReadSource} chose the source it chose.
@@ -109,6 +128,12 @@ export type CliReadSourceReason =
    * Under `auto`: the env carries no complete Firebase client config.
    */
   | 'firebase-config-incomplete'
+  /**
+   * Under `auto`: the signed-in grant does not carry the `session.firestore` scope, so the session
+   * was never attempted. Expected rather than a fault — an MCP-minted CLI handoff credential never
+   * carries the scope — so no `fallbackError` accompanies it.
+   */
+  | 'scope-not-granted'
   /**
    * Under `auto`: the chain is wired but the session could not be opened.
    */
@@ -191,11 +216,16 @@ export async function resolveCliReadSource(input: ResolveCliReadSourceInput): Pr
   } else if (context.getFirestoreModels == null) {
     verboseLog('read: --via auto → api (this CLI has no `firestore` binding)');
     result = { source: 'api', reason: 'no-firestore-binding', via };
-  } else if (isCliFirebaseConfigComplete(context.env.firebase)) {
-    result = await resolveAutoReadSource(context, via);
-  } else {
+  } else if (!isCliFirebaseConfigComplete(context.env.firebase)) {
     verboseLog(`read: --via auto → api (env "${context.envName}" has no complete firebase client config)`);
     result = { source: 'api', reason: 'firebase-config-incomplete', via };
+  } else if (hasCliFirestoreSessionScope(context.scope) === false) {
+    // checked before the handshake so a grant that cannot open a session costs no round-trip to be
+    // refused, and its reads carry no error for what is an expected state
+    verboseLog(`read: --via auto → api (the signed-in grant does not carry the \`${FIRESTORE_SESSION_OIDC_SCOPE}\` scope)`);
+    result = { source: 'api', reason: 'scope-not-granted', via };
+  } else {
+    result = await resolveAutoReadSource(context, via);
   }
 
   return result;

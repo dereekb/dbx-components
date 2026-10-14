@@ -3,6 +3,7 @@ import { AbstractDialogDirective, DbxActionModule, DbxButtonModule, DbxDialogMod
 import { type MatDialog } from '@angular/material/dialog';
 import { type WorkUsingContext, switchMapWhileTrue, type IsEqualFunction } from '@dereekb/rxjs';
 import { DemoGuestbookEntryFormComponent, type DemoGuestbookEntryFormValue, type GuestbookEntryDocumentStore } from 'demo-components';
+import { type InsertGuestbookEntryResult } from 'demo-firebase';
 import { map } from 'rxjs';
 import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -59,7 +60,7 @@ export class DemoGuestbookEntryPopupComponent extends AbstractDialogDirective<un
     );
   };
 
-  readonly handleUpdateEntry: WorkUsingContext<DemoGuestbookEntryFormValue, void> = (value, context) => {
+  readonly handleUpdateEntry: WorkUsingContext<DemoGuestbookEntryFormValue, InsertGuestbookEntryResult> = (value, context) => {
     context.startWorkingWithLoadingStateObservable(this.guestbookEntryDocumentStore.insertEntry(value));
   };
 }

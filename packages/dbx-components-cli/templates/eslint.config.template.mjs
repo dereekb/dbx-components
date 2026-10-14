@@ -279,7 +279,7 @@ export default [
           // Models intentionally registered without a matching `firestore.rules` block
           // (treated as system-admin-only via the model service layer until a customer-facing
           // permission story is needed). Shrink as `firestore.rules` is filled in.
-          allowedMissingCollectionNames: ['systemState', 'notificationLoggedEventDay', 'notificationLoggedEventDayPage']
+          allowedMissingCollectionNames: ['systemState', 'notificationLoggedEventDay', 'notificationLoggedEventDayPage', 'notificationTaskBot']
         }
       ]
     }

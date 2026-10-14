@@ -19,7 +19,9 @@ export interface ValidateAppOptions {
 /**
  * Reconciles declarations from the firebase-component package (and any
  * upstream `@dereekb/*` package it depends on) against the handlers wired
- * in the app's `crud.functions.ts`.
+ * in the app's `crud.functions.ts`, checks that every `invoke` /
+ * custom-verb handler declares its MCP read/write classification, and
+ * that every declared entry has a description.
  *
  * @param options - Resolved paths and optional model filter.
  * @returns The populated validation report.
@@ -48,4 +50,4 @@ export async function validateAppModelApi(options: ValidateAppOptions): Promise<
 }
 
 export { formatValidationAsJson, formatValidationAsMarkdown } from './format.js';
-export type { DeclaredEntry, HandlerEntry, ModelSummary, ReconciledEntry, ValidateIssue, ValidateIssueCode, ValidateReport, HandlerMapStatus } from './types.js';
+export type { DeclaredEntry, HandlerEntry, HandlerMcpReadOnly, HandlerMcpReadOnlyDeclared, HandlerMcpReadOnlyNoApiDetails, HandlerMcpReadOnlyUnresolved, HandlerMcpReadOnlyUnset, ModelSummary, ReconciledEntry, ValidateIssue, ValidateIssueCode, ValidateReport, HandlerMapStatus } from './types.js';

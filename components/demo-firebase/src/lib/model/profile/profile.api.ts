@@ -12,7 +12,7 @@ import {
   callModelFirebaseFunctionMapFactory
 } from '@dereekb/firebase';
 import { type Type } from 'arktype';
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type Milliseconds } from '@dereekb/util';
 import { ARKTYPE_DATE_DTO_TYPE, clearable } from '@dereekb/model';
 import { type ProfileTypes } from './profile';
 
@@ -76,6 +76,28 @@ export const profileCreateTestCalendarEventParamsType = inferredTargetModelParam
   'durationMinutes?': clearable('number'),
   'recurrenceRule?': clearable('string')
 }) as Type<ProfileCreateTestCalendarEventParams>;
+
+/**
+ * Params for starting the demo ping NotificationTaskBot on the current user's profile.
+ *
+ * Ensures the `demo_ping` entry on `ntb/pr_<uid>`, owned by the profile (`pr/<uid>`), so the user can turn it off from
+ * their notification settings. Idempotent: an existing entry is left as-is.
+ */
+export interface ProfileCreateTestNotificationTaskBotParams extends InferredTargetModelParams {
+  /**
+   * Interval between pings, in milliseconds. Defaults to one minute. Only used when the entry is created.
+   */
+  readonly interval?: Maybe<Milliseconds>;
+  /**
+   * Pauses the entry after this many pings. Defaults to 3. Only used when the entry is created.
+   */
+  readonly pauseAfter?: Maybe<number>;
+}
+
+export const profileCreateTestNotificationTaskBotParamsType = inferredTargetModelParamsType.merge({
+  'interval?': clearable('number >= 0'),
+  'pauseAfter?': clearable('number >= 0')
+}) as Type<ProfileCreateTestNotificationTaskBotParams>;
 
 /**
  * Params for changing the current user's profile username.
@@ -218,6 +240,13 @@ export type ProfileModelCrudFunctionsConfig = {
        */
       createTestCalendarEvent: ProfileCreateTestCalendarEventParams;
       /**
+       * Starts the demo ping NotificationTaskBot on the current user's profile
+       * (`ntb/pr_<uid>`), owned by the profile so the user can opt out of it.
+       *
+       * Idempotent: an existing ping entry is left as-is.
+       */
+      createTestNotificationTaskBot: ProfileCreateTestNotificationTaskBotParams;
+      /**
        * Initiates or completes a password reset for the current user.
        *
        * Set `requestReset: true` to start a new reset (generates a temporary
@@ -240,7 +269,7 @@ export type ProfileModelCrudFunctionsConfig = {
 export const profileModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<ProfileModelCrudFunctionsConfig, ProfileTypes> = {
   profile: [
     'read:downloadArchive',
-    'update:_,username,onboard,createTestNotification,createTestCalendarEvent,resetPassword' as any, // use "any" once typescript complains about combinations
+    'update:_,username,onboard,createTestNotification,createTestCalendarEvent,createTestNotificationTaskBot,resetPassword' as any, // use "any" once typescript complains about combinations
     'delete'
   ]
 };
@@ -265,6 +294,7 @@ export abstract class ProfileFunctions implements ModelFirebaseFunctionMap<Profi
       updateProfileOnboard: ModelFirebaseCrudFunction<FinishOnboardingProfileParams, boolean>;
       createTestNotification: ModelFirebaseCrudFunction<ProfileCreateTestNotificationParams>;
       createTestCalendarEvent: ModelFirebaseCrudFunction<ProfileCreateTestCalendarEventParams>;
+      createTestNotificationTaskBot: ModelFirebaseCrudFunction<ProfileCreateTestNotificationTaskBotParams>;
       updateProfileResetPassword: ModelFirebaseCrudFunction<ResetProfilePasswordParams>;
       // short names
       update: ModelFirebaseCrudFunction<UpdateProfileParams>;

@@ -9,7 +9,7 @@ describe('calendarTypeConfigRecord()', () => {
   });
 
   it('should throw for a duplicate type', () => {
-    expect(() => calendarTypeConfigRecord([DEMO_CONFIG, { ...DEMO_CONFIG, maxEvents: 5 }])).toThrow();
+    expect(() => calendarTypeConfigRecord([DEMO_CONFIG, { ...DEMO_CONFIG, maxEvents: 5 }])).toThrow('calendarTypeConfigRecord(): duplicate CalendarType in record: demo_profile');
   });
 });
 

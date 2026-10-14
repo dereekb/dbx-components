@@ -1,6 +1,6 @@
 import { type Maybe } from '@dereekb/util';
 import { callModelOidcScopeForCallType, type CallModelOidcScope, type OidcScopeTerm } from '@dereekb/firebase';
-import { type McpToolVisibility, type McpVisibilityContext, type McpVisibilityRule } from '@dereekb/firebase-server';
+import { type McpEscalatingParamHints, type McpToolVisibility, type McpVisibilityContext, type McpVisibilityRule } from '@dereekb/firebase-server';
 import type { ToolAnnotations } from '@modelcontextprotocol/server';
 
 /**
@@ -66,6 +66,17 @@ interface McpToolFilterMetadataBase {
    * Unknown counts as a write for fail-safe filtering.
    */
   readonly effectiveReadOnly?: boolean;
+  /**
+   * Destructive classification of a call that sets no escalating param. Only meaningful when `effectiveReadOnly` is not true.
+   *
+   * Explicit `mcp.destructive` wins; otherwise inferred from the call type (`create` → false, everything else → true).
+   * `undefined` on a read-only tool and on an unclassified static write, which counts as destructive (fail-safe).
+   */
+  readonly effectiveDestructive?: boolean;
+  /**
+   * The explicit `mcp.openWorld`, when set.
+   */
+  readonly openWorld?: boolean;
 }
 
 export interface McpToolFilterMetadataAlways extends McpToolFilterMetadataBase {
@@ -144,22 +155,89 @@ export function resolveEffectiveReadOnly(explicitReadOnly: Maybe<boolean>, callT
 }
 
 /**
- * Maps an effective read-only classification to the standard MCP {@link ToolAnnotations} hints
- * advertised on `tools/list`.
+ * The resolved MCP hints of a tool, or of one call of it.
+ */
+export interface McpToolHints {
+  /**
+   * Effective read-only classification. `undefined` is unclassified and treated as a write.
+   */
+  readonly readOnly?: Maybe<boolean>;
+  /**
+   * Whether a call that is not read-only may delete or overwrite data. `undefined` is unclassified and treated as destructive.
+   */
+  readonly destructive?: Maybe<boolean>;
+  /**
+   * Whether the call reaches outside the app. `undefined` advertises no `openWorldHint` and routes as `false`.
+   */
+  readonly openWorld?: Maybe<boolean>;
+}
+
+/**
+ * Inference table from call type to "may this call destroy data?", used when `mcp.destructive` is unset on a call that is
+ * not read-only. `create` → false (additive); `update` / `delete` → true; any other call type (`invoke`, custom verbs)
+ * falls back to true (fail-safe) in {@link resolveEffectiveDestructive}.
+ */
+const DESTRUCTIVE_BY_CALL_TYPE: Readonly<Record<string, boolean>> = {
+  create: false,
+  update: true,
+  delete: true
+};
+
+/**
+ * Resolves whether a call that is not read-only may delete or overwrite data.
  *
- * A definitively read-only tool advertises `{ readOnlyHint: true }`. Everything else — a known
- * write (`false`) or an unclassified verb (`undefined`, e.g. `invoke`/custom) — fails safe to
- * `{ readOnlyHint: false, destructiveHint: true }` so a client never mistakes an ambiguous tool
- * for a safe read. `idempotentHint` / `openWorldHint` are intentionally left unset.
+ * Explicit handler override wins. Otherwise infers from the call type, failing safe to `true` for `invoke` and custom verbs.
+ *
+ * @param explicitDestructive - The handler's explicit `mcp.destructive` value, if any.
+ * @param callType - The dispatch call type used to infer the classification when no override is present.
+ * @returns Whether the call may delete or overwrite data.
+ */
+export function resolveEffectiveDestructive(explicitDestructive: Maybe<boolean>, callType: string): boolean {
+  return explicitDestructive ?? DESTRUCTIVE_BY_CALL_TYPE[callType] ?? true;
+}
+
+/**
+ * Raises base hints by escalations: a hint any escalation sets wins. Used for the worst case a tool advertises, and for the
+ * kind of a call that sets one escalating param.
+ *
+ * @param base - The hints of a call that sets no escalating param.
+ * @param escalations - The hints of each escalating param to apply.
+ * @returns The raised hints. `readOnly` passes through unchanged.
+ */
+export function mergeMcpToolHints(base: McpToolHints, escalations: Iterable<McpEscalatingParamHints>): McpToolHints {
+  let destructive = base.destructive;
+  let openWorld = base.openWorld;
+
+  for (const escalation of escalations) {
+    if (escalation.destructive === true) {
+      destructive = true;
+    }
+
+    if (escalation.openWorld === true) {
+      openWorld = true;
+    }
+  }
+
+  return { readOnly: base.readOnly, destructive, openWorld };
+}
+
+/**
+ * Maps resolved hints to the standard MCP {@link ToolAnnotations} advertised on `tools/list`.
+ *
+ * A definitively read-only tool advertises `{ readOnlyHint: true }`. Everything else advertises
+ * `{ readOnlyHint: false, destructiveHint }`, where an unclassified `destructive` fails safe to `true` so a client never
+ * mistakes an ambiguous tool for a safe one. `openWorldHint` is added only when `openWorld` is set. `idempotentHint` stays
+ * unset.
  *
  * Co-located with {@link resolveEffectiveReadOnly} / {@link READ_ONLY_BY_CALL_TYPE} so the
  * read/write classification rules stay in one file.
  *
- * @param effectiveReadOnly - The resolved read-only classification from {@link resolveEffectiveReadOnly}.
- * @returns The MCP annotations describing the tool's read/write behaviour.
+ * @param hints - The resolved hints of the tool.
+ * @returns The MCP annotations describing the tool's behaviour.
  */
-export function resolveMcpToolAnnotations(effectiveReadOnly: boolean | undefined): ToolAnnotations {
-  return effectiveReadOnly === true ? { readOnlyHint: true } : { readOnlyHint: false, destructiveHint: true };
+export function resolveMcpToolAnnotations(hints: McpToolHints): ToolAnnotations {
+  const annotations: ToolAnnotations = hints.readOnly === true ? { readOnlyHint: true } : { readOnlyHint: false, destructiveHint: hints.destructive !== false };
+  return hints.openWorld == null ? annotations : { ...annotations, openWorldHint: hints.openWorld };
 }
 
 /**

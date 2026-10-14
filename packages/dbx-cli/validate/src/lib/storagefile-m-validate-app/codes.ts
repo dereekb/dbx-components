@@ -71,7 +71,7 @@ export enum StorageFileMValidateAppCode {
    * the API.
    *
    * @dbxRuleSeverity error
-   * @dbxRuleApplies APIs that declare at least one `UploadedFileTypeIdentifier` and therefore need to wire the upload service.
+   * @dbxRuleApplies Apps whose component declares at least one `UploadedFileTypeIdentifier` constant, and so must wire the upload service. The `storageFileInitializeFromUploadService(...)` call is matched by name, through an `@dereekb/*` import alias (`import { x as y }`), or as a member of an `@dereekb/*` namespace import (`ns.x(...)`).
    * @dbxRuleNotApplies APIs whose upload service is provided by an upstream module (and the call lives outside the scanned subpaths — extend the scanner if so).
    * @dbxRuleFix Add a factory whose return value is built from `storageFileInitializeFromUploadService({ initializer: [...] })` and bind it as a NestJS provider.
    * @dbxRuleSeeAlso artifact:storagefile-upload-handler
@@ -142,7 +142,7 @@ export enum StorageFileMValidateAppCode {
    * found.
    *
    * @dbxRuleSeverity warning
-   * @dbxRuleApplies When more than one upload-service factory exists in the API.
+   * @dbxRuleApplies When more than one `storageFileInitializeFromUploadService(...)` call exists in the API, counting aliased and namespaced calls.
    * @dbxRuleNotApplies Apps that intentionally compose multiple factories (rare — only the first one runs).
    * @dbxRuleFix Consolidate the factories into one — only the first call's config takes effect at runtime.
    */
@@ -154,7 +154,7 @@ export enum StorageFileMValidateAppCode {
    * is present in the API.
    *
    * @dbxRuleSeverity error
-   * @dbxRuleApplies When at least one purpose declares a `*ProcessingSubtask` union and `*_PROCESSING_SUBTASK` constants.
+   * @dbxRuleApplies When at least one purpose declares a `*ProcessingSubtask` union and `*_PROCESSING_SUBTASK` constants. The `storageFileProcessingNotificationTaskHandler(...)` call is matched by name, through an `@dereekb/*` import alias (`import { x as y }`), or as a member of an `@dereekb/*` namespace import (`ns.x(...)`).
    * @dbxRuleNotApplies Purposes that store a file but do not need processing.
    * @dbxRuleFix Add a `storageFileProcessingNotificationTaskHandler({ processors: [...] })` call and wire it into the notification-task service.
    * @dbxRuleSeeAlso artifact:storagefile-processor

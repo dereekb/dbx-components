@@ -1,4 +1,16 @@
-import { abbreviateMcpCallType, buildDefaultMcpToolDescription, buildDisambiguatedMcpToolName, buildMcpToolName, DEFAULT_SPECIFIER_KEY, generateMcpToolDefinitions, MCP_TOOL_NAME_MAX_LENGTH, MCP_TOOL_NAME_WARN_LENGTH, validateMcpToolName, type McpToolGenerationNamingOptions } from './mcp.tool-generator';
+import {
+  abbreviateMcpCallType,
+  buildDefaultMcpToolDescription,
+  buildDisambiguatedMcpToolName,
+  buildMcpToolName,
+  buildStaticToolDefinition,
+  DEFAULT_SPECIFIER_KEY,
+  generateMcpToolDefinitions,
+  MCP_TOOL_NAME_MAX_LENGTH,
+  MCP_TOOL_NAME_WARN_LENGTH,
+  validateMcpToolName,
+  type McpToolGenerationNamingOptions
+} from './mcp.tool-generator';
 import { type ModelApiDetailsResult, type McpVisibilityContext } from '@dereekb/firebase-server';
 import { type OidcModelScopeRequirement, type OidcScopeTerm } from '@dereekb/firebase';
 
@@ -365,18 +377,79 @@ describe('generateMcpToolDefinitions filter metadata', () => {
     }
   });
 
-  it('marks create/update/delete tools destructive writes and prefixes the description with [WRITE]', () => {
-    for (const callType of ['create', 'update', 'delete']) {
+  it('marks create tools additive writes and prefixes the description with [WRITE]', () => {
+    const tool = generateMcpToolDefinitions(makeApiDetailsWithMcp('create', undefined)).tools[0];
+    expect(tool.annotations).toEqual({ readOnlyHint: false, destructiveHint: false });
+    expect(tool.description.startsWith('[WRITE] ')).toBe(true);
+    expect(tool.filterMetadata.effectiveDestructive).toBe(false);
+  });
+
+  it('marks update/delete tools destructive writes and prefixes the description with [DESTRUCTIVE]', () => {
+    for (const callType of ['update', 'delete']) {
       const tool = generateMcpToolDefinitions(makeApiDetailsWithMcp(callType, undefined)).tools[0];
       expect(tool.annotations).toEqual({ readOnlyHint: false, destructiveHint: true });
-      expect(tool.description.startsWith('[WRITE] ')).toBe(true);
+      expect(tool.description.startsWith('[DESTRUCTIVE] ')).toBe(true);
+      expect(tool.filterMetadata.effectiveDestructive).toBe(true);
     }
   });
 
   it('treats an invoke with no override as a destructive write (fail-safe)', () => {
     const tool = generateMcpToolDefinitions(makeApiDetailsWithMcp('invoke', undefined)).tools[0];
     expect(tool.annotations).toEqual({ readOnlyHint: false, destructiveHint: true });
+    expect(tool.description.startsWith('[DESTRUCTIVE] ')).toBe(true);
+  });
+
+  it('honors an explicit mcp.destructive: false on an update', () => {
+    const tool = generateMcpToolDefinitions(makeApiDetailsWithMcp('update', { destructive: false })).tools[0];
+    expect(tool.annotations).toEqual({ readOnlyHint: false, destructiveHint: false });
     expect(tool.description.startsWith('[WRITE] ')).toBe(true);
+    expect(tool.filterMetadata.effectiveDestructive).toBe(false);
+  });
+
+  it('honors an explicit mcp.destructive: true on a create', () => {
+    const tool = generateMcpToolDefinitions(makeApiDetailsWithMcp('create', { destructive: true })).tools[0];
+    expect(tool.annotations).toEqual({ readOnlyHint: false, destructiveHint: true });
+    expect(tool.description.startsWith('[DESTRUCTIVE] ')).toBe(true);
+  });
+
+  it('advertises openWorldHint and the [DESTRUCTIVE] marker on an open-world create', () => {
+    const tool = generateMcpToolDefinitions(makeApiDetailsWithMcp('create', { openWorld: true })).tools[0];
+    expect(tool.annotations).toEqual({ readOnlyHint: false, destructiveHint: false, openWorldHint: true });
+    expect(tool.description.startsWith('[DESTRUCTIVE] ')).toBe(true);
+    expect(tool.filterMetadata.openWorld).toBe(true);
+  });
+
+  it('advertises openWorldHint on a read-only invoke without a prefix', () => {
+    const tool = generateMcpToolDefinitions(makeApiDetailsWithMcp('invoke', { readOnly: true, openWorld: true })).tools[0];
+    expect(tool.annotations).toEqual({ readOnlyHint: true, openWorldHint: true });
+    expect(tool.description.startsWith('[')).toBe(false);
+  });
+
+  it('advertises the worst case over escalating params while keeping the base marker', () => {
+    const escalatingParams = { probe: { openWorld: true } };
+    const tool = generateMcpToolDefinitions(makeApiDetailsWithMcp('invoke', { destructive: false, escalatingParams })).tools[0];
+    expect(tool.annotations).toEqual({ readOnlyHint: false, destructiveHint: false, openWorldHint: true });
+    expect(tool.description.startsWith('[WRITE] ')).toBe(true);
+    expect(tool.escalatingParams).toEqual(escalatingParams);
+    expect(tool.filterMetadata.effectiveDestructive).toBe(false);
+    expect(tool.filterMetadata.openWorld).toBeUndefined();
+  });
+
+  it('drops a read-only tool that declares escalating params', () => {
+    for (const [callType, mcp] of [
+      ['read', { escalatingParams: { purge: { destructive: true } } }],
+      ['invoke', { readOnly: true, escalatingParams: { purge: { destructive: true } } }]
+    ] as const) {
+      const result = generateMcpToolDefinitions(makeApiDetailsWithMcp(callType, mcp));
+      expect(result.tools).toHaveLength(0);
+      expect(result.skipped[0].reason).toBe('escalating_params_on_read_only');
+    }
+  });
+
+  it('keeps a read-only tool with an empty escalating params map', () => {
+    const result = generateMcpToolDefinitions(makeApiDetailsWithMcp('read', { escalatingParams: {} }));
+    expect(result.tools).toHaveLength(1);
+    expect(result.tools[0].escalatingParams).toBeUndefined();
   });
 
   it('honors an explicit mcp.readOnly override on an invoke (read-only, no prefix)', () => {
@@ -389,7 +462,38 @@ describe('generateMcpToolDefinitions filter metadata', () => {
     const tool = generateMcpToolDefinitions(makeApiDetailsWithMcp('update', undefined)).tools[0];
     expect(tool.staticWireEntry.annotations).toEqual({ readOnlyHint: false, destructiveHint: true });
     expect(tool.staticWireEntry.description).toBe(tool.description);
-    expect(tool.staticWireEntry.description.startsWith('[WRITE] ')).toBe(true);
+    expect(tool.staticWireEntry.description.startsWith('[DESTRUCTIVE] ')).toBe(true);
+  });
+});
+
+describe('buildStaticToolDefinition()', () => {
+  const baseInput = {
+    name: 'demo-tool',
+    description: 'Does a thing.',
+    inputSchema: { type: 'object' },
+    dispatch: { call: 'static', modelType: 'demo-tool' },
+    staticHandler: async () => ({ content: [] }),
+    effectiveReadOnly: false
+  };
+
+  it('keeps the [WRITE] marker on an unclassified write but fails safe on its hint', () => {
+    const tool = buildStaticToolDefinition(baseInput);
+    expect(tool.description).toBe('[WRITE] Does a thing.');
+    expect(tool.annotations).toEqual({ readOnlyHint: false, destructiveHint: true });
+    expect(tool.filterMetadata.effectiveDestructive).toBeUndefined();
+  });
+
+  it('marks a destructive write with [DESTRUCTIVE]', () => {
+    const tool = buildStaticToolDefinition({ ...baseInput, destructive: true });
+    expect(tool.description).toBe('[DESTRUCTIVE] Does a thing.');
+    expect(tool.annotations).toEqual({ readOnlyHint: false, destructiveHint: true });
+    expect(tool.filterMetadata.effectiveDestructive).toBe(true);
+  });
+
+  it('marks an additive write destructiveHint: false', () => {
+    const tool = buildStaticToolDefinition({ ...baseInput, destructive: false });
+    expect(tool.description).toBe('[WRITE] Does a thing.');
+    expect(tool.annotations).toEqual({ readOnlyHint: false, destructiveHint: false });
   });
 });
 

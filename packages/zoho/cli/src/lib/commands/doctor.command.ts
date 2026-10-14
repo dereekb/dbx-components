@@ -48,7 +48,7 @@ export const DOCTOR_COMMAND: CommandModule = {
     const fileConfig = await loadCliConfigFile();
     const checks: DoctorCheck[] = [];
 
-    checks.push(checkConfigLoaded(config));
+    checks.push(checkConfigLoaded(config, fileConfig));
     const sharedCheck = checkSharedCredentials(config, zohoCliCredentialSources(fileConfig).shared);
     if (sharedCheck) checks.push(sharedCheck);
     const shadowCheck = checkShadowedEnvCredentials(fileConfig);
@@ -74,11 +74,16 @@ export const DOCTOR_COMMAND: CommandModule = {
   }
 };
 
-function checkConfigLoaded(config: Awaited<ReturnType<typeof loadCliConfig>>): DoctorCheck {
-  if (config) {
-    return { name: 'config', status: 'pass', message: `Config loaded from ${getConfigFilePath()}` };
+function checkConfigLoaded(config: Awaited<ReturnType<typeof loadCliConfig>>, fileConfig: Maybe<ZohoCliConfig>): DoctorCheck {
+  let result: DoctorCheck;
+  if (!config) {
+    result = { name: 'config', status: 'fail', message: 'No config found. Run: zoho-cli auth login' };
+  } else if (fileConfig) {
+    result = { name: 'config', status: 'pass', message: `Config loaded from ${getConfigFilePath()}` };
+  } else {
+    result = { name: 'config', status: 'pass', message: 'Config loaded from environment variables (no config file)' };
   }
-  return { name: 'config', status: 'fail', message: 'No config found. Run: zoho-cli auth login' };
+  return result;
 }
 
 function checkSharedCredentials(config: Awaited<ReturnType<typeof loadCliConfig>>, source: ZohoCliCredentialSource): DoctorCheck | undefined {

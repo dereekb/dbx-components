@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
+import { type Maybe } from '@dereekb/util';
 import { type OnCallQueryModelResult } from '@dereekb/firebase';
-import { buildMcpToolName } from '@dereekb/firebase-server/mcp';
+import { mcpMethodIdForDispatch } from '@dereekb/firebase-server/mcp';
 import { OpenRouterApi } from '@dereekb/nestjs/openrouter';
 import { openRouterGeneration } from '@dereekb/openrouter';
 import { type CreateOpenRouterPromptVersionResult, type OpenRouterPrompt, OpenRouterPromptState, OpenRouterRunTaskState, openRouterPromptIdentity, openRouterPromptVersionId, openRouterPromptVersionIdentity } from '@dereekb/openrouter/firebase';
 import { openRouterRunTaskSweep } from '@dereekb/openrouter/firebase-server';
 import { DEMO_API_TEST_OPENROUTER_MODEL_CONFIG, demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoOpenRouterPromptContext } from '../../../test/fixture';
-import { callMcpTool, listMcpTools } from '../../../test/mcp';
+import { callMcpMethod, describeMcpMethod, searchMcpMethods } from '../../../test/mcp';
 
 /**
  * Closes the plan's last verification bullet: the prompt registry driven through the callModel MCP
@@ -18,8 +19,9 @@ import { callMcpTool, listMcpTools } from '../../../test/mcp';
  * every hop between an MCP client and the action (manifest entry, generated tool, dispatch, role gate)
  * lives in the app, and each one is a place the surface can be silently absent. `openRouterPrompt.query`
  * was exactly that until this app registered `OpenRouterPromptModelFunctions` in its functions config:
- * the handler carries no `inputType`, so with no manifest entry to supply the schema the tool was
- * dropped at generation time and nothing failed.
+ * the handler carried no `inputType` then, so with no manifest entry to supply the schema the tool was
+ * dropped at generation time and nothing failed. The handler now declares `inputType`, so the query no
+ * longer depends on the generated manifest.
  *
  * Everything here dispatches through `McpServerFactoryService` — the same chain `McpController` serves,
  * minus the HTTP transport.
@@ -63,22 +65,46 @@ async function retryLive<T>(fn: () => Promise<T>, attempts = 10): Promise<T> {
 }
 
 demoApiFunctionContextFactory((f) => {
-  const promptQueryToolName = buildMcpToolName(openRouterPromptIdentity.modelType, 'query');
-  const promptUpdateToolName = buildMcpToolName(openRouterPromptIdentity.modelType, 'update');
-  const versionCreateToolName = buildMcpToolName(openRouterPromptVersionIdentity.modelType, 'create');
-  const versionUpdateToolName = buildMcpToolName(openRouterPromptVersionIdentity.modelType, 'update');
+  const promptQueryMethod = mcpMethodIdForDispatch({ modelType: openRouterPromptIdentity.modelType, call: 'query' });
+  const promptUpdateMethod = mcpMethodIdForDispatch({ modelType: openRouterPromptIdentity.modelType, call: 'update' });
+  const versionCreateMethod = mcpMethodIdForDispatch({ modelType: openRouterPromptVersionIdentity.modelType, call: 'create' });
+  const versionUpdateMethod = mcpMethodIdForDispatch({ modelType: openRouterPromptVersionIdentity.modelType, call: 'update' });
 
   demoAuthorizedUserAdminContext({ f }, (au) => {
-    describe('tools/list', () => {
-      it('should advertise every openrouter prompt operation the model API declares', async () => {
-        const names = new Set((await listMcpTools(f, au)).map((x) => x.name));
+    describe('compact search', () => {
+      it('should find every openrouter prompt operation the model API declares', async () => {
+        const found = await searchMcpMethods({ f, u: au, query: 'openrouter prompt', limit: 50 });
+        const names = new Set(found.methods.map((x) => x.method));
 
-        expect(names.has(promptUpdateToolName)).toBe(true);
-        expect(names.has(versionCreateToolName)).toBe(true);
-        expect(names.has(versionUpdateToolName)).toBe(true);
-        // The one with no `inputType` on its handler, and therefore the one that only exists because the
-        // app's generated MCP manifest carries a schema for it.
-        expect(names.has(promptQueryToolName)).toBe(true);
+        expect(names.has(promptUpdateMethod)).toBe(true);
+        expect(names.has(versionCreateMethod)).toBe(true);
+        expect(names.has(versionUpdateMethod)).toBe(true);
+        // The one that once had no `inputType` on its handler, and so only existed because the app's
+        // generated MCP manifest carried a schema for it. The handler now declares `inputType`.
+        expect(names.has(promptQueryMethod)).toBe(true);
+      });
+    });
+
+    describe('openRouterPrompt.query state', () => {
+      it('should refuse a state name, listing the allowed values', async () => {
+        const result = await callMcpMethod({ f, u: au, kind: 'read', method: promptQueryMethod, params: { state: 'ACTIVE' } });
+        expect(result.isError).toBe(true);
+
+        const text = result.content.map((x) => (x.type === 'text' ? x.text : '')).join('\n');
+        expect(text).toContain('state must be 0, 1, 2');
+        expect(text).toContain('(was "ACTIVE")');
+      });
+
+      it('should advertise the allowed state values and the pagination params', async () => {
+        const { details } = await describeMcpMethod({ f, u: au, method: promptQueryMethod });
+        const inputSchema = details?.inputSchema as Maybe<{ readonly properties?: Record<string, { readonly enum?: unknown[]; readonly anyOf?: { readonly const?: unknown }[] }> }>;
+        const properties = inputSchema?.properties;
+        const state = properties?.['state'];
+        const stateValues = state?.enum ?? (state?.anyOf ?? []).map((x) => x.const).filter((x) => x !== undefined);
+
+        expect(stateValues).toEqual([OpenRouterPromptState.DRAFT, OpenRouterPromptState.ACTIVE, OpenRouterPromptState.ARCHIVED]);
+        expect(properties?.['limit']).toBeDefined();
+        expect(properties?.['cursorDocumentKey']).toBeDefined();
       });
     });
 
@@ -87,7 +113,7 @@ demoApiFunctionContextFactory((f) => {
       // an operator — so the document is staged and everything that follows goes over MCP.
       demoOpenRouterPromptContext({ f, key: 'mcp-prompt' }, (p) => {
         it('should publish, edit, promote and list a prompt entirely over MCP', async () => {
-          const published = await callMcpTool({ f, u: au, name: versionCreateToolName, args: { prompt: p.documentKey, instructions: 'You are a test.', config: DEMO_API_TEST_OPENROUTER_MODEL_CONFIG as unknown as Record<string, unknown>, activate: true } });
+          const published = await callMcpMethod({ f, u: au, kind: 'destructive', method: versionCreateMethod, params: { prompt: p.documentKey, instructions: 'You are a test.', config: DEMO_API_TEST_OPENROUTER_MODEL_CONFIG as unknown as Record<string, unknown>, activate: true } });
           expect(published.isError).toBeUndefined();
 
           const created = published.structuredContent as unknown as CreateOpenRouterPromptVersionResult;
@@ -97,10 +123,10 @@ demoApiFunctionContextFactory((f) => {
           expect(created.modelKeys[0]).toContain(openRouterPromptVersionId(1));
 
           const versionKey = created.modelKeys[0];
-          const edited = await callMcpTool({ f, u: au, name: versionUpdateToolName, args: { key: versionKey, instructions: 'You are an edited test.', notes: 'Reworded over MCP.' } });
+          const edited = await callMcpMethod({ f, u: au, kind: 'destructive', method: versionUpdateMethod, params: { key: versionKey, instructions: 'You are an edited test.', notes: 'Reworded over MCP.' } });
           expect(edited.isError).toBeUndefined();
 
-          const renamed = await callMcpTool({ f, u: au, name: promptUpdateToolName, args: { key: p.documentKey, name: 'Renamed over MCP', tags: ['mcp'], activeVersion: 1 } });
+          const renamed = await callMcpMethod({ f, u: au, kind: 'destructive', method: promptUpdateMethod, params: { key: p.documentKey, name: 'Renamed over MCP', tags: ['mcp'], activeVersion: 1 } });
           expect(renamed.isError).toBeUndefined();
 
           const prompt = await p.loadPrompt();
@@ -113,7 +139,7 @@ demoApiFunctionContextFactory((f) => {
           expect(version?.i).toBe('You are an edited test.');
           expect(version?.nt).toBe('Reworded over MCP.');
 
-          const listed = await callMcpTool({ f, u: au, name: promptQueryToolName, args: { state: OpenRouterPromptState.ACTIVE, limit: 10 } });
+          const listed = await callMcpMethod({ f, u: au, kind: 'read', method: promptQueryMethod, params: { state: OpenRouterPromptState.ACTIVE, limit: 10 } });
           expect(listed.isError).toBeUndefined();
 
           const query = listed.structuredContent as unknown as OnCallQueryModelResult<OpenRouterPrompt>;
@@ -124,7 +150,7 @@ demoApiFunctionContextFactory((f) => {
           it('should refuse a non-admin over MCP the same way the callable does', async () => {
             // A prompt has no owner to relate a role to, so the role map grants a non-admin nothing —
             // and the MCP surface must not be a way around that.
-            const result = await callMcpTool({ f, u, name: versionCreateToolName, args: { prompt: p.documentKey, instructions: 'not mine', config: DEMO_API_TEST_OPENROUTER_MODEL_CONFIG as unknown as Record<string, unknown> } });
+            const result = await callMcpMethod({ f, u, kind: 'write', method: versionCreateMethod, params: { prompt: p.documentKey, instructions: 'not mine', config: DEMO_API_TEST_OPENROUTER_MODEL_CONFIG as unknown as Record<string, unknown> } });
             expect(result.isError).toBe(true);
           });
         });
@@ -139,7 +165,7 @@ demoApiFunctionContextFactory((f) => {
          * @param config - Model config to publish with.
          */
         async function publishOverMcp(config: Record<string, unknown>): Promise<void> {
-          const result = await callMcpTool({ f, u: au, name: versionCreateToolName, args: { prompt: p.documentKey, instructions: 'You are a test.', config, activate: true } });
+          const result = await callMcpMethod({ f, u: au, kind: 'destructive', method: versionCreateMethod, params: { prompt: p.documentKey, instructions: 'You are a test.', config, activate: true } });
           expect(result.isError, JSON.stringify(result.content)).toBeUndefined();
         }
 

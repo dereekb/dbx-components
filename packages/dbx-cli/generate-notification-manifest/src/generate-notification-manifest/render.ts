@@ -111,6 +111,7 @@ const NOTIFICATION_DELIVERY_METHOD_CODES: Readonly<Record<notificationValidateAp
  * Maps the build-time notification manifest to the structural {@link CliNotificationManifest} an app CLI ships.
  *
  * Entries without a type code are skipped, delivery method enum member names become codes, and both lists are sorted by type.
+ * The NotificationTaskBot section is not part of the CLI manifest.
  *
  * @param manifest - The manifest from {@link renderNotificationManifest}.
  * @returns The CLI manifest.

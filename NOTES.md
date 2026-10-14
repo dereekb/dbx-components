@@ -201,9 +201,9 @@ The emulator do not require having `service_account.json` available, but would u
 
 To run the emulators execute:
 
-> `./serve-server.sh`
+> `dbx-claude serve server`
 
-This file instructs docker to start a new container, and execute `nx serve demo-api` inside of it.
+Without dbx-claude, run `./serve-server.sh` instead (it delegates to `dbx-claude serve server` when dbx-claude is installed). Either way, docker starts a new container and executes `nx serve demo-api` inside of it.
 
 Docker will take time to build the Docker Container from our Dockerfile the first time. This may take a few minutes.
 

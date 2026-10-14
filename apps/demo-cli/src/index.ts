@@ -1,4 +1,5 @@
 import { buildManifestCommands, buildNotificationModelCommands, runCli } from '@dereekb/dbx-cli';
+import demoCliPackageJson from '../package.json';
 import { DEMO_CLI_ACTION_COMMANDS } from './lib/actions';
 import { DEMO_DOCTOR_CHECKS } from './lib/doctor.checks';
 import { DEFAULT_DEMO_CLI_ENVS } from './lib/env.defaults';
@@ -9,6 +10,8 @@ import { DEMO_CLI_NOTIFICATION_CONFIG } from './lib/notification';
 
 void runCli({
   cliName: 'demo-cli',
+  // `--version` / `-V`, and the build stamp recorded datasets are tagged with — bundled at build time
+  version: demoCliPackageJson.version,
   doctorChecks: DEMO_DOCTOR_CHECKS,
   defaultEnvs: DEFAULT_DEMO_CLI_ENVS,
   modelManifest: DEMO_CLI_MODEL_MANIFEST,

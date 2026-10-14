@@ -46,6 +46,11 @@ import {
   type NotificationLoggedEventDayPageDocument,
   type NotificationLoggedEventDayPageDocumentData,
   notificationLoggedEventDayPageFirestoreCollectionGroup,
+  type NotificationTaskBotFirestoreCollection,
+  notificationTaskBotFirestoreCollection,
+  type NotificationTaskBot,
+  type NotificationTaskBotDocument,
+  type NotificationTaskBotRoles,
   type NotificationLoggedEventDayPageFirestoreCollectionGroup,
   type SystemState,
   type SystemStateDocument,
@@ -203,6 +208,7 @@ export abstract class DemoFirestoreCollections
   abstract readonly notificationLoggedEventDayCollectionGroup: NotificationLoggedEventDayFirestoreCollectionGroup;
   abstract readonly notificationLoggedEventDayPagedItemsCollectionFactory: NotificationLoggedEventDayPagedItemsFirestoreCollectionFactory;
   abstract readonly notificationLoggedEventDayPageCollectionGroup: NotificationLoggedEventDayPageFirestoreCollectionGroup;
+  abstract readonly notificationTaskBotCollection: NotificationTaskBotFirestoreCollection;
   abstract readonly storageFileCollection: StorageFileFirestoreCollection;
   abstract readonly storageFileGroupCollection: StorageFileGroupFirestoreCollection;
   abstract readonly calendarCollection: CalendarFirestoreCollection;
@@ -245,6 +251,7 @@ export function makeDemoFirestoreCollections(firestoreContext: FirestoreContext)
     notificationLoggedEventDayCollectionGroup: notificationLoggedEventDayFirestoreCollectionGroup(firestoreContext),
     notificationLoggedEventDayPagedItemsCollectionFactory: notificationLoggedEventDayPagedItemsCollectionFactory(firestoreContext),
     notificationLoggedEventDayPageCollectionGroup: notificationLoggedEventDayPageFirestoreCollectionGroup(firestoreContext),
+    notificationTaskBotCollection: notificationTaskBotFirestoreCollection(firestoreContext),
     storageFileCollection: storageFileFirestoreCollection(firestoreContext),
     storageFileGroupCollection: storageFileGroupFirestoreCollection(firestoreContext),
     calendarCollection: calendarFirestoreCollection(firestoreContext),
@@ -419,6 +426,29 @@ export const notificationLoggedEventDayPageFirebaseModelServiceFactory = firebas
     return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only — pages are framework-internal
   },
   getFirestoreCollection: (c) => c.app.notificationLoggedEventDayPageCollectionGroup
+});
+
+/**
+ * @dbxModelServiceFactory notificationTaskBot
+ */
+export const notificationTaskBotFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, NotificationTaskBot, NotificationTaskBotDocument, NotificationTaskBotRoles>({
+  roleMapForModel: function (output: FirebasePermissionServiceModel<NotificationTaskBot, NotificationTaskBotDocument>, context: DemoFirebaseContext, _model: NotificationTaskBotDocument): PromiseOrValue<GrantedRoleMap<NotificationTaskBotRoles>> {
+    // The bot's owner (`o`, the same key its profile's NotificationBox uses) gets ONLY `optOut`, never `read`: they
+    // manage their opt-outs through `read:optOuts` / `update:optOut` and never see the bot document itself.
+    //
+    // `optOut` must be granted explicitly; the opt-out update refuses full access, since an admin can't undo an owner's
+    // opt-out. An admin who owns the bot still gets it merged in, or they couldn't manage their own bot.
+    const uid = context.auth?.uid;
+    const ownerKey = uid == null ? undefined : firestoreModelKey(profileIdentity, uid);
+    const isOwner = ownerKey != null && output.data?.o === ownerKey;
+
+    return grantModelRolesIfAdmin(
+      context,
+      () => (isOwner ? ({ ...fullAccessRoleMap(), optOut: true } as GrantedRoleMap<NotificationTaskBotRoles>) : fullAccessRoleMap<NotificationTaskBotRoles>()),
+      () => grantedRoleKeysMapFromArray<NotificationTaskBotRoles>(isOwner ? ['optOut'] : [])
+    );
+  },
+  getFirestoreCollection: (c) => c.app.notificationTaskBotCollection
 });
 
 /**
@@ -660,6 +690,7 @@ export const DEMO_FIREBASE_MODEL_SERVICE_FACTORIES = {
   notificationWeek: notificationWeekFirebaseModelServiceFactory,
   notificationLoggedEventDay: notificationLoggedEventDayFirebaseModelServiceFactory,
   notificationLoggedEventDayPage: notificationLoggedEventDayPageFirebaseModelServiceFactory,
+  notificationTaskBot: notificationTaskBotFirebaseModelServiceFactory,
   storageFile: storageFileFirebaseModelServiceFactory,
   storageFileGroup: storageFileGroupFirebaseModelServiceFactory,
   calendar: calendarFirebaseModelServiceFactory,

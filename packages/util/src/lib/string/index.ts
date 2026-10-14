@@ -12,6 +12,7 @@ export * from './string';
 export * from './sort';
 export * from './replace';
 export * from './search';
+export * from './search.ranked';
 export * from './transform';
 export * from './tree';
 export * from './url';

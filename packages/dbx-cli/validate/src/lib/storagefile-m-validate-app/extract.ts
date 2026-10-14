@@ -8,12 +8,18 @@
  * External imports (`@dereekb/*`) are tracked in a trust-list so
  * rules can suppress "unresolved" / "orphan" diagnostics for
  * identifiers that cross into upstream packages.
+ *
+ * Upstream factory calls (`storageFileInitializeFromUploadService`,
+ * `storageFileProcessingNotificationTaskHandler`) are matched by name,
+ * through an `@dereekb/*` import alias, or as an `@dereekb/*` namespace
+ * member (`readCalleeName`).
  */
 
 import { Node, SyntaxKind, type ArrayLiteralExpression, type ArrowFunction, type FunctionDeclaration, type FunctionExpression, type ObjectLiteralExpression, type SourceFile, type VariableDeclaration } from 'ts-morph';
 import {
   apiRelPath,
   asObjectLiteral,
+  buildDereekbImportIndex,
   buildInMemoryProject,
   collectTrustedExternalIdentifiers,
   collectTypeofReferences,
@@ -21,10 +27,12 @@ import {
   findLocalVariable,
   findReturnExpression,
   getPropertyInitializer,
+  readCalleeName,
   readIdentifierProperty,
   readStringLiteralInitializer,
   typeAnnotationText,
-  unwrapAsExpressions
+  unwrapAsExpressions,
+  type DereekbImportIndex
 } from '../_core/_validate/ast.js';
 import { GROUP_IDS_FUNCTION_SUFFIXES } from './group-ids.js';
 import type {
@@ -65,6 +73,7 @@ const PROCESSING_SUBTASK_ALIAS_SUFFIX = 'ProcessingSubtask';
 export function extractAppStorageFiles(inspection: AppStorageFilesInspection): ExtractedAppStorageFiles {
   const { componentSources, apiSources } = buildInMemoryProject(inspection);
   const trustedExternalIdentifiers = collectTrustedExternalIdentifiers([...componentSources, ...apiSources]);
+  const dereekbImports = buildDereekbImportIndex([...componentSources, ...apiSources]);
 
   // Component pass
   const purposeConstants = extractPurposeConstants(componentSources);
@@ -76,10 +85,10 @@ export function extractAppStorageFiles(inspection: AppStorageFilesInspection): E
   // API pass
   const uploadInitializerEntries = extractUploadInitializerEntries(apiSources);
   const apiFunctionIndex = buildApiFunctionIndex(apiSources);
-  const uploadServiceCalls = extractUploadServiceCalls(apiSources, apiFunctionIndex);
+  const uploadServiceCalls = extractUploadServiceCalls({ sources: apiSources, index: apiFunctionIndex, imports: dereekbImports });
   const uploadServiceWirings = extractUploadServiceWirings(apiSources);
   const processingConfigs = extractProcessingConfigs(apiSources);
-  const processingHandlerCalls = extractProcessingHandlerCalls(apiSources);
+  const processingHandlerCalls = extractProcessingHandlerCalls(apiSources, dereekbImports);
 
   const result: ExtractedAppStorageFiles = {
     purposeConstants,
@@ -445,13 +454,22 @@ function readUploadInitializerSpreadName(inner: Node): string | undefined {
   return result;
 }
 
-function extractUploadServiceCalls(sources: readonly SourceFile[], index: ApiFunctionIndex): readonly ExtractedUploadServiceCall[] {
+interface ExtractUploadServiceCallsInput {
+  readonly sources: readonly SourceFile[];
+  readonly index: ApiFunctionIndex;
+  /**
+   * The per-file `@dereekb/*` import bindings, used to match an aliased or namespaced `storageFileInitializeFromUploadService(...)`.
+   */
+  readonly imports: DereekbImportIndex;
+}
+
+function extractUploadServiceCalls(input: ExtractUploadServiceCallsInput): readonly ExtractedUploadServiceCall[] {
+  const { sources, index, imports } = input;
   const out: ExtractedUploadServiceCall[] = [];
   for (const sf of sources) {
     const rel = apiRelPath(sf);
     for (const call of sf.getDescendantsOfKind(SyntaxKind.CallExpression)) {
-      const expr = call.getExpression();
-      if (!Node.isIdentifier(expr) || expr.getText() !== UPLOAD_SERVICE_FACTORY) continue;
+      if (readCalleeName(call, imports) !== UPLOAD_SERVICE_FACTORY) continue;
       const args = call.getArguments();
       const first = args[0] ? resolveObjectArg(args[0], sf) : undefined;
       if (!first) continue;
@@ -608,13 +626,12 @@ function readFlowSubtasks(obj: ObjectLiteralExpression): string[] {
 }
 
 // MARK: API — processing handler calls
-function extractProcessingHandlerCalls(sources: readonly SourceFile[]): readonly ExtractedProcessingHandlerCall[] {
+function extractProcessingHandlerCalls(sources: readonly SourceFile[], imports: DereekbImportIndex): readonly ExtractedProcessingHandlerCall[] {
   const out: ExtractedProcessingHandlerCall[] = [];
   for (const sf of sources) {
     const rel = apiRelPath(sf);
     for (const call of sf.getDescendantsOfKind(SyntaxKind.CallExpression)) {
-      const expr = call.getExpression();
-      if (!Node.isIdentifier(expr) || expr.getText() !== PROCESSING_HANDLER_FACTORY) continue;
+      if (readCalleeName(call, imports) !== PROCESSING_HANDLER_FACTORY) continue;
       const args = call.getArguments();
       const first = args[0] ? resolveObjectArg(args[0], sf) : undefined;
       if (!first) continue;

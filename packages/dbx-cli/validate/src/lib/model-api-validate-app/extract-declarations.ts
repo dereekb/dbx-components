@@ -60,6 +60,8 @@ async function extractDeclaredEntriesFromFile(fileAbs: string, root: DeclaredEnt
       specifier: entry.specifier,
       paramsTypeName: entry.paramsTypeName,
       resultTypeName: entry.resultTypeName,
+      description: entry.description,
+      paramsTypeDescription: entry.paramsTypeDescription,
       sourceFile: fileRel,
       line: entry.line
     });

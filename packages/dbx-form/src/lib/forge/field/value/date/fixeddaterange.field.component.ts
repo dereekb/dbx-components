@@ -15,7 +15,7 @@ import {
   limitDateTimeInstance,
   dateTimeMinuteWholeDayDecisionFunction
 } from '@dereekb/date';
-import { switchMap, shareReplay, map, startWith, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, type Observable, Subject, of, combineLatestWith, withLatestFrom, filter, combineLatest, scan, first, timer } from 'rxjs';
+import { switchMap, shareReplay, map, startWith, distinctUntilChanged, debounce, throttle, throttleTime, BehaviorSubject, type Observable, Subject, of, combineLatestWith, withLatestFrom, filter, combineLatest, scan, first, timer, merge } from 'rxjs';
 import { Component, ElementRef, Injectable, type InputSignal, type Signal, DestroyRef, inject, signal, viewChild, computed, input, forwardRef, effect, untracked } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { type MatDateRangeSelectionStrategy, MAT_DATE_RANGE_SELECTION_STRATEGY, DateRange as DatePickerDateRange, MatCalendar, MatDatepickerModule } from '@angular/material/datepicker';
@@ -71,6 +71,11 @@ function fixedDateRangeOutputValueFactory(mode: DbxDateTimeValueMode, timezoneIn
 }
 
 const TIME_OUTPUT_THROTTLE_TIME: Milliseconds = 10;
+
+/**
+ * How long after the last keystroke typed start/end text is applied when it is not committed by a blur or Enter.
+ */
+const DBX_FORGE_FIXED_DATE_RANGE_TEXT_INPUT_DEBOUNCE_TIME: Milliseconds = 500;
 
 // MARK: Internal Types
 type SelectedDateEventType = 'calendar' | 'input';
@@ -162,6 +167,8 @@ export interface DbxForgeFixedDateRangeFieldComponentProps {
  * (single, normal, arbitrary, arbitrary_quick), timezone conversion, date range input configuration,
  * picker config (limits, schedule), and optional text inputs for start/end dates.
  *
+ * Typed dates are applied when an input loses focus or Enter is pressed, otherwise 500ms after the last keystroke.
+ *
  * Uses a custom `MatDateRangeSelectionStrategy` for preview highlighting on the calendar.
  *
  * Registered as ng-forge type 'fixeddaterange'.
@@ -219,6 +226,8 @@ export class DbxForgeFixedDateRangeFieldComponent {
 
   // MARK: Event subject
   private readonly _selectionEvent = completeOnDestroy(new Subject<SelectedDateEvent>());
+  private readonly _commitTextInput = completeOnDestroy(new Subject<void>());
+  private readonly _flushOutput = completeOnDestroy(new Subject<void>());
   readonly selectedDateRange$: Observable<Maybe<Partial<DateRange>>> = this._selectionEvent.pipe(map((x) => x.range));
 
   // MARK: Form group for text inputs
@@ -355,7 +364,7 @@ export class DbxForgeFixedDateRangeFieldComponent {
   );
 
   readonly minMaxRange$ = this.limitDateTimeInstance$.pipe(
-    combineLatestWith(timer(MS_IN_MINUTE)),
+    combineLatestWith(timer(0, MS_IN_MINUTE)), // refresh every minute
     map(([x]) => x.dateRange()),
     distinctUntilChanged(isSameDateDayRange),
     shareReplay(1)
@@ -622,7 +631,11 @@ export class DbxForgeFixedDateRangeFieldComponent {
     // whenever the field value changed externally, causing the cached user selection to replay
     // and overwrite the external value.
     this._sub.subscription = dateRangeSelection
-      .pipe(skipAllInitialMaybe(), withLatestFrom(this.valueInSystemTimezone$, this.timezoneInstance$.pipe(map((timezoneInstance) => fixedDateRangeOutputValueFactory(this.valueModeSignal(), timezoneInstance)))), throttleTime(TIME_OUTPUT_THROTTLE_TIME, undefined, { leading: false, trailing: true }))
+      .pipe(
+        skipAllInitialMaybe(),
+        withLatestFrom(this.valueInSystemTimezone$, this.timezoneInstance$.pipe(map((timezoneInstance) => fixedDateRangeOutputValueFactory(this.valueModeSignal(), timezoneInstance)))),
+        throttle(() => merge(timer(TIME_OUTPUT_THROTTLE_TIME), this._flushOutput), { leading: false, trailing: true })
+      )
       .subscribe(([rawValue, currentValue, valueFactory]) => {
         const value = rawValue ? valueFactory(rawValue) : null;
         const isSameRange = dbxDateRangeIsSameDateRangeFieldValue(value, currentValue);
@@ -699,7 +712,7 @@ export class DbxForgeFixedDateRangeFieldComponent {
               throttleTime(100),
               switchMap(() => {
                 return this.inputRangeForm.valueChanges.pipe(
-                  debounceTime(500),
+                  debounce(() => merge(timer(DBX_FORGE_FIXED_DATE_RANGE_TEXT_INPUT_DEBOUNCE_TIME), this._commitTextInput)),
                   filter(() => {
                     const startString = this.startDateInputElement()?.nativeElement?.value;
                     let valid = isMonthDaySlashDate(startString);
@@ -756,6 +769,17 @@ export class DbxForgeFixedDateRangeFieldComponent {
   }
 
   // MARK: Public methods
+  /**
+   * Commits the typed start/end text right away instead of waiting for the typing debounce, and writes the resulting range to the field.
+   *
+   * Runs when either text input loses focus or Enter is pressed, so a typed date is applied before a following click
+   * (such as a popover's Save button) acts on the previous value. Text that is not a complete date is ignored, as while typing.
+   */
+  commitTextInput(): void {
+    this._commitTextInput.next();
+    this._flushOutput.next();
+  }
+
   selectedChange(date: Maybe<Date>): void {
     this.setDateRange(date ? { start: date } : null, 'calendar');
   }

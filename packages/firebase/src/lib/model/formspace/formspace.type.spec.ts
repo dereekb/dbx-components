@@ -12,7 +12,7 @@ describe('formSpaceTypeConfigRecord()', () => {
   });
 
   it('should throw on a duplicate type', () => {
-    expect(() => formSpaceTypeConfigRecord([configA, { formSpaceType: 'a' }])).toThrow();
+    expect(() => formSpaceTypeConfigRecord([configA, { formSpaceType: 'a' }])).toThrow('formSpaceTypeConfigRecord(): duplicate FormSpaceType in record: a');
   });
 });
 
@@ -37,5 +37,15 @@ describe('appFormSpaceTypeConfigService()', () => {
   it('should list every known type and config', () => {
     expect(service.getAllKnownFormSpaceTypes()).toEqual(['a', 'b']);
     expect(service.getAllKnownFormSpaceTypeConfigs()).toEqual([configA, configB]);
+  });
+
+  it('should not resolve an Object.prototype member name as a registered type', () => {
+    expect(service.configForFormSpaceType('constructor')).toBe(DEFAULT_FORM_SPACE_TYPE_CONFIG);
+    expect(service.registeredConfigForFormSpaceType('constructor')).toBeUndefined();
+  });
+
+  it('should return a copy of the known types', () => {
+    service.getAllKnownFormSpaceTypes().push('c');
+    expect(service.getAllKnownFormSpaceTypes()).toEqual(['a', 'b']);
   });
 });

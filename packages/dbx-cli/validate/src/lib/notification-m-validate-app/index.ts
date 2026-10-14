@@ -69,13 +69,36 @@ export function validateAppNotifications(inspection: AppNotificationsInspection,
 
 export { extractAppNotifications } from './extract.js';
 export { formatResult } from './format.js';
-export { inspectAppNotifications } from './inspect.js';
+export { inspectAppNotifications, type InspectAppNotificationsOptions } from './inspect.js';
+export { UPSTREAM_NOTIFICATION_TASK_HANDLERS, type UpstreamNotificationTaskHandlerContract, type UpstreamNotificationTaskHandlerDedicatedCodes, type UpstreamNotificationTaskType } from './extract.upstream.js';
+export { NOTIFICATION_TASK_BOT_UPSTREAM_NAMES, scriptTypeRefKey, scriptTypeRefLabel, taskServiceCallListsTaskBotTypes } from './extract.taskbot.js';
+export { isTaskBotRegistryWired, selectTaskBotRegistry, selectTaskBotRunHandlerCalls, taskBotLocationKey, type TaskBotRunHandlerCallSelection } from './select.taskbot.js';
 export type {
   AppNotificationsInspection,
+  AppNotificationsWorkspaceFiles,
+  ExtractedAppNotificationTaskBot,
   ExtractedAppNotifications,
+  ExtractedSourceLocation,
+  ExtractedUpstreamHandlerCall,
+  ExtractedUpstreamHandlerFactoryCall,
+  ExtractedNestedUpstreamValidateListing,
   ExtractedTaskCheckpointAlias,
   ExtractedTaskDataInterface,
+  ExtractedTaskBotFirestoreIndexes,
+  ExtractedTaskBotFirestoreRules,
+  ExtractedTaskBotLocation,
+  ExtractedTaskBotProcessor,
+  ExtractedTaskBotRegistry,
+  ExtractedTaskBotRegistryWiring,
+  ExtractedTaskBotRegistryWiringKind,
+  ExtractedTaskBotRunHandlerCall,
+  ExtractedTaskBotScriptConfig,
+  ExtractedTaskBotScriptConfigDataTypeSource,
+  ExtractedTaskBotScriptTypeConstant,
+  ExtractedTaskBotScriptTypeRef,
+  ExtractedTaskBotSide,
   ExtractedTaskHandlerEntry,
+  ExtractedTaskServiceValidateStatus,
   ExtractedTaskTypeConstant,
   ExtractedTemplateConfigsArrayFactory,
   ExtractedTemplateConfigsArrayWiring,
@@ -86,6 +109,7 @@ export type {
   ExtractedTemplateTypeInfo,
   ForcedDeliveryMethodsSource,
   InspectedFile,
+  InspectedWorkspaceFile,
   NotificationDeliveryMethodName,
   SideInspection,
   UserConfigurableDeliveryMethodsSource,

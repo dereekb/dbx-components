@@ -91,7 +91,7 @@ export function createAuthMiddleware(input: CreateAuthMiddlewareInput): Middlewa
       const existing = getCliContext();
 
       if (existing?.envName !== envName || existing.accessToken !== entry.accessToken) {
-        setCliContext(createCliContext({ cliName: input.cliName, envName, env, accessToken: entry.accessToken, modelManifest: input.modelManifest, firestoreSessionCache, firestore: input.firestore }));
+        setCliContext(createCliContext({ cliName: input.cliName, envName, env, accessToken: entry.accessToken, scope: entry.scope, modelManifest: input.modelManifest, firestoreSessionCache, firestore: input.firestore }));
       }
     } catch (e) {
       outputError(e);

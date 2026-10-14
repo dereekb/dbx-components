@@ -11,7 +11,10 @@
  * defined in the API app's `<app>FunctionMap` / `<app>CrudFunctionsConfig`.
  * Two reconciliation gaps fire (`MISSING_HANDLER` / `ORPHAN_HANDLER`),
  * plus a naming-convention check on every wired handler
- * (`HANDLER_NAMING_MISMATCH`).
+ * (`HANDLER_NAMING_MISMATCH`), an MCP read/write check on every
+ * `invoke` / custom-verb handler (`HANDLER_MCP_READ_ONLY_UNSET`, a warning)
+ * and a description check on every declared entry (`MISSING_DESCRIPTION`,
+ * a warning).
  */
 export enum ModelApiValidateAppCode {
   /**
@@ -49,7 +52,39 @@ export enum ModelApiValidateAppCode {
    * @dbxRuleNotApplies Handlers intentionally aliased to satisfy backwards-compatibility on a public re-export — colocate the alias in the verb-map by name to keep the cell aligned.
    * @dbxRuleFix Rename the handler (or its verb-map binding) to one of the accepted names so the model/verb/specifier triplet is recoverable from the identifier alone.
    */
-  HANDLER_NAMING_MISMATCH = 'HANDLER_NAMING_MISMATCH'
+  HANDLER_NAMING_MISMATCH = 'HANDLER_NAMING_MISMATCH',
+
+  /**
+   * An `invoke` or custom-verb handler leaves `mcp.readOnly` unset, so MCP treats it as a write.
+   * Only `read`/`query` (read) and `create`/`update`/`delete` (write) infer the classification from
+   * the call type. Every other call type resolves to "unknown", which the MCP module fails safe to a
+   * write: the method is only callable through the write tool (`<p>_api_write`), is advertised
+   * `destructiveHint: true`, and is dropped when the MCP module runs in `readOnly` mode. A pure-read
+   * invoke that forgets the flag silently disappears from the read tool.
+   *
+   * @dbxRuleSeverity warning
+   * @dbxRuleApplies Every handler wired in the app's `invoke` (or custom-verb) map whose `withApiDetails({ ... })` declaration has no `mcp` block, or an `mcp` block without `readOnly`.
+   * @dbxRuleNotApplies Handlers under `read`/`query`/`create`/`update`/`delete`, whose call type decides. Handlers the scan cannot follow back to a literal `withApiDetails({ ... })` — imported from an `@dereekb/*` package or from outside `src/app/function/`, built by a factory or inline, or whose config / `mcp` comes from a spread or a non-literal — are listed as not checked instead. Plain-function handlers without `withApiDetails` never become MCP tools.
+   * @dbxRuleFix Declare `mcp: { readOnly: true }` when the handler only reads, or `mcp: { readOnly: false }` when it writes (persists, sends, or calls out), with a short comment saying why.
+   * @dbxRuleSeeAlso doc:dbx__guide__invoke-mcp-builder
+   * @dbxRuleSeeAlso tool:dbx_model_api_lookup
+   */
+  HANDLER_MCP_READ_ONLY_UNSET = 'HANDLER_MCP_READ_ONLY_UNSET',
+
+  /**
+   * A declared CRUD entry has no description, so its MCP tool and CLI command say nothing about what the call does.
+   * The description is built from two JSDoc summaries: the one on the entry's member in the
+   * `<Group>ModelCrudFunctionsConfig` type and the one on its params interface. With neither, MCP falls back to the
+   * generic `Performs the "<verb>" call on the "<model>" model.`, and an agent has to guess what the params mean
+   * (for example, that `guestbookEntry.delete` takes the guestbook and always removes the caller's own entry).
+   *
+   * @dbxRuleSeverity warning
+   * @dbxRuleApplies Every declared `<model>.<verb>.<specifier>` cell whose config member and params interface both lack a JSDoc summary. A JSDoc block holding only tags (such as `@dbxModelApiMcpResult`) has no summary. A params interface declared in another file is not read, the same as when the manifests are generated.
+   * @dbxRuleNotApplies Standalone `<Group>FunctionTypeMap` entries, which are not reconciled.
+   * @dbxRuleFix Add a JSDoc summary above the entry's member in the `<Group>ModelCrudFunctionsConfig` type saying what the call does and what it acts on. The CLI's one-line command help reads only this one. A summary on the params interface also counts.
+   * @dbxRuleSeeAlso tool:dbx_model_api_lookup
+   */
+  MISSING_DESCRIPTION = 'MISSING_DESCRIPTION'
 }
 
 /**

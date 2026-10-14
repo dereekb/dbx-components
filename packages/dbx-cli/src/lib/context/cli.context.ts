@@ -26,6 +26,14 @@ export interface CliContext {
   readonly envName: string;
   readonly env: CliEnvConfig;
   readonly accessToken: string;
+  /**
+   * The space-separated OIDC scopes the access token's grant carries, when known.
+   *
+   * Lets a read skip the direct-Firestore handshake up front when the grant cannot open a session (no
+   * `session.firestore`), instead of paying a round-trip to be refused. Absent when the scope was never
+   * recorded, e.g. for an env-supplied token with no `<PREFIX>_TOKEN_SCOPE`.
+   */
+  readonly scope?: Maybe<string>;
   readonly callModel: <TParams = unknown, TResult = unknown>(params: OnCallTypedModelParams<TParams>) => Promise<TResult>;
   readonly getModel: <TResult = unknown>(modelType: string, key: string) => Promise<GetModelOverHttpResult<TResult>>;
   readonly getMultipleModels: <TResult = unknown>(modelType: string, keys: ReadonlyArray<string>) => Promise<GetMultipleModelsOverHttpResult<TResult>>;
@@ -139,6 +147,11 @@ export interface CreateCliContextInput {
   readonly env: CliEnvConfig;
   readonly accessToken: string;
   /**
+   * The space-separated OIDC scopes the access token's grant carries, when known. Surfaced as
+   * {@link CliContext.scope}.
+   */
+  readonly scope?: Maybe<string>;
+  /**
    * Optional generated model manifest. When supplied, surfaced on the context so commands
    * (e.g. `get <key>`) can resolve `prefix/id` keys to a `modelType` via `decodeFirestoreModelKey`.
    */
@@ -167,6 +180,7 @@ export interface CreateCliContextInput {
  * @param input.envName - The active env name.
  * @param input.env - The resolved {@link CliEnvConfig} for the active env.
  * @param input.accessToken - The Bearer access token to include on outgoing API calls.
+ * @param input.scope - The space-separated OIDC scopes the access token's grant carries, when known.
  * @param input.modelManifest - Optional generated {@link CliModelManifest} for key→modelType resolution.
  * @param input.firestoreSessionCache - Optional on-disk direct-Firestore session cache shared across invocations.
  * @param input.firestore - Optional app-supplied Firestore binding enabling the generic direct-read commands.
@@ -255,6 +269,7 @@ export function createCliContext(input: CreateCliContextInput): CliContext {
     envName: input.envName,
     env: input.env,
     accessToken,
+    scope: input.scope,
     modelManifest: input.modelManifest,
     callModel: <TParams = unknown, TResult = unknown>(params: OnCallTypedModelParams<TParams>) =>
       callModelOverHttp<TParams, TResult>({

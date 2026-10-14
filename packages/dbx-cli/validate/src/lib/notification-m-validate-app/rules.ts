@@ -6,7 +6,10 @@
 
 import { pushIoViolations, type IoViolationCodes, type IoViolationMessages } from '../_core/_validate/io-violations.js';
 import { attachRemediation } from '../_core/rule-catalog/index.js';
-import type { AppNotificationsInspection, ExtractedAppNotifications, ExtractedTaskHandlerEntry, ExtractedTemplateHandlerEntry, ExtractedTemplateTypeInfo, NotificationDeliveryMethodName, Violation, ViolationCode, ViolationSeverity } from './types.js';
+import type { AppNotificationsInspection, ExtractedAppNotifications, ExtractedTaskHandlerEntry, ExtractedTemplateHandlerEntry, ExtractedTemplateTypeInfo, NotificationDeliveryMethodName, Violation, ViolationCode } from './types.js';
+import { pushViolation } from './violation.js';
+import { checkTaskBots } from './rules.taskbot.js';
+import { checkUpstreamTaskHandlers } from './rules.upstream.js';
 
 const IO_VIOLATION_CODES: IoViolationCodes<ViolationCode> = {
   componentDirNotFound: 'NOTIF_COMPONENT_DIR_NOT_FOUND',
@@ -49,6 +52,8 @@ export function runRules(inspection: AppNotificationsInspection, extracted: Extr
   checkTemplateDeliveryMethods(extracted, violations);
   checkTemplateForcedDeliveryMethods(extracted, violations);
   checkTasks(extracted, violations);
+  checkUpstreamTaskHandlers(extracted, violations);
+  checkTaskBots(extracted, violations);
   checkDuplicates(extracted, violations);
 
   return violations;
@@ -353,7 +358,7 @@ function checkTasks(extracted: ExtractedAppNotifications, violations: Violation[
 
   const lenientHandlerTypeIdentifiers = flagOrphanTaskHandlers(extracted, violations);
   const reachableBindings = collectReachableHandlerBindings(extracted);
-  flagTaskHandlerCoverage({ extracted, violations, reachableBindings });
+  flagTaskHandlerCoverage(extracted, violations);
   flagUnresolvedHandlerIdentifiers({ extracted, violations, reachableBindings });
   flagValidateWithoutHandler({ extracted, violations, lenientHandlerTypeIdentifiers });
 }
@@ -411,7 +416,9 @@ function flagOrphanTaskHandlers(extracted: ExtractedAppNotifications, violations
 
 /**
  * Collects the union of every binding name resolved from
- * `notificationTaskService({ handlers })` array elements.
+ * `notificationTaskService({ handlers })` array elements, for the
+ * unresolved-name warning. Which declared configs are wired is matched by
+ * declaration instead (`collectReachableTypeIdentifiers`).
  *
  * @param extracted - The validator extraction.
  * @returns The reachable-binding set.
@@ -424,21 +431,17 @@ function collectReachableHandlerBindings(extracted: ExtractedAppNotifications): 
   return reachableBindings;
 }
 
-interface FlagTaskHandlerCoverageOptions {
-  readonly extracted: ExtractedAppNotifications;
-  readonly violations: Violation[];
-  readonly reachableBindings: Set<string>;
-}
-
 /**
  * Flags each declared task type whose handler config is either missing or
- * present-but-unreachable (binding-name mismatch).
+ * present-but-unreachable. A config is reachable when a `handlers` trace
+ * reached its declaration (`ExtractedTaskServiceCall.reachedTaskHandlerEntries`),
+ * so a reached config doesn't vouch for an unreached one of the same name.
  *
- * @param options - Extraction, violations buffer, and reachable bindings set.
+ * @param extracted - The validator extraction.
+ * @param violations - The mutable violations buffer to append to.
  */
-function flagTaskHandlerCoverage(options: FlagTaskHandlerCoverageOptions): void {
-  const { extracted, violations, reachableBindings } = options;
-  const reachableTypeIdentifiers = collectReachableTypeIdentifiers(extracted, reachableBindings);
+function flagTaskHandlerCoverage(extracted: ExtractedAppNotifications, violations: Violation[]): void {
+  const reachableTypeIdentifiers = collectReachableTypeIdentifiers(extracted);
   const entriesByType = groupTaskHandlerEntriesByType(extracted.taskHandlerEntries);
 
   for (const constant of extracted.taskTypeConstants) {
@@ -447,12 +450,17 @@ function flagTaskHandlerCoverage(options: FlagTaskHandlerCoverageOptions): void 
   }
 }
 
-function collectReachableTypeIdentifiers(extracted: ExtractedAppNotifications, reachableBindings: Set<string>): Set<string> {
+/**
+ * The task types the `handlers` traces register: the `type:` of every declared handler config a trace reached
+ * (`ExtractedTaskServiceCall.reachedTaskHandlerEntries`).
+ *
+ * @param extracted - The validator extraction.
+ * @returns The reachable task-type identifiers.
+ */
+function collectReachableTypeIdentifiers(extracted: ExtractedAppNotifications): Set<string> {
   const reachableTypeIdentifiers = new Set<string>();
-  for (const entry of extracted.taskHandlerEntries) {
-    if (entry.bindingName && reachableBindings.has(entry.bindingName)) {
-      reachableTypeIdentifiers.add(entry.typeIdentifier);
-    }
+  for (const call of extracted.taskServiceCalls) {
+    for (const entry of call.reachedTaskHandlerEntries) reachableTypeIdentifiers.add(entry.typeIdentifier);
   }
   return reachableTypeIdentifiers;
 }
@@ -476,7 +484,7 @@ function flagUnreachableTaskType(constant: { readonly symbolName: string; readon
     const bindingHint = entry.bindingName ? `\`${entry.bindingName}\`` : '<anonymous>';
     pushViolation(violations, {
       code: 'NOTIF_TASK_HANDLER_NAME_MISMATCH',
-      message: `Handler ${bindingHint} in \`${entry.sourceFile}\` declares \`type: ${constant.symbolName}\` but is not reachable from \`notificationTaskService({ handlers })\` because no array element resolves to that binding name. The cross-file tracer matches by identifier name through function returns — when a factory function ships a task-handler config, its inner variable name must match the call-site binding name (and the array element / spread that references it).`,
+      message: `Handler ${bindingHint} (${entry.sourceFile}:${entry.line}) declares \`type: ${constant.symbolName}\` but is not reachable from \`notificationTaskService({ handlers })\`: no \`handlers\` element leads to this declaration. The trace follows each element through the local variable it names and through function returns; a reached handler config of the same name elsewhere doesn't count.`,
       side: 'api',
       file: entry.sourceFile
     });
@@ -527,9 +535,10 @@ interface FlagValidateWithoutHandlerOptions {
 
 /**
  * Emits the validate-vs-handlers parity error for the first
- * `notificationTaskService` call. `notificationTaskService()` throws at
- * startup when a `validate` type has no handler, so this is an error. Uses the lenient handler-type set so a
- * declared-but-unreachable handler still counts as "exists" here; strict
+ * `notificationTaskService` call: every task type its `validate` lists, directly or through the app's own component
+ * aggregates (followed through any nesting, `ExtractedTaskServiceCall.nestedValidateIdentifiers`), needs a handler.
+ * `notificationTaskService()` throws at startup when a `validate` type has no handler, so this is an error. Uses the
+ * lenient handler-type set so a declared-but-unreachable handler still counts as "exists" here; strict
  * reachability is covered separately.
  *
  * @param options - Extraction, violations buffer, and lenient handler-type set.
@@ -538,13 +547,7 @@ function flagValidateWithoutHandler(options: FlagValidateWithoutHandlerOptions):
   const { extracted, violations, lenientHandlerTypeIdentifiers } = options;
   const call = extracted.taskServiceCalls[0];
   if (!call) return;
-  const validateNames = new Set<string>(call.validateIdentifiers);
-  for (const spread of call.spreadValidateIdentifiers) {
-    const agg = extracted.taskAllTypesAggregates.find((a) => a.symbolName === spread);
-    if (agg) {
-      for (const id of agg.taskTypeIdentifiers) validateNames.add(id);
-    }
-  }
+  const validateNames = new Set<string>([...call.validateIdentifiers, ...call.nestedValidateIdentifiers]);
   for (const name of validateNames) {
     if (!lenientHandlerTypeIdentifiers.has(name) && !extracted.trustedExternalIdentifiers.has(name)) {
       pushViolation(violations, {
@@ -616,19 +619,6 @@ function pascalize(screaming: string): string {
     out += p.charAt(0).toUpperCase() + p.slice(1).toLowerCase();
   }
   return out;
-}
-
-function pushViolation(buffer: Violation[], violation: Omit<Violation, 'severity' | 'remediation'> & { readonly severity?: ViolationSeverity }): void {
-  const severity: ViolationSeverity = violation.severity ?? 'error';
-  const filled: Violation = {
-    code: violation.code,
-    severity,
-    message: violation.message,
-    side: violation.side,
-    file: violation.file,
-    remediation: attachRemediation(violation.code)
-  };
-  buffer.push(filled);
 }
 
 function buildIoViolation(code: ViolationCode, message: string, side: 'component' | 'api'): Violation {

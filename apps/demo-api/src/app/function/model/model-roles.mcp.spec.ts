@@ -1,7 +1,7 @@
 import { MODEL_ROLES_TOOL_NAME } from '@dereekb/firebase-server/mcp';
 import { guestbookIdentity, guestbookEntryIdentity } from 'demo-firebase';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoGuestbookContext, demoGuestbookEntryContext } from '../../../test/fixture';
-import { callMcpTool, callMcpToolAnonymous, listMcpTools } from '../../../test/mcp';
+import { callMcpMethod, callMcpMethodAnonymous, describeMcpMethod } from '../../../test/mcp';
 
 vi.setConfig({ hookTimeout: 30000, testTimeout: 30000 });
 
@@ -16,7 +16,7 @@ interface RolesResponse {
 }
 
 /**
- * Integration coverage for the built-in `model-roles` MCP tool in apps/demo-api.
+ * Integration coverage for the built-in `model-roles` MCP method in apps/demo-api.
  *
  * The tool lives in `@dereekb/firebase-server/mcp` but the answers come from the demo app's real
  * `roleMapForModel()` delegates, so these exercise the full path (auth → makeModelContext →
@@ -36,10 +36,9 @@ interface RolesResponse {
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   demoAuthorizedUserAdminContext({ f }, (au) => {
     demoAuthorizedUserContext({ f }, (u) => {
-      describe('tools/list', () => {
+      describe('details', () => {
         it('exposes model-roles with readOnly metadata', async () => {
-          const tools = await listMcpTools(f, u);
-          const tool = tools.find((t) => t.name === MODEL_ROLES_TOOL_NAME);
+          const { details: tool } = await describeMcpMethod({ f, u, method: MODEL_ROLES_TOOL_NAME });
           expect(tool).toBeDefined();
           expect(tool?.description).toContain('roles');
           expect(tool?.inputSchema).toMatchObject({ type: 'object' });
@@ -51,7 +50,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         demoGuestbookContext({ f, name: 'RolesPublished', published: true }, (published) => {
           demoGuestbookContext({ f, name: 'RolesUnpublished', published: false }, (unpublished) => {
             it('resolves the read role a published guestbook grants every caller', async () => {
-              const result = await callMcpTool({ f, u, name: MODEL_ROLES_TOOL_NAME, args: { modelType: guestbookIdentity.modelType, keys: [published.documentKey] } });
+              const result = await callMcpMethod({ f, u, kind: 'read', method: MODEL_ROLES_TOOL_NAME, params: { modelType: guestbookIdentity.modelType, keys: [published.documentKey] } });
 
               expect(result.isError).toBeUndefined();
               const structured = result.structuredContent as unknown as RolesResponse;
@@ -63,7 +62,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             });
 
             it('promotes a bare id to <collectionName>/<id> for a root model', async () => {
-              const result = await callMcpTool({ f, u, name: MODEL_ROLES_TOOL_NAME, args: { modelType: guestbookIdentity.modelType, keys: [published.documentId] } });
+              const result = await callMcpMethod({ f, u, kind: 'read', method: MODEL_ROLES_TOOL_NAME, params: { modelType: guestbookIdentity.modelType, keys: [published.documentId] } });
 
               expect(result.isError).toBeUndefined();
               const structured = result.structuredContent as unknown as RolesResponse;
@@ -75,7 +74,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             // that separates "the document is not there" from "it is there and you may not touch it".
             it('separates an existing-but-inaccessible document from a missing one', async () => {
               const missingKey = `${guestbookIdentity.collectionName}/definitely-missing`;
-              const result = await callMcpTool({ f, u, name: MODEL_ROLES_TOOL_NAME, args: { modelType: guestbookIdentity.modelType, keys: [unpublished.documentKey, missingKey] } });
+              const result = await callMcpMethod({ f, u, kind: 'read', method: MODEL_ROLES_TOOL_NAME, params: { modelType: guestbookIdentity.modelType, keys: [unpublished.documentKey, missingKey] } });
 
               expect(result.isError).toBeUndefined();
               const structured = result.structuredContent as unknown as RolesResponse;
@@ -92,7 +91,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             });
 
             it('reports an admin short-circuit as fullAccess rather than an enumerated set', async () => {
-              const result = await callMcpTool({ f, u: au, name: MODEL_ROLES_TOOL_NAME, args: { modelType: guestbookIdentity.modelType, keys: [unpublished.documentKey] } });
+              const result = await callMcpMethod({ f, u: au, kind: 'read', method: MODEL_ROLES_TOOL_NAME, params: { modelType: guestbookIdentity.modelType, keys: [unpublished.documentKey] } });
 
               expect(result.isError).toBeUndefined();
               const structured = result.structuredContent as unknown as RolesResponse;
@@ -100,7 +99,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             });
 
             it('resolves a batch of keys in one call', async () => {
-              const result = await callMcpTool({ f, u, name: MODEL_ROLES_TOOL_NAME, args: { modelType: guestbookIdentity.modelType, keys: [published.documentKey, unpublished.documentKey] } });
+              const result = await callMcpMethod({ f, u, kind: 'read', method: MODEL_ROLES_TOOL_NAME, params: { modelType: guestbookIdentity.modelType, keys: [published.documentKey, unpublished.documentKey] } });
 
               expect(result.isError).toBeUndefined();
               const structured = result.structuredContent as unknown as RolesResponse;
@@ -112,14 +111,14 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
           demoGuestbookEntryContext({ f, u, g: published, published: true }, (entry) => {
             it('rejects bare ids for subcollection model types', async () => {
-              const result = await callMcpTool({ f, u, name: MODEL_ROLES_TOOL_NAME, args: { modelType: guestbookEntryIdentity.modelType, keys: [entry.documentId] } });
+              const result = await callMcpMethod({ f, u, kind: 'read', method: MODEL_ROLES_TOOL_NAME, params: { modelType: guestbookEntryIdentity.modelType, keys: [entry.documentId] } });
 
               expect(result.isError).toBe(true);
               expect((result.content[0] as { text: string }).text).toContain('subcollection');
             });
 
             it('accepts a full subcollection key and resolves the owner-related grant', async () => {
-              const result = await callMcpTool({ f, u, name: MODEL_ROLES_TOOL_NAME, args: { modelType: guestbookEntryIdentity.modelType, keys: [entry.documentKey] } });
+              const result = await callMcpMethod({ f, u, kind: 'read', method: MODEL_ROLES_TOOL_NAME, params: { modelType: guestbookEntryIdentity.modelType, keys: [entry.documentKey] } });
 
               expect(result.isError).toBeUndefined();
               const structured = result.structuredContent as unknown as RolesResponse;
@@ -133,7 +132,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         });
 
         it('returns isError when an unknown modelType is requested', async () => {
-          const result = await callMcpTool({ f, u, name: MODEL_ROLES_TOOL_NAME, args: { modelType: 'not-a-real-model', keys: ['something/abc'] } });
+          const result = await callMcpMethod({ f, u, kind: 'read', method: MODEL_ROLES_TOOL_NAME, params: { modelType: 'not-a-real-model', keys: ['something/abc'] } });
 
           expect(result.isError).toBe(true);
           expect((result.content[0] as { text: string }).text).toContain('Unknown modelType');
@@ -143,14 +142,14 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
       describe('uid targeting', () => {
         demoGuestbookContext({ f, name: 'RolesTargeted', published: false }, (unpublished) => {
           it('rejects a non-admin caller targeting another uid', async () => {
-            const result = await callMcpTool({ f, u, name: MODEL_ROLES_TOOL_NAME, args: { modelType: guestbookIdentity.modelType, keys: [unpublished.documentKey], uid: au.uid } });
+            const result = await callMcpMethod({ f, u, kind: 'read', method: MODEL_ROLES_TOOL_NAME, params: { modelType: guestbookIdentity.modelType, keys: [unpublished.documentKey], uid: au.uid } });
 
             expect(result.isError).toBe(true);
             expect((result.content[0] as { text: string }).text).toContain('elevated access');
           });
 
           it('allows any caller to pass their own uid', async () => {
-            const result = await callMcpTool({ f, u, name: MODEL_ROLES_TOOL_NAME, args: { modelType: guestbookIdentity.modelType, keys: [unpublished.documentKey], uid: u.uid } });
+            const result = await callMcpMethod({ f, u, kind: 'read', method: MODEL_ROLES_TOOL_NAME, params: { modelType: guestbookIdentity.modelType, keys: [unpublished.documentKey], uid: u.uid } });
 
             expect(result.isError).toBeUndefined();
             const structured = result.structuredContent as unknown as RolesResponse;
@@ -161,7 +160,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           // The admin resolves as the plain user, so the answer must be the TARGET's access (nothing on an
           // unpublished guestbook) rather than the caller's own admin full-access short-circuit.
           it('lets an admin resolve roles for another user', async () => {
-            const result = await callMcpTool({ f, u: au, name: MODEL_ROLES_TOOL_NAME, args: { modelType: guestbookIdentity.modelType, keys: [unpublished.documentKey], uid: u.uid } });
+            const result = await callMcpMethod({ f, u: au, kind: 'read', method: MODEL_ROLES_TOOL_NAME, params: { modelType: guestbookIdentity.modelType, keys: [unpublished.documentKey], uid: u.uid } });
 
             expect(result.isError).toBeUndefined();
             const structured = result.structuredContent as unknown as RolesResponse;
@@ -171,7 +170,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           });
 
           it('returns isError when the target uid has no auth user', async () => {
-            const result = await callMcpTool({ f, u: au, name: MODEL_ROLES_TOOL_NAME, args: { modelType: guestbookIdentity.modelType, keys: [unpublished.documentKey], uid: 'no-such-user' } });
+            const result = await callMcpMethod({ f, u: au, kind: 'read', method: MODEL_ROLES_TOOL_NAME, params: { modelType: guestbookIdentity.modelType, keys: [unpublished.documentKey], uid: 'no-such-user' } });
 
             expect(result.isError).toBe(true);
             expect((result.content[0] as { text: string }).text).toContain('No user exists');
@@ -181,7 +180,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
       describe('unauthenticated dispatch', () => {
         it('is isError when called anonymously', async () => {
-          const result = await callMcpToolAnonymous({ f, name: MODEL_ROLES_TOOL_NAME, args: { modelType: guestbookIdentity.modelType, keys: [`${guestbookIdentity.collectionName}/abc`] } });
+          const result = await callMcpMethodAnonymous({ f, kind: 'read', method: MODEL_ROLES_TOOL_NAME, params: { modelType: guestbookIdentity.modelType, keys: [`${guestbookIdentity.collectionName}/abc`] } });
 
           expect(result.isError).toBe(true);
         });

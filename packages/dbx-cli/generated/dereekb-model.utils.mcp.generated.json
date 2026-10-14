@@ -6,6 +6,47 @@
   "generator": "@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs",
   "entries": [
     {
+      "slug": "merge-clearable-object-update",
+      "name": "mergeClearableObjectUpdate",
+      "kind": "function",
+      "category": "object",
+      "module": "@dereekb/model",
+      "subpath": "type/type",
+      "signature": "mergeClearableObjectUpdate(current: Maybe<Partial<T>>, update: Maybe<ClearableObjectUpdate<T>>): Partial<T>",
+      "description": "Merges a {@link ClearableObjectUpdate} into the current object and returns the result as a new object.\n\nA `null` value in the update deletes the key, and an `undefined` value leaves the current value unchanged.\n`null` and `undefined` values already on the current object are dropped too, so the result only holds set values.",
+      "params": [
+        {
+          "name": "current",
+          "type": "Maybe<Partial<T>>",
+          "description": "- The current object. Null/undefined is treated as an empty object.",
+          "optional": false
+        },
+        {
+          "name": "update",
+          "type": "Maybe<ClearableObjectUpdate<T>>",
+          "description": "- The update to merge in. Null/undefined returns a copy of the current values.",
+          "optional": false
+        }
+      ],
+      "returns": "A new object with the update applied. Neither input is modified.",
+      "tags": [
+        "object",
+        "merge",
+        "update",
+        "patch",
+        "clear",
+        "clearable",
+        "null",
+        "delete",
+        "mergeclearableobjectupdate"
+      ],
+      "example": "mergeClearableObjectUpdate({ a: 1, b: 2 }, { b: null, c: 3, d: undefined });\n// { a: 1, c: 3 }",
+      "relatedSlugs": [
+        "merge-objects",
+        "strip-object"
+      ]
+    },
+    {
       "slug": "iso8601-day-string-type",
       "name": "iso8601DayStringType",
       "kind": "const",

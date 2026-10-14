@@ -7,7 +7,7 @@
  * and are rendered through {@link `./format.ts`}.
  */
 
-export type ArtifactKind = 'firestore-model' | 'storagefile-purpose' | 'storagefile-upload-handler' | 'storagefile-processor' | 'storagefile-processor-subtask' | 'notification-template' | 'notification-task' | 'nestjs-model-module' | 'nestjs-function-module' | 'nestjs-app-module';
+export type ArtifactKind = 'firestore-model' | 'storagefile-purpose' | 'storagefile-upload-handler' | 'storagefile-processor' | 'storagefile-processor-subtask' | 'notification-template' | 'notification-task' | 'notification-task-bot-script' | 'nestjs-model-module' | 'nestjs-function-module' | 'nestjs-app-module';
 
 export interface FileConventionStep {
   /**

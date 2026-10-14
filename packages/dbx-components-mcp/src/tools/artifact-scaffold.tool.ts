@@ -26,7 +26,7 @@ import { type } from 'arktype';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 import { applyIdempotency, formatResult, scaffoldArtifact, type ArtifactKind, type ScaffoldArtifactInput } from './artifact-scaffold/index.js';
 
-const ARTIFACT_KINDS: readonly ArtifactKind[] = ['storagefile-purpose', 'notification-template', 'notification-task'];
+const ARTIFACT_KINDS: readonly ArtifactKind[] = ['storagefile-purpose', 'notification-template', 'notification-task', 'notification-task-bot-script'];
 const ARTIFACT_KIND_LITERAL_UNION = ARTIFACT_KINDS.map((k) => `'${k}'`).join(' | ');
 const ARTIFACT_KIND_BACKTICK_LIST = ARTIFACT_KINDS.map((k) => '`' + k + '`').join(', ');
 
@@ -34,7 +34,7 @@ const ARTIFACT_KIND_BACKTICK_LIST = ARTIFACT_KINDS.map((k) => '`' + k + '`').joi
 const DBX_ARTIFACT_SCAFFOLD_TOOL: Tool = {
   name: 'dbx_artifact_scaffold',
   description: [
-    'Generate copy-paste-ready body templates for a downstream dbx-components artifact: a new `StorageFilePurpose`, `NotificationTemplateType`, or `NotificationTaskType`. Sibling to `dbx_artifact_file_convention` — that tool says where each piece belongs and what its export shape is; this one emits the actual TypeScript bodies.',
+    'Generate copy-paste-ready body templates for a downstream dbx-components artifact: a new `StorageFilePurpose`, `NotificationTemplateType`, `NotificationTaskType`, or NotificationTaskBot script (`NotificationTaskBotScriptConfig` + its `NotificationTaskBotScriptProcessorConfig`, plus the registry and NTBR handler for the first script of an app). Sibling to `dbx_artifact_file_convention` — that tool says where each piece belongs and what its export shape is; this one emits the actual TypeScript bodies.',
     '',
     `Supported artifact kinds: ${ARTIFACT_KIND_BACKTICK_LIST}.`,
     '',
@@ -46,6 +46,7 @@ const DBX_ARTIFACT_SCAFFOLD_TOOL: Tool = {
     '- `options.withProcessing` (storagefile-purpose only): also emit subtask processor scaffold + processing constants.',
     '- `options.unique` (notification-task only): emit `unique: true` on the template factory.',
     '- `options.handlersSubfolder` (default `true`): place API handler files inside `handlers/` subfolder.',
+    '- `notification-task-bot-script` takes no options. Its registry and NTBR handler files are skipped when they already exist, and the wiring steps then extend them instead.',
     '',
     'Output is a markdown response with one fenced code block per emitted file plus a "Wiring instructions" section listing the call-site changes the user must apply manually. Existing files are marked `EXISTS — skipped` and not overwritten.',
     '',

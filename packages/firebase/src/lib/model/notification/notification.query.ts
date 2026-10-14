@@ -8,6 +8,7 @@ import { type FirestoreQueryConstraint, orderBy, where } from '../../common/fire
 import { type NotificationSummary, type Notification, type NotificationBox, type NotificationLoggedEventDay, type NotificationUser } from './notification';
 import { toISODateString, toISO8601DayStringForUTC } from '@dereekb/date';
 import { type NotificationBoxSendExclusion } from './notification.id';
+import { type NotificationTaskBot } from './notification.taskbot';
 import { addDays } from 'date-fns';
 import { type ArrayOrValue, type E164PhoneNumber } from '@dereekb/util';
 
@@ -207,4 +208,42 @@ export function notificationsNewestFirstQuery(): FirestoreQueryConstraint[] {
 export function notificationLoggedEventDaysOlderThanQuery(retentionDays: number, now: Date = new Date()): FirestoreQueryConstraint[] {
   const cutoff = toISO8601DayStringForUTC(addDays(now, -retentionDays));
   return [where<NotificationLoggedEventDay>('d', '<', cutoff)];
+}
+
+// MARK: NotificationTaskBot
+/**
+ * Query constraints for finding {@link NotificationTaskBot} documents whose soonest live run (`nat`) is at or before the given time.
+ *
+ * Used by the repair sweep to find bots with an overdue run, whose run task may have gone missing.
+ *
+ * @param before - Bots with a `nat` at or before this time are returned.
+ * @returns Array of Firestore query constraints filtering for overdue bots.
+ *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel NotificationTaskBot
+ * @dbxModelFirebaseIndexScope COLLECTION
+ * @dbxModelFirebaseIndexCategory sweep
+ */
+export function notificationTaskBotsDueForRepairQuery(before: Date): FirestoreQueryConstraint[] {
+  return [where<NotificationTaskBot>('nat', '<=', toISODateString(before))];
+}
+
+/**
+ * Query constraints for finding {@link NotificationTaskBot} documents with a stalled entry: their `stl` (the earliest
+ * entry `stl`) is at or before the given time.
+ *
+ * The repair sweep marks a live run stalled when its task keeps failing or nothing picks it up. Pass an earlier time to
+ * find the bots that have been stalled at least that long. Use it for an admin list (`NotificationTaskBotCollectionStore`)
+ * or an alerting cron. Firestore's automatic single-field index covers it.
+ *
+ * @param stalledBefore - Bots whose earliest stalled entry was marked at or before this time are returned. Defaults to now.
+ * @returns Array of Firestore query constraints filtering for stalled bots.
+ *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel NotificationTaskBot
+ * @dbxModelFirebaseIndexScope COLLECTION
+ * @dbxModelFirebaseIndexCategory lookup
+ */
+export function notificationTaskBotsStalledQuery(stalledBefore: Date = new Date()): FirestoreQueryConstraint[] {
+  return [where<NotificationTaskBot>('stl', '<=', toISODateString(stalledBefore))];
 }

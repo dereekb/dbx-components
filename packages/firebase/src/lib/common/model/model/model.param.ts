@@ -2,6 +2,7 @@ import { type, type Type } from 'arktype';
 import { type FirestoreModelKey, type FirestoreModelKeyRef } from '../../firestore/collection/collection';
 import { firestoreModelIdType, firestoreModelKeyType } from './model.validator';
 import { clearable } from '@dereekb/model';
+import { type OnCallQueryModelRequestParams } from '../function';
 
 /**
  * API parameter type that targets a specific Firestore model by its full key path (e.g., `"collection/id"`).
@@ -62,3 +63,13 @@ export interface InferredTargetModelIdParams extends Partial<FirestoreModelKeyRe
 export const inferredTargetModelIdParamsType = /* @__PURE__ */ type({
   'key?': clearable(firestoreModelIdType)
 }) as Type<InferredTargetModelIdParams>;
+
+/**
+ * ArkType validator for {@link OnCallQueryModelRequestParams}: the `limit` / `cursorDocumentKey` pagination every query takes.
+ *
+ * Merge a query's own fields onto it so the query validates, and advertises, its pagination too.
+ */
+export const onCallQueryModelRequestParamsType = /* @__PURE__ */ type({
+  'limit?': clearable('number'),
+  'cursorDocumentKey?': clearable(firestoreModelKeyType)
+}) as Type<OnCallQueryModelRequestParams>;

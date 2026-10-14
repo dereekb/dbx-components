@@ -29,4 +29,4 @@ export function listAppNotifications(inspection: AppNotificationsInspection, opt
 export { collectAppNotifications, type CollectOptions } from './collect.js';
 export { formatReportAsJson } from './format.json.js';
 export { formatReportAsMarkdown } from './format.markdown.js';
-export type { AppNotificationsReport, TaskSummary, TemplateSummary } from './types.js';
+export type { AppNotificationsReport, TaskBotHandlerSummary, TaskBotRegistrySummary, TaskBotScriptSummary, TaskBotSummary, TaskSummary, TemplateSummary } from './types.js';

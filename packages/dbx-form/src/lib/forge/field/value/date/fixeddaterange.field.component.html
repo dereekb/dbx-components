@@ -3,8 +3,8 @@
   <mat-form-field class="dbx-fixeddaterange-field-input" appearance="fill">
     @if (showRangeInputSignal()) {
       <mat-date-range-input [formGroup]="inputRangeForm">
-        <input #startDateInput matStartDate formControlName="start" placeholder="Start date" />
-        <input #endDateInput [ngClass]="endDisabledSignal() ? 'dbx-fixeddaterange-field-input-end' : ''" [attr.tabindex]="endDisabledSignal() ? -1 : 0" matEndDate formControlName="end" placeholder="End date" />
+        <input #startDateInput matStartDate formControlName="start" placeholder="Start date" (blur)="commitTextInput()" (keydown.enter)="commitTextInput()" />
+        <input #endDateInput [ngClass]="endDisabledSignal() ? 'dbx-fixeddaterange-field-input-end' : ''" [attr.tabindex]="endDisabledSignal() ? -1 : 0" matEndDate formControlName="end" placeholder="End date" (blur)="commitTextInput()" (keydown.enter)="commitTextInput()" />
       </mat-date-range-input>
     }
   </mat-form-field>

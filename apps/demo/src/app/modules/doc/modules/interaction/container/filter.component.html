@@ -42,7 +42,7 @@
         <p>Filter Value: {{ urlFilterSignal() | json }}</p>
         <p>URL Params: {{ urlFilterParamsSignal() | json }}</p>
       </dbx-content-border>
-      <p>Pick a date and the URL updates. Reload the page and the filter is loaded from the URL again. Picking the default filter (no date) removes the params.</p>
+      <p>Pick a date and the URL updates. Reload the page and the filter is loaded from the URL again. Picking the default filter (no date) removes the params. The popover stays open while the URL updates, and a date typed and saved right away is applied before the popover closes.</p>
       <doc-interaction-test-date-filter-popover-button [buttonDisplayStyle]="displayForUrlFilterSignal()" [dbxFilterMapSourceConnector]="urlFilterKey" [dbxFilterMapRouteParams]="urlFilterRouteParamsConfig"></doc-interaction-test-date-filter-popover-button>
       <p>These anchors open this page with params in the URL, which sets the filter. A start on its own covers just that day.</p>
       <dbx-anchor [anchor]="urlFilterNextWeekAnchor">

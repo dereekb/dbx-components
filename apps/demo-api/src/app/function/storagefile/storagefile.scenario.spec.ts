@@ -10,6 +10,7 @@ import {
   onCallUpdateModelParams,
   STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE,
   type StorageFileDisplayName,
+  type StorageFileId,
   storageFileIdentity,
   storageFileGroupIdentity,
   StorageFileProcessingState,
@@ -251,6 +252,14 @@ demoApiFunctionContextFactory((f) => {
         });
 
         describe('StorageFileGroup', () => {
+          async function loadZipEntryNames(zipStorageFileId: StorageFileId): Promise<string[]> {
+            const zipStorageFileDocument = f.demoFirestoreCollections.storageFileCollection.documentAccessor().loadDocumentForId(zipStorageFileId);
+            const zipStorageFile = await assertSnapshotData(zipStorageFileDocument);
+            const fileBytes = await f.storageContext.file(zipStorageFile).getBytes();
+            const zip = new AdmZip(Buffer.from(fileBytes));
+            return zip.getEntries().map((x) => x.entryName);
+          }
+
           describe('multiple test files', () => {
             demoStorageFileGroupContext(
               {
@@ -332,6 +341,7 @@ demoApiFunctionContextFactory((f) => {
                         storageFileGroup = await assertSnapshotData(sfg.document);
                         expect(storageFileGroup.z).toBe(true); // zip should still be enabled
                         expect(storageFileGroup.zat).toBeDefined(); // lasted file time is now set
+                        expect(storageFileGroup.f.every((x) => x.zat != null)).toBe(true); // every embedded file was added to the zip
 
                         // check the zip file contents
                         const file = f.storageContext.file(zipStorageFile);
@@ -520,7 +530,7 @@ demoApiFunctionContextFactory((f) => {
 
                                   expect(zipStorageFile.ps).toBe(StorageFileProcessingState.SUCCESS);
 
-                                  await sfg.regenerateStorageFileGroupContent(); // flag for regenerating again
+                                  await sfg.regenerateStorageFileGroupContent(true); // force regenerating again, since the zip is already up to date
 
                                   zipStorageFile = await assertSnapshotData(zipStorageFileDocument);
                                   expect(zipStorageFile.ps).toBe(StorageFileProcessingState.PROCESSING); // should now be processing
@@ -530,6 +540,100 @@ demoApiFunctionContextFactory((f) => {
 
                                   zipStorageFile = await assertSnapshotData(zipStorageFileDocument);
                                   expect(zipStorageFile.ps).toBe(StorageFileProcessingState.SUCCESS); // should now be fully processed again
+                                });
+
+                                it('should stamp zat on every embedded file added to the zip', async () => {
+                                  const storageFileGroup = await assertSnapshotData(sfg.document);
+                                  expect(storageFileGroup.f).toHaveLength(3);
+                                  expect(storageFileGroup.f.every((x) => x.zat != null)).toBe(true);
+                                });
+
+                                it('should keep the first zat of each embedded file when the zip is rebuilt', async () => {
+                                  let storageFileGroup = await assertSnapshotData(sfg.document);
+                                  const firstZippedAt = new Map(storageFileGroup.f.map((x) => [x.s, x.zat?.getTime()]));
+
+                                  await sfg.regenerateStorageFileGroupContent(true);
+                                  await sfg.processZipFileRegeneration();
+
+                                  storageFileGroup = await assertSnapshotData(sfg.document);
+                                  expect(storageFileGroup.f).toHaveLength(3);
+
+                                  storageFileGroup.f.forEach((x) => {
+                                    expect(x.zat?.getTime()).toBe(firstZippedAt.get(x.s));
+                                  });
+                                });
+
+                                it('should not rebuild the zip when it is already up to date', async () => {
+                                  const storageFileGroup = await assertSnapshotData(sfg.document);
+                                  expect(storageFileGroup.re).toBeFalsy();
+
+                                  const result = await sfg.regenerateStorageFileGroupContent();
+                                  expect(result.contentStorageFilesFlaggedForProcessing).toBe(0);
+
+                                  const zipStorageFile = await assertSnapshotData(sf_zip.document);
+                                  expect(zipStorageFile.ps).toBe(StorageFileProcessingState.SUCCESS); // not flagged for processing again
+                                });
+
+                                it('should rebuild the zip when flagged with re even though every file is zipped', async () => {
+                                  await sfg.document.update({ re: true }); // manual/code-change rebuild request
+
+                                  const result = await sfg.regenerateAllFlaggedStorageFileGroupsContent();
+                                  expect(result.contentStorageFilesFlaggedForProcessing).toBeGreaterThanOrEqual(1);
+
+                                  const storageFileGroup = await assertSnapshotData(sfg.document);
+                                  expect(storageFileGroup.re).toBeFalsy(); // request consumed
+
+                                  let zipStorageFile = await assertSnapshotData(sf_zip.document);
+                                  expect(zipStorageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
+
+                                  await sfg.processZipFileRegeneration();
+
+                                  zipStorageFile = await assertSnapshotData(sf_zip.document);
+                                  expect(zipStorageFile.ps).toBe(StorageFileProcessingState.SUCCESS);
+                                });
+
+                                it('should keep re when the zip is already being built', async () => {
+                                  await sfg.document.update({ re: true });
+                                  await sfg.regenerateStorageFileGroupContent();
+
+                                  let zipStorageFile = await assertSnapshotData(sf_zip.document);
+                                  expect(zipStorageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
+
+                                  // request again while the zip is being built
+                                  await sfg.document.update({ re: true });
+                                  await sfg.regenerateStorageFileGroupContent();
+
+                                  let storageFileGroup = await assertSnapshotData(sfg.document);
+                                  expect(storageFileGroup.re).toBe(true); // kept for the next regeneration
+
+                                  // finish the current build, then the next sweep rebuilds again
+                                  await sfg.processZipFileRegeneration();
+                                  await sfg.regenerateAllFlaggedStorageFileGroupsContent();
+
+                                  zipStorageFile = await assertSnapshotData(sf_zip.document);
+                                  expect(zipStorageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
+
+                                  storageFileGroup = await assertSnapshotData(sfg.document);
+                                  expect(storageFileGroup.re).toBeFalsy();
+                                });
+
+                                describe('storage file renamed', () => {
+                                  const renamedDisplayName: StorageFileDisplayName = 'Renamed Test File 1';
+
+                                  beforeEach(async () => {
+                                    await sf1.document.update({ n: renamedDisplayName });
+                                  });
+
+                                  it('should rebuild the zip with the new name when the app flags the group with re', async () => {
+                                    await sfg.document.update({ re: true }); // the app flags the StorageFile's groups after a rename
+
+                                    await sfg.regenerateAllFlaggedStorageFileGroupsContent();
+                                    await sfg.processZipFileRegeneration();
+
+                                    const entryNames = await loadZipEntryNames(sf_zip.documentId);
+                                    expect(entryNames).toContain(`${renamedDisplayName}.any`);
+                                    expect(entryNames).not.toContain('test1.any');
+                                  });
                                 });
 
                                 it('should allow the user to download their zip file', async () => {
@@ -610,6 +714,33 @@ demoApiFunctionContextFactory((f) => {
 
                                     const nonExistentEmbeddedFile = updatedStorageFileGroup.f.find((file) => file.s === nonExistentFileId);
                                     expect(nonExistentEmbeddedFile).toBeUndefined();
+                                    expect(updatedStorageFileGroup.re).toBeFalsy(); // nothing changed
+                                  });
+
+                                  it('should flag the group and rebuild the zip with the new name', async () => {
+                                    const newDisplayName = 'Updated Test File Name';
+
+                                    const updateParams: UpdateStorageFileGroupParams = {
+                                      key: sfg.documentKey,
+                                      entries: [
+                                        {
+                                          s: sf1.document.id,
+                                          n: newDisplayName
+                                        }
+                                      ]
+                                    };
+
+                                    await au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(storageFileGroupIdentity, updateParams));
+
+                                    const storageFileGroup = await assertSnapshotData(sfg.document);
+                                    expect(storageFileGroup.re).toBe(true); // flagged for regeneration
+
+                                    await sfg.regenerateAllFlaggedStorageFileGroupsContent();
+                                    await sfg.processZipFileRegeneration();
+
+                                    const entryNames = await loadZipEntryNames(sf_zip.documentId);
+                                    expect(entryNames).toContain(`${newDisplayName}.any`);
+                                    expect(entryNames).not.toContain('test1.any');
                                   });
                                 });
 
@@ -687,6 +818,27 @@ demoApiFunctionContextFactory((f) => {
                                     storageFileGroup = await assertSnapshotData(sfg.document);
                                     expect(storageFileGroup.f).toHaveLength(2); // should now have removed the deleted filed
                                     expect(storageFileGroup.re).toBe(true); // should be flagged for regeneration
+                                  });
+
+                                  it('should rebuild the zip without the deleted file', async () => {
+                                    await sf1.deleteStorageFile();
+
+                                    let storageFileGroup = await assertSnapshotData(sfg.document);
+                                    expect(storageFileGroup.re).toBe(true);
+                                    expect(storageFileGroup.f.every((x) => x.zat != null)).toBe(true); // the remaining files were all zipped already
+
+                                    await sfg.regenerateAllFlaggedStorageFileGroupsContent();
+
+                                    storageFileGroup = await assertSnapshotData(sfg.document);
+                                    expect(storageFileGroup.re).toBeFalsy();
+
+                                    await sfg.processZipFileRegeneration();
+
+                                    const entryNames = await loadZipEntryNames(sf_zip.documentId);
+                                    expect(entryNames).toHaveLength(3); // info.json and the remaining test files
+                                    expect(entryNames).toContain('test2.any');
+                                    expect(entryNames).toContain('test3.any');
+                                    expect(entryNames).not.toContain('test1.any');
                                   });
                                 });
                               }

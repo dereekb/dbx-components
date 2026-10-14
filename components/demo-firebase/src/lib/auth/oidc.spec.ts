@@ -88,21 +88,54 @@ describe('demoOidcProviderProfiles()', () => {
   });
 });
 
-describe('external-token provider profile', () => {
-  // both environment shapes: the dev shape lifts ONLY the cli-handoff assignment, never this one
-  [demoOidcProviderProfiles(), demoOidcProviderProfiles({ unlockCliHandoffByDefault: true })].forEach((profiles, i) => {
-    describe(i === 0 ? 'production shape' : 'dev shape', () => {
-      const externalTokenProfile = profiles.find((profile) => profile.key === EXTERNAL_TOKEN_OIDC_PROVIDER_PROFILE_KEY)!;
+function externalTokenProfile(profiles: ReturnType<typeof demoOidcProviderProfiles>) {
+  return profiles.find((profile) => profile.key === EXTERNAL_TOKEN_OIDC_PROVIDER_PROFILE_KEY)!;
+}
 
-      it('is admin-only and never a default profile', () => {
-        expect(externalTokenProfile.adminOnly).toBe(true);
-        expect(externalTokenProfile.isDefault).not.toBe(true);
-        expect(adminOnlyScopesForOidcProviderProfiles(profiles).has(EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE)).toBe(true);
+describe('external-token provider profile', () => {
+  // the production shape, and the cli-handoff-only dev shape: neither lifts this profile's assignment
+  [demoOidcProviderProfiles(), demoOidcProviderProfiles({ unlockCliHandoffByDefault: true })].forEach((profiles, i) => {
+    describe(i === 0 ? 'production shape' : 'cli-handoff-only dev shape', () => {
+      it('is not a default profile', () => {
+        expect(externalTokenProfile(profiles).isDefault).not.toBe(true);
       });
 
       it('leaves token.external assignment-only', () => {
         expect(assignmentOnlyScopesForOidcProviderProfiles(profiles).has(EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE)).toBe(true);
         expect(scopesForOidcProviderProfiles(oidcProviderProfilesForClient(profiles, undefined)).has(EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE)).toBe(false);
+      });
+    });
+  });
+
+  describe('dev shape (unlockExternalTokenByDefault)', () => {
+    const profiles = demoOidcProviderProfiles({ unlockCliHandoffByDefault: true, unlockExternalTokenByDefault: true });
+
+    it('marks cli-handoff and external-token as the default profiles', () => {
+      expect(profiles.filter((profile) => profile.isDefault).map((profile) => profile.key)).toEqual([CLI_HANDOFF_OIDC_PROVIDER_PROFILE_KEY, EXTERNAL_TOKEN_OIDC_PROVIDER_PROFILE_KEY]);
+    });
+
+    // A self-registered MCP connector, whose client_id nobody can predict, can request token.external,
+    // and the scope is advertised in the MCP protected-resource document it copies onto /authorize.
+    it('unlocks token.external for a client with no assigned profiles, so it is advertised', () => {
+      expect(scopesForOidcProviderProfiles(oidcProviderProfilesForClient(profiles, undefined)).has(EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE)).toBe(true);
+      expect(assignmentOnlyScopesForOidcProviderProfiles(profiles).has(EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE)).toBe(false);
+    });
+
+    it('force-requires nothing of an unassigned client', () => {
+      expect(requiredScopesForOidcProviderProfiles(oidcProviderProfilesForClient(profiles, undefined)).size).toBe(0);
+    });
+
+    it('does not confer token.external on a client assigned some other profile', () => {
+      expect(scopesForOidcProviderProfiles(oidcProviderProfilesForClient(profiles, ['lms'])).has(EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE)).toBe(false);
+    });
+  });
+
+  // every environment shape: lifting the per-client assignment never lifts the admin gate or the cap
+  [demoOidcProviderProfiles(), demoOidcProviderProfiles({ unlockCliHandoffByDefault: true }), demoOidcProviderProfiles({ unlockCliHandoffByDefault: true, unlockExternalTokenByDefault: true })].forEach((profiles, i) => {
+    describe(['production shape', 'cli-handoff-only dev shape', 'dev shape'][i], () => {
+      it('is admin-only', () => {
+        expect(externalTokenProfile(profiles).adminOnly).toBe(true);
+        expect(adminOnlyScopesForOidcProviderProfiles(profiles).has(EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE)).toBe(true);
       });
 
       it('unlocks token.external for a client assigned the profile, without force-requiring it', () => {

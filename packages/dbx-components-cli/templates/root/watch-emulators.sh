@@ -9,6 +9,12 @@
 #
 # The emulator suite does not hot-reload functions, so entr restarts it whenever the built output
 # under dist/apps/demo-api changes.
+#
+# This script does not notice when the rebuild leg (demo-api:build-watch) dies. Nx keeps serve running
+# after a continuous dependency exits, so the emulators would keep serving a dist that never rebuilds.
+# `dbx-claude serve server` supervises that task (.dbx-claude/dbx-claude.json
+# `capabilityConfig.docker.options.serve.supervise`): when it dies, dbx-claude stops the container,
+# rebuilds on the host and starts it again.
 echo 'starting server in 5...'
 sleep 5
 while sleep 2; do

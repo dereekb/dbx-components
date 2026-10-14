@@ -1,6 +1,6 @@
 import { systemStateExampleRead } from './../system/systemstate.read';
 import { guestbookCreate } from '../guestbook/guestbook.create';
-import { profileUpdate, profileUpdateCreateTestCalendarEvent, profileUpdateCreateTestNotification, profileUpdateResetPassword, profileUpdateUsername, profileUpdateOnboard } from '../profile/profile.update';
+import { profileUpdate, profileUpdateCreateTestCalendarEvent, profileUpdateCreateTestNotification, profileUpdateCreateTestNotificationTaskBot, profileUpdateResetPassword, profileUpdateUsername, profileUpdateOnboard } from '../profile/profile.update';
 import { guestbookEntryInsert, guestbookEntryLike } from '../guestbook/guestbookentry.update';
 import { guestbookEntryDelete } from '../guestbook/guestbookentry.delete';
 import { onCallCreateModel, onCallDeleteModel, onCallUpdateModel, onCallQueryModel, onCallSpecifierHandler, onCallReadModel, onCallInvokeModel, onCallModel, type OnCallModelMap } from '@dereekb/firebase-server';
@@ -14,6 +14,7 @@ import { profileCreate } from '../profile/profile.create';
 import { profileDelete } from '../profile/profile.delete';
 import { notificationCreate } from '../notification/notification.create';
 import { notificationSend } from '../notification/notification.update';
+import { notificationTaskBotReadOptOuts, notificationTaskBotUpdateEntry, notificationTaskBotUpdateOptOut, notificationTaskBotUpdateRun } from '../notification/notificationtaskbot.update';
 import { storageFileUpdate, storageFileProcess, storageFileSyncWithGroups } from '../storagefile/storagefile.update';
 import { storageFileCreate, storageFileCreateSignedUploadUrl, storageFileFromUpload, storageFileAllFromUpload } from '../storagefile/storagefile.create';
 import { storageFileDelete } from '../storagefile/storagefile.delete';
@@ -89,6 +90,9 @@ export const DEMO_READ_MODEL_MAP: DemoOnCallReadModelMap = {
   openRouterPrompt: openRouterPromptRead,
   userExternalConnection: onCallSpecifierHandler({
     authorizeState: userExternalConnectionReadAuthorizeState
+  }),
+  notificationTaskBot: onCallSpecifierHandler({
+    optOuts: notificationTaskBotReadOptOuts
   })
 };
 
@@ -108,6 +112,7 @@ export const DEMO_UPDATE_MODEL_MAP: DemoOnCallUpdateModelMap = {
     onboard: profileUpdateOnboard,
     createTestNotification: profileUpdateCreateTestNotification,
     createTestCalendarEvent: profileUpdateCreateTestCalendarEvent,
+    createTestNotificationTaskBot: profileUpdateCreateTestNotificationTaskBot,
     resetPassword: profileUpdateResetPassword
   }),
   calendar: onCallSpecifierHandler({
@@ -126,6 +131,11 @@ export const DEMO_UPDATE_MODEL_MAP: DemoOnCallUpdateModelMap = {
   }),
   notification: onCallSpecifierHandler({
     send: notificationSend
+  }),
+  notificationTaskBot: onCallSpecifierHandler({
+    entry: notificationTaskBotUpdateEntry,
+    run: notificationTaskBotUpdateRun,
+    optOut: notificationTaskBotUpdateOptOut
   }),
   storageFile: onCallSpecifierHandler({
     _: storageFileUpdate,

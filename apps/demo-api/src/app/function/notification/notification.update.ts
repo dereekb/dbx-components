@@ -4,6 +4,10 @@ import { type DemoUpdateModelFunction } from '../function.context';
 
 export const notificationSend: DemoUpdateModelFunction<SendNotificationParams, SendNotificationResult> = withApiDetails({
   inputType: sendNotificationParamsType,
+  mcp: {
+    // Open-world: sends the notification now.
+    openWorld: true
+  },
   fn: async (request) => {
     const { nest, data } = request;
 

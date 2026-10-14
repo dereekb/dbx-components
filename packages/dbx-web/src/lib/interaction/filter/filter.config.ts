@@ -84,7 +84,16 @@ export interface DbxFilterComponentConfig<F extends object = object, P extends s
   /**
    * (Optional) Whether or not to close the component if the filter changes.
    *
-   * True by default.
+   * True by default. Also the default for {@link closeOnTransition}.
    */
   readonly closeOnFilterChange?: boolean;
+  /**
+   * (Optional) Whether or not to close the popover when a route transition succeeds.
+   *
+   * Defaults to {@link closeOnFilterChange}: a popover that stays open across filter changes also stays open across
+   * transitions. A filter written to the URL (see DbxFilterMapRouteParamsDirective) causes a transition on every change,
+   * so the popover must stay open across both while it is edited. The popover still closes when the button that opened
+   * it is destroyed, such as when navigating to another page.
+   */
+  readonly closeOnTransition?: Maybe<boolean>;
 }

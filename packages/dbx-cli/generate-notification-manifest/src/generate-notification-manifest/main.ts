@@ -5,8 +5,10 @@
  * Pipeline (build-time, run via `nx run <app-api>:generate-notification-manifest`):
  *
  *   1. Read the `-firebase` component's `src/lib/model/notification/**` and the
- *      API's `src/app/common/model/notification/**` + `src/app/common/firebase/**`
- *      (non-spec `.ts`) into an in-memory inspection — the same files
+ *      API's `src/app/common/model/notification/**`, `src/app/common/firebase/**`
+ *      and `src/app/function/notification/**` (non-spec `.ts`), plus the workspace's
+ *      `firestore.rules` and `firestore.indexes.json` (for the NotificationTaskBot
+ *      checks), into an in-memory inspection — the same files
  *      `dbx_notification_m_validate_app` scans.
  *   2. Run the pure {@link renderNotificationManifest} (→ `buildNotificationManifest`):
  *      one extraction feeding both the `dbx_notification_m_list_app` report and
@@ -19,8 +21,9 @@
  *
  * Each finding is logged with a severity-aware prefix. Validator `error`
  * findings (a template type without a message factory, a factory without an
- * info, a `validate` task type without a handler, a wrong `--component-dir` /
- * `--api-dir`, ...) fail generation (exit 1) and delete any manifest an earlier,
+ * info, a `validate` task type without a handler, an upstream task-type
+ * aggregate in `validate` whose upstream handler isn't registered, a wrong
+ * `--component-dir` / `--api-dir`, ...) fail generation (exit 1) and delete any manifest an earlier,
  * passing run left behind, so the build fails before deploy. `warning` findings
  * are written into the manifest's `findings` and do not fail it unless
  * `--strict` / `--max-warnings` say so. The runtime startup checks in
@@ -33,6 +36,8 @@
  *   --cli-output=<path>      destination TS module for an app CLI (workspace-relative ok). Skipped when the bytes are unchanged.
  *   --project=<name>         (optional) project name for the TS module's banner; also derives the constant names.
  *   --app=<name>             (optional) app name stamped onto the manifest; defaults to the basename of --api-dir.
+ *   --rules-file=<path>      (optional) Firestore rules for the NotificationTaskBot `ntb` rule check; defaults to `firestore.rules`.
+ *   --indexes-file=<path>    (optional) Firestore indexes for the `ntb.nat` index check; defaults to `firestore.indexes.json`.
  *   --strict                 (optional) promote all warnings to errors for the exit decision.
  *   --allow-warning=<CODE>   (optional, repeatable) tolerate a warning rule code (never fails generation,
  *                            even under --strict / --max-warnings).
@@ -55,6 +60,14 @@ interface Flags {
   readonly cliOutput: string | undefined;
   readonly project: string | undefined;
   readonly app: string | undefined;
+  /**
+   * `--rules-file=<path>`: the workspace's Firestore rules, read for the NotificationTaskBot `ntb` rule check.
+   */
+  readonly rulesFile: string;
+  /**
+   * `--indexes-file=<path>`: the workspace's Firestore indexes, read for the NotificationTaskBot `ntb.nat` index check.
+   */
+  readonly indexesFile: string;
   /**
    * When true, all warnings are promoted to errors for the exit decision, so any
    * finding fails generation.
@@ -88,7 +101,7 @@ async function main(): Promise<void> {
   const outputPaths = [flags.output, flags.cliOutput].filter((x): x is string => x != null).map(resolveWorkspacePath);
   const outputDisplay = outputPaths.map(toDisplayPath).join(', ');
 
-  const inspection = await notificationValidateApp.inspectAppNotifications(componentPath, apiPath);
+  const inspection = await notificationValidateApp.inspectAppNotifications(componentPath, apiPath, { firestoreRulesPath: resolveWorkspacePath(flags.rulesFile), firestoreIndexesPath: resolveWorkspacePath(flags.indexesFile), workspaceDir: WORKSPACE_ROOT });
   const app = { name: flags.app ?? basename(apiPath) };
   const { manifest, validation } = renderNotificationManifest({ app, inspection, componentDir: toDisplayPath(componentPath), apiDir: toDisplayPath(apiPath) });
 
@@ -114,7 +127,7 @@ async function main(): Promise<void> {
     await writeFile(tmpPath, serialized);
     await rename(tmpPath, outputPath);
 
-    console.log(`[wrote] ${toDisplayPath(outputPath)} — ${manifest.templates.length} templates, ${manifest.tasks.length} tasks, ${manifest.warningCount} warning(s)`);
+    console.log(`[wrote] ${toDisplayPath(outputPath)} — ${manifest.templates.length} templates, ${manifest.tasks.length} tasks, ${manifest.taskBot.scripts.length} bot scripts, ${manifest.warningCount} warning(s)`);
   }
 
   if (flags.cliOutput != null) {
@@ -170,6 +183,8 @@ function parseFlags(argv: readonly string[]): Flags {
   let cliOutput: string | undefined;
   let project: string | undefined;
   let app: string | undefined;
+  let rulesFile = 'firestore.rules';
+  let indexesFile = 'firestore.indexes.json';
   let strict = false;
   let maxWarnings: number | undefined;
 
@@ -186,6 +201,10 @@ function parseFlags(argv: readonly string[]): Flags {
       project = arg.slice('--project='.length);
     } else if (arg.startsWith('--app=')) {
       app = arg.slice('--app='.length);
+    } else if (arg.startsWith('--rules-file=')) {
+      rulesFile = arg.slice('--rules-file='.length);
+    } else if (arg.startsWith('--indexes-file=')) {
+      indexesFile = arg.slice('--indexes-file='.length);
     } else if (arg.startsWith('--allow-warning=')) {
       const code = arg.slice('--allow-warning='.length).trim();
       if (code.length > 0) {
@@ -199,7 +218,7 @@ function parseFlags(argv: readonly string[]): Flags {
     }
   }
 
-  return { componentDir, apiDir, output, cliOutput, project, app, strict, allowWarning, maxWarnings };
+  return { componentDir, apiDir, output, cliOutput, project, app, rulesFile, indexesFile, strict, allowWarning, maxWarnings };
 }
 
 function printUsageAndExit(): void {
@@ -215,8 +234,8 @@ Usage:
 Required flags:
   --component-dir=<path>     The app's -firebase component root (workspace-relative or absolute).
                              Scans src/lib/model/notification/**.
-  --api-dir=<path>           The API app root. Scans src/app/common/model/notification/** and
-                             src/app/common/firebase/**.
+  --api-dir=<path>           The API app root. Scans src/app/common/model/notification/**,
+                             src/app/common/firebase/** and src/app/function/notification/**.
   --output=<path>            Path to the notification manifest JSON to write (workspace-relative ok).
   --cli-output=<path>        Path to a TS module exporting <PROJECT>_NOTIFICATION_MANIFEST for an app CLI
                              (workspace-relative ok). At least one of --output / --cli-output is required.
@@ -225,6 +244,10 @@ Optional:
   --project=<name>           Project name for the --cli-output banner; also derives the constant names
                              (demo-cli -> DEMO_CLI_NOTIFICATION_MANIFEST).
   --app=<name>               App name stamped onto the manifest (default: basename of --api-dir).
+  --rules-file=<path>        Firestore rules read for the NotificationTaskBot ntb rule check
+                             (default: firestore.rules).
+  --indexes-file=<path>      Firestore indexes read for the NotificationTaskBot ntb.nat index check
+                             (default: firestore.indexes.json).
   --strict                   Promote all warnings to errors for the exit decision
                              (any finding then fails generation).
   --allow-warning=<CODE>     Tolerate a warning rule code (repeatable), e.g.

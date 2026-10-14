@@ -95,7 +95,7 @@ export function buildFirestoreQueryCommand(manifest: CliFirestoreQueryManifest, 
         .positional('query', { type: 'string', describe: 'Slug or exported identifier of the query to run. See `firestore-queries`.' })
         .option('params', { type: 'string', describe: 'JSON array (positional) or object (by name / single params object) of factory arguments.' })
         .option('raw-params', { type: 'boolean', default: false, describe: 'Disable date coercion on --params.' })
-        .option('parent', { type: 'string', describe: 'Parent DOCUMENT key to scope a nested model to — any depth (e.g. "gb/abc", "jl/abc/jlj/def").' })
+        .option('parent', { type: 'string', describe: 'Parent DOCUMENT key to scope a nested model to — any depth (e.g. "nb/abc", "nb/abc/nbn/def").' })
         .option('limit', { type: 'number', describe: "Replace the query's limit with this value." })
         .option('count', { type: 'boolean', default: false, describe: 'Return only the matching count, with no rows.' })
         .epilogue(EPILOGUE),

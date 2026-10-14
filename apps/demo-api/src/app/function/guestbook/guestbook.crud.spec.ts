@@ -7,7 +7,7 @@ import { AUTH_ADMIN_ROLE } from '@dereekb/util';
 import { BAD_DOCUMENT_QUERY_CURSOR_ERROR_CODE } from '@dereekb/firebase';
 import { firebaseServerErrorInfo } from '@dereekb/firebase-server';
 import { MODEL_GET_TOOL_NAME } from '@dereekb/firebase-server/mcp';
-import { callMcpTool } from '../../../test/mcp';
+import { callMcpMethod } from '../../../test/mcp';
 
 vi.setConfig({ hookTimeout: 30000, testTimeout: 30000 });
 
@@ -281,7 +281,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         const guestbookAccessor = f.instance.demoFirestoreCollections.guestbookCollection.documentAccessor();
         await guestbookAccessor.loadDocumentForKey(key).accessor.update({ published: true });
 
-        const result = await callMcpTool({ f, u, name: MODEL_GET_TOOL_NAME, args: { modelType: guestbookIdentity.modelType, keys: [key] } });
+        const result = await callMcpMethod({ f, u, kind: 'read', method: MODEL_GET_TOOL_NAME, params: { modelType: guestbookIdentity.modelType, keys: [key] } });
 
         expect(result.isError).toBeUndefined();
 
@@ -295,7 +295,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
       it('should allow the creator to read their own unpublished guestbook', async () => {
         const key = await createGuestbookForUser('OwnerReadableUnpublished');
 
-        const result = await callMcpTool({ f, u, name: MODEL_GET_TOOL_NAME, args: { modelType: guestbookIdentity.modelType, keys: [key] } });
+        const result = await callMcpMethod({ f, u, kind: 'read', method: MODEL_GET_TOOL_NAME, params: { modelType: guestbookIdentity.modelType, keys: [key] } });
 
         expect(result.isError).toBeUndefined();
 
@@ -312,7 +312,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         const document = guestbookAccessor.newDocument();
         await document.create({ name: 'PrivateBook', published: false, locked: false, cby: 'some-other-uid' });
 
-        const result = await callMcpTool({ f, u, name: MODEL_GET_TOOL_NAME, args: { modelType: guestbookIdentity.modelType, keys: [document.key] } });
+        const result = await callMcpMethod({ f, u, kind: 'read', method: MODEL_GET_TOOL_NAME, params: { modelType: guestbookIdentity.modelType, keys: [document.key] } });
 
         expect(result.isError).toBeUndefined();
 

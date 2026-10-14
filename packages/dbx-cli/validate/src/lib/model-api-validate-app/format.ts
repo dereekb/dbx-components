@@ -2,7 +2,8 @@
  * Markdown / JSON renderers for `dbx_model_api_validate_app`.
  */
 
-import type { ReconciledEntry, ValidateReport } from './types.js';
+import { isMcpReadOnlyInferredVerb } from './mcp-read-only.js';
+import type { HandlerMcpReadOnlyUnresolved, ReconciledEntry, ValidateReport } from './types.js';
 
 /**
  * Renders the API validation report as a markdown document with per-model sections, status tables, and an issue list.
@@ -24,7 +25,7 @@ export function formatValidationAsMarkdown(report: ValidateReport): string {
 
   for (const summary of report.summaries) {
     const modelEntries = report.entries.filter((e) => e.model === summary.model);
-    lines.push(`## \`${summary.model}\``, '', `Declared: ${summary.declaredCount} · Handled: ${summary.handledCount} · Matched: ${summary.matchedCount} · Errors: ${summary.errorCount}`, '', '| Verb | Specifier | Declared | Handler | Status |', '| --- | --- | --- | --- | --- |');
+    lines.push(`## \`${summary.model}\``, '', `Declared: ${summary.declaredCount} · Handled: ${summary.handledCount} · Matched: ${summary.matchedCount} · Errors: ${summary.errorCount} · Warnings: ${summary.warningCount}`, '', '| Verb | Specifier | Declared | Handler | Status |', '| --- | --- | --- | --- | --- |');
     for (const entry of modelEntries) {
       lines.push(formatEntryRow(entry));
     }
@@ -36,12 +37,42 @@ export function formatValidationAsMarkdown(report: ValidateReport): string {
     for (const issue of report.issues) {
       const verbSuffix = issue.verb ? `.${issue.verb}` : '';
       const specifierSuffix = issue.specifier ? `.${issue.specifier}` : '';
-      lines.push(`- **${issue.code}** \`${issue.model}${verbSuffix}${specifierSuffix}\` — ${issue.message}`);
+      const severitySuffix = issue.severity === 'warning' ? ' _(warning)_' : '';
+      lines.push(`- **${issue.code}**${severitySuffix} \`${issue.model}${verbSuffix}${specifierSuffix}\` — ${issue.message}`);
     }
     lines.push('');
   }
 
+  lines.push(...formatMcpReadOnlyNotChecked(report));
   return lines.join('\n');
+}
+
+/**
+ * Renders the "not checked" section: the `invoke` / custom-verb handlers the scan could not follow back to a literal
+ * `withApiDetails({ ... })`, so `HANDLER_MCP_READ_ONLY_UNSET` was not checked for them.
+ *
+ * @param report - The validation report.
+ * @returns The section's lines, or none when every such handler was read.
+ */
+function formatMcpReadOnlyNotChecked(report: ValidateReport): string[] {
+  const lines: string[] = [];
+  for (const entry of report.entries) {
+    const handler = entry.handler;
+    const status = handler?.mcpReadOnly;
+    if (handler && status?.kind === 'unresolved' && !isMcpReadOnlyInferredVerb(entry.verb)) {
+      const specifierSuffix = entry.specifier ? `.${entry.specifier}` : '';
+      lines.push(`- \`${entry.model}.${entry.verb}${specifierSuffix}\` → \`${handler.handlerName}\` — ${formatUnresolvedReason(status)}`);
+    }
+  }
+  if (lines.length > 0) {
+    lines.unshift('## MCP read/write classification not checked', '', 'The scan could not follow these handlers back to a literal `withApiDetails({ ... })`, so `HANDLER_MCP_READ_ONLY_UNSET` was not checked for them:', '');
+    lines.push('');
+  }
+  return lines;
+}
+
+function formatUnresolvedReason(status: HandlerMcpReadOnlyUnresolved): string {
+  return status.declarationSource ? `${status.reason} (\`${status.declarationSource}\`)` : status.reason;
 }
 
 /**

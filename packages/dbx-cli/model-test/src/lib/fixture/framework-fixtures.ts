@@ -13,6 +13,12 @@
  * fixture family. Both the inheritance signal (`baseFixtureClass` /
  * `baseInstanceClass`) and the factory-call signal (`factoryName`) are
  * supported; either alone is sufficient.
+ *
+ * Framework families that ARE backed by a Firestore model (see
+ * {@link KNOWN_MODEL_FIXTURE_FAMILIES}) keep the kind `firestore-model`: the
+ * extractor only accepts their factory in place of `modelTestContextFactory`
+ * and prefixes the model generics their library classes fill in, so the
+ * triplet, generics and registry checks still run.
  */
 export interface FrameworkNonModelFixtureFamily {
   /**
@@ -84,4 +90,76 @@ export function findFamilyByFactoryName(factoryCallName: string): FrameworkNonMo
  */
 export function findFamilyByBaseClass(baseClassName: string): FrameworkNonModelFixtureFamily | undefined {
   return KNOWN_NON_MODEL_FIXTURE_FAMILIES.find((f) => f.baseFixtureClass === baseClassName || f.baseInstanceClass === baseClassName);
+}
+
+/**
+ * A framework-provided fixture family that IS backed by a Firestore model.
+ * Its library Fixture/Instance classes and factory fill in the model and
+ * document generics, so downstream subclasses and factory calls omit them.
+ */
+export interface FrameworkModelFixtureFamily {
+  /**
+   * The Firestore model the family is backed by, e.g. `NotificationTaskBot`.
+   */
+  readonly model: string;
+  /**
+   * The generics the library classes and factory fill in, in the
+   * `modelTestContextFactory` order, e.g.
+   * `['NotificationTaskBot', 'NotificationTaskBotDocument']`. Prefixed to
+   * the factory call's and the `extends` clauses' generics.
+   */
+  readonly modelGenerics: readonly string[];
+  /**
+   * Variable name of the framework factory used to register the pair.
+   */
+  readonly factoryName: string;
+  /**
+   * Class name of the framework-provided Fixture base.
+   */
+  readonly baseFixtureClass: string;
+  /**
+   * Class name of the framework-provided Instance base.
+   */
+  readonly baseInstanceClass: string;
+  /**
+   * Module path the bases and factory are exported from.
+   */
+  readonly module: string;
+  /**
+   * One-line human description.
+   */
+  readonly description: string;
+}
+
+export const KNOWN_MODEL_FIXTURE_FAMILIES: readonly FrameworkModelFixtureFamily[] = [
+  {
+    model: 'NotificationTaskBot',
+    modelGenerics: ['NotificationTaskBot', 'NotificationTaskBotDocument'],
+    factoryName: 'notificationTaskBotTestContextFactory',
+    baseFixtureClass: 'NotificationTaskBotTestContextFixture',
+    baseInstanceClass: 'NotificationTaskBotTestContextInstance',
+    module: '@dereekb/firebase-server/test',
+    description: 'NotificationTaskBot attached to a model, with helpers that drive its runs.'
+  }
+] as const;
+
+/**
+ * Looks up a framework model-backed family by factory call name.
+ *
+ * @param factoryCallName - The identifier name appearing in the factory body
+ *   call expression (e.g. `notificationTaskBotTestContextFactory`)
+ * @returns The matched family, or `undefined`
+ */
+export function findModelFamilyByFactoryName(factoryCallName: string): FrameworkModelFixtureFamily | undefined {
+  return KNOWN_MODEL_FIXTURE_FAMILIES.find((f) => f.factoryName === factoryCallName);
+}
+
+/**
+ * Looks up a framework model-backed family by Fixture or Instance base class name.
+ *
+ * @param baseClassName - The class identifier on the `extends` clause.
+ * @returns The matched family, or `undefined`
+ */
+export function findModelFamilyByBaseClass(baseClassName: string): FrameworkModelFixtureFamily | undefined {
+  return KNOWN_MODEL_FIXTURE_FAMILIES.find((f) => f.baseFixtureClass === baseClassName || f.baseInstanceClass === baseClassName);
 }

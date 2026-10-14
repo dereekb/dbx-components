@@ -16,7 +16,7 @@ vi.mock('node:os', async (importOriginal) => {
 import { MS_IN_HOUR } from '@dereekb/util';
 import { DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR } from '@dereekb/dbx-cli';
 import { configuredProducts, getConfigFilePath, getTokenCachePath, loadCliConfig, mergeCliConfig, resolveZohoCliActiveTokenSource, saveCliTokenSourceConfig, zohoCliProductOrgId, ZOHO_CLI_TOKEN_COMMAND_ENV_VAR, type ZohoCliConfig, type ZohoCliTokenSourceCoverage } from './cli.config';
-import { createZohoCliTokenSource, loadZohoCliResolvedTokenSource, loadZohoCliTokenSourceStatus, zohoCliTokenSourceCacheKey, zohoCliTokenSourceReport, zohoCliTokenSourceTokenFromBundle, type ZohoCliTokenSourceBundle } from './token.source';
+import { createZohoCliTokenSource, loadZohoCliResolvedTokenSource, loadZohoCliTokenSourceStatus, zohoCliTokenSourceCacheKey, zohoCliTokenSourceCoverage, zohoCliTokenSourceReport, zohoCliTokenSourceTokenFromBundle, type ZohoCliTokenSourceBundle } from './token.source';
 import { createCliContext } from '../context/cli.context';
 
 const sharedCreds = {
@@ -174,6 +174,13 @@ describe('zoho-cli token source', () => {
 
       expect(hasExpiry).toBe(true);
       expect(token).toEqual({ accessToken: 'a', scopes: ['ZohoCRM.modules.ALL'], expiresAt: '2030-01-01T00:00:00.000Z', location: 'eu', apiDomain: 'https://www.zohoapis.eu', hints: { zohoDeskOrgId: '123' }, providerType: 'zoho_admin' });
+    });
+
+    it('should split a scope list element that holds a space-joined scope string', () => {
+      const { token } = zohoCliTokenSourceTokenFromBundle({ bundle: { uid: 'u', providerType: 'zoho_admin', accessToken: 'a', scopes: ['ZohoCRM.modules.ALL ZohoRecruit.modules.ALL Desk.tickets.ALL'] } });
+
+      expect(token.scopes).toEqual(['ZohoCRM.modules.ALL', 'ZohoRecruit.modules.ALL', 'Desk.tickets.ALL']);
+      expect(zohoCliTokenSourceCoverage(token).products).toEqual(['recruit', 'crm', 'desk']);
     });
 
     it('should fill a missing expiry with the default lifetime', () => {

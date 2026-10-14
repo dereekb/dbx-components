@@ -79,3 +79,44 @@ export const NOTIFICATION_USER_HEALTH_CHECK_AUTOFIX_UNAVAILABLE_ERROR_CODE = 'NO
  * {@link NotificationHealthCheckIssueAutofixType.EXPLICIT} without setting `allowExplicitAutofix`.
  */
 export const NOTIFICATION_USER_HEALTH_CHECK_AUTOFIX_NOT_ALLOWED_ERROR_CODE = 'NOTIFICATION_USER_HEALTH_CHECK_AUTOFIX_NOT_ALLOWED';
+
+/**
+ * Thrown when a NotificationTaskBot or one of its entries does not exist.
+ */
+export const NOTIFICATION_TASK_BOT_ENTRY_DOES_NOT_EXIST_ERROR_CODE = 'NOTIFICATION_TASK_BOT_ENTRY_DOES_NOT_EXIST';
+
+/**
+ * Thrown when a NotificationTaskBot entry is asked to run while it is disabled or paused. A FORCED run is the one
+ * exception: it resumes an entry paused with the `'failed'` reason and runs it.
+ */
+export const NOTIFICATION_TASK_BOT_ENTRY_NOT_RUNNABLE_ERROR_CODE = 'NOTIFICATION_TASK_BOT_ENTRY_NOT_RUNNABLE';
+
+/**
+ * Thrown when a NotificationTaskBot entry is asked to run or resume while the bot's owner has opted out of its script
+ * group. Only the owner can undo an opt-out.
+ */
+export const NOTIFICATION_TASK_BOT_ENTRY_OPTED_OUT_ERROR_CODE = 'NOTIFICATION_TASK_BOT_ENTRY_OPTED_OUT';
+
+/**
+ * Thrown when a NotificationTaskBot opt-out update names a group the owner can't change: one not listed by
+ * `read:optOuts`, or a group that appears in both the opt-out and the opt-in lists.
+ */
+export const NOTIFICATION_TASK_BOT_OPT_OUT_NOT_ALLOWED_ERROR_CODE = 'NOTIFICATION_TASK_BOT_OPT_OUT_NOT_ALLOWED';
+
+/**
+ * Thrown when someone other than the bot's owner tries to change a NotificationTaskBot's opt-outs. Admins included: an
+ * admin has no way to undo an owner's opt-out, so only the owner may change it, in both directions.
+ */
+export const NOTIFICATION_TASK_BOT_OPT_OUT_REQUIRES_OWNER_ERROR_CODE = 'NOTIFICATION_TASK_BOT_OPT_OUT_REQUIRES_OWNER';
+
+/**
+ * Thrown when `update:entry` patches the data of an entry whose script accepts no data patches, because its
+ * `NotificationTaskBotScriptConfig` sets no `dataType` (or the script is not registered).
+ */
+export const NOTIFICATION_TASK_BOT_ENTRY_DATA_PATCH_NOT_ALLOWED_ERROR_CODE = 'NOTIFICATION_TASK_BOT_ENTRY_DATA_PATCH_NOT_ALLOWED';
+
+/**
+ * Thrown when `update:entry` patches an entry's data and the data after the patch does not satisfy the script's
+ * `dataType`. The message lists the problems.
+ */
+export const NOTIFICATION_TASK_BOT_ENTRY_DATA_PATCH_INVALID_ERROR_CODE = 'NOTIFICATION_TASK_BOT_ENTRY_DATA_PATCH_INVALID';

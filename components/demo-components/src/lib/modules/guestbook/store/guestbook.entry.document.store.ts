@@ -2,7 +2,7 @@ import { first, type Observable, shareReplay, from, switchMap } from 'rxjs';
 import { Injectable, inject } from '@angular/core';
 import { type LoadingState, loadingStateFromObs } from '@dereekb/rxjs';
 import { AbstractDbxFirebaseDocumentWithParentStore, firebaseDocumentStoreCrudFunction, firebaseDocumentStoreInvokeFunction } from '@dereekb/dbx-firebase';
-import { DemoFirestoreCollections, type Guestbook, type GuestbookDocument, type GuestbookEntry, type GuestbookEntryDocument, GuestbookFunctions, type InsertGuestbookEntryParams } from 'demo-firebase';
+import { DemoFirestoreCollections, type Guestbook, type GuestbookDocument, type GuestbookEntry, type GuestbookEntryDocument, GuestbookFunctions, type InsertGuestbookEntryParams, type InsertGuestbookEntryResult } from 'demo-firebase';
 import { GuestbookDocumentStore } from './guestbook.document.store';
 
 @Injectable()
@@ -31,7 +31,7 @@ export class GuestbookEntryDocumentStore extends AbstractDbxFirebaseDocumentWith
    */
   readonly entryDetails = firebaseDocumentStoreInvokeFunction(this, this.guestbookFunctions.guestbookEntry.invokeGuestbookEntry.entryDetails);
 
-  insertEntry(params: Omit<InsertGuestbookEntryParams, 'guestbook'>): Observable<LoadingState<void>> {
+  insertEntry(params: Omit<InsertGuestbookEntryParams, 'guestbook'>): Observable<LoadingState<InsertGuestbookEntryResult>> {
     return this.parent$.pipe(
       first(),
       switchMap((parent) =>

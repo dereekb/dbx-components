@@ -112,6 +112,121 @@ export type NotificationSummaryKey = FirestoreModelKey;
  */
 export const notificationSummaryIdForModel = twoWayFlatFirestoreModelKey;
 
+// MARK: NotificationTaskBot
+/**
+ * Document ID for a {@link NotificationTaskBot}. Encoded as a two-way flat key of the model the bot is attached to.
+ */
+export type NotificationTaskBotId = FlatFirestoreModelKey;
+
+/**
+ * Full Firestore model key path for a {@link NotificationTaskBot} document.
+ */
+export type NotificationTaskBotKey = FirestoreModelKey;
+
+/**
+ * Converts a Firestore model key to a {@link NotificationTaskBotId} using two-way flat key encoding.
+ *
+ * @example
+ * ```ts
+ * const botId = notificationTaskBotIdForModel('profile/abc123');
+ * // botId === 'profile_abc123'
+ * ```
+ */
+export const notificationTaskBotIdForModel = twoWayFlatFirestoreModelKey;
+
+/**
+ * Identifier of a {@link NotificationTaskBotEmbeddedScriptEntry}, unique within its bot.
+ *
+ * Must match {@link NOTIFICATION_TASK_BOT_ENTRY_ID_REGEX}.
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:notification
+ */
+export type NotificationTaskBotEntryId = string;
+
+/**
+ * Pattern every {@link NotificationTaskBotEntryId} must match: lowercase letters, digits and dashes.
+ *
+ * Underscores are excluded because run ids use them as separators, and Firestore rejects ids that contain two `__` runs.
+ */
+export const NOTIFICATION_TASK_BOT_ENTRY_ID_REGEX = /^[a-z0-9-]+$/;
+
+/**
+ * Maximum length of a {@link NotificationTaskBotEntryId}.
+ */
+export const NOTIFICATION_TASK_BOT_ENTRY_ID_MAX_LENGTH = 40;
+
+/**
+ * Returns true if the input is a valid {@link NotificationTaskBotEntryId}.
+ *
+ * @param entryId - The candidate entry id.
+ * @returns True when the id matches {@link NOTIFICATION_TASK_BOT_ENTRY_ID_REGEX} and is within {@link NOTIFICATION_TASK_BOT_ENTRY_ID_MAX_LENGTH}.
+ */
+export function isNotificationTaskBotEntryId(entryId: string): entryId is NotificationTaskBotEntryId {
+  return entryId.length > 0 && entryId.length <= NOTIFICATION_TASK_BOT_ENTRY_ID_MAX_LENGTH && NOTIFICATION_TASK_BOT_ENTRY_ID_REGEX.test(entryId);
+}
+
+/**
+ * Key of a NotificationTaskBotScriptGroup, the topic a script belongs to (e.g. "Email reminders").
+ *
+ * The bot's owner opts out of a whole group at once rather than individual entries.
+ *
+ * Must match {@link NOTIFICATION_TASK_BOT_SCRIPT_GROUP_KEY_REGEX}.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:notification
+ */
+export type NotificationTaskBotScriptGroupKey = string;
+
+/**
+ * Pattern every {@link NotificationTaskBotScriptGroupKey} must match: lowercase letters, digits, underscores and dashes.
+ */
+export const NOTIFICATION_TASK_BOT_SCRIPT_GROUP_KEY_REGEX = /^[a-z0-9_-]+$/;
+
+/**
+ * Maximum length of a {@link NotificationTaskBotScriptGroupKey}.
+ */
+export const NOTIFICATION_TASK_BOT_SCRIPT_GROUP_KEY_MAX_LENGTH = 40;
+
+/**
+ * Returns true if the input is a valid {@link NotificationTaskBotScriptGroupKey}.
+ *
+ * @param groupKey - The candidate group key.
+ * @returns True when the key matches {@link NOTIFICATION_TASK_BOT_SCRIPT_GROUP_KEY_REGEX} and is within {@link NOTIFICATION_TASK_BOT_SCRIPT_GROUP_KEY_MAX_LENGTH}.
+ */
+export function isNotificationTaskBotScriptGroupKey(groupKey: string): groupKey is NotificationTaskBotScriptGroupKey {
+  return groupKey.length > 0 && groupKey.length <= NOTIFICATION_TASK_BOT_SCRIPT_GROUP_KEY_MAX_LENGTH && NOTIFICATION_TASK_BOT_SCRIPT_GROUP_KEY_REGEX.test(groupKey);
+}
+
+/**
+ * Run number of a single NotificationTaskBot run. Taken from the bot's monotonic run counter, so it never repeats within a bot.
+ *
+ * @semanticType
+ * @semanticTopic numeric
+ * @semanticTopic dereekb-firebase:notification
+ */
+export type NotificationTaskBotRunNumber = number;
+
+/**
+ * Returns the unique NotificationTask id for a single run of a bot entry.
+ *
+ * @param botId - The bot's id.
+ * @param entryId - The entry id.
+ * @param runNumber - The run number.
+ * @returns The unique task id, `${botId}_${entryId}_r${runNumber}`.
+ *
+ * @example
+ * ```ts
+ * notificationTaskBotRunNotificationTaskUniqueId('profile_abc', 'ping', 3); // 'profile_abc_ping_r3'
+ * ```
+ */
+export function notificationTaskBotRunNotificationTaskUniqueId(botId: NotificationTaskBotId, entryId: NotificationTaskBotEntryId, runNumber: NotificationTaskBotRunNumber): NotificationTaskUniqueId {
+  return `${botId}_${entryId}_r${runNumber}`;
+}
+
 /**
  * Factory function that produces a {@link NotificationSummaryId} from a user's auth UID.
  *

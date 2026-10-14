@@ -17,7 +17,8 @@ import {
   getDocumentSnapshotPairs,
   useDocumentSnapshot,
   useDocumentSnapshotData,
-  type AbstractFirestoreDocument
+  type AbstractFirestoreDocument,
+  loadDocumentForIdOrKey
 } from '@dereekb/firebase';
 import {
   type MockItemCollectionFixture,
@@ -820,6 +821,25 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
         itShouldFail('if the id is undefined.', async () => {
           await expectFail(() => {
             mockItemFirestoreDocumentAccessor.loadDocumentForId(undefined as any);
+          });
+        });
+      });
+
+      describe('loadDocumentForIdOrKey()', () => {
+        it('should load the document for an id relative to the collection.', () => {
+          const document = loadDocumentForIdOrKey(mockItemFirestoreDocumentAccessor, items[0].id);
+          expect(document.key).toBe(mockItemFirestoreDocumentAccessor.loadDocumentForId(items[0].id).key);
+          expect(document.key).toBe(items[0].key);
+        });
+
+        it('should load the document for a full key of the collection.', () => {
+          const document = loadDocumentForIdOrKey(mockItemFirestoreDocumentAccessor, items[0].key);
+          expect(document.key).toBe(items[0].key);
+        });
+
+        itShouldFail('if the key points to a different type/collection', async () => {
+          await expectFail(() => {
+            loadDocumentForIdOrKey(mockItemFirestoreDocumentAccessor, 'path/id');
           });
         });
       });
