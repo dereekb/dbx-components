@@ -190,6 +190,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
             expect(output.downloadUrl).toBeUndefined();
             expect(output.downloadSha256).toBeUndefined();
+            expect(output.installCommand).toBeUndefined();
             // the credential half still works — the download is the optional half
             expect(output.claimCode.length).toBeGreaterThan(20);
           });
@@ -201,6 +202,9 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             // ---- step 1: the tool's downloadUrl really serves the artifact, with no credential ----
             expect(output.downloadUrl).toBeDefined();
             expect(output.downloadSha256).toMatch(/^[0-9a-f]{64}$/);
+            // in the STRUCTURED output, which is all a client that surfaces `structuredContent` shows —
+            // and it saves under the CLI's own name, the one Node will run the ES-module file under
+            expect(output.installCommand).toBe(`curl -fsSL -o ${DEMO_CLI_NAME} "${output.downloadUrl}" && chmod +x ${DEMO_CLI_NAME}`);
 
             const downloadUrl = new URL(output.downloadUrl!);
             expect(downloadUrl.pathname).toBe('/api/download');

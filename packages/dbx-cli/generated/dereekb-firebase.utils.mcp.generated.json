@@ -1255,6 +1255,50 @@
       ]
     },
     {
+      "slug": "load-document-for-id-or-key",
+      "name": "loadDocumentForIdOrKey",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "loadDocumentForIdOrKey(accessor: FirestoreDocumentAccessor<T, D>, idOrKey: FirestoreModelId | FirestoreModelKey): D",
+      "description": "Loads the {@link FirestoreDocument} a document id or a full key refers to.\n\nA value containing `/` is a full key, loaded with `accessor.loadDocumentForKey()`, which refuses a key of another\ncollection. Anything else is a document id, loaded relative to the accessor's collection with `accessor.loadDocumentForId()`.\nResolving an id through the accessor, rather than prefixing a collection name onto it, keeps a subcollection's parent and\na test driver's fuzzed collection names intact. No network calls are made.",
+      "params": [
+        {
+          "name": "accessor",
+          "type": "FirestoreDocumentAccessor<T, D>",
+          "description": "- Accessor to load the document with (must have collection context to resolve an id).",
+          "optional": false
+        },
+        {
+          "name": "idOrKey",
+          "type": "FirestoreModelId | FirestoreModelKey",
+          "description": "- A document id (`abc123`) or a full key (`gb/abc123`).",
+          "optional": false
+        }
+      ],
+      "returns": "The document instance.",
+      "tags": [
+        "firestore",
+        "document",
+        "loader",
+        "accessor",
+        "id",
+        "key",
+        "path",
+        "either",
+        "promote",
+        "load",
+        "for",
+        "or",
+        "loaddocumentforidorkey"
+      ],
+      "relatedSlugs": [
+        "load-documents-for-ids",
+        "load-documents-for-keys"
+      ]
+    },
+    {
       "slug": "firestore-document-loader",
       "name": "firestoreDocumentLoader",
       "kind": "factory",

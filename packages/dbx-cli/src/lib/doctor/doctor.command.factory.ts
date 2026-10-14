@@ -23,6 +23,12 @@ export interface DoctorCheckInput {
 export interface DoctorCheckResult {
   readonly name: string;
   readonly ok: boolean;
+  /**
+   * Marks a PASSING check that still found something worth knowing — the feature works, but in a
+   * degraded mode (e.g. reads go through the API because the grant cannot open a direct-Firestore
+   * session). A warning never fails `allOk`; the doctor envelope lists it under `warnings`.
+   */
+  readonly warning?: boolean;
   readonly detail?: unknown;
   readonly suggestion?: string;
 }
@@ -130,7 +136,8 @@ export interface CreateDoctorCommandInput {
  * Composable doctor command.
  *
  * Runs all checks, prints a JSON summary, and exits 0 even when checks fail (the `ok` flag in the
- * envelope is what callers script against).
+ * envelope is what callers script against). `warnings` names the passing checks that flagged a
+ * degraded state, so they are not lost among the passes.
  *
  * @param input - Factory configuration.
  * @param input.cliName - The CLI's binary name.
@@ -166,7 +173,8 @@ export function createDoctorCommand(input: CreateDoctorCommandInput): CommandMod
       }
 
       const allOk = results.every((r) => r.ok);
-      outputResult({ allOk, env: envName, checks: results });
+      const warnings = results.filter((r) => r.warning === true).map((r) => r.name);
+      outputResult({ allOk, warnings, env: envName, checks: results });
     })
   };
 }

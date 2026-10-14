@@ -1,7 +1,21 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { type CliEnvConfig } from '../config/env';
+import type * as TokenCacheModule from '../config/token.cache';
+import { type CliTokenEntry } from '../config/token.cache';
 import { type CliFirestoreBinding } from '../firestore/firestore.models';
 import { type CliFirestoreQueryManifest, type CliModelManifest } from '../manifest/types';
-import { buildFirestoreSessionDoctorReadRouting } from './firestore-session.check';
+import { buildFirestoreSessionDoctorReadRouting, createFirestoreSessionDoctorCheck } from './firestore-session.check';
+
+/**
+ * The token cache the check reads, keyed by env name — swapped in for the on-disk store so a case
+ * can hand the check a grant without touching the user's real `~/.<cli>` directory.
+ */
+const TOKEN_CACHE_ENTRIES = vi.hoisted(() => new Map<string, CliTokenEntry>());
+
+vi.mock('../config/token.cache', async (importOriginal) => {
+  const original = await importOriginal<typeof TokenCacheModule>();
+  return { ...original, createCliTokenCacheStore: () => ({ get: async (key: string) => TOKEN_CACHE_ENTRIES.get(key) }) as never };
+});
 
 const BINDING = { collections: () => ({}), models: (() => ({})) as never } as CliFirestoreBinding;
 
@@ -45,6 +59,13 @@ describe('buildFirestoreSessionDoctorReadRouting()', () => {
 
     expect(routing.readPreference).toBe('api');
     expect(routing.reason).toBe('firebase-config-incomplete');
+  });
+
+  it('reports scope-not-granted ahead of the session state', () => {
+    const routing = buildFirestoreSessionDoctorReadRouting({ firestore: BINDING, firebaseConfigComplete: true, scopeGranted: false, sessionOpened: false });
+
+    expect(routing.readPreference).toBe('api');
+    expect(routing.reason).toBe('scope-not-granted');
   });
 
   it('reports session-unavailable when the chain is wired but the handshake failed', () => {
@@ -100,5 +121,48 @@ describe('buildFirestoreSessionDoctorReadRouting()', () => {
     expect(routing.parentChildQueryEntries).toBe(0);
     expect(routing.queryModesScanned).toBe(false);
     expect(routing.serverOnlyModels).toBe(0);
+  });
+});
+
+describe('createFirestoreSessionDoctorCheck()', () => {
+  const CLI_NAME = 'firestore-session-check-spec-cli';
+  const ENV_NAME = 'dev-mcp';
+
+  function runCheck(env: Partial<CliEnvConfig>) {
+    const fullEnv = { apiBaseUrl: 'http://localhost/api', oidcIssuer: 'http://localhost/oidc', firebase: { apiKey: 'k', projectId: 'p', appId: 'a' }, ...env } as CliEnvConfig;
+    return createFirestoreSessionDoctorCheck({ firestore: BINDING })({ cliName: CLI_NAME, envName: ENV_NAME, env: fullEnv, config: undefined });
+  }
+
+  afterEach(() => {
+    TOKEN_CACHE_ENTRIES.clear();
+  });
+
+  describe('when the grant lacks session.firestore', () => {
+    beforeEach(() => {
+      TOKEN_CACHE_ENTRIES.set(ENV_NAME, { accessToken: 'token', expiresAt: Date.now() + 10 * 60 * 1000, scope: 'openid model.read' });
+    });
+
+    it('passes with a warning instead of attempting the session', async () => {
+      const result = await runCheck({ scopes: 'openid model.read' });
+
+      expect(result.ok).toBe(true);
+      expect(result.warning).toBe(true);
+      expect(result.detail).toMatchObject({ reason: 'scope-not-granted', requiredScope: 'session.firestore', grantedScope: 'openid model.read', readRouting: { readPreference: 'api', reason: 'scope-not-granted' } });
+    });
+
+    it('points at a fresh login when the env requests the scope', async () => {
+      const result = await runCheck({ scopes: 'openid model.read session.firestore' });
+
+      expect(result.detail).toMatchObject({ envRequestsScope: true });
+      expect(result.suggestion).toContain(`${CLI_NAME} auth login --env ${ENV_NAME}`);
+    });
+
+    it('does not suggest a login that would reproduce the same grant when the env does not request the scope', async () => {
+      const result = await runCheck({ scopes: 'openid model.read' });
+
+      expect(result.detail).toMatchObject({ envRequestsScope: false });
+      expect(result.suggestion).toContain(`env "${ENV_NAME}" does not request it`);
+      expect(result.suggestion).not.toContain('auth login');
+    });
   });
 });

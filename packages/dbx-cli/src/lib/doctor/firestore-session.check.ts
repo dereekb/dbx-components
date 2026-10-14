@@ -1,10 +1,11 @@
+import { FIRESTORE_SESSION_OIDC_SCOPE } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { discoverOidcMetadata, refreshAccessToken } from '../auth/oidc.client';
-import { type CliEnvConfig, cliFirebaseEmulatorsInUse, isCliFirebaseConfigComplete, readEnvTokenEntry } from '../config/env';
+import { type CliEnvConfig, DEFAULT_CLI_OIDC_SCOPES, cliFirebaseEmulatorsInUse, isCliFirebaseConfigComplete, readEnvTokenEntry } from '../config/env';
 import { buildCliPaths } from '../config/paths';
 import { createCliTokenCacheStore, isTokenExpired } from '../config/token.cache';
 import { type CliFirestoreBinding } from '../firestore/firestore.models';
-import { type CliReadSourceReason } from '../firestore/firestore.read';
+import { type CliReadSourceReason, hasCliFirestoreSessionScope } from '../firestore/firestore.read';
 import { type CliFirestoreSessionContext, closeCliFirestoreSessionContext, createCliFirestoreSessionContext } from '../firestore/firestore.session';
 import { isCliFirestoreQueryInvocable } from '../firestore/query-mode';
 import { FIRESTORE_SDK_IDENTITY_STAGE, FIRESTORE_SDK_INSTANCE_MISMATCH_CODE, cliFirestoreSdkIdentitySuggestion, inspectCliFirestoreSdkIdentity } from '../firestore/firestore.sdk-identity';
@@ -108,6 +109,7 @@ export interface FirestoreSessionDoctorReadRouting {
  * @param input.modelManifest - The model manifest, when supplied.
  * @param input.firestoreQueryManifest - The query manifest, when supplied.
  * @param input.firebaseConfigComplete - Whether the env carries a complete Firebase client config.
+ * @param input.scopeGranted - Whether the grant carries `session.firestore`; `undefined` when not known.
  * @param input.sessionOpened - Whether the session handshake succeeded in this run.
  * @returns The routing summary.
  *
@@ -118,6 +120,7 @@ export function buildFirestoreSessionDoctorReadRouting(input: {
   readonly modelManifest?: CliModelManifest;
   readonly firestoreQueryManifest?: CliFirestoreQueryManifest;
   readonly firebaseConfigComplete: boolean;
+  readonly scopeGranted?: Maybe<boolean>;
   readonly sessionOpened: boolean;
 }): FirestoreSessionDoctorReadRouting {
   const getFirestoreModels = input.firestore != null;
@@ -127,6 +130,8 @@ export function buildFirestoreSessionDoctorReadRouting(input: {
     reason = 'no-firestore-binding';
   } else if (!input.firebaseConfigComplete) {
     reason = 'firebase-config-incomplete';
+  } else if (input.scopeGranted === false) {
+    reason = 'scope-not-granted';
   } else if (input.sessionOpened) {
     reason = 'session-available';
   } else {
@@ -157,6 +162,9 @@ export function buildFirestoreSessionDoctorReadRouting(input: {
  *
  * 1. the env carries a complete Firebase client config;
  * 2. a usable access token is available (cached, env-supplied, or refreshed);
+ *    - when its grant is KNOWN to lack the `session.firestore` scope, the check stops here with a
+ *      passing WARNING rather than a failure: reads still work, through the API, and a grant without
+ *      the scope (e.g. an MCP-minted CLI handoff credential) is a supported state, not a broken one;
  * 3. `GET /session/firestore` is reachable and mints a custom token (+ an App Check token when the
  *    API is configured with a web `appId`);
  * 4. `signInWithCustomToken` succeeds against the configured project;
@@ -186,15 +194,18 @@ export function createFirestoreSessionDoctorCheck(input: CreateFirestoreSessionD
    *
    * @param result - The session-chain result.
    * @param firebaseConfigComplete - Whether the env carries a complete Firebase client config.
+   * @param scopeGranted - Whether the grant carries `session.firestore`, when known.
    * @returns The result with `detail.readRouting` attached.
    */
-  function withReadRouting(result: DoctorCheckResult, firebaseConfigComplete: boolean): DoctorCheckResult {
+  function withReadRouting(result: DoctorCheckResult, firebaseConfigComplete: boolean, scopeGranted?: Maybe<boolean>): DoctorCheckResult {
     const readRouting = buildFirestoreSessionDoctorReadRouting({
       ...(input.firestore === undefined ? {} : { firestore: input.firestore }),
       ...(input.modelManifest === undefined ? {} : { modelManifest: input.modelManifest }),
       ...(input.firestoreQueryManifest === undefined ? {} : { firestoreQueryManifest: input.firestoreQueryManifest }),
       firebaseConfigComplete,
-      sessionOpened: result.ok
+      scopeGranted,
+      // a scope-not-granted warning passes without ever opening a session
+      sessionOpened: result.ok && scopeGranted !== false
     });
 
     return { ...result, detail: { ...(typeof result.detail === 'object' && result.detail != null ? result.detail : {}), readRouting } };
@@ -207,10 +218,13 @@ export function createFirestoreSessionDoctorCheck(input: CreateFirestoreSessionD
       const firebaseConfigComplete = isCliFirebaseConfigComplete(env.firebase);
 
       if (firebaseConfigComplete) {
-        const accessToken = await resolveDoctorAccessToken({ cliName, envName, env });
+        const grant = await resolveDoctorAccessGrant({ cliName, envName, env });
+        const scopeGranted = hasCliFirestoreSessionScope(grant?.scope);
 
-        if (accessToken) {
-          result = withReadRouting(await runFirestoreSessionProbe({ cliName, envName, env, accessToken, probe, probeName }), true);
+        if (grant && scopeGranted === false) {
+          result = withReadRouting(buildScopeNotGrantedResult({ cliName, envName, env, grantedScope: grant.scope }), true, false);
+        } else if (grant) {
+          result = withReadRouting(await runFirestoreSessionProbe({ cliName, envName, env, accessToken: grant.accessToken, probe, probeName }), true, scopeGranted);
         } else {
           result = withReadRouting(
             {
@@ -238,6 +252,40 @@ export function createFirestoreSessionDoctorCheck(input: CreateFirestoreSessionD
     }
 
     return result;
+  };
+}
+
+interface BuildScopeNotGrantedResultInput {
+  readonly cliName: string;
+  readonly envName: string;
+  readonly env: CliEnvConfig;
+  readonly grantedScope: Maybe<string>;
+}
+
+/**
+ * The passing WARNING reported when the grant is known to lack `session.firestore`.
+ *
+ * The suggestion depends on whether logging in again would help: an env whose configured scopes
+ * request `session.firestore` gets it back from a fresh `auth login` (as an admin), but one that does
+ * not — notably an env redeemed from a CLI handoff, which takes the handed-off credential's scopes —
+ * would only reproduce the same grant.
+ *
+ * @param input - The CLI name, env, and the grant's scope.
+ * @returns The warning result.
+ */
+function buildScopeNotGrantedResult(input: BuildScopeNotGrantedResultInput): DoctorCheckResult {
+  const { cliName, envName, env, grantedScope } = input;
+  const envRequestsScope = hasCliFirestoreSessionScope(env.scopes ?? DEFAULT_CLI_OIDC_SCOPES) === true;
+  const scopeName = `\`${FIRESTORE_SESSION_OIDC_SCOPE}\``;
+
+  return {
+    name: FIRESTORE_SESSION_DOCTOR_CHECK_NAME,
+    ok: true,
+    warning: true,
+    detail: { reason: 'scope-not-granted', requiredScope: FIRESTORE_SESSION_OIDC_SCOPE, grantedScope, envRequestsScope },
+    suggestion: envRequestsScope
+      ? `Reads go through the API: the current grant does not carry ${scopeName}. For direct Firestore reads (and \`firestore-get\` / \`firestore-query\`), run \`${cliName} auth login --env ${envName}\` as an admin.`
+      : `Reads go through the API: the current grant does not carry ${scopeName}, and env "${envName}" does not request it (an env redeemed from a CLI handoff takes the handed-off credential's scopes). For direct Firestore reads (and \`firestore-get\` / \`firestore-query\`), log in as an admin through an env that requests ${scopeName}.`
   };
 }
 
@@ -336,10 +384,21 @@ async function runFirestoreSessionProbe(input: RunFirestoreSessionProbeInput): P
   return result;
 }
 
-interface ResolveDoctorAccessTokenInput {
+interface ResolveDoctorAccessGrantInput {
   readonly cliName: string;
   readonly envName: string;
   readonly env: CliEnvConfig;
+}
+
+/**
+ * A usable access token plus what is known of the grant behind it.
+ */
+interface DoctorAccessGrant {
+  readonly accessToken: string;
+  /**
+   * The grant's space-separated scope, when known.
+   */
+  readonly scope: Maybe<string>;
 }
 
 /**
@@ -347,18 +406,18 @@ interface ResolveDoctorAccessTokenInput {
  * doctor is a diagnostic and should not have side effects on stored credentials.
  *
  * @param input - The CLI name, env name, and resolved env.
- * @returns A usable access token, or `undefined` when none can be obtained.
+ * @returns A usable access token and its grant's scope, or `undefined` when no token can be obtained.
  */
-async function resolveDoctorAccessToken(input: ResolveDoctorAccessTokenInput): Promise<Maybe<string>> {
+async function resolveDoctorAccessGrant(input: ResolveDoctorAccessGrantInput): Promise<Maybe<DoctorAccessGrant>> {
   const { cliName, envName, env } = input;
   const paths = buildCliPaths({ cliName });
   const tokens = createCliTokenCacheStore({ tokenCachePath: paths.tokenCachePath });
   const entry = (await tokens.get(envName)) ?? readEnvTokenEntry({ cliName });
 
-  let result: Maybe<string>;
+  let result: Maybe<DoctorAccessGrant>;
 
   if (entry?.accessToken && !isTokenExpired(entry)) {
-    result = entry.accessToken;
+    result = { accessToken: entry.accessToken, scope: entry.scope };
     // A public client refreshes with `client_id` alone, so the secret is not part of the guard.
   } else if (entry?.refreshToken && env.clientId) {
     try {
@@ -369,7 +428,7 @@ async function resolveDoctorAccessToken(input: ResolveDoctorAccessTokenInput): P
         clientSecret: env.clientSecret,
         refreshToken: entry.refreshToken
       });
-      result = refreshed.access_token;
+      result = { accessToken: refreshed.access_token, scope: refreshed.scope ?? entry.scope };
     } catch {
       result = undefined;
     }
