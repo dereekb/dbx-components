@@ -58,7 +58,7 @@ export abstract class DbxFirebaseOidcConfig {
    */
   readonly tokenEndpointAuthMethods?: Maybe<OidcTokenEndpointAuthMethod[]>;
   /**
-   * Whether the client form suggests the redirect URIs of well-known hosted MCP clients (Claude, ChatGPT, and Grok).
+   * Whether the client form suggests the redirect URIs of well-known MCP clients (Claude, ChatGPT, Grok, Cursor, and Grok Bot).
    *
    * When true, {@link KNOWN_MCP_CLIENT_OIDC_REDIRECT_URI_SUGGESTIONS} are shown as suggestion chips on the redirect URIs field, ahead of
    * any {@link redirectUriSuggestions}. False by default.

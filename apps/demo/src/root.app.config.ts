@@ -470,7 +470,7 @@ export const APP_CONFIG: ApplicationConfig = {
         availableProviderProfiles: DEMO_OIDC_PROVIDER_PROFILE_DETAILS,
         tokenEndpointAuthMethods: DEMO_OIDC_TOKEN_ENDPOINT_AUTH_METHODS,
         oauthInteractionRoute: DEMO_APP_OAUTH_INTERACTION_PATH,
-        // Suggest the Claude, ChatGPT, and Grok connector callbacks on the client form's redirect URIs field.
+        // Suggest the Claude, ChatGPT, Grok, Cursor, and Grok Bot connector callbacks on the client form's redirect URIs field.
         showMcpClientRedirectUriSuggestions: true,
         redirectUriSuggestions: DEMO_OIDC_REDIRECT_URI_SUGGESTIONS,
         // Production deploys the OIDC issuer at api.components.dereekb.com so cookies are set

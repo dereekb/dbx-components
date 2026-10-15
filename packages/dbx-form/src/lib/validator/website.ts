@@ -1,6 +1,6 @@
 /* eslint-disable dereekb-util/prefer-maybe-type -- Angular's ValidatorFn returns exactly `ValidationErrors | null`; widening to `Maybe<...>` adds `undefined` and breaks the contract (TS2322). */
 import { type AbstractControl, type ValidationErrors, type ValidatorFn } from '@angular/forms';
-import { type ArrayOrValue, type Maybe, type WebsiteDomain, type WebsiteUrlDetails, asArray, isWebsiteUrlWithPrefix, websiteUrlDetails } from '@dereekb/util';
+import { type ArrayOrValue, type Maybe, type WebsiteDomain, type WebsiteUrlDetails, asArray, isCustomSchemeUri, isWebsiteUrlWithPrefix, objectHasNoKeys, websiteUrlDetails } from '@dereekb/util';
 
 export const IS_NOT_WEBSITE_URL_VALIDATION_KEY = 'isNotWebsiteUrl';
 export const IS_NOT_WEBSITE_URL_WITH_PREFIX_VALIDATION_KEY = 'isNotWebsiteUrlWithPrefix';
@@ -27,6 +27,14 @@ export interface IsWebsiteUrlValidatorConfig {
    */
   readonly allowPorts?: Maybe<boolean>;
   /**
+   * Whether or not to also accept custom-scheme URIs, such as the link or OAuth callback URI of a native app (e.g. cursor://anysphere.cursor-mcp/oauth/callback).
+   *
+   * Custom-scheme URIs are not checked against validDomains, and unsafe schemes such as `javascript:` are never accepted. See isCustomSchemeUri() in @dereekb/util.
+   *
+   * Defaults to false.
+   */
+  readonly allowCustomSchemeUris?: Maybe<boolean>;
+  /**
    * Valid domains to accept.
    *
    * Defaults to undefined.
@@ -36,15 +44,16 @@ export interface IsWebsiteUrlValidatorConfig {
 
 /**
  * Angular form validator that checks whether the control value is a valid website URL,
- * optionally requiring an http/https prefix, allowing port numbers, and restricting to specific domains.
+ * optionally requiring an http/https prefix, allowing port numbers, allowing custom-scheme URIs, and restricting to specific domains.
  *
- * @param config - Optional validation configuration for prefix, port, and domain requirements.
+ * @param config - Optional validation configuration for prefix, port, custom scheme, and domain requirements.
  * @returns A ValidatorFn that validates website URLs.
  */
 export function isWebsiteUrlValidator(config?: IsWebsiteUrlValidatorConfig): ValidatorFn {
-  const { requirePrefix, allowPorts, validDomains: inputValidDomains } = config ?? {};
+  const { requirePrefix, allowPorts, allowCustomSchemeUris, validDomains: inputValidDomains } = config ?? {};
   const isPrefixRequired = requirePrefix ?? true;
   const isAllowPorts = allowPorts ?? false;
+  const isAllowCustomSchemeUris = allowCustomSchemeUris ?? false;
   const validDomains = asArray(inputValidDomains);
   const validDomainsSet = new Set(validDomains);
   const validateDomains = validDomainsSet.size > 0;
@@ -66,6 +75,7 @@ export function isWebsiteUrlValidator(config?: IsWebsiteUrlValidatorConfig): Val
   }
 
   const portNumbersMessagePart = isAllowPorts ? '' : ' Urls with port numbers (e.g. localhost:8080) are not allowed.';
+  const customSchemeUrisMessagePart = isAllowCustomSchemeUris ? ' or an app URI (e.g. myapp://callback)' : '';
 
   const validateWebsiteValue: (details: WebsiteUrlDetails) => ValidationErrors | null = isPrefixRequired
     ? (details: WebsiteUrlDetails) => {
@@ -75,7 +85,7 @@ export function isWebsiteUrlValidator(config?: IsWebsiteUrlValidatorConfig): Val
               [IS_NOT_WEBSITE_URL_WITH_PREFIX_VALIDATION_KEY]: {
                 value: details.input,
                 isPrefixRequired,
-                message: `Value is not a website url with an http/https prefix.${portNumbersMessagePart}`
+                message: `Value is not a website url with an http/https prefix${customSchemeUrisMessagePart}.${portNumbersMessagePart}`
               }
             };
       }
@@ -86,7 +96,7 @@ export function isWebsiteUrlValidator(config?: IsWebsiteUrlValidatorConfig): Val
               [IS_NOT_WEBSITE_URL_VALIDATION_KEY]: {
                 value: details.input,
                 isPrefixRequired,
-                message: `Value is not a valid website url.${portNumbersMessagePart}`
+                message: `Value is not a valid website url${customSchemeUrisMessagePart}.${portNumbersMessagePart}`
               }
             };
       };
@@ -112,16 +122,19 @@ export function isWebsiteUrlValidator(config?: IsWebsiteUrlValidatorConfig): Val
 
   return (control: AbstractControl): ValidationErrors | null => {
     const value: string | undefined = control.value;
+    let errors: ValidationErrors | null = null;
 
-    if (value != null) {
+    if (value != null && !(isAllowCustomSchemeUris && isCustomSchemeUri(value))) {
       const details = websiteUrlDetails(value);
-
-      return {
+      const validationErrors = {
         ...validateWebsiteValue(details),
         ...validateWebsiteDomain(details)
       };
+
+      // return null when valid; a non-null (even empty) errors object marks the control invalid when this validator is used on its own
+      errors = objectHasNoKeys(validationErrors) ? null : validationErrors;
     }
 
-    return {};
+    return errors;
   };
 }

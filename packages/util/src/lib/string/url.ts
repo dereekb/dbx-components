@@ -683,6 +683,44 @@ export function readUriScheme(input: string): Maybe<UriScheme> {
 }
 
 /**
+ * URI schemes that can run script or expose local/browser content when opened: `javascript`, `vbscript`, `data`, `blob`, `file`, and `about`.
+ *
+ * These are never treated as custom-scheme URIs by {@link isCustomSchemeUri}.
+ */
+export const UNSAFE_URI_SCHEMES: ReadonlySet<UriScheme> = new Set(['javascript', 'vbscript', 'data', 'blob', 'file', 'about']);
+
+/**
+ * Regex that matches a URI whose scheme is followed by a path (`scheme:/...` or `scheme://...`) and captures the scheme. Whitespace is not allowed.
+ */
+export const CUSTOM_SCHEME_URI_REGEX: RegExp = /^([a-zA-Z][a-zA-Z0-9+.-]*):\/\S*$/;
+
+/**
+ * Returns true if the input is a custom-scheme URI, such as the link or OAuth callback URI of a native app.
+ *
+ * Examples where it will return true:
+ * - cursor://anysphere.cursor-mcp/oauth/callback
+ * - com.example.app:/oauth2redirect
+ *
+ * Non-examples:
+ * - https://dereekb.com        // http/https
+ * - mailto:hello@dereekb.com   // no path after the scheme
+ * - localhost:8080/callback    // host:port, not a scheme
+ * - javascript://alert(1)      // one of the UNSAFE_URI_SCHEMES
+ *
+ * @param input - The string to check.
+ * @returns Whether the input is a custom-scheme URI.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilTags string, url, uri, scheme, protocol, custom, app, native, deep link, redirect, predicate
+ * @dbxUtilRelated has-uri-scheme, read-uri-scheme
+ */
+export function isCustomSchemeUri(input: string): boolean {
+  const scheme = CUSTOM_SCHEME_URI_REGEX.exec(input)?.[1].toLowerCase();
+  return scheme != null && scheme !== 'http' && scheme !== 'https' && !UNSAFE_URI_SCHEMES.has(scheme);
+}
+
+/**
  * Regex that matches `http://` or `https://` at the start of a string.
  */
 export const HTTP_OR_HTTPS_REGEX: RegExp = /^https:\/\/|http:\/\//;

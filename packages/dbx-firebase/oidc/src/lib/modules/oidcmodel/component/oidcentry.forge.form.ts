@@ -138,6 +138,9 @@ export function oidcClientNameForgeField() {
  *
  * Each configured {@link OidcRedirectUriSuggestion} is rendered as a suggestion chip that adds all of its redirect URIs when picked.
  *
+ * Accepts http/https URLs and the custom-scheme callback URIs native apps register (e.g. `cursor://anysphere.cursor-mcp/oauth/callback`).
+ * The server registers a client with a custom-scheme redirect URI as a native client.
+ *
  * @param config - Optional configuration, including the redirect URI suggestions to show.
  * @returns A forge searchable chip field for redirect URIs.
  */
@@ -152,11 +155,11 @@ export function oidcClientRedirectUrisForgeField(config?: OidcEntryClientUpdateF
     key: 'redirect_uris',
     label: 'Redirect URIs',
     placeholder: 'https://example.com/callback',
-    hint: 'Type a redirect URI (e.g. https://example.com/callback) and press enter to add it.',
+    hint: 'Type a redirect URI (e.g. https://example.com/callback, or an app callback like cursor://...) and press enter to add it.',
     required: true,
     props: {
       searchOnEmptyText: false,
-      textInputValidator: isWebsiteUrlValidator({ requirePrefix: true, allowPorts: true }),
+      textInputValidator: isWebsiteUrlValidator({ requirePrefix: true, allowPorts: true, allowCustomSchemeUris: true }),
       search: () => of([]),
       displayForValue: (values) => of(values.map((v) => ({ ...v, label: v.value }))),
       inputOnNewLine: true,

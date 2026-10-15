@@ -21,6 +21,7 @@ import {
   websiteUrlDetails,
   hasUriScheme,
   readUriScheme,
+  isCustomSchemeUri,
   websiteUrlRelativePathFunctions
 } from './url';
 
@@ -520,6 +521,40 @@ describe('readUriScheme()', () => {
 
   it('should return undefined when the input carries no scheme', () => {
     expect(readUriScheme('hello@dereekb.com')).toBeUndefined();
+  });
+});
+
+describe('isCustomSchemeUri()', () => {
+  it('should return true for a custom scheme with an authority', () => {
+    expect(isCustomSchemeUri('cursor://anysphere.cursor-mcp/oauth/callback')).toBe(true);
+  });
+
+  it('should return true for a reverse-domain private-use scheme (RFC 8252)', () => {
+    expect(isCustomSchemeUri('com.example.app:/oauth2redirect')).toBe(true);
+  });
+
+  it('should return false for http and https URIs', () => {
+    expect(isCustomSchemeUri('https://dereekb.com/callback')).toBe(false);
+    expect(isCustomSchemeUri('http://localhost:8080/callback')).toBe(false);
+    expect(isCustomSchemeUri('HTTPS://dereekb.com/callback')).toBe(false);
+  });
+
+  it('should return false for a scheme with no path', () => {
+    expect(isCustomSchemeUri('mailto:hello@dereekb.com')).toBe(false);
+  });
+
+  it('should return false for a host:port value', () => {
+    expect(isCustomSchemeUri('localhost:8080/callback')).toBe(false);
+  });
+
+  it('should return false for unsafe schemes', () => {
+    expect(isCustomSchemeUri('javascript://alert(1)')).toBe(false);
+    expect(isCustomSchemeUri('data:/text/html')).toBe(false);
+    expect(isCustomSchemeUri('file:///etc/passwd')).toBe(false);
+  });
+
+  it('should return false for input containing whitespace', () => {
+    expect(isCustomSchemeUri('myapp://call back')).toBe(false);
   });
 });
 
