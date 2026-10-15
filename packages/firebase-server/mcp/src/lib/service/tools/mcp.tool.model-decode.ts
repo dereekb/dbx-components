@@ -1,6 +1,8 @@
+import { type Maybe } from '@dereekb/util';
 import type { CallToolResult } from '@modelcontextprotocol/server';
 import { flatFirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey, twoWayFlatFirestoreModelKey } from '@dereekb/firebase';
 import { findCompositeKeyModelsDerivedFrom, type McpManifestModelCompositeKeyEncoding, type McpManifestModelEntry } from '../mcp.manifest';
+import { type McpToolCatalogExamples } from '../mcp.examples';
 import { formatMcpToolErrorResponse } from '../mcp.response-formatter';
 import { buildStaticToolDefinition, type McpToolDefinition, type McpStaticToolHandler, type McpStaticToolHandlerContext } from '../mcp.tool-generator';
 import { findModelEntry } from './mcp.tool.model-info';
@@ -33,6 +35,10 @@ export interface CreateModelDecodeToolDeps {
    * Frozen catalog of Firestore models used to resolve segment prefixes.
    */
   readonly manifest: readonly McpManifestModelEntry[];
+  /**
+   * Examples shown in the tool text. Omit for generic wording.
+   */
+  readonly examples?: Maybe<Pick<McpToolCatalogExamples, 'modelKey'>>;
 }
 
 /**
@@ -59,20 +65,49 @@ export interface DecodedKeySegment {
 }
 
 /**
- * Segments of a decoded Firestore key — the leaf, its ancestor chain, and any prefixes the manifest
- * could not resolve.
+ * Code of a {@link DecodedKeyIssue}.
+ *
+ * - `NESTED_ROOT_COLLECTION` — a root model's prefix sits under another collection.
+ * - `MISSING_PARENT` — a subcollection model's prefix starts the key, with no parent path.
+ * - `WRONG_PARENT` — a subcollection model sits under a model that is not its declared parent.
+ */
+export type DecodedKeyIssueCode = 'NESTED_ROOT_COLLECTION' | 'MISSING_PARENT' | 'WRONG_PARENT';
+
+/**
+ * A structural problem with a decoded key, found by checking each resolved segment against its declared parent.
+ */
+export interface DecodedKeyIssue {
+  /**
+   * The prefix of the segment with the problem.
+   */
+  readonly prefix: string;
+  readonly code: DecodedKeyIssueCode;
+  readonly message: string;
+}
+
+/**
+ * Segments of a decoded Firestore key — the leaf, its ancestor chain, any prefixes the manifest
+ * could not resolve, and whether the key is structurally valid.
  */
 export interface DecodedKeySegments {
   readonly key: string;
+  /**
+   * True when every prefix resolved and each segment sits under its declared parent.
+   */
+  readonly valid: boolean;
   readonly leaf: DecodedKeySegment;
   readonly ancestors: ReadonlyArray<DecodedKeySegment>;
   readonly unresolvedPrefixes: ReadonlyArray<string>;
+  /**
+   * Structural problems with the resolved segments. Empty for a valid key.
+   */
+  readonly issues: ReadonlyArray<DecodedKeyIssue>;
 }
 
 /**
  * A composite-key model whose document id is derived from the decoded key, with that document's
  * ready-to-use key. Published so a caller never has to hand-build a flattened id (e.g. decoding a
- * `District` key also yields the `jobDistrict` key `jd/<flattened district key>`).
+ * `Profile` key `pr/abc` also yields the `NotificationBox` key `nb/pr_abc`).
  */
 export interface DerivedCompositeKey {
   /**
@@ -90,14 +125,14 @@ export interface DerivedCompositeKey {
  */
 export interface ModelDecodeToolOutput extends DecodedKeySegments {
   /**
-   * Composite-key models derived from this key (see {@link DerivedCompositeKey}). Empty when the leaf
-   * prefix is unresolved or no model declares this leaf as a composite-key source.
+   * Composite-key models derived from this key (see {@link DerivedCompositeKey}). Empty when the key is
+   * not valid or no model declares this leaf as a composite-key source.
    */
   readonly derivedKeys: ReadonlyArray<DerivedCompositeKey>;
   /**
    * When the leaf is itself a `two-way` composite-key model, the source key recovered from its id
    * (`inferKeyFromTwoWayFlatFirestoreModelKey`), decoded. Absent for `one-way` models (the source is
-   * not recoverable) and when the id does not parse as a flattened key.
+   * not recoverable), when the id does not parse as a flattened key, and when the key is not valid.
    */
   readonly compositeSource?: DecodedKeySegments;
 }
@@ -121,12 +156,13 @@ export interface ModelDecodeToolOutput extends DecodedKeySegments {
 export function createModelDecodeTool(deps: CreateModelDecodeToolDeps): McpToolDefinition {
   const handler: McpStaticToolHandler = (args, ctx) => Promise.resolve(modelDecodeToolHandler(args, ctx, deps));
   const name = MODEL_DECODE_TOOL_NAME;
-  const description = `Decode a Firestore model key ("prefix/id", or subcollection path "parentPrefix/parentId/childPrefix/childId") into { leaf, ancestors, unresolvedPrefixes, derivedKeys, compositeSource? } using the registered manifest (${deps.manifest.length} model${deps.manifest.length === 1 ? '' : 's'}). \`derivedKeys\` lists composite-key models whose document id is a flattened form of this key, each with its ready-to-use key.`;
+  const modelKey = deps.examples?.modelKey;
+  const description = `Decode a Firestore model key ("prefix/id"${modelKey ? `, e.g. "${modelKey}"` : ''}, or a subcollection path "parentPrefix/parentId/childPrefix/childId") into { valid, leaf, ancestors, unresolvedPrefixes, issues, derivedKeys, compositeSource? } using the registered manifest (${deps.manifest.length} model${deps.manifest.length === 1 ? '' : 's'}). \`valid\` is false when a prefix is unknown or a collection sits under the wrong parent; \`derivedKeys\` (composite-key models whose document id is a flattened form of this key, each with its ready-to-use key) and \`compositeSource\` are only computed for a valid key.`;
 
   return buildStaticToolDefinition({
     name,
     description,
-    inputSchema: MODEL_DECODE_INPUT_SCHEMA,
+    inputSchema: buildModelDecodeInputSchema(modelKey),
     outputSchema: MODEL_DECODE_OUTPUT_SCHEMA,
     dispatch: {
       call: MODEL_DECODE_DISPATCH_CALL,
@@ -169,9 +205,9 @@ function parseModelDecodeInput(args: Record<string, unknown>): ModelDecodeToolIn
 
 /**
  * Splits `rawKey` on `/`, resolves each `[prefix, id]` pair against the manifest, and
- * returns the leaf segment + ancestor chain, plus the composite-key relationships declared
- * on the manifest: the keys of models derived from this key (`derivedKeys`) and, for a
- * two-way composite-key leaf, the recovered source key (`compositeSource`).
+ * returns the leaf segment + ancestor chain and its structural validity, plus — for a valid key —
+ * the composite-key relationships declared on the manifest: the keys of models derived from this
+ * key (`derivedKeys`) and, for a two-way composite-key leaf, the recovered source key (`compositeSource`).
  *
  * Mirrors the dbx-cli `decodeFirestoreModelKey` helper structurally; both implementations
  * must stay in lockstep on segment count, resolution order, and composite-key output.
@@ -185,7 +221,7 @@ function parseModelDecodeInput(args: Record<string, unknown>): ModelDecodeToolIn
  */
 export function decodeFirestoreModelKey(rawKey: string, manifest: ReadonlyArray<McpManifestModelEntry>): ModelDecodeToolOutput {
   const segments = decodeFirestoreModelKeySegments(rawKey, manifest);
-  const leafEntry = segments.leaf.modelType == null ? undefined : findModelEntry(segments.leaf.prefix, manifest);
+  const leafEntry = !segments.valid || segments.leaf.modelType == null ? undefined : findModelEntry(segments.leaf.prefix, manifest);
   const derivedKeys = leafEntry == null ? [] : findCompositeKeyModelsDerivedFrom(leafEntry, manifest).map((entry) => toDerivedCompositeKey(segments.key, entry));
   const compositeSource = leafEntry?.compositeKey?.encoding === 'two-way' ? decodeTwoWayCompositeSource(segments.leaf.id, manifest) : undefined;
 
@@ -247,7 +283,7 @@ export function decodeFirestoreModelKeySegments(rawKey: string, manifest: Readon
   const trimmed = rawKey.trim();
 
   if (trimmed.length === 0) {
-    throw new Error('model-decode: key is empty. Provide a Firestore key like `sf/abc123`.');
+    throw new Error('model-decode: key is empty. Provide a Firestore key like `prefix/id`.');
   }
 
   const segments = trimmed.split('/').filter((s) => s.length > 0);
@@ -258,21 +294,77 @@ export function decodeFirestoreModelKeySegments(rawKey: string, manifest: Readon
 
   const decoded: DecodedKeySegment[] = [];
   const unresolved: string[] = [];
+  const issues: DecodedKeyIssue[] = [];
+  let previousEntry: Maybe<McpManifestModelEntry>;
 
   for (let i = 0; i < segments.length; i += 2) {
     const prefix = segments[i];
     const id = segments[i + 1];
     const entry = findModelEntry(prefix, manifest);
+
     if (entry == null) {
       unresolved.push(prefix);
+    } else {
+      const issue = findDecodedKeySegmentIssue({ entry, prefix, index: i, segments, previousEntry, manifest });
+
+      if (issue != null) {
+        issues.push(issue);
+      }
     }
+
     decoded.push(toSegment(prefix, id, entry));
+    previousEntry = entry;
   }
 
   const leaf = decoded.at(-1) as DecodedKeySegment;
   const ancestors = decoded.slice(0, -1);
+  const valid = unresolved.length === 0 && issues.length === 0;
 
-  return { key: trimmed, leaf, ancestors, unresolvedPrefixes: unresolved };
+  return { key: trimmed, valid, leaf, ancestors, unresolvedPrefixes: unresolved, issues };
+}
+
+interface FindDecodedKeySegmentIssueInput {
+  readonly entry: McpManifestModelEntry;
+  readonly prefix: string;
+  /**
+   * Index of the segment's prefix within `segments`.
+   */
+  readonly index: number;
+  readonly segments: readonly string[];
+  /**
+   * The previous segment's entry, when it resolved.
+   */
+  readonly previousEntry: Maybe<McpManifestModelEntry>;
+  readonly manifest: ReadonlyArray<McpManifestModelEntry>;
+}
+
+/**
+ * Checks one resolved segment against its declared parent. A segment under an unresolved prefix is only checked for
+ * being a nested root collection, since the unresolved prefix already invalidates the key.
+ *
+ * @param input - The segment's entry, position, previous entry, and the manifest.
+ * @returns The issue, or undefined when the segment is placed correctly.
+ */
+function findDecodedKeySegmentIssue(input: FindDecodedKeySegmentIssueInput): Maybe<DecodedKeyIssue> {
+  const { entry, prefix, index, segments, previousEntry, manifest } = input;
+  const parentIdentityConst = entry.parentIdentityConst;
+  let issue: Maybe<DecodedKeyIssue>;
+
+  if (index === 0) {
+    if (parentIdentityConst != null) {
+      const parentEntry = manifest.find((x) => x.identityConst === parentIdentityConst);
+      const example = entry.exampleKey ?? (parentEntry == null ? undefined : `${parentEntry.collectionPrefix}/<parentId>/${prefix}/<id>`);
+      issue = { prefix, code: 'MISSING_PARENT', message: `"${prefix}" (${entry.modelName}) is a subcollection${parentEntry == null ? '' : ` of ${parentEntry.modelName}`}; its key needs the parent path${example ? `, e.g. "${example}"` : ''}.` };
+    }
+  } else if (parentIdentityConst == null) {
+    const parentPath = segments.slice(0, index).join('/');
+    issue = { prefix, code: 'NESTED_ROOT_COLLECTION', message: `"${prefix}" (${entry.modelName}) is a root collection; it cannot sit under "${parentPath}". Its keys look like "${prefix}/<id>".` };
+  } else if (previousEntry != null && parentIdentityConst !== previousEntry.identityConst) {
+    const parentEntry = manifest.find((x) => x.identityConst === parentIdentityConst);
+    issue = { prefix, code: 'WRONG_PARENT', message: `"${prefix}" (${entry.modelName}) belongs under ${parentEntry == null ? parentIdentityConst : `"${parentEntry.collectionPrefix}" (${parentEntry.modelName})`}, not "${previousEntry.collectionPrefix}" (${previousEntry.modelName}).` };
+  }
+
+  return issue;
 }
 
 function toSegment(prefix: string, id: string, entry: McpManifestModelEntry | undefined): DecodedKeySegment {
@@ -293,18 +385,20 @@ function toSegment(prefix: string, id: string, entry: McpManifestModelEntry | un
 }
 
 // MARK: Schemas
-const MODEL_DECODE_INPUT_SCHEMA = {
-  type: 'object',
-  required: ['key'],
-  properties: {
-    key: {
-      type: 'string',
-      minLength: 1,
-      description: 'Firestore model key — prefix/id, or `parentPrefix/parentId/childPrefix/childId` for subcollections.'
-    }
-  },
-  additionalProperties: false
-} as const;
+function buildModelDecodeInputSchema(modelKey: Maybe<string>) {
+  return {
+    type: 'object',
+    required: ['key'],
+    properties: {
+      key: {
+        type: 'string',
+        minLength: 1,
+        description: `Firestore model key — prefix/id${modelKey ? ` (e.g. "${modelKey}")` : ''}, or \`parentPrefix/parentId/childPrefix/childId\` for subcollections.`
+      }
+    },
+    additionalProperties: false
+  };
+}
 
 const SEGMENT_SCHEMA = {
   type: 'object',
@@ -322,8 +416,20 @@ const SEGMENT_SCHEMA = {
   }
 } as const;
 
+const ISSUE_SCHEMA = {
+  type: 'object',
+  required: ['prefix', 'code', 'message'],
+  properties: {
+    prefix: { type: 'string' },
+    code: { type: 'string', enum: ['NESTED_ROOT_COLLECTION', 'MISSING_PARENT', 'WRONG_PARENT'] },
+    message: { type: 'string' }
+  }
+} as const;
+
 const DECODED_SEGMENTS_PROPERTIES = {
   key: { type: 'string', description: 'The trimmed input key.' },
+  valid: { type: 'boolean', description: 'True when every prefix resolved and each segment sits under its declared parent.' },
+  issues: { type: 'array', description: 'Structural problems: a root collection nested under another, a subcollection without its parent, or under the wrong parent.', items: ISSUE_SCHEMA },
   leaf: SEGMENT_SCHEMA,
   ancestors: { type: 'array', description: 'Parent segments, root-first.', items: SEGMENT_SCHEMA },
   unresolvedPrefixes: { type: 'array', description: 'Prefixes that did not match any model in the manifest.', items: { type: 'string' } }
@@ -343,18 +449,18 @@ const DERIVED_KEY_SCHEMA = {
 
 const MODEL_DECODE_OUTPUT_SCHEMA = {
   type: 'object',
-  required: ['key', 'leaf', 'ancestors', 'unresolvedPrefixes', 'derivedKeys'],
+  required: ['key', 'valid', 'leaf', 'ancestors', 'unresolvedPrefixes', 'issues', 'derivedKeys'],
   properties: {
     ...DECODED_SEGMENTS_PROPERTIES,
     derivedKeys: {
       type: 'array',
-      description: 'Composite-key models whose document id is derived from this key (from `@dbxModelCompositeKey`), each with its ready-to-use key. Empty when none apply.',
+      description: 'Composite-key models whose document id is derived from this key (from `@dbxModelCompositeKey`), each with its ready-to-use key. Empty when none apply or the key is not valid.',
       items: DERIVED_KEY_SCHEMA
     },
     compositeSource: {
       type: 'object',
       description: 'When the leaf is a two-way composite-key model, the source key recovered from its id, decoded. Absent otherwise.',
-      required: ['key', 'leaf', 'ancestors', 'unresolvedPrefixes'],
+      required: ['key', 'valid', 'leaf', 'ancestors', 'unresolvedPrefixes', 'issues'],
       properties: DECODED_SEGMENTS_PROPERTIES
     }
   }

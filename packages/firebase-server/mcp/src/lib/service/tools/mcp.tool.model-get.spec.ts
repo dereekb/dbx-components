@@ -2,7 +2,7 @@ import { type Maybe } from '@dereekb/util';
 import { type FirestoreModelIdentity } from '@dereekb/firebase';
 import { type ModelAccessMultiReadResult } from '@dereekb/firebase-server';
 import type { CallToolResult } from '@modelcontextprotocol/server';
-import { createModelGetTool, MCP_MODEL_GET_BATCH_SIZE, MODEL_GET_TOOL_NAME } from './mcp.tool.model-get';
+import { createModelGetTool, MCP_MODEL_GET_BATCH_SIZE, MODEL_GET_MODEL_TYPE_REQUIRED_ERROR_CODE, MODEL_GET_TOOL_NAME, MODEL_GET_UNKNOWN_MODEL_KEY_ERROR_CODE, type McpModelGetResolveIdentityForKey } from './mcp.tool.model-get';
 import { type McpManifestModelEntry } from '../mcp.manifest';
 import { type McpStaticToolHandlerContext } from '../mcp.tool-generator';
 
@@ -225,5 +225,101 @@ describe('createModelGetTool', () => {
       expect(merged.results).toHaveLength(MCP_MODEL_GET_BATCH_SIZE + 1);
       expect(merged.errors).toHaveLength(2);
     });
+  });
+});
+
+describe('createModelGetTool() without modelType', () => {
+  const IDENTITIES_BY_COLLECTION_TYPE: Record<string, FirestoreModelIdentity> = {
+    gb: makeIdentity('guestbook', 'gb'),
+    'gb/gbe': { type: 'nested', modelType: 'guestbookEntry', collectionName: 'gbe', collectionType: 'gb/gbe' } as FirestoreModelIdentity,
+    pr: makeIdentity('profile', 'pr')
+  };
+
+  const resolveIdentityForKey: McpModelGetResolveIdentityForKey = (key) => {
+    const segments = key.split('/');
+    const collectionType = segments.filter((_, i) => i % 2 === 0).join('/');
+    return segments.length % 2 === 0 ? IDENTITIES_BY_COLLECTION_TYPE[collectionType] : undefined;
+  };
+
+  function buildTool(input?: { readonly failModelType?: string }) {
+    const calls: RecordedCall[] = [];
+    const tool = createModelGetTool({
+      readDocuments: async (modelType, keys) => {
+        calls.push({ modelType, keys });
+
+        if (modelType === input?.failModelType) {
+          throw new Error('server-only');
+        }
+
+        return { results: keys.map((key) => ({ key, data: { modelType } })), errors: [] };
+      },
+      resolveIdentity: () => undefined,
+      resolveIdentityForKey
+    });
+
+    return { tool, calls };
+  }
+
+  it('reads each model group through its own model, grouped in first-seen order', async () => {
+    const { tool, calls } = buildTool();
+    const result = await tool.staticHandler!({ keys: ['gb/a', 'pr/1', 'gb/a/gbe/x', 'gb/b'] }, makeCtx());
+    const output = unwrapStructured(result);
+
+    expect(result.isError).toBeFalsy();
+    expect(calls).toEqual([
+      { modelType: 'guestbook', keys: ['gb/a', 'gb/b'] },
+      { modelType: 'profile', keys: ['pr/1'] },
+      { modelType: 'guestbookEntry', keys: ['gb/a/gbe/x'] }
+    ]);
+    expect(output.results.map((x) => x.key)).toEqual(['gb/a', 'gb/b', 'pr/1', 'gb/a/gbe/x']);
+    expect(output.errors).toEqual([]);
+  });
+
+  it('returns per-key errors for a bare id and an unknown path', async () => {
+    const { tool, calls } = buildTool();
+    const result = await tool.staticHandler!({ keys: ['abc', 'zzz/1', 'gb/a'] }, makeCtx());
+    const output = unwrapStructured(result);
+
+    expect(result.isError).toBeFalsy();
+    expect(calls).toEqual([{ modelType: 'guestbook', keys: ['gb/a'] }]);
+    expect(output.errors.map((x) => [x.key, x.code])).toEqual([
+      ['abc', MODEL_GET_MODEL_TYPE_REQUIRED_ERROR_CODE],
+      ['zzz/1', MODEL_GET_UNKNOWN_MODEL_KEY_ERROR_CODE]
+    ]);
+    expect(output.errors[1].message).toContain('"zzz"');
+  });
+
+  it('turns a thrown group read into per-key errors while other groups return', async () => {
+    const { tool } = buildTool({ failModelType: 'profile' });
+    const result = await tool.staticHandler!({ keys: ['pr/1', 'gb/a', 'pr/2'] }, makeCtx());
+    const output = unwrapStructured(result);
+
+    expect(result.isError).toBeFalsy();
+    expect(output.results.map((x) => x.key)).toEqual(['gb/a']);
+    expect(output.errors.map((x) => x.key)).toEqual(['pr/1', 'pr/2']);
+  });
+
+  it('only requires keys in the schema when a key resolver is wired', () => {
+    expect(buildTool().tool.inputSchema).toMatchObject({ required: ['keys'] });
+  });
+
+  it('still requires modelType when no key resolver is wired', async () => {
+    const tool = createModelGetTool({ readDocuments: async () => ({ results: [], errors: [] }), resolveIdentity: () => undefined });
+    const result = await tool.staticHandler!({ keys: ['gb/a'] }, makeCtx());
+
+    expect(result.isError).toBe(true);
+  });
+
+  it('uses no example text when examples are absent', () => {
+    const { tool } = buildTool();
+    expect(JSON.stringify(tool.inputSchema)).not.toContain('e.g.');
+  });
+
+  it('uses the example model types and key when given', () => {
+    const tool = createModelGetTool({ readDocuments: async () => ({ results: [], errors: [] }), resolveIdentity: () => undefined, resolveIdentityForKey, examples: { modelTypes: ['guestbook', 'profile'], modelKey: 'gb/abc123' } });
+    const schema = JSON.stringify(tool.inputSchema);
+
+    expect(schema).toContain(String.raw`e.g. \"guestbook\" or \"profile\"`);
+    expect(schema).toContain(String.raw`e.g. \"gb/abc123\"`);
   });
 });

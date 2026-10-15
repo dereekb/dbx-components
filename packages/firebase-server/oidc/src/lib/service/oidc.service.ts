@@ -205,7 +205,9 @@ export class OidcService {
           sub: accessToken.accountId,
           scope: accessToken.scope,
           client_id: accessToken.clientId,
-          ...accountClaims
+          ...accountClaims,
+          // after the claims spread so an app claim cannot shadow it
+          grantId: accessToken.grantId
         }
       };
     } else {

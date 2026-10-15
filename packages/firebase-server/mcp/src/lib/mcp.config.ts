@@ -1,6 +1,6 @@
-import { type AuthClaims, type AuthRoleSet, type Maybe, type PromiseOrValue } from '@dereekb/util';
+import { type AuthClaims, type AuthRoleSet, type Maybe, type PromiseOrValue, type WebsiteUrl } from '@dereekb/util';
 import { type FirebaseServerAuthData } from '@dereekb/firebase-server';
-import { type FirestoreModelType, type OidcModelScopeRequirement, type OidcScope, type OidcScopeTerm } from '@dereekb/firebase';
+import { type CliTokenCredentialType, type FirestoreModelKey, type FirestoreModelType, type OidcModelScopeRequirement, type OidcScope, type OidcScopeTerm } from '@dereekb/firebase';
 import { type McpMethodToolSelector } from './service/mcp.method';
 import { type McpToolDefinition } from './service/mcp.tool-generator';
 
@@ -302,6 +302,51 @@ export interface McpToolsConfig {
    * Append the compact usage block to the server instructions. Defaults to `true`.
    */
   readonly instructions?: boolean;
+  /**
+   * Examples shown in the tool text: the usage block, tool descriptions, and input schemas.
+   *
+   * Each field resolves in order: the configured value, then a value derived from the app's own surface, then generic
+   * wording with no example. Method-based examples (method id, search queries) are derived per request from the methods
+   * the caller can see; catalog examples (model type, model key, enum name, page URL) are derived once at boot from the
+   * loaded `mcp.manifest.json` / `route.manifest.json`.
+   *
+   * Pass `false` to show generic wording only. Applies in legacy (non-compact) mode too, for the built-in tools.
+   */
+  readonly examples?: McpToolExamplesConfig | false;
+}
+
+/**
+ * App-specific examples shown in the MCP tool text. Every field is optional; an omitted field is derived from the app's
+ * own surface.
+ *
+ * Configured values are shown to every caller, so do not name a method some callers cannot see.
+ */
+export interface McpToolExamplesConfig {
+  /**
+   * Example search queries, one to three keywords each, e.g. `['create guestbook', 'subscribe notifications']`. At most 2
+   * are shown.
+   */
+  readonly searchQueries?: readonly string[];
+  /**
+   * Example method id, e.g. `guestbook.update.subscribeToNotifications`. Prefer one with a specifier.
+   */
+  readonly methodId?: string;
+  /**
+   * Example model type, e.g. `guestbook`.
+   */
+  readonly modelType?: FirestoreModelType;
+  /**
+   * Example full model key, e.g. `gb/abc123`.
+   */
+  readonly modelKey?: FirestoreModelKey;
+  /**
+   * Example enum declaration name, e.g. `NotificationRecipientSendFlag`.
+   */
+  readonly enumName?: string;
+  /**
+   * Example app page URL, e.g. `https://app.example.com/guestbook/abc123`.
+   */
+  readonly pageUrl?: WebsiteUrl;
 }
 
 /**
@@ -404,17 +449,28 @@ export interface McpCliTokenMintInput {
    * path and not the other — a gate that looks enabled while doing nothing is worse than none.
    */
   readonly requestIp?: Maybe<string>;
+  /**
+   * The kind of credential to mint. The tool has already defaulted it to `bearer`.
+   *
+   * A minter MUST forward it to the mint (`OidcCliTokenService.mintCliToken`), or the mint falls back
+   * to the service default (`refresh`) and the handoff stays coupled to the CLI client's registration.
+   */
+  readonly credentialType?: Maybe<CliTokenCredentialType>;
 }
 
 /**
- * What an {@link McpCliTokenMinter} returns. Carries the one-time claim code and NEVER the refresh
- * token — the tool's output reaches an MCP transcript, and a refresh token must not.
+ * What an {@link McpCliTokenMinter} returns. Carries the one-time claim code and NEVER the credential
+ * — the tool's output reaches an MCP transcript, and a credential must not.
  */
 export interface McpCliTokenMintResult {
   readonly claimCode: string;
   readonly claimExpiresAt: string;
   readonly expiresAt: string;
   readonly scope: string;
+  /**
+   * The kind of credential the claim code redeems to, as reported by the mint.
+   */
+  readonly credentialType?: Maybe<CliTokenCredentialType>;
   /**
    * The CLI's binary name, used to render the exact `<cli> auth handoff <code>` command.
    */

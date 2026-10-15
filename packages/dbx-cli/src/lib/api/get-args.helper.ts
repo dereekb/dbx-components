@@ -1,4 +1,4 @@
-import { compareStrings } from '@dereekb/util';
+import { compareStrings, type Maybe } from '@dereekb/util';
 import { decodeFirestoreModelKey } from '../manifest/build-model-decode-command';
 import { type CliModelManifest } from '../manifest/types';
 import { CliError } from '../util/output';
@@ -59,7 +59,7 @@ export function parseGetArgs(input: { readonly modelOrKey: string | undefined; r
   } else {
     if (!modelOrKey.includes('/')) {
       throw new CliError({
-        message: `get: '${modelOrKey}' looks like a bare doc id. Provide a full key (e.g. 'jws/abc123') or use 'get <model> <key>'.`,
+        message: `get: '${modelOrKey}' looks like a bare doc id. Provide a full key (e.g. '${exampleGetKey(input.manifest)}') or use 'get <model> <key>'.`,
         code: 'INVALID_ARGUMENT'
       });
     }
@@ -80,6 +80,14 @@ export function parseGetArgs(input: { readonly modelOrKey: string | undefined; r
         message: `get: unable to resolve modelType for key '${modelOrKey}'. Unknown prefix: ${decoded.unresolvedPrefixes.join(', ') || decoded.leaf.prefix}. Known prefixes: ${manifestPrefixList(manifest)}.`,
         code: 'INVALID_ARGUMENT',
         suggestion: "Run `<cli> model-decode '<key>'` to inspect a key, or use `get <model> <key>` explicitly."
+      });
+    }
+
+    if (!decoded.valid) {
+      throw new CliError({
+        message: `get: key '${modelOrKey}' is not a valid key. ${decoded.issues.map((issue) => issue.message).join(' ')}`,
+        code: 'INVALID_ARGUMENT',
+        suggestion: "Run `<cli> model-decode '<key>'` to inspect a key."
       });
     }
 
@@ -152,20 +160,30 @@ function inferModelTypeFromKeys(keys: ReadonlyArray<string>, manifest: CliModelM
 
   const decodedTypes = new Set<string>();
   const unresolved: string[] = [];
+  const issueMessages: string[] = [];
 
   for (const key of keys) {
     const decoded = decodeFirestoreModelKey(key, manifest);
 
     if (decoded.unresolvedPrefixes.length > 0 || !decoded.leaf.modelType) {
       unresolved.push(key);
-    } else {
+    } else if (decoded.valid) {
       decodedTypes.add(decoded.leaf.modelType);
+    } else {
+      issueMessages.push(...decoded.issues.map((issue) => `'${key}': ${issue.message}`));
     }
   }
 
   if (unresolved.length > 0) {
     throw new CliError({
       message: `get-many: unable to resolve modelType for key(s): ${unresolved.join(', ')}. Known prefixes: ${manifestPrefixList(manifest)}.`,
+      code: 'INVALID_ARGUMENT'
+    });
+  }
+
+  if (issueMessages.length > 0) {
+    throw new CliError({
+      message: `get-many: invalid key(s). ${issueMessages.join(' ')}`,
       code: 'INVALID_ARGUMENT'
     });
   }
@@ -179,6 +197,17 @@ function inferModelTypeFromKeys(keys: ReadonlyArray<string>, manifest: CliModelM
 
   const [modelType] = decodedTypes;
   return { modelType, keys };
+}
+
+/**
+ * Builds an example full key from the first root, non-singleton, non-composite model of the manifest, for error text.
+ *
+ * @param manifest - The model manifest, when wired.
+ * @returns `<prefix>/abc123`, or `prefix/abc123` when the manifest has no such model.
+ */
+function exampleGetKey(manifest: Maybe<CliModelManifest>): string {
+  const prefix = manifest?.find((entry) => entry.parentIdentityConst == null && entry.singleton !== true && entry.compositeKey == null)?.collectionPrefix ?? 'prefix';
+  return `${prefix}/abc123`;
 }
 
 function manifestPrefixList(manifest: CliModelManifest): string {

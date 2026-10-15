@@ -1,9 +1,10 @@
 import { FilterSource, FilterSourceConnector } from '@dereekb/rxjs';
-import { type DbxFilterButtonConfigWithPresetFilter, type DbxButtonDisplayStylePair, DbxFilterPopoverButtonComponent } from '@dereekb/dbx-web';
+import { type DbxFilterButtonConfig, type DbxButtonDisplayStylePair, DbxFilterPopoverButtonComponent } from '@dereekb/dbx-web';
 import { Component, inject, input } from '@angular/core';
 import { type DocInteractionTestFilter } from './filter';
 import { type Maybe } from '@dereekb/util';
 import { DocInteractionTestDateFilterPresetFilterComponent } from './filter.date.preset.component';
+import { DocInteractionTestDateFilterCustomFilterComponent } from './filter.date.custom.component';
 
 @Component({
   selector: 'doc-interaction-test-date-filter-popover-button',
@@ -18,16 +19,21 @@ export class DocInteractionTestDateFilterPopoverButtonComponent {
 
   readonly buttonDisplayStyle = input<Maybe<DbxButtonDisplayStylePair>>();
 
-  readonly config: DbxFilterButtonConfigWithPresetFilter<DocInteractionTestFilter, DocInteractionTestDateFilterPresetFilterComponent> = {
+  /**
+   * Picking a preset closes the popover. The "Custom" button, in the header and below the presets, switches to the date range editor, which applies each change right away and stays open until Save. The buttons show both in the header and below the content.
+   */
+  readonly config: DbxFilterButtonConfig<DocInteractionTestFilter> = {
     icon: 'calendar_today',
     header: 'Date Range',
+    customizeButtonText: 'Custom',
+    showButtonsBelowContent: true,
     closeButtonText: 'Save',
     presetFilterComponentConfig: {
       componentClass: DocInteractionTestDateFilterPresetFilterComponent
     },
-    showCloseButton: true,
+    customFilterComponentClass: DocInteractionTestDateFilterCustomFilterComponent,
+    closeOnCustomFilterChange: false,
     height: '800px',
-    closeOnFilterChange: false,
     connector: this.filterSourceConnector,
     initialFilterObs: this.filterSource.filter$
   };

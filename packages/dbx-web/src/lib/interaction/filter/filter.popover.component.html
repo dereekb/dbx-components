@@ -1,25 +1,29 @@
 <dbx-popover-content>
   <!-- Header -->
   <dbx-popover-header [icon]="icon" [header]="header">
-    @if (showSwitchButtons) {
-      @switch (showPresetSignal()) {
-        @case (true) {
-          <dbx-button [buttonStyle]="switchButtonStyle" [text]="customizeButtonText" (buttonClick)="showCustom()"></dbx-button>
-        }
-        @case (false) {
-          <dbx-button [buttonStyle]="switchButtonStyle" [text]="presetsButtonText" (buttonClick)="showPresets()"></dbx-button>
-        }
-      }
-    }
-    @if (showCloseButton) {
-      @if (showSwitchButtons) {
-        <dbx-button-spacer></dbx-button-spacer>
-      }
-      <dbx-button [buttonStyle]="closeButtonStyle" [text]="closeButtonText" (buttonClick)="close()"></dbx-button>
+    @if (showButtonsInHeader) {
+      <ng-container [ngTemplateOutlet]="buttons"></ng-container>
     }
   </dbx-popover-header>
   <!-- Content -->
   <dbx-popover-scroll-content>
     <dbx-injection [config]="configSignal()"></dbx-injection>
+    @if (showButtonsBelowContent && hasButtonsSignal()) {
+      <div class="dbx-filter-popover-content-buttons">
+        <ng-container [ngTemplateOutlet]="buttons"></ng-container>
+      </div>
+    }
   </dbx-popover-scroll-content>
 </dbx-popover-content>
+<!-- Buttons, shown in the header and/or below the content -->
+<ng-template #buttons>
+  @if (showSwitchButtons) {
+    <dbx-filter-popover-switch-button></dbx-filter-popover-switch-button>
+  }
+  @if (showCloseButtonSignal()) {
+    @if (showSwitchButtons) {
+      <dbx-button-spacer></dbx-button-spacer>
+    }
+    <dbx-button [buttonStyle]="closeButtonStyle" [text]="closeButtonText" (buttonClick)="close()"></dbx-button>
+  }
+</ng-template>

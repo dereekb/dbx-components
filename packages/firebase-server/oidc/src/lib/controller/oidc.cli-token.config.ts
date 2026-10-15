@@ -1,5 +1,5 @@
 import { type ISO8601DateString, type Maybe, type PromiseOrValue, type Seconds, type WebsiteUrl, SECONDS_IN_HOUR, SECONDS_IN_MINUTE } from '@dereekb/util';
-import { type FirebaseAuthUserId, type OidcScope, type OidcScopeTerm, CLI_TOKEN_OIDC_SCOPE, OFFLINE_ACCESS_OIDC_SCOPE, SERVICE_TOKEN_OIDC_SCOPE } from '@dereekb/firebase';
+import { type CliTokenCredentialType, type FirebaseAuthUserId, type OidcScope, type OidcScopeTerm, CLI_TOKEN_OIDC_SCOPE, CLI_TOKEN_REFRESH_CREDENTIAL_TYPE, OFFLINE_ACCESS_OIDC_SCOPE, SERVICE_TOKEN_OIDC_SCOPE } from '@dereekb/firebase';
 import { type FirebaseServerAuthData } from '@dereekb/firebase-server';
 
 // MARK: Paths
@@ -71,6 +71,22 @@ export const CLI_TOKEN_CLAIM_TTL_SECONDS: Seconds = 2 * SECONDS_IN_MINUTE;
  */
 export const CLI_TOKEN_CLAIM_CODE_BYTES = 32;
 
+// MARK: Credential Type
+/**
+ * Credential type minted when the caller names none.
+ *
+ * `refresh` is the HTTP default, kept for wire compatibility: `POST /oidc/cli-token` has callers other
+ * than the MCP tool, and a CLI that predates bearer handoffs only understands a refresh bundle. The
+ * MCP `cli-token` tool always passes an explicit type and defaults to `bearer`.
+ */
+export const DEFAULT_CLI_TOKEN_CREDENTIAL_TYPE: CliTokenCredentialType = CLI_TOKEN_REFRESH_CREDENTIAL_TYPE;
+
+/**
+ * The `gty` stamped on a bearer-mode AccessToken, so a handoff token is identifiable in its stored
+ * payload. oidc-provider never validates an access token's `gty`.
+ */
+export const CLI_TOKEN_ACCESS_TOKEN_GRANT_TYPE = 'dbx_cli_token';
+
 // MARK: Scopes
 /**
  * Scopes a minted CLI credential NEVER inherits, no matter what the minting session holds.
@@ -85,7 +101,9 @@ export const CLI_TOKEN_CLAIM_CODE_BYTES = 32;
 export const CLI_TOKEN_DENIED_INHERITED_OIDC_SCOPES: readonly OidcScope[] = [CLI_TOKEN_OIDC_SCOPE, SERVICE_TOKEN_OIDC_SCOPE];
 
 /**
- * Scope always unioned into a minted credential's grant, so the refresh-token grant is coherent.
+ * Scope unioned into a REFRESH-mode credential's grant, so the refresh-token grant is coherent.
+ *
+ * Never added in bearer mode — see {@link CLI_TOKEN_BEARER_EXCLUDED_OIDC_SCOPES}.
  */
 export const CLI_TOKEN_REQUIRED_OIDC_SCOPE: OidcScope = OFFLINE_ACCESS_OIDC_SCOPE;
 
@@ -94,6 +112,32 @@ export const CLI_TOKEN_REQUIRED_OIDC_SCOPE: OidcScope = OFFLINE_ACCESS_OIDC_SCOP
  * it into an OR-group rather than replace it.
  */
 export const DEFAULT_CLI_TOKEN_REQUIRED_OIDC_SCOPE: OidcScopeTerm = CLI_TOKEN_OIDC_SCOPE;
+
+/**
+ * Scopes a BEARER-mode credential never carries, even when the caller holds or names them.
+ *
+ * A bearer credential has no refresh token, so `offline_access` would claim a capability it does not
+ * have.
+ */
+export const CLI_TOKEN_BEARER_EXCLUDED_OIDC_SCOPES: readonly OidcScope[] = [OFFLINE_ACCESS_OIDC_SCOPE];
+
+/**
+ * Derives the scopes narrowing always retains from the provider's claims config: every scope mapped to
+ * at least one claim.
+ *
+ * Those are the identity scopes — `openid`, `profile`, `email` and the app's own claims scope, which
+ * carries its role claims. Verb and capability scopes (`model.*`, `token.*`, `offline_access`) map to
+ * no claims and are left to narrowing.
+ *
+ * @param claims - The provider's `claims` config, keyed by scope.
+ * @returns The scopes to retain when a mint narrows its scopes.
+ * @__NO_SIDE_EFFECTS__
+ */
+export function cliTokenRetainedScopesForProviderClaims(claims: Readonly<Record<string, readonly string[]>>): OidcScope[] {
+  return Object.entries(claims)
+    .filter(([, claimKeys]) => claimKeys.length > 0)
+    .map(([scope]) => scope as OidcScope);
+}
 
 // MARK: Admin Predicate
 /**
@@ -154,9 +198,13 @@ export async function resolveCliTokenClientId(cliClientId: Maybe<string | CliTok
 export abstract class CliTokenApiModuleConfig {
   /**
    * The registered OAuth `client_id` of the app's CLI client — the same client the CLI's
-   * `auth setup` was configured with.
+   * `auth setup` was configured with. The minted credential's child grant belongs to it.
    *
    * REQUIRED. When absent (or unresolvable at the provider) the endpoint is disabled.
+   *
+   * In refresh mode the CLI must authenticate as this client to use its credential, so the client has
+   * to be one the CLI can present (typically a public, `token_endpoint_auth_method: 'none'` client). In
+   * bearer mode any registered client works, because the CLI never authenticates as it.
    *
    * May be a {@link CliTokenClientIdResolver} instead of a literal id, for an app that discovers or
    * provisions its CLI client at runtime rather than reading a configured value. The resolver is
@@ -208,11 +256,24 @@ export abstract class CliTokenApiModuleConfig {
    * Name it after the deployment (`local`, `staging`, `prod`), not after the app.
    */
   readonly envName?: string;
+  /**
+   * Scopes that narrowing always RETAINS when the caller holds them, so a mint that narrows to verb
+   * scopes (e.g. `model.read`) still carries the caller's identity and role claims.
+   *
+   * Defaults to {@link cliTokenRetainedScopesForProviderClaims} over the provider's `claims` config —
+   * every scope mapped to at least one claim (`openid`, `profile`, `email`, the app's claims scope). Set
+   * it when the app's role claims hang off a scope whose `claims` entry is empty. An explicit `[]`
+   * retains nothing.
+   *
+   * Retained scopes never widen the grant: they are intersected with the caller's own scopes, and the
+   * deny-list still applies. Read per mint.
+   */
+  readonly retainedScopes?: Maybe<readonly OidcScope[]>;
 }
 
 // MARK: Results
 /**
- * Result of a successful mint. Carries ONLY the one-time claim code — never the refresh token, which
+ * Result of a successful mint. Carries ONLY the one-time claim code — never the credential, which
  * would otherwise land in an MCP transcript and a shell history.
  */
 export interface CliTokenMintResult {
@@ -246,6 +307,10 @@ export interface CliTokenMintResult {
    * The space-delimited scopes the minted credential carries.
    */
   readonly scope: string;
+  /**
+   * The kind of credential the claim code redeems to.
+   */
+  readonly credentialType: CliTokenCredentialType;
   /**
    * Name of the CLI env the credential should be redeemed into, echoed from
    * {@link CliTokenApiModuleConfig.envName}.
@@ -288,14 +353,28 @@ export interface CliTokenHandoffBundle {
    */
   readonly envName?: string;
   /**
-   * The CLI OAuth client the refresh token is bound to. The CLI must present THIS `client_id` when
-   * refreshing — a refresh token is client-bound.
+   * The CLI OAuth client the credential's grant belongs to.
+   *
+   * Refresh mode: the CLI must present THIS `client_id` when refreshing — a refresh token is
+   * client-bound. Bearer mode: recorded in the CLI env only; the CLI never authenticates as it.
    */
   readonly clientId: string;
   /**
-   * The refresh token itself. The only place it is ever returned.
+   * The kind of credential this bundle carries.
    */
-  readonly refreshToken: string;
+  readonly credentialType: CliTokenCredentialType;
+  /**
+   * The bearer access token, in bearer mode. The only place it is ever returned.
+   */
+  readonly accessToken?: string;
+  /**
+   * The token type of {@link CliTokenHandoffBundle.accessToken}. Present with it.
+   */
+  readonly tokenType?: 'Bearer';
+  /**
+   * The refresh token, in refresh mode. The only place it is ever returned.
+   */
+  readonly refreshToken?: string;
   /**
    * The space-delimited scopes the credential carries.
    */
@@ -320,26 +399,46 @@ export interface ResolveCliTokenScopesInput {
    * that the caller does not hold is dropped.
    */
   readonly requestedScopes?: Maybe<readonly OidcScope[]>;
+  /**
+   * Scopes a narrowing request always keeps when the caller holds them. Ignored when nothing is
+   * requested. See {@link CliTokenApiModuleConfig.retainedScopes}.
+   */
+  readonly retainedScopes?: Maybe<readonly OidcScope[]>;
+  /**
+   * The credential type being minted. Defaults to {@link DEFAULT_CLI_TOKEN_CREDENTIAL_TYPE}.
+   */
+  readonly credentialType?: Maybe<CliTokenCredentialType>;
 }
 
 /**
  * Resolves the scope set a minted CLI credential carries.
  *
- * `granted = callerScopes ∩ (requestedSubset ?? callerScopes) − {token.cli, token.service} ∪ {offline_access}`
+ * ```
+ * keep    = requested == null ? callerScopes : (requested ∪ retained)
+ * granted = (callerScopes ∩ keep) − {token.cli, token.service}
+ * refresh: granted ∪= {offline_access}
+ * bearer:  granted −= {offline_access}
+ * ```
  *
- * The intersection is what makes the mint non-amplifying: the caller may narrow, never widen. The
- * deny-list is the only asymmetry, and it exists so a one-hour credential cannot manufacture a
- * longer-lived or further-minting one.
+ * The intersection is what makes the mint non-amplifying: the caller may narrow, never widen, and the
+ * retained scopes only keep identity the caller already holds. The deny-list is the only asymmetry,
+ * and it exists so a one-hour credential cannot manufacture a longer-lived or further-minting one.
  *
  * @param input - The caller's scopes and the optional requested subset.
  * @returns The space-delimited scope string to grant.
  * @__NO_SIDE_EFFECTS__
  */
 export function resolveCliTokenScopes(input: ResolveCliTokenScopesInput): string {
-  const { callerScopes, requestedScopes } = input;
+  const { callerScopes, requestedScopes, retainedScopes, credentialType } = input;
+  const isRefresh = (credentialType ?? DEFAULT_CLI_TOKEN_CREDENTIAL_TYPE) === CLI_TOKEN_REFRESH_CREDENTIAL_TYPE;
   const denied = new Set<OidcScope>(CLI_TOKEN_DENIED_INHERITED_OIDC_SCOPES);
+
+  if (!isRefresh) {
+    CLI_TOKEN_BEARER_EXCLUDED_OIDC_SCOPES.forEach((scope) => denied.add(scope));
+  }
+
   const available = callerScopes ?? new Set<OidcScope>();
-  const requested = requestedScopes == null ? undefined : new Set<OidcScope>(requestedScopes);
+  const requested = requestedScopes == null ? undefined : new Set<OidcScope>([...requestedScopes, ...(retainedScopes ?? [])]);
 
   const granted = new Set<OidcScope>();
 
@@ -351,7 +450,9 @@ export function resolveCliTokenScopes(input: ResolveCliTokenScopesInput): string
 
   // a refresh-token grant that does not carry offline_access is incoherent — the credential exists
   // only to be refreshed
-  granted.add(CLI_TOKEN_REQUIRED_OIDC_SCOPE);
+  if (isRefresh) {
+    granted.add(CLI_TOKEN_REQUIRED_OIDC_SCOPE);
+  }
 
   return Array.from(granted).join(' ');
 }

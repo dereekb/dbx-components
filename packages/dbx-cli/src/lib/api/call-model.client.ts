@@ -1,5 +1,5 @@
 import type { OnCallTypedModelParams } from '@dereekb/firebase';
-import { CliError, tracedFetch } from '../util/output';
+import { CliError, CliHttpError, tracedFetch } from '../util/output';
 
 export const CALL_MODEL_API_PATH = `/model/call`;
 
@@ -221,10 +221,17 @@ async function requestJson<R>(input: RequestJsonInput): Promise<R> {
   const { ok, body, fallbackMessage } = await readJsonResponse(res);
 
   if (!ok) {
-    throw new CliError({
-      message: `${input.errorPrefix}: ${extractMessage(body, fallbackMessage, res)}`,
-      code: codeForStatus(res.status),
-      suggestion: res.status === 401 || res.status === 403 ? 'Run `<cli> auth login` to refresh credentials.' : undefined
+    // the mapper registered by the runner (`cliAuthFailureErrorMapper`) rewrites the 401/403 suggestion
+    // from the credential in context; this fallback is generic but correct without it
+    const validationSummary = extractValidationSummary(body);
+    const message = extractMessage(body, fallbackMessage, res);
+
+    throw new CliHttpError({
+      message: `${input.errorPrefix}: ${validationSummary == null ? message : `${message}\n${validationSummary}`}`,
+      code: validationSummary == null ? codeForStatus(res.status) : 'VALIDATION_ERROR',
+      suggestion: fallbackSuggestionForStatus(res.status),
+      status: res.status,
+      serverCode: extractServerCode(body)
     });
   }
 
@@ -250,6 +257,35 @@ async function readJsonResponse(res: Response): Promise<ReadJsonResponse> {
   }
 
   return { ok: res.ok, body, fallbackMessage: text };
+}
+
+function fallbackSuggestionForStatus(status: number): string | undefined {
+  let result: string | undefined;
+
+  if (status === 401) {
+    result = 'The credentials were rejected — log in again, or re-run `auth handoff` with a fresh claim code for a handoff credential.';
+  } else if (status === 403) {
+    result = 'The credential is valid but is not permitted to make this call.';
+  }
+
+  return result;
+}
+
+function extractServerCode(body: unknown): string | undefined {
+  const code = typeof body === 'object' && body && 'code' in body ? (body as { code?: unknown }).code : undefined;
+  return typeof code === 'string' ? code : undefined;
+}
+
+/**
+ * Reads the per-field summary a server `VALIDATION_ERROR` carries in its `details.data.message`.
+ *
+ * @param body - The parsed error response body.
+ * @returns The summary, or undefined when the body is not a validation error with a summary.
+ */
+function extractValidationSummary(body: unknown): string | undefined {
+  const details = typeof body === 'object' && body && 'details' in body ? (body as { details?: { code?: unknown; data?: { message?: unknown } } }).details : undefined;
+  const summary = details?.code === 'VALIDATION_ERROR' ? details.data?.message : undefined;
+  return typeof summary === 'string' && summary.length > 0 ? summary : undefined;
 }
 
 function extractMessage(body: unknown, fallback: string, res: Response): string {

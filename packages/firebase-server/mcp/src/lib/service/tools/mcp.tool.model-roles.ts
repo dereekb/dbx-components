@@ -2,6 +2,7 @@ import { type Maybe, type PromiseOrValue } from '@dereekb/util';
 import { type FirebaseAuthUserId, type FirestoreModelIdentity, type FirestoreModelKey, type FirestoreModelType } from '@dereekb/firebase';
 import type { CallToolResult } from '@modelcontextprotocol/server';
 import { type ModelAccessMultiRoleMapResult, type FirebaseServerAuthData } from '@dereekb/firebase-server';
+import { type McpToolCatalogExamples, mcpToolExampleList } from '../mcp.examples';
 import { formatMcpToolErrorResponse } from '../mcp.response-formatter';
 import { buildStaticToolDefinition, type McpToolDefinition, type McpStaticToolHandler, type McpStaticToolHandlerContext } from '../mcp.tool-generator';
 
@@ -67,6 +68,10 @@ export interface CreateModelRolesToolDeps {
    * the tool still answers for the calling user.
    */
   readonly canTargetOtherUids?: Maybe<McpModelRolesTargetUidCheck>;
+  /**
+   * Examples shown in the tool text. Omit for generic wording.
+   */
+  readonly examples?: Maybe<Pick<McpToolCatalogExamples, 'modelTypes'>>;
 }
 
 /**
@@ -111,7 +116,7 @@ export function createModelRolesTool(deps: CreateModelRolesToolDeps): McpToolDef
   return buildStaticToolDefinition({
     name,
     description,
-    inputSchema: MODEL_ROLES_INPUT_SCHEMA,
+    inputSchema: buildModelRolesInputSchema(deps.examples),
     outputSchema: MODEL_ROLES_OUTPUT_SCHEMA,
     dispatch: {
       call: MODEL_ROLES_DISPATCH_CALL,
@@ -232,30 +237,34 @@ function resolveKeys(keys: ReadonlyArray<string>, identity: FirestoreModelIdenti
 }
 
 // MARK: Schemas
-const MODEL_ROLES_INPUT_SCHEMA = {
-  type: 'object',
-  required: ['modelType', 'keys'],
-  properties: {
-    modelType: {
-      type: 'string',
-      minLength: 1,
-      description: 'Firestore model type to resolve roles on (e.g. "guestbook", "profile").'
+function buildModelRolesInputSchema(examples: Maybe<Pick<McpToolCatalogExamples, 'modelTypes'>>) {
+  const modelTypeExamples = mcpToolExampleList(examples?.modelTypes);
+
+  return {
+    type: 'object',
+    required: ['modelType', 'keys'],
+    properties: {
+      modelType: {
+        type: 'string',
+        minLength: 1,
+        description: `Model type to resolve roles on${modelTypeExamples ? ` (e.g. ${modelTypeExamples})` : ''}.`
+      },
+      keys: {
+        type: 'array',
+        minItems: 1,
+        maxItems: MCP_MODEL_ROLES_MAX_KEYS,
+        description: 'Full keys ("prefix/id") or bare ids (root models only).',
+        items: { type: 'string', minLength: 1 }
+      },
+      uid: {
+        type: 'string',
+        minLength: 1,
+        description: 'Resolve roles as this user instead of the caller. Requires elevated access; passing your own uid is always allowed.'
+      }
     },
-    keys: {
-      type: 'array',
-      minItems: 1,
-      maxItems: MCP_MODEL_ROLES_MAX_KEYS,
-      description: 'Full keys ("prefix/id") or bare ids (root models only).',
-      items: { type: 'string', minLength: 1 }
-    },
-    uid: {
-      type: 'string',
-      minLength: 1,
-      description: 'Resolve roles as this user instead of the caller. Requires elevated access; passing your own uid is always allowed.'
-    }
-  },
-  additionalProperties: false
-} as const;
+    additionalProperties: false
+  };
+}
 
 const MODEL_ROLES_OUTPUT_SCHEMA = {
   type: 'object',

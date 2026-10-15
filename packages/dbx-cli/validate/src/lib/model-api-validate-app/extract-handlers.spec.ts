@@ -196,6 +196,14 @@ describe('extractHandlerEntriesFromFiles() — mcp.readOnly of invoke handlers',
     expect(entries[0].mcpReadOnly).toBeUndefined();
   });
 
+  it('reads verb-level shorthand as a bare handler', () => {
+    const entries = extract({
+      [CRUD]: "import { thing } from '../thing/thing.update';\nexport const DEMO_UPDATE_MODEL_MAP = {\n  thing\n};\n"
+    });
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({ model: 'thing', verb: 'update', specifier: undefined, handlerName: 'thing', sourceFile: `${API_DIR}/${CRUD}`, line: 3 });
+  });
+
   it('reports a missing handler map', () => {
     const result = extractHandlerEntriesFromFiles({ files: [{ relPath: INVOKE, text: 'export const a = 1;' }], apiAbs: '/abs/x-api', apiDir: API_DIR });
     expect(result.status.kind).toBe('missing');

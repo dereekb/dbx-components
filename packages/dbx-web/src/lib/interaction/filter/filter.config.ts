@@ -43,6 +43,20 @@ export interface DbxFilterComponentConfig<F extends object = object, P extends s
    */
   readonly switchButtonStyle?: Maybe<DbxButtonStyle>;
   /**
+   * (Optional) Whether or not to show the popover's buttons in its header: the "Customize"/"Presets" switch button and the close button.
+   *
+   * True by default.
+   */
+  readonly showButtonsInHeader?: Maybe<boolean>;
+  /**
+   * (Optional) Whether or not to also show the popover's buttons below the filter content, such as right under a preset list or a form:
+   * the same switch and close buttons as the header.
+   *
+   * False by default. Can be shown together with the header buttons. To place a switch button elsewhere, the filter content can show a
+   * `dbx-filter-popover-switch-button` itself.
+   */
+  readonly showButtonsBelowContent?: Maybe<boolean>;
+  /**
    * (Optional) Style for the close button in the popover header.
    *
    * Defaults to {@link DEFAULT_FILTER_POPOVER_CLOSE_BUTTON_STYLE}. Set a `color` here to paint the close button with an
@@ -52,7 +66,11 @@ export interface DbxFilterComponentConfig<F extends object = object, P extends s
    */
   readonly closeButtonStyle?: Maybe<DbxButtonStyle>;
   /**
-   * Whether or not to show the close button. Defaults to the value of !closeOnFilterChange
+   * Whether or not to show the close button.
+   *
+   * Defaults to whether the shown filter keeps the popover open on a filter change: {@link closeOnFilterChange} for the preset filter,
+   * {@link closeOnCustomFilterChange} for the custom filter. The close button is the only way to close a popover that stays open, besides
+   * clicking outside of it.
    */
   readonly showCloseButton?: Maybe<boolean>;
   /**
@@ -82,18 +100,25 @@ export interface DbxFilterComponentConfig<F extends object = object, P extends s
    */
   readonly initialFilterObs?: Observable<F>;
   /**
-   * (Optional) Whether or not to close the component if the filter changes.
+   * (Optional) Whether or not to close the popover when the filter changes.
    *
-   * True by default. Also the default for {@link closeOnTransition}.
+   * True by default. Applies to the preset filter, and to the custom filter unless {@link closeOnCustomFilterChange} is set.
    */
   readonly closeOnFilterChange?: boolean;
   /**
+   * (Optional) Whether or not to close the popover when the filter changes while the custom filter is shown.
+   *
+   * Defaults to {@link closeOnFilterChange}. Set it to false with a preset filter to have a preset close the popover right away,
+   * while the custom filter applies each change right away and keeps the popover open until its close button is clicked.
+   */
+  readonly closeOnCustomFilterChange?: Maybe<boolean>;
+  /**
    * (Optional) Whether or not to close the popover when a route transition succeeds.
    *
-   * Defaults to {@link closeOnFilterChange}: a popover that stays open across filter changes also stays open across
-   * transitions. A filter written to the URL (see DbxFilterMapRouteParamsDirective) causes a transition on every change,
-   * so the popover must stay open across both while it is edited. The popover still closes when the button that opened
-   * it is destroyed, such as when navigating to another page.
+   * Defaults to false when a filter in the popover keeps it open across filter changes (see {@link closeOnFilterChange} and
+   * {@link closeOnCustomFilterChange}), and true otherwise. A filter written to the URL (see DbxFilterMapRouteParamsDirective)
+   * causes a transition on every change, so the popover must stay open across both while it is edited. The popover still closes
+   * when the button that opened it is destroyed, such as when navigating to another page.
    */
   readonly closeOnTransition?: Maybe<boolean>;
 }

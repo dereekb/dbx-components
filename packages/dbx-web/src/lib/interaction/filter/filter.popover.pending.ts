@@ -1,9 +1,9 @@
-import { type DestroyFunction, type Milliseconds, waitForMs } from '@dereekb/util';
+import { type DestroyFunction, type Maybe } from '@dereekb/util';
 
 /**
- * Applies a change that filter popover content has not applied yet. The returned promise resolves once the change is applied, or once there was nothing to apply.
+ * Applies a change that filter popover content has not applied yet. Runs synchronously, right before the popover closes and destroys the content.
  */
-export type DbxFilterPopoverApplyPendingFunction = () => Promise<void>;
+export type DbxFilterPopoverApplyPendingFunction = () => void;
 
 /**
  * Provided by a filter popover to its filter content, so the content can apply a pending change before the popover closes.
@@ -12,7 +12,7 @@ export type DbxFilterPopoverApplyPendingFunction = () => Promise<void>;
  */
 export abstract class DbxFilterPopoverPendingChanges {
   /**
-   * Registers a function that is awaited before the popover closes on its close button, on a filter change or on a click outside.
+   * Registers a function that is called before the popover closes on its close button, on a filter change, on a transition or on a click outside.
    *
    * @param applyPending - Function that applies the pending change.
    * @returns Removes the registration when called.
@@ -21,17 +21,15 @@ export abstract class DbxFilterPopoverPendingChanges {
 }
 
 /**
- * Default maximum time a filter popover waits for its registered {@link DbxFilterPopoverApplyPendingFunction}s before it closes anyway.
- */
-export const DBX_FILTER_POPOVER_APPLY_PENDING_MAX_WAIT: Milliseconds = 3000;
-
-/**
  * Registry of {@link DbxFilterPopoverApplyPendingFunction}s used by a filter popover.
  */
 export class DbxFilterPopoverPendingChangesInstance implements DbxFilterPopoverPendingChanges {
   private readonly _applyPendingFunctions = new Set<DbxFilterPopoverApplyPendingFunction>();
 
-  constructor(readonly maxWait: Milliseconds = DBX_FILTER_POPOVER_APPLY_PENDING_MAX_WAIT) {}
+  /**
+   * @param handleError - Receives an error thrown by a registered function. The remaining functions still run.
+   */
+  constructor(readonly handleError?: Maybe<(error: unknown) => void>) {}
 
   /**
    * Whether or not at least one function is registered.
@@ -51,13 +49,16 @@ export class DbxFilterPopoverPendingChangesInstance implements DbxFilterPopoverP
   }
 
   /**
-   * Runs every registered function and resolves once all of them have finished, or once {@link maxWait} has passed.
-   *
-   * @returns Resolves once the pending changes have been applied or the wait has timed out.
+   * Runs every registered function.
    */
-  applyPending(): Promise<void> {
-    // a function that fails still counts as finished, so a broken apply never keeps the popover open
-    const applyAll = Promise.all(Array.from(this._applyPendingFunctions).map((x) => x().catch(() => undefined)));
-    return Promise.race([applyAll, waitForMs(this.maxWait)]).then(() => undefined);
+  applyPending(): void {
+    // a function that fails does not stop the others, so a broken apply never keeps the popover open
+    Array.from(this._applyPendingFunctions).forEach((applyPending) => {
+      try {
+        applyPending();
+      } catch (error) {
+        this.handleError?.(error);
+      }
+    });
   }
 }

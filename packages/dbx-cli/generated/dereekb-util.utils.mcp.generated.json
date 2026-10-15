@@ -10912,6 +10912,44 @@
       ]
     },
     {
+      "slug": "js-doc-inline-links-to-text",
+      "name": "jsDocInlineLinksToText",
+      "kind": "function",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/jsdoc",
+      "signature": "jsDocInlineLinksToText(input: string): string",
+      "description": "Replaces JSDoc/TSDoc inline link tags (`{@link X}`, `{@linkplain X}`, `{@linkcode X}`) with plain display text.\n\n- `{@link Foo}` → `Foo`\n- `{@link Foo.bar}` → `Foo.bar`\n- `{@link Foo | the foo}` and `{@link Foo the foo}` → `the foo`\n- `{@link Foo#bar}` → `Foo.bar`\n- `{@link ./path/mod#member}` → `member`\n- `{@linkcode Foo}` → `` `Foo` ``\n- `{@link https://example.com}` → `https://example.com`, and with a label, the label.\n\nText without tags, and malformed tags with no target, are returned unchanged.",
+      "params": [
+        {
+          "name": "input",
+          "type": "string",
+          "description": "- The text to convert, typically a JSDoc description.",
+          "optional": false
+        }
+      ],
+      "returns": "The text with every inline link tag replaced by its display text.",
+      "tags": [
+        "jsdoc",
+        "tsdoc",
+        "link",
+        "markdown",
+        "text",
+        "documentation",
+        "string",
+        "js",
+        "doc",
+        "inline",
+        "links",
+        "to",
+        "jsdocinlinelinkstotext"
+      ],
+      "example": "jsDocInlineLinksToText('Creates a {@link NotificationBox} for the {@link Profile.uid}.');\n// 'Creates a NotificationBox for the Profile.uid.'",
+      "relatedSlugs": [
+        "first-sentence"
+      ]
+    },
+    {
       "slug": "replace-strings-function",
       "name": "replaceStringsFunction",
       "kind": "factory",
@@ -11424,6 +11462,46 @@
       ],
       "relatedSlugs": [
         "case-insensitive-filter-by-index-of-decision-factory"
+      ]
+    },
+    {
+      "slug": "first-sentence",
+      "name": "firstSentence",
+      "kind": "function",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/sentence",
+      "signature": "firstSentence(input: string, config?: Maybe<FirstSentenceConfig>): string",
+      "description": "Returns the first sentence of the first paragraph of the input.\n\n- The first paragraph ends at the first blank line.\n- Soft line breaks and runs of whitespace are collapsed to single spaces.\n- A sentence ends at `.`, `!` or `?` (plus optional closing `\"`, `'`, `)` or `]`) followed by the end of the text, or by whitespace and a character that is not a lowercase letter.\n- A period after `e.g`, `i.e`, `cf` or `vs` never ends a sentence.\n- With no terminator, the whole flattened paragraph is returned.\n- When `maxLength` is set and exceeded, the text is cut at the last space that fits and `endText` is appended.",
+      "params": [
+        {
+          "name": "input",
+          "type": "string",
+          "description": "- The text to read, typically a JSDoc description.",
+          "optional": false
+        },
+        {
+          "name": "config",
+          "type": "Maybe<FirstSentenceConfig>",
+          "description": "- Optional length cap and end text.",
+          "optional": true
+        }
+      ],
+      "returns": "The first sentence, flattened to a single line.",
+      "tags": [
+        "sentence",
+        "summary",
+        "first-line",
+        "truncate",
+        "paragraph",
+        "description",
+        "string",
+        "first",
+        "firstsentence"
+      ],
+      "example": "firstSentence('Creates the\\nthing for the user. Then more.');\n// 'Creates the thing for the user.'",
+      "relatedSlugs": [
+        "js-doc-inline-links-to-text"
       ]
     },
     {

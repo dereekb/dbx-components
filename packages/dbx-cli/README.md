@@ -604,6 +604,65 @@ Anything else throws `CREDENTIAL_PROCESS_FAILED` (the process could not start, o
 stdout. A command that hands out a secret should check `isCliCredentialProcess()` and print a
 redacted value whenever it is false.
 
+## Build-time API manifest
+
+`dbx-cli-firebase-api-manifest` writes the app's `api.manifest.generated.ts` during the build. It
+reads the `*Functions` groups in the app's `<APP>_FIREBASE_FUNCTIONS_CONFIG`, walks each group's
+`.api.ts`, and emits one entry per callModel call (model, verb, specifier, params validator, docs).
+`buildManifestCommands()` turns each entry into a `<cli> model <model> <verb>[-<specifier>]` command,
+and `generate-mcp-manifest` turns the same manifest into `mcp.manifest.json`.
+
+**Without `--api-dir` it lists what the `*Functions` groups declare, not what the app serves.** A
+library group such as `NotificationFunctions` or `StorageFileFunctions` declares every call the
+library offers, and an app usually wires only some of them. The CLI then shows commands the server
+answers with `Invalid type to …` / `Invalid/unknown specifier for this function.`. With `--api-dir`,
+the generator scans the app's callModel handler map (`<api-dir>/src/app/function/model/crud.functions.ts`,
+the same scan `dbx_model_api_validate_app` runs) and drops every declared call it never wires. Each drop
+is logged as `[unregistered]`.
+
+### Flags
+
+| Flag | |
+|---|---|
+| `--functions-config=<path>` | required; the app's `functions.ts` (workspace-relative or absolute) |
+| `--output=<path>` | required; the manifest TS file to write |
+| `--project=<name>` | the CLI project name; shown in the banner and used for the namespace (`demo-cli` → `DEMO_CLI_API_MANIFEST`) |
+| `--api-dir=<path>` | the API app root; only calls its handler map wires are emitted |
+| `--only=<model[,model]>` | emit only these models |
+| `--strict` | exit 1 when a params validator is missing |
+| `--emit-models` | also emit `<NAMESPACE>_MODEL_MANIFEST` (needed by `model-info`) |
+| `--emit-model-converters` | include each model field's converter expression text |
+
+### Rules
+
+- A bare (non-`onCallSpecifierHandler`) handler serves the default `_` specifier only. This matches
+  how the MCP server wraps it.
+- Constructs the scan can't read (a spread or computed key in a verb map, a non-literal verb map or
+  `onCallSpecifierHandler(...)` config, a wrapped handler such as `inAuthContext(fn)`) keep every entry
+  of that verb / model and print `[handler-map-opaque]`.
+- A missing handler map, or one with no `<APP>_<VERB>_MODEL_MAP` / `<app><Verb>ModelMap` consts, exits 1.
+- Dropped entries are skipped before validator binding, so they never print `[no-validator]` or count
+  toward `--strict`.
+- The MCP server already lists only the handlers registered at runtime, so its tool list is
+  unaffected; `mcp.manifest.json` just carries fewer unused entries.
+
+### Adopting it in an app
+
+```json
+"generate-api-manifest": {
+  "inputs": ["...", "{workspaceRoot}/apps/demo-api/src/app/function/model/crud.functions.ts"],
+  "options": {
+    "command": "node dist/packages/dbx-cli/firebase-api-manifest/main.js --project=demo-cli --functions-config=components/demo-firebase/src/lib/functions.ts --output=apps/demo-cli/src/lib/manifest/api.manifest.generated.ts --emit-models --api-dir=apps/demo-api"
+  }
+}
+```
+
+Add the handler map to the target's `inputs`. Every API's `generate-mcp-manifest` depends on
+`<cli>:generate-api-manifest`, so this input is what regenerates both manifests when a handler is
+wired. Without it Nx serves the cached manifest and the newly wired call stays hidden. Don't add the
+API project to the CLI's `implicitDependencies` instead: the API already depends on the CLI, so the
+reverse edge would be a cycle.
+
 ## Build-time notification wiring check
 
 `dbx-cli-generate-notification-manifest` checks an app's notification wiring during the build and

@@ -71,7 +71,7 @@ import {
 } from 'demo-firebase';
 import { type CliApiManifest, type CliGeneratedManifestStamp, type CliModelManifest, type CliEnumManifest } from '@dereekb/dbx-cli';
 
-export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.16.0' };
+export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.17.0' };
 
 export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
   {
@@ -871,7 +871,8 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     resultTypeName: 'DownloadProfileArchiveResult',
     groupName: 'Profile',
     sourceFile: 'components/demo-firebase/src/lib/model/profile/profile.api.ts',
-    description: "Generates and returns a signed URL for downloading a ZIP archive of\nthe current user's profile data. The archive is generated on demand\nand the URL expires after a short window."
+    description: "Generates and returns a signed URL for downloading a ZIP archive of\nthe current user's profile data. The archive is generated on demand\nand the URL expires after a short window.",
+    paramsTypeDescription: "Params for downloading a profile's archive. The `key` is optional: the caller's own profile is used when it is omitted."
   },
   {
     model: 'profile',

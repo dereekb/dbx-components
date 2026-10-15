@@ -1,6 +1,6 @@
 import { type } from 'arktype';
 import { badRequestError, firebaseServerErrorInfo } from '../../function/error';
-import { assertValidParams, FIREBASE_SERVER_VALIDATION_ERROR_CODE, readFirebaseServerValidationErrorSummary } from './context';
+import { assertValidParams, FIREBASE_SERVER_VALIDATION_ERROR_CODE, firebaseServerValidationErrorForSummary, firebaseServerValidationServerErrorForSummary, readFirebaseServerValidationErrorSummary } from './context';
 
 const testParamsType = type({ name: 'string' });
 
@@ -21,6 +21,21 @@ describe('assertValidParams()', () => {
 
     expect(error).toBeDefined();
     expect(firebaseServerErrorInfo(error).serverErrorCode).toBe(FIREBASE_SERVER_VALIDATION_ERROR_CODE);
+  });
+});
+
+describe('firebaseServerValidationServerErrorForSummary()', () => {
+  it('should build a VALIDATION_ERROR server error carrying the summary', () => {
+    const serverError = firebaseServerValidationServerErrorForSummary('a must be a string (was number)');
+    expect(serverError.code).toBe(FIREBASE_SERVER_VALIDATION_ERROR_CODE);
+    expect(serverError.data.message).toBe('a must be a string (was number)');
+  });
+});
+
+describe('firebaseServerValidationErrorForSummary()', () => {
+  it('should build a throwable error whose summary can be read back', () => {
+    const error = firebaseServerValidationErrorForSummary('detail must be one of "summary" (was true)');
+    expect(readFirebaseServerValidationErrorSummary(error)).toBe('detail must be one of "summary" (was true)');
   });
 });
 

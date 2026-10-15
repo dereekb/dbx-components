@@ -28,6 +28,7 @@ import { DbxErrorWidgetService } from '@dereekb/dbx-web';
 import { DocInteractionTestFilterPartialPresetMenuComponent } from './component/filter.partial.preset.menu.component';
 import { DocInteractionTestDateFilterPopoverButtonComponent } from './component/filter.date.popover.button.component';
 import { DocInteractionTestDateFilterPresetFilterComponent } from './component/filter.date.preset.component';
+import { DocInteractionTestDateFilterCustomFilterComponent } from './component/filter.date.custom.component';
 import { DocInteractionTestFilterCustomFilterFormComponent } from './component/filter.custom.form.component';
 import { CUSTOM_DBX_ERROR_TEST_ERROR_CODE, DocInteractionCustomInlineErrorWidgetComponent } from './component/error.custom.inline.widget.component';
 import { DocInteractionIframeComponent } from './container/iframe.component';
@@ -43,6 +44,7 @@ import { DocInteractionIframeComponent } from './container/iframe.component';
     DocInteractionTestDateFilterFormComponent,
     DocInteractionTestDateFilterPopoverButtonComponent,
     DocInteractionTestDateFilterPresetFilterComponent,
+    DocInteractionTestDateFilterCustomFilterComponent,
     DocInteractionTestFilterPresetFilterComponent,
     DocInteractionTestFilterPresetMenuComponent,
     DocInteractionTestFilterPartialPresetMenuComponent,

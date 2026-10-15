@@ -169,7 +169,8 @@ export function demoMcpCliTokenMinterFactory(cliTokenService: OidcCliTokenServic
   return async (input) => {
     // `requestIp` is forwarded so an MCP mint records the same address an HTTP mint does — otherwise
     // `bindClaimToMintIp` would bind codes minted over HTTP and silently skip those minted here.
-    const minted = await cliTokenService.mintCliToken(input.auth, { scopes: input.scopes, ttlSeconds: input.ttlSeconds }, { requestIp: input.requestIp });
+    // `credentialType` is forwarded so the tool's bearer default reaches the mint, whose own default is refresh.
+    const minted = await cliTokenService.mintCliToken(input.auth, { scopes: input.scopes, ttlSeconds: input.ttlSeconds, credentialType: input.credentialType }, { requestIp: input.requestIp });
     let download: { readonly downloadUrl: string; readonly downloadSha256: string } | undefined;
 
     if (input.includeDownloadUrl !== false && downloadService.enabled) {

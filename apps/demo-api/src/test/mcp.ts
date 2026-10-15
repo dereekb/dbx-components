@@ -192,6 +192,19 @@ export async function listMcpTools(f: DemoApiFunctionContextFixture, u: DemoApiA
   return result.tools;
 }
 
+/**
+ * Runs `server/discover` for the user and returns the server's advertised instructions and capabilities.
+ *
+ * @param f - Demo-api function fixture providing the Nest module.
+ * @param u - Authorized user fixture; the instructions' method examples are drawn from this caller's visible methods.
+ * @returns The discover result.
+ */
+export async function discoverMcpServer(f: DemoApiFunctionContextFixture, u: DemoApiAuthorizedUserTestContextFixture): Promise<{ readonly instructions?: string; readonly capabilities?: Record<string, unknown> }> {
+  const factory = f.instance.nest.get(McpServerFactoryService);
+  const auth = await loadAuthData(u);
+  return (await dispatchMcpRequest({ factory, auth, method: 'server/discover', params: {} })) as { instructions?: string; capabilities?: Record<string, unknown> };
+}
+
 // MARK: Compact Surface
 /**
  * Returns the compact tool names the demo's MCP server resolved at boot (`demo_api_search`, `demo_api_read`, …).
@@ -296,6 +309,10 @@ export interface SearchMcpMethodsParams {
   readonly kind?: McpMethodKind;
   readonly limit?: number;
   /**
+   * Number of matches to skip, for paging.
+   */
+  readonly offset?: number;
+  /**
    * Optional space-delimited OIDC scope string. See {@link CallMcpToolParams.scopes}.
    */
   readonly scopes?: string;
@@ -308,9 +325,9 @@ export interface SearchMcpMethodsParams {
  * @returns The ranked search result.
  */
 export async function searchMcpMethods(params: SearchMcpMethodsParams): Promise<McpCompactSearchResult> {
-  const { f, u, query, model, kind, limit, scopes } = params;
+  const { f, u, query, model, kind, limit, offset, scopes } = params;
   const name = mcpCompactToolNames(f).search;
-  const result = await callMcpTool({ f, u, name, args: { query, ...(model == null ? undefined : { model }), ...(kind == null ? undefined : { kind }), ...(limit == null ? undefined : { limit }) }, scopes });
+  const result = await callMcpTool({ f, u, name, args: { query, ...(model == null ? undefined : { model }), ...(kind == null ? undefined : { kind }), ...(limit == null ? undefined : { limit }), ...(offset == null ? undefined : { offset }) }, scopes });
 
   if (result.isError) {
     throw new Error(`${name} failed: ${JSON.stringify(result.content)}`);

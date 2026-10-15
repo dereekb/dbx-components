@@ -1,5 +1,5 @@
 import { DBX_FIREBASE_SERVER_PASSWORD_RESET_INVALID_CODE_ERROR_CODE, FIREBASE_SERVER_AUTH_CLAIMS_RESET_EXPIRES_AT_KEY, FIREBASE_SERVER_AUTH_CLAIMS_RESET_PASSWORD_KEY, onCallUpdateModelParams } from '@dereekb/firebase';
-import { encodeFirebaseServerUserPasswordResetOobCode, type FirebaseServerUserPasswordResetOobCode } from '@dereekb/firebase-server';
+import { encodeFirebaseServerUserPasswordResetOobCode, FIREBASE_SERVER_VALIDATION_ERROR_CODE, readFirebaseServerValidationErrorSummary, type FirebaseServerUserPasswordResetOobCode } from '@dereekb/firebase-server';
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { captureRejection } from '@dereekb/util/test';
 import { HttpsError } from 'firebase-functions/https';
@@ -46,6 +46,15 @@ demoApiFunctionContextFactory((f) => {
           await u.callWrappedFunction(demoCallModelWrappedFn, makeResetParams({ requestReset: true }));
           return loadCurrentOobCode();
         }
+
+        it('should reject params that do not match the declared inputType before the reset begins', async () => {
+          const error = await captureRejection(() => u.callWrappedFunction(demoCallModelWrappedFn, makeResetParams({ requestReset: 'yes' } as unknown as ResetProfilePasswordParams)));
+
+          expect(error).toBeInstanceOf(HttpsError);
+          expect(((error as HttpsError).details as { code?: string } | undefined)?.code).toBe(FIREBASE_SERVER_VALIDATION_ERROR_CODE);
+          expect(readFirebaseServerValidationErrorSummary(error)).toContain('requestReset');
+          expect(await f.authService.userContext(u.uid).loadResetPasswordClaims()).toBeUndefined();
+        });
 
         it('should begin a password reset (authenticated) and complete it (unauthenticated) with the generated code', async () => {
           // user context is intentionally re-created after each mutation because

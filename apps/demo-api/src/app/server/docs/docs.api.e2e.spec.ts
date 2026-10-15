@@ -8,6 +8,7 @@ const DOCS_PATH = FIREBASE_SERVER_DOCS_API_PROTECTED_PATH;
 const ANY_DOC_ID = 'getting-started';
 const USER_DOC_ID = 'guestbook/signing';
 const ADMIN_DOC_ID = 'admin/managing-guestbooks';
+const NOTIFICATION_USER_DOC_ID = 'notification/task-bots';
 
 /**
  * A user who never finished onboarding: holds no demo role, so only `any` docs are visible to them.
@@ -52,7 +53,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             const res = await oauth.authRequest('get', DOCS_PATH).expect(200);
             const ids = (res.body as DocsListResult).docs.map((x) => x.id);
 
-            expect(ids).toEqual([ADMIN_DOC_ID, ANY_DOC_ID, USER_DOC_ID]);
+            expect(ids).toEqual([ADMIN_DOC_ID, ANY_DOC_ID, USER_DOC_ID, NOTIFICATION_USER_DOC_ID]);
             expect(res.headers['cache-control']).toBe(DOCS_API_CACHE_CONTROL);
           });
 
@@ -76,7 +77,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             const res = await oauth.authRequest('get', DOCS_PATH).expect(200);
             const ids = (res.body as DocsListResult).docs.map((x) => x.id);
 
-            expect(ids).toEqual([ANY_DOC_ID, USER_DOC_ID]);
+            expect(ids).toEqual([ANY_DOC_ID, USER_DOC_ID, NOTIFICATION_USER_DOC_ID]);
           });
 
           it('searches only the docs it may see', async () => {

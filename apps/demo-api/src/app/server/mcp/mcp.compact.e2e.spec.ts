@@ -1,9 +1,9 @@
 import { type CallToolResult, type Tool } from '@modelcontextprotocol/server';
-import { buildMcpToolName, MCP_ALWAYS_LOAD_META_KEY, MCP_DOCS_READ_TOOL_NAME, MODEL_GET_TOOL_NAME } from '@dereekb/firebase-server/mcp';
+import { buildMcpToolName, ENUM_INFO_TOOL_NAME, type EnumInfoToolListOutput, MCP_ALWAYS_LOAD_META_KEY, MCP_DOCS_READ_TOOL_NAME, MODEL_GET_TOOL_NAME } from '@dereekb/firebase-server/mcp';
 import { type DocsSearchResult } from '@dereekb/firebase-server';
 import { guestbookIdentity, type EntryDetailsGuestbookEntryResult } from 'demo-firebase';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoAuthorizedUserContextFactory, demoGuestbookContext, demoGuestbookEntryContext, type DemoApiAuthorizedUserTestContextFixture } from '../../../test/fixture';
-import { callMcpMethod, callMcpTool, describeMcpMethod, listMcpTools, mcpCompactToolNames, searchMcpMethods } from '../../../test/mcp';
+import { callMcpMethod, callMcpTool, describeMcpMethod, discoverMcpServer, listMcpTools, mcpCompactToolNames, searchMcpMethods } from '../../../test/mcp';
 import { DEMO_MCP_API_STATUS_TOOL_NAME, type DemoMcpApiStatus } from './mcp.module';
 
 vi.setConfig({ hookTimeout: 40000, testTimeout: 40000 });
@@ -126,6 +126,38 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           it('never advertises the same name twice', () => {
             const names = tools.map((x) => x.name);
             expect(new Set(names).size).toBe(names.length);
+          });
+        });
+
+        describe('app-neutral examples', () => {
+          it('names a method id from the demo API in the instructions that resolves', async () => {
+            const { instructions } = await discoverMcpServer(f, u);
+            const methodId = /Method ids are `model\.call` or `model\.call\.specifier`, e\.g\. `([^`]+)`/.exec(instructions ?? '')?.[1];
+
+            expect(instructions).not.toMatch(/\b(worker|timesheet)\b/i);
+            expect(methodId).toBeDefined();
+
+            const { result } = await describeMcpMethod({ f, u, method: methodId as string });
+            expect(result.isError).toBeFalsy();
+          });
+
+          it('pages search results with offset and nextOffset', async () => {
+            const first = await searchMcpMethods({ f, u, query: '', kind: 'read', limit: 1 });
+            const second = await searchMcpMethods({ f, u, query: '', kind: 'read', limit: 1, offset: 1 });
+
+            expect(first.total).toBeGreaterThan(1);
+            expect(first.nextOffset).toBe(1);
+            expect(second.total).toBe(first.total);
+            expect(second.methods[0].method).not.toBe(first.methods[0].method);
+          });
+
+          it('lists the demo enum names through enum-info with no params', async () => {
+            const result = await callMcpMethod({ f, u, kind: 'read', method: ENUM_INFO_TOOL_NAME, params: {} });
+            const output = result.structuredContent as unknown as EnumInfoToolListOutput;
+
+            expect(result.isError).toBeFalsy();
+            expect(output.total).toBeGreaterThan(0);
+            expect(output.names).toHaveLength(output.total);
           });
         });
 

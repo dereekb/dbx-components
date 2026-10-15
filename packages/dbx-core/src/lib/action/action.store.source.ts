@@ -1,7 +1,8 @@
 import { first, switchMap, type Observable, type Subscription } from 'rxjs';
 import { LockSet, filterMaybe, type LoadingState, type LoadingStateType, type MaybeObservableOrValue } from '@dereekb/rxjs';
-import { type Destroyable, type Maybe, type ReadableError } from '@dereekb/util';
-import { type ActionContextState, type ActionContextStore } from './action.store';
+import { type Destroyable, type DestroyFunction, type Maybe, type ReadableError } from '@dereekb/util';
+import { type ActionContextState, type ActionContextStore, type DbxActionValueSnapshotFunction } from './action.store';
+import { type DbxActionValueGetterResult } from './directive/state/action.value.trigger.instance';
 import { type DbxActionDisabledKey, type DbxActionRejectedPair, type DbxActionState, type DbxActionSuccessPair, type DbxActionWorkOrWorkProgress, type DbxActionWorkProgress } from './action';
 
 /**
@@ -141,6 +142,34 @@ export class DbxActionContextStoreSourceInstance<T = unknown, O = unknown> imple
 
   public destroy(): void {
     this.lockSet.destroyOnNextUnlock();
+  }
+
+  // MARK: Value Snapshot
+  /**
+   * Registers the function that returns the value a trigger would ready right now. See {@link ActionContextStore.registerValueSnapshot}.
+   *
+   * @param valueSnapshotFunction - Function that returns the current value.
+   * @returns Removes the registration when called.
+   */
+  registerValueSnapshot(valueSnapshotFunction: DbxActionValueSnapshotFunction<T>): DestroyFunction {
+    let unregister: Maybe<DestroyFunction>;
+    const sub = this.useStore((x) => (unregister = x.registerValueSnapshot(valueSnapshotFunction)));
+
+    return () => {
+      sub.unsubscribe();
+      unregister?.();
+    };
+  }
+
+  /**
+   * Returns the value a trigger would ready right now, without triggering the action. See {@link ActionContextStore.valueSnapshot}.
+   *
+   * @returns The current value, or undefined when it is not available synchronously.
+   */
+  valueSnapshot(): Maybe<DbxActionValueGetterResult<T>> {
+    let snapshot: Maybe<DbxActionValueGetterResult<T>>;
+    this.useStore((x) => (snapshot = x.valueSnapshot())).unsubscribe();
+    return snapshot;
   }
 
   // MARK: Store

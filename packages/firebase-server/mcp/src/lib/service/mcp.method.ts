@@ -57,7 +57,7 @@ export type McpMethodSource = 'callModel' | 'builtin' | 'additional';
 export interface McpMethodSummary {
   /**
    * Canonical method id. `modelType.call` / `modelType.call.specifier` for callModel methods (e.g.
-   * `worker.create`, `jobWorkerTimesheet.update.reopen`); the tool name for built-in and additional methods.
+   * `guestbook.create`, `guestbook.update.subscribeToNotifications`); the tool name for built-in and additional methods.
    */
   readonly id: string;
   /**
@@ -100,7 +100,7 @@ export interface McpMethod extends McpMethodSummary {
  *
  * @example
  * ```ts
- * mcpMethodIdForDispatch({ modelType: 'worker', call: 'create' }); // 'worker.create'
+ * mcpMethodIdForDispatch({ modelType: 'guestbook', call: 'create' }); // 'guestbook.create'
  * ```
  */
 export function mcpMethodIdForDispatch(dispatch: McpToolDispatchTarget): string {

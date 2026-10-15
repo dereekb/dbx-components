@@ -3,8 +3,9 @@ import { type CliEnvDefault, readEnvTokenEntry } from '../config/env';
 import { type CliEnvConfigComplete, resolveCliEnvOrThrow } from '../config/env.resolve';
 import { createCliFirestoreSessionCacheStore } from '../config/firestore-session.cache';
 import { buildCliPaths } from '../config/paths';
-import { type CliTokenEntry, createCliTokenCacheStore, didRotateRefreshToken, isTokenExpired, mergeRefreshedTokenEntry } from '../config/token.cache';
+import { type CliTokenEntry, createCliTokenCacheStore, didRotateRefreshToken, isCliTokenEntryExpired, isCliTokenEntryRefreshable, mergeRefreshedTokenEntry } from '../config/token.cache';
 import { discoverOidcMetadata, refreshAccessToken } from '../auth/oidc.client';
+import { cliHandoffRemintSuggestion } from '../auth/auth-failure.hint';
 import { type CliContext, createCliContext, getCliContext, setCliContext } from '../context/cli.context';
 import { type CliFirestoreBinding } from '../firestore/firestore.models';
 import { type CliModelManifest } from '../manifest/types';
@@ -91,7 +92,8 @@ export function createAuthMiddleware(input: CreateAuthMiddlewareInput): Middlewa
       const existing = getCliContext();
 
       if (existing?.envName !== envName || existing.accessToken !== entry.accessToken) {
-        setCliContext(createCliContext({ cliName: input.cliName, envName, env, accessToken: entry.accessToken, scope: entry.scope, modelManifest: input.modelManifest, firestoreSessionCache, firestore: input.firestore }));
+        const credential = { handoff: entry.handoff === true, refreshable: isCliTokenEntryRefreshable(entry), expiresAt: entry.expiresAt };
+        setCliContext(createCliContext({ cliName: input.cliName, envName, env, accessToken: entry.accessToken, scope: entry.scope, credential, modelManifest: input.modelManifest, firestoreSessionCache, firestore: input.firestore }));
       }
     } catch (e) {
       outputError(e);
@@ -139,7 +141,8 @@ async function resolveAccessTokenEntry(input: ResolveAccessTokenEntryInput): Pro
   }
 
   // Mint an access token when none is present (env refresh-only case) or the cached one is expired.
-  if (!entry.accessToken || isTokenExpired(entry)) {
+  // A bearer handoff entry (no refresh token) is used until just before it lapses, then fails.
+  if (!entry.accessToken || isCliTokenEntryExpired(entry)) {
     entry = await refreshTokenEntry({ cliName, envName, env, tokens, entry });
   }
 
@@ -164,20 +167,38 @@ async function refreshTokenEntry(input: RefreshTokenEntryInput): Promise<CliToke
   const { cliName, envName, env, tokens, entry } = input;
 
   if (!entry.refreshToken) {
-    throw new CliError({
-      message: `Token for env "${envName}" is expired and no refresh token is cached. Re-login.`,
-      code: 'TOKEN_EXPIRED',
-      suggestion: `Run \`${cliName} auth login --env ${envName}\`.`
-    });
+    // a bearer handoff credential is never refreshed — the recovery is a fresh mint, not a login
+    throw entry.handoff
+      ? new CliError({
+          message: `The handoff credential for env "${envName}" expired at ${new Date(entry.expiresAt).toISOString()} and cannot be refreshed.`,
+          code: 'AUTH_HANDOFF_EXPIRED',
+          suggestion: cliHandoffRemintSuggestion({ cliName, envName })
+        })
+      : new CliError({
+          message: `Token for env "${envName}" is expired and no refresh token is cached. Re-login.`,
+          code: 'TOKEN_EXPIRED',
+          suggestion: `Run \`${cliName} auth login --env ${envName}\`.`
+        });
   }
 
   const meta = await discoverOidcMetadata({ issuer: env.oidcIssuer, fallbackBaseUrl: env.apiBaseUrl });
-  const refreshed = await refreshAccessToken({
-    tokenEndpoint: meta.token_endpoint,
-    clientId: env.clientId,
-    clientSecret: env.clientSecret,
-    refreshToken: entry.refreshToken
-  });
+  let refreshed: Awaited<ReturnType<typeof refreshAccessToken>>;
+
+  try {
+    refreshed = await refreshAccessToken({
+      tokenEndpoint: meta.token_endpoint,
+      clientId: env.clientId,
+      clientSecret: env.clientSecret,
+      refreshToken: entry.refreshToken
+    });
+  } catch (e) {
+    // a handoff refresh credential that can no longer refresh is recovered by re-minting, not `auth login`
+    if (entry.handoff && e instanceof CliError && (e.code === 'TOKEN_INVALID_GRANT' || e.code === 'TOKEN_EXCHANGE_FAILED')) {
+      throw new CliError({ message: e.message, code: e.code, suggestion: cliHandoffRemintSuggestion({ cliName, envName }) });
+    }
+
+    throw e;
+  }
 
   const updated: CliTokenEntry = mergeRefreshedTokenEntry({ entry, refreshed });
 

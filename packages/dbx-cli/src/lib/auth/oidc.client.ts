@@ -128,6 +128,17 @@ export function fetchUserInfo(input: FetchUserInfoInput): Promise<Record<string,
 }
 
 /**
+ * Builds the dbx-components `GET /oidc/session` endpoint URL from an OIDC issuer.
+ *
+ * @param oidcIssuer - The env's OIDC issuer URL.
+ * @returns The session endpoint URL.
+ * @__NO_SIDE_EFFECTS__
+ */
+export function buildOidcSessionEndpoint(oidcIssuer: string): string {
+  return `${oidcIssuer.replace(/\/+$/, '')}/session`;
+}
+
+/**
  * Fetches the dbx-components `GET /oidc/session` route and returns the parsed session lifetime metadata.
  *
  * @param input - The session request.

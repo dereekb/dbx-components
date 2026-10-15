@@ -1,7 +1,7 @@
 import { Directive, type OnInit, inject, input } from '@angular/core';
 import { addSeconds, isPast } from 'date-fns';
 import { type Observable, of, combineLatest, exhaustMap, catchError, delay, filter, first, map, switchMap, distinctUntilChanged, shareReplay } from 'rxjs';
-import { DbxActionContextStoreSourceInstance, type DbxActionValueGetterResult, cleanLockSet, cleanSubscription } from '@dereekb/dbx-core';
+import { DbxActionContextStoreSourceInstance, type DbxActionValueGetterResult, clean, cleanLockSet, cleanSubscription } from '@dereekb/dbx-core';
 import { type IsModifiedFunction, type IsValidFunction, type ObservableOrValue, asObservable, type IsEqualFunction, makeIsModifiedFunctionObservable } from '@dereekb/rxjs';
 import { DbxFormState, DbxMutableForm } from '../../form/form';
 import { type IsModified, type IsValid, type MapFunction, type Maybe } from '@dereekb/util';
@@ -103,56 +103,21 @@ export class DbxActionFormDirective<T = object, O = T> implements OnInit {
     }
 
     this.lockSet.addChildLockSet(this.source.lockSet, 'source');
+
+    clean(this.source.registerValueSnapshot(() => this.valueSnapshot()));
   }
 
   ngOnInit(): void {
     // Pass data from the form to the source when triggered.
-    this._triggeredSub.subscription = this.source.triggered$
-      .pipe(
-        switchMap(() =>
-          this.form.stream$.pipe(
-            first(),
-            exhaustMap((stream) => {
-              const { isComplete } = stream;
-              const doNothing = {}; // nothing, form not complete
-
-              let obs: Observable<DbxActionValueGetterResult<O>>;
-
-              if (isComplete) {
-                obs = this.form.getValue().pipe(
-                  first(),
-                  exhaustMap((value) =>
-                    this.preCheckReadyValue(value).pipe(
-                      first(),
-                      switchMap((canContinue) => {
-                        if (canContinue) {
-                          return this.readyValue(value).pipe(first());
-                        }
-
-                        return of(doNothing);
-                      }),
-                      catchError((error) => of({ reject: error }))
-                    )
-                  )
-                );
-              } else {
-                obs = of(doNothing);
-              }
-
-              return obs;
-            })
-          )
-        )
-      )
-      .subscribe((result: DbxActionValueGetterResult<O>) => {
-        if (result.reject) {
-          this.source.reject(result.reject);
-        } else if (result.value == null) {
-          // value isn't ready
-        } else {
-          this.source.readyValue(result.value);
-        }
-      });
+    this._triggeredSub.subscription = this.source.triggered$.pipe(switchMap(() => this._readyValueResult())).subscribe((result: DbxActionValueGetterResult<O>) => {
+      if (result.reject) {
+        this.source.reject(result.reject);
+      } else if (result.value == null) {
+        // value isn't ready
+      } else {
+        this.source.readyValue(result.value);
+      }
+    });
 
     // Update the enabled/disabled state
     this._isCompleteSub.subscription = this.form.stream$
@@ -200,6 +165,57 @@ export class DbxActionFormDirective<T = object, O = T> implements OnInit {
       .subscribe((disable) => {
         this.form.setDisabled(APP_ACTION_FORM_DISABLED_KEY, disable);
       });
+  }
+
+  /**
+   * Returns the value a trigger would ready right now, without triggering the action.
+   *
+   * Runs the same completeness check, validity/modified pre-check and value mapping as a trigger.
+   *
+   * @returns The current result, or undefined when a check or the map function does not resolve synchronously.
+   */
+  valueSnapshot(): Maybe<DbxActionValueGetterResult<O>> {
+    let snapshot: Maybe<DbxActionValueGetterResult<O>>;
+    this._readyValueResult()
+      .pipe(first())
+      .subscribe((result) => (snapshot = result))
+      .unsubscribe();
+    return snapshot;
+  }
+
+  private _readyValueResult(): Observable<DbxActionValueGetterResult<O>> {
+    return this.form.stream$.pipe(
+      first(),
+      exhaustMap((stream) => {
+        const { isComplete } = stream;
+        const doNothing = {}; // nothing, form not complete
+
+        let obs: Observable<DbxActionValueGetterResult<O>>;
+
+        if (isComplete) {
+          obs = this.form.getValue().pipe(
+            first(),
+            exhaustMap((value) =>
+              this.preCheckReadyValue(value).pipe(
+                first(),
+                switchMap((canContinue) => {
+                  if (canContinue) {
+                    return this.readyValue(value).pipe(first());
+                  }
+
+                  return of(doNothing);
+                }),
+                catchError((error) => of({ reject: error }))
+              )
+            )
+          );
+        } else {
+          obs = of(doNothing);
+        }
+
+        return obs;
+      })
+    );
   }
 
   /**

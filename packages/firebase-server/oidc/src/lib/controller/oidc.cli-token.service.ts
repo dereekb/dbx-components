@@ -1,13 +1,15 @@
 import { randomBytes } from 'node:crypto';
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { type Maybe, type Seconds, unixDateTimeSecondsNumberForNow } from '@dereekb/util';
-import { type OidcEntry, type OidcScope, OIDC_ENTRY_CLI_TOKEN_CLAIM_TYPE } from '@dereekb/firebase';
+import { type CliTokenCredentialType, type OidcEntry, type OidcScope, CLI_TOKEN_BEARER_CREDENTIAL_TYPE, CLI_TOKEN_REFRESH_CREDENTIAL_TYPE, isCliTokenCredentialType, OIDC_ENTRY_CLI_TOKEN_CLAIM_TYPE } from '@dereekb/firebase';
 import { assertEndpointOidcScope, badRequestError, clientIpsMatch, forbiddenError, type FirebaseServerAuthData, notFoundError, oidcScopesFromRequestAuth, oidcSessionExpiresAtFromRequestAuth, unauthenticatedError } from '@dereekb/firebase-server';
 import { OidcModuleConfig } from '../oidc.config';
 import { OidcService } from '../service/oidc.service';
 import { OidcEncryptionService } from '../service/oidc.encryption.service';
+import { OidcProviderConfigService } from '../service/oidc.config.service';
 import { OidcServerFirestoreCollections } from '../model/model';
 import {
+  CLI_TOKEN_ACCESS_TOKEN_GRANT_TYPE,
   CLI_TOKEN_ADMIN_PREDICATE,
   CLI_TOKEN_CLAIM_CODE_BYTES,
   CLI_TOKEN_CLAIM_TTL_SECONDS,
@@ -16,6 +18,8 @@ import {
   CliTokenApiModuleConfig,
   type CliTokenHandoffBundle,
   type CliTokenMintResult,
+  cliTokenRetainedScopesForProviderClaims,
+  DEFAULT_CLI_TOKEN_CREDENTIAL_TYPE,
   DEFAULT_CLI_TOKEN_REQUIRED_OIDC_SCOPE,
   FIREBASE_SERVER_CLI_TOKEN_API_PROTECTED_PATH,
   resolveCliTokenScopes,
@@ -40,6 +44,11 @@ export const CLI_TOKEN_DISABLED_ERROR_CODE = 'CLI_TOKEN_DISABLED_ERROR';
  */
 export const CLI_TOKEN_CLAIM_INVALID_ERROR_CODE = 'CLI_TOKEN_CLAIM_INVALID_ERROR';
 
+/**
+ * Error code thrown when the mint names a `credentialType` that is not a known {@link CliTokenCredentialType}.
+ */
+export const CLI_TOKEN_INVALID_CREDENTIAL_TYPE_ERROR_CODE = 'CLI_TOKEN_INVALID_CREDENTIAL_TYPE_ERROR';
+
 const CLI_TOKEN_CLAIM_INVALID_MESSAGE = 'The claim code is invalid, expired, or has already been used.';
 
 // MARK: Params
@@ -57,6 +66,11 @@ export interface MintCliTokenParams {
    * caller's own grant.
    */
   readonly ttlSeconds?: Maybe<Seconds>;
+  /**
+   * The kind of credential to mint. Defaults to {@link DEFAULT_CLI_TOKEN_CREDENTIAL_TYPE} (`refresh`),
+   * so callers that predate bearer handoffs see no wire change.
+   */
+  readonly credentialType?: Maybe<CliTokenCredentialType>;
 }
 
 /**
@@ -67,8 +81,8 @@ export interface ClaimCliTokenParams {
 }
 
 /**
- * The payload persisted behind a claim code. Everything but `refreshToken` is non-secret; the
- * refresh token is encrypted at rest with the OIDC encryption provider before it is written.
+ * The payload persisted behind a claim code. Everything but the credential is non-secret; the
+ * credential is encrypted at rest with the OIDC encryption provider before it is written.
  */
 interface StoredCliTokenClaimPayload {
   readonly uid: string;
@@ -76,10 +90,19 @@ interface StoredCliTokenClaimPayload {
   readonly scope: string;
   readonly expiresAt: string;
   /**
-   * The refresh token, encrypted. Named distinctly from the adapter's own `refresh_token` field so
-   * nothing mistakes this entry for an oidc-provider RefreshToken record.
+   * The kind of credential stored. Absent on a claim minted before bearer handoffs existed, which is
+   * a refresh credential.
    */
-  readonly encryptedRefreshToken: string;
+  readonly credentialType?: CliTokenCredentialType;
+  /**
+   * The bearer access token, encrypted. Present in bearer mode.
+   */
+  readonly encryptedAccessToken?: string;
+  /**
+   * The refresh token, encrypted. Present in refresh mode. Named distinctly from the adapter's own
+   * `refresh_token` field so nothing mistakes this entry for an oidc-provider RefreshToken record.
+   */
+  readonly encryptedRefreshToken?: string;
   readonly apiBaseUrl?: string;
   /**
    * The env name the app configured, recorded at mint so the claim can echo it without re-reading
@@ -121,20 +144,39 @@ export interface CliTokenRequestContext {
  *
  * The minted credential is never MORE privileged than the session that minted it: its scopes are the
  * caller's own, minus `token.cli` / `token.service` (see {@link resolveCliTokenScopes}), and its TTL
- * is capped at one hour AND at the remaining life of the caller's own grant.
+ * is capped at one hour AND at the remaining life of the caller's own grant. Narrowing with `scopes`
+ * keeps the caller's identity scopes (see {@link CliTokenApiModuleConfig.retainedScopes}), so a
+ * narrowed credential still carries the caller's role claims.
+ *
+ * Only the one-time claim code leaves the mint; the credential itself is returned exclusively by
+ * {@link OidcCliTokenService.claimCliToken}.
+ *
+ * ## Credential types
+ *
+ * - `bearer` — an opaque AccessToken the CLI uses directly. The CLI never calls the token endpoint,
+ *   so it never authenticates as the CLI client: the handoff works whatever that client's
+ *   `token_endpoint_auth_method` is. No refresh token exists, so the token's own `exp` is absolute.
+ *   It carries no `aud`, so the provider's userinfo endpoint accepts it.
+ * - `refresh` — a RefreshToken bound to the CLI client. The CLI exchanges it at `/oidc/token`, so it
+ *   must authenticate as exactly that client. The HTTP default, kept for CLIs that predate bearer.
+ *
+ * Both modes mint against a NEW child Grant owned by the CLI client, with the credential's own
+ * lifetime. The grant is what userinfo, the `dbx_session_expires_at` bound on a direct-Firestore
+ * session, the user's grant-list kill switch and RFC 7009 revocation all act on.
  *
  * ## Accepted limitation — no revocation cascade
  *
- * A refresh token is CLIENT-BOUND: oidc-provider's `validateGrant` requires
- * `grant.clientId === client.clientId`, so the parent grant (owned by the MCP client) cannot be
- * reused for the CLI client and a **separate** Grant must be created. Revoking the parent session
- * therefore does NOT cascade to the minted credential. The ≤1h cap is the mitigation; `auth logout
- * --revoke` and the `deleteOidcToken` callModel action are the manual kill switches.
+ * The child grant is separate from the parent grant (owned by the MCP client): a refresh token is
+ * CLIENT-BOUND (oidc-provider's `validateGrant` requires `grant.clientId === client.clientId`), and
+ * binding a bearer token to the parent would stretch its Firestore-session bound to the parent's
+ * lifetime. Revoking the parent session therefore does NOT cascade to the minted credential, in either
+ * mode. The ≤1h cap is the mitigation; `auth logout --revoke` and the `deleteOidcToken` callModel
+ * action are the manual kill switches.
  *
- * Rotation is deliberately left ON (the scope is NOT added to `nonRotatingScopes`): the CLI client is
- * a public PKCE client, so oidc-provider rotates the refresh token on every exchange and its reuse
- * detection kills the whole grant if a stolen copy is replayed. That is why the credential must land
- * in the CLI's PERSISTED token cache rather than the non-persisting `fromEnv` path.
+ * In refresh mode, rotation is deliberately left ON (the scope is NOT added to `nonRotatingScopes`):
+ * the CLI client is a public PKCE client, so oidc-provider rotates the refresh token on every exchange
+ * and its reuse detection kills the whole grant if a stolen copy is replayed. That is why the
+ * credential must land in the CLI's PERSISTED token cache rather than the non-persisting `fromEnv` path.
  */
 @Injectable()
 export class OidcCliTokenService {
@@ -145,6 +187,7 @@ export class OidcCliTokenService {
     @Inject(OidcModuleConfig) private readonly oidcModuleConfig: OidcModuleConfig,
     @Inject(OidcEncryptionService) private readonly encryptionService: OidcEncryptionService,
     @Inject(OidcServerFirestoreCollections) private readonly collections: OidcServerFirestoreCollections,
+    @Inject(OidcProviderConfigService) private readonly providerConfigService: OidcProviderConfigService,
     @Optional() @Inject(CliTokenApiModuleConfig) private readonly config?: CliTokenApiModuleConfig,
     @Optional() @Inject(CLI_TOKEN_ADMIN_PREDICATE) private readonly adminPredicate?: CliTokenAdminPredicate
   ) {
@@ -161,8 +204,8 @@ export class OidcCliTokenService {
    * Mints a CLI credential for the calling user and returns the one-time claim code that unwraps it.
    *
    * @param auth - The authenticated request's auth data (`req.auth`).
-   * @param params - The optional requested scope subset + TTL.
-   * @returns The claim code and the minted credential's metadata. The refresh token itself is NOT returned.
+   * @param params - The optional requested scope subset, TTL and credential type.
+   * @returns The claim code and the minted credential's metadata. The credential itself is NOT returned.
    * @throws {HttpsError} `401` with no uid, `403` when a gate rejects the caller, `400` when minting is disabled.
    */
   async mintCliToken(auth: Maybe<FirebaseServerAuthData>, params: MintCliTokenParams, context?: CliTokenRequestContext): Promise<CliTokenMintResult> {
@@ -192,6 +235,14 @@ export class OidcCliTokenService {
       endpoint: FIREBASE_SERVER_CLI_TOKEN_API_PROTECTED_PATH
     });
 
+    // validated after the auth gates, so an unauthorized caller learns nothing about the mint
+    const requestedCredentialType = params.credentialType;
+
+    if (requestedCredentialType != null && !isCliTokenCredentialType(requestedCredentialType)) {
+      throw badRequestError({ status: 400, code: CLI_TOKEN_INVALID_CREDENTIAL_TYPE_ERROR_CODE, message: `Unknown credentialType. Expected "${CLI_TOKEN_BEARER_CREDENTIAL_TYPE}" or "${CLI_TOKEN_REFRESH_CREDENTIAL_TYPE}".` });
+    }
+
+    const credentialType: CliTokenCredentialType = requestedCredentialType ?? DEFAULT_CLI_TOKEN_CREDENTIAL_TYPE;
     const cliClientId = await resolveCliTokenClientId(this.config?.cliClientId);
 
     if (!cliClientId) {
@@ -205,15 +256,20 @@ export class OidcCliTokenService {
       throw badRequestError({ status: 400, code: CLI_TOKEN_DISABLED_ERROR_CODE, message: 'The configured CLI OAuth client could not be resolved.' });
     }
 
-    const scopeString = resolveCliTokenScopes({ callerScopes, requestedScopes: params.scopes });
+    const retainedScopes = this.config?.retainedScopes ?? cliTokenRetainedScopesForProviderClaims(this.providerConfigService.providerConfig.claims);
+    const scopeString = resolveCliTokenScopes({ callerScopes, requestedScopes: params.scopes, retainedScopes, credentialType });
     const ttlSeconds = resolveCliTokenTtlSeconds({
       requestedTtlSeconds: params.ttlSeconds,
       defaultTtlSeconds: this.config?.defaultTtlSeconds,
       parentRemainingSeconds: parentGrantRemainingSeconds(auth)
     });
 
+    // taken BEFORE the saves, so the reported `expiresAt` never overstates the credential's life
+    const nowMs = Date.now();
+
     // A NEW grant is required rather than a reuse of the caller's: a refresh token is client-bound,
-    // and oidc-provider's `validateGrant` demands `grant.clientId === client.clientId`.
+    // and oidc-provider's `validateGrant` demands `grant.clientId === client.clientId`. A bearer token
+    // gets one too, so its `dbx_session_expires_at` and kill switches follow the credential, not the parent.
     // `expiresIn` is honoured by Grant#save but is absent from the constructor's published type, so
     // the init object is declared separately (the same shape `findOrCreateGrant` uses).
     const grantInit: { accountId: string; clientId: string; expiresIn?: number } = { accountId: uid, clientId: cliClientId, expiresIn: ttlSeconds };
@@ -221,22 +277,42 @@ export class OidcCliTokenService {
     grant.addOIDCScope(scopeString);
     const grantId = await grant.save();
 
-    const refreshToken = new provider.RefreshToken({
-      accountId: uid,
-      client,
-      clientId: cliClientId,
-      grantId,
-      scope: scopeString,
-      gty: 'authorization_code',
-      // not bound to an IdP session — there is no interactive session behind a minted credential
-      expiresWithSession: false
-    });
-    // `expiresIn` is a runtime BaseToken field oidc-provider reads at save time; it is not on the
-    // published RefreshToken type, hence the narrow cast rather than an `any`.
-    (refreshToken as unknown as { expiresIn?: number }).expiresIn = ttlSeconds;
-    const refreshTokenValue = await refreshToken.save();
+    let credentialPayload: Pick<StoredCliTokenClaimPayload, 'encryptedAccessToken' | 'encryptedRefreshToken'>;
 
-    const nowMs = Date.now();
+    if (credentialType === CLI_TOKEN_BEARER_CREDENTIAL_TYPE) {
+      // No `aud` / resource server: userinfo rejects any token with an audience, and the CLI's own
+      // refresh-issued tokens carry none either.
+      const accessToken = new provider.AccessToken({
+        client,
+        accountId: uid,
+        grantId,
+        scope: scopeString,
+        gty: CLI_TOKEN_ACCESS_TOKEN_GRANT_TYPE,
+        // not bound to an IdP session — there is no interactive session behind a minted credential
+        expiresWithSession: false,
+        // a runtime BaseToken field oidc-provider reads at save time; the constructor's index signature admits it
+        expiresIn: ttlSeconds
+      });
+      const accessTokenValue = await accessToken.save();
+      credentialPayload = { encryptedAccessToken: this.encryptionService.provider.encrypt(accessTokenValue) };
+    } else {
+      const refreshToken = new provider.RefreshToken({
+        accountId: uid,
+        client,
+        clientId: cliClientId,
+        grantId,
+        scope: scopeString,
+        gty: 'authorization_code',
+        // not bound to an IdP session — there is no interactive session behind a minted credential
+        expiresWithSession: false
+      });
+      // `expiresIn` is a runtime BaseToken field oidc-provider reads at save time; it is not on the
+      // published RefreshToken type, hence the narrow cast rather than an `any`.
+      (refreshToken as unknown as { expiresIn?: number }).expiresIn = ttlSeconds;
+      const refreshTokenValue = await refreshToken.save();
+      credentialPayload = { encryptedRefreshToken: this.encryptionService.provider.encrypt(refreshTokenValue) };
+    }
+
     const expiresAt = new Date(nowMs + ttlSeconds * 1000).toISOString();
     const claimExpiresAt = new Date(nowMs + CLI_TOKEN_CLAIM_TTL_SECONDS * 1000);
     const claimCode = generateCliTokenClaimCode();
@@ -249,18 +325,19 @@ export class OidcCliTokenService {
         clientId: cliClientId,
         scope: scopeString,
         expiresAt,
-        encryptedRefreshToken: this.encryptionService.provider.encrypt(refreshTokenValue),
+        credentialType,
+        ...credentialPayload,
         ...(this.config?.apiBaseUrl ? { apiBaseUrl: this.config.apiBaseUrl } : undefined),
         ...(this.config?.envName ? { envName: this.config.envName } : undefined),
         ...(this.config?.bindClaimToMintIp && context?.requestIp ? { mintIp: context.requestIp } : undefined)
       }
     });
 
-    this._logger.log(`Minted CLI credential: minter=${uid} parentGrant=${parentGrantId(auth) ?? 'unknown'} childGrant=${grantId} client=${cliClientId} scope="${scopeString}" expiresAt=${expiresAt}`);
+    this._logger.log(`Minted CLI credential: minter=${uid} parentGrant=${parentGrantId(auth) ?? 'unknown'} childGrant=${grantId} client=${cliClientId} type=${credentialType} scope="${scopeString}" expiresAt=${expiresAt}`);
 
     // `envName` is returned as well as stored on the claim: the stored copy configures the env AFTER a
     // successful redeem, but the caller needs the name to BUILD the redeem command in the first place.
-    return { claimCode, claimExpiresAt: claimExpiresAt.toISOString(), expiresAt, scope: scopeString, ...(this.config?.envName ? { envName: this.config.envName } : undefined) };
+    return { claimCode, claimExpiresAt: claimExpiresAt.toISOString(), expiresAt, scope: scopeString, credentialType, ...(this.config?.envName ? { envName: this.config.envName } : undefined) };
   }
 
   /**
@@ -315,13 +392,26 @@ export class OidcCliTokenService {
       throw this._claimInvalidError();
     }
 
-    this._logger.log(`Redeemed CLI credential claim: uid=${payload.uid} client=${payload.clientId} expiresAt=${payload.expiresAt}`);
+    // a claim minted before bearer handoffs existed carries no type and is a refresh credential
+    const credentialType: CliTokenCredentialType = payload.credentialType ?? CLI_TOKEN_REFRESH_CREDENTIAL_TYPE;
+    const encryptedCredential = credentialType === CLI_TOKEN_BEARER_CREDENTIAL_TYPE ? payload.encryptedAccessToken : payload.encryptedRefreshToken;
+
+    if (!encryptedCredential) {
+      this._logger.error(`CLI credential claim for uid=${payload.uid} has no stored ${credentialType} credential.`);
+      throw this._claimInvalidError();
+    }
+
+    const credentialValue = this.encryptionService.provider.decrypt(encryptedCredential);
+    const credential: Pick<CliTokenHandoffBundle, 'accessToken' | 'tokenType' | 'refreshToken'> = credentialType === CLI_TOKEN_BEARER_CREDENTIAL_TYPE ? { accessToken: credentialValue, tokenType: 'Bearer' } : { refreshToken: credentialValue };
+
+    this._logger.log(`Redeemed CLI credential claim: uid=${payload.uid} client=${payload.clientId} type=${credentialType} expiresAt=${payload.expiresAt}`);
 
     return {
       uid: payload.uid,
       issuer: this.oidcModuleConfig.issuer,
       clientId: payload.clientId,
-      refreshToken: this.encryptionService.provider.decrypt(payload.encryptedRefreshToken),
+      credentialType,
+      ...credential,
       scope: payload.scope,
       expiresAt: payload.expiresAt,
       ...(payload.apiBaseUrl ? { apiBaseUrl: payload.apiBaseUrl } : undefined),

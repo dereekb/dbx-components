@@ -21,6 +21,21 @@ import { CliError } from '../util/output';
  * When provided by the runner, {@link CliContext.modelManifest} carries the generated
  * `CliModelManifest` so commands can resolve `prefix/id` keys to a `modelType`.
  */
+export interface CliContextCredential {
+  /**
+   * Whether the credential was redeemed from a claim code (`auth handoff`) rather than `auth login`.
+   */
+  readonly handoff: boolean;
+  /**
+   * Whether the credential carries a refresh token. A bearer handoff credential does not.
+   */
+  readonly refreshable: boolean;
+  /**
+   * Unix epoch milliseconds at which the access token expires.
+   */
+  readonly expiresAt: number;
+}
+
 export interface CliContext {
   readonly cliName: string;
   readonly envName: string;
@@ -34,6 +49,11 @@ export interface CliContext {
    * recorded, e.g. for an env-supplied token with no `<PREFIX>_TOKEN_SCOPE`.
    */
   readonly scope?: Maybe<string>;
+  /**
+   * What kind of credential the access token is, when known. Lets an auth failure tell the user how
+   * to recover — re-mint a handoff credential vs. log in again.
+   */
+  readonly credential?: Maybe<CliContextCredential>;
   readonly callModel: <TParams = unknown, TResult = unknown>(params: OnCallTypedModelParams<TParams>) => Promise<TResult>;
   readonly getModel: <TResult = unknown>(modelType: string, key: string) => Promise<GetModelOverHttpResult<TResult>>;
   readonly getMultipleModels: <TResult = unknown>(modelType: string, keys: ReadonlyArray<string>) => Promise<GetMultipleModelsOverHttpResult<TResult>>;
@@ -151,6 +171,10 @@ export interface CreateCliContextInput {
    * {@link CliContext.scope}.
    */
   readonly scope?: Maybe<string>;
+  /**
+   * The credential's kind, when known. Surfaced as {@link CliContext.credential}.
+   */
+  readonly credential?: Maybe<CliContextCredential>;
   /**
    * Optional generated model manifest. When supplied, surfaced on the context so commands
    * (e.g. `get <key>`) can resolve `prefix/id` keys to a `modelType` via `decodeFirestoreModelKey`.
@@ -270,6 +294,7 @@ export function createCliContext(input: CreateCliContextInput): CliContext {
     env: input.env,
     accessToken,
     scope: input.scope,
+    credential: input.credential,
     modelManifest: input.modelManifest,
     callModel: <TParams = unknown, TResult = unknown>(params: OnCallTypedModelParams<TParams>) =>
       callModelOverHttp<TParams, TResult>({

@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { type OnCallTypedModelParams } from '@dereekb/firebase';
 import { type FirebaseServerAuthData, type McpToolDetailsBuilder, type McpToolVisibility, type ModelApiDetailsResult } from '@dereekb/firebase-server';
 import { AUTH_ADMIN_ROLE, type Maybe } from '@dereekb/util';
+import { type } from 'arktype';
 import { type McpAdditionalTools, type McpAuthRoleReader, type McpModuleConfig } from '../mcp.config';
 import { type McpAnalyticsEvent } from './analytics/mcp.analytics.handler';
 import { mcpAdditionalTool } from './mcp.compact';
@@ -491,6 +492,80 @@ describe('McpServerFactoryService compact surface', () => {
     });
   });
 
+  describe('examples', () => {
+    const HIDDEN_FIRST_API_DETAILS = makeApiDetails([
+      { model: 'secretLedger', call: 'update', specifier: 'rebalance', mcp: { visibility: ADMIN_ONLY } },
+      { model: 'guestbook', call: 'create' },
+      { model: 'guestbook', call: 'update', specifier: 'reopen' }
+    ]);
+
+    async function searchDescription(factory: McpServerFactoryService, ctx: McpSpecDriverContext): Promise<string> {
+      const tools = await dispatchMcpToolsList<WireToolEntry>(factory, ctx);
+      return tools.find((x) => x.name === factory.compactToolNames.search)?.description ?? '';
+    }
+
+    it('should never name a method the caller cannot see', async () => {
+      const factory = makeFactory({ apiDetails: HIDDEN_FIRST_API_DETAILS });
+      const userInstructions = (await dispatchMcpDiscover(factory, USER)).instructions ?? '';
+      const adminInstructions = (await dispatchMcpDiscover(factory, ADMIN)).instructions ?? '';
+
+      expect(userInstructions).toContain('e.g. `guestbook.update.reopen`');
+      expect(userInstructions).not.toMatch(/secretLedger|rebalance/i);
+      expect(await searchDescription(factory, USER)).not.toMatch(/secretLedger|rebalance/i);
+      expect(adminInstructions).toContain('e.g. `secretLedger.update.rebalance`');
+      expect(await searchDescription(factory, ADMIN)).toContain('rebalance');
+    });
+
+    it('should use the configured examples', async () => {
+      const factory = makeFactory({ config: { tools: { examples: { methodId: 'guestbook.create', searchQueries: ['make guestbook'] } } } });
+      const instructions = (await dispatchMcpDiscover(factory, USER)).instructions ?? '';
+      const tools = await dispatchMcpToolsList<WireToolEntry>(factory, USER);
+      const details = tools.find((x) => x.name === 'demo_api_details');
+
+      expect(instructions).toContain("('make guestbook')");
+      expect(instructions).toContain('e.g. `guestbook.create`');
+      expect(await searchDescription(factory, USER)).toContain("e.g. 'make guestbook'");
+      expect(JSON.stringify(details?.inputSchema)).toContain('e.g. `guestbook.create`');
+    });
+
+    it('should use generic wording when examples are off', async () => {
+      const factory = makeFactory({ config: { tools: { examples: false } } });
+      const instructions = (await dispatchMcpDiscover(factory, USER)).instructions ?? '';
+
+      expect(instructions).toContain('a verb and/or a model name');
+      expect(instructions).not.toContain('e.g.');
+      expect(await searchDescription(factory, USER)).not.toContain('e.g.');
+    });
+
+    it('should name a method of the router kind when method is missing', async () => {
+      const factory = makeFactory();
+      const write = await dispatchMcpToolCall<ToolResult>({ factory, ctx: USER, name: 'demo_api_write', args: {} });
+      const destructive = await dispatchMcpToolCall<ToolResult>({ factory, ctx: USER, name: 'demo_api_destructive', args: {} });
+
+      expect(write.isError).toBe(true);
+      expect(write.content[0].text).toContain("method: 'guestbook.create'");
+      expect(destructive.content[0].text).toContain("method: 'guestbook.update.reopen'");
+    });
+  });
+
+  describe('search paging', () => {
+    it('should page with offset and nextOffset', async () => {
+      const factory = makeFactory({ apiDetails: SEARCH_API_DETAILS });
+      const first = await search(factory, USER, { query: '', model: 'guestbookEntry', limit: 1 });
+      const second = await search(factory, USER, { query: '', model: 'guestbookEntry', limit: 1, offset: 1 });
+      const last = await search(factory, USER, { query: '', model: 'guestbookEntry', limit: 1, offset: 2 });
+      const past = await search(factory, USER, { query: '', model: 'guestbookEntry', limit: 1, offset: 5 });
+
+      expect([first.total, second.total, last.total, past.total]).toEqual([3, 3, 3, 3]);
+      expect((first as { nextOffset?: number }).nextOffset).toBe(1);
+      expect((second as { nextOffset?: number }).nextOffset).toBe(2);
+      expect(last).not.toHaveProperty('nextOffset');
+      expect(past).not.toHaveProperty('nextOffset');
+      expect(past.methods).toEqual([]);
+      expect(new Set([first.methods[0].method, second.methods[0].method, last.methods[0].method]).size).toBe(3);
+    });
+  });
+
   describe('analytics', () => {
     it('should describe the executed method and the inner reason', async () => {
       const events: McpAnalyticsEvent[] = [];
@@ -612,6 +687,78 @@ describe('McpServerFactoryService compact surface', () => {
       const names = await listNames(makeFactory({ docs: makeDocsService(), config: { tools: { compact: false, methodTools: true } } }));
       expect(names).toContain('search_demo_documentation');
       expect(names).toContain('docs-read');
+    });
+  });
+
+  describe('input validation', () => {
+    function makeAuthManifestFactory(config: Partial<McpModuleConfig> = {}): McpServerFactoryService {
+      const manifestPath = join(mkdtempSync(join(tmpdir(), 'mcp-validation-')), 'mcp.manifest.json');
+      writeFileSync(manifestPath, JSON.stringify({ version: MCP_MANIFEST_VERSION, generatedAt: '2026-10-14T00:00:00.000Z', tools: {}, auth: { apps: [], claims: [] } }));
+      return makeFactory({ config: { mcpManifestPath: manifestPath, ...config } });
+    }
+
+    it('should reject whoami args that do not match its schema through the read router', async () => {
+      const factory = makeAuthManifestFactory();
+
+      const invalid = await dispatchMcpMethodCall<ToolResult>({ factory, ctx: USER, kind: 'read', method: 'whoami', params: { detail: true } });
+      expect(invalid.isError).toBe(true);
+      expect(invalid.content[0].text).toContain('detail must be one of "summary", "claims", "full" (was true)');
+
+      const valid = await dispatchMcpMethodCall<ToolResult>({ factory, ctx: USER, kind: 'read', method: 'whoami', params: { detail: 'claims' } });
+      expect(valid.isError).toBeUndefined();
+    });
+
+    it('should reject whoami args that do not match its schema as a direct tool', async () => {
+      const factory = makeAuthManifestFactory({ tools: { compact: false, methodTools: true } });
+
+      const undeclared = await dispatchMcpToolCall<ToolResult>({ factory, ctx: USER, name: 'whoami', args: { bogus: 1 } });
+      expect(undeclared.isError).toBe(true);
+      expect(undeclared.content[0].text).toContain('bogus is not a parameter of this tool');
+
+      const valid = await dispatchMcpToolCall<ToolResult>({ factory, ctx: USER, name: 'whoami', args: { detail: 'summary' } });
+      expect(valid.isError).toBeUndefined();
+    });
+
+    it('should still run search without a query', async () => {
+      const result = await search(makeFactory(), USER, { model: 'guestbook' });
+      expect(result.methods.length).toBeGreaterThan(0);
+    });
+
+    it('should check an mcpAdditionalTool inputType with arktype and pass the parsed args', async () => {
+      let received: unknown;
+      const additional: McpAdditionalTools = [
+        mcpAdditionalTool({
+          name: 'demo_count',
+          description: 'Counts.',
+          inputType: type({ n: 'string.numeric.parse' }),
+          readOnly: true,
+          expose: 'tool',
+          handler: (args) => {
+            received = args;
+            return { ok: true };
+          }
+        })
+      ];
+
+      const factory = makeFactory({ additional });
+
+      const invalid = await dispatchMcpToolCall<ToolResult>({ factory, ctx: USER, name: 'demo_count', args: { n: 'abc' } });
+      expect(invalid.isError).toBe(true);
+      expect(invalid.content[0].text).toContain('n must be');
+      expect(received).toBeUndefined();
+
+      const valid = await dispatchMcpToolCall<ToolResult>({ factory, ctx: USER, name: 'demo_count', args: { n: '5' } });
+      expect(valid.isError).toBeUndefined();
+      expect(received).toEqual({ n: 5 });
+    });
+
+    it('should check an mcpAdditionalTool inputSchema with the JSON-Schema validator', async () => {
+      const additional: McpAdditionalTools = [mcpAdditionalTool({ name: 'demo_lookup', description: 'Looks up.', inputSchema: { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] }, readOnly: true, expose: 'tool', handler: () => ({ ok: true }) })];
+      const factory = makeFactory({ additional });
+
+      const invalid = await dispatchMcpToolCall<ToolResult>({ factory, ctx: USER, name: 'demo_lookup', args: {} });
+      expect(invalid.isError).toBe(true);
+      expect(invalid.content[0].text).toContain('id is required');
     });
   });
 

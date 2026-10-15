@@ -6,7 +6,7 @@ import { PopoverPositionStrategy } from './popover.position.strategy';
 import { type Overlay } from '@angular/cdk/overlay';
 import { LockSet } from '@dereekb/rxjs';
 import { CompactContextStore, CompactMode } from '../../layout/compact';
-import { asPromise, type Maybe, type PromiseOrValue, type SpaceSeparatedCssClasses } from '@dereekb/util';
+import { isPromise, type Maybe, type PromiseOrValue, type SpaceSeparatedCssClasses } from '@dereekb/util';
 import { DbxPopoverController, type DbxPopoverKey } from './popover';
 import { DbxPopoverCoordinatorComponent } from './popover.coordinator.component';
 import { DbxWindowKeyDownListenerDirective } from '../../keypress';
@@ -118,6 +118,7 @@ export class DbxPopoverComponent<O = unknown, I = unknown, T = unknown> extends 
   };
 
   private _startedClosing = false;
+  private _awaitingClosingValue = false;
   private readonly _closing = completeOnDestroy(new Subject<void>());
 
   private _triggerCloseKeys: string[] = [];
@@ -131,6 +132,9 @@ export class DbxPopoverComponent<O = unknown, I = unknown, T = unknown> extends 
 
   readonly closing$ = this.isClosing$.pipe(filter((x) => x));
 
+  /**
+   * Optional function that provides the value to close with. A value that is not a promise closes the popover right away.
+   */
   getClosingValueFn?: (value: Maybe<I>, closeType: NgPopoverCloseType) => PromiseOrValue<O | undefined>;
 
   constructor() {
@@ -226,15 +230,23 @@ export class DbxPopoverComponent<O = unknown, I = unknown, T = unknown> extends 
   private _useClosingValue(closeType: NgPopoverCloseType, useValue: (value?: O | undefined) => void) {
     if (this.getClosingValueFn == null) {
       useValue();
-    } else {
-      asPromise(this.getClosingValueFn(this.data, closeType)).then(
-        (x) => {
-          useValue(x);
-        },
-        () => {
-          useValue();
-        }
-      );
+    } else if (!this._awaitingClosingValue) {
+      // a close requested while the closing value is computed is ignored, so the closing value is only computed once
+      this._awaitingClosingValue = true;
+      const closingValue = this.getClosingValueFn(this.data, closeType);
+
+      if (isPromise(closingValue)) {
+        closingValue.then(
+          (x) => {
+            useValue(x);
+          },
+          () => {
+            useValue();
+          }
+        );
+      } else {
+        useValue(closingValue);
+      }
     }
   }
 

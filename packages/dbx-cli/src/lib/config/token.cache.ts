@@ -26,6 +26,15 @@ export interface CliTokenEntry {
    */
   readonly rotationDisabled?: boolean;
   /**
+   * Whether this entry was redeemed from an MCP-minted claim code (`auth handoff`) rather than an
+   * interactive `auth login`. Persisted.
+   *
+   * A handoff credential is recovered by minting a fresh claim code and re-running `auth handoff`, not
+   * by `auth login`. A handoff entry with no {@link refreshToken} is a bearer credential: it is used
+   * as-is until {@link expiresAt} and cannot be refreshed.
+   */
+  readonly handoff?: boolean;
+  /**
    * Transient (never persisted) marker that this entry was sourced from environment variables rather
    * than the on-disk cache. Env-sourced entries are not written back after a refresh — see the auth
    * middleware. Set by `readEnvTokenEntry`.
@@ -68,6 +77,42 @@ export function createCliTokenCacheStore(input: CreateCliTokenCacheStoreInput): 
 }
 
 /**
+ * Expiry buffer for an entry that can be refreshed — refreshing a minute early absorbs clock skew and
+ * request latency.
+ */
+export const REFRESHABLE_TOKEN_EXPIRY_BUFFER_MS = 60_000;
+
+/**
+ * Expiry buffer for an entry with no refresh token (a bearer handoff credential). Nothing can buy it
+ * time, so it is used until just before it lapses.
+ */
+export const NON_REFRESHABLE_TOKEN_EXPIRY_BUFFER_MS = 5_000;
+
+/**
+ * Whether the entry can be refreshed — i.e. it carries a refresh token.
+ *
+ * @param entry - The token cache entry.
+ * @returns `true` when the entry has a refresh token.
+ * @__NO_SIDE_EFFECTS__
+ */
+export function isCliTokenEntryRefreshable(entry: Maybe<Pick<CliTokenEntry, 'refreshToken'>>): boolean {
+  return Boolean(entry?.refreshToken);
+}
+
+/**
+ * Returns true when the entry's access token is at or near expiry, using the buffer that suits the
+ * entry: {@link REFRESHABLE_TOKEN_EXPIRY_BUFFER_MS} when it can be refreshed, otherwise
+ * {@link NON_REFRESHABLE_TOKEN_EXPIRY_BUFFER_MS}.
+ *
+ * @param entry - The token cache entry to check (`null`/`undefined` is treated as expired).
+ * @param nowMs - The current time in unix epoch milliseconds. Defaults to `Date.now()`.
+ * @returns `true` when the token is at or within its buffer of expiry.
+ */
+export function isCliTokenEntryExpired(entry: Maybe<CliTokenEntry>, nowMs: number = Date.now()): boolean {
+  return isTokenExpired(entry, nowMs, isCliTokenEntryRefreshable(entry) ? REFRESHABLE_TOKEN_EXPIRY_BUFFER_MS : NON_REFRESHABLE_TOKEN_EXPIRY_BUFFER_MS);
+}
+
+/**
  * Returns true when the token entry's access token is at or near expiry.
  *
  * Defaults to a 60-second buffer to allow for clock skew and request latency.
@@ -77,7 +122,7 @@ export function createCliTokenCacheStore(input: CreateCliTokenCacheStoreInput): 
  * @param bufferMs - Skew/latency buffer in milliseconds; the token is treated as expired this far ahead of `expiresAt`.
  * @returns `true` when the token is at or within `bufferMs` of expiry, otherwise `false`.
  */
-export function isTokenExpired(entry: Maybe<CliTokenEntry>, nowMs: number = Date.now(), bufferMs: number = 60_000): boolean {
+export function isTokenExpired(entry: Maybe<CliTokenEntry>, nowMs: number = Date.now(), bufferMs: number = REFRESHABLE_TOKEN_EXPIRY_BUFFER_MS): boolean {
   return expirationDetails({ expiresFromDate: entry?.expiresAt, expiresIn: -bufferMs, now: new Date(nowMs) }).hasExpired();
 }
 

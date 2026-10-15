@@ -6,9 +6,10 @@ import { type CliEnvConfig, type CliEnvDefault, type OidcCliTokenEndpointAuthMet
 import { resolveCliEnvOrThrow } from '../config/env.resolve';
 import { buildCliPaths } from '../config/paths';
 import { createCliFirestoreSessionCacheStore } from '../config/firestore-session.cache';
-import { type CliTokenEntry, createCliTokenCacheStore, isTokenExpired, mergeRefreshedTokenEntry } from '../config/token.cache';
-import { discoverOidcMetadata, exchangeAuthorizationCode, fetchSessionInfo, fetchUserInfo, refreshAccessToken, revokeToken } from './oidc.client';
-import { claimCliHandoff } from './cli-handoff.client';
+import { type CliTokenEntry, createCliTokenCacheStore, isCliTokenEntryExpired, isCliTokenEntryRefreshable, mergeRefreshedTokenEntry } from '../config/token.cache';
+import { buildOidcSessionEndpoint, discoverOidcMetadata, exchangeAuthorizationCode, fetchSessionInfo, fetchUserInfo, refreshAccessToken, revokeToken } from './oidc.client';
+import { cliHandoffRemintSuggestion } from './auth-failure.hint';
+import { claimCliHandoff, cliHandoffBundleCredentialType } from './cli-handoff.client';
 import { buildAuthorizationUrl, parsePastedRedirect } from './oidc.flow';
 import { type LoopbackRedirectCapture, SUGGESTED_CLI_LOOPBACK_REDIRECT_PORT, parseLoopbackRedirectUri, startLoopbackRedirectCapture } from './oidc.loopback';
 import { CliError, outputResult } from '../util/output';
@@ -71,16 +72,6 @@ async function resolveAuthSetupPrompt(input: ResolveAuthSetupPromptInput): Promi
 }
 
 /**
- * Builds the `GET /oidc/session` endpoint URL from the env's OIDC issuer (`<oidcIssuer>/session`).
- *
- * @param oidcIssuer - The env's OIDC issuer URL.
- * @returns The session endpoint URL.
- */
-function buildSessionEndpoint(oidcIssuer: string): string {
-  return `${oidcIssuer.replace(/\/+$/, '')}/session`;
-}
-
-/**
  * Best-effort fetch of the session lifetime metadata for an access token. Returns `undefined` when
  * the route is unavailable or errors, so callers can treat the session info as supplemental.
  *
@@ -93,7 +84,7 @@ async function loadSessionInfoSafely(input: { readonly oidcIssuer: string; reado
   let result: OidcSessionInfo | undefined;
 
   try {
-    result = await fetchSessionInfo({ sessionEndpoint: buildSessionEndpoint(input.oidcIssuer), accessToken: input.accessToken });
+    result = await fetchSessionInfo({ sessionEndpoint: buildOidcSessionEndpoint(input.oidcIssuer), accessToken: input.accessToken });
   } catch {
     // Supplemental — older servers without the /oidc/session route, or transient errors, are non-fatal.
     result = undefined;
@@ -135,17 +126,41 @@ async function loadUserInfoSafely(input: { readonly userinfoEndpoint: string; re
  * @param input - The session lifetime fields.
  * @param input.sessionExpiresAt - Grant expiry as unix epoch seconds.
  * @param input.rotationDisabled - Whether refresh-token rotation is disabled.
+ * @param input.refreshable - Whether the credential can be refreshed. A `false` (a bearer handoff credential) replaces the rotation note with `not refreshable`.
  * @param input.nowMs - Current time in unix epoch milliseconds. Defaults to `Date.now()`.
  * @returns The summary line, or `undefined` when no `sessionExpiresAt` is available.
  */
-function describeSessionLifetime(input: { readonly sessionExpiresAt?: number; readonly rotationDisabled?: boolean; readonly nowMs?: number }): string | undefined {
+function describeSessionLifetime(input: { readonly sessionExpiresAt?: number; readonly rotationDisabled?: boolean; readonly refreshable?: boolean; readonly nowMs?: number }): string | undefined {
   let result: string | undefined;
 
   if (input.sessionExpiresAt != null) {
     const expiresMs = input.sessionExpiresAt * MS_IN_SECOND;
     const remaining = describeRemainingDuration(expiresMs - (input.nowMs ?? Date.now()));
-    const rotation = input.rotationDisabled ? 'disabled' : 'enabled';
-    result = `valid until ${new Date(expiresMs).toISOString()} (${remaining}), rotation: ${rotation}`;
+    const suffix = input.refreshable === false ? 'not refreshable' : `rotation: ${input.rotationDisabled ? 'disabled' : 'enabled'}`;
+    result = `valid until ${new Date(expiresMs).toISOString()} (${remaining}), ${suffix}`;
+  }
+
+  return result;
+}
+
+/**
+ * The suggestion for an expired cached credential: a refreshable one refreshes on its own, a handoff
+ * credential is re-minted, and anything else needs a fresh login.
+ *
+ * @param input - The CLI/env names and the credential's kind.
+ * @returns The suggestion text.
+ * @__NO_SIDE_EFFECTS__
+ */
+function describeExpiredSuggestion(input: { readonly cliName: string; readonly envName: string; readonly refreshable: boolean; readonly handoff: boolean }): string {
+  const { cliName, envName, refreshable, handoff } = input;
+  let result: string;
+
+  if (refreshable) {
+    result = `Access token expired — it refreshes automatically on the next non-auth command. Run \`${cliName} auth login --env ${envName}\` only if the session itself has ended.`;
+  } else if (handoff) {
+    result = `The handoff credential expired and cannot be refreshed. ${cliHandoffRemintSuggestion({ cliName, envName })}`;
+  } else {
+    result = `Access token expired and cannot be refreshed. Run \`${cliName} auth login --env ${envName}\`.`;
   }
 
   return result;
@@ -525,6 +540,9 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
       };
 
       await tokens.set(envName, entry);
+      // a new login may be a different user — the direct-Firestore session cached for the previous
+      // credential must not outlive it
+      await firestoreSessions.remove(envName);
 
       const sessionSummary = describeSessionLifetime({ sessionExpiresAt, rotationDisabled });
 
@@ -558,7 +576,11 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
 
       // No `clientSecret` in the guard: a public client has none, and gating on it would silently
       // skip the server-side revoke for exactly the clients that most need it.
-      if (argv.revoke && entry?.refreshToken && env.clientId) {
+      // A bearer handoff entry has no refresh token; revoking its access token also revokes its child
+      // grant. Best-effort either way — a secret-based CLI client fails client auth here.
+      const revokeTarget = entry?.refreshToken ? { token: entry.refreshToken, tokenTypeHint: 'refresh_token' as const } : entry?.accessToken ? { token: entry.accessToken, tokenTypeHint: 'access_token' as const } : undefined;
+
+      if (argv.revoke && revokeTarget && env.clientId) {
         try {
           const meta = await discoverOidcMetadata({ issuer: env.oidcIssuer, fallbackBaseUrl: env.apiBaseUrl });
 
@@ -567,8 +589,7 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
               revocationEndpoint: meta.revocation_endpoint,
               clientId: env.clientId,
               clientSecret: env.clientSecret,
-              token: entry.refreshToken,
-              tokenTypeHint: 'refresh_token'
+              ...revokeTarget
             });
           }
         } catch {
@@ -671,24 +692,45 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
         }
       });
 
-      const sessionExpiresAt = Math.floor(new Date(bundle.expiresAt).getTime() / MS_IN_SECOND);
-      const entry: CliTokenEntry = {
-        // No access token is handed over — only the refresh token. `expiresAt: 0` marks it expired so
-        // the FIRST non-auth command refreshes, which is also the `readEnvTokenEntry` convention.
-        accessToken: '',
-        refreshToken: bundle.refreshToken,
-        scope: bundle.scope,
-        expiresAt: 0,
-        sessionExpiresAt
-      };
+      const expiresAtMs = Date.parse(bundle.expiresAt);
+      const sessionExpiresAt = Math.floor(expiresAtMs / MS_IN_SECOND);
+      const credentialType = cliHandoffBundleCredentialType(bundle);
+      const isBearer = credentialType === 'bearer';
+      const entry: CliTokenEntry = isBearer
+        ? {
+            // A bearer credential is used directly until it lapses — no token-endpoint exchange, so
+            // no client authentication — and is never refreshed.
+            accessToken: bundle.accessToken as string,
+            tokenType: bundle.tokenType ?? 'Bearer',
+            scope: bundle.scope,
+            expiresAt: expiresAtMs,
+            sessionExpiresAt,
+            handoff: true
+          }
+        : {
+            // A refresh credential hands over no access token. `expiresAt: 0` marks it expired so the
+            // FIRST non-auth command refreshes, which is also the `readEnvTokenEntry` convention.
+            accessToken: '',
+            refreshToken: bundle.refreshToken,
+            scope: bundle.scope,
+            expiresAt: 0,
+            sessionExpiresAt,
+            handoff: true
+          };
 
-      // PERSISTED, deliberately not `fromEnv`: the CLI client is a public PKCE client, so the server
-      // rotates the refresh token on every exchange and a rotation that is not written back would
-      // trip oidc-provider's reuse detection and kill the whole grant.
+      // PERSISTED, deliberately not `fromEnv`: in refresh mode the CLI client is a public PKCE client,
+      // so the server rotates the refresh token on every exchange and a rotation that is not written
+      // back would trip oidc-provider's reuse detection and kill the whole grant.
       await tokens.set(envName, entry);
+      // a handoff replaces the env's identity wholesale — possibly with another uid — so the
+      // direct-Firestore session cached for the previous credential goes, exactly as in `logout`
+      await firestoreSessions.remove(envName);
 
       const remainingMinutes = Math.max(0, Math.round((sessionExpiresAt * MS_IN_SECOND - Date.now()) / MS_IN_SECOND / 60));
-      process.stderr.write(`Handoff credential accepted for ${bundle.uid}. SHORT-LIVED: expires ${bundle.expiresAt} (~${remainingMinutes} min). Run \`${cliName} auth login\` for a durable session.\n`);
+      const notice = isBearer
+        ? `Handoff credential accepted for ${bundle.uid}. SHORT-LIVED bearer token: expires ${bundle.expiresAt} (~${remainingMinutes} min) and cannot be refreshed — when it lapses, mint a new claim code and re-run \`${cliName} auth handoff\`.`
+        : `Handoff credential accepted for ${bundle.uid}. SHORT-LIVED: expires ${bundle.expiresAt} (~${remainingMinutes} min). Run \`${cliName} auth login\` for a durable session.`;
+      process.stderr.write(`${notice}\n`);
 
       outputResult({
         handoff: true,
@@ -697,7 +739,9 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
         uid: bundle.uid,
         clientId: bundle.clientId,
         scope: bundle.scope,
-        refreshToken: maskSecret(bundle.refreshToken),
+        credentialType,
+        refreshable: !isBearer,
+        ...(isBearer ? { accessToken: maskSecret(entry.accessToken) } : { refreshToken: maskSecret(entry.refreshToken ?? '') }),
         expiresAt: bundle.expiresAt,
         sessionExpiresAt,
         config: maskEnv(nextEnv)
@@ -715,11 +759,14 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
       const entry = await tokens.get(envName);
 
       if (entry) {
-        const expired = isTokenExpired(entry);
-        const sessionInfo = await loadSessionInfoSafely({ oidcIssuer: env.oidcIssuer, accessToken: entry.accessToken });
+        const expired = isCliTokenEntryExpired(entry);
+        const refreshable = isCliTokenEntryRefreshable(entry);
+        const handoff = entry.handoff === true;
+        // an expired credential that cannot be refreshed is certain to be rejected — skip the round-trip
+        const sessionInfo = expired && !refreshable ? undefined : await loadSessionInfoSafely({ oidcIssuer: env.oidcIssuer, accessToken: entry.accessToken });
         const sessionExpiresAt = sessionInfo?.expiresAt ?? entry.sessionExpiresAt;
         const rotationDisabled = sessionInfo?.rotationDisabled ?? entry.rotationDisabled;
-        const session = describeSessionLifetime({ sessionExpiresAt: sessionExpiresAt ?? undefined, rotationDisabled });
+        const session = describeSessionLifetime({ sessionExpiresAt: sessionExpiresAt ?? undefined, rotationDisabled, refreshable });
         const meta = await discoverOidcMetadata({ issuer: env.oidcIssuer, fallbackBaseUrl: env.apiBaseUrl });
         const userinfoEndpoint = meta.userinfo_endpoint;
         // An expired access token is certain to be rejected by userinfo, so calling it only trades the
@@ -735,12 +782,14 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
           expiresAt: entry.expiresAt,
           expired,
           scope: entry.scope,
+          handoff,
+          refreshable,
           sessionExpiresAt,
           rotationDisabled,
           session,
           sub: claims?.['sub'],
           claims,
-          suggestion: expired ? `Access token expired — it refreshes automatically on the next non-auth command. Run \`${cliName} auth login --env ${envName}\` only if the session itself has ended.` : undefined
+          suggestion: expired ? describeExpiredSuggestion({ cliName, envName, refreshable, handoff }) : undefined
         });
       } else {
         outputResult({ env: envName, authenticated: false, suggestion: `Run: ${cliName} auth login --env ${envName}` });
@@ -766,11 +815,13 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
               refreshToken: entry.refreshToken ? maskSecret(entry.refreshToken) : undefined,
               tokenType: entry.tokenType,
               scope: entry.scope,
+              handoff: entry.handoff === true,
+              refreshable: isCliTokenEntryRefreshable(entry),
               expiresAt: entry.expiresAt,
-              expired: isTokenExpired(entry),
+              expired: isCliTokenEntryExpired(entry),
               sessionExpiresAt: entry.sessionExpiresAt,
               rotationDisabled: entry.rotationDisabled,
-              session: describeSessionLifetime({ sessionExpiresAt: entry.sessionExpiresAt, rotationDisabled: entry.rotationDisabled })
+              session: describeSessionLifetime({ sessionExpiresAt: entry.sessionExpiresAt, rotationDisabled: entry.rotationDisabled, refreshable: isCliTokenEntryRefreshable(entry) })
             }
           : null
       });
@@ -780,31 +831,54 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
   // MARK: check
   const checkCommand: CommandModule = {
     command: 'check',
-    describe: 'Verify the cached refresh token is still valid by performing a refresh round-trip',
+    describe: 'Verify the cached credential is still valid — a refresh round-trip, or a direct bearer check for a handoff credential',
     builder: (yargs: Argv) => withEnv(yargs),
     handler: wrapCommandHandler(async (argv: any) => {
       const { envName, env } = await resolveCliEnvOrThrow({ cliName, paths, flagEnv: argv.env, envVarName, defaultEnvs, requireComplete: true });
       const entry = await tokens.get(envName);
 
-      if (!entry?.refreshToken) {
+      if (!entry?.refreshToken && entry?.accessToken) {
+        // A bearer credential cannot be refreshed, so verify it directly against the session route.
+        const handoff = entry.handoff === true;
+
+        if (isCliTokenEntryExpired(entry)) {
+          throw handoff
+            ? new CliError({ message: `The handoff credential for env "${envName}" expired at ${new Date(entry.expiresAt).toISOString()} and cannot be refreshed.`, code: 'AUTH_HANDOFF_EXPIRED', suggestion: cliHandoffRemintSuggestion({ cliName, envName }) })
+            : new CliError({ message: `Token for env "${envName}" is expired and no refresh token is cached.`, code: 'TOKEN_EXPIRED', suggestion: `Run \`${cliName} auth login --env ${envName}\`.` });
+        }
+
+        let sessionInfo: OidcSessionInfo;
+
+        try {
+          sessionInfo = await fetchSessionInfo({ sessionEndpoint: buildOidcSessionEndpoint(env.oidcIssuer), accessToken: entry.accessToken });
+        } catch (e) {
+          throw new CliError({
+            message: `The credential for env "${envName}" was rejected: ${(e as Error).message}`,
+            code: 'AUTH_TOKEN_REJECTED',
+            suggestion: handoff ? cliHandoffRemintSuggestion({ cliName, envName }) : `Run \`${cliName} auth login --env ${envName}\`.`
+          });
+        }
+
+        outputResult({ env: envName, refreshed: false, verified: true, refreshable: false, expiresAt: entry.expiresAt, sub: sessionInfo.sub });
+      } else if (entry?.refreshToken) {
+        const meta = await discoverOidcMetadata({ issuer: env.oidcIssuer, fallbackBaseUrl: env.apiBaseUrl });
+        const refreshed = await refreshAccessToken({
+          tokenEndpoint: meta.token_endpoint,
+          clientId: env.clientId,
+          clientSecret: env.clientSecret,
+          refreshToken: entry.refreshToken
+        });
+
+        const updated = mergeRefreshedTokenEntry({ entry, refreshed });
+        await tokens.set(envName, updated);
+
+        outputResult({ env: envName, refreshed: true, expiresAt: updated.expiresAt });
+      } else {
         throw new CliError({
           message: `No refresh token for env "${envName}". Run \`${cliName} auth login --env ${envName}\`.`,
           code: 'NO_REFRESH_TOKEN'
         });
       }
-
-      const meta = await discoverOidcMetadata({ issuer: env.oidcIssuer, fallbackBaseUrl: env.apiBaseUrl });
-      const refreshed = await refreshAccessToken({
-        tokenEndpoint: meta.token_endpoint,
-        clientId: env.clientId,
-        clientSecret: env.clientSecret,
-        refreshToken: entry.refreshToken
-      });
-
-      const updated = mergeRefreshedTokenEntry({ entry, refreshed });
-      await tokens.set(envName, updated);
-
-      outputResult({ env: envName, refreshed: true, expiresAt: updated.expiresAt });
     })
   };
 

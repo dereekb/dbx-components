@@ -25,9 +25,9 @@ import { DEMO_APP_OAUTH_INTERACTION_PATH, DEMO_AUTH_CLAIMS_SERVICE, DEMO_OIDC_PR
  * Environment variable naming the registered OAuth client the CLI-token mint issues credentials for
  * — the same `client_id` `demo-cli auth setup` was configured with.
  *
- * Absent ⇒ `POST /oidc/cli-token` is disabled. There is no safe default: minting against the wrong
- * client hands the CLI a refresh token its own `client_id` cannot redeem (a refresh token is
- * client-bound).
+ * Absent ⇒ `POST /oidc/cli-token` is disabled. There is no safe default: in refresh mode, minting
+ * against the wrong client hands the CLI a refresh token its own `client_id` cannot redeem (a refresh
+ * token is client-bound). A bearer-mode credential is used directly and does not have that problem.
  */
 export const DEMO_CLI_OIDC_CLIENT_ID_ENV_KEY = 'DEMO_CLI_OIDC_CLIENT_ID';
 
@@ -190,7 +190,7 @@ export function demoJwksServiceStorageConfigFactory(firebaseServerStorageService
 /**
  * The load-bearing gate on `POST /oidc/cli-token` for the demo app.
  *
- * A minted credential is a real, refreshable CLI login for the caller's own uid, so it is admin-only
+ * A minted credential is a real CLI login for the caller's own uid, so it is admin-only
  * — the same reasoning (and the same shape) as `demoFirestoreSessionAdminPredicate`. The `token.cli`
  * scope enforced alongside it is defence in depth: a non-OIDC caller carries no `scope` claim at all.
  *
@@ -251,8 +251,8 @@ export function demoCliTokenApiModuleConfigFactory(envService: FirebaseServerEnv
     // rebuilding the module graph. Deliberately NOT ConfigService: nothing else in this app injects
     // it, and its snapshot is taken at boot, which is exactly the case this resolver exists to cover.
     //
-    // In production an explicit value is still REQUIRED: minting against an auto-created client would
-    // hand the CLI a credential the deployed `auth setup` cannot refresh, so it stays disabled instead.
+    // In production an explicit value is still REQUIRED: a refresh-mode mint against an auto-created
+    // client would hand the CLI a credential the deployed `auth setup` cannot refresh, so it stays disabled instead.
     cliClientId: () => process.env[DEMO_CLI_OIDC_CLIENT_ID_ENV_KEY] || (envService.isProduction ? undefined : resolveDevCliClientId()),
     ...(apiBaseUrl ? { apiBaseUrl } : undefined),
     // Deliberately NOT `local` / `prod`: a redeem writes the env wholesale, so naming it after the

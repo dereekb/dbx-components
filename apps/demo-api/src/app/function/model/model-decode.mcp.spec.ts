@@ -74,6 +74,17 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         expect(structured.unresolvedPrefixes).toContain('not-a-prefix');
       });
 
+      it('marks a root collection nested under an unknown prefix invalid, with no derived keys', async () => {
+        const result = await callMcpMethod({ f, u, kind: 'read', method: MODEL_DECODE_TOOL_NAME, params: { key: `zzz/abc/${guestbookIdentity.collectionName}/1` } });
+        const output = result.structuredContent as { readonly valid: boolean; readonly issues: ReadonlyArray<{ readonly code: string }>; readonly derivedKeys: ReadonlyArray<unknown>; readonly compositeSource?: unknown };
+
+        expect(result.isError).toBeUndefined();
+        expect(output.valid).toBe(false);
+        expect(output.issues[0].code).toBe('NESTED_ROOT_COLLECTION');
+        expect(output.derivedKeys).toEqual([]);
+        expect(output.compositeSource).toBeUndefined();
+      });
+
       it('returns isError for a malformed key with an odd number of segments', async () => {
         const result = await callMcpMethod({ f, u, kind: 'read', method: MODEL_DECODE_TOOL_NAME, params: { key: 'gb' } });
 

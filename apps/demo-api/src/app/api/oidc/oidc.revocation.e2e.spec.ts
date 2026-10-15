@@ -66,8 +66,9 @@ const MAX_REVOCATION_LATENCY_MS = 2000;
  * Both are accepted, documented limitations rather than bugs, and are pinned here so a future change
  * to either has to be deliberate:
  *
- * - A **minted CLI credential** lives on its own Grant (a refresh token is client-bound, so the parent
- *   Grant cannot be reused), so revoking the parent session leaves it alive. See
+ * - A **minted CLI credential**, bearer or refresh, lives on its own child Grant (a refresh token is
+ *   client-bound, and a bearer token on the parent would inherit the parent's lifetime), so revoking
+ *   the parent session leaves it alive. See
  *   `OidcCliTokenService`'s "Accepted limitation — no revocation cascade".
  * - A **JWT access token** has no adapter record at all, so `revokeGrant` cannot reach it and it stays
  *   verifiable until `exp`. See `BuildOidcResourceServerConfig.accessTokenFormat`.

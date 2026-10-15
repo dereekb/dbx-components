@@ -83,7 +83,7 @@ export interface McpAnalyticsEvent {
   readonly durationMs?: Maybe<number>;
   /**
    * The resolved method id when the call was routed through a compact `read` / `write` / `destructive`
-   * tool (e.g. `worker.create`). For routed calls {@link toolName} is the compact wire tool (so a destructive call names
+   * tool (e.g. `guestbook.create`). For routed calls {@link toolName} is the compact wire tool (so a destructive call names
    * the `destructive` router, and {@link args} carry any escalating param that sent it there), while
    * {@link toolKind}, {@link call}, {@link modelType}, {@link specifier}, and {@link args} describe the
    * executed method.

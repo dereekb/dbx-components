@@ -3,6 +3,7 @@ import { hideBin } from 'yargs/helpers';
 import { type ActionCommandSpec } from '../action/action.command.factory';
 import { buildActionCommands } from '../action/build-action-commands';
 import { createAuthCommand } from '../auth/auth.command.factory';
+import { cliAuthFailureErrorMapper } from '../auth/auth-failure.hint';
 import { type CreateCacheCommandInput, createCacheCommand } from '../cache/cache.command.factory';
 import { type CliDataCache, createCliDataCache } from '../cache/data-cache';
 import { CLI_DATA_CACHE_GLOBAL_OPTION_NAMES, DEFAULT_CLI_DATA_CACHE_MAX_AGE_HOURS, checkCliDataCacheArgv } from '../cache/data-cache.options';
@@ -314,6 +315,10 @@ export function createCli(input: CreateCliInput): Argv {
   if (input.disableModelGet !== true) {
     builtInApiCommands.push(GET_COMMAND, GET_MANY_COMMAND);
   }
+
+  // appended like the Firestore mapper below; the two handle disjoint error types (a 401/403
+  // CliHttpError vs. a Firestore error), so their order does not matter
+  appendCliErrorMapper(cliAuthFailureErrorMapper);
 
   if (input.firestore) {
     // appended, not installed: an app may already own the single mapper slot, and the Firestore

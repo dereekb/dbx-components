@@ -39,20 +39,46 @@ export interface DecodedKeySegment {
 }
 
 /**
- * Segments of a decoded Firestore key — the leaf, its ancestor chain, and any prefixes the manifest
- * could not resolve.
+ * Code of a {@link DecodedKeyIssue}.
+ *
+ * - `NESTED_ROOT_COLLECTION` — a root model's prefix sits under another collection.
+ * - `MISSING_PARENT` — a subcollection model's prefix starts the key, with no parent path.
+ * - `WRONG_PARENT` — a subcollection model sits under a model that is not its declared parent.
+ */
+export type DecodedKeyIssueCode = 'NESTED_ROOT_COLLECTION' | 'MISSING_PARENT' | 'WRONG_PARENT';
+
+/**
+ * A structural problem with a decoded key, found by checking each resolved segment against its declared parent.
+ */
+export interface DecodedKeyIssue {
+  readonly prefix: string;
+  readonly code: DecodedKeyIssueCode;
+  readonly message: string;
+}
+
+/**
+ * Segments of a decoded Firestore key — the leaf, its ancestor chain, any prefixes the manifest
+ * could not resolve, and whether the key is structurally valid.
  */
 export interface DecodedKeySegments {
   readonly key: string;
+  /**
+   * True when every prefix resolved and each segment sits under its declared parent.
+   */
+  readonly valid: boolean;
   readonly leaf: DecodedKeySegment;
   readonly ancestors: readonly DecodedKeySegment[];
   readonly unresolvedPrefixes: readonly string[];
+  /**
+   * Structural problems with the resolved segments. Empty for a valid key.
+   */
+  readonly issues: readonly DecodedKeyIssue[];
 }
 
 /**
  * A composite-key model whose document id is derived from the decoded key, with that document's
- * ready-to-use key (e.g. decoding a `District` key also yields the `jobDistrict` key
- * `jd/<flattened district key>`).
+ * ready-to-use key (e.g. decoding a `Profile` key `pr/abc` also yields the `NotificationBox` key
+ * `nb/pr_abc`).
  */
 export interface DerivedCompositeKey {
   /**
@@ -162,7 +188,7 @@ function runHandler(manifest: CliModelManifest, argv: ModelDecodeArgv): void {
  */
 export function decodeFirestoreModelKey(rawKey: string, manifest: CliModelManifest): DecodedKey {
   const segments = decodeFirestoreModelKeySegments(rawKey, manifest);
-  const leafEntry = segments.leaf.modelType == null ? undefined : findCliModelManifestEntry(segments.leaf.prefix, manifest);
+  const leafEntry = !segments.valid || segments.leaf.modelType == null ? undefined : findCliModelManifestEntry(segments.leaf.prefix, manifest);
   const derivedKeys = leafEntry == null ? [] : findCompositeKeyModelsDerivedFrom(leafEntry, manifest).map((entry) => toDerivedCompositeKey(segments.key, entry));
   const compositeSource = leafEntry?.compositeKey?.encoding === 'two-way' ? decodeTwoWayCompositeSource(segments.leaf.id, manifest) : undefined;
 
@@ -232,7 +258,7 @@ export function decodeFirestoreModelKeySegments(rawKey: string, manifest: CliMod
   const trimmed = rawKey.trim();
   if (trimmed.length === 0) {
     throw new CliError({
-      message: 'Key is empty. Provide a Firestore key like `sf/abc123`.',
+      message: 'Key is empty. Provide a Firestore key like `prefix/id`.',
       code: 'MODEL_DECODE_INVALID_KEY'
     });
   }
@@ -248,19 +274,70 @@ export function decodeFirestoreModelKeySegments(rawKey: string, manifest: CliMod
 
   const decoded: DecodedKeySegment[] = [];
   const unresolved: string[] = [];
+  const issues: DecodedKeyIssue[] = [];
+  let previousEntry: CliModelManifestEntry | undefined;
+
   for (let i = 0; i < segments.length; i += 2) {
     const prefix = segments[i];
     const id = segments[i + 1];
     const entry = findCliModelManifestEntry(prefix, manifest);
-    if (!entry) {
+
+    if (entry) {
+      const issue = findDecodedKeySegmentIssue({ entry, prefix, index: i, segments, previousEntry, manifest });
+
+      if (issue != null) {
+        issues.push(issue);
+      }
+    } else {
       unresolved.push(prefix);
     }
+
     decoded.push(toSegment(prefix, id, entry));
+    previousEntry = entry;
   }
 
   const leaf = decoded.at(-1) as DecodedKeySegment;
   const ancestors = decoded.slice(0, -1);
-  return { key: trimmed, leaf, ancestors, unresolvedPrefixes: unresolved };
+  const valid = unresolved.length === 0 && issues.length === 0;
+  return { key: trimmed, valid, leaf, ancestors, unresolvedPrefixes: unresolved, issues };
+}
+
+interface FindDecodedKeySegmentIssueInput {
+  readonly entry: CliModelManifestEntry;
+  readonly prefix: string;
+  readonly index: number;
+  readonly segments: readonly string[];
+  readonly previousEntry: CliModelManifestEntry | undefined;
+  readonly manifest: CliModelManifest;
+}
+
+/**
+ * Checks one resolved segment against its declared parent. Mirrors the firebase-server MCP `model-decode` check; a
+ * segment under an unresolved prefix is only checked for being a nested root collection.
+ *
+ * @param input - The segment's entry, position, previous entry, and the manifest.
+ * @returns The issue, or undefined when the segment is placed correctly.
+ */
+function findDecodedKeySegmentIssue(input: FindDecodedKeySegmentIssueInput): DecodedKeyIssue | undefined {
+  const { entry, prefix, index, segments, previousEntry, manifest } = input;
+  const parentIdentityConst = entry.parentIdentityConst;
+  let issue: DecodedKeyIssue | undefined;
+
+  if (index === 0) {
+    if (parentIdentityConst != null) {
+      const parentEntry = manifest.find((x) => x.identityConst === parentIdentityConst);
+      const example = entry.exampleKey ?? (parentEntry == null ? undefined : `${parentEntry.collectionPrefix}/<parentId>/${prefix}/<id>`);
+      issue = { prefix, code: 'MISSING_PARENT', message: `"${prefix}" (${entry.modelName}) is a subcollection${parentEntry == null ? '' : ` of ${parentEntry.modelName}`}; its key needs the parent path${example ? `, e.g. "${example}"` : ''}.` };
+    }
+  } else if (parentIdentityConst == null) {
+    const parentPath = segments.slice(0, index).join('/');
+    issue = { prefix, code: 'NESTED_ROOT_COLLECTION', message: `"${prefix}" (${entry.modelName}) is a root collection; it cannot sit under "${parentPath}". Its keys look like "${prefix}/<id>".` };
+  } else if (previousEntry != null && parentIdentityConst !== previousEntry.identityConst) {
+    const parentEntry = manifest.find((x) => x.identityConst === parentIdentityConst);
+    issue = { prefix, code: 'WRONG_PARENT', message: `"${prefix}" (${entry.modelName}) belongs under ${parentEntry == null ? parentIdentityConst : `"${parentEntry.collectionPrefix}" (${parentEntry.modelName})`}, not "${previousEntry.collectionPrefix}" (${previousEntry.modelName}).` };
+  }
+
+  return issue;
 }
 
 function toSegment(prefix: string, id: string, entry: CliModelManifestEntry | undefined): DecodedKeySegment {
@@ -300,6 +377,10 @@ export function renderDecodedKey(decoded: DecodedKey): string {
   if (decoded.unresolvedPrefixes.length > 0) {
     const suffix = decoded.unresolvedPrefixes.length === 1 ? '' : 'es';
     lines.push('', `Unresolved prefix${suffix}: ${decoded.unresolvedPrefixes.join(', ')}. Run \`model-info\` to list known models.`);
+  }
+
+  if (decoded.issues.length > 0) {
+    lines.push('', 'Invalid key:', ...decoded.issues.map((issue) => `- ${issue.message}`));
   }
 
   if (decoded.compositeSource != null) {

@@ -4,7 +4,8 @@ import { type CliConfig } from '../config/cli.config';
 import { type CliEnvConfig, type CliEnvDefault } from '../config/env';
 import { resolveCliEnv } from '../config/env.resolve';
 import { buildCliPaths } from '../config/paths';
-import { createCliTokenCacheStore, isTokenExpired } from '../config/token.cache';
+import { createCliTokenCacheStore, isCliTokenEntryExpired, isCliTokenEntryRefreshable } from '../config/token.cache';
+import { cliHandoffRemintSuggestion } from '../auth/auth-failure.hint';
 import { discoverOidcMetadata } from '../auth/oidc.client';
 import { CALL_MODEL_API_PATH } from '../api/call-model.client';
 import { outputResult, tracedFetch } from '../util/output';
@@ -83,8 +84,10 @@ export function defaultDoctorChecks(input: DefaultDoctorChecksInput = {}): Docto
         const entry = await tokens.get(envName);
 
         if (entry) {
-          const expired = isTokenExpired(entry);
-          result = { name: 'token-cache-fresh', ok: !expired, detail: { expiresAt: entry.expiresAt, expired }, ...(expired ? { suggestion: `Run \`${cliName} auth check --env ${envName}\` to refresh.` } : {}) };
+          const expired = isCliTokenEntryExpired(entry);
+          // a bearer handoff credential cannot be refreshed, so `auth check` would not revive it
+          const expiredSuggestion = entry.handoff || !isCliTokenEntryRefreshable(entry) ? cliHandoffRemintSuggestion({ cliName, envName }) : `Run \`${cliName} auth check --env ${envName}\` to refresh.`;
+          result = { name: 'token-cache-fresh', ok: !expired, detail: { expiresAt: entry.expiresAt, expired }, ...(expired ? { suggestion: expiredSuggestion } : {}) };
         } else {
           result = { name: 'token-cache-fresh', ok: false, suggestion: `Run \`${cliName} auth login --env ${envName}\`.` };
         }

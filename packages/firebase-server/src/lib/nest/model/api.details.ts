@@ -1,7 +1,8 @@
 import { type AuthRole, type Configurable, type Maybe, type PromiseOrValue } from '@dereekb/util';
-import { type OnCallFunctionType, type OnCallTypedModelParams, type FirestoreModelType, type ModelFirebaseCrudFunctionSpecifier, type OidcScopeTerm } from '@dereekb/firebase';
+import { type OnCallFunctionType, type OnCallTypedModelParams, type FirestoreModelType, type ModelFirebaseCrudFunctionSpecifier, type OidcScopeTerm, DEFAULT_MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER } from '@dereekb/firebase';
 import { type FirebaseServerAuthData } from '../controller/auth.context.server';
 import { type OnCallModelFunctionAnalyticsDetails } from './analytics.details';
+import { isOnCallModelInputValidator, type OnCallModelFunctionInputValidation } from './input.validator';
 
 // MARK: JSON Schema
 /**
@@ -369,8 +370,23 @@ export type OnCallModelFunctionMcpDetails<R = unknown, M = unknown> = BaseOnCall
 export interface OnCallModelFunctionApiDetails<R = unknown, M = unknown> {
   /**
    * The input parameter type. Must implement toJsonSchema() for MCP tool input schema generation.
+   *
+   * When it implements Standard Schema — any ArkType `Type` — the callModel dispatch checks the request data against
+   * it before the handler runs. See {@link inputValidation}.
    */
   readonly inputType?: JsonSchemaRef;
+  /**
+   * How the callModel dispatch checks the request data against {@link inputType} before the handler runs.
+   *
+   * - 'validate' (default): reject invalid data with a `VALIDATION_ERROR`; the handler receives the raw data unchanged.
+   *   The app-level `OnCallModelConfig.inputValidation` mode can relax this to `'log'` or `'off'`.
+   * - 'parse': same check; the handler receives the schema's output (morphs applied, defaults filled, `'delete'` keys
+   *   removed). Always enforced, whatever the app mode. Requires an `inputType` that implements Standard Schema.
+   * - 'off': no check, for a handler that validates itself or must accept data its type does not describe.
+   *
+   * Undeclared keys pass through unless the type itself sets `.onUndeclaredKey('reject')` or `'delete'`.
+   */
+  readonly inputValidation?: OnCallModelFunctionInputValidation;
   /**
    * The output result type. Optional — many handlers return void or generic results.
    */
@@ -416,6 +432,9 @@ export interface OnCallModelFunctionApiDetailsRef {
  * Maps specifier keys (e.g., '_', 'username', 'fromUpload') to handler-level details.
  */
 export interface OnCallModelTypeApiDetails {
+  /**
+   * True for an onCallSpecifierHandler map. False for a direct handler wrapped under `_`, which answers only the default specifier.
+   */
   readonly isSpecifier: boolean;
   readonly specifiers: { readonly [key: string]: OnCallModelFunctionApiDetails | undefined };
 }
@@ -539,12 +558,17 @@ export interface WithApiDetailsConfig<F extends (...args: any[]) => any> extends
  * (same effect as optionalAuthContext). This avoids the composition issue where
  * optionalAuthContext(withApiDetails(...)) would lose the _apiDetails.
  *
+ * When `inputType` implements Standard Schema (any ArkType `Type`), the callModel dispatch checks the request data
+ * against it before `fn` runs, and rejects invalid data with a `VALIDATION_ERROR`. See
+ * {@link OnCallModelFunctionApiDetails.inputValidation}.
+ *
  * @param config - The API details configuration including the handler function.
  * @returns The handler function with _apiDetails attached.
+ * @throws {Error} When `inputValidation` is `'parse'` but `inputType` cannot validate.
  *
  * @example
  * ```typescript
- * // Handler with api details (auth required by default)
+ * // Handler with api details (auth required by default). The dispatch checks data against inputType before fn runs.
  * export const createGuestbook: DemoCreateModelFunction<CreateGuestbookParams> = withApiDetails({
  *   inputType: createGuestbookParamsType,
  *   fn: async (request) => {
@@ -552,6 +576,13 @@ export interface WithApiDetailsConfig<F extends (...args: any[]) => any> extends
  *     const result = await nest.guestbookActions.createGuestbook(data);
  *     return onCallCreateModelResultWithDocs(await result());
  *   }
+ * });
+ *
+ * // Handler that reads data directly and receives the parsed output of inputType
+ * export const guestbookEntryQuery: DemoQueryModelFunction<GuestbookEntryQueryParams> = withApiDetails({
+ *   inputType: guestbookEntryQueryParamsType,
+ *   inputValidation: 'parse',
+ *   fn: async (request) => { ... }
  * });
  *
  * // Handler with optional auth
@@ -563,6 +594,11 @@ export interface WithApiDetailsConfig<F extends (...args: any[]) => any> extends
  */
 export function withApiDetails<F extends (...args: any[]) => any>(config: WithApiDetailsConfig<F>): F & OnCallModelFunctionApiDetailsRef {
   const { optionalAuth, fn, ...apiDetails } = config;
+
+  if (apiDetails.inputValidation === 'parse' && !isOnCallModelInputValidator(apiDetails.inputType)) {
+    throw new Error(`withApiDetails(): inputValidation 'parse' requires an inputType that implements Standard Schema (such as an ArkType Type).`);
+  }
+
   // Stored as the unknown-result form; the narrower handler-result typing lives on the config for authoring only.
   (fn as Configurable<OnCallModelFunctionApiDetailsRef>)._apiDetails = apiDetails as OnCallModelFunctionApiDetails;
 
@@ -765,12 +801,40 @@ export function getModelApiDetails(callModelFn: Maybe<OnCallApiDetailsRef>): May
   return result;
 }
 
+// MARK: Handler Resolution
+/**
+ * Resolves the handler-level details for a call coordinate from the aggregated _apiDetails tree.
+ *
+ * A direct (non-specifier) handler resolves to its `_` entry whatever specifier the request carries: the dispatch
+ * rejects a non-default specifier sent to it, and reading `_` keeps every lookup at least as strict as the handler.
+ * A specifier handler resolves only the key it maps (an omitted specifier is `_`).
+ *
+ * @param apiDetails - The top-level aggregated API details.
+ * @param call - The CRUD operation type to look up.
+ * @param modelType - The Firestore model type to look up.
+ * @param specifier - Optional specifier key for variant handlers.
+ * @returns The handler-level details for the resolved handler, or undefined.
+ */
+// eslint-disable-next-line @typescript-eslint/max-params
+function resolveHandlerApiDetailsFromApiDetails(apiDetails: OnCallModelApiDetails, call: OnCallFunctionType, modelType: FirestoreModelType, specifier?: Maybe<ModelFirebaseCrudFunctionSpecifier>): Maybe<OnCallModelFunctionApiDetails> {
+  const modelDetails = apiDetails[call]?.modelTypes[modelType];
+  let result: Maybe<OnCallModelFunctionApiDetails>;
+
+  if (modelDetails) {
+    const key = modelDetails.isSpecifier ? (specifier ?? DEFAULT_MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER) : DEFAULT_MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER;
+    result = modelDetails.specifiers[key];
+  }
+
+  return result;
+}
+
 // MARK: Analytics Resolution
 /**
  * Resolves leaf-level analytics details from the aggregated _apiDetails tree.
  *
  * Walks: call -> modelType -> specifier (if specifier-level), then reads the `analytics`
- * field from the handler-level {@link OnCallModelFunctionApiDetails}.
+ * field from the handler-level {@link OnCallModelFunctionApiDetails}. A direct (non-specifier)
+ * handler resolves from its `_` entry whatever specifier the request carries.
  *
  * @param apiDetails - The top-level aggregated API details.
  * @param call - The CRUD operation type to look up.
@@ -780,17 +844,7 @@ export function getModelApiDetails(callModelFn: Maybe<OnCallApiDetailsRef>): May
  */
 // eslint-disable-next-line @typescript-eslint/max-params
 export function resolveAnalyticsFromApiDetails(apiDetails: OnCallModelApiDetails, call: OnCallFunctionType, modelType: FirestoreModelType, specifier?: ModelFirebaseCrudFunctionSpecifier): Maybe<OnCallModelFunctionAnalyticsDetails> {
-  const modelDetails = apiDetails[call]?.modelTypes[modelType];
-  let result: Maybe<OnCallModelFunctionAnalyticsDetails>;
-
-  if (modelDetails) {
-    // All entries are now OnCallModelTypeApiDetails. For non-specifier handlers,
-    // the details are under the `_` key.
-    const key = specifier ?? '_';
-    result = modelDetails.specifiers[key]?.analytics;
-  }
-
-  return result;
+  return resolveHandlerApiDetailsFromApiDetails(apiDetails, call, modelType, specifier)?.analytics;
 }
 
 // MARK: Required Scope Resolution
@@ -798,8 +852,9 @@ export function resolveAnalyticsFromApiDetails(apiDetails: OnCallModelApiDetails
  * Resolves the leaf-level per-function required OIDC scope from the aggregated _apiDetails tree.
  *
  * Walks: call -> modelType -> specifier (if specifier-level), then reads the `requiredScope`
- * field from the handler-level {@link OnCallModelFunctionApiDetails}. Mirrors
- * {@link resolveAnalyticsFromApiDetails}.
+ * field from the handler-level {@link OnCallModelFunctionApiDetails}. A direct (non-specifier)
+ * handler resolves from its `_` entry whatever specifier the request carries, so a stray
+ * specifier cannot skip the handler's scope. Mirrors {@link resolveAnalyticsFromApiDetails}.
  *
  * @param apiDetails - The top-level aggregated API details.
  * @param call - The CRUD operation type to look up.
@@ -809,13 +864,5 @@ export function resolveAnalyticsFromApiDetails(apiDetails: OnCallModelApiDetails
  */
 // eslint-disable-next-line @typescript-eslint/max-params
 export function resolveRequiredScopeFromApiDetails(apiDetails: OnCallModelApiDetails, call: OnCallFunctionType, modelType: FirestoreModelType, specifier?: ModelFirebaseCrudFunctionSpecifier): Maybe<OidcScopeTerm> {
-  const modelDetails = apiDetails[call]?.modelTypes[modelType];
-  let result: Maybe<OidcScopeTerm>;
-
-  if (modelDetails) {
-    const key = specifier ?? '_';
-    result = modelDetails.specifiers[key]?.requiredScope;
-  }
-
-  return result;
+  return resolveHandlerApiDetailsFromApiDetails(apiDetails, call, modelType, specifier)?.requiredScope;
 }

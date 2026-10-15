@@ -43,6 +43,15 @@ describe('parseGetArgs', () => {
     expect(() => parseGetArgs({ modelOrKey: 'abc123', key: undefined, manifest: MANIFEST })).toThrow(/bare doc id/);
   });
 
+  it('uses a manifest prefix in the bare doc id example', () => {
+    expect(() => parseGetArgs({ modelOrKey: 'abc123', key: undefined, manifest: MANIFEST })).toThrow(/e\.g\. 'jws\/abc123'/);
+    expect(() => parseGetArgs({ modelOrKey: 'abc123', key: undefined, manifest: undefined })).toThrow(/e\.g\. 'prefix\/abc123'/);
+  });
+
+  it('rejects a structurally invalid key', () => {
+    expect(() => parseGetArgs({ modelOrKey: 'jws/a/jwr/b', key: undefined, manifest: MANIFEST })).toThrow(/not a valid key/);
+  });
+
   it('rejects an unknown prefix and lists known prefixes', () => {
     expect(() => parseGetArgs({ modelOrKey: 'unknown/abc', key: undefined, manifest: MANIFEST })).toThrow(/Known prefixes: jwr, jws/);
   });
@@ -87,5 +96,11 @@ describe('parseGetManyArgs', () => {
     const keys = Array.from({ length: 100 }, (_, i) => `jws/k${i}`);
     const result = parseGetManyArgs({ firstArg: keys[0], rest: keys.slice(1), manifest: MANIFEST });
     expect(result.keys.length).toBe(100);
+  });
+});
+
+describe('parseGetManyArgs invalid keys', () => {
+  it('rejects a structurally invalid key', () => {
+    expect(() => parseGetManyArgs({ firstArg: 'jws/a/jwr/b', rest: [], manifest: MANIFEST })).toThrow(/invalid key/);
   });
 });

@@ -1,7 +1,8 @@
 import { type CallToolResult } from '@modelcontextprotocol/server';
-import { type Maybe } from '@dereekb/util';
+import { firstSentence, jsDocInlineLinksToText, type Maybe } from '@dereekb/util';
 import { type McpCompactToolNames } from '../../mcp.config';
-import { MCP_COMPACT_SEARCH_INPUT_SCHEMA } from '../mcp.compact';
+import { buildMcpCompactSearchInputSchema } from '../mcp.compact';
+import { type McpToolMethodExamples } from '../mcp.examples';
 import { mcpMethodInputPropertyNames, mcpMethodPlainDescription, searchMcpMethods, type McpMethodSearchEntries } from '../mcp.method.search';
 import { isMcpMethodKind, type McpMethod, type McpMethodKind, type McpMethodView } from '../mcp.method';
 import { buildStaticToolDefinition, type McpToolDefinition } from '../mcp.tool-generator';
@@ -42,6 +43,10 @@ export interface McpCompactSearchResultEntry {
  */
 export interface McpCompactSearchResult {
   readonly total: number;
+  /**
+   * The offset to pass for the next page. Present only while more matches remain past {@link methods}.
+   */
+  readonly nextOffset?: number;
   readonly methods: readonly McpCompactSearchResultEntry[];
   /**
    * Present (`true`) when no method matched every keyword, so {@link methods} match only some of them.
@@ -78,19 +83,28 @@ export interface CreateMcpCompactSearchToolDeps {
    * The caller's visible methods. Results never leave this view.
    */
   readonly view: McpMethodView;
+  /**
+   * Examples drawn from the caller's visible methods. Omit for generic wording.
+   */
+  readonly examples?: Maybe<McpToolMethodExamples>;
 }
 
 /**
- * Returns the first sentence (or line) of a method description, for search result summaries.
+ * Maximum length of a search result summary. Longer first sentences are cut at a word boundary.
+ */
+export const MCP_METHOD_SUMMARY_MAX_LENGTH = 240;
+
+/**
+ * Returns the first sentence of the first paragraph of a method description, for search result summaries.
+ *
+ * Soft line breaks are joined, JSDoc `{@link X}` tags become plain text, and the result is capped at
+ * {@link MCP_METHOD_SUMMARY_MAX_LENGTH} characters.
  *
  * @param method - The method.
  * @returns The one-line summary.
  */
 export function mcpMethodOneLineSummary(method: McpMethod): string {
-  const description = mcpMethodPlainDescription(method).trim();
-  const firstLine = description.split('\n')[0] ?? '';
-  const sentenceEnd = firstLine.search(/\.\s/);
-  return sentenceEnd > 0 ? firstLine.slice(0, sentenceEnd + 1) : firstLine;
+  return firstSentence(jsDocInlineLinksToText(mcpMethodPlainDescription(method)), { maxLength: MCP_METHOD_SUMMARY_MAX_LENGTH });
 }
 
 /**
@@ -100,21 +114,27 @@ export function mcpMethodOneLineSummary(method: McpMethod): string {
  * @returns The tool definition.
  */
 export function createMcpCompactSearchTool(deps: CreateMcpCompactSearchToolDeps): McpToolDefinition {
-  const { name, app, names, entries, view } = deps;
+  const { name, app, names, entries, view, examples } = deps;
+  const queries = examples?.searchQueries ?? [];
+  const queryExamples = queries.length > 0 ? `, e.g. ${queries.map((x) => `'${x}'`).join(' or ')}` : '';
 
   return buildStaticToolDefinition({
     name,
-    description: `Search the ${app} API for methods by keyword. Pass one to three keywords, not a sentence: a verb and/or a model, e.g. 'create worker' or 'reopen timesheet'. Common verbs also match their synonyms (remove finds delete, add finds create, list finds query). Returns method ids with their kind (read/write/destructive), model and a one-line summary. Next: \`${names.details}\` for parameters, then \`${names.read}\` / \`${names.write}\` / \`${names.destructive}\`.`,
-    inputSchema: MCP_COMPACT_SEARCH_INPUT_SCHEMA,
+    description: `Search the ${app} API for methods by keyword. Pass one to three keywords, not a sentence: a verb and/or a model${queryExamples}. Common verbs also match their synonyms (remove finds delete, add finds create, list finds query). Returns method ids with their kind (read/write/destructive), model and a one-line summary; when more methods match than are returned, pass \`nextOffset\` as \`offset\` for the next page. Next: \`${names.details}\` for parameters, then \`${names.read}\` / \`${names.write}\` / \`${names.destructive}\`.`,
+    inputSchema: buildMcpCompactSearchInputSchema(examples),
     dispatch: { call: MCP_COMPACT_SEARCH_DISPATCH_CALL, modelType: MCP_COMPACT_DISPATCH_MODEL_TYPE },
     effectiveReadOnly: true,
     omitReasonParameter: true,
+    // lenient catalog lookups that coerce their own args; their schemas are rebuilt per request with examples
+    validateInput: false,
     staticHandler: async (args) => {
       const query = typeof args['query'] === 'string' ? args['query'] : '';
       const model = typeof args['model'] === 'string' ? args['model'] : undefined;
       const kind = isMcpMethodKind(args['kind']) ? args['kind'] : undefined;
       const limit = typeof args['limit'] === 'number' ? args['limit'] : undefined;
-      const found = searchMcpMethods({ entries, view, query, model, kind, limit });
+      const offset = typeof args['offset'] === 'number' ? args['offset'] : undefined;
+      const found = searchMcpMethods({ entries, view, query, model, kind, limit, offset });
+      const nextOffset = found.offset + found.methods.length;
       let hint: Maybe<string>;
 
       if (found.partial) {
@@ -125,6 +145,7 @@ export function createMcpCompactSearchTool(deps: CreateMcpCompactSearchToolDeps)
 
       const result: McpCompactSearchResult = {
         total: found.total,
+        ...(nextOffset < found.total && found.methods.length > 0 ? { nextOffset } : undefined),
         ...(found.partial ? { partial: true } : undefined),
         ...(hint == null ? undefined : { hint }),
         methods: found.methods.map((method) => ({

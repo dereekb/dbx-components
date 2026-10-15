@@ -1,4 +1,6 @@
+import { type Maybe } from '@dereekb/util';
 import type { CallToolResult } from '@modelcontextprotocol/server';
+import { type McpToolCatalogExamples } from '../mcp.examples';
 import { type McpManifestEnum } from '../mcp.manifest';
 import { formatMcpToolErrorResponse } from '../mcp.response-formatter';
 import { buildStaticToolDefinition, type McpToolDefinition, type McpStaticToolHandler, type McpStaticToolHandlerContext } from '../mcp.tool-generator';
@@ -22,6 +24,11 @@ export const ENUM_INFO_DISPATCH_CALL = 'info';
  */
 export const ENUM_INFO_DISPATCH_MODEL_TYPE = 'enum';
 
+/**
+ * Hint returned when a requested enum name matched no registered enum.
+ */
+export const ENUM_INFO_NOT_FOUND_HINT = 'Call enum-info with no arguments to list the registered enum names.';
+
 // MARK: Types
 /**
  * Constructor dependencies for {@link createEnumInfoTool}.
@@ -32,6 +39,10 @@ export interface CreateEnumInfoToolDeps {
    * block.
    */
   readonly enums: { readonly [name: string]: McpManifestEnum };
+  /**
+   * Examples shown in the tool text. Omit for generic wording.
+   */
+  readonly examples?: Maybe<Pick<McpToolCatalogExamples, 'enumName'>>;
 }
 
 /**
@@ -39,19 +50,39 @@ export interface CreateEnumInfoToolDeps {
  */
 export interface EnumInfoToolInput {
   /**
-   * One enum name (string) or several (string array), each matched exactly by declaration name.
+   * One enum name (string) or several (string array), each matched exactly by declaration name. Omit to list the
+   * registered enum names.
    */
-  readonly enum: string | ReadonlyArray<string>;
+  readonly enum?: Maybe<string | ReadonlyArray<string>>;
 }
 
 /**
- * Output payload for the `enum-info` tool: the resolved value tables, with any unmatched names in
- * `notFound`.
+ * Lookup output of the `enum-info` tool: the resolved value tables, with any unmatched names in `notFound`.
  */
-export interface EnumInfoToolOutput {
+export interface EnumInfoToolLookupOutput {
   readonly enums: ReadonlyArray<McpManifestEnum>;
   readonly notFound?: ReadonlyArray<string>;
+  /**
+   * How to find the right name. Present when {@link notFound} is non-empty.
+   */
+  readonly hint?: string;
 }
+
+/**
+ * List output of the `enum-info` tool, returned when no `enum` is passed.
+ */
+export interface EnumInfoToolListOutput {
+  /**
+   * The registered enum declaration names, sorted.
+   */
+  readonly names: readonly string[];
+  readonly total: number;
+}
+
+/**
+ * Output payload for the `enum-info` tool.
+ */
+export type EnumInfoToolOutput = EnumInfoToolLookupOutput | EnumInfoToolListOutput;
 
 // MARK: Factory
 /**
@@ -72,12 +103,13 @@ export function createEnumInfoTool(deps: CreateEnumInfoToolDeps): McpToolDefinit
   const handler: McpStaticToolHandler = (args, ctx) => Promise.resolve(enumInfoToolHandler(args, ctx, deps));
   const name = ENUM_INFO_TOOL_NAME;
   const count = Object.keys(deps.enums).length;
-  const description = `Look up enum value→label tables by name (${count} enum${count === 1 ? '' : 's'} registered). Pass \`enum\` (a string or array of enum declaration names, e.g. "JobWorkerTimesheetState") to decode the raw persisted integer/string values a model field stores. Misses are reported in \`notFound\`.`;
+  const enumName = deps.examples?.enumName;
+  const description = `Look up enum value→label tables by name (${count} enum${count === 1 ? '' : 's'} registered). Call with no arguments to list the registered enum names. Pass \`enum\` (one declaration name or an array${enumName ? `, e.g. "${enumName}"` : ''}) to decode the raw persisted integer/string values a model field stores. Misses are reported in \`notFound\`.`;
 
   return buildStaticToolDefinition({
     name,
     description,
-    inputSchema: ENUM_INFO_INPUT_SCHEMA,
+    inputSchema: buildEnumInfoInputSchema(enumName),
     outputSchema: ENUM_INFO_OUTPUT_SCHEMA,
     dispatch: {
       call: ENUM_INFO_DISPATCH_CALL,
@@ -95,7 +127,7 @@ function enumInfoToolHandler(args: Record<string, unknown>, _ctx: McpStaticToolH
 
   try {
     const names = parseEnumInfoInput(args);
-    const output = resolveEnumInfoOutput(names, deps.enums);
+    const output: EnumInfoToolOutput = names == null ? resolveEnumInfoListOutput(deps.enums) : resolveEnumInfoOutput(names, deps.enums);
 
     result = {
       content: [{ type: 'text', text: JSON.stringify(output) }],
@@ -117,7 +149,7 @@ function enumInfoToolHandler(args: Record<string, unknown>, _ctx: McpStaticToolH
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function resolveEnumInfoOutput(names: readonly string[], enums: CreateEnumInfoToolDeps['enums']): EnumInfoToolOutput {
+export function resolveEnumInfoOutput(names: readonly string[], enums: CreateEnumInfoToolDeps['enums']): EnumInfoToolLookupOutput {
   const found: McpManifestEnum[] = [];
   const notFound: string[] = [];
 
@@ -130,16 +162,29 @@ export function resolveEnumInfoOutput(names: readonly string[], enums: CreateEnu
     }
   }
 
-  return notFound.length > 0 ? { enums: found, notFound } : { enums: found };
+  return notFound.length > 0 ? { enums: found, notFound, hint: ENUM_INFO_NOT_FOUND_HINT } : { enums: found };
+}
+
+/**
+ * Lists the registered enum names, sorted.
+ *
+ * @param enums - The registered enum value tables keyed by name.
+ * @returns The sorted names and their count.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function resolveEnumInfoListOutput(enums: CreateEnumInfoToolDeps['enums']): EnumInfoToolListOutput {
+  const names = Object.keys(enums).sort((a, b) => a.localeCompare(b));
+  return { names, total: names.length };
 }
 
 // MARK: Input parsing
-function parseEnumInfoInput(args: Record<string, unknown>): readonly string[] {
+function parseEnumInfoInput(args: Record<string, unknown>): Maybe<readonly string[]> {
   const raw = args['enum'];
-  let result: readonly string[];
+  let result: Maybe<readonly string[]>;
 
   if (raw == null) {
-    throw new Error('enum-info: "enum" is required and must be a string or an array of strings.');
+    result = undefined;
   } else if (typeof raw === 'string') {
     result = [requireNonEmptyString(raw, 'enum')];
   } else if (Array.isArray(raw)) {
@@ -169,24 +214,24 @@ function requireNonEmptyString(value: unknown, label: string): string {
 }
 
 // MARK: Schemas
-const ENUM_INFO_INPUT_SCHEMA = {
-  type: 'object',
-  required: ['enum'],
-  properties: {
-    enum: {
-      description: 'One enum name (string) or many (string array), each matched exactly by declaration name (e.g. "JobWorkerTimesheetState"). Misses are reported in `notFound`.',
-      oneOf: [
-        { type: 'string', minLength: 1 },
-        { type: 'array', minItems: 1, items: { type: 'string', minLength: 1 } }
-      ]
-    }
-  },
-  additionalProperties: false
-} as const;
+function buildEnumInfoInputSchema(enumName: Maybe<string>) {
+  return {
+    type: 'object',
+    properties: {
+      enum: {
+        description: `One enum name (string) or many (string array), each matched exactly by declaration name${enumName ? `, e.g. "${enumName}"` : ''}. Omit to list the registered enum names.`,
+        oneOf: [
+          { type: 'string', minLength: 1 },
+          { type: 'array', minItems: 1, items: { type: 'string', minLength: 1 } }
+        ]
+      }
+    },
+    additionalProperties: false
+  };
+}
 
 const ENUM_INFO_OUTPUT_SCHEMA = {
   type: 'object',
-  required: ['enums'],
   properties: {
     enums: {
       type: 'array',
@@ -197,6 +242,20 @@ const ENUM_INFO_OUTPUT_SCHEMA = {
       type: 'array',
       description: 'Requested enum names that matched no registered enum.',
       items: { type: 'string' }
+    },
+    hint: {
+      type: 'string',
+      description: 'How to find the right enum name. Present when `notFound` is non-empty.'
+    },
+    names: {
+      type: 'array',
+      description: 'The registered enum names, sorted. Returned when no `enum` is passed.',
+      items: { type: 'string' }
+    },
+    total: {
+      type: 'integer',
+      description: 'The number of registered enum names.'
     }
-  }
+  },
+  anyOf: [{ required: ['enums'] }, { required: ['names'] }]
 } as const;

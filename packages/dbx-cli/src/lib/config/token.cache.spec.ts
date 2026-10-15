@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, it, expect } from 'vitest';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { createCliTokenCacheStore, didRotateRefreshToken, isTokenExpired, mergeRefreshedTokenEntry, type CliTokenEntry } from './token.cache';
+import { createCliTokenCacheStore, didRotateRefreshToken, isCliTokenEntryExpired, isTokenExpired, mergeRefreshedTokenEntry, type CliTokenEntry } from './token.cache';
 
 describe('isTokenExpired', () => {
   it('returns true when entry is undefined', () => {
@@ -25,6 +25,19 @@ describe('isTokenExpired', () => {
     const now = 1_000_000;
     const entry = { accessToken: 'a', expiresAt: now + 30_000 };
     expect(isTokenExpired(entry, now, 60_000)).toBe(true);
+  });
+});
+
+describe('isCliTokenEntryExpired', () => {
+  const now = 1_000_000;
+
+  it('uses the 60s buffer for a refreshable entry', () => {
+    expect(isCliTokenEntryExpired({ accessToken: 'a', refreshToken: 'r', expiresAt: now + 30_000 }, now)).toBe(true);
+  });
+
+  it('uses the 5s buffer for a bearer entry with no refresh token', () => {
+    expect(isCliTokenEntryExpired({ accessToken: 'a', expiresAt: now + 30_000, handoff: true }, now)).toBe(false);
+    expect(isCliTokenEntryExpired({ accessToken: 'a', expiresAt: now + 3_000, handoff: true }, now)).toBe(true);
   });
 });
 

@@ -44,7 +44,7 @@ import { openRouterPromptsWithStateQuery, openRouterRunTasksExpiredQuery, openRo
 import { profileWithUsernameQuery, publishedGuestbookEntriesQuery, publishedGuestbooksQuery } from 'demo-firebase';
 import { type CliFirestoreQueryManifest, type CliGeneratedManifestStamp } from '@dereekb/dbx-cli';
 
-export const DEMO_CLI_FIRESTORE_QUERY_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.16.0' };
+export const DEMO_CLI_FIRESTORE_QUERY_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.17.0' };
 
 export const DEMO_CLI_FIRESTORE_QUERY_MANIFEST: CliFirestoreQueryManifest = [
   {

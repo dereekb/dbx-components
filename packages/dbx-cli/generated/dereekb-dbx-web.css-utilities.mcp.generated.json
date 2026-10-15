@@ -2369,6 +2369,40 @@
       ]
     },
     {
+      "slug": "filter-popover-content-buttons",
+      "selector": ".dbx-filter-popover-content-buttons",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/interaction/filter/_filter.scss",
+      "line": 12,
+      "declarations": [
+        {
+          "property": "display",
+          "value": "flex"
+        },
+        {
+          "property": "align-items",
+          "value": "center"
+        },
+        {
+          "property": "justify-content",
+          "value": "center"
+        },
+        {
+          "property": "padding",
+          "value": "var(--dbx-padding-2) var(--dbx-padding-3)"
+        }
+      ],
+      "role": "layout",
+      "intent": "filter popover buttons below the filter content — holds the same switch and close buttons as the header when `showButtonsBelowContent` is set",
+      "component": "DbxFilterPopoverComponent",
+      "scope": "component-class",
+      "tokensRead": [
+        "--dbx-padding-2",
+        "--dbx-padding-3"
+      ]
+    },
+    {
       "slug": "flex",
       "selector": ".dbx-flex",
       "source": "@dereekb/dbx-web",

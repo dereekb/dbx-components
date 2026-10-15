@@ -1,6 +1,21 @@
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory } from '../../../test/fixture';
-import { ModelApiCallModelDispatchService, type ModelApiDispatchConfig, type ModelApiGetService, MAX_MODEL_ACCESS_MULTI_READ_KEYS, getModelApiDetails, ModelApiController } from '@dereekb/firebase-server';
-import { demoCallModelFn } from '../../function/model/crud.functions';
+import {
+  ModelApiCallModelDispatchService,
+  type ModelApiDispatchConfig,
+  type ModelApiGetService,
+  MAX_MODEL_ACCESS_MULTI_READ_KEYS,
+  getModelApiDetails,
+  ModelApiController,
+  forbiddenError,
+  onCallModel,
+  FIREBASE_SERVER_VALIDATION_ERROR_CODE,
+  firebaseServerValidationErrorForSummary,
+  firebaseServerErrorInfoServerErrorPair,
+  readFirebaseServerValidationErrorSummary
+} from '@dereekb/firebase-server';
+import { CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE } from '@dereekb/firebase';
+import { HttpException } from '@nestjs/common';
+import { DEMO_CALL_MODEL_MAP, demoCallModelFn } from '../../function/model/crud.functions';
 import { mapDemoApiNestContext } from '../../function/function.context';
 
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
@@ -29,6 +44,84 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
         expect(modelNames.length).toBeGreaterThan(0);
       });
+    });
+  });
+
+  describe('input validation', () => {
+    const onboardParams = { call: 'update', modelType: 'profile', specifier: 'onboard', data: { key: 5 } } as any;
+    const auth = { uid: 'validation-test-user', token: {} } as any;
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('should reject params that do not match the handler inputType with a VALIDATION_ERROR', async () => {
+      const dispatchService = new ModelApiCallModelDispatchService({ callModelFn: demoCallModelFn, makeNestContext: mapDemoApiNestContext }, f.instance.nest);
+      const error = await dispatchService.dispatch(onboardParams, auth, _mockRequest('POST', auth)).catch((e: unknown) => e);
+
+      expect(firebaseServerErrorInfoServerErrorPair(error)[0]?.code).toBe(FIREBASE_SERVER_VALIDATION_ERROR_CODE);
+      expect(readFirebaseServerValidationErrorSummary(error)).toContain('key');
+    });
+
+    it('should run the handler and warn in log mode', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      const callModelFn = onCallModel(DEMO_CALL_MODEL_MAP, { inputValidation: 'log' });
+      const dispatchService = new ModelApiCallModelDispatchService({ callModelFn, makeNestContext: mapDemoApiNestContext }, f.instance.nest);
+
+      // the handler runs on the invalid data; whatever it does with it, the dispatch did not reject the params
+      const error = await dispatchService.dispatch(onboardParams, auth, _mockRequest('POST', auth)).then(
+        () => undefined,
+        (e: unknown) => e
+      );
+
+      expect(firebaseServerErrorInfoServerErrorPair(error)[0]?.code).not.toBe(FIREBASE_SERVER_VALIDATION_ERROR_CODE);
+      expect(warn.mock.calls.some((x) => String(x[0]).includes('call=update modelType=profile specifier=onboard'))).toBe(true);
+    });
+
+    it('should include the validation details in the REST error body', async () => {
+      const dispatch = vi.fn().mockRejectedValue(firebaseServerValidationErrorForSummary('key must be a string (was number)'));
+      const controller = new ModelApiController({ dispatch, getApiDetails: vi.fn() } as unknown as ModelApiCallModelDispatchService, {} as ModelApiGetService);
+      const error = await controller.directDispatch(onboardParams, _mockRequest('POST', auth)).catch((e: unknown) => e);
+
+      expect(error).toBeInstanceOf(HttpException);
+      const body = (error as HttpException).getResponse() as { code?: string; details?: { data?: { message?: string } } };
+      expect(body.code).toBe(FIREBASE_SERVER_VALIDATION_ERROR_CODE);
+      expect(body.details?.data?.message).toBe('key must be a string (was number)');
+    });
+  });
+
+  describe('stray specifiers on direct handlers', () => {
+    const auth = { uid: 'stray-specifier-test-user', token: {} } as any;
+
+    function buildController() {
+      const dispatchService = new ModelApiCallModelDispatchService({ callModelFn: demoCallModelFn, makeNestContext: mapDemoApiNestContext }, f.instance.nest);
+      return new ModelApiController(dispatchService, {} as ModelApiGetService);
+    }
+
+    async function dispatchAndCatch(path: string, body: unknown): Promise<unknown> {
+      const req = _mockRequest('POST', auth, { path });
+      req.body = body;
+      return buildController()
+        .handleDispatchRequest(req)
+        .then(
+          () => undefined,
+          (e: unknown) => e
+        );
+    }
+
+    it('should reject a stray specifier on the direct guestbook create handler with UNKNOWN_SPECIFIER_ERROR', async () => {
+      const error = await dispatchAndCatch('guestbook/create/bogus', { name: 'stray' });
+
+      expect(error).toBeInstanceOf(HttpException);
+      expect((error as HttpException).getStatus()).toBe(400);
+      expect(((error as HttpException).getResponse() as { code?: string }).code).toBe('UNKNOWN_SPECIFIER_ERROR');
+    });
+
+    it('should pass the default specifier through to the handler inputType check', async () => {
+      const error = await dispatchAndCatch('guestbook/create', { name: 5 });
+
+      expect(error).toBeInstanceOf(HttpException);
+      expect(((error as HttpException).getResponse() as { code?: string }).code).toBe(FIREBASE_SERVER_VALIDATION_ERROR_CODE);
     });
   });
 
@@ -189,6 +282,17 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         const req = _mockRequest('DELETE', { uid: 'test-user' }, { path: 'profile/update' });
 
         await expect(controller.handleDispatchRequest(req)).rejects.toThrow();
+      });
+
+      it('should surface the specific server error code of a rejected dispatch', async () => {
+        vi.mocked(mockDispatchService.dispatch).mockRejectedValueOnce(forbiddenError({ code: CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE, message: 'missing scope' }));
+        const req = _mockRequest('POST', { uid: 'test-user' }, { path: 'profile/update' });
+
+        const error = await controller.handleDispatchRequest(req).catch((e: unknown) => e);
+
+        expect(error).toBeInstanceOf(HttpException);
+        expect((error as HttpException).getStatus()).toBe(403);
+        expect(((error as HttpException).getResponse() as { code?: string }).code).toBe(CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE);
       });
 
       it('should throw 405 for GET method', async () => {

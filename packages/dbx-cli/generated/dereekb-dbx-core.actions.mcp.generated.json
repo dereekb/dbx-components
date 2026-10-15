@@ -34,6 +34,16 @@
           "name": "afterDistinctLoadingStateTypeChange",
           "signature": "afterDistinctLoadingStateTypeChange(): Observable<ActionContextState<T, O>>",
           "description": ""
+        },
+        {
+          "name": "registerValueSnapshot",
+          "signature": "registerValueSnapshot(valueSnapshotFunction: DbxActionValueSnapshotFunction<T>): DestroyFunction",
+          "description": "Registers the function that returns the value a trigger would ready right now. Registered by the action's value source, such as dbxActionValue or dbxActionForm.\n\nOnly one function is kept, so a later registration replaces an earlier one."
+        },
+        {
+          "name": "valueSnapshot",
+          "signature": "valueSnapshot(): Maybe<DbxActionValueGetterResult<T>>",
+          "description": "Returns the value a trigger would ready right now, without triggering the action.\n\nLets a change be applied synchronously when the action's own trigger path and its delays can no longer run, such as right before\nthe content that holds the action is destroyed."
         }
       ],
       "observables": [

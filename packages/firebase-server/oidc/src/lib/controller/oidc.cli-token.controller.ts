@@ -32,7 +32,7 @@ export class OidcCliTokenController {
    *
    * @param req - The Express request carrying auth credentials on `req.auth`.
    * @param body - The optional requested scope subset + TTL.
-   * @returns The {@link CliTokenMintResult}. Never the refresh token itself.
+   * @returns The {@link CliTokenMintResult}. Never the credential itself.
    */
   @Post(CLI_TOKEN_MINT_PATH_PART)
   async mintCliToken(@Req() req: Request, @Body() body: MintCliTokenParams): Promise<CliTokenMintResult> {

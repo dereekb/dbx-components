@@ -1,15 +1,15 @@
 import type { CallToolResult } from '@modelcontextprotocol/server';
 import { type McpManifestEnum } from '../mcp.manifest';
 import { type McpStaticToolHandlerContext } from '../mcp.tool-generator';
-import { createEnumInfoTool, resolveEnumInfoOutput, ENUM_INFO_TOOL_NAME, type EnumInfoToolOutput } from './mcp.tool.enum-info';
+import { createEnumInfoTool, resolveEnumInfoListOutput, resolveEnumInfoOutput, ENUM_INFO_NOT_FOUND_HINT, ENUM_INFO_TOOL_NAME, type EnumInfoToolListOutput, type EnumInfoToolLookupOutput } from './mcp.tool.enum-info';
 
 function makeCtx(): McpStaticToolHandlerContext {
   return { rawRequest: {} as unknown as McpStaticToolHandlerContext['rawRequest'] };
 }
 
-function unwrap(result: CallToolResult): EnumInfoToolOutput {
+function unwrap(result: CallToolResult): EnumInfoToolLookupOutput {
   const content: unknown = result.structuredContent;
-  return content as EnumInfoToolOutput;
+  return content as EnumInfoToolLookupOutput;
 }
 
 const ENUMS: { readonly [name: string]: McpManifestEnum } = {
@@ -45,8 +45,9 @@ describe('createEnumInfoTool', () => {
         expect(tool.filterMetadata.rule.requireAuthenticated).toBe(true);
       }
 
-      expect(tool.inputSchema).toMatchObject({ type: 'object', required: ['enum'] });
-      expect(tool.outputSchema).toMatchObject({ type: 'object', required: ['enums'] });
+      expect(tool.inputSchema).toMatchObject({ type: 'object' });
+      expect(tool.inputSchema).not.toHaveProperty('required');
+      expect(tool.outputSchema).toMatchObject({ type: 'object', anyOf: [{ required: ['enums'] }, { required: ['names'] }] });
     });
 
     it('mentions the registered enum count, pluralized', () => {
@@ -76,6 +77,7 @@ describe('createEnumInfoTool', () => {
 
       expect(output.enums.map((e) => e.name)).toEqual(['JobWorkerTimesheetState']);
       expect(output.notFound).toEqual(['Ghost']);
+      expect(output.hint).toBe(ENUM_INFO_NOT_FOUND_HINT);
     });
 
     it('trims surrounding whitespace before matching', async () => {
@@ -85,12 +87,20 @@ describe('createEnumInfoTool', () => {
       expect(output.enums.map((e) => e.name)).toEqual(['DayOfWeek']);
     });
 
-    it('errors on a missing enum arg', async () => {
+    it('lists the sorted enum names when no enum arg is passed', async () => {
       const tool = createEnumInfoTool({ enums: ENUMS });
       const result = await tool.staticHandler!({}, makeCtx());
+      const output = result.structuredContent as unknown as EnumInfoToolListOutput;
 
-      expect(result.isError).toBe(true);
-      expect((result.content[0] as { text: string }).text).toContain('"enum" is required');
+      expect(result.isError).toBeFalsy();
+      expect(output.names).toEqual(Object.keys(ENUMS).sort((a, b) => a.localeCompare(b)));
+      expect(output.total).toBe(Object.keys(ENUMS).length);
+    });
+
+    it('lists the enum names when enum is null', async () => {
+      const tool = createEnumInfoTool({ enums: ENUMS });
+      const result = await tool.staticHandler!({ enum: null }, makeCtx());
+      expect((result.structuredContent as unknown as EnumInfoToolListOutput).total).toBe(Object.keys(ENUMS).length);
     });
 
     it('errors on an empty array', async () => {
@@ -113,6 +123,31 @@ describe('createEnumInfoTool', () => {
 
       expect(result.isError).toBe(true);
     });
+  });
+});
+
+describe('createEnumInfoTool text', () => {
+  it('mentions the list mode in the description', () => {
+    expect(createEnumInfoTool({ enums: ENUMS }).description).toContain('Call with no arguments to list the registered enum names.');
+  });
+
+  it('uses no example name by default', () => {
+    const tool = createEnumInfoTool({ enums: ENUMS });
+    expect(tool.description).not.toContain('e.g.');
+    expect(JSON.stringify(tool.inputSchema)).not.toContain('e.g.');
+  });
+
+  it('uses the configured example name', () => {
+    const tool = createEnumInfoTool({ enums: ENUMS, examples: { enumName: 'DayOfWeek' } });
+    expect(tool.description).toContain('e.g. "DayOfWeek"');
+    expect(JSON.stringify(tool.inputSchema)).toContain(String.raw`e.g. \"DayOfWeek\"`);
+  });
+});
+
+describe('resolveEnumInfoListOutput', () => {
+  it('returns the sorted names and total', () => {
+    const out = resolveEnumInfoListOutput({ b: ENUMS['DayOfWeek'], a: ENUMS['DayOfWeek'] });
+    expect(out).toEqual({ names: ['a', 'b'], total: 2 });
   });
 });
 

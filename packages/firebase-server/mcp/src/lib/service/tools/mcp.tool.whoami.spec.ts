@@ -214,6 +214,30 @@ describe('createWhoamiTool', () => {
       expect(output.unknownClaimKeys).toEqual(['x']);
     });
 
+    it('separates standard token claims from unknown custom claims', async () => {
+      const tool = createWhoamiTool({ auth: makeAuth() });
+      const token = { aud: 'app', iss: 'https://issuer', sub: 'user-4', iat: 1, exp: 2, auth_time: 1, scope: 'openid model.read', client_id: 'c', firebase: { sign_in_provider: 'custom' }, uid: 'user-4', o: 1, x: 'mystery' };
+      const result = await tool.staticHandler!({ detail: 'full' }, makeCtx({ auth: makeAuthData('user-4', token) }));
+      const output = unwrap(result);
+
+      expect([...output.standardClaimKeys!].sort((a, b) => a.localeCompare(b))).toEqual(['aud', 'auth_time', 'client_id', 'exp', 'firebase', 'iat', 'iss', 'scope', 'sub', 'uid']);
+      expect(output.unknownClaimKeys).toEqual(['x']);
+      expect(output.claimDetails!.map((d) => d.key)).toEqual(['o']);
+      expect(output.claimCount).toBe(2);
+      expect(readText(result)).toContain('## Standard token claims');
+    });
+
+    it('describes a manifest claim named like a standard claim', async () => {
+      const scopeClaim: McpManifestAuthClaim = { ...ONBOARDED_CLAIM, key: 'scope', description: 'App scope claim.' };
+      const tool = createWhoamiTool({ auth: { ...makeAuth(), claims: [scopeClaim] } });
+      const result = await tool.staticHandler!({ detail: 'full' }, makeCtx({ auth: makeAuthData('user-5', { scope: 'x', sub: 'user-5' }) }));
+      const output = unwrap(result);
+
+      expect(output.claimDetails!.map((d) => d.key)).toEqual(['scope']);
+      expect(output.standardClaimKeys).toEqual(['sub']);
+      expect(output.unknownClaimKeys).toEqual([]);
+    });
+
     it('emits both the per-claim descriptions and the raw claims block, with no further hint', async () => {
       const tool = createWhoamiTool({ auth: makeAuth() });
       const result = await tool.staticHandler!({ detail: 'full' }, makeCtx({ auth: makeAuthData('user-2', { o: 1, a: 1 }) }));

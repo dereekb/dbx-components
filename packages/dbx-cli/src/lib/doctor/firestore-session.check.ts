@@ -3,7 +3,7 @@ import { type Maybe } from '@dereekb/util';
 import { discoverOidcMetadata, refreshAccessToken } from '../auth/oidc.client';
 import { type CliEnvConfig, DEFAULT_CLI_OIDC_SCOPES, cliFirebaseEmulatorsInUse, isCliFirebaseConfigComplete, readEnvTokenEntry } from '../config/env';
 import { buildCliPaths } from '../config/paths';
-import { createCliTokenCacheStore, isTokenExpired } from '../config/token.cache';
+import { createCliTokenCacheStore, isCliTokenEntryExpired } from '../config/token.cache';
 import { type CliFirestoreBinding } from '../firestore/firestore.models';
 import { type CliReadSourceReason, hasCliFirestoreSessionScope } from '../firestore/firestore.read';
 import { type CliFirestoreSessionContext, closeCliFirestoreSessionContext, createCliFirestoreSessionContext } from '../firestore/firestore.session';
@@ -416,7 +416,7 @@ async function resolveDoctorAccessGrant(input: ResolveDoctorAccessGrantInput): P
 
   let result: Maybe<DoctorAccessGrant>;
 
-  if (entry?.accessToken && !isTokenExpired(entry)) {
+  if (entry?.accessToken && !isCliTokenEntryExpired(entry)) {
     result = { accessToken: entry.accessToken, scope: entry.scope };
     // A public client refreshes with `client_id` alone, so the secret is not part of the guard.
   } else if (entry?.refreshToken && env.clientId) {

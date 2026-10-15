@@ -1,6 +1,18 @@
 import { type Maybe } from '@dereekb/util';
 import { type GrantedRoleMap, isFullAccessRoleMap, FULL_ACCESS_ROLE_KEY, NO_ACCESS_ROLE_KEY } from '@dereekb/model';
-import { type FirebaseAuthUserId, type FirestoreModelIdentity, type FirestoreModelKey, type FirestoreModelType, type OidcModelScopeRequirement, type OidcScopeTerm, NOT_FOUND_ERROR_CODE, MODEL_NOT_AVAILABLE_ERROR_CODE, PERMISSION_DENIED_ERROR_CODE, FORBIDDEN_ERROR_CODE } from '@dereekb/firebase';
+import {
+  type FirebaseAuthUserId,
+  type FirestoreModelIdentity,
+  type FirestoreModelKey,
+  type FirestoreModelType,
+  type OidcModelScopeRequirement,
+  type OidcScopeTerm,
+  NOT_FOUND_ERROR_CODE,
+  MODEL_NOT_AVAILABLE_ERROR_CODE,
+  firestoreModelKeyCollectionType,
+  PERMISSION_DENIED_ERROR_CODE,
+  FORBIDDEN_ERROR_CODE
+} from '@dereekb/firebase';
 import { Injectable, Inject, type INestApplicationContext } from '@nestjs/common';
 import { type AbstractFirebaseNestContext } from '../../nest.provider';
 import { type AuthData } from '../../../type';
@@ -228,6 +240,14 @@ function modelAccessReadErrorMessageFromCode(code: Maybe<string>): string {
 
 // MARK: Service
 /**
+ * The cached identity lookups of {@link ModelApiGetService}.
+ */
+interface ModelApiGetServiceIdentityMaps {
+  readonly byModelType: ReadonlyMap<string, FirestoreModelIdentity>;
+  readonly byCollectionType: ReadonlyMap<string, FirestoreModelIdentity>;
+}
+
+/**
  * Service for direct document reads using the `useModel()` permission-checking pattern.
  *
  * Unlike the dispatch service (which goes through callModel handlers), this service
@@ -239,7 +259,7 @@ export class ModelApiGetService {
   private readonly _nestContext: AbstractFirebaseNestContext<any, any>;
   private readonly _defaultRequiredScope: Maybe<OidcScopeTerm>;
   private readonly _modelRequiredScopes: Maybe<Record<FirestoreModelType, OidcModelScopeRequirement>>;
-  private _identityByModelType: Map<string, FirestoreModelIdentity> | undefined;
+  private _identityMaps: ModelApiGetServiceIdentityMaps | undefined;
 
   constructor(@Inject(ModelApiDispatchConfig) config: ModelApiDispatchConfig, @Inject(MODEL_API_NEST_APPLICATION_CONTEXT) nestApplication: INestApplicationContext) {
     this._nestContext = config.makeNestContext(nestApplication) as AbstractFirebaseNestContext<any, any>;
@@ -331,12 +351,43 @@ export class ModelApiGetService {
    * @returns The matching identity or `undefined`.
    */
   getModelIdentity(modelType: FirestoreModelType, auth: Maybe<FirebaseServerAuthData>): Maybe<FirestoreModelIdentity> {
-    this._identityByModelType ??= this._buildIdentityMap(auth);
-    return this._identityByModelType.get(modelType);
+    this._identityMaps ??= this._buildIdentityMaps(auth);
+    return this._identityMaps.byModelType.get(modelType);
   }
 
-  private _buildIdentityMap(auth: Maybe<FirebaseServerAuthData>): Map<string, FirestoreModelIdentity> {
-    const map = new Map<string, FirestoreModelIdentity>();
+  /**
+   * Returns the registered {@link FirestoreModelIdentity} whose collection path exactly matches the given full key, or
+   * `undefined` when no model is registered for that path.
+   *
+   * The key's collection type (e.g. `gb/abc/gbe/x` → `gb/gbe`) is matched against each identity's `collectionType`, so a
+   * root collection nested under another collection (e.g. `gb/abc/cs/1`) does not match.
+   *
+   * @param key - The full Firestore model key (e.g., 'pr/abc123', 'gb/abc/gbe/x').
+   * @param auth - The request's auth data; used to build a context for the (one-time) lookup.
+   * @returns The matching identity or `undefined`.
+   */
+  getModelIdentityForKey(key: FirestoreModelKey, auth: Maybe<FirebaseServerAuthData>): Maybe<FirestoreModelIdentity> {
+    let collectionType: Maybe<string>;
+
+    try {
+      collectionType = firestoreModelKeyCollectionType(key.trim());
+    } catch {
+      // an odd segment count is not a model key
+    }
+
+    let result: Maybe<FirestoreModelIdentity>;
+
+    if (collectionType) {
+      this._identityMaps ??= this._buildIdentityMaps(auth);
+      result = this._identityMaps.byCollectionType.get(collectionType);
+    }
+
+    return result;
+  }
+
+  private _buildIdentityMaps(auth: Maybe<FirebaseServerAuthData>): ModelApiGetServiceIdentityMaps {
+    const byModelType = new Map<string, FirestoreModelIdentity>();
+    const byCollectionType = new Map<string, FirestoreModelIdentity>();
     const authRef = this._makeAuthRef(auth);
     const inContextService = this._nestContext.model(authRef);
     const allTypes = inContextService.allTypes();
@@ -345,14 +396,15 @@ export class ModelApiGetService {
       try {
         const modelService = inContextService(type as never) as unknown as { getFirestoreCollection: () => { modelIdentity: FirestoreModelIdentity } };
         const identity = modelService.getFirestoreCollection().modelIdentity;
-        map.set(type, identity);
+        byModelType.set(type, identity);
+        byCollectionType.set(identity.collectionType, identity);
       } catch {
         // identity unavailable for this type — skipped silently. A subsequent get attempt for a
         // missing type surfaces a user-visible "Unknown modelType" error at the tool layer.
       }
     }
 
-    return map;
+    return { byModelType, byCollectionType };
   }
 
   /**

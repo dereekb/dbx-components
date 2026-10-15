@@ -1,3 +1,29 @@
+# [14.18.0](https://github.com/dereekb/dbx-components/compare/v14.17.0-dev...v14.18.0) (2026-10-15)
+
+### Bug Fixes
+
+- **firebase-server:** reject stray specifiers on direct handlers ([3f80609c](https://github.com/dereekb/dbx-components/commit/3f80609cb76ba5721b35e9ef2a8176b1a4825d92))
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes + peer dep sync ([a7ecaab7](https://github.com/dereekb/dbx-components/commit/a7ecaab7e36616c5daed22bd2b98357775491b8d))
+
+### Code Refactoring
+
+- doc fixes ([459142fe](https://github.com/dereekb/dbx-components/commit/459142fee6c4539ce23c6060827c67ddd665f1ee))
+
+### Features
+
+- **dbx-cli,demo:** drop unregistered calls from the api manifest ([6e3d8ba5](https://github.com/dereekb/dbx-components/commit/6e3d8ba53ed5029b3bbe5f4a234b2e874ad7f2b5))
+- **dbx-web,dbx-form,dbx-core,demo:** improve filter popover closing ([227782f5](https://github.com/dereekb/dbx-components/commit/227782f5b6d5b0416ca870b7b2582c388a9ee4e1))
+- **firebase-server,dbx-cli,util:** app-neutral MCP tool text + fixes ([08f3a6a4](https://github.com/dereekb/dbx-components/commit/08f3a6a45117d420ac17b56b921c27e66049004d))
+- **firebase-server,dbx-cli:** mint bearer CLI handoff credentials ([a84541c5](https://github.com/dereekb/dbx-components/commit/a84541c5139ed4e4a1d4ac1ec8ca0c6990da6b4b))
+- **firebase-server,dbx-cli:** validate callModel params by inputType ([99cfbd7a](https://github.com/dereekb/dbx-components/commit/99cfbd7a47fd06d13ded27ebe9b1377c45162201))
+
+### Tests
+
+- **demo-api:** include task-bots doc in docs API list specs ([71962d16](https://github.com/dereekb/dbx-components/commit/71962d1609a3c9ac2a5a00cb7224e361c094f900))
+
 # [14.17.0](https://github.com/dereekb/dbx-components/compare/v14.16.0-dev...v14.17.0) (2026-10-14)
 
 ### Bug Fixes

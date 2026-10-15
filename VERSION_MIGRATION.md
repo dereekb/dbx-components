@@ -1,3 +1,155 @@
+## Migration to v14.18.x — a direct callModel handler rejects a stray specifier
+
+A handler registered straight on a CRUD map (not through `onCallSpecifierHandler`) used to run for any `specifier` a
+request carried, while its per-function `requiredScope` and `analytics` were looked up by that specifier and came back
+empty. `POST /api/model/<model>/create/x` reached the handler without its `requiredScope`.
+
+### What changed
+- **A direct handler answers only the default specifier**: omitted, `null` or `'_'`. Any other value throws the 400
+  `UNKNOWN_SPECIFIER_ERROR` that `onCallSpecifierHandler` throws for a key it does not map. The check runs after the auth
+  check and the CRUD `preAssert`, before input validation.
+- **`resolveRequiredScopeFromApiDetails()` / `resolveAnalyticsFromApiDetails()` read a direct handler's `_` entry
+  whatever specifier the request carries**, so the `/api/model` + MCP scope gate, the `onCallModel` `preAssert` context and
+  analytics always see the handler's own `requiredScope` / `analytics`.
+- **`onCallSpecifierHandler()` marks its function with `_isSpecifierHandler: true`** (`OnCallSpecifierHandlerRef`). The
+  dispatch uses it, not `_apiDetails`, to tell the two kinds apart.
+
+### Check
+- A client that sends a specifier to a direct handler now gets `UNKNOWN_SPECIFIER_ERROR`. `dbx_model_api_validate_app`
+  reports a declared specifier the server map lacks as `MISSING_HANDLER`; wire it through `onCallSpecifierHandler` or
+  drop it from the client.
+- A hand-rolled handler that routes `request.specifier` itself, or a wrapper around an `onCallSpecifierHandler`, must be
+  built with `onCallSpecifierHandler` or carry `_isSpecifierHandler: true`.
+- A `preAssert` still sees the specifier as sent, including `'_'` and stray values the dispatch then rejects.
+
+## Migration to v14.18.x — callModel params are validated against their `inputType`
+
+A handler's declared `withApiDetails({ inputType })` is now a guard, not only MCP metadata. The callModel dispatch
+checks each request's `data` against the leaf handler's `inputType` right after the auth check (and the CRUD
+`preAssert`) and before the handler runs. One check covers HTTP callables, `/api/model` REST, MCP per-method tools,
+the compact `read` / `write` / `destructive` routers and every `batch-execute` operation.
+
+### What changed
+- **Validation is on by default (`'enforce'`).** Invalid data throws the same `VALIDATION_ERROR` bad request the
+  per-action transforms throw today (`details.data.message` carries the ArkType summary, one line per field). Any
+  `inputType` that implements Standard Schema (every ArkType `Type`) validates; a plain `{ toJsonSchema }` ref is skipped.
+- **Handlers still receive the raw data.** Per-action `firebaseServerActionTransformFunctionFactory` checks keep
+  parsing what they parse today; they are now redundant, not broken.
+- **Undeclared keys are allowed** (ArkType's default). A type opts into rejecting them with `.onUndeclaredKey('reject')`
+  (also exported as `additionalProperties: false`), or into stripping them under `'parse'` with `'delete'`.
+- **Missing data** (`null` / `undefined`) is checked as `{}`, so an all-optional params type accepts "no params".
+- **Built-in and app-supplied static MCP tools** (`whoami`, `model-get`, `docs-read`, …) check their args against their
+  own JSON-Schema `inputSchema` (`whoami { detail: true }` is now an error). The compact `search` / `details` tools are
+  exempt. Opt a tool out with `buildStaticToolDefinition({ validateInput: false })`.
+- **`mcpAdditionalTool({ inputType })`** validates the args with ArkType (even when `inputSchema` overrides the
+  advertised schema) and hands the handler the **parsed** output.
+- **The REST error body gains `details`.** `ModelApiController` adds the server error (`details.data.message` holds the
+  summary) next to the unchanged `statusCode`, `message` and `code`. dbx-cli appends the summary to the error message
+  and reports `VALIDATION_ERROR` instead of `API_ERROR`.
+
+### Rollout
+- **`'log'` mode first.** Downstream clients that send data their types reject (nulls into fields that are not
+  `clearable`, a required key the handler infers) start failing on upgrade. Roll out with:
+  ```ts
+  export const appCallModelFn = onCallModel(APP_CALL_MODEL_MAP, { inputValidation: 'log' });
+  ```
+  `'log'` `console.warn`s each failure (call, modelType, specifier and summary, never the data) and runs the handler.
+  Fix each offending client or type, then drop the option. `'off'` skips the check entirely.
+- **Per-handler escape hatch.** `withApiDetails({ inputValidation: 'off', ... })` skips the check for a handler that
+  validates itself or must accept data its type does not describe.
+- **`'parse'`.** `withApiDetails({ inputValidation: 'parse', ... })` hands the handler the type's output (morphs
+  applied, defaults filled). It replaces an `assertValidParams(type, data)` in a handler that reads `data` directly, and
+  is always enforced whatever the app mode. `withApiDetails` throws when `'parse'` is set without a validator `inputType`.
+
+### Review
+- Check that each handler's declared `inputType` matches what its clients send. A declared type that is wrong now
+  rejects valid traffic (the demo `profile.read.downloadArchive` declared a required `key` its handler infers).
+- Per-handler `assertValidParams(inputType, data)` calls that re-check the same type are now redundant.
+
+## Migration to v14.18.x — CLI handoff bearer credentials
+
+The `cli-token` MCP tool now hands the CLI a **bearer access token** by default instead of a refresh token. The CLI
+uses it directly and never calls `/oidc/token`, so it never authenticates as the app's CLI OAuth client. A refresh
+handoff only worked when the CLI could present that client's exact identity (including a secret, if it had one).
+
+### What changed
+- **MCP default is `bearer`.** `McpCliTokenMintInput` gains `credentialType` (already defaulted to `bearer` by the
+  tool), and the tool accepts a `credentialType: 'bearer' | 'refresh'` argument. `POST /oidc/cli-token` is unchanged:
+  with no `credentialType` it still mints `refresh`. An unknown value returns 400 `CLI_TOKEN_INVALID_CREDENTIAL_TYPE_ERROR`.
+- **`CliTokenHandoffBundle`**: `credentialType`, `accessToken` and `tokenType` are new, and `refreshToken` is now
+  optional (present for `refresh` only). `CliTokenMintResult` gains `credentialType`. The mint still returns only the
+  one-time claim code; the credential comes only from `POST /oidc/cli-token/claim`.
+- **A bearer credential never carries `offline_access`.** It still gets its own child Grant owned by the CLI client,
+  so userinfo, the `dbx_session_expires_at` bound and grant revocation all work. It does not cascade-revoke with
+  the parent session (unchanged).
+- **Narrowing keeps identity scopes.** With `scopes`, the mint now keeps every scope the provider's `claims` config
+  maps to at least one claim (`openid`, `profile`, `email` and the app's claims scope), so a narrowed credential keeps
+  the caller's role claims. Override with `CliTokenApiModuleConfig.retainedScopes` (`[]` restores the old behavior).
+- **The model API error `code` is specific.** `ModelApiController` now returns `error.details.code` (e.g.
+  `CALL_MODEL_MISSING_OIDC_SCOPE`) instead of the generic `permission-denied`.
+- **`OidcAuthData.oidcValidatedToken.grantId`** is set for opaque access tokens.
+- **dbx-cli**: a bearer handoff entry (`handoff: true`, no refresh token) is used until it expires and then fails
+  `AUTH_HANDOFF_EXPIRED` with a re-mint suggestion. `auth status` / `show` / `check`, `doctor` and
+  `auth logout --revoke` handle it. API 401/403 responses throw `CliHttpError`, and the suggestion now tells a missing
+  scope apart from a missing role and from an expired credential.
+
+### Required
+- **Forward `credentialType` in your `McpCliTokenMinter`**, or the mint falls back to `refresh`:
+  ```ts
+  cliTokenService.mintCliToken(input.auth, { scopes: input.scopes, ttlSeconds: input.ttlSeconds, credentialType: input.credentialType }, { requestIp: input.requestIp });
+  ```
+- Update tests that read `bundle.refreshToken` as required.
+
+### Check
+- A CLI that predates bearer support rejects a bearer claim with `AUTH_HANDOFF_FAILED`, and the code is used up. Ship
+  the matching CLI (the tool's `installCommand`), or mint with `credentialType: 'refresh'`.
+- Set `retainedScopes` if your role claims hang off a scope whose `claims` entry is `[]`.
+
+## Migration to v14.18.x — MCP tool examples and built-in tools
+
+The MCP tool text no longer names HelloSubs or demo models. Examples now come from the app itself, and several
+built-in tools gained small features.
+
+### Optional
+- **`tools.examples`** on `McpModuleConfig` sets the examples shown in the usage block, tool descriptions and input
+  schemas: `searchQueries`, `methodId`, `modelType`, `modelKey`, `enumName`, `pageUrl`. Each omitted field is derived:
+  method examples per request from the methods the caller can see, catalog examples at boot from `mcp.manifest.json`
+  and `route.manifest.json`. Configured values are shown to every caller, so do not name a method some callers cannot see.
+  ```ts
+  tools: { examples: { searchQueries: ['create guestbook'], methodId: 'guestbook.update.subscribeToNotifications' } }
+  ```
+- **`tools: { examples: false }`** shows generic wording with no examples.
+- A configured `methodId` / `modelType` / `enumName` that does not resolve logs a boot warning, and the
+  `MCP tool surface: ...` line now ends with `examples=configured|derived|off`.
+
+### Changed text
+- The compact usage block, the `search` / `details` input schemas and the router `method` description were reworded.
+  Method ids are described as `model.call` or `model.call.specifier`. Tests that assert the old example strings
+  (`'reopen timesheet'`, `worker.update.schedule`) need updating.
+
+### Review
+- **`whoami`**: standard JWT / OIDC / OAuth / Firebase claims (`aud`, `iss`, `sub`, `iat`, `exp`, `auth_time`, `scope`,
+  `client_id`, `firebase`, `uid`, …, see `WHOAMI_STANDARD_CLAIM_KEYS`) move from `unknownClaimKeys` to a new
+  `standardClaimKeys` list at `detail: "full"`. `claimCount` now counts custom claims only.
+- **`model-decode`**: output gains `valid` and `issues` (`NESTED_ROOT_COLLECTION`, `MISSING_PARENT`, `WRONG_PARENT`).
+  `derivedKeys` and `compositeSource` are only computed for a valid key. The dbx-cli `model-decode`, `get` and
+  `get-many` commands apply the same check and refuse invalid keys.
+- **`EnumInfoToolOutput`** is now `EnumInfoToolLookupOutput | EnumInfoToolListOutput`; `resolveEnumInfoOutput` still
+  returns the lookup shape (plus a `hint` on misses).
+- **`ModelGetToolInput.modelType`** is optional.
+
+### New
+- **Search paging**: `search` accepts `offset` and returns `nextOffset` while more matches remain.
+- **`model-get` without `modelType`**: each full key resolves its own model by collection path
+  (`ModelApiGetService.getModelIdentityForKey`), so keys of different models can be mixed in one call. A bare id
+  reports `MODEL_TYPE_REQUIRED` and an unknown path `UNKNOWN_MODEL_KEY`, per key.
+- **`enum-info` with no arguments** lists the registered enum names.
+- **`@dereekb/util`**: `jsDocInlineLinksToText()` and `firstSentence()`.
+
+### Rebuild
+- Regenerate `mcp.manifest.json` (`generate-mcp-manifest`): JSDoc `{@link X}` tags now render as plain text in every
+  `description`. Search summaries use the first sentence of a description rather than its first line.
+
 ## Migration to v14.17.x — compact (Stripe-like) MCP surface
 
 v14.17 changes the default tool surface of `@dereekb/firebase-server/mcp`. Instead of one tool per callModel
@@ -18,8 +170,8 @@ the compact tools only ever resolve methods the caller could see before.
   mode), `tools: { methodTools: true }`. The boot log prints one `MCP tool surface: ...` line describing what is listed.
 
 ### What changes for callers
-- **Tool name → method id.** A method is addressed by its id, `modelType.call[.specifier]` (`worker.create`,
-  `jobWorkerTimesheet.update.reopen`), or by its old tool name (`guestbook-create`), which stays an alias. Built-ins
+- **Tool name → method id.** A method is addressed by its id, `modelType.call[.specifier]` (`guestbook.create`,
+  `guestbook.update.subscribeToNotifications`), or by its old tool name (`guestbook-create`), which stays an alias. Built-ins
   keep their names as ids (`model-get`, `model-info`, `whoami`, `batch-execute`, ...). `cli-token` is the
   `<p>_cli_token` tool. A client calling an old tool name that is no longer listed gets an error naming the compact
   call to make instead.
