@@ -407,9 +407,10 @@ export class DocFormSelectionComponent implements OnInit {
       dbxForgeSearchableStringChipField({
         key: 'typeAndPickChips',
         label: 'Search And Pick Strings',
-        hint: 'This input can search for string, but also have an arbitrary value input.',
+        hint: 'This input can search for string, but also have an arbitrary value input. Backspace in the empty input removes the chips (backspaceRemovesChips).',
         props: {
           searchOnEmptyText: true,
+          backspaceRemovesChips: true,
           search: makeSearchForStringValue(this.searchFn$),
           displayForValue: DISPLAY_FOR_STRING_VALUE
         }
@@ -480,6 +481,40 @@ export class DocFormSelectionComponent implements OnInit {
           textInputValidator: isWebsiteUrlValidator({ requirePrefix: true, allowPorts: true }),
           search: () => of([]),
           displayForValue: (values) => of(values.map((v) => ({ ...v, label: v.value })))
+        }
+      }),
+      dbxForgeSearchableStringChipField({
+        key: 'suggestedChips',
+        label: 'Chips With Suggestions',
+        hint: 'Click a suggestion to add it. A suggestion can add several values at once, and hides once all of its values are picked. Shows a custom input preview while the input is empty.',
+        props: {
+          searchOnEmptyText: true,
+          search: makeSearchForStringValue(this.searchFn$),
+          displayForValue: DISPLAY_FOR_STRING_VALUE,
+          inputPreview: 'Add a tag...',
+          suggestions: [
+            { label: 'Urgent', value: 'urgent', icon: 'priority_high' },
+            { label: 'Follow Up', value: 'follow-up', icon: 'reply' },
+            { label: 'Starter Pack', sublabel: '(3)', value: ['onboarding', 'welcome', 'getting-started'], tooltip: 'Adds onboarding, welcome, and getting-started' }
+          ]
+        }
+      }),
+      dbxForgeSearchableStringChipField({
+        key: 'suggestedUrls',
+        label: 'URL Chips With Recommendations',
+        placeholder: 'https://example.com',
+        hint: 'Type a URL and press enter, or click a recommendation to add it. The input is on its own line and always shows its placeholder (fields without a placeholder show a "|" input preview), and uses a custom suggestions label.',
+        props: {
+          inputOnNewLine: true,
+          searchOnEmptyText: false,
+          textInputValidator: isWebsiteUrlValidator({ requirePrefix: true, allowPorts: true }),
+          search: () => of([]),
+          displayForValue: (values) => of(values.map((v) => ({ ...v, label: v.value }))),
+          suggestionsLabel: 'Recommended',
+          suggestions: [
+            { label: 'Example', value: 'https://example.com/callback', tooltip: 'https://example.com/callback' },
+            { label: 'Localhost', value: ['http://localhost:8080/callback', 'http://127.0.0.1:8080/callback'], tooltip: 'http://localhost:8080/callback\nhttp://127.0.0.1:8080/callback' }
+          ]
         }
       })
     ]

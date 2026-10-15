@@ -1,7 +1,7 @@
-import { Component, computed, effect, ElementRef, inject, input } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, input, signal } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule, type MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
-import { MatChipsModule, type MatChipInputEvent } from '@angular/material/chips';
+import { MatChipsModule, type MatChipInputEvent, type MatChipSelectionChange } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatOptionModule } from '@angular/material/core';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
@@ -17,7 +17,7 @@ import { AbstractForgeSearchableFieldDirective } from './searchable.field.direct
 import { createResolvedErrorsSignal, setupMetaTracking, shouldShowErrors } from '@ng-forge/dynamic-forms/integration';
 import { dbxForgeFieldDisabled } from '../../field.util';
 import { toggleDisableFormControl } from '../../../../form/form';
-import { type DbxForgeSearchableChipFieldProps } from './searchable-chip.field';
+import { DEFAULT_DBX_FORGE_SEARCHABLE_CHIP_FIELD_INPUT_PREVIEW, DEFAULT_DBX_FORGE_SEARCHABLE_CHIP_FIELD_SUGGESTIONS_LABEL, type DbxForgeSearchableChipFieldProps, type DbxForgeSearchableChipFieldSuggestion } from './searchable-chip.field';
 import { completeOnDestroy, cleanSubscription } from '@dereekb/dbx-core';
 
 /**
@@ -67,6 +67,60 @@ export class DbxForgeSearchableChipFieldComponent<T = unknown, M = unknown, H ex
 
   readonly displayValuesSignal = toSignal(this.displayValues$, { initialValue: [] as ConfiguredSearchableValueFieldDisplayValue<T, M>[] });
 
+  // Input
+  private readonly _inputFocusedSignal = signal(false);
+
+  readonly inputOnNewLineSignal = computed(() => this.props()?.inputOnNewLine ?? false);
+
+  readonly inputPreviewSignal = computed(() => {
+    const inputOnNewLine = this.inputOnNewLineSignal();
+    return this.props()?.inputPreview ?? (inputOnNewLine ? DEFAULT_DBX_FORGE_SEARCHABLE_CHIP_FIELD_INPUT_PREVIEW : undefined);
+  });
+
+  /**
+   * The input's placeholder: a configured placeholder always wins. Otherwise the input preview is shown while unfocused, and the default search placeholder while focused.
+   */
+  readonly inputPlaceholderSignal = computed(() => {
+    const inputFocused = this._inputFocusedSignal();
+    const placeholderValue = this.placeholder();
+    const inputPreview = this.inputPreviewSignal();
+    const searchInputPlaceholder = this.searchInputPlaceholderSignal();
+    const placeholder = typeof placeholderValue === 'string' ? placeholderValue : undefined;
+    let result: string;
+
+    if (placeholder) {
+      result = placeholder;
+    } else if (inputPreview && !inputFocused) {
+      result = inputPreview;
+    } else {
+      result = searchInputPlaceholder;
+    }
+
+    return result;
+  });
+
+  // Suggestions
+  readonly valuesSignal = toSignal(this.values$, { initialValue: [] as T[] });
+
+  readonly suggestionsLabelSignal = computed(() => this.props()?.suggestionsLabel ?? DEFAULT_DBX_FORGE_SEARCHABLE_CHIP_FIELD_SUGGESTIONS_LABEL);
+
+  /**
+   * Suggestions that still have at least one value that is not yet selected. Empty while the field is disabled.
+   */
+  readonly visibleSuggestionsSignal = computed(() => {
+    const values = this.valuesSignal();
+    const suggestions = this.props()?.suggestions;
+    let result: DbxForgeSearchableChipFieldSuggestion<T>[] = [];
+
+    if (suggestions?.length && !this.isDisabled()) {
+      const hashForValue = this._hashForValue();
+      const selectedHashes = new Set(values.map(hashForValue));
+      result = suggestions.filter((suggestion) => convertMaybeToArray(suggestion.value).some((x) => !selectedHashes.has(hashForValue(x))));
+    }
+
+    return result;
+  });
+
   // Disabled state propagation
   private readonly _disabledEffect = effect(() => {
     toggleDisableFormControl(this.inputCtrl, this.isDisabled());
@@ -80,9 +134,26 @@ export class DbxForgeSearchableChipFieldComponent<T = unknown, M = unknown, H ex
     this._valuesSubject.next(values);
   });
 
+  /**
+   * Capture-phase keydown listener that keeps Backspace from reaching Angular Material's chip input and chip row handlers, unless `backspaceRemovesChips` is enabled.
+   *
+   * @param event - The keydown event.
+   */
+  private readonly _backspaceKeydownCaptureListener = (event: KeyboardEvent) => {
+    if (event.key === 'Backspace' && !this.props()?.backspaceRemovesChips) {
+      const target = event.target as Maybe<HTMLElement>;
+      const isEmptyChipInput = target instanceof HTMLInputElement && target.classList.contains('mat-mdc-chip-input') && !target.value;
+
+      if (isEmptyChipInput || target?.closest('mat-chip-row')) {
+        event.stopPropagation();
+      }
+    }
+  };
+
   constructor() {
     super();
     setupMetaTracking(this.elementRef, this.meta, { selector: 'input' });
+    this.elementRef.nativeElement.addEventListener('keydown', this._backspaceKeydownCaptureListener, true);
   }
 
   get inputErrorMessage(): Maybe<string> {
@@ -121,6 +192,7 @@ export class DbxForgeSearchableChipFieldComponent<T = unknown, M = unknown, H ex
   }
 
   protected _onDestroy(): void {
+    this.elementRef.nativeElement.removeEventListener('keydown', this._backspaceKeydownCaptureListener, true);
     this._valuesSubject.complete();
     this._blur.complete();
     this._blurSub.destroy();
@@ -132,6 +204,30 @@ export class DbxForgeSearchableChipFieldComponent<T = unknown, M = unknown, H ex
 
   removeWithDisplayValue(displayValue: SearchableValueFieldDisplayValue<T>): void {
     this._removeValue(displayValue.value);
+  }
+
+  /**
+   * Handles a suggestion chip being picked by the user (click, Enter, or Space).
+   *
+   * The chip is immediately deselected so it never renders as a selected filter chip; the suggestion hides itself once its values are added.
+   *
+   * @param event - The chip selection change event.
+   * @param suggestion - The suggestion that was picked.
+   */
+  suggestionSelectionChange(event: MatChipSelectionChange, suggestion: DbxForgeSearchableChipFieldSuggestion<T>): void {
+    if (event.isUserInput) {
+      event.source.deselect();
+      this.addSuggestion(suggestion);
+    }
+  }
+
+  /**
+   * Adds every value of the input suggestion to the field.
+   *
+   * @param suggestion - The suggestion whose values to add.
+   */
+  addSuggestion(suggestion: DbxForgeSearchableChipFieldSuggestion<T>): void {
+    this._setValues([...this._valuesSubject.getValue(), ...convertMaybeToArray(suggestion.value)]);
   }
 
   addChip(event: MatChipInputEvent): void {
@@ -149,7 +245,12 @@ export class DbxForgeSearchableChipFieldComponent<T = unknown, M = unknown, H ex
     return true;
   }
 
+  onFocus(): void {
+    this._inputFocusedSignal.set(true);
+  }
+
   onBlur(): void {
+    this._inputFocusedSignal.set(false);
     this._blur.next();
   }
 

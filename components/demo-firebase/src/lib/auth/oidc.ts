@@ -10,6 +10,7 @@ import {
   type FirestoreSessionOidcScope,
   type OidcProviderProfile,
   type OidcProviderProfileDetails,
+  type OidcRedirectUriSuggestion,
   oidcProviderProfileDetails,
   type OidcScopeDetails,
   type OidcTokenEndpointAuthMethod,
@@ -238,3 +239,17 @@ export const DEMO_OIDC_PROVIDER_PROFILE_DETAILS: OidcProviderProfileDetails[] = 
  * All available OIDC token endpoint auth methods for the demo app, suitable for use in auth method picker fields.
  */
 export const DEMO_OIDC_TOKEN_ENDPOINT_AUTH_METHODS: OidcTokenEndpointAuthMethod[] = ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHODS;
+
+// MARK: Redirect URIs
+/**
+ * App-specific redirect URI suggestions shown on the demo's OAuth client form, after the known MCP client suggestions.
+ *
+ * Suggests the MCP Inspector's local callbacks for testing the demo's MCP server during development.
+ */
+export const DEMO_OIDC_REDIRECT_URI_SUGGESTIONS: OidcRedirectUriSuggestion[] = [
+  {
+    label: 'MCP Inspector',
+    redirectUris: ['http://localhost:6274/oauth/callback', 'http://localhost:6274/oauth/callback/debug'],
+    description: 'Local MCP Inspector (npx @modelcontextprotocol/inspector).'
+  }
+];

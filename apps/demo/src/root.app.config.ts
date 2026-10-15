@@ -53,6 +53,7 @@ import {
   DEMO_NOTIFICATION_TEXT_MESSAGE_DISCLOSURE,
   DEMO_OIDC_AVAILABLE_SCOPES,
   DEMO_OIDC_PROVIDER_PROFILE_DETAILS,
+  DEMO_OIDC_REDIRECT_URI_SUGGESTIONS,
   DEMO_OIDC_TOKEN_ENDPOINT_AUTH_METHODS,
   DEMO_APP_OAUTH_INTERACTION_PATH,
   DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER_TYPE,
@@ -469,6 +470,9 @@ export const APP_CONFIG: ApplicationConfig = {
         availableProviderProfiles: DEMO_OIDC_PROVIDER_PROFILE_DETAILS,
         tokenEndpointAuthMethods: DEMO_OIDC_TOKEN_ENDPOINT_AUTH_METHODS,
         oauthInteractionRoute: DEMO_APP_OAUTH_INTERACTION_PATH,
+        // Suggest the Claude, ChatGPT, and Grok connector callbacks on the client form's redirect URIs field.
+        showMcpClientRedirectUriSuggestions: true,
+        redirectUriSuggestions: DEMO_OIDC_REDIRECT_URI_SUGGESTIONS,
         // Production deploys the OIDC issuer at api.components.dereekb.com so cookies are set
         // on the API host directly, bypassing the Firebase Hosting cookie strip. Local stays
         // undefined and OIDC paths remain relative.
