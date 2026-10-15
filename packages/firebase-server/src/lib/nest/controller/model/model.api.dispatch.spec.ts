@@ -32,8 +32,8 @@ function oidcAuth(scope: string | undefined): any {
   return scope === undefined ? undefined : { uid: 'user-1', oidcValidatedToken: { sub: 'user-1', scope } };
 }
 
-function createParams(modelType = 'guestbook'): OnCallTypedModelParams {
-  return { call: 'create', modelType, specifier: undefined, data: {} } as OnCallTypedModelParams;
+function createParams(modelType = 'guestbook', specifier?: string): OnCallTypedModelParams {
+  return { call: 'create', modelType, specifier, data: {} } as OnCallTypedModelParams;
 }
 
 async function codeOfRejected(fn: () => Promise<unknown>): Promise<string | undefined> {
@@ -87,6 +87,21 @@ describe('ModelApiCallModelDispatchService.dispatch() — OIDC scope enforcement
     // holds both → dispatches
     const result = await service.dispatch(createParams(), oidcAuth('openid model.create lms'), rawRequest);
     expect(result).toBe(DISPATCH_SENTINEL);
+    expect(callModelFn).toHaveBeenCalledTimes(1);
+  });
+
+  it("enforces a direct handler's requiredScope whatever specifier the request carries", async () => {
+    const { service, callModelFn } = buildService({ requiredScope: 'lms' });
+
+    // a stray or default specifier on the direct handler still resolves its `_` entry → rejected, no dispatch
+    for (const specifier of ['bogus', '_']) {
+      expect(await codeOfRejected(() => service.dispatch(createParams('guestbook', specifier), oidcAuth('openid model.create'), rawRequest))).toBe(CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE);
+    }
+
+    expect(callModelFn).not.toHaveBeenCalled();
+
+    // holds both → gets past the gate (the real dispatch then rejects the stray specifier)
+    await expect(service.dispatch(createParams('guestbook', 'bogus'), oidcAuth('openid model.create lms'), rawRequest)).resolves.toBe(DISPATCH_SENTINEL);
     expect(callModelFn).toHaveBeenCalledTimes(1);
   });
 

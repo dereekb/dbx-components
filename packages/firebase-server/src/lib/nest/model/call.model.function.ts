@@ -1,5 +1,5 @@
 import { type Configurable, type PromiseOrValue, serverError } from '@dereekb/util';
-import { type FirestoreModelIdentity, type FirestoreModelType, type FirestoreModelTypes, type ModelFirebaseCrudFunctionSpecifierRef, type OnCallFunctionType, type OnCallTypedModelParams } from '@dereekb/firebase';
+import { type FirestoreModelIdentity, type FirestoreModelType, type FirestoreModelTypes, type ModelFirebaseCrudFunctionSpecifierRef, type OnCallFunctionType, type OnCallTypedModelParams, DEFAULT_MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER } from '@dereekb/firebase';
 import { badRequestError } from '../../function/error';
 import { assertRequestRequiresAuthForFunction, type OnCallWithAuthAwareNestContext, type OnCallWithAuthAwareNestRequireAuthRef, type OnCallWithNestContext, type OnCallWithNestContextRequest } from '../function/call';
 import { type AssertModelCrudRequestFunctionContextCrudType, type AssertModelCrudRequestFunction } from './crud.assert.function';
@@ -11,6 +11,7 @@ import { callWithAnalytics } from './analytics.emit';
 import { ModuleRef } from '@nestjs/core';
 import { DEFAULT_ON_CALL_MODEL_INPUT_VALIDATION_MODE, type OnCallModelInputValidationMode } from './input.validator';
 import { type OnCallModelInputValidationRequestRef, validateOnCallModelFunctionInput } from './input.validation';
+import { type OnCallSpecifierHandlerRef, unknownModelCrudFunctionSpecifierError } from './specifier.function';
 
 // MARK: Function
 /**
@@ -198,12 +199,14 @@ export function onCallModelUnknownCallTypeError(call: OnCallFunctionType) {
  *
  * Each handler receives the NestContext request and an optional specifier, and may
  * declare whether it requires authentication via {@link OnCallWithAuthAwareNestRequireAuthRef}.
+ * A direct handler answers only the default specifier; an onCallSpecifierHandler (marked by
+ * {@link OnCallSpecifierHandlerRef}) routes the specifier itself.
  *
  * @typeParam N - The NestJS context type.
  * @typeParam T - The Firestore model identity constraining which model type keys are valid.
  */
 export type OnCallWithCallTypeModelMap<N, T extends FirestoreModelIdentity = FirestoreModelIdentity> = {
-  readonly [K in FirestoreModelTypes<T>]?: ((request: NestContextCallableRequest<N, any> & ModelFirebaseCrudFunctionSpecifierRef) => PromiseOrValue<any>) & OnCallWithAuthAwareNestRequireAuthRef;
+  readonly [K in FirestoreModelTypes<T>]?: ((request: NestContextCallableRequest<N, any> & ModelFirebaseCrudFunctionSpecifierRef) => PromiseOrValue<any>) & OnCallWithAuthAwareNestRequireAuthRef & OnCallSpecifierHandlerRef;
 };
 
 /**
@@ -239,7 +242,8 @@ export interface OnCallWithCallTypeModelConfig<N> {
  * Internal factory used by the CRUD-specific wrappers ({@link onCallCreateModel}, {@link onCallReadModel}, etc.).
  *
  * Dispatches to the correct model-type handler from the map, enforces auth requirements,
- * runs pre-assertions, checks the request data against the handler's declared `inputType`
+ * runs pre-assertions, rejects a non-default specifier sent to a direct handler with an UNKNOWN_SPECIFIER_ERROR
+ * (see {@link unknownModelCrudFunctionSpecifierError}), checks the request data against the handler's declared `inputType`
  * (see {@link validateOnCallModelFunctionInput}), and aggregates API details from all handlers for MCP introspection.
  *
  * @param map - Maps model type strings to their handler functions.
@@ -259,6 +263,12 @@ export function _onCallWithCallTypeFunction<N>(map: OnCallWithCallTypeModelMap<N
       const specifier = request.data.specifier;
       assertRequestRequiresAuthForFunction(crudFn, request);
       preAssert({ call: callType, request, modelType, specifier });
+
+      // A direct handler answers only the default specifier. Running it for any other value would let a stray specifier
+      // dodge each check keyed on the specifier, such as the handler's per-function requiredScope.
+      if (crudFn._isSpecifierHandler !== true && specifier != null && specifier !== DEFAULT_MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER) {
+        throw unknownModelCrudFunctionSpecifierError(specifier);
+      }
 
       // Specifier handlers carry aggregated details and are checked one level down, by onCallSpecifierHandler
       const data = validateOnCallModelFunctionInput({ handler: crudFn as OnCallApiDetailsRef, data: request.data.data, request });

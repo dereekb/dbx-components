@@ -90,12 +90,24 @@ describe('onCallModel() input validation', () => {
       expect(handlerImpl.mock.calls[0][0].data).toBe(data);
     });
 
-    it('should still check a direct handler called with a bogus specifier', async () => {
+    it('should reject a stray specifier on a direct handler before validating', async () => {
       const { callModel, handlerImpl } = buildCallModel();
-      const error = await callAndCatch(callModel, buildRequest({ call: 'create', modelType: 'assessment', specifier: 'bogus', data: { m: 'bogus' } }));
 
-      expect(serverErrorCode(error)).toBe(FIREBASE_SERVER_VALIDATION_ERROR_CODE);
+      for (const specifier of ['bogus', '']) {
+        const error = await callAndCatch(callModel, buildRequest({ call: 'create', modelType: 'assessment', specifier, data: { m: 'bogus' } }));
+        expect(serverErrorCode(error)).toBe('UNKNOWN_SPECIFIER_ERROR');
+      }
+
       expect(handlerImpl).not.toHaveBeenCalled();
+    });
+
+    it('should run a direct handler for the default specifier', async () => {
+      const { callModel, handlerImpl } = buildCallModel();
+
+      await callModel(buildRequest({ call: 'create', modelType: 'assessment', specifier: '_', data: { m: 'demo' } }));
+      await callModel(buildRequest({ call: 'create', modelType: 'assessment', specifier: null as any, data: { m: 'demo' } }));
+
+      expect(handlerImpl).toHaveBeenCalledTimes(2);
     });
 
     it('should hand a parse handler the parsed output', async () => {
@@ -122,6 +134,23 @@ describe('onCallModel() input validation', () => {
 
       expect((error as Error).message).toBe('preAssert ran');
     });
+
+    it('should assert auth before rejecting a stray specifier', async () => {
+      const { callModel } = buildCallModel();
+      const error = await callAndCatch(callModel, buildRequest({ call: 'create', modelType: 'assessment', specifier: 'bogus', data: { m: 'demo' } }, null));
+      expect(serverErrorCode(error)).toBe(DBX_FIREBASE_SERVER_NO_AUTH_ERROR_CODE);
+    });
+
+    it('should run the CRUD preAssert before rejecting a stray specifier', async () => {
+      const preAssert = vi.fn(() => {
+        throw new Error('preAssert ran');
+      });
+
+      const { callModel } = buildCallModel(undefined, undefined, { preAssert });
+      const error = await callAndCatch(callModel, buildRequest({ call: 'create', modelType: 'assessment', specifier: 'bogus', data: { m: 'demo' } }));
+
+      expect((error as Error).message).toBe('preAssert ran');
+    });
   });
 
   describe('specifiers', () => {
@@ -139,6 +168,26 @@ describe('onCallModel() input validation', () => {
       const { callModel } = buildCallModel();
       const error = await callAndCatch(callModel, buildRequest({ call: 'update', modelType: 'profile', data: { m: 'bogus' } }));
       expect(serverErrorCode(error)).toBe(FIREBASE_SERVER_VALIDATION_ERROR_CODE);
+    });
+
+    it('should reject a specifier the specifier handler does not map', async () => {
+      const { callModel, handlerImpl } = buildCallModel();
+      const error = await callAndCatch(callModel, buildRequest({ call: 'update', modelType: 'profile', specifier: 'bogus', data: { m: 'demo' } }));
+
+      expect(serverErrorCode(error)).toBe('UNKNOWN_SPECIFIER_ERROR');
+      expect(handlerImpl).not.toHaveBeenCalled();
+    });
+
+    it('should route a named specifier on a specifier handler without api details', async () => {
+      const handlerImpl = vi.fn(async (request: any) => request.data);
+      const updateNamed = onCallSpecifierHandler({ named: (request: any) => handlerImpl(request) });
+      const callModel = onCallModel({ update: onCallUpdateModel({ plain: updateNamed } as any) });
+
+      await callModel(buildRequest({ call: 'update', modelType: 'plain', specifier: 'named', data: {} }));
+
+      expect(updateNamed._isSpecifierHandler).toBe(true);
+      expect(updateNamed._apiDetails).toBeUndefined();
+      expect(handlerImpl).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -176,6 +225,16 @@ describe('onCallModel() input validation', () => {
       const error = await callAndCatch(callModel, buildRequest({ call: 'create', modelType: 'assessment', data: { m: 'bogus' } }));
 
       expect(serverErrorCode(error)).toBe(FIREBASE_SERVER_VALIDATION_ERROR_CODE);
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(onError.mock.calls[0][2]).toBe(error);
+    });
+
+    it('should fire onError for a stray specifier on a direct handler', async () => {
+      const onError = vi.fn();
+      const { callModel } = buildCallModel(undefined, undefined, { onError });
+      const error = await callAndCatch(callModel, buildRequest({ call: 'create', modelType: 'assessment', specifier: 'bogus', data: { m: 'demo' } }));
+
+      expect(serverErrorCode(error)).toBe('UNKNOWN_SPECIFIER_ERROR');
       expect(onError).toHaveBeenCalledTimes(1);
       expect(onError.mock.calls[0][2]).toBe(error);
     });

@@ -41,6 +41,16 @@ export type OnCallSpecifierHandlerFunctionWithOptionalAuth<N, I = unknown, O = u
  */
 export type OnCallSpecifierHandlerFunction<N, I = unknown, O = void> = (OnCallSpecifierHandlerFunctionWithAuth<N, I, O> | OnCallSpecifierHandlerFunctionWithOptionalAuth<N, I, O>) & OnCallWithAuthAwareNestRequireAuthRef;
 
+/**
+ * Ref for a model CRUD handler that routes the request's specifier itself.
+ *
+ * Set by {@link onCallSpecifierHandler}. The CRUD dispatch hands any specifier to a handler that carries it, and rejects
+ * a non-default specifier sent to one that does not (a direct handler) with an UNKNOWN_SPECIFIER_ERROR.
+ */
+export interface OnCallSpecifierHandlerRef {
+  readonly _isSpecifierHandler?: true;
+}
+
 // TODO(FUTURE): Add typing magic to ensure all expected function keys are present here.
 
 /**
@@ -85,7 +95,7 @@ export type OnCallSpecifierHandlerConfig<N> = {
  * });
  * ```
  */
-export function onCallSpecifierHandler<N, I = any, O = any>(config: OnCallSpecifierHandlerConfig<N>): OnCallWithNestContext<N, I, O> & OnCallWithAuthAwareNestRequireAuthRef & OnCallApiDetailsRef {
+export function onCallSpecifierHandler<N, I = any, O = any>(config: OnCallSpecifierHandlerConfig<N>): OnCallWithNestContext<N, I, O> & OnCallWithAuthAwareNestRequireAuthRef & OnCallApiDetailsRef & OnCallSpecifierHandlerRef {
   const map = objectToMap(config);
 
   const fn = (request: OnCallSpecifierHandlerNestContextRequestWithOptionalAuth<N, I> & OnCallModelInputValidationRequestRef) => {
@@ -103,6 +113,7 @@ export function onCallSpecifierHandler<N, I = any, O = any>(config: OnCallSpecif
   };
 
   (fn as Configurable<OnCallWithAuthAwareNestRequireAuthRef>)._requireAuth = false;
+  (fn as Configurable<OnCallSpecifierHandlerRef>)._isSpecifierHandler = true;
 
   // Aggregate _apiDetails from handler functions in the config
   const specifierApiDetails = aggregateSpecifierApiDetails(config as { readonly [key: string]: Maybe<OnCallApiDetailsRef> });
@@ -117,6 +128,9 @@ export function onCallSpecifierHandler<N, I = any, O = any>(config: OnCallSpecif
 /**
  * Creates a bad-request error indicating the provided specifier is not recognized
  * by the current model CRUD handler.
+ *
+ * Thrown by {@link onCallSpecifierHandler} for a key it does not map, and by the CRUD dispatch for a non-default
+ * specifier sent to a direct (non-specifier) handler.
  *
  * @param specifier - The unrecognized specifier string.
  * @returns A bad-request error with UNKNOWN_SPECIFIER_ERROR code.

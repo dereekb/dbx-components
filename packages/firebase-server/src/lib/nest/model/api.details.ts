@@ -1,5 +1,5 @@
 import { type AuthRole, type Configurable, type Maybe, type PromiseOrValue } from '@dereekb/util';
-import { type OnCallFunctionType, type OnCallTypedModelParams, type FirestoreModelType, type ModelFirebaseCrudFunctionSpecifier, type OidcScopeTerm } from '@dereekb/firebase';
+import { type OnCallFunctionType, type OnCallTypedModelParams, type FirestoreModelType, type ModelFirebaseCrudFunctionSpecifier, type OidcScopeTerm, DEFAULT_MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER } from '@dereekb/firebase';
 import { type FirebaseServerAuthData } from '../controller/auth.context.server';
 import { type OnCallModelFunctionAnalyticsDetails } from './analytics.details';
 import { isOnCallModelInputValidator, type OnCallModelFunctionInputValidation } from './input.validator';
@@ -432,6 +432,9 @@ export interface OnCallModelFunctionApiDetailsRef {
  * Maps specifier keys (e.g., '_', 'username', 'fromUpload') to handler-level details.
  */
 export interface OnCallModelTypeApiDetails {
+  /**
+   * True for an onCallSpecifierHandler map. False for a direct handler wrapped under `_`, which answers only the default specifier.
+   */
   readonly isSpecifier: boolean;
   readonly specifiers: { readonly [key: string]: OnCallModelFunctionApiDetails | undefined };
 }
@@ -798,12 +801,40 @@ export function getModelApiDetails(callModelFn: Maybe<OnCallApiDetailsRef>): May
   return result;
 }
 
+// MARK: Handler Resolution
+/**
+ * Resolves the handler-level details for a call coordinate from the aggregated _apiDetails tree.
+ *
+ * A direct (non-specifier) handler resolves to its `_` entry whatever specifier the request carries: the dispatch
+ * rejects a non-default specifier sent to it, and reading `_` keeps every lookup at least as strict as the handler.
+ * A specifier handler resolves only the key it maps (an omitted specifier is `_`).
+ *
+ * @param apiDetails - The top-level aggregated API details.
+ * @param call - The CRUD operation type to look up.
+ * @param modelType - The Firestore model type to look up.
+ * @param specifier - Optional specifier key for variant handlers.
+ * @returns The handler-level details for the resolved handler, or undefined.
+ */
+// eslint-disable-next-line @typescript-eslint/max-params
+function resolveHandlerApiDetailsFromApiDetails(apiDetails: OnCallModelApiDetails, call: OnCallFunctionType, modelType: FirestoreModelType, specifier?: Maybe<ModelFirebaseCrudFunctionSpecifier>): Maybe<OnCallModelFunctionApiDetails> {
+  const modelDetails = apiDetails[call]?.modelTypes[modelType];
+  let result: Maybe<OnCallModelFunctionApiDetails>;
+
+  if (modelDetails) {
+    const key = modelDetails.isSpecifier ? (specifier ?? DEFAULT_MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER) : DEFAULT_MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER;
+    result = modelDetails.specifiers[key];
+  }
+
+  return result;
+}
+
 // MARK: Analytics Resolution
 /**
  * Resolves leaf-level analytics details from the aggregated _apiDetails tree.
  *
  * Walks: call -> modelType -> specifier (if specifier-level), then reads the `analytics`
- * field from the handler-level {@link OnCallModelFunctionApiDetails}.
+ * field from the handler-level {@link OnCallModelFunctionApiDetails}. A direct (non-specifier)
+ * handler resolves from its `_` entry whatever specifier the request carries.
  *
  * @param apiDetails - The top-level aggregated API details.
  * @param call - The CRUD operation type to look up.
@@ -813,17 +844,7 @@ export function getModelApiDetails(callModelFn: Maybe<OnCallApiDetailsRef>): May
  */
 // eslint-disable-next-line @typescript-eslint/max-params
 export function resolveAnalyticsFromApiDetails(apiDetails: OnCallModelApiDetails, call: OnCallFunctionType, modelType: FirestoreModelType, specifier?: ModelFirebaseCrudFunctionSpecifier): Maybe<OnCallModelFunctionAnalyticsDetails> {
-  const modelDetails = apiDetails[call]?.modelTypes[modelType];
-  let result: Maybe<OnCallModelFunctionAnalyticsDetails>;
-
-  if (modelDetails) {
-    // All entries are now OnCallModelTypeApiDetails. For non-specifier handlers,
-    // the details are under the `_` key.
-    const key = specifier ?? '_';
-    result = modelDetails.specifiers[key]?.analytics;
-  }
-
-  return result;
+  return resolveHandlerApiDetailsFromApiDetails(apiDetails, call, modelType, specifier)?.analytics;
 }
 
 // MARK: Required Scope Resolution
@@ -831,8 +852,9 @@ export function resolveAnalyticsFromApiDetails(apiDetails: OnCallModelApiDetails
  * Resolves the leaf-level per-function required OIDC scope from the aggregated _apiDetails tree.
  *
  * Walks: call -> modelType -> specifier (if specifier-level), then reads the `requiredScope`
- * field from the handler-level {@link OnCallModelFunctionApiDetails}. Mirrors
- * {@link resolveAnalyticsFromApiDetails}.
+ * field from the handler-level {@link OnCallModelFunctionApiDetails}. A direct (non-specifier)
+ * handler resolves from its `_` entry whatever specifier the request carries, so a stray
+ * specifier cannot skip the handler's scope. Mirrors {@link resolveAnalyticsFromApiDetails}.
  *
  * @param apiDetails - The top-level aggregated API details.
  * @param call - The CRUD operation type to look up.
@@ -842,13 +864,5 @@ export function resolveAnalyticsFromApiDetails(apiDetails: OnCallModelApiDetails
  */
 // eslint-disable-next-line @typescript-eslint/max-params
 export function resolveRequiredScopeFromApiDetails(apiDetails: OnCallModelApiDetails, call: OnCallFunctionType, modelType: FirestoreModelType, specifier?: ModelFirebaseCrudFunctionSpecifier): Maybe<OidcScopeTerm> {
-  const modelDetails = apiDetails[call]?.modelTypes[modelType];
-  let result: Maybe<OidcScopeTerm>;
-
-  if (modelDetails) {
-    const key = specifier ?? '_';
-    result = modelDetails.specifiers[key]?.requiredScope;
-  }
-
-  return result;
+  return resolveHandlerApiDetailsFromApiDetails(apiDetails, call, modelType, specifier)?.requiredScope;
 }

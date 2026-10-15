@@ -1,3 +1,27 @@
+## Migration to v14.18.x — a direct callModel handler rejects a stray specifier
+
+A handler registered straight on a CRUD map (not through `onCallSpecifierHandler`) used to run for any `specifier` a
+request carried, while its per-function `requiredScope` and `analytics` were looked up by that specifier and came back
+empty. `POST /api/model/<model>/create/x` reached the handler without its `requiredScope`.
+
+### What changed
+- **A direct handler answers only the default specifier**: omitted, `null` or `'_'`. Any other value throws the 400
+  `UNKNOWN_SPECIFIER_ERROR` that `onCallSpecifierHandler` throws for a key it does not map. The check runs after the auth
+  check and the CRUD `preAssert`, before input validation.
+- **`resolveRequiredScopeFromApiDetails()` / `resolveAnalyticsFromApiDetails()` read a direct handler's `_` entry
+  whatever specifier the request carries**, so the `/api/model` + MCP scope gate, the `onCallModel` `preAssert` context and
+  analytics always see the handler's own `requiredScope` / `analytics`.
+- **`onCallSpecifierHandler()` marks its function with `_isSpecifierHandler: true`** (`OnCallSpecifierHandlerRef`). The
+  dispatch uses it, not `_apiDetails`, to tell the two kinds apart.
+
+### Check
+- A client that sends a specifier to a direct handler now gets `UNKNOWN_SPECIFIER_ERROR`. `dbx_model_api_validate_app`
+  reports a declared specifier the server map lacks as `MISSING_HANDLER`; wire it through `onCallSpecifierHandler` or
+  drop it from the client.
+- A hand-rolled handler that routes `request.specifier` itself, or a wrapper around an `onCallSpecifierHandler`, must be
+  built with `onCallSpecifierHandler` or carry `_isSpecifierHandler: true`.
+- A `preAssert` still sees the specifier as sent, including `'_'` and stray values the dispatch then rejects.
+
 ## Migration to v14.18.x — callModel params are validated against their `inputType`
 
 A handler's declared `withApiDetails({ inputType })` is now a guard, not only MCP metadata. The callModel dispatch

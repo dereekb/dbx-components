@@ -90,6 +90,41 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
     });
   });
 
+  describe('stray specifiers on direct handlers', () => {
+    const auth = { uid: 'stray-specifier-test-user', token: {} } as any;
+
+    function buildController() {
+      const dispatchService = new ModelApiCallModelDispatchService({ callModelFn: demoCallModelFn, makeNestContext: mapDemoApiNestContext }, f.instance.nest);
+      return new ModelApiController(dispatchService, {} as ModelApiGetService);
+    }
+
+    async function dispatchAndCatch(path: string, body: unknown): Promise<unknown> {
+      const req = _mockRequest('POST', auth, { path });
+      req.body = body;
+      return buildController()
+        .handleDispatchRequest(req)
+        .then(
+          () => undefined,
+          (e: unknown) => e
+        );
+    }
+
+    it('should reject a stray specifier on the direct guestbook create handler with UNKNOWN_SPECIFIER_ERROR', async () => {
+      const error = await dispatchAndCatch('guestbook/create/bogus', { name: 'stray' });
+
+      expect(error).toBeInstanceOf(HttpException);
+      expect((error as HttpException).getStatus()).toBe(400);
+      expect(((error as HttpException).getResponse() as { code?: string }).code).toBe('UNKNOWN_SPECIFIER_ERROR');
+    });
+
+    it('should pass the default specifier through to the handler inputType check', async () => {
+      const error = await dispatchAndCatch('guestbook/create', { name: 5 });
+
+      expect(error).toBeInstanceOf(HttpException);
+      expect(((error as HttpException).getResponse() as { code?: string }).code).toBe(FIREBASE_SERVER_VALIDATION_ERROR_CODE);
+    });
+  });
+
   describe('ModelApiController', () => {
     let controller: ModelApiController;
     let mockDispatchService: ModelApiCallModelDispatchService;

@@ -33,7 +33,11 @@ export interface AssertModelCrudRequestFunctionContext<N, I = unknown> {
    */
   readonly modelType: FirestoreModelType;
   /**
-   * The optional sub-operation specifier (e.g., 'username', 'fromUpload').
+   * The optional sub-operation specifier (e.g., 'username', 'fromUpload'), as the request sent it.
+   *
+   * Omitted and `'_'` both mean the default handler. The pre-assertion runs before the dispatch rejects an
+   * unknown specifier, so it can see a value no handler answers. Don't read a truthy `specifier` as
+   * "a specifier handler was targeted".
    */
   readonly specifier: Maybe<string>;
   /**
@@ -42,6 +46,7 @@ export interface AssertModelCrudRequestFunctionContext<N, I = unknown> {
    * A single scope string, or a `readonly` array as an OR-group (see {@link OidcScopeTerm}). Resolved
    * from the handler's `_apiDetails` at dispatch so the model-api scope gate (`assertModelApiOidcScope`)
    * can enforce it as the finest group term (AND-ed with the per-verb `model.<call>` scope).
+   * For a direct (non-specifier) handler it is resolved from the handler's `_` entry whatever the specifier.
    * `undefined` when the handler declares no extra scope.
    */
   readonly requiredScope?: Maybe<OidcScopeTerm>;
