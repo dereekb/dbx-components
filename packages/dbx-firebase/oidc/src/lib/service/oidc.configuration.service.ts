@@ -1,7 +1,7 @@
 import { Injectable, inject, type Type } from '@angular/core';
 import { type SegueRefOrSegueRefRouterLink } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
-import { type OidcProviderProfileDetails, type OidcScopeDetails, type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
+import { KNOWN_MCP_CLIENT_OIDC_REDIRECT_URI_SUGGESTIONS, type OidcProviderProfileDetails, type OidcRedirectUriSuggestion, type OidcScopeDetails, type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
 import { type AbstractDbxFirebaseOAuthConsentScopeViewComponent } from '../interaction/components/oauth.consent.scope.view.component';
 
 export const DEFAULT_OIDC_AUTHORIZATION_ENDPOINT_PATH = '/oidc/auth';
@@ -58,6 +58,17 @@ export abstract class DbxFirebaseOidcConfig {
    */
   readonly tokenEndpointAuthMethods?: Maybe<OidcTokenEndpointAuthMethod[]>;
   /**
+   * Whether the client form suggests the redirect URIs of well-known MCP clients (Claude, ChatGPT, Grok, Cursor, and Grok Bot).
+   *
+   * When true, {@link KNOWN_MCP_CLIENT_OIDC_REDIRECT_URI_SUGGESTIONS} are shown as suggestion chips on the redirect URIs field, ahead of
+   * any {@link redirectUriSuggestions}. False by default.
+   */
+  readonly showMcpClientRedirectUriSuggestions?: Maybe<boolean>;
+  /**
+   * Additional redirect URI suggestions shown as suggestion chips on the client form's redirect URIs field.
+   */
+  readonly redirectUriSuggestions?: Maybe<OidcRedirectUriSuggestion[]>;
+  /**
    * Frontend route ref for the OAuth interaction pages (login/consent).
    *
    * When provided, this route is registered with {@link DbxAppAuthRouterService} as an
@@ -106,6 +117,16 @@ export class DbxFirebaseOidcConfigService {
 
   get tokenEndpointAuthMethods(): OidcTokenEndpointAuthMethod[] {
     return this.config.tokenEndpointAuthMethods ?? DEFAULT_OIDC_TOKEN_ENDPOINT_AUTH_METHODS;
+  }
+
+  /**
+   * Redirect URI suggestions for the client form, combining the known MCP client suggestions (when enabled) with the app's own suggestions.
+   *
+   * @returns The redirect URI suggestions to show, in display order.
+   */
+  get redirectUriSuggestions(): OidcRedirectUriSuggestion[] {
+    const mcpClientSuggestions = this.config.showMcpClientRedirectUriSuggestions ? KNOWN_MCP_CLIENT_OIDC_REDIRECT_URI_SUGGESTIONS : [];
+    return [...mcpClientSuggestions, ...(this.config.redirectUriSuggestions ?? [])];
   }
 
   get oauthInteractionRoute(): Maybe<SegueRefOrSegueRefRouterLink> {

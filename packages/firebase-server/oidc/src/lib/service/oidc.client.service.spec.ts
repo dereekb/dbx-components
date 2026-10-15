@@ -69,6 +69,8 @@ function buildTestProvider(): Provider {
   });
 }
 
+const CURSOR_REDIRECT_URI = 'cursor://anysphere.cursor-mcp/oauth/callback';
+
 function stubOidcService(provider: Provider): OidcService {
   return { getProvider: () => Promise.resolve(provider) } as unknown as OidcService;
 }
@@ -115,6 +117,38 @@ describe('OidcClientService', () => {
       expect(result.client_id).toBeDefined();
       expect(typeof result.client_secret).toBe('string');
     });
+
+    it('should register a web client when every redirect URI is http or https', async () => {
+      const result = await service.createClient({ ...baseCreateParams('none'), redirect_uris: ['https://claude.ai/api/mcp/auth_callback', 'http://localhost:8080/callback'] });
+      const payload = await clientAdapter(provider).find(result.client_id);
+
+      expect(payload?.['application_type']).toBe('web');
+    });
+
+    it('should register a native client when a redirect URI uses a custom scheme', async () => {
+      const result = await service.createClient({ ...baseCreateParams('none'), redirect_uris: ['https://claude.ai/api/mcp/auth_callback', CURSOR_REDIRECT_URI] });
+      const payload = await clientAdapter(provider).find(result.client_id);
+
+      expect(payload?.['application_type']).toBe('native');
+      expect(payload?.['redirect_uris']).toContain(CURSOR_REDIRECT_URI);
+    });
+
+    it('should reject a custom-scheme client that also registers a non-loopback http redirect URI', async () => {
+      await expect(service.createClient({ ...baseCreateParams('none'), redirect_uris: ['http://app.example.com/callback', CURSOR_REDIRECT_URI] })).rejects.toMatchObject({ message: 'invalid_redirect_uri', error_description: expect.stringMatching(/loopback/) });
+    });
+  });
+
+  describe('updateClient()', () => {
+    it('should switch the client to native when a custom-scheme redirect URI is added, and back to web when it is removed', async () => {
+      const created = await service.createClient(baseCreateParams('none'));
+      const adapter = clientAdapter(provider);
+
+      await service.updateClient(created.client_id, { client_name: 'Test Client', redirect_uris: ['https://app.example.com/callback', CURSOR_REDIRECT_URI] });
+      expect((await adapter.find(created.client_id))?.['application_type']).toBe('native');
+
+      await service.updateClient(created.client_id, { client_name: 'Test Client', redirect_uris: ['https://app.example.com/callback'] });
+      expect((await adapter.find(created.client_id))?.['application_type']).toBe('web');
+    });
   });
 
   describe('rotateClientSecret()', () => {
@@ -134,8 +168,8 @@ describe('OidcClientService', () => {
   });
 });
 
-function buildConfiguration() {
-  const config = { tokenLifetimes: DEFAULT_OIDC_TOKEN_LIFETIMES } as unknown as OidcModuleConfig;
+function buildConfiguration(configOverrides?: Partial<OidcModuleConfig>) {
+  const config = { tokenLifetimes: DEFAULT_OIDC_TOKEN_LIFETIMES, ...configOverrides } as unknown as OidcModuleConfig;
   const providerConfigService = {
     providerConfig: { claims: { openid: ['sub'] }, responseTypes: ['code'], grantTypes: ['authorization_code', 'refresh_token'] },
     routes: DEFAULT_OIDC_ROUTES,
@@ -160,5 +194,17 @@ describe('OidcService.buildProviderConfiguration()', () => {
   it('should leave clientAuthMethods unset so oidc-provider\'s default (which includes "none") flows through', () => {
     const built = buildConfiguration();
     expect((built as { clientAuthMethods?: unknown }).clientAuthMethods).toBeUndefined();
+  });
+
+  describe('clientBasedCORS', () => {
+    const clientBasedCORS = () => (buildConfiguration({ cors: { clientBased: true } }) as { clientBasedCORS: (ctx: unknown, origin: string, client: unknown) => boolean }).clientBasedCORS;
+
+    it('should allow an origin that matches a registered redirect URI', () => {
+      expect(clientBasedCORS()({}, 'https://app.example.com', { redirectUris: ['https://app.example.com/callback'] })).toBe(true);
+    });
+
+    it('should refuse a null origin even though a custom-scheme redirect URI has a null origin', () => {
+      expect(clientBasedCORS()({}, 'null', { redirectUris: [CURSOR_REDIRECT_URI] })).toBe(false);
+    });
   });
 });

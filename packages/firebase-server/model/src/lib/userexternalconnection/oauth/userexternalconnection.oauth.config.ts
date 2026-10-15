@@ -42,6 +42,9 @@ export function userExternalConnectionOAuthRoutesForGlobalRouteExclude(providerT
 export interface UserExternalConnectionOAuthRedirectUriInput {
   /**
    * The origin the OAuth endpoints are reachable at, e.g. `https://example.com`.
+   *
+   * Outside production this may also carry a path the host strips before the request reaches the
+   * app, e.g. the Functions emulator's `http://localhost:9902/<project>/<region>/<function>`.
    */
   readonly origin: WebsiteUrl;
   readonly providerType: UserExternalConnectionProviderType;
@@ -129,6 +132,21 @@ export function isAllowedUserExternalConnectionReturnPath(config: UserExternalCo
 }
 
 /**
+ * Options for {@link UserExternalConnectionOAuthServiceConfig.assertValidConfig}.
+ */
+export interface UserExternalConnectionOAuthServiceConfigAssertOptions {
+  /**
+   * Whether the redirect URI's path may carry a prefix before the mounted callback route, e.g. the
+   * Functions emulator's `/<project>/<region>/<function>`, which the emulator strips before the
+   * request reaches the app.
+   *
+   * Only for non-production environments. Production must serve the routes at the root of the OAuth
+   * origin, so the path has to equal the callback route exactly. Defaults to false.
+   */
+  readonly allowRedirectUriPathPrefix?: Maybe<boolean>;
+}
+
+/**
  * Configuration for an {@link AbstractUserExternalConnectionOAuthService}.
  *
  * Provided privately by each provider's module, so two registered providers never collide on this
@@ -137,7 +155,7 @@ export function isAllowedUserExternalConnectionReturnPath(config: UserExternalCo
 export abstract class UserExternalConnectionOAuthServiceConfig {
   readonly userExternalConnectionOAuth!: UserExternalConnectionOAuthApiConfig;
 
-  static assertValidConfig(config: UserExternalConnectionOAuthServiceConfig) {
+  static assertValidConfig(config: UserExternalConnectionOAuthServiceConfig, options?: Maybe<UserExternalConnectionOAuthServiceConfigAssertOptions>) {
     const { userExternalConnectionOAuth } = config;
 
     if (!userExternalConnectionOAuth) {
@@ -162,9 +180,13 @@ export abstract class UserExternalConnectionOAuthServiceConfig {
     // until the provider rejects it, since the provider compares it byte-for-byte
     const expectedPath = `/${userExternalConnectionOAuthControllerPath(providerType)}/callback`;
     const actualPath = new URL(redirectUri).pathname;
+    const allowPathPrefix = options?.allowRedirectUriPathPrefix === true;
 
-    if (actualPath !== expectedPath) {
-      throw new Error(`UserExternalConnectionOAuthServiceConfig for "${providerType}" has a redirectUri of "${redirectUri}", whose path "${actualPath}" does not match the mounted callback route "${expectedPath}".`);
+    // the expected path starts with a slash, so a prefix can only end on a path segment boundary
+    const pathMatches = allowPathPrefix ? actualPath.endsWith(expectedPath) : actualPath === expectedPath;
+
+    if (!pathMatches) {
+      throw new Error(`UserExternalConnectionOAuthServiceConfig for "${providerType}" has a redirectUri of "${redirectUri}", whose path "${actualPath}" does not ${allowPathPrefix ? 'end with' : 'match'} the mounted callback route "${expectedPath}".`);
     }
   }
 }
@@ -233,6 +255,8 @@ export function userExternalConnectionOAuthServiceConfigFactory(config: UserExte
     }
   };
 
-  UserExternalConnectionOAuthServiceConfig.assertValidConfig(result);
+  // outside production the OAuth url may point straight at the Functions emulator, whose path prefix
+  // the emulator strips; production stays exact
+  UserExternalConnectionOAuthServiceConfig.assertValidConfig(result, { allowRedirectUriPathPrefix: !envService.isProduction });
   return result;
 }

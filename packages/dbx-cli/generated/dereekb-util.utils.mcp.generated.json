@@ -12531,6 +12531,45 @@
       ]
     },
     {
+      "slug": "is-custom-scheme-uri",
+      "name": "isCustomSchemeUri",
+      "kind": "function",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/url",
+      "signature": "isCustomSchemeUri(input: string): boolean",
+      "description": "Returns true if the input is a custom-scheme URI, such as the link or OAuth callback URI of a native app.\n\nExamples where it will return true:\n- cursor://anysphere.cursor-mcp/oauth/callback\n- com.example.app:/oauth2redirect\n\nNon-examples:\n- https://dereekb.com        // http/https\n- mailto:hello@dereekb.com   // no path after the scheme\n- localhost:8080/callback    // host:port, not a scheme\n- javascript://alert(1)      // one of the UNSAFE_URI_SCHEMES",
+      "params": [
+        {
+          "name": "input",
+          "type": "string",
+          "description": "- The string to check.",
+          "optional": false
+        }
+      ],
+      "returns": "Whether the input is a custom-scheme URI.",
+      "tags": [
+        "string",
+        "url",
+        "uri",
+        "scheme",
+        "protocol",
+        "custom",
+        "app",
+        "native",
+        "deep",
+        "link",
+        "redirect",
+        "predicate",
+        "is",
+        "iscustomschemeuri"
+      ],
+      "relatedSlugs": [
+        "has-uri-scheme",
+        "read-uri-scheme"
+      ]
+    },
+    {
       "slug": "website-url-relative-path-functions",
       "name": "websiteUrlRelativePathFunctions",
       "kind": "factory",

@@ -1,4 +1,4 @@
-import { type CreateOidcClientParams, type CreateOidcClientResult, type UpdateOidcClientParams, type RotateOidcClientSecretResult, type OidcEntryClientId, oidcEntryIdentity, firestoreModelKey, PUBLIC_PKCE_TOKEN_ENDPOINT_AUTH_METHOD } from '@dereekb/firebase';
+import { type CreateOidcClientParams, type CreateOidcClientResult, type UpdateOidcClientParams, type RotateOidcClientSecretResult, type OidcEntryClientId, oidcEntryIdentity, firestoreModelKey, oidcClientApplicationTypeForRedirectUris, PUBLIC_PKCE_TOKEN_ENDPOINT_AUTH_METHOD } from '@dereekb/firebase';
 import type { ClientMetadata } from 'oidc-provider';
 import { nanoid } from 'nanoid';
 import { randomBytes } from 'node:crypto';
@@ -29,6 +29,9 @@ export class OidcClientService {
    * methods `private_key_jwt` and `'none'` (public PKCE client) therefore persist no secret and the
    * returned `client_secret` is `undefined`.
    *
+   * The client's `application_type` is derived from its redirect URIs: `native` when any uses a custom scheme
+   * (e.g. `cursor://`), otherwise `web`. See {@link oidcClientApplicationTypeForRedirectUris}.
+   *
    * @param params - Client registration parameters.
    * @param validatedMetadata - Optional pre-validated metadata to merge into the client properties.
    *   Use this for server-side fields (e.g., inline `jwks`) that have already been validated
@@ -45,6 +48,8 @@ export class OidcClientService {
     const properties: ClientMetadata = {
       client_name: params.client_name,
       redirect_uris: params.redirect_uris,
+      // a custom-scheme redirect URI (e.g. cursor://) is only accepted by oidc-provider for a native client
+      application_type: oidcClientApplicationTypeForRedirectUris(params.redirect_uris),
       grant_types: ['authorization_code', 'refresh_token'],
       response_types: ['code'] as ClientMetadata['response_types'],
       token_endpoint_auth_method: params.token_endpoint_auth_method,
@@ -112,7 +117,8 @@ export class OidcClientService {
    * Loads the existing client payload via the adapter, merges the updated fields,
    * re-validates through `provider.Client`, and persists.
    *
-   * `token_endpoint_auth_method` is immutable and cannot be changed.
+   * `token_endpoint_auth_method` is immutable and cannot be changed. The `application_type` is re-derived from the
+   * updated redirect URIs, as in {@link createClient}.
    *
    * @param clientId - The client's document/adapter entry ID.
    * @param params - The fields to update.
@@ -130,6 +136,7 @@ export class OidcClientService {
     const updatedMetadata = { ...existing };
     updatedMetadata.client_name = params.client_name;
     updatedMetadata.redirect_uris = params.redirect_uris;
+    updatedMetadata.application_type = oidcClientApplicationTypeForRedirectUris(params.redirect_uris);
 
     if (params.logo_uri !== undefined) {
       updatedMetadata.logo_uri = params.logo_uri ?? undefined;

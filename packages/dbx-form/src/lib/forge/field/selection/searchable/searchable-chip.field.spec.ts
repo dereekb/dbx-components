@@ -5,7 +5,7 @@ import { describe, it, expect, beforeEach, afterEach, expectTypeOf } from 'vites
 import { type DynamicText, type LogicConfig, type ValidatorConfig, type ValidationMessages, type FormConfig, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
 import { firstValueFrom, first, of, timeout } from 'rxjs';
 import type { DbxForgeSearchableChipFieldConfig, DbxForgeSearchableChipFieldDef, DbxForgeSearchableChipFieldProps } from './searchable-chip.field';
-import { dbxForgeSearchableChipField, dbxForgeSearchableStringChipField } from './searchable-chip.field';
+import { DEFAULT_DBX_FORGE_SEARCHABLE_CHIP_FIELD_INPUT_PREVIEW, dbxForgeSearchableChipField, dbxForgeSearchableStringChipField } from './searchable-chip.field';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, inject } from '@angular/core';
 import { provideDbxForgeFormFieldDeclarations } from '../../../../forge/forge.providers';
@@ -310,6 +310,13 @@ describe('dbxForgeSearchableChipField()', () => {
   it('should not set textInputValidator on the inner field when not provided', () => {
     const inner = getInnerField(dbxForgeSearchableChipField(minimalConfig()) as any);
     expect(inner.props?.textInputValidator).toBeUndefined();
+  });
+
+  it('should propagate suggestions and suggestionsLabel through inner field props when provided', () => {
+    const suggestions = [{ label: 'A', value: 'a' }];
+    const inner = getInnerField(dbxForgeSearchableChipField(withProps({ suggestions, suggestionsLabel: 'Recommended' })) as any);
+    expect(inner.props?.suggestions).toBe(suggestions);
+    expect(inner.props?.suggestionsLabel).toBe('Recommended');
   });
 
   it('should propagate useAnchor through inner field props when provided', () => {
@@ -700,5 +707,236 @@ describe('DbxForgeSearchableChipFieldComponent', () => {
     expect(afterValid?.urls).toEqual(['https://valid.example.com']);
 
     fixture.destroy();
+  });
+
+  // MARK: Input Preview
+  describe('inputOnNewLine and inputPreview', () => {
+    function createInputConfig(props: { inputOnNewLine?: boolean; inputPreview?: string }, placeholder?: string): FormConfig {
+      return {
+        fields: [
+          dbxForgeSearchableStringChipField({
+            key: 'urls',
+            label: 'URLs',
+            placeholder,
+            props: {
+              searchOnEmptyText: false,
+              search: () => of([]),
+              displayForValue: (values) => of(values.map((v) => ({ ...v, label: String(v.value) }))),
+              ...props
+            }
+          }) as any
+        ]
+      };
+    }
+
+    async function createInputComponent(props: { inputOnNewLine?: boolean; inputPreview?: string }, placeholder?: string) {
+      const fixture = TestBed.createComponent(SearchableChipTestHostComponent);
+      const context = fixture.componentInstance.context;
+      context.requireValid = false;
+      context.config = createInputConfig(props, placeholder);
+
+      await settleWithLazyLoad(fixture);
+
+      return { fixture, component: getChipFieldComponent(fixture) };
+    }
+
+    it('should not show an input preview or put the input on a new line by default', async () => {
+      const { fixture, component } = await createInputComponent({}, 'https://example.com');
+
+      expect(component.inputOnNewLineSignal()).toBe(false);
+      expect(component.inputPreviewSignal()).toBeUndefined();
+      expect(component.inputPlaceholderSignal()).toBe('https://example.com');
+      expect(fixture.nativeElement.querySelector('.dbx-searchable-chip-field-input-new-line')).toBeNull();
+
+      fixture.destroy();
+    });
+
+    it('should always show a configured placeholder instead of the input preview', async () => {
+      const { fixture, component } = await createInputComponent({ inputOnNewLine: true }, 'https://example.com');
+
+      expect(fixture.nativeElement.querySelector('.dbx-searchable-chip-field-input-new-line')).toBeTruthy();
+      expect(component.inputPreviewSignal()).toBe(DEFAULT_DBX_FORGE_SEARCHABLE_CHIP_FIELD_INPUT_PREVIEW);
+      expect(component.inputPlaceholderSignal()).toBe('https://example.com');
+
+      component.onFocus();
+      expect(component.inputPlaceholderSignal()).toBe('https://example.com');
+
+      fixture.destroy();
+    });
+
+    it('should default the input preview to "|" when inputOnNewLine is true and no placeholder is configured, and show the search placeholder while focused', async () => {
+      const { fixture, component } = await createInputComponent({ inputOnNewLine: true });
+
+      expect(component.inputPlaceholderSignal()).toBe(DEFAULT_DBX_FORGE_SEARCHABLE_CHIP_FIELD_INPUT_PREVIEW);
+
+      component.onFocus();
+      expect(component.inputPlaceholderSignal()).toBe(component.searchInputPlaceholderSignal());
+
+      component.onBlur();
+      expect(component.inputPlaceholderSignal()).toBe(DEFAULT_DBX_FORGE_SEARCHABLE_CHIP_FIELD_INPUT_PREVIEW);
+
+      fixture.destroy();
+    });
+
+    it('should use a configured inputPreview when no placeholder is configured', async () => {
+      const { fixture, component } = await createInputComponent({ inputPreview: 'Add a URL...' });
+
+      expect(component.inputPlaceholderSignal()).toBe('Add a URL...');
+
+      fixture.destroy();
+    });
+  });
+
+  // MARK: Backspace
+  describe('backspaceRemovesChips', () => {
+    function createBackspaceConfig(backspaceRemovesChips?: boolean): FormConfig {
+      return {
+        fields: [
+          dbxForgeSearchableStringChipField({
+            key: 'urls',
+            label: 'URLs',
+            props: {
+              searchOnEmptyText: false,
+              search: () => of([]),
+              displayForValue: (values) => of(values.map((v) => ({ ...v, label: String(v.value) }))),
+              backspaceRemovesChips
+            }
+          }) as any
+        ]
+      };
+    }
+
+    async function pressBackspaceOnLastChip(backspaceRemovesChips?: boolean): Promise<unknown> {
+      const fixture = TestBed.createComponent(SearchableChipTestHostComponent);
+      const context = fixture.componentInstance.context;
+      context.requireValid = false;
+      context.config = createBackspaceConfig(backspaceRemovesChips);
+
+      await settleWithLazyLoad(fixture);
+
+      context.setValue({ urls: ['https://a.example.com', 'https://b.example.com'] } as any);
+      await settleWithLazyLoad(fixture);
+
+      const chipRows: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('mat-chip-row');
+      expect(chipRows.length).toBe(2);
+
+      const lastChipAction = chipRows[1].querySelector<HTMLElement>('.mat-mdc-chip-action') ?? chipRows[1];
+      lastChipAction.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace', keyCode: 8, bubbles: true, cancelable: true }));
+      await settle(fixture);
+
+      const value = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
+      fixture.destroy();
+      return (value as any)?.urls;
+    }
+
+    it('should not remove a chip when Backspace is pressed on it by default', async () => {
+      const urls = await pressBackspaceOnLastChip();
+      expect(urls).toEqual(['https://a.example.com', 'https://b.example.com']);
+    });
+
+    it('should remove a chip when Backspace is pressed on it when backspaceRemovesChips is true', async () => {
+      const urls = await pressBackspaceOnLastChip(true);
+      expect(urls).toEqual(['https://a.example.com']);
+    });
+  });
+
+  // MARK: Suggestions
+  describe('suggestions', () => {
+    const SINGLE_SUGGESTION = { label: 'Single', value: 'https://single.example.com' };
+    const MULTI_SUGGESTION = { label: 'Multi', value: ['https://a.example.com', 'https://b.example.com'] };
+
+    function createSuggestionChipConfig(suggestionsLabel?: string): FormConfig {
+      return {
+        fields: [
+          dbxForgeSearchableStringChipField({
+            key: 'urls',
+            label: 'URLs',
+            props: {
+              searchOnEmptyText: false,
+              search: () => of([]),
+              displayForValue: (values) => of(values.map((v) => ({ ...v, label: String(v.value) }))),
+              suggestions: [SINGLE_SUGGESTION, MULTI_SUGGESTION],
+              suggestionsLabel
+            }
+          }) as any
+        ]
+      };
+    }
+
+    it('should render a suggestion chip for each suggestion with the default label', async () => {
+      const fixture = TestBed.createComponent(SearchableChipTestHostComponent);
+      const context = fixture.componentInstance.context;
+      context.requireValid = false;
+      context.config = createSuggestionChipConfig();
+
+      await settleWithLazyLoad(fixture);
+
+      const component = getChipFieldComponent(fixture);
+      expect(component.visibleSuggestionsSignal().map((x) => x.label)).toEqual(['Single', 'Multi']);
+      expect(component.suggestionsLabelSignal()).toBe('Suggestions');
+
+      const suggestionsEl: HTMLElement = fixture.nativeElement.querySelector('.dbx-searchable-chip-field-suggestions');
+      expect(suggestionsEl).toBeTruthy();
+      expect(suggestionsEl.querySelectorAll('mat-chip-option').length).toBe(2);
+
+      fixture.destroy();
+    });
+
+    it('should use the configured suggestionsLabel', async () => {
+      const fixture = TestBed.createComponent(SearchableChipTestHostComponent);
+      const context = fixture.componentInstance.context;
+      context.requireValid = false;
+      context.config = createSuggestionChipConfig('Recommended');
+
+      await settleWithLazyLoad(fixture);
+
+      const component = getChipFieldComponent(fixture);
+      expect(component.suggestionsLabelSignal()).toBe('Recommended');
+
+      fixture.destroy();
+    });
+
+    it('should add every value of a picked suggestion and hide it once all of its values are selected', async () => {
+      const fixture = TestBed.createComponent(SearchableChipTestHostComponent);
+      const context = fixture.componentInstance.context;
+      context.requireValid = false;
+      context.config = createSuggestionChipConfig();
+
+      await settleWithLazyLoad(fixture);
+
+      const component = getChipFieldComponent(fixture);
+      component.addSuggestion(MULTI_SUGGESTION);
+      await settle(fixture);
+
+      const afterAdd = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
+      expect(afterAdd?.urls).toEqual(MULTI_SUGGESTION.value);
+      expect(component.visibleSuggestionsSignal().map((x) => x.label)).toEqual(['Single']);
+
+      fixture.destroy();
+    });
+
+    it('should keep a suggestion visible while only some of its values are selected, and not duplicate selected values when picked', async () => {
+      const fixture = TestBed.createComponent(SearchableChipTestHostComponent);
+      const context = fixture.componentInstance.context;
+      context.requireValid = false;
+      context.config = createSuggestionChipConfig();
+
+      await settleWithLazyLoad(fixture);
+
+      context.setValue({ urls: ['https://a.example.com'] } as any);
+      await settleWithLazyLoad(fixture);
+
+      const component = getChipFieldComponent(fixture);
+      expect(component.visibleSuggestionsSignal().map((x) => x.label)).toEqual(['Single', 'Multi']);
+
+      component.addSuggestion(MULTI_SUGGESTION);
+      await settle(fixture);
+
+      const afterAdd = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
+      expect(afterAdd?.urls).toEqual(['https://a.example.com', 'https://b.example.com']);
+      expect(component.visibleSuggestionsSignal().map((x) => x.label)).toEqual(['Single']);
+
+      fixture.destroy();
+    });
   });
 });

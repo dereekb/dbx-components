@@ -580,7 +580,7 @@
         "string",
         "dereekb-firebase:oidc"
       ],
-      "notes": "A redirect URI registered to an OIDC client.\n\nMust be a valid absolute URL (e.g. `https://myapp.example.com/callback`)."
+      "notes": "A redirect URI registered to an OIDC client.\n\nMust be a valid absolute URL (e.g. `https://myapp.example.com/callback`), or a private-use (custom) scheme URI that a native app registers\n(e.g. `cursor://anysphere.cursor-mcp/oauth/callback`)."
     },
     {
       "name": "OidcEntryClientId",

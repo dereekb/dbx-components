@@ -14,6 +14,18 @@
     }
   }
 
+  // Renders the chip input on its own full-width line beneath the selected chips.
+  .dbx-searchable-chip-field-input-new-line input.mat-mdc-chip-input {
+    flex-basis: 100%;
+    margin-left: 4px;
+  }
+
+  // MDC hides the chip input's placeholder unless an MDC focused/no-label text field ancestor exists, which the forge wrapper
+  // does not provide. Show it when an input preview is configured so the preview (and the placeholder on focus) is visible.
+  .dbx-searchable-chip-field-input-preview input.mat-mdc-chip-input::placeholder {
+    opacity: 1;
+  }
+
   // Bare input styling is provided by the .dbx-forge-bare-input class
   // applied directly in the searchable templates.
 

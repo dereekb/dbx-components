@@ -39,7 +39,8 @@ export type OidcScopeDetails<T extends OidcScope = OidcScope> = LabeledValueWith
 /**
  * A redirect URI registered to an OIDC client.
  *
- * Must be a valid absolute URL (e.g. `https://myapp.example.com/callback`).
+ * Must be a valid absolute URL (e.g. `https://myapp.example.com/callback`), or a private-use (custom) scheme URI that a native app registers
+ * (e.g. `cursor://anysphere.cursor-mcp/oauth/callback`).
  *
  * @semanticType
  * @semanticTopic url

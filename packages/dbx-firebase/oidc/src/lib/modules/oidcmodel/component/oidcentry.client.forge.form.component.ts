@@ -14,10 +14,10 @@ export type DbxFirebaseOidcModelClientUpdateFormValue = UpdateOidcClientFieldPar
 /**
  * Config input for {@link DbxFirebaseOidcEntryClientForgeFormComponent}.
  *
- * Omits `tokenEndpointAuthMethods` and `providerProfiles` since the component pulls those from
+ * Omits `tokenEndpointAuthMethods`, `providerProfiles`, and `redirectUriSuggestions` since the component pulls those from
  * {@link DbxFirebaseOidcConfigService}.
  */
-export type DbxFirebaseOidcEntryClientFormComponentConfig = Omit<OidcEntryClientFormFieldsConfig, 'tokenEndpointAuthMethods' | 'providerProfiles'>;
+export type DbxFirebaseOidcEntryClientFormComponentConfig = Omit<OidcEntryClientFormFieldsConfig, 'tokenEndpointAuthMethods' | 'providerProfiles' | 'redirectUriSuggestions'>;
 
 /**
  * Configurable forge form component for creating or updating an OAuth client.
@@ -25,7 +25,7 @@ export type DbxFirebaseOidcEntryClientFormComponentConfig = Omit<OidcEntryClient
  * Pass `{ mode: 'create' }` to show all fields including `token_endpoint_auth_method`.
  * Pass `{ mode: 'update' }` to exclude `token_endpoint_auth_method` (immutable after creation).
  *
- * Token endpoint auth methods are pulled from the injected {@link DbxFirebaseOidcConfigService}.
+ * Token endpoint auth methods, provider profiles, and redirect URI suggestions are pulled from the injected {@link DbxFirebaseOidcConfigService}.
  */
 @Component({
   selector: 'dbx-firebase-oidc-client-forge-form',
@@ -44,7 +44,8 @@ export class DbxFirebaseOidcEntryClientForgeFormComponent extends AbstractConfig
         result = oidcEntryClientForgeFormFields({
           ...config,
           tokenEndpointAuthMethods: this._oidcConfigService.tokenEndpointAuthMethods,
-          providerProfiles: this._oidcConfigService.availableProviderProfiles ?? undefined
+          providerProfiles: this._oidcConfigService.availableProviderProfiles ?? undefined,
+          redirectUriSuggestions: this._oidcConfigService.redirectUriSuggestions
         });
       } else {
         result = undefined;

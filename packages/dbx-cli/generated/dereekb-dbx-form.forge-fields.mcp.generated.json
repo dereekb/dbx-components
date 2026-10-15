@@ -783,7 +783,7 @@
       "tier": "field-factory",
       "produces": "T | T[]",
       "arrayOutput": "optional",
-      "description": "Multi-value autocomplete with chips. Defaults to multi-select; supports free-form text entry when `allowStringValues` is set.",
+      "description": "Multi-value autocomplete with chips. Defaults to multi-select; supports free-form text entry when `allowStringValues` is set, and clickable suggestion chips via `suggestions`.",
       "example": "dbxForgeSearchableChipField<Tag>({ key: 'tags', props: { search, displayForValue } })",
       "properties": [
         {
@@ -886,6 +886,36 @@
           "name": "asArrayValue (props)",
           "type": "boolean",
           "description": "",
+          "required": false
+        },
+        {
+          "name": "inputOnNewLine (props)",
+          "type": "Maybe<boolean>",
+          "description": "Whether to render the text input on its own line beneath the selected chips, rather than inline after the last chip.",
+          "required": false
+        },
+        {
+          "name": "inputPreview (props)",
+          "type": "Maybe<string>",
+          "description": "Preview text shown in the input while it is empty and unfocused, marking where typing starts. Only used when the field has no `placeholder`; a\nconfigured placeholder is always shown instead.\n\nDefaults to {@link DEFAULT_DBX_FORGE_SEARCHABLE_CHIP_FIELD_INPUT_PREVIEW} when {@link inputOnNewLine} is true, otherwise no preview is shown.",
+          "required": false
+        },
+        {
+          "name": "backspaceRemovesChips (props)",
+          "type": "Maybe<boolean>",
+          "description": "Whether Backspace removes chips, Angular Material's default chip behavior: Backspace in the empty input focuses the last chip, and Backspace on a\nfocused chip removes it.\n\nFalse by default, so pressing Backspace repeatedly never walks back into and deletes the selected chips. Chips can still be removed with their\nremove button or the Delete key.",
+          "required": false
+        },
+        {
+          "name": "suggestions (props)",
+          "type": "Maybe<DbxForgeSearchableChipFieldSuggestion<T>[]>",
+          "description": "Suggestions rendered as clickable chips beneath the input. Picking one adds its value(s) to the field.",
+          "required": false
+        },
+        {
+          "name": "suggestionsLabel (props)",
+          "type": "Maybe<string>",
+          "description": "Label rendered before the suggestion chips. Defaults to {@link DEFAULT_DBX_FORGE_SEARCHABLE_CHIP_FIELD_SUGGESTIONS_LABEL}.",
           "required": false
         }
       ],

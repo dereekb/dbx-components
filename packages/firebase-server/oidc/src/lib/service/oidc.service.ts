@@ -537,9 +537,12 @@ export class OidcService {
       // so oidc-provider's CORS never runs and behavior is byte-identical to before. Note: unlike
       // oidc-provider's default helper (which restricts non-userinfo routes to public clients), this
       // matches by redirect_uris origin for any client — harmless, since only browsers do CORS.
+      // An opaque `null` Origin is always refused: a custom-scheme redirect_uri (e.g. cursor://) also has a `null`
+      // origin, so without the guard any sandboxed or file:// page would match a native client.
       ...(config.cors?.clientBased
         ? {
             clientBasedCORS: (_ctx: KoaContextWithOIDC, origin: string, client: Client): boolean =>
+              origin !== 'null' &&
               (client.redirectUris ?? []).some((uri) => {
                 let matches = false;
 

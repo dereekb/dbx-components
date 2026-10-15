@@ -1,11 +1,22 @@
-import { dbxForgeTextField, dbxForgeValueSelectionField, dbxForgeSearchableStringChipField, dbxForgePickableChipField, dbxForgeContainer, pickableValueFieldValuesConfigForStaticLabeledValues, isWebsiteUrlValidator } from '@dereekb/dbx-form';
-import { ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHOD_OPTIONS, PRIVATE_KEY_JWT_TOKEN_ENDPOINT_AUTH_METHOD, type OidcProviderProfileDetails, type OidcRedirectUri, type OidcScopeDetails, type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
+import { dbxForgeTextField, dbxForgeValueSelectionField, dbxForgeSearchableStringChipField, dbxForgePickableChipField, dbxForgeContainer, pickableValueFieldValuesConfigForStaticLabeledValues, isWebsiteUrlValidator, type DbxForgeSearchableChipFieldSuggestion } from '@dereekb/dbx-form';
+import { ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHOD_OPTIONS, PRIVATE_KEY_JWT_TOKEN_ENDPOINT_AUTH_METHOD, type OidcProviderProfileDetails, type OidcRedirectUri, type OidcRedirectUriSuggestion, type OidcScopeDetails, type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
+import { type Maybe } from '@dereekb/util';
 import type { ContainerField, FormConfig, RegisteredFieldTypes } from '@ng-forge/dynamic-forms';
 import { of } from 'rxjs';
 
 // MARK: OidcClient Form Fields
 
-export interface OidcEntryClientFormFieldsConfig {
+/**
+ * Config for {@link oidcEntryClientUpdateForgeFormFields} and {@link oidcClientRedirectUrisForgeField}.
+ */
+export interface OidcEntryClientUpdateFormFieldsConfig {
+  /**
+   * Redirect URI suggestions shown as suggestion chips on the redirect URIs field. Provided by the {@link DbxFirebaseOidcConfigService}.
+   */
+  readonly redirectUriSuggestions?: Maybe<OidcRedirectUriSuggestion[]>;
+}
+
+export interface OidcEntryClientFormFieldsConfig extends OidcEntryClientUpdateFormFieldsConfig {
   /**
    * Mode to show. Defaults to 'create'.
    */
@@ -41,7 +52,7 @@ export function oidcEntryClientForgeFormFields(config?: OidcEntryClientFormField
     fields.push(oidcClientTokenEndpointAuthMethodForgeField(config));
   }
 
-  fields.push(...oidcEntryClientUpdateForgeFormFields());
+  fields.push(...oidcEntryClientUpdateForgeFormFields(config));
 
   if (config?.providerProfiles?.length) {
     fields.push(oidcClientProviderProfilesForgeField(config.providerProfiles));
@@ -100,10 +111,11 @@ export function oidcClientTokenEndpointAuthMethodForgeField(config?: OidcEntryCl
  *
  * Excludes `token_endpoint_auth_method` (immutable after creation).
  *
+ * @param config - Optional configuration, including the redirect URI suggestions to show.
  * @returns Array of forge field definitions for the client update form.
  */
-export function oidcEntryClientUpdateForgeFormFields(): RegisteredFieldTypes[] {
-  return [oidcClientNameForgeField(), oidcClientRedirectUrisForgeField(), oidcClientJwksUriForgeField(), oidcClientLogoUriForgeField(), oidcClientHomepageUriForgeField()];
+export function oidcEntryClientUpdateForgeFormFields(config?: OidcEntryClientUpdateFormFieldsConfig): RegisteredFieldTypes[] {
+  return [oidcClientNameForgeField(), oidcClientRedirectUrisForgeField(config), oidcClientJwksUriForgeField(), oidcClientLogoUriForgeField(), oidcClientHomepageUriForgeField()];
 }
 
 /**
@@ -124,19 +136,34 @@ export function oidcClientNameForgeField() {
 /**
  * Creates a forge searchable chip field for entering redirect URIs.
  *
+ * Each configured {@link OidcRedirectUriSuggestion} is rendered as a suggestion chip that adds all of its redirect URIs when picked.
+ *
+ * Accepts http/https URLs and the custom-scheme callback URIs native apps register (e.g. `cursor://anysphere.cursor-mcp/oauth/callback`).
+ * The server registers a client with a custom-scheme redirect URI as a native client.
+ *
+ * @param config - Optional configuration, including the redirect URI suggestions to show.
  * @returns A forge searchable chip field for redirect URIs.
  */
-export function oidcClientRedirectUrisForgeField() {
+export function oidcClientRedirectUrisForgeField(config?: OidcEntryClientUpdateFormFieldsConfig) {
+  const suggestions: Maybe<DbxForgeSearchableChipFieldSuggestion<OidcRedirectUri>[]> = config?.redirectUriSuggestions?.map((x) => ({
+    label: x.label,
+    value: x.redirectUris,
+    tooltip: [x.description, ...x.redirectUris].filter(Boolean).join('\n')
+  }));
+
   return dbxForgeSearchableStringChipField({
     key: 'redirect_uris',
     label: 'Redirect URIs',
-    hint: 'Type a redirect URI (e.g. https://example.com/callback) and press enter to add it.',
+    placeholder: 'https://example.com/callback',
+    hint: 'Type a redirect URI (e.g. https://example.com/callback, or an app callback like cursor://...) and press enter to add it.',
     required: true,
     props: {
       searchOnEmptyText: false,
-      textInputValidator: isWebsiteUrlValidator({ requirePrefix: true, allowPorts: true }),
+      textInputValidator: isWebsiteUrlValidator({ requirePrefix: true, allowPorts: true, allowCustomSchemeUris: true }),
       search: () => of([]),
-      displayForValue: (values) => of(values.map((v) => ({ ...v, label: v.value })))
+      displayForValue: (values) => of(values.map((v) => ({ ...v, label: v.value }))),
+      inputOnNewLine: true,
+      suggestions
     }
   });
 }

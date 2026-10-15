@@ -1,3 +1,15 @@
+# [14.19.0](https://github.com/dereekb/dbx-components/compare/v14.18.0-dev...v14.19.0) (2026-10-15)
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes + peer dep sync ([7e6064a1](https://github.com/dereekb/dbx-components/commit/7e6064a196e5a5181b872659b97774c81f0c3978))
+
+### Features
+
+- **dbx-firebase:** allow custom-scheme OIDC client redirect URIs ([ecb5d983](https://github.com/dereekb/dbx-components/commit/ecb5d9838b8014dc4927fa25123a6ef149604a88))
+- **dbx-firebase:** suggest MCP client redirect URIs on OIDC client form ([569ac069](https://github.com/dereekb/dbx-components/commit/569ac0693fcb9fe58692798646a4c2621b21a34b))
+- **firebase-server:** allow oauth redirect path prefix outside prod ([6f865fc0](https://github.com/dereekb/dbx-components/commit/6f865fc0d2e9e529b7cd307ad89ce6e9580c6e4d))
+
 # [14.18.0](https://github.com/dereekb/dbx-components/compare/v14.17.0-dev...v14.18.0) (2026-10-15)
 
 ### Bug Fixes
