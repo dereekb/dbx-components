@@ -4,6 +4,7 @@ import { UserExternalConnectionOAuthServiceConfig, userExternalConnectionOAuthCo
 
 const CALCOM = 'calcom';
 const SETTINGS_PATH = '/demo/app/settings';
+const FUNCTIONS_EMULATOR_OAUTH_URL = 'http://localhost:9902/demo-project/us-central1/api';
 
 function makeEnvService(overrides: Partial<FirebaseServerEnvService> = {}): FirebaseServerEnvService {
   return {
@@ -98,6 +99,27 @@ describe('userExternalConnectionOAuthServiceConfigFactory()', () => {
     expect(userExternalConnectionOAuth.signInFailureUrl).toBe('https://app.example.com/demo/auth/login?signin=failed');
   });
 
+  it('accepts an oauth url on the functions emulator outside production', () => {
+    // local dev pointed straight at the functions emulator, which strips its own path prefix
+    const { userExternalConnectionOAuth } = userExternalConnectionOAuthServiceConfigFactory({
+      envService: makeEnvService({ isProduction: false, appUrl: 'http://localhost:9010', appOAuthUrl: FUNCTIONS_EMULATOR_OAUTH_URL }),
+      providerType: CALCOM,
+      successPath: SETTINGS_PATH
+    });
+
+    expect(userExternalConnectionOAuth.redirectUri).toBe(`${FUNCTIONS_EMULATOR_OAUTH_URL}/oauth/calcom/callback`);
+  });
+
+  it('throws for an oauth url with a path in production', () => {
+    expect(() =>
+      userExternalConnectionOAuthServiceConfigFactory({
+        envService: makeEnvService({ isProduction: true, appOAuthUrl: 'https://api.example.com/api' }),
+        providerType: CALCOM,
+        successPath: SETTINGS_PATH
+      })
+    ).toThrow();
+  });
+
   it('throws when no app url is configured', () => {
     expect(() => userExternalConnectionOAuthServiceConfigFactory({ envService: makeEnvService({ appUrl: undefined }), providerType: CALCOM, successPath: SETTINGS_PATH })).toThrow();
   });
@@ -128,6 +150,41 @@ describe('UserExternalConnectionOAuthServiceConfig.assertValidConfig()', () => {
         }
       })
     ).not.toThrow();
+  });
+
+  describe('allowRedirectUriPathPrefix', () => {
+    function assertRedirectUriWithPathPrefixAllowed(redirectUri: string) {
+      UserExternalConnectionOAuthServiceConfig.assertValidConfig(
+        {
+          userExternalConnectionOAuth: {
+            providerType: CALCOM,
+            redirectUri,
+            successUrl: 'http://localhost:9010/demo/app/settings'
+          }
+        },
+        { allowRedirectUriPathPrefix: true }
+      );
+    }
+
+    it('accepts a prefix before the mounted callback route', () => {
+      expect(() => assertRedirectUriWithPathPrefixAllowed(`${FUNCTIONS_EMULATOR_OAUTH_URL}/oauth/calcom/callback`)).not.toThrow();
+    });
+
+    it('accepts the mounted callback route with no prefix', () => {
+      expect(() => assertRedirectUriWithPathPrefixAllowed('http://localhost:9901/oauth/calcom/callback')).not.toThrow();
+    });
+
+    it('rejects a path that continues past the mounted callback route', () => {
+      expect(() => assertRedirectUriWithPathPrefixAllowed(`${FUNCTIONS_EMULATOR_OAUTH_URL}/oauth/calcom/callback/extra`)).toThrow();
+    });
+
+    it('rejects a prefix that does not end on a path segment boundary', () => {
+      expect(() => assertRedirectUriWithPathPrefixAllowed('http://localhost:9902/fooauth/calcom/callback')).toThrow();
+    });
+
+    it('rejects a different provider callback route', () => {
+      expect(() => assertRedirectUriWithPathPrefixAllowed(`${FUNCTIONS_EMULATOR_OAUTH_URL}/oauth/zoho/callback`)).toThrow();
+    });
   });
 
   it('rejects a config with no redirect uri', () => {

@@ -42,6 +42,11 @@ export interface FirebaseServerEnvironmentConfig extends ServerEnvironmentConfig
    * is typically the Angular dev server while the `/oauth/**` hosting rewrite is served by the
    * hosting emulator on another port. In production the two normally coincide, so it can be omitted.
    *
+   * Outside production (`isProduction` false) this may also point straight at the Functions emulator,
+   * path included (e.g. `http://localhost:9902/<project>/<region>/<function>`), since the emulator
+   * strips that prefix before the request reaches the app. In production it must be a bare origin:
+   * the redirect URI's path has to equal `/oauth/<providerType>/callback` exactly.
+   *
    * When omitted, modules fall back to `appUrl`.
    */
   readonly appOAuthUrl?: Maybe<WebsiteUrlWithPrefix>;
