@@ -113,12 +113,12 @@ export interface MatchRouteManifestUrlInput {
  * scheme/host/port, query string, and hash; collapses an empty path to `/` and
  * trims a single trailing slash.
  *
- * @param url - A full URL (`https://app.example.co/worker/x/timesheets/list`) or bare path.
+ * @param url - A full URL (`https://app.example.com/guestbook/x/entries`) or bare path.
  * @returns The normalized pathname.
  *
  * @example
  * ```ts
- * parseUrlModelsPathname('https://app.hellosubs.co/worker/abc/timesheets/list/'); // => '/worker/abc/timesheets/list'
+ * parseUrlModelsPathname('https://app.example.com/guestbook/abc/entries/'); // => '/guestbook/abc/entries'
  * ```
  */
 export function parseUrlModelsPathname(url: string): string {
