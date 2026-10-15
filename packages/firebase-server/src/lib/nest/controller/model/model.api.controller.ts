@@ -204,7 +204,7 @@ export class ModelApiController {
 
       // pass the server error details through (e.g. a VALIDATION_ERROR's per-field summary in details.data.message)
       const [details] = firebaseServerErrorInfoServerErrorPair(error);
-      const body = details != null ? { statusCode: status, message, code, details } : { statusCode: status, message, code };
+      const body = details == null ? { statusCode: status, message, code } : { statusCode: status, message, code, details };
       result = new HttpException(body, status);
     }
 
