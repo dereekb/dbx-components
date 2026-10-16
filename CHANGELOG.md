@@ -1,3 +1,17 @@
+# [14.20.0](https://github.com/dereekb/dbx-components/compare/v14.19.0-dev...v14.20.0) (2026-10-16)
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes + peer dep sync ([5f2945e0](https://github.com/dereekb/dbx-components/commit/5f2945e0df2d4ab892523322054459063c03d1c0))
+
+### Code Refactoring
+
+- **firebase-server:** search docs by manifest metadata only ([0cc1557c](https://github.com/dereekb/dbx-components/commit/0cc1557cb19fc196cf4cf929b966352d1e841aa1))
+
+### Features
+
+- **zoho-cli:** add named token sources with a per-source api mode ([e854f88a](https://github.com/dereekb/dbx-components/commit/e854f88ae07ac064c62fcf6090bbd7eef37c3327))
+
 # [14.19.0](https://github.com/dereekb/dbx-components/compare/v14.18.0-dev...v14.19.0) (2026-10-15)
 
 ### Build System

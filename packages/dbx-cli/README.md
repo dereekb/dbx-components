@@ -584,6 +584,16 @@ zoho-cli auth check
 Every Zoho product that the token's scopes cover uses the minted token and its datacenter. The other
 products keep `zoho-cli`'s own credentials. `zoho-cli auth token-source clear` puts things back.
 
+When you mint from more than one env of the app, save one source per env by name and pick one per run.
+A source can also send its calls to the Zoho sandboxes:
+
+```sh
+zoho-cli auth token-source set "demo-cli external-token zoho_admin --env prod-external-token" --name prod
+zoho-cli auth token-source set "demo-cli external-token zoho_admin --env external-token" --name dev --api-mode sandbox
+zoho-cli auth token-source use prod       # the default when a run selects none
+zoho-cli --token-source dev crm …         # or ZOHO_CLI_TOKEN_SOURCE=dev for a whole shell
+```
+
 To consume the token from any other tool, use `runCliCredentialProcess`:
 
 ```ts

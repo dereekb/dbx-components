@@ -2,8 +2,8 @@ import { createHash } from 'node:crypto';
 import { type CliExternalConnectionTokenBundle, runCliCredentialProcess } from '@dereekb/dbx-cli';
 import { createJsonFileAsyncKeyedValueCache } from '@dereekb/nestjs';
 import { MS_IN_MINUTE, MS_IN_SECOND, type ISO8601DateString, type Maybe, type Milliseconds } from '@dereekb/util';
-import { ZOHO_OAUTH_SCOPE_DELIMITER, type ZohoAccessToken, type ZohoAccessTokenRefresher, type ZohoAccountsApiUrlKey, type ZohoOAuthScope, zohoAccountsApiUrlKeyForToken, zohoDatacenterApiDomain, zohoOAuthScopesFromScopeString, zohoProductsForOAuthScopes } from '@dereekb/zoho';
-import { getTokenCachePath, resolveZohoCliActiveTokenSource, ZOHO_CLI_PRODUCTS, type ZohoCliActiveTokenSource, type ZohoCliConfig, type ZohoCliProduct, type ZohoCliTokenSourceCoverage } from './cli.config';
+import { ZOHO_OAUTH_SCOPE_DELIMITER, type ZohoAccessToken, type ZohoAccessTokenRefresher, type ZohoAccountsApiUrlKey, type ZohoApiUrlKey, type ZohoOAuthScope, zohoAccountsApiUrlKeyForToken, zohoDatacenterApiDomain, zohoOAuthScopesFromScopeString, zohoProductsForOAuthScopes } from '@dereekb/zoho';
+import { getTokenCachePath, resolveZohoCliActiveTokenSource, ZOHO_CLI_PRODUCTS, type ZohoCliActiveTokenSource, type ZohoCliConfig, type ZohoCliProduct, type ZohoCliTokenSourceCoverage, type ZohoCliTokenSourceName, type ZohoCliTokenSourceSelection } from './cli.config';
 
 // MARK: Token
 /**
@@ -293,6 +293,10 @@ export async function clearCachedZohoCliTokenSourceToken(input: ZohoCliTokenSour
 export interface ZohoCliTokenSource {
   readonly command: string;
   /**
+   * The Zoho environment the covered products are called in.
+   */
+  readonly apiMode: ZohoApiUrlKey;
+  /**
    * Returns a reusable token: the one in memory, else the token file's, else a fresh one from running
    * the command (cached to the token file when the bundle reported its expiry). Concurrent calls share
    * one run.
@@ -312,6 +316,10 @@ export interface CreateZohoCliTokenSourceInput extends ZohoCliTokenSourceTokenFi
    * How long the command may run. Defaults to dbx-cli's credential-process timeout.
    */
   readonly timeoutMs?: Maybe<Milliseconds>;
+  /**
+   * The Zoho environment the covered products are called in. Defaults to `production`.
+   */
+  readonly apiMode?: Maybe<ZohoApiUrlKey>;
 }
 
 /**
@@ -331,6 +339,7 @@ export interface CreateZohoCliTokenSourceInput extends ZohoCliTokenSourceTokenFi
  */
 export function createZohoCliTokenSource(input: CreateZohoCliTokenSourceInput): ZohoCliTokenSource {
   const { command, tokenCachePath, timeoutMs } = input;
+  const apiMode = input.apiMode ?? 'production';
   let current: Maybe<ZohoCliTokenSourceToken>;
   let inFlight: Maybe<Promise<ZohoCliTokenSourceToken>>;
 
@@ -380,7 +389,7 @@ export function createZohoCliTokenSource(input: CreateZohoCliTokenSourceInput): 
     await clearCachedZohoCliTokenSourceToken({ command, tokenCachePath });
   }
 
-  return { command, loadToken, resetToken };
+  return { command, apiMode, loadToken, resetToken };
 }
 
 /**
@@ -473,7 +482,7 @@ export type LoadZohoCliTokenSourceOptions = Omit<CreateZohoCliTokenSourceInput, 
  */
 export async function loadZohoCliResolvedTokenSource(config: Maybe<ZohoCliConfig>, options?: Maybe<LoadZohoCliTokenSourceOptions>): Promise<Maybe<ZohoCliResolvedTokenSource>> {
   const command = config?.tokenSource?.command;
-  return command ? resolveZohoCliTokenSource(createZohoCliTokenSource({ ...options, command })) : undefined;
+  return command ? resolveZohoCliTokenSource(createZohoCliTokenSource({ ...options, command, apiMode: config?.tokenSource?.apiMode })) : undefined;
 }
 
 // MARK: Status
@@ -493,24 +502,32 @@ export interface ZohoCliTokenSourceStatus {
 }
 
 /**
- * Loads the active token source of the stored config and env, capturing a failure instead of throwing.
+ * Optional overrides and the `--token-source` selection for {@link loadZohoCliTokenSourceStatus}.
+ */
+export type LoadZohoCliTokenSourceStatusOptions = LoadZohoCliTokenSourceOptions & ZohoCliTokenSourceSelection;
+
+/**
+ * Loads the active token source of the stored config and env, capturing a failure to load its token
+ * instead of throwing.
  *
- * @param fileConfig - The raw config file (its saved `tokenSource` block).
- * @param options - Token file and timeout overrides.
+ * @param fileConfig - The raw config file (its saved token sources and selection).
+ * @param options - The `--token-source` selection, and token file and timeout overrides.
  * @returns The status, or undefined when no token source is active.
+ * @throws {Error} When a selected token source name has no saved source — selecting the source, unlike loading its token, is not captured.
  *
  * @example
  * ```typescript
  * const status = await loadZohoCliTokenSourceStatus(await loadCliConfigFile());
  * ```
  */
-export async function loadZohoCliTokenSourceStatus(fileConfig: Maybe<Pick<ZohoCliConfig, 'tokenSource'>>, options?: Maybe<LoadZohoCliTokenSourceOptions>): Promise<Maybe<ZohoCliTokenSourceStatus>> {
-  const active = resolveZohoCliActiveTokenSource(fileConfig);
+export async function loadZohoCliTokenSourceStatus(fileConfig: Maybe<Pick<ZohoCliConfig, 'tokenSource' | 'tokenSources' | 'activeTokenSource'>>, options?: Maybe<LoadZohoCliTokenSourceStatusOptions>): Promise<Maybe<ZohoCliTokenSourceStatus>> {
+  const { tokenSourceName, ...sourceOptions } = options ?? {};
+  const active = resolveZohoCliActiveTokenSource(fileConfig, { tokenSourceName });
   let result: Maybe<ZohoCliTokenSourceStatus>;
 
   if (active) {
     try {
-      result = { active, resolved: await resolveZohoCliTokenSource(createZohoCliTokenSource({ ...options, command: active.command })) };
+      result = { active, resolved: await resolveZohoCliTokenSource(createZohoCliTokenSource({ ...sourceOptions, command: active.command, apiMode: active.apiMode })) };
     } catch (e) {
       result = { active, error: e instanceof Error ? e.message : String(e) };
     }
@@ -525,6 +542,11 @@ export async function loadZohoCliTokenSourceStatus(fileConfig: Maybe<Pick<ZohoCl
 export interface ZohoCliTokenSourceReport {
   readonly command: string;
   readonly origin: ZohoCliActiveTokenSource['origin'];
+  /**
+   * The saved source's name; absent for a `ZOHO_CLI_TOKEN_COMMAND` command.
+   */
+  readonly name?: ZohoCliTokenSourceName;
+  readonly apiMode: ZohoApiUrlKey;
   readonly products?: readonly ZohoCliProduct[];
   readonly datacenter?: ZohoAccountsApiUrlKey;
   readonly expiresAt?: ISO8601DateString;
@@ -547,13 +569,14 @@ export interface ZohoCliTokenSourceReport {
  */
 export function zohoCliTokenSourceReport(status: ZohoCliTokenSourceStatus): ZohoCliTokenSourceReport {
   const { active, resolved, error } = status;
+  const source = { command: active.command, origin: active.origin, ...(active.name ? { name: active.name } : {}), apiMode: active.apiMode ?? 'production' };
   let result: ZohoCliTokenSourceReport;
 
   if (resolved) {
     const { products, datacenter, hints, token } = resolved;
-    result = { command: active.command, origin: active.origin, products, datacenter, expiresAt: token.expiresAt, scopes: token.scopes, providerType: token.providerType, hints };
+    result = { ...source, products, datacenter, expiresAt: token.expiresAt, scopes: token.scopes, providerType: token.providerType, hints };
   } else {
-    result = { command: active.command, origin: active.origin, error: error ?? 'The token source could not be loaded.' };
+    result = { ...source, error: error ?? 'The token source could not be loaded.' };
   }
 
   return result;

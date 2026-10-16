@@ -1,6 +1,6 @@
 import { createContextSlot } from '@dereekb/dbx-cli';
 import type { MiddlewareFunction } from 'yargs';
-import { loadCliConfig, configuredProducts } from '../config/cli.config';
+import { loadCliConfig, configuredProducts, zohoCliTokenSourceSelectionFromArgv } from '../config/cli.config';
 import { loadZohoCliResolvedTokenSource } from '../config/token.source';
 import { createCliContext, type ZohoCliContext } from '../context/cli.context';
 import { outputError } from '../util/output';
@@ -24,7 +24,7 @@ const TOKEN_SOURCE_SETUP_HINT = 'or use a token source: zoho-cli auth token-sour
 /**
  * Builds a yargs middleware that loads the CLI config, ensures at least one Zoho product has resolvable credentials, and stores the constructed {@link ZohoCliContext} in a module-level slot for command handlers to consume via {@link getCliContext}.
  *
- * When a token source is active (`ZOHO_CLI_TOKEN_COMMAND`, else the saved `tokenSource` block), its token is loaded first — running its command unless a cached token is still valid — and the products its scopes cover authenticate through it. A failing token source fails the command with the source's own error.
+ * When a token source is active (`--token-source <name>`, `ZOHO_CLI_TOKEN_SOURCE`, `ZOHO_CLI_TOKEN_COMMAND`, the saved `activeTokenSource`, else the saved `tokenSource` block — see `resolveZohoCliActiveTokenSource`), its token is loaded first — running its command unless a cached token is still valid — and the products its scopes cover authenticate through it. A failing token source, or a selected name with no saved source, fails the command with that error.
  *
  * Commands listed in `skipCommands` (typically `auth` subcommands like `setup`/`clear`) bypass the check so users can configure credentials before they exist. On any failure the middleware writes a structured error envelope to stdout via {@link outputError} and exits the process with status `4`.
  *
@@ -40,7 +40,7 @@ export function createAuthMiddleware(skipCommands: ReadonlySet<string>): Middlew
     }
 
     try {
-      const config = await loadCliConfig();
+      const config = await loadCliConfig(zohoCliTokenSourceSelectionFromArgv(argv));
 
       if (!config) {
         outputError(new Error(`Not authenticated. Run: zoho-cli auth login (or zoho-cli auth setup --client-id X --client-secret Y --token Z), ${TOKEN_SOURCE_SETUP_HINT}`));

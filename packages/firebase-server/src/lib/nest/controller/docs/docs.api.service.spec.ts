@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -13,7 +13,7 @@ const ANY_DOC = '---\naudience: any\n---\n# Welcome\n\nHello everyone.\n\n## Get
 const ADMIN_DOC = '---\naudience: [admin]\n---\n# Admin Runbook\n\nSecret admin steps.\n\n## Rotate Keys\n\nRotate the signing keys.\n\n### Verify\n\nCheck the JWKS.\n\n## Backups\n\nNightly.\n';
 const USER_DOC = '---\naudience: [user, admin]\n---\n# User Guide\n\n## Guestbook Entries\n\nWrite a guestbook entry.\n';
 
-function entryFor(id: string, content: string, input: Pick<DocsManifestEntry, 'title' | 'audience' | 'sections'>): DocsManifestEntry {
+function entryFor(id: string, content: string, input: Pick<DocsManifestEntry, 'title' | 'audience' | 'sections'> & Partial<Pick<DocsManifestEntry, 'description' | 'tags'>>): DocsManifestEntry {
   const bytes = Buffer.from(content, 'utf8');
   return { id, path: `${id}.md`, sha256: createHash('sha256').update(bytes).digest('hex'), size: bytes.byteLength, ...input };
 }
@@ -27,7 +27,7 @@ function buildFixture(input?: { readonly extraEntries?: readonly DocsManifestEnt
   writeFileSync(path.join(docsRoot, 'guides', 'user.md'), USER_DOC);
 
   const docs: DocsManifestEntry[] = [
-    entryFor('welcome', ANY_DOC, { title: 'Welcome', audience: ['any'], sections: [{ id: 'getting-around', title: 'Getting Around', depth: 2 }] }),
+    entryFor('welcome', ANY_DOC, { title: 'Welcome', description: 'Start here.', tags: ['onboarding'], audience: ['any'], sections: [{ id: 'getting-around', title: 'Getting Around', depth: 2 }] }),
     entryFor('admin', ADMIN_DOC, {
       title: 'Admin Runbook',
       audience: ['admin'],
@@ -144,7 +144,17 @@ describe('DocsApiService', () => {
   });
 
   describe('loading', () => {
-    it('should exclude a doc whose file is a symlink escaping the docs folder', () => {
+    it('should load docs from the manifest without reading their files', () => {
+      const { service, docsRoot } = buildFixture();
+      unlinkSync(path.join(docsRoot, 'welcome.md'));
+
+      expect(service.docCount).toBe(3);
+      expect(service.listDocs(authWithRoles([])).docs.map((x) => x.id)).toEqual(['welcome']);
+      expect(service.searchDocs(authWithRoles([]), { query: 'welcome' }).results[0]).toMatchObject({ id: 'welcome' });
+      expect(errorCodeOf(() => service.readDoc(authWithRoles([]), { id: 'welcome' }))).toBe(DOCS_NOT_FOUND_ERROR_CODE);
+    });
+
+    it('should refuse to read a doc whose file is a symlink escaping the docs folder', () => {
       const outside = '---\naudience: any\n---\n# Outside\n';
       const { service } = buildFixture({ extraEntries: [entryFor('escape', outside, { title: 'Escape', audience: ['any'], sections: [] })] });
       // the fixture's docsRoot is created inside buildFixture; add the escaping symlink before the lazy load
@@ -153,18 +163,13 @@ describe('DocsApiService', () => {
       writeFileSync(outsidePath, outside);
       symlinkSync(outsidePath, path.join(docsRoot, 'escape.md'));
 
-      expect(service.listDocs(authWithRoles([])).docs.map((x) => x.id)).toEqual(['welcome']);
       expect(errorCodeOf(() => service.readDoc(authWithRoles([]), { id: 'escape' }))).toBe(DOCS_NOT_FOUND_ERROR_CODE);
     });
 
-    it('should exclude a doc whose content drifted from the manifest, unless verification is off', () => {
-      const drifted = buildFixture();
-      writeFileSync(path.join(drifted.docsRoot, 'welcome.md'), `${ANY_DOC}\nchanged`);
-      expect(drifted.service.docCount).toBe(2);
-
-      const unverified = buildFixture({ config: { verifyContentHashes: false } });
-      writeFileSync(path.join(unverified.docsRoot, 'welcome.md'), `${ANY_DOC}\nchanged`);
-      expect(unverified.service.docCount).toBe(3);
+    it('should read a doc whose content drifted from the manifest when verification is off', () => {
+      const { service, docsRoot } = buildFixture({ config: { verifyContentHashes: false } });
+      writeFileSync(path.join(docsRoot, 'welcome.md'), `${ANY_DOC}\nchanged`);
+      expect(service.readDoc(authWithRoles([]), { id: 'welcome' }).content).toContain('changed');
     });
 
     it('should serve no docs without a manifest', () => {
@@ -206,6 +211,19 @@ describe('DocsApiService', () => {
       expect(userResult.results.every((x) => x.id !== 'admin')).toBe(true);
     });
 
+    it('should match tags and return the description on doc hits only', () => {
+      const { service } = buildFixture();
+      expect(service.searchDocs(authWithRoles([]), { query: 'onboarding' }).results).toEqual([{ id: 'welcome', title: 'Welcome', description: 'Start here.' }]);
+
+      const sectionHit = service.searchDocs(authWithRoles([]), { query: 'getting around' }).results[0];
+      expect(sectionHit).toEqual({ id: 'welcome', title: 'Welcome', section: { id: 'getting-around', title: 'Getting Around' } });
+    });
+
+    it('should not search doc bodies', () => {
+      const { service } = buildFixture();
+      expect(service.searchDocs(authWithRoles(['admin']), { query: 'nightly' }).total).toBe(0);
+    });
+
     it('should fall back to matching any word', () => {
       const { service } = buildFixture();
       const result = service.searchDocs(authWithRoles(['user']), { query: 'guestbook zebra' });
@@ -214,15 +232,16 @@ describe('DocsApiService', () => {
 
     it('should respect the limit', () => {
       const { service } = buildFixture();
-      expect(service.searchDocs(authWithRoles(['admin']), { query: 'the', limit: 1 }).results).toHaveLength(1);
+      const result = service.searchDocs(authWithRoles(['admin']), { query: 'admin', limit: 1 });
+      expect(result.total).toBeGreaterThan(1);
+      expect(result.results).toHaveLength(1);
     });
   });
 
   describe('splitDocsMarkdownSections()', () => {
     it('should ignore headings inside fenced code', () => {
       const split = splitDocsMarkdownSections('# T\n\nintro\n\n```\n## Not a heading\n```\n\n## Real\n\nbody', [{ id: 'real', title: 'Real', depth: 2 }]);
-      expect(split.intro).toContain('## Not a heading');
-      expect(split.sections[0].ownText).toBe('body');
+      expect(split.sections.map((x) => x.content)).toEqual(['## Real\n\nbody']);
     });
   });
 });

@@ -56,7 +56,7 @@ export function createMcpDocsSearchTool(deps: CreateMcpDocsSearchToolDeps): McpT
 
   return buildStaticToolDefinition({
     name,
-    description: `Search the ${app} documentation (guides and how-tos) by keyword. Returns doc ids, matching section ids and a snippet. Read a doc or one section with ${readHint}, passing \`{ id, section? }\`.`,
+    description: `Search the ${app} documentation (guides and how-tos) by keyword, matching doc titles, tags, descriptions and section headings. Returns doc ids, matching section ids and doc descriptions. Read a doc or one section with ${readHint}, passing \`{ id, section? }\`.`,
     inputSchema: MCP_DOCS_SEARCH_INPUT_SCHEMA,
     dispatch: { call: MCP_DOCS_SEARCH_DISPATCH_CALL, modelType: MCP_DOCS_DISPATCH_MODEL_TYPE },
     effectiveReadOnly: true,

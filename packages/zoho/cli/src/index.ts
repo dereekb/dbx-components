@@ -10,14 +10,14 @@ import { SIGN_COMMAND } from './lib/commands/sign.command';
 import { ANALYTICS_COMMAND } from './lib/commands/analytics.command';
 import { REQUEST_COMMAND } from './lib/commands/request.command';
 import { createAuthMiddleware } from './lib/middleware/auth.middleware';
-import { clearOutputConfig, loadCliConfig, mergeCliConfig } from './lib/config/cli.config';
+import { clearOutputConfig, loadCliConfigFile, mergeCliConfig, ZOHO_CLI_TOKEN_COMMAND_ENV_VAR, ZOHO_CLI_TOKEN_SOURCE_ENV_VAR } from './lib/config/cli.config';
 // Importing this module registers the Zoho secret-redaction pattern + Zoho-aware error mapper
 // with @dereekb/dbx-cli. The named import keeps the side effects scoped to this entry point.
 import { outputError } from './lib/util/output';
 
 const outputCommand = createOutputCommand({
   cliName: 'zoho-cli',
-  loadOutputConfig: async () => (await loadCliConfig())?.output,
+  loadOutputConfig: async () => (await loadCliConfigFile())?.output,
   mergeOutputConfig: (update) => mergeCliConfig({ output: update }),
   clearOutputConfig
 });
@@ -48,7 +48,7 @@ const configCommandNames = new Set(configCommands.map(commandName));
 const outputMiddleware = createOutputMiddleware({
   cliName: 'zoho-cli',
   skipCommands: configCommandNames,
-  loadOutputConfig: async () => (await loadCliConfig())?.output,
+  loadOutputConfig: async () => (await loadCliConfigFile())?.output,
   saveCommandOutputConfig: async (commandKey, commandConfig) => {
     await mergeCliConfig({ output: { commands: { [commandKey]: commandConfig } } });
   }
@@ -90,6 +90,11 @@ async function main() {
         type: 'boolean',
         global: true,
         describe: 'Ignore any configured pick filters and return full response data'
+      })
+      .option('token-source', {
+        type: 'string',
+        global: true,
+        describe: `Saved token source to use for this run, e.g. dev or prod (overrides ${ZOHO_CLI_TOKEN_SOURCE_ENV_VAR}, ${ZOHO_CLI_TOKEN_COMMAND_ENV_VAR} and the saved selection)`
       })
       .middleware([createAuthMiddleware(configCommandNames), outputMiddleware], true)
       .command(configCommands)

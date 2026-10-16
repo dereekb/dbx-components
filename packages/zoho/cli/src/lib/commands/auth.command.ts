@@ -11,9 +11,17 @@ import {
   zohoCliCredentialSources,
   zohoCliRefreshTokenEnvVarName,
   zohoCliTokenCommandFromEnv,
+  zohoCliTokenSourceNameFromEnv,
+  zohoCliTokenSourceSelectionFromArgv,
+  zohoCliSavedTokenSource,
+  zohoCliSavedTokenSourceBlock,
+  zohoCliSavedTokenSourceNames,
+  assertZohoCliTokenSourceName,
   resolveZohoCliActiveTokenSource,
-  saveCliTokenSourceConfig,
+  updateCliTokenSourceConfig,
+  DEFAULT_ZOHO_CLI_TOKEN_SOURCE_NAME,
   ZOHO_CLI_TOKEN_COMMAND_ENV_VAR,
+  ZOHO_CLI_TOKEN_SOURCE_ENV_VAR,
   ZOHO_CLI_PRODUCTS,
   ZOHO_CLI_ORG_ID_PRODUCTS,
   ZOHO_CLI_DEDICATED_CLIENT_PRODUCTS,
@@ -23,14 +31,17 @@ import {
   type ZohoCliProductConfig,
   type ZohoCliCredentialBlockKey,
   type ZohoCliCredentialSource,
-  type ZohoCliActiveTokenSource
+  type ZohoCliActiveTokenSource,
+  type ZohoCliTokenSourceConfig,
+  type ZohoCliTokenSourceName,
+  type ZohoCliTokenSourceSelection
 } from '../config/cli.config';
 import { clearCachedZohoCliTokenSourceToken, loadCachedZohoCliTokenSourceToken, loadZohoCliTokenSourceStatus, zohoCliTokenSourceCoverage, zohoCliTokenSourceReport, type ZohoCliTokenSourceStatus } from '../config/token.source';
 import { DEFAULT_AUTH_LOGIN_REDIRECT_URI, ZOHO_CLI_REGION_CHOICES, exchangeZohoAuthorizationCode, loadZohoAuthUserEmail, parseZohoAuthRedirect, zohoCliScopesForProducts } from '../config/cli.oauth';
 import { noop, generateOAuthState, type Maybe } from '@dereekb/util';
 import { parseDurationStringToMilliseconds } from '@dereekb/date';
 import { openUrlInBrowser, parseLoopbackRedirectUri, promptLine, startLoopbackRedirectCapture, type LoopbackRedirectCapture } from '@dereekb/dbx-cli';
-import { zohoAccountsAuthorizeUrlFactory, zohoAccountsConfigApiUrl, zohoOAuthScopesFromScopeString, type ZohoOAuthScope } from '@dereekb/zoho';
+import { zohoAccountsAuthorizeUrlFactory, zohoAccountsConfigApiUrl, zohoOAuthScopesFromScopeString, type ZohoApiUrlKey, type ZohoOAuthScope } from '@dereekb/zoho';
 import { fileZohoAccountsAccessTokenCacheService } from '@dereekb/zoho/nestjs';
 import { createCliContext, toZohoCliProductApis } from '../context/cli.context';
 import { outputResult, outputError } from '../util/output';
@@ -61,7 +72,7 @@ const ZOHO_API_CONSOLE_URL = 'https://api-console.zoho.com/';
  * @returns The configured products.
  */
 async function configuredProductsAfterSave(merged: ZohoCliConfig): Promise<ZohoCliProduct[]> {
-  return configuredProducts((await loadCliConfig()) ?? merged);
+  return configuredProducts((await loadCliConfig({ skipTokenSource: true })) ?? merged);
 }
 
 // MARK: Setup
@@ -91,7 +102,7 @@ const authSetupCommand: CommandModule = {
       ]),
   handler: async (argv: any) => {
     try {
-      const existingConfig = await loadCliConfig();
+      const existingConfig = await loadCliConfig({ skipTokenSource: true });
       const ctx = buildAuthSetupContext(argv, existingConfig);
 
       if (!ctx.clientId || !ctx.clientSecret) {
@@ -654,7 +665,7 @@ async function waitForAuthLoginRedirect(capture: Maybe<LoopbackRedirectCapture>,
  * @returns Resolves once the cache entries are cleared.
  */
 async function clearAuthLoginCachedTokens(result: AuthLoginResult): Promise<void> {
-  const config = await loadCliConfig();
+  const config = await loadCliConfig({ skipTokenSource: true });
   const cacheService = fileZohoAccountsAccessTokenCacheService(getTokenCachePath(), false);
   const products = config
     ? ZOHO_CLI_PRODUCTS.filter((product) => {
@@ -674,7 +685,7 @@ async function clearAuthLoginCachedTokens(result: AuthLoginResult): Promise<void
  * @returns Resolves once the result is stored and reported.
  */
 async function handleAuthLogin(argv: AuthLoginArgv): Promise<void> {
-  const ctx = await promptAuthLoginClient(buildAuthLoginContext(argv, await loadCliConfig()));
+  const ctx = await promptAuthLoginClient(buildAuthLoginContext(argv, await loadCliConfig({ skipTokenSource: true })));
   const listenFor = argv.listenFor ?? DEFAULT_AUTH_LOGIN_LISTEN_FOR;
   const listenForMs = parseDurationStringToMilliseconds(listenFor);
 
@@ -803,11 +814,12 @@ const authShowCommand: CommandModule = {
   command: 'show',
   describe: 'Show current configuration (secrets masked)',
   builder: (yargs: Argv) => yargs,
-  handler: async () => {
+  handler: async (argv: any) => {
     try {
-      const config = await loadCliConfig();
+      const selection = zohoCliTokenSourceSelectionFromArgv(argv);
+      const config = await loadCliConfig(selection);
       const fileConfig = await loadCliConfigFile();
-      outputResult(config ? buildAuthShowResult(config, zohoCliCredentialSources(fileConfig), await loadZohoCliTokenSourceStatus(fileConfig)) : { configured: false });
+      outputResult(config ? buildAuthShowResult(config, zohoCliCredentialSources(fileConfig), await loadZohoCliTokenSourceStatus(fileConfig, selection)) : { configured: false });
     } catch (e) {
       outputError(e);
       process.exit(1);
@@ -820,12 +832,13 @@ const authCheckCommand: CommandModule = {
   command: 'check',
   describe: 'Verify credentials by exchanging tokens',
   builder: (yargs: Argv) => yargs,
-  handler: async () => {
+  handler: async (argv: any) => {
     try {
-      const config = await loadCliConfig();
+      const selection = zohoCliTokenSourceSelectionFromArgv(argv);
+      const config = await loadCliConfig(selection);
 
       if (config) {
-        const tokenSourceStatus = await loadZohoCliTokenSourceStatus(await loadCliConfigFile());
+        const tokenSourceStatus = await loadZohoCliTokenSourceStatus(await loadCliConfigFile(), selection);
         const tokenSource = tokenSourceStatus?.resolved;
         const tokenSourceResult = tokenSourceStatus ? { tokenSource: zohoCliTokenSourceReport(tokenSourceStatus) } : {};
         const products = configuredProducts(config, tokenSource);
@@ -879,78 +892,208 @@ const authCheckCommand: CommandModule = {
 
 // MARK: Token Source
 /**
- * Result of {@link setAuthTokenSource}.
+ * Reads the `--name` option of the `auth token-source` subcommands.
+ *
+ * @param name - The option value.
+ * @returns The trimmed name, else {@link DEFAULT_ZOHO_CLI_TOKEN_SOURCE_NAME}.
+ * @throws {Error} When the name is not a valid token source name.
  */
-export interface SetAuthTokenSourceResult {
-  readonly saved: true;
-  readonly command: string;
-  /**
-   * The {@link ZOHO_CLI_TOKEN_COMMAND_ENV_VAR} command, when set — it wins over the saved one for runs where it is set.
-   */
-  readonly envOverride?: string;
+function authTokenSourceName(name: Maybe<string>): ZohoCliTokenSourceName {
+  return name?.trim() ? assertZohoCliTokenSourceName(name) : DEFAULT_ZOHO_CLI_TOKEN_SOURCE_NAME;
 }
 
 /**
- * Saves the token source command (`auth token-source set`).
+ * The token-source env vars that are set, which win over the saved selection on the runs where they are set.
+ */
+interface AuthTokenSourceEnvOverrides {
+  /**
+   * The {@link ZOHO_CLI_TOKEN_COMMAND_ENV_VAR} command, when set.
+   */
+  readonly envOverride?: string;
+  /**
+   * The {@link ZOHO_CLI_TOKEN_SOURCE_ENV_VAR} name, when set.
+   */
+  readonly envSelection?: string;
+}
+
+function authTokenSourceEnvOverrides(): AuthTokenSourceEnvOverrides {
+  const envOverride = zohoCliTokenCommandFromEnv();
+  const envSelection = zohoCliTokenSourceNameFromEnv();
+  return { ...(envOverride ? { envOverride } : {}), ...(envSelection ? { envSelection } : {}) };
+}
+
+/**
+ * Input for {@link setAuthTokenSource}.
+ */
+export interface SetAuthTokenSourceInput {
+  /**
+   * The token source command, e.g. `demo-cli external-token zoho_admin --env external-token`.
+   */
+  readonly command: string;
+  /**
+   * The name to save it under. Defaults to {@link DEFAULT_ZOHO_CLI_TOKEN_SOURCE_NAME}, the unnamed `tokenSource` block.
+   */
+  readonly name?: Maybe<string>;
+  /**
+   * The Zoho environment its covered products are called in. When omitted, a replaced source keeps its
+   * stored mode (so re-saving a sandbox source's command cannot quietly point it at production), and a
+   * new one uses `production`.
+   */
+  readonly apiMode?: Maybe<ZohoApiUrlKey>;
+}
+
+/**
+ * Result of {@link setAuthTokenSource}.
+ */
+export interface SetAuthTokenSourceResult extends AuthTokenSourceEnvOverrides {
+  readonly saved: true;
+  readonly name: ZohoCliTokenSourceName;
+  readonly command: string;
+  readonly apiMode: ZohoApiUrlKey;
+}
+
+/**
+ * Saves a token source (`auth token-source set`): the unnamed `tokenSource` block, or a named entry of `tokenSources`.
  *
- * Writes only the `tokenSource` block — the `shared` and product credential blocks are left as they
- * are, and take over again for every product once the source is cleared. The cached token of a
+ * Writes only the token-source keys — the `shared` and product credential blocks are left as they
+ * are, and take over again for every product once no source is active. The cached token of a
  * replaced command is removed from the token file.
  *
- * @param command - The token source command, e.g. `demo-cli external-token zoho_admin`.
+ * @param input - The command, name, and api mode.
  * @returns What was saved.
- * @throws {Error} When the command is blank.
+ * @throws {Error} When the command is blank or the name is invalid.
  */
-export async function setAuthTokenSource(command: string): Promise<SetAuthTokenSourceResult> {
-  const trimmed = command.trim();
+export async function setAuthTokenSource(input: SetAuthTokenSourceInput): Promise<SetAuthTokenSourceResult> {
+  const command = input.command.trim();
 
-  if (!trimmed) {
+  if (!command) {
     throw new Error('The token source command cannot be empty.');
   }
 
-  const previous = (await loadCliConfigFile())?.tokenSource?.command;
-  await saveCliTokenSourceConfig({ command: trimmed });
+  const name = authTokenSourceName(input.name);
+  const fileConfig = await loadCliConfigFile();
+  const isDefault = name === DEFAULT_ZOHO_CLI_TOKEN_SOURCE_NAME;
+  const previous = zohoCliSavedTokenSourceBlock(fileConfig, name);
+  const apiMode: ZohoApiUrlKey = input.apiMode ?? (previous?.apiMode === 'sandbox' ? 'sandbox' : 'production');
+  // production is the default, so it is not stored
+  const block: ZohoCliTokenSourceConfig = apiMode === 'sandbox' ? { command, apiMode } : { command };
 
-  if (previous && previous !== trimmed) {
-    await clearCachedZohoCliTokenSourceToken({ command: previous });
+  await updateCliTokenSourceConfig(isDefault ? { tokenSource: block } : { tokenSources: { ...fileConfig?.tokenSources, [name]: block } });
+
+  const previousCommand = previous?.command?.trim();
+
+  if (previousCommand && previousCommand !== command) {
+    await clearCachedZohoCliTokenSourceToken({ command: previousCommand });
   }
 
-  const envOverride = zohoCliTokenCommandFromEnv();
-  return { saved: true, command: trimmed, ...(envOverride ? { envOverride } : {}) };
+  return { saved: true, name, command, apiMode, ...authTokenSourceEnvOverrides() };
+}
+
+/**
+ * Result of {@link useAuthTokenSource}.
+ */
+export interface UseAuthTokenSourceResult extends AuthTokenSourceEnvOverrides {
+  readonly activeTokenSource: ZohoCliTokenSourceName;
+  /**
+   * The selected source's command, or null when {@link DEFAULT_ZOHO_CLI_TOKEN_SOURCE_NAME} is selected and none is saved.
+   */
+  readonly command: Maybe<string>;
+  readonly apiMode: ZohoApiUrlKey;
+}
+
+/**
+ * Selects the saved token source used when a run selects none (`auth token-source use <name>`).
+ *
+ * Selecting {@link DEFAULT_ZOHO_CLI_TOKEN_SOURCE_NAME} removes the saved selection, so the unnamed
+ * `tokenSource` block (when saved) applies again.
+ *
+ * @param name - The source's name.
+ * @returns The selection and the selected source.
+ * @throws {Error} When the name is invalid or no source is saved under it.
+ */
+export async function useAuthTokenSource(name: string): Promise<UseAuthTokenSourceResult> {
+  const sourceName = authTokenSourceName(name);
+  const fileConfig = await loadCliConfigFile();
+  const saved = zohoCliSavedTokenSource(fileConfig, sourceName);
+  const isDefault = sourceName === DEFAULT_ZOHO_CLI_TOKEN_SOURCE_NAME;
+
+  if (!saved && !isDefault) {
+    const names = zohoCliSavedTokenSourceNames(fileConfig);
+    throw new Error(`No token source is saved as "${sourceName}". Saved token sources: ${names.length > 0 ? names.join(', ') : 'none'}. Save it with: zoho-cli auth token-source set "<command>" --name ${sourceName}`);
+  }
+
+  await updateCliTokenSourceConfig({ activeTokenSource: isDefault ? undefined : sourceName });
+  return { activeTokenSource: sourceName, command: saved?.command ?? null, apiMode: saved?.apiMode ?? 'production', ...authTokenSourceEnvOverrides() };
+}
+
+/**
+ * Input for {@link clearAuthTokenSource}.
+ */
+export interface ClearAuthTokenSourceInput {
+  /**
+   * The source to remove. Defaults to {@link DEFAULT_ZOHO_CLI_TOKEN_SOURCE_NAME}, the unnamed `tokenSource` block.
+   */
+  readonly name?: Maybe<string>;
 }
 
 /**
  * Result of {@link clearAuthTokenSource}.
  */
-export interface ClearAuthTokenSourceResult {
+export interface ClearAuthTokenSourceResult extends AuthTokenSourceEnvOverrides {
   readonly cleared: boolean;
+  readonly name: ZohoCliTokenSourceName;
   /**
    * The command that was removed, when one was saved.
    */
   readonly command?: string;
   /**
-   * The {@link ZOHO_CLI_TOKEN_COMMAND_ENV_VAR} command, when set — it still applies to runs where it is set.
+   * True when the removed source was the saved selection, which was removed with it.
    */
-  readonly envOverride?: string;
+  readonly activeTokenSourceCleared?: true;
 }
 
 /**
- * Removes the saved token source (`auth token-source clear`) and its cached token.
+ * Removes a saved token source (`auth token-source clear`) and its cached token.
  *
- * Only the `tokenSource` block is removed, so the stored credentials apply again to every product.
+ * Only that source is removed — and the saved selection, when it named the source. Once no source is
+ * active, the stored credentials apply again to every product.
  *
+ * @param input - The source to remove.
  * @returns What was cleared.
+ * @throws {Error} When the name is invalid.
  */
-export async function clearAuthTokenSource(): Promise<ClearAuthTokenSourceResult> {
-  const previous = (await loadCliConfigFile())?.tokenSource?.command;
+export async function clearAuthTokenSource(input?: Maybe<ClearAuthTokenSourceInput>): Promise<ClearAuthTokenSourceResult> {
+  const name = authTokenSourceName(input?.name);
+  const fileConfig = await loadCliConfigFile();
+  const isDefault = name === DEFAULT_ZOHO_CLI_TOKEN_SOURCE_NAME;
+  const previous = zohoCliSavedTokenSourceBlock(fileConfig, name)?.command;
+  const clearsSelection = !isDefault && fileConfig?.activeTokenSource === name;
 
-  if (previous) {
-    await saveCliTokenSourceConfig(undefined);
+  if (previous != null) {
+    if (isDefault) {
+      await updateCliTokenSourceConfig({ tokenSource: undefined });
+    } else {
+      const { [name]: _removed, ...tokenSources } = fileConfig?.tokenSources ?? {};
+      await updateCliTokenSourceConfig({ tokenSources: Object.keys(tokenSources).length > 0 ? tokenSources : undefined, ...(clearsSelection ? { activeTokenSource: undefined } : {}) });
+    }
+
     await clearCachedZohoCliTokenSourceToken({ command: previous });
   }
 
-  const envOverride = zohoCliTokenCommandFromEnv();
-  return { cleared: previous != null, ...(previous ? { command: previous } : {}), ...(envOverride ? { envOverride } : {}) };
+  return { cleared: previous != null, name, ...(previous ? { command: previous } : {}), ...(previous != null && clearsSelection ? { activeTokenSourceCleared: true as const } : {}), ...authTokenSourceEnvOverrides() };
+}
+
+/**
+ * A saved token source, as `auth token-source show` lists it.
+ */
+export interface AuthTokenSourceSavedSource {
+  readonly name: ZohoCliTokenSourceName;
+  readonly command: string;
+  readonly apiMode: ZohoApiUrlKey;
+  /**
+   * Whether this source is the one in effect for the run.
+   */
+  readonly active: boolean;
 }
 
 /**
@@ -958,9 +1101,21 @@ export async function clearAuthTokenSource(): Promise<ClearAuthTokenSourceResult
  */
 export interface AuthTokenSourceShowResult {
   /**
-   * The saved command, or null.
+   * The command of the saved unnamed source ({@link DEFAULT_ZOHO_CLI_TOKEN_SOURCE_NAME}), or null.
    */
   readonly saved: Maybe<string>;
+  /**
+   * Every saved source, the unnamed one first.
+   */
+  readonly sources: readonly AuthTokenSourceSavedSource[];
+  /**
+   * The saved selection (`auth token-source use`), or null when the unnamed source applies.
+   */
+  readonly activeTokenSource: Maybe<ZohoCliTokenSourceName>;
+  /**
+   * The {@link ZOHO_CLI_TOKEN_SOURCE_ENV_VAR} name, or null.
+   */
+  readonly envSelection: Maybe<ZohoCliTokenSourceName>;
   /**
    * The {@link ZOHO_CLI_TOKEN_COMMAND_ENV_VAR} command, or null.
    */
@@ -970,20 +1125,46 @@ export interface AuthTokenSourceShowResult {
    */
   readonly active: Maybe<ZohoCliActiveTokenSource>;
   /**
+   * Why no source could be selected (a selected name with no saved source), when that is the case.
+   */
+  readonly error?: string;
+  /**
    * What the active source's cached token covers, or null when no token is cached. Never the token.
    */
   readonly cached: Maybe<Record<string, unknown>>;
 }
 
 /**
- * Builds the `auth token-source show` result. Does NOT run the command: only a token already cached
- * in the token file is described (use `auth check` to run it).
+ * Builds the `auth token-source show` (alias `list`) result. Does NOT run any command: only a token
+ * already cached in the token file is described (use `auth check` to run it).
  *
- * @returns The saved and env commands, the active source, and the cached token's coverage.
+ * @param selection - The `--token-source` flag, when given.
+ * @returns The saved sources and selection, the env overrides, the active source, and the cached token's coverage.
  */
-export async function buildAuthTokenSourceShowResult(): Promise<AuthTokenSourceShowResult> {
+export async function buildAuthTokenSourceShowResult(selection?: Maybe<ZohoCliTokenSourceSelection>): Promise<AuthTokenSourceShowResult> {
   const fileConfig = await loadCliConfigFile();
-  const active = resolveZohoCliActiveTokenSource(fileConfig);
+  let active: Maybe<ZohoCliActiveTokenSource>;
+  let error: Maybe<string>;
+
+  try {
+    active = resolveZohoCliActiveTokenSource(fileConfig, selection);
+  } catch (e) {
+    error = e instanceof Error ? e.message : String(e);
+  }
+
+  const sources = zohoCliSavedTokenSourceNames(fileConfig).map((name): AuthTokenSourceSavedSource => {
+    let source: Maybe<ZohoCliTokenSourceConfig>;
+
+    try {
+      source = zohoCliSavedTokenSource(fileConfig, name);
+    } catch {
+      // an unknown stored apiMode; listed with the raw command so it can be fixed with `set --api-mode`
+    }
+
+    const command = source?.command ?? zohoCliSavedTokenSourceBlock(fileConfig, name)?.command ?? '';
+    return { name, command, apiMode: source?.apiMode ?? 'production', active: active?.name === name };
+  });
+
   const cachedToken = active ? await loadCachedZohoCliTokenSourceToken({ command: active.command }) : undefined;
   let cached: Maybe<Record<string, unknown>> = null;
 
@@ -994,20 +1175,50 @@ export async function buildAuthTokenSourceShowResult(): Promise<AuthTokenSourceS
 
   return {
     saved: fileConfig?.tokenSource?.command ?? null,
+    sources,
+    activeTokenSource: fileConfig?.activeTokenSource ?? null,
+    envSelection: zohoCliTokenSourceNameFromEnv() ?? null,
     envOverride: zohoCliTokenCommandFromEnv() ?? null,
     active: active ?? null,
+    ...(error ? { error } : {}),
     cached
   };
 }
 
+const TOKEN_SOURCE_NAME_OPTION_DESCRIBE = `Name of the token source (default: "${DEFAULT_ZOHO_CLI_TOKEN_SOURCE_NAME}", the unnamed one)`;
+
 const authTokenSourceSetCommand: CommandModule = {
   command: 'set <token-command>',
-  describe: 'Save a command that prints a Zoho access token bundle (e.g. "demo-cli external-token zoho_admin")',
-  builder: (yargs: Argv) => yargs.positional('token-command', { type: 'string', demandOption: true, describe: 'The command to run (quote it as one argument)' }).example([['$0 auth token-source set "demo-cli external-token zoho_admin"', 'Use tokens minted by demo-cli for every product their scopes cover']]),
+  describe: 'Save a command that prints a Zoho access token bundle (e.g. "demo-cli external-token zoho_admin"), optionally under a name',
+  builder: (yargs: Argv) =>
+    yargs
+      .positional('token-command', { type: 'string', demandOption: true, describe: 'The command to run (quote it as one argument)' })
+      .option('name', { type: 'string', describe: TOKEN_SOURCE_NAME_OPTION_DESCRIBE })
+      .option('api-mode', { type: 'string', choices: ['production', 'sandbox'] as const, defaultDescription: 'the stored mode, otherwise production', describe: 'Zoho environment the covered products are called in (Desk and Analytics have no sandbox)' })
+      .example([
+        ['$0 auth token-source set "demo-cli external-token zoho_admin"', 'Use tokens minted by demo-cli for every product their scopes cover'],
+        ['$0 auth token-source set "demo-cli external-token zoho_admin --env prod-external-token" --name prod', 'Save a named source for production'],
+        ['$0 auth token-source set "demo-cli external-token zoho_admin --env external-token" --name dev --api-mode sandbox', 'Save a named source whose calls go to the Zoho sandboxes']
+      ]),
   handler: async (argv: any) => {
     try {
-      const result = await setAuthTokenSource(String(argv.tokenCommand ?? ''));
-      outputResult({ ...result, nextStep: 'zoho-cli auth check' });
+      const result = await setAuthTokenSource({ command: String(argv.tokenCommand ?? ''), name: argv.name, apiMode: argv.apiMode });
+      const nextStep = result.name === DEFAULT_ZOHO_CLI_TOKEN_SOURCE_NAME ? 'zoho-cli auth check' : `zoho-cli auth check --token-source ${result.name}`;
+      outputResult({ ...result, nextStep });
+    } catch (e) {
+      outputError(e);
+      process.exit(1);
+    }
+  }
+};
+
+const authTokenSourceUseCommand: CommandModule = {
+  command: 'use <name>',
+  describe: `Select the saved token source used when a run selects none ("${DEFAULT_ZOHO_CLI_TOKEN_SOURCE_NAME}" for the unnamed one)`,
+  builder: (yargs: Argv) => yargs.positional('name', { type: 'string', demandOption: true, describe: 'The saved source to use' }).example([['$0 auth token-source use prod', 'Use the "prod" source unless a run selects another one']]),
+  handler: async (argv: any) => {
+    try {
+      outputResult(await useAuthTokenSource(String(argv.name ?? '')));
     } catch (e) {
       outputError(e);
       process.exit(1);
@@ -1017,11 +1228,12 @@ const authTokenSourceSetCommand: CommandModule = {
 
 const authTokenSourceShowCommand: CommandModule = {
   command: 'show',
-  describe: `Show the saved token source, the ${ZOHO_CLI_TOKEN_COMMAND_ENV_VAR} override, and the cached token's coverage (never the token)`,
+  aliases: ['list'],
+  describe: `List the saved token sources and show the one in effect (${ZOHO_CLI_TOKEN_SOURCE_ENV_VAR} / ${ZOHO_CLI_TOKEN_COMMAND_ENV_VAR} included) and its cached token's coverage (never the token)`,
   builder: (yargs: Argv) => yargs,
-  handler: async () => {
+  handler: async (argv: any) => {
     try {
-      outputResult(await buildAuthTokenSourceShowResult());
+      outputResult(await buildAuthTokenSourceShowResult(zohoCliTokenSourceSelectionFromArgv(argv)));
     } catch (e) {
       outputError(e);
       process.exit(1);
@@ -1031,11 +1243,11 @@ const authTokenSourceShowCommand: CommandModule = {
 
 const authTokenSourceClearCommand: CommandModule = {
   command: 'clear',
-  describe: 'Remove the saved token source; stored credentials apply again',
-  builder: (yargs: Argv) => yargs,
-  handler: async () => {
+  describe: 'Remove a saved token source; stored credentials apply again once none is active',
+  builder: (yargs: Argv) => yargs.option('name', { type: 'string', describe: TOKEN_SOURCE_NAME_OPTION_DESCRIBE }),
+  handler: async (argv: any) => {
     try {
-      outputResult(await clearAuthTokenSource());
+      outputResult(await clearAuthTokenSource({ name: argv.name }));
     } catch (e) {
       outputError(e);
       process.exit(1);
@@ -1045,8 +1257,8 @@ const authTokenSourceClearCommand: CommandModule = {
 
 const authTokenSourceCommand: CommandModule = {
   command: 'token-source',
-  describe: `Use a command that mints Zoho access tokens instead of stored credentials (per run: ${ZOHO_CLI_TOKEN_COMMAND_ENV_VAR})`,
-  builder: (yargs: Argv) => yargs.command(authTokenSourceSetCommand).command(authTokenSourceShowCommand).command(authTokenSourceClearCommand).demandCommand(1, 'Please specify a token-source subcommand.'),
+  describe: `Use commands that mint Zoho access tokens instead of stored credentials, saved by name (per run: --token-source <name>, ${ZOHO_CLI_TOKEN_SOURCE_ENV_VAR}, ${ZOHO_CLI_TOKEN_COMMAND_ENV_VAR})`,
+  builder: (yargs: Argv) => yargs.command(authTokenSourceSetCommand).command(authTokenSourceUseCommand).command(authTokenSourceShowCommand).command(authTokenSourceClearCommand).demandCommand(1, 'Please specify a token-source subcommand.'),
   handler: noop
 };
 

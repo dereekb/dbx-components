@@ -71,10 +71,6 @@ export interface DocsMarkdownSectionText {
    * The section from its heading up to the next heading of the same or a higher level (H3s stay inside their H2).
    */
   readonly content: string;
-  /**
-   * The text directly under the heading, up to the next heading of any level. Used for search.
-   */
-  readonly ownText: string;
 }
 
 /**
@@ -85,10 +81,6 @@ export interface DocsMarkdownSplit {
    * The doc with its frontmatter removed.
    */
   readonly body: string;
-  /**
-   * The text before the first section heading.
-   */
-  readonly intro: string;
   readonly sections: readonly DocsMarkdownSectionText[];
 }
 
@@ -103,7 +95,7 @@ const DOCS_FENCE_REGEX = /^ {0,3}(`{3,}|~{3,})/;
  *
  * @param content - The raw doc content, including frontmatter.
  * @param sections - The doc's manifest sections.
- * @returns The body, intro and section texts.
+ * @returns The body and section texts.
  */
 export function splitDocsMarkdownSections(content: string, sections: readonly DocsManifestSection[]): DocsMarkdownSplit {
   const lines = content.split(/\r?\n/);
@@ -146,18 +138,9 @@ export function splitDocsMarkdownSections(content: string, sections: readonly Do
 
     if (heading != null) {
       const endOfContent = headings.find((x) => x.lineIndex > heading.lineIndex && x.depth <= heading.depth)?.lineIndex ?? bodyLines.length;
-      const endOfOwnText = headings.find((x) => x.lineIndex > heading.lineIndex)?.lineIndex ?? bodyLines.length;
-      result.push({
-        section,
-        content: bodyLines.slice(heading.lineIndex, endOfContent).join('\n').trim(),
-        ownText: bodyLines
-          .slice(heading.lineIndex + 1, endOfOwnText)
-          .join('\n')
-          .trim()
-      });
+      result.push({ section, content: bodyLines.slice(heading.lineIndex, endOfContent).join('\n').trim() });
     }
   });
 
-  const firstSectionLine = sectionHeadings[0]?.lineIndex ?? bodyLines.length;
-  return { body: bodyLines.join('\n').trim(), intro: bodyLines.slice(0, firstSectionLine).join('\n').trim(), sections: result };
+  return { body: bodyLines.join('\n').trim(), sections: result };
 }

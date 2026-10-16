@@ -637,7 +637,7 @@ describe('McpServerFactoryService compact surface', () => {
         reads,
         // admins see both docs, other callers one, and callers flagged `noDocs` none
         countVisibleDocs: (auth: Maybe<FirebaseServerAuthData>) => (auth == null || auth.token['noDocs'] === true ? 0 : auth.token['a'] === true ? 2 : 1),
-        searchDocs: (_auth: unknown, params: { query: string }) => ({ total: 1, results: [{ id: 'welcome', title: 'Welcome', snippet: params.query }] }),
+        searchDocs: (_auth: unknown, params: { query: string }) => ({ total: 1, results: [{ id: 'welcome', title: 'Welcome', description: params.query }] }),
         readDoc: (_auth: unknown, params: { id: string; section?: string }) => {
           reads.push(params);
           return { id: params.id, title: 'Welcome', content: '# Welcome' };
@@ -660,7 +660,7 @@ describe('McpServerFactoryService compact surface', () => {
       expect(entry?._meta?.['anthropic/alwaysLoad']).toBe(true);
 
       const result = await dispatchMcpToolCall<ToolResult>({ factory, ctx: USER, name: 'search_demo_documentation', args: { query: 'setup' } });
-      expect(result.structuredContent.results[0].snippet).toBe('setup');
+      expect(result.structuredContent.results[0].description).toBe('setup');
     });
 
     it('should read a doc through the docs-read method', async () => {

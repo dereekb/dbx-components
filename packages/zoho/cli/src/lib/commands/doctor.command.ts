@@ -10,6 +10,8 @@ import {
   zohoCliProductOrgId,
   zohoCliRefreshTokenEnvVarName,
   zohoCliShadowedEnvCredentialBlocks,
+  zohoCliTokenSourceOriginLabel,
+  zohoCliTokenSourceSelectionFromArgv,
   ZOHO_CLI_ORG_ID_PRODUCTS,
   ZOHO_CLI_TOKEN_SOURCE_ORG_ID_HINTS,
   type ZohoCliConfig,
@@ -43,8 +45,9 @@ export const DOCTOR_COMMAND: CommandModule = {
   command: 'doctor',
   describe: 'Check CLI configuration and connectivity',
   builder: (yargs: Argv) => yargs,
-  handler: async () => {
-    const config = await loadCliConfig();
+  handler: async (argv: any) => {
+    const selection = zohoCliTokenSourceSelectionFromArgv(argv);
+    const config = await loadCliConfig(selection);
     const fileConfig = await loadCliConfigFile();
     const checks: DoctorCheck[] = [];
 
@@ -56,7 +59,7 @@ export const DOCTOR_COMMAND: CommandModule = {
     checks.push(await checkTokenCacheDir());
 
     if (config) {
-      const tokenSourceStatus = await loadZohoCliTokenSourceStatus(fileConfig);
+      const tokenSourceStatus = await loadZohoCliTokenSourceStatus(fileConfig, selection);
       const tokenSource = tokenSourceStatus?.resolved;
       const tokenSourceCheck = tokenSourceStatus ? checkTokenSource(tokenSourceStatus) : undefined;
       if (tokenSourceCheck) checks.push(tokenSourceCheck);
@@ -119,8 +122,8 @@ export function checkShadowedEnvCredentials(fileConfig: Maybe<ZohoCliConfig>): D
 }
 
 /**
- * Reports the active token source: where it came from, what its token covers, the datacenter, expiry
- * and scopes — never the token. Fails when the source could not produce a token, and warns when its
+ * Reports the active token source: its name and where it was selected, what its token covers, the
+ * datacenter, api mode, expiry and scopes — never the token. Fails when the source could not produce a token, and warns when its
  * token covers none of the CLI's products.
  *
  * @param status - The active token source's status.
@@ -128,7 +131,7 @@ export function checkShadowedEnvCredentials(fileConfig: Maybe<ZohoCliConfig>): D
  */
 export function checkTokenSource(status: ZohoCliTokenSourceStatus): DoctorCheck {
   const { active, resolved, error } = status;
-  const source = `Token source "${active.command}" (from ${active.origin === 'env' ? 'ZOHO_CLI_TOKEN_COMMAND' : 'config file'})`;
+  const source = active.name ? `Token source "${active.name}" ("${active.command}", from ${zohoCliTokenSourceOriginLabel(active)})` : `Token source "${active.command}" (from ${zohoCliTokenSourceOriginLabel(active)})`;
   let result: DoctorCheck;
 
   if (resolved == null) {
@@ -136,7 +139,7 @@ export function checkTokenSource(status: ZohoCliTokenSourceStatus): DoctorCheck 
   } else if (resolved.products.length === 0) {
     result = { name: 'token-source', status: 'warn', message: `${source} grants no Zoho product scopes the CLI supports. Scopes: ${resolved.token.scopes.join(', ') || '(none)'}` };
   } else {
-    result = { name: 'token-source', status: 'pass', message: `${source} covers ${resolved.products.join(', ')} (datacenter: ${resolved.datacenter}, expires: ${resolved.token.expiresAt}). Scopes: ${resolved.token.scopes.join(', ')}` };
+    result = { name: 'token-source', status: 'pass', message: `${source} covers ${resolved.products.join(', ')} (datacenter: ${resolved.datacenter}, api mode: ${active.apiMode ?? 'production'}, expires: ${resolved.token.expiresAt}). Scopes: ${resolved.token.scopes.join(', ')}` };
   }
 
   return result;

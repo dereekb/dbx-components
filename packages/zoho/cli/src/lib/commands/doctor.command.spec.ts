@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { checkOrgIdProducts, doctorChecksHealthy } from './doctor.command';
+import { checkOrgIdProducts, checkTokenSource, doctorChecksHealthy } from './doctor.command';
 import { configuredProducts, type ZohoCliConfig } from '../config/cli.config';
+import { type ZohoCliTokenSourceStatus } from '../config/token.source';
 
 const fullCreds = {
   clientId: 'id',
@@ -77,5 +78,24 @@ describe('doctorChecksHealthy()', () => {
       ])
     ).toBe(false);
     expect(doctorChecksHealthy([{ name: 'a', status: 'fail' }])).toBe(false);
+  });
+});
+
+describe('checkTokenSource()', () => {
+  const resolved = { products: ['crm'], datacenter: 'us', token: { accessToken: 'minted-secret', scopes: ['ZohoCRM.modules.ALL'], expiresAt: '2030-01-01T00:00:00.000Z' } };
+
+  it('should name a selected source, where it was selected, and its api mode', () => {
+    const status = { active: { command: 'dev-cmd', apiMode: 'sandbox', origin: 'flag', name: 'dev' }, resolved } as unknown as ZohoCliTokenSourceStatus;
+    const check = checkTokenSource(status);
+
+    expect(check.status).toBe('pass');
+    expect(check.message).toContain('Token source "dev" ("dev-cmd", from --token-source) covers crm (datacenter: us, api mode: sandbox,');
+    expect(check.message).not.toContain('minted-secret');
+  });
+
+  it('should label a ZOHO_CLI_TOKEN_COMMAND command by its env var', () => {
+    const status = { active: { command: 'env-cmd', origin: 'env' }, error: 'not logged in' } as unknown as ZohoCliTokenSourceStatus;
+
+    expect(checkTokenSource(status)).toEqual({ name: 'token-source', status: 'fail', message: 'Token source "env-cmd" (from ZOHO_CLI_TOKEN_COMMAND) failed: not logged in' });
   });
 });

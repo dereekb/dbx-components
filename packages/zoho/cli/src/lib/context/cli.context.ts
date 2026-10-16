@@ -96,7 +96,8 @@ interface ZohoCliProductApiSetup {
  *
  * When a token source is given, every product its token covers is built through ONE accounts API whose
  * `tokenRefresher` is the token source — overriding that product's own credentials — with its API url
- * for the token's datacenter and its org id from the config, else the token source's hints. Products
+ * for the token's datacenter and the source's api mode (production, or the product's sandbox), and
+ * its org id from the config, else the token source's hints. Products
  * the token does not cover keep their own credentials. The token-source accounts API keeps its tokens
  * in memory only: the token source caches them itself, and the per-product entries of the token file
  * stay those of the products' own credentials.
@@ -161,7 +162,7 @@ export function createCliContext(config: ZohoCliConfig, tokenSource?: Maybe<Zoho
     if (tokenSource?.products.includes(product)) {
       result = {
         accountsApi: getTokenSourceAccountsApi(tokenSource),
-        apiUrl: zohoProductConfigApiUrlForDatacenter({ product, datacenter: tokenSource.datacenter }),
+        apiUrl: zohoProductConfigApiUrlForDatacenter({ product, datacenter: tokenSource.datacenter, mode: tokenSource.source.apiMode }),
         orgId: zohoCliProductOrgId({ config, product, tokenSource })
       };
     } else {
