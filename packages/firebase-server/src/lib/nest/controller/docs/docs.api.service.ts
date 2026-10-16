@@ -8,7 +8,7 @@ import { assertEndpointOidcScope, oidcScopesFromRequestAuth } from '../api.scope
 import { type FirebaseServerAuthData } from '../auth.context.server';
 import { resolveSecureAssetPath } from '../download/download.api.config';
 import { DEFAULT_DOCS_MAX_READ_LENGTH, DOCS_API_PATH, DOCS_AUDIENCE_ANY, DOCS_AUDIENCE_READER, DocsApiModuleConfig, type DocsAudience, type DocsAudienceReader } from './docs.api.config';
-import { readDocsManifestJson, splitDocsMarkdownSections, type DocsManifestEntry, type DocsManifestSection, type DocsMarkdownSplit } from './docs.api.manifest';
+import { readDocsManifestJson, splitDocsMarkdownSections, type DocsManifestEntry, type DocsManifestSection } from './docs.api.manifest';
 
 // MARK: Errors
 /**
@@ -65,13 +65,16 @@ export interface DocsSearchParams {
 }
 
 /**
- * One search hit: a doc's intro (no `section`) or one of its sections.
+ * One search hit: a doc (no `section`) or one of its sections.
  */
 export interface DocsSearchResultEntry {
   readonly id: string;
   readonly title: string;
   readonly section?: DocsSectionSummary;
-  readonly snippet: string;
+  /**
+   * The doc's manifest description. Present on doc hits only.
+   */
+  readonly description?: string;
 }
 
 /**
@@ -116,24 +119,16 @@ export interface DocsReadResult {
 }
 
 // MARK: State
-interface DocsLoadedDoc {
-  readonly entry: DocsManifestEntry;
-  readonly split: DocsMarkdownSplit;
-}
-
 interface DocsSearchCandidate {
-  readonly doc: DocsLoadedDoc;
+  readonly entry: DocsManifestEntry;
   readonly section?: DocsManifestSection;
-  readonly text: string;
 }
 
 interface DocsLoadedState {
-  readonly docs: ReadonlyMap<string, DocsLoadedDoc>;
+  readonly docs: ReadonlyMap<string, DocsManifestEntry>;
   readonly audiences: ReadonlySet<DocsAudience>;
   readonly searchEntries: readonly RankedSearchEntry<DocsSearchCandidate>[];
 }
-
-const SNIPPET_LENGTH = 240;
 
 /**
  * Serves an app's audience-gated docs: the markdown in {@link DocsApiModuleConfig.docsRoot}, described by the
@@ -147,8 +142,9 @@ const SNIPPET_LENGTH = 240;
  * - docs are read by manifest id only, and each read re-checks that the file is contained in the docs folder and still
  *   matches the manifest's hash.
  *
- * The manifest is loaded lazily on first use. A doc whose file escapes the folder, is missing, or no longer matches
- * its hash is excluded with a log line.
+ * The manifest is loaded lazily on first use. Listing and search use only the manifest, so no doc file is read until a
+ * doc is requested. A requested doc whose file escapes the folder, is missing, or no longer matches its hash is answered
+ * with the 404 and a log line.
  */
 @Injectable()
 export class DocsApiService {
@@ -196,7 +192,7 @@ export class DocsApiService {
 
     if (auth?.uid) {
       const audiences = this._audiencesFor(auth);
-      result = Array.from(this._loadState().docs.values()).filter((doc) => isDocsEntryVisible(doc.entry, audiences)).length;
+      result = Array.from(this._loadState().docs.values()).filter((entry) => isDocsEntryVisible(entry, audiences)).length;
     }
 
     return result;
@@ -212,8 +208,8 @@ export class DocsApiService {
   listDocs(auth: Maybe<FirebaseServerAuthData>): DocsListResult {
     const audiences = this._authorize(auth, DOCS_API_PATH);
     const docs = Array.from(this._loadState().docs.values())
-      .filter((doc) => isDocsEntryVisible(doc.entry, audiences))
-      .map(({ entry }) => ({
+      .filter((entry) => isDocsEntryVisible(entry, audiences))
+      .map((entry) => ({
         id: entry.id,
         title: entry.title,
         ...(entry.description == null ? undefined : { description: entry.description }),
@@ -225,7 +221,8 @@ export class DocsApiService {
   }
 
   /**
-   * Searches the visible docs' titles, tags, headings and section text.
+   * Searches the visible docs' manifest metadata: titles, tags, descriptions and section headings. Doc bodies are not
+   * searched.
    *
    * @param auth - The caller's auth data.
    * @param params - The query and an optional limit (default {@link DEFAULT_DOCS_SEARCH_LIMIT}, max {@link MAX_DOCS_SEARCH_LIMIT}).
@@ -236,18 +233,18 @@ export class DocsApiService {
     const audiences = this._authorize(auth, `${DOCS_API_PATH}/search`);
     const limit = Math.min(Math.max(1, Math.floor(params.limit ?? DEFAULT_DOCS_SEARCH_LIMIT)), MAX_DOCS_SEARCH_LIMIT);
     const entries = this._loadState().searchEntries;
-    const filter = (candidate: DocsSearchCandidate) => isDocsEntryVisible(candidate.doc.entry, audiences);
+    const filter = (candidate: DocsSearchCandidate) => isDocsEntryVisible(candidate.entry, audiences);
     let ranked = rankSearchEntries({ entries, query: params.query, mode: 'all', filter });
 
     if (ranked.length === 0) {
       ranked = rankSearchEntries({ entries, query: params.query, mode: 'any', filter });
     }
 
-    const results = ranked.slice(0, limit).map(({ value }) => ({
-      id: value.doc.entry.id,
-      title: value.doc.entry.title,
-      ...(value.section == null ? undefined : { section: { id: value.section.id, title: value.section.title } }),
-      snippet: toDocsSnippet(value.text)
+    const results = ranked.slice(0, limit).map(({ value: { entry, section } }) => ({
+      id: entry.id,
+      title: entry.title,
+      ...(section == null ? undefined : { section: { id: section.id, title: section.title } }),
+      ...(section != null || entry.description == null ? undefined : { description: entry.description })
     }));
 
     return { total: ranked.length, results };
@@ -266,14 +263,13 @@ export class DocsApiService {
   readDoc(auth: Maybe<FirebaseServerAuthData>, params: DocsReadParams): DocsReadResult {
     const audiences = this._authorize(auth, `${DOCS_API_PATH}/read`);
     const { id, section: sectionId } = params;
-    const doc = this._loadState().docs.get(id);
-    const content = doc != null && isDocsEntryVisible(doc.entry, audiences) ? this._readDocContent(doc.entry) : undefined;
+    const entry = this._loadState().docs.get(id);
+    const content = entry != null && isDocsEntryVisible(entry, audiences) ? this._readDocContent(entry) : undefined;
 
-    if (doc == null || content == null) {
+    if (entry == null || content == null) {
       throw notFoundError({ code: DOCS_NOT_FOUND_ERROR_CODE, message: `No doc with id "${id}". Search or list the docs for valid ids.` });
     }
 
-    const { entry } = doc;
     const split = splitDocsMarkdownSections(content, entry.sections);
     const maxLength = this._config?.maxReadLength ?? DEFAULT_DOCS_MAX_READ_LENGTH;
     let text = split.body;
@@ -350,7 +346,7 @@ export class DocsApiService {
   private _buildState(): DocsLoadedState {
     const docsRoot = this._config?.docsRoot;
     const manifestPath = this._config?.docsManifestPath;
-    const docs = new Map<string, DocsLoadedDoc>();
+    const docs = new Map<string, DocsManifestEntry>();
     let audiences: readonly DocsAudience[] = [];
 
     if (!docsRoot || !manifestPath) {
@@ -372,14 +368,10 @@ export class DocsApiService {
         audiences = manifest.audiences;
 
         for (const entry of manifest.docs) {
-          const content = this._readDocContent(entry);
-
-          if (content != null) {
-            docs.set(entry.id, { entry, split: splitDocsMarkdownSections(content, entry.sections) });
-          }
+          docs.set(entry.id, entry);
         }
 
-        this._logger.log(`Loaded ${docs.size} of ${manifest.docs.length} doc(s) from ${manifestPath}.`);
+        this._logger.log(`Loaded ${docs.size} doc(s) from ${manifestPath}.`);
       }
     } else {
       this._logger.warn(`No docs manifest at ${manifestPath}; the docs API serves no docs. Run the app's generate-docs-manifest target.`);
@@ -427,22 +419,17 @@ export function isDocsEntryVisible(entry: Pick<DocsManifestEntry, 'audience'>, a
   return entry.audience.some((audience) => audiences.has(audience));
 }
 
-function buildDocsSearchEntries(docs: Iterable<DocsLoadedDoc>): RankedSearchEntry<DocsSearchCandidate>[] {
+function buildDocsSearchEntries(entries: Iterable<DocsManifestEntry>): RankedSearchEntry<DocsSearchCandidate>[] {
   const candidates: DocsSearchCandidate[] = [];
 
-  for (const doc of docs) {
-    candidates.push({ doc, text: doc.split.intro }, ...doc.split.sections.map((x) => ({ doc, section: x.section, text: x.ownText })));
+  for (const entry of entries) {
+    candidates.push({ entry }, ...entry.sections.map((section) => ({ entry, section })));
   }
 
   return buildRankedSearchEntries(candidates, [
-    { read: (x) => (x.section == null ? x.doc.entry.title : undefined), weights: RANKED_SEARCH_NAME_WEIGHTS },
+    { read: (x) => (x.section == null ? x.entry.title : undefined), weights: RANKED_SEARCH_NAME_WEIGHTS },
     { read: (x) => x.section?.title, weights: RANKED_SEARCH_SLUG_WEIGHTS },
-    { read: (x) => (x.section == null ? x.doc.entry.tags : undefined), weights: RANKED_SEARCH_TAG_WEIGHTS },
-    { read: (x) => [x.section == null ? x.doc.entry.description : x.doc.entry.title, x.text], weights: RANKED_SEARCH_TEXT_WEIGHTS }
+    { read: (x) => (x.section == null ? x.entry.tags : undefined), weights: RANKED_SEARCH_TAG_WEIGHTS },
+    { read: (x) => (x.section == null ? x.entry.description : x.entry.title), weights: RANKED_SEARCH_TEXT_WEIGHTS }
   ]);
-}
-
-function toDocsSnippet(text: string): string {
-  const collapsed = text.replaceAll(/\s+/g, ' ').trim();
-  return collapsed.length > SNIPPET_LENGTH ? `${collapsed.slice(0, SNIPPET_LENGTH - 1)}…` : collapsed;
 }
