@@ -15,7 +15,23 @@ vi.mock('node:os', async (importOriginal) => {
 
 import { MS_IN_HOUR } from '@dereekb/util';
 import { DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR } from '@dereekb/dbx-cli';
-import { configuredProducts, getConfigFilePath, getTokenCachePath, loadCliConfig, mergeCliConfig, resolveZohoCliActiveTokenSource, saveCliTokenSourceConfig, zohoCliProductOrgId, ZOHO_CLI_TOKEN_COMMAND_ENV_VAR, type ZohoCliConfig, type ZohoCliTokenSourceCoverage } from './cli.config';
+import {
+  configuredProducts,
+  getConfigFilePath,
+  getTokenCachePath,
+  loadCliConfig,
+  mergeCliConfig,
+  resolveZohoCliActiveTokenSource,
+  saveCliTokenSourceConfig,
+  updateCliTokenSourceConfig,
+  zohoCliProductOrgId,
+  zohoCliSavedTokenSourceNames,
+  DEFAULT_ZOHO_CLI_TOKEN_SOURCE_NAME,
+  ZOHO_CLI_TOKEN_COMMAND_ENV_VAR,
+  ZOHO_CLI_TOKEN_SOURCE_ENV_VAR,
+  type ZohoCliConfig,
+  type ZohoCliTokenSourceCoverage
+} from './cli.config';
 import { createZohoCliTokenSource, loadZohoCliResolvedTokenSource, loadZohoCliTokenSourceStatus, zohoCliTokenSourceCacheKey, zohoCliTokenSourceCoverage, zohoCliTokenSourceReport, zohoCliTokenSourceTokenFromBundle, type ZohoCliTokenSourceBundle } from './token.source';
 import { createCliContext } from '../context/cli.context';
 
@@ -125,8 +141,10 @@ describe('zoho-cli token source', () => {
   });
 
   describe('resolveZohoCliActiveTokenSource()', () => {
+    const named: ZohoCliConfig['tokenSources'] = { dev: { command: 'dev-cmd', apiMode: 'sandbox' }, prod: { command: 'prod-cmd' } };
+
     it('should return the saved command', () => {
-      expect(resolveZohoCliActiveTokenSource({ tokenSource: { command: 'saved-cmd' } })).toEqual({ command: 'saved-cmd', origin: 'config' });
+      expect(resolveZohoCliActiveTokenSource({ tokenSource: { command: 'saved-cmd' } })).toEqual({ command: 'saved-cmd', origin: 'config', name: DEFAULT_ZOHO_CLI_TOKEN_SOURCE_NAME });
     });
 
     it('should let the env override beat the saved command', () => {
@@ -141,6 +159,46 @@ describe('zoho-cli token source', () => {
 
     it('should return undefined when neither is set', () => {
       expect(resolveZohoCliActiveTokenSource(undefined)).toBeUndefined();
+    });
+
+    it('should use the saved selection over the unnamed source', () => {
+      expect(resolveZohoCliActiveTokenSource({ tokenSource: { command: 'saved-cmd' }, tokenSources: named, activeTokenSource: 'prod' })).toEqual({ command: 'prod-cmd', origin: 'config', name: 'prod' });
+    });
+
+    it('should let an env override command beat the saved selection', () => {
+      process.env[ZOHO_CLI_TOKEN_COMMAND_ENV_VAR] = 'env-cmd';
+      expect(resolveZohoCliActiveTokenSource({ tokenSources: named, activeTokenSource: 'prod' })).toEqual({ command: 'env-cmd', origin: 'env' });
+    });
+
+    it('should let an env name beat the env override command and carry the api mode', () => {
+      process.env[ZOHO_CLI_TOKEN_COMMAND_ENV_VAR] = 'env-cmd';
+      process.env[ZOHO_CLI_TOKEN_SOURCE_ENV_VAR] = 'dev';
+      expect(resolveZohoCliActiveTokenSource({ tokenSources: named, activeTokenSource: 'prod' })).toEqual({ command: 'dev-cmd', apiMode: 'sandbox', origin: 'env', name: 'dev' });
+    });
+
+    it('should let the --token-source flag beat every other selection', () => {
+      process.env[ZOHO_CLI_TOKEN_SOURCE_ENV_VAR] = 'dev';
+      expect(resolveZohoCliActiveTokenSource({ tokenSource: { command: 'saved-cmd' }, tokenSources: named }, { tokenSourceName: 'default' })).toEqual({ command: 'saved-cmd', origin: 'flag', name: DEFAULT_ZOHO_CLI_TOKEN_SOURCE_NAME });
+    });
+
+    it('should throw for a selected name with no saved source instead of falling through', () => {
+      process.env[ZOHO_CLI_TOKEN_SOURCE_ENV_VAR] = 'staging';
+      expect(() => resolveZohoCliActiveTokenSource({ tokenSource: { command: 'saved-cmd' }, tokenSources: named })).toThrow('Unknown token source "staging" (from ZOHO_CLI_TOKEN_SOURCE). Saved token sources: default, dev, prod.');
+    });
+
+    it('should throw for a saved selection whose source was removed', () => {
+      expect(() => resolveZohoCliActiveTokenSource({ tokenSource: { command: 'saved-cmd' }, activeTokenSource: 'prod' })).toThrow('Unknown token source "prod" (from config file)');
+    });
+
+    it('should throw rather than treat an unknown api mode as production', () => {
+      const fileConfig = { tokenSources: { dev: { command: 'dev-cmd', apiMode: 'sandbx' } } } as unknown as ZohoCliConfig;
+      expect(() => resolveZohoCliActiveTokenSource(fileConfig, { tokenSourceName: 'dev' })).toThrow('unknown apiMode "sandbx"');
+    });
+  });
+
+  describe('zohoCliSavedTokenSourceNames()', () => {
+    it('should list the unnamed source first, then the named ones, skipping blank commands', () => {
+      expect(zohoCliSavedTokenSourceNames({ tokenSource: { command: 'saved-cmd' }, tokenSources: { dev: { command: 'dev-cmd' }, empty: { command: '  ' } } })).toEqual(['default', 'dev']);
     });
   });
 
@@ -163,6 +221,28 @@ describe('zoho-cli token source', () => {
       await mergeCliConfig({ shared: { ...sharedCreds } });
 
       expect((await loadCliConfig())?.tokenSource?.command).toBe('saved-cmd');
+    });
+
+    it('should keep the named token sources and the selection through a credential merge', async () => {
+      await updateCliTokenSourceConfig({ tokenSources: { dev: { command: 'dev-cmd', apiMode: 'sandbox' } }, activeTokenSource: 'dev' });
+      await mergeCliConfig({ shared: { ...sharedCreds } });
+
+      expect(await loadCliConfig()).toMatchObject({ tokenSource: { command: 'dev-cmd', apiMode: 'sandbox' } });
+    });
+
+    it('should resolve the source selected by --token-source', async () => {
+      await updateCliTokenSourceConfig({ tokenSource: { command: 'saved-cmd' }, tokenSources: { dev: { command: 'dev-cmd', apiMode: 'sandbox' } } });
+
+      expect((await loadCliConfig())?.tokenSource).toEqual({ command: 'saved-cmd' });
+      expect((await loadCliConfig({ tokenSourceName: 'dev' }))?.tokenSource).toEqual({ command: 'dev-cmd', apiMode: 'sandbox' });
+    });
+
+    it('should not resolve the token source when skipped, so an unknown selection cannot fail a credential command', async () => {
+      await mergeCliConfig({ shared: { ...sharedCreds } });
+      process.env[ZOHO_CLI_TOKEN_SOURCE_ENV_VAR] = 'missing';
+
+      await expect(loadCliConfig()).rejects.toThrow('Unknown token source "missing"');
+      expect((await loadCliConfig({ skipTokenSource: true }))?.shared.clientId).toBe('shared-id');
     });
   });
 
@@ -386,6 +466,20 @@ describe('zoho-cli token source', () => {
       expect(config.shared.clientId).toBe('shared-id');
       expect(config.crm).toBeUndefined();
     });
+
+    it("should call the covered products' sandboxes for a sandbox source, and production for products without one", async () => {
+      const { command } = bundleCommand();
+      await mergeCliConfig({ desk: { orgId: 'config-desk-org' } });
+      await updateCliTokenSourceConfig({ tokenSources: { dev: { command, apiMode: 'sandbox' } } });
+
+      const config = (await loadCliConfig({ tokenSourceName: 'dev' })) as ZohoCliConfig;
+      const tokenSource = await loadZohoCliResolvedTokenSource(config);
+      const context = createCliContext(config, tokenSource);
+
+      expect(tokenSource?.source.apiMode).toBe('sandbox');
+      expect(context.crmApi?.crmContext.config.apiUrl).toBe('https://crmsandbox.zoho.eu/crm');
+      expect(context.deskApi?.deskContext.config.apiUrl).toBe('https://desk.zoho.eu/api/v1');
+    });
   });
 
   describe('loadZohoCliTokenSourceStatus()', () => {
@@ -408,6 +502,14 @@ describe('zoho-cli token source', () => {
 
     it('should return undefined when no source is active', async () => {
       expect(await loadZohoCliTokenSourceStatus(undefined)).toBeUndefined();
+    });
+
+    it('should report the selected named source with its api mode', async () => {
+      const { command } = bundleCommand();
+      const status = await loadZohoCliTokenSourceStatus({ tokenSource: { command: 'unused-cmd' }, tokenSources: { dev: { command, apiMode: 'sandbox' } } }, { tokenSourceName: 'dev' });
+
+      expect(status?.resolved?.source.apiMode).toBe('sandbox');
+      expect(zohoCliTokenSourceReport(status!)).toMatchObject({ command, origin: 'flag', name: 'dev', apiMode: 'sandbox', products: ['crm', 'desk'] });
     });
   });
 });
