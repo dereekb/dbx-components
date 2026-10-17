@@ -141,7 +141,10 @@ function enumInfoToolHandler(args: Record<string, unknown>, _ctx: McpStaticToolH
 }
 
 /**
- * Resolves each requested enum name against the registered value tables.
+ * Resolves each requested enum name against the registered value tables. Only the map's own keys
+ * match, so `constructor` / `toString` / `__proto__` are misses rather than `Object.prototype` members.
+ *
+ * Mirrored by `@dereekb/dbx-cli`'s `resolveCliEnumInfoLookupOutput`; keep the matching rules in lockstep.
  *
  * @param names - The requested enum declaration names.
  * @param enums - The registered enum value tables keyed by name.
@@ -154,7 +157,7 @@ export function resolveEnumInfoOutput(names: readonly string[], enums: CreateEnu
   const notFound: string[] = [];
 
   for (const name of names) {
-    const table = enums[name];
+    const table = Object.hasOwn(enums, name) ? enums[name] : undefined;
     if (table == null) {
       notFound.push(name);
     } else {

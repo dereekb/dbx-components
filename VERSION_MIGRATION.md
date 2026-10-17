@@ -1,3 +1,21 @@
+## Migration to v14.21.x — dbx-cli `enum-info`
+
+### New
+- **`runCli({ enumManifest })`** registers an auth-free `enum-info [name..]` command, the CLI counterpart of the MCP
+  `enum-info` tool. Pass `<NAMESPACE>_ENUM_MANIFEST`, which `dbx-cli-generate-firebase-api-manifest --emit-models`
+  already writes into `api.manifest.generated.ts`. `disableEnumInfo` suppresses the command.
+- **`model-info <model>`** ends with the value tables of the enums its fields use when `enumManifest` is passed
+  (`--json`: an `enums` array next to `fields`).
+
+### Changed
+- `model-info`'s field table gains an `ENUM` column whenever a field has an `enumRef`, with or without `enumManifest`.
+- The MCP `enum-info` tool matches only the enum map's own keys, so `constructor` / `toString` / `__proto__` now land in
+  `notFound` instead of resolving to `Object.prototype` members.
+
+### Adopt
+- Add `enumManifest: <NS>_ENUM_MANIFEST` to `runCli`. It bundles the tables (about 47 KB minified for 75 enums);
+  until then they are tree-shaken out.
+
 ## Migration to v14.18.x — a direct callModel handler rejects a stray specifier
 
 A handler registered straight on a CRUD map (not through `onCallSpecifierHandler`) used to run for any `specifier` a

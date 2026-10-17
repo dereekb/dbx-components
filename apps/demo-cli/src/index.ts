@@ -4,7 +4,7 @@ import { DEMO_CLI_ACTION_COMMANDS } from './lib/actions';
 import { DEMO_DOCTOR_CHECKS } from './lib/doctor.checks';
 import { DEFAULT_DEMO_CLI_ENVS } from './lib/env.defaults';
 import { demoCliFirestore } from './lib/firestore';
-import { DEMO_CLI_API_MANIFEST, DEMO_CLI_MODEL_MANIFEST } from './lib/manifest/api.manifest.generated';
+import { DEMO_CLI_API_MANIFEST, DEMO_CLI_ENUM_MANIFEST, DEMO_CLI_MODEL_MANIFEST } from './lib/manifest/api.manifest.generated';
 import { DEMO_CLI_FIRESTORE_QUERY_MANIFEST, DEMO_CLI_FIRESTORE_QUERY_MANIFEST_STAMP } from './lib/manifest/query.manifest.generated';
 import { DEMO_CLI_NOTIFICATION_CONFIG } from './lib/notification';
 
@@ -15,6 +15,9 @@ void runCli({
   doctorChecks: DEMO_DOCTOR_CHECKS,
   defaultEnvs: DEFAULT_DEMO_CLI_ENVS,
   modelManifest: DEMO_CLI_MODEL_MANIFEST,
+  // the auth-free `enum-info [name..]` command, and the value tables `model-info <model>` appends — decodes
+  // the raw values enum-typed fields store (e.g. a StorageFile's `ps: 2`)
+  enumManifest: DEMO_CLI_ENUM_MANIFEST,
   // one hook wires `firestore-get` / `firestore-query` for EVERY registered demo model — the same
   // collections object the Angular app builds, read through the same security rules
   firestore: demoCliFirestore.binding,

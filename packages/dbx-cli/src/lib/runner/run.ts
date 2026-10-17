@@ -17,9 +17,10 @@ import { buildCliPaths } from '../config/paths';
 import { type CliContext, getCliContext } from '../context/cli.context';
 import { createDoctorCommand, type DoctorCheck } from '../doctor/doctor.command.factory';
 import { createEnvCommand } from '../env/env.command.factory';
+import { buildEnumInfoCommand } from '../manifest/build-enum-info-command';
 import { buildModelDecodeCommand } from '../manifest/build-model-decode-command';
 import { buildModelInfoCommand } from '../manifest/build-model-info-command';
-import { type CliFirestoreQueryManifest, type CliModelManifest } from '../manifest/types';
+import { type CliEnumManifest, type CliFirestoreQueryManifest, type CliModelManifest } from '../manifest/types';
 import { createAuthMiddleware, createPassthroughAuthMiddleware } from '../middleware/auth.middleware';
 import { cliFirestoreErrorMapper } from '../firestore/firestore.error';
 import { type CliFirestoreBinding } from '../firestore/firestore.models';
@@ -115,6 +116,9 @@ export interface CreateCliInput extends CliLifecycleHooks {
    * only emits `<NAMESPACE>_MODEL_MANIFEST` when invoked with `--emit-models`, so apps that never
    * enable this option won't bundle model metadata into their final binary.
    *
+   * Pair it with {@link enumManifest} to have `model-info <model>` append the value tables of the
+   * enums its fields reference.
+   *
    * Note: this option only controls the inspection commands. Manifest-driven typed model commands
    * are still wired explicitly via {@link apiCommands} (see `buildManifestCommands`), and the
    * `--expand-keys` flag still requires passing the manifest to `buildManifestCommands`.
@@ -134,6 +138,21 @@ export interface CreateCliInput extends CliLifecycleHooks {
    * not want to surface the key-decode command itself.
    */
   readonly disableModelDecode?: boolean;
+  /**
+   * Generated enum value tables (`<NAMESPACE>_ENUM_MANIFEST`, emitted next to the model manifest by
+   * `dbx-cli-generate-firebase-api-manifest --emit-models`), used to decode the raw values enum-typed model
+   * fields store (e.g. `s: 2`).
+   *
+   * Opt-in: when provided, the auth-free `enum-info [name..]` command is registered, and `model-info <model>`
+   * appends the value tables of the enums its fields reference. The tables are bundled only when passed —
+   * the generated constant is tree-shaken out of CLIs that never import it.
+   */
+  readonly enumManifest?: CliEnumManifest;
+  /**
+   * Disable the built-in `enum-info` command even when {@link enumManifest} is provided. `model-info` still
+   * appends the enum tables; omit `enumManifest` to drop both.
+   */
+  readonly disableEnumInfo?: boolean;
   /**
    * The app-supplied direct-Firestore binding — `cliFirestoreBinding({ collections, models })`.
    *
@@ -260,6 +279,10 @@ export interface CreateCliInput extends CliLifecycleHooks {
  *   built-in `model-info` command. Opt-in per app.
  * @param input.disableModelInfo - When `true`, suppresses the auto-wired `model-info` command even
  *   if {@link CreateCliInput.modelManifest} is provided.
+ * @param input.enumManifest - Optional generated enum value tables. When provided, auto-wires the
+ *   built-in `enum-info` command and has `model-info <model>` append the referenced enum tables.
+ * @param input.disableEnumInfo - When `true`, suppresses the auto-wired `enum-info` command even
+ *   if {@link CreateCliInput.enumManifest} is provided.
  * @param input.firestore - The app-supplied direct-Firestore binding; enables `firestore-get` / `firestore-query`.
  * @param input.firestoreQueryManifest - The generated Firestore query catalog; enables `firestore-queries`.
  * @param input.dataCache - Enables the recorded dataset cache: the `cache` command group plus the `--cache` / `--refresh` global flags.
@@ -283,11 +306,15 @@ export function createCli(input: CreateCliInput): Argv {
   ];
 
   if (input.modelManifest && input.disableModelInfo !== true) {
-    builtInConfigCommands.push(buildModelInfoCommand(input.modelManifest));
+    builtInConfigCommands.push(buildModelInfoCommand(input.modelManifest, { enumManifest: input.enumManifest }));
   }
 
   if (input.modelManifest && input.disableModelDecode !== true) {
     builtInConfigCommands.push(buildModelDecodeCommand(input.modelManifest));
+  }
+
+  if (input.enumManifest && input.disableEnumInfo !== true) {
+    builtInConfigCommands.push(buildEnumInfoCommand(input.enumManifest));
   }
 
   if (input.firestoreQueryManifest) {

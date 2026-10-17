@@ -1,5 +1,7 @@
+export * from './build-enum-info-command';
 export * from './build-manifest-commands';
 export * from './build-model-decode-command';
 export * from './build-model-info-command';
+export * from './enum-info-utils';
 export * from './model-info-utils';
 export * from './types';

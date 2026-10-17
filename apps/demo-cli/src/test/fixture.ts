@@ -12,7 +12,7 @@ import { DEMO_CLI_ACTION_COMMANDS } from '../lib/actions';
 import { DEMO_DOCTOR_CHECKS } from '../lib/doctor.checks';
 import { DEFAULT_DEMO_CLI_ENVS } from '../lib/env.defaults';
 import { demoCliFirestore } from '../lib/firestore';
-import { DEMO_CLI_API_MANIFEST, DEMO_CLI_MODEL_MANIFEST } from '../lib/manifest/api.manifest.generated';
+import { DEMO_CLI_API_MANIFEST, DEMO_CLI_ENUM_MANIFEST, DEMO_CLI_MODEL_MANIFEST } from '../lib/manifest/api.manifest.generated';
 import { DEMO_CLI_FIRESTORE_QUERY_MANIFEST } from '../lib/manifest/query.manifest.generated';
 import { DEMO_CLI_NOTIFICATION_CONFIG } from '../lib/notification';
 
@@ -167,6 +167,7 @@ export function withDemoTestCli(params: WithDemoTestCliParams, buildTests: (ctx:
         cliName: DEMO_TEST_CLI_NAME,
         defaultEnvs: DEFAULT_DEMO_CLI_ENVS,
         modelManifest: DEMO_CLI_MODEL_MANIFEST,
+        enumManifest: DEMO_CLI_ENUM_MANIFEST,
         firestore: demoCliFirestore.binding,
         firestoreQueryManifest: DEMO_CLI_FIRESTORE_QUERY_MANIFEST,
         notification: DEMO_CLI_NOTIFICATION_CONFIG,
