@@ -58,6 +58,7 @@
       "@dereekb/discord/nestjs": ["./packages/discord/nestjs/src/index.ts"],
       "@dereekb/firebase": ["./packages/firebase/src/index.ts"],
       "@dereekb/firebase/eslint": ["./packages/firebase/eslint/src/index.ts"],
+      "@dereekb/firebase/manifest": ["./packages/firebase/manifest/src/index.ts"],
       "@dereekb/firebase-server": ["./packages/firebase-server/src/index.ts"],
       "@dereekb/firebase-server/calcom": ["./packages/firebase-server/calcom/src/index.ts"],
       "@dereekb/firebase-server/discord": ["./packages/firebase-server/discord/src/index.ts"],

@@ -16,7 +16,8 @@ void runCli({
   defaultEnvs: DEFAULT_DEMO_CLI_ENVS,
   modelManifest: DEMO_CLI_MODEL_MANIFEST,
   // the auth-free `enum-info [name..]` command, and the value tables `model-info <model>` appends — decodes
-  // the raw values enum-typed fields store (e.g. a StorageFile's `ps: 2`)
+  // the raw values enum-typed fields store (e.g. a StorageFile's `ps: 2`). With modelManifest it also wires the
+  // auth-free `info [query..]` command: search models, fields and enums, or look them up with `--model` / `--enum`
   enumManifest: DEMO_CLI_ENUM_MANIFEST,
   // one hook wires `firestore-get` / `firestore-query` for EVERY registered demo model — the same
   // collections object the Angular app builds, read through the same security rules

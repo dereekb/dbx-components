@@ -18,4 +18,5 @@ group off or back on with `notificationTaskBot.update.optOut`. Only the owner ca
 ## Run triggers
 
 Each run records what triggered it as a `NotificationTaskBotRunTrigger` value: `0` (scheduled), `1` (manual) or `2`
-(forced). Look the table up with the `enum-info` read method to decode a stored value.
+(forced). Look the table up with `demo_api_info` (`{ enum: 'NotificationTaskBotRunTrigger' }`, which also lists the
+fields that store it) or the `enum-info` read method to decode a stored value.

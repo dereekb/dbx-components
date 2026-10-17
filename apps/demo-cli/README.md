@@ -74,6 +74,11 @@ values enum-typed fields store (`demo-cli enum-info StorageFileProcessingState` 
 makes `model-info <model>` end with the value tables of the enums its fields use. No login is needed. See
 the dbx-cli README's [Enum values](../../packages/dbx-cli/README.md#enum-values) section.
 
+The two manifests also wire the auth-free `info [query..]` command: `demo-cli info NotificationSendState` finds the
+enum, and `demo-cli info --enum NotificationSendState` shows its table plus the `notification` fields that store it
+(`ts` / `es` / `ps` / `ns`). `--json` returns the same output as the MCP `demo_api_info` tool. See the dbx-cli README's
+[Data-model catalog](../../packages/dbx-cli/README.md#data-model-catalog-info) section.
+
 ## Direct Firestore reads
 
 ### The query catalog

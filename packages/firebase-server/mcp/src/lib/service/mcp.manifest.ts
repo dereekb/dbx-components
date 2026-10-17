@@ -1,286 +1,43 @@
-import { type Maybe } from '@dereekb/util';
+import { type ModelManifestCompositeKey, type ModelManifestCompositeKeyEncoding, type ModelManifestEntry, type ModelManifestEnum, type ModelManifestEnumValue, type ModelManifestField } from '@dereekb/firebase/manifest';
+
+// The mcp.manifest.json wire format and the model catalog helpers live in `@dereekb/firebase/manifest`,
+// shared with the `@dereekb/dbx-cli` generators that write the manifest.
+export { MCP_MANIFEST_VERSION, mcpManifestKey, findCompositeKeyModelsDerivedFrom, isCompositeKeyModelDerivedFrom } from '@dereekb/firebase/manifest';
+export type { McpManifest, McpManifestAuth, McpManifestAuthApp, McpManifestAuthClaim, McpManifestToolEntry } from '@dereekb/firebase/manifest';
 
 /**
- * Version stamp embedded in the build-time MCP manifest JSON. Runtime loaders
- * refuse manifests whose `version` does not match this constant.
- *
- * Mirrors {@link MCP_MANIFEST_VERSION} in `@dereekb/dbx-cli` — both packages
- * version-bump together when the manifest shape changes.
+ * One persisted field on a {@link McpManifestModelEntry}. Alias of the shared
+ * `@dereekb/firebase/manifest` {@link ModelManifestField}.
  */
-export const MCP_MANIFEST_VERSION = 1 as const;
+export type McpManifestModelField = ModelManifestField;
 
 /**
- * One tool entry inside the pre-rendered MCP manifest JSON.
- *
- * Structural mirror of `@dereekb/dbx-cli`'s `McpManifestToolEntry` so the
- * firebase-server/mcp runtime can consume the build output without taking a
- * runtime dependency on the build-time CLI package.
+ * One Firestore model entry in the pre-rendered MCP manifest JSON. Alias of the shared
+ * {@link ModelManifestEntry}. Drives the built-in `model-info` / `model-decode` / `model-get` tools
+ * and the compact `<prefix>_api_info` tool.
  */
-export interface McpManifestToolEntry {
-  readonly description?: string;
-  readonly inputSchema?: object;
-  readonly outputSchema?: object;
-  /**
-   * Name of the MCP-mapped result interface (from `@dbxModelApiMcpResult`) when the output schema was
-   * built from a mapped type. Used at boot to detect a `mapSuccessfulResult` handler whose `.api.ts`
-   * leaf was never annotated (the output schema would then describe the raw, un-mapped result).
-   */
-  readonly mcpResultTypeName?: string;
-}
+export type McpManifestModelEntry = ModelManifestEntry;
 
 /**
- * One persisted field on a {@link McpManifestModelEntry}.
- *
- * Structural mirror of `@dereekb/dbx-cli`'s `CliModelField` minus the
- * converter-text fields (CLI-only). The runtime keeps the payload narrow so the
- * built-in `model-info` / `model-decode` tools can answer catalog queries without
- * round-tripping back through the source packages.
+ * Flat-key encoding declared by a `@dbxModelCompositeKey` tag. Alias of the shared
+ * {@link ModelManifestCompositeKeyEncoding}.
  */
-export interface McpManifestModelField {
-  readonly name: string;
-  readonly longName: string;
-  readonly tsType?: string;
-  readonly optional: boolean;
-  readonly description?: string;
-  readonly enumRef?: string;
-  readonly syncFlag?: string;
-  readonly nestedFields?: readonly McpManifestModelField[];
-  readonly nestedIsArray?: boolean;
-}
+export type McpManifestModelCompositeKeyEncoding = ModelManifestCompositeKeyEncoding;
 
 /**
- * One Firestore model entry in the pre-rendered MCP manifest JSON.
- *
- * Structural mirror of `@dereekb/dbx-cli`'s `CliModelManifestEntry`. Drives the
- * built-in `model-info` and `model-decode` MCP tools.
+ * Composite-key declaration carried on a {@link McpManifestModelEntry}. Alias of the shared
+ * {@link ModelManifestCompositeKey}.
  */
-export interface McpManifestModelEntry {
-  readonly modelType: string;
-  readonly modelName: string;
-  readonly modelGroup?: string;
-  readonly identityConst: string;
-  readonly collectionPrefix: string;
-  readonly parentIdentityConst?: string;
-  /**
-   * `true` when the model's collection holds exactly one document, at the fixed
-   * {@link singleItemIdentifier} — `singleItemFirestoreCollection` (one per parent) or
-   * `rootSingleItemFirestoreCollection` (one, full stop).
-   */
-  readonly singleton?: boolean;
-  /**
-   * Fixed document id of a {@link singleton} model's one document: the `singleItemIdentifier`
-   * the collection factory declared, or `'0'`
-   * ({@link DEFAULT_SINGLE_ITEM_FIRESTORE_COLLECTION_DOCUMENT_IDENTIFIER}) when it omits one.
-   *
-   * Published because it cannot be inferred — plenty of single-item collections override the
-   * default — so a `model-get` caller reading only the catalog can still build the one key that
-   * resolves. Absent when the id was declared as an expression the generator could not read.
-   */
-  readonly singleItemIdentifier?: string;
-  /**
-   * Example document key with the parent chain resolved and `<…Id>` placeholders for the ids a
-   * caller supplies (e.g. `gb/<guestbookId>/gbe/<guestbookEntryId>`). Absent when some ancestor identity
-   * could not be resolved at generation time.
-   */
-  readonly exampleKey?: string;
-  readonly description?: string;
-  readonly sourcePackage: string;
-  readonly sourceFile: string;
-  readonly fields: readonly McpManifestModelField[];
-  /**
-   * Per-model override of the model segment used in generated MCP tool names (from
-   * `@dbxModelMcpToolNameSegment` on the model interface). When present it replaces the model type
-   * in tool names (e.g. the collection prefix), trading readability for shorter names. Absent when
-   * the model omits the tag — names then use the model type.
-   */
-  readonly mcpToolNameSegment?: string;
-  /**
-   * Read posture declared by `@dbxModelRead <level>` on the model interface (`system` /
-   * `owner` / `admin-only` / `permissions`). Absent when the source model omits the tag.
-   */
-  readonly read?: 'system' | 'owner' | 'admin-only' | 'permissions';
-  /**
-   * Resolved `@dbxModelServiceFactory`-tagged export that implements this model, joined onto
-   * the model entry by `modelType`. Absent when no factory was found in the same scan.
-   */
-  readonly serviceFactory?: {
-    readonly exportName: string;
-    readonly sourceFile: string;
-  };
-  /**
-   * Declared `@dbxModelCompositeKey from=<ModelA>[,<ModelB>...] encoding=<two-way|one-way>` on the
-   * model interface — this model's document id is a flattened encoding of a source model's key
-   * (structural mirror of `@dereekb/dbx-cli`'s `CliModelCompositeKey`). Absent when the model omits
-   * the tag.
-   *
-   * Drives `model-decode`'s `derivedKeys` / `compositeSource` output and lets `model-get` accept a
-   * source model key in place of the flattened id.
-   */
-  readonly compositeKey?: McpManifestModelCompositeKey;
-  /**
-   * True when the model is declared server-only (`@dbxModelServerOnly`), so client callers cannot read it.
-   */
-  readonly serverOnly?: boolean;
-}
+export type McpManifestModelCompositeKey = ModelManifestCompositeKey;
 
 /**
- * Flat-key encoding declared by a `@dbxModelCompositeKey` tag.
- *
- * - `one-way` — `flatFirestoreModelKey()`: slashes removed; the source key cannot be recovered.
- * - `two-way` — `twoWayFlatFirestoreModelKey()`: slashes replaced with underscores; the source key
- *   is recoverable with `inferKeyFromTwoWayFlatFirestoreModelKey()`.
+ * One enum value with its persisted literal and the leading JSDoc paragraph. Alias of the shared
+ * {@link ModelManifestEnumValue}.
  */
-export type McpManifestModelCompositeKeyEncoding = 'one-way' | 'two-way';
+export type McpManifestEnumValue = ModelManifestEnumValue;
 
 /**
- * Composite-key declaration carried on a {@link McpManifestModelEntry}.
+ * One TypeScript enum referenced by some model field's `enumRef`. Alias of the shared
+ * {@link ModelManifestEnum}.
  */
-export interface McpManifestModelCompositeKey {
-  /**
-   * `'*'` when any model's key may be the source, or the source model names as written in the tag
-   * — each an interface name, identity const, or modelType, resolved against the manifest.
-   */
-  readonly from: readonly string[] | '*';
-  readonly encoding: McpManifestModelCompositeKeyEncoding;
-}
-
-/**
- * Resolves the manifest entries whose `compositeKey.from` names `source` — the models whose document
- * id is derived from a `source` document's key. A wildcard `from=*` matches every model except
- * `source` itself (a model's id is never derived from its own key).
- *
- * @param source - The manifest entry of the decoded key's leaf model.
- * @param manifest - The full model manifest.
- * @returns The composite-key entries derived from `source`, in manifest order.
- */
-export function findCompositeKeyModelsDerivedFrom(source: McpManifestModelEntry, manifest: readonly McpManifestModelEntry[]): McpManifestModelEntry[] {
-  return manifest.filter((entry) => isCompositeKeyModelDerivedFrom(source, entry));
-}
-
-/**
- * Whether `candidate` is a composite-key model whose document id is derived from a `source`
- * document's key — `candidate.compositeKey.from` names `source` (by interface name, identity const,
- * or modelType) or is the wildcard `*`. A model is never derived from its own key.
- *
- * @param source - The manifest entry of the source model.
- * @param candidate - The manifest entry to test.
- * @returns `true` when `candidate`'s id is a flattened `source` key.
- */
-export function isCompositeKeyModelDerivedFrom(source: McpManifestModelEntry, candidate: McpManifestModelEntry): boolean {
-  const from = candidate.compositeKey?.from;
-  return from != null && candidate.modelType !== source.modelType && (from === '*' || from.some((name) => name === source.modelName || name === source.identityConst || name === source.modelType));
-}
-
-/**
- * One enum value with its persisted literal and the leading JSDoc paragraph.
- *
- * Structural mirror of `@dereekb/dbx-cli`'s `CliModelEnumValue`. Lets the
- * runtime `model-info` / `enum-info` tools decode raw persisted integer/string
- * values (`s: 4`) back to human-readable names without dropping into source.
- */
-export interface McpManifestEnumValue {
-  readonly name: string;
-  readonly value: number | string;
-  readonly description?: string;
-}
-
-/**
- * One TypeScript enum referenced by some model field's `enumRef`.
- *
- * Structural mirror of `@dereekb/dbx-cli`'s `CliModelEnum`.
- */
-export interface McpManifestEnum {
-  readonly name: string;
-  readonly values: readonly McpManifestEnumValue[];
-  readonly description?: string;
-}
-
-/**
- * One auth claim entry in the pre-rendered MCP manifest JSON.
- *
- * Source paths and line numbers are deliberately stripped — the `whoami`
- * runtime tool only needs the claim key, the interface it belongs to, the
- * roles it grants, and the human-readable description.
- */
-export interface McpManifestAuthClaim {
-  readonly key: string;
-  readonly description: string;
-  readonly type: string;
-  readonly app?: string;
-  readonly interfaceName?: string;
-  readonly source: 'system' | 'app';
-  readonly mapping: {
-    readonly roles: readonly string[];
-    readonly inverse: boolean;
-    readonly inverseMode?: 'any' | 'all';
-    readonly claimValue?: string | number | boolean;
-    readonly customEncodeDecode: boolean;
-  };
-  readonly tags: readonly string[];
-}
-
-/**
- * One auth app entry in the pre-rendered MCP manifest JSON.
- *
- * `auth.app` denotes the manifest's primary app (the host that emitted the
- * manifest). `auth.apps` carries the full list, which may include the primary
- * plus inherited apps (e.g. `storageFile-upload-user`).
- */
-export interface McpManifestAuthApp {
-  readonly app: string;
-  readonly claimsInterfaceName: string;
-  readonly serviceConstName: string;
-  readonly claimKeys: readonly string[];
-  readonly scopes: readonly string[];
-  readonly description?: string;
-}
-
-/**
- * Auth section of the pre-rendered MCP manifest JSON. Drives the built-in
- * `whoami` static tool. Optional — runtimes that pre-date this section skip
- * registering whoami.
- */
-export interface McpManifestAuth {
-  readonly app?: McpManifestAuthApp;
-  readonly apps: readonly McpManifestAuthApp[];
-  readonly claims: readonly McpManifestAuthClaim[];
-}
-
-/**
- * Full MCP manifest JSON shape consumed at boot.
- *
- * The optional `models` array carries the Firestore model catalog used by the
- * built-in `model-info` / `model-decode` static tools. When absent (e.g., legacy
- * manifests rendered before model catalog support landed), the runtime skips
- * registering those tools instead of failing the boot.
- *
- * The optional `enums` map (keyed by enum name) carries the value→label tables
- * `model-info` inlines and the `enum-info` static tool serves. Absent on legacy
- * manifests; the runtime then skips registering `enum-info`.
- *
- * The optional `auth` section drives the built-in `whoami` static tool.
- */
-export interface McpManifest {
-  readonly version: typeof MCP_MANIFEST_VERSION;
-  readonly generatedAt: string;
-  readonly tools: { readonly [key: string]: McpManifestToolEntry | undefined };
-  readonly models?: readonly McpManifestModelEntry[];
-  readonly enums?: { readonly [name: string]: McpManifestEnum };
-  readonly auth?: McpManifestAuth;
-}
-
-/**
- * Builds the canonical MCP manifest key for a (modelType, callType, specifier) triple.
- *
- * Default-specifier entries collapse to `_`. Must stay in sync with the build-time
- * helper of the same name in `@dereekb/dbx-cli`.
- *
- * @param modelType - The Firestore model type segment of the key.
- * @param call - The call type segment of the key.
- * @param specifier - The specifier segment, or `_` / undefined for the default entry.
- * @returns The canonical `modelType.call.specifier` manifest key.
- */
-export function mcpManifestKey(modelType: string, call: string, specifier?: Maybe<string>): string {
-  const isDefault = specifier == null || specifier === '_';
-  return isDefault ? `${modelType}.${call}._` : `${modelType}.${call}.${specifier}`;
-}
+export type McpManifestEnum = ModelManifestEnum;

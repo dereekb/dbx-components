@@ -31,7 +31,7 @@ export const MCP_ALWAYS_LOAD_META_KEY = 'anthropic/alwaysLoad';
 /**
  * Every compact tool key, in listing order.
  */
-export const MCP_COMPACT_TOOL_KEYS: readonly McpCompactToolKey[] = ['search', 'details', 'read', 'write', 'destructive', 'token', 'documentation'];
+export const MCP_COMPACT_TOOL_KEYS: readonly McpCompactToolKey[] = ['search', 'details', 'read', 'write', 'destructive', 'token', 'documentation', 'info'];
 
 /**
  * Derives the compact tool-name prefix from a server name.
@@ -98,7 +98,8 @@ export function resolveMcpCompactToolNames(input: ResolveMcpCompactToolNamesInpu
     write: names?.write ?? `${prefix}_api_write`,
     destructive: names?.destructive ?? `${prefix}_api_destructive`,
     token: names?.token ?? `${prefix}_cli_token`,
-    documentation: names?.documentation ?? `search_${prefix}_documentation`
+    documentation: names?.documentation ?? `search_${prefix}_documentation`,
+    info: names?.info ?? `${prefix}_api_info`
   };
 
   const seen = new Set<string>();
@@ -205,6 +206,10 @@ export interface BuildMcpCompactInstructionsInput {
   readonly builtinReadMethods: readonly string[];
   readonly hasDocumentation: boolean;
   readonly hasToken: boolean;
+  /**
+   * Whether the `info` data-model catalog tool is listed. Defaults to `false`.
+   */
+  readonly hasInfo?: boolean;
   readonly methodToolsListed: boolean;
   /**
    * Whether the module runs in `readOnly` mode, where only the `read` router is listed.
@@ -223,7 +228,7 @@ export interface BuildMcpCompactInstructionsInput {
  * @returns The usage block.
  */
 export function buildMcpCompactInstructions(input: BuildMcpCompactInstructionsInput): string {
-  const { app, names, builtinReadMethods, hasDocumentation, hasToken, methodToolsListed, readOnly, examples } = input;
+  const { app, names, builtinReadMethods, hasDocumentation, hasToken, hasInfo, methodToolsListed, readOnly, examples } = input;
   const callStep =
     readOnly === true
       ? `3) Call it with \`${names.read}\`, passing \`{ method, params }\`.`
@@ -236,6 +241,10 @@ export function buildMcpCompactInstructions(input: BuildMcpCompactInstructionsIn
   if (builtinReadMethods.length > 0) {
     const quoted = builtinReadMethods.map((x) => `\`${x}\``).join(', ');
     parts.push(`Built-in read methods: ${quoted}.`);
+  }
+
+  if (hasInfo === true) {
+    parts.push(`\`${names.info}\` describes the data model: models, their fields, and enum value tables with the fields that use them.`);
   }
 
   if (hasDocumentation) {
@@ -274,6 +283,10 @@ export interface PlanMcpToolSurfaceInput {
    * The standalone documentation search tool, when docs are on.
    */
   readonly documentation?: Maybe<McpToolDefinition>;
+  /**
+   * The standalone `info` data-model catalog tool. Compact only: ignored when {@link compact} is off.
+   */
+  readonly info?: Maybe<McpToolDefinition>;
   readonly additional?: Maybe<McpAdditionalTools>;
   /**
    * The request-scoped batch tool name, reserved when a storage service is wired.
@@ -290,8 +303,8 @@ export interface McpToolSurfacePlan {
    */
   readonly methodCandidates: readonly McpToolDefinition[];
   /**
-   * Tools listed on their own regardless of methods: the token tool, the documentation search tool, and additional
-   * `tool` tools.
+   * Tools listed on their own regardless of methods: the token tool, the documentation search tool, the `info` catalog
+   * tool (compact mode), and additional `tool` tools.
    */
   readonly standaloneTools: readonly McpToolDefinition[];
   readonly registry: McpMethodRegistry;
@@ -328,7 +341,7 @@ export interface McpToolSurfacePlan {
  * @returns The surface plan.
  */
 export function planMcpToolSurface(input: PlanMcpToolSurfaceInput): McpToolSurfacePlan {
-  const { compact, methodTools, compactNames, generated, builtins, token, documentation, batchName } = input;
+  const { compact, methodTools, compactNames, generated, builtins, token, documentation, info, batchName } = input;
   const errors: string[] = [];
   const warnings: string[] = [];
   const { methods: additionalMethods, tools: additionalTools } = partitionMcpAdditionalTools({ input, errors });
@@ -385,6 +398,11 @@ export function planMcpToolSurface(input: PlanMcpToolSurfaceInput): McpToolSurfa
     if (!compact) {
       alwaysLoad.add(documentation);
     }
+  }
+
+  // compact only, and never added to alwaysLoad here: the compact loop marks it and applies tools.meta.info
+  if (info != null && compact) {
+    standaloneTools.push(info);
   }
 
   for (const additional of additionalTools) {

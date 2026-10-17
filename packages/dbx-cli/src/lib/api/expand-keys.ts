@@ -1,26 +1,8 @@
-import type { CliModelField, CliModelManifest, CliModelManifestEntry } from '../manifest/types';
+import { findModelManifestEntry as findCliModelManifestEntry } from '@dereekb/firebase/manifest';
+import type { CliModelField, CliModelManifest } from '../manifest/types';
 
-/**
- * Resolves the manifest entry for `modelType`. Lookup tries
- * `modelType` first, then falls back to `identityConst` and `collectionPrefix`
- * so callers can pass any of the three forms a user might type at the CLI.
- *
- * @param modelType - Identifier to look up.
- * @param manifest - Generated model manifest.
- * @returns The matching entry, or `undefined` when none exists.
- *
- * @__NO_SIDE_EFFECTS__
- */
-export function findCliModelManifestEntry(modelType: string, manifest: CliModelManifest): CliModelManifestEntry | undefined {
-  let result: CliModelManifestEntry | undefined;
-  for (const entry of manifest) {
-    if (entry.modelType === modelType || entry.identityConst === modelType || entry.collectionPrefix === modelType) {
-      result = entry;
-      break;
-    }
-  }
-  return result;
-}
+// The manifest lookup is shared with the firebase-server MCP catalog tools; re-exported under its CLI name.
+export { findModelManifestEntry as findCliModelManifestEntry } from '@dereekb/firebase/manifest';
 
 /**
  * Rewrites the persisted (short) keys in `data` to the long-name form

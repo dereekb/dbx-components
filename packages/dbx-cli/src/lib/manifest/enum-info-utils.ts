@@ -1,3 +1,4 @@
+import { findReferencedModelManifestEnums, resolveModelManifestEnumList, resolveModelManifestEnumLookup, type ModelManifestEnumListOutput, type ModelManifestEnumLookupOutput } from '@dereekb/firebase/manifest';
 import { type Maybe } from '@dereekb/util';
 import { renderTable, truncate } from '../util/table';
 import type { CliEnumManifest, CliModelEnum, CliModelField } from './types';
@@ -10,31 +11,15 @@ export const DEFAULT_ENUM_INFO_COMMAND_NAME = 'enum-info';
 
 /**
  * Lookup output of the `enum-info` command: the resolved value tables, with any unmatched names in
- * `notFound`.
- *
- * Mirrors `@dereekb/firebase-server/mcp`'s `EnumInfoToolLookupOutput`.
+ * `notFound`. Alias of the shared `@dereekb/firebase/manifest` {@link ModelManifestEnumLookupOutput}.
  */
-export interface CliEnumInfoLookupOutput {
-  readonly enums: readonly CliModelEnum[];
-  readonly notFound?: readonly string[];
-  /**
-   * How to find the right name. Present when {@link notFound} is non-empty.
-   */
-  readonly hint?: string;
-}
+export type CliEnumInfoLookupOutput = ModelManifestEnumLookupOutput;
 
 /**
- * List output of the `enum-info` command, returned when no name is passed.
- *
- * Mirrors `@dereekb/firebase-server/mcp`'s `EnumInfoToolListOutput`.
+ * List output of the `enum-info` command, returned when no name is passed. Alias of the shared
+ * {@link ModelManifestEnumListOutput}.
  */
-export interface CliEnumInfoListOutput {
-  /**
-   * The registered enum declaration names, sorted.
-   */
-  readonly names: readonly string[];
-  readonly total: number;
-}
+export type CliEnumInfoListOutput = ModelManifestEnumListOutput;
 
 /**
  * Output payload of the `enum-info` command.
@@ -81,7 +66,7 @@ export function cliEnumInfoNotFoundHint(commandName: Maybe<string>): string {
  * order and duplicates; misses land in `notFound` together with a hint. Only the manifest's own keys
  * match, so `constructor` / `toString` / `__proto__` are misses.
  *
- * Mirrors `@dereekb/firebase-server/mcp`'s `resolveEnumInfoOutput` — keep the matching rules in lockstep.
+ * Shares its matching rules with `@dereekb/firebase-server/mcp`'s `resolveEnumInfoOutput` via `@dereekb/firebase/manifest`.
  *
  * @param input - The names, the manifest, and the optional command name for the hint.
  * @returns The matched tables, with any unmatched names in `notFound`.
@@ -89,25 +74,11 @@ export function cliEnumInfoNotFoundHint(commandName: Maybe<string>): string {
  * @__NO_SIDE_EFFECTS__
  */
 export function resolveCliEnumInfoLookupOutput(input: ResolveCliEnumInfoLookupOutputInput): CliEnumInfoLookupOutput {
-  const found: CliModelEnum[] = [];
-  const notFound: string[] = [];
-
-  for (const name of input.names) {
-    const table = findCliEnum(input.manifest, name);
-    if (table == null) {
-      notFound.push(name);
-    } else {
-      found.push(table);
-    }
-  }
-
-  return notFound.length > 0 ? { enums: found, notFound, hint: cliEnumInfoNotFoundHint(input.commandName) } : { enums: found };
+  return resolveModelManifestEnumLookup({ names: input.names, enums: input.manifest, notFoundHint: cliEnumInfoNotFoundHint(input.commandName) });
 }
 
 /**
  * Lists the registered enum names, sorted.
- *
- * Mirrors `@dereekb/firebase-server/mcp`'s `resolveEnumInfoListOutput` — keep the matching rules in lockstep.
  *
  * @param manifest - The generated enum manifest.
  * @returns The sorted names and their count.
@@ -115,8 +86,7 @@ export function resolveCliEnumInfoLookupOutput(input: ResolveCliEnumInfoLookupOu
  * @__NO_SIDE_EFFECTS__
  */
 export function resolveCliEnumInfoListOutput(manifest: CliEnumManifest): CliEnumInfoListOutput {
-  const names = Object.keys(manifest).sort((a, b) => a.localeCompare(b));
-  return { names, total: names.length };
+  return resolveModelManifestEnumList(manifest);
 }
 
 /**
@@ -131,16 +101,7 @@ export function resolveCliEnumInfoListOutput(manifest: CliEnumManifest): CliEnum
  * @__NO_SIDE_EFFECTS__
  */
 export function findReferencedCliEnums(input: FindReferencedCliEnumsInput): CliModelEnum[] {
-  const referenced = new Set<string>();
-  collectFieldEnumRefs(input.fields, referenced);
-
-  const tables: CliModelEnum[] = [];
-  for (const name of referenced) {
-    const table = findCliEnum(input.manifest, name);
-    if (table != null) tables.push(table);
-  }
-
-  return tables;
+  return findReferencedModelManifestEnums({ fields: input.fields, enums: input.manifest });
 }
 
 /**
@@ -219,16 +180,4 @@ export function renderCliEnumInfoLookupOutput(output: CliEnumInfoLookupOutput): 
     blocks.push(`Not found: ${output.notFound.join(', ')}.${hintSuffix}`);
   }
   return blocks.join('\n\n') + '\n';
-}
-
-function findCliEnum(manifest: CliEnumManifest, name: string): Maybe<CliModelEnum> {
-  // own keys only: the generated literal inherits from Object.prototype, so `manifest['constructor']` is `Object`
-  return Object.hasOwn(manifest, name) ? manifest[name] : undefined;
-}
-
-function collectFieldEnumRefs(fields: readonly CliModelField[], into: Set<string>): void {
-  for (const field of fields) {
-    if (field.enumRef) into.add(field.enumRef);
-    if (field.nestedFields) collectFieldEnumRefs(field.nestedFields, into);
-  }
 }

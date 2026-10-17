@@ -128,6 +128,27 @@ describe('createCli() enum-info auto-wiring', () => {
       expect(parsed.data.enums).toEqual([ENUM_MANIFEST['ProfileState']]);
     }
   });
+
+  describe('info', () => {
+    // `model-info` / `enum-info` also contain "info", so match the bare command at the start of a help line
+    const INFO_HELP_LINE = /^\s+\S+ info\b/m;
+
+    it('registers the built-in info command when either manifest is provided', async () => {
+      expect(await getRootHelp({ cliName: 'demo-cli', enumManifest: ENUM_MANIFEST })).toMatch(INFO_HELP_LINE);
+      expect(await getRootHelp({ cliName: 'demo-cli', modelManifest: ENUM_MODEL_MANIFEST })).toMatch(INFO_HELP_LINE);
+    });
+
+    it('does NOT register info without a manifest or with disableInfo', async () => {
+      expect(await getRootHelp({ cliName: 'demo-cli' })).not.toMatch(INFO_HELP_LINE);
+      expect(await getRootHelp({ cliName: 'demo-cli', modelManifest: ENUM_MODEL_MANIFEST, enumManifest: ENUM_MANIFEST, disableInfo: true })).not.toMatch(INFO_HELP_LINE);
+    });
+
+    it('runs `info` without a login', async () => {
+      const parsed = await runJson({ cliName: 'dbx-cli-enum-info-spec-no-tokens', modelManifest: ENUM_MODEL_MANIFEST, enumManifest: ENUM_MANIFEST }, ['info', '--enum', 'ProfileState', '--json']);
+      expect(parsed.ok).toBe(true);
+      expect(parsed.data.enums[0].usedBy).toEqual([{ modelType: 'profile', field: 's', longName: 'state' }]);
+    });
+  });
 });
 
 describe('createCli() external-token opt-in', () => {

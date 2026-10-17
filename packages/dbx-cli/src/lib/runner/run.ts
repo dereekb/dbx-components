@@ -18,6 +18,7 @@ import { type CliContext, getCliContext } from '../context/cli.context';
 import { createDoctorCommand, type DoctorCheck } from '../doctor/doctor.command.factory';
 import { createEnvCommand } from '../env/env.command.factory';
 import { buildEnumInfoCommand } from '../manifest/build-enum-info-command';
+import { buildInfoCommand } from '../manifest/build-info-command';
 import { buildModelDecodeCommand } from '../manifest/build-model-decode-command';
 import { buildModelInfoCommand } from '../manifest/build-model-info-command';
 import { type CliEnumManifest, type CliFirestoreQueryManifest, type CliModelManifest } from '../manifest/types';
@@ -154,6 +155,12 @@ export interface CreateCliInput extends CliLifecycleHooks {
    */
   readonly disableEnumInfo?: boolean;
   /**
+   * Disable the built-in `info` command (the data-model catalog: search models, fields and enums, or look them up by
+   * name) even when {@link modelManifest} or {@link enumManifest} is provided. Needed when the app registers its own
+   * `info` command.
+   */
+  readonly disableInfo?: boolean;
+  /**
    * The app-supplied direct-Firestore binding — `cliFirestoreBinding({ collections, models })`.
    *
    * `dbx-cli` cannot import an app's collections factory, so this one option is what makes the
@@ -283,6 +290,8 @@ export interface CreateCliInput extends CliLifecycleHooks {
  *   built-in `enum-info` command and has `model-info <model>` append the referenced enum tables.
  * @param input.disableEnumInfo - When `true`, suppresses the auto-wired `enum-info` command even
  *   if {@link CreateCliInput.enumManifest} is provided.
+ * @param input.disableInfo - When `true`, suppresses the auto-wired auth-free `info` command that
+ *   otherwise registers whenever {@link CreateCliInput.modelManifest} or {@link CreateCliInput.enumManifest} is provided.
  * @param input.firestore - The app-supplied direct-Firestore binding; enables `firestore-get` / `firestore-query`.
  * @param input.firestoreQueryManifest - The generated Firestore query catalog; enables `firestore-queries`.
  * @param input.dataCache - Enables the recorded dataset cache: the `cache` command group plus the `--cache` / `--refresh` global flags.
@@ -315,6 +324,10 @@ export function createCli(input: CreateCliInput): Argv {
 
   if (input.enumManifest && input.disableEnumInfo !== true) {
     builtInConfigCommands.push(buildEnumInfoCommand(input.enumManifest));
+  }
+
+  if ((input.modelManifest || input.enumManifest) && input.disableInfo !== true) {
+    builtInConfigCommands.push(buildInfoCommand({ modelManifest: input.modelManifest, enumManifest: input.enumManifest }));
   }
 
   if (input.firestoreQueryManifest) {

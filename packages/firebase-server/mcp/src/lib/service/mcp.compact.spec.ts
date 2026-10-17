@@ -20,7 +20,12 @@ describe('resolveMcpToolNamePrefix()', () => {
 
 describe('resolveMcpCompactToolNames()', () => {
   it('should resolve the default names', () => {
-    expect(resolveMcpCompactToolNames({ prefix: 'demo' })).toEqual({ search: 'demo_api_search', details: 'demo_api_details', read: 'demo_api_read', write: 'demo_api_write', destructive: 'demo_api_destructive', token: 'demo_cli_token', documentation: 'search_demo_documentation' });
+    expect(resolveMcpCompactToolNames({ prefix: 'demo' })).toEqual({ search: 'demo_api_search', details: 'demo_api_details', read: 'demo_api_read', write: 'demo_api_write', destructive: 'demo_api_destructive', token: 'demo_cli_token', documentation: 'search_demo_documentation', info: 'demo_api_info' });
+  });
+
+  it('should apply an info override and reject an info name used by another compact tool', () => {
+    expect(resolveMcpCompactToolNames({ prefix: 'demo', names: { info: 'demo_catalog' } }).info).toBe('demo_catalog');
+    expect(() => resolveMcpCompactToolNames({ prefix: 'demo', names: { info: 'demo_api_search' } })).toThrow();
   });
 
   it('should apply overrides', () => {
@@ -50,11 +55,21 @@ describe('buildMcpCompactInstructions()', () => {
   it('should stay under the client text limit with every option on', () => {
     const names = resolveMcpCompactToolNames({ prefix: 'a'.repeat(MCP_TOOL_NAME_PREFIX_MAX_LENGTH) });
     const examples = { methodId: 'm'.repeat(64), methodIdByKind: {}, searchQueries: ['q'.repeat(40), 'r'.repeat(40)] };
-    const text = buildMcpCompactInstructions({ app: 'a'.repeat(MCP_TOOL_NAME_PREFIX_MAX_LENGTH), names, builtinReadMethods: ['model-get', 'model-roles', 'url-models', 'model-info', 'model-decode', 'enum-info', 'whoami', 'docs-read'], hasDocumentation: true, hasToken: true, methodToolsListed: true, examples });
+    const text = buildMcpCompactInstructions({
+      app: 'a'.repeat(MCP_TOOL_NAME_PREFIX_MAX_LENGTH),
+      names,
+      builtinReadMethods: ['model-get', 'model-roles', 'url-models', 'model-info', 'model-decode', 'enum-info', 'whoami', 'docs-read'],
+      hasDocumentation: true,
+      hasToken: true,
+      hasInfo: true,
+      methodToolsListed: true,
+      examples
+    });
     expect(text.length).toBeLessThan(MCP_CLIENT_TEXT_MAX_LENGTH);
     expect(text).toContain(names.search);
     expect(text).toContain(names.destructive);
     expect(text).toContain(names.documentation);
+    expect(text).toContain(names.info);
     expect(text).toContain('Per-method tools are also listed.');
   });
 
@@ -71,6 +86,16 @@ describe('buildMcpCompactInstructions()', () => {
     expect(text).toContain('a verb and/or a model name');
     expect(text).toContain('`model.call` or `model.call.specifier`');
     expect(text).not.toContain('e.g.');
+  });
+
+  it('should name the info tool only when it is listed, without examples', () => {
+    const names = resolveMcpCompactToolNames({ prefix: 'demo' });
+    const base = { app: 'demo', names, builtinReadMethods: [], hasDocumentation: false, hasToken: false, methodToolsListed: false };
+    const withInfo = buildMcpCompactInstructions({ ...base, hasInfo: true });
+
+    expect(withInfo).toContain('`demo_api_info` describes the data model');
+    expect(withInfo).not.toContain('e.g.');
+    expect(buildMcpCompactInstructions(base)).not.toContain(names.info);
   });
 
   it('should only name the read router in readOnly mode', () => {
@@ -94,6 +119,24 @@ describe('planMcpToolSurface()', () => {
     expect(plan.promoted.size).toBe(0);
     expect(plan.methodCandidates).toEqual([generatedRead, generatedCreate, builtin]);
     expect(plan.alwaysLoad.size).toBe(0);
+  });
+
+  it('should list the info tool in compact mode only, never in alwaysLoad', () => {
+    const info = makeTool('demo_api_info', true, { call: 'info', modelType: 'catalog' });
+    const compactPlan = planMcpToolSurface({ compact: true, methodTools: undefined, compactNames, generated: [], builtins: [], info });
+    const legacyPlan = planMcpToolSurface({ compact: false, methodTools: true, compactNames, generated: [], builtins: [], info });
+
+    expect(compactPlan.standaloneTools).toEqual([info]);
+    expect(compactPlan.alwaysLoad.has(info)).toBe(false);
+    expect(legacyPlan.standaloneTools).toEqual([]);
+  });
+
+  it('should drop an additional tool named like the info tool', () => {
+    const additional = mcpAdditionalTool({ name: 'demo_api_info', description: 'x', readOnly: true, expose: 'tool', handler: () => ({ ok: true }) });
+    const plan = planMcpToolSurface({ compact: true, methodTools: undefined, compactNames, generated: [], builtins: [], additional: [additional] });
+
+    expect(plan.standaloneTools).toEqual([]);
+    expect(plan.errors.length).toBe(1);
   });
 
   it('should promote every method without alwaysLoad when methodTools is true', () => {

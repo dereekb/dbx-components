@@ -641,6 +641,25 @@ demo-cli model-info storageFile                    # an ENUM column, then the va
   array). `disableEnumInfo` drops the `enum-info` command but keeps those tables.
 - The tables are bundled only when passed: about 47 KB minified for 75 enums.
 
+### Data-model catalog (`info`)
+
+With `modelManifest` or `enumManifest`, `runCli` also registers the auth-free `info [query..]` command, the CLI
+counterpart of the MCP `<prefix>_api_info` tool. It describes the data model: models, their stored fields, and enum
+value tables with the fields that use them. It returns catalog details only and decodes no values.
+
+```bash
+demo-cli info                                      # overview: GROUP · MODELS, then the enum names
+demo-cli info created at --kind field              # KIND · NAME · MODEL · SUMMARY hits; page with --offset
+demo-cli info --model notification --model gb      # full entries plus the enum tables their fields use
+demo-cli info --enum NotificationSendState         # the value table, then Used by: MODEL · FIELD · LONG NAME
+```
+
+- Pass at most one of a query, `--model`, or `--enum`. `--model` / `--enum` repeat. An invalid combination exits 1
+  with `MODEL_MANIFEST_INFO_INVALID_INPUT`; a lookup miss comes back in `notFound` with a `hint`.
+- `--json` `data` is exactly the MCP tool's output (`mode`: `overview` / `search` / `model` / `enum`). Both surfaces
+  share `resolveModelManifestInfoOutput` from `@dereekb/firebase/manifest`.
+- `disableInfo: true` drops the command, e.g. when the app registers its own `info`.
+
 ## Build-time API manifest
 
 `dbx-cli-firebase-api-manifest` writes the app's `api.manifest.generated.ts` during the build. It

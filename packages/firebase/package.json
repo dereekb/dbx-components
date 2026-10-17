@@ -13,6 +13,11 @@
       "types": "./eslint/index.d.ts",
       "import": "./eslint/index.esm.js",
       "default": "./eslint/index.esm.js"
+    },
+    "./manifest": {
+      "types": "./manifest/index.d.ts",
+      "import": "./manifest/index.esm.js",
+      "default": "./manifest/index.esm.js"
     }
   },
   "peerDependencies": {

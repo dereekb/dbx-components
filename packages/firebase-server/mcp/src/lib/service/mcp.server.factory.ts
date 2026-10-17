@@ -24,6 +24,7 @@ import {
 import { mcpToolInputValidator } from './mcp.tool-input.validation';
 import { applyMcpReasonParameterToSchema, extractMcpReasonFromArgs, mcpSchemaDeclaresProperty, resolveMcpReasonParameterConfig, type ResolvedMcpReasonParameterConfig } from './mcp.reason';
 import { MCP_ANALYTICS_SERVICE, noopMcpAnalyticsService, type McpAnalyticsEvent, type McpAnalyticsService } from './analytics/mcp.analytics.handler';
+import { buildModelManifestCatalog } from '@dereekb/firebase/manifest';
 import { MCP_MANIFEST_VERSION, type McpManifest, type McpManifestAuth, type McpManifestEnum, type McpManifestModelEntry, type McpManifestToolEntry } from './mcp.manifest';
 import { ROUTE_MANIFEST_VERSION, type RouteManifest } from './mcp.route-manifest';
 import { formatMcpToolErrorResponse, formatMcpToolResponse } from './mcp.response-formatter';
@@ -44,6 +45,7 @@ import { createWhoamiTool } from './tools/mcp.tool.whoami';
 import { CLI_TOKEN_TOOL_NAME, createCliTokenTool } from './tools/mcp.tool.cli-token';
 import { createUrlModelsTool } from './tools/mcp.tool.url-models';
 import { createMcpDocsSearchTool } from './tools/mcp.tool.docs-search';
+import { createMcpCompactInfoTool } from './tools/mcp.tool.compact-info';
 import { createMcpDocsReadTool, MCP_DOCS_READ_TOOL_NAME } from './tools/mcp.tool.docs-read';
 import { BATCH_EXECUTE_TOOL_NAME, createBatchExecuteTool, batchOperationCoordKey, type BatchOperationAuthorization } from './tools/mcp.tool.batch-execute';
 
@@ -213,12 +215,17 @@ export class McpServerFactoryService {
 
       const compactNames: McpCompactToolNames = compact ? resolvedNames : { ...resolvedNames, token: CLI_TOKEN_TOOL_NAME };
       const examplesConfig = toolsConfig?.examples;
-      const builtins = this._resolveBuiltinMethodTools(prefix, examplesConfig);
+      // Load the manifest first so its models / enums feed the catalog tools and their examples.
+      this._resolveManifest();
+      const catalogExamples: McpToolCatalogExamples = resolveMcpToolCatalogExamples({ config: examplesConfig, models: this._cachedManifestModels, enums: this._cachedManifestEnums, routeManifest: this._resolveRouteManifest() });
+      const builtins = this._resolveBuiltinMethodTools(prefix, catalogExamples);
+      const infoTool = this._resolveInfoTool({ compact, name: compactNames.info, app: prefix, examples: catalogExamples });
       const token = this.cliTokenMinter == null ? undefined : createCliTokenTool({ minter: this.cliTokenMinter, name: compactNames.token });
       const batchName = this.storageService == null ? undefined : BATCH_EXECUTE_TOOL_NAME;
       const docsSearchTool = this._resolveDocsSearchTool({ compact, compactNames, app: prefix });
-      const plan = planMcpToolSurface({ compact, methodTools, compactNames, generated: generation.tools, builtins, token, documentation: docsSearchTool, additional: this.additionalTools, batchName });
+      const plan = planMcpToolSurface({ compact, methodTools, compactNames, generated: generation.tools, builtins, token, documentation: docsSearchTool, info: infoTool, additional: this.additionalTools, batchName });
       const listedDocsSearchTool = docsSearchTool != null && plan.standaloneTools.includes(docsSearchTool) ? docsSearchTool : undefined;
+      const listedInfoTool = infoTool != null && plan.standaloneTools.includes(infoTool) ? infoTool : undefined;
 
       plan.errors.forEach((line) => this._logger.error(line));
       plan.warnings.forEach((line) => this._logger.warn(line));
@@ -252,7 +259,7 @@ export class McpServerFactoryService {
 
       if (compact && toolsConfig?.instructions !== false) {
         const builtinReadMethods = builtins.filter((tool) => tool.filterMetadata.effectiveReadOnly === true).map((tool) => tool.name);
-        compactInstructionsInput = { app: prefix, names: compactNames, builtinReadMethods, hasDocumentation: listedDocsSearchTool != null, hasToken: token != null, methodToolsListed: plan.promoted.size > 0, readOnly: this.mcpConfig.readOnly === true };
+        compactInstructionsInput = { app: prefix, names: compactNames, builtinReadMethods, hasDocumentation: listedDocsSearchTool != null, hasToken: token != null, hasInfo: listedInfoTool != null, methodToolsListed: plan.promoted.size > 0, readOnly: this.mcpConfig.readOnly === true };
       }
 
       findMcpToolExamplesConfigWarnings({ config: examplesConfig, registry: plan.registry, models: this._cachedManifestModels, enums: this._cachedManifestEnums }).forEach((line) => this._logger.warn(line));
@@ -265,6 +272,7 @@ export class McpServerFactoryService {
         searchEntries: buildMcpMethodSearchEntries(plan.registry.methods, this._cachedManifestModels),
         routerTools,
         docsSearchTool: listedDocsSearchTool,
+        infoTool: listedInfoTool,
         routerKindByName,
         metaByName,
         baseInstructions,
@@ -294,7 +302,7 @@ export class McpServerFactoryService {
     const compactLabel = compact ? `on (prefix "${prefix}")` : 'off';
     const unsetHint = this.mcpConfig.tools == null ? ' McpModuleConfig.tools is unset, so the compact surface is the default; set tools: { compact: false, methodTools: true } for the legacy per-method tools.' : '';
     this._logger.log(
-      `MCP tool surface: compact=${compactLabel}, methodTools=${methodToolsLabel}, ${methods.length} methods (${callModelCount} callModel), ${additionalCount} additional tools, token=${this.cliTokenMinter == null ? 'off' : 'on'}, docs=${this._describeDocs()}, examples=${this._describeExamples()}.${unsetHint}`
+      `MCP tool surface: compact=${compactLabel}, methodTools=${methodToolsLabel}, ${methods.length} methods (${callModelCount} callModel), ${additionalCount} additional tools, token=${this.cliTokenMinter == null ? 'off' : 'on'}, docs=${this._describeDocs()}, info=${this._describeInfo(catalog)}, examples=${this._describeExamples()}.${unsetHint}`
     );
   }
 
@@ -344,6 +352,42 @@ export class McpServerFactoryService {
     if (docsService != null && this._isDocsOn()) {
       const readHint = compact ? `\`${compactNames.read}\` with \`method: "${MCP_DOCS_READ_TOOL_NAME}"\`` : `the \`${MCP_DOCS_READ_TOOL_NAME}\` tool`;
       result = createMcpDocsSearchTool({ name: compactNames.documentation, app, readHint, docsService });
+    }
+
+    return result;
+  }
+
+  /**
+   * Builds the compact `info` data-model catalog tool. Compact mode only, and only when the manifest carries models or
+   * enums.
+   *
+   * @param input - The surface mode, wire name, app label, and catalog examples.
+   * @param input.compact - Whether the compact surface is on.
+   * @param input.name - The resolved `info` tool name.
+   * @param input.app - The app label (the tool-name prefix).
+   * @param input.examples - The catalog examples for the tool text.
+   * @returns The tool, or `undefined` when it is not offered.
+   */
+  private _resolveInfoTool(input: { readonly compact: boolean; readonly name: string; readonly app: string; readonly examples: McpToolCatalogExamples }): Maybe<McpToolDefinition> {
+    const { compact, name, app, examples } = input;
+    const models = this._cachedManifestModels ?? [];
+    const enums = this._cachedManifestEnums ?? {};
+    let result: Maybe<McpToolDefinition>;
+
+    if (compact && (models.length > 0 || Object.keys(enums).length > 0)) {
+      result = createMcpCompactInfoTool({ name, app, catalog: buildModelManifestCatalog({ models, enums }), examples });
+    }
+
+    return result;
+  }
+
+  private _describeInfo(catalog: McpToolCatalog): string {
+    let result: string;
+
+    if (catalog.infoTool == null) {
+      result = 'off';
+    } else {
+      result = `on (${this._cachedManifestModels?.length ?? 0} models, ${Object.keys(this._cachedManifestEnums ?? {}).length} enums)`;
     }
 
     return result;
@@ -532,18 +576,15 @@ export class McpServerFactoryService {
    * builds it separately.
    *
    * @param app - The app label used in tool descriptions (the tool-name prefix).
+   * @param examples - The catalog examples shown in the tool text.
    * @returns The built-in method tool definitions.
    */
-  private _resolveBuiltinMethodTools(app: string, examplesConfig: Maybe<McpToolExamplesConfig | false>): McpToolDefinition[] {
-    // Ensure the manifest has been loaded so its `models` array is available for the catalog tools.
-    this._resolveManifest();
-
+  private _resolveBuiltinMethodTools(app: string, examples: McpToolCatalogExamples): McpToolDefinition[] {
     const builtins: McpToolDefinition[] = [];
     const getService = this.modelApiGetService;
     const modelManifest = this._cachedManifestModels;
     const enumManifest = this._cachedManifestEnums;
     const routeManifest = this._resolveRouteManifest();
-    const examples: McpToolCatalogExamples = resolveMcpToolCatalogExamples({ config: examplesConfig, models: modelManifest, enums: enumManifest, routeManifest });
 
     if (getService != null) {
       builtins.push(
@@ -1245,6 +1286,10 @@ interface McpToolCatalog {
    * The documentation search tool when it is listed; filtered per request to callers who can see at least one doc.
    */
   readonly docsSearchTool: Maybe<McpToolDefinition>;
+  /**
+   * The compact `info` data-model catalog tool when it is listed.
+   */
+  readonly infoTool: Maybe<McpToolDefinition>;
   /**
    * Router tool names to their kind. Only routers are routed; every other listed tool runs directly.
    */
