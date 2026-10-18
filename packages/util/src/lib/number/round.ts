@@ -292,3 +292,100 @@ export function roundNumberToStepFunction(input: RoundNumberToStepFunctionInput)
   fn._round = config;
   return fn as RoundNumberToStepFunction;
 }
+
+// MARK: Factor
+/**
+ * Number used to convert values between two scales. Values are divided by the factor when reduced, and multiplied by the factor when expanded.
+ *
+ * For example, with a factor of 15, the value 45 reduces to 3, and 3 expands back to 45.
+ *
+ * @semanticType
+ * @semanticTopic numeric
+ */
+export type NumberFactor = number;
+
+/**
+ * numberFactorConverter() configuration.
+ */
+export interface NumberFactorConverterConfig {
+  /**
+   * Factor to reduce and expand values by. Must be non-zero.
+   */
+  readonly factor: NumberFactor;
+  /**
+   * Rounding applied to reduced values.
+   *
+   * Defaults to 'floor'.
+   */
+  readonly round?: NumberRounding;
+}
+
+export type NumberFactorConverterInput = NumberFactorConverterConfig | NumberFactor;
+
+/**
+ * Converts numbers down and up by a NumberFactor.
+ */
+export interface NumberFactorConverter {
+  readonly factor: NumberFactor;
+  readonly rounding: NumberRounding;
+  /**
+   * Divides the input by the factor, then applies the configured rounding.
+   */
+  readonly reduce: MapFunction<number, number>;
+  /**
+   * Multiplies the input by the factor.
+   */
+  readonly expand: MapFunction<number, number>;
+  /**
+   * Rounds the input to a multiple of the factor using the configured rounding. Equivalent to expand(reduce(value)).
+   */
+  readonly round: MapFunction<number, number>;
+}
+
+/**
+ * Creates a NumberFactorConverter that reduces values by dividing by the factor, expands values by multiplying by the factor, and rounds values to a multiple of the factor.
+ *
+ * Accepts either a factor (uses 'floor' rounding) or a full config with the factor and rounding type.
+ *
+ * @param input - Factor or full configuration.
+ * @returns Converter that reduces, expands, and rounds numbers by the factor.
+ * @throws {Error} If the factor is 0 or undefined.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory number
+ * @dbxUtilKind factory
+ * @dbxUtilTags number, factor, convert, reduce, expand, round, scale, factory
+ * @dbxUtilRelated round-number-to-step-function, minutes-increment-converter, minute-of-day-increment-converter
+ *
+ * @example
+ * ```ts
+ * const converter = numberFactorConverter(15);
+ * converter.reduce(50); // 3
+ * converter.expand(3); // 45
+ * converter.round(50); // 45
+ *
+ * numberFactorConverter({ factor: 15, round: 'ceil' }).round(50); // 60
+ * ```
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function numberFactorConverter(input: NumberFactorConverterInput): NumberFactorConverter {
+  const config: NumberFactorConverterConfig = typeof input === 'number' ? { factor: input } : input;
+  const { factor, round: rounding = 'floor' } = config;
+
+  if (!factor) {
+    throw new Error('Factor must be defined and non-zero.');
+  }
+
+  const roundingFn = roundingFunction(rounding);
+  const reduce = (value: number) => roundingFn(value / factor);
+  const expand = (value: number) => value * factor;
+
+  return {
+    factor,
+    rounding,
+    reduce,
+    expand,
+    round: (value: number) => expand(reduce(value))
+  };
+}

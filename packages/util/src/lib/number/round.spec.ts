@@ -1,4 +1,4 @@
-import { cutToPrecision, cutValueToPrecision } from './round';
+import { cutToPrecision, cutValueToPrecision, numberFactorConverter } from './round';
 
 describe('cutToPrecision', () => {
   it('should not round to the nearest value.', () => {
@@ -79,6 +79,60 @@ describe('cutValueToPrecision', () => {
       const result = cutValueToPrecision(value, precision);
 
       expect(result).toBe(expectedValue);
+    });
+  });
+});
+
+describe('numberFactorConverter()', () => {
+  it('should throw if the factor is zero', () => {
+    expect(() => numberFactorConverter(0)).toThrow();
+  });
+
+  describe('function', () => {
+    const converter = numberFactorConverter(15);
+
+    it('should default to floor rounding', () => {
+      expect(converter.rounding).toBe('floor');
+    });
+
+    describe('reduce()', () => {
+      it('should divide the value by the factor', () => {
+        expect(converter.reduce(45)).toBe(3);
+      });
+
+      it('should round the reduced value', () => {
+        expect(converter.reduce(50)).toBe(3);
+      });
+    });
+
+    describe('expand()', () => {
+      it('should multiply the value by the factor', () => {
+        expect(converter.expand(3)).toBe(45);
+      });
+    });
+
+    describe('round()', () => {
+      it('should round the value to a multiple of the factor', () => {
+        expect(converter.round(50)).toBe(45);
+      });
+
+      it('should not change a multiple of the factor', () => {
+        expect(converter.round(45)).toBe(45);
+      });
+    });
+  });
+
+  describe('config', () => {
+    it('should use the configured rounding', () => {
+      const converter = numberFactorConverter({ factor: 15, round: 'ceil' });
+      expect(converter.reduce(50)).toBe(4);
+      expect(converter.round(50)).toBe(60);
+    });
+
+    it('should not round when rounding is none', () => {
+      const converter = numberFactorConverter({ factor: 100, round: 'none' });
+      expect(converter.reduce(150)).toBe(1.5);
+      expect(converter.round(150)).toBe(150);
     });
   });
 });

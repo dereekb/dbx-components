@@ -1,7 +1,23 @@
 import { startOfDay } from 'date-fns';
 import { range } from '../array/array.number';
 import { MINUTES_IN_HOUR } from './date';
-import { asMinuteOfDay, computeNextFractionalHour, dateFromMinuteOfDay, dateToHoursAndMinutes, dateToMinuteOfDay, fractionalHoursToMinutes, hourToFractionalHour, hoursAndMinutesToString, isHourOfDay, isMinuteOfDay, minutesToFractionalHours, minutesToHoursAndMinutes, toMinuteOfDay } from './hour';
+import {
+  asMinuteOfDay,
+  computeNextFractionalHour,
+  minuteOfDayIncrementConverter,
+  type MinuteOfDayIncrementConverterConfig,
+  dateFromMinuteOfDay,
+  dateToHoursAndMinutes,
+  dateToMinuteOfDay,
+  fractionalHoursToMinutes,
+  hourToFractionalHour,
+  hoursAndMinutesToString,
+  isHourOfDay,
+  isMinuteOfDay,
+  minutesToFractionalHours,
+  minutesToHoursAndMinutes,
+  toMinuteOfDay
+} from './hour';
 
 describe('fractionalHoursToMinutes()', () => {
   it('should convert the fractional hours to minutes.', () => {
@@ -197,6 +213,95 @@ describe('asMinuteOfDay()', () => {
   it('should convert 2000 minutes to 560', () => {
     const result = asMinuteOfDay(2000);
     expect(result).toBe(560);
+  });
+});
+
+describe('minuteOfDayIncrementConverter()', () => {
+  it('should throw if the increment is zero', () => {
+    expect(() => minuteOfDayIncrementConverter(0)).toThrow();
+  });
+
+  it('should throw if the increment is negative', () => {
+    expect(() => minuteOfDayIncrementConverter(-15)).toThrow();
+  });
+
+  it('should throw if the increment is not an integer', () => {
+    expect(() => minuteOfDayIncrementConverter(7.5)).toThrow();
+  });
+
+  describe('function', () => {
+    const converter = minuteOfDayIncrementConverter(15);
+
+    it('should compute the number of increments in a day', () => {
+      expect(converter.incrementsInDay).toBe(96);
+    });
+
+    describe('reduce()', () => {
+      it('should reduce the minute of day to the increment that contains it', () => {
+        expect(converter.reduce(0)).toBe(0);
+        expect(converter.reduce(15)).toBe(1);
+        expect(converter.reduce(68)).toBe(4);
+        expect(converter.reduce(1439)).toBe(95);
+      });
+
+      it('should wrap minutes past the end of the day', () => {
+        expect(converter.reduce(1440)).toBe(0);
+        expect(converter.reduce(1455)).toBe(1);
+      });
+    });
+
+    describe('expand()', () => {
+      it('should expand the increment to the minute of day at its start', () => {
+        expect(converter.expand(0)).toBe(0);
+        expect(converter.expand(4)).toBe(60);
+        expect(converter.expand(95)).toBe(1425);
+      });
+
+      it('should wrap increments past the end of the day', () => {
+        expect(converter.expand(96)).toBe(0);
+        expect(converter.expand(97)).toBe(15);
+      });
+    });
+
+    describe('round()', () => {
+      it('should round the minute of day down to the start of its increment', () => {
+        expect(converter.round(68)).toBe(60);
+        expect(converter.round(75)).toBe(75);
+        expect(converter.round(1439)).toBe(1425);
+      });
+    });
+  });
+
+  describe('config', () => {
+    it('should round up when rounding is ceil', () => {
+      const converter = minuteOfDayIncrementConverter({ increment: 15, round: 'ceil' });
+      expect(converter.reduce(68)).toBe(5);
+      expect(converter.round(68)).toBe(75);
+    });
+
+    it('should round to the nearest increment when rounding is round', () => {
+      const converter = minuteOfDayIncrementConverter({ increment: 15, round: 'round' });
+      expect(converter.round(67)).toBe(60);
+      expect(converter.round(68)).toBe(75);
+    });
+
+    it('should wrap to midnight when rounding up past the last increment of the day', () => {
+      const converter = minuteOfDayIncrementConverter({ increment: 15, round: 'ceil' });
+      expect(converter.reduce(1439)).toBe(0);
+      expect(converter.round(1439)).toBe(0);
+    });
+
+    it('should not allow a fractional increment even if allowFractionalIncrement is passed', () => {
+      const config = { increment: 7.5, allowFractionalIncrement: true } as MinuteOfDayIncrementConverterConfig;
+      expect(() => minuteOfDayIncrementConverter(config)).toThrow();
+    });
+
+    it('should wrap to midnight for an increment that does not evenly divide the day', () => {
+      const converter = minuteOfDayIncrementConverter({ increment: 7, round: 'ceil' });
+      expect(converter.incrementsInDay).toBe(206);
+      expect(converter.round(1434)).toBe(1435);
+      expect(converter.round(1439)).toBe(0);
+    });
   });
 });
 
