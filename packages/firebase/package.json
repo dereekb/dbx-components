@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/firebase",
-  "version": "14.20.0",
+  "version": "14.21.0",
   "type": "module",
   "sideEffects": false,
   "exports": {
@@ -21,10 +21,10 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/date": "14.20.0",
-    "@dereekb/model": "14.20.0",
-    "@dereekb/rxjs": "14.20.0",
-    "@dereekb/util": "14.20.0",
+    "@dereekb/date": "14.21.0",
+    "@dereekb/model": "14.21.0",
+    "@dereekb/rxjs": "14.21.0",
+    "@dereekb/util": "14.21.0",
     "@firebase/rules-unit-testing": "5.0.2",
     "@marcbachmann/cel-js": "^8.0.0",
     "@typescript-eslint/parser": "8.69.0",
