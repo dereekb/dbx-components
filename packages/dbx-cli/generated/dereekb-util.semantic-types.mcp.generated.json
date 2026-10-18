@@ -490,6 +490,64 @@
       "notes": "The minute of the day.\n\nNumber from 0-1439."
     },
     {
+      "name": "MinuteOfDayIncrement",
+      "package": "@dereekb/util",
+      "module": "src/lib/date/hour",
+      "kind": "semantic-type",
+      "definition": "MinutesIncrement<T>",
+      "baseType": "other",
+      "topics": [
+        "date",
+        "numeric"
+      ],
+      "typeParameters": [
+        "T"
+      ],
+      "notes": "A MinuteOfDay expressed as a MinutesIncrement, which is the index of the increment of the day that contains it.\n\nFor example, with a 15 minute increment: 0 (00:00) is 0, 15 (00:15) is 1, 60 (01:00) is 4, and 1425 (23:45) is 95.\n\nIs always an integer.\n\nOptional generic typing exists for communicating the increment size in minutes.\n\nUse minuteOfDayIncrementConverter() to convert between MinuteOfDay and MinuteOfDayIncrement values."
+    },
+    {
+      "name": "MinuteOfDayFifteenMinuteIncrement",
+      "package": "@dereekb/util",
+      "module": "src/lib/date/hour",
+      "kind": "semantic-type",
+      "definition": "MinuteOfDayIncrement<15>",
+      "baseType": "other",
+      "topics": [
+        "date",
+        "numeric"
+      ],
+      "notes": "A MinuteOfDayIncrement for a 15 minute increment, where each value is a quarter hour of the day.\n\nNumber from 0-95."
+    },
+    {
+      "name": "MinutesIncrement",
+      "package": "@dereekb/util",
+      "module": "src/lib/date/minute",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": [
+        "date",
+        "numeric"
+      ],
+      "typeParameters": [
+        "T"
+      ],
+      "notes": "A number of Minutes expressed in increments of a fixed size, rounded to an integer.\n\nFor example, with a 15 minute increment and floor rounding: 0 is 0, 15 is 1, 50 is 3, and 720 is 48.\n\nIs always an integer.\n\nOptional generic typing exists for communicating the increment size in minutes.\n\nUse minutesIncrementConverter() to convert between Minutes and MinutesIncrement values."
+    },
+    {
+      "name": "FifteenMinuteIncrement",
+      "package": "@dereekb/util",
+      "module": "src/lib/date/minute",
+      "kind": "semantic-type",
+      "definition": "MinutesIncrement<15>",
+      "baseType": "other",
+      "topics": [
+        "date",
+        "numeric"
+      ],
+      "notes": "A MinutesIncrement for a 15 minute increment, which is a duration expressed in quarter hours."
+    },
+    {
       "name": "UtcOffsetString",
       "package": "@dereekb/util",
       "module": "src/lib/date/offset",
@@ -891,6 +949,18 @@
         "numeric"
       ],
       "notes": "Origin value for StepNumbers that is used as an offset for input. Is usually 0."
+    },
+    {
+      "name": "NumberFactor",
+      "package": "@dereekb/util",
+      "module": "src/lib/number/round",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": [
+        "numeric"
+      ],
+      "notes": "Number used to convert values between two scales. Values are divided by the factor when reduced, and multiplied by the factor when expanded.\n\nFor example, with a factor of 15, the value 45 reduces to 3, and 3 expands back to 45."
     },
     {
       "name": "ObjectKey",
