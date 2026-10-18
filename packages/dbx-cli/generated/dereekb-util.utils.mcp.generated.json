@@ -4788,6 +4788,79 @@
       ]
     },
     {
+      "slug": "minute-of-day-increment-converter",
+      "name": "minuteOfDayIncrementConverter",
+      "kind": "factory",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/hour",
+      "signature": "minuteOfDayIncrementConverter(input: MinuteOfDayIncrementConverterInput<T>): MinuteOfDayIncrementConverter<T>",
+      "description": "Creates a MinuteOfDayIncrementConverter that reduces MinuteOfDay values to MinuteOfDayIncrement values, expands them back, and rounds MinuteOfDay values to the start of an increment.\n\nAccepts either an increment size (uses 'floor' rounding) or a full config with the increment and rounding type.",
+      "params": [
+        {
+          "name": "input",
+          "type": "MinuteOfDayIncrementConverterInput<T>",
+          "description": "- Increment size in minutes, or full configuration.",
+          "optional": false
+        }
+      ],
+      "returns": "Converter that reduces, expands, and rounds MinuteOfDay values by the increment.",
+      "tags": [
+        "date",
+        "minute",
+        "minute-of-day",
+        "increment",
+        "round",
+        "convert",
+        "factory",
+        "of",
+        "day",
+        "converter",
+        "minuteofdayincrementconverter"
+      ],
+      "example": "const converter = minuteOfDayIncrementConverter(15);\nconverter.reduce(68); // 4 (01:08 is within the 01:00 increment)\nconverter.expand(4); // 60\nconverter.round(68); // 60\n\nconst ceilConverter = minuteOfDayIncrementConverter({ increment: 15, round: 'ceil' });\nceilConverter.round(68); // 75\nceilConverter.round(1439); // 0 (wraps to midnight)",
+      "relatedSlugs": [
+        "minutes-increment-converter",
+        "number-factor-converter"
+      ]
+    },
+    {
+      "slug": "minutes-increment-converter",
+      "name": "minutesIncrementConverter",
+      "kind": "factory",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/minute",
+      "signature": "minutesIncrementConverter(input: MinutesIncrementConverterInput<T>): MinutesIncrementConverter<T>",
+      "description": "Creates a MinutesIncrementConverter that reduces Minutes to MinutesIncrement values, expands them back, and rounds Minutes to a multiple of the increment.\n\nAccepts either an increment size (uses 'floor' rounding) or a full config with the increment, rounding type, and whether or not to allow a fractional increment.",
+      "params": [
+        {
+          "name": "input",
+          "type": "MinutesIncrementConverterInput<T>",
+          "description": "- Increment size in minutes, or full configuration.",
+          "optional": false
+        }
+      ],
+      "returns": "Converter that reduces, expands, and rounds Minutes by the increment.",
+      "tags": [
+        "date",
+        "minute",
+        "duration",
+        "increment",
+        "round",
+        "convert",
+        "factory",
+        "minutes",
+        "converter",
+        "minutesincrementconverter"
+      ],
+      "example": "const converter = minutesIncrementConverter(15);\nconverter.reduce(50); // 3\nconverter.expand(3); // 45\nconverter.round(50); // 45\n\nminutesIncrementConverter({ increment: 15, round: 'ceil' }).round(50); // 60\n\nminutesIncrementConverter({ increment: 7.5, allowFractionalIncrement: true }).round(50); // 45",
+      "relatedSlugs": [
+        "minute-of-day-increment-converter",
+        "number-factor-converter"
+      ]
+    },
+    {
       "slug": "utc-offset-string",
       "name": "utcOffsetString",
       "kind": "function",
@@ -7086,6 +7159,43 @@
       "relatedSlugs": [
         "round-number-up-to-step",
         "round-to-precision-function"
+      ]
+    },
+    {
+      "slug": "number-factor-converter",
+      "name": "numberFactorConverter",
+      "kind": "factory",
+      "category": "number",
+      "module": "@dereekb/util",
+      "subpath": "number/round",
+      "signature": "numberFactorConverter(input: NumberFactorConverterInput): NumberFactorConverter",
+      "description": "Creates a NumberFactorConverter that reduces values by dividing by the factor, expands values by multiplying by the factor, and rounds values to a multiple of the factor.\n\nAccepts either a factor (uses 'floor' rounding) or a full config with the factor and rounding type.",
+      "params": [
+        {
+          "name": "input",
+          "type": "NumberFactorConverterInput",
+          "description": "- Factor or full configuration.",
+          "optional": false
+        }
+      ],
+      "returns": "Converter that reduces, expands, and rounds numbers by the factor.",
+      "tags": [
+        "number",
+        "factor",
+        "convert",
+        "reduce",
+        "expand",
+        "round",
+        "scale",
+        "factory",
+        "converter",
+        "numberfactorconverter"
+      ],
+      "example": "const converter = numberFactorConverter(15);\nconverter.reduce(50); // 3\nconverter.expand(3); // 45\nconverter.round(50); // 45\n\nnumberFactorConverter({ factor: 15, round: 'ceil' }).round(50); // 60",
+      "relatedSlugs": [
+        "round-number-to-step-function",
+        "minutes-increment-converter",
+        "minute-of-day-increment-converter"
       ]
     },
     {

@@ -1,284 +1,61 @@
 import type { FirestoreQueryConstraint } from '@dereekb/firebase';
 import type { Maybe } from '@dereekb/util';
 import { type Type } from 'arktype';
+import type { ModelManifest, ModelManifestCompositeKey, ModelManifestCompositeKeyEncoding, ModelManifestEntry, ModelManifestEnum, ModelManifestEnums, ModelManifestEnumValue, ModelManifestField } from '@dereekb/firebase/manifest';
 
 /**
- * One persisted field on a {@link CliModelManifestEntry}.
+ * One persisted field on a {@link CliModelManifestEntry}. Alias of the shared
+ * `@dereekb/firebase/manifest` {@link ModelManifestField}.
+ */
+export type CliModelField = ModelManifestField;
+
+/**
+ * One Firestore model entry in a downstream CLI's `<NAMESPACE>_MODEL_MANIFEST`. Alias of the
+ * shared `@dereekb/firebase/manifest` {@link ModelManifestEntry}.
  *
- * Captures both the persisted (Firestore) short key and the human-readable
- * long name from the model's `@dbxModelVariable` JSDoc tag, plus the verbatim
- * converter expression text and any nested converter shape (for
- * `firestoreObjectArray` / `firestoreSubObject` fields) so downstream tooling
- * can recursively rewrite payload keys.
+ * Generated at build time by `dbx-cli-generate-firebase-api-manifest` from the same source
+ * packages it walks for the API manifest. Drives the `model-info` / `model-decode` / `info`
+ * commands and the `--expand-keys` flag's payload-rewrite behaviour.
  */
-export interface CliModelField {
-  /**
-   * Persisted Firestore short key (e.g. `fn`, `cat`, `gc`).
-   */
-  readonly name: string;
-  /**
-   * Human-readable long name resolved from the interface property's
-   * `@dbxModelVariable` JSDoc tag. Falls back to `name` when no tag is
-   * declared and the persisted key is already long-form.
-   */
-  readonly longName: string;
-  /**
-   * Verbatim converter expression text from the converter's `fields` literal
-   * (e.g. `firestoreDate()`, `firestoreObjectArray({ objectField: foo })`).
-   *
-   * Opt-in. Only emitted when the manifest is generated with
-   * `--emit-model-converters`; downstream tooling (e.g. the dbx-components MCP)
-   * uses this text, while the CLI itself does not need it.
-   */
-  readonly converter?: string;
-  /**
-   * TypeScript type text from the interface property declaration, when the
-   * field's interface property could be located (e.g. `Date`, `Maybe<NotificationUserState>`).
-   */
-  readonly tsType?: string;
-  /**
-   * `true` when the interface property is optional (`?`) or typed as `Maybe<>`,
-   * or when the converter is an `optionalFirestore...()` factory.
-   */
-  readonly optional: boolean;
-  /**
-   * First paragraph of the interface property's JSDoc, when present.
-   */
-  readonly description?: string;
-  /**
-   * Enum name referenced by either the interface property's TS type or the
-   * converter's `firestoreEnum<Enum>()` generic argument, resolved against
-   * every enum in the scan — the declaring file does not have to be the
-   * converter's own.
-   */
-  readonly enumRef?: string;
-  /**
-   * Free-text description from the interface property's
-   * `@dbxModelVariableSyncFlag` JSDoc tag, when present.
-   */
-  readonly syncFlag?: string;
-  /**
-   * Recursively-resolved nested fields when this field's converter is a
-   * `firestoreObjectArray({ objectField: ... })` or
-   * `firestoreSubObject({ objectField: ... })` call whose inner converter
-   * could be resolved (either inline or via cross-file converter const).
-   *
-   * Absent when the converter is opaque (custom helper, dynamic expression,
-   * `firestoreEnum`, primitive factory, etc.).
-   */
-  readonly nestedFields?: readonly CliModelField[];
-  /**
-   * `true` when the nested fields describe an array element shape
-   * (`firestoreObjectArray`); `false` for sub-object fields. Only meaningful
-   * when {@link nestedFields} is set.
-   */
-  readonly nestedIsArray?: boolean;
-}
+export type CliModelManifestEntry = ModelManifestEntry;
 
 /**
- * One Firestore model entry in a downstream CLI's `<NAMESPACE>_MODEL_MANIFEST`.
- *
- * Generated at build time by `dbx-cli-generate-firebase-api-manifest` from the
- * same source packages it walks for the API manifest. Drives both the
- * `model-info` command's catalog/per-model help and the `--expand-keys` flag's
- * payload-rewrite behaviour.
+ * Flat-key encoding declared by a `@dbxModelCompositeKey` tag. Alias of the shared
+ * {@link ModelManifestCompositeKeyEncoding}.
  */
-export interface CliModelManifestEntry {
-  /**
-   * Persisted model type id (e.g. `notificationBox`, `profile`).
-   */
-  readonly modelType: string;
-  /**
-   * Pascal-case model name as declared by the source interface (e.g.
-   * `NotificationBox`).
-   */
-  readonly modelName: string;
-  /**
-   * Group name from the source `@dbxModelGroup` tag on the
-   * `<X>FirestoreCollections` container (e.g. `Notification`, `Profile`).
-   */
-  readonly modelGroup?: string;
-  /**
-   * Identity const name from the source file (e.g. `notificationBoxIdentity`).
-   */
-  readonly identityConst: string;
-  /**
-   * Collection-name prefix used by the identity (e.g. `nb`, `p`).
-   */
-  readonly collectionPrefix: string;
-  /**
-   * Parent identity const name when the model is a subcollection.
-   */
-  readonly parentIdentityConst?: string;
-  /**
-   * `true` when the model's collection holds exactly one document — built by
-   * `singleItemFirestoreCollection` (one per parent) or
-   * `rootSingleItemFirestoreCollection` (one, full stop). Absent for ordinary
-   * multi-document collections.
-   */
-  readonly singleton?: boolean;
-  /**
-   * Fixed document id of a {@link singleton} model's one document: the value passed as
-   * `singleItemIdentifier`, or `'0'`
-   * (`DEFAULT_SINGLE_ITEM_FIRESTORE_COLLECTION_DOCUMENT_IDENTIFIER`) when the collection
-   * factory omits it.
-   *
-   * This cannot be inferred from the rest of the entry — plenty of single-item collections
-   * override the default (`bgbs`, `bgsu`, …) — so a caller building a document key must read
-   * it here rather than assume `/0`. Absent when {@link singleton} is `true` but the id was
-   * declared as an expression the generator could not resolve (a build-time warning is
-   * printed for that case).
-   */
-  readonly singleItemIdentifier?: string;
-  /**
-   * A ready-to-use example document key for this model, with the parent chain resolved from
-   * the identity graph and `<…Id>` placeholders standing in for the ids a caller supplies
-   * (e.g. `p/<profileId>`, `bg/<billingGroupId>/bgi/<billingGroupInvoiceId>`). A
-   * {@link singleton} model's own segment is its literal {@link singleItemIdentifier}, so the
-   * key is exact past the last placeholder (e.g. `bg/<billingGroupId>/bgis/bgbs`).
-   *
-   * Key *shape* — parent chain plus fixed document id — is what consumers of the manifest
-   * actually get wrong, so it is published pre-assembled. Absent only when some ancestor
-   * identity could not be resolved.
-   */
-  readonly exampleKey?: string;
-  /**
-   * First paragraph of the source interface's JSDoc, when present.
-   */
-  readonly description?: string;
-  /**
-   * Source package providing the model (e.g. `@dereekb/firebase`,
-   * `demo-firebase`).
-   */
-  readonly sourcePackage: string;
-  /**
-   * Workspace-relative path of the source `.ts` file that declares the model.
-   */
-  readonly sourceFile: string;
-  /**
-   * Persisted-field metadata in source order.
-   */
-  readonly fields: readonly CliModelField[];
-  /**
-   * Per-model override of the MCP tool-name model segment, from `@dbxModelMcpToolNameSegment
-   * <segment>` on the model interface. When present it replaces the model type in generated tool
-   * names (e.g. the collection prefix). Absent when the model omits the tag.
-   */
-  readonly mcpToolNameSegment?: string;
-  /**
-   * Read posture declared by `@dbxModelRead <level>` on the model interface. Closed enum:
-   * `system` / `owner` / `admin-only` / `permissions`. Absent when the model interface omits the tag.
-   */
-  readonly read?: 'system' | 'owner' | 'admin-only' | 'permissions';
-  /**
-   * True when the model declared `@dbxModelServerOnly` — no client may read it, on any path.
-   *
-   * Mirrors `FirebaseModelServiceConfig.serverOnly` on the runtime side. Carried on the manifest so
-   * the CLI can refuse the read locally, before choosing a transport, instead of round-tripping to
-   * an API that will refuse it anyway.
-   */
-  readonly serverOnly?: boolean;
-  /**
-   * Resolved `@dbxModelServiceFactory <modelType>`-tagged export that implements this model.
-   * Joined by `modelType` during model-manifest assembly. Absent when no factory was found
-   * (surfaced as an orphan by the cross-file ESLint rule).
-   */
-  readonly serviceFactory?: {
-    readonly exportName: string;
-    readonly sourceFile: string;
-  };
-  /**
-   * Declared `@dbxModelCompositeKey from=<ModelA>[,<ModelB>...] encoding=<two-way|one-way>` on the
-   * model interface — this model's document id is a flattened encoding of a source model's key.
-   * Absent when the model omits the tag.
-   *
-   * Consumed by `model-decode` (to publish the derived key when a source key is decoded, and to
-   * recover the source key from a two-way id) and by `model-get` (to accept a source key in place
-   * of the flattened id).
-   */
-  readonly compositeKey?: CliModelCompositeKey;
-}
+export type CliModelCompositeKeyEncoding = ModelManifestCompositeKeyEncoding;
 
 /**
- * Flat-key encoding declared by a `@dbxModelCompositeKey` tag.
- *
- * - `one-way` — `flatFirestoreModelKey()`: slashes removed; the source key cannot be recovered
- *   from the id.
- * - `two-way` — `twoWayFlatFirestoreModelKey()`: slashes replaced with underscores; recover the
- *   source key with `inferKeyFromTwoWayFlatFirestoreModelKey()`.
+ * Composite-key declaration carried on a {@link CliModelManifestEntry}. Alias of the shared
+ * {@link ModelManifestCompositeKey}.
  */
-export type CliModelCompositeKeyEncoding = 'one-way' | 'two-way';
+export type CliModelCompositeKey = ModelManifestCompositeKey;
 
 /**
- * Composite-key declaration carried on a {@link CliModelManifestEntry}.
+ * Generated array of {@link CliModelManifestEntry} consumed by `model-info` and the
+ * `--expand-keys` rewrite. Each downstream CLI app exports its own `<NAMESPACE>_MODEL_MANIFEST`
+ * of this type.
  */
-export interface CliModelCompositeKey {
-  /**
-   * `'*'` when any model's key may be the source (framework models such as `NotificationBox`), or
-   * the source model names as written in the tag — each an interface name, identity const, or
-   * modelType, resolved against the manifest at decode time.
-   */
-  readonly from: readonly string[] | '*';
-  readonly encoding: CliModelCompositeKeyEncoding;
-}
+export type CliModelManifest = ModelManifest;
 
 /**
- * Generated array of {@link CliModelManifestEntry} consumed by `model-info`
- * and the `--expand-keys` rewrite. Each downstream CLI app exports its own
- * `<NAMESPACE>_MODEL_MANIFEST` of this type.
+ * One enum value with its persisted literal and the leading JSDoc paragraph. Alias of the shared
+ * {@link ModelManifestEnumValue}.
  */
-export type CliModelManifest = readonly CliModelManifestEntry[];
+export type CliModelEnumValue = ModelManifestEnumValue;
 
 /**
- * One enum value with its persisted literal and the leading JSDoc paragraph.
- *
- * Mirrors the dbx-components MCP `FirebaseEnumValue` shape so the runtime MCP
- * manifest carries the same value→label tables the design-time catalog builds.
+ * One TypeScript enum referenced by some model field's `enumRef`. Alias of the shared
+ * {@link ModelManifestEnum}.
  */
-export interface CliModelEnumValue {
-  /**
-   * Enum member name (e.g. `ACTIVE`).
-   */
-  readonly name: string;
-  /**
-   * Raw persisted literal stored in Firestore (e.g. `1`, `'a'`).
-   */
-  readonly value: number | string;
-  /**
-   * First paragraph of the member's JSDoc, when present.
-   */
-  readonly description?: string;
-}
+export type CliModelEnum = ModelManifestEnum;
 
 /**
- * One TypeScript enum referenced by some model field's `enumRef`, captured so
- * the runtime `model-info` / `enum-info` tools can decode raw integer/string
- * values without dropping into source.
- *
- * Mirrors the dbx-components MCP `FirebaseEnum` shape.
+ * Generated map of {@link CliModelEnum} keyed by enum name, scoped to enums referenced by some
+ * emitted model field's `enumRef`. Each downstream CLI app exports its own
+ * `<NAMESPACE>_ENUM_MANIFEST` of this type. Alias of the shared {@link ModelManifestEnums}.
  */
-export interface CliModelEnum {
-  /**
-   * Enum declaration name (e.g. `JobWorkerTimesheetState`).
-   */
-  readonly name: string;
-  /**
-   * Value table in source order.
-   */
-  readonly values: readonly CliModelEnumValue[];
-  /**
-   * First paragraph of the enum declaration's JSDoc, when present.
-   */
-  readonly description?: string;
-}
-
-/**
- * Generated map of {@link CliModelEnum} keyed by enum name, scoped to enums
- * referenced by some emitted model field's `enumRef`. Each downstream CLI app
- * exports its own `<NAMESPACE>_ENUM_MANIFEST` of this type; keying by name lets
- * the runtime do O(1) lookups for both `model-info` and `enum-info`.
- */
-export type CliEnumManifest = { readonly [enumName: string]: CliModelEnum };
+export type CliEnumManifest = ModelManifestEnums;
 
 export type CliApiVerb = 'create' | 'read' | 'update' | 'delete' | 'query' | 'invoke' | 'standalone';
 
@@ -339,199 +116,20 @@ export interface CliApiManifestEntry {
 export type CliApiManifest = readonly CliApiManifestEntry[];
 
 // MARK: MCP Manifest
-/**
- * Version stamp embedded in the build-time MCP manifest JSON. Runtime loaders
- * refuse manifests whose `version` does not match this constant.
- */
-export const MCP_MANIFEST_VERSION = 1 as const;
+// The mcp.manifest.json wire format lives in `@dereekb/firebase/manifest`, shared with the
+// firebase-server/mcp runtime that consumes it.
+export { MCP_MANIFEST_VERSION, mcpManifestKey } from '@dereekb/firebase/manifest';
+export type { McpManifest, McpManifestAuth, McpManifestAuthApp, McpManifestAuthClaim, McpManifestToolEntry } from '@dereekb/firebase/manifest';
 
 /**
- * One tool entry inside the build-time MCP manifest JSON.
- *
- * The renderer pre-merges descriptions, enriches the input schema with per-field
- * `description` text, and synthesizes an `outputSchema` from `resultFields[]` so the
- * runtime only has to do map lookups.
+ * One persisted field on a {@link McpManifestModelEntry}. Alias of the shared {@link ModelManifestField}.
  */
-export interface McpManifestToolEntry {
-  /**
-   * Merged tool description: `entry.description` joined with `entry.paramsTypeDescription`.
-   * Omitted when both source fields are absent.
-   */
-  readonly description?: string;
-  /**
-   * JSON Schema produced from the params validator and enriched with `paramsFields[]` descriptions.
-   * Omitted when neither validator nor fields produced a schema.
-   */
-  readonly inputSchema?: object;
-  /**
-   * JSON Schema synthesized from `resultFields[]` / `resultTypeDescription`. Omitted when both absent.
-   */
-  readonly outputSchema?: object;
-  /**
-   * Name of the MCP-mapped result interface (from `@dbxModelApiMcpResult`) when the output schema was
-   * built from a mapped type. Present iff the source leaf was annotated — the runtime tool generator
-   * uses it to detect handlers whose `mapSuccessfulResult` lacks the matching `.api.ts` annotation.
-   */
-  readonly mcpResultTypeName?: string;
-}
+export type McpManifestModelField = ModelManifestField;
 
 /**
- * One persisted field on a {@link McpManifestModelEntry}.
- *
- * Structural projection of {@link CliModelField} minus the converter expression
- * text (CLI-only). Keeps the runtime payload narrow for downstream MCP tools.
+ * One Firestore model entry in the build-time MCP manifest JSON. Alias of the shared {@link ModelManifestEntry}.
  */
-export interface McpManifestModelField {
-  readonly name: string;
-  readonly longName: string;
-  readonly tsType?: string;
-  readonly optional: boolean;
-  readonly description?: string;
-  readonly enumRef?: string;
-  readonly syncFlag?: string;
-  readonly nestedFields?: readonly McpManifestModelField[];
-  readonly nestedIsArray?: boolean;
-}
-
-/**
- * One Firestore model entry in the build-time MCP manifest JSON.
- *
- * Structural projection of {@link CliModelManifestEntry} consumed at runtime by
- * the firebase-server/mcp built-in `model-info` and `model-decode` tools.
- */
-export interface McpManifestModelEntry {
-  readonly modelType: string;
-  readonly modelName: string;
-  readonly modelGroup?: string;
-  readonly identityConst: string;
-  readonly collectionPrefix: string;
-  readonly parentIdentityConst?: string;
-  /**
-   * `true` when the model's collection holds exactly one document, at the fixed
-   * {@link singleItemIdentifier} (mirror of {@link CliModelManifestEntry.singleton}).
-   */
-  readonly singleton?: boolean;
-  /**
-   * Fixed document id of a {@link singleton} model's one document — `'0'` by default but
-   * frequently overridden, so it cannot be inferred (mirror of
-   * {@link CliModelManifestEntry.singleItemIdentifier}).
-   */
-  readonly singleItemIdentifier?: string;
-  /**
-   * Example document key with the parent chain resolved and `<…Id>` placeholders for the ids a
-   * caller supplies (mirror of {@link CliModelManifestEntry.exampleKey}). Surfaced by
-   * `model-info` so a `model-get` caller can build a valid key without reading source.
-   */
-  readonly exampleKey?: string;
-  readonly description?: string;
-  readonly sourcePackage: string;
-  readonly sourceFile: string;
-  readonly fields: readonly McpManifestModelField[];
-  /**
-   * Per-model override of the model segment used in generated MCP tool names (mirror of
-   * {@link CliModelManifestEntry.mcpToolNameSegment}). Consumed by the runtime generator and the
-   * build-time name validation so both compose the same names.
-   */
-  readonly mcpToolNameSegment?: string;
-  /**
-   * True when the model declared `@dbxModelServerOnly` — no client may read it, on any path.
-   *
-   * Surfaced in the MCP catalog so a tool consumer sees the refusal is structural (there is no
-   * client read grant in `firestore.rules` either) rather than a missing role it could be granted.
-   */
-  readonly serverOnly?: boolean;
-  /**
-   * Composite-key declaration (mirror of {@link CliModelManifestEntry.compositeKey}). Lets the
-   * runtime `model-decode` publish derived keys and `model-get` accept a source key.
-   */
-  readonly compositeKey?: CliModelCompositeKey;
-}
-
-/**
- * One auth claim entry in the pre-rendered MCP manifest JSON. Powers the
- * runtime `whoami` tool. Source paths and line numbers are stripped — only
- * the catalog-facing fields survive.
- */
-export interface McpManifestAuthClaim {
-  readonly key: string;
-  readonly description: string;
-  readonly type: string;
-  readonly app?: string;
-  readonly interfaceName?: string;
-  readonly source: 'system' | 'app';
-  readonly mapping: {
-    readonly roles: readonly string[];
-    readonly inverse: boolean;
-    readonly inverseMode?: 'any' | 'all';
-    readonly claimValue?: string | number | boolean;
-    readonly customEncodeDecode: boolean;
-  };
-  readonly tags: readonly string[];
-}
-
-/**
- * One auth app entry in the pre-rendered MCP manifest JSON.
- *
- * `auth.app` denotes the manifest's primary app (the host that emitted the
- * manifest). `auth.apps` carries the full list, which may include the primary
- * plus inherited apps (e.g. `storageFile-upload-user`).
- */
-export interface McpManifestAuthApp {
-  readonly app: string;
-  readonly claimsInterfaceName: string;
-  readonly serviceConstName: string;
-  readonly claimKeys: readonly string[];
-  readonly scopes: readonly string[];
-  readonly description?: string;
-}
-
-/**
- * Auth section of the pre-rendered MCP manifest JSON. Optional — runtimes
- * built before this section landed simply skip registering whoami.
- */
-export interface McpManifestAuth {
-  readonly app?: McpManifestAuthApp;
-  readonly apps: readonly McpManifestAuthApp[];
-  readonly claims: readonly McpManifestAuthClaim[];
-}
-
-/**
- * Build-time MCP manifest JSON shape consumed by the runtime MCP module's optional manifest loader.
- *
- * `tools` is keyed by {@link mcpManifestKey} so the runtime can do O(1) lookups per registered tool.
- * `models` is optional — the runtime skips the catalog-introspection tools when missing.
- * `enums` is optional — keyed by enum name, it carries the value→label tables `model-info` /
- * `enum-info` decode. Scoped to enums referenced by some model field's `enumRef`.
- * `auth` is optional — drives the runtime `whoami` tool.
- */
-export interface McpManifest {
-  readonly version: typeof MCP_MANIFEST_VERSION;
-  /**
-   * ISO-8601 timestamp captured when the manifest was rendered. Useful for diagnostics.
-   */
-  readonly generatedAt: string;
-  readonly tools: { readonly [key: string]: McpManifestToolEntry | undefined };
-  readonly models?: readonly McpManifestModelEntry[];
-  readonly enums?: CliEnumManifest;
-  readonly auth?: McpManifestAuth;
-}
-
-/**
- * Builds the canonical MCP manifest key for a (modelType, callType, specifier) triple.
- *
- * The default-specifier entry collapses to `_` so the runtime can compose the same
- * key from its dispatch coordinates without first checking whether the handler is
- * behind a specifier router.
- *
- * @param modelType - The Firestore model type (e.g., `guestbook`).
- * @param call - The call type / verb (e.g., `query`).
- * @param specifier - The specifier key, or `_` / undefined for the default entry.
- * @returns The canonical `modelType.call.specifier` lookup key, with the default specifier normalized to `_`.
- */
-export function mcpManifestKey(modelType: string, call: string, specifier?: Maybe<string>): string {
-  const isDefault = specifier == null || specifier === '_';
-  return isDefault ? `${modelType}.${call}._` : `${modelType}.${call}.${specifier}`;
-}
+export type McpManifestModelEntry = ModelManifestEntry;
 
 /**
  * Default specifier key used when a handler is not behind a specifier router.

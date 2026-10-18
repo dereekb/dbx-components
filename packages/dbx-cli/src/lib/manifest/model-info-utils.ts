@@ -1,6 +1,8 @@
+import { type Maybe } from '@dereekb/util';
 import { findCliModelManifestEntry } from '../api/expand-keys';
 import { indentLines, renderTable, truncate } from '../util/table';
-import type { CliModelField, CliModelManifest, CliModelManifestEntry } from './types';
+import { findReferencedCliEnums, renderCliEnumValuesTable } from './enum-info-utils';
+import type { CliEnumManifest, CliModelField, CliModelManifest, CliModelManifestEntry } from './types';
 
 /**
  * Glosses for the closed `@dbxModelRead` enum surfaced on each model entry.
@@ -52,15 +54,28 @@ export function renderModelManifestList(manifest: CliModelManifest): string {
 }
 
 /**
+ * Options accepted by {@link renderModelManifestEntry}.
+ */
+export interface RenderModelManifestEntryOptions {
+  /**
+   * Generated enum value tables. When provided, the summary ends with an `Enums (N):` section
+   * holding the tables of the enums the entry's fields reference (recursing into `nestedFields`).
+   */
+  readonly enumManifest?: Maybe<CliEnumManifest>;
+}
+
+/**
  * Produces a human-readable summary of one model entry: header, description,
- * and an indented field tree (recursing into `nestedFields`).
+ * an indented field tree (recursing into `nestedFields`), and — when an enum
+ * manifest is supplied — the value tables of the enums its fields reference.
  *
  * @param entry - The manifest entry to render.
+ * @param options - Optional render options; see {@link RenderModelManifestEntryOptions}.
  * @returns The formatted summary as a single string with a trailing newline.
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function renderModelManifestEntry(entry: CliModelManifestEntry): string {
+export function renderModelManifestEntry(entry: CliModelManifestEntry, options?: RenderModelManifestEntryOptions): string {
   const groupSuffix = entry.modelGroup ? ` · group ${entry.modelGroup}` : '';
   const lines: string[] = [`# ${entry.modelType}${groupSuffix}`, `Identity: ${entry.identityConst}`, `Collection prefix: ${entry.collectionPrefix}`];
   if (entry.parentIdentityConst) lines.push(`Parent identity: ${entry.parentIdentityConst}`);
@@ -70,6 +85,13 @@ export function renderModelManifestEntry(entry: CliModelManifestEntry): string {
     lines.push('', entry.description);
   }
   lines.push('', `Fields (${entry.fields.length}):`, renderFieldsTree(entry.fields, 0));
+  const enums = options?.enumManifest ? findReferencedCliEnums({ fields: entry.fields, manifest: options.enumManifest }) : [];
+  if (enums.length > 0) {
+    lines.push('', `Enums (${enums.length}):`);
+    for (const enumTable of enums) {
+      lines.push('', indentLines(enumTable.description ? `${enumTable.name} — ${enumTable.description}` : enumTable.name, 2), indentLines(renderCliEnumValuesTable(enumTable), 4));
+    }
+  }
   return lines.join('\n') + '\n';
 }
 
@@ -87,20 +109,33 @@ export function renderModelManifestFields(entry: CliModelManifestEntry): string 
 }
 
 function renderFieldsTree(fields: readonly CliModelField[], indent: number): string {
-  const includeConverter = fields.some((f) => f.converter !== undefined);
-  const tableBlock = indentLines(renderTable(buildFieldsTableRows(fields, includeConverter)), indent);
+  const columns: FieldTableColumns = { includeEnum: fields.some((f) => f.enumRef != null), includeConverter: fields.some((f) => f.converter !== undefined) };
+  const tableBlock = indentLines(renderTable(buildFieldsTableRows(fields, columns)), indent);
   const nestedBlocks = fields.flatMap((field) => renderNestedFieldBlock(field, indent));
   return [tableBlock, ...nestedBlocks].join('\n');
 }
 
-function buildFieldsTableRows(fields: readonly CliModelField[], includeConverter: boolean): readonly string[][] {
-  const header = includeConverter ? ['NAME', 'LONG NAME', 'TYPE', 'OPTIONAL', 'CONVERTER'] : ['NAME', 'LONG NAME', 'TYPE', 'OPTIONAL'];
-  return [header, ...fields.map((field) => buildFieldRow(field, includeConverter))];
+/**
+ * Optional columns of a field table, each shown only when some field in that table carries the data.
+ */
+interface FieldTableColumns {
+  readonly includeEnum: boolean;
+  readonly includeConverter: boolean;
 }
 
-function buildFieldRow(field: CliModelField, includeConverter: boolean): string[] {
+function buildFieldsTableRows(fields: readonly CliModelField[], columns: FieldTableColumns): readonly string[][] {
+  const header = ['NAME', 'LONG NAME', 'TYPE', 'OPTIONAL'];
+  if (columns.includeEnum) header.push('ENUM');
+  if (columns.includeConverter) header.push('CONVERTER');
+  return [header, ...fields.map((field) => buildFieldRow(field, columns))];
+}
+
+function buildFieldRow(field: CliModelField, columns: FieldTableColumns): string[] {
   const row: string[] = [field.name, field.longName, field.tsType ?? '', field.optional ? 'yes' : 'no'];
-  if (includeConverter) {
+  if (columns.includeEnum) {
+    row.push(field.enumRef ?? '');
+  }
+  if (columns.includeConverter) {
     row.push(field.converter ? truncate(field.converter, 60) : '');
   }
   return row;

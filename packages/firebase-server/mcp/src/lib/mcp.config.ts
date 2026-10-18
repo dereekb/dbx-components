@@ -261,7 +261,7 @@ export abstract class McpModuleConfig {
 /**
  * Keys of the compact MCP tools.
  */
-export type McpCompactToolKey = 'search' | 'details' | 'read' | 'write' | 'destructive' | 'token' | 'documentation';
+export type McpCompactToolKey = 'search' | 'details' | 'read' | 'write' | 'destructive' | 'token' | 'documentation' | 'info';
 
 /**
  * Resolved compact tool names, keyed by {@link McpCompactToolKey}.
@@ -274,7 +274,8 @@ export type McpCompactToolNames = Readonly<Record<McpCompactToolKey, string>>;
 export interface McpToolsConfig {
   /**
    * Advertise the compact, Stripe-like surface: `search` → `details` → `read` / `write` / `destructive` over every visible
-   * method, plus the `token` and `documentation` tools when available.
+   * method, plus the `token` and `documentation` tools when available, and the `info` data-model catalog tool
+   * (`<prefix>_api_info`) when the generated `mcp.manifest.json` carries models or enums. `info` exists in compact mode only.
    *
    * Defaults to `true`.
    */
@@ -290,12 +291,13 @@ export interface McpToolsConfig {
    */
   readonly methodTools?: boolean | McpMethodToolSelector;
   /**
-   * Full-name overrides per compact tool. Each name must be a valid MCP tool name; an invalid one throws at boot.
+   * Full-name overrides per compact tool, e.g. `{ info: 'acme_catalog' }`. Each name must be a valid MCP tool name; an
+   * invalid one throws at boot.
    */
   readonly names?: Partial<Record<McpCompactToolKey, string>>;
   /**
    * `_meta` merged onto each compact tool's `tools/list` entry, e.g.
-   * `{ destructive: { 'anthropic/requiresUserInteraction': true } }`.
+   * `{ destructive: { 'anthropic/requiresUserInteraction': true } }`. `info` is honored only when that tool is listed.
    */
   readonly meta?: Partial<Record<McpCompactToolKey, Record<string, unknown>>>;
   /**

@@ -1,6 +1,7 @@
+import { findModelManifestEntry as findModelEntry, findReferencedModelManifestEnums, MODEL_MANIFEST_UNGROUPED_LABEL } from '@dereekb/firebase/manifest';
 import { type Maybe, makeValuesGroupMap } from '@dereekb/util';
 import type { CallToolResult } from '@modelcontextprotocol/server';
-import { type McpManifestEnum, type McpManifestModelEntry, type McpManifestModelField } from '../mcp.manifest';
+import { type McpManifestEnum, type McpManifestModelEntry } from '../mcp.manifest';
 import { formatMcpToolErrorResponse } from '../mcp.response-formatter';
 import { buildStaticToolDefinition, type McpToolDefinition, type McpStaticToolHandler, type McpStaticToolHandlerContext } from '../mcp.tool-generator';
 
@@ -26,7 +27,7 @@ export const MODEL_INFO_DISPATCH_MODEL_TYPE = 'model';
  * Group label applied to manifest entries that declare no `modelGroup`. Keeps the `groups` mode
  * total reconcilable with the catalog size (sum of group counts always equals `totalModels`).
  */
-export const MODEL_INFO_UNGROUPED_LABEL = '(ungrouped)';
+export const MODEL_INFO_UNGROUPED_LABEL = MODEL_MANIFEST_UNGROUPED_LABEL;
 
 /**
  * Hint string surfaced alongside the default `groups` response so callers know how to drill in.
@@ -251,16 +252,7 @@ function attachReferencedEnums(output: ModelInfoToolOutput, enums: CreateModelIn
   let result = output;
 
   if (enums != null) {
-    const referenced = new Set<string>();
-    for (const entry of collectDetailedEntries(output)) {
-      collectFieldEnumRefs(entry.fields, referenced);
-    }
-
-    const tables: McpManifestEnum[] = [];
-    for (const name of referenced) {
-      const table = enums[name];
-      if (table != null) tables.push(table);
-    }
+    const tables = findReferencedModelManifestEnums({ fields: collectDetailedEntries(output).flatMap((entry) => entry.fields), enums });
 
     if (tables.length > 0) {
       result = { ...output, enums: tables };
@@ -287,13 +279,6 @@ function collectDetailedEntries(output: ModelInfoToolOutput): McpManifestModelEn
   }
 
   return rows.filter((row): row is McpManifestModelEntry => Array.isArray((row as McpManifestModelEntry).fields));
-}
-
-function collectFieldEnumRefs(fields: readonly McpManifestModelField[], into: Set<string>): void {
-  for (const field of fields) {
-    if (field.enumRef) into.add(field.enumRef);
-    if (field.nestedFields) collectFieldEnumRefs(field.nestedFields, into);
-  }
 }
 
 // MARK: Input parsing
@@ -518,25 +503,8 @@ function buildUnknownGroupMessage(group: string, manifest: ReadonlyArray<McpMani
   return `model-info: no model group matches "${group}". Available groups: ${available || '(none)'}. Call \`model-info\` with no arguments to list groups.`;
 }
 
-/**
- * Resolves a manifest entry by `modelType`, `identityConst`, or `collectionPrefix`.
- *
- * @param query - Identifier to look up.
- * @param manifest - Model manifest to search.
- * @returns The matching entry or `undefined`.
- *
- * @__NO_SIDE_EFFECTS__
- */
-export function findModelEntry(query: string, manifest: ReadonlyArray<McpManifestModelEntry>): McpManifestModelEntry | undefined {
-  let result: McpManifestModelEntry | undefined;
-  for (const entry of manifest) {
-    if (entry.modelType === query || entry.identityConst === query || entry.collectionPrefix === query) {
-      result = entry;
-      break;
-    }
-  }
-  return result;
-}
+// The manifest lookup is shared with the dbx-cli catalog commands; re-exported under its MCP name.
+export { findModelManifestEntry as findModelEntry } from '@dereekb/firebase/manifest';
 
 // MARK: Schemas
 const MODEL_INFO_INPUT_SCHEMA = {
@@ -568,7 +536,7 @@ const MODEL_INFO_INPUT_SCHEMA = {
 
 // Shared item schema for model-bearing rows. Required props cover the summary form; full entries
 // add `fields`, `sourceFile`, and `serviceFactory` (allowed as additional properties).
-const MODEL_ROW_SCHEMA = {
+export const MODEL_INFO_ROW_SCHEMA = {
   type: 'object',
   required: ['modelType', 'modelName', 'identityConst', 'collectionPrefix', 'sourcePackage'],
   properties: {
@@ -647,10 +615,10 @@ const MODEL_INFO_OUTPUT_SCHEMA = {
     models: {
       type: 'array',
       description: 'Present when `mode` is `"list"` or `"multiple"`. Summary rows by default; full entries when `fields` requests detail.',
-      items: MODEL_ROW_SCHEMA
+      items: MODEL_INFO_ROW_SCHEMA
     },
     modelGroup: { type: 'string', description: 'Present when `mode` is `"list"` from a `modelGroup` filter. The canonical group name.' },
-    model: { ...MODEL_ROW_SCHEMA, description: 'Present when `mode` is `"single"`. The matched model entry (full detail unless `fields:false`).' },
+    model: { ...MODEL_INFO_ROW_SCHEMA, description: 'Present when `mode` is `"single"`. The matched model entry (full detail unless `fields:false`).' },
     notFound: {
       type: 'array',
       description: 'Present when `mode` is `"multiple"` and one or more queries matched nothing.',

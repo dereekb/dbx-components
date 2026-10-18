@@ -163,4 +163,11 @@ describe('resolveEnumInfoOutput', () => {
     expect(out.enums.map((e) => e.name)).toEqual(['DayOfWeek']);
     expect(out.notFound).toEqual(['Nope']);
   });
+
+  it('treats Object.prototype member names as misses', () => {
+    const out = resolveEnumInfoOutput(['constructor', 'toString', '__proto__'], ENUMS);
+    expect(out.enums).toEqual([]);
+    expect(out.notFound).toEqual(['constructor', 'toString', '__proto__']);
+    expect(out.hint).toBe(ENUM_INFO_NOT_FOUND_HINT);
+  });
 });

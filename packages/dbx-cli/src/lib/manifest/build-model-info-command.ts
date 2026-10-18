@@ -1,8 +1,10 @@
+import { type Maybe } from '@dereekb/util';
 import type { Argv, CommandModule } from 'yargs';
 import { CliError, outputResult } from '../util/output';
 import { wrapSyncCommandHandler } from '../util/handler';
+import { findReferencedCliEnums } from './enum-info-utils';
 import { renderModelManifestEntry, renderModelManifestFields, renderModelManifestList, resolveCliModel } from './model-info-utils';
-import type { CliModelManifest } from './types';
+import type { CliEnumManifest, CliModelManifest } from './types';
 
 /**
  * Default command name for the model-info command. Top-level so it stays out
@@ -19,6 +21,12 @@ export interface BuildModelInfoCommandOptions {
    * {@link DEFAULT_MODEL_INFO_COMMAND_NAME}.
    */
   readonly commandName?: string;
+  /**
+   * Generated enum value tables (`<NAMESPACE>_ENUM_MANIFEST`). When provided, the per-model view
+   * ends with the value tables of the enums its fields reference, and `--json` adds them as an
+   * `enums` array next to the entry's keys (absent when none resolve).
+   */
+  readonly enumManifest?: Maybe<CliEnumManifest>;
 }
 
 /**
@@ -28,7 +36,8 @@ export interface BuildModelInfoCommandOptions {
  * in the manifest. With an argument: looks the model up by `modelType`,
  * `identityConst`, or `collectionPrefix` and prints its full per-field
  * documentation, recursing into nested converters when the manifest captured
- * them.
+ * them. With {@link BuildModelInfoCommandOptions.enumManifest}, the per-model
+ * view also carries the value tables of the enums its fields reference.
  *
  * Flags:
  *   - `--json` emits a structured `{ ok, data }` envelope instead of the
@@ -63,7 +72,7 @@ export function buildModelInfoCommand(manifest: CliModelManifest, options?: Buil
         });
     },
     handler: wrapSyncCommandHandler((argv: any) => {
-      runHandler(manifest, argv);
+      runHandler({ manifest, enumManifest: options?.enumManifest, argv });
     })
   };
 }
@@ -74,7 +83,14 @@ interface ModelInfoArgv {
   readonly fields?: boolean;
 }
 
-function runHandler(manifest: CliModelManifest, argv: ModelInfoArgv): void {
+interface ModelInfoHandlerInput {
+  readonly manifest: CliModelManifest;
+  readonly enumManifest?: Maybe<CliEnumManifest>;
+  readonly argv: ModelInfoArgv;
+}
+
+function runHandler(input: ModelInfoHandlerInput): void {
+  const { manifest, enumManifest, argv } = input;
   const query = typeof argv.model === 'string' && argv.model.length > 0 ? argv.model : undefined;
 
   if (query) {
@@ -87,11 +103,12 @@ function runHandler(manifest: CliModelManifest, argv: ModelInfoArgv): void {
     }
 
     if (argv.json) {
-      outputResult(entry);
+      const enums = enumManifest ? findReferencedCliEnums({ fields: entry.fields, manifest: enumManifest }) : [];
+      outputResult(enums.length > 0 ? { ...entry, enums } : entry);
     } else if (argv.fields) {
       process.stdout.write(renderModelManifestFields(entry));
     } else {
-      process.stdout.write(renderModelManifestEntry(entry));
+      process.stdout.write(renderModelManifestEntry(entry, { enumManifest }));
     }
   } else if (argv.json) {
     outputResult(manifest);

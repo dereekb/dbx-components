@@ -18,7 +18,7 @@ npx nx build demo-cli
 
 | Target | Output |
 | --- | --- |
-| `generate-api-manifest` | `src/lib/manifest/api.manifest.generated.ts` — the API command tree + the model manifest (`--emit-models`) |
+| `generate-api-manifest` | `src/lib/manifest/api.manifest.generated.ts` — the API command tree + the model and enum manifests (`--emit-models`) |
 | `generate-firestore-query-manifest` | `src/lib/manifest/query.manifest.generated.ts` — the per-model Firestore query catalog |
 | `generate-notification-manifest` | `src/lib/manifest/notification.manifest.generated.ts` — the notification template + task type catalog (task checkpoints) for the [notification commands](#notifications) |
 
@@ -49,6 +49,7 @@ void runCli({
   doctorChecks: DEMO_DOCTOR_CHECKS,
   defaultEnvs: DEFAULT_DEMO_CLI_ENVS,
   modelManifest: DEMO_CLI_MODEL_MANIFEST,
+  enumManifest: DEMO_CLI_ENUM_MANIFEST,
   firestore: demoCliFirestore.binding,
   firestoreQueryManifest: DEMO_CLI_FIRESTORE_QUERY_MANIFEST,
   apiCommands: buildManifestCommands(DEMO_CLI_API_MANIFEST, { modelManifest: DEMO_CLI_MODEL_MANIFEST }),
@@ -65,6 +66,18 @@ same collections through the same `firestore.rules`.
 inside an action reuse the collections the CLI already built, instead of building a second copy —
 which is what `guestbook.firestore.actions.ts` used to do just to recover the
 `DemoFirestoreCollections` type the CLI boundary erased.
+
+### Enum values
+
+`enumManifest: DEMO_CLI_ENUM_MANIFEST` wires the auth-free `enum-info` command, which decodes the raw
+values enum-typed fields store (`demo-cli enum-info StorageFileProcessingState` shows `2  PROCESSING`), and
+makes `model-info <model>` end with the value tables of the enums its fields use. No login is needed. See
+the dbx-cli README's [Enum values](../../packages/dbx-cli/README.md#enum-values) section.
+
+The two manifests also wire the auth-free `info [query..]` command: `demo-cli info NotificationSendState` finds the
+enum, and `demo-cli info --enum NotificationSendState` shows its table plus the `notification` fields that store it
+(`ts` / `es` / `ps` / `ns`). `--json` returns the same output as the MCP `demo_api_info` tool. See the dbx-cli README's
+[Data-model catalog](../../packages/dbx-cli/README.md#data-model-catalog-info) section.
 
 ## Direct Firestore reads
 

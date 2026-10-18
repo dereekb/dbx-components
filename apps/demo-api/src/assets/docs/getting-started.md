@@ -1,6 +1,6 @@
 ---
 title: Getting started with the Demo API
-description: What the Demo API is and how an agent finds its way around it.
+description: What the Demo API serves (guestbooks, guestbook entries, profiles, notifications) and how an agent finds its way around it.
 tags: [overview, mcp]
 audience: [any]
 ---

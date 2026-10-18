@@ -1,3 +1,4 @@
+import { buildModelManifestCatalog } from '@dereekb/firebase/manifest';
 import { describe, expect, it } from 'vitest';
 import { buildMcpCompactDetailsInputSchema, buildMcpCompactInstructions, buildMcpCompactSearchInputSchema, MCP_COMPACT_ROUTER_INPUT_SCHEMA, resolveMcpCompactToolNames } from './mcp.compact';
 import { EMPTY_MCP_TOOL_CATALOG_EXAMPLES, EMPTY_MCP_TOOL_METHOD_EXAMPLES, findMcpToolExamplesConfigWarnings, mcpMethodExampleSearchQuery, mcpToolExamplePageUrl, resolveMcpToolCatalogExamples, resolveMcpToolMethodExamples } from './mcp.examples';
@@ -6,6 +7,7 @@ import { buildMcpMethodRegistry, type McpMethodSummary } from './mcp.method';
 import { buildMcpMethodSearchEntries } from './mcp.method.search';
 import { ROUTE_MANIFEST_VERSION, type RouteManifest } from './mcp.route-manifest';
 import { createMcpCompactDetailsTool } from './tools/mcp.tool.compact-details';
+import { createMcpCompactInfoTool } from './tools/mcp.tool.compact-info';
 import { createMcpCompactRouterTool } from './tools/mcp.tool.compact-router';
 import { createMcpCompactSearchTool } from './tools/mcp.tool.compact-search';
 import { createEnumInfoTool } from './tools/mcp.tool.enum-info';
@@ -197,7 +199,8 @@ describe('app-neutral defaults', () => {
       createMcpCompactDetailsTool({ name: names.details, app: 'x', names, entries, view, isListedAsTool: () => false, resolveWireEntry: () => ({}) as never }),
       createMcpCompactRouterTool({ name: names.read, kind: 'read', app: 'x', names }),
       createMcpCompactRouterTool({ name: names.write, kind: 'write', app: 'x', names }),
-      createMcpCompactRouterTool({ name: names.destructive, kind: 'destructive', app: 'x', names })
+      createMcpCompactRouterTool({ name: names.destructive, kind: 'destructive', app: 'x', names }),
+      createMcpCompactInfoTool({ name: names.info, app: 'x', catalog: buildModelManifestCatalog({ models: [model({ modelType: 'calendar', collectionPrefix: 'cal' })], enums: { SampleEnum: ENUM } }) })
     ];
 
     const text = JSON.stringify([
@@ -205,7 +208,7 @@ describe('app-neutral defaults', () => {
       buildMcpCompactSearchInputSchema(),
       buildMcpCompactDetailsInputSchema(),
       MCP_COMPACT_ROUTER_INPUT_SCHEMA,
-      buildMcpCompactInstructions({ app: 'x', names, builtinReadMethods: ['model-get'], hasDocumentation: true, hasToken: true, methodToolsListed: true })
+      buildMcpCompactInstructions({ app: 'x', names, builtinReadMethods: ['model-get'], hasDocumentation: true, hasToken: true, hasInfo: true, methodToolsListed: true })
     ]);
 
     expect(text).not.toMatch(APP_SPECIFIC_NAMES);

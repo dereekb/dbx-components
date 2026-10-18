@@ -690,6 +690,73 @@ describe('McpServerFactoryService compact surface', () => {
     });
   });
 
+  describe('info', () => {
+    const COMPACT_NAMES = ['demo_api_search', 'demo_api_details', 'demo_api_read', 'demo_api_write', 'demo_api_destructive'];
+
+    function writeManifest(content: { models?: unknown[]; enums?: Record<string, unknown>; auth?: unknown }): string {
+      const manifestPath = join(mkdtempSync(join(tmpdir(), 'mcp-info-')), 'mcp.manifest.json');
+      writeFileSync(manifestPath, JSON.stringify({ version: MCP_MANIFEST_VERSION, generatedAt: '2026-10-17T00:00:00.000Z', tools: {}, ...content }));
+      return manifestPath;
+    }
+
+    function makeInfoFactory(config: Partial<McpModuleConfig> = {}): McpServerFactoryService {
+      const mcpManifestPath = writeManifest({
+        models: [{ modelType: 'guestbook', modelName: 'Guestbook', modelGroup: 'Guestbook', identityConst: 'guestbookIdentity', collectionPrefix: 'gb', sourcePackage: 'demo-firebase', sourceFile: 'guestbook.ts', fields: [{ name: 's', longName: 'state', optional: false, enumRef: 'GuestbookState' }] }],
+        enums: { GuestbookState: { name: 'GuestbookState', values: [{ name: 'OPEN', value: 0 }] } }
+      });
+      return makeFactory({ config: { mcpManifestPath, ...config } });
+    }
+
+    it('should list the info tool after the compact tools with alwaysLoad and tools.meta.info merged', async () => {
+      const factory = makeInfoFactory({ tools: { meta: { info: { custom: 1 } } } });
+      const entries = await dispatchMcpToolsList<WireToolEntry>(factory, USER);
+      const entry = entries.find((x) => x.name === 'demo_api_info');
+
+      expect(factory.compactToolNames.info).toBe('demo_api_info');
+      expect(entries.map((x) => x.name)).toEqual([...COMPACT_NAMES, 'demo_api_info']);
+      expect(entry?._meta).toEqual({ 'anthropic/alwaysLoad': true, custom: 1 });
+      expect(entry?.annotations?.readOnlyHint).toBe(true);
+      expect(entry?.inputSchema.properties?.['reason']).toBeUndefined();
+    });
+
+    it('should not list the info tool without a model or enum catalog', async () => {
+      expect(await listNames(makeFactory())).not.toContain('demo_api_info');
+      expect(await listNames(makeFactory({ config: { mcpManifestPath: writeManifest({ auth: { apps: [], claims: [] } }) } }))).not.toContain('demo_api_info');
+    });
+
+    it('should not list the info tool for an unauthenticated caller or in legacy mode', async () => {
+      expect(await listNames(makeInfoFactory(), {})).not.toContain('demo_api_info');
+      expect(await listNames(makeInfoFactory({ tools: { compact: false, methodTools: true } }))).not.toContain('demo_api_info');
+    });
+
+    it('should list the info tool in readOnly mode', async () => {
+      expect(await listNames(makeInfoFactory({ readOnly: true }))).toContain('demo_api_info');
+    });
+
+    it('should apply the tools.names.info override', async () => {
+      const factory = makeInfoFactory({ tools: { names: { info: 'demo_catalog' } } });
+      expect(await listNames(factory)).toContain('demo_catalog');
+      expect((await dispatchMcpDiscover(factory, USER)).instructions).toContain('`demo_catalog` describes the data model');
+    });
+
+    it('should mention the info tool in the instructions only when it is listed', async () => {
+      expect((await dispatchMcpDiscover(makeInfoFactory(), USER)).instructions).toContain('`demo_api_info` describes the data model');
+      expect((await dispatchMcpDiscover(makeFactory(), USER)).instructions).not.toContain('demo_api_info');
+    });
+
+    it('should answer a query end to end', async () => {
+      const result = await dispatchMcpToolCall<ToolResult>({ factory: makeInfoFactory(), ctx: USER, name: 'demo_api_info', args: { query: 'guestbook' } });
+      expect(result.isError).not.toBe(true);
+      expect(result.structuredContent.mode).toBe('search');
+      expect(result.structuredContent.hits[0]).toMatchObject({ kind: 'model', modelType: 'guestbook' });
+    });
+
+    it('should reject an extra key', async () => {
+      const result = await dispatchMcpToolCall<ToolResult>({ factory: makeInfoFactory(), ctx: USER, name: 'demo_api_info', args: { query: 'guestbook', extra: true } });
+      expect(result.isError).toBe(true);
+    });
+  });
+
   describe('input validation', () => {
     function makeAuthManifestFactory(config: Partial<McpModuleConfig> = {}): McpServerFactoryService {
       const manifestPath = join(mkdtempSync(join(tmpdir(), 'mcp-validation-')), 'mcp.manifest.json');

@@ -24,4 +24,5 @@ export * from './tools/mcp.tool.compact-search';
 export * from './tools/mcp.tool.compact-details';
 export * from './tools/mcp.tool.compact-router';
 export * from './tools/mcp.tool.docs-search';
+export * from './tools/mcp.tool.compact-info';
 export * from './tools/mcp.tool.docs-read';

@@ -1,3 +1,4 @@
+import { resolveModelManifestEnumList, resolveModelManifestEnumLookup, type ModelManifestEnumListOutput, type ModelManifestEnumLookupOutput } from '@dereekb/firebase/manifest';
 import { type Maybe } from '@dereekb/util';
 import type { CallToolResult } from '@modelcontextprotocol/server';
 import { type McpToolCatalogExamples } from '../mcp.examples';
@@ -57,27 +58,16 @@ export interface EnumInfoToolInput {
 }
 
 /**
- * Lookup output of the `enum-info` tool: the resolved value tables, with any unmatched names in `notFound`.
+ * Lookup output of the `enum-info` tool: the resolved value tables, with any unmatched names in `notFound`. Alias of the
+ * shared `@dereekb/firebase/manifest` {@link ModelManifestEnumLookupOutput}.
  */
-export interface EnumInfoToolLookupOutput {
-  readonly enums: ReadonlyArray<McpManifestEnum>;
-  readonly notFound?: ReadonlyArray<string>;
-  /**
-   * How to find the right name. Present when {@link notFound} is non-empty.
-   */
-  readonly hint?: string;
-}
+export type EnumInfoToolLookupOutput = ModelManifestEnumLookupOutput;
 
 /**
- * List output of the `enum-info` tool, returned when no `enum` is passed.
+ * List output of the `enum-info` tool, returned when no `enum` is passed. Alias of the shared
+ * {@link ModelManifestEnumListOutput}.
  */
-export interface EnumInfoToolListOutput {
-  /**
-   * The registered enum declaration names, sorted.
-   */
-  readonly names: readonly string[];
-  readonly total: number;
-}
+export type EnumInfoToolListOutput = ModelManifestEnumListOutput;
 
 /**
  * Output payload for the `enum-info` tool.
@@ -141,7 +131,10 @@ function enumInfoToolHandler(args: Record<string, unknown>, _ctx: McpStaticToolH
 }
 
 /**
- * Resolves each requested enum name against the registered value tables.
+ * Resolves each requested enum name against the registered value tables. Only the map's own keys
+ * match, so `constructor` / `toString` / `__proto__` are misses rather than `Object.prototype` members.
+ *
+ * Shares its matching rules with `@dereekb/dbx-cli`'s `resolveCliEnumInfoLookupOutput` via `@dereekb/firebase/manifest`.
  *
  * @param names - The requested enum declaration names.
  * @param enums - The registered enum value tables keyed by name.
@@ -150,19 +143,7 @@ function enumInfoToolHandler(args: Record<string, unknown>, _ctx: McpStaticToolH
  * @__NO_SIDE_EFFECTS__
  */
 export function resolveEnumInfoOutput(names: readonly string[], enums: CreateEnumInfoToolDeps['enums']): EnumInfoToolLookupOutput {
-  const found: McpManifestEnum[] = [];
-  const notFound: string[] = [];
-
-  for (const name of names) {
-    const table = enums[name];
-    if (table == null) {
-      notFound.push(name);
-    } else {
-      found.push(table);
-    }
-  }
-
-  return notFound.length > 0 ? { enums: found, notFound, hint: ENUM_INFO_NOT_FOUND_HINT } : { enums: found };
+  return resolveModelManifestEnumLookup({ names, enums, notFoundHint: ENUM_INFO_NOT_FOUND_HINT });
 }
 
 /**
@@ -174,8 +155,7 @@ export function resolveEnumInfoOutput(names: readonly string[], enums: CreateEnu
  * @__NO_SIDE_EFFECTS__
  */
 export function resolveEnumInfoListOutput(enums: CreateEnumInfoToolDeps['enums']): EnumInfoToolListOutput {
-  const names = Object.keys(enums).sort((a, b) => a.localeCompare(b));
-  return { names, total: names.length };
+  return resolveModelManifestEnumList(enums);
 }
 
 // MARK: Input parsing

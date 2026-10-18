@@ -1,3 +1,40 @@
+## Migration to v14.21.x — dbx-cli `enum-info` / `info`, MCP `<p>_api_info`, `@dereekb/firebase/manifest`
+
+### New
+- **`runCli({ enumManifest })`** registers an auth-free `enum-info [name..]` command, the CLI counterpart of the MCP
+  `enum-info` tool. Pass `<NAMESPACE>_ENUM_MANIFEST`, which `dbx-cli-generate-firebase-api-manifest --emit-models`
+  already writes into `api.manifest.generated.ts`. `disableEnumInfo` suppresses the command.
+- **`model-info <model>`** ends with the value tables of the enums its fields use when `enumManifest` is passed
+  (`--json`: an `enums` array next to `fields`).
+- **`@dereekb/firebase/manifest`**, a new secondary entry point holding the one copy of the data-model catalog both
+  dbx-cli and `@dereekb/firebase-server/mcp` use: the `ModelManifest*` catalog and `McpManifest*` wire types, model and
+  enum lookup, Firestore key decode (`decodeModelManifestKey`), and the catalog search / info resolver
+  (`buildModelManifestCatalog`, `searchModelManifestCatalog`, `resolveModelManifestInfoOutput`).
+- **MCP `<p>_api_info`** (compact key `info`), a read-only tool listed in compact mode once `mcp.manifest.json` carries
+  models or enums. It searches the data model (models, stored fields, enum tables with the fields that use them) and
+  returns catalog details only. Rename it with `tools.names.info`; add `_meta` with `tools.meta.info`. Never listed in
+  legacy mode (`compact: false`).
+- **`runCli` `info [query..]`**, the auth-free CLI counterpart, registered when `modelManifest` or `enumManifest` is
+  passed. `--json` `data` is exactly the MCP tool's output. `disableInfo` suppresses it.
+
+### Changed
+- `McpCompactToolNames` gains `info`. Code that builds a full names literal instead of calling
+  `resolveMcpCompactToolNames` must add it.
+- An additional tool named `<p>_api_info` is now dropped at boot (with an error logged): the compact name is reserved.
+- dbx-cli's `McpManifestModelEntry` gains `read` / `serviceFactory`, matching the MCP side.
+- The dbx-cli `Cli*` and MCP `McpManifest*` catalog types (`CliModelManifest`, `CliEnumManifest`, `McpManifestEnum`, …)
+  are now aliases of the shared `@dereekb/firebase/manifest` types. Their shapes are unchanged.
+- MCP `model-info` attaches only enums that are own keys of the enum map, the same rule `enum-info` uses.
+- `model-info`'s field table gains an `ENUM` column whenever a field has an `enumRef`, with or without `enumManifest`.
+- The MCP `enum-info` tool matches only the enum map's own keys, so `constructor` / `toString` / `__proto__` now land in
+  `notFound` instead of resolving to `Object.prototype` members.
+
+### Adopt
+- Add `enumManifest: <NS>_ENUM_MANIFEST` to `runCli`. It bundles the tables (about 47 KB minified for 75 enums);
+  until then they are tree-shaken out.
+- Allow `mcp__<server>__<p>_api_info` in Claude Code permission rules: it is read-only.
+- A CLI that registers its own `info` command passes `disableInfo: true`.
+
 ## Migration to v14.18.x — a direct callModel handler rejects a stray specifier
 
 A handler registered straight on a CRUD map (not through `onCallSpecifierHandler`) used to run for any `specifier` a
@@ -176,7 +213,7 @@ the compact tools only ever resolve methods the caller could see before.
   `<p>_cli_token` tool. A client calling an old tool name that is no longer listed gets an error naming the compact
   call to make instead.
 - **Claude Code permission rules.** `mcp__<server>__<old-tool>` rules no longer match. Allow
-  `mcp__<server>__<p>_api_search`, `..._details` and `..._read`. `..._write` only runs additive changes, so it may be
+  `mcp__<server>__<p>_api_search`, `..._details` and `..._read` (and, from v14.21, the read-only `..._api_info`). `..._write` only runs additive changes, so it may be
   allowed where those are acceptable. Never allow `..._destructive`: one "always allow" on it covers every call that
   deletes or overwrites data or sends real messages. `tools.meta` can add `'anthropic/requiresUserInteraction': true`
   to `destructive`, `write` or `token`.

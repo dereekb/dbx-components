@@ -3,7 +3,7 @@ import type { CommandModule } from 'yargs';
 import { createCli, runCli } from './run';
 import { getCliContext } from '../context/cli.context';
 import type { CliContext } from '../context/cli.context';
-import type { CliModelManifest } from '../manifest/types';
+import type { CliEnumManifest, CliModelManifest } from '../manifest/types';
 import { firestoreModelIdentity, notificationTemplateTypeInfoRecord } from '@dereekb/firebase';
 
 const MODEL_MANIFEST: CliModelManifest = [
@@ -64,6 +64,90 @@ describe('createCli() model-decode auto-wiring', () => {
   it('does NOT register model-decode when disableModelDecode is true', async () => {
     const help = await getRootHelp({ cliName: 'demo-cli', modelManifest: MODEL_MANIFEST, disableModelDecode: true });
     expect(help).not.toContain('model-decode');
+  });
+});
+
+describe('createCli() enum-info auto-wiring', () => {
+  const ENUM_MANIFEST: CliEnumManifest = {
+    ProfileState: { name: 'ProfileState', values: [{ name: 'ACTIVE', value: 1 }] }
+  };
+  const ENUM_MODEL_MANIFEST: CliModelManifest = [
+    {
+      modelType: 'profile',
+      modelName: 'Profile',
+      identityConst: 'profileIdentity',
+      collectionPrefix: 'p',
+      sourcePackage: 'demo-firebase',
+      sourceFile: 'profile.ts',
+      fields: [{ name: 's', longName: 'state', tsType: 'ProfileState', optional: false, enumRef: 'ProfileState' }]
+    }
+  ];
+
+  async function runJson(input: Parameters<typeof createCli>[0], args: readonly string[]): Promise<any> {
+    const lines: string[] = [];
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation((arg: unknown) => {
+      lines.push(String(arg));
+    });
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation((code?: string | number | null): never => {
+      throw new Error(`process.exit:${code ?? 0}`);
+    });
+
+    try {
+      await createCli({ ...input, argv: [...args] })
+        .exitProcess(false)
+        .parseAsync([...args]);
+    } finally {
+      consoleSpy.mockRestore();
+      exitSpy.mockRestore();
+    }
+
+    return JSON.parse(lines.join(''));
+  }
+
+  it('registers the built-in enum-info command when enumManifest is provided', async () => {
+    expect(await getRootHelp({ cliName: 'demo-cli', enumManifest: ENUM_MANIFEST })).toContain('enum-info');
+  });
+
+  it('does NOT register enum-info when enumManifest is omitted', async () => {
+    expect(await getRootHelp({ cliName: 'demo-cli', modelManifest: MODEL_MANIFEST })).not.toContain('enum-info');
+  });
+
+  it('does NOT register enum-info when disableEnumInfo is true', async () => {
+    expect(await getRootHelp({ cliName: 'demo-cli', enumManifest: ENUM_MANIFEST, disableEnumInfo: true })).not.toContain('enum-info');
+  });
+
+  it('runs `enum-info` without a login', async () => {
+    // a cliName with no config dir, so there are no tokens on disk: the auth middleware would exit if it ran
+    const parsed = await runJson({ cliName: 'dbx-cli-enum-info-spec-no-tokens', enumManifest: ENUM_MANIFEST }, ['enum-info', '--json']);
+    expect(parsed).toEqual({ ok: true, data: { names: ['ProfileState'], total: 1 } });
+  });
+
+  it('threads enumManifest into model-info, even with disableEnumInfo', async () => {
+    for (const disableEnumInfo of [false, true]) {
+      const parsed = await runJson({ cliName: 'dbx-cli-enum-info-spec-no-tokens', modelManifest: ENUM_MODEL_MANIFEST, enumManifest: ENUM_MANIFEST, disableEnumInfo }, ['model-info', 'profile', '--json']);
+      expect(parsed.data.enums).toEqual([ENUM_MANIFEST['ProfileState']]);
+    }
+  });
+
+  describe('info', () => {
+    // `model-info` / `enum-info` also contain "info", so match the bare command at the start of a help line
+    const INFO_HELP_LINE = /^\s+\S+ info\b/m;
+
+    it('registers the built-in info command when either manifest is provided', async () => {
+      expect(await getRootHelp({ cliName: 'demo-cli', enumManifest: ENUM_MANIFEST })).toMatch(INFO_HELP_LINE);
+      expect(await getRootHelp({ cliName: 'demo-cli', modelManifest: ENUM_MODEL_MANIFEST })).toMatch(INFO_HELP_LINE);
+    });
+
+    it('does NOT register info without a manifest or with disableInfo', async () => {
+      expect(await getRootHelp({ cliName: 'demo-cli' })).not.toMatch(INFO_HELP_LINE);
+      expect(await getRootHelp({ cliName: 'demo-cli', modelManifest: ENUM_MODEL_MANIFEST, enumManifest: ENUM_MANIFEST, disableInfo: true })).not.toMatch(INFO_HELP_LINE);
+    });
+
+    it('runs `info` without a login', async () => {
+      const parsed = await runJson({ cliName: 'dbx-cli-enum-info-spec-no-tokens', modelManifest: ENUM_MODEL_MANIFEST, enumManifest: ENUM_MANIFEST }, ['info', '--enum', 'ProfileState', '--json']);
+      expect(parsed.ok).toBe(true);
+      expect(parsed.data.enums[0].usedBy).toEqual([{ modelType: 'profile', field: 's', longName: 'state' }]);
+    });
   });
 });
 

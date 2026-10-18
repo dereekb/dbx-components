@@ -75,6 +75,10 @@
             "command": "npx nx test firebase-server-model"
           },
           {
+            "description": "run firebase-server-mcp tests",
+            "command": "npx nx test firebase-server-mcp"
+          },
+          {
             "description": "run firebase-server-calcom tests",
             "command": "npx nx test firebase-server-calcom"
           },

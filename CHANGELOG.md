@@ -1,3 +1,19 @@
+# [14.21.0](https://github.com/dereekb/dbx-components/compare/v14.20.0-dev...v14.21.0) (2026-10-18)
+
+### Bug Fixes
+
+- **date:** align roundToMinuteSteps to the start of the day ([271edeaf](https://github.com/dereekb/dbx-components/commit/271edeaf2935f80f60742fe7ae8cd33e6c1ed5a5))
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes + peer dep sync ([d3081af8](https://github.com/dereekb/dbx-components/commit/d3081af86f6508ed110113cb9b0f5a3f60503aa4))
+
+### Features
+
+- **dbx-cli:** add enum-info command and model-info enum tables ([e22d2c20](https://github.com/dereekb/dbx-components/commit/e22d2c200cabfe180558b431939d6bbf54e00053))
+- **firebase,dbx-cli,firebase-server:** add api_info + firebase/manifest ([cc46ef64](https://github.com/dereekb/dbx-components/commit/cc46ef6433353c2d15348aac2c3c7489d9cbe8e4))
+- **util:** add numberFactorConverter and minute increment converters ([b4d18e08](https://github.com/dereekb/dbx-components/commit/b4d18e0829406b48b22323e0b0c60db224c63f17))
+
 # [14.20.0](https://github.com/dereekb/dbx-components/compare/v14.19.0-dev...v14.20.0) (2026-10-16)
 
 ### Build System

@@ -614,6 +614,52 @@ Anything else throws `CREDENTIAL_PROCESS_FAILED` (the process could not start, o
 stdout. A command that hands out a secret should check `isCliCredentialProcess()` and print a
 redacted value whenever it is false.
 
+## Enum values
+
+Persisted model fields store enum values raw (`s: 2`, `ps: 4`). With `--emit-models`, the API manifest generator also
+writes `<NAMESPACE>_ENUM_MANIFEST`: the value table of every enum a model field references. Pass it to `runCli`:
+
+```ts
+runCli({
+  cliName: 'demo-cli',
+  modelManifest: DEMO_CLI_MODEL_MANIFEST,
+  enumManifest: DEMO_CLI_ENUM_MANIFEST
+});
+```
+
+```bash
+demo-cli enum-info                                 # every enum: ENUM · VALUES · DESCRIPTION
+demo-cli enum-info StorageFileProcessingState      # VALUE · NAME · DESCRIPTION
+demo-cli enum-info StorageFileState Ghost --json   # {"ok":true,"data":{"enums":[…],"notFound":["Ghost"],"hint":"…"}}
+demo-cli model-info storageFile                    # an ENUM column, then the value tables
+```
+
+- `enum-info` runs without a login, like `model-info`.
+- A name must match the enum's declaration name exactly. A miss is not an error: it comes back in `notFound` with a
+  `hint`. `--json` returns the same shapes as the MCP `enum-info` tool (`{ names, total }` when no name is given).
+- With `enumManifest`, `model-info <model>` ends with the tables of the enums its fields use (`--json`: an `enums`
+  array). `disableEnumInfo` drops the `enum-info` command but keeps those tables.
+- The tables are bundled only when passed: about 47 KB minified for 75 enums.
+
+### Data-model catalog (`info`)
+
+With `modelManifest` or `enumManifest`, `runCli` also registers the auth-free `info [query..]` command, the CLI
+counterpart of the MCP `<prefix>_api_info` tool. It describes the data model: models, their stored fields, and enum
+value tables with the fields that use them. It returns catalog details only and decodes no values.
+
+```bash
+demo-cli info                                      # overview: GROUP · MODELS, then the enum names
+demo-cli info created at --kind field              # KIND · NAME · MODEL · SUMMARY hits; page with --offset
+demo-cli info --model notification --model gb      # full entries plus the enum tables their fields use
+demo-cli info --enum NotificationSendState         # the value table, then Used by: MODEL · FIELD · LONG NAME
+```
+
+- Pass at most one of a query, `--model`, or `--enum`. `--model` / `--enum` repeat. An invalid combination exits 1
+  with `MODEL_MANIFEST_INFO_INVALID_INPUT`; a lookup miss comes back in `notFound` with a `hint`.
+- `--json` `data` is exactly the MCP tool's output (`mode`: `overview` / `search` / `model` / `enum`). Both surfaces
+  share `resolveModelManifestInfoOutput` from `@dereekb/firebase/manifest`.
+- `disableInfo: true` drops the command, e.g. when the app registers its own `info`.
+
 ## Build-time API manifest
 
 `dbx-cli-firebase-api-manifest` writes the app's `api.manifest.generated.ts` during the build. It
@@ -640,7 +686,7 @@ is logged as `[unregistered]`.
 | `--api-dir=<path>` | the API app root; only calls its handler map wires are emitted |
 | `--only=<model[,model]>` | emit only these models |
 | `--strict` | exit 1 when a params validator is missing |
-| `--emit-models` | also emit `<NAMESPACE>_MODEL_MANIFEST` (needed by `model-info`) |
+| `--emit-models` | also emit `<NAMESPACE>_MODEL_MANIFEST` (needed by `model-info`) and `<NAMESPACE>_ENUM_MANIFEST` (needed by `enum-info`) |
 | `--emit-model-converters` | include each model field's converter expression text |
 
 ### Rules

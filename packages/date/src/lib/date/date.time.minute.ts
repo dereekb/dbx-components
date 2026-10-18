@@ -340,7 +340,7 @@ export class DateTimeMinuteInstance {
   }
 
   /**
-   * Rounds the instance's current date down to the configured step interval,
+   * Rounds the instance's current date up to the next configured step interval, then clears the seconds and milliseconds,
    * optionally clamping the result to the min/max bounds.
    *
    * @param round - Rounding and clamping options.
@@ -354,7 +354,7 @@ export class DateTimeMinuteInstance {
    *   limits: { min: new Date('2024-06-15T09:00:00') }
    * });
    *
-   * instance.round({ roundToSteps: true }); // 2024-06-15T09:00:00
+   * instance.round({ roundToSteps: true }); // 2024-06-15T09:15:00
    * instance.round({ roundToSteps: true, roundToBound: true }); // clamped to min if below
    * ```
    */

@@ -1,6 +1,7 @@
 import { type CallToolResult, type Tool } from '@modelcontextprotocol/server';
 import { buildMcpToolName, ENUM_INFO_TOOL_NAME, type EnumInfoToolListOutput, MCP_ALWAYS_LOAD_META_KEY, MCP_DOCS_READ_TOOL_NAME, MODEL_GET_TOOL_NAME } from '@dereekb/firebase-server/mcp';
 import { type DocsSearchResult } from '@dereekb/firebase-server';
+import { type ModelManifestInfoEnumOutput, type ModelManifestInfoModelOutput, type ModelManifestInfoOverviewOutput, type ModelManifestInfoSearchOutput } from '@dereekb/firebase/manifest';
 import { guestbookIdentity, type EntryDetailsGuestbookEntryResult } from 'demo-firebase';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoAuthorizedUserContextFactory, demoGuestbookContext, demoGuestbookEntryContext, type DemoApiAuthorizedUserTestContextFixture } from '../../../test/fixture';
 import { callMcpMethod, callMcpTool, describeMcpMethod, discoverMcpServer, listMcpTools, mcpCompactToolNames, searchMcpMethods } from '../../../test/mcp';
@@ -88,14 +89,16 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             expect(names.write).toBe('demo_api_write');
             expect(names.destructive).toBe('demo_api_destructive');
             expect(names.documentation).toBe('search_demo_documentation');
+            expect(names.info).toBe('demo_api_info');
 
-            for (const name of [names.search, names.details, names.read, names.write, names.destructive]) {
+            for (const name of [names.search, names.details, names.read, names.write, names.destructive, names.info]) {
               const tool = byName.get(name);
               expect(tool).toBeDefined();
               expect((tool as { readonly _meta?: Record<string, unknown> })._meta?.[MCP_ALWAYS_LOAD_META_KEY]).toBe(true);
             }
 
             expect(byName.get(names.read)?.annotations?.readOnlyHint).toBe(true);
+            expect(byName.get(names.info)?.annotations?.readOnlyHint).toBe(true);
             expect(byName.get(names.write)?.annotations).toEqual({ readOnlyHint: false, destructiveHint: false });
             expect(byName.get(names.destructive)?.annotations).toEqual({ readOnlyHint: false, destructiveHint: true, openWorldHint: true });
           });
@@ -149,6 +152,42 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             expect(first.nextOffset).toBe(1);
             expect(second.total).toBe(first.total);
             expect(second.methods[0].method).not.toBe(first.methods[0].method);
+          });
+
+          describe('demo_api_info', () => {
+            function callInfo(args: Record<string, unknown>): Promise<CallToolResult> {
+              return callMcpTool({ f, u, name: mcpCompactToolNames(f).info, args });
+            }
+
+            it('returns the overview totals with no arguments', async () => {
+              const result = await callInfo({});
+              const output = result.structuredContent as unknown as ModelManifestInfoOverviewOutput;
+
+              expect(result.isError).toBeFalsy();
+              expect(output.mode).toBe('overview');
+              expect(output.totalModels).toBeGreaterThan(0);
+              expect(output.enumNames).toHaveLength(output.totalEnums);
+            });
+
+            it('returns the NotificationSendState table with the fields that use it', async () => {
+              const output = (await callInfo({ enum: 'NotificationSendState' })).structuredContent as unknown as ModelManifestInfoEnumOutput;
+              expect(output.enums[0].usedBy.length).toBeGreaterThan(0);
+              expect(output.enums[0].usedBy.every((x) => x.modelType === 'notification')).toBe(true);
+            });
+
+            it('returns the guestbook model hit first for a guestbook query', async () => {
+              const output = (await callInfo({ query: 'guestbook' })).structuredContent as unknown as ModelManifestInfoSearchOutput;
+              expect(output.hits[0]).toMatchObject({ kind: 'model', modelType: guestbookIdentity.modelType });
+            });
+
+            it('returns the guestbook entry for a model lookup', async () => {
+              const output = (await callInfo({ model: 'guestbook' })).structuredContent as unknown as ModelManifestInfoModelOutput;
+              expect(output.models.map((x) => x.modelType)).toEqual([guestbookIdentity.modelType]);
+            });
+
+            it('rejects a query together with a model', async () => {
+              expect((await callInfo({ query: 'guestbook', model: 'guestbook' })).isError).toBe(true);
+            });
           });
 
           it('lists the demo enum names through enum-info with no params', async () => {

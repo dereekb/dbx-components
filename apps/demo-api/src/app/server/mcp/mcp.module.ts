@@ -69,7 +69,8 @@ export function demoMcpModuleConfigFactory(envService: FirebaseServerEnvService,
     mcpManifestPath: MCP_MANIFEST_PATH,
     mcpRouteManifestPath: ROUTE_MANIFEST_PATH,
     // The compact tools are `demo_api_search` / `demo_api_details` / `demo_api_read` / `demo_api_write` /
-    // `demo_api_destructive` / `demo_cli_token` and `search_demo_documentation`. `tools` is left unset, so only the compact surface is
+    // `demo_api_destructive` / `demo_cli_token`, `search_demo_documentation` and `demo_api_info` (the data-model catalog:
+    // models, fields and enum tables from mcp.manifest.json). `tools` is left unset, so only the compact surface is
     // advertised: every method is reached through those tools rather than listed as its own tool.
     toolNamePrefix: 'demo'
   };
