@@ -1,5 +1,5 @@
-import { roundNumberUpToStep } from '@dereekb/util';
-import { set, getMinutes, addHours } from 'date-fns';
+import { dateToMinuteOfDay, MINUTES_IN_DAY, minutesIncrementConverter } from '@dereekb/util';
+import { set, addMinutes } from 'date-fns';
 
 /**
  * Options for rounding a date's time components down.
@@ -80,13 +80,16 @@ export function roundDateTimeDown(date: Date, round: RoundTimeDown): Date {
 }
 
 /**
- * Rounds the date's minutes up to the nearest multiple of the given step.
+ * Rounds the date up to the next multiple of the given step of minutes, counted from the start of the date's day in the system timezone.
  *
- * If the step is 1 or less, the date is returned unchanged. If rounding pushes minutes to 60, the hour is incremented.
+ * If the step is 1 or less, the date is returned unchanged. Rounding uses the whole minute of the day, and the seconds and milliseconds are not changed. If rounding passes the end of the day, the result is the start of the next day.
+ *
+ * Steps that evenly divide an hour (5, 15, 30, etc.) align to each hour. Other steps align to the start of the day, so a 45 minute step produces 00:00, 00:45, 01:30, etc.
  *
  * @param date - Moment to round.
  * @param step - Granularity of minutes the result must align to.
  * @returns Copy of the moment with minutes snapped to the requested step.
+ * @throws {Error} If the step is greater than 1 and is not an integer.
  *
  * @example
  * ```ts
@@ -99,16 +102,11 @@ export function roundToMinuteSteps(date: Date, step: number): Date {
 
   // Only steps of 1 or more are allowed.
   if (step > 1) {
-    const minute = getMinutes(date);
-    const roundedValue = roundNumberUpToStep(minute, step);
+    const minuteOfDay = dateToMinuteOfDay(date);
+    const roundedValue = Math.min(minutesIncrementConverter({ increment: step, round: 'ceil' }).round(minuteOfDay), MINUTES_IN_DAY);
 
-    if (roundedValue !== minute) {
-      if (roundedValue === 60) {
-        // Round the hour up.
-        result = addHours(set(date, { minutes: 0 }), 1);
-      } else {
-        result = set(date, { minutes: roundedValue });
-      }
+    if (roundedValue !== minuteOfDay) {
+      result = addMinutes(date, roundedValue - minuteOfDay);
     }
   }
 
