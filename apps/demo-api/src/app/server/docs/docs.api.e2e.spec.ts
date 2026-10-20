@@ -1,6 +1,7 @@
 import request from 'supertest';
 import { DOCS_API_CACHE_CONTROL, DOCS_NOT_FOUND_ERROR_CODE, DOCS_SECTION_NOT_FOUND_ERROR_CODE, FIREBASE_SERVER_DOCS_API_PROTECTED_PATH, type DocsListResult, type DocsReadResult, type DocsSearchResult } from '@dereekb/firebase-server';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoAuthorizedUserContextFactory, demoOAuthAuthorizedSuperTestContext } from '../../../test/fixture';
+import { DEMO_NOTIFICATION_TYPES_DOC_ID } from './docs.notification';
 
 vi.setConfig({ hookTimeout: 30000, testTimeout: 30000 });
 
@@ -9,6 +10,8 @@ const ANY_DOC_ID = 'getting-started';
 const USER_DOC_ID = 'guestbook/signing';
 const ADMIN_DOC_ID = 'admin/managing-guestbooks';
 const NOTIFICATION_USER_DOC_ID = 'notification/task-bots';
+const DYNAMIC_USER_DOC_ID = DEMO_NOTIFICATION_TYPES_DOC_ID;
+const DYNAMIC_DOC_SECTION_ID = 'calendar-event-invite-calinv';
 
 /**
  * A user who never finished onboarding: holds no demo role, so only `any` docs are visible to them.
@@ -30,7 +33,8 @@ function readPath(id: string, section?: string): string {
 /**
  * Coverage for demo-api's audience-gated docs API (`GET /api/docs`, `/api/docs/search`, `/api/docs/read`), wired by
  * `DemoDocsApiModule` over the markdown in `src/assets/docs` and the `docs.manifest.json` that the
- * `generate-docs-manifest` target writes.
+ * `generate-docs-manifest` target writes, plus the dynamic `notification/types` doc that `demoNotificationTypesDocsSource`
+ * renders from the notification type registry.
  *
  * Audiences come from `demoDocsAudienceReader`: admins hold `admin` + `user`, onboarded users hold `user`, and every
  * authenticated caller holds `any`. A hidden doc and a missing doc share one 404, so a caller cannot probe for ids.
@@ -53,7 +57,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             const res = await oauth.authRequest('get', DOCS_PATH).expect(200);
             const ids = (res.body as DocsListResult).docs.map((x) => x.id);
 
-            expect(ids).toEqual([ADMIN_DOC_ID, ANY_DOC_ID, USER_DOC_ID, NOTIFICATION_USER_DOC_ID]);
+            expect(ids).toEqual([ADMIN_DOC_ID, ANY_DOC_ID, USER_DOC_ID, NOTIFICATION_USER_DOC_ID, DYNAMIC_USER_DOC_ID]);
             expect(res.headers['cache-control']).toBe(DOCS_API_CACHE_CONTROL);
           });
 
@@ -77,7 +81,24 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             const res = await oauth.authRequest('get', DOCS_PATH).expect(200);
             const ids = (res.body as DocsListResult).docs.map((x) => x.id);
 
-            expect(ids).toEqual([ANY_DOC_ID, USER_DOC_ID, NOTIFICATION_USER_DOC_ID]);
+            expect(ids).toEqual([ANY_DOC_ID, USER_DOC_ID, NOTIFICATION_USER_DOC_ID, DYNAMIC_USER_DOC_ID]);
+          });
+
+          it('reads one section of the dynamic doc', async () => {
+            const res = await oauth.authRequest('get', readPath(DYNAMIC_USER_DOC_ID, DYNAMIC_DOC_SECTION_ID)).expect(200);
+            const result = res.body as DocsReadResult;
+
+            expect(result.title).toBe('Notification types');
+            expect(result.section?.id).toBe(DYNAMIC_DOC_SECTION_ID);
+            expect(result.content).toContain('- Always delivered by: email');
+            expect(result.content).not.toContain('Guestbook Entry Liked');
+          });
+
+          it('finds a section of the dynamic doc through search', async () => {
+            const res = await oauth.authRequest('get', `${DOCS_PATH}/search?q=calendar%20event%20invite&limit=50`).expect(200);
+            const results = (res.body as DocsSearchResult).results;
+
+            expect(results.find((x) => x.id === DYNAMIC_USER_DOC_ID)?.section?.id).toBe(DYNAMIC_DOC_SECTION_ID);
           });
 
           it('searches only the docs it may see', async () => {
@@ -125,6 +146,11 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           it('reads the any doc but not the user doc', async () => {
             await oauth.authRequest('get', readPath(ANY_DOC_ID)).expect(200);
             const res = await oauth.authRequest('get', readPath(USER_DOC_ID)).expect(404);
+            expect(res.body.code).toBe(DOCS_NOT_FOUND_ERROR_CODE);
+          });
+
+          it('cannot read the user-audience dynamic doc', async () => {
+            const res = await oauth.authRequest('get', readPath(DYNAMIC_USER_DOC_ID)).expect(404);
             expect(res.body.code).toBe(DOCS_NOT_FOUND_ERROR_CODE);
           });
         });

@@ -82,6 +82,12 @@ export const DOC_EXTENSION_ROUTES = [
     title: 'Browser Agent',
     detail: 'dbx-browser-agent-view',
     ref: 'doc.extension.browseragent'
+  },
+  {
+    icon: 'smart_toy',
+    title: 'MCP Connect',
+    detail: 'dbx-mcp-connect-button',
+    ref: 'doc.extension.mcp'
   }
 ];
 

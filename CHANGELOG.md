@@ -1,3 +1,16 @@
+# [14.22.0](https://github.com/dereekb/dbx-components/compare/v14.21.0-dev...v14.22.0) (2026-10-20)
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes + peer dep sync ([77fd527a](https://github.com/dereekb/dbx-components/commit/77fd527aa359c427f35ce27dbeabf88e9bb43875))
+
+### Features
+
+- **dbx-web:** add MCP connect button, dialog, and view ([5f5a59ea](https://github.com/dereekb/dbx-components/commit/5f5a59ea8b96d6b84dac392f1c0989de7f3ee81a))
+- **demo-api:** serve notification types as a dynamic doc ([a291db58](https://github.com/dereekb/dbx-components/commit/a291db5800dedbc941f902e71b4e683214e7727e))
+- **firebase-server-mcp:** per-tool MCP analytics + docs search events ([394e7b3a](https://github.com/dereekb/dbx-components/commit/394e7b3aaf39b6eb6e8c89d03f4d0f4e2c3dac6e))
+- **firebase-server:** add dynamic docs sources to DocsApiService ([3a18301d](https://github.com/dereekb/dbx-components/commit/3a18301d5a6bd4fda73d5490310a4f76b10dcbb3))
+
 # [14.21.0](https://github.com/dereekb/dbx-components/compare/v14.20.0-dev...v14.21.0) (2026-10-18)
 
 ### Bug Fixes

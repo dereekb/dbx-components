@@ -1,6 +1,6 @@
-import { Injectable, inject, type Type } from '@angular/core';
+import { DOCUMENT, Injectable, inject, type Type } from '@angular/core';
 import { type SegueRefOrSegueRefRouterLink } from '@dereekb/dbx-core';
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type WebsiteUrl } from '@dereekb/util';
 import { KNOWN_MCP_CLIENT_OIDC_REDIRECT_URI_SUGGESTIONS, type OidcProviderProfileDetails, type OidcRedirectUriSuggestion, type OidcScopeDetails, type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
 import { type AbstractDbxFirebaseOAuthConsentScopeViewComponent } from '../interaction/components/oauth.consent.scope.view.component';
 
@@ -13,6 +13,12 @@ export const DEFAULT_OIDC_CLIENT_URI_PARAM_KEY = 'client_uri';
 export const DEFAULT_OIDC_LOGO_URI_PARAM_KEY = 'logo_uri';
 export const DEFAULT_OIDC_SCOPES_PARAM_KEY = 'scopes';
 export const DEFAULT_OIDC_REQUIRED_SCOPES_PARAM_KEY = 'requiredScopes';
+/**
+ * Default path of the app's MCP server, appended to the API origin.
+ *
+ * Mirrors `DEFAULT_MCP_PATH` in `@dereekb/firebase-server/mcp`.
+ */
+export const DEFAULT_OIDC_MCP_PATH = '/mcp';
 export const DEFAULT_OIDC_TOKEN_ENDPOINT_AUTH_METHODS: OidcTokenEndpointAuthMethod[] = ['client_secret_post', 'client_secret_basic'];
 
 /**
@@ -42,6 +48,14 @@ export abstract class DbxFirebaseOidcConfig {
    * Leave unset for single-origin deployments; the endpoint paths stay relative.
    */
   readonly oidcApiOrigin?: Maybe<string>;
+  /**
+   * Url of the app's MCP server, shown to users by `dbx-mcp-connect-button` and `dbx-mcp-connect-view` in `@dereekb/dbx-web`.
+   *
+   * Defaults to {@link oidcApiOrigin} (or the page's origin when unset) followed by {@link DEFAULT_OIDC_MCP_PATH}. Set it when the server is
+   * served from somewhere else, such as a local emulator. It must match the server's `appMcpUrl` byte-for-byte, since MCP clients use it as
+   * the OAuth resource.
+   */
+  readonly mcpUrl?: Maybe<WebsiteUrl>;
   /**
    * Path to the authorization endpoint. Defaults to '/oidc/auth'.
    */
@@ -96,6 +110,7 @@ export abstract class DbxFirebaseOidcConfig {
 @Injectable()
 export class DbxFirebaseOidcConfigService {
   private readonly config = inject(DbxFirebaseOidcConfig);
+  private readonly document = inject(DOCUMENT);
 
   get availableScopes(): OidcScopeDetails[] {
     return this.config.availableScopes;
@@ -113,6 +128,15 @@ export class DbxFirebaseOidcConfigService {
   get oidcInteractionEndpointApiPath(): string {
     const origin = this.config.oidcApiOrigin ?? '';
     return `${origin}${this.config.oidcInteractionEndpointApiPath ?? DEFAULT_OIDC_INTERACTION_ENDPOINT_PATH}`;
+  }
+
+  /**
+   * Url of the app's MCP server.
+   *
+   * @returns The configured {@link DbxFirebaseOidcConfig.mcpUrl}, or the API origin (or the page's origin) followed by {@link DEFAULT_OIDC_MCP_PATH}.
+   */
+  get mcpUrl(): WebsiteUrl {
+    return this.config.mcpUrl ?? `${this.config.oidcApiOrigin ?? this.document.location.origin}${DEFAULT_OIDC_MCP_PATH}`;
   }
 
   get tokenEndpointAuthMethods(): OidcTokenEndpointAuthMethod[] {

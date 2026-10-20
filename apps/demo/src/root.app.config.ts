@@ -476,7 +476,10 @@ export const APP_CONFIG: ApplicationConfig = {
         // Production deploys the OIDC issuer at api.components.dereekb.com so cookies are set
         // on the API host directly, bypassing the Firebase Hosting cookie strip. Local stays
         // undefined and OIDC paths remain relative.
-        oidcApiOrigin: environment.oidc.apiOrigin
+        oidcApiOrigin: environment.oidc.apiOrigin,
+        // Local development serves the MCP endpoint from the hosting emulator rather than the app's origin. Undefined in
+        // production, where it is derived from oidcApiOrigin.
+        mcpUrl: environment.oidc.mcpUrl
       }
     }),
     // App initializers

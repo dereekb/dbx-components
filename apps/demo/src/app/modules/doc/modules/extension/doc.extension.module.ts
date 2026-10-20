@@ -38,6 +38,7 @@ import { DocExtensionHelpListBottomExampleComponent } from './component/help.lis
 import { DocExtensionOidcComponent } from './container/oidc.component';
 import { DocExtensionQuizComponent } from './container/quiz.component';
 import { DocExtensionQuizExampleResultComponent } from './component/quiz.example.result.component';
+import { DocExtensionMcpComponent } from './container/mcp.component';
 
 @NgModule({
   imports: [
@@ -84,7 +85,8 @@ import { DocExtensionQuizExampleResultComponent } from './component/quiz.example
     DocExtensionHelpComponent,
     DocExtensionOidcComponent,
     DocExtensionQuizComponent,
-    DocExtensionQuizExampleResultComponent
+    DocExtensionQuizExampleResultComponent,
+    DocExtensionMcpComponent
   ]
 })
 export class DocExtensionModule {

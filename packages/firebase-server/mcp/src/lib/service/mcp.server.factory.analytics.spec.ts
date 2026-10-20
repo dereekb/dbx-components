@@ -129,6 +129,17 @@ describe('McpServerFactoryService MCP analytics', () => {
     expect(events[0]).toMatchObject({ toolName: 'model-info', toolKind: 'static', isSuccessful: true });
   });
 
+  it('puts the response sent to the client on the event as result', async () => {
+    const { service, events } = capturingAnalytics();
+    const factory = makeFactory(makeApiDetails([{ model: 'guestbook', call: 'query' }]), { config: { mcpManifestPath: makeManifestModelsPath() }, analytics: service });
+
+    const result = (await callTool(factory, 'model-info', { auth: firebaseAuth() })) as { content?: unknown[] };
+
+    expect(events).toHaveLength(1);
+    expect(events[0].result?.structuredContent).toBeDefined();
+    expect(events[0].result?.content).toEqual(result.content);
+  });
+
   it('emits a single failed completion event and forwards the thrown error', async () => {
     const { service, events } = capturingAnalytics();
     const boom = new Error('dispatch boom');

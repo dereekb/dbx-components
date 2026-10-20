@@ -1100,6 +1100,7 @@ export class McpServerFactoryService {
       isSuccessful,
       error: outcome.error,
       durationMs: Date.now() - startedAt,
+      result: outcome.response,
       ...(routed == null ? undefined : { routed: true, method: routed.method?.id, ...(routed.method == null ? { requestedMethod: routed.requestedMethod } : undefined) })
     });
 

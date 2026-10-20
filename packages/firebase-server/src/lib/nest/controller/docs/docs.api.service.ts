@@ -8,7 +8,8 @@ import { assertEndpointOidcScope, oidcScopesFromRequestAuth } from '../api.scope
 import { type FirebaseServerAuthData } from '../auth.context.server';
 import { resolveSecureAssetPath } from '../download/download.api.config';
 import { DEFAULT_DOCS_MAX_READ_LENGTH, DOCS_API_PATH, DOCS_AUDIENCE_ANY, DOCS_AUDIENCE_READER, DocsApiModuleConfig, type DocsAudience, type DocsAudienceReader } from './docs.api.config';
-import { readDocsManifestJson, splitDocsMarkdownSections, type DocsManifestEntry, type DocsManifestSection } from './docs.api.manifest';
+import { extractDocsMarkdownSections, readDocsManifestJson, splitDocsMarkdownSections, type DocsManifest, type DocsManifestEntry, type DocsManifestSection } from './docs.api.manifest';
+import { DYNAMIC_DOCS_SOURCES, type DynamicDocsEntry, type DynamicDocsSource } from './docs.api.dynamic';
 
 // MARK: Errors
 /**
@@ -83,6 +84,10 @@ export interface DocsSearchResultEntry {
 export interface DocsSearchResult {
   readonly total: number;
   readonly results: readonly DocsSearchResultEntry[];
+  /**
+   * True when no doc matched every query word, so {@link results} match only some of them. Omitted otherwise.
+   */
+  readonly partial?: boolean;
 }
 
 /**
@@ -119,44 +124,72 @@ export interface DocsReadResult {
 }
 
 // MARK: State
+interface DynamicDocsLoadedEntry extends DynamicDocsEntry {
+  readonly sections: readonly DocsManifestSection[];
+}
+
+/**
+ * A doc the service serves: a file doc (its manifest entry) or a dynamic doc from a {@link DynamicDocsSource}.
+ */
+type DocsLoadedEntry = { readonly kind: 'file'; readonly entry: DocsManifestEntry } | { readonly kind: 'dynamic'; readonly entry: DynamicDocsLoadedEntry };
+
 interface DocsSearchCandidate {
-  readonly entry: DocsManifestEntry;
+  readonly entry: DocsLoadedEntry['entry'];
   readonly section?: DocsManifestSection;
 }
 
 interface DocsLoadedState {
-  readonly docs: ReadonlyMap<string, DocsManifestEntry>;
+  /**
+   * Every served doc, file and dynamic, sorted by id.
+   */
+  readonly docs: ReadonlyMap<string, DocsLoadedEntry>;
+  /**
+   * The manifest's audiences plus every dynamic doc's audiences.
+   */
   readonly audiences: ReadonlySet<DocsAudience>;
   readonly searchEntries: readonly RankedSearchEntry<DocsSearchCandidate>[];
 }
 
 /**
- * Serves an app's audience-gated docs: the markdown in {@link DocsApiModuleConfig.docsRoot}, described by the
- * `docs.manifest.json` that `dbx-cli-generate-docs-manifest` writes.
+ * The docs and audiences collected while a {@link DocsLoadedState} is built.
+ */
+interface DocsBuildingState {
+  readonly docs: Map<string, DocsLoadedEntry>;
+  readonly audiences: Set<DocsAudience>;
+}
+
+/**
+ * Serves an app's audience-gated docs: the file docs (the markdown in {@link DocsApiModuleConfig.docsRoot}, described
+ * by the `docs.manifest.json` that `dbx-cli-generate-docs-manifest` writes) and the dynamic docs of the
+ * {@link DYNAMIC_DOCS_SOURCES} (docs built in code).
  *
- * Every check lives here so the REST controller and the MCP docs tools share them:
+ * Every check lives here so the REST controller and the MCP docs tools share them, and file and dynamic docs pass the
+ * same ones:
  * - the caller must be authenticated (401) and hold {@link DocsApiModuleConfig.requiredScope} when it is an OIDC caller (403);
  * - the caller sees a doc only when it holds one of the doc's audiences ({@link DOCS_AUDIENCE_ANY} plus whatever the
  *   {@link DocsAudienceReader} returns);
  * - a hidden doc and a missing doc return the same 404;
- * - docs are read by manifest id only, and each read re-checks that the file is contained in the docs folder and still
- *   matches the manifest's hash.
+ * - docs are read by id only. Each file doc read re-checks that the file is contained in the docs folder and still
+ *   matches the manifest's hash; dynamic docs are served from memory.
  *
- * The manifest is loaded lazily on first use. Listing and search use only the manifest, so no doc file is read until a
- * doc is requested. A requested doc whose file escapes the folder, is missing, or no longer matches its hash is answered
- * with the 404 and a log line.
+ * The manifest and the dynamic sources are loaded lazily on first use, and each source's `loadDocs` runs once. Listing
+ * and search use only the loaded metadata, so no doc file is read until a doc is requested; search ranks file and
+ * dynamic docs together. A requested file doc whose file escapes the folder, is missing, or no longer matches its hash
+ * is answered with the 404 and a log line.
  */
 @Injectable()
 export class DocsApiService {
   private readonly _logger = new Logger(DocsApiService.name);
   private readonly _config: Maybe<DocsApiModuleConfig>;
   private readonly _audienceReader: Maybe<DocsAudienceReader>;
+  private readonly _dynamicDocsSources: readonly DynamicDocsSource[];
   private readonly _warnedAudiences = new Set<string>();
   private _state: Maybe<DocsLoadedState>;
 
-  constructor(@Optional() @Inject(DocsApiModuleConfig) config?: DocsApiModuleConfig, @Optional() @Inject(DOCS_AUDIENCE_READER) audienceReader?: DocsAudienceReader) {
+  constructor(@Optional() @Inject(DocsApiModuleConfig) config?: DocsApiModuleConfig, @Optional() @Inject(DOCS_AUDIENCE_READER) audienceReader?: DocsAudienceReader, @Optional() @Inject(DYNAMIC_DOCS_SOURCES) dynamicDocsSources?: Maybe<readonly DynamicDocsSource[]>) {
     this._config = config;
     this._audienceReader = audienceReader;
+    this._dynamicDocsSources = dynamicDocsSources ?? [];
 
     if (!audienceReader) {
       this._logger.warn(`No ${DOCS_AUDIENCE_READER} provided — every docs caller holds only the "${DOCS_AUDIENCE_ANY}" audience. Provide one (see docsAudienceReaderForRoles) from the docs module's dependency module.`);
@@ -173,7 +206,7 @@ export class DocsApiService {
   }
 
   /**
-   * The number of docs loaded from the manifest (across all audiences).
+   * The number of docs served: the manifest's docs plus the dynamic docs (across all audiences).
    *
    * @returns The doc count.
    */
@@ -192,7 +225,7 @@ export class DocsApiService {
 
     if (auth?.uid) {
       const audiences = this._audiencesFor(auth);
-      result = Array.from(this._loadState().docs.values()).filter((entry) => isDocsEntryVisible(entry, audiences)).length;
+      result = Array.from(this._loadState().docs.values()).filter((x) => isDocsEntryVisible(x.entry, audiences)).length;
     }
 
     return result;
@@ -208,8 +241,8 @@ export class DocsApiService {
   listDocs(auth: Maybe<FirebaseServerAuthData>): DocsListResult {
     const audiences = this._authorize(auth, DOCS_API_PATH);
     const docs = Array.from(this._loadState().docs.values())
-      .filter((entry) => isDocsEntryVisible(entry, audiences))
-      .map((entry) => ({
+      .filter(({ entry }) => isDocsEntryVisible(entry, audiences))
+      .map(({ entry }) => ({
         id: entry.id,
         title: entry.title,
         ...(entry.description == null ? undefined : { description: entry.description }),
@@ -221,12 +254,12 @@ export class DocsApiService {
   }
 
   /**
-   * Searches the visible docs' manifest metadata: titles, tags, descriptions and section headings. Doc bodies are not
-   * searched.
+   * Searches the visible docs' metadata: titles, tags, descriptions and section headings. File and dynamic docs are
+   * ranked together. Doc bodies are not searched.
    *
    * @param auth - The caller's auth data.
    * @param params - The query and an optional limit (default {@link DEFAULT_DOCS_SEARCH_LIMIT}, max {@link MAX_DOCS_SEARCH_LIMIT}).
-   * @returns The ranked hits. Matches every query word when possible, otherwise any word.
+   * @returns The ranked hits. Matches every query word when possible, otherwise any word, flagged `partial`.
    * @throws {HttpsError} A `401` for an anonymous caller, or a `403` when an OIDC caller lacks the required scope.
    */
   searchDocs(auth: Maybe<FirebaseServerAuthData>, params: DocsSearchParams): DocsSearchResult {
@@ -235,9 +268,11 @@ export class DocsApiService {
     const entries = this._loadState().searchEntries;
     const filter = (candidate: DocsSearchCandidate) => isDocsEntryVisible(candidate.entry, audiences);
     let ranked = rankSearchEntries({ entries, query: params.query, mode: 'all', filter });
+    let partial = false;
 
     if (ranked.length === 0) {
       ranked = rankSearchEntries({ entries, query: params.query, mode: 'any', filter });
+      partial = ranked.length > 0;
     }
 
     const results = ranked.slice(0, limit).map(({ value: { entry, section } }) => ({
@@ -247,28 +282,30 @@ export class DocsApiService {
       ...(section != null || entry.description == null ? undefined : { description: entry.description })
     }));
 
-    return { total: ranked.length, results };
+    return { total: ranked.length, results, ...(partial ? { partial } : undefined) };
   }
 
   /**
-   * Reads a visible doc, or one of its sections, by manifest id.
+   * Reads a visible doc, or one of its sections, by id.
    *
    * @param auth - The caller's auth data.
    * @param params - The doc id and an optional section id.
    * @returns The doc (or section) markdown.
    * @throws {HttpsError} A `401` / `403` like {@link listDocs}; a `404` ({@link DOCS_NOT_FOUND_ERROR_CODE}) for a missing
-   *   OR hidden doc, or when the file no longer passes the containment / hash checks; a `404`
+   *   OR hidden doc, or when a file doc no longer passes the containment / hash checks; a `404`
    *   ({@link DOCS_SECTION_NOT_FOUND_ERROR_CODE}) for an unknown section of a visible doc.
    */
   readDoc(auth: Maybe<FirebaseServerAuthData>, params: DocsReadParams): DocsReadResult {
     const audiences = this._authorize(auth, `${DOCS_API_PATH}/read`);
     const { id, section: sectionId } = params;
-    const entry = this._loadState().docs.get(id);
-    const content = entry != null && isDocsEntryVisible(entry, audiences) ? this._readDocContent(entry) : undefined;
+    const loaded = this._loadState().docs.get(id);
+    const content = loaded != null && isDocsEntryVisible(loaded.entry, audiences) ? this._readDocContent(loaded) : undefined;
 
-    if (entry == null || content == null) {
+    if (loaded == null || content == null) {
       throw notFoundError({ code: DOCS_NOT_FOUND_ERROR_CODE, message: `No doc with id "${id}". Search or list the docs for valid ids.` });
     }
+
+    const { entry } = loaded;
 
     const split = splitDocsMarkdownSections(content, entry.sections);
     const maxLength = this._config?.maxReadLength ?? DEFAULT_DOCS_MAX_READ_LENGTH;
@@ -320,7 +357,7 @@ export class DocsApiService {
 
           if (audience !== DOCS_AUDIENCE_ANY && !known.has(audience) && !this._warnedAudiences.has(audience)) {
             this._warnedAudiences.add(audience);
-            this._logger.warn(`The docs audience reader returned "${audience}", which is not in the docs manifest's audiences (${Array.from(known).join(', ') || 'none'}).`);
+            this._logger.warn(`The docs audience reader returned "${audience}", which is not in the docs manifest's audiences or any dynamic doc's (known: ${Array.from(known).join(', ') || 'none'}).`);
           }
         }
       } catch (error) {
@@ -344,40 +381,119 @@ export class DocsApiService {
   }
 
   private _buildState(): DocsLoadedState {
+    const docs = new Map<string, DocsLoadedEntry>();
+    const audiences = new Set<DocsAudience>();
+    const building: DocsBuildingState = { docs, audiences };
+    const manifest = this._loadManifest();
+
+    if (manifest != null) {
+      manifest.audiences.forEach((audience) => audiences.add(audience));
+
+      for (const entry of manifest.docs) {
+        docs.set(entry.id, { kind: 'file', entry });
+      }
+    }
+
+    for (const source of this._dynamicDocsSources) {
+      const accepted = this._loadDynamicDocs(source).filter((doc) => this._addDynamicDoc(source, doc, building)).length;
+      this._logger.log(`Loaded ${accepted} dynamic doc(s) from source "${source.name}".`);
+    }
+
+    const sorted = Array.from(docs.values()).sort((a, b) => a.entry.id.localeCompare(b.entry.id));
+    return { docs: new Map(sorted.map((x) => [x.entry.id, x])), audiences, searchEntries: buildDocsSearchEntries(sorted.map((x) => x.entry)) };
+  }
+
+  /**
+   * Reads the docs manifest named by the config.
+   *
+   * @returns The manifest, or `undefined` (logged) when it is not configured, missing, or unreadable.
+   */
+  private _loadManifest(): Maybe<DocsManifest> {
     const docsRoot = this._config?.docsRoot;
     const manifestPath = this._config?.docsManifestPath;
-    const docs = new Map<string, DocsManifestEntry>();
-    let audiences: readonly DocsAudience[] = [];
+    let result: Maybe<DocsManifest>;
 
     if (!docsRoot || !manifestPath) {
-      this._logger.warn('DocsApiModuleConfig has no docsRoot / docsManifestPath; the docs API serves no docs.');
+      if (this._dynamicDocsSources.length === 0) {
+        this._logger.warn('DocsApiModuleConfig has no docsRoot / docsManifestPath; the docs API serves no docs.');
+      } else {
+        this._logger.log('DocsApiModuleConfig has no docsRoot / docsManifestPath; the docs API is serving dynamic docs only.');
+      }
     } else if (existsSync(manifestPath)) {
       let manifestJson: unknown;
 
       try {
         manifestJson = JSON.parse(readFileSync(manifestPath, 'utf8'));
       } catch (error) {
-        this._logger.error(`Failed to read the docs manifest at ${manifestPath}; the docs API serves no docs.`, error);
+        this._logger.error(`Failed to read the docs manifest at ${manifestPath}; the docs API serves no file docs.`, error);
       }
 
-      const manifest = readDocsManifestJson(manifestJson);
+      result = readDocsManifestJson(manifestJson);
 
-      if (manifest == null) {
-        this._logger.error(`${manifestPath} is not a docs manifest this server can read; the docs API serves no docs. Regenerate it with dbx-cli-generate-docs-manifest.`);
+      if (result == null) {
+        this._logger.error(`${manifestPath} is not a docs manifest this server can read; the docs API serves no file docs. Regenerate it with dbx-cli-generate-docs-manifest.`);
       } else {
-        audiences = manifest.audiences;
-
-        for (const entry of manifest.docs) {
-          docs.set(entry.id, entry);
-        }
-
-        this._logger.log(`Loaded ${docs.size} doc(s) from ${manifestPath}.`);
+        this._logger.log(`Loaded ${result.docs.length} doc(s) from ${manifestPath}.`);
       }
     } else {
-      this._logger.warn(`No docs manifest at ${manifestPath}; the docs API serves no docs. Run the app's generate-docs-manifest target.`);
+      this._logger.warn(`No docs manifest at ${manifestPath}; the docs API serves no file docs. Run the app's generate-docs-manifest target.`);
     }
 
-    return { docs, audiences: new Set(audiences), searchEntries: buildDocsSearchEntries(docs.values()) };
+    return result;
+  }
+
+  /**
+   * Calls a dynamic docs source's `loadDocs`.
+   *
+   * @param source - The source.
+   * @returns Its docs, or none (logged) when it throws.
+   */
+  private _loadDynamicDocs(source: DynamicDocsSource): readonly DynamicDocsEntry[] {
+    let result: readonly DynamicDocsEntry[];
+
+    try {
+      result = source.loadDocs() ?? [];
+    } catch (error) {
+      this._logger.error(`Dynamic docs source "${source.name}" failed to load; its docs are not served.`, error);
+      result = [];
+    }
+
+    return result;
+  }
+
+  /**
+   * Adds a dynamic doc to the loading state, unless it has no id, audience or content, or its id is already taken.
+   *
+   * @param source - The source that returned the doc.
+   * @param doc - The doc.
+   * @param building - The docs and audiences loaded so far; the doc and its audiences are added to them.
+   * @returns True when the doc was added.
+   */
+  private _addDynamicDoc(source: DynamicDocsSource, doc: DynamicDocsEntry, building: DocsBuildingState): boolean {
+    const { docs, audiences } = building;
+    let added = false;
+
+    if (!doc.id || !doc.audience?.length || typeof doc.content !== 'string') {
+      this._logger.warn(`Dynamic docs source "${source.name}" returned a doc ("${doc.id ?? ''}") with no id, audience or content; skipped.`);
+    } else if (docs.has(doc.id)) {
+      this._logger.warn(`Dynamic docs source "${source.name}" returned doc "${doc.id}", whose id is already taken; skipped.`);
+    } else {
+      docs.set(doc.id, { kind: 'dynamic', entry: { ...doc, sections: extractDocsMarkdownSections(doc.content) } });
+      doc.audience.forEach((audience) => audiences.add(audience));
+      added = true;
+    }
+
+    return added;
+  }
+
+  /**
+   * Reads a loaded doc's content: a dynamic doc's from memory, a file doc's from its file after the file checks.
+   *
+   * @param loaded - The loaded doc.
+   * @returns The content, or `undefined` when a file doc's file fails its checks.
+   */
+  private _readDocContent(loaded: DocsLoadedEntry): Maybe<string> {
+    return loaded.kind === 'dynamic' ? loaded.entry.content : this._readDocFile(loaded.entry);
   }
 
   /**
@@ -386,7 +502,7 @@ export class DocsApiService {
    * @param entry - The manifest entry.
    * @returns The content, or `undefined` (logged) when the file is not contained, missing, or does not match the manifest.
    */
-  private _readDocContent(entry: DocsManifestEntry): Maybe<string> {
+  private _readDocFile(entry: DocsManifestEntry): Maybe<string> {
     const filePath = resolveSecureAssetPath(this._config?.docsRoot, entry.path);
     let result: Maybe<string>;
 
@@ -419,7 +535,7 @@ export function isDocsEntryVisible(entry: Pick<DocsManifestEntry, 'audience'>, a
   return entry.audience.some((audience) => audiences.has(audience));
 }
 
-function buildDocsSearchEntries(entries: Iterable<DocsManifestEntry>): RankedSearchEntry<DocsSearchCandidate>[] {
+function buildDocsSearchEntries(entries: Iterable<DocsLoadedEntry['entry']>): RankedSearchEntry<DocsSearchCandidate>[] {
   const candidates: DocsSearchCandidate[] = [];
 
   for (const entry of entries) {

@@ -1,9 +1,10 @@
 import { existsSync } from 'node:fs';
 import { Module } from '@nestjs/common';
 import { AUTH_ADMIN_ROLE, AUTH_ONBOARDED_ROLE, type AuthClaims } from '@dereekb/util';
-import { DOCS_AUDIENCE_READER, DocsApiModuleConfig, type DocsAudienceReader, docsApiModuleMetadata, docsAudienceReaderForRoles } from '@dereekb/firebase-server';
+import { DOCS_AUDIENCE_READER, DocsApiModuleConfig, type DocsAudienceReader, docsApiModuleMetadata, docsAudienceReaderForRoles, DYNAMIC_DOCS_SOURCES, type DynamicDocsSource } from '@dereekb/firebase-server';
 import { DEMO_AUTH_CLAIMS_SERVICE } from 'demo-firebase';
 import { resolveDistArtifactPath } from '../dist.path';
+import { demoNotificationTypesDocsSource } from './docs.notification';
 
 /**
  * Absolute path to the deployed docs folder (`apps/demo-api/src/assets/docs`, copied to `dist/.../assets/docs` by
@@ -67,14 +68,19 @@ export function demoDocsApiModuleConfigFactory(): DocsApiModuleConfig {
     {
       provide: DOCS_AUDIENCE_READER,
       useValue: demoDocsAudienceReader
+    },
+    {
+      provide: DYNAMIC_DOCS_SOURCES,
+      useFactory: (): DynamicDocsSource[] => [demoNotificationTypesDocsSource()]
     }
   ],
-  exports: [DocsApiModuleConfig, DOCS_AUDIENCE_READER]
+  exports: [DocsApiModuleConfig, DOCS_AUDIENCE_READER, DYNAMIC_DOCS_SOURCES]
 })
 export class DemoDocsApiDependencyModule {}
 
 /**
- * Registers the audience-gated docs API for the demo app.
+ * Registers the audience-gated docs API for the demo app: the markdown docs in `src/assets/docs`, plus the dynamic docs
+ * of {@link demoNotificationTypesDocsSource}.
  *
  * Routes: `GET /api/docs`, `GET /api/docs/search`, `GET /api/docs/read`. Bearer-protected — `'/api/docs'` is in
  * `DemoApiOidcModule`'s `protectedPaths`. `DemoMcpDependencyModule` imports and re-exports this module so the MCP

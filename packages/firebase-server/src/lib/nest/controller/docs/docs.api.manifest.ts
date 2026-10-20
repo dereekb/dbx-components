@@ -87,6 +87,56 @@ export interface DocsMarkdownSplit {
 const DOCS_HEADING_REGEX = /^ {0,3}(#{1,6})\s+(.*?)\s*#*\s*$/;
 const DOCS_FENCE_REGEX = /^ {0,3}(`{3,}|~{3,})/;
 
+interface DocsMarkdownHeading {
+  readonly depth: number;
+  readonly title: string;
+  /**
+   * 0-based line index within the scanned lines.
+   */
+  readonly lineIndex: number;
+}
+
+/**
+ * Slugs a heading title the way the docs manifest generator does: lowercase, inline markdown removed, runs of
+ * non-alphanumerics become `-`. Mirrors `slugifyDocsHeading` in `@dereekb/dbx-cli`, which writes the manifest's section ids.
+ *
+ * @param title - The heading text.
+ * @returns The slug, or `section` when nothing is left.
+ */
+export function slugifyDocsHeading(title: string): string {
+  const slug = title
+    .toLowerCase()
+    .replaceAll(/[`*_~]/g, '')
+    .replaceAll(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replaceAll(/[^a-z0-9]+/g, '-')
+    .replaceAll(/^-+|-+$/g, '');
+  return slug.length > 0 ? slug : 'section';
+}
+
+/**
+ * Reads a doc's sections the way the docs manifest generator does: the H2/H3 ATX headings outside fenced code, in
+ * document order, with ids from {@link slugifyDocsHeading} (repeats get a `-2`, `-3`, … suffix). A leading frontmatter
+ * block is skipped, the same as {@link splitDocsMarkdownSections} skips it.
+ *
+ * @param content - The doc content, optionally starting with frontmatter.
+ * @returns The sections in document order.
+ */
+export function extractDocsMarkdownSections(content: string): DocsManifestSection[] {
+  const used = new Map<string, number>();
+  const sections: DocsManifestSection[] = [];
+
+  for (const heading of scanDocsMarkdownHeadings(docsMarkdownBodyLines(content))) {
+    if (heading.depth === 2 || heading.depth === 3) {
+      const base = slugifyDocsHeading(heading.title);
+      const count = (used.get(base) ?? 0) + 1;
+      used.set(base, count);
+      sections.push({ id: count === 1 ? base : `${base}-${count}`, title: heading.title, depth: heading.depth });
+    }
+  }
+
+  return sections;
+}
+
 /**
  * Splits a doc into its manifest sections.
  *
@@ -98,6 +148,30 @@ const DOCS_FENCE_REGEX = /^ {0,3}(`{3,}|~{3,})/;
  * @returns The body and section texts.
  */
 export function splitDocsMarkdownSections(content: string, sections: readonly DocsManifestSection[]): DocsMarkdownSplit {
+  const bodyLines = docsMarkdownBodyLines(content);
+  const headings = scanDocsMarkdownHeadings(bodyLines);
+  const sectionHeadings = headings.filter((x) => x.depth === 2 || x.depth === 3);
+  const result: DocsMarkdownSectionText[] = [];
+
+  sections.forEach((section, i) => {
+    const heading = sectionHeadings[i];
+
+    if (heading != null) {
+      const endOfContent = headings.find((x) => x.lineIndex > heading.lineIndex && x.depth <= heading.depth)?.lineIndex ?? bodyLines.length;
+      result.push({ section, content: bodyLines.slice(heading.lineIndex, endOfContent).join('\n').trim() });
+    }
+  });
+
+  return { body: bodyLines.join('\n').trim(), sections: result };
+}
+
+/**
+ * Splits a doc into lines, dropping a leading `---` ... `---` frontmatter block.
+ *
+ * @param content - The raw doc content.
+ * @returns The body lines.
+ */
+function docsMarkdownBodyLines(content: string): string[] {
   const lines = content.split(/\r?\n/);
   let start = 0;
 
@@ -106,11 +180,20 @@ export function splitDocsMarkdownSections(content: string, sections: readonly Do
     start = close === -1 ? 0 : close + 1;
   }
 
-  const bodyLines = lines.slice(start);
-  const headings: { readonly depth: number; readonly lineIndex: number }[] = [];
+  return lines.slice(start);
+}
+
+/**
+ * Lists the ATX headings of a doc's body lines, skipping fenced code blocks.
+ *
+ * @param lines - The body lines (frontmatter already removed).
+ * @returns Every heading in document order.
+ */
+function scanDocsMarkdownHeadings(lines: readonly string[]): DocsMarkdownHeading[] {
+  const headings: DocsMarkdownHeading[] = [];
   let openFence: Maybe<string>;
 
-  bodyLines.forEach((line, lineIndex) => {
+  lines.forEach((line, lineIndex) => {
     const fence = DOCS_FENCE_REGEX.exec(line);
 
     if (fence != null) {
@@ -125,22 +208,10 @@ export function splitDocsMarkdownSections(content: string, sections: readonly Do
       const heading = DOCS_HEADING_REGEX.exec(line);
 
       if (heading != null && heading[2].length > 0) {
-        headings.push({ depth: heading[1].length, lineIndex });
+        headings.push({ depth: heading[1].length, title: heading[2], lineIndex });
       }
     }
   });
 
-  const sectionHeadings = headings.filter((x) => x.depth === 2 || x.depth === 3);
-  const result: DocsMarkdownSectionText[] = [];
-
-  sections.forEach((section, i) => {
-    const heading = sectionHeadings[i];
-
-    if (heading != null) {
-      const endOfContent = headings.find((x) => x.lineIndex > heading.lineIndex && x.depth <= heading.depth)?.lineIndex ?? bodyLines.length;
-      result.push({ section, content: bodyLines.slice(heading.lineIndex, endOfContent).join('\n').trim() });
-    }
-  });
-
-  return { body: bodyLines.join('\n').trim(), sections: result };
+  return headings;
 }

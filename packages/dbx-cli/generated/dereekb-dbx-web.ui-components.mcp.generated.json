@@ -937,6 +937,77 @@
       "minimalExample": "<dbx-browser-agent-view-override-button></dbx-browser-agent-view-override-button>"
     },
     {
+      "slug": "mcp-connect-button",
+      "category": "button",
+      "kind": "component",
+      "selector": "dbx-mcp-connect-button",
+      "className": "DbxMcpConnectButtonComponent",
+      "module": "@dereekb/dbx-web",
+      "description": "Drop-in button that opens a dialog with the app's MCP server url and how to connect AI assistants to it.\n\nNeeds no config in apps that call `provideDbxFirebaseOidc()`, which provides the server url. Otherwise, provide\n`DBX_MCP_CONNECT_SERVER` or pass a server in the config.",
+      "inputs": [
+        {
+          "name": "config",
+          "type": "Maybe<DbxMcpConnectButtonConfig>",
+          "description": "",
+          "required": false
+        }
+      ],
+      "outputs": [],
+      "relatedSlugs": [
+        "mcp-connect-view"
+      ],
+      "example": "<dbx-mcp-connect-button [config]=\"{ server: { url: 'https://api.example.com/mcp' }, buttonStyle: { type: 'raised', color: 'primary' } }\"></dbx-mcp-connect-button>",
+      "minimalExample": "<dbx-mcp-connect-button></dbx-mcp-connect-button>"
+    },
+    {
+      "slug": "mcp-connect-view",
+      "category": "misc",
+      "kind": "component",
+      "selector": "dbx-mcp-connect-view",
+      "className": "DbxMcpConnectViewComponent",
+      "module": "@dereekb/dbx-web",
+      "description": "Shows an MCP server's url and short instructions for connecting AI assistants, such as Claude, Claude Code, ChatGPT, Cursor, and VS Code, to it.\n\nThe server comes from the `server` input, then the `config` input, then the app's {@link DBX_MCP_CONNECT_SERVER}. Apps that call\n`provideDbxFirebaseOidc()` provide that token, so the view needs no inputs there.",
+      "inputs": [
+        {
+          "name": "config",
+          "type": "Maybe<DbxMcpConnectViewConfig>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "server",
+          "type": "Maybe<DbxMcpConnectServer>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "clients",
+          "type": "Maybe<DbxMcpConnectClient[]>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "defaultClientId",
+          "type": "Maybe<DbxMcpConnectClientId>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "hint",
+          "type": "Maybe<string>",
+          "description": "",
+          "required": false
+        }
+      ],
+      "outputs": [],
+      "relatedSlugs": [
+        "mcp-connect-button",
+        "click-to-copy-text"
+      ],
+      "example": "<dbx-mcp-connect-view [server]=\"{ url: 'https://api.example.com/mcp', label: 'Example' }\" [clients]=\"clients\"></dbx-mcp-connect-view>",
+      "minimalExample": "<dbx-mcp-connect-view></dbx-mcp-connect-view>"
+    },
+    {
       "slug": "page-title-info",
       "category": "navigation",
       "kind": "directive",

@@ -671,6 +671,16 @@ describe('McpServerFactoryService compact surface', () => {
       expect(docs.reads).toEqual([{ id: 'welcome', section: 'intro' }]);
     });
 
+    it('should put the docs-read response on the analytics event when routed through read', async () => {
+      const events: McpAnalyticsEvent[] = [];
+      const factory = makeFactory({ docs: makeDocsService(), events });
+      await dispatchMcpMethodCall<ToolResult>({ factory, ctx: USER, kind: 'read', method: 'docs-read', params: { id: 'welcome' } });
+
+      expect(events).toHaveLength(1);
+      expect(events[0]).toMatchObject({ toolName: 'demo_api_read', method: 'docs-read', modelType: 'docs', call: 'read', routed: true, isSuccessful: true });
+      expect(events[0].result?.structuredContent).toEqual({ id: 'welcome', title: 'Welcome', content: '# Welcome' });
+    });
+
     it('should mention the documentation tool in the instructions', async () => {
       const discover = await dispatchMcpDiscover(makeFactory({ docs: makeDocsService() }), USER);
       expect(discover.instructions).toContain('search_demo_documentation');

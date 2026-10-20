@@ -6,6 +6,7 @@ import { guestbookIdentity, type EntryDetailsGuestbookEntryResult } from 'demo-f
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoAuthorizedUserContextFactory, demoGuestbookContext, demoGuestbookEntryContext, type DemoApiAuthorizedUserTestContextFixture } from '../../../test/fixture';
 import { callMcpMethod, callMcpTool, describeMcpMethod, discoverMcpServer, listMcpTools, mcpCompactToolNames, searchMcpMethods } from '../../../test/mcp';
 import { DEMO_MCP_API_STATUS_TOOL_NAME, type DemoMcpApiStatus } from './mcp.module';
+import { DEMO_NOTIFICATION_TYPES_DOC_ID } from '../docs/docs.notification';
 
 vi.setConfig({ hookTimeout: 40000, testTimeout: 40000 });
 
@@ -464,6 +465,16 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             expect(ids.has('notification/task-bots')).toBe(true);
           });
 
+          it('finds and reads the dynamic notification types doc', async () => {
+            const ids = await searchDocIds(f, u, 'guestbook entry liked');
+            expect(ids.has(DEMO_NOTIFICATION_TYPES_DOC_ID)).toBe(true);
+
+            const result = await callMcpMethod({ f, u, kind: 'read', method: MCP_DOCS_READ_TOOL_NAME, params: { id: DEMO_NOTIFICATION_TYPES_DOC_ID } });
+
+            expect(result.isError).toBeUndefined();
+            expect((result.structuredContent as { readonly content: string }).content).toContain('`GBE_L`');
+          });
+
           it('refuses to read the admin doc exactly as it refuses a missing doc', async () => {
             const hidden = await callMcpMethod({ f, u, kind: 'read', method: MCP_DOCS_READ_TOOL_NAME, params: { id: 'admin/managing-guestbooks' } });
             const missing = await callMcpMethod({ f, u, kind: 'read', method: MCP_DOCS_READ_TOOL_NAME, params: { id: 'admin/does-not-exist' } });
@@ -518,6 +529,11 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         it('never finds the user-audience task bot doc', async () => {
           const ids = await searchDocIds(f, u, 'task bot opt out');
           expect(ids.has('notification/task-bots')).toBe(false);
+        });
+
+        it('never finds the user-audience dynamic notification types doc', async () => {
+          const ids = await searchDocIds(f, u, 'guestbook entry liked');
+          expect(ids.has(DEMO_NOTIFICATION_TYPES_DOC_ID)).toBe(false);
         });
       });
     });
