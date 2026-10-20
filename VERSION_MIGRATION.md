@@ -1,3 +1,27 @@
+## Migration to v14.22.x — dynamic docs sources
+
+### New
+- **`DYNAMIC_DOCS_SOURCES`** (`@dereekb/firebase-server`) serves docs built in code next to the markdown docs. Provide a
+  `DynamicDocsSource[]` from the docs module's dependency module (and export it). Each source's `loadDocs()` runs once, on
+  the first docs request, and returns `DynamicDocsEntry` values: `id`, `title`, optional `description` / `tags`,
+  `audience`, and markdown `content`. The docs API and the MCP documentation tools serve them under the same checks as the
+  file docs (an authenticated caller, the required OIDC scope, the doc's audiences; a hidden dynamic doc 404s like a
+  missing one), and search ranks file and dynamic docs together.
+- A dynamic doc's sections are its H2/H3 headings outside fenced code, slugged like `dbx-cli-generate-docs-manifest`
+  (`-2`, `-3` on repeats). `extractDocsMarkdownSections()` and `slugifyDocsHeading()` apply the same rules.
+
+### Changed
+- `listDocs` (`GET /api/docs`) sorts the docs by id itself. Manifests written by `dbx-cli-generate-docs-manifest` are
+  already sorted, so their order is unchanged.
+- `DocsApiService`'s constructor takes an optional third argument (the dynamic sources). Subclasses that call
+  `super(config, audienceReader)` still compile.
+- A dynamic doc whose id is taken (file docs first, then the first source) or that has no audience is skipped with a
+  warning. A source whose `loadDocs()` throws is logged and serves no docs until the server restarts.
+
+### Adopt
+- An app that subclassed `DocsApiService` to serve code-built docs can drop the subclass: register its sources under
+  `DYNAMIC_DOCS_SOURCES` and remove its `DocsApiService` provider override.
+
 ## Migration to v14.21.x — dbx-cli `enum-info` / `info`, MCP `<p>_api_info`, `@dereekb/firebase/manifest`
 
 ### New

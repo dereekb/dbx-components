@@ -6,19 +6,32 @@ import { describe, expect, it } from 'vitest';
 import { type FirebaseServerAuthData } from '../auth.context.server';
 import { MISSING_ENDPOINT_OIDC_SCOPE_ERROR_CODE } from '../api.scope';
 import { DOCS_AUDIENCE_ANY, docsAudienceReaderForRoles, type DocsApiModuleConfig, type DocsAudienceReader } from './docs.api.config';
-import { DOCS_MANIFEST_VERSION, splitDocsMarkdownSections, type DocsManifest, type DocsManifestEntry } from './docs.api.manifest';
+import { DOCS_MANIFEST_VERSION, extractDocsMarkdownSections, slugifyDocsHeading, splitDocsMarkdownSections, type DocsManifest, type DocsManifestEntry } from './docs.api.manifest';
+import { type DynamicDocsEntry, type DynamicDocsSource } from './docs.api.dynamic';
 import { DOCS_NOT_FOUND_ERROR_CODE, DOCS_SECTION_NOT_FOUND_ERROR_CODE, DocsApiService } from './docs.api.service';
 
 const ANY_DOC = '---\naudience: any\n---\n# Welcome\n\nHello everyone.\n\n## Getting Around\n\nUse the menu.\n';
 const ADMIN_DOC = '---\naudience: [admin]\n---\n# Admin Runbook\n\nSecret admin steps.\n\n## Rotate Keys\n\nRotate the signing keys.\n\n### Verify\n\nCheck the JWKS.\n\n## Backups\n\nNightly.\n';
 const USER_DOC = '---\naudience: [user, admin]\n---\n# User Guide\n\n## Guestbook Entries\n\nWrite a guestbook entry.\n';
 
+const CATALOG_CONTENT = ['# Catalog', '', '## Widgets', '', 'Widget text.', '', '### Gadget Specs', '', 'Specs.', '', '```md', '## Not A Heading', '```', '', '## Widgets', '', 'More widgets.', ''].join('\n');
+
+const DYNAMIC_DOCS: readonly DynamicDocsEntry[] = [
+  { id: 'dynamic/catalog', title: 'Catalog', description: 'Built in code.', tags: ['catalog'], audience: ['user'], content: CATALOG_CONTENT },
+  { id: 'dynamic/secret', title: 'Secret Catalog', audience: ['admin'], content: '# Secret Catalog\n\n## Hidden Things\n\nShh.\n' },
+  { id: 'faq/guestbook', title: 'Guestbook FAQ', audience: ['any'], content: '# Guestbook FAQ\n\n## Answers\n\nYes.\n' }
+];
+
+function dynamicSource(docs: readonly DynamicDocsEntry[], name = 'test'): DynamicDocsSource {
+  return { name, loadDocs: () => docs };
+}
+
 function entryFor(id: string, content: string, input: Pick<DocsManifestEntry, 'title' | 'audience' | 'sections'> & Partial<Pick<DocsManifestEntry, 'description' | 'tags'>>): DocsManifestEntry {
   const bytes = Buffer.from(content, 'utf8');
   return { id, path: `${id}.md`, sha256: createHash('sha256').update(bytes).digest('hex'), size: bytes.byteLength, ...input };
 }
 
-function buildFixture(input?: { readonly extraEntries?: readonly DocsManifestEntry[]; readonly reader?: DocsAudienceReader | null; readonly config?: Partial<DocsApiModuleConfig> }) {
+function buildFixture(input?: { readonly extraEntries?: readonly DocsManifestEntry[]; readonly reader?: DocsAudienceReader | null; readonly config?: Partial<DocsApiModuleConfig>; readonly dynamicSources?: readonly DynamicDocsSource[] }) {
   const base = mkdtempSync(path.join(tmpdir(), 'docs-api-'));
   const docsRoot = path.join(base, 'docs');
   mkdirSync(path.join(docsRoot, 'guides'), { recursive: true });
@@ -54,7 +67,7 @@ function buildFixture(input?: { readonly extraEntries?: readonly DocsManifestEnt
           audiences: { admin: ['admin'], user: ['user', 'admin'] }
         }));
 
-  const service = new DocsApiService({ docsRoot, docsManifestPath, ...input?.config }, reader);
+  const service = new DocsApiService({ docsRoot, docsManifestPath, ...input?.config }, reader, input?.dynamicSources);
   return { base, docsRoot, service };
 }
 
@@ -79,8 +92,8 @@ describe('DocsApiService', () => {
     it('should return only the docs visible to the caller', () => {
       const { service } = buildFixture();
       expect(service.listDocs(authWithRoles([])).docs.map((x) => x.id)).toEqual(['welcome']);
-      expect(service.listDocs(authWithRoles(['user'])).docs.map((x) => x.id)).toEqual(['welcome', 'guides/user']);
-      expect(service.listDocs(authWithRoles(['admin'])).docs.map((x) => x.id)).toEqual(['welcome', 'admin', 'guides/user']);
+      expect(service.listDocs(authWithRoles(['user'])).docs.map((x) => x.id)).toEqual(['guides/user', 'welcome']);
+      expect(service.listDocs(authWithRoles(['admin'])).docs.map((x) => x.id)).toEqual(['admin', 'guides/user', 'welcome']);
     });
 
     it('should reject an anonymous caller with a 401', () => {
@@ -238,10 +251,178 @@ describe('DocsApiService', () => {
     });
   });
 
+  describe('dynamic docs', () => {
+    function buildDynamicFixture(input?: { readonly config?: Partial<DocsApiModuleConfig> }) {
+      return buildFixture({ ...input, dynamicSources: [dynamicSource(DYNAMIC_DOCS)] });
+    }
+
+    it('should list file and dynamic docs together, sorted by id', () => {
+      const { service } = buildDynamicFixture();
+      expect(service.listDocs(authWithRoles([])).docs.map((x) => x.id)).toEqual(['faq/guestbook', 'welcome']);
+      expect(service.listDocs(authWithRoles(['user'])).docs.map((x) => x.id)).toEqual(['dynamic/catalog', 'faq/guestbook', 'guides/user', 'welcome']);
+      expect(service.listDocs(authWithRoles(['admin'])).docs.map((x) => x.id)).toEqual(['admin', 'dynamic/catalog', 'dynamic/secret', 'faq/guestbook', 'guides/user', 'welcome']);
+      expect(service.docCount).toBe(6);
+      expect(service.countVisibleDocs(authWithRoles([]))).toBe(2);
+      expect(service.countVisibleDocs(authWithRoles(['user']))).toBe(4);
+    });
+
+    it('should read a dynamic doc and its sections', () => {
+      const { service } = buildDynamicFixture();
+      const auth = authWithRoles(['user']);
+      const whole = service.readDoc(auth, { id: 'dynamic/catalog' });
+      expect(whole.content.startsWith('# Catalog')).toBe(true);
+      expect(whole.description).toBe('Built in code.');
+      expect(whole.sections?.map((x) => x.id)).toEqual(['widgets', 'gadget-specs', 'widgets-2']);
+
+      const widgets = service.readDoc(auth, { id: 'dynamic/catalog', section: 'widgets' });
+      expect(widgets.section).toEqual({ id: 'widgets', title: 'Widgets' });
+      expect(widgets.content).toContain('### Gadget Specs');
+      expect(widgets.content).toContain('## Not A Heading');
+      expect(widgets.content).not.toContain('More widgets');
+
+      expect(service.readDoc(auth, { id: 'dynamic/catalog', section: 'widgets-2' }).content).toBe('## Widgets\n\nMore widgets.');
+      expect(errorCodeOf(() => service.readDoc(auth, { id: 'dynamic/catalog', section: 'nope' }))).toBe(DOCS_SECTION_NOT_FOUND_ERROR_CODE);
+    });
+
+    it('should return the same 404 for a hidden dynamic doc and a missing one', () => {
+      const { service } = buildDynamicFixture();
+      expect(errorCodeOf(() => service.readDoc(authWithRoles(['user']), { id: 'dynamic/secret' }))).toBe(DOCS_NOT_FOUND_ERROR_CODE);
+      expect(errorCodeOf(() => service.readDoc(authWithRoles(['user']), { id: 'dynamic/nope' }))).toBe(DOCS_NOT_FOUND_ERROR_CODE);
+    });
+
+    it('should apply the auth and scope checks to dynamic docs', () => {
+      const { service } = buildDynamicFixture({ config: { requiredScope: 'demo' } });
+      expect(() => service.listDocs(undefined)).toThrow();
+      expect(() => service.searchDocs(undefined, { query: 'catalog' })).toThrow();
+      expect(() => service.readDoc(undefined, { id: 'faq/guestbook' })).toThrow();
+      expect(service.countVisibleDocs(undefined)).toBe(0);
+
+      const oidcAuth = { uid: 'u1', token: { roles: ['user'] }, oidcValidatedToken: { scope: 'openid' } } as unknown as FirebaseServerAuthData;
+      expect(errorCodeOf(() => service.readDoc(oidcAuth, { id: 'dynamic/catalog' }))).toBe(MISSING_ENDPOINT_OIDC_SCOPE_ERROR_CODE);
+    });
+
+    it('should rank file and dynamic docs together', () => {
+      const { service } = buildDynamicFixture();
+      const user = authWithRoles(['user']);
+      expect(service.searchDocs(user, { query: 'guestbook' }).results).toEqual([
+        { id: 'faq/guestbook', title: 'Guestbook FAQ' },
+        { id: 'guides/user', title: 'User Guide', section: { id: 'guestbook-entries', title: 'Guestbook Entries' } },
+        { id: 'faq/guestbook', title: 'Guestbook FAQ', section: { id: 'answers', title: 'Answers' } }
+      ]);
+      expect(service.searchDocs(user, { query: 'catalog' }).results[0]).toEqual({ id: 'dynamic/catalog', title: 'Catalog', description: 'Built in code.' });
+      expect(service.searchDocs(user, { query: 'hidden things' }).total).toBe(0);
+      expect(service.searchDocs(authWithRoles(['admin']), { query: 'hidden things' }).results[0]).toMatchObject({ id: 'dynamic/secret', section: { id: 'hidden-things' } });
+    });
+
+    it('should call loadDocs once, on first use', () => {
+      let calls = 0;
+      const source: DynamicDocsSource = {
+        name: 'counting',
+        loadDocs: () => {
+          calls += 1;
+          return DYNAMIC_DOCS;
+        }
+      };
+
+      const { service } = buildFixture({ dynamicSources: [source] });
+      expect(calls).toBe(0);
+
+      const auth = authWithRoles(['user']);
+      expect(service.docCount).toBe(6);
+      service.listDocs(auth);
+      service.searchDocs(auth, { query: 'catalog' });
+      service.readDoc(auth, { id: 'dynamic/catalog' });
+      service.countVisibleDocs(auth);
+      expect(calls).toBe(1);
+    });
+
+    it('should keep serving the other docs when a source throws', () => {
+      const throwing: DynamicDocsSource = {
+        name: 'throwing',
+        loadDocs: () => {
+          throw new Error('boom');
+        }
+      };
+
+      const { service } = buildFixture({ dynamicSources: [throwing, dynamicSource(DYNAMIC_DOCS, 'good')] });
+      expect(service.listDocs(authWithRoles(['admin'])).docs).toHaveLength(6);
+      expect(service.readDoc(authWithRoles([]), { id: 'faq/guestbook' }).title).toBe('Guestbook FAQ');
+    });
+
+    it('should skip a dynamic doc whose id is already taken', () => {
+      const { service } = buildFixture({ dynamicSources: [dynamicSource([{ id: 'welcome', title: 'Dynamic Welcome', audience: ['any'], content: '# Dynamic Welcome\n' }])] });
+      expect(service.readDoc(authWithRoles([]), { id: 'welcome' }).title).toBe('Welcome');
+      expect(service.docCount).toBe(3);
+
+      const shared = (title: string): DynamicDocsEntry => ({ id: 'shared/doc', title, audience: ['any'], content: `# ${title}\n` });
+      const { service: sharedService } = buildFixture({ dynamicSources: [dynamicSource([shared('First')], 'first'), dynamicSource([shared('Second')], 'second')] });
+      expect(sharedService.readDoc(authWithRoles([]), { id: 'shared/doc' }).title).toBe('First');
+      expect(sharedService.docCount).toBe(4);
+    });
+
+    it('should skip a dynamic doc with no id or no audience', () => {
+      const { service } = buildFixture({
+        dynamicSources: [
+          dynamicSource([
+            { id: '', title: 'No Id', audience: ['any'], content: '# No Id\n' },
+            { id: 'no-audience', title: 'No Audience', audience: [], content: '# No Audience\n' }
+          ])
+        ]
+      });
+      expect(service.docCount).toBe(3);
+      expect(errorCodeOf(() => service.readDoc(authWithRoles(['admin']), { id: 'no-audience' }))).toBe(DOCS_NOT_FOUND_ERROR_CODE);
+    });
+
+    it('should serve dynamic docs without a docs manifest', () => {
+      const service = new DocsApiService({}, undefined, [dynamicSource(DYNAMIC_DOCS)]);
+      expect(service.docCount).toBe(3);
+      expect(service.listDocs(authWithRoles([])).docs.map((x) => x.id)).toEqual(['faq/guestbook']);
+      expect(service.readDoc(authWithRoles([]), { id: 'faq/guestbook', section: 'answers' }).content).toBe('## Answers\n\nYes.');
+    });
+
+    it('should truncate a dynamic doc past the max read length', () => {
+      const { service } = buildDynamicFixture({ config: { maxReadLength: 10 } });
+      const result = service.readDoc(authWithRoles(['user']), { id: 'dynamic/catalog' });
+      expect(result.content).toHaveLength(10);
+      expect(result.truncated).toBe(true);
+    });
+
+    it('should drop a leading frontmatter block from dynamic content', () => {
+      const { service } = buildFixture({ dynamicSources: [dynamicSource([{ id: 'fm', title: 'Doc', audience: ['any'], content: '---\ntitle: x\n---\n# Doc\n\n## Part\n\nText.\n' }])] });
+      const whole = service.readDoc(authWithRoles([]), { id: 'fm' });
+      expect(whole.sections?.map((x) => x.id)).toEqual(['part']);
+      expect(whole.content).not.toContain('title: x');
+      expect(service.readDoc(authWithRoles([]), { id: 'fm', section: 'part' }).content).toBe('## Part\n\nText.');
+    });
+  });
+
   describe('splitDocsMarkdownSections()', () => {
     it('should ignore headings inside fenced code', () => {
       const split = splitDocsMarkdownSections('# T\n\nintro\n\n```\n## Not a heading\n```\n\n## Real\n\nbody', [{ id: 'real', title: 'Real', depth: 2 }]);
       expect(split.sections.map((x) => x.content)).toEqual(['## Real\n\nbody']);
+    });
+  });
+
+  describe('extractDocsMarkdownSections()', () => {
+    it('should extract H2/H3 headings, skip fenced code and dedupe ids', () => {
+      const body = ['# Title', '## Getting Started', 'text', '```md', '## Not A Heading', '```', '### Step `one`', '## Getting Started', '#### Too deep'].join('\n');
+      expect(extractDocsMarkdownSections(body)).toEqual([
+        { id: 'getting-started', title: 'Getting Started', depth: 2 },
+        { id: 'step-one', title: 'Step `one`', depth: 3 },
+        { id: 'getting-started-2', title: 'Getting Started', depth: 2 }
+      ]);
+    });
+
+    it('should skip a leading frontmatter block', () => {
+      expect(extractDocsMarkdownSections('---\ntitle: x\n## not a section\n---\n## Real\n')).toEqual([{ id: 'real', title: 'Real', depth: 2 }]);
+    });
+  });
+
+  describe('slugifyDocsHeading()', () => {
+    it('should slug headings like the docs manifest generator', () => {
+      expect(slugifyDocsHeading('Use [the API](https://x.y) & more!')).toBe('use-the-api-more');
+      expect(slugifyDocsHeading('!!!')).toBe('section');
+      expect(slugifyDocsHeading('snake_case')).toBe('snakecase');
     });
   });
 });

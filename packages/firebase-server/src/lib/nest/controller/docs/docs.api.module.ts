@@ -13,9 +13,11 @@ export interface DocsApiModuleMetadataConfig extends Pick<ModuleMetadata, 'impor
    *
    * Should provide:
    * - `DocsApiModuleConfig` — `docsRoot` + `docsManifestPath` (and optionally `requiredScope`). Without them the
-   *   API serves no docs.
+   *   API serves no file docs.
    * - `DOCS_AUDIENCE_READER` — the caller → audiences reader (see `docsAudienceReaderForRoles`). Without it every
    *   caller holds only the `any` audience, and a warning is logged at boot.
+   * - `DYNAMIC_DOCS_SOURCES` (optional) — the `DynamicDocsSource` array for docs built in code, served next to the file
+   *   docs under the same checks. Export it too; a token that is provided but not exported is silently ignored.
    */
   readonly dependencyModule: ClassType;
 }
@@ -36,9 +38,10 @@ export interface DocsApiModuleMetadataConfig extends Pick<ModuleMetadata, 'impor
  * @Module({
  *   providers: [
  *     { provide: DocsApiModuleConfig, useValue: { docsRoot, docsManifestPath } },
- *     { provide: DOCS_AUDIENCE_READER, useValue: docsAudienceReaderForRoles({ roleReader, audiences: { admin: [AUTH_ADMIN_ROLE] } }) }
+ *     { provide: DOCS_AUDIENCE_READER, useValue: docsAudienceReaderForRoles({ roleReader, audiences: { admin: [AUTH_ADMIN_ROLE] } }) },
+ *     { provide: DYNAMIC_DOCS_SOURCES, useFactory: () => [demoDynamicDocsSource()] }
  *   ],
- *   exports: [DocsApiModuleConfig, DOCS_AUDIENCE_READER]
+ *   exports: [DocsApiModuleConfig, DOCS_AUDIENCE_READER, DYNAMIC_DOCS_SOURCES]
  * })
  * export class DemoDocsApiDependencyModule {}
  *

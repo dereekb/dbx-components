@@ -22,8 +22,8 @@ export const FIREBASE_SERVER_DOCS_API_PROTECTED_PATH = '/api/docs';
 
 // MARK: Audiences
 /**
- * An audience a doc is published to (e.g. `admin`, `worker`, `school`). Declared per doc in its frontmatter and
- * checked against the generator's `--audiences` allow-list.
+ * An audience a doc is published to (e.g. `admin`, `worker`, `school`). Declared per doc in its frontmatter (checked
+ * against the generator's `--audiences` allow-list) or set on a `DynamicDocsEntry`.
  */
 export type DocsAudience = string;
 
@@ -55,7 +55,8 @@ export const DEFAULT_DOCS_MAX_READ_LENGTH = 200_000;
 /**
  * Configuration for the docs API, supplied by the app via its dependency module.
  *
- * Without a {@link docsRoot} and {@link docsManifestPath} the API serves no docs.
+ * Without a {@link docsRoot} and {@link docsManifestPath} the API serves no file docs; the docs of
+ * `DYNAMIC_DOCS_SOURCES` are still served.
  *
  * **`docsRoot` must never sit under the download module's `secureAssetsRoot`.** Every file under that root can be
  * minted as a signed download, which would bypass a doc's audience.
