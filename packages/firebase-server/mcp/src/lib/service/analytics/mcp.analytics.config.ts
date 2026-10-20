@@ -1,4 +1,5 @@
 import { type InjectionToken } from '@nestjs/common';
+import { type McpToolAnalyticsConfigs } from './mcp.analytics.tool';
 
 /**
  * Default analytics event name used by {@link FirebaseServerMcpAnalyticsService} when
@@ -25,6 +26,12 @@ export interface FirebaseServerMcpAnalyticsConfig {
    * Defaults to `true` on non-production environments.
    */
   readonly logEvents?: boolean;
+  /**
+   * Per-tool analytics: turn off the default event, change its data, or send extra events for one tool or method.
+   *
+   * Keyed by method id, dispatch key or tool name, most specific first. See {@link mcpToolAnalyticsKeys}.
+   */
+  readonly tools?: McpToolAnalyticsConfigs;
 }
 
 /**

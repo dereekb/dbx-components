@@ -3,6 +3,7 @@ import { DemoApiApiModule } from './api/api.module';
 import { DemoApiFirebaseModule, DemoApiModelModule } from './common';
 import { GlobalNotificationModule } from '@dereekb/firebase-server/model';
 import { DemoApiServerModule } from './server/server.module';
+import { demoMcpAnalyticsToolConfigs } from './server/mcp/mcp.analytics';
 import { appAnalyticsModuleMetadata, FirebaseServerAnalyticsSegmentModule } from '@dereekb/firebase-server';
 import { appMcpAnalyticsModuleMetadata } from '@dereekb/firebase-server/mcp';
 import { appOidcAnalyticsModuleMetadata } from '@dereekb/firebase-server/oidc';
@@ -16,7 +17,7 @@ import { appOidcAnalyticsModuleMetadata } from '@dereekb/firebase-server/oidc';
 export class DemoApiAppAnalyticsModule {}
 
 @Global()
-@Module(appMcpAnalyticsModuleMetadata())
+@Module(appMcpAnalyticsModuleMetadata({ mcpAnalyticsConfig: { tools: demoMcpAnalyticsToolConfigs() } }))
 export class DemoApiAppMcpAnalyticsModule {}
 
 @Global()

@@ -84,6 +84,10 @@ export interface DocsSearchResultEntry {
 export interface DocsSearchResult {
   readonly total: number;
   readonly results: readonly DocsSearchResultEntry[];
+  /**
+   * True when no doc matched every query word, so {@link results} match only some of them. Omitted otherwise.
+   */
+  readonly partial?: boolean;
 }
 
 /**
@@ -255,7 +259,7 @@ export class DocsApiService {
    *
    * @param auth - The caller's auth data.
    * @param params - The query and an optional limit (default {@link DEFAULT_DOCS_SEARCH_LIMIT}, max {@link MAX_DOCS_SEARCH_LIMIT}).
-   * @returns The ranked hits. Matches every query word when possible, otherwise any word.
+   * @returns The ranked hits. Matches every query word when possible, otherwise any word, flagged `partial`.
    * @throws {HttpsError} A `401` for an anonymous caller, or a `403` when an OIDC caller lacks the required scope.
    */
   searchDocs(auth: Maybe<FirebaseServerAuthData>, params: DocsSearchParams): DocsSearchResult {
@@ -264,9 +268,11 @@ export class DocsApiService {
     const entries = this._loadState().searchEntries;
     const filter = (candidate: DocsSearchCandidate) => isDocsEntryVisible(candidate.entry, audiences);
     let ranked = rankSearchEntries({ entries, query: params.query, mode: 'all', filter });
+    let partial = false;
 
     if (ranked.length === 0) {
       ranked = rankSearchEntries({ entries, query: params.query, mode: 'any', filter });
+      partial = ranked.length > 0;
     }
 
     const results = ranked.slice(0, limit).map(({ value: { entry, section } }) => ({
@@ -276,7 +282,7 @@ export class DocsApiService {
       ...(section != null || entry.description == null ? undefined : { description: entry.description })
     }));
 
-    return { total: ranked.length, results };
+    return { total: ranked.length, results, ...(partial ? { partial } : undefined) };
   }
 
   /**

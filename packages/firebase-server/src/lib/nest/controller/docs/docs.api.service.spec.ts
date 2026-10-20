@@ -241,6 +241,13 @@ describe('DocsApiService', () => {
       const { service } = buildFixture();
       const result = service.searchDocs(authWithRoles(['user']), { query: 'guestbook zebra' });
       expect(result.results[0]).toMatchObject({ id: 'guides/user', section: { id: 'guestbook-entries' } });
+      expect(result.partial).toBe(true);
+    });
+
+    it('should flag partial only when the "any" fallback found matches', () => {
+      const { service } = buildFixture();
+      expect(service.searchDocs(authWithRoles([]), { query: 'onboarding' })).not.toHaveProperty('partial');
+      expect(service.searchDocs(authWithRoles(['admin']), { query: 'nightly' })).not.toHaveProperty('partial');
     });
 
     it('should respect the limit', () => {

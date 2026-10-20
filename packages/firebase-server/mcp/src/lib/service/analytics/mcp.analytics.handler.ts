@@ -1,4 +1,5 @@
 import { type InjectionToken } from '@nestjs/common';
+import { type CallToolResult } from '@modelcontextprotocol/server';
 import { type FirebaseAuthUserId } from '@dereekb/firebase';
 import { type FirebaseServerAuthData } from '@dereekb/firebase-server';
 import { type Maybe } from '@dereekb/util';
@@ -81,6 +82,13 @@ export interface McpAnalyticsEvent {
    * Wall-clock duration in milliseconds from dispatch start to completion.
    */
   readonly durationMs?: Maybe<number>;
+  /**
+   * The response sent to the client. For routed calls (e.g. `demo_api_read` → `docs-read`) it is the executed
+   * method's response. When the call failed, `structuredContent` is unset and the thrown error stays on {@link error}.
+   *
+   * Passed by reference: consumers must not modify it.
+   */
+  readonly result?: Maybe<CallToolResult>;
   /**
    * The resolved method id when the call was routed through a compact `read` / `write` / `destructive`
    * tool (e.g. `guestbook.create`). For routed calls {@link toolName} is the compact wire tool (so a destructive call names
