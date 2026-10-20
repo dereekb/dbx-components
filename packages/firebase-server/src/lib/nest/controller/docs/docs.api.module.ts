@@ -39,7 +39,7 @@ export interface DocsApiModuleMetadataConfig extends Pick<ModuleMetadata, 'impor
  *   providers: [
  *     { provide: DocsApiModuleConfig, useValue: { docsRoot, docsManifestPath } },
  *     { provide: DOCS_AUDIENCE_READER, useValue: docsAudienceReaderForRoles({ roleReader, audiences: { admin: [AUTH_ADMIN_ROLE] } }) },
- *     { provide: DYNAMIC_DOCS_SOURCES, useFactory: () => [demoDynamicDocsSource()] }
+ *     { provide: DYNAMIC_DOCS_SOURCES, useFactory: () => [demoNotificationTypesDocsSource()] }
  *   ],
  *   exports: [DocsApiModuleConfig, DOCS_AUDIENCE_READER, DYNAMIC_DOCS_SOURCES]
  * })
