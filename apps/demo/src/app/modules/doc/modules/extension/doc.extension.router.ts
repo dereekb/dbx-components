@@ -15,6 +15,7 @@ import { DocExtensionHelpComponent } from './container/help.component';
 import { DocExtensionOidcComponent } from './container/oidc.component';
 import { DocExtensionQuizComponent } from './container/quiz.component';
 import { DocExtensionBrowserAgentComponent } from './container/browseragent.component';
+import { DocExtensionMcpComponent } from './container/mcp.component';
 
 export const LAYOUT_STATE: Ng2StateDeclaration = {
   url: '/extension',
@@ -113,6 +114,12 @@ export const DOC_EXTENSION_BROWSER_AGENT_STATE: Ng2StateDeclaration = {
   component: DocExtensionBrowserAgentComponent
 };
 
+export const DOC_EXTENSION_MCP_STATE: Ng2StateDeclaration = {
+  url: '/mcp',
+  name: 'doc.extension.mcp',
+  component: DocExtensionMcpComponent
+};
+
 export const STATES: Ng2StateDeclaration[] = [
   //
   LAYOUT_STATE,
@@ -130,5 +137,6 @@ export const STATES: Ng2StateDeclaration[] = [
   DOC_EXTENSION_HELP_STATE,
   DOC_EXTENSION_OIDC_STATE,
   DOC_EXTENSION_QUIZ_STATE,
-  DOC_EXTENSION_BROWSER_AGENT_STATE
+  DOC_EXTENSION_BROWSER_AGENT_STATE,
+  DOC_EXTENSION_MCP_STATE
 ];

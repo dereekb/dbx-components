@@ -1,0 +1,31 @@
+@use '../../style/theming';
+
+// MARK: Mixin
+@mixin core() {
+  // many clients do not fit on a narrow screen, so the toggle bar scrolls instead of wrapping
+  .dbx-mcp-connect-view-clients {
+    overflow-x: auto;
+
+    .mat-button-toggle-group {
+      flex-wrap: nowrap;
+    }
+
+    .mat-button-toggle {
+      white-space: nowrap;
+    }
+  }
+
+  .dbx-mcp-connect-view-url {
+    word-break: break-all;
+  }
+
+  // snippets are commands and JSON configs, so they keep their spacing but wrap long urls
+  .dbx-mcp-connect-view-snippet {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+}
+
+@mixin theme($theme-config) {
+}

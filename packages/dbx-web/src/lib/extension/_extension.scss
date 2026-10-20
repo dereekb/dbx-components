@@ -6,6 +6,7 @@
 @use './help/help';
 @use './pdf/pdf';
 @use './download/download';
+@use './mcp/mcp';
 @use './mapbox/mapbox';
 
 @mixin all-extension-core($theme-config) {
@@ -45,6 +46,7 @@
 
   @include pdf.core();
   @include download.core();
+  @include mcp.core();
 }
 
 @mixin all-extension-typography($theme-config-or-typography-config) {
@@ -87,4 +89,5 @@
 
   @include pdf.theme($theme-config);
   @include download.theme($theme-config);
+  @include mcp.theme($theme-config);
 }

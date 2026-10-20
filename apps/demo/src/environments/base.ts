@@ -21,6 +21,13 @@ export interface DemoOidcEnvironmentOptions {
    * share an origin, which keeps the OIDC paths relative.
    */
   apiOrigin?: Maybe<string>;
+  /**
+   * Url of the app's MCP server, shown by `dbx-mcp-connect-button`.
+   *
+   * Leave undefined to derive it from {@link apiOrigin} (or the page's origin) plus `/mcp`. Set it when the server is not
+   * served from that origin. It must match the demo-api `appMcpUrl`.
+   */
+  mcpUrl?: Maybe<string>;
 }
 
 /**
@@ -84,7 +91,10 @@ export const base: DemoEnvironment = {
   },
   oidc: {
     // local development is single-origin
-    apiOrigin: undefined
+    apiOrigin: undefined,
+    // `ng serve` hosts the app on 9010, but the MCP endpoint is served through the Firebase Hosting emulator on 9901.
+    // Must match the demo-api `appMcpUrl` and the `demo-api-mcp-dev` server in `.mcp.json`.
+    mcpUrl: 'http://localhost:9901/mcp'
   },
   externalConnections: {
     // `ng serve` hosts the app on 9010, but the OAuth controller is behind the Firebase Hosting
