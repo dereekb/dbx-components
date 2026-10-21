@@ -76,7 +76,7 @@
     },
     "@nx/eslint:lint": {
       "cache": false,
-      "inputs": ["default", "{workspaceRoot}/eslint.config.mjs", "{workspaceRoot}/eslint.config.angular.mjs", "{workspaceRoot}/eslint.config.library.mjs"],
+      "inputs": ["default", "{workspaceRoot}/eslint.config.mjs", "{workspaceRoot}/eslint.config.angular.mjs", "{workspaceRoot}/eslint.config.library.mjs", "{workspaceRoot}/eslint.plugins.mjs"],
       "options": {
         "cache": true,
         "cacheLocation": ".cache/eslint",
