@@ -658,6 +658,27 @@ export class Foo {
       expect(fixed).toMatch(/return this\.flag\(\) \? a : b;/);
     });
 
+    it('replaces the parentheses around a parenthesized expression body', () => {
+      const fixed = fixCode(`
+import { Component, computed, signal } from '@angular/core';
+
+@Component({})
+export class Foo {
+  readonly flag = signal(false);
+  readonly aSignal = signal(1);
+  readonly bSignal = signal(2);
+  readonly resultSignal = computed(() => (this.flag() ? this.aSignal() : this.bSignal()));
+}
+`);
+
+      expect(fixed).toContain(`  readonly resultSignal = computed(() => {
+    const a = this.aSignal();
+    const b = this.bSignal();
+    return this.flag() ? a : b;
+  });`);
+      expect(fixed).not.toContain('computed(() => ({');
+    });
+
     it('converts a short-circuit expression body to a block body with hoists', () => {
       const fixed = fixCode(`
 import { Component, computed, signal } from '@angular/core';

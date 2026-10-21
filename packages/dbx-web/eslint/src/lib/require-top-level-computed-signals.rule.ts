@@ -852,11 +852,13 @@ function applyFixPlan(fixer: AstNode, plan: FixPlan, sourceCode: AstNode): AstNo
     // replacement covers every flagged call site, so per-call replacements
     // are baked into the substituted expression text rather than emitted as
     // separate fixer operations (which would overlap the body replacement).
+    // Any parentheses wrapping the body (`() => (<expr>)`) are replaced too,
+    // otherwise the new block would be left as `({ … })` — an object literal.
     const baseIndent = getStatementIndent(plan.callback, sourceCode);
     const innerIndent = `${baseIndent}  `;
     const hoistText = hoistLines.map((line) => `${innerIndent}${line}`).join('\n');
     const substitutedExpr = substituteInExpression(plan, sourceCode);
-    fixes.push(fixer.replaceText(plan.body, `{\n${hoistText}\n${innerIndent}return ${substitutedExpr};\n${baseIndent}}`));
+    fixes.push(fixer.replaceTextRange(getExpressionBodyRange(plan.body, sourceCode), `{\n${hoistText}\n${innerIndent}return ${substitutedExpr};\n${baseIndent}}`));
   }
 
   return fixes;
@@ -891,6 +893,36 @@ function getStatementIndent(node: AstNode, sourceCode: AstNode): string {
   }
 
   return result;
+}
+
+/**
+ * Returns the source range of an arrow function's expression body, widened to
+ * include any parentheses wrapping it (`() => (<expr>)`). ESTree node ranges
+ * exclude wrapping parentheses, so replacing only the body node's own range
+ * would leave them behind.
+ *
+ * Only valid for arrow expression bodies: the token before an unwrapped body
+ * is always `=>`, so every `(` / `)` pair directly around it is a wrapping
+ * pair rather than call or grouping syntax belonging to an outer node.
+ *
+ * @param body - The expression body AST node of an arrow function.
+ * @param sourceCode - The ESLint sourceCode service.
+ * @returns The `[start, end]` range covering the body and its wrapping parentheses.
+ */
+function getExpressionBodyRange(body: AstNode, sourceCode: AstNode): [number, number] {
+  let start: number = body.range[0];
+  let end: number = body.range[1];
+  let tokenBefore: Maybe<AstNode> = sourceCode.getTokenBefore(body);
+  let tokenAfter: Maybe<AstNode> = sourceCode.getTokenAfter(body);
+
+  while (tokenBefore?.value === '(' && tokenAfter?.value === ')') {
+    start = tokenBefore.range[0];
+    end = tokenAfter.range[1];
+    tokenBefore = sourceCode.getTokenBefore(tokenBefore);
+    tokenAfter = sourceCode.getTokenAfter(tokenAfter);
+  }
+
+  return [start, end];
 }
 
 /**
