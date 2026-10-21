@@ -1,4 +1,4 @@
-import { type AuthClaims, type AuthRoleSet, type Maybe, type PromiseOrValue, type WebsiteUrl } from '@dereekb/util';
+import { type AuthClaims, type AuthRole, type AuthRoleSet, type Maybe, type PromiseOrValue, type WebsiteUrl } from '@dereekb/util';
 import { type FirebaseServerAuthData } from '@dereekb/firebase-server';
 import { type CliTokenCredentialType, type FirestoreModelKey, type FirestoreModelType, type OidcModelScopeRequirement, type OidcScope, type OidcScopeTerm } from '@dereekb/firebase';
 import { type McpMethodToolSelector } from './service/mcp.method';
@@ -256,6 +256,16 @@ export abstract class McpModuleConfig {
    * Pass `{ compact: false, methodTools: true }` to keep the legacy one-tool-per-method surface exactly.
    */
   readonly tools?: McpToolsConfig;
+  /**
+   * Roles the caller must hold (AND-semantics) to see and call the `cli-token` tool. Only applies when an
+   * {@link McpCliTokenMinter} is wired, since the tool is not registered otherwise.
+   *
+   * Defaults to `DEFAULT_MCP_CLI_TOKEN_REQUIRED_ROLES` (`[admin]`). Set it to the role the app's
+   * `CLI_TOKEN_ADMIN_PREDICATE` checks so the tool reaches every caller that predicate admits; a narrower
+   * set here silently hides the tool from callers who could mint over `POST /oidc/cli-token` anyway. An
+   * empty array leaves only the `token.cli` scope filter and the minter's own predicate.
+   */
+  readonly cliTokenRequiredRoles?: ReadonlyArray<AuthRole>;
 }
 
 /**

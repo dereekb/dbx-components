@@ -220,7 +220,7 @@ export class McpServerFactoryService {
       const catalogExamples: McpToolCatalogExamples = resolveMcpToolCatalogExamples({ config: examplesConfig, models: this._cachedManifestModels, enums: this._cachedManifestEnums, routeManifest: this._resolveRouteManifest() });
       const builtins = this._resolveBuiltinMethodTools(prefix, catalogExamples);
       const infoTool = this._resolveInfoTool({ compact, name: compactNames.info, app: prefix, examples: catalogExamples });
-      const token = this.cliTokenMinter == null ? undefined : createCliTokenTool({ minter: this.cliTokenMinter, name: compactNames.token });
+      const token = this.cliTokenMinter == null ? undefined : createCliTokenTool({ minter: this.cliTokenMinter, name: compactNames.token, requiredRoles: this.mcpConfig.cliTokenRequiredRoles });
       const batchName = this.storageService == null ? undefined : BATCH_EXECUTE_TOOL_NAME;
       const docsSearchTool = this._resolveDocsSearchTool({ compact, compactNames, app: prefix });
       const plan = planMcpToolSurface({ compact, methodTools, compactNames, generated: generation.tools, builtins, token, documentation: docsSearchTool, info: infoTool, additional: this.additionalTools, batchName });

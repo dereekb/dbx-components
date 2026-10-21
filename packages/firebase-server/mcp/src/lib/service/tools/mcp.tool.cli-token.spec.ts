@@ -1,8 +1,9 @@
 import type { CallToolResult } from '@modelcontextprotocol/server';
-import { type FirebaseServerAuthData } from '@dereekb/firebase-server';
+import { AUTH_ADMIN_ROLE } from '@dereekb/util';
+import { type FirebaseServerAuthData, type McpVisibilityRule } from '@dereekb/firebase-server';
 import { type McpCliTokenMintInput, type McpCliTokenMintResult } from '../../mcp.config';
-import { type McpStaticToolHandlerContext } from '../mcp.tool-generator';
-import { type CliTokenToolOutput, createCliTokenTool, DEFAULT_MCP_CLI_TOKEN_CREDENTIAL_TYPE } from './mcp.tool.cli-token';
+import { type McpStaticToolHandlerContext, type McpToolDefinition } from '../mcp.tool-generator';
+import { type CliTokenToolOutput, createCliTokenTool, DEFAULT_MCP_CLI_TOKEN_CREDENTIAL_TYPE, DEFAULT_MCP_CLI_TOKEN_REQUIRED_ROLES } from './mcp.tool.cli-token';
 
 const AUTH = { uid: 'admin-uid', token: {} } as unknown as FirebaseServerAuthData;
 
@@ -37,6 +38,16 @@ async function callTool(args: Record<string, unknown>, minter: ReturnType<typeof
   return (await tool.staticHandler?.(args, makeCtx())) as CallToolResult;
 }
 
+function readRule(tool: McpToolDefinition): McpVisibilityRule {
+  const metadata = tool.filterMetadata;
+
+  if (metadata.visibilityKind !== 'declarative') {
+    throw new Error('expected a declarative visibility rule');
+  }
+
+  return metadata.rule;
+}
+
 function readText(result: CallToolResult): string {
   const first = result.content[0];
 
@@ -48,6 +59,21 @@ function readText(result: CallToolResult): string {
 }
 
 describe('createCliTokenTool', () => {
+  it('requires the admin role by default', () => {
+    const tool = createCliTokenTool({ minter: makeMinter().minter });
+
+    expect(DEFAULT_MCP_CLI_TOKEN_REQUIRED_ROLES).toEqual([AUTH_ADMIN_ROLE]);
+    expect(readRule(tool).requireAuthenticated).toBe(true);
+    expect(readRule(tool).requiredRoles).toEqual([AUTH_ADMIN_ROLE]);
+  });
+
+  it('requires the configured roles instead of admin when given', () => {
+    const tool = createCliTokenTool({ minter: makeMinter().minter, requiredRoles: ['app_admin'] });
+
+    expect(readRule(tool).requireAuthenticated).toBe(true);
+    expect(readRule(tool).requiredRoles).toEqual(['app_admin']);
+  });
+
   it('advertises the credentialType input', () => {
     const tool = createCliTokenTool({ minter: makeMinter().minter });
 

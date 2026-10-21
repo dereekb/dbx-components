@@ -1,5 +1,5 @@
 import type { CallToolResult } from '@modelcontextprotocol/server';
-import { AUTH_ADMIN_ROLE, type Maybe } from '@dereekb/util';
+import { AUTH_ADMIN_ROLE, type AuthRole, type Maybe } from '@dereekb/util';
 import { type CliTokenCredentialType, CLI_TOKEN_BEARER_CREDENTIAL_TYPE, CLI_TOKEN_OIDC_SCOPE, isCliTokenCredentialType } from '@dereekb/firebase';
 import { requestClientIp } from '@dereekb/firebase-server';
 import { type McpCliTokenMinter, type McpCliTokenMintResult } from '../../mcp.config';
@@ -31,6 +31,11 @@ export const CLI_TOKEN_DISPATCH_MODEL_TYPE = 'auth';
  */
 export const DEFAULT_MCP_CLI_TOKEN_CREDENTIAL_TYPE: CliTokenCredentialType = CLI_TOKEN_BEARER_CREDENTIAL_TYPE;
 
+/**
+ * Roles the tool requires when the app configures none. See `McpModuleConfig.cliTokenRequiredRoles`.
+ */
+export const DEFAULT_MCP_CLI_TOKEN_REQUIRED_ROLES: ReadonlyArray<AuthRole> = [AUTH_ADMIN_ROLE];
+
 // MARK: Types
 /**
  * Constructor dependencies for {@link createCliTokenTool}.
@@ -45,6 +50,10 @@ export interface CreateCliTokenToolDeps {
    * it `<prefix>_cli_token`.
    */
   readonly name?: string;
+  /**
+   * Roles the caller must hold to see and call the tool. Defaults to {@link DEFAULT_MCP_CLI_TOKEN_REQUIRED_ROLES}.
+   */
+  readonly requiredRoles?: ReadonlyArray<AuthRole>;
 }
 
 /**
@@ -99,11 +108,11 @@ export interface CliTokenToolOutput {
  *
  * - `requiredScopeTerms: [token.cli]` — the tool is invisible to `tools/list` AND uncallable without
  *   the scope, through the factory's existing scope filter.
- * - `visibility.requiredRoles: [admin]` — the declarative role gate, which fails closed when the app
- *   wires no `McpAuthRoleReader`.
+ * - `visibility.requiredRoles` — the declarative role gate ({@link CreateCliTokenToolDeps.requiredRoles},
+ *   `[admin]` by default), which fails closed when the app wires no `McpAuthRoleReader`.
  * - The mint endpoint's own admin predicate, inside the minter.
  *
- * @param deps - The app-supplied minter.
+ * @param deps - The app-supplied minter, plus the optional tool name and required roles.
  * @returns A statically-registered {@link McpToolDefinition} to append to the MCP server factory's tool registry.
  */
 export function createCliTokenTool(deps: CreateCliTokenToolDeps): McpToolDefinition {
@@ -122,7 +131,7 @@ export function createCliTokenTool(deps: CreateCliTokenToolDeps): McpToolDefinit
     staticHandler: handler,
     effectiveReadOnly: false,
     requiredScopeTerms: [CLI_TOKEN_OIDC_SCOPE],
-    rule: { requireAuthenticated: true, requiredRoles: [AUTH_ADMIN_ROLE] }
+    rule: { requireAuthenticated: true, requiredRoles: deps.requiredRoles ?? DEFAULT_MCP_CLI_TOKEN_REQUIRED_ROLES }
   });
 }
 
