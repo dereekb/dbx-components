@@ -11,6 +11,11 @@ import { DbxMcpConnectViewComponent, type DbxMcpConnectViewConfig } from './mcp.
 export const DEFAULT_DBX_MCP_CONNECT_DIALOG_HEADER = 'Connect an AI assistant';
 
 /**
+ * Width {@link DbxMcpConnectDialogComponent} opens at. Material narrows it on small screens.
+ */
+export const DBX_MCP_CONNECT_DIALOG_WIDTH = '600px';
+
+/**
  * Config for {@link DbxMcpConnectDialogComponent}.
  */
 export interface DbxMcpConnectDialogConfig extends DbxMcpConnectViewConfig {
@@ -40,7 +45,9 @@ export class DbxMcpConnectDialogComponent extends AbstractDialogDirective<unknow
   readonly headerSignal = computed(() => this.data?.header ?? DEFAULT_DBX_MCP_CONNECT_DIALOG_HEADER);
 
   static openDialog(matDialog: MatDialog, config?: Maybe<DbxMcpConnectDialogConfig>): MatDialogRef<DbxMcpConnectDialogComponent> {
+    // fixed so the dialog does not resize as the selected client's instructions change
     return matDialog.open(DbxMcpConnectDialogComponent, {
+      width: DBX_MCP_CONNECT_DIALOG_WIDTH,
       data: config
     });
   }

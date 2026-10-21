@@ -35,7 +35,20 @@ import {
   provideDbxFirebaseFormSpaceTypeConfigService,
   provideDbxFirebaseLogin
 } from '@dereekb/dbx-firebase';
-import { DBX_WEB_FILE_PREVIEW_SERVICE_ZIP_PRESET_ENTRY, provideDbxHelpServices, provideDbxLinkify, provideDbxModelService, provideDbxRouterWebUiRouterProviderConfig, provideDbxScreenMediaService, provideDbxStyleService, provideDbxWebFilePreviewServiceEntries, provideDbxWebPageTitleService } from '@dereekb/dbx-web';
+import {
+  DBX_WEB_FILE_PREVIEW_SERVICE_ZIP_PRESET_ENTRY,
+  DEFAULT_DBX_MCP_CONNECT_CLIENTS,
+  GROK_DBX_MCP_CONNECT_CLIENT,
+  provideDbxHelpServices,
+  provideDbxLinkify,
+  provideDbxMcpConnectService,
+  provideDbxModelService,
+  provideDbxRouterWebUiRouterProviderConfig,
+  provideDbxScreenMediaService,
+  provideDbxStyleService,
+  provideDbxWebFilePreviewServiceEntries,
+  provideDbxWebPageTitleService
+} from '@dereekb/dbx-web';
 import {
   DEMO_AUTH_CLAIMS_SERVICE,
   DEMO_API_AUTH_CLAIMS_ONBOARDED_TOKEN,
@@ -481,6 +494,11 @@ export const APP_CONFIG: ApplicationConfig = {
         // production, where it is derived from oidcApiOrigin.
         mcpUrl: environment.oidc.mcpUrl
       }
+    }),
+    // The AI assistants every dbx-mcp-connect-button shows unless it is given its own: the defaults plus Grok. The server comes from
+    // provideDbxFirebaseOidc() above.
+    provideDbxMcpConnectService({
+      clients: [...DEFAULT_DBX_MCP_CONNECT_CLIENTS, GROK_DBX_MCP_CONNECT_CLIENT]
     }),
     // App initializers
     provideAppInitializer(() => {

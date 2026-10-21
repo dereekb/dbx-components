@@ -1,7 +1,27 @@
 import { describe, expect, it } from 'vitest';
-import { CLAUDE_CODE_DBX_MCP_CONNECT_CLIENT, cursorDbxMcpConnectInstallUrl, DEFAULT_DBX_MCP_CONNECT_CLIENTS, DEFAULT_DBX_MCP_CONNECT_SERVER_NAME, type DbxMcpConnectServer, dbxMcpConnectServerLabel, dbxMcpConnectServerName, GROK_DBX_MCP_CONNECT_CLIENT, vscodeDbxMcpConnectInstallUrl } from './mcp.connect';
+import {
+  CLAUDE_CODE_DBX_MCP_CONNECT_CLIENT,
+  CLAUDE_DBX_MCP_CONNECT_CLIENT,
+  CURSOR_DBX_MCP_CONNECT_CLIENT,
+  cursorDbxMcpConnectInstallUrl,
+  DBX_MCP_CONNECT_CLIENT_SECRET_PLACEHOLDER,
+  isConfidentialDbxMcpConnectOAuthClient,
+  DEFAULT_DBX_MCP_CONNECT_CLIENTS,
+  DEFAULT_DBX_MCP_CONNECT_SERVER_NAME,
+  type DbxMcpConnectOAuthClient,
+  type DbxMcpConnectServer,
+  dbxMcpConnectServerLabel,
+  dbxMcpConnectServerName,
+  GROK_DBX_MCP_CONNECT_CLIENT,
+  makeClaudeCodeDbxMcpConnectClient,
+  VSCODE_DBX_MCP_CONNECT_CLIENT,
+  vscodeDbxMcpConnectInstallUrl
+} from './mcp.connect';
 
 const TEST_SERVER: DbxMcpConnectServer = { url: 'https://api.example.com/mcp' };
+const TEST_OAUTH_CLIENT: DbxMcpConnectOAuthClient = { clientId: 'test-client-id', clientSecret: 'test-client-secret' };
+const TEST_PUBLIC_OAUTH_CLIENT: DbxMcpConnectOAuthClient = { clientId: 'test-client-id' };
+const TEST_UNKNOWN_SECRET_OAUTH_CLIENT: DbxMcpConnectOAuthClient = { clientId: 'test-client-id', confidential: true };
 
 describe('dbxMcpConnectServerName()', () => {
   it('should return the configured name', () => {
@@ -40,10 +60,112 @@ describe('dbxMcpConnectServerLabel()', () => {
   });
 });
 
+describe('isConfidentialDbxMcpConnectOAuthClient()', () => {
+  it('should be true when the client secret is set', () => {
+    expect(isConfidentialDbxMcpConnectOAuthClient(TEST_OAUTH_CLIENT)).toBe(true);
+  });
+
+  it('should be false for a client without a secret', () => {
+    expect(isConfidentialDbxMcpConnectOAuthClient(TEST_PUBLIC_OAUTH_CLIENT)).toBe(false);
+  });
+
+  it('should use confidential over the client secret', () => {
+    expect(isConfidentialDbxMcpConnectOAuthClient(TEST_UNKNOWN_SECRET_OAUTH_CLIENT)).toBe(true);
+    expect(isConfidentialDbxMcpConnectOAuthClient({ ...TEST_OAUTH_CLIENT, confidential: false })).toBe(false);
+  });
+});
+
+describe('CLAUDE_DBX_MCP_CONNECT_CLIENT', () => {
+  it('should ask for the client secret of a confidential client whose secret is not known', () => {
+    const instructions = CLAUDE_DBX_MCP_CONNECT_CLIENT.instructions({ server: TEST_SERVER, oauthClient: TEST_UNKNOWN_SECRET_OAUTH_CLIENT });
+    expect((instructions.steps ?? []).some((x) => x.includes('client ID and client secret'))).toBe(true);
+    expect((instructions.steps ?? []).some((x) => x.includes('blank'))).toBe(false);
+  });
+
+  it('should not mention a client id without an OAuth client', () => {
+    const instructions = CLAUDE_DBX_MCP_CONNECT_CLIENT.instructions({ server: TEST_SERVER });
+    expect((instructions.steps ?? []).some((x) => x.includes('client ID'))).toBe(false);
+  });
+
+  it('should add a step for the client id and secret', () => {
+    const instructions = CLAUDE_DBX_MCP_CONNECT_CLIENT.instructions({ server: TEST_SERVER, oauthClient: TEST_OAUTH_CLIENT });
+    expect((instructions.steps ?? []).some((x) => x.includes('client ID and client secret'))).toBe(true);
+  });
+});
+
 describe('CLAUDE_CODE_DBX_MCP_CONNECT_CLIENT', () => {
   it('should build the claude mcp add command', () => {
-    const instructions = CLAUDE_CODE_DBX_MCP_CONNECT_CLIENT.instructions(TEST_SERVER);
+    const instructions = CLAUDE_CODE_DBX_MCP_CONNECT_CLIENT.instructions({ server: TEST_SERVER });
     expect(instructions.snippet?.text).toBe('claude mcp add --transport http example https://api.example.com/mcp');
+  });
+
+  it('should pass the client id and ask for the secret without putting it in the command', () => {
+    const instructions = CLAUDE_CODE_DBX_MCP_CONNECT_CLIENT.instructions({ server: TEST_SERVER, oauthClient: TEST_OAUTH_CLIENT });
+    expect(instructions.snippet?.text).toBe('claude mcp add --transport http --client-id test-client-id --client-secret --callback-port 8080 example https://api.example.com/mcp');
+    expect(instructions.snippet?.text).not.toContain('test-client-secret');
+  });
+
+  it('should ask for the secret of a confidential client whose secret is not known', () => {
+    const instructions = CLAUDE_CODE_DBX_MCP_CONNECT_CLIENT.instructions({ server: TEST_SERVER, oauthClient: TEST_UNKNOWN_SECRET_OAUTH_CLIENT });
+    expect(instructions.snippet?.text).toContain('--client-secret');
+  });
+
+  it('should leave out --client-secret for a public client', () => {
+    const instructions = CLAUDE_CODE_DBX_MCP_CONNECT_CLIENT.instructions({ server: TEST_SERVER, oauthClient: TEST_PUBLIC_OAUTH_CLIENT });
+    expect(instructions.snippet?.text).toBe('claude mcp add --transport http --client-id test-client-id --callback-port 8080 example https://api.example.com/mcp');
+  });
+});
+
+describe('makeClaudeCodeDbxMcpConnectClient()', () => {
+  it('should use the configured callback port', () => {
+    const client = makeClaudeCodeDbxMcpConnectClient({ callbackPort: 3118 });
+    const instructions = client.instructions({ server: TEST_SERVER, oauthClient: TEST_PUBLIC_OAUTH_CLIENT });
+    expect(instructions.snippet?.text).toContain('--callback-port 3118');
+  });
+});
+
+describe('CURSOR_DBX_MCP_CONNECT_CLIENT', () => {
+  it('should offer the install deeplink without an OAuth client', () => {
+    const instructions = CURSOR_DBX_MCP_CONNECT_CLIENT.instructions({ server: TEST_SERVER });
+    expect(instructions.action?.url).toBe(cursorDbxMcpConnectInstallUrl(TEST_SERVER));
+    expect(JSON.parse(instructions.snippet?.text as string)).toEqual({ mcpServers: { example: { url: TEST_SERVER.url } } });
+  });
+
+  it('should put the OAuth client in the auth object and leave out the deeplink', () => {
+    const instructions = CURSOR_DBX_MCP_CONNECT_CLIENT.instructions({ server: TEST_SERVER, oauthClient: TEST_OAUTH_CLIENT });
+    expect(instructions.action).toBeUndefined();
+    expect(JSON.parse(instructions.snippet?.text as string)).toEqual({ mcpServers: { example: { url: TEST_SERVER.url, auth: { CLIENT_ID: 'test-client-id', CLIENT_SECRET: 'test-client-secret' } } } });
+  });
+
+  it('should put a placeholder for the secret of a confidential client whose secret is not known', () => {
+    const instructions = CURSOR_DBX_MCP_CONNECT_CLIENT.instructions({ server: TEST_SERVER, oauthClient: TEST_UNKNOWN_SECRET_OAUTH_CLIENT });
+    expect(JSON.parse(instructions.snippet?.text as string)).toEqual({ mcpServers: { example: { url: TEST_SERVER.url, auth: { CLIENT_ID: 'test-client-id', CLIENT_SECRET: DBX_MCP_CONNECT_CLIENT_SECRET_PLACEHOLDER } } } });
+    expect(instructions.steps?.[0]).toContain(DBX_MCP_CONNECT_CLIENT_SECRET_PLACEHOLDER);
+  });
+
+  it('should leave out CLIENT_SECRET for a public client', () => {
+    const instructions = CURSOR_DBX_MCP_CONNECT_CLIENT.instructions({ server: TEST_SERVER, oauthClient: TEST_PUBLIC_OAUTH_CLIENT });
+    expect(JSON.parse(instructions.snippet?.text as string)).toEqual({ mcpServers: { example: { url: TEST_SERVER.url, auth: { CLIENT_ID: 'test-client-id' } } } });
+  });
+});
+
+describe('VSCODE_DBX_MCP_CONNECT_CLIENT', () => {
+  it('should put the client id in the oauth object and the secret in a step', () => {
+    const instructions = VSCODE_DBX_MCP_CONNECT_CLIENT.instructions({ server: TEST_SERVER, oauthClient: TEST_OAUTH_CLIENT });
+    expect(instructions.action).toBeUndefined();
+    expect(instructions.snippet?.text).not.toContain('test-client-secret');
+    expect(JSON.parse(instructions.snippet?.text as string)).toEqual({ servers: { example: { type: 'http', url: TEST_SERVER.url, oauth: { clientId: 'test-client-id' } } } });
+    expect((instructions.steps ?? []).some((x) => x.includes('Set Client Secret'))).toBe(true);
+  });
+
+  it('should keep the secret step for a confidential client whose secret is not known', () => {
+    const instructions = VSCODE_DBX_MCP_CONNECT_CLIENT.instructions({ server: TEST_SERVER, oauthClient: TEST_UNKNOWN_SECRET_OAUTH_CLIENT });
+    expect((instructions.steps ?? []).some((x) => x.includes('Set Client Secret'))).toBe(true);
+  });
+
+  it('should skip the secret step for a public client', () => {
+    const instructions = VSCODE_DBX_MCP_CONNECT_CLIENT.instructions({ server: TEST_SERVER, oauthClient: TEST_PUBLIC_OAUTH_CLIENT });
+    expect((instructions.steps ?? []).some((x) => x.includes('Set Client Secret'))).toBe(false);
   });
 });
 
@@ -85,7 +207,8 @@ describe('DEFAULT_DBX_MCP_CONNECT_CLIENTS', () => {
 
   it('should produce at least one step for every client', () => {
     [...DEFAULT_DBX_MCP_CONNECT_CLIENTS, GROK_DBX_MCP_CONNECT_CLIENT].forEach((client) => {
-      expect(client.instructions(TEST_SERVER).steps.length).toBeGreaterThan(0);
+      expect(client.instructions({ server: TEST_SERVER }).steps?.length).toBeGreaterThan(0);
+      expect(client.instructions({ server: TEST_SERVER, oauthClient: TEST_OAUTH_CLIENT }).steps?.length).toBeGreaterThan(0);
     });
   });
 });

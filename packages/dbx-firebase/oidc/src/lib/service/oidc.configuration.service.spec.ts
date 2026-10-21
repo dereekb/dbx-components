@@ -32,4 +32,15 @@ describe('DbxFirebaseOidcConfigService', () => {
       expect(service.mcpUrl).toBe(`${pageOrigin}${DEFAULT_OIDC_MCP_PATH}`);
     });
   });
+
+  describe('mcpOAuthClient', () => {
+    it('should return the configured mcpOAuthClient', () => {
+      const mcpOAuthClient = { clientId: 'test-client-id' };
+      expect(configService({ mcpOAuthClient }).mcpOAuthClient).toEqual(mcpOAuthClient);
+    });
+
+    it('should return undefined when no mcpOAuthClient is configured', () => {
+      expect(configService({}).mcpOAuthClient).toBeUndefined();
+    });
+  });
 });

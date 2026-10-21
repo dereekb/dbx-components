@@ -1,29 +1,160 @@
 @use '../../style/theming';
 
+// MARK: Variables
+$dbx-mcp-connect-view-code-font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+$dbx-mcp-connect-view-code-font-size: 13px;
+// tints over whatever surface the view sits on, so it reads the same in a dialog, a page, light, and dark
+$dbx-mcp-connect-view-tint: color-mix(in srgb, var(--mat-sys-on-surface) 4%, transparent);
+$dbx-mcp-connect-view-code-tint: color-mix(in srgb, var(--mat-sys-on-surface) 7%, transparent);
+$dbx-mcp-connect-view-section-gap: var(--dbx-padding-4);
+$dbx-mcp-connect-view-label-gap: var(--dbx-padding-2);
+$dbx-mcp-connect-view-small-icon-size: 18px;
+$dbx-mcp-connect-view-step-badge-size: 24px;
+$dbx-mcp-connect-view-step-badge-font-size: 12px;
+$dbx-mcp-connect-view-step-gap: 12px;
+$dbx-mcp-connect-view-step-padding: 6px;
+// centers the step's first line of text on the badge: (badge size - body-medium line height) / 2
+$dbx-mcp-connect-view-step-text-offset: 2px;
+
 // MARK: Mixin
 @mixin core() {
-  // many clients do not fit on a narrow screen, so the toggle bar scrolls instead of wrapping
+  .dbx-mcp-connect-view-hint {
+    margin: 0 0 $dbx-mcp-connect-view-section-gap;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  .dbx-mcp-connect-view-label {
+    margin-bottom: $dbx-mcp-connect-view-label-gap;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  // MARK: Fields
+  // the server url, client id, and client secret are dbx-click-to-copy-field rows
+  .dbx-mcp-connect-view > .dbx-click-to-copy-field,
+  .dbx-mcp-connect-view-note {
+    margin-bottom: var(--dbx-padding-3);
+  }
+
+  .dbx-mcp-connect-view-clients-label {
+    margin-top: $dbx-mcp-connect-view-section-gap;
+  }
+
+  // MARK: Clients
+  // the toggles stretch to fill the row when they fit, and the row scrolls instead of wrapping when they do not
   .dbx-mcp-connect-view-clients {
+    margin-bottom: var(--dbx-padding-3);
     overflow-x: auto;
 
+    // border-box keeps the group's border inside the 100%, so a row that fits does not scroll by 2px
     .mat-button-toggle-group {
+      box-sizing: border-box;
       flex-wrap: nowrap;
+      min-width: 100%;
     }
 
     .mat-button-toggle {
+      flex: 1 0 auto;
       white-space: nowrap;
+    }
+
+    // Material's 12px label padding pushes six clients past a 600px dialog
+    .mat-button-toggle .mat-button-toggle-label-content {
+      padding: 0 var(--dbx-padding-2);
     }
   }
 
-  .dbx-mcp-connect-view-url {
-    word-break: break-all;
+  // MARK: Instructions
+  // compacts the step blocks with plain properties rather than the --dbx-step-block-* tokens, since declaring those here
+  // would register this partial as their owner in the css token catalog
+  .dbx-mcp-connect-view-instructions {
+    padding: var(--dbx-padding-2) var(--dbx-padding-4) var(--dbx-padding-4);
+    border-radius: var(--mat-sys-corner-medium, 12px);
+    background: $dbx-mcp-connect-view-tint;
+
+    .dbx-step-block {
+      gap: $dbx-mcp-connect-view-step-gap;
+      padding: $dbx-mcp-connect-view-step-padding 0;
+    }
+
+    .dbx-step-block-badge {
+      width: $dbx-mcp-connect-view-step-badge-size;
+      min-width: $dbx-mcp-connect-view-step-badge-size;
+      height: $dbx-mcp-connect-view-step-badge-size;
+      font-size: $dbx-mcp-connect-view-step-badge-font-size;
+    }
+
+    .dbx-step-block-header {
+      font-weight: 400;
+    }
+
+    .dbx-step-block-content {
+      padding-top: $dbx-mcp-connect-view-step-text-offset;
+    }
+
+    > .dbx-mcp-connect-view-label {
+      margin-top: var(--dbx-padding-3);
+    }
   }
 
   // snippets are commands and JSON configs, so they keep their spacing but wrap long urls
   .dbx-mcp-connect-view-snippet {
-    margin: 0;
-    white-space: pre-wrap;
-    word-break: break-all;
+    position: relative;
+    display: block;
+    border-radius: var(--mat-sys-corner-small, 8px);
+    background: $dbx-mcp-connect-view-code-tint;
+
+    pre {
+      margin: 0;
+      padding: var(--dbx-padding-3);
+      // leaves room for the copy icon in the top corner
+      padding-right: calc(var(--dbx-padding-3) * 2 + #{$dbx-mcp-connect-view-small-icon-size});
+      font-family: $dbx-mcp-connect-view-code-font-family;
+      font-size: $dbx-mcp-connect-view-code-font-size;
+      white-space: pre-wrap;
+      word-break: break-all;
+      cursor: pointer;
+    }
+
+    .dbx-click-to-copy-text-icon.mat-icon {
+      position: absolute;
+      top: var(--dbx-padding-3);
+      right: var(--dbx-padding-3);
+      padding-left: 0;
+      color: var(--mat-sys-primary);
+      cursor: pointer;
+    }
+  }
+
+  // custom content a client adds to its instructions
+  .dbx-mcp-connect-view-injection {
+    display: block;
+    margin-top: var(--dbx-padding-3);
+  }
+
+  .dbx-mcp-connect-view-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--dbx-padding-3);
+    margin-top: var(--dbx-padding-4);
+  }
+
+  .dbx-mcp-connect-view-docs-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--dbx-padding-1);
+    color: var(--mat-sys-primary);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    .mat-icon {
+      width: $dbx-mcp-connect-view-small-icon-size;
+      height: $dbx-mcp-connect-view-small-icon-size;
+      font-size: $dbx-mcp-connect-view-small-icon-size;
+    }
   }
 }
 

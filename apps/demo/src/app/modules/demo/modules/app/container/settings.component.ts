@@ -32,6 +32,7 @@ export class DemoAppSettingsComponent {
 
   readonly notificationSettingsRef = inject(DemoAppRouterService).userNotificationSettingsRef();
 
+  // the clients come from provideDbxMcpConnectService() in the app config
   readonly mcpConnectButtonConfig: DbxMcpConnectButtonConfig = {
     buttonStyle: { type: 'stroked' }
   };

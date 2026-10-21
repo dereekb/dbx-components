@@ -11,6 +11,7 @@ import { DbxTextChipsComponent } from './text.chips.component';
 import { DbxNumberWithLimitComponent } from './number.limit.component';
 import { DbxClickToCopyTextDirective } from './copy.text.directive';
 import { DbxClickToCopyTextComponent } from './copy.text.component';
+import { DbxClickToCopyFieldComponent } from './copy.field.component';
 import { DbxStepBlockComponent } from './step.block.component';
 
 const importsAndExports = [
@@ -18,6 +19,7 @@ const importsAndExports = [
   DbxNumberWithLimitComponent,
   DbxClickToCopyTextDirective,
   DbxClickToCopyTextComponent,
+  DbxClickToCopyFieldComponent,
   DbxChipDirective,
   DbxChipListComponent,
   DbxDetailBlockComponent,

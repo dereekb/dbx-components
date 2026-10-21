@@ -1,7 +1,19 @@
 import { Component } from '@angular/core';
-import { CLAUDE_CODE_DBX_MCP_CONNECT_CLIENT, CURSOR_DBX_MCP_CONNECT_CLIENT, DbxContentContainerDirective, type DbxMcpConnectClient, DbxMcpConnectButtonComponent, type DbxMcpConnectButtonConfig, type DbxMcpConnectServer, DbxMcpConnectViewComponent, GROK_DBX_MCP_CONNECT_CLIENT } from '@dereekb/dbx-web';
+import {
+  CLAUDE_CODE_DBX_MCP_CONNECT_CLIENT,
+  CURSOR_DBX_MCP_CONNECT_CLIENT,
+  DbxContentContainerDirective,
+  type DbxMcpConnectClient,
+  DbxMcpConnectButtonComponent,
+  type DbxMcpConnectButtonConfig,
+  type DbxMcpConnectOAuthClient,
+  type DbxMcpConnectServer,
+  DbxMcpConnectViewComponent,
+  GROK_DBX_MCP_CONNECT_CLIENT
+} from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
+import { DOC_EXTENSION_MCP_EXAMPLE_AGENT_CLIENT } from '../component/mcp.example.client.component';
 
 /**
  * Demo page for the MCP connect button and view.
@@ -22,4 +34,11 @@ export class DocExtensionMcpComponent {
   };
 
   readonly exampleClients: DbxMcpConnectClient[] = [CLAUDE_CODE_DBX_MCP_CONNECT_CLIENT, CURSOR_DBX_MCP_CONNECT_CLIENT, GROK_DBX_MCP_CONNECT_CLIENT];
+
+  readonly exampleOAuthClient: DbxMcpConnectOAuthClient = {
+    clientId: 'h5Nq2xWc8kYb3TzR',
+    clientSecret: 'example-client-secret-Jm4Vp9Lr2Qs7'
+  };
+
+  readonly exampleCustomClients: DbxMcpConnectClient[] = [CLAUDE_CODE_DBX_MCP_CONNECT_CLIENT, DOC_EXTENSION_MCP_EXAMPLE_AGENT_CLIENT];
 }

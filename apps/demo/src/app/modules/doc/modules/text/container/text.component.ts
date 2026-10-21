@@ -23,11 +23,13 @@ import {
   DbxNumberWithLimitComponent,
   DbxClickToCopyTextDirective,
   DbxClickToCopyTextComponent,
+  DbxClickToCopyFieldComponent,
+  type DbxClickToCopyFieldComponentConfig,
   DbxIconTileDirective,
   DbxIconTileComponent,
   DbxButtonComponent
 } from '@dereekb/dbx-web';
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { type UnitedStatesAddressWithContact, dollarAmountString, unitedStatesAddressString } from '@dereekb/util';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
@@ -57,6 +59,7 @@ import { LOREM } from '../../shared';
     DbxAnchorComponent,
     DbxClickToCopyTextDirective,
     DbxClickToCopyTextComponent,
+    DbxClickToCopyFieldComponent,
     DbxIconTileDirective,
     DbxIconTileComponent,
     MatIconModule
@@ -71,6 +74,15 @@ export class DocTextTextComponent {
       options: { defaultProtocol: 'https', target: { url: '_blank' }, truncate: 30 }
     });
   }
+
+  readonly copyFieldSecretRevealed = signal(false);
+
+  readonly copyFieldConfig: DbxClickToCopyFieldComponentConfig = {
+    icon: 'badge',
+    text: 'Order #1042',
+    copyText: '1042',
+    clipboardSnackbarMessagesConfig: { successMessage: 'Copied the order number.' }
+  };
 
   readonly noTargetLinkifyConfig: DbxLinkifyConfig = { type: 'no-target' };
   readonly truncatedLinkifyConfig: DbxLinkifyConfig = { type: 'truncated' };

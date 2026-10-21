@@ -16,4 +16,5 @@ export * from './text.chips.component';
 export * from './number.limit.component';
 export * from './copy.text.directive';
 export * from './copy.text.component';
+export * from './copy.field.component';
 export * from './text.module';

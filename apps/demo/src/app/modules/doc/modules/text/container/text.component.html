@@ -159,6 +159,20 @@
         <dbx-click-to-copy-text [clickIconToCopyOnly]="true" [clickToCopyIcon]="'content_paste'">Click To Copy With Custom Icon!</dbx-click-to-copy-text>
       </p>
     </doc-feature-example>
+    <doc-feature-example header="dbx-click-to-copy-field" hint="A read-only field that copies its value when clicked or when its copy icon is clicked. It takes an optional icon, a monospace font for urls, ids, and keys, and can hide a secret until it is revealed. Copying a secret always copies the real value.">
+      <h4>Basic</h4>
+      <dbx-click-to-copy-field class="dbx-mb3" text="Click to copy this value"></dbx-click-to-copy-field>
+      <h4>With an icon and a monospace font</h4>
+      <dbx-click-to-copy-field class="dbx-mb3" icon="link" [monospace]="true" text="https://api.example.com/mcp"></dbx-click-to-copy-field>
+      <dbx-click-to-copy-field class="dbx-mb3" icon="key" [monospace]="true" text="h5Nq2xWc8kYb3TzR"></dbx-click-to-copy-field>
+      <h4>Secret</h4>
+      <dbx-click-to-copy-field class="dbx-mb2" icon="lock" [monospace]="true" [secret]="true" [(revealed)]="copyFieldSecretRevealed" text="example-client-secret-Jm4Vp9Lr2Qs7"></dbx-click-to-copy-field>
+      <p class="dbx-hint">Bind [(revealed)] to follow or set whether the secret is shown. Revealed: {{ copyFieldSecretRevealed() }}</p>
+      <h4>Copy from the icon only</h4>
+      <dbx-click-to-copy-field class="dbx-mb3" [clickIconToCopyOnly]="true" text="Select part of this text, or copy all of it with the icon"></dbx-click-to-copy-field>
+      <h4>Config object, copying different text than it shows</h4>
+      <dbx-click-to-copy-field [config]="copyFieldConfig"></dbx-click-to-copy-field>
+    </doc-feature-example>
     <doc-feature-example header="dbx-label-block">
       <dbx-label-block header="A custom label">
         {{ lorem }}

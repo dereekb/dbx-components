@@ -966,7 +966,7 @@
       "selector": "dbx-mcp-connect-view",
       "className": "DbxMcpConnectViewComponent",
       "module": "@dereekb/dbx-web",
-      "description": "Shows an MCP server's url and short instructions for connecting AI assistants, such as Claude, Claude Code, ChatGPT, Cursor, and VS Code, to it.\n\nThe server comes from the `server` input, then the `config` input, then the app's {@link DBX_MCP_CONNECT_SERVER}. Apps that call\n`provideDbxFirebaseOidc()` provide that token, so the view needs no inputs there.",
+      "description": "Shows an MCP server's url and short instructions for connecting AI assistants, such as Claude, Claude Code, ChatGPT, Cursor, and VS Code, to it.\n\nThe server comes from the `server` input, then the `config` input, then the app's {@link DBX_MCP_CONNECT_SERVER}. Apps that call\n`provideDbxFirebaseOidc()` provide that token, so the view needs no inputs there.\n\nThe clients come from the `clients` input, then the `config` input, then the app's {@link DbxMcpConnectService} from\n`provideDbxMcpConnectService()`, then {@link DEFAULT_DBX_MCP_CONNECT_CLIENTS}.\n\nPass an `oauthClient` when the assistants must sign in with a pre-registered OAuth client. The view then shows its client id and secret,\nhiding the secret until the user reveals it, and each client's instructions say where to enter them.",
       "inputs": [
         {
           "name": "config",
@@ -977,6 +977,12 @@
         {
           "name": "server",
           "type": "Maybe<DbxMcpConnectServer>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "oauthClient",
+          "type": "Maybe<DbxMcpConnectOAuthClient>",
           "description": "",
           "required": false
         },
@@ -1004,7 +1010,7 @@
         "mcp-connect-button",
         "click-to-copy-text"
       ],
-      "example": "<dbx-mcp-connect-view [server]=\"{ url: 'https://api.example.com/mcp', label: 'Example' }\" [clients]=\"clients\"></dbx-mcp-connect-view>",
+      "example": "<dbx-mcp-connect-view [server]=\"{ url: 'https://api.example.com/mcp', label: 'Example' }\" [oauthClient]=\"{ clientId: 'abc123' }\" [clients]=\"clients\"></dbx-mcp-connect-view>",
       "minimalExample": "<dbx-mcp-connect-view></dbx-mcp-connect-view>"
     },
     {
@@ -2406,74 +2412,170 @@
       "minimalExample": "<span [dbxTextColor]=\"'primary'\"></span>"
     },
     {
+      "slug": "click-to-copy-field",
+      "category": "text",
+      "kind": "component",
+      "selector": "dbx-click-to-copy-field",
+      "className": "DbxClickToCopyFieldComponent",
+      "module": "@dereekb/dbx-web",
+      "description": "A read-only field that shows a value, such as a url, id, or key, and copies it when clicked or when its copy icon is clicked.\n\nCopying is done by a wrapped `dbx-click-to-copy-text`, and the field passes its copy options (`copyText`, `showIcon`, `clickToCopyIcon`,\n`clickIconToCopyOnly`, and the clipboard snackbar options) through to it. Set `clickIconToCopyOnly` to leave the value selectable.\n\nSet `secret` to hide the value until the user reveals it with the field's show/hide button. Bind `[(revealed)]` to follow or control\nwhether the secret is shown, such as to hide the same secret elsewhere on the page.\n\nAccepts either individual inputs or a single `config` object. Individual inputs take precedence over config values.",
+      "inputs": [
+        {
+          "name": "config",
+          "type": "Maybe<DbxClickToCopyFieldComponentConfig>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "text",
+          "type": "Maybe<string>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "icon",
+          "type": "Maybe<string>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "monospace",
+          "type": "Maybe<boolean>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "secret",
+          "type": "Maybe<boolean>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "hiddenText",
+          "type": "Maybe<string>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "copyText",
+          "type": "Maybe<string>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "showIcon",
+          "type": "Maybe<boolean>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "clickToCopyIcon",
+          "type": "Maybe<string>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "clickIconToCopyOnly",
+          "type": "Maybe<boolean>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "clipboardSnackbarMessagesEnabled",
+          "type": "Maybe<boolean>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "clipboardSnackbarMessagesConfig",
+          "type": "Maybe<CopyToClipboardFunctionWithSnackbarMessageSnackbarConfig>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "revealed",
+          "type": "boolean",
+          "description": "Whether a secret value is shown. Hidden at first.",
+          "required": false,
+          "default": "false"
+        }
+      ],
+      "outputs": [],
+      "relatedSlugs": [
+        "click-to-copy-text"
+      ],
+      "example": "<dbx-click-to-copy-field icon=\"key\" [monospace]=\"true\" [text]=\"clientId\"></dbx-click-to-copy-field>\n<dbx-click-to-copy-field icon=\"lock\" [monospace]=\"true\" [secret]=\"true\" [text]=\"clientSecret\"></dbx-click-to-copy-field>",
+      "minimalExample": "<dbx-click-to-copy-field [text]=\"value\"></dbx-click-to-copy-field>"
+    },
+    {
       "slug": "click-to-copy-text",
       "category": "text",
       "kind": "component",
       "selector": "dbx-click-to-copy-text",
       "className": "DbxClickToCopyTextComponent",
       "module": "@dereekb/dbx-web",
-      "description": "Wraps projected content with click-to-copy functionality and a copy icon button.\n\nClicking the text or the icon copies the text to the clipboard and optionally shows a snackbar confirmation.",
+      "description": "Wraps projected content with click-to-copy functionality and a copy icon button.\n\nClicking the text or the icon copies the text to the clipboard and optionally shows a snackbar confirmation.\n\nAccepts either individual inputs or a single `config` object. Individual inputs take precedence over config values.",
       "inputs": [
+        {
+          "name": "config",
+          "type": "Maybe<DbxClickToCopyTextComponentConfig>",
+          "description": "",
+          "required": false
+        },
         {
           "name": "copyText",
           "type": "Maybe<string>",
           "description": "",
-          "required": false,
-          "default": "undefined"
+          "required": false
         },
         {
           "name": "showIcon",
           "type": "Maybe<boolean>",
           "description": "",
-          "required": false,
-          "default": "true"
+          "required": false
         },
         {
           "name": "highlighted",
-          "type": "boolean",
+          "type": "Maybe<boolean>",
           "description": "",
-          "required": false,
-          "default": "false"
+          "required": false
         },
         {
           "name": "clipboardSnackbarMessagesConfig",
           "type": "Maybe<CopyToClipboardFunctionWithSnackbarMessageSnackbarConfig>",
           "description": "",
-          "required": false,
-          "default": "undefined"
+          "required": false
         },
         {
           "name": "clipboardSnackbarMessagesEnabled",
-          "type": "boolean",
+          "type": "Maybe<boolean>",
           "description": "",
-          "required": false,
-          "default": "true"
+          "required": false
         },
         {
           "name": "clickToCopyIcon",
-          "type": "string",
+          "type": "Maybe<string>",
           "description": "",
-          "required": false,
-          "default": "'content_copy'"
+          "required": false
         },
         {
           "name": "clickIconToCopyOnly",
-          "type": "boolean",
+          "type": "Maybe<boolean>",
           "description": "",
-          "required": false,
-          "default": "false"
+          "required": false
         }
       ],
       "outputs": [],
       "contentProjection": "<ng-content></ng-content>",
       "relatedSlugs": [
-        "chip"
+        "chip",
+        "click-to-copy-field"
       ],
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "example": "<dbx-click-to-copy-text [text]=\"userId\"></dbx-click-to-copy-text>",
-      "minimalExample": "<dbx-click-to-copy-text [text]=\"value\"></dbx-click-to-copy-text>"
+      "example": "<dbx-click-to-copy-text [copyText]=\"userId\">User {{ userId }}</dbx-click-to-copy-text>",
+      "minimalExample": "<dbx-click-to-copy-text>{{ value }}</dbx-click-to-copy-text>"
     },
     {
       "slug": "detail-block",
