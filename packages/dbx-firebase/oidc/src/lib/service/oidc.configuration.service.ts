@@ -1,5 +1,6 @@
 import { DOCUMENT, Injectable, inject, type Type } from '@angular/core';
 import { type SegueRefOrSegueRefRouterLink } from '@dereekb/dbx-core';
+import { type DbxMcpConnectOAuthClient } from '@dereekb/dbx-web';
 import { type Maybe, type WebsiteUrl } from '@dereekb/util';
 import { KNOWN_MCP_CLIENT_OIDC_REDIRECT_URI_SUGGESTIONS, type OidcProviderProfileDetails, type OidcRedirectUriSuggestion, type OidcScopeDetails, type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
 import { type AbstractDbxFirebaseOAuthConsentScopeViewComponent } from '../interaction/components/oauth.consent.scope.view.component';
@@ -56,6 +57,14 @@ export abstract class DbxFirebaseOidcConfig {
    * the OAuth resource.
    */
   readonly mcpUrl?: Maybe<WebsiteUrl>;
+  /**
+   * Pre-registered OAuth client that `dbx-mcp-connect-button` and `dbx-mcp-connect-view` tell users to sign in to the MCP server with.
+   *
+   * Set it when the server does not offer dynamic client registration and the app has one client for every user. It ships with the app, so
+   * leave out the client secret unless it is fine for every user to see it. Views given their own client, such as one a user registered, use
+   * that one instead.
+   */
+  readonly mcpOAuthClient?: Maybe<DbxMcpConnectOAuthClient>;
   /**
    * Path to the authorization endpoint. Defaults to '/oidc/auth'.
    */
@@ -137,6 +146,15 @@ export class DbxFirebaseOidcConfigService {
    */
   get mcpUrl(): WebsiteUrl {
     return this.config.mcpUrl ?? `${this.config.oidcApiOrigin ?? this.document.location.origin}${DEFAULT_OIDC_MCP_PATH}`;
+  }
+
+  /**
+   * Pre-registered OAuth client for the app's MCP server.
+   *
+   * @returns The configured {@link DbxFirebaseOidcConfig.mcpOAuthClient}, if any.
+   */
+  get mcpOAuthClient(): Maybe<DbxMcpConnectOAuthClient> {
+    return this.config.mcpOAuthClient;
   }
 
   get tokenEndpointAuthMethods(): OidcTokenEndpointAuthMethod[] {

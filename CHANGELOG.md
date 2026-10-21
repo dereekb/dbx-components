@@ -1,3 +1,20 @@
+# [14.23.0](https://github.com/dereekb/dbx-components/compare/v14.22.0-dev...v14.23.0) (2026-10-21)
+
+### Bug Fixes
+
+- **dbx-web:** keep computed autofix from leaving `({ })` around body ([dd00e3b3](https://github.com/dereekb/dbx-components/commit/dd00e3b354b8afbfc7d8045ff96b10e3bd51fee7))
+
+### Build System
+
+- build in-repo eslint plugins before lint ([48a3a5c3](https://github.com/dereekb/dbx-components/commit/48a3a5c39e99b674a02024f6390519b1e5a33b45))
+- lint fix + mcp regeneration + firestore indexes + peer dep sync ([b729bc95](https://github.com/dereekb/dbx-components/commit/b729bc95ef588a33f6c2783e8648333c64eb172a))
+
+### Features
+
+- **dbx-web:** add MCP connect OAuth clients, app service, copy field ([2c943bc1](https://github.com/dereekb/dbx-components/commit/2c943bc17833c07f6ca2557278539e206e6360b5))
+- **demo:** add MCP connect button to the demo app settings page ([039a5a32](https://github.com/dereekb/dbx-components/commit/039a5a324bfa3c6f59ef27e68950a2ae23fac2f2))
+- **firebase-server-mcp:** configurable cli-token tool required roles ([0d7933d4](https://github.com/dereekb/dbx-components/commit/0d7933d413209bd0009bda26bc217e43950287e5))
+
 # [14.22.0](https://github.com/dereekb/dbx-components/compare/v14.21.0-dev...v14.22.0) (2026-10-20)
 
 ### Build System

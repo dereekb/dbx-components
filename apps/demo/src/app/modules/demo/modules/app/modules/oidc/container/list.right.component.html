@@ -4,6 +4,9 @@
       <div class="dbx-pt3 dbx-mb3">
         <dbx-firebase-oidc-entry-client-view></dbx-firebase-oidc-entry-client-view>
       </div>
+      <dbx-section class="dbx-mb3" [elevate]="true" header="Connect an AI Assistant" hint="Sign an AI assistant in to the demo's MCP server with this client. Its redirect URIs must include the assistant's.">
+        <dbx-mcp-connect-button [config]="mcpConnectButtonConfigSignal()"></dbx-mcp-connect-button>
+      </dbx-section>
       <dbx-section class="dbx-mb3" [elevate]="true" header="Update Client">
         <dbx-firebase-oidc-entry-client-update></dbx-firebase-oidc-entry-client-update>
       </dbx-section>

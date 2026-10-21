@@ -46,8 +46,8 @@ export interface ProvideDbxFirebaseOidcConfig {
 /**
  * Provides the OIDC-related Angular services and collections for `@dereekb/dbx-firebase/oidc`.
  *
- * Also provides {@link DBX_MCP_CONNECT_SERVER} from {@link DbxFirebaseOidcConfigService.mcpUrl}, so `dbx-mcp-connect-button` works without
- * any other config.
+ * Also provides {@link DBX_MCP_CONNECT_SERVER} from {@link DbxFirebaseOidcConfigService.mcpUrl} and {@link DbxFirebaseOidcConfigService.mcpOAuthClient},
+ * so `dbx-mcp-connect-button` works without any other config.
  *
  * When `oauthInteractionRoute` is configured in {@link DbxFirebaseOidcConfig}, an app initializer
  * is registered that adds that route to the {@link DbxAppAuthRouterService} ignored routes set,
@@ -62,7 +62,10 @@ export function provideDbxFirebaseOidc(config: ProvideDbxFirebaseOidcConfig): En
     DbxFirebaseOidcConfigService,
     {
       provide: DBX_MCP_CONNECT_SERVER,
-      useFactory: (): DbxMcpConnectServer => ({ url: inject(DbxFirebaseOidcConfigService).mcpUrl })
+      useFactory: (): DbxMcpConnectServer => {
+        const oidcConfigService = inject(DbxFirebaseOidcConfigService);
+        return { url: oidcConfigService.mcpUrl, oauthClient: oidcConfigService.mcpOAuthClient };
+      }
     }
   ];
 

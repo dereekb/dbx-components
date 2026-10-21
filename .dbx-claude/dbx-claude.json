@@ -36,6 +36,7 @@
           { "name": "regenerate dbx-components-mcp files", "command": ["./regenerate-dbx-components-mcp.sh"] },
           { "name": "regenerate firestore.indexes.json", "command": ["./regenerate-firestore-indexes.sh"] },
           { "name": "sync internal peer dependency versions", "command": ["node", "tools/scripts/sync-peer-deps.mjs"] },
+          { "name": "build eslint plugins", "command": ["npx", "nx", "run", "workspace:build-eslint-plugins"] },
           { "name": "lint-fix", "command": ["./lint-fix-all.sh"], "allowFailure": true }
         ],
         "prepareCommitMessage": "build: lint fix + mcp regeneration + firestore indexes + peer dep sync",

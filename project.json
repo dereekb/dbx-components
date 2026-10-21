@@ -14,9 +14,16 @@
         "color": true
       }
     },
+    "build-eslint-plugins": {
+      "executor": "nx:noop",
+      "dependsOn": [{ "projects": ["util", "nestjs", "firebase", "dbx-web", "dbx-cli"], "target": "build" }],
+      "metadata": {
+        "description": "Builds the in-repo ESLint plugins that eslint.config.mjs / eslint.config.angular.mjs load from dist (via eslint.plugins.mjs): util-eslint, nestjs-eslint, firebase-eslint, dbx-web-eslint and dbx-cli-eslint. Lint runs the BUILT plugins, so a rule fix in source does nothing until this runs -- the lint targets below depend on it. Builds the parent packages' `build` (not the plugins' `build-base`) because a parent build-base wipes its whole dist folder, and only the parent `build` rebuilds every child into it."
+      }
+    },
     "lint-all": {
       "executor": "nx:run-commands",
-      "dependsOn": [],
+      "dependsOn": ["build-eslint-plugins"],
       "options": {
         "description": "",
         "command": "npx nx run-many --tui=false --parallel=6 --exclude=workspace,util-test,firebase-test,firebase-server-test,dbx-cli-test --target=lint"
@@ -24,7 +31,7 @@
     },
     "lint-fix-all": {
       "executor": "nx:run-commands",
-      "dependsOn": [],
+      "dependsOn": ["build-eslint-plugins"],
       "options": {
         "description": "",
         "command": "npx nx run-many --tui=false --parallel=6 --exclude=workspace,util-test,firebase-test,firebase-server-test,dbx-cli-test --target=lint --fix"
@@ -60,6 +67,7 @@
     },
     "lint-fix-cache": {
       "executor": "nx:run-commands",
+      "dependsOn": ["build-eslint-plugins"],
       "metadata": {
         "description": "Lint every project via dbx-cli-lint-cache with --fix, writing grouped JSON caches to .tmp/lint-cache/. Rebuilds the CLI bundle first if its source changed."
       },

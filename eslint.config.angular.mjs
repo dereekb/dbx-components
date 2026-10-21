@@ -1,6 +1,6 @@
 import nx from '@nx/eslint-plugin';
 import baseLibraryConfig from './eslint.config.library.mjs';
-import { DBX_WEB_ESLINT_PLUGIN } from './dist/packages/dbx-web/eslint/index.esm.js';
+import { DBX_WEB_ESLINT_PLUGIN } from './eslint.plugins.mjs';
 
 export default [
   ...baseLibraryConfig,

@@ -12,6 +12,11 @@ $dbx-label-padded-padding: var(--dbx-padding-2);
 $dbx-detail-block-bottom-padding: var(--dbx-padding-3);
 $dbx-detail-block-content-offset: 30px;
 $click-to-copy-icon-size: 18px;
+$dbx-click-to-copy-field-icon-size: 18px;
+$dbx-click-to-copy-field-monospace-font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+$dbx-click-to-copy-field-monospace-font-size: 13px;
+// tints over whatever surface the field sits on, so it reads the same in a dialog, a page, light, and dark
+$dbx-click-to-copy-field-background: color-mix(in srgb, var(--mat-sys-on-surface) 4%, transparent);
 $dbx-detail-block-big-header-icon-size: 18px;
 $dbx-detail-block-tile-size: 28px;
 $dbx-detail-block-tile-icon-size: 16px;
@@ -791,6 +796,98 @@ $dbx-step-block-badge-font-weight: 600;
     height: $click-to-copy-icon-size;
     font-size: $click-to-copy-icon-size;
     padding-left: 4px;
+  }
+
+  // MARK: Click To Copy Field
+  /// @dbx-utility click-to-copy-field
+  /// @intent read-only copyable field — `<dbx-click-to-copy-field>` body that shows a value (url, id, key, secret) in a bordered, tinted row with an optional leading icon, the copy icon at the end, and a show/hide button for secrets
+  /// @role layout
+  /// @component DbxClickToCopyFieldComponent
+  /// @scope component-class
+  /// @see-also click-to-copy-field-monospace
+  .dbx-click-to-copy-field {
+    display: flex;
+    align-items: center;
+    padding: var(--dbx-padding-2) var(--dbx-padding-3);
+    border: 1px solid var(--mat-sys-outline-variant);
+    border-radius: var(--mat-sys-corner-small, 8px);
+    background: $dbx-click-to-copy-field-background;
+
+    > .dbx-click-to-copy-text-component {
+      display: flex;
+      flex: 1 1 auto;
+      align-items: center;
+      min-width: 0;
+
+      // the click-to-copy content span
+      > span {
+        display: flex;
+        flex: 1 1 auto;
+        align-items: center;
+        gap: var(--dbx-padding-2);
+        min-width: 0;
+        cursor: pointer;
+      }
+    }
+
+    .dbx-click-to-copy-text-icon.mat-icon {
+      padding-left: var(--dbx-padding-2);
+      color: var(--mat-sys-primary);
+      cursor: pointer;
+    }
+  }
+
+  .dbx-click-to-copy-field-icon.mat-icon {
+    flex-shrink: 0;
+    width: $dbx-click-to-copy-field-icon-size;
+    height: $dbx-click-to-copy-field-icon-size;
+    font-size: $dbx-click-to-copy-field-icon-size;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  .dbx-click-to-copy-field-text {
+    color: var(--mat-sys-on-surface);
+    word-break: break-all;
+  }
+
+  // with clickIconToCopyOnly only the icon copies, so the value is selectable text rather than a click target
+  .dbx-click-to-copy-field-icon-only > .dbx-click-to-copy-text-component > span {
+    cursor: auto;
+  }
+
+  /// @dbx-utility click-to-copy-field-monospace
+  /// @intent monospace value for `<dbx-click-to-copy-field [monospace]="true">` — urls, ids, keys, and codes
+  /// @role text
+  /// @component DbxClickToCopyFieldComponent
+  /// @scope component-class
+  /// @see-also click-to-copy-field
+  .dbx-click-to-copy-field-monospace .dbx-click-to-copy-field-text {
+    font-family: $dbx-click-to-copy-field-monospace-font-family;
+    font-size: $dbx-click-to-copy-field-monospace-font-size;
+  }
+
+  // the show/hide button beside a secret's copy icon
+  .dbx-click-to-copy-field-reveal {
+    display: flex;
+    flex-shrink: 0;
+    margin: 0 0 0 var(--dbx-padding-2);
+    padding: 0;
+    border: none;
+    border-radius: var(--mat-sys-corner-full, 50%);
+    background: none;
+    color: var(--mat-sys-on-surface-variant);
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 2px solid var(--mat-sys-primary);
+      outline-offset: 2px;
+    }
+
+    .mat-icon {
+      width: $dbx-click-to-copy-field-icon-size;
+      height: $dbx-click-to-copy-field-icon-size;
+      font-size: $dbx-click-to-copy-field-icon-size;
+    }
   }
 }
 

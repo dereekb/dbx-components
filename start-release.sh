@@ -23,6 +23,11 @@ echo regenerating firestore.indexes.json before starting release
 echo syncing internal peer dependency versions before starting release
 node tools/scripts/sync-peer-deps.mjs || exit 1
 
+# lint loads the in-repo ESLint plugins from dist, so build them first -- a stale or missing bundle runs old rule code.
+# Run on its own so a failed build stops the release; lint-fix-all.sh's exit code is not checked.
+echo building the in-repo eslint plugins before lint-fix
+npx nx run workspace:build-eslint-plugins || exit 1
+
 echo running lint-fix before starting release
 ./lint-fix-all.sh
 

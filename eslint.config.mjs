@@ -5,11 +5,7 @@ import jsdocPlugin from 'eslint-plugin-jsdoc';
 import sonarjsPlugin from 'eslint-plugin-sonarjs';
 import unicornPlugin from 'eslint-plugin-unicorn';
 import * as jsoncParser from 'jsonc-eslint-parser';
-import { NESTJS_ESLINT_PLUGIN } from './dist/packages/nestjs/eslint/index.esm.js';
-import { DBX_WEB_ESLINT_PLUGIN } from './dist/packages/dbx-web/eslint/index.esm.js';
-import { UTIL_ESLINT_PLUGIN } from './dist/packages/util/eslint/index.esm.js';
-import { FIREBASE_ESLINT_PLUGIN } from './dist/packages/firebase/eslint/index.esm.js';
-import { DBX_CLI_ESLINT_PLUGIN } from './dist/packages/dbx-cli/eslint/index.esm.js';
+import { NESTJS_ESLINT_PLUGIN, DBX_WEB_ESLINT_PLUGIN, UTIL_ESLINT_PLUGIN, FIREBASE_ESLINT_PLUGIN, DBX_CLI_ESLINT_PLUGIN } from './eslint.plugins.mjs';
 
 export default [
   importPlugin.flatConfigs.recommended,

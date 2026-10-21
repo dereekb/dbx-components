@@ -1,6 +1,6 @@
 <dbx-content-container>
   <doc-feature-layout header="MCP Connect" hint="Shows users the app's MCP server URL and how to connect AI assistants such as Claude, Claude Code, ChatGPT, Cursor, and VS Code to it.">
-    <doc-feature-example header="dbx-mcp-connect-button" hint="Opens a dialog with the MCP server URL and per-client instructions. It needs no config here: provideDbxFirebaseOidc() provides the server URL from the app's OIDC config.">
+    <doc-feature-example header="dbx-mcp-connect-button" hint="Opens a dialog with the MCP server URL and per-client instructions. It needs no config here: provideDbxFirebaseOidc() provides the server URL from the app's OIDC config, and provideDbxMcpConnectService() sets the app's clients (the defaults plus Grok).">
       <dbx-mcp-connect-button></dbx-mcp-connect-button>
       <h3>With a custom header and button style</h3>
       <dbx-mcp-connect-button [config]="styledButtonConfig"></dbx-mcp-connect-button>
@@ -8,6 +8,14 @@
 
     <doc-feature-example header="dbx-mcp-connect-view" hint="The dialog's content, shown inline. It uses the same server URL from the OIDC config.">
       <dbx-mcp-connect-view></dbx-mcp-connect-view>
+    </doc-feature-example>
+
+    <doc-feature-example header="dbx-mcp-connect-view with an OAuth client" hint="A pre-registered OAuth client, for servers without dynamic client registration. The client ID and secret are shown with the server URL and used in each client's steps, and the secret stays hidden until revealed.">
+      <dbx-mcp-connect-view [server]="exampleServer" [oauthClient]="exampleOAuthClient"></dbx-mcp-connect-view>
+    </doc-feature-example>
+
+    <doc-feature-example header="dbx-mcp-connect-view with a custom client" hint="A custom client whose instructions add a dbx-injection component after the steps. Custom clients can also be added app-wide through provideDbxMcpConnectService() or DbxMcpConnectService.registerClients().">
+      <dbx-mcp-connect-view [server]="exampleServer" [oauthClient]="exampleOAuthClient" [clients]="exampleCustomClients" defaultClientId="example-agent"></dbx-mcp-connect-view>
     </doc-feature-example>
 
     <doc-feature-example header="dbx-mcp-connect-view with overrides" hint="An explicit server and a reduced client list that includes Grok, which is not in the default list.">
