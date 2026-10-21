@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { DbxContentLayoutModule, DbxSectionPageComponent, DbxSectionComponent, DbxLabelBlockComponent, DbxButtonComponent, DbxAnchorComponent, DbxButtonSpacerDirective } from '@dereekb/dbx-web';
+import { DbxContentLayoutModule, DbxSectionPageComponent, DbxSectionComponent, DbxLabelBlockComponent, DbxButtonComponent, DbxAnchorComponent, DbxButtonSpacerDirective, DbxMcpConnectButtonComponent, type DbxMcpConnectButtonConfig } from '@dereekb/dbx-web';
 import { DbxFirebaseAuthService, DbxFirebaseStorageService, DbxFirebaseExternalConnectionsComponent, DbxFirebaseManageAuthProvidersComponent, DbxFirebaseNotificationHealthCheckDialogButtonComponent, DbxFirebaseNotificationUserDocumentStoreDirective } from '@dereekb/dbx-firebase';
 import { JsonPipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -18,6 +18,7 @@ import { DemoAppRouterService } from '../demo.app.router.service';
     DbxButtonComponent,
     DbxAnchorComponent,
     DbxButtonSpacerDirective,
+    DbxMcpConnectButtonComponent,
     DbxFirebaseExternalConnectionsComponent,
     DbxFirebaseManageAuthProvidersComponent,
     DbxFirebaseNotificationHealthCheckDialogButtonComponent,
@@ -30,6 +31,10 @@ export class DemoAppSettingsComponent {
   readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);
 
   readonly notificationSettingsRef = inject(DemoAppRouterService).userNotificationSettingsRef();
+
+  readonly mcpConnectButtonConfig: DbxMcpConnectButtonConfig = {
+    buttonStyle: { type: 'stroked' }
+  };
 
   // currentUid$ rather than userIdentifier$: this page is dbxAppContextState="public", so a signed-out
   // visitor genuinely reaches it, and userIdentifier$ would substitute NO_AUTH_USER_IDENTIFIER ('0')
