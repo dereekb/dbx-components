@@ -181,8 +181,9 @@ export class DbxMcpConnectViewComponent {
   });
 
   readonly oauthClientSignal = computed(() => {
+    const server = this.serverSignal();
     const config = this.config();
-    return this.oauthClient() ?? config?.oauthClient ?? this.serverSignal()?.oauthClient;
+    return this.oauthClient() ?? config?.oauthClient ?? server?.oauthClient;
   });
 
   /**
@@ -221,18 +222,20 @@ export class DbxMcpConnectViewComponent {
   });
 
   readonly instructionsSignal = computed(() => {
+    const oauthClient = this.oauthClientSignal();
     const server = this.serverSignal();
     const client = this.selectedClientSignal();
-    return server && client ? client.instructions({ server, oauthClient: this.oauthClientSignal() }) : undefined;
+    return server && client ? client.instructions({ server, oauthClient: oauthClient }) : undefined;
   });
 
   /**
    * The snippet as displayed, with the client secret hidden until the user reveals it. Copying the snippet always copies the real text.
    */
   readonly snippetDisplayTextSignal = computed(() => {
+    const showSecret = this.showSecretSignal();
     const text = this.instructionsSignal()?.snippet?.text;
     const clientSecret = this.oauthClientSignal()?.clientSecret;
-    return text && clientSecret && !this.showSecretSignal() ? text.replaceAll(clientSecret, DEFAULT_DBX_CLICK_TO_COPY_FIELD_HIDDEN_TEXT) : text;
+    return text && clientSecret && !showSecret ? text.replaceAll(clientSecret, DEFAULT_DBX_CLICK_TO_COPY_FIELD_HIDDEN_TEXT) : text;
   });
 
   readonly actionAnchorSignal = computed<Maybe<ClickableUrl>>(() => {

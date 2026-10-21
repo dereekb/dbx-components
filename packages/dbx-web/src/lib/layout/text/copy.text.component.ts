@@ -101,11 +101,32 @@ export class DbxClickToCopyTextComponent {
   readonly clickToCopyIcon = input<Maybe<string>>();
   readonly clickIconToCopyOnly = input<Maybe<boolean>>();
 
-  readonly copyTextSignal = computed(() => this.copyText() ?? this.config()?.copyText);
-  readonly showIconSignal = computed(() => this.showIcon() ?? this.config()?.showIcon ?? true);
-  readonly highlightedSignal = computed(() => this.highlighted() ?? this.config()?.highlighted ?? false);
-  readonly clipboardSnackbarMessagesConfigSignal = computed(() => this.clipboardSnackbarMessagesConfig() ?? this.config()?.clipboardSnackbarMessagesConfig);
-  readonly clipboardSnackbarMessagesEnabledSignal = computed(() => this.clipboardSnackbarMessagesEnabled() ?? this.config()?.clipboardSnackbarMessagesEnabled ?? true);
-  readonly clickToCopyIconSignal = computed(() => this.clickToCopyIcon() ?? this.config()?.clickToCopyIcon ?? DEFAULT_DBX_CLICK_TO_COPY_TEXT_ICON);
-  readonly clickIconToCopyOnlySignal = computed(() => this.clickIconToCopyOnly() ?? this.config()?.clickIconToCopyOnly ?? false);
+  readonly copyTextSignal = computed(() => {
+    const config = this.config();
+    return this.copyText() ?? config?.copyText;
+  });
+  readonly showIconSignal = computed(() => {
+    const config = this.config();
+    return this.showIcon() ?? config?.showIcon ?? true;
+  });
+  readonly highlightedSignal = computed(() => {
+    const config = this.config();
+    return this.highlighted() ?? config?.highlighted ?? false;
+  });
+  readonly clipboardSnackbarMessagesConfigSignal = computed(() => {
+    const config = this.config();
+    return this.clipboardSnackbarMessagesConfig() ?? config?.clipboardSnackbarMessagesConfig;
+  });
+  readonly clipboardSnackbarMessagesEnabledSignal = computed(() => {
+    const config = this.config();
+    return this.clipboardSnackbarMessagesEnabled() ?? config?.clipboardSnackbarMessagesEnabled ?? true;
+  });
+  readonly clickToCopyIconSignal = computed(() => {
+    const config = this.config();
+    return this.clickToCopyIcon() ?? config?.clickToCopyIcon ?? DEFAULT_DBX_CLICK_TO_COPY_TEXT_ICON;
+  });
+  readonly clickIconToCopyOnlySignal = computed(() => {
+    const config = this.config();
+    return this.clickIconToCopyOnly() ?? config?.clickIconToCopyOnly ?? false;
+  });
 }

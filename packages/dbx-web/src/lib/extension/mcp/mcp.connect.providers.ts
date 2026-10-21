@@ -27,13 +27,13 @@ export interface ProvideDbxMcpConnectServiceConfig {
  * Creates EnvironmentProviders for {@link DbxMcpConnectService}, which sets the AI assistants that `dbx-mcp-connect-view` and
  * `dbx-mcp-connect-button` show across the app.
  *
+ * @param config - Optional app-level config.
+ * @returns EnvironmentProviders.
+ *
  * @example
  * ```ts
  * provideDbxMcpConnectService({ clients: [...DEFAULT_DBX_MCP_CONNECT_CLIENTS, GROK_DBX_MCP_CONNECT_CLIENT], defaultClientId: 'claude-code' })
  * ```
- *
- * @param config - Optional app-level config.
- * @returns EnvironmentProviders.
  *
  * @__NO_SIDE_EFFECTS__
  */

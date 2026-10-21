@@ -109,20 +109,36 @@ export class DbxClickToCopyFieldComponent {
    */
   readonly revealed = model<boolean>(false);
 
-  readonly textSignal = computed(() => this.text() ?? this.config()?.text);
-  readonly iconSignal = computed(() => this.icon() ?? this.config()?.icon);
-  readonly monospaceSignal = computed(() => this.monospace() ?? this.config()?.monospace ?? false);
-  readonly secretSignal = computed(() => this.secret() ?? this.config()?.secret ?? false);
-  readonly hiddenTextSignal = computed(() => this.hiddenText() ?? this.config()?.hiddenText ?? DEFAULT_DBX_CLICK_TO_COPY_FIELD_HIDDEN_TEXT);
+  readonly textSignal = computed(() => {
+    const config = this.config();
+    return this.text() ?? config?.text;
+  });
+  readonly iconSignal = computed(() => {
+    const config = this.config();
+    return this.icon() ?? config?.icon;
+  });
+  readonly monospaceSignal = computed(() => {
+    const config = this.config();
+    return this.monospace() ?? config?.monospace ?? false;
+  });
+  readonly secretSignal = computed(() => {
+    const config = this.config();
+    return this.secret() ?? config?.secret ?? false;
+  });
+  readonly hiddenTextSignal = computed(() => {
+    const config = this.config();
+    return this.hiddenText() ?? config?.hiddenText ?? DEFAULT_DBX_CLICK_TO_COPY_FIELD_HIDDEN_TEXT;
+  });
 
   /**
    * The copy options passed to the wrapped `dbx-click-to-copy-text`, which applies its own defaults to the unset ones.
    */
   readonly clickToCopyTextConfigSignal = computed<DbxClickToCopyTextComponentConfig>(() => {
+    const text = this.textSignal();
     const config = this.config();
 
     return {
-      copyText: this.copyText() ?? config?.copyText ?? this.textSignal(),
+      copyText: this.copyText() ?? config?.copyText ?? text,
       showIcon: this.showIcon() ?? config?.showIcon,
       clickToCopyIcon: this.clickToCopyIcon() ?? config?.clickToCopyIcon,
       clickIconToCopyOnly: this.clickIconToCopyOnly() ?? config?.clickIconToCopyOnly,
@@ -131,7 +147,12 @@ export class DbxClickToCopyFieldComponent {
     };
   });
 
-  readonly displayTextSignal = computed(() => (this.secretSignal() && !this.revealed() ? this.hiddenTextSignal() : this.textSignal()));
+  readonly displayTextSignal = computed(() => {
+    const revealed = this.revealed();
+    const hiddenText = this.hiddenTextSignal();
+    const text = this.textSignal();
+    return this.secretSignal() && !revealed ? hiddenText : text;
+  });
 
   toggleRevealed(): void {
     this.revealed.update((x) => !x);

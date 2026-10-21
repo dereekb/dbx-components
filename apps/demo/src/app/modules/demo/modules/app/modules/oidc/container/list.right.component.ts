@@ -24,11 +24,13 @@ export class DemoAppOidcClientListPageRightComponent implements OnDestroy {
   readonly latestClientSecretSignal = toSignal(this.oidcEntryStore.latestClientSecret$);
 
   readonly mcpConnectButtonConfigSignal = computed<DbxMcpConnectButtonConfig>(() => {
+    const latestClientSecret = this.latestClientSecretSignal();
+    const confidential = this.confidentialSignal();
     const clientId = this.clientIdSignal();
 
     return {
       buttonStyle: { type: 'stroked' },
-      oauthClient: clientId ? { clientId, clientSecret: this.latestClientSecretSignal(), confidential: this.confidentialSignal() } : undefined
+      oauthClient: clientId ? { clientId, clientSecret: latestClientSecret, confidential: confidential } : undefined
     };
   });
 

@@ -129,7 +129,7 @@ export const DBX_MCP_CONNECT_CLIENT_SECRET_PLACEHOLDER = '<your client secret>';
  * Returns whether the OAuth client signs in with a client secret.
  *
  * @param oauthClient - The OAuth client.
- * @returns {@link DbxMcpConnectOAuthClient.confidential} when set, otherwise whether the client secret is set.
+ * @returns {@link DbxMcpConnectOAuthClient.confidential} When set, otherwise whether the client secret is set.
  */
 export function isConfidentialDbxMcpConnectOAuthClient(oauthClient: DbxMcpConnectOAuthClient): boolean {
   return oauthClient.confidential ?? Boolean(oauthClient.clientSecret);
