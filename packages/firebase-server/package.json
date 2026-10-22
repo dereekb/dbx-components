@@ -19,6 +19,11 @@
       "import": "./discord/index.esm.js",
       "default": "./discord/index.esm.js"
     },
+    "./trello": {
+      "types": "./trello/index.d.ts",
+      "import": "./trello/index.esm.js",
+      "default": "./trello/index.esm.js"
+    },
     "./mailgun": {
       "types": "./mailgun/index.d.ts",
       "import": "./mailgun/index.esm.js",
@@ -62,6 +67,7 @@
     "@dereekb/nestjs": "14.23.0",
     "@dereekb/oauth-resource": "14.23.0",
     "@dereekb/rxjs": "14.23.0",
+    "@dereekb/trello": "14.23.0",
     "@dereekb/util": "14.23.0",
     "@dereekb/zoho": "14.23.0",
     "@google-cloud/firestore": "^7.11.6",

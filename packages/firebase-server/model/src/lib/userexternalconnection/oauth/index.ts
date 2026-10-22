@@ -6,3 +6,4 @@ export * from './userexternalconnection.oauth.registry';
 export * from './userexternalconnection.oauth.service';
 export * from './userexternalconnection.oauth.state';
 export * from './userexternalconnection.oauth.throttle';
+export * from './userexternalconnection.oauth.instance';

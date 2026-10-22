@@ -16,6 +16,7 @@
     "@dereekb/model": "14.23.0",
     "@dereekb/nestjs": "14.23.0",
     "@dereekb/openrouter": "14.23.0",
+    "@dereekb/trello": "14.23.0",
     "@dereekb/util": "14.23.0",
     "@dereekb/zoho": "14.23.0",
     "@dereekb/zoom": "14.23.0",

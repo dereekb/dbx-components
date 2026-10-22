@@ -1,4 +1,12 @@
-import { CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, ZOOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, type KnownUserExternalConnectionProviderType, type UserExternalConnectionProviderType } from '@dereekb/firebase';
+import {
+  CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  TRELLO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  ZOOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  type KnownUserExternalConnectionProviderType,
+  type UserExternalConnectionProviderType
+} from '@dereekb/firebase';
 
 /**
  * Provider type for the demo app's Cal.com integration.
@@ -35,3 +43,20 @@ export const DEMO_ZOHO_EXTERNAL_CONNECTION_PROVIDER_TYPE: KnownUserExternalConne
  * `adminOnly` + `tokenExport` for it).
  */
 export const DEMO_ZOHO_ADMIN_EXTERNAL_CONNECTION_PROVIDER_TYPE: UserExternalConnectionProviderType = 'zoho_admin';
+
+/**
+ * Provider type for the demo app's Trello integration: a member's own Trello account.
+ */
+export const DEMO_TRELLO_EXTERNAL_CONNECTION_PROVIDER_TYPE: KnownUserExternalConnectionProviderType = TRELLO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE;
+
+/**
+ * Provider type for the demo app's BOT Trello integration: a second Trello connection, separate from
+ * {@link DEMO_TRELLO_EXTERNAL_CONNECTION_PROVIDER_TYPE}, to the Trello account a board bot acts as.
+ *
+ * Same Trello OAuth client, but its own consent with the board scopes a board loop uses, its own
+ * controller at `/oauth/trello_bot`, and its own entry in the connection map — so a user's own `trello`
+ * connection is never widened or replaced by the bot's. Its access token may be minted out to its owner
+ * (demo-api's provider policy declares `tokenExport`), and it is deliberately NOT `adminOnly` and NOT
+ * `unique`: several users may each connect the same bot account.
+ */
+export const DEMO_TRELLO_BOT_EXTERNAL_CONNECTION_PROVIDER_TYPE: UserExternalConnectionProviderType = 'trello_bot';

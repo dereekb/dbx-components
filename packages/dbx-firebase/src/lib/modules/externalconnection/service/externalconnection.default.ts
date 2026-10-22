@@ -1,4 +1,4 @@
-import { type KnownUserExternalConnectionProviderType, CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, ZOOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE } from '@dereekb/firebase';
+import { type KnownUserExternalConnectionProviderType, CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, TRELLO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, ZOOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { type DbxActionConfirmConfig } from '@dereekb/dbx-web';
 import { type DbxFirebaseExternalConnectionConnectFunction, type DbxFirebaseExternalConnectionProvider, type DbxFirebaseExternalConnectionProviderAssets, type DbxFirebaseExternalConnectionProviderEntry, type DbxFirebaseExternalConnectionSignInConfig } from './externalconnection';
@@ -56,6 +56,22 @@ export const DBX_FIREBASE_EXTERNAL_CONNECTION_ZOHO_PROVIDER: DbxFirebaseExternal
 };
 
 /**
+ * Default presentation for Trello.
+ *
+ * Declares no `signIn` and no `authorizePath`: Trello is a data connection only, and leaving the path to
+ * the registry default lets a second instance (e.g. `trello_bot`) follow its overridden provider type to
+ * `/oauth/<providerType>/authorize`.
+ */
+export const DBX_FIREBASE_EXTERNAL_CONNECTION_TRELLO_PROVIDER: DbxFirebaseExternalConnectionProvider = {
+  providerType: TRELLO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  assets: {
+    providerName: 'Trello',
+    icon: 'view_kanban',
+    description: 'Connect your Trello account.'
+  }
+};
+
+/**
  * The library's provider for each known third-party service, keyed by provider type.
  *
  * Every service the workspace ships a server-side OAuth adapter for appears here, so an app that
@@ -65,7 +81,8 @@ export const DBX_FIREBASE_KNOWN_EXTERNAL_CONNECTION_PROVIDERS: Record<KnownUserE
   calcom: DBX_FIREBASE_EXTERNAL_CONNECTION_CALCOM_PROVIDER,
   zoom: DBX_FIREBASE_EXTERNAL_CONNECTION_ZOOM_PROVIDER,
   discord: DBX_FIREBASE_EXTERNAL_CONNECTION_DISCORD_PROVIDER,
-  zoho: DBX_FIREBASE_EXTERNAL_CONNECTION_ZOHO_PROVIDER
+  zoho: DBX_FIREBASE_EXTERNAL_CONNECTION_ZOHO_PROVIDER,
+  trello: DBX_FIREBASE_EXTERNAL_CONNECTION_TRELLO_PROVIDER
 };
 
 /**

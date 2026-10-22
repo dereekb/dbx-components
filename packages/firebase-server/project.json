@@ -4,7 +4,7 @@
   "sourceRoot": "packages/firebase-server/src",
   "projectType": "library",
   "tags": ["publishable"],
-  "implicitDependencies": ["calcom", "discord", "zoho", "util", "!util-test", "!firebase-server-test", "!firebase-test"],
+  "implicitDependencies": ["calcom", "discord", "trello", "zoho", "util", "!util-test", "!firebase-server-test", "!firebase-test"],
   "targets": {
     "build": {
       "executor": "nx:run-commands",
@@ -16,6 +16,8 @@
         "!{workspaceRoot}/packages/firebase-server/calcom/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
         "{workspaceRoot}/packages/firebase-server/discord/**/*",
         "!{workspaceRoot}/packages/firebase-server/discord/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+        "{workspaceRoot}/packages/firebase-server/trello/**/*",
+        "!{workspaceRoot}/packages/firebase-server/trello/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
         "{workspaceRoot}/packages/firebase-server/mailgun/**/*",
         "!{workspaceRoot}/packages/firebase-server/mailgun/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
         "{workspaceRoot}/packages/firebase-server/mcp/**/*",
@@ -38,12 +40,12 @@
       "dependsOn": [
         "build-base",
         {
-          "projects": ["firebase-server-mailgun", "firebase-server-model", "firebase-server-oidc", "firebase-server-twilio", "firebase-server-zoho", "firebase-server-calcom", "firebase-server-discord", "firebase-server-mcp", "firebase-server-test"],
+          "projects": ["firebase-server-mailgun", "firebase-server-model", "firebase-server-oidc", "firebase-server-twilio", "firebase-server-zoho", "firebase-server-calcom", "firebase-server-discord", "firebase-server-trello", "firebase-server-mcp", "firebase-server-test"],
           "target": "build-base"
         }
       ],
       "metadata": {
-        "description": "The nested case. dist/packages/firebase-server is ONE npm package with 10 rollup entry points, not 10 packages: the nine children (firebase-server-mailgun, -model, -oidc, -twilio, -zoho, -calcom, -discord, -mcp, -test) compile INTO this directory and are named by this package's own dist `exports`. So this target is the sole deliverable and the sole owner of the directory, and the children deliberately have no `build` of their own -- there is nothing they could publish.  What changed: the sequential `npx nx run <child>:build-base` shell-outs became dependsOn EDGES. Each of those was a separate Nx process with its own task graph, so nothing deduped and `parallel: false` was the only ordering; now it is one process, one graph, and Nx schedules the children by their real production layering -- 3 waves (parent; -mailgun/-model/-oidc/-twilio; -zoho/-calcom/-discord/-mcp/-test) instead of 10 sequential steps. The old hand-written order was not even a valid topological sort: it built firebase-server-model third while the graph put firebase-server-test, which model appeared to depend on, tenth. The finalize stays this target's own command, so it runs after every entry point is built -- dependsOn does not order its own entries, which is exactly why the post-step must not be a sibling list item.  Outputs stay the whole directory, which is correct HERE precisely because this task is its only writer: the cache payload is always complete, so the restore that remove()s the directory always puts all of it back."
+        "description": "The nested case. dist/packages/firebase-server is ONE npm package with 11 rollup entry points, not 11 packages: the ten children (firebase-server-mailgun, -model, -oidc, -twilio, -zoho, -calcom, -discord, -trello, -mcp, -test) compile INTO this directory and are named by this package's own dist `exports`. So this target is the sole deliverable and the sole owner of the directory, and the children deliberately have no `build` of their own -- there is nothing they could publish.  What changed: the sequential `npx nx run <child>:build-base` shell-outs became dependsOn EDGES. Each of those was a separate Nx process with its own task graph, so nothing deduped and `parallel: false` was the only ordering; now it is one process, one graph, and Nx schedules the children by their real production layering -- 3 waves (parent; -mailgun/-model/-oidc/-twilio; -zoho/-calcom/-discord/-trello/-mcp/-test) instead of 11 sequential steps. The old hand-written order was not even a valid topological sort: it built firebase-server-model third while the graph put firebase-server-test, which model appeared to depend on, tenth. The finalize stays this target's own command, so it runs after every entry point is built -- dependsOn does not order its own entries, which is exactly why the post-step must not be a sibling list item.  Outputs stay the whole directory, which is correct HERE precisely because this task is its only writer: the cache payload is always complete, so the restore that remove()s the directory always puts all of it back."
       }
     },
     "build-base": {
@@ -85,6 +87,10 @@
           {
             "description": "run firebase-server-discord tests",
             "command": "npx nx test firebase-server-discord"
+          },
+          {
+            "description": "run firebase-server-trello tests",
+            "command": "npx nx test firebase-server-trello"
           },
           {
             "description": "run firebase-server-test tests",

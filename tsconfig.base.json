@@ -67,6 +67,7 @@
       "@dereekb/firebase-server/model": ["./packages/firebase-server/model/src/index.ts"],
       "@dereekb/firebase-server/test": ["./packages/firebase-server/test/src/index.ts"],
       "@dereekb/firebase-server/oidc": ["./packages/firebase-server/oidc/src/index.ts"],
+      "@dereekb/firebase-server/trello": ["./packages/firebase-server/trello/src/index.ts"],
       "@dereekb/firebase-server/twilio": ["./packages/firebase-server/twilio/src/index.ts"],
       "@dereekb/firebase-server/zoho": ["./packages/firebase-server/zoho/src/index.ts"],
       "@dereekb/firebase/test": ["./packages/firebase/test/src/index.ts"],

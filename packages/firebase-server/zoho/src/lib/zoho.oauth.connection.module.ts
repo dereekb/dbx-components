@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { type ZohoAccountsConfigApiUrlInput, type ZohoOAuthScope } from '@dereekb/zoho';
 import { ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, type UserExternalConnectionProviderType } from '@dereekb/firebase';
 import { FirebaseServerEnvService } from '@dereekb/firebase-server';
+import { userExternalConnectionOAuthServiceTokenForProviderType } from '@dereekb/firebase-server/model';
 import { type Maybe } from '@dereekb/util';
 import { ZohoUserExternalConnectionOAuthServiceConfig, zohoUserExternalConnectionOAuthServiceConfigFactory } from './zoho.oauth.connection.config';
 import { zohoUserExternalConnectionOAuthControllerForProviderType } from './zoho.oauth.connection.controller';
@@ -21,8 +22,7 @@ import { ZohoUserExternalConnectionOAuthService } from './zoho.oauth.connection.
  * @returns The token to list in `userExternalConnectionOAuthProviderRegistryProvider()`.
  */
 export function zohoUserExternalConnectionOAuthServiceToken(providerType?: Maybe<UserExternalConnectionProviderType>): InjectionToken {
-  const type = providerType ?? ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE;
-  return type === ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE ? ZohoUserExternalConnectionOAuthService : `ZohoUserExternalConnectionOAuthService:${type}`;
+  return userExternalConnectionOAuthServiceTokenForProviderType({ providerType, defaultProviderType: ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, serviceClass: ZohoUserExternalConnectionOAuthService, tokenPrefix: 'ZohoUserExternalConnectionOAuthService' });
 }
 
 // MARK: App Zoho UserExternalConnection OAuth Module
