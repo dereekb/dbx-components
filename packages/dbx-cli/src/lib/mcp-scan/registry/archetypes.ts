@@ -265,7 +265,7 @@ export const MODEL_ARCHETYPES: readonly ModelArchetypeInfo[] = [
     description: 'Child of one parent, many-per-parent.',
     whenToUse: 'Entity that always exists under a parent and there are many per parent.',
     expected: {
-      docIdSource: ['auto', 'numeric-short-id'],
+      docIdSource: ['auto', 'numeric-short-id', 'external-vendor-id'],
       parentRelation: ['one-parent'],
       instancesPerParent: ['many'],
       syncMode: ['always-in-sync'],
@@ -369,6 +369,7 @@ export const MODEL_ARCHETYPES: readonly ModelArchetypeInfo[] = [
     description: 'One doc per (group, user). Carries per-group role + cached user fields.',
     whenToUse: 'Membership rows under a group root, keyed per-user.',
     expected: {
+      docIdSource: ['user-uid', 'auto'],
       parentRelation: ['one-parent'],
       instancesPerParent: ['many'],
       userRelation: ['references-user-key', 'uid-is-doc-id', 'owned-by-uid'],
@@ -389,7 +390,8 @@ export const MODEL_ARCHETYPES: readonly ModelArchetypeInfo[] = [
       'Pick the encoding based on whether the source key(s) must be recoverable from the doc id. `twoWayFlatFirestoreModelKey` (slashes → `_`, round-tripped via `inferKeyFromTwoWayFlatFirestoreModelKey`) lets you recover the source keys when iterating the collection. `flatFirestoreModelKey` (one-way, slashes stripped) is appropriate when the source key is already stored as a field on the doc and the id only needs to be unique.',
     expected: {
       docIdSource: ['composite-flat-key'],
-      parentRelation: ['composite-key', 'none']
+      // `user-uid`: a `<uid>_<slug>` id is a flat encoding of a user key plus a slug.
+      parentRelation: ['composite-key', 'none', 'user-uid']
     },
     axes: {},
     implementationPointers: [
@@ -482,6 +484,7 @@ export const MODEL_ARCHETYPES: readonly ModelArchetypeInfo[] = [
     disambiguation: 'If the doc is a stable top-level entity whose own state-enum field defines its lifecycle, use `state-machine-item`. If rows are never mutated after creation (one row per event), use `audit-log`.',
     expected: {
       docIdSource: ['auto', 'numeric-short-id'],
+      parentRelation: ['one-parent'],
       hasLifecycleStates: true,
       mutability: ['mutable'],
       syncMode: ['trigger-eventual', 'pull-on-demand', 'always-in-sync'],

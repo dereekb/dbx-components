@@ -154,4 +154,45 @@ describe('dbx_model_archetype_recommend', () => {
     expect(text).not.toContain('OR `composite-flat-key`');
     expect(text).not.toContain('OR `bucket-code`');
   });
+
+  it('names unrecognized questionnaire keys and lists the accepted dimensions', async () => {
+    const { text } = await runRecommend({
+      questionnaire: { kind: 'root', idKind: 'uid', tenancy: 'workspace' },
+      scope: 'upstream'
+    });
+    expect(text).toContain('Unrecognized questionnaire keys');
+    expect(text).toContain('`kind`');
+    expect(text).toContain('`idKind`');
+    expect(text).toContain('`tenancy`');
+    expect(text).toContain('`docIdSource`: `auto`');
+    expect(text).toContain('`parentRelation`');
+    expect(text).toContain('**boolean:**');
+  });
+
+  it('lists the accepted dimensions when nothing was answered', async () => {
+    const { text } = await runRecommend({ questionnaire: {}, scope: 'upstream' });
+    expect(text).toContain('No dimensions in the questionnaire were filled in');
+    expect(text).toContain('`docIdSource`: `auto`');
+  });
+
+  it('exposes the questionnaire dimensions in the input schema', () => {
+    const questionnaireSchema = (ARCHETYPE_RECOMMEND_TOOL.definition.inputSchema.properties as Record<string, { readonly properties?: Record<string, { readonly enum?: readonly string[] }> }>)['questionnaire'];
+    expect(questionnaireSchema.properties?.['docIdSource']?.enum).toContain('composite-flat-key');
+    expect(questionnaireSchema.properties?.['parentRelation']?.enum).toContain('user-uid');
+  });
+
+  it('lists composite-key-root for a composite-flat-key id', async () => {
+    const { text } = await runRecommend({
+      questionnaire: {
+        candidateName: 'Project',
+        docIdSource: 'composite-flat-key',
+        parentRelation: 'user-uid',
+        syncMode: 'always-in-sync'
+      },
+      scope: 'upstream',
+      maxResults: 1
+    });
+    expect(text).toContain('`composite-key-root`');
+    expect(text).not.toContain('Recommended Archetype: `notification-template`');
+  });
 });

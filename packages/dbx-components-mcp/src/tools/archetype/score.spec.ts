@@ -190,4 +190,61 @@ describe('archetype scoring', () => {
     const result = scoreCatalog(q);
     expect(result.top.archetype.slug).toBe('model-tree-node');
   });
+
+  describe('confidence normalization', () => {
+    it('does not let a single syncMode match win at 100% for a composite-flat-key root', () => {
+      const q: ArchetypeQuestionnaire = {
+        candidateName: 'Project',
+        docIdSource: 'composite-flat-key',
+        parentRelation: 'user-uid',
+        syncMode: 'always-in-sync'
+      };
+      const result = scoreCatalog(q);
+      expect(result.top.archetype.slug).not.toBe('notification-template');
+      const compositeKeyRoot = result.ranked.find((x) => x.archetype.slug === 'composite-key-root');
+      expect(compositeKeyRoot).toBeDefined();
+      expect(compositeKeyRoot?.confidence).toBe(result.top.confidence);
+      expect(result.top.confidence).toBeLessThan(1);
+      const notificationTemplate = result.ranked.find((x) => x.archetype.slug === 'notification-template');
+      expect(notificationTemplate?.confidence).toBeLessThan(0.5);
+    });
+
+    it('ranks sub-collection-entity above group-member for an external-vendor-id sub-collection', () => {
+      const q: ArchetypeQuestionnaire = {
+        candidateName: 'ProjectLoopCard',
+        docIdSource: 'external-vendor-id',
+        parentRelation: 'one-parent',
+        instancesPerParent: 'many',
+        syncMode: 'always-in-sync'
+      };
+      const result = scoreCatalog(q);
+      expect(result.top.archetype.slug).toBe('sub-collection-entity');
+      const subCollection = result.ranked.find((x) => x.archetype.slug === 'sub-collection-entity');
+      const groupMember = result.ranked.find((x) => x.archetype.slug === 'group-member');
+      expect(groupMember?.confidence).toBeLessThan(subCollection?.confidence as number);
+    });
+
+    it('counts every answered dimension in the denominator of every archetype', () => {
+      const q: ArchetypeQuestionnaire = { docIdSource: 'auto', parentRelation: 'none', syncMode: 'always-in-sync' };
+      const result = scoreCatalog(q);
+      for (const scored of result.ranked) {
+        expect(scored.maxScore).toBe(9);
+      }
+    });
+
+    it('lowers confidence on a weight-1 mismatch', () => {
+      const base: ArchetypeQuestionnaire = { docIdSource: 'auto', parentRelation: 'none', syncMode: 'always-in-sync' };
+      const matched = scoreArchetypeAgainstQuestionnaire(archetype('lifecycle-item'), { ...base, hasLifecycleStates: true });
+      const mismatched = scoreArchetypeAgainstQuestionnaire(archetype('lifecycle-item'), { ...base, hasLifecycleStates: false });
+      expect(mismatched.confidence).toBeLessThan(matched.confidence);
+      expect(mismatched.maxScore).toBe(matched.maxScore);
+      expect(mismatched.mismatches.some((x) => x.dimension === 'hasLifecycleStates' && x.contribution === 0)).toBe(true);
+    });
+
+    it('keeps short-circuited archetypes at confidence 1', () => {
+      const result = scoreCatalog({ docIdSource: 'auto', sendsMessageToUser: true });
+      expect(result.top.archetype.slug).toBe('notification-template');
+      expect(result.top.confidence).toBe(1);
+    });
+  });
 });
