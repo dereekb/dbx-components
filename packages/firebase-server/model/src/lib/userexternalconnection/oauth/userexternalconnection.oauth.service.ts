@@ -1,7 +1,7 @@
 import { Logger } from '@nestjs/common';
 import { type Request } from 'express';
 import { type FirebaseAuthUserId, type UserExternalConnectionProviderType } from '@dereekb/firebase';
-import { cachedGetter, generatePkceMaterial, type Maybe, type WebsiteUrl } from '@dereekb/util';
+import { cachedGetter, generatePkceCodeChallenge, generatePkceMaterial, type Maybe, type WebsiteUrl } from '@dereekb/util';
 import { type UserExternalConnectionCredentials } from '../userexternalconnection.private';
 import { type UserExternalConnectionAccessor } from '../userexternalconnection.accessor.service';
 import { type UserExternalConnectionServerActions } from '../userexternalconnection.action.server';
@@ -70,9 +70,11 @@ export interface UserExternalConnectionOAuthExchangeInput {
   /**
    * The PKCE code verifier whose challenge the authorize request carried, when it carried one.
    *
-   * Present only for a sign-in, whose state is minted by this server and can therefore hold the
-   * verifier. A connect state is minted by the authenticated `read:authorizeState` call, which sends
-   * no challenge, so its exchange sends no verifier either.
+   * Always present for a sign-in, whose state is minted by this server and can therefore hold the
+   * verifier. A connect or link state carries one when the adapter sets
+   * {@link AbstractUserExternalConnectionOAuthService.requirePkce} (the `/authorize` route re-mints the
+   * state with a sealed verifier) or when the app minted the state with one itself. Otherwise the
+   * authorize request sent no challenge, so the exchange sends no verifier either.
    */
   readonly codeVerifier?: Maybe<string>;
 }
@@ -153,7 +155,9 @@ export interface UserExternalConnectionOAuthAuthorizeUrlInput {
   /**
    * The PKCE code challenge to send to the provider, when the flow has one.
    *
-   * Set for a sign-in, absent for a connect — see {@link UserExternalConnectionOAuthExchangeInput.codeVerifier}.
+   * Always set for a sign-in. Set for a connect or link exactly when its state carries a verifier —
+   * every handoff for an adapter with `requirePkce`, otherwise only an app-minted verifier-bearing
+   * state. See {@link UserExternalConnectionOAuthExchangeInput.codeVerifier}.
    */
   readonly codeChallenge?: Maybe<string>;
   /**
@@ -377,6 +381,17 @@ export abstract class AbstractUserExternalConnectionOAuthService {
    * there that only make sense to the server, such as the host its refresh is sent to.
    */
   readonly exportedCredentialExtraKeys?: Maybe<readonly string[]>;
+  /**
+   * PROVIDER (optional): whether EVERY authorization — connect and link as well as sign-in — must carry a
+   * PKCE challenge.
+   *
+   * Trello's OAuth 2.0 requires one on every code grant. A sign-in always has one, because its state is
+   * minted by `/signin`; a connect or link state is minted by the app's authenticated
+   * `read:authorizeState` callable, which seals no verifier. With this set, the `/authorize` route
+   * re-mints such a state with a fresh sealed verifier and sends its S256 challenge, so app handlers
+   * need no change.
+   */
+  readonly requirePkce?: Maybe<boolean>;
 
   // lazy, because `providerType` reads a subclass constructor property that is not assigned yet
   // while this class's own fields initialize
@@ -521,10 +536,15 @@ export abstract class AbstractUserExternalConnectionOAuthService {
   /**
    * Builds the authorize URL to redirect an incoming `/authorize` request to.
    *
+   * Invariant: the state the URL carries holds a PKCE verifier (`cv`) if and only if the URL carries its
+   * challenge. A verifier-bearing state gets its challenge derived; a verifier-less state for an adapter
+   * with {@link requirePkce} is re-minted with a fresh verifier first; any other state is passed through
+   * unchanged and sends no challenge.
+   *
    * @param request - The incoming authorize request, which the state is read from.
    * @returns The authorize URL, or null when the request carried no state.
    */
-  authorizeUrlForRequest(request: Request): Maybe<WebsiteUrl> {
+  async authorizeUrlForRequest(request: Request): Promise<Maybe<WebsiteUrl>> {
     const state = userExternalConnectionOAuthStateForRequest(request);
     let result: Maybe<WebsiteUrl>;
 
@@ -546,7 +566,23 @@ export abstract class AbstractUserExternalConnectionOAuthService {
       } else if (isUserExternalConnectionLinkStateActor(actor) && !this.policy.signIn) {
         this.logger.warn(`Rejected a link authorize request: "${this.providerType}" is not enabled for sign-in.`);
       } else {
-        result = this.authorizeUrlForState({ state, mode: actor.mode });
+        let authorizeState: UserExternalConnectionOAuthState = state;
+        let codeChallenge: Maybe<string>;
+
+        if (actor.codeVerifier) {
+          codeChallenge = await generatePkceCodeChallenge(actor.codeVerifier);
+        } else if (this.requirePkce) {
+          // re-minting resets the state's expiry window; acceptable, since the user is only now being
+          // sent to the provider and the window is meant to bound the handoff from this point on
+          const material = await generatePkceMaterial();
+          const { uid, mode } = actor;
+          const providerType = this.providerType;
+
+          authorizeState = mode === 'link' ? this.stateCoder.mintState({ mode, uid, providerType, codeVerifier: material.codeVerifier }) : this.stateCoder.mintState({ uid, providerType, codeVerifier: material.codeVerifier });
+          codeChallenge = material.codeChallenge;
+        }
+
+        result = this.authorizeUrlForState({ state: authorizeState, codeChallenge, mode: actor.mode });
       }
     }
 

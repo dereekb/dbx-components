@@ -5,3 +5,4 @@ export * from './trello.config';
 export * from './trello.error.api';
 export * from './trello.limit';
 export * from './trello.type';
+export * from './oauth';

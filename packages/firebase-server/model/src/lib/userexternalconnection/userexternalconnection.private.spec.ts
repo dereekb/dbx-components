@@ -26,6 +26,7 @@ const model: UserExternalConnectionPrivate = {
   cr: {
     calcom: calcomCredentials
   },
+  rl: {},
   uat: new Date('2026-03-01T00:00:00.000Z')
 };
 
@@ -83,6 +84,24 @@ describe('userExternalConnectionPrivateConverter()', () => {
     expect(result.cr).toBeDefined();
     expect(Object.keys(result.cr).length).toBe(0);
   });
+
+  it('should decode a document without refresh leases as an empty lease map', () => {
+    const data = converter.mapFunctions.to(model);
+    delete (data as Record<string, unknown>)['rl'];
+
+    const result = converter.mapFunctions.from(data);
+
+    expect(result.rl).toEqual({});
+  });
+
+  it('should round-trip a refresh lease', () => {
+    const until = new Date('2026-03-01T00:01:00.000Z');
+    const data = converter.mapFunctions.to({ ...model, rl: { calcom: { h: 'holder-1', u: until } } });
+    const result = converter.mapFunctions.from(data);
+
+    expect(result.rl['calcom']?.h).toBe('holder-1');
+    expect(result.rl['calcom']?.u.getTime()).toBe(until.getTime());
+  });
 });
 
 describe('userExternalConnectionGrantSummaryFromCredentials()', () => {
@@ -106,6 +125,15 @@ describe('userExternalConnectionGrantSummaryFromCredentials()', () => {
 
 describe('applyUserExternalConnectionCredentials()', () => {
   const now = new Date('2026-03-02T00:00:00.000Z');
+
+  it("should end only the written provider's refresh lease", () => {
+    const until = new Date('2026-03-02T00:01:00.000Z');
+    const current: UserExternalConnectionPrivate = { ...model, rl: { calcom: { h: 'holder-calcom', u: until }, zoom: { h: 'holder-zoom', u: until } } };
+    const result = applyUserExternalConnectionCredentials({ current, uid: TEST_UID, providerType: 'calcom', credentials: calcomCredentials, now });
+
+    expect(result.rl['calcom']).toBeUndefined();
+    expect(result.rl['zoom']?.h).toBe('holder-zoom');
+  });
 
   it('should remove the provider key when the credentials are null', () => {
     const result = applyUserExternalConnectionCredentials({ current: model, uid: TEST_UID, providerType: 'calcom', credentials: null, now });

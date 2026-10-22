@@ -1,3 +1,4 @@
+import { isTrelloApiKeyTokenConfig } from '../trello.config';
 import { makeUrlSearchParams } from '@dereekb/util/fetch';
 import { type TrelloContext } from './trello.factory';
 import { type TrelloApiToken, type TrelloWebhookId } from '../trello.type';
@@ -71,7 +72,8 @@ export function deleteWebhook(context: TrelloContext): DeleteWebhookFunction {
 
 export interface ListWebhooksForTokenInput {
   /**
-   * Optional override for the token whose webhooks to list. Defaults to the context's configured token.
+   * Optional override for the token whose webhooks to list. Defaults to the context's configured token
+   * in the key+token mode; REQUIRED in either bearer mode, which has no API token of its own.
    */
   readonly apiToken?: TrelloApiToken;
 }
@@ -86,7 +88,13 @@ export type ListWebhooksForTokenFunction = (input?: ListWebhooksForTokenInput) =
  */
 export function listWebhooksForToken(context: TrelloContext): ListWebhooksForTokenFunction {
   return (input) => {
-    const token = input?.apiToken ?? context.config.apiToken;
+    const config = context.config;
+    const token = input?.apiToken ?? (isTrelloApiKeyTokenConfig(config) ? config.apiToken : undefined);
+
+    if (!token) {
+      throw new Error('listWebhooksForToken() is for the legacy key+token mode only; pass an explicit apiToken. OAuth 2.0 webhooks are created with POST /1/webhooks.');
+    }
+
     return context.fetchJson(`/tokens/${token}/webhooks`, 'GET');
   };
 }

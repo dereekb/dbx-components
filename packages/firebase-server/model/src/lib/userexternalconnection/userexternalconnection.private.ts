@@ -1,4 +1,4 @@
-import { type ISO8601DateString, type Maybe, filterUndefinedValues } from '@dereekb/util';
+import { type ISO8601DateString, type Maybe, type Milliseconds, expirationDetails, filterUndefinedValues } from '@dereekb/util';
 import { safeToJsDate } from '@dereekb/date';
 import {
   AbstractFirestoreDocument,
@@ -9,6 +9,9 @@ import {
   type FirestoreContext,
   firestoreDate,
   firestoreModelIdentity,
+  type FirestoreModelData,
+  firestoreObjectMap,
+  firestoreString,
   firestoreUID,
   snapshotConverterFunctions,
   type UserExternalConnectionCapability,
@@ -74,6 +77,37 @@ export interface UserExternalConnectionCredentials {
 export type UserExternalConnectionCredentialsMap = Record<UserExternalConnectionProviderType, UserExternalConnectionCredentials>;
 
 /**
+ * Identifies one refresh attempt holding a {@link UserExternalConnectionRefreshLease}.
+ *
+ * Random per attempt (a UUID), so two attempts in the same process are as distinct as two in different
+ * instances.
+ */
+export type UserExternalConnectionRefreshLeaseHolder = string;
+
+/**
+ * A cross-instance lease on refreshing one provider's credentials.
+ *
+ * Held while a refresh is in flight, so a second instance that finds the same expired credentials waits
+ * for the first instead of spending a refresh token the first is already spending. Providers that
+ * rotate their refresh token on every use (Trello, Cal.com) treat a reuse as a breach.
+ */
+export interface UserExternalConnectionRefreshLease {
+  /**
+   * The holder.
+   */
+  h: UserExternalConnectionRefreshLeaseHolder;
+  /**
+   * Held until. Past this instant another instance may take the lease over.
+   */
+  u: Date;
+}
+
+/**
+ * Map of provider type to the refresh lease currently held for that provider.
+ */
+export type UserExternalConnectionRefreshLeaseMap = Record<UserExternalConnectionProviderType, UserExternalConnectionRefreshLease>;
+
+/**
  * The server-only half of a user's third-party OAuth connection state.
  *
  * Shares its document id (the user's uid) with the client-readable `UserExternalConnection` in
@@ -88,6 +122,17 @@ export interface UserExternalConnectionPrivate extends UserRelated, UserRelatedB
    * query inside credentials, and one field keeps the whole blob atomic with the paired write.
    */
   cr: UserExternalConnectionCredentialsMap;
+  /**
+   * Per-provider refresh leases. See {@link UserExternalConnectionRefreshLease}.
+   *
+   * The ONE exception to this document never being written independently of its public twin: a lease
+   * is coordination state, not connection state, and has no public counterpart, so writing it alone
+   * cannot make the pair disagree. Every paired write for a provider ends that provider's lease — see
+   * {@link applyUserExternalConnectionCredentials}.
+   *
+   * An absent map decodes as `{}`, so documents written before leases existed need no migration.
+   */
+  rl: UserExternalConnectionRefreshLeaseMap;
   /**
    * Date this document was last updated at.
    */
@@ -125,6 +170,9 @@ export function userExternalConnectionPrivateConverter(config: UserExternalConne
     fields: {
       uid: firestoreUID(),
       cr: firestoreEncryptedField<UserExternalConnectionCredentialsMap>({ secret: config.encryptionSecret, default: () => ({}) }),
+      rl: firestoreObjectMap<UserExternalConnectionRefreshLease, FirestoreModelData<UserExternalConnectionRefreshLease>, UserExternalConnectionProviderType>({
+        objectField: { fields: { h: firestoreString(), u: firestoreDate() } }
+      }),
       uat: firestoreDate({ saveDefaultAsNow: true })
     }
   });
@@ -192,6 +240,42 @@ export function userExternalConnectionGrantSummaryFromCredentials(credentials: U
     connectedAt: safeToJsDate(credentials.issuedAt),
     expiresAt: safeToJsDate(credentials.expiresAt)
   };
+}
+
+/**
+ * Input for {@link isUserExternalConnectionCredentialsExpired}.
+ */
+export interface IsUserExternalConnectionCredentialsExpiredInput {
+  readonly credentials: UserExternalConnectionCredentials;
+  /**
+   * The leeway window: credentials expiring within it count as expired.
+   */
+  readonly buffer: Milliseconds;
+  /**
+   * The instant to check at. Defaults to now.
+   */
+  readonly now?: Maybe<Date>;
+}
+
+/**
+ * Whether these credentials are close enough to expiring that they should not be handed out.
+ *
+ * Credentials with NO stated expiration are usable, not expired — some providers issue long-lived
+ * tokens and simply do not say when they end. That is why `defaultExpiresFromDateToNow` is false:
+ * left at its default, a missing expiration would resolve to `now - buffer` and read as expired.
+ *
+ * @param input - The credentials, the leeway window, and optionally the instant to check at.
+ * @returns True when the credentials are expired or expire inside the leeway window.
+ */
+export function isUserExternalConnectionCredentialsExpired(input: IsUserExternalConnectionCredentialsExpiredInput): boolean {
+  const { credentials, buffer, now } = input;
+
+  return expirationDetails({
+    expiresFromDate: safeToJsDate(credentials.expiresAt),
+    expiresIn: -buffer,
+    defaultExpiresFromDateToNow: false,
+    now
+  }).hasExpired();
 }
 
 /**
@@ -264,6 +348,12 @@ export interface ApplyUserExternalConnectionCredentialsInput {
    */
   readonly credentials: Maybe<UserExternalConnectionCredentials>;
   readonly now: Date;
+  /**
+   * Whether this write ends the provider's refresh lease. Defaults to true.
+   *
+   * The paired write passes false for a failure mark only — see `writeUserExternalConnectionPairInTransactionFactory`.
+   */
+  readonly endRefreshLease?: Maybe<boolean>;
 }
 
 /**
@@ -272,12 +362,17 @@ export interface ApplyUserExternalConnectionCredentialsInput {
  * The counterpart of `applyUserExternalConnectionEntry()` — both are always called with the same
  * provider and instant inside one transaction.
  *
+ * Also ENDS that provider's refresh lease, carrying every other provider's forward. Any paired write
+ * for a provider — a connect, a refresh's fenced persist, a failure mark, a disconnect, a collision
+ * release, an unlink — supersedes whatever refresh was in flight for it.
+ *
  * @param input - The current document plus the credentials to apply.
  * @returns The next UserExternalConnectionPrivate value to write.
  */
 export function applyUserExternalConnectionCredentials(input: ApplyUserExternalConnectionCredentialsInput): UserExternalConnectionPrivate {
-  const { current, uid, providerType, credentials, now } = input;
+  const { current, uid, providerType, credentials, now, endRefreshLease } = input;
   const nextCredentials: UserExternalConnectionCredentialsMap = { ...current?.cr };
+  const nextLeases: UserExternalConnectionRefreshLeaseMap = { ...current?.rl };
 
   if (credentials) {
     nextCredentials[providerType] = credentials;
@@ -285,9 +380,14 @@ export function applyUserExternalConnectionCredentials(input: ApplyUserExternalC
     delete nextCredentials[providerType];
   }
 
+  if (endRefreshLease ?? true) {
+    delete nextLeases[providerType];
+  }
+
   return {
     uid,
     cr: nextCredentials,
+    rl: nextLeases,
     uat: now
   };
 }
