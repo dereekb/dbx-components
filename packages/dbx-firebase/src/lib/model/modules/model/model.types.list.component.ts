@@ -55,5 +55,7 @@ export class DbxFirebaseModelTypeInstanceListViewComponent extends AbstractDbxSe
   `
 })
 export class DbxFirebaseModelTypeInstanceListViewItemComponent extends AbstractDbxValueListViewItemComponent<DbxFirebaseModelTypesServiceInstancePair> {
-  readonly title = this.itemValue.displayInfo.title;
+  get title(): string {
+    return this.itemValue.displayInfo.title;
+  }
 }

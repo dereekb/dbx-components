@@ -58,12 +58,14 @@ export class DbxListTitleGroupDirective<T, O extends PrimativeKey = PrimativeKey
               }
             ];
 
+            // dbx-injection ignores providers when comparing configs but compares data, so passing the group data as data re-creates the
+            // header and footer whenever the group's data changes, such as the item count in its title, instead of keeping their first data.
             const group: DbxValueListItemGroup<D, T, I> = {
               id: String(value),
               data,
               items,
-              headerConfig: { componentClass, providers },
-              footerConfig: footerComponentClass ? { componentClass: footerComponentClass, providers } : undefined,
+              headerConfig: { componentClass, providers, data },
+              footerConfig: footerComponentClass ? { componentClass: footerComponentClass, providers, data } : undefined,
               cssClasses
             };
 

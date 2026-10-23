@@ -114,12 +114,12 @@ export class DbxValueListViewContentGroupComponent<G, T, I extends DbxValueListI
 /**
  * Default track-by function for list view content components.
  *
- * Uses the item's {@link DbxValueListItem.key} when available for stable identity across
- * data updates, falling back to a prefixed index string to avoid collisions with key values.
+ * Tracks items by their {@link DbxValueListItem.key}, which {@link addConfigToValueListItems} sets for items that have none
+ * and makes unique for items that repeat an earlier item's key.
  *
  * @param index - The item's position index in the list.
  * @param item - The list item whose identity key is resolved.
- * @returns The item's key, itemValue key/id, or a prefixed index string as a fallback.
+ * @returns The item's key.
  */
 export const DEFAULT_VALUE_LIST_VIEW_CONTENT_COMPONENT_TRACK_BY_FUNCTION: TrackByFunction<DbxValueListItem<unknown>> = (index: number, item: DbxValueListItem<unknown>) => item.key;
 
