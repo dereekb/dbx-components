@@ -3096,6 +3096,60 @@
       }
     },
     {
+      "cssVariable": "--dbx-timeline-connector-color",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "timeline connector color"
+      ],
+      "description": "Component-scoped override point (`text`) read in `packages/dbx-web/src/lib/layout/text/_text.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-outline-variant)`.",
+      "defaults": {
+        "light": "var(--mat-sys-outline-variant)"
+      },
+      "componentScope": "text"
+    },
+    {
+      "cssVariable": "--dbx-timeline-connector-gap",
+      "source": "dbx-web",
+      "role": "spacing",
+      "intents": [
+        "timeline connector gap",
+        "timeline connector gap spacing"
+      ],
+      "description": "Component-scoped override point (`text`) read in `packages/dbx-web/src/lib/layout/text/_text.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `0px`.",
+      "defaults": {
+        "light": "0px"
+      },
+      "componentScope": "text"
+    },
+    {
+      "cssVariable": "--dbx-timeline-connector-thickness",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "timeline connector thickness"
+      ],
+      "description": "Component-scoped override point (`text`) read in `packages/dbx-web/src/lib/layout/text/_text.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `2px`.",
+      "defaults": {
+        "light": "2px"
+      },
+      "componentScope": "text"
+    },
+    {
+      "cssVariable": "--dbx-timeline-item-gap",
+      "source": "dbx-web",
+      "role": "spacing",
+      "intents": [
+        "timeline item gap",
+        "timeline item gap spacing"
+      ],
+      "description": "Component-scoped override point (`text`) read in `packages/dbx-web/src/lib/layout/text/_text.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-padding-2)`.",
+      "defaults": {
+        "light": "var(--dbx-padding-2)"
+      },
+      "componentScope": "text"
+    },
+    {
       "cssVariable": "--dbx-top-banner-height",
       "scssVariable": "$top-banner-height-var",
       "source": "dbx-web",

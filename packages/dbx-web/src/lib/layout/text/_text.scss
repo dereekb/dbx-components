@@ -39,6 +39,9 @@ $dbx-step-block-badge-font-size: 14px;
 $dbx-step-block-badge-icon-size: 18px;
 $dbx-step-block-header-font-weight: 500;
 $dbx-step-block-badge-font-weight: 600;
+$dbx-timeline-connector-thickness: 2px;
+$dbx-timeline-connector-gap: 0px; // a length, not a bare 0, so the connector width `calc()` stays valid
+$dbx-timeline-item-gap: var(--dbx-padding-2);
 
 // MARK: Internal
 // The `.dbx-icon-tile` body, shared with surfaces that make an element an icon tile without the class (the
@@ -414,6 +417,71 @@ $dbx-step-block-badge-font-weight: 600;
     display: block;
     font-size: var(--dbx-step-block-hint-font-size, var(--mat-sys-body-small-size));
     opacity: var(--dbx-step-block-hint-opacity, #{$hint-opacity});
+  }
+
+  /// @dbx-utility timeline
+  /// @intent horizontal progress timeline — a row of equal-width `.dbx-timeline-item` steps whose markers are joined by connector lines (a program journey, an approval chain, an order's progress)
+  /// @role layout
+  /// @see-also timeline-item, step-block, avatar-view, icon-tile
+  .dbx-timeline {
+    display: flex;
+    align-items: flex-start;
+  }
+
+  // The item is a three-column grid: the marker (its first child) sits in the middle column, and every other child
+  // spans all three below it, centered. The outer columns are the empty space either side of the marker that the
+  // connector lines run through, so the connector centers on the marker whatever its size.
+  /// @dbx-utility timeline-item
+  /// @intent one step of a `.dbx-timeline` — its first child is the marker (a `<dbx-avatar>`, `<dbx-icon-tile>`, ...) with the label lines centered below it, and a connector line runs back to the previous step's marker. Add `[dbxColor]` (without a tone) to color that connector for the progress reached; color the marker through its own inputs. Customize via the `--dbx-timeline-*` CSS variables.
+  /// @role layout
+  /// @parent timeline
+  /// @see-also timeline, avatar-view, icon-tile
+  .dbx-timeline-item {
+    flex: 1 1 0;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    justify-items: center;
+    text-align: center;
+
+    // the leading connector. It is drawn in the column before the marker at twice that column's width, so it reaches
+    // back across the previous step's trailing column to its marker — the steps are equal width, so with equal-size
+    // markers the two columns are the same width.
+    &::before {
+      content: '';
+      grid-row: 1;
+      grid-column: 1;
+      align-self: center;
+      justify-self: end;
+      width: calc(200% - 2 * var(--dbx-timeline-connector-gap, #{$dbx-timeline-connector-gap}));
+      height: var(--dbx-timeline-connector-thickness, #{$dbx-timeline-connector-thickness});
+      margin-inline-end: var(--dbx-timeline-connector-gap, #{$dbx-timeline-connector-gap});
+      border-radius: var(--dbx-timeline-connector-thickness, #{$dbx-timeline-connector-thickness});
+      background: var(--dbx-timeline-connector-color, var(--mat-sys-outline-variant));
+    }
+
+    &:first-child::before {
+      content: none;
+    }
+
+    > :first-child {
+      grid-row: 1;
+      grid-column: 2;
+    }
+
+    > :not(:first-child) {
+      grid-column: 1 / -1;
+    }
+
+    > :first-child + * {
+      margin-top: var(--dbx-timeline-item-gap, #{$dbx-timeline-item-gap});
+    }
+  }
+
+  // Colored connector. `[dbxColor]` only provides the color tokens (and the `.dbx-color` marker); the connector
+  // paints from them here, scoped on the marker so an item inside a `[dbxColor]` section keeps the default line.
+  .dbx-timeline-item.dbx-color:not(.dbx-default)::before {
+    background: var(#{theming.$dbx-bg-color-var});
   }
 
   /// @dbx-utility text-no-overflow
