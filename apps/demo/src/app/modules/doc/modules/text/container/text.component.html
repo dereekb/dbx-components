@@ -290,29 +290,29 @@
     </doc-feature-example>
     <doc-feature-example
       header=".dbx-timeline + .dbx-timeline-item"
-      hint="Horizontal progress timeline. Each .dbx-timeline-item takes its first child as the marker (a <dbx-icon-tile>, <dbx-avatar>, ...) and centers the remaining children below it as label lines. A connector line runs from the previous marker into each item; add [dbxColor] (without a tone) to an item to color its connector for the progress reached. The timeline is presentational — use mat-stepper for an interactive wizard.">
+      hint="Horizontal progress timeline. Each .dbx-timeline-item takes its first child as the marker (a <dbx-icon-tile>, <dbx-avatar>, ...) and centers the remaining children below it as label lines. A connector line runs from the previous marker into each item; add [dbxColor] (without a tone) to an item to color its connector for the progress reached. Steps keep a minimum width, so a narrow viewport scrolls the timeline sideways; use the [dbxTimelineItem] directive and mark the step in progress with [dbxTimelineItemCurrent] (as on 3. Development below) so a scrolled timeline opens centered on that step. The timeline is presentational — use mat-stepper for an interactive wizard.">
       <div class="dbx-timeline">
-        <div class="dbx-timeline-item">
+        <div dbxTimelineItem>
           <dbx-icon-tile icon="check" dbxColor="success" [round]="true"></dbx-icon-tile>
           <span class="dbx-text-label-large">1. Discovery</span>
           <span class="dbx-text-body-small dbx-hint">Complete</span>
         </div>
-        <div class="dbx-timeline-item" dbxColor="success">
+        <div dbxTimelineItem dbxColor="success">
           <dbx-icon-tile icon="check" dbxColor="success" [round]="true"></dbx-icon-tile>
           <span class="dbx-text-label-large">2. Goal Setting</span>
           <span class="dbx-text-body-small dbx-hint">Complete</span>
         </div>
-        <div class="dbx-timeline-item" dbxColor="primary">
+        <div dbxTimelineItem [dbxTimelineItemCurrent]="true" dbxColor="primary">
           <dbx-icon-tile icon="trending_up" dbxColor="primary" [round]="true"></dbx-icon-tile>
           <span class="dbx-text-label-large">3. Development</span>
           <span class="dbx-text-body-small dbx-hint">In Progress</span>
         </div>
-        <div class="dbx-timeline-item">
+        <div dbxTimelineItem>
           <dbx-icon-tile icon="hub" dbxColor="grey" [dbxColorTone]="18" [round]="true"></dbx-icon-tile>
           <span class="dbx-text-label-large">4. Integration</span>
           <span class="dbx-text-body-small dbx-hint">Upcoming</span>
         </div>
-        <div class="dbx-timeline-item">
+        <div dbxTimelineItem>
           <dbx-icon-tile icon="rate_review" dbxColor="grey" [dbxColorTone]="18" [round]="true"></dbx-icon-tile>
           <span class="dbx-text-label-large">5. Review</span>
           <span class="dbx-text-body-small dbx-hint">Upcoming</span>

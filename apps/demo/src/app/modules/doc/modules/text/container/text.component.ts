@@ -28,7 +28,8 @@ import {
   DbxIconTileDirective,
   DbxIconTileComponent,
   DbxButtonComponent,
-  DbxAvatarComponent
+  DbxAvatarComponent,
+  DbxTimelineItemDirective
 } from '@dereekb/dbx-web';
 import { Component, inject, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
@@ -64,6 +65,7 @@ import { LOREM } from '../../shared';
     DbxIconTileDirective,
     DbxIconTileComponent,
     DbxAvatarComponent,
+    DbxTimelineItemDirective,
     MatIconModule
   ]
 })

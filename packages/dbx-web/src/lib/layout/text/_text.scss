@@ -42,6 +42,7 @@ $dbx-step-block-badge-font-weight: 600;
 $dbx-timeline-connector-thickness: 2px;
 $dbx-timeline-connector-gap: 0px; // a length, not a bare 0, so the connector width `calc()` stays valid
 $dbx-timeline-item-gap: var(--dbx-padding-2);
+$dbx-timeline-item-min-width: 96px;
 
 // MARK: Internal
 // The `.dbx-icon-tile` body, shared with surfaces that make an element an icon tile without the class (the
@@ -420,25 +421,28 @@ $dbx-timeline-item-gap: var(--dbx-padding-2);
   }
 
   /// @dbx-utility timeline
-  /// @intent horizontal progress timeline — a row of equal-width `.dbx-timeline-item` steps whose markers are joined by connector lines (a program journey, an approval chain, an order's progress)
+  /// @intent horizontal progress timeline — a row of equal-width `.dbx-timeline-item` steps whose markers are joined by connector lines (a program journey, an approval chain, an order's progress). Scrolls sideways when its steps don't fit at their minimum width.
   /// @role layout
   /// @see-also timeline-item, step-block, avatar-view, icon-tile
   .dbx-timeline {
     display: flex;
     align-items: flex-start;
+    // the steps keep a readable minimum width, so a narrow viewport scrolls the row instead of overlapping the labels
+    overflow-x: auto;
   }
 
   // The item is a three-column grid: the marker (its first child) sits in the middle column, and every other child
   // spans all three below it, centered. The outer columns are the empty space either side of the marker that the
   // connector lines run through, so the connector centers on the marker whatever its size.
   /// @dbx-utility timeline-item
-  /// @intent one step of a `.dbx-timeline` — its first child is the marker (a `<dbx-avatar>`, `<dbx-icon-tile>`, ...) with the label lines centered below it, and a connector line runs back to the previous step's marker. Add `[dbxColor]` (without a tone) to color that connector for the progress reached; color the marker through its own inputs. Customize via the `--dbx-timeline-*` CSS variables.
+  /// @intent one step of a `.dbx-timeline` — its first child is the marker (a `<dbx-avatar>`, `<dbx-icon-tile>`, ...) with the label lines centered below it, and a connector line runs back to the previous step's marker. Add `[dbxColor]` (without a tone) to color that connector for the progress reached; color the marker through its own inputs. Apply it with the `[dbxTimelineItem]` directive and mark the step in progress with `[dbxTimelineItemCurrent]` so a narrow, scrolling timeline opens centered on that step. Customize via the `--dbx-timeline-*` CSS variables.
   /// @role layout
   /// @parent timeline
   /// @see-also timeline, avatar-view, icon-tile
   .dbx-timeline-item {
     flex: 1 1 0;
-    min-width: 0;
+    min-width: var(--dbx-timeline-item-min-width, #{$dbx-timeline-item-min-width});
+    overflow-wrap: break-word; // a word wider than the step breaks rather than running into the next step
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     justify-items: center;

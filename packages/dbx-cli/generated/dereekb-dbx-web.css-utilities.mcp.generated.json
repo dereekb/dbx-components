@@ -559,7 +559,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/button/_button.scss",
-      "line": 177,
+      "line": 184,
       "declarations": [
         {
           "property": "display",
@@ -590,7 +590,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/button/_button.scss",
-      "line": 205,
+      "line": 212,
       "declarations": [
         {
           "property": "position",
@@ -665,7 +665,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/button/_button.scss",
-      "line": 265,
+      "line": 272,
       "declarations": [
         {
           "property": "margin-left",
@@ -691,7 +691,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/button/_button.scss",
-      "line": 226,
+      "line": 233,
       "declarations": [
         {
           "property": "position",
@@ -726,7 +726,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/button/_button.scss",
-      "line": 250,
+      "line": 257,
       "declarations": [
         {
           "property": "margin-left",
@@ -752,7 +752,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/button/_button.scss",
-      "line": 240,
+      "line": 247,
       "declarations": [
         {
           "property": "top",
@@ -826,7 +826,7 @@
       "line": 106,
       "declarations": [],
       "role": "layout",
-      "intent": "turn a `<dbx-button>` that wraps a `<dbx-icon-tile>` into a clickable tile — strips the button's padding/min-width so it hugs the tile, adopts the tile's `--dbx-icon-tile-border-radius`, and lifts a neutralized (`--mat-sys-on-surface`) state layer above the tile so hover/press/ripple reads on every color variant (including opaque full-color and primary-tonal tiles)",
+      "intent": "turn a `<dbx-button>` that wraps a `<dbx-icon-tile>` into a clickable tile — strips the button's padding/min-width so it hugs the tile, adopts the tile's `--dbx-icon-tile-border-radius` (or a circle when the tile is `[round]`), and lifts a neutralized (`--mat-sys-on-surface`) state layer above the tile so hover/press/ripple reads on every color variant (including opaque full-color and primary-tonal tiles)",
       "seeAlso": [
         "icon-tile",
         "button-neutral-interaction-color"
@@ -859,7 +859,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/button/_button.scss",
-      "line": 165,
+      "line": 172,
       "declarations": [
         {
           "property": "padding-right",
@@ -1391,7 +1391,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 533,
+      "line": 537,
       "declarations": [
         {
           "property": "font-size",
@@ -1460,7 +1460,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 603,
+      "line": 607,
       "declarations": [
         {
           "property": "margin",
@@ -1479,7 +1479,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 564,
+      "line": 568,
       "declarations": [
         {
           "property": "margin-right",
@@ -1499,7 +1499,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 876,
+      "line": 880,
       "declarations": [
         {
           "property": "display",
@@ -1547,7 +1547,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 932,
+      "line": 936,
       "declarations": [
         {
           "property": "font-family",
@@ -2114,7 +2114,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 175,
+      "line": 176,
       "declarations": [
         {
           "property": "display",
@@ -2144,7 +2144,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 217,
+      "line": 218,
       "declarations": [
         {
           "property": "position",
@@ -2207,7 +2207,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 312,
+      "line": 313,
       "declarations": [
         {
           "property": "display",
@@ -2243,7 +2243,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 302,
+      "line": 303,
       "declarations": [
         {
           "property": "display",
@@ -2293,7 +2293,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 551,
+      "line": 555,
       "declarations": [
         {
           "property": "display",
@@ -2367,7 +2367,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 654,
+      "line": 658,
       "declarations": [
         {
           "property": "opacity",
@@ -2716,7 +2716,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 522,
+      "line": 526,
       "declarations": [
         {
           "property": "font-size",
@@ -2740,7 +2740,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/button/_button.scss",
-      "line": 153,
+      "line": 160,
       "declarations": [
         {
           "property": "width",
@@ -2795,7 +2795,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 645,
+      "line": 649,
       "declarations": [
         {
           "property": "opacity",
@@ -2835,7 +2835,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 514,
+      "line": 518,
       "declarations": [
         {
           "property": "margin-right",
@@ -2855,7 +2855,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 355,
+      "line": 356,
       "declarations": [],
       "role": "layout",
       "intent": "rounded, padded icon container — the visible body of `<dbx-icon-tile>` / `[dbxIconTile]`. Customize via the `--dbx-icon-tile-*` CSS variables.",
@@ -2868,7 +2868,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 381,
+      "line": 382,
       "declarations": [
         {
           "property": "border-radius",
@@ -2908,7 +2908,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 117,
+      "line": 118,
       "declarations": [
         {
           "property": "height",
@@ -2951,7 +2951,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 662,
+      "line": 666,
       "declarations": [
         {
           "property": "opacity",
@@ -2972,7 +2972,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 129,
+      "line": 130,
       "declarations": [
         {
           "property": "display",
@@ -2998,7 +2998,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 82,
+      "line": 83,
       "declarations": [
         {
           "property": "padding-bottom",
@@ -3577,7 +3577,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 848,
+      "line": 852,
       "declarations": [
         {
           "property": "text-transform",
@@ -3596,7 +3596,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 622,
+      "line": 626,
       "declarations": [
         {
           "property": "line-break",
@@ -3647,7 +3647,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 673,
+      "line": 677,
       "declarations": [
         {
           "property": "opacity",
@@ -3667,7 +3667,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 692,
+      "line": 696,
       "declarations": [
         {
           "property": "white-space",
@@ -3683,7 +3683,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 680,
+      "line": 684,
       "declarations": [
         {
           "property": "color",
@@ -3878,7 +3878,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 73,
+      "line": 74,
       "declarations": [
         {
           "property": "font-size",
@@ -3914,7 +3914,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 325,
+      "line": 326,
       "declarations": [
         {
           "property": "display",
@@ -3956,7 +3956,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 395,
+      "line": 396,
       "declarations": [
         {
           "property": "--dbx-icon-tile-padding",
@@ -4023,7 +4023,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 795,
+      "line": 799,
       "declarations": [
         {
           "property": "font",
@@ -4042,7 +4042,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 802,
+      "line": 806,
       "declarations": [
         {
           "property": "font",
@@ -4061,7 +4061,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 809,
+      "line": 813,
       "declarations": [
         {
           "property": "font",
@@ -4080,7 +4080,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 89,
+      "line": 90,
       "declarations": [
         {
           "property": "text-align",
@@ -4096,7 +4096,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 732,
+      "line": 736,
       "declarations": [
         {
           "property": "font",
@@ -4115,7 +4115,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 739,
+      "line": 743,
       "declarations": [
         {
           "property": "font",
@@ -4134,7 +4134,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 746,
+      "line": 750,
       "declarations": [
         {
           "property": "font",
@@ -4153,7 +4153,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 753,
+      "line": 757,
       "declarations": [
         {
           "property": "font",
@@ -4172,7 +4172,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 760,
+      "line": 764,
       "declarations": [
         {
           "property": "font",
@@ -4191,7 +4191,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 767,
+      "line": 771,
       "declarations": [
         {
           "property": "font",
@@ -4210,7 +4210,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 816,
+      "line": 820,
       "declarations": [
         {
           "property": "font",
@@ -4229,7 +4229,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 824,
+      "line": 828,
       "declarations": [
         {
           "property": "font",
@@ -4252,7 +4252,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 831,
+      "line": 835,
       "declarations": [
         {
           "property": "font",
@@ -4271,7 +4271,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 491,
+      "line": 495,
       "declarations": [
         {
           "property": "white-space",
@@ -4298,7 +4298,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 774,
+      "line": 778,
       "declarations": [
         {
           "property": "font",
@@ -4317,7 +4317,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 781,
+      "line": 785,
       "declarations": [
         {
           "property": "font",
@@ -4336,7 +4336,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 788,
+      "line": 792,
       "declarations": [
         {
           "property": "font",
@@ -4355,7 +4355,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 506,
+      "line": 510,
       "declarations": [],
       "role": "text",
       "intent": "single-line truncation with ellipsis on any block-level element",
@@ -4370,7 +4370,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 426,
+      "line": 427,
       "declarations": [
         {
           "property": "display",
@@ -4379,10 +4379,14 @@
         {
           "property": "align-items",
           "value": "flex-start"
+        },
+        {
+          "property": "overflow-x",
+          "value": "auto"
         }
       ],
       "role": "layout",
-      "intent": "horizontal progress timeline — a row of equal-width `.dbx-timeline-item` steps whose markers are joined by connector lines (a program journey, an approval chain, an order's progress)",
+      "intent": "horizontal progress timeline — a row of equal-width `.dbx-timeline-item` steps whose markers are joined by connector lines (a program journey, an approval chain, an order's progress). Scrolls sideways when its steps don't fit at their minimum width.",
       "seeAlso": [
         "timeline-item",
         "step-block",
@@ -4396,7 +4400,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 439,
+      "line": 442,
       "declarations": [
         {
           "property": "flex",
@@ -4404,7 +4408,11 @@
         },
         {
           "property": "min-width",
-          "value": "0"
+          "value": "var(--dbx-timeline-item-min-width, #{$dbx-timeline-item-min-width})"
+        },
+        {
+          "property": "overflow-wrap",
+          "value": "break-word"
         },
         {
           "property": "display",
@@ -4424,7 +4432,7 @@
         }
       ],
       "role": "layout",
-      "intent": "one step of a `.dbx-timeline` — its first child is the marker (a `<dbx-avatar>`, `<dbx-icon-tile>`, ...) with the label lines centered below it, and a connector line runs back to the previous step's marker. Add `[dbxColor]` (without a tone) to color that connector for the progress reached; color the marker through its own inputs. Customize via the `--dbx-timeline-*` CSS variables.",
+      "intent": "one step of a `.dbx-timeline` — its first child is the marker (a `<dbx-avatar>`, `<dbx-icon-tile>`, ...) with the label lines centered below it, and a connector line runs back to the previous step's marker. Add `[dbxColor]` (without a tone) to color that connector for the progress reached; color the marker through its own inputs. Apply it with the `[dbxTimelineItem]` directive and mark the step in progress with `[dbxTimelineItemCurrent]` so a narrow, scrolling timeline opens centered on that step. Customize via the `--dbx-timeline-*` CSS variables.",
       "seeAlso": [
         "timeline",
         "avatar-view",
@@ -4436,6 +4444,7 @@
         "--dbx-timeline-connector-gap",
         "--dbx-timeline-connector-thickness",
         "--dbx-timeline-item-gap",
+        "--dbx-timeline-item-min-width",
         "--mat-sys-outline-variant"
       ]
     },
@@ -4445,7 +4454,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 858,
+      "line": 862,
       "declarations": [
         {
           "property": "letter-spacing",
@@ -4529,7 +4538,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 97,
+      "line": 98,
       "declarations": [
         {
           "property": "text-decoration",
@@ -4545,7 +4554,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 840,
+      "line": 844,
       "declarations": [
         {
           "property": "text-transform",
@@ -4565,7 +4574,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 614,
+      "line": 618,
       "declarations": [
         {
           "property": "white-space",

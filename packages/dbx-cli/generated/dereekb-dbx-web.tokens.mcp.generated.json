@@ -3150,6 +3150,19 @@
       "componentScope": "text"
     },
     {
+      "cssVariable": "--dbx-timeline-item-min-width",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "timeline item min width"
+      ],
+      "description": "Component-scoped override point (`text`) read in `packages/dbx-web/src/lib/layout/text/_text.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `96px`.",
+      "defaults": {
+        "light": "96px"
+      },
+      "componentScope": "text"
+    },
+    {
       "cssVariable": "--dbx-top-banner-height",
       "scssVariable": "$top-banner-height-var",
       "source": "dbx-web",
