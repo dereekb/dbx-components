@@ -6,12 +6,13 @@ import {
   USER_EXTERNAL_CONNECTION_TOKEN_FORBIDDEN_ERROR_CODE,
   type UserExternalConnectionAccessToken,
   userExternalConnectionTokenApiPath,
+  TRELLO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as TRELLO,
   ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as ZOHO
 } from '@dereekb/firebase';
 import { type FirebaseServerEnvService, MISSING_ENDPOINT_OIDC_SCOPE_ERROR_CODE } from '@dereekb/firebase-server';
 import { oAuthAuthorizedSuperTestContextFactory } from '@dereekb/firebase-server/test';
 import { MS_IN_MINUTE } from '@dereekb/util';
-import { DEMO_ZOHO_ADMIN_EXTERNAL_CONNECTION_PROVIDER_TYPE as ZOHO_ADMIN, EXTERNAL_TOKEN_OIDC_PROVIDER_PROFILE_KEY } from 'demo-firebase';
+import { DEMO_TRELLO_BOT_EXTERNAL_CONNECTION_PROVIDER_TYPE as TRELLO_BOT, DEMO_ZOHO_ADMIN_EXTERNAL_CONNECTION_PROVIDER_TYPE as ZOHO_ADMIN, EXTERNAL_TOKEN_OIDC_PROVIDER_PROFILE_KEY } from 'demo-firebase';
 import { DEMO_EXTERNAL_CONNECTION_TOKEN_OIDC_CLIENT_IDS_ENV_KEY, demoExternalConnectionTokenApiModuleConfigFactory } from './externaltoken.module';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoOAuthAuthorizedSuperTestContext, demoUserExternalConnectionContext, demoUserExternalConnectionTestCredentials } from '../../../test/fixture';
 
@@ -19,6 +20,8 @@ vi.setConfig({ hookTimeout: 40000, testTimeout: 40000 });
 
 const ZOHO_ADMIN_TOKEN_PATH = `/api${userExternalConnectionTokenApiPath(ZOHO_ADMIN)}`;
 const ZOHO_TOKEN_PATH = `/api${userExternalConnectionTokenApiPath(ZOHO)}`;
+const TRELLO_BOT_TOKEN_PATH = `/api${userExternalConnectionTokenApiPath(TRELLO_BOT)}`;
+const TRELLO_TOKEN_PATH = `/api${userExternalConnectionTokenApiPath(TRELLO)}`;
 
 /**
  * OAuth fixture shaped like demo-cli's dedicated `external-token` env: a client assigned the admin-only
@@ -41,6 +44,12 @@ const demoOAuthSuperTestContextWithExternalTokenScope = oAuthAuthorizedSuperTest
 const ZOHO_ADMIN_EXTRA = { apiDomain: 'https://www.zohoapis.com', location: 'us', accountsServer: 'https://accounts.zoho.com' };
 
 /**
+ * The values a real Trello connection stores beside its tokens. `memberId` + `username` are on the
+ * Trello adapter's export allowlist; `refreshExpiresAt` feeds the server-side expiry notice only.
+ */
+const TRELLO_BOT_EXTRA = { memberId: '5a1b2c3d4e5f60718293a4b5', username: 'boardbot', refreshExpiresAt: new Date(Date.now() + MS_IN_MINUTE * 60 * 24 * 90).toISOString() };
+
+/**
  * Coverage for the external connection token API (`GET /api/session/external/:providerType`) as wired
  * into demo-api by `DemoExternalConnectionTokenApiModule` — the endpoint `demo-cli external-token`
  * calls to hand zoho-cli a `zoho_admin` access token.
@@ -51,7 +60,11 @@ const ZOHO_ADMIN_EXTRA = { apiDomain: 'https://www.zohoapis.com', location: 'us'
  *    production means any client).
  * 2. The admin predicate — the load-bearing check.
  * 3. The `token.external` OIDC scope.
- * 4. The provider's `tokenExport` policy: `zoho_admin` is opted in, plain `zoho` is not.
+ * 4. The provider's `tokenExport` policy: `zoho_admin` and `trello_bot` are opted in, plain `zoho` and
+ *    `trello` are not.
+ *
+ * `trello_bot` is the second worked example: exportable WITHOUT being admin-only to connect, so the
+ * admin predicate here is the token API's own gate rather than the provider policy's.
  */
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   describe('GET /api/session/external/:providerType', () => {
@@ -134,6 +147,52 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
               });
             });
 
+            describe('with a trello_bot connection', () => {
+              beforeEach(async () => {
+                await uec.connect({
+                  providerType: TRELLO_BOT,
+                  credentials: demoUserExternalConnectionTestCredentials({
+                    accessToken: 'trello-bot-access-token',
+                    refreshToken: 'trello-bot-refresh-token',
+                    tokenType: 'Bearer',
+                    scopes: ['read:board:trello', 'write:board:trello', 'read:member:trello', 'offline_access'],
+                    externalAccountId: TRELLO_BOT_EXTRA.memberId,
+                    label: 'Board Bot',
+                    extra: TRELLO_BOT_EXTRA
+                  })
+                });
+              });
+
+              it('mints the caller’s own trello_bot access token', async () => {
+                const res = await oauth.authRequest('get', TRELLO_BOT_TOKEN_PATH).expect(200);
+                const result = res.body as UserExternalConnectionAccessToken;
+
+                expect(result.uid).toBe(au.uid);
+                expect(result.providerType).toBe(TRELLO_BOT);
+                expect(result.accessToken).toBe('trello-bot-access-token');
+                expect(result.tokenType).toBe('Bearer');
+                expect(res.headers['cache-control']).toBe('no-store');
+              });
+
+              it('exports exactly the member id and username, never the refresh token or its expiry', async () => {
+                const res = await oauth.authRequest('get', TRELLO_BOT_TOKEN_PATH).expect(200);
+                const result = res.body as UserExternalConnectionAccessToken;
+
+                expect(JSON.stringify(result)).not.toContain('trello-bot-refresh-token');
+                expect(result).not.toHaveProperty('refreshToken');
+                expect(result.extra).toEqual({ memberId: TRELLO_BOT_EXTRA.memberId, username: TRELLO_BOT_EXTRA.username });
+                expect(JSON.stringify(result)).not.toContain('refreshExpiresAt');
+              });
+
+              it('refuses the plain trello connection, which is not opted in to token export', async () => {
+                await uec.connect({ providerType: TRELLO, credentials: demoUserExternalConnectionTestCredentials({ accessToken: 'trello-access-token', externalAccountId: `trello-${au.uid}` }) });
+
+                const res = await oauth.authRequest('get', TRELLO_TOKEN_PATH).expect(403);
+                expect(res.body.code).toBe(USER_EXTERNAL_CONNECTION_TOKEN_EXPORT_NOT_ALLOWED_ERROR_CODE);
+                expect(JSON.stringify(res.body)).not.toContain('trello-access-token');
+              });
+            });
+
             describe('without a zoho_admin connection', () => {
               it('reports the provider as not connected', async () => {
                 const res = await oauth.authRequest('get', ZOHO_ADMIN_TOKEN_PATH).expect(409);
@@ -174,6 +233,16 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
               const res = await oauth.authRequest('get', ZOHO_ADMIN_TOKEN_PATH).expect(403);
               expect(res.body.code).toBe(USER_EXTERNAL_CONNECTION_TOKEN_FORBIDDEN_ERROR_CODE);
+            });
+
+            it('is refused by the admin predicate for trello_bot too, which a non-admin may connect', async () => {
+              // trello_bot is not adminOnly, so this connection is reachable through the real connect flow:
+              // the mint's own admin predicate is the only thing keeping its token on the server
+              await uec.connect({ providerType: TRELLO_BOT, credentials: demoUserExternalConnectionTestCredentials({ accessToken: 'trello-bot-access-token' }) });
+
+              const res = await oauth.authRequest('get', TRELLO_BOT_TOKEN_PATH).expect(403);
+              expect(res.body.code).toBe(USER_EXTERNAL_CONNECTION_TOKEN_FORBIDDEN_ERROR_CODE);
+              expect(JSON.stringify(res.body)).not.toContain('trello-bot-access-token');
             });
           });
         });

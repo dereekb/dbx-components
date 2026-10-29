@@ -140,9 +140,9 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         const readConnection = () => readConnectionFor(f, u.uid);
 
         describe('authorizeUrlForRequest()', () => {
-          it('should build an authorize url carrying the request state and derived redirect uri', () => {
+          it('should build an authorize url carrying the request state and derived redirect uri', async () => {
             const state = signedState();
-            const url = service.authorizeUrlForRequest({ query: { state } } as never);
+            const url = await service.authorizeUrlForRequest({ query: { state } } as never);
 
             expect(url).toBeDefined();
 
@@ -156,8 +156,8 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             expect(searchParams.get('scope')).toContain('BOOKING_READ');
           });
 
-          it('should refuse a request with no resolvable state', () => {
-            expect(service.authorizeUrlForRequest({ query: {} } as never)).toBeUndefined();
+          it('should refuse a request with no resolvable state', async () => {
+            expect(await service.authorizeUrlForRequest({ query: {} } as never)).toBeUndefined();
           });
         });
 

@@ -4,6 +4,7 @@ export * from './detail.block.header.component';
 export * from './icon-tile.component';
 export * from './icon-tile.directive';
 export * from './step.block.component';
+export * from './timeline.item.directive';
 export * from './icon.spacer.component';
 export * from './label.block.component';
 export * from './linkify/linkify';

@@ -44,4 +44,21 @@ export type TrelloUsername = string;
  */
 export const TRELLO_API_URL = 'https://api.trello.com/1';
 
+/**
+ * Trello API URL (versioned) used for OAuth 2.0 bearer requests.
+ *
+ * Kept apart from {@link TRELLO_API_URL}, which the legacy key+token mode uses unchanged. Trello's OAuth
+ * 2.0 guides call `https://trello.com/1` while the webhooks guide uses `https://api.trello.com/1`; the
+ * latter is the default here, unverified against the live server, so flipping it is a one-constant change.
+ */
+export const TRELLO_OAUTH_API_URL = 'https://api.trello.com/1';
+
+/**
+ * An OAuth 2.0 access token Trello's (Atlassian's) authorization server issued for a member. Sent as
+ * `Authorization: Bearer`.
+ *
+ * Treat as a secret.
+ */
+export type TrelloOAuthAccessTokenString = string;
+
 export type TrelloApiUrl = typeof TRELLO_API_URL;

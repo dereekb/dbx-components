@@ -27,7 +27,9 @@ import {
   type DbxClickToCopyFieldComponentConfig,
   DbxIconTileDirective,
   DbxIconTileComponent,
-  DbxButtonComponent
+  DbxButtonComponent,
+  DbxAvatarComponent,
+  DbxTimelineItemDirective
 } from '@dereekb/dbx-web';
 import { Component, inject, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
@@ -62,6 +64,8 @@ import { LOREM } from '../../shared';
     DbxClickToCopyFieldComponent,
     DbxIconTileDirective,
     DbxIconTileComponent,
+    DbxAvatarComponent,
+    DbxTimelineItemDirective,
     MatIconModule
   ]
 })

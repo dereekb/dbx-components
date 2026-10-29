@@ -8,6 +8,7 @@ import {
   type ReadUserExternalConnectionAuthorizeStateParams,
   type UserExternalConnectionAuthorizeStateResult,
   USER_EXTERNAL_CONNECTION_PROVIDER_NOT_ALLOWED_ERROR_CODE,
+  TRELLO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as TRELLO,
   ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as ZOHO,
   ZOOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as ZOOM,
   onCallCreateModelParams,
@@ -18,7 +19,7 @@ import {
 import { type Maybe } from '@dereekb/util';
 import { UserExternalConnectionOAuthProviderRegistry, UserExternalConnectionStateCoder, type UserExternalConnectionStateActor } from '@dereekb/firebase-server/model';
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
-import { DEMO_ZOHO_ADMIN_EXTERNAL_CONNECTION_PROVIDER_TYPE as ZOHO_ADMIN } from 'demo-firebase';
+import { DEMO_TRELLO_BOT_EXTERNAL_CONNECTION_PROVIDER_TYPE as TRELLO_BOT, DEMO_ZOHO_ADMIN_EXTERNAL_CONNECTION_PROVIDER_TYPE as ZOHO_ADMIN } from 'demo-firebase';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoUserExternalConnectionContext, demoUserExternalConnectionTestCredentials } from '../../../test/fixture';
 
 /**
@@ -364,6 +365,26 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
                 expect(stateActorUid(f.nest.get(UserExternalConnectionStateCoder).verifyState({ state: result.state, providerType: ZOHO }))).toBe(u.uid);
               });
             });
+
+            describe('trello providers', () => {
+              function callAuthorizeState(params: ReadUserExternalConnectionAuthorizeStateParams) {
+                return u.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(userExternalConnectionIdentity, params, 'authorizeState')) as Promise<UserExternalConnectionAuthorizeStateResult>;
+              }
+
+              it('should mint a non-admin a state for trello', async () => {
+                const result = await callAuthorizeState({ providerType: TRELLO });
+                expect(stateActorUid(f.nest.get(UserExternalConnectionStateCoder).verifyState({ state: result.state, providerType: TRELLO }))).toBe(u.uid);
+              });
+
+              it('should mint a non-admin a state for trello_bot, which is exportable but not admin-only', async () => {
+                const result = await callAuthorizeState({ providerType: TRELLO_BOT });
+                const stateCoder = f.nest.get(UserExternalConnectionStateCoder);
+
+                expect(stateActorUid(stateCoder.verifyState({ state: result.state, providerType: TRELLO_BOT }))).toBe(u.uid);
+                // a trello_bot state cannot be redeemed at the plain trello callback
+                expect(stateCoder.verifyState({ state: result.state, providerType: TRELLO })).toBeUndefined();
+              });
+            });
           });
 
           it('should offer exactly the providers whose oauth modules are mounted', () => {
@@ -376,6 +397,9 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             expect(registry.hasAuthorizeFlowForProviderType(ZOHO)).toBe(true);
             // the second Zoho connection, registered under its own service token
             expect(registry.hasAuthorizeFlowForProviderType(ZOHO_ADMIN)).toBe(true);
+            expect(registry.hasAuthorizeFlowForProviderType(TRELLO)).toBe(true);
+            // the second Trello connection, registered under its own service token
+            expect(registry.hasAuthorizeFlowForProviderType(TRELLO_BOT)).toBe(true);
             expect(registry.hasAuthorizeFlowForProviderType(ZOOM)).toBe(false);
           });
         });

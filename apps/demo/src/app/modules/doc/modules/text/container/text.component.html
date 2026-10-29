@@ -288,6 +288,72 @@
         </dbx-step-block>
       </div>
     </doc-feature-example>
+    <doc-feature-example
+      header=".dbx-timeline + .dbx-timeline-item"
+      hint="Horizontal progress timeline. Each .dbx-timeline-item takes its first child as the marker (a <dbx-icon-tile>, <dbx-avatar>, ...) and centers the remaining children below it as label lines. A connector line runs from the previous marker into each item; add [dbxColor] (without a tone) to an item to color its connector for the progress reached. Steps keep a minimum width, so a narrow viewport scrolls the timeline sideways; use the [dbxTimelineItem] directive and mark the step in progress with [dbxTimelineItemCurrent] (as on 3. Development below) so a scrolled timeline opens centered on that step. The timeline is presentational — use mat-stepper for an interactive wizard.">
+      <div class="dbx-timeline">
+        <div dbxTimelineItem>
+          <dbx-icon-tile icon="check" dbxColor="success" [round]="true"></dbx-icon-tile>
+          <span class="dbx-text-label-large">1. Discovery</span>
+          <span class="dbx-text-body-small dbx-hint">Complete</span>
+        </div>
+        <div dbxTimelineItem dbxColor="success">
+          <dbx-icon-tile icon="check" dbxColor="success" [round]="true"></dbx-icon-tile>
+          <span class="dbx-text-label-large">2. Goal Setting</span>
+          <span class="dbx-text-body-small dbx-hint">Complete</span>
+        </div>
+        <div dbxTimelineItem [dbxTimelineItemCurrent]="true" dbxColor="primary">
+          <dbx-icon-tile icon="trending_up" dbxColor="primary" [round]="true"></dbx-icon-tile>
+          <span class="dbx-text-label-large">3. Development</span>
+          <span class="dbx-text-body-small dbx-hint">In Progress</span>
+        </div>
+        <div dbxTimelineItem>
+          <dbx-icon-tile icon="hub" dbxColor="grey" [dbxColorTone]="18" [round]="true"></dbx-icon-tile>
+          <span class="dbx-text-label-large">4. Integration</span>
+          <span class="dbx-text-body-small dbx-hint">Upcoming</span>
+        </div>
+        <div dbxTimelineItem>
+          <dbx-icon-tile icon="rate_review" dbxColor="grey" [dbxColorTone]="18" [round]="true"></dbx-icon-tile>
+          <span class="dbx-text-label-large">5. Review</span>
+          <span class="dbx-text-body-small dbx-hint">Upcoming</span>
+        </div>
+      </div>
+      <p>Any marker works. Here &lt;dbx-avatar&gt; shows the people in an approval chain — initials on a curated color, then the icon fallback for the step still waiting on someone.</p>
+      <div class="dbx-timeline">
+        <div class="dbx-timeline-item">
+          <dbx-avatar avatarSize="small" avatarName="Morgan Lee"></dbx-avatar>
+          <span class="dbx-text-label-large">Requested</span>
+          <span class="dbx-text-body-small dbx-hint">Morgan Lee · Apr 24</span>
+        </div>
+        <div class="dbx-timeline-item" dbxColor="success">
+          <dbx-avatar avatarSize="small" avatarName="Sam Rivera"></dbx-avatar>
+          <span class="dbx-text-label-large">Reviewed</span>
+          <span class="dbx-text-body-small dbx-hint">Sam Rivera · Apr 28</span>
+        </div>
+        <div class="dbx-timeline-item">
+          <dbx-avatar avatarSize="small" avatarIcon="hourglass_empty"></dbx-avatar>
+          <span class="dbx-text-label-large">Approved</span>
+          <span class="dbx-text-body-small dbx-hint">Waiting on finance</span>
+        </div>
+      </div>
+      <div style="--dbx-timeline-connector-thickness: 4px; --dbx-timeline-connector-gap: 6px; --dbx-timeline-item-gap: 12px; --dbx-icon-tile-padding: 12px">
+        <p class="dbx-hint">Custom tokens: thicker connector (4px), a gap (6px) between the connector and the markers, a wider gap (12px) above the labels, and larger icon tiles.</p>
+        <div class="dbx-timeline">
+          <div class="dbx-timeline-item">
+            <dbx-icon-tile icon="shopping_cart" dbxColor="accent" [round]="true"></dbx-icon-tile>
+            <span class="dbx-text-label-large">Ordered</span>
+          </div>
+          <div class="dbx-timeline-item" dbxColor="accent">
+            <dbx-icon-tile icon="local_shipping" dbxColor="accent" [round]="true"></dbx-icon-tile>
+            <span class="dbx-text-label-large">Shipped</span>
+          </div>
+          <div class="dbx-timeline-item">
+            <dbx-icon-tile icon="home" dbxColor="grey" [dbxColorTone]="18" [round]="true"></dbx-icon-tile>
+            <span class="dbx-text-label-large">Delivered</span>
+          </div>
+        </div>
+      </div>
+    </doc-feature-example>
     <doc-feature-example header="dbx-number-with-limit" hint="Displays a number that can be paired with a limit and be colored based on the ratio between the number and limit.">
       <p>A</p>
       <dbx-number-with-limit [number]="numberLimitA"></dbx-number-with-limit>

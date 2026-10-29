@@ -1,4 +1,4 @@
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type Milliseconds } from '@dereekb/util';
 import {
   applyUserExternalConnectionEntry,
   applyUserExternalConnectionLogin,
@@ -7,6 +7,7 @@ import {
   type FirestoreContextReference,
   type Transaction,
   type UserExternalConnectionDocument,
+  type UserExternalConnectionEntry,
   type UserExternalConnectionEntryStatus,
   type UserExternalConnectionErrorCode,
   type UserExternalConnectionExternalAccountId,
@@ -23,8 +24,16 @@ import {
   userExternalConnectionsWithExternalAccountQuery
 } from '@dereekb/firebase';
 import { type FirebaseServerAuthService, getAuthUserOrUndefined } from '@dereekb/firebase-server';
-import { applyUserExternalConnectionCredentials, type UserExternalConnectionCredentials, type UserExternalConnectionServerFirestoreCollections, userExternalConnectionGrantSummaryFromCredentials } from './userexternalconnection.private';
-import { userExternalConnectionAlreadyExistsError, userExternalConnectionExternalAccountInUseError, userExternalConnectionUnlinkLastLoginMethodError } from './userexternalconnection.error';
+import {
+  applyUserExternalConnectionCredentials,
+  isUserExternalConnectionCredentialsExpired,
+  type UserExternalConnectionCredentials,
+  type UserExternalConnectionRefreshLeaseHolder,
+  type UserExternalConnectionRefreshLeaseMap,
+  type UserExternalConnectionServerFirestoreCollections,
+  userExternalConnectionGrantSummaryFromCredentials
+} from './userexternalconnection.private';
+import { userExternalConnectionAlreadyExistsError, userExternalConnectionExternalAccountInUseError, userExternalConnectionRefreshLeaseLostError, userExternalConnectionUnlinkLastLoginMethodError } from './userexternalconnection.error';
 import { type UserExternalConnectionProviderPolicyRegistry, userExternalConnectionPolicyForProviderType } from './userexternalconnection.policy';
 
 /**
@@ -78,7 +87,94 @@ export interface UserExternalConnectionConnectParams {
 /**
  * Parameters for replacing a provider's credentials after a token refresh.
  */
-export type UserExternalConnectionRefreshCredentialsParams = UserExternalConnectionConnectParams;
+export interface UserExternalConnectionRefreshCredentialsParams extends UserExternalConnectionConnectParams {
+  /**
+   * The refresh lease the refresh was performed under, when it was performed under one.
+   *
+   * Fences the persist: when set and the stored lease for this provider is no longer this holder's —
+   * a reconnect, a disconnect or a takeover after expiry ended it — nothing is written and
+   * `USER_EXTERNAL_CONNECTION_REFRESH_LEASE_LOST` is thrown instead.
+   */
+  readonly refreshLeaseHolder?: Maybe<UserExternalConnectionRefreshLeaseHolder>;
+}
+
+/**
+ * Parameters for {@link UserExternalConnectionRefreshLeaseWriter.acquireUserExternalConnectionRefreshLease}.
+ */
+export interface AcquireUserExternalConnectionRefreshLeaseParams {
+  readonly uid: FirebaseAuthUserId;
+  readonly providerType: UserExternalConnectionProviderType;
+  /**
+   * The refresh attempt asking for the lease.
+   */
+  readonly holder: UserExternalConnectionRefreshLeaseHolder;
+  /**
+   * The credentials the caller decided to refresh from. Stored credentials whose access token differs
+   * from these AND that are still usable mean another instance already refreshed.
+   */
+  readonly previous: UserExternalConnectionCredentials;
+  /**
+   * How long the stored credentials must remain valid to count as already refreshed.
+   */
+  readonly buffer: Milliseconds;
+  /**
+   * How long the lease is held for once acquired.
+   */
+  readonly leaseDuration: Milliseconds;
+  readonly now?: Maybe<Date>;
+}
+
+/**
+ * The user is no longer connected to the provider; there is nothing to refresh.
+ */
+export interface UserExternalConnectionRefreshLeaseDisconnectedResult {
+  readonly outcome: 'disconnected';
+}
+
+/**
+ * Another instance refreshed since the caller read: the stored credentials are already usable.
+ */
+export interface UserExternalConnectionRefreshLeaseRefreshedResult {
+  readonly outcome: 'refreshed';
+  readonly credentials: UserExternalConnectionCredentials;
+  readonly entry: UserExternalConnectionEntry;
+}
+
+/**
+ * Another refresh attempt holds an unexpired lease.
+ */
+export interface UserExternalConnectionRefreshLeaseHeldResult {
+  readonly outcome: 'held';
+  /**
+   * When the other holder's lease expires.
+   */
+  readonly until: Date;
+  readonly credentials: UserExternalConnectionCredentials;
+  readonly entry: UserExternalConnectionEntry;
+}
+
+/**
+ * The caller now holds the lease, and should refresh from the STORED credentials returned here.
+ */
+export interface UserExternalConnectionRefreshLeaseAcquiredResult {
+  readonly outcome: 'acquired';
+  readonly credentials: UserExternalConnectionCredentials;
+  readonly entry: UserExternalConnectionEntry;
+}
+
+/**
+ * The result of {@link UserExternalConnectionRefreshLeaseWriter.acquireUserExternalConnectionRefreshLease}.
+ */
+export type AcquireUserExternalConnectionRefreshLeaseResult = UserExternalConnectionRefreshLeaseDisconnectedResult | UserExternalConnectionRefreshLeaseRefreshedResult | UserExternalConnectionRefreshLeaseHeldResult | UserExternalConnectionRefreshLeaseAcquiredResult;
+
+/**
+ * Parameters for {@link UserExternalConnectionRefreshLeaseWriter.releaseUserExternalConnectionRefreshLease}.
+ */
+export interface ReleaseUserExternalConnectionRefreshLeaseParams {
+  readonly uid: FirebaseAuthUserId;
+  readonly providerType: UserExternalConnectionProviderType;
+  readonly holder: UserExternalConnectionRefreshLeaseHolder;
+}
 
 /**
  * Parameters for marking a provider's connection as errored.
@@ -196,6 +292,27 @@ export abstract class UserExternalConnectionServerActions {
    * {@link backfillUserExternalConnectionLoginsFactory}.
    */
   abstract backfillUserExternalConnectionLogins(params?: Maybe<BackfillUserExternalConnectionParams>): Promise<BackfillUserExternalConnectionResult>;
+  /**
+   * Acquires the cross-instance refresh lease for one provider, or reports why not. See
+   * {@link acquireUserExternalConnectionRefreshLeaseFactory}.
+   */
+  abstract acquireUserExternalConnectionRefreshLease(params: AcquireUserExternalConnectionRefreshLeaseParams): Promise<AcquireUserExternalConnectionRefreshLeaseResult>;
+  /**
+   * Releases a refresh lease, if the holder still holds it. See
+   * {@link releaseUserExternalConnectionRefreshLeaseFactory}.
+   */
+  abstract releaseUserExternalConnectionRefreshLease(params: ReleaseUserExternalConnectionRefreshLeaseParams): Promise<void>;
+}
+
+/**
+ * The two lease operations a reader's cross-instance refresh needs.
+ *
+ * Narrower than {@link UserExternalConnectionServerActions} on purpose, like the writers below — a full
+ * `UserExternalConnectionServerActions` satisfies it.
+ */
+export interface UserExternalConnectionRefreshLeaseWriter {
+  acquireUserExternalConnectionRefreshLease(params: AcquireUserExternalConnectionRefreshLeaseParams): Promise<AcquireUserExternalConnectionRefreshLeaseResult>;
+  releaseUserExternalConnectionRefreshLease(params: ReleaseUserExternalConnectionRefreshLeaseParams): Promise<void>;
 }
 
 /**
@@ -233,14 +350,16 @@ export function userExternalConnectionServerActions(context: UserExternalConnect
   return {
     createUserExternalConnection: createUserExternalConnectionFactory(context),
     connectUserExternalConnection: (params) => writePair({ ...params, outcome: 'connected' }),
-    refreshUserExternalConnectionCredentials: (params) => writePair({ ...params, outcome: 'connected' }),
+    refreshUserExternalConnectionCredentials: ({ refreshLeaseHolder, ...params }) => writePair({ ...params, outcome: 'connected', expectedRefreshLeaseHolder: refreshLeaseHolder }),
     markUserExternalConnectionError: (params) => writePair({ ...params, outcome: 'error' }),
     disconnectUserExternalConnection: (params) => writePair({ ...params, outcome: 'disconnected' }),
     linkUserExternalConnectionLogin: linkUserExternalConnectionLoginFactory(context),
     unlinkUserExternalConnectionLogin: unlinkUserExternalConnectionLoginFactory(context),
     deleteAllUserExternalConnectionsForUser: deleteAllUserExternalConnectionsForUserFactory(context),
     backfillUserExternalConnectionExternalAccountKeys: backfillUserExternalConnectionExternalAccountKeysFactory(context),
-    backfillUserExternalConnectionLogins: backfillUserExternalConnectionLoginsFactory(context)
+    backfillUserExternalConnectionLogins: backfillUserExternalConnectionLoginsFactory(context),
+    acquireUserExternalConnectionRefreshLease: acquireUserExternalConnectionRefreshLeaseFactory(context),
+    releaseUserExternalConnectionRefreshLease: releaseUserExternalConnectionRefreshLeaseFactory(context)
   };
 }
 
@@ -293,6 +412,13 @@ export interface WriteUserExternalConnectionPairParams {
   readonly error?: Maybe<UserExternalConnectionErrorCode>;
   readonly retainEntry?: Maybe<boolean>;
   readonly now?: Maybe<Date>;
+  /**
+   * The refresh lease holder this write must still be fenced by.
+   *
+   * When set, the write is refused BEFORE anything is written — `USER_EXTERNAL_CONNECTION_REFRESH_LEASE_LOST`
+   * — unless the stored lease for this provider still names this holder.
+   */
+  readonly expectedRefreshLeaseHolder?: Maybe<UserExternalConnectionRefreshLeaseHolder>;
 }
 
 /**
@@ -339,7 +465,7 @@ export function writeUserExternalConnectionPairInTransactionFactory(context: Use
   const resolveCollision = resolveUserExternalAccountCollisionInTransactionFactory(context);
 
   return async (params: WriteUserExternalConnectionPairParams): Promise<UserExternalConnectionDocument> => {
-    const { uid, providerType, outcome, credentials, error, retainEntry } = params;
+    const { uid, providerType, outcome, credentials, error, retainEntry, expectedRefreshLeaseHolder } = params;
     const now = params.now ?? new Date();
     const policy = userExternalConnectionPolicyForProviderType(userExternalConnectionProviderPolicyRegistry, providerType);
 
@@ -351,6 +477,12 @@ export function writeUserExternalConnectionPairInTransactionFactory(context: Use
       const currentPublic = await publicDocument.snapshotData();
       const currentPrivate = await privateDocument.snapshotData();
 
+      // the persist fence: a refresh performed under a lease that has since been ended by another paired
+      // write (a reconnect, a disconnect) or taken over after expiry must not overwrite what that wrote
+      if (expectedRefreshLeaseHolder != null && currentPrivate?.rl?.[providerType]?.h !== expectedRefreshLeaseHolder) {
+        throw userExternalConnectionRefreshLeaseLostError(providerType);
+      }
+
       // ONE input -> BOTH sides. The entry is derived from the credentials being stored, never from
       // anything the caller supplied alongside them.
       const nextCredentials = credentialsForUserExternalConnectionOutcome({ outcome, credentials, previous: currentPrivate?.cr?.[providerType] });
@@ -361,13 +493,104 @@ export function writeUserExternalConnectionPairInTransactionFactory(context: Use
       const displaced = policy.unique && outcome === 'connected' && entry?.ea ? await resolveCollision({ transaction, uid, providerType, externalAccountId: entry.ea, policy: policy.onCollision }) : undefined;
 
       await publicDocument.accessor.set(applyUserExternalConnectionEntry({ current: currentPublic, uid, providerType, entry, now }));
-      await privateDocument.accessor.set(applyUserExternalConnectionCredentials({ current: currentPrivate, uid, providerType, credentials: nextCredentials, now }));
+      // a failure mark keeps the provider's refresh lease: it is written by whoever saw a 401, which may
+      // be a different instance than the one mid-refresh, and ending that refresh's lease would make its
+      // fenced persist drop a rotated refresh token the provider has already spent the old one for
+      await privateDocument.accessor.set(applyUserExternalConnectionCredentials({ current: currentPrivate, uid, providerType, credentials: nextCredentials, now, endRefreshLease: outcome !== 'error' }));
 
       if (displaced) {
         await displaced.release(now);
       }
 
       return publicDocument;
+    });
+  };
+}
+
+/**
+ * Creates the function that acquires a provider's cross-instance refresh lease.
+ *
+ * One transaction reads both halves of the pair and resolves to exactly one outcome:
+ *
+ * - `disconnected`: no entry, no credentials, or a `disconnected` entry. Nothing is written.
+ * - `refreshed`: the stored access token differs from `previous` and is usable within `buffer` on a
+ *   `connected` entry — another instance refreshed since the caller read. This is the re-read before
+ *   refresh, and nothing is written.
+ * - `held`: another holder's lease has not expired. Nothing is written.
+ * - `acquired`: otherwise. The lease is written (`rl[providerType] = { h: holder, u: now + leaseDuration }`)
+ *   and the STORED credentials are returned, which the caller must refresh from instead of the copy it
+ *   read earlier.
+ *
+ * The lease is the one write to the private document that does not go through the paired write. It is
+ * coordination state with no public counterpart, so writing it alone cannot make the pair disagree; the
+ * credentials and `uat` are written back unchanged.
+ *
+ * @param context - The context carrying both halves of the pair.
+ * @returns A function acquiring the lease inside a transaction.
+ */
+export function acquireUserExternalConnectionRefreshLeaseFactory(context: UserExternalConnectionServerActionsContext) {
+  const { userExternalConnectionCollection, userExternalConnectionPrivateCollection, firestoreContext } = context;
+
+  return async (params: AcquireUserExternalConnectionRefreshLeaseParams): Promise<AcquireUserExternalConnectionRefreshLeaseResult> => {
+    const { uid, providerType, holder, previous, buffer, leaseDuration } = params;
+    const now = params.now ?? new Date();
+
+    return firestoreContext.runTransaction(async (transaction) => {
+      const publicDocument = userExternalConnectionCollection.documentAccessorForTransaction(transaction).loadDocumentForId(uid);
+      const privateDocument = userExternalConnectionPrivateCollection.documentAccessorForTransaction(transaction).loadDocumentForId(uid);
+
+      const currentPublic = await publicDocument.snapshotData();
+      const currentPrivate = await privateDocument.snapshotData();
+
+      const entry = currentPublic?.e?.[providerType];
+      const credentials = currentPrivate?.cr?.[providerType];
+      let result: AcquireUserExternalConnectionRefreshLeaseResult;
+
+      if (entry == null || credentials == null || currentPrivate == null || entry.st === 'disconnected') {
+        result = { outcome: 'disconnected' };
+      } else {
+        const lease = currentPrivate.rl?.[providerType];
+
+        if (entry.st === 'connected' && credentials.accessToken !== previous.accessToken && !isUserExternalConnectionCredentialsExpired({ credentials, buffer, now })) {
+          result = { outcome: 'refreshed', credentials, entry };
+        } else if (lease != null && lease.h !== holder && lease.u.getTime() > now.getTime()) {
+          result = { outcome: 'held', until: lease.u, credentials, entry };
+        } else {
+          const rl: UserExternalConnectionRefreshLeaseMap = { ...currentPrivate.rl, [providerType]: { h: holder, u: new Date(now.getTime() + leaseDuration) } };
+          await privateDocument.accessor.set({ ...currentPrivate, rl });
+          result = { outcome: 'acquired', credentials, entry };
+        }
+      }
+
+      return result;
+    });
+  };
+}
+
+/**
+ * Creates the function that releases a provider's refresh lease.
+ *
+ * Removes the lease only while it still names `holder`; otherwise — already released, ended by a paired
+ * write, or taken over — it is a no-op.
+ *
+ * @param context - The context carrying the private collection.
+ * @returns A function releasing the lease inside a transaction.
+ */
+export function releaseUserExternalConnectionRefreshLeaseFactory(context: UserExternalConnectionServerActionsContext) {
+  const { userExternalConnectionPrivateCollection, firestoreContext } = context;
+
+  return async (params: ReleaseUserExternalConnectionRefreshLeaseParams): Promise<void> => {
+    const { uid, providerType, holder } = params;
+
+    await firestoreContext.runTransaction(async (transaction) => {
+      const privateDocument = userExternalConnectionPrivateCollection.documentAccessorForTransaction(transaction).loadDocumentForId(uid);
+      const currentPrivate = await privateDocument.snapshotData();
+
+      if (currentPrivate?.rl?.[providerType]?.h === holder) {
+        const rl: UserExternalConnectionRefreshLeaseMap = { ...currentPrivate.rl };
+        delete rl[providerType];
+        await privateDocument.accessor.set({ ...currentPrivate, rl });
+      }
     });
   };
 }

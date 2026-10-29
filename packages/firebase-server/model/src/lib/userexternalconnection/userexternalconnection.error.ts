@@ -7,6 +7,8 @@ import {
   USER_EXTERNAL_CONNECTION_EXTERNAL_ACCOUNT_IN_USE_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_PROVIDER_NOT_ALLOWED_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_PROVIDER_NOT_CONNECTED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_REFRESH_IN_PROGRESS_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_REFRESH_LEASE_LOST_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_SIGN_IN_DENIED_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_SIGN_IN_EMAIL_CONFLICT_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_SIGN_IN_IDENTITY_UNAVAILABLE_ERROR_CODE,
@@ -16,7 +18,7 @@ import {
   USER_EXTERNAL_CONNECTION_LINK_NOT_ENABLED_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_UNLINK_LAST_LOGIN_METHOD_ERROR_CODE
 } from '@dereekb/firebase';
-import { forbiddenError, preconditionConflictError } from '@dereekb/firebase-server';
+import { forbiddenError, preconditionConflictError, unavailableError } from '@dereekb/firebase-server';
 import { type Maybe } from '@dereekb/util';
 
 /**
@@ -111,6 +113,54 @@ export function userExternalConnectionCredentialsExpiredError(providerType: User
     code: USER_EXTERNAL_CONNECTION_CREDENTIALS_EXPIRED_ERROR_CODE,
     data: { providerType }
   });
+}
+
+/**
+ * Creates an error indicating another instance holds the refresh lease for this connection and did not
+ * finish within the wait.
+ *
+ * A 503: retryable, since the refresh is still in progress and a retry will most likely find the
+ * credentials it produced. The token mint forwards it as-is through `details.code`.
+ *
+ * @param providerType - The provider whose refresh is in progress.
+ * @returns An unavailable HttpsError.
+ */
+export function userExternalConnectionRefreshInProgressError(providerType: UserExternalConnectionProviderType) {
+  return unavailableError({
+    message: `This user's "${providerType}" credentials are being refreshed elsewhere. Try again shortly.`,
+    code: USER_EXTERNAL_CONNECTION_REFRESH_IN_PROGRESS_ERROR_CODE,
+    data: { providerType }
+  });
+}
+
+/**
+ * Creates an error indicating a refresh's fenced persist found its lease gone, so the refreshed
+ * credentials were not written.
+ *
+ * Internal: `UserExternalConnectionReader` catches it and re-reads whatever superseded the refresh.
+ *
+ * @param providerType - The provider whose refresh lost its lease.
+ * @returns A precondition-conflict HttpsError.
+ */
+export function userExternalConnectionRefreshLeaseLostError(providerType: UserExternalConnectionProviderType) {
+  return preconditionConflictError({
+    message: `The "${providerType}" refresh lease was superseded before the refreshed credentials could be written.`,
+    code: USER_EXTERNAL_CONNECTION_REFRESH_LEASE_LOST_ERROR_CODE,
+    data: { providerType }
+  });
+}
+
+/**
+ * Whether a thrown value is the refresh fence's `USER_EXTERNAL_CONNECTION_REFRESH_LEASE_LOST`.
+ *
+ * @param e - The thrown value.
+ * @returns True when the persist was refused because the refresh lease was lost.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function isUserExternalConnectionRefreshLeaseLostError(e: unknown): boolean {
+  const details = (e as Maybe<{ readonly details?: Maybe<{ readonly code?: Maybe<string> }> }>)?.details;
+  return details?.code === USER_EXTERNAL_CONNECTION_REFRESH_LEASE_LOST_ERROR_CODE;
 }
 
 /**

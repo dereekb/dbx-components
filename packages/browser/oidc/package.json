@@ -1,12 +1,12 @@
 {
   "name": "@dereekb/browser/oidc",
-  "version": "14.23.0",
+  "version": "14.24.0",
   "type": "module",
   "sideEffects": false,
   "peerDependencies": {
-    "@dereekb/util": "14.23.0",
-    "@dereekb/util/oidc": "14.23.0",
-    "@dereekb/util/fetch": "14.23.0",
+    "@dereekb/util": "14.24.0",
+    "@dereekb/util/oidc": "14.24.0",
+    "@dereekb/util/fetch": "14.24.0",
     "rxjs": "^7.8.2"
   }
 }

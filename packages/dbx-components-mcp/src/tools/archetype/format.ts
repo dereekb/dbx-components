@@ -94,6 +94,14 @@ export interface FormatRecommendationInput {
   readonly alternatives: readonly ScoredArchetype[];
   readonly scopeLabel: string;
   readonly shortCircuited: boolean;
+  /**
+   * Questionnaire keys the scorer ignored. Renders a warning block listing them alongside the accepted dimensions.
+   */
+  readonly unrecognizedKeys?: readonly string[];
+  /**
+   * JSON-schema `properties` of the accepted questionnaire dimensions. Listed when keys were unrecognized or no dimension was answered.
+   */
+  readonly acceptedDimensions?: Readonly<Record<string, object>>;
 }
 
 /**
@@ -104,7 +112,7 @@ export interface FormatRecommendationInput {
  * @returns The markdown body.
  */
 export function formatRecommendation(input: FormatRecommendationInput): string {
-  const lines: string[] = [...formatRecommendationHeader(input), ...formatRecommendationWhy(input.top), ...formatRecommendationShape(input), ...formatRecommendationPeers(input), ...formatRecommendationPointers(input.top.archetype), ...formatRecommendationAlternatives(input.alternatives)];
+  const lines: string[] = [...formatRecommendationHeader(input), ...formatUnrecognizedKeys(input), ...formatRecommendationWhy(input), ...formatRecommendationShape(input), ...formatRecommendationPeers(input), ...formatRecommendationPointers(input.top.archetype), ...formatRecommendationAlternatives(input.alternatives)];
   return lines.join('\n').trimEnd();
 }
 
@@ -139,10 +147,56 @@ function formatRecommendationHeader(input: FormatRecommendationInput): readonly 
   return lines;
 }
 
-function formatRecommendationWhy(top: ScoredArchetype): readonly string[] {
+function formatUnrecognizedKeys(input: FormatRecommendationInput): readonly string[] {
+  const unrecognizedKeys = input.unrecognizedKeys ?? [];
+  if (unrecognizedKeys.length === 0) {
+    return [];
+  }
+  const lines: string[] = ['', '## ⚠ Unrecognized questionnaire keys', '', `Ignored: ${unrecognizedKeys.map(wrapBacktick).join(', ')}.`];
+  lines.push(...formatAcceptedDimensions(input.acceptedDimensions));
+  return lines;
+}
+
+/**
+ * Renders the accepted questionnaire dimensions: one line per enum dimension with its values, then the boolean / string / string[] groups.
+ *
+ * @param acceptedDimensions - JSON-schema `properties` of the questionnaire type.
+ * @returns The markdown lines, or an empty array when no dimensions are known.
+ */
+function formatAcceptedDimensions(acceptedDimensions: Readonly<Record<string, object>> | undefined): readonly string[] {
+  if (acceptedDimensions === undefined) {
+    return [];
+  }
+  const lines: string[] = ['', 'Accepted dimensions:', ''];
+  const groups = new Map<string, string[]>();
+  for (const [key, schema] of Object.entries(acceptedDimensions)) {
+    const property = schema as { readonly enum?: readonly unknown[]; readonly type?: string; readonly items?: { readonly type?: string } };
+    if (property.enum) {
+      lines.push(`- ${wrapBacktick(key)}: ${property.enum.map((x) => wrapBacktick(String(x))).join(' | ')}`);
+    } else {
+      const groupName = property.type === 'array' ? `${property.items?.type ?? 'unknown'}[]` : (property.type ?? 'unknown');
+      const group = groups.get(groupName);
+      if (group) {
+        group.push(key);
+      } else {
+        groups.set(groupName, [key]);
+      }
+    }
+  }
+  for (const [groupName, keys] of groups) {
+    lines.push(`- **${groupName}:** ${keys.map(wrapBacktick).join(', ')}`);
+  }
+  return lines;
+}
+
+function formatRecommendationWhy(input: FormatRecommendationInput): readonly string[] {
+  const { top } = input;
   const lines: string[] = ['', '## Why', ''];
   if (top.matches.length === 0 && top.mismatches.length === 0) {
     lines.push('- No dimensions in the questionnaire were filled in. Returning the lowest-cost archetype.');
+    if (!input.unrecognizedKeys?.length) {
+      lines.push(...formatAcceptedDimensions(input.acceptedDimensions));
+    }
     return lines;
   }
   for (const m of top.matches.slice(0, 8)) {

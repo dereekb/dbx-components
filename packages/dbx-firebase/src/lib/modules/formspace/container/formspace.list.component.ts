@@ -1,5 +1,5 @@
 import { NgClass } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { TimeDistancePipe } from '@dereekb/dbx-core';
 import {
   AbstractDbxSelectionListViewDirective,
@@ -222,7 +222,11 @@ export class DbxFirebaseFormSpaceListViewItemComponent extends AbstractDbxValueL
    */
   readonly appFormSpaceTypeConfigService = inject(AppFormSpaceTypeConfigService, { optional: true });
 
-  readonly status = dbxFirebaseFormSpaceListItemStatus(this.itemValue);
+  readonly statusSignal = computed(() => dbxFirebaseFormSpaceListItemStatus(this.itemValueSignal()));
+
+  get status(): DbxFirebaseFormSpaceListItemStatus {
+    return this.statusSignal();
+  }
 
   get name(): string {
     const formSpace = this.itemValue;

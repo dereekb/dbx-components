@@ -26,6 +26,7 @@ import {
   type DbxFirebaseModelTypesServiceConfig,
   type DbxFirebaseModelTypesServiceEntry,
   type DbxFirebaseExternalConnectionProviderEntry,
+  DBX_FIREBASE_EXTERNAL_CONNECTION_TRELLO_PROVIDER,
   DBX_FIREBASE_EXTERNAL_CONNECTION_ZOHO_PROVIDER,
   dbxFirebaseKnownExternalConnectionProvider,
   defaultDbxFirebaseAuthServiceDelegateWithClaimsService,
@@ -73,6 +74,8 @@ import {
   DEMO_DISCORD_EXTERNAL_CONNECTION_PROVIDER_TYPE,
   DEMO_ZOHO_EXTERNAL_CONNECTION_PROVIDER_TYPE,
   DEMO_ZOHO_ADMIN_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  DEMO_TRELLO_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  DEMO_TRELLO_BOT_EXTERNAL_CONNECTION_PROVIDER_TYPE,
   DEMO_FORM_SPACE_TYPE_CONFIG_SERVICE,
   ProfileFunctions
 } from 'demo-firebase';
@@ -117,6 +120,10 @@ import { META_REDUCERS, ROOT_REDUCER } from './app/state/app.state';
  * `adminOnly`: hidden from non-admins entirely and marked "Admin Only" for admins. Display only —
  * demo-api's provider policy is what refuses a non-admin. No `signIn`: an admin-only provider can never
  * be a login method.
+ *
+ * `trello_bot` is a second Trello connection to the account a board bot acts as, minted out to demo-cli.
+ * Unlike `zoho_admin` it is open to every user. It reuses the known Trello presentation, whose lack of a
+ * fixed `authorizePath` lets the override route it to `/oauth/trello_bot/authorize`.
  */
 export const DEMO_EXTERNAL_CONNECTION_PROVIDERS: DbxFirebaseExternalConnectionProviderEntry[] = [
   DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER_TYPE,
@@ -135,6 +142,16 @@ export const DEMO_EXTERNAL_CONNECTION_PROVIDERS: DbxFirebaseExternalConnectionPr
       ...DBX_FIREBASE_EXTERNAL_CONNECTION_ZOHO_PROVIDER.assets,
       providerName: 'Zoho (Admin, CLI)',
       description: 'Connect the Zoho account zoho-cli runs as. Its access token can be minted out to demo-cli.'
+    }
+  },
+  DEMO_TRELLO_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  {
+    ...DBX_FIREBASE_EXTERNAL_CONNECTION_TRELLO_PROVIDER,
+    providerType: DEMO_TRELLO_BOT_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+    assets: {
+      ...DBX_FIREBASE_EXTERNAL_CONNECTION_TRELLO_PROVIDER.assets,
+      providerName: 'Trello (Bot)',
+      description: 'Connect the Trello account a bot acts as. Its access token can be minted out to demo-cli.'
     }
   }
 ];

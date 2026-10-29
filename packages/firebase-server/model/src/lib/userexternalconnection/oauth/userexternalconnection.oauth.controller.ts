@@ -85,8 +85,8 @@ export abstract class AbstractUserExternalConnectionOAuthController {
    * @param response - The response to issue the redirect on.
    */
   @Get('authorize')
-  authorize(@Req() request: Request, @Res() response: Response): void {
-    const authorizeUrl = this.oauthService.authorizeUrlForRequest(request);
+  async authorize(@Req() request: Request, @Res() response: Response): Promise<void> {
+    const authorizeUrl = await this.oauthService.authorizeUrlForRequest(request);
     response.redirect(USER_EXTERNAL_CONNECTION_OAUTH_REDIRECT_STATUS, authorizeUrl ?? this.oauthService.failureUrl);
   }
 

@@ -28,6 +28,20 @@ export const USER_EXTERNAL_CONNECTION_UNLINK_LAST_LOGIN_METHOD_ERROR_CODE = 'USE
  * to make the provider a login method, and the same `policy.signIn` opt-in governs both.
  */
 export const USER_EXTERNAL_CONNECTION_LINK_NOT_ENABLED_ERROR_CODE = 'USER_EXTERNAL_CONNECTION_LINK_NOT_ENABLED';
+/**
+ * Another instance holds the refresh lease for this connection and did not finish within the wait.
+ *
+ * Retryable (a 503): the refresh is still in progress, and the next attempt will most likely find the
+ * credentials it produced.
+ */
+export const USER_EXTERNAL_CONNECTION_REFRESH_IN_PROGRESS_ERROR_CODE = 'USER_EXTERNAL_CONNECTION_REFRESH_IN_PROGRESS';
+/**
+ * A refresh's fenced persist found the lease it was holding gone — a reconnect, a disconnect or a
+ * takeover after expiry superseded it — so the refreshed credentials were NOT written.
+ *
+ * Internal: the reader handles it by re-reading what was written instead.
+ */
+export const USER_EXTERNAL_CONNECTION_REFRESH_LEASE_LOST_ERROR_CODE = 'USER_EXTERNAL_CONNECTION_REFRESH_LEASE_LOST';
 
 /**
  * The only error codes a failed SIGN-IN reports back to the browser.

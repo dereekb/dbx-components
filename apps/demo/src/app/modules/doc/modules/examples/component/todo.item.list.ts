@@ -67,10 +67,8 @@ export const TODO_ITEM_STANDARD_SEEDS: readonly TodoItemSeed[] = [
  * Builds the {@link TodoItemValue}s for a {@link TodoItemPresentation},
  * giving each item an `anchor.onClick` that fires `onClick(key)`.
  *
- * Each item's key is prefixed with the presentation. The list reuses an item
- * component whenever the key stays the same (and the component keeps the item
- * it was created with), so switching presentations must change the keys for
- * the rows to pick up the new presentation's data, e.g. the urgent highlight.
+ * Both presentations share their item keys, so switching between them keeps
+ * each row's component and updates it with the new presentation's item.
  *
  * @param presentation - Which seed set to build; `empty` returns no items.
  * @param onClick - Invoked with the seed `key` when a row is clicked.
@@ -93,7 +91,6 @@ export function makeTodoItemValues(presentation: TodoItemPresentation, onClick: 
 
   return seeds.map((seed) => ({
     ...seed,
-    key: `${presentation}:${seed.key}`,
     anchor: { onClick: () => onClick(seed.key) }
   }));
 }

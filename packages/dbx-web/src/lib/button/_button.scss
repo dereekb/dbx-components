@@ -99,7 +99,7 @@ $big-button-height: 46px; // 33% bigger
   }
 
   /// @dbx-utility button-icon-tile
-  /// @intent turn a `<dbx-button>` that wraps a `<dbx-icon-tile>` into a clickable tile — strips the button's padding/min-width so it hugs the tile, adopts the tile's `--dbx-icon-tile-border-radius`, and lifts a neutralized (`--mat-sys-on-surface`) state layer above the tile so hover/press/ripple reads on every color variant (including opaque full-color and primary-tonal tiles)
+  /// @intent turn a `<dbx-button>` that wraps a `<dbx-icon-tile>` into a clickable tile — strips the button's padding/min-width so it hugs the tile, adopts the tile's `--dbx-icon-tile-border-radius` (or a circle when the tile is `[round]`), and lifts a neutralized (`--mat-sys-on-surface`) state layer above the tile so hover/press/ripple reads on every color variant (including opaque full-color and primary-tonal tiles)
   /// @role layout
   /// @see-also icon-tile, button-neutral-interaction-color
   /// @anti-use don't apply to a `<dbx-button>` with no inner `<dbx-icon-tile>` — there is no tile surface to shape the button to or to overlay
@@ -128,6 +128,13 @@ $big-button-height: 46px; // 33% bigger
     .mat-mdc-button-persistent-ripple,
     .mat-mdc-button-ripple {
       z-index: 2;
+    }
+
+    // A round tile (`[round]` / `.dbx-icon-tile-round`) sets its radius on the tile itself rather than through
+    // `--dbx-icon-tile-border-radius`, which the button cannot see from outside it — match the circle here so the
+    // state layer and ripple don't show rounded-square corners past the round tile.
+    &:has(.dbx-icon-tile-round) .mat-mdc-button.dbx-base-button {
+      border-radius: 50%;
     }
   }
 

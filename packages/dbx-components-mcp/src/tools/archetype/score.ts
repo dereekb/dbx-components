@@ -19,7 +19,16 @@
  *   - `involvesFileUpload` / `sendsMessageToUser` / `isMultiCheckpointWorkflow`
  *     / `isSubsystemSingleton`: hard match (framework / singleton short-circuit)
  *
- * Mismatch on a 2+ weight subtracts the weight. Unset answers contribute zero.
+ * Mismatch on a 2+ weight subtracts the weight; a weight-1 mismatch contributes zero.
+ * Unset answers contribute zero.
+ *
+ * Confidence is `score / maxScore`, where `maxScore` is the summed weight of every
+ * ANSWERED dimension — the same denominator for every archetype. An archetype that
+ * declares no expectation for an answered dimension contributes zero for it rather
+ * than dropping it from its denominator, so a single weak match (e.g. only `syncMode`)
+ * cannot reach 100%. The `aggregatesFrom + isSiblingAggregate` combo adds 3 to every
+ * archetype's `maxScore` when answered; only `root-singleton-aggregate` scores it.
+ * Framework / singleton short-circuits stay at confidence `1.0`.
  */
 
 import { MODEL_ARCHETYPES, type ModelArchetypeInfo, type ModelArchetypeSlug } from '@dereekb/dbx-cli';
@@ -91,27 +100,37 @@ interface DimensionScoreInput {
   readonly expected: readonly unknown[] | undefined;
 }
 
-function scoreDimension(input: DimensionScoreInput): ScoredArchetypeMatch | undefined {
-  let result: ScoredArchetypeMatch | undefined;
+/**
+ * Result of scoring one dimension for one archetype.
+ *
+ * `answeredWeight` is the weight the dimension adds to the archetype's `maxScore`: the full
+ * weight whenever the questionnaire answered it (even when the archetype declares no
+ * expectation), zero otherwise. `match` is absent when the dimension is unanswered or
+ * unconstrained by the archetype.
+ */
+interface DimensionScore {
+  readonly answeredWeight: number;
+  readonly match?: ScoredArchetypeMatch;
+}
+
+const UNANSWERED_DIMENSION_SCORE: DimensionScore = { answeredWeight: 0 };
+
+function scoreDimension(input: DimensionScoreInput): DimensionScore {
+  let result: DimensionScore;
   const { dimension, weight, answer, expected } = input;
-  if (answer === undefined || answer === null) return undefined;
-  if (!expected || expected.length === 0) return undefined;
-  const answerLabel = JSON.stringify(answer);
-  if (expected.includes(answer)) {
-    result = {
-      dimension,
-      weight,
-      contribution: weight,
-      note: `answer \`${answerLabel}\` matched expected ${JSON.stringify(expected)}`
-    };
-  } else if (weight >= 2) {
-    // Mismatch on a 2+-weight dimension subtracts the weight.
-    result = {
-      dimension,
-      weight,
-      contribution: -weight,
-      note: `answer \`${answerLabel}\` did not match expected ${JSON.stringify(expected)}`
-    };
+  if (answer === undefined || answer === null) {
+    result = UNANSWERED_DIMENSION_SCORE;
+  } else if (!expected || expected.length === 0) {
+    result = { answeredWeight: weight };
+  } else {
+    const answerLabel = JSON.stringify(answer);
+    if (expected.includes(answer)) {
+      result = { answeredWeight: weight, match: { dimension, weight, contribution: weight, note: `answer \`${answerLabel}\` matched expected ${JSON.stringify(expected)}` } };
+    } else {
+      // Mismatch on a 2+-weight dimension subtracts the weight; a weight-1 mismatch contributes zero.
+      const contribution = weight >= 2 ? -weight : 0;
+      result = { answeredWeight: weight, match: { dimension, weight, contribution, note: `answer \`${answerLabel}\` did not match expected ${JSON.stringify(expected)}` } };
+    }
   }
   return result;
 }
@@ -123,15 +142,18 @@ interface BoolDimensionScoreInput {
   readonly expected: boolean | undefined;
 }
 
-function scoreBoolDimension(input: BoolDimensionScoreInput): ScoredArchetypeMatch | undefined {
-  let result: ScoredArchetypeMatch | undefined;
+function scoreBoolDimension(input: BoolDimensionScoreInput): DimensionScore {
+  let result: DimensionScore;
   const { dimension, weight, answer, expected } = input;
-  if (answer === undefined) return undefined;
-  if (expected === undefined) return undefined;
-  if (answer === expected) {
-    result = { dimension, weight, contribution: weight, note: `${dimension}=${expected} (match)` };
-  } else if (weight >= 2) {
-    result = { dimension, weight, contribution: -weight, note: `${dimension}: answered ${answer}, expected ${expected}` };
+  if (answer === undefined) {
+    result = UNANSWERED_DIMENSION_SCORE;
+  } else if (expected === undefined) {
+    result = { answeredWeight: weight };
+  } else if (answer === expected) {
+    result = { answeredWeight: weight, match: { dimension, weight, contribution: weight, note: `${dimension}=${expected} (match)` } };
+  } else {
+    const contribution = weight >= 2 ? -weight : 0;
+    result = { answeredWeight: weight, match: { dimension, weight, contribution, note: `${dimension}: answered ${answer}, expected ${expected}` } };
   }
   return result;
 }
@@ -149,12 +171,14 @@ export function scoreArchetypeAgainstQuestionnaire(archetype: ModelArchetypeInfo
   let score = 0;
   let maxScore = 0;
 
-  const tally = (m: ScoredArchetypeMatch | undefined): void => {
-    if (!m) return;
-    if (m.contribution > 0) matches.push(m);
-    else mismatches.push(m);
-    score += m.contribution;
-    maxScore += m.weight;
+  const tally = (dimensionScore: DimensionScore): void => {
+    maxScore += dimensionScore.answeredWeight;
+    const m = dimensionScore.match;
+    if (m) {
+      if (m.contribution > 0) matches.push(m);
+      else mismatches.push(m);
+      score += m.contribution;
+    }
   };
 
   // 3-weight dimensions
@@ -187,15 +211,16 @@ export function scoreArchetypeAgainstQuestionnaire(archetype: ModelArchetypeInfo
   // mutability
   tally(scoreDimension({ dimension: 'mutability', weight: 1, answer: q.mutability, expected: archetype.expected.mutability }));
 
-  // Root-singleton-aggregate boost: decisive when aggregatesFrom non-empty + isSiblingAggregate=true
-  if (archetype.slug === ROOT_SINGLETON_AGGREGATE_BOOST_SLUG) {
-    const aggregatesFromNonEmpty = (q.aggregatesFrom?.length ?? 0) > 0;
-    if (aggregatesFromNonEmpty && q.isSiblingAggregate === true) {
+  // Root-singleton-aggregate boost: decisive when aggregatesFrom non-empty + isSiblingAggregate=true.
+  // The answered combo counts in every archetype's denominator; only root-singleton-aggregate scores it.
+  const aggregatesFromNonEmpty = (q.aggregatesFrom?.length ?? 0) > 0;
+  if (aggregatesFromNonEmpty && q.isSiblingAggregate === true) {
+    maxScore += 3;
+    if (archetype.slug === ROOT_SINGLETON_AGGREGATE_BOOST_SLUG) {
       const note = 'aggregatesFrom non-empty + isSiblingAggregate=true (decisive for root-singleton-aggregate)';
       const m: ScoredArchetypeMatch = { dimension: 'aggregatesFrom+isSiblingAggregate', weight: 3, contribution: 3, note };
       matches.push(m);
       score += 3;
-      maxScore += 3;
     }
   }
 

@@ -24,7 +24,7 @@ export type UserExternalConnectionProviderType = string;
 /**
  * Known third-party services the workspace ships provider support for.
  */
-export type KnownUserExternalConnectionProviderType = 'calcom' | 'zoom' | 'discord' | 'zoho';
+export type KnownUserExternalConnectionProviderType = 'calcom' | 'zoom' | 'discord' | 'zoho' | 'trello';
 
 /**
  * Provider type for Cal.com.
@@ -49,6 +49,15 @@ export const DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE: KnownUserExternalCo
  * Provider type for Zoho.
  */
 export const ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE: KnownUserExternalConnectionProviderType = 'zoho';
+
+/**
+ * Provider type for Trello.
+ *
+ * A connection through Trello's OAuth 2.0 (3LO) on Atlassian's authorization server, not the legacy
+ * key+token flow. An app may mount further Trello instances under their own provider types (a bot
+ * account, say); this is the default one.
+ */
+export const TRELLO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE: KnownUserExternalConnectionProviderType = 'trello';
 
 /**
  * A capability/scope string granted by a third-party provider (e.g. an OAuth scope).

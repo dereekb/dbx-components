@@ -3,7 +3,7 @@ import { Directive, inject, input } from '@angular/core';
 import { filterMaybe, mapForEach } from '@dereekb/rxjs';
 import { distinctUntilChanged, shareReplay, combineLatest, switchMap, map, type Observable, of } from 'rxjs';
 import { DbxListView } from './list.view';
-import { type AbstractDbxValueListViewConfig, type DbxValueListItem, type DbxValueListItemConfig, type DbxValueListView, mapValuesToValuesListItemConfigObs } from './list.view.value';
+import { type AbstractDbxValueListViewConfig, type DbxValueListItem, type DbxValueListItemConfig, DbxValueListItemConfigCache, type DbxValueListView, mapValuesToValuesListItemConfigObs } from './list.view.value';
 import { DbxValueListItemModifier } from './list.view.value.modifier';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 
@@ -21,8 +21,13 @@ export abstract class AbstractDbxValueListViewDirective<T, I extends DbxValueLis
   readonly config$ = toObservable(this.config).pipe(filterMaybe(), distinctUntilChanged(), shareReplay(1));
   readonly modifyFn$: Observable<Maybe<ModifierFunction<I>>> = this.dbxValueListViewModifier ? this.dbxValueListViewModifier.modifiers$.pipe(map(maybeModifierMapToFunction)) : of(undefined);
 
+  /**
+   * Keeps each item key's configs across updates, so the list keeps the components of the items that stay in the list.
+   */
+  private readonly _itemConfigCache = new DbxValueListItemConfigCache<T, I, V>();
+
   readonly items$: Observable<DbxValueListItemConfig<T, I>[]> = combineLatest([this.config$, this.dbxListView.values$, this.modifyFn$]).pipe(
-    switchMap(([listViewConfig, values, modifyFn]) => mapValuesToValuesListItemConfigObs<T, I, V>(listViewConfig, values).pipe(mapForEach(modifyFn)) as Observable<DbxValueListItemConfig<T, I>[]>),
+    switchMap(([listViewConfig, values, modifyFn]) => mapValuesToValuesListItemConfigObs<T, I, V>(listViewConfig, values, this._itemConfigCache).pipe(mapForEach(modifyFn)) as Observable<DbxValueListItemConfig<T, I>[]>),
     shareReplay(1)
   );
 

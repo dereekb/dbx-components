@@ -338,9 +338,9 @@ describe('ZohoUserExternalConnectionOAuthService', () => {
   });
 
   describe('authorizeUrlForRequest()', () => {
-    it('should build an authorize url carrying the request state and derived redirect uri', () => {
+    it('should build an authorize url carrying the request state and derived redirect uri', async () => {
       const state = signedState();
-      const url = service.authorizeUrlForRequest({ query: { state } } as never);
+      const url = await service.authorizeUrlForRequest({ query: { state } } as never);
 
       expect(url).toBeDefined();
 
@@ -357,8 +357,8 @@ describe('ZohoUserExternalConnectionOAuthService', () => {
       expect(searchParams.get('scope')).toBe(DEFAULT_ZOHO_OAUTH_SCOPES.join(','));
     });
 
-    it('should refuse a request with no resolvable state', () => {
-      expect(service.authorizeUrlForRequest({ query: {} } as never)).toBeUndefined();
+    it('should refuse a request with no resolvable state', async () => {
+      expect(await service.authorizeUrlForRequest({ query: {} } as never)).toBeUndefined();
     });
   });
 

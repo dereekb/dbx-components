@@ -1,5 +1,5 @@
-import { Component, InjectionToken, inject } from '@angular/core';
-import { DBX_VALUE_LIST_VIEW_ITEM, type DbxValueListItem } from '../list.view.value';
+import { Component, InjectionToken, computed, inject, type Signal } from '@angular/core';
+import { type DbxValueListItem, injectDbxValueListViewItemSignal } from '../list.view.value';
 import { type Maybe } from '@dereekb/util';
 import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { MatIconModule } from '@angular/material/icon';
@@ -30,15 +30,23 @@ export interface DbxListViewMetaIconConfig {
 @Component({
   selector: 'dbx-list-view-meta-icon',
   template: `
-    <mat-icon class="dbx-list-view-meta-icon">{{ icon }}</mat-icon>
+    <mat-icon class="dbx-list-view-meta-icon">{{ iconSignal() }}</mat-icon>
   `,
   imports: [MatIconModule]
 })
 export class DbxListViewMetaIconComponent {
-  readonly item = inject<DbxValueListItem<unknown, DbxListViewMetaIconConfig>>(DBX_VALUE_LIST_VIEW_ITEM, { optional: true });
+  readonly itemSignal: Maybe<Signal<DbxValueListItem<unknown, DbxListViewMetaIconConfig>>> = injectDbxValueListViewItemSignal<DbxValueListItem<unknown, DbxListViewMetaIconConfig>>({ optional: true });
   readonly defaultIcon = inject<Maybe<string>>(DEFAULT_DBX_LIST_VIEW_META_ICON, { optional: true });
 
-  readonly icon: Maybe<string> = this.item?.meta?.icon ?? this.defaultIcon;
+  readonly iconSignal = computed(() => this.itemSignal?.().meta?.icon ?? this.defaultIcon);
+
+  get item(): Maybe<DbxValueListItem<unknown, DbxListViewMetaIconConfig>> {
+    return this.itemSignal?.();
+  }
+
+  get icon(): Maybe<string> {
+    return this.iconSignal();
+  }
 
   static metaConfig(defaultIcon?: Maybe<string>): DbxInjectionComponentConfig<DbxListViewMetaIconConfig> {
     return {

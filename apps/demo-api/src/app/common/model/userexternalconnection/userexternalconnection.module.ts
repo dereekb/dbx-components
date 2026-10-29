@@ -1,6 +1,6 @@
 import { type InjectionToken, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { DEMO_DISCORD_EXTERNAL_CONNECTION_PROVIDER_TYPE, DEMO_ZOHO_ADMIN_EXTERNAL_CONNECTION_PROVIDER_TYPE, DemoFirestoreCollections } from 'demo-firebase';
+import { DEMO_DISCORD_EXTERNAL_CONNECTION_PROVIDER_TYPE, DEMO_TRELLO_BOT_EXTERNAL_CONNECTION_PROVIDER_TYPE, DEMO_TRELLO_EXTERNAL_CONNECTION_PROVIDER_TYPE, DEMO_ZOHO_ADMIN_EXTERNAL_CONNECTION_PROVIDER_TYPE, DemoFirestoreCollections } from 'demo-firebase';
 import { type UserExternalConnectionSignInDelegate, appUserExternalConnectionModuleMetadata, autoCreateUserSignInDelegate } from '@dereekb/firebase-server/model';
 import { DemoApiAuthModule, DemoApiAuthService, DemoApiFirestoreModule } from '../../firebase';
 
@@ -61,6 +61,11 @@ export const DEMO_USER_EXTERNAL_CONNECTION_SIGN_IN_DELEGATE: InjectionToken = 'D
  * and its access token may be minted out to its owner through `DemoExternalConnectionTokenApiModule`
  * (for `zoho-cli`). The plain `zoho` connection has no policy, so it stays open to every user and its
  * token never leaves the server.
+ *
+ * `trello_bot` is the second EXPORTABLE provider, and the contrast to `zoho_admin`: it is NOT admin-only
+ * (any user may connect the account a bot acts as) and NOT unique (several users may connect the same
+ * bot account). The token API's own admin predicate still gates the mint. The plain `trello` connection
+ * is a member's own account, so it is unique and never exported.
  */
 @Module(
   appUserExternalConnectionModuleMetadata({
@@ -88,6 +93,20 @@ export const DEMO_USER_EXTERNAL_CONNECTION_SIGN_IN_DELEGATE: InjectionToken = 'D
         // the reason this connection exists: its access token is minted out to zoho-cli. The token API
         // adds its own gates on top (admin predicate, `token.external` scope, allowlisted OIDC client).
         tokenExport: true
+      },
+      {
+        providerType: DEMO_TRELLO_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+        // one Trello account is one demo user. Not exported and no sign-in: the member's own account
+        // is a data connection only
+        unique: true
+      },
+      {
+        providerType: DEMO_TRELLO_BOT_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+        // the reason this connection exists: its access token is minted out to the bot's runner
+        tokenExport: true,
+        // stated rather than defaulted: several users may each connect the same bot account. Also
+        // deliberately NOT adminOnly, unlike zoho_admin — a board bot is not an org administrator
+        unique: false
       }
     ],
     signIn: {

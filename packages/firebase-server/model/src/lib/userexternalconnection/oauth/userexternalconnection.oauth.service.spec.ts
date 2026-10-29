@@ -118,6 +118,8 @@ function capturingServerActions(config: CapturingServerActionsConfig = {}): Capt
 class TestUserExternalConnectionOAuthService extends AbstractUserExternalConnectionOAuthService {
   exchangeResult: UserExternalConnectionCredentials = { accessToken: 'access-token', refreshToken: 'exchanged-refresh-token', issuedAt: new Date().toISOString() };
   seenExchangeInput: Maybe<UserExternalConnectionOAuthExchangeInput>;
+  seenAuthorizeInput: Maybe<UserExternalConnectionOAuthAuthorizeUrlInput>;
+  override requirePkce: Maybe<boolean> = undefined;
 
   constructor(
     readonly config: UserExternalConnectionOAuthServiceConfig,
@@ -131,6 +133,7 @@ class TestUserExternalConnectionOAuthService extends AbstractUserExternalConnect
   }
 
   protected authorizeUrlForState(input: UserExternalConnectionOAuthAuthorizeUrlInput): WebsiteUrl {
+    this.seenAuthorizeInput = input;
     return `https://provider.example/authorize?state=${input.state}`;
   }
 
@@ -228,6 +231,89 @@ describe('AbstractUserExternalConnectionOAuthService', () => {
       await service.handleCallback({ code: 'code', state: signedState() });
 
       expect(service.seenExchangeInput?.query).toBeUndefined();
+    });
+  });
+
+  describe('authorizeUrlForRequest() PKCE', () => {
+    const linkPolicy = userExternalConnectionProviderPolicyRegistry([{ providerType: TEST_PROVIDER_TYPE, unique: true, signIn: true }]);
+
+    function makePkceService(requirePkce: boolean, policy?: UserExternalConnectionProviderPolicyRegistry): TestUserExternalConnectionOAuthService {
+      const captured = capturingServerActions();
+      const service = new TestUserExternalConnectionOAuthService(TEST_CONFIG, stateCoder, captured.actions, captured.accessor, undefined, policy);
+      service.requirePkce = requirePkce;
+      return service;
+    }
+
+    it('should re-mint a connect state with a sealed verifier and send its challenge when requirePkce is set', async () => {
+      const service = makePkceService(true);
+      const state = signedState();
+      const url = await service.authorizeUrlForRequest({ query: { state } } as never);
+
+      expect(url).toBeDefined();
+
+      const input = service.seenAuthorizeInput;
+      expect(input?.codeChallenge).toBeTruthy();
+      expect(input?.mode).toBe('connect');
+      expect(input?.state).not.toBe(state);
+
+      const actor = stateCoder.verifyState({ state: input?.state, providerType: TEST_PROVIDER_TYPE });
+      expect(actor?.mode).toBe('connect');
+      expect(actor && 'uid' in actor ? actor.uid : undefined).toBe(TEST_UID);
+      expect(actor?.codeVerifier).toBeTruthy();
+      expect(await generatePkceCodeChallenge(actor?.codeVerifier as string)).toBe(input?.codeChallenge);
+    });
+
+    it('should re-mint a link state with a sealed verifier and send its challenge when requirePkce is set', async () => {
+      const service = makePkceService(true, linkPolicy);
+      const state = stateCoder.mintState({ mode: 'link', uid: TEST_UID, providerType: TEST_PROVIDER_TYPE });
+      const url = await service.authorizeUrlForRequest({ query: { state } } as never);
+
+      expect(url).toBeDefined();
+
+      const input = service.seenAuthorizeInput;
+      expect(input?.mode).toBe('link');
+
+      const actor = stateCoder.verifyState({ state: input?.state, providerType: TEST_PROVIDER_TYPE });
+      expect(actor?.mode).toBe('link');
+      expect(actor && 'uid' in actor ? actor.uid : undefined).toBe(TEST_UID);
+      expect(await generatePkceCodeChallenge(actor?.codeVerifier as string)).toBe(input?.codeChallenge);
+    });
+
+    it('should pass the state through unchanged and send no challenge without requirePkce', async () => {
+      const service = makePkceService(false);
+      const state = signedState();
+
+      await service.authorizeUrlForRequest({ query: { state } } as never);
+
+      expect(service.seenAuthorizeInput?.state).toBe(state);
+      expect(service.seenAuthorizeInput?.codeChallenge).toBeUndefined();
+    });
+
+    it('should derive the challenge of a state that was minted with a verifier', async () => {
+      // closes the latent mismatch where a verifier-bearing connect state sent no challenge while the
+      // exchange still sent the verifier
+      const service = makePkceService(false);
+      const codeVerifier = generatePkceCodeVerifier();
+      const state = stateCoder.mintState({ uid: TEST_UID, providerType: TEST_PROVIDER_TYPE, codeVerifier });
+
+      await service.authorizeUrlForRequest({ query: { state } } as never);
+
+      expect(service.seenAuthorizeInput?.state).toBe(state);
+      expect(service.seenAuthorizeInput?.codeChallenge).toBe(await generatePkceCodeChallenge(codeVerifier));
+    });
+
+    it('should send the re-minted verifier to the exchange on the callback', async () => {
+      const service = makePkceService(true);
+
+      await service.authorizeUrlForRequest({ query: { state: signedState() } } as never);
+
+      const remintedState = service.seenAuthorizeInput?.state;
+      const actor = stateCoder.verifyState({ state: remintedState, providerType: TEST_PROVIDER_TYPE });
+      const result = await service.handleCallback({ code: 'code', state: remintedState });
+
+      expect(result.success).toBe(true);
+      expect(service.seenExchangeInput?.codeVerifier).toBeTruthy();
+      expect(service.seenExchangeInput?.codeVerifier).toBe(actor?.codeVerifier);
     });
   });
 });

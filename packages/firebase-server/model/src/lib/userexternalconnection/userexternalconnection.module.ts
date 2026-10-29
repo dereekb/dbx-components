@@ -7,7 +7,7 @@ import { type AES256GCMEncryptionSecret, isValidAES256GCMEncryptionSecret } from
 import { type UserExternalConnectionPrivateConverterConfig, UserExternalConnectionServerFirestoreCollections, userExternalConnectionPrivateFirestoreCollection } from './userexternalconnection.private';
 import { UserExternalConnectionServerActions, type UserExternalConnectionServerActionsContext, userExternalConnectionServerActions } from './userexternalconnection.action.server';
 import { UserExternalConnectionAccessor, userExternalConnectionAccessor } from './userexternalconnection.accessor.service';
-import { UserExternalConnectionReader, userExternalConnectionReader } from './userexternalconnection.reader.service';
+import { UserExternalConnectionReader, type UserExternalConnectionRefreshLeaseConfig, userExternalConnectionReader } from './userexternalconnection.reader.service';
 import { UserExternalConnectionOAuthProviderRegistry, UserExternalConnectionStateCoder, userExternalConnectionOAuthRegistryCredentialsRefresher, userExternalConnectionStateCoderFactory } from './oauth';
 import { type UserExternalConnectionProviderPolicy, UserExternalConnectionProviderPolicyRegistry, userExternalConnectionProviderPolicyRegistry } from './userexternalconnection.policy';
 import { type UserExternalConnectionSignInDelegate, UserExternalConnectionSignInService, userExternalConnectionSignInService } from './userexternalconnection.signin';
@@ -281,6 +281,15 @@ export interface UserExternalConnectionReaderProviderConfig {
    * Overrides how long before its stated expiration a credential is treated as expired.
    */
   readonly expirationBuffer?: Maybe<Milliseconds>;
+  /**
+   * The cross-instance refresh lease. ON by default, leased through the injected
+   * `UserExternalConnectionServerActions`, so two instances finding the same expired credentials
+   * refresh once — which a provider that rotates its refresh token on every use requires.
+   *
+   * Pass an object to tune the timings, or `false` to opt out and keep only the in-process
+   * single-flight. It costs one extra transaction per refresh.
+   */
+  readonly refreshLease?: Maybe<false | Omit<UserExternalConnectionRefreshLeaseConfig, 'leaser'>>;
 }
 
 /**
@@ -298,7 +307,7 @@ export interface UserExternalConnectionReaderProviderConfig {
  * @__NO_SIDE_EFFECTS__
  */
 export function userExternalConnectionReaderProvider(config?: Maybe<UserExternalConnectionReaderProviderConfig>): Provider {
-  const { refreshWithOAuthProviderRegistry, expirationBuffer } = config ?? {};
+  const { refreshWithOAuthProviderRegistry, expirationBuffer, refreshLease } = config ?? {};
   const withRegistry = refreshWithOAuthProviderRegistry ?? true;
 
   return {
@@ -308,7 +317,8 @@ export function userExternalConnectionReaderProvider(config?: Maybe<UserExternal
         accessor,
         actions,
         refresher: registry ? userExternalConnectionOAuthRegistryCredentialsRefresher({ registry }) : null,
-        expirationBuffer
+        expirationBuffer,
+        refreshLease: refreshLease === false ? null : { ...refreshLease, leaser: actions }
       }),
     inject: withRegistry ? [UserExternalConnectionAccessor, UserExternalConnectionServerActions, UserExternalConnectionOAuthProviderRegistry] : [UserExternalConnectionAccessor, UserExternalConnectionServerActions]
   };

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, type KnownUserExternalConnectionProviderType, ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE } from '@dereekb/firebase';
+import { DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, type KnownUserExternalConnectionProviderType, TRELLO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE } from '@dereekb/firebase';
 import { type DbxFirebaseExternalConnectionProvider } from './externalconnection';
-import { DBX_FIREBASE_EXTERNAL_CONNECTION_DISCORD_PROVIDER, DBX_FIREBASE_KNOWN_EXTERNAL_CONNECTION_PROVIDERS, dbxFirebaseExternalConnectionProviderForEntry, dbxFirebaseKnownExternalConnectionProvider } from './externalconnection.default';
+import { DBX_FIREBASE_EXTERNAL_CONNECTION_DISCORD_PROVIDER, DBX_FIREBASE_EXTERNAL_CONNECTION_TRELLO_PROVIDER, DBX_FIREBASE_KNOWN_EXTERNAL_CONNECTION_PROVIDERS, dbxFirebaseExternalConnectionProviderForEntry, dbxFirebaseKnownExternalConnectionProvider } from './externalconnection.default';
 
 describe('DBX_FIREBASE_KNOWN_EXTERNAL_CONNECTION_PROVIDERS', () => {
   it('should key each provider by its own provider type', () => {
@@ -20,6 +20,16 @@ describe('DBX_FIREBASE_KNOWN_EXTERNAL_CONNECTION_PROVIDERS', () => {
 describe('dbxFirebaseExternalConnectionProviderForEntry()', () => {
   it('should resolve a known provider type to the library provider', () => {
     expect(dbxFirebaseExternalConnectionProviderForEntry(DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE)).toBe(DBX_FIREBASE_EXTERNAL_CONNECTION_DISCORD_PROVIDER);
+  });
+
+  it('should resolve trello to the library provider', () => {
+    expect(dbxFirebaseExternalConnectionProviderForEntry(TRELLO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE)).toBe(DBX_FIREBASE_EXTERNAL_CONNECTION_TRELLO_PROVIDER);
+  });
+
+  it('should leave trello without a sign-in or a fixed authorize path', () => {
+    // with no fixed path, a second instance such as trello_bot follows its own provider type to /oauth/<providerType>/authorize
+    expect(DBX_FIREBASE_EXTERNAL_CONNECTION_TRELLO_PROVIDER.signIn).toBeUndefined();
+    expect(DBX_FIREBASE_EXTERNAL_CONNECTION_TRELLO_PROVIDER.authorizePath).toBeUndefined();
   });
 
   it('should pass a declared provider through untouched', () => {
@@ -51,6 +61,18 @@ describe('dbxFirebaseKnownExternalConnectionProvider()', () => {
     const result = dbxFirebaseKnownExternalConnectionProvider({ providerType: DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE });
 
     expect(result).toEqual(expect.objectContaining({ providerType: DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, assets: DBX_FIREBASE_EXTERNAL_CONNECTION_DISCORD_PROVIDER.assets }));
+  });
+
+  it('should patch the trello provider', () => {
+    const result = dbxFirebaseKnownExternalConnectionProvider({
+      providerType: TRELLO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+      assets: { description: 'Connect the Trello account your boards live in.' }
+    });
+
+    expect(result.providerType).toBe(TRELLO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE);
+    expect(result.assets.description).toBe('Connect the Trello account your boards live in.');
+    expect(result.assets.providerName).toBe('Trello');
+    expect(result.assets.icon).toBe('view_kanban');
   });
 
   it('should apply an authorize path override', () => {

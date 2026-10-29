@@ -1,3 +1,21 @@
+# [14.24.0](https://github.com/dereekb/dbx-components/compare/v14.23.0-dev...v14.24.0) (2026-10-29)
+
+### Bug Fixes
+
+- **dbx-components-mcp:** normalize archetype confidence, report keys ([5e7cbd83](https://github.com/dereekb/dbx-components/commit/5e7cbd83786340829bc38e97bdc9e7fc2dbe3ab4))
+- **dbx-web:** update kept list item components when their item changes ([59f8af23](https://github.com/dereekb/dbx-components/commit/59f8af236eacdf04fa7bb07447f13f58edead34e))
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes + peer dep sync ([42db3c9a](https://github.com/dereekb/dbx-components/commit/42db3c9a4d3b61469712051a1c1dab78e304995a))
+
+### Features
+
+- **dbx-web:** add coaching, candidate and pipeline layout examples ([b4400346](https://github.com/dereekb/dbx-components/commit/b44003469f9a23bcb29b7a9cce4a42e3a9c8898f))
+- **dbx-web:** add dbx-timeline horizontal progress timeline classes ([83a55ad9](https://github.com/dereekb/dbx-components/commit/83a55ad9ef1432f2b7526b236eb45bdf65ee7916))
+- **firebase-server:** add PKCE handoffs, refresh lease, trello oauth ([fc665245](https://github.com/dereekb/dbx-components/commit/fc665245552f2e2f0e944fab27900c2dd55ecba0))
+- **firebase-server:** add the trello UserExternalConnection provider ([fab7bc91](https://github.com/dereekb/dbx-components/commit/fab7bc91211f21369241f36ac611062a197654ad))
+
 # [14.23.0](https://github.com/dereekb/dbx-components/compare/v14.22.0-dev...v14.23.0) (2026-10-21)
 
 ### Bug Fixes

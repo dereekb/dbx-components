@@ -13,6 +13,7 @@ import { DbxClickToCopyTextDirective } from './copy.text.directive';
 import { DbxClickToCopyTextComponent } from './copy.text.component';
 import { DbxClickToCopyFieldComponent } from './copy.field.component';
 import { DbxStepBlockComponent } from './step.block.component';
+import { DbxTimelineItemDirective } from './timeline.item.directive';
 
 const importsAndExports = [
   DbxUnitedStatesAddressComponent,
@@ -25,6 +26,7 @@ const importsAndExports = [
   DbxDetailBlockComponent,
   DbxDetailBlockHeaderComponent,
   DbxStepBlockComponent,
+  DbxTimelineItemDirective,
   DbxLabelBlockComponent,
   DbxLinkifyComponent,
   DbxTextChipsComponent,

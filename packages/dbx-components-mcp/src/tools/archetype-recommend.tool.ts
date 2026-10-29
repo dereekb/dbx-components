@@ -64,6 +64,17 @@ const QuestionnaireType = type({
   'alwaysReadWithParent?': 'boolean'
 });
 
+/**
+ * Accepted questionnaire keys, read from {@link QuestionnaireType} so the schema and the
+ * unrecognized-key report share one source of truth.
+ */
+const ACCEPTED_QUESTIONNAIRE_KEYS: ReadonlySet<string> = new Set(QuestionnaireType.props.map((x) => String(x.key)));
+
+/**
+ * JSON-schema `properties` for the questionnaire, derived from {@link QuestionnaireType}.
+ */
+const QUESTIONNAIRE_JSON_SCHEMA_PROPERTIES = (QuestionnaireType.toJsonSchema() as { readonly properties?: Record<string, object> }).properties ?? {};
+
 const RecommendArgsType = type({
   questionnaire: QuestionnaireType,
   'archetypeHint?': 'string',
@@ -94,7 +105,8 @@ const DBX_MODEL_ARCHETYPE_RECOMMEND_TOOL: Tool = {
     properties: {
       questionnaire: {
         type: 'object',
-        description: 'Filled questionnaire describing the proposed model.',
+        description: 'Filled questionnaire describing the proposed model. Only the listed dimensions are scored; unrecognized keys are ignored and reported in the output.',
+        properties: QUESTIONNAIRE_JSON_SCHEMA_PROPERTIES,
         additionalProperties: true
       },
       archetypeHint: {
@@ -126,6 +138,11 @@ interface ParsedRecommendArgs {
   readonly maxResults: number;
   readonly peerCount: number;
   readonly includeFieldLevelAddons: boolean;
+  /**
+   * Keys of the raw questionnaire that are not accepted dimensions. They are ignored by
+   * the scorer and reported in the output.
+   */
+  readonly unrecognizedKeys: readonly string[];
 }
 
 function parseArgs(raw: unknown): ParsedRecommendArgs {
@@ -140,9 +157,35 @@ function parseArgs(raw: unknown): ParsedRecommendArgs {
     componentDirs: parsed.componentDirs,
     maxResults: parsed.maxResults ?? DEFAULT_MAX_RESULTS,
     peerCount: parsed.peerCount ?? DEFAULT_PEER_COUNT,
-    includeFieldLevelAddons: parsed.includeFieldLevelAddons ?? true
+    includeFieldLevelAddons: parsed.includeFieldLevelAddons ?? true,
+    unrecognizedKeys: readUnrecognizedQuestionnaireKeys(raw)
   };
   return result;
+}
+
+function readUnrecognizedQuestionnaireKeys(raw: unknown): readonly string[] {
+  const rawQuestionnaire = (raw as { readonly questionnaire?: unknown } | undefined)?.questionnaire;
+  let result: readonly string[] = [];
+  if (rawQuestionnaire != null && typeof rawQuestionnaire === 'object') {
+    result = Object.keys(rawQuestionnaire).filter((key) => !ACCEPTED_QUESTIONNAIRE_KEYS.has(key));
+  }
+  return result;
+}
+
+/**
+ * Picks the alternatives to surface: the top `maxResults` runners-up, plus every archetype
+ * whose expected `docIdSource` contains the answered one — "considered" must mean visible.
+ *
+ * @param ranked - Every scored archetype, ranked.
+ * @param top - The archetype being recommended.
+ * @param questionnaire - The caller's questionnaire.
+ * @param maxResults - Max ranked runners-up to surface.
+ * @returns The alternatives, in rank order.
+ */
+function pickAlternatives(ranked: readonly ScoredArchetype[], top: ScoredArchetype, questionnaire: ArchetypeQuestionnaire, maxResults: number): ScoredArchetype[] {
+  const docIdSource = questionnaire.docIdSource;
+  const runnersUp = ranked.filter((r) => r.archetype.slug !== top.archetype.slug);
+  return runnersUp.filter((r, i) => i < maxResults || (docIdSource !== undefined && r.archetype.expected.docIdSource?.includes(docIdSource) === true));
 }
 
 interface BuildPeerPoolInput {
@@ -215,7 +258,7 @@ export async function runArchetypeRecommend(rawArgs: unknown): Promise<ToolResul
         limit: args.peerCount
       });
 
-      const alternatives: ScoredArchetype[] = scoreResult.ranked.filter((r) => r.archetype.slug !== top.archetype.slug).slice(0, args.maxResults);
+      const alternatives = pickAlternatives(scoreResult.ranked, top, args.questionnaire, args.maxResults);
 
       const scopeLabel = `scope=${args.scope}`;
       const text = formatRecommendation({
@@ -227,6 +270,8 @@ export async function runArchetypeRecommend(rawArgs: unknown): Promise<ToolResul
         peers,
         alternatives,
         scopeLabel,
+        unrecognizedKeys: args.unrecognizedKeys,
+        acceptedDimensions: QUESTIONNAIRE_JSON_SCHEMA_PROPERTIES,
         shortCircuited: scoreResult.shortCircuited && top.archetype.slug === scoreResult.top.archetype.slug
       });
       result = { content: [{ type: 'text', text }] };

@@ -1,6 +1,6 @@
 import { Controller, Inject, type Type } from '@nestjs/common';
 import { ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, type UserExternalConnectionProviderType } from '@dereekb/firebase';
-import { AbstractUserExternalConnectionOAuthController, userExternalConnectionOAuthControllerPath } from '@dereekb/firebase-server/model';
+import { AbstractUserExternalConnectionOAuthController, userExternalConnectionOAuthControllerForProviderType } from '@dereekb/firebase-server/model';
 import { ZOHO_USER_EXTERNAL_CONNECTION_OAUTH_CONTROLLER_PATH } from './zoho.oauth.connection.config';
 import { ZohoUserExternalConnectionOAuthService } from './zoho.oauth.connection.service';
 
@@ -36,20 +36,5 @@ export class ZohoUserExternalConnectionOAuthController extends AbstractUserExter
  * @returns The controller class to register on that connection's module.
  */
 export function zohoUserExternalConnectionOAuthControllerForProviderType(providerType: UserExternalConnectionProviderType): Type<AbstractUserExternalConnectionOAuthController> {
-  let result: Type<AbstractUserExternalConnectionOAuthController>;
-
-  if (providerType === ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE) {
-    result = ZohoUserExternalConnectionOAuthController;
-  } else {
-    @Controller(userExternalConnectionOAuthControllerPath(providerType))
-    class ZohoUserExternalConnectionOAuthProviderTypeController extends AbstractUserExternalConnectionOAuthController {
-      constructor(@Inject(ZohoUserExternalConnectionOAuthService) readonly oauthService: ZohoUserExternalConnectionOAuthService) {
-        super();
-      }
-    }
-
-    result = ZohoUserExternalConnectionOAuthProviderTypeController;
-  }
-
-  return result;
+  return userExternalConnectionOAuthControllerForProviderType({ providerType, defaultProviderType: ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, defaultController: ZohoUserExternalConnectionOAuthController, serviceClass: ZohoUserExternalConnectionOAuthService });
 }

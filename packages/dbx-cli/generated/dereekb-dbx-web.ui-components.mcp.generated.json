@@ -2799,6 +2799,33 @@
       "minimalExample": "<dbx-chip-list></dbx-chip-list>"
     },
     {
+      "slug": "timeline-item",
+      "category": "layout",
+      "kind": "directive",
+      "selector": "[dbxTimelineItem]",
+      "className": "DbxTimelineItemDirective",
+      "module": "@dereekb/dbx-web",
+      "description": "Directive form of a `.dbx-timeline` step — applies the `dbx-timeline-item` class to its host, and opens a\nscrolling timeline on the step in progress.\n\nA `.dbx-timeline` keeps its steps at a readable minimum width, so on a narrow viewport the row scrolls sideways.\nLeft at its start, a timeline with several finished steps would only show those, and read as complete. Mark the\nstep in progress with `[dbxTimelineItemCurrent]` and the timeline scrolls to center it — the last finished step\nstays in view on one side and the next step on the other. It re-centers whenever the timeline is laid out at a new\nwidth (its first layout, a timeline first shown in a hidden tab, a window resize), never in response to the user's\nown scrolling, and does nothing while the steps fit.\n\nThe current step also takes the `dbx-timeline-item-current` class.",
+      "inputs": [
+        {
+          "name": "dbxTimelineItemCurrent",
+          "type": "boolean",
+          "description": "Whether this is the step in progress, which a scrolling timeline centers.",
+          "required": false,
+          "default": "false"
+        }
+      ],
+      "outputs": [],
+      "relatedSlugs": [
+        "icon-tile",
+        "avatar",
+        "dbx-color",
+        "step-block"
+      ],
+      "example": "```html\n<div class=\"dbx-timeline\">",
+      "minimalExample": "<div class=\"dbx-timeline\">\n<div dbxTimelineItem>...</div>\n<div dbxTimelineItem [dbxTimelineItemCurrent]=\"true\" dbxColor=\"primary\">...</div>\n</div>"
+    },
+    {
       "slug": "two-column",
       "category": "layout",
       "kind": "component",

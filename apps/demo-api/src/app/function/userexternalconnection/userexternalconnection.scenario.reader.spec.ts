@@ -1,6 +1,6 @@
 import { demoCallModel } from './../model/crud.functions';
-import { CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as CALCOM, ZOOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as ZOOM } from '@dereekb/firebase';
-import { MS_IN_MINUTE, MS_IN_SECOND, type Maybe } from '@dereekb/util';
+import { CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as CALCOM, USER_EXTERNAL_CONNECTION_REFRESH_IN_PROGRESS_ERROR_CODE, ZOOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as ZOOM } from '@dereekb/firebase';
+import { MS_IN_MINUTE, MS_IN_SECOND, type Maybe, waitForMs } from '@dereekb/util';
 import { USER_EXTERNAL_CONNECTION_CREDENTIALS_EXPIRED_ERROR_CODE, USER_EXTERNAL_CONNECTION_PROVIDER_NOT_CONNECTED_ERROR_CODE, type UserExternalConnectionCredentials, type UserExternalConnectionCredentialsAndFailureWriter, userExternalConnectionReader } from '@dereekb/firebase-server/model';
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext, demoUserExternalConnectionContext, demoUserExternalConnectionPrivateContext, demoUserExternalConnectionTestCredentials } from '../../../test/fixture';
@@ -387,6 +387,137 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
                 expect(refreshInputs).toHaveLength(2);
                 // the second refresh read the FIRST refresh's result out of the store
                 expect(refreshInputs[1].credentials.accessToken).toBe('refreshed-access-token');
+              });
+            });
+
+            describe('cross-instance refresh lease', () => {
+              // two testReader() readers are two instances: two in-process single-flight maps sharing one
+              // emulator, so only the Firestore lease can keep them from both refreshing
+
+              it('should refresh ONCE across two instances reading concurrently', async () => {
+                await uec.connect({ providerType: CALCOM, credentials: expiredTestCredentials() });
+
+                const a = uecp.testReader({ refreshResult: refreshedTestCredentials({ accessToken: 'refreshed-by-a' }), refreshDelayMs: 300 });
+                const b = uecp.testReader({ refreshResult: refreshedTestCredentials({ accessToken: 'refreshed-by-b' }), refreshDelayMs: 300 });
+
+                const results = await Promise.all([uecp.readerFor(a.reader).readUsableUserExternalConnectionCredentials(), uecp.readerFor(b.reader).readUsableUserExternalConnectionCredentials()]);
+
+                expect(a.refreshInputs.length + b.refreshInputs.length).toBe(1);
+
+                const refreshedAccessToken = a.refreshInputs.length === 1 ? 'refreshed-by-a' : 'refreshed-by-b';
+                results.forEach((x) => expect(x.accessToken).toBe(refreshedAccessToken));
+                expect((await uec.loadUserExternalConnectionPrivate())?.cr[CALCOM].accessToken).toBe(refreshedAccessToken);
+              });
+
+              it('should wait for a foreign holder and return what it persisted without refreshing', async () => {
+                await uec.connect({ providerType: CALCOM, credentials: expiredTestCredentials() });
+                await uecp.seedRefreshLease({ holder: 'foreign-holder', until: new Date(Date.now() + MS_IN_MINUTE) });
+
+                const { reader, refreshInputs } = uecp.testReader({ refreshResult: refreshedTestCredentials({ accessToken: 'never-refreshed' }) });
+                const read = uecp.readerFor(reader).readUsableUserExternalConnectionCredentials();
+
+                await waitForMs(150);
+                await f.userExternalConnectionServerActions.refreshUserExternalConnectionCredentials({ uid: u.uid, providerType: CALCOM, credentials: refreshedTestCredentials({ accessToken: 'refreshed-by-foreign-holder', refreshToken: 'rotated-refresh-token' }), refreshLeaseHolder: 'foreign-holder' });
+
+                const result = await read;
+
+                expect(result.accessToken).toBe('refreshed-by-foreign-holder');
+                expect(refreshInputs).toHaveLength(0);
+                // the fenced persist ended the lease
+                expect((await uec.loadUserExternalConnectionPrivate())?.rl[CALCOM]).toBeUndefined();
+              });
+
+              it('should take over an expired lease and refresh', async () => {
+                await uec.connect({ providerType: CALCOM, credentials: expiredTestCredentials() });
+                await uecp.seedRefreshLease({ holder: 'stale-holder', until: new Date(Date.now() - MS_IN_SECOND) });
+
+                const { reader, refreshInputs } = uecp.testReader({ refreshResult: refreshedTestCredentials({ accessToken: 'refreshed-after-takeover' }) });
+                const result = await uecp.readerFor(reader).readUsableUserExternalConnectionCredentials();
+
+                expect(result.accessToken).toBe('refreshed-after-takeover');
+                expect(refreshInputs).toHaveLength(1);
+                expect((await uec.loadUserExternalConnectionPrivate())?.rl[CALCOM]).toBeUndefined();
+              });
+
+              it('should not repeat a refresh the holder already failed', async () => {
+                // the doomed-refresh rule: the waiter sees the failure recorded against the very refresh
+                // token it would send, so it gives up instead of spending a request on a refused grant
+                await uec.connect({ providerType: CALCOM, credentials: expiredTestCredentials() });
+
+                const holder = uecp.testReader({ refreshError: new Error('invalid_grant'), refreshDelayMs: 500 });
+                const waiter = uecp.testReader({ refreshResult: refreshedTestCredentials({ accessToken: 'never-refreshed' }) });
+
+                const holderRead = uecp.readerFor(holder.reader).readUsableUserExternalConnectionCredentials();
+                const holderOutcome = holderRead.then(
+                  () => undefined,
+                  (e: unknown) => e
+                );
+
+                await waitForMs(150);
+                const waiterCode = await errorCodeFor(() => uecp.readerFor(waiter.reader).readUsableUserExternalConnectionCredentials());
+
+                expect(((await holderOutcome) as Error)?.message).toBe('invalid_grant');
+                expect(waiterCode).toBe(USER_EXTERNAL_CONNECTION_CREDENTIALS_EXPIRED_ERROR_CODE);
+                expect(holder.refreshInputs).toHaveLength(1);
+                expect(waiter.refreshInputs).toHaveLength(0);
+
+                const publicData = await uec.loadUserExternalConnection();
+                expect(publicData?.e[CALCOM].st).toBe('error');
+                expect(publicData?.e[CALCOM].er).toBe('expired');
+                // the holder released its lease on the way out
+                expect((await uec.loadUserExternalConnectionPrivate())?.rl[CALCOM]).toBeUndefined();
+              });
+
+              it('should not overwrite a reconnect that happened mid-refresh', async () => {
+                await uec.connect({ providerType: CALCOM, credentials: expiredTestCredentials() });
+
+                const { reader, refreshInputs } = uecp.testReader({ refreshResult: refreshedTestCredentials({ accessToken: 'superseded-refresh' }), refreshDelayMs: 400 });
+                const read = uecp.readerFor(reader).readUsableUserExternalConnectionCredentials();
+
+                await waitForMs(150);
+                await uec.connect({ providerType: CALCOM, credentials: demoUserExternalConnectionTestCredentials({ accessToken: 'reconnected-access-token' }) });
+
+                const result = await read;
+
+                expect(refreshInputs).toHaveLength(1);
+                expect(result.accessToken).toBe('reconnected-access-token');
+                expect((await uec.loadUserExternalConnectionPrivate())?.cr[CALCOM].accessToken).toBe('reconnected-access-token');
+                expect((await uec.loadUserExternalConnection())?.e[CALCOM].st).toBe('connected');
+              });
+
+              it('should not resurrect a connection disconnected mid-refresh', async () => {
+                await uec.connect({ providerType: CALCOM, credentials: expiredTestCredentials() });
+
+                const { reader } = uecp.testReader({ refreshResult: refreshedTestCredentials({ accessToken: 'superseded-refresh' }), refreshDelayMs: 400 });
+                const read = errorCodeFor(() => uecp.readerFor(reader).readUsableUserExternalConnectionCredentials());
+
+                await waitForMs(150);
+                await uec.disconnect({ providerType: CALCOM });
+
+                expect(await read).toBe(USER_EXTERNAL_CONNECTION_PROVIDER_NOT_CONNECTED_ERROR_CODE);
+                expect((await uec.loadUserExternalConnectionPrivate())?.cr[CALCOM]).toBeUndefined();
+                expect((await uec.loadUserExternalConnection())?.e[CALCOM]).toBeUndefined();
+              });
+
+              it('should give up with REFRESH_IN_PROGRESS when the wait times out', async () => {
+                await uec.connect({ providerType: CALCOM, credentials: expiredTestCredentials() });
+                await uecp.seedRefreshLease({ holder: 'foreign-holder', until: new Date(Date.now() + MS_IN_MINUTE) });
+
+                const { reader, refreshInputs } = uecp.testReader({ refreshResult: refreshedTestCredentials({ accessToken: 'never-refreshed' }), refreshLease: { waitTimeout: 300 } });
+
+                expect(await errorCodeFor(() => uecp.readerFor(reader).readUsableUserExternalConnectionCredentials())).toBe(USER_EXTERNAL_CONNECTION_REFRESH_IN_PROGRESS_ERROR_CODE);
+                expect(refreshInputs).toHaveLength(0);
+              });
+
+              it('should ignore leases entirely with refreshLease: false', async () => {
+                await uec.connect({ providerType: CALCOM, credentials: expiredTestCredentials() });
+                await uecp.seedRefreshLease({ holder: 'foreign-holder', until: new Date(Date.now() + MS_IN_MINUTE) });
+
+                const { reader, refreshInputs } = uecp.testReader({ refreshResult: refreshedTestCredentials({ accessToken: 'refreshed-without-lease' }), refreshLease: false });
+                const result = await uecp.readerFor(reader).readUsableUserExternalConnectionCredentials();
+
+                expect(result.accessToken).toBe('refreshed-without-lease');
+                expect(refreshInputs).toHaveLength(1);
               });
             });
 

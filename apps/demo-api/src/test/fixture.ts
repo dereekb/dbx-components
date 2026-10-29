@@ -146,6 +146,8 @@ import {
   userExternalConnectionReader,
   type UserExternalConnectionReaderProviderInstance,
   type UserExternalConnectionRefreshCredentialsInput,
+  type UserExternalConnectionRefreshLeaseConfig,
+  type UserExternalConnectionRefreshLeaseHolder,
   UserExternalConnectionServerActions,
   UserExternalConnectionServerFirestoreCollections
 } from '@dereekb/firebase-server/model';
@@ -2233,6 +2235,26 @@ export interface DemoApiUserExternalConnectionTestReaderConfig {
    * Delays the refresher's resolution, so concurrent callers overlap.
    */
   readonly refreshDelayMs?: Milliseconds;
+  /**
+   * The cross-instance refresh lease. On by default, leased through the app's real server actions with a
+   * 25ms poll interval; pass an object to tune it, or `false` for a reader with the in-process
+   * single-flight only.
+   *
+   * Two `testReader()` readers simulate two instances: two in-process maps sharing one emulator.
+   */
+  readonly refreshLease?: false | Omit<UserExternalConnectionRefreshLeaseConfig, 'leaser'>;
+}
+
+/**
+ * Input for {@link DemoApiUserExternalConnectionPrivateTestContextInstance.seedRefreshLease}.
+ */
+export interface DemoApiUserExternalConnectionSeedRefreshLeaseInput {
+  /**
+   * Defaults to `calcom`.
+   */
+  readonly providerType?: UserExternalConnectionProviderType;
+  readonly holder: UserExternalConnectionRefreshLeaseHolder;
+  readonly until: Date;
 }
 
 export interface DemoApiUserExternalConnectionTestReader {
@@ -2256,6 +2278,10 @@ export class DemoApiUserExternalConnectionPrivateTestContextFixture<F extends Fi
 > {
   testReader(config: DemoApiUserExternalConnectionTestReaderConfig = {}): DemoApiUserExternalConnectionTestReader {
     return this.instance.testReader(config);
+  }
+
+  seedRefreshLease(input: DemoApiUserExternalConnectionSeedRefreshLeaseInput): Promise<void> {
+    return this.instance.seedRefreshLease(input);
   }
 
   readerFor(reader: UserExternalConnectionReader, providerType?: UserExternalConnectionProviderType): UserExternalConnectionReaderProviderInstance {
@@ -2283,7 +2309,7 @@ export class DemoApiUserExternalConnectionPrivateTestContextInstance<F extends F
    * @returns The reader plus every input its refresher saw.
    */
   testReader(config: DemoApiUserExternalConnectionTestReaderConfig = {}): DemoApiUserExternalConnectionTestReader {
-    const { refreshResult, refreshError, refreshDelayMs } = config;
+    const { refreshResult, refreshError, refreshDelayMs, refreshLease } = config;
     const refreshInputs: UserExternalConnectionRefreshCredentialsInput[] = [];
     let refresher: Maybe<UserExternalConnectionCredentialsRefresher>;
 
@@ -2305,13 +2331,35 @@ export class DemoApiUserExternalConnectionPrivateTestContextInstance<F extends F
       };
     }
 
+    const actions = this.testContext.userExternalConnectionServerActions;
     const reader = userExternalConnectionReader({
       accessor: this.testContext.userExternalConnectionAccessor,
-      actions: this.testContext.userExternalConnectionServerActions,
-      refresher
+      actions,
+      refresher,
+      refreshLease: refreshLease === false ? null : { pollInterval: 25, ...refreshLease, leaser: actions }
     });
 
     return { reader, refreshInputs };
+  }
+
+  /**
+   * Writes a refresh lease straight onto the private document, as if another instance held it.
+   *
+   * Reaches around the server actions like {@link deleteUserExternalConnectionPrivate}: no supported
+   * write lets a test name the holder, which is exactly what simulating a foreign one needs.
+   *
+   * @param input - The provider, the holder, and when its lease expires.
+   */
+  async seedRefreshLease(input: DemoApiUserExternalConnectionSeedRefreshLeaseInput): Promise<void> {
+    const { providerType = CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, holder, until } = input;
+    const document = this.testContext.userExternalConnectionServerFirestoreCollections.userExternalConnectionPrivateCollection.documentAccessor().loadDocumentForId(this.documentId);
+    const current = await document.snapshotData();
+
+    if (current == null) {
+      throw new Error('seedRefreshLease() requires a connected provider: the private document does not exist yet.');
+    }
+
+    await document.accessor.set({ ...current, rl: { ...current.rl, [providerType]: { h: holder, u: until } } });
   }
 
   /**

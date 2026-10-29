@@ -328,7 +328,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             });
 
             it('should request the SIGN-IN scopes on the authorize url', async () => {
-              const url = service.authorizeUrlForRequest({ query: { state: linkState(u.uid) } } as never);
+              const url = await service.authorizeUrlForRequest({ query: { state: linkState(u.uid) } } as never);
 
               expect(url).toBeDefined();
               expect(new URL(url as string).searchParams.get('scope')).toBe('identify email');

@@ -1,12 +1,12 @@
 import { Logger } from '@nestjs/common';
-import { MS_IN_MINUTE, type FactoryWithRequiredInput, type Maybe, type Milliseconds, expirationDetails } from '@dereekb/util';
-import { safeToJsDate } from '@dereekb/date';
+import { randomUUID } from 'node:crypto';
+import { MS_IN_MINUTE, MS_IN_SECOND, type FactoryWithRequiredInput, type Maybe, type Milliseconds, waitForMs } from '@dereekb/util';
 import { type FirebaseAuthUserId, type FirebaseAuthUserIdRef, type UserExternalConnectionEntry, type UserExternalConnectionErrorCode, type UserExternalConnectionProviderType } from '@dereekb/firebase';
 import { type UserExternalConnectionAccessor, type UserExternalConnectionForProvider, type UserExternalConnectionReadParams } from './userexternalconnection.accessor.service';
-import { type UserExternalConnectionCredentials, mergeRefreshedUserExternalConnectionCredentials } from './userexternalconnection.private';
+import { type UserExternalConnectionCredentials, isUserExternalConnectionCredentialsExpired, mergeRefreshedUserExternalConnectionCredentials } from './userexternalconnection.private';
 import { type UserExternalConnectionCredentialsRefresher } from './userexternalconnection.refresh.service';
-import { type UserExternalConnectionCredentialsAndFailureWriter } from './userexternalconnection.action.server';
-import { userExternalConnectionCredentialsExpiredError, userExternalConnectionProviderNotConnectedError } from './userexternalconnection.error';
+import { type UserExternalConnectionCredentialsAndFailureWriter, type UserExternalConnectionRefreshLeaseWriter } from './userexternalconnection.action.server';
+import { isUserExternalConnectionRefreshLeaseLostError, userExternalConnectionCredentialsExpiredError, userExternalConnectionProviderNotConnectedError, userExternalConnectionRefreshInProgressError } from './userexternalconnection.error';
 
 /**
  * How long before its stated expiration a set of credentials is treated as already expired.
@@ -28,6 +28,59 @@ export const DEFAULT_USER_EXTERNAL_CONNECTION_CREDENTIALS_EXPIRATION_BUFFER: Mil
 export const DEFAULT_USER_EXTERNAL_CONNECTION_REFRESH_FAILURE_ERROR_CODE: UserExternalConnectionErrorCode = 'expired';
 
 /**
+ * How long a refresh lease is held before another instance may take it over.
+ *
+ * Three times the 20-second fetch timeout the shipped OAuth clients use, so a refresh that is still
+ * running is never taken over.
+ */
+export const DEFAULT_USER_EXTERNAL_CONNECTION_REFRESH_LEASE_DURATION: Milliseconds = MS_IN_MINUTE;
+
+/**
+ * How long a reader waits on another instance's refresh lease before giving up with
+ * `USER_EXTERNAL_CONNECTION_REFRESH_IN_PROGRESS`. Kept under a 60-second HTTP request.
+ */
+export const DEFAULT_USER_EXTERNAL_CONNECTION_REFRESH_LEASE_WAIT_TIMEOUT: Milliseconds = MS_IN_SECOND * 25;
+
+/**
+ * The first interval a waiting reader polls the lease at. Backs off by
+ * {@link USER_EXTERNAL_CONNECTION_REFRESH_LEASE_POLL_BACKOFF} up to
+ * {@link MAX_USER_EXTERNAL_CONNECTION_REFRESH_LEASE_POLL_INTERVAL}.
+ */
+export const DEFAULT_USER_EXTERNAL_CONNECTION_REFRESH_LEASE_POLL_INTERVAL: Milliseconds = 250;
+
+/**
+ * The longest interval a waiting reader polls the lease at.
+ */
+export const MAX_USER_EXTERNAL_CONNECTION_REFRESH_LEASE_POLL_INTERVAL: Milliseconds = MS_IN_SECOND * 2;
+
+/**
+ * The factor a waiting reader's poll interval grows by after each poll.
+ */
+export const USER_EXTERNAL_CONNECTION_REFRESH_LEASE_POLL_BACKOFF = 1.5;
+
+/**
+ * Configures the cross-instance refresh lease of a {@link userExternalConnectionReader}.
+ */
+export interface UserExternalConnectionRefreshLeaseConfig {
+  /**
+   * Acquires and releases the lease. A full `UserExternalConnectionServerActions` satisfies it.
+   */
+  readonly leaser: UserExternalConnectionRefreshLeaseWriter;
+  /**
+   * Defaults to {@link DEFAULT_USER_EXTERNAL_CONNECTION_REFRESH_LEASE_DURATION}.
+   */
+  readonly leaseDuration?: Maybe<Milliseconds>;
+  /**
+   * Defaults to {@link DEFAULT_USER_EXTERNAL_CONNECTION_REFRESH_LEASE_WAIT_TIMEOUT}.
+   */
+  readonly waitTimeout?: Maybe<Milliseconds>;
+  /**
+   * Defaults to {@link DEFAULT_USER_EXTERNAL_CONNECTION_REFRESH_LEASE_POLL_INTERVAL}.
+   */
+  readonly pollInterval?: Maybe<Milliseconds>;
+}
+
+/**
  * Internal input for the reader's refresh path.
  *
  * Carries the entry the decision was made from so the failure path can tell whether the document
@@ -36,6 +89,10 @@ export const DEFAULT_USER_EXTERNAL_CONNECTION_REFRESH_FAILURE_ERROR_CODE: UserEx
 interface RefreshCredentialsInput extends UserExternalConnectionReadParams {
   readonly previous: UserExternalConnectionCredentials;
   readonly entry: UserExternalConnectionEntry;
+  /**
+   * How long the credentials must remain valid, as the read that triggered the refresh required.
+   */
+  readonly buffer: Milliseconds;
 }
 
 /**
@@ -76,6 +133,14 @@ export interface UserExternalConnectionReaderConfig {
    * {@link DEFAULT_USER_EXTERNAL_CONNECTION_CREDENTIALS_EXPIRATION_BUFFER}.
    */
   readonly expirationBuffer?: Maybe<Milliseconds>;
+  /**
+   * Optional. Coordinates refreshes ACROSS instances through a Firestore lease on `/uecp`, so two
+   * instances (or two machines minting a token) that find the same expired credentials refresh once.
+   *
+   * Without it this reader behaves exactly as before: refreshes are deduplicated within this process
+   * only. `userExternalConnectionReaderProvider()` configures one by default.
+   */
+  readonly refreshLease?: Maybe<UserExternalConnectionRefreshLeaseConfig>;
 }
 
 /**
@@ -207,42 +272,35 @@ export interface UserExternalConnectionReaderRef {
  * @returns A concrete UserExternalConnectionReader implementation.
  */
 export function userExternalConnectionReader(config: UserExternalConnectionReaderConfig): UserExternalConnectionReader {
-  const { accessor, actions, refresher } = config;
+  const { accessor, actions, refresher, refreshLease } = config;
   const expirationBuffer = config.expirationBuffer ?? DEFAULT_USER_EXTERNAL_CONNECTION_CREDENTIALS_EXPIRATION_BUFFER;
   const logger = new Logger('UserExternalConnectionReader');
 
   /**
-   * In-flight refreshes, keyed by user and provider.
+   * In-flight refreshes, keyed by user and provider — the IN-PROCESS tier.
    *
    * Without this, two concurrent calls that both find an expired credential both refresh, and for a
-   * provider that ROTATES its refresh token (Cal.com invalidates the token each use) the second
-   * exchange is sent with a token the first already spent — so one of two valid grants is destroyed
-   * and the loser's write leaves a dead token stored.
+   * provider that ROTATES its refresh token (Cal.com and Trello invalidate the token each use) the
+   * second exchange is sent with a token the first already spent — so one of two valid grants is
+   * destroyed and the loser's write leaves a dead token stored.
    *
-   * This is process-local. Two Cloud Function instances refreshing the same connection at the same
-   * instant still race, and the paired write is last-write-wins. Narrowing that further would need a
-   * lease in Firestore; the window is small enough, and the failure recoverable by a reconnect, that
-   * it is deliberately left open rather than paid for on every read.
+   * It sits in front of the Firestore refresh lease (`refreshLease`), which covers the cross-instance
+   * case: two Cloud Functions instances, or two machines minting a token, refreshing the same connection
+   * at once. Without a configured lease only this tier applies, and the paired write is last-write-wins
+   * across instances.
    */
   const inFlightRefreshes = new Map<string, Promise<UserExternalConnectionCredentials>>();
 
-  /**
-   * Whether these credentials are close enough to expiring that they should not be handed out.
-   *
-   * Credentials with NO stated expiration are usable, not expired — some providers issue long-lived
-   * tokens and simply do not say when they end. That is why `defaultExpiresFromDateToNow` is false:
-   * left at its default, a missing expiration would resolve to `now - buffer` and read as expired.
-   *
-   * @param credentials - The credentials to check.
-   * @param buffer - The leeway window. Defaults to the configured expiration buffer.
-   * @returns True when the credentials are expired or expire inside the leeway window.
-   */
-  function credentialsAreExpired(credentials: UserExternalConnectionCredentials, buffer: Milliseconds = expirationBuffer): boolean {
-    return expirationDetails({
-      expiresFromDate: safeToJsDate(credentials.expiresAt),
-      expiresIn: -buffer,
-      defaultExpiresFromDateToNow: false
-    }).hasExpired();
+  async function markRefreshFailure(input: { readonly uid: FirebaseAuthUserId; readonly providerType: UserExternalConnectionProviderType; readonly entry: UserExternalConnectionEntry }): Promise<void> {
+    const { uid, providerType, entry } = input;
+
+    // leaving the entry `connected` after its refresh failed would present a connection that cannot
+    // be used and does not look broken — the exact state this framework exists to make impossible.
+    // Skipped when the entry ALREADY records this, so a hot read path against an unrenewable
+    // connection does not write a transaction per call to say what the document already says.
+    if (entry.st !== 'error' || entry.er !== DEFAULT_USER_EXTERNAL_CONNECTION_REFRESH_FAILURE_ERROR_CODE) {
+      await reportUserExternalConnectionFailure({ uid, providerType, error: DEFAULT_USER_EXTERNAL_CONNECTION_REFRESH_FAILURE_ERROR_CODE });
+    }
   }
 
   async function refreshAndPersistCredentials(input: RefreshCredentialsInput): Promise<UserExternalConnectionCredentials> {
@@ -272,16 +330,133 @@ export function userExternalConnectionReader(config: UserExternalConnectionReade
 
       return credentials;
     } catch (e) {
-      // leaving the entry `connected` after its refresh failed would present a connection that cannot
-      // be used and does not look broken — the exact state this framework exists to make impossible.
-      // Skipped when the entry ALREADY records this, so a hot read path against an unrenewable
-      // connection does not write a transaction per call to say what the document already says.
-      if (entry.st !== 'error' || entry.er !== DEFAULT_USER_EXTERNAL_CONNECTION_REFRESH_FAILURE_ERROR_CODE) {
-        await reportUserExternalConnectionFailure({ uid, providerType, error: DEFAULT_USER_EXTERNAL_CONNECTION_REFRESH_FAILURE_ERROR_CODE });
-      }
-
+      await markRefreshFailure({ uid, providerType, entry });
       throw e;
     }
+  }
+
+  /**
+   * Re-reads the pair after a refresh's fenced persist lost its lease, and returns what superseded it.
+   *
+   * @param input - The refresh that lost its lease.
+   * @returns The stored credentials, when they are usable.
+   */
+  async function readUsableCredentialsAfterLeaseLost(input: RefreshCredentialsInput): Promise<UserExternalConnectionCredentials> {
+    const { uid, providerType, buffer } = input;
+    const { entry, credentials } = await accessor.accessorForUser({ uid })(providerType).readUserExternalConnectionForProvider();
+
+    if (entry == null || credentials == null || entry.st === 'disconnected') {
+      throw userExternalConnectionProviderNotConnectedError(providerType);
+    }
+
+    if (entry.st === 'error' || isUserExternalConnectionCredentialsExpired({ credentials, buffer })) {
+      throw userExternalConnectionCredentialsExpiredError(providerType);
+    }
+
+    return credentials;
+  }
+
+  /**
+   * The refresh path with a cross-instance lease: acquire, re-read, refresh, fenced persist.
+   *
+   * @param input - The refresh to perform.
+   * @param lease - The lease configuration.
+   * @returns The usable credentials — refreshed here, or by whichever instance held the lease.
+   */
+  async function refreshAndPersistCredentialsUnderLease(input: RefreshCredentialsInput, lease: UserExternalConnectionRefreshLeaseConfig): Promise<UserExternalConnectionCredentials> {
+    const { uid, providerType, previous, buffer } = input;
+    const { leaser } = lease;
+    const leaseDuration = lease.leaseDuration ?? DEFAULT_USER_EXTERNAL_CONNECTION_REFRESH_LEASE_DURATION;
+    const waitTimeout = lease.waitTimeout ?? DEFAULT_USER_EXTERNAL_CONNECTION_REFRESH_LEASE_WAIT_TIMEOUT;
+    let pollInterval = lease.pollInterval ?? DEFAULT_USER_EXTERNAL_CONNECTION_REFRESH_LEASE_POLL_INTERVAL;
+
+    const holder = randomUUID();
+    const waitUntil = Date.now() + waitTimeout;
+    let observedHolder = false;
+    let result: Maybe<UserExternalConnectionCredentials>;
+    let acquired: Maybe<{ readonly credentials: UserExternalConnectionCredentials; readonly entry: UserExternalConnectionEntry }>;
+
+    while (result == null && acquired == null) {
+      const attempt = await leaser.acquireUserExternalConnectionRefreshLease({ uid, providerType, holder, previous, buffer, leaseDuration });
+
+      switch (attempt.outcome) {
+        case 'disconnected':
+          throw userExternalConnectionProviderNotConnectedError(providerType);
+        case 'refreshed':
+          // another instance refreshed since this one read: no provider call at all
+          result = attempt.credentials;
+          break;
+        case 'held': {
+          observedHolder = true;
+          const remaining = waitUntil - Date.now();
+
+          if (remaining <= 0) {
+            throw userExternalConnectionRefreshInProgressError(providerType);
+          }
+
+          await waitForMs(Math.min(pollInterval, remaining));
+          pollInterval = Math.min(pollInterval * USER_EXTERNAL_CONNECTION_REFRESH_LEASE_POLL_BACKOFF, MAX_USER_EXTERNAL_CONNECTION_REFRESH_LEASE_POLL_INTERVAL);
+          break;
+        }
+        case 'acquired':
+          acquired = attempt;
+          break;
+      }
+    }
+
+    if (acquired != null) {
+      const { credentials: stored, entry: storedEntry } = acquired;
+      const releaseLease = () =>
+        leaser.releaseUserExternalConnectionRefreshLease({ uid, providerType, holder }).catch((releaseError: unknown) => {
+          logger.error(`Failed releasing the "${providerType}" refresh lease for uid "${uid}": `, releaseError);
+        });
+
+      // the doomed-refresh rule. A holder was seen, and now that it is gone the entry records a refresh
+      // failure against the very refresh token this instance would send: the refresh waited on failed,
+      // and repeating it would only spend a request on a grant the provider already refused. Decided
+      // from what was written rather than from any clock.
+      if (observedHolder && storedEntry.st === 'error' && storedEntry.er === DEFAULT_USER_EXTERNAL_CONNECTION_REFRESH_FAILURE_ERROR_CODE && stored.refreshToken === previous.refreshToken) {
+        await releaseLease();
+        throw userExternalConnectionCredentialsExpiredError(providerType);
+      }
+
+      let refreshedCredentials: Maybe<UserExternalConnectionCredentials>;
+      let leaseLost = false;
+
+      try {
+        // refresh from the STORED credentials, which the acquire just re-read — the copy this instance
+        // read before waiting may carry a refresh token another instance has since spent
+        const refreshed = refresher ? await refresher.refreshUserExternalConnectionCredentials({ uid, providerType, credentials: stored }) : undefined;
+
+        if (refreshed == null) {
+          logger.warn(`No refresh path is available for "${providerType}"; uid "${uid}" must reconnect.`);
+          throw userExternalConnectionCredentialsExpiredError(providerType);
+        }
+
+        refreshedCredentials = mergeRefreshedUserExternalConnectionCredentials({ previous: stored, refreshed });
+        // fenced by the lease, which the write also ends
+        await actions.refreshUserExternalConnectionCredentials({ uid, providerType, credentials: refreshedCredentials, refreshLeaseHolder: holder });
+        logger.log(`Refreshed the "${providerType}" credentials for uid "${uid}".`);
+      } catch (e) {
+        if (isUserExternalConnectionRefreshLeaseLostError(e)) {
+          leaseLost = true;
+        } else {
+          await markRefreshFailure({ uid, providerType, entry: storedEntry });
+          await releaseLease();
+          throw e;
+        }
+      }
+
+      if (leaseLost) {
+        // nothing was written: whatever ended the lease is what is stored now, and it wins
+        logger.error(`A reconnect, disconnect or takeover superseded the "${providerType}" refresh for uid "${uid}"; its result was discarded.`);
+        result = await readUsableCredentialsAfterLeaseLost(input);
+      } else {
+        result = refreshedCredentials as UserExternalConnectionCredentials;
+      }
+    }
+
+    return result as UserExternalConnectionCredentials;
   }
 
   function refreshCredentialsOnce(input: RefreshCredentialsInput): Promise<UserExternalConnectionCredentials> {
@@ -289,7 +464,10 @@ export function userExternalConnectionReader(config: UserExternalConnectionReade
     let result = inFlightRefreshes.get(key);
 
     if (result == null) {
-      result = refreshAndPersistCredentials(input).finally(() => {
+      // never take a lease with nothing to refresh with: that path only marks the failure
+      const refresh = refreshLease != null && refresher != null ? refreshAndPersistCredentialsUnderLease(input, refreshLease) : refreshAndPersistCredentials(input);
+
+      result = refresh.finally(() => {
         inFlightRefreshes.delete(key);
       });
 
@@ -314,10 +492,10 @@ export function userExternalConnectionReader(config: UserExternalConnectionReade
     // there is something to try with. When there is not, the stored credentials are still handed over
     // if they have not expired: the recorded error may have been a scope refusal that leaves them
     // usable for other calls, and refusing to try would be less useful than letting the caller find out
-    const expired = credentialsAreExpired(credentials, buffer);
+    const expired = isUserExternalConnectionCredentialsExpired({ credentials, buffer });
     const shouldRefresh = expired || (entry.st === 'error' && refresher != null);
 
-    return shouldRefresh ? refreshCredentialsOnce({ ...params, previous: credentials, entry }) : credentials;
+    return shouldRefresh ? refreshCredentialsOnce({ ...params, previous: credentials, entry, buffer }) : credentials;
   }
 
   async function reportUserExternalConnectionFailure(params: UserExternalConnectionReportFailureParams): Promise<void> {
