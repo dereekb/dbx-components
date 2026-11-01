@@ -15,6 +15,7 @@ queue drained by a sweeper the app mounts on a schedule it already runs.
 |---|---|
 | `@dereekb/openrouter` | Config types, request builder, `callModel` wrapper, deferred-tool helpers, embeddings, **decisions**. Pure — no I/O. |
 | `@dereekb/openrouter/decision` | The decision layer WITHOUT `@openrouter/sdk`: questions, validation, the request body, the answer reader, model ids. See [below](#loading-without-the-sdk). |
+| `@dereekb/openrouter/template` | The message template core WITHOUT `@openrouter/sdk`: template types, the script validator and runner, the context builder, output checks, the review definition. See [Message templates](#message-templates). |
 | `@dereekb/openrouter/firebase` | The `OpenRouterPrompt`, `OpenRouterPromptVersion` and `OpenRouterRunTask` models. |
 | `@dereekb/openrouter/firebase-server` | Prompt service, run-task queue + sweep, Firestore `StateAccessor`, server actions. |
 
@@ -375,6 +376,82 @@ Treat both as **audit surfaces, never the system of record**: what they return i
 settings (nothing is retained under ZDR / logging-disabled), retention is undocumented, and they are
 keyed per generation rather than per conversation.
 
+## Message templates
+
+A message template renders a message string (an SMS, an in-app notification) from a typed context, with no AI
+writing the text unless the template's type allows it. The core lives in `@dereekb/openrouter/template`.
+
+### Template types
+
+A template TYPE is registered in code with `openRouterTemplateType()`. It declares:
+
+- `input` — an arktype shape for the template input (JSON-only; pre-format dates and money);
+- `loaders` — `loadX` functions that take NO script arguments, derive their data from the validated input, and
+  declare their output shape;
+- `mode` — one of four `OpenRouterTemplateMode`s, fixed per type and enforced at publish and at render:
+
+| Mode | Path to the message text |
+|---|---|
+| `DETERMINISTIC` | body → text |
+| `DETERMINISTIC_OPENROUTER` | body → `{ openRouter: { input } }` → the version's prompt call → [final script] → text |
+| `DETERMINISTIC_OR_OPENROUTER` | body → text, or details → prompt call → [final script] → text |
+| `OPENROUTER` | today's prompt call → [final script] → text |
+
+- `output` — `maxLength`, `allowedUrlDomains`, `maxOpenRouterInputLength`. Script text and model text get the same
+  checks (`checkOpenRouterTemplateOutputText`);
+- `finalScript` — whether a version may (`optional`) or must (`required`) carry a final script that turns the
+  model output into the text. Absent means it may not;
+- `allowMultipleRecipients` — single-recipient unless set. Set it only for generic text, when every loader returns
+  data that EVERY recipient may see; otherwise create one notification per recipient.
+
+Registration refuses a non-JSON shape, a loader name that is not `load[A-Z]…`, and any field or loader name in
+`OPENROUTER_TEMPLATE_BANNED_NAMES`. Types are served by `appOpenRouterTemplateTypeConfigService()`, which refuses
+an unknown type rather than falling back.
+
+### Uploaded scripts
+
+A stored template's body is a script that runs as `new AsyncFunction('context', "'use strict';\n" + code)`. There
+is no VM: `validateOpenRouterTemplateScript()` is the boundary, and `compileOpenRouterTemplateScript()` re-runs it
+against the CURRENT type config every time it compiles. In short, a script may only:
+
+- use `const`/`let`, `if`, blocks, `return`, calls, `await` and assignments to its own `let`s — no loops, `switch`,
+  `try`, function or class declarations;
+- reference `context, Math, JSON, Number, String, Array, Boolean` and its own earlier declarations;
+- access the type's declared fields, `input`, the loader names, the return keys and a fixed built-in set
+  (`OPENROUTER_TEMPLATE_SCRIPT_BUILT_IN_MEMBERS`), never a banned name;
+- call a const-declared arrow, `String`/`Number`/`Boolean`, a built-in method, or `context.loadX()`;
+- pass functions only as callbacks. A function body may only reference bindings declared before it, so nothing
+  can recurse, and every script terminates.
+
+Every `context.input…` chain, awaited loader result, and value destructured from them must name declared fields.
+
+```ts
+const worker = await context.loadWorker();
+const jobs = await context.loadJobs();
+if (jobs.length === 0) {
+  return null;
+}
+return `Hi ${worker.nickname ?? worker.firstName}, you have ${jobs.length} ${jobs.length === 1 ? 'job' : 'jobs'}:\n${jobs.map((job) => `- ${job.title} on ${job.date}`).join('\n')}`;
+```
+
+`openRouterTemplateContext()` hands a script a frozen, null-prototype `{ input, loadX… }`. Loaders are memoized per
+render, and their output must be plain data (no snapshots, references, `Timestamp`s, `Date`s or class instances),
+which is deep-copied, validated, stripped of undeclared keys and frozen.
+
+A human security review of the validator rules is required before uploaded scripts are enabled in production.
+
+### Review
+
+Every uploaded script is also reviewed by Jev (`openRouterTemplateReviewPromptDefinition()`), one Noul per rule:
+`obfuscatedCode`, `sendsDataOut`, `offPurpose`, `inventsDetails`, `addressesReviewer`, plus `personalDetails` for
+a multi-recipient type. `readOpenRouterTemplateReviewVerdict()` flags any noul at or above 0.5. The service asks the
+code definition directly, so a Firestore edit cannot weaken the review.
+
+### SMS length
+
+`smsTextSegmentDetails()` in `@dereekb/util` reports the length, the encoding (`gsm7` / `ucs2`) and the segment
+count of a message.
+
 ## Live probes
 
 Two blocks make real API calls, both skipped unless `OPENROUTER_API_KEY` is set:
@@ -386,6 +463,9 @@ Two blocks make real API calls, both skipped unless `OPENROUTER_API_KEY` is set:
   primitives answer in the declared shape, that `usage.cost` arrives synchronously (which is why a
   decision needs no broadcast reconciliation), and that the wire is snake_case where the SDK decodes to
   camelCase.
+- `openrouter.template.review.spike.spec.ts` — feeds every known-bad template script (including the ones
+  the parser already refuses) to the template review, and requires each to be flagged in all 5 runs; the
+  good templates must be approved in all 5.
 - the `live end-to-end` block in `openrouter.runtask.emulator.spec.ts` — publishes a version, enqueues a
   run, drains it with the real sweeper against the real API, then resolves the stored generation id
   through `openRouterGeneration`. This is the plan's end-to-end bullet minus its MCP transport: no app in

@@ -57,6 +57,7 @@
     "@vapi-ai/server-sdk": "^1.2.0",
     "@vvo/tzdb": "^6.198.0",
     "@zip.js/zip.js": "^2.8.26",
+    "acorn": "^8.18.0",
     "angular-calendar": "^0.32.2",
     "archiver": "^8.0.0",
     "arktype": "^2.2.0",

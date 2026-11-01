@@ -7,7 +7,9 @@ const options = {
   // `@dereekb/openrouter/decision`: the decision layer without the SDK (see src/decision.ts). A second
   // input of THIS build rather than a child project, because the root entry re-exports the same modules —
   // rollup emits them once, as a chunk both entries import, so there is one copy and one class identity.
-  additionalEntryPoints: ['./src/decision.ts'],
+  // `@dereekb/openrouter/template`: the message template core (types, validator, runner, context, output checks and the
+  // review definition), also SDK-free, built the same way.
+  additionalEntryPoints: ['./src/decision.ts', './src/template.ts'],
   outputPath: '../../dist/packages/openrouter',
   tsConfig: './tsconfig.lib.json',
   project: './package.json',
