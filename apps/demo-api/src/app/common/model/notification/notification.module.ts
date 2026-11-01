@@ -18,7 +18,7 @@ import { DemoApiActionModule } from '../../firebase/action.module';
 import { demoNotificationSendServiceFactory } from './notification.send.service';
 import { demoNotificationInitServerActionsContextConfig } from './notification.init';
 import { demoNotificationTaskServiceFactory } from './notification.task.service';
-import { OPENROUTER_RUN_TASK_SERVICE_TOKEN } from '@dereekb/openrouter/firebase-server';
+import { OPENROUTER_RUN_TASK_SERVICE_TOKEN, OPENROUTER_TEMPLATE_SERVICE_TOKEN } from '@dereekb/openrouter/firebase-server';
 import { DemoApiOpenRouterDependencyModule } from '../../../api/openrouter';
 import { DemoApiTwilioModule } from '../../../api/twilio/twilio.module';
 import { TwilioService } from '@dereekb/nestjs/twilio';
@@ -77,7 +77,7 @@ export const demoFirebaseServerActionsContextWithNotificationServicesFactory = (
     {
       provide: NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN,
       useFactory: demoNotificationTemplateServiceConfigsArrayFactory,
-      inject: [DemoFirebaseServerActionsContext]
+      inject: [DemoFirebaseServerActionsContext, OPENROUTER_TEMPLATE_SERVICE_TOKEN]
     }
   ],
   exports: [DemoApiActionModule, NotificationSendService, NotificationTaskService, BASE_NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN, NOTIFICATION_INIT_SERVER_ACTIONS_CONTEXT_CONFIG_TOKEN, NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN]

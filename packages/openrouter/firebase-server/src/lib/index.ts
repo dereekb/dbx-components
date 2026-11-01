@@ -10,3 +10,4 @@ export * from './openrouter.runtask.sweep';
 export * from './openrouter.state.accessor';
 export * from './openrouter.template.approval';
 export * from './openrouter.template.service';
+export * from './openrouter.template.notification';

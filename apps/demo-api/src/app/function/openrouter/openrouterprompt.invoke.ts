@@ -5,6 +5,8 @@ import { type DemoInvokeModelFunction } from '../function.context';
 export const openRouterPromptPreviewTemplate: DemoInvokeModelFunction<PreviewOpenRouterTemplateParams, PreviewOpenRouterTemplateResult> = withApiDetails({
   inputType: previewOpenRouterTemplateParamsType,
   mcp: {
+    // A preview never writes: it renders a stored version or a draft and reports the result.
+    readOnly: true,
     // With `callModel` a preview makes the model call a render would, which costs money.
     escalatingParams: { callModel: { destructive: true } }
   },

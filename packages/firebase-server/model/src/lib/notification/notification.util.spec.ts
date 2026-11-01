@@ -12,7 +12,7 @@ import {
   type NotificationUserNotificationBoxRecipientConfig,
   firestoreDummyKey
 } from '@dereekb/firebase';
-import { notificationMessageFunctionWithUnlistedDeliveryMethodsWarning, updateNotificationUserNotificationBoxRecipientConfig } from './notification.util';
+import { countExpandedNotificationRecipientPeople, notificationMessageFunctionWithUnlistedDeliveryMethodsWarning, updateNotificationUserNotificationBoxRecipientConfig } from './notification.util';
 import { expectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
 
 // more utils are tested in demo-api/.../notification.util.spec.ts so that it has access to authService and other configured services.
@@ -402,5 +402,87 @@ describe('notificationMessageFunctionWithUnlistedDeliveryMethodsWarning()', () =
 
   it('should return the message function itself without template type info', () => {
     expect(notificationMessageFunctionWithUnlistedDeliveryMethodsWarning({ messageFunction, templateTypeInfo: undefined })).toBe(messageFunction);
+  });
+});
+
+describe('countExpandedNotificationRecipientPeople()', () => {
+  const uidA = 'uid-a' as FirebaseAuthUserId;
+  const uidB = 'uid-b' as FirebaseAuthUserId;
+
+  it('should count zero when there are no recipients', () => {
+    expect(countExpandedNotificationRecipientPeople({ emails: [], texts: [], notificationSummaries: [] })).toBe(0);
+  });
+
+  it('should count a box recipient reached on every channel once', () => {
+    const boxRecipient = { recipient: { uid: uidA } };
+
+    const result = countExpandedNotificationRecipientPeople({
+      emails: [{ emailAddress: 'a@example.com', boxRecipient }],
+      texts: [{ phoneNumber: '+15555550100', boxRecipient }],
+      notificationSummaries: [{ notificationSummaryId: 'summary-a', boxRecipient }]
+    });
+
+    expect(result).toBe(1);
+  });
+
+  it('should count different uids separately', () => {
+    const result = countExpandedNotificationRecipientPeople({
+      emails: [],
+      texts: [
+        { phoneNumber: '+15555550100', boxRecipient: { recipient: { uid: uidA } } },
+        { phoneNumber: '+15555550101', boxRecipient: { recipient: { uid: uidB } } }
+      ],
+      notificationSummaries: []
+    });
+
+    expect(result).toBe(2);
+  });
+
+  it('should dedupe a uid that is reached as a box recipient and an other user recipient', () => {
+    const result = countExpandedNotificationRecipientPeople({
+      emails: [{ emailAddress: 'a@example.com', otherUserRecipient: { recipient: { uid: uidA } } }],
+      texts: [{ phoneNumber: '+15555550100', otherRecipient: { uid: uidA } }],
+      notificationSummaries: [{ notificationSummaryId: 'summary-a', boxRecipient: { recipient: { uid: uidA } } }]
+    });
+
+    expect(result).toBe(1);
+  });
+
+  it('should count explicit recipients without a uid by their contact details', () => {
+    const explicitRecipient = { e: 'explicit@example.com', t: '+15555550102' as const };
+
+    const result = countExpandedNotificationRecipientPeople({
+      emails: [{ emailAddress: 'explicit@example.com', otherRecipient: explicitRecipient }],
+      texts: [
+        { phoneNumber: '+15555550102', otherRecipient: explicitRecipient },
+        { phoneNumber: '+15555550103', otherRecipient: { t: '+15555550103' } }
+      ],
+      notificationSummaries: []
+    });
+
+    expect(result).toBe(2);
+  });
+
+  it('should count a mix of uid and explicit recipients across channels', () => {
+    const result = countExpandedNotificationRecipientPeople({
+      emails: [{ emailAddress: 'a@example.com', boxRecipient: { recipient: { uid: uidA } } }],
+      texts: [
+        { phoneNumber: '+15555550100', boxRecipient: { recipient: { uid: uidA } } },
+        { phoneNumber: '+15555550104', otherRecipient: { t: '+15555550104' } }
+      ],
+      notificationSummaries: [{ notificationSummaryId: 'summary-b', boxRecipient: { recipient: { uid: uidB } } }]
+    });
+
+    expect(result).toBe(3);
+  });
+
+  it('should fall back to the channel address when the entry has no source recipient', () => {
+    const result = countExpandedNotificationRecipientPeople({
+      emails: [{ emailAddress: 'a@example.com' }, { emailAddress: 'a@example.com' }],
+      texts: [{ phoneNumber: '+15555550100' }],
+      notificationSummaries: []
+    });
+
+    expect(result).toBe(2);
   });
 });

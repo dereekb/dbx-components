@@ -17,6 +17,7 @@ import {
   type NotificationTemplateTypeInfoGroup,
   NotificationDeliveryMethod
 } from '@dereekb/firebase';
+import { openRouterTemplateTextNotificationTemplateTypeInfo } from '@dereekb/openrouter/firebase';
 import { type ProfileDocument, profileIdentity } from '../profile';
 import { demoProfileCalendarId } from '../calendar';
 import { type Guestbook, type GuestbookEntry, type GuestbookEntryKey, type GuestbookKey, guestbookEntryIdentity, guestbookIdentity } from '../guestbook';
@@ -297,13 +298,27 @@ export function calendarEventInviteNotificationTemplate(input: CalendarEventInvi
   });
 }
 
+// MARK: Template Text Notification
+/**
+ * The library's template-text notification type, delivered to profile notification boxes.
+ *
+ * Every recipient of a template-text notification gets the identical body. A template of a type without
+ * `allowMultipleRecipients` sends nothing when the notification would reach more than one person; create one
+ * notification per recipient when the content differs.
+ */
+export const DEMO_OPENROUTER_TEMPLATE_TEXT_NOTIFICATION_TEMPLATE_TYPE_INFO: NotificationTemplateTypeInfo = openRouterTemplateTextNotificationTemplateTypeInfo({
+  notificationModelIdentity: profileIdentity,
+  group: DEMO_NOTIFICATION_PROFILE_SETTINGS_GROUP
+});
+
 // MARK: All Notifications
 export const DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD = notificationTemplateTypeInfoRecord([
   TEST_NOTIFICATIONS_TEMPLATE_TYPE_INFO,
   EXAMPLE_NOTIFICATION_TEMPLATE_TYPE_INFO,
   GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE_INFO,
   GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE_INFO,
-  CALENDAR_EVENT_INVITE_NOTIFICATION_TEMPLATE_TYPE_INFO
+  CALENDAR_EVENT_INVITE_NOTIFICATION_TEMPLATE_TYPE_INFO,
+  DEMO_OPENROUTER_TEMPLATE_TEXT_NOTIFICATION_TEMPLATE_TYPE_INFO
 ]);
 
 export const DEMO_API_NOTIFICATION_SUMMARY_ID_FOR_UID: NotificationSummaryIdForUidFunction = notificationSummaryIdForUidFunctionForRootFirestoreModelIdentity(profileIdentity);

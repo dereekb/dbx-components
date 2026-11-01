@@ -452,6 +452,79 @@ code definition directly, so a Firestore edit cannot weaken the review.
 `smsTextSegmentDetails()` in `@dereekb/util` reports the length, the encoding (`gsm7` / `ucs2`) and the segment
 count of a message.
 
+### Template service
+
+`openRouterTemplateService({ typeConfigService, promptService, client, approvalSecret, codeTemplates?, review? })` in
+`@dereekb/openrouter/firebase-server` renders templates and validates and approves their versions. Provide it under
+`OPENROUTER_TEMPLATE_SERVICE_TOKEN` and pass it to `openRouterPromptServerActions()` as `openRouterTemplateService`;
+without it the template operations (`create:template`, a template version upload, `invoke:previewTemplate`) are refused.
+
+`renderTemplate({ templateKey, version?, input?, openRouter?, trace? })` resolves the template (code templates first,
+then the store, so pinned versions work), checks the version's shape against its type's mode, verifies its approval,
+re-validates its scripts, runs the body, makes the model call when the mode needs one, runs the final script and the
+output checks. It returns `{ text?, empty, templateKey, version?, templateType, mode, path, finalized, source,
+openRouterInput?, modelCalled, openRouter?, metrics? }`.
+
+Code templates (`openRouterCodeTemplate({ key, type, render?, finalize?, promptKey? })`) are reviewed in pull requests,
+so they skip the approval and the review but keep the mode rules and output checks. Their keys are disjoint from stored
+templates.
+
+### Approval
+
+A version that carries a script or a final script is only written once its static checks and the review pass. It is
+then signed with an HMAC-SHA256 over its type, script, final script, instructions, messages and model config, keyed
+with a server secret read from `OPENROUTER_TEMPLATE_APPROVAL_SECRET` (`openRouterTemplateApprovalSecretFromConfigService()`,
+at least 16 characters). A plain hash would not do: anyone who can edit Firestore could recompute it.
+
+The approval fails closed. Without the secret, approving and rendering stored scripts are both refused, and a version
+whose script was edited directly in Firestore fails verification at render and when it is promoted to `activeVersion`.
+Rotating the secret un-approves every stored version until it is re-signed.
+
+### Preview
+
+`invoke:previewTemplate` (`previewTemplate()` on the service) runs a stored version, or a draft sent in the request,
+through the real render path. It swaps the type's `samples` (or the given `loaderData`) in for the real loaders, stops
+before the model call unless `callModel: true`, and then feeds the final script `modelOutput` (or `samples.output`). A
+draft runs only after its static checks pass. The result reports problems instead of throwing, plus the SMS metrics.
+
+### Notifications
+
+`openRouterTemplateNotificationMessageFunctionFactory({ templateService, renderParamsForItem, buildMessage? })` returns a
+`NotificationMessageFunctionFactory` that sends a rendered template:
+
+- it renders ONCE per notification, before recipients are expanded, so every recipient gets the identical body and
+  modes that call a model make one call per notification;
+- the default message is `{ content: { title: text }, textContent: { title: text } }`, which the text send services
+  send as the body;
+- an empty result sends nothing (`NotificationMessageFlag.DO_NOT_SEND`), and a render error fails the attempt, which
+  is retried. A retry re-renders, so recipients not yet sent to get the retry's text;
+- the message function's `maxRecipients` is `1` unless the template's type has `allowMultipleRecipients`.
+
+`maxRecipients` is a generic `NotificationMessageFunctionExtras` field. After recipient expansion the send loop counts
+the distinct people across email, text and in-app summary (`countExpandedNotificationRecipientPeople()`; one person by
+uid, else by their explicit contact details), and when the count exceeds the limit it sends nothing on any channel and
+sets every channel's send state to `NO_TRY`, which is never retried.
+
+**Recipient rule:** the loaders of a multi-recipient template may only return data that EVERY recipient of the
+notification may see. When the content has to differ per person, create one notification per recipient.
+
+The opt-in template-text notification type sends any template by key:
+
+- `openRouterTemplateTextNotificationTemplateTypeInfo({ notificationModelIdentity })` builds its
+  `NotificationTemplateTypeInfo` (`OPENROUTER_TEMPLATE_TEXT_NOTIFICATION_TEMPLATE_TYPE`, delivered by text and in-app);
+- `createOpenRouterTemplateTextNotificationTemplate({ templateKey, version?, input, notificationModel, ... })` creates a
+  notification whose data is `OpenRouterTemplateTextNotificationData { k, v?, i }` — identifiers only, since `n.d` is
+  copied into the summary and week documents;
+- `openRouterTemplateTextNotificationMessageFunctionFactory({ templateService })` is the ready-made factory that reads
+  `n.d`.
+
+### Migration notes
+
+- `OpenRouterPromptVersion.by` now holds the uid of the user who uploaded the version. It was documented as a model key
+  but was never written, so existing versions have no value.
+- `OpenRouterResolvedPrompt.template` is new. It carries a template version's type, scripts and approval, and is absent
+  for plain prompts (additive).
+
 ## Live probes
 
 Two blocks make real API calls, both skipped unless `OPENROUTER_API_KEY` is set:
