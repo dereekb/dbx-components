@@ -8,3 +8,5 @@ export * from './openrouter.runtask.handle';
 export * from './openrouter.runtask.service';
 export * from './openrouter.runtask.sweep';
 export * from './openrouter.state.accessor';
+export * from './openrouter.template.approval';
+export * from './openrouter.template.service';

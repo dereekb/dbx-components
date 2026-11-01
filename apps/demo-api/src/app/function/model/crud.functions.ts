@@ -33,6 +33,8 @@ import { userExternalConnectionUpdateDisconnect } from '../userexternalconnectio
 import { userExternalConnectionUpdateUnlink } from '../userexternalconnection/userexternalconnection.unlink';
 import { userExternalConnectionReadAuthorizeState } from '../userexternalconnection/userexternalconnection.read';
 import { userExternalConnectionCreate } from '../userexternalconnection/userexternalconnection.create';
+import { openRouterPromptCreateTemplate } from '../openrouter/openrouterprompt.create';
+import { openRouterPromptPreviewTemplate } from '../openrouter/openrouterprompt.invoke';
 import { openRouterPromptRead } from '../openrouter/openrouterprompt.read';
 import { openRouterPromptUpdate } from '../openrouter/openrouterprompt.update';
 import { openRouterPromptQuery } from '../openrouter/openrouterprompt.query';
@@ -68,7 +70,10 @@ export const DEMO_CREATE_MODEL_MAP: DemoOnCallCreateModelMap = {
   userExternalConnection: userExternalConnectionCreate,
   // Publishing a prompt version is a create on the version model: it writes a new document,
   // and there is no Angular screen for prompt authoring, so callModel and its MCP are the only way in.
-  openRouterPromptVersion: openRouterPromptVersionCreate
+  openRouterPromptVersion: openRouterPromptVersionCreate,
+  openRouterPrompt: onCallSpecifierHandler({
+    template: openRouterPromptCreateTemplate
+  })
 };
 
 // MARK: Read
@@ -203,6 +208,9 @@ export const DEMO_INVOKE_MODEL_MAP: DemoOnCallInvokeModelMap = {
   notificationUser: onCallSpecifierHandler({
     healthCheck: notificationUserHealthCheck,
     healthCheckAutofix: notificationUserHealthCheckAutofix
+  }),
+  openRouterPrompt: onCallSpecifierHandler({
+    previewTemplate: openRouterPromptPreviewTemplate
   })
 };
 

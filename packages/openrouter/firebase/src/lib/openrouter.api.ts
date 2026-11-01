@@ -16,8 +16,8 @@ import {
   onCallQueryModelRequestParamsType
 } from '@dereekb/firebase';
 import { clearable } from '@dereekb/model';
-import { type Maybe } from '@dereekb/util';
-import { type OpenRouterPromptResolutionSource, type OpenRouterPromptVersionNumber, type OpenRouterResolvedPrompt } from '@dereekb/openrouter';
+import { type Maybe, type SmsTextEncoding } from '@dereekb/util';
+import { type OpenRouterPromptKey, type OpenRouterPromptResolutionSource, type OpenRouterPromptVersionNumber, type OpenRouterResolvedPrompt, type OpenRouterTemplateBodyResultKind, type OpenRouterTemplateReviewRecord, type OpenRouterTemplateScriptError, type OpenRouterTemplateTypeKey } from '@dereekb/openrouter';
 import { type OpenRouterPrompt, OpenRouterPromptState, type OpenRouterPromptTypes } from './openrouter.model';
 
 // MARK: State
@@ -28,6 +28,77 @@ import { type OpenRouterPrompt, OpenRouterPromptState, type OpenRouterPromptType
  * the allowed numbers listed rather than quietly matching no prompt.
  */
 export const openRouterPromptStateType = /* @__PURE__ */ type.enumerated(OpenRouterPromptState.DRAFT, OpenRouterPromptState.ACTIVE, OpenRouterPromptState.ARCHIVED);
+
+// MARK: Create Template
+/**
+ * Parameters for creating a message TEMPLATE: an {@link OpenRouterPrompt} of a template type registered in code.
+ *
+ * The one create on the prompt model, and it is template-only: a plain prompt still comes into existence from a seed against
+ * its code definition. A template is created at runtime so an admin can add one of an existing type without a deploy. The
+ * type cannot change after, and the key must not belong to a code template or an existing prompt.
+ *
+ * @dbxModelApiParams
+ */
+export interface CreateOpenRouterTemplateParams {
+  /**
+   * The template key, used as the prompt's document id. Lowercase, dash-separated by convention.
+   */
+  readonly key: OpenRouterPromptKey;
+  /**
+   * Human-readable name.
+   */
+  readonly name: string;
+  /**
+   * What the template is for.
+   */
+  readonly description?: Maybe<string>;
+  /**
+   * Grouping tags.
+   */
+  readonly tags?: Maybe<string[]>;
+  /**
+   * The registered template type. Its mode, input, loaders and output rules govern every version.
+   */
+  readonly templateType: OpenRouterTemplateTypeKey;
+}
+
+export const createOpenRouterTemplateParamsType = /* @__PURE__ */ type({
+  key: 'string >= 1',
+  name: 'string >= 1',
+  'description?': clearable('string'),
+  'tags?': clearable('string[]'),
+  templateType: 'string >= 1'
+}) as Type<CreateOpenRouterTemplateParams>;
+
+/**
+ * Details carried by the error a refused template version or preview throws.
+ *
+ * Structured so an author can see each problem where it is: parser errors keep their line and column, and a flagged review
+ * names the questions it flagged.
+ */
+export interface OpenRouterTemplateCheckErrorData {
+  /**
+   * Shape, config and runtime problems.
+   */
+  readonly errors: string[];
+  /**
+   * The body script's static check errors.
+   */
+  readonly scriptErrors?: Maybe<OpenRouterTemplateScriptError[]>;
+  /**
+   * The final script's static check errors.
+   */
+  readonly finalScriptErrors?: Maybe<OpenRouterTemplateScriptError[]>;
+  /**
+   * The review questions that were flagged.
+   */
+  readonly flagged?: Maybe<string[]>;
+}
+
+/**
+ * Error code a refused template version or preview throws with.
+ */
+export const OPENROUTER_TEMPLATE_CHECK_FAILED_ERROR_CODE = 'OPENROUTER_TEMPLATE_CHECK_FAILED';
 
 // MARK: Update
 /**
@@ -127,6 +198,18 @@ export interface CreateOpenRouterPromptVersionParams {
    */
   readonly questions?: Maybe<Record<string, unknown>>;
   /**
+   * The template body script, when the prompt is a template.
+   *
+   * A version carrying any script is written only when every check passes — the shape rules of the type's mode, the static
+   * script checks and the review — and is then approved by the server. A failure refuses the write.
+   */
+  readonly script?: Maybe<string>;
+  /**
+   * The template final script, run on a model's output. Allowed only when the template's type declares a `finalScript`
+   * setting.
+   */
+  readonly finalScript?: Maybe<string>;
+  /**
    * Why this version was created.
    */
   readonly notes?: Maybe<string>;
@@ -145,6 +228,8 @@ export const createOpenRouterPromptVersionParamsType = /* @__PURE__ */ type({
   'messages?': clearable(openRouterPromptVersionMessageParamsType.array()),
   'config?': clearable('object'),
   'questions?': clearable('object'),
+  'script?': clearable('string'),
+  'finalScript?': clearable('string'),
   'notes?': clearable('string'),
   'activate?': clearable('boolean')
 }) as Type<CreateOpenRouterPromptVersionParams>;
@@ -178,6 +263,14 @@ export interface UpdateOpenRouterPromptVersionParams extends InferredTargetModel
    */
   readonly questions?: Maybe<Record<string, unknown>>;
   /**
+   * The template body script. See {@link CreateOpenRouterPromptVersionParams.script}.
+   */
+  readonly script?: Maybe<string>;
+  /**
+   * The template final script. See {@link CreateOpenRouterPromptVersionParams.finalScript}.
+   */
+  readonly finalScript?: Maybe<string>;
+  /**
    * Why the version says what it says.
    */
   readonly notes?: Maybe<string>;
@@ -189,6 +282,8 @@ export const updateOpenRouterPromptVersionParamsType = /* @__PURE__ */ inferredT
     'messages?': clearable(openRouterPromptVersionMessageParamsType.array()),
     'config?': clearable('object'),
     'questions?': clearable('object'),
+    'script?': clearable('string'),
+    'finalScript?': clearable('string'),
     'notes?': clearable('string')
   })
 ) as Type<UpdateOpenRouterPromptVersionParams>;
@@ -204,6 +299,10 @@ export interface UpdateOpenRouterPromptVersionResult {
    * provider produces a wrong answer rather than an error, so an edit that introduces one has to say so.
    */
   readonly warnings: string[];
+  /**
+   * The review of a template version that carries a script.
+   */
+  readonly review?: Maybe<OpenRouterTemplateReviewRecord>;
 }
 
 /**
@@ -229,6 +328,10 @@ export interface CreateOpenRouterPromptVersionResult extends OnCallCreateModelRe
    * answer rather than an error, so the warning is the only chance to notice.
    */
   readonly warnings: string[];
+  /**
+   * The review of a template version that carries a script.
+   */
+  readonly review?: Maybe<OpenRouterTemplateReviewRecord>;
 }
 
 // MARK: Query
@@ -323,6 +426,149 @@ export interface ReadOpenRouterPromptResult {
   readonly errors: string[];
 }
 
+// MARK: Preview Template
+/**
+ * A draft to preview in place of what a stored template version says. Each field left out keeps the version's own.
+ */
+export interface PreviewOpenRouterTemplateDraftParams {
+  readonly script?: Maybe<string>;
+  readonly finalScript?: Maybe<string>;
+  readonly instructions?: Maybe<string>;
+  readonly messages?: Maybe<OpenRouterPromptVersionMessageParams[]>;
+  readonly config?: Maybe<Record<string, unknown>>;
+}
+
+export const previewOpenRouterTemplateDraftParamsType = /* @__PURE__ */ type({
+  'script?': clearable('string'),
+  'finalScript?': clearable('string'),
+  'instructions?': clearable('string'),
+  'messages?': clearable(openRouterPromptVersionMessageParamsType.array()),
+  'config?': clearable('object')
+}) as Type<PreviewOpenRouterTemplateDraftParams>;
+
+/**
+ * A model output to feed a final script, so it can be previewed without paying for a model call.
+ */
+export interface PreviewOpenRouterTemplateModelOutputParams {
+  readonly text?: Maybe<string>;
+  readonly json?: Maybe<unknown>;
+}
+
+/**
+ * Parameters for previewing a template through the real render path.
+ *
+ * An `invoke` rather than a `read`, because it can spend money: with `callModel` it makes the model call a render would.
+ * Without it, the render stops before the call and feeds a final script `modelOutput` (or the type's sample output).
+ *
+ * @dbxModelApiParams
+ */
+export interface PreviewOpenRouterTemplateParams extends InferredTargetModelParams {
+  /**
+   * The version to preview. Omit for the active version.
+   */
+  readonly version?: Maybe<OpenRouterPromptVersionNumber>;
+  /**
+   * A draft to preview instead of the stored version. It runs only once its static checks pass.
+   */
+  readonly draft?: Maybe<PreviewOpenRouterTemplateDraftParams>;
+  /**
+   * The template input. Defaults to the type's sample input.
+   */
+  readonly input?: Maybe<Record<string, unknown>>;
+  /**
+   * Data that stands in for the loaders, keyed by loader name. Defaults to the type's sample loader data.
+   */
+  readonly loaderData?: Maybe<Record<string, unknown>>;
+  /**
+   * The model output to feed a final script when the model is not called. Defaults to the type's sample output.
+   */
+  readonly modelOutput?: Maybe<PreviewOpenRouterTemplateModelOutputParams>;
+  /**
+   * Whether to run the review too. Costs a model call.
+   */
+  readonly review?: Maybe<boolean>;
+  /**
+   * Whether to make the model call a render would. Defaults to false.
+   */
+  readonly callModel?: Maybe<boolean>;
+}
+
+export const previewOpenRouterTemplateParamsType = /* @__PURE__ */ inferredTargetModelParamsType.merge(
+  type({
+    'version?': clearable('number'),
+    'draft?': clearable(previewOpenRouterTemplateDraftParamsType),
+    'input?': clearable('object'),
+    'loaderData?': clearable('object'),
+    'modelOutput?': clearable(type({ 'text?': clearable('string'), 'json?': 'unknown' })),
+    'review?': clearable('boolean'),
+    'callModel?': clearable('boolean')
+  })
+) as Type<PreviewOpenRouterTemplateParams>;
+
+/**
+ * The rendered output of a preview.
+ */
+export interface PreviewOpenRouterTemplateOutput {
+  /**
+   * The message text, when the render produced one.
+   */
+  readonly text?: Maybe<string>;
+  /**
+   * Whether the render produced no message, which means nothing would be sent.
+   */
+  readonly empty: boolean;
+  /**
+   * What the body returned: text, OpenRouter details, or nothing.
+   */
+  readonly path: OpenRouterTemplateBodyResultKind;
+  /**
+   * The OpenRouter input the body handed off, when it did.
+   */
+  readonly openRouterInput?: Maybe<string>;
+  /**
+   * Whether the model was called.
+   */
+  readonly modelCalled: boolean;
+  /**
+   * Whether a final script (or a code template's `finalize`) produced the text.
+   */
+  readonly finalized: boolean;
+  /**
+   * The text's length.
+   */
+  readonly length: number;
+  /**
+   * The SMS encoding the text needs.
+   */
+  readonly encoding: SmsTextEncoding;
+  /**
+   * The number of SMS segments the text takes.
+   */
+  readonly segments: number;
+}
+
+/**
+ * Result of previewing a template.
+ */
+export interface PreviewOpenRouterTemplateResult extends OpenRouterTemplateCheckErrorData {
+  /**
+   * Whether every check passed and the render succeeded.
+   */
+  readonly valid: boolean;
+  /**
+   * Problems that would not stop a publish.
+   */
+  readonly warnings: string[];
+  /**
+   * The review, when one was asked for.
+   */
+  readonly review?: Maybe<OpenRouterTemplateReviewRecord>;
+  /**
+   * The rendered output, when the render ran.
+   */
+  readonly output?: Maybe<PreviewOpenRouterTemplateOutput>;
+}
+
 // MARK: Run Task
 /**
  * Parameters for reading an {@link OpenRouterRunTask}.
@@ -353,8 +599,9 @@ export const OPENROUTER_PROMPT_FUNCTION_TYPE_CONFIG_MAP: FirebaseFunctionTypeCon
  * prompt operation reachable over an app's existing callModel surface — including from the callModel
  * MCP — instead of requiring a screen to be built for it.
  *
- * A prompt has no `create` of its own: it is created server-side, from a seed against an
- * {@link OpenRouterPromptDefinition} the code already carries. A VERSION does, because publishing one
+ * A plain prompt has no `create` of its own: it is created server-side, from a seed against an
+ * {@link OpenRouterPromptDefinition} the code already carries. The prompt's one create is `create:template`, which makes a
+ * message TEMPLATE of a type registered in code, so an admin can add one at runtime without a deploy. A VERSION has a create, because publishing one
  * writes a new document, and the create sits on `openRouterPromptVersion` — the model whose document
  * appears — rather than as a specifier on the parent's update. Its `update` edits the latest version
  * in place and refuses a locked one, so iterating on a prompt does not mint a version per keystroke.
@@ -373,9 +620,21 @@ export const OPENROUTER_PROMPT_FUNCTION_TYPE_CONFIG_MAP: FirebaseFunctionTypeCon
  */
 export type OpenRouterPromptModelCrudFunctionsConfig = {
   readonly openRouterPrompt: {
+    create: {
+      /**
+       * Admin-only. Creates a message template of a registered type.
+       */
+      template: [CreateOpenRouterTemplateParams, OnCallCreateModelResult];
+    };
     read: [ReadOpenRouterPromptParams, ReadOpenRouterPromptResult];
     update: UpdateOpenRouterPromptParams;
     query: [QueryOpenRouterPromptsParams, OnCallQueryModelResult<OpenRouterPrompt>];
+    invoke: {
+      /**
+       * Admin-only. Previews a template, or a draft of one, through the real render path.
+       */
+      previewTemplate: [PreviewOpenRouterTemplateParams, PreviewOpenRouterTemplateResult];
+    };
   };
   readonly openRouterPromptVersion: {
     create: [CreateOpenRouterPromptVersionParams, CreateOpenRouterPromptVersionResult];
@@ -384,7 +643,7 @@ export type OpenRouterPromptModelCrudFunctionsConfig = {
 };
 
 export const OPENROUTER_PROMPT_MODEL_CRUD_FUNCTIONS_CONFIG: ModelFirebaseCrudFunctionConfigMap<OpenRouterPromptModelCrudFunctionsConfig, OpenRouterPromptTypes> = {
-  openRouterPrompt: ['read', 'update', 'query'],
+  openRouterPrompt: ['create:template', 'read', 'update', 'query', 'invoke:previewTemplate'],
   openRouterPromptVersion: ['create', 'update']
 };
 
@@ -393,9 +652,15 @@ export const OPENROUTER_PROMPT_MODEL_CRUD_FUNCTIONS_CONFIG: ModelFirebaseCrudFun
  */
 export abstract class OpenRouterPromptModelFunctions implements ModelFirebaseFunctionMap<OpenRouterPromptFunctionTypeMap, OpenRouterPromptModelCrudFunctionsConfig> {
   abstract openRouterPrompt: {
+    createOpenRouterPrompt: {
+      template: ModelFirebaseCreateFunction<CreateOpenRouterTemplateParams, OnCallCreateModelResult>;
+    };
     readOpenRouterPrompt: ModelFirebaseCrudFunction<ReadOpenRouterPromptParams, ReadOpenRouterPromptResult>;
     updateOpenRouterPrompt: ModelFirebaseCrudFunction<UpdateOpenRouterPromptParams>;
     queryOpenRouterPrompt: ModelFirebaseQueryFunction<QueryOpenRouterPromptsParams, OnCallQueryModelResult<OpenRouterPrompt>>;
+    invokeOpenRouterPrompt: {
+      previewTemplate: ModelFirebaseCrudFunction<PreviewOpenRouterTemplateParams, PreviewOpenRouterTemplateResult>;
+    };
   };
   abstract openRouterPromptVersion: {
     createOpenRouterPromptVersion: ModelFirebaseCreateFunction<CreateOpenRouterPromptVersionParams, CreateOpenRouterPromptVersionResult>;
