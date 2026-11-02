@@ -480,6 +480,22 @@ The approval fails closed. Without the secret, approving and rendering stored sc
 whose script was edited directly in Firestore fails verification at render and when it is promoted to `activeVersion`.
 Rotating the secret un-approves every stored version until it is re-signed.
 
+### Killing a version
+
+An approval never expires, so posting a replacement version does not stop the old one: a caller that pins it (such as a
+template-text notification created with `v`) still renders it, and it can be promoted back to `activeVersion`. Kill it
+instead. A killed version (`kat` on the version, `killedAt` on the resolved template) is refused at render, including a
+pinned render, at promotion, and on edit. `readOpenRouterPrompt` reports it as an error.
+
+- `update` on the prompt with `killVersions: [n, ...]` kills those versions. Each must exist, and a version can't be
+  killed and made active in the same call. Killing the active version stops the template from rendering until another
+  version is made active.
+- `killPreviousVersionsOnActivate: true` on `openRouterTemplateService()` kills every older version whenever a version
+  is made active, by `activeVersion` or by creating it with `activate`. Off by default.
+
+A kill is permanent through the API. A pinned notification of a killed version fails each attempt until it runs out of
+retries. The kill lives in Firestore, so someone who can edit Firestore can undo it; only rotating the secret stops them.
+
 ### Preview
 
 `invoke:previewTemplate` (`previewTemplate()` on the service) runs a stored version, or a draft sent in the request,
@@ -524,7 +540,6 @@ The opt-in template-text notification type sends any template by key:
   but was never written, so existing versions have no value.
 - `OpenRouterResolvedPrompt.template` is new. It carries a template version's type, scripts and approval, and is absent
   for plain prompts (additive).
-
 ## Live probes
 
 Two blocks make real API calls, both skipped unless `OPENROUTER_API_KEY` is set:

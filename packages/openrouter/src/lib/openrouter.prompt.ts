@@ -95,6 +95,10 @@ export interface OpenRouterResolvedPromptTemplate {
    * When the version was approved.
    */
   readonly approvedAt?: Maybe<Date>;
+  /**
+   * When the version was killed. A killed version is never rendered.
+   */
+  readonly killedAt?: Maybe<Date>;
 }
 
 /**

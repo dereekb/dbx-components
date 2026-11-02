@@ -105,7 +105,8 @@ export const OPENROUTER_TEMPLATE_CHECK_FAILED_ERROR_CODE = 'OPENROUTER_TEMPLATE_
  * Parameters for updating an {@link OpenRouterPrompt}'s metadata and lifecycle state.
  *
  * Notably absent: anything that would change what a version SAYS. That is the version model's own
- * update, so the only writes here are to the prompt's metadata and to which version is active.
+ * update, so the only writes here are to the prompt's metadata, to which version is active, and to which
+ * template versions are killed.
  *
  * @dbxModelApiParams
  */
@@ -132,6 +133,14 @@ export interface UpdateOpenRouterPromptParams extends InferredTargetModelParams 
    * operator has to be able to take that decision back.
    */
   readonly storeLocked?: Maybe<boolean>;
+  /**
+   * Template versions to kill. A killed version is never rendered, promoted or edited again, even by a caller that pins
+   * it, so a version found to be bad can't come back through a pinned render or a re-promotion.
+   *
+   * Permanent. Each must exist and belong to a template. Killing the active version stops the template from rendering
+   * until another version is made active.
+   */
+  readonly killVersions?: Maybe<OpenRouterPromptVersionNumber[]>;
 }
 
 export const updateOpenRouterPromptParamsType = /* @__PURE__ */ inferredTargetModelParamsType.merge(
@@ -141,7 +150,8 @@ export const updateOpenRouterPromptParamsType = /* @__PURE__ */ inferredTargetMo
     'tags?': clearable('string[]'),
     'state?': clearable(openRouterPromptStateType),
     'activeVersion?': clearable('number'),
-    'storeLocked?': clearable('boolean')
+    'storeLocked?': clearable('boolean'),
+    'killVersions?': clearable('number[]')
   })
 ) as Type<UpdateOpenRouterPromptParams>;
 

@@ -8,6 +8,7 @@ import { type Maybe } from '@dereekb/util';
 import { type OpenRouterModelConfig, type OpenRouterTemplateTypeConfig, OpenRouterTemplateMode, appOpenRouterTemplateTypeConfigService, openRouterTemplateReviewQuestions, openRouterTemplateType, openRouterTemplateTypeConfigRecord } from '@dereekb/openrouter';
 import {
   type OpenRouterPromptVersion,
+  type UpdateOpenRouterPromptParams,
   OpenRouterPromptState,
   openRouterPromptFirestoreCollection,
   openRouterPromptIdentity,
@@ -100,6 +101,7 @@ describe('OpenRouter templates (firestore emulator)', () => {
       readonly approvalSecret?: Maybe<string>;
       readonly flag?: Maybe<string>;
       readonly modelText?: Maybe<string>;
+      readonly killPreviousVersionsOnActivate?: Maybe<boolean>;
     }
 
     function buildStack(config?: TemplateStackConfig) {
@@ -116,7 +118,7 @@ describe('OpenRouter templates (firestore emulator)', () => {
       const promptService = openRouterPromptService({ collections, cacheDuration: 1 });
       const typeConfigService = appOpenRouterTemplateTypeConfigService(openRouterTemplateTypeConfigRecord(TEMPLATE_TYPES));
       const codeTemplate = openRouterCodeTemplate({ key: 'code-profile', type: PROFILE_TYPE, render: async (x) => `Code hi ${(await x.loadProfile()).username}` });
-      const templateService = openRouterTemplateService({ typeConfigService, promptService, client: fake.client, approvalSecret: config?.approvalSecret === undefined ? TEST_APPROVAL_SECRET : config.approvalSecret, codeTemplates: [codeTemplate] });
+      const templateService = openRouterTemplateService({ typeConfigService, promptService, client: fake.client, approvalSecret: config?.approvalSecret === undefined ? TEST_APPROVAL_SECRET : config.approvalSecret, codeTemplates: [codeTemplate], killPreviousVersionsOnActivate: config?.killPreviousVersionsOnActivate });
       const actionsContext = { ...firebaseServerActionsContext(), ...collections, firestoreContext: context, openRouterPromptService: promptService, openRouterTemplateService: templateService };
       const actions = openRouterPromptServerActions(actionsContext);
 
@@ -138,7 +140,13 @@ describe('OpenRouter templates (firestore emulator)', () => {
         return collections.openRouterPromptVersionCollectionFactory(document).documentAccessor().loadDocumentForId(openRouterPromptVersionId(version));
       }
 
-      return { collections, fake, state, promptService, templateService, actions, createTemplate, publish, versionDocument };
+      async function updatePrompt(key: string, params: Omit<UpdateOpenRouterPromptParams, 'key'>) {
+        const document = collections.openRouterPromptCollection.documentAccessor().loadDocumentForId(key);
+        const update = await actions.updateOpenRouterPrompt({ key: document.key, ...params });
+        return update(document);
+      }
+
+      return { collections, fake, state, promptService, templateService, actions, createTemplate, publish, versionDocument, updatePrompt };
     }
 
     describe('create:template', () => {
@@ -360,6 +368,100 @@ describe('OpenRouter templates (firestore emulator)', () => {
         // A plain hash is what someone who can edit Firestore, but has no secret, could compute.
         const unkeyed = createHash('sha256').update(openRouterTemplateApprovalPayload(input)).digest('hex');
         expect(verifyOpenRouterTemplateApproval(TEST_APPROVAL_SECRET, input, unkeyed)).toBe(false);
+      });
+    });
+
+    describe('killing a version', () => {
+      it('refuses rendering a killed version, pinned or active, and keeps its first kill date', async () => {
+        const stack = buildStack();
+        await stack.createTemplate('profile', PROFILE_TYPE);
+        await stack.publish('profile', { script: PROFILE_SCRIPT });
+        await stack.publish('profile', { script: `return 'Version two';` });
+
+        await stack.updatePrompt('profile', { killVersions: [1] });
+        const killedAt = (await stack.versionDocument('profile', 1).snapshotData())?.kat;
+        expect(killedAt).toBeInstanceOf(Date);
+        await expect(stack.templateService.renderTemplate({ templateKey: 'profile', version: 1, input: { profileKey: 'p/1' } })).rejects.toThrow(/killed/);
+        expect((await stack.templateService.renderTemplate({ templateKey: 'profile', input: { profileKey: 'p/1' } })).text).toBe('Version two');
+
+        await stack.updatePrompt('profile', { killVersions: [1, 2] });
+        expect((await stack.versionDocument('profile', 1).snapshotData())?.kat).toEqual(killedAt);
+        await expect(stack.templateService.renderTemplate({ templateKey: 'profile', input: { profileKey: 'p/1' } })).rejects.toThrow(/killed/);
+      });
+
+      it('refuses promoting a killed version, and killing the version being promoted', async () => {
+        const stack = buildStack();
+        await stack.createTemplate('profile', PROFILE_TYPE);
+        await stack.publish('profile', { script: PROFILE_SCRIPT });
+        await stack.publish('profile', { script: `return 'Version two';` });
+        await stack.updatePrompt('profile', { killVersions: [1] });
+
+        await expect(stack.updatePrompt('profile', { activeVersion: 1 })).rejects.toThrow(/killed/);
+        await expect(stack.updatePrompt('profile', { activeVersion: 2, killVersions: [2] })).rejects.toThrow(/make it active/);
+        expect((await stack.versionDocument('profile', 2).snapshotData())?.kat).toBeUndefined();
+      });
+
+      it('refuses editing a killed version, before running the review', async () => {
+        const stack = buildStack();
+        await stack.createTemplate('profile', PROFILE_TYPE);
+        await stack.publish('profile', { script: PROFILE_SCRIPT });
+        await stack.updatePrompt('profile', { killVersions: [1] });
+
+        const callsBeforeEdit = stack.fake.callCount;
+        const versionDocument = stack.versionDocument('profile', 1);
+        const update = await stack.actions.updateOpenRouterPromptVersion({ key: versionDocument.key, script: `return 'Edited';` });
+        await expect(update(versionDocument)).rejects.toThrow(/killed/);
+        expect(stack.fake.callCount).toBe(callsBeforeEdit);
+      });
+
+      it('refuses killing a missing version, or a version of a plain prompt', async () => {
+        const stack = buildStack();
+        await stack.createTemplate('profile', PROFILE_TYPE);
+        await stack.publish('profile', { script: PROFILE_SCRIPT });
+        await expect(stack.updatePrompt('profile', { killVersions: [1, 5] })).rejects.toThrow(/5 .*do not exist/);
+        expect((await stack.versionDocument('profile', 1).snapshotData())?.kat).toBeUndefined();
+
+        await stack.actions.createOpenRouterPrompt({ key: 'plain', name: 'Plain' });
+        await expect(stack.updatePrompt('plain', { killVersions: [1] })).rejects.toThrow(/not a template/);
+      });
+
+      it('reports a killed version on read', async () => {
+        const stack = buildStack();
+        const document = await stack.createTemplate('profile', PROFILE_TYPE);
+        await stack.publish('profile', { script: PROFILE_SCRIPT });
+        await stack.updatePrompt('profile', { killVersions: [1] });
+        const read = await (await stack.actions.readOpenRouterPrompt({ key: document.key }))(document);
+        expect(read.resolved.template?.killedAt).toBeInstanceOf(Date);
+        expect(read.errors[0]).toMatch(/killed/);
+      });
+
+      it('leaves older versions alone on activate by default', async () => {
+        const stack = buildStack();
+        await stack.createTemplate('profile', PROFILE_TYPE);
+        await stack.publish('profile', { script: PROFILE_SCRIPT });
+        await stack.publish('profile', { script: `return 'Version two';` });
+        expect((await stack.versionDocument('profile', 1).snapshotData())?.kat).toBeUndefined();
+        expect((await stack.templateService.renderTemplate({ templateKey: 'profile', version: 1, input: { profileKey: 'p/1' } })).text).toBe('Hi ana!');
+      });
+
+      it('kills every older version on activate when the server enables it', async () => {
+        const stack = buildStack({ killPreviousVersionsOnActivate: true });
+        await stack.createTemplate('profile', PROFILE_TYPE);
+        await stack.publish('profile', { script: PROFILE_SCRIPT });
+        await stack.publish('profile', { script: `return 'Version two';` });
+        const killedAt = (await stack.versionDocument('profile', 1).snapshotData())?.kat;
+        expect(killedAt).toBeInstanceOf(Date);
+        expect((await stack.versionDocument('profile', 2).snapshotData())?.kat).toBeUndefined();
+
+        // A version created without activate kills nothing; promoting it does.
+        await stack.publish('profile', { script: `return 'Version three';` }, false);
+        expect((await stack.versionDocument('profile', 2).snapshotData())?.kat).toBeUndefined();
+        await stack.updatePrompt('profile', { activeVersion: 3 });
+        expect((await stack.versionDocument('profile', 2).snapshotData())?.kat).toBeInstanceOf(Date);
+        expect((await stack.versionDocument('profile', 1).snapshotData())?.kat).toEqual(killedAt);
+
+        expect((await stack.templateService.renderTemplate({ templateKey: 'profile', input: { profileKey: 'p/1' } })).text).toBe('Version three');
+        await expect(stack.templateService.renderTemplate({ templateKey: 'profile', version: 2, input: { profileKey: 'p/1' } })).rejects.toThrow(/killed/);
       });
     });
 

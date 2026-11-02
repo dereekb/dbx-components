@@ -414,6 +414,16 @@ export interface OpenRouterPromptVersion {
    * @dbxModelVariable approvedAt
    */
   aat?: Maybe<Date>;
+  /**
+   * When the template version was killed. A killed version is never rendered, promoted or edited again, even by a caller
+   * that pins it.
+   *
+   * Set by the prompt update's `killVersions`, or, when the server enables it, once a newer version is made active.
+   * Permanent: no API unsets it.
+   *
+   * @dbxModelVariable killedAt
+   */
+  kat?: Maybe<Date>;
 }
 
 /**
@@ -450,7 +460,8 @@ export const openRouterPromptVersionConverter = snapshotConverterFunctions<OpenR
     fsc: optionalFirestoreString(),
     rv: optionalFirestoreJsonStringField<OpenRouterTemplateReviewRecord>(),
     ah: optionalFirestoreString(),
-    aat: optionalFirestoreDate()
+    aat: optionalFirestoreDate(),
+    kat: optionalFirestoreDate()
   }
 });
 
@@ -949,7 +960,7 @@ export function openRouterResolvedPromptForVersion(promptKey: OpenRouterPromptKe
     messages: version.m?.map(({ r, c }) => ({ role: r, content: c })),
     config: version.c ?? {},
     questions: version.q,
-    ...(templateType == null ? undefined : { template: { type: templateType, script: version.sc, finalScript: version.fsc, approvalHash: version.ah, approvedAt: version.aat } })
+    ...(templateType == null ? undefined : { template: { type: templateType, script: version.sc, finalScript: version.fsc, approvalHash: version.ah, approvedAt: version.aat, killedAt: version.kat } })
   };
 }
 

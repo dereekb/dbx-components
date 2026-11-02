@@ -1,6 +1,6 @@
 import { type FirebaseServerActionsContext, badRequestError, preconditionConflictError } from '@dereekb/firebase-server';
 import { type FirebaseAuthUserId, type FirestoreContextReference, type FirestoreModelKey, type OnCallCreateModelResult, firestoreModelId, firestoreModelKeyParentKey, getDocumentSnapshotDataTuples } from '@dereekb/firebase';
-import { type Maybe, runAsyncTasksForValues } from '@dereekb/util';
+import { type Maybe, range, runAsyncTasksForValues, unique } from '@dereekb/util';
 import {
   type OpenRouterDecisionQuestions,
   type OpenRouterModelConfig,
@@ -96,6 +96,10 @@ function openRouterTemplateCheckFailedError(message: string, data: OpenRouterTem
   ];
   const errorData: OpenRouterTemplateCheckErrorData = { errors: data.errors, scriptErrors: data.scriptErrors, finalScriptErrors: data.finalScriptErrors, flagged: data.flagged };
   return preconditionConflictError({ code: OPENROUTER_TEMPLATE_CHECK_FAILED_ERROR_CODE, message: `${message}: ${details.join(' ')}`, data: errorData });
+}
+
+function openRouterPromptVersionKilledError(document: OpenRouterPromptVersionDocument) {
+  return preconditionConflictError({ message: `The OpenRouterPromptVersion "${document.key}" was killed, so it can't be edited. Create a new version instead.` });
 }
 
 function openRouterSeedMessagesForParams(messages: Maybe<OpenRouterPromptVersionMessageParams[]>): Maybe<OpenRouterPromptSeedMessage[]> {
@@ -370,7 +374,8 @@ export function previewOpenRouterTemplateFactory(context: OpenRouterPromptServer
 }
 
 /**
- * Updates a prompt's metadata, lifecycle state, or active version, then drops its cached resolution.
+ * Updates a prompt's metadata, lifecycle state, or active version, or kills template versions, then drops its cached
+ * resolution.
  *
  * @param context - The actions context.
  * @returns The update action.
@@ -379,7 +384,7 @@ export function updateOpenRouterPromptFactory(context: OpenRouterPromptServerAct
   const { firebaseServerActionTransformFunctionFactory, openRouterPromptCollection, openRouterPromptVersionCollectionFactory, openRouterPromptService } = context;
 
   return firebaseServerActionTransformFunctionFactory(updateOpenRouterPromptParamsType, async (params) => {
-    const { name, description, tags, state, activeVersion, storeLocked } = params;
+    const { name, description, tags, state, activeVersion, storeLocked, killVersions } = params;
 
     return async (document: OpenRouterPromptDocument) => {
       await openRouterPromptCollection.firestoreContext.runTransaction(async (transaction) => {
@@ -390,20 +395,37 @@ export function updateOpenRouterPromptFactory(context: OpenRouterPromptServerAct
           throw new Error(`The OpenRouterPrompt "${document.id}" does not exist.`);
         }
 
+        if (killVersions?.length && prompt.tt == null) {
+          throw badRequestError({ message: `OpenRouterPrompt "${document.id}" is not a template, so its versions can't be killed.` });
+        }
+
+        if (activeVersion != null && killVersions?.includes(activeVersion)) {
+          throw badRequestError({ message: `Cannot both kill version ${activeVersion} of OpenRouter template "${document.id}" and make it active.` });
+        }
+
+        // The versions this write kills: the ones named, plus every older version when the server kills them on activate.
+        const killPreviousVersions = prompt.tt != null && activeVersion != null && context.openRouterTemplateService?.killPreviousVersionsOnActivate === true;
+        const killVersionNumbers = unique([...(killVersions ?? []), ...(killPreviousVersions ? range(1, activeVersion) : [])]);
+        const versionAccessor = openRouterPromptVersionCollectionFactory(inTransaction).documentAccessorForTransaction(transaction);
+        const activeVersionDocument = activeVersion == null ? undefined : versionAccessor.loadDocumentForId(openRouterPromptVersionId(activeVersion));
+        const killVersionDocuments = killVersionNumbers.map((x) => versionAccessor.loadDocumentForId(openRouterPromptVersionId(x)));
+        const [activeVersionData, killVersionData] = await Promise.all([activeVersionDocument?.snapshotData(), Promise.all(killVersionDocuments.map((x) => x.snapshotData()))]);
+
         if (activeVersion != null) {
           // Promoting to a version that was never published would leave every unpinned caller failing to
           // resolve, so the pointer is only allowed to move to a version that exists.
-          const versionDocument = openRouterPromptVersionCollectionFactory(inTransaction).documentAccessorForTransaction(transaction).loadDocumentForId(openRouterPromptVersionId(activeVersion));
-          const versionData = await versionDocument.snapshotData();
-
-          if (versionData == null) {
+          if (activeVersionData == null) {
             throw new Error(`Cannot set activeVersion to ${activeVersion} on OpenRouterPrompt "${document.id}": that version does not exist.`);
           }
 
-          // A template version that carries code is only ever served once approved, so promoting one that is unapproved,
-          // or was edited after its approval, is refused here rather than failing every render after it.
           if (prompt.tt != null) {
-            const resolved = openRouterResolvedPromptForVersion(document.id, versionData, prompt.tt);
+            if (activeVersionData.kat != null) {
+              throw preconditionConflictError({ message: `Cannot set activeVersion to ${activeVersion} on OpenRouter template "${document.id}": that version was killed.` });
+            }
+
+            // A template version that carries code is only ever served once approved, so promoting one that is unapproved,
+            // or was edited after its approval, is refused here rather than failing every render after it.
+            const resolved = openRouterResolvedPromptForVersion(document.id, activeVersionData, prompt.tt);
 
             if (openRouterTemplateVersionHasCode(openRouterTemplateVersionContentForResolvedPrompt(resolved)) && !requireOpenRouterTemplateService(context).verifyTemplateVersionApproval(resolved)) {
               throw preconditionConflictError({ message: `Cannot set activeVersion to ${activeVersion} on OpenRouter template "${document.id}": that version is not approved, or was changed after it was approved.` });
@@ -411,7 +433,26 @@ export function updateOpenRouterPromptFactory(context: OpenRouterPromptServerAct
           }
         }
 
-        await inTransaction.update({ n: name ?? undefined, d: description, t: tags, s: state ?? undefined, av: activeVersion, sl: storeLocked, uat: new Date() });
+        // An older version missing from the store is skipped, but one the caller named has to exist.
+        const missingKillVersions = killVersionNumbers.filter((x, i) => killVersionData[i] == null && killVersions?.includes(x));
+
+        if (missingKillVersions.length) {
+          throw badRequestError({ message: `Cannot kill version(s) ${missingKillVersions.join(', ')} of OpenRouter template "${document.id}": they do not exist.` });
+        }
+
+        const now = new Date();
+
+        // A version already killed keeps its first kill date.
+        await Promise.all(
+          killVersionDocuments
+            .filter((_, i) => {
+              const data = killVersionData[i];
+              return data != null && data.kat == null;
+            })
+            .map((x) => x.update({ kat: now }))
+        );
+
+        await inTransaction.update({ n: name ?? undefined, d: description, t: tags, s: state ?? undefined, av: activeVersion, sl: storeLocked, uat: now });
       });
 
       openRouterPromptService.clearCachedPrompt(document.id);
@@ -451,7 +492,8 @@ export function readOpenRouterPromptFactory(context: OpenRouterPromptServerActio
         // A template is judged per its type's mode: a DETERMINISTIC version has no model config, and reporting "no model"
         // for it would be wrong.
         const typeConfig = context.openRouterTemplateService?.typeConfigService.registeredConfigForTemplateType(resolved.template.type);
-        validation = typeConfig == null ? { warnings: [], errors: [`Template type "${resolved.template.type}" is not registered on this server, so the template can't be validated or rendered.`] } : checkOpenRouterTemplateVersionShape(typeConfig, openRouterTemplateVersionContentForResolvedPrompt(resolved));
+        const shape = typeConfig == null ? { warnings: [], errors: [`Template type "${resolved.template.type}" is not registered on this server, so the template can't be validated or rendered.`] } : checkOpenRouterTemplateVersionShape(typeConfig, openRouterTemplateVersionContentForResolvedPrompt(resolved));
+        validation = resolved.template.killedAt == null ? shape : { warnings: shape.warnings, errors: [`Version ${resolved.version} was killed, so it is never rendered.`, ...shape.errors] };
       }
 
       const result: ReadOpenRouterPromptResult = {
@@ -472,7 +514,8 @@ export function readOpenRouterPromptFactory(context: OpenRouterPromptServerActio
 
 /**
  * Creates a new version, allocating its number inside the transaction, locking the version it succeeds,
- * and optionally promoting it.
+ * and optionally promoting it. Promoting a template version also kills every older version when the template service's
+ * `killPreviousVersionsOnActivate` is on.
  *
  * @param context - The actions context.
  * @returns The create version action.
@@ -542,7 +585,11 @@ export function createOpenRouterPromptVersionFactory(context: OpenRouterPromptSe
         // Firestore forbids a read after a write in a transaction, and a `set` on a version that was
         // deleted out from under us would resurrect it as a document holding nothing but a lock.
         const previousVersionDocument = prompt.lv > 0 ? versionCollection.loadDocumentForId(openRouterPromptVersionId(prompt.lv)) : undefined;
-        const previousVersionExists = previousVersionDocument == null ? false : await previousVersionDocument.accessor.exists();
+
+        // When the server kills older versions on activate, every version below this one is read here too, before any write.
+        const killPreviousVersions = activate === true && templateType != null && context.openRouterTemplateService?.killPreviousVersionsOnActivate === true;
+        const killVersionDocuments = (killPreviousVersions ? range(1, version) : []).map((x) => versionCollection.loadDocumentForId(openRouterPromptVersionId(x)));
+        const [previousVersionExists, killVersionData] = await Promise.all([previousVersionDocument == null ? false : previousVersionDocument.accessor.exists(), Promise.all(killVersionDocuments.map((x) => x.snapshotData()))]);
 
         if (prompt.tt != templateType) {
           throw new Error(`The template type of OpenRouterPrompt "${document.id}" changed while its version was being checked.`);
@@ -570,6 +617,16 @@ export function createOpenRouterPromptVersionFactory(context: OpenRouterPromptSe
         if (previousVersionDocument != null && previousVersionExists) {
           await previousVersionDocument.update({ lk: true });
         }
+
+        // A version already killed keeps its first kill date.
+        await Promise.all(
+          killVersionDocuments
+            .filter((_, i) => {
+              const data = killVersionData[i];
+              return data != null && data.kat == null;
+            })
+            .map((x) => x.update({ kat: versionData.cat }))
+        );
 
         await versionDocument.accessor.set(versionData);
         await inTransaction.update({ lv: version, uat: new Date(), ...(activate ? { av: version, s: OpenRouterPromptState.ACTIVE } : undefined) });
@@ -616,6 +673,11 @@ export function updateOpenRouterPromptVersionFactory(context: OpenRouterPromptSe
           throw new Error(`The OpenRouterPromptVersion "${document.key}" does not exist.`);
         }
 
+        // Checked before the review, which is a model call. The transaction checks again.
+        if (current.kat != null) {
+          throw openRouterPromptVersionKilledError(document);
+        }
+
         const content = openRouterTemplateVersionContentForUpdate(current, params);
         const checked = await templateService.validateTemplateVersion({ typeConfig, content, review: openRouterTemplateVersionHasCode(content) });
 
@@ -634,6 +696,11 @@ export function updateOpenRouterPromptVersionFactory(context: OpenRouterPromptSe
 
         if (version == null) {
           throw new Error(`The OpenRouterPromptVersion "${document.key}" does not exist.`);
+        }
+
+        // Editing a killed version would sign it again, bringing it back.
+        if (version.kat != null) {
+          throw openRouterPromptVersionKilledError(document);
         }
 
         if (version.lk) {

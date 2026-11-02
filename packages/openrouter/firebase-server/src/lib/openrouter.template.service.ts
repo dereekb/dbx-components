@@ -451,6 +451,10 @@ export interface PreviewOpenRouterTemplateServiceParams {
 export abstract class OpenRouterTemplateService {
   abstract readonly typeConfigService: AppOpenRouterTemplateTypeConfigService;
   /**
+   * Whether making a template version active kills every older version. See {@link OpenRouterTemplateServiceConfig.killPreviousVersionsOnActivate}.
+   */
+  abstract readonly killPreviousVersionsOnActivate: boolean;
+  /**
    * Returns the code template with the key, if there is one.
    */
   abstract codeTemplate(templateKey: OpenRouterTemplateKey): Maybe<OpenRouterCodeTemplate>;
@@ -490,6 +494,14 @@ export interface OpenRouterTemplateServiceConfig {
   readonly approvalSecret?: Maybe<OpenRouterTemplateApprovalSecret>;
   readonly codeTemplates?: Maybe<OpenRouterCodeTemplate[]>;
   readonly review?: Maybe<OpenRouterTemplateServiceReviewConfig>;
+  /**
+   * Whether making a template version active, by promoting it or by creating it with `activate`, kills every version
+   * older than it. A killed version is never rendered again, even by a caller that pins it, so nothing can roll back to
+   * an older version.
+   *
+   * Defaults to false.
+   */
+  readonly killPreviousVersionsOnActivate?: Maybe<boolean>;
 }
 
 /**
@@ -511,7 +523,7 @@ interface OpenRouterTemplateRenderSource {
 /**
  * Creates an {@link OpenRouterTemplateService}.
  *
- * @param config - The type registry, the prompt service, the client, the approval secret, the code templates and the review overrides.
+ * @param config - The type registry, the prompt service, the client, the approval secret, the code templates, the review overrides and the version kill option.
  * @returns The template service.
  */
 export function openRouterTemplateService(config: OpenRouterTemplateServiceConfig): OpenRouterTemplateService {
@@ -579,6 +591,10 @@ export function openRouterTemplateService(config: OpenRouterTemplateServiceConfi
       const storedContent: OpenRouterTemplateVersionContent = resolved == null ? {} : openRouterTemplateVersionContentForResolvedPrompt(resolved);
       const content = mergeDraft(storedContent, draft);
       const prompt: OpenRouterResolvedPrompt = { promptKey: templateKey, version: resolved?.version ?? 0, instructions: content.instructions, messages: content.messages, config: content.config ?? {} };
+
+      if (draft == null && resolved?.template?.killedAt != null) {
+        throw new OpenRouterTemplateRenderError(`OpenRouter template "${templateKey}" version ${resolved.version} was killed, so it is never rendered.`);
+      }
 
       if (draft == null && resolved != null && openRouterTemplateVersionHasCode(content) && !verifyTemplateVersionApproval(resolved)) {
         throw new OpenRouterTemplateRenderError(`OpenRouter template "${templateKey}" version ${resolved.version} is not approved, or was changed after it was approved.`);
@@ -840,5 +856,5 @@ export function openRouterTemplateService(config: OpenRouterTemplateServiceConfi
     return verifyOpenRouterTemplateApproval(approvalSecret, openRouterTemplateApprovalInputForResolvedPrompt(resolved), resolved.template?.approvalHash);
   }
 
-  return { typeConfigService, codeTemplate, renderTemplate, previewTemplate, validateTemplateVersion, approveTemplateVersion, verifyTemplateVersionApproval };
+  return { typeConfigService, killPreviousVersionsOnActivate: config.killPreviousVersionsOnActivate === true, codeTemplate, renderTemplate, previewTemplate, validateTemplateVersion, approveTemplateVersion, verifyTemplateVersionApproval };
 }
