@@ -2,6 +2,7 @@ import { type Maybe } from '@dereekb/util';
 import { type OpenRouterModelConfig } from './openrouter.config';
 import { type OpenRouterDecisionQuestions } from './openrouter.decision.question';
 import { type OpenRouterInputRole } from './openrouter.input';
+import { type OpenRouterTemplateTypeKey } from './openrouter.template';
 import { type OpenRouterPromptKey, type OpenRouterPromptVersionNumber } from './openrouter.type';
 
 /**
@@ -61,6 +62,43 @@ export interface OpenRouterResolvedPrompt {
    * declare further questions per call; they merge over these by id. See `openRouterDecisionRequest`.
    */
   readonly questions?: Maybe<OpenRouterDecisionQuestions>;
+  /**
+   * The template half of the version, present when the prompt is a message TEMPLATE.
+   *
+   * A template is rendered through the template service rather than called directly: its mode, set by its type in code,
+   * decides whether the model config is used at all. Additive — a plain prompt never carries it.
+   */
+  readonly template?: Maybe<OpenRouterResolvedPromptTemplate>;
+}
+
+/**
+ * The template half of a resolved prompt version.
+ */
+export interface OpenRouterResolvedPromptTemplate {
+  /**
+   * The template type, from the prompt's `tt`.
+   */
+  readonly type: OpenRouterTemplateTypeKey;
+  /**
+   * The uploaded body script.
+   */
+  readonly script?: Maybe<string>;
+  /**
+   * The uploaded final script, run on a model's output.
+   */
+  readonly finalScript?: Maybe<string>;
+  /**
+   * The approval HMAC the server signed when the version passed every check.
+   */
+  readonly approvalHash?: Maybe<string>;
+  /**
+   * When the version was approved.
+   */
+  readonly approvedAt?: Maybe<Date>;
+  /**
+   * When the version was killed. A killed version is never rendered.
+   */
+  readonly killedAt?: Maybe<Date>;
 }
 
 /**

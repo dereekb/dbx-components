@@ -1,3 +1,27 @@
+# [14.25.0](https://github.com/dereekb/dbx-components/compare/v14.24.0-dev...v14.25.0) (2026-11-02)
+
+### Bug Fixes
+
+- **openrouter:** add template tsconfig path and fix stale docs ([50bf33b7](https://github.com/dereekb/dbx-components/commit/50bf33b7155d9acdbfec07860006e60a903e165b))
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes + peer dep sync ([d7792765](https://github.com/dereekb/dbx-components/commit/d7792765883ad25afa1b2f88ce1c905477777159))
+
+### Features
+
+- **openrouter:** add message template core and SMS segment details ([02919b35](https://github.com/dereekb/dbx-components/commit/02919b3521db97864a6a3a2c7214e7511a894247))
+- **openrouter:** add template notifications and recipient limit ([91aeaefe](https://github.com/dereekb/dbx-components/commit/91aeaefe658e0308cf2d9adf68d701c49085a6f3))
+- **openrouter:** add template service, approval and template API ([a976d21b](https://github.com/dereekb/dbx-components/commit/a976d21bd9fe4f1927b4ecf336cefd1b6cfdab16))
+- **openrouter:** add template version kill and auto-kill option ([93e33699](https://github.com/dereekb/dbx-components/commit/93e33699fa4f0161b0598ad88cec88e7a5d665de))
+- **openrouter:** replace template input/loaders with context factory ([ea1d798d](https://github.com/dereekb/dbx-components/commit/ea1d798d8d944c2e2b3df3bcefa91d77dee64a74))
+
+### Tests
+
+- **dbx-cli:** pin demo previewTemplate handler in api validate spec ([723be916](https://github.com/dereekb/dbx-components/commit/723be916316519413495e3b27310563e07da0cc3))
+- **demo-api:** add openrouter message template scenario specs ([39bf4492](https://github.com/dereekb/dbx-components/commit/39bf4492397802ed70473bf6e2d2f52575c26a1f))
+- **openrouter:** add template approval tamper tests ([4b7eb2e6](https://github.com/dereekb/dbx-components/commit/4b7eb2e6675b6758567d4dd3bfb75ec4cd36d271))
+
 # [14.24.0](https://github.com/dereekb/dbx-components/compare/v14.23.0-dev...v14.24.0) (2026-10-29)
 
 ### Bug Fixes

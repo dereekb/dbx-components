@@ -15,6 +15,7 @@ export * from './replace';
 export * from './search';
 export * from './search.ranked';
 export * from './sentence';
+export * from './sms';
 export * from './transform';
 export * from './tree';
 export * from './url';

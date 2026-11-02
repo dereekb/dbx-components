@@ -101,10 +101,10 @@ describe('HANDLER_MCP_READ_ONLY_UNSET (demo-firebase + demo-api)', () => {
   it('reads every demo invoke handler as declared', async () => {
     const report = await validateAppModelApi({ componentAbs: COMPONENT_ABS, componentDir: COMPONENT_DIR, apiAbs: API_ABS, apiDir: API_DIR });
     const invokes = report.entries.filter((e) => e.verb === 'invoke').map((e) => `${e.model}.${e.specifier ?? '_'}: ${render(e.handler?.mcpReadOnly)}`);
-    expect(invokes).toEqual(['guestbookEntry.allPublishedEntries: declared(true)', 'guestbookEntry.entryDetails: declared(true)', 'notificationUser.healthCheck: declared(false)', 'notificationUser.healthCheckAutofix: declared(false)']);
+    expect(invokes).toEqual(['guestbookEntry.allPublishedEntries: declared(true)', 'guestbookEntry.entryDetails: declared(true)', 'notificationUser.healthCheck: declared(false)', 'notificationUser.healthCheckAutofix: declared(false)', 'openRouterPrompt.previewTemplate: declared(true)']);
     expect(report.issues.filter((x) => x.code === 'HANDLER_MCP_READ_ONLY_UNSET')).toHaveLength(0);
     expect(report.warningCount).toBe(0);
-    expect(report.errorCount).toBe(9);
+    expect(report.errorCount).toBe(11);
     expect(formatValidationAsMarkdown(report)).not.toContain('MCP read/write classification not checked');
   });
 

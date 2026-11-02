@@ -6,6 +6,7 @@ import {
   type NotificationBoxRecipient,
   type NotificationBoxRecipientTemplateConfig,
   NotificationRecipientSendFlag,
+  type NotificationRecipient,
   type NotificationRecipientWithConfig,
   type FirebaseAuthDetails,
   type FirebaseAuthUserId,
@@ -209,6 +210,42 @@ export interface ExpandNotificationRecipientsResult {
   readonly texts: ExpandedNotificationRecipientText[];
   // readonly pushNotifications: ExpandedNotificationRecipient[];
   readonly notificationSummaries: ExpandedNotificationNotificationSummaryRecipient[];
+}
+
+/**
+ * Counts the distinct people reached by an {@link ExpandNotificationRecipientsResult} across every channel.
+ *
+ * A person is identified by the uid of the recipient the expanded entry came from (`boxRecipient`, `otherUserRecipient`
+ * or `otherRecipient`). When that recipient has no uid, its explicit contact details (email, phone and summary id)
+ * identify them instead, so one explicit recipient reached on several channels still counts once. Entries without
+ * any source recipient fall back to the channel address.
+ *
+ * @param result - The expanded recipients to count.
+ * @returns The number of distinct people the notification would reach.
+ */
+export function countExpandedNotificationRecipientPeople(result: Pick<ExpandNotificationRecipientsResult, 'emails' | 'texts' | 'notificationSummaries'>): number {
+  const people = new Set<string>();
+
+  function addPerson(entry: Pick<ExpandedNotificationRecipientBase, 'boxRecipient' | 'otherUserRecipient' | 'otherRecipient'>, channelAddressKey: string) {
+    const sourceRecipient: Maybe<Omit<NotificationRecipient, 'i'>> = entry.boxRecipient?.recipient ?? entry.otherUserRecipient?.recipient ?? entry.otherRecipient;
+    let personKey: string;
+
+    if (sourceRecipient?.uid) {
+      personKey = `uid:${sourceRecipient.uid}`;
+    } else if (sourceRecipient) {
+      personKey = `contact:${sourceRecipient.e ?? ''}:${sourceRecipient.t ?? ''}:${sourceRecipient.s ?? ''}`;
+    } else {
+      personKey = channelAddressKey;
+    }
+
+    people.add(personKey);
+  }
+
+  result.emails.forEach((x) => addPerson(x, `email:${x.emailAddress}`));
+  result.texts.forEach((x) => addPerson(x, `text:${x.phoneNumber}`));
+  result.notificationSummaries.forEach((x) => addPerson(x, `summary:${x.notificationSummaryId}`));
+
+  return people.size;
 }
 
 /**

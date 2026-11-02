@@ -11615,6 +11615,39 @@
       ]
     },
     {
+      "slug": "sms-text-segment-details",
+      "name": "smsTextSegmentDetails",
+      "kind": "function",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/sms",
+      "signature": "smsTextSegmentDetails(text: string): SmsTextSegmentDetails",
+      "description": "Returns the length, encoding and segment count of an SMS body.\n\n- GSM-7 when every character is in the GSM 03.38 basic or extension table, otherwise UCS-2.\n- GSM-7 fits 160 characters in one segment and 153 per segment when split. Extension characters (`^{}\\[~]|€`) count as two.\n- UCS-2 fits 70 code units in one segment and 67 per segment when split. Characters outside the BMP (most emoji) count as two.\n- A split never divides an extension character or a surrogate pair, so a segment may end one unit short.",
+      "params": [
+        {
+          "name": "text",
+          "type": "string",
+          "description": "- The SMS body.",
+          "optional": false
+        }
+      ],
+      "returns": "The length, encoding and segment count.",
+      "tags": [
+        "sms",
+        "text",
+        "segment",
+        "gsm7",
+        "ucs2",
+        "length",
+        "encoding",
+        "twilio",
+        "string",
+        "details",
+        "smstextsegmentdetails"
+      ],
+      "example": "smsTextSegmentDetails('Hello!');\n// { length: 6, encoding: 'gsm7', segments: 1 }\n\nsmsTextSegmentDetails('Hello 👋');\n// { length: 8, encoding: 'ucs2', segments: 1 }"
+    },
+    {
       "slug": "compare-strings",
       "name": "compareStrings",
       "kind": "const",

@@ -156,7 +156,7 @@ import { notificationBoxDoesNotExist, notificationBoxExclusionTargetInvalidError
 import { type NotificationSendMessagesInstance } from './notification.send';
 import { type NotificationSendServiceRef } from './notification.send.service';
 import { notificationUserHealthCheckAutofixFactory, notificationUserHealthCheckFactory } from './notification.healthcheck';
-import { expandNotificationRecipients, makeNewNotificationSummaryTemplate, notificationMessageFunctionWithUnlistedDeliveryMethodsWarning, updateNotificationUserNotificationBoxRecipientConfig } from './notification.util';
+import { countExpandedNotificationRecipientPeople, expandNotificationRecipients, makeNewNotificationSummaryTemplate, notificationMessageFunctionWithUnlistedDeliveryMethodsWarning, updateNotificationUserNotificationBoxRecipientConfig } from './notification.util';
 import { type NotificationTaskServiceRef, type NotificationTaskServiceTaskHandler } from './notification.task.service';
 import { removeFromCompletionsArrayWithTaskResult } from './notification.task.service.util';
 import {
@@ -1869,6 +1869,20 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
 
               let { es, ts, ns } = notification;
               let ps: typeof notification.ps | undefined = undefined; // next ps value. If undefined, remains the same.
+
+              // enforce the recipient limit before any channel builds or sends. NO_TRY is terminal, so the notification is never retried.
+              const { maxRecipients } = messageFunction;
+
+              if (maxRecipients != null) {
+                const recipientCount = countExpandedNotificationRecipientPeople({ emails: emailRecipients, texts: textRecipients, notificationSummaries: notificationSummaryRecipients });
+
+                if (recipientCount > maxRecipients) {
+                  console.error(`Notification "${notification.id}" with type "${notificationTemplateType}" expanded to ${recipientCount} recipients, which exceeds its maxRecipients of ${maxRecipients}. Nothing was sent.`);
+                  es = NotificationSendState.NO_TRY;
+                  ts = NotificationSendState.NO_TRY;
+                  ns = NotificationSendState.NO_TRY;
+                }
+              }
               const { esr: currentEsr, tsr: currentTsr } = notification;
 
               // do emails

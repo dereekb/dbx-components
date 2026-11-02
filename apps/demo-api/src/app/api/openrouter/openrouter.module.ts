@@ -1,17 +1,24 @@
 import { Module } from '@nestjs/common';
-import { FirebaseServerEnvService, FirebaseServerStorageService } from '@dereekb/firebase-server';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { FirebaseServerEnvService, FirebaseServerStorageService, assertSnapshotData } from '@dereekb/firebase-server';
 import { OpenRouterApi, OpenRouterModule } from '@dereekb/nestjs/openrouter';
 import {
   OPENROUTER_PROMPT_SERVICE_TOKEN,
   OPENROUTER_RUN_TASK_SERVICE_TOKEN,
+  OPENROUTER_TEMPLATE_SERVICE_TOKEN,
   OpenRouterPromptServerActions,
   type OpenRouterPromptService,
   type OpenRouterRunTaskService,
+  type OpenRouterTemplateService,
   appOpenRouterModuleMetadata,
   openRouterPromptServerActions,
   openRouterPromptService,
-  openRouterRunTaskService
+  openRouterRunTaskService,
+  openRouterTemplateApprovalSecretFromConfigService,
+  openRouterTemplateService
 } from '@dereekb/openrouter/firebase-server';
+import { appOpenRouterTemplateTypeConfigService, openRouterTemplateTypeConfigRecord } from '@dereekb/openrouter';
+import { type DemoProfileTemplateData, type DemoProfileTemplateProfile, demoOpenRouterTemplateTypes } from 'demo-firebase';
 import { DemoFirebaseServerActionsContext } from '../../common/firebase/action.context';
 import { DemoApiActionModule } from '../../common/firebase/action.module';
 import { DemoApiStorageModule } from '../../common/firebase/storage.module';
@@ -58,14 +65,46 @@ export function demoOpenRouterRunTaskServiceFactory(context: DemoFirebaseServerA
 }
 
 /**
+ * Builds the {@link OpenRouterTemplateService} for the demo app.
+ *
+ * The template types' context factories read the demo's profiles. The approval secret comes from `OPENROUTER_TEMPLATE_APPROVAL_SECRET`;
+ * without it, approving and rendering stored template scripts are both refused.
+ *
+ * @param context - Server actions context supplying the profile collection.
+ * @param promptService - Resolves the stored templates.
+ * @param openRouterApi - Supplies the OpenRouter client.
+ * @param configService - Supplies the approval secret.
+ * @returns The template service.
+ */
+export function demoOpenRouterTemplateServiceFactory(context: DemoFirebaseServerActionsContext, promptService: OpenRouterPromptService, openRouterApi: OpenRouterApi, configService: ConfigService): OpenRouterTemplateService {
+  async function loadProfile(data: DemoProfileTemplateData): Promise<DemoProfileTemplateProfile> {
+    // the template data is not shape-checked at runtime, so check the key before loading it
+    if (typeof data?.profileKey !== 'string') {
+      throw new TypeError('The template data must carry a profileKey string.');
+    }
+
+    const profile = await assertSnapshotData(context.profileCollection.documentAccessor().loadDocumentForKey(data.profileKey));
+    return { username: profile.username, bio: profile.bio ?? undefined };
+  }
+
+  return openRouterTemplateService({
+    typeConfigService: appOpenRouterTemplateTypeConfigService(openRouterTemplateTypeConfigRecord(demoOpenRouterTemplateTypes(loadProfile))),
+    promptService,
+    client: openRouterApi.openRouterClient,
+    approvalSecret: openRouterTemplateApprovalSecretFromConfigService(configService)
+  });
+}
+
+/**
  * Builds the {@link OpenRouterPromptServerActions} for the demo app.
  *
  * @param context - Server actions context.
  * @param promptService - The prompt service, so a publish drops its cached resolution immediately.
+ * @param templateService - The template service, which enables the message template operations.
  * @returns The server actions.
  */
-export function demoOpenRouterPromptServerActionsFactory(context: DemoFirebaseServerActionsContext, promptService: OpenRouterPromptService): OpenRouterPromptServerActions {
-  return openRouterPromptServerActions({ ...context, openRouterPromptService: promptService });
+export function demoOpenRouterPromptServerActionsFactory(context: DemoFirebaseServerActionsContext, promptService: OpenRouterPromptService, templateService: OpenRouterTemplateService): OpenRouterPromptServerActions {
+  return openRouterPromptServerActions({ ...context, openRouterPromptService: promptService, openRouterTemplateService: templateService });
 }
 
 /**
@@ -76,7 +115,7 @@ export function demoOpenRouterPromptServerActionsFactory(context: DemoFirebaseSe
  * the framework module cannot construct them.
  */
 @Module({
-  imports: [DemoApiActionModule, DemoApiStorageModule, OpenRouterModule],
+  imports: [DemoApiActionModule, DemoApiStorageModule, OpenRouterModule, ConfigModule],
   providers: [
     {
       provide: OPENROUTER_PROMPT_SERVICE_TOKEN,
@@ -87,9 +126,14 @@ export function demoOpenRouterPromptServerActionsFactory(context: DemoFirebaseSe
       provide: OPENROUTER_RUN_TASK_SERVICE_TOKEN,
       useFactory: demoOpenRouterRunTaskServiceFactory,
       inject: [DemoFirebaseServerActionsContext, OPENROUTER_PROMPT_SERVICE_TOKEN, OpenRouterApi, FirebaseServerStorageService, FirebaseServerEnvService]
+    },
+    {
+      provide: OPENROUTER_TEMPLATE_SERVICE_TOKEN,
+      useFactory: demoOpenRouterTemplateServiceFactory,
+      inject: [DemoFirebaseServerActionsContext, OPENROUTER_PROMPT_SERVICE_TOKEN, OpenRouterApi, ConfigService]
     }
   ],
-  exports: [DemoApiActionModule, OPENROUTER_PROMPT_SERVICE_TOKEN, OPENROUTER_RUN_TASK_SERVICE_TOKEN]
+  exports: [DemoApiActionModule, OPENROUTER_PROMPT_SERVICE_TOKEN, OPENROUTER_RUN_TASK_SERVICE_TOKEN, OPENROUTER_TEMPLATE_SERVICE_TOKEN]
 })
 export class DemoApiOpenRouterDependencyModule {}
 
@@ -102,7 +146,7 @@ export class DemoApiOpenRouterDependencyModule {}
     serverActionsProvider: {
       provide: OpenRouterPromptServerActions,
       useFactory: demoOpenRouterPromptServerActionsFactory,
-      inject: [DemoFirebaseServerActionsContext, OPENROUTER_PROMPT_SERVICE_TOKEN]
+      inject: [DemoFirebaseServerActionsContext, OPENROUTER_PROMPT_SERVICE_TOKEN, OPENROUTER_TEMPLATE_SERVICE_TOKEN]
     },
     // The dependency MODULE is re-exported, not its tokens: Nest only lets a module export a provider
     // it declares itself, and these are declared next door.

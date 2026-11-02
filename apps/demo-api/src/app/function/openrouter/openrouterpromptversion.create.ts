@@ -30,6 +30,6 @@ export const openRouterPromptVersionCreate: DemoCreateModelFunction<CreateOpenRo
       use: (x) => x.document
     });
 
-    return createOpenRouterPromptVersion(document);
+    return createOpenRouterPromptVersion(document, { createdBy: request.auth?.uid });
   }
 });

@@ -346,6 +346,16 @@ export interface NotificationMessageFunctionExtras {
    */
   readonly globalRecipients?: Maybe<NotificationRecipientWithConfig[]>;
   /**
+   * Maximum number of distinct people the notification may reach after recipient expansion.
+   *
+   * People are counted across every channel (email, text, notification summary), so one person reached by
+   * text and in-app counts once. When the expanded recipients exceed this limit nothing is sent on any channel
+   * and every channel's send state is set to `NotificationSendState.NO_TRY`.
+   *
+   * Use this for message functions whose content must only ever reach a single person (or a small fixed group).
+   */
+  readonly maxRecipients?: Maybe<number>;
+  /**
    * Called after each send attempt (whether successful or not) with the delivery results.
    */
   readonly onSendAttempted?: NotificationMessageFunctionExtrasCallbackFunction;
@@ -393,6 +403,7 @@ export function notificationMessageFunction(fn: NotificationMessageFunctionWitho
   if (extras) {
     const fnWithExtras = fn as Building<NotificationMessageFunction>;
     fnWithExtras.globalRecipients = extras.globalRecipients;
+    fnWithExtras.maxRecipients = extras.maxRecipients;
     fnWithExtras.onSendAttempted = extras.onSendAttempted;
     fnWithExtras.onSendSuccess = extras.onSendSuccess;
     fn = fnWithExtras as NotificationMessageFunction;

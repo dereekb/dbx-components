@@ -1,6 +1,7 @@
 import { type DynamicModule, type ModuleMetadata, type Provider } from '@nestjs/common';
 import { type OpenRouterPromptService } from './openrouter.prompt.service';
 import { type OpenRouterRunTaskService } from './openrouter.runtask.service';
+import { type OpenRouterTemplateService } from './openrouter.template.service';
 import { OpenRouterPromptServerActions } from './openrouter.action.server';
 
 /**
@@ -74,6 +75,18 @@ export const OPENROUTER_PROMPT_SERVICE_TOKEN = 'OPENROUTER_PROMPT_SERVICE_TOKEN'
  * Injection token for the {@link OpenRouterRunTaskService}.
  */
 export const OPENROUTER_RUN_TASK_SERVICE_TOKEN = 'OPENROUTER_RUN_TASK_SERVICE_TOKEN';
+
+/**
+ * Ref for the {@link OpenRouterTemplateService}.
+ */
+export interface OpenRouterTemplateServiceRef {
+  readonly openRouterTemplateService: OpenRouterTemplateService;
+}
+
+/**
+ * Injection token for the {@link OpenRouterTemplateService}.
+ */
+export const OPENROUTER_TEMPLATE_SERVICE_TOKEN = 'OPENROUTER_TEMPLATE_SERVICE_TOKEN';
 
 /**
  * Type of a dynamic module produced for the OpenRouter services.

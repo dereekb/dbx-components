@@ -27,6 +27,8 @@ import {
 import { type Maybe } from '@dereekb/util';
 import { type DemoFirebaseServerActionsContext } from '../../firebase/action.context';
 import { type NotificationTemplateServiceTypeConfig } from '@dereekb/firebase-server/model';
+import { OPENROUTER_TEMPLATE_TEXT_NOTIFICATION_TEMPLATE_TYPE } from '@dereekb/openrouter/firebase';
+import { type OpenRouterTemplateService, openRouterTemplateTextNotificationMessageFunctionFactory } from '@dereekb/openrouter/firebase-server';
 import { DEMO_CALENDAR_ICS_DOMAIN, DEMO_CALENDAR_INVITE_ORGANIZER } from '../calendar/calendar.module';
 
 // MARK: Text
@@ -209,6 +211,21 @@ export function demoGuestbookEntryLikedNotificationFactory(context: DemoFirebase
   };
 }
 
+// MARK: Template Text
+/**
+ * Creates the notification template config for the library's template-text notification type, which sends a message
+ * template by key as a text. The recipient limit comes from the template's type.
+ *
+ * @param openRouterTemplateService - Renders the template.
+ * @returns The notification template service type config.
+ */
+export function demoOpenRouterTemplateTextNotificationFactory(openRouterTemplateService: OpenRouterTemplateService): NotificationTemplateServiceTypeConfig {
+  return {
+    type: OPENROUTER_TEMPLATE_TEXT_NOTIFICATION_TEMPLATE_TYPE,
+    factory: openRouterTemplateTextNotificationMessageFunctionFactory({ templateService: openRouterTemplateService })
+  };
+}
+
 /**
  * Creates a notification template config for calendar event invites.
  *
@@ -289,6 +306,13 @@ export function demoCalendarEventInviteNotificationFactory(context: DemoFirebase
 }
 
 // MARK: All
-export const demoNotificationTemplateServiceConfigsArrayFactory = (context: DemoFirebaseServerActionsContext) => {
-  return [demoNotificationTestFactory(context), demoExampleNotificationFactory(context), demoGuestbookEntryCreatedNotificationFactory(context), demoGuestbookEntryLikedNotificationFactory(context), demoCalendarEventInviteNotificationFactory(context)];
+export const demoNotificationTemplateServiceConfigsArrayFactory = (context: DemoFirebaseServerActionsContext, openRouterTemplateService: OpenRouterTemplateService) => {
+  return [
+    demoNotificationTestFactory(context),
+    demoExampleNotificationFactory(context),
+    demoGuestbookEntryCreatedNotificationFactory(context),
+    demoGuestbookEntryLikedNotificationFactory(context),
+    demoCalendarEventInviteNotificationFactory(context),
+    demoOpenRouterTemplateTextNotificationFactory(openRouterTemplateService)
+  ];
 };

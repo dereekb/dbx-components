@@ -28,6 +28,6 @@ export const openRouterPromptVersionUpdate: DemoUpdateModelFunction<UpdateOpenRo
       use: (x) => x.document
     });
 
-    return updateOpenRouterPromptVersion(document);
+    return updateOpenRouterPromptVersion(document, { createdBy: request.auth?.uid });
   }
 });

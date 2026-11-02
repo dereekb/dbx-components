@@ -14,7 +14,9 @@ import {
   type OpenRouterPromptVersionNumber,
   type OpenRouterResolvedPrompt,
   type OpenRouterRunError,
-  type OpenRouterRunUsage
+  type OpenRouterRunUsage,
+  type OpenRouterTemplateReviewRecord,
+  type OpenRouterTemplateTypeKey
 } from '@dereekb/openrouter';
 import {
   AbstractFirestoreDocument,
@@ -25,7 +27,7 @@ import {
   type FirestoreCollectionGroup,
   type FirestoreCollectionWithParent,
   type FirestoreContext,
-  type FirestoreModelKey,
+  type FirebaseAuthUserId,
   firestoreDate,
   firestoreEnum,
   firestoreModelIdentity,
@@ -177,6 +179,16 @@ export interface OpenRouterPrompt {
    * @dbxModelVariable storeLocked
    */
   sl?: Maybe<boolean>;
+  /**
+   * The template type, when this prompt is a message TEMPLATE.
+   *
+   * Presence is what makes a prompt a template: its versions carry a script and are rendered through the template service,
+   * which takes the mode, the context factory and the output rules from the type registered in code under this key.
+   * Set when the template is created, and never changed after.
+   *
+   * @dbxModelVariable templateType
+   */
+  tt?: Maybe<OpenRouterTemplateTypeKey>;
 }
 
 /**
@@ -201,7 +213,8 @@ export const openRouterPromptConverter = snapshotConverterFunctions<OpenRouterPr
     av: optionalFirestoreNumber(),
     lv: firestoreNumber({ default: 0 }),
     t: optionalFirestoreArray<string>({ filterUnique: true, dontStoreIfEmpty: true }),
-    sl: optionalFirestoreBoolean()
+    sl: optionalFirestoreBoolean(),
+    tt: optionalFirestoreString()
   }
 });
 
@@ -330,11 +343,13 @@ export interface OpenRouterPromptVersion {
    */
   nt?: Maybe<string>;
   /**
-   * Model key of whoever published it.
+   * Uid of whoever published it, following the `StorageFile.uby` / `NotificationItem.cb` precedent.
+   *
+   * Written from the caller's auth on create, never from params. Absent on a seeded version, which no person published.
    *
    * @dbxModelVariable createdBy
    */
-  by?: Maybe<FirestoreModelKey>;
+  by?: Maybe<FirebaseAuthUserId>;
   /**
    * The questions this version declares, when it is a DECISION prompt.
    *
@@ -362,6 +377,53 @@ export interface OpenRouterPromptVersion {
    * @dbxModelVariable locked
    */
   lk?: Maybe<boolean>;
+  /**
+   * The uploaded body script, when the prompt is a template.
+   *
+   * Runs only once the version is approved, and only if {@link ah} still matches what it says.
+   *
+   * @dbxModelVariable script
+   */
+  sc?: Maybe<string>;
+  /**
+   * The uploaded final script, run on a model's output to turn it into the message text.
+   *
+   * Allowed only when the template's type declares a `finalScript` setting.
+   *
+   * @dbxModelVariable finalScript
+   */
+  fsc?: Maybe<string>;
+  /**
+   * The review record of a template version that carries a script, stored as a JSON string.
+   *
+   * @dbxModelVariable review
+   */
+  rv?: Maybe<OpenRouterTemplateReviewRecord>;
+  /**
+   * The approval HMAC the server signed once every check passed.
+   *
+   * Keyed with a server secret rather than a plain hash: anyone who can edit Firestore could recompute a plain hash. A
+   * script whose version does not match it is never run.
+   *
+   * @dbxModelVariable approvalHash
+   */
+  ah?: Maybe<string>;
+  /**
+   * When the version was approved.
+   *
+   * @dbxModelVariable approvedAt
+   */
+  aat?: Maybe<Date>;
+  /**
+   * When the template version was killed. A killed version is never rendered, promoted or edited again, even by a caller
+   * that pins it.
+   *
+   * Set by the prompt update's `killVersions`, or, when the server enables it, once a newer version is made active.
+   * Permanent: no API unsets it.
+   *
+   * @dbxModelVariable killedAt
+   */
+  kat?: Maybe<Date>;
 }
 
 /**
@@ -393,7 +455,13 @@ export const openRouterPromptVersionConverter = snapshotConverterFunctions<OpenR
     q: optionalFirestoreJsonStringField<OpenRouterDecisionQuestions>(),
     nt: optionalFirestoreString(),
     by: optionalFirestoreString(),
-    lk: optionalFirestoreBoolean()
+    lk: optionalFirestoreBoolean(),
+    sc: optionalFirestoreString(),
+    fsc: optionalFirestoreString(),
+    rv: optionalFirestoreJsonStringField<OpenRouterTemplateReviewRecord>(),
+    ah: optionalFirestoreString(),
+    aat: optionalFirestoreDate(),
+    kat: optionalFirestoreDate()
   }
 });
 
@@ -874,20 +942,25 @@ export function openRouterRunTaskFirestoreCollection(firestoreContext: Firestore
 /**
  * Converts a stored version document into the resolved prompt the request builder consumes.
  *
+ * The template half is filled only when the prompt's template type is passed, which is what keeps a plain prompt's
+ * resolution exactly what it was.
+ *
  * @param promptKey - The prompt key the version belongs to.
  * @param version - The stored version.
+ * @param templateType - The prompt's `tt`, when the prompt is a template.
  * @returns The resolved prompt.
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function openRouterResolvedPromptForVersion(promptKey: OpenRouterPromptKey, version: OpenRouterPromptVersion): OpenRouterResolvedPrompt {
+export function openRouterResolvedPromptForVersion(promptKey: OpenRouterPromptKey, version: OpenRouterPromptVersion, templateType?: Maybe<OpenRouterTemplateTypeKey>): OpenRouterResolvedPrompt {
   return {
     promptKey,
     version: version.v,
     instructions: version.i,
     messages: version.m?.map(({ r, c }) => ({ role: r, content: c })),
     config: version.c ?? {},
-    questions: version.q
+    questions: version.q,
+    ...(templateType == null ? undefined : { template: { type: templateType, script: version.sc, finalScript: version.fsc, approvalHash: version.ah, approvedAt: version.aat, killedAt: version.kat } })
   };
 }
 

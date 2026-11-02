@@ -169,14 +169,15 @@ export function openRouterPromptService(config: OpenRouterPromptServiceConfig): 
    * Reads one published version.
    *
    * @param promptDocument - The parent prompt document.
+   * @param prompt - The parent prompt, whose template type a template version carries.
    * @param promptKey - The prompt's key, recorded on the resolution.
    * @param version - The version to read.
    * @returns The resolved version, or undefined when that version was never published.
    */
-  async function readStoredVersion(promptDocument: OpenRouterPromptDocument, promptKey: OpenRouterPromptKey, version: OpenRouterPromptVersionNumber): Promise<Maybe<OpenRouterResolvedPrompt>> {
+  async function readStoredVersion(promptDocument: OpenRouterPromptDocument, prompt: OpenRouterPrompt, promptKey: OpenRouterPromptKey, version: OpenRouterPromptVersionNumber): Promise<Maybe<OpenRouterResolvedPrompt>> {
     const versionDocument = openRouterPromptVersionCollectionFactory(promptDocument).documentAccessor().loadDocumentForId(openRouterPromptVersionId(version));
     const versionData: Maybe<OpenRouterPromptVersion> = await versionDocument.snapshotData();
-    return versionData == null ? undefined : openRouterResolvedPromptForVersion(promptKey, versionData);
+    return versionData == null ? undefined : openRouterResolvedPromptForVersion(promptKey, versionData, prompt.tt);
   }
 
   async function resolveVersion(promptKey: OpenRouterPromptKey, inputVersion: Maybe<OpenRouterPromptVersionNumber>): Promise<OpenRouterPromptResolution> {
@@ -200,7 +201,7 @@ export function openRouterPromptService(config: OpenRouterPromptServiceConfig): 
       // Pinned. The store wins whenever it actually holds that version, so a version published under the
       // same number after a run was queued is picked up on the run's next attempt. The definition covers
       // the rest, which is what lets a run enqueued against a definition still dispatch.
-      resolved = prompt == null ? undefined : await readStoredVersion(promptDocument, promptKey, inputVersion);
+      resolved = prompt == null ? undefined : await readStoredVersion(promptDocument, prompt, promptKey, inputVersion);
 
       if (resolved == null && definition?.version === inputVersion) {
         resolved = definition;
@@ -217,7 +218,7 @@ export function openRouterPromptService(config: OpenRouterPromptServiceConfig): 
       resolved = definition;
       source = 'definition';
     } else if (storedActiveVersion != null) {
-      resolved = await readStoredVersion(promptDocument, promptKey, storedActiveVersion);
+      resolved = await readStoredVersion(promptDocument, prompt as OpenRouterPrompt, promptKey, storedActiveVersion);
     }
 
     if (resolved == null) {
@@ -234,7 +235,9 @@ export function openRouterPromptService(config: OpenRouterPromptServiceConfig): 
       }
     }
 
-    if (rejectInvalidConfig) {
+    // A template is validated per its type's mode by the template service: a DETERMINISTIC version carries no model config
+    // at all, and judging it here would refuse every one of them for naming no model.
+    if (rejectInvalidConfig && resolved.template == null) {
       // Which arm the version belongs to is read off the version itself: a version carrying questions is
       // a decision and needs a System One model, one without is a completion and must not have one.
       const validation = validateOpenRouterModelConfig(resolved.config, { decision: resolved.questions != null });
