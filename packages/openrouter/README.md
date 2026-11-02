@@ -385,9 +385,10 @@ writing the text unless the template's type allows it. The core lives in `@deree
 
 A template TYPE is registered in code with `openRouterTemplateType()`. It declares:
 
-- `input` — an arktype shape for the template input (JSON-only; pre-format dates and money);
-- `loaders` — `loadX` functions that take NO script arguments, derive their data from the validated input, and
-  declare their output shape;
+- `contextFactory` — built with `openRouterTemplateContextFactory({ accessors })`. It turns the render's source (the
+  template data, plus the notification when rendering for one) into the context scripts see. Accessors are plainly
+  named server functions (`profile`, `upcomingJobs`) that receive the frozen `{ data, notification }` source and take
+  NO script arguments. Optional for every mode with a body; refused for `OPENROUTER`;
 - `mode` — one of four `OpenRouterTemplateMode`s, fixed per type and enforced at publish and at render:
 
 | Mode | Path to the message text |
@@ -401,12 +402,40 @@ A template TYPE is registered in code with `openRouterTemplateType()`. It declar
   checks (`checkOpenRouterTemplateOutputText`);
 - `finalScript` — whether a version may (`optional`) or must (`required`) carry a final script that turns the
   model output into the text. Absent means it may not;
-- `allowMultipleRecipients` — single-recipient unless set. Set it only for generic text, when every loader returns
-  data that EVERY recipient may see; otherwise create one notification per recipient.
+- `allowMultipleRecipients` — single-recipient unless set. Set it only for generic text, when every accessor of the
+  type's context factory returns data that EVERY recipient may see; otherwise create one notification per recipient;
+- `samples` — `{ data?, notification?, accessor?: { profile: … }, output? }`, used by preview and the review.
 
-Registration refuses a non-JSON shape, a loader name that is not `load[A-Z]…`, and any field or loader name in
-`OPENROUTER_TEMPLATE_BANNED_NAMES`. Types are served by `appOpenRouterTemplateTypeConfigService()`, which refuses
-an unknown type rather than falling back.
+```ts
+interface ProfileAccessorResults {
+  readonly profile: { readonly username: string; readonly bio?: Maybe<string> };
+}
+
+const profileContextFactory = openRouterTemplateContextFactory<ProfileTemplateData, ProfileAccessorResults>({
+  accessors: {
+    profile: async ({ data }) => loadProfile(data.profileKey)
+  }
+});
+
+// share it between types with the same data, or extend it:
+const jobsContextFactory = openRouterTemplateContextFactory({ accessors: { ...profileContextFactory.accessors, upcomingJobs } });
+```
+
+The factory's result type is checked at compile time: each accessor result must be plain data
+(`OpenRouterTemplateAccessorResults` / `OpenRouterTemplatePlainData`), so returning a `Date`, a `Map` or a function is a
+compile error. Format dates in the accessor, in the reader's time zone — for example
+`new Intl.DateTimeFormat('en-US', { timeZone, weekday: 'short', month: 'short', day: 'numeric' })` gives `'Mon, Nov 3'`.
+Scripts can never call `toString`/`valueOf`/`toJSON`, so an implicit `Date#toString` never reaches them.
+
+**Accessor authors are responsible for what scripts see.** An accessor result is plain-data copied and deep-frozen, but
+neither validated nor stripped of extra keys, so return only the fields scripts may read. For a type with
+`allowMultipleRecipients`, give it a factory whose accessors return only data EVERY recipient may see (the demo's
+`demoPublicProfileTemplateContextFactory` returns just the username). `context.data` is likewise copied and frozen
+but not shape-checked: it comes from the stored notification, so an accessor validates what it uses from it.
+
+The factory refuses an accessor name that is not plain camelCase or is in `OPENROUTER_TEMPLATE_BANNED_NAMES`, and an
+accessor that is not a function. Types are served by `appOpenRouterTemplateTypeConfigService()`, which refuses an
+unknown type rather than falling back.
 
 ### Uploaded scripts
 
@@ -417,26 +446,35 @@ against the CURRENT type config every time it compiles. In short, a script may o
 - use `const`/`let`, `if`, blocks, `return`, calls, `await` and assignments to its own `let`s — no loops, `switch`,
   `try`, function or class declarations;
 - reference `context, Math, JSON, Number, String, Array, Boolean` and its own earlier declarations;
-- access the type's declared fields, `input`, the loader names, the return keys and a fixed built-in set
-  (`OPENROUTER_TEMPLATE_SCRIPT_BUILT_IN_MEMBERS`), never a banned name;
-- call a const-declared arrow, `String`/`Number`/`Boolean`, a built-in method, or `context.loadX()`;
+- read `context.data` and `context.notification` (never call them), and call an accessor only as
+  `await context.accessor.x()` — awaited, with no arguments. `context` and `context.accessor` can only be used to read a
+  member: never aliased, passed, destructured, indexed or called;
+- read any property name except a banned one. A name of an allowed built-in method (`OPENROUTER_TEMPLATE_SCRIPT_BUILT_IN_MEMBERS`)
+  can only be called, so a data field named `at`, `map`, `find`, `includes`, `join`, `split`, … cannot be read;
+- call a const-declared arrow, `String`/`Number`/`Boolean`, an allowed built-in method, or an accessor;
+- use only the allowed members of `Math`, `JSON`, `Number` and `Array` (and none of `String` or `Boolean`);
+- give `map`/`filter`/`find`/`some`/`every`/`reduce` an arrow, a const arrow or `String`/`Number`/`Boolean` as their
+  callback and no `thisArg` (`reduce` takes at most an initial value), and give `JSON.stringify` no replacer (`null` is
+  fine). With call syntax restricted too, the engine can never invoke a function value a script read off data;
 - pass functions only as callbacks. A function body may only reference bindings declared before it, so nothing
   can recurse, and every script terminates.
 
-Every `context.input…` chain, awaited loader result, and value destructured from them must name declared fields.
+Reads of fields no shape declares are not refused (an accepted trade-off of typed accessors): what a script can read is
+exactly what the data and accessors hand it.
 
 ```ts
-const worker = await context.loadWorker();
-const jobs = await context.loadJobs();
+const worker = await context.accessor.worker();
+const jobs = await context.accessor.jobs();
 if (jobs.length === 0) {
   return null;
 }
 return `Hi ${worker.nickname ?? worker.firstName}, you have ${jobs.length} ${jobs.length === 1 ? 'job' : 'jobs'}:\n${jobs.map((job) => `- ${job.title} on ${job.date}`).join('\n')}`;
 ```
 
-`openRouterTemplateContext()` hands a script a frozen, null-prototype `{ input, loadX… }`. Loaders are memoized per
-render, and their output must be plain data (no snapshots, references, `Timestamp`s, `Date`s or class instances),
-which is deep-copied, validated, stripped of undeclared keys and frozen.
+`openRouterTemplateContext()` hands a script a frozen, null-prototype `{ data, notification, accessor }` (plus a frozen
+`output` for a final script). `context.accessor` is itself frozen and null-prototype. Accessors are memoized per render,
+and their results must be plain data (no snapshots, references, `Timestamp`s, `Date`s or class instances): they are
+deep-copied and frozen, but not validated or stripped.
 
 A human security review of the validator rules is required before uploaded scripts are enabled in production.
 
@@ -445,7 +483,8 @@ A human security review of the validator rules is required before uploaded scrip
 Every uploaded script is also reviewed by Jev (`openRouterTemplateReviewPromptDefinition()`), one Noul per rule:
 `obfuscatedCode`, `sendsDataOut`, `offPurpose`, `inventsDetails`, `addressesReviewer`, plus `personalDetails` for
 a multi-recipient type. `readOpenRouterTemplateReviewVerdict()` flags any noul at or above 0.5. The service asks the
-code definition directly, so a Firestore edit cannot weaken the review.
+code definition directly, so a Firestore edit cannot weaken the review. Its `declaredFields` list the context paths the
+type's samples carry (`data.…`, `accessor.<name>.…`) plus every accessor and the notification fields.
 
 ### SMS length
 
@@ -459,7 +498,7 @@ count of a message.
 `OPENROUTER_TEMPLATE_SERVICE_TOKEN` and pass it to `openRouterPromptServerActions()` as `openRouterTemplateService`;
 without it the template operations (`create:template`, a template version upload, `invoke:previewTemplate`) are refused.
 
-`renderTemplate({ templateKey, version?, input?, openRouter?, trace? })` resolves the template (code templates first,
+`renderTemplate({ templateKey, version?, data?, notification?, openRouter?, trace? })` resolves the template (code templates first,
 then the store, so pinned versions work), checks the version's shape against its type's mode, verifies its approval,
 re-validates its scripts, runs the body, makes the model call when the mode needs one, runs the final script and the
 output checks. It returns `{ text?, empty, templateKey, version?, templateType, mode, path, finalized, source,
@@ -499,7 +538,9 @@ retries. The kill lives in Firestore, so someone who can edit Firestore can undo
 ### Preview
 
 `invoke:previewTemplate` (`previewTemplate()` on the service) runs a stored version, or a draft sent in the request,
-through the real render path. It swaps the type's `samples` (or the given `loaderData`) in for the real loaders, stops
+through the real render path. It renders with the given `data` and `notification` or the type's `samples.data` and
+`samples.notification` (`notification: null` renders without one), swaps `samples.accessor` (or the given
+`accessorData`) in for the real accessors (an accessor without sample data runs for real), stops
 before the model call unless `callModel: true`, and then feeds the final script `modelOutput` (or `samples.output`). A
 draft runs only after its static checks pass. The result reports problems instead of throwing, plus the SMS metrics.
 
@@ -514,21 +555,24 @@ draft runs only after its static checks pass. The result reports problems instea
   send as the body;
 - an empty result sends nothing (`NotificationMessageFlag.DO_NOT_SEND`), and a render error fails the attempt, which
   is retried. A retry re-renders, so recipients not yet sent to get the retry's text;
-- the message function's `maxRecipients` is `1` unless the template's type has `allowMultipleRecipients`.
+- the message function's `maxRecipients` is `1` unless the template's type has `allowMultipleRecipients`;
+- every render gets `context.notification`: `{ key, templateType, createdAt }`, where `createdAt` is an ISO 8601 UTC
+  string (`openRouterTemplateNotificationContextForNotification()`). Recipients, send times and overrides are left out,
+  since one render serves every recipient.
 
 `maxRecipients` is a generic `NotificationMessageFunctionExtras` field. After recipient expansion the send loop counts
 the distinct people across email, text and in-app summary (`countExpandedNotificationRecipientPeople()`; one person by
 uid, else by their explicit contact details), and when the count exceeds the limit it sends nothing on any channel and
 sets every channel's send state to `NO_TRY`, which is never retried.
 
-**Recipient rule:** the loaders of a multi-recipient template may only return data that EVERY recipient of the
+**Recipient rule:** the accessors of a multi-recipient type may only return data that EVERY recipient of the
 notification may see. When the content has to differ per person, create one notification per recipient.
 
 The opt-in template-text notification type sends any template by key:
 
 - `openRouterTemplateTextNotificationTemplateTypeInfo({ notificationModelIdentity })` builds its
   `NotificationTemplateTypeInfo` (`OPENROUTER_TEMPLATE_TEXT_NOTIFICATION_TEMPLATE_TYPE`, delivered by text and in-app);
-- `createOpenRouterTemplateTextNotificationTemplate({ templateKey, version?, input, notificationModel, ... })` creates a
+- `createOpenRouterTemplateTextNotificationTemplate({ templateKey, version?, data, notificationModel, ... })` creates a
   notification whose data is `OpenRouterTemplateTextNotificationData { k, v?, i }` — identifiers only, since `n.d` is
   copied into the summary and week documents;
 - `openRouterTemplateTextNotificationMessageFunctionFactory({ templateService })` is the ready-made factory that reads

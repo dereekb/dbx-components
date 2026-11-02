@@ -1,8 +1,7 @@
-import { type } from 'arktype';
 import { describe, expect, it, vi } from 'vitest';
 import { TEST_GOOD_TEMPLATE_SCRIPTS, TEST_JOB_REMINDER_TEMPLATE_TYPE, TEST_OPENROUTER_TEMPLATE_TYPE, TEST_PROFILE_TEXT_TEMPLATE_TYPE } from '../test/openrouter.template.fixture';
 import { OpenRouterTemplateMode, OpenRouterTemplateRenderError, readOpenRouterTemplateBodyResult } from './openrouter.template';
-import { copyOpenRouterTemplateJsonOutput, copyOpenRouterTemplatePlainData, openRouterTemplateContext, openRouterTemplateFinalContext } from './openrouter.template.context';
+import { copyOpenRouterTemplateJsonOutput, copyOpenRouterTemplatePlainData, openRouterTemplateContext, openRouterTemplateContextFactory, openRouterTemplateFinalContext } from './openrouter.template.context';
 import { OpenRouterTemplateScriptValidationError, compileOpenRouterTemplateScript } from './openrouter.template.script.run';
 import { openRouterTemplateType } from './openrouter.template.type';
 
@@ -35,63 +34,134 @@ describe('copyOpenRouterTemplatePlainData()', () => {
 });
 
 describe('openRouterTemplateContext()', () => {
-  it('should validate and strip the input', () => {
-    const context = openRouterTemplateContext({ typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE, input: { workerKey: 'wk/1', extra: 'secret' } });
-    expect(context.input).toEqual({ workerKey: 'wk/1' });
-    expect(Object.isFrozen(context.input)).toBe(true);
+  const notification = { key: 'nb/1/n/1', templateType: 'ORTT', createdAt: '2026-11-03T15:00:00.000Z' };
+
+  describe('data', () => {
+    it('should copy and freeze the data without checking its shape, dropping banned keys', () => {
+      const factory = openRouterTemplateContextFactory({});
+      const raw = JSON.parse('{"a":"x","extra":{"b":1},"constructor":"y"}') as object;
+      const context = factory({ data: raw });
+      expect(context.data).toEqual({ a: 'x', extra: { b: 1 } });
+      expect(context.data).not.toBe(raw);
+      expect(Object.isFrozen((context.data as { extra: object }).extra)).toBe(true);
+      expect(() => factory({ data: { at: new Date() } })).toThrow(OpenRouterTemplateRenderError);
+      expect(() => openRouterTemplateContext({ typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE, data: { workerKey: new TestTimestamp(1) } })).toThrow(OpenRouterTemplateRenderError);
+    });
+
+    it('should turn undefined data into null', () => {
+      expect(openRouterTemplateContextFactory({})({ data: undefined }).data).toBeNull();
+    });
   });
 
-  it('should refuse an invalid input', () => {
-    expect(() => openRouterTemplateContext({ typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE, input: { workerKey: 1 } })).toThrow(OpenRouterTemplateRenderError);
-    expect(() => openRouterTemplateContext({ typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE, input: { workerKey: new TestTimestamp(1) } })).toThrow(OpenRouterTemplateRenderError);
+  describe('structure', () => {
+    it('should be a frozen, null-prototype object with exactly data, notification and accessor', () => {
+      const context = openRouterTemplateContext({ typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE, data: { workerKey: 'wk/1' } });
+      expect(Object.getPrototypeOf(context)).toBeNull();
+      expect(Object.isFrozen(context)).toBe(true);
+      expect(Object.keys(context)).toEqual(['data', 'notification', 'accessor']);
+    });
+
+    it('should hold the accessors in a frozen, null-prototype object', () => {
+      const context = openRouterTemplateContext({ typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE, data: { workerKey: 'wk/1' } });
+      expect(Object.getPrototypeOf(context.accessor)).toBeNull();
+      expect(Object.isFrozen(context.accessor)).toBe(true);
+      expect(Object.keys(context.accessor).sort()).toEqual(['jobs', 'worker']);
+    });
+
+    it('should use a factory with no accessors for a type without one', () => {
+      const typeConfig = openRouterTemplateType({ ...TEST_PROFILE_TEXT_TEMPLATE_TYPE, contextFactory: undefined });
+      const context = openRouterTemplateContext({ typeConfig, data: { anything: 1 } });
+      expect(context.data).toEqual({ anything: 1 });
+      expect(Object.keys(context.accessor)).toEqual([]);
+    });
   });
 
-  it('should be a frozen, null-prototype object', () => {
-    const context = openRouterTemplateContext({ typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE, input: { workerKey: 'wk/1' } });
-    expect(Object.getPrototypeOf(context)).toBeNull();
-    expect(Object.isFrozen(context)).toBe(true);
+  describe('notification', () => {
+    it('should be null when the render is not for a notification', () => {
+      expect(openRouterTemplateContext({ typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE, data: { workerKey: 'wk/1' } }).notification).toBeNull();
+    });
+
+    it('should validate, strip and freeze the notification', () => {
+      const context = openRouterTemplateContext({ typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE, data: { workerKey: 'wk/1' }, notification: { ...notification, recipients: ['u1'] } as never });
+      expect(context.notification).toEqual(notification);
+      expect(Object.isFrozen(context.notification)).toBe(true);
+    });
+
+    it('should refuse an invalid notification', () => {
+      expect(() => openRouterTemplateContext({ typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE, data: { workerKey: 'wk/1' }, notification: { ...notification, createdAt: 1 } as never })).toThrow(OpenRouterTemplateRenderError);
+    });
   });
 
-  it('should memoize each loader per context, and strip and freeze its output', async () => {
-    const load = vi.fn(async () => ({ username: 'ana', password: 'secret' }));
-    const typeConfig = openRouterTemplateType({ ...TEST_PROFILE_TEXT_TEMPLATE_TYPE, loaders: { loadProfile: { output: type({ username: 'string' }), load } } });
-    const context = openRouterTemplateContext({ typeConfig, input: { profileKey: 'p/1' } });
+  describe('accessors', () => {
+    it('should memoize each accessor per context and call it once with the frozen source', async () => {
+      const profile = vi.fn(async () => ({ username: 'ana' }));
+      const factory = openRouterTemplateContextFactory({ accessors: { profile } });
+      const context = factory({ data: { profileKey: 'p/1' }, notification });
 
-    const [a, b] = await Promise.all([context.loadProfile(), context.loadProfile()]);
-    expect(a).toEqual({ username: 'ana' });
-    expect(a).toBe(b);
-    expect(Object.isFrozen(a)).toBe(true);
-    expect(load).toHaveBeenCalledTimes(1);
-    expect(load).toHaveBeenCalledWith({ profileKey: 'p/1' });
-  });
+      const [a, b] = await Promise.all([context.accessor.profile(), context.accessor.profile()]);
+      expect(a).toEqual({ username: 'ana' });
+      expect(a).toBe(b);
+      expect(Object.isFrozen(a)).toBe(true);
+      expect(profile).toHaveBeenCalledTimes(1);
 
-  it('should refuse a loader output that is not plain data', async () => {
-    const typeConfig = openRouterTemplateType({ ...TEST_PROFILE_TEXT_TEMPLATE_TYPE, loaders: { loadProfile: { output: type({ username: 'string' }), load: async () => ({ username: 'ana', ref: new TestTimestamp(1) }) as never } } });
-    const context = openRouterTemplateContext({ typeConfig, input: { profileKey: 'p/1' } });
-    await expect(context.loadProfile()).rejects.toThrow(OpenRouterTemplateRenderError);
-  });
+      const [source] = profile.mock.calls[0] as unknown as [object];
+      expect(source).toEqual({ data: { profileKey: 'p/1' }, notification });
+      expect(Object.isFrozen(source)).toBe(true);
+    });
 
-  it('should refuse a loader output that does not match its shape', async () => {
-    const typeConfig = openRouterTemplateType({ ...TEST_PROFILE_TEXT_TEMPLATE_TYPE, loaders: { loadProfile: { output: type({ username: 'string' }), load: async () => ({ username: 3 }) as never } } });
-    const context = openRouterTemplateContext({ typeConfig, input: { profileKey: 'p/1' } });
-    await expect(context.loadProfile()).rejects.toThrow(OpenRouterTemplateRenderError);
-  });
+    it('should freeze an accessor result without stripping it', async () => {
+      const factory = openRouterTemplateContextFactory({ accessors: { profile: async () => ({ username: 'ana', bio: 'Teacher', extra: { a: 1 } }) } });
+      const result = await factory({ data: null }).accessor.profile();
+      expect(result).toEqual({ username: 'ana', bio: 'Teacher', extra: { a: 1 } });
+      expect(Object.isFrozen(result.extra)).toBe(true);
+    });
 
-  it('should use a loader override instead of the real loader', async () => {
-    const load = vi.fn(async () => ({ username: 'real' }));
-    const typeConfig = openRouterTemplateType({ ...TEST_PROFILE_TEXT_TEMPLATE_TYPE, loaders: { loadProfile: { output: type({ username: 'string' }), load } } });
-    const context = openRouterTemplateContext({ typeConfig, input: { profileKey: 'p/1' }, loaderOverrides: { loadProfile: { username: 'sample' } } });
-    expect(await context.loadProfile()).toEqual({ username: 'sample' });
-    expect(load).not.toHaveBeenCalled();
+    it('should refuse an accessor result that is not plain data', async () => {
+      const results: unknown[] = [{ at: new Date() }, new TestTimestamp(1), { fn: () => 1 }];
+
+      for (const x of results) {
+        const factory = openRouterTemplateContextFactory({ accessors: { profile: async () => x as never } });
+        await expect(factory({ data: null }).accessor.profile()).rejects.toThrow(OpenRouterTemplateRenderError);
+      }
+    });
+
+    it('should turn an undefined result into null', async () => {
+      const factory = openRouterTemplateContextFactory({ accessors: { profile: async (): Promise<{ username: string } | undefined> => undefined } });
+      expect(await factory({ data: null }).accessor.profile()).toBeNull();
+    });
+
+    it('should use an accessor override instead of the real accessor, and copy and freeze it', async () => {
+      const worker = vi.fn(async () => ({ firstName: 'Real' }));
+      const jobs = vi.fn(async () => [{ title: 'Real job' }]);
+      const factory = openRouterTemplateContextFactory({ accessors: { worker, jobs } });
+      const override = { firstName: 'Sample' };
+      const context = factory({ data: null, accessorOverrides: { worker: override } });
+
+      const result = await context.accessor.worker();
+      expect(result).toEqual({ firstName: 'Sample' });
+      expect(result).not.toBe(override);
+      expect(Object.isFrozen(result)).toBe(true);
+      expect(worker).not.toHaveBeenCalled();
+      expect(await context.accessor.jobs()).toEqual([{ title: 'Real job' }]);
+      expect(jobs).toHaveBeenCalledTimes(1);
+    });
+
+    it('should look up the accessor when it is called, so a spy on the factory intercepts it', async () => {
+      const factory = openRouterTemplateContextFactory({ accessors: { profile: async () => ({ username: 'real' }) } });
+      const spy = vi.spyOn(factory.accessors, 'profile').mockResolvedValue({ username: 'spied' });
+      expect(await factory({ data: null }).accessor.profile()).toEqual({ username: 'spied' });
+      expect(spy).toHaveBeenCalledTimes(1);
+    });
   });
 });
 
 describe('openRouterTemplateFinalContext()', () => {
   it('should carry the body context and a frozen output', () => {
-    const body = openRouterTemplateContext({ typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE, input: { workerKey: 'wk/1' } });
+    const body = openRouterTemplateContext({ typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE, data: { workerKey: 'wk/1' } });
     const context = openRouterTemplateFinalContext(body, { text: 'Hi' });
-    expect(context.input).toBe(body.input);
-    expect(context.loadJobs).toBe(body.loadJobs);
+    expect(context.data).toBe(body.data);
+    expect(context.notification).toBe(body.notification);
+    expect(context.accessor).toBe(body.accessor);
     expect(context.output.text).toBe('Hi');
     expect(Object.isFrozen(context.output)).toBe(true);
     expect(Object.getPrototypeOf(context)).toBeNull();
@@ -134,7 +204,7 @@ describe('copyOpenRouterTemplateJsonOutput()', () => {
 describe('compileOpenRouterTemplateScript()', () => {
   it('should run a validated script against a context', async () => {
     const script = compileOpenRouterTemplateScript({ code: TEST_GOOD_TEMPLATE_SCRIPTS['jobReminder'], typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE });
-    const context = openRouterTemplateContext({ typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE, input: { workerKey: 'wk/1' } });
+    const context = openRouterTemplateContext({ typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE, data: { workerKey: 'wk/1' } });
     const result = readOpenRouterTemplateBodyResult(await script(context), OpenRouterTemplateMode.DETERMINISTIC_OR_OPENROUTER);
     expect(result).toEqual({ kind: 'text', text: 'Hi Ana, your upcoming jobs:\n- Grade 3 teacher on Mon, Nov 3\n- Library aide on Tue, Nov 4' });
   });
@@ -142,15 +212,15 @@ describe('compileOpenRouterTemplateScript()', () => {
   it('should return details or text depending on the data', async () => {
     const script = compileOpenRouterTemplateScript({ code: TEST_GOOD_TEMPLATE_SCRIPTS['detailsOrText'], typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE });
     const manyJobs = Array.from({ length: 6 }, (_, i) => ({ title: `Job ${i}`, date: 'Mon' }));
-    const few = await script(openRouterTemplateContext({ typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE, input: { workerKey: 'wk/1' } }));
-    const many = await script(openRouterTemplateContext({ typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE, input: { workerKey: 'wk/1' }, loaderOverrides: { loadJobs: manyJobs } }));
+    const few = await script(openRouterTemplateContext({ typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE, data: { workerKey: 'wk/1' } }));
+    const many = await script(openRouterTemplateContext({ typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE, data: { workerKey: 'wk/1' }, accessorOverrides: { jobs: manyJobs } }));
     expect(few).toEqual({ text: 'Grade 3 teacher, Library aide' });
     expect(readOpenRouterTemplateBodyResult(many, OpenRouterTemplateMode.DETERMINISTIC_OR_OPENROUTER).kind).toBe('openrouter');
   });
 
   it('should return null when there are no jobs', async () => {
     const script = compileOpenRouterTemplateScript({ code: TEST_GOOD_TEMPLATE_SCRIPTS['noJobsNull'], typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE });
-    expect(await script(openRouterTemplateContext({ typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE, input: { workerKey: 'wk/1' }, loaderOverrides: { loadJobs: [] } }))).toBeNull();
+    expect(await script(openRouterTemplateContext({ typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE, data: { workerKey: 'wk/1' }, accessorOverrides: { jobs: [] } }))).toBeNull();
   });
 
   it('should run a final script against the model output', async () => {
@@ -172,24 +242,31 @@ describe('compileOpenRouterTemplateScript()', () => {
     expect(() => compileOpenRouterTemplateScript({ code: `return String(010);`, typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE })).toThrow(OpenRouterTemplateScriptValidationError);
   });
 
-  it('should re-validate against the current type config', () => {
-    const code = `return context.input.workerKey;`;
+  it('should re-validate against the current type config: a script calling an accessor the type no longer has fails to compile', () => {
+    const code = `const worker = await context.accessor.worker(); return worker.firstName;`;
     expect(() => compileOpenRouterTemplateScript({ code, typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE })).not.toThrow();
-    const changed = openRouterTemplateType({ ...TEST_JOB_REMINDER_TEMPLATE_TYPE, input: type({ otherKey: 'string' }), samples: undefined });
+    const changed = openRouterTemplateType({ ...TEST_JOB_REMINDER_TEMPLATE_TYPE, contextFactory: openRouterTemplateContextFactory({ accessors: { jobs: async () => [] as { title: string }[] } }), samples: undefined });
     expect(() => compileOpenRouterTemplateScript({ code, typeConfig: changed })).toThrow(OpenRouterTemplateScriptValidationError);
   });
 
   it('should sanitize a runtime error', async () => {
-    const script = compileOpenRouterTemplateScript({ code: `return context.input.workerKey.toFixed(2);`, typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE });
-    const promise = script(openRouterTemplateContext({ typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE, input: { workerKey: 'wk/1' } }));
+    const script = compileOpenRouterTemplateScript({ code: `return context.data.workerKey.toFixed(2);`, typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE });
+    const promise = script(openRouterTemplateContext({ typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE, data: { workerKey: 'wk/1' } }));
     await expect(promise).rejects.toThrow(OpenRouterTemplateRenderError);
     await expect(promise).rejects.toThrow(/TypeError/);
   });
 
+  it('should throw when a built-in method read off data is used as a replace callback, since it runs with no this', async () => {
+    for (const method of ['repeat', 'padStart']) {
+      const script = compileOpenRouterTemplateScript({ code: `return 'x'.replace('x', context.data.workerKey.${method});`, typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE });
+      await expect(script(openRouterTemplateContext({ typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE, data: { workerKey: 'wk/1' } }))).rejects.toThrow(OpenRouterTemplateRenderError);
+    }
+  });
+
   it('should not let a script mutate its context', async () => {
-    const script = compileOpenRouterTemplateScript({ code: `const jobs = await context.loadJobs(); return String(jobs.concat([1]).length);`, typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE });
-    const context = openRouterTemplateContext({ typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE, input: { workerKey: 'wk/1' } });
+    const script = compileOpenRouterTemplateScript({ code: `const jobs = await context.accessor.jobs(); return String(jobs.concat([1]).length);`, typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE });
+    const context = openRouterTemplateContext({ typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE, data: { workerKey: 'wk/1' } });
     expect(await script(context)).toBe('3');
-    expect(await context.loadJobs()).toHaveLength(2);
+    expect(await context.accessor.jobs()).toHaveLength(2);
   });
 });

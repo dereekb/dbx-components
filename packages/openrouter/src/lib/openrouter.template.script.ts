@@ -2,18 +2,17 @@ import { type Maybe } from '@dereekb/util';
 import { type ArrowFunctionExpression, type CallExpression, type Expression, type Identifier, type MemberExpression, type Node as AcornNode, type ObjectExpression, type Pattern, type PrivateIdentifier, type SpreadElement, type Statement, type Super, type VariableDeclaration, parse } from 'acorn';
 import {
   OPENROUTER_TEMPLATE_BANNED_NAMES,
-  OPENROUTER_TEMPLATE_BODY_RETURN_KEYS,
-  OPENROUTER_TEMPLATE_FINAL_OUTPUT_NAMES,
-  OPENROUTER_TEMPLATE_FINAL_RETURN_KEYS,
+  OPENROUTER_TEMPLATE_SCRIPT_BUILT_IN_MEMBERS,
   OPENROUTER_TEMPLATE_SCRIPT_BUILT_IN_MEMBER_NAMES,
   OPENROUTER_TEMPLATE_SCRIPT_BUILT_IN_PROPERTY_NAMES,
   OPENROUTER_TEMPLATE_SCRIPT_FIRST_ARGUMENT_CALLBACK_METHODS,
   OPENROUTER_TEMPLATE_SCRIPT_GLOBALS,
   OPENROUTER_TEMPLATE_SCRIPT_SECOND_ARGUMENT_CALLBACK_METHODS,
   OpenRouterTemplateMode,
-  type OpenRouterTemplateScriptPhase
+  type OpenRouterTemplateScriptPhase,
+  isOpenRouterTemplateModeWithBody
 } from './openrouter.template';
-import { type OpenRouterTemplateTypeConfig, addOpenRouterTemplateJsonSchemaFieldNames, openRouterTemplateFieldNames } from './openrouter.template.type';
+import { type OpenRouterTemplateTypeConfig, addOpenRouterTemplateJsonSchemaFieldNames } from './openrouter.template.type';
 
 /**
  * The longest a template script may be, in characters.
@@ -44,6 +43,18 @@ const OPENROUTER_TEMPLATE_SCRIPT_RESERVED_BINDING_NAMES: ReadonlySet<string> = n
  * The globals that can be called as conversions, and passed as callbacks.
  */
 const OPENROUTER_TEMPLATE_SCRIPT_CONVERSION_GLOBALS: ReadonlySet<string> = new Set(['String', 'Number', 'Boolean']);
+
+/**
+ * The members a script may use on each global, by global. `context` is checked separately.
+ */
+const OPENROUTER_TEMPLATE_SCRIPT_GLOBAL_MEMBERS: Readonly<Record<string, readonly string[]>> = {
+  Math: OPENROUTER_TEMPLATE_SCRIPT_BUILT_IN_MEMBERS.Math,
+  Number: OPENROUTER_TEMPLATE_SCRIPT_BUILT_IN_MEMBERS.Number,
+  Array: OPENROUTER_TEMPLATE_SCRIPT_BUILT_IN_MEMBERS.Array,
+  JSON: OPENROUTER_TEMPLATE_SCRIPT_BUILT_IN_MEMBERS.JSON,
+  String: [],
+  Boolean: []
+};
 
 const OPENROUTER_TEMPLATE_SCRIPT_LOGICAL_OPERATORS: ReadonlySet<string> = new Set(['&&', '||', '??']);
 const OPENROUTER_TEMPLATE_SCRIPT_BINARY_OPERATORS: ReadonlySet<string> = new Set(['+', '-', '*', '/', '%', '===', '!==', '<', '<=', '>', '>=']);
@@ -80,9 +91,9 @@ export interface OpenRouterTemplateScriptValidation {
    */
   readonly errors: OpenRouterTemplateScriptError[];
   /**
-   * The loaders the script calls.
+   * The accessors the script calls.
    */
-  readonly usedLoaders: string[];
+  readonly usedAccessors: string[];
 }
 
 /**
@@ -102,8 +113,7 @@ export interface ValidateOpenRouterTemplateScriptConfig {
    */
   readonly phase?: Maybe<OpenRouterTemplateScriptPhase>;
   /**
-   * The JSON Schema of the version's `json_schema` text format, when it has one. A final script may read its declared fields
-   * through `context.output.json`.
+   * The JSON Schema of the version's `json_schema` text format, when it has one. It may not declare a banned property name.
    */
   readonly outputJsonSchema?: Maybe<object>;
 }
@@ -115,8 +125,9 @@ export interface ValidateOpenRouterTemplateScriptConfig {
  * - `callee`: the function of a call.
  * - `callback`: a callback argument of a built-in method; may also be an ordinary value.
  * - `member`: the object of a member access.
+ * - `await`: the direct operand of an `await`. An ordinary value, except that an accessor call must sit here.
  */
-type ScriptSlot = 'value' | 'callee' | 'callback' | 'member';
+type ScriptSlot = 'value' | 'callee' | 'callback' | 'member' | 'await';
 
 interface ScriptBinding {
   readonly kind: 'const' | 'let' | 'param';
@@ -124,10 +135,6 @@ interface ScriptBinding {
    * Whether the binding is a const holding a script arrow function.
    */
   readonly arrow: boolean;
-  /**
-   * The declared path the binding's value sits at, when known.
-   */
-  readonly path?: Maybe<string>;
 }
 
 interface ScriptScope {
@@ -137,21 +144,25 @@ interface ScriptScope {
 
 interface ScriptValueInfo {
   /**
-   * The declared path the value sits at, when known.
-   */
-  readonly path?: Maybe<string>;
-  /**
    * Set when the value is the `context` global.
    */
   readonly context?: boolean;
   /**
-   * Set when the value is a `context.loadX` member, which may only be called.
+   * Set when the value is `context.accessor`, which may only be used to call an accessor.
    */
-  readonly loader?: Maybe<string>;
+  readonly accessorObject?: boolean;
   /**
-   * Set when the value is the not-yet-awaited result of calling a loader.
+   * Set when the value is a `context.accessor.<name>` member, which may only be called, and awaited.
    */
-  readonly loaderPromise?: Maybe<string>;
+  readonly accessor?: Maybe<string>;
+  /**
+   * Set when the value is a global other than `context`, read for one of its members.
+   */
+  readonly global?: Maybe<string>;
+  /**
+   * Set when the value is a conversion global (`String`, `Number`, `Boolean`) in a callee or callback slot.
+   */
+  readonly conversion?: boolean;
   /**
    * Set when the value is a script arrow function.
    */
@@ -168,29 +179,39 @@ interface ScriptValueInfo {
  * - statements: `const`/`let`, `if`, blocks, `return`, and expression statements that are a call, an `await` or an
  *   assignment to a script `let`. No loops, `switch`, `try`, `throw`, labels, function or class declarations, or directives;
  * - expressions: literals (no regex or bigint), untagged templates, `?:`, `&& || ??`, `+ - * / %`, strict comparisons,
- *   `!` and unary `-`, member access (allowlisted names; computed only with an integer or allowlisted string literal),
- *   calls, plain object and array literals, and non-async arrow functions;
+ *   `!` and unary `-`, member access (computed only with an integer or a string literal), calls, plain object and array
+ *   literals, and non-async arrow functions;
  * - free names: only {@link OPENROUTER_TEMPLATE_SCRIPT_GLOBALS};
- * - property names: only the type's declared fields, `input`, the loader names, the return keys and the fixed built-in set,
- *   and never a banned name. Names are always checked decoded, so a unicode escape cannot hide one;
- * - calls: a const-declared arrow, `String`/`Number`/`Boolean`, a built-in method, or `context.loadX()` with no arguments;
+ * - property names: any name except a banned one. Names are always checked decoded, so a unicode escape cannot hide one. A
+ *   name of an allowed built-in method can only be called, so a data field named like one (`at`, `map`, `find`, …) cannot
+ *   be read;
+ * - context members: `context.data` and `context.notification` (values, never called), and `context.accessor.<name>()`
+ *   (the type's accessors), in every mode with a body. `context` and `context.accessor` can only be used to read a member:
+ *   they are never aliased, passed, destructured, indexed or called;
+ * - accessors: an accessor takes no arguments, can only be called, and the call must be the direct operand of `await`;
+ * - calls: a const-declared arrow, `String`/`Number`/`Boolean`, a built-in method, or an accessor;
+ * - globals: `Math`, `JSON`, `Number` and `Array` expose only their allowed members, and `String` and `Boolean` none;
+ * - callbacks: `map`/`filter`/`find`/`some`/`every`/`reduce` take an arrow, a const arrow or a conversion as their callback,
+ *   and no `thisArg` (`reduce` takes at most an initial value), and `JSON.stringify` takes no replacer. With call syntax
+ *   already restricted, this closes every way the engine could invoke a function value a script read off data;
  * - functions: an arrow may only be declared with `const` or passed as a callback, a function value can only be called or
  *   passed as a callback, and a function body may only reference bindings declared before it. With no loops, this rules out
- *   recursion and so guarantees termination;
- * - authoring: every `context.input…`, `context.loadX()` result, and value destructured or derived from them, may only
- *   name declared fields.
+ *   recursion and so guarantees termination.
  *
- * A final script (`phase: 'final'`) follows the same rules, plus `context.output` (`text`, `json` and the version's
- * `json_schema` fields), and may never return `openRouter`.
+ * Reads of fields a type does not declare are not refused: what a script can read is exactly what the data and accessors
+ * hand it, which their authors are responsible for.
+ *
+ * A final script (`phase: 'final'`) follows the same rules, plus `context.output`, and may never return `openRouter`. In
+ * {@link OpenRouterTemplateMode.OPENROUTER} mode it sees only `context.output`.
  *
  * @param config - The script, its type and its phase.
- * @returns Whether it is valid, every problem found, and the loaders it uses.
+ * @returns Whether it is valid, every problem found, and the accessors it uses.
  */
 export function validateOpenRouterTemplateScript(config: ValidateOpenRouterTemplateScriptConfig): OpenRouterTemplateScriptValidation {
   const { code, typeConfig, outputJsonSchema } = config;
   const phase = config.phase ?? 'body';
   const errors: OpenRouterTemplateScriptError[] = [];
-  const usedLoaders = new Set<string>();
+  const usedAccessors = new Set<string>();
 
   function addError(message: string, node?: Maybe<AcornNode>): void {
     if (errors.length < OPENROUTER_TEMPLATE_SCRIPT_MAX_ERRORS) {
@@ -263,35 +284,18 @@ export function validateOpenRouterTemplateScript(config: ValidateOpenRouterTempl
 
   function walkProgram(body: Statement[]): void {
     // MARK: Names
-    const { propertyNames: declaredNames, paths: declaredPaths, loaderNames } = openRouterTemplateFieldNames(typeConfig);
-    const paths = new Set(declaredPaths);
-    const declaredFieldNames = new Set(declaredNames);
-    const allowedPropertyNames = new Set<string>([...Array.from(declaredNames), ...Array.from(OPENROUTER_TEMPLATE_SCRIPT_BUILT_IN_MEMBER_NAMES)]);
-    const hasInput = typeConfig.input != null;
+    const accessorNames: ReadonlySet<string> = typeConfig.contextFactory?.accessorNames ?? new Set();
+    const hasBody = isOpenRouterTemplateModeWithBody(typeConfig.mode);
 
-    if (phase === 'final') {
-      OPENROUTER_TEMPLATE_FINAL_OUTPUT_NAMES.forEach((x) => allowedPropertyNames.add(x));
-      OPENROUTER_TEMPLATE_FINAL_RETURN_KEYS.forEach((x) => allowedPropertyNames.add(x));
-      paths.add('output');
-      paths.add('output.text');
+    if (phase === 'final' && outputJsonSchema != null) {
+      const jsonNames = new Set<string>();
+      addOpenRouterTemplateJsonSchemaFieldNames({ schema: outputJsonSchema, path: 'output.json', propertyNames: jsonNames, paths: new Set() });
 
-      if (outputJsonSchema == null) {
-        paths.add('output.json');
-      } else {
-        const jsonNames = new Set<string>();
-        addOpenRouterTemplateJsonSchemaFieldNames({ schema: outputJsonSchema, path: 'output.json', propertyNames: jsonNames, paths });
-
-        jsonNames.forEach((x) => {
-          if (OPENROUTER_TEMPLATE_BANNED_NAMES.has(x)) {
-            addError(`The output JSON schema declares the banned property name "${x}".`);
-          }
-
-          allowedPropertyNames.add(x);
-          declaredFieldNames.add(x);
-        });
-      }
-    } else {
-      OPENROUTER_TEMPLATE_BODY_RETURN_KEYS.forEach((x) => allowedPropertyNames.add(x));
+      jsonNames.forEach((x) => {
+        if (OPENROUTER_TEMPLATE_BANNED_NAMES.has(x)) {
+          addError(`The output JSON schema declares the banned property name "${x}".`);
+        }
+      });
     }
 
     // MARK: Helpers
@@ -334,43 +338,15 @@ export function validateOpenRouterTemplateScript(config: ValidateOpenRouterTempl
         addError(`"${name}" is a banned name.`, node);
       } else if (phase === 'final' && name === 'openRouter') {
         addError('A final script cannot return OpenRouter details, so there is never a second model call.', node);
-      } else if (allowedPropertyNames.has(name)) {
-        ok = true;
       } else {
-        addError(`"${name}" is not an allowed property name. A script can only use the template type's declared fields and the allowed built-in members.`, node);
+        ok = true;
       }
 
       return ok;
     }
 
-    /**
-     * Returns the child path for a property of a value at a declared path, reporting a property that the type does not
-     * declare there.
-     *
-     * @param path - The parent path.
-     * @param name - The property name, or null for an index.
-     * @param node - The node to report on.
-     * @returns The child path, when it is declared.
-     */
-    function childPath(path: Maybe<string>, name: Maybe<string>, node: AcornNode): Maybe<string> {
-      let result: Maybe<string>;
-
-      if (path != null) {
-        if (name == null) {
-          const itemPath = `${path}[]`;
-          result = paths.has(itemPath) ? itemPath : undefined;
-        } else {
-          const candidate = `${path}.${name}`;
-
-          if (paths.has(candidate)) {
-            result = candidate;
-          } else if (!OPENROUTER_TEMPLATE_SCRIPT_BUILT_IN_MEMBER_NAMES.has(name)) {
-            addError(`"${name}" is not a declared field of \`${path}\`.`, node);
-          }
-        }
-      }
-
-      return result;
+    function reportMethodRead(name: string, node: AcornNode): void {
+      addError(`\`.${name}\` is a built-in method, so it must be called. A data field named like a built-in method cannot be read.`, node);
     }
 
     // MARK: Statements
@@ -429,29 +405,28 @@ export function validateOpenRouterTemplateScript(config: ValidateOpenRouterTempl
       } else {
         node.declarations.forEach((declarator) => {
           const { id, init } = declarator;
-          let info: ScriptValueInfo = {};
+          let arrow = false;
 
           // The init is checked BEFORE the declaration's own names are bound, so an arrow can never reference itself.
           if (init != null) {
             if (init.type === 'ArrowFunctionExpression' && kind === 'const' && id.type === 'Identifier') {
-              checkArrow(init, scope, []);
-              info = { arrow: true };
+              checkArrow(init, scope);
+              arrow = true;
             } else {
-              info = checkExpression(init, scope, 'value');
+              checkExpression(init, scope, 'value');
             }
           }
 
-          const path = kind === 'const' ? info.path : undefined;
-          checkPattern(id, scope, kind, path, info.arrow ?? false);
+          checkPattern(id, scope, kind, arrow);
         });
       }
     }
 
-    function checkPattern(node: Pattern, scope: ScriptScope, kind: ScriptBinding['kind'], path: Maybe<string>, arrow: boolean): void {
+    function checkPattern(node: Pattern, scope: ScriptScope, kind: ScriptBinding['kind'], arrow: boolean): void {
       switch (node.type) {
         case 'Identifier':
           if (checkBindingName(node.name, node)) {
-            scope.bindings.set(node.name, { kind, arrow, path });
+            scope.bindings.set(node.name, { kind, arrow });
           }
           break;
         case 'ObjectPattern':
@@ -466,8 +441,11 @@ export function validateOpenRouterTemplateScript(config: ValidateOpenRouterTempl
               if (keyName == null) {
                 addError('A pattern key must be a name.', property.key);
               } else if (checkPropertyName(keyName, property.key)) {
-                const valuePath = childPath(path, keyName, property.key);
-                checkPatternTarget(property.value, scope, kind, valuePath);
+                if (isBuiltInMethodName(keyName)) {
+                  reportMethodRead(keyName, property.key);
+                } else {
+                  checkPatternTarget(property.value, scope, kind);
+                }
               }
             }
           });
@@ -475,7 +453,7 @@ export function validateOpenRouterTemplateScript(config: ValidateOpenRouterTempl
         case 'ArrayPattern':
           node.elements.forEach((element) => {
             if (element != null) {
-              checkPatternTarget(element, scope, kind, childPath(path, null, element));
+              checkPatternTarget(element, scope, kind);
             }
           });
           break;
@@ -491,9 +469,9 @@ export function validateOpenRouterTemplateScript(config: ValidateOpenRouterTempl
       }
     }
 
-    function checkPatternTarget(node: Pattern, scope: ScriptScope, kind: ScriptBinding['kind'], path: Maybe<string>): void {
+    function checkPatternTarget(node: Pattern, scope: ScriptScope, kind: ScriptBinding['kind']): void {
       if (node.type === 'Identifier') {
-        checkPattern(node, scope, kind, path, false);
+        checkPattern(node, scope, kind, false);
       } else if (node.type === 'AssignmentPattern') {
         addError('Default values are not allowed; use ?? instead.', node);
       } else if (node.type === 'RestElement') {
@@ -520,7 +498,7 @@ export function validateOpenRouterTemplateScript(config: ValidateOpenRouterTempl
     }
 
     // MARK: Functions
-    function checkArrow(node: ArrowFunctionExpression, scope: ScriptScope, paramPaths: Maybe<string>[]): void {
+    function checkArrow(node: ArrowFunctionExpression, scope: ScriptScope): void {
       if (node.async) {
         addError('Async arrow functions are not allowed.', node);
       } else if (node.generator) {
@@ -528,13 +506,7 @@ export function validateOpenRouterTemplateScript(config: ValidateOpenRouterTempl
       } else {
         const functionScope = childScope(scope);
 
-        node.params.forEach((param, i) => {
-          if (param.type === 'Identifier' || param.type === 'ObjectPattern' || param.type === 'ArrayPattern') {
-            checkPattern(param, functionScope, 'param', paramPaths[i], false);
-          } else {
-            checkPattern(param, functionScope, 'param', undefined, false);
-          }
-        });
+        node.params.forEach((param) => checkPattern(param, functionScope, 'param', false));
 
         if (node.body.type === 'BlockStatement') {
           checkStatements(node.body.body, functionScope);
@@ -561,23 +533,27 @@ export function validateOpenRouterTemplateScript(config: ValidateOpenRouterTempl
           }
         } else if (slot === 'callee') {
           addError(`"${name}" cannot be called. Only an arrow function declared with const can be called.`, node);
-        } else {
-          info = { path: binding.path };
         }
       } else if (name === 'context') {
         if (slot === 'member') {
           info = { context: true };
         } else {
-          addError('`context` can only be used to read its members, such as `context.input`.', node);
+          addError('`context` can only be used to read its members, such as `context.data`.', node);
         }
       } else if (OPENROUTER_TEMPLATE_SCRIPT_CONVERSION_GLOBALS.has(name)) {
-        if (slot === 'value') {
+        if (slot === 'member') {
+          info = { global: name };
+        } else if (slot === 'callee' || slot === 'callback') {
+          info = { conversion: true };
+        } else {
           addError(`\`${name}\` can only be called, passed as a callback, or used to read its members.`, node);
         }
       } else if (OPENROUTER_TEMPLATE_SCRIPT_GLOBALS.includes(name)) {
-        if (slot === 'callee' && name === 'Array') {
+        if (slot === 'member') {
+          info = { global: name };
+        } else if (slot === 'callee' && name === 'Array') {
           addError('`Array(...)` cannot be called; only `Array.isArray` is available.', node);
-        } else if (slot !== 'member') {
+        } else {
           addError(`\`${name}\` can only be used to read its members.`, node);
         }
       } else {
@@ -622,40 +598,77 @@ export function validateOpenRouterTemplateScript(config: ValidateOpenRouterTempl
       const { ok, name } = readMemberName(node);
       let info: ScriptValueInfo = {};
 
-      if (objectInfo.loaderPromise != null) {
-        addError(`Await the loader before reading its result: \`(await context.${objectInfo.loaderPromise}())\`.`, node);
-      } else if (ok && name != null) {
+      if (ok) {
         if (objectInfo.context) {
-          if (name === 'input' && hasInput && !(phase === 'final' && typeConfig.mode === OpenRouterTemplateMode.OPENROUTER)) {
-            info = { path: 'input' };
-          } else if (loaderNames.has(name)) {
-            if (slot === 'callee') {
-              usedLoaders.add(name);
-              info = { loader: name };
-            } else {
-              addError(`\`context.${name}\` is a loader, so it can only be called: \`await context.${name}()\`.`, node);
-            }
-          } else if (name === 'output' && phase === 'final') {
-            info = { path: 'output' };
-          } else {
-            addError(`\`context.${name}\` is not available to this script.`, node.property);
+          info = checkContextMember(node, name, slot);
+        } else if (objectInfo.accessorObject) {
+          info = checkAccessorMember(node, name, slot);
+        } else if (name == null) {
+          if (objectInfo.global != null) {
+            addError(`\`${objectInfo.global}\` has no indexed members.`, node.property);
           }
         } else if (checkPropertyName(name, node.property)) {
-          const isMethodName = OPENROUTER_TEMPLATE_SCRIPT_BUILT_IN_MEMBER_NAMES.has(name) && !OPENROUTER_TEMPLATE_SCRIPT_BUILT_IN_PROPERTY_NAMES.has(name) && !declaredFieldNames.has(name);
+          const globalMembers = objectInfo.global == null ? undefined : OPENROUTER_TEMPLATE_SCRIPT_GLOBAL_MEMBERS[objectInfo.global];
 
-          if (isMethodName && slot !== 'callee') {
-            addError(`\`.${name}\` is a method, so it must be called.`, node.property);
-          } else {
-            info = { path: childPath(objectInfo.path, name, node.property) };
+          if (globalMembers != null && !globalMembers.includes(name)) {
+            const owner = objectInfo.global as string;
+            const memberList = globalMembers.map((x) => owner + '.' + x).join(', ');
+            const available = globalMembers.length > 0 ? `A script can use ${memberList}.` : `\`${owner}\` has no members a script can use.`;
+            addError(`\`${objectInfo.global}.${name}\` is not available. ${available}`, node.property);
+          } else if (isBuiltInMethodName(name) && slot !== 'callee') {
+            reportMethodRead(name, node.property);
           }
         }
-      } else if (ok && objectInfo.context) {
-        addError('`context` has no indexed members.', node.property);
-      } else if (ok) {
-        info = { path: childPath(objectInfo.path, null, node.property) };
       }
 
       return { info, name: ok ? name : undefined, objectInfo };
+    }
+
+    function checkContextMember(node: MemberExpression, name: Maybe<string>, slot: ScriptSlot): ScriptValueInfo {
+      let info: ScriptValueInfo = {};
+
+      if (name == null) {
+        addError('`context` has no indexed members.', node.property);
+      } else if (OPENROUTER_TEMPLATE_BANNED_NAMES.has(name)) {
+        addError(`"${name}" is a banned name.`, node.property);
+      } else if (hasBody && (name === 'data' || name === 'notification')) {
+        if (slot === 'callee') {
+          addError(`\`context.${name}\` cannot be called.`, node);
+        }
+      } else if (hasBody && name === 'accessor') {
+        if (slot === 'member') {
+          info = { accessorObject: true };
+        } else {
+          addError('`context.accessor` can only be used to call an accessor, such as `await context.accessor.profile()`.', node);
+        }
+      } else if (phase === 'final' && name === 'output') {
+        if (slot === 'callee') {
+          addError('`context.output` cannot be called.', node);
+        }
+      } else {
+        addError(`\`context.${name}\` is not available to this script.`, node.property);
+      }
+
+      return info;
+    }
+
+    function checkAccessorMember(node: MemberExpression, name: Maybe<string>, slot: ScriptSlot): ScriptValueInfo {
+      let info: ScriptValueInfo = {};
+
+      if (name == null) {
+        addError('`context.accessor` has no indexed members.', node.property);
+      } else if (OPENROUTER_TEMPLATE_BANNED_NAMES.has(name)) {
+        addError(`"${name}" is a banned name.`, node.property);
+      } else if (!accessorNames.has(name)) {
+        addError(`\`context.accessor.${name}\` is not an accessor of this template type.`, node.property);
+      } else if (slot === 'callee') {
+        usedAccessors.add(name);
+        info = { accessor: name };
+      } else {
+        addError(`\`context.accessor.${name}\` is an accessor, so it can only be called: \`await context.accessor.${name}()\`.`, node);
+      }
+
+      return info;
     }
 
     function reportSuper(node: Super): ScriptValueInfo {
@@ -663,12 +676,11 @@ export function validateOpenRouterTemplateScript(config: ValidateOpenRouterTempl
       return {};
     }
 
-    function checkCall(node: CallExpression, scope: ScriptScope): ScriptValueInfo {
+    function checkCall(node: CallExpression, scope: ScriptScope, slot: ScriptSlot): ScriptValueInfo {
       const callee = node.callee;
       const args = node.arguments;
-      let info: ScriptValueInfo = {};
       let callbackIndex = -1;
-      let callbackParamPaths: Maybe<string>[] = [];
+      let callbackMethod: Maybe<string>;
 
       if (args.some((x) => x.type === 'SpreadElement')) {
         addError('Spread arguments are not allowed.', node);
@@ -681,58 +693,76 @@ export function validateOpenRouterTemplateScript(config: ValidateOpenRouterTempl
       } else if (callee.type === 'MemberExpression') {
         const { info: calleeInfo, name, objectInfo } = checkMember(callee, scope, 'callee');
 
-        if (calleeInfo.loader != null) {
+        if (calleeInfo.accessor != null) {
           if (args.length > 0) {
-            addError(`Loaders take no arguments: \`context.${calleeInfo.loader}()\`.`, node);
+            addError(`Accessors take no arguments: \`context.accessor.${calleeInfo.accessor}()\`.`, node);
           }
 
-          info = { loaderPromise: calleeInfo.loader };
-        } else if (objectInfo.context) {
-          if (calleeInfo.path != null) {
-            addError(`\`context.${name ?? ''}\` cannot be called.`, callee);
+          if (slot !== 'await') {
+            addError(`Await the accessor: \`await context.accessor.${calleeInfo.accessor}()\`.`, node);
           }
-        } else if (name == null) {
-          addError('Only named methods can be called.', callee);
-        } else {
-          if (!OPENROUTER_TEMPLATE_SCRIPT_BUILT_IN_MEMBER_NAMES.has(name) || OPENROUTER_TEMPLATE_SCRIPT_BUILT_IN_PROPERTY_NAMES.has(name)) {
-            addError(`\`.${name}\` cannot be called. Only the allowed built-in methods and \`context\` loaders can be called.`, callee.property);
+        } else if (!objectInfo.context && !objectInfo.accessorObject) {
+          if (name == null) {
+            addError('Only named methods can be called.', callee);
+          } else if (isBuiltInMethodName(name)) {
+            callbackIndex = checkBuiltInMethodArguments(node, name);
+            callbackMethod = callbackIndex === 0 ? name : undefined;
           } else {
-            const itemPath = objectInfo.path != null && paths.has(`${objectInfo.path}[]`) ? `${objectInfo.path}[]` : undefined;
-
-            if (OPENROUTER_TEMPLATE_SCRIPT_FIRST_ARGUMENT_CALLBACK_METHODS.has(name)) {
-              callbackIndex = 0;
-              callbackParamPaths = name === 'reduce' ? [undefined, itemPath] : [itemPath];
-            } else if (OPENROUTER_TEMPLATE_SCRIPT_SECOND_ARGUMENT_CALLBACK_METHODS.has(name)) {
-              callbackIndex = 1;
-            }
-
-            if (name === 'find' || name === 'at') {
-              info = { path: itemPath };
-            } else if (name === 'filter' || name === 'slice') {
-              info = { path: itemPath == null ? undefined : objectInfo.path };
-            }
+            addError(`\`.${name}\` cannot be called. Only the allowed built-in methods and \`context.accessor\` accessors can be called.`, callee.property);
           }
         }
       } else {
-        addError('Only a declared arrow function, a conversion (String, Number, Boolean), a built-in method or a loader can be called.', callee);
+        addError('Only a declared arrow function, a conversion (String, Number, Boolean), a built-in method or an accessor can be called.', callee);
         checkExpression(callee, scope, 'value');
       }
 
       args.forEach((arg, i) => {
         if (arg.type !== 'SpreadElement') {
-          if (i === callbackIndex) {
-            if (arg.type === 'ArrowFunctionExpression') {
-              checkArrow(arg, scope, callbackParamPaths);
-            } else {
-              checkExpression(arg, scope, 'callback');
-            }
-          } else {
+          if (i !== callbackIndex) {
             checkExpression(arg, scope, 'value');
+          } else if (arg.type === 'ArrowFunctionExpression') {
+            checkArrow(arg, scope);
+          } else {
+            const callbackInfo = checkExpression(arg, scope, 'callback');
+
+            if (callbackMethod != null && !callbackInfo.arrow && !callbackInfo.conversion) {
+              addError(`\`.${callbackMethod}\` needs an arrow function, a const arrow or String/Number/Boolean as its callback.`, arg);
+            }
           }
         }
       });
 
-      return info;
+      return {};
+    }
+
+    /**
+     * Checks the arguments of a call to an allowed built-in method: no `thisArg` after a callback, and no `JSON.stringify`
+     * replacer.
+     *
+     * @param node - The call.
+     * @param name - The method name.
+     * @returns The index of the argument that may be a callback, or -1.
+     */
+    function checkBuiltInMethodArguments(node: CallExpression, name: string): number {
+      const args = node.arguments;
+      let callbackIndex = -1;
+
+      if (OPENROUTER_TEMPLATE_SCRIPT_FIRST_ARGUMENT_CALLBACK_METHODS.has(name)) {
+        const maxArguments = name === 'reduce' ? 2 : 1;
+        callbackIndex = 0;
+
+        if (args.length > maxArguments) {
+          addError(name === 'reduce' ? '`.reduce` takes only its callback and an initial value.' : `\`.${name}\` takes only its callback; a \`thisArg\` is not allowed.`, node);
+        }
+      } else if (OPENROUTER_TEMPLATE_SCRIPT_SECOND_ARGUMENT_CALLBACK_METHODS.has(name)) {
+        callbackIndex = 1;
+      }
+
+      if (name === 'stringify' && args.length > 1 && !isNullLiteral(args[1])) {
+        addError('`JSON.stringify` takes no replacer: leave the second argument out or pass null.', args[1]);
+      }
+
+      return callbackIndex;
     }
 
     function checkObject(node: ObjectExpression, scope: ScriptScope): void {
@@ -821,17 +851,17 @@ export function validateOpenRouterTemplateScript(config: ValidateOpenRouterTempl
           info = checkMember(node, scope, slot).info;
           break;
         case 'ChainExpression':
-          info = node.expression.type === 'CallExpression' ? checkCall(node.expression, scope) : checkMember(node.expression, scope, slot).info;
+          info = node.expression.type === 'CallExpression' ? checkCall(node.expression, scope, slot) : checkMember(node.expression, scope, slot).info;
           break;
         case 'CallExpression':
-          info = checkCall(node, scope);
+          info = checkCall(node, scope, slot);
           break;
         case 'AwaitExpression':
-          info = { path: checkExpression(node.argument, scope, 'value').loaderPromise };
+          checkExpression(node.argument, scope, 'await');
           break;
         case 'ArrowFunctionExpression':
           if (slot === 'callback') {
-            checkArrow(node, scope, []);
+            checkArrow(node, scope);
             info = { arrow: true };
           } else {
             addError('An arrow function can only be declared with const or passed as a callback.', node);
@@ -861,7 +891,7 @@ export function validateOpenRouterTemplateScript(config: ValidateOpenRouterTempl
     checkStatements(body, { bindings: new Map() });
   }
 
-  return { valid: errors.length === 0, errors, usedLoaders: Array.from(usedLoaders) };
+  return { valid: errors.length === 0, errors, usedAccessors: Array.from(usedAccessors) };
 }
 
 const OPENROUTER_TEMPLATE_SCRIPT_NODE_DESCRIPTIONS: Readonly<Record<string, string>> = {
@@ -896,6 +926,14 @@ const OPENROUTER_TEMPLATE_SCRIPT_NODE_DESCRIPTIONS: Readonly<Record<string, stri
   ExportDefaultDeclaration: 'An export',
   ExportAllDeclaration: 'An export'
 };
+
+function isBuiltInMethodName(name: string): boolean {
+  return OPENROUTER_TEMPLATE_SCRIPT_BUILT_IN_MEMBER_NAMES.has(name) && !OPENROUTER_TEMPLATE_SCRIPT_BUILT_IN_PROPERTY_NAMES.has(name);
+}
+
+function isNullLiteral(node: Expression | SpreadElement): boolean {
+  return node.type === 'Literal' && node.value === null && node.regex == null;
+}
 
 function readKeyName(key: Expression | PrivateIdentifier): Maybe<string> {
   let name: Maybe<string>;

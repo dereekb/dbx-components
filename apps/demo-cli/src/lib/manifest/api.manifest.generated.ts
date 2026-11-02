@@ -48,7 +48,7 @@ import {
   updateStorageFileGroupParamsType,
   updateStorageFileParamsType
 } from '@dereekb/firebase';
-import { createOpenRouterPromptVersionParamsType, queryOpenRouterPromptsParamsType, readOpenRouterPromptParamsType, updateOpenRouterPromptParamsType, updateOpenRouterPromptVersionParamsType } from '@dereekb/openrouter/firebase';
+import { createOpenRouterPromptVersionParamsType, createOpenRouterTemplateParamsType, previewOpenRouterTemplateParamsType, queryOpenRouterPromptsParamsType, readOpenRouterPromptParamsType, updateOpenRouterPromptParamsType, updateOpenRouterPromptVersionParamsType } from '@dereekb/openrouter/firebase';
 import {
   allPublishedGuestbookEntriesParamsType,
   createGuestbookParamsType,
@@ -71,7 +71,7 @@ import {
 } from 'demo-firebase';
 import { type CliApiManifest, type CliGeneratedManifestStamp, type CliModelManifest, type CliEnumManifest } from '@dereekb/dbx-cli';
 
-export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.20.0' };
+export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.24.0' };
 
 export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
   {
@@ -728,6 +728,56 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
   },
   {
     model: 'openRouterPrompt',
+    verb: 'create',
+    specifier: 'template',
+    paramsTypeName: 'CreateOpenRouterTemplateParams',
+    paramsValidator: createOpenRouterTemplateParamsType,
+    resultTypeName: 'OnCallCreateModelResult',
+    groupName: 'OpenRouterPrompt',
+    sourceFile: 'packages/openrouter/firebase/src/lib/openrouter.api.ts',
+    description: 'Admin-only. Creates a message template of a registered type.',
+    paramsTypeDescription:
+      'Parameters for creating a message TEMPLATE: an {@link OpenRouterPrompt} of a template type registered in code.\n\nThe one create on the prompt model, and it is template-only: a plain prompt still comes into existence from a seed against\nits code definition. A template is created at runtime so an admin can add one of an existing type without a deploy. The\ntype cannot change after, and the key must not belong to a code template or an existing prompt.',
+    paramsFields: [
+      { name: 'key', typeText: 'OpenRouterPromptKey', description: "The template key, used as the prompt's document id. Lowercase, dash-separated by convention." },
+      { name: 'name', typeText: 'string', description: 'Human-readable name.' },
+      { name: 'description', typeText: 'Maybe<string>', description: 'What the template is for.' },
+      { name: 'tags', typeText: 'Maybe<string[]>', description: 'Grouping tags.' },
+      { name: 'templateType', typeText: 'OpenRouterTemplateTypeKey', description: 'The registered template type. Its mode, context factory and output rules govern every version.' }
+    ]
+  },
+  {
+    model: 'openRouterPrompt',
+    verb: 'invoke',
+    specifier: 'previewTemplate',
+    paramsTypeName: 'PreviewOpenRouterTemplateParams',
+    paramsValidator: previewOpenRouterTemplateParamsType,
+    resultTypeName: 'PreviewOpenRouterTemplateResult',
+    groupName: 'OpenRouterPrompt',
+    sourceFile: 'packages/openrouter/firebase/src/lib/openrouter.api.ts',
+    description: 'Admin-only. Previews a template, or a draft of one, through the real render path.',
+    paramsTypeDescription:
+      "Parameters for previewing a template through the real render path.\n\nAn `invoke` rather than a `read`, because it can spend money: with `callModel` it makes the model call a render would.\nWithout it, the render stops before the call and feeds a final script `modelOutput` (or the type's sample output).",
+    paramsFields: [
+      { name: 'version', typeText: 'Maybe<OpenRouterPromptVersionNumber>', description: 'The version to preview. Omit for the active version.' },
+      { name: 'draft', typeText: 'Maybe<PreviewOpenRouterTemplateDraftParams>', description: 'A draft to preview instead of the stored version. It runs only once its static checks pass.' },
+      { name: 'data', typeText: 'Maybe<Record<string, unknown>>', description: "The template data, read by scripts as `context.data`. Defaults to the type's sample data." },
+      { name: 'notification', typeText: 'Maybe<OpenRouterTemplateNotificationContext>', description: "The notification to render for, read by scripts as `context.notification`. Defaults to the type's sample notification;\nnull renders without one." },
+      { name: 'accessorData', typeText: 'Maybe<Record<string, unknown>>', description: "Data that stands in for the accessors, keyed by accessor name. Defaults to the type's sample accessor data." },
+      { name: 'modelOutput', typeText: 'Maybe<PreviewOpenRouterTemplateModelOutputParams>', description: "The model output to feed a final script when the model is not called. Defaults to the type's sample output." },
+      { name: 'review', typeText: 'Maybe<boolean>', description: 'Whether to run the review too. Costs a model call.' },
+      { name: 'callModel', typeText: 'Maybe<boolean>', description: 'Whether to make the model call a render would. Defaults to false.' }
+    ],
+    resultTypeDescription: 'Result of previewing a template.',
+    resultFields: [
+      { name: 'valid', typeText: 'boolean', description: 'Whether every check passed and the render succeeded.' },
+      { name: 'warnings', typeText: 'string[]', description: 'Problems that would not stop a publish.' },
+      { name: 'review', typeText: 'Maybe<OpenRouterTemplateReviewRecord>', description: 'The review, when one was asked for.' },
+      { name: 'output', typeText: 'Maybe<PreviewOpenRouterTemplateOutput>', description: 'The rendered output, when the render ran.' }
+    ]
+  },
+  {
+    model: 'openRouterPrompt',
     verb: 'query',
     paramsTypeName: 'QueryOpenRouterPromptsParams',
     paramsValidator: queryOpenRouterPromptsParamsType,
@@ -778,7 +828,8 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     paramsValidator: updateOpenRouterPromptParamsType,
     groupName: 'OpenRouterPrompt',
     sourceFile: 'packages/openrouter/firebase/src/lib/openrouter.api.ts',
-    paramsTypeDescription: "Parameters for updating an {@link OpenRouterPrompt}'s metadata and lifecycle state.\n\nNotably absent: anything that would change what a version SAYS. That is the version model's own\nupdate, so the only writes here are to the prompt's metadata and to which version is active.",
+    paramsTypeDescription:
+      "Parameters for updating an {@link OpenRouterPrompt}'s metadata and lifecycle state.\n\nNotably absent: anything that would change what a version SAYS. That is the version model's own\nupdate, so the only writes here are to the prompt's metadata, to which version is active, and to which\ntemplate versions are killed.",
     paramsFields: [
       { name: 'name', typeText: 'Maybe<string>' },
       { name: 'description', typeText: 'Maybe<string>' },
@@ -790,6 +841,12 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
         typeText: 'Maybe<boolean>',
         description:
           "Whether the prompt is locked to the store, so a code definition can neither seed it nor overtake it.\n\nThe one write that turns the lever on and off, and it is deliberately here rather than only on a\ndefinition: locking a prompt is an operator's decision about who maintains its content, and an\noperator has to be able to take that decision back."
+      },
+      {
+        name: 'killVersions',
+        typeText: 'Maybe<OpenRouterPromptVersionNumber[]>',
+        description:
+          "Template versions to kill. A killed version is never rendered, promoted or edited again, even by a caller that pins\nit, so a version found to be bad can't come back through a pinned render or a re-promotion.\n\nPermanent. Each must exist and belong to a template. Killing the active version stops the template from rendering\nuntil another version is made active."
       }
     ]
   },
@@ -814,6 +871,12 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
         description:
           'The questions this version declares, making it a DECISION prompt.\n\nPassthrough JSON, validated against the declaration guards before the version is written — an\neleven-level Score or a question with blank instructions is refused here rather than at the wire.\nA version carrying questions must also name a System One model in its config.'
       },
+      {
+        name: 'script',
+        typeText: 'Maybe<string>',
+        description: "The template body script, when the prompt is a template.\n\nA version carrying any script is written only when every check passes — the shape rules of the type's mode, the static\nscript checks and the review — and is then approved by the server. A failure refuses the write."
+      },
+      { name: 'finalScript', typeText: 'Maybe<string>', description: "The template final script, run on a model's output. Allowed only when the template's type declares a `finalScript`\nsetting." },
       { name: 'notes', typeText: 'Maybe<string>', description: 'Why this version was created.' },
       { name: 'activate', typeText: 'Maybe<boolean>', description: 'Whether to promote this version to `activeVersion` on creation.\n\nDefaults to false: publishing and promoting are separate acts, so a version can be tested by a\npinned caller before it becomes what everyone gets.' }
     ],
@@ -822,7 +885,8 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'modelKeys', typeText: '[FirestoreModelKey]', description: 'Key of the created version document.' },
       { name: 'version', typeText: 'OpenRouterPromptVersionNumber', description: 'The allocated version number.' },
       { name: 'activated', typeText: 'boolean', description: 'Whether the version was promoted to active.' },
-      { name: 'warnings', typeText: 'string[]', description: 'Config problems that did not prevent the version from being written.\n\nSurfaced rather than swallowed: an unpinned PDF engine or an unpinned provider produces a wrong\nanswer rather than an error, so the warning is the only chance to notice.' }
+      { name: 'warnings', typeText: 'string[]', description: 'Config problems that did not prevent the version from being written.\n\nSurfaced rather than swallowed: an unpinned PDF engine or an unpinned provider produces a wrong\nanswer rather than an error, so the warning is the only chance to notice.' },
+      { name: 'review', typeText: 'Maybe<OpenRouterTemplateReviewRecord>', description: 'The review of a template version that carries a script.' }
     ]
   },
   {
@@ -840,6 +904,8 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'messages', typeText: 'Maybe<OpenRouterPromptVersionMessageParams[]>', description: 'Static seed messages.' },
       { name: 'config', typeText: 'Maybe<Record<string, unknown>>', description: 'Model configuration. Passthrough JSON — validated against `OpenRouterModelConfig` but stored as-is.' },
       { name: 'questions', typeText: 'Maybe<Record<string, unknown>>', description: 'The questions this version declares, making it a DECISION prompt. See\n{@link CreateOpenRouterPromptVersionParams.questions}.' },
+      { name: 'script', typeText: 'Maybe<string>', description: 'The template body script. See {@link CreateOpenRouterPromptVersionParams.script}.' },
+      { name: 'finalScript', typeText: 'Maybe<string>', description: 'The template final script. See {@link CreateOpenRouterPromptVersionParams.finalScript}.' },
       { name: 'notes', typeText: 'Maybe<string>', description: 'Why the version says what it says.' }
     ],
     resultTypeDescription: 'Result of updating a version.',
@@ -848,7 +914,8 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
         name: 'warnings',
         typeText: 'string[]',
         description: 'Config problems that did not prevent the edit from being written.\n\nReturned for the same reason the create returns them: an unpinned PDF engine or an unpinned\nprovider produces a wrong answer rather than an error, so an edit that introduces one has to say so.'
-      }
+      },
+      { name: 'review', typeText: 'Maybe<OpenRouterTemplateReviewRecord>', description: 'The review of a template version that carries a script.' }
     ]
   },
   {
@@ -1813,7 +1880,8 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'av', longName: 'activeVersion', tsType: 'Maybe<OpenRouterPromptVersionNumber>', optional: true, description: 'Version served when a caller does not pin one.' },
       { name: 'lv', longName: 'latestVersion', tsType: 'OpenRouterPromptVersionNumber', optional: false, description: 'Highest version number allocated so far — the allocator for the next one.' },
       { name: 't', longName: 'tags', tsType: 'Maybe<string[]>', optional: true, description: 'Free-form tags for grouping.' },
-      { name: 'sl', longName: 'storeLocked', tsType: 'Maybe<boolean>', optional: true, description: 'Whether this prompt is locked to the store, so a code definition can neither seed it nor overtake it.' }
+      { name: 'sl', longName: 'storeLocked', tsType: 'Maybe<boolean>', optional: true, description: 'Whether this prompt is locked to the store, so a code definition can neither seed it nor overtake it.' },
+      { name: 'tt', longName: 'templateType', tsType: 'Maybe<OpenRouterTemplateTypeKey>', optional: true, description: 'The template type, when this prompt is a message TEMPLATE.' }
     ],
     read: 'admin-only',
     serviceFactory: { exportName: 'openRouterPromptFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
@@ -1837,8 +1905,14 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'c', longName: 'config', tsType: 'Maybe<OpenRouterModelConfig>', optional: true, description: 'Model configuration.' },
       { name: 'q', longName: 'questions', tsType: 'Maybe<OpenRouterDecisionQuestions>', optional: true, description: 'The questions this version declares, when it is a DECISION prompt.' },
       { name: 'nt', longName: 'notes', tsType: 'Maybe<string>', optional: true, description: 'Why this version was published.' },
-      { name: 'by', longName: 'createdBy', tsType: 'Maybe<FirestoreModelKey>', optional: true, description: 'Model key of whoever published it.' },
-      { name: 'lk', longName: 'locked', tsType: 'Maybe<boolean>', optional: true, description: 'Whether the version is locked against further edits.' }
+      { name: 'by', longName: 'createdBy', tsType: 'Maybe<FirebaseAuthUserId>', optional: true, description: 'Uid of whoever published it, following the `StorageFile.uby` / `NotificationItem.cb` precedent.' },
+      { name: 'lk', longName: 'locked', tsType: 'Maybe<boolean>', optional: true, description: 'Whether the version is locked against further edits.' },
+      { name: 'sc', longName: 'script', tsType: 'Maybe<string>', optional: true, description: 'The uploaded body script, when the prompt is a template.' },
+      { name: 'fsc', longName: 'finalScript', tsType: 'Maybe<string>', optional: true, description: "The uploaded final script, run on a model's output to turn it into the message text." },
+      { name: 'rv', longName: 'review', tsType: 'Maybe<OpenRouterTemplateReviewRecord>', optional: true, description: 'The review record of a template version that carries a script, stored as a JSON string.' },
+      { name: 'ah', longName: 'approvalHash', tsType: 'Maybe<string>', optional: true, description: 'The approval HMAC the server signed once every check passed.' },
+      { name: 'aat', longName: 'approvedAt', tsType: 'Maybe<Date>', optional: true, description: 'When the version was approved.' },
+      { name: 'kat', longName: 'killedAt', tsType: 'Maybe<Date>', optional: true, description: 'When the template version was killed. A killed version is never rendered, promoted or edited again, even by a caller that pins it.' }
     ],
     read: 'admin-only',
     serviceFactory: { exportName: 'openRouterPromptVersionFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }

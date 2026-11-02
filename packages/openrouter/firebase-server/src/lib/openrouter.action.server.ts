@@ -344,7 +344,7 @@ export function previewOpenRouterTemplateFactory(context: OpenRouterPromptServer
   const { firebaseServerActionTransformFunctionFactory } = context;
 
   return firebaseServerActionTransformFunctionFactory(previewOpenRouterTemplateParamsType, async (params) => {
-    const { version, draft, input, loaderData, modelOutput, review, callModel } = params;
+    const { version, draft, data, notification, accessorData, modelOutput, review, callModel } = params;
 
     return async (document: OpenRouterPromptDocument): Promise<PreviewOpenRouterTemplateResult> => {
       const templateService = requireOpenRouterTemplateService(context);
@@ -363,8 +363,9 @@ export function previewOpenRouterTemplateFactory(context: OpenRouterPromptServer
         templateKey: document.id,
         version,
         draft: draftContent,
-        input: input ?? undefined,
-        loaderData,
+        data: data ?? undefined,
+        notification,
+        accessorData,
         modelOutput: modelOutput == null ? undefined : { text: modelOutput.text ?? '', json: modelOutput.json },
         review,
         callModel

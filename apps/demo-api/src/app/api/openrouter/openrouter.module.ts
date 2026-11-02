@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { FirebaseServerEnvService, FirebaseServerStorageService } from '@dereekb/firebase-server';
+import { FirebaseServerEnvService, FirebaseServerStorageService, assertSnapshotData } from '@dereekb/firebase-server';
 import { OpenRouterApi, OpenRouterModule } from '@dereekb/nestjs/openrouter';
 import {
   OPENROUTER_PROMPT_SERVICE_TOKEN,
@@ -18,8 +18,7 @@ import {
   openRouterTemplateService
 } from '@dereekb/openrouter/firebase-server';
 import { appOpenRouterTemplateTypeConfigService, openRouterTemplateTypeConfigRecord } from '@dereekb/openrouter';
-import { type DemoProfileTemplateInput, type DemoProfileTemplateProfile, demoOpenRouterTemplateTypes } from 'demo-firebase';
-import { assertSnapshotData } from '@dereekb/firebase-server';
+import { type DemoProfileTemplateData, type DemoProfileTemplateProfile, demoOpenRouterTemplateTypes } from 'demo-firebase';
 import { DemoFirebaseServerActionsContext } from '../../common/firebase/action.context';
 import { DemoApiActionModule } from '../../common/firebase/action.module';
 import { DemoApiStorageModule } from '../../common/firebase/storage.module';
@@ -68,7 +67,7 @@ export function demoOpenRouterRunTaskServiceFactory(context: DemoFirebaseServerA
 /**
  * Builds the {@link OpenRouterTemplateService} for the demo app.
  *
- * The template types' loaders read the demo's profiles. The approval secret comes from `OPENROUTER_TEMPLATE_APPROVAL_SECRET`;
+ * The template types' context factories read the demo's profiles. The approval secret comes from `OPENROUTER_TEMPLATE_APPROVAL_SECRET`;
  * without it, approving and rendering stored template scripts are both refused.
  *
  * @param context - Server actions context supplying the profile collection.
@@ -78,8 +77,13 @@ export function demoOpenRouterRunTaskServiceFactory(context: DemoFirebaseServerA
  * @returns The template service.
  */
 export function demoOpenRouterTemplateServiceFactory(context: DemoFirebaseServerActionsContext, promptService: OpenRouterPromptService, openRouterApi: OpenRouterApi, configService: ConfigService): OpenRouterTemplateService {
-  async function loadProfile(input: DemoProfileTemplateInput): Promise<DemoProfileTemplateProfile> {
-    const profile = await assertSnapshotData(context.profileCollection.documentAccessor().loadDocumentForKey(input.profileKey));
+  async function loadProfile(data: DemoProfileTemplateData): Promise<DemoProfileTemplateProfile> {
+    // the template data is not shape-checked at runtime, so check the key before loading it
+    if (typeof data?.profileKey !== 'string') {
+      throw new TypeError('The template data must carry a profileKey string.');
+    }
+
+    const profile = await assertSnapshotData(context.profileCollection.documentAccessor().loadDocumentForKey(data.profileKey));
     return { username: profile.username, bio: profile.bio ?? undefined };
   }
 

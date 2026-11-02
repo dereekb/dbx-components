@@ -1,8 +1,8 @@
-import { type } from 'arktype';
 import { describe, expect, it } from 'vitest';
-import { TEST_JOB_REMINDER_TEMPLATE_TYPE, TEST_OPENROUTER_TEMPLATE_TYPE, TEST_PROFILE_TEXT_TEMPLATE_TYPE } from '../test/openrouter.template.fixture';
+import { TEST_JOB_REMINDER_TEMPLATE_TYPE, TEST_PROFILE_TEXT_TEMPLATE_TYPE } from '../test/openrouter.template.fixture';
 import { OpenRouterTemplateMode, OpenRouterTemplateModeError, OpenRouterTemplateRenderError, readOpenRouterTemplateBodyResult } from './openrouter.template';
-import { OpenRouterTemplateTypeConfigError, appOpenRouterTemplateTypeConfigService, openRouterTemplateFieldNames, openRouterTemplateType, openRouterTemplateTypeConfigRecord } from './openrouter.template.type';
+import { openRouterTemplateContextFactory } from './openrouter.template.context';
+import { OpenRouterTemplateTypeConfigError, appOpenRouterTemplateTypeConfigService, openRouterTemplateType, openRouterTemplateTypeConfigRecord } from './openrouter.template.type';
 
 describe('readOpenRouterTemplateBodyResult()', () => {
   const { DETERMINISTIC, DETERMINISTIC_OPENROUTER, DETERMINISTIC_OR_OPENROUTER, OPENROUTER } = OpenRouterTemplateMode;
@@ -53,43 +53,40 @@ describe('readOpenRouterTemplateBodyResult()', () => {
 });
 
 describe('openRouterTemplateType()', () => {
+  const contextFactory = openRouterTemplateContextFactory({
+    accessors: { profile: async () => ({ username: 'ana' }) }
+  });
+
   const base = {
     type: 'test',
     name: 'Test',
     purpose: 'Testing.',
     mode: OpenRouterTemplateMode.DETERMINISTIC,
-    input: type({ key: 'string' }),
+    contextFactory,
     output: { maxLength: 160 }
   };
 
   it('should return a valid config', () => {
     expect(openRouterTemplateType(base)).toBe(base);
+    expect(openRouterTemplateType(TEST_JOB_REMINDER_TEMPLATE_TYPE)).toBe(TEST_JOB_REMINDER_TEMPLATE_TYPE);
   });
 
-  it('should refuse a missing input on a mode with a body', () => {
-    expect(() => openRouterTemplateType({ ...base, input: undefined })).toThrow(OpenRouterTemplateTypeConfigError);
+  it('should accept a type with a body and no context factory', () => {
+    expect(() => openRouterTemplateType({ ...base, contextFactory: undefined })).not.toThrow();
   });
 
-  it('should refuse an input or loaders on an OPENROUTER type', () => {
+  it('should refuse a context factory on an OPENROUTER type', () => {
     expect(() => openRouterTemplateType({ ...base, mode: OpenRouterTemplateMode.OPENROUTER })).toThrow(OpenRouterTemplateTypeConfigError);
-    expect(() => openRouterTemplateType({ ...base, mode: OpenRouterTemplateMode.OPENROUTER, input: undefined, loaders: { loadX: { output: type({ a: 'string' }), load: async () => ({ a: 'x' }) } } })).toThrow(OpenRouterTemplateTypeConfigError);
   });
 
   it('should refuse a final script setting on a DETERMINISTIC type', () => {
     expect(() => openRouterTemplateType({ ...base, finalScript: 'optional' })).toThrow(OpenRouterTemplateTypeConfigError);
   });
 
-  it('should refuse a loader name that does not match load[A-Z]', () => {
-    expect(() => openRouterTemplateType({ ...base, loaders: { getProfile: { output: type({ a: 'string' }), load: async () => ({ a: 'x' }) } } })).toThrow(OpenRouterTemplateTypeConfigError);
-  });
-
-  it('should refuse a banned field name anywhere in a shape', () => {
-    expect(() => openRouterTemplateType({ ...base, input: type({ caller: 'string' }) })).toThrow(OpenRouterTemplateTypeConfigError);
-    expect(() => openRouterTemplateType({ ...base, loaders: { loadX: { output: type({ items: type({ toString: 'string' }).array() }), load: async () => ({ items: [] }) } } })).toThrow(OpenRouterTemplateTypeConfigError);
-  });
-
-  it('should refuse a shape that is not JSON-only', () => {
-    expect(() => openRouterTemplateType({ ...base, input: type({ at: 'Date' }) })).toThrow(OpenRouterTemplateTypeConfigError);
+  it('should refuse sample data for an accessor the context factory does not have', () => {
+    expect(() => openRouterTemplateType({ ...base, samples: { accessor: { profile: { username: 'ana' } } } })).not.toThrow();
+    expect(() => openRouterTemplateType({ ...base, samples: { accessor: { worker: { firstName: 'Ana' } } as never } })).toThrow(OpenRouterTemplateTypeConfigError);
+    expect(() => openRouterTemplateType({ ...base, contextFactory: undefined, samples: { accessor: { profile: { username: 'ana' } } } })).toThrow(OpenRouterTemplateTypeConfigError);
   });
 
   it('should refuse a non-positive maxLength', () => {
@@ -97,19 +94,24 @@ describe('openRouterTemplateType()', () => {
   });
 });
 
-describe('openRouterTemplateFieldNames()', () => {
-  it('should return the flat property names and the declared paths', () => {
-    const { propertyNames, paths, loaderNames } = openRouterTemplateFieldNames(TEST_JOB_REMINDER_TEMPLATE_TYPE);
+describe('openRouterTemplateContextFactory()', () => {
+  it('should expose the accessor names and the accessors', () => {
+    const profile = async () => ({ username: 'ana' });
+    const factory = openRouterTemplateContextFactory({ accessors: { profile } });
 
-    expect([...loaderNames].sort()).toEqual(['loadJobs', 'loadWorker']);
-    expect([...propertyNames].sort()).toEqual(['date', 'firstName', 'input', 'loadJobs', 'loadWorker', 'name', 'nickname', 'school', 'title', 'workerKey']);
-    expect([...paths].sort()).toEqual(['input', 'input.workerKey', 'loadJobs', 'loadJobs[]', 'loadJobs[].date', 'loadJobs[].school', 'loadJobs[].school.name', 'loadJobs[].title', 'loadWorker', 'loadWorker.firstName', 'loadWorker.nickname']);
+    expect([...factory.accessorNames]).toEqual(['profile']);
+    expect(factory.accessors.profile).toBe(profile);
+    expect([...TEST_JOB_REMINDER_TEMPLATE_TYPE.contextFactory!.accessorNames].sort()).toEqual(['jobs', 'worker']);
   });
 
-  it('should return nothing for an OPENROUTER type', () => {
-    const { propertyNames, paths } = openRouterTemplateFieldNames(TEST_OPENROUTER_TEMPLATE_TYPE);
-    expect(propertyNames.size).toBe(0);
-    expect(paths.size).toBe(0);
+  it('should refuse an accessor name that is not plain camelCase or is banned', () => {
+    ['Profile', '_x', 'load-profile', 'then', 'constructor'].forEach((name) => {
+      expect(() => openRouterTemplateContextFactory({ accessors: { [name]: async () => 'x' } })).toThrow(OpenRouterTemplateTypeConfigError);
+    });
+  });
+
+  it('should refuse an accessor that is not a function', () => {
+    expect(() => openRouterTemplateContextFactory({ accessors: { profile: 'x' } as never })).toThrow(OpenRouterTemplateTypeConfigError);
   });
 });
 

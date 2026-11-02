@@ -17,7 +17,18 @@ import {
 } from '@dereekb/firebase';
 import { clearable } from '@dereekb/model';
 import { type Maybe, type SmsTextEncoding } from '@dereekb/util';
-import { type OpenRouterPromptKey, type OpenRouterPromptResolutionSource, type OpenRouterPromptVersionNumber, type OpenRouterResolvedPrompt, type OpenRouterTemplateBodyResultKind, type OpenRouterTemplateReviewRecord, type OpenRouterTemplateScriptError, type OpenRouterTemplateTypeKey } from '@dereekb/openrouter';
+import {
+  type OpenRouterPromptKey,
+  type OpenRouterPromptResolutionSource,
+  type OpenRouterPromptVersionNumber,
+  type OpenRouterResolvedPrompt,
+  type OpenRouterTemplateBodyResultKind,
+  type OpenRouterTemplateNotificationContext,
+  type OpenRouterTemplateReviewRecord,
+  type OpenRouterTemplateScriptError,
+  type OpenRouterTemplateTypeKey,
+  openRouterTemplateNotificationContextType
+} from '@dereekb/openrouter';
 import { type OpenRouterPrompt, OpenRouterPromptState, type OpenRouterPromptTypes } from './openrouter.model';
 
 // MARK: State
@@ -57,7 +68,7 @@ export interface CreateOpenRouterTemplateParams {
    */
   readonly tags?: Maybe<string[]>;
   /**
-   * The registered template type. Its mode, input, loaders and output rules govern every version.
+   * The registered template type. Its mode, context factory and output rules govern every version.
    */
   readonly templateType: OpenRouterTemplateTypeKey;
 }
@@ -482,13 +493,18 @@ export interface PreviewOpenRouterTemplateParams extends InferredTargetModelPara
    */
   readonly draft?: Maybe<PreviewOpenRouterTemplateDraftParams>;
   /**
-   * The template input. Defaults to the type's sample input.
+   * The template data, read by scripts as `context.data`. Defaults to the type's sample data.
    */
-  readonly input?: Maybe<Record<string, unknown>>;
+  readonly data?: Maybe<Record<string, unknown>>;
   /**
-   * Data that stands in for the loaders, keyed by loader name. Defaults to the type's sample loader data.
+   * The notification to render for, read by scripts as `context.notification`. Defaults to the type's sample notification;
+   * null renders without one.
    */
-  readonly loaderData?: Maybe<Record<string, unknown>>;
+  readonly notification?: Maybe<OpenRouterTemplateNotificationContext>;
+  /**
+   * Data that stands in for the accessors, keyed by accessor name. Defaults to the type's sample accessor data.
+   */
+  readonly accessorData?: Maybe<Record<string, unknown>>;
   /**
    * The model output to feed a final script when the model is not called. Defaults to the type's sample output.
    */
@@ -507,8 +523,9 @@ export const previewOpenRouterTemplateParamsType = /* @__PURE__ */ inferredTarge
   type({
     'version?': clearable('number'),
     'draft?': clearable(previewOpenRouterTemplateDraftParamsType),
-    'input?': clearable('object'),
-    'loaderData?': clearable('object'),
+    'data?': clearable('object'),
+    'notification?': clearable(openRouterTemplateNotificationContextType),
+    'accessorData?': clearable('object'),
     'modelOutput?': clearable(type({ 'text?': clearable('string'), 'json?': 'unknown' })),
     'review?': clearable('boolean'),
     'callModel?': clearable('boolean')

@@ -43,10 +43,10 @@ export function openRouterTemplateTextNotificationTemplateTypeInfo(config: OpenR
  * Stored data of a template-text notification.
  *
  * IDENTIFIERS ONLY: a NotificationItem's `d` is copied into the summary and week documents, which share a single 1 MiB
- * document each. Keep `i` to the keys the template's loaders need, never the loaded data itself.
+ * document each. Keep `i` to the keys the template's accessors need, never the data they load.
  *
  * Recipient rule: the template is rendered once per notification, and every recipient gets the identical body. For a
- * template whose type allows multiple recipients, its loaders may only return data that EVERY recipient may see. When the
+ * template whose type allows multiple recipients, its accessors may only return data that EVERY recipient may see. When the
  * content has to differ per person, create one notification per recipient instead.
  */
 export interface OpenRouterTemplateTextNotificationData {
@@ -59,7 +59,7 @@ export interface OpenRouterTemplateTextNotificationData {
    */
   readonly v?: Maybe<OpenRouterPromptVersionNumber>;
   /**
-   * The template input.
+   * The template data, read by scripts as `context.data`.
    */
   readonly i: unknown;
 }
@@ -77,33 +77,33 @@ export interface CreateOpenRouterTemplateTextNotificationTemplateInput extends O
    */
   readonly version?: Maybe<OpenRouterPromptVersionNumber>;
   /**
-   * The template input. Identifiers only; see {@link OpenRouterTemplateTextNotificationData}.
+   * The template data, read by scripts as `context.data`. Identifiers only; see {@link OpenRouterTemplateTextNotificationData}.
    */
-  readonly input: unknown;
+  readonly data: unknown;
 }
 
 /**
  * Creates a template-text notification template.
  *
  * Recipient rule: every recipient of the notification gets the identical body. Address one person per notification
- * unless the template's type allows multiple recipients and its loaders only return data every recipient may see.
+ * unless the template's type allows multiple recipients and its accessors only return data every recipient may see.
  *
- * @param input - The template key, version and input, plus the usual notification template fields.
+ * @param input - The template key, version and data, plus the usual notification template fields.
  * @returns The notification template.
  *
  * @example
  * ```ts
  * const template = createOpenRouterTemplateTextNotificationTemplate({
  *   templateKey: 'welcome',
- *   input: { profileKey: profileDocument.key },
+ *   data: { profileKey: profileDocument.key },
  *   notificationModel: profileDocument,
  *   recipients: [{ uid: profileDocument.id }]
  * });
  * ```
  */
 export function createOpenRouterTemplateTextNotificationTemplate(input: CreateOpenRouterTemplateTextNotificationTemplateInput): CreateNotificationTemplate {
-  const { templateKey, version, input: templateInput, ...notificationTemplateInput } = input;
-  const data: OpenRouterTemplateTextNotificationData = { k: templateKey, v: version, i: templateInput };
+  const { templateKey, version, data: templateData, ...notificationTemplateInput } = input;
+  const data: OpenRouterTemplateTextNotificationData = { k: templateKey, v: version, i: templateData };
 
   return createNotificationTemplate({
     ...notificationTemplateInput,

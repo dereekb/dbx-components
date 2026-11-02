@@ -28,21 +28,21 @@ describe('validateOpenRouterTemplateScript()', () => {
       });
     });
 
-    it('should report the loaders a script uses', () => {
-      expect(validate(TEST_GOOD_TEMPLATE_SCRIPTS['jobReminder']).usedLoaders.sort()).toEqual(['loadJobs', 'loadWorker']);
+    it('should report the accessors a script uses', () => {
+      expect(validate(TEST_GOOD_TEMPLATE_SCRIPTS['jobReminder']).usedAccessors.sort()).toEqual(['jobs', 'worker']);
     });
 
-    it('should accept direct destructuring of the input and a loader result', () => {
-      expectValid(`const { workerKey } = context.input; const { firstName } = await context.loadWorker(); return workerKey + firstName;`);
+    it('should accept direct destructuring of the data and an accessor result', () => {
+      expectValid(`const { workerKey } = context.data; const { firstName } = await context.accessor.worker(); return workerKey + firstName;`);
     });
 
-    it('should accept an awaited loader result read in place', () => {
-      expectValid(`return (await context.loadWorker()).firstName;`);
+    it('should accept an awaited accessor result read in place', () => {
+      expectValid(`return (await context.accessor.worker()).firstName;`);
     });
 
     it('should accept const helpers, built-ins and conversions', () => {
       expectValid(`const fmt = (job) => job.title.toUpperCase();
-const jobs = await context.loadJobs();
+const jobs = await context.accessor.jobs();
 let text = jobs.map(fmt).filter(Boolean).join(', ');
 text += ' ' + String(Math.max(jobs.length, 1)) + ' ' + Number.isFinite(jobs.length);
 if (!Array.isArray(jobs) || -jobs.length > 0) {
@@ -52,7 +52,28 @@ return text.slice(0, 100).trim();`);
     });
 
     it('should accept a callback passed to reduce', () => {
-      expectValid(`const jobs = await context.loadJobs(); return jobs.reduce((acc, job) => acc + job.title, '');`);
+      expectValid(`const jobs = await context.accessor.jobs(); return jobs.reduce((acc, job) => acc + job.title, '');`);
+    });
+
+    it('should accept reads of fields no shape declares', () => {
+      expectValid(`return context.data.anything;`);
+      expectValid(`const w = await context.accessor.worker(); return w.secretField;`);
+      expectValid(`return context.data.profile.sub;`);
+      expectValid(`return context.output.json.firstName;`, TEST_JOB_REMINDER_TEMPLATE_TYPE, { phase: 'final', outputJsonSchema: { type: 'object', properties: { summary: { type: 'string' } } } });
+    });
+
+    it('should accept the allowed accessor, context and callback forms', () => {
+      expectValid(`const w = await context.accessor['worker'](); return w.firstName;`);
+      expectValid(`return context.notification?.createdAt ?? 'never';`);
+      expectValid(`const d = context.data; return d.workerKey;`);
+      expectValid(`return JSON.stringify(context.data, null, 2);`);
+      expectValid(`const jobs = await context.accessor.jobs(); return jobs.map((j) => j.title).filter(Boolean).map(String).join(', ');`);
+      expectValid(`const p = await context.accessor.worker(); return 'Hi {name}'.replace('{name}', p.firstName);`);
+      expectValid(`return String([1, 2].reduce((a, x) => a + x, 0));`);
+    });
+
+    it('should accept a method read off data as a replace callback, which the engine calls with no this', () => {
+      expectValid(`return 'x'.replace('x', context.data.workerKey.repeat);`);
     });
 
     it('should accept a comment telling the reviewer to approve, which only the review can catch', () => {
@@ -75,8 +96,8 @@ return text.slice(0, 100).trim();`);
       this: `return this;`,
       new: `return new Array(3);`,
       forLoop: `for (let i = 0; i < 1; i += 1) {} return 'x';`,
-      forIn: `for (const k in context.input) {} return 'x';`,
-      forOf: `const jobs = await context.loadJobs(); for (const j of jobs) {} return 'x';`,
+      forIn: `for (const k in context.data) {} return 'x';`,
+      forOf: `const jobs = await context.accessor.jobs(); for (const j of jobs) {} return 'x';`,
       whileLoop: `while (true) {} return 'x';`,
       doWhile: `do {} while (true); return 'x';`,
       dynamicImport: `await import('fs'); return 'x';`,
@@ -91,14 +112,14 @@ return text.slice(0, 100).trim();`);
       functionDeclaration: `function f() { return 1; } return 'x';`,
       functionExpression: `const f = function () { return 1; }; return 'x';`,
       arguments: `const f = () => arguments; return f();`,
-      computedBuiltName: `const k = 'length'; return context.input.workerKey[k];`,
-      computedTemplate: 'return context.input[`workerKey`];',
-      spreadArray: `const jobs = await context.loadJobs(); return [...jobs].join('');`,
-      spreadObject: `const w = await context.loadWorker(); return { ...w };`,
-      spreadArgument: `const jobs = await context.loadJobs(); return Math.max(...jobs);`,
-      restPattern: `const [a, ...rest] = await context.loadJobs(); return 'x';`,
-      restObjectPattern: `const { firstName, ...rest } = await context.loadWorker(); return 'x';`,
-      defaultPattern: `const { nickname = 'x' } = await context.loadWorker(); return 'x';`,
+      computedBuiltName: `const k = 'length'; return context.data.workerKey[k];`,
+      computedTemplate: 'return context.data[`workerKey`];',
+      spreadArray: `const jobs = await context.accessor.jobs(); return [...jobs].join('');`,
+      spreadObject: `const w = await context.accessor.worker(); return { ...w };`,
+      spreadArgument: `const jobs = await context.accessor.jobs(); return Math.max(...jobs);`,
+      restPattern: `const [a, ...rest] = await context.accessor.jobs(); return 'x';`,
+      restObjectPattern: `const { firstName, ...rest } = await context.accessor.worker(); return 'x';`,
+      defaultPattern: `const { nickname = 'x' } = await context.accessor.worker(); return 'x';`,
       defaultParam: `const f = (a = 1) => a; return f();`,
       taggedTemplate: 'return String.raw`x`;',
       regex: `return 'abc'.replace(/a/g, 'b');`,
@@ -124,32 +145,52 @@ return text.slice(0, 100).trim();`);
       directive: `'use strict'; return 'x';`,
       sequence: `return (1, 'x');`,
       update: `let a = 1; a++; return 'x';`,
-      typeof: `return typeof context.input;`,
+      typeof: `return typeof context.data;`,
       void: `return void 0;`,
       delete: `const o = { text: 'a' }; delete o.text; return 'x';`,
       looseEquals: `return 1 == 1 ? 'x' : 'y';`,
       looseNotEquals: `return 1 != 1 ? 'x' : 'y';`,
-      inOperator: `return 'workerKey' in context.input ? 'x' : 'y';`,
+      inOperator: `return 'workerKey' in context.data ? 'x' : 'y';`,
       instanceofOperator: `return [] instanceof Array ? 'x' : 'y';`,
       bitwise: `return String(1 | 2);`,
       undefinedGlobal: `return undefined;`,
-      unknownGlobal: `return Object.keys(context.input).join('');`,
+      unknownGlobal: `return Object.keys(context.data).join('');`,
       bareContext: `return JSON.stringify(context);`,
       contextAlias: `const c = context; return 'x';`,
-      contextDestructure: `const { input } = context; return 'x';`,
+      contextDestructure: `const { data } = context; return 'x';`,
       unknownContextMember: `return context.secrets;`,
       contextIndex: `return context[0];`,
-      loaderAsValue: `const l = context.loadWorker; return 'x';`,
-      loaderWithArguments: `const w = await context.loadWorker('other'); return w.firstName;`,
-      loaderNotAwaited: `return context.loadWorker().firstName;`,
-      undeclaredInputPath: `return context.input.title;`,
-      undeclaredLoaderPath: `const worker = await context.loadWorker(); return worker.title;`,
-      undeclaredDestructure: `const { title } = context.input; return title;`,
-      undeclaredCallbackPath: `const jobs = await context.loadJobs(); return jobs.map((job) => job.firstName).join('');`,
-      unknownProperty: `return context.input.secretField;`,
-      methodAsValue: `const t = context.input.workerKey.trim; return 'x';`,
-      callDataField: `return context.input.workerKey();`,
-      callLength: `return String(context.input.workerKey.length());`,
+      accessorAsValue: `const l = context.accessor.worker; return 'x';`,
+      accessorWithArguments: `const w = await context.accessor.worker('other'); return w.firstName;`,
+      accessorNotAwaited: `return context.accessor.worker().firstName;`,
+      accessorNotAwaitedStatement: `context.accessor.worker(); return 'x';`,
+      accessorNotAwaitedReturn: `return context.accessor.worker();`,
+      accessorNotAwaitedBinding: `const w = context.accessor.worker(); return 'x';`,
+      accessorObjectAlias: `const a = context.accessor; return 'x';`,
+      accessorObjectDestructure: `const { worker } = context.accessor; return 'x';`,
+      accessorObjectPassed: `return [1].map(context.accessor).join('');`,
+      accessorObjectCalled: `return context.accessor();`,
+      accessorObjectIndex: `return await context.accessor[0]();`,
+      unknownAccessor: `return await context.accessor.profile();`,
+      callData: `return context.data();`,
+      callNotification: `return context.notification();`,
+      methodReadAsCallback: `return [5].map(context.data.workerKey.repeat).join('');`,
+      thisArg: `return [3].map((x) => x, 'x').join('');`,
+      nonArrowBindingCallback: `const f = context.data.workerKey.padStart; return [1].map(f).join('');`,
+      staticAsCallback: `return [65].map(String.fromCharCode).join('');`,
+      parseAsCallback: `return ['1'].map(JSON.parse).join('');`,
+      mathRandomRead: `const r = Math.random; return 'x';`,
+      mathRandomCall: `return String(Math.random());`,
+      arrayFrom: `return Array.from([1]).join('');`,
+      globalIndex: `return String(Math[0]);`,
+      jsonReplacer: `return JSON.stringify(context.data, context.data.workerKey.repeat);`,
+      reduceExtraArgument: `const jobs = await context.accessor.jobs(); return String(jobs.reduce((a, x) => a, 0, 1));`,
+      methodNameRead: `return context.data.at;`,
+      methodNameDestructure: `const { at } = context.data; return 'x';`,
+      awaitedArrow: `return await (() => 1);`,
+      methodAsValue: `const t = context.data.workerKey.trim; return 'x';`,
+      callDataField: `return context.data.workerKey();`,
+      callLength: `return String(context.data.workerKey.length());`,
       callNonArrowBinding: `const a = 'x'; return a();`,
       callLetArrow: `let f = () => 1; return 'x';`,
       callCallResult: `const f = (a) => a; return String(f(1)(2));`,
@@ -157,12 +198,12 @@ return text.slice(0, 100).trim();`);
       functionInObject: `const f = () => 1; return { text: f };`,
       functionInArray: `const f = () => 1; const a = [f]; return 'x';`,
       functionInConditional: `const f = () => 1; const g = () => 2; const h = true ? f : g; return 'x';`,
-      functionAsReduceInitial: `const f = () => 1; const jobs = await context.loadJobs(); return String(jobs.reduce((acc) => acc, f));`,
+      functionAsReduceInitial: `const f = () => 1; const jobs = await context.accessor.jobs(); return String(jobs.reduce((acc) => acc, f));`,
       functionThroughObjectMethod: `const f = (o, n) => (n > 0 ? o.map(o, n - 1) + o.map(o, n - 1) : 1); return String(f({ map: f }, 30));`,
       arrowOutsideCallback: `return String((() => 1)());`,
       privateName: `const o = { text: 'a' }; return o.#x;`,
-      negativeIndex: `const jobs = await context.loadJobs(); return jobs[-1].title;`,
-      fractionalIndex: `const jobs = await context.loadJobs(); return jobs[1.5].title;`,
+      negativeIndex: `const jobs = await context.accessor.jobs(); return jobs[-1].title;`,
+      fractionalIndex: `const jobs = await context.accessor.jobs(); return jobs[1.5].title;`,
       numberKey: `return { 1: 'x' };`,
       computedKey: `return { ['text']: 'x' };`,
       infinityLiteral: `return String(1e999);`,
@@ -183,10 +224,10 @@ return text.slice(0, 100).trim();`);
 
     it('should refuse every banned name as a member, a key, a pattern key and a binding', () => {
       OPENROUTER_TEMPLATE_BANNED_NAMES.forEach((name) => {
-        expectInvalid(`return context.input.workerKey.${name};`);
-        expectInvalid(`return context.input.workerKey['${name}'];`);
+        expectInvalid(`return context.data.workerKey.${name};`);
+        expectInvalid(`return context.data.workerKey['${name}'];`);
         expectInvalid(`return { '${name}': 'x' };`);
-        expectInvalid(`const { ${name}: x } = context.input; return 'x';`);
+        expectInvalid(`const { ${name}: x } = context.data; return 'x';`);
 
         if (name !== 'arguments' && name !== 'eval') {
           expectInvalid(`const ${name} = 'x'; return 'x';`);
@@ -196,7 +237,7 @@ return text.slice(0, 100).trim();`);
 
     it('should refuse every excluded member', () => {
       OPENROUTER_TEMPLATE_EXCLUDED_MEMBER_NAMES.forEach((name) => {
-        expectInvalid(`return context.input.workerKey.${name}('x');`);
+        expectInvalid(`return context.data.workerKey.${name}('x');`);
       });
     });
 
@@ -235,17 +276,12 @@ return text.slice(0, 100).trim();`);
     });
 
     it('should accept a final script that wraps the model text', () => {
-      expectValid(`const worker = await context.loadWorker(); return \`Hi \${worker.firstName}! \${context.output.text.trim()}\`;`, TEST_JOB_REMINDER_TEMPLATE_TYPE, { phase: 'final' });
+      expectValid(`const worker = await context.accessor.worker(); return \`Hi \${worker.firstName}! \${context.output.text.trim()}\`;`, TEST_JOB_REMINDER_TEMPLATE_TYPE, { phase: 'final' });
     });
 
     it('should accept a final script that formats declared json_schema fields', () => {
       const outputJsonSchema = { type: 'object', properties: { summary: { type: 'string' }, count: { type: 'number' } } };
       expectValid(`const json = context.output.json; return \`\${json.summary} (\${json.count})\`;`, TEST_JOB_REMINDER_TEMPLATE_TYPE, { phase: 'final', outputJsonSchema });
-    });
-
-    it('should refuse a final script reading an undeclared json_schema field', () => {
-      const outputJsonSchema = { type: 'object', properties: { summary: { type: 'string' } } };
-      expectInvalid(`return context.output.json.firstName;`, TEST_JOB_REMINDER_TEMPLATE_TYPE, { phase: 'final', outputJsonSchema });
     });
 
     it('should refuse a json_schema declaring a banned property name', () => {
@@ -263,7 +299,7 @@ return text.slice(0, 100).trim();`);
 
     it('should give an OPENROUTER final script only context.output', () => {
       expectValid(`return context.output.text.trim();`, TEST_OPENROUTER_TEMPLATE_TYPE, { phase: 'final' });
-      expectInvalid(`return context.input.workerKey;`, TEST_OPENROUTER_TEMPLATE_TYPE, { phase: 'final' });
+      expectInvalid(`return context.data.workerKey;`, TEST_OPENROUTER_TEMPLATE_TYPE, { phase: 'final' });
     });
   });
 });

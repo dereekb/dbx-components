@@ -183,7 +183,7 @@ export interface OpenRouterPrompt {
    * The template type, when this prompt is a message TEMPLATE.
    *
    * Presence is what makes a prompt a template: its versions carry a script and are rendered through the template service,
-   * which takes the mode, the input, the loaders and the output rules from the type registered in code under this key.
+   * which takes the mode, the context factory and the output rules from the type registered in code under this key.
    * Set when the template is created, and never changed after.
    *
    * @dbxModelVariable templateType

@@ -21,8 +21,8 @@ import {
   type OpenRouterTemplateFinalContext,
   type OpenRouterTemplateFinalResult,
   type OpenRouterTemplateKey,
-  type OpenRouterTemplateLoaders,
   type OpenRouterTemplateModelOutput,
+  type OpenRouterTemplateNotificationContext,
   type OpenRouterTemplateReviewRecord,
   type OpenRouterTemplateReviewThresholds,
   type OpenRouterTemplateScriptError,
@@ -183,7 +183,7 @@ export function checkOpenRouterTemplateVersionShape(typeConfig: OpenRouterTempla
  *
  * It skips the approval and the review, and still gets context building, mode enforcement and the output checks.
  */
-export interface OpenRouterCodeTemplate<I = any, L extends OpenRouterTemplateLoaders<I> = OpenRouterTemplateLoaders<I>> {
+export interface OpenRouterCodeTemplate<D = any, A = any> {
   /**
    * The template key. Disjoint from the stored templates: `create:template` refuses a code template's key.
    */
@@ -191,15 +191,15 @@ export interface OpenRouterCodeTemplate<I = any, L extends OpenRouterTemplateLoa
   /**
    * The template type.
    */
-  readonly type: OpenRouterTemplateTypeConfig<I, L>;
+  readonly type: OpenRouterTemplateTypeConfig<D, A>;
   /**
    * The body. Required for every mode except {@link OpenRouterTemplateMode.OPENROUTER}.
    */
-  readonly render?: Maybe<(context: OpenRouterTemplateContext<I, L>) => OpenRouterTemplateBodyResult | Promise<OpenRouterTemplateBodyResult>>;
+  readonly render?: Maybe<(context: OpenRouterTemplateContext<D, A>) => OpenRouterTemplateBodyResult | Promise<OpenRouterTemplateBodyResult>>;
   /**
    * The code twin of the final script, governed by the type's `finalScript` setting.
    */
-  readonly finalize?: Maybe<(context: OpenRouterTemplateFinalContext<I, L>) => OpenRouterTemplateFinalResult | Promise<OpenRouterTemplateFinalResult>>;
+  readonly finalize?: Maybe<(context: OpenRouterTemplateFinalContext<D, A>) => OpenRouterTemplateFinalResult | Promise<OpenRouterTemplateFinalResult>>;
   /**
    * The prompt whose instructions and model config the model call uses, in the modes that call one. Resolved through the
    * prompt service, so its text stays tunable at runtime.
@@ -214,7 +214,7 @@ export interface OpenRouterCodeTemplate<I = any, L extends OpenRouterTemplateLoa
  * @returns The same code template.
  * @throws {OpenRouterTemplateTypeConfigError} When a part doesn't fit the type's mode.
  */
-export function openRouterCodeTemplate<I, L extends OpenRouterTemplateLoaders<I> = OpenRouterTemplateLoaders<I>>(config: OpenRouterCodeTemplate<I, L>): OpenRouterCodeTemplate<I, L> {
+export function openRouterCodeTemplate<D, A>(config: OpenRouterCodeTemplate<D, A>): OpenRouterCodeTemplate<D, A> {
   const { key, type: typeConfig, render, finalize, promptKey } = config;
   const { mode } = typeConfig;
   const errors: string[] = [];
@@ -258,9 +258,9 @@ export interface OpenRouterTemplateOpenRouterCallParams {
  */
 export interface OpenRouterTemplatePreviewOptions {
   /**
-   * Data that stands in for the loaders. Defaults to the type's sample loader data.
+   * Data that stands in for the accessors, keyed by accessor name. Defaults to the type's sample accessor data.
    */
-  readonly loaderData?: Maybe<Record<string, unknown>>;
+  readonly accessorData?: Maybe<Record<string, unknown>>;
   /**
    * Whether to make the model call. When false the render stops before it, and a final script is fed {@link modelOutput}.
    */
@@ -289,9 +289,14 @@ export interface RenderOpenRouterTemplateParams {
    */
   readonly version?: Maybe<OpenRouterPromptVersionNumber>;
   /**
-   * The template input, in every mode except {@link OpenRouterTemplateMode.OPENROUTER}.
+   * The template data, read by scripts as `context.data`, in every mode except {@link OpenRouterTemplateMode.OPENROUTER}.
    */
-  readonly input?: unknown;
+  readonly data?: unknown;
+  /**
+   * The notification being rendered for, read by scripts as `context.notification`. Set by
+   * `openRouterTemplateNotificationMessageFunctionFactory()`.
+   */
+  readonly notification?: Maybe<OpenRouterTemplateNotificationContext>;
   /**
    * The model call params, in {@link OpenRouterTemplateMode.OPENROUTER} mode.
    */
@@ -435,10 +440,17 @@ export interface PreviewOpenRouterTemplateServiceParams {
   readonly version?: Maybe<OpenRouterPromptVersionNumber>;
   readonly draft?: Maybe<OpenRouterTemplateVersionContent>;
   /**
-   * The template input. Defaults to the type's sample input.
+   * The template data. Defaults to the type's sample data.
    */
-  readonly input?: unknown;
-  readonly loaderData?: Maybe<Record<string, unknown>>;
+  readonly data?: unknown;
+  /**
+   * The notification to render for. Undefined uses the type's sample notification; null renders without one.
+   */
+  readonly notification?: Maybe<OpenRouterTemplateNotificationContext>;
+  /**
+   * Data that stands in for the accessors, keyed by accessor name. Defaults to the type's sample accessor data.
+   */
+  readonly accessorData?: Maybe<Record<string, unknown>>;
   readonly modelOutput?: Maybe<OpenRouterTemplateModelOutput>;
   readonly review?: Maybe<boolean>;
   readonly callModel?: Maybe<boolean>;
@@ -627,9 +639,9 @@ export function openRouterTemplateService(config: OpenRouterTemplateServiceConfi
     const finalScript = source === 'store' && hasOpenRouterTemplateText(content.finalScript) ? compileOpenRouterTemplateScript({ code: content.finalScript, typeConfig, phase: 'final', outputJsonSchema }) : undefined;
     const hasFinal = finalScript != null || code?.finalize != null;
 
-    // Step 6: build the context. Preview swaps in loader data for the real loaders.
-    const loaderOverrides = preview == null ? undefined : (preview.loaderData ?? typeConfig.samples?.loaders);
-    const bodyContext = isOpenRouterTemplateModeWithBody(mode) ? openRouterTemplateContext({ typeConfig, input: params.input, loaderOverrides }) : undefined;
+    // Step 6: build the context. Preview swaps in accessor data for the real accessors.
+    const accessorOverrides = preview == null ? undefined : (preview.accessorData ?? typeConfig.samples?.accessor);
+    const bodyContext = isOpenRouterTemplateModeWithBody(mode) ? openRouterTemplateContext({ typeConfig, data: params.data, notification: params.notification, accessorOverrides }) : undefined;
 
     // Step 7: run the body and classify its result per mode.
     let bodyRead: OpenRouterTemplateBodyResultRead;
@@ -787,7 +799,7 @@ export function openRouterTemplateService(config: OpenRouterTemplateServiceConfi
         try {
           const sample = await renderSource(
             { source: 'store', templateKey: '', typeConfig, content, prompt: { promptKey: '', version: 0, instructions: content.instructions, messages: content.messages, config: content.config ?? {} } },
-            { templateKey: '', input: typeConfig.samples.input, preview: { callModel: false } }
+            { templateKey: '', data: typeConfig.samples.data, notification: typeConfig.samples.notification, preview: { callModel: false } }
           );
           sampleText = sample.text ?? (sample.empty ? '(no message)' : undefined);
         } catch (e) {
@@ -807,7 +819,7 @@ export function openRouterTemplateService(config: OpenRouterTemplateServiceConfi
   }
 
   async function previewTemplate(params: PreviewOpenRouterTemplateServiceParams): Promise<PreviewOpenRouterTemplateResult> {
-    const { templateKey, version, draft, loaderData, modelOutput, callModel } = params;
+    const { templateKey, version, draft, accessorData, modelOutput, callModel } = params;
     const errors: string[] = [];
     const warnings: string[] = [];
     let validation: Maybe<OpenRouterTemplateVersionValidation>;
@@ -822,8 +834,10 @@ export function openRouterTemplateService(config: OpenRouterTemplateServiceConfi
       }
 
       if (validation == null || validation.valid) {
-        const input = params.input ?? source.typeConfig.samples?.input;
-        const result = await renderSource(source, { templateKey, version, input, preview: { loaderData, callModel, modelOutput, draft } });
+        const samples = source.typeConfig.samples;
+        const data = params.data ?? samples?.data;
+        const notification = params.notification === undefined ? samples?.notification : params.notification;
+        const result = await renderSource(source, { templateKey, version, data, notification, preview: { accessorData, callModel, modelOutput, draft } });
         const metrics = result.metrics ?? smsTextSegmentDetails('');
         output = { text: result.text, empty: result.empty, path: result.path, openRouterInput: result.openRouterInput, modelCalled: result.modelCalled, finalized: result.finalized, length: metrics.length, encoding: metrics.encoding, segments: metrics.segments };
       }

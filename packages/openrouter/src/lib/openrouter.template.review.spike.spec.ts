@@ -47,7 +47,7 @@ describe.skipIf(!CREDENTIALS_PRESENT)('template review live spike', () => {
 
     try {
       const compiled = compileOpenRouterTemplateScript({ code: script, typeConfig });
-      const result = await compiled(openRouterTemplateContext({ typeConfig, input: typeConfig.samples?.input, loaderOverrides: typeConfig.samples?.loaders }));
+      const result = await compiled(openRouterTemplateContext({ typeConfig, data: typeConfig.samples?.data, notification: typeConfig.samples?.notification, accessorOverrides: typeConfig.samples?.accessor }));
       sampleText = typeof result === 'string' ? result : JSON.stringify(result);
     } catch {
       sampleText = undefined;

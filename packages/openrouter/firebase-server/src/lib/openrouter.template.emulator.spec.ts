@@ -1,11 +1,20 @@
 import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import { type } from 'arktype';
 import { firestoreModelKey } from '@dereekb/firebase';
 import { firebaseServerActionsContext } from '@dereekb/firebase-server';
 import { adminFirestoreFactory } from '@dereekb/firebase-server/test';
 import { type Maybe } from '@dereekb/util';
-import { type OpenRouterModelConfig, type OpenRouterTemplateTypeConfig, OpenRouterTemplateMode, appOpenRouterTemplateTypeConfigService, openRouterTemplateReviewQuestions, openRouterTemplateType, openRouterTemplateTypeConfigRecord } from '@dereekb/openrouter';
+import {
+  type OpenRouterModelConfig,
+  type OpenRouterTemplateNotificationContext,
+  type OpenRouterTemplateTypeConfig,
+  OpenRouterTemplateMode,
+  appOpenRouterTemplateTypeConfigService,
+  openRouterTemplateContextFactory,
+  openRouterTemplateReviewQuestions,
+  openRouterTemplateType,
+  openRouterTemplateTypeConfigRecord
+} from '@dereekb/openrouter';
 import {
   type OpenRouterPromptVersion,
   type UpdateOpenRouterPromptParams,
@@ -29,16 +38,17 @@ const TEST_JSON_MODEL_CONFIG: OpenRouterModelConfig = { ...TEST_MODEL_CONFIG, te
 
 const PROFILE = { username: 'ana', bio: 'Teaches grade 3.' };
 const JOBS = [{ title: 'Grade 3 teacher', date: 'Mon, Nov 3' }];
+const NOTIFICATION: OpenRouterTemplateNotificationContext = { key: 'nb/1/n/1', templateType: 'ORTT', createdAt: '2026-11-03T15:00:00.000Z' };
+const SAMPLE_NOTIFICATION: OpenRouterTemplateNotificationContext = { key: 'nb/sample/n/sample', templateType: 'SAMPLE', createdAt: '2026-11-01T15:00:00.000Z' };
 
 const PROFILE_TYPE = openRouterTemplateType({
   type: 'test-profile-text',
   name: 'Profile text',
   purpose: 'Tells a user their profile username.',
   mode: OpenRouterTemplateMode.DETERMINISTIC,
-  input: type({ profileKey: 'string' }),
-  loaders: { loadProfile: { output: type({ username: 'string', 'bio?': 'string' }), load: async () => PROFILE } },
+  contextFactory: openRouterTemplateContextFactory({ accessors: { profile: async () => PROFILE } }),
   output: { maxLength: 480, allowedUrlDomains: ['demo.dereekb.com'] },
-  samples: { input: { profileKey: 'p/1' }, loaders: { loadProfile: PROFILE } }
+  samples: { data: { profileKey: 'p/1' }, notification: SAMPLE_NOTIFICATION, accessor: { profile: PROFILE } }
 });
 
 const JOBS_TYPE = openRouterTemplateType({
@@ -46,12 +56,11 @@ const JOBS_TYPE = openRouterTemplateType({
   name: 'Jobs text',
   purpose: 'Tells a group about open jobs.',
   mode: OpenRouterTemplateMode.DETERMINISTIC_OR_OPENROUTER,
-  input: type({ groupKey: 'string' }),
-  loaders: { loadJobs: { output: type({ title: 'string', date: 'string' }).array(), load: async () => JOBS } },
+  contextFactory: openRouterTemplateContextFactory({ accessors: { jobs: async () => JOBS } }),
   output: { maxLength: 480, maxOpenRouterInputLength: 2000 },
   allowMultipleRecipients: true,
   finalScript: 'optional',
-  samples: { input: { groupKey: 'g/1' }, loaders: { loadJobs: JOBS }, output: { text: 'Sample model text.' } }
+  samples: { data: { groupKey: 'g/1' }, accessor: { jobs: JOBS }, output: { text: 'Sample model text.' } }
 });
 
 const HANDOFF_TYPE = openRouterTemplateType({
@@ -59,7 +68,6 @@ const HANDOFF_TYPE = openRouterTemplateType({
   name: 'Handoff text',
   purpose: 'Asks the model to write a reminder.',
   mode: OpenRouterTemplateMode.DETERMINISTIC_OPENROUTER,
-  input: type({ groupKey: 'string' }),
   output: { maxLength: 480 }
 });
 
@@ -83,9 +91,10 @@ const REQUIRED_FINAL_TYPE = openRouterTemplateType({
 
 const TEMPLATE_TYPES = [PROFILE_TYPE, JOBS_TYPE, HANDOFF_TYPE, OPENROUTER_TYPE, REQUIRED_FINAL_TYPE] as OpenRouterTemplateTypeConfig[];
 
-const PROFILE_SCRIPT = `const profile = await context.loadProfile();\nreturn 'Hi ' + profile.username + '!';`;
-const JOBS_SCRIPT = `const jobs = await context.loadJobs();\nif (jobs.length === 0) { return null; }\nreturn { openRouter: { input: jobs.map((x) => x.title + ' on ' + x.date).join('\\n') } };`;
+const PROFILE_SCRIPT = `const profile = await context.accessor.profile();\nreturn 'Hi ' + profile.username + '!';`;
+const JOBS_SCRIPT = `const jobs = await context.accessor.jobs();\nif (jobs.length === 0) { return null; }\nreturn { openRouter: { input: jobs.map((x) => x.title + ' on ' + x.date).join('\\n') } };`;
 const WRAP_FINAL_SCRIPT = `return 'Jobs: ' + context.output.text;`;
+const NOTIFICATION_SCRIPT = `return context.notification ? 'For ' + context.notification.templateType + ' on ' + context.notification.createdAt.slice(0, 10) : 'No notification';`;
 
 function reviewAnswers(typeConfig: OpenRouterTemplateTypeConfig, flagged?: string) {
   const answers: Record<string, unknown> = {};
@@ -117,7 +126,7 @@ describe('OpenRouter templates (firestore emulator)', () => {
       const fake: FakeOpenRouterClient = fakeOpenRouterClient(() => ({ text: state.modelText, decision: { answers: reviewAnswers(state.reviewType, state.flag ?? undefined) } }));
       const promptService = openRouterPromptService({ collections, cacheDuration: 1 });
       const typeConfigService = appOpenRouterTemplateTypeConfigService(openRouterTemplateTypeConfigRecord(TEMPLATE_TYPES));
-      const codeTemplate = openRouterCodeTemplate({ key: 'code-profile', type: PROFILE_TYPE, render: async (x) => `Code hi ${(await x.loadProfile()).username}` });
+      const codeTemplate = openRouterCodeTemplate({ key: 'code-profile', type: PROFILE_TYPE, render: async (x) => `Code hi ${(await x.accessor.profile()).username}` });
       const templateService = openRouterTemplateService({ typeConfigService, promptService, client: fake.client, approvalSecret: config?.approvalSecret === undefined ? TEST_APPROVAL_SECRET : config.approvalSecret, codeTemplates: [codeTemplate], killPreviousVersionsOnActivate: config?.killPreviousVersionsOnActivate });
       const actionsContext = { ...firebaseServerActionsContext(), ...collections, firestoreContext: context, openRouterPromptService: promptService, openRouterTemplateService: templateService };
       const actions = openRouterPromptServerActions(actionsContext);
@@ -204,7 +213,7 @@ describe('OpenRouter templates (firestore emulator)', () => {
       it('refuses a final script on a type without a finalScript setting, and a missing required one', async () => {
         const stack = buildStack();
         await stack.createTemplate('handoff', HANDOFF_TYPE);
-        await expect(stack.publish('handoff', { script: `return { openRouter: { input: context.input.groupKey } };`, finalScript: WRAP_FINAL_SCRIPT, config: TEST_MODEL_CONFIG })).rejects.toThrow(/does not allow a final script/);
+        await expect(stack.publish('handoff', { script: `return { openRouter: { input: context.data.groupKey } };`, finalScript: WRAP_FINAL_SCRIPT, config: TEST_MODEL_CONFIG })).rejects.toThrow(/does not allow a final script/);
 
         await stack.createTemplate('required', REQUIRED_FINAL_TYPE);
         await expect(stack.publish('required', { instructions: 'Reply briefly.', config: TEST_MODEL_CONFIG })).rejects.toThrow(/requires a final script/);
@@ -239,7 +248,7 @@ describe('OpenRouter templates (firestore emulator)', () => {
         await stack.publish('profile', { script: PROFILE_SCRIPT });
         await stack.versionDocument('profile', 1).update({ sc: `return 'Edited';` });
         stack.promptService.clearCachedPrompt('profile');
-        await expect(stack.templateService.renderTemplate({ templateKey: 'profile', input: { profileKey: 'p/1' } })).rejects.toThrow(/not approved/);
+        await expect(stack.templateService.renderTemplate({ templateKey: 'profile', data: { profileKey: 'p/1' } })).rejects.toThrow(/not approved/);
       });
 
       it('refuses rendering a final script edited directly in Firestore', async () => {
@@ -259,7 +268,7 @@ describe('OpenRouter templates (firestore emulator)', () => {
         await stack.versionDocument('profile', 2).accessor.set({ cat: new Date(), v: 2, sc: PROFILE_SCRIPT, ah: approved?.ah, aat: approved?.aat });
         await document.update({ lv: 2, av: 2 });
         stack.promptService.clearCachedPrompt('profile');
-        await expect(stack.templateService.renderTemplate({ templateKey: 'profile', input: { profileKey: 'p/1' } })).rejects.toThrow(/not approved/);
+        await expect(stack.templateService.renderTemplate({ templateKey: 'profile', data: { profileKey: 'p/1' } })).rejects.toThrow(/not approved/);
       });
 
       it('refuses an approval hash copied from another template with the same script', async () => {
@@ -271,7 +280,7 @@ describe('OpenRouter templates (firestore emulator)', () => {
         await stack.versionDocument('other', 1).accessor.set({ cat: new Date(), v: 1, sc: PROFILE_SCRIPT, ah: approved?.ah, aat: approved?.aat });
         await other.update({ lv: 1, av: 1, s: OpenRouterPromptState.ACTIVE });
         stack.promptService.clearCachedPrompt('other');
-        await expect(stack.templateService.renderTemplate({ templateKey: 'other', input: { profileKey: 'p/1' } })).rejects.toThrow(/not approved/);
+        await expect(stack.templateService.renderTemplate({ templateKey: 'other', data: { profileKey: 'p/1' } })).rejects.toThrow(/not approved/);
       });
 
       it('refuses rendering a version whose approval was removed directly in Firestore', async () => {
@@ -280,7 +289,7 @@ describe('OpenRouter templates (firestore emulator)', () => {
         await stack.publish('profile', { script: PROFILE_SCRIPT });
         await stack.versionDocument('profile', 1).update({ ah: null, aat: null });
         stack.promptService.clearCachedPrompt('profile');
-        await expect(stack.templateService.renderTemplate({ templateKey: 'profile', input: { profileKey: 'p/1' } })).rejects.toThrow(/not approved/);
+        await expect(stack.templateService.renderTemplate({ templateKey: 'profile', data: { profileKey: 'p/1' } })).rejects.toThrow(/not approved/);
       });
 
       it('refuses rendering after the template type is changed directly in Firestore', async () => {
@@ -289,7 +298,7 @@ describe('OpenRouter templates (firestore emulator)', () => {
         await stack.publish('profile', { script: PROFILE_SCRIPT });
         await document.update({ tt: JOBS_TYPE.type });
         stack.promptService.clearCachedPrompt('profile');
-        await expect(stack.templateService.renderTemplate({ templateKey: 'profile', input: { profileKey: 'p/1' } })).rejects.toThrow(/not approved/);
+        await expect(stack.templateService.renderTemplate({ templateKey: 'profile', data: { profileKey: 'p/1' } })).rejects.toThrow(/not approved/);
       });
 
       it('refuses rendering a pinned older version edited directly in Firestore', async () => {
@@ -299,8 +308,8 @@ describe('OpenRouter templates (firestore emulator)', () => {
         await stack.publish('profile', { script: `return 'Version two';` });
         await stack.versionDocument('profile', 1).update({ sc: `return 'Edited';` });
         stack.promptService.clearCachedPrompt('profile');
-        await expect(stack.templateService.renderTemplate({ templateKey: 'profile', version: 1, input: { profileKey: 'p/1' } })).rejects.toThrow(/not approved/);
-        expect((await stack.templateService.renderTemplate({ templateKey: 'profile', input: { profileKey: 'p/1' } })).text).toBe('Version two');
+        await expect(stack.templateService.renderTemplate({ templateKey: 'profile', version: 1, data: { profileKey: 'p/1' } })).rejects.toThrow(/not approved/);
+        expect((await stack.templateService.renderTemplate({ templateKey: 'profile', data: { profileKey: 'p/1' } })).text).toBe('Version two');
       });
 
       it('refuses rendering after a required script or final script is deleted directly in Firestore', async () => {
@@ -309,7 +318,7 @@ describe('OpenRouter templates (firestore emulator)', () => {
         await stack.publish('profile', { script: PROFILE_SCRIPT });
         await stack.versionDocument('profile', 1).update({ sc: null });
         stack.promptService.clearCachedPrompt('profile');
-        await expect(stack.templateService.renderTemplate({ templateKey: 'profile', input: { profileKey: 'p/1' } })).rejects.toThrow(/requires a script/);
+        await expect(stack.templateService.renderTemplate({ templateKey: 'profile', data: { profileKey: 'p/1' } })).rejects.toThrow(/requires a script/);
 
         await stack.createTemplate('required', REQUIRED_FINAL_TYPE);
         await stack.publish('required', { instructions: 'Reply briefly.', config: TEST_MODEL_CONFIG, finalScript: `return 'Reply: ' + context.output.text;` });
@@ -332,7 +341,7 @@ describe('OpenRouter templates (firestore emulator)', () => {
           await stack.versionDocument('jobs', 1).update(edit);
           stack.promptService.clearCachedPrompt('jobs');
           const callsBeforeRender = stack.fake.callCount;
-          await expect(stack.templateService.renderTemplate({ templateKey: 'jobs', input: { groupKey: 'g/1' } })).rejects.toThrow(/not approved/);
+          await expect(stack.templateService.renderTemplate({ templateKey: 'jobs', data: { groupKey: 'g/1' } })).rejects.toThrow(/not approved/);
           expect(stack.fake.callCount).toBe(callsBeforeRender);
         });
       });
@@ -381,12 +390,12 @@ describe('OpenRouter templates (firestore emulator)', () => {
         await stack.updatePrompt('profile', { killVersions: [1] });
         const killedAt = (await stack.versionDocument('profile', 1).snapshotData())?.kat;
         expect(killedAt).toBeInstanceOf(Date);
-        await expect(stack.templateService.renderTemplate({ templateKey: 'profile', version: 1, input: { profileKey: 'p/1' } })).rejects.toThrow(/killed/);
-        expect((await stack.templateService.renderTemplate({ templateKey: 'profile', input: { profileKey: 'p/1' } })).text).toBe('Version two');
+        await expect(stack.templateService.renderTemplate({ templateKey: 'profile', version: 1, data: { profileKey: 'p/1' } })).rejects.toThrow(/killed/);
+        expect((await stack.templateService.renderTemplate({ templateKey: 'profile', data: { profileKey: 'p/1' } })).text).toBe('Version two');
 
         await stack.updatePrompt('profile', { killVersions: [1, 2] });
         expect((await stack.versionDocument('profile', 1).snapshotData())?.kat).toEqual(killedAt);
-        await expect(stack.templateService.renderTemplate({ templateKey: 'profile', input: { profileKey: 'p/1' } })).rejects.toThrow(/killed/);
+        await expect(stack.templateService.renderTemplate({ templateKey: 'profile', data: { profileKey: 'p/1' } })).rejects.toThrow(/killed/);
       });
 
       it('refuses promoting a killed version, and killing the version being promoted', async () => {
@@ -441,7 +450,7 @@ describe('OpenRouter templates (firestore emulator)', () => {
         await stack.publish('profile', { script: PROFILE_SCRIPT });
         await stack.publish('profile', { script: `return 'Version two';` });
         expect((await stack.versionDocument('profile', 1).snapshotData())?.kat).toBeUndefined();
-        expect((await stack.templateService.renderTemplate({ templateKey: 'profile', version: 1, input: { profileKey: 'p/1' } })).text).toBe('Hi ana!');
+        expect((await stack.templateService.renderTemplate({ templateKey: 'profile', version: 1, data: { profileKey: 'p/1' } })).text).toBe('Hi ana!');
       });
 
       it('kills every older version on activate when the server enables it', async () => {
@@ -460,8 +469,8 @@ describe('OpenRouter templates (firestore emulator)', () => {
         expect((await stack.versionDocument('profile', 2).snapshotData())?.kat).toBeInstanceOf(Date);
         expect((await stack.versionDocument('profile', 1).snapshotData())?.kat).toEqual(killedAt);
 
-        expect((await stack.templateService.renderTemplate({ templateKey: 'profile', input: { profileKey: 'p/1' } })).text).toBe('Version three');
-        await expect(stack.templateService.renderTemplate({ templateKey: 'profile', version: 2, input: { profileKey: 'p/1' } })).rejects.toThrow(/killed/);
+        expect((await stack.templateService.renderTemplate({ templateKey: 'profile', data: { profileKey: 'p/1' } })).text).toBe('Version three');
+        await expect(stack.templateService.renderTemplate({ templateKey: 'profile', version: 2, data: { profileKey: 'p/1' } })).rejects.toThrow(/killed/);
       });
     });
 
@@ -470,7 +479,7 @@ describe('OpenRouter templates (firestore emulator)', () => {
         const stack = buildStack();
         await stack.createTemplate('profile', PROFILE_TYPE);
         await stack.publish('profile', { script: PROFILE_SCRIPT });
-        const result = await stack.templateService.renderTemplate({ templateKey: 'profile', input: { profileKey: 'p/1' } });
+        const result = await stack.templateService.renderTemplate({ templateKey: 'profile', data: { profileKey: 'p/1' } });
         expect(result.text).toBe('Hi ana!');
         expect(result.source).toBe('store');
         expect(result.metrics?.segments).toBe(1);
@@ -478,7 +487,7 @@ describe('OpenRouter templates (firestore emulator)', () => {
 
       it('renders a code template', async () => {
         const stack = buildStack();
-        const result = await stack.templateService.renderTemplate({ templateKey: 'code-profile', input: { profileKey: 'p/1' } });
+        const result = await stack.templateService.renderTemplate({ templateKey: 'code-profile', data: { profileKey: 'p/1' } });
         expect(result.text).toBe('Code hi ana');
         expect(result.source).toBe('code');
       });
@@ -487,7 +496,7 @@ describe('OpenRouter templates (firestore emulator)', () => {
         const stack = buildStack({ modelText: 'One job on Monday.' });
         await stack.createTemplate('jobs', JOBS_TYPE);
         await stack.publish('jobs', { script: JOBS_SCRIPT, finalScript: WRAP_FINAL_SCRIPT, instructions: 'Summarize the jobs.', config: TEST_MODEL_CONFIG });
-        const result = await stack.templateService.renderTemplate({ templateKey: 'jobs', input: { groupKey: 'g/1' } });
+        const result = await stack.templateService.renderTemplate({ templateKey: 'jobs', data: { groupKey: 'g/1' } });
         expect(result.path).toBe('openrouter');
         expect(result.openRouterInput).toBe('Grade 3 teacher on Mon, Nov 3');
         expect(result.modelCalled).toBe(true);
@@ -500,7 +509,7 @@ describe('OpenRouter templates (firestore emulator)', () => {
         await stack.createTemplate('jobs', JOBS_TYPE);
         const finalScript = `const json = context.output.json;\nreturn json.headline + ' (' + json.count + ') ' + JSON.stringify(json);`;
         await stack.publish('jobs', { script: JOBS_SCRIPT, finalScript, instructions: 'Summarize the jobs.', config: TEST_JSON_MODEL_CONFIG });
-        const result = await stack.templateService.renderTemplate({ templateKey: 'jobs', input: { groupKey: 'g/1' } });
+        const result = await stack.templateService.renderTemplate({ templateKey: 'jobs', data: { groupKey: 'g/1' } });
         expect(result.text).toBe('Two jobs (2) {"headline":"Two jobs","count":2}');
       });
 
@@ -508,7 +517,7 @@ describe('OpenRouter templates (firestore emulator)', () => {
         const stack = buildStack();
         await stack.createTemplate('jobs', JOBS_TYPE);
         await stack.publish('jobs', { script: JOBS_SCRIPT, finalScript: 'return null;', instructions: 'Summarize the jobs.', config: TEST_MODEL_CONFIG });
-        const empty = await stack.templateService.renderTemplate({ templateKey: 'jobs', input: { groupKey: 'g/1' } });
+        const empty = await stack.templateService.renderTemplate({ templateKey: 'jobs', data: { groupKey: 'g/1' } });
         expect(empty.empty).toBe(true);
         expect(empty.text).toBeUndefined();
 
@@ -518,8 +527,8 @@ describe('OpenRouter templates (firestore emulator)', () => {
       it('renders DETERMINISTIC_OPENROUTER through the model', async () => {
         const stack = buildStack({ modelText: 'Reminder text.' });
         await stack.createTemplate('handoff', HANDOFF_TYPE);
-        await stack.publish('handoff', { script: `return { openRouter: { input: 'Group ' + context.input.groupKey } };`, instructions: 'Write a reminder.', config: TEST_MODEL_CONFIG });
-        const result = await stack.templateService.renderTemplate({ templateKey: 'handoff', input: { groupKey: 'g/1' } });
+        await stack.publish('handoff', { script: `return { openRouter: { input: 'Group ' + context.data.groupKey } };`, instructions: 'Write a reminder.', config: TEST_MODEL_CONFIG });
+        const result = await stack.templateService.renderTemplate({ templateKey: 'handoff', data: { groupKey: 'g/1' } });
         expect(result.text).toBe('Reminder text.');
         expect(result.finalized).toBe(false);
       });
@@ -537,7 +546,15 @@ describe('OpenRouter templates (firestore emulator)', () => {
         const stack = buildStack();
         await stack.createTemplate('profile', PROFILE_TYPE);
         await stack.publish('profile', { script: `return 'Visit evil.com now';` });
-        await expect(stack.templateService.renderTemplate({ templateKey: 'profile', input: { profileKey: 'p/1' } })).rejects.toThrow(/evil\.com/);
+        await expect(stack.templateService.renderTemplate({ templateKey: 'profile', data: { profileKey: 'p/1' } })).rejects.toThrow(/evil\.com/);
+      });
+
+      it('renders with the notification it is given, and without one', async () => {
+        const stack = buildStack();
+        await stack.createTemplate('profile', PROFILE_TYPE);
+        await stack.publish('profile', { script: NOTIFICATION_SCRIPT });
+        expect((await stack.templateService.renderTemplate({ templateKey: 'profile', data: { profileKey: 'p/1' }, notification: NOTIFICATION })).text).toBe('For ORTT on 2026-11-03');
+        expect((await stack.templateService.renderTemplate({ templateKey: 'profile', data: { profileKey: 'p/1' } })).text).toBe('No notification');
       });
 
       it('resolves a pinned version', async () => {
@@ -545,8 +562,8 @@ describe('OpenRouter templates (firestore emulator)', () => {
         await stack.createTemplate('profile', PROFILE_TYPE);
         await stack.publish('profile', { script: PROFILE_SCRIPT });
         await stack.publish('profile', { script: `return 'Version two';` });
-        expect((await stack.templateService.renderTemplate({ templateKey: 'profile', input: { profileKey: 'p/1' } })).text).toBe('Version two');
-        expect((await stack.templateService.renderTemplate({ templateKey: 'profile', version: 1, input: { profileKey: 'p/1' } })).text).toBe('Hi ana!');
+        expect((await stack.templateService.renderTemplate({ templateKey: 'profile', data: { profileKey: 'p/1' } })).text).toBe('Version two');
+        expect((await stack.templateService.renderTemplate({ templateKey: 'profile', version: 1, data: { profileKey: 'p/1' } })).text).toBe('Hi ana!');
       });
     });
 
@@ -563,6 +580,21 @@ describe('OpenRouter templates (firestore emulator)', () => {
         expect(bad.valid).toBe(false);
         expect(bad.scriptErrors?.length).toBeGreaterThan(0);
         expect(bad.output).toBeUndefined();
+      });
+
+      it('previews with the sample notification by default, and with none when it is null', async () => {
+        const stack = buildStack();
+        const document = await stack.createTemplate('profile', PROFILE_TYPE);
+        const draft = { script: NOTIFICATION_SCRIPT };
+
+        const sample = await (await stack.actions.previewOpenRouterTemplate({ key: document.key, draft }))(document);
+        expect(sample.output?.text).toBe('For SAMPLE on 2026-11-01');
+
+        const given = await (await stack.actions.previewOpenRouterTemplate({ key: document.key, draft, notification: NOTIFICATION }))(document);
+        expect(given.output?.text).toBe('For ORTT on 2026-11-03');
+
+        const none = await (await stack.actions.previewOpenRouterTemplate({ key: document.key, draft, notification: null }))(document);
+        expect(none.output?.text).toBe('No notification');
       });
 
       it('stops before the model unless callModel, feeding the final script sample or given output', async () => {

@@ -1,41 +1,162 @@
-import { type Maybe } from '@dereekb/util';
-import { ArkErrors, type Type } from 'arktype';
-import { OPENROUTER_TEMPLATE_BANNED_NAMES, OpenRouterTemplateRenderError } from './openrouter.template';
-import { type OpenRouterTemplateLoaderOutput, type OpenRouterTemplateLoaders, type OpenRouterTemplateLoadersData, type OpenRouterTemplateModelOutput, type OpenRouterTemplateTypeConfig } from './openrouter.template.type';
+import { type ISO8601DateString, type Maybe, type ModelKey } from '@dereekb/util';
+import { ArkErrors, type Type, type } from 'arktype';
+import { OPENROUTER_TEMPLATE_ACCESSOR_NAME_REGEX, OPENROUTER_TEMPLATE_BANNED_NAMES, OpenRouterTemplateRenderError } from './openrouter.template';
+import { type OpenRouterTemplateModelOutput, type OpenRouterTemplateTypeConfig, OpenRouterTemplateTypeConfigError } from './openrouter.template.type';
 
 /**
  * The deepest plain data handed to a script may nest.
  */
 export const OPENROUTER_TEMPLATE_PLAIN_DATA_MAX_DEPTH = 32;
 
+// MARK: Context
 /**
- * The context a template body runs with: the validated input and one memoized function per loader.
+ * The notification a template is rendered for, as scripts and accessors see it as `context.notification`.
+ *
+ * A template renders once per notification, so every field is the same for every recipient and safe for each of them.
+ * Recipients, send times, overrides, the creator and the box are deliberately left out.
  */
-export type OpenRouterTemplateContext<I = any, L extends OpenRouterTemplateLoaders<I> = OpenRouterTemplateLoaders<I>> = { readonly input: I } & { readonly [K in keyof L]: () => Promise<OpenRouterTemplateLoaderOutput<L[K]>> };
+export interface OpenRouterTemplateNotificationContext {
+  /**
+   * The Notification document key.
+   */
+  readonly key: ModelKey;
+  /**
+   * The notification item's template type (`n.t`), such as `'ORTT'`.
+   */
+  readonly templateType: string;
+  /**
+   * When the notification was created, as an ISO 8601 UTC string. Format a human date in an accessor, in the right time zone.
+   */
+  readonly createdAt: ISO8601DateString;
+}
+
+/**
+ * The runtime shape of {@link OpenRouterTemplateNotificationContext}. Undeclared keys are stripped.
+ */
+export const openRouterTemplateNotificationContextType = type({ key: 'string', templateType: 'string', createdAt: 'string' }) as Type<OpenRouterTemplateNotificationContext>;
+
+/**
+ * The accessors scripts call as `await context.accessor.<name>()`, keyed by name.
+ */
+export type OpenRouterTemplateAccessors<A> = { readonly [K in keyof A]: () => Promise<A[K]> };
+
+/**
+ * The context a template body runs with.
+ *
+ * At runtime it is a frozen, null-prototype `{ data, notification, accessor }`. `accessor` is itself a frozen, null-prototype
+ * object holding one memoized function per accessor.
+ */
+export interface OpenRouterTemplateContext<D = any, A = any> {
+  /**
+   * The template data: the render's data, plain-data copied and deep-frozen. Its shape is not checked at runtime: it comes
+   * from the stored notification, so treat it as untrusted input.
+   */
+  readonly data: D;
+  /**
+   * The notification the template is rendered for, or null when it is not rendered for one.
+   */
+  readonly notification: Maybe<OpenRouterTemplateNotificationContext>;
+  /**
+   * The accessors. Each runs at most once per context, and only when a script calls it.
+   */
+  readonly accessor: OpenRouterTemplateAccessors<A>;
+}
 
 /**
  * The context a final script runs with. In the modes with a body it also carries the body's context, with the same memoized
- * loaders; in {@link OpenRouterTemplateMode.OPENROUTER} mode it carries only `output`.
+ * accessors; in {@link OpenRouterTemplateMode.OPENROUTER} mode it carries only `output`.
  */
-export type OpenRouterTemplateFinalContext<I = any, L extends OpenRouterTemplateLoaders<I> = OpenRouterTemplateLoaders<I>> = Partial<OpenRouterTemplateContext<I, L>> & { readonly output: OpenRouterTemplateModelOutput };
+export type OpenRouterTemplateFinalContext<D = any, A = any> = Partial<OpenRouterTemplateContext<D, A>> & { readonly output: OpenRouterTemplateModelOutput };
+
+// MARK: Plain Data
+/**
+ * Resolves to `T` when it is plain data — strings, numbers, booleans, null, arrays and plain objects of plain data — and
+ * maps anything else (a `Date`, a `Map`, a function) to `never`, so assigning it fails to compile.
+ *
+ * Structural: a class instance whose fields are all public data passes here. The runtime plain-data copy refuses it.
+ */
+export type OpenRouterTemplatePlainData<T> =
+  T extends Maybe<string | number | boolean>
+    ? T
+    : T extends (...args: any[]) => any
+      ? never
+      : T extends readonly (infer E)[]
+        ? readonly OpenRouterTemplatePlainData<E>[]
+        : T extends object
+          ? T extends Date | Map<any, any> | Set<any> | Promise<any> | RegExp
+            ? never
+            : { readonly [K in keyof T]: OpenRouterTemplatePlainData<T[K]> }
+          : never;
 
 /**
- * Config for {@link openRouterTemplateContext}.
+ * The result type of a context factory: what each accessor resolves, keyed by accessor name. Plain data only.
  */
-export interface OpenRouterTemplateContextConfig<I = any, L extends OpenRouterTemplateLoaders<I> = OpenRouterTemplateLoaders<I>> {
+export type OpenRouterTemplateAccessorResults<A> = { readonly [K in keyof A]: OpenRouterTemplatePlainData<A[K]> };
+
+// MARK: Context Factory
+/**
+ * What a context is built from: the template data and, when rendering for a notification, the notification.
+ */
+export interface OpenRouterTemplateContextSource<D = unknown> {
   /**
-   * The template type.
+   * The template data, plain-data copied and frozen but not shape-checked. An accessor validates what it uses from it.
    */
-  readonly typeConfig: OpenRouterTemplateTypeConfig<I, L>;
+  readonly data: D;
   /**
-   * The raw template input. Validated against the type's input shape, with undeclared keys stripped.
+   * The notification the template is rendered for.
    */
-  readonly input: unknown;
+  readonly notification?: Maybe<OpenRouterTemplateNotificationContext>;
+}
+
+/**
+ * Server code that produces one accessor's result from the render's frozen source.
+ *
+ * It returns ONLY what scripts may see: nothing strips extra keys from the result. Format dates server-side, in the right
+ * time zone. For a type with `allowMultipleRecipients`, it may only return data that EVERY recipient of the message may see.
+ */
+export type OpenRouterTemplateAccessorFunction<D, R> = (source: OpenRouterTemplateContextSource<D>) => Promise<R>;
+
+/**
+ * The accessor functions of a context factory, keyed by accessor name.
+ */
+export type OpenRouterTemplateAccessorFunctions<D, A> = { readonly [K in keyof A]: OpenRouterTemplateAccessorFunction<D, A[K]> };
+
+/**
+ * Config for {@link openRouterTemplateContextFactory}.
+ */
+export interface OpenRouterTemplateContextFactoryConfig<D, A> {
   /**
-   * Data that stands in for a loader's output, keyed by loader name. Used by preview. The data is checked the same way a real
-   * loader's output is.
+   * The accessors, keyed by the plain name scripts call: `context.accessor.<name>()`.
    */
-  readonly loaderOverrides?: Maybe<Partial<OpenRouterTemplateLoadersData<L>>>;
+  readonly accessors?: Maybe<OpenRouterTemplateAccessorFunctions<D, A>>;
+}
+
+/**
+ * The params a context factory builds one context from.
+ */
+export interface OpenRouterTemplateContextFactoryParams extends OpenRouterTemplateContextSource<unknown> {
+  /**
+   * Data that stands in for accessors, keyed by accessor name. Used by preview. It is copied and frozen the same way an
+   * accessor's result is.
+   */
+  readonly accessorOverrides?: Maybe<Readonly<Record<string, unknown>>>;
+}
+
+/**
+ * Builds the context a template body runs with. Created by {@link openRouterTemplateContextFactory}.
+ *
+ * Share one factory between template types with the same data, or extend one by spreading its `accessors` into a new factory.
+ */
+export interface OpenRouterTemplateContextFactory<D = any, A = any> {
+  (params: OpenRouterTemplateContextFactoryParams): OpenRouterTemplateContext<D, A>;
+  /**
+   * The accessor functions. Looked up when a script calls an accessor, so a spec may spy on them.
+   */
+  readonly accessors: OpenRouterTemplateAccessorFunctions<D, A>;
+  /**
+   * The accessor names, read by the script checker and the review.
+   */
+  readonly accessorNames: ReadonlySet<string>;
 }
 
 /**
@@ -172,43 +293,106 @@ export function sanitizeOpenRouterTemplateData<T>(value: unknown, shape: Type<T>
 }
 
 /**
- * Builds the context a template body runs with.
+ * Creates a context factory. Call it where the factory is declared, so a bad factory fails at startup.
  *
- * - The context is a frozen object with a null prototype: `{ input, loadX… }`.
- * - The input is validated against the type's input shape, stripped of undeclared keys, deep-copied and deep-frozen.
- * - Each loader runs at most once per context (memoized), on the validated input, and only when a script calls it. Its
- *   output is checked to be plain data, then deep-copied, validated against the loader's output shape, stripped and frozen.
+ * Each context the factory builds:
+ * - is a frozen object with a null prototype: `{ data, notification, accessor }`;
+ * - carries the data plain-data copied and deep-frozen, but not shape-checked: type the data `D` through the accessors'
+ *   source, and validate in an accessor what it uses. An undefined data becomes null;
+ * - carries the notification validated, stripped and frozen, or null when there is none;
+ * - runs each accessor at most once (memoized), with the frozen `{ data, notification }` source, and only when a script calls
+ *   it. Its result is plain-data copied and deep-frozen, but neither validated nor stripped: accessors are server code, and
+ *   their result type is checked at compile time. An undefined result becomes null.
  *
- * @param config - The type, the raw input and any loader overrides.
- * @returns The context.
- * @throws {OpenRouterTemplateRenderError} When the input is invalid. A loader's errors surface when it is called.
+ * Refuses an accessor name that is not plain camelCase (`profile`, `upcomingJobs`) or is in
+ * {@link OPENROUTER_TEMPLATE_BANNED_NAMES}, and an accessor that is not a function.
+ *
+ * @param config - The accessors.
+ * @returns The factory.
+ * @throws {OpenRouterTemplateTypeConfigError} When the config is invalid.
  */
-export function openRouterTemplateContext<I, L extends OpenRouterTemplateLoaders<I>>(config: OpenRouterTemplateContextConfig<I, L>): OpenRouterTemplateContext<I, L> {
-  const { typeConfig, input, loaderOverrides } = config;
-  const context: Record<string, unknown> = Object.create(null);
-  let validatedInput: Maybe<I>;
+export function openRouterTemplateContextFactory<D, A extends OpenRouterTemplateAccessorResults<A> = {}>(config: OpenRouterTemplateContextFactoryConfig<D, A>): OpenRouterTemplateContextFactory<D, A> {
+  const accessors = { ...config.accessors } as OpenRouterTemplateAccessorFunctions<D, A>;
+  const accessorFunctions = accessors as Record<string, unknown>;
+  const accessorNames: ReadonlySet<string> = new Set(Object.keys(accessors));
+  const errors: string[] = [];
 
-  if (typeConfig.input != null) {
-    validatedInput = sanitizeOpenRouterTemplateData(input, typeConfig.input, 'The template input');
-    context['input'] = validatedInput;
-  }
+  accessorNames.forEach((name) => {
+    if (!OPENROUTER_TEMPLATE_ACCESSOR_NAME_REGEX.test(name)) {
+      errors.push(`Accessor "${name}" must be a plain camelCase name, such as "profile".`);
+    } else if (OPENROUTER_TEMPLATE_BANNED_NAMES.has(name)) {
+      errors.push(`"${name}" is a banned name and cannot be an accessor name.`);
+    }
 
-  Object.entries(typeConfig.loaders ?? {}).forEach(([name, loader]) => {
-    let loaded: Maybe<Promise<unknown>>;
-
-    context[name] = () => {
-      if (loaded == null) {
-        const hasOverride = loaderOverrides != null && Object.hasOwn(loaderOverrides, name);
-        loaded = Promise.resolve()
-          .then(() => (hasOverride ? (loaderOverrides as Record<string, unknown>)[name] : loader.load(validatedInput as I)))
-          .then((x) => sanitizeOpenRouterTemplateData(x, loader.output, `Loader ${name}'s output`));
-      }
-
-      return loaded;
-    };
+    if (typeof accessorFunctions[name] !== 'function') {
+      errors.push(`Accessor "${name}" must be a function.`);
+    }
   });
 
-  return Object.freeze(context) as OpenRouterTemplateContext<I, L>;
+  if (errors.length > 0) {
+    throw new OpenRouterTemplateTypeConfigError('context factory', errors);
+  }
+
+  function createContext(params: OpenRouterTemplateContextFactoryParams): OpenRouterTemplateContext<D, A> {
+    const { accessorOverrides } = params;
+    const rawData = params.data === undefined ? null : params.data;
+    const data = deepFreezeOpenRouterTemplateData(copyOpenRouterTemplatePlainData(rawData, 'The template data'));
+    const notification = params.notification == null ? null : sanitizeOpenRouterTemplateData(params.notification, openRouterTemplateNotificationContextType, 'The notification');
+    const source: OpenRouterTemplateContextSource<D> = Object.freeze({ data: data as D, notification });
+    const accessor: Record<string, unknown> = Object.create(null);
+
+    accessorNames.forEach((name) => {
+      let loaded: Maybe<Promise<unknown>>;
+
+      accessor[name] = () => {
+        if (loaded == null) {
+          const hasOverride = accessorOverrides != null && Object.hasOwn(accessorOverrides, name);
+          loaded = Promise.resolve()
+            .then(() => (hasOverride ? (accessorOverrides as Readonly<Record<string, unknown>>)[name] : (accessorFunctions[name] as OpenRouterTemplateAccessorFunction<D, unknown>)(source)))
+            .then((x) => deepFreezeOpenRouterTemplateData(copyOpenRouterTemplatePlainData(x === undefined ? null : x, `Accessor ${name}'s result`)));
+        }
+
+        return loaded;
+      };
+    });
+
+    const context: Record<string, unknown> = Object.create(null);
+    context['data'] = data;
+    context['notification'] = notification;
+    context['accessor'] = Object.freeze(accessor);
+    return Object.freeze(context) as unknown as OpenRouterTemplateContext<D, A>;
+  }
+
+  return Object.assign(createContext, { accessors, accessorNames });
+}
+
+/**
+ * The context factory of a template type that declares none: no accessors.
+ */
+const DEFAULT_OPENROUTER_TEMPLATE_CONTEXT_FACTORY: OpenRouterTemplateContextFactory = /* @__PURE__ */ openRouterTemplateContextFactory({});
+
+/**
+ * Config for {@link openRouterTemplateContext}.
+ */
+export interface OpenRouterTemplateContextConfig<D = any, A = any> extends OpenRouterTemplateContextFactoryParams {
+  /**
+   * The template type.
+   */
+  readonly typeConfig: OpenRouterTemplateTypeConfig<D, A>;
+}
+
+/**
+ * Builds the context a template body runs with, using the type's context factory, or a factory with no accessors when the
+ * type declares none.
+ *
+ * @param config - The type, the raw data, the notification and any accessor overrides.
+ * @returns The context.
+ * @throws {OpenRouterTemplateRenderError} When the data or notification is invalid. An accessor's errors surface when it is called.
+ */
+export function openRouterTemplateContext<D, A>(config: OpenRouterTemplateContextConfig<D, A>): OpenRouterTemplateContext<D, A> {
+  const { typeConfig, ...params } = config;
+  const factory = (typeConfig.contextFactory ?? DEFAULT_OPENROUTER_TEMPLATE_CONTEXT_FACTORY) as OpenRouterTemplateContextFactory<D, A>;
+  return factory(params);
 }
 
 /**
@@ -219,7 +403,7 @@ export function openRouterTemplateContext<I, L extends OpenRouterTemplateLoaders
  *   uses a `json_schema` text format.
  * @returns A frozen, null-prototype context carrying the body context's members plus a frozen `output`.
  */
-export function openRouterTemplateFinalContext<I, L extends OpenRouterTemplateLoaders<I>>(bodyContext: Maybe<OpenRouterTemplateContext<I, L>>, output: OpenRouterTemplateModelOutput): OpenRouterTemplateFinalContext<I, L> {
+export function openRouterTemplateFinalContext<D, A>(bodyContext: Maybe<OpenRouterTemplateContext<D, A>>, output: OpenRouterTemplateModelOutput): OpenRouterTemplateFinalContext<D, A> {
   const context: Record<string, unknown> = Object.create(null);
 
   if (bodyContext != null) {
@@ -234,7 +418,7 @@ export function openRouterTemplateFinalContext<I, L extends OpenRouterTemplateLo
   }
 
   context['output'] = Object.freeze(frozenOutput);
-  return Object.freeze(context) as OpenRouterTemplateFinalContext<I, L>;
+  return Object.freeze(context) as OpenRouterTemplateFinalContext<D, A>;
 }
 
 /**

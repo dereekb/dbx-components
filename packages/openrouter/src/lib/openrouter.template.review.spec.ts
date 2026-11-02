@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { TEST_GOOD_TEMPLATE_SCRIPTS, TEST_JOB_REMINDER_TEMPLATE_TYPE, TEST_PROFILE_TEXT_TEMPLATE_TYPE } from '../test/openrouter.template.fixture';
+import { TEST_GOOD_TEMPLATE_SCRIPTS, TEST_JOB_REMINDER_TEMPLATE_TYPE, TEST_OPENROUTER_TEMPLATE_TYPE, TEST_PROFILE_TEXT_TEMPLATE_TYPE } from '../test/openrouter.template.fixture';
 import { openRouterDecisionRequest } from './openrouter.decision';
 import { validateOpenRouterDecisionQuestions } from './openrouter.decision.question';
 import { OPENROUTER_TEMPLATE_REVIEW_QUESTIONS, openRouterTemplateReviewPromptDefinition, openRouterTemplateReviewQuestions, openRouterTemplateReviewState, readOpenRouterTemplateReviewVerdict } from './openrouter.template.review';
@@ -34,8 +34,17 @@ describe('openRouterTemplateReviewState()', () => {
     expect(state.script).toBe('return "x";');
     expect(state.finalScript).toBe('');
     expect(state.instructions).toBe('Be brief.\n\n[user] Example');
-    expect(state.declaredFields).toContain('loadProfile.username');
+    expect(state.declaredFields).toEqual(expect.arrayContaining(['data', 'accessor.profile', 'notification.key', 'notification.templateType', 'notification.createdAt']));
     expect(state.sampleText).toBe('x');
+  });
+
+  it('should list the fields the samples carry, every accessor and the notification fields', () => {
+    const { declaredFields } = openRouterTemplateReviewState({ typeConfig: TEST_JOB_REMINDER_TEMPLATE_TYPE, script: 'return "x";' });
+    expect(declaredFields).toEqual(expect.arrayContaining(['data.workerKey', 'accessor.worker', 'accessor.worker.firstName', 'accessor.jobs', 'accessor.jobs[].title', 'accessor.jobs[].school.name', 'notification.createdAt']));
+  });
+
+  it('should list no fields for an OPENROUTER type', () => {
+    expect(openRouterTemplateReviewState({ typeConfig: TEST_OPENROUTER_TEMPLATE_TYPE, finalScript: 'return context.output.text;' }).declaredFields).toEqual([]);
   });
 });
 

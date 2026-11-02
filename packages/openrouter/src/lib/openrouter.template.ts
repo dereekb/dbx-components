@@ -40,7 +40,8 @@ export enum OpenRouterTemplateMode {
 /**
  * Which script of a template is being read or validated.
  *
- * - `body`: the first script (or code `render`), which runs on the typed template input.
+ * - `body`: the first script (or code `render`), which runs on the template's context: its data, the notification it is
+ *   rendered for and its accessors.
  * - `final`: the optional script (or code `finalize`) that runs after a model call and turns its output into the text.
  */
 export type OpenRouterTemplateScriptPhase = 'body' | 'final';
@@ -276,7 +277,7 @@ export const OPENROUTER_TEMPLATE_SCRIPT_SECOND_ARGUMENT_CALLBACK_METHODS: Readon
 
 /**
  * Names that are refused wherever they appear in a script — as a member, an object key, a pattern key or a binding — and
- * that no template type may declare as a field or loader name.
+ * that no data-shape field or accessor may be named.
  *
  * The first group is the decided set. The second reaches reflection or engine hooks.
  */
@@ -286,26 +287,12 @@ export const OPENROUTER_TEMPLATE_BANNED_NAMES: ReadonlySet<string> = new Set(['c
  * Members deliberately left out of {@link OPENROUTER_TEMPLATE_SCRIPT_BUILT_IN_MEMBERS}: ones that amplify size or mutate,
  * and obfuscation or reflection helpers.
  *
- * Listed so the exclusion is visible and tested, not because the validator needs it — anything not allowlisted is refused.
+ * Listed so the exclusion is visible and tested, not because the validator needs it — a method that is not allowlisted can
+ * never be called.
  */
 export const OPENROUTER_TEMPLATE_EXCLUDED_MEMBER_NAMES: readonly string[] = ['repeat', 'padStart', 'padEnd', 'fill', 'sort', 'reverse', 'splice', 'push', 'from', 'of', 'fromCharCode', 'fromCodePoint', 'raw', 'parse'];
 
 /**
- * The keys a body's return value may use.
+ * Matches a valid accessor name: a plain camelCase name such as `profile` or `upcomingJobs`.
  */
-export const OPENROUTER_TEMPLATE_BODY_RETURN_KEYS: readonly string[] = ['text', 'openRouter', 'input'];
-
-/**
- * The keys a final script's return value may use.
- */
-export const OPENROUTER_TEMPLATE_FINAL_RETURN_KEYS: readonly string[] = ['text'];
-
-/**
- * The names the final-script context adds: `output` and its members.
- */
-export const OPENROUTER_TEMPLATE_FINAL_OUTPUT_NAMES: readonly string[] = ['output', 'text', 'json'];
-
-/**
- * Matches a valid loader name: `load` followed by an upper-case letter.
- */
-export const OPENROUTER_TEMPLATE_LOADER_NAME_REGEX = /^load[A-Z][A-Za-z0-9]*$/;
+export const OPENROUTER_TEMPLATE_ACCESSOR_NAME_REGEX = /^[a-z][A-Za-z0-9]*$/;

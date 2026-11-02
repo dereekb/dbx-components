@@ -17,7 +17,7 @@ import { demoCallModel } from '../model/crud.functions';
  *
  * The openrouter package's emulator spec proves the template service and its actions in-process. What only the app can
  * prove is the wiring around them: the callModel operations, the template service the app builds from its profile
- * loaders, the template-text notification type it registers, and the notification send loop's recipient limit.
+ * context factories, the template-text notification type it registers, and the notification send loop's recipient limit.
  *
  * Nothing reaches OpenRouter. The app's own client is answered locally (see {@link installFakeOpenRouter}), and texts go
  * to a capturing text send service instead of the ignoring one the test environment configures.
@@ -29,21 +29,26 @@ const PHONE_NUMBER_B: E164PhoneNumber = '+12085550102';
 const PROFILE_USERNAME = 'jordan';
 
 /**
- * The username in the demo profile types' sample loader data, which a preview renders with by default.
+ * The username in the demo profile types' sample accessor data, which a preview renders with by default.
  */
 const SAMPLE_PROFILE_USERNAME = 'ana';
 
-const PROFILE_TEXT_SCRIPT = `const profile = await context.loadProfile();\nreturn 'Hi ' + profile.username + '! Your demo profile is ready.';`;
+const PROFILE_TEXT_SCRIPT = `const profile = await context.accessor.profile();\nreturn 'Hi ' + profile.username + '! Your demo profile is ready.';`;
 const PROFILE_TEXT_BODY = `Hi ${PROFILE_USERNAME}! Your demo profile is ready.`;
 const SAMPLE_PROFILE_TEXT_BODY = `Hi ${SAMPLE_PROFILE_USERNAME}! Your demo profile is ready.`;
 
 /**
  * Returns null, which means "no message", when the profile has no bio.
  */
-const PROFILE_BIO_SCRIPT = `const profile = await context.loadProfile();\nif (!profile.bio) { return null; }\nreturn 'Your bio: ' + profile.bio;`;
+const PROFILE_BIO_SCRIPT = `const profile = await context.accessor.profile();\nif (!profile.bio) { return null; }\nreturn 'Your bio: ' + profile.bio;`;
 
-const ANNOUNCEMENT_SCRIPT = `const profile = await context.loadProfile();\nreturn { openRouter: { input: 'Announce that ' + profile.username + ' updated their profile.' } };`;
+const ANNOUNCEMENT_SCRIPT = `const profile = await context.accessor.profile();\nreturn { openRouter: { input: 'Announce that ' + profile.username + ' updated their profile.' } };`;
 const ANNOUNCEMENT_FINAL_SCRIPT = `return 'Demo news: ' + context.output.text;`;
+
+/**
+ * Reads the notification the template is rendered for.
+ */
+const NOTIFICATION_SCRIPT = `return context.notification ? 'Sent for ' + context.notification.templateType : null;`;
 const ANNOUNCEMENT_MODEL_TEXT = `${PROFILE_USERNAME} updated their profile today.`;
 const ANNOUNCEMENT_BODY = `Demo news: ${ANNOUNCEMENT_MODEL_TEXT}`;
 
@@ -276,8 +281,8 @@ demoApiFunctionContextFactory((f) => {
             expect(uploaded.review?.flagged).toEqual([]);
             expect(fakeOpenRouter.urls.some((x) => x.endsWith(FAKE_OPENROUTER_SYSTEM_ONE_PATH))).toBe(true);
 
-            // the preview runs the stored version with the type's sample loader data, with no model call
-            const preview = (await u.callWrappedFunction(demoCallModelWrappedFn, onCallInvokeModelParams(openRouterPromptIdentity, { key: promptKey, version: 1, input: { profileKey: p.documentKey } }, 'previewTemplate'))) as PreviewOpenRouterTemplateResult;
+            // the preview runs the stored version with the type's sample accessor data, with no model call
+            const preview = (await u.callWrappedFunction(demoCallModelWrappedFn, onCallInvokeModelParams(openRouterPromptIdentity, { key: promptKey, version: 1, data: { profileKey: p.documentKey } }, 'previewTemplate'))) as PreviewOpenRouterTemplateResult;
             expect(preview.valid).toBe(true);
             expect(preview.output?.text).toBe(SAMPLE_PROFILE_TEXT_BODY);
             expect(preview.output?.encoding).toBe('gsm7');
@@ -290,7 +295,7 @@ demoApiFunctionContextFactory((f) => {
             expect(promoted.av).toBe(1);
             expect(promoted.s).toBe(OpenRouterPromptState.ACTIVE);
 
-            const rendered = await templateService().renderTemplate({ templateKey: key, input: { profileKey: p.documentKey } });
+            const rendered = await templateService().renderTemplate({ templateKey: key, data: { profileKey: p.documentKey } });
             expect(rendered.text).toBe(PROFILE_TEXT_BODY);
             expect(fakeOpenRouter.modelCallCount).toBe(0);
           });
@@ -314,7 +319,7 @@ demoApiFunctionContextFactory((f) => {
               }
 
               async function sendTemplateTextNotification(templateKey: string) {
-                const template = createOpenRouterTemplateTextNotificationTemplate({ templateKey, input: { profileKey: p.documentKey }, notificationModel: p.document });
+                const template = createOpenRouterTemplateTextNotificationTemplate({ templateKey, data: { profileKey: p.documentKey }, notificationModel: p.document });
                 const { notificationDocument } = await createNotificationDocument({ template, accessor: f.demoFirestoreCollections.notificationCollectionFactory(nb.document).documentAccessor() });
 
                 const sendNotification = await f.notificationServerActions.sendNotification({ key: notificationDocument.key });
@@ -361,6 +366,16 @@ demoApiFunctionContextFactory((f) => {
                   expect(notification.ns).toBe(NotificationSendState.SENT);
                 });
 
+                it('should render with the notification it is sent for', async () => {
+                  const key = nextTemplateKey('profile-notification');
+                  await publishTemplate({ key, templateType: DEMO_PROFILE_TEXT_TEMPLATE_TYPE, script: NOTIFICATION_SCRIPT });
+
+                  const { result } = await sendTemplateTextNotification(key);
+
+                  expect(result.success).toBe(true);
+                  expect(capturedTexts).toEqual([{ to: PHONE_NUMBER_A, body: `Sent for ${OPENROUTER_TEMPLATE_TEXT_NOTIFICATION_TEMPLATE_TYPE}` }]);
+                });
+
                 it('should send nothing when the script returns null', async () => {
                   const key = nextTemplateKey('profile-bio');
                   await publishTemplate({ key, templateType: DEMO_PROFILE_TEXT_TEMPLATE_TYPE, script: PROFILE_BIO_SCRIPT });
@@ -401,9 +416,9 @@ demoApiFunctionContextFactory((f) => {
                       const key = nextTemplateKey('profile-announcement');
                       await publishTemplate({ key, templateType: DEMO_PROFILE_ANNOUNCEMENT_TEXT_TEMPLATE_TYPE, script: ANNOUNCEMENT_SCRIPT, finalScript: ANNOUNCEMENT_FINAL_SCRIPT, instructions: 'Write a one sentence announcement.' });
 
-                      const loader = templateService().typeConfigService.configForTemplateType(DEMO_PROFILE_ANNOUNCEMENT_TEXT_TEMPLATE_TYPE).loaders?.['loadProfile'];
-                      expect(loader).toBeDefined();
-                      const loadSpy = vi.spyOn(loader as NonNullable<typeof loader>, 'load');
+                      const accessors = templateService().typeConfigService.configForTemplateType(DEMO_PROFILE_ANNOUNCEMENT_TEXT_TEMPLATE_TYPE).contextFactory?.accessors;
+                      expect(accessors).toBeDefined();
+                      const loadSpy = vi.spyOn(accessors as NonNullable<typeof accessors>, 'profile');
 
                       fakeOpenRouter.modelText = ANNOUNCEMENT_MODEL_TEXT;
                       const modelCallsBeforeSend = fakeOpenRouter.modelCallCount;

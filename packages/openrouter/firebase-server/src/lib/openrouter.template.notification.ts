@@ -1,4 +1,5 @@
 import { type NotificationItemMetadata, type NotificationMessage, type NotificationMessageFunctionFactory, type NotificationMessageFunctionFactoryConfig, type NotificationMessageInputContext, NotificationMessageFlag, notificationMessageFunction } from '@dereekb/firebase';
+import { type OpenRouterTemplateNotificationContext } from '@dereekb/openrouter';
 import { type OpenRouterTemplateTextNotificationData } from '@dereekb/openrouter/firebase';
 import { type Maybe, type PromiseOrValue } from '@dereekb/util';
 import { type OpenRouterTemplateRenderResult, type OpenRouterTemplateService, type RenderOpenRouterTemplateParams } from './openrouter.template.service';
@@ -47,7 +48,7 @@ export interface OpenRouterTemplateNotificationMessageFunctionFactoryConfig<D ex
    * Called once per notification, before recipients are expanded, so the params can never depend on the recipient. Every
    * recipient of the notification gets the identical body.
    *
-   * Recipient rule: for a template whose type has `allowMultipleRecipients`, the template's loaders may only return data that
+   * Recipient rule: for a template whose type has `allowMultipleRecipients`, the type's accessors may only return data that
    * EVERY recipient of the notification may see. When the content has to differ per person, create one notification per
    * recipient instead. A template of a type without `allowMultipleRecipients` sends nothing when the notification would reach
    * more than one person.
@@ -81,6 +82,18 @@ export function defaultOpenRouterTemplateNotificationBuildMessage<D extends Noti
 }
 
 /**
+ * Returns the notification a template is rendered for, as scripts see it as `context.notification`: the notification key, the
+ * item's template type and the creation time as an ISO 8601 UTC string. Every field is the same for each recipient.
+ *
+ * @param config - The notification item and the notification.
+ * @returns The notification context.
+ */
+export function openRouterTemplateNotificationContextForNotification(config: Pick<NotificationMessageFunctionFactoryConfig, 'item' | 'notification'>): OpenRouterTemplateNotificationContext {
+  const { item, notification } = config;
+  return { key: notification.key, templateType: item.t, createdAt: notification.cat.toISOString() };
+}
+
+/**
  * Creates a {@link NotificationMessageFunctionFactory} that sends a rendered message template.
  *
  * The template is rendered ONCE per notification, inside the factory and before recipients are expanded. The returned
@@ -90,6 +103,8 @@ export function defaultOpenRouterTemplateNotificationBuildMessage<D extends Noti
  *
  * Recipient limit: the message function's `maxRecipients` is 1 unless the template's type has `allowMultipleRecipients`, so a
  * single-recipient template never reaches two people by accident (a box with several subscribers, explicit or global recipients).
+ *
+ * Every render gets the notification as `context.notification`, built by {@link openRouterTemplateNotificationContextForNotification}.
  *
  * An empty render result sends nothing ({@link NotificationMessageFlag.DO_NOT_SEND}).
  *
@@ -102,7 +117,7 @@ export function openRouterTemplateNotificationMessageFunctionFactory<D extends N
 
   return async (factoryConfig: NotificationMessageFunctionFactoryConfig<D>) => {
     const renderParams = await renderParamsForItem(factoryConfig);
-    const renderResult = renderParams ? await templateService.renderTemplate(renderParams) : undefined;
+    const renderResult = renderParams ? await templateService.renderTemplate({ ...renderParams, notification: openRouterTemplateNotificationContextForNotification(factoryConfig) }) : undefined;
     const text = renderResult?.empty === false ? renderResult.text : undefined;
     const allowMultipleRecipients = renderResult ? templateService.typeConfigService.configForTemplateType(renderResult.templateType).allowMultipleRecipients === true : false;
 
@@ -132,7 +147,7 @@ export type OpenRouterTemplateTextNotificationMessageFunctionFactoryConfig = Omi
  * Creates the {@link NotificationMessageFunctionFactory} of the template-text notification type
  * (`OPENROUTER_TEMPLATE_TEXT_NOTIFICATION_TEMPLATE_TYPE`). It renders the template named by the notification's data (`n.d`).
  *
- * Recipient rule: see {@link openRouterTemplateNotificationMessageFunctionFactory}. Loaders of a multi-recipient template may only
+ * Recipient rule: see {@link openRouterTemplateNotificationMessageFunctionFactory}. Accessors of a multi-recipient type may only
  * return data every recipient may see; create one notification per recipient when the content differs.
  *
  * @param config - The template service and the optional message builder.
@@ -146,7 +161,7 @@ export function openRouterTemplateTextNotificationMessageFunctionFactory(config:
       let params: Maybe<RenderOpenRouterTemplateParams>;
 
       if (data?.k) {
-        params = { templateKey: data.k, version: data.v, input: data.i, trace: { notificationKey: notification.key } };
+        params = { templateKey: data.k, version: data.v, data: data.i, trace: { notificationKey: notification.key } };
       }
 
       return params;

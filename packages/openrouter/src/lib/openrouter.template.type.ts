@@ -1,42 +1,7 @@
 import { type Maybe, arrayToObject, typedConfigRegistry } from '@dereekb/util';
 import { type Type } from 'arktype';
-import { OPENROUTER_TEMPLATE_BANNED_NAMES, OPENROUTER_TEMPLATE_LOADER_NAME_REGEX, OPENROUTER_TEMPLATE_MODES, OpenRouterTemplateMode, type OpenRouterTemplateTypeKey } from './openrouter.template';
-
-/**
- * A loader a template type pre-registers in code.
- *
- * A loader takes NO script arguments: it derives everything it needs from the validated template input. Its output is
- * checked to be plain data, deep-copied, validated against `output` and stripped of undeclared keys before a script sees it.
- *
- * For a type with `allowMultipleRecipients`, a loader may only return data that EVERY recipient of the message may see.
- */
-export interface OpenRouterTemplateLoader<I = any, O = any> {
-  /**
-   * The declared shape of the loaded data. JSON-only: pre-format dates and money as strings.
-   */
-  readonly output: Type<O>;
-  /**
-   * Loads the data for one render. Called at most once per render, and only when a script asks for it.
-   *
-   * @param input - The validated template input.
-   */
-  load(input: I): Promise<O>;
-}
-
-/**
- * The loaders of a template type, keyed by name. Every name matches `load[A-Z]…`.
- */
-export type OpenRouterTemplateLoaders<I = any> = Readonly<Record<string, OpenRouterTemplateLoader<I>>>;
-
-/**
- * The output type of a loader.
- */
-export type OpenRouterTemplateLoaderOutput<L> = L extends OpenRouterTemplateLoader<any, infer O> ? O : never;
-
-/**
- * The output of every loader in a record, keyed by loader name.
- */
-export type OpenRouterTemplateLoadersData<L extends OpenRouterTemplateLoaders> = { readonly [K in keyof L]: OpenRouterTemplateLoaderOutput<L[K]> };
+import { OPENROUTER_TEMPLATE_MODES, OpenRouterTemplateMode, type OpenRouterTemplateTypeKey } from './openrouter.template';
+import { type OpenRouterTemplateContextFactory, type OpenRouterTemplateNotificationContext } from './openrouter.template.context';
 
 /**
  * The output rules every rendered message of a type must meet. Model-written text gets the same checks as script text.
@@ -79,15 +44,20 @@ export interface OpenRouterTemplateModelOutput {
 /**
  * Sample data for a type, used by preview and by the review.
  */
-export interface OpenRouterTemplateSamples<I = any, L extends OpenRouterTemplateLoaders<I> = OpenRouterTemplateLoaders<I>> {
+export interface OpenRouterTemplateSamples<D = any, A = any> {
   /**
-   * A sample template input.
+   * Sample template data, read by scripts as `context.data`.
    */
-  readonly input: I;
+  readonly data?: Maybe<D>;
   /**
-   * Sample loader outputs, standing in for the real loaders.
+   * A sample notification, read by scripts as `context.notification`.
    */
-  readonly loaders: Partial<OpenRouterTemplateLoadersData<L>>;
+  readonly notification?: Maybe<OpenRouterTemplateNotificationContext>;
+  /**
+   * Sample accessor results, keyed by accessor name, standing in for the real accessors. An accessor without a sample runs
+   * for real in preview.
+   */
+  readonly accessor?: Maybe<Partial<A>>;
   /**
    * A sample model output, so a final script can be rendered without calling the model.
    */
@@ -97,10 +67,10 @@ export interface OpenRouterTemplateSamples<I = any, L extends OpenRouterTemplate
 /**
  * A template type, registered in code.
  *
- * The type is the security and authoring contract of every template of that type: it declares the input, the loaders and
- * their output shapes, the mode and the output rules. A stored template can change its script, never its type's config.
+ * The type is the security and authoring contract of every template of that type: it declares the context factory, the mode
+ * and the output rules. A stored template can change its script, never its type's config.
  */
-export interface OpenRouterTemplateTypeConfig<I = any, L extends OpenRouterTemplateLoaders<I> = OpenRouterTemplateLoaders<I>> {
+export interface OpenRouterTemplateTypeConfig<D = any, A = any> {
   /**
    * The type key.
    */
@@ -114,18 +84,16 @@ export interface OpenRouterTemplateTypeConfig<I = any, L extends OpenRouterTempl
    */
   readonly purpose: string;
   /**
-   * How templates of this type turn their input into text.
+   * How templates of this type turn their context into text.
    */
   readonly mode: OpenRouterTemplateMode;
   /**
-   * The template input's shape. Required for every mode except {@link OpenRouterTemplateMode.OPENROUTER}, which takes none.
-   * JSON-only.
+   * Builds the context scripts see: `context.data`, `context.notification` and `context.accessor`. Created with
+   * {@link openRouterTemplateContextFactory}. Not allowed for {@link OpenRouterTemplateMode.OPENROUTER}, which runs no body.
+   *
+   * Optional for every other mode: without one, the context has the data and no accessors.
    */
-  readonly input?: Maybe<Type<I>>;
-  /**
-   * The pre-registered loaders. Not allowed for {@link OpenRouterTemplateMode.OPENROUTER}.
-   */
-  readonly loaders?: Maybe<L>;
+  readonly contextFactory?: Maybe<OpenRouterTemplateContextFactory<D, A>>;
   /**
    * The output rules.
    */
@@ -134,7 +102,7 @@ export interface OpenRouterTemplateTypeConfig<I = any, L extends OpenRouterTempl
    * Whether this type is GENERIC text that may go to several people in one notification. Defaults to false: a notification
    * rendered from a single-recipient type that would reach more than one person sends nothing.
    *
-   * Set it only when every loader returns data that EVERY recipient may see. When content has to differ per person, create
+   * Set it only when every accessor of the type's context factory returns data that EVERY recipient may see. When content has to differ per person, create
    * one notification per recipient instead. Templates inherit this from their type; it can never be set from the store.
    */
   readonly allowMultipleRecipients?: Maybe<boolean>;
@@ -145,7 +113,7 @@ export interface OpenRouterTemplateTypeConfig<I = any, L extends OpenRouterTempl
   /**
    * Sample data for preview and review.
    */
-  readonly samples?: Maybe<OpenRouterTemplateSamples<I, L>>;
+  readonly samples?: Maybe<OpenRouterTemplateSamples<D, A>>;
 }
 
 /**
@@ -185,28 +153,6 @@ export function openRouterTemplateJsonSchema(shape: Type<unknown>): object {
 }
 
 /**
- * The field names and paths a template type declares.
- */
-export interface OpenRouterTemplateFieldNames {
-  /**
-   * Every property name declared anywhere in the input or a loader output, plus `input` and the loader names.
-   *
-   * This flat set is the security boundary's data half: a script may access a property only when its name is here or in the
-   * fixed built-in set.
-   */
-  readonly propertyNames: ReadonlySet<string>;
-  /**
-   * Every declared path, rooted at `input` or a loader name: `input.jobs`, `input.jobs[]`, `input.jobs[].title`,
-   * `loadProfile.username`. Drives the authoring check that every field a script names exists.
-   */
-  readonly paths: ReadonlySet<string>;
-  /**
-   * The declared loader names.
-   */
-  readonly loaderNames: ReadonlySet<string>;
-}
-
-/**
  * Config for {@link addOpenRouterTemplateJsonSchemaFieldNames}.
  */
 export interface AddOpenRouterTemplateJsonSchemaFieldNamesConfig {
@@ -231,8 +177,7 @@ export interface AddOpenRouterTemplateJsonSchemaFieldNamesConfig {
 /**
  * Walks a JSON Schema, adding each declared property name and path.
  *
- * Follows `properties`, `items`, `prefixItems`, `anyOf`, `oneOf` and `allOf`. `additionalProperties` is not followed: a key
- * that is not declared by name can never be accessed by a script.
+ * Follows `properties`, `items`, `prefixItems`, `anyOf`, `oneOf` and `allOf`. `additionalProperties` is not followed.
  *
  * @param config - The schema, its root path and the sets to collect into.
  */
@@ -275,51 +220,24 @@ function walkOpenRouterTemplateJsonSchema(schema: unknown, path: string, propert
 }
 
 /**
- * Returns the field names and paths a template type declares, read from the JSON Schema of its input and loader outputs.
- *
- * @param typeConfig - The template type.
- * @returns The flat property allowlist, the declared path set and the loader names.
- */
-export function openRouterTemplateFieldNames(typeConfig: OpenRouterTemplateTypeConfig): OpenRouterTemplateFieldNames {
-  const propertyNames = new Set<string>();
-  const paths = new Set<string>();
-  const loaders = typeConfig.loaders ?? {};
-  const loaderNames = new Set(Object.keys(loaders));
-
-  if (typeConfig.input != null) {
-    propertyNames.add('input');
-    addOpenRouterTemplateJsonSchemaFieldNames({ schema: openRouterTemplateJsonSchema(typeConfig.input), path: 'input', propertyNames, paths });
-  }
-
-  Object.entries(loaders).forEach(([name, loader]) => {
-    propertyNames.add(name);
-    addOpenRouterTemplateJsonSchemaFieldNames({ schema: openRouterTemplateJsonSchema(loader.output), path: name, propertyNames, paths });
-  });
-
-  return { propertyNames, paths, loaderNames };
-}
-
-/**
  * Validates and returns a template type config. Call it where the type is declared, so a bad type fails at startup.
  *
  * Refuses:
  * - a missing type, name or purpose, or an unknown mode;
- * - an input on an {@link OpenRouterTemplateMode.OPENROUTER} type, or a missing one on any other mode;
- * - loaders on an {@link OpenRouterTemplateMode.OPENROUTER} type, or a loader name that does not match `load[A-Z]…`;
+ * - a context factory on an {@link OpenRouterTemplateMode.OPENROUTER} type, which runs no body;
+ * - sample accessor data for an accessor the context factory does not have;
  * - a `finalScript` setting on a {@link OpenRouterTemplateMode.DETERMINISTIC} type, which never calls a model;
- * - a `maxLength` that is not a positive integer;
- * - a shape that is not JSON-only (for example a `Date`);
- * - any field or loader name in {@link OPENROUTER_TEMPLATE_BANNED_NAMES}, so the flat allowlist can never let in a
- *   dangerous name by way of a data field.
+ * - a `maxLength` that is not a positive integer.
+ *
+ * The accessor names are checked by {@link openRouterTemplateContextFactory}, where the factory is declared.
  *
  * @param config - The template type config.
  * @returns The same config.
  * @throws {OpenRouterTemplateTypeConfigError} When the config is invalid.
  */
-export function openRouterTemplateType<I, L extends OpenRouterTemplateLoaders<I> = OpenRouterTemplateLoaders<I>>(config: OpenRouterTemplateTypeConfig<I, L>): OpenRouterTemplateTypeConfig<I, L> {
+export function openRouterTemplateType<D, A>(config: OpenRouterTemplateTypeConfig<D, A>): OpenRouterTemplateTypeConfig<D, A> {
   const errors: string[] = [];
-  const { type, name, purpose, mode, input, loaders, output, finalScript } = config;
-  const loaderNames = Object.keys(loaders ?? {});
+  const { type, name, purpose, mode, contextFactory, output, finalScript, samples } = config;
 
   if (!type) {
     errors.push('A type key is required.');
@@ -337,16 +255,18 @@ export function openRouterTemplateType<I, L extends OpenRouterTemplateLoaders<I>
     errors.push(`Unknown mode "${String(mode)}".`);
   }
 
-  if (mode === OpenRouterTemplateMode.OPENROUTER) {
-    if (input != null) {
-      errors.push('An OPENROUTER type takes no template input: the caller passes the prompt call params through.');
-    }
+  if (mode === OpenRouterTemplateMode.OPENROUTER && contextFactory != null) {
+    errors.push('An OPENROUTER type has no context factory, because no script runs on template data: the caller passes the prompt call params through.');
+  }
 
-    if (loaderNames.length > 0) {
-      errors.push('An OPENROUTER type has no loaders, because no script runs on a template input.');
-    }
-  } else if (input == null) {
-    errors.push('An input shape is required for every mode except OPENROUTER.');
+  if (samples?.accessor != null) {
+    const accessorNames = contextFactory?.accessorNames;
+
+    Object.keys(samples.accessor).forEach((accessorName) => {
+      if (accessorNames?.has(accessorName) !== true) {
+        errors.push(`The samples carry data for accessor "${accessorName}", which the context factory does not have.`);
+      }
+    });
   }
 
   if (finalScript != null && mode === OpenRouterTemplateMode.DETERMINISTIC) {
@@ -355,26 +275,6 @@ export function openRouterTemplateType<I, L extends OpenRouterTemplateLoaders<I>
 
   if (output == null || !Number.isInteger(output.maxLength) || output.maxLength <= 0) {
     errors.push('output.maxLength must be a positive integer.');
-  }
-
-  loaderNames.forEach((loaderName) => {
-    if (!OPENROUTER_TEMPLATE_LOADER_NAME_REGEX.test(loaderName)) {
-      errors.push(`Loader "${loaderName}" must be named load[A-Z]….`);
-    }
-  });
-
-  if (errors.length === 0) {
-    try {
-      const { propertyNames } = openRouterTemplateFieldNames(config as OpenRouterTemplateTypeConfig);
-
-      propertyNames.forEach((propertyName) => {
-        if (OPENROUTER_TEMPLATE_BANNED_NAMES.has(propertyName)) {
-          errors.push(`"${propertyName}" is a banned name and cannot be a field or loader name.`);
-        }
-      });
-    } catch (e) {
-      errors.push(`Every input and loader shape must be JSON-only (pre-format dates and money as strings): ${(e as Error).message}`);
-    }
   }
 
   if (errors.length > 0) {
@@ -460,8 +360,8 @@ export interface AppOpenRouterTemplateTypeConfigServiceRef {
  *
  * @example
  * ```ts
- * const service = appOpenRouterTemplateTypeConfigService(openRouterTemplateTypeConfigRecord([DEMO_PROFILE_TEXT_TEMPLATE_TYPE]));
- * const typeConfig = service.configForTemplateType('demo-profile-text');
+ * const service = appOpenRouterTemplateTypeConfigService(openRouterTemplateTypeConfigRecord(demoOpenRouterTemplateTypes(loadProfile)));
+ * const typeConfig = service.configForTemplateType(DEMO_PROFILE_TEXT_TEMPLATE_TYPE);
  * ```
  *
  * @__NO_SIDE_EFFECTS__
