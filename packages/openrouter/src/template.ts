@@ -8,7 +8,8 @@
  * - the vocabulary — modes, body results and their classification;
  * - the type config, its registry, and the field walker that reads a type's declared names and paths;
  * - the script validator (the security boundary for uploaded scripts) and the runner that compiles a validated script;
- * - the context builder, which hands a script frozen, plain, schema-checked copies of its input and loader data;
+ * - the context factory and builder, which hand a script deep-frozen, plain-data copies of the template data and each
+ *   accessor's result — never validated or stripped, so an accessor returns only what scripts may read;
  * - the output checks (length and URL domains);
  * - the review prompt definition and its verdict reader.
  *

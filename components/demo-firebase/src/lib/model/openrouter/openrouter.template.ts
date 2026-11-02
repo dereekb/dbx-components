@@ -7,7 +7,8 @@ import { type Maybe, type ModelKey } from '@dereekb/util';
 export const DEMO_TEMPLATE_ALLOWED_URL_DOMAIN = 'demo.dereekb.com';
 
 /**
- * The longest demo template text: three SMS segments of GSM-7 text.
+ * The longest demo template text. 480 characters of GSM-7 text send as four SMS segments, since each segment of a split
+ * message holds 153 characters (`SMS_GSM7_MULTI_SEGMENT_LENGTH`).
  */
 export const DEMO_TEMPLATE_MAX_LENGTH = 480;
 
