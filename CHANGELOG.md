@@ -1,3 +1,13 @@
+## [14.25.1](https://github.com/dereekb/dbx-components/compare/v14.25.0-dev...v14.25.1) (2026-11-04)
+
+### Bug Fixes
+
+- **nestjs:** flatten line breaks in Mailgun batch recipient variables ([2b312d37](https://github.com/dereekb/dbx-components/commit/2b312d37df6cabb1fe3ebd3c2b7d1076b0e18088))
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes + peer dep sync ([47aaa2b8](https://github.com/dereekb/dbx-components/commit/47aaa2b8f7a8e7645946bcde8e3831caf0132ab3))
+
 # [14.25.0](https://github.com/dereekb/dbx-components/compare/v14.24.0-dev...v14.25.0) (2026-11-02)
 
 ### Bug Fixes
