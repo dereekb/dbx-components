@@ -1,5 +1,5 @@
 import { isTestNodeEnv } from '@dereekb/nestjs';
-import { type ArrayOrValue, asArray, type EmailAddress, type EmailAddressDomain, forEachKeyValue, KeyValueTypleValueFilter, type NameEmailPair, overrideInObject, objectIsEmpty, type EmailParticipantString, addToSet, forEachInIterable, type Maybe, MAP_IDENTITY } from '@dereekb/util';
+import { type ArrayOrValue, asArray, type EmailAddress, type EmailAddressDomain, forEachKeyValue, KeyValueTypleValueFilter, type NameEmailPair, overrideInObject, objectIsEmpty, type EmailParticipantString, addToSet, forEachInIterable, type Maybe, MAP_IDENTITY, mapObjectMap } from '@dereekb/util';
 import { type MailgunMessagesClient, type MailgunDomainsClient } from './mailgun.type';
 
 /**
@@ -369,6 +369,9 @@ export function convertMailgunTemplateEmailRequestToMailgunMessageData(config: C
         }
       });
     } else {
+      // Mailgun substitutes each %recipient.<key>% into the message headers unescaped, so a line break in a value would end the header block early
+      recipientVariables = mapObjectMap(recipientVariables, (userVariables) => flattenMailgunRecipientVariableLineBreaks(userVariables));
+
       // set back on the data object
       data['recipient-variables'] = JSON.stringify(recipientVariables);
 
@@ -431,6 +434,29 @@ export function convertMailgunRecipientToString(recipient: MailgunRecipient): Em
   }
 
   return address;
+}
+
+/**
+ * Matches a line break along with any whitespace around it.
+ */
+const MAILGUN_RECIPIENT_VARIABLE_LINE_BREAK_REGEX = /\s*[\r\n]\s*/g;
+
+/**
+ * Replaces every line break in the top-level string values of a recipient's variables with a single space.
+ *
+ * Mailgun substitutes each `%recipient.<key>%` placeholder of a batch send textually, without escaping, into the message
+ * headers: the X-Mailgun-Variables header that carries every `v:` variable, and the Subject when it is a recipient placeholder.
+ * A raw line break there ends the header block early, so every header after it (Content-Type included) and the html body are
+ * delivered as plain text, which receivers that honor the break (Gmail) show the recipient as raw html.
+ *
+ * A line break is never safe in a batch recipient variable, so flattening it always beats sending it. Html templates render a
+ * line break as whitespace anyway. Strings without a line break are returned unchanged.
+ *
+ * @param userVariables - The recipient's variables.
+ * @returns A copy of the variables with no line breaks in any top-level string value.
+ */
+export function flattenMailgunRecipientVariableLineBreaks(userVariables: Record<string, unknown>): Record<string, unknown> {
+  return mapObjectMap(userVariables, (value) => (typeof value === 'string' && /[\r\n]/.test(value) ? value.replaceAll(MAILGUN_RECIPIENT_VARIABLE_LINE_BREAK_REGEX, ' ').trim() : value));
 }
 
 /**
