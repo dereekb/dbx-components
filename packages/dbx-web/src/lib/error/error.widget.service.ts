@@ -44,7 +44,17 @@ export interface DbxErrorWidgetEntry {
 export type DbxErrorWidgetEntryWithPopupComponentClass = Omit<DbxErrorWidgetEntry, 'popupComponentClass'> & { popupComponentClass: Type<unknown> };
 
 /**
- * Service used to register error widgets.
+ * App-wide registry that maps an error code to custom error widget views.
+ *
+ * Register an entry per error code to change how that error renders:
+ * - `errorComponentClass` is the inline view rendered inside `<dbx-error>` in place of the default message.
+ * - `widgetComponentClass` is the popover/details view opened from `<dbx-error>`.
+ *
+ * Widget components extend `AbstractDbxErrorWidgetComponent` to read the error's `code`, `message` and `data`.
+ * {@link DbxErrorWidgetService.register} replaces any existing entry with the same error code, so register both classes in one call.
+ *
+ * The service is provided automatically. Register widgets at startup, for example in `provideAppInitializer()`.
+ * The `HTTP_NETWORK_ERROR_CODE` code (set by `convertToServerErrorResponse()` when the server could not be reached) can drive an "offline" view.
  *
  * It has two default widgets:
  *
@@ -52,6 +62,23 @@ export type DbxErrorWidgetEntryWithPopupComponentClass = Omit<DbxErrorWidgetEntr
  * - unknown: used in cases where an error has an error code that has not been registered
  *
  * By default the DbxErrorDefaultErrorWidgetComponent is registered to both the default and unknown error entries.
+ *
+ * @dbxWebComponent
+ * @dbxWebSlug error-widget-service
+ * @dbxWebCategory feedback
+ * @dbxWebRelated error, error-snackbar-service
+ * @dbxWebSkillRefs dbx__ref__dbx-component-patterns
+ * @dbxWebMinimalExample ```ts
+ * inject(DbxErrorWidgetService).register({ code: HTTP_NETWORK_ERROR_CODE, errorComponentClass: AppOfflineErrorComponent });
+ * ```
+ *
+ * @example
+ * ```ts
+ * provideAppInitializer(() => {
+ *   inject(DbxErrorWidgetService).register({ code: 'NAME_TAKEN', errorComponentClass: NameTakenErrorComponent, widgetComponentClass: NameTakenErrorWidgetComponent });
+ * });
+ * // NameTakenErrorComponent extends AbstractDbxErrorWidgetComponent to read this.code / this.message / this.data.
+ * ```
  */
 @Service()
 export class DbxErrorWidgetService {
@@ -63,6 +90,12 @@ export class DbxErrorWidgetService {
     this.registerUnknownEntry(defaultEntry);
   }
 
+  /**
+   * Registers the widget used for an error whose code has a registered entry without its own `widgetComponentClass`.
+   *
+   * @param entry - The widget configuration for the default entry.
+   * @returns True if the entry was registered.
+   */
   registerDefaultEntry(entry: Omit<DbxErrorWidgetEntry, 'errorComponentClass' | 'code'>) {
     return this.register({
       ...entry,
@@ -71,6 +104,12 @@ export class DbxErrorWidgetService {
     });
   }
 
+  /**
+   * Registers the widget used for an error whose code has no registered entry.
+   *
+   * @param entry - The widget configuration for the unknown entry.
+   * @returns True if the entry was registered.
+   */
   registerUnknownEntry(entry: Omit<DbxErrorWidgetEntry, 'errorComponentClass' | 'code'>) {
     return this.register({
       ...entry,
@@ -79,6 +118,13 @@ export class DbxErrorWidgetService {
     });
   }
 
+  /**
+   * Registers the widget views for an error code.
+   *
+   * @param entry - The error code and the inline and/or popover widget component classes to use for it.
+   * @param override - Whether to replace an existing entry with the same code. Defaults to true.
+   * @returns True if the entry was registered.
+   */
   register(entry: DbxErrorWidgetEntry, override: boolean = true): boolean {
     let registered = false;
 

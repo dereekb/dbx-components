@@ -38,7 +38,7 @@ interface DbxErrorComponentState {
  * @dbxWebComponent
  * @dbxWebSlug error
  * @dbxWebCategory feedback
- * @dbxWebRelated error-snackbar, error-view, loading
+ * @dbxWebRelated error-snackbar, error-view, loading, error-widget-service
  * @dbxWebSkillRefs dbx__ref__dbx-component-patterns
  * @dbxWebMinimalExample ```html
  * <dbx-error [error]="error"></dbx-error>

@@ -15,7 +15,7 @@ import { type FirebaseError } from 'firebase/app';
  * @dbxUtilCategory firebase-error
  * @dbxUtilKind class
  * @dbxUtilTags firebase, https, callable, error, server-error, client, response, details
- * @dbxUtilRelated convert-https-callable-error-to-readable-error, is-client-firebase-error
+ * @dbxUtilRelated convert-https-callable-error-to-readable-error, is-client-firebase-error, convert-to-server-error-response
  *
  * @example
  * ```ts

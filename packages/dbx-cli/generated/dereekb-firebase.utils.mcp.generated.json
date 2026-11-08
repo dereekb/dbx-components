@@ -79,7 +79,8 @@
       "example": "try {\n  await callableFunction(data);\n} catch (e) {\n  if (e instanceof FirebaseServerError) {\n    console.log(e.code, e.message, e.firebaseError.code);\n  }\n}",
       "relatedSlugs": [
         "convert-https-callable-error-to-readable-error",
-        "is-client-firebase-error"
+        "is-client-firebase-error",
+        "convert-to-server-error-response"
       ]
     },
     {
@@ -117,7 +118,9 @@
       "relatedSlugs": [
         "firebase-server-error",
         "is-client-firebase-error",
-        "firebase-auth-error-to-readable-error"
+        "firebase-auth-error-to-readable-error",
+        "convert-to-server-error-response",
+        "catch-server-error-response"
       ]
     },
     {

@@ -37,7 +37,7 @@ export interface DbxErrorSnackbarData<T extends ErrorInput = ErrorInput> {
  * @dbxWebComponent
  * @dbxWebSlug error-snackbar
  * @dbxWebCategory feedback
- * @dbxWebRelated error
+ * @dbxWebRelated error, error-snackbar-service
  * @dbxWebSkillRefs dbx__ref__dbx-component-patterns
  * @dbxWebMinimalExample ```html
  * <dbx-error-snackbar></dbx-error-snackbar>
@@ -45,7 +45,7 @@ export interface DbxErrorSnackbarData<T extends ErrorInput = ErrorInput> {
  *
  * @example
  * ```html
- * // Triggered via DbxErrorSnackbarService.showError(error)
+ * // Triggered via DbxErrorSnackbarService.showSnackbarError(error)
  * ```
  */
 @Component({

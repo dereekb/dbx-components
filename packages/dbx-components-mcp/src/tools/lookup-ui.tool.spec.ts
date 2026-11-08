@@ -67,6 +67,21 @@ const FIXTURE_ENTRIES: readonly UiComponentEntry[] = [
     skillRefs: [],
     example: '<dbx-button text="Save"></dbx-button>',
     minimalExample: '<dbx-button></dbx-button>'
+  },
+  {
+    slug: 'error-widget-service',
+    category: 'feedback',
+    kind: 'service',
+    selector: '',
+    className: 'DbxErrorWidgetService',
+    module: '@dereekb/dbx-web',
+    description: 'App-wide registry that maps an error code to custom error widget views.',
+    inputs: [],
+    outputs: [],
+    relatedSlugs: ['error'],
+    skillRefs: [],
+    example: "inject(DbxErrorWidgetService).register({ code: 'NAME_TAKEN', errorComponentClass: NameTakenErrorComponent });",
+    minimalExample: 'inject(DbxErrorWidgetService).register({ code, errorComponentClass });'
   }
 ];
 
@@ -105,6 +120,23 @@ describe('dbx_ui_lookup', () => {
     expect(text).toMatch(/## DbxSectionComponent/);
     expect(text).not.toMatch(/## Inputs/);
     expect(text).not.toMatch(/## Example/);
+  });
+
+  it('renders a service entry with ts fences, no selector line and no inputs table', () => {
+    const text = firstText(runLookupUi({ topic: 'error-widget-service' }));
+    expect(text).toMatch(/# DbxErrorWidgetService/);
+    expect(text).toMatch(/\*\*kind:\*\* `service`/);
+    expect(text).toContain('```ts');
+    expect(text).not.toContain('```html');
+    expect(text).not.toMatch(/\*\*selector:\*\*/);
+    expect(text).not.toMatch(/## Inputs/);
+  });
+
+  it('renders a service entry at brief depth with a ts fence and no selector', () => {
+    const text = firstText(runLookupUi({ topic: 'error-widget-service', depth: 'brief' }));
+    expect(text).toMatch(/## DbxErrorWidgetService/);
+    expect(text).toContain('```ts');
+    expect(text).not.toMatch(/\*\*selector:\*\*/);
   });
 
   it('resolves a class name (case-insensitive)', () => {

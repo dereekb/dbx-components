@@ -387,6 +387,7 @@ function mapDecoratorNameToKind(name: string): UiComponentEntry['kind'] | undefi
       result = 'pipe';
       break;
     case 'Injectable':
+    case 'Service':
       result = 'service';
       break;
     default:

@@ -113,7 +113,7 @@ export function directDataHttpsCallable<I, O, C extends HttpsCallable<I, O> = Ht
  * @dbxUtilCategory firebase-error
  * @dbxUtilKind function
  * @dbxUtilTags firebase, https, callable, error, decode, convert, readable, client, server
- * @dbxUtilRelated firebase-server-error, is-client-firebase-error, firebase-auth-error-to-readable-error
+ * @dbxUtilRelated firebase-server-error, is-client-firebase-error, firebase-auth-error-to-readable-error, convert-to-server-error-response, catch-server-error-response
  */
 export function convertHttpsCallableErrorToReadableError(error: unknown) {
   let result: unknown;
