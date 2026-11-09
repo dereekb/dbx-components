@@ -48,6 +48,12 @@ export const DOC_FORM_ROUTES = [
     ref: 'doc.form.texteditor'
   },
   {
+    icon: 'crop_free',
+    title: 'Layout Boxes',
+    detail: 'layout boxes field',
+    ref: 'doc.form.layoutboxes'
+  },
+  {
     icon: 'table_view',
     title: 'Wrappers',
     detail: 'form wrappers',

@@ -1,0 +1,33 @@
+@if (imageUrlSignal(); as imageUrl) {
+  <img class="dbx-layout-boxes-canvas-image" [src]="imageUrl" alt="" draggable="false" />
+}
+@for (drawn of boxesSignal(); track $index; let boxIndex = $index) {
+  @let selected = boxIndex === selectedIndex();
+  <div
+    class="dbx-layout-boxes-box"
+    [class]="drawn.cssClasses"
+    [dbxColor]="drawn.color"
+    [class.dbx-layout-boxes-box-selected]="selected"
+    [style.left.%]="drawn.box.x * 100"
+    [style.top.%]="drawn.box.y * 100"
+    [style.width.%]="drawn.box.w * 100"
+    [style.height.%]="drawn.box.h * 100"
+    role="button"
+    [attr.aria-label]="'Box ' + ($index + 1)"
+    [attr.aria-pressed]="selected"
+    [attr.tabindex]="readonlySignal() ? null : 0"
+    (focus)="onBoxFocus($index)"
+    (pointerdown)="dragStart($event, $index)"
+    (pointermove)="dragMove($event)"
+    (pointerup)="dragEnd()"
+    (pointercancel)="dragEnd()"
+    (lostpointercapture)="dragEnd()"
+    (keydown)="onBoxKeydown($event, $index)">
+    <span class="dbx-layout-boxes-box-number">{{ $index + 1 }}</span>
+    @if (selected && !readonlySignal()) {
+      @for (corner of corners; track corner) {
+        <span [class]="'dbx-layout-boxes-handle dbx-layout-boxes-handle-' + corner" (pointerdown)="dragStart($event, boxIndex, corner)"></span>
+      }
+    }
+  </div>
+}

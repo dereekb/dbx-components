@@ -3,6 +3,7 @@
 @use './value/phone/phone';
 @use './value/date/date';
 @use './value/duration/duration';
+@use './value/layoutboxes/layoutboxes';
 @use './texteditor/texteditor';
 @use './radio/radio';
 @use './wrapper/wrapper';
@@ -13,6 +14,7 @@
   @include phone.core();
   @include date.core();
   @include duration.core();
+  @include layoutboxes.core();
   @include texteditor.core();
   @include radio.core();
   @include wrapper.core();
@@ -24,6 +26,7 @@
   @include phone.theme($theme-config);
   @include date.theme($theme-config);
   @include duration.theme($theme-config);
+  @include layoutboxes.theme($theme-config);
   @include texteditor.theme($theme-config);
   @include wrapper.theme($theme-config);
 }

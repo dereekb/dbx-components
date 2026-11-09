@@ -1601,6 +1601,45 @@
       "configInterface": "DbxForgeTimeDurationFieldConfig"
     },
     {
+      "slug": "layout-boxes",
+      "factoryName": "dbxForgeLayoutBoxesField",
+      "tier": "field-factory",
+      "produces": "DbxLayoutBoxItem<T>[]",
+      "arrayOutput": "yes",
+      "description": "Box-layout editor: a list of boxes drawn over a canvas (optionally over a picture), each a normalized rectangle plus a\nconsumer payload. Boxes can be moved, resized, nudged with the arrow keys, added and removed. A list beside the canvas\nshows one row per box, rendered by the consumer's `item` component.\n\n- The `item` row component should extend {@link AbstractDbxLayoutBoxesItemDirective}.\n- For \"at least one box\", use `minLength: 1`; `required` does not reject an empty list. For a hard limit, use\n  `maxLength`. The `cap` prop only warns.\n- The form output strips empty payload values (`''`, `null`, `undefined`), so make payload fields optional and default\n  them when reading.\n- The value defaults to `[]` when none is given.",
+      "example": "dbxForgeLayoutBoxesField<MyBoxData>({\n  key: 'boxes',\n  label: 'Layout',\n  minLength: 1,\n  props: {\n    canvas: { width: 16, height: 9 },\n    item: { componentClass: MyBoxRowComponent },\n    itemStyle: (item) => ({ color: item.data.kind === 'person' ? 'primary' : 'tertiary' }),\n    addOptions: [{ text: 'Add box', icon: 'add_box', data: () => ({ kind: 'thing' }) }]\n  }\n})",
+      "properties": [
+        {
+          "name": "canvas (props)",
+          "type": "MaybeObservableOrValue<DbxLayoutBoxesCanvasSize>",
+          "description": "The canvas the boxes are drawn on. Only its aspect ratio is used. Defaults to a square.\n\nMay be an Observable, to change the canvas at runtime.",
+          "required": false
+        },
+        {
+          "name": "imageUrl (props)",
+          "type": "MaybeObservableOrValue<string>",
+          "description": "A picture drawn under the boxes, stretched to the canvas.\n\nMay be an Observable, to change the picture at runtime.",
+          "required": false
+        },
+        {
+          "name": "hint (props)",
+          "type": "string",
+          "description": "Hint text shown below the field.",
+          "required": false
+        },
+        {
+          "name": "wrapped (props)",
+          "type": "boolean",
+          "description": "When `false`, render the editor bare without the surrounding dbx form-field outline (no label, hint or error\nchrome). Defaults to `true`.",
+          "required": false
+        }
+      ],
+      "wrapperPattern": "material-form-field-wrapped",
+      "ngFormType": "dbx-layout-boxes",
+      "generic": "<T = unknown>",
+      "configInterface": "DbxForgeLayoutBoxesFieldConfig<T>"
+    },
+    {
       "slug": "dollar-amount",
       "factoryName": "dbxForgeDollarAmountField",
       "tier": "field-derivative",

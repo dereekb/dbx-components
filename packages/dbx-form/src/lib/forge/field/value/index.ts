@@ -6,3 +6,4 @@ export * from './duration';
 export * from './phone';
 export * from './array';
 export * from './website';
+export * from './layoutboxes';

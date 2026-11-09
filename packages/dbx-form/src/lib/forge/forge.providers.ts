@@ -14,6 +14,7 @@ import {
   FORGE_DATERANGE_FIELD_TYPE,
   FORGE_TIMEDURATION_FIELD_TYPE,
   FORGE_WEBSITE_URL_FIELD_TYPE,
+  FORGE_LAYOUT_BOXES_FIELD_TYPE,
   DBX_FORGE_SEARCHABLE_TEXT_FIELD_TYPE_NAME,
   DBX_FORGE_SEARCHABLE_CHIP_FIELD_TYPE_NAME,
   FORGE_PICKABLE_CHIP_FIELD_TYPE,
@@ -104,6 +105,11 @@ export const DBX_FORGE_FIELD_TYPES: FieldTypeDefinition[] = [
   {
     name: FORGE_SOURCE_SELECT_FIELD_TYPE,
     loadComponent: () => import('./field/selection/sourceselect/sourceselect.field.component').then((m) => m.DbxForgeSourceSelectFieldComponent),
+    mapper: valueFieldMapper
+  },
+  {
+    name: FORGE_LAYOUT_BOXES_FIELD_TYPE,
+    loadComponent: () => import('./field/value/layoutboxes/layoutboxes.field.component').then((m) => m.DbxForgeLayoutBoxesFieldComponent),
     mapper: valueFieldMapper
   },
   // -- Other fields --

@@ -1,0 +1,34 @@
+<div class="dbx-layout-boxes-canvas-cell">
+  <dbx-layout-boxes-canvas [items]="valueSignal()" [canvas]="canvasSignal()" [imageUrl]="imageUrlSignal()" [itemStyle]="itemStyleSignal()" [readonly]="readonlySignal()" [selectedIndex]="selectedIndexSignal()" (selectedIndexChange)="selectIndex($event)" (boxChange)="onBoxChange($event)"></dbx-layout-boxes-canvas>
+</div>
+<div class="dbx-layout-boxes-list">
+  @if (capWarningSignal(); as capWarning) {
+    <p class="dbx-layout-boxes-cap-warning dbx-hint" [dbxTextColor]="'warn'">{{ capWarning }}</p>
+  }
+  <div class="dbx-layout-boxes-items" role="list">
+    @for (row of rowsSignal(); track $index) {
+      @let style = itemStylesSignal()[$index];
+      @let selected = $index === selectedIndexSignal();
+      <div class="dbx-layout-boxes-item" role="listitem" [class]="style.cssClasses" [class.dbx-layout-boxes-item-selected]="selected" [attr.aria-current]="selected ? 'true' : null" (click)="selectIndex($index)" (keydown.enter)="selectIndex($index)" (focusin)="selectIndex($index)">
+        <dbx-chip class="dbx-layout-boxes-item-number" [small]="true" [color]="style.color">{{ $index + 1 }}</dbx-chip>
+        <div class="dbx-layout-boxes-item-content">
+          @if (row.injectionConfig) {
+            <dbx-injection [config]="row.injectionConfig"></dbx-injection>
+          } @else {
+            <span class="dbx-layout-boxes-item-default">Box {{ $index + 1 }}</span>
+          }
+        </div>
+        @if (!readonlySignal()) {
+          <dbx-button class="dbx-layout-boxes-item-remove" icon="close" [iconOnly]="true" (click)="$event.stopPropagation()" (focusin)="$event.stopPropagation()" (buttonClick)="remove($index)"></dbx-button>
+        }
+      </div>
+    }
+  </div>
+  @if (!readonlySignal() && addOptionsSignal().length > 0) {
+    <div class="dbx-layout-boxes-add">
+      @for (option of addOptionsSignal(); track $index) {
+        <dbx-button stroked [icon]="option.icon" [text]="option.text" (buttonClick)="add(option)"></dbx-button>
+      }
+    </div>
+  }
+</div>

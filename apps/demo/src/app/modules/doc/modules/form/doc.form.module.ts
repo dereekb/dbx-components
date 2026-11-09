@@ -4,6 +4,7 @@ import { DocFormHomeComponent } from './container/home.component';
 
 import { DocFormWrapperComponent } from './container/wrapper.component';
 import { DocFormTextEditorComponent } from './container/texteditor.component';
+import { DocFormLayoutBoxesComponent } from './container/layoutboxes.component';
 import { DocFormSelectionComponent } from './container/selection.component';
 import { DocFormComponentComponent } from './container/component.component';
 import { DocFormChecklistComponent } from './container/checklist.component';
@@ -36,6 +37,7 @@ import { DocFormArrayComponent } from './container/array.component';
     DocFormComponentComponent,
     DocFormDirectiveComponent,
     DocFormTextEditorComponent,
+    DocFormLayoutBoxesComponent,
     DocFormTemplateComponent,
     DocFormWrapperComponent,
     DocFormFormComponent

@@ -217,6 +217,137 @@
       "componentScope": "array"
     },
     {
+      "cssVariable": "--dbx-layout-boxes-box-color",
+      "source": "dbx-form",
+      "role": "color",
+      "intents": [
+        "layout boxes box color"
+      ],
+      "description": "Component-scoped override point (`layoutboxes`) read in `packages/dbx-form/src/lib/forge/field/value/layoutboxes/_layoutboxes.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-primary)`.",
+      "defaults": {
+        "light": "var(--mat-sys-primary)"
+      },
+      "componentScope": "layoutboxes"
+    },
+    {
+      "cssVariable": "--dbx-layout-boxes-box-color-resolved",
+      "source": "dbx-form",
+      "role": "color",
+      "intents": [
+        "layout boxes box color resolved"
+      ],
+      "description": "Component-scoped token (`layoutboxes`) declared in `packages/dbx-form/src/lib/forge/field/value/layoutboxes/_layoutboxes.scss`. Add a sassdoc `///` block above the declaration for richer guidance.",
+      "defaults": {
+        "light": "var(--dbx-layout-boxes-box-color, var(--mat-sys-primary))"
+      },
+      "componentScope": "layoutboxes"
+    },
+    {
+      "cssVariable": "--dbx-layout-boxes-box-fill-tone",
+      "source": "dbx-form",
+      "role": "misc",
+      "intents": [
+        "layout boxes box fill tone"
+      ],
+      "description": "Component-scoped override point (`layoutboxes`) read in `packages/dbx-form/src/lib/forge/field/value/layoutboxes/_layoutboxes.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `12%`.",
+      "defaults": {
+        "light": "12%"
+      },
+      "componentScope": "layoutboxes"
+    },
+    {
+      "cssVariable": "--dbx-layout-boxes-canvas-background",
+      "source": "dbx-form",
+      "role": "misc",
+      "intents": [
+        "layout boxes canvas background"
+      ],
+      "description": "Component-scoped override point (`layoutboxes`) read in `packages/dbx-form/src/lib/forge/field/value/layoutboxes/_layoutboxes.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-surface-container)`.",
+      "defaults": {
+        "light": "var(--mat-sys-surface-container)"
+      },
+      "componentScope": "layoutboxes"
+    },
+    {
+      "cssVariable": "--dbx-layout-boxes-canvas-max-height",
+      "source": "dbx-form",
+      "role": "size",
+      "intents": [
+        "layout boxes canvas max height"
+      ],
+      "description": "Component-scoped override point (`layoutboxes`) read in `packages/dbx-form/src/lib/forge/field/value/layoutboxes/_layoutboxes.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `70vh`.",
+      "defaults": {
+        "light": "70vh"
+      },
+      "componentScope": "layoutboxes"
+    },
+    {
+      "cssVariable": "--dbx-layout-boxes-canvas-ratio-current",
+      "source": "dbx-form",
+      "role": "misc",
+      "intents": [
+        "layout boxes canvas ratio current"
+      ],
+      "description": "Component-scoped override point (`layoutboxes`) read in `packages/dbx-form/src/lib/forge/field/value/layoutboxes/_layoutboxes.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `1`.",
+      "defaults": {
+        "light": "1"
+      },
+      "componentScope": "layoutboxes"
+    },
+    {
+      "cssVariable": "--dbx-layout-boxes-handle-size",
+      "source": "dbx-form",
+      "role": "size",
+      "intents": [
+        "layout boxes handle size"
+      ],
+      "description": "Component-scoped override point (`layoutboxes`) read in `packages/dbx-form/src/lib/forge/field/value/layoutboxes/_layoutboxes.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `12px`.",
+      "defaults": {
+        "light": "12px"
+      },
+      "componentScope": "layoutboxes"
+    },
+    {
+      "cssVariable": "--dbx-layout-boxes-item-selected-color",
+      "source": "dbx-form",
+      "role": "color",
+      "intents": [
+        "layout boxes item selected color"
+      ],
+      "description": "Component-scoped override point (`layoutboxes`) read in `packages/dbx-form/src/lib/forge/field/value/layoutboxes/_layoutboxes.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-primary-container)`.",
+      "defaults": {
+        "light": "var(--mat-sys-primary-container)"
+      },
+      "componentScope": "layoutboxes"
+    },
+    {
+      "cssVariable": "--dbx-layout-boxes-item-selected-on-color",
+      "source": "dbx-form",
+      "role": "text-color",
+      "intents": [
+        "layout boxes item selected on color",
+        "layout boxes item selected on color text"
+      ],
+      "description": "Component-scoped override point (`layoutboxes`) read in `packages/dbx-form/src/lib/forge/field/value/layoutboxes/_layoutboxes.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-on-primary-container)`.",
+      "defaults": {
+        "light": "var(--mat-sys-on-primary-container)"
+      },
+      "componentScope": "layoutboxes"
+    },
+    {
+      "cssVariable": "--dbx-layout-boxes-list-min-width",
+      "source": "dbx-form",
+      "role": "size",
+      "intents": [
+        "layout boxes list min width"
+      ],
+      "description": "Component-scoped override point (`layoutboxes`) read in `packages/dbx-form/src/lib/forge/field/value/layoutboxes/_layoutboxes.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `240px`.",
+      "defaults": {
+        "light": "240px"
+      },
+      "componentScope": "layoutboxes"
+    },
+    {
       "cssVariable": "--dbx-phone-field-country-selector-width",
       "source": "dbx-form",
       "role": "size",
