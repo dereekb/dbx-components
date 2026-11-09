@@ -1,0 +1,62 @@
+<dbx-content-container>
+  <doc-feature-layout header="2D Fields" hint="Fields whose value is a set of areas on a 2D canvas. dbxForgeLayoutBoxesField() edits a list of boxes, each a normalized rectangle (fractions of the canvas) plus a payload, with one injected row component per box.">
+    <!-- Examples -->
+    <doc-feature-example header="dbxForgeLayoutBoxesField()" hint="Boxes over a 16:9 picture. Each row is a DocFormLayoutBoxesItemComponent that edits its box's kind and label. People are colored primary and things tertiary, and more than two people shows the cap warning.">
+      <doc-feature-form-tabs #formTabs forgeFn="dbxForgeLayoutBoxesField()">
+        <doc-forge-example-form forge [config]="forgeLayoutBoxesFieldConfig" [dbxFormSource]="layoutBoxesValue" [disabled]="formTabs.disabled()"></doc-forge-example-form>
+      </doc-feature-form-tabs>
+    </doc-feature-example>
+    <doc-feature-example header="Minimal" hint="Only addOptions. With no canvas the canvas is square, with no item each row shows Box N, and an add option with no box starts the new box in the middle.">
+      <doc-feature-form-tabs #minimalFormTabs forgeFn="dbxForgeLayoutBoxesField()">
+        <doc-forge-example-form forge [config]="forgeMinimalLayoutBoxesFieldConfig" [disabled]="minimalFormTabs.disabled()"></doc-forge-example-form>
+      </doc-feature-form-tabs>
+    </doc-feature-example>
+    <doc-feature-example header="Runtime Canvas and Picture" hint="canvas and imageUrl accept Observables, so the aspect and picture can change while the field is open. The other props are fixed for the field's lifetime.">
+      <div class="doc-layout-boxes-controls dbx-mb3">
+        @for (preset of canvasPresets; track preset.text) {
+          <dbx-button [stroked]="preset !== canvasPreset()" [flat]="preset === canvasPreset()" [text]="preset.text" (buttonClick)="canvasPreset.set(preset)"></dbx-button>
+        }
+        <dbx-button stroked [icon]="showPicture() ? 'hide_image' : 'image'" [text]="showPicture() ? 'Hide picture' : 'Show picture'" (buttonClick)="showPicture.set(!showPicture())"></dbx-button>
+      </div>
+      <doc-feature-form-tabs #runtimeFormTabs forgeFn="dbxForgeLayoutBoxesField()">
+        <doc-forge-example-form forge [config]="forgeRuntimeLayoutBoxesFieldConfig" [dbxFormSource]="layoutBoxesValue" [disabled]="runtimeFormTabs.disabled()"></doc-forge-example-form>
+      </doc-feature-form-tabs>
+    </doc-feature-example>
+    <doc-feature-example header="Limits" hint="Use minLength / maxLength for hard limits; required does not reject an empty list. cap is a soft limit that only shows a warning, here with the default text past 3 boxes.">
+      <doc-feature-form-tabs #limitsFormTabs forgeFn="dbxForgeLayoutBoxesField()">
+        <doc-forge-example-form forge [config]="forgeLimitsLayoutBoxesFieldConfig" [dbxFormSource]="layoutBoxesValue" [disabled]="limitsFormTabs.disabled()"></doc-forge-example-form>
+      </doc-feature-form-tabs>
+    </doc-feature-example>
+    <doc-feature-example header="Shared Row Context" hint="The item config's data is passed to every row through DBX_INJECTION_COMPONENT_DATA. DocFormLayoutBoxesPickItemComponent reads a shared label list from it.">
+      <doc-feature-form-tabs #sharedFormTabs forgeFn="dbxForgeLayoutBoxesField()">
+        <doc-forge-example-form forge [config]="forgeSharedContextLayoutBoxesFieldConfig" [dbxFormSource]="layoutBoxesValue" [disabled]="sharedFormTabs.disabled()"></doc-forge-example-form>
+      </doc-feature-form-tabs>
+    </doc-feature-example>
+    <doc-feature-example header="Styling" hint="itemStyle returns cssClasses that set --dbx-layout-boxes-box-color for a custom tone. The wrapper sets --dbx-layout-boxes-box-fill-tone, --dbx-layout-boxes-handle-size, --dbx-layout-boxes-canvas-max-height and --dbx-layout-boxes-list-min-width.">
+      <div class="doc-layout-boxes-styled">
+        <doc-feature-form-tabs #styledFormTabs forgeFn="dbxForgeLayoutBoxesField()">
+          <doc-forge-example-form forge [config]="forgeStyledLayoutBoxesFieldConfig" [dbxFormSource]="layoutBoxesValue" [disabled]="styledFormTabs.disabled()"></doc-forge-example-form>
+        </doc-feature-form-tabs>
+      </div>
+    </doc-feature-example>
+    <doc-feature-example header="Unwrapped, List Below" hint="wrapped: false draws the editor with no form-field outline, label or hint. listPosition: 'below' always puts the list under the canvas.">
+      <doc-feature-form-tabs #unwrappedFormTabs forgeFn="dbxForgeLayoutBoxesField()">
+        <doc-forge-example-form forge [config]="forgeUnwrappedLayoutBoxesFieldConfig" [dbxFormSource]="layoutBoxesValue" [disabled]="unwrappedFormTabs.disabled()"></doc-forge-example-form>
+      </doc-feature-form-tabs>
+    </doc-feature-example>
+    <doc-feature-example header="Readonly" hint="The same field with readonly: true. The boxes are drawn with no handles, and the rows show text. A disabled field or form is also shown readonly.">
+      <doc-feature-form-tabs #readonlyFormTabs forgeFn="dbxForgeLayoutBoxesField()">
+        <doc-forge-example-form forge [config]="forgeReadonlyLayoutBoxesFieldConfig" [dbxFormSource]="layoutBoxesValue" [disabled]="readonlyFormTabs.disabled()"></doc-forge-example-form>
+      </doc-feature-form-tabs>
+    </doc-feature-example>
+    <doc-feature-example header="dbx-layout-boxes" hint="The standalone editor outside a form, on a 4:3 canvas with no picture and the list below. Bind [(value)] directly.">
+      <dbx-layout-boxes [config]="standaloneConfig" [(value)]="standaloneValue"></dbx-layout-boxes>
+      <pre class="dbx-mt3">{{ standaloneValue() | json }}</pre>
+    </doc-feature-example>
+    <doc-feature-example header="dbx-layout-boxes-canvas" hint="The canvas alone with readonly: true, as an overlay viewer. It shows the boxes from the dbx-layout-boxes example above.">
+      <div class="doc-layout-boxes-viewer">
+        <dbx-layout-boxes-canvas [items]="standaloneValue()" [canvas]="standaloneConfig.canvas" [itemStyle]="docFormLayoutBoxStyle" [readonly]="true"></dbx-layout-boxes-canvas>
+      </div>
+    </doc-feature-example>
+  </doc-feature-layout>
+</dbx-content-container>

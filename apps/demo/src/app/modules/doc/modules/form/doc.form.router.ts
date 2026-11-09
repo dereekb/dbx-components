@@ -4,7 +4,7 @@ import { DocFormLayoutComponent } from './container/layout.component';
 import { DocFormValueComponent } from './container/value.component';
 import { DocFormWrapperComponent } from './container/wrapper.component';
 import { DocFormTextEditorComponent } from './container/texteditor.component';
-import { DocFormLayoutBoxesComponent } from './container/layoutboxes.component';
+import { DocForm2dComponent } from './container/2d.component';
 import { DocFormSelectionComponent } from './container/selection.component';
 import { DocFormComponentComponent } from './container/component.component';
 import { DocFormChecklistComponent } from './container/checklist.component';
@@ -70,10 +70,10 @@ export const DOC_FORM_TEXT_EDITOR_STATE: Ng2StateDeclaration = {
   component: DocFormTextEditorComponent
 };
 
-export const DOC_FORM_LAYOUT_BOXES_STATE: Ng2StateDeclaration = {
-  url: '/layoutboxes',
-  name: 'doc.form.layoutboxes',
-  component: DocFormLayoutBoxesComponent
+export const DOC_FORM_2D_STATE: Ng2StateDeclaration = {
+  url: '/2d',
+  name: 'doc.form.2d',
+  component: DocForm2dComponent
 };
 
 export const DOC_FORM_WRAPPER_STATE: Ng2StateDeclaration = {
@@ -117,7 +117,7 @@ export const STATES: Ng2StateDeclaration[] = [
   DOC_FORM_EXPRESSION_STATE,
   DOC_FORM_SELECTION_STATE,
   DOC_FORM_TEXT_EDITOR_STATE,
-  DOC_FORM_LAYOUT_BOXES_STATE,
+  DOC_FORM_2D_STATE,
   DOC_FORM_ARRAY_STATE,
   DOC_FORM_WRAPPER_STATE,
   DOC_FORM_DIRECTIVE_STATE,

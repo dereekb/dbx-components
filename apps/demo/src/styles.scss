@@ -41,6 +41,36 @@ mgl-map {
   border-color: blue;
 }
 
+// Layout boxes demo (doc.form.2d)
+.doc-layout-boxes-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbx-padding-2);
+}
+
+.doc-layout-box-tone-orange {
+  --dbx-layout-boxes-box-color: #ef6c00;
+}
+
+.doc-layout-box-tone-teal {
+  --dbx-layout-boxes-box-color: #00897b;
+}
+
+.doc-layout-box-tone-purple {
+  --dbx-layout-boxes-box-color: #8e24aa;
+}
+
+.doc-layout-boxes-styled {
+  --dbx-layout-boxes-box-fill-tone: 30%;
+  --dbx-layout-boxes-handle-size: 16px;
+  --dbx-layout-boxes-canvas-max-height: 320px;
+  --dbx-layout-boxes-list-min-width: 320px;
+}
+
+.doc-layout-boxes-viewer {
+  max-width: 360px;
+}
+
 // Emulator Warning
 .firebase-emulator-warning {
   font-size: 0.5em;

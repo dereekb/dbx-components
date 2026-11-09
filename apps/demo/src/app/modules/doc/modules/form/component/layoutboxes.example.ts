@@ -1,4 +1,4 @@
-import { type DbxLayoutBoxesAddOption, type DbxLayoutBoxesCapConfig, type DbxLayoutBoxesItemStyleFunction, type DbxLayoutBoxesValue } from '@dereekb/dbx-form';
+import { type DbxLayoutBoxesAddOption, type DbxLayoutBoxesCanvasSize, type DbxLayoutBoxesCapConfig, type DbxLayoutBoxesItemStyleFunction, type DbxLayoutBoxesValue } from '@dereekb/dbx-form';
 import { type Maybe } from '@dereekb/util';
 
 /**
@@ -37,6 +37,40 @@ export const DOC_FORM_LAYOUT_BOXES_PEOPLE_CAP: DbxLayoutBoxesCapConfig<DocFormLa
   countFilter: (item) => item.data?.kind === 'person',
   warning: (count, max) => `${count} people: past the cap of ${max}.`
 };
+
+/**
+ * A single "Add box" button that starts each new box at the default spot in the middle of the canvas.
+ */
+export const DOC_FORM_LAYOUT_BOXES_ADD_BOX_OPTIONS: DbxLayoutBoxesAddOption<DocFormLayoutBoxData>[] = [{ text: 'Add box', icon: 'add_box', data: () => ({ kind: 'thing' }) }];
+
+/**
+ * The custom box tones, cycled by box index. Each class sets `--dbx-layout-boxes-box-color` (see the demo `styles.scss`).
+ */
+export const DOC_FORM_LAYOUT_BOXES_TONE_CSS_CLASSES = ['doc-layout-box-tone-orange', 'doc-layout-box-tone-teal', 'doc-layout-box-tone-purple'];
+
+/**
+ * Gives each box a custom tone by index, through a CSS class instead of a `[dbxColor]` color.
+ *
+ * @param _item - The box.
+ * @param index - The box index.
+ * @returns The box style.
+ */
+export const docFormLayoutBoxToneStyle: DbxLayoutBoxesItemStyleFunction<DocFormLayoutBoxData> = (_item, index) => ({ cssClasses: DOC_FORM_LAYOUT_BOXES_TONE_CSS_CLASSES[index % DOC_FORM_LAYOUT_BOXES_TONE_CSS_CLASSES.length] });
+
+/**
+ * A canvas aspect the runtime canvas example can switch to.
+ */
+export interface DocFormLayoutBoxesCanvasPreset {
+  readonly text: string;
+  readonly canvas: DbxLayoutBoxesCanvasSize;
+}
+
+export const DOC_FORM_LAYOUT_BOXES_CANVAS_PRESETS: DocFormLayoutBoxesCanvasPreset[] = [
+  { text: '16:9', canvas: { width: 16, height: 9 } },
+  { text: '4:3', canvas: { width: 4, height: 3 } },
+  { text: '1:1', canvas: { width: 1, height: 1 } },
+  { text: '9:16', canvas: { width: 9, height: 16 } }
+];
 
 /**
  * Two seeded boxes for the demo.

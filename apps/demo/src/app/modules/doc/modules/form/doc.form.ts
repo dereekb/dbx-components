@@ -49,9 +49,9 @@ export const DOC_FORM_ROUTES = [
   },
   {
     icon: 'crop_free',
-    title: 'Layout Boxes',
-    detail: 'layout boxes field',
-    ref: 'doc.form.layoutboxes'
+    title: '2D Fields',
+    detail: 'layout boxes and area fields',
+    ref: 'doc.form.2d'
   },
   {
     icon: 'table_view',
