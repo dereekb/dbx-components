@@ -19,6 +19,11 @@ export interface DocFormLayoutBoxesPickItemData {
 export const DOC_FORM_LAYOUT_BOXES_PICK_LABELS: string[] = ['Ada', 'Grace', 'Alan', 'Lamp', 'Chair', 'Plant'];
 
 /**
+ * The labels thing boxes pick from in the row component per box example.
+ */
+export const DOC_FORM_LAYOUT_BOXES_THING_LABELS: string[] = ['Lamp', 'Chair', 'Plant', 'Table'];
+
+/**
  * Demo row component that picks its box's label from a list shared by every row through `DBX_INJECTION_COMPONENT_DATA`.
  */
 @Component({

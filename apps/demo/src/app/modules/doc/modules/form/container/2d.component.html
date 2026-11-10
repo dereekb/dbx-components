@@ -32,6 +32,13 @@
         <doc-forge-example-form forge [config]="forgeSharedContextLayoutBoxesFieldConfig" [dbxFormSource]="layoutBoxesValue" [disabled]="sharedFormTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
     </doc-feature-example>
+    <doc-feature-example
+      header="Row Component Per Box"
+      hint="item can be a function of the box that returns a DbxInjectionComponentConfig per box, so each row can be a different component with its own data. Person boxes get DocFormLayoutBoxesPersonItemComponent; thing boxes get DocFormLayoutBoxesPickItemComponent with a list of things as its data. A row keeps its component while the function returns the same config, and swaps it when the config changes.">
+      <doc-feature-form-tabs #perBoxFormTabs forgeFn="dbxForgeLayoutBoxesField()">
+        <doc-forge-example-form forge [config]="forgePerBoxLayoutBoxesFieldConfig" [dbxFormSource]="layoutBoxesValue" [disabled]="perBoxFormTabs.disabled()"></doc-forge-example-form>
+      </doc-feature-form-tabs>
+    </doc-feature-example>
     <doc-feature-example header="Styling" hint="itemStyle returns cssClasses that set --dbx-layout-boxes-box-color for a custom tone. The wrapper sets --dbx-layout-boxes-box-fill-tone, --dbx-layout-boxes-handle-size, --dbx-layout-boxes-canvas-max-height and --dbx-layout-boxes-list-min-width.">
       <div class="doc-layout-boxes-styled">
         <doc-feature-form-tabs #styledFormTabs forgeFn="dbxForgeLayoutBoxesField()">

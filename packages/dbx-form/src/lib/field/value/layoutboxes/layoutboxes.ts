@@ -1,4 +1,5 @@
 import { type CssClassesArray, type FilterFunction, type Getter, type Maybe, type PercentDecimal } from '@dereekb/util';
+import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { type DbxColorInput } from '@dereekb/dbx-web';
 
 // MARK: Value
@@ -108,6 +109,20 @@ export interface DbxLayoutBoxesItemStyle {
  * Returns the style for one box. Called once per box each time the value changes.
  */
 export type DbxLayoutBoxesItemStyleFunction<T = unknown> = (item: DbxLayoutBoxItem<T>, index: number) => Maybe<DbxLayoutBoxesItemStyle>;
+
+/**
+ * Returns the row component config for one box, or nothing to show `Box N` for it.
+ *
+ * Called once per box each time the value changes. Return stable references (such as module constants): a row keeps
+ * its component while the returned reference stays the same, and is rebuilt when it changes.
+ */
+export type DbxLayoutBoxesItemConfigFunction<T = unknown> = (item: DbxLayoutBoxItem<T>, index: number) => Maybe<DbxInjectionComponentConfig>;
+
+/**
+ * The row component for the box list: one config for every row, or a {@link DbxLayoutBoxesItemConfigFunction} that
+ * picks a config per box.
+ */
+export type DbxLayoutBoxesItemConfig<T = unknown> = DbxInjectionComponentConfig | DbxLayoutBoxesItemConfigFunction<T>;
 
 /**
  * One "add a box" button.

@@ -2,7 +2,18 @@ import { ChangeDetectionStrategy, Component, computed, input, model, type Signal
 import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { DbxButtonComponent, DbxChipDirective, type DbxColorInput, DbxTextColorDirective } from '@dereekb/dbx-web';
 import { type Maybe, spaceSeparatedCssClasses } from '@dereekb/util';
-import { type DbxLayoutBoxesAddOption, type DbxLayoutBoxesCanvasSize, type DbxLayoutBoxesCapConfig, type DbxLayoutBoxesItemStyleFunction, type DbxLayoutBoxesListPosition, type DbxLayoutBoxesValue, type DbxLayoutBoxItem, DEFAULT_DBX_LAYOUT_BOX_NEW_BOX, defaultDbxLayoutBoxesCapWarning } from './layoutboxes';
+import {
+  type DbxLayoutBoxesAddOption,
+  type DbxLayoutBoxesCanvasSize,
+  type DbxLayoutBoxesCapConfig,
+  type DbxLayoutBoxesItemConfig,
+  type DbxLayoutBoxesItemStyleFunction,
+  type DbxLayoutBoxesListPosition,
+  type DbxLayoutBoxesValue,
+  type DbxLayoutBoxItem,
+  DEFAULT_DBX_LAYOUT_BOX_NEW_BOX,
+  defaultDbxLayoutBoxesCapWarning
+} from './layoutboxes';
 import { addDbxLayoutBoxItem, countDbxLayoutBoxItems, removeDbxLayoutBoxItem, updateDbxLayoutBoxItemBox, updateDbxLayoutBoxItemData } from './layoutboxes.geometry';
 import { type DbxLayoutBoxesBoxChange, type DbxLayoutBoxesCanvasComponentConfig, DbxLayoutBoxesCanvasComponent } from './layoutboxes.canvas.component';
 import { DbxLayoutBoxesItemRef } from './layoutboxes.item';
@@ -15,13 +26,17 @@ export interface DbxLayoutBoxesComponentConfig<T = unknown> extends DbxLayoutBox
    * The component that shows or edits one box's payload in the box list. It should extend
    * {@link AbstractDbxLayoutBoxesItemDirective}, which provides the row's {@link DbxLayoutBoxesItemRef}.
    *
-   * Keep this reference stable (a class field, not a new literal on each change detection); a new reference rebuilds
-   * every row. The `data` and `injector` pass through to each row, so `DBX_INJECTION_COMPONENT_DATA` can carry shared
-   * context such as a lookup list.
+   * Pass one config for every row, or a {@link DbxLayoutBoxesItemConfigFunction} that picks a config per box, so
+   * different boxes can show different components. A row keeps its component while its config reference stays the
+   * same, and is rebuilt when the function returns a different one, such as after the box's payload changes kind.
    *
-   * Rows show `Box N` when omitted.
+   * Keep the references stable (a class field or module constant, not a new literal on each call or change detection).
+   * The `data` and `injector` pass through to the row, so `DBX_INJECTION_COMPONENT_DATA` can carry context such as a
+   * lookup list.
+   *
+   * Rows show `Box N` when omitted, or when the function returns nothing for a box.
    */
-  readonly item?: Maybe<DbxInjectionComponentConfig>;
+  readonly item?: Maybe<DbxLayoutBoxesItemConfig<T>>;
   /**
    * One "add" button per option. No add buttons are shown when omitted.
    */
@@ -41,6 +56,13 @@ export interface DbxLayoutBoxesComponentConfig<T = unknown> extends DbxLayoutBox
  */
 interface DbxLayoutBoxesRow<T> {
   readonly ref: DbxLayoutBoxesItemRef<T>;
+  /**
+   * The consumer's config the row was made from.
+   */
+  readonly itemConfig: Maybe<DbxInjectionComponentConfig>;
+  /**
+   * The config injected for the row: the consumer's config, plus the row's {@link DbxLayoutBoxesItemRef}.
+   */
   readonly injectionConfig: Maybe<DbxInjectionComponentConfig>;
 }
 
@@ -56,8 +78,9 @@ interface DbxLayoutBoxesResolvedItemStyle {
  * An editor for a list of layout boxes: the boxes drawn over a canvas (see {@link DbxLayoutBoxesCanvasComponent}),
  * a list with one row per box, add buttons and an optional cap warning.
  *
- * Each row renders the consumer's `item` component for that box's payload. Selecting a row selects its box, and the
- * reverse. Rows are positional, and keep their component while the box's payload changes.
+ * Each row renders the consumer's `item` component for that box's payload: one component for every row, or one picked
+ * per box. Selecting a row selects its box, and the reverse. Rows are positional, and keep their component while the
+ * box's payload changes and its picked config stays the same.
  *
  * The component holds no layout of its own: every edit computes the next value with the layout boxes geometry and
  * writes it whole to `value`.
@@ -100,7 +123,7 @@ export class DbxLayoutBoxesComponent<T = unknown> {
   /**
    * Overrides the config's row component.
    */
-  readonly item = input<Maybe<DbxInjectionComponentConfig>>();
+  readonly item = input<Maybe<DbxLayoutBoxesItemConfig<T>>>();
   /**
    * Overrides the config's add options.
    */
@@ -140,7 +163,7 @@ export class DbxLayoutBoxesComponent<T = unknown> {
     const config = this.config();
     return this.readonly() ?? config?.readonly ?? false;
   });
-  readonly itemSignal = computed<Maybe<DbxInjectionComponentConfig>>(() => {
+  readonly itemSignal = computed<Maybe<DbxLayoutBoxesItemConfig<T>>>(() => {
     const config = this.config();
     return this.item() ?? config?.item;
   });
@@ -201,23 +224,40 @@ export class DbxLayoutBoxesComponent<T = unknown> {
     return warning;
   });
 
+  /**
+   * The consumer's row config for each box.
+   *
+   * A single config only reads the length. A config function reads the value, but the array only changes when a box's
+   * returned reference changes, so a payload edit that keeps each box's config does not reach the rows.
+   */
+  readonly rowItemConfigsSignal = computed<Maybe<DbxInjectionComponentConfig>[]>(
+    () => {
+      const item = this.itemSignal();
+      let configs: Maybe<DbxInjectionComponentConfig>[];
+
+      if (typeof item === 'function') {
+        configs = this.valueSignal().map((x, index) => item(x, index));
+      } else {
+        configs = Array.from({ length: this.lengthSignal() }, () => item);
+      }
+
+      return configs;
+    },
+    { equal: (a, b) => a.length === b.length && a.every((x, i) => x === b[i]) }
+  );
+
   private readonly _rowCache = new Map<number, DbxLayoutBoxesRow<T>>();
-  private _rowCacheItem: Maybe<DbxInjectionComponentConfig>;
 
   /**
    * One row per box, cached by position so a row keeps its component while its box's payload changes.
    *
-   * Reads only the length and the row component config, so a payload edit does not recompute it.
+   * A row is rebuilt only when its box's config reference changes.
    */
   readonly rowsSignal = computed<DbxLayoutBoxesRow<T>[]>(() => {
-    const length = this.lengthSignal();
-    const item = this.itemSignal();
+    const itemConfigs = this.rowItemConfigsSignal();
 
     return untracked(() => {
-      if (item !== this._rowCacheItem) {
-        this._rowCache.clear();
-        this._rowCacheItem = item;
-      }
+      const length = itemConfigs.length;
 
       for (const index of this._rowCache.keys()) {
         if (index >= length) {
@@ -225,20 +265,16 @@ export class DbxLayoutBoxesComponent<T = unknown> {
         }
       }
 
-      const rows: DbxLayoutBoxesRow<T>[] = [];
-
-      for (let index = 0; index < length; index += 1) {
+      return itemConfigs.map((itemConfig, index) => {
         let row = this._rowCache.get(index);
 
-        if (row == null) {
-          row = this._makeRow(index, item);
+        if (row == null || row.itemConfig !== itemConfig) {
+          row = this._makeRow(index, itemConfig);
           this._rowCache.set(index, row);
         }
 
-        rows.push(row);
-      }
-
-      return rows;
+        return row;
+      });
     });
   });
 
@@ -282,7 +318,7 @@ export class DbxLayoutBoxesComponent<T = unknown> {
     }
   }
 
-  private _makeRow(index: number, item: Maybe<DbxInjectionComponentConfig>): DbxLayoutBoxesRow<T> {
+  private _makeRow(index: number, itemConfig: Maybe<DbxInjectionComponentConfig>): DbxLayoutBoxesRow<T> {
     let lastItem: Maybe<DbxLayoutBoxItem<T>>;
 
     // falls back to the last item seen, so a row being torn down by a removal never reads undefined
@@ -303,15 +339,15 @@ export class DbxLayoutBoxesComponent<T = unknown> {
       remove: () => this.remove(index)
     };
 
-    const injectionConfig: Maybe<DbxInjectionComponentConfig> = item
+    const injectionConfig: Maybe<DbxInjectionComponentConfig> = itemConfig
       ? {
-          ...item,
-          providers: [{ provide: DbxLayoutBoxesItemRef, useValue: ref }, ...(item.providers ?? [])],
-          // a row-specific init keeps each row's config unique and stable
-          init: (instance: unknown) => item.init?.(instance)
+          ...itemConfig,
+          providers: [{ provide: DbxLayoutBoxesItemRef, useValue: ref }, ...(itemConfig.providers ?? [])],
+          // a row-specific init keeps each row's config unique and stable, so a rebuilt row always gets a new component
+          init: (instance: unknown) => itemConfig.init?.(instance)
         }
       : undefined;
 
-    return { ref, injectionConfig };
+    return { ref, itemConfig, injectionConfig };
   }
 }

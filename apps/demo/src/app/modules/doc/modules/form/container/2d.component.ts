@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/c
 import { toObservable } from '@angular/core/rxjs-interop';
 import { JsonPipe } from '@angular/common';
 import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { dbxForgeLayoutBoxesField, type DbxLayoutBoxesComponentConfig, DbxLayoutBoxesComponent, DbxLayoutBoxesCanvasComponent, type DbxLayoutBoxesValue, DbxFormSourceDirective } from '@dereekb/dbx-form';
+import { dbxForgeLayoutBoxesField, type DbxLayoutBoxesComponentConfig, type DbxLayoutBoxesItemConfigFunction, DbxLayoutBoxesComponent, DbxLayoutBoxesCanvasComponent, type DbxLayoutBoxesValue, DbxFormSourceDirective } from '@dereekb/dbx-form';
 import { DbxButtonComponent, DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
@@ -11,7 +11,8 @@ import { DocFeatureExampleComponent } from '../../shared/component/feature.examp
 import { DocFeatureFormTabsComponent } from '../../shared/component/feature.formtabs.component';
 import { DocFormForgeExampleComponent } from '../../shared/component/forge.example.form.component';
 import { DocFormLayoutBoxesItemComponent } from '../component/layoutboxes.example.item.component';
-import { DOC_FORM_LAYOUT_BOXES_PICK_LABELS, type DocFormLayoutBoxesPickItemData, DocFormLayoutBoxesPickItemComponent } from '../component/layoutboxes.example.pick.item.component';
+import { DOC_FORM_LAYOUT_BOXES_PICK_LABELS, DOC_FORM_LAYOUT_BOXES_THING_LABELS, type DocFormLayoutBoxesPickItemData, DocFormLayoutBoxesPickItemComponent } from '../component/layoutboxes.example.pick.item.component';
+import { DocFormLayoutBoxesPersonItemComponent } from '../component/layoutboxes.example.person.item.component';
 import {
   DOC_FORM_LAYOUT_BOXES_ADD_BOX_OPTIONS,
   DOC_FORM_LAYOUT_BOXES_ADD_OPTIONS,
@@ -29,6 +30,19 @@ const DOC_FORM_LAYOUT_BOXES_ITEM: DbxInjectionComponentConfig = { componentClass
 
 const DOC_FORM_LAYOUT_BOXES_PICK_ITEM_DATA: DocFormLayoutBoxesPickItemData = { labels: DOC_FORM_LAYOUT_BOXES_PICK_LABELS };
 const DOC_FORM_LAYOUT_BOXES_PICK_ITEM: DbxInjectionComponentConfig = { componentClass: DocFormLayoutBoxesPickItemComponent, data: DOC_FORM_LAYOUT_BOXES_PICK_ITEM_DATA };
+
+const DOC_FORM_LAYOUT_BOXES_PERSON_ITEM: DbxInjectionComponentConfig = { componentClass: DocFormLayoutBoxesPersonItemComponent };
+const DOC_FORM_LAYOUT_BOXES_THING_ITEM_DATA: DocFormLayoutBoxesPickItemData = { labels: DOC_FORM_LAYOUT_BOXES_THING_LABELS };
+const DOC_FORM_LAYOUT_BOXES_THING_ITEM: DbxInjectionComponentConfig = { componentClass: DocFormLayoutBoxesPickItemComponent, data: DOC_FORM_LAYOUT_BOXES_THING_ITEM_DATA };
+
+/**
+ * Picks the row component by the box's kind. Returns the same constant per kind, so a row keeps its component until the
+ * box changes kind.
+ *
+ * @param item - The box.
+ * @returns The person row config for person boxes, otherwise the thing row config.
+ */
+const docFormLayoutBoxItemForKind: DbxLayoutBoxesItemConfigFunction<DocFormLayoutBoxData> = (item) => (item.data?.kind === 'person' ? DOC_FORM_LAYOUT_BOXES_PERSON_ITEM : DOC_FORM_LAYOUT_BOXES_THING_ITEM);
 
 @Component({
   templateUrl: './2d.component.html',
@@ -124,6 +138,24 @@ export class DocForm2dComponent {
           item: DOC_FORM_LAYOUT_BOXES_PICK_ITEM,
           itemStyle: docFormLayoutBoxStyle,
           addOptions: DOC_FORM_LAYOUT_BOXES_ADD_BOX_OPTIONS
+        }
+      })
+    ]
+  };
+
+  // MARK: Row Component Per Box
+  readonly forgePerBoxLayoutBoxesFieldConfig: FormConfig = {
+    fields: [
+      dbxForgeLayoutBoxesField<DocFormLayoutBoxData>({
+        key: 'boxes',
+        label: 'People and things',
+        hint: 'item is a function of the box: people get a name input, things pick from a list. Make thing changes the kind, and the row swaps its component.',
+        props: {
+          canvas: { width: 16, height: 9 },
+          imageUrl: DOC_FORM_LAYOUT_BOXES_SCENE_IMAGE_URL,
+          item: docFormLayoutBoxItemForKind,
+          itemStyle: docFormLayoutBoxStyle,
+          addOptions: DOC_FORM_LAYOUT_BOXES_ADD_OPTIONS
         }
       })
     ]

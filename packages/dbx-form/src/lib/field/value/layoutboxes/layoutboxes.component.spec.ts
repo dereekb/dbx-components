@@ -4,7 +4,7 @@ import { Component, provideZonelessChangeDetection, signal } from '@angular/core
 import { By } from '@angular/platform-browser';
 import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
-import { type DbxLayoutBoxesValue } from './layoutboxes';
+import { type DbxLayoutBoxesItemConfigFunction, type DbxLayoutBoxesValue } from './layoutboxes';
 import { type DbxLayoutBoxesComponentConfig, DbxLayoutBoxesComponent } from './layoutboxes.component';
 import { DbxLayoutBoxesCanvasComponent } from './layoutboxes.canvas.component';
 import { AbstractDbxLayoutBoxesItemDirective } from './layoutboxes.item';
@@ -25,7 +25,31 @@ class TestLayoutBoxRowComponent extends AbstractDbxLayoutBoxesItemDirective<Test
   }
 }
 
+@Component({
+  template: `
+    <span class="test-thing-row">{{ dataSignal().label }}</span>
+  `
+})
+class TestLayoutBoxThingRowComponent extends AbstractDbxLayoutBoxesItemDirective<TestData> {}
+
 const TEST_ROW_ITEM: DbxInjectionComponentConfig = { componentClass: TestLayoutBoxRowComponent };
+const TEST_THING_ROW_ITEM: DbxInjectionComponentConfig = { componentClass: TestLayoutBoxThingRowComponent };
+
+/**
+ * Person boxes get the input row, thing boxes the text row, and boxes labeled "none" get no row component.
+ *
+ * @param item - The box.
+ * @returns The row config for the box.
+ */
+const testRowItemForBox: DbxLayoutBoxesItemConfigFunction<TestData> = (item) => {
+  let config: Maybe<DbxInjectionComponentConfig>;
+
+  if (item.data.label !== 'none') {
+    config = item.data.kind === 'person' ? TEST_ROW_ITEM : TEST_THING_ROW_ITEM;
+  }
+
+  return config;
+};
 const TEST_NEW_BOX = { x: 0.4, y: 0.4, w: 0.1, h: 0.1 };
 
 function makeItems(): DbxLayoutBoxesValue<TestData> {
@@ -72,6 +96,16 @@ describe('DbxLayoutBoxesComponent', () => {
 
   function rowComponents(): TestLayoutBoxRowComponent[] {
     return fixture.debugElement.queryAll(By.directive(TestLayoutBoxRowComponent)).map((x) => x.componentInstance as TestLayoutBoxRowComponent);
+  }
+
+  function thingRowComponents(): TestLayoutBoxThingRowComponent[] {
+    return fixture.debugElement.queryAll(By.directive(TestLayoutBoxThingRowComponent)).map((x) => x.componentInstance as TestLayoutBoxThingRowComponent);
+  }
+
+  function rowComponentAt(index: number): unknown {
+    const debugElement = fixture.debugElement.queryAll(By.css('.dbx-layout-boxes-item'))[index];
+    const rowDebugElement = debugElement.query(By.directive(TestLayoutBoxRowComponent)) ?? debugElement.query(By.directive(TestLayoutBoxThingRowComponent));
+    return rowDebugElement?.componentInstance;
   }
 
   function clickRemove(index: number): void {
@@ -122,6 +156,63 @@ describe('DbxLayoutBoxesComponent', () => {
       expect(value[1]).toBe(before[1]);
       expect(value[2]).toBe(before[2]);
       expect(rowComponents()[0]).toBe(componentBefore);
+    });
+  });
+
+  describe('per-box row configs', () => {
+    beforeEach(() => {
+      host.config.set({ ...makeConfig(), item: testRowItemForBox });
+      fixture.detectChanges();
+    });
+
+    it('should render the row component the function picks for each box', () => {
+      expect(rowComponentAt(0)).toBeInstanceOf(TestLayoutBoxRowComponent);
+      expect(rowComponentAt(1)).toBeInstanceOf(TestLayoutBoxThingRowComponent);
+      expect(rowComponentAt(2)).toBeInstanceOf(TestLayoutBoxRowComponent);
+      expect(rowComponents().length).toBe(2);
+      expect(thingRowComponents().length).toBe(1);
+      expect(rowElements()[1].querySelector('.test-thing-row')?.textContent?.trim()).toBe('B');
+    });
+
+    it('should keep every row component while a payload edit keeps the picked configs', () => {
+      const componentsBefore = [0, 1, 2].map(rowComponentAt);
+      const input = rowElements()[0].querySelector('.test-row-input') as HTMLInputElement;
+      input.value = 'Z';
+      input.dispatchEvent(new Event('input'));
+      fixture.detectChanges();
+
+      expect((host.value() as DbxLayoutBoxesValue<TestData>)[0].data).toEqual({ kind: 'person', label: 'Z' });
+      expect([0, 1, 2].map(rowComponentAt)).toEqual(componentsBefore);
+    });
+
+    it('should swap only the row whose picked config changes', () => {
+      const componentsBefore = [0, 1, 2].map(rowComponentAt);
+      const items = makeItems();
+      host.value.set([items[0], { ...items[1], data: { kind: 'person', label: 'B' } }, items[2]]);
+      fixture.detectChanges();
+
+      expect(rowComponentAt(0)).toBe(componentsBefore[0]);
+      expect(rowComponentAt(1)).toBeInstanceOf(TestLayoutBoxRowComponent);
+      expect(rowComponentAt(1)).not.toBe(componentsBefore[1]);
+      expect(rowComponentAt(2)).toBe(componentsBefore[2]);
+      expect(thingRowComponents().length).toBe(0);
+    });
+
+    it("should give a row that moves to a box with another config that box's component after a removal", () => {
+      clickRemove(0);
+
+      expect(rowComponentAt(0)).toBeInstanceOf(TestLayoutBoxThingRowComponent);
+      expect(rowComponentAt(1)).toBeInstanceOf(TestLayoutBoxRowComponent);
+      expect((rowComponentAt(1) as TestLayoutBoxRowComponent).dataSignal()).toEqual({ kind: 'person', label: 'C' });
+    });
+
+    it('should show "Box N" for a box the function returns nothing for', () => {
+      const items = makeItems();
+      host.value.set([items[0], { ...items[1], data: { kind: 'thing', label: 'none' } }]);
+      fixture.detectChanges();
+
+      expect(rowComponentAt(1)).toBeUndefined();
+      expect(rowElements()[1].querySelector('.dbx-layout-boxes-item-default')?.textContent?.trim()).toBe('Box 2');
     });
   });
 

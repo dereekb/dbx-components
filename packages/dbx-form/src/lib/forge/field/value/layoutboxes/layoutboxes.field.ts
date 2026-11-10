@@ -67,7 +67,8 @@ export type DbxForgeLayoutBoxesFieldFunction = <T = unknown>(config: DbxForgeLay
  * consumer payload. Boxes can be moved, resized, nudged with the arrow keys, added and removed. A list beside the canvas
  * shows one row per box, rendered by the consumer's `item` component.
  *
- * - The `item` row component should extend {@link AbstractDbxLayoutBoxesItemDirective}.
+ * - The `item` row component should extend {@link AbstractDbxLayoutBoxesItemDirective}. Pass one config for every row, or
+ *   a function of the box that returns a config per box, so different boxes can show different components.
  * - For "at least one box", use `minLength: 1`; `required` does not reject an empty list. For a hard limit, use
  *   `maxLength`. The `cap` prop only warns.
  * - The form output strips empty payload values (`''`, `null`, `undefined`), so make payload fields optional and default
