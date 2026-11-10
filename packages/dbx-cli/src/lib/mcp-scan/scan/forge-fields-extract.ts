@@ -723,7 +723,8 @@ function collectFromInterface(decl: InterfaceDeclaration, context: CollectContex
   for (const ext of decl.getExtends()) {
     const expr = ext.getExpression();
     const refName = Node.isIdentifier(expr) ? expr.getText() : ext.getText();
-    const inherited = collectFromInterfaceName(stripGenericArgs(refName), context);
+    // heritage clauses go through the same utility-type handling as type references, so `extends Omit<X, K>` walks X
+    const inherited = collectFromReference(stripGenericArgs(refName), ext.getTypeArguments(), context);
     accumulator.addAll(inherited);
   }
   for (const propSig of decl.getProperties()) {
@@ -800,10 +801,19 @@ function collectFromUnionTypeNode(typeNode: UnionTypeNode, context: CollectConte
 }
 
 function collectFromTypeReference(ref: TypeReferenceNode, context: CollectContext): readonly ForgeFieldPropertyEntry[] {
-  const refNameNode = ref.getTypeName();
-  const refName = refNameNode.getText();
-  const args = ref.getTypeArguments();
+  return collectFromReference(ref.getTypeName().getText(), ref.getTypeArguments(), context);
+}
 
+/**
+ * Collects the properties of a named type reference, from a type node or an interface heritage clause. Unwraps the
+ * `Partial` / `Readonly` / `Required` / `Omit` / `Pick` utility types, and otherwise walks the named interface or alias.
+ *
+ * @param refName - The referenced type name, without type arguments.
+ * @param args - The reference's type arguments.
+ * @param context - The walker context.
+ * @returns The collected properties.
+ */
+function collectFromReference(refName: string, args: readonly TypeNode[], context: CollectContext): readonly ForgeFieldPropertyEntry[] {
   let result: readonly ForgeFieldPropertyEntry[];
   if ((refName === 'Partial' || refName === 'Readonly') && args.length === 1) {
     const innerContext: CollectContext = refName === 'Partial' ? { ...context, forceOptional: true } : context;

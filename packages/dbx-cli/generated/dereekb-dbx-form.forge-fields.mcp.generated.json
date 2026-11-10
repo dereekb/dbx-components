@@ -13,7 +13,20 @@
       "arrayOutput": "no",
       "description": "Password input (HTML `type=\"password\"`) with secure autocomplete defaults.\n\nDefaults to the key `'password'` and label `'Password'` unless overridden.",
       "example": "dbxForgeTextPasswordField({ key: 'password', required: true })",
-      "properties": [],
+      "properties": [
+        {
+          "name": "autocomplete",
+          "type": "FieldAutocompleteAttributeOption",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "idempotentTransform",
+          "type": "TransformStringFunctionConfig",
+          "description": "An idempotent string transformation applied as a value parser (e.g., trim, uppercase).\n\nFor non-idempotent transformations, you should directly configure the `transform` property instead.",
+          "required": false
+        }
+      ],
       "composesFromSlugs": [
         "text"
       ],
@@ -27,7 +40,20 @@
       "arrayOutput": "no",
       "description": "Companion to `password-field` for sign-up flows. Defaults `autocomplete` to `new-password`. Pair with `password-with-verify-fields` for cross-field equality validation.\n\nDefaults to the key `'verifyPassword'` and label `'Verify Password'` unless overridden.",
       "example": "dbxForgeTextVerifyPasswordField({ key: 'verifyPassword' })",
-      "properties": [],
+      "properties": [
+        {
+          "name": "autocomplete",
+          "type": "FieldAutocompleteAttributeOption",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "idempotentTransform",
+          "type": "TransformStringFunctionConfig",
+          "description": "An idempotent string transformation applied as a value parser (e.g., trim, uppercase).\n\nFor non-idempotent transformations, you should directly configure the `transform` property instead.",
+          "required": false
+        }
+      ],
       "composesFromSlugs": [
         "password-field"
       ],
@@ -136,6 +162,12 @@
           "name": "autocomplete",
           "type": "FieldAutocompleteAttributeOption",
           "description": "",
+          "required": false
+        },
+        {
+          "name": "idempotentTransform",
+          "type": "TransformStringFunctionConfig",
+          "description": "An idempotent string transformation applied as a value parser (e.g., trim, uppercase).\n\nFor non-idempotent transformations, you should directly configure the `transform` property instead.",
           "required": false
         },
         {
@@ -1610,6 +1642,36 @@
       "example": "dbxForgeLayoutBoxesField<MyBoxData>({\n  key: 'boxes',\n  label: 'Layout',\n  minLength: 1,\n  props: {\n    canvas: { width: 16, height: 9 },\n    item: { componentClass: MyBoxRowComponent },\n    itemStyle: (item) => ({ color: item.data.kind === 'person' ? 'primary' : 'tertiary' }),\n    addOptions: [{ text: 'Add box', icon: 'add_box', data: () => ({ kind: 'thing' }) }]\n  }\n})",
       "properties": [
         {
+          "name": "itemStyle (props)",
+          "type": "Maybe<DbxLayoutBoxesItemStyleFunction<T>>",
+          "description": "Returns the CSS classes and color for each box.",
+          "required": false
+        },
+        {
+          "name": "item (props)",
+          "type": "Maybe<DbxLayoutBoxesItemConfig<T>>",
+          "description": "The component that shows or edits one box's payload in the box list. It should extend\n{@link AbstractDbxLayoutBoxesItemDirective}, which provides the row's {@link DbxLayoutBoxesItemRef}.\n\nPass one config for every row, or a {@link DbxLayoutBoxesItemConfigFunction} that picks a config per box, so\ndifferent boxes can show different components. A row keeps its component while its config reference stays the\nsame, and is rebuilt when the function returns a different one, such as after the box's payload changes kind.\n\nKeep the references stable (a class field or module constant, not a new literal on each call or change detection).\nThe `data` and `injector` pass through to the row, so `DBX_INJECTION_COMPONENT_DATA` can carry context such as a\nlookup list.\n\nRows show `Box N` when omitted, or when the function returns nothing for a box.",
+          "required": false
+        },
+        {
+          "name": "addOptions (props)",
+          "type": "Maybe<DbxLayoutBoxesAddOption<T>[]>",
+          "description": "One \"add\" button per option. No add buttons are shown when omitted.",
+          "required": false
+        },
+        {
+          "name": "cap (props)",
+          "type": "Maybe<DbxLayoutBoxesCapConfig<T>>",
+          "description": "A soft limit on the number of boxes. Passing it shows a warning, but never blocks adding.",
+          "required": false
+        },
+        {
+          "name": "listPosition (props)",
+          "type": "Maybe<DbxLayoutBoxesListPosition>",
+          "description": "Where the box list is drawn. Defaults to `'side'`.",
+          "required": false
+        },
+        {
           "name": "canvas (props)",
           "type": "MaybeObservableOrValue<DbxLayoutBoxesCanvasSize>",
           "description": "The canvas the boxes are drawn on. Only its aspect ratio is used. Defaults to a square.\n\nMay be an Observable, to change the canvas at runtime.",
@@ -1985,6 +2047,24 @@
       "example": "dbxForgeStateField({ asCode: true, required: true })",
       "properties": [
         {
+          "name": "autocomplete",
+          "type": "FieldAutocompleteAttributeOption",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "inputType",
+          "type": "DbxForgeTextFieldInputType",
+          "description": "HTML input type. Defaults to `'text'`.",
+          "required": false
+        },
+        {
+          "name": "idempotentTransform",
+          "type": "TransformStringFunctionConfig",
+          "description": "An idempotent string transformation applied as a value parser (e.g., trim, uppercase).\n\nFor non-idempotent transformations, you should directly configure the `transform` property instead.",
+          "required": false
+        },
+        {
           "name": "asCode",
           "type": "boolean",
           "description": "When true, validates and formats as a 2-letter state code (e.g., `'CA'`).",
@@ -2104,6 +2184,24 @@
       "description": "Street address line input. The `line` prop controls which line (1 or 2) — it affects key and label generation.",
       "example": "dbxForgeAddressLineField({ line: 2 })",
       "properties": [
+        {
+          "name": "autocomplete",
+          "type": "FieldAutocompleteAttributeOption",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "inputType",
+          "type": "DbxForgeTextFieldInputType",
+          "description": "HTML input type. Defaults to `'text'`.",
+          "required": false
+        },
+        {
+          "name": "idempotentTransform",
+          "type": "TransformStringFunctionConfig",
+          "description": "An idempotent string transformation applied as a value parser (e.g., trim, uppercase).\n\nFor non-idempotent transformations, you should directly configure the `transform` property instead.",
+          "required": false
+        },
         {
           "name": "line",
           "type": "0 | 1 | 2",
@@ -2422,6 +2520,24 @@
       "description": "Creates a responsive flex layout container that arranges child fields horizontally\nwith configurable sizing, breakpoints, and responsive behavior.\n\nEach child field gets a `dbx-flex-N` CSS class applied (merged with any existing className).\nThe container hosts the `dbx-forge-flex` wrapper, which renders the `dbxFlexGroup`\ndirective for responsive breakpoint handling.\n\nA `container` is used (not a `group`) because flex layout is purely visual —\nthe wrapped fields should remain at the same level in the form value, not be\nnested under an extra object.",
       "example": "// Simple: all fields get default size (2)\ndbxForgeFlexLayout({ fields: [dbxForgeCityField({}), dbxForgeStateField({}), dbxForgeZipCodeField({})] })\n\n// Resulting form value shape (flat — no wrapper property):\n// { city: '...', state: '...', zip: '...' }\n\n// With per-field sizing and breakpoint\ndbxForgeFlexLayout({\n  breakpoint: 'small',\n  size: 1,\n  fields: [\n    { field: dbxForgeCityField({}), size: 4 },\n    dbxForgeStateField({}),\n    dbxForgeZipCodeField({})\n  ]\n})\n\n// Full config\ndbxForgeFlexLayout({ breakpoint: 'large', breakToColumn: true, relative: true, size: 1, fields: [...] })",
       "properties": [
+        {
+          "name": "breakpoint",
+          "type": "ScreenMediaWidthType",
+          "description": "Breakpoint based on the screen width below which fields stack.",
+          "required": false
+        },
+        {
+          "name": "relative",
+          "type": "boolean",
+          "description": "Whether to use relative sizing (removes max-width constraints).",
+          "required": false
+        },
+        {
+          "name": "breakToColumn",
+          "type": "boolean",
+          "description": "Whether to break to a column layout when the breakpoint is reached.",
+          "required": false
+        },
         {
           "name": "fields",
           "type": "readonly (FieldDef<unknown> | DbxForgeFlexLayoutFieldConfig)[]",

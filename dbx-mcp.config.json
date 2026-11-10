@@ -70,7 +70,7 @@
         "project": "packages/dbx-form",
         "source": "@dereekb/dbx-form",
         "module": "@dereekb/dbx-form",
-        "include": ["src/lib/forge/**/*.ts", "src/lib/field/field.autocomplete.ts"],
+        "include": ["src/lib/forge/**/*.ts", "src/lib/field/field.autocomplete.ts", "src/lib/field/value/layoutboxes/*.ts"],
         "exclude": ["**/*.spec.ts", "**/*.test.ts"],
         "out": "packages/dbx-cli/generated/dereekb-dbx-form.forge-fields.mcp.generated.json"
       }

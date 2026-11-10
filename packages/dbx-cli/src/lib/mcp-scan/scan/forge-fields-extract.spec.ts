@@ -294,3 +294,53 @@ describe('extractForgeFieldEntries — marker tag aliases', () => {
     expect(entry.composesFromSlugs).toEqual(['username', 'password']);
   });
 });
+
+describe('extractForgeFieldEntries — utility types in heritage clauses', () => {
+  it('walks the base of an interface that extends Omit<X, K> and Partial<Y>', () => {
+    const project = projectWith({
+      '/proj/src/heritage.ts': `
+        export interface HeritageBaseConfig {
+          /**
+           * Kept from the base.
+           */
+          readonly a: string;
+          readonly b?: number;
+          readonly c?: boolean;
+        }
+
+        export interface HeritageOtherConfig {
+          readonly d: string;
+        }
+
+        export interface DbxForgeHeritageFieldProps extends Omit<HeritageBaseConfig, 'b'>, Partial<HeritageOtherConfig> {
+          readonly e?: string;
+        }
+
+        export interface DbxForgeHeritageFieldConfig {
+          readonly key: string;
+        }
+
+        /**
+         * Test factory whose props extend utility types.
+         * @dbxFormField
+         * @dbxFormSlug heritage
+         * @dbxFormTier field-factory
+         * @dbxFormProduces string
+         * @dbxFormArrayOutput no
+         * @dbxFormNgFormType input
+         * @dbxFormWrapperPattern unwrapped
+         * @dbxFormPropsInterface DbxForgeHeritageFieldProps
+         */
+        export function dbxForgeHeritageField(config: DbxForgeHeritageFieldConfig) {
+          return config;
+        }
+      `
+    });
+    const result = extractForgeFieldEntries({ project });
+    const entry = findEntry(result.entries, 'heritage');
+    const props = entry.properties.filter((p) => p.name.endsWith(' (props)'));
+    expect(props.map((p) => p.name).sort()).toEqual(['a (props)', 'c (props)', 'd (props)', 'e (props)']);
+    expect(props.find((p) => p.name === 'a (props)')).toMatchObject({ required: true, description: 'Kept from the base.' });
+    expect(props.find((p) => p.name === 'd (props)')?.required).toBe(false);
+  });
+});
