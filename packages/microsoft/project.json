@@ -1,0 +1,61 @@
+{
+  "name": "microsoft",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/microsoft/src",
+  "projectType": "library",
+  "tags": ["publishable"],
+  "implicitDependencies": ["util-fetch", "util-oidc", "!util-test"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/packages/microsoft"],
+      "options": {
+        "color": true,
+        "command": "node tools/scripts/finalize-esm-exports.mjs dist/packages/microsoft"
+      },
+      "dependsOn": [
+        "build-base",
+        {
+          "projects": ["microsoft-nestjs"],
+          "target": "build-base"
+        }
+      ],
+      "metadata": {
+        "description": "The nested case. dist/packages/microsoft is ONE npm package whose entry points (the root and microsoft-nestjs) compile into this directory and are named by this package's own dist `exports`. So this target is the sole deliverable and the sole owner of the directory; the children deliberately have no `build` of their own. The children are dependsOn EDGES (one Nx process, one graph), and the finalize stays this target's own command so it runs after every entry point is built."
+      }
+    },
+    "build-base": {
+      "dependsOn": ["^build"],
+      "metadata": {
+        "description": "`^build`, NOT the `^build-base` @nx/rollup/plugin infers. @nx/js remaps @dereekb/* imports to the dist DIRECTORY, so TypeScript reads that directory's package.json `exports` to resolve them -- and rollup writes `.` as {import, types} until that dependency's own `build` reorders it. `^build-base` would compile this package against un-finalized dependencies."
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "run-all-tests": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "description": "run microsoft tests",
+            "command": "npx nx test microsoft"
+          },
+          {
+            "description": "run microsoft-nestjs tests",
+            "command": "npx nx test microsoft-nestjs"
+          }
+        ],
+        "color": true,
+        "parallel": false
+      }
+    },
+    "ci-publish-npmjs": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cd ./dist/packages/microsoft && npm publish --access public --tag latest"
+      }
+    }
+  }
+}

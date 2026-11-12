@@ -121,3 +121,55 @@ export function smallestUserExternalConnectionScopePresetCovering(input: Smalles
 
   return result;
 }
+
+// MARK: Microsoft
+/**
+ * The Microsoft Graph delegated scopes the default "Read" preset requests, in their canonical casing.
+ *
+ * Plain strings rather than `@dereekb/microsoft` constants, so the server model and the Angular UI need
+ * no dependency on the Microsoft package to declare or render the presets.
+ */
+export const MICROSOFT_GRAPH_READ_SCOPES: readonly UserExternalConnectionCapability[] = ['User.Read', 'Mail.Read', 'Calendars.Read', 'Files.Read.All', 'Sites.Read.All'];
+
+/**
+ * The Microsoft Graph delegated scopes the default "Read + Write" preset requests: the read set plus
+ * the mail, calendar and files write scopes.
+ *
+ * Deliberately excludes `Mail.Send`.
+ */
+export const MICROSOFT_GRAPH_READ_WRITE_SCOPES: readonly UserExternalConnectionCapability[] = [...MICROSOFT_GRAPH_READ_SCOPES, 'Mail.ReadWrite', 'Calendars.ReadWrite', 'Files.ReadWrite.All'];
+
+/**
+ * Key of the default Microsoft "Read" preset.
+ */
+export const MICROSOFT_READ_SCOPE_PRESET_KEY: UserExternalConnectionScopePresetKey = 'read';
+
+/**
+ * Key of the default Microsoft "Read + Write" preset.
+ */
+export const MICROSOFT_READ_WRITE_SCOPE_PRESET_KEY: UserExternalConnectionScopePresetKey = 'readwrite';
+
+/**
+ * The default Microsoft "Read" preset.
+ */
+export const MICROSOFT_READ_SCOPE_PRESET: UserExternalConnectionScopePreset = {
+  key: MICROSOFT_READ_SCOPE_PRESET_KEY,
+  label: 'Read',
+  description: 'Read your profile, mail, calendar and files.',
+  scopes: MICROSOFT_GRAPH_READ_SCOPES
+};
+
+/**
+ * The default Microsoft "Read + Write" preset.
+ */
+export const MICROSOFT_READ_WRITE_SCOPE_PRESET: UserExternalConnectionScopePreset = {
+  key: MICROSOFT_READ_WRITE_SCOPE_PRESET_KEY,
+  label: 'Read + Write',
+  description: 'Read and change your mail, calendar and files. Never sends mail.',
+  scopes: MICROSOFT_GRAPH_READ_WRITE_SCOPES
+};
+
+/**
+ * The default scope presets a Microsoft connection is made with, smallest first.
+ */
+export const MICROSOFT_USER_EXTERNAL_CONNECTION_SCOPE_PRESETS: readonly UserExternalConnectionScopePreset[] = [MICROSOFT_READ_SCOPE_PRESET, MICROSOFT_READ_WRITE_SCOPE_PRESET];

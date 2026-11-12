@@ -1,0 +1,28 @@
+{
+  "name": "microsoft-nestjs",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/microsoft/nestjs/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build-base": {
+      "dependsOn": [
+        {
+          "projects": ["microsoft"],
+          "target": "build-base"
+        },
+        {
+          "projects": ["util"],
+          "target": "build"
+        }
+      ],
+      "metadata": {
+        "description": "An explicit edge to microsoft:build-base, NOT `^build`: `^build` would resolve to microsoft:build, which depends on this very target -- a hard cycle. Cross-family deps are spelled as the other family's ROOT `build` (util), since the parent's `build` runs the ESM finalize TypeScript resolves `exports` against."
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    }
+  }
+}

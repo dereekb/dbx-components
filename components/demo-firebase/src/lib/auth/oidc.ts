@@ -66,6 +66,21 @@ export const LMS_OIDC_SCOPE = 'lms' as const;
 export const REPORTS_OIDC_SCOPE = 'reports' as const;
 
 /**
+ * Narrows a `microsoft` token mint to the Read preset's Graph scopes — the `providerScopes` ceiling
+ * `DemoExternalConnectionTokenApiModule` maps it to. Carried alongside `token.external` (which still
+ * gates the mint itself) and unlocked by the admin-only `external-token` provider profile.
+ */
+export const MICROSOFT_READ_EXTERNAL_TOKEN_OIDC_SCOPE = 'token.external.microsoft_read' as const;
+
+/**
+ * Narrows a `microsoft` token mint to the Read + Write preset's Graph scopes. See
+ * {@link MICROSOFT_READ_EXTERNAL_TOKEN_OIDC_SCOPE}.
+ */
+export const MICROSOFT_ADMIN_EXTERNAL_TOKEN_OIDC_SCOPE = 'token.external.microsoft_admin' as const;
+
+export type MicrosoftExternalTokenOidcScope = typeof MICROSOFT_READ_EXTERNAL_TOKEN_OIDC_SCOPE | typeof MICROSOFT_ADMIN_EXTERNAL_TOKEN_OIDC_SCOPE;
+
+/**
  * Key of the admin-only provider profile that unlocks {@link CLI_TOKEN_OIDC_SCOPE}.
  *
  * Deliberately a PROFILE rather than an `adminOnlyScopes` entry: only a client an admin explicitly
@@ -116,7 +131,7 @@ export type ReportsOidcScope = typeof REPORTS_OIDC_SCOPE;
  * - {@link ExternalConnectionTokenOidcScope} (`token.external`): unlocked (optional) by the admin-only
  *   `external-token` profile.
  */
-export type DemoOidcProviderProfileScope = LmsOidcScope | ReportsOidcScope | CliTokenOidcScope | ExternalConnectionTokenOidcScope;
+export type DemoOidcProviderProfileScope = LmsOidcScope | ReportsOidcScope | CliTokenOidcScope | ExternalConnectionTokenOidcScope | MicrosoftExternalTokenOidcScope;
 
 /**
  * Frontend base path for the demo app's OAuth interaction pages.
@@ -225,7 +240,12 @@ export function demoOidcProviderProfiles(config: DemoOidcProviderProfilesConfig 
       adminOnly: true,
       ...(unlockExternalTokenByDefault ? { isDefault: true } : undefined),
       maxSessionTtl: DEMO_EXTERNAL_TOKEN_OIDC_MAX_SESSION_TTL,
-      scopes: [{ scope: EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE, require: 'none' }]
+      scopes: [
+        { scope: EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE, require: 'none' },
+        // the microsoft mint's narrowing ceilings; useful only together with token.external
+        { scope: MICROSOFT_READ_EXTERNAL_TOKEN_OIDC_SCOPE, require: 'none' },
+        { scope: MICROSOFT_ADMIN_EXTERNAL_TOKEN_OIDC_SCOPE, require: 'none' }
+      ]
     }
   ];
 }

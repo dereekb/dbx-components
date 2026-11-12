@@ -7,6 +7,7 @@ import { CALCOM_USER_EXTERNAL_CONNECTION_OAUTH_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE }
 import { DISCORD_USER_EXTERNAL_CONNECTION_OAUTH_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE } from '@dereekb/firebase-server/discord';
 import { ZOHO_USER_EXTERNAL_CONNECTION_OAUTH_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE } from '@dereekb/firebase-server/zoho';
 import { TRELLO_USER_EXTERNAL_CONNECTION_OAUTH_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE } from '@dereekb/firebase-server/trello';
+import { MICROSOFT_USER_EXTERNAL_CONNECTION_OAUTH_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE } from '@dereekb/firebase-server/microsoft';
 import { userExternalConnectionOAuthRoutesForGlobalRouteExclude } from '@dereekb/firebase-server/model';
 import { DEMO_TRELLO_BOT_EXTERNAL_CONNECTION_PROVIDER_TYPE, DEMO_ZOHO_ADMIN_EXTERNAL_CONNECTION_PROVIDER_TYPE } from 'demo-firebase';
 import { DemoApiAppModule } from './app.module';
@@ -29,7 +30,8 @@ export const DEMO_API_NEST_SERVER_CONFIG: NestServerInstanceConfig<DemoApiAppMod
       ...userExternalConnectionOAuthRoutesForGlobalRouteExclude(DEMO_ZOHO_ADMIN_EXTERNAL_CONNECTION_PROVIDER_TYPE),
       ...TRELLO_USER_EXTERNAL_CONNECTION_OAUTH_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE,
       // the second Trello connection (DemoTrelloBotOAuthConnectionModule) mounts at /oauth/trello_bot
-      ...userExternalConnectionOAuthRoutesForGlobalRouteExclude(DEMO_TRELLO_BOT_EXTERNAL_CONNECTION_PROVIDER_TYPE)
+      ...userExternalConnectionOAuthRoutesForGlobalRouteExclude(DEMO_TRELLO_BOT_EXTERNAL_CONNECTION_PROVIDER_TYPE),
+      ...MICROSOFT_USER_EXTERNAL_CONNECTION_OAUTH_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE
     ]
   },
   configureNestServerInstance: (nestApp: INestApplication) => {

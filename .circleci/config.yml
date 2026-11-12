@@ -207,6 +207,9 @@ jobs:
           name: run trello tests
           command: npx nx run-all-tests trello
       - run:
+          name: run microsoft tests
+          command: npx nx run-all-tests microsoft
+      - run:
           name: run openrouter tests
           command: npx nx test openrouter
       - run:

@@ -1,6 +1,7 @@
 import {
   CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
   DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  MICROSOFT_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
   TRELLO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
   ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
   ZOOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
@@ -60,3 +61,10 @@ export const DEMO_TRELLO_EXTERNAL_CONNECTION_PROVIDER_TYPE: KnownUserExternalCon
  * `unique`: several users may each connect the same bot account.
  */
 export const DEMO_TRELLO_BOT_EXTERNAL_CONNECTION_PROVIDER_TYPE: UserExternalConnectionProviderType = 'trello_bot';
+
+/**
+ * The demo's Microsoft Graph connection: one connection per admin, connected with the Read or the Read +
+ * Write scope preset, and minted out to a CLI narrowed by the `token.external.microsoft_read` /
+ * `token.external.microsoft_admin` OIDC scope ceilings.
+ */
+export const DEMO_MICROSOFT_EXTERNAL_CONNECTION_PROVIDER_TYPE: KnownUserExternalConnectionProviderType = MICROSOFT_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE;

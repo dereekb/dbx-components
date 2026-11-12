@@ -1,7 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import { DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, type KnownUserExternalConnectionProviderType, TRELLO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE } from '@dereekb/firebase';
+import {
+  DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  type KnownUserExternalConnectionProviderType,
+  MICROSOFT_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  MICROSOFT_USER_EXTERNAL_CONNECTION_SCOPE_PRESETS,
+  TRELLO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE
+} from '@dereekb/firebase';
 import { type DbxFirebaseExternalConnectionProvider } from './externalconnection';
-import { DBX_FIREBASE_EXTERNAL_CONNECTION_DISCORD_PROVIDER, DBX_FIREBASE_EXTERNAL_CONNECTION_TRELLO_PROVIDER, DBX_FIREBASE_KNOWN_EXTERNAL_CONNECTION_PROVIDERS, dbxFirebaseExternalConnectionProviderForEntry, dbxFirebaseKnownExternalConnectionProvider } from './externalconnection.default';
+import {
+  DBX_FIREBASE_EXTERNAL_CONNECTION_DISCORD_PROVIDER,
+  DBX_FIREBASE_EXTERNAL_CONNECTION_MICROSOFT_PROVIDER,
+  DBX_FIREBASE_EXTERNAL_CONNECTION_TRELLO_PROVIDER,
+  DBX_FIREBASE_KNOWN_EXTERNAL_CONNECTION_PROVIDERS,
+  dbxFirebaseExternalConnectionProviderForEntry,
+  dbxFirebaseKnownExternalConnectionProvider
+} from './externalconnection.default';
 
 describe('DBX_FIREBASE_KNOWN_EXTERNAL_CONNECTION_PROVIDERS', () => {
   it('should key each provider by its own provider type', () => {
@@ -30,6 +44,12 @@ describe('dbxFirebaseExternalConnectionProviderForEntry()', () => {
     // with no fixed path, a second instance such as trello_bot follows its own provider type to /oauth/<providerType>/authorize
     expect(DBX_FIREBASE_EXTERNAL_CONNECTION_TRELLO_PROVIDER.signIn).toBeUndefined();
     expect(DBX_FIREBASE_EXTERNAL_CONNECTION_TRELLO_PROVIDER.authorizePath).toBeUndefined();
+  });
+
+  it('should resolve microsoft to the library provider with the default scope presets', () => {
+    expect(dbxFirebaseExternalConnectionProviderForEntry(MICROSOFT_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE)).toBe(DBX_FIREBASE_EXTERNAL_CONNECTION_MICROSOFT_PROVIDER);
+    expect(DBX_FIREBASE_EXTERNAL_CONNECTION_MICROSOFT_PROVIDER.scopePresets).toBe(MICROSOFT_USER_EXTERNAL_CONNECTION_SCOPE_PRESETS);
+    expect(DBX_FIREBASE_EXTERNAL_CONNECTION_MICROSOFT_PROVIDER.scopePresets?.map((x) => x.label)).toEqual(['Read', 'Read + Write']);
   });
 
   it('should pass a declared provider through untouched', () => {

@@ -2,6 +2,8 @@ import {
   type KnownUserExternalConnectionProviderType,
   CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
   DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  MICROSOFT_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  MICROSOFT_USER_EXTERNAL_CONNECTION_SCOPE_PRESETS,
   TRELLO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
   ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
   ZOOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
@@ -80,6 +82,23 @@ export const DBX_FIREBASE_EXTERNAL_CONNECTION_TRELLO_PROVIDER: DbxFirebaseExtern
 };
 
 /**
+ * Default presentation for Microsoft (Microsoft Graph).
+ *
+ * Declares the default Read / Read + Write scope presets, so the connect list renders one connect
+ * button per preset and a chip naming the preset the current grant covers. An app whose server declares
+ * its own presets mirrors them through `dbxFirebaseKnownExternalConnectionProvider({ scopePresets })`.
+ */
+export const DBX_FIREBASE_EXTERNAL_CONNECTION_MICROSOFT_PROVIDER: DbxFirebaseExternalConnectionProvider = {
+  providerType: MICROSOFT_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  assets: {
+    providerName: 'Microsoft',
+    icon: 'mail',
+    description: 'Connect your Microsoft 365 account to read your mail, calendar and files.'
+  },
+  scopePresets: MICROSOFT_USER_EXTERNAL_CONNECTION_SCOPE_PRESETS
+};
+
+/**
  * The library's provider for each known third-party service, keyed by provider type.
  *
  * Every service the workspace ships a server-side OAuth adapter for appears here, so an app that
@@ -90,7 +109,8 @@ export const DBX_FIREBASE_KNOWN_EXTERNAL_CONNECTION_PROVIDERS: Record<KnownUserE
   zoom: DBX_FIREBASE_EXTERNAL_CONNECTION_ZOOM_PROVIDER,
   discord: DBX_FIREBASE_EXTERNAL_CONNECTION_DISCORD_PROVIDER,
   zoho: DBX_FIREBASE_EXTERNAL_CONNECTION_ZOHO_PROVIDER,
-  trello: DBX_FIREBASE_EXTERNAL_CONNECTION_TRELLO_PROVIDER
+  trello: DBX_FIREBASE_EXTERNAL_CONNECTION_TRELLO_PROVIDER,
+  microsoft: DBX_FIREBASE_EXTERNAL_CONNECTION_MICROSOFT_PROVIDER
 };
 
 /**

@@ -19,7 +19,7 @@ import {
 import { DemoApiAuthModule } from '../../common/firebase/auth.module';
 import { DemoApiAuthService, DemoApiFirestoreModule, DemoApiStorageModule } from '../../common/firebase';
 import { FIREBASE_SERVER_DOCS_API_PROTECTED_PATH, FIREBASE_SERVER_SESSION_API_PROTECTED_PATH, FirebaseServerEnvService, type FirebaseServerAuthUserContext, FirebaseServerStorageService } from '@dereekb/firebase-server';
-import { DEMO_APP_OAUTH_INTERACTION_PATH, DEMO_AUTH_CLAIMS_SERVICE, DEMO_OIDC_PROVIDER_PROFILES, DEMO_OIDC_TOKEN_ENDPOINT_AUTH_METHODS, demoOidcProviderProfiles, type DemoApiAuthClaims, type DemoOidcScope } from 'demo-firebase';
+import { DEMO_APP_OAUTH_INTERACTION_PATH, DEMO_AUTH_CLAIMS_SERVICE, DEMO_OIDC_PROVIDER_PROFILES, MICROSOFT_ADMIN_EXTERNAL_TOKEN_OIDC_SCOPE, MICROSOFT_READ_EXTERNAL_TOKEN_OIDC_SCOPE, DEMO_OIDC_TOKEN_ENDPOINT_AUTH_METHODS, demoOidcProviderProfiles, type DemoApiAuthClaims, type DemoOidcScope } from 'demo-firebase';
 
 /**
  * Environment variable naming the registered OAuth client the CLI-token mint issues credentials for
@@ -74,6 +74,10 @@ export const DEMO_OIDC_PROVIDER_CONFIG: OidcProviderConfig<DemoOidcScope> = {
     // 8 hours — and deliberately NOT in `adminOnlyScopes` below, whose 365-day service-token TTL tier
     // would otherwise turn a grant that can mint third-party tokens into a year-long one.
     [EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE]: [],
+    // the microsoft mint's narrowing ceilings (see DemoExternalConnectionTokenApiModule providerScopes).
+    // Gated by the same admin-only `external-token` profile; no extra ID-token claims.
+    [MICROSOFT_READ_EXTERNAL_TOKEN_OIDC_SCOPE]: [],
+    [MICROSOFT_ADMIN_EXTERNAL_TOKEN_OIDC_SCOPE]: [],
     // lms / reports are provider-profile-gated (see DEMO_OIDC_PROVIDER_PROFILES) — supported/issuable but
     // only obtainable by a client whose assigned profile unlocks them. They add no extra ID-token claims.
     lms: [],

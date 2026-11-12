@@ -1,0 +1,36 @@
+{
+  "name": "firebase-server-microsoft",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/firebase-server/microsoft/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build-base": {
+      "dependsOn": [
+        {
+          "projects": ["firebase-server"],
+          "target": "build-base"
+        },
+        {
+          "projects": ["firebase-server-model"],
+          "target": "build-base"
+        },
+        {
+          "projects": ["microsoft"],
+          "target": "build"
+        },
+        {
+          "projects": ["util"],
+          "target": "build"
+        }
+      ],
+      "metadata": {
+        "description": "An explicit edge to firebase-server:build-base, NOT `^build`: `^build` would resolve to firebase-server:build, which depends on this very target -- a hard cycle. It also imports the SIBLING entry point @dereekb/firebase-server/model, spelled `firebase-server-model:build-base` (siblings compile into the same dist directory and have no `build` of their own). It further imports @dereekb/microsoft, its @dereekb/microsoft/nestjs child, and @dereekb/util/oidc, hence `microsoft:build` and `util:build`: cross-family deps are spelled as the other family's ROOT `build`, the only target that produces a finalized copy for TypeScript to resolve `exports` against."
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    }
+  }
+}

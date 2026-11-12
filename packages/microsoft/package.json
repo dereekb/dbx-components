@@ -1,0 +1,25 @@
+{
+  "name": "@dereekb/microsoft",
+  "version": "14.25.1",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    "./nestjs": {
+      "types": "./nestjs/index.d.ts",
+      "import": "./nestjs/index.esm.js",
+      "default": "./nestjs/index.esm.js"
+    }
+  },
+  "peerDependencies": {
+    "@dereekb/nestjs": "14.25.1",
+    "@dereekb/rxjs": "14.25.1",
+    "@dereekb/util": "14.25.1",
+    "@nestjs/common": "^12.0.1",
+    "@nestjs/config": "^12.0.0",
+    "express": "^5.2.1",
+    "make-error": "^1.3.6"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^12.0.1"
+  }
+}

@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
 import { AUTH_ADMIN_ROLE, type Maybe } from '@dereekb/util';
-import { type OidcEntryClientId } from '@dereekb/firebase';
+import { MICROSOFT_GRAPH_READ_SCOPES, MICROSOFT_GRAPH_READ_WRITE_SCOPES, type OidcEntryClientId } from '@dereekb/firebase';
 import { FirebaseServerEnvService } from '@dereekb/firebase-server';
-import { USER_EXTERNAL_CONNECTION_TOKEN_PREDICATE, UserExternalConnectionTokenApiModuleConfig, type UserExternalConnectionTokenPredicate, userExternalConnectionTokenApiModuleMetadata } from '@dereekb/firebase-server/model';
+import { USER_EXTERNAL_CONNECTION_TOKEN_PREDICATE, UserExternalConnectionTokenApiModuleConfig, type UserExternalConnectionTokenPredicate, type UserExternalConnectionTokenProviderScopeConfig, userExternalConnectionTokenApiModuleMetadata } from '@dereekb/firebase-server/model';
+import { DEMO_MICROSOFT_EXTERNAL_CONNECTION_PROVIDER_TYPE, MICROSOFT_ADMIN_EXTERNAL_TOKEN_OIDC_SCOPE, MICROSOFT_READ_EXTERNAL_TOKEN_OIDC_SCOPE } from 'demo-firebase';
 import { DemoApiApiModule } from '../../api/api.module';
 import { DemoApiAuthService } from '../../common/firebase';
 import { DemoApiAuthModule } from '../../common/firebase/auth.module';
@@ -62,6 +63,23 @@ export function demoExternalConnectionTokenPredicateFactory(authService: DemoApi
 }
 
 /**
+ * The OIDC scope ceilings a `microsoft` token mint is narrowed to.
+ *
+ * A caller holding `token.external.microsoft_read` gets a token carrying at most the Read preset's
+ * Graph scopes; `token.external.microsoft_admin` at most Read + Write. Holding both unions the two. A
+ * caller holding neither is refused a `microsoft` token outright, even with `token.external`.
+ */
+export const DEMO_EXTERNAL_CONNECTION_TOKEN_PROVIDER_SCOPES: readonly UserExternalConnectionTokenProviderScopeConfig[] = [
+  {
+    providerType: DEMO_MICROSOFT_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+    oidcScopeCeilings: {
+      [MICROSOFT_READ_EXTERNAL_TOKEN_OIDC_SCOPE]: MICROSOFT_GRAPH_READ_SCOPES,
+      [MICROSOFT_ADMIN_EXTERNAL_TOKEN_OIDC_SCOPE]: MICROSOFT_GRAPH_READ_WRITE_SCOPES
+    }
+  }
+];
+
+/**
  * Builds the external connection token API config for the demo app.
  *
  * Only the client allowlist is configured, from {@link DEMO_EXTERNAL_CONNECTION_TOKEN_OIDC_CLIENT_IDS_ENV_KEY};
@@ -79,7 +97,8 @@ export function demoExternalConnectionTokenApiModuleConfigFactory(envService: Fi
     allowedClientIds: (clientId) => {
       const allowedClientIds = readDemoExternalConnectionTokenAllowedClientIds();
       return allowedClientIds == null ? !isProduction : allowedClientIds.includes(clientId);
-    }
+    },
+    providerScopes: DEMO_EXTERNAL_CONNECTION_TOKEN_PROVIDER_SCOPES
   };
 }
 

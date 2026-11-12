@@ -15,6 +15,7 @@
     "@dereekb/firebase-server": "14.25.1",
     "@dereekb/model": "14.25.1",
     "@dereekb/nestjs": "14.25.1",
+    "@dereekb/microsoft": "14.25.1",
     "@dereekb/openrouter": "14.25.1",
     "@dereekb/trello": "14.25.1",
     "@dereekb/util": "14.25.1",
