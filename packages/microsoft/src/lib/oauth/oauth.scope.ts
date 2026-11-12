@@ -55,6 +55,10 @@ export const KNOWN_MICROSOFT_GRAPH_SCOPES: readonly MicrosoftGraphScope[] = [
   'Team.ReadBasic.All',
   'Channel.ReadBasic.All',
   'Chat.Read',
+  'Chat.ReadWrite',
+  'ChannelMessage.Send',
+  'ChannelMessage.Read.All',
+  'ChannelMessage.ReadWrite',
   'Presence.Read'
 ];
 
