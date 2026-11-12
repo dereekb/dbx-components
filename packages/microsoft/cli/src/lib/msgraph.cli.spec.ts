@@ -15,6 +15,9 @@ import { parseMsGraphCliDateOption, parseMsGraphCliIdsFileContent } from './util
 import { MAIL_DELETE_COMMAND, MAIL_DRAFT_CREATE_COMMAND, MAIL_DRAFT_UPDATE_COMMAND, MAIL_REPLY_COMMAND, MAIL_SEND_COMMAND } from './commands/mail.write.command';
 import { msGraphCliConfigSetUpdate } from './commands/config.command';
 import { MAIL_MAILBOXES_CHECK_COMMAND } from './commands/mail.mailboxes.command';
+import { CALENDAR_CREATE_COMMAND, CALENDAR_DELETE_COMMAND } from './commands/calendar.command';
+import { FILES_DELETE_COMMAND, FILES_MOVE_COMMAND, FILES_UPLOAD_COMMAND } from './commands/files.command';
+import { MAIL_AUTO_REPLY_OFF_COMMAND, MAIL_AUTO_REPLY_RESTORE_COMMAND } from './commands/mail.auto.reply.command';
 
 // what the entry point does at startup
 configureMsGraphCliOutput();
@@ -580,6 +583,150 @@ describe('msgraph-cli', () => {
         { mailbox: 'shared@example.com', read: 'ok', write: 'ok' },
         { mailbox: 'denied@example.com', read: 'denied', write: 'skipped', readCode: 'ErrorAccessDenied' }
       ]);
+    });
+  });
+
+  describe('calendar, auto-reply and files commands', () => {
+    interface RecordedCall {
+      readonly method: string;
+      readonly path: string;
+      readonly body: unknown;
+    }
+
+    async function connectRecording(answer: (method: string, path: string) => { readonly status: number; readonly body?: unknown }) {
+      const calls: RecordedCall[] = [];
+      await createMsGraphCliAuthMiddleware({
+        skipCommands: new Set(),
+        env: { ...env, MSGRAPH_CLI_TOKEN_COMMAND: source.command },
+        graphFactoryConfig: {
+          fetchHandler: async (request: Request) => {
+            const path = new URL(request.url).pathname.replace(/^\/v1\.0/, '');
+            const text = await request.text();
+            calls.push({ method: request.method, path, body: text ? JSON.parse(text) : undefined });
+            const x = answer(request.method, path);
+            return new Response(x.body == null ? null : JSON.stringify(x.body), { status: x.status, headers: { 'Content-Type': 'application/json' } });
+          }
+        }
+      })({ _: ['calendar'], $0: 'msgraph-cli' });
+      return calls;
+    }
+
+    function run(command: { handler: unknown }, argv: Record<string, unknown>): Promise<void> {
+      return (command.handler as (argv: unknown) => Promise<void>)({ _: ['calendar'], $0: 'msgraph-cli', ...argv });
+    }
+
+    const EVENT_WINDOW = { subject: 'Sync', start: '2026-11-16T17:00:00Z', end: '2026-11-16T17:30:00Z' };
+
+    it('should create an event without attendees with no --yes, and refuse one with attendees', async () => {
+      // models: M-q (user-post-events) — 201 with the event; attendees get invitations
+      const calls = await connectRecording(() => ({ status: 201, body: { id: 'e1', webLink: 'https://outlook/e1' } }));
+      const exit = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+      await run(CALENDAR_CREATE_COMMAND, { ...EVENT_WINDOW });
+      await run(CALENDAR_CREATE_COMMAND, { ...EVENT_WINDOW, attendee: ['ada@example.com'] });
+
+      expect(calls).toHaveLength(1);
+      expect(calls[0].body).toEqual({ subject: 'Sync', start: { dateTime: '2026-11-16T17:00:00.000', timeZone: 'UTC' }, end: { dateTime: '2026-11-16T17:30:00.000', timeZone: 'UTC' } });
+      expect(JSON.parse(log.mock.calls[0][0] as string).data).toEqual({ id: 'e1', webLink: 'https://outlook/e1', invitationsSent: 0 });
+      expect(exit).toHaveBeenCalledWith(1);
+      expect(JSON.parse(log.mock.calls[1][0] as string).code).toBe('CONFIRMATION_REQUIRED');
+    });
+
+    it('should name the cancellations when deleting a meeting the user organizes, and delete with --yes', async () => {
+      // models: M-q (event-delete) — DELETE on the organizer's calendar sends attendees cancellations; 204
+      const calls = await connectRecording((method) => (method === 'GET' ? { status: 200, body: { id: 'e1', isOrganizer: true, attendees: [{ emailAddress: { address: 'ada@example.com' } }, { emailAddress: { address: 'bob@example.com' } }] } } : { status: 204 }));
+      vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+      await run(CALENDAR_DELETE_COMMAND, { id: 'e1' });
+      await run(CALENDAR_DELETE_COMMAND, { id: 'e1', yes: true });
+
+      const refused = JSON.parse(log.mock.calls[0][0] as string);
+      expect(refused.code).toBe('CONFIRMATION_REQUIRED');
+      expect(refused.error).toContain('2 attendee(s) are sent a cancellation');
+      expect(calls.map((x) => x.method)).toEqual(['GET', 'GET', 'DELETE']);
+      expect(JSON.parse(log.mock.calls[1][0] as string).data).toEqual({ id: 'e1', deleted: true, cancellationsSent: 2 });
+    });
+
+    it('should refuse --cancel on an event the user does not organize', async () => {
+      const calls = await connectRecording(() => ({ status: 200, body: { id: 'e1', isOrganizer: false, attendees: [] } }));
+      vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+      await run(CALENDAR_DELETE_COMMAND, { id: 'e1', cancel: true, comment: 'Moved', yes: true });
+
+      expect(JSON.parse(log.mock.calls[0][0] as string).code).toBe('INVALID_ARGUMENT');
+      expect(calls.map((x) => x.method)).toEqual(['GET']);
+    });
+
+    it('should back up the setting before auto-reply off, and restore it exactly', async () => {
+      // models: user-update-mailboxsettings — PATCH answers 200 with the updated settings
+      const original = { status: 'scheduled', externalAudience: 'none', scheduledStartDateTime: { dateTime: '2030-01-01T00:00:00.0000000', timeZone: 'UTC' }, scheduledEndDateTime: { dateTime: '2030-01-02T00:00:00.0000000', timeZone: 'UTC' }, internalReplyMessage: '<p>Away</p>', externalReplyMessage: '' };
+      let current: Record<string, unknown> = { '@odata.context': 'x', ...original };
+      const calls = await connectRecording((method) => {
+        let answer: { status: number; body: unknown } = { status: 200, body: current };
+
+        if (method === 'PATCH') {
+          const patch = (calls[calls.length - 1].body as { automaticRepliesSetting: Record<string, unknown> }).automaticRepliesSetting;
+          current = { ...current, ...patch };
+          answer = { status: 200, body: { automaticRepliesSetting: current } };
+        }
+
+        return answer;
+      });
+      vi.stubEnv(MSGRAPH_CLI_CONFIG_DIR_ENV_VAR, join(dir, 'config'));
+      vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+      await run(MAIL_AUTO_REPLY_OFF_COMMAND, { yes: true });
+      expect(current['status']).toBe('disabled');
+      await run(MAIL_AUTO_REPLY_RESTORE_COMMAND, { yes: true });
+
+      expect(calls.map((x) => `${x.method} ${x.path}`)).toEqual(['GET /me/mailboxSettings/automaticRepliesSetting', 'PATCH /me/mailboxSettings', 'GET /me/mailboxSettings/automaticRepliesSetting', 'PATCH /me/mailboxSettings']);
+      expect(calls[3].body).toEqual({ automaticRepliesSetting: original });
+      vi.unstubAllEnvs();
+    });
+
+    it('should map a files move into another drive to CROSS_DRIVE_MOVE before any write', async () => {
+      // models: F-h (driveitem-move) — move cannot cross drives
+      const calls = await connectRecording((method, path) => ({ status: 200, body: path === '/me/drive' ? { id: 'my-drive' } : { id: 'folder-1' } }));
+      vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+      await run(FILES_MOVE_COMMAND, { id: 'item-1', to: 'folder-1', toDrive: 'other-drive' });
+
+      const printedError = JSON.parse(log.mock.calls[0][0] as string);
+      expect(printedError.code).toBe('CROSS_DRIVE_MOVE');
+      expect(printedError.suggestion).toContain('files copy');
+      expect(calls.map((x) => x.method)).not.toContain('PATCH');
+    });
+
+    it('should refuse files delete without --yes, and delete to the recycle bin with it', async () => {
+      // models: F-f (driveitem-delete) — 204
+      const calls = await connectRecording(() => ({ status: 204 }));
+      vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+      await run(FILES_DELETE_COMMAND, { path: 'Docs/old.txt' });
+      await run(FILES_DELETE_COMMAND, { path: 'Docs/old.txt', yes: true });
+
+      expect(JSON.parse(log.mock.calls[0][0] as string).code).toBe('CONFIRMATION_REQUIRED');
+      expect(calls.map((x) => `${x.method} ${x.path}`)).toEqual(['DELETE /me/drive/root:/Docs/old.txt']);
+      expect(JSON.parse(log.mock.calls[1][0] as string).data).toEqual({ deleted: true, path: 'Docs/old.txt', permanent: false });
+    });
+
+    it('should print a large upload as a session plus chunk count on --dry-run and send nothing', async () => {
+      const calls = await connectRecording(() => ({ status: 200, body: {} }));
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+      const local = join(dir, 'big.bin');
+      writeFileSync(local, new Uint8Array(5 * 1024 * 1024));
+
+      await run(FILES_UPLOAD_COMMAND, { local, toPath: 'Docs', conflict: 'rename', dryRun: true });
+
+      const data = JSON.parse(log.mock.calls[0][0] as string).data;
+      expect(data.requests[0]).toEqual({ method: 'POST', url: '/me/drive/root:/Docs/big.bin:/createUploadSession', body: { item: { name: 'big.bin', '@microsoft.graph.conflictBehavior': 'rename' } } });
+      expect(data.note).toContain('1 chunk PUT(s)');
+      expect(calls).toHaveLength(0);
     });
   });
 

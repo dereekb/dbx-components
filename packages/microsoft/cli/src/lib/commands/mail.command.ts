@@ -7,6 +7,7 @@ import { msGraphCommandHandler } from '../middleware/auth.middleware';
 import { msGraphCliMailboxOptions, msGraphCliPagingOptions, parseMsGraphCliDateOption, readMsGraphCliIdsOption } from '../util/option';
 import { DEFAULT_MSGRAPH_CLI_MAIL_DUMP_MAX_MESSAGES, dumpMsGraphCliMail } from '../util/mail.dump';
 import { outputMsGraphCliResult } from '../util/output';
+import { MAIL_AUTO_REPLY_COMMAND } from './mail.auto.reply.command';
 import { MAIL_MAILBOXES_COMMAND } from './mail.mailboxes.command';
 import { MAIL_WRITE_COMMANDS } from './mail.write.command';
 
@@ -201,7 +202,8 @@ export const MAIL_DUMP_COMMAND: CommandModule = {
 
 /**
  * The `mail` command: reads (`list`, `search`, `get`, `get-many`, `dump`) and writes (`draft`, `send`,
- * `send-bulk`, `reply`, `forward`, `move`, `copy`, `delete`), and `mailboxes check` for shared mailboxes.
+ * `send-bulk`, `reply`, `forward`, `move`, `copy`, `delete`), `mailboxes check` for shared mailboxes, and
+ * `auto-reply` for automatic replies.
  */
 export const MAIL_COMMAND: CommandModule = {
   command: 'mail',
@@ -215,6 +217,7 @@ export const MAIL_COMMAND: CommandModule = {
       .command(MAIL_DUMP_COMMAND)
       .command([...MAIL_WRITE_COMMANDS])
       .command(MAIL_MAILBOXES_COMMAND)
+      .command(MAIL_AUTO_REPLY_COMMAND)
       .demandCommand(1, 'Please specify a mail subcommand.'),
   handler: () => undefined
 };

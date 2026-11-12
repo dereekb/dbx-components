@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { type FetchHandler } from '@dereekb/util/fetch';
-import { getDriveItem, microsoftGraphRequest, microsoftGraphRequestAllPages } from './graph.api';
+import { microsoftGraphRequest, microsoftGraphRequestAllPages } from './graph.api';
+import { getDriveItem } from './graph.drive.api';
 import { getMessage, searchMessages } from './graph.mail.api';
 import { MicrosoftGraphError } from './graph.error.api';
 import { microsoftGraphFactory } from './graph.factory';

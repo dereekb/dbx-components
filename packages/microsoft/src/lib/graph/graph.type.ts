@@ -84,7 +84,20 @@ export interface MicrosoftGraphEvent {
   readonly organizer?: Maybe<MicrosoftGraphRecipient>;
   readonly attendees?: Maybe<MicrosoftGraphRecipient[]>;
   readonly webLink?: Maybe<string>;
+  /**
+   * Whether the signed-in user organizes the event. Deleting an event the user organizes that has attendees
+   * sends them cancellations.
+   */
+  readonly isOrganizer?: Maybe<boolean>;
+  readonly isCancelled?: Maybe<boolean>;
+  readonly isOnlineMeeting?: Maybe<boolean>;
+  readonly showAs?: Maybe<MicrosoftGraphEventShowAs>;
 }
+
+/**
+ * How an event shows on the calendar (`free`, `busy`, …).
+ */
+export type MicrosoftGraphEventShowAs = 'free' | 'tentative' | 'busy' | 'oof' | 'workingElsewhere' | 'unknown';
 
 /**
  * The subset of a Graph `driveItem` this package reads.
@@ -98,5 +111,25 @@ export interface MicrosoftGraphDriveItem {
   readonly lastModifiedDateTime?: Maybe<ISO8601DateString>;
   readonly file?: Maybe<{ readonly mimeType?: Maybe<string> }>;
   readonly folder?: Maybe<{ readonly childCount?: Maybe<number> }>;
-  readonly parentReference?: Maybe<{ readonly driveId?: Maybe<string>; readonly path?: Maybe<string> }>;
+  readonly parentReference?: Maybe<{ readonly driveId?: Maybe<string>; readonly id?: Maybe<string>; readonly path?: Maybe<string> }>;
+}
+
+/**
+ * The subset of a Graph `drive` (a OneDrive, or a SharePoint document library) this package reads.
+ */
+export interface MicrosoftGraphDrive {
+  readonly id: string;
+  readonly name?: Maybe<string>;
+  readonly driveType?: Maybe<string>;
+  readonly webUrl?: Maybe<string>;
+}
+
+/**
+ * The subset of a Graph `site` this package reads.
+ */
+export interface MicrosoftGraphSite {
+  readonly id: string;
+  readonly name?: Maybe<string>;
+  readonly displayName?: Maybe<string>;
+  readonly webUrl?: Maybe<string>;
 }

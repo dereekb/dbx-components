@@ -1,5 +1,5 @@
 import { type CliErrorOutput, type CliOutputPickApplier, DEFAULT_CLI_SECRET_PATTERNS, appendCliErrorMapper, cliCollectionPickApplier, configureCliSecretPatterns, outputResult, sanitizeString } from '@dereekb/dbx-cli';
-import { MicrosoftGraphError, MicrosoftGraphMessageNotDraftError, isMicrosoftGraphAdminConsentScope, isMicrosoftGraphNotFoundError, isMicrosoftGraphServiceError, readMicrosoftGraphRequiredScopesFromErrorMessage } from '@dereekb/microsoft';
+import { MicrosoftGraphCrossDriveMoveError, MicrosoftGraphError, MicrosoftGraphLibraryNotFoundError, MicrosoftGraphMessageNotDraftError, isMicrosoftGraphAdminConsentScope, isMicrosoftGraphNotFoundError, isMicrosoftGraphServiceError, readMicrosoftGraphRequiredScopesFromErrorMessage } from '@dereekb/microsoft';
 import { type Maybe } from '@dereekb/util';
 import { FetchResponseError, FetchTimeoutError } from '@dereekb/util/fetch';
 import { MSGRAPH_CLI_NAME } from '../config/cli.config';
@@ -80,7 +80,8 @@ export function isMsGraphCliTimeoutError(error: unknown): boolean {
  * - 5xx / `UnknownError`: `SERVICE_UNAVAILABLE` (Microsoft's side failed).
  *
  * A non-Graph error body with a 404 or 5xx status maps to `NOT_FOUND` / `SERVICE_UNAVAILABLE` too, a
- * timeout or abort to `TIMEOUT`, and a `draft update` of a sent message to `NOT_A_DRAFT`. Other errors return undefined so the default mapping applies.
+ * timeout or abort to `TIMEOUT`, a `draft update` of a sent message to `NOT_A_DRAFT`, a `files move` into
+ * another drive to `CROSS_DRIVE_MOVE`, and an unknown `--library` to `NOT_FOUND`. Other errors return undefined so the default mapping applies.
  *
  * @param error - The thrown value.
  * @returns The envelope, or undefined when the error is not one msgraph-cli maps.
@@ -118,6 +119,10 @@ export function msGraphCliErrorOutput(error: unknown): CliErrorOutput | undefine
     }
   } else if (error instanceof MicrosoftGraphMessageNotDraftError) {
     result = { ok: false, error: error.message, code: 'NOT_A_DRAFT', suggestion: 'The message was already sent. Use mail reply / mail forward to follow up on it.' };
+  } else if (error instanceof MicrosoftGraphCrossDriveMoveError) {
+    result = { ok: false, error: error.message, code: 'CROSS_DRIVE_MOVE', suggestion: `Run ${MSGRAPH_CLI_NAME} files copy <id> --to-drive <driveId> --wait, check the copy, then ${MSGRAPH_CLI_NAME} files delete <id> --yes.` };
+  } else if (error instanceof MicrosoftGraphLibraryNotFoundError) {
+    result = { ok: false, error: error.message, code: 'NOT_FOUND', suggestion: 'Pass one of the listed names to --library, or drop --library for the default library.' };
   } else if (isMsGraphCliTimeoutError(error)) {
     result = { ok: false, error: sanitizeString((error as Error).message), code: 'TIMEOUT', suggestion: `Microsoft Graph did not answer within the client timeout. Retry; if it keeps timing out, check ${MSGRAPH_CLI_SERVICE_STATUS_URL}.` };
   }

@@ -7,6 +7,7 @@ import { CONFIG_COMMAND } from './lib/commands/config.command';
 import { FILES_COMMAND } from './lib/commands/files.command';
 import { MAIL_COMMAND } from './lib/commands/mail.command';
 import { REQUEST_COMMAND } from './lib/commands/request.command';
+import { TEAMS_COMMAND } from './lib/commands/teams.command';
 import { MSGRAPH_CLI_NAME, mergeMsGraphCliOutputConfig, msGraphCliConfigStore, msGraphCliTokenSourceResolver } from './lib/config/cli.config';
 import { createMsGraphCliAuthMiddleware } from './lib/middleware/auth.middleware';
 import { configureMsGraphCliOutput } from './lib/util/output';
@@ -28,7 +29,7 @@ const outputCommand = createOutputCommand({
 /**
  * Graph commands: they need a token source (auth middleware) and support pick/dump output filtering.
  */
-const apiCommands: CommandModule[] = [REQUEST_COMMAND, MAIL_COMMAND, CALENDAR_COMMAND, FILES_COMMAND];
+const apiCommands: CommandModule[] = [REQUEST_COMMAND, MAIL_COMMAND, CALENDAR_COMMAND, FILES_COMMAND, TEAMS_COMMAND];
 
 /**
  * Config commands: they run without a token source and their output is never filtered.

@@ -32,10 +32,11 @@ export function msGraphCliDryRunOptions<T>(yargs: Argv<T>) {
  * Adds `--yes`, the gate on outward-facing or destructive commands.
  *
  * @param yargs - The command's yargs.
+ * @param describe - The option's help text. Defaults to the mail wording.
  * @returns The yargs, with the option added.
  */
-export function msGraphCliConfirmOptions<T>(yargs: Argv<T>) {
-  return yargs.option('yes', { type: 'boolean', default: false, describe: 'Confirm the command: it sends mail or deletes, so it refuses to run without --yes' });
+export function msGraphCliConfirmOptions<T>(yargs: Argv<T>, describe = 'Confirm the command: it sends mail or deletes, so it refuses to run without --yes') {
+  return yargs.option('yes', { type: 'boolean', default: false, describe });
 }
 
 /**

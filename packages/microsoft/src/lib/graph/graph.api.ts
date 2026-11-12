@@ -1,8 +1,8 @@
-import { type ISO8601DateString, type Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { type FetchJsonBody, type FetchMethod } from '@dereekb/util/fetch';
 import { type MicrosoftGraphContext } from './graph.config';
 import { canonicalizeMicrosoftGraphHeaders, type MicrosoftGraphHeaders } from './graph.header';
-import { type MicrosoftGraphDriveItem, type MicrosoftGraphEvent, type MicrosoftGraphPage } from './graph.type';
+import { type MicrosoftGraphPage } from './graph.type';
 
 /**
  * Query parameters for a Graph request. `undefined`/`null` values are dropped.
@@ -102,84 +102,5 @@ export function microsoftGraphRequestAllPages(context: MicrosoftGraphContext): <
     }
 
     return items;
-  };
-}
-
-// MARK: Calendar
-export interface MicrosoftGraphListCalendarViewInput {
-  readonly start: ISO8601DateString;
-  readonly end: ISO8601DateString;
-  readonly top?: Maybe<number>;
-}
-
-/**
- * Lists the user's calendar occurrences between two instants (`/me/calendarView`), recurring
- * instances expanded. Requires `Calendars.Read`.
- *
- * @param context - Fetch function and access-token source each request is sent with.
- * @returns Function that lists calendar events and resolves the first page.
- */
-export function listCalendarView(context: MicrosoftGraphContext): (input: MicrosoftGraphListCalendarViewInput) => Promise<MicrosoftGraphPage<MicrosoftGraphEvent>> {
-  const request = microsoftGraphRequest(context);
-
-  return (input) => request({ method: 'GET', path: '/me/calendarView', query: { startDateTime: input.start, endDateTime: input.end, $top: input.top ?? 50, $orderby: 'start/dateTime', $select: 'id,subject,start,end,isAllDay,location,organizer,attendees,webLink' } });
-}
-
-// MARK: Files
-export interface MicrosoftGraphSearchDriveItemsInput {
-  readonly query: string;
-  readonly top?: Maybe<number>;
-}
-
-/**
- * Searches the user's OneDrive (`/me/drive/root/search`). Requires `Files.Read` (or `.All`).
- *
- * @param context - Fetch function and access-token source each request is sent with.
- * @returns Function that searches OneDrive and resolves the first page of matches.
- */
-export function searchDriveItems(context: MicrosoftGraphContext): (input: MicrosoftGraphSearchDriveItemsInput) => Promise<MicrosoftGraphPage<MicrosoftGraphDriveItem>> {
-  const request = microsoftGraphRequest(context);
-
-  return (input) => {
-    // OData string literals escape a single quote by doubling it
-    const q = input.query.replaceAll("'", "''");
-    return request({ method: 'GET', path: `/me/drive/root/search(q='${encodeURIComponent(q)}')`, query: { $top: input.top ?? 25 } });
-  };
-}
-
-export interface MicrosoftGraphGetDriveItemInput {
-  /**
-   * The drive item id. Takes precedence over `path`.
-   */
-  readonly id?: Maybe<string>;
-  /**
-   * The item's path from the drive root, e.g. `Documents/report.docx`.
-   */
-  readonly path?: Maybe<string>;
-}
-
-/**
- * Reads a drive item's metadata by id or by path. Requires `Files.Read` (or `.All`).
- *
- * @param context - Fetch function and access-token source each request is sent with.
- * @returns Function that loads one drive item by id or path.
- * @throws {Error} When neither an id nor a path is given.
- */
-export function getDriveItem(context: MicrosoftGraphContext): (input: MicrosoftGraphGetDriveItemInput) => Promise<MicrosoftGraphDriveItem> {
-  const request = microsoftGraphRequest(context);
-
-  return (input) => {
-    let path: string;
-
-    if (input.id) {
-      path = `/me/drive/items/${encodeURIComponent(input.id)}`;
-    } else if (input.path) {
-      const itemPath = input.path.replace(/^\/+/, '').split('/').map(encodeURIComponent).join('/');
-      path = `/me/drive/root:/${itemPath}`;
-    } else {
-      throw new Error('getDriveItem requires an id or a path.');
-    }
-
-    return request({ method: 'GET', path });
   };
 }
