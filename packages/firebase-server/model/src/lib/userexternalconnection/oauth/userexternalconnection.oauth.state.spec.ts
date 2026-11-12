@@ -162,6 +162,19 @@ describe('userExternalConnectionStateCoder() sign-in states', () => {
     expect(coder.verifyState({ state, providerType: CALCOM })).toBeUndefined();
   });
 
+  it('should round trip the scope preset through a connect state', () => {
+    const state = coder.mintState({ uid: TEST_UID, providerType: CALCOM, scopePreset: 'readwrite' });
+    const actor = coder.verifyState({ state, providerType: CALCOM });
+
+    expect(actor?.mode).toBe('connect');
+    expect(actor?.mode === 'connect' ? actor.scopePreset : undefined).toBe('readwrite');
+  });
+
+  it('should carry no scope preset on a connect state minted without one', () => {
+    const actor = coder.verifyState({ state: coder.mintState({ uid: TEST_UID, providerType: CALCOM }), providerType: CALCOM });
+    expect(actor?.mode === 'connect' ? actor.scopePreset : 'not-connect').toBeUndefined();
+  });
+
   it('should treat a state minted with no mode as a connect state', () => {
     // a state already in flight when sign-in mode shipped carries no `mode` and must still verify
     const legacyCoder = userExternalConnectionStateCoder({ secret: TEST_SECRET });

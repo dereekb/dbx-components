@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { USER_EXTERNAL_CONNECTION_PROVIDER_NOT_ALLOWED_ERROR_CODE } from './userexternalconnection.error';
 import { userExternalConnectionOAuthProviderRegistry } from './oauth/userexternalconnection.oauth.registry';
 import { type AbstractUserExternalConnectionOAuthService } from './oauth/userexternalconnection.oauth.service';
-import { CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as CALCOM, DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as DISCORD } from '@dereekb/firebase';
+import { CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as CALCOM, DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as DISCORD, USER_EXTERNAL_CONNECTION_SCOPE_PRESET_NOT_ALLOWED_ERROR_CODE } from '@dereekb/firebase';
+import { type Maybe } from '@dereekb/util';
 import { assertUserExternalConnectionProviderConnectable, resolveUserExternalConnectionProviderPolicy, userExternalConnectionPolicyForProviderType, userExternalConnectionProviderPolicyRegistry } from './userexternalconnection.policy';
 
 describe('resolveUserExternalConnectionProviderPolicy()', () => {
@@ -116,5 +117,31 @@ describe('assertUserExternalConnectionProviderConnectable()', () => {
 
   it('should still refuse an unmounted provider, even to an admin', () => {
     expectNotAllowed(() => assertUserExternalConnectionProviderConnectable({ oauthRegistry, policyRegistry, providerType: UNMOUNTED, isAdmin: true }));
+  });
+
+  describe('scopePreset', () => {
+    const PRESET_PROVIDER = 'presets';
+    const presetService = { providerType: PRESET_PROVIDER, scopePresetForKey: (key: Maybe<string>) => (key === 'read' ? { key: 'read', label: 'Read', scopes: ['read'] } : undefined) } as unknown as AbstractUserExternalConnectionOAuthService;
+    const presetOAuthRegistry = userExternalConnectionOAuthProviderRegistry([presetService]);
+
+    it('should allow a declared preset', () => {
+      expect(() => assertUserExternalConnectionProviderConnectable({ oauthRegistry: presetOAuthRegistry, providerType: PRESET_PROVIDER, isAdmin: false, scopePreset: 'read' })).not.toThrow();
+    });
+
+    it('should allow no preset', () => {
+      expect(() => assertUserExternalConnectionProviderConnectable({ oauthRegistry: presetOAuthRegistry, providerType: PRESET_PROVIDER, isAdmin: false })).not.toThrow();
+    });
+
+    it('should refuse an undeclared preset with the scope-preset-not-allowed error', () => {
+      let error: unknown;
+
+      try {
+        assertUserExternalConnectionProviderConnectable({ oauthRegistry: presetOAuthRegistry, providerType: PRESET_PROVIDER, isAdmin: false, scopePreset: 'admin' });
+      } catch (e) {
+        error = e;
+      }
+
+      expect((error as { details?: { code?: string } })?.details?.code).toBe(USER_EXTERNAL_CONNECTION_SCOPE_PRESET_NOT_ALLOWED_ERROR_CODE);
+    });
   });
 });

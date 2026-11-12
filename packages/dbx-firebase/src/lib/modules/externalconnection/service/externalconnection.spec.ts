@@ -98,4 +98,34 @@ describe('dbxFirebaseExternalConnectionRows()', () => {
       expect(result[1].adminOnly).toBe(true);
     });
   });
+
+  describe('scope presets', () => {
+    const presetProvider: DbxFirebaseExternalConnectionProvider = {
+      providerType: 'graph',
+      assets: { providerName: 'Graph' },
+      scopePresets: [
+        { key: 'read', label: 'Read', scopes: ['Mail.Read'] },
+        { key: 'readwrite', label: 'Read + Write', scopes: ['Mail.Read', 'Mail.ReadWrite'] }
+      ]
+    };
+
+    it('should carry the presets and the current preset the granted capabilities cover', () => {
+      const [row] = dbxFirebaseExternalConnectionRows({ providers: [presetProvider], enabledProviderTypes: ['graph'], entries: { graph: { st: 'connected', uat: now, ca: ['Mail.Read', 'Mail.ReadWrite', 'User.Read'] } } });
+
+      expect(row.scopePresets?.map((x) => x.key)).toEqual(['read', 'readwrite']);
+      expect(row.scopePreset?.key).toBe('readwrite');
+    });
+
+    it('should have no current preset when the grant covers none', () => {
+      const [row] = dbxFirebaseExternalConnectionRows({ providers: [presetProvider], enabledProviderTypes: ['graph'], entries: { graph: { st: 'connected', uat: now, ca: ['User.Read'] } } });
+      expect(row.scopePreset).toBeUndefined();
+    });
+
+    it('should have no presets for a provider that declares none', () => {
+      const [row] = dbxFirebaseExternalConnectionRows({ providers: [calcomProvider], enabledProviderTypes: ['calcom'], entries: {} });
+
+      expect(row.scopePresets).toBeUndefined();
+      expect(row.scopePreset).toBeUndefined();
+    });
+  });
 });

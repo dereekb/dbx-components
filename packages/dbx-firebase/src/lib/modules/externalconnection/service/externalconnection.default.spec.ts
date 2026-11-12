@@ -80,4 +80,12 @@ describe('dbxFirebaseKnownExternalConnectionProvider()', () => {
 
     expect(result.authorizePath).toBe('/connect/discord');
   });
+
+  it('should apply a scope presets override', () => {
+    const scopePresets = [{ key: 'read', label: 'Read', scopes: ['read'] }];
+    const result = dbxFirebaseKnownExternalConnectionProvider({ providerType: DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, scopePresets });
+
+    expect(result.scopePresets).toBe(scopePresets);
+    expect(DBX_FIREBASE_EXTERNAL_CONNECTION_DISCORD_PROVIDER.scopePresets).toBeUndefined();
+  });
 });

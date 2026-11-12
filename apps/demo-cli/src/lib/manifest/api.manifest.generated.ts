@@ -71,7 +71,7 @@ import {
 } from 'demo-firebase';
 import { type CliApiManifest, type CliGeneratedManifestStamp, type CliModelManifest, type CliEnumManifest } from '@dereekb/dbx-cli';
 
-export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.24.0' };
+export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.25.1' };
 
 export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
   {
@@ -1347,6 +1347,12 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
         typeText: "Maybe<'connect' | 'link'>",
         description:
           'Which handoff the state begins. Defaults to `connect`.\n\n- `connect` — attach the provider as a DATA connection, with the data scopes.\n- `link` — make the provider a LOGIN METHOD for the already-signed-in caller, with the sign-in\n  scopes. A separate round trip because the two scope sets are not guaranteed to be the same,\n  so a data grant cannot be assumed to cover an identity read.\n\nAbsent means `connect`, so a client minting a state before `link` existed still gets one.'
+      },
+      {
+        name: 'scopePreset',
+        typeText: 'Maybe<UserExternalConnectionScopePresetKey>',
+        description:
+          "Key of the scope preset to connect with, for a provider that declares scope presets.\n\nOnly applies to the `connect` mode; ignored for `link`. Absent means the provider's default preset\n(or no preset at all when the provider declares none). A key the provider does not declare is\nrefused with `USER_EXTERNAL_CONNECTION_SCOPE_PRESET_NOT_ALLOWED`."
       }
     ],
     resultTypeDescription:

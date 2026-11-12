@@ -4,6 +4,7 @@ import { type InferredTargetModelParams, inferredTargetModelParamsType } from '.
 import { callModelFirebaseFunctionMapFactory, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCreateFunction, type ModelFirebaseCrudFunction, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap } from '../../client';
 import { type UserExternalConnectionTypes } from './userexternalconnection';
 import { type UserExternalConnectionProviderType } from './userexternalconnection.id';
+import { type UserExternalConnectionScopePresetKey } from './userexternalconnection.preset';
 
 // MARK: Create
 /**
@@ -64,12 +65,21 @@ export interface ReadUserExternalConnectionAuthorizeStateParams extends Inferred
    * Absent means `connect`, so a client minting a state before `link` existed still gets one.
    */
   readonly mode?: Maybe<'connect' | 'link'>;
+  /**
+   * Key of the scope preset to connect with, for a provider that declares scope presets.
+   *
+   * Only applies to the `connect` mode; ignored for `link`. Absent means the provider's default preset
+   * (or no preset at all when the provider declares none). A key the provider does not declare is
+   * refused with `USER_EXTERNAL_CONNECTION_SCOPE_PRESET_NOT_ALLOWED`.
+   */
+  readonly scopePreset?: Maybe<UserExternalConnectionScopePresetKey>;
 }
 
 export const readUserExternalConnectionAuthorizeStateParamsType = /* @__PURE__ */ inferredTargetModelParamsType.merge(
   type({
     providerType: 'string',
-    'mode?': "'connect' | 'link'"
+    'mode?': "'connect' | 'link'",
+    'scopePreset?': 'string'
   })
 ) as Type<ReadUserExternalConnectionAuthorizeStateParams>;
 

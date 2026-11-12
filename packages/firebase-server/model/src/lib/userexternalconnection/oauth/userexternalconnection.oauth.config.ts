@@ -1,4 +1,4 @@
-import { type UserExternalConnectionProviderType } from '@dereekb/firebase';
+import { type UserExternalConnectionProviderType, type UserExternalConnectionScopePreset, type UserExternalConnectionScopePresetKey } from '@dereekb/firebase';
 import { type FirebaseServerEnvService } from '@dereekb/firebase-server';
 import { type Maybe, type WebsiteUrl } from '@dereekb/util';
 
@@ -112,6 +112,18 @@ export interface UserExternalConnectionOAuthApiConfig {
    * return path is honored at all, which is the safe default.
    */
   readonly allowedReturnPaths?: Maybe<readonly string[]>;
+  /**
+   * The scope presets a user picks from when connecting this provider, e.g. "Read" and "Read + Write".
+   *
+   * Absent or empty means the provider has no presets: the adapter requests its own fixed scopes.
+   * Keys must be unique.
+   */
+  readonly scopePresets?: Maybe<readonly UserExternalConnectionScopePreset[]>;
+  /**
+   * Key of the preset a connect uses when the request names none. Must name one of
+   * {@link scopePresets}. Absent means a connect with no requested preset carries none.
+   */
+  readonly defaultScopePreset?: Maybe<UserExternalConnectionScopePresetKey>;
 }
 
 /**
@@ -188,6 +200,21 @@ export abstract class UserExternalConnectionOAuthServiceConfig {
     if (!pathMatches) {
       throw new Error(`UserExternalConnectionOAuthServiceConfig for "${providerType}" has a redirectUri of "${redirectUri}", whose path "${actualPath}" does not ${allowPathPrefix ? 'end with' : 'match'} the mounted callback route "${expectedPath}".`);
     }
+
+    const { scopePresets, defaultScopePreset } = userExternalConnectionOAuth;
+    const presetKeys = new Set<UserExternalConnectionScopePresetKey>();
+
+    for (const preset of scopePresets ?? []) {
+      if (presetKeys.has(preset.key)) {
+        throw new Error(`UserExternalConnectionOAuthServiceConfig for "${providerType}" declares the scope preset "${preset.key}" more than once.`);
+      }
+
+      presetKeys.add(preset.key);
+    }
+
+    if (defaultScopePreset != null && !presetKeys.has(defaultScopePreset)) {
+      throw new Error(`UserExternalConnectionOAuthServiceConfig for "${providerType}" has a defaultScopePreset of "${defaultScopePreset}", which is not one of its scope presets.`);
+    }
   }
 }
 
@@ -218,6 +245,14 @@ export interface UserExternalConnectionOAuthServiceConfigFactoryConfig {
    * App paths a sign-in request may ask to return to instead of {@link signInSuccessPath}.
    */
   readonly allowedReturnPaths?: Maybe<readonly string[]>;
+  /**
+   * The scope presets a user picks from when connecting. See {@link UserExternalConnectionOAuthApiConfig.scopePresets}.
+   */
+  readonly scopePresets?: Maybe<readonly UserExternalConnectionScopePreset[]>;
+  /**
+   * The preset a connect uses when the request names none. See {@link UserExternalConnectionOAuthApiConfig.defaultScopePreset}.
+   */
+  readonly defaultScopePreset?: Maybe<UserExternalConnectionScopePresetKey>;
 }
 
 /**
@@ -233,7 +268,7 @@ export interface UserExternalConnectionOAuthServiceConfigFactoryConfig {
  * @throws {Error} When no app URL is configured, or the derived URIs are inconsistent.
  */
 export function userExternalConnectionOAuthServiceConfigFactory(config: UserExternalConnectionOAuthServiceConfigFactoryConfig): UserExternalConnectionOAuthServiceConfig {
-  const { envService, providerType, successPath, failurePath, signInSuccessPath, signInFailurePath, allowedReturnPaths } = config;
+  const { envService, providerType, successPath, failurePath, signInSuccessPath, signInFailurePath, allowedReturnPaths, scopePresets, defaultScopePreset } = config;
   const appUrl = envService.appUrl;
 
   if (!appUrl) {
@@ -251,7 +286,9 @@ export function userExternalConnectionOAuthServiceConfigFactory(config: UserExte
       failureUrl: `${appOrigin}${failurePath ?? successPath}`,
       signInSuccessUrl: `${appOrigin}${signInSuccessPath ?? successPath}`,
       signInFailureUrl: `${appOrigin}${signInFailurePath ?? failurePath ?? successPath}`,
-      allowedReturnPaths
+      allowedReturnPaths,
+      scopePresets,
+      defaultScopePreset
     }
   };
 

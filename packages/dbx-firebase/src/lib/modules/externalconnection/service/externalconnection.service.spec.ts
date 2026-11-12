@@ -2,7 +2,7 @@ import { webcrypto } from 'node:crypto';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { type Maybe, waitForMs } from '@dereekb/util';
-import { CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, UserExternalConnectionFunctions, type UserExternalConnectionProviderType, ZOOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE } from '@dereekb/firebase';
+import { CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, type ReadUserExternalConnectionAuthorizeStateParams, UserExternalConnectionFunctions, type UserExternalConnectionProviderType, ZOOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE } from '@dereekb/firebase';
 import { type DbxFirebaseExternalConnectionAuthorizeState, type DbxFirebaseExternalConnectionNavigateFunction, type DbxFirebaseExternalConnectionProvider, type DbxFirebaseExternalConnectionProviderEntry, DbxFirebaseExternalConnectionsConfig } from './externalconnection';
 import { DbxFirebaseExternalConnectionService, navigateAndWaitForPageToLeave, readExternalConnectionSignInFailureFromUrl, readExternalConnectionSignInTicketFromUrl } from './externalconnection.service';
 import { EXTERNAL_CONNECTION_SIGN_IN_VERIFIER_STORAGE_KEY } from './externalconnection';
@@ -69,6 +69,10 @@ interface TestService {
    * Every provider type the authorizeState callable was asked to mint for, in order.
    */
   readonly mintedFor: UserExternalConnectionProviderType[];
+  /**
+   * Every params object the authorizeState callable was called with, in order.
+   */
+  readonly mintedParams: ReadUserExternalConnectionAuthorizeStateParams[];
 }
 
 /**
@@ -81,6 +85,7 @@ function testService(input: TestServiceInput = {}): TestService {
   const { navigate, providers, mintAuthorizeState, mintState, withoutFunctions } = input;
   const navigatedTo: string[] = [];
   const mintedFor: UserExternalConnectionProviderType[] = [];
+  const mintedParams: ReadUserExternalConnectionAuthorizeStateParams[] = [];
 
   const config: DbxFirebaseExternalConnectionsConfig = {
     providers: providers ?? [testProvider],
@@ -96,8 +101,10 @@ function testService(input: TestServiceInput = {}): TestService {
   const userExternalConnectionFunctions = {
     userExternalConnection: {
       readUserExternalConnection: {
-        authorizeState: async ({ providerType }: { providerType: UserExternalConnectionProviderType }) => {
+        authorizeState: async (params: ReadUserExternalConnectionAuthorizeStateParams) => {
+          const { providerType } = params;
           mintedFor.push(providerType);
+          mintedParams.push(params);
           return { state: mintState ? await mintState(providerType) : TEST_STATE };
         }
       }
@@ -114,7 +121,7 @@ function testService(input: TestServiceInput = {}): TestService {
     ]
   });
 
-  return { service: TestBed.inject(DbxFirebaseExternalConnectionService), navigatedTo, mintedFor };
+  return { service: TestBed.inject(DbxFirebaseExternalConnectionService), navigatedTo, mintedFor, mintedParams };
 }
 
 afterEach(() => {
@@ -209,6 +216,23 @@ describe('DbxFirebaseExternalConnectionService', () => {
 
       expect(mintedFor).toEqual([TEST_PROVIDER_TYPE]);
       expect(navigatedTo).toEqual([`${TEST_AUTHORIZE_URL}?state=${TEST_STATE}`]);
+    });
+
+    it('should mint the state for the chosen scope preset', async () => {
+      const { service, mintedParams, navigatedTo } = testService();
+
+      await service.connectToProvider(TEST_PROVIDER_TYPE, { scopePreset: 'readwrite' });
+
+      expect(mintedParams).toEqual([{ providerType: TEST_PROVIDER_TYPE, mode: 'connect', scopePreset: 'readwrite' }]);
+      expect(navigatedTo).toEqual([`${TEST_AUTHORIZE_URL}?state=${TEST_STATE}`]);
+    });
+
+    it('should mint the state with no scope preset when none is chosen', async () => {
+      const { service, mintedParams } = testService();
+
+      await service.connectToProvider(TEST_PROVIDER_TYPE);
+
+      expect(mintedParams[0].scopePreset).toBeUndefined();
     });
 
     it('should not navigate when the state could not be minted', async () => {

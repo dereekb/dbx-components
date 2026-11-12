@@ -11,6 +11,9 @@ import {
   EXTERNAL_CONNECTION_SIGN_IN_VERIFIER_STORAGE_KEY,
   type DbxFirebaseExternalConnectionAuthorizeMode,
   type DbxFirebaseExternalConnectionAuthorizeState,
+  type DbxFirebaseExternalConnectionAuthorizeStateOptions,
+  type DbxFirebaseExternalConnectionConnectOptions,
+  dbxFirebaseExternalConnectionAuthorizeStateOptions,
   type DbxFirebaseExternalConnectionProvider,
   type DbxFirebaseExternalConnectionProviderAssets,
   DbxFirebaseExternalConnectionsConfig
@@ -258,17 +261,19 @@ export class DbxFirebaseExternalConnectionService {
    * creates it on load; a custom UI that reaches this call by another route has to create it too.
    *
    * @param providerType - The provider the state is for.
-   * @param mode - Which handoff the state begins. Defaults to `connect`.
+   * @param modeOrOptions - Which handoff the state begins (defaults to `connect`), or the full options carrying the mode and the scope preset to connect with.
    * @returns The state to send on the authorize request.
    */
-  async mintAuthorizeStateForProvider(providerType: UserExternalConnectionProviderType, mode?: Maybe<DbxFirebaseExternalConnectionAuthorizeMode>): Promise<DbxFirebaseExternalConnectionAuthorizeState> {
+  async mintAuthorizeStateForProvider(providerType: UserExternalConnectionProviderType, modeOrOptions?: Maybe<DbxFirebaseExternalConnectionAuthorizeMode | DbxFirebaseExternalConnectionAuthorizeStateOptions>): Promise<DbxFirebaseExternalConnectionAuthorizeState> {
+    const { mode, scopePreset } = dbxFirebaseExternalConnectionAuthorizeStateOptions(modeOrOptions);
     const userExternalConnectionFunctions = this._userExternalConnectionFunctions;
 
     if (!userExternalConnectionFunctions) {
       throw new Error(`DbxFirebaseExternalConnectionService: cannot mint an authorize state for "${providerType}" because UserExternalConnectionFunctions was not provided. Add the userExternalConnection functions to the app's functions config map, or configure mintAuthorizeState: false.`);
     }
 
-    const { state } = await userExternalConnectionFunctions.userExternalConnection.readUserExternalConnection.authorizeState({ providerType, mode: mode ?? undefined });
+    // a preset only applies to a connect; a link runs the sign-in scopes
+    const { state } = await userExternalConnectionFunctions.userExternalConnection.readUserExternalConnection.authorizeState({ providerType, mode: mode ?? undefined, scopePreset: mode === 'link' ? undefined : (scopePreset ?? undefined) });
     return state;
   }
 
@@ -277,15 +282,15 @@ export class DbxFirebaseExternalConnectionService {
    * is enabled.
    *
    * @param providerType - The provider to resolve.
-   * @param mode - Which handoff the state begins. Defaults to `connect`.
+   * @param modeOrOptions - Which handoff the state begins (defaults to `connect`), or the full options carrying the mode and the scope preset to connect with.
    * @returns The authorize url, or null when the provider is not registered.
    */
-  async authorizeUrlWithStateForProvider(providerType: UserExternalConnectionProviderType, mode?: Maybe<DbxFirebaseExternalConnectionAuthorizeMode>): Promise<Maybe<string>> {
+  async authorizeUrlWithStateForProvider(providerType: UserExternalConnectionProviderType, modeOrOptions?: Maybe<DbxFirebaseExternalConnectionAuthorizeMode | DbxFirebaseExternalConnectionAuthorizeStateOptions>): Promise<Maybe<string>> {
     const authorizeUrl = this.authorizeUrlForProvider(providerType);
     let result = authorizeUrl;
 
     if (authorizeUrl && this.mintsAuthorizeState) {
-      const state = await this.mintAuthorizeStateForProvider(providerType, mode);
+      const state = await this.mintAuthorizeStateForProvider(providerType, modeOrOptions);
       // appended as text rather than through URL, since an app that shares an origin with its API
       // configures no authorizeOrigin and the path stays relative
       result = fixExtraQueryParameters(`${authorizeUrl}?state=${encodeURIComponent(state)}`);
@@ -323,9 +328,10 @@ export class DbxFirebaseExternalConnectionService {
    * the user back on the settings page unconnected.
    *
    * @param providerType - The provider to connect.
+   * @param options - Optional connect options, e.g. the scope preset to connect with.
    * @returns Resolves once the authorize page is actually opening, and rejects when it never opened.
    */
-  async connectToProvider(providerType: UserExternalConnectionProviderType): Promise<void> {
+  async connectToProvider(providerType: UserExternalConnectionProviderType, options?: Maybe<DbxFirebaseExternalConnectionConnectOptions>): Promise<void> {
     const provider = this.getProvider(providerType);
 
     if (!provider) {
@@ -333,17 +339,20 @@ export class DbxFirebaseExternalConnectionService {
     }
 
     const navigate = this.config.navigate ?? DEFAULT_EXTERNAL_CONNECTION_NAVIGATE_FUNCTION;
+    const scopePresetKey = options?.scopePreset ?? undefined;
+    const stateOptions: DbxFirebaseExternalConnectionAuthorizeStateOptions = { mode: 'connect', scopePreset: scopePresetKey };
 
     if (provider.connect) {
       await provider.connect({
         providerType,
         provider,
         authorizeUrl: this.authorizeUrlForProvider(providerType),
-        mintAuthorizeState: () => this.mintAuthorizeStateForProvider(providerType),
+        mintAuthorizeState: () => this.mintAuthorizeStateForProvider(providerType, stateOptions),
+        scopePreset: scopePresetKey == null ? undefined : provider.scopePresets?.find((x) => x.key === scopePresetKey),
         navigate
       });
     } else {
-      const authorizeUrl = await this.authorizeUrlWithStateForProvider(providerType);
+      const authorizeUrl = await this.authorizeUrlWithStateForProvider(providerType, stateOptions);
 
       if (!authorizeUrl) {
         throw new Error(`DbxFirebaseExternalConnectionService: no authorize url could be resolved for "${providerType}".`);

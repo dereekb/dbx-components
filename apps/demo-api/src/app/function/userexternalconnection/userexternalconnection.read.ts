@@ -22,6 +22,10 @@ import { type DemoReadModelFunction } from '../function.context';
  * anything else the caller could act on). The `connect` role is asserted against that document, which
  * therefore has to exist — a user creates it before connecting anything.
  *
+ * A `connect` may name a `scopePreset` ("Read" / "Read + Write"). It is checked against the mounted
+ * provider's declared presets before the state is minted, and the state carries only the key — the
+ * `/authorize` route resolves it (or the provider's default) to the scopes to request.
+ *
  * The same role gates BOTH modes. A `link` state begins an identity-scoped handoff rather than a data
  * one, but it is still the caller attaching their own third-party account, and the server independently
  * refuses a link for a provider whose policy has not enabled sign-in. An app that wants the two
@@ -32,12 +36,15 @@ export const userExternalConnectionReadAuthorizeState: DemoReadModelFunction<Rea
   fn: async (request) => {
     const { nest, data, auth } = request;
     const { providerType, mode } = data;
+    // a preset only applies to a connect; a link runs the provider's sign-in scopes
+    const scopePreset = mode === 'link' ? undefined : (data.scopePreset ?? undefined);
 
     assertUserExternalConnectionProviderConnectable({
       oauthRegistry: nest.userExternalConnectionOAuthRegistry,
       policyRegistry: nest.userExternalConnectionProviderPolicyRegistry,
       providerType,
-      isAdmin: isAdminInRequest(request)
+      isAdmin: isAdminInRequest(request),
+      scopePreset
     });
 
     const uid = auth.uid;
@@ -46,7 +53,7 @@ export const userExternalConnectionReadAuthorizeState: DemoReadModelFunction<Rea
       request,
       key: firestoreModelKey(userExternalConnectionIdentity, uid),
       roles: 'connect',
-      use: () => ({ state: mode === 'link' ? nest.userExternalConnectionStateCoder.mintState({ mode: 'link', uid, providerType }) : nest.userExternalConnectionStateCoder.mintState({ uid, providerType }) })
+      use: () => ({ state: mode === 'link' ? nest.userExternalConnectionStateCoder.mintState({ mode: 'link', uid, providerType }) : nest.userExternalConnectionStateCoder.mintState({ uid, providerType, scopePreset }) })
     });
   }
 });

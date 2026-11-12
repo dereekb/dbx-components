@@ -6,3 +6,4 @@ export * from './userexternalconnection.api';
 export * from './userexternalconnection.action';
 export * from './userexternalconnection.error';
 export * from './userexternalconnection.token';
+export * from './userexternalconnection.preset';

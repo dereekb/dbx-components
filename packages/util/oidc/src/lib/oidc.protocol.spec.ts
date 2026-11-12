@@ -111,6 +111,16 @@ describe('refreshAccessToken()', () => {
     expect(params.get('grant_type')).toBe('refresh_token');
     expect(params.get('refresh_token')).toBe('rt-1');
     expect(params.has('client_secret')).toBe(false);
+    expect(params.has('scope')).toBe(false);
+  });
+
+  it('sends the scope form field when a narrower scope is requested', async () => {
+    const { fetch, calls } = mockFetch([jsonResponse({ access_token: 'at-3' })]);
+
+    await refreshAccessToken({ tokenEndpoint: 'https://api.example.com/oidc/token', clientId: 'cid', refreshToken: 'rt-1', scope: 'Mail.Read offline_access', fetch });
+
+    const params = bodyParams(calls[0].init);
+    expect(params.get('scope')).toBe('Mail.Read offline_access');
   });
 });
 

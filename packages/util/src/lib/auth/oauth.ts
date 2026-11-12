@@ -197,6 +197,14 @@ export interface ExchangeAuthorizationCodeInput extends OidcClientAuthInput {
 export interface RefreshAccessTokenInput extends OidcClientAuthInput {
   readonly tokenEndpoint: string;
   readonly refreshToken: string;
+  /**
+   * Optional space-delimited scope string sent as the `scope` form field (RFC 6749 §6).
+   *
+   * Requests an access token narrower than the original grant. Providers that support it (e.g.
+   * Microsoft identity platform) mint a token for just that subset; providers that do not may ignore
+   * or reject it. Omit to request the full originally-granted scope.
+   */
+  readonly scope?: Maybe<string>;
 }
 
 export interface RevokeTokenInput extends OidcClientAuthInput {

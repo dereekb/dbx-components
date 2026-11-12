@@ -1,7 +1,7 @@
 import { Logger } from '@nestjs/common';
 import { type Request } from 'express';
-import { type FirebaseAuthUserId, type UserExternalConnectionProviderType } from '@dereekb/firebase';
-import { cachedGetter, generatePkceCodeChallenge, generatePkceMaterial, type Maybe, type WebsiteUrl } from '@dereekb/util';
+import { type FirebaseAuthUserId, type UserExternalConnectionCapability, type UserExternalConnectionProviderType, type UserExternalConnectionScopePreset, type UserExternalConnectionScopePresetKey } from '@dereekb/firebase';
+import { cachedGetter, generatePkceCodeChallenge, generatePkceMaterial, type ISO8601DateString, type Maybe, type WebsiteUrl } from '@dereekb/util';
 import { type UserExternalConnectionCredentials } from '../userexternalconnection.private';
 import { type UserExternalConnectionAccessor } from '../userexternalconnection.accessor.service';
 import { type UserExternalConnectionServerActions } from '../userexternalconnection.action.server';
@@ -129,6 +129,39 @@ export interface UserExternalConnectionOAuthRefreshCredentialsInput {
 }
 
 /**
+ * Input for {@link AbstractUserExternalConnectionOAuthService.narrowAccessToken}.
+ */
+export interface UserExternalConnectionOAuthNarrowAccessTokenInput {
+  readonly uid: FirebaseAuthUserId;
+  /**
+   * The usable credentials currently stored for this provider, carrying the refresh token.
+   */
+  readonly credentials: UserExternalConnectionCredentials;
+  /**
+   * The scopes the narrowed access token should carry. Already normalized, deduped, and checked to
+   * sit inside both the caller's ceiling and the connection's granted scopes.
+   */
+  readonly scopes: readonly UserExternalConnectionCapability[];
+}
+
+/**
+ * The narrowed access token a {@link AbstractUserExternalConnectionOAuthService.narrowAccessToken}
+ * produced.
+ *
+ * Deliberately carries no refresh token: the mint path is not the place to persist a rotated one — that
+ * would race the reader's refresh lease. Refresh-token rotation is handled by `refreshCredentials`.
+ */
+export interface UserExternalConnectionOAuthNarrowedAccessToken {
+  readonly accessToken: string;
+  readonly tokenType?: Maybe<string>;
+  /**
+   * The scopes the provider says the narrowed token carries.
+   */
+  readonly scopes: UserExternalConnectionCapability[];
+  readonly expiresAt?: Maybe<ISO8601DateString>;
+}
+
+/**
  * Input for {@link AbstractUserExternalConnectionOAuthService.revokeCredentials}.
  */
 export interface UserExternalConnectionOAuthRevokeCredentialsInput {
@@ -168,6 +201,14 @@ export interface UserExternalConnectionOAuthAuthorizeUrlInput {
    * scopes; `connect` wants the data scopes, which are usually neither a superset nor a subset.
    */
   readonly mode?: Maybe<UserExternalConnectionStateMode>;
+  /**
+   * The scope preset the connect requests, already resolved: the preset the state names, else the
+   * config's default preset, else none.
+   *
+   * Only ever set for a `connect`. An adapter whose provider declares presets requests
+   * `scopePreset.scopes` instead of its own fixed data scopes.
+   */
+  readonly scopePreset?: Maybe<UserExternalConnectionScopePreset>;
 }
 
 /**
@@ -501,6 +542,64 @@ export abstract class AbstractUserExternalConnectionOAuthService {
   revokeCredentials?(input: UserExternalConnectionOAuthRevokeCredentialsInput): Promise<void>;
 
   /**
+   * PROVIDER (optional): normalizes provider scope strings to their canonical form, so requested,
+   * ceiling and granted scopes compare equal regardless of how a caller spelled them (e.g. Microsoft's
+   * `https://graph.microsoft.com/Mail.Read` vs `mail.read` vs `Mail.Read`).
+   *
+   * PUBLIC for the same reason as `refreshCredentials`: the token mint reaches it through the registry.
+   * Absent means scopes are compared exactly as given.
+   *
+   * @param scopes - The scopes to normalize.
+   * @returns The normalized scopes.
+   */
+  normalizeScopes?(scopes: readonly UserExternalConnectionCapability[]): UserExternalConnectionCapability[];
+
+  /**
+   * PROVIDER (optional): mints an access token narrower than the stored grant, without a new OAuth
+   * round trip — e.g. Microsoft's refresh grant, which accepts any subset of the consented scopes.
+   *
+   * Implementing it opts the provider into per-mint narrowing: the token mint then trades the stored
+   * refresh token for a token carrying only the scopes the caller's ceiling (and optional `scopes`
+   * request) allows. A provider that cannot narrow (Zoho) leaves it absent and the mint returns the
+   * stored access token as before.
+   *
+   * Throw the framework's credentials-expired error when the provider says the refresh token is no
+   * longer valid; the mint then marks the connection expired.
+   *
+   * @param input - The acting user, the stored credentials, and the scopes to narrow to.
+   * @returns The narrowed access token.
+   */
+  narrowAccessToken?(input: UserExternalConnectionOAuthNarrowAccessTokenInput): Promise<UserExternalConnectionOAuthNarrowedAccessToken>;
+
+  /**
+   * The scope presets a user picks from when connecting this provider. Empty when it declares none.
+   *
+   * @returns The configured presets.
+   */
+  get scopePresets(): readonly UserExternalConnectionScopePreset[] {
+    return this.config.userExternalConnectionOAuth.scopePresets ?? [];
+  }
+
+  /**
+   * The preset a connect uses when the request names none, if any.
+   *
+   * @returns The default preset.
+   */
+  get defaultScopePreset(): Maybe<UserExternalConnectionScopePreset> {
+    return this.scopePresetForKey(this.config.userExternalConnectionOAuth.defaultScopePreset);
+  }
+
+  /**
+   * Returns the declared scope preset with the given key.
+   *
+   * @param key - The preset key to look up.
+   * @returns The preset, or undefined when the key is absent or not declared.
+   */
+  scopePresetForKey(key: Maybe<UserExternalConnectionScopePresetKey>): Maybe<UserExternalConnectionScopePreset> {
+    return key == null ? undefined : this.scopePresets.find((preset) => preset.key === key);
+  }
+
+  /**
    * Carries the stored refresh token forward when a provider's exchange returned none.
    *
    * The paired write replaces a provider's credentials wholesale, so persisting an exchange that
@@ -566,23 +665,33 @@ export abstract class AbstractUserExternalConnectionOAuthService {
       } else if (isUserExternalConnectionLinkStateActor(actor) && !this.policy.signIn) {
         this.logger.warn(`Rejected a link authorize request: "${this.providerType}" is not enabled for sign-in.`);
       } else {
-        let authorizeState: UserExternalConnectionOAuthState = state;
-        let codeChallenge: Maybe<string>;
+        // only a connect carries a preset; a link runs the sign-in scopes
+        const requestedScopePresetKey = actor.mode === 'connect' ? actor.scopePreset : undefined;
+        const scopePreset = actor.mode === 'connect' ? this.scopePresetForKey(requestedScopePresetKey ?? this.config.userExternalConnectionOAuth.defaultScopePreset) : undefined;
 
-        if (actor.codeVerifier) {
-          codeChallenge = await generatePkceCodeChallenge(actor.codeVerifier);
-        } else if (this.requirePkce) {
-          // re-minting resets the state's expiry window; acceptable, since the user is only now being
-          // sent to the provider and the window is meant to bound the handoff from this point on
-          const material = await generatePkceMaterial();
-          const { uid, mode } = actor;
-          const providerType = this.providerType;
+        if (requestedScopePresetKey != null && scopePreset == null) {
+          // the callable validates the key before minting, so an unknown one means the presets changed
+          // mid-flight or the state did not come from this app's callable
+          this.logger.warn(`Rejected an authorize request naming the unknown scope preset "${requestedScopePresetKey}".`);
+        } else {
+          let authorizeState: UserExternalConnectionOAuthState = state;
+          let codeChallenge: Maybe<string>;
 
-          authorizeState = mode === 'link' ? this.stateCoder.mintState({ mode, uid, providerType, codeVerifier: material.codeVerifier }) : this.stateCoder.mintState({ uid, providerType, codeVerifier: material.codeVerifier });
-          codeChallenge = material.codeChallenge;
+          if (actor.codeVerifier) {
+            codeChallenge = await generatePkceCodeChallenge(actor.codeVerifier);
+          } else if (this.requirePkce) {
+            // re-minting resets the state's expiry window; acceptable, since the user is only now being
+            // sent to the provider and the window is meant to bound the handoff from this point on
+            const material = await generatePkceMaterial();
+            const { uid, mode } = actor;
+            const providerType = this.providerType;
+
+            authorizeState = mode === 'link' ? this.stateCoder.mintState({ mode, uid, providerType, codeVerifier: material.codeVerifier }) : this.stateCoder.mintState({ uid, providerType, codeVerifier: material.codeVerifier, scopePreset: requestedScopePresetKey });
+            codeChallenge = material.codeChallenge;
+          }
+
+          result = this.authorizeUrlForState({ state: authorizeState, codeChallenge, mode: actor.mode, scopePreset });
         }
-
-        result = this.authorizeUrlForState({ state: authorizeState, codeChallenge, mode: actor.mode });
       }
     }
 

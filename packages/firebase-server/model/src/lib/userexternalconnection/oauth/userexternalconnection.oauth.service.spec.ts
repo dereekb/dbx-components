@@ -30,6 +30,17 @@ const TEST_CONFIG: UserExternalConnectionOAuthServiceConfig = {
   }
 };
 
+const TEST_PRESET_CONFIG: UserExternalConnectionOAuthServiceConfig = {
+  userExternalConnectionOAuth: {
+    ...TEST_CONFIG.userExternalConnectionOAuth,
+    scopePresets: [
+      { key: 'read', label: 'Read', scopes: ['read'] },
+      { key: 'readwrite', label: 'Read + Write', scopes: ['read', 'write'] }
+    ],
+    defaultScopePreset: 'read'
+  }
+};
+
 interface CapturedConnect {
   readonly uid: string;
   readonly providerType: string;
@@ -300,6 +311,19 @@ describe('AbstractUserExternalConnectionOAuthService', () => {
 
       expect(service.seenAuthorizeInput?.state).toBe(state);
       expect(service.seenAuthorizeInput?.codeChallenge).toBe(await generatePkceCodeChallenge(codeVerifier));
+    });
+
+    it('should carry the scope preset forward when re-minting a connect state', async () => {
+      const captured = capturingServerActions();
+      const service = new TestUserExternalConnectionOAuthService(TEST_PRESET_CONFIG, stateCoder, captured.actions, captured.accessor);
+      service.requirePkce = true;
+
+      await service.authorizeUrlForRequest({ query: { state: stateCoder.mintState({ uid: TEST_UID, providerType: TEST_PROVIDER_TYPE, scopePreset: 'readwrite' }) } } as never);
+
+      const actor = stateCoder.verifyState({ state: service.seenAuthorizeInput?.state, providerType: TEST_PROVIDER_TYPE });
+      expect(actor?.codeVerifier).toBeTruthy();
+      expect(actor?.mode === 'connect' ? actor.scopePreset : undefined).toBe('readwrite');
+      expect(service.seenAuthorizeInput?.scopePreset?.key).toBe('readwrite');
     });
 
     it('should send the re-minted verifier to the exchange on the callback', async () => {
@@ -602,5 +626,56 @@ describe('AbstractUserExternalConnectionOAuthService sign-in', () => {
     const result = await service.handleCallback({ code: 'a-code', state: await signInStateForVerifier(generatePkceCodeVerifier()) });
 
     expect(result.success).toBe(false);
+  });
+});
+
+describe('AbstractUserExternalConnectionOAuthService scope presets', () => {
+  const stateCoder = userExternalConnectionStateCoder({ secret: TEST_STATE_SECRET });
+
+  function makePresetService(config: UserExternalConnectionOAuthServiceConfig = TEST_PRESET_CONFIG): TestUserExternalConnectionOAuthService {
+    const captured = capturingServerActions();
+    return new TestUserExternalConnectionOAuthService(config, stateCoder, captured.actions, captured.accessor, undefined, userExternalConnectionProviderPolicyRegistry([{ providerType: TEST_PROVIDER_TYPE, unique: true, signIn: true }]));
+  }
+
+  it('should expose the configured presets and look them up by key', () => {
+    const service = makePresetService();
+    expect(service.scopePresets.map((x) => x.key)).toEqual(['read', 'readwrite']);
+    expect(service.scopePresetForKey('readwrite')?.label).toBe('Read + Write');
+    expect(service.scopePresetForKey('admin')).toBeUndefined();
+    expect(service.scopePresetForKey(undefined)).toBeUndefined();
+    expect(service.defaultScopePreset?.key).toBe('read');
+  });
+
+  it('should pass the preset the state names to the adapter', async () => {
+    const service = makePresetService();
+    await service.authorizeUrlForRequest({ query: { state: stateCoder.mintState({ uid: TEST_UID, providerType: TEST_PROVIDER_TYPE, scopePreset: 'readwrite' }) } } as never);
+    expect(service.seenAuthorizeInput?.scopePreset?.key).toBe('readwrite');
+  });
+
+  it('should fall back to the default preset when the state names none', async () => {
+    const service = makePresetService();
+    await service.authorizeUrlForRequest({ query: { state: stateCoder.mintState({ uid: TEST_UID, providerType: TEST_PROVIDER_TYPE }) } } as never);
+    expect(service.seenAuthorizeInput?.scopePreset?.key).toBe('read');
+  });
+
+  it('should pass no preset when the state names none and there is no default', async () => {
+    const service = makePresetService({ userExternalConnectionOAuth: { ...TEST_PRESET_CONFIG.userExternalConnectionOAuth, defaultScopePreset: undefined } });
+    await service.authorizeUrlForRequest({ query: { state: stateCoder.mintState({ uid: TEST_UID, providerType: TEST_PROVIDER_TYPE }) } } as never);
+    expect(service.seenAuthorizeInput).toBeDefined();
+    expect(service.seenAuthorizeInput?.scopePreset).toBeUndefined();
+  });
+
+  it('should refuse a state naming an unknown preset', async () => {
+    const service = makePresetService();
+    const url = await service.authorizeUrlForRequest({ query: { state: stateCoder.mintState({ uid: TEST_UID, providerType: TEST_PROVIDER_TYPE, scopePreset: 'admin' }) } } as never);
+    expect(url).toBeUndefined();
+    expect(service.seenAuthorizeInput).toBeUndefined();
+  });
+
+  it('should pass no preset for a link state', async () => {
+    const service = makePresetService();
+    await service.authorizeUrlForRequest({ query: { state: stateCoder.mintState({ mode: 'link', uid: TEST_UID, providerType: TEST_PROVIDER_TYPE }) } } as never);
+    expect(service.seenAuthorizeInput?.mode).toBe('link');
+    expect(service.seenAuthorizeInput?.scopePreset).toBeUndefined();
   });
 });

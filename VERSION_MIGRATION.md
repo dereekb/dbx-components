@@ -1,3 +1,55 @@
+## Migration to v14.26.x — external connection scope presets + narrowed token mint
+
+### New
+- **Connect-time scope presets.** A provider's OAuth config takes `scopePresets` (`{ key, label, description?, scopes }`,
+  `UserExternalConnectionScopePreset` from `@dereekb/firebase`) and an optional `defaultScopePreset`, both passed through
+  `userExternalConnectionOAuthServiceConfigFactory`. `assertValidConfig` rejects duplicate keys and a default that names no
+  preset. `ReadUserExternalConnectionAuthorizeStateParams` gains `scopePreset` (connect mode only); the connect state
+  carries it, the PKCE re-mint keeps it, and the `/authorize` route resolves it (else the default) and hands the resolved
+  preset to the adapter as `UserExternalConnectionOAuthAuthorizeUrlInput.scopePreset`. An unknown key is refused there
+  the same way as a bad state.
+- **`assertUserExternalConnectionProviderConnectable({ scopePreset })`** refuses a preset the mounted provider does not
+  declare with `USER_EXTERNAL_CONNECTION_SCOPE_PRESET_NOT_ALLOWED` (400).
+- **Provider hooks** on `AbstractUserExternalConnectionOAuthService`: `normalizeScopes?(scopes)` canonicalizes scope
+  strings, and `narrowAccessToken?({ uid, credentials, scopes })` mints an access token for a subset of the grant with no
+  new OAuth round trip. Plus `scopePresets`, `defaultScopePreset` and `scopePresetForKey(key)`.
+- **Narrow-only token mint.** `UserExternalConnectionTokenApiModuleConfig.providerScopes`
+  (`{ providerType, oidcScopeCeilings: { [oidcScope]: providerScopes[] } }[]`) caps what a caller may mint by its OIDC
+  scopes; the ceiling is the union over the mapped scopes it holds. `GET /api/session/external/:providerType` takes an
+  optional `?scopes=` (space- or comma-delimited, `USER_EXTERNAL_CONNECTION_TOKEN_SCOPES_QUERY_PARAM`) that can only narrow
+  further. A provider with `narrowAccessToken` mints a token for the requested scopes (else the ceiling). A provider
+  without it (Zoho) refuses `?scopes=` and, under a ceiling, mints only when its whole grant fits inside it. A non-OIDC
+  caller gets no ceiling. `UserExternalConnectionAccessToken.scopes` is the narrowed set whenever the mint narrowed.
+- **Token error codes** (`@dereekb/firebase`):
+  - `USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR` (403): above the ceiling, or the caller holds none of the
+    provider's mapped OIDC scopes.
+  - `USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_NOT_GRANTED_ERROR` (403): the connection was not granted the scopes;
+    `data: { missingScopes, reconnectScopePreset: { key, label } }` names the preset to reconnect with.
+  - `USER_EXTERNAL_CONNECTION_TOKEN_SCOPES_INVALID_ERROR` (400): `?scopes=` present but empty.
+  - `USER_EXTERNAL_CONNECTION_TOKEN_NARROWING_UNSUPPORTED_ERROR` (400): `?scopes=` for a provider that cannot narrow.
+
+  The mint controller now returns the error `data` for these codes (and `..._EXPORT_NOT_ALLOWED_ERROR`).
+- `@dereekb/util/oidc` `refreshAccessToken({ scope })` sends the `scope` form field.
+- `@dereekb/dbx-firebase`: `DbxFirebaseExternalConnectionProvider.scopePresets` (also a
+  `dbxFirebaseKnownExternalConnectionProvider` override). A provider with presets gets one connect action per preset
+  ("Connect: Read"), "Switch to <label>" actions once connected, and a chip with the preset its granted scopes cover
+  (`DbxFirebaseExternalConnectionRow.scopePreset`). `connectToProvider(providerType, { scopePreset })`, and
+  `mintAuthorizeStateForProvider` / `authorizeUrlWithStateForProvider` take a mode or an options object
+  (`{ mode, scopePreset }`).
+
+### Changed
+- `AssertUserExternalConnectionProviderConnectableInput`, `UserExternalConnectionOAuthAuthorizeUrlInput`,
+  `MintUserExternalConnectionConnectStateInput`, `UserExternalConnectionConnectStateActor` and
+  `UserExternalConnectionTokenMintInput` each gain an optional field; existing callers compile unchanged.
+
+### Adopt
+- **Forward `scopePreset` in the app's `read:authorizeState` handler** — pass `data.scopePreset` (connect mode only) to
+  `assertUserExternalConnectionProviderConnectable` and to `mintState({ uid, providerType, scopePreset })`. Optional:
+  without it every connect uses the provider's default preset, and the per-preset connect buttons all connect with it.
+- To mint narrowed tokens, declare per-provider OIDC scopes (e.g. `token.external.<provider>_read` / `_admin`) in the
+  scope union and the OIDC `claims` (as `[]`), assign them through the admin-only `external-token` profile, and list
+  them in `providerScopes`. A CLI branching on mint errors should handle the four new codes.
+
 ## Migration to v14.22.x — dynamic docs sources
 
 ### New

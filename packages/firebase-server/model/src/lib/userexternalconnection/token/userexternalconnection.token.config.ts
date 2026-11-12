@@ -1,5 +1,5 @@
 import { type Maybe, type Milliseconds, MS_IN_MINUTE, type PromiseOrValue } from '@dereekb/util';
-import { EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE, type OidcEntryClientId, type OidcScopeTerm, type UserExternalConnectionProviderType } from '@dereekb/firebase';
+import { EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE, type OidcEntryClientId, type OidcScope, type OidcScopeTerm, type UserExternalConnectionCapability, type UserExternalConnectionProviderType } from '@dereekb/firebase';
 import { type FirebaseServerAuthData } from '@dereekb/firebase-server';
 import { type UserExternalConnectionResolvedProviderPolicy } from '../userexternalconnection.policy';
 
@@ -48,6 +48,28 @@ export type UserExternalConnectionTokenPredicate = (input: UserExternalConnectio
  */
 export const USER_EXTERNAL_CONNECTION_TOKEN_PREDICATE = 'USER_EXTERNAL_CONNECTION_TOKEN_PREDICATE';
 
+// MARK: Provider Scopes
+/**
+ * Per-provider scope ceilings for the token mint, keyed by the caller's OIDC scopes.
+ *
+ * Lets one connection be minted out at different widths: a CLI grant holding
+ * `token.external.ms_graph_read` gets a read-only token, one holding `token.external.ms_graph_admin`
+ * gets read + write — from the same stored connection, without a second OAuth client.
+ */
+export interface UserExternalConnectionTokenProviderScopeConfig {
+  /**
+   * The provider these ceilings apply to.
+   */
+  readonly providerType: UserExternalConnectionProviderType;
+  /**
+   * For each OIDC scope term, the provider scopes a caller holding it may mint.
+   *
+   * The caller's ceiling is the UNION over every mapped OIDC scope it holds. An OIDC caller holding
+   * none of them is refused (`USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR`).
+   */
+  readonly oidcScopeCeilings: Readonly<Record<OidcScope, readonly UserExternalConnectionCapability[]>>;
+}
+
 // MARK: Config
 /**
  * Decides whether an OIDC client may mint external connection tokens: either the allowed client ids,
@@ -85,4 +107,14 @@ export abstract class UserExternalConnectionTokenApiModuleConfig {
    * apply to it, and no client id, so neither can {@link allowedClientIds}.
    */
   readonly allowNonOidcCallers?: Maybe<boolean>;
+  /**
+   * Per-provider scope ceilings, keyed by the caller's OIDC scopes.
+   *
+   * A provider listed here mints only what the caller's OIDC scopes allow: a provider that can narrow
+   * (it implements `narrowAccessToken`) mints a token carrying just the ceiling (or the requested
+   * `scopes`), and one that cannot is refused unless its whole grant fits inside the ceiling. A
+   * provider absent from the list has no ceiling. A non-OIDC caller (see {@link allowNonOidcCallers})
+   * carries no scopes and so gets no ceiling either, matching how the scope requirement skips it.
+   */
+  readonly providerScopes?: Maybe<readonly UserExternalConnectionTokenProviderScopeConfig[]>;
 }

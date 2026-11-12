@@ -1,10 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { type FirebaseServerEnvService } from '@dereekb/firebase-server';
+import { type UserExternalConnectionScopePreset } from '@dereekb/firebase';
 import { UserExternalConnectionOAuthServiceConfig, userExternalConnectionOAuthControllerPath, userExternalConnectionOAuthRedirectUri, userExternalConnectionOAuthRoutesForGlobalRouteExclude, userExternalConnectionOAuthServiceConfigFactory } from './userexternalconnection.oauth.config';
 
 const CALCOM = 'calcom';
 const SETTINGS_PATH = '/demo/app/settings';
 const FUNCTIONS_EMULATOR_OAUTH_URL = 'http://localhost:9902/demo-project/us-central1/api';
+const SCOPE_PRESETS: readonly UserExternalConnectionScopePreset[] = [
+  { key: 'read', label: 'Read', scopes: ['read'] },
+  { key: 'readwrite', label: 'Read + Write', scopes: ['read', 'write'] }
+];
 
 function makeEnvService(overrides: Partial<FirebaseServerEnvService> = {}): FirebaseServerEnvService {
   return {
@@ -123,6 +128,16 @@ describe('userExternalConnectionOAuthServiceConfigFactory()', () => {
   it('throws when no app url is configured', () => {
     expect(() => userExternalConnectionOAuthServiceConfigFactory({ envService: makeEnvService({ appUrl: undefined }), providerType: CALCOM, successPath: SETTINGS_PATH })).toThrow();
   });
+
+  it('passes the scope presets and the default preset through', () => {
+    const { userExternalConnectionOAuth } = userExternalConnectionOAuthServiceConfigFactory({ envService: makeEnvService(), providerType: CALCOM, successPath: SETTINGS_PATH, scopePresets: SCOPE_PRESETS, defaultScopePreset: 'read' });
+    expect(userExternalConnectionOAuth.scopePresets).toBe(SCOPE_PRESETS);
+    expect(userExternalConnectionOAuth.defaultScopePreset).toBe('read');
+  });
+
+  it('throws when the default preset is not one of the scope presets', () => {
+    expect(() => userExternalConnectionOAuthServiceConfigFactory({ envService: makeEnvService(), providerType: CALCOM, successPath: SETTINGS_PATH, scopePresets: SCOPE_PRESETS, defaultScopePreset: 'admin' })).toThrow();
+  });
 });
 
 describe('UserExternalConnectionOAuthServiceConfig.assertValidConfig()', () => {
@@ -184,6 +199,40 @@ describe('UserExternalConnectionOAuthServiceConfig.assertValidConfig()', () => {
 
     it('rejects a different provider callback route', () => {
       expect(() => assertRedirectUriWithPathPrefixAllowed(`${FUNCTIONS_EMULATOR_OAUTH_URL}/oauth/zoho/callback`)).toThrow();
+    });
+  });
+
+  describe('scope presets', () => {
+    function assertScopePresets(scopePresets: readonly UserExternalConnectionScopePreset[], defaultScopePreset?: string) {
+      UserExternalConnectionOAuthServiceConfig.assertValidConfig({
+        userExternalConnectionOAuth: {
+          providerType: CALCOM,
+          redirectUri: 'https://app.example.com/oauth/calcom/callback',
+          successUrl: 'https://app.example.com/demo/app/settings',
+          scopePresets,
+          defaultScopePreset
+        }
+      });
+    }
+
+    it('accepts unique presets with a default naming one of them', () => {
+      expect(() => assertScopePresets(SCOPE_PRESETS, 'readwrite')).not.toThrow();
+    });
+
+    it('accepts presets with no default', () => {
+      expect(() => assertScopePresets(SCOPE_PRESETS)).not.toThrow();
+    });
+
+    it('rejects duplicate preset keys', () => {
+      expect(() => assertScopePresets([...SCOPE_PRESETS, { key: 'read', label: 'Read again', scopes: ['a'] }])).toThrow();
+    });
+
+    it('rejects a default that names no preset', () => {
+      expect(() => assertScopePresets(SCOPE_PRESETS, 'admin')).toThrow();
+    });
+
+    it('rejects a default when there are no presets', () => {
+      expect(() => assertScopePresets([], 'read')).toThrow();
     });
   });
 

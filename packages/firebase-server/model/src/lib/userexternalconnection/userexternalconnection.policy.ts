@@ -1,6 +1,6 @@
 import { type Maybe } from '@dereekb/util';
-import { type UserExternalConnectionProviderType } from '@dereekb/firebase';
-import { userExternalConnectionProviderNotAllowedError } from './userexternalconnection.error';
+import { type UserExternalConnectionProviderType, type UserExternalConnectionScopePresetKey } from '@dereekb/firebase';
+import { userExternalConnectionProviderNotAllowedError, userExternalConnectionScopePresetNotAllowedError } from './userexternalconnection.error';
 import { type UserExternalConnectionOAuthProviderRegistry } from './oauth/userexternalconnection.oauth.registry';
 
 /**
@@ -200,6 +200,13 @@ export interface AssertUserExternalConnectionProviderConnectableInput {
    * Whether the caller is an admin, by the app's own definition (typically `isAdminInRequest(request)`).
    */
   readonly isAdmin: boolean;
+  /**
+   * The scope preset the connect asks for, when it named one (`ReadUserExternalConnectionAuthorizeStateParams.scopePreset`).
+   *
+   * Asserted to be one of the mounted provider's declared presets. Absent skips the check — the
+   * provider's default preset (if any) then applies.
+   */
+  readonly scopePreset?: Maybe<UserExternalConnectionScopePresetKey>;
 }
 
 /**
@@ -214,16 +221,21 @@ export interface AssertUserExternalConnectionProviderConnectableInput {
  *
  * @param input - The registries, provider and caller's admin status.
  * @returns The provider's resolved policy.
- * @throws A precondition-conflict HttpsError when the provider is not mounted or is admin-only and the caller is not an admin.
+ * @throws {HttpsError} A precondition-conflict error when the provider is not mounted or is admin-only and the caller is not an admin, or a bad-request error when the requested scope preset is not one the provider declares.
  */
 export function assertUserExternalConnectionProviderConnectable(input: AssertUserExternalConnectionProviderConnectableInput): UserExternalConnectionResolvedProviderPolicy {
-  const { oauthRegistry, policyRegistry, providerType, isAdmin } = input;
+  const { oauthRegistry, policyRegistry, providerType, isAdmin, scopePreset } = input;
   oauthRegistry.assertHasAuthorizeFlowForProviderType(providerType);
 
   const policy = userExternalConnectionPolicyForProviderType(policyRegistry, providerType);
 
   if (policy.adminOnly && !isAdmin) {
     throw userExternalConnectionProviderNotAllowedError(providerType);
+  }
+
+  // checked after the admin gate, so a non-admin probing presets learns nothing about admin-only providers
+  if (scopePreset != null && oauthRegistry.serviceForProviderType(providerType)?.scopePresetForKey(scopePreset) == null) {
+    throw userExternalConnectionScopePresetNotAllowedError(providerType, scopePreset);
   }
 
   return policy;

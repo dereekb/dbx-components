@@ -2,7 +2,7 @@ import { timingSafeEqual } from 'node:crypto';
 import { type ConfigService } from '@nestjs/config';
 import { type AES256GCMEncryptionSecret, createAES256GCMEncryption, isValidAES256GCMEncryptionSecret } from '@dereekb/nestjs';
 import { type FirebaseServerEnvService } from '@dereekb/firebase-server';
-import { type FirebaseAuthUserId, type UserExternalConnectionProviderType } from '@dereekb/firebase';
+import { type FirebaseAuthUserId, type UserExternalConnectionProviderType, type UserExternalConnectionScopePresetKey } from '@dereekb/firebase';
 import { generatePkceCodeChallenge, MS_IN_MINUTE, type Maybe, type Milliseconds } from '@dereekb/util';
 
 /**
@@ -94,6 +94,12 @@ export interface UserExternalConnectionConnectStatePayload extends UserExternalC
    * The user the handoff belongs to.
    */
   readonly uid: FirebaseAuthUserId;
+  /**
+   * Key of the scope preset the connect requests, already validated against the provider's presets.
+   *
+   * Only a connect carries one: a sign-in or link runs the provider's sign-in scopes.
+   */
+  readonly sp?: Maybe<UserExternalConnectionScopePresetKey>;
 }
 
 /**
@@ -172,6 +178,10 @@ export interface UserExternalConnectionConnectStateActor {
   readonly mode: 'connect';
   readonly uid: FirebaseAuthUserId;
   readonly codeVerifier?: Maybe<string>;
+  /**
+   * Key of the scope preset the connect was started with, if any.
+   */
+  readonly scopePreset?: Maybe<UserExternalConnectionScopePresetKey>;
 }
 
 /**
@@ -226,6 +236,11 @@ export interface MintUserExternalConnectionConnectStateInput {
    * The PKCE code verifier whose challenge the authorize request sends to the provider.
    */
   readonly codeVerifier?: Maybe<string>;
+  /**
+   * Key of the scope preset to connect with. Validate it against the provider's presets BEFORE
+   * minting — the state only carries it.
+   */
+  readonly scopePreset?: Maybe<UserExternalConnectionScopePresetKey>;
 }
 
 export interface MintUserExternalConnectionSignInStateInput {
@@ -387,7 +402,7 @@ export function userExternalConnectionStateCoder(config: UserExternalConnectionS
         payload = { mode: 'link', uid: input.uid, providerType: input.providerType, cv: input.codeVerifier, exp };
         break;
       default:
-        payload = { mode: 'connect', uid: input.uid, providerType: input.providerType, cv: input.codeVerifier, exp };
+        payload = { mode: 'connect', uid: input.uid, providerType: input.providerType, cv: input.codeVerifier, sp: input.scopePreset ?? undefined, exp };
         break;
     }
 
@@ -410,7 +425,7 @@ export function userExternalConnectionStateCoder(config: UserExternalConnectionS
               result = { mode: 'signin', challenge: payload.challenge, returnPath: payload.returnPath, codeVerifier: payload.cv };
             }
           } else if (payload.uid) {
-            result = { mode: payload.mode === 'link' ? 'link' : 'connect', uid: payload.uid, codeVerifier: payload.cv };
+            result = payload.mode === 'link' ? { mode: 'link', uid: payload.uid, codeVerifier: payload.cv } : { mode: 'connect', uid: payload.uid, codeVerifier: payload.cv, scopePreset: payload.sp };
           }
         }
       } catch {

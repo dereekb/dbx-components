@@ -1,6 +1,15 @@
 import { type FirebaseLoginMethodType } from '../../../auth/login/login';
 import { type Maybe, type PromiseOrValue } from '@dereekb/util';
-import { type KnownUserExternalConnectionProviderType, type UserExternalConnectionEntry, type UserExternalConnectionEntryMap, type UserExternalConnectionProviderType, userExternalConnectionEntryIsConnected } from '@dereekb/firebase';
+import {
+  type KnownUserExternalConnectionProviderType,
+  type UserExternalConnectionEntry,
+  type UserExternalConnectionEntryMap,
+  type UserExternalConnectionProviderType,
+  type UserExternalConnectionScopePreset,
+  type UserExternalConnectionScopePresetKey,
+  userExternalConnectionEntryIsConnected,
+  userExternalConnectionScopePresetForCapabilities
+} from '@dereekb/firebase';
 import { type WorkUsingContext } from '@dereekb/rxjs';
 import { type DbxActionConfirmConfig } from '@dereekb/dbx-web';
 
@@ -72,6 +81,44 @@ export type DbxFirebaseExternalConnectionAuthorizeState = string;
 export type DbxFirebaseExternalConnectionAuthorizeMode = 'connect' | 'link';
 
 /**
+ * Options for minting a {@link DbxFirebaseExternalConnectionAuthorizeState}.
+ */
+export interface DbxFirebaseExternalConnectionAuthorizeStateOptions {
+  /**
+   * Which handoff the state begins. Defaults to `connect`.
+   */
+  readonly mode?: Maybe<DbxFirebaseExternalConnectionAuthorizeMode>;
+  /**
+   * Key of the scope preset to connect with, for a provider that declares presets. Only applies to a
+   * `connect`. Absent means the server's default preset for the provider.
+   */
+  readonly scopePreset?: Maybe<UserExternalConnectionScopePresetKey>;
+}
+
+/**
+ * Normalizes a mode-or-options argument into {@link DbxFirebaseExternalConnectionAuthorizeStateOptions}.
+ *
+ * @param modeOrOptions - A bare mode (the original positional argument), the full options, or nothing.
+ * @returns The options.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function dbxFirebaseExternalConnectionAuthorizeStateOptions(modeOrOptions: Maybe<DbxFirebaseExternalConnectionAuthorizeMode | DbxFirebaseExternalConnectionAuthorizeStateOptions>): DbxFirebaseExternalConnectionAuthorizeStateOptions {
+  return typeof modeOrOptions === 'string' ? { mode: modeOrOptions } : (modeOrOptions ?? {});
+}
+
+/**
+ * Options for {@link DbxFirebaseExternalConnectionService.connectToProvider}.
+ */
+export interface DbxFirebaseExternalConnectionConnectOptions {
+  /**
+   * Key of the scope preset to connect with, for a provider that declares presets. Absent means the
+   * server's default preset for the provider.
+   */
+  readonly scopePreset?: Maybe<UserExternalConnectionScopePresetKey>;
+}
+
+/**
  * Mints a fresh {@link DbxFirebaseExternalConnectionAuthorizeState} for a provider.
  */
 export type DbxFirebaseExternalConnectionMintAuthorizeStateFunction = () => Promise<DbxFirebaseExternalConnectionAuthorizeState>;
@@ -97,6 +144,13 @@ export interface DbxFirebaseExternalConnectionConnectContext {
    * a state wants one; it throws only when the app never wired the userExternalConnection callables.
    */
   readonly mintAuthorizeState: DbxFirebaseExternalConnectionMintAuthorizeStateFunction;
+  /**
+   * The scope preset the user picked to connect with, when the provider declares presets.
+   *
+   * {@link mintAuthorizeState} already carries it into the state; it is here for a handler that wants
+   * to show or log it.
+   */
+  readonly scopePreset?: Maybe<UserExternalConnectionScopePreset>;
   /**
    * Navigates the browser. Use this rather than `window.location` directly, and AWAIT it: it settles
    * on the new page actually opening, which is what holds the connect action in its working state
@@ -169,6 +223,15 @@ export interface DbxFirebaseExternalConnectionProvider {
    * declare {@link signIn}.
    */
   readonly adminOnly?: Maybe<boolean>;
+  /**
+   * The scope presets a user picks from when connecting, e.g. "Read" and "Read + Write".
+   *
+   * Present means the row offers one connect action per preset ("Connect: Read"), a connected row
+   * offers "Switch to <label>" for each other preset, and a chip shows the preset the connection's
+   * granted scopes currently cover. Must mirror the server's `scopePresets` for the provider — the
+   * server is what validates the key and decides the requested scopes.
+   */
+  readonly scopePresets?: Maybe<readonly UserExternalConnectionScopePreset[]>;
 }
 
 /**
@@ -367,6 +430,15 @@ export interface DbxFirebaseExternalConnectionRow {
    * Whether only admins may connect this provider.
    */
   readonly adminOnly: boolean;
+  /**
+   * The provider's scope presets, when it declares any.
+   */
+  readonly scopePresets?: Maybe<readonly UserExternalConnectionScopePreset[]>;
+  /**
+   * The largest preset the entry's granted scopes fully cover — the connection's "current access".
+   * Absent when the provider declares no presets or the grant covers none of them.
+   */
+  readonly scopePreset?: Maybe<UserExternalConnectionScopePreset>;
 }
 
 /**
@@ -457,13 +529,17 @@ export function dbxFirebaseExternalConnectionRows(input: DbxFirebaseExternalConn
     .map((provider) => {
       const entry = entries?.[provider.providerType];
 
+      const scopePresets = provider.scopePresets?.length ? provider.scopePresets : undefined;
+
       return {
         providerType: provider.providerType,
         assets: provider.assets,
         entry,
         status: loading ? ('loading' as const) : dbxFirebaseExternalConnectionRowStatusForEntry(entry),
         enabled: enabled.has(provider.providerType),
-        adminOnly: provider.adminOnly === true
+        adminOnly: provider.adminOnly === true,
+        scopePresets,
+        scopePreset: userExternalConnectionScopePresetForCapabilities({ presets: scopePresets, capabilities: entry?.ca })
       };
     });
 }

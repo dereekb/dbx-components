@@ -1,4 +1,12 @@
-import { type KnownUserExternalConnectionProviderType, CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, TRELLO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, ZOOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE } from '@dereekb/firebase';
+import {
+  type KnownUserExternalConnectionProviderType,
+  CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  TRELLO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  ZOOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  type UserExternalConnectionScopePreset
+} from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { type DbxActionConfirmConfig } from '@dereekb/dbx-web';
 import { type DbxFirebaseExternalConnectionConnectFunction, type DbxFirebaseExternalConnectionProvider, type DbxFirebaseExternalConnectionProviderAssets, type DbxFirebaseExternalConnectionProviderEntry, type DbxFirebaseExternalConnectionSignInConfig } from './externalconnection';
@@ -118,6 +126,11 @@ export interface DbxFirebaseKnownExternalConnectionProviderConfig {
    * hand-spreading the library const.
    */
   readonly signIn?: Maybe<DbxFirebaseExternalConnectionSignInConfig>;
+  /**
+   * Overrides the known provider's scope presets — e.g. to mirror a server that declared its own
+   * presets for the provider. Must match the server's presets.
+   */
+  readonly scopePresets?: Maybe<readonly UserExternalConnectionScopePreset[]>;
 }
 
 /**
@@ -128,7 +141,7 @@ export interface DbxFirebaseKnownExternalConnectionProviderConfig {
  * @throws {Error} When there is no known provider for the given type.
  */
 export function dbxFirebaseKnownExternalConnectionProvider(config: DbxFirebaseKnownExternalConnectionProviderConfig): DbxFirebaseExternalConnectionProvider {
-  const { providerType, assets, authorizePath, connect, disconnectConfirm, signIn } = config;
+  const { providerType, assets, authorizePath, connect, disconnectConfirm, signIn, scopePresets } = config;
   const known = DBX_FIREBASE_KNOWN_EXTERNAL_CONNECTION_PROVIDERS[providerType];
 
   if (known == null) {
@@ -141,7 +154,8 @@ export function dbxFirebaseKnownExternalConnectionProvider(config: DbxFirebaseKn
     authorizePath: authorizePath ?? known.authorizePath,
     connect: connect ?? known.connect,
     disconnectConfirm: disconnectConfirm ?? known.disconnectConfirm,
-    signIn: signIn ?? known.signIn
+    signIn: signIn ?? known.signIn,
+    scopePresets: scopePresets ?? known.scopePresets
   };
 }
 

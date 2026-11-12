@@ -9,6 +9,7 @@ import {
   USER_EXTERNAL_CONNECTION_PROVIDER_NOT_CONNECTED_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_REFRESH_IN_PROGRESS_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_REFRESH_LEASE_LOST_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_SCOPE_PRESET_NOT_ALLOWED_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_SIGN_IN_DENIED_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_SIGN_IN_EMAIL_CONFLICT_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_SIGN_IN_IDENTITY_UNAVAILABLE_ERROR_CODE,
@@ -18,7 +19,7 @@ import {
   USER_EXTERNAL_CONNECTION_LINK_NOT_ENABLED_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_UNLINK_LAST_LOGIN_METHOD_ERROR_CODE
 } from '@dereekb/firebase';
-import { forbiddenError, preconditionConflictError, unavailableError } from '@dereekb/firebase-server';
+import { badRequestError, forbiddenError, preconditionConflictError, unavailableError } from '@dereekb/firebase-server';
 import { type Maybe } from '@dereekb/util';
 
 /**
@@ -31,6 +32,7 @@ import { type Maybe } from '@dereekb/util';
 export {
   USER_EXTERNAL_CONNECTION_PROVIDER_NOT_CONNECTED_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_PROVIDER_NOT_ALLOWED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_SCOPE_PRESET_NOT_ALLOWED_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_ALREADY_EXISTS_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_CREDENTIALS_EXPIRED_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_EXTERNAL_ACCOUNT_IN_USE_ERROR_CODE,
@@ -116,6 +118,19 @@ export function userExternalConnectionCredentialsExpiredError(providerType: User
 }
 
 /**
+ * Whether a thrown value is `USER_EXTERNAL_CONNECTION_CREDENTIALS_EXPIRED`.
+ *
+ * @param e - The thrown value.
+ * @returns True when the credentials expired and could not be renewed.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function isUserExternalConnectionCredentialsExpiredError(e: unknown): boolean {
+  const details = (e as Maybe<{ readonly details?: Maybe<{ readonly code?: Maybe<string> }> }>)?.details;
+  return details?.code === USER_EXTERNAL_CONNECTION_CREDENTIALS_EXPIRED_ERROR_CODE;
+}
+
+/**
  * Creates an error indicating another instance holds the refresh lease for this connection and did not
  * finish within the wait.
  *
@@ -174,6 +189,21 @@ export function userExternalConnectionProviderNotAllowedError(providerType: User
     message: `"${providerType}" is not an allowed external connection provider.`,
     code: USER_EXTERNAL_CONNECTION_PROVIDER_NOT_ALLOWED_ERROR_CODE,
     data: { providerType }
+  });
+}
+
+/**
+ * Creates an error indicating a connect named a scope preset the provider does not declare.
+ *
+ * @param providerType - The provider being connected.
+ * @param scopePreset - The preset key that was requested.
+ * @returns A bad-request HttpsError.
+ */
+export function userExternalConnectionScopePresetNotAllowedError(providerType: UserExternalConnectionProviderType, scopePreset: string) {
+  return badRequestError({
+    message: `"${scopePreset}" is not a scope preset of the "${providerType}" external connection provider.`,
+    code: USER_EXTERNAL_CONNECTION_SCOPE_PRESET_NOT_ALLOWED_ERROR_CODE,
+    data: { providerType, scopePreset }
   });
 }
 

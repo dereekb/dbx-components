@@ -141,6 +141,9 @@ export class DbxFirebaseExternalConnectionListViewComponent extends AbstractDbxL
             @if (row.adminOnly) {
               <dbx-chip class="dbx-pl2" [small]="true">Admin Only</dbx-chip>
             }
+            @if (scopePresetLabel; as scopePresetLabelValue) {
+              <dbx-chip class="dbx-pl2" [small]="true">{{ scopePresetLabelValue }}</dbx-chip>
+            }
           </div>
           @if (detail; as detailValue) {
             <div class="dbx-text-body-small dbx-hint">{{ detailValue }}</div>
@@ -195,6 +198,16 @@ export class DbxFirebaseExternalConnectionListViewItemComponent extends Abstract
 
   get statusColor(): DbxThemeColor {
     return CONNECTION_STATUS_COLORS[this.row.status];
+  }
+
+  /**
+   * The label of the scope preset the connection's granted scopes currently cover, for a provider with presets.
+   *
+   * @returns The preset label, or nullish when there is no current preset to show.
+   */
+  get scopePresetLabel(): Maybe<string> {
+    const { status, scopePreset } = this.row;
+    return status === 'connected' || status === 'error' ? scopePreset?.label : undefined;
   }
 
   get connectedAt(): Maybe<Date> {

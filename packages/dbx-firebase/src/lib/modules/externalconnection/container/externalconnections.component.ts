@@ -2,7 +2,7 @@ import { Component, computed, inject } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { type Maybe } from '@dereekb/util';
 import { beginLoading, isLoadingStateLoading, type ListLoadingState, successResult } from '@dereekb/rxjs';
-import { type UserExternalConnectionProviderType } from '@dereekb/firebase';
+import { type UserExternalConnectionProviderType, type UserExternalConnectionScopePresetKey } from '@dereekb/firebase';
 import { DbxErrorComponent, DbxListEmptyContentComponent } from '@dereekb/dbx-web';
 import { DbxFirebaseAuthService } from '../../../auth/service/firebase.auth.service';
 import { DbxFirebaseExternalConnectionListComponent } from '../component/externalconnection.list.component';
@@ -110,21 +110,49 @@ export class DbxFirebaseExternalConnectionsComponent {
    * An errored connection offers both Reconnect and Disconnect: reconnecting is the usual fix, but a
    * user who no longer wants the integration must not be forced to reauthorize just to remove it.
    *
+   * A provider with scope presets offers one connect action per preset ("Connect: Read"), and once
+   * connected a "Switch to <label>" action for every preset other than the current one — switching is
+   * a reconnect with the other preset.
+   *
    * @param row - The row to build actions for.
    * @returns The actions to render, or null while loading.
    */
   actionsForRow(row: DbxFirebaseExternalConnectionRow): Maybe<DbxFirebaseExternalConnectionActionConfig[]> {
-    const { providerType, assets, status } = row;
+    const { providerType, assets, status, scopePresets, scopePreset } = row;
     const provider = this.dbxFirebaseExternalConnectionService.getProvider(providerType);
     const result: DbxFirebaseExternalConnectionActionConfig[] = [];
 
     if (status !== 'loading') {
-      if (status !== 'connected' && row.enabled) {
-        result.push({
-          label: assets.connectText ?? (status === 'error' ? 'Reconnect' : 'Connect'),
-          icon: 'link',
-          handler: (_, context) => context.startWorkingWithPromise(this.connectToProvider(providerType))
-        });
+      if (row.enabled) {
+        const connectLabel = assets.connectText ?? (status === 'error' ? 'Reconnect' : 'Connect');
+
+        if (!scopePresets?.length) {
+          if (status !== 'connected') {
+            result.push({
+              label: connectLabel,
+              icon: 'link',
+              handler: (_, context) => context.startWorkingWithPromise(this.connectToProvider(providerType))
+            });
+          }
+        } else if (status === 'connected') {
+          scopePresets
+            .filter((x) => x.key !== scopePreset?.key)
+            .forEach((preset) => {
+              result.push({
+                label: `Switch to ${preset.label}`,
+                icon: 'swap_horiz',
+                handler: (_, context) => context.startWorkingWithPromise(this.connectToProvider(providerType, preset.key))
+              });
+            });
+        } else {
+          scopePresets.forEach((preset) => {
+            result.push({
+              label: `${connectLabel}: ${preset.label}`,
+              icon: 'link',
+              handler: (_, context) => context.startWorkingWithPromise(this.connectToProvider(providerType, preset.key))
+            });
+          });
+        }
       }
 
       if (status !== 'notConnected') {
@@ -152,10 +180,11 @@ export class DbxFirebaseExternalConnectionsComponent {
    * success there reads as "nothing happened".
    *
    * @param providerType - The provider to connect.
+   * @param scopePreset - The scope preset to connect with, for a provider that declares presets.
    * @returns Resolves once the authorize page is actually opening.
    */
-  async connectToProvider(providerType: UserExternalConnectionProviderType): Promise<void> {
-    await this.dbxFirebaseExternalConnectionService.connectToProvider(providerType);
+  async connectToProvider(providerType: UserExternalConnectionProviderType, scopePreset?: Maybe<UserExternalConnectionScopePresetKey>): Promise<void> {
+    await this.dbxFirebaseExternalConnectionService.connectToProvider(providerType, { scopePreset });
   }
 
   /**
