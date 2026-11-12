@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { type UserExternalConnectionErrorCode } from '@dereekb/firebase';
+import { type UserExternalConnectionCapability, type UserExternalConnectionErrorCode, type UserExternalConnectionScopePreset } from '@dereekb/firebase';
 import { type Maybe, type WebsiteUrl } from '@dereekb/util';
 import { type UserExternalConnectionCredentials } from '../userexternalconnection.private';
 import { type UserExternalConnectionAccessor } from '../userexternalconnection.accessor.service';
@@ -9,8 +9,27 @@ import { type UserExternalConnectionProviderPolicyRegistry, userExternalConnecti
 import { type ResolveUserExternalConnectionSignInInput, type UserExternalConnectionSignInResult, type UserExternalConnectionSignInService } from '../userexternalconnection.signin';
 import { userExternalConnectionStateCoder, type UserExternalConnectionStateCoder } from './userexternalconnection.oauth.state';
 import { type UserExternalConnectionOAuthServiceConfig } from './userexternalconnection.oauth.config';
-import { USER_EXTERNAL_CONNECTION_SIGN_IN_EMAIL_CONFLICT_ERROR_CODE, USER_EXTERNAL_CONNECTION_SIGN_IN_IDENTITY_UNAVAILABLE_ERROR_CODE, userExternalConnectionAlreadyExistsError, userExternalConnectionSignInEmailConflictError, userExternalConnectionSignInErrorCode } from '../userexternalconnection.error';
-import { AbstractUserExternalConnectionOAuthService, USER_EXTERNAL_CONNECTION_SIGN_IN_ERROR_PARAM, type UserExternalConnectionOAuthCallbackQueryValues, type UserExternalConnectionOAuthExchangeInput, type UserExternalConnectionOAuthAuthorizeUrlInput } from './userexternalconnection.oauth.service';
+import {
+  USER_EXTERNAL_CONNECTION_OVER_GRANTED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_SIGN_IN_EMAIL_CONFLICT_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_SIGN_IN_IDENTITY_UNAVAILABLE_ERROR_CODE,
+  userExternalConnectionAlreadyExistsError,
+  userExternalConnectionConnectErrorCode,
+  userExternalConnectionOverGrantedError,
+  userExternalConnectionSignInEmailConflictError,
+  userExternalConnectionSignInErrorCode
+} from '../userexternalconnection.error';
+import {
+  AbstractUserExternalConnectionOAuthService,
+  normalizeUserExternalConnectionProviderScopes,
+  USER_EXTERNAL_CONNECTION_CONNECT_ERROR_PARAM,
+  USER_EXTERNAL_CONNECTION_CONNECT_ERROR_PROVIDER_PARAM,
+  USER_EXTERNAL_CONNECTION_SIGN_IN_ERROR_PARAM,
+  userExternalConnectionConnectFailureRedirectUrl,
+  type UserExternalConnectionOAuthCallbackQueryValues,
+  type UserExternalConnectionOAuthExchangeInput,
+  type UserExternalConnectionOAuthAuthorizeUrlInput
+} from './userexternalconnection.oauth.service';
 
 const TEST_PROVIDER_TYPE = 'testprovider';
 const TEST_UID = 'test-uid';
@@ -677,5 +696,188 @@ describe('AbstractUserExternalConnectionOAuthService scope presets', () => {
     await service.authorizeUrlForRequest({ query: { state: stateCoder.mintState({ mode: 'link', uid: TEST_UID, providerType: TEST_PROVIDER_TYPE }) } } as never);
     expect(service.seenAuthorizeInput?.mode).toBe('link');
     expect(service.seenAuthorizeInput?.scopePreset).toBeUndefined();
+  });
+});
+
+describe('AbstractUserExternalConnectionOAuthService over-grant', () => {
+  const stateCoder = userExternalConnectionStateCoder({ secret: TEST_STATE_SECRET });
+
+  interface OverGrantServiceConfig {
+    readonly config?: UserExternalConnectionOAuthServiceConfig;
+    readonly policyRegistry?: Maybe<UserExternalConnectionProviderPolicyRegistry>;
+  }
+
+  function makeOverGrantService(captured: CapturingServerActions, input: OverGrantServiceConfig = {}): TestUserExternalConnectionOAuthService {
+    return new TestUserExternalConnectionOAuthService(input.config ?? TEST_PRESET_CONFIG, stateCoder, captured.actions, captured.accessor, undefined, input.policyRegistry);
+  }
+
+  function connectState(scopePreset?: string): string {
+    return stateCoder.mintState({ uid: TEST_UID, providerType: TEST_PROVIDER_TYPE, scopePreset });
+  }
+
+  function grant(scopes: Maybe<UserExternalConnectionCapability[]>): UserExternalConnectionCredentials {
+    return { accessToken: 'access-token', refreshToken: 'exchanged-refresh-token', issuedAt: new Date().toISOString(), scopes };
+  }
+
+  it('should refuse a connect whose grant is wider than the preset, writing nothing', async () => {
+    const captured = capturingServerActions();
+    const service = makeOverGrantService(captured);
+    service.exchangeResult = grant(['read', 'write']);
+
+    const result = await service.handleCallback({ code: 'code', state: connectState('read') });
+    const url = new URL(result.redirectUrl);
+
+    expect(result.success).toBe(false);
+    expect(url.searchParams.get(USER_EXTERNAL_CONNECTION_CONNECT_ERROR_PARAM)).toBe(USER_EXTERNAL_CONNECTION_OVER_GRANTED_ERROR_CODE);
+    expect(url.searchParams.get(USER_EXTERNAL_CONNECTION_CONNECT_ERROR_PROVIDER_PARAM)).toBe(TEST_PROVIDER_TYPE);
+    expect(url.searchParams.get('failed')).toBe('1'); // keeps the failure url's own query
+    expect(captured.connects).toHaveLength(0);
+    expect(captured.errors).toHaveLength(0); // a refusal never marks a (possibly working) connection
+    expect(captured.reads).toHaveLength(0); // refused before the refresh-token carry-forward read
+  });
+
+  it('should check the default preset when the state named none', async () => {
+    const captured = capturingServerActions();
+    const service = makeOverGrantService(captured);
+    service.exchangeResult = grant(['read', 'write']);
+
+    const result = await service.handleCallback({ code: 'code', state: connectState() });
+
+    expect(result.success).toBe(false);
+    expect(captured.connects).toHaveLength(0);
+  });
+
+  it("should store the wider grant when the policy's onOverGrant is allow", async () => {
+    const captured = capturingServerActions();
+    const service = makeOverGrantService(captured, { policyRegistry: userExternalConnectionProviderPolicyRegistry([{ providerType: TEST_PROVIDER_TYPE, onOverGrant: 'allow' }]) });
+    service.exchangeResult = grant(['read', 'write']);
+
+    const result = await service.handleCallback({ code: 'code', state: connectState('read') });
+
+    expect(result.success).toBe(true);
+    expect(captured.connects[0].credentials.scopes).toEqual(['read', 'write']);
+  });
+
+  it('should connect a grant equal to the preset', async () => {
+    const captured = capturingServerActions();
+    const service = makeOverGrantService(captured);
+    service.exchangeResult = grant(['read', 'write']);
+
+    const result = await service.handleCallback({ code: 'code', state: connectState('readwrite') });
+
+    expect(result.success).toBe(true);
+    expect(captured.connects).toHaveLength(1);
+  });
+
+  it('should accept an under-grant', async () => {
+    const captured = capturingServerActions();
+    const service = makeOverGrantService(captured);
+    service.exchangeResult = grant(['read']);
+
+    const result = await service.handleCallback({ code: 'code', state: connectState('readwrite') });
+
+    expect(result.success).toBe(true);
+    expect(captured.connects[0].credentials.scopes).toEqual(['read']);
+  });
+
+  it('should connect an exchange that reported no scopes', async () => {
+    for (const scopes of [undefined, []]) {
+      const captured = capturingServerActions();
+      const service = makeOverGrantService(captured);
+      service.exchangeResult = grant(scopes);
+
+      const result = await service.handleCallback({ code: 'code', state: connectState('read') });
+
+      expect(result.success).toBe(true);
+      expect(captured.connects).toHaveLength(1);
+    }
+  });
+
+  it('should not check a provider with no presets', async () => {
+    const captured = capturingServerActions();
+    const service = makeOverGrantService(captured, { config: TEST_CONFIG });
+    service.exchangeResult = grant(['read', 'write', 'admin']);
+
+    const result = await service.handleCallback({ code: 'code', state: connectState() });
+
+    expect(result.success).toBe(true);
+  });
+
+  it("should compare through the provider's normalizeScopes on both sides", async () => {
+    class NormalizingService extends TestUserExternalConnectionOAuthService {
+      override normalizeScopes(scopes: readonly UserExternalConnectionCapability[]): UserExternalConnectionCapability[] {
+        return scopes.map((x) => x.toLowerCase());
+      }
+    }
+
+    const captured = capturingServerActions();
+    const service = new NormalizingService(TEST_PRESET_CONFIG, stateCoder, captured.actions, captured.accessor);
+    service.exchangeResult = grant(['READ']);
+
+    const result = await service.handleCallback({ code: 'code', state: connectState('read') });
+
+    expect(result.success).toBe(true);
+  });
+
+  it('should check against an overridden requestedScopesForScopePreset() even without presets', async () => {
+    class RequestingService extends TestUserExternalConnectionOAuthService {
+      override requestedScopesForScopePreset(_scopePreset: Maybe<UserExternalConnectionScopePreset>): Maybe<readonly UserExternalConnectionCapability[]> {
+        return ['read'];
+      }
+    }
+
+    const captured = capturingServerActions();
+    const service = new RequestingService(TEST_CONFIG, stateCoder, captured.actions, captured.accessor);
+    service.exchangeResult = grant(['read', 'write']);
+
+    const result = await service.handleCallback({ code: 'code', state: connectState() });
+
+    expect(result.success).toBe(false);
+    expect(captured.connects).toHaveLength(0);
+    expect(captured.errors).toHaveLength(0);
+  });
+
+  it('should still mark any other connect failure and redirect to the bare failure url', async () => {
+    const captured = capturingServerActions({ readFails: true });
+    const service = makeOverGrantService(captured);
+    service.exchangeResult = { accessToken: 'access-token', issuedAt: new Date().toISOString(), scopes: ['read'] };
+
+    const result = await service.handleCallback({ code: 'code', state: connectState('read') });
+
+    expect(result.success).toBe(false);
+    expect(result.redirectUrl).toBe(TEST_FAILURE_URL);
+    expect(captured.errors).toHaveLength(1);
+  });
+
+  describe('userExternalConnectionConnectFailureRedirectUrl()', () => {
+    it('should add the code and provider while keeping the base query', () => {
+      const url = new URL(userExternalConnectionConnectFailureRedirectUrl({ baseUrl: TEST_FAILURE_URL, providerType: TEST_PROVIDER_TYPE, errorCode: USER_EXTERNAL_CONNECTION_OVER_GRANTED_ERROR_CODE }));
+
+      expect(url.searchParams.get('failed')).toBe('1');
+      expect(url.searchParams.get(USER_EXTERNAL_CONNECTION_CONNECT_ERROR_PARAM)).toBe(USER_EXTERNAL_CONNECTION_OVER_GRANTED_ERROR_CODE);
+      expect(url.searchParams.get(USER_EXTERNAL_CONNECTION_CONNECT_ERROR_PROVIDER_PARAM)).toBe(TEST_PROVIDER_TYPE);
+    });
+
+    it('should return the base url unchanged without a code', () => {
+      expect(userExternalConnectionConnectFailureRedirectUrl({ baseUrl: TEST_FAILURE_URL, providerType: TEST_PROVIDER_TYPE })).toBe(TEST_FAILURE_URL);
+    });
+  });
+
+  describe('userExternalConnectionConnectErrorCode()', () => {
+    it('should read the over-granted code', () => {
+      const error = userExternalConnectionOverGrantedError({ providerType: TEST_PROVIDER_TYPE, requestedScopes: ['read'], grantedScopes: ['read', 'write'], extraScopes: ['write'] });
+      expect(userExternalConnectionConnectErrorCode(error)).toBe(USER_EXTERNAL_CONNECTION_OVER_GRANTED_ERROR_CODE);
+    });
+
+    it('should not report a code outside the allowlist', () => {
+      expect(userExternalConnectionConnectErrorCode(userExternalConnectionSignInEmailConflictError(TEST_PROVIDER_TYPE))).toBeUndefined();
+      expect(userExternalConnectionConnectErrorCode(new Error('internal detail'))).toBeUndefined();
+    });
+  });
+
+  describe('normalizeUserExternalConnectionProviderScopes()', () => {
+    it('should pass the scopes through, deduped, without a service', () => {
+      expect(normalizeUserExternalConnectionProviderScopes(undefined, ['read', 'write', 'read'])).toEqual(['read', 'write']);
+    });
   });
 });

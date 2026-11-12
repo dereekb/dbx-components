@@ -39,11 +39,27 @@
   (`DbxFirebaseExternalConnectionRow.scopePreset`). `connectToProvider(providerType, { scopePreset })`, and
   `mintAuthorizeStateForProvider` / `authorizeUrlWithStateForProvider` take a mode or an options object
   (`{ mode, scopePreset }`).
+- **Over-granted connects are refused by default.** `UserExternalConnectionProviderPolicy.onOverGrant: 'block' | 'allow'`
+  (default `block`) refuses a CONNECT whose code exchange granted scopes beyond what the round trip requested: nothing is
+  stored, an existing connection is left as it was, and the entry is not marked `error`. Enforced only when the provider
+  knows what it requested (a resolved preset, or the new overridable `requestedScopesForScopePreset()` hook on
+  `AbstractUserExternalConnectionOAuthService`); connects only. New `USER_EXTERNAL_CONNECTION_OVER_GRANTED` (403,
+  `userExternalConnectionOverGrantedError`) and its allowlist `USER_EXTERNAL_CONNECTION_CONNECT_REPORTABLE_ERROR_CODES`
+  (`@dereekb/firebase`, read with `userExternalConnectionConnectErrorCode`).
+- **Connect failure redirect params.** A refused connect returns to the failure url carrying `connectError` and
+  `connectErrorProvider` (`USER_EXTERNAL_CONNECTION_CONNECT_ERROR_PARAM` / `_PROVIDER_PARAM`, built by
+  `userExternalConnectionConnectFailureRedirectUrl`); other connect failures keep the bare failure url.
+- **`normalizeUserExternalConnectionProviderScopes(oauthService, scopes)`** is exported from the OAuth service module; the
+  connect's over-grant check and the token mint share it.
+- **`packages/microsoft/SETUP.md`** documents the app registration, the "Consent on behalf of your organization" checkbox
+  (it cannot be disabled — leave it unticked) and how to find and revoke tenant-wide or per-user consent.
 
 ### Changed
 - `AssertUserExternalConnectionProviderConnectableInput`, `UserExternalConnectionOAuthAuthorizeUrlInput`,
   `MintUserExternalConnectionConnectStateInput`, `UserExternalConnectionConnectStateActor` and
   `UserExternalConnectionTokenMintInput` each gain an optional field; existing callers compile unchanged.
+- The Microsoft adapter always requests `User.Read` beside the preset's scopes (`requestedScopesForScopePreset()`); the
+  default presets' authorize urls are unchanged, while a custom preset without `User.Read` now also requests it.
 
 ### Adopt
 - **Forward `scopePreset` in the app's `read:authorizeState` handler** — pass `data.scopePreset` (connect mode only) to
@@ -52,6 +68,8 @@
 - To mint narrowed tokens, declare per-provider OIDC scopes (e.g. `token.external.<provider>_read` / `_admin`) in the
   scope union and the OIDC `claims` (as `[]`), assign them through the admin-only `external-token` profile, and list
   them in `providerScopes`. A CLI branching on mint errors should handle the four new codes.
+- Nothing is required for the over-grant refusal. Declare `onOverGrant: 'allow'` on a provider's policy to store wider
+  grants instead. An app with its own connect UI should read `connectError` / `connectErrorProvider` off the failure url.
 
 ## Migration to v14.22.x — dynamic docs sources
 

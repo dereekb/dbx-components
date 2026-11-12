@@ -3,9 +3,17 @@ import { type DynamicModule, Module, type Provider } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { type MicrosoftOAuthCurrentUser, type MicrosoftOAuthTokenResponse } from '@dereekb/microsoft';
 import { type MicrosoftOAuthServiceConfig, appMicrosoftOAuthModuleMetadata } from '@dereekb/microsoft/nestjs';
-import { MICROSOFT_GRAPH_READ_SCOPES, MICROSOFT_GRAPH_READ_WRITE_SCOPES, MICROSOFT_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE } from '@dereekb/firebase';
+import { MICROSOFT_GRAPH_READ_SCOPES, MICROSOFT_GRAPH_READ_WRITE_SCOPES, MICROSOFT_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, USER_EXTERNAL_CONNECTION_OVER_GRANTED_ERROR_CODE, type UserExternalConnectionScopePreset } from '@dereekb/firebase';
 import { FirebaseServerEnvService } from '@dereekb/firebase-server';
-import { UserExternalConnectionAccessor, UserExternalConnectionServerActions, UserExternalConnectionStateCoder, type UserExternalConnectionCredentials, userExternalConnectionStateCoder } from '@dereekb/firebase-server/model';
+import {
+  USER_EXTERNAL_CONNECTION_CONNECT_ERROR_PARAM,
+  UserExternalConnectionAccessor,
+  UserExternalConnectionServerActions,
+  UserExternalConnectionStateCoder,
+  type UserExternalConnectionCredentials,
+  type UserExternalConnectionOAuthAuthorizeUrlInput,
+  userExternalConnectionStateCoder
+} from '@dereekb/firebase-server/model';
 import { type Maybe } from '@dereekb/util';
 import { type FetchHandler } from '@dereekb/util/fetch';
 import { MICROSOFT_USER_EXTERNAL_CONNECTION_OAUTH_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE } from './microsoft.oauth.connection.config';
@@ -39,6 +47,7 @@ function fakeIdToken(claims: object): string {
 }
 
 const READ_SCOPE_STRING = MICROSOFT_GRAPH_READ_SCOPES.map((x) => `https://graph.microsoft.com/${x}`).join(' ') + ' openid profile email offline_access';
+const READ_WRITE_SCOPE_STRING = MICROSOFT_GRAPH_READ_WRITE_SCOPES.map((x) => `https://graph.microsoft.com/${x}`).join(' ') + ' openid profile email offline_access';
 
 function tokenResponse(overrides: Partial<MicrosoftOAuthTokenResponse> = {}): MicrosoftOAuthTokenResponse {
   return { access_token: 'access-token', token_type: 'Bearer', expires_in: 3600, refresh_token: 'refresh-token', id_token: fakeIdToken({ oid: TEST_OID, tid: TEST_TENANT_ID, preferred_username: TEST_UPN }), scope: READ_SCOPE_STRING, ...overrides };
@@ -117,12 +126,15 @@ interface CapturedConnect {
 
 function capturingServerActions() {
   const connects: CapturedConnect[] = [];
+  const errors: unknown[] = [];
 
   const actions = {
     connectUserExternalConnection: async (params: CapturedConnect) => {
       connects.push(params);
     },
-    markUserExternalConnectionError: async () => undefined,
+    markUserExternalConnectionError: async (params: unknown) => {
+      errors.push(params);
+    },
     refreshUserExternalConnectionCredentials: async (params: CapturedConnect) => {
       connects.push(params);
     }
@@ -139,7 +151,7 @@ function capturingServerActions() {
       })
   };
 
-  return { actions, accessor, connects };
+  return { actions, accessor, connects, errors };
 }
 
 @Module(appMicrosoftOAuthModuleMetadata({ microsoftOAuthServiceConfigFactory: () => oauthServiceConfig }))
@@ -273,6 +285,46 @@ describe('MicrosoftUserExternalConnectionOAuthService', () => {
       const { credentials } = captured.connects[0];
       expect(credentials.externalAccountId).toBe(TEST_OID);
       expect(credentials.extra).toEqual({ [MICROSOFT_EXTRA_TENANT_ID_KEY]: TEST_TENANT_ID });
+    });
+
+    it('refuses a read connect Entra answered with read + write (an earlier or organization-wide consent)', async () => {
+      fakeMicrosoft.tokenResponse = tokenResponse({ scope: READ_WRITE_SCOPE_STRING });
+      const state = (await authorizeUrl('read')).searchParams.get('state') as string;
+      const result = await service.handleCallback({ code: 'the-code', state });
+
+      expect(result.success).toBe(false);
+      expect(new URL(result.redirectUrl).searchParams.get(USER_EXTERNAL_CONNECTION_CONNECT_ERROR_PARAM)).toBe(USER_EXTERNAL_CONNECTION_OVER_GRANTED_ERROR_CODE);
+      expect(captured.connects).toHaveLength(0);
+      expect(captured.errors).toHaveLength(0);
+    });
+
+    it('accepts a read grant in a different casing and prefix form', async () => {
+      fakeMicrosoft.tokenResponse = tokenResponse({ scope: MICROSOFT_GRAPH_READ_SCOPES.map((x) => `https://graph.microsoft.com/${x.toLowerCase()}`).join(' ') + ' openid profile email offline_access' });
+      const state = (await authorizeUrl('read')).searchParams.get('state') as string;
+      const result = await service.handleCallback({ code: 'the-code', state });
+
+      expect(result.success).toBe(true);
+      expect(captured.connects[0].credentials.scopes).toEqual([...MICROSOFT_GRAPH_READ_SCOPES]);
+    });
+  });
+
+  describe('requestedScopesForScopePreset()', () => {
+    const CUSTOM_PRESET: UserExternalConnectionScopePreset = { key: 'mail', label: 'Mail', scopes: ['Mail.Read'] };
+
+    it('requests User.Read alone without a preset', () => {
+      expect(service.requestedScopesForScopePreset(undefined)).toEqual(['User.Read']);
+    });
+
+    it('adds User.Read to a custom preset, in the hook and in the authorize url', () => {
+      expect(service.requestedScopesForScopePreset(CUSTOM_PRESET)).toEqual(['Mail.Read', 'User.Read']);
+
+      const authorizeUrlForState = (service as unknown as { authorizeUrlForState(input: UserExternalConnectionOAuthAuthorizeUrlInput): string }).authorizeUrlForState.bind(service);
+      const url = new URL(authorizeUrlForState({ state: 'state', mode: 'connect', scopePreset: CUSTOM_PRESET }));
+      expect(url.searchParams.get('scope')).toBe('Mail.Read User.Read openid profile email offline_access');
+    });
+
+    it('leaves the default presets unchanged', () => {
+      expect(service.requestedScopesForScopePreset(service.scopePresetForKey('read'))).toEqual([...MICROSOFT_GRAPH_READ_SCOPES]);
     });
   });
 

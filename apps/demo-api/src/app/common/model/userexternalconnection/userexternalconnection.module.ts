@@ -120,7 +120,10 @@ export const DEMO_USER_EXTERNAL_CONNECTION_SIGN_IN_DELEGATE: InjectionToken = 'D
         // the connection reads an org mailbox, so only an admin may consent to it
         adminOnly: true,
         // one Microsoft account is one demo user
-        unique: true
+        unique: true,
+        // stated rather than defaulted: Entra issues every consented Graph scope, so a connect that comes back
+        // wider than its preset (an org-wide or never-revoked consent) is refused rather than stored
+        onOverGrant: 'block'
       }
     ],
     signIn: {

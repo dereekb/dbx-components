@@ -46,6 +46,14 @@ export const USER_EXTERNAL_CONNECTION_REFRESH_IN_PROGRESS_ERROR_CODE = 'USER_EXT
  * Internal: the reader handles it by re-reading what was written instead.
  */
 export const USER_EXTERNAL_CONNECTION_REFRESH_LEASE_LOST_ERROR_CODE = 'USER_EXTERNAL_CONNECTION_REFRESH_LEASE_LOST';
+/**
+ * A CONNECT was refused because the provider granted scopes the connect did not request — for example an
+ * earlier consent that was never revoked, or an organization-wide consent.
+ *
+ * Refused by default (the provider policy's `onOverGrant`). Nothing is stored: an existing connection is left
+ * exactly as it was.
+ */
+export const USER_EXTERNAL_CONNECTION_OVER_GRANTED_ERROR_CODE = 'USER_EXTERNAL_CONNECTION_OVER_GRANTED';
 
 /**
  * The only error codes a failed SIGN-IN reports back to the browser.
@@ -66,3 +74,14 @@ export const USER_EXTERNAL_CONNECTION_SIGN_IN_REPORTABLE_ERROR_CODES: ReadonlySe
   USER_EXTERNAL_CONNECTION_SIGN_IN_IDENTITY_UNAVAILABLE_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_LINK_NOT_ENABLED_ERROR_CODE
 ]);
+
+/**
+ * The only error codes a failed CONNECT reports back to the browser.
+ *
+ * An ALLOWLIST for the same reason as {@link USER_EXTERNAL_CONNECTION_SIGN_IN_REPORTABLE_ERROR_CODES}: the
+ * connect failure redirect is a URL the user can read, so a code absent from this set is reported as nothing
+ * at all.
+ *
+ * Shared with the client so the connect UI's copy map and the server's allowlist cannot drift.
+ */
+export const USER_EXTERNAL_CONNECTION_CONNECT_REPORTABLE_ERROR_CODES: ReadonlySet<string> = new Set<string>([USER_EXTERNAL_CONNECTION_OVER_GRANTED_ERROR_CODE]);

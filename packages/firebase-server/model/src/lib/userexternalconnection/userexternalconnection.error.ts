@@ -1,10 +1,14 @@
 import {
   type FirebaseAuthUserId,
+  type UserExternalConnectionCapability,
   type UserExternalConnectionExternalAccountId,
   type UserExternalConnectionProviderType,
+  type UserExternalConnectionScopePresetKey,
   USER_EXTERNAL_CONNECTION_ALREADY_EXISTS_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_CONNECT_REPORTABLE_ERROR_CODES,
   USER_EXTERNAL_CONNECTION_CREDENTIALS_EXPIRED_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_EXTERNAL_ACCOUNT_IN_USE_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_OVER_GRANTED_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_PROVIDER_NOT_ALLOWED_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_PROVIDER_NOT_CONNECTED_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_REFRESH_IN_PROGRESS_ERROR_CODE,
@@ -43,8 +47,21 @@ export {
   USER_EXTERNAL_CONNECTION_SIGN_IN_IDENTITY_UNAVAILABLE_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_LINK_NOT_ENABLED_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_UNLINK_LAST_LOGIN_METHOD_ERROR_CODE,
-  USER_EXTERNAL_CONNECTION_SIGN_IN_REPORTABLE_ERROR_CODES
+  USER_EXTERNAL_CONNECTION_SIGN_IN_REPORTABLE_ERROR_CODES,
+  USER_EXTERNAL_CONNECTION_OVER_GRANTED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_CONNECT_REPORTABLE_ERROR_CODES
 } from '@dereekb/firebase';
+
+/**
+ * Reads `HttpsError.details.code` off a thrown value — where every helper in `@dereekb/firebase-server` puts it.
+ *
+ * @param e - The thrown value.
+ * @returns The code, or nullish when the value carries none.
+ */
+function userExternalConnectionThrownErrorCode(e: unknown): Maybe<string> {
+  const details = (e as Maybe<{ readonly details?: Maybe<{ readonly code?: Maybe<string> }> }>)?.details;
+  return details?.code;
+}
 
 /**
  * Reads the reportable error code off a thrown sign-in failure.
@@ -59,9 +76,59 @@ export {
  * @__NO_SIDE_EFFECTS__
  */
 export function userExternalConnectionSignInErrorCode(e: unknown): Maybe<string> {
-  const details = (e as Maybe<{ readonly details?: Maybe<{ readonly code?: Maybe<string> }> }>)?.details;
-  const code = details?.code;
+  const code = userExternalConnectionThrownErrorCode(e);
   return code != null && USER_EXTERNAL_CONNECTION_SIGN_IN_REPORTABLE_ERROR_CODES.has(code) ? code : undefined;
+}
+
+/**
+ * Reads the reportable error code off a thrown CONNECT failure.
+ *
+ * The connect twin of {@link userExternalConnectionSignInErrorCode}: returns the code only when it is in
+ * `USER_EXTERNAL_CONNECTION_CONNECT_REPORTABLE_ERROR_CODES`. Anything else, including a plain `Error`, yields null.
+ *
+ * @param e - The thrown value.
+ * @returns The reportable code, or null when there is none.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function userExternalConnectionConnectErrorCode(e: unknown): Maybe<string> {
+  const code = userExternalConnectionThrownErrorCode(e);
+  return code != null && USER_EXTERNAL_CONNECTION_CONNECT_REPORTABLE_ERROR_CODES.has(code) ? code : undefined;
+}
+
+/**
+ * Server-side detail of a refused over-granted connect. Logged and carried on the error's data only: the
+ * browser only ever sees the code.
+ */
+export interface UserExternalConnectionOverGrantedErrorData {
+  readonly providerType: UserExternalConnectionProviderType;
+  /**
+   * The preset the connect resolved to, if any.
+   */
+  readonly scopePreset?: Maybe<UserExternalConnectionScopePresetKey>;
+  readonly requestedScopes: readonly UserExternalConnectionCapability[];
+  readonly grantedScopes: readonly UserExternalConnectionCapability[];
+  /**
+   * The granted scopes the connect did not request.
+   */
+  readonly extraScopes: readonly UserExternalConnectionCapability[];
+}
+
+/**
+ * Creates an error indicating a connect was refused because the provider granted scopes it did not request.
+ *
+ * Thrown by the OAuth callback when the provider policy's `onOverGrant` is `block` (the default). Typical
+ * causes: an earlier, never-revoked consent for more, or an administrator's organization-wide consent.
+ *
+ * @param data - What was requested, what was granted, and the difference.
+ * @returns A forbidden HttpsError.
+ */
+export function userExternalConnectionOverGrantedError(data: UserExternalConnectionOverGrantedErrorData) {
+  return forbiddenError({
+    message: `"${data.providerType}" granted more access than the connect requested, so the connection was not saved.`,
+    code: USER_EXTERNAL_CONNECTION_OVER_GRANTED_ERROR_CODE,
+    data
+  });
 }
 
 /**
@@ -126,8 +193,7 @@ export function userExternalConnectionCredentialsExpiredError(providerType: User
  * @__NO_SIDE_EFFECTS__
  */
 export function isUserExternalConnectionCredentialsExpiredError(e: unknown): boolean {
-  const details = (e as Maybe<{ readonly details?: Maybe<{ readonly code?: Maybe<string> }> }>)?.details;
-  return details?.code === USER_EXTERNAL_CONNECTION_CREDENTIALS_EXPIRED_ERROR_CODE;
+  return userExternalConnectionThrownErrorCode(e) === USER_EXTERNAL_CONNECTION_CREDENTIALS_EXPIRED_ERROR_CODE;
 }
 
 /**
@@ -174,8 +240,7 @@ export function userExternalConnectionRefreshLeaseLostError(providerType: UserEx
  * @__NO_SIDE_EFFECTS__
  */
 export function isUserExternalConnectionRefreshLeaseLostError(e: unknown): boolean {
-  const details = (e as Maybe<{ readonly details?: Maybe<{ readonly code?: Maybe<string> }> }>)?.details;
-  return details?.code === USER_EXTERNAL_CONNECTION_REFRESH_LEASE_LOST_ERROR_CODE;
+  return userExternalConnectionThrownErrorCode(e) === USER_EXTERNAL_CONNECTION_REFRESH_LEASE_LOST_ERROR_CODE;
 }
 
 /**

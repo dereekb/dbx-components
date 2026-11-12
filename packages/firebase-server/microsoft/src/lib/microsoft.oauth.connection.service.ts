@@ -1,7 +1,7 @@
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import { type MicrosoftOAuthAccessToken, type MicrosoftOAuthAuthorizeUrlFactory, type MicrosoftOAuthCurrentUser, normalizeMicrosoftGraphScopes } from '@dereekb/microsoft';
 import { MicrosoftOAuthApi } from '@dereekb/microsoft/nestjs';
-import { type UserExternalConnectionCapability } from '@dereekb/firebase';
+import { type UserExternalConnectionCapability, type UserExternalConnectionScopePreset } from '@dereekb/firebase';
 import {
   AbstractUserExternalConnectionOAuthService,
   UserExternalConnectionAccessor,
@@ -116,6 +116,9 @@ export function microsoftUserExternalConnectionCredentials(input: MicrosoftUserE
  *   exceeds the caller's ceiling. The connect's scope preset is the only scope control.
  * - There is NO `revokeCredentials`: Entra has no per-grant revoke, so a disconnect forgets the stored
  *   credentials and the access token lapses within its hour.
+ * - A connect whose grant exceeds what it requested is REFUSED by default (the provider policy's
+ *   `onOverGrant`): Entra issues every scope consented for Graph, so an organization-wide consent or an
+ *   earlier, never-revoked consent would otherwise silently widen a "Read" connect. See `SETUP.md`.
  */
 @Injectable()
 export class MicrosoftUserExternalConnectionOAuthService extends AbstractUserExternalConnectionOAuthService {
@@ -141,10 +144,24 @@ export class MicrosoftUserExternalConnectionOAuthService extends AbstractUserExt
     this.authorizeUrlFactory = oauthApi.authorizeUrlFactory({ redirectUri: config.userExternalConnectionOAuth.redirectUri });
   }
 
+  /**
+   * The Graph scopes a connect requests: the preset's, plus `User.Read` ALWAYS — the identity fallback reads
+   * `/me` with it, and Entra returns it whenever it was ever consented, so leaving it out of a custom preset
+   * would make every such connect look over-granted.
+   *
+   * The authorize url is built from this same hook, so the request and the over-grant check cannot drift.
+   *
+   * @param scopePreset - The preset the connect resolved to, if any.
+   * @returns The normalized requested scopes.
+   */
+  override requestedScopesForScopePreset(scopePreset: Maybe<UserExternalConnectionScopePreset>): readonly UserExternalConnectionCapability[] {
+    return normalizeMicrosoftGraphScopes([...(scopePreset?.scopes ?? []), 'User.Read']);
+  }
+
   protected authorizeUrlForState(input: UserExternalConnectionOAuthAuthorizeUrlInput): WebsiteUrl {
     // the framework resolves the preset (requested, else the config default); with no presets at all the
     // request still carries User.Read so the identity fallback works
-    const scopes = input.scopePreset?.scopes ?? ['User.Read'];
+    const scopes = this.requestedScopesForScopePreset(input.scopePreset);
     return this.authorizeUrlFactory({ state: input.state, codeChallenge: input.codeChallenge, scopes });
   }
 

@@ -14,7 +14,8 @@ export type UserExternalConnectionScopePresetKey = string;
  *
  * A provider with presets is connected with exactly one of them: the chosen preset decides which
  * scopes the authorize request asks for, and the connection then records what the provider actually
- * granted. Switching presets is a reconnect.
+ * granted. A grant WIDER than the preset is refused unless the provider policy's `onOverGrant` is `allow`.
+ * Switching presets is a reconnect.
  */
 export interface UserExternalConnectionScopePreset {
   /**
@@ -125,6 +126,9 @@ export function smallestUserExternalConnectionScopePresetCovering(input: Smalles
 // MARK: Microsoft
 /**
  * The Microsoft Graph delegated scopes the default "Read" preset requests, in their canonical casing.
+ *
+ * A custom Microsoft preset should use canonical Graph scope casing too (`Mail.Read`, not `mail.read`): the
+ * connect's over-grant check and the mint's ceiling check compare scopes exactly after normalization.
  *
  * Plain strings rather than `@dereekb/microsoft` constants, so the server model and the Angular UI need
  * no dependency on the Microsoft package to declare or render the presets.

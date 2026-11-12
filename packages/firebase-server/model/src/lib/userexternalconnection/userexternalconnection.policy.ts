@@ -16,6 +16,15 @@ import { type UserExternalConnectionOAuthProviderRegistry } from './oauth/userex
 export type UserExternalConnectionCollisionPolicy = 'block' | 'transfer' | 'allow';
 
 /**
+ * What happens when a CONNECT's code exchange grants provider scopes the round trip did not request.
+ *
+ * - `block` — refuse the connect. Nothing is stored, an existing connection is left exactly as it was, and the
+ *   browser returns to the failure url carrying `USER_EXTERNAL_CONNECTION_OVER_GRANTED`. The default.
+ * - `allow` — store the connection with what was actually granted (its `ca` then covers more than the preset).
+ */
+export type UserExternalConnectionOverGrantPolicy = 'block' | 'allow';
+
+/**
  * Per-provider rules the connect and sign-in paths enforce.
  *
  * Declared by the app rather than by the provider adapter: whether two users may share a Discord
@@ -82,6 +91,20 @@ export interface UserExternalConnectionProviderPolicy {
    * exported at all.
    */
   readonly tokenExport?: Maybe<boolean>;
+  /**
+   * What to do when a CONNECT's code exchange grants scopes beyond what the connect requested. Defaults to `block`.
+   *
+   * Why it exists: some providers issue every scope the user (or an administrator, for the whole organization)
+   * ever consented to, whatever the request named. Microsoft Entra does — so an organization-wide consent, or a
+   * user's earlier Read + Write consent that a disconnect never revoked, silently turns a "Read" connect into a
+   * Read + Write connection. `block` refuses that connect instead of storing the wider grant.
+   *
+   * Enforced only when the provider knows what it requested: a resolved scope preset, or the OAuth service's
+   * `requestedScopesForScopePreset()`. A provider with neither (no presets) is never checked.
+   *
+   * Connects only. A sign-in with {@link signInConnects} stores whatever its exchange granted.
+   */
+  readonly onOverGrant?: Maybe<UserExternalConnectionOverGrantPolicy>;
 }
 
 /**
@@ -89,7 +112,8 @@ export interface UserExternalConnectionProviderPolicy {
  *
  * Every field is the restrictive option: an unlisted provider behaves exactly as it did before
  * policies existed (shared accounts permitted, connect-only), so adding the registry changes no
- * existing app's behavior.
+ * existing app's behavior. `onOverGrant`'s `block` only bites a provider that declares what it requested
+ * (scope presets — Microsoft, new in v14.26).
  */
 export const DEFAULT_USER_EXTERNAL_CONNECTION_PROVIDER_POLICY: Omit<Required<UserExternalConnectionProviderPolicy>, 'providerType'> = {
   unique: false,
@@ -97,7 +121,8 @@ export const DEFAULT_USER_EXTERNAL_CONNECTION_PROVIDER_POLICY: Omit<Required<Use
   signInConnects: false,
   onCollision: 'block',
   adminOnly: false,
-  tokenExport: false
+  tokenExport: false,
+  onOverGrant: 'block'
 };
 
 /**
@@ -121,6 +146,7 @@ export interface UserExternalConnectionResolvedProviderPolicy {
   readonly onCollision: UserExternalConnectionCollisionPolicy;
   readonly adminOnly: boolean;
   readonly tokenExport: boolean;
+  readonly onOverGrant: UserExternalConnectionOverGrantPolicy;
 }
 
 /**
@@ -141,7 +167,8 @@ export function resolveUserExternalConnectionProviderPolicy(providerType: UserEx
     signInConnects: policy?.signInConnects ?? DEFAULT_USER_EXTERNAL_CONNECTION_PROVIDER_POLICY.signInConnects ?? false,
     onCollision: policy?.onCollision ?? DEFAULT_USER_EXTERNAL_CONNECTION_PROVIDER_POLICY.onCollision ?? 'block',
     adminOnly: policy?.adminOnly ?? DEFAULT_USER_EXTERNAL_CONNECTION_PROVIDER_POLICY.adminOnly ?? false,
-    tokenExport: policy?.tokenExport ?? DEFAULT_USER_EXTERNAL_CONNECTION_PROVIDER_POLICY.tokenExport ?? false
+    tokenExport: policy?.tokenExport ?? DEFAULT_USER_EXTERNAL_CONNECTION_PROVIDER_POLICY.tokenExport ?? false,
+    onOverGrant: policy?.onOverGrant ?? DEFAULT_USER_EXTERNAL_CONNECTION_PROVIDER_POLICY.onOverGrant ?? 'block'
   };
 }
 

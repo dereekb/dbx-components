@@ -1,10 +1,23 @@
 import { type MicrosoftOAuthAccessToken, type MicrosoftOAuthExchangeAuthorizationCodeInput } from '@dereekb/microsoft';
 import { MicrosoftOAuthApi } from '@dereekb/microsoft/nestjs';
-import { type FirebaseAuthUserId, MICROSOFT_GRAPH_READ_SCOPES, MICROSOFT_GRAPH_READ_WRITE_SCOPES, MICROSOFT_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as MICROSOFT, type UserExternalConnectionScopePresetKey } from '@dereekb/firebase';
+import {
+  type FirebaseAuthUserId,
+  MICROSOFT_GRAPH_READ_SCOPES,
+  MICROSOFT_GRAPH_READ_WRITE_SCOPES,
+  MICROSOFT_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as MICROSOFT,
+  onCallReadModelParams,
+  type ReadUserExternalConnectionAuthorizeStateParams,
+  USER_EXTERNAL_CONNECTION_OVER_GRANTED_ERROR_CODE,
+  type UserExternalConnectionAuthorizeStateResult,
+  type UserExternalConnectionScopePresetKey,
+  userExternalConnectionIdentity
+} from '@dereekb/firebase';
 import { MICROSOFT_EXTRA_TENANT_ID_KEY, MicrosoftUserExternalConnectionOAuthController, type MicrosoftUserExternalConnectionOAuthService } from '@dereekb/firebase-server/microsoft';
-import { UserExternalConnectionOAuthProviderRegistry, type UserExternalConnectionStateCoder } from '@dereekb/firebase-server/model';
+import { USER_EXTERNAL_CONNECTION_CONNECT_ERROR_PARAM, USER_EXTERNAL_CONNECTION_CONNECT_ERROR_PROVIDER_PARAM, UserExternalConnectionOAuthProviderRegistry, type UserExternalConnectionStateCoder } from '@dereekb/firebase-server/model';
+import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
+import { demoCallModel } from '../../function/model/crud.functions';
 import { DEMO_API_NEST_SERVER_CONFIG } from '../../app';
-import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserAdminContext } from '../../../test/fixture';
+import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoUserExternalConnectionContext } from '../../../test/fixture';
 
 vi.setConfig({ hookTimeout: 40000, testTimeout: 40000 });
 
@@ -74,6 +87,21 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
       return f.userExternalConnectionAccessor.accessorForUser({ uid })(MICROSOFT).readUserExternalConnectionForProvider();
     }
 
+    async function connect(uid: FirebaseAuthUserId, scopePreset: UserExternalConnectionScopePresetKey, granted: readonly string[]) {
+      grantedScopes = granted;
+      const { state } = await authorize(uid, scopePreset);
+      return service.handleCallback({ code: 'microsoft-code', state });
+    }
+
+    function expectOverGrantRefusal(result: { readonly success: boolean; readonly redirectUrl: string }) {
+      const expected = new URL(service.failureUrl);
+      expected.searchParams.set(USER_EXTERNAL_CONNECTION_CONNECT_ERROR_PARAM, USER_EXTERNAL_CONNECTION_OVER_GRANTED_ERROR_CODE);
+      expected.searchParams.set(USER_EXTERNAL_CONNECTION_CONNECT_ERROR_PROVIDER_PARAM, MICROSOFT);
+
+      expect(result.success).toBe(false);
+      expect(result.redirectUrl).toBe(expected.toString());
+    }
+
     describe('wiring', () => {
       it('registers the microsoft connection with the default presets and PKCE', () => {
         expect(service.providerType).toBe(MICROSOFT);
@@ -125,6 +153,64 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           expect(credentials?.scopes).toEqual([...MICROSOFT_GRAPH_READ_WRITE_SCOPES]);
           expect(credentials?.refreshToken).toBe('microsoft-refresh-token');
           expect(credentials?.extra?.[MICROSOFT_EXTRA_TENANT_ID_KEY]).toBe(TENANT_ID);
+        });
+
+        describe('over-grant (the default onOverGrant: block)', () => {
+          it('refuses a read reconnect Entra answers with read + write, keeping the working read connection', async () => {
+            expect((await connect(au.uid, 'read', MICROSOFT_GRAPH_READ_SCOPES)).success).toBe(true);
+            expectOverGrantRefusal(await connect(au.uid, 'read', MICROSOFT_GRAPH_READ_WRITE_SCOPES));
+
+            const { entry, credentials } = await readConnectionFor(au.uid);
+
+            expect(entry?.st).toBe('connected');
+            expect(entry?.ca).toEqual([...MICROSOFT_GRAPH_READ_SCOPES]);
+            expect(credentials?.scopes).toEqual([...MICROSOFT_GRAPH_READ_SCOPES]);
+          });
+
+          it('refuses a switch from read + write to read while the read + write consent remains, keeping the connection', async () => {
+            expect((await connect(au.uid, 'readwrite', MICROSOFT_GRAPH_READ_WRITE_SCOPES)).success).toBe(true);
+            // Entra has no per-grant revoke, so a switch down still comes back carrying read + write
+            expectOverGrantRefusal(await connect(au.uid, 'read', MICROSOFT_GRAPH_READ_WRITE_SCOPES));
+
+            const { entry, credentials } = await readConnectionFor(au.uid);
+
+            expect(entry?.st).toBe('connected');
+            expect(credentials?.scopes).toEqual([...MICROSOFT_GRAPH_READ_WRITE_SCOPES]);
+          });
+
+          it('accepts an under-grant, storing the smaller set', async () => {
+            const smaller = MICROSOFT_GRAPH_READ_SCOPES.filter((x) => x !== 'Sites.Read.All');
+            expect((await connect(au.uid, 'read', smaller)).success).toBe(true);
+
+            const { credentials } = await readConnectionFor(au.uid);
+            expect(credentials?.scopes).toEqual(smaller);
+          });
+        });
+      });
+    });
+
+    describeCallableRequestTest('microsoft over-grant', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
+      demoAuthorizedUserAdminContext({ f }, (au) => {
+        demoUserExternalConnectionContext({ f, u: au, createIfNeeded: true }, () => {
+          it('refuses a read connect started through read:authorizeState that Entra answers with read + write, writing nothing', async () => {
+            const params: ReadUserExternalConnectionAuthorizeStateParams = { providerType: MICROSOFT, scopePreset: 'read' };
+            const { state } = (await au.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(userExternalConnectionIdentity, params, 'authorizeState'))) as UserExternalConnectionAuthorizeStateResult;
+
+            // the authorize door re-mints the state with a PKCE verifier, exactly as the browser redirect would
+            const authorizeUrl = new URL((await service.authorizeUrlForRequest({ query: { state } } as never)) as string);
+            expect(authorizeUrl.searchParams.get('scope')).toBe(`${MICROSOFT_GRAPH_READ_SCOPES.join(' ')} openid profile email offline_access`);
+
+            grantedScopes = MICROSOFT_GRAPH_READ_WRITE_SCOPES;
+            const result = await service.handleCallback({ code: 'microsoft-code', state: authorizeUrl.searchParams.get('state') as string });
+
+            expectOverGrantRefusal(result);
+            expect(exchangeInputs).toHaveLength(1);
+
+            const { entry, credentials } = await readConnectionFor(au.uid);
+
+            expect(entry?.st).not.toBe('connected');
+            expect(credentials).toBeUndefined();
+          });
         });
       });
     });

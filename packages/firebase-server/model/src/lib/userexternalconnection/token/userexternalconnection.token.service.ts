@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
-import { filterUndefinedValues, type Maybe, unique } from '@dereekb/util';
+import { filterUndefinedValues, type Maybe } from '@dereekb/util';
 import {
   type OidcEntryClientId,
   smallestUserExternalConnectionScopePresetCovering,
@@ -21,7 +21,7 @@ import { type UserExternalConnectionCredentials } from '../userexternalconnectio
 import { UserExternalConnectionProviderPolicyRegistry, userExternalConnectionPolicyForProviderType } from '../userexternalconnection.policy';
 import { isUserExternalConnectionCredentialsExpiredError } from '../userexternalconnection.error';
 import { UserExternalConnectionOAuthProviderRegistry } from '../oauth/userexternalconnection.oauth.registry';
-import { type AbstractUserExternalConnectionOAuthService, type UserExternalConnectionOAuthNarrowedAccessToken } from '../oauth/userexternalconnection.oauth.service';
+import { type AbstractUserExternalConnectionOAuthService, normalizeUserExternalConnectionProviderScopes, type UserExternalConnectionOAuthNarrowedAccessToken } from '../oauth/userexternalconnection.oauth.service';
 import {
   DEFAULT_USER_EXTERNAL_CONNECTION_TOKEN_MINIMUM_REMAINING,
   DEFAULT_USER_EXTERNAL_CONNECTION_TOKEN_REQUIRED_OIDC_SCOPE,
@@ -140,17 +140,6 @@ function tokenScopeForbiddenError(message: string, data?: Maybe<object>) {
 
 function tokenScopesInvalidError(message: string) {
   return badRequestError({ code: USER_EXTERNAL_CONNECTION_TOKEN_SCOPES_INVALID_ERROR_CODE, message });
-}
-
-/**
- * Normalizes scopes through the provider's `normalizeScopes` hook (when it has one) and dedupes them.
- *
- * @param oauthService - The provider's mounted OAuth service, if any.
- * @param scopes - The scopes to normalize.
- * @returns The normalized, deduped scopes.
- */
-function normalizeProviderScopes(oauthService: Maybe<AbstractUserExternalConnectionOAuthService>, scopes: readonly UserExternalConnectionCapability[]): UserExternalConnectionCapability[] {
-  return unique(oauthService?.normalizeScopes ? oauthService.normalizeScopes(scopes) : [...scopes]);
 }
 
 /**
@@ -285,7 +274,7 @@ export class UserExternalConnectionTokenApiService {
     readonly ceiling: Maybe<UserExternalConnectionCapability[]>;
   } {
     const { auth, providerType, oauthService } = input;
-    const requestedScopes = input.requestedScopes == null ? undefined : normalizeProviderScopes(oauthService, input.requestedScopes);
+    const requestedScopes = input.requestedScopes == null ? undefined : normalizeUserExternalConnectionProviderScopes(oauthService, input.requestedScopes);
 
     if (requestedScopes?.length === 0) {
       throw tokenScopesInvalidError('The requested scopes named no scopes.');
@@ -335,7 +324,7 @@ export class UserExternalConnectionTokenApiService {
     readonly ceiling: Maybe<UserExternalConnectionCapability[]>;
   }): Promise<UserExternalConnectionCredentials> {
     const { uid, providerType, oauthService, providerReader, credentials, target, ceiling } = input;
-    const grantedScopes = credentials.scopes == null ? undefined : normalizeProviderScopes(oauthService, credentials.scopes);
+    const grantedScopes = credentials.scopes == null ? undefined : normalizeUserExternalConnectionProviderScopes(oauthService, credentials.scopes);
     let result: UserExternalConnectionCredentials = credentials;
 
     if (target != null && oauthService?.narrowAccessToken != null) {
@@ -368,7 +357,7 @@ export class UserExternalConnectionTokenApiService {
       // a provider can accept a scope subset yet answer with every consented scope (Microsoft Entra
       // does); handing that token out would widen the caller past its target, and so its ceiling
       const targetSet = new Set(target);
-      const widerScopes = normalizeProviderScopes(oauthService, narrowed.scopes ?? []).filter((scope) => !targetSet.has(scope));
+      const widerScopes = normalizeUserExternalConnectionProviderScopes(oauthService, narrowed.scopes ?? []).filter((scope) => !targetSet.has(scope));
 
       if (widerScopes.length > 0) {
         throw tokenScopeForbiddenError(`The "${providerType}" provider returned a token wider than the scopes it was asked to narrow to: ${widerScopes.join(' ')}.`, { providerType, excessScopes: widerScopes });
@@ -413,7 +402,7 @@ export class UserExternalConnectionTokenApiService {
         throw tokenScopeForbiddenError(`This client holds none of the scopes that allow minting "${providerType}" access tokens.`, { providerType });
       }
 
-      result = normalizeProviderScopes(
+      result = normalizeUserExternalConnectionProviderScopes(
         oauthService,
         heldCeilings.flatMap(([, scopes]) => scopes)
       );

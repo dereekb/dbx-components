@@ -8,6 +8,8 @@ Microsoft identity platform (Entra ID v2) OAuth and a small Microsoft Graph clie
 
 Only single-tenant app registrations are supported: the `common`, `organizations` and `consumers` authorities are refused.
 
+See [SETUP.md](./SETUP.md) for the app registration and what tenant administrators need to know about consent (leave "Consent on behalf of your organization" unticked).
+
 The sources for this package are in the main [@dereekb/dbx-components](https://github.com/dereekb/dbx-components) repo. Please file issues and pull requests against that repo.
 
 License: MIT
