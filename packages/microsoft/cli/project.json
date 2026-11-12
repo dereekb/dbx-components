@@ -1,0 +1,58 @@
+{
+  "name": "microsoft-cli",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/microsoft/cli/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build-base": {
+      "dependsOn": [
+        {
+          "projects": ["microsoft"],
+          "target": "build-base"
+        }
+      ],
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "dist/packages/microsoft/cli",
+        "main": "packages/microsoft/cli/src/index.ts",
+        "tsConfig": "packages/microsoft/cli/tsconfig.lib.json",
+        "format": ["esm"],
+        "platform": "node",
+        "target": "node20",
+        "bundle": true,
+        "thirdParty": false,
+        "skipTypeCheck": true,
+        "declaration": false,
+        "external": ["class-validator", "class-transformer"],
+        "esbuildOptions": {
+          "banner": {
+            "js": "#!/usr/bin/env node\nimport { createRequire as __createRequire } from 'node:module';\nconst require = __createRequire(import.meta.url);"
+          }
+        },
+        "assets": [
+          {
+            "glob": "LICENSE",
+            "input": ".",
+            "output": "."
+          }
+        ]
+      },
+      "configurations": {
+        "production": {
+          "minify": true,
+          "sourcemap": false
+        }
+      },
+      "metadata": {
+        "description": "An explicit edge to microsoft:build-base, NOT `^build`: `^build` would resolve to microsoft:build, which depends on this very target -- a hard cycle. The bundle compiles into the parent's dist directory (dist/packages/microsoft/cli), and the parent's `build` aggregates it, so this entry point has no `build` of its own."
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    }
+  }
+}

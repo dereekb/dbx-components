@@ -20,4 +20,5 @@ export * from './scan-helpers/firestore-model-extract-utils.js';
 export * from './output';
 export * from './route';
 export * from './runner';
+export * from './token-source';
 export * from './util';

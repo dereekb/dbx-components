@@ -60,11 +60,16 @@ export function buildExternalTokenCommand(options?: Maybe<BuildExternalTokenComm
   return {
     command: `${commandName} <providerType>`,
     describe: `Mint a short-lived access token for one of your external connections (e.g. zoho_admin). Prints it REDACTED; the raw token is only written for a credential process (${DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR}=1), e.g. \`zoho-cli auth token-source set "${cliName} ${commandName} zoho_admin"\`.`,
-    builder: (yargs: Argv) => yargs.positional('providerType', { type: 'string', demandOption: true, describe: 'The external connection provider type, e.g. "zoho_admin".' }),
+    builder: (yargs: Argv) =>
+      yargs.positional('providerType', { type: 'string', demandOption: true, describe: 'The external connection provider type, e.g. "zoho_admin".' }).option('scopes', {
+        type: 'string',
+        describe: 'Narrow the minted token to these provider scopes (space- or comma-separated). Only providers that support narrowing accept it; it never widens past your login or the connection.'
+      }),
     handler: wrapCommandHandler(async (argv: any) => {
       const context: CliContext = requireCliContext();
       const providerType = String(argv.providerType);
-      const token = await fetchExternalConnectionToken({ apiBaseUrl: context.env.apiBaseUrl, accessToken: context.accessToken, providerType, cliName: context.cliName, fetcher });
+      const scopes = typeof argv.scopes === 'string' ? argv.scopes.split(/[\s,]+/).filter((x: string) => x.length > 0) : undefined;
+      const token = await fetchExternalConnectionToken({ apiBaseUrl: context.env.apiBaseUrl, accessToken: context.accessToken, providerType, scopes, cliName: context.cliName, fetcher });
       const bundle: CliExternalConnectionTokenBundle = cliExternalConnectionTokenBundle(token, context.env.externalConnectionHints);
 
       if (isCliCredentialProcess()) {

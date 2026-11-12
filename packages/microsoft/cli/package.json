@@ -1,0 +1,18 @@
+{
+  "name": "@dereekb/microsoft/cli",
+  "version": "14.25.1",
+  "sideEffects": false,
+  "type": "module",
+  "bin": {
+    "msgraph-cli": "index.js"
+  },
+  "peerDependencies": {
+    "@dereekb/dbx-cli": "14.25.1",
+    "@dereekb/microsoft": "14.25.1",
+    "@dereekb/util": "14.25.1",
+    "yargs": "^18.0.0"
+  },
+  "devDependencies": {
+    "@types/yargs": "^17.0.35"
+  }
+}

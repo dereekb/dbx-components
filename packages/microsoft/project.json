@@ -16,7 +16,7 @@
       "dependsOn": [
         "build-base",
         {
-          "projects": ["microsoft-nestjs"],
+          "projects": ["microsoft-nestjs", "microsoft-cli"],
           "target": "build-base"
         }
       ],
@@ -45,6 +45,10 @@
           {
             "description": "run microsoft-nestjs tests",
             "command": "npx nx test microsoft-nestjs"
+          },
+          {
+            "description": "run microsoft-cli tests",
+            "command": "npx nx test microsoft-cli"
           }
         ],
         "color": true,
