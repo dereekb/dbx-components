@@ -19,6 +19,9 @@ const options = {
   extractLicenses: true,
   assets: [
     { glob: 'packages/microsoft/README.md', input: '.', output: '.' },
+    { glob: 'packages/microsoft/SETUP.md', input: '.', output: '.' },
+    // the agent docs (dbx-claude refs) this package ships; msgraph-cli also embeds them for `msgraph-cli docs`
+    { glob: '**/*.md', input: 'packages/microsoft/refs', output: 'refs' },
     { glob: 'LICENSE', input: '.', output: '.' }
   ]
 };

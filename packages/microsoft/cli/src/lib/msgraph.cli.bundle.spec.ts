@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { spawn } from 'node:child_process';
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { type AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
@@ -287,4 +287,51 @@ process.stdout.write(JSON.stringify(${JSON.stringify(bundle)}));
     },
     BUNDLE_TEST_TIMEOUT_MS
   );
+
+  describe('docs', () => {
+    const workspaceRoot = findWorkspaceRoot();
+    const sourceRefPath = join(workspaceRoot, 'packages/microsoft/refs/msgraph-cli/REF.md');
+
+    it(
+      'should list the embedded msgraph-cli ref',
+      async () => {
+        const result = await runBundle(['docs']);
+
+        expect(result.exitCode).toBe(0);
+        expect(result.stdout).toContain('`msgraph-cli`');
+        expect(result.stdout).toContain('Run: msgraph-cli docs <topic>');
+      },
+      BUNDLE_TEST_TIMEOUT_MS
+    );
+
+    it(
+      'should print the msgraph-cli ref byte-identical to the source file',
+      async () => {
+        const result = await runBundle(['docs', 'msgraph-cli']);
+
+        expect(result.exitCode).toBe(0);
+        expect(result.stdout).toBe(readFileSync(sourceRefPath, 'utf8'));
+      },
+      BUNDLE_TEST_TIMEOUT_MS
+    );
+
+    it(
+      'should fail an unknown topic with DOCS_TOPIC_NOT_FOUND',
+      async () => {
+        const result = await runBundle(['docs', 'nope']);
+
+        expect(result.exitCode).not.toBe(0);
+        expect(result.json?.['code']).toBe('DOCS_TOPIC_NOT_FOUND');
+      },
+      BUNDLE_TEST_TIMEOUT_MS
+    );
+
+    it('should ship the ref and its declaration in the built package', () => {
+      const distPackage = join(workspaceRoot, 'dist/packages/microsoft');
+      const packageJson = JSON.parse(readFileSync(join(distPackage, 'package.json'), 'utf8')) as { readonly dbxClaude?: { readonly refs?: readonly { readonly name: string }[] } };
+
+      expect(readFileSync(join(distPackage, 'refs/msgraph-cli/REF.md'), 'utf8')).toBe(readFileSync(sourceRefPath, 'utf8'));
+      expect(packageJson.dbxClaude?.refs?.[0]?.name).toBe('msgraph-cli');
+    });
+  });
 });

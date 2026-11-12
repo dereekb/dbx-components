@@ -8,6 +8,7 @@ export * from './commands/mail.write.command';
 export * from './commands/request.command';
 export * from './config/cli.config';
 export * from './context/cli.context';
+export * from './docs/msgraph.docs';
 export * from './middleware/auth.middleware';
 export * from './util/mail.bulk';
 export * from './util/mail.dump';

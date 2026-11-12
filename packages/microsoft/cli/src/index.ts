@@ -1,4 +1,4 @@
-import { createOutputCommand, createOutputMiddleware, outputError } from '@dereekb/dbx-cli';
+import { createOutputCommand, createOutputMiddleware, createPackageRefsDocsCommand, outputError } from '@dereekb/dbx-cli';
 import yargs, { type CommandModule } from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { AUTH_COMMAND } from './lib/commands/auth.command';
@@ -9,6 +9,7 @@ import { MAIL_COMMAND } from './lib/commands/mail.command';
 import { REQUEST_COMMAND } from './lib/commands/request.command';
 import { TEAMS_COMMAND } from './lib/commands/teams.command';
 import { MSGRAPH_CLI_NAME, mergeMsGraphCliOutputConfig, msGraphCliConfigStore, msGraphCliTokenSourceResolver } from './lib/config/cli.config';
+import { MSGRAPH_CLI_PACKAGE_REFS } from './lib/docs/msgraph.docs';
 import { createMsGraphCliAuthMiddleware } from './lib/middleware/auth.middleware';
 import { configureMsGraphCliOutput } from './lib/util/output';
 
@@ -32,9 +33,14 @@ const outputCommand = createOutputCommand({
 const apiCommands: CommandModule[] = [REQUEST_COMMAND, MAIL_COMMAND, CALENDAR_COMMAND, FILES_COMMAND, TEAMS_COMMAND];
 
 /**
+ * `docs [topic]`: prints the agent docs @dereekb/microsoft ships under refs/, embedded in this bundle.
+ */
+const docsCommand = createPackageRefsDocsCommand({ cliName: MSGRAPH_CLI_NAME, refs: MSGRAPH_CLI_PACKAGE_REFS });
+
+/**
  * Config commands: they run without a token source and their output is never filtered.
  */
-const configCommands: CommandModule[] = [AUTH_COMMAND, CONFIG_COMMAND, outputCommand];
+const configCommands: CommandModule[] = [AUTH_COMMAND, CONFIG_COMMAND, outputCommand, docsCommand];
 const configCommandNames = new Set(configCommands.map((cmd) => (cmd.command as string).split(' ')[0]));
 
 const outputMiddleware = createOutputMiddleware({

@@ -15,6 +15,9 @@
   "builds": {
     "recovery": { "enabled": true, "target": "workspace:build-all" }
   },
+  "references": {
+    "packages": { "workspace": ["packages/*"] }
+  },
   "capabilityConfig": {
     "block-nx-build": { "options": { "enabled": true } },
     "circleci": {

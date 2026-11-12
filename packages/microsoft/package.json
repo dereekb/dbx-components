@@ -16,6 +16,39 @@
       "default": "./cli/index.js"
     }
   },
+  "dbxClaude": {
+    "refs": [
+      {
+        "name": "msgraph-cli",
+        "triggers": [
+          {
+            "words": [
+              "msgraph-cli",
+              "msgraph",
+              "Microsoft Graph",
+              "graph.microsoft.com",
+              "MSGRAPH_CLI_TOKEN_SOURCE",
+              "MSGRAPH_CLI_TOKEN_COMMAND",
+              "MSGRAPH_CLI_CONFIG_DIR",
+              "Outlook mail",
+              "Outlook inbox",
+              "Outlook calendar",
+              "OneDrive"
+            ]
+          },
+          {
+            "pathContains": [
+              "/microsoft/cli/"
+            ],
+            "capabilities": [
+              "dbx-components"
+            ],
+            "every": 8
+          }
+        ]
+      }
+    ]
+  },
   "peerDependencies": {
     "@dereekb/dbx-cli": "14.25.1",
     "@dereekb/nestjs": "14.25.1",
