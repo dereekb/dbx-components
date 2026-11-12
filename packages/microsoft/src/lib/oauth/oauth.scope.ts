@@ -32,6 +32,9 @@ export const KNOWN_MICROSOFT_GRAPH_SCOPES: readonly MicrosoftGraphScope[] = [
   'Mail.ReadBasic',
   'Mail.ReadWrite',
   'Mail.Send',
+  'Mail.Read.Shared',
+  'Mail.ReadWrite.Shared',
+  'Mail.Send.Shared',
   'MailboxSettings.Read',
   'MailboxSettings.ReadWrite',
   'Calendars.Read',
@@ -48,7 +51,11 @@ export const KNOWN_MICROSOFT_GRAPH_SCOPES: readonly MicrosoftGraphScope[] = [
   'Sites.ReadWrite.All',
   'Tasks.Read',
   'Tasks.ReadWrite',
-  'People.Read'
+  'People.Read',
+  'Team.ReadBasic.All',
+  'Channel.ReadBasic.All',
+  'Chat.Read',
+  'Presence.Read'
 ];
 
 const CANONICAL_SCOPE_BY_LOWERCASE = new Map<string, string>([...KNOWN_MICROSOFT_GRAPH_SCOPES, ...MICROSOFT_OIDC_SCOPES].map((scope) => [scope.toLowerCase(), scope]));

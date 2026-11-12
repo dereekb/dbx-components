@@ -33,7 +33,15 @@ describe('MICROSOFT_USER_EXTERNAL_CONNECTION_SCOPE_PRESETS', () => {
     expect(read.scopes.every((scope) => readWrite.scopes.includes(scope))).toBe(true);
   });
 
-  it('never requests Mail.Send', () => {
-    expect(MICROSOFT_GRAPH_READ_WRITE_SCOPES).not.toContain('Mail.Send');
+  it('sends mail only from read + write, and keeps read free of write and send scopes', () => {
+    const [read] = MICROSOFT_USER_EXTERNAL_CONNECTION_SCOPE_PRESETS;
+
+    expect(MICROSOFT_GRAPH_READ_WRITE_SCOPES).toContain('Mail.Send');
+    expect(read.scopes.filter((scope) => /ReadWrite|Send/.test(scope))).toEqual([]);
+  });
+
+  it('requests no scope that needs admin consent', () => {
+    // admin consent is tenant-wide; ChannelMessage.Read.All is the Teams read scope that needs it
+    expect(MICROSOFT_GRAPH_READ_WRITE_SCOPES).not.toContain('ChannelMessage.Read.All');
   });
 });

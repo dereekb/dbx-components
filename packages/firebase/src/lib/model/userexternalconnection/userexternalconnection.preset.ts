@@ -93,11 +93,29 @@ export const MICROSOFT_GRAPH_READ_SCOPES: readonly UserExternalConnectionCapabil
 
 /**
  * The Microsoft Graph delegated scopes the default "Read + Write" preset requests: the read set plus
- * the mail, calendar and files write scopes.
+ * the mail, calendar and files write scopes, sending mail, mailbox settings, the mail of shared
+ * mailboxes the user holds Exchange permissions on, and read-only Teams access (joined teams, their
+ * channels, the user's chats, and presence).
  *
- * Deliberately excludes `Mail.Send`.
+ * Every scope here is one a user may consent to without an administrator (per the Graph permissions
+ * reference — https://learn.microsoft.com/en-us/graph/permissions-reference), so connecting never
+ * needs admin, and so never tenant-wide, consent. That is why `ChannelMessage.Read.All` (admin
+ * consent required) is left out. A tenant's own consent policy can still demand approval.
  */
-export const MICROSOFT_GRAPH_READ_WRITE_SCOPES: readonly UserExternalConnectionCapability[] = [...MICROSOFT_GRAPH_READ_SCOPES, 'Mail.ReadWrite', 'Calendars.ReadWrite', 'Files.ReadWrite.All'];
+export const MICROSOFT_GRAPH_READ_WRITE_SCOPES: readonly UserExternalConnectionCapability[] = [
+  ...MICROSOFT_GRAPH_READ_SCOPES,
+  'Mail.ReadWrite',
+  'Mail.Send',
+  'MailboxSettings.Read',
+  'Mail.ReadWrite.Shared',
+  'Mail.Send.Shared',
+  'Calendars.ReadWrite',
+  'Files.ReadWrite.All',
+  'Team.ReadBasic.All',
+  'Channel.ReadBasic.All',
+  'Chat.Read',
+  'Presence.Read'
+];
 
 /**
  * Key of the default Microsoft "Read" preset.
@@ -125,7 +143,7 @@ export const MICROSOFT_READ_SCOPE_PRESET: UserExternalConnectionScopePreset = {
 export const MICROSOFT_READ_WRITE_SCOPE_PRESET: UserExternalConnectionScopePreset = {
   key: MICROSOFT_READ_WRITE_SCOPE_PRESET_KEY,
   label: 'Read + Write',
-  description: 'Read and change your mail, calendar and files. Never sends mail.',
+  description: 'Read, change and send your mail (and shared mailboxes you can access), change your calendar and files, and read your Teams chats, teams and channels.',
   scopes: MICROSOFT_GRAPH_READ_WRITE_SCOPES
 };
 
