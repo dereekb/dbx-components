@@ -2,13 +2,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { CliError, DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR, buildErrorOutput, sanitizeString } from '@dereekb/dbx-cli';
+import { CliError, DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR, buildErrorOutput, configureOutputOptions, sanitizeString } from '@dereekb/dbx-cli';
 import { microsoftGraphRequest } from '@dereekb/microsoft';
 import { MS_IN_HOUR } from '@dereekb/util';
 import { type FetchHandler } from '@dereekb/util/fetch';
 import { MSGRAPH_CLI_CONFIG_DIR_ENV_VAR, msGraphCliConfigStore, msGraphCliPaths } from './config/cli.config';
 import { createMsGraphCliAuthMiddleware, msGraphCommandHandler, resolveMsGraphCliContext } from './middleware/auth.middleware';
-import { configureMsGraphCliOutput, msGraphCliErrorOutput } from './util/output';
+import { configureMsGraphCliOutput, msGraphCliErrorOutput, outputMsGraphCliResult } from './util/output';
 
 // what the entry point does at startup
 configureMsGraphCliOutput();
@@ -140,6 +140,7 @@ describe('msgraph-cli', () => {
       expect(exit).toHaveBeenCalledWith(1);
       const printed = JSON.parse(log.mock.calls[0][0] as string);
       expect(printed.code).toBe('TOKEN_REJECTED');
+      expect(printed.serverCode).toBe('InvalidAuthenticationToken');
       expect(tokenSourceRef).toBeDefined();
 
       // the cached token was cleared, so the next load runs the command again
@@ -157,14 +158,42 @@ describe('msgraph-cli', () => {
 
       const output = msGraphCliErrorOutput(error);
       expect(output?.code).toBe('SCOPE_DENIED');
+      expect(output?.serverCode).toBe('ErrorAccessDenied');
       expect(output?.suggestion).toContain('auth show');
       // msgraph-cli has no --scopes; the suggestion must not send the user looking for one
       expect(output?.suggestion).not.toContain('--scopes');
       expect(buildErrorOutput(error).code).toBe('SCOPE_DENIED');
     });
 
+    it('should map a 429 to RATE_LIMITED with the Graph code as serverCode', async () => {
+      const graph = interceptGraph({ status: 429, body: { error: { code: 'TooManyRequests', message: 'Too many requests.' } } });
+      const context = await resolveMsGraphCliContext({}, { env: { ...env, MSGRAPH_CLI_TOKEN_COMMAND: source.command }, graphFactoryConfig: { fetchHandler: graph.fetchHandler } });
+      const error = await microsoftGraphRequest(context.graphContext)({ method: 'GET', path: '/me/messages' }).catch((e) => e);
+
+      const output = msGraphCliErrorOutput(error);
+      expect(output?.code).toBe('RATE_LIMITED');
+      expect(output?.serverCode).toBe('TooManyRequests');
+      expect(output?.suggestion).toContain('retry');
+    });
+
     it('should leave non-Graph errors to the default mapping', () => {
       expect(msGraphCliErrorOutput(new Error('boom'))).toBeUndefined();
+    });
+  });
+
+  describe('outputMsGraphCliResult()', () => {
+    afterEach(() => {
+      configureOutputOptions({});
+    });
+
+    it('should apply --pick to each item of a collection page and keep the page fields', () => {
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+      configureOutputOptions({ pick: 'id' });
+
+      outputMsGraphCliResult({ '@odata.context': 'c', value: [{ id: '1', subject: 's' }], '@odata.nextLink': 'n' });
+
+      const printed = JSON.parse(log.mock.calls[0][0] as string);
+      expect(printed).toEqual({ ok: true, data: { '@odata.context': 'c', value: [{ id: '1' }], '@odata.nextLink': 'n' } });
     });
   });
 

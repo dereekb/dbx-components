@@ -1,5 +1,5 @@
 import { getMessage, searchMessages } from '@dereekb/microsoft';
-import { outputResult } from '@dereekb/dbx-cli';
+import { outputMsGraphCliResult } from '../util/output';
 import type { Argv, CommandModule } from 'yargs';
 import { msGraphCommandHandler } from '../middleware/auth.middleware';
 
@@ -13,7 +13,7 @@ const MAIL_SEARCH_COMMAND: CommandModule = {
       .option('folder', { type: 'string', describe: 'Limit to one mail folder by id or well-known name (e.g. inbox, sentitems)' })
       .example([['$0 mail search "invoice" --top 10', 'Ten messages matching "invoice"']]),
   handler: msGraphCommandHandler(async (argv: any, { graphContext }) => {
-    outputResult(await searchMessages(graphContext)({ query: argv.query, top: argv.top, folder: argv.folder }));
+    outputMsGraphCliResult(await searchMessages(graphContext)({ query: argv.query, top: argv.top, folder: argv.folder }));
   })
 };
 
@@ -22,7 +22,7 @@ const MAIL_GET_COMMAND: CommandModule = {
   describe: 'Get one message with its body',
   builder: (yargs: Argv) => yargs.positional('id', { type: 'string', demandOption: true, describe: 'The message id' }).option('format', { type: 'string', choices: ['text', 'html'] as const, default: 'text', describe: 'Body format' }),
   handler: msGraphCommandHandler(async (argv: any, { graphContext }) => {
-    outputResult(await getMessage(graphContext)({ id: argv.id, format: argv.format }));
+    outputMsGraphCliResult(await getMessage(graphContext)({ id: argv.id, format: argv.format }));
   })
 };
 

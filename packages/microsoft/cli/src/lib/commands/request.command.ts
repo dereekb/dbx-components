@@ -1,4 +1,5 @@
-import { CliError, outputResult } from '@dereekb/dbx-cli';
+import { CliError } from '@dereekb/dbx-cli';
+import { outputMsGraphCliResult } from '../util/output';
 import { type MicrosoftGraphQuery, microsoftGraphRequest, microsoftGraphRequestAllPages } from '@dereekb/microsoft';
 import { type Maybe } from '@dereekb/util';
 import { type FetchJsonBody, type FetchMethod } from '@dereekb/util/fetch';
@@ -62,9 +63,9 @@ export const REQUEST_COMMAND: CommandModule = {
         throw new CliError({ message: '--all-pages only applies to a GET without a body.', code: 'INVALID_ARGUMENT' });
       }
 
-      outputResult(await microsoftGraphRequestAllPages(graphContext)({ path, query, maxPages: argv.maxPages }));
+      outputMsGraphCliResult(await microsoftGraphRequestAllPages(graphContext)({ path, query, maxPages: argv.maxPages }));
     } else {
-      outputResult(await microsoftGraphRequest(graphContext)({ method, path, query, body }));
+      outputMsGraphCliResult(await microsoftGraphRequest(graphContext)({ method, path, query, body }));
     }
   })
 };

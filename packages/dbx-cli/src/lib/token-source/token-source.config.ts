@@ -1,5 +1,12 @@
 import { type Maybe } from '@dereekb/util';
 import { getCliEnvVarName } from '../config/env.resolve';
+import { CliError } from '../util/output';
+
+/**
+ * Error code when a token source name selects no saved token source (from `--token-source`, the
+ * `<CLI>_TOKEN_SOURCE` env var, the saved selection, or `auth token-source use`).
+ */
+export const CLI_TOKEN_SOURCE_UNKNOWN_ERROR_CODE = 'TOKEN_SOURCE_UNKNOWN';
 
 // MARK: Config
 /**
@@ -193,6 +200,8 @@ export interface CliTokenSourceResolver<T extends CliTokenSourceConfig = CliToke
    *
    * A name that selects no saved source throws instead of falling through, so a mistyped `prod` never
    * quietly runs against another environment.
+   *
+   * @throws {CliError} A {@link CLI_TOKEN_SOURCE_UNKNOWN_ERROR_CODE} error, with the save hint as its suggestion, when a name selects no saved source.
    */
   resolveActiveTokenSource(fileConfig: Maybe<CliTokenSourceConfigFile<T>>, selection?: Maybe<CliTokenSourceSelection>): Maybe<CliActiveTokenSource<T>>;
   /**
@@ -300,7 +309,11 @@ export function cliTokenSourceResolver<T extends CliTokenSourceConfig = CliToken
 
       if (!saved) {
         const names = savedTokenSourceNames(fileConfig);
-        throw new Error(`Unknown token source "${name}" (from ${originLabel(selected)}). Saved token sources: ${names.length > 0 ? names.join(', ') : 'none'}. Save it with: ${setHint(name)}`);
+        throw new CliError({
+          message: `Unknown token source "${name}" (from ${originLabel(selected)}). Saved token sources: ${names.length > 0 ? names.join(', ') : 'none'}.`,
+          code: CLI_TOKEN_SOURCE_UNKNOWN_ERROR_CODE,
+          suggestion: `Save it with: ${setHint(name)}`
+        });
       }
 
       result = { ...saved, origin, name };

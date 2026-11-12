@@ -14,7 +14,7 @@ vi.mock('node:os', async (importOriginal) => {
 });
 
 import { MS_IN_HOUR } from '@dereekb/util';
-import { DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR } from '@dereekb/dbx-cli';
+import { CLI_TOKEN_SOURCE_FAILED_ERROR_CODE, CLI_TOKEN_SOURCE_UNKNOWN_ERROR_CODE, CliError, DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR } from '@dereekb/dbx-cli';
 import {
   configuredProducts,
   getConfigFilePath,
@@ -30,7 +30,7 @@ import {
   type ZohoCliConfig,
   type ZohoCliTokenSourceCoverage
 } from './cli.config';
-import { createZohoCliTokenSource, loadZohoCliResolvedTokenSource, loadZohoCliTokenSourceStatus, zohoCliTokenSourceCacheKey, zohoCliTokenSourceCoverage, zohoCliTokenSourceReport, zohoCliTokenSourceTokenFromBundle, type ZohoCliTokenSourceBundle } from './token.source';
+import { createZohoCliTokenSource, loadZohoCliResolvedTokenSource, loadZohoCliTokenSourceStatus, zohoCliTokenSourceCacheKey, zohoCliTokenSourceCoverage, zohoCliTokenSourceReport, zohoCliTokenSourceStatusError, zohoCliTokenSourceTokenFromBundle, type ZohoCliTokenSourceBundle } from './token.source';
 import { createCliContext } from '../context/cli.context';
 
 const sharedCreds = {
@@ -40,6 +40,16 @@ const sharedCreds = {
 };
 
 const MINTED_ACCESS_TOKEN = 'minted-access-token';
+
+/**
+ * The dbx-cli error envelope a failing bundle command prints.
+ */
+interface BundleCommandFailure {
+  readonly error: string;
+  readonly code?: string;
+  readonly serverCode?: string;
+  readonly suggestion?: string;
+}
 
 interface BundleCommand {
   readonly command: string;
@@ -54,10 +64,10 @@ interface BundleCommand {
  * `external-token` — and counts its runs, and returns the command that runs it.
  *
  * @param bundle - Overrides merged over the default bundle.
- * @param failWith - When set, the script prints a dbx-cli error envelope with this message instead.
+ * @param failWith - When set, the script prints a dbx-cli error envelope instead: this message (code `NOT_LOGGED_IN`), or the whole envelope.
  * @returns The command and its run counter.
  */
-function bundleCommand(bundle: Partial<ZohoCliTokenSourceBundle> = {}, failWith?: string): BundleCommand {
+function bundleCommand(bundle: Partial<ZohoCliTokenSourceBundle> = {}, failWith?: string | BundleCommandFailure): BundleCommand {
   const dir = join(testHome, 'bin');
   mkdirSync(dir, { recursive: true });
 
@@ -82,9 +92,9 @@ if (process.env[${JSON.stringify(DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR)}] !== '1') 
   process.stdout.write(JSON.stringify({ ok: false, error: 'not run as a credential process', code: 'NOT_CREDENTIAL_PROCESS' }));
   process.exit(1);
 }
-const failWith = ${JSON.stringify(failWith ?? null)};
+const failWith = ${JSON.stringify(typeof failWith === 'string' ? { error: failWith, code: 'NOT_LOGGED_IN' } : (failWith ?? null))};
 if (failWith) {
-  process.stdout.write(JSON.stringify({ ok: false, error: failWith, code: 'NOT_LOGGED_IN' }));
+  process.stdout.write(JSON.stringify({ ok: false, ...failWith }));
   process.exit(1);
 }
 process.stdout.write(JSON.stringify(${JSON.stringify(fullBundle)}));
@@ -150,7 +160,18 @@ describe('zoho-cli token source', () => {
 
     it('should name zoho-cli and its env vars in the unknown-source error', () => {
       process.env[ZOHO_CLI_TOKEN_SOURCE_ENV_VAR] = 'staging';
-      expect(() => resolveZohoCliActiveTokenSource({ tokenSource: { command: 'saved-cmd' }, tokenSources: named })).toThrow('Unknown token source "staging" (from ZOHO_CLI_TOKEN_SOURCE). Saved token sources: default, dev, prod. Save it with: zoho-cli auth token-source set "<command>" --name staging');
+      let error: unknown;
+
+      try {
+        resolveZohoCliActiveTokenSource({ tokenSource: { command: 'saved-cmd' }, tokenSources: named });
+      } catch (e) {
+        error = e;
+      }
+
+      expect(error).toBeInstanceOf(CliError);
+      expect((error as CliError).message).toBe('Unknown token source "staging" (from ZOHO_CLI_TOKEN_SOURCE). Saved token sources: default, dev, prod.');
+      expect((error as CliError).code).toBe(CLI_TOKEN_SOURCE_UNKNOWN_ERROR_CODE);
+      expect((error as CliError).suggestion).toBe('Save it with: zoho-cli auth token-source set "<command>" --name staging');
     });
 
     it('should throw rather than treat an unknown api mode as production', () => {
@@ -399,7 +420,8 @@ describe('zoho-cli token source', () => {
       const status = await loadZohoCliTokenSourceStatus({ tokenSource: { command } });
       const report = zohoCliTokenSourceReport(status!);
 
-      expect(report).toMatchObject({ command, origin: 'config', products: ['crm', 'desk'], datacenter: 'eu', scopes: ['ZohoCRM.modules.ALL', 'Desk.tickets.ALL', 'AaaServer.profile.READ'] });
+      expect(report).toMatchObject({ command, origin: 'config', apiMode: 'production', products: ['crm', 'desk'], datacenter: 'eu', scopes: ['ZohoCRM.modules.ALL', 'Desk.tickets.ALL', 'AaaServer.profile.READ'], hints: { zohoDeskOrgId: 'hint-desk-org' } });
+      expect(report.error).toBeUndefined();
       expect(JSON.stringify(report)).not.toContain(MINTED_ACCESS_TOKEN);
     });
 
@@ -409,6 +431,15 @@ describe('zoho-cli token source', () => {
 
       expect(status?.resolved).toBeUndefined();
       expect(zohoCliTokenSourceReport(status!).error).toContain('did not return an access token');
+    });
+
+    it("should keep the command's error code, server code and suggestion", async () => {
+      const { command } = bundleCommand({}, { error: 'external-token zoho_admin failed: Forbidden', code: 'AUTH_FORBIDDEN', serverCode: 'USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR', suggestion: 'Re-mint the credential.' });
+      const status = await loadZohoCliTokenSourceStatus({ tokenSource: { command } });
+
+      expect(status).toMatchObject({ errorCode: 'AUTH_FORBIDDEN', serverCode: 'USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR', suggestion: 'Re-mint the credential.' });
+      expect(zohoCliTokenSourceReport(status!)).toMatchObject({ command, origin: 'config', apiMode: 'production', errorCode: 'AUTH_FORBIDDEN', serverCode: 'USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR', suggestion: 'Re-mint the credential.' });
+      expect(zohoCliTokenSourceReport(status!).error).toContain('external-token zoho_admin failed: Forbidden');
     });
 
     it('should return undefined when no source is active', async () => {
@@ -421,6 +452,36 @@ describe('zoho-cli token source', () => {
 
       expect(status?.resolved?.source.apiMode).toBe('sandbox');
       expect(zohoCliTokenSourceReport(status!)).toMatchObject({ command, origin: 'flag', name: 'dev', apiMode: 'sandbox', products: ['crm', 'desk'] });
+    });
+  });
+
+  describe('zohoCliTokenSourceStatusError()', () => {
+    it('should return undefined for a loaded source', async () => {
+      const { command } = bundleCommand();
+      const status = await loadZohoCliTokenSourceStatus({ tokenSource: { command } });
+
+      expect(zohoCliTokenSourceStatusError({ status: status! })).toBeUndefined();
+    });
+
+    it("should carry the command's code, server code and suggestion, with the report as data", async () => {
+      const { command } = bundleCommand({}, { error: 'external-token zoho_admin failed: Forbidden', code: 'AUTH_FORBIDDEN', serverCode: 'USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR', suggestion: 'Re-mint the credential.' });
+      const status = await loadZohoCliTokenSourceStatus({ tokenSource: { command } });
+      const data = { configured: true, tokenSource: zohoCliTokenSourceReport(status!) };
+      const error = zohoCliTokenSourceStatusError({ status: status!, data });
+
+      expect(error).toBeInstanceOf(CliError);
+      expect(error?.message).toBe(`Token source "default" ("${command}", from config file) failed: external-token zoho_admin failed: Forbidden`);
+      expect(error).toMatchObject({ code: 'AUTH_FORBIDDEN', serverCode: 'USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR', suggestion: 'Re-mint the credential.', data });
+    });
+
+    it('should fall back to TOKEN_SOURCE_FAILED and a run-it-directly suggestion for a failure with no code', async () => {
+      const { command } = bundleCommand({ accessToken: '' });
+      const status = await loadZohoCliTokenSourceStatus({ tokenSource: { command } });
+      const error = zohoCliTokenSourceStatusError({ status: status! });
+
+      expect(error?.code).toBe(CLI_TOKEN_SOURCE_FAILED_ERROR_CODE);
+      expect(error?.serverCode).toBeUndefined();
+      expect(error?.suggestion).toContain('directly');
     });
   });
 });

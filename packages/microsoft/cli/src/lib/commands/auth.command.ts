@@ -1,4 +1,4 @@
-import { buildCliTokenSourceAuthCommand, cliTokenSourceReport, cliTokenSourceSelectionFromArgv, loadCliTokenSourceStatus, outputResult, wrapCommandHandler } from '@dereekb/dbx-cli';
+import { buildCliTokenSourceAuthCommand, cliTokenSourceReport, cliTokenSourceSelectionFromArgv, cliTokenSourceStatusError, loadCliTokenSourceStatus, outputResult, wrapCommandHandler } from '@dereekb/dbx-cli';
 import type { Argv, CommandModule } from 'yargs';
 import { msGraphCliTokenSourceCommandConfig } from '../config/cli.config';
 import { MSGRAPH_CLI_NO_TOKEN_SOURCE_HINT } from '../middleware/auth.middleware';
@@ -6,10 +6,13 @@ import { MSGRAPH_CLI_NO_TOKEN_SOURCE_HINT } from '../middleware/auth.middleware'
 /**
  * `auth show`: the active token source and its token (never the token itself), minting one when no
  * cached token is reusable.
+ *
+ * Fails (`ok: false`, exit 1) when the active source cannot produce a token, with the source's code,
+ * `serverCode` and suggestion, and the report under `data`. No configured source is not a failure.
  */
 const AUTH_SHOW_COMMAND: CommandModule = {
   command: 'show',
-  describe: 'Show the active token source and the scopes and expiry of its token (never the token)',
+  describe: 'Show the active token source and the scopes and expiry of its token (never the token); fails when the source cannot produce a token',
   builder: (yargs: Argv) =>
     yargs.example([
       ['$0 auth show', 'Mint (or reuse) a token and show its source, scopes and expiry'],
@@ -18,7 +21,15 @@ const AUTH_SHOW_COMMAND: CommandModule = {
   handler: wrapCommandHandler(async (argv: any) => {
     const config = msGraphCliTokenSourceCommandConfig();
     const status = await loadCliTokenSourceStatus({ resolver: config.resolver, fileConfig: await config.loadConfigFile(), tokenCachePath: config.tokenCachePath, ...cliTokenSourceSelectionFromArgv(argv) });
-    outputResult(status ? { tokenSource: cliTokenSourceReport(status) } : { tokenSource: null, suggestion: MSGRAPH_CLI_NO_TOKEN_SOURCE_HINT });
+    const result = status ? { tokenSource: cliTokenSourceReport(status) } : { tokenSource: null, suggestion: MSGRAPH_CLI_NO_TOKEN_SOURCE_HINT };
+    const failure = status ? cliTokenSourceStatusError({ status, resolver: config.resolver, data: result }) : undefined;
+
+    if (failure) {
+      // wrapCommandHandler prints { ok: false, error, code, serverCode?, suggestion, data } and exits 1
+      throw failure;
+    }
+
+    outputResult(result);
   })
 };
 

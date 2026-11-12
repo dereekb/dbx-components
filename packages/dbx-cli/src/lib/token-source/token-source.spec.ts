@@ -6,8 +6,9 @@ import { join } from 'node:path';
 import { MS_IN_HOUR, MS_IN_MINUTE } from '@dereekb/util';
 import { buildCliPaths, type CliPaths } from '../config/paths';
 import { DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR } from '../util/credential-process';
-import { type CliTokenSourceBundle, cliTokenSourceCacheKey, cliTokenSourceReport, cliTokenSourceTokenFromBundle, createCliTokenSource, loadCliTokenSourceStatus } from './token-source';
-import { type CliTokenSourceConfig, cliTokenSourceEnvVarNames, cliTokenSourceResolver, DEFAULT_CLI_TOKEN_SOURCE_NAME } from './token-source.config';
+import { CliError } from '../util/output';
+import { type CliTokenSourceBundle, CLI_TOKEN_SOURCE_FAILED_ERROR_CODE, cliTokenSourceCacheKey, cliTokenSourceReport, cliTokenSourceStatusError, cliTokenSourceTokenFromBundle, createCliTokenSource, loadCliTokenSourceStatus } from './token-source';
+import { type CliTokenSourceConfig, CLI_TOKEN_SOURCE_UNKNOWN_ERROR_CODE, cliTokenSourceEnvVarNames, cliTokenSourceResolver, DEFAULT_CLI_TOKEN_SOURCE_NAME } from './token-source.config';
 import { buildCliTokenSourceShowResult, clearCliTokenSource, cliTokenSourceJsonConfigStore, type CliTokenSourceCommandConfig, setCliTokenSource, useCliTokenSource } from './token-source.command';
 
 const MINTED_ACCESS_TOKEN = 'minted-access-token';
@@ -29,7 +30,7 @@ interface BundleCommand {
  * @param failWith - When set, the script prints a dbx-cli error envelope with this message instead.
  * @returns The command and its run log.
  */
-function bundleCommand(dir: string, bundle: Partial<CliTokenSourceBundle> = {}, failWith?: string, failSuggestion?: string): BundleCommand {
+function bundleCommand(dir: string, bundle: Partial<CliTokenSourceBundle> = {}, failWith?: string, failSuggestion?: string, failServerCode?: string): BundleCommand {
   mkdirSync(dir, { recursive: true });
 
   const id = Math.random().toString(36).slice(2);
@@ -57,8 +58,9 @@ if (process.env[${JSON.stringify(DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR)}] !== '1') 
 }
 const failWith = ${JSON.stringify(failWith ?? null)};
 const failSuggestion = ${JSON.stringify(failSuggestion ?? null)};
+const failServerCode = ${JSON.stringify(failServerCode ?? null)};
 if (failWith) {
-  process.stdout.write(JSON.stringify({ ok: false, error: failWith, code: 'NOT_LOGGED_IN', ...(failSuggestion ? { suggestion: failSuggestion } : {}) }));
+  process.stdout.write(JSON.stringify({ ok: false, error: failWith, code: 'NOT_LOGGED_IN', ...(failServerCode ? { serverCode: failServerCode } : {}), ...(failSuggestion ? { suggestion: failSuggestion } : {}) }));
   process.exit(1);
 }
 const bundle = ${JSON.stringify(fullBundle)};
@@ -124,7 +126,22 @@ describe('dbx-cli token source', () => {
 
     it('throws for a selected name with no saved source instead of falling through', () => {
       const resolver = cliTokenSourceResolver({ cliName: 'test-cli', env: {} });
-      expect(() => resolver.resolveActiveTokenSource(fileConfig, { tokenSourceName: 'nope' })).toThrow('Unknown token source "nope" (from --token-source). Saved token sources: default, prod. Save it with: test-cli auth token-source set "<command>" --name nope');
+      expect(() => resolver.resolveActiveTokenSource(fileConfig, { tokenSourceName: 'nope' })).toThrow('Unknown token source "nope" (from --token-source). Saved token sources: default, prod.');
+    });
+
+    it('throws a TOKEN_SOURCE_UNKNOWN CliError with the save hint as its suggestion', () => {
+      const resolver = cliTokenSourceResolver({ cliName: 'test-cli', env: {} });
+      let error: unknown;
+
+      try {
+        resolver.resolveActiveTokenSource(fileConfig, { tokenSourceName: 'nope' });
+      } catch (e) {
+        error = e;
+      }
+
+      expect(error).toBeInstanceOf(CliError);
+      expect((error as CliError).code).toBe(CLI_TOKEN_SOURCE_UNKNOWN_ERROR_CODE);
+      expect((error as CliError).suggestion).toBe('Save it with: test-cli auth token-source set "<command>" --name nope');
     });
 
     it('reads and validates the extra fields of a saved block', () => {
@@ -301,6 +318,52 @@ describe('dbx-cli token source', () => {
       expect(cliTokenSourceReport(status!)).toMatchObject({ errorCode: 'NOT_LOGGED_IN', suggestion: 'Run test-cli auth login.' });
     });
 
+    it('keeps the failing command serverCode in the status and report', async () => {
+      const { command } = bundleCommand(join(home, 'bin'), {}, 'Not logged in.', 'Run test-cli auth login.', 'SERVER_CODE');
+      const resolver = cliTokenSourceResolver({ cliName: 'test-cli', env: {} });
+      const status = await loadCliTokenSourceStatus({ resolver, fileConfig: { tokenSource: { command } }, tokenCachePath: paths.tokenCachePath });
+
+      expect(status?.serverCode).toBe('SERVER_CODE');
+      expect(cliTokenSourceReport(status!)).toMatchObject({ errorCode: 'NOT_LOGGED_IN', serverCode: 'SERVER_CODE', suggestion: 'Run test-cli auth login.' });
+    });
+  });
+
+  describe('cliTokenSourceStatusError()', () => {
+    it('returns undefined for a loaded status', async () => {
+      const { command } = bundleCommand(join(home, 'bin'));
+      const resolver = cliTokenSourceResolver({ cliName: 'test-cli', env: {} });
+      const status = await loadCliTokenSourceStatus({ resolver, fileConfig: { tokenSource: { command } }, tokenCachePath: paths.tokenCachePath });
+
+      expect(cliTokenSourceStatusError({ status: status!, resolver })).toBeUndefined();
+    });
+
+    it('names the source and its origin, and passes the code, serverCode, suggestion and data through', async () => {
+      const { command } = bundleCommand(join(home, 'bin'), {}, 'Not logged in.', 'Run test-cli auth login.', 'SERVER_CODE');
+      const resolver = cliTokenSourceResolver({ cliName: 'test-cli', env: {} });
+      const status = await loadCliTokenSourceStatus({ resolver, fileConfig: { tokenSource: { command } }, tokenCachePath: paths.tokenCachePath });
+      const data = { tokenSource: cliTokenSourceReport(status!) };
+      const error = cliTokenSourceStatusError({ status: status!, resolver, data });
+
+      expect(error).toBeInstanceOf(CliError);
+      expect(error?.message).toContain(`Token source "${DEFAULT_CLI_TOKEN_SOURCE_NAME}" ("${command}", from config file) failed:`);
+      expect(error?.message).toContain('Not logged in.');
+      expect(error?.code).toBe('NOT_LOGGED_IN');
+      expect(error?.serverCode).toBe('SERVER_CODE');
+      expect(error?.suggestion).toBe('Run test-cli auth login.');
+      expect(error?.data).toBe(data);
+    });
+
+    it('falls back to TOKEN_SOURCE_FAILED and a run-it-directly suggestion for a plain failure', async () => {
+      const { command } = bundleCommand(join(home, 'bin'), { accessToken: '' });
+      const resolver = cliTokenSourceResolver({ cliName: 'test-cli', env: {} });
+      const status = await loadCliTokenSourceStatus({ resolver, fileConfig: { tokenSource: { command } }, tokenCachePath: paths.tokenCachePath });
+      const error = cliTokenSourceStatusError({ status: status!, resolver });
+
+      expect(error?.code).toBe(CLI_TOKEN_SOURCE_FAILED_ERROR_CODE);
+      expect(error?.serverCode).toBeUndefined();
+      expect(error?.suggestion).toContain(`Run \`${command}\` directly`);
+    });
+
     it('reports the loaded token without the access token', async () => {
       const { command } = bundleCommand(join(home, 'bin'));
       const resolver = cliTokenSourceResolver({ cliName: 'test-cli', env: {} });
@@ -380,6 +443,7 @@ describe('dbx-cli token source', () => {
       const unknown = await buildCliTokenSourceShowResult(config, { tokenSourceName: 'staging' });
       expect(unknown.active).toBeNull();
       expect(unknown.error).toContain('Unknown token source "staging"');
+      expect(unknown.suggestion).toContain('Save it with:');
       expect(unknown.sources.map((x) => x.name)).toEqual([DEFAULT_CLI_TOKEN_SOURCE_NAME, 'dev']);
     });
 

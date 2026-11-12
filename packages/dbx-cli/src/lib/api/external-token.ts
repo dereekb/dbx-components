@@ -1,6 +1,15 @@
-import { type UserExternalConnectionAccessToken, type UserExternalConnectionProviderType, USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE, userExternalConnectionTokenApiPath } from '@dereekb/firebase';
+import {
+  type UserExternalConnectionAccessToken,
+  type UserExternalConnectionProviderType,
+  USER_EXTERNAL_CONNECTION_CREDENTIALS_EXPIRED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_TOKEN_EXPORT_NOT_ALLOWED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE,
+  userExternalConnectionTokenApiPath
+} from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
+import { cliHandoffRemintSuggestion, describeCliAuthFailureSuggestion, MISSING_ENDPOINT_OIDC_SCOPE_ERROR_CODE } from '../auth/auth-failure.hint';
 import { type CliExternalConnectionHints } from '../config/env';
+import { type CliContextCredential } from '../context/cli.context';
 import { CliError, tracedFetch } from '../util/output';
 import { codeForStatus } from './call-model.client';
 
@@ -39,6 +48,19 @@ export interface FetchExternalConnectionTokenInput {
    */
   readonly cliName?: Maybe<string>;
   /**
+   * The active env's name. Used only to tailor a failure's suggestion.
+   */
+  readonly envName?: Maybe<string>;
+  /**
+   * The space-delimited scopes the CLI's credential carries, when known. Used only to tailor a failure's suggestion.
+   */
+  readonly scope?: Maybe<string>;
+  /**
+   * How the CLI's credential was obtained. Used only to tailor a failure's suggestion: a handoff
+   * credential is told to re-mint through the MCP CLI token tool, never to `auth login`.
+   */
+  readonly credential?: Maybe<Pick<CliContextCredential, 'handoff' | 'refreshable'>>;
+  /**
    * Custom fetch implementation for tests.
    */
   readonly fetcher?: Maybe<typeof fetch>;
@@ -55,8 +77,8 @@ export interface FetchExternalConnectionTokenInput {
  * @returns The minted {@link UserExternalConnectionAccessToken}.
  * @throws {CliError} With a code derived from the HTTP status when the server refuses (e.g.
  *   `AUTH_FORBIDDEN` when the login lacks the `token.external` scope, the provider is not exportable,
- *   or the connection's grant reaches past the login's scope ceiling), or `API_ERROR` when a 2xx body
- *   carries no access token.
+ *   or the connection's grant reaches past the login's scope ceiling) and the server's own code as
+ *   `serverCode`, or `API_ERROR` when a 2xx body carries no access token.
  *
  * @example
  * ```typescript
@@ -71,7 +93,7 @@ export async function fetchExternalConnectionToken(input: FetchExternalConnectio
   const body = await readJsonBody(res);
 
   if (!res.ok) {
-    throw externalConnectionTokenHttpError({ res, body, providerType, cliName: input.cliName });
+    throw externalConnectionTokenHttpError({ res, body, providerType, cliName: input.cliName, envName: input.envName, scope: input.scope, credential: input.credential });
   }
 
   if (body == null || typeof body !== 'object' || typeof (body as Partial<UserExternalConnectionAccessToken>).accessToken !== 'string') {
@@ -99,6 +121,81 @@ export function cliExternalConnectionTokenBundle(token: UserExternalConnectionAc
   return hints == null ? { ...token } : { ...token, hints };
 }
 
+/**
+ * Inputs to {@link describeExternalConnectionTokenFailureSuggestion}.
+ */
+export interface DescribeExternalConnectionTokenFailureSuggestionInput {
+  readonly status: number;
+  /**
+   * The error body's `code`.
+   */
+  readonly serverCode?: Maybe<string>;
+  /**
+   * The error body's `data` (read defensively).
+   */
+  readonly data?: unknown;
+  readonly providerType: UserExternalConnectionProviderType;
+  readonly cliName?: Maybe<string>;
+  readonly envName?: Maybe<string>;
+  /**
+   * The space-delimited scopes the credential carries, when known.
+   */
+  readonly scope?: Maybe<string>;
+  readonly credential?: Maybe<Pick<CliContextCredential, 'handoff' | 'refreshable'>>;
+}
+
+/**
+ * The remediation for a refused `external-token` mint.
+ *
+ * A login credential is pointed at `auth login`; a handoff credential (`auth handoff`, refreshable or
+ * not) never is — it is told to re-mint through the MCP server's CLI token tool instead, since its
+ * scopes were fixed when it was minted. The CLI cannot see the app's ceiling map, so a wider
+ * `token.external.*` scope is described rather than named.
+ *
+ * @param input - The response status, the server's code and data, and the credential in context.
+ * @returns The suggestion text, or `undefined` when there is no useful remediation.
+ * @__NO_SIDE_EFFECTS__
+ */
+export function describeExternalConnectionTokenFailureSuggestion(input: DescribeExternalConnectionTokenFailureSuggestionInput): Maybe<string> {
+  const { status, serverCode, providerType } = input;
+  const cli = input.cliName ?? '<cli>';
+  const env = input.envName ?? '<env>';
+  const handoff = input.credential?.handoff === true;
+  const who = handoff ? 'credential' : 'login';
+  const carries = describeCarriedExternalTokenScopes(input.scope);
+  const remintWith = (scopeDescription: string) => `Its scopes were fixed when it was minted. ${cliHandoffRemintSuggestion({ cliName: cli, envName: env })} Leave the tool's \`scopes\` unset (it then keeps every scope your MCP session holds) or include ${scopeDescription}; the MCP session must hold it.`;
+  let result: Maybe<string>;
+
+  if (status === 401) {
+    result = handoff ? describeCliAuthFailureSuggestion({ status, cliName: cli, envName: env, credential: input.credential }) : `Run \`${cli} auth login --env ${env}\` to refresh credentials.`;
+  } else if (status === 403 && serverCode === USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE) {
+    const excessScopes = readExcessScopes(input.data);
+
+    if (excessScopes) {
+      const intro = `Your "${providerType}" connection grants scopes this ${who} may not mint (${excessScopes.join(' ')}), and its tokens cannot be narrowed. Reconnect "${providerType}" in the app with a narrower access level, or`;
+      result = handoff ? `${intro} re-mint this handoff credential with the provider's wider \`token.external.*\` scope. ${remintWith('that scope')}` : `${intro} log in with an env preset whose scopes include the provider's wider \`token.external.*\` scope (\`${cli} auth login --env <preset>\`) and mint through it.`;
+    } else {
+      const intro = `This ${who} holds none of the \`token.external.*\` scopes the app maps to "${providerType}".${carries}`;
+      result = handoff ? `${intro} ${remintWith('one of them')}` : `${intro} Log in with an env preset whose scopes include one (\`${cli} auth login --env <preset>\`) and mint through it.`;
+    }
+  } else if (status === 403 && serverCode === MISSING_ENDPOINT_OIDC_SCOPE_ERROR_CODE) {
+    const intro = `This ${who} lacks the \`token.external\` scope minting needs.${carries}`;
+    result = handoff ? `${intro} ${remintWith('`token.external`')}` : `${intro} Log in with the app's external-token env preset (\`${cli} auth login --env <preset>\`).`;
+  } else if (status === 403 && serverCode === USER_EXTERNAL_CONNECTION_TOKEN_EXPORT_NOT_ALLOWED_ERROR_CODE) {
+    result = `The app does not allow exporting "${providerType}" tokens; logging in again will not change that.`;
+  } else if (status === 403) {
+    result = handoff
+      ? `Minting requires the \`token.external\` scope, an OIDC client the app allows (a handoff credential belongs to the app's CLI client), a user the app permits, and a provider the app allows exporting.${carries} If the credential lacks the scope: ${remintWith('`token.external`')}`
+      : `Minting requires a login carrying the \`token.external\` scope through an allowed OIDC client, by a user the app permits, for a provider the app allows exporting. Run \`${cli} auth login\` with that scope.`;
+  } else if (status === 409 && serverCode === USER_EXTERNAL_CONNECTION_CREDENTIALS_EXPIRED_ERROR_CODE) {
+    result = `Your "${providerType}" connection's stored credentials expired. Reconnect it in the app.`;
+  } else if (status === 404 || status === 409) {
+    result = `Connect your "${providerType}" account in the app first.`;
+  }
+
+  return result;
+}
+
 // MARK: Internal
 async function readJsonBody(res: Response): Promise<unknown> {
   const text = await res.text();
@@ -115,50 +212,49 @@ async function readJsonBody(res: Response): Promise<unknown> {
   return body;
 }
 
-interface ExternalConnectionTokenHttpErrorInput {
+interface ExternalConnectionTokenHttpErrorInput extends Pick<FetchExternalConnectionTokenInput, 'cliName' | 'envName' | 'scope' | 'credential'> {
   readonly res: Response;
   readonly body: unknown;
   readonly providerType: UserExternalConnectionProviderType;
-  readonly cliName?: Maybe<string>;
 }
 
 function externalConnectionTokenHttpError(input: ExternalConnectionTokenHttpErrorInput): CliError {
   const { res, body, providerType } = input;
-  const cli = input.cliName ?? '<cli>';
-  const errorBody = body != null && typeof body === 'object' ? (body as { readonly message?: unknown; readonly code?: unknown }) : undefined;
+  const errorBody = body != null && typeof body === 'object' ? (body as { readonly message?: unknown; readonly code?: unknown; readonly data?: unknown }) : undefined;
   const serverMessage = typeof errorBody?.message === 'string' && errorBody.message ? errorBody.message : `${res.status} ${res.statusText}`.trim();
-  const code = typeof errorBody?.code === 'string' && errorBody.code ? errorBody.code : undefined;
-  const serverCode = code ? ` (${code})` : '';
-  const suggestion =
-    code === USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE
-      ? `Your login may not mint this "${providerType}" token: the connection was granted more than your login's scope ceiling allows, or your login holds none of the provider's token scopes. Run \`${cli} auth login\` with an env preset that carries the provider's wider token scope, or reconnect "${providerType}" in the app with a smaller access level.`
-      : externalConnectionTokenStatusSuggestion(res.status, providerType, cli);
+  const serverCode = typeof errorBody?.code === 'string' && errorBody.code ? errorBody.code : undefined;
+  const codeSuffix = serverCode ? ` (${serverCode})` : '';
+  const suggestion = describeExternalConnectionTokenFailureSuggestion({
+    status: res.status,
+    serverCode,
+    data: errorBody?.data,
+    providerType,
+    cliName: input.cliName,
+    envName: input.envName,
+    scope: input.scope,
+    credential: input.credential
+  });
 
   return new CliError({
-    message: `external-token ${providerType} failed: ${serverMessage}${serverCode}`,
+    message: `external-token ${providerType} failed: ${serverMessage}${codeSuffix}`,
     code: codeForStatus(res.status),
+    ...(serverCode ? { serverCode } : {}),
     ...(suggestion ? { suggestion } : {})
   });
 }
 
-function externalConnectionTokenStatusSuggestion(status: number, providerType: UserExternalConnectionProviderType, cli: string): Maybe<string> {
-  let suggestion: Maybe<string>;
+function describeCarriedExternalTokenScopes(scope: Maybe<string>): string {
+  let result = '';
 
-  switch (status) {
-    case 401:
-      suggestion = `Run \`${cli} auth login\` to refresh credentials.`;
-      break;
-    case 403:
-      suggestion = `Minting requires a login carrying the \`token.external\` scope through an allowed OIDC client, by a user the app permits, for a provider the app allows exporting. Run \`${cli} auth login\` with that scope.`;
-      break;
-    case 404:
-    case 409:
-      suggestion = `Connect your "${providerType}" account in the app first.`;
-      break;
-    default:
-      suggestion = undefined;
-      break;
+  if (scope != null) {
+    const externalScopes = scope.split(/\s+/).filter((x) => x === 'token.external' || x.startsWith('token.external.'));
+    result = externalScopes.length > 0 ? ` It carries \`${externalScopes.join(' ')}\`.` : ' It carries no `token.external` scope.';
   }
 
-  return suggestion;
+  return result;
+}
+
+function readExcessScopes(data: unknown): Maybe<string[]> {
+  const excessScopes = data != null && typeof data === 'object' ? (data as { readonly excessScopes?: unknown }).excessScopes : undefined;
+  return Array.isArray(excessScopes) && excessScopes.length > 0 && excessScopes.every((x) => typeof x === 'string' && x.length > 0) ? (excessScopes as string[]) : undefined;
 }

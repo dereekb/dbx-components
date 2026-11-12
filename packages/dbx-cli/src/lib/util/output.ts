@@ -12,7 +12,16 @@ export interface CliErrorOutput {
   readonly ok: false;
   readonly error: string;
   readonly code: string;
+  /**
+   * The server's own error code behind the failure (e.g. `USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR`),
+   * so scripts can branch on it while {@link CliErrorOutput.code} stays the CLI's stable category.
+   */
+  readonly serverCode?: string;
   readonly suggestion?: string;
+  /**
+   * A report the failed command still has to show (e.g. `auth show`'s token-source report when the active source fails).
+   */
+  readonly data?: unknown;
 }
 
 export type CliOutput<T = unknown> = CliSuccessOutput<T> | CliErrorOutput;
@@ -401,11 +410,91 @@ export interface CliOutputResultOptions<T> {
 }
 
 /**
+ * A {@link CliOutputPickApplier} for a collection page that keeps its items under `itemsKey` (Microsoft
+ * Graph's `value`, …): `--pick` reduces each item and keeps the page's own fields (e.g.
+ * `@odata.nextLink`). A result without an array under `itemsKey` (a single item, a bare array) is
+ * picked at the top level, so one applier serves every output of a command.
+ *
+ * @param itemsKey - The page field holding the items, e.g. `value`.
+ * @returns The applier.
+ * @__NO_SIDE_EFFECTS__
+ *
+ * @example
+ * ```typescript
+ * outputResult(page, undefined, { applyPick: cliCollectionPickApplier('value') });
+ * ```
+ */
+export function cliCollectionPickApplier(itemsKey: string): CliOutputPickApplier<unknown> {
+  return (data, pick) => {
+    let result: unknown;
+
+    if (data != null && typeof data === 'object' && !Array.isArray(data) && Array.isArray((data as Record<string, unknown>)[itemsKey])) {
+      result = { ...(data as Record<string, unknown>), [itemsKey]: pick((data as Record<string, unknown>)[itemsKey]) };
+    } else {
+      result = pick(data);
+    }
+
+    return result;
+  };
+}
+
+/**
+ * The most field names the `--pick` no-match warning lists.
+ */
+const CLI_PICK_WARNING_MAX_FIELDS = 25;
+
+interface CliPickTracker {
+  readonly pick: (value: unknown) => unknown;
+  /**
+   * The keys of the first non-empty object the pick reduced to nothing, when NO reduced object kept a key.
+   */
+  readonly unmatchedFields: () => Maybe<string[]>;
+}
+
+function cliPickTracker(pick: string): CliPickTracker {
+  let sawKeys = false;
+  let keptKeys = false;
+  let firstKeys: Maybe<string[]>;
+
+  function track(before: unknown, after: unknown): void {
+    if (before != null && typeof before === 'object' && !Array.isArray(before)) {
+      const keys = Object.keys(before);
+
+      if (keys.length > 0) {
+        sawKeys = true;
+        firstKeys ??= keys;
+
+        if (after != null && typeof after === 'object' && Object.keys(after).length > 0) {
+          keptKeys = true;
+        }
+      }
+    }
+  }
+
+  return {
+    pick: (value) => {
+      const picked = pickFields(value, pick);
+
+      if (Array.isArray(value)) {
+        value.forEach((item, i) => track(item, (picked as unknown[])[i]));
+      } else {
+        track(value, picked);
+      }
+
+      return picked;
+    },
+    unmatchedFields: () => (sawKeys && !keptKeys ? firstKeys : undefined)
+  };
+}
+
+/**
  * Prints a successful command result as a `{ ok: true, data, meta? }` JSON envelope on stdout.
  *
  * Also writes a full unfiltered dump to disk when `dumpDir` is configured, then applies any
- * configured `pick` filter to the stdout payload. Honors the global `--pretty` flag for the
- * stdout payload only (the dump-to-disk path is always pretty-printed).
+ * configured `pick` filter to the stdout payload. When the pick matched no field of any object it
+ * reduced, one warning naming the available fields goes to stderr (stdout's envelope is unchanged).
+ * Honors the global `--pretty` flag for the stdout payload only (the dump-to-disk path is always
+ * pretty-printed).
  *
  * @param data - The command result to emit.
  * @param meta - Optional additional metadata to attach to the envelope.
@@ -417,12 +506,18 @@ export function outputResult<T>(data: T, meta?: Record<string, unknown>, options
   const pick = _outputOptions.pick;
   let outputData: unknown;
 
-  if (!pick) {
-    outputData = data;
-  } else if (options?.applyPick) {
-    outputData = options.applyPick(data, (value) => pickFields(value, pick));
+  if (pick) {
+    const tracker = cliPickTracker(pick);
+    outputData = options?.applyPick ? options.applyPick(data, tracker.pick) : tracker.pick(data);
+    const unmatchedFields = tracker.unmatchedFields();
+
+    if (unmatchedFields) {
+      const listed = unmatchedFields.slice(0, CLI_PICK_WARNING_MAX_FIELDS).join(', ');
+      const more = unmatchedFields.length > CLI_PICK_WARNING_MAX_FIELDS ? ', …' : '';
+      console.error(`--pick "${pick}" matched no fields. Available fields: ${listed}${more}.`);
+    }
   } else {
-    outputData = pickFields(data, pick);
+    outputData = data;
   }
 
   const output: CliSuccessOutput<unknown> = { ok: true, data: outputData, ...(meta ? { meta } : {}) };
@@ -430,7 +525,7 @@ export function outputResult<T>(data: T, meta?: Record<string, unknown>, options
 }
 
 /**
- * Prints a failed command result as a `{ ok: false, error, code, suggestion? }` JSON envelope on stdout.
+ * Prints a failed command result as a `{ ok: false, error, code, serverCode?, suggestion?, data? }` JSON envelope on stdout.
  *
  * Honors the global `--pretty` flag.
  *
@@ -442,36 +537,67 @@ export function outputError(error: unknown): void {
 }
 
 /**
+ * Input to the {@link CliError} constructor.
+ */
+export interface CliErrorInput {
+  readonly message: string;
+  /**
+   * The CLI's stable error category (e.g. `AUTH_FORBIDDEN`).
+   */
+  readonly code: string;
+  /**
+   * The server's own error code behind the failure, printed as the envelope's `serverCode`.
+   */
+  readonly serverCode?: string;
+  readonly suggestion?: string;
+  /**
+   * A report the failed command still has to show, printed as the envelope's `data`.
+   *
+   * Printed as-is (only `message` is sanitized), so never put a secret in it.
+   */
+  readonly data?: unknown;
+}
+
+/**
  * An error that carries a stable code and optional suggestion for the user.
  *
- * Throw from within commands to produce a structured `{ ok: false, code, suggestion }` envelope.
+ * Throw from within commands to produce a structured `{ ok: false, error, code, serverCode?, suggestion?, data? }` envelope.
  */
 export class CliError extends Error {
   readonly code: string;
+  readonly serverCode?: string;
   readonly suggestion?: string;
+  readonly data?: unknown;
 
-  constructor(input: { readonly message: string; readonly code: string; readonly suggestion?: string }) {
+  constructor(input: CliErrorInput) {
     super(input.message);
     this.name = 'CliError';
     this.code = input.code;
+    this.serverCode = input.serverCode;
     this.suggestion = input.suggestion;
+    this.data = input.data;
   }
 }
 
 /**
- * A {@link CliError} raised for a non-OK HTTP response, carrying the response status and the server's
- * error code (the body's `code`, when present) so an error mapper can tailor the suggestion — e.g. tell
- * a credential that lacks a scope apart from one that expired.
+ * Input to the {@link CliHttpError} constructor.
+ */
+export interface CliHttpErrorInput extends CliErrorInput {
+  readonly status: number;
+}
+
+/**
+ * A {@link CliError} raised for a non-OK HTTP response, carrying the response status (and, through
+ * {@link CliError.serverCode}, the server's error code — the body's `code`, when present) so an error
+ * mapper can tailor the suggestion — e.g. tell a credential that lacks a scope apart from one that expired.
  */
 export class CliHttpError extends CliError {
   readonly status: number;
-  readonly serverCode?: string;
 
-  constructor(input: { readonly message: string; readonly code: string; readonly suggestion?: string; readonly status: number; readonly serverCode?: string }) {
+  constructor(input: CliHttpErrorInput) {
     super(input);
     this.name = 'CliHttpError';
     this.status = input.status;
-    this.serverCode = input.serverCode;
   }
 }
 
@@ -480,7 +606,7 @@ export class CliHttpError extends CliError {
  *
  * Order of resolution:
  *   1. Any registered {@link CliErrorMapper} that returns a mapped envelope.
- *   2. {@link CliError} instances (preserve `code` and optional `suggestion`).
+ *   2. {@link CliError} instances (preserve `code` and the optional `serverCode`, `suggestion` and `data`).
  *   3. Generic `Error` instances (`code: 'ERROR'`).
  *   4. Unknown values (`code: 'UNKNOWN_ERROR'`, message stringified).
  *
@@ -497,7 +623,14 @@ export function buildErrorOutput(error: unknown): CliErrorOutput {
   if (mapped) {
     result = mapped;
   } else if (error instanceof CliError) {
-    result = { ok: false, error: sanitizeString(error.message), code: error.code, ...(error.suggestion ? { suggestion: error.suggestion } : {}) };
+    result = {
+      ok: false,
+      error: sanitizeString(error.message),
+      code: error.code,
+      ...(error.serverCode ? { serverCode: error.serverCode } : {}),
+      ...(error.suggestion ? { suggestion: error.suggestion } : {}),
+      ...(error.data === undefined ? {} : { data: error.data })
+    };
   } else if (error instanceof Error) {
     result = { ok: false, error: sanitizeString(error.message), code: 'ERROR' };
   } else {

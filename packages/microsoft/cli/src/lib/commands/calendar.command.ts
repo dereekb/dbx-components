@@ -1,4 +1,4 @@
-import { outputResult } from '@dereekb/dbx-cli';
+import { outputMsGraphCliResult } from '../util/output';
 import { listCalendarView } from '@dereekb/microsoft';
 import { MS_IN_DAY } from '@dereekb/util';
 import type { Argv, CommandModule } from 'yargs';
@@ -21,7 +21,7 @@ const CALENDAR_LIST_COMMAND: CommandModule = {
   handler: msGraphCommandHandler(async (argv: any, { graphContext }) => {
     const start = argv.start ? new Date(argv.start) : new Date();
     const end = argv.end ? new Date(argv.end) : new Date(start.getTime() + DEFAULT_MSGRAPH_CLI_CALENDAR_DAYS * MS_IN_DAY);
-    outputResult(await listCalendarView(graphContext)({ start: start.toISOString(), end: end.toISOString(), top: argv.top }));
+    outputMsGraphCliResult(await listCalendarView(graphContext)({ start: start.toISOString(), end: end.toISOString(), top: argv.top }));
   })
 };
 

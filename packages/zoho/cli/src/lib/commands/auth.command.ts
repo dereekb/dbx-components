@@ -26,7 +26,7 @@ import {
   type ZohoCliTokenSourceConfig,
   type ZohoCliTokenSourceSelection
 } from '../config/cli.config';
-import { loadZohoCliTokenSourceStatus, zohoCliTokenSourceCommandConfig, zohoCliTokenSourceReport, type ZohoCliTokenSourceStatus } from '../config/token.source';
+import { loadZohoCliTokenSourceStatus, zohoCliTokenSourceCommandConfig, zohoCliTokenSourceReport, zohoCliTokenSourceStatusError, type ZohoCliTokenSourceStatus } from '../config/token.source';
 import { DEFAULT_AUTH_LOGIN_REDIRECT_URI, ZOHO_CLI_REGION_CHOICES, exchangeZohoAuthorizationCode, loadZohoAuthUserEmail, parseZohoAuthRedirect, zohoCliScopesForProducts } from '../config/cli.oauth';
 import { noop, generateOAuthState, type Maybe } from '@dereekb/util';
 import { parseDurationStringToMilliseconds } from '@dereekb/date';
@@ -818,16 +818,29 @@ export function buildAuthShowResult(config: ZohoCliConfig, credentialSources?: M
   };
 }
 
+/**
+ * `auth show`: the configuration with every secret masked. Fails (`ok: false`, exit 1) when the active
+ * token source cannot produce a token, with the source's code, `serverCode` and suggestion, and the
+ * report under `data`.
+ */
 const authShowCommand: CommandModule = {
   command: 'show',
-  describe: 'Show current configuration (secrets masked)',
+  describe: 'Show current configuration (secrets masked); fails when the active token source cannot produce a token',
   builder: (yargs: Argv) => yargs,
   handler: async (argv: any) => {
     try {
       const selection = zohoCliTokenSourceSelectionFromArgv(argv);
       const config = await loadCliConfig(selection);
       const fileConfig = await loadCliConfigFile();
-      outputResult(config ? buildAuthShowResult(config, zohoCliCredentialSources(fileConfig), await loadZohoCliTokenSourceStatus(fileConfig, selection)) : { configured: false });
+      const tokenSourceStatus = config ? await loadZohoCliTokenSourceStatus(fileConfig, selection) : undefined;
+      const result = config ? buildAuthShowResult(config, zohoCliCredentialSources(fileConfig), tokenSourceStatus) : { configured: false };
+      const failure = tokenSourceStatus ? zohoCliTokenSourceStatusError({ status: tokenSourceStatus, data: result }) : undefined;
+
+      if (failure) {
+        throw failure;
+      }
+
+      outputResult(result);
     } catch (e) {
       outputError(e);
       process.exit(1);
@@ -836,9 +849,14 @@ const authShowCommand: CommandModule = {
 };
 
 // MARK: Check
+/**
+ * `auth check`: verifies each configured product's credentials by exchanging tokens. Fails (`ok: false`,
+ * exit 1) when the active token source cannot produce a token, with the report under `data`; a single
+ * product's failure stays an `authenticated: false` entry.
+ */
 const authCheckCommand: CommandModule = {
   command: 'check',
-  describe: 'Verify credentials by exchanging tokens',
+  describe: 'Verify credentials by exchanging tokens; fails when the active token source cannot produce a token',
   builder: (yargs: Argv) => yargs,
   handler: async (argv: any) => {
     try {
@@ -850,9 +868,10 @@ const authCheckCommand: CommandModule = {
         const tokenSource = tokenSourceStatus?.resolved;
         const tokenSourceResult = tokenSourceStatus ? { tokenSource: zohoCliTokenSourceReport(tokenSourceStatus) } : {};
         const products = configuredProducts(config, tokenSource);
+        let result: Record<string, unknown>;
 
         if (products.length === 0) {
-          outputResult({ authenticated: false, error: 'No products have complete credentials or a token source covering them. Run: zoho-cli auth login, or zoho-cli auth token-source set "<command>"', ...tokenSourceResult });
+          result = { authenticated: false, error: 'No products have complete credentials or a token source covering them. Run: zoho-cli auth login, or zoho-cli auth token-source set "<command>"', ...tokenSourceResult };
         } else {
           // Try token exchange for each configured product
           const context = createCliContext(config, tokenSource);
@@ -886,8 +905,16 @@ const authCheckCommand: CommandModule = {
             }
           }
 
-          outputResult({ products: results, ...tokenSourceResult });
+          result = { products: results, ...tokenSourceResult };
         }
+
+        const failure = tokenSourceStatus ? zohoCliTokenSourceStatusError({ status: tokenSourceStatus, data: result }) : undefined;
+
+        if (failure) {
+          throw failure;
+        }
+
+        outputResult(result);
       } else {
         outputResult({ authenticated: false, error: 'No credentials configured. Run: zoho-cli auth login' });
       }

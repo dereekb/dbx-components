@@ -64,7 +64,7 @@ export function buildExternalTokenCommand(options?: Maybe<BuildExternalTokenComm
     handler: wrapCommandHandler(async (argv: any) => {
       const context: CliContext = requireCliContext();
       const providerType = String(argv.providerType);
-      const token = await fetchExternalConnectionToken({ apiBaseUrl: context.env.apiBaseUrl, accessToken: context.accessToken, providerType, cliName: context.cliName, fetcher });
+      const token = await fetchExternalConnectionToken({ apiBaseUrl: context.env.apiBaseUrl, accessToken: context.accessToken, providerType, cliName: context.cliName, envName: context.envName, scope: context.scope, credential: context.credential, fetcher });
       const bundle: CliExternalConnectionTokenBundle = cliExternalConnectionTokenBundle(token, context.env.externalConnectionHints);
 
       if (isCliCredentialProcess()) {

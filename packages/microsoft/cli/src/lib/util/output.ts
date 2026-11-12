@@ -1,4 +1,4 @@
-import { type CliErrorOutput, DEFAULT_CLI_SECRET_PATTERNS, appendCliErrorMapper, configureCliSecretPatterns, sanitizeString } from '@dereekb/dbx-cli';
+import { type CliErrorOutput, type CliOutputPickApplier, DEFAULT_CLI_SECRET_PATTERNS, appendCliErrorMapper, cliCollectionPickApplier, configureCliSecretPatterns, outputResult, sanitizeString } from '@dereekb/dbx-cli';
 import { MicrosoftGraphError } from '@dereekb/microsoft';
 import { MSGRAPH_CLI_NAME } from '../config/cli.config';
 
@@ -9,7 +9,8 @@ export const MSGRAPH_CLI_JWT_SECRET_PATTERN = /eyJ[\w-]{8,}\.[\w-]{8,}\.[\w-]+/g
 
 /**
  * Maps a {@link MicrosoftGraphError} to the CLI error envelope, with a suggestion for the statuses a
- * user can act on. Other errors return undefined so the default mapping applies.
+ * user can act on. Graph's own `error.code` (e.g. `InvalidAuthenticationToken`) is printed as
+ * `serverCode`. Other errors return undefined so the default mapping applies.
  *
  * - 401: the token was rejected. The command handler has already cleared the cached token, so a re-run mints a new one.
  * - 403: the token lacks a scope the call needs — mint from a connection whose preset grants it.
@@ -23,29 +24,46 @@ export function msGraphCliErrorOutput(error: unknown): CliErrorOutput | undefine
 
   if (error instanceof MicrosoftGraphError) {
     const message = sanitizeString(error.message);
+    const serverCode = error.code ? { serverCode: error.code } : {};
 
     switch (error.status) {
       case 401:
-        result = { ok: false, error: message, code: 'TOKEN_REJECTED', suggestion: `Microsoft rejected the access token; the cached token was cleared, so re-run to mint a new one. If it keeps failing, check the token source: ${MSGRAPH_CLI_NAME} auth show` };
+        result = { ok: false, error: message, code: 'TOKEN_REJECTED', ...serverCode, suggestion: `Microsoft rejected the access token; the cached token was cleared, so re-run to mint a new one. If it keeps failing, check the token source: ${MSGRAPH_CLI_NAME} auth show` };
         break;
       case 403:
         result = {
           ok: false,
           error: message,
           code: 'SCOPE_DENIED',
+          ...serverCode,
           suggestion: `The token lacks a scope this call needs. Use a token source whose connection was granted it (e.g. one connected with the Read + Write preset rather than Read) and whose app login allows minting it; a scope outside every preset cannot be minted. Compare the token's scopes with: ${MSGRAPH_CLI_NAME} auth show`
         };
         break;
       case 429:
-        result = { ok: false, error: message, code: 'RATE_LIMITED', suggestion: 'Microsoft Graph throttled the request. Wait and retry.' };
+        result = { ok: false, error: message, code: 'RATE_LIMITED', ...serverCode, suggestion: 'Microsoft Graph throttled the request. Wait and retry.' };
         break;
       default:
-        result = { ok: false, error: message, code: 'API_ERROR' };
+        result = { ok: false, error: message, code: 'API_ERROR', ...serverCode };
         break;
     }
   }
 
   return result;
+}
+
+/**
+ * Applies `--pick` to each item of a Graph collection page (`value[]`), keeping the page's own fields
+ * (`@odata.context`, `@odata.nextLink`); a single item or a bare array is picked at the top level.
+ */
+const msGraphCliPickApplier: CliOutputPickApplier<unknown> = cliCollectionPickApplier('value');
+
+/**
+ * Prints a Graph result, applying `--pick` to each item of a collection page (`value[]`).
+ *
+ * @param data - The Graph result: a collection page, a single item, or an array of items.
+ */
+export function outputMsGraphCliResult(data: unknown): void {
+  outputResult(data, undefined, { applyPick: msGraphCliPickApplier });
 }
 
 let msGraphCliOutputConfigured = false;

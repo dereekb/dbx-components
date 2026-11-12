@@ -557,8 +557,14 @@ demo-cli external-token zoho_admin --env external-token
 | Status | `code` | What it means |
 |---|---|---|
 | 401 | `AUTH_UNAUTHORIZED` | The login expired. Run `auth login` again. |
-| 403 | `AUTH_FORBIDDEN` | Several causes: the login lacks `token.external`, the client is not allowed, the user is not permitted, or the provider is not exported. The server's code is in the message. |
+| 403 | `AUTH_FORBIDDEN` | Several causes: the login lacks `token.external`, the client is not allowed, the user is not permitted, or the provider is not exported. |
 | 404 / 409 | `NOT_FOUND` / `API_ERROR` | The user has not connected that provider in the app. |
+
+`code` stays the generic one above, so scripts keyed on `AUTH_FORBIDDEN` keep working. The server's own
+code (for example `USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR`) is in `serverCode`, and still
+in the message, so a script can branch on it. The 401 / 403 suggestions depend on the credential: a
+handoff credential (`auth handoff`) is told to re-mint through the app's MCP CLI token tool, never to run
+`auth login`.
 
 ### Output modes
 
@@ -570,7 +576,7 @@ demo-cli external-token zoho_admin --env external-token
   `expiresAt` and `extra`, plus the env's `hints`. It writes that line with `process.stdout.write`,
   never through `outputResult`, so `--dump-dir`, `--pick` and `--pretty` never see the raw token. The
   command also never touches the dataset cache.
-- **Errors** print the `{ ok: false, error, code, suggestion? }` envelope on stdout in both modes.
+- **Errors** print the `{ ok: false, error, code, serverCode?, suggestion? }` envelope on stdout in both modes.
 
 ### Consuming the token from another CLI
 
@@ -583,6 +589,11 @@ zoho-cli auth check
 
 Every Zoho product that the token's scopes cover uses the minted token and its datacenter. The other
 products keep `zoho-cli`'s own credentials. `zoho-cli auth token-source clear` puts things back.
+
+When the active source cannot produce a token, a token-source CLI's `auth show` (and `zoho-cli auth
+check`) fails: it prints `{ ok: false, error, code, serverCode?, suggestion, data }` and exits 1. `code`
+and `serverCode` are the source command's own (for example `AUTH_FORBIDDEN` from a refused mint), and
+the full report stays under `data`.
 
 When you mint from more than one env of the app, save one source per env by name and pick one per run.
 A source can also send its calls to the Zoho sandboxes:
@@ -605,8 +616,8 @@ const bundle = await runCliCredentialProcess<CliExternalConnectionTokenBundle>({
 It runs the command through the shell with `DBX_CLI_CREDENTIAL_PROCESS=1` set. Stdin is ignored,
 stderr goes straight to your terminal, and stdout is captured in-process. Stdout can be a bare JSON
 object or a `{ ok: true, data }` envelope; if the whole output doesn't parse, the last non-empty line
-is tried. An `{ ok: false, error, code }` envelope is thrown as the child's own `CliError`, and this is
-checked before the exit code.
+is tried. An `{ ok: false, error, code }` envelope is thrown as the child's own `CliError`, including its
+`serverCode`, and this is checked before the exit code.
 
 Anything else throws `CREDENTIAL_PROCESS_FAILED` (the process could not start, or exited non-zero),
 `CREDENTIAL_PROCESS_TIMEOUT` (it ran past `timeoutMs`: 60s by default, `0` disables it) or

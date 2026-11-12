@@ -56,6 +56,13 @@
 - **Microsoft default notice.** `DBX_FIREBASE_EXTERNAL_CONNECTION_MICROSOFT_PROVIDER` declares a `connectConfirm` telling
   administrators to leave "Consent on behalf of your organization" unticked, plus over-grant copy explaining how to revoke
   the extra consent. To drop the notice, spread the constant and set `connectConfirm: undefined`.
+- **`@dereekb/dbx-cli` error envelope.** `CliError.serverCode` / `CliError.data` (constructed from a `CliErrorInput`), and
+  the error envelope's `serverCode?` / `data?` (`CliHttpError` inherits `serverCode`). `runCliCredentialProcess` carries a
+  child's `serverCode`, and `CliTokenSourceStatus` / `CliTokenSourceReport` gain `serverCode`.
+- `@dereekb/dbx-cli`: `cliTokenSourceStatusError` (the error a report command throws for a failing active token source),
+  `CLI_TOKEN_SOURCE_FAILED_ERROR_CODE`, `CLI_TOKEN_SOURCE_UNKNOWN_ERROR_CODE`,
+  `describeExternalConnectionTokenFailureSuggestion` and `cliCollectionPickApplier` (applies `--pick` to each item of a
+  collection page).
 
 ### Changed
 - `AssertUserExternalConnectionProviderConnectableInput`, `UserExternalConnectionOAuthAuthorizeUrlInput`,
@@ -63,6 +70,17 @@
   field; existing callers compile unchanged.
 - The Microsoft adapter always requests `User.Read` beside the preset's scopes (`requestedScopesForScopePreset()`); the
   default presets' authorize urls are unchanged, while a custom preset without `User.Read` now also requests it.
+- `external-token` failures print the server's code as `serverCode` (`code` is unchanged), and their suggestions are
+  handoff-aware: a handoff credential is told to re-mint through the MCP CLI token tool, never to run `auth login`.
+- An unknown token-source name fails with `TOKEN_SOURCE_UNKNOWN` (was `ERROR`); the save hint moved from the message to
+  `suggestion`.
+- `--pick` prints a stderr warning naming the available fields when it matches nothing. msgraph-cli applies it to each
+  item of a collection page (`value[]`).
+- **zoho-cli `auth show` / `auth check` print `ok: false` and exit 1 when the active token source fails** (msgraph-cli
+  `auth show` too). The full report stays under `data`, so scripts reading `.data` keep working; scripts keyed on `ok` or
+  the exit code now see the failure.
+- `ZohoCliTokenSourceStatus` / `ZohoCliTokenSourceReport` extend dbx-cli's types and carry `errorCode` / `serverCode` /
+  `suggestion`; zoho-cli `doctor`'s token-source check carries `suggestion`.
 
 ### Adopt
 - **Forward `scopePreset` in the app's `read:authorizeState` handler** — pass `data.scopePreset` (connect mode only) to

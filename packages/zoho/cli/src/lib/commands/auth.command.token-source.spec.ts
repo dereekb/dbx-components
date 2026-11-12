@@ -145,7 +145,7 @@ describe('auth token-source', () => {
 
     it('should name zoho-cli in the hint for a name with no saved source', async () => {
       await setAuthTokenSource({ command: 'dev-cmd', name: 'dev' });
-      await expect(useAuthTokenSource('prod')).rejects.toThrow('No token source is saved as "prod". Saved token sources: dev. Save it with: zoho-cli auth token-source set "<command>" --name prod');
+      await expect(useAuthTokenSource('prod')).rejects.toMatchObject({ message: 'No token source is saved as "prod". Saved token sources: dev.', code: 'TOKEN_SOURCE_UNKNOWN', suggestion: 'Save it with: zoho-cli auth token-source set "<command>" --name prod' });
     });
   });
 
@@ -199,6 +199,7 @@ describe('auth token-source', () => {
       expect(result.active).toBeNull();
       expect(result.envSelection).toBe('staging');
       expect(result.error).toContain('Unknown token source "staging"');
+      expect(result.suggestion).toBe('Save it with: zoho-cli auth token-source set "<command>" --name staging');
     });
   });
 
@@ -215,6 +216,22 @@ describe('auth token-source', () => {
       expect(result['configuredProducts']).toEqual(['crm']);
       expect(result['tokenSource']).toMatchObject({ command: 'saved-cmd', origin: 'config', products: ['crm'], datacenter: 'eu', expiresAt: '2030-01-01T00:00:00.000Z' });
       expect(JSON.stringify(result)).not.toContain('minted-secret');
+    });
+
+    it("should carry a failing source's error code, server code and suggestion", () => {
+      const config: ZohoCliConfig = { shared: { clientId: '', clientSecret: '', refreshToken: '' }, tokenSource: { command: 'saved-cmd' } };
+      const status: ZohoCliTokenSourceStatus = {
+        active: { command: 'saved-cmd', origin: 'config' },
+        error: 'external-token zoho_admin failed: Forbidden',
+        errorCode: 'AUTH_FORBIDDEN',
+        serverCode: 'USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR',
+        suggestion: 'Re-mint the credential.'
+      };
+
+      const result = buildAuthShowResult(config, undefined, status);
+
+      expect(result['configuredProducts']).toEqual([]);
+      expect(result['tokenSource']).toMatchObject({ command: 'saved-cmd', origin: 'config', apiMode: 'production', error: 'external-token zoho_admin failed: Forbidden', errorCode: 'AUTH_FORBIDDEN', serverCode: 'USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR', suggestion: 'Re-mint the credential.' });
     });
   });
 });

@@ -51,7 +51,7 @@ async function main() {
       .usage('$0 <command> [options]')
       .option('verbose', { alias: 'v', type: 'boolean', default: false, global: true, describe: 'Verbose output' })
       .option('dump-dir', { type: 'string', global: true, describe: 'Directory to save full API responses as JSON files (overrides config)' })
-      .option('pick', { type: 'string', global: true, describe: 'Comma-separated top-level fields to include in output (overrides config)' })
+      .option('pick', { type: 'string', global: true, describe: 'Comma-separated fields to include in output; on a collection page it applies to each item in `value` (overrides config)' })
       .option('set-dump-dir', { type: 'string', global: true, describe: 'Save dump directory to config for this command and apply now' })
       .option('set-pick', { type: 'string', global: true, describe: 'Save pick fields to config for this command and apply now' })
       .option('pick-all', { type: 'boolean', global: true, describe: 'Ignore any configured pick filters and return full response data' })

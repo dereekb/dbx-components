@@ -8,6 +8,12 @@ import { type CliActiveTokenSource, type CliTokenSourceConfig, type CliTokenSour
 
 // MARK: Constants
 /**
+ * Error code a report command (`auth show`, zoho-cli `auth check`) fails with when the active token
+ * source could not produce a token and its command answered with no code of its own.
+ */
+export const CLI_TOKEN_SOURCE_FAILED_ERROR_CODE = 'TOKEN_SOURCE_FAILED';
+
+/**
  * Prefix of the token-file key a token source's token is cached under.
  */
 export const CLI_TOKEN_SOURCE_CACHE_KEY_PREFIX = 'tokenSource:';
@@ -449,6 +455,11 @@ export interface CliTokenSourceStatus<C extends CliTokenSourceConfig = CliTokenS
    */
   readonly errorCode?: Maybe<string>;
   /**
+   * The server's code behind the failure (e.g. `USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR`),
+   * when the token command passed one.
+   */
+  readonly serverCode?: Maybe<string>;
+  /**
    * The failure's remediation, when the token command answered with one.
    */
   readonly suggestion?: Maybe<string>;
@@ -470,7 +481,7 @@ export interface LoadCliTokenSourceStatusInput<C extends CliTokenSourceConfig = 
  *
  * @param input - The resolver, the config file, the `--token-source` selection, and the source options.
  * @returns The status, or undefined when no token source is active.
- * @throws {Error} When a selected token source name has no saved source — selecting the source, unlike loading its token, is not captured.
+ * @throws {CliError} A `TOKEN_SOURCE_UNKNOWN` error when a selected token source name has no saved source — selecting the source, unlike loading its token, is not captured.
  *
  * @example
  * ```typescript
@@ -489,7 +500,7 @@ export async function loadCliTokenSourceStatus<C extends CliTokenSourceConfig = 
     } catch (e) {
       // keep the child's code and remediation: a refused mint says WHY and what to do about it
       const cliError = e instanceof CliError ? e : undefined;
-      result = { active, error: e instanceof Error ? e.message : String(e), errorCode: cliError?.code, suggestion: cliError?.suggestion };
+      result = { active, error: e instanceof Error ? e.message : String(e), errorCode: cliError?.code, serverCode: cliError?.serverCode, suggestion: cliError?.suggestion };
     }
   }
 
@@ -512,6 +523,7 @@ export interface CliTokenSourceReport {
   readonly hints?: Maybe<Readonly<Record<string, string>>>;
   readonly error?: string;
   readonly errorCode?: string;
+  readonly serverCode?: string;
   readonly suggestion?: string;
 }
 
@@ -527,7 +539,7 @@ export interface CliTokenSourceReport {
  * ```
  */
 export function cliTokenSourceReport(status: CliTokenSourceStatus<CliTokenSourceConfig, CliTokenSourceToken>): CliTokenSourceReport {
-  const { active, resolved, error, errorCode, suggestion } = status;
+  const { active, resolved, error, errorCode, serverCode, suggestion } = status;
   const source = { command: active.command, origin: active.origin, ...(active.name ? { name: active.name } : {}) };
   let result: CliTokenSourceReport;
 
@@ -535,7 +547,78 @@ export function cliTokenSourceReport(status: CliTokenSourceStatus<CliTokenSource
     const { token } = resolved;
     result = { ...source, expiresAt: token.expiresAt, scopes: token.scopes, providerType: token.providerType, hints: token.hints };
   } else {
-    result = { ...source, error: error ?? 'The token source could not be loaded.', ...(errorCode ? { errorCode } : {}), ...(suggestion ? { suggestion } : {}) };
+    result = { ...source, error: error ?? 'The token source could not be loaded.', ...(errorCode ? { errorCode } : {}), ...(serverCode ? { serverCode } : {}), ...(suggestion ? { suggestion } : {}) };
+  }
+
+  return result;
+}
+
+/**
+ * Input for {@link cliTokenSourceLabel}.
+ */
+export interface CliTokenSourceLabelInput {
+  readonly active: Pick<CliActiveTokenSource, 'command' | 'origin' | 'name'>;
+  readonly resolver: Pick<CliTokenSourceResolver, 'originLabel'>;
+}
+
+/**
+ * Names a token source for messages: `Token source "<name>" ("<command>", from <origin>)`, or
+ * `Token source "<command>" (from <origin>)` for an unnamed `<CLI>_TOKEN_COMMAND` source.
+ *
+ * @param input - The active source and the resolver that labels its origin.
+ * @returns The label.
+ * @__NO_SIDE_EFFECTS__
+ */
+export function cliTokenSourceLabel(input: CliTokenSourceLabelInput): string {
+  const { active, resolver } = input;
+  const origin = resolver.originLabel(active);
+  return active.name ? `Token source "${active.name}" ("${active.command}", from ${origin})` : `Token source "${active.command}" (from ${origin})`;
+}
+
+/**
+ * Input for {@link cliTokenSourceStatusError}.
+ */
+export interface CliTokenSourceStatusErrorInput {
+  /**
+   * The status. Structural, so a consuming CLI's status (with its own `resolved` shape) fits.
+   */
+  readonly status: Pick<CliTokenSourceStatus, 'active' | 'error' | 'errorCode' | 'serverCode' | 'suggestion'> & { readonly resolved?: unknown };
+  readonly resolver: Pick<CliTokenSourceResolver, 'originLabel'>;
+  /**
+   * The report the command would have printed; becomes the error envelope's `data`.
+   */
+  readonly data?: unknown;
+}
+
+/**
+ * The error a report command (`auth show`, zoho-cli `auth check`) throws when the active token source
+ * failed to load, so it prints `{ ok: false, error, code, serverCode?, suggestion, data }` and exits 1
+ * while still showing its report under `data`.
+ *
+ * `code` is the source's own (e.g. `AUTH_FORBIDDEN` from a refused mint), else {@link CLI_TOKEN_SOURCE_FAILED_ERROR_CODE}.
+ *
+ * @param input - The status, the resolver that labels its origin, and the report.
+ * @returns The CliError a report command throws when the active token source failed to load, else undefined.
+ * @__NO_SIDE_EFFECTS__
+ *
+ * @example
+ * ```typescript
+ * const failure = cliTokenSourceStatusError({ status, resolver, data: result });
+ * ```
+ */
+export function cliTokenSourceStatusError(input: CliTokenSourceStatusErrorInput): Maybe<CliError> {
+  const { status, resolver, data } = input;
+  let result: Maybe<CliError>;
+
+  if (status.resolved == null) {
+    const { active } = status;
+    result = new CliError({
+      message: `${cliTokenSourceLabel({ active, resolver })} failed: ${status.error ?? 'The token source could not be loaded.'}`,
+      code: status.errorCode ?? CLI_TOKEN_SOURCE_FAILED_ERROR_CODE,
+      ...(status.serverCode ? { serverCode: status.serverCode } : {}),
+      suggestion: status.suggestion ?? `Run \`${active.command}\` directly (it prints a redacted token) to see why it fails, or select another source with --token-source.`,
+      ...(data === undefined ? {} : { data })
+    });
   }
 
   return result;

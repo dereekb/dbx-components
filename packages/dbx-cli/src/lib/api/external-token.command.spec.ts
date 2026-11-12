@@ -23,12 +23,13 @@ const MINTED_TOKEN: UserExternalConnectionAccessToken = {
 
 const HINTS = { recruitOrgId: '12345' };
 
-function buildStubContext(): CliContext {
+function buildStubContext(overrides?: Pick<CliContext, 'credential' | 'scope'>): CliContext {
   return {
     cliName: 'demo-cli',
     envName: 'local',
     env: { apiBaseUrl: 'http://localhost/api/', oidcIssuer: 'http://localhost/oidc', externalConnectionHints: { zoho_admin: HINTS, zoho: { other: 'x' } } },
     accessToken: 'cli-access-token',
+    ...overrides,
     callModel: (async () => undefined) as never,
     getModel: (async () => ({ key: '', data: null })) as never,
     getMultipleModels: (async () => ({ results: [], errors: [] })) as never
@@ -163,6 +164,7 @@ describe('buildExternalTokenCommand()', () => {
     expect(parsed.code).toBe('AUTH_FORBIDDEN');
     expect(parsed.error).toContain('"zoho" access tokens may not be minted.');
     expect(parsed.error).toContain('USER_EXTERNAL_CONNECTION_TOKEN_EXPORT_NOT_ALLOWED_ERROR');
+    expect(parsed.serverCode).toBe('USER_EXTERNAL_CONNECTION_TOKEN_EXPORT_NOT_ALLOWED_ERROR');
   });
 
   it('suggests another login or a smaller connection on a SCOPE_FORBIDDEN refusal', async () => {
@@ -173,7 +175,32 @@ describe('buildExternalTokenCommand()', () => {
     const parsed = JSON.parse(stdout.join(''));
     expect(parsed.code).toBe('AUTH_FORBIDDEN');
     expect(parsed.suggestion).toContain('demo-cli auth login');
+    expect(parsed.suggestion).toContain('narrower access level');
     expect(parsed.suggestion).not.toContain('--scopes');
+  });
+
+  it('tells a handoff credential to re-mint, never to log in, on a SCOPE_FORBIDDEN refusal', async () => {
+    setCliContext(buildStubContext({ credential: { handoff: true, refreshable: false, expiresAt: Date.now() + 60 * 60 * 1000 }, scope: 'openid token.external token.external.microsoft_read' }));
+    const fetcher = async () => jsonResponse({ statusCode: 403, message: 'The "microsoft" connection was granted scopes this client may not mint: Mail.ReadWrite.', code: 'USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR', data: { providerType: 'microsoft', excessScopes: ['Mail.ReadWrite'] } }, 403);
+
+    await expect(runExternalToken(fetcher as unknown as typeof fetch, 'microsoft')).rejects.toThrow('process.exit:1');
+
+    const parsed = JSON.parse(stdout.join(''));
+    expect(parsed.code).toBe('AUTH_FORBIDDEN');
+    expect(parsed.serverCode).toBe('USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR');
+    expect(parsed.suggestion).toContain('_cli_token');
+    expect(parsed.suggestion).toContain('demo-cli auth handoff <code> --env local');
+    expect(parsed.suggestion).not.toContain('auth login');
+  });
+
+  it('tells a login credential to log in again on a 401', async () => {
+    const fetcher = async () => jsonResponse({ statusCode: 401, message: 'Unauthorized' }, 401);
+
+    await expect(runExternalToken(fetcher as unknown as typeof fetch, 'microsoft')).rejects.toThrow('process.exit:1');
+
+    const parsed = JSON.parse(stdout.join(''));
+    expect(parsed.code).toBe('AUTH_UNAUTHORIZED');
+    expect(parsed.suggestion).toContain('demo-cli auth login --env local');
   });
 
   it('refuses a 2xx body without an access token, without echoing the body', async () => {

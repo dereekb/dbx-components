@@ -29,6 +29,10 @@ export interface DoctorCheck {
   readonly name: string;
   readonly status: 'pass' | 'warn' | 'fail';
   readonly message?: string;
+  /**
+   * How to fix a failing check, when known (e.g. the token source command's own remediation).
+   */
+  readonly suggestion?: string;
 }
 
 /**
@@ -130,12 +134,12 @@ export function checkShadowedEnvCredentials(fileConfig: Maybe<ZohoCliConfig>): D
  * @returns The check.
  */
 export function checkTokenSource(status: ZohoCliTokenSourceStatus): DoctorCheck {
-  const { active, resolved, error } = status;
+  const { active, resolved, error, suggestion } = status;
   const source = active.name ? `Token source "${active.name}" ("${active.command}", from ${zohoCliTokenSourceOriginLabel(active)})` : `Token source "${active.command}" (from ${zohoCliTokenSourceOriginLabel(active)})`;
   let result: DoctorCheck;
 
   if (resolved == null) {
-    result = { name: 'token-source', status: 'fail', message: `${source} failed: ${error ?? 'no token'}` };
+    result = { name: 'token-source', status: 'fail', message: `${source} failed: ${error ?? 'no token'}`, ...(suggestion ? { suggestion } : {}) };
   } else if (resolved.products.length === 0) {
     result = { name: 'token-source', status: 'warn', message: `${source} grants no Zoho product scopes the CLI supports. Scopes: ${resolved.token.scopes.join(', ') || '(none)'}` };
   } else {

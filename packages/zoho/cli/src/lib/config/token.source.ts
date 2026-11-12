@@ -4,32 +4,25 @@ import {
   DEFAULT_CLI_TOKEN_SOURCE_TTL_MS,
   type CliTokenSource,
   type CliTokenSourceBundle,
+  type CliError,
   type CliTokenSourceCommandConfig,
+  type CliTokenSourceReport,
+  type CliTokenSourceStatus,
   type CliTokenSourceToken,
   type CreateCliTokenSourceInput,
   clearCachedCliTokenSourceToken,
   cliTokenSourceCacheKey,
+  cliTokenSourceReport,
+  cliTokenSourceStatusError,
   cliTokenSourceTokenFromBundle,
   createCliTokenSource,
   isCliTokenSourceTokenReusable,
   loadCachedCliTokenSourceToken,
   loadCliTokenSourceStatus
 } from '@dereekb/dbx-cli';
-import { MS_IN_SECOND, type ISO8601DateString, type Maybe, type Milliseconds } from '@dereekb/util';
+import { MS_IN_SECOND, type Maybe, type Milliseconds } from '@dereekb/util';
 import { ZOHO_OAUTH_SCOPE_DELIMITER, type ZohoAccessToken, type ZohoAccessTokenRefresher, type ZohoAccountsApiUrlKey, type ZohoApiUrlKey, type ZohoOAuthScope, zohoAccountsApiUrlKeyForToken, zohoDatacenterApiDomain, zohoProductsForOAuthScopes } from '@dereekb/zoho';
-import {
-  getTokenCachePath,
-  zohoCliTokenSourceConfigStore,
-  zohoCliTokenSourceResolver,
-  ZOHO_CLI_PRODUCTS,
-  type ZohoCliActiveTokenSource,
-  type ZohoCliConfig,
-  type ZohoCliProduct,
-  type ZohoCliTokenSourceConfig,
-  type ZohoCliTokenSourceCoverage,
-  type ZohoCliTokenSourceName,
-  type ZohoCliTokenSourceSelection
-} from './cli.config';
+import { getTokenCachePath, zohoCliTokenSourceConfigStore, zohoCliTokenSourceResolver, ZOHO_CLI_PRODUCTS, type ZohoCliConfig, type ZohoCliProduct, type ZohoCliTokenSourceConfig, type ZohoCliTokenSourceCoverage, type ZohoCliTokenSourceSelection } from './cli.config';
 
 // MARK: Token
 /**
@@ -376,18 +369,15 @@ export async function loadZohoCliResolvedTokenSource(config: Maybe<ZohoCliConfig
 
 // MARK: Status
 /**
- * The state of the active token source, for `auth show` / `auth check` / `doctor`.
+ * The state of the active token source, for `auth show` / `auth check` / `doctor`: dbx-cli's
+ * {@link CliTokenSourceStatus} (with the failure's `error`, `errorCode`, `serverCode` and `suggestion`),
+ * whose resolved source also carries what its token covers.
  */
-export interface ZohoCliTokenSourceStatus {
-  readonly active: ZohoCliActiveTokenSource;
+export interface ZohoCliTokenSourceStatus extends Omit<CliTokenSourceStatus<ZohoCliTokenSourceConfig, ZohoCliTokenSourceToken>, 'resolved'> {
   /**
    * The loaded token source, unless loading it failed.
    */
   readonly resolved?: Maybe<ZohoCliResolvedTokenSource>;
-  /**
-   * Why loading the token source failed.
-   */
-  readonly error?: Maybe<string>;
 }
 
 /**
@@ -402,7 +392,7 @@ export type LoadZohoCliTokenSourceStatusOptions = LoadZohoCliTokenSourceOptions 
  * @param fileConfig - The raw config file (its saved token sources and selection).
  * @param options - The `--token-source` selection, and token file and timeout overrides.
  * @returns The status, or undefined when no token source is active.
- * @throws {Error} When a selected token source name has no saved source — selecting the source, unlike loading its token, is not captured.
+ * @throws {CliError} A `TOKEN_SOURCE_UNKNOWN` error when a selected token source name has no saved source — selecting the source, unlike loading its token, is not captured.
  *
  * @example
  * ```typescript
@@ -415,8 +405,9 @@ export async function loadZohoCliTokenSourceStatus(fileConfig: Maybe<Pick<ZohoCl
   let result: Maybe<ZohoCliTokenSourceStatus>;
 
   if (status) {
-    const { active, resolved, error } = status;
-    result = resolved ? { active, resolved: { ...zohoCliTokenSourceCoverage(resolved.token), source: { ...resolved.source, apiMode: active.apiMode ?? 'production' }, token: resolved.token } } : { active, error };
+    // keep the failure's error, errorCode, serverCode and suggestion
+    const { resolved, ...failure } = status;
+    result = resolved ? { active: status.active, resolved: { ...zohoCliTokenSourceCoverage(resolved.token), source: { ...resolved.source, apiMode: status.active.apiMode ?? 'production' }, token: resolved.token } } : failure;
   }
 
   return result;
@@ -424,22 +415,14 @@ export async function loadZohoCliTokenSourceStatus(fileConfig: Maybe<Pick<ZohoCl
 
 /**
  * What `auth show` / `auth check` / `doctor` print about the token source. Never the token.
+ *
+ * dbx-cli's {@link CliTokenSourceReport} (with a failure's `error`, `errorCode`, `serverCode` and
+ * `suggestion`) plus the source's api mode and what its token covers.
  */
-export interface ZohoCliTokenSourceReport {
-  readonly command: string;
-  readonly origin: ZohoCliActiveTokenSource['origin'];
-  /**
-   * The saved source's name; absent for a `ZOHO_CLI_TOKEN_COMMAND` command.
-   */
-  readonly name?: ZohoCliTokenSourceName;
+export interface ZohoCliTokenSourceReport extends CliTokenSourceReport {
   readonly apiMode: ZohoApiUrlKey;
   readonly products?: readonly ZohoCliProduct[];
   readonly datacenter?: ZohoAccountsApiUrlKey;
-  readonly expiresAt?: ISO8601DateString;
-  readonly scopes?: readonly ZohoOAuthScope[];
-  readonly providerType?: Maybe<string>;
-  readonly hints?: Maybe<Readonly<Record<string, string>>>;
-  readonly error?: string;
 }
 
 /**
@@ -454,18 +437,37 @@ export interface ZohoCliTokenSourceReport {
  * ```
  */
 export function zohoCliTokenSourceReport(status: ZohoCliTokenSourceStatus): ZohoCliTokenSourceReport {
-  const { active, resolved, error } = status;
-  const source = { command: active.command, origin: active.origin, ...(active.name ? { name: active.name } : {}), apiMode: active.apiMode ?? 'production' };
-  let result: ZohoCliTokenSourceReport;
+  const { active, resolved } = status;
+  const report = cliTokenSourceReport(status);
+  const apiMode: ZohoApiUrlKey = active.apiMode ?? 'production';
+  return resolved ? { ...report, apiMode, products: resolved.products, datacenter: resolved.datacenter } : { ...report, apiMode };
+}
 
-  if (resolved) {
-    const { products, datacenter, hints, token } = resolved;
-    result = { ...source, products, datacenter, expiresAt: token.expiresAt, scopes: token.scopes, providerType: token.providerType, hints };
-  } else {
-    result = { ...source, error: error ?? 'The token source could not be loaded.' };
-  }
+/**
+ * Input for {@link zohoCliTokenSourceStatusError}.
+ */
+export interface ZohoCliTokenSourceStatusErrorInput {
+  readonly status: ZohoCliTokenSourceStatus;
+  /**
+   * The report the command would have printed; becomes the error envelope's `data`.
+   */
+  readonly data?: unknown;
+}
 
-  return result;
+/**
+ * The error `auth show` / `auth check` throw when the active token source failed to load, so they print
+ * `{ ok: false, error, code, serverCode?, suggestion, data }` and exit 1 with the report under `data`.
+ *
+ * @param input - The status and the report.
+ * @returns The CliError to throw when the active token source failed to load, else undefined.
+ *
+ * @example
+ * ```typescript
+ * const failure = zohoCliTokenSourceStatusError({ status, data: result });
+ * ```
+ */
+export function zohoCliTokenSourceStatusError(input: ZohoCliTokenSourceStatusErrorInput): Maybe<CliError> {
+  return cliTokenSourceStatusError({ status: input.status, resolver: zohoCliTokenSourceResolver(), data: input.data });
 }
 
 // MARK: Commands

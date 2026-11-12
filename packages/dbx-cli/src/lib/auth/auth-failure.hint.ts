@@ -109,7 +109,8 @@ export const cliAuthFailureErrorMapper: CliErrorMapper = (error: unknown): Maybe
         credential: context.credential
       });
 
-      result = { ok: false, error: sanitizeString(error.message), code: error.code, ...((suggestion ?? error.suggestion) ? { suggestion: suggestion ?? error.suggestion } : {}) };
+      const finalSuggestion = suggestion ?? error.suggestion;
+      result = { ok: false, error: sanitizeString(error.message), code: error.code, ...(error.serverCode ? { serverCode: error.serverCode } : {}), ...(finalSuggestion ? { suggestion: finalSuggestion } : {}) };
     }
   }
 

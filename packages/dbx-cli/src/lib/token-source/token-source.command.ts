@@ -4,8 +4,19 @@ import { readJsonFile, writeJsonFile } from '@dereekb/nestjs';
 import { CLI_CONFIG_FILE_MODE } from '../config/cli.config';
 import { type CliPaths } from '../config/paths';
 import { wrapCommandHandler } from '../util/handler';
-import { outputResult } from '../util/output';
-import { type CliActiveTokenSource, type CliTokenSourceConfig, type CliTokenSourceConfigFile, type CliTokenSourceName, type CliTokenSourceResolver, type CliTokenSourceSelection, DEFAULT_CLI_TOKEN_SOURCE_NAME, assertCliTokenSourceName, cliTokenSourceSelectionFromArgv } from './token-source.config';
+import { CliError, outputResult } from '../util/output';
+import {
+  type CliActiveTokenSource,
+  type CliTokenSourceConfig,
+  type CliTokenSourceConfigFile,
+  type CliTokenSourceName,
+  type CliTokenSourceResolver,
+  type CliTokenSourceSelection,
+  CLI_TOKEN_SOURCE_UNKNOWN_ERROR_CODE,
+  DEFAULT_CLI_TOKEN_SOURCE_NAME,
+  assertCliTokenSourceName,
+  cliTokenSourceSelectionFromArgv
+} from './token-source.config';
 import { type CliTokenSourceScopesParser, type CliTokenSourceToken, type CliTokenSourceTokenMapper, clearCachedCliTokenSourceToken, loadCachedCliTokenSourceToken } from './token-source';
 
 // MARK: Config File
@@ -209,7 +220,8 @@ export interface UseCliTokenSourceResult extends CliTokenSourceEnvOverrides {
  * @param config - The CLI's token-source command config.
  * @param name - The source's name.
  * @returns The selection and the selected source.
- * @throws {Error} When the name is invalid or no source is saved under it.
+ * @throws {Error} When the name is invalid.
+ * @throws {CliError} A {@link CLI_TOKEN_SOURCE_UNKNOWN_ERROR_CODE} error, with the save hint as its suggestion, when no source is saved under the name.
  */
 export async function useCliTokenSource<C extends CliTokenSourceConfig, T extends CliTokenSourceToken = CliTokenSourceToken>(config: CliTokenSourceCommandConfig<C, T>, name: string): Promise<UseCliTokenSourceResult> {
   const { resolver } = config;
@@ -220,7 +232,11 @@ export async function useCliTokenSource<C extends CliTokenSourceConfig, T extend
 
   if (!saved && !isDefault) {
     const names = resolver.savedTokenSourceNames(fileConfig);
-    throw new Error(`No token source is saved as "${sourceName}". Saved token sources: ${names.length > 0 ? names.join(', ') : 'none'}. Save it with: ${resolver.setHint(sourceName)}`);
+    throw new CliError({
+      message: `No token source is saved as "${sourceName}". Saved token sources: ${names.length > 0 ? names.join(', ') : 'none'}.`,
+      code: CLI_TOKEN_SOURCE_UNKNOWN_ERROR_CODE,
+      suggestion: `Save it with: ${resolver.setHint(sourceName)}`
+    });
   }
 
   await config.updateConfigFile({ activeTokenSource: isDefault ? undefined : sourceName });
@@ -331,6 +347,10 @@ export interface CliTokenSourceShowResult<C extends CliTokenSourceConfig = CliTo
    */
   readonly error?: string;
   /**
+   * How to fix {@link CliTokenSourceShowResult.error} (e.g. the `set` command that saves the missing source), when known.
+   */
+  readonly suggestion?: string;
+  /**
    * What the active source's cached token covers, or null when no token is cached. Never the token.
    */
   readonly cached: Maybe<Record<string, unknown>>;
@@ -349,11 +369,13 @@ export async function buildCliTokenSourceShowResult<C extends CliTokenSourceConf
   const fileConfig = await config.loadConfigFile();
   let active: Maybe<CliActiveTokenSource<C>>;
   let error: Maybe<string>;
+  let suggestion: Maybe<string>;
 
   try {
     active = resolver.resolveActiveTokenSource(fileConfig, selection);
   } catch (e) {
     error = e instanceof Error ? e.message : String(e);
+    suggestion = e instanceof CliError ? e.suggestion : undefined;
   }
 
   const sources = resolver.savedTokenSourceNames(fileConfig).map((name): CliTokenSourceSavedSource => {
@@ -384,6 +406,7 @@ export async function buildCliTokenSourceShowResult<C extends CliTokenSourceConf
     envOverride: resolver.tokenCommandFromEnv() ?? null,
     active: active ?? null,
     ...(error ? { error } : {}),
+    ...(suggestion ? { suggestion } : {}),
     cached
   };
 }

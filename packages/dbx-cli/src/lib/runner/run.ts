@@ -401,7 +401,7 @@ export function createCli(input: CreateCliInput): Argv {
     .option('verbose', { alias: 'v', type: 'boolean', default: false, global: true, describe: 'Emit stderr trace lines for HTTP calls' })
     .option('env', { type: 'string', global: true, describe: 'Named env to target (overrides activeEnv and *_ENV var)' })
     .option('dump-dir', { type: 'string', global: true, describe: 'Directory to save full responses as JSON files' })
-    .option('pick', { type: 'string', global: true, describe: 'Comma-separated top-level fields to include in output' })
+    .option('pick', { type: 'string', global: true, describe: 'Comma-separated fields to keep (top-level, or each item of a collection the command declares); warns when none match' })
     .option('set-dump-dir', { type: 'string', global: true, describe: 'Save dump-dir for this command and apply now' })
     .option('set-pick', { type: 'string', global: true, describe: 'Save pick for this command and apply now' })
     .option('pick-all', { type: 'boolean', global: true, describe: 'Ignore configured pick filters' })

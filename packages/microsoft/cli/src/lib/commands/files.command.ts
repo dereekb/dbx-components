@@ -1,4 +1,5 @@
-import { CliError, outputResult } from '@dereekb/dbx-cli';
+import { CliError } from '@dereekb/dbx-cli';
+import { outputMsGraphCliResult } from '../util/output';
 import { getDriveItem, searchDriveItems } from '@dereekb/microsoft';
 import type { Argv, CommandModule } from 'yargs';
 import { msGraphCommandHandler } from '../middleware/auth.middleware';
@@ -8,7 +9,7 @@ const FILES_SEARCH_COMMAND: CommandModule = {
   describe: "Search the user's OneDrive",
   builder: (yargs: Argv) => yargs.positional('query', { type: 'string', demandOption: true, describe: 'Search text' }).option('top', { type: 'number', describe: 'Maximum items to return (default 25)' }),
   handler: msGraphCommandHandler(async (argv: any, { graphContext }) => {
-    outputResult(await searchDriveItems(graphContext)({ query: argv.query, top: argv.top }));
+    outputMsGraphCliResult(await searchDriveItems(graphContext)({ query: argv.query, top: argv.top }));
   })
 };
 
@@ -28,7 +29,7 @@ const FILES_GET_COMMAND: CommandModule = {
       throw new CliError({ message: 'Pass an item id or --path.', code: 'INVALID_ARGUMENT' });
     }
 
-    outputResult(await getDriveItem(graphContext)({ id: argv.id, path: argv.path }));
+    outputMsGraphCliResult(await getDriveItem(graphContext)({ id: argv.id, path: argv.path }));
   })
 };
 

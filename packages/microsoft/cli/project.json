@@ -30,6 +30,9 @@
         "esbuildOptions": {
           "banner": {
             "js": "#!/usr/bin/env node\nimport { createRequire as __createRequire } from 'node:module';\nconst require = __createRequire(import.meta.url);"
+          },
+          "logOverride": {
+            "ignored-bare-import": "error"
           }
         },
         "assets": [
@@ -53,6 +56,12 @@
     "lint": {
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "dependsOn": ["build-base"],
+      "metadata": {
+        "description": "msgraph.cli.bundle.spec.ts runs the BUILT bundle (dist/packages/microsoft/cli/index.js), so it is built first. The nx default test.dependsOn [\"build\"] names a target this entry point does not have (see build-base) and is skipped silently."
+      }
     }
   }
 }
