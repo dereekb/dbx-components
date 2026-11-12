@@ -6,4 +6,5 @@ export * from './commands/request.command';
 export * from './config/cli.config';
 export * from './context/cli.context';
 export * from './middleware/auth.middleware';
+export * from './util/option';
 export * from './util/output';

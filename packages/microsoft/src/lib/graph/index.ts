@@ -4,5 +4,6 @@ export * from './graph.config';
 export * from './graph.error.api';
 export * from './graph.factory';
 export * from './graph.header';
+export * from './graph.mail.api';
 export * from './graph.raw.api';
 export * from './graph.type';

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { type FetchHandler } from '@dereekb/util/fetch';
-import { getDriveItem, getMessage, microsoftGraphRequest, microsoftGraphRequestAllPages, searchMessages } from './graph.api';
+import { getDriveItem, microsoftGraphRequest, microsoftGraphRequestAllPages } from './graph.api';
+import { getMessage, searchMessages } from './graph.mail.api';
 import { MicrosoftGraphError } from './graph.error.api';
 import { microsoftGraphFactory } from './graph.factory';
 import { type MicrosoftGraphContext } from './graph.config';
@@ -92,7 +93,7 @@ describe('mail and files helpers', () => {
     const { graphContext, requests } = testGraphContext([{ body: { id: 'm1' } }]);
     await getMessage(graphContext)({ id: 'm1', format: 'html' });
 
-    expect(requests[0].headers.get('Prefer')).toBe('outlook.body-content-type="html"');
+    expect(requests[0].headers.get('Prefer')).toBe('IdType="ImmutableId", outlook.body-content-type="html"');
   });
 
   it('getDriveItem resolves by path', async () => {

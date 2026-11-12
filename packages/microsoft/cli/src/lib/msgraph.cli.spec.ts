@@ -10,6 +10,8 @@ import { MSGRAPH_CLI_CONFIG_DIR_ENV_VAR, msGraphCliConfigStore, msGraphCliPaths 
 import { createMsGraphCliAuthMiddleware, msGraphCommandHandler, resolveMsGraphCliContext } from './middleware/auth.middleware';
 import { configureMsGraphCliOutput, msGraphCliErrorOutput, msGraphCliScopeDeniedSuggestion, outputMsGraphCliResult } from './util/output';
 import { REQUEST_COMMAND, msGraphCliContentTypeForFile, parseMsGraphCliHeaderOptions } from './commands/request.command';
+import { MAIL_GET_COMMAND, MAIL_GET_MANY_COMMAND, MAIL_LIST_COMMAND, MAIL_SEARCH_COMMAND } from './commands/mail.command';
+import { parseMsGraphCliDateOption, parseMsGraphCliIdsFileContent } from './util/option';
 
 // what the entry point does at startup
 configureMsGraphCliOutput();
@@ -301,6 +303,99 @@ describe('msgraph-cli', () => {
       expect(printed.data.status).toBe(202);
       expect(printed.data.headers.location).toBe('https://api.onedrive.com/monitor/abc');
       expect(printed.data.bytes).toBe(0);
+    });
+  });
+
+  describe('mail command', () => {
+    async function connect(fetchHandler: FetchHandler) {
+      await createMsGraphCliAuthMiddleware({ skipCommands: new Set(), env: { ...env, MSGRAPH_CLI_TOKEN_COMMAND: source.command }, graphFactoryConfig: { fetchHandler } })({ _: ['mail'], $0: 'msgraph-cli' });
+    }
+
+    function runCommand(command: { handler: unknown }, argv: Record<string, unknown>): Promise<void> {
+      return (command.handler as (argv: unknown) => Promise<void>)({ _: ['mail'], $0: 'msgraph-cli', ...argv });
+    }
+
+    it('should parse date options and ids files', () => {
+      expect(parseMsGraphCliDateOption('since', '2026-11-01')?.toISOString()).toBe('2026-11-01T00:00:00.000Z');
+      expect(parseMsGraphCliDateOption('since', undefined)).toBeUndefined();
+      expect(() => parseMsGraphCliDateOption('since', 'last week')).toThrow(CliError);
+      expect(parseMsGraphCliIdsFileContent('a\nb, c\n\n')).toEqual(['a', 'b', 'c']);
+      expect(parseMsGraphCliIdsFileContent('["a","b"]')).toEqual(['a', 'b']);
+    });
+
+    it('should stop mail list --all-pages at --max-pages and print one array', async () => {
+      // models: T-c / M-k — each page carries @odata.nextLink until the last
+      const urls: string[] = [];
+      await connect(async (request: Request) => {
+        urls.push(request.url);
+        return new Response(JSON.stringify({ value: [{ id: `m${urls.length}`, subject: 's' }], '@odata.nextLink': `https://graph.microsoft.com/v1.0/me/messages?$skiptoken=p${urls.length}` }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      });
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+      await runCommand(MAIL_LIST_COMMAND, { since: '2026-11-01', from: 'ada@example.com', allPages: true, maxPages: 2, mutableIds: false });
+
+      expect(urls).toHaveLength(2);
+      const first = new URL(urls[0]);
+      expect(first.searchParams.get('$filter')).toBe("receivedDateTime ge 2026-11-01T00:00:00Z and from/emailAddress/address eq 'ada@example.com'");
+      const printed = JSON.parse(log.mock.calls[0][0] as string);
+      expect(printed.data.map((x: { id: string }) => x.id)).toEqual(['m1', 'm2']);
+    });
+
+    it('should refuse mail search with --since and point at mail list', async () => {
+      await connect(interceptGraph({ status: 200, body: { value: [] } }).fetchHandler);
+      const exit = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+      await runCommand(MAIL_SEARCH_COMMAND, { query: 'invoice', since: '2026-11-01' });
+
+      expect(exit).toHaveBeenCalledWith(1);
+      const printed = JSON.parse(log.mock.calls[0][0] as string);
+      expect(printed.code).toBe('INVALID_ARGUMENT');
+      expect(printed.suggestion).toContain('mail list');
+    });
+
+    it('should write mail get --mime to --out and print only the path and size', async () => {
+      // models: M-h (outlook-get-mime-message) — $value answers the MIME text
+      const mime = 'Subject: private\r\n\r\nsecret body';
+      const urls: string[] = [];
+      await connect(async (request: Request) => {
+        urls.push(request.url);
+        return new Response(mime, { status: 200, headers: { 'Content-Type': 'text/plain' } });
+      });
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+      const out = join(dir, 'message.eml');
+
+      await runCommand(MAIL_GET_COMMAND, { id: 'm1', mime: true, out, mailbox: 'shared@example.com' });
+
+      expect(new URL(urls[0]).pathname).toBe('/v1.0/users/shared%40example.com/messages/m1/$value');
+      expect(readFileSync(out, 'utf8')).toBe(mime);
+      const printedText = log.mock.calls[0][0] as string;
+      expect(printedText).not.toContain('secret');
+      expect(JSON.parse(printedText).data).toEqual({ id: 'm1', file: out, bytes: mime.length, contentType: 'text/plain' });
+    });
+
+    it('should print mail get-many messages in id order with per-id errors', async () => {
+      const idsFile = join(dir, 'ids.txt');
+      writeFileSync(idsFile, 'b\n');
+      await connect(async (request: Request) => {
+        const body = (await request.json()) as { requests: { id: string }[] };
+        // models: json-batching — per-item status; responses in any order
+        const responses = [
+          { id: '1', status: 404, body: { error: { code: 'ErrorItemNotFound', message: 'Not found.' } } },
+          { id: '0', status: 200, body: { id: 'a', subject: 'A' } }
+        ];
+        expect(body.requests).toHaveLength(2);
+        return new Response(JSON.stringify({ responses }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      });
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+      await runCommand(MAIL_GET_MANY_COMMAND, { ids: ['a'], idsFile });
+
+      const printed = JSON.parse(log.mock.calls[0][0] as string);
+      expect(printed.data).toEqual([
+        { id: 'a', subject: 'A' },
+        { id: 'b', error: { status: 404, code: 'ErrorItemNotFound', message: 'Not found.' } }
+      ]);
     });
   });
 

@@ -1,8 +1,8 @@
 import { type ISO8601DateString, type Maybe } from '@dereekb/util';
 import { type FetchJsonBody, type FetchMethod } from '@dereekb/util/fetch';
 import { type MicrosoftGraphContext } from './graph.config';
-import { canonicalizeMicrosoftGraphHeaders, type MicrosoftGraphBodyContentType, type MicrosoftGraphHeaders, microsoftGraphBodyContentTypePrefer } from './graph.header';
-import { type MicrosoftGraphDriveItem, type MicrosoftGraphEvent, type MicrosoftGraphMessage, type MicrosoftGraphPage } from './graph.type';
+import { canonicalizeMicrosoftGraphHeaders, type MicrosoftGraphHeaders } from './graph.header';
+import { type MicrosoftGraphDriveItem, type MicrosoftGraphEvent, type MicrosoftGraphPage } from './graph.type';
 
 /**
  * Query parameters for a Graph request. `undefined`/`null` values are dropped.
@@ -103,62 +103,6 @@ export function microsoftGraphRequestAllPages(context: MicrosoftGraphContext): <
 
     return items;
   };
-}
-
-// MARK: Mail
-/**
- * The message fields the mail helpers select.
- */
-export const MICROSOFT_GRAPH_MESSAGE_SELECT = 'id,subject,bodyPreview,from,toRecipients,ccRecipients,receivedDateTime,isRead,hasAttachments,webLink,conversationId';
-
-export interface MicrosoftGraphSearchMessagesInput {
-  /**
-   * The KQL search query, e.g. `from:ada subject:invoice`.
-   */
-  readonly query: string;
-  readonly top?: Maybe<number>;
-  /**
-   * A mail folder id or well-known name (`inbox`, `sentitems`). Searches every folder when absent.
-   */
-  readonly folder?: Maybe<string>;
-}
-
-/**
- * Searches the user's messages (`$search`). Requires `Mail.Read`.
- *
- * @param context - Fetch function and access-token source each request is sent with.
- * @returns Function that searches the mailbox and resolves the first page of matches.
- */
-export function searchMessages(context: MicrosoftGraphContext): (input: MicrosoftGraphSearchMessagesInput) => Promise<MicrosoftGraphPage<MicrosoftGraphMessage>> {
-  const request = microsoftGraphRequest(context);
-
-  return (input) => {
-    const path = input.folder ? `/me/mailFolders/${encodeURIComponent(input.folder)}/messages` : '/me/messages';
-    // $search values must be double-quoted; an embedded double quote is backslash-escaped
-    const escapedQuery = input.query.replaceAll('"', String.raw`\"`);
-    const search = `"${escapedQuery}"`;
-    return request({ method: 'GET', path, query: { $search: search, $top: input.top ?? 25, $select: MICROSOFT_GRAPH_MESSAGE_SELECT } });
-  };
-}
-
-export interface MicrosoftGraphGetMessageInput {
-  readonly id: string;
-  /**
-   * The body format to return. Defaults to `text`.
-   */
-  readonly format?: Maybe<MicrosoftGraphBodyContentType>;
-}
-
-/**
- * Reads one message with its body. Requires `Mail.Read`.
- *
- * @param context - Fetch function and access-token source each request is sent with.
- * @returns Function that loads one message by id.
- */
-export function getMessage(context: MicrosoftGraphContext): (input: MicrosoftGraphGetMessageInput) => Promise<MicrosoftGraphMessage> {
-  const request = microsoftGraphRequest(context);
-
-  return (input) => request({ method: 'GET', path: `/me/messages/${encodeURIComponent(input.id)}`, query: { $select: `${MICROSOFT_GRAPH_MESSAGE_SELECT},body` }, headers: { Prefer: microsoftGraphBodyContentTypePrefer(input.format ?? 'text') } });
 }
 
 // MARK: Calendar
