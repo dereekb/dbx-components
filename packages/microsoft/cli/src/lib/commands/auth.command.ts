@@ -32,7 +32,13 @@ export const AUTH_COMMAND: CommandModule = {
         buildCliTokenSourceAuthCommand({
           ...msGraphCliTokenSourceCommandConfig(),
           tokenDescription: 'a Microsoft Graph access token bundle',
-          exampleCommand: 'demo-cli external-token microsoft --env external-token'
+          exampleCommand: 'demo-cli external-token microsoft --env msgraph-read',
+          // explicit: the derived default appends `--env prod` to exampleCommand, which already names an env
+          setExamples: [
+            ['$0 auth token-source set "demo-cli external-token microsoft --env msgraph-read"', 'Use Read tokens minted by demo-cli'],
+            ['$0 auth token-source set "demo-cli external-token microsoft --env msgraph-admin" --name admin', 'Save a named source whose grant allows Read + Write'],
+            ['$0 auth token-source set "demo-cli external-token microsoft --env prod-msgraph-read" --name prod', 'Save a named source for production']
+          ]
         })
       )
       .command(AUTH_SHOW_COMMAND)

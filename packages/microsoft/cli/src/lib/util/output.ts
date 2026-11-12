@@ -7,9 +7,6 @@ import { MSGRAPH_CLI_NAME } from '../config/cli.config';
  */
 export const MSGRAPH_CLI_JWT_SECRET_PATTERN = /eyJ[\w-]{8,}\.[\w-]{8,}\.[\w-]+/g;
 
-// The defaults already redact `Bearer <token>`; add a bare JWT so a token echoed in an error body is redacted too.
-configureCliSecretPatterns([...DEFAULT_CLI_SECRET_PATTERNS, MSGRAPH_CLI_JWT_SECRET_PATTERN]);
-
 /**
  * Maps a {@link MicrosoftGraphError} to the CLI error envelope, with a suggestion for the statuses a
  * user can act on. Other errors return undefined so the default mapping applies.
@@ -46,4 +43,20 @@ export function msGraphCliErrorOutput(error: unknown): CliErrorOutput | undefine
   return result;
 }
 
-appendCliErrorMapper(msGraphCliErrorOutput);
+let msGraphCliOutputConfigured = false;
+
+/**
+ * Registers msgraph-cli's output behaviour with `@dereekb/dbx-cli`: the bare-JWT secret pattern and
+ * the {@link msGraphCliErrorOutput} Graph error mapper. Safe to call more than once.
+ *
+ * An explicit call rather than an import side effect: the package is `"sideEffects": false`, so a
+ * bundler drops a bare `import './lib/util/output'` and the built binary would ship without either.
+ */
+export function configureMsGraphCliOutput(): void {
+  if (!msGraphCliOutputConfigured) {
+    msGraphCliOutputConfigured = true;
+    // The defaults already redact `Bearer <token>`; add a bare JWT so a token echoed in an error body is redacted too.
+    configureCliSecretPatterns([...DEFAULT_CLI_SECRET_PATTERNS, MSGRAPH_CLI_JWT_SECRET_PATTERN]);
+    appendCliErrorMapper(msGraphCliErrorOutput);
+  }
+}

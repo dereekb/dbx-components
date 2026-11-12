@@ -15,7 +15,7 @@ const _cliContextSlot = createContextSlot<MsGraphCliContext>({
 /**
  * The hint printed when no token source is configured.
  */
-export const MSGRAPH_CLI_NO_TOKEN_SOURCE_HINT = `Run: ${MSGRAPH_CLI_NAME} auth token-source set "<app-cli> external-token microsoft --env <preset>" (e.g. "demo-cli external-token microsoft --env external-token")`;
+export const MSGRAPH_CLI_NO_TOKEN_SOURCE_HINT = `Run: ${MSGRAPH_CLI_NAME} auth token-source set "<app-cli> external-token microsoft --env <preset>" (e.g. "demo-cli external-token microsoft --env msgraph-read")`;
 
 /**
  * The global arguments the auth middleware reads.

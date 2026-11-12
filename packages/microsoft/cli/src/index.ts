@@ -8,8 +8,10 @@ import { MAIL_COMMAND } from './lib/commands/mail.command';
 import { REQUEST_COMMAND } from './lib/commands/request.command';
 import { MSGRAPH_CLI_NAME, MSGRAPH_CLI_SCOPES_ENV_VAR, mergeMsGraphCliOutputConfig, msGraphCliConfigStore, msGraphCliTokenSourceResolver } from './lib/config/cli.config';
 import { createMsGraphCliAuthMiddleware } from './lib/middleware/auth.middleware';
-// Importing this module registers the JWT secret-redaction pattern and the Graph error mapper with @dereekb/dbx-cli.
-import './lib/util/output';
+import { configureMsGraphCliOutput } from './lib/util/output';
+
+// registers the JWT secret-redaction pattern and the Graph error mapper with @dereekb/dbx-cli
+configureMsGraphCliOutput();
 
 const configStore = msGraphCliConfigStore();
 const { envVarNames } = msGraphCliTokenSourceResolver();

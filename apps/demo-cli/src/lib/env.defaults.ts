@@ -1,6 +1,6 @@
 import { type CliEnvDefault, type CliExternalConnectionHints, type CliFirebaseConfig } from '@dereekb/dbx-cli';
 import { EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE, FIRESTORE_SESSION_OIDC_SCOPE, OFFLINE_ACCESS_OIDC_SCOPE, OPENID_OIDC_SCOPE } from '@dereekb/firebase';
-import { DEMO_FIREBASE_CLIENT_CONFIG, DEMO_ZOHO_ADMIN_EXTERNAL_CONNECTION_PROVIDER_TYPE } from 'demo-firebase';
+import { DEMO_FIREBASE_CLIENT_CONFIG, DEMO_ZOHO_ADMIN_EXTERNAL_CONNECTION_PROVIDER_TYPE, MICROSOFT_ADMIN_EXTERNAL_TOKEN_OIDC_SCOPE, MICROSOFT_READ_EXTERNAL_TOKEN_OIDC_SCOPE } from 'demo-firebase';
 // eslint-disable-next-line @nx/enforce-module-boundaries -- firebase.json is workspace configuration, not an nx project; `apps/demo/src/environments/base.ts` reads its emulator ports the same way.
 import firebaseInfo from '../../../../firebase.json';
 
@@ -153,4 +153,74 @@ export const DEFAULT_DEMO_PROD_EXTERNAL_TOKEN_ENV: CliEnvDefault = {
   }
 };
 
-export const DEFAULT_DEMO_CLI_ENVS: readonly CliEnvDefault[] = [DEFAULT_DEMO_LOCAL_ENV, DEFAULT_DEMO_PROD_ENV, DEFAULT_DEMO_LOCAL_EXTERNAL_TOKEN_ENV, DEFAULT_DEMO_PROD_EXTERNAL_TOKEN_ENV];
+/**
+ * {@link DEMO_CLI_EXTERNAL_TOKEN_SCOPES} plus the `token.external.microsoft_read` ceiling: a `microsoft`
+ * mint from this grant is narrowed to the Read preset's Graph scopes.
+ *
+ * A `microsoft` mint needs one of the two ceiling scopes on top of `token.external` — a grant holding
+ * neither is refused with a 403 (`..._SCOPE_FORBIDDEN`), which is why the plain `external-token` env
+ * cannot mint one.
+ */
+export const DEMO_CLI_MSGRAPH_READ_SCOPES = `${DEMO_CLI_EXTERNAL_TOKEN_SCOPES} ${MICROSOFT_READ_EXTERNAL_TOKEN_OIDC_SCOPE}`;
+
+/**
+ * {@link DEMO_CLI_EXTERNAL_TOKEN_SCOPES} plus the `token.external.microsoft_admin` ceiling: a `microsoft`
+ * mint from this grant may carry the Read + Write preset's Graph scopes.
+ */
+export const DEMO_CLI_MSGRAPH_ADMIN_SCOPES = `${DEMO_CLI_EXTERNAL_TOKEN_SCOPES} ${MICROSOFT_ADMIN_EXTERNAL_TOKEN_OIDC_SCOPE}`;
+
+/**
+ * The local `msgraph-read` env: the {@link DEFAULT_DEMO_LOCAL_EXTERNAL_TOKEN_ENV} login plus the Read
+ * ceiling ({@link DEMO_CLI_MSGRAPH_READ_SCOPES}), for msgraph-cli's token source.
+ *
+ * One-time setup, with the same kind of OIDC client as the `external-token` env:
+ *
+ * ```
+ * demo-cli auth setup --env msgraph-read --client-id <id>
+ * demo-cli auth login --env msgraph-read
+ * msgraph-cli auth token-source set "demo-cli external-token microsoft --env msgraph-read"
+ * ```
+ *
+ * The connection must have been connected with a preset covering the ceiling, or the mint is refused
+ * with a 403 naming the preset to reconnect with.
+ */
+export const DEFAULT_DEMO_LOCAL_MSGRAPH_READ_ENV: CliEnvDefault = {
+  names: ['msgraph-read', 'dev-msgraph-read'],
+  env: { ...DEFAULT_DEMO_LOCAL_EXTERNAL_TOKEN_ENV.env, scopes: DEMO_CLI_MSGRAPH_READ_SCOPES }
+};
+
+/**
+ * The local `msgraph-admin` env: {@link DEFAULT_DEMO_LOCAL_MSGRAPH_READ_ENV} with the Read + Write ceiling
+ * ({@link DEMO_CLI_MSGRAPH_ADMIN_SCOPES}). Minting through it needs a connection made with "Read + Write".
+ */
+export const DEFAULT_DEMO_LOCAL_MSGRAPH_ADMIN_ENV: CliEnvDefault = {
+  names: ['msgraph-admin', 'dev-msgraph-admin'],
+  env: { ...DEFAULT_DEMO_LOCAL_EXTERNAL_TOKEN_ENV.env, scopes: DEMO_CLI_MSGRAPH_ADMIN_SCOPES }
+};
+
+/**
+ * The production counterpart of {@link DEFAULT_DEMO_LOCAL_MSGRAPH_READ_ENV}.
+ */
+export const DEFAULT_DEMO_PROD_MSGRAPH_READ_ENV: CliEnvDefault = {
+  names: ['prod-msgraph-read'],
+  env: { ...DEFAULT_DEMO_PROD_EXTERNAL_TOKEN_ENV.env, scopes: DEMO_CLI_MSGRAPH_READ_SCOPES }
+};
+
+/**
+ * The production counterpart of {@link DEFAULT_DEMO_LOCAL_MSGRAPH_ADMIN_ENV}.
+ */
+export const DEFAULT_DEMO_PROD_MSGRAPH_ADMIN_ENV: CliEnvDefault = {
+  names: ['prod-msgraph-admin'],
+  env: { ...DEFAULT_DEMO_PROD_EXTERNAL_TOKEN_ENV.env, scopes: DEMO_CLI_MSGRAPH_ADMIN_SCOPES }
+};
+
+export const DEFAULT_DEMO_CLI_ENVS: readonly CliEnvDefault[] = [
+  DEFAULT_DEMO_LOCAL_ENV,
+  DEFAULT_DEMO_PROD_ENV,
+  DEFAULT_DEMO_LOCAL_EXTERNAL_TOKEN_ENV,
+  DEFAULT_DEMO_PROD_EXTERNAL_TOKEN_ENV,
+  DEFAULT_DEMO_LOCAL_MSGRAPH_READ_ENV,
+  DEFAULT_DEMO_LOCAL_MSGRAPH_ADMIN_ENV,
+  DEFAULT_DEMO_PROD_MSGRAPH_READ_ENV,
+  DEFAULT_DEMO_PROD_MSGRAPH_ADMIN_ENV
+];

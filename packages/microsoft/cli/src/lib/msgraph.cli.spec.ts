@@ -8,7 +8,10 @@ import { MS_IN_HOUR } from '@dereekb/util';
 import { type FetchHandler } from '@dereekb/util/fetch';
 import { MSGRAPH_CLI_CONFIG_DIR_ENV_VAR, msGraphCliConfigStore, msGraphCliPaths, msGraphCliScopesFromArgv } from './config/cli.config';
 import { createMsGraphCliAuthMiddleware, msGraphCommandHandler, resolveMsGraphCliContext } from './middleware/auth.middleware';
-import { msGraphCliErrorOutput } from './util/output';
+import { configureMsGraphCliOutput, msGraphCliErrorOutput } from './util/output';
+
+// what the entry point does at startup
+configureMsGraphCliOutput();
 
 const MINTED_ACCESS_TOKEN = 'minted-graph-token';
 

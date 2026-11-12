@@ -409,7 +409,7 @@ export interface BuildCliTokenSourceAuthCommandOptions<C extends CliTokenSourceC
    */
   readonly tokenDescription?: Maybe<string>;
   /**
-   * An example token source command, e.g. `demo-cli external-token microsoft --env external-token`.
+   * An example token source command, e.g. `demo-cli external-token microsoft --env msgraph-read`.
    */
   readonly exampleCommand?: Maybe<string>;
   /**
