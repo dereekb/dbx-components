@@ -185,18 +185,6 @@ export function userExternalConnectionCredentialsExpiredError(providerType: User
 }
 
 /**
- * Whether a thrown value is `USER_EXTERNAL_CONNECTION_CREDENTIALS_EXPIRED`.
- *
- * @param e - The thrown value.
- * @returns True when the credentials expired and could not be renewed.
- *
- * @__NO_SIDE_EFFECTS__
- */
-export function isUserExternalConnectionCredentialsExpiredError(e: unknown): boolean {
-  return userExternalConnectionThrownErrorCode(e) === USER_EXTERNAL_CONNECTION_CREDENTIALS_EXPIRED_ERROR_CODE;
-}
-
-/**
  * Creates an error indicating another instance holds the refresh lease for this connection and did not
  * finish within the wait.
  *

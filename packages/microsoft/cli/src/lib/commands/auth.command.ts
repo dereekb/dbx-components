@@ -1,6 +1,6 @@
 import { buildCliTokenSourceAuthCommand, cliTokenSourceReport, cliTokenSourceSelectionFromArgv, loadCliTokenSourceStatus, outputResult, wrapCommandHandler } from '@dereekb/dbx-cli';
 import type { Argv, CommandModule } from 'yargs';
-import { msGraphCliScopesFromArgv, msGraphCliTokenSourceCommandConfig } from '../config/cli.config';
+import { msGraphCliTokenSourceCommandConfig } from '../config/cli.config';
 import { MSGRAPH_CLI_NO_TOKEN_SOURCE_HINT } from '../middleware/auth.middleware';
 
 /**
@@ -17,7 +17,7 @@ const AUTH_SHOW_COMMAND: CommandModule = {
     ]),
   handler: wrapCommandHandler(async (argv: any) => {
     const config = msGraphCliTokenSourceCommandConfig();
-    const status = await loadCliTokenSourceStatus({ resolver: config.resolver, fileConfig: await config.loadConfigFile(), tokenCachePath: config.tokenCachePath, scopes: msGraphCliScopesFromArgv(argv), ...cliTokenSourceSelectionFromArgv(argv) });
+    const status = await loadCliTokenSourceStatus({ resolver: config.resolver, fileConfig: await config.loadConfigFile(), tokenCachePath: config.tokenCachePath, ...cliTokenSourceSelectionFromArgv(argv) });
     outputResult(status ? { tokenSource: cliTokenSourceReport(status) } : { tokenSource: null, suggestion: MSGRAPH_CLI_NO_TOKEN_SOURCE_HINT });
   })
 };

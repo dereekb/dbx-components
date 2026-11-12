@@ -1,31 +1,16 @@
-import { Controller, Get, Header, HttpException, HttpStatus, Inject, Param, Query, Req } from '@nestjs/common';
+import { Controller, Get, Header, HttpException, HttpStatus, Inject, Param, Req } from '@nestjs/common';
 import { type Request } from 'express';
-import {
-  type UserExternalConnectionAccessToken,
-  type UserExternalConnectionProviderType,
-  USER_EXTERNAL_CONNECTION_TOKEN_EXPORT_NOT_ALLOWED_ERROR_CODE,
-  USER_EXTERNAL_CONNECTION_TOKEN_NARROWING_UNSUPPORTED_ERROR_CODE,
-  USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE,
-  USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_NOT_GRANTED_ERROR_CODE,
-  USER_EXTERNAL_CONNECTION_TOKEN_SCOPES_INVALID_ERROR_CODE,
-  USER_EXTERNAL_CONNECTION_TOKEN_SCOPES_QUERY_PARAM
-} from '@dereekb/firebase';
+import { type UserExternalConnectionAccessToken, type UserExternalConnectionProviderType, USER_EXTERNAL_CONNECTION_TOKEN_EXPORT_NOT_ALLOWED_ERROR_CODE, USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE } from '@dereekb/firebase';
 import { type FirebaseServerAuthenticatedRequest } from '@dereekb/firebase-server';
-import { UserExternalConnectionTokenApiService, userExternalConnectionTokenRequestedScopesFromQuery } from './userexternalconnection.token.service';
+import { UserExternalConnectionTokenApiService } from './userexternalconnection.token.service';
 
 /**
  * Error codes whose `data` the controller passes back to the caller.
  *
- * An allowlist so only data the mint's own gates built — the provider, the excess / missing scopes,
- * the preset to reconnect with — leaves the server; data attached by any other failure stays put.
+ * An allowlist so only data the mint's own gates built (the provider and the excess scopes) leaves the
+ * server; data attached by any other failure stays put.
  */
-const USER_EXTERNAL_CONNECTION_TOKEN_ERROR_CODES_WITH_DATA: ReadonlySet<string> = new Set<string>([
-  USER_EXTERNAL_CONNECTION_TOKEN_EXPORT_NOT_ALLOWED_ERROR_CODE,
-  USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE,
-  USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_NOT_GRANTED_ERROR_CODE,
-  USER_EXTERNAL_CONNECTION_TOKEN_SCOPES_INVALID_ERROR_CODE,
-  USER_EXTERNAL_CONNECTION_TOKEN_NARROWING_UNSUPPORTED_ERROR_CODE
-]);
+const USER_EXTERNAL_CONNECTION_TOKEN_ERROR_CODES_WITH_DATA: ReadonlySet<string> = new Set<string>([USER_EXTERNAL_CONNECTION_TOKEN_EXPORT_NOT_ALLOWED_ERROR_CODE, USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE]);
 
 /**
  * Route prefix the token controller is mounted at. Under the `/api` global route prefix the route
@@ -48,17 +33,15 @@ export class UserExternalConnectionTokenApiController {
    *
    * @param req - The Express request carrying auth credentials on `req.auth`.
    * @param providerType - The provider whose access token to mint.
-   * @param scopes - The optional `scopes` query parameter narrowing the minted token (space- or comma-delimited).
    * @returns The {@link UserExternalConnectionAccessToken}.
    */
   @Get(':providerType')
   @Header('Cache-Control', 'no-store')
-  async getAccessToken(@Req() req: Request, @Param('providerType') providerType: UserExternalConnectionProviderType, @Query(USER_EXTERNAL_CONNECTION_TOKEN_SCOPES_QUERY_PARAM) scopes?: unknown): Promise<UserExternalConnectionAccessToken> {
+  async getAccessToken(@Req() req: Request, @Param('providerType') providerType: UserExternalConnectionProviderType): Promise<UserExternalConnectionAccessToken> {
     const auth = (req as FirebaseServerAuthenticatedRequest).auth;
 
     try {
-      const requestedScopes = userExternalConnectionTokenRequestedScopesFromQuery(scopes);
-      return await this.tokenService.mintAccessToken({ auth, providerType, requestedScopes });
+      return await this.tokenService.mintAccessToken({ auth, providerType });
     } catch (error: any) {
       throw this._toHttpException(error);
     }

@@ -84,14 +84,6 @@ describe('refreshAccessToken()', () => {
     expect(body.has('scope')).toBe(false);
   });
 
-  it('sends the narrowed scopes plus offline_access', async () => {
-    const { oauthContext, requests } = testOAuthContext();
-    await refreshAccessToken(oauthContext)({ refreshToken: 'refresh-token', scopes: ['mail.read', 'User.Read'] });
-
-    const body = new URLSearchParams(await requests[0].text());
-    expect(body.get('scope')).toBe('Mail.Read User.Read offline_access');
-  });
-
   it('surfaces invalid_grant as a typed error', async () => {
     const { oauthContext } = testOAuthContext({ error: 'invalid_grant', error_description: 'AADSTS70008: expired', error_codes: [70008] }, 400);
     const error = await refreshAccessToken(oauthContext)({ refreshToken: 'refresh-token' }).catch((e: unknown) => e);

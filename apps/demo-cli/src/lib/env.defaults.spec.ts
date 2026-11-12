@@ -15,7 +15,7 @@ describe('DEFAULT_DEMO_CLI_ENVS', () => {
   });
 
   describe('microsoft mint envs', () => {
-    // a microsoft mint is refused (403 SCOPE_FORBIDDEN) unless the grant holds token.external AND one of the narrowing ceilings
+    // a microsoft mint is refused (403 SCOPE_FORBIDDEN) unless the grant holds token.external AND one of the scope ceilings
     it('should not give the plain external-token env a microsoft ceiling', () => {
       const scopes = scopesForEnv('external-token');
       expect(scopes).toContain(EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE);

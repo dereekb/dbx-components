@@ -1,14 +1,4 @@
-import {
-  type UserExternalConnectionAccessToken,
-  type UserExternalConnectionProviderType,
-  type UserExternalConnectionTokenScopeNotGrantedErrorData,
-  USER_EXTERNAL_CONNECTION_TOKEN_NARROWING_UNSUPPORTED_ERROR_CODE,
-  USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE,
-  USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_NOT_GRANTED_ERROR_CODE,
-  USER_EXTERNAL_CONNECTION_TOKEN_SCOPES_INVALID_ERROR_CODE,
-  USER_EXTERNAL_CONNECTION_TOKEN_SCOPES_QUERY_PARAM,
-  userExternalConnectionTokenApiPath
-} from '@dereekb/firebase';
+import { type UserExternalConnectionAccessToken, type UserExternalConnectionProviderType, USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE, userExternalConnectionTokenApiPath } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { type CliExternalConnectionHints } from '../config/env';
 import { CliError, tracedFetch } from '../util/output';
@@ -45,12 +35,6 @@ export interface FetchExternalConnectionTokenInput {
    */
   readonly providerType: UserExternalConnectionProviderType;
   /**
-   * Narrows the minted token to these provider scopes (sent space-delimited as `?scopes=`). The server
-   * refuses scopes above the caller's ceiling or outside the connection's grant, and a provider that
-   * cannot narrow; it never widens. Omit (or pass an empty list) to mint the ceiling.
-   */
-  readonly scopes?: Maybe<readonly string[]>;
-  /**
    * The CLI's binary name, used in remediation suggestions.
    */
   readonly cliName?: Maybe<string>;
@@ -71,8 +55,8 @@ export interface FetchExternalConnectionTokenInput {
  * @returns The minted {@link UserExternalConnectionAccessToken}.
  * @throws {CliError} With a code derived from the HTTP status when the server refuses (e.g.
  *   `AUTH_FORBIDDEN` when the login lacks the `token.external` scope, the provider is not exportable,
- *   or the requested `scopes` reach above the ceiling or the connection's grant), or `API_ERROR` when a
- *   2xx body carries no access token.
+ *   or the connection's grant reaches past the login's scope ceiling), or `API_ERROR` when a 2xx body
+ *   carries no access token.
  *
  * @example
  * ```typescript
@@ -82,9 +66,7 @@ export interface FetchExternalConnectionTokenInput {
 export async function fetchExternalConnectionToken(input: FetchExternalConnectionTokenInput): Promise<UserExternalConnectionAccessToken> {
   const { providerType } = input;
   const apiBaseUrl = input.apiBaseUrl.endsWith('/') ? input.apiBaseUrl.slice(0, -1) : input.apiBaseUrl;
-  const scopes = (input.scopes ?? []).map((x) => x.trim()).filter((x) => x.length > 0);
-  const query = scopes.length > 0 ? `?${new URLSearchParams({ [USER_EXTERNAL_CONNECTION_TOKEN_SCOPES_QUERY_PARAM]: scopes.join(' ') }).toString()}` : '';
-  const url = `${apiBaseUrl}${userExternalConnectionTokenApiPath(providerType)}${query}`;
+  const url = `${apiBaseUrl}${userExternalConnectionTokenApiPath(providerType)}`;
   const res = await tracedFetch(input.fetcher ?? undefined, url, { method: 'GET', headers: { Accept: 'application/json', Authorization: `Bearer ${input.accessToken}` } });
   const body = await readJsonBody(res);
 
@@ -143,32 +125,14 @@ interface ExternalConnectionTokenHttpErrorInput {
 function externalConnectionTokenHttpError(input: ExternalConnectionTokenHttpErrorInput): CliError {
   const { res, body, providerType } = input;
   const cli = input.cliName ?? '<cli>';
-  const errorBody = body != null && typeof body === 'object' ? (body as { readonly message?: unknown; readonly code?: unknown; readonly data?: unknown }) : undefined;
+  const errorBody = body != null && typeof body === 'object' ? (body as { readonly message?: unknown; readonly code?: unknown }) : undefined;
   const serverMessage = typeof errorBody?.message === 'string' && errorBody.message ? errorBody.message : `${res.status} ${res.statusText}`.trim();
   const code = typeof errorBody?.code === 'string' && errorBody.code ? errorBody.code : undefined;
   const serverCode = code ? ` (${code})` : '';
-  let suggestion: Maybe<string>;
-
-  switch (code) {
-    case USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_NOT_GRANTED_ERROR_CODE: {
-      const data = (errorBody?.data != null && typeof errorBody.data === 'object' ? errorBody.data : undefined) as Maybe<Partial<UserExternalConnectionTokenScopeNotGrantedErrorData>>;
-      const preset = data?.reconnectScopePreset?.label;
-      suggestion = preset ? `Your "${providerType}" connection was not granted those scopes. Reconnect it in the app with the "${preset}" access level.` : `Your "${providerType}" connection was not granted those scopes. Reconnect it in the app with a wider access level.`;
-      break;
-    }
-    case USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE:
-      suggestion = `Your login's OIDC scopes do not allow those "${providerType}" scopes. Request fewer with \`--scopes\`, or run \`${cli} auth login\` with an env preset that carries the provider's wider token scope.`;
-      break;
-    case USER_EXTERNAL_CONNECTION_TOKEN_SCOPES_INVALID_ERROR_CODE:
-      suggestion = 'Fix `--scopes`: pass one or more space- or comma-separated provider scopes.';
-      break;
-    case USER_EXTERNAL_CONNECTION_TOKEN_NARROWING_UNSUPPORTED_ERROR_CODE:
-      suggestion = `The "${providerType}" provider cannot mint a narrowed token. Drop \`--scopes\`.`;
-      break;
-    default:
-      suggestion = externalConnectionTokenStatusSuggestion(res.status, providerType, cli);
-      break;
-  }
+  const suggestion =
+    code === USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE
+      ? `Your login may not mint this "${providerType}" token: the connection was granted more than your login's scope ceiling allows, or your login holds none of the provider's token scopes. Run \`${cli} auth login\` with an env preset that carries the provider's wider token scope, or reconnect "${providerType}" in the app with a smaller access level.`
+      : externalConnectionTokenStatusSuggestion(res.status, providerType, cli);
 
   return new CliError({
     message: `external-token ${providerType} failed: ${serverMessage}${serverCode}`,

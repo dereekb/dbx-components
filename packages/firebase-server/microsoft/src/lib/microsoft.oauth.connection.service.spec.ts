@@ -344,11 +344,4 @@ describe('MicrosoftUserExternalConnectionOAuthService', () => {
       expect(service.normalizeScopes(['mail.read', 'https://graph.microsoft.com/User.Read', 'Mail.Read'])).toEqual(['Mail.Read', 'User.Read']);
     });
   });
-
-  describe('narrowAccessToken()', () => {
-    it('is not implemented: Entra answers a scope-subset refresh with every consented scope, so Microsoft cannot narrow', () => {
-      // a narrowing hook here would hand a read-ceiling caller a token carrying a read + write grant
-      expect(service.narrowAccessToken).toBeUndefined();
-    });
-  });
 });

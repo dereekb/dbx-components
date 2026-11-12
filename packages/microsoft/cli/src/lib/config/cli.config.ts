@@ -13,11 +13,6 @@ export const MSGRAPH_CLI_NAME = 'msgraph-cli';
 export const MSGRAPH_CLI_CONFIG_DIR_ENV_VAR = 'MSGRAPH_CLI_CONFIG_DIR';
 
 /**
- * Env var that names the scopes to narrow the minted token to when `--scopes` is not passed.
- */
-export const MSGRAPH_CLI_SCOPES_ENV_VAR = 'MSGRAPH_CLI_SCOPES';
-
-/**
  * A saved msgraph-cli token source. It has only the shared `command`.
  */
 export type MsGraphCliTokenSourceConfig = CliTokenSourceConfig;
@@ -87,19 +82,4 @@ export function msGraphCliTokenSourceResolver(env?: Maybe<NodeJS.ProcessEnv>): C
  */
 export function msGraphCliTokenSourceCommandConfig(paths: CliPaths = msGraphCliPaths(), env?: Maybe<NodeJS.ProcessEnv>): CliTokenSourceCommandConfig<MsGraphCliTokenSourceConfig> {
   return { resolver: msGraphCliTokenSourceResolver(env), tokenCachePath: paths.tokenCachePath, ...msGraphCliConfigStore(paths) };
-}
-
-/**
- * Reads the scopes to narrow the minted token to: the `--scopes` flag, else {@link MSGRAPH_CLI_SCOPES_ENV_VAR}.
- *
- * Accepts space- or comma-separated scopes.
- *
- * @param argv - The parsed arguments.
- * @param env - The environment. Defaults to `process.env`.
- * @returns The scopes, or undefined when neither is set.
- */
-export function msGraphCliScopesFromArgv(argv: Maybe<{ readonly scopes?: unknown }>, env: NodeJS.ProcessEnv = process.env): Maybe<string[]> {
-  const raw = typeof argv?.scopes === 'string' && argv.scopes.trim() ? argv.scopes : env[MSGRAPH_CLI_SCOPES_ENV_VAR];
-  const scopes = (raw ?? '').split(/[\s,]+/).filter(Boolean);
-  return scopes.length > 0 ? scopes : undefined;
 }

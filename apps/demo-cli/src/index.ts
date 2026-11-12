@@ -31,7 +31,7 @@ void runCli({
   // exportable connections (demo-api opts `zoho_admin` in) so zoho-cli can run without its own login —
   // `zoho-cli auth token-source set "demo-cli external-token zoho_admin --env external-token"`. Needs the
   // dedicated `external-token` env, whose grant is the only one carrying the `token.external` scope. The
-  // `microsoft` connection also needs a narrowing ceiling, so msgraph-cli mints through the `msgraph-read`
+  // `microsoft` connection also needs a scope ceiling, so msgraph-cli mints through the `msgraph-read`
   // / `msgraph-admin` envs: `msgraph-cli auth token-source set "demo-cli external-token microsoft --env msgraph-read"`.
   externalConnectionToken: true,
   // the generator version the committed manifests were emitted by, so `doctor`'s `cli-build-not-stale`

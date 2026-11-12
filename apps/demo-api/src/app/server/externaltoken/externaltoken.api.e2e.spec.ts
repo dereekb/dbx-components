@@ -7,9 +7,7 @@ import {
   USER_EXTERNAL_CONNECTION_PROVIDER_NOT_CONNECTED_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_TOKEN_EXPORT_NOT_ALLOWED_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_TOKEN_FORBIDDEN_ERROR_CODE,
-  USER_EXTERNAL_CONNECTION_TOKEN_NARROWING_UNSUPPORTED_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE,
-  USER_EXTERNAL_CONNECTION_TOKEN_SCOPES_INVALID_ERROR_CODE,
   type UserExternalConnectionAccessToken,
   userExternalConnectionTokenApiPath,
   TRELLO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as TRELLO,
@@ -243,9 +241,8 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         oauthApi = f.instance.apiNestContext.nestApplication.get(MicrosoftOAuthApi);
         refreshInputs = [];
 
-        // a mint of a fresh stored token makes no Microsoft call. Shadow the refresh with an OWN property
-        // that records any call and answers the way Entra does: with EVERY consented scope, whatever
-        // subset was asked for — which is why Microsoft cannot narrow
+        // a mint of a fresh stored token makes no Microsoft call; shadow the refresh with an OWN property
+        // that records any call, so each case can assert none happened
         Object.defineProperty(oauthApi, 'refreshToAccessToken', {
           configurable: true,
           writable: true,
@@ -290,25 +287,6 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
                   expect(result.extra).toEqual({ tenantId: MICROSOFT_TENANT_ID });
                   expect(JSON.stringify(result)).not.toContain('refresh-token');
                 });
-
-                it('refuses ?scopes=, since Microsoft cannot narrow', async () => {
-                  const res = await oauth.authRequest('get', `${MICROSOFT_TOKEN_PATH}?scopes=${encodeURIComponent('mail.read https://graph.microsoft.com/User.Read')}`).expect(400);
-
-                  expect(res.body.code).toBe(USER_EXTERNAL_CONNECTION_TOKEN_NARROWING_UNSUPPORTED_ERROR_CODE);
-                  expect(refreshInputs.length).toBe(0);
-                });
-
-                it('refuses a ?scopes= request above the ceiling', async () => {
-                  const res = await oauth.authRequest('get', `${MICROSOFT_TOKEN_PATH}?scopes=Mail.ReadWrite`).expect(403);
-
-                  expect(res.body.code).toBe(USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE);
-                  expect(refreshInputs.length).toBe(0);
-                });
-
-                it('refuses an empty ?scopes=', async () => {
-                  const res = await oauth.authRequest('get', `${MICROSOFT_TOKEN_PATH}?scopes=`).expect(400);
-                  expect(res.body.code).toBe(USER_EXTERNAL_CONNECTION_TOKEN_SCOPES_INVALID_ERROR_CODE);
-                });
               });
 
               describe('and a read + write connection', () => {
@@ -318,6 +296,15 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
                 it('refuses the grant, which exceeds the read ceiling, without returning its token', async () => {
                   const res = await oauth.authRequest('get', MICROSOFT_TOKEN_PATH).expect(403);
+
+                  expect(res.body.code).toBe(USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE);
+                  expect(res.body.data?.excessScopes).toEqual(MICROSOFT_GRAPH_READ_WRITE_SCOPES.filter((scope) => !MICROSOFT_GRAPH_READ_SCOPES.includes(scope)));
+                  expect(JSON.stringify(res.body)).not.toContain('access-token');
+                  expect(refreshInputs.length).toBe(0);
+                });
+
+                it('ignores a ?scopes= parameter: the grant is still refused under the read ceiling', async () => {
+                  const res = await oauth.authRequest('get', `${MICROSOFT_TOKEN_PATH}?scopes=Mail.Read`).expect(403);
 
                   expect(res.body.code).toBe(USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE);
                   expect(JSON.stringify(res.body)).not.toContain('access-token');
@@ -345,13 +332,6 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
                 const res = await oauth.authRequest('get', MICROSOFT_TOKEN_PATH).expect(200);
                 expect((res.body as UserExternalConnectionAccessToken).scopes).toEqual([...MICROSOFT_GRAPH_READ_WRITE_SCOPES]);
-              });
-
-              it('refuses ?scopes= on a provider that cannot narrow (zoho_admin)', async () => {
-                await uec.connect({ providerType: ZOHO_ADMIN, credentials: demoUserExternalConnectionTestCredentials({ accessToken: 'zoho-admin-access-token', scopes: ['ZohoCRM.modules.ALL'] }) });
-
-                const res = await oauth.authRequest('get', `${ZOHO_ADMIN_TOKEN_PATH}?scopes=ZohoCRM.modules.ALL`).expect(400);
-                expect(res.body.code).toBe(USER_EXTERNAL_CONNECTION_TOKEN_NARROWING_UNSUPPORTED_ERROR_CODE);
               });
             });
           });

@@ -338,7 +338,7 @@ export interface CliTokenSourceShowResult<C extends CliTokenSourceConfig = CliTo
 
 /**
  * Builds the `auth token-source show` (alias `list`) result. Does NOT run any command: only a token
- * already cached in the token file (for the unnarrowed request) is described.
+ * already cached in the token file is described.
  *
  * @param config - The CLI's token-source command config.
  * @param selection - The `--token-source` flag, when given.

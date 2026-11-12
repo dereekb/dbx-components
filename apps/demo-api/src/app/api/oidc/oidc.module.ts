@@ -74,7 +74,7 @@ export const DEMO_OIDC_PROVIDER_CONFIG: OidcProviderConfig<DemoOidcScope> = {
     // 8 hours — and deliberately NOT in `adminOnlyScopes` below, whose 365-day service-token TTL tier
     // would otherwise turn a grant that can mint third-party tokens into a year-long one.
     [EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE]: [],
-    // the microsoft mint's narrowing ceilings (see DemoExternalConnectionTokenApiModule providerScopes).
+    // the microsoft mint's scope ceilings (see DemoExternalConnectionTokenApiModule providerScopes).
     // Gated by the same admin-only `external-token` profile; no extra ID-token claims.
     [MICROSOFT_READ_EXTERNAL_TOKEN_OIDC_SCOPE]: [],
     [MICROSOFT_ADMIN_EXTERNAL_TOKEN_OIDC_SCOPE]: [],

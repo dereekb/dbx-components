@@ -64,7 +64,7 @@ export const DEMO_TRELLO_BOT_EXTERNAL_CONNECTION_PROVIDER_TYPE: UserExternalConn
 
 /**
  * The demo's Microsoft Graph connection: one connection per admin, connected with the Read or the Read +
- * Write scope preset, and minted out to a CLI narrowed by the `token.external.microsoft_read` /
+ * Write scope preset, and minted out to a CLI under the `token.external.microsoft_read` /
  * `token.external.microsoft_admin` OIDC scope ceilings.
  */
 export const DEMO_MICROSOFT_EXTERNAL_CONNECTION_PROVIDER_TYPE: KnownUserExternalConnectionProviderType = MICROSOFT_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE;

@@ -6,7 +6,7 @@ import { CALENDAR_COMMAND } from './lib/commands/calendar.command';
 import { FILES_COMMAND } from './lib/commands/files.command';
 import { MAIL_COMMAND } from './lib/commands/mail.command';
 import { REQUEST_COMMAND } from './lib/commands/request.command';
-import { MSGRAPH_CLI_NAME, MSGRAPH_CLI_SCOPES_ENV_VAR, mergeMsGraphCliOutputConfig, msGraphCliConfigStore, msGraphCliTokenSourceResolver } from './lib/config/cli.config';
+import { MSGRAPH_CLI_NAME, mergeMsGraphCliOutputConfig, msGraphCliConfigStore, msGraphCliTokenSourceResolver } from './lib/config/cli.config';
 import { createMsGraphCliAuthMiddleware } from './lib/middleware/auth.middleware';
 import { configureMsGraphCliOutput } from './lib/util/output';
 
@@ -56,11 +56,6 @@ async function main() {
       .option('set-pick', { type: 'string', global: true, describe: 'Save pick fields to config for this command and apply now' })
       .option('pick-all', { type: 'boolean', global: true, describe: 'Ignore any configured pick filters and return full response data' })
       .option('token-source', { type: 'string', global: true, describe: `Saved token source to use for this run, e.g. dev or prod (overrides ${envVarNames.tokenSource}, ${envVarNames.tokenCommand} and the saved selection)` })
-      .option('scopes', {
-        type: 'string',
-        global: true,
-        describe: `Ask the token source for a token narrowed to these Graph scopes, space- or comma-separated (overrides ${MSGRAPH_CLI_SCOPES_ENV_VAR}). Forwarded to the token source as --scopes; a source that cannot narrow refuses it. An app-minted Microsoft token cannot be narrowed (Entra issues every consented scope): its scopes are set by the connection's preset.`
-      })
       .middleware([createMsGraphCliAuthMiddleware({ skipCommands: configCommandNames }), outputMiddleware], true)
       .command(configCommands)
       .command(apiCommands)

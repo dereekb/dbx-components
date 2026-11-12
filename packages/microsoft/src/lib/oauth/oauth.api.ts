@@ -2,9 +2,7 @@ import { type EmailAddress, type Maybe, type Seconds } from '@dereekb/util';
 import { type FetchJsonInput } from '@dereekb/util/fetch';
 import { exchangeAuthorizationCode as exchangeOidcAuthorizationCode, refreshAccessToken as refreshOidcAccessToken } from '@dereekb/util/oidc';
 import { MICROSOFT_GRAPH_API_URL } from '../microsoft.config';
-import { MICROSOFT_OAUTH_SCOPE_DELIMITER } from './oauth.authorize';
 import { MICROSOFT_OAUTH_CLIENT_AUTH_METHOD, MICROSOFT_OAUTH_TOKEN_PATH, type MicrosoftOAuthContext } from './oauth.config';
-import { MICROSOFT_OFFLINE_ACCESS_SCOPE, type MicrosoftGraphScope, normalizeMicrosoftGraphScopes } from './oauth.scope';
 
 /**
  * The `Content-Type` the token endpoint requires.
@@ -31,15 +29,6 @@ export interface MicrosoftOAuthExchangeAuthorizationCodeInput {
 
 export interface MicrosoftOAuthRefreshTokenInput {
   readonly refreshToken: string;
-  /**
-   * Optional subset of the consented Graph scopes to name in the refresh request.
-   *
-   * When set, the request's `scope` is these scopes plus `offline_access` (so a refresh token still
-   * comes back). It does NOT narrow the token: Entra accepts the subset but issues a token carrying
-   * every scope consented for the resource, and its response `scope` says so. Read the granted scopes
-   * from the response rather than assuming the requested ones.
-   */
-  readonly scopes?: Maybe<readonly MicrosoftGraphScope[]>;
 }
 
 export interface MicrosoftOAuthReadCurrentUserInput {
@@ -110,8 +99,8 @@ export function exchangeAuthorizationCode(context: MicrosoftOAuthContext): (inpu
 }
 
 /**
- * Redeems a refresh token for a new access token. A requested scope subset does not narrow it: the
- * token carries every scope consented for the resource.
+ * Redeems a refresh token for a new access token, which carries every scope the user has consented to for
+ * the resource.
  *
  * The response carries a ROTATED refresh token. The old one stays valid until it expires (Microsoft does
  * not revoke a redeemed refresh token), so persisting the rotated one is good hygiene rather than a
@@ -122,16 +111,13 @@ export function exchangeAuthorizationCode(context: MicrosoftOAuthContext): (inpu
  */
 export function refreshAccessToken(context: MicrosoftOAuthContext): (input: MicrosoftOAuthRefreshTokenInput) => Promise<MicrosoftOAuthTokenResponse> {
   return async (input) => {
-    const scope = input.scopes?.length ? normalizeMicrosoftGraphScopes([...input.scopes, MICROSOFT_OFFLINE_ACCESS_SCOPE]).join(MICROSOFT_OAUTH_SCOPE_DELIMITER) : undefined;
-
     const response = await refreshOidcAccessToken({
       fetch: context.fetch,
       tokenEndpoint: MICROSOFT_OAUTH_TOKEN_PATH,
       clientId: context.config.clientId,
       clientSecret: context.config.clientSecret,
       clientAuth: MICROSOFT_OAUTH_CLIENT_AUTH_METHOD,
-      refreshToken: input.refreshToken,
-      scope
+      refreshToken: input.refreshToken
     });
 
     return response as MicrosoftOAuthTokenResponse;

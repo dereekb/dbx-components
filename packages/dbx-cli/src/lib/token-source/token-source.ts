@@ -26,12 +26,6 @@ export const CLI_TOKEN_SOURCE_EXPIRATION_MARGIN_MS: Milliseconds = 2 * MS_IN_MIN
  */
 export const DEFAULT_CLI_TOKEN_SOURCE_TTL_MS: Milliseconds = 5 * MS_IN_MINUTE;
 
-/**
- * The option a token source appends to its command to narrow the minted token: dbx-cli's
- * `external-token --scopes`.
- */
-export const CLI_TOKEN_SOURCE_SCOPES_OPTION = '--scopes';
-
 // MARK: Token
 /**
  * The JSON bundle a token source command prints when run as a dbx-cli credential process.
@@ -47,7 +41,7 @@ export type CliTokenSourceBundle = CliExternalConnectionTokenBundle;
 export interface CliTokenSourceToken {
   readonly accessToken: string;
   /**
-   * The scopes the token was granted — the narrowed set when the mint narrowed.
+   * The scopes the token was granted.
    */
   readonly scopes: string[];
   /**
@@ -102,46 +96,20 @@ export function defaultCliTokenSourceScopesParser(value: unknown): string[] {
   return result;
 }
 
-const CLI_TOKEN_SOURCE_SCOPE_REGEX = /^[\w.:/-]+$/;
-
-/**
- * Normalizes the scopes a token source is asked to narrow its token to: trimmed, deduped, sorted, and
- * restricted to characters that are safe to append to a shell command.
- *
- * @param scopes - The requested scopes.
- * @returns The sorted unique scopes, or undefined when none were given.
- * @throws {Error} When a scope holds a character outside letters, digits, `_`, `.`, `:`, `/` and `-`.
- */
-export function cliTokenSourceRequestedScopes(scopes: Maybe<readonly string[]>): Maybe<string[]> {
-  const unique = Array.from(new Set((scopes ?? []).flatMap((x) => defaultCliTokenSourceScopesParser(x)))).sort();
-  const invalid = unique.find((x) => !CLI_TOKEN_SOURCE_SCOPE_REGEX.test(x));
-
-  if (invalid != null) {
-    throw new Error(`Invalid scope "${invalid}": use letters, digits, "_", ".", ":", "/" and "-".`);
-  }
-
-  return unique.length > 0 ? unique : undefined;
-}
-
 /**
  * Input for {@link cliTokenSourceCacheKey}.
  */
 export interface CliTokenSourceCacheKeyInput {
   readonly command: string;
-  /**
-   * The scopes the source narrows its token to, if any.
-   */
-  readonly scopes?: Maybe<readonly string[]>;
 }
 
 /**
  * Returns the token-file key a token source's token is cached under.
  *
- * Keyed by a hash of the command plus the sorted requested scopes, so a narrowed token is never reused
- * for a wider request, changing the command never reuses another command's token, and the command text
- * itself is not repeated in the token file. Without scopes the key hashes the command alone.
+ * Keyed by a hash of the command, so changing the command never reuses another command's token, and the
+ * command text itself is not repeated in the token file.
  *
- * @param input - The command and requested scopes.
+ * @param input - The command.
  * @returns `tokenSource:<sha256 hex>`.
  *
  * @example
@@ -150,20 +118,7 @@ export interface CliTokenSourceCacheKeyInput {
  * ```
  */
 export function cliTokenSourceCacheKey(input: CliTokenSourceCacheKeyInput): string {
-  const scopes = cliTokenSourceRequestedScopes(input.scopes);
-  const hashed = scopes ? `${input.command}\n${scopes.join(' ')}` : input.command;
-  return `${CLI_TOKEN_SOURCE_CACHE_KEY_PREFIX}${createHash('sha256').update(hashed).digest('hex')}`;
-}
-
-/**
- * Returns the command a token source runs: its command, plus `--scopes "<scopes>"` when it narrows.
- *
- * @param input - The command and requested scopes.
- * @returns The command line to run.
- */
-export function cliTokenSourceRunCommand(input: CliTokenSourceCacheKeyInput): string {
-  const scopes = cliTokenSourceRequestedScopes(input.scopes);
-  return scopes ? `${input.command} ${CLI_TOKEN_SOURCE_SCOPES_OPTION} "${scopes.join(' ')}"` : input.command;
+  return `${CLI_TOKEN_SOURCE_CACHE_KEY_PREFIX}${createHash('sha256').update(input.command).digest('hex')}`;
 }
 
 function nonEmptyString(value: unknown): Maybe<string> {
@@ -314,7 +269,7 @@ export function cliTokenSourceTokenFile(tokenCachePath: string) {
 /**
  * Reads a token source's raw cached entry from the token file.
  *
- * @param input - The command, scopes, and token file.
+ * @param input - The command and token file.
  * @returns The raw entry, or undefined.
  */
 export async function loadCachedCliTokenSourceTokenEntry(input: CliTokenSourceTokenFileInput): Promise<unknown> {
@@ -338,7 +293,7 @@ export interface LoadCachedCliTokenSourceTokenInput<T extends CliTokenSourceToke
 /**
  * Reads a token source's cached token from the token file, when present and reusable.
  *
- * @param input - The command, scopes, token file, and token hooks.
+ * @param input - The command, token file, and token hooks.
  * @returns The cached token, or undefined when there is none or it nears expiry.
  */
 export async function loadCachedCliTokenSourceToken<T extends CliTokenSourceToken = CliTokenSourceToken>(input: LoadCachedCliTokenSourceTokenInput<T>): Promise<Maybe<T>> {
@@ -356,7 +311,7 @@ export async function loadCachedCliTokenSourceToken<T extends CliTokenSourceToke
 /**
  * Removes a token source's cached token from the token file. Other entries are left untouched.
  *
- * @param input - The command, scopes, and token file.
+ * @param input - The command and token file.
  * @returns Resolves once the entry is removed.
  */
 export async function clearCachedCliTokenSourceToken(input: CliTokenSourceTokenFileInput): Promise<void> {
@@ -369,13 +324,9 @@ export async function clearCachedCliTokenSourceToken(input: CliTokenSourceTokenF
  */
 export interface CliTokenSource<T extends CliTokenSourceToken = CliTokenSourceToken> {
   /**
-   * The saved command, without the appended `--scopes`.
+   * The saved command.
    */
   readonly command: string;
-  /**
-   * The sorted scopes the token is narrowed to, if any.
-   */
-  readonly scopes?: Maybe<readonly string[]>;
   /**
    * Returns a reusable token: the one in memory, else the token file's, else a fresh one from running
    * the command (cached to the token file when the bundle reported its expiry). Concurrent calls share
@@ -410,16 +361,14 @@ export interface CreateCliTokenSourceInput<T extends CliTokenSourceToken = CliTo
  * Creates a {@link CliTokenSource} for a command.
  *
  * The command runs through {@link runCliCredentialProcess}: its stdout is captured in-process and never
- * echoed, and a failure surfaces the child's own error message. With `scopes`, the command runs with
- * `--scopes "<sorted scopes>"` appended and its token is cached under a key of its own.
+ * echoed, and a failure surfaces the child's own error message.
  *
- * @param input - The command, scopes, token file, timeout, and token hooks.
+ * @param input - The command, token file, timeout, and token hooks.
  * @returns The token source.
- * @throws {Error} When a requested scope holds an unsafe character.
  *
  * @example
  * ```typescript
- * const source = createCliTokenSource({ command: 'demo-cli external-token microsoft', scopes: ['User.Read'], tokenCachePath });
+ * const source = createCliTokenSource({ command: 'demo-cli external-token microsoft', tokenCachePath });
  * const token = await source.loadToken();
  * ```
  */
@@ -427,9 +376,7 @@ export function createCliTokenSource<T extends CliTokenSourceToken = CliTokenSou
   const { command, tokenCachePath, timeoutMs } = input;
   const parseScopes = input.parseScopes ?? defaultCliTokenSourceScopesParser;
   const mapToken = input.mapToken ?? ((token: CliTokenSourceToken) => token as T);
-  const scopes = cliTokenSourceRequestedScopes(input.scopes);
-  const fileInput: CliTokenSourceTokenFileInput = { command, scopes, tokenCachePath };
-  const runCommand = cliTokenSourceRunCommand({ command, scopes });
+  const fileInput: CliTokenSourceTokenFileInput = { command, tokenCachePath };
   let current: Maybe<T>;
   let inFlight: Maybe<Promise<T>>;
 
@@ -437,7 +384,7 @@ export function createCliTokenSource<T extends CliTokenSourceToken = CliTokenSou
     let token = await loadCachedCliTokenSourceToken<T>({ ...fileInput, parseScopes, mapToken });
 
     if (token == null) {
-      const bundle = await runCliCredentialProcess<CliTokenSourceBundle>({ command: runCommand, timeoutMs });
+      const bundle = await runCliCredentialProcess<CliTokenSourceBundle>({ command, timeoutMs });
       const fromBundle = cliTokenSourceTokenFromBundle({ bundle, parseScopes });
       token = mapToken(fromBundle.token);
 
@@ -479,7 +426,7 @@ export function createCliTokenSource<T extends CliTokenSourceToken = CliTokenSou
     await clearCachedCliTokenSourceToken(fileInput);
   }
 
-  return { command, scopes, loadToken, resetToken };
+  return { command, loadToken, resetToken };
 }
 
 // MARK: Status
@@ -559,10 +506,6 @@ export interface CliTokenSourceReport {
    * The saved source's name; absent for a `<CLI>_TOKEN_COMMAND` command.
    */
   readonly name?: CliTokenSourceName;
-  /**
-   * The scopes the source was asked to narrow its token to, if any.
-   */
-  readonly requestedScopes?: readonly string[];
   readonly expiresAt?: ISO8601DateString;
   readonly scopes?: readonly string[];
   readonly providerType?: Maybe<string>;
@@ -585,8 +528,7 @@ export interface CliTokenSourceReport {
  */
 export function cliTokenSourceReport(status: CliTokenSourceStatus<CliTokenSourceConfig, CliTokenSourceToken>): CliTokenSourceReport {
   const { active, resolved, error, errorCode, suggestion } = status;
-  const requestedScopes = resolved?.source.scopes;
-  const source = { command: active.command, origin: active.origin, ...(active.name ? { name: active.name } : {}), ...(requestedScopes?.length ? { requestedScopes } : {}) };
+  const source = { command: active.command, origin: active.origin, ...(active.name ? { name: active.name } : {}) };
   let result: CliTokenSourceReport;
 
   if (resolved) {

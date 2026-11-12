@@ -121,7 +121,6 @@ export async function exchangeAuthorizationCode(input: ExchangeAuthorizationCode
  * @param input.clientSecret - Optional client secret; omit for public clients.
  * @param input.clientAuth - How the client secret is presented. Defaults to `client_secret_post`.
  * @param input.refreshToken - The cached refresh token to redeem.
- * @param input.scope - Optional space-delimited scope string sent as the `scope` form field to request a narrower access token.
  * @param input.fetch - The plain fetch transport.
  * @returns The parsed {@link OidcTokenResponse} with the refreshed access token.
  */
@@ -130,10 +129,6 @@ export async function refreshAccessToken(input: RefreshAccessTokenInput & OidcRe
     grant_type: 'refresh_token',
     refresh_token: input.refreshToken
   });
-
-  if (input.scope) {
-    params.set('scope', input.scope);
-  }
 
   return postTokenEndpoint({ tokenEndpoint: input.tokenEndpoint, body: applyOidcClientAuthToParams(input, params), fetch: input.fetch, authorization: oidcClientAuthAuthorizationHeader(input) });
 }

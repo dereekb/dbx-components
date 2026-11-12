@@ -6,7 +6,7 @@ import { CliError, DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR, buildErrorOutput, sanitiz
 import { microsoftGraphRequest } from '@dereekb/microsoft';
 import { MS_IN_HOUR } from '@dereekb/util';
 import { type FetchHandler } from '@dereekb/util/fetch';
-import { MSGRAPH_CLI_CONFIG_DIR_ENV_VAR, msGraphCliConfigStore, msGraphCliPaths, msGraphCliScopesFromArgv } from './config/cli.config';
+import { MSGRAPH_CLI_CONFIG_DIR_ENV_VAR, msGraphCliConfigStore, msGraphCliPaths } from './config/cli.config';
 import { createMsGraphCliAuthMiddleware, msGraphCommandHandler, resolveMsGraphCliContext } from './middleware/auth.middleware';
 import { configureMsGraphCliOutput, msGraphCliErrorOutput } from './util/output';
 
@@ -17,8 +17,7 @@ const MINTED_ACCESS_TOKEN = 'minted-graph-token';
 
 /**
  * Writes a fake token-source command that prints a Microsoft token bundle when run as a credential
- * process (like `<app-cli> external-token microsoft`), narrowing its scopes to `--scopes`, and logs
- * the arguments of each run.
+ * process (like `<app-cli> external-token microsoft`), and logs the arguments of each run.
  *
  * @param dir - Where to write the script.
  * @returns The command and its run log.
@@ -38,10 +37,6 @@ if (process.env[${JSON.stringify(DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR)}] !== '1') 
   process.exit(1);
 }
 const bundle = ${JSON.stringify(bundle)};
-const scopesIndex = args.indexOf('--scopes');
-if (scopesIndex >= 0) {
-  bundle.scopes = args[scopesIndex + 1].split(' ');
-}
 process.stdout.write(JSON.stringify(bundle));
 `
   );
@@ -102,20 +97,6 @@ describe('msgraph-cli', () => {
     rmSync(dir, { recursive: true, force: true });
   });
 
-  describe('msGraphCliScopesFromArgv()', () => {
-    it('should split space- and comma-separated scopes', () => {
-      expect(msGraphCliScopesFromArgv({ scopes: 'Mail.Read, Calendars.Read User.Read' }, {})).toEqual(['Mail.Read', 'Calendars.Read', 'User.Read']);
-    });
-
-    it('should fall back to MSGRAPH_CLI_SCOPES', () => {
-      expect(msGraphCliScopesFromArgv({}, { MSGRAPH_CLI_SCOPES: 'Mail.Read' })).toEqual(['Mail.Read']);
-    });
-
-    it('should return undefined when no scopes are set', () => {
-      expect(msGraphCliScopesFromArgv({ scopes: '  ' }, {})).toBeUndefined();
-    });
-  });
-
   describe('resolveMsGraphCliContext()', () => {
     it('should throw NOT_CONFIGURED when no token source is configured', async () => {
       const error = await resolveMsGraphCliContext({}, { env }).catch((e) => e);
@@ -137,29 +118,6 @@ describe('msgraph-cli', () => {
       expect(graph.requests[0].url).toBe('https://graph.microsoft.com/v1.0/me');
       expect(graph.requests[0].authorization).toBe(`Bearer ${MINTED_ACCESS_TOKEN}`);
       expect(source.runs()).toEqual([[]]);
-    });
-
-    it('should forward --scopes to the token source and cache the token per scope set', async () => {
-      const scopedEnv = { ...env, MSGRAPH_CLI_TOKEN_COMMAND: source.command };
-      const graph = interceptGraph({ status: 200, body: {} });
-      const graphFactoryConfig = { fetchHandler: graph.fetchHandler };
-
-      const narrowed = await resolveMsGraphCliContext({ scopes: 'User.Read' }, { env: scopedEnv, graphFactoryConfig });
-      expect((await narrowed.tokenSource.loadToken()).scopes).toEqual(['User.Read']);
-      expect(narrowed.active.origin).toBe('env');
-
-      // the same scope set, in a later run, reuses the cached narrowed token
-      const narrowedAgain = await resolveMsGraphCliContext({ scopes: 'User.Read' }, { env: scopedEnv, graphFactoryConfig });
-      await narrowedAgain.tokenSource.loadToken();
-
-      // a wider scope set never reuses the narrowed token
-      const wider = await resolveMsGraphCliContext({ scopes: 'User.Read Mail.Read' }, { env: scopedEnv, graphFactoryConfig });
-      expect((await wider.tokenSource.loadToken()).scopes).toEqual(['Mail.Read', 'User.Read']);
-
-      expect(source.runs()).toEqual([
-        ['--scopes', 'User.Read'],
-        ['--scopes', 'Mail.Read User.Read']
-      ]);
     });
   });
 
@@ -200,7 +158,7 @@ describe('msgraph-cli', () => {
       const output = msGraphCliErrorOutput(error);
       expect(output?.code).toBe('SCOPE_DENIED');
       expect(output?.suggestion).toContain('auth show');
-      // --scopes can only narrow, so it can never add the missing scope
+      // msgraph-cli has no --scopes; the suggestion must not send the user looking for one
       expect(output?.suggestion).not.toContain('--scopes');
       expect(buildErrorOutput(error).code).toBe('SCOPE_DENIED');
     });

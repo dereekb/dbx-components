@@ -1,7 +1,7 @@
 import { Logger } from '@nestjs/common';
 import { type Request } from 'express';
 import { type FirebaseAuthUserId, type UserExternalConnectionCapability, type UserExternalConnectionProviderType, type UserExternalConnectionScopePreset, type UserExternalConnectionScopePresetKey } from '@dereekb/firebase';
-import { cachedGetter, excludeValuesFromArray, generatePkceCodeChallenge, generatePkceMaterial, type ISO8601DateString, type Maybe, unique, type WebsiteUrl } from '@dereekb/util';
+import { cachedGetter, excludeValuesFromArray, generatePkceCodeChallenge, generatePkceMaterial, type Maybe, unique, type WebsiteUrl } from '@dereekb/util';
 import { type UserExternalConnectionCredentials } from '../userexternalconnection.private';
 import { type UserExternalConnectionAccessor } from '../userexternalconnection.accessor.service';
 import { type UserExternalConnectionServerActions } from '../userexternalconnection.action.server';
@@ -135,40 +135,6 @@ export interface UserExternalConnectionOAuthRefreshCredentialsInput {
    * provider-specific `extra` the exchange needs.
    */
   readonly credentials: UserExternalConnectionCredentials;
-}
-
-/**
- * Input for {@link AbstractUserExternalConnectionOAuthService.narrowAccessToken}.
- */
-export interface UserExternalConnectionOAuthNarrowAccessTokenInput {
-  readonly uid: FirebaseAuthUserId;
-  /**
-   * The usable credentials currently stored for this provider, carrying the refresh token.
-   */
-  readonly credentials: UserExternalConnectionCredentials;
-  /**
-   * The scopes the narrowed access token should carry. Already normalized, deduped, and checked to
-   * sit inside both the caller's ceiling and the connection's granted scopes.
-   */
-  readonly scopes: readonly UserExternalConnectionCapability[];
-}
-
-/**
- * The narrowed access token a {@link AbstractUserExternalConnectionOAuthService.narrowAccessToken}
- * produced.
- *
- * Deliberately carries no refresh token: the mint path is not the place to persist a rotated one — that
- * would race the reader's refresh lease. Refresh-token rotation is handled by `refreshCredentials`.
- */
-export interface UserExternalConnectionOAuthNarrowedAccessToken {
-  readonly accessToken: string;
-  readonly tokenType?: Maybe<string>;
-  /**
-   * The scopes the provider says the narrowed token carries. Must not reach past the requested scopes:
-   * the mint refuses a token that does.
-   */
-  readonly scopes: UserExternalConnectionCapability[];
-  readonly expiresAt?: Maybe<ISO8601DateString>;
 }
 
 /**
@@ -626,29 +592,6 @@ export abstract class AbstractUserExternalConnectionOAuthService {
    * @returns The normalized scopes.
    */
   normalizeScopes?(scopes: readonly UserExternalConnectionCapability[]): UserExternalConnectionCapability[];
-
-  /**
-   * PROVIDER (optional): mints an access token narrower than the stored grant, without a new OAuth
-   * round trip.
-   *
-   * Implementing it opts the provider into per-mint narrowing: the token mint then trades the stored
-   * refresh token for a token carrying only the scopes the caller's ceiling (and optional `scopes`
-   * request) allows. A provider that cannot narrow (Zoho, Microsoft) leaves it absent and the mint
-   * returns the stored access token, refusing it when the connection's grant exceeds the ceiling.
-   *
-   * Implement it ONLY when the provider really issues a token limited to the requested subset. An
-   * authorization server that ACCEPTS a scope subset is not enough: Microsoft Entra accepts one on a
-   * refresh, yet returns a token carrying every scope consented for the resource. The mint refuses a
-   * returned token whose scopes reach past what it asked for, so a provider that over-returns fails
-   * closed rather than widening a caller's token.
-   *
-   * Throw the framework's credentials-expired error when the provider says the refresh token is no
-   * longer valid; the mint then marks the connection expired.
-   *
-   * @param input - The acting user, the stored credentials, and the scopes to narrow to.
-   * @returns The narrowed access token.
-   */
-  narrowAccessToken?(input: UserExternalConnectionOAuthNarrowAccessTokenInput): Promise<UserExternalConnectionOAuthNarrowedAccessToken>;
 
   /**
    * The scope presets a user picks from when connecting this provider. Empty when it declares none.

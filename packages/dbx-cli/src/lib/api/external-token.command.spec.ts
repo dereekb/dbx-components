@@ -46,8 +46,8 @@ describe('buildExternalTokenCommand()', () => {
   let exitSpy: ReturnType<typeof vi.spyOn>;
   let savedCredentialProcessEnv: string | undefined;
 
-  async function runExternalToken(fetcher: typeof fetch, providerType = 'zoho_admin', extraArgs: string[] = []): Promise<void> {
-    await yargs(['external-token', providerType, ...extraArgs])
+  async function runExternalToken(fetcher: typeof fetch, providerType = 'zoho_admin'): Promise<void> {
+    await yargs(['external-token', providerType])
       .command(buildExternalTokenCommand({ cliName: 'demo-cli', fetcher }))
       .exitProcess(false)
       .fail((msg: string, err: Error | undefined) => {
@@ -165,54 +165,15 @@ describe('buildExternalTokenCommand()', () => {
     expect(parsed.error).toContain('USER_EXTERNAL_CONNECTION_TOKEN_EXPORT_NOT_ALLOWED_ERROR');
   });
 
-  describe('--scopes', () => {
-    it('sends the scopes space-delimited as the scopes query parameter', async () => {
-      const fetcher = vi.fn(async () => jsonResponse(MINTED_TOKEN));
-      await runExternalToken(fetcher as unknown as typeof fetch, 'microsoft', ['--scopes', 'User.Read,Mail.Read']);
+  it('suggests another login or a smaller connection on a SCOPE_FORBIDDEN refusal', async () => {
+    const fetcher = async () => jsonResponse({ statusCode: 403, message: 'The "microsoft" connection was granted scopes this client may not mint: Mail.ReadWrite.', code: 'USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR', data: { providerType: 'microsoft', excessScopes: ['Mail.ReadWrite'] } }, 403);
 
-      const [url] = fetcher.mock.calls[0] as unknown as [string];
-      const parsed = new URL(url);
-      expect(parsed.pathname).toBe('/api/session/external/microsoft');
-      expect(parsed.searchParams.get('scopes')).toBe('User.Read Mail.Read');
-    });
+    await expect(runExternalToken(fetcher as unknown as typeof fetch, 'microsoft')).rejects.toThrow('process.exit:1');
 
-    it('sends no query when --scopes is blank', async () => {
-      const fetcher = vi.fn(async () => jsonResponse(MINTED_TOKEN));
-      await runExternalToken(fetcher as unknown as typeof fetch, 'zoho_admin', ['--scopes', ' ']);
-
-      const [url] = fetcher.mock.calls[0] as unknown as [string];
-      expect(url).toBe('http://localhost/api/session/external/zoho_admin');
-    });
-
-    it('suggests reconnecting with the preset named by a SCOPE_NOT_GRANTED refusal', async () => {
-      const fetcher = async () =>
-        jsonResponse({ statusCode: 403, message: 'The "microsoft" connection was not granted: Mail.ReadWrite.', code: 'USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_NOT_GRANTED_ERROR', data: { missingScopes: ['Mail.ReadWrite'], reconnectScopePreset: { key: 'readwrite', label: 'Read + Write' } } }, 403);
-
-      await expect(runExternalToken(fetcher as unknown as typeof fetch, 'microsoft', ['--scopes', 'Mail.ReadWrite'])).rejects.toThrow('process.exit:1');
-
-      const parsed = JSON.parse(stdout.join(''));
-      expect(parsed.code).toBe('AUTH_FORBIDDEN');
-      expect(parsed.suggestion).toContain('"Read + Write"');
-    });
-
-    it('suggests a narrower request or another login on a SCOPE_FORBIDDEN refusal', async () => {
-      const fetcher = async () => jsonResponse({ statusCode: 403, message: 'Above the ceiling.', code: 'USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR' }, 403);
-
-      await expect(runExternalToken(fetcher as unknown as typeof fetch, 'microsoft', ['--scopes', 'Mail.ReadWrite'])).rejects.toThrow('process.exit:1');
-
-      const parsed = JSON.parse(stdout.join(''));
-      expect(parsed.suggestion).toContain('--scopes');
-      expect(parsed.suggestion).toContain('demo-cli auth login');
-    });
-
-    it('suggests fixing --scopes on an invalid or unsupported narrowing request', async () => {
-      const fetcher = async () => jsonResponse({ statusCode: 400, message: 'Narrowing is not supported.', code: 'USER_EXTERNAL_CONNECTION_TOKEN_NARROWING_UNSUPPORTED_ERROR' }, 400);
-
-      await expect(runExternalToken(fetcher as unknown as typeof fetch, 'zoho_admin', ['--scopes', 'ZohoCRM.modules.ALL'])).rejects.toThrow('process.exit:1');
-
-      const parsed = JSON.parse(stdout.join(''));
-      expect(parsed.suggestion).toContain('Drop `--scopes`');
-    });
+    const parsed = JSON.parse(stdout.join(''));
+    expect(parsed.code).toBe('AUTH_FORBIDDEN');
+    expect(parsed.suggestion).toContain('demo-cli auth login');
+    expect(parsed.suggestion).not.toContain('--scopes');
   });
 
   it('refuses a 2xx body without an access token, without echoing the body', async () => {

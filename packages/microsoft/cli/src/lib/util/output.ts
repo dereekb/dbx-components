@@ -12,7 +12,7 @@ export const MSGRAPH_CLI_JWT_SECRET_PATTERN = /eyJ[\w-]{8,}\.[\w-]{8,}\.[\w-]+/g
  * user can act on. Other errors return undefined so the default mapping applies.
  *
  * - 401: the token was rejected. The command handler has already cleared the cached token, so a re-run mints a new one.
- * - 403: the token lacks a scope the call needs — widen `--scopes`, or mint from a preset that grants it.
+ * - 403: the token lacks a scope the call needs — mint from a connection whose preset grants it.
  * - 429: Graph throttled the call.
  *
  * @param error - The thrown value.

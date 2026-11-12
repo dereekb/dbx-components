@@ -1,11 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { createHash } from 'node:crypto';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { MS_IN_HOUR, MS_IN_MINUTE } from '@dereekb/util';
 import { buildCliPaths, type CliPaths } from '../config/paths';
 import { DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR } from '../util/credential-process';
-import { type CliTokenSourceBundle, cliTokenSourceCacheKey, cliTokenSourceReport, cliTokenSourceRunCommand, cliTokenSourceTokenFromBundle, createCliTokenSource, loadCliTokenSourceStatus } from './token-source';
+import { type CliTokenSourceBundle, cliTokenSourceCacheKey, cliTokenSourceReport, cliTokenSourceTokenFromBundle, createCliTokenSource, loadCliTokenSourceStatus } from './token-source';
 import { type CliTokenSourceConfig, cliTokenSourceEnvVarNames, cliTokenSourceResolver, DEFAULT_CLI_TOKEN_SOURCE_NAME } from './token-source.config';
 import { buildCliTokenSourceShowResult, clearCliTokenSource, cliTokenSourceJsonConfigStore, type CliTokenSourceCommandConfig, setCliTokenSource, useCliTokenSource } from './token-source.command';
 
@@ -22,8 +23,6 @@ interface BundleCommand {
 /**
  * Writes a script that prints a token bundle — only when run as a credential process, like dbx-cli's
  * `external-token` — recording the arguments of each run, and returns the command that runs it.
- *
- * With `--scopes "<scopes>"`, the bundle's scopes are the requested ones (a narrowed mint).
  *
  * @param dir - Where to write the script.
  * @param bundle - Overrides merged over the default bundle.
@@ -63,10 +62,6 @@ if (failWith) {
   process.exit(1);
 }
 const bundle = ${JSON.stringify(fullBundle)};
-const scopesIndex = args.indexOf('--scopes');
-if (scopesIndex >= 0) {
-  bundle.scopes = args[scopesIndex + 1].split(' ');
-}
 process.stdout.write(JSON.stringify(bundle));
 `
   );
@@ -190,19 +185,9 @@ describe('dbx-cli token source', () => {
   });
 
   describe('cliTokenSourceCacheKey()', () => {
-    it('hashes the command alone without scopes', () => {
-      expect(cliTokenSourceCacheKey({ command: 'a' })).toBe(cliTokenSourceCacheKey({ command: 'a', scopes: [] }));
-    });
-
-    it('keys a narrowed request apart from the unnarrowed one, independent of scope order', () => {
-      const narrowed = cliTokenSourceCacheKey({ command: 'a', scopes: ['Mail.Read', 'User.Read'] });
-      expect(narrowed).not.toBe(cliTokenSourceCacheKey({ command: 'a' }));
-      expect(narrowed).toBe(cliTokenSourceCacheKey({ command: 'a', scopes: ['User.Read', 'Mail.Read', 'User.Read'] }));
-      expect(narrowed).not.toBe(cliTokenSourceCacheKey({ command: 'a', scopes: ['User.Read'] }));
-    });
-
-    it('refuses a scope that is unsafe to append to a shell command', () => {
-      expect(() => cliTokenSourceRunCommand({ command: 'a', scopes: ['User.Read"; rm -rf ~'] })).toThrow('Invalid scope');
+    it('keys by the sha256 of the command alone, so cached tokens keep hitting', () => {
+      expect(cliTokenSourceCacheKey({ command: 'a' })).toBe(`tokenSource:${createHash('sha256').update('a').digest('hex')}`);
+      expect(cliTokenSourceCacheKey({ command: 'a' })).not.toBe(cliTokenSourceCacheKey({ command: 'b' }));
     });
   });
 
@@ -218,20 +203,6 @@ describe('dbx-cli token source', () => {
       const cached = readTokenFile()[cliTokenSourceCacheKey({ command })] as Record<string, unknown>;
       expect(cached['accessToken']).toBe(MINTED_ACCESS_TOKEN);
       expect(JSON.stringify(readTokenFile())).not.toContain(command);
-    });
-
-    it('appends --scopes and caches the narrowed token under its own key', async () => {
-      const { command, runs } = bundleCommand(join(home, 'bin'));
-      const narrowed = await createCliTokenSource({ command, scopes: ['User.Read'], tokenCachePath: paths.tokenCachePath }).loadToken();
-      const wider = await createCliTokenSource({ command, tokenCachePath: paths.tokenCachePath }).loadToken();
-
-      expect(narrowed.scopes).toEqual(['User.Read']);
-      expect(wider.scopes).toEqual(['User.Read', 'Mail.Read']);
-      expect(runs()).toEqual([['--scopes', 'User.Read'], []]);
-
-      // the narrowed token is reused only for the same narrowed request
-      await createCliTokenSource({ command, scopes: ['User.Read'], tokenCachePath: paths.tokenCachePath }).loadToken();
-      expect(runs().length).toBe(2);
     });
 
     it('shares one run between concurrent loads and reuses the cached token in a new source', async () => {
@@ -333,10 +304,11 @@ describe('dbx-cli token source', () => {
     it('reports the loaded token without the access token', async () => {
       const { command } = bundleCommand(join(home, 'bin'));
       const resolver = cliTokenSourceResolver({ cliName: 'test-cli', env: {} });
-      const status = await loadCliTokenSourceStatus({ resolver, fileConfig: { tokenSource: { command } }, tokenCachePath: paths.tokenCachePath, scopes: ['User.Read'] });
+      const status = await loadCliTokenSourceStatus({ resolver, fileConfig: { tokenSource: { command } }, tokenCachePath: paths.tokenCachePath });
       const report = cliTokenSourceReport(status!);
 
-      expect(report).toMatchObject({ requestedScopes: ['User.Read'], scopes: ['User.Read'], providerType: 'microsoft' });
+      expect(report).toMatchObject({ scopes: ['User.Read', 'Mail.Read'], providerType: 'microsoft' });
+      expect(report).not.toHaveProperty('requestedScopes');
       expect(JSON.stringify(report)).not.toContain(MINTED_ACCESS_TOKEN);
     });
   });

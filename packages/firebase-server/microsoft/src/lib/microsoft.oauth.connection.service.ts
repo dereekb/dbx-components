@@ -110,10 +110,9 @@ export function microsoftUserExternalConnectionCredentials(input: MicrosoftUserE
  * - The identity comes from the id token (`oid`, `tid`, `preferred_username`), falling back to Graph
  *   `/me` when the token carries no `oid`.
  * - `refreshCredentials` returns the ROTATED refresh token, which the reader persists under its lease.
- * - There is NO `narrowAccessToken`: Entra accepts a scope subset on a refresh, but the token it issues
- *   carries EVERY scope consented for Graph, whatever was asked for. Microsoft is therefore a
- *   non-narrowing provider: a mint hands out the stored token, refused when the connection's grant
- *   exceeds the caller's ceiling. The connect's scope preset is the only scope control.
+ * - Entra issues EVERY Graph scope the user consented to in each access token, whatever a request names.
+ *   So the connect's scope preset is the only scope control: a token mint hands out the stored token,
+ *   refused when the connection's grant exceeds the caller's ceiling.
  * - There is NO `revokeCredentials`: Entra has no per-grant revoke, so a disconnect forgets the stored
  *   credentials and the access token lapses within its hour.
  * - A connect whose grant exceeds what it requested is REFUSED by default (the provider policy's

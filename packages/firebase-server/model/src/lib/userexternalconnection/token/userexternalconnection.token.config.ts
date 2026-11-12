@@ -52,9 +52,11 @@ export const USER_EXTERNAL_CONNECTION_TOKEN_PREDICATE = 'USER_EXTERNAL_CONNECTIO
 /**
  * Per-provider scope ceilings for the token mint, keyed by the caller's OIDC scopes.
  *
- * Lets one connection be minted out at different widths: a CLI grant holding
- * `token.external.ms_graph_read` gets a read-only token, one holding `token.external.ms_graph_admin`
- * gets read + write — from the same stored connection, without a second OAuth client.
+ * Caps which connections a caller may mint from. The mint hands out a connection's stored token only when
+ * its whole grant fits inside the caller's ceiling. A CLI grant holding `token.external.ms_graph_read` can
+ * mint from a connection made with the Read preset, but is refused one made with Read + Write. A grant
+ * holding `token.external.ms_graph_admin` can mint from either. No provider narrows a token below its
+ * connection's grant.
  */
 export interface UserExternalConnectionTokenProviderScopeConfig {
   /**
@@ -110,11 +112,11 @@ export abstract class UserExternalConnectionTokenApiModuleConfig {
   /**
    * Per-provider scope ceilings, keyed by the caller's OIDC scopes.
    *
-   * A provider listed here mints only what the caller's OIDC scopes allow: a provider that can narrow
-   * (it implements `narrowAccessToken`) mints a token carrying just the ceiling (or the requested
-   * `scopes`), and one that cannot is refused unless its whole grant fits inside the ceiling. A
-   * provider absent from the list has no ceiling. A non-OIDC caller (see {@link allowNonOidcCallers})
-   * carries no scopes and so gets no ceiling either, matching how the scope requirement skips it.
+   * A provider listed here mints its stored token only when the connection's whole grant (normalized
+   * through the provider's `normalizeScopes`) fits inside the caller's ceiling. An unknown grant never
+   * fits, and an OIDC caller holding none of the mapped scopes is refused. A provider absent from the
+   * list has no ceiling. A non-OIDC caller (see {@link allowNonOidcCallers}) carries no scopes and so gets
+   * no ceiling either, matching how the scope requirement skips it.
    */
   readonly providerScopes?: Maybe<readonly UserExternalConnectionTokenProviderScopeConfig[]>;
 }

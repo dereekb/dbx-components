@@ -23,8 +23,7 @@ export interface UserExternalConnectionScopePreset {
    */
   readonly key: UserExternalConnectionScopePresetKey;
   /**
-   * Short human-readable label, e.g. `Read + Write`. Shown on the connect buttons and named in the
-   * reconnect hint a mint returns when the connection lacks scopes.
+   * Short human-readable label, e.g. `Read + Write`. Shown on the connect and switch actions.
    */
   readonly label: string;
   /**
@@ -72,49 +71,6 @@ export function userExternalConnectionScopePresetForCapabilities(input: UserExte
 
     for (const preset of presets) {
       if (preset.scopes.every((scope) => granted.has(scope)) && (!result || preset.scopes.length > result.scopes.length)) {
-        result = preset;
-      }
-    }
-  }
-
-  return result;
-}
-
-/**
- * Input for {@link smallestUserExternalConnectionScopePresetCovering}.
- */
-export interface SmallestUserExternalConnectionScopePresetCoveringInput {
-  /**
-   * The provider's presets.
-   */
-  readonly presets: Maybe<readonly UserExternalConnectionScopePreset[]>;
-  /**
-   * The scopes that must all be covered.
-   */
-  readonly scopes: readonly UserExternalConnectionCapability[];
-}
-
-/**
- * Returns the smallest preset whose scopes include every one of the given scopes — the preset a user
- * should reconnect with when a mint asks for scopes their connection was not granted.
- *
- * "Smallest" is by scope count; on a tie the earlier preset wins. Returns undefined when no preset
- * covers them all.
- *
- * @param input - The presets and the scopes to cover.
- * @returns The covering preset with the fewest scopes, if any.
- *
- * @__NO_SIDE_EFFECTS__
- */
-export function smallestUserExternalConnectionScopePresetCovering(input: SmallestUserExternalConnectionScopePresetCoveringInput): Maybe<UserExternalConnectionScopePreset> {
-  const { presets, scopes } = input;
-  let result: Maybe<UserExternalConnectionScopePreset>;
-
-  if (presets?.length) {
-    for (const preset of presets) {
-      const presetScopes = new Set(preset.scopes);
-
-      if (scopes.every((scope) => presetScopes.has(scope)) && (!result || preset.scopes.length < result.scopes.length)) {
         result = preset;
       }
     }

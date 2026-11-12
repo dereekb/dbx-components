@@ -62,10 +62,10 @@ export const TRELLO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE: KnownUserExternalCon
 /**
  * Provider type for Microsoft (Microsoft Graph through a single-tenant Entra ID app registration).
  *
- * One connection per user, connected with a scope preset (Read, or Read + Write) rather than a
- * Zoho-style read/admin pair: Microsoft's refresh grant accepts any subset of the consented scopes, so
- * a token mint can narrow per request. An app may register it under its own provider type (e.g.
- * `ms_graph`) through the adapter's `providerType` override.
+ * One connection per user, connected with a scope preset (Read, or Read + Write). Entra puts every Graph
+ * scope the user has consented to in each access token, whatever a request names. So the preset decides
+ * what a minted token carries; a token cannot be narrowed below it. An app may register it under its own
+ * provider type (e.g. `ms_graph`) through the adapter's `providerType` override.
  */
 export const MICROSOFT_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE: KnownUserExternalConnectionProviderType = 'microsoft';
 

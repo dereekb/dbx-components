@@ -2,7 +2,7 @@ import { CLI_EXIT_CODE_AUTH, CliError, cliTokenSourceSelectionFromArgv, createCo
 import { MicrosoftGraphError, type MicrosoftGraphFactoryConfig } from '@dereekb/microsoft';
 import { type Maybe } from '@dereekb/util';
 import type { Arguments, MiddlewareFunction } from 'yargs';
-import { MSGRAPH_CLI_NAME, msGraphCliPaths, msGraphCliScopesFromArgv, msGraphCliTokenSourceCommandConfig } from '../config/cli.config';
+import { MSGRAPH_CLI_NAME, msGraphCliPaths, msGraphCliTokenSourceCommandConfig } from '../config/cli.config';
 import { createMsGraphCliContext, type MsGraphCliContext } from '../context/cli.context';
 
 /**
@@ -22,7 +22,6 @@ export const MSGRAPH_CLI_NO_TOKEN_SOURCE_HINT = `Run: ${MSGRAPH_CLI_NAME} auth t
  */
 export interface MsGraphCliAuthArgs {
   readonly tokenSource?: unknown;
-  readonly scopes?: unknown;
 }
 
 /**
@@ -34,7 +33,7 @@ export interface CreateMsGraphCliAuthMiddlewareConfig {
    */
   readonly skipCommands: ReadonlySet<string>;
   /**
-   * The environment to read the config dir, token-source and scope env vars from. Defaults to `process.env`.
+   * The environment to read the config dir and token-source env vars from. Defaults to `process.env`.
    */
   readonly env?: Maybe<NodeJS.ProcessEnv>;
   /**
@@ -45,11 +44,11 @@ export interface CreateMsGraphCliAuthMiddlewareConfig {
 
 /**
  * Resolves the {@link MsGraphCliContext} for a run: the active token source (`--token-source`,
- * `MSGRAPH_CLI_TOKEN_SOURCE`, `MSGRAPH_CLI_TOKEN_COMMAND`, the saved selection), narrowed to `--scopes`.
+ * `MSGRAPH_CLI_TOKEN_SOURCE`, `MSGRAPH_CLI_TOKEN_COMMAND`, the saved selection).
  *
  * msgraph-cli authenticates ONLY through a token source; there is no `auth login`.
  *
- * @param argv - The parsed arguments (`tokenSource`, `scopes`).
+ * @param argv - The parsed arguments (`tokenSource`).
  * @param config - The env and Graph client overrides.
  * @returns The context.
  * @throws {CliError} `NOT_CONFIGURED` when no token source is active.
@@ -64,7 +63,7 @@ export async function resolveMsGraphCliContext(argv: Maybe<MsGraphCliAuthArgs>, 
     throw new CliError({ message: 'No token source is configured.', code: 'NOT_CONFIGURED', suggestion: MSGRAPH_CLI_NO_TOKEN_SOURCE_HINT });
   }
 
-  return createMsGraphCliContext({ active, tokenCachePath, scopes: msGraphCliScopesFromArgv(argv, env), graphFactoryConfig: config?.graphFactoryConfig });
+  return createMsGraphCliContext({ active, tokenCachePath, graphFactoryConfig: config?.graphFactoryConfig });
 }
 
 /**

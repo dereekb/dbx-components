@@ -105,10 +105,10 @@ export class MicrosoftOAuthApi {
   }
 
   /**
-   * Refreshes an access token and maps the response to a {@link MicrosoftOAuthAccessToken}. A requested
-   * scope subset does not narrow the token: its `scopes` are every scope consented for the resource.
+   * Refreshes an access token and maps the response to a {@link MicrosoftOAuthAccessToken}. Its `scopes`
+   * are every scope the user has consented to for the resource.
    *
-   * @param input - The stored refresh token and the optional scope subset.
+   * @param input - The stored refresh token.
    * @returns The refreshed access token, carrying the rotated refresh token.
    */
   async refreshToAccessToken(input: MicrosoftOAuthRefreshTokenInput): Promise<MicrosoftOAuthAccessToken> {

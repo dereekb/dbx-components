@@ -66,14 +66,15 @@ export const LMS_OIDC_SCOPE = 'lms' as const;
 export const REPORTS_OIDC_SCOPE = 'reports' as const;
 
 /**
- * Narrows a `microsoft` token mint to the Read preset's Graph scopes — the `providerScopes` ceiling
- * `DemoExternalConnectionTokenApiModule` maps it to. Carried alongside `token.external` (which still
- * gates the mint itself) and unlocked by the admin-only `external-token` provider profile.
+ * Caps a `microsoft` token mint at the Read preset's Graph scopes — the `providerScopes` ceiling
+ * `DemoExternalConnectionTokenApiModule` maps it to: a caller holding it can mint from a Read connection,
+ * never a Read + Write one. Carried alongside `token.external` (which still gates the mint itself) and
+ * unlocked by the admin-only `external-token` provider profile.
  */
 export const MICROSOFT_READ_EXTERNAL_TOKEN_OIDC_SCOPE = 'token.external.microsoft_read' as const;
 
 /**
- * Narrows a `microsoft` token mint to the Read + Write preset's Graph scopes. See
+ * Caps a `microsoft` token mint at the Read + Write preset's Graph scopes. See
  * {@link MICROSOFT_READ_EXTERNAL_TOKEN_OIDC_SCOPE}.
  */
 export const MICROSOFT_ADMIN_EXTERNAL_TOKEN_OIDC_SCOPE = 'token.external.microsoft_admin' as const;
@@ -242,7 +243,7 @@ export function demoOidcProviderProfiles(config: DemoOidcProviderProfilesConfig 
       maxSessionTtl: DEMO_EXTERNAL_TOKEN_OIDC_MAX_SESSION_TTL,
       scopes: [
         { scope: EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE, require: 'none' },
-        // the microsoft mint's narrowing ceilings; useful only together with token.external
+        // the microsoft mint's scope ceilings; useful only together with token.external
         { scope: MICROSOFT_READ_EXTERNAL_TOKEN_OIDC_SCOPE, require: 'none' },
         { scope: MICROSOFT_ADMIN_EXTERNAL_TOKEN_OIDC_SCOPE, require: 'none' }
       ]
