@@ -7,6 +7,8 @@ import { msGraphCommandHandler } from '../middleware/auth.middleware';
 import { msGraphCliMailboxOptions, msGraphCliPagingOptions, parseMsGraphCliDateOption, readMsGraphCliIdsOption } from '../util/option';
 import { DEFAULT_MSGRAPH_CLI_MAIL_DUMP_MAX_MESSAGES, dumpMsGraphCliMail } from '../util/mail.dump';
 import { outputMsGraphCliResult } from '../util/output';
+import { MAIL_MAILBOXES_COMMAND } from './mail.mailboxes.command';
+import { MAIL_WRITE_COMMANDS } from './mail.write.command';
 
 /**
  * GETs a mail list or search: the first page (with its `@odata.nextLink`), or with `--all-pages` every
@@ -198,11 +200,21 @@ export const MAIL_DUMP_COMMAND: CommandModule = {
 };
 
 /**
- * The `mail` command: `list`, `search`, `get`, `get-many` and `dump`.
+ * The `mail` command: reads (`list`, `search`, `get`, `get-many`, `dump`) and writes (`draft`, `send`,
+ * `send-bulk`, `reply`, `forward`, `move`, `copy`, `delete`), and `mailboxes check` for shared mailboxes.
  */
 export const MAIL_COMMAND: CommandModule = {
   command: 'mail',
-  describe: "Read the user's (or a shared mailbox's) Outlook mail",
-  builder: (yargs: Argv) => yargs.command(MAIL_LIST_COMMAND).command(MAIL_SEARCH_COMMAND).command(MAIL_GET_COMMAND).command(MAIL_GET_MANY_COMMAND).command(MAIL_DUMP_COMMAND).demandCommand(1, 'Please specify a mail subcommand.'),
+  describe: "Read and write the user's (or a shared mailbox's) Outlook mail",
+  builder: (yargs: Argv) =>
+    yargs
+      .command(MAIL_LIST_COMMAND)
+      .command(MAIL_SEARCH_COMMAND)
+      .command(MAIL_GET_COMMAND)
+      .command(MAIL_GET_MANY_COMMAND)
+      .command(MAIL_DUMP_COMMAND)
+      .command([...MAIL_WRITE_COMMANDS])
+      .command(MAIL_MAILBOXES_COMMAND)
+      .demandCommand(1, 'Please specify a mail subcommand.'),
   handler: () => undefined
 };

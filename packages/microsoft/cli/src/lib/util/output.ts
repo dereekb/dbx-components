@@ -1,5 +1,5 @@
 import { type CliErrorOutput, type CliOutputPickApplier, DEFAULT_CLI_SECRET_PATTERNS, appendCliErrorMapper, cliCollectionPickApplier, configureCliSecretPatterns, outputResult, sanitizeString } from '@dereekb/dbx-cli';
-import { MicrosoftGraphError, isMicrosoftGraphAdminConsentScope, isMicrosoftGraphNotFoundError, isMicrosoftGraphServiceError, readMicrosoftGraphRequiredScopesFromErrorMessage } from '@dereekb/microsoft';
+import { MicrosoftGraphError, MicrosoftGraphMessageNotDraftError, isMicrosoftGraphAdminConsentScope, isMicrosoftGraphNotFoundError, isMicrosoftGraphServiceError, readMicrosoftGraphRequiredScopesFromErrorMessage } from '@dereekb/microsoft';
 import { type Maybe } from '@dereekb/util';
 import { FetchResponseError, FetchTimeoutError } from '@dereekb/util/fetch';
 import { MSGRAPH_CLI_NAME } from '../config/cli.config';
@@ -15,6 +15,22 @@ export const MSGRAPH_CLI_JWT_SECRET_PATTERN = /eyJ[\w-]{8,}\.[\w-]{8,}\.[\w-]+/g
 export const MSGRAPH_CLI_SERVICE_STATUS_URL = 'https://status.cloud.microsoft';
 
 const MSGRAPH_CLI_SERVICE_UNAVAILABLE_SUGGESTION = `Microsoft's service failed, not the request. Check ${MSGRAPH_CLI_SERVICE_STATUS_URL} for an incident and retry later.`;
+
+/**
+ * Exchange's code for a mailbox the user may not open (a shared mailbox without Full Access).
+ */
+export const MSGRAPH_CLI_ACCESS_DENIED_CODE = 'ErrorAccessDenied';
+
+/**
+ * Exchange's code for a mailbox address that does not resolve.
+ */
+export const MSGRAPH_CLI_INVALID_USER_CODE = 'ErrorInvalidUser';
+
+/**
+ * Added to `SCOPE_DENIED` when Exchange denied access to a mailbox.
+ */
+export const MSGRAPH_CLI_SHARED_MAILBOX_DENIED_HINT =
+  'For another mailbox (--mailbox), the token also needs the *.Shared scope (Mail.Read.Shared, Mail.ReadWrite.Shared, Mail.Send.Shared) and the user needs an Exchange permission on it (Full Access; Send As or Send on Behalf to send). Probe it with: mail mailboxes check <address>';
 
 /**
  * Builds the `SCOPE_DENIED` suggestion. When Graph's message names the scopes the call needs ("API
@@ -58,12 +74,13 @@ export function isMsGraphCliTimeoutError(error: unknown): boolean {
  *
  * - 401: `TOKEN_REJECTED`. The command handler has already cleared the cached token, so a re-run mints a new one.
  * - 403: `SCOPE_DENIED`. The token lacks a scope the call needs; the suggestion names it when Graph does.
- * - 404 / `itemNotFound` / `ErrorItemNotFound`: `NOT_FOUND`.
+ * - 403 `ErrorAccessDenied` adds the shared-mailbox permissions to the `SCOPE_DENIED` suggestion.
+ * - 404 / `itemNotFound` / `ErrorItemNotFound` / `ErrorInvalidUser`: `NOT_FOUND`.
  * - 429: `RATE_LIMITED`.
  * - 5xx / `UnknownError`: `SERVICE_UNAVAILABLE` (Microsoft's side failed).
  *
- * A non-Graph error body with a 404 or 5xx status maps to `NOT_FOUND` / `SERVICE_UNAVAILABLE` too, and a
- * timeout or abort to `TIMEOUT`. Other errors return undefined so the default mapping applies.
+ * A non-Graph error body with a 404 or 5xx status maps to `NOT_FOUND` / `SERVICE_UNAVAILABLE` too, a
+ * timeout or abort to `TIMEOUT`, and a `draft update` of a sent message to `NOT_A_DRAFT`. Other errors return undefined so the default mapping applies.
  *
  * @param error - The thrown value.
  * @returns The envelope, or undefined when the error is not one msgraph-cli maps.
@@ -78,9 +95,12 @@ export function msGraphCliErrorOutput(error: unknown): CliErrorOutput | undefine
     if (error.status === 401) {
       result = { ...base, code: 'TOKEN_REJECTED', suggestion: `Microsoft rejected the access token; the cached token was cleared, so re-run to mint a new one. If it keeps failing, check the token source: ${MSGRAPH_CLI_NAME} auth show` };
     } else if (error.status === 403) {
-      result = { ...base, code: 'SCOPE_DENIED', suggestion: msGraphCliScopeDeniedSuggestion(error.data.message) };
+      const sharedHint = error.code === MSGRAPH_CLI_ACCESS_DENIED_CODE ? ` ${MSGRAPH_CLI_SHARED_MAILBOX_DENIED_HINT}` : '';
+      result = { ...base, code: 'SCOPE_DENIED', suggestion: `${msGraphCliScopeDeniedSuggestion(error.data.message)}${sharedHint}` };
     } else if (error.status === 429) {
       result = { ...base, code: 'RATE_LIMITED', suggestion: 'Microsoft Graph throttled the request. Wait and retry.' };
+    } else if (error.code === MSGRAPH_CLI_INVALID_USER_CODE) {
+      result = { ...base, code: 'NOT_FOUND', suggestion: 'Check the --mailbox address: Graph found no mailbox for it (or it is not enabled for the REST API).' };
     } else if (isMicrosoftGraphNotFoundError(error)) {
       result = { ...base, code: 'NOT_FOUND', suggestion: 'Check the id or path. A mail id read without immutable ids changes when the message moves to another folder.' };
     } else if (isMicrosoftGraphServiceError(error)) {
@@ -96,6 +116,8 @@ export function msGraphCliErrorOutput(error: unknown): CliErrorOutput | undefine
     } else if (httpStatus >= 500) {
       result = { ok: false, error: sanitizeString(error.message), code: 'SERVICE_UNAVAILABLE', httpStatus, suggestion: MSGRAPH_CLI_SERVICE_UNAVAILABLE_SUGGESTION };
     }
+  } else if (error instanceof MicrosoftGraphMessageNotDraftError) {
+    result = { ok: false, error: error.message, code: 'NOT_A_DRAFT', suggestion: 'The message was already sent. Use mail reply / mail forward to follow up on it.' };
   } else if (isMsGraphCliTimeoutError(error)) {
     result = { ok: false, error: sanitizeString((error as Error).message), code: 'TIMEOUT', suggestion: `Microsoft Graph did not answer within the client timeout. Retry; if it keeps timing out, check ${MSGRAPH_CLI_SERVICE_STATUS_URL}.` };
   }

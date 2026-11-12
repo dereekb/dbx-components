@@ -12,6 +12,9 @@ import { configureMsGraphCliOutput, msGraphCliErrorOutput, msGraphCliScopeDenied
 import { REQUEST_COMMAND, msGraphCliContentTypeForFile, parseMsGraphCliHeaderOptions } from './commands/request.command';
 import { MAIL_GET_COMMAND, MAIL_GET_MANY_COMMAND, MAIL_LIST_COMMAND, MAIL_SEARCH_COMMAND } from './commands/mail.command';
 import { parseMsGraphCliDateOption, parseMsGraphCliIdsFileContent } from './util/option';
+import { MAIL_DELETE_COMMAND, MAIL_DRAFT_CREATE_COMMAND, MAIL_DRAFT_UPDATE_COMMAND, MAIL_REPLY_COMMAND, MAIL_SEND_COMMAND } from './commands/mail.write.command';
+import { msGraphCliConfigSetUpdate } from './commands/config.command';
+import { MAIL_MAILBOXES_CHECK_COMMAND } from './commands/mail.mailboxes.command';
 
 // what the entry point does at startup
 configureMsGraphCliOutput();
@@ -395,6 +398,187 @@ describe('msgraph-cli', () => {
       expect(printed.data).toEqual([
         { id: 'a', subject: 'A' },
         { id: 'b', error: { status: 404, code: 'ErrorItemNotFound', message: 'Not found.' } }
+      ]);
+    });
+  });
+
+  describe('mail write commands', () => {
+    async function connect(fetchHandler: FetchHandler) {
+      await createMsGraphCliAuthMiddleware({ skipCommands: new Set(), env: { ...env, MSGRAPH_CLI_TOKEN_COMMAND: source.command }, graphFactoryConfig: { fetchHandler } })({ _: ['mail'], $0: 'msgraph-cli' });
+    }
+
+    function runCommand(command: { handler: unknown }, argv: Record<string, unknown>): Promise<void> {
+      return (command.handler as (argv: unknown) => Promise<void>)({ _: ['mail'], $0: 'msgraph-cli', signature: false, ...argv });
+    }
+
+    function printed(log: { mock: { calls: unknown[][] } }) {
+      return JSON.parse(log.mock.calls[0][0] as string);
+    }
+
+    it('should refuse mail send without --yes and call no Graph endpoint', async () => {
+      const graph = interceptGraph({ status: 202, body: null });
+      await connect(graph.fetchHandler);
+      const exit = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+      await runCommand(MAIL_SEND_COMMAND, { to: ['ada@example.com'], subject: 'Hi', body: 'x' });
+
+      expect(exit).toHaveBeenCalledWith(1);
+      expect(printed(log).code).toBe('CONFIRMATION_REQUIRED');
+      expect(graph.requests).toHaveLength(0);
+    });
+
+    it('should print the sendMail call with recipients redacted on --dry-run and send nothing', async () => {
+      const graph = interceptGraph({ status: 202, body: null });
+      await connect(graph.fetchHandler);
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+      await runCommand(MAIL_SEND_COMMAND, { to: ['ada@example.com', 'bob@example.com'], subject: 'Hi', body: 'x', mailbox: 'shared@example.com', dryRun: true, save: false });
+
+      const text = log.mock.calls[0][0] as string;
+      expect(text).not.toContain('ada@example.com');
+      const data = JSON.parse(text).data;
+      expect(data.dryRun).toBe(true);
+      expect(data.requests[0].url).toBe('/users/shared%40example.com/sendMail');
+      expect(data.requests[0].body.message.toRecipients).toBe('[2 recipients]');
+      expect(data.requests[0].body.saveToSentItems).toBe(false);
+      expect(graph.requests).toHaveLength(0);
+    });
+
+    it('should send with --yes and print only the recipient count', async () => {
+      // models: M-c (user-sendmail) — 202 with no body
+      const graph = interceptGraph({ status: 202, body: null });
+      await connect(graph.fetchHandler);
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+      await runCommand(MAIL_SEND_COMMAND, { to: ['ada@example.com'], cc: ['bob@example.com'], subject: 'Hi', body: 'x', yes: true });
+
+      expect(new URL(graph.requests[0].url).pathname).toBe('/v1.0/me/sendMail');
+      expect(printed(log).data).toEqual({ sent: true, recipients: 2 });
+    });
+
+    it('should refuse a reply with both --comment and --body', async () => {
+      const graph = interceptGraph({ status: 202, body: null });
+      await connect(graph.fetchHandler);
+      const exit = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+      await runCommand(MAIL_REPLY_COMMAND, { id: 'm1', comment: 'Thanks', body: 'x', yes: true });
+
+      expect(exit).toHaveBeenCalledWith(1);
+      expect(printed(log).code).toBe('INVALID_ARGUMENT');
+      expect(graph.requests).toHaveLength(0);
+    });
+
+    it('should map draft update of a sent message to NOT_A_DRAFT', async () => {
+      // models: M-b (message-update) — isDraft false: the PATCH is never sent
+      const graph = interceptGraph({ status: 200, body: { id: 'm1', isDraft: false } });
+      await connect(graph.fetchHandler);
+      const exit = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+      await runCommand(MAIL_DRAFT_UPDATE_COMMAND, { id: 'm1', subject: 'New' });
+
+      expect(exit).toHaveBeenCalledWith(1);
+      expect(printed(log).code).toBe('NOT_A_DRAFT');
+      expect(graph.requests).toHaveLength(1);
+    });
+
+    it('should delete through $batch with --yes and print a per-id table', async () => {
+      await connect(async () => {
+        // models: json-batching — per-item status
+        const responses = [
+          { id: '0', status: 201, body: { id: 'a' } },
+          { id: '1', status: 404, body: { error: { code: 'ErrorItemNotFound', message: 'Not found.' } } }
+        ];
+        return new Response(JSON.stringify({ responses }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      });
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+      await runCommand(MAIL_DELETE_COMMAND, { ids: ['a', 'b'], yes: true });
+
+      const data = printed(log).data;
+      expect(data.total).toBe(2);
+      expect(data.failed).toBe(1);
+      expect(data.results[1]).toEqual({ id: 'b', ok: false, status: 404, code: 'ErrorItemNotFound', message: 'Not found.' });
+    });
+
+    it('should append the saved signature-file to a new draft unless --no-signature', async () => {
+      const configDir = join(dir, 'config');
+      vi.stubEnv(MSGRAPH_CLI_CONFIG_DIR_ENV_VAR, configDir);
+      const signatureFile = join(dir, 'signature.html');
+      writeFileSync(signatureFile, '<p>Ada Lovelace</p>');
+      // what `msgraph-cli config set signature-file <file>` saves
+      await msGraphCliConfigStore(msGraphCliPaths({ [MSGRAPH_CLI_CONFIG_DIR_ENV_VAR]: configDir })).updateConfigFile(await msGraphCliConfigSetUpdate('signature-file', signatureFile));
+
+      const bodies: unknown[] = [];
+      await connect(async (request: Request) => {
+        bodies.push(await request.json());
+        return new Response(JSON.stringify({ id: 'd1', isDraft: true }), { status: 201, headers: { 'Content-Type': 'application/json' } });
+      });
+
+      vi.spyOn(console, 'log').mockImplementation(() => undefined);
+      await runCommand(MAIL_DRAFT_CREATE_COMMAND, { to: ['ada@example.com'], subject: 'Hi', body: '<p>Hi</p>', html: true, signature: true });
+      await runCommand(MAIL_DRAFT_CREATE_COMMAND, { to: ['ada@example.com'], subject: 'Hi', body: 'Hi', signature: false });
+
+      expect((bodies[0] as { body: unknown }).body).toEqual({ contentType: 'html', content: '<p>Hi</p><br><br><p>Ada Lovelace</p>' });
+      expect((bodies[1] as { body: unknown }).body).toEqual({ contentType: 'text', content: 'Hi' });
+      vi.unstubAllEnvs();
+    });
+  });
+
+  describe('shared mailboxes', () => {
+    it('should name the shared-mailbox permissions on ErrorAccessDenied and the address on ErrorInvalidUser', async () => {
+      // models: docs-mail G (outlook-share-messages-folders) — Exchange denies a mailbox without Full Access; an unknown address is ErrorInvalidUser
+      const cases = [
+        { status: 403, code: 'ErrorAccessDenied', expected: 'SCOPE_DENIED', hint: 'Full Access' },
+        { status: 404, code: 'ErrorInvalidUser', expected: 'NOT_FOUND', hint: '--mailbox' }
+      ];
+
+      for (const x of cases) {
+        const graph = interceptGraph({ status: x.status, body: { error: { code: x.code, message: 'Access is denied.' } } });
+        const context = await resolveMsGraphCliContext({}, { env: { ...env, MSGRAPH_CLI_TOKEN_COMMAND: source.command }, graphFactoryConfig: { fetchHandler: graph.fetchHandler } });
+        const error = await microsoftGraphRequest(context.graphContext)({ method: 'GET', path: '/users/shared%40example.com/messages' }).catch((e) => e);
+        const output = msGraphCliErrorOutput(error);
+        expect(output?.code).toBe(x.expected);
+        expect(output?.suggestion).toContain(x.hint);
+      }
+    });
+
+    it('should probe read and write per mailbox, deleting the probe draft', async () => {
+      const calls: string[] = [];
+      await createMsGraphCliAuthMiddleware({
+        skipCommands: new Set(),
+        env: { ...env, MSGRAPH_CLI_TOKEN_COMMAND: source.command },
+        graphFactoryConfig: {
+          fetchHandler: async (request: Request) => {
+            const url = new URL(request.url);
+            calls.push(`${request.method} ${url.pathname}`);
+            let response: Response;
+
+            if (url.pathname.startsWith('/v1.0/users/denied')) {
+              // models: C2 (pending live test) — a mailbox without Full Access answers 403 ErrorAccessDenied
+              response = new Response(JSON.stringify({ error: { code: 'ErrorAccessDenied', message: 'Access is denied.' } }), { status: 403, headers: { 'Content-Type': 'application/json' } });
+            } else if (request.method === 'POST' && url.pathname.endsWith('/permanentDelete')) {
+              response = new Response(null, { status: 204 });
+            } else if (request.method === 'POST') {
+              response = new Response(JSON.stringify({ id: 'probe-1', isDraft: true }), { status: 201, headers: { 'Content-Type': 'application/json' } });
+            } else {
+              response = new Response(JSON.stringify({ value: [{ id: 'm1' }] }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+            }
+
+            return response;
+          }
+        }
+      })({ _: ['mail'], $0: 'msgraph-cli' });
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+      await (MAIL_MAILBOXES_CHECK_COMMAND.handler as (argv: unknown) => Promise<void>)({ _: ['mail'], $0: 'msgraph-cli', mailboxes: ['shared@example.com', 'denied@example.com'], write: true });
+
+      expect(calls).toEqual(['GET /v1.0/users/shared%40example.com/messages', 'POST /v1.0/users/shared%40example.com/messages', 'POST /v1.0/users/shared%40example.com/messages/probe-1/permanentDelete', 'GET /v1.0/users/denied%40example.com/messages']);
+      expect(JSON.parse(log.mock.calls[0][0] as string).data).toEqual([
+        { mailbox: 'shared@example.com', read: 'ok', write: 'ok' },
+        { mailbox: 'denied@example.com', read: 'denied', write: 'skipped', readCode: 'ErrorAccessDenied' }
       ]);
     });
   });

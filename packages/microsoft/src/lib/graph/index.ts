@@ -5,5 +5,7 @@ export * from './graph.error.api';
 export * from './graph.factory';
 export * from './graph.header';
 export * from './graph.mail.api';
+export * from './graph.mail.write.api';
 export * from './graph.raw.api';
 export * from './graph.type';
+export * from './graph.upload.api';

@@ -18,10 +18,20 @@ export const MSGRAPH_CLI_CONFIG_DIR_ENV_VAR = 'MSGRAPH_CLI_CONFIG_DIR';
 export type MsGraphCliTokenSourceConfig = CliTokenSourceConfig;
 
 /**
- * The msgraph-cli config file: the saved token sources and the output settings.
+ * The msgraph-cli config file: the saved token sources, the output settings and the mail defaults.
  */
 export interface MsGraphCliConfigFile extends CliTokenSourceConfigFile<MsGraphCliTokenSourceConfig> {
   readonly output?: Maybe<CliOutputConfig>;
+  /**
+   * The signature file appended to new messages, replies and forwards (`msgraph-cli config set signature-file`).
+   * Graph cannot read the Outlook signature, so it is exported to a file once.
+   */
+  readonly signatureFile?: Maybe<string>;
+  /**
+   * Known shared mailbox addresses (`msgraph-cli config set mailboxes a@x,b@y`). Graph cannot list the
+   * mailboxes a user may open, so they are recorded here for `mail mailboxes check`.
+   */
+  readonly mailboxes?: Maybe<string[]>;
 }
 
 /**

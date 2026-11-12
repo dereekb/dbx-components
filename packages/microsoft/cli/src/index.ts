@@ -3,6 +3,7 @@ import yargs, { type CommandModule } from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { AUTH_COMMAND } from './lib/commands/auth.command';
 import { CALENDAR_COMMAND } from './lib/commands/calendar.command';
+import { CONFIG_COMMAND } from './lib/commands/config.command';
 import { FILES_COMMAND } from './lib/commands/files.command';
 import { MAIL_COMMAND } from './lib/commands/mail.command';
 import { REQUEST_COMMAND } from './lib/commands/request.command';
@@ -32,7 +33,7 @@ const apiCommands: CommandModule[] = [REQUEST_COMMAND, MAIL_COMMAND, CALENDAR_CO
 /**
  * Config commands: they run without a token source and their output is never filtered.
  */
-const configCommands: CommandModule[] = [AUTH_COMMAND, outputCommand];
+const configCommands: CommandModule[] = [AUTH_COMMAND, CONFIG_COMMAND, outputCommand];
 const configCommandNames = new Set(configCommands.map((cmd) => (cmd.command as string).split(' ')[0]));
 
 const outputMiddleware = createOutputMiddleware({
