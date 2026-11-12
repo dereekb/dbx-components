@@ -155,7 +155,8 @@ export const DEFAULT_DEMO_PROD_EXTERNAL_TOKEN_ENV: CliEnvDefault = {
 
 /**
  * {@link DEMO_CLI_EXTERNAL_TOKEN_SCOPES} plus the `token.external.microsoft_read` ceiling: a `microsoft`
- * mint from this grant is narrowed to the Read preset's Graph scopes.
+ * mint from this grant is capped at the Read preset's Graph scopes — refused when the connection's grant
+ * reaches past them, since Microsoft cannot narrow a token.
  *
  * A `microsoft` mint needs one of the two ceiling scopes on top of `token.external` — a grant holding
  * neither is refused with a 403 (`..._SCOPE_FORBIDDEN`), which is why the plain `external-token` env

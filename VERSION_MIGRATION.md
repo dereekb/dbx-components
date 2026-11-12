@@ -12,13 +12,16 @@
   declare with `USER_EXTERNAL_CONNECTION_SCOPE_PRESET_NOT_ALLOWED` (400).
 - **Provider hooks** on `AbstractUserExternalConnectionOAuthService`: `normalizeScopes?(scopes)` canonicalizes scope
   strings, and `narrowAccessToken?({ uid, credentials, scopes })` mints an access token for a subset of the grant with no
-  new OAuth round trip. Plus `scopePresets`, `defaultScopePreset` and `scopePresetForKey(key)`.
+  new OAuth round trip. Plus `scopePresets`, `defaultScopePreset` and `scopePresetForKey(key)`. Implement
+  `narrowAccessToken` only when the provider truly issues a token limited to the subset: the mint refuses (403
+  `..._SCOPE_FORBIDDEN_ERROR`) a narrowed token whose scopes reach past what it asked for. Microsoft does NOT narrow —
+  Entra accepts a scope subset on a refresh but issues every consented Graph scope — so it mints like Zoho.
 - **Narrow-only token mint.** `UserExternalConnectionTokenApiModuleConfig.providerScopes`
   (`{ providerType, oidcScopeCeilings: { [oidcScope]: providerScopes[] } }[]`) caps what a caller may mint by its OIDC
   scopes; the ceiling is the union over the mapped scopes it holds. `GET /api/session/external/:providerType` takes an
   optional `?scopes=` (space- or comma-delimited, `USER_EXTERNAL_CONNECTION_TOKEN_SCOPES_QUERY_PARAM`) that can only narrow
   further. A provider with `narrowAccessToken` mints a token for the requested scopes (else the ceiling). A provider
-  without it (Zoho) refuses `?scopes=` and, under a ceiling, mints only when its whole grant fits inside it. A non-OIDC
+  without it (Zoho, Microsoft) refuses `?scopes=` and, under a ceiling, mints only when its whole grant fits inside it. A non-OIDC
   caller gets no ceiling. `UserExternalConnectionAccessToken.scopes` is the narrowed set whenever the mint narrowed.
 - **Token error codes** (`@dereekb/firebase`):
   - `USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR` (403): above the ceiling, or the caller holds none of the

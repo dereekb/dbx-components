@@ -1,5 +1,5 @@
 import { Inject, Injectable, Optional } from '@nestjs/common';
-import { isMicrosoftOAuthInvalidGrantError, type MicrosoftOAuthAccessToken, type MicrosoftOAuthAuthorizeUrlFactory, type MicrosoftOAuthCurrentUser, normalizeMicrosoftGraphScopes } from '@dereekb/microsoft';
+import { type MicrosoftOAuthAccessToken, type MicrosoftOAuthAuthorizeUrlFactory, type MicrosoftOAuthCurrentUser, normalizeMicrosoftGraphScopes } from '@dereekb/microsoft';
 import { MicrosoftOAuthApi } from '@dereekb/microsoft/nestjs';
 import { type UserExternalConnectionCapability } from '@dereekb/firebase';
 import {
@@ -10,12 +10,9 @@ import {
   UserExternalConnectionSignInService,
   UserExternalConnectionSignInThrottle,
   UserExternalConnectionStateCoder,
-  userExternalConnectionCredentialsExpiredError,
   type UserExternalConnectionCredentials,
   type UserExternalConnectionOAuthAuthorizeUrlInput,
   type UserExternalConnectionOAuthExchangeInput,
-  type UserExternalConnectionOAuthNarrowAccessTokenInput,
-  type UserExternalConnectionOAuthNarrowedAccessToken,
   type UserExternalConnectionOAuthRefreshCredentialsInput
 } from '@dereekb/firebase-server/model';
 import { type Maybe, type WebsiteUrl } from '@dereekb/util';
@@ -113,9 +110,10 @@ export function microsoftUserExternalConnectionCredentials(input: MicrosoftUserE
  * - The identity comes from the id token (`oid`, `tid`, `preferred_username`), falling back to Graph
  *   `/me` when the token carries no `oid`.
  * - `refreshCredentials` returns the ROTATED refresh token, which the reader persists under its lease.
- * - `narrowAccessToken` redeems the stored refresh token for a token carrying a SUBSET of the granted
- *   scopes, and DISCARDS the rotated refresh token it returns: Microsoft does not revoke a redeemed
- *   refresh token, and persisting from the mint would race the reader's refresh lease.
+ * - There is NO `narrowAccessToken`: Entra accepts a scope subset on a refresh, but the token it issues
+ *   carries EVERY scope consented for Graph, whatever was asked for. Microsoft is therefore a
+ *   non-narrowing provider: a mint hands out the stored token, refused when the connection's grant
+ *   exceeds the caller's ceiling. The connect's scope preset is the only scope control.
  * - There is NO `revokeCredentials`: Entra has no per-grant revoke, so a disconnect forgets the stored
  *   credentials and the access token lapses within its hour.
  */
@@ -175,29 +173,6 @@ export class MicrosoftUserExternalConnectionOAuthService extends AbstractUserExt
 
   override normalizeScopes(scopes: readonly UserExternalConnectionCapability[]): UserExternalConnectionCapability[] {
     return normalizeMicrosoftGraphScopes(scopes);
-  }
-
-  override async narrowAccessToken(input: UserExternalConnectionOAuthNarrowAccessTokenInput): Promise<UserExternalConnectionOAuthNarrowedAccessToken> {
-    const refreshToken = this._requireRefreshToken(input.credentials, 'narrowAccessToken');
-    let accessToken: MicrosoftOAuthAccessToken;
-
-    try {
-      accessToken = await this.oauthApi.refreshToAccessToken({ refreshToken, scopes: input.scopes });
-    } catch (e) {
-      if (isMicrosoftOAuthInvalidGrantError(e)) {
-        throw userExternalConnectionCredentialsExpiredError(this.providerType);
-      }
-
-      throw e;
-    }
-
-    // the rotated refresh token is deliberately dropped here; see the class doc
-    return {
-      accessToken: accessToken.accessToken,
-      tokenType: 'Bearer',
-      scopes: accessToken.scopes,
-      expiresAt: accessToken.expiresAt.toISOString()
-    };
   }
 
   private _requireRefreshToken(credentials: UserExternalConnectionCredentials, method: string): string {

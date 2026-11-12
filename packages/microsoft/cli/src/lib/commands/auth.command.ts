@@ -10,7 +10,11 @@ import { MSGRAPH_CLI_NO_TOKEN_SOURCE_HINT } from '../middleware/auth.middleware'
 const AUTH_SHOW_COMMAND: CommandModule = {
   command: 'show',
   describe: 'Show the active token source and the scopes and expiry of its token (never the token)',
-  builder: (yargs: Argv) => yargs.example([['$0 auth show --scopes "Mail.Read"', 'Mint (or reuse) a token narrowed to Mail.Read and show it']]),
+  builder: (yargs: Argv) =>
+    yargs.example([
+      ['$0 auth show', 'Mint (or reuse) a token and show its source, scopes and expiry'],
+      ['$0 auth show --token-source admin', 'The same for the saved "admin" source']
+    ]),
   handler: wrapCommandHandler(async (argv: any) => {
     const config = msGraphCliTokenSourceCommandConfig();
     const status = await loadCliTokenSourceStatus({ resolver: config.resolver, fileConfig: await config.loadConfigFile(), tokenCachePath: config.tokenCachePath, scopes: msGraphCliScopesFromArgv(argv), ...cliTokenSourceSelectionFromArgv(argv) });

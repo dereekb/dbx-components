@@ -68,7 +68,7 @@ export const DEMO_USER_EXTERNAL_CONNECTION_SIGN_IN_DELEGATE: InjectionToken = 'D
  * is a member's own account, so it is unique and never exported.
  *
  * `microsoft` is admin-only, exportable and unique: one Microsoft connection per admin, connected with a
- * Read or Read + Write scope preset and minted out narrowed to a CLI.
+ * Read or Read + Write scope preset and minted out to a CLI under an OIDC scope ceiling.
  */
 @Module(
   appUserExternalConnectionModuleMetadata({
@@ -113,8 +113,9 @@ export const DEMO_USER_EXTERNAL_CONNECTION_SIGN_IN_DELEGATE: InjectionToken = 'D
       },
       {
         providerType: DEMO_MICROSOFT_EXTERNAL_CONNECTION_PROVIDER_TYPE,
-        // minted out to msgraph-cli, narrowed per mint by the token.external.microsoft_read / _admin
-        // OIDC scope ceilings (see DemoExternalConnectionTokenApiModule)
+        // minted out to msgraph-cli, capped by the token.external.microsoft_read / _admin OIDC scope
+        // ceilings (see DemoExternalConnectionTokenApiModule); Microsoft cannot narrow, so a grant
+        // wider than the caller's ceiling is refused
         tokenExport: true,
         // the connection reads an org mailbox, so only an admin may consent to it
         adminOnly: true,

@@ -196,6 +196,10 @@ describe('UserExternalConnectionTokenApiService narrowing', () => {
     readonly grantedScopes?: Maybe<string[]>;
     readonly nonNarrowingScopes?: Maybe<string[]>;
     readonly narrowFails?: boolean;
+    /**
+     * Scopes the fake provider answers a narrowing with, regardless of what it was asked for (the way Entra does).
+     */
+    readonly narrowReturnsScopes?: Maybe<string[]>;
     readonly config?: Maybe<UserExternalConnectionTokenApiModuleConfig>;
   }
 
@@ -213,7 +217,7 @@ describe('UserExternalConnectionTokenApiService narrowing', () => {
         throw userExternalConnectionCredentialsExpiredError(NARROWING);
       }
 
-      return { accessToken: `narrowed:${narrowInput.scopes.join(' ')}`, tokenType: 'Bearer', scopes: [...narrowInput.scopes], expiresAt: '2026-01-01T00:30:00.000Z' };
+      return { accessToken: `narrowed:${narrowInput.scopes.join(' ')}`, tokenType: 'Bearer', scopes: input.narrowReturnsScopes ?? [...narrowInput.scopes], expiresAt: '2026-01-01T00:30:00.000Z' };
     });
 
     // case-insensitive canonicalization, like Microsoft's
@@ -262,6 +266,29 @@ describe('UserExternalConnectionTokenApiService narrowing', () => {
     const { service } = makeNarrowingService();
     const result = await service.mintAccessToken({ auth: oidcAuthWith(READ_SCOPE), providerType: NARROWING, requestedScopes: ['mail.read', 'Mail.Read'] });
     expect(result.scopes).toEqual(['Mail.Read']);
+  });
+
+  it('should refuse a narrowed token whose scopes reach past the target, never returning it', async () => {
+    // the provider accepted the read target but answered with the whole read + write grant
+    const { service, narrowAccessToken } = makeNarrowingService({ narrowReturnsScopes: [...READ_SCOPES, ...WRITE_SCOPES] });
+    let caught: any;
+
+    try {
+      await service.mintAccessToken({ auth: oidcAuthWith(READ_SCOPE), providerType: NARROWING });
+    } catch (e) {
+      caught = e;
+    }
+
+    expect(narrowAccessToken).toHaveBeenCalledTimes(1);
+    expect(caught?.details?.code).toBe(USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE);
+    expect(caught?.details?.data?.excessScopes).toEqual(WRITE_SCOPES);
+    expect(JSON.stringify(caught?.details ?? {})).not.toContain('narrowed:');
+  });
+
+  it('should accept a narrowed token reporting the target in another spelling', async () => {
+    const { service } = makeNarrowingService({ narrowReturnsScopes: ['mail.read'] });
+    const result = await service.mintAccessToken({ auth: oidcAuthWith(READ_SCOPE), providerType: NARROWING, requestedScopes: ['Mail.Read'] });
+    expect(result.accessToken).toBe('narrowed:Mail.Read');
   });
 
   it('should refuse requested scopes above the ceiling', async () => {

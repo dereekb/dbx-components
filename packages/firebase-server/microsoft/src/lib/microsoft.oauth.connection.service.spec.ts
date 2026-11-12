@@ -5,7 +5,7 @@ import { type MicrosoftOAuthCurrentUser, type MicrosoftOAuthTokenResponse } from
 import { type MicrosoftOAuthServiceConfig, appMicrosoftOAuthModuleMetadata } from '@dereekb/microsoft/nestjs';
 import { MICROSOFT_GRAPH_READ_SCOPES, MICROSOFT_GRAPH_READ_WRITE_SCOPES, MICROSOFT_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE } from '@dereekb/firebase';
 import { FirebaseServerEnvService } from '@dereekb/firebase-server';
-import { isUserExternalConnectionCredentialsExpiredError, UserExternalConnectionAccessor, UserExternalConnectionServerActions, UserExternalConnectionStateCoder, type UserExternalConnectionCredentials, userExternalConnectionStateCoder } from '@dereekb/firebase-server/model';
+import { UserExternalConnectionAccessor, UserExternalConnectionServerActions, UserExternalConnectionStateCoder, type UserExternalConnectionCredentials, userExternalConnectionStateCoder } from '@dereekb/firebase-server/model';
 import { type Maybe } from '@dereekb/util';
 import { type FetchHandler } from '@dereekb/util/fetch';
 import { MICROSOFT_USER_EXTERNAL_CONNECTION_OAUTH_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE } from './microsoft.oauth.connection.config';
@@ -294,23 +294,9 @@ describe('MicrosoftUserExternalConnectionOAuthService', () => {
   });
 
   describe('narrowAccessToken()', () => {
-    it('sends the scope subset plus offline_access and returns only the narrowed access token', async () => {
-      fakeMicrosoft.refreshResponse = tokenResponse({ access_token: 'narrowed-access-token', refresh_token: 'rotated-refresh-token', id_token: undefined, scope: 'https://graph.microsoft.com/Mail.Read https://graph.microsoft.com/User.Read offline_access' });
-      const narrowed = await service.narrowAccessToken({ uid: TEST_UID, credentials: STORED_CREDENTIALS, scopes: ['Mail.Read', 'User.Read'] });
-
-      expect(fakeMicrosoft.requests[0].body?.get('scope')).toBe('Mail.Read User.Read offline_access');
-      expect(narrowed.accessToken).toBe('narrowed-access-token');
-      expect(narrowed.scopes).toEqual(['Mail.Read', 'User.Read']);
-      expect(narrowed).not.toHaveProperty('refreshToken');
-      // the mint never persists the rotated refresh token
-      expect(captured.connects.length).toBe(0);
-    });
-
-    it('maps invalid_grant to the credentials-expired error', async () => {
-      fakeMicrosoft.refreshResponse = { status: 400, body: { error: 'invalid_grant', error_description: 'AADSTS70008: expired', error_codes: [70008] } };
-      const error = await service.narrowAccessToken({ uid: TEST_UID, credentials: STORED_CREDENTIALS, scopes: ['Mail.Read'] }).catch((e: unknown) => e);
-
-      expect(isUserExternalConnectionCredentialsExpiredError(error)).toBe(true);
+    it('is not implemented: Entra answers a scope-subset refresh with every consented scope, so Microsoft cannot narrow', () => {
+      // a narrowing hook here would hand a read-ceiling caller a token carrying a read + write grant
+      expect(service.narrowAccessToken).toBeUndefined();
     });
   });
 });

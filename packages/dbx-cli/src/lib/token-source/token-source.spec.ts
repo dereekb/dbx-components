@@ -30,7 +30,7 @@ interface BundleCommand {
  * @param failWith - When set, the script prints a dbx-cli error envelope with this message instead.
  * @returns The command and its run log.
  */
-function bundleCommand(dir: string, bundle: Partial<CliTokenSourceBundle> = {}, failWith?: string): BundleCommand {
+function bundleCommand(dir: string, bundle: Partial<CliTokenSourceBundle> = {}, failWith?: string, failSuggestion?: string): BundleCommand {
   mkdirSync(dir, { recursive: true });
 
   const id = Math.random().toString(36).slice(2);
@@ -57,8 +57,9 @@ if (process.env[${JSON.stringify(DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR)}] !== '1') 
   process.exit(1);
 }
 const failWith = ${JSON.stringify(failWith ?? null)};
+const failSuggestion = ${JSON.stringify(failSuggestion ?? null)};
 if (failWith) {
-  process.stdout.write(JSON.stringify({ ok: false, error: failWith, code: 'NOT_LOGGED_IN' }));
+  process.stdout.write(JSON.stringify({ ok: false, error: failWith, code: 'NOT_LOGGED_IN', ...(failSuggestion ? { suggestion: failSuggestion } : {}) }));
   process.exit(1);
 }
 const bundle = ${JSON.stringify(fullBundle)};
@@ -318,7 +319,15 @@ describe('dbx-cli token source', () => {
       const status = await loadCliTokenSourceStatus({ resolver, fileConfig: { tokenSource: { command } }, tokenCachePath: paths.tokenCachePath });
 
       expect(status?.error).toContain('Not logged in.');
-      expect(cliTokenSourceReport(status!)).toEqual({ command, origin: 'config', name: DEFAULT_CLI_TOKEN_SOURCE_NAME, error: status?.error });
+      expect(cliTokenSourceReport(status!)).toEqual({ command, origin: 'config', name: DEFAULT_CLI_TOKEN_SOURCE_NAME, error: status?.error, errorCode: 'NOT_LOGGED_IN' });
+    });
+
+    it('keeps the failing command error code and suggestion in the report', async () => {
+      const { command } = bundleCommand(join(home, 'bin'), {}, 'Not logged in.', 'Run test-cli auth login.');
+      const resolver = cliTokenSourceResolver({ cliName: 'test-cli', env: {} });
+      const status = await loadCliTokenSourceStatus({ resolver, fileConfig: { tokenSource: { command } }, tokenCachePath: paths.tokenCachePath });
+
+      expect(cliTokenSourceReport(status!)).toMatchObject({ errorCode: 'NOT_LOGGED_IN', suggestion: 'Run test-cli auth login.' });
     });
 
     it('reports the loaded token without the access token', async () => {

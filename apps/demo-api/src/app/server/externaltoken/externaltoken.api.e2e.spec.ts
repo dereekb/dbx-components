@@ -9,7 +9,6 @@ import {
   USER_EXTERNAL_CONNECTION_TOKEN_FORBIDDEN_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_TOKEN_NARROWING_UNSUPPORTED_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE,
-  USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_NOT_GRANTED_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_TOKEN_SCOPES_INVALID_ERROR_CODE,
   type UserExternalConnectionAccessToken,
   userExternalConnectionTokenApiPath,
@@ -48,7 +47,7 @@ const demoOAuthSuperTestContextWithExternalTokenScope = oAuthAuthorizedSuperTest
 });
 
 /**
- * The `external-token` fixture plus the `token.external.microsoft_read` narrowing scope: a `microsoft`
+ * The `external-token` fixture plus the `token.external.microsoft_read` ceiling scope: a `microsoft`
  * mint is capped at the Read preset's Graph scopes.
  */
 const demoOAuthSuperTestContextWithMicrosoftReadScope = oAuthAuthorizedSuperTestContextFactory({
@@ -58,7 +57,7 @@ const demoOAuthSuperTestContextWithMicrosoftReadScope = oAuthAuthorizedSuperTest
 });
 
 /**
- * The `external-token` fixture plus the `token.external.microsoft_admin` narrowing scope: a `microsoft`
+ * The `external-token` fixture plus the `token.external.microsoft_admin` ceiling scope: a `microsoft`
  * mint is capped at the Read + Write preset's Graph scopes.
  */
 const demoOAuthSuperTestContextWithMicrosoftAdminScope = oAuthAuthorizedSuperTestContextFactory({
@@ -244,14 +243,15 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         oauthApi = f.instance.apiNestContext.nestApplication.get(MicrosoftOAuthApi);
         refreshInputs = [];
 
-        // the narrowing refresh is the only Microsoft call a mint makes; shadow it with an OWN property
-        // that answers with exactly the scopes it was asked for, the way Entra does for a consented subset
+        // a mint of a fresh stored token makes no Microsoft call. Shadow the refresh with an OWN property
+        // that records any call and answers the way Entra does: with EVERY consented scope, whatever
+        // subset was asked for — which is why Microsoft cannot narrow
         Object.defineProperty(oauthApi, 'refreshToAccessToken', {
           configurable: true,
           writable: true,
           value: async (input: MicrosoftOAuthRefreshTokenInput): Promise<MicrosoftOAuthAccessToken> => {
             refreshInputs.push(input);
-            return { accessToken: `narrowed:${[...(input.scopes ?? [])].join(' ')}`, refreshToken: 'rotated-refresh-token', scopes: [...(input.scopes ?? [])], expiresIn: 3600, expiresAt: new Date(Date.now() + 3600 * 1000) };
+            return { accessToken: 'microsoft-refreshed-access-token', refreshToken: 'rotated-refresh-token', scopes: [...MICROSOFT_GRAPH_READ_WRITE_SCOPES], expiresIn: 3600, expiresAt: new Date(Date.now() + 3600 * 1000) };
           }
         });
       });
@@ -275,30 +275,27 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         demoAuthorizedUserAdminContext({ f }, (au) => {
           demoUserExternalConnectionContext({ f, u: au }, (uec) => {
             demoOAuthSuperTestContextWithMicrosoftReadScope({ f, u: au }, (oauth) => {
-              describe('and a read + write connection', () => {
+              describe('and a read connection', () => {
                 beforeEach(async () => {
-                  await uec.connect({ providerType: MICROSOFT, credentials: microsoftCredentials(MICROSOFT_GRAPH_READ_WRITE_SCOPES) });
+                  await uec.connect({ providerType: MICROSOFT, credentials: microsoftCredentials(MICROSOFT_GRAPH_READ_SCOPES) });
                 });
 
-                it('mints a token narrowed to the read ceiling', async () => {
+                it('mints the stored token, without a Microsoft round trip', async () => {
                   const res = await oauth.authRequest('get', MICROSOFT_TOKEN_PATH).expect(200);
                   const result = res.body as UserExternalConnectionAccessToken;
 
-                  expect(refreshInputs.length).toBe(1);
-                  expect(refreshInputs[0].refreshToken).toBe('microsoft-refresh-token');
-                  expect(refreshInputs[0].scopes).toEqual([...MICROSOFT_GRAPH_READ_SCOPES]);
+                  expect(refreshInputs.length).toBe(0);
                   expect(result.scopes).toEqual([...MICROSOFT_GRAPH_READ_SCOPES]);
-                  expect(result.accessToken).toBe(`narrowed:${MICROSOFT_GRAPH_READ_SCOPES.join(' ')}`);
+                  expect(result.accessToken).toBe('microsoft-stored-access-token');
                   expect(result.extra).toEqual({ tenantId: MICROSOFT_TENANT_ID });
                   expect(JSON.stringify(result)).not.toContain('refresh-token');
                 });
 
-                it('narrows further to a ?scopes= subset, in any casing or prefix', async () => {
-                  const res = await oauth.authRequest('get', `${MICROSOFT_TOKEN_PATH}?scopes=${encodeURIComponent('mail.read https://graph.microsoft.com/User.Read')}`).expect(200);
-                  const result = res.body as UserExternalConnectionAccessToken;
+                it('refuses ?scopes=, since Microsoft cannot narrow', async () => {
+                  const res = await oauth.authRequest('get', `${MICROSOFT_TOKEN_PATH}?scopes=${encodeURIComponent('mail.read https://graph.microsoft.com/User.Read')}`).expect(400);
 
-                  expect(refreshInputs[0].scopes).toEqual(['Mail.Read', 'User.Read']);
-                  expect(result.scopes).toEqual(['Mail.Read', 'User.Read']);
+                  expect(res.body.code).toBe(USER_EXTERNAL_CONNECTION_TOKEN_NARROWING_UNSUPPORTED_ERROR_CODE);
+                  expect(refreshInputs.length).toBe(0);
                 });
 
                 it('refuses a ?scopes= request above the ceiling', async () => {
@@ -313,6 +310,20 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
                   expect(res.body.code).toBe(USER_EXTERNAL_CONNECTION_TOKEN_SCOPES_INVALID_ERROR_CODE);
                 });
               });
+
+              describe('and a read + write connection', () => {
+                beforeEach(async () => {
+                  await uec.connect({ providerType: MICROSOFT, credentials: microsoftCredentials(MICROSOFT_GRAPH_READ_WRITE_SCOPES) });
+                });
+
+                it('refuses the grant, which exceeds the read ceiling, without returning its token', async () => {
+                  const res = await oauth.authRequest('get', MICROSOFT_TOKEN_PATH).expect(403);
+
+                  expect(res.body.code).toBe(USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE);
+                  expect(JSON.stringify(res.body)).not.toContain('access-token');
+                  expect(refreshInputs.length).toBe(0);
+                });
+              });
             });
           });
         });
@@ -322,14 +333,11 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         demoAuthorizedUserAdminContext({ f }, (au) => {
           demoUserExternalConnectionContext({ f, u: au }, (uec) => {
             demoOAuthSuperTestContextWithMicrosoftAdminScope({ f, u: au }, (oauth) => {
-              it('refuses a read connection, naming the Read + Write preset to reconnect with', async () => {
+              it('mints a read connection, whose grant fits inside the ceiling', async () => {
                 await uec.connect({ providerType: MICROSOFT, credentials: microsoftCredentials(MICROSOFT_GRAPH_READ_SCOPES) });
 
-                const res = await oauth.authRequest('get', MICROSOFT_TOKEN_PATH).expect(403);
-
-                expect(res.body.code).toBe(USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_NOT_GRANTED_ERROR_CODE);
-                expect(res.body.message).toContain('Read + Write');
-                expect(refreshInputs.length).toBe(0);
+                const res = await oauth.authRequest('get', MICROSOFT_TOKEN_PATH).expect(200);
+                expect((res.body as UserExternalConnectionAccessToken).scopes).toEqual([...MICROSOFT_GRAPH_READ_SCOPES]);
               });
 
               it('mints a read + write token from a read + write connection', async () => {

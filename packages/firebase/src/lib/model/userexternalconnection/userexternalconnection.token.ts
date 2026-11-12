@@ -66,7 +66,7 @@ export const USER_EXTERNAL_CONNECTION_TOKEN_SCOPES_INVALID_ERROR_CODE = 'USER_EX
 
 /**
  * Error code (400) thrown when the mint asks for explicit `scopes` but the provider cannot mint a
- * narrowed access token (e.g. Zoho).
+ * narrowed access token (e.g. Zoho, Microsoft).
  */
 export const USER_EXTERNAL_CONNECTION_TOKEN_NARROWING_UNSUPPORTED_ERROR_CODE = 'USER_EXTERNAL_CONNECTION_TOKEN_NARROWING_UNSUPPORTED_ERROR';
 

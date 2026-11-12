@@ -63,11 +63,15 @@ export function demoExternalConnectionTokenPredicateFactory(authService: DemoApi
 }
 
 /**
- * The OIDC scope ceilings a `microsoft` token mint is narrowed to.
+ * The OIDC scope ceilings a `microsoft` token mint is capped at.
  *
  * A caller holding `token.external.microsoft_read` gets a token carrying at most the Read preset's
  * Graph scopes; `token.external.microsoft_admin` at most Read + Write. Holding both unions the two. A
  * caller holding neither is refused a `microsoft` token outright, even with `token.external`.
+ *
+ * Microsoft cannot narrow a token (Entra issues every scope consented for Graph, whatever a refresh
+ * asks for), so the mint hands out the stored token only when the connection's whole grant fits inside
+ * the ceiling, and refuses it otherwise.
  */
 export const DEMO_EXTERNAL_CONNECTION_TOKEN_PROVIDER_SCOPES: readonly UserExternalConnectionTokenProviderScopeConfig[] = [
   {

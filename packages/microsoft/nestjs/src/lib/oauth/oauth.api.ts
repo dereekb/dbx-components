@@ -68,7 +68,7 @@ export class MicrosoftOAuthApi {
   /**
    * Configured pass-through for {@link refreshAccessToken}.
    *
-   * @returns Function to refresh (and optionally narrow) an access token.
+   * @returns Function to refresh an access token.
    */
   get refreshAccessToken() {
     return refreshAccessToken(this.oauthContext);
@@ -105,8 +105,8 @@ export class MicrosoftOAuthApi {
   }
 
   /**
-   * Refreshes an access token, optionally narrowed to a subset of the consented scopes, and maps the
-   * response to a {@link MicrosoftOAuthAccessToken}.
+   * Refreshes an access token and maps the response to a {@link MicrosoftOAuthAccessToken}. A requested
+   * scope subset does not narrow the token: its `scopes` are every scope consented for the resource.
    *
    * @param input - The stored refresh token and the optional scope subset.
    * @returns The refreshed access token, carrying the rotated refresh token.

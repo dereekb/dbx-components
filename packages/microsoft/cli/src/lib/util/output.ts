@@ -29,7 +29,12 @@ export function msGraphCliErrorOutput(error: unknown): CliErrorOutput | undefine
         result = { ok: false, error: message, code: 'TOKEN_REJECTED', suggestion: `Microsoft rejected the access token; the cached token was cleared, so re-run to mint a new one. If it keeps failing, check the token source: ${MSGRAPH_CLI_NAME} auth show` };
         break;
       case 403:
-        result = { ok: false, error: message, code: 'SCOPE_DENIED', suggestion: `The token lacks a scope this call needs. Re-run with --scopes naming it (e.g. --scopes "Mail.Read"), or mint from an app env preset / connection preset that grants it (Read vs Read + Write). See: ${MSGRAPH_CLI_NAME} auth show` };
+        result = {
+          ok: false,
+          error: message,
+          code: 'SCOPE_DENIED',
+          suggestion: `The token lacks a scope this call needs. Use a token source whose connection was granted it (e.g. one connected with the Read + Write preset rather than Read) and whose app login allows minting it; a scope outside every preset cannot be minted. Compare the token's scopes with: ${MSGRAPH_CLI_NAME} auth show`
+        };
         break;
       case 429:
         result = { ok: false, error: message, code: 'RATE_LIMITED', suggestion: 'Microsoft Graph throttled the request. Wait and retry.' };

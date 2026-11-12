@@ -155,7 +155,8 @@ export interface UserExternalConnectionOAuthNarrowedAccessToken {
   readonly accessToken: string;
   readonly tokenType?: Maybe<string>;
   /**
-   * The scopes the provider says the narrowed token carries.
+   * The scopes the provider says the narrowed token carries. Must not reach past the requested scopes:
+   * the mint refuses a token that does.
    */
   readonly scopes: UserExternalConnectionCapability[];
   readonly expiresAt?: Maybe<ISO8601DateString>;
@@ -556,12 +557,18 @@ export abstract class AbstractUserExternalConnectionOAuthService {
 
   /**
    * PROVIDER (optional): mints an access token narrower than the stored grant, without a new OAuth
-   * round trip — e.g. Microsoft's refresh grant, which accepts any subset of the consented scopes.
+   * round trip.
    *
    * Implementing it opts the provider into per-mint narrowing: the token mint then trades the stored
    * refresh token for a token carrying only the scopes the caller's ceiling (and optional `scopes`
-   * request) allows. A provider that cannot narrow (Zoho) leaves it absent and the mint returns the
-   * stored access token as before.
+   * request) allows. A provider that cannot narrow (Zoho, Microsoft) leaves it absent and the mint
+   * returns the stored access token, refusing it when the connection's grant exceeds the ceiling.
+   *
+   * Implement it ONLY when the provider really issues a token limited to the requested subset. An
+   * authorization server that ACCEPTS a scope subset is not enough: Microsoft Entra accepts one on a
+   * refresh, yet returns a token carrying every scope consented for the resource. The mint refuses a
+   * returned token whose scopes reach past what it asked for, so a provider that over-returns fails
+   * closed rather than widening a caller's token.
    *
    * Throw the framework's credentials-expired error when the provider says the refresh token is no
    * longer valid; the mint then marks the connection expired.

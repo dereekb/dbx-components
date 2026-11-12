@@ -32,10 +32,12 @@ export interface MicrosoftOAuthExchangeAuthorizationCodeInput {
 export interface MicrosoftOAuthRefreshTokenInput {
   readonly refreshToken: string;
   /**
-   * Optional subset of the consented Graph scopes to narrow the new access token to.
+   * Optional subset of the consented Graph scopes to name in the refresh request.
    *
    * When set, the request's `scope` is these scopes plus `offline_access` (so a refresh token still
-   * comes back). When absent, the token carries the full consented set.
+   * comes back). It does NOT narrow the token: Entra accepts the subset but issues a token carrying
+   * every scope consented for the resource, and its response `scope` says so. Read the granted scopes
+   * from the response rather than assuming the requested ones.
    */
   readonly scopes?: Maybe<readonly MicrosoftGraphScope[]>;
 }
@@ -108,8 +110,8 @@ export function exchangeAuthorizationCode(context: MicrosoftOAuthContext): (inpu
 }
 
 /**
- * Redeems a refresh token for a new access token, optionally narrowed to a subset of the consented
- * scopes.
+ * Redeems a refresh token for a new access token. A requested scope subset does not narrow it: the
+ * token carries every scope consented for the resource.
  *
  * The response carries a ROTATED refresh token. The old one stays valid until it expires (Microsoft does
  * not revoke a redeemed refresh token), so persisting the rotated one is good hygiene rather than a

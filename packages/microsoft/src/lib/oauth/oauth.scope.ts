@@ -17,7 +17,7 @@ export const MICROSOFT_GRAPH_SCOPE_RESOURCE_PREFIX = 'https://graph.microsoft.co
 export const MICROSOFT_OIDC_SCOPES = ['openid', 'profile', 'email', 'offline_access'] as const;
 
 /**
- * The `offline_access` scope. Sent with a narrowed refresh so the response still carries a refresh token.
+ * The `offline_access` scope. Sent with a refresh that names a scope subset, so the response still carries a refresh token.
  */
 export const MICROSOFT_OFFLINE_ACCESS_SCOPE = 'offline_access';
 

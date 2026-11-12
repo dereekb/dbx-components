@@ -21,7 +21,7 @@ import { type UserExternalConnectionCredentials } from '../userexternalconnectio
 import { UserExternalConnectionProviderPolicyRegistry, userExternalConnectionPolicyForProviderType } from '../userexternalconnection.policy';
 import { isUserExternalConnectionCredentialsExpiredError } from '../userexternalconnection.error';
 import { UserExternalConnectionOAuthProviderRegistry } from '../oauth/userexternalconnection.oauth.registry';
-import { type AbstractUserExternalConnectionOAuthService } from '../oauth/userexternalconnection.oauth.service';
+import { type AbstractUserExternalConnectionOAuthService, type UserExternalConnectionOAuthNarrowedAccessToken } from '../oauth/userexternalconnection.oauth.service';
 import {
   DEFAULT_USER_EXTERNAL_CONNECTION_TOKEN_MINIMUM_REMAINING,
   DEFAULT_USER_EXTERNAL_CONNECTION_TOKEN_REQUIRED_OIDC_SCOPE,
@@ -177,9 +177,11 @@ function normalizeProviderScopes(oauthService: Maybe<AbstractUserExternalConnect
  * - Requested `scopes` outside the ceiling are refused (403 `..._SCOPE_FORBIDDEN_ERROR`).
  * - A provider that implements `narrowAccessToken` mints a token for the requested scopes (else the
  *   ceiling), provided the connection was granted all of them (403 `..._SCOPE_NOT_GRANTED_ERROR`,
- *   naming the preset to reconnect with, otherwise).
- * - A provider that cannot narrow refuses explicit `scopes` (400 `..._NARROWING_UNSUPPORTED_ERROR`),
- *   and under a ceiling is minted only when its whole grant fits inside it.
+ *   naming the preset to reconnect with, otherwise). A narrowed token whose reported scopes reach past
+ *   that target is refused (403 `..._SCOPE_FORBIDDEN_ERROR`) rather than handed out.
+ * - A provider that cannot narrow (Zoho, Microsoft) refuses explicit `scopes` (400
+ *   `..._NARROWING_UNSUPPORTED_ERROR`), and under a ceiling is minted only when its whole grant fits
+ *   inside it (403 `..._SCOPE_FORBIDDEN_ERROR` otherwise).
  *
  * The token is ALWAYS read for `auth.uid`: there is no way to ask for another user's connection.
  */
@@ -349,9 +351,10 @@ export class UserExternalConnectionTokenApiService {
         throw forbiddenError({ status: 403, code: USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_NOT_GRANTED_ERROR_CODE, message: `The "${providerType}" connection was not granted: ${missingScopes.join(' ')}. ${hint}`, data });
       }
 
+      let narrowed: UserExternalConnectionOAuthNarrowedAccessToken;
+
       try {
-        const narrowed = await oauthService.narrowAccessToken({ uid, credentials, scopes: target });
-        result = { ...credentials, accessToken: narrowed.accessToken, tokenType: narrowed.tokenType ?? credentials.tokenType, scopes: narrowed.scopes, expiresAt: narrowed.expiresAt };
+        narrowed = await oauthService.narrowAccessToken({ uid, credentials, scopes: target });
       } catch (e) {
         // 6. a refresh token the provider no longer honors means the connection is dead; mark it so the
         // user sees it needs a reconnect, then surface the same error
@@ -361,6 +364,17 @@ export class UserExternalConnectionTokenApiService {
 
         throw e;
       }
+
+      // a provider can accept a scope subset yet answer with every consented scope (Microsoft Entra
+      // does); handing that token out would widen the caller past its target, and so its ceiling
+      const targetSet = new Set(target);
+      const widerScopes = normalizeProviderScopes(oauthService, narrowed.scopes ?? []).filter((scope) => !targetSet.has(scope));
+
+      if (widerScopes.length > 0) {
+        throw tokenScopeForbiddenError(`The "${providerType}" provider returned a token wider than the scopes it was asked to narrow to: ${widerScopes.join(' ')}.`, { providerType, excessScopes: widerScopes });
+      }
+
+      result = { ...credentials, accessToken: narrowed.accessToken, tokenType: narrowed.tokenType ?? credentials.tokenType, scopes: narrowed.scopes, expiresAt: narrowed.expiresAt };
     } else if (ceiling != null) {
       // a provider that cannot narrow mints its stored token as-is, so the whole grant must fit. An
       // unknown grant cannot be shown to fit

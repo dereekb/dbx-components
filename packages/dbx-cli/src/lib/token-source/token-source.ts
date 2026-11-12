@@ -3,6 +3,7 @@ import { createJsonFileAsyncKeyedValueCache } from '@dereekb/nestjs';
 import { MS_IN_MINUTE, type ISO8601DateString, type Maybe, type Milliseconds } from '@dereekb/util';
 import { type CliExternalConnectionTokenBundle } from '../api/external-token';
 import { runCliCredentialProcess } from '../util/credential-process';
+import { CliError } from '../util/output';
 import { type CliActiveTokenSource, type CliTokenSourceConfig, type CliTokenSourceConfigFile, type CliTokenSourceName, type CliTokenSourceOrigin, type CliTokenSourceResolver, type CliTokenSourceSelection } from './token-source.config';
 
 // MARK: Constants
@@ -495,6 +496,15 @@ export interface CliTokenSourceStatus<C extends CliTokenSourceConfig = CliTokenS
    * Why loading the token source failed.
    */
   readonly error?: Maybe<string>;
+  /**
+   * The failure's error code, when the token command answered with a dbx-cli error envelope (e.g. the
+   * app's `AUTH_FORBIDDEN` for a refused mint).
+   */
+  readonly errorCode?: Maybe<string>;
+  /**
+   * The failure's remediation, when the token command answered with one.
+   */
+  readonly suggestion?: Maybe<string>;
 }
 
 /**
@@ -530,7 +540,9 @@ export async function loadCliTokenSourceStatus<C extends CliTokenSourceConfig = 
       const source = createCliTokenSource<T>({ ...sourceInput, command: active.command });
       result = { active, resolved: { source, token: await source.loadToken() } };
     } catch (e) {
-      result = { active, error: e instanceof Error ? e.message : String(e) };
+      // keep the child's code and remediation: a refused mint says WHY and what to do about it
+      const cliError = e instanceof CliError ? e : undefined;
+      result = { active, error: e instanceof Error ? e.message : String(e), errorCode: cliError?.code, suggestion: cliError?.suggestion };
     }
   }
 
@@ -556,6 +568,8 @@ export interface CliTokenSourceReport {
   readonly providerType?: Maybe<string>;
   readonly hints?: Maybe<Readonly<Record<string, string>>>;
   readonly error?: string;
+  readonly errorCode?: string;
+  readonly suggestion?: string;
 }
 
 /**
@@ -570,7 +584,7 @@ export interface CliTokenSourceReport {
  * ```
  */
 export function cliTokenSourceReport(status: CliTokenSourceStatus<CliTokenSourceConfig, CliTokenSourceToken>): CliTokenSourceReport {
-  const { active, resolved, error } = status;
+  const { active, resolved, error, errorCode, suggestion } = status;
   const requestedScopes = resolved?.source.scopes;
   const source = { command: active.command, origin: active.origin, ...(active.name ? { name: active.name } : {}), ...(requestedScopes?.length ? { requestedScopes } : {}) };
   let result: CliTokenSourceReport;
@@ -579,7 +593,7 @@ export function cliTokenSourceReport(status: CliTokenSourceStatus<CliTokenSource
     const { token } = resolved;
     result = { ...source, expiresAt: token.expiresAt, scopes: token.scopes, providerType: token.providerType, hints: token.hints };
   } else {
-    result = { ...source, error: error ?? 'The token source could not be loaded.' };
+    result = { ...source, error: error ?? 'The token source could not be loaded.', ...(errorCode ? { errorCode } : {}), ...(suggestion ? { suggestion } : {}) };
   }
 
   return result;

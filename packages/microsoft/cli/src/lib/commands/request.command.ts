@@ -48,7 +48,7 @@ export const REQUEST_COMMAND: CommandModule = {
       .option('max-pages', { type: 'number', describe: 'With --all-pages: stop after this many pages (default 20)' })
       .example([
         ['$0 request GET /me', 'The signed-in user'],
-        ['$0 request GET /me/messages --query \'{"$top":5,"$select":"subject"}\' --scopes Mail.Read', 'Five message subjects, with a token narrowed to Mail.Read'],
+        ['$0 request GET /me/messages --query \'{"$top":5,"$select":"subject"}\'', 'Five message subjects'],
         ['$0 request GET /me/events --all-pages', 'Every event, following nextLink']
       ]),
   handler: msGraphCommandHandler(async (argv: any, { graphContext }) => {

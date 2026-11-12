@@ -192,14 +192,16 @@ describe('msgraph-cli', () => {
   });
 
   describe('msGraphCliErrorOutput()', () => {
-    it('should map a 403 to SCOPE_DENIED with a --scopes hint', async () => {
+    it('should map a 403 to SCOPE_DENIED with a hint to use a source granted the scope', async () => {
       const graph = interceptGraph({ status: 403, body: { error: { code: 'ErrorAccessDenied', message: 'Access is denied.' } } });
       const context = await resolveMsGraphCliContext({}, { env: { ...env, MSGRAPH_CLI_TOKEN_COMMAND: source.command }, graphFactoryConfig: { fetchHandler: graph.fetchHandler } });
       const error = await microsoftGraphRequest(context.graphContext)({ method: 'GET', path: '/me/messages' }).catch((e) => e);
 
       const output = msGraphCliErrorOutput(error);
       expect(output?.code).toBe('SCOPE_DENIED');
-      expect(output?.suggestion).toContain('--scopes');
+      expect(output?.suggestion).toContain('auth show');
+      // --scopes can only narrow, so it can never add the missing scope
+      expect(output?.suggestion).not.toContain('--scopes');
       expect(buildErrorOutput(error).code).toBe('SCOPE_DENIED');
     });
 
