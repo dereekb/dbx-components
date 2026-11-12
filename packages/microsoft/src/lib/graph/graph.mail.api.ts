@@ -3,9 +3,9 @@ import { type MicrosoftGraphQuery, microsoftGraphPathWithQuery, microsoftGraphRe
 import { microsoftGraphBatch } from './graph.batch.api';
 import { type MicrosoftGraphContext } from './graph.config';
 import { type MicrosoftGraphErrorData } from './graph.error.api';
-import { MICROSOFT_GRAPH_IMMUTABLE_ID_PREFER, type MicrosoftGraphBodyContentType, type MicrosoftGraphHeaders, microsoftGraphBodyContentTypePrefer, microsoftGraphPreferHeaderValue } from './graph.header';
+import { MICROSOFT_GRAPH_IMMUTABLE_ID_PREFER, type MicrosoftGraphBodyContentType, type MicrosoftGraphHeaders, microsoftGraphBodyContentTypePrefer, microsoftGraphMaxPageSizePrefer, microsoftGraphPreferHeaderValue } from './graph.header';
 import { type MicrosoftGraphRawResponse, microsoftGraphRequestRaw } from './graph.raw.api';
-import { type MicrosoftGraphMessage, type MicrosoftGraphPage } from './graph.type';
+import { type MicrosoftGraphAttachment, type MicrosoftGraphMessage, type MicrosoftGraphPage } from './graph.type';
 
 /**
  * The message fields the mail helpers select by default.
@@ -168,13 +168,13 @@ export interface MicrosoftGraphMessageListFilterInput {
  * @param input - The filters.
  * @returns The `$filter`, or undefined when no filter is set.
  *
+ * @see https://learn.microsoft.com/en-us/graph/api/user-list-messages#using-filter-and-orderby-in-the-same-query
+ *
  * @example
  * ```ts
  * microsoftGraphMessageListFilter({ from: 'ada@example.com', unread: true });
  * // "receivedDateTime ge 1900-01-01T00:00:00Z and from/emailAddress/address eq 'ada@example.com' and isRead eq false"
  * ```
- *
- * @see https://learn.microsoft.com/en-us/graph/api/user-list-messages#using-filter-and-orderby-in-the-same-query
  */
 export function microsoftGraphMessageListFilter(input: MicrosoftGraphMessageListFilterInput): Maybe<string> {
   const others: string[] = [];
@@ -419,4 +419,140 @@ export function getMessages(context: MicrosoftGraphContext): (input: MicrosoftGr
       return result;
     });
   };
+}
+
+// MARK: Delta
+/**
+ * The fields a message delta round selects by default: enough to tell a new or changed message from one
+ * already held, without the body.
+ */
+export const MICROSOFT_GRAPH_MESSAGE_DELTA_SELECT = 'id,changeKey,receivedDateTime,hasAttachments';
+
+/**
+ * The page size a message delta round asks for (`Prefer: odata.maxpagesize`) when none is given.
+ */
+export const DEFAULT_MICROSOFT_GRAPH_MESSAGE_DELTA_PAGE_SIZE = 50;
+
+/**
+ * Why a delta round reports a message as removed: `deleted`, or `changed` (moved out of the folder).
+ */
+export type MicrosoftGraphDeltaRemovedReason = 'changed' | 'deleted';
+
+/**
+ * One item of a message delta page: a new or changed message, or a removed one (`@removed`).
+ */
+export interface MicrosoftGraphMessageDeltaItem extends Partial<Omit<MicrosoftGraphMessage, 'id'>> {
+  readonly id: string;
+  readonly '@removed'?: Maybe<{ readonly reason?: Maybe<MicrosoftGraphDeltaRemovedReason> }>;
+}
+
+/**
+ * A page of a message delta round. Every page but the last carries `@odata.nextLink`; the last carries
+ * `@odata.deltaLink`, which a later round resumes from to get only what changed since.
+ */
+export interface MicrosoftGraphMessageDeltaPage extends MicrosoftGraphPage<MicrosoftGraphMessageDeltaItem> {
+  readonly '@odata.deltaLink'?: Maybe<string>;
+}
+
+export interface MicrosoftGraphMessagesDeltaInput extends MicrosoftGraphMailboxInput {
+  /**
+   * The mail folder id or well-known name (`inbox`, `sentitems`). Delta is a per-folder operation.
+   */
+  readonly folder: string;
+  /**
+   * Only messages received at or after this instant (`$filter=receivedDateTime ge …`). Ignored with `link`.
+   */
+  readonly since?: Maybe<Date>;
+  /**
+   * Comma-separated fields to select. Defaults to {@link MICROSOFT_GRAPH_MESSAGE_DELTA_SELECT}. Ignored with `link`.
+   */
+  readonly select?: Maybe<string>;
+  /**
+   * The most items per page. Defaults to {@link DEFAULT_MICROSOFT_GRAPH_MESSAGE_DELTA_PAGE_SIZE}.
+   */
+  readonly pageSize?: Maybe<number>;
+  /**
+   * A stored `@odata.nextLink` or `@odata.deltaLink` to resume from instead of starting a new round. It
+   * carries the folder, filter and fields of the round that issued it.
+   */
+  readonly link?: Maybe<string>;
+}
+
+/**
+ * Builds the GET for one page of a message delta round on a folder.
+ *
+ * Delta takes `$filter` only on `receivedDateTime` (`ge` / `gt`) and no `$search`; the page size goes in
+ * `Prefer: odata.maxpagesize`, which must be sent with every page.
+ *
+ * @param input - The folder, mailbox, lower bound and fields, or the link to resume from.
+ * @returns The request.
+ *
+ * @see https://learn.microsoft.com/en-us/graph/delta-query-messages
+ */
+export function microsoftGraphMessagesDeltaRequest(input: MicrosoftGraphMessagesDeltaInput): MicrosoftGraphMailRequest {
+  const prefer = microsoftGraphPreferHeaderValue([input.immutableIds === false ? undefined : MICROSOFT_GRAPH_IMMUTABLE_ID_PREFER, microsoftGraphMaxPageSizePrefer(input.pageSize ?? DEFAULT_MICROSOFT_GRAPH_MESSAGE_DELTA_PAGE_SIZE)]);
+  const headers: Maybe<MicrosoftGraphHeaders> = prefer ? { Prefer: prefer } : undefined;
+  let result: MicrosoftGraphMailRequest;
+
+  if (input.link) {
+    result = { path: input.link, query: {}, headers };
+  } else {
+    result = {
+      path: `${microsoftGraphMessagesPath(input)}/delta`,
+      query: { $select: input.select ?? MICROSOFT_GRAPH_MESSAGE_DELTA_SELECT, $filter: input.since ? `receivedDateTime ge ${microsoftGraphDateTimeLiteral(input.since)}` : undefined },
+      headers
+    };
+  }
+
+  return result;
+}
+
+/**
+ * Reads one page of a message delta round on a folder. Requires `Mail.Read` (`Mail.Read.Shared` for
+ * another mailbox).
+ *
+ * @param context - Fetch function and access-token source each request is sent with.
+ * @returns Function that resolves one delta page; follow `@odata.nextLink` until `@odata.deltaLink`.
+ */
+export function listMessagesDeltaPage(context: MicrosoftGraphContext): (input: MicrosoftGraphMessagesDeltaInput) => Promise<MicrosoftGraphMessageDeltaPage> {
+  const request = microsoftGraphRequest(context);
+  return (input) => request({ method: 'GET', ...microsoftGraphMessagesDeltaRequest(input) });
+}
+
+// MARK: Attachments
+export interface MicrosoftGraphMessageAttachmentsInput extends Pick<MicrosoftGraphMailboxInput, 'mailbox'> {
+  /**
+   * The message id.
+   */
+  readonly id: string;
+}
+
+/**
+ * Lists a message's attachments without their content (`id,name,contentType,size,isInline`). Requires
+ * `Mail.Read` (`Mail.Read.Shared` for another mailbox).
+ *
+ * @param context - Fetch function and access-token source each request is sent with.
+ * @returns Function that resolves the attachments page.
+ */
+export function listMessageAttachments(context: MicrosoftGraphContext): (input: MicrosoftGraphMessageAttachmentsInput) => Promise<MicrosoftGraphPage<MicrosoftGraphAttachment>> {
+  const request = microsoftGraphRequest(context);
+  return (input) => request({ method: 'GET', path: `${microsoftGraphMessagePath(input)}/attachments`, query: { $select: 'id,name,contentType,size,isInline' } });
+}
+
+export interface MicrosoftGraphMessageAttachmentContentInput extends MicrosoftGraphMessageAttachmentsInput {
+  readonly attachmentId: string;
+}
+
+/**
+ * Reads one attachment's raw content (`/$value`) through the raw path. Requires `Mail.Read`
+ * (`Mail.Read.Shared` for another mailbox).
+ *
+ * @param context - Fetch function and access-token source each request is sent with.
+ * @returns Function that resolves the raw response; its body is the file's bytes.
+ *
+ * @see https://learn.microsoft.com/en-us/graph/api/attachment-get#example-6-get-the-raw-contents-of-a-file-attachment-on-a-message
+ */
+export function getMessageAttachmentContent(context: MicrosoftGraphContext): (input: MicrosoftGraphMessageAttachmentContentInput) => Promise<MicrosoftGraphRawResponse> {
+  const requestRaw = microsoftGraphRequestRaw(context);
+  return (input) => requestRaw({ method: 'GET', path: `${microsoftGraphMessagePath(input)}/attachments/${encodeURIComponent(input.attachmentId)}/$value` });
 }

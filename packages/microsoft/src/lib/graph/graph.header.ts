@@ -53,6 +53,23 @@ export function microsoftGraphTimeZonePrefer(timeZone: string): string {
 }
 
 /**
+ * The `Prefer` key capping a page's size where `$top` does not apply, e.g. a message delta round.
+ *
+ * @see https://learn.microsoft.com/en-us/graph/api/message-delta#request-headers
+ */
+export const MICROSOFT_GRAPH_MAX_PAGE_SIZE_PREFER_KEY = 'odata.maxpagesize';
+
+/**
+ * Returns the `Prefer` value capping a page at the given number of items.
+ *
+ * @param size - The most items per page.
+ * @returns E.g. `odata.maxpagesize=50`.
+ */
+export function microsoftGraphMaxPageSizePrefer(size: number): string {
+  return `${MICROSOFT_GRAPH_MAX_PAGE_SIZE_PREFER_KEY}=${size}`;
+}
+
+/**
  * Combines several `Prefer` values into one header value. Graph reads a comma-separated list, and a
  * request carrying two `Prefer` headers may see only one of them.
  *

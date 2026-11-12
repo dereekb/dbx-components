@@ -5,6 +5,7 @@ import { writeFile } from 'node:fs/promises';
 import type { Argv, CommandModule } from 'yargs';
 import { msGraphCommandHandler } from '../middleware/auth.middleware';
 import { msGraphCliMailboxOptions, msGraphCliPagingOptions, parseMsGraphCliDateOption, readMsGraphCliIdsOption } from '../util/option';
+import { DEFAULT_MSGRAPH_CLI_MAIL_DUMP_MAX_MESSAGES, dumpMsGraphCliMail } from '../util/mail.dump';
 import { outputMsGraphCliResult } from '../util/output';
 
 /**
@@ -13,7 +14,9 @@ import { outputMsGraphCliResult } from '../util/output';
  *
  * @param graphContext - The Graph context.
  * @param request - The built request.
- * @param argv - The parsed arguments (`allPages`, `maxPages`).
+ * @param argv - The parsed arguments.
+ * @param argv.allPages - Whether to follow `@odata.nextLink` and return every item.
+ * @param argv.maxPages - With `allPages`: the most pages to read.
  * @returns The page or the items.
  */
 async function requestMsGraphCliMailPages(graphContext: MicrosoftGraphContext, request: MicrosoftGraphMailRequest, argv: { readonly allPages?: boolean; readonly maxPages?: Maybe<number> }): Promise<unknown> {
@@ -153,12 +156,53 @@ export const MAIL_GET_MANY_COMMAND: CommandModule = {
   })
 };
 
+export const MAIL_DUMP_COMMAND: CommandModule = {
+  command: 'dump',
+  describe: 'Dump a mail folder to a directory, incrementally (delta): JSON + Markdown per message, optional .eml and attachments',
+  builder: (yargs: Argv) =>
+    msGraphCliMailboxOptions(yargs)
+      .option('dir', { type: 'string', demandOption: true, describe: 'The dump directory (created with mode 0700). Re-running into it resumes from its manifest.json' })
+      .option('folder', { type: 'string', default: 'inbox', describe: 'The mail folder by id or well-known name (inbox, sentitems, archive). Delta is per-folder' })
+      .option('since', { type: 'string', describe: 'First run only: messages received at or after this date/instant (ISO 8601)' })
+      .option('body-format', { type: 'string', choices: ['text', 'html'] as const, default: 'text', describe: 'Body format written to the .json / .md files' })
+      .option('markdown', { type: 'boolean', default: true, describe: 'Also write a .md rendering of each message (--no-markdown to skip)' })
+      .option('eml', { type: 'boolean', default: false, describe: 'Also write each message as .eml (MIME)' })
+      .option('attachments', { type: 'boolean', default: false, describe: "Also write each message's file attachments" })
+      .option('max-bytes', { type: 'number', describe: 'With --attachments: the most attachment bytes one run writes' })
+      .option('prune', { type: 'boolean', default: false, describe: 'Delete the files of messages Graph reports removed (default: only record them in the manifest)' })
+      .option('max-messages', { type: 'number', default: DEFAULT_MSGRAPH_CLI_MAIL_DUMP_MAX_MESSAGES, describe: 'The most messages one run processes; re-run to continue' })
+      .example([
+        ['$0 mail dump --dir ./mail --since 2026-10-01', 'Dump the inbox since Oct 1; re-run later to add only new or changed messages'],
+        ['$0 mail dump --dir ./sent --folder sentitems --eml --attachments --max-bytes 50000000', 'Sent items with .eml files and up to 50 MB of attachments']
+      ]),
+  handler: msGraphCommandHandler(async (argv: any, { graphContext }) => {
+    const result = await dumpMsGraphCliMail({
+      graphContext,
+      dir: argv.dir,
+      mailbox: argv.mailbox,
+      folder: argv.folder,
+      since: parseMsGraphCliDateOption('since', argv.since),
+      bodyFormat: argv.bodyFormat ?? 'text',
+      markdown: argv.markdown ?? true,
+      eml: argv.eml ?? false,
+      attachments: argv.attachments ?? false,
+      prune: argv.prune ?? false,
+      maxMessages: argv.maxMessages ?? DEFAULT_MSGRAPH_CLI_MAIL_DUMP_MAX_MESSAGES,
+      maxBytes: argv.maxBytes,
+      immutableIds: !argv.mutableIds,
+      progress: (line) => process.stderr.write(`${line}\n`)
+    });
+
+    outputMsGraphCliResult(result);
+  })
+};
+
 /**
- * The `mail` command: `list`, `search`, `get` and `get-many`.
+ * The `mail` command: `list`, `search`, `get`, `get-many` and `dump`.
  */
 export const MAIL_COMMAND: CommandModule = {
   command: 'mail',
   describe: "Read the user's (or a shared mailbox's) Outlook mail",
-  builder: (yargs: Argv) => yargs.command(MAIL_LIST_COMMAND).command(MAIL_SEARCH_COMMAND).command(MAIL_GET_COMMAND).command(MAIL_GET_MANY_COMMAND).demandCommand(1, 'Please specify a mail subcommand.'),
+  builder: (yargs: Argv) => yargs.command(MAIL_LIST_COMMAND).command(MAIL_SEARCH_COMMAND).command(MAIL_GET_COMMAND).command(MAIL_GET_MANY_COMMAND).command(MAIL_DUMP_COMMAND).demandCommand(1, 'Please specify a mail subcommand.'),
   handler: () => undefined
 };

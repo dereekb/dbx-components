@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { type FetchHandler } from '@dereekb/util/fetch';
 import { type MicrosoftGraphBatchResponseItem } from './graph.batch.api';
 import { microsoftGraphFactory } from './graph.factory';
-import { MICROSOFT_GRAPH_MESSAGE_FILTER_EARLIEST, getMessageMime, getMessages, listMessages, microsoftGraphMessageListFilter, microsoftGraphSearchMessagesRequest } from './graph.mail.api';
+import { MICROSOFT_GRAPH_MESSAGE_DELTA_SELECT, MICROSOFT_GRAPH_MESSAGE_FILTER_EARLIEST, getMessageAttachmentContent, getMessageMime, getMessages, listMessages, microsoftGraphMessageListFilter, microsoftGraphMessagesDeltaRequest, microsoftGraphSearchMessagesRequest } from './graph.mail.api';
 
 function recordingGraph(answer: (request: Request) => Promise<Response> | Response) {
   const requests: Request[] = [];
@@ -123,5 +123,32 @@ describe('getMessages()', () => {
     const first = (await requests[0].json()) as { requests: { url: string; headers?: Record<string, string> }[] };
     expect(first.requests[0].url).toContain('/me/messages/a?');
     expect(first.requests[0].headers?.['Prefer']).toBe('IdType="ImmutableId", outlook.body-content-type="html"');
+  });
+});
+
+describe('microsoftGraphMessagesDeltaRequest()', () => {
+  it('starts a folder round with a receivedDateTime lower bound and the page size in Prefer', () => {
+    // models: M-k (delta-query-messages) — per-folder; $filter only on receivedDateTime; page size via odata.maxpagesize
+    const request = microsoftGraphMessagesDeltaRequest({ folder: 'inbox', mailbox: 'shared@example.com', since: new Date('2026-10-01T00:00:00Z'), pageSize: 20 });
+    expect(request.path).toBe('/users/shared%40example.com/mailFolders/inbox/messages/delta');
+    expect(request.query).toEqual({ $select: MICROSOFT_GRAPH_MESSAGE_DELTA_SELECT, $filter: 'receivedDateTime ge 2026-10-01T00:00:00Z' });
+    expect(request.headers).toEqual({ Prefer: 'IdType="ImmutableId", odata.maxpagesize=20' });
+  });
+
+  it('resumes from a stored link without adding a query', () => {
+    const link = 'https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages/delta?$deltatoken=d1';
+    const request = microsoftGraphMessagesDeltaRequest({ folder: 'inbox', link, since: new Date('2026-10-01T00:00:00Z'), immutableIds: false });
+    expect(request.path).toBe(link);
+    expect(request.query).toEqual({});
+    expect(request.headers).toEqual({ Prefer: 'odata.maxpagesize=50' });
+  });
+});
+
+describe('getMessageAttachmentContent()', () => {
+  it('reads the attachment bytes through $value', async () => {
+    const { graphContext, requests } = recordingGraph(() => new Response(new Uint8Array([1, 2, 3]), { status: 200, headers: { 'Content-Type': 'application/pdf' } }));
+    const response = await getMessageAttachmentContent(graphContext)({ id: 'm1', attachmentId: 'a/1' });
+    expect(new URL(requests[0].url).pathname).toBe('/v1.0/me/messages/m1/attachments/a%2F1/$value');
+    expect([...response.body]).toEqual([1, 2, 3]);
   });
 });

@@ -30,6 +30,10 @@ export interface MicrosoftGraphItemBody {
  */
 export interface MicrosoftGraphMessage {
   readonly id: string;
+  /**
+   * Changes whenever the message changes. A dump skips a message whose `changeKey` it already holds.
+   */
+  readonly changeKey?: Maybe<string>;
   readonly subject?: Maybe<string>;
   readonly bodyPreview?: Maybe<string>;
   readonly body?: Maybe<MicrosoftGraphItemBody>;
@@ -41,6 +45,25 @@ export interface MicrosoftGraphMessage {
   readonly hasAttachments?: Maybe<boolean>;
   readonly webLink?: Maybe<string>;
   readonly conversationId?: Maybe<string>;
+  readonly sentDateTime?: Maybe<ISO8601DateString>;
+  readonly parentFolderId?: Maybe<string>;
+  /**
+   * Whether the message is an unsent draft. Only a draft's recipients, subject and body can be changed.
+   */
+  readonly isDraft?: Maybe<boolean>;
+}
+
+/**
+ * The subset of a Graph message `attachment` this package reads. A `#microsoft.graph.fileAttachment` holds
+ * file bytes; an item or reference attachment does not.
+ */
+export interface MicrosoftGraphAttachment {
+  readonly id: string;
+  readonly '@odata.type'?: Maybe<string>;
+  readonly name?: Maybe<string>;
+  readonly contentType?: Maybe<string>;
+  readonly size?: Maybe<number>;
+  readonly isInline?: Maybe<boolean>;
 }
 
 export interface MicrosoftGraphDateTimeTimeZone {
