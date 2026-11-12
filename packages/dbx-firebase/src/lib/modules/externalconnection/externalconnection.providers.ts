@@ -29,6 +29,15 @@ export interface ProvideDbxFirebaseExternalConnectionsConfig extends DbxFirebase
    * `handleSignInRedirectResult()` itself, e.g. from a dedicated callback route.
    */
   readonly handleSignInRedirectResult?: Maybe<boolean>;
+  /**
+   * Whether to record a refused connect on app start, when the landing url carries one. Defaults to true.
+   *
+   * Reads the `connectError` / `connectErrorProvider` parameters the server's connect failure redirect
+   * carries into the service's `connectFailure` signal, which `dbx-firebase-external-connections` renders
+   * as a banner. Synchronous and network-free. Turn it off only for an app that calls
+   * `handleConnectRedirectResult()` itself.
+   */
+  readonly handleConnectRedirectResult?: Maybe<boolean>;
 }
 
 /**
@@ -95,11 +104,21 @@ export function provideDbxFirebaseExternalConnections(config: ProvideDbxFirebase
         dbxFirebaseExternalConnectionLoginProviders(config.providers).forEach((x) => loginService.register(x, false));
       }
 
-      if (config.handleSignInRedirectResult ?? true) {
-        // deliberately not awaited: a failed redemption must not block the app from booting, and the
-        // user is already looking at a page that renders fine signed out
+      const handleSignInRedirectResult = config.handleSignInRedirectResult ?? true;
+      const handleConnectRedirectResult = config.handleConnectRedirectResult ?? true;
+
+      if (handleSignInRedirectResult || handleConnectRedirectResult) {
         const externalConnectionService = inject(DbxFirebaseExternalConnectionService);
-        externalConnectionService.handleSignInRedirectResult().catch((e: unknown) => console.error('DbxFirebaseExternalConnectionService: failed completing a sign-in redirect: ', e));
+
+        if (handleSignInRedirectResult) {
+          // deliberately not awaited: a failed redemption must not block the app from booting, and the
+          // user is already looking at a page that renders fine signed out
+          externalConnectionService.handleSignInRedirectResult().catch((e: unknown) => console.error('DbxFirebaseExternalConnectionService: failed completing a sign-in redirect: ', e));
+        }
+
+        if (handleConnectRedirectResult) {
+          externalConnectionService.handleConnectRedirectResult();
+        }
       }
     })
   ];

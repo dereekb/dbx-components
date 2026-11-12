@@ -1,7 +1,8 @@
 import { type FirebaseLoginMethodType } from '../../../auth/login/login';
-import { type Maybe, type PromiseOrValue } from '@dereekb/util';
+import { type Maybe, type PromiseOrValue, type ReadableError } from '@dereekb/util';
 import {
   type KnownUserExternalConnectionProviderType,
+  USER_EXTERNAL_CONNECTION_OVER_GRANTED_ERROR_CODE,
   type UserExternalConnectionEntry,
   type UserExternalConnectionEntryMap,
   type UserExternalConnectionProviderType,
@@ -204,6 +205,21 @@ export interface DbxFirebaseExternalConnectionProvider {
    */
   readonly disconnectConfirm?: Maybe<DbxActionConfirmConfig>;
   /**
+   * Confirmation shown before connecting, reconnecting or switching presets.
+   *
+   * Absent means the connect actions run without asking. Use it for a notice the user must read
+   * before the provider's consent page opens, e.g. the Microsoft default's warning about the
+   * "Consent on behalf of your organization" checkbox.
+   */
+  readonly connectConfirm?: Maybe<DbxActionConfirmConfig>;
+  /**
+   * The copy shown for each reason code a refused connect reported back, keyed by the code.
+   *
+   * Takes precedence over {@link DEFAULT_DBX_FIREBASE_EXTERNAL_CONNECTION_CONNECT_ERROR_MESSAGES}. See
+   * {@link dbxFirebaseExternalConnectionConnectFailureReadableError}.
+   */
+  readonly connectErrorMessages?: Maybe<DbxFirebaseExternalConnectionConnectErrorMessages>;
+  /**
    * Declares that this provider can also be used to LOG IN, and how its login button renders.
    *
    * Present means the registry derives a `DbxFirebaseAuthLoginProvider` for it, so "Log in with
@@ -394,6 +410,91 @@ export const EXTERNAL_CONNECTION_SIGN_IN_TICKET_PARAM = 'ticket';
  * maps it to its own copy rather than rendering anything the server said.
  */
 export const EXTERNAL_CONNECTION_SIGN_IN_ERROR_PARAM = 'signInError';
+
+/**
+ * Query parameter a REFUSED connect returns its reason code on. Must match the server's
+ * `USER_EXTERNAL_CONNECTION_CONNECT_ERROR_PARAM`.
+ *
+ * The value is one of the server's allowlisted connect codes (`USER_EXTERNAL_CONNECTION_CONNECT_REPORTABLE_ERROR_CODES`),
+ * e.g. `USER_EXTERNAL_CONNECTION_OVER_GRANTED`. Other connect failures return to the bare failure url.
+ */
+export const EXTERNAL_CONNECTION_CONNECT_ERROR_PARAM = 'connectError';
+
+/**
+ * Query parameter a REFUSED connect returns the provider type on, beside {@link EXTERNAL_CONNECTION_CONNECT_ERROR_PARAM}.
+ * Must match the server's `USER_EXTERNAL_CONNECTION_CONNECT_ERROR_PROVIDER_PARAM`.
+ */
+export const EXTERNAL_CONNECTION_CONNECT_ERROR_PROVIDER_PARAM = 'connectErrorProvider';
+
+// MARK: Connect Failure
+/**
+ * A refused connect, as reported on the connect failure redirect.
+ */
+export interface DbxFirebaseExternalConnectionConnectFailure {
+  /**
+   * The provider the refused connect was for.
+   */
+  readonly providerType: UserExternalConnectionProviderType;
+  /**
+   * The server's allowlisted reason code, e.g. `USER_EXTERNAL_CONNECTION_OVER_GRANTED`.
+   */
+  readonly errorCode: string;
+}
+
+/**
+ * The copy shown for each reason code a refused connect reported back, keyed by the code.
+ */
+export type DbxFirebaseExternalConnectionConnectErrorMessages = Readonly<Partial<Record<string, string>>>;
+
+/**
+ * The library's copy for each reason code a refused connect can report, used when the provider declares
+ * none of its own for the code.
+ */
+export const DEFAULT_DBX_FIREBASE_EXTERNAL_CONNECTION_CONNECT_ERROR_MESSAGES: DbxFirebaseExternalConnectionConnectErrorMessages = {
+  [USER_EXTERNAL_CONNECTION_OVER_GRANTED_ERROR_CODE]: 'The provider granted more access than the option you picked, so the connection was not saved. Remove the access this app already holds with the provider, then connect again.'
+};
+
+/**
+ * Fallback message for a reported reason code that neither the provider nor the library has copy for.
+ */
+export const DEFAULT_DBX_FIREBASE_EXTERNAL_CONNECTION_CONNECT_ERROR_MESSAGE = 'The connection did not complete.';
+
+/**
+ * Input for {@link dbxFirebaseExternalConnectionConnectFailureReadableError}.
+ */
+export interface DbxFirebaseExternalConnectionConnectFailureReadableErrorInput {
+  /**
+   * The refused connect.
+   */
+  readonly failure: DbxFirebaseExternalConnectionConnectFailure;
+  /**
+   * The registered provider the failure is for, when there is one.
+   */
+  readonly provider?: Maybe<DbxFirebaseExternalConnectionProvider>;
+}
+
+/**
+ * Builds the error a refused connect renders as.
+ *
+ * The message is the provider's `connectErrorMessages` entry for the code, else the library default for it,
+ * else a generic line — prefixed with the provider's name, or with its type when the provider is not registered.
+ *
+ * @param input - The refused connect and the provider it was for.
+ * @returns The error to render, carrying the reason code.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function dbxFirebaseExternalConnectionConnectFailureReadableError(input: DbxFirebaseExternalConnectionConnectFailureReadableErrorInput): ReadableError {
+  const { failure, provider } = input;
+  const { providerType, errorCode } = failure;
+  const providerName = provider?.assets.providerName ?? providerType;
+  const message = provider?.connectErrorMessages?.[errorCode] ?? DEFAULT_DBX_FIREBASE_EXTERNAL_CONNECTION_CONNECT_ERROR_MESSAGES[errorCode] ?? DEFAULT_DBX_FIREBASE_EXTERNAL_CONNECTION_CONNECT_ERROR_MESSAGE;
+
+  return {
+    code: errorCode,
+    message: `${providerName}: ${message}`
+  };
+}
 
 /**
  * `sessionStorage` key the in-flight sign-in's PKCE verifier is held under.

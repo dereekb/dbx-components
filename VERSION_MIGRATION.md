@@ -53,6 +53,18 @@
   connect's over-grant check and the token mint share it.
 - **`packages/microsoft/SETUP.md`** documents the app registration, the "Consent on behalf of your organization" checkbox
   (it cannot be disabled — leave it unticked) and how to find and revoke tenant-wide or per-user consent.
+- **`@dereekb/dbx-firebase` connect notice and refusal banner.** `DbxFirebaseExternalConnectionProvider.connectConfirm`
+  (a `DbxActionConfirmConfig`, shown before Connect, a preset connect, Reconnect and "Switch to") and `connectErrorMessages`
+  (copy per reported code, over `DEFAULT_DBX_FIREBASE_EXTERNAL_CONNECTION_CONNECT_ERROR_MESSAGES`), both also
+  `dbxFirebaseKnownExternalConnectionProvider` overrides. `DbxFirebaseExternalConnectionService.connectFailure` (a signal),
+  `handleConnectRedirectResult(url?)` (synchronous, leaves the url as is) and `clearConnectFailure()`;
+  `connectToProvider` clears a recorded failure. `readExternalConnectionConnectFailureFromUrl`,
+  `EXTERNAL_CONNECTION_CONNECT_ERROR_PARAM` / `_PROVIDER_PARAM` and `dbxFirebaseExternalConnectionConnectFailureReadableError`
+  are exported. `provideDbxFirebaseExternalConnections({ handleConnectRedirectResult })` (default true) records the failure
+  on app start, and `dbx-firebase-external-connections` renders it as a `<dbx-error>` banner above the list.
+- **Microsoft default notice.** `DBX_FIREBASE_EXTERNAL_CONNECTION_MICROSOFT_PROVIDER` declares a `connectConfirm` telling
+  administrators to leave "Consent on behalf of your organization" unticked, plus over-grant copy explaining how to revoke
+  the extra consent. To drop the notice, spread the constant and set `connectConfirm: undefined`.
 
 ### Changed
 - `AssertUserExternalConnectionProviderConnectableInput`, `UserExternalConnectionOAuthAuthorizeUrlInput`,
@@ -69,7 +81,9 @@
   scope union and the OIDC `claims` (as `[]`), assign them through the admin-only `external-token` profile, and list
   them in `providerScopes`. A CLI branching on mint errors should handle the four new codes.
 - Nothing is required for the over-grant refusal. Declare `onOverGrant: 'allow'` on a provider's policy to store wider
-  grants instead. An app with its own connect UI should read `connectError` / `connectErrorProvider` off the failure url.
+  grants instead. An app with its own connect UI should read `connectError` / `connectErrorProvider` off the failure url —
+  with `@dereekb/dbx-firebase`, read `DbxFirebaseExternalConnectionService.connectFailure` (recorded on app start) and
+  render it with `dbxFirebaseExternalConnectionConnectFailureReadableError`.
 
 ## Migration to v14.22.x — dynamic docs sources
 

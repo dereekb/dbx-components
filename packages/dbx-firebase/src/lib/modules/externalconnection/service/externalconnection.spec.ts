@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { type UserExternalConnectionEntryMap } from '@dereekb/firebase';
-import { type DbxFirebaseExternalConnectionProvider, dbxFirebaseExternalConnectionRowStatusForEntry, dbxFirebaseExternalConnectionRows } from './externalconnection';
+import { USER_EXTERNAL_CONNECTION_OVER_GRANTED_ERROR_CODE, type UserExternalConnectionEntryMap } from '@dereekb/firebase';
+import {
+  DEFAULT_DBX_FIREBASE_EXTERNAL_CONNECTION_CONNECT_ERROR_MESSAGE,
+  DEFAULT_DBX_FIREBASE_EXTERNAL_CONNECTION_CONNECT_ERROR_MESSAGES,
+  type DbxFirebaseExternalConnectionConnectFailure,
+  dbxFirebaseExternalConnectionConnectFailureReadableError,
+  type DbxFirebaseExternalConnectionProvider,
+  dbxFirebaseExternalConnectionRowStatusForEntry,
+  dbxFirebaseExternalConnectionRows
+} from './externalconnection';
 
 const now = new Date();
 
@@ -127,5 +135,36 @@ describe('dbxFirebaseExternalConnectionRows()', () => {
       expect(row.scopePresets).toBeUndefined();
       expect(row.scopePreset).toBeUndefined();
     });
+  });
+});
+
+describe('dbxFirebaseExternalConnectionConnectFailureReadableError()', () => {
+  const overGrantFailure: DbxFirebaseExternalConnectionConnectFailure = { providerType: 'calcom', errorCode: USER_EXTERNAL_CONNECTION_OVER_GRANTED_ERROR_CODE };
+
+  it("should use the provider's message for the code", () => {
+    const provider: DbxFirebaseExternalConnectionProvider = { ...calcomProvider, connectErrorMessages: { [USER_EXTERNAL_CONNECTION_OVER_GRANTED_ERROR_CODE]: 'Remove the extra Cal.com access.' } };
+    const result = dbxFirebaseExternalConnectionConnectFailureReadableError({ failure: overGrantFailure, provider });
+
+    expect(result.code).toBe(USER_EXTERNAL_CONNECTION_OVER_GRANTED_ERROR_CODE);
+    expect(result.message).toBe('Cal.com: Remove the extra Cal.com access.');
+  });
+
+  it('should fall back to the library default for the code', () => {
+    const result = dbxFirebaseExternalConnectionConnectFailureReadableError({ failure: overGrantFailure, provider: calcomProvider });
+
+    expect(result.message).toBe(`Cal.com: ${DEFAULT_DBX_FIREBASE_EXTERNAL_CONNECTION_CONNECT_ERROR_MESSAGES[USER_EXTERNAL_CONNECTION_OVER_GRANTED_ERROR_CODE]}`);
+  });
+
+  it('should fall back to the generic line for a code with no copy', () => {
+    const result = dbxFirebaseExternalConnectionConnectFailureReadableError({ failure: { providerType: 'calcom', errorCode: 'SOME_OTHER_CODE' }, provider: calcomProvider });
+
+    expect(result.code).toBe('SOME_OTHER_CODE');
+    expect(result.message).toBe(`Cal.com: ${DEFAULT_DBX_FIREBASE_EXTERNAL_CONNECTION_CONNECT_ERROR_MESSAGE}`);
+  });
+
+  it('should prefix the message with the provider type when the provider is unknown', () => {
+    const result = dbxFirebaseExternalConnectionConnectFailureReadableError({ failure: { providerType: 'unregistered', errorCode: USER_EXTERNAL_CONNECTION_OVER_GRANTED_ERROR_CODE } });
+
+    expect(result.message).toBe(`unregistered: ${DEFAULT_DBX_FIREBASE_EXTERNAL_CONNECTION_CONNECT_ERROR_MESSAGES[USER_EXTERNAL_CONNECTION_OVER_GRANTED_ERROR_CODE]}`);
   });
 });

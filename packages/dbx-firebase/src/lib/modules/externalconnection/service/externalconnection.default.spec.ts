@@ -5,6 +5,7 @@ import {
   MICROSOFT_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
   MICROSOFT_USER_EXTERNAL_CONNECTION_SCOPE_PRESETS,
   TRELLO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  USER_EXTERNAL_CONNECTION_OVER_GRANTED_ERROR_CODE,
   ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE
 } from '@dereekb/firebase';
 import { type DbxFirebaseExternalConnectionProvider } from './externalconnection';
@@ -50,6 +51,18 @@ describe('dbxFirebaseExternalConnectionProviderForEntry()', () => {
     expect(dbxFirebaseExternalConnectionProviderForEntry(MICROSOFT_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE)).toBe(DBX_FIREBASE_EXTERNAL_CONNECTION_MICROSOFT_PROVIDER);
     expect(DBX_FIREBASE_EXTERNAL_CONNECTION_MICROSOFT_PROVIDER.scopePresets).toBe(MICROSOFT_USER_EXTERNAL_CONNECTION_SCOPE_PRESETS);
     expect(DBX_FIREBASE_EXTERNAL_CONNECTION_MICROSOFT_PROVIDER.scopePresets?.map((x) => x.label)).toEqual(['Read', 'Read + Write']);
+  });
+
+  it('should give microsoft an org-consent connect notice and over-grant copy', () => {
+    expect(DBX_FIREBASE_EXTERNAL_CONNECTION_MICROSOFT_PROVIDER.connectConfirm?.title).toBe('Connect Microsoft');
+    expect(DBX_FIREBASE_EXTERNAL_CONNECTION_MICROSOFT_PROVIDER.connectConfirm?.prompt).toContain('Consent on behalf of your organization');
+    expect(DBX_FIREBASE_EXTERNAL_CONNECTION_MICROSOFT_PROVIDER.connectConfirm?.confirmText).toBe('Continue to Microsoft');
+    expect(DBX_FIREBASE_EXTERNAL_CONNECTION_MICROSOFT_PROVIDER.connectErrorMessages?.[USER_EXTERNAL_CONNECTION_OVER_GRANTED_ERROR_CODE]).toContain('Microsoft granted more access');
+  });
+
+  it('should leave the other known providers without a connect notice', () => {
+    expect(DBX_FIREBASE_EXTERNAL_CONNECTION_DISCORD_PROVIDER.connectConfirm).toBeUndefined();
+    expect(DBX_FIREBASE_EXTERNAL_CONNECTION_TRELLO_PROVIDER.connectConfirm).toBeUndefined();
   });
 
   it('should pass a declared provider through untouched', () => {
@@ -107,5 +120,21 @@ describe('dbxFirebaseKnownExternalConnectionProvider()', () => {
 
     expect(result.scopePresets).toBe(scopePresets);
     expect(DBX_FIREBASE_EXTERNAL_CONNECTION_DISCORD_PROVIDER.scopePresets).toBeUndefined();
+  });
+
+  it('should keep the known connect notice and over-grant copy when not overridden', () => {
+    const result = dbxFirebaseKnownExternalConnectionProvider({ providerType: MICROSOFT_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE });
+
+    expect(result.connectConfirm).toBe(DBX_FIREBASE_EXTERNAL_CONNECTION_MICROSOFT_PROVIDER.connectConfirm);
+    expect(result.connectErrorMessages).toBe(DBX_FIREBASE_EXTERNAL_CONNECTION_MICROSOFT_PROVIDER.connectErrorMessages);
+  });
+
+  it('should apply a connect notice and connect error messages override', () => {
+    const connectConfirm = { title: 'Connect your work account', prompt: 'Use your work account.', confirmText: 'Continue' };
+    const connectErrorMessages = { [USER_EXTERNAL_CONNECTION_OVER_GRANTED_ERROR_CODE]: 'Ask IT to remove the extra access.' };
+    const result = dbxFirebaseKnownExternalConnectionProvider({ providerType: MICROSOFT_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, connectConfirm, connectErrorMessages });
+
+    expect(result.connectConfirm).toBe(connectConfirm);
+    expect(result.connectErrorMessages).toBe(connectErrorMessages);
   });
 });
