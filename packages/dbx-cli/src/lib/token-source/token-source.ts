@@ -321,14 +321,35 @@ export async function loadCachedCliTokenSourceTokenEntry(input: CliTokenSourceTo
 }
 
 /**
+ * Input for {@link loadCachedCliTokenSourceToken}.
+ */
+export interface LoadCachedCliTokenSourceTokenInput<T extends CliTokenSourceToken = CliTokenSourceToken> extends CliTokenSourceTokenFileInput {
+  /**
+   * Parses the cached token's scopes. Defaults to {@link defaultCliTokenSourceScopesParser}.
+   */
+  readonly parseScopes?: Maybe<CliTokenSourceScopesParser>;
+  /**
+   * Maps the cached token to the CLI's own token type, handed the raw entry. Defaults to the token as is.
+   */
+  readonly mapToken?: Maybe<CliTokenSourceTokenMapper<T>>;
+}
+
+/**
  * Reads a token source's cached token from the token file, when present and reusable.
  *
- * @param input - The command, scopes, and token file.
+ * @param input - The command, scopes, token file, and token hooks.
  * @returns The cached token, or undefined when there is none or it nears expiry.
  */
-export async function loadCachedCliTokenSourceToken(input: CliTokenSourceTokenFileInput): Promise<Maybe<CliTokenSourceToken>> {
-  const token = readCliTokenSourceToken(await loadCachedCliTokenSourceTokenEntry(input));
-  return token != null && isCliTokenSourceTokenReusable(token) ? token : undefined;
+export async function loadCachedCliTokenSourceToken<T extends CliTokenSourceToken = CliTokenSourceToken>(input: LoadCachedCliTokenSourceTokenInput<T>): Promise<Maybe<T>> {
+  const stored = await loadCachedCliTokenSourceTokenEntry(input);
+  const token = readCliTokenSourceToken(stored, input.parseScopes ?? undefined);
+  let result: Maybe<T>;
+
+  if (token != null && isCliTokenSourceTokenReusable(token)) {
+    result = input.mapToken ? input.mapToken(token, stored as Record<string, unknown>) : (token as T);
+  }
+
+  return result;
 }
 
 /**
@@ -412,13 +433,9 @@ export function createCliTokenSource<T extends CliTokenSourceToken = CliTokenSou
   let inFlight: Maybe<Promise<T>>;
 
   async function fetchToken(): Promise<T> {
-    const stored = await loadCachedCliTokenSourceTokenEntry(fileInput);
-    const cached = readCliTokenSourceToken(stored, parseScopes);
-    let token: T;
+    let token = await loadCachedCliTokenSourceToken<T>({ ...fileInput, parseScopes, mapToken });
 
-    if (cached != null && isCliTokenSourceTokenReusable(cached)) {
-      token = mapToken(cached, stored as Record<string, unknown>);
-    } else {
+    if (token == null) {
       const bundle = await runCliCredentialProcess<CliTokenSourceBundle>({ command: runCommand, timeoutMs });
       const fromBundle = cliTokenSourceTokenFromBundle({ bundle, parseScopes });
       token = mapToken(fromBundle.token);

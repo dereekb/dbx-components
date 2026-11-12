@@ -67,6 +67,8 @@ describe('auth token-source', () => {
     expect(getConfigFilePath().startsWith(testHome)).toBe(true);
   });
 
+  // the generic set/use/show/clear behaviour is covered by dbx-cli's token-source spec; these cover the
+  // zoho-cli config file (credential blocks), apiMode, and the cached token's coverage
   describe('setAuthTokenSource()', () => {
     it('should save the command without touching the shared or product blocks', async () => {
       await mergeCliConfig({ shared: { ...creds, region: 'eu' }, crm: { clientId: 'crm-id', clientSecret: 'crm-secret', refreshToken: 'crm-token' }, desk: { orgId: '42' }, output: { pick: 'id' } });
@@ -87,11 +89,7 @@ describe('auth token-source', () => {
       expect((await loadCliConfig())?.tokenSource?.command).toBe('demo-cli external-token zoho_admin');
     });
 
-    it('should reject a blank command', async () => {
-      await expect(setAuthTokenSource({ command: '   ' })).rejects.toThrow('cannot be empty');
-    });
-
-    it("should evict a replaced command's cached token and keep the other token file entries", async () => {
+    it("should evict a replaced command's cached token and keep the product tokens", async () => {
       await setAuthTokenSource({ command: 'old-cmd' });
       writeTokenFile({ crm: { accessToken: 'crm-token' }, [zohoCliTokenSourceCacheKey('old-cmd')]: cachedToken('old') });
 
@@ -102,7 +100,7 @@ describe('auth token-source', () => {
       expect(tokens['crm']).toEqual({ accessToken: 'crm-token' });
     });
 
-    it('should report an env override that wins over the saved command', async () => {
+    it('should report the ZOHO_CLI_TOKEN_COMMAND override that wins over the saved command', async () => {
       process.env[ZOHO_CLI_TOKEN_COMMAND_ENV_VAR] = 'env-cmd';
       expect((await setAuthTokenSource({ command: 'saved-cmd' })).envOverride).toBe('env-cmd');
     });
@@ -113,52 +111,7 @@ describe('auth token-source', () => {
 
       expect((await loadCliConfigFile())?.tokenSource?.command).toBe('saved-cmd');
     });
-  });
 
-  describe('clearAuthTokenSource()', () => {
-    it('should remove only the token source block and its cached token', async () => {
-      await mergeCliConfig({ shared: { ...creds }, sign: { ...creds, apiUrl: 'production' } });
-      const before = readConfigFile();
-      await setAuthTokenSource({ command: 'saved-cmd' });
-      writeTokenFile({ sign: { accessToken: 'sign-token' }, [zohoCliTokenSourceCacheKey('saved-cmd')]: cachedToken('minted') });
-
-      const result = await clearAuthTokenSource();
-
-      expect(result).toEqual({ cleared: true, name: 'default', command: 'saved-cmd' });
-      expect(readConfigFile()).toEqual(before);
-      expect(readTokenFile()).toEqual({ sign: { accessToken: 'sign-token' } });
-    });
-
-    it('should report nothing cleared when no command is saved', async () => {
-      expect(await clearAuthTokenSource()).toEqual({ cleared: false, name: 'default' });
-    });
-  });
-
-  describe('buildAuthTokenSourceShowResult()', () => {
-    it('should report the saved command and the env override, with the override active', async () => {
-      await setAuthTokenSource({ command: 'saved-cmd' });
-      process.env[ZOHO_CLI_TOKEN_COMMAND_ENV_VAR] = 'env-cmd';
-
-      const result = await buildAuthTokenSourceShowResult();
-
-      expect(result.saved).toBe('saved-cmd');
-      expect(result.envOverride).toBe('env-cmd');
-      expect(result.active).toEqual({ command: 'env-cmd', origin: 'env' });
-      expect(result.cached).toBeNull();
-    });
-
-    it("should describe the active source's cached token without the token", async () => {
-      await setAuthTokenSource({ command: 'saved-cmd' });
-      writeTokenFile({ [zohoCliTokenSourceCacheKey('saved-cmd')]: cachedToken('minted-secret') });
-
-      const result = await buildAuthTokenSourceShowResult();
-
-      expect(result.cached).toMatchObject({ products: ['crm'], datacenter: 'eu', scopes: ['ZohoCRM.modules.ALL'] });
-      expect(JSON.stringify(result)).not.toContain('minted-secret');
-    });
-  });
-
-  describe('named token sources', () => {
     it('should save a named source next to the unnamed one, storing only a sandbox api mode', async () => {
       await setAuthTokenSource({ command: 'saved-cmd' });
       const dev = await setAuthTokenSource({ command: 'dev-cmd', name: 'dev', apiMode: 'sandbox' });
@@ -175,21 +128,10 @@ describe('auth token-source', () => {
       expect(result.apiMode).toBe('sandbox');
       expect((await loadCliConfigFile())?.tokenSources?.['dev']).toEqual({ command: 'dev-cmd-2', apiMode: 'sandbox' });
     });
+  });
 
-    it('should reject an invalid name', async () => {
-      await expect(setAuthTokenSource({ command: 'dev-cmd', name: 'dev env' })).rejects.toThrow('Invalid token source name "dev env"');
-    });
-
-    it("should evict a replaced named source's cached token", async () => {
-      await setAuthTokenSource({ command: 'old-dev-cmd', name: 'dev' });
-      writeTokenFile({ [zohoCliTokenSourceCacheKey('old-dev-cmd')]: cachedToken('old') });
-
-      await setAuthTokenSource({ command: 'new-dev-cmd', name: 'dev' });
-
-      expect(readTokenFile()[zohoCliTokenSourceCacheKey('old-dev-cmd')]).toBeUndefined();
-    });
-
-    it('should select a saved source with use, and the unnamed one again with use default', async () => {
+  describe('useAuthTokenSource()', () => {
+    it('should select a saved source with its api mode, and the unnamed one again with use default', async () => {
       await setAuthTokenSource({ command: 'saved-cmd' });
       await setAuthTokenSource({ command: 'dev-cmd', name: 'dev', apiMode: 'sandbox' });
 
@@ -201,42 +143,39 @@ describe('auth token-source', () => {
       expect((await loadCliConfig())?.tokenSource).toEqual({ command: 'saved-cmd' });
     });
 
-    it('should refuse to use a name with no saved source', async () => {
+    it('should name zoho-cli in the hint for a name with no saved source', async () => {
       await setAuthTokenSource({ command: 'dev-cmd', name: 'dev' });
-      await expect(useAuthTokenSource('prod')).rejects.toThrow('No token source is saved as "prod". Saved token sources: dev.');
+      await expect(useAuthTokenSource('prod')).rejects.toThrow('No token source is saved as "prod". Saved token sources: dev. Save it with: zoho-cli auth token-source set "<command>" --name prod');
     });
+  });
 
-    it('should report the env selection that wins over the saved one', async () => {
-      await setAuthTokenSource({ command: 'dev-cmd', name: 'dev' });
-      process.env[ZOHO_CLI_TOKEN_SOURCE_ENV_VAR] = 'prod';
-
-      expect((await useAuthTokenSource('dev')).envSelection).toBe('prod');
-    });
-
-    it('should clear a named source, its cached token, and the selection that named it', async () => {
+  describe('clearAuthTokenSource()', () => {
+    it('should remove only the token source block and its cached token', async () => {
+      await mergeCliConfig({ shared: { ...creds }, sign: { ...creds, apiUrl: 'production' } });
+      const before = readConfigFile();
       await setAuthTokenSource({ command: 'saved-cmd' });
-      await setAuthTokenSource({ command: 'dev-cmd', name: 'dev' });
-      await useAuthTokenSource('dev');
-      writeTokenFile({ [zohoCliTokenSourceCacheKey('dev-cmd')]: cachedToken('dev') });
+      writeTokenFile({ sign: { accessToken: 'sign-token' }, [zohoCliTokenSourceCacheKey('saved-cmd')]: cachedToken('minted') });
 
-      const result = await clearAuthTokenSource({ name: 'dev' });
+      const result = await clearAuthTokenSource();
 
-      expect(result).toEqual({ cleared: true, name: 'dev', command: 'dev-cmd', activeTokenSourceCleared: true });
-      expect(readConfigFile()).toEqual({ tokenSource: { command: 'saved-cmd' } });
-      expect(readTokenFile()).toEqual({});
+      expect(result).toEqual({ cleared: true, name: 'default', command: 'saved-cmd' });
+      expect(readConfigFile()).toEqual(before);
+      expect(readTokenFile()).toEqual({ sign: { accessToken: 'sign-token' } });
+    });
+  });
+
+  describe('buildAuthTokenSourceShowResult()', () => {
+    it("should describe the active source's cached token by its coverage, without the token", async () => {
+      await setAuthTokenSource({ command: 'saved-cmd' });
+      writeTokenFile({ [zohoCliTokenSourceCacheKey('saved-cmd')]: cachedToken('minted-secret') });
+
+      const result = await buildAuthTokenSourceShowResult();
+
+      expect(result.cached).toEqual({ products: ['crm'], datacenter: 'eu', expiresAt: expect.any(String), scopes: ['ZohoCRM.modules.ALL'] });
+      expect(JSON.stringify(result)).not.toContain('minted-secret');
     });
 
-    it('should keep the selection when clearing a different source', async () => {
-      await setAuthTokenSource({ command: 'dev-cmd', name: 'dev' });
-      await setAuthTokenSource({ command: 'prod-cmd', name: 'prod' });
-      await useAuthTokenSource('prod');
-
-      await clearAuthTokenSource({ name: 'dev' });
-
-      expect(readConfigFile()).toEqual({ tokenSources: { prod: { command: 'prod-cmd' } }, activeTokenSource: 'prod' });
-    });
-
-    it('should list every saved source and mark the one in effect', async () => {
+    it('should list every saved source with its api mode and mark the one in effect', async () => {
       await setAuthTokenSource({ command: 'saved-cmd' });
       await setAuthTokenSource({ command: 'dev-cmd', name: 'dev', apiMode: 'sandbox' });
       await useAuthTokenSource('dev');
@@ -251,14 +190,7 @@ describe('auth token-source', () => {
       expect(result.active).toEqual({ command: 'dev-cmd', apiMode: 'sandbox', origin: 'config', name: 'dev' });
     });
 
-    it('should follow the --token-source flag', async () => {
-      await setAuthTokenSource({ command: 'saved-cmd' });
-      await setAuthTokenSource({ command: 'dev-cmd', name: 'dev' });
-
-      expect((await buildAuthTokenSourceShowResult({ tokenSourceName: 'dev' })).active).toMatchObject({ name: 'dev', origin: 'flag' });
-    });
-
-    it('should report an unknown selection as an error instead of failing', async () => {
+    it('should report a ZOHO_CLI_TOKEN_SOURCE name with no saved source as an error instead of failing', async () => {
       await setAuthTokenSource({ command: 'saved-cmd' });
       process.env[ZOHO_CLI_TOKEN_SOURCE_ENV_VAR] = 'staging';
 
@@ -267,7 +199,6 @@ describe('auth token-source', () => {
       expect(result.active).toBeNull();
       expect(result.envSelection).toBe('staging');
       expect(result.error).toContain('Unknown token source "staging"');
-      expect(result.sources.map((x) => x.name)).toEqual(['default']);
     });
   });
 

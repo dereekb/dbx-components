@@ -6,7 +6,7 @@ import { type CliPaths } from '../config/paths';
 import { wrapCommandHandler } from '../util/handler';
 import { outputResult } from '../util/output';
 import { type CliActiveTokenSource, type CliTokenSourceConfig, type CliTokenSourceConfigFile, type CliTokenSourceName, type CliTokenSourceResolver, type CliTokenSourceSelection, DEFAULT_CLI_TOKEN_SOURCE_NAME, assertCliTokenSourceName, cliTokenSourceSelectionFromArgv } from './token-source.config';
-import { type CliTokenSourceToken, clearCachedCliTokenSourceToken, loadCachedCliTokenSourceToken } from './token-source';
+import { type CliTokenSourceScopesParser, type CliTokenSourceToken, type CliTokenSourceTokenMapper, clearCachedCliTokenSourceToken, loadCachedCliTokenSourceToken } from './token-source';
 
 // MARK: Config File
 /**
@@ -69,7 +69,7 @@ export function cliTokenSourceJsonConfigStore<C extends CliTokenSourceConfig = C
 /**
  * Config shared by the `auth token-source` functions and {@link buildCliTokenSourceAuthCommand}.
  */
-export interface CliTokenSourceCommandConfig<C extends CliTokenSourceConfig = CliTokenSourceConfig> extends CliTokenSourceConfigStore<C> {
+export interface CliTokenSourceCommandConfig<C extends CliTokenSourceConfig = CliTokenSourceConfig, T extends CliTokenSourceToken = CliTokenSourceToken> extends CliTokenSourceConfigStore<C> {
   readonly resolver: CliTokenSourceResolver<C>;
   /**
    * The CLI's token file, where the sources' tokens are cached.
@@ -86,10 +86,19 @@ export interface CliTokenSourceCommandConfig<C extends CliTokenSourceConfig = Cl
    */
   readonly describeSource?: Maybe<(source: Maybe<C>) => Record<string, unknown>>;
   /**
+   * Parses the cached token's scopes for `show`. Defaults to whitespace- or comma-delimited scopes.
+   */
+  readonly parseScopes?: Maybe<CliTokenSourceScopesParser>;
+  /**
+   * Maps the cached token `show` reads to the CLI's own token type, handed the raw token-file entry.
+   * Defaults to the token as is.
+   */
+  readonly mapToken?: Maybe<CliTokenSourceTokenMapper<T>>;
+  /**
    * What `show` prints about the active source's cached token (never the token). Defaults to its
    * `expiresAt`, `scopes`, and `providerType`.
    */
-  readonly describeCachedToken?: Maybe<(token: CliTokenSourceToken) => Record<string, unknown>>;
+  readonly describeCachedToken?: Maybe<(token: T) => Record<string, unknown>>;
 }
 
 /**
@@ -154,7 +163,7 @@ export interface SetCliTokenSourceResult extends CliTokenSourceEnvOverrides {
  * @returns What was saved.
  * @throws {Error} When the command is blank or the name is invalid.
  */
-export async function setCliTokenSource<C extends CliTokenSourceConfig>(config: CliTokenSourceCommandConfig<C>, input: SetCliTokenSourceInput): Promise<SetCliTokenSourceResult> {
+export async function setCliTokenSource<C extends CliTokenSourceConfig, T extends CliTokenSourceToken = CliTokenSourceToken>(config: CliTokenSourceCommandConfig<C, T>, input: SetCliTokenSourceInput): Promise<SetCliTokenSourceResult> {
   const { resolver, tokenCachePath } = config;
   const command = input.command.trim();
 
@@ -202,7 +211,7 @@ export interface UseCliTokenSourceResult extends CliTokenSourceEnvOverrides {
  * @returns The selection and the selected source.
  * @throws {Error} When the name is invalid or no source is saved under it.
  */
-export async function useCliTokenSource<C extends CliTokenSourceConfig>(config: CliTokenSourceCommandConfig<C>, name: string): Promise<UseCliTokenSourceResult> {
+export async function useCliTokenSource<C extends CliTokenSourceConfig, T extends CliTokenSourceToken = CliTokenSourceToken>(config: CliTokenSourceCommandConfig<C, T>, name: string): Promise<UseCliTokenSourceResult> {
   const { resolver } = config;
   const sourceName = cliTokenSourceNameOption(name);
   const fileConfig = await config.loadConfigFile();
@@ -254,7 +263,7 @@ export interface ClearCliTokenSourceResult extends CliTokenSourceEnvOverrides {
  * @returns What was cleared.
  * @throws {Error} When the name is invalid.
  */
-export async function clearCliTokenSource<C extends CliTokenSourceConfig>(config: CliTokenSourceCommandConfig<C>, input?: Maybe<ClearCliTokenSourceInput>): Promise<ClearCliTokenSourceResult> {
+export async function clearCliTokenSource<C extends CliTokenSourceConfig, T extends CliTokenSourceToken = CliTokenSourceToken>(config: CliTokenSourceCommandConfig<C, T>, input?: Maybe<ClearCliTokenSourceInput>): Promise<ClearCliTokenSourceResult> {
   const { resolver, tokenCachePath } = config;
   const name = cliTokenSourceNameOption(input?.name);
   const fileConfig = await config.loadConfigFile();
@@ -335,7 +344,7 @@ export interface CliTokenSourceShowResult<C extends CliTokenSourceConfig = CliTo
  * @param selection - The `--token-source` flag, when given.
  * @returns The saved sources and selection, the env overrides, the active source, and the cached token's description.
  */
-export async function buildCliTokenSourceShowResult<C extends CliTokenSourceConfig>(config: CliTokenSourceCommandConfig<C>, selection?: Maybe<CliTokenSourceSelection>): Promise<CliTokenSourceShowResult<C>> {
+export async function buildCliTokenSourceShowResult<C extends CliTokenSourceConfig, T extends CliTokenSourceToken = CliTokenSourceToken>(config: CliTokenSourceCommandConfig<C, T>, selection?: Maybe<CliTokenSourceSelection>): Promise<CliTokenSourceShowResult<C>> {
   const { resolver, tokenCachePath } = config;
   const fileConfig = await config.loadConfigFile();
   let active: Maybe<CliActiveTokenSource<C>>;
@@ -360,7 +369,7 @@ export async function buildCliTokenSourceShowResult<C extends CliTokenSourceConf
     return { name, command, ...config.describeSource?.(source), active: active?.name === name };
   });
 
-  const cachedToken = active ? await loadCachedCliTokenSourceToken({ command: active.command, tokenCachePath }) : undefined;
+  const cachedToken = active ? await loadCachedCliTokenSourceToken<T>({ command: active.command, tokenCachePath, parseScopes: config.parseScopes, mapToken: config.mapToken }) : undefined;
   let cached: Maybe<Record<string, unknown>> = null;
 
   if (cachedToken) {
@@ -380,9 +389,21 @@ export async function buildCliTokenSourceShowResult<C extends CliTokenSourceConf
 }
 
 /**
+ * Help-text overrides for {@link buildCliTokenSourceAuthCommand}.
+ */
+export interface CliTokenSourceAuthCommandDescriptions {
+  /**
+   * The `token-source` command's own description.
+   */
+  readonly tokenSource?: Maybe<string>;
+  readonly show?: Maybe<string>;
+  readonly clear?: Maybe<string>;
+}
+
+/**
  * Options for {@link buildCliTokenSourceAuthCommand}.
  */
-export interface BuildCliTokenSourceAuthCommandOptions<C extends CliTokenSourceConfig = CliTokenSourceConfig> extends CliTokenSourceCommandConfig<C> {
+export interface BuildCliTokenSourceAuthCommandOptions<C extends CliTokenSourceConfig = CliTokenSourceConfig, T extends CliTokenSourceToken = CliTokenSourceToken> extends CliTokenSourceCommandConfig<C, T> {
   /**
    * What the source's command prints, for the help text, e.g. `a Microsoft Graph access token bundle`.
    */
@@ -396,9 +417,14 @@ export interface BuildCliTokenSourceAuthCommandOptions<C extends CliTokenSourceC
    */
   readonly setOptions?: Maybe<(yargs: Argv) => Argv>;
   /**
-   * Extra `set` examples, as `[command, description]` pairs.
+   * The `set` examples, as `[command, description]` pairs. Defaults to an unnamed and a named source
+   * built from {@link exampleCommand}.
    */
   readonly setExamples?: Maybe<ReadonlyArray<readonly [string, string]>>;
+  /**
+   * Overrides the help text of the `token-source` command and its `show` and `clear` subcommands.
+   */
+  readonly describe?: Maybe<CliTokenSourceAuthCommandDescriptions>;
   /**
    * The follow-up command `set` suggests, given the saved name. Defaults to `<cli> auth show [--token-source <name>]`.
    */
@@ -417,7 +443,7 @@ export interface BuildCliTokenSourceAuthCommandOptions<C extends CliTokenSourceC
  * yargs.command(buildCliTokenSourceAuthCommand({ resolver, tokenCachePath, ...cliTokenSourceJsonConfigStore(paths) }));
  * ```
  */
-export function buildCliTokenSourceAuthCommand<C extends CliTokenSourceConfig>(options: BuildCliTokenSourceAuthCommandOptions<C>): CommandModule {
+export function buildCliTokenSourceAuthCommand<C extends CliTokenSourceConfig, T extends CliTokenSourceToken = CliTokenSourceToken>(options: BuildCliTokenSourceAuthCommandOptions<C, T>): CommandModule {
   const { resolver } = options;
   const { cliName, envVarNames } = resolver;
   const tokenDescription = options.tokenDescription ?? 'an access token bundle';
@@ -431,7 +457,12 @@ export function buildCliTokenSourceAuthCommand<C extends CliTokenSourceConfig>(o
     builder: (yargs: Argv) => {
       const base = yargs.positional('token-command', { type: 'string', demandOption: true, describe: 'The command to run (quote it as one argument)' }).option('name', { type: 'string', describe: nameDescribe });
       const withOptions = options.setOptions ? options.setOptions(base) : base;
-      return withOptions.example([[`$0 auth token-source set "${exampleCommand}"`, 'Use tokens minted by the app CLI'], [`$0 auth token-source set "${exampleCommand} --env prod" --name prod`, 'Save a named source for production'], ...((options.setExamples ?? []) as [string, string][])]);
+      const examples = options.setExamples ?? [
+        [`$0 auth token-source set "${exampleCommand}"`, 'Use tokens minted by the app CLI'],
+        [`$0 auth token-source set "${exampleCommand} --env prod" --name prod`, 'Save a named source for production']
+      ];
+
+      return withOptions.example(examples as [string, string][]);
     },
     handler: wrapCommandHandler(async (argv: any) => {
       const result = await setCliTokenSource(options, { command: String(argv.tokenCommand ?? ''), name: argv.name, options: argv });
@@ -451,7 +482,7 @@ export function buildCliTokenSourceAuthCommand<C extends CliTokenSourceConfig>(o
   const showCommand: CommandModule = {
     command: 'show',
     aliases: ['list'],
-    describe: `List the saved token sources and show the one in effect (${envVarNames.tokenSource} / ${envVarNames.tokenCommand} included) and its cached token (never the token)`,
+    describe: options.describe?.show ?? `List the saved token sources and show the one in effect (${envVarNames.tokenSource} / ${envVarNames.tokenCommand} included) and its cached token (never the token)`,
     builder: (yargs: Argv) => yargs,
     handler: wrapCommandHandler(async (argv: any) => {
       outputResult(await buildCliTokenSourceShowResult(options, cliTokenSourceSelectionFromArgv(argv)));
@@ -460,7 +491,7 @@ export function buildCliTokenSourceAuthCommand<C extends CliTokenSourceConfig>(o
 
   const clearCommand: CommandModule = {
     command: 'clear',
-    describe: 'Remove a saved token source and its cached token',
+    describe: options.describe?.clear ?? 'Remove a saved token source and its cached token',
     builder: (yargs: Argv) => yargs.option('name', { type: 'string', describe: nameDescribe }),
     handler: wrapCommandHandler(async (argv: any) => {
       outputResult(await clearCliTokenSource(options, { name: argv.name }));
@@ -469,7 +500,7 @@ export function buildCliTokenSourceAuthCommand<C extends CliTokenSourceConfig>(o
 
   return {
     command: 'token-source',
-    describe: `Use commands that mint access tokens, saved by name (per run: --token-source <name>, ${envVarNames.tokenSource}, ${envVarNames.tokenCommand})`,
+    describe: options.describe?.tokenSource ?? `Use commands that mint access tokens, saved by name (per run: --token-source <name>, ${envVarNames.tokenSource}, ${envVarNames.tokenCommand})`,
     builder: (yargs: Argv) => yargs.command(setCommand).command(useCommand).command(showCommand).command(clearCommand).demandCommand(1, 'Please specify a token-source subcommand.'),
     handler: () => undefined
   };

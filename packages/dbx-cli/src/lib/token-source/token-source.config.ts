@@ -242,7 +242,7 @@ export function cliTokenSourceResolver<T extends CliTokenSourceConfig = CliToken
 
     if (block != null && command) {
       const extra = readExtra ? readExtra(block, name) : {};
-      result = { ...extra, command } as T;
+      result = { command, ...extra } as T;
     }
 
     return result;

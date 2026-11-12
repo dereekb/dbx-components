@@ -155,6 +155,18 @@ describe('dbx-cli token source', () => {
     it('lists the unnamed source first, skipping blank commands', () => {
       expect(cliTokenSourceResolver({ cliName: 'test-cli', env: {} }).savedTokenSourceNames(fileConfig)).toEqual([DEFAULT_CLI_TOKEN_SOURCE_NAME, 'prod']);
     });
+
+    it('ignores blank env vars and returns undefined when nothing selects a source', () => {
+      const resolver = cliTokenSourceResolver({ cliName: 'test-cli', env: { TEST_CLI_TOKEN_SOURCE: ' ', TEST_CLI_TOKEN_COMMAND: '  ' } });
+
+      expect(resolver.resolveActiveTokenSource(fileConfig)?.origin).toBe('config');
+      expect(resolver.resolveActiveTokenSource(undefined)).toBeUndefined();
+    });
+
+    it('throws for a saved selection whose source was removed, labelling where it was selected', () => {
+      expect(() => cliTokenSourceResolver({ cliName: 'test-cli', env: {} }).resolveActiveTokenSource({ ...fileConfig, activeTokenSource: 'gone' })).toThrow('Unknown token source "gone" (from config file)');
+      expect(() => cliTokenSourceResolver({ cliName: 'test-cli', env: { TEST_CLI_TOKEN_SOURCE: 'gone' } }).resolveActiveTokenSource(fileConfig)).toThrow('(from TEST_CLI_TOKEN_SOURCE)');
+    });
   });
 
   describe('cliTokenSourceTokenFromBundle()', () => {
@@ -275,6 +287,24 @@ describe('dbx-cli token source', () => {
       expect((stored[1] as Record<string, unknown>)['accessToken']).toBe(MINTED_ACCESS_TOKEN);
     });
 
+    it('keeps a token without an expiry in memory only, never in the token file', async () => {
+      const { command, runs } = bundleCommand(join(home, 'bin'), { expiresAt: undefined });
+      const source = createCliTokenSource({ command, tokenCachePath: paths.tokenCachePath });
+      await source.loadToken();
+      await source.loadToken();
+
+      let tokens: Record<string, unknown> = {};
+
+      try {
+        tokens = readTokenFile();
+      } catch {
+        // no token file at all is fine
+      }
+
+      expect(tokens[cliTokenSourceCacheKey({ command })]).toBeUndefined();
+      expect(runs().length).toBe(1);
+    });
+
     it("surfaces the command's own error", async () => {
       const { command } = bundleCommand(join(home, 'bin'), {}, 'Not logged in to demo-cli.');
       await expect(createCliTokenSource({ command, tokenCachePath: paths.tokenCachePath }).loadToken()).rejects.toThrow('Not logged in to demo-cli.');
@@ -333,6 +363,60 @@ describe('dbx-cli token source', () => {
 
     it('refuses to select a name with no saved source', async () => {
       await expect(useCliTokenSource(config, 'nope')).rejects.toThrow('No token source is saved as "nope"');
+    });
+
+    it('rejects a blank command and an invalid name', async () => {
+      await expect(setCliTokenSource(config, { command: '   ' })).rejects.toThrow('cannot be empty');
+      await expect(setCliTokenSource(config, { command: 'cmd', name: 'dev env' })).rejects.toThrow('Invalid token source name "dev env"');
+    });
+
+    it('reports the env vars that win over the saved selection', async () => {
+      const envConfig: CliTokenSourceCommandConfig = { ...config, resolver: cliTokenSourceResolver({ cliName: 'test-cli', env: { TEST_CLI_TOKEN_COMMAND: 'env-cmd', TEST_CLI_TOKEN_SOURCE: 'prod' } }) };
+      await setCliTokenSource(envConfig, { command: 'cmd-prod', name: 'prod' });
+
+      expect(await setCliTokenSource(envConfig, { command: 'cmd-default' })).toMatchObject({ envOverride: 'env-cmd', envSelection: 'prod' });
+      expect(await useCliTokenSource(envConfig, 'default')).toMatchObject({ envOverride: 'env-cmd', envSelection: 'prod' });
+      expect((await buildCliTokenSourceShowResult(envConfig)).active).toMatchObject({ command: 'cmd-prod', origin: 'env', name: 'prod' });
+    });
+
+    it('reports nothing cleared when no source is saved, and keeps the selection when clearing another source', async () => {
+      expect(await clearCliTokenSource(config)).toEqual({ cleared: false, name: DEFAULT_CLI_TOKEN_SOURCE_NAME });
+
+      await setCliTokenSource(config, { command: 'cmd-dev', name: 'dev' });
+      await setCliTokenSource(config, { command: 'cmd-prod', name: 'prod' });
+      await useCliTokenSource(config, 'prod');
+      await clearCliTokenSource(config, { name: 'dev' });
+
+      expect(JSON.parse(readFileSync(paths.configFilePath, 'utf8'))).toEqual({ tokenSources: { prod: { command: 'cmd-prod' } }, activeTokenSource: 'prod' });
+    });
+
+    it('shows the --token-source selection, and an unknown selection as an error instead of failing', async () => {
+      await setCliTokenSource(config, { command: 'cmd-default' });
+      await setCliTokenSource(config, { command: 'cmd-dev', name: 'dev' });
+
+      expect((await buildCliTokenSourceShowResult(config, { tokenSourceName: 'dev' })).active).toMatchObject({ name: 'dev', origin: 'flag' });
+
+      const unknown = await buildCliTokenSourceShowResult(config, { tokenSourceName: 'staging' });
+      expect(unknown.active).toBeNull();
+      expect(unknown.error).toContain('Unknown token source "staging"');
+      expect(unknown.sources.map((x) => x.name)).toEqual([DEFAULT_CLI_TOKEN_SOURCE_NAME, 'dev']);
+    });
+
+    it("describes the active source's cached token through mapToken and describeCachedToken, never the token", async () => {
+      const { command } = bundleCommand(join(home, 'bin'));
+      await setCliTokenSource(config, { command });
+      await createCliTokenSource({ command, tokenCachePath: paths.tokenCachePath }).loadToken();
+
+      expect((await buildCliTokenSourceShowResult(config)).cached).toEqual({ expiresAt: expect.any(String), scopes: ['User.Read', 'Mail.Read'], providerType: 'microsoft' });
+
+      const described = await buildCliTokenSourceShowResult({
+        ...config,
+        mapToken: (token, stored) => ({ ...token, tenantId: (stored?.['extra'] as Record<string, string> | undefined)?.['tenantId'] }),
+        describeCachedToken: (token) => ({ tenantId: token.tenantId })
+      });
+
+      expect(described.cached).toEqual({ tenantId: 'tenant-1' });
+      expect(JSON.stringify(described)).not.toContain(MINTED_ACCESS_TOKEN);
     });
 
     it("removes the replaced command's cached token", async () => {
