@@ -77,3 +77,55 @@ export function handleMicrosoftGraphErrorFetch(fetch: ConfiguredFetch): Configur
     }
   };
 }
+
+// MARK: Error classification
+/**
+ * Graph error codes meaning the addressed item does not exist (or the user cannot see it): OneDrive's
+ * `itemNotFound`, Outlook's `ErrorItemNotFound`, and the generic `ResourceNotFound`.
+ */
+export const MICROSOFT_GRAPH_NOT_FOUND_ERROR_CODES: readonly string[] = ['itemNotFound', 'ErrorItemNotFound', 'ResourceNotFound'];
+
+/**
+ * The Graph error code Exchange returns while the service is degraded. During the 2026-11-12 Microsoft
+ * 365 outage every mail and calendar call answered it.
+ */
+export const MICROSOFT_GRAPH_UNKNOWN_ERROR_CODE = 'UnknownError';
+
+/**
+ * Returns whether a Graph error means the item was not found: a 404, or a not-found code under another
+ * status.
+ *
+ * @param error - The Graph error.
+ * @returns True when the item does not exist or is not visible to the user.
+ */
+export function isMicrosoftGraphNotFoundError(error: MicrosoftGraphError): boolean {
+  return error.status === 404 || MICROSOFT_GRAPH_NOT_FOUND_ERROR_CODES.includes(error.code);
+}
+
+/**
+ * Returns whether a Graph error means the service, not the request, failed: a 5xx, or Exchange's
+ * `UnknownError` under any status.
+ *
+ * @param error - The Graph error.
+ * @returns True for a server-side failure worth retrying later.
+ */
+export function isMicrosoftGraphServiceError(error: MicrosoftGraphError): boolean {
+  return error.status >= 500 || error.code === MICROSOFT_GRAPH_UNKNOWN_ERROR_CODE;
+}
+
+/**
+ * Reads the scopes a 403 says the call needs. Teams and some other workloads answer
+ * `Missing scope permissions on the request. API requires one of 'ChannelMessage.Read.All, Group.Read.All'. Scopes on the request '…'`.
+ *
+ * @param message - The Graph error message.
+ * @returns The required scopes, in the order Graph lists them; empty when the message names none.
+ */
+export function readMicrosoftGraphRequiredScopesFromErrorMessage(message: Maybe<string>): string[] {
+  const match = /requires one of '([^']*)'/i.exec(message ?? '');
+  return match
+    ? match[1]
+        .split(',')
+        .map((x) => x.trim())
+        .filter(Boolean)
+    : [];
+}

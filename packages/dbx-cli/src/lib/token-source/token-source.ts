@@ -599,12 +599,13 @@ export interface CliTokenSourceStatusErrorInput {
  *
  * @param input - The status, the resolver that labels its origin, and the report.
  * @returns The CliError a report command throws when the active token source failed to load, else undefined.
- * @__NO_SIDE_EFFECTS__
  *
  * @example
  * ```typescript
  * const failure = cliTokenSourceStatusError({ status, resolver, data: result });
  * ```
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function cliTokenSourceStatusError(input: CliTokenSourceStatusErrorInput): Maybe<CliError> {
   const { status, resolver, data } = input;

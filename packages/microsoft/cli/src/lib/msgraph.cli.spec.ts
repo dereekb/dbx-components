@@ -8,7 +8,8 @@ import { MS_IN_HOUR } from '@dereekb/util';
 import { type FetchHandler } from '@dereekb/util/fetch';
 import { MSGRAPH_CLI_CONFIG_DIR_ENV_VAR, msGraphCliConfigStore, msGraphCliPaths } from './config/cli.config';
 import { createMsGraphCliAuthMiddleware, msGraphCommandHandler, resolveMsGraphCliContext } from './middleware/auth.middleware';
-import { configureMsGraphCliOutput, msGraphCliErrorOutput, outputMsGraphCliResult } from './util/output';
+import { configureMsGraphCliOutput, msGraphCliErrorOutput, msGraphCliScopeDeniedSuggestion, outputMsGraphCliResult } from './util/output';
+import { REQUEST_COMMAND, msGraphCliContentTypeForFile, parseMsGraphCliHeaderOptions } from './commands/request.command';
 
 // what the entry point does at startup
 configureMsGraphCliOutput();
@@ -176,6 +177,64 @@ describe('msgraph-cli', () => {
       expect(output?.suggestion).toContain('retry');
     });
 
+    it('should name the required scopes and say when every one needs admin consent', async () => {
+      // models: the D6 403 shape (channel messages read with a Read + Write token): "API requires one of '…'"
+      const graph = interceptGraph({ status: 403, body: { error: { code: 'Forbidden', message: "Missing scope permissions on the request. API requires one of 'ChannelMessage.Read.All, Group.Read.All, Group.ReadWrite.All'. Scopes on the request 'Chat.ReadWrite, User.Read'" } } });
+      const context = await resolveMsGraphCliContext({}, { env: { ...env, MSGRAPH_CLI_TOKEN_COMMAND: source.command }, graphFactoryConfig: { fetchHandler: graph.fetchHandler } });
+      const error = await microsoftGraphRequest(context.graphContext)({ method: 'GET', path: '/teams/t/channels/c/messages' }).catch((e) => e);
+
+      const output = msGraphCliErrorOutput(error);
+      expect(output?.code).toBe('SCOPE_DENIED');
+      expect(output?.httpStatus).toBe(403);
+      expect(output?.suggestion).toContain('ChannelMessage.Read.All');
+      expect(output?.suggestion).toContain('admin consent');
+      expect(output?.suggestion).not.toContain('Read + Write preset rather than Read');
+    });
+
+    it('should suggest a Read + Write source when a required scope is user-consentable', () => {
+      const suggestion = msGraphCliScopeDeniedSuggestion("Missing scope permissions on the request. API requires one of 'ChannelMessage.Send, Group.ReadWrite.All'.");
+      expect(suggestion).toContain('ChannelMessage.Send');
+      expect(suggestion).toContain('Read + Write');
+      expect(suggestion).not.toContain('admin consent');
+    });
+
+    it('should map itemNotFound and ErrorItemNotFound to NOT_FOUND', async () => {
+      // models: live F10 (GET after permanentDelete → 404 itemNotFound) and docs-mail ErrorItemNotFound
+      for (const code of ['itemNotFound', 'ErrorItemNotFound']) {
+        const graph = interceptGraph({ status: 404, body: { error: { code, message: 'The resource could not be found.' } } });
+        const context = await resolveMsGraphCliContext({}, { env: { ...env, MSGRAPH_CLI_TOKEN_COMMAND: source.command }, graphFactoryConfig: { fetchHandler: graph.fetchHandler } });
+        const error = await microsoftGraphRequest(context.graphContext)({ method: 'GET', path: '/me/drive/items/gone' }).catch((e) => e);
+
+        const output = msGraphCliErrorOutput(error);
+        expect(output?.code).toBe('NOT_FOUND');
+        expect(output?.serverCode).toBe(code);
+        expect(output?.httpStatus).toBe(404);
+      }
+    });
+
+    it('should map UnknownError and a bare 5xx to SERVICE_UNAVAILABLE with the HTTP status', async () => {
+      // models: live C-b outage probes 2026-11-12 — Exchange answered UnknownError; a bare 500 carried no Graph body
+      const unknown = interceptGraph({ status: 400, body: { error: { code: 'UnknownError', message: '' } } });
+      const unknownContext = await resolveMsGraphCliContext({}, { env: { ...env, MSGRAPH_CLI_TOKEN_COMMAND: source.command }, graphFactoryConfig: { fetchHandler: unknown.fetchHandler } });
+      const unknownOutput = msGraphCliErrorOutput(await microsoftGraphRequest(unknownContext.graphContext)({ method: 'GET', path: '/me/messages' }).catch((e) => e));
+      expect(unknownOutput?.code).toBe('SERVICE_UNAVAILABLE');
+      expect(unknownOutput?.httpStatus).toBe(400);
+      expect(unknownOutput?.suggestion).toContain('status.cloud.microsoft');
+
+      const bare = interceptGraph({ status: 500, body: 'Internal Server Error' });
+      const bareContext = await resolveMsGraphCliContext({}, { env: { ...env, MSGRAPH_CLI_TOKEN_COMMAND: source.command }, graphFactoryConfig: { fetchHandler: bare.fetchHandler } });
+      const bareOutput = msGraphCliErrorOutput(await microsoftGraphRequest(bareContext.graphContext)({ method: 'GET', path: '/me/messages' }).catch((e) => e));
+      expect(bareOutput?.code).toBe('SERVICE_UNAVAILABLE');
+      expect(bareOutput?.httpStatus).toBe(500);
+    });
+
+    it('should map an abort to TIMEOUT', () => {
+      // models: live C-c — the 30 s client timeout rejected with "This operation was aborted"
+      const abort = new Error('This operation was aborted');
+      abort.name = 'AbortError';
+      expect(msGraphCliErrorOutput(abort)?.code).toBe('TIMEOUT');
+    });
+
     it('should leave non-Graph errors to the default mapping', () => {
       expect(msGraphCliErrorOutput(new Error('boom'))).toBeUndefined();
     });
@@ -194,6 +253,54 @@ describe('msgraph-cli', () => {
 
       const printed = JSON.parse(log.mock.calls[0][0] as string);
       expect(printed).toEqual({ ok: true, data: { '@odata.context': 'c', value: [{ id: '1' }], '@odata.nextLink': 'n' } });
+    });
+  });
+
+  describe('request command', () => {
+    it('should parse repeatable --header options', () => {
+      expect(parseMsGraphCliHeaderOptions(['Prefer: IdType="ImmutableId"', 'ConsistencyLevel:eventual'])).toEqual({ Prefer: 'IdType="ImmutableId"', ConsistencyLevel: 'eventual' });
+      expect(parseMsGraphCliHeaderOptions(undefined)).toBeUndefined();
+      expect(() => parseMsGraphCliHeaderOptions(['no-colon'])).toThrow(CliError);
+    });
+
+    it('should pick a --body-file Content-Type from the extension', () => {
+      expect(msGraphCliContentTypeForFile('a.json')).toBe('application/json');
+      expect(msGraphCliContentTypeForFile('notes.TXT')).toBe('text/plain');
+      expect(msGraphCliContentTypeForFile('sheet.xlsx')).toBe('application/octet-stream');
+    });
+
+    it('should write --raw-out bytes to the file and print only the path and size', async () => {
+      // models: API:driveitem-get-content — the followed 302 answers the file bytes
+      const bytes = new Uint8Array([1, 2, 3, 4]);
+      const requests: Request[] = [];
+      const fetchHandler: FetchHandler = async (request: Request) => {
+        requests.push(request);
+        return new Response(bytes, { status: 200, headers: { 'Content-Type': 'application/octet-stream' } });
+      };
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+      await createMsGraphCliAuthMiddleware({ skipCommands: new Set(), env: { ...env, MSGRAPH_CLI_TOKEN_COMMAND: source.command }, graphFactoryConfig: { fetchHandler } })({ _: ['request'], $0: 'msgraph-cli' });
+
+      const out = join(dir, 'download.bin');
+      await (REQUEST_COMMAND.handler as (argv: unknown) => Promise<void>)({ _: ['request'], $0: 'msgraph-cli', method: 'GET', path: '/me/drive/items/f1/content', rawOut: out, header: ['prefer: IdType="ImmutableId"'] });
+
+      expect(Array.from(readFileSync(out))).toEqual([1, 2, 3, 4]);
+      expect(requests[0].headers.get('Prefer')).toBe('IdType="ImmutableId"');
+      const printed = JSON.parse(log.mock.calls[0][0] as string);
+      expect(printed).toEqual({ ok: true, data: { status: 200, file: out, bytes: 4, contentType: 'application/octet-stream' } });
+    });
+
+    it('should print the status and headers of a 202 with --include-headers', async () => {
+      // models: API:driveitem-copy — 202 with the monitor URL in Location (live F6)
+      const fetchHandler: FetchHandler = async () => new Response(null, { status: 202, headers: { Location: 'https://api.onedrive.com/monitor/abc' } });
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+      await createMsGraphCliAuthMiddleware({ skipCommands: new Set(), env: { ...env, MSGRAPH_CLI_TOKEN_COMMAND: source.command }, graphFactoryConfig: { fetchHandler } })({ _: ['request'], $0: 'msgraph-cli' });
+
+      await (REQUEST_COMMAND.handler as (argv: unknown) => Promise<void>)({ _: ['request'], $0: 'msgraph-cli', method: 'POST', path: '/me/drive/items/f1/copy', body: '{"name":"copy.txt"}', includeHeaders: true });
+
+      const printed = JSON.parse(log.mock.calls[0][0] as string);
+      expect(printed.data.status).toBe(202);
+      expect(printed.data.headers.location).toBe('https://api.onedrive.com/monitor/abc');
+      expect(printed.data.bytes).toBe(0);
     });
   });
 

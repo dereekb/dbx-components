@@ -45,7 +45,10 @@ export function microsoftGraphFactory(factoryConfig: MicrosoftGraphFactoryConfig
 
   const baseFetch = fetchApiFetchService.makeFetch({
     baseUrl: apiUrl ?? MICROSOFT_GRAPH_API_URL,
-    baseRequest: { headers: { Accept: 'application/json' } },
+    // Graph rejects a JSON body sent as text/plain ("Entity only allows writes with a JSON Content-Type
+    // header"), and fetchJson stringifies the body without setting the header. A raw request with a
+    // non-JSON body overrides it (see microsoftGraphRequestRaw).
+    baseRequest: { headers: { Accept: 'application/json', 'Content-Type': 'application/json' } },
     // the handler stands in for the network UNDER the timeout and the ok-check, so a non-2xx answer it
     // returns is mapped exactly as a real one would be
     ...(fetchHandler ? { makeFetch: ((input: RequestInfo | URL, init?: RequestInit) => fetchHandler(new Request(input, init), fetch)) as typeof fetch } : undefined),
@@ -54,12 +57,14 @@ export function microsoftGraphFactory(factoryConfig: MicrosoftGraphFactoryConfig
     useTimeout: true
   });
 
-  const fetchJson = fetchJsonFunction(handleMicrosoftGraphErrorFetch(baseFetch), {
+  const fetch = handleMicrosoftGraphErrorFetch(baseFetch);
+  const fetchJson = fetchJsonFunction(fetch, {
     handleFetchJsonParseErrorFunction: returnNullHandleFetchJsonParseErrorFunction
   });
 
   return (config: MicrosoftGraphConfig) => ({
     graphContext: {
+      fetch,
       fetchJson,
       accessTokenGetter: config.accessTokenGetter
     }

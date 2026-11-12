@@ -40,6 +40,23 @@ describe('microsoftGraphRequest()', () => {
     expect(requests[1].headers.get('Authorization')).toBe('Bearer token-2');
   });
 
+  it('sends a JSON body with a JSON Content-Type', async () => {
+    // models: live 2026-11-12 F1 — POST /me/drive/root/children without the header answered 400 "Entity only allows writes with a JSON Content-Type header"
+    const { graphContext, requests } = testGraphContext([{ status: 201, body: { id: 'folder-1' } }]);
+    await microsoftGraphRequest(graphContext)({ method: 'POST', path: '/me/drive/root/children', body: { name: 'x', folder: {} } });
+
+    expect(requests[0].headers.get('Content-Type')).toBe('application/json');
+    expect(await requests[0].text()).toBe('{"name":"x","folder":{}}');
+  });
+
+  it('replaces a default header whatever casing the caller uses', async () => {
+    const { graphContext, requests } = testGraphContext([{ body: {} }]);
+    await microsoftGraphRequest(graphContext)({ method: 'GET', path: '/me', headers: { accept: 'text/plain', prefer: 'IdType="ImmutableId"' } });
+
+    expect(requests[0].headers.get('Accept')).toBe('text/plain');
+    expect(requests[0].headers.get('Prefer')).toBe('IdType="ImmutableId"');
+  });
+
   it('surfaces a Graph error body as a MicrosoftGraphError', async () => {
     const { graphContext } = testGraphContext([{ status: 403, body: { error: { code: 'ErrorAccessDenied', message: 'Access is denied.' } } }]);
     const error = await microsoftGraphRequest(graphContext)({ method: 'GET', path: '/me/messages' }).catch((e: unknown) => e);

@@ -1,6 +1,7 @@
 import { type ISO8601DateString, type Maybe } from '@dereekb/util';
 import { type FetchJsonBody, type FetchMethod } from '@dereekb/util/fetch';
 import { type MicrosoftGraphContext } from './graph.config';
+import { canonicalizeMicrosoftGraphHeaders, type MicrosoftGraphBodyContentType, type MicrosoftGraphHeaders, microsoftGraphBodyContentTypePrefer } from './graph.header';
 import { type MicrosoftGraphDriveItem, type MicrosoftGraphEvent, type MicrosoftGraphMessage, type MicrosoftGraphPage } from './graph.type';
 
 /**
@@ -17,9 +18,10 @@ export interface MicrosoftGraphRequestInput {
   readonly query?: Maybe<MicrosoftGraphQuery>;
   readonly body?: Maybe<FetchJsonBody>;
   /**
-   * Extra request headers, e.g. `Prefer` or `ConsistencyLevel`.
+   * Extra request headers, e.g. `Prefer` or `ConsistencyLevel`. A header the client sets by default
+   * (`Accept`, `Content-Type`) is replaced whatever its casing.
    */
-  readonly headers?: Maybe<Record<string, string>>;
+  readonly headers?: Maybe<MicrosoftGraphHeaders>;
 }
 
 /**
@@ -63,7 +65,7 @@ export function microsoftGraphRequest(context: MicrosoftGraphContext): <T = unkn
       method: input.method,
       body: input.body ?? undefined,
       headers: {
-        ...input.headers,
+        ...canonicalizeMicrosoftGraphHeaders(input.headers),
         Authorization: `Bearer ${accessToken}`
       }
     });
@@ -144,7 +146,7 @@ export interface MicrosoftGraphGetMessageInput {
   /**
    * The body format to return. Defaults to `text`.
    */
-  readonly format?: Maybe<'text' | 'html'>;
+  readonly format?: Maybe<MicrosoftGraphBodyContentType>;
 }
 
 /**
@@ -156,7 +158,7 @@ export interface MicrosoftGraphGetMessageInput {
 export function getMessage(context: MicrosoftGraphContext): (input: MicrosoftGraphGetMessageInput) => Promise<MicrosoftGraphMessage> {
   const request = microsoftGraphRequest(context);
 
-  return (input) => request({ method: 'GET', path: `/me/messages/${encodeURIComponent(input.id)}`, query: { $select: `${MICROSOFT_GRAPH_MESSAGE_SELECT},body` }, headers: { Prefer: `outlook.body-content-type="${input.format ?? 'text'}"` } });
+  return (input) => request({ method: 'GET', path: `/me/messages/${encodeURIComponent(input.id)}`, query: { $select: `${MICROSOFT_GRAPH_MESSAGE_SELECT},body` }, headers: { Prefer: microsoftGraphBodyContentTypePrefer(input.format ?? 'text') } });
 }
 
 // MARK: Calendar

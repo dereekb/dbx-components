@@ -115,3 +115,26 @@ export function microsoftGraphScopesFromScopeString(scope: Maybe<string>): Micro
   const parts = scope ? scope.split(/\s+/) : [];
   return normalizeMicrosoftGraphScopes(parts).filter((x) => !isMicrosoftOidcScope(x));
 }
+
+// MARK: Admin consent
+/**
+ * Graph delegated scopes that only a tenant admin can consent to. Consent is then tenant-wide: every
+ * user's token from the app carries them. No user-consentable preset can include them.
+ *
+ * Not exhaustive: the scopes msgraph-cli's commands or Graph's 403 messages name.
+ *
+ * @see https://learn.microsoft.com/en-us/graph/permissions-reference
+ */
+export const MICROSOFT_GRAPH_ADMIN_CONSENT_SCOPES: readonly MicrosoftGraphScope[] = ['ChannelMessage.Read.All', 'ChannelMessage.ReadWrite', 'OnlineMeetingTranscript.Read.All', 'OnlineMeetingRecording.Read.All', 'Group.Read.All', 'Group.ReadWrite.All', 'Directory.Read.All', 'Directory.ReadWrite.All'];
+
+const MICROSOFT_GRAPH_ADMIN_CONSENT_SCOPE_SET = new Set(MICROSOFT_GRAPH_ADMIN_CONSENT_SCOPES.map((x) => x.toLowerCase()));
+
+/**
+ * Returns whether a Graph scope needs admin consent (see {@link MICROSOFT_GRAPH_ADMIN_CONSENT_SCOPES}).
+ *
+ * @param scope - The scope, in any casing, with or without the Graph resource prefix.
+ * @returns True when only a tenant admin can consent to it.
+ */
+export function isMicrosoftGraphAdminConsentScope(scope: MicrosoftGraphScope): boolean {
+  return MICROSOFT_GRAPH_ADMIN_CONSENT_SCOPE_SET.has(normalizeMicrosoftGraphScope(scope).toLowerCase());
+}

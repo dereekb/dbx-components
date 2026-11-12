@@ -17,6 +17,11 @@ export interface CliErrorOutput {
    * so scripts can branch on it while {@link CliErrorOutput.code} stays the CLI's stable category.
    */
   readonly serverCode?: string;
+  /**
+   * The HTTP status of the failed upstream response, when the failure came from one (e.g. `503`), so a
+   * script can tell a service outage from a bad request without parsing the message.
+   */
+  readonly httpStatus?: number;
   readonly suggestion?: string;
   /**
    * A report the failed command still has to show (e.g. `auth show`'s token-source report when the active source fails).
@@ -417,12 +422,13 @@ export interface CliOutputResultOptions<T> {
  *
  * @param itemsKey - The page field holding the items, e.g. `value`.
  * @returns The applier.
- * @__NO_SIDE_EFFECTS__
  *
  * @example
  * ```typescript
  * outputResult(page, undefined, { applyPick: cliCollectionPickApplier('value') });
  * ```
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function cliCollectionPickApplier(itemsKey: string): CliOutputPickApplier<unknown> {
   return (data, pick) => {

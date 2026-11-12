@@ -1,5 +1,5 @@
 import { type PromiseOrValue } from '@dereekb/util';
-import { type FetchJsonFunction } from '@dereekb/util/fetch';
+import { type ConfiguredFetch, type FetchJsonFunction } from '@dereekb/util/fetch';
 
 /**
  * Returns the bearer access token for the next Graph request. Called once per request, so a getter
@@ -11,6 +11,11 @@ export type MicrosoftGraphAccessTokenGetter = () => PromiseOrValue<string>;
  * Context used for performing Graph calls.
  */
 export interface MicrosoftGraphContext {
+  /**
+   * The configured fetch under {@link MicrosoftGraphContext.fetchJson}: Graph base URL, timeout, non-2xx
+   * mapped to a `MicrosoftGraphError`. Used by the raw request path, which must not JSON-parse.
+   */
+  readonly fetch: ConfiguredFetch;
   readonly fetchJson: FetchJsonFunction;
   readonly accessTokenGetter: MicrosoftGraphAccessTokenGetter;
 }
