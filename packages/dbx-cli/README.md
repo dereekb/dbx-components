@@ -671,6 +671,55 @@ demo-cli info --enum NotificationSendState         # the value table, then Used 
   share `resolveModelManifestInfoOutput` from `@dereekb/firebase/manifest`.
 - `disableInfo: true` drops the command, e.g. when the app registers its own `info`.
 
+## Bulk downloads (for CLI authors)
+
+`src/lib/download` is a shared engine for commands that copy many remote files into a local folder and can be
+re-run to resume. It has three parts:
+
+- **Opener + `downloadCliFile`** — streams one file to disk. The body goes to a partial file that is renamed
+  into place only once complete, so an interrupted run never leaves a truncated file under the real name. A
+  body that stops sending bytes for `idleTimeout` (60 s by default; the timer starts once `open` resolves, so the
+  wait for headers is not counted) throws `CliDownloadStalledError`. A short body throws
+  `CliDownloadIncompleteError`, and cancelling throws `CliDownloadAbortedError`.
+- **Manifest store (`cliDownloadManifestStore`)** — reads and writes the JSON file that records what was written.
+  Writes are atomic (mode 0600) and serialized. Call `saveSoon` after each file and `flush` before exiting.
+- **Runner (`runCliBulkDownload`)** — runs tasks `concurrency` at a time through `runCliTaskWithRetry`: 4 attempts
+  with 1–60 s equal-jitter backoff, and a classifier `retryAfter` honored for up to 5 minutes. It also enforces
+  `maxTasks` / `maxBytes` budgets and a consecutive-failure breaker (`TOO_MANY_FAILURES`). On a fatal failure or
+  an abort, it cancels the in-flight tasks and awaits them before rethrowing.
+
+```ts
+await ensureCliPrivateDir(dir); // 0700
+const store = cliDownloadManifestStore<MyManifest>({ dir, fileName: '.my-cli-download.json', empty: () => ({ version: 1, files: {} }), accept: acceptMyManifest });
+const manifest = await store.read();
+const classify = composeCliDownloadFailureClassifiers(myApiFailureClassifier, defaultCliDownloadFailureClassifier);
+
+await withCliInterruptSignal(async (signal) => {
+  try {
+    return await runCliBulkDownload({
+      tasks: items.filter((x) => !manifest.files[x.id]).map((x) => ({
+        key: x.id,
+        bytes: x.size,
+        run: (taskSignal) => downloadCliFile({ open: (s) => openMyItem(x.id, s), out: resolveCliDirChildPath(dir, x.name), signal: taskSignal, mtime: x.modified }).then((r) => r.bytes)
+      })),
+      concurrency: cliConcurrencyValue(argv.concurrency, { default: 4, max: 8 }),
+      classify,
+      signal,
+      onTaskDone: (task) => { manifest.files[task.key] = { at: new Date().toISOString() }; store.saveSoon(manifest); }
+    });
+  } finally {
+    await store.flush(); // an interrupted run keeps what it finished
+  }
+});
+```
+
+- `resolveCliDirChildPath` refuses a name that escapes the folder; `cliAvailableBytes` supports a free-space
+  pre-check, and `isCliDirEmptyOrMissing` a "refuse a non-empty folder without a manifest" check.
+- `cliIdleTimeoutOption` / `cliConcurrencyOption` add the shared `--idle-timeout` / `--concurrency` flags.
+- The first Ctrl+C aborts the signal from `withCliInterruptSignal`, which lets the run save its manifest. A second
+  Ctrl+C exits immediately.
+- Keep output to counts, bytes and failure codes (`failedCodes`). Task `key`s are never printed.
+
 ## Build-time API manifest
 
 `dbx-cli-firebase-api-manifest` writes the app's `api.manifest.generated.ts` during the build. It

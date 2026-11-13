@@ -5,6 +5,7 @@ export * from './cache';
 export * from './config';
 export * from './context';
 export * from './docs';
+export * from './download';
 export * from './doctor';
 export * from './env';
 export * from './firestore';
