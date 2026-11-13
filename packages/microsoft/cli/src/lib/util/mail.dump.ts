@@ -3,10 +3,13 @@ import {
   type MicrosoftGraphBodyContentType,
   type MicrosoftGraphContext,
   type MicrosoftGraphDeltaRemovedReason,
+  type MicrosoftGraphMailRequest,
   type MicrosoftGraphMessage,
   type MicrosoftGraphMessageDeltaItem,
+  type MicrosoftGraphMessageDeltaPage,
   type MicrosoftGraphRawRequestInput,
   type MicrosoftGraphRecipient,
+  MICROSOFT_GRAPH_MESSAGE_DELTA_SELECT,
   MICROSOFT_GRAPH_MESSAGE_SELECT,
   getMessages,
   listMessageAttachments,
@@ -14,6 +17,9 @@ import {
   microsoftGraphDateTimeLiteral,
   microsoftGraphGetMessageAttachmentContentRequest,
   microsoftGraphGetMessageMimeRequest,
+  microsoftGraphListMessagesRequest,
+  microsoftGraphRequest,
+  microsoftGraphSearchMessagesRequest,
   DEFAULT_MICROSOFT_GRAPH_MESSAGE_DELTA_PAGE_SIZE
 } from '@dereekb/microsoft';
 import { type EmailAddress, type ISO8601DateString, type Maybe, type Milliseconds, sanitizeFileName } from '@dereekb/util';
@@ -23,9 +29,37 @@ import { msGraphCliDownloadFailureClassify } from './download.failure';
 import { downloadMsGraphCliFile } from './file.download';
 
 /**
- * The version of the dump manifest this CLI writes.
+ * The version of the manifest a delta dump writes. Its JSON is unchanged since the first dump format.
  */
 export const MSGRAPH_CLI_MAIL_DUMP_MANIFEST_VERSION = 1;
+
+/**
+ * The version of the manifest a list or search dump writes: v1 plus `mode` and a `selection` hash, without the raw `filter`.
+ */
+export const MSGRAPH_CLI_MAIL_DUMP_LIST_MANIFEST_VERSION = 2;
+
+/**
+ * How `mail dump` picks messages:
+ * - `delta`: one folder's delta round, resumed from the stored links; tracks removals.
+ * - `list`: a filtered message list (`--from`, `--until`, `--unread`, `--has-attachments`, `--all-folders`), re-walked each run.
+ * - `search`: a `$search` (KQL), re-walked each run.
+ */
+export type MsGraphCliMailDumpMode = 'delta' | 'list' | 'search';
+
+/**
+ * The folder a dump reads when none is given (delta and list modes).
+ */
+export const DEFAULT_MSGRAPH_CLI_MAIL_DUMP_FOLDER = 'inbox';
+
+/**
+ * What a list or search manifest records as its folder when the walk covers every folder.
+ */
+export const MSGRAPH_CLI_MAIL_DUMP_ALL_FOLDERS = '*';
+
+/**
+ * The page size of a list or search walk.
+ */
+export const MSGRAPH_CLI_MAIL_DUMP_LIST_PAGE_SIZE = 100;
 
 /**
  * The manifest's file name inside the dump directory.
@@ -114,6 +148,86 @@ export interface MsGraphCliMailDumpManifest {
 }
 
 /**
+ * `manifest.json` of a list or search dump (v2). The selection is kept only as a hash: the raw filter or
+ * query can contain an address, so it is never written.
+ */
+export interface MsGraphCliMailDumpListManifest {
+  readonly version: typeof MSGRAPH_CLI_MAIL_DUMP_LIST_MANIFEST_VERSION;
+  readonly mode: Exclude<MsGraphCliMailDumpMode, 'delta'>;
+  /**
+   * {@link msGraphCliMailDumpSelectionKey} of the selection options the dump was created with.
+   */
+  readonly selection: string;
+  /**
+   * `me`, or a hash of the shared mailbox address (see {@link MsGraphCliMailDumpManifest.mailbox}).
+   */
+  readonly mailbox: string;
+  /**
+   * The folder walked, or {@link MSGRAPH_CLI_MAIL_DUMP_ALL_FOLDERS} for every folder.
+   */
+  readonly folder: string;
+  readonly immutableIds: boolean;
+  /**
+   * Where the next run resumes when the last one stopped inside a walk: the paging part of Graph's
+   * `@odata.nextLink` (its query without `$filter` and `$search`). The path and the filter are rebuilt from
+   * the selection options, whose hash must match. Cleared when a walk finishes, so the next run walks again.
+   */
+  readonly nextLink?: Maybe<string>;
+  readonly counts: MsGraphCliMailDumpCounts;
+  readonly lastRun?: Maybe<ISO8601DateString>;
+  readonly messages: Record<string, MsGraphCliMailDumpManifestEntry>;
+  /**
+   * Always empty: a list or search walk does not track removals. Kept so every manifest has the same fields.
+   */
+  readonly removed: MsGraphCliMailDumpRemovedEntry[];
+}
+
+/**
+ * Any manifest a dump directory can hold: v1 (delta) or v2 (list or search).
+ */
+export type MsGraphCliMailDumpAnyManifest = MsGraphCliMailDumpManifest | MsGraphCliMailDumpListManifest;
+
+/**
+ * The options that pick which messages a dump holds. Any of `until`, `from`, `unread`, `hasAttachments` or
+ * `allFolders` selects list mode, `search` selects search mode, and neither keeps delta mode.
+ */
+export interface MsGraphCliMailDumpSelection {
+  /**
+   * The folder to read. Defaults to {@link DEFAULT_MSGRAPH_CLI_MAIL_DUMP_FOLDER} in delta and list modes; a
+   * search covers every folder unless one is given.
+   */
+  readonly folder?: Maybe<string>;
+  /**
+   * Only messages received at or after this instant. Delta mode uses it on the first run only; list mode on every walk.
+   */
+  readonly since?: Maybe<Date>;
+  /**
+   * List mode: only messages received before this instant.
+   */
+  readonly until?: Maybe<Date>;
+  /**
+   * List mode: only messages from this sender.
+   */
+  readonly from?: Maybe<EmailAddress>;
+  /**
+   * List mode: only unread messages.
+   */
+  readonly unread?: Maybe<boolean>;
+  /**
+   * List mode: only messages with file attachments.
+   */
+  readonly hasAttachments?: Maybe<boolean>;
+  /**
+   * List mode: read every folder (`/messages`) instead of one.
+   */
+  readonly allFolders?: Maybe<boolean>;
+  /**
+   * Search mode: a KQL query (`$search`). Graph cannot combine it with a filter.
+   */
+  readonly search?: Maybe<string>;
+}
+
+/**
  * What `mail dump` prints: counts for this run, never message content.
  */
 export interface MsGraphCliMailDumpResult {
@@ -129,18 +243,10 @@ export interface MsGraphCliMailDumpResult {
   readonly complete: boolean;
 }
 
-export interface MsGraphCliMailDumpConfig {
+export interface MsGraphCliMailDumpConfig extends MsGraphCliMailDumpSelection {
   readonly graphContext: MicrosoftGraphContext;
   readonly dir: string;
   readonly mailbox?: Maybe<EmailAddress>;
-  /**
-   * The folder to dump. Delta is per-folder.
-   */
-  readonly folder: string;
-  /**
-   * Only messages received at or after this instant. Used by the first run only; later runs resume the stored round.
-   */
-  readonly since?: Maybe<Date>;
   readonly bodyFormat: MicrosoftGraphBodyContentType;
   /**
    * Also write a `.md` rendering of each message.
@@ -155,7 +261,12 @@ export interface MsGraphCliMailDumpConfig {
    */
   readonly attachments: boolean;
   /**
-   * Delete a removed message's files instead of only recording the removal.
+   * Write only the file attachments of messages that have any: no `$batch` body read and no `.json`, `.md`
+   * or `.eml`. Implies `attachments`. Each message is still recorded with its `changeKey`.
+   */
+  readonly attachmentsOnly?: Maybe<boolean>;
+  /**
+   * Delete a removed message's files instead of only recording the removal. Delta mode only.
    */
   readonly prune: boolean;
   readonly maxMessages: number;
@@ -282,19 +393,124 @@ export function msGraphCliMailDumpMarkdown(message: MicrosoftGraphMessage): stri
   return `${lines.join('\n')}\n`;
 }
 
-function emptyMsGraphCliMailDumpManifest(config: Pick<MsGraphCliMailDumpConfig, 'mailbox' | 'folder' | 'immutableIds'>): MsGraphCliMailDumpManifest {
-  return { version: MSGRAPH_CLI_MAIL_DUMP_MANIFEST_VERSION, mailbox: msGraphCliMailDumpMailboxKey(config.mailbox), folder: config.folder, immutableIds: config.immutableIds, counts: { written: 0, skipped: 0, removed: 0, failed: 0, bytes: 0 }, messages: {}, removed: [] };
+/**
+ * The dump directory, mailbox, id type and selection a manifest belongs to.
+ */
+export type MsGraphCliMailDumpManifestStoreConfig = Pick<MsGraphCliMailDumpConfig, 'dir' | 'mailbox' | 'immutableIds'> & MsGraphCliMailDumpSelection;
+
+/**
+ * Returns how a dump picks its messages, refusing option sets Graph cannot run.
+ *
+ * @param selection - The selection options.
+ * @returns `search` with `search`, `list` with any list-only option (`until`, `from`, `unread`, `hasAttachments`,
+ * `allFolders`), else `delta` (which also takes `since`).
+ * @throws {CliError} `INVALID_ARGUMENT` for `search` combined with a filter option (Graph cannot combine
+ * `$search` with `$filter`), an empty `search`, or `allFolders` together with a `folder`.
+ */
+export function msGraphCliMailDumpMode(selection: MsGraphCliMailDumpSelection): MsGraphCliMailDumpMode {
+  // since alone stays in delta mode: a delta round takes a receivedDateTime filter
+  const listOnly = selection.until != null || Boolean(selection.from) || Boolean(selection.unread) || Boolean(selection.hasAttachments);
+  const filtered = listOnly || selection.since != null;
+  let result: MsGraphCliMailDumpMode;
+
+  if (selection.allFolders && selection.folder) {
+    throw new CliError({ message: '--all-folders reads every folder; it does not take --folder.', code: 'INVALID_ARGUMENT', suggestion: 'Pass --folder <name> for one folder, or --all-folders for all of them.' });
+  }
+
+  if (selection.search != null) {
+    if (!selection.search.trim()) {
+      throw new CliError({ message: '--search needs a query.', code: 'INVALID_ARGUMENT', suggestion: 'e.g. --search "invoice" or --search "from:ada@example.com"' });
+    }
+
+    if (filtered) {
+      // models: B13 — Graph rejects $search combined with $filter on messages
+      throw new CliError({
+        message: '--search does not take --since, --until, --from, --unread or --has-attachments: Graph cannot combine $search with a filter.',
+        code: 'INVALID_ARGUMENT',
+        suggestion: 'Put them in the query as KQL (from:ada@example.com received>=2026-11-01), or drop --search to filter without searching.'
+      });
+    }
+
+    result = 'search';
+  } else if (listOnly || selection.allFolders) {
+    result = 'list';
+  } else {
+    result = 'delta';
+  }
+
+  return result;
+}
+
+/**
+ * Returns the hash a list or search manifest records for its selection: the first 16 hex characters of the
+ * SHA-256 of the selection's canonical JSON (set options only, keys sorted, an address lower-cased). The
+ * options themselves are never written.
+ *
+ * @param selection - The selection options.
+ * @returns The hash, or undefined in delta mode.
+ */
+export function msGraphCliMailDumpSelectionKey(selection: MsGraphCliMailDumpSelection): Maybe<string> {
+  const mode = msGraphCliMailDumpMode(selection);
+  let canonical: Maybe<Record<string, unknown>>;
+
+  if (mode === 'search') {
+    canonical = { search: selection.search };
+  } else if (mode === 'list') {
+    canonical = {
+      allFolders: selection.allFolders || undefined,
+      from: selection.from?.toLowerCase() || undefined,
+      hasAttachments: selection.hasAttachments || undefined,
+      since: selection.since ? microsoftGraphDateTimeLiteral(selection.since) : undefined,
+      unread: selection.unread || undefined,
+      until: selection.until ? microsoftGraphDateTimeLiteral(selection.until) : undefined
+    };
+  }
+
+  return canonical ? cliSha256HexPrefix(JSON.stringify(canonical), 16) : undefined;
+}
+
+function msGraphCliMailDumpFolderKey(selection: MsGraphCliMailDumpSelection, mode: MsGraphCliMailDumpMode): string {
+  let result: string;
+
+  if (mode === 'delta' || (mode === 'list' && !selection.allFolders)) {
+    result = selection.folder || DEFAULT_MSGRAPH_CLI_MAIL_DUMP_FOLDER;
+  } else {
+    // --all-folders, or a search without --folder
+    result = (mode === 'search' && selection.folder) || MSGRAPH_CLI_MAIL_DUMP_ALL_FOLDERS;
+  }
+
+  return result;
+}
+
+function emptyMsGraphCliMailDumpManifest(config: MsGraphCliMailDumpManifestStoreConfig): MsGraphCliMailDumpAnyManifest {
+  const mode = msGraphCliMailDumpMode(config);
+  const mailbox = msGraphCliMailDumpMailboxKey(config.mailbox);
+  const folder = msGraphCliMailDumpFolderKey(config, mode);
+  const counts: MsGraphCliMailDumpCounts = { written: 0, skipped: 0, removed: 0, failed: 0, bytes: 0 };
+  let result: MsGraphCliMailDumpAnyManifest;
+
+  if (mode === 'delta') {
+    result = { version: MSGRAPH_CLI_MAIL_DUMP_MANIFEST_VERSION, mailbox, folder, immutableIds: config.immutableIds, counts, messages: {}, removed: [] };
+  } else {
+    // the undefined keys hold their place, so a saved v2 manifest always lists its fields in this order
+    result = { version: MSGRAPH_CLI_MAIL_DUMP_LIST_MANIFEST_VERSION, mode, selection: msGraphCliMailDumpSelectionKey(config) as string, mailbox, folder, immutableIds: config.immutableIds, nextLink: undefined, counts, lastRun: undefined, messages: {}, removed: [] };
+  }
+
+  return result;
 }
 
 /**
  * Returns the store of a dump directory's manifest. Reading starts a new manifest when there is none, and
- * refuses one written for another mailbox, folder or id type: its ids and resume links would not match.
- * Saving writes the same JSON as before (`JSON.stringify(m, null, 2)` and a newline), atomically.
+ * refuses one written for another mailbox, folder, id type, mode or selection: its ids and resume links would
+ * not match. A v1 manifest is read as a delta dump and a v2 manifest as a list or search dump.
  *
- * @param config - The dump's directory, mailbox, folder and id type.
+ * Saving writes `JSON.stringify(m, null, 2)` and a newline, atomically; a delta dump's JSON is unchanged since
+ * the first dump format.
+ *
+ * @param config - The dump's directory, mailbox, id type and selection.
  * @returns The store.
  */
-export function msGraphCliMailDumpManifestStore(config: Pick<MsGraphCliMailDumpConfig, 'dir' | 'mailbox' | 'folder' | 'immutableIds'>): CliDownloadManifestStore<MsGraphCliMailDumpManifest> {
+export function msGraphCliMailDumpManifestStore(config: MsGraphCliMailDumpManifestStoreConfig): CliDownloadManifestStore<MsGraphCliMailDumpAnyManifest> {
   const empty = () => emptyMsGraphCliMailDumpManifest(config);
 
   return cliDownloadManifestStore({
@@ -303,26 +519,36 @@ export function msGraphCliMailDumpManifestStore(config: Pick<MsGraphCliMailDumpC
     empty,
     accept: (parsed: unknown) => {
       const base = empty();
-      const existing = (typeof parsed === 'object' && parsed != null ? parsed : {}) as MsGraphCliMailDumpManifest;
+      const existing = (typeof parsed === 'object' && parsed != null ? parsed : {}) as MsGraphCliMailDumpAnyManifest;
+      const sameDump =
+        existing.version === base.version &&
+        existing.mailbox === base.mailbox &&
+        existing.folder === base.folder &&
+        existing.immutableIds === base.immutableIds &&
+        (base.version === MSGRAPH_CLI_MAIL_DUMP_MANIFEST_VERSION || (existing.version === MSGRAPH_CLI_MAIL_DUMP_LIST_MANIFEST_VERSION && existing.mode === base.mode && existing.selection === base.selection));
 
-      if (existing.version !== MSGRAPH_CLI_MAIL_DUMP_MANIFEST_VERSION || existing.mailbox !== base.mailbox || existing.folder !== base.folder || existing.immutableIds !== base.immutableIds) {
-        throw new CliError({ message: `${config.dir} holds a dump of another mailbox, folder or id type.`, code: 'INVALID_ARGUMENT', suggestion: 'Dump into a new directory, or re-run with the --mailbox, --folder and --mutable-ids values that directory was created with.' });
+      if (!sameDump) {
+        throw new CliError({
+          message: `${config.dir} holds a dump of another mailbox, folder, selection or id type.`,
+          code: 'INVALID_ARGUMENT',
+          suggestion: 'Dump into a new directory, or re-run with the --mailbox, --folder, selection (--since, --until, --from, --unread, --has-attachments, --all-folders, --search) and --mutable-ids values that directory was created with.'
+        });
       }
 
-      return { ...base, ...existing, messages: existing.messages ?? {}, removed: existing.removed ?? [] };
+      return { ...base, ...existing, messages: existing.messages ?? {}, removed: existing.removed ?? [] } as MsGraphCliMailDumpAnyManifest;
     }
   });
 }
 
 /**
  * Reads the dump directory's manifest, or starts a new one. A manifest written for another mailbox,
- * folder or id type is refused: its ids and resume links would not match.
+ * folder, id type or selection is refused: its ids and resume links would not match.
  *
- * @param config - The dump's directory, mailbox, folder and id type.
+ * @param config - The dump's directory, mailbox, id type and selection.
  * @returns The manifest.
  * @throws {CliError} `INVALID_ARGUMENT` when the manifest belongs to another dump or is not readable JSON.
  */
-export function readMsGraphCliMailDumpManifest(config: Pick<MsGraphCliMailDumpConfig, 'dir' | 'mailbox' | 'folder' | 'immutableIds'>): Promise<MsGraphCliMailDumpManifest> {
+export function readMsGraphCliMailDumpManifest(config: MsGraphCliMailDumpManifestStoreConfig): Promise<MsGraphCliMailDumpAnyManifest> {
   return msGraphCliMailDumpManifestStore(config).read();
 }
 
@@ -335,11 +561,96 @@ interface MsGraphCliMailDumpRun {
 }
 
 /**
- * Dumps a mail folder into a directory, incrementally: the first run walks a delta round from the start
- * (or `since`), and later runs resume from the stored `nextLink` / `deltaLink`, writing only new or changed
- * messages. Bodies are read 20 at a time through `$batch`, then each page's messages are written by the
- * dbx-cli bulk-download engine, `concurrency` at a time, each retried on a stall, a short body, a throttle
- * or an outage.
+ * Returns the paging part of a list or search page's `@odata.nextLink`: its query without `$filter` and
+ * `$search`, which can contain an address or a search term. The path (mailbox and folder) and the filter are
+ * rebuilt from the selection options on resume.
+ *
+ * @param nextLink - The page's `@odata.nextLink`.
+ * @returns The query string to store, or undefined on the last page.
+ */
+export function msGraphCliMailDumpListCursor(nextLink: Maybe<string>): Maybe<string> {
+  let result: Maybe<string>;
+
+  if (nextLink) {
+    const params = new URL(nextLink, 'https://graph.microsoft.com').searchParams;
+    params.delete('$filter');
+    params.delete('$search');
+    result = params.toString() || undefined;
+  }
+
+  return result;
+}
+
+/**
+ * Builds the GET for one page of a list or search walk: the first page from the selection, or the page a
+ * stored {@link msGraphCliMailDumpListCursor} points to. Pages select only `id`, `changeKey`,
+ * `receivedDateTime` and `hasAttachments`; bodies are read through `$batch` for new or changed messages only.
+ *
+ * @param input - The selection, mailbox and id type, plus the page size and cursor.
+ * @param input.mode - `list` or `search`.
+ * @param input.pageSize - The page size. It replaces the cursor's when the cursor pages by offset (`$skip`).
+ * @param input.cursor - Where the walk resumes, if not at the start.
+ * @returns The request.
+ */
+export function msGraphCliMailDumpListPageRequest(input: MsGraphCliMailDumpSelection & Pick<MsGraphCliMailDumpConfig, 'mailbox' | 'immutableIds'> & { readonly mode: Exclude<MsGraphCliMailDumpMode, 'delta'>; readonly pageSize: number; readonly cursor?: Maybe<string> }): MicrosoftGraphMailRequest {
+  const { mode, mailbox, immutableIds, pageSize, cursor } = input;
+  let request: MicrosoftGraphMailRequest;
+
+  if (mode === 'search') {
+    request = microsoftGraphSearchMessagesRequest({ query: input.search ?? '', folder: input.allFolders ? undefined : input.folder, mailbox, immutableIds, select: MICROSOFT_GRAPH_MESSAGE_DELTA_SELECT, top: pageSize });
+  } else {
+    request = microsoftGraphListMessagesRequest({
+      mailbox,
+      immutableIds,
+      folder: input.allFolders ? undefined : input.folder || DEFAULT_MSGRAPH_CLI_MAIL_DUMP_FOLDER,
+      since: input.since,
+      until: input.until,
+      from: input.from,
+      unread: input.unread,
+      hasAttachments: input.hasAttachments,
+      select: MICROSOFT_GRAPH_MESSAGE_DELTA_SELECT,
+      top: pageSize
+    });
+  }
+
+  if (cursor) {
+    const paging = Object.fromEntries(new URLSearchParams(cursor));
+    // an offset cursor takes this run's page size; an opaque one keeps its own
+    request = { ...request, query: { ...request.query, ...paging, ...(paging['$skip'] == null ? {} : { $top: pageSize }) } };
+  }
+
+  return request;
+}
+
+/**
+ * One page of a dump's walk.
+ */
+interface MsGraphCliMailDumpPage {
+  readonly items: readonly MicrosoftGraphMessageDeltaItem[];
+  /**
+   * Where the walk continues; undefined on the last page.
+   */
+  readonly next?: Maybe<string>;
+  /**
+   * Delta mode, last page: where the next round resumes.
+   */
+  readonly deltaLink?: Maybe<string>;
+}
+
+/**
+ * Dumps mail into a directory, incrementally. How it picks messages depends on the selection, as decided by
+ * {@link msGraphCliMailDumpMode}.
+ *
+ * - **delta** (default): the first run walks a folder's delta round from the start (or `since`), and later
+ *   runs resume from the stored `nextLink` / `deltaLink`. Removals are recorded (and pruned with `prune`).
+ *   The manifest is v1, unchanged.
+ * - **list** / **search**: a filtered list or a `$search`, paged 100 at a time by `@odata.nextLink`. A run
+ *   stopped at `maxMessages` stores the cursor and the next resumes it; a finished walk clears it, so the next
+ *   run walks the selection again. Removals are not tracked. The manifest is v2.
+ *
+ * Every mode writes only new or changed messages (by `changeKey`). Bodies are read 20 at a time through
+ * `$batch` (skipped with `attachmentsOnly`), then each page's messages are written by the dbx-cli
+ * bulk-download engine, `concurrency` at a time, each retried on a stall, a short body, a throttle or an outage.
  *
  * - A message that fails for good (e.g. its attachment was deleted) is counted in `failed` and the run goes on.
  * - A message that still fails after its retries (an outage or throttling) stops the run. The manifest is
@@ -354,10 +665,20 @@ interface MsGraphCliMailDumpRun {
  */
 export async function dumpMsGraphCliMail(config: MsGraphCliMailDumpConfig): Promise<MsGraphCliMailDumpResult> {
   const { graphContext, dir, mailbox, immutableIds, signal } = config;
+  const mode = msGraphCliMailDumpMode(config);
+
+  if (config.prune && mode !== 'delta') {
+    throw new CliError({ message: '--prune needs delta mode: a list or search dump does not track removals.', code: 'INVALID_ARGUMENT', suggestion: 'Drop --prune, or dump one folder without --until/--from/--unread/--has-attachments/--all-folders/--search to track removals.' });
+  }
+
   const now = config.now ?? (() => new Date());
   const progress = config.progress ?? (() => undefined);
   const concurrency = config.concurrency ?? MSGRAPH_CLI_MAIL_DUMP_CONCURRENCY.default;
+  const attachmentsOnly = Boolean(config.attachmentsOnly);
+  const attachments = config.attachments || attachmentsOnly;
+  const folder = config.folder || DEFAULT_MSGRAPH_CLI_MAIL_DUMP_FOLDER;
   const deltaPage = listMessagesDeltaPage(graphContext);
+  const requestPage = microsoftGraphRequest(graphContext);
   const readMessages = getMessages(graphContext);
   const readAttachments = listMessageAttachments(graphContext);
 
@@ -367,7 +688,8 @@ export async function dumpMsGraphCliMail(config: MsGraphCliMailDumpConfig): Prom
   const messages: Record<string, MsGraphCliMailDumpManifestEntry> = { ...manifest.messages };
   const removedEntries: MsGraphCliMailDumpRemovedEntry[] = [...manifest.removed];
   const run: MsGraphCliMailDumpRun = { written: 0, skipped: 0, removed: 0, failed: 0, bytes: 0 };
-  const filter = config.since && !manifest.nextLink && !manifest.deltaLink ? `receivedDateTime ge ${microsoftGraphDateTimeLiteral(config.since)}` : manifest.filter;
+  const storedDeltaLink = manifest.version === MSGRAPH_CLI_MAIL_DUMP_MANIFEST_VERSION ? manifest.deltaLink : undefined;
+  const filter = manifest.version === MSGRAPH_CLI_MAIL_DUMP_MANIFEST_VERSION && config.since && !manifest.nextLink && !manifest.deltaLink ? `receivedDateTime ge ${microsoftGraphDateTimeLiteral(config.since)}` : (manifest as MsGraphCliMailDumpManifest).filter;
   // attachment bytes written or reserved this run; concurrent messages share --max-bytes
   let attachmentBytes = 0;
 
@@ -429,17 +751,19 @@ export async function dumpMsGraphCliMail(config: MsGraphCliMailDumpConfig): Prom
       await rm(join(dir, `${previous.file}.json`), { force: true });
     }
 
-    bytes += await writeDumpFile(`${file}.json`, `${JSON.stringify(message, null, 2)}\n`);
+    if (!attachmentsOnly) {
+      bytes += await writeDumpFile(`${file}.json`, `${JSON.stringify(message, null, 2)}\n`);
 
-    if (config.markdown) {
-      bytes += await writeDumpFile(`${file}.md`, msGraphCliMailDumpMarkdown(message));
+      if (config.markdown) {
+        bytes += await writeDumpFile(`${file}.md`, msGraphCliMailDumpMarkdown(message));
+      }
+
+      if (config.eml) {
+        bytes += await downloadDumpFile(`${file}.eml`, microsoftGraphGetMessageMimeRequest({ mailbox, id: message.id }), taskSignal);
+      }
     }
 
-    if (config.eml) {
-      bytes += await downloadDumpFile(`${file}.eml`, microsoftGraphGetMessageMimeRequest({ mailbox, id: message.id }), taskSignal);
-    }
-
-    if (config.attachments && message.hasAttachments) {
+    if (attachments && message.hasAttachments) {
       bytes += await writeAttachments(message, file, taskSignal);
     }
 
@@ -506,22 +830,63 @@ export async function dumpMsGraphCliMail(config: MsGraphCliMailDumpConfig): Prom
 
   async function saveManifest(cursor: Pick<MsGraphCliMailDumpManifest, 'nextLink' | 'deltaLink'>): Promise<void> {
     const counts = manifest.counts;
-    manifest = {
-      ...manifest,
-      ...cursor,
-      filter,
-      lastRun: now().toISOString(),
-      counts: { written: counts.written + run.written, skipped: counts.skipped + run.skipped, removed: counts.removed + run.removed, failed: counts.failed + run.failed, bytes: counts.bytes + run.bytes },
-      messages,
-      removed: removedEntries
-    };
+    const lastRun = now().toISOString();
+    const savedCounts = { written: counts.written + run.written, skipped: counts.skipped + run.skipped, removed: counts.removed + run.removed, failed: counts.failed + run.failed, bytes: counts.bytes + run.bytes };
+
+    if (manifest.version === MSGRAPH_CLI_MAIL_DUMP_MANIFEST_VERSION) {
+      // v1: the same keys in the same order as the first dump format
+      manifest = { ...manifest, ...cursor, filter, lastRun, counts: savedCounts, messages, removed: removedEntries };
+    } else {
+      manifest = { ...manifest, nextLink: cursor.nextLink, lastRun, counts: savedCounts, messages, removed: removedEntries };
+    }
+
     await store.save(manifest);
     // the manifest's counts are cumulative; start this run's tally again from the saved totals
     Object.assign(run, { written: 0, skipped: 0, removed: 0, failed: 0, bytes: 0 });
   }
 
+  async function readPage(link: Maybe<string>, pageSize: number): Promise<MsGraphCliMailDumpPage> {
+    let result: MsGraphCliMailDumpPage;
+
+    if (mode === 'delta') {
+      const page: MicrosoftGraphMessageDeltaPage = await deltaPage({ link, mailbox, immutableIds, folder, since: config.since, pageSize });
+      const deltaLink = page['@odata.deltaLink'];
+      result = { items: page.value ?? [], next: deltaLink ? undefined : page['@odata.nextLink'], deltaLink };
+    } else {
+      const request = msGraphCliMailDumpListPageRequest({ ...config, mode, pageSize, cursor: link });
+      const page = await requestPage<MicrosoftGraphMessageDeltaPage>({ method: 'GET', ...request });
+      result = { items: page.value ?? [], next: msGraphCliMailDumpListCursor(page['@odata.nextLink']) };
+    }
+
+    return result;
+  }
+
+  // the page's messages with their bodies, read 20 at a time through $batch; an attachments-only dump needs none
+  async function readPageMessages(items: readonly MicrosoftGraphMessageDeltaItem[]): Promise<MicrosoftGraphMessage[]> {
+    let result: MicrosoftGraphMessage[];
+
+    if (attachmentsOnly) {
+      result = items.map((x) => ({ id: x.id, changeKey: x.changeKey, receivedDateTime: x.receivedDateTime, hasAttachments: x.hasAttachments }));
+    } else {
+      const read = await readMessages({ ids: items.map((x) => x.id), mailbox, immutableIds, format: config.bodyFormat, select: MSGRAPH_CLI_MAIL_DUMP_MESSAGE_SELECT, wait: config.wait });
+      result = [];
+
+      for (const item of read) {
+        if (item.message) {
+          result.push(item.message);
+        } else {
+          run.failed += 1;
+          progress(`could not read a message (${item.status} ${item.error?.code ?? ''})`);
+        }
+      }
+    }
+
+    return result;
+  }
+
   const totals = { written: 0, skipped: 0, removed: 0, failed: 0, bytes: 0 };
-  let link = manifest.nextLink ?? manifest.deltaLink;
+  const pageSizeMax = mode === 'delta' ? DEFAULT_MICROSOFT_GRAPH_MESSAGE_DELTA_PAGE_SIZE : MSGRAPH_CLI_MAIL_DUMP_LIST_PAGE_SIZE;
+  let link = manifest.nextLink ?? storedDeltaLink;
   let processed = 0;
   let complete = false;
 
@@ -539,49 +904,36 @@ export async function dumpMsGraphCliMail(config: MsGraphCliMailDumpConfig): Prom
         throw new CliDownloadAbortedError('The dump was cancelled; finished messages were kept and the manifest saved.');
       }
 
-      const pageSize = Math.min(DEFAULT_MICROSOFT_GRAPH_MESSAGE_DELTA_PAGE_SIZE, config.maxMessages - processed);
-      const page = await deltaPage({ link, mailbox, immutableIds, folder: config.folder, since: config.since, pageSize });
-      const items = page.value ?? [];
+      const page = await readPage(link, Math.min(pageSizeMax, config.maxMessages - processed));
+      const items = page.items;
       const changed = items.filter((x) => !x['@removed']);
-      const fetch = changed.filter((x) => !x.changeKey || messages[x.id]?.changeKey !== x.changeKey);
-      run.skipped += changed.length - fetch.length;
+      // --attachments-only keeps only messages with file attachments (delta, list and search pages all select hasAttachments)
+      const selected = attachmentsOnly ? changed.filter((x) => x.hasAttachments) : changed;
+      const fetch = selected.filter((x) => !x.changeKey || messages[x.id]?.changeKey !== x.changeKey);
+      run.skipped += selected.length - fetch.length;
 
       for (const item of items.filter((x) => x['@removed'])) {
         await removeMessage(item);
       }
 
       if (fetch.length > 0) {
-        const read = await readMessages({ ids: fetch.map((x) => x.id), mailbox, immutableIds, format: config.bodyFormat, select: MSGRAPH_CLI_MAIL_DUMP_MESSAGE_SELECT, wait: config.wait });
-        const pageMessages: MicrosoftGraphMessage[] = [];
-
-        for (const item of read) {
-          if (item.message) {
-            pageMessages.push(item.message);
-          } else {
-            run.failed += 1;
-            progress(`could not read a message (${item.status} ${item.error?.code ?? ''})`);
-          }
-        }
-
-        await writeMessages(pageMessages);
+        await writeMessages(await readPageMessages(fetch));
       }
 
       processed += items.length;
-      const deltaLink = page['@odata.deltaLink'];
-      const nextLink = deltaLink ? undefined : page['@odata.nextLink'];
       addToTotals();
-      await saveManifest({ nextLink, deltaLink: deltaLink ?? manifest.deltaLink });
+      await saveManifest({ nextLink: page.next, deltaLink: page.deltaLink ?? storedDeltaLink });
       progress(`${processed} messages processed`);
-      link = nextLink ?? deltaLink;
+      link = page.next ?? page.deltaLink;
 
-      if (!nextLink) {
+      if (!page.next) {
         complete = true;
         break;
       }
     }
   } catch (e) {
     addToTotals();
-    await saveManifest({ nextLink: manifest.nextLink, deltaLink: manifest.deltaLink });
+    await saveManifest({ nextLink: manifest.nextLink, deltaLink: manifest.version === MSGRAPH_CLI_MAIL_DUMP_MANIFEST_VERSION ? manifest.deltaLink : undefined });
     // a bulk task that failed fatally (e.g. a rejected token) rethrows its cause, so callers see the Graph error
     throw e instanceof CliDownloadTaskFailedError && e.cause != null ? e.cause : e;
   }

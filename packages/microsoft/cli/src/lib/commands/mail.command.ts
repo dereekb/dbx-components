@@ -159,22 +159,31 @@ export const MAIL_GET_MANY_COMMAND: CommandModule = {
 
 export const MAIL_DUMP_COMMAND: CommandModule = {
   command: 'dump',
-  describe: 'Dump a mail folder to a directory, incrementally (delta): JSON + Markdown per message, optional .eml and attachments',
+  describe: 'Dump mail to a directory, incrementally: a folder (delta), a filtered list or a search; JSON + Markdown per message, optional .eml and attachments',
   builder: (yargs: Argv) =>
     cliConcurrencyOption(msGraphCliIdleTimeoutOption(msGraphCliMailboxOptions(yargs)), MSGRAPH_CLI_MAIL_DUMP_CONCURRENCY)
       .option('dir', { type: 'string', demandOption: true, describe: 'The dump directory (created with mode 0700). Re-running into it resumes from its manifest.json' })
-      .option('folder', { type: 'string', default: 'inbox', describe: 'The mail folder by id or well-known name (inbox, sentitems, archive). Delta is per-folder' })
-      .option('since', { type: 'string', describe: 'First run only: messages received at or after this date/instant (ISO 8601)' })
+      .option('folder', { type: 'string', describe: 'The mail folder by id or well-known name (inbox, sentitems, archive). Default: inbox; a --search covers every folder unless one is given' })
+      .option('since', { type: 'string', describe: 'Messages received at or after this date/instant (ISO 8601). Delta mode: first run only; list mode: every run' })
+      .option('until', { type: 'string', describe: 'List mode: messages received before this date/instant (ISO 8601)' })
+      .option('from', { type: 'string', describe: "List mode: only messages from this sender's address" })
+      .option('unread', { type: 'boolean', describe: 'List mode: only unread messages' })
+      .option('has-attachments', { type: 'boolean', describe: 'List mode: only messages with file attachments' })
+      .option('all-folders', { type: 'boolean', describe: 'List mode: every folder of the mailbox instead of one' })
+      .option('search', { type: 'string', describe: 'Search mode: a KQL query ($search). Cannot be combined with --since/--until/--from/--unread/--has-attachments' })
       .option('body-format', { type: 'string', choices: ['text', 'html'] as const, default: 'text', describe: 'Body format written to the .json / .md files' })
       .option('markdown', { type: 'boolean', default: true, describe: 'Also write a .md rendering of each message (--no-markdown to skip)' })
       .option('eml', { type: 'boolean', default: false, describe: 'Also write each message as .eml (MIME)' })
       .option('attachments', { type: 'boolean', default: false, describe: "Also write each message's file attachments" })
+      .option('attachments-only', { type: 'boolean', default: false, describe: 'Write only the file attachments of messages that have any: no bodies, no .json/.md/.eml (implies --attachments)' })
       .option('max-bytes', { type: 'number', describe: 'With --attachments: the most attachment bytes one run writes' })
-      .option('prune', { type: 'boolean', default: false, describe: 'Delete the files of messages Graph reports removed (default: only record them in the manifest)' })
+      .option('prune', { type: 'boolean', default: false, describe: 'Delta mode: delete the files of messages Graph reports removed (default: only record them in the manifest)' })
       .option('max-messages', { type: 'number', default: DEFAULT_MSGRAPH_CLI_MAIL_DUMP_MAX_MESSAGES, describe: 'The most messages one run processes; re-run to continue' })
       .example([
         ['$0 mail dump --dir ./mail --since 2026-10-01', 'Dump the inbox since Oct 1; re-run later to add only new or changed messages'],
-        ['$0 mail dump --dir ./sent --folder sentitems --eml --attachments --max-bytes 50000000', 'Sent items with .eml files and up to 50 MB of attachments']
+        ['$0 mail dump --dir ./sent --folder sentitems --eml --attachments --max-bytes 50000000', 'Sent items with .eml files and up to 50 MB of attachments'],
+        ['$0 mail dump --dir ./ada --from ada@example.com --since 2026-01-01 --all-folders', 'List mode: every message from ada since Jan 1, in any folder'],
+        ['$0 mail dump --dir ./invoices --search "invoice" --attachments-only', 'Search mode: only the attachments of messages matching "invoice"']
       ]),
   handler: msGraphCommandHandler(async (argv: any, { graphContext }) => {
     const concurrency = cliConcurrencyValue(argv.concurrency, MSGRAPH_CLI_MAIL_DUMP_CONCURRENCY);
@@ -188,10 +197,17 @@ export const MAIL_DUMP_COMMAND: CommandModule = {
         mailbox: argv.mailbox,
         folder: argv.folder,
         since: parseMsGraphCliDateOption('since', argv.since),
+        until: parseMsGraphCliDateOption('until', argv.until),
+        from: argv.from,
+        unread: argv.unread,
+        hasAttachments: argv.hasAttachments,
+        allFolders: argv.allFolders,
+        search: argv.search,
         bodyFormat: argv.bodyFormat ?? 'text',
         markdown: argv.markdown ?? true,
         eml: argv.eml ?? false,
         attachments: argv.attachments ?? false,
+        attachmentsOnly: argv.attachmentsOnly ?? false,
         prune: argv.prune ?? false,
         maxMessages: argv.maxMessages ?? DEFAULT_MSGRAPH_CLI_MAIL_DUMP_MAX_MESSAGES,
         maxBytes: argv.maxBytes,

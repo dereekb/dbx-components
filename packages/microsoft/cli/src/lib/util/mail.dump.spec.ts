@@ -6,7 +6,20 @@ import { CliDownloadStalledError, CliError } from '@dereekb/dbx-cli';
 import { type MicrosoftGraphContext, microsoftGraphFactory } from '@dereekb/microsoft';
 import { type Maybe } from '@dereekb/util';
 import { type FetchHandler } from '@dereekb/util/fetch';
-import { type MsGraphCliMailDumpConfig, type MsGraphCliMailDumpManifest, MSGRAPH_CLI_MAIL_DUMP_MANIFEST_FILE, dumpMsGraphCliMail, msGraphCliMailDumpHash8, msGraphCliMailDumpMailboxKey, msGraphCliMailDumpMarkdown, msGraphCliMailDumpMessagePath, sanitizeMsGraphCliFileName } from './mail.dump';
+import {
+  type MsGraphCliMailDumpConfig,
+  type MsGraphCliMailDumpListManifest,
+  type MsGraphCliMailDumpManifest,
+  MSGRAPH_CLI_MAIL_DUMP_MANIFEST_FILE,
+  dumpMsGraphCliMail,
+  msGraphCliMailDumpListCursor,
+  msGraphCliMailDumpSelectionKey,
+  msGraphCliMailDumpHash8,
+  msGraphCliMailDumpMailboxKey,
+  msGraphCliMailDumpMarkdown,
+  msGraphCliMailDumpMessagePath,
+  sanitizeMsGraphCliFileName
+} from './mail.dump';
 
 const GRAPH = 'https://graph.microsoft.com/v1.0';
 const DELTA_PATH = '/me/mailFolders/inbox/messages/delta';
@@ -60,6 +73,12 @@ function fakeGraph() {
     ['m3', { id: 'm3', changeKey: 'k3', receivedDateTime: '2026-11-03T12:00:00Z' }]
   ]);
   const deltaRequests: { url: URL; prefer: string | null }[] = [];
+  const listRequests: { url: URL; prefer: string | null }[] = [];
+  let batchCalls = 0;
+  /**
+   * Messages with no attachments while an attachment is set.
+   */
+  const withoutAttachments = new Set<string>();
   /**
    * What the next round from the deltaLink answers.
    */
@@ -83,21 +102,20 @@ function fakeGraph() {
     return left > 0;
   }
 
-  const summary = (m: FakeMessage) => ({ id: m.id, changeKey: m.changeKey, receivedDateTime: m.receivedDateTime });
+  const summary = (m: FakeMessage) => ({ id: m.id, changeKey: m.changeKey, receivedDateTime: m.receivedDateTime, hasAttachments: attachment != null && !withoutAttachments.has(m.id) });
 
   const fetchHandler: FetchHandler = async (request: Request) => {
     const url = new URL(request.url);
     let response: Response;
 
     if (url.pathname.endsWith('/$batch')) {
+      batchCalls += 1;
       const body = (await request.json()) as { requests: { id: string; url: string }[] };
       // models: json-batching — per-item status, matched back by id
       const responses = body.requests.map((x) => {
         const id = /messages\/([^/?]+)/.exec(x.url)?.[1] ?? '';
         const m = messages.get(decodeURIComponent(id));
-        return m
-          ? { id: x.id, status: 200, body: { ...summary(m), subject: `Private ${m.id}`, from: { emailAddress: { address: 'ada@example.com' } }, body: { contentType: 'text', content: `secret body ${m.id}` }, hasAttachments: attachment != null } }
-          : { id: x.id, status: 404, body: { error: { code: 'ErrorItemNotFound', message: 'Not found.' } } };
+        return m ? { id: x.id, status: 200, body: { ...summary(m), subject: `Private ${m.id}`, from: { emailAddress: { address: 'ada@example.com' } }, body: { contentType: 'text', content: `secret body ${m.id}` } } } : { id: x.id, status: 404, body: { error: { code: 'ErrorItemNotFound', message: 'Not found.' } } };
       });
       response = json({ responses });
     } else if (attachment && url.pathname.endsWith('/attachments')) {
@@ -130,6 +148,18 @@ function fakeGraph() {
         const end = start + value.length;
         response = json(end < all.length ? { value, '@odata.nextLink': `${GRAPH}${DELTA_PATH}?$skiptoken=${end}` } : { value, '@odata.deltaLink': `${GRAPH}${DELTA_PATH}?$deltatoken=d1` });
       }
+    } else if (url.pathname === '/v1.0/me/mailFolders/inbox/messages' || url.pathname === '/v1.0/me/messages') {
+      // models: user-list-messages — $filter/$orderby/$select/$top, pages linked by an @odata.nextLink that echoes the query plus $skip;
+      // B13 — $search takes no $filter. The fake returns every message newest first, whatever the filter or query.
+      listRequests.push({ url, prefer: request.headers.get('Prefer') });
+      const top = Number(url.searchParams.get('$top') ?? 10);
+      const start = Number(url.searchParams.get('$skip') ?? 0);
+      const all = [...messages.values()].sort((a, b) => b.receivedDateTime.localeCompare(a.receivedDateTime));
+      const value = all.slice(start, start + top).map(summary);
+      const end = start + value.length;
+      const next = new URL(url);
+      next.searchParams.set('$skip', String(end));
+      response = json(end < all.length ? { value, '@odata.nextLink': next.toString() } : { value });
     } else {
       response = json({ error: { code: 'BadRequest', message: `unexpected ${url.pathname}` } }, 400);
     }
@@ -143,6 +173,9 @@ function fakeGraph() {
     graphContext,
     messages,
     deltaRequests,
+    listRequests,
+    batchCalls: () => batchCalls,
+    withoutAttachments,
     setChanges: (value: unknown[]) => {
       changes = value;
     },
@@ -463,6 +496,178 @@ describe('mail dump', () => {
       expect(manifest.deltaLink).toContain('$deltatoken=d1');
       expect(manifest.messages['m1']).toBeUndefined();
       expect(manifest.counts.failed).toBe(1);
+    });
+  });
+
+  describe('list and search modes', () => {
+    const LIST_SELECT = 'id,changeKey,receivedDateTime,hasAttachments';
+
+    function readListManifest(): MsGraphCliMailDumpListManifest {
+      return JSON.parse(readFileSync(join(dir, MSGRAPH_CLI_MAIL_DUMP_MANIFEST_FILE), 'utf8')) as MsGraphCliMailDumpListManifest;
+    }
+
+    async function invalidArgument(promise: Promise<unknown>): Promise<CliError> {
+      const error = await promise.catch((e: unknown) => e);
+      expect(error).toBeInstanceOf(CliError);
+      expect((error as CliError).code).toBe('INVALID_ARGUMENT');
+      return error as CliError;
+    }
+
+    it('lists a folder with the filter, paging 100 ids at a time, and writes a v2 manifest without the raw filter', async () => {
+      const graph = fakeGraph();
+      const result = await dumpMsGraphCliMail(config(graph.graphContext, { from: 'Ada@Example.com', unread: true }));
+
+      expect(result).toEqual({ dir, written: 3, skipped: 0, removed: 0, failed: 0, bytes: expect.any(Number), complete: true });
+      expect(graph.deltaRequests).toHaveLength(0);
+      const first = graph.listRequests[0];
+      expect(first.url.pathname).toBe('/v1.0/me/mailFolders/inbox/messages');
+      expect(first.url.searchParams.get('$filter')).toBe("receivedDateTime ge 1900-01-01T00:00:00Z and from/emailAddress/address eq 'Ada@Example.com' and isRead eq false");
+      expect(first.url.searchParams.get('$orderby')).toBe('receivedDateTime desc');
+      expect(first.url.searchParams.get('$select')).toBe(LIST_SELECT);
+      expect(first.url.searchParams.get('$top')).toBe('100');
+      expect(first.prefer).toContain('IdType="ImmutableId"');
+
+      const manifest = readListManifest();
+      expect(Object.keys(manifest)).toEqual(['version', 'mode', 'selection', 'mailbox', 'folder', 'immutableIds', 'counts', 'lastRun', 'messages', 'removed']);
+      expect(manifest).toMatchObject({ version: 2, mode: 'list', mailbox: 'me', folder: 'inbox', immutableIds: true });
+      expect(manifest.selection).toMatch(/^[0-9a-f]{16}$/);
+      expect(manifest.selection).toBe(msGraphCliMailDumpSelectionKey({ from: 'ada@example.com', unread: true }));
+      expect(readFileSync(join(dir, MSGRAPH_CLI_MAIL_DUMP_MANIFEST_FILE), 'utf8').toLowerCase()).not.toContain('ada@example.com');
+      expect(existsSync(join(dir, `${msGraphCliMailDumpMessagePath(graph.messages.get('m2')!)}.json`))).toBe(true);
+    });
+
+    it('reads every folder with --all-folders and records the folder as *', async () => {
+      const graph = fakeGraph();
+      await dumpMsGraphCliMail(config(graph.graphContext, { folder: undefined, allFolders: true, since: new Date('2026-10-01T00:00:00Z'), until: new Date('2026-12-01T00:00:00Z') }));
+
+      const first = graph.listRequests[0];
+      expect(first.url.pathname).toBe('/v1.0/me/messages');
+      expect(first.url.searchParams.get('$filter')).toBe('receivedDateTime ge 2026-10-01T00:00:00Z and receivedDateTime lt 2026-12-01T00:00:00Z');
+      expect(readListManifest()).toMatchObject({ mode: 'list', folder: '*' });
+      await invalidArgument(dumpMsGraphCliMail({ ...config(graph.graphContext, { allFolders: true }), dir: join(dir, '..', 'other') }));
+    });
+
+    it('searches every folder with --search, or one folder with --folder', async () => {
+      const graph = fakeGraph();
+      await dumpMsGraphCliMail(config(graph.graphContext, { folder: undefined, search: 'from:ada "invoice"' }));
+
+      const first = graph.listRequests[0];
+      expect(first.url.pathname).toBe('/v1.0/me/messages');
+      expect(first.url.searchParams.get('$search')).toBe(String.raw`"from:ada \"invoice\""`);
+      expect(first.url.searchParams.has('$filter')).toBe(false);
+      expect(first.url.searchParams.get('$select')).toBe(LIST_SELECT);
+      expect(readListManifest()).toMatchObject({ version: 2, mode: 'search', folder: '*' });
+      expect(readFileSync(join(dir, MSGRAPH_CLI_MAIL_DUMP_MANIFEST_FILE), 'utf8')).not.toContain('invoice');
+
+      await dumpMsGraphCliMail({ ...config(graph.graphContext, { search: 'invoice' }), dir: join(dir, '..', 'inbox-search') });
+      expect(graph.listRequests.at(-1)?.url.pathname).toBe('/v1.0/me/mailFolders/inbox/messages');
+    });
+
+    it('refuses --search combined with a filter option before any request', async () => {
+      const graph = fakeGraph();
+      const error = await invalidArgument(dumpMsGraphCliMail(config(graph.graphContext, { search: 'invoice', from: 'ada@example.com' })));
+
+      expect(error.message).toContain('$search');
+      await invalidArgument(dumpMsGraphCliMail(config(graph.graphContext, { search: 'invoice', since: new Date('2026-10-01T00:00:00Z') })));
+      await invalidArgument(dumpMsGraphCliMail(config(graph.graphContext, { search: '  ' })));
+      expect(graph.listRequests).toHaveLength(0);
+      expect(existsSync(dir)).toBe(false);
+    });
+
+    it('refuses --prune outside delta mode', async () => {
+      const graph = fakeGraph();
+      await invalidArgument(dumpMsGraphCliMail(config(graph.graphContext, { unread: true, prune: true })));
+      await invalidArgument(dumpMsGraphCliMail(config(graph.graphContext, { search: 'x', prune: true })));
+      expect(graph.listRequests).toHaveLength(0);
+    });
+
+    it('refuses a directory dumped with another selection, mode or format', async () => {
+      const graph = fakeGraph();
+      await dumpMsGraphCliMail(config(graph.graphContext, { from: 'ada@example.com' }));
+
+      // the same selection (an address differing only in case) resumes
+      await expect(dumpMsGraphCliMail(config(graph.graphContext, { from: 'ADA@example.com' }))).resolves.toMatchObject({ complete: true });
+      await invalidArgument(dumpMsGraphCliMail(config(graph.graphContext, { from: 'bob@example.com' })));
+      await invalidArgument(dumpMsGraphCliMail(config(graph.graphContext, { search: 'from:ada@example.com' })));
+      // a v2 directory is not a delta dump
+      await invalidArgument(dumpMsGraphCliMail(config(graph.graphContext)));
+    });
+
+    it('leaves delta dumps on v1: no mode or selection, and a v1 directory refuses list mode', async () => {
+      const graph = fakeGraph();
+      await dumpMsGraphCliMail(config(graph.graphContext, { since: new Date('2026-10-01T00:00:00Z') }));
+
+      const manifest = readManifest();
+      expect(Object.keys(manifest)).toEqual(['version', 'mailbox', 'folder', 'immutableIds', 'counts', 'messages', 'removed', 'deltaLink', 'filter', 'lastRun']);
+      expect(manifest.version).toBe(1);
+      expect(graph.listRequests).toHaveLength(0);
+      await invalidArgument(dumpMsGraphCliMail(config(graph.graphContext, { unread: true })));
+    });
+
+    it('resumes a list walk after --max-messages from a cursor without the filter, then walks again without reading bodies', async () => {
+      const graph = fakeGraph();
+      const first = await dumpMsGraphCliMail(config(graph.graphContext, { from: 'ada@example.com', maxMessages: 2 }));
+
+      expect(first).toMatchObject({ written: 2, complete: false });
+      expect(graph.listRequests[0].url.searchParams.get('$top')).toBe('2');
+      const cursor = readListManifest().nextLink;
+      expect(cursor).toBeDefined();
+      expect(new URLSearchParams(cursor ?? '').get('$skip')).toBe('2');
+      expect(cursor).not.toContain('filter');
+      expect(cursor?.toLowerCase()).not.toContain('ada');
+
+      const second = await dumpMsGraphCliMail(config(graph.graphContext, { from: 'ada@example.com' }));
+      const resumed = graph.listRequests[1].url;
+      expect(resumed.searchParams.get('$skip')).toBe('2');
+      expect(resumed.searchParams.get('$top')).toBe('100');
+      expect(resumed.searchParams.get('$filter')).toContain("from/emailAddress/address eq 'ada@example.com'");
+      expect(second).toMatchObject({ written: 1, complete: true });
+      expect(readListManifest().nextLink).toBeUndefined();
+      expect(Object.keys(readListManifest().messages)).toHaveLength(3);
+
+      const batchCalls = graph.batchCalls();
+      const third = await dumpMsGraphCliMail(config(graph.graphContext, { from: 'ada@example.com' }));
+      expect(graph.listRequests[2].url.searchParams.has('$skip')).toBe(false);
+      expect(third).toMatchObject({ written: 0, skipped: 3, complete: true });
+      expect(graph.batchCalls()).toBe(batchCalls);
+    });
+
+    it('keeps only the paging part of a nextLink', () => {
+      expect(msGraphCliMailDumpListCursor(undefined)).toBeUndefined();
+      const cursor = msGraphCliMailDumpListCursor(`${GRAPH}/users/shared%40example.com/messages?%24search=%22secret%22&%24top=100&%24skip=200&%24filter=x`);
+      expect(cursor).not.toContain('shared');
+      expect(cursor).not.toContain('secret');
+      expect(Object.fromEntries(new URLSearchParams(cursor ?? ''))).toEqual({ $top: '100', $skip: '200' });
+    });
+  });
+
+  describe('--attachments-only', () => {
+    it('writes only attachments, makes no $batch call and skips messages without attachments', async () => {
+      const graph = fakeGraph();
+      graph.setAttachment({ id: 'att/1', name: 'report.pdf', bytes: new Uint8Array([1, 2, 3]) });
+      graph.withoutAttachments.add('m3');
+
+      const result = await dumpMsGraphCliMail(config(graph.graphContext, { attachmentsOnly: true, eml: true }));
+
+      expect(result).toMatchObject({ written: 2, skipped: 0, failed: 0, complete: true });
+      expect(graph.batchCalls()).toBe(0);
+      const files = Object.keys(readTree(dir)).sort();
+      expect(files).toEqual([`${msGraphCliMailDumpMessagePath(graph.messages.get('m1')!)}/attachments/${msGraphCliMailDumpHash8('att/1')}_report.pdf`, `${msGraphCliMailDumpMessagePath(graph.messages.get('m2')!)}/attachments/${msGraphCliMailDumpHash8('att/1')}_report.pdf`].sort());
+      const manifest = readManifest();
+      expect(manifest.version).toBe(1);
+      expect(manifest.messages['m1']).toEqual({ file: msGraphCliMailDumpMessagePath(graph.messages.get('m1')!), changeKey: 'k1' });
+      expect(manifest.messages['m3']).toBeUndefined();
+    });
+
+    it('works in list mode too', async () => {
+      const graph = fakeGraph();
+      graph.setAttachment({ id: 'att/1', name: 'a.txt', bytes: new Uint8Array([1]) });
+
+      const result = await dumpMsGraphCliMail(config(graph.graphContext, { hasAttachments: true, attachmentsOnly: true }));
+
+      expect(result).toMatchObject({ written: 3, complete: true });
+      expect(graph.batchCalls()).toBe(0);
+      expect(Object.keys(readTree(dir)).every((x) => x.includes('/attachments/'))).toBe(true);
     });
   });
 });
