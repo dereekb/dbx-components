@@ -1,6 +1,6 @@
 ---
 name: msgraph-cli
-description: "The `msgraph-cli` command (the `msgraph-cli` bin of `@dereekb/microsoft`, run as `npx msgraph-cli`; this doc ships with that package and prints with `npx msgraph-cli docs`) for a user's Outlook mail, shared mailboxes, automatic replies, calendar, OneDrive / SharePoint files and Teams chats and channels through Microsoft Graph, plus a raw Graph `request`. Bulk downloads: `files download-folder` copies a SharePoint / OneDrive folder to disk recursively and re-syncs it on re-run, and `mail dump` dumps a folder (delta), a filtered list or a search, with `--attachments-only`. It authenticates ONLY through a token source: each run borrows an access token minted from an app's Microsoft external connection by `<app>-cli external-token <providerType>` (no `auth login`). Covers setup (`auth token-source set/use/show/clear`, `auth show`), the global `--token-source` option and the `MSGRAPH_CLI_TOKEN_SOURCE` / `MSGRAPH_CLI_TOKEN_COMMAND` / `MSGRAPH_CLI_CONFIG_DIR` env vars, the Read / Read + Write presets and which commands need which scope, `--yes` / `--dry-run` on writes, the JSON output, and the error codes (`NOT_CONFIGURED`, `TOKEN_REJECTED`, `SCOPE_DENIED`, `CONFIRMATION_REQUIRED`, `RATE_LIMITED`, `NOT_FOUND`, `ABORTED`, `INSUFFICIENT_SPACE`, …)."
+description: "The `msgraph-cli` command (the `msgraph-cli` bin of `@dereekb/microsoft`, run as `npx msgraph-cli`; this doc ships with that package and prints with `npx msgraph-cli docs`) for a user's Outlook mail, shared mailboxes, automatic replies, calendar, OneDrive / SharePoint files and Teams chats and channels through Microsoft Graph, plus a raw Graph `request`. Bulk downloads: `files download-folder` copies a SharePoint / OneDrive folder to disk recursively and re-syncs it on re-run, `mail dump` dumps a folder (delta), a filtered list or a search, with `--attachments-only`, and `teams chat dump` keeps an incremental archive of Teams chats (JSON + Markdown per message, inline images, optional file attachments). It authenticates ONLY through a token source: each run borrows an access token minted from an app's Microsoft external connection by `<app>-cli external-token <providerType>` (no `auth login`). Covers setup (`auth token-source set/use/show/clear`, `auth show`), the global `--token-source` option and the `MSGRAPH_CLI_TOKEN_SOURCE` / `MSGRAPH_CLI_TOKEN_COMMAND` / `MSGRAPH_CLI_CONFIG_DIR` env vars, the Read / Read + Write presets and which commands need which scope, `--yes` / `--dry-run` on writes, the JSON output, and the error codes (`NOT_CONFIGURED`, `TOKEN_REJECTED`, `SCOPE_DENIED`, `CONFIRMATION_REQUIRED`, `RATE_LIMITED`, `NOT_FOUND`, `ABORTED`, `INSUFFICIENT_SPACE`, …)."
 ---
 
 # Microsoft Graph CLI
@@ -270,7 +270,10 @@ polls Graph's copy monitor until the copy finishes. `delete --hard` deletes perm
 ```bash
 msgraph-cli teams list | channels <team> | presence [--user <id>] | files <team> <channel>
 msgraph-cli teams chats [--with "Ada,Grace"] [--topic …] [--type …]
-msgraph-cli teams chat messages <chat> [--since <iso>] [--top 50]
+msgraph-cli teams chat messages <chat> [--since <iso>] [--top 50]   # --since: messages CREATED after it (not a change feed)
+msgraph-cli teams chat dump <chat> | --all-chats | --with "Ada,Grace" [--topic …] [--type …] --dir <dir>   # incremental archive; re-run to update
+   # also: [--since <iso>] [--lookback 7] [--attachments] [--no-hosted-contents] [--no-markdown] [--prune]
+   #       [--max-messages 5000] [--max-bytes N] [--concurrency 3 (max 4)] [--idle-timeout 60]
 msgraph-cli teams chat send <chat> --text "…" | --html "…" | --file msg.html
 msgraph-cli teams chat delete <chat> <message> [--undo] --yes
 msgraph-cli teams channel send <team> <channel> --text "…"      # also: reply <team> <channel> <message>
@@ -283,6 +286,93 @@ per second per chat or channel and per user, and Microsoft's terms forbid using 
 there is no bulk or repeat mode. Sends are paced to one per second even across separate runs (the last
 send time is kept in `<configDir>/teams.last-send.json`). `teams chats --with` matches member names
 locally and never echoes the chats that did not match. `chat delete --undo` restores a deleted message.
+
+`chat messages --since <iso>` asks Graph for `lastModifiedDateTime gt <since>`, but Graph applies that filter to the
+creation time for older messages: it returns the messages **created** after the instant, and edits, deletes and
+reactions to older messages only sometimes. Use it to read what is new, not to find what changed; `teams chat dump`
+handles changes with its lookback.
+
+#### Archive chats to disk (teams chat dump)
+
+- **Pick the chats.** `teams chat dump <chat> --dir <dir>` archives one chat; `--all-chats` archives every chat you are
+  in; `--with` / `--topic` / `--type` (combinable, matched locally like `teams chats`) archive the chats that match.
+  Exactly one of the three forms is required, and mixing them is refused (`INVALID_ARGUMENT`). Every run resolves the
+  selection again (reading every page of your chat list, unless a chat id was given), so chats that newly match are
+  added. A chat that no longer matches, or that you left, keeps its files and state but is not read.
+- **One directory, many chats.** A dump directory belongs to one selection and one `--since`: re-running it with
+  another is refused (`INVALID_ARGUMENT`). A re-run may omit `--since`; the stored value applies. A `--dir` that is not
+  empty and holds no chat dump (for example a mail dump) is refused too. Layout (folders 0700, files 0600):
+  ```
+  <dir>/manifest.json                    selection hash, --since, the chat index, cumulative counts
+  <dir>/chats/<chatKey>/chat.json        the chat as Graph returns it (topic, type, members); rewritten when it changes
+  <dir>/chats/<chatKey>/manifest.json    the chat's mark, walk cursor, counts, messages and soft deletes
+  <dir>/chats/<chatKey>/messages/<yyyy>/<mm>/<createdUtc>_<sha8>.json        the message as Graph returns it
+  <dir>/chats/<chatKey>/messages/<yyyy>/<mm>/<createdUtc>_<sha8>.md          a Markdown rendering
+  <dir>/chats/<chatKey>/messages/<yyyy>/<mm>/<createdUtc>_<sha8>/hosted/<sha8>.<ext>             inline images
+  <dir>/chats/<chatKey>/messages/<yyyy>/<mm>/<createdUtc>_<sha8>/attachments/<sha8>_<name>       file attachments
+  ```
+  `<chatKey>` is a hash of the chat id and `<sha8>` a hash of the message id, so no id or name is in a path. Message
+  files are dated by creation time, which never changes: an edit rewrites them in place, and
+  `cat messages/2026/11/*.md` reads in order. A message with no date goes under `messages/undated/`.
+- **What each message writes.** The `.json` always, first, so the text is kept even if a download fails. Then, by
+  default, its inline images (`--no-hosted-contents` skips them): read through Graph's hostedContents, named by
+  response type (png, jpg, gif, webp, bmp, svg, else bin), and never downloaded twice. With `--attachments` (off by
+  default) its file attachments: each SharePoint / OneDrive link is resolved through `/shares` and streamed by drive
+  item, so no pre-authenticated URL is used; folders, notebooks and malware-flagged items count as `unsupported`, and
+  a file already on disk is not downloaded again. Quoted messages, cards and meeting links have nothing to download;
+  they stay in the `.json`. The `.md` comes last (`--no-markdown` skips it): a `### <sender> · <created>` header with
+  `(edited …)` / `(deleted …)` markers, the body converted from Teams HTML (bold, italics, strikethrough, code, quotes,
+  lists, links, `@mentions`, emoji, local image links; runs of blank lines collapse to one), and a list of attachments
+  (`[not downloaded]` when one failed). System events (members added, chat renamed, …) are archived like messages and
+  render as `_membersAdded_`.
+- **Change detection.** The first run reads the chat's whole history (or back to `--since`). Each later run reads
+  only a window: the messages Graph returns for `lastModifiedDateTime gt <start>`, where the start is the earlier of
+  the chat's mark minus 10 minutes and `now − --lookback` days (default 7). Each returned message is compared with the
+  manifest by `lastModifiedDateTime`: unchanged is skipped, new or changed is written. The mark is set only when a
+  chat's walk finishes, to its newest change (or the walk's start, when that is earlier), so messages that arrive
+  during a long run fall inside the next window.
+  - **Why a lookback and not just a high-water mark:** Graph applies that filter to the creation time for older
+    messages. It returns every message created after the start in its current state (edited, reacted, deleted), but
+    edits, reactions and most deletes of messages created *before* the start are not returned. Live checks found
+    every edit and 98% of reactions within 7 days of posting, hence the default.
+  - **What is missed:** changes to messages older than `--lookback`, and hard deletes (a retention policy purge):
+    Graph keeps no tombstone a delegated read can see. `--lookback 0` reads only new messages; a large value (e.g.
+    `--lookback 3650`) is a full re-check. When you use `--prune`, re-run with `--lookback 90` now and then to catch
+    late deletes.
+  - **Messages created before `--since`** are skipped on every run.
+- **Deletions.** A soft-deleted message you already have keeps its `.json` and files as last archived (Graph has
+  emptied the body), its `.md` gains a `Deleted: <time>` line, and it is recorded in the chat manifest's `removed`
+  and counted in `removed`. `--prune` deletes that message's `.json`, `.md` and files instead. A message first seen
+  deleted is recorded without files. A restored message (`chat delete --undo`) is written again.
+- **Budgets and resume.** `--max-messages` (default 5000) is the most messages one run **writes**; unchanged messages
+  don't count, so re-reading the lookback never starves later chats. `--max-bytes N` caps the bytes one run writes
+  (it can overshoot by the files in flight; nothing is skipped). Either stops the run with `complete: false`; re-run
+  to continue. Each chat's walk keeps its page cursor, so an interrupted walk resumes at the page it stopped on (a
+  cursor Graph no longer accepts restarts that chat's window once, and written messages are skipped). Ctrl+C stops
+  the run, removes partial files, saves the manifests and fails with `ABORTED`.
+- **Pacing.** Teams allows one read per second per chat and per user, so every Teams read of a run (message pages,
+  inline images, the chat list) is paced to one per second, and chats are read one at a time. `--concurrency`
+  (default 3, max 4) is how many messages of a page are written at once, which mainly overlaps the SharePoint
+  attachment downloads (those are not Teams reads and are not paced). A first run lists about 50 messages per second;
+  a quiet re-run costs about one read per chat (68 quiet chats take about 70 s). Microsoft asks that polling for
+  changes happen at most once a day, so run it on demand, or at most daily when scheduled.
+- **Failures.** An inline image or attachment that fails for good (not found, access denied, malware) does not fail
+  its message: it is counted in `failed` / `failedCodes`, shown as `[not downloaded]`, recorded as missing, and tried
+  again by the next run whose window returns the message. A chat that cannot be read (for example one you left) is
+  recorded, counted in `failed`, and skipped, and the run goes on with `complete: false`; a chat named by id that
+  cannot be read fails the run. An outage or throttling that outlasts its retries, a rejected token after one re-mint,
+  or a full disk stops the run with the manifests saved and the cursor at the unfinished page's start, and so do 10
+  failures in a row (`TOO_MANY_FAILURES`). A re-run continues.
+- **Output.** `{ dir, chats, written, skipped, removed, failed, files, unsupported, bytes, complete, failedCodes? }`.
+  `chats` is the chats read this run, `files` the inline images and attachments written, and `complete: true` means
+  every selected chat's walk finished. stderr shows `chat dump: 68 chats (3 new)` once, then progress at most every
+  2 s: `chat dump: chat 12/68, 1250 messages read, 40 written, 2 removed, 0 failed` (chats finished so far).
+- **Privacy.** stdout and stderr carry only counts, bytes and failure codes: no chat id, topic, member name, message
+  id, content or URL. The top-level manifest holds hashes and dates; the chat manifests hold message ids and relative
+  paths. `chat.json` (member names and addresses) and the message files hold the chat's content, 0600 inside the 0700
+  `--dir`.
+- **Data loss prevention.** When a DLP policy blocks a message, Teams empties its body without marking it deleted.
+  If that happens inside the lookback, the next run rewrites the archived `.json` / `.md` with the emptied body.
 
 ### Raw Request (Escape Hatch)
 
@@ -307,8 +397,8 @@ odd call. `--all-pages` follows `@odata.nextLink` and works only on a `GET` with
 | `--pick <fields>` / `--pick-all` | Keep only these fields (per item of a collection's `value`) / ignore the saved pick |
 | `--dump-dir <dir>` | Write full results to a directory |
 | `--set-pick` / `--set-dump-dir` | Save those defaults for the command |
-| `--idle-timeout <s>` | Downloads (`files download`, `files download-folder`, `mail get --mime`, `mail dump`): abort a body that sends no bytes for this many seconds (default 60). The timer starts once the headers arrive |
-| `--concurrency <n>` | Bulk downloads: how many items run at once. `files download-folder` default 4 (max 8), `mail dump` default 3 (max 4). Out of range is `INVALID_ARGUMENT` |
+| `--idle-timeout <s>` | Downloads (`files download`, `files download-folder`, `mail get --mime`, `mail dump`, `teams chat dump`): abort a body that sends no bytes for this many seconds (default 60). The timer starts once the headers arrive |
+| `--concurrency <n>` | Bulk downloads: how many items run at once. `files download-folder` default 4 (max 8), `mail dump` and `teams chat dump` default 3 (max 4). Out of range is `INVALID_ARGUMENT` |
 | `MSGRAPH_CLI_TOKEN_SOURCE` | Name of the saved source to use |
 | `MSGRAPH_CLI_TOKEN_COMMAND` | A token command to use as is (unnamed, not saved) |
 | `MSGRAPH_CLI_CONFIG_DIR` | Config directory (default `~/.msgraph-cli/`) |
@@ -333,6 +423,7 @@ Every scope in them is user-consentable, so connecting never needs an administra
 | `mail draft/send/send-bulk/reply/forward/move/copy/delete`, `mail auto-reply set/off/restore`, `calendar create/delete`, `files upload/mkdir/rename/move/copy/delete` | Read + Write |
 | `--mailbox` / `--send-as` (shared mailboxes) | Read + Write (`*.Shared`) **and** an Exchange permission on that mailbox |
 | `teams list/channels/chats/chat …/presence`, `teams channel send/reply` | Read + Write |
+| `teams chat dump` | Read + Write (`Chat.Read`). `--attachments` also uses `Files.Read.All`, which both presets carry |
 | `teams channel messages/delete` | `ChannelMessage.Read.All` / `ChannelMessage.ReadWrite` (admin consent). Neither Read nor Read + Write grants them, so these run only on a connection a tenant admin consented with them for the organization |
 
 ## Output Format
@@ -388,6 +479,9 @@ token command fails, msgraph-cli shows the **app CLI's** code and suggestion (ex
 - **`auth token-source show` vs `auth show`.** `token-source show` never runs the command; `auth show` mints when nothing is cached.
 - **Graph cannot list the shared mailboxes a user may open.** Save them with `config set mailboxes …`, then `mail mailboxes check`.
 - **Channel reads and deletes need admin consent** (`ChannelMessage.Read.All` / `.ReadWrite`), even for the user's own posts.
+- **Graph's `lastModifiedDateTime` filter on chat messages acts on creation time for older messages.** It returns the messages created after the instant, and edits, deletes and reactions to older ones only sometimes, so `teams chat messages --since` is not a change feed and `teams chat dump` re-reads a lookback window instead.
+- **`teams chat dump` does not see hard deletes.** A message a retention policy purged simply stops coming back; there is no delegated delta or tombstone for chats, so its archived files stay.
+- **`teams chat dump` keeps no edit history.** Graph keeps only the current version of a message, and the dump rewrites a changed message in place.
 
 ## When Uncertain
 
