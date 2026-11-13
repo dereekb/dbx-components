@@ -4,7 +4,7 @@ import { type MicrosoftGraphBatchRequestItem, isMicrosoftGraphBatchResponseOk, m
 import { type MicrosoftGraphContext } from './graph.config';
 import { MicrosoftGraphError, type MicrosoftGraphErrorData } from './graph.error.api';
 import { type MicrosoftGraphMailboxInput, microsoftGraphGetMessageRequest, microsoftGraphMailHeaders, microsoftGraphMailboxPath, microsoftGraphMessagePath, microsoftGraphMessagesPath } from './graph.mail.api';
-import { microsoftGraphUploadSessionPut } from './graph.upload.api';
+import { microsoftGraphUploadSessionPut, microsoftGraphUploadTimeout } from './graph.upload.api';
 import { type MicrosoftGraphItemBody, type MicrosoftGraphMessage, type MicrosoftGraphRecipient } from './graph.type';
 
 /**
@@ -419,7 +419,8 @@ export interface MicrosoftGraphUploadMessageAttachmentInput extends Pick<Microso
   readonly id: string;
   readonly attachment: MicrosoftGraphFileAttachmentInput;
   /**
-   * Overrides the client's timeout per chunk PUT.
+   * The timeout of each chunk PUT. Defaults to {@link microsoftGraphUploadTimeout} of one chunk, not the
+   * client's flat 30 seconds.
    */
   readonly timeout?: Maybe<Milliseconds>;
 }
@@ -451,7 +452,7 @@ export function uploadMessageAttachment(context: MicrosoftGraphContext): (input:
       body: { AttachmentItem: { attachmentType: 'file', name: attachment.name, size: attachment.bytes.length, contentType: attachment.contentType ?? 'application/octet-stream' } }
     });
 
-    await put({ uploadUrl: session.uploadUrl, bytes: attachment.bytes, chunkSize: MICROSOFT_GRAPH_MESSAGE_ATTACHMENT_CHUNK_BYTES, timeout: input.timeout });
+    await put({ uploadUrl: session.uploadUrl, bytes: attachment.bytes, chunkSize: MICROSOFT_GRAPH_MESSAGE_ATTACHMENT_CHUNK_BYTES, timeout: input.timeout ?? microsoftGraphUploadTimeout(MICROSOFT_GRAPH_MESSAGE_ATTACHMENT_CHUNK_BYTES) });
   };
 }
 

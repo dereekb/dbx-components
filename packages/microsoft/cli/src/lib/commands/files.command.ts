@@ -24,12 +24,13 @@ import {
   uploadDriveFile
 } from '@dereekb/microsoft';
 import { type Maybe } from '@dereekb/util';
-import { readFile, writeFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import { basename, posix } from 'node:path';
 import type { Argv, CommandModule } from 'yargs';
 import { msGraphCommandHandler } from '../middleware/auth.middleware';
 import { parseMsGraphCliEnumOption } from '../util/auto.reply';
 import { msGraphCliConfirmOptions, msGraphCliDryRunOptions, msGraphCliDryRunOutput, requireMsGraphCliConfirmation } from '../util/mail.write';
+import { openMsGraphCliFileUploadSource } from '../util/file.source';
 import { outputMsGraphCliResult } from '../util/output';
 import { msGraphCliContentTypeForFile } from './request.command';
 
@@ -185,18 +186,24 @@ export const FILES_UPLOAD_COMMAND: CommandModule = {
       .option('chunk-size', { type: 'number', describe: 'Bytes per upload session chunk, rounded down to a multiple of 320 KiB (default 10 MiB)' })
       .example([['$0 files upload ./report.xlsx --to-path Documents/Reports --conflict rename', 'Upload into a folder, renaming on a clash']]),
   handler: msGraphCommandHandler(async (argv: any, { graphContext }) => {
-    const bytes = new Uint8Array(await readFile(argv.local));
-    const name = argv.name ?? basename(argv.local);
-    const driveId = await resolveMsGraphCliDriveId(graphContext, argv);
-    const input = { driveId, parentId: argv.to, parentPath: argv.toPath, name, bytes, contentType: msGraphCliContentTypeForFile(name), conflictBehavior: parseMsGraphCliEnumOption('conflict', argv.conflict, CONFLICT_BEHAVIORS), chunkSize: argv.chunkSize };
+    // the file is read one chunk at a time, just before that chunk's PUT, so memory holds one chunk at most
+    const source = await openMsGraphCliFileUploadSource(argv.local);
 
-    if (argv.dryRun) {
-      const simple = bytes.length <= MICROSOFT_GRAPH_DRIVE_SIMPLE_UPLOAD_MAX_BYTES;
-      const chunkSize = microsoftGraphDriveUploadChunkSize(argv.chunkSize);
-      const request: MicrosoftGraphRequestInput = simple ? { ...microsoftGraphSimpleUploadRequest(input), body: undefined } : microsoftGraphCreateDriveUploadSessionRequest(input);
-      outputMsGraphCliResult(msGraphCliDryRunOutput([request], simple ? `The PUT body is the file's ${bytes.length} bytes.` : `Then ${Math.ceil(bytes.length / chunkSize)} chunk PUT(s) of up to ${chunkSize} bytes to the session's uploadUrl, without an Authorization header.`));
-    } else {
-      outputMsGraphCliResult(await uploadDriveFile(graphContext)(input));
+    try {
+      const name = argv.name ?? basename(argv.local);
+      const driveId = await resolveMsGraphCliDriveId(graphContext, argv);
+      const target = { driveId, parentId: argv.to, parentPath: argv.toPath, name, contentType: msGraphCliContentTypeForFile(name), conflictBehavior: parseMsGraphCliEnumOption('conflict', argv.conflict, CONFLICT_BEHAVIORS) };
+
+      if (argv.dryRun) {
+        const simple = source.size <= MICROSOFT_GRAPH_DRIVE_SIMPLE_UPLOAD_MAX_BYTES;
+        const chunkSize = microsoftGraphDriveUploadChunkSize(argv.chunkSize);
+        const request: MicrosoftGraphRequestInput = simple ? { ...microsoftGraphSimpleUploadRequest({ ...target, bytes: new Uint8Array(0) }), body: undefined } : microsoftGraphCreateDriveUploadSessionRequest(target);
+        outputMsGraphCliResult(msGraphCliDryRunOutput([request], simple ? `The PUT body is the file's ${source.size} bytes.` : `Then ${Math.ceil(source.size / chunkSize)} chunk PUT(s) of up to ${chunkSize} bytes to the session's uploadUrl, without an Authorization header.`));
+      } else {
+        outputMsGraphCliResult(await uploadDriveFile(graphContext)({ ...target, bytes: source, chunkSize: argv.chunkSize }));
+      }
+    } finally {
+      await source.close();
     }
   })
 };

@@ -724,7 +724,7 @@ describe('msgraph-cli', () => {
       await run(FILES_UPLOAD_COMMAND, { local, toPath: 'Docs', conflict: 'rename', dryRun: true });
 
       const data = JSON.parse(log.mock.calls[0][0] as string).data;
-      expect(data.requests[0]).toEqual({ method: 'POST', url: '/me/drive/root:/Docs/big.bin:/createUploadSession', body: { item: { name: 'big.bin', '@microsoft.graph.conflictBehavior': 'rename' } } });
+      expect(data.requests[0]).toEqual({ method: 'POST', url: '/me/drive/root:/Docs/big.bin:/createUploadSession', body: { item: { '@microsoft.graph.conflictBehavior': 'rename' } } });
       expect(data.note).toContain('1 chunk PUT(s)');
       expect(calls).toHaveLength(0);
     });

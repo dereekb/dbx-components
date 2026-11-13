@@ -3,7 +3,7 @@ import { type MicrosoftGraphRequestInput, microsoftGraphRequest } from './graph.
 import { type MicrosoftGraphContext } from './graph.config';
 import { type MicrosoftGraphRawRequestInput, type MicrosoftGraphRawResponse, microsoftGraphRequestRaw } from './graph.raw.api';
 import { type MicrosoftGraphDrive, type MicrosoftGraphDriveItem, type MicrosoftGraphPage, type MicrosoftGraphSite } from './graph.type';
-import { microsoftGraphUploadSessionPut } from './graph.upload.api';
+import { type MicrosoftGraphUploadBytes, microsoftGraphUploadBytesSize, microsoftGraphUploadSessionPut, microsoftGraphUploadTimeout, readMicrosoftGraphUploadRange } from './graph.upload.api';
 
 /**
  * Files up to this size upload with one PUT; larger ones through an upload session.
@@ -313,10 +313,16 @@ export function microsoftGraphDownloadDriveItemRequest(input: MicrosoftGraphDriv
 }
 
 // MARK: Write requests
-export interface MicrosoftGraphUploadDriveItemInput extends MicrosoftGraphDriveChildInput {
-  readonly bytes: Uint8Array;
+/**
+ * Where an upload goes (drive, parent folder and name), its content type and its conflict behavior.
+ */
+export interface MicrosoftGraphUploadDriveItemTargetInput extends MicrosoftGraphDriveChildInput {
   readonly contentType?: Maybe<string>;
   readonly conflictBehavior?: Maybe<MicrosoftGraphConflictBehavior>;
+}
+
+export interface MicrosoftGraphUploadDriveItemInput extends MicrosoftGraphUploadDriveItemTargetInput {
+  readonly bytes: Uint8Array;
 }
 
 /**
@@ -335,13 +341,17 @@ export function microsoftGraphSimpleUploadRequest(input: MicrosoftGraphUploadDri
  * Builds the POST that opens an upload session for a large file. The conflict behavior is a field of the
  * body's `item` here.
  *
+ * The file name is carried only by the path. OneDrive for Business answers `invalidRequest` ("The request is
+ * malformed or incorrect") when `item.name` is also sent, for both the `items/{parent}:/{name}:` and the
+ * `root:/{path}/{name}:` forms (live, 2026-11-13), although the doc's example body includes it.
+ *
  * @param input - The drive, parent, name and conflict behavior.
  * @returns The request.
  *
  * @see https://learn.microsoft.com/en-us/graph/api/driveitem-createuploadsession
  */
-export function microsoftGraphCreateDriveUploadSessionRequest(input: Omit<MicrosoftGraphUploadDriveItemInput, 'bytes'>): MicrosoftGraphRequestInput {
-  const item: Record<string, unknown> = { name: input.name };
+export function microsoftGraphCreateDriveUploadSessionRequest(input: MicrosoftGraphUploadDriveItemTargetInput): MicrosoftGraphRequestInput {
+  const item: Record<string, unknown> = {};
 
   if (input.conflictBehavior) {
     item[MICROSOFT_GRAPH_CONFLICT_BEHAVIOR_KEY] = input.conflictBehavior;
@@ -443,11 +453,21 @@ export function microsoftGraphDeleteDriveItemRequest(input: MicrosoftGraphDriveI
 }
 
 // MARK: Write executors
-export interface MicrosoftGraphUploadDriveFileInput extends MicrosoftGraphUploadDriveItemInput {
+export interface MicrosoftGraphUploadDriveFileInput extends MicrosoftGraphUploadDriveItemTargetInput {
+  /**
+   * The file's bytes, or a `MicrosoftGraphUploadByteSource` read one chunk at a time, which
+   * keeps a large upload to one chunk of memory.
+   */
+  readonly bytes: MicrosoftGraphUploadBytes;
   /**
    * Bytes per upload session chunk, rounded down to a multiple of 320 KiB. Defaults to 10 MiB.
    */
   readonly chunkSize?: Maybe<number>;
+  /**
+   * The timeout of each PUT (the simple upload, or one session chunk). Defaults to
+   * {@link microsoftGraphUploadTimeout} of the bytes that PUT carries, not the client's flat 30 seconds.
+   */
+  readonly timeout?: Maybe<Milliseconds>;
   readonly onProgress?: Maybe<(sent: number, total: number) => void>;
 }
 
@@ -465,13 +485,16 @@ export function uploadDriveFile(context: MicrosoftGraphContext): (input: Microso
   const putSession = microsoftGraphUploadSessionPut(context);
 
   return async (input) => {
+    const size = microsoftGraphUploadBytesSize(input.bytes);
     let response: Maybe<MicrosoftGraphRawResponse>;
 
-    if (input.bytes.length <= MICROSOFT_GRAPH_DRIVE_SIMPLE_UPLOAD_MAX_BYTES) {
-      response = await requestRaw(microsoftGraphSimpleUploadRequest(input));
+    if (size <= MICROSOFT_GRAPH_DRIVE_SIMPLE_UPLOAD_MAX_BYTES) {
+      const bytes = size === 0 ? new Uint8Array(0) : await readMicrosoftGraphUploadRange(input.bytes, { start: 0, end: size - 1 });
+      response = await requestRaw({ ...microsoftGraphSimpleUploadRequest({ ...input, bytes }), timeout: input.timeout ?? microsoftGraphUploadTimeout(size) });
     } else {
+      const chunkSize = microsoftGraphDriveUploadChunkSize(input.chunkSize);
       const session = await request<{ readonly uploadUrl: string }>(microsoftGraphCreateDriveUploadSessionRequest(input));
-      response = await putSession({ uploadUrl: session.uploadUrl, bytes: input.bytes, chunkSize: microsoftGraphDriveUploadChunkSize(input.chunkSize), onProgress: input.onProgress });
+      response = await putSession({ uploadUrl: session.uploadUrl, bytes: input.bytes, chunkSize, timeout: input.timeout ?? microsoftGraphUploadTimeout(chunkSize), onProgress: input.onProgress });
     }
 
     const item = response?.json<MicrosoftGraphDriveItem>();

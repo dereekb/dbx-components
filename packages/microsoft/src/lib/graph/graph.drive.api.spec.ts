@@ -83,11 +83,11 @@ describe('drive writes', () => {
   });
 
   it('places conflictBehavior in the query of a simple upload and in the body of a folder create and an upload session', () => {
-    // models: F-a (driveitem-post-children), API:driveitem-put-content, API:driveitem-createuploadsession
+    // models: F-a (driveitem-post-children), API:driveitem-put-content, API:driveitem-createuploadsession; FT4 live — `item.name` alongside a path-addressed name is rejected with invalidRequest
     const simple = microsoftGraphSimpleUploadRequest({ parentPath: 'Docs', name: 'a b.txt', bytes: new Uint8Array(3), conflictBehavior: 'rename' });
     expect(microsoftGraphPathWithQuery(simple.path, simple.query)).toBe('/me/drive/root:/Docs/a%20b.txt:/content?%40microsoft.graph.conflictBehavior=rename');
 
-    expect(microsoftGraphCreateDriveUploadSessionRequest({ parentId: 'P1', name: 'big.zip', conflictBehavior: 'replace' })).toEqual({ method: 'POST', path: '/me/drive/items/P1:/big.zip:/createUploadSession', body: { item: { name: 'big.zip', '@microsoft.graph.conflictBehavior': 'replace' } } });
+    expect(microsoftGraphCreateDriveUploadSessionRequest({ parentId: 'P1', name: 'big.zip', conflictBehavior: 'replace' })).toEqual({ method: 'POST', path: '/me/drive/items/P1:/big.zip:/createUploadSession', body: { item: { '@microsoft.graph.conflictBehavior': 'replace' } } });
     expect(microsoftGraphCreateFolderRequest({ parentPath: 'Docs', name: 'New' })).toEqual({ method: 'POST', path: '/me/drive/root:/Docs:/children', body: { name: 'New', folder: {}, '@microsoft.graph.conflictBehavior': 'fail' } });
   });
 
@@ -112,6 +112,66 @@ describe('drive writes', () => {
     expect(item.id).toBe('new-item');
     expect(puts.map((x) => x.headers.get('Content-Range'))).toEqual([`bytes 0-1966079/${total}`, `bytes 1966080-3932159/${total}`, `bytes 3932160-5242879/${total}`]);
     puts.forEach((x) => expect(x.headers.get('Authorization')).toBeNull());
+  });
+
+  it('reads a byte source one chunk at a time, just before each PUT, and never reads the whole file', async () => {
+    const total = 5 * 1024 * 1024;
+    const file = new Uint8Array(total).map((_, i) => i % 251);
+    const reads: string[] = [];
+    const graph = recordingGraph((request) => {
+      let response: Response;
+
+      if (request.url.includes('createUploadSession')) {
+        response = jsonResponse({ uploadUrl: 'https://upload.example.com/session-2' });
+      } else {
+        const range = request.headers.get('Content-Range') ?? '';
+        response = range.endsWith(`-${total - 1}/${total}`) ? jsonResponse({ id: 'streamed', name: 'big.bin' }, 201) : jsonResponse({ nextExpectedRanges: [] }, 202);
+      }
+
+      return response;
+    });
+
+    const created = await uploadDriveFile(graph.graphContext)({
+      name: 'big.bin',
+      chunkSize: 2 * 1024 * 1024,
+      bytes: {
+        size: total,
+        readRange: async (range) => {
+          reads.push(`${range.start}-${range.end}`);
+          return file.slice(range.start, range.end + 1);
+        }
+      }
+    });
+
+    const bodies: Uint8Array[] = [];
+
+    for (const put of graph.requests.filter((x) => x.method === 'PUT')) {
+      bodies.push(new Uint8Array(await put.arrayBuffer()));
+    }
+
+    expect(created.id).toBe('streamed');
+    expect(reads).toEqual(['0-1966079', '1966080-3932159', '3932160-5242879']);
+    expect(Buffer.concat(bodies).equals(Buffer.from(file))).toBe(true);
+  });
+
+  it('reads a small byte source once and uploads it with one PUT', async () => {
+    const reads: string[] = [];
+    const graph = recordingGraph(() => jsonResponse({ id: 'small', name: 'a.txt' }, 201));
+    const created = await uploadDriveFile(graph.graphContext)({
+      name: 'a.txt',
+      bytes: {
+        size: 3,
+        readRange: async (range) => {
+          reads.push(`${range.start}-${range.end}`);
+          return new Uint8Array([1, 2, 3]);
+        }
+      }
+    });
+
+    expect(created.id).toBe('small');
+    expect(reads).toEqual(['0-2']);
+    expect(graph.requests.map((x) => x.method)).toEqual(['PUT']);
+    expect(new Uint8Array(await graph.requests[0].arrayBuffer())).toEqual(new Uint8Array([1, 2, 3]));
   });
 
   it('refuses a move into another drive and suggests copy plus delete', async () => {

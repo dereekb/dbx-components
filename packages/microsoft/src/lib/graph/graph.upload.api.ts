@@ -43,19 +43,88 @@ export function microsoftGraphUploadContentRange(range: MicrosoftGraphUploadChun
   return `bytes ${range.start}-${range.end}/${total}`;
 }
 
+/**
+ * Upload bytes read one range at a time, so a file never has to sit in memory whole. A file reader keeps an
+ * upload to one chunk of memory, and lifts the 2 GiB ceiling of Node's `readFile`.
+ */
+export interface MicrosoftGraphUploadByteSource {
+  /**
+   * The total size in bytes.
+   */
+  readonly size: number;
+  /**
+   * Reads exactly the bytes of one range (`end` inclusive).
+   */
+  readonly readRange: (range: MicrosoftGraphUploadChunkRange) => Promise<Uint8Array>;
+}
+
+/**
+ * The bytes to upload: in memory, or a {@link MicrosoftGraphUploadByteSource} read one range at a time.
+ */
+export type MicrosoftGraphUploadBytes = Uint8Array | MicrosoftGraphUploadByteSource;
+
+/**
+ * Returns the size of upload bytes, in memory or from a source.
+ *
+ * @param bytes - The bytes or source.
+ * @returns The size in bytes.
+ */
+export function microsoftGraphUploadBytesSize(bytes: MicrosoftGraphUploadBytes): number {
+  return bytes instanceof Uint8Array ? bytes.length : bytes.size;
+}
+
+/**
+ * Reads one range of upload bytes: a view of in-memory bytes, or a read from the source.
+ *
+ * @param bytes - The bytes or source.
+ * @param range - The range (`end` inclusive).
+ * @returns The range's bytes.
+ * @throws {Error} When a source returns a different number of bytes than the range holds.
+ */
+export async function readMicrosoftGraphUploadRange(bytes: MicrosoftGraphUploadBytes, range: MicrosoftGraphUploadChunkRange): Promise<Uint8Array> {
+  const expected = range.end - range.start + 1;
+  const chunk = bytes instanceof Uint8Array ? bytes.subarray(range.start, range.end + 1) : await bytes.readRange(range);
+
+  if (chunk.length !== expected) {
+    throw new Error(`Upload source returned ${chunk.length} bytes for range ${range.start}-${range.end}, expected ${expected}. Did the file change during the upload?`);
+  }
+
+  return chunk;
+}
+
+/**
+ * The slowest upload rate the default chunk timeout allows for: 64 KiB/s (about 0.5 Mbit/s).
+ */
+export const MICROSOFT_GRAPH_UPLOAD_MIN_BYTES_PER_SECOND = 64 * 1024;
+
+/**
+ * Returns the default timeout of one upload PUT: the client's usual 30 seconds plus the time `byteCount`
+ * takes at {@link MICROSOFT_GRAPH_UPLOAD_MIN_BYTES_PER_SECOND}. A flat 30 seconds would fail a 10 MiB chunk
+ * on any link slower than about 2.8 Mbit/s.
+ *
+ * @param byteCount - The bytes the PUT carries.
+ * @returns The timeout in milliseconds.
+ */
+export function microsoftGraphUploadTimeout(byteCount: number): Milliseconds {
+  return 30 * 1000 + Math.ceil((byteCount / MICROSOFT_GRAPH_UPLOAD_MIN_BYTES_PER_SECOND) * 1000);
+}
+
 export interface MicrosoftGraphUploadSessionPutInput {
   /**
    * The session's pre-authenticated `uploadUrl`.
    */
   readonly uploadUrl: string;
-  readonly bytes: Uint8Array;
+  /**
+   * The bytes, or a source each chunk is read from just before its PUT.
+   */
+  readonly bytes: MicrosoftGraphUploadBytes;
   /**
    * The most bytes per PUT. An Outlook attachment session takes up to 4 MB per request; a drive item session
    * takes multiples of 320 KiB under 60 MiB.
    */
   readonly chunkSize: number;
   /**
-   * Overrides the client's timeout per chunk PUT.
+   * Overrides the client's timeout per chunk PUT. Defaults to the client's timeout.
    */
   readonly timeout?: Maybe<Milliseconds>;
   /**
@@ -65,7 +134,9 @@ export interface MicrosoftGraphUploadSessionPutInput {
 }
 
 /**
- * Uploads a file's bytes to an upload session, one chunk PUT after another, in order.
+ * Uploads a file's bytes to an upload session, one chunk PUT after another, in order. A
+ * {@link MicrosoftGraphUploadByteSource} is read one chunk at a time, just before that chunk's PUT, so memory
+ * holds one chunk whatever the file size.
  *
  * Every chunk PUT goes through the raw path **without** an `Authorization` header: the session URL is
  * pre-authenticated and a bearer token on it is rejected.
@@ -82,14 +153,14 @@ export function microsoftGraphUploadSessionPut(context: MicrosoftGraphContext): 
   const requestRaw = microsoftGraphRequestRaw(context);
 
   return async (input) => {
-    const total = input.bytes.length;
+    const total = microsoftGraphUploadBytesSize(input.bytes);
     let last: Maybe<MicrosoftGraphRawResponse>;
 
     for (const range of microsoftGraphUploadChunkRanges(total, input.chunkSize)) {
       last = await requestRaw({
         method: 'PUT',
         path: input.uploadUrl,
-        body: input.bytes.subarray(range.start, range.end + 1),
+        body: await readMicrosoftGraphUploadRange(input.bytes, range),
         headers: { 'Content-Range': microsoftGraphUploadContentRange(range, total) },
         authorize: false,
         timeout: input.timeout
