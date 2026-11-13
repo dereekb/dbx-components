@@ -3,6 +3,7 @@ import { MicrosoftGraphCrossDriveMoveError, MicrosoftGraphError, MicrosoftGraphL
 import { type Maybe } from '@dereekb/util';
 import { FetchResponseError, FetchTimeoutError } from '@dereekb/util/fetch';
 import { MSGRAPH_CLI_NAME } from '../config/cli.config';
+import { MsGraphCliDownloadIncompleteError, MsGraphCliDownloadStalledError } from './file.download';
 
 /**
  * Matches a JWT, the shape of a Microsoft access token, wherever it appears (not only after `Bearer`).
@@ -81,7 +82,8 @@ export function isMsGraphCliTimeoutError(error: unknown): boolean {
  *
  * A non-Graph error body with a 404 or 5xx status maps to `NOT_FOUND` / `SERVICE_UNAVAILABLE` too, a
  * timeout or abort to `TIMEOUT`, a `draft update` of a sent message to `NOT_A_DRAFT`, a `files move` into
- * another drive to `CROSS_DRIVE_MOVE`, and an unknown `--library` to `NOT_FOUND`. Other errors return undefined so the default mapping applies.
+ * another drive to `CROSS_DRIVE_MOVE`, an unknown `--library` to `NOT_FOUND`, a stalled download to `TIMEOUT` and
+ * a download cut short of its `Content-Length` to `DOWNLOAD_INCOMPLETE`. Other errors return undefined so the default mapping applies.
  *
  * @param error - The thrown value.
  * @returns The envelope, or undefined when the error is not one msgraph-cli maps.
@@ -123,6 +125,10 @@ export function msGraphCliErrorOutput(error: unknown): CliErrorOutput | undefine
     result = { ok: false, error: error.message, code: 'CROSS_DRIVE_MOVE', suggestion: `Run ${MSGRAPH_CLI_NAME} files copy <id> --to-drive <driveId> --wait, check the copy, then ${MSGRAPH_CLI_NAME} files delete <id> --yes.` };
   } else if (error instanceof MicrosoftGraphLibraryNotFoundError) {
     result = { ok: false, error: error.message, code: 'NOT_FOUND', suggestion: 'Pass one of the listed names to --library, or drop --library for the default library.' };
+  } else if (error instanceof MsGraphCliDownloadStalledError) {
+    result = { ok: false, error: error.message, code: 'TIMEOUT', suggestion: `Retry. On a slow or flaky connection raise --idle-timeout (seconds); if Graph keeps stalling, check ${MSGRAPH_CLI_SERVICE_STATUS_URL}.` };
+  } else if (error instanceof MsGraphCliDownloadIncompleteError) {
+    result = { ok: false, error: error.message, code: 'DOWNLOAD_INCOMPLETE', suggestion: 'The connection closed early. Retry the download.' };
   } else if (isMsGraphCliTimeoutError(error)) {
     result = { ok: false, error: sanitizeString((error as Error).message), code: 'TIMEOUT', suggestion: `Microsoft Graph did not answer within the client timeout. Retry; if it keeps timing out, check ${MSGRAPH_CLI_SERVICE_STATUS_URL}.` };
   }

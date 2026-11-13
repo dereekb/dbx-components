@@ -12,39 +12,44 @@ export class FetchTimeoutError extends BaseError {
 }
 
 /**
- * Wraps a fetch function to add automatic timeout/abort support. If a timeout value
- * is present on the RequestInit or Request and no abort signal is already provided,
- * an AbortController is created to abort the request after the specified duration.
+ * Wraps a fetch function to add automatic timeout/abort support. If a timeout value is present on the
+ * RequestInit or Request, the request is aborted after that many milliseconds without a response. A timeout
+ * of 0 disables it.
+ *
+ * An abort signal the caller already set (on the RequestInit, or on the Request itself) keeps working: the
+ * request aborts on whichever comes first, the caller's signal or the timeout.
+ *
+ * The timeout covers the wait for the response (its headers). Reading the body afterwards is not timed out;
+ * abort the caller's signal for that.
  *
  * @param inputFetch - The fetch function to wrap with timeout behavior.
  * @returns A wrapped fetch function that enforces timeouts via AbortController.
  */
 export function fetchTimeout(inputFetch: typeof fetch): typeof fetch {
   return (input: RequestInfo | URL, init: Maybe<RequestInit>) => {
-    let controller: Maybe<AbortController>;
     const timeout: Maybe<number> = (init as Maybe<RequestInitWithTimeout>)?.timeout ?? (input as RequestWithTimeout).timeout;
-
-    // if signal is not provided, and a timeout is specified, configure the timeout
-    if (!init?.signal && timeout) {
-      const abortController = new AbortController();
-      controller = abortController;
-
-      init = {
-        ...init,
-        signal: abortController.signal // pass the abort signal
-      };
-    }
-
-    let responsePromise = inputFetch(input, init ?? undefined);
+    let responsePromise: Promise<Response>;
 
     if (timeout) {
+      const controller = new AbortController();
+      const callerSignal = init?.signal ?? (typeof Request !== 'undefined' && input instanceof Request ? input.signal : undefined);
+
+      // follow the caller's signal too, so passing one never turns the timeout off nor the other way around
+      if (callerSignal?.aborted) {
+        controller.abort(callerSignal.reason);
+      } else {
+        callerSignal?.addEventListener('abort', () => controller.abort(callerSignal.reason), { once: true });
+      }
+
       const timeoutId = setTimeout(() => {
-        controller?.abort();
+        controller.abort();
       }, timeout);
 
-      responsePromise = responsePromise.finally(() => {
+      responsePromise = inputFetch(input, { ...init, signal: controller.signal }).finally(() => {
         clearTimeout(timeoutId);
       });
+    } else {
+      responsePromise = inputFetch(input, init ?? undefined);
     }
 
     return responsePromise;

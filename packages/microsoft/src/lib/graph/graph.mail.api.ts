@@ -4,7 +4,7 @@ import { microsoftGraphBatch } from './graph.batch.api';
 import { type MicrosoftGraphContext } from './graph.config';
 import { type MicrosoftGraphErrorData } from './graph.error.api';
 import { MICROSOFT_GRAPH_IMMUTABLE_ID_PREFER, type MicrosoftGraphBodyContentType, type MicrosoftGraphHeaders, microsoftGraphBodyContentTypePrefer, microsoftGraphMaxPageSizePrefer, microsoftGraphPreferHeaderValue } from './graph.header';
-import { type MicrosoftGraphRawResponse, microsoftGraphRequestRaw } from './graph.raw.api';
+import { type MicrosoftGraphRawRequestInput, type MicrosoftGraphRawResponse, microsoftGraphRequestRaw } from './graph.raw.api';
 import { type MicrosoftGraphAttachment, type MicrosoftGraphMessage, type MicrosoftGraphPage } from './graph.type';
 
 /**
@@ -348,6 +348,19 @@ export interface MicrosoftGraphGetMessageMimeInput extends Pick<MicrosoftGraphMa
 }
 
 /**
+ * Builds the GET of one message's MIME content (`/$value`), for {@link getMessageMime} or a streamed read
+ * through `microsoftGraphRequestStream`.
+ *
+ * @param input - The message id and mailbox.
+ * @returns The raw request.
+ *
+ * @see https://learn.microsoft.com/en-us/graph/outlook-get-mime-message
+ */
+export function microsoftGraphGetMessageMimeRequest(input: MicrosoftGraphGetMessageMimeInput): MicrosoftGraphRawRequestInput {
+  return { method: 'GET', path: `${microsoftGraphMessagePath(input)}/$value` };
+}
+
+/**
  * Reads one message's MIME content (`/$value`) through the raw path; the JSON client cannot represent it.
  * Requires `Mail.Read` (`Mail.Read.Shared` for another mailbox).
  *
@@ -358,7 +371,7 @@ export interface MicrosoftGraphGetMessageMimeInput extends Pick<MicrosoftGraphMa
  */
 export function getMessageMime(context: MicrosoftGraphContext): (input: MicrosoftGraphGetMessageMimeInput) => Promise<MicrosoftGraphRawResponse> {
   const requestRaw = microsoftGraphRequestRaw(context);
-  return (input) => requestRaw({ method: 'GET', path: `${microsoftGraphMessagePath(input)}/$value` });
+  return (input) => requestRaw(microsoftGraphGetMessageMimeRequest(input));
 }
 
 // MARK: Get Many

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { type FetchHandler } from '@dereekb/util/fetch';
 import { MicrosoftGraphError } from './graph.error.api';
 import { microsoftGraphFactory } from './graph.factory';
-import { microsoftGraphRequestRaw } from './graph.raw.api';
+import { microsoftGraphRequestRaw, microsoftGraphRequestStream } from './graph.raw.api';
 
 function rawGraphContext(answer: () => Response) {
   const requests: Request[] = [];
@@ -71,5 +71,44 @@ describe('microsoftGraphRequestRaw()', () => {
 
     expect(error).toBeInstanceOf(MicrosoftGraphError);
     expect((error as MicrosoftGraphError).code).toBe('itemNotFound');
+  });
+});
+
+describe('microsoftGraphRequestStream()', () => {
+  it('returns the body as an unread stream with its declared length', async () => {
+    // models: API:driveitem-get-content — the followed 302 answers the bytes with a Content-Length
+    const bytes = new Uint8Array([1, 2, 3, 4, 5, 6]);
+    const { graphContext, requests } = rawGraphContext(() => new Response(bytes, { status: 200, headers: { 'Content-Type': 'application/octet-stream', 'Content-Length': '6' } }));
+
+    const response = await microsoftGraphRequestStream(graphContext)({ method: 'GET', path: '/me/drive/items/f1/content' });
+
+    expect(response.status).toBe(200);
+    expect(response.contentLength).toBe(6);
+    expect(response.headers['content-type']).toBe('application/octet-stream');
+    expect(new Uint8Array(await new Response(response.body).arrayBuffer())).toEqual(bytes);
+    expect(requests[0].headers.get('Authorization')).toBe('Bearer token-1');
+  });
+
+  it('reports no length for a content-encoded body, whose decoded size differs from Content-Length', async () => {
+    const { graphContext } = rawGraphContext(() => new Response('abc', { status: 200, headers: { 'Content-Length': '99', 'Content-Encoding': 'gzip' } }));
+    const response = await microsoftGraphRequestStream(graphContext)({ method: 'GET', path: '/me/messages/m1/$value' });
+    expect(response.contentLength).toBeUndefined();
+  });
+
+  it('passes the caller signal through, so aborting it cancels the request', async () => {
+    const { graphContext, requests } = rawGraphContext(() => new Response('x', { status: 200 }));
+    const controller = new AbortController();
+
+    await microsoftGraphRequestStream(graphContext)({ method: 'GET', path: '/me/drive/items/f1/content', signal: controller.signal });
+    controller.abort();
+
+    expect(requests[0].signal.aborted).toBe(true);
+  });
+
+  it('still throws a MicrosoftGraphError for a Graph error body', async () => {
+    // models: live F10 itemNotFound
+    const { graphContext } = rawGraphContext(() => new Response(JSON.stringify({ error: { code: 'itemNotFound', message: 'The resource could not be found.' } }), { status: 404, headers: { 'Content-Type': 'application/json' } }));
+    const error = await microsoftGraphRequestStream(graphContext)({ method: 'GET', path: '/me/drive/items/gone/content' }).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(MicrosoftGraphError);
   });
 });

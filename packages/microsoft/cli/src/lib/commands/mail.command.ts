@@ -1,11 +1,11 @@
 import { CliError } from '@dereekb/dbx-cli';
-import { type MicrosoftGraphContext, type MicrosoftGraphGetMessagesItem, type MicrosoftGraphMailRequest, getMessage, getMessageMime, getMessages, microsoftGraphListMessagesRequest, microsoftGraphRequest, microsoftGraphRequestAllPages, microsoftGraphSearchMessagesRequest } from '@dereekb/microsoft';
+import { type MicrosoftGraphContext, type MicrosoftGraphGetMessagesItem, type MicrosoftGraphMailRequest, getMessage, getMessages, microsoftGraphGetMessageMimeRequest, microsoftGraphListMessagesRequest, microsoftGraphRequest, microsoftGraphRequestAllPages, microsoftGraphSearchMessagesRequest } from '@dereekb/microsoft';
 import { type Maybe } from '@dereekb/util';
-import { writeFile } from 'node:fs/promises';
 import type { Argv, CommandModule } from 'yargs';
 import { msGraphCommandHandler } from '../middleware/auth.middleware';
 import { msGraphCliMailboxOptions, msGraphCliPagingOptions, parseMsGraphCliDateOption, readMsGraphCliIdsOption } from '../util/option';
 import { DEFAULT_MSGRAPH_CLI_MAIL_DUMP_MAX_MESSAGES, dumpMsGraphCliMail } from '../util/mail.dump';
+import { downloadMsGraphCliFile, msGraphCliIdleTimeoutMs, msGraphCliIdleTimeoutOption } from '../util/file.download';
 import { outputMsGraphCliResult } from '../util/output';
 import { MAIL_AUTO_REPLY_COMMAND } from './mail.auto.reply.command';
 import { MAIL_MAILBOXES_COMMAND } from './mail.mailboxes.command';
@@ -101,12 +101,12 @@ export const MAIL_GET_COMMAND: CommandModule = {
   command: 'get <id>',
   describe: 'Get one message with its body, or its MIME (.eml) to a file',
   builder: (yargs: Argv) =>
-    msGraphCliMailboxOptions(yargs)
+    msGraphCliIdleTimeoutOption(msGraphCliMailboxOptions(yargs))
       .positional('id', { type: 'string', demandOption: true, describe: 'The message id' })
       .option('format', { type: 'string', choices: ['text', 'html'] as const, default: 'text', describe: 'Body format' })
       .option('select', { type: 'string', describe: 'Comma-separated fields to return instead of the default set plus body' })
       .option('mime', { type: 'boolean', default: false, describe: 'Download the raw MIME message (RFC 822) to --out instead of reading the JSON message' })
-      .option('out', { type: 'string', describe: 'With --mime: the file to write (e.g. message.eml). Only the path and size are printed' })
+      .option('out', { type: 'string', describe: 'With --mime: the file to write (e.g. message.eml), streamed to disk. Only the path and size are printed' })
       .example([
         ['$0 mail get AAMk... --format html', 'One message with an HTML body'],
         ['$0 mail get AAMk... --mime --out message.eml', 'Save the message as .eml']
@@ -117,10 +117,8 @@ export const MAIL_GET_COMMAND: CommandModule = {
         throw new CliError({ message: '--mime needs --out <file>: the MIME content is never printed.', code: 'INVALID_ARGUMENT', suggestion: 'e.g. --mime --out message.eml' });
       }
 
-      const response = await getMessageMime(graphContext)({ id: argv.id, mailbox: argv.mailbox });
-      await writeFile(argv.out, response.body, { mode: 0o600 });
-      const contentType = response.headers['content-type'];
-      const output: MsGraphCliMailMimeOutput = { id: argv.id, file: argv.out, bytes: response.body.length, ...(contentType ? { contentType } : {}) };
+      const download = await downloadMsGraphCliFile({ graphContext, request: microsoftGraphGetMessageMimeRequest({ id: argv.id, mailbox: argv.mailbox }), out: argv.out, idleTimeout: msGraphCliIdleTimeoutMs(argv.idleTimeout) });
+      const output: MsGraphCliMailMimeOutput = { id: argv.id, ...download };
       outputMsGraphCliResult(output);
     } else {
       outputMsGraphCliResult(await getMessage(graphContext)({ id: argv.id, format: argv.format, select: argv.select, mailbox: argv.mailbox, immutableIds: !argv.mutableIds }));

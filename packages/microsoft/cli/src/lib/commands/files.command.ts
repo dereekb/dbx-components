@@ -14,7 +14,6 @@ import {
   microsoftGraphDownloadDriveItemRequest,
   microsoftGraphDriveUploadChunkSize,
   microsoftGraphRequest,
-  microsoftGraphRequestRaw,
   microsoftGraphSimpleUploadRequest,
   microsoftGraphSiteByUrlPath,
   microsoftGraphUpdateDriveItemRequest,
@@ -24,12 +23,12 @@ import {
   uploadDriveFile
 } from '@dereekb/microsoft';
 import { type Maybe } from '@dereekb/util';
-import { writeFile } from 'node:fs/promises';
 import { basename, posix } from 'node:path';
 import type { Argv, CommandModule } from 'yargs';
 import { msGraphCommandHandler } from '../middleware/auth.middleware';
 import { parseMsGraphCliEnumOption } from '../util/auto.reply';
 import { msGraphCliConfirmOptions, msGraphCliDryRunOptions, msGraphCliDryRunOutput, requireMsGraphCliConfirmation } from '../util/mail.write';
+import { downloadMsGraphCliFile, msGraphCliIdleTimeoutMs, msGraphCliIdleTimeoutOption } from '../util/file.download';
 import { openMsGraphCliFileUploadSource } from '../util/file.source';
 import { outputMsGraphCliResult } from '../util/output';
 import { msGraphCliContentTypeForFile } from './request.command';
@@ -160,14 +159,11 @@ export interface MsGraphCliDownloadOutput {
 
 const FILES_DOWNLOAD_COMMAND: CommandModule = {
   command: 'download [id]',
-  describe: "Download a file's bytes to --out",
-  builder: (yargs: Argv) => itemOptions(yargs).option('out', { type: 'string', demandOption: true, describe: 'The file to write (mode 0600)' }),
+  describe: "Download a file's bytes to --out, streamed to disk as they arrive",
+  builder: (yargs: Argv) => msGraphCliIdleTimeoutOption(itemOptions(yargs).option('out', { type: 'string', demandOption: true, describe: 'The file to write (mode 0600). It appears only once the download is complete' })),
   handler: msGraphCommandHandler(async (argv: any, { graphContext }) => {
     const ref = await resolveMsGraphCliItemRef(graphContext, argv);
-    const response = await microsoftGraphRequestRaw(graphContext)(microsoftGraphDownloadDriveItemRequest(ref));
-    await writeFile(argv.out, response.body, { mode: 0o600 });
-    const contentType = response.headers['content-type'];
-    const output: MsGraphCliDownloadOutput = { file: argv.out, bytes: response.body.length, ...(contentType ? { contentType } : {}) };
+    const output: MsGraphCliDownloadOutput = await downloadMsGraphCliFile({ graphContext, request: microsoftGraphDownloadDriveItemRequest(ref), out: argv.out, idleTimeout: msGraphCliIdleTimeoutMs(argv.idleTimeout) });
     outputMsGraphCliResult(output);
   })
 };

@@ -49,6 +49,11 @@ export interface MicrosoftGraphRawRequestInput {
    * Overrides the client's 30-second timeout, e.g. for a large download or chunk upload.
    */
   readonly timeout?: Maybe<Milliseconds>;
+  /**
+   * Cancels the request, e.g. a stall timeout on a streamed download. With a signal the caller owns
+   * cancellation: the client's `timeout` no longer applies.
+   */
+  readonly signal?: Maybe<AbortSignal>;
 }
 
 /**
@@ -69,6 +74,49 @@ export interface MicrosoftGraphRawResponse {
    * Parses the body as JSON. Returns undefined for an empty or non-JSON body.
    */
   json<T = unknown>(): Maybe<T>;
+}
+
+/**
+ * Sends a raw request: the client's headers, the caller's headers and body sent as-is, and the bearer token
+ * unless `authorize` is false. Shared by {@link microsoftGraphRequestRaw} and {@link microsoftGraphRequestStream}.
+ *
+ * @param context - Fetch function and access-token source the request is sent with.
+ * @param input - The request.
+ * @returns The fetch response, its body unread. A non-2xx answer has already thrown.
+ */
+async function fetchMicrosoftGraphRaw(context: MicrosoftGraphContext, input: MicrosoftGraphRawRequestInput): Promise<Response> {
+  const authorization: MicrosoftGraphHeaders = input.authorize === false ? {} : { Authorization: `Bearer ${await context.accessTokenGetter()}` };
+  const contentType: MicrosoftGraphHeaders = input.body == null ? {} : { 'Content-Type': input.contentType ?? DEFAULT_MICROSOFT_GRAPH_RAW_CONTENT_TYPE };
+
+  const init: RequestInitWithTimeout = {
+    method: input.method,
+    // a Uint8Array over a shared/Node buffer (ArrayBufferLike) is a valid fetch body at runtime; TS's DOM
+    // BodyInit only names ArrayBuffer-backed views
+    body: (input.body ?? undefined) as Maybe<BodyInit>,
+    headers: {
+      ...contentType,
+      ...canonicalizeMicrosoftGraphHeaders(input.headers),
+      ...authorization
+    },
+    ...(input.timeout == null ? {} : { timeout: input.timeout }),
+    ...(input.signal == null ? {} : { signal: input.signal })
+  };
+
+  return context.fetch(microsoftGraphPathWithQuery(input.path, input.query), init);
+}
+
+/**
+ * Returns a response's headers with lower-cased names.
+ *
+ * @param response - The response.
+ * @returns The headers.
+ */
+function readMicrosoftGraphResponseHeaders(response: Response): MicrosoftGraphHeaders {
+  const headers: MicrosoftGraphHeaders = {};
+  response.headers.forEach((value, name) => {
+    headers[name.toLowerCase()] = value;
+  });
+  return headers;
 }
 
 /**
@@ -94,28 +142,9 @@ export interface MicrosoftGraphRawResponse {
  */
 export function microsoftGraphRequestRaw(context: MicrosoftGraphContext): (input: MicrosoftGraphRawRequestInput) => Promise<MicrosoftGraphRawResponse> {
   return async (input) => {
-    const authorization: MicrosoftGraphHeaders = input.authorize === false ? {} : { Authorization: `Bearer ${await context.accessTokenGetter()}` };
-    const contentType: MicrosoftGraphHeaders = input.body == null ? {} : { 'Content-Type': input.contentType ?? DEFAULT_MICROSOFT_GRAPH_RAW_CONTENT_TYPE };
-
-    const init: RequestInitWithTimeout = {
-      method: input.method,
-      // a Uint8Array over a shared/Node buffer (ArrayBufferLike) is a valid fetch body at runtime; TS's DOM
-      // BodyInit only names ArrayBuffer-backed views
-      body: (input.body ?? undefined) as Maybe<BodyInit>,
-      headers: {
-        ...contentType,
-        ...canonicalizeMicrosoftGraphHeaders(input.headers),
-        ...authorization
-      },
-      ...(input.timeout == null ? {} : { timeout: input.timeout })
-    };
-
-    const response = await context.fetch(microsoftGraphPathWithQuery(input.path, input.query), init);
+    const response = await fetchMicrosoftGraphRaw(context, input);
     const body = new Uint8Array(await response.arrayBuffer());
-    const headers: MicrosoftGraphHeaders = {};
-    response.headers.forEach((value, name) => {
-      headers[name.toLowerCase()] = value;
-    });
+    const headers = readMicrosoftGraphResponseHeaders(response);
 
     return {
       status: response.status,
@@ -136,5 +165,54 @@ export function microsoftGraphRequestRaw(context: MicrosoftGraphContext): (input
         return result;
       }
     };
+  };
+}
+
+/**
+ * A Graph response whose body is left as a stream, for a download too large to hold in memory.
+ */
+export interface MicrosoftGraphStreamResponse {
+  readonly status: number;
+  /**
+   * Response headers, names lower-cased.
+   */
+  readonly headers: MicrosoftGraphHeaders;
+  /**
+   * The body, read as it arrives. Null when the response has none (e.g. a 204).
+   */
+  readonly body: ReadableStream<Uint8Array> | null;
+  /**
+   * The declared `Content-Length`, when present and the body is not content-encoded (a decoded body's
+   * length differs from it).
+   */
+  readonly contentLength: Maybe<number>;
+}
+
+/**
+ * Makes a Graph call and returns the body as a stream instead of reading it, so a download of any size holds
+ * only what has arrived and not been consumed. Use it for `/content` and `/$value`.
+ *
+ * The client's timeout only bounds the wait for the response headers; a body that stalls afterwards is never
+ * timed out. Pass a `signal` and abort it when no bytes arrive for a while (a stall timeout).
+ *
+ * A non-2xx response throws, the same as {@link microsoftGraphRequestRaw}.
+ *
+ * @param context - Fetch function and access-token source each request is sent with.
+ * @returns Function that performs the request and resolves the response with its body unread.
+ *
+ * @example
+ * ```ts
+ * const response = await microsoftGraphRequestStream(graphContext)({ method: 'GET', path: `/me/drive/items/${id}/content`, signal });
+ * await pipeline(Readable.fromWeb(response.body), createWriteStream(out)); // node
+ * ```
+ */
+export function microsoftGraphRequestStream(context: MicrosoftGraphContext): (input: MicrosoftGraphRawRequestInput) => Promise<MicrosoftGraphStreamResponse> {
+  return async (input) => {
+    const response = await fetchMicrosoftGraphRaw(context, input);
+    const headers = readMicrosoftGraphResponseHeaders(response);
+    const encoding = headers['content-encoding'];
+    const declared = headers['content-length'] == null ? undefined : Number(headers['content-length']);
+    const contentLength = declared != null && Number.isFinite(declared) && (encoding == null || encoding === 'identity') ? declared : undefined;
+    return { status: response.status, headers, body: response.body, contentLength };
   };
 }
