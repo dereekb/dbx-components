@@ -4,13 +4,14 @@ import { microsoftGraphFactory } from './graph.factory';
 import { microsoftGraphDriveFolderWalk, type MicrosoftGraphDriveFolderWalkEntry } from './graph.drive.walk';
 import { type MicrosoftGraphDriveItem } from './graph.type';
 
-// models: B1 (children pages with @odata.nextLink; $select/$top supported), B8 (a package is listed like a file but is not a folder)
+// models: B1 (children pages with @odata.nextLink; $select/$top supported), B8 (a package is listed like a file but is not a folder; a shortcut carries remoteItem, here with a folder facet, and lives in another drive)
 const CHILDREN: Record<string, MicrosoftGraphDriveItem[]> = {
   R: [
     { id: 'A', name: 'Alpha', folder: { childCount: 2 } },
     { id: 'f1', name: 'one.txt', size: 1, file: {} },
     { id: 'N', name: 'Notebook', package: { type: 'oneNote' } },
-    { id: 'f2', name: 'two.txt', size: 2, file: {} }
+    { id: 'f2', name: 'two.txt', size: 2, file: {} },
+    { id: 'S', name: 'Shortcut', folder: { childCount: 1 }, remoteItem: { id: 'X' } }
   ],
   A: [
     { id: 'B', name: 'Beta', folder: { childCount: 0 } },
@@ -68,13 +69,14 @@ describe('microsoftGraphDriveFolderWalk()', () => {
       { id: 'f1', parentId: 'R', path: [], depth: 1 },
       { id: 'N', parentId: 'R', path: [], depth: 1 },
       { id: 'f2', parentId: 'R', path: [], depth: 1 },
+      { id: 'S', parentId: 'R', path: [], depth: 1 },
       { id: 'B', parentId: 'A', path: ['Alpha'], depth: 2 },
       { id: 'f3', parentId: 'A', path: ['Alpha'], depth: 2 }
     ]);
 
-    // R takes two pages at top 2; A and B one each. The package is never opened.
-    expect(drive.urls.map((x) => x.pathname)).toEqual(['/v1.0/drives/d/items/R/children', '/v1.0/drives/d/items/R/children', '/v1.0/drives/d/items/A/children', '/v1.0/drives/d/items/B/children']);
-    expect(reads).toBe(4);
+    // R takes three pages at top 2; A and B one each. The package and the shortcut are never opened.
+    expect(drive.urls.map((x) => x.pathname)).toEqual(['/v1.0/drives/d/items/R/children', '/v1.0/drives/d/items/R/children', '/v1.0/drives/d/items/R/children', '/v1.0/drives/d/items/A/children', '/v1.0/drives/d/items/B/children']);
+    expect(reads).toBe(5);
   });
 
   it('should ask for the sync fields by default, or the given ones', async () => {
@@ -91,7 +93,7 @@ describe('microsoftGraphDriveFolderWalk()', () => {
     const drive = fakeDrive();
     const entries = await collect(microsoftGraphDriveFolderWalk(drive.graphContext)({ driveId: 'd', id: 'R', maxDepth: 1 }));
 
-    expect(entries.map((x) => x.item.id)).toEqual(['A', 'f1', 'N', 'f2']);
+    expect(entries.map((x) => x.item.id)).toEqual(['A', 'f1', 'N', 'f2', 'S']);
     expect(drive.urls).toHaveLength(1);
   });
 });

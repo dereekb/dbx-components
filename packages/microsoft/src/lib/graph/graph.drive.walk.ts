@@ -64,7 +64,8 @@ interface MicrosoftGraphDriveFolderWalkQueueEntry {
 /**
  * Walks a drive folder breadth-first, one folder at a time, and yields every folder, file and package below it.
  * Each folder is read page by page across `@odata.nextLink`, so there is no cap on the number of children. Only
- * folders are walked into: a package (such as a OneNote notebook) is yielded but not opened.
+ * folders are walked into: a package (such as a OneNote notebook) or a shortcut into another drive (`remoteItem`) is
+ * yielded but not opened.
  *
  * Requires `Files.Read` (or `.All`).
  *
@@ -103,7 +104,8 @@ export function microsoftGraphDriveFolderWalk(context: MicrosoftGraphContext): (
         for (const item of page.items) {
           yield { item, parentId: folder.id, path: folder.path, depth: folder.depth };
 
-          if (item.folder != null && (maxDepth == null || folder.depth < maxDepth)) {
+          // a shortcut (remoteItem) may carry a folder facet, but its children live in another drive
+          if (item.folder != null && item.remoteItem == null && (maxDepth == null || folder.depth < maxDepth)) {
             queue.push({ id: item.id, path: [...folder.path, item.name ?? item.id], depth: folder.depth + 1 });
           }
         }

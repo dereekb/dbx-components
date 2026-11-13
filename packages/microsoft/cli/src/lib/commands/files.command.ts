@@ -1,4 +1,4 @@
-import { CliError } from '@dereekb/dbx-cli';
+import { CliError, cliConcurrencyOption, cliConcurrencyValue, withCliInterruptSignal } from '@dereekb/dbx-cli';
 import {
   type MicrosoftGraphConflictBehavior,
   type MicrosoftGraphContext,
@@ -37,6 +37,7 @@ import { msGraphCommandHandler } from '../middleware/auth.middleware';
 import { parseMsGraphCliEnumOption } from '../util/auto.reply';
 import { msGraphCliConfirmOptions, msGraphCliDryRunOptions, msGraphCliDryRunOutput, requireMsGraphCliConfirmation } from '../util/mail.write';
 import { downloadMsGraphCliFile, msGraphCliIdleTimeoutMs, msGraphCliIdleTimeoutOption } from '../util/file.download';
+import { MSGRAPH_CLI_FOLDER_DOWNLOAD_CONCURRENCY, MSGRAPH_CLI_FOLDER_DOWNLOAD_MANIFEST_FILE, downloadMsGraphCliFolder } from '../util/file.download.folder';
 import { openMsGraphCliFileUploadSource } from '../util/file.source';
 import { outputMsGraphCliResult } from '../util/output';
 import { msGraphCliContentTypeForFile } from './request.command';
@@ -156,7 +157,7 @@ export const FILES_LIST_COMMAND: CommandModule = {
       .option('all-pages', { type: 'boolean', default: false, describe: 'Follow @odata.nextLink and return every page (up to --max-pages)' })
       .option('max-pages', { type: 'number', describe: 'With --all-pages: stop after this many pages (default 20)' })
       .option('next', { type: 'string', describe: 'Continue a listing from the nextLink a previous call returned (the folder options are ignored)' })
-      .option('type', { type: 'string', choices: ['file', 'folder'], describe: 'Keep only files or only folders (a OneNote notebook, listed as type package, counts as a file)' })
+      .option('type', { type: 'string', choices: ['file', 'folder', 'package'], describe: 'Keep only files, folders or packages (a package is a OneNote notebook: listed, but it cannot be downloaded)' })
       .option('urls', { type: 'boolean', default: false, describe: "Include each item's webUrl" })
       .option('full', { type: 'boolean', default: false, describe: 'Return the full driveItems (much larger, and they carry pre-authenticated download URLs)' })
       .example([
@@ -168,7 +169,7 @@ export const FILES_LIST_COMMAND: CommandModule = {
   handler: msGraphCommandHandler(async (argv: any, { graphContext }) => {
     const pageInput = argv.next ? { path: '', nextLink: String(argv.next) } : microsoftGraphDriveChildrenPageInput({ driveId: await resolveMsGraphCliDriveId(graphContext, argv), id: argv.id, path: argv.path, top: argv.top, full: argv.full });
     const { items, nextLink } = await microsoftGraphCollectPages(graphContext)<MicrosoftGraphDriveItem>({ ...pageInput, maxPages: argv.allPages ? argv.maxPages : 1 });
-    const kept = argv.type ? items.filter((x) => (x.folder == null ? 'file' : 'folder') === argv.type) : items;
+    const kept = argv.type ? items.filter((x) => microsoftGraphDriveItemSummary(x).type === argv.type) : items;
     outputMsGraphCliResult({ items: argv.full ? kept : kept.map((x) => microsoftGraphDriveItemSummary(x, argv.urls)), ...(nextLink ? { nextLink } : {}) });
   })
 };
@@ -235,6 +236,60 @@ const FILES_DOWNLOAD_COMMAND: CommandModule = {
     const ref = await resolveMsGraphCliItemRef(graphContext, argv);
     const output: MsGraphCliDownloadOutput = await downloadMsGraphCliFile({ graphContext, request: microsoftGraphDownloadDriveItemRequest(ref), out: argv.out, idleTimeout: msGraphCliIdleTimeoutMs(argv.idleTimeout) });
     outputMsGraphCliResult(output);
+  })
+};
+
+/**
+ * The fields `files download-folder` reads to check what it was pointed at; the parent reference carries the drive id
+ * of the user's own OneDrive.
+ */
+const FILES_DOWNLOAD_FOLDER_RESOLVE_SELECT = 'id,name,folder,package,file,parentReference';
+
+const FILES_DOWNLOAD_FOLDER_COMMAND: CommandModule = {
+  command: 'download-folder [id]',
+  describe: 'Copy a folder (by id or --path; --path / for a whole library) to --dir, recursively; re-run to sync changes',
+  builder: (yargs: Argv) =>
+    cliConcurrencyOption(msGraphCliIdleTimeoutOption(itemOptions(yargs)), MSGRAPH_CLI_FOLDER_DOWNLOAD_CONCURRENCY)
+      .option('dir', { type: 'string', demandOption: true, describe: `The local directory (mode 0700) the folder's contents go into. Re-running into it resumes from its ${MSGRAPH_CLI_FOLDER_DOWNLOAD_MANIFEST_FILE}` })
+      .option('dry-run', { type: 'boolean', default: false, describe: 'List the folder and print what a run would download, rename and remove; write nothing' })
+      .option('max-files', { type: 'number', describe: 'The most files one run downloads; re-run to continue' })
+      .option('max-bytes', { type: 'number', describe: 'The most bytes one run downloads; re-run to continue' })
+      .option('prune', { type: 'boolean', default: false, describe: 'Delete local copies of files removed remotely (only files this command downloaded). Default: only record the removals' })
+      .example([
+        ['$0 files download-folder --site https://contoso.sharepoint.com/sites/Team --path "Tech talk" --dir ./tech-talk --dry-run', 'Count what a copy would download'],
+        ['$0 files download-folder --drive b!xyz --path "Tech talk" --dir ./tech-talk', 'Copy a SharePoint folder; re-run later to download only what changed'],
+        ['$0 files download-folder --path / --dir ./onedrive --max-bytes 5000000000', 'Copy your whole OneDrive, 5 GB per run']
+      ]),
+  handler: msGraphCommandHandler(async (argv: any, { graphContext, tokenSource }) => {
+    const concurrency = cliConcurrencyValue(argv.concurrency, MSGRAPH_CLI_FOLDER_DOWNLOAD_CONCURRENCY);
+    const ref = await resolveMsGraphCliItemRef(graphContext, argv);
+    const folder = await getDriveItem(graphContext)({ ...ref, select: FILES_DOWNLOAD_FOLDER_RESOLVE_SELECT });
+
+    if (folder.folder == null) {
+      throw new CliError({ message: 'The item is not a folder.', code: 'INVALID_ARGUMENT', suggestion: folder.file == null ? undefined : 'Use files download for a single file.' });
+    }
+
+    // Ctrl+C stops the run with finished files kept and the manifest saved (ABORTED); re-run to resume
+    const result = await withCliInterruptSignal((signal) =>
+      downloadMsGraphCliFolder({
+        graphContext,
+        tokenSource,
+        signal,
+        concurrency,
+        driveId: ref.driveId,
+        manifestDriveId: ref.driveId ?? folder.parentReference?.driveId,
+        folderId: folder.id,
+        dir: argv.dir,
+        idleTimeout: msGraphCliIdleTimeoutMs(argv.idleTimeout),
+        maxFiles: argv.maxFiles,
+        maxBytes: argv.maxBytes,
+        prune: argv.prune ?? false,
+        dryRun: argv.dryRun ?? false,
+        progress: (line) => process.stderr.write(`${line}\n`)
+      })
+    );
+
+    outputMsGraphCliResult(result);
   })
 };
 
@@ -376,6 +431,7 @@ export const FILES_COMMAND: CommandModule = {
       .command(FILES_DRIVE_COMMAND)
       .command(FILES_SHEET_COMMAND)
       .command(FILES_DOWNLOAD_COMMAND)
+      .command(FILES_DOWNLOAD_FOLDER_COMMAND)
       .command(FILES_UPLOAD_COMMAND)
       .command(FILES_MKDIR_COMMAND)
       .command(FILES_RENAME_COMMAND)
