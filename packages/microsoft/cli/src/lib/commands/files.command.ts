@@ -6,17 +6,25 @@ import {
   type MicrosoftGraphRequestInput,
   MICROSOFT_GRAPH_DRIVE_SIMPLE_UPLOAD_MAX_BYTES,
   copyDriveItem,
+  type MicrosoftGraphDriveItem,
+  findMicrosoftGraphWorkbookWorksheet,
   getDriveItem,
+  getWorkbookRange,
+  listWorkbookWorksheets,
+  microsoftGraphCollectPages,
   microsoftGraphCopyDriveItemRequest,
   microsoftGraphCreateDriveUploadSessionRequest,
   microsoftGraphCreateFolderRequest,
   microsoftGraphDeleteDriveItemRequest,
   microsoftGraphDownloadDriveItemRequest,
+  microsoftGraphDriveChildrenPageInput,
+  microsoftGraphDriveItemSummary,
   microsoftGraphDriveUploadChunkSize,
   microsoftGraphRequest,
   microsoftGraphSimpleUploadRequest,
   microsoftGraphSiteByUrlPath,
   microsoftGraphUpdateDriveItemRequest,
+  microsoftGraphWorkbookRowsToObjects,
   moveDriveItem,
   resolveSiteDrive,
   searchDriveItems,
@@ -136,6 +144,68 @@ const FILES_GET_COMMAND: CommandModule = {
     ]),
   handler: msGraphCommandHandler(async (argv: any, { graphContext }) => {
     outputMsGraphCliResult(await getDriveItem(graphContext)(await resolveMsGraphCliItemRef(graphContext, argv)));
+  })
+};
+
+export const FILES_LIST_COMMAND: CommandModule = {
+  command: 'list [id]',
+  describe: "List a folder's items (default: the drive root), compact by default",
+  builder: (yargs: Argv) =>
+    itemOptions(yargs)
+      .option('top', { type: 'number', describe: 'Items per page (default 200)' })
+      .option('all-pages', { type: 'boolean', default: false, describe: 'Follow @odata.nextLink and return every page (up to --max-pages)' })
+      .option('max-pages', { type: 'number', describe: 'With --all-pages: stop after this many pages (default 20)' })
+      .option('next', { type: 'string', describe: 'Continue a listing from the nextLink a previous call returned (the folder options are ignored)' })
+      .option('type', { type: 'string', choices: ['file', 'folder'], describe: 'Keep only files or only folders' })
+      .option('urls', { type: 'boolean', default: false, describe: "Include each item's webUrl" })
+      .option('full', { type: 'boolean', default: false, describe: 'Return the full driveItems (much larger, and they carry pre-authenticated download URLs)' })
+      .example([
+        ['$0 files list', 'Your OneDrive root'],
+        ['$0 files list --site https://contoso.sharepoint.com/sites/Team --path Policies --type file', 'The files of a SharePoint folder'],
+        ['$0 files list --drive b!xyz 01ABCDEF --all-pages', 'Every item of a folder by id'],
+        ['$0 files list --next "<nextLink>"', 'The next page of a previous listing']
+      ]),
+  handler: msGraphCommandHandler(async (argv: any, { graphContext }) => {
+    const pageInput = argv.next ? { path: '', nextLink: String(argv.next) } : microsoftGraphDriveChildrenPageInput({ driveId: await resolveMsGraphCliDriveId(graphContext, argv), id: argv.id, path: argv.path, top: argv.top, full: argv.full });
+    const { items, nextLink } = await microsoftGraphCollectPages(graphContext)<MicrosoftGraphDriveItem>({ ...pageInput, maxPages: argv.allPages ? argv.maxPages : 1 });
+    const kept = argv.type ? items.filter((x) => (x.folder == null ? 'file' : 'folder') === argv.type) : items;
+    outputMsGraphCliResult({ items: argv.full ? kept : kept.map((x) => microsoftGraphDriveItemSummary(x, argv.urls)), ...(nextLink ? { nextLink } : {}) });
+  })
+};
+
+export const FILES_SHEET_COMMAND: CommandModule = {
+  command: 'sheet [id]',
+  describe: "Read an .xlsx worksheet's cells (read-only), by id or --path. To edit a workbook, download it and use a local xlsx tool",
+  builder: (yargs: Argv) =>
+    itemOptions(yargs)
+      .option('list', { type: 'boolean', default: false, describe: "List the workbook's worksheets instead of reading one" })
+      .option('sheet', { type: 'string', describe: 'The worksheet name (case-insensitive) or id. Default: the first worksheet' })
+      .option('range', { type: 'string', describe: "An A1 address within the sheet, e.g. A1:F200. Default: the sheet's used range" })
+      .option('values-only', { type: 'boolean', default: true, describe: 'For the used range: skip cells that have formatting but no value (--no-values-only to keep them)' })
+      .option('header', { type: 'boolean', default: false, describe: 'Return each row as an object keyed by the first row' })
+      .option('text', { type: 'boolean', default: false, describe: 'Return the displayed (formatted) text instead of the raw values' })
+      .example([
+        ['$0 files sheet --path Reports/roster.xlsx --list', "List a workbook's worksheets"],
+        ['$0 files sheet 01ABCDEF --sheet Texas --header', 'Read a worksheet as objects keyed by its header row'],
+        ['$0 files sheet --drive b!xyz 01ABCDEF --sheet Texas --range A1:F50', 'Read part of a sheet in a SharePoint library']
+      ]),
+  handler: msGraphCommandHandler(async (argv: any, { graphContext }) => {
+    const item = await resolveMsGraphCliItemRef(graphContext, argv);
+    const worksheets = (await listWorkbookWorksheets(graphContext)(item)).value;
+
+    if (argv.list) {
+      outputMsGraphCliResult(worksheets.map(({ id, name, position, visibility }) => ({ id, name, position, visibility })));
+    } else {
+      const worksheet = findMicrosoftGraphWorkbookWorksheet(worksheets, argv.sheet);
+
+      if (!worksheet) {
+        throw new CliError({ message: `No worksheet named "${argv.sheet}".`, code: 'NOT_FOUND', suggestion: `The workbook has: ${worksheets.map((x) => x.name).join(', ')}` });
+      }
+
+      const range = await getWorkbookRange(graphContext)({ ...item, sheet: worksheet.id, address: argv.range, valuesOnly: argv.valuesOnly });
+      const cells: readonly (readonly unknown[])[] = argv.text ? (range.text ?? []) : range.values;
+      outputMsGraphCliResult({ sheet: worksheet.name, address: range.address, rowCount: range.rowCount, columnCount: range.columnCount, rows: argv.header ? microsoftGraphWorkbookRowsToObjects(cells) : cells });
+    }
   })
 };
 
@@ -302,7 +372,9 @@ export const FILES_COMMAND: CommandModule = {
     yargs
       .command(FILES_SEARCH_COMMAND)
       .command(FILES_GET_COMMAND)
+      .command(FILES_LIST_COMMAND)
       .command(FILES_DRIVE_COMMAND)
+      .command(FILES_SHEET_COMMAND)
       .command(FILES_DOWNLOAD_COMMAND)
       .command(FILES_UPLOAD_COMMAND)
       .command(FILES_MKDIR_COMMAND)

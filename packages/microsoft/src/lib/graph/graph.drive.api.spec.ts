@@ -10,6 +10,8 @@ import {
   microsoftGraphCreateDriveUploadSessionRequest,
   microsoftGraphCreateFolderRequest,
   microsoftGraphDeleteDriveItemRequest,
+  microsoftGraphDriveChildrenPageInput,
+  microsoftGraphDriveItemSummary,
   microsoftGraphDriveItemPath,
   microsoftGraphDriveUploadChunkSize,
   microsoftGraphSimpleUploadRequest,
@@ -210,5 +212,20 @@ describe('drive writes', () => {
     // models: F-f (driveitem-delete, driveitem-permanentdelete)
     expect(microsoftGraphDeleteDriveItemRequest({ id: 'i1' })).toEqual({ method: 'DELETE', path: '/me/drive/items/i1' });
     expect(microsoftGraphDeleteDriveItemRequest({ id: 'i1', hard: true })).toEqual({ method: 'POST', path: '/me/drive/items/i1/permanentDelete' });
+  });
+});
+
+describe('folder listing', () => {
+  it('lists a folder by id, by path, or the root, selecting the compact fields by default', () => {
+    expect(microsoftGraphDriveChildrenPageInput({ driveId: 'b!d', id: 'F1' })).toEqual({ path: '/drives/b!d/items/F1/children', query: { $top: 200, $select: 'id,name,size,lastModifiedDateTime,folder,file,webUrl' } });
+    expect(microsoftGraphDriveChildrenPageInput({ path: 'Tech talk', top: 50 }).path).toBe('/me/drive/root:/Tech%20talk:/children');
+    expect(microsoftGraphDriveChildrenPageInput({})).toMatchObject({ path: '/me/drive/root/children' });
+    expect(microsoftGraphDriveChildrenPageInput({ id: 'F1', full: true }).query).toEqual({ $top: 200, $select: undefined });
+  });
+
+  it('summarizes folders with their child count and files with their mime type', () => {
+    // models: live folder listing 2026-11-13 (driveItem keys folder.childCount / file.mimeType)
+    expect(microsoftGraphDriveItemSummary({ id: 'F', name: 'Docs', size: 10, folder: { childCount: 3 }, lastModifiedDateTime: '2026-11-13T00:00:00Z', webUrl: 'https://x/Docs' })).toEqual({ id: 'F', name: 'Docs', type: 'folder', size: 10, childCount: 3, modified: '2026-11-13T00:00:00Z' });
+    expect(microsoftGraphDriveItemSummary({ id: 'X', name: 'a.xlsx', size: 5, file: { mimeType: 'application/vnd.ms-excel' }, webUrl: 'https://x/a.xlsx' }, true)).toEqual({ id: 'X', name: 'a.xlsx', type: 'file', size: 5, mimeType: 'application/vnd.ms-excel', modified: undefined, webUrl: 'https://x/a.xlsx' });
   });
 });

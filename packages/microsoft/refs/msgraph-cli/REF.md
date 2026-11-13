@@ -120,6 +120,8 @@ msgraph-cli files search "<text>" [--top 25]
 msgraph-cli files get <id> | --path "/Documents/plan.docx"     # metadata
 msgraph-cli files drive                                        # the drive's details
 msgraph-cli files download <id> --out plan.docx
+msgraph-cli files sheet <id> | --path "/Reports/roster.xlsx" --list           # an .xlsx's worksheets
+msgraph-cli files sheet <id> [--sheet Texas] [--range A1:F200] [--header] [--text]   # read cells (read-only)
 msgraph-cli files upload ./plan.docx [--to-path Documents] [--conflict fail|replace|rename]
 msgraph-cli files mkdir Documents/Reports
 msgraph-cli files rename <id> --name new.docx | move <id> --to-path Archive | copy <id> [--to-drive <driveId>] [--wait]
@@ -132,6 +134,26 @@ otherwise): copy, then delete. `upload` uses one PUT up to 4 MB, and an upload s
 chunks of `--chunk-size` bytes (default 10 MiB, rounded down to a multiple of 320 KiB). `copy --wait`
 polls Graph's copy monitor until the copy finishes. `delete --hard` deletes permanently (no recycle bin).
 
+`files sheet` reads an `.xlsx` through Excel on the server (no download), read-only:
+
+- With no `--sheet`, it reads the first worksheet; `--sheet` matches a name (case-insensitive) or an id.
+  An unknown sheet is `NOT_FOUND`, and the suggestion lists the workbook's sheets.
+- With no `--range`, it reads the sheet's used range, skipping cells that only carry formatting
+  (`--no-values-only` keeps them). `--range` takes an A1 address within the sheet (`A1:F200`, `$A$1:$C$1`).
+- Output: `{ sheet, address, rowCount, columnCount, rows }`. `rows` holds arrays of raw values (numbers stay
+  numbers, an empty cell is `""`). `--header` turns each row after the first into an object keyed by the
+  first row (a blank header becomes `column_<n>`, a repeated one `Name_2`). `--text` gives the displayed
+  (formatted) text instead.
+- It returns only the values, which is roughly 6× smaller than a raw `request GET …/usedRange` (that also
+  carries text, formulas, number formats and value types). `--header` repeats the keys on every row, so it is
+  larger than plain arrays: use it when the columns matter more than the size.
+- Big sheets: read them in pieces with `--range` (e.g. `A1:Y500`, then `A501:Y1000`); one used-range read
+  returns everything at once.
+- A SharePoint workbook works the same way through `--drive <driveId>` (or `--site` / `--library`) plus the
+  item id or `--path`. It needs `Files.Read.All`, which both presets carry.
+- To edit a workbook, or for analysis a cell dump can't do (formulas, charts, pivots), `files download` it and
+  use a local xlsx tool (openpyxl, exceljs, or the xlsx skill), then `files upload --conflict replace` it back.
+
 ### Teams
 
 ```bash
@@ -141,8 +163,8 @@ msgraph-cli teams chat messages <chat> [--since <iso>] [--top 50]
 msgraph-cli teams chat send <chat> --text "…" | --html "…" | --file msg.html
 msgraph-cli teams chat delete <chat> <message> [--undo] --yes
 msgraph-cli teams channel send <team> <channel> --text "…"      # also: reply <team> <channel> <message>
-msgraph-cli teams channel messages <team> <channel> [--replies]  # Admin preset only
-msgraph-cli teams channel delete <team> <channel> <message> --yes  # Admin preset only
+msgraph-cli teams channel messages <team> <channel> [--replies]  # admin consent only; no standard preset
+msgraph-cli teams channel delete <team> <channel> <message> --yes  # admin consent only; no standard preset
 ```
 
 Every send (`chat send`, `channel send`, `channel reply`) needs `--yes`. Teams takes at most one message
@@ -194,11 +216,11 @@ Every scope in them is user-consentable, so connecting never needs an administra
 
 | Commands | Need |
 | --- | --- |
-| `mail list/search/get/get-many/dump`, `calendar list/get`, `files search/get/drive/download` | Read |
+| `mail list/search/get/get-many/dump`, `calendar list/get`, `files search/get/drive/download/sheet` | Read |
 | `mail draft/send/send-bulk/reply/forward/move/copy/delete`, `mail auto-reply set/off/restore`, `calendar create/delete`, `files upload/mkdir/rename/move/copy/delete` | Read + Write |
 | `--mailbox` / `--send-as` (shared mailboxes) | Read + Write (`*.Shared`) **and** an Exchange permission on that mailbox |
 | `teams list/channels/chats/chat …/presence`, `teams channel send/reply` | Read + Write |
-| `teams channel messages/delete` | An app-defined Admin preset with `ChannelMessage.Read.All` / `ChannelMessage.ReadWrite` (admin consent); never Read or Read + Write |
+| `teams channel messages/delete` | `ChannelMessage.Read.All` / `ChannelMessage.ReadWrite` (admin consent). Neither Read nor Read + Write grants them, so these run only on a connection a tenant admin consented with them for the organization |
 
 ## Output Format
 
@@ -215,7 +237,7 @@ Every scope in them is user-consentable, so connecting never needs an administra
 | --- | --- | --- |
 | `NOT_CONFIGURED` | No token source is configured (exit 4) | `msgraph-cli auth token-source set "<app>-cli external-token <providerType> --env <preset>"` |
 | `TOKEN_REJECTED` | Graph returned 401; the cached token was already cleared | Re-run; if it repeats, `msgraph-cli auth show` |
-| `SCOPE_DENIED` | Graph returned 403: the grant lacks the scope (or, with `--mailbox`, the Exchange permission) | Reconnect with Read + Write, or use the Admin source for channel reads/deletes |
+| `SCOPE_DENIED` | Graph returned 403: the grant lacks the scope (or, with `--mailbox`, the Exchange permission) | Reconnect with Read + Write. Channel reads/deletes need an admin-consented grant that no standard preset gives |
 | `CONFIRMATION_REQUIRED` | A send / delete / settings change ran without `--yes` | Re-run with `--yes`, or `--dry-run` to preview |
 | `RATE_LIMITED` | Graph returned 429 | Wait and retry |
 | `NOT_FOUND` | No item, mailbox, library or saved auto-reply backup | Check the id / path / `--mailbox`; mutable mail ids change when a message moves |

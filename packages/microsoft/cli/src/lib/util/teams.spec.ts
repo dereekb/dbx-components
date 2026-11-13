@@ -36,14 +36,15 @@ describe('teams helpers', () => {
     expect(waits).toEqual([700]);
   });
 
-  it('turns a 403 on an admin-only call into SCOPE_DENIED pointing at the Admin preset', () => {
+  it('turns a 403 on an admin-only call into SCOPE_DENIED saying no standard preset grants the scope', () => {
     // models: D6 live error text (channel messages read with a Read + Write token)
     const error = graphError('Forbidden', "Missing scope permissions on the request. API requires one of 'ChannelMessage.Read.All, Group.Read.All, Group.ReadWrite.All'. Scopes on the request 'Chat.ReadWrite, User.Read'", 403);
     const mapped = msGraphCliTeamsAdminScopeError(error, MICROSOFT_GRAPH_CHANNEL_MESSAGE_READ_SCOPE) as CliError;
 
     expect(mapped).toBeInstanceOf(CliError);
     expect(mapped.code).toBe('SCOPE_DENIED');
-    expect(mapped.suggestion).toContain('Admin preset');
+    expect(mapped.suggestion).toContain('Neither standard preset');
+    expect(mapped.suggestion).not.toContain('Admin preset');
     expect(mapped.suggestion).toContain('ChannelMessage.Read.All');
 
     const notFound = graphError('NotFound', 'x', 404);

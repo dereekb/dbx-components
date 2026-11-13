@@ -200,7 +200,7 @@ export const TEAMS_CHANNEL_REPLY_COMMAND: CommandModule = {
 
 export const TEAMS_CHANNEL_MESSAGES_COMMAND: CommandModule = {
   command: 'messages <team> <channel>',
-  describe: `List a channel's messages. Admin preset only: needs ${MICROSOFT_GRAPH_CHANNEL_MESSAGE_READ_SCOPE} (admin consent), even for your own posts`,
+  describe: `List a channel's messages. Needs ${MICROSOFT_GRAPH_CHANNEL_MESSAGE_READ_SCOPE} (admin consent; neither the Read nor the Read + Write preset grants it), even for your own posts`,
   builder: (yargs: Argv) => channelPositionals(yargs).option('replies', { type: 'boolean', default: false, describe: "Include each message's replies" }).option('top', { type: 'number', describe: 'Messages to return (at most 50)' }),
   handler: msGraphCommandHandler(async (argv: any, { graphContext }) => {
     const request = microsoftGraphChannelMessagesRequest({ teamId: String(argv.team), channelId: String(argv.channel), top: argv.top, replies: argv.replies });
@@ -210,7 +210,7 @@ export const TEAMS_CHANNEL_MESSAGES_COMMAND: CommandModule = {
 
 export const TEAMS_CHANNEL_DELETE_COMMAND: CommandModule = {
   command: 'delete <team> <channel> <message>',
-  describe: `Soft-delete a channel message. Admin preset only: needs ${MICROSOFT_GRAPH_CHANNEL_MESSAGE_WRITE_SCOPE} (admin consent), even for your own post. Needs --yes`,
+  describe: `Soft-delete a channel message. Needs ${MICROSOFT_GRAPH_CHANNEL_MESSAGE_WRITE_SCOPE} (admin consent; neither the Read nor the Read + Write preset grants it), even for your own post. Needs --yes`,
   builder: (yargs: Argv) => channelPositionals(msGraphCliConfirmOptions(msGraphCliDryRunOptions(yargs), 'Confirm the delete')).positional('message', { type: 'string', demandOption: true, describe: 'The message id' }),
   handler: msGraphCommandHandler(async (argv: any, { graphContext }) => {
     const request = microsoftGraphSoftDeleteChannelMessageRequest({ teamId: String(argv.team), channelId: String(argv.channel), messageId: String(argv.message) });
@@ -227,7 +227,7 @@ export const TEAMS_CHANNEL_DELETE_COMMAND: CommandModule = {
 
 const TEAMS_CHANNEL_COMMAND: CommandModule = {
   command: 'channel',
-  describe: 'Post and reply in channels; read and delete channel messages (Admin preset)',
+  describe: 'Post and reply in channels; read and delete channel messages (admin consent only)',
   builder: (yargs: Argv) => yargs.command(TEAMS_CHANNEL_SEND_COMMAND).command(TEAMS_CHANNEL_REPLY_COMMAND).command(TEAMS_CHANNEL_MESSAGES_COMMAND).command(TEAMS_CHANNEL_DELETE_COMMAND).demandCommand(1, 'Please specify a channel subcommand.'),
   handler: () => undefined
 };

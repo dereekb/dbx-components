@@ -60,7 +60,7 @@ export async function awaitMsGraphCliTeamsSendSlot(config: MsGraphCliTeamsSendGa
 }
 
 /**
- * Turns the 403 of an admin-consent-only Teams call into a `SCOPE_DENIED` that points at the Admin preset.
+ * Turns the 403 of an admin-consent-only Teams call into a `SCOPE_DENIED` that explains no standard preset grants the scope.
  *
  * @param error - The thrown value.
  * @param scope - The admin-consent scope the call needs.
@@ -73,7 +73,7 @@ export function msGraphCliTeamsAdminScopeError(error: unknown, scope: string): u
     result = new CliError({
       message: error.message,
       code: 'SCOPE_DENIED',
-      suggestion: `This call needs ${scope}, which needs admin consent: only the Admin preset carries it, never Read or Read + Write. Connect with the Admin preset (a tenant admin consents for the organization) and pick that token source: ${MSGRAPH_CLI_NAME} --token-source <admin source> …`
+      suggestion: `This call needs ${scope}, which needs admin consent. Neither standard preset (Read, Read + Write) grants it, so the call only works through a token source whose connection a tenant admin consented with ${scope} for the organization. Compare the token's scopes with: ${MSGRAPH_CLI_NAME} auth show`
     });
   }
 

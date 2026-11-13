@@ -49,7 +49,7 @@ export function msGraphCliScopeDeniedSuggestion(message: Maybe<string>): string 
   if (required.length === 0) {
     result = `The token lacks a scope this call needs. Use a token source whose connection was granted it (e.g. one connected with the Read + Write preset rather than Read) and whose app login allows minting it; a scope outside every preset cannot be minted. ${compare}`;
   } else if (required.every(isMicrosoftGraphAdminConsentScope)) {
-    result = `This call needs one of: ${required.join(', ')}. Each needs admin consent, so no user-consentable preset (Read, Read + Write) carries it: use a token source whose connection a tenant admin consented with an admin preset. ${compare}`;
+    result = `This call needs one of: ${required.join(', ')}. Each needs admin consent, so no user-consentable preset (Read, Read + Write) carries it: the call only works through a token source whose connection a tenant admin consented with one of them for the organization. ${compare}`;
   } else {
     result = `This call needs one of: ${required.join(', ')}. Use a token source whose connection was granted one of them (e.g. the Read + Write preset rather than Read). ${compare}`;
   }

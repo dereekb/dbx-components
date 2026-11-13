@@ -2,7 +2,6 @@ import { type Maybe } from '@dereekb/util';
 import { type FetchJsonBody, type FetchMethod } from '@dereekb/util/fetch';
 import { type MicrosoftGraphContext } from './graph.config';
 import { canonicalizeMicrosoftGraphHeaders, type MicrosoftGraphHeaders } from './graph.header';
-import { type MicrosoftGraphPage } from './graph.type';
 
 /**
  * Query parameters for a Graph request. `undefined`/`null` values are dropped.
@@ -69,38 +68,5 @@ export function microsoftGraphRequest(context: MicrosoftGraphContext): <T = unkn
         Authorization: `Bearer ${accessToken}`
       }
     });
-  };
-}
-
-export interface MicrosoftGraphRequestAllPagesInput extends Omit<MicrosoftGraphRequestInput, 'method' | 'body'> {
-  /**
-   * Stops after this many pages. Defaults to 20.
-   */
-  readonly maxPages?: Maybe<number>;
-}
-
-/**
- * GETs a Graph collection and follows `@odata.nextLink` until the last page (or `maxPages`).
- *
- * @param context - Fetch function and access-token source each request is sent with.
- * @returns Function that follows `@odata.nextLink` (up to `maxPages`) and resolves the collected items.
- */
-export function microsoftGraphRequestAllPages(context: MicrosoftGraphContext): <T = unknown>(input: MicrosoftGraphRequestAllPagesInput) => Promise<T[]> {
-  const request = microsoftGraphRequest(context);
-
-  return async <T>(input: MicrosoftGraphRequestAllPagesInput) => {
-    const maxPages = input.maxPages ?? 20;
-    const items: T[] = [];
-    let page = await request<MicrosoftGraphPage<T>>({ method: 'GET', path: input.path, query: input.query, headers: input.headers });
-    let pageCount = 1;
-    items.push(...(page.value ?? []));
-
-    while (page['@odata.nextLink'] && pageCount < maxPages) {
-      page = await request<MicrosoftGraphPage<T>>({ method: 'GET', path: page['@odata.nextLink'], headers: input.headers });
-      items.push(...(page.value ?? []));
-      pageCount += 1;
-    }
-
-    return items;
   };
 }

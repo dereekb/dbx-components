@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { type FetchHandler } from '@dereekb/util/fetch';
-import { microsoftGraphRequest, microsoftGraphRequestAllPages } from './graph.api';
+import { microsoftGraphRequest } from './graph.api';
+import { microsoftGraphCollectPages, microsoftGraphRequestAllPages } from './graph.page';
 import { getDriveItem } from './graph.drive.api';
 import { getMessage, searchMessages } from './graph.mail.api';
 import { MicrosoftGraphError } from './graph.error.api';
@@ -76,6 +77,19 @@ describe('microsoftGraphRequestAllPages()', () => {
 
     expect(items).toEqual([1, 2, 3]);
     expect(decodeURIComponent(requests[1].url)).toBe('https://graph.microsoft.com/v1.0/me/messages?$skiptoken=abc');
+  });
+
+  it('stops at maxPages and returns the next unread page link, then continues from it', async () => {
+    const next = 'https://graph.microsoft.com/v1.0/me/drive/root/children?$skiptoken=p2';
+    const { graphContext, requests } = testGraphContext([{ body: { value: ['a'], '@odata.nextLink': next } }, { body: { value: ['b'] } }]);
+    const collect = microsoftGraphCollectPages(graphContext);
+
+    const first = await collect<string>({ path: '/me/drive/root/children', query: { $top: 1 }, maxPages: 1 });
+    expect(first).toEqual({ items: ['a'], pageCount: 1, nextLink: next });
+
+    const rest = await collect<string>({ path: '/ignored', nextLink: first.nextLink });
+    expect(rest).toEqual({ items: ['b'], pageCount: 1, nextLink: undefined });
+    expect(decodeURIComponent(requests[1].url)).toBe('https://graph.microsoft.com/v1.0/me/drive/root/children?$skiptoken=p2');
   });
 });
 

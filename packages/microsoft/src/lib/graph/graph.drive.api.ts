@@ -2,6 +2,7 @@ import { type Maybe, type Milliseconds } from '@dereekb/util';
 import { type MicrosoftGraphRequestInput, microsoftGraphRequest } from './graph.api';
 import { type MicrosoftGraphContext } from './graph.config';
 import { type MicrosoftGraphRawRequestInput, type MicrosoftGraphRawResponse, microsoftGraphRequestRaw } from './graph.raw.api';
+import { type MicrosoftGraphPageInput } from './graph.page';
 import { type MicrosoftGraphDrive, type MicrosoftGraphDriveItem, type MicrosoftGraphPage, type MicrosoftGraphSite } from './graph.type';
 import { type MicrosoftGraphUploadBytes, microsoftGraphUploadBytesSize, microsoftGraphUploadSessionPut, microsoftGraphUploadTimeout, readMicrosoftGraphUploadRange } from './graph.upload.api';
 
@@ -297,6 +298,92 @@ export function getDriveItem(context: MicrosoftGraphContext): (input: MicrosoftG
     }
 
     return request({ method: 'GET', path: microsoftGraphDriveItemPath(input) });
+  };
+}
+
+/**
+ * The driveItem fields a compact listing asks Graph for (`$select`). A full driveItem also carries a
+ * pre-authenticated `@microsoft.graph.downloadUrl`, the creator and modifier, the parent reference and the file
+ * system info, which made a live folder listing about 6x larger.
+ */
+export const MICROSOFT_GRAPH_DRIVE_ITEM_LIST_SELECT: readonly string[] = ['id', 'name', 'size', 'lastModifiedDateTime', 'folder', 'file', 'webUrl'];
+
+/**
+ * Default page size of a folder listing. Graph's own default is 200.
+ */
+export const DEFAULT_MICROSOFT_GRAPH_DRIVE_CHILDREN_TOP = 200;
+
+/**
+ * A folder to list: the folder by id or path (the drive root when neither), and the page shape.
+ */
+export interface MicrosoftGraphDriveChildrenInput extends MicrosoftGraphDriveItemRefInput {
+  /**
+   * Items per page. Defaults to {@link DEFAULT_MICROSOFT_GRAPH_DRIVE_CHILDREN_TOP}.
+   */
+  readonly top?: Maybe<number>;
+  /**
+   * Ask for the full driveItems instead of {@link MICROSOFT_GRAPH_DRIVE_ITEM_LIST_SELECT}.
+   */
+  readonly full?: Maybe<boolean>;
+}
+
+/**
+ * Builds the first-page input of a folder listing (`…/children`), for {@link microsoftGraphFetchPageFactory} or
+ * {@link microsoftGraphCollectPages}. Requires `Files.Read` (or `.All`).
+ *
+ * @param input - The drive, folder and page shape.
+ * @returns The page input.
+ *
+ * @see https://learn.microsoft.com/en-us/graph/api/driveitem-list-children
+ */
+export function microsoftGraphDriveChildrenPageInput(input: MicrosoftGraphDriveChildrenInput): MicrosoftGraphPageInput {
+  return {
+    path: microsoftGraphDriveItemPath(input, 'children'),
+    query: { $top: input.top ?? DEFAULT_MICROSOFT_GRAPH_DRIVE_CHILDREN_TOP, $select: input.full ? undefined : MICROSOFT_GRAPH_DRIVE_ITEM_LIST_SELECT.join(',') }
+  };
+}
+
+/**
+ * A driveItem reduced to what a listing needs.
+ */
+export interface MicrosoftGraphDriveItemSummary {
+  readonly id: string;
+  readonly name?: Maybe<string>;
+  readonly type: 'folder' | 'file';
+  /**
+   * Bytes. For a folder, the total size of its contents.
+   */
+  readonly size?: Maybe<number>;
+  /**
+   * Folders only: how many items it holds.
+   */
+  readonly childCount?: Maybe<number>;
+  /**
+   * Files only.
+   */
+  readonly mimeType?: Maybe<string>;
+  readonly modified?: Maybe<string>;
+  readonly webUrl?: Maybe<string>;
+}
+
+/**
+ * Reduces a driveItem to a {@link MicrosoftGraphDriveItemSummary}.
+ *
+ * @param item - The driveItem.
+ * @param includeWebUrl - Keep the item's `webUrl`.
+ * @returns The summary.
+ */
+export function microsoftGraphDriveItemSummary(item: MicrosoftGraphDriveItem, includeWebUrl?: Maybe<boolean>): MicrosoftGraphDriveItemSummary {
+  const isFolder = item.folder != null;
+
+  return {
+    id: item.id,
+    name: item.name,
+    type: isFolder ? 'folder' : 'file',
+    size: item.size,
+    ...(isFolder ? { childCount: item.folder?.childCount } : { mimeType: item.file?.mimeType }),
+    modified: item.lastModifiedDateTime,
+    ...(includeWebUrl ? { webUrl: item.webUrl } : {})
   };
 }
 
