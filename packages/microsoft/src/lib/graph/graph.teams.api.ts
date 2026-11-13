@@ -1,6 +1,7 @@
 import { type ISO8601DateString, type Maybe } from '@dereekb/util';
 import { type MicrosoftGraphQuery, type MicrosoftGraphRequestInput } from './graph.api';
-import { type MicrosoftGraphItemBody } from './graph.type';
+import { type MicrosoftGraphRawRequestInput } from './graph.raw.api';
+import { type MicrosoftGraphItemBody, type MicrosoftGraphPage } from './graph.type';
 
 /**
  * Teams answers sends at most once per second per chat or channel, and once per second per user.
@@ -46,6 +47,103 @@ export interface MicrosoftGraphChat {
   readonly webUrl?: Maybe<string>;
   readonly members?: Maybe<MicrosoftGraphChatMember[]>;
 }
+
+/**
+ * The `Prefer` value that makes Graph return system events as `systemEventMessage` (with `eventDetail`) instead of
+ * `unknownFutureValue`.
+ *
+ * @see https://learn.microsoft.com/en-us/graph/api/resources/chatmessage
+ */
+export const MICROSOFT_GRAPH_PREFER_INCLUDE_UNKNOWN_ENUM_MEMBERS = 'include-unknown-enum-members';
+
+export type MicrosoftGraphChatMessageType = 'message' | 'chatEvent' | 'typing' | 'systemEventMessage' | 'unknownFutureValue';
+
+/**
+ * A user, application or device that sent or reacted to a chat message.
+ */
+export interface MicrosoftGraphChatMessageIdentity {
+  readonly id?: Maybe<string>;
+  readonly displayName?: Maybe<string>;
+  readonly userIdentityType?: Maybe<string>;
+  readonly applicationIdentityType?: Maybe<string>;
+  readonly tenantId?: Maybe<string>;
+}
+
+/**
+ * Who sent a chat message. System events have no sender.
+ */
+export interface MicrosoftGraphChatMessageFrom {
+  readonly user?: Maybe<MicrosoftGraphChatMessageIdentity>;
+  readonly application?: Maybe<MicrosoftGraphChatMessageIdentity>;
+  readonly device?: Maybe<MicrosoftGraphChatMessageIdentity>;
+}
+
+/**
+ * A chat message attachment. `reference` attachments are SharePoint or OneDrive file links (`contentUrl`);
+ * `messageReference` is a quoted reply and cards carry their JSON in `content`.
+ *
+ * @see https://learn.microsoft.com/en-us/graph/api/resources/chatmessageattachment
+ */
+export interface MicrosoftGraphChatMessageAttachment {
+  readonly id?: Maybe<string>;
+  readonly contentType?: Maybe<string>;
+  readonly contentUrl?: Maybe<string>;
+  readonly content?: Maybe<string>;
+  readonly name?: Maybe<string>;
+  readonly thumbnailUrl?: Maybe<string>;
+  readonly teamsAppId?: Maybe<string>;
+}
+
+export interface MicrosoftGraphChatMessageReaction {
+  readonly reactionType?: Maybe<string>;
+  readonly displayName?: Maybe<string>;
+  readonly reactionContentUrl?: Maybe<string>;
+  readonly createdDateTime?: Maybe<ISO8601DateString>;
+  readonly user?: Maybe<MicrosoftGraphChatMessageFrom>;
+}
+
+export interface MicrosoftGraphChatMessageMention {
+  readonly id?: Maybe<number>;
+  readonly mentionText?: Maybe<string>;
+  readonly mentioned?: Maybe<MicrosoftGraphChatMessageFrom>;
+}
+
+/**
+ * A Graph `chatMessage`. Edits, soft deletes and reactions all move `lastModifiedDateTime`. A soft-deleted message
+ * stays in the list with `deletedDateTime` set, an empty body and no attachments.
+ *
+ * @see https://learn.microsoft.com/en-us/graph/api/resources/chatmessage
+ */
+export interface MicrosoftGraphChatMessage {
+  readonly id: string;
+  readonly chatId?: Maybe<string>;
+  readonly messageType?: Maybe<MicrosoftGraphChatMessageType>;
+  readonly createdDateTime?: Maybe<ISO8601DateString>;
+  readonly lastModifiedDateTime?: Maybe<ISO8601DateString>;
+  readonly lastEditedDateTime?: Maybe<ISO8601DateString>;
+  readonly deletedDateTime?: Maybe<ISO8601DateString>;
+  readonly etag?: Maybe<string>;
+  readonly subject?: Maybe<string>;
+  readonly summary?: Maybe<string>;
+  readonly importance?: Maybe<string>;
+  readonly locale?: Maybe<string>;
+  readonly webUrl?: Maybe<string>;
+  readonly replyToId?: Maybe<string>;
+  readonly from?: Maybe<MicrosoftGraphChatMessageFrom>;
+  readonly body?: Maybe<MicrosoftGraphItemBody>;
+  readonly attachments?: Maybe<MicrosoftGraphChatMessageAttachment[]>;
+  readonly mentions?: Maybe<MicrosoftGraphChatMessageMention[]>;
+  readonly reactions?: Maybe<MicrosoftGraphChatMessageReaction[]>;
+  /**
+   * Set on system events read with {@link MICROSOFT_GRAPH_PREFER_INCLUDE_UNKNOWN_ENUM_MEMBERS}, e.g.
+   * `#microsoft.graph.membersAddedEventMessageDetail`.
+   */
+  readonly eventDetail?: Maybe<{ readonly '@odata.type'?: Maybe<string> } & Record<string, unknown>>;
+  readonly policyViolation?: unknown;
+  readonly channelIdentity?: unknown;
+}
+
+export type MicrosoftGraphChatMessagePage = MicrosoftGraphPage<MicrosoftGraphChatMessage>;
 
 // MARK: Paths
 function enc(value: string): string {
@@ -109,27 +207,117 @@ export function microsoftGraphChatsRequest(): MicrosoftGraphRequestInput {
   return { method: 'GET', path: '/me/chats', query: { $expand: 'members', $top: MICROSOFT_GRAPH_TEAMS_MAX_TOP } };
 }
 
+/**
+ * Builds the GET of one chat with its members expanded (`Chat.ReadBasic` / `Chat.Read`).
+ *
+ * @param chatId - The chat id.
+ * @returns The request.
+ *
+ * @see https://learn.microsoft.com/en-us/graph/api/chat-get
+ */
+export function microsoftGraphChatRequest(chatId: string): MicrosoftGraphRequestInput {
+  return { method: 'GET', path: `/chats/${enc(chatId)}`, query: { $expand: 'members' } };
+}
+
 export interface MicrosoftGraphChatMessagesInput {
   readonly chatId: string;
   /**
-   * Only messages changed after this instant.
+   * Sends `$filter=lastModifiedDateTime gt <since>`. Despite the property's name, Graph returns the messages
+   * *created* after this instant, in their current state. Edits, soft deletes and reactions made after it to messages
+   * created before it are usually not returned (live probe TC7, 2026-11-13), so this is not a change feed.
    */
   readonly since?: Maybe<ISO8601DateString>;
   readonly top?: Maybe<number>;
+  /**
+   * The `$skiptoken` of a page's `@odata.nextLink`, to continue a listing from a rebuilt request. See
+   * `microsoftGraphPageSkipToken()`.
+   */
+  readonly skipToken?: Maybe<string>;
+  /**
+   * Sends `Prefer: include-unknown-enum-members`, so system events arrive as `systemEventMessage` with
+   * `eventDetail` instead of `unknownFutureValue`.
+   */
+  readonly includeSystemEvents?: Maybe<boolean>;
 }
 
 /**
- * Builds the GET of a chat's messages, newest change first. A `since` filter is on `lastModifiedDateTime`, the
- * property the list is ordered by, as Graph requires.
+ * Builds the GET of a chat's messages. Graph orders by `lastModifiedDateTime` desc as asked only loosely: pages come
+ * back mostly in `createdDateTime` order. A `since` filter is on `lastModifiedDateTime`, the property the list is
+ * ordered by, as Graph requires; see {@link MicrosoftGraphChatMessagesInput.since} for what it actually returns.
  *
- * @param input - The chat, window and page size.
+ * @param input - The chat, window, page size, skip token and whether to include system events.
  * @returns The request.
  *
  * @see https://learn.microsoft.com/en-us/graph/api/chat-list-messages
  */
 export function microsoftGraphChatMessagesRequest(input: MicrosoftGraphChatMessagesInput): MicrosoftGraphRequestInput {
-  const query: MicrosoftGraphQuery = { $top: Math.min(input.top ?? MICROSOFT_GRAPH_TEAMS_MAX_TOP, MICROSOFT_GRAPH_TEAMS_MAX_TOP), $orderby: 'lastModifiedDateTime desc', $filter: input.since ? `lastModifiedDateTime gt ${input.since}` : undefined };
-  return { method: 'GET', path: microsoftGraphChatMessagesPath(input.chatId), query };
+  const query: MicrosoftGraphQuery = { $top: Math.min(input.top ?? MICROSOFT_GRAPH_TEAMS_MAX_TOP, MICROSOFT_GRAPH_TEAMS_MAX_TOP), $orderby: 'lastModifiedDateTime desc', $filter: input.since ? `lastModifiedDateTime gt ${input.since}` : undefined, $skiptoken: input.skipToken || undefined };
+  return { method: 'GET', path: microsoftGraphChatMessagesPath(input.chatId), query, ...(input.includeSystemEvents ? { headers: { Prefer: MICROSOFT_GRAPH_PREFER_INCLUDE_UNKNOWN_ENUM_MEMBERS } } : undefined) };
+}
+
+/**
+ * One inline image (hosted content) of a chat message.
+ */
+export interface MicrosoftGraphChatMessageHostedContentInput {
+  readonly chatId: string;
+  readonly messageId: string;
+  readonly hostedContentId: string;
+}
+
+/**
+ * Builds the GET of a hosted content's bytes (`Chat.Read`). Sends `ConsistencyLevel: eventual`, which Graph needs
+ * for the hosted contents of edited or deleted messages. The response's `content-type` gives the image type; live
+ * reads carried no `Content-Length`.
+ *
+ * @param input - The chat, message and hosted content.
+ * @returns The raw request.
+ *
+ * @see https://learn.microsoft.com/en-us/graph/api/chatmessagehostedcontent-get
+ */
+export function microsoftGraphChatMessageHostedContentRequest(input: MicrosoftGraphChatMessageHostedContentInput): MicrosoftGraphRawRequestInput {
+  return { method: 'GET', path: `${microsoftGraphChatMessagesPath(input.chatId)}/${enc(input.messageId)}/hostedContents/${enc(input.hostedContentId)}/$value`, headers: { ConsistencyLevel: 'eventual' } };
+}
+
+/**
+ * Matches a hosted content `$value` URL in a message body, on any host and any version segment (`v1.0`, `beta`, and
+ * the `1.0` some docs show).
+ */
+const MICROSOFT_GRAPH_HOSTED_CONTENT_URL_REGEX = /\/chats\/([^/"'\s<>]+)\/messages\/([^/"'\s<>]+)\/hostedContents\/([^/"'\s<>]+)\/\$value/g;
+
+function decodeHostedContentSegment(value: string): string {
+  let result: string;
+
+  try {
+    result = decodeURIComponent(value);
+  } catch {
+    result = value;
+  }
+
+  return result;
+}
+
+/**
+ * Finds the inline images (hosted contents) a chat message's HTML body references. Each is returned with the chat
+ * and message ids its URL names, so an image forwarded from another message is fetched through that message.
+ *
+ * @param message - The chat message.
+ * @returns The hosted contents, unique by id, in body order.
+ */
+export function microsoftGraphChatMessageHostedContentRefs(message: Pick<MicrosoftGraphChatMessage, 'body'>): MicrosoftGraphChatMessageHostedContentInput[] {
+  const content = message.body?.content ?? '';
+  const seen = new Set<string>();
+  const result: MicrosoftGraphChatMessageHostedContentInput[] = [];
+
+  for (const match of content.matchAll(MICROSOFT_GRAPH_HOSTED_CONTENT_URL_REGEX)) {
+    const hostedContentId = decodeHostedContentSegment(match[3]);
+
+    if (!seen.has(hostedContentId)) {
+      seen.add(hostedContentId);
+      result.push({ chatId: decodeHostedContentSegment(match[1]), messageId: decodeHostedContentSegment(match[2]), hostedContentId });
+    }
+  }
+
+  return result;
 }
 
 /**

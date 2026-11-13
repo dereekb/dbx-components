@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { type FetchHandler } from '@dereekb/util/fetch';
 import { microsoftGraphRequest } from './graph.api';
-import { microsoftGraphCollectPages, microsoftGraphRequestAllPages } from './graph.page';
+import { microsoftGraphCollectPages, microsoftGraphPageSkipToken, microsoftGraphRequestAllPages } from './graph.page';
 import { getDriveItem } from './graph.drive.api';
 import { getMessage, searchMessages } from './graph.mail.api';
 import { MicrosoftGraphError } from './graph.error.api';
@@ -90,6 +90,22 @@ describe('microsoftGraphRequestAllPages()', () => {
     const rest = await collect<string>({ path: '/ignored', nextLink: first.nextLink });
     expect(rest).toEqual({ items: ['b'], pageCount: 1, nextLink: undefined });
     expect(decodeURIComponent(requests[1].url)).toBe('https://graph.microsoft.com/v1.0/me/drive/root/children?$skiptoken=p2');
+  });
+});
+
+describe('microsoftGraphPageSkipToken()', () => {
+  it('reads the decoded $skiptoken of a nextLink', () => {
+    // models: TC9 (a filtered chat messages nextLink carries $top, $orderby, $filter and $skiptoken)
+    const next = 'https://graph.microsoft.com/v1.0/chats/19%3Aabc%40thread.v2/messages?%24top=50&%24orderby=lastModifiedDateTime+desc&%24filter=lastModifiedDateTime+gt+2026-11-01T00%3A00%3A00.000Z&%24skiptoken=M2UyZDAwMDAwMDMx%3D';
+    expect(microsoftGraphPageSkipToken(next)).toBe('M2UyZDAwMDAwMDMx=');
+    expect(microsoftGraphPageSkipToken('https://graph.microsoft.com/v1.0/me/messages?$skiptoken=abc')).toBe('abc');
+  });
+
+  it('returns undefined without a next page, a token or a URL', () => {
+    expect(microsoftGraphPageSkipToken(undefined)).toBeUndefined();
+    expect(microsoftGraphPageSkipToken('')).toBeUndefined();
+    expect(microsoftGraphPageSkipToken('https://graph.microsoft.com/v1.0/me/messages?$top=5')).toBeUndefined();
+    expect(microsoftGraphPageSkipToken('not a url')).toBeUndefined();
   });
 });
 

@@ -20,6 +20,27 @@ export interface MicrosoftGraphPageInput extends Omit<MicrosoftGraphRequestInput
 }
 
 /**
+ * Reads the `$skiptoken` of a page's `@odata.nextLink`, so a listing can be continued later from a rebuilt request
+ * (fresh headers and filter) instead of a stored absolute URL.
+ *
+ * @param nextLink - The page's `@odata.nextLink`.
+ * @returns The skip token, or undefined when there is no next page, the link has no token or isn't a URL.
+ */
+export function microsoftGraphPageSkipToken(nextLink: Maybe<string>): Maybe<string> {
+  let result: Maybe<string>;
+
+  if (nextLink) {
+    try {
+      result = new URL(nextLink).searchParams.get('$skiptoken') ?? undefined;
+    } catch {
+      result = undefined;
+    }
+  }
+
+  return result;
+}
+
+/**
  * Creates a {@link FetchPageFactory} over a Graph collection that follows `@odata.nextLink`.
  *
  * @param context - Fetch function and access-token source each request is sent with.

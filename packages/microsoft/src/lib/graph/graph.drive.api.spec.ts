@@ -5,6 +5,7 @@ import {
   DEFAULT_MICROSOFT_GRAPH_DRIVE_UPLOAD_CHUNK_BYTES,
   MICROSOFT_GRAPH_DRIVE_ITEM_SYNC_SELECT,
   MICROSOFT_GRAPH_DRIVE_UPLOAD_CHUNK_MULTIPLE_BYTES,
+  MICROSOFT_GRAPH_SHARED_FILE_SELECT,
   MicrosoftGraphCrossDriveMoveError,
   MicrosoftGraphLibraryNotFoundError,
   copyDriveItem,
@@ -16,6 +17,8 @@ import {
   microsoftGraphDriveItemSummary,
   microsoftGraphDriveItemPath,
   microsoftGraphDriveUploadChunkSize,
+  microsoftGraphShareIdForUrl,
+  microsoftGraphSharedDriveItemRequest,
   microsoftGraphSimpleUploadRequest,
   microsoftGraphSiteByUrlPath,
   moveDriveItem,
@@ -73,6 +76,32 @@ describe('drive addressing', () => {
     expect((await resolve({ siteUrl: 'https://contoso.sharepoint.com/sites/Team', library: 'Policies' })).id).toBe('d2');
     await expect(resolve({ siteUrl: 'https://contoso.sharepoint.com/sites/Team', library: 'Missing' })).rejects.toBeInstanceOf(MicrosoftGraphLibraryNotFoundError);
     expect(new URL(graph.requests[1].url).pathname).toBe('/v1.0/sites/contoso.sharepoint.com%2C1%2C2/drives');
+  });
+});
+
+describe('shares', () => {
+  it('encodes a sharing URL as u! plus unpadded base64url (the doc example)', () => {
+    // models: TC15 (shares-get, "Encoding sharing URLs")
+    expect(microsoftGraphShareIdForUrl('https://onedrive.live.com/redir?resid=1231244193912!12&authKey=1201919!12921!1')).toBe('u!aHR0cHM6Ly9vbmVkcml2ZS5saXZlLmNvbS9yZWRpcj9yZXNpZD0xMjMxMjQ0MTkzOTEyITEyJmF1dGhLZXk9MTIwMTkxOSExMjkyMSEx');
+  });
+
+  it('encodes the exact string of a Teams chat file URL with raw spaces and non-ASCII names', () => {
+    // models: TC15 (Teams chat-file contentUrl values carry raw spaces; encode the exact string)
+    const spaced = 'https://contoso-my.sharepoint.com/personal/ada_contoso_com/Documents/Microsoft Teams Chat Files/Q1 plan.docx';
+    const accented = 'https://contoso-my.sharepoint.com/personal/ada/Documents/Café menü.pdf';
+
+    expect(microsoftGraphShareIdForUrl(spaced)).toBe(`u!${Buffer.from(spaced, 'utf8').toString('base64url')}`);
+    expect(microsoftGraphShareIdForUrl(accented)).toBe(`u!${Buffer.from(accented, 'utf8').toString('base64url')}`);
+    expect(microsoftGraphShareIdForUrl(accented)).not.toMatch(/[+/=]/);
+  });
+
+  it('reads the shared drive item with the shared-file fields', () => {
+    // models: live P6 (/shares/u!…/driveItem?$select=… resolved 4/4 chat-file URLs to file + driveId + size)
+    const url = 'https://onedrive.live.com/redir?resid=1231244193912!12&authKey=1201919!12921!1';
+    const request = microsoftGraphSharedDriveItemRequest({ url, select: MICROSOFT_GRAPH_SHARED_FILE_SELECT });
+
+    expect(request).toEqual({ method: 'GET', path: `/shares/${microsoftGraphShareIdForUrl(url)}/driveItem`, query: { $select: 'id,name,size,file,folder,package,malware,parentReference' } });
+    expect(microsoftGraphSharedDriveItemRequest({ url }).query).toBeUndefined();
   });
 });
 

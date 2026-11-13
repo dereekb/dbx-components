@@ -1,6 +1,7 @@
 import { type Maybe, type Milliseconds } from '@dereekb/util';
 import { type MicrosoftGraphRequestInput, microsoftGraphRequest } from './graph.api';
 import { type MicrosoftGraphContext } from './graph.config';
+import { microsoftGraphBase64 } from './graph.mail.write.api';
 import { type MicrosoftGraphRawRequestInput, type MicrosoftGraphRawResponse, microsoftGraphRequestRaw } from './graph.raw.api';
 import { type MicrosoftGraphPageInput } from './graph.page';
 import { type MicrosoftGraphDrive, type MicrosoftGraphDriveItem, type MicrosoftGraphPage, type MicrosoftGraphSite } from './graph.type';
@@ -449,6 +450,53 @@ export function microsoftGraphDriveItemSummary(item: MicrosoftGraphDriveItem, in
  */
 export function microsoftGraphDownloadDriveItemRequest(input: MicrosoftGraphDriveItemRefInput): MicrosoftGraphRawRequestInput {
   return { method: 'GET', path: microsoftGraphDriveItemPath(input, 'content') };
+}
+
+// MARK: Shares
+/**
+ * Encodes a sharing URL as a Graph share id: `u!` plus the unpadded base64url of the URL's UTF-8 bytes. The exact
+ * string is encoded, raw spaces and all, as Teams chat file links carry them.
+ *
+ * @param url - The sharing URL, e.g. a Teams `reference` attachment's `contentUrl`.
+ * @returns The share id.
+ *
+ * @see https://learn.microsoft.com/en-us/graph/api/shares-get#encoding-sharing-urls
+ */
+export function microsoftGraphShareIdForUrl(url: string): string {
+  const base64url = microsoftGraphBase64(new TextEncoder().encode(url)).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '');
+  return `u!${base64url}`;
+}
+
+/**
+ * The driveItem fields a shared-file lookup asks for: enough to tell a downloadable file from a folder, package or
+ * malware-flagged item, and the `parentReference.driveId` + `id` to download it by.
+ */
+export const MICROSOFT_GRAPH_SHARED_FILE_SELECT: readonly string[] = ['id', 'name', 'size', 'file', 'folder', 'package', 'malware', 'parentReference'];
+
+export interface MicrosoftGraphSharedDriveItemInput {
+  /**
+   * The sharing URL, e.g. a Teams `reference` attachment's `contentUrl`.
+   */
+  readonly url: string;
+  /**
+   * The fields to ask Graph for (`$select`). Defaults to the whole driveItem.
+   */
+  readonly select?: Maybe<MicrosoftGraphDriveItemSelect>;
+}
+
+/**
+ * Builds the GET of the drive item a sharing URL points at (`Files.Read.All`). Download it afterwards by
+ * `{ driveId: parentReference.driveId, id }` through {@link microsoftGraphDownloadDriveItemRequest}, so no
+ * pre-authenticated URL is handled.
+ *
+ * @param input - The sharing URL and the fields to read.
+ * @returns The request.
+ *
+ * @see https://learn.microsoft.com/en-us/graph/api/shares-get
+ */
+export function microsoftGraphSharedDriveItemRequest(input: MicrosoftGraphSharedDriveItemInput): MicrosoftGraphRequestInput {
+  const $select = microsoftGraphDriveItemSelectValue(input.select);
+  return { method: 'GET', path: `/shares/${encodeURIComponent(microsoftGraphShareIdForUrl(input.url))}/driveItem`, ...($select ? { query: { $select } } : undefined) };
 }
 
 // MARK: Write requests

@@ -1,6 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { microsoftGraphPathWithQuery } from './graph.api';
-import { type MicrosoftGraphChat, microsoftGraphChatMatches, microsoftGraphChatMessagesRequest, microsoftGraphSendChannelMessageRequest, microsoftGraphSoftDeleteChannelMessageRequest, microsoftGraphSoftDeleteChatMessageRequest } from './graph.teams.api';
+import {
+  MICROSOFT_GRAPH_PREFER_INCLUDE_UNKNOWN_ENUM_MEMBERS,
+  type MicrosoftGraphChat,
+  type MicrosoftGraphChatMessage,
+  microsoftGraphChatMatches,
+  microsoftGraphChatMessageHostedContentRefs,
+  microsoftGraphChatMessageHostedContentRequest,
+  microsoftGraphChatMessagesRequest,
+  microsoftGraphChatRequest,
+  microsoftGraphSendChannelMessageRequest,
+  microsoftGraphSoftDeleteChannelMessageRequest,
+  microsoftGraphSoftDeleteChatMessageRequest
+} from './graph.teams.api';
 
 // synthetic chats; no real names
 const CHATS: MicrosoftGraphChat[] = [
@@ -46,5 +58,58 @@ describe('teams requests', () => {
   it('posts a channel reply under the parent message', () => {
     // models: T-g (chatmessage-post-replies) — the reply's replyToId is the parent id
     expect(microsoftGraphSendChannelMessageRequest({ teamId: 't', channelId: 'ch', replyToId: 'p1', body: { contentType: 'text', content: 'ok' } })).toEqual({ method: 'POST', path: '/teams/t/channels/ch/messages/p1/replies', body: { body: { contentType: 'text', content: 'ok' } } });
+  });
+});
+
+describe('chat dump requests', () => {
+  it('continues a listing from a skip token and asks for system events only when told to', () => {
+    // models: TC9 (a filtered nextLink carries $top, $orderby, $filter and $skiptoken) and TC10 (Prefer: include-unknown-enum-members)
+    const request = microsoftGraphChatMessagesRequest({ chatId: 'c', since: '2026-11-01T00:00:00.000Z', skipToken: 'tok=1', includeSystemEvents: true });
+    expect(request.query).toEqual({ $top: 50, $orderby: 'lastModifiedDateTime desc', $filter: 'lastModifiedDateTime gt 2026-11-01T00:00:00.000Z', $skiptoken: 'tok=1' });
+    expect(request.headers).toEqual({ Prefer: MICROSOFT_GRAPH_PREFER_INCLUDE_UNKNOWN_ENUM_MEMBERS });
+    expect(MICROSOFT_GRAPH_PREFER_INCLUDE_UNKNOWN_ENUM_MEMBERS).toBe('include-unknown-enum-members');
+  });
+
+  it('sends no skip token and no Prefer header by default, so teams chat messages is unchanged', () => {
+    const request = microsoftGraphChatMessagesRequest({ chatId: 'c' });
+    expect(request.headers).toBeUndefined();
+    expect(microsoftGraphPathWithQuery(request.path, request.query)).toBe('/chats/c/messages?%24top=50&%24orderby=lastModifiedDateTime+desc');
+  });
+
+  it('reads one chat with its members', () => {
+    expect(microsoftGraphChatRequest('19:abc@thread.v2')).toEqual({ method: 'GET', path: '/chats/19%3Aabc%40thread.v2', query: { $expand: 'members' } });
+  });
+
+  it('reads a hosted content through $value with ConsistencyLevel: eventual', () => {
+    // models: TC14 (chatmessagehostedcontent-get) — eventual consistency is needed for edited or deleted messages
+    expect(microsoftGraphChatMessageHostedContentRequest({ chatId: '19:abc@thread.v2', messageId: '171', hostedContentId: 'aWQ9eA==' })).toEqual({ method: 'GET', path: '/chats/19%3Aabc%40thread.v2/messages/171/hostedContents/aWQ9eA%3D%3D/$value', headers: { ConsistencyLevel: 'eventual' } });
+  });
+
+  describe('microsoftGraphChatMessageHostedContentRefs()', () => {
+    function message(content: string): Pick<MicrosoftGraphChatMessage, 'body'> {
+      return { body: { contentType: 'html', content } };
+    }
+
+    it('finds every image in body order, on v1.0 and beta, decoding encoded ids', () => {
+      // models: TC13 (bodies reference https://graph.microsoft.com/v1.0/chats/{c}/messages/{m}/hostedContents/{id}/$value; docs also show /beta/)
+      const refs = microsoftGraphChatMessageHostedContentRefs(message('<p>a</p><img src="https://graph.microsoft.com/v1.0/chats/19:abc@thread.v2/messages/171/hostedContents/aWQ9eA%3D%3D/$value" width="10"><img src="https://graph.microsoft.com/beta/chats/19:abc@thread.v2/messages/171/hostedContents/aWQ9eQ/$value">'));
+      expect(refs).toEqual([
+        { chatId: '19:abc@thread.v2', messageId: '171', hostedContentId: 'aWQ9eA==' },
+        { chatId: '19:abc@thread.v2', messageId: '171', hostedContentId: 'aWQ9eQ' }
+      ]);
+    });
+
+    it('keeps the ids a forwarded image names, accepts the /1.0/ typo and drops duplicates', () => {
+      // models: TC13 (docs show a /1.0/ typo; parse loosely)
+      const url = 'https://graph.microsoft.com/1.0/chats/19:other@thread.v2/messages/99/hostedContents/aWQ9eg/$value';
+      const refs = microsoftGraphChatMessageHostedContentRefs(message(`<img src="${url}"><img src="${url}">`));
+      expect(refs).toEqual([{ chatId: '19:other@thread.v2', messageId: '99', hostedContentId: 'aWQ9eg' }]);
+    });
+
+    it('returns nothing for a message without a body or without images', () => {
+      expect(microsoftGraphChatMessageHostedContentRefs({})).toEqual([]);
+      expect(microsoftGraphChatMessageHostedContentRefs({ body: null })).toEqual([]);
+      expect(microsoftGraphChatMessageHostedContentRefs(message('<img src="https://example.com/a.png">'))).toEqual([]);
+    });
   });
 });
