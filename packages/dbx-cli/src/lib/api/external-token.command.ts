@@ -5,6 +5,7 @@ import { type CliContext, requireCliContext } from '../context/cli.context';
 import { DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR, isCliCredentialProcess } from '../util/credential-process';
 import { wrapCommandHandler } from '../util/handler';
 import { outputResult } from '../util/output';
+import { type CliExternalConnectionDataAdapter, type CliExternalConnectionDataAdapters, type CliExternalConnectionSettings, summarizeCliExternalConnectionSettings } from './external-connection-data';
 import { type CliExternalConnectionTokenBundle, cliExternalConnectionTokenBundle, fetchExternalConnectionToken } from './external-token';
 
 /**
@@ -21,6 +22,13 @@ export interface BuildExternalTokenCommandOptions {
    * The CLI's binary name, used in the command's help text. Defaults to `<cli>`.
    */
   readonly cliName?: Maybe<string>;
+  /**
+   * Connection-data adapters keyed by provider type (`CreateCliInput.externalConnectionData.adapters`).
+   *
+   * The token is requested with `?include=data` only for a provider that has an adapter, and the
+   * adapter's `unpack` output rides the bundle as `settings`. Other providers never receive stored data.
+   */
+  readonly dataAdapters?: Maybe<CliExternalConnectionDataAdapters>;
   /**
    * Custom fetch implementation for tests.
    */
@@ -41,7 +49,12 @@ export interface BuildExternalTokenCommandOptions {
  * `outputResult`, so `--dump-dir` / `--pick` never see it, and the command never touches the dataset
  * cache.
  *
- * @param options - Optional command-name override, CLI name for the help text, and fetch override.
+ * With a data adapter for the provider ({@link BuildExternalTokenCommandOptions.dataAdapters}), the
+ * caller's stored connection data is requested too and unpacked into the bundle's `settings` — the
+ * consuming CLI's defaults. A failing unpack prints one warning to stderr and never fails the mint.
+ * Direct runs print only the settings' keys.
+ *
+ * @param options - Optional command-name override, CLI name for the help text, data adapters, and fetch override.
  * @returns A yargs `CommandModule` for the API command list.
  *
  * @example
@@ -56,6 +69,7 @@ export function buildExternalTokenCommand(options?: Maybe<BuildExternalTokenComm
   const commandName = options?.commandName ?? DEFAULT_EXTERNAL_TOKEN_COMMAND_NAME;
   const cliName = options?.cliName ?? '<cli>';
   const fetcher = options?.fetcher;
+  const dataAdapters = options?.dataAdapters;
 
   return {
     command: `${commandName} <providerType>`,
@@ -64,8 +78,20 @@ export function buildExternalTokenCommand(options?: Maybe<BuildExternalTokenComm
     handler: wrapCommandHandler(async (argv: any) => {
       const context: CliContext = requireCliContext();
       const providerType = String(argv.providerType);
-      const token = await fetchExternalConnectionToken({ apiBaseUrl: context.env.apiBaseUrl, accessToken: context.accessToken, providerType, cliName: context.cliName, envName: context.envName, scope: context.scope, credential: context.credential, fetcher });
-      const bundle: CliExternalConnectionTokenBundle = cliExternalConnectionTokenBundle(token, context.env.externalConnectionHints);
+      const adapter: Maybe<CliExternalConnectionDataAdapter> = dataAdapters != null && Object.hasOwn(dataAdapters, providerType) ? dataAdapters[providerType] : undefined;
+      const token = await fetchExternalConnectionToken({ apiBaseUrl: context.env.apiBaseUrl, accessToken: context.accessToken, providerType, cliName: context.cliName, envName: context.envName, scope: context.scope, credential: context.credential, includeData: adapter != null, fetcher });
+      let settings: Maybe<CliExternalConnectionSettings>;
+
+      if (adapter && token.data != null) {
+        try {
+          settings = adapter.unpack({ providerType, data: token.data, env: context.env });
+        } catch {
+          // stored data must never block a mint, and its contents never reach the output
+          process.stderr.write(`${commandName}: could not apply connection defaults for "${providerType}".\n`);
+        }
+      }
+
+      const bundle: CliExternalConnectionTokenBundle = cliExternalConnectionTokenBundle(token, context.env.externalConnectionHints, settings);
 
       if (isCliCredentialProcess()) {
         // the ONLY place the raw token is written: one line, straight to stdout, for the parent
@@ -81,7 +107,8 @@ export function buildExternalTokenCommand(options?: Maybe<BuildExternalTokenComm
             scopes: bundle.scopes,
             expiresAt: bundle.expiresAt,
             extra: bundle.extra,
-            hints: bundle.hints
+            hints: bundle.hints,
+            settings: summarizeCliExternalConnectionSettings(bundle.settings)
           },
           {
             redacted: true,

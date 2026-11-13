@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { createJsonFileAsyncKeyedValueCache } from '@dereekb/nestjs';
 import { MS_IN_MINUTE, type ISO8601DateString, type Maybe, type Milliseconds } from '@dereekb/util';
+import { type CliExternalConnectionSettingsSummary, summarizeCliExternalConnectionSettings } from '../api/external-connection-data';
 import { type CliExternalConnectionTokenBundle } from '../api/external-token';
 import { runCliCredentialProcess } from '../util/credential-process';
 import { CliError } from '../util/output';
@@ -66,6 +67,11 @@ export interface CliTokenSourceToken {
    * The connection type the token was minted from, e.g. `zoho_admin`.
    */
   readonly providerType?: Maybe<string>;
+  /**
+   * Defaults the issuing app unpacked from the user's stored connection data (e.g. msgraph-cli mail
+   * signatures). Cached with the token, so they share its expiry and are dropped whenever it is.
+   */
+  readonly settings?: Maybe<Record<string, unknown>>;
 }
 
 /**
@@ -201,7 +207,8 @@ export function cliTokenSourceTokenFromBundle(input: CliTokenSourceTokenFromBund
     expiresAt: expiresAt.toISOString(),
     extra: objectRecord(bundle.extra),
     hints: stringRecord(bundle.hints),
-    providerType: nonEmptyString(bundle.providerType)
+    providerType: nonEmptyString(bundle.providerType),
+    settings: objectRecord(bundle.settings)
   };
 
   return { token, hasExpiry: reportedExpiresAt != null };
@@ -229,7 +236,8 @@ export function readCliTokenSourceToken(raw: unknown, parseScopes: CliTokenSourc
         expiresAt: expiresAt.toISOString(),
         extra: objectRecord(value['extra']),
         hints: stringRecord(value['hints']),
-        providerType: nonEmptyString(value['providerType'])
+        providerType: nonEmptyString(value['providerType']),
+        settings: objectRecord(value['settings'])
       };
     }
   }
@@ -521,6 +529,10 @@ export interface CliTokenSourceReport {
   readonly scopes?: readonly string[];
   readonly providerType?: Maybe<string>;
   readonly hints?: Maybe<Readonly<Record<string, string>>>;
+  /**
+   * The keys of the app-supplied settings (e.g. `{ mail_signature: ['me'] }`). Never their values.
+   */
+  readonly settings?: Maybe<CliExternalConnectionSettingsSummary>;
   readonly error?: string;
   readonly errorCode?: string;
   readonly serverCode?: string;
@@ -545,7 +557,7 @@ export function cliTokenSourceReport(status: CliTokenSourceStatus<CliTokenSource
 
   if (resolved) {
     const { token } = resolved;
-    result = { ...source, expiresAt: token.expiresAt, scopes: token.scopes, providerType: token.providerType, hints: token.hints };
+    result = { ...source, expiresAt: token.expiresAt, scopes: token.scopes, providerType: token.providerType, hints: token.hints, settings: summarizeCliExternalConnectionSettings(token.settings) };
   } else {
     result = { ...source, error: error ?? 'The token source could not be loaded.', ...(errorCode ? { errorCode } : {}), ...(serverCode ? { serverCode } : {}), ...(suggestion ? { suggestion } : {}) };
   }

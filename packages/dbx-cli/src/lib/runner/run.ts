@@ -8,6 +8,8 @@ import { type CreateCacheCommandInput, createCacheCommand } from '../cache/cache
 import { type CliDataCache, createCliDataCache } from '../cache/data-cache';
 import { CLI_DATA_CACHE_GLOBAL_OPTION_NAMES, DEFAULT_CLI_DATA_CACHE_MAX_AGE_HOURS, checkCliDataCacheArgv } from '../cache/data-cache.options';
 import { CALL_PASSTHROUGH_COMMAND } from '../api/call.passthrough.command';
+import { buildConnectionDataCommand } from '../api/connection-data.command';
+import { type CliExternalConnectionDataConfig } from '../api/external-connection-data';
 import { buildExternalTokenCommand } from '../api/external-token.command';
 import { GET_COMMAND } from '../api/get.command';
 import { GET_MANY_COMMAND } from '../api/get-many.command';
@@ -216,6 +218,16 @@ export interface CreateCliInput extends CliLifecycleHooks {
    */
   readonly externalConnectionToken?: boolean;
   /**
+   * The app's connection data (`UserExternalConnectionData`) config: its data type registry and per-provider
+   * adapters.
+   *
+   * Enables the `connection-data` command group (list / get / set / unset / import over the user's stored
+   * data). With {@link externalConnectionToken}, `external-token` also asks for the provider's stored data
+   * (`?include=data`) when the provider has an adapter, and hands the adapter's output to the consuming CLI
+   * as the bundle's `settings`.
+   */
+  readonly externalConnectionData?: Maybe<CliExternalConnectionDataConfig>;
+  /**
    * Test-only override that bypasses the auth middleware entirely and attaches the supplied
    * {@link CliContext} on every command invocation.
    *
@@ -296,6 +308,7 @@ export interface CreateCliInput extends CliLifecycleHooks {
  * @param input.firestoreQueryManifest - The generated Firestore query catalog; enables `firestore-queries`.
  * @param input.dataCache - Enables the recorded dataset cache: the `cache` command group plus the `--cache` / `--refresh` global flags.
  * @param input.externalConnectionToken - Enables the `external-token <providerType>` command.
+ * @param input.externalConnectionData - Enables the `connection-data` commands and the `external-token` connection defaults.
  * @param input.manifestGeneratorVersion - The `@dereekb/dbx-cli` version that emitted the app's generated
  *   manifests, for the built-in `cli-build-not-stale` doctor check.
  * @param input.setup - App hook run once before the command's handler; a throw aborts the command.
@@ -375,7 +388,11 @@ export function createCli(input: CreateCliInput): Argv {
   }
 
   if (input.externalConnectionToken) {
-    builtInApiCommands.push(buildExternalTokenCommand({ cliName }));
+    builtInApiCommands.push(buildExternalTokenCommand({ cliName, dataAdapters: input.externalConnectionData?.adapters }));
+  }
+
+  if (input.externalConnectionData) {
+    builtInApiCommands.push(buildConnectionDataCommand({ cliName, config: input.externalConnectionData }));
   }
 
   const actionCommands = buildActionCommands(input.actionCommands ?? []);

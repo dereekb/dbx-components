@@ -1,5 +1,6 @@
 import {
   type UserExternalConnectionAccessToken,
+  type UserExternalConnectionAccessTokenResponse,
   type UserExternalConnectionProviderType,
   USER_EXTERNAL_CONNECTION_CREDENTIALS_EXPIRED_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_TOKEN_EXPORT_NOT_ALLOWED_ERROR_CODE,
@@ -12,6 +13,7 @@ import { type CliExternalConnectionHints } from '../config/env';
 import { type CliContextCredential } from '../context/cli.context';
 import { CliError, tracedFetch } from '../util/output';
 import { codeForStatus } from './call-model.client';
+import { type CliExternalConnectionSettings } from './external-connection-data';
 
 /**
  * The JSON line the `external-token` command writes to stdout when it runs as a credential process
@@ -26,6 +28,11 @@ export interface CliExternalConnectionTokenBundle extends UserExternalConnection
    * The active env's hints for the provider, if any.
    */
   readonly hints?: Maybe<Record<string, string>>;
+  /**
+   * Defaults for the consuming CLI, unpacked from the caller's stored connection data by the app's
+   * `CliExternalConnectionDataAdapter`. The raw stored data never rides the bundle.
+   */
+  readonly settings?: Maybe<CliExternalConnectionSettings>;
 }
 
 /**
@@ -61,6 +68,10 @@ export interface FetchExternalConnectionTokenInput {
    */
   readonly credential?: Maybe<Pick<CliContextCredential, 'handoff' | 'refreshable'>>;
   /**
+   * Also asks for the caller's stored connection data for the provider (`?include=data`).
+   */
+  readonly includeData?: Maybe<boolean>;
+  /**
    * Custom fetch implementation for tests.
    */
   readonly fetcher?: Maybe<typeof fetch>;
@@ -73,8 +84,8 @@ export interface FetchExternalConnectionTokenInput {
  * Neither the response body nor the token ever appears in a thrown error: a non-2xx answer is reported
  * with the server's error message only, and an unusable 2xx body with a generic message.
  *
- * @param input - The API target, access token, provider, and optional fetch override.
- * @returns The minted {@link UserExternalConnectionAccessToken}.
+ * @param input - The API target, access token, provider, whether to include stored data, and optional fetch override.
+ * @returns The minted token, with the provider's stored `data` when `includeData` was set and the server returned some.
  * @throws {CliError} With a code derived from the HTTP status when the server refuses (e.g.
  *   `AUTH_FORBIDDEN` when the login lacks the `token.external` scope, the provider is not exportable,
  *   or the connection's grant reaches past the login's scope ceiling) and the server's own code as
@@ -85,10 +96,10 @@ export interface FetchExternalConnectionTokenInput {
  * const token = await fetchExternalConnectionToken({ apiBaseUrl: env.apiBaseUrl, accessToken, providerType: 'zoho_admin' });
  * ```
  */
-export async function fetchExternalConnectionToken(input: FetchExternalConnectionTokenInput): Promise<UserExternalConnectionAccessToken> {
+export async function fetchExternalConnectionToken(input: FetchExternalConnectionTokenInput): Promise<UserExternalConnectionAccessTokenResponse> {
   const { providerType } = input;
   const apiBaseUrl = input.apiBaseUrl.endsWith('/') ? input.apiBaseUrl.slice(0, -1) : input.apiBaseUrl;
-  const url = `${apiBaseUrl}${userExternalConnectionTokenApiPath(providerType)}`;
+  const url = `${apiBaseUrl}${userExternalConnectionTokenApiPath(providerType, { includeData: input.includeData === true })}`;
   const res = await tracedFetch(input.fetcher ?? undefined, url, { method: 'GET', headers: { Accept: 'application/json', Authorization: `Bearer ${input.accessToken}` } });
   const body = await readJsonBody(res);
 
@@ -100,25 +111,31 @@ export async function fetchExternalConnectionToken(input: FetchExternalConnectio
     throw new CliError({ message: `external-token ${providerType} failed: the server did not return an access token.`, code: 'API_ERROR' });
   }
 
-  return body as UserExternalConnectionAccessToken;
+  return body as UserExternalConnectionAccessTokenResponse;
 }
 
 /**
  * Builds the {@link CliExternalConnectionTokenBundle} the `external-token` command emits under a
- * credential process: the minted token plus the env's hints for its provider.
+ * credential process: the minted token plus the env's hints for its provider and the consumer settings.
+ *
+ * The token's raw stored `data` (from `?include=data`) is always stripped: only the adapter's settings
+ * leave the app CLI.
  *
  * @param token - The minted access token.
  * @param externalConnectionHints - The active env's hints, keyed by provider type.
- * @returns The bundle. `hints` is omitted when the env declares none for the provider.
+ * @param settings - The consumer settings unpacked from the provider's stored data.
+ * @returns The bundle. `hints` is omitted when the env declares none for the provider, and `settings` when empty.
  *
  * @example
  * ```typescript
  * const bundle = cliExternalConnectionTokenBundle(token, context.env.externalConnectionHints);
  * ```
  */
-export function cliExternalConnectionTokenBundle(token: UserExternalConnectionAccessToken, externalConnectionHints: Maybe<CliExternalConnectionHints>): CliExternalConnectionTokenBundle {
+export function cliExternalConnectionTokenBundle(token: UserExternalConnectionAccessTokenResponse, externalConnectionHints: Maybe<CliExternalConnectionHints>, settings?: Maybe<CliExternalConnectionSettings>): CliExternalConnectionTokenBundle {
+  const { data: _data, ...accessToken } = token;
   const hints = externalConnectionHints?.[token.providerType];
-  return hints == null ? { ...token } : { ...token, hints };
+  const hasSettings = settings != null && Object.keys(settings).length > 0;
+  return { ...accessToken, ...(hints == null ? {} : { hints }), ...(hasSettings ? { settings } : {}) };
 }
 
 /**

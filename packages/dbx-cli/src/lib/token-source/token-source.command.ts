@@ -2,6 +2,7 @@ import type { Argv, CommandModule } from 'yargs';
 import { type Maybe } from '@dereekb/util';
 import { readJsonFile, writeJsonFile } from '@dereekb/nestjs';
 import { CLI_CONFIG_FILE_MODE } from '../config/cli.config';
+import { summarizeCliExternalConnectionSettings } from '../api/external-connection-data';
 import { type CliPaths } from '../config/paths';
 import { wrapCommandHandler } from '../util/handler';
 import { CliError, outputResult } from '../util/output';
@@ -302,6 +303,64 @@ export async function clearCliTokenSource<C extends CliTokenSourceConfig, T exte
 }
 
 /**
+ * Input for {@link refreshCliTokenSource}.
+ */
+export interface RefreshCliTokenSourceInput {
+  /**
+   * The saved source whose cached token to drop. Defaults to the source in effect.
+   */
+  readonly name?: Maybe<string>;
+  /**
+   * The run's `--token-source` selection, used when {@link name} is not given.
+   */
+  readonly selection?: Maybe<CliTokenSourceSelection>;
+}
+
+/**
+ * Result of {@link refreshCliTokenSource}.
+ */
+export interface RefreshCliTokenSourceResult {
+  readonly refreshed: boolean;
+  /**
+   * The refreshed source's name; absent for a `<CLI>_TOKEN_COMMAND` command.
+   */
+  readonly name?: CliTokenSourceName;
+  readonly origin?: CliActiveTokenSource['origin'];
+  /**
+   * Why nothing was refreshed.
+   */
+  readonly reason?: string;
+}
+
+/**
+ * Drops the cached token of the source in effect, or of a named saved source (`auth token-source refresh`).
+ *
+ * Never runs the source's command: the next command that needs a token mints a new one, which also re-reads any
+ * defaults the issuing app supplies with it (the token's `settings`).
+ *
+ * @param config - The CLI's token-source command config.
+ * @param input - The source to refresh.
+ * @returns Whether a source was found, and which.
+ * @throws {CliError} A `TOKEN_SOURCE_UNKNOWN` error when the name selects no saved source.
+ */
+export async function refreshCliTokenSource<C extends CliTokenSourceConfig, T extends CliTokenSourceToken = CliTokenSourceToken>(config: CliTokenSourceCommandConfig<C, T>, input?: Maybe<RefreshCliTokenSourceInput>): Promise<RefreshCliTokenSourceResult> {
+  const { resolver, tokenCachePath } = config;
+  const fileConfig = await config.loadConfigFile();
+  const selection: Maybe<CliTokenSourceSelection> = input?.name == null ? input?.selection : { tokenSourceName: cliTokenSourceNameOption(input.name) };
+  const active = resolver.resolveActiveTokenSource(fileConfig, selection);
+  let result: RefreshCliTokenSourceResult;
+
+  if (active) {
+    await clearCachedCliTokenSourceToken({ command: active.command, tokenCachePath });
+    result = { refreshed: true, ...(active.name ? { name: active.name } : {}), origin: active.origin };
+  } else {
+    result = { refreshed: false, reason: 'No token source is in effect.' };
+  }
+
+  return result;
+}
+
+/**
  * A saved token source, as `auth token-source show` lists it.
  */
 export interface CliTokenSourceSavedSource {
@@ -395,7 +454,7 @@ export async function buildCliTokenSourceShowResult<C extends CliTokenSourceConf
   let cached: Maybe<Record<string, unknown>> = null;
 
   if (cachedToken) {
-    cached = config.describeCachedToken ? config.describeCachedToken(cachedToken) : { expiresAt: cachedToken.expiresAt, scopes: cachedToken.scopes, providerType: cachedToken.providerType };
+    cached = config.describeCachedToken ? config.describeCachedToken(cachedToken) : { expiresAt: cachedToken.expiresAt, scopes: cachedToken.scopes, providerType: cachedToken.providerType, settings: summarizeCliExternalConnectionSettings(cachedToken.settings) };
   }
 
   return {
@@ -421,6 +480,7 @@ export interface CliTokenSourceAuthCommandDescriptions {
   readonly tokenSource?: Maybe<string>;
   readonly show?: Maybe<string>;
   readonly clear?: Maybe<string>;
+  readonly refresh?: Maybe<string>;
 }
 
 /**
@@ -456,7 +516,7 @@ export interface BuildCliTokenSourceAuthCommandOptions<C extends CliTokenSourceC
 
 /**
  * Builds the `auth token-source` command with its `set <token-command>`, `use <name>`, `show` (alias
- * `list`), and `clear` subcommands.
+ * `list`), `refresh`, and `clear` subcommands.
  *
  * @param options - The CLI's token-source command config and help text.
  * @returns The yargs command, to register under the CLI's `auth` command.
@@ -512,6 +572,15 @@ export function buildCliTokenSourceAuthCommand<C extends CliTokenSourceConfig, T
     })
   };
 
+  const refreshCommand: CommandModule = {
+    command: 'refresh',
+    describe: options.describe?.refresh ?? 'Drop the cached token of the source in effect (or --name), so the next command mints a new one and re-reads the defaults the app supplies with it. Never runs the command itself.',
+    builder: (yargs: Argv) => yargs.option('name', { type: 'string', describe: 'The saved source to refresh (default: the one in effect)' }),
+    handler: wrapCommandHandler(async (argv: any) => {
+      outputResult(await refreshCliTokenSource(options, { name: argv.name, selection: cliTokenSourceSelectionFromArgv(argv) }));
+    })
+  };
+
   const clearCommand: CommandModule = {
     command: 'clear',
     describe: options.describe?.clear ?? 'Remove a saved token source and its cached token',
@@ -524,7 +593,7 @@ export function buildCliTokenSourceAuthCommand<C extends CliTokenSourceConfig, T
   return {
     command: 'token-source',
     describe: options.describe?.tokenSource ?? `Use commands that mint access tokens, saved by name (per run: --token-source <name>, ${envVarNames.tokenSource}, ${envVarNames.tokenCommand})`,
-    builder: (yargs: Argv) => yargs.command(setCommand).command(useCommand).command(showCommand).command(clearCommand).demandCommand(1, 'Please specify a token-source subcommand.'),
+    builder: (yargs: Argv) => yargs.command(setCommand).command(useCommand).command(showCommand).command(refreshCommand).command(clearCommand).demandCommand(1, 'Please specify a token-source subcommand.'),
     handler: () => undefined
   };
 }

@@ -7,9 +7,9 @@ import { MS_IN_HOUR, MS_IN_MINUTE } from '@dereekb/util';
 import { buildCliPaths, type CliPaths } from '../config/paths';
 import { DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR } from '../util/credential-process';
 import { CliError } from '../util/output';
-import { type CliTokenSourceBundle, CLI_TOKEN_SOURCE_FAILED_ERROR_CODE, cliTokenSourceCacheKey, cliTokenSourceReport, cliTokenSourceStatusError, cliTokenSourceTokenFromBundle, createCliTokenSource, loadCliTokenSourceStatus } from './token-source';
+import { type CliTokenSourceBundle, CLI_TOKEN_SOURCE_FAILED_ERROR_CODE, cliTokenSourceCacheKey, cliTokenSourceReport, cliTokenSourceStatusError, cliTokenSourceTokenFromBundle, createCliTokenSource, loadCliTokenSourceStatus, readCliTokenSourceToken } from './token-source';
 import { type CliTokenSourceConfig, CLI_TOKEN_SOURCE_UNKNOWN_ERROR_CODE, cliTokenSourceEnvVarNames, cliTokenSourceResolver, DEFAULT_CLI_TOKEN_SOURCE_NAME } from './token-source.config';
-import { buildCliTokenSourceShowResult, clearCliTokenSource, cliTokenSourceJsonConfigStore, type CliTokenSourceCommandConfig, setCliTokenSource, useCliTokenSource } from './token-source.command';
+import { buildCliTokenSourceShowResult, clearCliTokenSource, cliTokenSourceJsonConfigStore, type CliTokenSourceCommandConfig, refreshCliTokenSource, setCliTokenSource, useCliTokenSource } from './token-source.command';
 
 const MINTED_ACCESS_TOKEN = 'minted-access-token';
 
@@ -201,6 +201,28 @@ describe('dbx-cli token source', () => {
     });
   });
 
+  describe('token settings', () => {
+    const SETTINGS = { mail_signature: { me: { html: '<p>Hi</p>' }, 'support@example.com': { text: 'Hi' } } };
+
+    it('keeps the settings from bundle to token to file and back', async () => {
+      const { command } = bundleCommand(join(home, 'bin'), { settings: SETTINGS });
+      const token = await createCliTokenSource({ command, tokenCachePath: paths.tokenCachePath }).loadToken();
+      expect(token.settings).toEqual(SETTINGS);
+
+      const stored = readTokenFile()[cliTokenSourceCacheKey({ command })];
+      expect(readCliTokenSourceToken(stored)?.settings).toEqual(SETTINGS);
+
+      const reloaded = await createCliTokenSource({ command, tokenCachePath: paths.tokenCachePath }).loadToken();
+      expect(reloaded.settings).toEqual(SETTINGS);
+    });
+
+    it('drops empty or non-object settings', () => {
+      const base = { uid: 'u', providerType: 'microsoft', accessToken: 'a', tokenType: 'Bearer', scopes: [], expiresAt: new Date(Date.now() + MS_IN_HOUR).toISOString() };
+      expect(cliTokenSourceTokenFromBundle({ bundle: { ...base, settings: {} } }).token.settings).toBeUndefined();
+      expect(cliTokenSourceTokenFromBundle({ bundle: { ...base, settings: ['x'] as never } }).token.settings).toBeUndefined();
+    });
+  });
+
   describe('cliTokenSourceCacheKey()', () => {
     it('keys by the sha256 of the command alone, so cached tokens keep hitting', () => {
       expect(cliTokenSourceCacheKey({ command: 'a' })).toBe(`tokenSource:${createHash('sha256').update('a').digest('hex')}`);
@@ -364,6 +386,16 @@ describe('dbx-cli token source', () => {
       expect(error?.suggestion).toContain(`Run \`${command}\` directly`);
     });
 
+    it('reports the keys of the token settings, never their values', async () => {
+      const { command } = bundleCommand(join(home, 'bin'), { settings: { mail_signature: { me: { html: '<p>sentinel-settings-value</p>' } } } });
+      const resolver = cliTokenSourceResolver({ cliName: 'test-cli', env: {} });
+      const status = await loadCliTokenSourceStatus({ resolver, fileConfig: { tokenSource: { command } }, tokenCachePath: paths.tokenCachePath });
+      const report = cliTokenSourceReport(status!);
+
+      expect(report.settings).toEqual({ mail_signature: ['me'] });
+      expect(JSON.stringify(report)).not.toContain('sentinel-settings-value');
+    });
+
     it('reports the loaded token without the access token', async () => {
       const { command } = bundleCommand(join(home, 'bin'));
       const resolver = cliTokenSourceResolver({ cliName: 'test-cli', env: {} });
@@ -381,6 +413,22 @@ describe('dbx-cli token source', () => {
 
     beforeEach(() => {
       config = { resolver: cliTokenSourceResolver({ cliName: 'test-cli', env: {} }), tokenCachePath: paths.tokenCachePath, ...cliTokenSourceJsonConfigStore(paths) };
+    });
+
+    it('refresh drops the cached token of the source in effect without running it', async () => {
+      const { command, runs } = bundleCommand(join(home, 'bin'));
+      await setCliTokenSource(config, { command });
+      await createCliTokenSource({ command, tokenCachePath: paths.tokenCachePath }).loadToken();
+      expect(readTokenFile()[cliTokenSourceCacheKey({ command })]).toBeDefined();
+
+      expect(await refreshCliTokenSource(config)).toEqual({ refreshed: true, name: DEFAULT_CLI_TOKEN_SOURCE_NAME, origin: 'config' });
+      expect(readTokenFile()[cliTokenSourceCacheKey({ command })]).toBeUndefined();
+      expect(runs()).toEqual([[]]);
+    });
+
+    it('refresh reports nothing refreshed when no source is in effect, and refuses an unknown name', async () => {
+      expect(await refreshCliTokenSource(config)).toEqual({ refreshed: false, reason: 'No token source is in effect.' });
+      await expect(refreshCliTokenSource(config, { name: 'missing' })).rejects.toThrow('Unknown token source "missing"');
     });
 
     it('saves, selects, shows, and clears named sources, leaving other config keys alone', async () => {

@@ -7,6 +7,7 @@ import { type UserExternalConnectionAccessToken } from '@dereekb/firebase';
 import { type CliContext, setCliContext } from '../context/cli.context';
 import { DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR } from '../util/credential-process';
 import { configureOutputOptions } from '../util/output';
+import { type CliExternalConnectionDataAdapters, passthroughCliExternalConnectionDataAdapter } from './external-connection-data';
 import { buildExternalTokenCommand } from './external-token.command';
 
 const RAW_ACCESS_TOKEN = '1000.raw-zoho-access-token-value';
@@ -47,9 +48,9 @@ describe('buildExternalTokenCommand()', () => {
   let exitSpy: ReturnType<typeof vi.spyOn>;
   let savedCredentialProcessEnv: string | undefined;
 
-  async function runExternalToken(fetcher: typeof fetch, providerType = 'zoho_admin'): Promise<void> {
+  async function runExternalToken(fetcher: typeof fetch, providerType = 'zoho_admin', dataAdapters?: CliExternalConnectionDataAdapters): Promise<void> {
     await yargs(['external-token', providerType])
-      .command(buildExternalTokenCommand({ cliName: 'demo-cli', fetcher }))
+      .command(buildExternalTokenCommand({ cliName: 'demo-cli', fetcher, dataAdapters }))
       .exitProcess(false)
       .fail((msg: string, err: Error | undefined) => {
         throw err ?? new Error(msg);
@@ -211,5 +212,103 @@ describe('buildExternalTokenCommand()', () => {
     const output = stdout.join('');
     expect(output).not.toContain('secret-looking-value');
     expect(JSON.parse(output).code).toBe('API_ERROR');
+  });
+
+  describe('connection data', () => {
+    const SIGNATURE_SENTINEL = 'sentinel-signature-value-1234';
+    const STORED_DATA = { mail_signature: { me: { html: `<p>${SIGNATURE_SENTINEL}</p>` }, 'support@example.com': { text: SIGNATURE_SENTINEL } }, other_type: { x: { y: 1 } } };
+    const MICROSOFT_TOKEN = { ...MINTED_TOKEN, providerType: 'microsoft' };
+    const ADAPTERS: CliExternalConnectionDataAdapters = { microsoft: passthroughCliExternalConnectionDataAdapter({ dataTypes: ['mail_signature'] }) };
+    let stderr: string[] = [];
+    let stderrSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      stderr = [];
+      stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation((chunk: any) => {
+        stderr.push(typeof chunk === 'string' ? chunk : chunk.toString());
+        return true;
+      });
+    });
+
+    afterEach(() => {
+      stderrSpy.mockRestore();
+    });
+
+    it('asks for ?include=data only for a provider with an adapter', async () => {
+      const fetcher = vi.fn(async () => jsonResponse(MICROSOFT_TOKEN));
+      await runExternalToken(fetcher as unknown as typeof fetch, 'microsoft', ADAPTERS);
+      await runExternalToken(fetcher as unknown as typeof fetch, 'zoho_admin', ADAPTERS);
+      await runExternalToken(fetcher as unknown as typeof fetch, 'microsoft');
+
+      const urls = fetcher.mock.calls.map((call) => (call as unknown as [string])[0]);
+      expect(urls).toEqual(['http://localhost/api/session/external/microsoft?include=data', 'http://localhost/api/session/external/zoho_admin', 'http://localhost/api/session/external/microsoft']);
+    });
+
+    it('never asks for data for a provider named like an Object prototype key', async () => {
+      const fetcher = vi.fn(async () => jsonResponse({ ...MINTED_TOKEN, providerType: 'constructor' }));
+      await runExternalToken(fetcher as unknown as typeof fetch, 'constructor', ADAPTERS);
+
+      expect((fetcher.mock.calls[0] as unknown as [string])[0]).toBe('http://localhost/api/session/external/constructor');
+    });
+
+    it('writes the adapter settings, never the raw data, on the credential-process line', async () => {
+      process.env[DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR] = '1';
+      await runExternalToken((async () => jsonResponse({ ...MICROSOFT_TOKEN, data: STORED_DATA })) as unknown as typeof fetch, 'microsoft', ADAPTERS);
+
+      const lines = stdout
+        .join('')
+        .split('\n')
+        .filter((line) => line.length > 0);
+      expect(lines).toHaveLength(1);
+      const bundle = JSON.parse(lines[0]);
+      expect(bundle.data).toBeUndefined();
+      expect(bundle.settings).toEqual({ mail_signature: STORED_DATA.mail_signature });
+      expect(lines[0]).not.toContain('other_type');
+    });
+
+    it('omits settings when the token carries no data', async () => {
+      process.env[DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR] = '1';
+      await runExternalToken((async () => jsonResponse(MICROSOFT_TOKEN)) as unknown as typeof fetch, 'microsoft', ADAPTERS);
+
+      const bundle = JSON.parse(stdout.join(''));
+      expect(bundle.settings).toBeUndefined();
+      expect(bundle.accessToken).toBe(RAW_ACCESS_TOKEN);
+    });
+
+    it('drops raw data even for a provider without an adapter', async () => {
+      process.env[DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR] = '1';
+      await runExternalToken((async () => jsonResponse({ ...MICROSOFT_TOKEN, data: STORED_DATA })) as unknown as typeof fetch, 'microsoft');
+
+      const output = stdout.join('');
+      expect(output).not.toContain(SIGNATURE_SENTINEL);
+      expect(JSON.parse(output).settings).toBeUndefined();
+    });
+
+    it('warns once on stderr and still mints when the adapter throws', async () => {
+      process.env[DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR] = '1';
+      const throwing: CliExternalConnectionDataAdapters = {
+        microsoft: {
+          unpack: () => {
+            throw new Error(SIGNATURE_SENTINEL);
+          }
+        }
+      };
+
+      await runExternalToken((async () => jsonResponse({ ...MICROSOFT_TOKEN, data: STORED_DATA })) as unknown as typeof fetch, 'microsoft', throwing);
+
+      const bundle = JSON.parse(stdout.join(''));
+      expect(bundle.accessToken).toBe(RAW_ACCESS_TOKEN);
+      expect(bundle.settings).toBeUndefined();
+      expect(stderr).toEqual(['external-token: could not apply connection defaults for "microsoft".\n']);
+    });
+
+    it('prints only the settings keys when redacted', async () => {
+      await runExternalToken((async () => jsonResponse({ ...MICROSOFT_TOKEN, data: STORED_DATA })) as unknown as typeof fetch, 'microsoft', ADAPTERS);
+
+      const output = stdout.join('');
+      expect(output).not.toContain(SIGNATURE_SENTINEL);
+      expect(output).not.toContain(RAW_ACCESS_TOKEN);
+      expect(JSON.parse(output).data.settings).toEqual({ mail_signature: ['me', 'support@example.com'] });
+    });
   });
 });
