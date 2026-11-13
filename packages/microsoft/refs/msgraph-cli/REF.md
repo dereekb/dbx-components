@@ -95,8 +95,14 @@ msgraph-cli mail auto-reply set [--start <t> --end <t> [--tz "<zone>"]] --intern
 msgraph-cli mail auto-reply off --yes | restore --yes                  # each saves the previous setting first
 ```
 
-`--send-as <address>` sends from a shared mailbox (with `--mailbox`). `--signature-file` / `--signature`
-override the saved signature.
+`--send-as <address>` sends from a shared mailbox (with `--mailbox`). Graph cannot read the Outlook
+signature: export it once from Outlook on the web to a file and `config set signature-file <file>`.
+`--signature-file <file>` uses another file for one command; `--no-signature` leaves it off.
+
+Every auto-reply change first saves the current setting to `<configDir>/auto-reply.backup.json`.
+`restore` swaps the saved and current settings, so a second `restore` undoes the first. `set` takes
+`--status disabled|alwaysEnabled|scheduled` (default: `scheduled` with `--start`/`--end`, else
+`alwaysEnabled`) and `--audience none|contactsOnly|all` for external senders.
 
 ### Calendar
 
@@ -122,7 +128,9 @@ msgraph-cli files delete <id> [--hard] --yes
 
 Every files command takes `--drive <id>`, or `--site <url> [--library <name>]` for SharePoint (needs
 `Sites.Read.All`). Default: the user's own OneDrive. `move` stays within a drive (`CROSS_DRIVE_MOVE`
-otherwise): copy, then delete.
+otherwise): copy, then delete. `upload` uses one PUT up to 4 MB, and an upload session above that, in
+chunks of `--chunk-size` bytes (default 10 MiB, rounded down to a multiple of 320 KiB). `copy --wait`
+polls Graph's copy monitor until the copy finishes. `delete --hard` deletes permanently (no recycle bin).
 
 ### Teams
 
@@ -136,6 +144,12 @@ msgraph-cli teams channel send <team> <channel> --text "…"      # also: reply 
 msgraph-cli teams channel messages <team> <channel> [--replies]  # Admin preset only
 msgraph-cli teams channel delete <team> <channel> <message> --yes  # Admin preset only
 ```
+
+Every send (`chat send`, `channel send`, `channel reply`) needs `--yes`. Teams takes at most one message
+per second per chat or channel and per user, and Microsoft's terms forbid using Teams as a log file, so
+there is no bulk or repeat mode. Sends are paced to one per second even across separate runs (the last
+send time is kept in `<configDir>/teams.last-send.json`). `teams chats --with` matches member names
+locally and never echoes the chats that did not match. `chat delete --undo` restores a deleted message.
 
 ### Raw Request (Escape Hatch)
 

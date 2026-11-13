@@ -24,9 +24,21 @@ Each environment (local, staging, production) needs an app registration in the t
 3. **Create a client secret.** Under **Certificates & secrets**, choose **New client secret**. Copy its **Value** (not the Secret ID) into `MICROSOFT_OAUTH_CLIENT_SECRET`. The value is shown only once. Use a client secret, not a certificate or federated credential: the token request authenticates with `client_secret_post`. Secrets expire after at most 24 months, so set a reminder to rotate it. An app can hold several active secrets, so rotate by adding the new secret, deploying it, then deleting the old one.
 4. **Add the Graph permissions.** Under **API permissions**, choose **Add a permission** → **Microsoft Graph** → **Delegated permissions**, and add every scope your connect presets request. The default presets (`MICROSOFT_USER_EXTERNAL_CONNECTION_SCOPE_PRESETS` in `@dereekb/firebase`) request:
    - Read: `User.Read Mail.Read Calendars.Read Files.Read.All Sites.Read.All`
-   - Read + Write: the Read scopes plus `Mail.ReadWrite Calendars.ReadWrite Files.ReadWrite.All`
+   - Read + Write: the Read scopes plus `Mail.ReadWrite Mail.Send MailboxSettings.Read MailboxSettings.ReadWrite Mail.ReadWrite.Shared Mail.Send.Shared Calendars.ReadWrite Files.ReadWrite.All Team.ReadBasic.All Channel.ReadBasic.All Chat.Read Chat.ReadWrite Presence.Read ChannelMessage.Send`
 
    `openid profile email offline_access` are requested on every connect. Then choose **Grant admin consent for &lt;tenant&gt;**, so connecting is not stopped by the tenant's user-consent policy. See the [Graph permissions reference](https://learn.microsoft.com/en-us/graph/permissions-reference) for what each scope allows.
+
+## msgraph-cli
+
+The `msgraph-cli` bin (the `./cli` export) reads and changes a user's mail, calendar, files and Teams messages through a token minted from the app's Microsoft connection. Its full docs are in `refs/msgraph-cli/REF.md` (see Agent docs below).
+
+**Mail signatures.** Microsoft Graph cannot read the Outlook signature, so msgraph-cli cannot add it on its own. Export your signature once from Outlook on the web (Settings → Mail → Compose and reply) to a file, then save it:
+
+```bash
+msgraph-cli config set signature-file ./signature.html
+```
+
+New messages, replies and forwards then get it appended (`.html` / `.htm` files as HTML, anything else as text). For one command, `--signature-file <file>` uses another file and `--no-signature` leaves it off.
 
 ## Agent docs
 
