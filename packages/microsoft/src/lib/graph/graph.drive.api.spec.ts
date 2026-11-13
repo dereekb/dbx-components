@@ -3,10 +3,12 @@ import { type FetchHandler } from '@dereekb/util/fetch';
 import { microsoftGraphFactory } from './graph.factory';
 import {
   DEFAULT_MICROSOFT_GRAPH_DRIVE_UPLOAD_CHUNK_BYTES,
+  MICROSOFT_GRAPH_DRIVE_ITEM_SYNC_SELECT,
   MICROSOFT_GRAPH_DRIVE_UPLOAD_CHUNK_MULTIPLE_BYTES,
   MicrosoftGraphCrossDriveMoveError,
   MicrosoftGraphLibraryNotFoundError,
   copyDriveItem,
+  getDriveItem,
   microsoftGraphCreateDriveUploadSessionRequest,
   microsoftGraphCreateFolderRequest,
   microsoftGraphDeleteDriveItemRequest,
@@ -217,15 +219,36 @@ describe('drive writes', () => {
 
 describe('folder listing', () => {
   it('lists a folder by id, by path, or the root, selecting the compact fields by default', () => {
-    expect(microsoftGraphDriveChildrenPageInput({ driveId: 'b!d', id: 'F1' })).toEqual({ path: '/drives/b!d/items/F1/children', query: { $top: 200, $select: 'id,name,size,lastModifiedDateTime,folder,file,webUrl' } });
+    expect(microsoftGraphDriveChildrenPageInput({ driveId: 'b!d', id: 'F1' })).toEqual({ path: '/drives/b!d/items/F1/children', query: { $top: 200, $select: 'id,name,size,lastModifiedDateTime,folder,file,package,webUrl' } });
     expect(microsoftGraphDriveChildrenPageInput({ path: 'Tech talk', top: 50 }).path).toBe('/me/drive/root:/Tech%20talk:/children');
     expect(microsoftGraphDriveChildrenPageInput({})).toMatchObject({ path: '/me/drive/root/children' });
     expect(microsoftGraphDriveChildrenPageInput({ id: 'F1', full: true }).query).toEqual({ $top: 200, $select: undefined });
+  });
+
+  it('selects the given fields in place of the compact ones, but full still wins', () => {
+    // models: B1 (children supports $select), B15 (eTag/cTag/file.hashes are selectable)
+    expect(microsoftGraphDriveChildrenPageInput({ id: 'F1', select: MICROSOFT_GRAPH_DRIVE_ITEM_SYNC_SELECT }).query).toEqual({ $top: 200, $select: 'id,name,size,eTag,cTag,lastModifiedDateTime,file,folder,package,remoteItem,malware,parentReference' });
+    expect(microsoftGraphDriveChildrenPageInput({ id: 'F1', select: 'id,name' }).query).toEqual({ $top: 200, $select: 'id,name' });
+    expect(microsoftGraphDriveChildrenPageInput({ id: 'F1', select: 'id,name', full: true }).query).toEqual({ $top: 200, $select: undefined });
+  });
+
+  it('reads one item with or without a $select', async () => {
+    const { graphContext, requests } = recordingGraph(() => jsonResponse({ id: 'F1', name: 'Tech talk', folder: { childCount: 2 } }));
+    const get = getDriveItem(graphContext);
+
+    await get({ driveId: 'b!d', path: 'Tech talk', select: ['id', 'name', 'folder'] });
+    await get({ driveId: 'b!d', id: 'F1' });
+
+    expect(new URL(requests[0].url).pathname).toBe('/v1.0/drives/b!d/root:/Tech%20talk');
+    expect(new URL(requests[0].url).searchParams.get('$select')).toBe('id,name,folder');
+    expect(new URL(requests[1].url).search).toBe('');
   });
 
   it('summarizes folders with their child count and files with their mime type', () => {
     // models: live folder listing 2026-11-13 (driveItem keys folder.childCount / file.mimeType)
     expect(microsoftGraphDriveItemSummary({ id: 'F', name: 'Docs', size: 10, folder: { childCount: 3 }, lastModifiedDateTime: '2026-11-13T00:00:00Z', webUrl: 'https://x/Docs' })).toEqual({ id: 'F', name: 'Docs', type: 'folder', size: 10, childCount: 3, modified: '2026-11-13T00:00:00Z' });
     expect(microsoftGraphDriveItemSummary({ id: 'X', name: 'a.xlsx', size: 5, file: { mimeType: 'application/vnd.ms-excel' }, webUrl: 'https://x/a.xlsx' }, true)).toEqual({ id: 'X', name: 'a.xlsx', type: 'file', size: 5, mimeType: 'application/vnd.ms-excel', modified: undefined, webUrl: 'https://x/a.xlsx' });
+    // models: B8 (a OneNote notebook is a package, not a file)
+    expect(microsoftGraphDriveItemSummary({ id: 'N', name: 'Notes', package: { type: 'oneNote' } }).type).toBe('package');
   });
 });

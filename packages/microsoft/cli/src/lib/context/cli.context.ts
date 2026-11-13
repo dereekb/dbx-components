@@ -1,5 +1,5 @@
 import { type CliActiveTokenSource, type CliTokenSource, createCliTokenSource } from '@dereekb/dbx-cli';
-import { type MicrosoftGraphContext, type MicrosoftGraphFactoryConfig, microsoftGraphFactory } from '@dereekb/microsoft';
+import { type MicrosoftGraphContext, type MicrosoftGraphFactoryConfig, type MicrosoftGraphRateLimitedFetchHandlerConfig, type MicrosoftGraphThrottleDetails, microsoftGraphFactory } from '@dereekb/microsoft';
 import { type Maybe } from '@dereekb/util';
 import { type MsGraphCliTokenSourceConfig } from '../config/cli.config';
 
@@ -28,10 +28,30 @@ export interface CreateMsGraphCliContextConfig {
    */
   readonly tokenCachePath: string;
   /**
-   * Overrides the Graph client's fetch handler / base URL. Used by specs to intercept requests.
+   * Overrides the Graph client's fetch handler / base URL / throttle handling. Used by specs to intercept requests.
    */
   readonly graphFactoryConfig?: Maybe<MicrosoftGraphFactoryConfig>;
 }
+
+/**
+ * Formats the stderr line msgraph-cli prints when Graph throttles a request. It carries the status and the wait
+ * only, never the request.
+ *
+ * @param details - The throttle.
+ * @returns The line, without a trailing newline.
+ */
+export function msGraphCliThrottledLine(details: MicrosoftGraphThrottleDetails): string {
+  const seconds = Math.ceil(details.wait / 1000);
+  return details.retrying ? `msgraph-cli: throttled by Microsoft Graph (${details.status}); waiting ${seconds} s` : `msgraph-cli: throttled by Microsoft Graph (${details.status}); not retrying (asked to wait ${seconds} s)`;
+}
+
+/**
+ * The throttle handling msgraph-cli turns on for its Graph client: the library defaults (3 retries, a 60 s
+ * longest wait), and a stderr line on each throttle.
+ */
+export const MSGRAPH_CLI_GRAPH_RATE_LIMITER_CONFIG: MicrosoftGraphRateLimitedFetchHandlerConfig = {
+  onThrottled: (details) => process.stderr.write(`${msGraphCliThrottledLine(details)}\n`)
+};
 
 /**
  * Creates the {@link MsGraphCliContext} for a run: a token source for the active source's command, and a
@@ -49,6 +69,6 @@ export interface CreateMsGraphCliContextConfig {
 export function createMsGraphCliContext(config: CreateMsGraphCliContextConfig): MsGraphCliContext {
   const { active, tokenCachePath } = config;
   const tokenSource = createCliTokenSource({ command: active.command, tokenCachePath });
-  const { graphContext } = microsoftGraphFactory(config.graphFactoryConfig ?? {})({ accessTokenGetter: async () => (await tokenSource.loadToken()).accessToken });
+  const { graphContext } = microsoftGraphFactory({ rateLimiterConfig: MSGRAPH_CLI_GRAPH_RATE_LIMITER_CONFIG, ...config.graphFactoryConfig })({ accessTokenGetter: async () => (await tokenSource.loadToken()).accessToken });
   return { active, tokenSource, graphContext };
 }

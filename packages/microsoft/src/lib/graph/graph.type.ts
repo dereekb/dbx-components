@@ -100,7 +100,29 @@ export interface MicrosoftGraphEvent {
 export type MicrosoftGraphEventShowAs = 'free' | 'tentative' | 'busy' | 'oof' | 'workingElsewhere' | 'unknown';
 
 /**
+ * A drive item's `parentReference`: where the item lives.
+ */
+export interface MicrosoftGraphDriveItemParentReference {
+  readonly driveId?: Maybe<string>;
+  readonly id?: Maybe<string>;
+  readonly path?: Maybe<string>;
+}
+
+/**
+ * A file's content hashes. On OneDrive for Business and SharePoint only `quickXorHash` is guaranteed.
+ *
+ * @see https://learn.microsoft.com/en-us/graph/api/resources/hashes
+ */
+export interface MicrosoftGraphDriveItemHashes {
+  readonly quickXorHash?: Maybe<string>;
+  readonly sha1Hash?: Maybe<string>;
+  readonly crc32Hash?: Maybe<string>;
+}
+
+/**
  * The subset of a Graph `driveItem` this package reads.
+ *
+ * @see https://learn.microsoft.com/en-us/graph/api/resources/driveitem
  */
 export interface MicrosoftGraphDriveItem {
   readonly id: string;
@@ -109,9 +131,37 @@ export interface MicrosoftGraphDriveItem {
   readonly webUrl?: Maybe<string>;
   readonly createdDateTime?: Maybe<ISO8601DateString>;
   readonly lastModifiedDateTime?: Maybe<ISO8601DateString>;
-  readonly file?: Maybe<{ readonly mimeType?: Maybe<string> }>;
+  /**
+   * Changes when the item's metadata or content changes.
+   */
+  readonly eTag?: Maybe<string>;
+  /**
+   * Changes only when the item's content changes. OneDrive for Business and SharePoint folders have none.
+   */
+  readonly cTag?: Maybe<string>;
+  readonly file?: Maybe<{ readonly mimeType?: Maybe<string>; readonly hashes?: Maybe<MicrosoftGraphDriveItemHashes> }>;
   readonly folder?: Maybe<{ readonly childCount?: Maybe<number> }>;
-  readonly parentReference?: Maybe<{ readonly driveId?: Maybe<string>; readonly id?: Maybe<string>; readonly path?: Maybe<string> }>;
+  /**
+   * Set on a package, such as a OneNote notebook: it is listed like a file but has no downloadable content.
+   */
+  readonly package?: Maybe<{ readonly type?: Maybe<string> }>;
+  /**
+   * Set on a shortcut to an item in another drive.
+   */
+  readonly remoteItem?: Maybe<{ readonly id?: Maybe<string>; readonly parentReference?: Maybe<MicrosoftGraphDriveItemParentReference> }>;
+  /**
+   * Set when the service flagged the file as malware; downloading it fails with `malwareDetected`.
+   */
+  readonly malware?: Maybe<{ readonly description?: Maybe<string> }>;
+  /**
+   * Set on a deleted item, e.g. in a delta response.
+   */
+  readonly deleted?: Maybe<{ readonly state?: Maybe<string> }>;
+  /**
+   * The times the client that uploaded the file reported.
+   */
+  readonly fileSystemInfo?: Maybe<{ readonly createdDateTime?: Maybe<ISO8601DateString>; readonly lastModifiedDateTime?: Maybe<ISO8601DateString> }>;
+  readonly parentReference?: Maybe<MicrosoftGraphDriveItemParentReference>;
 }
 
 /**

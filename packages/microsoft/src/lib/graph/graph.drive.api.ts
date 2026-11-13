@@ -280,7 +280,31 @@ export function searchDriveItems(context: MicrosoftGraphContext): (input: Micros
   };
 }
 
-export type MicrosoftGraphGetDriveItemInput = MicrosoftGraphDriveItemRefInput;
+/**
+ * A drive item to read, by id or by path, and optionally the fields to read.
+ */
+export interface MicrosoftGraphGetDriveItemInput extends MicrosoftGraphDriveItemRefInput {
+  /**
+   * The fields to ask Graph for (`$select`), e.g. `id,name,folder`. Defaults to the whole driveItem.
+   */
+  readonly select?: Maybe<MicrosoftGraphDriveItemSelect>;
+}
+
+/**
+ * The driveItem fields to ask Graph for: a comma-separated string or a list of field names.
+ */
+export type MicrosoftGraphDriveItemSelect = string | readonly string[];
+
+/**
+ * Turns a {@link MicrosoftGraphDriveItemSelect} into a `$select` value.
+ *
+ * @param select - The fields.
+ * @returns The comma-separated value, or undefined when none were given.
+ */
+export function microsoftGraphDriveItemSelectValue(select: Maybe<MicrosoftGraphDriveItemSelect>): Maybe<string> {
+  const value = typeof select === 'string' ? select : select?.join(',');
+  return value || undefined;
+}
 
 /**
  * Reads a drive item's metadata by id or by path. Requires `Files.Read` (or `.All`).
@@ -297,7 +321,8 @@ export function getDriveItem(context: MicrosoftGraphContext): (input: MicrosoftG
       throw new Error('getDriveItem requires an id or a path.');
     }
 
-    return request({ method: 'GET', path: microsoftGraphDriveItemPath(input) });
+    const $select = microsoftGraphDriveItemSelectValue(input.select);
+    return request({ method: 'GET', path: microsoftGraphDriveItemPath(input), ...($select ? { query: { $select } } : undefined) });
   };
 }
 
@@ -306,7 +331,14 @@ export function getDriveItem(context: MicrosoftGraphContext): (input: MicrosoftG
  * pre-authenticated `@microsoft.graph.downloadUrl`, the creator and modifier, the parent reference and the file
  * system info, which made a live folder listing about 6x larger.
  */
-export const MICROSOFT_GRAPH_DRIVE_ITEM_LIST_SELECT: readonly string[] = ['id', 'name', 'size', 'lastModifiedDateTime', 'folder', 'file', 'webUrl'];
+export const MICROSOFT_GRAPH_DRIVE_ITEM_LIST_SELECT: readonly string[] = ['id', 'name', 'size', 'lastModifiedDateTime', 'folder', 'file', 'package', 'webUrl'];
+
+/**
+ * The driveItem fields a folder copy needs to tell what changed: the content tag (`cTag`), the metadata tag
+ * (`eTag`), the file facet (with its `hashes`), and the facets of items it cannot download (`package`,
+ * `remoteItem`, `malware`). It leaves out `@microsoft.graph.downloadUrl`.
+ */
+export const MICROSOFT_GRAPH_DRIVE_ITEM_SYNC_SELECT: readonly string[] = ['id', 'name', 'size', 'eTag', 'cTag', 'lastModifiedDateTime', 'file', 'folder', 'package', 'remoteItem', 'malware', 'parentReference'];
 
 /**
  * Default page size of a folder listing. Graph's own default is 200.
@@ -322,9 +354,14 @@ export interface MicrosoftGraphDriveChildrenInput extends MicrosoftGraphDriveIte
    */
   readonly top?: Maybe<number>;
   /**
-   * Ask for the full driveItems instead of {@link MICROSOFT_GRAPH_DRIVE_ITEM_LIST_SELECT}.
+   * Ask for the full driveItems instead of {@link MICROSOFT_GRAPH_DRIVE_ITEM_LIST_SELECT}. Wins over `select`.
    */
   readonly full?: Maybe<boolean>;
+  /**
+   * The fields to ask for in place of {@link MICROSOFT_GRAPH_DRIVE_ITEM_LIST_SELECT}, e.g.
+   * {@link MICROSOFT_GRAPH_DRIVE_ITEM_SYNC_SELECT}.
+   */
+  readonly select?: Maybe<MicrosoftGraphDriveItemSelect>;
 }
 
 /**
@@ -339,9 +376,14 @@ export interface MicrosoftGraphDriveChildrenInput extends MicrosoftGraphDriveIte
 export function microsoftGraphDriveChildrenPageInput(input: MicrosoftGraphDriveChildrenInput): MicrosoftGraphPageInput {
   return {
     path: microsoftGraphDriveItemPath(input, 'children'),
-    query: { $top: input.top ?? DEFAULT_MICROSOFT_GRAPH_DRIVE_CHILDREN_TOP, $select: input.full ? undefined : MICROSOFT_GRAPH_DRIVE_ITEM_LIST_SELECT.join(',') }
+    query: { $top: input.top ?? DEFAULT_MICROSOFT_GRAPH_DRIVE_CHILDREN_TOP, $select: input.full ? undefined : (microsoftGraphDriveItemSelectValue(input.select) ?? MICROSOFT_GRAPH_DRIVE_ITEM_LIST_SELECT.join(',')) }
   };
 }
+
+/**
+ * What kind of item a {@link MicrosoftGraphDriveItemSummary} describes.
+ */
+export type MicrosoftGraphDriveItemSummaryType = 'folder' | 'file' | 'package';
 
 /**
  * A driveItem reduced to what a listing needs.
@@ -349,7 +391,10 @@ export function microsoftGraphDriveChildrenPageInput(input: MicrosoftGraphDriveC
 export interface MicrosoftGraphDriveItemSummary {
   readonly id: string;
   readonly name?: Maybe<string>;
-  readonly type: 'folder' | 'file';
+  /**
+   * `package` is an item listed like a file without downloadable content, such as a OneNote notebook.
+   */
+  readonly type: MicrosoftGraphDriveItemSummaryType;
   /**
    * Bytes. For a folder, the total size of its contents.
    */
@@ -375,11 +420,18 @@ export interface MicrosoftGraphDriveItemSummary {
  */
 export function microsoftGraphDriveItemSummary(item: MicrosoftGraphDriveItem, includeWebUrl?: Maybe<boolean>): MicrosoftGraphDriveItemSummary {
   const isFolder = item.folder != null;
+  let type: MicrosoftGraphDriveItemSummaryType = 'file';
+
+  if (isFolder) {
+    type = 'folder';
+  } else if (item.package != null) {
+    type = 'package';
+  }
 
   return {
     id: item.id,
     name: item.name,
-    type: isFolder ? 'folder' : 'file',
+    type,
     size: item.size,
     ...(isFolder ? { childCount: item.folder?.childCount } : { mimeType: item.file?.mimeType }),
     modified: item.lastModifiedDateTime,

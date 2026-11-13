@@ -1,18 +1,7 @@
 import { type CliDownloadFailure, type CliDownloadFailureClassifier, type CliDownloadFailureClassifyFunction, CliDownloadTaskFailedError, composeCliDownloadFailureClassifiers, defaultCliDownloadFailureClassifier } from '@dereekb/dbx-cli';
-import { MicrosoftGraphError, isMicrosoftGraphNotFoundError, isMicrosoftGraphServiceError } from '@dereekb/microsoft';
-import { type Maybe, type Milliseconds } from '@dereekb/util';
-import { parseRetryAfterHeader } from '@dereekb/util/fetch';
+import { MicrosoftGraphError, isMicrosoftGraphNotFoundError, isMicrosoftGraphServiceError, microsoftGraphRetryAfter } from '@dereekb/microsoft';
+import { type Maybe } from '@dereekb/util';
 import { msGraphCliErrorOutput } from './output';
-
-/**
- * Reads the wait a Graph error's `Retry-After` header asks for.
- *
- * @param error - The Graph error.
- * @returns The wait, or undefined when the header is missing or unreadable.
- */
-function msGraphCliErrorRetryAfter(error: MicrosoftGraphError): Maybe<Milliseconds> {
-  return parseRetryAfterHeader(error.responseError.response.headers.get('retry-after'));
-}
 
 /**
  * Classifies a {@link MicrosoftGraphError} for the dbx-cli download engine by its status.
@@ -37,11 +26,11 @@ export const msGraphCliDownloadFailureClassifier: CliDownloadFailureClassifier =
     if (error.status === 401) {
       result = { kind: 'fatal', code };
     } else if (error.status === 429) {
-      result = { kind: 'throttled', code, retryAfter: msGraphCliErrorRetryAfter(error) };
+      result = { kind: 'throttled', code, retryAfter: microsoftGraphRetryAfter(error) };
     } else if (error.status === 403 || isMicrosoftGraphNotFoundError(error)) {
       result = { kind: 'item', code };
     } else if (isMicrosoftGraphServiceError(error)) {
-      result = { kind: 'transient', code, retryAfter: msGraphCliErrorRetryAfter(error) };
+      result = { kind: 'transient', code, retryAfter: microsoftGraphRetryAfter(error) };
     } else {
       result = { kind: 'item', code };
     }

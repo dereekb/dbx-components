@@ -156,7 +156,7 @@ export const FILES_LIST_COMMAND: CommandModule = {
       .option('all-pages', { type: 'boolean', default: false, describe: 'Follow @odata.nextLink and return every page (up to --max-pages)' })
       .option('max-pages', { type: 'number', describe: 'With --all-pages: stop after this many pages (default 20)' })
       .option('next', { type: 'string', describe: 'Continue a listing from the nextLink a previous call returned (the folder options are ignored)' })
-      .option('type', { type: 'string', choices: ['file', 'folder'], describe: 'Keep only files or only folders' })
+      .option('type', { type: 'string', choices: ['file', 'folder'], describe: 'Keep only files or only folders (a OneNote notebook, listed as type package, counts as a file)' })
       .option('urls', { type: 'boolean', default: false, describe: "Include each item's webUrl" })
       .option('full', { type: 'boolean', default: false, describe: 'Return the full driveItems (much larger, and they carry pre-authenticated download URLs)' })
       .example([

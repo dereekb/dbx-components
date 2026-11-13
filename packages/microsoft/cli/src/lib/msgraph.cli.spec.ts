@@ -80,11 +80,11 @@ interface InterceptedRequest {
  * @param answer - The status and body to answer with.
  * @returns The handler and the recorded requests.
  */
-function interceptGraph(answer: { readonly status: number; readonly body: unknown }) {
+function interceptGraph(answer: { readonly status: number; readonly body: unknown; readonly headers?: Record<string, string> }) {
   const requests: InterceptedRequest[] = [];
   const fetchHandler: FetchHandler = async (request: Request) => {
     requests.push({ url: request.url, authorization: request.headers.get('Authorization') });
-    return new Response(JSON.stringify(answer.body), { status: answer.status, headers: { 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify(answer.body), { status: answer.status, headers: { 'Content-Type': 'application/json', ...answer.headers } });
   };
 
   return { fetchHandler, requests };
@@ -174,11 +174,15 @@ describe('msgraph-cli', () => {
       expect(buildErrorOutput(error).code).toBe('SCOPE_DENIED');
     });
 
-    it('should map a 429 to RATE_LIMITED with the Graph code as serverCode', async () => {
-      const graph = interceptGraph({ status: 429, body: { error: { code: 'TooManyRequests', message: 'Too many requests.' } } });
+    it('should retry a 429 three times, then map it to RATE_LIMITED with the Graph code as serverCode', async () => {
+      // models: B10 (a Graph 429 carries TooManyRequests and Retry-After); 0 s keeps the retries instant
+      const stderr = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+      const graph = interceptGraph({ status: 429, body: { error: { code: 'TooManyRequests', message: 'Too many requests.' } }, headers: { 'Retry-After': '0' } });
       const context = await resolveMsGraphCliContext({}, { env: { ...env, MSGRAPH_CLI_TOKEN_COMMAND: source.command }, graphFactoryConfig: { fetchHandler: graph.fetchHandler } });
       const error = await microsoftGraphRequest(context.graphContext)({ method: 'GET', path: '/me/messages' }).catch((e) => e);
 
+      expect(graph.requests).toHaveLength(1 + 3);
+      expect(stderr.mock.calls.map((x) => String(x[0]))).toContain('msgraph-cli: throttled by Microsoft Graph (429); waiting 0 s\n');
       const output = msGraphCliErrorOutput(error);
       expect(output?.code).toBe('RATE_LIMITED');
       expect(output?.serverCode).toBe('TooManyRequests');

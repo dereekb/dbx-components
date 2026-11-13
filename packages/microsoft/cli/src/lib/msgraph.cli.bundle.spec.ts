@@ -91,6 +91,7 @@ describe('msgraph-cli bundle', () => {
   let dir: string;
   let okTokenCommand: string;
   let failingTokenCommand: string;
+  let throttledRequests = 0;
 
   /**
    * Runs the bundle asynchronously — never `spawnSync`, which would block the event loop so the
@@ -172,7 +173,10 @@ process.stdout.write(JSON.stringify(${JSON.stringify(bundle)}));
           sendJson(res, 403, { error: { code: 'ErrorAccessDenied', message: 'Access is denied.' } });
           break;
         case '/v1.0/throttled':
-          sendJson(res, 429, { error: { code: 'TooManyRequests', message: 'Too many requests.' } });
+          // models: B10 (a Graph 429 carries TooManyRequests and Retry-After); 0 s keeps the retries instant
+          throttledRequests += 1;
+          res.writeHead(429, { 'Content-Type': 'application/json', 'Retry-After': '0' });
+          res.end(JSON.stringify({ error: { code: 'TooManyRequests', message: 'Too many requests.' } }));
           break;
         default:
           sendJson(res, 404, { error: { code: 'NotFound', message: 'Not found.' } });
@@ -237,10 +241,13 @@ process.stdout.write(JSON.stringify(${JSON.stringify(bundle)}));
   );
 
   it(
-    'should map a 429 to RATE_LIMITED',
+    'should retry a 429 three times, then map it to RATE_LIMITED',
     async () => {
+      throttledRequests = 0;
       const result = await runBundle(['request', 'GET', `${baseUrl}/v1.0/throttled`]);
 
+      expect(throttledRequests).toBe(1 + 3);
+      expect(result.stderr).toContain('throttled by Microsoft Graph (429); waiting 0 s');
       expect(result.exitCode).toBe(1);
       expect(result.json?.['code']).toBe('RATE_LIMITED');
       expect(result.json?.['serverCode']).toBe('TooManyRequests');

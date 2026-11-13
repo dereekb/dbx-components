@@ -1,5 +1,5 @@
-import { type Maybe } from '@dereekb/util';
-import { type ConfiguredFetch, FetchResponseError } from '@dereekb/util/fetch';
+import { type Maybe, type Milliseconds } from '@dereekb/util';
+import { type ConfiguredFetch, FetchResponseError, parseRetryAfterHeader } from '@dereekb/util/fetch';
 import { BaseError } from 'make-error';
 
 /**
@@ -111,6 +111,37 @@ export function isMicrosoftGraphNotFoundError(error: MicrosoftGraphError): boole
  */
 export function isMicrosoftGraphServiceError(error: MicrosoftGraphError): boolean {
   return error.status >= 500 || error.code === MICROSOFT_GRAPH_UNKNOWN_ERROR_CODE;
+}
+
+/**
+ * The statuses Graph and SharePoint throttle with when they also send `Retry-After`: 503 (service
+ * unavailable) and 509 (bandwidth limit exceeded). A 429 is always a throttle.
+ */
+export const MICROSOFT_GRAPH_THROTTLE_WITH_RETRY_AFTER_STATUSES: readonly number[] = [503, 509];
+
+/**
+ * Reads how long a Graph error's response asks the caller to wait (`Retry-After`, in seconds or an HTTP date).
+ *
+ * @param error - The Graph error, or a {@link FetchResponseError}.
+ * @param now - The current time, for an HTTP-date value. Defaults to now.
+ * @returns The wait, or undefined when the response carried no usable `Retry-After`.
+ */
+export function microsoftGraphRetryAfter(error: MicrosoftGraphError | FetchResponseError, now?: Maybe<Date>): Maybe<Milliseconds> {
+  const response = error instanceof MicrosoftGraphError ? error.responseError.response : error.response;
+  return parseRetryAfterHeader(response.headers.get('retry-after'), now);
+}
+
+/**
+ * Returns whether a Graph error is a throttle: a 429, or a 503/509 that carries `Retry-After`.
+ *
+ * @param error - The Graph error, or a {@link FetchResponseError}.
+ * @returns True when the caller should wait and try again.
+ *
+ * @see https://learn.microsoft.com/en-us/graph/throttling
+ */
+export function isMicrosoftGraphThrottledError(error: MicrosoftGraphError | FetchResponseError): boolean {
+  const status = error instanceof MicrosoftGraphError ? error.status : error.response.status;
+  return status === 429 || (MICROSOFT_GRAPH_THROTTLE_WITH_RETRY_AFTER_STATUSES.includes(status) && microsoftGraphRetryAfter(error) != null);
 }
 
 /**
