@@ -117,6 +117,7 @@ msgraph-cli calendar delete <id> [--cancel --comment "…"] --yes
 
 ```bash
 msgraph-cli files search "<text>" [--top 25]
+msgraph-cli files list [<folderId> | --path Documents] [--type file|folder] [--all-pages] [--next <nextLink>]  # a folder's items
 msgraph-cli files get <id> | --path "/Documents/plan.docx"     # metadata
 msgraph-cli files drive                                        # the drive's details
 msgraph-cli files download <id> --out plan.docx
@@ -133,6 +134,29 @@ Every files command takes `--drive <id>`, or `--site <url> [--library <name>]` f
 otherwise): copy, then delete. `upload` uses one PUT up to 4 MB, and an upload session above that, in
 chunks of `--chunk-size` bytes (default 10 MiB, rounded down to a multiple of 320 KiB). `copy --wait`
 polls Graph's copy monitor until the copy finishes. `delete --hard` deletes permanently (no recycle bin).
+
+#### SharePoint and OneDrive file handling
+
+- **Pick the drive once.** Each `files` command reads the user's OneDrive by default. For SharePoint, pass
+  `--site <https://<tenant>.sharepoint.com/sites/<name>> [--library <name>]`; the site's default library is
+  `Documents`. `--site` costs two extra Graph calls on every run (site, then its libraries), so for repeated
+  work resolve it once with `files drive --site … [--library …]` and pass the returned id as `--drive <id>`.
+- **Find items.** Browse with `files list` (a folder by id or `--path`, the drive root when neither), or search
+  with `files search "<text>"`. Use the `id`s these return: an id is stable across renames and moves in the same
+  drive, and a path is not.
+- **`files list` output** is compact: `{ items: [{ id, name, type: "file"|"folder", size, childCount (folders),
+  mimeType (files), modified }], nextLink? }`. `--urls` adds each `webUrl`. `--type file|folder` keeps only
+  files or only folders. `--full` returns raw driveItems, which are about 10× larger on OneDrive and about 17× larger on a
+  SharePoint folder of 850 items (2.6 MB raw against 150 KB compact). They also carry a pre-authenticated
+  `@microsoft.graph.downloadUrl`, so avoid `--full` unless you need a field the summary drops.
+- **Paging.** One run reads one page (`--top`, default 200) and returns `nextLink` when more remain: pass it back
+  with `files list --next "<nextLink>"`. `--all-pages` follows the links itself, up to `--max-pages` (default
+  20), and still returns `nextLink` if it stopped early.
+- **Then act on an id.** `files get <id>` for metadata, `files sheet <id>` for an `.xlsx`, `files download <id>
+  --out <file>` for the bytes. Keep the same `--drive` / `--site` on every call: an id only means something
+  inside its drive.
+- **Scopes.** Reading a SharePoint library needs `Files.Read.All` (both presets). Resolving `--site` also needs
+  `Sites.Read.All` (both presets). Writes need Read + Write.
 
 `files sheet` reads an `.xlsx` through Excel on the server (no download), read-only:
 
@@ -216,7 +240,7 @@ Every scope in them is user-consentable, so connecting never needs an administra
 
 | Commands | Need |
 | --- | --- |
-| `mail list/search/get/get-many/dump`, `calendar list/get`, `files search/get/drive/download/sheet` | Read |
+| `mail list/search/get/get-many/dump`, `calendar list/get`, `files search/list/get/drive/download/sheet` | Read |
 | `mail draft/send/send-bulk/reply/forward/move/copy/delete`, `mail auto-reply set/off/restore`, `calendar create/delete`, `files upload/mkdir/rename/move/copy/delete` | Read + Write |
 | `--mailbox` / `--send-as` (shared mailboxes) | Read + Write (`*.Shared`) **and** an Exchange permission on that mailbox |
 | `teams list/channels/chats/chat …/presence`, `teams channel send/reply` | Read + Write |
