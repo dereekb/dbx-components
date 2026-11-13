@@ -8517,7 +8517,7 @@
       "module": "@dereekb/util",
       "subpath": "path/path",
       "signature": "slashPathType(input: SlashPath): SlashPathType",
-      "description": "Determines the type of a slash path string.",
+      "description": "Determines the type of a slash path string.\n\nA path ending with a slash is a folder. Otherwise the last part is the file name, and its '.' count decides\nthe type: none is a file, one is a typed file, and more than one is invalid. Dots in the folder parts are\nignored, so `/test.test.test/hello` is a file and `/v1.0/` is a folder.",
       "params": [
         {
           "name": "input",
@@ -8538,6 +8538,7 @@
         "detect",
         "slashpathtype"
       ],
+      "example": "slashPathType('/a/b/');                 // 'folder'\nslashPathType('/test.test.test/hello'); // 'file'\nslashPathType('/a.b/image.png');        // 'typedfile'\nslashPathType('/a/file.pdf.tmp');       // 'invalid'",
       "relatedSlugs": [
         "is-slash-path-file",
         "is-slash-path-folder",
