@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { CliError } from '@dereekb/dbx-cli';
 import { MICROSOFT_GRAPH_CHANNEL_MESSAGE_READ_SCOPE, MicrosoftGraphError } from '@dereekb/microsoft';
 import { type FetchResponseError } from '@dereekb/util/fetch';
-import { awaitMsGraphCliTeamsSendSlot, msGraphCliChatOutput, msGraphCliTeamsAdminScopeError, readMsGraphCliTeamsBody } from './teams';
+import { awaitMsGraphCliTeamsSendSlot, msGraphCliChatOutput, msGraphCliTeamsAdminScopeError, parseMsGraphCliTeamsWithNames, readMsGraphCliTeamsBody } from './teams';
 
 function graphError(code: string, message: string, status: number): MicrosoftGraphError {
   return new MicrosoftGraphError({ code, message }, { response: new Response(null, { status }) } as unknown as FetchResponseError);
@@ -56,6 +56,13 @@ describe('teams helpers', () => {
     expect(await readMsGraphCliTeamsBody({ html: '<b>hi</b>' })).toEqual({ contentType: 'html', content: '<b>hi</b>' });
     await expect(readMsGraphCliTeamsBody({})).rejects.toBeInstanceOf(CliError);
     await expect(readMsGraphCliTeamsBody({ text: 'a', html: 'b' })).rejects.toBeInstanceOf(CliError);
+  });
+
+  it('parses --with as repeatable or comma-separated names, trimmed, blanks dropped', () => {
+    expect(parseMsGraphCliTeamsWithNames(undefined)).toEqual([]);
+    expect(parseMsGraphCliTeamsWithNames('Ada')).toEqual(['Ada']);
+    expect(parseMsGraphCliTeamsWithNames(['Ada, Grace', ' Linus ', ''])).toEqual(['Ada', 'Grace', 'Linus']);
+    expect(parseMsGraphCliTeamsWithNames('Ada,,  ,Grace')).toEqual(['Ada', 'Grace']);
   });
 
   it('prints member names only', () => {

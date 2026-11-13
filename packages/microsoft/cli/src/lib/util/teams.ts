@@ -126,6 +126,30 @@ export async function readMsGraphCliTeamsBody(input: { readonly text?: Maybe<str
 }
 
 /**
+ * Parses `--with` for `teams chats` and `teams chat dump`: repeatable or comma-separated, each name trimmed and
+ * blanks dropped.
+ *
+ * @param value - The option value: a string, an array of strings, or nothing.
+ * @returns The names, in the order given.
+ */
+export function parseMsGraphCliTeamsWithNames(value: unknown): string[] {
+  let values: unknown[];
+
+  if (value == null) {
+    values = [];
+  } else if (Array.isArray(value)) {
+    values = value;
+  } else {
+    values = [value];
+  }
+
+  return values
+    .flatMap((x) => String(x).split(','))
+    .map((x) => x.trim())
+    .filter(Boolean);
+}
+
+/**
  * What `teams chats` prints per chat: the members' names only, never their ids.
  */
 export interface MsGraphCliChatOutput {

@@ -17,3 +17,5 @@ export * from './util/mail.dump';
 export * from './util/mail.write';
 export * from './util/option';
 export * from './util/output';
+export * from './util/teams.chat.dump';
+export * from './util/teams.markdown';
