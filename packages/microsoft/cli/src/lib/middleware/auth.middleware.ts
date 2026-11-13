@@ -1,9 +1,10 @@
 import { CLI_EXIT_CODE_AUTH, CliError, cliTokenSourceSelectionFromArgv, createContextSlot, outputError, wrapCommandHandler } from '@dereekb/dbx-cli';
-import { MicrosoftGraphError, type MicrosoftGraphFactoryConfig } from '@dereekb/microsoft';
+import { type MicrosoftGraphFactoryConfig } from '@dereekb/microsoft';
 import { type Maybe } from '@dereekb/util';
 import type { Arguments, MiddlewareFunction } from 'yargs';
 import { MSGRAPH_CLI_NAME, msGraphCliPaths, msGraphCliTokenSourceCommandConfig } from '../config/cli.config';
 import { createMsGraphCliContext, type MsGraphCliContext } from '../context/cli.context';
+import { isMsGraphCliTokenRejectedError } from '../util/download.failure';
 
 /**
  * Module-level context set by the auth middleware. Kept off argv so yargs strict mode does not reject it.
@@ -112,7 +113,7 @@ export function msGraphCommandHandler<T>(handler: (argv: Arguments<T>, context: 
     try {
       await handler(argv, context);
     } catch (e) {
-      if (e instanceof MicrosoftGraphError && e.status === 401) {
+      if (isMsGraphCliTokenRejectedError(e)) {
         await context.tokenSource.resetToken().catch(() => undefined);
       }
 

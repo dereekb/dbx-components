@@ -1,9 +1,21 @@
-import { type CliErrorOutput, type CliOutputPickApplier, DEFAULT_CLI_SECRET_PATTERNS, appendCliErrorMapper, cliCollectionPickApplier, configureCliSecretPatterns, outputResult, sanitizeString } from '@dereekb/dbx-cli';
+import {
+  CliDownloadAbortedError,
+  CliDownloadIncompleteError,
+  CliDownloadStalledError,
+  CliDownloadTaskFailedError,
+  type CliErrorOutput,
+  type CliOutputPickApplier,
+  DEFAULT_CLI_SECRET_PATTERNS,
+  appendCliErrorMapper,
+  cliCollectionPickApplier,
+  configureCliSecretPatterns,
+  outputResult,
+  sanitizeString
+} from '@dereekb/dbx-cli';
 import { MicrosoftGraphCrossDriveMoveError, MicrosoftGraphError, MicrosoftGraphLibraryNotFoundError, MicrosoftGraphMessageNotDraftError, isMicrosoftGraphAdminConsentScope, isMicrosoftGraphNotFoundError, isMicrosoftGraphServiceError, readMicrosoftGraphRequiredScopesFromErrorMessage } from '@dereekb/microsoft';
 import { type Maybe } from '@dereekb/util';
 import { FetchResponseError, FetchTimeoutError } from '@dereekb/util/fetch';
 import { MSGRAPH_CLI_NAME } from '../config/cli.config';
-import { MsGraphCliDownloadIncompleteError, MsGraphCliDownloadStalledError } from './file.download';
 
 /**
  * Matches a JWT, the shape of a Microsoft access token, wherever it appears (not only after `Bearer`).
@@ -80,10 +92,11 @@ export function isMsGraphCliTimeoutError(error: unknown): boolean {
  * - 429: `RATE_LIMITED`.
  * - 5xx / `UnknownError`: `SERVICE_UNAVAILABLE` (Microsoft's side failed).
  *
- * A non-Graph error body with a 404 or 5xx status maps to `NOT_FOUND` / `SERVICE_UNAVAILABLE` too, a
+ * A non-Graph error body with a 404, 429 or 5xx status maps to `NOT_FOUND` / `RATE_LIMITED` / `SERVICE_UNAVAILABLE` too, a
  * timeout or abort to `TIMEOUT`, a `draft update` of a sent message to `NOT_A_DRAFT`, a `files move` into
  * another drive to `CROSS_DRIVE_MOVE`, an unknown `--library` to `NOT_FOUND`, a stalled download to `TIMEOUT` and
- * a download cut short of its `Content-Length` to `DOWNLOAD_INCOMPLETE`. Other errors return undefined so the default mapping applies.
+ * a download cut short of its `Content-Length` to `DOWNLOAD_INCOMPLETE`, a cancelled download (Ctrl+C) to `ABORTED`, and a failed
+ * bulk-download task to its cause's mapping (else the task's failure code). Other errors return undefined so the default mapping applies.
  *
  * @param error - The thrown value.
  * @returns The envelope, or undefined when the error is not one msgraph-cli maps.
@@ -116,6 +129,8 @@ export function msGraphCliErrorOutput(error: unknown): CliErrorOutput | undefine
 
     if (httpStatus === 404) {
       result = { ok: false, error: sanitizeString(error.message), code: 'NOT_FOUND', httpStatus };
+    } else if (httpStatus === 429) {
+      result = { ok: false, error: sanitizeString(error.message), code: 'RATE_LIMITED', httpStatus, suggestion: 'The server throttled the request. Wait and retry.' };
     } else if (httpStatus >= 500) {
       result = { ok: false, error: sanitizeString(error.message), code: 'SERVICE_UNAVAILABLE', httpStatus, suggestion: MSGRAPH_CLI_SERVICE_UNAVAILABLE_SUGGESTION };
     }
@@ -125,9 +140,13 @@ export function msGraphCliErrorOutput(error: unknown): CliErrorOutput | undefine
     result = { ok: false, error: error.message, code: 'CROSS_DRIVE_MOVE', suggestion: `Run ${MSGRAPH_CLI_NAME} files copy <id> --to-drive <driveId> --wait, check the copy, then ${MSGRAPH_CLI_NAME} files delete <id> --yes.` };
   } else if (error instanceof MicrosoftGraphLibraryNotFoundError) {
     result = { ok: false, error: error.message, code: 'NOT_FOUND', suggestion: 'Pass one of the listed names to --library, or drop --library for the default library.' };
-  } else if (error instanceof MsGraphCliDownloadStalledError) {
+  } else if (error instanceof CliDownloadTaskFailedError) {
+    result = msGraphCliErrorOutput(error.cause) ?? { ok: false, error: sanitizeString(error.cause instanceof Error ? error.cause.message : error.message), code: error.failure.code };
+  } else if (error instanceof CliDownloadAbortedError) {
+    result = { ok: false, error: error.message, code: 'ABORTED', suggestion: 'Re-run the same command to resume; finished files are kept.' };
+  } else if (error instanceof CliDownloadStalledError) {
     result = { ok: false, error: error.message, code: 'TIMEOUT', suggestion: `Retry. On a slow or flaky connection raise --idle-timeout (seconds); if Graph keeps stalling, check ${MSGRAPH_CLI_SERVICE_STATUS_URL}.` };
-  } else if (error instanceof MsGraphCliDownloadIncompleteError) {
+  } else if (error instanceof CliDownloadIncompleteError) {
     result = { ok: false, error: error.message, code: 'DOWNLOAD_INCOMPLETE', suggestion: 'The connection closed early. Retry the download.' };
   } else if (isMsGraphCliTimeoutError(error)) {
     result = { ok: false, error: sanitizeString((error as Error).message), code: 'TIMEOUT', suggestion: `Microsoft Graph did not answer within the client timeout. Retry; if it keeps timing out, check ${MSGRAPH_CLI_SERVICE_STATUS_URL}.` };

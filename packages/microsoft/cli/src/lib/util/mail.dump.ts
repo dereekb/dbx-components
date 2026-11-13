@@ -1,4 +1,4 @@
-import { CliError } from '@dereekb/dbx-cli';
+import { type CliBulkDownloadTask, type CliConcurrencyOptionConfig, type CliDownloadCounts, type CliDownloadManifestStore, CliDownloadAbortedError, CliDownloadTaskFailedError, CliError, cliDownloadManifestStore, cliSha256HexPrefix, ensureCliPrivateDir, runCliBulkDownload, writeCliFileAtomic } from '@dereekb/dbx-cli';
 import {
   type MicrosoftGraphBodyContentType,
   type MicrosoftGraphContext,
@@ -17,9 +17,9 @@ import {
   DEFAULT_MICROSOFT_GRAPH_MESSAGE_DELTA_PAGE_SIZE
 } from '@dereekb/microsoft';
 import { type EmailAddress, type ISO8601DateString, type Maybe, type Milliseconds, sanitizeFileName } from '@dereekb/util';
-import { createHash } from 'node:crypto';
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { rm } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
+import { msGraphCliDownloadFailureClassify } from './download.failure';
 import { downloadMsGraphCliFile } from './file.download';
 
 /**
@@ -36,6 +36,12 @@ export const MSGRAPH_CLI_MAIL_DUMP_MANIFEST_FILE = 'manifest.json';
  * How many messages one `mail dump` run processes by default. A re-run continues where it stopped.
  */
 export const DEFAULT_MSGRAPH_CLI_MAIL_DUMP_MAX_MESSAGES = 500;
+
+/**
+ * `--concurrency` for `mail dump`: 3 messages at once by default, at most 4 (Outlook allows 4 concurrent
+ * requests per app per mailbox).
+ */
+export const MSGRAPH_CLI_MAIL_DUMP_CONCURRENCY: CliConcurrencyOptionConfig = { default: 3, max: 4 };
 
 /**
  * The longest file name the dump writes for an attachment, extension included.
@@ -75,13 +81,7 @@ export interface MsGraphCliMailDumpRemovedEntry {
 /**
  * Counts a dump keeps across runs.
  */
-export interface MsGraphCliMailDumpCounts {
-  readonly written: number;
-  readonly skipped: number;
-  readonly removed: number;
-  readonly failed: number;
-  readonly bytes: number;
-}
+export type MsGraphCliMailDumpCounts = CliDownloadCounts;
 
 /**
  * `manifest.json`: what was dumped and where the next run resumes.
@@ -170,11 +170,19 @@ export interface MsGraphCliMailDumpConfig {
    */
   readonly idleTimeout?: Maybe<Milliseconds>;
   /**
+   * How many messages are written at once. Defaults to {@link MSGRAPH_CLI_MAIL_DUMP_CONCURRENCY}'s default (3).
+   */
+  readonly concurrency?: Maybe<number>;
+  /**
+   * Cancels the run (e.g. Ctrl+C). Finished messages are kept and the manifest saved, so a re-run resumes.
+   */
+  readonly signal?: Maybe<AbortSignal>;
+  /**
    * Receives a progress line (stderr in the CLI).
    */
   readonly progress?: Maybe<(line: string) => void>;
   /**
-   * Waits between `$batch` retries. A spec passes a fake.
+   * Waits between `$batch` retries and between a message's retries. A spec passes a fake.
    */
   readonly wait?: Maybe<(ms: number) => Promise<unknown>>;
   readonly now?: Maybe<() => Date>;
@@ -187,7 +195,7 @@ export interface MsGraphCliMailDumpConfig {
  * @returns The hash prefix, 8 hex characters.
  */
 export function msGraphCliMailDumpHash8(value: string): string {
-  return createHash('sha256').update(value).digest('hex').slice(0, 8);
+  return cliSha256HexPrefix(value, 8);
 }
 
 /**
@@ -197,7 +205,7 @@ export function msGraphCliMailDumpHash8(value: string): string {
  * @returns The manifest value.
  */
 export function msGraphCliMailDumpMailboxKey(mailbox: Maybe<EmailAddress>): string {
-  return mailbox ? createHash('sha256').update(mailbox.toLowerCase()).digest('hex').slice(0, 16) : 'me';
+  return mailbox ? cliSha256HexPrefix(mailbox.toLowerCase(), 16) : 'me';
 }
 
 /**
@@ -208,9 +216,16 @@ export function msGraphCliMailDumpMailboxKey(mailbox: Maybe<EmailAddress>): stri
  * @param name - The raw name, e.g. an attachment's.
  * @param maxLength - The longest result. Defaults to {@link MSGRAPH_CLI_MAIL_DUMP_MAX_FILE_NAME_LENGTH}.
  * @returns The safe name; `attachment` when nothing is left.
+ * @deprecated Use `sanitizeFileName(name, { mode: 'strict', maxLength, fallback: 'attachment' })` from `@dereekb/util`.
  */
+// COMPAT: kept for consumers of the package index; the util sanitizer owns the rule now.
 export function sanitizeMsGraphCliFileName(name: Maybe<string>, maxLength = MSGRAPH_CLI_MAIL_DUMP_MAX_FILE_NAME_LENGTH): string {
   return sanitizeFileName(name, { mode: 'strict', maxLength, fallback: 'attachment' });
+}
+
+// an attachment's file name in the dump: the strict rule, unchanged since the first dump format
+function msGraphCliMailDumpAttachmentFileName(name: Maybe<string>): string {
+  return sanitizeFileName(name, { mode: 'strict', maxLength: MSGRAPH_CLI_MAIL_DUMP_MAX_FILE_NAME_LENGTH, fallback: 'attachment' });
 }
 
 /**
@@ -272,35 +287,43 @@ function emptyMsGraphCliMailDumpManifest(config: Pick<MsGraphCliMailDumpConfig, 
 }
 
 /**
+ * Returns the store of a dump directory's manifest. Reading starts a new manifest when there is none, and
+ * refuses one written for another mailbox, folder or id type: its ids and resume links would not match.
+ * Saving writes the same JSON as before (`JSON.stringify(m, null, 2)` and a newline), atomically.
+ *
+ * @param config - The dump's directory, mailbox, folder and id type.
+ * @returns The store.
+ */
+export function msGraphCliMailDumpManifestStore(config: Pick<MsGraphCliMailDumpConfig, 'dir' | 'mailbox' | 'folder' | 'immutableIds'>): CliDownloadManifestStore<MsGraphCliMailDumpManifest> {
+  const empty = () => emptyMsGraphCliMailDumpManifest(config);
+
+  return cliDownloadManifestStore({
+    dir: config.dir,
+    fileName: MSGRAPH_CLI_MAIL_DUMP_MANIFEST_FILE,
+    empty,
+    accept: (parsed: unknown) => {
+      const base = empty();
+      const existing = (typeof parsed === 'object' && parsed != null ? parsed : {}) as MsGraphCliMailDumpManifest;
+
+      if (existing.version !== MSGRAPH_CLI_MAIL_DUMP_MANIFEST_VERSION || existing.mailbox !== base.mailbox || existing.folder !== base.folder || existing.immutableIds !== base.immutableIds) {
+        throw new CliError({ message: `${config.dir} holds a dump of another mailbox, folder or id type.`, code: 'INVALID_ARGUMENT', suggestion: 'Dump into a new directory, or re-run with the --mailbox, --folder and --mutable-ids values that directory was created with.' });
+      }
+
+      return { ...base, ...existing, messages: existing.messages ?? {}, removed: existing.removed ?? [] };
+    }
+  });
+}
+
+/**
  * Reads the dump directory's manifest, or starts a new one. A manifest written for another mailbox,
  * folder or id type is refused: its ids and resume links would not match.
  *
  * @param config - The dump's directory, mailbox, folder and id type.
  * @returns The manifest.
- * @throws {CliError} `INVALID_ARGUMENT` when the manifest belongs to another dump.
+ * @throws {CliError} `INVALID_ARGUMENT` when the manifest belongs to another dump or is not readable JSON.
  */
-export async function readMsGraphCliMailDumpManifest(config: Pick<MsGraphCliMailDumpConfig, 'dir' | 'mailbox' | 'folder' | 'immutableIds'>): Promise<MsGraphCliMailDumpManifest> {
-  let content: Maybe<string>;
-
-  try {
-    content = await readFile(join(config.dir, MSGRAPH_CLI_MAIL_DUMP_MANIFEST_FILE), 'utf8');
-  } catch {
-    // no manifest yet
-  }
-
-  let result = emptyMsGraphCliMailDumpManifest(config);
-
-  if (content != null) {
-    const existing = JSON.parse(content) as MsGraphCliMailDumpManifest;
-
-    if (existing.version !== MSGRAPH_CLI_MAIL_DUMP_MANIFEST_VERSION || existing.mailbox !== result.mailbox || existing.folder !== result.folder || existing.immutableIds !== result.immutableIds) {
-      throw new CliError({ message: `${config.dir} holds a dump of another mailbox, folder or id type.`, code: 'INVALID_ARGUMENT', suggestion: 'Dump into a new directory, or re-run with the --mailbox, --folder and --mutable-ids values that directory was created with.' });
-    }
-
-    result = { ...result, ...existing, messages: existing.messages ?? {}, removed: existing.removed ?? [] };
-  }
-
-  return result;
+export function readMsGraphCliMailDumpManifest(config: Pick<MsGraphCliMailDumpConfig, 'dir' | 'mailbox' | 'folder' | 'immutableIds'>): Promise<MsGraphCliMailDumpManifest> {
+  return msGraphCliMailDumpManifestStore(config).read();
 }
 
 interface MsGraphCliMailDumpRun {
@@ -309,14 +332,20 @@ interface MsGraphCliMailDumpRun {
   removed: number;
   failed: number;
   bytes: number;
-  attachmentBytes: number;
 }
 
 /**
  * Dumps a mail folder into a directory, incrementally: the first run walks a delta round from the start
  * (or `since`), and later runs resume from the stored `nextLink` / `deltaLink`, writing only new or changed
- * messages. Bodies are read 20 at a time through `$batch`. The manifest is saved after every page, and
- * before an error is rethrown, so a run stopped by a timeout or an outage resumes where it stopped.
+ * messages. Bodies are read 20 at a time through `$batch`, then each page's messages are written by the
+ * dbx-cli bulk-download engine, `concurrency` at a time, each retried on a stall, a short body, a throttle
+ * or an outage.
+ *
+ * - A message that fails for good (e.g. its attachment was deleted) is counted in `failed` and the run goes on.
+ * - A message that still fails after its retries (an outage or throttling) stops the run. The manifest is
+ *   saved with the finished messages but the page's starting cursor, so a re-run re-reads the page and skips
+ *   what was written.
+ * - The manifest is saved (atomically) after every page and before an error is rethrown.
  *
  * The directory is created with mode 0700 and each file with 0600. Nothing in the result is message content.
  *
@@ -324,38 +353,41 @@ interface MsGraphCliMailDumpRun {
  * @returns This run's counts.
  */
 export async function dumpMsGraphCliMail(config: MsGraphCliMailDumpConfig): Promise<MsGraphCliMailDumpResult> {
-  const { graphContext, dir, mailbox, immutableIds } = config;
+  const { graphContext, dir, mailbox, immutableIds, signal } = config;
   const now = config.now ?? (() => new Date());
   const progress = config.progress ?? (() => undefined);
+  const concurrency = config.concurrency ?? MSGRAPH_CLI_MAIL_DUMP_CONCURRENCY.default;
   const deltaPage = listMessagesDeltaPage(graphContext);
   const readMessages = getMessages(graphContext);
   const readAttachments = listMessageAttachments(graphContext);
 
-  await mkdir(dir, { recursive: true, mode: 0o700 });
-  let manifest = await readMsGraphCliMailDumpManifest(config);
+  await ensureCliPrivateDir(dir);
+  const store = msGraphCliMailDumpManifestStore(config);
+  let manifest = await store.read();
   const messages: Record<string, MsGraphCliMailDumpManifestEntry> = { ...manifest.messages };
   const removedEntries: MsGraphCliMailDumpRemovedEntry[] = [...manifest.removed];
-  const run: MsGraphCliMailDumpRun = { written: 0, skipped: 0, removed: 0, failed: 0, bytes: 0, attachmentBytes: 0 };
+  const run: MsGraphCliMailDumpRun = { written: 0, skipped: 0, removed: 0, failed: 0, bytes: 0 };
   const filter = config.since && !manifest.nextLink && !manifest.deltaLink ? `receivedDateTime ge ${microsoftGraphDateTimeLiteral(config.since)}` : manifest.filter;
+  // attachment bytes written or reserved this run; concurrent messages share --max-bytes
+  let attachmentBytes = 0;
 
-  async function writeDumpFile(relativePath: string, data: string | Uint8Array): Promise<void> {
+  async function writeDumpFile(relativePath: string, data: string | Uint8Array): Promise<number> {
     const path = join(dir, relativePath);
-    await mkdir(dirname(path), { recursive: true, mode: 0o700 });
-    await writeFile(path, data, { mode: 0o600 });
-    run.bytes += typeof data === 'string' ? Buffer.byteLength(data) : data.length;
+    await ensureCliPrivateDir(dirname(path));
+    return writeCliFileAtomic({ path, data });
   }
 
   // streams a raw body to disk (0600, through a `.part` file), so a large .eml or attachment is never held in memory
-  async function downloadDumpFile(relativePath: string, request: MicrosoftGraphRawRequestInput): Promise<number> {
+  async function downloadDumpFile(relativePath: string, request: MicrosoftGraphRawRequestInput, taskSignal: AbortSignal): Promise<number> {
     const path = join(dir, relativePath);
-    await mkdir(dirname(path), { recursive: true, mode: 0o700 });
-    const { bytes } = await downloadMsGraphCliFile({ graphContext, request, out: path, idleTimeout: config.idleTimeout });
-    run.bytes += bytes;
+    await ensureCliPrivateDir(dirname(path));
+    const { bytes } = await downloadMsGraphCliFile({ graphContext, request, out: path, idleTimeout: config.idleTimeout, signal: taskSignal });
     return bytes;
   }
 
-  async function writeAttachments(message: MicrosoftGraphMessage, file: string): Promise<void> {
+  async function writeAttachments(message: MicrosoftGraphMessage, file: string, taskSignal: AbortSignal): Promise<number> {
     const page = await readAttachments({ mailbox, id: message.id });
+    let bytes = 0;
 
     for (const attachment of page.value ?? []) {
       const size = attachment.size ?? 0;
@@ -365,40 +397,95 @@ export async function dumpMsGraphCliMail(config: MsGraphCliMailDumpConfig): Prom
         continue;
       }
 
-      if (config.maxBytes != null && run.attachmentBytes + size > config.maxBytes) {
+      if (config.maxBytes != null && attachmentBytes + size > config.maxBytes) {
         progress(`skipped an attachment of ${size} bytes: --max-bytes ${config.maxBytes} reached`);
         continue;
       }
 
-      const relativePath = `${file}/attachments/${msGraphCliMailDumpHash8(attachment.id)}_${sanitizeMsGraphCliFileName(attachment.name)}`;
-      run.attachmentBytes += await downloadDumpFile(relativePath, microsoftGraphGetMessageAttachmentContentRequest({ mailbox, id: message.id, attachmentId: attachment.id }));
+      const relativePath = `${file}/attachments/${msGraphCliMailDumpHash8(attachment.id)}_${msGraphCliMailDumpAttachmentFileName(attachment.name)}`;
+      let written = 0;
+      // reserve the declared size, then settle to what was written (nothing when the download failed)
+      attachmentBytes += size;
+
+      try {
+        written = await downloadDumpFile(relativePath, microsoftGraphGetMessageAttachmentContentRequest({ mailbox, id: message.id, attachmentId: attachment.id }), taskSignal);
+      } finally {
+        attachmentBytes += written - size;
+      }
+
+      bytes += written;
     }
+
+    return bytes;
   }
 
-  async function writeMessage(message: MicrosoftGraphMessage): Promise<void> {
+  // writes one message's files; resolves the bytes written. It may run again after a failure, so every write replaces.
+  async function writeMessage(message: MicrosoftGraphMessage, taskSignal: AbortSignal): Promise<number> {
     const file = msGraphCliMailDumpMessagePath(message);
     const previous = messages[message.id];
+    let bytes = 0;
 
     if (previous && previous.file !== file) {
       await rm(join(dir, `${previous.file}.json`), { force: true });
     }
 
-    await writeDumpFile(`${file}.json`, `${JSON.stringify(message, null, 2)}\n`);
+    bytes += await writeDumpFile(`${file}.json`, `${JSON.stringify(message, null, 2)}\n`);
 
     if (config.markdown) {
-      await writeDumpFile(`${file}.md`, msGraphCliMailDumpMarkdown(message));
+      bytes += await writeDumpFile(`${file}.md`, msGraphCliMailDumpMarkdown(message));
     }
 
     if (config.eml) {
-      await downloadDumpFile(`${file}.eml`, microsoftGraphGetMessageMimeRequest({ mailbox, id: message.id }));
+      bytes += await downloadDumpFile(`${file}.eml`, microsoftGraphGetMessageMimeRequest({ mailbox, id: message.id }), taskSignal);
     }
 
     if (config.attachments && message.hasAttachments) {
-      await writeAttachments(message, file);
+      bytes += await writeAttachments(message, file, taskSignal);
     }
 
-    messages[message.id] = { file, changeKey: message.changeKey };
-    run.written += 1;
+    return bytes;
+  }
+
+  async function writeMessages(pageMessages: readonly MicrosoftGraphMessage[]): Promise<void> {
+    const byId = new Map(pageMessages.map((x) => [x.id, x]));
+    const lastErrors = new Map<string, unknown>();
+    let stopError: Maybe<{ readonly error: unknown }>;
+
+    const tasks: CliBulkDownloadTask[] = pageMessages.map((message) => ({
+      key: message.id,
+      run: (taskSignal: AbortSignal) =>
+        writeMessage(message, taskSignal).catch((error: unknown) => {
+          lastErrors.set(message.id, error);
+          throw error;
+        })
+    }));
+
+    await runCliBulkDownload({
+      tasks,
+      concurrency,
+      classify: msGraphCliDownloadFailureClassify,
+      signal,
+      wait: config.wait,
+      onTaskDone: (task, bytes) => {
+        const message = byId.get(task.key) as MicrosoftGraphMessage;
+        messages[message.id] = { file: msGraphCliMailDumpMessagePath(message), changeKey: message.changeKey };
+        run.written += 1;
+        run.bytes += bytes;
+      },
+      onTaskFailed: (task, failure) => {
+        if (failure.kind === 'transient' || failure.kind === 'throttled') {
+          // still failing after its retries: stop once the page's other messages are done, without advancing the cursor
+          stopError ??= { error: lastErrors.get(task.key) ?? new CliDownloadTaskFailedError(failure, undefined) };
+        } else {
+          run.failed += 1;
+          progress(`could not write a message (${failure.code})`);
+        }
+      }
+    });
+
+    if (stopError) {
+      throw stopError.error;
+    }
   }
 
   async function removeMessage(item: MicrosoftGraphMessageDeltaItem): Promise<void> {
@@ -428,7 +515,7 @@ export async function dumpMsGraphCliMail(config: MsGraphCliMailDumpConfig): Prom
       messages,
       removed: removedEntries
     };
-    await writeFile(join(dir, MSGRAPH_CLI_MAIL_DUMP_MANIFEST_FILE), `${JSON.stringify(manifest, null, 2)}\n`, { mode: 0o600 });
+    await store.save(manifest);
     // the manifest's counts are cumulative; start this run's tally again from the saved totals
     Object.assign(run, { written: 0, skipped: 0, removed: 0, failed: 0, bytes: 0 });
   }
@@ -448,6 +535,10 @@ export async function dumpMsGraphCliMail(config: MsGraphCliMailDumpConfig): Prom
 
   try {
     while (processed < config.maxMessages) {
+      if (signal?.aborted) {
+        throw new CliDownloadAbortedError('The dump was cancelled; finished messages were kept and the manifest saved.');
+      }
+
       const pageSize = Math.min(DEFAULT_MICROSOFT_GRAPH_MESSAGE_DELTA_PAGE_SIZE, config.maxMessages - processed);
       const page = await deltaPage({ link, mailbox, immutableIds, folder: config.folder, since: config.since, pageSize });
       const items = page.value ?? [];
@@ -461,15 +552,18 @@ export async function dumpMsGraphCliMail(config: MsGraphCliMailDumpConfig): Prom
 
       if (fetch.length > 0) {
         const read = await readMessages({ ids: fetch.map((x) => x.id), mailbox, immutableIds, format: config.bodyFormat, select: MSGRAPH_CLI_MAIL_DUMP_MESSAGE_SELECT, wait: config.wait });
+        const pageMessages: MicrosoftGraphMessage[] = [];
 
         for (const item of read) {
           if (item.message) {
-            await writeMessage(item.message);
+            pageMessages.push(item.message);
           } else {
             run.failed += 1;
             progress(`could not read a message (${item.status} ${item.error?.code ?? ''})`);
           }
         }
+
+        await writeMessages(pageMessages);
       }
 
       processed += items.length;
@@ -488,7 +582,8 @@ export async function dumpMsGraphCliMail(config: MsGraphCliMailDumpConfig): Prom
   } catch (e) {
     addToTotals();
     await saveManifest({ nextLink: manifest.nextLink, deltaLink: manifest.deltaLink });
-    throw e;
+    // a bulk task that failed fatally (e.g. a rejected token) rethrows its cause, so callers see the Graph error
+    throw e instanceof CliDownloadTaskFailedError && e.cause != null ? e.cause : e;
   }
 
   return { dir, ...totals, complete };

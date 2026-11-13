@@ -1,10 +1,10 @@
-import { CliError } from '@dereekb/dbx-cli';
+import { CliError, cliConcurrencyOption, cliConcurrencyValue, withCliInterruptSignal } from '@dereekb/dbx-cli';
 import { type MicrosoftGraphContext, type MicrosoftGraphGetMessagesItem, type MicrosoftGraphMailRequest, getMessage, getMessages, microsoftGraphGetMessageMimeRequest, microsoftGraphListMessagesRequest, microsoftGraphRequest, microsoftGraphRequestAllPages, microsoftGraphSearchMessagesRequest } from '@dereekb/microsoft';
 import { type Maybe } from '@dereekb/util';
 import type { Argv, CommandModule } from 'yargs';
 import { msGraphCommandHandler } from '../middleware/auth.middleware';
 import { msGraphCliMailboxOptions, msGraphCliPagingOptions, parseMsGraphCliDateOption, readMsGraphCliIdsOption } from '../util/option';
-import { DEFAULT_MSGRAPH_CLI_MAIL_DUMP_MAX_MESSAGES, dumpMsGraphCliMail } from '../util/mail.dump';
+import { DEFAULT_MSGRAPH_CLI_MAIL_DUMP_MAX_MESSAGES, MSGRAPH_CLI_MAIL_DUMP_CONCURRENCY, dumpMsGraphCliMail } from '../util/mail.dump';
 import { downloadMsGraphCliFile, msGraphCliIdleTimeoutMs, msGraphCliIdleTimeoutOption } from '../util/file.download';
 import { outputMsGraphCliResult } from '../util/output';
 import { MAIL_AUTO_REPLY_COMMAND } from './mail.auto.reply.command';
@@ -161,7 +161,7 @@ export const MAIL_DUMP_COMMAND: CommandModule = {
   command: 'dump',
   describe: 'Dump a mail folder to a directory, incrementally (delta): JSON + Markdown per message, optional .eml and attachments',
   builder: (yargs: Argv) =>
-    msGraphCliIdleTimeoutOption(msGraphCliMailboxOptions(yargs))
+    cliConcurrencyOption(msGraphCliIdleTimeoutOption(msGraphCliMailboxOptions(yargs)), MSGRAPH_CLI_MAIL_DUMP_CONCURRENCY)
       .option('dir', { type: 'string', demandOption: true, describe: 'The dump directory (created with mode 0700). Re-running into it resumes from its manifest.json' })
       .option('folder', { type: 'string', default: 'inbox', describe: 'The mail folder by id or well-known name (inbox, sentitems, archive). Delta is per-folder' })
       .option('since', { type: 'string', describe: 'First run only: messages received at or after this date/instant (ISO 8601)' })
@@ -177,23 +177,29 @@ export const MAIL_DUMP_COMMAND: CommandModule = {
         ['$0 mail dump --dir ./sent --folder sentitems --eml --attachments --max-bytes 50000000', 'Sent items with .eml files and up to 50 MB of attachments']
       ]),
   handler: msGraphCommandHandler(async (argv: any, { graphContext }) => {
-    const result = await dumpMsGraphCliMail({
-      graphContext,
-      dir: argv.dir,
-      mailbox: argv.mailbox,
-      folder: argv.folder,
-      since: parseMsGraphCliDateOption('since', argv.since),
-      bodyFormat: argv.bodyFormat ?? 'text',
-      markdown: argv.markdown ?? true,
-      eml: argv.eml ?? false,
-      attachments: argv.attachments ?? false,
-      prune: argv.prune ?? false,
-      maxMessages: argv.maxMessages ?? DEFAULT_MSGRAPH_CLI_MAIL_DUMP_MAX_MESSAGES,
-      maxBytes: argv.maxBytes,
-      immutableIds: !argv.mutableIds,
-      idleTimeout: msGraphCliIdleTimeoutMs(argv.idleTimeout),
-      progress: (line) => process.stderr.write(`${line}\n`)
-    });
+    const concurrency = cliConcurrencyValue(argv.concurrency, MSGRAPH_CLI_MAIL_DUMP_CONCURRENCY);
+    // Ctrl+C stops the run with finished messages kept and the manifest saved (ABORTED); re-run to resume
+    const result = await withCliInterruptSignal((signal) =>
+      dumpMsGraphCliMail({
+        graphContext,
+        signal,
+        concurrency,
+        dir: argv.dir,
+        mailbox: argv.mailbox,
+        folder: argv.folder,
+        since: parseMsGraphCliDateOption('since', argv.since),
+        bodyFormat: argv.bodyFormat ?? 'text',
+        markdown: argv.markdown ?? true,
+        eml: argv.eml ?? false,
+        attachments: argv.attachments ?? false,
+        prune: argv.prune ?? false,
+        maxMessages: argv.maxMessages ?? DEFAULT_MSGRAPH_CLI_MAIL_DUMP_MAX_MESSAGES,
+        maxBytes: argv.maxBytes,
+        immutableIds: !argv.mutableIds,
+        idleTimeout: msGraphCliIdleTimeoutMs(argv.idleTimeout),
+        progress: (line) => process.stderr.write(`${line}\n`)
+      })
+    );
 
     outputMsGraphCliResult(result);
   })
