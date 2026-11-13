@@ -11,6 +11,7 @@ import {
   DbxActionErrorDirective,
   DbxAvatarComponent,
   DbxButtonComponent,
+  DbxButtonSpacerDirective,
   DbxChipDirective,
   DbxErrorComponent,
   DbxListWrapperComponentImportsModule,
@@ -159,6 +160,9 @@ export class DbxFirebaseExternalConnectionListViewComponent extends AbstractDbxL
       @if (actions.length) {
         <div class="dbx-flex-bar dbx-pt2">
           @for (action of actions; track action.label) {
+            @if (!$first) {
+              <dbx-button-spacer></dbx-button-spacer>
+            }
             <!-- dbxActionValue is not used: each action's handler takes no input and the confirm marks it ready, dialog or not -->
             <div dbxAction [dbxActionHandler]="action.handler" [dbxActionConfirm]="action.confirm ?? autoConfirmConfig">
               <dbx-button dbxActionButton [stroked]="true" [text]="action.label" [icon]="action.icon"></dbx-button>
@@ -169,7 +173,7 @@ export class DbxFirebaseExternalConnectionListViewComponent extends AbstractDbxL
       }
     </div>
   `,
-  imports: [DatePipe, DbxActionButtonDirective, DbxActionConfirmDirective, DbxActionDirective, DbxActionErrorDirective, DbxActionHandlerDirective, DbxAvatarComponent, DbxButtonComponent, DbxChipDirective, DbxErrorComponent]
+  imports: [DatePipe, DbxActionButtonDirective, DbxActionConfirmDirective, DbxActionDirective, DbxActionErrorDirective, DbxActionHandlerDirective, DbxAvatarComponent, DbxButtonComponent, DbxButtonSpacerDirective, DbxChipDirective, DbxErrorComponent]
 })
 export class DbxFirebaseExternalConnectionListViewItemComponent extends AbstractDbxValueListViewItemComponent<DbxFirebaseExternalConnectionListItemValue> {
   readonly defaultIcon = DEFAULT_CONNECTION_ICON;
