@@ -72,8 +72,13 @@ msgraph-cli mail list [--folder inbox] [--since <iso>] [--until <iso>] [--from <
 msgraph-cli mail search "<KQL>" [--top 25] [--folder inbox] [--all-pages [--max-pages 20]]   # e.g. "from:ada@example.com received>=2026-11-01"
 msgraph-cli mail get <id> [--format text|html] [--select a,b] [--mime --out message.eml]
 msgraph-cli mail get-many <id…> | --ids-file ids.txt                    # $batch, 20 per call, in order
-msgraph-cli mail dump --dir <dir> [--folder inbox] [--since <iso>] [--eml] [--attachments]   # delta; re-running resumes
+msgraph-cli mail dump --dir <dir> [--folder inbox] [--since <iso>] [--eml] [--attachments] [--idle-timeout 60]   # delta; re-running resumes
 ```
+
+`mail dump --eml` / `--attachments`, `mail get --mime` and `files download` stream each body to disk (0600, through a
+`.part` file renamed into place), so a large file never sits in memory. `--idle-timeout <s>` (default 60) aborts a body
+that stops sending bytes; a stalled or short body leaves no partial file, and `mail dump` saves its manifest first, so a
+re-run resumes the page.
 
 The mail read and write commands take `--mailbox <address>` for a shared or delegated mailbox, and return
 immutable ids (`--mutable-ids` for the default ones). `mail search` cannot take `--since` / `--from`

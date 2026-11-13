@@ -557,6 +557,19 @@ export interface MicrosoftGraphMessageAttachmentContentInput extends MicrosoftGr
 }
 
 /**
+ * Builds the GET of one attachment's raw content (`/$value`), for {@link getMessageAttachmentContent} or a
+ * streamed read through `microsoftGraphRequestStream`. The attachment id is URL-encoded.
+ *
+ * @param input - The message id, attachment id and mailbox.
+ * @returns The raw request.
+ *
+ * @see https://learn.microsoft.com/en-us/graph/api/attachment-get#example-6-get-the-raw-contents-of-a-file-attachment-on-a-message
+ */
+export function microsoftGraphGetMessageAttachmentContentRequest(input: MicrosoftGraphMessageAttachmentContentInput): MicrosoftGraphRawRequestInput {
+  return { method: 'GET', path: `${microsoftGraphMessagePath(input)}/attachments/${encodeURIComponent(input.attachmentId)}/$value` };
+}
+
+/**
  * Reads one attachment's raw content (`/$value`) through the raw path. Requires `Mail.Read`
  * (`Mail.Read.Shared` for another mailbox).
  *
@@ -567,5 +580,5 @@ export interface MicrosoftGraphMessageAttachmentContentInput extends MicrosoftGr
  */
 export function getMessageAttachmentContent(context: MicrosoftGraphContext): (input: MicrosoftGraphMessageAttachmentContentInput) => Promise<MicrosoftGraphRawResponse> {
   const requestRaw = microsoftGraphRequestRaw(context);
-  return (input) => requestRaw({ method: 'GET', path: `${microsoftGraphMessagePath(input)}/attachments/${encodeURIComponent(input.attachmentId)}/$value` });
+  return (input) => requestRaw(microsoftGraphGetMessageAttachmentContentRequest(input));
 }

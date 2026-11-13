@@ -4997,6 +4997,78 @@
       ]
     },
     {
+      "slug": "sanitize-file-name",
+      "name": "sanitizeFileName",
+      "kind": "function",
+      "category": "file",
+      "module": "@dereekb/util",
+      "subpath": "file/file.name",
+      "signature": "sanitizeFileName(name: Maybe<string>, config?: Maybe<SanitizeFileNameConfig>): string",
+      "description": "Makes a name safe to use as one local file name: never a path, never empty.\n\n`strict` (the default) replaces path separators, control characters, `..` and anything outside ASCII letters, digits,\n`.`, `-`, `_` and spaces with `_`, collapses repeated `_`, drops leading dots, underscores and spaces, and caps the\nname at `maxLength` characters (default 80), keeping its extension.\n\n`portable` NFC-normalizes the name and replaces only what a local file system rejects (`/`, `\\`, NUL and other control\ncharacters, DEL, and `< > : \" | ? *`) with `_`. It trims trailing dots and spaces, prefixes Windows device names\n(`CON`, `NUL`, `COM1`, `LPT1`, …, with or without an extension) with `_`, keeps leading dots and Unicode, and caps the\nname at `maxLength` UTF-8 bytes (default 255), keeping its extension and never splitting a code point.",
+      "params": [
+        {
+          "name": "name",
+          "type": "Maybe<string>",
+          "description": "- The raw name, e.g. a remote file's or an attachment's.",
+          "optional": false
+        },
+        {
+          "name": "config",
+          "type": "Maybe<SanitizeFileNameConfig>",
+          "description": "- The mode, length cap and fallback.",
+          "optional": true
+        }
+      ],
+      "returns": "The safe name; `fallback` (default `file`) when nothing is left.",
+      "tags": [
+        "file",
+        "name",
+        "sanitize",
+        "filename",
+        "path",
+        "safe",
+        "portable",
+        "sanitizefilename"
+      ],
+      "example": "sanitizeFileName('../../etc/passwd'); // 'etc_passwd'\nsanitizeFileName('Résumé: draft?.docx', { mode: 'portable' }); // 'Résumé_ draft_.docx'"
+    },
+    {
+      "slug": "file-name-with-suffix",
+      "name": "fileNameWithSuffix",
+      "kind": "function",
+      "category": "file",
+      "module": "@dereekb/util",
+      "subpath": "file/file.name",
+      "signature": "fileNameWithSuffix(name: string, suffix: string): string",
+      "description": "Inserts a suffix before a file name's extension, e.g. to tell apart two names that collide.\nThe extension is the last `.` part that is not the first character and is at most 10 characters long.\nThe result is not re-capped: sanitize with room to spare when the suffix must fit a length limit.",
+      "params": [
+        {
+          "name": "name",
+          "type": "string",
+          "description": "- The file name.",
+          "optional": false
+        },
+        {
+          "name": "suffix",
+          "type": "string",
+          "description": "- The text to insert.",
+          "optional": false
+        }
+      ],
+      "returns": "The name with the suffix before its extension.",
+      "tags": [
+        "file",
+        "name",
+        "suffix",
+        "extension",
+        "collision",
+        "rename",
+        "with",
+        "filenamewithsuffix"
+      ],
+      "example": "fileNameWithSuffix('report.pdf', ' (1a2b3c4d)'); // 'report (1a2b3c4d).pdf'\nfileNameWithSuffix('.bashrc', ' (1)'); // '.bashrc (1)'"
+    },
+    {
       "slug": "merge-filter-functions",
       "name": "mergeFilterFunctions",
       "kind": "factory",
@@ -9514,6 +9586,39 @@
       "relatedSlugs": [
         "slash-path-path-matcher",
         "expand-slash-path-path-matcher-part-to-decision-functions"
+      ]
+    },
+    {
+      "slug": "exponential-backoff-delay",
+      "name": "exponentialBackoffDelay",
+      "kind": "function",
+      "category": "promise",
+      "module": "@dereekb/util",
+      "subpath": "promise/backoff",
+      "signature": "exponentialBackoffDelay(input: ExponentialBackoffDelayInput): Milliseconds",
+      "description": "Returns how long to wait before a retry: `initialDelay * factor^(attempt - 1)`, capped at `maxDelay`, then jittered.",
+      "params": [
+        {
+          "name": "input",
+          "type": "ExponentialBackoffDelayInput",
+          "description": "- The attempt number and backoff settings.",
+          "optional": false
+        }
+      ],
+      "returns": "The delay in whole milliseconds.",
+      "tags": [
+        "promise",
+        "retry",
+        "backoff",
+        "exponential",
+        "jitter",
+        "delay",
+        "throttle",
+        "exponentialbackoffdelay"
+      ],
+      "example": "exponentialBackoffDelay({ attempt: 1, jitter: 'none' }); // 1000\nexponentialBackoffDelay({ attempt: 3, jitter: 'none' }); // 4000\nexponentialBackoffDelay({ attempt: 3 }); // between 2000 and 4000",
+      "relatedSlugs": [
+        "wait"
       ]
     },
     {

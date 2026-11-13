@@ -2,7 +2,18 @@ import { describe, expect, it } from 'vitest';
 import { type FetchHandler } from '@dereekb/util/fetch';
 import { type MicrosoftGraphBatchResponseItem } from './graph.batch.api';
 import { microsoftGraphFactory } from './graph.factory';
-import { MICROSOFT_GRAPH_MESSAGE_DELTA_SELECT, MICROSOFT_GRAPH_MESSAGE_FILTER_EARLIEST, getMessageAttachmentContent, getMessageMime, getMessages, listMessages, microsoftGraphMessageListFilter, microsoftGraphMessagesDeltaRequest, microsoftGraphSearchMessagesRequest } from './graph.mail.api';
+import {
+  MICROSOFT_GRAPH_MESSAGE_DELTA_SELECT,
+  MICROSOFT_GRAPH_MESSAGE_FILTER_EARLIEST,
+  getMessageAttachmentContent,
+  getMessageMime,
+  getMessages,
+  listMessages,
+  microsoftGraphGetMessageAttachmentContentRequest,
+  microsoftGraphMessageListFilter,
+  microsoftGraphMessagesDeltaRequest,
+  microsoftGraphSearchMessagesRequest
+} from './graph.mail.api';
 
 function recordingGraph(answer: (request: Request) => Promise<Response> | Response) {
   const requests: Request[] = [];
@@ -150,5 +161,14 @@ describe('getMessageAttachmentContent()', () => {
     const response = await getMessageAttachmentContent(graphContext)({ id: 'm1', attachmentId: 'a/1' });
     expect(new URL(requests[0].url).pathname).toBe('/v1.0/me/messages/m1/attachments/a%2F1/$value');
     expect([...response.body]).toEqual([1, 2, 3]);
+  });
+});
+
+describe('microsoftGraphGetMessageAttachmentContentRequest()', () => {
+  it('encodes the message and attachment ids in the $value path', () => {
+    // models: https://learn.microsoft.com/en-us/graph/api/attachment-get#example-6-get-the-raw-contents-of-a-file-attachment-on-a-message
+    const request = microsoftGraphGetMessageAttachmentContentRequest({ mailbox: 'shared@example.com', id: 'm/1', attachmentId: 'a=/1' });
+    expect(request.method).toBe('GET');
+    expect(request.path).toBe('/users/shared%40example.com/messages/m%2F1/attachments/a%3D%2F1/$value');
   });
 });

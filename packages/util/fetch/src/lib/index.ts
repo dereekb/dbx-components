@@ -8,5 +8,6 @@ export * from './fetch.page.iterate';
 export * from './fetch.url';
 export * from './json';
 export * from './provider';
+export * from './retry.after';
 export * from './timeout';
 export * from './url';

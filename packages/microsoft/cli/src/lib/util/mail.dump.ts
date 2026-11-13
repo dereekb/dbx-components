@@ -5,20 +5,22 @@ import {
   type MicrosoftGraphDeltaRemovedReason,
   type MicrosoftGraphMessage,
   type MicrosoftGraphMessageDeltaItem,
+  type MicrosoftGraphRawRequestInput,
   type MicrosoftGraphRecipient,
   MICROSOFT_GRAPH_MESSAGE_SELECT,
-  getMessageAttachmentContent,
-  getMessageMime,
   getMessages,
   listMessageAttachments,
   listMessagesDeltaPage,
   microsoftGraphDateTimeLiteral,
+  microsoftGraphGetMessageAttachmentContentRequest,
+  microsoftGraphGetMessageMimeRequest,
   DEFAULT_MICROSOFT_GRAPH_MESSAGE_DELTA_PAGE_SIZE
 } from '@dereekb/microsoft';
-import { type EmailAddress, type ISO8601DateString, type Maybe } from '@dereekb/util';
+import { type EmailAddress, type ISO8601DateString, type Maybe, type Milliseconds, sanitizeFileName } from '@dereekb/util';
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
+import { downloadMsGraphCliFile } from './file.download';
 
 /**
  * The version of the dump manifest this CLI writes.
@@ -163,6 +165,11 @@ export interface MsGraphCliMailDumpConfig {
   readonly maxBytes?: Maybe<number>;
   readonly immutableIds: boolean;
   /**
+   * Aborts an `.eml` or attachment download when no byte arrives for this long. Defaults to the
+   * `downloadMsGraphCliFile` default (60 s).
+   */
+  readonly idleTimeout?: Maybe<Milliseconds>;
+  /**
    * Receives a progress line (stderr in the CLI).
    */
   readonly progress?: Maybe<(line: string) => void>;
@@ -203,21 +210,7 @@ export function msGraphCliMailDumpMailboxKey(mailbox: Maybe<EmailAddress>): stri
  * @returns The safe name; `attachment` when nothing is left.
  */
 export function sanitizeMsGraphCliFileName(name: Maybe<string>, maxLength = MSGRAPH_CLI_MAIL_DUMP_MAX_FILE_NAME_LENGTH): string {
-  const cleaned = (name ?? '')
-    .replaceAll(/[^\w.\- ]/g, '_')
-    .replaceAll(/\.{2,}/g, '_')
-    .replaceAll(/_+/g, '_')
-    .replace(/^[._\s]+/, '')
-    .trim();
-  let result = cleaned || 'attachment';
-
-  if (result.length > maxLength) {
-    const dot = result.lastIndexOf('.');
-    const extension = dot > 0 && result.length - dot <= 10 ? result.slice(dot) : '';
-    result = result.slice(0, maxLength - extension.length) + extension;
-  }
-
-  return result;
+  return sanitizeFileName(name, { mode: 'strict', maxLength, fallback: 'attachment' });
 }
 
 /**
@@ -336,9 +329,7 @@ export async function dumpMsGraphCliMail(config: MsGraphCliMailDumpConfig): Prom
   const progress = config.progress ?? (() => undefined);
   const deltaPage = listMessagesDeltaPage(graphContext);
   const readMessages = getMessages(graphContext);
-  const readMime = getMessageMime(graphContext);
   const readAttachments = listMessageAttachments(graphContext);
-  const readAttachment = getMessageAttachmentContent(graphContext);
 
   await mkdir(dir, { recursive: true, mode: 0o700 });
   let manifest = await readMsGraphCliMailDumpManifest(config);
@@ -352,6 +343,15 @@ export async function dumpMsGraphCliMail(config: MsGraphCliMailDumpConfig): Prom
     await mkdir(dirname(path), { recursive: true, mode: 0o700 });
     await writeFile(path, data, { mode: 0o600 });
     run.bytes += typeof data === 'string' ? Buffer.byteLength(data) : data.length;
+  }
+
+  // streams a raw body to disk (0600, through a `.part` file), so a large .eml or attachment is never held in memory
+  async function downloadDumpFile(relativePath: string, request: MicrosoftGraphRawRequestInput): Promise<number> {
+    const path = join(dir, relativePath);
+    await mkdir(dirname(path), { recursive: true, mode: 0o700 });
+    const { bytes } = await downloadMsGraphCliFile({ graphContext, request, out: path, idleTimeout: config.idleTimeout });
+    run.bytes += bytes;
+    return bytes;
   }
 
   async function writeAttachments(message: MicrosoftGraphMessage, file: string): Promise<void> {
@@ -370,9 +370,8 @@ export async function dumpMsGraphCliMail(config: MsGraphCliMailDumpConfig): Prom
         continue;
       }
 
-      const content = await readAttachment({ mailbox, id: message.id, attachmentId: attachment.id });
-      run.attachmentBytes += content.body.length;
-      await writeDumpFile(`${file}/attachments/${msGraphCliMailDumpHash8(attachment.id)}_${sanitizeMsGraphCliFileName(attachment.name)}`, content.body);
+      const relativePath = `${file}/attachments/${msGraphCliMailDumpHash8(attachment.id)}_${sanitizeMsGraphCliFileName(attachment.name)}`;
+      run.attachmentBytes += await downloadDumpFile(relativePath, microsoftGraphGetMessageAttachmentContentRequest({ mailbox, id: message.id, attachmentId: attachment.id }));
     }
   }
 
@@ -391,7 +390,7 @@ export async function dumpMsGraphCliMail(config: MsGraphCliMailDumpConfig): Prom
     }
 
     if (config.eml) {
-      await writeDumpFile(`${file}.eml`, (await readMime({ mailbox, id: message.id })).body);
+      await downloadDumpFile(`${file}.eml`, microsoftGraphGetMessageMimeRequest({ mailbox, id: message.id }));
     }
 
     if (config.attachments && message.hasAttachments) {

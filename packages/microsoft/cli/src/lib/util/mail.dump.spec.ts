@@ -1,9 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { existsSync, mkdtempSync, readFileSync, rmSync, statSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CliError } from '@dereekb/dbx-cli';
 import { type MicrosoftGraphContext, microsoftGraphFactory } from '@dereekb/microsoft';
+import { type Maybe } from '@dereekb/util';
 import { type FetchHandler } from '@dereekb/util/fetch';
 import { type MsGraphCliMailDumpConfig, type MsGraphCliMailDumpManifest, MSGRAPH_CLI_MAIL_DUMP_MANIFEST_FILE, dumpMsGraphCliMail, msGraphCliMailDumpHash8, msGraphCliMailDumpMailboxKey, msGraphCliMailDumpMarkdown, msGraphCliMailDumpMessagePath, sanitizeMsGraphCliFileName } from './mail.dump';
 
@@ -18,6 +19,32 @@ interface FakeMessage {
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+}
+
+interface FakeAttachment {
+  readonly id: string;
+  readonly name: string;
+  readonly bytes: Uint8Array;
+}
+
+/**
+ * A raw body sent in 64 KiB chunks; when `hang`, it sends the first chunk and then stays open until the request is aborted.
+ */
+function chunkedBody(request: Request, bytes: Uint8Array, hang = false): ReadableStream<Uint8Array> {
+  return new ReadableStream<Uint8Array>({
+    start(controller) {
+      if (hang) {
+        controller.enqueue(bytes.subarray(0, 1024));
+        request.signal.addEventListener('abort', () => controller.error(new DOMException('This operation was aborted', 'AbortError')));
+      } else {
+        for (let i = 0; i < bytes.length; i += 64 * 1024) {
+          controller.enqueue(bytes.subarray(i, i + 64 * 1024));
+        }
+
+        controller.close();
+      }
+    }
+  });
 }
 
 /**
@@ -38,6 +65,8 @@ function fakeGraph() {
    */
   let changes: unknown[] = [];
   let failNextPage = false;
+  let attachment: Maybe<FakeAttachment>;
+  let hangValue = false;
 
   const summary = (m: FakeMessage) => ({ id: m.id, changeKey: m.changeKey, receivedDateTime: m.receivedDateTime });
 
@@ -52,13 +81,19 @@ function fakeGraph() {
         const id = /messages\/([^/?]+)/.exec(x.url)?.[1] ?? '';
         const m = messages.get(decodeURIComponent(id));
         return m
-          ? { id: x.id, status: 200, body: { ...summary(m), subject: `Private ${m.id}`, from: { emailAddress: { address: 'ada@example.com' } }, body: { contentType: 'text', content: `secret body ${m.id}` }, hasAttachments: false } }
+          ? { id: x.id, status: 200, body: { ...summary(m), subject: `Private ${m.id}`, from: { emailAddress: { address: 'ada@example.com' } }, body: { contentType: 'text', content: `secret body ${m.id}` }, hasAttachments: attachment != null } }
           : { id: x.id, status: 404, body: { error: { code: 'ErrorItemNotFound', message: 'Not found.' } } };
       });
       response = json({ responses });
+    } else if (attachment && url.pathname.endsWith('/attachments')) {
+      // models: https://learn.microsoft.com/en-us/graph/api/message-list-attachments — fileAttachment entries with size, no contentBytes under $select
+      response = json({ value: [{ '@odata.type': '#microsoft.graph.fileAttachment', id: attachment.id, name: attachment.name, contentType: 'application/octet-stream', size: attachment.bytes.length, isInline: false }] });
+    } else if (attachment && url.pathname.endsWith(`/attachments/${encodeURIComponent(attachment.id)}/$value`)) {
+      // models: attachment-get example 6 — the raw file bytes, with a Content-Length
+      response = new Response(chunkedBody(request, attachment.bytes, hangValue), { status: 200, headers: { 'Content-Type': 'application/octet-stream', 'Content-Length': String(attachment.bytes.length) } });
     } else if (url.pathname.endsWith('/$value')) {
       // models: M-h (outlook-get-mime-message)
-      response = new Response('Subject: private\r\n\r\nsecret', { status: 200, headers: { 'Content-Type': 'text/plain' } });
+      response = hangValue ? new Response(chunkedBody(request, new TextEncoder().encode('Subject: private\r\n\r\n'), true), { status: 200, headers: { 'Content-Type': 'text/plain' } }) : new Response('Subject: private\r\n\r\nsecret', { status: 200, headers: { 'Content-Type': 'text/plain' } });
     } else if (url.pathname.startsWith(`/v1.0${DELTA_PATH}`)) {
       deltaRequests.push({ url, prefer: request.headers.get('Prefer') });
       const top = Number(/odata\.maxpagesize=(\d+)/.exec(request.headers.get('Prefer') ?? '')?.[1] ?? 50);
@@ -94,6 +129,12 @@ function fakeGraph() {
     },
     failNextPage: () => {
       failNextPage = true;
+    },
+    setAttachment: (value: Maybe<FakeAttachment>) => {
+      attachment = value;
+    },
+    hangValue: (value: boolean) => {
+      hangValue = value;
     }
   };
 }
@@ -235,6 +276,39 @@ describe('mail dump', () => {
     expect(manifest.counts.written).toBe(2);
     const resumed = await dumpMsGraphCliMail(config(graph.graphContext));
     expect(resumed).toMatchObject({ written: 1, complete: true });
+  });
+
+  it('streams a large attachment to a 0600 file with identical bytes and leaves no .part file', async () => {
+    const graph = fakeGraph();
+    const bytes = new Uint8Array(3 * 1024 * 1024 + 17).map((_, i) => (i * 31) % 251);
+    graph.setAttachment({ id: 'att/1', name: 'report.pdf', bytes });
+    graph.messages.delete('m2');
+    graph.messages.delete('m3');
+
+    const result = await dumpMsGraphCliMail(config(graph.graphContext, { attachments: true }));
+
+    const folder = join(dir, `${msGraphCliMailDumpMessagePath({ id: 'm1', receivedDateTime: '2026-11-01T10:00:00Z' })}`, 'attachments');
+    const files = readdirSync(folder);
+    expect(files).toEqual([`${msGraphCliMailDumpHash8('att/1')}_report.pdf`]);
+    const written = join(folder, files[0]);
+    expect(Buffer.compare(readFileSync(written), Buffer.from(bytes))).toBe(0);
+    expect(statSync(written).mode & 0o777).toBe(0o600);
+    expect(result.bytes).toBeGreaterThan(bytes.length);
+  });
+
+  it('rethrows a stalled .eml download after saving the manifest with the previous cursor, leaving no .part file', async () => {
+    const graph = fakeGraph();
+    await dumpMsGraphCliMail(config(graph.graphContext, { maxMessages: 2 }));
+    graph.hangValue(true);
+
+    const error = await dumpMsGraphCliMail(config(graph.graphContext, { eml: true, idleTimeout: 50 })).catch((e: unknown) => e);
+    expect((error as Error).name).toBe('MsGraphCliDownloadStalledError');
+
+    const manifest = readManifest();
+    expect(manifest.nextLink).toContain('$skiptoken=2');
+    expect(manifest.counts.written).toBe(2);
+    const messageDir = join(dir, msGraphCliMailDumpMessagePath({ id: 'm3', receivedDateTime: '2026-11-03T12:00:00Z' }), '..');
+    expect(readdirSync(messageDir).filter((x) => x.endsWith('.part'))).toEqual([]);
   });
 
   it('refuses a directory dumped from another folder', async () => {

@@ -50,8 +50,8 @@ export interface MicrosoftGraphRawRequestInput {
    */
   readonly timeout?: Maybe<Milliseconds>;
   /**
-   * Cancels the request, e.g. a stall timeout on a streamed download. With a signal the caller owns
-   * cancellation: the client's `timeout` no longer applies.
+   * Cancels the request, e.g. a stall timeout on a streamed download. The signal and the client's
+   * `timeout` both apply: whichever fires first aborts the request.
    */
   readonly signal?: Maybe<AbortSignal>;
 }

@@ -86,7 +86,7 @@ describe('rateLimitedFetchHandler()', () => {
       await handler(request, makeFetch);
 
       expect(updateWithResponse).toHaveBeenCalledTimes(1);
-      expect(updateWithResponse).toHaveBeenCalledWith(expectedResponse, undefined);
+      expect(updateWithResponse).toHaveBeenCalledWith(expectedResponse, undefined, request);
     });
   });
 
@@ -245,7 +245,7 @@ describe('rateLimitedFetchHandler()', () => {
         expect(e).toBe(fetchResponseError);
       }
 
-      expect(updateWithResponse).toHaveBeenCalledWith(errorResponse, fetchResponseError);
+      expect(updateWithResponse).toHaveBeenCalledWith(errorResponse, fetchResponseError, request);
     });
 
     it('should retry on FetchResponseError when updateWithResponse returns true', async () => {
@@ -276,6 +276,44 @@ describe('rateLimitedFetchHandler()', () => {
   });
 
   describe('error handling', () => {
+    it('should rethrow an error without a response (an abort) untouched, without calling updateWithResponse', async () => {
+      const abortError = new DOMException('This operation was aborted', 'AbortError');
+      const updateWithResponse = vi.fn().mockReturnValue(true);
+      const handler = rateLimitedFetchHandler({ rateLimiter: mockRateLimiter(), updateWithResponse, maxRetries: 3 });
+      const makeFetch = vi.fn().mockRejectedValue(abortError);
+
+      await expect(handler(new Request('https://example.com/test'), makeFetch)).rejects.toBe(abortError);
+      expect(updateWithResponse).not.toHaveBeenCalled();
+      expect(makeFetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('should rethrow a network TypeError untouched', async () => {
+      const networkError = new TypeError('fetch failed');
+      const handler = rateLimitedFetchHandler({ rateLimiter: mockRateLimiter(), updateWithResponse: () => true });
+
+      await expect(handler(new Request('https://example.com/test'), vi.fn().mockRejectedValue(networkError))).rejects.toBe(networkError);
+    });
+
+    it('should pass the request to updateWithResponse and still retry a 429', async () => {
+      const throttled = Object.assign(new Error('throttled'), { response: mockResponse(429, 'Too Many Requests') }) as unknown as FetchResponseError;
+      const ok = mockResponse(200);
+      const methods: string[] = [];
+      const handler = rateLimitedFetchHandler({
+        rateLimiter: mockRateLimiter(),
+        updateWithResponse: (response, _error, request) => {
+          methods.push(request?.method ?? '');
+          return response.status === 429;
+        }
+      });
+      const makeFetch = vi.fn().mockRejectedValueOnce(throttled).mockResolvedValueOnce(ok);
+
+      const response = await handler(new Request('https://example.com/test', { method: 'DELETE' }), makeFetch);
+
+      expect(response).toBe(ok);
+      expect(makeFetch).toHaveBeenCalledTimes(2);
+      expect(methods).toEqual(['DELETE', 'DELETE']);
+    });
+
     it('should re-throw FetchResponseError when retries are exhausted', async () => {
       const errorResponse = mockResponse(429, 'Too Many Requests');
       const fetchResponseError = Object.assign(new Error('rate limited'), { response: errorResponse }) as unknown as FetchResponseError;

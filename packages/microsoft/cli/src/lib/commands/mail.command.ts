@@ -161,7 +161,7 @@ export const MAIL_DUMP_COMMAND: CommandModule = {
   command: 'dump',
   describe: 'Dump a mail folder to a directory, incrementally (delta): JSON + Markdown per message, optional .eml and attachments',
   builder: (yargs: Argv) =>
-    msGraphCliMailboxOptions(yargs)
+    msGraphCliIdleTimeoutOption(msGraphCliMailboxOptions(yargs))
       .option('dir', { type: 'string', demandOption: true, describe: 'The dump directory (created with mode 0700). Re-running into it resumes from its manifest.json' })
       .option('folder', { type: 'string', default: 'inbox', describe: 'The mail folder by id or well-known name (inbox, sentitems, archive). Delta is per-folder' })
       .option('since', { type: 'string', describe: 'First run only: messages received at or after this date/instant (ISO 8601)' })
@@ -191,6 +191,7 @@ export const MAIL_DUMP_COMMAND: CommandModule = {
       maxMessages: argv.maxMessages ?? DEFAULT_MSGRAPH_CLI_MAIL_DUMP_MAX_MESSAGES,
       maxBytes: argv.maxBytes,
       immutableIds: !argv.mutableIds,
+      idleTimeout: msGraphCliIdleTimeoutMs(argv.idleTimeout),
       progress: (line) => process.stderr.write(`${line}\n`)
     });
 
