@@ -32,6 +32,13 @@ export interface MsGraphCliConfigFile extends CliTokenSourceConfigFile<MsGraphCl
    * mailboxes a user may open, so they are recorded here for `mail mailboxes check`.
    */
   readonly mailboxes?: Maybe<string[]>;
+  /**
+   * The signature file of each address mail is sent as other than your own, keyed by the lowercased
+   * address (`msgraph-cli config set signature-file <file> --mailbox <address>`). A message sent from
+   * `--mailbox` or as `--send-as` gets the signature of that address and never falls back to
+   * {@link signatureFile}, so a shared mailbox without one sends with none.
+   */
+  readonly mailboxSignatureFiles?: Maybe<Record<string, string>>;
 }
 
 /**

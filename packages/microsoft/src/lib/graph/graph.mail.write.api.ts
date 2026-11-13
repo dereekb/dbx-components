@@ -38,6 +38,15 @@ export interface MicrosoftGraphFileAttachmentInput {
   readonly name: string;
   readonly contentType?: Maybe<string>;
   readonly bytes: Uint8Array;
+  /**
+   * Whether the attachment is shown in the body (an image an HTML body references as `cid:<contentId>`)
+   * rather than listed as a file.
+   */
+  readonly isInline?: Maybe<boolean>;
+  /**
+   * The id an HTML body references the attachment by (`<img src="cid:<contentId>">`). Set with {@link isInline}.
+   */
+  readonly contentId?: Maybe<string>;
 }
 
 /**
@@ -91,6 +100,31 @@ export function microsoftGraphRecipients(addresses: readonly EmailAddress[]): Mi
 }
 
 /**
+ * Builds the Graph `fileAttachment` resource for a file small enough to send in one request.
+ *
+ * @param attachment - The file.
+ * @returns The attachment resource.
+ * @throws {Error} When the file is not under {@link MICROSOFT_GRAPH_MESSAGE_INLINE_ATTACHMENT_MAX_BYTES}.
+ */
+export function microsoftGraphFileAttachment(attachment: MicrosoftGraphFileAttachmentInput): Record<string, unknown> {
+  if (attachment.bytes.length >= MICROSOFT_GRAPH_MESSAGE_INLINE_ATTACHMENT_MAX_BYTES) {
+    throw new Error(`Attachment "${attachment.name}" is ${attachment.bytes.length} bytes; inline attachments must be under ${MICROSOFT_GRAPH_MESSAGE_INLINE_ATTACHMENT_MAX_BYTES}. Upload it to a draft instead.`);
+  }
+
+  const result: Record<string, unknown> = { '@odata.type': '#microsoft.graph.fileAttachment', name: attachment.name, contentType: attachment.contentType ?? 'application/octet-stream', contentBytes: microsoftGraphBase64(attachment.bytes) };
+
+  if (attachment.isInline) {
+    result['isInline'] = true;
+  }
+
+  if (attachment.contentId != null) {
+    result['contentId'] = attachment.contentId;
+  }
+
+  return result;
+}
+
+/**
  * Builds the Graph `message` resource for an outgoing message, with only the fields given.
  *
  * @param input - The message fields.
@@ -125,13 +159,7 @@ export function microsoftGraphOutgoingMessage(input: MicrosoftGraphOutgoingMessa
   }
 
   if (input.attachments?.length) {
-    message['attachments'] = input.attachments.map((attachment) => {
-      if (attachment.bytes.length >= MICROSOFT_GRAPH_MESSAGE_INLINE_ATTACHMENT_MAX_BYTES) {
-        throw new Error(`Attachment "${attachment.name}" is ${attachment.bytes.length} bytes; inline attachments must be under ${MICROSOFT_GRAPH_MESSAGE_INLINE_ATTACHMENT_MAX_BYTES}. Upload it to a draft instead.`);
-      }
-
-      return { '@odata.type': '#microsoft.graph.fileAttachment', name: attachment.name, contentType: attachment.contentType ?? 'application/octet-stream', contentBytes: microsoftGraphBase64(attachment.bytes) };
-    });
+    message['attachments'] = input.attachments.map(microsoftGraphFileAttachment);
   }
 
   return message;
@@ -184,6 +212,26 @@ export interface MicrosoftGraphMessageIdInput extends Pick<MicrosoftGraphMailbox
  */
 export function microsoftGraphSendDraftRequest(input: MicrosoftGraphMessageIdInput): MicrosoftGraphRequestInput {
   return { method: 'POST', path: `${microsoftGraphMessagePath(input)}/send` };
+}
+
+export interface MicrosoftGraphAddMessageAttachmentInput extends MicrosoftGraphMessageIdInput {
+  /**
+   * The file, under {@link MICROSOFT_GRAPH_MESSAGE_INLINE_ATTACHMENT_MAX_BYTES}. Larger files go through {@link uploadMessageAttachment}.
+   */
+  readonly attachment: MicrosoftGraphFileAttachmentInput;
+}
+
+/**
+ * Builds the POST that adds a small file to a draft (Graph answers 201 with the attachment).
+ *
+ * @param input - The mailbox, draft id and file.
+ * @returns The request.
+ * @throws {Error} When the file is not under {@link MICROSOFT_GRAPH_MESSAGE_INLINE_ATTACHMENT_MAX_BYTES}.
+ *
+ * @see https://learn.microsoft.com/en-us/graph/api/message-post-attachments
+ */
+export function microsoftGraphAddMessageAttachmentRequest(input: MicrosoftGraphAddMessageAttachmentInput): MicrosoftGraphRequestInput {
+  return { method: 'POST', path: `${microsoftGraphMessagePath(input)}/attachments`, body: microsoftGraphFileAttachment(input.attachment) };
 }
 
 export interface MicrosoftGraphSendMailInput extends Pick<MicrosoftGraphMailboxInput, 'mailbox'> {
@@ -384,6 +432,19 @@ export function sendDraftMessage(context: MicrosoftGraphContext): (input: Micros
   const request = microsoftGraphRequest(context);
   return async (input) => {
     await request(microsoftGraphSendDraftRequest(input));
+  };
+}
+
+/**
+ * Adds a small file to a draft. Requires `Mail.ReadWrite` (`Mail.ReadWrite.Shared` in another mailbox).
+ *
+ * @param context - Fetch function and access-token source each request is sent with.
+ * @returns Function that adds the attachment.
+ */
+export function addMessageAttachment(context: MicrosoftGraphContext): (input: MicrosoftGraphAddMessageAttachmentInput) => Promise<void> {
+  const request = microsoftGraphRequest(context);
+  return async (input) => {
+    await request(microsoftGraphAddMessageAttachmentRequest(input));
   };
 }
 

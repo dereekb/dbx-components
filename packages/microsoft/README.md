@@ -32,13 +32,20 @@ Each environment (local, staging, production) needs an app registration in the t
 
 The `msgraph-cli` bin (the `./cli` export) reads and changes a user's mail, calendar, files and Teams messages through a token minted from the app's Microsoft connection. Its full docs are in `refs/msgraph-cli/REF.md` (see Agent docs below).
 
-**Mail signatures.** Microsoft Graph cannot read the Outlook signature, so msgraph-cli cannot add it on its own. Export your signature once from Outlook on the web (Settings → Mail → Compose and reply) to a file, then save it:
+**Mail signatures.** Microsoft Graph cannot read the Outlook signature: it is not in `mailboxSettings`, and Outlook's roaming signatures have no Graph API (the beta `userConfigurations` API reaches `OWA.UserOptions`, which no longer holds it). So msgraph-cli cannot add it on its own. Export your signature once from Outlook on the web (Settings → Mail → Compose and reply) to a file, then save it:
 
 ```bash
 msgraph-cli config set signature-file ./signature.html
+msgraph-cli config set signature-file ./billing-signature.html --mailbox billing@example.com
 ```
 
-New messages, replies and forwards then get it appended (`.html` / `.htm` files as HTML, anything else as text). For one command, `--signature-file <file>` uses another file and `--no-signature` leaves it off.
+New messages, replies and forwards then get the signature of the address they are sent as appended (`.html` / `.htm` files as HTML, anything else as text):
+
+- Mail from your own mailbox gets `signature-file`.
+- Mail sent from `--mailbox <address>` or as `--send-as <address>` gets the signature saved for that address with `--mailbox`, and never your own, so a shared mailbox without one sends with none.
+- In an HTML signature, a local `<img src="logo.png">` (relative to the signature file, like Outlook's exported `<name>_files/image001.png`) is attached inline and shown in the body. Web image URLs are left as they are.
+
+For one command, `--signature-file <file>` uses another file and `--no-signature` leaves it off. `config unset signature-file [--mailbox <address>]` removes one.
 
 ## Agent docs
 

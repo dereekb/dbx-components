@@ -6,6 +6,7 @@ import {
   MicrosoftGraphMessageNotDraftError,
   createDraftMessage,
   deleteMessages,
+  microsoftGraphAddMessageAttachmentRequest,
   microsoftGraphCreateDraftRequest,
   microsoftGraphMessageResponseAction,
   microsoftGraphOutgoingMessage,
@@ -46,6 +47,22 @@ describe('microsoftGraphOutgoingMessage()', () => {
 
   it('refuses an inline attachment of 3 MB or more', () => {
     expect(() => microsoftGraphOutgoingMessage({ attachments: [{ name: 'big.bin', bytes: new Uint8Array(3 * 1024 * 1024) }] })).toThrow(/upload it to a draft/i);
+  });
+
+  it('marks an attachment the body shows as inline, with its content id', () => {
+    const message = microsoftGraphOutgoingMessage({ attachments: [{ name: 'logo.png', contentType: 'image/png', bytes: new TextEncoder().encode('png'), isInline: true, contentId: 'logo-1' }] });
+    expect(message['attachments']).toEqual([{ '@odata.type': '#microsoft.graph.fileAttachment', name: 'logo.png', contentType: 'image/png', contentBytes: 'cG5n', isInline: true, contentId: 'logo-1' }]);
+  });
+});
+
+describe('microsoftGraphAddMessageAttachmentRequest()', () => {
+  it('posts the file attachment to the draft', () => {
+    const request = microsoftGraphAddMessageAttachmentRequest({ mailbox: 'shared@example.com', id: 'd1', attachment: { name: 'logo.png', contentType: 'image/png', bytes: new TextEncoder().encode('png'), isInline: true, contentId: 'logo-1' } });
+    expect(request).toEqual({
+      method: 'POST',
+      path: '/users/shared%40example.com/messages/d1/attachments',
+      body: { '@odata.type': '#microsoft.graph.fileAttachment', name: 'logo.png', contentType: 'image/png', contentBytes: 'cG5n', isInline: true, contentId: 'logo-1' }
+    });
   });
 });
 

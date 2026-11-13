@@ -532,6 +532,64 @@ describe('msgraph-cli', () => {
       expect((bodies[1] as { body: unknown }).body).toEqual({ contentType: 'text', content: 'Hi' });
       vi.unstubAllEnvs();
     });
+
+    describe('per-mailbox signatures', () => {
+      async function saveSignatures() {
+        const configDir = join(dir, 'config');
+        vi.stubEnv(MSGRAPH_CLI_CONFIG_DIR_ENV_VAR, configDir);
+        const store = msGraphCliConfigStore(msGraphCliPaths({ [MSGRAPH_CLI_CONFIG_DIR_ENV_VAR]: configDir }));
+        const ownFile = join(dir, 'own.html');
+        const billingFile = join(dir, 'billing.html');
+        writeFileSync(ownFile, '<p>Ada Lovelace</p>');
+        writeFileSync(billingFile, '<p>Billing team</p><img src="logo.png" alt="logo">');
+        writeFileSync(join(dir, 'logo.png'), 'png');
+        // what `config set signature-file <file>` and `config set signature-file <file> --mailbox billing@example.com` save
+        await store.updateConfigFile(await msGraphCliConfigSetUpdate('signature-file', ownFile));
+        await store.updateConfigFile(await msGraphCliConfigSetUpdate('signature-file', billingFile, { mailbox: 'Billing@Example.com', current: await store.loadConfigFile() }));
+      }
+
+      it('should append the sending mailbox signature with its image inline, and none for a mailbox without one', async () => {
+        await saveSignatures();
+        const sent: { url: string; body: { body?: { content: string }; attachments?: unknown[] } }[] = [];
+        await connect(async (request: Request) => {
+          sent.push({ url: request.url, body: await request.json() });
+          return new Response(JSON.stringify({ id: 'd1', isDraft: true }), { status: 201, headers: { 'Content-Type': 'application/json' } });
+        });
+        vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+        await runCommand(MAIL_DRAFT_CREATE_COMMAND, { to: ['ada@example.com'], subject: 'Hi', body: '<p>Hi</p>', html: true, signature: true, mailbox: 'billing@example.com' });
+        await runCommand(MAIL_DRAFT_CREATE_COMMAND, { to: ['ada@example.com'], subject: 'Hi', body: '<p>Hi</p>', html: true, signature: true, mailbox: 'support@example.com' });
+        await runCommand(MAIL_DRAFT_CREATE_COMMAND, { to: ['ada@example.com'], subject: 'Hi', body: '<p>Hi</p>', html: true, signature: true });
+
+        expect(sent[0].body.body?.content).toBe('<p>Hi</p><br><br><p>Billing team</p><img src="cid:signature1-logo.png" alt="logo">');
+        expect(sent[0].body.attachments).toEqual([{ '@odata.type': '#microsoft.graph.fileAttachment', name: 'logo.png', contentType: 'image/png', contentBytes: 'cG5n', isInline: true, contentId: 'signature1-logo.png' }]);
+        expect(sent[1].body.body?.content).toBe('<p>Hi</p>');
+        expect(sent[1].body.attachments).toBeUndefined();
+        expect(sent[2].body.body?.content).toBe('<p>Hi</p><br><br><p>Ada Lovelace</p>');
+        vi.unstubAllEnvs();
+      });
+
+      it('should reply through a draft when the signature has images: create the reply, attach the images, then send it', async () => {
+        await saveSignatures();
+        const calls: { method: string; path: string; body: unknown }[] = [];
+        await connect(async (request: Request) => {
+          const path = new URL(request.url).pathname;
+          const text = await request.text();
+          calls.push({ method: request.method, path, body: text ? JSON.parse(text) : undefined });
+          const answer = path.endsWith('/createReply') ? { status: 201, body: { id: 'd1', isDraft: true } } : path.endsWith('/attachments') ? { status: 201, body: { id: 'a1' } } : { status: 202, body: null };
+          return new Response(answer.body == null ? null : JSON.stringify(answer.body), { status: answer.status, headers: { 'Content-Type': 'application/json' } });
+        });
+        const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+        await runCommand(MAIL_REPLY_COMMAND, { id: 'm1', comment: 'Thanks', signature: true, mailbox: 'billing@example.com', yes: true });
+
+        expect(calls.map((x) => `${x.method} ${x.path}`)).toEqual(['POST /v1.0/users/billing%40example.com/messages/m1/createReply', 'POST /v1.0/users/billing%40example.com/messages/d1/attachments', 'POST /v1.0/users/billing%40example.com/messages/d1/send']);
+        expect((calls[0].body as { comment: string }).comment).toBe('Thanks<br><br><p>Billing team</p><img src="cid:signature1-logo.png" alt="logo">');
+        expect(calls[1].body).toMatchObject({ name: 'logo.png', isInline: true, contentId: 'signature1-logo.png' });
+        expect(printed(log).data).toEqual({ sent: true, id: 'm1' });
+        vi.unstubAllEnvs();
+      });
+    });
   });
 
   describe('shared mailboxes', () => {

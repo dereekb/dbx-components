@@ -58,7 +58,8 @@ msgraph-cli auth token-source use <name>          # `use default` returns to the
 msgraph-cli auth token-source show                # alias: list. Saved sources, the one in effect, env overrides (never the token)
 msgraph-cli auth token-source clear [--name <name>]
 msgraph-cli auth show [--token-source <name>]     # the active source, its token's scopes and expiry; fails when it cannot mint
-msgraph-cli config set signature-file <path>      # appended to new messages, replies and forwards
+msgraph-cli config set signature-file <path>      # appended to new messages, replies and forwards from your own mailbox
+msgraph-cli config set signature-file <path> --mailbox <addr>  # the signature of mail sent from / as <addr>
 msgraph-cli config set mailboxes a@x.com,b@x.com  # shared mailboxes for `mail mailboxes check`
 msgraph-cli config get | unset <key>
 msgraph-cli output set|show|clear                 # saved --pick / --dump-dir defaults
@@ -134,7 +135,12 @@ msgraph-cli mail auto-reply off --yes | restore --yes                  # each sa
 ```
 
 `--send-as <address>` sends from a shared mailbox (with `--mailbox`). Graph cannot read the Outlook
-signature: export it once from Outlook on the web to a file and `config set signature-file <file>`.
+signature (no `mailboxSettings` field, no roaming-signature API): export it once from Outlook on the web
+to a file and `config set signature-file <file>`. The signature is picked by the address a message is
+sent as: your own mailbox gets `signature-file`; `--mailbox <addr>` / `--send-as <addr>` gets the file
+saved with `config set signature-file <file> --mailbox <addr>`, and none when there is none (never your
+own). A local `<img src>` in an HTML signature (relative to the file) is attached inline as `cid:`; a
+reply or forward whose signature has images goes through its draft (create, attach, send).
 `--signature-file <file>` uses another file for one command; `--no-signature` leaves it off.
 
 Every auto-reply change first saves the current setting to `<configDir>/auto-reply.backup.json`.

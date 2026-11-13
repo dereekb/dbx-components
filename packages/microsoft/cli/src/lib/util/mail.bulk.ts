@@ -1,9 +1,9 @@
 import { CliError } from '@dereekb/dbx-cli';
-import { type MicrosoftGraphContext, type MicrosoftGraphItemBody, type MicrosoftGraphRequestInput, isMicrosoftGraphBatchResponseOk, microsoftGraphBatch, microsoftGraphBatchRequestItems, microsoftGraphSendMailRequest } from '@dereekb/microsoft';
+import { type MicrosoftGraphContext, type MicrosoftGraphRequestInput, isMicrosoftGraphBatchResponseOk, microsoftGraphBatch, microsoftGraphBatchRequestItems, microsoftGraphSendMailRequest } from '@dereekb/microsoft';
 import { type EmailAddress, type Maybe, type Milliseconds, MS_IN_MINUTE, waitForMs } from '@dereekb/util';
 import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
-import { appendMsGraphCliSignature, msGraphCliEscapeHtml, parseMsGraphCliAddressesOption, type MsGraphCliSignature } from './mail.write';
+import { appendMsGraphCliSignature, msGraphCliEscapeHtml, msGraphCliSignatureAttachments, parseMsGraphCliAddressesOption, type MsGraphCliSignature } from './mail.write';
 
 /**
  * The most messages `mail send-bulk` sends per minute: Exchange Online's limit per mailbox.
@@ -308,12 +308,13 @@ export interface MsGraphCliBulkMessageTemplate {
  * @returns The request.
  */
 export function msGraphCliBulkSendMailRequest(template: MsGraphCliBulkMessageTemplate, row: MsGraphCliBulkRow): MicrosoftGraphRequestInput {
-  const body: MicrosoftGraphItemBody = { contentType: template.html ? 'html' : 'text', content: renderMsGraphCliTemplate(template.body, row.fields, template.html) };
+  const body = appendMsGraphCliSignature({ contentType: template.html ? 'html' : 'text', content: renderMsGraphCliTemplate(template.body, row.fields, template.html) }, template.signature);
+  const attachments = msGraphCliSignatureAttachments(body, template.signature);
 
   return microsoftGraphSendMailRequest({
     mailbox: template.mailbox,
     saveToSentItems: template.saveToSentItems,
-    message: { subject: renderMsGraphCliTemplate(template.subject, row.fields, false), body: appendMsGraphCliSignature(body, template.signature), to: row.to, cc: row.cc.length > 0 ? row.cc : undefined, from: template.sendAs }
+    message: { subject: renderMsGraphCliTemplate(template.subject, row.fields, false), body, to: row.to, cc: row.cc.length > 0 ? row.cc : undefined, from: template.sendAs, attachments: attachments.length > 0 ? attachments : undefined }
   });
 }
 

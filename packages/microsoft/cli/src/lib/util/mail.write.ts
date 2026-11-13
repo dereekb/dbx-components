@@ -1,11 +1,12 @@
 import { CliError } from '@dereekb/dbx-cli';
 import { type MicrosoftGraphFileAttachmentInput, type MicrosoftGraphItemBody, type MicrosoftGraphMessageWriteResult, type MicrosoftGraphRequestInput, MICROSOFT_GRAPH_MESSAGE_INLINE_ATTACHMENT_MAX_BYTES, microsoftGraphPathWithQuery } from '@dereekb/microsoft';
-import { type EmailAddress, type Maybe } from '@dereekb/util';
+import { type EmailAddress, type Maybe, mimeTypeForFileExtension } from '@dereekb/util';
 import { readFile } from 'node:fs/promises';
-import { basename } from 'node:path';
+import { basename, dirname, extname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { Argv } from 'yargs';
 import { msGraphCliContentTypeForFile } from '../commands/request.command';
-import { msGraphCliConfigStore, msGraphCliPaths } from '../config/cli.config';
+import { type MsGraphCliConfigFile, msGraphCliConfigStore, msGraphCliPaths } from '../config/cli.config';
 
 /**
  * The fields of a Graph request body whose addresses `--dry-run` replaces with a count.
@@ -50,7 +51,11 @@ export function msGraphCliBodyOptions<T>(yargs: Argv<T>) {
     .option('body', { type: 'string', describe: 'The message body' })
     .option('body-file', { type: 'string', describe: 'Read the body from a file (.html / .htm is sent as HTML)' })
     .option('html', { type: 'boolean', default: false, describe: 'Send the body as HTML' })
-    .option('signature-file', { type: 'string', describe: 'Append this signature (.html / .htm as HTML, else text). Default: the saved signature-file (msgraph-cli config set signature-file <file>). Graph cannot read the Outlook signature' })
+    .option('signature-file', {
+      type: 'string',
+      describe:
+        'Append this signature (.html / .htm as HTML with its local <img> files attached inline, else text). Default: the saved signature of the address sent as (msgraph-cli config set signature-file <file> [--mailbox <address>]); a --mailbox / --send-as address without one gets none. Graph cannot read the Outlook signature'
+    })
     .option('signature', { type: 'boolean', default: true, describe: 'Append the signature (--no-signature to skip)' });
 }
 
@@ -314,30 +319,167 @@ export function splitMsGraphCliAttachments(attachments: readonly MicrosoftGraphF
 export interface MsGraphCliSignature {
   readonly content: string;
   readonly isHtml: boolean;
+  /**
+   * The local images an HTML signature shows, attached inline. The signature's `<img src>` values for them
+   * are rewritten to `cid:<contentId>`.
+   */
+  readonly inlineImages?: Maybe<readonly MicrosoftGraphFileAttachmentInput[]>;
 }
 
 /**
- * Reads the signature a command appends: `--signature-file`, else the saved `signature-file`, unless
- * `--no-signature`.
+ * The saved signature settings a send reads.
+ */
+export type MsGraphCliSignatureConfig = Pick<MsGraphCliConfigFile, 'signatureFile' | 'mailboxSignatureFiles'>;
+
+/**
+ * Returns the saved signature file for the address a message is sent as.
+ *
+ * Mail sent as another address (`--send-as`, else `--mailbox`) gets that address's signature from
+ * `mailboxSignatureFiles` and never your own `signatureFile`, so a shared mailbox without one sends with
+ * none. Mail from your own mailbox gets `signatureFile`.
+ *
+ * @param input - The sending address and the saved settings.
+ * @param input.sender - The address the message is sent as, when not your own.
+ * @param input.config - The saved signature settings.
+ * @returns The signature file path, if one is saved for the sender.
+ */
+export function msGraphCliSignatureFileForSender(input: { readonly sender?: Maybe<string>; readonly config?: Maybe<MsGraphCliSignatureConfig> }): Maybe<string> {
+  const sender = input.sender?.trim().toLowerCase();
+  return sender ? input.config?.mailboxSignatureFiles?.[sender] : input.config?.signatureFile;
+}
+
+/**
+ * Reads the signature a command appends, unless `--no-signature`: `--signature-file`, else the saved
+ * signature of the address the message is sent as (see {@link msGraphCliSignatureFileForSender}).
  *
  * @param input - The option values.
  * @param input.signature - False with `--no-signature`.
  * @param input.signatureFile - The `--signature-file` path.
- * @param input.configSignatureFile - The saved default. Read from the config file when not given.
+ * @param input.mailbox - The `--mailbox` the message is sent from.
+ * @param input.sendAs - The `--send-as` address.
+ * @param input.config - The saved signature settings. Read from the config file when not given.
  * @returns The signature, or undefined when none applies.
  */
-export async function readMsGraphCliSignature(input: { readonly signature?: Maybe<boolean>; readonly signatureFile?: Maybe<string>; readonly configSignatureFile?: Maybe<string> }): Promise<Maybe<MsGraphCliSignature>> {
+export async function readMsGraphCliSignature(input: { readonly signature?: Maybe<boolean>; readonly signatureFile?: Maybe<string>; readonly mailbox?: Maybe<string>; readonly sendAs?: Maybe<string>; readonly config?: Maybe<MsGraphCliSignatureConfig> }): Promise<Maybe<MsGraphCliSignature>> {
   let result: Maybe<MsGraphCliSignature>;
 
   if (input.signature !== false) {
-    const path = input.signatureFile ?? input.configSignatureFile ?? (await msGraphCliConfigStore(msGraphCliPaths()).loadConfigFile())?.signatureFile;
+    const path = input.signatureFile ?? msGraphCliSignatureFileForSender({ sender: input.sendAs ?? input.mailbox, config: input.config ?? (await msGraphCliConfigStore(msGraphCliPaths()).loadConfigFile()) });
 
     if (path) {
-      result = { content: (await readFile(path, 'utf8')).trim(), isHtml: isMsGraphCliHtmlFile(path) };
+      result = await readMsGraphCliSignatureFile(path);
     }
   }
 
   return result;
+}
+
+/**
+ * Reads a signature file: `.html` / `.htm` as HTML with its local images attached inline, anything else as text.
+ *
+ * @param path - The signature file.
+ * @returns The signature.
+ * @throws {CliError} `INVALID_ARGUMENT` when an image the HTML references cannot be read.
+ */
+export async function readMsGraphCliSignatureFile(path: string): Promise<MsGraphCliSignature> {
+  const content = (await readFile(path, 'utf8')).trim();
+  return isMsGraphCliHtmlFile(path) ? embedMsGraphCliSignatureImages({ html: content, baseDir: dirname(path) }) : { content, isHtml: false };
+}
+
+/**
+ * Matches an `<img>` tag's quoted `src`: the text before the value, the quote, and the value.
+ */
+const MSGRAPH_CLI_IMG_SRC_REGEX = /(<img\b[^>]*?\bsrc\s*=\s*)(["'])(.*?)\2/gi;
+
+/**
+ * Matches an image `src` that is not a local file: a web URL, a protocol-relative URL, `cid:` or `data:`.
+ */
+const MSGRAPH_CLI_REMOTE_IMG_SRC_REGEX = /^(?:https?:|cid:|data:|\/\/)/i;
+
+/**
+ * Attaches the local images an HTML signature shows inline, the way Outlook does.
+ *
+ * Every `<img src>` naming a local file (relative to `baseDir`, absolute, or a `file:` URL, as Outlook's
+ * exported `<name>_files/image001.png` are) is read, attached with `isInline` and a content id, and its
+ * `src` rewritten to `cid:<contentId>`. Web, `cid:` and `data:` images are left alone. A file referenced
+ * twice is attached once.
+ *
+ * @param input - The signature HTML and the folder its relative image paths start from.
+ * @param input.html - The signature HTML.
+ * @param input.baseDir - The folder relative `src` values resolve against (the signature file's folder).
+ * @returns The signature with the rewritten HTML and its inline images.
+ * @throws {CliError} `INVALID_ARGUMENT` when an image cannot be read.
+ */
+export async function embedMsGraphCliSignatureImages(input: { readonly html: string; readonly baseDir: string }): Promise<MsGraphCliSignature> {
+  const { html, baseDir } = input;
+  const contentIdByPath = new Map<string, string>();
+  const inlineImages: MicrosoftGraphFileAttachmentInput[] = [];
+
+  for (const match of html.matchAll(MSGRAPH_CLI_IMG_SRC_REGEX)) {
+    const src = match[3].trim();
+
+    if (src && !MSGRAPH_CLI_REMOTE_IMG_SRC_REGEX.test(src)) {
+      const path = msGraphCliSignatureImagePath(src, baseDir);
+
+      if (!contentIdByPath.has(path)) {
+        const bytes = await readFile(path).catch(() => {
+          throw new CliError({ message: `The signature image "${src}" (${path}) cannot be read.`, code: 'INVALID_ARGUMENT', suggestion: 'Keep the images next to the signature file (relative src paths start from its folder), or use a web URL.' });
+        });
+        const name = basename(path);
+        const contentId = `signature${inlineImages.length + 1}-${name.replaceAll(/[^\w.-]/g, '_')}`;
+        contentIdByPath.set(path, contentId);
+        inlineImages.push({ name, contentType: mimeTypeForFileExtension(extname(path).slice(1).toLowerCase()) ?? msGraphCliContentTypeForFile(path), bytes: new Uint8Array(bytes), isInline: true, contentId });
+      }
+    }
+  }
+
+  const content = html.replaceAll(MSGRAPH_CLI_IMG_SRC_REGEX, (...match: string[]) => {
+    const [whole, prefix, quote, src] = match;
+    const value = src.trim();
+    const contentId = value && !MSGRAPH_CLI_REMOTE_IMG_SRC_REGEX.test(value) ? contentIdByPath.get(msGraphCliSignatureImagePath(value, baseDir)) : undefined;
+    return contentId ? `${prefix}${quote}cid:${contentId}${quote}` : whole;
+  });
+
+  return { content, isHtml: true, inlineImages: inlineImages.length > 0 ? inlineImages : undefined };
+}
+
+/**
+ * Resolves a local image `src` to a file path: a `file:` URL, or a path (URL-encoded, as `%20`, or not) against `baseDir`.
+ *
+ * @param src - The `src` value.
+ * @param baseDir - The folder a relative path starts from.
+ * @returns The absolute file path.
+ */
+function msGraphCliSignatureImagePath(src: string, baseDir: string): string {
+  let result: string;
+
+  if (/^file:/i.test(src)) {
+    result = fileURLToPath(src);
+  } else {
+    let decoded = src;
+
+    try {
+      decoded = decodeURI(src);
+    } catch {
+      // keep a src that is not valid URI encoding as written
+    }
+
+    result = resolve(baseDir, decoded);
+  }
+
+  return result;
+}
+
+/**
+ * Returns the signature images to attach with a body: the signature's inline images when the body it was
+ * appended to is HTML. A text body carries the signature as text, so its images are dropped.
+ *
+ * @param body - The body after the signature was appended (for a reply or forward comment, an HTML body of the comment).
+ * @param signature - The signature, if any.
+ * @returns The inline attachments.
+ */
+export function msGraphCliSignatureAttachments(body: Maybe<MicrosoftGraphItemBody>, signature: Maybe<MsGraphCliSignature>): MicrosoftGraphFileAttachmentInput[] {
+  return body?.contentType === 'html' && signature?.isHtml && signature.inlineImages ? [...signature.inlineImages] : [];
 }
 
 /**

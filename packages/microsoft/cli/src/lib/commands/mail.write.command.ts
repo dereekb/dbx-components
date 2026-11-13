@@ -1,10 +1,14 @@
 import { CliError } from '@dereekb/dbx-cli';
 import {
+  type MicrosoftGraphFileAttachmentInput,
   type MicrosoftGraphMessage,
   type MicrosoftGraphOutgoingMessageInput,
   type MicrosoftGraphRequestInput,
+  type MicrosoftGraphRespondToMessageInput,
+  addMessageAttachment,
   createDraftMessage,
   deleteMessages,
+  microsoftGraphAddMessageAttachmentRequest,
   microsoftGraphCreateDraftRequest,
   microsoftGraphDeleteMessagesRequests,
   microsoftGraphDraftStateRequest,
@@ -34,6 +38,7 @@ import {
   msGraphCliConfirmOptions,
   msGraphCliDryRunOptions,
   msGraphCliDryRunOutput,
+  msGraphCliSignatureAttachments,
   msGraphCliWriteResultsOutput,
   parseMsGraphCliAddressesOption,
   readMsGraphCliAttachments,
@@ -55,21 +60,26 @@ export interface MsGraphCliComposedMessage {
 
 /**
  * Composes a message from the compose options: recipients, subject, body with the signature appended, and
- * attachments split into inline and large.
+ * attachments (the signature's inline images first) split into inline and large.
  *
  * @param argv - The parsed arguments.
  * @param options - Whether to append the signature to the body.
  * @param options.signature - Append the signature (a new message's body); false for a PATCH that leaves the body alone.
  * @returns The composed message.
+ * @throws {CliError} `INVALID_ARGUMENT` when the signature's images are too large to send inline.
  */
 export async function composeMsGraphCliMessage(argv: any, options: { readonly signature: boolean }): Promise<MsGraphCliComposedMessage> {
-  const body = await readMsGraphCliBodyOption(argv);
   const signature = options.signature ? await readMsGraphCliSignature(argv) : undefined;
-  const { inline, large } = splitMsGraphCliAttachments(await readMsGraphCliAttachments(argv.attach));
+  const body = appendMsGraphCliSignature(await readMsGraphCliBodyOption(argv), signature);
+  const { inline, large } = splitMsGraphCliAttachments([...msGraphCliSignatureAttachments(body, signature), ...(await readMsGraphCliAttachments(argv.attach))]);
+
+  if (large.some((x) => x.isInline)) {
+    throw new CliError({ message: 'The signature images are 3 MB or more together, too large to send inline.', code: 'INVALID_ARGUMENT', suggestion: 'Shrink the images, or use web URLs for them in the signature file.' });
+  }
 
   const message: MicrosoftGraphOutgoingMessageInput = {
     subject: argv.subject,
-    body: appendMsGraphCliSignature(body, signature),
+    body,
     to: parseMsGraphCliAddressesOption('to', argv.to),
     cc: parseMsGraphCliAddressesOption('cc', argv.cc),
     bcc: parseMsGraphCliAddressesOption('bcc', argv.bcc),
@@ -293,18 +303,70 @@ async function respondHandler(argv: any, graphContext: Parameters<typeof respond
   const comment = argv.comment == null ? undefined : appendMsGraphCliSignatureToComment(String(argv.comment), signature);
   const messageBody = comment == null ? appendMsGraphCliSignature(body, signature) : undefined;
   const message: MicrosoftGraphOutgoingMessageInput = { body: messageBody, to, cc };
-  const input = { mailbox: argv.mailbox, immutableIds: !argv.mutableIds, id: argv.id, kind, draft: argv.draft, comment, message };
+  const images = msGraphCliSignatureAttachments(comment == null ? messageBody : { contentType: 'html', content: comment }, signature);
+  const input: MicrosoftGraphRespondToMessageInput = { mailbox: argv.mailbox, immutableIds: !argv.mutableIds, id: argv.id, kind, draft: argv.draft, comment, message };
 
   if (argv.dryRun) {
-    outputMsGraphCliResult(msGraphCliDryRunOutput([microsoftGraphRespondToMessageRequest(input)]));
+    outputMsGraphCliResult(msGraphCliDryRunOutput(msGraphCliRespondRequests({ input, images }), images.length > 0 ? 'The signature has images, so the draft is created, the images are attached to it inline, and it is then sent (unless --draft).' : undefined));
   } else {
     if (!argv.draft) {
       requireMsGraphCliConfirmation({ yes: argv.yes, action: kind === 'forward' ? 'forward this message' : 'send this reply' });
     }
 
-    const draft = await respondToMessage(graphContext)(input);
-    outputMsGraphCliResult(draft ? msGraphCliDraftOutput(draft) : { sent: true, id: argv.id });
+    const draft = images.length > 0 ? await respondMsGraphCliViaDraft({ graphContext, input, images }) : await respondToMessage(graphContext)(input);
+    outputMsGraphCliResult(draft && argv.draft ? msGraphCliDraftOutput(draft) : { sent: true, id: argv.id });
   }
+}
+
+/**
+ * Returns the Graph calls a reply or forward makes. With signature images it goes through its draft: a
+ * reply or forward carries no attachments in one call, so the draft is created, each image is attached
+ * to it, and it is then sent unless `draft`.
+ *
+ * @param config - The response and the signature's inline images.
+ * @param config.input - The reply or forward.
+ * @param config.images - The signature's inline images.
+ * @returns The requests, in order; `{draftId}` stands for the draft's id.
+ */
+export function msGraphCliRespondRequests(config: { readonly input: MicrosoftGraphRespondToMessageInput; readonly images: readonly MicrosoftGraphFileAttachmentInput[] }): MicrosoftGraphRequestInput[] {
+  const { input, images } = config;
+  let result: MicrosoftGraphRequestInput[];
+
+  if (images.length > 0) {
+    const draftRef = { mailbox: input.mailbox, id: '{draftId}' };
+    result = [microsoftGraphRespondToMessageRequest({ ...input, draft: true }), ...images.map((attachment) => microsoftGraphAddMessageAttachmentRequest({ ...draftRef, attachment })), ...(input.draft ? [] : [microsoftGraphSendDraftRequest(draftRef)])];
+  } else {
+    result = [microsoftGraphRespondToMessageRequest(input)];
+  }
+
+  return result;
+}
+
+/**
+ * Answers a message through its draft, so the signature's images can be attached inline: creates the
+ * reply or forward draft, attaches each image, then sends it unless `input.draft`.
+ *
+ * @param config - The Graph context, the response and the images.
+ * @param config.graphContext - The Graph context.
+ * @param config.input - The reply or forward.
+ * @param config.images - The signature's inline images.
+ * @returns The draft.
+ */
+async function respondMsGraphCliViaDraft(config: { readonly graphContext: Parameters<typeof respondToMessage>[0]; readonly input: MicrosoftGraphRespondToMessageInput; readonly images: readonly MicrosoftGraphFileAttachmentInput[] }): Promise<Maybe<MicrosoftGraphMessage>> {
+  const { graphContext, input, images } = config;
+  const draft = await respondToMessage(graphContext)({ ...input, draft: true });
+
+  if (draft) {
+    for (const attachment of images) {
+      await addMessageAttachment(graphContext)({ mailbox: input.mailbox, id: draft.id, attachment });
+    }
+
+    if (!input.draft) {
+      await sendDraftMessage(graphContext)({ mailbox: input.mailbox, id: draft.id });
+    }
+  }
+
+  return draft;
 }
 
 function respondOptions(yargs: Argv) {
