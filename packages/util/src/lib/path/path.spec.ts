@@ -5,6 +5,7 @@ import {
   slashPathValidationFactory,
   type SlashPathFolder,
   slashPathType,
+  isValidSlashPath,
   type SlashPathTypedFile,
   type SlashPathFile,
   SLASH_PATH_SEPARATOR,
@@ -55,6 +56,46 @@ describe('slashPathType', () => {
     const folderPath: SlashPathFolder = 'wMNzlhSlp6Gb93V8u4Rs/';
     const type = slashPathType(folderPath);
     expect(type).toBe('folder');
+  });
+
+  it('should return invalid for an empty string', () => {
+    expect(slashPathType('')).toBe('invalid');
+  });
+
+  describe('dots in folder names', () => {
+    it('should identify a file under folders with multiple dots', () => {
+      expect(slashPathType('/test.test.test/hello')).toBe('file');
+    });
+
+    it('should identify a typed file under folders with multiple dots', () => {
+      expect(slashPathType('/test.test.test/hello.txt')).toBe('typedfile');
+    });
+
+    it('should identify a folder with multiple dots', () => {
+      expect(slashPathType('/test.test.test/')).toBe('folder');
+    });
+
+    it('should identify a folder with a single dot as a folder, not a typed file', () => {
+      expect(slashPathType('v1.0/')).toBe('folder');
+    });
+
+    it('should identify a file under several dotted folders', () => {
+      expect(slashPathType('/v1.0/users/support@hellosubs.co/messages')).toBe('file');
+    });
+
+    it('should still return invalid when the file name has more than one dot', () => {
+      expect(slashPathType('/test.test.test/hello.pdf.tmp')).toBe('invalid');
+    });
+  });
+});
+
+describe('isValidSlashPath()', () => {
+  it('should return true for a path whose folder names contain multiple dots', () => {
+    expect(isValidSlashPath('/test.test.test/hello')).toBe(true);
+  });
+
+  it('should return false for a file name with more than one dot', () => {
+    expect(isValidSlashPath('/a/file.pdf.tmp')).toBe(false);
   });
 });
 
@@ -336,6 +377,20 @@ describe('isolateSlashPathFunction', () => {
 });
 
 describe('slashPathDetails()', () => {
+  it('should return the details of a typed file under folders that contain dots', () => {
+    const folder = '/v1.0/test.test.test/';
+    const file = 'd.e';
+    const path = `${folder}${file}`;
+    const details = slashPathDetails(path);
+
+    expect(details.type).toBe('typedfile');
+    expect(details.isFile).toBe(true);
+    expect(details.folderPath).toBe(folder);
+    expect(details.fileFolder).toBe('test.test.test');
+    expect(details.fileName).toBe('d');
+    expect(details.typedFileExtension).toBe('e');
+  });
+
   it('should return the details of the path', () => {
     const folder = '/a/b/c/'; // absolute path
     const file = 'd.e';

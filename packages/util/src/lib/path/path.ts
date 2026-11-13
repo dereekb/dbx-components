@@ -138,15 +138,21 @@ export type SlashPathFunction = MapSameFunction<SlashPath>;
 
 /**
  * Slash path type
- * - folder: is a folder
+ * - folder: is a folder (ends with a slash)
  * - file: is a file without a type
  * - typedfile: is a file with a type
- * - invalid: is an invalid slash path that might contain multiple '.' values, or is an empty string.
+ * - invalid: is an empty string, or a file whose name contains more than one '.'
+ *
+ * Only the file name (the last part of a file path) is limited to a single '.'. Folder names may contain any number of them.
  */
 export type SlashPathType = 'folder' | 'file' | 'typedfile' | 'invalid';
 
 /**
  * Determines the type of a slash path string.
+ *
+ * A path ending with a slash is a folder. Otherwise the last part is the file name, and its '.' count decides
+ * the type: none is a file, one is a typed file, and more than one is invalid. Dots in the folder parts are
+ * ignored, so `/test.test.test/hello` is a file and `/v1.0/` is a folder.
  *
  * @param input - The slash path to classify.
  * @returns The path type classification.
@@ -155,31 +161,37 @@ export type SlashPathType = 'folder' | 'file' | 'typedfile' | 'invalid';
  * @dbxUtilCategory path
  * @dbxUtilTags path, slash, type, classify, file, folder, typed, detect
  * @dbxUtilRelated is-slash-path-file, is-slash-path-folder, is-slash-path-typed-file, is-valid-slash-path
+ *
+ * @example
+ * ```ts
+ * slashPathType('/a/b/');                 // 'folder'
+ * slashPathType('/test.test.test/hello'); // 'file'
+ * slashPathType('/a.b/image.png');        // 'typedfile'
+ * slashPathType('/a/file.pdf.tmp');       // 'invalid'
+ * ```
  */
 export function slashPathType(input: SlashPath): SlashPathType {
-  const dotCount = input.split(SLASH_PATH_FILE_TYPE_SEPARATOR, 3).length - 1;
   let type: SlashPathType;
 
-  switch (dotCount) {
-    case 0:
-      if (input.length === 0) {
-        type = 'invalid';
-      } else {
-        const lastValue = input.at(-1);
+  if (input.length === 0) {
+    type = 'invalid';
+  } else if (input.endsWith(SLASH_PATH_SEPARATOR)) {
+    type = 'folder';
+  } else {
+    const fileName = input.slice(input.lastIndexOf(SLASH_PATH_SEPARATOR) + 1);
+    const dotCount = fileName.split(SLASH_PATH_FILE_TYPE_SEPARATOR, 3).length - 1;
 
-        if (lastValue === SLASH_PATH_SEPARATOR) {
-          type = 'folder';
-        } else {
-          type = 'file';
-        }
-      }
-      break;
-    case 1:
-      type = 'typedfile';
-      break;
-    default:
-      type = 'invalid';
-      break;
+    switch (dotCount) {
+      case 0:
+        type = 'file';
+        break;
+      case 1:
+        type = 'typedfile';
+        break;
+      default:
+        type = 'invalid';
+        break;
+    }
   }
 
   return type;

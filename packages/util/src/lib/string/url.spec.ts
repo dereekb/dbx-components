@@ -215,6 +215,10 @@ describe('isWebsiteUrl()', () => {
   it('should return true for a valid website url with a prefix and a path and query parameters', () => {
     expect(isWebsiteUrl('https://dereek.com/test/hello/world?test=1')).toBe(true);
   });
+
+  it('should return true for a valid website url whose path contains more than one dot', () => {
+    expect(isWebsiteUrl('https://dereek.com/v1.0/files/report.pdf')).toBe(true);
+  });
 });
 
 describe('websiteUrlDetails()', () => {
@@ -258,6 +262,44 @@ describe('isWebsiteUrlWithPrefix()', () => {
 
   it('should return true for a valid website url with a prefix', () => {
     expect(isWebsiteUrlWithPrefix('https://dereekb.com')).toBe(true);
+  });
+
+  describe('paths with dots', () => {
+    it('should return true for a path with a single dot', () => {
+      expect(isWebsiteUrlWithPrefix('https://graph.microsoft.com/v1.0/me/messages?$skip=5')).toBe(true);
+    });
+
+    it('should return true for a path with an email address in a folder part', () => {
+      expect(isWebsiteUrlWithPrefix('https://graph.microsoft.com/v1.0/users/support@hellosubs.co/messages')).toBe(true);
+    });
+
+    it('should return true for a path with an encoded email address in a folder part', () => {
+      expect(isWebsiteUrlWithPrefix('https://graph.microsoft.com/v1.0/users/support%40hellosubs.co/messages?%24top=3')).toBe(true);
+    });
+
+    it('should return true for a path with several dotted folder parts and a typed file', () => {
+      expect(isWebsiteUrlWithPrefix('https://graph.microsoft.com/v1.0/drives/x/root:/report.v2/file.txt:/children')).toBe(true);
+    });
+
+    it('should return true for a path ending in a file name with more than one dot', () => {
+      expect(isWebsiteUrlWithPrefix('https://dereekb.com/a/archive.tar.gz')).toBe(true);
+    });
+
+    it('should return true for a path with a dotted folder part', () => {
+      expect(isWebsiteUrlWithPrefix('https://dereekb.com/a.b/c')).toBe(true);
+    });
+  });
+
+  it('should return true for a url with a port number', () => {
+    expect(isWebsiteUrlWithPrefix('https://dereekb.com:8443/path')).toBe(true);
+  });
+
+  it('should return true for a url with a fragment', () => {
+    expect(isWebsiteUrlWithPrefix('https://dereekb.com/a/b#frag')).toBe(true);
+  });
+
+  it('should return true for an ip address url', () => {
+    expect(isWebsiteUrlWithPrefix('http://127.0.0.1:8976/callback')).toBe(true);
   });
 });
 
