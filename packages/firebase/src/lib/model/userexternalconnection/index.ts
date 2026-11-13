@@ -7,3 +7,5 @@ export * from './userexternalconnection.action';
 export * from './userexternalconnection.error';
 export * from './userexternalconnection.token';
 export * from './userexternalconnection.preset';
+export * from './userexternalconnection.data';
+export * from './userexternalconnection.data.microsoft';

@@ -55,6 +55,29 @@ export const USER_EXTERNAL_CONNECTION_REFRESH_LEASE_LOST_ERROR_CODE = 'USER_EXTE
  */
 export const USER_EXTERNAL_CONNECTION_OVER_GRANTED_ERROR_CODE = 'USER_EXTERNAL_CONNECTION_OVER_GRANTED';
 
+// MARK: Data
+/**
+ * Refuses a connection data write (400) for a data type the app has not registered for the provider. Data `{ providerType, dataType }`.
+ */
+export const USER_EXTERNAL_CONNECTION_DATA_TYPE_NOT_ALLOWED_ERROR_CODE = 'USER_EXTERNAL_CONNECTION_DATA_TYPE_NOT_ALLOWED_ERROR';
+/**
+ * Refuses a connection data item key (400) the data type does not accept. Data `{ providerType, dataType }`.
+ */
+export const USER_EXTERNAL_CONNECTION_DATA_ITEM_KEY_INVALID_ERROR_CODE = 'USER_EXTERNAL_CONNECTION_DATA_ITEM_KEY_INVALID_ERROR';
+/**
+ * Refuses a connection data value (400) that does not match the data type's shape. Data `{ providerType, dataType, itemKey, path? }`.
+ * Never carries the value.
+ */
+export const USER_EXTERNAL_CONNECTION_DATA_VALUE_INVALID_ERROR_CODE = 'USER_EXTERNAL_CONNECTION_DATA_VALUE_INVALID_ERROR';
+/**
+ * Refuses a connection data write (400) that exceeds a limit. Data `{ limit, bytes?, count?, scope: 'value' | 'items' | 'document' | 'operations' }`.
+ */
+export const USER_EXTERNAL_CONNECTION_DATA_TOO_LARGE_ERROR_CODE = 'USER_EXTERNAL_CONNECTION_DATA_TOO_LARGE_ERROR';
+/**
+ * The stored connection data could not be decrypted (500). An update with `clear: true` replaces it without reading it.
+ */
+export const USER_EXTERNAL_CONNECTION_DATA_UNREADABLE_ERROR_CODE = 'USER_EXTERNAL_CONNECTION_DATA_UNREADABLE_ERROR';
+
 /**
  * The only error codes a failed SIGN-IN reports back to the browser.
  *

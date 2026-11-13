@@ -1,6 +1,7 @@
 import { type ISO8601DateString, type Maybe } from '@dereekb/util';
 import { type FirebaseAuthUserId } from '../../common/auth/auth';
 import { type UserExternalConnectionCapability, type UserExternalConnectionProviderType } from './userexternalconnection.id';
+import { type UserExternalConnectionProviderData } from './userexternalconnection.data';
 
 // MARK: Paths
 /**
@@ -15,12 +16,35 @@ export const USER_EXTERNAL_CONNECTION_TOKEN_API_PATH = '/session/external';
  * Returns the path (relative to the API base URL) that mints an access token for one provider.
  *
  * @param providerType - The provider whose access token to mint.
+ * @param options - Optional query options, e.g. `includeData`.
  * @returns The path, e.g. `/session/external/zoho_admin`.
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function userExternalConnectionTokenApiPath(providerType: UserExternalConnectionProviderType): string {
-  return `${USER_EXTERNAL_CONNECTION_TOKEN_API_PATH}/${encodeURIComponent(providerType)}`;
+export function userExternalConnectionTokenApiPath(providerType: UserExternalConnectionProviderType, options?: Maybe<UserExternalConnectionTokenApiPathOptions>): string {
+  const path = `${USER_EXTERNAL_CONNECTION_TOKEN_API_PATH}/${encodeURIComponent(providerType)}`;
+  return options?.includeData ? `${path}?${USER_EXTERNAL_CONNECTION_TOKEN_INCLUDE_QUERY_PARAM}=${USER_EXTERNAL_CONNECTION_TOKEN_INCLUDE_DATA}` : path;
+}
+
+/**
+ * Query parameter of the token API that asks for extra content alongside the token (comma-separated values).
+ */
+export const USER_EXTERNAL_CONNECTION_TOKEN_INCLUDE_QUERY_PARAM = 'include';
+
+/**
+ * {@link USER_EXTERNAL_CONNECTION_TOKEN_INCLUDE_QUERY_PARAM} value that adds the caller's stored connection data for the
+ * provider to the response.
+ */
+export const USER_EXTERNAL_CONNECTION_TOKEN_INCLUDE_DATA = 'data';
+
+/**
+ * Options for {@link userExternalConnectionTokenApiPath}.
+ */
+export interface UserExternalConnectionTokenApiPathOptions {
+  /**
+   * Adds `?include=data`, asking for the caller's stored connection data for the provider.
+   */
+  readonly includeData?: Maybe<boolean>;
 }
 
 // MARK: Error Codes
@@ -72,4 +96,16 @@ export interface UserExternalConnectionAccessToken {
    * Non-secret provider values the token is only usable alongside.
    */
   readonly extra?: Maybe<Record<string, Maybe<string | number | boolean>>>;
+}
+
+/**
+ * The token API's response: the access token, plus the caller's stored connection data for the provider when asked
+ * for with `?include=data`.
+ */
+export interface UserExternalConnectionAccessTokenResponse extends UserExternalConnectionAccessToken {
+  /**
+   * The caller's stored data for THIS provider only. Present only with `?include=data`, when the app wired connection
+   * data and some exists.
+   */
+  readonly data?: Maybe<UserExternalConnectionProviderData>;
 }

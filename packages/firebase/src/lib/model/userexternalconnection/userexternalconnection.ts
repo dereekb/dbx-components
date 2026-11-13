@@ -284,8 +284,11 @@ export interface UserExternalConnection extends UserRelated, UserRelatedById {
  * data connection and keeps the login link, an unlink removes the login link AND everything the
  * disconnect would have. Removing a way to sign in is the more consequential of the two, so an app can
  * grant one without the other.
+ *
+ * `data` allows reading and writing the user's stored connection data (`UserExternalConnectionData`) through the
+ * `read:data` / `update:data` API. Owner full-access role maps grant it automatically.
  */
-export type UserExternalConnectionRoles = GrantedReadRole | GrantedUpdateRole | 'connect' | 'disconnect' | 'unlink';
+export type UserExternalConnectionRoles = GrantedReadRole | GrantedUpdateRole | 'connect' | 'disconnect' | 'unlink' | 'data';
 
 export class UserExternalConnectionDocument extends AbstractFirestoreDocument<UserExternalConnection, UserExternalConnectionDocument, typeof userExternalConnectionIdentity> {
   get modelIdentity() {
