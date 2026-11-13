@@ -1,6 +1,6 @@
 ---
 name: msgraph-cli
-description: "The `msgraph-cli` command (the `msgraph-cli` bin of `@dereekb/microsoft`, run as `npx msgraph-cli`; this doc ships with that package and prints with `npx msgraph-cli docs`) for a user's Outlook mail, shared mailboxes, automatic replies, calendar, OneDrive / SharePoint files and Teams chats and channels through Microsoft Graph, plus a raw Graph `request`. It authenticates ONLY through a token source: each run borrows an access token minted from an app's Microsoft external connection by `<app>-cli external-token <providerType>` (no `auth login`). Covers setup (`auth token-source set/use/show/clear`, `auth show`), the global `--token-source` option and the `MSGRAPH_CLI_TOKEN_SOURCE` / `MSGRAPH_CLI_TOKEN_COMMAND` / `MSGRAPH_CLI_CONFIG_DIR` env vars, the Read / Read + Write presets and which commands need which scope, `--yes` / `--dry-run` on writes, the JSON output, and the error codes (`NOT_CONFIGURED`, `TOKEN_REJECTED`, `SCOPE_DENIED`, `CONFIRMATION_REQUIRED`, `RATE_LIMITED`, `NOT_FOUND`, …)."
+description: "The `msgraph-cli` command (the `msgraph-cli` bin of `@dereekb/microsoft`, run as `npx msgraph-cli`; this doc ships with that package and prints with `npx msgraph-cli docs`) for a user's Outlook mail, shared mailboxes, automatic replies, calendar, OneDrive / SharePoint files and Teams chats and channels through Microsoft Graph, plus a raw Graph `request`. Bulk downloads: `files download-folder` copies a SharePoint / OneDrive folder to disk recursively and re-syncs it on re-run, and `mail dump` dumps a folder (delta), a filtered list or a search, with `--attachments-only`. It authenticates ONLY through a token source: each run borrows an access token minted from an app's Microsoft external connection by `<app>-cli external-token <providerType>` (no `auth login`). Covers setup (`auth token-source set/use/show/clear`, `auth show`), the global `--token-source` option and the `MSGRAPH_CLI_TOKEN_SOURCE` / `MSGRAPH_CLI_TOKEN_COMMAND` / `MSGRAPH_CLI_CONFIG_DIR` env vars, the Read / Read + Write presets and which commands need which scope, `--yes` / `--dry-run` on writes, the JSON output, and the error codes (`NOT_CONFIGURED`, `TOKEN_REJECTED`, `SCOPE_DENIED`, `CONFIRMATION_REQUIRED`, `RATE_LIMITED`, `NOT_FOUND`, `ABORTED`, `INSUFFICIENT_SPACE`, …)."
 ---
 
 # Microsoft Graph CLI
@@ -73,12 +73,45 @@ msgraph-cli mail search "<KQL>" [--top 25] [--folder inbox] [--all-pages [--max-
 msgraph-cli mail get <id> [--format text|html] [--select a,b] [--mime --out message.eml]
 msgraph-cli mail get-many <id…> | --ids-file ids.txt                    # $batch, 20 per call, in order
 msgraph-cli mail dump --dir <dir> [--folder inbox] [--since <iso>] [--eml] [--attachments] [--idle-timeout 60]   # delta; re-running resumes
+msgraph-cli mail dump --dir <dir> [--from <addr>] [--since <iso>] [--until <iso>] [--unread] [--has-attachments] [--all-folders]   # list mode
+msgraph-cli mail dump --dir <dir> --search "<KQL>" [--folder inbox]      # search mode (every folder unless --folder)
+   # also: [--attachments-only] [--max-messages 500] [--max-bytes N] [--concurrency 3 (max 4)] [--prune (delta only)]
 ```
 
 `mail dump --eml` / `--attachments`, `mail get --mime` and `files download` stream each body to disk (0600, through a
 `.part` file renamed into place), so a large file never sits in memory. `--idle-timeout <s>` (default 60) aborts a body
 that stops sending bytes; a stalled or short body leaves no partial file, and `mail dump` saves its manifest first, so a
-re-run resumes the page.
+re-run resumes the page. The idle timer starts once the response headers arrive, so the wait for headers is bounded by
+the 30 s client timeout instead: an `--idle-timeout` below 30 s does not shorten it.
+
+**`mail dump` modes.** The options pick one of three modes; a re-run into the same `--dir` resumes and writes only new
+or changed messages (by `changeKey`):
+
+- **Delta** (the default; `--folder`, `--since`): reads one folder's changes through delta query. `--since` applies to
+  the first run only. It tracks removals: `--prune` deletes their files, otherwise they are only recorded.
+- **List** (any of `--until`, `--from`, `--unread`, `--has-attachments`, `--all-folders`; `--since` then joins the
+  filter on every run): a filtered message list. `--all-folders` reads every folder of the mailbox (refused with
+  `--folder`). A run stopped by `--max-messages` resumes from where it stopped; a finished run lets the next one re-walk
+  the whole selection, which costs one listing call per 100 messages and fetches bodies only for new or changed
+  messages. It does not track removals, so `--prune` is refused (`INVALID_ARGUMENT`).
+- **Search** (`--search "<KQL>"`): a `$search` across every folder, or within `--folder`. Graph cannot combine
+  `$search` with a filter, so `--since` / `--until` / `--from` / `--unread` / `--has-attachments` are refused with it
+  (`INVALID_ARGUMENT`): put them in the KQL. Paging and `--prune` work as in list mode. Graph's `$search` returns
+  at most 275 messages (as `mail search --all-pages` does), so for a larger selection use list mode.
+
+A dump directory belongs to one mailbox, folder and id type (`--mutable-ids`), and a list or search dump also to its
+mode and selection: re-running it with different values is refused (`INVALID_ARGUMENT`). The manifest holds a hash of
+the selection and mailbox, never the filter, search or address itself. Delta dumps keep their existing manifest
+format, so older dumps resume unchanged.
+
+- **`--attachments-only`** writes only the file attachments of messages that have any
+  (`messages/<yyyy>/<mm>/<stamp>_<hash>/attachments/…`): no `.json`, `.md` or `.eml`, and no body reads. It implies
+  `--attachments`, and it works in every mode.
+- **`--concurrency <n>`** (default 3, max 4; Outlook allows 4 concurrent requests per mailbox) is how many messages are
+  written at once.
+- **Ctrl+C** stops the run, removes partial files, saves the manifest and fails with `ABORTED`; re-run to resume.
+- Output: `{ dir, written, skipped, removed, failed, bytes, complete }`. A failed message is counted and the run goes
+  on; `complete: false` means a re-run has more to do.
 
 The mail read and write commands take `--mailbox <address>` for a shared or delegated mailbox, and return
 immutable ids (`--mutable-ids` for the default ones). `mail search` cannot take `--since` / `--from`
@@ -122,10 +155,12 @@ msgraph-cli calendar delete <id> [--cancel --comment "…"] --yes
 
 ```bash
 msgraph-cli files search "<text>" [--top 25]
-msgraph-cli files list [<folderId> | --path Documents] [--type file|folder] [--all-pages] [--next <nextLink>]  # a folder's items
+msgraph-cli files list [<folderId> | --path Documents] [--type file|folder|package] [--all-pages] [--next <nextLink>]  # a folder's items
 msgraph-cli files get <id> | --path "/Documents/plan.docx"     # metadata
 msgraph-cli files drive                                        # the drive's details
 msgraph-cli files download <id> --out plan.docx
+msgraph-cli files download-folder [<folderId> | --path "Tech talk"] --dir ./tech-talk [--dry-run]   # recursive copy; re-run to sync
+   # also: [--concurrency 4 (max 8)] [--idle-timeout 60] [--max-files N] [--max-bytes N] [--prune]
 msgraph-cli files sheet <id> | --path "/Reports/roster.xlsx" --list           # an .xlsx's worksheets
 msgraph-cli files sheet <id> [--sheet Texas] [--range A1:F200] [--header] [--text]   # read cells (read-only)
 msgraph-cli files upload ./plan.docx [--to-path Documents] [--conflict fail|replace|rename]
@@ -149,9 +184,10 @@ polls Graph's copy monitor until the copy finishes. `delete --hard` deletes perm
 - **Find items.** Browse with `files list` (a folder by id or `--path`, the drive root when neither), or search
   with `files search "<text>"`. Use the `id`s these return: an id is stable across renames and moves in the same
   drive, and a path is not.
-- **`files list` output** is compact: `{ items: [{ id, name, type: "file"|"folder", size, childCount (folders),
-  mimeType (files), modified }], nextLink? }`. `--urls` adds each `webUrl`. `--type file|folder` keeps only
-  files or only folders. `--full` returns raw driveItems, which are about 10× larger on OneDrive and about 17× larger on a
+- **`files list` output** is compact: `{ items: [{ id, name, type: "file"|"folder"|"package", size, childCount (folders),
+  mimeType (files), modified }], nextLink? }`. A `package` is a OneNote notebook: it is listed, but it cannot be
+  downloaded. `--urls` adds each `webUrl`. `--type file|folder|package` keeps only that type. `--full` returns raw
+  driveItems, which are about 10× larger on OneDrive and about 17× larger on a
   SharePoint folder of 850 items (2.6 MB raw against 150 KB compact). They also carry a pre-authenticated
   `@microsoft.graph.downloadUrl`, so avoid `--full` unless you need a field the summary drops.
 - **Paging.** One run reads one page (`--top`, default 200) and returns `nextLink` when more remain: pass it back
@@ -162,6 +198,46 @@ polls Graph's copy monitor until the copy finishes. `delete --hard` deletes perm
   inside its drive.
 - **Scopes.** Reading a SharePoint library needs `Files.Read.All` (both presets). Resolving `--site` also needs
   `Sites.Read.All` (both presets). Writes need Read + Write.
+- **Copy a folder to disk** with `files download-folder [<folderId> | --path <folder>] --dir <dir>`, plus the usual
+  `--drive` / `--site [--library]`. `--path /` copies a whole library. It reads the folder tree, then downloads every
+  file, `--concurrency` at a time (default 4, max 8). Start with `--dry-run`.
+  - **Layout.** The folder's *contents* go directly into `--dir`, keeping the sub-folder tree. Empty remote folders
+    become empty local folders, and each file gets the remote modification time. Folders are 0700 and files 0600.
+    The command keeps its manifest in `<dir>/.msgraph-cli-download.json` and partial files in
+    `<dir>/.msgraph-cli-download.parts/`, which it empties at the start of each run. A `--dir` that is not empty and
+    has no manifest is refused (`INVALID_ARGUMENT`), and so is a `--dir` holding a copy of another drive or folder.
+  - **Names.** Characters a local file system rejects are replaced; Unicode and leading dots are kept. Two names that
+    clash locally (by case, or after replacing characters) are told apart with a ` (<hash>)` suffix.
+  - **Resume.** Re-run the same command. Only finished files are recorded, so the re-run downloads the rest. A file
+    that is already on disk with the remote size and modification time, but missing from the manifest, is adopted
+    without a download.
+  - **Change detection.** Each run reads the whole folder tree again: 5 listing calls for 850 items. A file is skipped
+    when its content tag matches the manifest (`cTag`, else `quickXorHash`, else `eTag`), its size matches, and the
+    local copy exists with that size. A file renamed or moved remotely, with the same content, is renamed locally
+    instead of downloaded again.
+  - **One-way mirror.** The copy follows the remote. A local file edited to a different size is downloaded again.
+  - **`--prune`** deletes the local copies of files removed remotely, and then any folders that become empty. It only
+    deletes files the manifest recorded, never a file the command did not download. Without it, removals are only
+    recorded in the manifest. Removals are decided only after a complete read of the folder tree.
+  - **`--dry-run`** reads the folder tree and prints `{ dir, dryRun, folders, files, bytes, toDownload,
+    toDownloadBytes, unchanged, renamed, removed, unsupported }`. It writes nothing and does not create `--dir`.
+  - **Budgets.** `--max-files N` / `--max-bytes N` cap one run. The rest is counted in `deferred`, and a re-run
+    continues.
+  - **Free space.** Before downloading, the command checks that the disk can hold the files to download (capped by
+    `--max-bytes`) plus a 256 MiB margin, and fails with `INSUFFICIENT_SPACE` when it can't: free space, or copy in
+    parts with `--max-bytes`.
+  - **Unsupported items.** OneNote notebooks (`package`), shortcuts to another drive (`remoteItem`) and files
+    SharePoint flagged as malware are skipped and counted in `unsupported`.
+  - **Failures.** A file that fails (not found, access denied, or retries used up) is counted in `failed` and
+    `failedCodes`, and the run goes on; the next run retries it. A rejected token after one re-mint, a full or
+    read-only disk, Ctrl+C (`ABORTED`) and 10 failures in a row (`TOO_MANY_FAILURES`) stop the run. The manifest is
+    saved first, and no partial file is left behind.
+  - **Output.** `{ dir, folders, files, written, skipped, renamed, removed, failed, unsupported, deferred, bytes,
+    complete, failedCodes? }`. `complete: true` means the tree was read in full and nothing failed or was deferred.
+    stderr shows progress at most every 2 s (`download-folder: 120/850 files, 1.2 GB/9.8 GB, 2 failed`).
+  - **Privacy.** stdout and stderr carry only counts, bytes and failure codes: no names, paths, ids or URLs. The
+    manifest (0600, in the 0700 `--dir`) holds item ids and relative paths. Each file is read through its `/content`
+    request, so no pre-authenticated download URL is ever requested, stored or printed.
 
 `files sheet` reads an `.xlsx` through Excel on the server (no download), read-only:
 
@@ -225,6 +301,8 @@ odd call. `--all-pages` follows `@odata.nextLink` and works only on a `GET` with
 | `--pick <fields>` / `--pick-all` | Keep only these fields (per item of a collection's `value`) / ignore the saved pick |
 | `--dump-dir <dir>` | Write full results to a directory |
 | `--set-pick` / `--set-dump-dir` | Save those defaults for the command |
+| `--idle-timeout <s>` | Downloads (`files download`, `files download-folder`, `mail get --mime`, `mail dump`): abort a body that sends no bytes for this many seconds (default 60). The timer starts once the headers arrive |
+| `--concurrency <n>` | Bulk downloads: how many items run at once. `files download-folder` default 4 (max 8), `mail dump` default 3 (max 4). Out of range is `INVALID_ARGUMENT` |
 | `MSGRAPH_CLI_TOKEN_SOURCE` | Name of the saved source to use |
 | `MSGRAPH_CLI_TOKEN_COMMAND` | A token command to use as is (unnamed, not saved) |
 | `MSGRAPH_CLI_CONFIG_DIR` | Config directory (default `~/.msgraph-cli/`) |
@@ -245,7 +323,7 @@ Every scope in them is user-consentable, so connecting never needs an administra
 
 | Commands | Need |
 | --- | --- |
-| `mail list/search/get/get-many/dump`, `calendar list/get`, `files search/list/get/drive/download/sheet` | Read |
+| `mail list/search/get/get-many/dump`, `calendar list/get`, `files search/list/get/drive/download/download-folder/sheet` | Read |
 | `mail draft/send/send-bulk/reply/forward/move/copy/delete`, `mail auto-reply set/off/restore`, `calendar create/delete`, `files upload/mkdir/rename/move/copy/delete` | Read + Write |
 | `--mailbox` / `--send-as` (shared mailboxes) | Read + Write (`*.Shared`) **and** an Exchange permission on that mailbox |
 | `teams list/channels/chats/chat …/presence`, `teams channel send/reply` | Read + Write |
@@ -268,15 +346,25 @@ Every scope in them is user-consentable, so connecting never needs an administra
 | `TOKEN_REJECTED` | Graph returned 401; the cached token was already cleared | Re-run; if it repeats, `msgraph-cli auth show` |
 | `SCOPE_DENIED` | Graph returned 403: the grant lacks the scope (or, with `--mailbox`, the Exchange permission) | Reconnect with Read + Write. Channel reads/deletes need an admin-consented grant that no standard preset gives |
 | `CONFIRMATION_REQUIRED` | A send / delete / settings change ran without `--yes` | Re-run with `--yes`, or `--dry-run` to preview |
-| `RATE_LIMITED` | Graph returned 429 | Wait and retry |
+| `RATE_LIMITED` | Graph returned 429. It is retried automatically up to 3 times, honoring `Retry-After`; this code shows only when it persists | Wait and retry |
 | `NOT_FOUND` | No item, mailbox, library or saved auto-reply backup | Check the id / path / `--mailbox`; mutable mail ids change when a message moves |
-| `SERVICE_UNAVAILABLE` / `TIMEOUT` | Graph is down or did not answer in time | Retry; check the Microsoft service status |
+| `SERVICE_UNAVAILABLE` / `TIMEOUT` | Graph is down or did not answer in time. `TIMEOUT` also covers a download that stalled for `--idle-timeout` seconds | Retry; check the Microsoft service status. On a slow connection raise `--idle-timeout` |
+| `DOWNLOAD_INCOMPLETE` | A download ended before its `Content-Length`; no partial file is left | Retry (a bulk download re-run resumes) |
+| `ABORTED` | A download or bulk download was stopped (Ctrl+C); finished files are kept and the manifest saved | Re-run the same command to resume |
+| `INSUFFICIENT_SPACE` | `files download-folder`: the disk cannot hold the files to download plus a 256 MiB margin | Free space, or copy in parts with `--max-bytes` |
+| `TOO_MANY_FAILURES` | A bulk download stopped after 10 failures in a row; the manifest is saved | Check the connection and access, then re-run |
 | `NOT_A_DRAFT` | `mail send <id>` on a message already sent | Use `mail reply` / `mail forward` |
 | `CROSS_DRIVE_MOVE` | `files move` into another drive | `files copy <id> --to-drive <driveId> --wait`, then `files delete <id> --yes` |
 | `TOO_MANY_RECIPIENTS` | `mail send-bulk` has more than 500 rows left and no `--limit` | Pass `--limit` |
 | `INVALID_ARGUMENT` | Bad JSON in `--query` / `--body`, `--all-pages` misuse, a missing id or path, conflicting options | Fix the arguments |
 | `API_ERROR` | Any other Graph error | Read `error` |
 | `ERROR` (exit 4) | Unknown `--token-source` name | Check `auth token-source show` |
+
+**Throttling.** When Graph answers 429 (any request), or 503 / 504 / 509 to a read, msgraph-cli pauses every request of
+the run for the `Retry-After` time (backing off when there is none) and retries up to 3 times. It does not wait longer
+than 60 s per retry. Each pause prints one line on stderr, with the status and the wait only:
+`msgraph-cli: throttled by Microsoft Graph (429); waiting 12 s`. In a bulk download, an item that is still throttled
+after those retries is retried again by the download (up to 4 attempts, 1–60 s apart) before it counts as failed.
 
 **Passed through from the app CLI.** The token is minted lazily on the first Graph call. When the
 token command fails, msgraph-cli shows the **app CLI's** code and suggestion (exit 1):
