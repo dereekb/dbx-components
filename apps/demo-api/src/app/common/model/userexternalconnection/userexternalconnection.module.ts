@@ -1,6 +1,14 @@
 import { type InjectionToken, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { DEMO_DISCORD_EXTERNAL_CONNECTION_PROVIDER_TYPE, DEMO_MICROSOFT_EXTERNAL_CONNECTION_PROVIDER_TYPE, DEMO_TRELLO_BOT_EXTERNAL_CONNECTION_PROVIDER_TYPE, DEMO_TRELLO_EXTERNAL_CONNECTION_PROVIDER_TYPE, DEMO_ZOHO_ADMIN_EXTERNAL_CONNECTION_PROVIDER_TYPE, DemoFirestoreCollections } from 'demo-firebase';
+import {
+  DEMO_DISCORD_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  DEMO_MICROSOFT_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  DEMO_TRELLO_BOT_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  DEMO_TRELLO_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  DEMO_USER_EXTERNAL_CONNECTION_DATA_TYPES,
+  DEMO_ZOHO_ADMIN_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  DemoFirestoreCollections
+} from 'demo-firebase';
 import { type UserExternalConnectionSignInDelegate, appUserExternalConnectionModuleMetadata, autoCreateUserSignInDelegate } from '@dereekb/firebase-server/model';
 import { DemoApiAuthModule, DemoApiAuthService, DemoApiFirestoreModule } from '../../firebase';
 
@@ -75,6 +83,9 @@ export const DEMO_USER_EXTERNAL_CONNECTION_SIGN_IN_DELEGATE: InjectionToken = 'D
     dependencyModule: DemoApiFirestoreModule,
     appCollectionsToken: DemoFirestoreCollections,
     imports: [ConfigModule, DemoApiAuthModule],
+    // the connection data (`uecd`) types: Microsoft mail signatures, read by msgraph-cli as server defaults. The
+    // encryption key is derived from USER_EXTERNAL_CONNECTION_ENCRYPTION_SECRET, so no new secret is needed.
+    dataTypes: DEMO_USER_EXTERNAL_CONNECTION_DATA_TYPES,
     providerPolicies: [
       {
         providerType: DEMO_DISCORD_EXTERNAL_CONNECTION_PROVIDER_TYPE,

@@ -3,7 +3,9 @@ import { filterUndefinedValues, type Maybe } from '@dereekb/util';
 import {
   type OidcEntryClientId,
   type UserExternalConnectionAccessToken,
+  type UserExternalConnectionAccessTokenResponse,
   type UserExternalConnectionCapability,
+  type UserExternalConnectionProviderData,
   type UserExternalConnectionProviderType,
   USER_EXTERNAL_CONNECTION_TOKEN_API_PATH,
   USER_EXTERNAL_CONNECTION_TOKEN_EXPORT_NOT_ALLOWED_ERROR_CODE,
@@ -16,6 +18,7 @@ import { type UserExternalConnectionCredentials } from '../userexternalconnectio
 import { UserExternalConnectionProviderPolicyRegistry, userExternalConnectionPolicyForProviderType } from '../userexternalconnection.policy';
 import { UserExternalConnectionOAuthProviderRegistry } from '../oauth/userexternalconnection.oauth.registry';
 import { type AbstractUserExternalConnectionOAuthService, normalizeUserExternalConnectionProviderScopes } from '../oauth/userexternalconnection.oauth.service';
+import { UserExternalConnectionDataServerActions } from '../data/userexternalconnection.data.action.server';
 import {
   DEFAULT_USER_EXTERNAL_CONNECTION_TOKEN_MINIMUM_REMAINING,
   DEFAULT_USER_EXTERNAL_CONNECTION_TOKEN_REQUIRED_OIDC_SCOPE,
@@ -34,6 +37,23 @@ export interface UserExternalConnectionTokenMintInput {
    */
   readonly auth: Maybe<FirebaseServerAuthData>;
   readonly providerType: UserExternalConnectionProviderType;
+  /**
+   * Whether to add the caller's stored connection data for this provider (`?include=data`).
+   *
+   * Read only AFTER every gate passes, and only when the app wired `UserExternalConnectionDataServerActions`. A data
+   * failure never blocks the mint: the token is returned without `data`.
+   */
+  readonly includeData?: Maybe<boolean>;
+}
+
+/**
+ * Counts the items of a provider's connection data.
+ *
+ * @param data - The provider data.
+ * @returns The number of items across every data type.
+ */
+export function countUserExternalConnectionProviderDataItems(data: Maybe<UserExternalConnectionProviderData>): number {
+  return Object.values(data ?? {}).reduce((sum, items) => sum + Object.keys(items ?? {}).length, 0);
 }
 
 /**
@@ -134,7 +154,8 @@ export class UserExternalConnectionTokenApiService {
     @Inject(UserExternalConnectionOAuthProviderRegistry) private readonly _oauthRegistry: UserExternalConnectionOAuthProviderRegistry,
     @Optional() @Inject(UserExternalConnectionProviderPolicyRegistry) private readonly _policyRegistry?: Maybe<UserExternalConnectionProviderPolicyRegistry>,
     @Optional() @Inject(USER_EXTERNAL_CONNECTION_TOKEN_PREDICATE) private readonly _predicate?: Maybe<UserExternalConnectionTokenPredicate>,
-    @Optional() @Inject(UserExternalConnectionTokenApiModuleConfig) private readonly _config?: Maybe<UserExternalConnectionTokenApiModuleConfig>
+    @Optional() @Inject(UserExternalConnectionTokenApiModuleConfig) private readonly _config?: Maybe<UserExternalConnectionTokenApiModuleConfig>,
+    @Optional() @Inject(UserExternalConnectionDataServerActions) private readonly _dataActions?: Maybe<UserExternalConnectionDataServerActions>
   ) {
     if (!_predicate) {
       this._logger.warn(`No ${USER_EXTERNAL_CONNECTION_TOKEN_PREDICATE} provided — ${USER_EXTERNAL_CONNECTION_TOKEN_API_PATH} will reject every caller. Provide one from the token module's dependency module.`);
@@ -144,12 +165,12 @@ export class UserExternalConnectionTokenApiService {
   /**
    * Mints the caller's access token for a provider after enforcing every gate.
    *
-   * @param input - The request auth and the provider.
-   * @returns The access token bundle.
+   * @param input - The request auth, the provider, and whether to include the caller's connection data.
+   * @returns The access token bundle, with `data` when requested, wired and non-empty.
    * @throws {HttpsError} A 401 without a uid, a 403 when a gate refuses, or the reader's error when the user is not connected or the credentials cannot be renewed.
    */
-  async mintAccessToken(input: UserExternalConnectionTokenMintInput): Promise<UserExternalConnectionAccessToken> {
-    const { auth, providerType } = input;
+  async mintAccessToken(input: UserExternalConnectionTokenMintInput): Promise<UserExternalConnectionAccessTokenResponse> {
+    const { auth, providerType, includeData } = input;
     const uid = auth?.uid;
 
     if (!auth || !uid) {
@@ -201,11 +222,39 @@ export class UserExternalConnectionTokenApiService {
       this._assertGrantWithinCeiling({ providerType, oauthService, credentials, ceiling });
     }
 
-    // 4. never log the token itself
-    const clientSuffix = clientId ? ` (client ${clientId})` : '';
-    this._logger.log(`Minted a "${providerType}" access token for uid ${uid}${clientSuffix} with ${credentials.scopes?.length ?? 0} scope(s).`);
+    // 4. connection data, only now that every gate has passed; a data problem never blocks the mint
+    const data = includeData ? await this._readConnectionData(uid, providerType) : undefined;
 
-    return userExternalConnectionAccessTokenFromCredentials({ uid, providerType, credentials, exportedExtraKeys: oauthService?.exportedCredentialExtraKeys });
+    // 5. never log the token itself, nor the data
+    const clientSuffix = clientId ? ` (client ${clientId})` : '';
+    const dataSuffix = data ? ` with connection data (${countUserExternalConnectionProviderDataItems(data)} item(s))` : '';
+    this._logger.log(`Minted a "${providerType}" access token for uid ${uid}${clientSuffix} with ${credentials.scopes?.length ?? 0} scope(s)${dataSuffix}.`);
+
+    const token: UserExternalConnectionAccessTokenResponse = userExternalConnectionAccessTokenFromCredentials({ uid, providerType, credentials, exportedExtraKeys: oauthService?.exportedCredentialExtraKeys });
+    return data ? { ...token, data } : token;
+  }
+
+  /**
+   * Reads the caller's connection data for one provider for the mint response.
+   *
+   * @param uid - The caller.
+   * @param providerType - The provider.
+   * @returns The non-empty provider data, or undefined when none, not wired, or unreadable.
+   */
+  private async _readConnectionData(uid: string, providerType: UserExternalConnectionProviderType): Promise<Maybe<UserExternalConnectionProviderData>> {
+    let result: Maybe<UserExternalConnectionProviderData>;
+
+    if (this._dataActions) {
+      try {
+        const data = await this._dataActions.readUserExternalConnectionProviderData({ uid, providerType });
+        result = countUserExternalConnectionProviderDataItems(data) > 0 ? data : undefined;
+      } catch (e: unknown) {
+        const code = (e as Maybe<{ readonly details?: { readonly code?: string } }>)?.details?.code ?? 'UNKNOWN';
+        this._logger.warn(`Could not read connection data for uid ${uid} provider "${providerType}" (${code}).`);
+      }
+    }
+
+    return result;
   }
 
   /**

@@ -801,13 +801,13 @@ export function unlinkUserExternalConnectionLoginFactory(context: UserExternalCo
 }
 
 /**
- * Creates a function that deletes a user's entire connection pair in one transaction.
+ * Creates a function that deletes a user's entire connection pair, and their connection data, in one transaction.
  *
- * @param context - The context carrying both halves of the pair.
- * @returns A function that removes both documents for a uid.
+ * @param context - The context carrying both halves of the pair and the connection data collection.
+ * @returns A function that removes the `uec`, `uecp` and `uecd` documents for a uid.
  */
 export function deleteAllUserExternalConnectionsForUserFactory(context: UserExternalConnectionServerActionsContext) {
-  const { userExternalConnectionCollection, userExternalConnectionPrivateCollection, firestoreContext } = context;
+  const { userExternalConnectionCollection, userExternalConnectionPrivateCollection, userExternalConnectionDataCollection, firestoreContext } = context;
 
   return async (params: UserExternalConnectionDeleteAllParams): Promise<void> => {
     const { uid } = params;
@@ -815,9 +815,11 @@ export function deleteAllUserExternalConnectionsForUserFactory(context: UserExte
     return firestoreContext.runTransaction(async (transaction) => {
       const publicDocument = userExternalConnectionCollection.documentAccessorForTransaction(transaction).loadDocumentForId(uid);
       const privateDocument = userExternalConnectionPrivateCollection.documentAccessorForTransaction(transaction).loadDocumentForId(uid);
+      const dataDocument = userExternalConnectionDataCollection.documentAccessorForTransaction(transaction).loadDocumentForId(uid);
 
       await publicDocument.accessor.delete();
       await privateDocument.accessor.delete();
+      await dataDocument.accessor.delete();
     });
   };
 }

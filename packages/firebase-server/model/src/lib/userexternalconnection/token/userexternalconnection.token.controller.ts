@@ -1,6 +1,14 @@
-import { Controller, Get, Header, HttpException, HttpStatus, Inject, Param, Req } from '@nestjs/common';
+import { Controller, Get, Header, HttpException, HttpStatus, Inject, Param, Query, Req } from '@nestjs/common';
 import { type Request } from 'express';
-import { type UserExternalConnectionAccessToken, type UserExternalConnectionProviderType, USER_EXTERNAL_CONNECTION_TOKEN_EXPORT_NOT_ALLOWED_ERROR_CODE, USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE } from '@dereekb/firebase';
+import { type Maybe } from '@dereekb/util';
+import {
+  type UserExternalConnectionAccessTokenResponse,
+  type UserExternalConnectionProviderType,
+  USER_EXTERNAL_CONNECTION_TOKEN_EXPORT_NOT_ALLOWED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_TOKEN_INCLUDE_DATA,
+  USER_EXTERNAL_CONNECTION_TOKEN_INCLUDE_QUERY_PARAM,
+  USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE
+} from '@dereekb/firebase';
 import { type FirebaseServerAuthenticatedRequest } from '@dereekb/firebase-server';
 import { UserExternalConnectionTokenApiService } from './userexternalconnection.token.service';
 
@@ -19,6 +27,19 @@ const USER_EXTERNAL_CONNECTION_TOKEN_ERROR_CODES_WITH_DATA: ReadonlySet<string> 
 export const USER_EXTERNAL_CONNECTION_TOKEN_API_ROUTE_PREFIX = 'session/external';
 
 /**
+ * Whether an `include` query value asks for the caller's connection data.
+ *
+ * Comma-separated and trimmed; unknown values are ignored. A repeated query (`?include=a&include=data`) is accepted.
+ *
+ * @param include - The raw `include` query value.
+ * @returns True when it contains `data`.
+ */
+export function userExternalConnectionTokenIncludesData(include: unknown): boolean {
+  const values = (Array.isArray(include) ? include : [include]).filter((x): x is string => typeof x === 'string');
+  return values.some((value) => value.split(',').some((part) => part.trim() === USER_EXTERNAL_CONNECTION_TOKEN_INCLUDE_DATA));
+}
+
+/**
  * REST controller that mints the caller's access token for one of their external connections.
  *
  * Auth comes from the global OIDC bearer middleware, so `'/api/session'` MUST be listed in the OIDC
@@ -33,15 +54,16 @@ export class UserExternalConnectionTokenApiController {
    *
    * @param req - The Express request carrying auth credentials on `req.auth`.
    * @param providerType - The provider whose access token to mint.
-   * @returns The {@link UserExternalConnectionAccessToken}.
+   * @param include - The optional `include` query; `data` adds the caller's connection data for this provider.
+   * @returns The {@link UserExternalConnectionAccessTokenResponse}.
    */
   @Get(':providerType')
   @Header('Cache-Control', 'no-store')
-  async getAccessToken(@Req() req: Request, @Param('providerType') providerType: UserExternalConnectionProviderType): Promise<UserExternalConnectionAccessToken> {
+  async getAccessToken(@Req() req: Request, @Param('providerType') providerType: UserExternalConnectionProviderType, @Query(USER_EXTERNAL_CONNECTION_TOKEN_INCLUDE_QUERY_PARAM) include?: Maybe<string | string[]>): Promise<UserExternalConnectionAccessTokenResponse> {
     const auth = (req as FirebaseServerAuthenticatedRequest).auth;
 
     try {
-      return await this.tokenService.mintAccessToken({ auth, providerType });
+      return await this.tokenService.mintAccessToken({ auth, providerType, includeData: userExternalConnectionTokenIncludesData(include) });
     } catch (error: any) {
       throw this._toHttpException(error);
     }

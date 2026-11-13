@@ -79,9 +79,11 @@ export const USER_EXTERNAL_CONNECTION_DATA_MAX_OPERATIONS = 50;
 
 // MARK: Typing Hook
 /**
- * The value shapes of one provider's data types, keyed by data type.
+ * The value shapes of one provider's data types, keyed by data type, e.g. `MicrosoftUserExternalConnectionDataTypes`.
+ *
+ * Deliberately not an index signature: a plain interface (which has no implicit index signature) must satisfy it.
  */
-export type UserExternalConnectionDataTypeValues = { readonly [dataType: string]: object };
+export type UserExternalConnectionDataTypeValues = Record<never, never>;
 
 /**
  * An app's typings for its connection data: provider type → data type → value shape.
@@ -94,7 +96,7 @@ export type UserExternalConnectionDataTypeValues = { readonly [dataType: string]
  * }
  * ```
  */
-export type UserExternalConnectionDataTypings = { readonly [providerType: string]: UserExternalConnectionDataTypeValues };
+export type UserExternalConnectionDataTypings = Record<never, never>;
 
 /**
  * Typed view of one provider's data.
@@ -104,7 +106,7 @@ export type TypedUserExternalConnectionProviderData<D extends UserExternalConnec
 /**
  * Typed view of every provider's data.
  */
-export type TypedUserExternalConnectionDataMap<T extends UserExternalConnectionDataTypings> = { readonly [P in keyof T]?: TypedUserExternalConnectionProviderData<T[P]> };
+export type TypedUserExternalConnectionDataMap<T extends UserExternalConnectionDataTypings> = { readonly [P in keyof T]?: TypedUserExternalConnectionProviderData<T[P] & object> };
 
 /**
  * Reads one item from a typed data map.

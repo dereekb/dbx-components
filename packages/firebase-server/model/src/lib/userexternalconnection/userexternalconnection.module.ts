@@ -1,7 +1,7 @@
 import { type InjectionToken, type ModuleMetadata, type Provider } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { type Maybe, type Milliseconds } from '@dereekb/util';
-import { type FirestoreContext, type FirestoreContextReference, type UserExternalConnectionFirestoreCollections } from '@dereekb/firebase';
+import { type FirestoreContext, type FirestoreContextReference, type UserExternalConnectionDataTypeConfig, type UserExternalConnectionFirestoreCollections } from '@dereekb/firebase';
 import { FIREBASE_FIRESTORE_CONTEXT_TOKEN, type FirebaseServerAuthService, FirebaseServerEnvService, FirebaseServerFirestoreContextModule } from '@dereekb/firebase-server';
 import { type AES256GCMEncryptionSecret, isValidAES256GCMEncryptionSecret } from '@dereekb/nestjs';
 import { type UserExternalConnectionPrivateConverterConfig, UserExternalConnectionServerFirestoreCollections, userExternalConnectionPrivateFirestoreCollection } from './userexternalconnection.private';
@@ -11,6 +11,9 @@ import { UserExternalConnectionReader, type UserExternalConnectionRefreshLeaseCo
 import { UserExternalConnectionOAuthProviderRegistry, UserExternalConnectionStateCoder, userExternalConnectionOAuthRegistryCredentialsRefresher, userExternalConnectionStateCoderFactory } from './oauth';
 import { type UserExternalConnectionProviderPolicy, UserExternalConnectionProviderPolicyRegistry, userExternalConnectionProviderPolicyRegistry } from './userexternalconnection.policy';
 import { type UserExternalConnectionSignInDelegate, UserExternalConnectionSignInService, userExternalConnectionSignInService } from './userexternalconnection.signin';
+import { deriveUserExternalConnectionDataEncryptionSecret, type UserExternalConnectionDataConverterConfig, userExternalConnectionDataFirestoreCollection } from './data/userexternalconnection.data';
+import { type UserExternalConnectionDataLimits, UserExternalConnectionDataTypeRegistry, userExternalConnectionDataTypeRegistry } from './data/userexternalconnection.data.registry';
+import { UserExternalConnectionDataServerActions, userExternalConnectionDataServerActions } from './data/userexternalconnection.data.action.server';
 
 // MARK: Environment Variable Keys
 /**
@@ -19,7 +22,9 @@ import { type UserExternalConnectionSignInDelegate, UserExternalConnectionSignIn
  *
  * IMPORTANT: there is NO key rotation. `firestoreEncryptedField` resolves and validates the key once
  * at converter construction and closes over it, so changing this value makes every existing
- * `uecp` document permanently undecryptable. Treat it as write-once per environment.
+ * `uecp` document permanently undecryptable. Treat it as write-once per environment. The `uecd` connection data
+ * key is DERIVED from this secret (see `deriveUserExternalConnectionDataEncryptionSecret`), so rotating it orphans
+ * every `uecd` document too.
  */
 export const USER_EXTERNAL_CONNECTION_ENCRYPTION_SECRET_ENV_KEY = 'USER_EXTERNAL_CONNECTION_ENCRYPTION_SECRET';
 
@@ -37,6 +42,14 @@ export const TESTING_USER_EXTERNAL_CONNECTION_ENCRYPTION_SECRET: AES256GCMEncryp
  */
 export abstract class UserExternalConnectionModuleConfig {
   abstract readonly userExternalConnectionPrivateConverterConfig: UserExternalConnectionPrivateConverterConfig;
+  /**
+   * Converter config of the `uecd` connection data collection.
+   *
+   * When absent, the key is derived from {@link userExternalConnectionPrivateConverterConfig}'s secret with
+   * `deriveUserExternalConnectionDataEncryptionSecret`. Never the family key itself: a `uecp.cr` ciphertext copied
+   * into `uecd.d` must not decrypt.
+   */
+  abstract readonly userExternalConnectionDataConverterConfig?: Maybe<UserExternalConnectionDataConverterConfig>;
 }
 
 /**
@@ -61,8 +74,21 @@ export function userExternalConnectionModuleConfigFactory(configService: ConfigS
   return {
     userExternalConnectionPrivateConverterConfig: {
       encryptionSecret
+    },
+    userExternalConnectionDataConverterConfig: {
+      encryptionSecret: deriveUserExternalConnectionDataEncryptionSecret(encryptionSecret)
     }
   };
+}
+
+/**
+ * Returns the `uecd` converter config of a module config, deriving the key from the family secret when absent.
+ *
+ * @param config - The module config.
+ * @returns The connection data converter config.
+ */
+export function userExternalConnectionDataConverterConfigFromModuleConfig(config: UserExternalConnectionModuleConfig): UserExternalConnectionDataConverterConfig {
+  return config.userExternalConnectionDataConverterConfig ?? { encryptionSecret: deriveUserExternalConnectionDataEncryptionSecret(config.userExternalConnectionPrivateConverterConfig.encryptionSecret) };
 }
 
 // MARK: Provider Factories
@@ -79,7 +105,8 @@ export function userExternalConnectionModuleConfigFactory(configService: ConfigS
  */
 export function userExternalConnectionServerFirestoreCollectionsFactory(firestoreContext: FirestoreContext, config: UserExternalConnectionModuleConfig): UserExternalConnectionServerFirestoreCollections {
   return {
-    userExternalConnectionPrivateCollection: userExternalConnectionPrivateFirestoreCollection({ firestoreContext, ...config.userExternalConnectionPrivateConverterConfig })
+    userExternalConnectionPrivateCollection: userExternalConnectionPrivateFirestoreCollection({ firestoreContext, ...config.userExternalConnectionPrivateConverterConfig }),
+    userExternalConnectionDataCollection: userExternalConnectionDataFirestoreCollection({ firestoreContext, ...userExternalConnectionDataConverterConfigFromModuleConfig(config) })
   };
 }
 
@@ -98,6 +125,7 @@ export function userExternalConnectionServerActionsContextFactory(appCollections
     firestoreContext: appCollections.firestoreContext,
     userExternalConnectionCollection: appCollections.userExternalConnectionCollection,
     userExternalConnectionPrivateCollection: serverCollections.userExternalConnectionPrivateCollection,
+    userExternalConnectionDataCollection: serverCollections.userExternalConnectionDataCollection,
     userExternalConnectionAuthService: authService
   };
 }
@@ -138,6 +166,17 @@ export interface ProvideAppUserExternalConnectionModuleMetadataConfig extends Pi
    * take a deliberate declaration to acquire one.
    */
   readonly signIn?: Maybe<ProvideAppUserExternalConnectionSignInConfig>;
+  /**
+   * The connection data types the app allows (`UserExternalConnectionData`, the `read:data` / `update:data` API and
+   * the token mint's `?include=data`).
+   *
+   * Fails closed: omitted (or empty) means every data write is refused and every read returns nothing.
+   */
+  readonly dataTypes?: Maybe<readonly UserExternalConnectionDataTypeConfig[]>;
+  /**
+   * Overrides the whole-document and per-request connection data limits.
+   */
+  readonly dataLimits?: Maybe<Partial<UserExternalConnectionDataLimits>>;
 }
 
 /**
@@ -180,6 +219,9 @@ export interface ProvideAppUserExternalConnectionSignInConfig {
  * - UserExternalConnectionServerFirestoreCollections
  * - UserExternalConnectionModuleConfig
  * - UserExternalConnectionStateCoder
+ * - UserExternalConnectionProviderPolicyRegistry
+ * - UserExternalConnectionDataTypeRegistry
+ * - UserExternalConnectionDataServerActions
  *
  * NOTE what is absent: `UserExternalConnectionReader`. The reader can be configured with a refresher,
  * and the only refresher an app normally wants is backed by the OAuth provider registry — which this
@@ -190,7 +232,7 @@ export interface ProvideAppUserExternalConnectionSignInConfig {
  * @returns The assembled {@link ModuleMetadata}.
  */
 export function appUserExternalConnectionModuleMetadata(config: ProvideAppUserExternalConnectionModuleMetadataConfig): ModuleMetadata {
-  const { dependencyModule, appCollectionsToken, imports, exports, providers, providerPolicies, signIn } = config;
+  const { dependencyModule, appCollectionsToken, imports, exports, providers, providerPolicies, signIn, dataTypes, dataLimits } = config;
   const dependencyModuleImport = dependencyModule ? [dependencyModule] : [];
 
   const signInProviders: Provider[] = signIn
@@ -214,13 +256,28 @@ export function appUserExternalConnectionModuleMetadata(config: ProvideAppUserEx
 
   return {
     imports: [ConfigModule, FirebaseServerFirestoreContextModule, ...dependencyModuleImport, ...(imports ?? [])],
-    exports: [UserExternalConnectionServerActions, UserExternalConnectionAccessor, UserExternalConnectionServerFirestoreCollections, UserExternalConnectionModuleConfig, UserExternalConnectionStateCoder, UserExternalConnectionProviderPolicyRegistry, ...signInExports, ...(exports ?? [])],
+    exports: [
+      UserExternalConnectionServerActions,
+      UserExternalConnectionAccessor,
+      UserExternalConnectionServerFirestoreCollections,
+      UserExternalConnectionModuleConfig,
+      UserExternalConnectionStateCoder,
+      UserExternalConnectionProviderPolicyRegistry,
+      UserExternalConnectionDataTypeRegistry,
+      UserExternalConnectionDataServerActions,
+      ...signInExports,
+      ...(exports ?? [])
+    ],
     providers: [
       {
         // provider-agnostic like the state coder: whether two users may share a Discord account is a
         // property of the app, not of any one provider adapter
         provide: UserExternalConnectionProviderPolicyRegistry,
         useValue: userExternalConnectionProviderPolicyRegistry(providerPolicies)
+      },
+      {
+        provide: UserExternalConnectionDataTypeRegistry,
+        useValue: userExternalConnectionDataTypeRegistry(dataTypes)
       },
       ...signInProviders,
       {
@@ -258,6 +315,17 @@ export function appUserExternalConnectionModuleMetadata(config: ProvideAppUserEx
         provide: UserExternalConnectionAccessor,
         useFactory: userExternalConnectionAccessor,
         inject: [USER_EXTERNAL_CONNECTION_SERVER_ACTIONS_CONTEXT_TOKEN]
+      },
+      {
+        provide: UserExternalConnectionDataServerActions,
+        useFactory: (firestoreContext: FirestoreContext, serverCollections: UserExternalConnectionServerFirestoreCollections, registry: UserExternalConnectionDataTypeRegistry) =>
+          userExternalConnectionDataServerActions({
+            firestoreContext,
+            userExternalConnectionDataCollection: serverCollections.userExternalConnectionDataCollection,
+            userExternalConnectionDataTypeRegistry: registry,
+            userExternalConnectionDataLimits: dataLimits
+          }),
+        inject: [FIREBASE_FIRESTORE_CONTEXT_TOKEN, UserExternalConnectionServerFirestoreCollections, UserExternalConnectionDataTypeRegistry]
       },
       ...(providers ?? [])
     ]

@@ -9,6 +9,8 @@ import { userExternalConnectionOAuthProviderRegistry } from '../oauth/userextern
 import { type AbstractUserExternalConnectionOAuthService } from '../oauth/userexternalconnection.oauth.service';
 import { DEFAULT_USER_EXTERNAL_CONNECTION_TOKEN_MINIMUM_REMAINING, type UserExternalConnectionTokenApiModuleConfig, type UserExternalConnectionTokenPredicate } from './userexternalconnection.token.config';
 import { UserExternalConnectionTokenApiService } from './userexternalconnection.token.service';
+import { userExternalConnectionTokenIncludesData } from './userexternalconnection.token.controller';
+import { type UserExternalConnectionDataServerActions } from '../data/userexternalconnection.data.action.server';
 
 const EXPORTED = 'zoho_admin';
 const NOT_EXPORTED = 'zoho';
@@ -285,5 +287,92 @@ describe('UserExternalConnectionTokenApiService scope ceilings', () => {
       const result = await service.mintAccessToken({ auth: oidcAuthWith(), providerType: ZOHO });
       expect(result.accessToken).toBe('access-token');
     });
+  });
+
+  describe('include data', () => {
+    const PROVIDER_DATA = { mail_signature: { me: { html: '<p>sig</p>' } } };
+
+    function makeDataService(input: { readonly predicate?: Maybe<UserExternalConnectionTokenPredicate>; readonly read?: () => Promise<unknown>; readonly withData?: boolean } = {}) {
+      const base = makeService({ predicate: input.predicate });
+      const readUserExternalConnectionProviderData = vi.fn(input.read ?? (async () => PROVIDER_DATA));
+      const dataActions = { readUserExternalConnectionProviderData } as unknown as UserExternalConnectionDataServerActions;
+      const reader = { readerForUser: vi.fn(() => vi.fn(() => ({ readUsableUserExternalConnectionCredentials: vi.fn(async () => STORED_CREDENTIALS) }))) } as unknown as UserExternalConnectionReader;
+      const oauthRegistry = userExternalConnectionOAuthProviderRegistry([{ providerType: EXPORTED } as unknown as AbstractUserExternalConnectionOAuthService]);
+      const policyRegistry = userExternalConnectionProviderPolicyRegistry([{ providerType: EXPORTED, adminOnly: true, tokenExport: true }]);
+      const predicate = input.predicate === undefined ? () => true : input.predicate;
+      const service = new UserExternalConnectionTokenApiService(reader, oauthRegistry, policyRegistry, predicate, undefined, input.withData === false ? undefined : dataActions);
+      return { ...base, service, readUserExternalConnectionProviderData };
+    }
+
+    it('should attach the provider data after every gate passes', async () => {
+      const { service, readUserExternalConnectionProviderData } = makeDataService();
+      const result = await service.mintAccessToken({ auth: oidcAuth(), providerType: EXPORTED, includeData: true });
+
+      expect(result.data).toEqual(PROVIDER_DATA);
+      expect(result.accessToken).toBe('access-token');
+      expect(readUserExternalConnectionProviderData).toHaveBeenCalledWith({ uid: 'u1', providerType: EXPORTED });
+    });
+
+    it('should not read data without includeData', async () => {
+      const { service, readUserExternalConnectionProviderData } = makeDataService();
+      const result = await service.mintAccessToken({ auth: oidcAuth(), providerType: EXPORTED });
+
+      expect(result.data).toBeUndefined();
+      expect(readUserExternalConnectionProviderData).not.toHaveBeenCalled();
+    });
+
+    it('should never read data when a gate refuses', async () => {
+      const { service, readUserExternalConnectionProviderData } = makeDataService({ predicate: () => false });
+
+      expect(await codeOfRejection(() => service.mintAccessToken({ auth: oidcAuth(), providerType: EXPORTED, includeData: true }))).toBe(USER_EXTERNAL_CONNECTION_TOKEN_FORBIDDEN_ERROR_CODE);
+      expect(readUserExternalConnectionProviderData).not.toHaveBeenCalled();
+    });
+
+    it('should never read data when the provider does not export tokens', async () => {
+      const { service, readUserExternalConnectionProviderData } = makeDataService();
+
+      expect(await codeOfRejection(() => service.mintAccessToken({ auth: oidcAuth(), providerType: NOT_EXPORTED, includeData: true }))).toBe(USER_EXTERNAL_CONNECTION_TOKEN_EXPORT_NOT_ALLOWED_ERROR_CODE);
+      expect(readUserExternalConnectionProviderData).not.toHaveBeenCalled();
+    });
+
+    it('should still return the token when reading the data fails', async () => {
+      const { service } = makeDataService({
+        read: async () => {
+          throw new Error('unreadable');
+        }
+      });
+      const result = await service.mintAccessToken({ auth: oidcAuth(), providerType: EXPORTED, includeData: true });
+
+      expect(result.accessToken).toBe('access-token');
+      expect(result.data).toBeUndefined();
+    });
+
+    it('should omit data when there is none', async () => {
+      const { service } = makeDataService({ read: async () => ({}) });
+      const result = await service.mintAccessToken({ auth: oidcAuth(), providerType: EXPORTED, includeData: true });
+
+      expect('data' in result).toBe(false);
+    });
+
+    it('should omit data when the data actions are not provided', async () => {
+      const { service } = makeDataService({ withData: false });
+      const result = await service.mintAccessToken({ auth: oidcAuth(), providerType: EXPORTED, includeData: true });
+
+      expect('data' in result).toBe(false);
+    });
+  });
+});
+
+describe('userExternalConnectionTokenIncludesData()', () => {
+  it('should detect data in a comma-separated list', () => {
+    expect(userExternalConnectionTokenIncludesData('data')).toBe(true);
+    expect(userExternalConnectionTokenIncludesData('other, data')).toBe(true);
+    expect(userExternalConnectionTokenIncludesData(['other', 'data'])).toBe(true);
+  });
+
+  it('should ignore unknown and missing values', () => {
+    expect(userExternalConnectionTokenIncludesData(undefined)).toBe(false);
+    expect(userExternalConnectionTokenIncludesData('database')).toBe(false);
+    expect(userExternalConnectionTokenIncludesData('')).toBe(false);
   });
 });

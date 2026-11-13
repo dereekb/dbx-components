@@ -26,6 +26,7 @@ import {
   readNotificationTaskBotOptOutsParamsType,
   readStorageFileMetadataParamsType,
   readUserExternalConnectionAuthorizeStateParamsType,
+  readUserExternalConnectionDataParamsType,
   regenerateStorageFileGroupContentParamsType,
   removeFormSpaceFileParamsType,
   reopenFormSpaceParamsType,
@@ -46,7 +47,8 @@ import {
   updateNotificationUserParamsType,
   updateOidcClientParamsType,
   updateStorageFileGroupParamsType,
-  updateStorageFileParamsType
+  updateStorageFileParamsType,
+  updateUserExternalConnectionDataParamsType
 } from '@dereekb/firebase';
 import { createOpenRouterPromptVersionParamsType, createOpenRouterTemplateParamsType, previewOpenRouterTemplateParamsType, queryOpenRouterPromptsParamsType, readOpenRouterPromptParamsType, updateOpenRouterPromptParamsType, updateOpenRouterPromptVersionParamsType } from '@dereekb/openrouter/firebase';
 import {
@@ -1358,6 +1360,52 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     resultTypeDescription:
       "The opaque, short-lived `state` to carry through a provider's OAuth handoff.\n\nMinting it requires an authenticated call, because a top-level navigation to the provider's\nauthorize endpoint carries no credentials and the server must already know who is connecting. The\nclient's only job is to pass this through — it must never append its ID token to the redirect.",
     resultFields: [{ name: 'state', typeText: 'string', description: 'The state to send on the authorize request.' }]
+  },
+  {
+    model: 'userExternalConnection',
+    verb: 'read',
+    specifier: 'data',
+    paramsTypeName: 'ReadUserExternalConnectionDataParams',
+    paramsValidator: readUserExternalConnectionDataParamsType,
+    resultTypeName: 'ReadUserExternalConnectionDataResult',
+    groupName: 'UserExternalConnection',
+    sourceFile: 'packages/firebase/src/lib/model/userexternalconnection/userexternalconnection.api.ts',
+    description:
+      "Reads the caller's stored connection data (UserExternalConnectionData): per-provider settings such as default\nmail signatures, decrypted server-side. Also returns the data types the caller may store.\n\nExample: `{ providerType: 'microsoft', dataType: 'mail_signature' }`. Use `keysOnly: true` to list items without values.",
+    paramsTypeDescription: "Parameters for reading the calling user's stored connection data (`UserExternalConnectionData`).\n\nAlways reads the caller's own data. Every filter is optional: omit them all to read everything the caller may use.",
+    paramsFields: [
+      { name: 'providerType', typeText: 'Maybe<UserExternalConnectionProviderType>', description: "Only this provider's data. Omit for every provider the caller may use." },
+      { name: 'dataType', typeText: 'Maybe<UserExternalConnectionDataTypeKey>', description: 'Only this data type, e.g. `mail_signature`.' },
+      { name: 'itemKey', typeText: 'Maybe<UserExternalConnectionDataItemKey>', description: 'Only this item, e.g. `me` or a mailbox address.' },
+      { name: 'keysOnly', typeText: 'Maybe<boolean>', description: 'Return item summaries only, without values.' }
+    ],
+    resultTypeDescription: "Result of reading the calling user's connection data.",
+    resultFields: [
+      { name: 'data', typeText: 'UserExternalConnectionDataMap', description: 'The values, keyed provider type → data type → item key. Absent with `keysOnly`.' },
+      { name: 'items', typeText: 'readonly UserExternalConnectionDataItemSummary[]', description: 'A summary of every matching item.' },
+      { name: 'dataTypes', typeText: 'readonly UserExternalConnectionDataTypeSummary[]', description: 'The data types the caller may store (for the matching provider), so a caller can discover what to save.' }
+    ]
+  },
+  {
+    model: 'userExternalConnection',
+    verb: 'update',
+    specifier: 'data',
+    paramsTypeName: 'UpdateUserExternalConnectionDataParams',
+    paramsValidator: updateUserExternalConnectionDataParamsType,
+    resultTypeName: 'UpdateUserExternalConnectionDataResult',
+    groupName: 'UserExternalConnection',
+    sourceFile: 'packages/firebase/src/lib/model/userexternalconnection/userexternalconnection.api.ts',
+    description:
+      "Saves or removes the caller's stored connection data for one provider, encrypted at rest. The app CLI hands it\nto the provider's CLI as DEFAULT settings when it mints a token (explicit local config and flags still win).\n\nExample (a default msgraph-cli signature for a shared mailbox):\n`{ providerType: 'microsoft', set: [{ dataType: 'mail_signature', itemKey: 'support@example.com', value: { html: '<p>…</p>' } }] }`.\nUse `itemKey: 'me'` for your own mailbox. `unset` removes items; `clear: true` removes everything for the provider.\nCall `read` `data` first to see which data types are allowed.",
+    paramsTypeDescription: "Parameters for changing the calling user's stored data for one provider.\n\nApplies `clear`, then every `unset`, then every `set`, in one transaction.",
+    paramsFields: [
+      { name: 'providerType', typeText: 'UserExternalConnectionProviderType', description: 'The provider whose data to change, e.g. `microsoft`.' },
+      { name: 'set', typeText: 'Maybe<readonly UserExternalConnectionDataSetOperation[]>', description: 'Items to set (create or replace).' },
+      { name: 'unset', typeText: 'Maybe<readonly UserExternalConnectionDataUnsetOperation[]>', description: 'Items (or whole data types) to remove.' },
+      { name: 'clear', typeText: 'Maybe<boolean>', description: "Drop all of this provider's data first. Written without decrypting, so it also recovers an unreadable document." }
+    ],
+    resultTypeDescription: "Result of changing the calling user's connection data. Never carries values.",
+    resultFields: [{ name: 'items', typeText: 'readonly UserExternalConnectionDataItemSummary[]', description: "The provider's items after the write." }]
   },
   {
     model: 'userExternalConnection',

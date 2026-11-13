@@ -23,6 +23,7 @@ import {
 } from '@dereekb/firebase';
 import { firestoreEncryptedField } from '@dereekb/firebase-server';
 import { type AES256GCMEncryptionSecretSource } from '@dereekb/nestjs';
+import { type UserExternalConnectionDataFirestoreCollection } from './data/userexternalconnection.data';
 
 // MARK: Collections
 /**
@@ -33,9 +34,13 @@ import { type AES256GCMEncryptionSecretSource } from '@dereekb/nestjs';
  * `(context: FirestoreContext) => T` factory, which cannot carry the encryption secret this
  * collection's converter needs — so the private collection structurally cannot leak into the
  * client-shared collection set.
+ *
+ * Also carries the {@link UserExternalConnectionDataFirestoreCollection} (`uecd`), the server-only encrypted
+ * connection data, for the same reason.
  */
 export abstract class UserExternalConnectionServerFirestoreCollections {
   abstract readonly userExternalConnectionPrivateCollection: UserExternalConnectionPrivateFirestoreCollection;
+  abstract readonly userExternalConnectionDataCollection: UserExternalConnectionDataFirestoreCollection;
 }
 
 // MARK: Identity
