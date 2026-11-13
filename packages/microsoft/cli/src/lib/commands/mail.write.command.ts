@@ -28,6 +28,7 @@ import { type Maybe } from '@dereekb/util';
 import { readFile } from 'node:fs/promises';
 import type { Argv, CommandModule } from 'yargs';
 import { msGraphCommandHandler } from '../middleware/auth.middleware';
+import { type MsGraphCliConnectionSettings, type MsGraphCliServerSettingsSource, msGraphCliServerDefaults } from '../util/connection.settings';
 import { MSGRAPH_CLI_BULK_MAX_PER_MINUTE, parseMsGraphCliBulkRecipients, planMsGraphCliBulkSend, readMsGraphCliBulkProgress, sendMsGraphCliBulkMail } from '../util/mail.bulk';
 import {
   appendMsGraphCliSignature,
@@ -63,13 +64,14 @@ export interface MsGraphCliComposedMessage {
  * attachments (the signature's inline images first) split into inline and large.
  *
  * @param argv - The parsed arguments.
- * @param options - Whether to append the signature to the body.
+ * @param options - Whether to append the signature to the body, and the server defaults.
  * @param options.signature - Append the signature (a new message's body); false for a PATCH that leaves the body alone.
+ * @param options.serverSettings - Reads the server defaults, consulted when no flag or local signature applies.
  * @returns The composed message.
  * @throws {CliError} `INVALID_ARGUMENT` when the signature's images are too large to send inline.
  */
-export async function composeMsGraphCliMessage(argv: any, options: { readonly signature: boolean }): Promise<MsGraphCliComposedMessage> {
-  const signature = options.signature ? await readMsGraphCliSignature(argv) : undefined;
+export async function composeMsGraphCliMessage(argv: any, options: { readonly signature: boolean; readonly serverSettings?: Maybe<() => Promise<Maybe<MsGraphCliConnectionSettings>>> }): Promise<MsGraphCliComposedMessage> {
+  const signature = options.signature ? await readMsGraphCliSignature({ ...argv, serverSettings: options.serverSettings }) : undefined;
   const body = appendMsGraphCliSignature(await readMsGraphCliBodyOption(argv), signature);
   const { inline, large } = splitMsGraphCliAttachments([...msGraphCliSignatureAttachments(body, signature), ...(await readMsGraphCliAttachments(argv.attach))]);
 
@@ -125,12 +127,14 @@ export const MAIL_DRAFT_CREATE_COMMAND: CommandModule = {
       ['$0 mail draft create --to ada@example.com --subject "Hello" --body-file note.html', 'An HTML draft with the saved signature'],
       ['$0 mail draft create --to ada@example.com --subject "Report" --body "Attached." --attach report.pdf', 'A draft with an attachment (over 3 MB uploads in a session)']
     ]),
-  handler: msGraphCommandHandler(async (argv: any, { graphContext }) => {
-    const { message, largeAttachments } = await composeMsGraphCliMessage(argv, { signature: true });
+  handler: msGraphCommandHandler(async (argv: any, context) => {
+    const { graphContext } = context;
+    const defaults = msGraphCliServerDefaults(argv, context);
+    const { message, largeAttachments } = await composeMsGraphCliMessage(argv, { signature: true, serverSettings: defaults.serverSettings });
     const input = { mailbox: argv.mailbox, immutableIds: !argv.mutableIds, message };
 
     if (argv.dryRun) {
-      outputMsGraphCliResult(msGraphCliDryRunOutput([microsoftGraphCreateDraftRequest(input)], largeAttachmentNote(largeAttachments.length)));
+      outputMsGraphCliResult(msGraphCliDryRunOutput([microsoftGraphCreateDraftRequest(input)], largeAttachmentNote(largeAttachments.length), defaults.warnings));
     } else {
       const draft = await createDraftMessage(graphContext)(input);
 
@@ -150,17 +154,20 @@ export const MAIL_DRAFT_UPDATE_COMMAND: CommandModule = {
     msGraphCliDryRunOptions(msGraphCliComposeOptions(msGraphCliMailboxOptions(yargs)))
       .positional('id', { type: 'string', demandOption: true, describe: 'The draft id' })
       .example([['$0 mail draft update AAMk... --subject "Hello again" --cc grace@example.com', 'Change the subject and Cc; the body is left alone']]),
-  handler: msGraphCommandHandler(async (argv: any, { graphContext }) => {
+  handler: msGraphCommandHandler(async (argv: any, context) => {
+    const { graphContext } = context;
+
     if (argv.attach?.length) {
       throw new CliError({ message: 'mail draft update cannot add attachments.', code: 'INVALID_ARGUMENT', suggestion: 'Create a new draft with --attach, or attach in Outlook.' });
     }
 
     // the signature is appended only when a new body replaces the old one
-    const { message } = await composeMsGraphCliMessage(argv, { signature: argv.body != null || argv.bodyFile != null });
+    const defaults = msGraphCliServerDefaults(argv, context);
+    const { message } = await composeMsGraphCliMessage(argv, { signature: argv.body != null || argv.bodyFile != null, serverSettings: defaults.serverSettings });
     const input = { mailbox: argv.mailbox, immutableIds: !argv.mutableIds, id: argv.id, message };
 
     if (argv.dryRun) {
-      outputMsGraphCliResult(msGraphCliDryRunOutput([microsoftGraphDraftStateRequest(input), microsoftGraphUpdateDraftRequest(input)], 'The GET checks isDraft first; a sent message is refused before the PATCH.'));
+      outputMsGraphCliResult(msGraphCliDryRunOutput([microsoftGraphDraftStateRequest(input), microsoftGraphUpdateDraftRequest(input)], 'The GET checks isDraft first; a sent message is refused before the PATCH.', defaults.warnings));
     } else {
       outputMsGraphCliResult(msGraphCliDraftOutput(await updateDraftMessage(graphContext)(input)));
     }
@@ -200,7 +207,9 @@ export const MAIL_SEND_COMMAND: CommandModule = {
         ['$0 mail send --mailbox support@example.com --to ada@example.com --subject "Re: ticket" --body-file reply.html --yes', 'Send from a shared mailbox (saved to its Sent Items)'],
         ['$0 mail send --to ada@example.com --subject "Hi" --body "x" --dry-run', 'Print the Graph call, recipients redacted to counts']
       ]),
-  handler: msGraphCommandHandler(async (argv: any, { graphContext }) => {
+  handler: msGraphCommandHandler(async (argv: any, context) => {
+    const { graphContext } = context;
+
     if (argv.draftId) {
       const request = microsoftGraphSendDraftRequest({ mailbox: argv.mailbox, id: argv.draftId });
 
@@ -213,7 +222,8 @@ export const MAIL_SEND_COMMAND: CommandModule = {
         outputMsGraphCliResult(output);
       }
     } else {
-      const { message, largeAttachments } = await composeMsGraphCliMessage(argv, { signature: true });
+      const defaults = msGraphCliServerDefaults(argv, context);
+      const { message, largeAttachments } = await composeMsGraphCliMessage(argv, { signature: true, serverSettings: defaults.serverSettings });
 
       if (!message.to?.length || message.subject == null) {
         throw new CliError({ message: 'A new message needs --to and --subject (or pass a draft id to send a draft).', code: 'INVALID_ARGUMENT' });
@@ -227,7 +237,7 @@ export const MAIL_SEND_COMMAND: CommandModule = {
       const recipients = (message.to?.length ?? 0) + (message.cc?.length ?? 0) + (message.bcc?.length ?? 0);
 
       if (argv.dryRun) {
-        outputMsGraphCliResult(msGraphCliDryRunOutput([microsoftGraphSendMailRequest(input)]));
+        outputMsGraphCliResult(msGraphCliDryRunOutput([microsoftGraphSendMailRequest(input)], undefined, defaults.warnings));
       } else {
         requireMsGraphCliConfirmation({ yes: argv.yes, action: `send a message to ${recipients} recipient(s)` });
         await sendMail(graphContext)(input);
@@ -251,25 +261,27 @@ export const MAIL_SEND_BULK_COMMAND: CommandModule = {
       .option('progress-file', { type: 'string', describe: 'Records sent rows so a re-run resumes. Default: <file>.progress.json' })
       .option('send-as', { type: 'string', describe: 'Send as this address (sets `from`)' })
       .option('save', { type: 'boolean', default: true, describe: 'Save sent copies to Sent Items (--no-save to skip)' })
-      .option('signature-file', { type: 'string', describe: 'Append this signature. Default: the saved signature-file' })
+      .option('signature-file', { type: 'string', describe: "Append this signature. Default: the saved signature-file of the address sent as, else the app's server default for it" })
       .option('signature', { type: 'boolean', default: true, describe: 'Append the signature (--no-signature to skip)' })
       .example([
         ['$0 mail send-bulk --file subs.csv --template invite.html --subject "Hi {{name}}" --dry-run', 'Counts and the first Graph call, recipients redacted'],
         ['$0 mail send-bulk --file subs.csv --template invite.html --subject "Hi {{name}}" --yes', 'Send; re-run the same command to resume after an interruption']
       ]),
-  handler: msGraphCommandHandler(async (argv: any, { graphContext }) => {
+  handler: msGraphCommandHandler(async (argv: any, context) => {
+    const { graphContext } = context;
+    const defaults = msGraphCliServerDefaults(argv, context);
     const file = String(argv.file);
     const rows = parseMsGraphCliBulkRecipients(await readFile(file, 'utf8'), /\.json$/i.test(file) ? 'json' : 'csv');
     const progressFile = argv.progressFile ?? `${file}.progress.json`;
     const progress = await readMsGraphCliBulkProgress(progressFile);
     const html = argv.html || isMsGraphCliHtmlFile(argv.template);
-    const template = { subject: argv.subject, body: await readFile(argv.template, 'utf8'), html, signature: await readMsGraphCliSignature(argv), mailbox: argv.mailbox, sendAs: argv.sendAs, saveToSentItems: argv.save !== false };
+    const template = { subject: argv.subject, body: await readFile(argv.template, 'utf8'), html, signature: await readMsGraphCliSignature({ ...argv, serverSettings: defaults.serverSettings }), mailbox: argv.mailbox, sendAs: argv.sendAs, saveToSentItems: argv.save !== false };
     const plan = planMsGraphCliBulkSend({ rows, progress, template, limit: argv.limit });
 
     if (argv.dryRun) {
       const first = plan.toSend[0]?.request;
       outputMsGraphCliResult({
-        ...msGraphCliDryRunOutput(first ? [first] : [], `Only the first of ${plan.toSend.length} sendMail calls is shown. They go in $batch calls of up to 10, paced to ${MSGRAPH_CLI_BULK_MAX_PER_MINUTE} messages a minute.`),
+        ...msGraphCliDryRunOutput(first ? [first] : [], `Only the first of ${plan.toSend.length} sendMail calls is shown. They go in $batch calls of up to 10, paced to ${MSGRAPH_CLI_BULK_MAX_PER_MINUTE} messages a minute.`, defaults.warnings),
         rows: plan.rows,
         alreadySent: plan.alreadySent,
         toSend: plan.toSend.length,
@@ -285,13 +297,16 @@ export const MAIL_SEND_BULK_COMMAND: CommandModule = {
 };
 
 // MARK: Reply / Forward
-async function respondHandler(argv: any, graphContext: Parameters<typeof respondToMessage>[0], kind: 'reply' | 'replyAll' | 'forward'): Promise<void> {
+async function respondHandler(argv: any, context: MsGraphCliServerSettingsSource & { readonly graphContext: Parameters<typeof respondToMessage>[0] }, kind: 'reply' | 'replyAll' | 'forward'): Promise<void> {
+  const { graphContext } = context;
+
   if (argv.comment != null && (argv.body != null || argv.bodyFile != null)) {
     // models: M-d (message-reply) — a comment and a message body together answer 400
     throw new CliError({ message: 'Pass --comment or --body / --body-file, not both: Graph rejects a comment with a message body.', code: 'INVALID_ARGUMENT', suggestion: '--comment keeps the quoted original below your text; --body replaces the reply body.' });
   }
 
-  const signature = await readMsGraphCliSignature(argv);
+  const defaults = msGraphCliServerDefaults(argv, context);
+  const signature = await readMsGraphCliSignature({ ...argv, serverSettings: defaults.serverSettings });
   const body = await readMsGraphCliBodyOption(argv);
   const to = parseMsGraphCliAddressesOption('to', argv.to);
   const cc = parseMsGraphCliAddressesOption('cc', argv.cc);
@@ -307,7 +322,7 @@ async function respondHandler(argv: any, graphContext: Parameters<typeof respond
   const input: MicrosoftGraphRespondToMessageInput = { mailbox: argv.mailbox, immutableIds: !argv.mutableIds, id: argv.id, kind, draft: argv.draft, comment, message };
 
   if (argv.dryRun) {
-    outputMsGraphCliResult(msGraphCliDryRunOutput(msGraphCliRespondRequests({ input, images }), images.length > 0 ? 'The signature has images, so the draft is created, the images are attached to it inline, and it is then sent (unless --draft).' : undefined));
+    outputMsGraphCliResult(msGraphCliDryRunOutput(msGraphCliRespondRequests({ input, images }), images.length > 0 ? 'The signature has images, so the draft is created, the images are attached to it inline, and it is then sent (unless --draft).' : undefined, defaults.warnings));
   } else {
     if (!argv.draft) {
       requireMsGraphCliConfirmation({ yes: argv.yes, action: kind === 'forward' ? 'forward this message' : 'send this reply' });
@@ -388,14 +403,14 @@ export const MAIL_REPLY_COMMAND: CommandModule = {
         ['$0 mail reply AAMk... --comment "Thanks, done." --yes', 'Reply above the quoted original'],
         ['$0 mail reply AAMk... --all --comment "See below." --draft', 'Create a reply-all draft to edit before sending']
       ]),
-  handler: msGraphCommandHandler(async (argv: any, { graphContext }) => respondHandler(argv, graphContext, argv.all ? 'replyAll' : 'reply'))
+  handler: msGraphCommandHandler(async (argv: any, context) => respondHandler(argv, context, argv.all ? 'replyAll' : 'reply'))
 };
 
 export const MAIL_FORWARD_COMMAND: CommandModule = {
   command: 'forward <id>',
   describe: 'Forward a message to --to. Needs --yes unless --draft',
   builder: (yargs: Argv) => respondOptions(yargs).example([['$0 mail forward AAMk... --to grace@example.com --comment "FYI" --yes', 'Forward with a note']]),
-  handler: msGraphCommandHandler(async (argv: any, { graphContext }) => respondHandler(argv, graphContext, 'forward'))
+  handler: msGraphCommandHandler(async (argv: any, context) => respondHandler(argv, context, 'forward'))
 };
 
 // MARK: Move / Copy / Delete

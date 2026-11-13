@@ -29,19 +29,22 @@ const MINTED_ACCESS_TOKEN = 'minted-graph-token';
  * process (like `<app-cli> external-token microsoft`), and logs the arguments of each run.
  *
  * @param dir - Where to write the script.
+ * @param options - The app settings the bundle carries, or a refusal instead of a bundle.
+ * @param options.settings - The bundle's `settings` (the app's unpacked connection data).
+ * @param options.fail - Print a refusal envelope and exit 1 instead.
  * @returns The command and its run log.
  */
-function fakeTokenSourceCommand(dir: string) {
+function fakeTokenSourceCommand(dir: string, options?: { readonly settings?: Record<string, unknown>; readonly fail?: boolean }) {
   const runsPath = join(dir, 'runs.ndjson');
-  const scriptPath = join(dir, 'token-source.cjs');
-  const bundle = { uid: 'user-1', providerType: 'microsoft', accessToken: MINTED_ACCESS_TOKEN, scopes: ['User.Read', 'Mail.Read', 'Calendars.Read'], expiresAt: new Date(Date.now() + MS_IN_HOUR).toISOString() };
+  const scriptPath = join(dir, `token-source${options ? '-custom' : ''}.cjs`);
+  const bundle = { uid: 'user-1', providerType: 'microsoft', accessToken: MINTED_ACCESS_TOKEN, scopes: ['User.Read', 'Mail.Read', 'Calendars.Read'], expiresAt: new Date(Date.now() + MS_IN_HOUR).toISOString(), ...(options?.settings ? { settings: options.settings } : {}) };
 
   writeFileSync(
     scriptPath,
     String.raw`const fs = require('node:fs');
 const args = process.argv.slice(2);
 fs.appendFileSync(${JSON.stringify(runsPath)}, JSON.stringify(args) + '\n');
-if (process.env[${JSON.stringify(DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR)}] !== '1') {
+if (${options?.fail ? 'true' : 'false'} || process.env[${JSON.stringify(DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR)}] !== '1') {
   process.stdout.write(JSON.stringify({ ok: false, error: 'not run as a credential process', code: 'NOT_CREDENTIAL_PROCESS' }));
   process.exit(1);
 }
@@ -462,6 +465,51 @@ describe('msgraph-cli', () => {
 
       expect(new URL(graph.requests[0].url).pathname).toBe('/v1.0/me/sendMail');
       expect(printed(log).data).toEqual({ sent: true, recipients: 2 });
+    });
+
+    describe('server signature defaults', () => {
+      async function connectWith(tokenSource: { readonly command: string }, fetchHandler: FetchHandler) {
+        vi.stubEnv(MSGRAPH_CLI_CONFIG_DIR_ENV_VAR, join(dir, 'config'));
+        await createMsGraphCliAuthMiddleware({ skipCommands: new Set(), env: { ...env, MSGRAPH_CLI_TOKEN_COMMAND: tokenSource.command }, graphFactoryConfig: { fetchHandler } })({ _: ['mail'], $0: 'msgraph-cli' });
+      }
+
+      afterEach(() => {
+        vi.unstubAllEnvs();
+      });
+
+      it('should append the signature the token bundle carries, with no local config', async () => {
+        const custom = fakeTokenSourceCommand(dir, { settings: { mail_signature: { me: { text: 'Server signature' }, 'Support@Example.com': { html: '<p>Support</p>' } } } });
+        const graph = interceptGraph({ status: 202, body: null });
+        await connectWith(custom, graph.fetchHandler);
+        const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+        await runCommand(MAIL_SEND_COMMAND, { to: ['ada@example.com'], subject: 'Hi', body: 'x', signature: true, dryRun: true });
+        await runCommand(MAIL_SEND_COMMAND, { to: ['ada@example.com'], subject: 'Hi', body: 'x', html: true, mailbox: 'support@example.com', signature: true, dryRun: true });
+        await runCommand(MAIL_SEND_COMMAND, { to: ['ada@example.com'], subject: 'Hi', body: 'x', mailbox: 'billing@example.com', signature: true, dryRun: true });
+
+        expect(JSON.parse(log.mock.calls[0][0] as string).data.requests[0].body.message.body).toEqual({ contentType: 'text', content: 'x\n\nServer signature' });
+        expect(JSON.parse(log.mock.calls[1][0] as string).data.requests[0].body.message.body.content).toContain('<p>Support</p>');
+        // a shared mailbox without its own item never falls back to me
+        expect(JSON.parse(log.mock.calls[2][0] as string).data.requests[0].body.message.body).toEqual({ contentType: 'text', content: 'x' });
+        expect(graph.requests).toHaveLength(0);
+        // the token (and its settings) is cached, so the three runs minted once
+        expect(custom.runs()).toHaveLength(1);
+      });
+
+      it('should degrade a --dry-run to a warning when the token source fails', async () => {
+        const failing = fakeTokenSourceCommand(dir, { fail: true });
+        const graph = interceptGraph({ status: 202, body: null });
+        await connectWith(failing, graph.fetchHandler);
+        const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+        await runCommand(MAIL_SEND_COMMAND, { to: ['ada@example.com'], subject: 'Hi', body: 'x', signature: true, dryRun: true });
+
+        const data = JSON.parse(log.mock.calls[0][0] as string).data;
+        expect(data.dryRun).toBe(true);
+        expect(data.warnings).toHaveLength(1);
+        expect(data.warnings[0]).toMatch(/^server defaults unavailable \(.+\)$/);
+        expect(data.requests[0].body.message.body).toEqual({ contentType: 'text', content: 'x' });
+      });
     });
 
     it('should refuse a reply with both --comment and --body', async () => {

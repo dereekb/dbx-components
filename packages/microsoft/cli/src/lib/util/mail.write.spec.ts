@@ -11,7 +11,10 @@ import {
   msGraphCliDryRunOutput,
   msGraphCliHtmlToText,
   msGraphCliSignatureAttachments,
+  msGraphCliServerSignatureForSender,
   msGraphCliSignatureFileForSender,
+  msGraphCliSignatureFromServerItem,
+  msGraphCliSignatureLocalImageSources,
   msGraphCliWriteResultsOutput,
   parseMsGraphCliAddressesOption,
   readMsGraphCliSignature,
@@ -86,6 +89,55 @@ describe('mail write helpers', () => {
       expect(await readMsGraphCliSignature({ mailbox: 'billing@example.com', config: { mailboxSignatureFiles: { 'billing@example.com': file } } })).toEqual({ content: 'Billing team', isHtml: false });
       expect(await readMsGraphCliSignature({ mailbox: 'support@example.com', config: { signatureFile: file } })).toBeUndefined();
       rmSync(dir, { recursive: true, force: true });
+    });
+  });
+
+  describe('server signature defaults', () => {
+    const settings = { mail_signature: { me: { html: '<p>Ada</p><img src="https://example.com/logo.png">' }, 'support@example.com': { text: 'Support team' } } };
+    const serverSettings = async () => settings;
+
+    it('picks the item for the lowercased sender, else me', () => {
+      expect(msGraphCliServerSignatureForSender({ settings })).toEqual(settings.mail_signature.me);
+      expect(msGraphCliServerSignatureForSender({ sender: ' Support@Example.com ', settings })).toEqual({ text: 'Support team' });
+    });
+
+    it('never falls back to me for a shared mailbox', () => {
+      expect(msGraphCliServerSignatureForSender({ sender: 'billing@example.com', settings })).toBeUndefined();
+    });
+
+    it('uses server HTML as-is, with no local embedding, and text items as text', () => {
+      expect(msGraphCliSignatureFromServerItem({ html: '<img src="logo.png">' })).toEqual({ content: '<img src="logo.png">', isHtml: true });
+      expect(msGraphCliSignatureFromServerItem({ text: 'Support team' })).toEqual({ content: 'Support team', isHtml: false });
+      expect(msGraphCliSignatureFromServerItem(undefined)).toBeUndefined();
+    });
+
+    it('resolves --no-signature > --signature-file > local per-address > server per-address > none', async () => {
+      const dir = mkdtempSync(join(tmpdir(), 'msgraph-cli-sig-'));
+      const flagFile = join(dir, 'flag.txt');
+      const localFile = join(dir, 'local.txt');
+      writeFileSync(flagFile, 'Flag');
+      writeFileSync(localFile, 'Local');
+      let calls = 0;
+      const countingSettings = async () => {
+        calls += 1;
+        return settings;
+      };
+
+      expect(await readMsGraphCliSignature({ signature: false, config: {}, serverSettings: countingSettings })).toBeUndefined();
+      expect(await readMsGraphCliSignature({ signatureFile: flagFile, config: { signatureFile: localFile }, serverSettings: countingSettings })).toEqual({ content: 'Flag', isHtml: false });
+      expect(await readMsGraphCliSignature({ config: { signatureFile: localFile }, serverSettings: countingSettings })).toEqual({ content: 'Local', isHtml: false });
+      expect(calls).toBe(0);
+      expect(await readMsGraphCliSignature({ config: {}, serverSettings })).toEqual({ content: settings.mail_signature.me.html, isHtml: true });
+      expect(await readMsGraphCliSignature({ mailbox: 'support@example.com', config: { signatureFile: localFile }, serverSettings })).toEqual({ content: 'Support team', isHtml: false });
+      expect(await readMsGraphCliSignature({ sendAs: 'support@example.com', config: { mailboxSignatureFiles: { 'support@example.com': localFile } }, serverSettings })).toEqual({ content: 'Local', isHtml: false });
+      expect(await readMsGraphCliSignature({ mailbox: 'billing@example.com', config: { signatureFile: localFile }, serverSettings })).toBeUndefined();
+      rmSync(dir, { recursive: true, force: true });
+    });
+  });
+
+  describe('msGraphCliSignatureLocalImageSources()', () => {
+    it('returns only local sources', () => {
+      expect(msGraphCliSignatureLocalImageSources('<img src="logo.png"><img src="https://x.com/a.png"><img src=\'cid:a\'><img src="data:image/png;base64,AA"><img src="//cdn/x.png">')).toEqual(['logo.png']);
     });
   });
 

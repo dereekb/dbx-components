@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CliError } from '@dereekb/dbx-cli';
-import { msGraphCliConfigSetUpdate, msGraphCliConfigSettings, msGraphCliConfigUnsetUpdate } from './config.command';
+import { msGraphCliConfigExport, msGraphCliConfigSetUpdate, msGraphCliConfigSettings, msGraphCliConfigUnsetUpdate } from './config.command';
 
 describe('msgraph-cli config', () => {
   let dir: string;
@@ -57,5 +57,30 @@ describe('msgraph-cli config', () => {
 
   it('prints the mailbox signatures with the other settings', () => {
     expect(msGraphCliConfigSettings({ signatureFile: '/sig/own.html', mailboxSignatureFiles: { 'billing@example.com': '/sig/billing.html' } })).toEqual({ 'signature-file': '/sig/own.html', 'mailbox-signature-files': { 'billing@example.com': '/sig/billing.html' }, mailboxes: undefined });
+  });
+  describe('msGraphCliConfigExport()', () => {
+    it('prints the local signatures as connection settings, raw and trimmed', async () => {
+      const text = join(dir, 'billing.txt');
+      writeFileSync(text, '  Billing team\n');
+      writeFileSync(file, '<p>Ada</p><img src="https://example.com/logo.png">\n');
+
+      expect(await msGraphCliConfigExport({ signatureFile: file, mailboxSignatureFiles: { 'Billing@Example.com': text } })).toEqual({ mail_signature: { me: { html: '<p>Ada</p><img src="https://example.com/logo.png">' }, 'billing@example.com': { text: 'Billing team' } } });
+    });
+
+    it('prints nothing without saved signatures', async () => {
+      expect(await msGraphCliConfigExport({})).toEqual({});
+    });
+
+    it('refuses a signature that shows a local image', async () => {
+      writeFileSync(file, '<p>Ada</p><img src="logo.png">');
+      await expect(msGraphCliConfigExport({ signatureFile: file })).rejects.toMatchObject({ code: 'INVALID_ARGUMENT' });
+    });
+
+    it('refuses a missing file with its address', async () => {
+      const error = await msGraphCliConfigExport({ mailboxSignatureFiles: { 'billing@example.com': join(dir, 'missing.html') } }).catch((e: unknown) => e);
+      expect(error).toBeInstanceOf(CliError);
+      expect((error as CliError).message).toContain('billing@example.com');
+      expect((error as CliError).message).toContain('ENOENT');
+    });
   });
 });

@@ -57,11 +57,13 @@ msgraph-cli auth token-source set "<token-command>" [--name <name>]
 msgraph-cli auth token-source use <name>          # `use default` returns to the unnamed source
 msgraph-cli auth token-source show                # alias: list. Saved sources, the one in effect, env overrides (never the token)
 msgraph-cli auth token-source clear [--name <name>]
+msgraph-cli auth token-source refresh [--name <name>]  # drop the cached token: the next command mints again and re-reads the app's server defaults
 msgraph-cli auth show [--token-source <name>]     # the active source, its token's scopes and expiry; fails when it cannot mint
 msgraph-cli config set signature-file <path>      # appended to new messages, replies and forwards from your own mailbox
 msgraph-cli config set signature-file <path> --mailbox <addr>  # the signature of mail sent from / as <addr>
 msgraph-cli config set mailboxes a@x.com,b@x.com  # shared mailboxes for `mail mailboxes check`
 msgraph-cli config get | unset <key>
+msgraph-cli config export                          # the local signatures as connection settings, for `<app>-cli connection-data import microsoft --file -`
 msgraph-cli output set|show|clear                 # saved --pick / --dump-dir defaults
 msgraph-cli docs [topic]                          # these docs
 ```
@@ -142,6 +144,36 @@ saved with `config set signature-file <file> --mailbox <addr>`, and none when th
 own). A local `<img src>` in an HTML signature (relative to the file) is attached inline as `cid:`; a
 reply or forward whose signature has images goes through its draft (create, attach, send).
 `--signature-file <file>` uses another file for one command; `--no-signature` leaves it off.
+
+#### Signatures from the app (server defaults)
+
+An app can store signatures for you (its `UserExternalConnectionData`, data type `mail_signature`,
+encrypted per user). When its CLI mints with them, the token bundle carries them as `settings`, and
+msgraph-cli caches them with the token. Each item is keyed by `me` (your own mailbox) or a sending
+address, and holds `{ html }` or `{ text }`.
+
+The first that applies wins:
+
+1. `--no-signature`: none.
+2. `--signature-file <file>`.
+3. The local signature saved for the address the message is sent as (`config set signature-file …`).
+4. The server item for that same address (`me` for your own mailbox).
+5. None. A `--mailbox` / `--send-as` address with neither gets none: never yours, never `me`.
+
+Server signatures are used as stored: images must be web (https) URLs, because nothing is embedded
+from disk. `config export` refuses a signature that shows a local image. `--dry-run` resolves the
+server signature too (it may mint); when the token source fails, the preview omits it and adds
+`warnings: ["server defaults unavailable (<code>)"]`.
+
+Where to save one, for everyone and every machine:
+
+- **Through MCP:** "To save a signature for everyone and every machine, call the app MCP's `userExternalConnection` `update:data`
+  (`{ providerType: 'microsoft', set: [{ dataType: 'mail_signature', itemKey: 'support@x.com' | 'me', value: { html } }] }`).
+- **Through the CLI:** or `<app>-cli connection-data set microsoft mail_signature <me|address> --file sig.html`
+  (everyday login). `msgraph-cli config export | <app>-cli connection-data import microsoft --file -` uploads
+  every local signature at once.
+- **Then refresh:** "then `msgraph-cli auth token-source refresh`." The cached token keeps the old defaults
+  until it expires otherwise.
 
 Every auto-reply change first saves the current setting to `<configDir>/auto-reply.backup.json`.
 `restore` swaps the saved and current settings, so a second `restore` undoes the first. `set` takes
@@ -469,7 +501,7 @@ token command fails, msgraph-cli shows the **app CLI's** code and suggestion (ex
 | Code | Cause | What to do |
 | --- | --- | --- |
 | `AUTH_FORBIDDEN` (server `SCOPE_FORBIDDEN`) | The app login holds no Microsoft ceiling scope | `auth login` the app CLI with an env preset carrying the ceiling scope |
-| `AUTH_FORBIDDEN` (server `SCOPE_NOT_GRANTED`) | The connection was not granted what the ceiling requires | Reconnect Microsoft in the app with the access level the suggestion names |
+| `AUTH_FORBIDDEN` (server `SCOPE_FORBIDDEN`, with excess scopes) | The connection grants scopes this login may not mint, and its tokens cannot be narrowed | Reconnect Microsoft in the app with a narrower access level, or log the app CLI in with a preset carrying the wider ceiling scope |
 | `AUTH_HANDOFF_EXPIRED` | The app CLI's handed-off bearer credential lapsed | Re-mint it (ref `cli-handoff`); msgraph-cli needs no change |
 | Not connected / expired (409) | The user has no Microsoft connection, or it expired | Connect (or reconnect) Microsoft in the app |
 | `CREDENTIAL_PROCESS_FAILED` / `_TIMEOUT` / `_INVALID_OUTPUT` / `_ERROR` | The token command could not run, hung (60 s), printed no JSON, or failed without a code | Run the token command by hand with `DBX_CLI_CREDENTIAL_PROCESS=1` to see its output |

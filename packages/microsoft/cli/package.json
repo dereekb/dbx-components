@@ -8,6 +8,7 @@
   },
   "peerDependencies": {
     "@dereekb/dbx-cli": "14.25.1",
+    "@dereekb/firebase": "14.25.1",
     "@dereekb/microsoft": "14.25.1",
     "@dereekb/util": "14.25.1",
     "yargs": "^18.0.0"

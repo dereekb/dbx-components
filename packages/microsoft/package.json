@@ -33,7 +33,9 @@
               "Outlook mail",
               "Outlook inbox",
               "Outlook calendar",
-              "OneDrive"
+              "OneDrive",
+              "mail_signature",
+              "connection-data"
             ]
           },
           {

@@ -10,6 +10,7 @@ export * from './config/cli.config';
 export * from './context/cli.context';
 export * from './docs/msgraph.docs';
 export * from './middleware/auth.middleware';
+export * from './util/connection.settings';
 export * from './util/file.download';
 export * from './util/file.source';
 export * from './util/mail.bulk';

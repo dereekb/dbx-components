@@ -47,6 +47,15 @@ New messages, replies and forwards then get the signature of the address they ar
 
 For one command, `--signature-file <file>` uses another file and `--no-signature` leaves it off. `config unset signature-file [--mailbox <address>]` removes one.
 
+**Signatures from the app (server defaults).** An app built on dbx-components can store your signatures (`mail_signature` connection data, encrypted per user) so every machine and every Claude environment gets them with no local setup. Its CLI mints with them, and msgraph-cli caches them with the token. The order is: `--no-signature` > `--signature-file` > the local signature for the sending address > the app's signature for that address (`me` for your own mailbox) > none. A shared mailbox never falls back to yours. Server signatures are used as stored, so their images must be web (https) URLs.
+
+```bash
+<app>-cli connection-data set microsoft mail_signature me --file signature.html
+<app>-cli connection-data set microsoft mail_signature billing@example.com --file billing-signature.html
+msgraph-cli config export | <app>-cli connection-data import microsoft --file -   # upload every local signature
+msgraph-cli auth token-source refresh                                            # apply now instead of at the next mint
+```
+
 ## Agent docs
 
 This package ships its agent docs (dbx-claude refs) in `refs/`: `refs/msgraph-cli/REF.md` documents the `msgraph-cli` command. `npx msgraph-cli docs` prints them, and dbx-claude discovers them from your installed `@dereekb/microsoft`, so the doc matches the version you have. They are declared in this package's `package.json` under `dbxClaude.refs`.

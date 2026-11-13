@@ -1,10 +1,12 @@
 import { CliError, outputResult, wrapCommandHandler } from '@dereekb/dbx-cli';
+import { type MicrosoftMailSignatureUserExternalConnectionData, USER_EXTERNAL_CONNECTION_DATA_SELF_ITEM_KEY } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
-import { access } from 'node:fs/promises';
+import { access, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import type { Argv, CommandModule } from 'yargs';
 import { type MsGraphCliConfigFile, type MsGraphCliConfigStore, msGraphCliConfigStore } from '../config/cli.config';
-import { parseMsGraphCliAddressesOption } from '../util/mail.write';
+import { type MsGraphCliConnectionSettings } from '../util/connection.settings';
+import { isMsGraphCliHtmlFile, msGraphCliSignatureLocalImageSources, parseMsGraphCliAddressesOption } from '../util/mail.write';
 
 /**
  * The settings `msgraph-cli config` reads and writes.
@@ -126,6 +128,75 @@ export function msGraphCliConfigUnsetUpdate(key: MsGraphCliConfigKey, context?: 
   return result;
 }
 
+/**
+ * Reads one saved signature file as a connection-data value: raw content, trimmed, `.html` / `.htm` as `{ html }`,
+ * anything else as `{ text }`. Local images are not embedded.
+ *
+ * @param input - The item key the signature is saved under (`me` or an address) and its file.
+ * @param input.itemKey - `me` or the address.
+ * @param input.path - The signature file.
+ * @returns The value.
+ * @throws {CliError} `INVALID_ARGUMENT` when the file cannot be read, or the HTML shows a local image.
+ */
+export async function readMsGraphCliExportSignature(input: { readonly itemKey: string; readonly path: string }): Promise<MicrosoftMailSignatureUserExternalConnectionData> {
+  const { itemKey, path } = input;
+  const label = itemKey === USER_EXTERNAL_CONNECTION_DATA_SELF_ITEM_KEY ? 'your own mailbox' : itemKey;
+  let content: string;
+
+  try {
+    content = (await readFile(path, 'utf8')).trim();
+  } catch (e) {
+    const code = (e as Maybe<{ readonly code?: string }>)?.code ?? 'READ_FAILED';
+    throw new CliError({
+      message: `The signature file of ${label} ("${path}") cannot be read (${code}).`,
+      code: 'INVALID_ARGUMENT',
+      suggestion: `Point it at an existing file (msgraph-cli config set signature-file <file>${itemKey === USER_EXTERNAL_CONNECTION_DATA_SELF_ITEM_KEY ? '' : ` --mailbox ${itemKey}`}), or unset it.`
+    });
+  }
+
+  let result: MicrosoftMailSignatureUserExternalConnectionData;
+
+  if (isMsGraphCliHtmlFile(path)) {
+    const local = msGraphCliSignatureLocalImageSources(content);
+
+    if (local.length > 0) {
+      throw new CliError({ message: `The signature of ${label} shows ${local.length} local image(s), which cannot work on another machine.`, code: 'INVALID_ARGUMENT', suggestion: 'Host the images on the web and use their https URLs in the signature file, then export again.' });
+    }
+
+    result = { html: content };
+  } else {
+    result = { text: content };
+  }
+
+  return result;
+}
+
+/**
+ * Builds `config export`'s output: the saved local signatures as connection settings (`mail_signature` keyed by
+ * `me` and each address), ready for `<app>-cli connection-data import microsoft --file -`.
+ *
+ * @param file - The config file.
+ * @returns The settings. Empty when no signature is saved.
+ * @throws {CliError} `INVALID_ARGUMENT` when a signature file cannot be read or shows a local image.
+ */
+export async function msGraphCliConfigExport(file: Maybe<MsGraphCliConfigFile>): Promise<MsGraphCliConnectionSettings> {
+  const entries: [string, string][] = [];
+
+  if (file?.signatureFile) {
+    entries.push([USER_EXTERNAL_CONNECTION_DATA_SELF_ITEM_KEY, file.signatureFile]);
+  }
+
+  Object.entries(file?.mailboxSignatureFiles ?? {}).forEach(([address, path]) => entries.push([address.toLowerCase(), path]));
+
+  const signatures: Record<string, MicrosoftMailSignatureUserExternalConnectionData> = {};
+
+  for (const [itemKey, path] of entries) {
+    signatures[itemKey] = await readMsGraphCliExportSignature({ itemKey, path });
+  }
+
+  return entries.length > 0 ? { mail_signature: signatures } : {};
+}
+
 function configStoreFor(store: Maybe<MsGraphCliConfigStore>): MsGraphCliConfigStore {
   return store ?? msGraphCliConfigStore();
 }
@@ -178,15 +249,24 @@ export function msGraphCliConfigCommand(storeOverride?: Maybe<MsGraphCliConfigSt
     })
   };
 
+  const exportCommand: CommandModule = {
+    command: 'export',
+    describe: "Print the saved signatures as connection settings, to store them in the app (everyone's machines get them as server defaults)",
+    builder: (yargs: Argv) => yargs.example([['$0 config export | <app>-cli connection-data import microsoft --file -', 'Save your local signatures to the app, then run msgraph-cli auth token-source refresh']]),
+    handler: wrapCommandHandler(async () => {
+      outputResult(await msGraphCliConfigExport(await configStoreFor(storeOverride).loadConfigFile()));
+    })
+  };
+
   return {
     command: 'config',
-    describe: 'Saved mail defaults: signature-file, mailboxes',
-    builder: (yargs: Argv) => yargs.command(getCommand).command(setCommand).command(unsetCommand).demandCommand(1, 'Please specify a config subcommand.'),
+    describe: 'Saved mail defaults: signature-file, mailboxes; export them as server defaults',
+    builder: (yargs: Argv) => yargs.command(getCommand).command(setCommand).command(unsetCommand).command(exportCommand).demandCommand(1, 'Please specify a config subcommand.'),
     handler: () => undefined
   };
 }
 
 /**
- * The `config` command: `get`, `set <key> <value>` and `unset <key>`.
+ * The `config` command: `get`, `set <key> <value>`, `unset <key>` and `export`.
  */
 export const CONFIG_COMMAND: CommandModule = msGraphCliConfigCommand();

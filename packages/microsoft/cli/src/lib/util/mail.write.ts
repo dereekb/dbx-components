@@ -1,5 +1,6 @@
 import { CliError } from '@dereekb/dbx-cli';
 import { type MicrosoftGraphFileAttachmentInput, type MicrosoftGraphItemBody, type MicrosoftGraphMessageWriteResult, type MicrosoftGraphRequestInput, MICROSOFT_GRAPH_MESSAGE_INLINE_ATTACHMENT_MAX_BYTES, microsoftGraphPathWithQuery } from '@dereekb/microsoft';
+import { type MicrosoftMailSignatureUserExternalConnectionData, USER_EXTERNAL_CONNECTION_DATA_SELF_ITEM_KEY } from '@dereekb/firebase';
 import { type EmailAddress, type Maybe, mimeTypeForFileExtension } from '@dereekb/util';
 import { readFile } from 'node:fs/promises';
 import { basename, dirname, extname, resolve } from 'node:path';
@@ -7,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import type { Argv } from 'yargs';
 import { msGraphCliContentTypeForFile } from '../commands/request.command';
 import { type MsGraphCliConfigFile, msGraphCliConfigStore, msGraphCliPaths } from '../config/cli.config';
+import { type MsGraphCliConnectionSettings } from './connection.settings';
 
 /**
  * The fields of a Graph request body whose addresses `--dry-run` replaces with a count.
@@ -54,7 +56,7 @@ export function msGraphCliBodyOptions<T>(yargs: Argv<T>) {
     .option('signature-file', {
       type: 'string',
       describe:
-        'Append this signature (.html / .htm as HTML with its local <img> files attached inline, else text). Default: the saved signature of the address sent as (msgraph-cli config set signature-file <file> [--mailbox <address>]); a --mailbox / --send-as address without one gets none. Graph cannot read the Outlook signature'
+        'Append this signature (.html / .htm as HTML with its local <img> files attached inline, else text). Default: the saved signature of the address sent as (msgraph-cli config set signature-file <file> [--mailbox <address>]), else the server default the app stores for that address (connection-data); a --mailbox / --send-as address without either gets none. Graph cannot read the Outlook signature'
     })
     .option('signature', { type: 'boolean', default: true, describe: 'Append the signature (--no-signature to skip)' });
 }
@@ -111,6 +113,10 @@ export interface MsGraphCliDryRunOutput {
   readonly dryRun: true;
   readonly requests: MsGraphCliDryRunRequest[];
   readonly note?: string;
+  /**
+   * What the preview could not resolve, e.g. `server defaults unavailable (<code>)` when the token source failed.
+   */
+  readonly warnings?: string[];
 }
 
 function countLabel(count: number, noun: string): string {
@@ -155,9 +161,10 @@ export function msGraphCliRedactRecipients(value: unknown): unknown {
  *
  * @param requests - The requests, in order.
  * @param note - A line explaining anything the requests do not show.
+ * @param warnings - What the preview could not resolve (e.g. the server defaults in a dry run).
  * @returns The output.
  */
-export function msGraphCliDryRunOutput(requests: readonly MicrosoftGraphRequestInput[], note?: Maybe<string>): MsGraphCliDryRunOutput {
+export function msGraphCliDryRunOutput(requests: readonly MicrosoftGraphRequestInput[], note?: Maybe<string>, warnings?: Maybe<readonly string[]>): MsGraphCliDryRunOutput {
   return {
     dryRun: true,
     requests: requests.map((x) => ({
@@ -166,7 +173,8 @@ export function msGraphCliDryRunOutput(requests: readonly MicrosoftGraphRequestI
       ...(x.headers ? { headers: x.headers } : {}),
       ...(x.body == null ? {} : { body: msGraphCliRedactRecipients(x.body) })
     })),
-    ...(note ? { note } : {})
+    ...(note ? { note } : {}),
+    ...(warnings?.length ? { warnings: [...warnings] } : {})
   };
 }
 
@@ -349,25 +357,93 @@ export function msGraphCliSignatureFileForSender(input: { readonly sender?: Mayb
 }
 
 /**
- * Reads the signature a command appends, unless `--no-signature`: `--signature-file`, else the saved
- * signature of the address the message is sent as (see {@link msGraphCliSignatureFileForSender}).
+ * Returns the server signature item for the address a message is sent as: the lowercased `sender`, else `me`
+ * (your own mailbox). A shared-mailbox sender without its own item gets none: never `me`.
  *
- * @param input - The option values.
- * @param input.signature - False with `--no-signature`.
- * @param input.signatureFile - The `--signature-file` path.
- * @param input.mailbox - The `--mailbox` the message is sent from.
- * @param input.sendAs - The `--send-as` address.
- * @param input.config - The saved signature settings. Read from the config file when not given.
+ * @param input - The sending address and the server defaults.
+ * @param input.sender - The address the message is sent as, when not your own.
+ * @param input.settings - The server defaults from the token source.
+ * @returns The item, if the server has one for the sender.
+ */
+export function msGraphCliServerSignatureForSender(input: { readonly sender?: Maybe<string>; readonly settings?: Maybe<MsGraphCliConnectionSettings> }): Maybe<MicrosoftMailSignatureUserExternalConnectionData> {
+  const key = input.sender?.trim().toLowerCase() || USER_EXTERNAL_CONNECTION_DATA_SELF_ITEM_KEY;
+  return input.settings?.mail_signature?.[key];
+}
+
+/**
+ * Turns a server signature item into a signature: `html` as HTML, `text` as text. Used as stored: no local
+ * image embedding (there is no folder to resolve against), so web, `cid:` and `data:` image sources pass through.
+ *
+ * @param item - The server item.
+ * @returns The signature, or undefined when the item has neither html nor text.
+ */
+export function msGraphCliSignatureFromServerItem(item: Maybe<MicrosoftMailSignatureUserExternalConnectionData>): Maybe<MsGraphCliSignature> {
+  let result: Maybe<MsGraphCliSignature>;
+
+  if (item?.html) {
+    result = { content: item.html, isHtml: true };
+  } else if (item?.text) {
+    result = { content: item.text, isHtml: false };
+  }
+
+  return result;
+}
+
+/**
+ * Input for {@link readMsGraphCliSignature}.
+ */
+export interface ReadMsGraphCliSignatureInput {
+  /**
+   * False with `--no-signature`.
+   */
+  readonly signature?: Maybe<boolean>;
+  /**
+   * The `--signature-file` path.
+   */
+  readonly signatureFile?: Maybe<string>;
+  /**
+   * The `--mailbox` the message is sent from.
+   */
+  readonly mailbox?: Maybe<string>;
+  /**
+   * The `--send-as` address.
+   */
+  readonly sendAs?: Maybe<string>;
+  /**
+   * The saved signature settings. Read from the config file when not given.
+   */
+  readonly config?: Maybe<MsGraphCliSignatureConfig>;
+  /**
+   * Reads the server defaults (see {@link msGraphCliServerSettingsGetter}). Called only when no flag or local file applies.
+   */
+  readonly serverSettings?: Maybe<() => Promise<Maybe<MsGraphCliConnectionSettings>>>;
+}
+
+/**
+ * Reads the signature a command appends. The first that applies wins:
+ *
+ * 1. `--no-signature`: none.
+ * 2. `--signature-file`.
+ * 3. The saved local signature of the address the message is sent as (see {@link msGraphCliSignatureFileForSender}).
+ * 4. The server default for that same address (see {@link msGraphCliServerSignatureForSender}).
+ * 5. None.
+ *
+ * A shared-mailbox sender with no local file and no server item gets none, never your own.
+ *
+ * @param input - The option values, the saved settings and the server defaults getter.
  * @returns The signature, or undefined when none applies.
  */
-export async function readMsGraphCliSignature(input: { readonly signature?: Maybe<boolean>; readonly signatureFile?: Maybe<string>; readonly mailbox?: Maybe<string>; readonly sendAs?: Maybe<string>; readonly config?: Maybe<MsGraphCliSignatureConfig> }): Promise<Maybe<MsGraphCliSignature>> {
+export async function readMsGraphCliSignature(input: ReadMsGraphCliSignatureInput): Promise<Maybe<MsGraphCliSignature>> {
   let result: Maybe<MsGraphCliSignature>;
 
   if (input.signature !== false) {
-    const path = input.signatureFile ?? msGraphCliSignatureFileForSender({ sender: input.sendAs ?? input.mailbox, config: input.config ?? (await msGraphCliConfigStore(msGraphCliPaths()).loadConfigFile()) });
+    const sender = input.sendAs ?? input.mailbox;
+    const path = input.signatureFile ?? msGraphCliSignatureFileForSender({ sender, config: input.config ?? (await msGraphCliConfigStore(msGraphCliPaths()).loadConfigFile()) });
 
     if (path) {
       result = await readMsGraphCliSignatureFile(path);
+    } else if (input.serverSettings) {
+      result = msGraphCliSignatureFromServerItem(msGraphCliServerSignatureForSender({ sender, settings: await input.serverSettings() }));
     }
   }
 
@@ -395,6 +471,16 @@ const MSGRAPH_CLI_IMG_SRC_REGEX = /(<img\b[^>]*?\bsrc\s*=\s*)(["'])(.*?)\2/gi;
  * Matches an image `src` that is not a local file: a web URL, a protocol-relative URL, `cid:` or `data:`.
  */
 const MSGRAPH_CLI_REMOTE_IMG_SRC_REGEX = /^(?:https?:|cid:|data:|\/\/)/i;
+
+/**
+ * Returns the `<img src>` values of an HTML signature that point at local files: not a web URL, `cid:` or `data:`.
+ *
+ * @param html - The signature HTML.
+ * @returns The local sources, in order.
+ */
+export function msGraphCliSignatureLocalImageSources(html: string): string[] {
+  return Array.from(html.matchAll(MSGRAPH_CLI_IMG_SRC_REGEX), (match) => match[3].trim()).filter((src) => src && !MSGRAPH_CLI_REMOTE_IMG_SRC_REGEX.test(src));
+}
 
 /**
  * Attaches the local images an HTML signature shows inline, the way Outlook does.
