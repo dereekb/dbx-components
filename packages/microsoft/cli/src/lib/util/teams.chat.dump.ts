@@ -574,11 +574,14 @@ const HOSTED_CONTENT_EXTENSIONS: Readonly<Record<string, string>> = {
   'image/gif': 'gif',
   'image/webp': 'webp',
   'image/bmp': 'bmp',
-  'image/svg+xml': 'svg'
+  'image/svg+xml': 'svg',
+  // live: Teams serves short inline video clips as hostedContents too
+  'video/mp4': 'mp4',
+  'video/quicktime': 'mov'
 };
 
 /**
- * Returns the file extension of an inline image by its response type: png, jpg, gif, webp, bmp or svg, else `bin`.
+ * Returns the file extension of an inline image or video clip by its response type: png, jpg, gif, webp, bmp, svg, mp4 or mov, else `bin`.
  *
  * @param contentType - The response's `content-type`.
  * @returns The extension, without the dot.

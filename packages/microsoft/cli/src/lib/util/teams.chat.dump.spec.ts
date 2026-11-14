@@ -327,6 +327,7 @@ describe('teams chat dump', () => {
     it('names inline images by their type', () => {
       expect(msGraphCliTeamsHostedContentExtension('image/png')).toBe('png');
       expect(msGraphCliTeamsHostedContentExtension('image/jpeg; charset=binary')).toBe('jpg');
+      expect(msGraphCliTeamsHostedContentExtension('video/mp4')).toBe('mp4');
       expect(msGraphCliTeamsHostedContentExtension('application/octet-stream')).toBe('bin');
       expect(msGraphCliTeamsHostedContentExtension(undefined)).toBe('bin');
     });

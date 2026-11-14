@@ -348,9 +348,9 @@ handles changes with its lookback.
   `cat messages/2026/11/*.md` reads in order. A message with no date goes under `messages/undated/`.
 - **What each message writes.** The `.json` always, first, so the text is kept even if a download fails. Then, by
   default, its inline images (`--no-hosted-contents` skips them): read through Graph's hostedContents, named by
-  response type (png, jpg, gif, webp, bmp, svg, else bin), and never downloaded twice. With `--attachments` (off by
-  default) its file attachments: each SharePoint / OneDrive link is resolved through `/shares` and streamed by drive
-  item, so no pre-authenticated URL is used; folders, notebooks and malware-flagged items count as `unsupported`, and
+  response type (png, jpg, gif, webp, bmp, svg; mp4 / mov for the short video clips Teams also serves this way; else
+  bin), and never downloaded twice. With `--attachments` (off by default) its file attachments: each SharePoint /
+  OneDrive link is resolved through `/shares` and streamed by drive item, so no pre-authenticated URL is used; folders, notebooks and malware-flagged items count as `unsupported`, and
   a file already on disk is not downloaded again. Quoted messages, cards and meeting links have nothing to download;
   they stay in the `.json`. The `.md` comes last (`--no-markdown` skips it): a `### <sender> · <created>` header with
   `(edited …)` / `(deleted …)` markers, the body converted from Teams HTML (bold, italics, strikethrough, code, quotes,
@@ -385,12 +385,16 @@ handles changes with its lookback.
 - **Pacing.** Teams allows one read per second per chat and per user, so every Teams read of a run (message pages,
   inline images, the chat list) is paced to one per second, and chats are read one at a time. `--concurrency`
   (default 3, max 4) is how many messages of a page are written at once, which mainly overlaps the SharePoint
-  attachment downloads (those are not Teams reads and are not paced). A first run lists about 50 messages per second;
-  a quiet re-run costs about one read per chat (68 quiet chats take about 70 s). Microsoft asks that polling for
+  attachment downloads (those are not Teams reads and are not paced). A first run archives about 20 messages per
+  second (live: 23,788 messages in 68 chats took about 19 minutes; 17–33 per second, slower with many inline images). A
+  quiet re-run costs about two reads per chat, because Graph sends a next-page link after a filtered walk's last page
+  and that page comes back empty (68 quiet chats take about 140 s). Microsoft asks that polling for
   changes happen at most once a day, so run it on demand, or at most daily when scheduled.
 - **Failures.** An inline image or attachment that fails for good (not found, access denied, malware) does not fail
   its message: it is counted in `failed` / `failedCodes`, shown as `[not downloaded]`, recorded as missing, and tried
-  again by the next run whose window returns the message. A chat that cannot be read (for example one you left) is
+  again by the next run whose window returns the message. Graph refuses some inline images of old messages with 403
+  even with `Chat.Read` (live: 3 of 4 images on one 2022 message; a plain `request GET` of the same `$value` gets the
+  same 403); they count as `SCOPE_DENIED` and need no other token. A chat that cannot be read (for example one you left) is
   recorded, counted in `failed`, and skipped, and the run goes on with `complete: false`; a chat named by id that
   cannot be read fails the run. An outage or throttling that outlasts its retries, a rejected token after one re-mint,
   or a full disk stops the run with the manifests saved and the cursor at the unfinished page's start, and so do 10
