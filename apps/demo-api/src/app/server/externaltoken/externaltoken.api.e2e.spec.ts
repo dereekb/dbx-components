@@ -3,12 +3,14 @@ import {
   EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE,
   MICROSOFT_GRAPH_READ_SCOPES,
   MICROSOFT_GRAPH_READ_WRITE_SCOPES,
+  MICROSOFT_MAIL_SIGNATURE_USER_EXTERNAL_CONNECTION_DATA_TYPE as MAIL_SIGNATURE,
   MICROSOFT_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as MICROSOFT,
   USER_EXTERNAL_CONNECTION_PROVIDER_NOT_CONNECTED_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_TOKEN_EXPORT_NOT_ALLOWED_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_TOKEN_FORBIDDEN_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE,
   type UserExternalConnectionAccessToken,
+  type UserExternalConnectionAccessTokenResponse,
   userExternalConnectionTokenApiPath,
   TRELLO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as TRELLO,
   ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as ZOHO
@@ -29,6 +31,7 @@ const ZOHO_TOKEN_PATH = `/api${userExternalConnectionTokenApiPath(ZOHO)}`;
 const TRELLO_BOT_TOKEN_PATH = `/api${userExternalConnectionTokenApiPath(TRELLO_BOT)}`;
 const TRELLO_TOKEN_PATH = `/api${userExternalConnectionTokenApiPath(TRELLO)}`;
 const MICROSOFT_TOKEN_PATH = `/api${userExternalConnectionTokenApiPath(MICROSOFT)}`;
+const MICROSOFT_TOKEN_WITH_DATA_PATH = `/api${userExternalConnectionTokenApiPath(MICROSOFT, { includeData: true })}`;
 
 /**
  * OAuth fixture shaped like demo-cli's dedicated `external-token` env: a client assigned the admin-only
@@ -287,11 +290,62 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
                   expect(result.extra).toEqual({ tenantId: MICROSOFT_TENANT_ID });
                   expect(JSON.stringify(result)).not.toContain('refresh-token');
                 });
+
+                describe('?include=data', () => {
+                  it('returns no data when the caller has none stored', async () => {
+                    const res = await oauth.authRequest('get', MICROSOFT_TOKEN_WITH_DATA_PATH).expect(200);
+                    const result = res.body as UserExternalConnectionAccessTokenResponse;
+
+                    expect(result.accessToken).toBe('microsoft-stored-access-token');
+                    expect(result.data).toBeUndefined();
+                  });
+
+                  describe('with stored connection data', () => {
+                    beforeEach(async () => {
+                      await f.instance.userExternalConnectionDataServerActions.updateUserExternalConnectionData({ uid: au.uid, params: { providerType: MICROSOFT, set: [{ dataType: MAIL_SIGNATURE, itemKey: 'me', value: { html: '<p>Regards</p>' } }] } });
+                    });
+
+                    it('returns this provider’s data, keyed data type → item key', async () => {
+                      const res = await oauth.authRequest('get', MICROSOFT_TOKEN_WITH_DATA_PATH).expect(200);
+                      const result = res.body as UserExternalConnectionAccessTokenResponse;
+
+                      expect(result.accessToken).toBe('microsoft-stored-access-token');
+                      expect(result.data).toEqual({ [MAIL_SIGNATURE]: { me: { html: '<p>Regards</p>' } } });
+                    });
+
+                    it('marks the response uncacheable', async () => {
+                      const res = await oauth.authRequest('get', MICROSOFT_TOKEN_WITH_DATA_PATH).expect(200);
+                      expect(res.headers['cache-control']).toBe('no-store');
+                    });
+
+                    it('returns no data without the parameter', async () => {
+                      const res = await oauth.authRequest('get', MICROSOFT_TOKEN_PATH).expect(200);
+                      const result = res.body as UserExternalConnectionAccessTokenResponse;
+
+                      expect(result.data).toBeUndefined();
+                      expect(JSON.stringify(result)).not.toContain('Regards');
+                    });
+
+                    it('ignores an unknown include value', async () => {
+                      const res = await oauth.authRequest('get', `${MICROSOFT_TOKEN_PATH}?include=other`).expect(200);
+                      expect((res.body as UserExternalConnectionAccessTokenResponse).data).toBeUndefined();
+                    });
+                  });
+                });
               });
 
               describe('and a read + write connection', () => {
                 beforeEach(async () => {
                   await uec.connect({ providerType: MICROSOFT, credentials: microsoftCredentials(MICROSOFT_GRAPH_READ_WRITE_SCOPES) });
+                });
+
+                it('refuses the grant with ?include=data without returning the stored data', async () => {
+                  await f.instance.userExternalConnectionDataServerActions.updateUserExternalConnectionData({ uid: au.uid, params: { providerType: MICROSOFT, set: [{ dataType: MAIL_SIGNATURE, itemKey: 'me', value: { html: '<p>Regards</p>' } }] } });
+
+                  const res = await oauth.authRequest('get', MICROSOFT_TOKEN_WITH_DATA_PATH).expect(403);
+
+                  expect(res.body.code).toBe(USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE);
+                  expect(JSON.stringify(res.body)).not.toContain('Regards');
                 });
 
                 it('refuses the grant, which exceeds the read ceiling, without returning its token', async () => {

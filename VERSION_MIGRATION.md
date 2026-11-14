@@ -1,3 +1,64 @@
+## Migration to v14.26.x — UserExternalConnectionData: encrypted per-user connection defaults
+
+### New
+- **`UserExternalConnectionData` (`/uecd`)**, a server-only model in `@dereekb/firebase-server/model`
+  (`userExternalConnectionDataIdentity`, `UserExternalConnectionDataServerActions`). It stores a user's per-connection
+  data (keyed provider type → data type → item key, with the reserved item key `me` for the connection's own account),
+  encrypted at rest as one AES-256-GCM string. Like `uecp` it has no rules block, no model service and no `@dbxModel`,
+  so it cannot be read from a client SDK, `ModelApiGetService` or `<cli> get`, and it is absent from the manifests.
+  Data is kept on disconnect and unlink, and deleted by `deleteAllUserExternalConnectionsForUser`.
+- **Data type registry** (`@dereekb/firebase`): `UserExternalConnectionDataTypeConfig` / `userExternalConnectionDataTypeConfig`
+  (an arktype `valueType`, optional `normalizeItemKey`, `packFile`, `maxItems`, `maxValueBytes`),
+  `userExternalConnectionDataTypeConfigLookup`, and the typed views `UserExternalConnectionDataTypings` /
+  `TypedUserExternalConnectionDataMap` / `readUserExternalConnectionDataItem`. The registry fails closed: an
+  unregistered provider or data type is refused. Limits default to 32 KiB per value, 50 items per data type, 256 KiB per
+  document and 50 operations per update.
+- **Microsoft mail signatures**: `microsoftMailSignatureUserExternalConnectionDataTypeConfig(providerType)` registers
+  `mail_signature` (`{ html } | { text }`, exactly one, up to 64 KiB; item keys `me` or a lowercased sending address via
+  `microsoftMailSignatureItemKey`; `.html` files pack to `{ html }`). Typings: `MicrosoftUserExternalConnectionDataTypes`.
+- **Model API specifiers on `userExternalConnection`**: `read:data` (`ReadUserExternalConnectionDataParams`: optional
+  `providerType` / `dataType` / `itemKey` / `keysOnly`; returns `data`, keys-only `items` and the `dataTypes` the caller
+  may store) and `update:data` (`UpdateUserExternalConnectionDataParams`: `clear`, then `unset`, then `set`, in one
+  transaction). Both act on the caller's own uid only, assert the new `data` role on the caller's `/uec` document, and
+  apply the provider's connect policy (an `adminOnly` provider needs an admin). On MCP, `read:data` is a read method and
+  `update:data` a write method whose `unset` / `clear` escalate to destructive.
+- **Error codes** (`@dereekb/firebase`): `USER_EXTERNAL_CONNECTION_DATA_TYPE_NOT_ALLOWED_ERROR`,
+  `..._DATA_ITEM_KEY_INVALID_ERROR`, `..._DATA_VALUE_INVALID_ERROR`, `..._DATA_TOO_LARGE_ERROR` (400) and
+  `..._DATA_UNREADABLE_ERROR` (500; `update:data` with `clear: true` replaces an unreadable document). Errors carry
+  paths and counts, never values.
+- **Token mint `?include=data`.** `GET /api/session/external/:providerType?include=data` attaches the caller's stored data
+  for that provider (`UserExternalConnectionAccessTokenResponse.data`), only after every mint gate passed. A data
+  failure still returns the token. `userExternalConnectionTokenApiPath(providerType, { includeData: true })` builds the
+  path. No app change is needed: the token module reads the data actions from the app's `UserExternalConnectionModule`.
+- `@dereekb/nestjs`: `deriveAES256GCMEncryptionSecret` (HKDF-SHA256). The data key is derived from
+  `USER_EXTERNAL_CONNECTION_ENCRYPTION_SECRET` with a versioned info label, so `uecp` ciphertext cannot be replayed as
+  data. **There is no new env var.**
+- **`@dereekb/dbx-cli`**: `CreateCliInput.externalConnectionData` (`CliExternalConnectionDataConfig`: `dataTypes` plus
+  per-provider `adapters`), `passthroughCliExternalConnectionDataAdapter`, `summarizeCliExternalConnectionSettings`, and
+  `CliExternalConnectionTokenBundle.settings`. `external-token` requests `?include=data` only for a provider with an
+  adapter and forwards only the adapter's `unpack` output as `settings`. New `connection-data` command group
+  (`list` / `get` / `set` / `unset` / `import`, on the everyday login). Token sources cache `settings` in their entry
+  (keys only in reports) and gain `auth token-source refresh`.
+- **msgraph-cli server defaults.** A token source whose bundle carries `mail_signature` settings supplies default
+  signatures: `--no-signature` > `--signature-file` > the local file for that address > the server item for that
+  address > none, and a shared mailbox never falls back to `me`. Server HTML is used as-is (web image URLs, no local
+  embedding). `--dry-run` resolves it too, and degrades to a warning when the token source fails. New
+  `msgraph-cli config export` prints the local signatures as importable settings (refusing local images).
+
+### Adopt
+- Declare the app's registry in its `-firebase` component (e.g. `DEMO_USER_EXTERNAL_CONNECTION_DATA_TYPES` with
+  `microsoftMailSignatureUserExternalConnectionDataTypeConfig(<your microsoft provider type>)`) and a hand-written
+  `<App>UserExternalConnectionDataTypings` interface beside it.
+- Pass `dataTypes` (and optionally `dataLimits`) to the app's `UserExternalConnectionModule` config.
+- Add `read:data` / `update:data` handlers (see `apps/demo-api/src/app/function/userexternalconnection/userexternalconnection.data.ts`)
+  to the CRUD map's `userExternalConnection` read and update specifier handlers, and a
+  `userExternalConnectionDataActions` getter to the function context. Grant the `data` role to the owner in the
+  `userExternalConnection` role map (a full-access owner map already includes it).
+- In the app CLI, pass `externalConnectionData: { dataTypes, adapters }` to `runCli`, then regenerate the API and MCP
+  manifests.
+- Nothing is required of an app that does not register data types: with no `dataTypes` the registry is empty and every
+  write is refused.
+
 ## Migration to v14.26.x — external connection scope presets + token scope ceilings
 
 ### New

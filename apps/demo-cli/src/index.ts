@@ -3,6 +3,7 @@ import demoCliPackageJson from '../package.json';
 import { DEMO_CLI_ACTION_COMMANDS } from './lib/actions';
 import { DEMO_DOCTOR_CHECKS } from './lib/doctor.checks';
 import { DEFAULT_DEMO_CLI_ENVS } from './lib/env.defaults';
+import { DEMO_CLI_EXTERNAL_CONNECTION_DATA_CONFIG } from './lib/external.connection';
 import { demoCliFirestore } from './lib/firestore';
 import { DEMO_CLI_API_MANIFEST, DEMO_CLI_ENUM_MANIFEST, DEMO_CLI_MODEL_MANIFEST } from './lib/manifest/api.manifest.generated';
 import { DEMO_CLI_FIRESTORE_QUERY_MANIFEST, DEMO_CLI_FIRESTORE_QUERY_MANIFEST_STAMP } from './lib/manifest/query.manifest.generated';
@@ -34,6 +35,11 @@ void runCli({
   // `microsoft` connection also needs a scope ceiling, so msgraph-cli mints through the `msgraph-read`
   // / `msgraph-admin` envs: `msgraph-cli auth token-source set "demo-cli external-token microsoft --env msgraph-read"`.
   externalConnectionToken: true,
+  // the `connection-data` group (list / get / set / unset / import, on the everyday login) and the
+  // connection defaults `external-token` hands out: with an adapter for a provider, the mint requests
+  // `?include=data` and unpacks the caller's stored data into the bundle's `settings`. Only `microsoft` has one,
+  // so msgraph-cli receives the admin's stored mail signatures as defaults below its own config and flags
+  externalConnectionData: DEMO_CLI_EXTERNAL_CONNECTION_DATA_CONFIG,
   // the generator version the committed manifests were emitted by, so `doctor`'s `cli-build-not-stale`
   // check can also catch manifests left behind by a `@dereekb/*` bump that skipped regeneration
   manifestGeneratorVersion: DEMO_CLI_FIRESTORE_QUERY_MANIFEST_STAMP.generatorVersion,

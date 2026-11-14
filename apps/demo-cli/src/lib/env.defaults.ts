@@ -184,6 +184,11 @@ export const DEMO_CLI_MSGRAPH_ADMIN_SCOPES = `${DEMO_CLI_EXTERNAL_TOKEN_SCOPES} 
  *
  * The connection must have been connected with a preset covering the ceiling, or the mint is refused
  * with a 403 naming the preset to reconnect with.
+ *
+ * The mint also carries the server defaults: demo-cli requests `?include=data` for `microsoft` and hands the
+ * caller's stored mail signatures (`demo-cli connection-data set microsoft mail_signature me --file sig.html`)
+ * to msgraph-cli as `settings`, which applies them below its own config and flags. They are cached with the
+ * token; `msgraph-cli auth token-source refresh` re-reads them after a change.
  */
 export const DEFAULT_DEMO_LOCAL_MSGRAPH_READ_ENV: CliEnvDefault = {
   names: ['msgraph-read', 'dev-msgraph-read'],
@@ -193,6 +198,9 @@ export const DEFAULT_DEMO_LOCAL_MSGRAPH_READ_ENV: CliEnvDefault = {
 /**
  * The local `msgraph-admin` env: {@link DEFAULT_DEMO_LOCAL_MSGRAPH_READ_ENV} with the Read + Write ceiling
  * ({@link DEMO_CLI_MSGRAPH_ADMIN_SCOPES}). Minting through it needs a connection made with "Read + Write".
+ *
+ * Like the read env, its mint carries the caller's stored server defaults (mail signatures) as msgraph-cli
+ * `settings`, so `msgraph-cli mail send` appends the stored signature with no per-machine setup.
  */
 export const DEFAULT_DEMO_LOCAL_MSGRAPH_ADMIN_ENV: CliEnvDefault = {
   names: ['msgraph-admin', 'dev-msgraph-admin'],

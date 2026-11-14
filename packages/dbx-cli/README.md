@@ -625,6 +625,62 @@ Anything else throws `CREDENTIAL_PROCESS_FAILED` (the process could not start, o
 stdout. A command that hands out a secret should check `isCliCredentialProcess()` and print a
 redacted value whenever it is false.
 
+### Connection defaults (`?include=data`, `settings`, `connection-data`)
+
+An app can store per-user, per-connection defaults on the server (`UserExternalConnectionData`, `/uecd`), for example the
+signature msgraph-cli appends to mail sent from a mailbox. The data is encrypted at rest and never readable from a client
+SDK. The app CLI writes it through the model API and hands it to a consuming CLI on the token mint, so the consumer gets
+its defaults in every environment with no per-machine setup.
+
+Wire it with `externalConnectionData` next to `externalConnectionToken`:
+
+```ts
+runCli({
+  cliName: 'demo-cli',
+  externalConnectionToken: true,
+  externalConnectionData: {
+    // the same registry the API's UserExternalConnectionModule validates against (`dataTypes`)
+    dataTypes: DEMO_USER_EXTERNAL_CONNECTION_DATA_TYPES,
+    // only providers with an adapter request ?include=data, and only the adapter's output leaves the app CLI
+    adapters: {
+      [DEMO_MICROSOFT_EXTERNAL_CONNECTION_PROVIDER_TYPE]: passthroughCliExternalConnectionDataAdapter({ dataTypes: [MICROSOFT_MAIL_SIGNATURE_USER_EXTERNAL_CONNECTION_DATA_TYPE] })
+    }
+  }
+});
+```
+
+- **The mint.** For a provider with an adapter, `external-token` calls the token API with `?include=data`
+  (`userExternalConnectionTokenApiPath(providerType, { includeData: true })`). The server attaches the caller's stored
+  data for that provider only, and only after every mint gate passed; a refused mint never returns data, and a data
+  failure returns the token without it. The adapter's `unpack` turns the data into the bundle's `settings`. The raw
+  `data` is never forwarded, and an `unpack` that throws prints a warning and returns the token without `settings`.
+- **The bundle.** `CliExternalConnectionTokenBundle.settings` is consumer-defined JSON that the consumer applies as
+  defaults below its own config and flags. Redacted output (a direct run) shows its keys only
+  (`summarizeCliExternalConnectionSettings`).
+- **Token sources.** A token-source CLI caches `settings` inside its 0600 token entry with the token's `expiresAt`, and
+  its report and `auth show` list keys only. After changing the stored data, run `<consumer> auth token-source refresh`
+  to drop the cached entry so the next call re-mints and re-reads it.
+- **Adapters.** `passthroughCliExternalConnectionDataAdapter({ dataTypes })` keeps the settings keys equal to the data
+  type keys, the shape msgraph-cli reads. Write your own `CliExternalConnectionDataAdapter` (`unpack`, and optionally
+  `pack` for `connection-data import`) when the consumer's settings differ from the stored shape.
+
+`connection-data` manages the stored data on the everyday login (it calls `read:data` / `update:data` on
+`userExternalConnection`, so it needs `model.read` / `model.update`, not `token.external`):
+
+```sh
+demo-cli connection-data list                       # data types you may store, and your items (keys and sizes only)
+demo-cli connection-data get microsoft mail_signature me
+demo-cli connection-data set microsoft mail_signature me --file signature.html   # packed by the data type (.html → { html })
+demo-cli connection-data set microsoft mail_signature support@example.com --json '{"text":"Support team"}'
+demo-cli connection-data unset microsoft mail_signature support@example.com
+demo-cli connection-data import microsoft --file msgraph-settings.json --replace  # e.g. `msgraph-cli config export` output
+msgraph-cli auth token-source refresh               # pick the change up now rather than at the token's expiry
+```
+
+The server validates every value against its registered data type, refuses unknown data types and invalid item keys,
+and never echoes a value in an error. See `UserExternalConnectionData` in `@dereekb/firebase-server/model` for the
+model, and the msgraph-cli REF for the signature precedence.
+
 ## Enum values
 
 Persisted model fields store enum values raw (`s: 2`, `ps: 4`). With `--emit-models`, the API manifest generator also

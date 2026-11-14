@@ -149,6 +149,7 @@ import {
   type UserExternalConnectionRefreshLeaseConfig,
   type UserExternalConnectionRefreshLeaseHolder,
   UserExternalConnectionServerActions,
+  UserExternalConnectionDataServerActions,
   UserExternalConnectionServerFirestoreCollections
 } from '@dereekb/firebase-server/model';
 import { UserExternalConnectionCalcomUserContextService } from '@dereekb/firebase-server/calcom';
@@ -212,6 +213,7 @@ export interface DemoApiContext {
   get openRouterRunTaskService(): OpenRouterRunTaskService;
   get userExternalConnectionServerFirestoreCollections(): UserExternalConnectionServerFirestoreCollections;
   get userExternalConnectionServerActions(): UserExternalConnectionServerActions;
+  get userExternalConnectionDataServerActions(): UserExternalConnectionDataServerActions;
   get userExternalConnectionAccessor(): UserExternalConnectionAccessor;
   get userExternalConnectionReader(): UserExternalConnectionReader;
   get userExternalConnectionCalcomUserContextService(): UserExternalConnectionCalcomUserContextService;
@@ -305,6 +307,10 @@ export class DemoApiContextFixture<F extends FirebaseAdminTestContextInstance = 
 
   get userExternalConnectionServerActions() {
     return this.instance.userExternalConnectionServerActions;
+  }
+
+  get userExternalConnectionDataServerActions() {
+    return this.instance.userExternalConnectionDataServerActions;
   }
 
   get userExternalConnectionAccessor() {
@@ -411,6 +417,10 @@ export class DemoApiContextFixtureInstance<F extends FirebaseAdminTestContextIns
 
   get userExternalConnectionServerActions() {
     return this.get(UserExternalConnectionServerActions);
+  }
+
+  get userExternalConnectionDataServerActions() {
+    return this.get(UserExternalConnectionDataServerActions);
   }
 
   get userExternalConnectionAccessor() {
@@ -543,6 +553,10 @@ export class DemoApiFunctionContextFixture<F extends FirebaseAdminFunctionTestCo
     return this.instance.userExternalConnectionServerActions;
   }
 
+  get userExternalConnectionDataServerActions() {
+    return this.instance.userExternalConnectionDataServerActions;
+  }
+
   get userExternalConnectionAccessor() {
     return this.instance.userExternalConnectionAccessor;
   }
@@ -647,6 +661,10 @@ export class DemoApiFunctionContextFixtureInstance<F extends FirebaseAdminFuncti
 
   get userExternalConnectionServerActions() {
     return this.get(UserExternalConnectionServerActions);
+  }
+
+  get userExternalConnectionDataServerActions() {
+    return this.get(UserExternalConnectionDataServerActions);
   }
 
   get userExternalConnectionAccessor() {
