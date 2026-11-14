@@ -19,6 +19,8 @@ const options = {
   extractLicenses: true,
   assets: [
     { glob: 'packages/trello/README.md', input: '.', output: '.' },
+    // the agent docs (dbx-claude refs) this package ships; the trello-cli binary also embeds them for `trello-cli docs`
+    { glob: '**/*.md', input: 'packages/trello/refs', output: 'refs' },
     { glob: 'LICENSE', input: '.', output: '.' }
   ]
 };

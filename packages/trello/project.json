@@ -16,8 +16,12 @@
       "dependsOn": [
         "build-base",
         {
-          "projects": ["trello-nestjs"],
+          "projects": ["trello-nestjs", "trello-cli"],
           "target": "build-base"
+        },
+        {
+          "projects": ["trello-cli"],
+          "target": "build-bin"
         }
       ],
       "metadata": {
@@ -45,6 +49,10 @@
           {
             "description": "run trello-nestjs tests",
             "command": "npx nx test trello-nestjs"
+          },
+          {
+            "description": "run trello-cli tests",
+            "command": "npx nx test trello-cli"
           }
         ],
         "color": true,

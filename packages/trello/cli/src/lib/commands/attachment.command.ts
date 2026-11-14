@@ -1,0 +1,120 @@
+import { CliError } from '@dereekb/dbx-cli';
+import { addAttachmentToCard, deleteAttachmentFromCard, downloadCardAttachment, getCardAttachment, listCardAttachments } from '@dereekb/trello';
+import { type Maybe } from '@dereekb/util';
+import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
+import { basename, join } from 'node:path';
+import type { Argv } from 'yargs';
+import { type TrelloCliCommand } from '../context/cli.command';
+import { parseTrelloCliCardArg, requireTrelloCliConfirmation } from '../util/option';
+import { withTrelloCliCardPositional } from './card.command';
+
+/**
+ * Makes an attachment file name safe to write: strips control characters and path separators.
+ *
+ * @param name - The attachment's file name.
+ * @returns A file name with no directory part.
+ */
+export function sanitizeTrelloCliFileName(name: string): string {
+  const safe = name
+    // eslint-disable-next-line no-control-regex -- strip ASCII control characters from a remote file name
+    .replaceAll(/[\x00-\x1f\x7f]/g, '')
+    .replaceAll(/[\\/]/g, '-')
+    .replace(/^\.+/, '')
+    .trim();
+  return safe || 'attachment';
+}
+
+const attachmentPositional = (yargs: Argv) => withTrelloCliCardPositional(yargs).positional('attachmentId', { type: 'string', demandOption: true, describe: 'The attachment id (from attachment list)' });
+
+const listCommand: TrelloCliCommand = {
+  command: 'list <card>',
+  describe: "List a card's attachments",
+  builder: withTrelloCliCardPositional,
+  handler: async (argv, ctx) => ctx.output.result(await listCardAttachments(ctx.trelloContext)({ cardId: parseTrelloCliCardArg(argv['card']) }))
+};
+
+const addCommand: TrelloCliCommand = {
+  command: 'add <card>',
+  describe: 'Attach a file (--file) or a link (--url) to a card',
+  builder: (yargs: Argv) =>
+    withTrelloCliCardPositional(yargs)
+      .option('file', { type: 'string', describe: 'Upload this file' })
+      .option('url', { type: 'string', describe: 'Attach this link' })
+      .option('name', { type: 'string', describe: 'The attachment name (default: the file name or url)' })
+      .option('mime-type', { type: 'string', describe: 'The file MIME type (default: application/octet-stream)' })
+      .option('set-cover', { type: 'boolean', describe: 'Use the attachment as the card cover' })
+      .conflicts('file', 'url')
+      .example([
+        ['$0 attachment add AbCd1234 --file ./screenshot.png', 'Upload a file'],
+        ['$0 attachment add AbCd1234 --url https://example.com/spec --name Spec', 'Attach a link']
+      ]),
+  handler: async (argv, ctx) => {
+    const file = argv['file'] as Maybe<string>;
+    const url = argv['url'] as Maybe<string>;
+
+    if (!file && !url) {
+      throw new CliError({ message: 'Pass --file <path> or --url <url>.', code: 'INVALID_ARGUMENT' });
+    }
+
+    const attachment = await addAttachmentToCard(ctx.trelloContext)({
+      cardId: parseTrelloCliCardArg(argv['card']),
+      name: (argv['name'] as Maybe<string>) ?? undefined,
+      setCover: (argv['set-cover'] as Maybe<boolean>) ?? undefined,
+      ...(file ? { file: { content: new Uint8Array(await readFile(file)), fileName: basename(file), mimeType: (argv['mime-type'] as Maybe<string>) ?? undefined } } : { url: url as string })
+    });
+
+    ctx.output.result(attachment);
+  }
+};
+
+const downloadCommand: TrelloCliCommand = {
+  command: 'download <card> <attachmentId>',
+  describe: 'Download an uploaded attachment to a file (stdout gets the path and byte count, never the bytes)',
+  builder: (yargs: Argv) => attachmentPositional(yargs).option('out', { type: 'string', describe: 'The file to write, or an existing directory to write into (default: the current directory)' }),
+  handler: async (argv, ctx) => {
+    const cardId = parseTrelloCliCardArg(argv['card']);
+    const attachmentId = String(argv['attachmentId']);
+    const attachment = await getCardAttachment(ctx.trelloContext)({ cardId, attachmentId });
+
+    if (!attachment.isUpload) {
+      throw new CliError({ message: 'The attachment is a link, not an uploaded file.', code: 'INVALID_ARGUMENT', suggestion: `Open its url instead: ${attachment.url}` });
+    }
+
+    const fileName = sanitizeTrelloCliFileName(attachment.fileName || attachment.name);
+    const out = (argv['out'] as Maybe<string>) ?? '.';
+    const isDir = await stat(out)
+      .then((x) => x.isDirectory())
+      .catch(() => false);
+    const path = isDir ? join(out, fileName) : out;
+    const download = await downloadCardAttachment(ctx.trelloContext)({ cardId, attachmentId, attachment });
+    const bytes = new Uint8Array(await download.arrayBuffer());
+
+    if (!isDir) {
+      await mkdir(join(path, '..'), { recursive: true });
+    }
+
+    await writeFile(path, bytes);
+    ctx.output.result({ file: path, bytes: bytes.length, attachmentId, mimeType: attachment.mimeType ?? null });
+  }
+};
+
+const deleteCommand: TrelloCliCommand = {
+  command: 'delete <card> <attachmentId>',
+  describe: 'Delete an attachment (needs --yes)',
+  builder: (yargs: Argv) => attachmentPositional(yargs).option('yes', { type: 'boolean', default: false, describe: 'Confirm the deletion' }),
+  handler: async (argv, ctx) => {
+    requireTrelloCliConfirmation(argv, 'Deleting an attachment');
+    const cardId = parseTrelloCliCardArg(argv['card']);
+    await deleteAttachmentFromCard(ctx.trelloContext)({ cardId, attachmentId: String(argv['attachmentId']) });
+    ctx.output.result({ deleted: true, cardId, attachmentId: String(argv['attachmentId']) });
+  }
+};
+
+/**
+ * The `attachment` command.
+ */
+export const TRELLO_CLI_ATTACHMENT_COMMAND: TrelloCliCommand = {
+  command: 'attachment',
+  describe: 'Card attachments: list, add, download, delete',
+  subcommands: [listCommand, addCommand, downloadCommand, deleteCommand]
+};
