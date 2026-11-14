@@ -15,6 +15,7 @@ import {
   deleteCard,
   deleteCheckItemFromCard,
   deleteChecklist,
+  deleteCommentOnCard,
   deleteWebhook,
   downloadCardAttachment,
   getBoard,
@@ -25,6 +26,7 @@ import {
   getMe,
   getMember,
   getWebhook,
+  listBoardActions,
   listBoardCards,
   listBoardLabels,
   listBoardLists,
@@ -33,12 +35,17 @@ import {
   listCardAttachments,
   listCardChecklists,
   listCardsInList,
+  listMemberBoards,
   listWebhooksForToken,
+  removeLabelFromCard,
+  removeMemberFromCard,
+  searchTrello,
   trelloFactory,
   updateBoard,
   updateCard,
   updateCardCheckItem,
   updateChecklist,
+  updateCommentOnCard,
   updateList,
   updateWebhook,
   type Trello,
@@ -95,6 +102,10 @@ export class TrelloApi {
     return listBoardLabels(this.trelloContext);
   }
 
+  get listBoardActions() {
+    return listBoardActions(this.trelloContext);
+  }
+
   // MARK: Lists
   get getList() {
     return getList(this.trelloContext);
@@ -143,6 +154,22 @@ export class TrelloApi {
 
   get listCardActions() {
     return listCardActions(this.trelloContext);
+  }
+
+  get removeLabelFromCard() {
+    return removeLabelFromCard(this.trelloContext);
+  }
+
+  get removeMemberFromCard() {
+    return removeMemberFromCard(this.trelloContext);
+  }
+
+  get updateCommentOnCard() {
+    return updateCommentOnCard(this.trelloContext);
+  }
+
+  get deleteCommentOnCard() {
+    return deleteCommentOnCard(this.trelloContext);
   }
 
   // MARK: Card Attachments
@@ -206,6 +233,15 @@ export class TrelloApi {
 
   get getMe() {
     return getMe(this.trelloContext);
+  }
+
+  get listMemberBoards() {
+    return listMemberBoards(this.trelloContext);
+  }
+
+  // MARK: Search
+  get searchTrello() {
+    return searchTrello(this.trelloContext);
   }
 
   // MARK: Webhooks

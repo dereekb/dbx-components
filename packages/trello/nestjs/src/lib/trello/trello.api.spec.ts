@@ -68,6 +68,20 @@ describe('trello.api', () => {
     });
   });
 
+  describe('listMemberBoards()', () => {
+    it('lists the authenticated member\'s boards', async () => {
+      const boards = await api.listMemberBoards({ filter: 'open', fields: 'name,closed' });
+      expect(Array.isArray(boards)).toBe(true);
+    });
+  });
+
+  describe('searchTrello()', () => {
+    it('returns the searched model collections', async () => {
+      const result = await api.searchTrello({ query: 'test', modelTypes: ['boards'], boardsLimit: 1 });
+      expect(Array.isArray(result.boards)).toBe(true);
+    });
+  });
+
   describe.runIf(TEST_BOARD_ID)('boards', () => {
     // May be either a canonical 24-char board id or an 8-char shortLink (e.g. "lDnRQCp7").
     // Trello's API accepts both in URLs but always returns the canonical id in payloads.
@@ -288,6 +302,38 @@ describe('trello.api', () => {
           });
         });
 
+        describe('comment editing', () => {
+          it('edits and deletes a comment', async () => {
+            const action = await api.addCommentToCard({ cardId, text: `comment to edit ${Date.now()}` });
+
+            const edited = await api.updateCommentOnCard({ cardId, actionId: action.id, text: 'edited comment' });
+            expect(edited.data.text).toBe('edited comment');
+
+            await api.deleteCommentOnCard({ cardId, actionId: action.id });
+            const comments = await api.listCardActions({ cardId, filter: 'commentCard' });
+            expect(comments.find((x) => x.id === action.id)).toBeUndefined();
+          });
+        });
+
+        describe('getCard() expansions', () => {
+          it('includes the requested checklists and members', async () => {
+            const card = await api.getCard({ cardId, checklists: 'all', members: true });
+            expect(Array.isArray(card.checklists)).toBe(true);
+            expect(Array.isArray(card.members)).toBe(true);
+          });
+        });
+
+        describe('removeMemberFromCard()', () => {
+          it('removes a member added to the card', async () => {
+            const me = await api.getMe();
+            await api.addMemberToCard({ cardId, memberId: me.id });
+            await api.removeMemberFromCard({ cardId, memberId: me.id });
+
+            const card = await api.getCard({ cardId });
+            expect(card.idMembers).not.toContain(me.id);
+          });
+        });
+
         describe('addCommentToCard()', () => {
           it('posts a comment and returns it as a commentCard action', async () => {
             const text = `addCommentToCard test ${Date.now()}`;
@@ -443,6 +489,14 @@ describe('trello.api', () => {
             it('adds the label to the card', async () => {
               const result = await api.addLabelToCard({ cardId, labelId });
               expect(result).toContain(labelId);
+            });
+
+            it('removes only that label with removeLabelFromCard()', async () => {
+              await api.addLabelToCard({ cardId, labelId });
+              await api.removeLabelFromCard({ cardId, labelId });
+
+              const card = await api.getCard({ cardId });
+              expect(card.idLabels).not.toContain(labelId);
             });
           });
         });
