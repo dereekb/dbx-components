@@ -1,8 +1,7 @@
 import { addCheckItemToChecklist, addChecklistToCard, deleteCheckItemFromCard, deleteChecklist, listCardChecklists, updateCardCheckItem, updateChecklist } from '@dereekb/trello';
 import type { Argv } from 'yargs';
 import { type TrelloCliCommand } from '../context/cli.command';
-import { parseTrelloCliCardArg, parseTrelloCliPosition, requireTrelloCliConfirmation } from '../util/option';
-import { withTrelloCliCardPositional } from './card.command';
+import { parseTrelloCliCardArg, parseTrelloCliPosition, requireTrelloCliConfirmation, withTrelloCliCardPositional } from '../util/option';
 
 const checklistPositional = (yargs: Argv) => yargs.positional('checklistId', { type: 'string', demandOption: true, describe: 'The checklist id (from checklist list)' });
 const checkItemPositional = (yargs: Argv) => withTrelloCliCardPositional(yargs).positional('itemId', { type: 'string', demandOption: true, describe: 'The check item id (from checklist list)' });

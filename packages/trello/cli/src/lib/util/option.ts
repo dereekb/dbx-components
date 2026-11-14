@@ -2,6 +2,7 @@ import { CliError } from '@dereekb/dbx-cli';
 import { TRELLO_API_URL, type TrelloBoardId, type TrelloCardId, type TrelloContext, type TrelloList, type TrelloPosition, listBoardLists, matchTrelloList, parseTrelloCardRef } from '@dereekb/trello';
 import { type Maybe } from '@dereekb/util';
 import { readFile } from 'node:fs/promises';
+import type { Argv } from 'yargs';
 
 /**
  * Matches a Trello board url and captures its shortLink.
@@ -259,4 +260,30 @@ export function parseTrelloCliPosition(value: unknown): TrelloPosition | undefin
   }
 
   return result;
+}
+
+/**
+ * Adds the `<card>` positional every card command takes.
+ *
+ * @param yargs - The yargs instance.
+ * @returns The yargs instance.
+ */
+export function withTrelloCliCardPositional(yargs: Argv): Argv {
+  return yargs.positional('card', { type: 'string', demandOption: true, describe: 'The card: its link, shortLink or id' });
+}
+
+/**
+ * Makes an attachment file name safe to write: strips control characters and path separators.
+ *
+ * @param name - The attachment's file name.
+ * @returns A file name with no directory part.
+ */
+export function sanitizeTrelloCliFileName(name: string): string {
+  const safe = name
+    // eslint-disable-next-line no-control-regex -- strip ASCII control characters from a remote file name
+    .replaceAll(/[\x00-\x1f\x7f]/g, '')
+    .replaceAll(/[\\/]/g, '-')
+    .replace(/^\.+/, '')
+    .trim();
+  return safe || 'attachment';
 }

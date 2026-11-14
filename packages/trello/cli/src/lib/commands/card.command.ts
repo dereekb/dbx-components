@@ -4,19 +4,9 @@ import { type Maybe } from '@dereekb/util';
 import type { Argv } from 'yargs';
 import { type TrelloCliCommand } from '../context/cli.command';
 import { type TrelloCliContext } from '../context/cli.context';
-import { parseTrelloCliBoardArg, parseTrelloCliCardArg, parseTrelloCliListOption, parseTrelloCliPosition, readTrelloCliTextOption, requireTrelloCliConfirmation, resolveTrelloCliList } from '../util/option';
+import { parseTrelloCliBoardArg, parseTrelloCliCardArg, withTrelloCliCardPositional, parseTrelloCliListOption, parseTrelloCliPosition, readTrelloCliTextOption, requireTrelloCliConfirmation, resolveTrelloCliList } from '../util/option';
 
 const TRELLO_ID_REGEX = /^[a-f0-9]{24}$/i;
-
-/**
- * Adds the `<card>` positional every card command takes.
- *
- * @param yargs - The yargs instance.
- * @returns The yargs instance.
- */
-export function withTrelloCliCardPositional(yargs: Argv): Argv {
-  return yargs.positional('card', { type: 'string', demandOption: true, describe: 'The card: its link, shortLink or id' });
-}
 
 /**
  * Resolves label refs — ids, or names matched case-insensitively — to label ids on a board.

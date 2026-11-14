@@ -5,24 +5,7 @@ import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 import type { Argv } from 'yargs';
 import { type TrelloCliCommand } from '../context/cli.command';
-import { parseTrelloCliCardArg, requireTrelloCliConfirmation } from '../util/option';
-import { withTrelloCliCardPositional } from './card.command';
-
-/**
- * Makes an attachment file name safe to write: strips control characters and path separators.
- *
- * @param name - The attachment's file name.
- * @returns A file name with no directory part.
- */
-export function sanitizeTrelloCliFileName(name: string): string {
-  const safe = name
-    // eslint-disable-next-line no-control-regex -- strip ASCII control characters from a remote file name
-    .replaceAll(/[\x00-\x1f\x7f]/g, '')
-    .replaceAll(/[\\/]/g, '-')
-    .replace(/^\.+/, '')
-    .trim();
-  return safe || 'attachment';
-}
+import { parseTrelloCliCardArg, requireTrelloCliConfirmation, sanitizeTrelloCliFileName, withTrelloCliCardPositional } from '../util/option';
 
 const attachmentPositional = (yargs: Argv) => withTrelloCliCardPositional(yargs).positional('attachmentId', { type: 'string', demandOption: true, describe: 'The attachment id (from attachment list)' });
 

@@ -3,8 +3,7 @@ import { addCommentToCard, deleteCommentOnCard, listCardActions, updateCommentOn
 import { type Maybe } from '@dereekb/util';
 import type { Argv } from 'yargs';
 import { type TrelloCliCommand } from '../context/cli.command';
-import { parseTrelloCliCardArg, readTrelloCliTextOption, requireTrelloCliConfirmation } from '../util/option';
-import { withTrelloCliCardPositional } from './card.command';
+import { parseTrelloCliCardArg, readTrelloCliTextOption, requireTrelloCliConfirmation, withTrelloCliCardPositional } from '../util/option';
 
 /**
  * Reads a comment's text from the `[text]` positional or `--file`.
