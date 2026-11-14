@@ -29,6 +29,12 @@ export interface CreateContextSlotInput {
    * to a generic "context slot has not been initialized" message.
    */
   readonly notInitializedMessage?: string;
+  /**
+   * Opt-in process-wide key. When set, the value lives on `globalThis` under `Symbol.for(globalKey)` instead of in
+   * this module, so every copy of the module in the process — a plugin that bundled its own copy of a CLI library,
+   * say — reads and writes the same slot. Leave it unset for a slot private to this module copy.
+   */
+  readonly globalKey?: string;
 }
 
 /**
@@ -54,18 +60,29 @@ export interface CreateContextSlotInput {
 export function createContextSlot<T>(input?: CreateContextSlotInput): ContextSlot<T> {
   let _value: Maybe<T>;
   const notInitializedMessage = input?.notInitializedMessage ?? 'Context slot has not been initialized.';
+  const globalKey = input?.globalKey;
+  const symbol = globalKey == null ? undefined : Symbol.for(globalKey);
+  const globalStore = globalThis as unknown as Record<symbol, Maybe<T>>;
+
+  const get = (): Maybe<T> => (symbol == null ? _value : globalStore[symbol]);
 
   return {
     set: (value) => {
-      _value = value;
+      if (symbol == null) {
+        _value = value;
+      } else {
+        globalStore[symbol] = value;
+      }
     },
-    get: () => _value,
+    get,
     require: () => {
-      if (_value == null) {
+      const value = get();
+
+      if (value == null) {
         throw new Error(notInitializedMessage);
       }
 
-      return _value;
+      return value;
     }
   };
 }
