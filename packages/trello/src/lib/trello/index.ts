@@ -7,6 +7,8 @@ export * from './trello.api.card';
 export * from './trello.api.card.type';
 export * from './trello.api.card.attachment';
 export * from './trello.api.card.attachment.type';
+export * from './trello.api.card.checklist';
+export * from './trello.api.card.checklist.type';
 export * from './trello.api.member';
 export * from './trello.api.member.type';
 export * from './trello.api.webhook';

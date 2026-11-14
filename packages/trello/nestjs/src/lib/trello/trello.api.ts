@@ -1,6 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import {
   addAttachmentToCard,
+  addCheckItemToChecklist,
+  addChecklistToCard,
   addCommentToCard,
   addLabelToCard,
   addMemberToCard,
@@ -11,11 +13,14 @@ import {
   deleteAttachmentFromCard,
   deleteBoard,
   deleteCard,
+  deleteCheckItemFromCard,
+  deleteChecklist,
   deleteWebhook,
   downloadCardAttachment,
   getBoard,
   getCard,
   getCardAttachment,
+  getChecklist,
   getList,
   getMe,
   getMember,
@@ -26,11 +31,14 @@ import {
   listBoardMembers,
   listCardActions,
   listCardAttachments,
+  listCardChecklists,
   listCardsInList,
   listWebhooksForToken,
   trelloFactory,
   updateBoard,
   updateCard,
+  updateCardCheckItem,
+  updateChecklist,
   updateList,
   updateWebhook,
   type Trello,
@@ -156,6 +164,39 @@ export class TrelloApi {
 
   get downloadCardAttachment() {
     return downloadCardAttachment(this.trelloContext);
+  }
+
+  // MARK: Card Checklists
+  get listCardChecklists() {
+    return listCardChecklists(this.trelloContext);
+  }
+
+  get getChecklist() {
+    return getChecklist(this.trelloContext);
+  }
+
+  get addChecklistToCard() {
+    return addChecklistToCard(this.trelloContext);
+  }
+
+  get updateChecklist() {
+    return updateChecklist(this.trelloContext);
+  }
+
+  get deleteChecklist() {
+    return deleteChecklist(this.trelloContext);
+  }
+
+  get addCheckItemToChecklist() {
+    return addCheckItemToChecklist(this.trelloContext);
+  }
+
+  get updateCardCheckItem() {
+    return updateCardCheckItem(this.trelloContext);
+  }
+
+  get deleteCheckItemFromCard() {
+    return deleteCheckItemFromCard(this.trelloContext);
   }
 
   // MARK: Members
