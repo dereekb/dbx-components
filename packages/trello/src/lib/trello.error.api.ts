@@ -72,21 +72,24 @@ export class TrelloTooManyRequestsError extends TrelloServerFetchResponseError {
 export type LogTrelloServerErrorFunction = (error: FetchRequestFactoryError | TrelloServerError) => void;
 
 /**
- * Creates a logTrelloServerErrorFunction that logs the error to console.
+ * Creates a logTrelloServerErrorFunction that logs the error to the console's error stream (stderr).
+ *
+ * Logs go to stderr, never stdout, so a consumer that speaks a protocol over stdout (an MCP server on stdio, a CLI
+ * printing a JSON envelope) is never corrupted by a Trello error.
  *
  * @param trelloApiNamePrefix - Prefix to use when logging.
- * @returns Logs Trello server errors to the console.
+ * @returns Logs Trello server errors to the console's error stream.
  *
  * @__NO_SIDE_EFFECTS__
  */
 export function logTrelloServerErrorFunction(trelloApiNamePrefix: string): LogTrelloServerErrorFunction {
   return (error: FetchRequestFactoryError | TrelloServerError) => {
     if (error instanceof TrelloServerFetchResponseError) {
-      console.log(`${trelloApiNamePrefix}Error(${error.responseError.response.status}): `, { error, errorData: error.data });
+      console.error(`${trelloApiNamePrefix}Error(${error.responseError.response.status}): `, { error, errorData: error.data });
     } else if (error instanceof TrelloServerError) {
-      console.log(`${trelloApiNamePrefix}Error(status:${error.status}): `, { error });
+      console.error(`${trelloApiNamePrefix}Error(status:${error.status}): `, { error });
     } else {
-      console.log(`${trelloApiNamePrefix}Error(name:${error.name}): `, { error });
+      console.error(`${trelloApiNamePrefix}Error(name:${error.name}): `, { error });
     }
   };
 }
