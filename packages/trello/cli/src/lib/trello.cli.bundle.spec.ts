@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { spawn } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { type AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
@@ -176,7 +176,7 @@ describe('trello-cli bundle', () => {
 
       expect(result.exitCode).toBe(0);
 
-      for (const command of ['auth', 'board', 'list', 'card', 'comment', 'attachment', 'checklist', 'search', 'request', 'docs', 'doctor']) {
+      for (const command of ['auth', 'board', 'list', 'card', 'comment', 'attachment', 'checklist', 'search', 'request', 'docs', 'doctor', 'extensions']) {
         expect(result.stdout).toContain(command);
       }
     },
@@ -246,6 +246,87 @@ describe('trello-cli bundle', () => {
     },
     BUNDLE_TEST_TIMEOUT_MS
   );
+
+  describe('plugins', () => {
+    let fixturePath: string;
+    let brokenPath: string;
+
+    beforeAll(() => {
+      fixturePath = join(dir, 'fixture.plugin.mjs');
+      brokenPath = join(dir, 'broken.plugin.mjs');
+      writeFileSync(
+        fixturePath,
+        `export default {
+  apiVersion: 1,
+  name: 'fixture',
+  version: '0.0.1',
+  setup: (api) => {
+    console.log('setup output goes to stderr, never stdout');
+    return { commands: [{ command: 'hello', describe: 'Say hello', requires: 'none', handler: (_argv, ctx) => ctx.output.result({ hello: api.pluginName, source: api.source, stateDir: ctx.stateDir() }) }] };
+  }
+};
+`
+      );
+      writeFileSync(brokenPath, `throw new Error('broken on import');\n`);
+    });
+
+    it(
+      'should load a plugin with --extension and run its command',
+      async () => {
+        const result = await runBundle(['--extension', fixturePath, 'fixture', 'hello']);
+
+        expect(result.exitCode).toBe(0);
+        expect(result.json).toEqual({ ok: true, data: { hello: 'fixture', source: 'flag', stateDir: join(dir, 'config', 'state', 'fixture') } });
+        expect(result.stdout).not.toContain('setup output');
+        expect(result.stderr).toContain('setup output goes to stderr');
+      },
+      BUNDLE_TEST_TIMEOUT_MS
+    );
+
+    it(
+      'should warn about a plugin that throws on import while the core commands keep working',
+      async () => {
+        const result = await runBundle(['--extension', brokenPath, 'board', 'list', '--api-url', apiUrl]);
+
+        expect(result.exitCode).toBe(0);
+        expect(result.json?.['data']).toEqual([{ id: 'board-1', name: 'Bundle Board' }]);
+        expect(result.json?.['meta']?.['warnings']).toEqual([expect.stringContaining('broken on import')]);
+        expect(result.stderr).toContain('broken on import');
+      },
+      BUNDLE_TEST_TIMEOUT_MS
+    );
+
+    it(
+      'should list the plugins with extensions, and load none with --no-extensions',
+      async () => {
+        const listed = await runBundle(['--extension', fixturePath, '--extension', brokenPath, 'extensions']);
+
+        expect(listed.exitCode).toBe(0);
+        expect(listed.json?.['data']['plugins']).toEqual([expect.objectContaining({ source: 'flag', name: 'fixture', status: 'loaded', commands: ['hello'] }), expect.objectContaining({ source: 'flag', status: 'failed', step: 'import' })]);
+
+        const disabled = await runBundle(['--no-extensions', '--extension', fixturePath, 'extensions']);
+
+        expect(disabled.json?.['data']).toEqual({ externalDisabled: true, plugins: [] });
+
+        const unknown = await runBundle(['--no-extensions', '--extension', fixturePath, 'fixture', 'hello']);
+
+        expect(unknown.exitCode).toBe(1);
+        expect(unknown.json?.['ok']).toBe(false);
+      },
+      BUNDLE_TEST_TIMEOUT_MS
+    );
+
+    it(
+      'should load plugins listed in TRELLO_CLI_EXTENSIONS',
+      async () => {
+        const result = await runBundle(['fixture', 'hello'], { env: { TRELLO_CLI_EXTENSIONS: fixturePath } });
+
+        expect(result.exitCode).toBe(0);
+        expect(result.json?.['data']['source']).toBe('env');
+      },
+      BUNDLE_TEST_TIMEOUT_MS
+    );
+  });
 
   describe('docs', () => {
     const sourceRefPath = join(workspaceRoot, 'packages/trello/refs/trello-cli/REF.md');

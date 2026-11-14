@@ -1,6 +1,6 @@
 ---
 name: trello-cli
-description: "The `trello-cli` command (the `trello-cli` bin of `@dereekb/trello`, run as `npx trello-cli`; this doc ships with that package and prints with `npx trello-cli docs`) for Trello boards, lists, cards, comments, attachments and checklists, Trello search, and a raw `request` to the Trello REST api. Covers setup (`auth login` with an API key + token, the `TRELLO_API_KEY` / `TRELLO_API_TOKEN` env vars, or a token source minting OAuth tokens via `auth token-source set`), choosing a board (`--board`, `config set default-board`, `TRELLO_CLI_BOARD`), card arguments (a link, shortLink or id), `--yes` on deletes, the JSON output, and the error codes (`NOT_CONFIGURED`, `TOKEN_REJECTED`, `SCOPE_DENIED`, `NOT_FOUND`, `RATE_LIMITED`, `BOARD_REQUIRED`, `CONFIRMATION_REQUIRED`, …). Also the `@dereekb/trello/cli` library (`runTrelloCli`) for building a CLI on the same commands."
+description: "The `trello-cli` command (the `trello-cli` bin of `@dereekb/trello`, run as `npx trello-cli`; this doc ships with that package and prints with `npx trello-cli docs`) for Trello boards, lists, cards, comments, attachments and checklists, Trello search, and a raw `request` to the Trello REST api. Covers setup (`auth login` with an API key + token, the `TRELLO_API_KEY` / `TRELLO_API_TOKEN` env vars, or a token source minting OAuth tokens via `auth token-source set`), choosing a board (`--board`, `config set default-board`, `TRELLO_CLI_BOARD`), card arguments (a link, shortLink or id), `--yes` on deletes, the JSON output, and the error codes (`NOT_CONFIGURED`, `TOKEN_REJECTED`, `SCOPE_DENIED`, `NOT_FOUND`, `RATE_LIMITED`, `BOARD_REQUIRED`, `CONFIRMATION_REQUIRED`, …). Also the board loop commands (`board changes --save`, `board activity`, `board mentions`, `card render --out`, `card attachments sync`), writing a trello-cli plugin (`defineTrelloCliPlugin`, `--extension`, `TRELLO_CLI_EXTENSIONS`, config `extensions`), and the `@dereekb/trello/cli` library (`runTrelloCli`) for building a CLI on the same commands."
 ---
 
 # Trello CLI
@@ -61,7 +61,8 @@ trello-cli config set default-board <board>
 trello-cli config unset default-board
 trello-cli output …                        # saved --pick / --dump-dir per command
 trello-cli docs [topic]                    # this doc
-trello-cli doctor                          # config, credentials, board (exit 1 when a check fails)
+trello-cli doctor                          # config, credentials, board, plugins (exit 1 when a check fails)
+trello-cli extensions                      # the plugins: source, path, version, status, commands
 ```
 
 ### Boards (`--board <id|shortLink|link>` or the default board)
@@ -74,6 +75,22 @@ trello-cli board labels
 trello-cli board members
 trello-cli board cards [--list "<name|id>"] [--filter visible|open|closed|all] [--fields …]
 ```
+
+### Board Loop (change detection for a bot or a script)
+
+```bash
+trello-cli board snapshot [--save] [--card-filter visible|open|closed|all]   # lists, labels, card fingerprints
+trello-cli board changes [--save] [--ndjson] [--card-filter …]   # diff against the saved snapshot
+trello-cli board activity [--since <actionId|iso>] [--save] [--filter commentCard,…] [--max-pages 5]
+trello-cli board mentions [--username <name>] [--save] [--include-self] [--max-pages 5]
+trello-cli board resolve [--list "To Do,Doing"] [--label bug,urgent]   # names → ids; unknown fails
+```
+
+`board changes --save` is the polling primitive: the first run reports every card as `added`, later runs
+report `added` / `removed` / `closed` / `reopened` / `moved` / `relabeled` / `renamed` / `commented`, and
+`--save` moves the baseline forward (a second run with nothing changed reports `changes: []`). `--save` on
+`activity` / `mentions` reads and stores a watermark, so each run returns only what is new. Saved state
+lives in `<configDir>/state/core/boards/<board>.json`.
 
 ### Lists
 
@@ -105,10 +122,20 @@ trello-cli card unarchive <card>
 trello-cli card delete <card> --yes
 trello-cli card label <card> [--add a,b] [--remove c]
 trello-cli card member <card> [--add me,alice] [--remove bob]
+trello-cli card render <card> [--out card.md] [--attachments] [--attachments-dir d] [--comments-limit 50] [--raw]
+trello-cli card attachments sync <card> --dir <dir>   # mirror uploads: cached by size, stale files removed
+trello-cli card mentions <card> [--username <name>] [--after <actionId>] [--include-self]
+trello-cli card ref "<text>"                          # parse a card ref + every card shortLink; no api call
 ```
 
 `card update --labels/--members` REPLACE the whole set. `card label` / `card member` add and remove one at
 a time (one api call each), so they never race another writer changing the same card.
+
+`card render --out f.md` writes the card as markdown with a `## Notes` block between
+`<!-- notes:begin -->` and `<!-- notes:end -->`. Text written inside it survives the next render, and the
+file is only rewritten when its content changed (`data.changed`). `--attachments` mirrors the uploaded
+files into `<dir of --out>/attachments` (`<attachmentId>__<name>`) and links them from an `Attachments`
+section. `--raw` prints the markdown instead of the JSON envelope.
 
 ### Comments
 
@@ -162,6 +189,9 @@ raw request can never send the credentials elsewhere.
 | `--api-url <url>` | The api base url. Only `https://api.trello.com/1` or a loopback url (a local fake) is accepted. |
 | `--pick a,b`, `--dump-dir`, `--pick-all`, `--set-pick`, `--set-dump-dir` | Output filtering, as in every dbx-cli CLI. |
 | `--verbose`, `-v` | Also log each Trello error to stderr. |
+| `--extension <path\|package>` | Load a plugin for this run (repeatable; a path is relative to the cwd). |
+| `--no-extensions` / `TRELLO_CLI_NO_EXTENSIONS=1` | Load no external plugin (config, env or flag). |
+| `TRELLO_CLI_EXTENSIONS` | Plugins to load: absolute paths or package names, `:`-separated (`;` on Windows). |
 | `TRELLO_API_KEY` + `TRELLO_API_TOKEN` | Key + token credentials. |
 | `TRELLO_CLI_TOKEN_SOURCE` / `TRELLO_CLI_TOKEN_COMMAND` | Pick a saved token source / run this mint command. |
 | `TRELLO_CLI_CONFIG_DIR` | Replaces `~/.trello-cli`. |
@@ -171,7 +201,8 @@ raw request can never send the credentials elsewhere.
 
 Every command prints one JSON line: `{ "ok": true, "data": … }` or
 `{ "ok": false, "error": "…", "code": "…", "httpStatus"?: n, "suggestion"?: "…" }`. Diagnostics go to
-stderr only, so stdout is always parseable.
+stderr only, so stdout is always parseable. A plugin that failed to load adds a line to
+`meta.warnings` (and to stderr); the command itself still runs.
 
 ## Error Codes
 
@@ -189,6 +220,7 @@ stderr only, so stdout is always parseable.
 | `INVALID_ARGUMENT` | 1 | A bad card / board / list / label argument or option. |
 | `CONFIRMATION_REQUIRED` | 1 | A delete without `--yes`. |
 | `DOCTOR_FAILED` | 1 | `doctor` found a failing check (see `data.checks`). |
+| `PLUGIN_LOAD_FAILED` | 1 | A host-built CLI with `strictPlugins` had a plugin fail to load (see `data.plugins`). |
 
 ## Building a CLI on the library
 
@@ -205,6 +237,87 @@ A `TrelloCliCommand` is `{ command, describe, builder?, requires?: 'none' | 'tre
 (mode and source, never a secret), `board` / `requireBoard()`, a memoized `me()`, `output.result()` /
 `output.ndjson()`, a stderr `log()`, `stateDir()` and `now()`. A host command whose name clashes with a
 built-in one is skipped with a warning.
+
+`runTrelloCli` also takes `plugins` (compiled-in plugins, loaded first and never turned off by
+`--no-extensions`), `loadExternalPlugins` (default `true`) and `strictPlugins` (any plugin that fails to
+load stops the run with `PLUGIN_LOAD_FAILED` before the arguments are parsed). A `contextProvider` can wrap
+the host's own Trello context with `createTrelloCliContext({ trelloContext, auth: { mode: 'host', source }, board, configDir, stateName: request.pluginName })`.
+
+## Writing a plugin
+
+A plugin adds commands under `trello-cli <plugin-name> …`. It is the default (or `plugin`) export of an
+ES module:
+
+```js
+// standup.plugin.mjs
+export default {
+  apiVersion: 1,
+  name: 'standup', // lowercase letters, digits and dashes; the command group name
+  version: '1.0.0',
+  setup: (api) => ({
+    commands: [
+      {
+        command: 'today',
+        describe: 'My open cards on the board',
+        requires: 'board',
+        handler: async (argv, ctx) => ctx.output.result({ me: (await ctx.me()).username, board: ctx.requireBoard() })
+      }
+    ],
+    doctorChecks: [(ctx) => ({ name: 'ready', status: 'pass', message: 'standup is ready' })]
+  })
+};
+```
+
+In TypeScript, wrap it in `defineTrelloCliPlugin({ … })` from `@dereekb/trello/cli` to type-check it
+against the contract.
+
+- **The contract.** An optional `minHostVersion` (`x.y.z`) skips the plugin on an older trello-cli.
+  `setup(api)` returns `{ commands?, doctorChecks? }` within 2 seconds. `api` carries
+  `apiVersion`, `hostVersion`, `cliName`, `pluginName`, the config entry's `options`, `source`, `path`, a
+  stderr `log()` and `isTrelloServerError()`. Commands are `TrelloCliCommand`s; their `ctx` is the same
+  context the built-in commands get, with `stateDir()` set to `<configDir>/state/<plugin-name>`.
+  `doctorChecks` run in `doctor`, reported as `<plugin-name>:<check>`.
+- **Sources, in load order:** the host's compiled-in plugins; config `extensions[]` (a path or
+  `{ path, options }`, a relative path resolved against the config directory:
+  `"extensions": ["./standup.plugin.mjs", { "path": "my-trello-plugin", "options": { "team": "core" } }]`);
+  `TRELLO_CLI_EXTENSIONS` (absolute paths or package names only); then the repeatable `--extension` (a path
+  relative to the cwd). A package name resolves from `<configDir>/node_modules`, then from the CLI's install
+  location, never from the cwd. The same module listed twice loads once. `--no-extensions` or
+  `TRELLO_CLI_NO_EXTENSIONS=1` turns every external source off.
+- **Isolation.** Resolve, import, shape check, `apiVersion` / `minHostVersion`, the name, `setup` and mount
+  are each isolated: a failure skips only that plugin, with one stderr line and one `meta.warnings` entry.
+  `console.*` during import and `setup` goes to stderr, so stdout stays one JSON envelope.
+- **Names.** Plugin commands always mount under the plugin's name and never shadow a built-in command; a
+  plugin named like one (`board`, `card`, `doctor`, …) is not loaded.
+- **Errors.** Use `api.isTrelloServerError(e)` to recognize a Trello error, never `instanceof`: the plugin
+  and the host may each have their own copy of `@dereekb/trello`. A handler's thrown error prints as the
+  error envelope (exit 1), mapped like a built-in command's.
+- `trello-cli extensions` lists every plugin with its source, path, version, status, failed step, message
+  and commands.
+
+## Loop kit
+
+The loop commands are thin wrappers over primitives a bot can call directly.
+
+From `@dereekb/trello`:
+
+- `fetchTrelloBoardSnapshot` / `diffTrelloBoardSnapshots` / `trelloCardFingerprint`: capture a board and
+  report what changed between two captures.
+- `listTrelloBoardActivitySince`: board actions newer than a watermark (an action id or a date), with a
+  page cap and a `truncated` flag.
+- `findTrelloMentions` / `isTrelloActionAuthoredBy`: `@username` mentions in comment actions, skipping the
+  bot's own comments.
+- `renderTrelloCardMarkdown` / `readTrelloMarkdownPreservedBlocks` / `mergeTrelloMarkdownPreservedBlocks`:
+  a card as markdown with blocks that survive a re-render.
+- `updateTrelloCardLabels`, `matchTrelloList` / `matchTrelloLabel` / `resolveTrelloBoardNames`,
+  `normalizeTrelloListName`, `probeTrelloAuth`.
+
+From `@dereekb/trello/cli`:
+
+- `syncTrelloCardAttachments({ trelloContext, cardId, dir })`: mirror a card's uploads into a directory.
+- `writeMarkdownPreservingBlocks({ path, markdown })`: write a render, keeping the old file's blocks.
+- `trelloCliBoardStateStore({ stateDir, boardId })`: the saved `{ snapshot, activityWatermark, mentionWatermark }`
+  of one board, the state `board changes / activity / mentions --save` use.
 
 ## Known Rough Edges
 

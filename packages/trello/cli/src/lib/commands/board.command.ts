@@ -2,6 +2,7 @@ import { type TrelloMemberBoardsFilter, getBoard, listBoardCards, listBoardLabel
 import { type Maybe } from '@dereekb/util';
 import type { Argv } from 'yargs';
 import { type TrelloCliCommand } from '../context/cli.command';
+import { TRELLO_CLI_BOARD_LOOP_SUBCOMMANDS } from '../loop/trello.cli.loop.commands';
 import { resolveTrelloCliList } from '../util/option';
 
 /**
@@ -81,15 +82,16 @@ const cardsCommand: TrelloCliCommand = {
 };
 
 /**
- * The read-only `board` subcommands: `list`, `get`, `lists`, `labels`, `members`, `cards`.
+ * The `board` subcommands: the read-only `list`, `get`, `lists`, `labels`, `members`, `cards`, then the loop commands
+ * `snapshot`, `changes`, `activity`, `mentions`, `resolve`.
  */
-export const TRELLO_CLI_BOARD_CORE_SUBCOMMANDS: readonly TrelloCliCommand[] = [listCommand, getCommand, listsCommand, labelsCommand, membersCommand, cardsCommand];
+export const TRELLO_CLI_BOARD_CORE_SUBCOMMANDS: readonly TrelloCliCommand[] = [listCommand, getCommand, listsCommand, labelsCommand, membersCommand, cardsCommand, ...TRELLO_CLI_BOARD_LOOP_SUBCOMMANDS];
 
 /**
  * The `board` command.
  */
 export const TRELLO_CLI_BOARD_COMMAND: TrelloCliCommand = {
   command: 'board',
-  describe: 'Boards: list, get, lists, labels, members, cards',
+  describe: 'Boards: list, get, lists, labels, members, cards, snapshot, changes, activity, mentions, resolve',
   subcommands: TRELLO_CLI_BOARD_CORE_SUBCOMMANDS
 };

@@ -4,6 +4,7 @@ import { type Maybe } from '@dereekb/util';
 import type { Argv } from 'yargs';
 import { type TrelloCliCommand } from '../context/cli.command';
 import { type TrelloCliContext } from '../context/cli.context';
+import { TRELLO_CLI_CARD_LOOP_SUBCOMMANDS } from '../loop/trello.cli.loop.commands';
 import { parseTrelloCliBoardArg, parseTrelloCliCardArg, withTrelloCliCardPositional, parseTrelloCliListOption, parseTrelloCliPosition, readTrelloCliTextOption, requireTrelloCliConfirmation, resolveTrelloCliList } from '../util/option';
 
 const TRELLO_ID_REGEX = /^[a-f0-9]{24}$/i;
@@ -299,15 +300,15 @@ const memberCommand: TrelloCliCommand = {
 };
 
 /**
- * The built-in `card` subcommands.
+ * The built-in `card` subcommands, then the loop commands `render`, `attachments sync`, `mentions`, `ref`.
  */
-export const TRELLO_CLI_CARD_CORE_SUBCOMMANDS: readonly TrelloCliCommand[] = [getCommand, createCommand, updateCommand, moveCommand, archiveCommand, unarchiveCommand, deleteCommand, labelCommand, memberCommand];
+export const TRELLO_CLI_CARD_CORE_SUBCOMMANDS: readonly TrelloCliCommand[] = [getCommand, createCommand, updateCommand, moveCommand, archiveCommand, unarchiveCommand, deleteCommand, labelCommand, memberCommand, ...TRELLO_CLI_CARD_LOOP_SUBCOMMANDS];
 
 /**
  * The `card` command.
  */
 export const TRELLO_CLI_CARD_COMMAND: TrelloCliCommand = {
   command: 'card',
-  describe: 'Cards: get, create, update, move, archive, unarchive, delete, label, member',
+  describe: 'Cards: get, create, update, move, archive, unarchive, delete, label, member, render, attachments, mentions, ref',
   subcommands: TRELLO_CLI_CARD_CORE_SUBCOMMANDS
 };
