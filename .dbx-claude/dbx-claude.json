@@ -16,7 +16,22 @@
     "recovery": { "enabled": true, "target": "workspace:build-all" }
   },
   "references": {
-    "packages": { "workspace": ["packages/*"] }
+    "packages": { "workspace": ["packages/*"] },
+    "project": [
+      {
+        "name": "demo-api-mcp",
+        "delivery": "read",
+        "tone": "hint",
+        "triggers": [{ "words": ["demo-api-mcp", "demo-api-mcp-dev"] }, { "toolNames": ["mcp__demo-api-mcp-dev__*"] }, { "pathContains": [".dbx-claude/offerings.json", "refs/demo-api-mcp/"], "every": 12 }]
+      }
+    ]
+  },
+  "queue": {
+    "loop": {
+      "offerings": {
+        "require": { "evaluation": ["demo-api-mcp"] }
+      }
+    }
   },
   "capabilityConfig": {
     "block-nx-build": { "options": { "enabled": true } },
