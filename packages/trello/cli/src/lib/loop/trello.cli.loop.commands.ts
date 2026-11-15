@@ -5,6 +5,7 @@ import {
   type TrelloActionAuthorIdentity,
   type TrelloActionType,
   type TrelloCardId,
+  type TrelloCardMarkdownPreservedBlock,
   type TrelloCommentCardActionData,
   TRELLO_MAX_PAGE_LIMIT,
   diffTrelloBoardSnapshots,
@@ -24,7 +25,8 @@ import type { Argv } from 'yargs';
 import { type TrelloCliCommand } from '../context/cli.command';
 import { type TrelloCliContext } from '../context/cli.context';
 import { parseTrelloCliCardArg, parseTrelloCliListOption, withTrelloCliCardPositional } from '../util/option';
-import { type TrelloCardAttachmentSync, syncTrelloCardAttachments, trelloCliBoardStateStore, writeMarkdownPreservingBlocks } from './trello.cli.loop.fs';
+import { type TrelloCardAttachmentSync, type TrelloCardAttachmentSyncEntry, type WriteMarkdownPreservingBlocksResult, syncTrelloCardAttachments, writeMarkdownPreservingBlocks } from '@dereekb/trello/node';
+import { trelloCliBoardStateStore } from './trello.cli.loop.fs';
 
 /**
  * The card filters `board snapshot` / `board changes` accept.
@@ -239,6 +241,17 @@ export function trelloCliAttachmentSectionLines(sync: TrelloCardAttachmentSync, 
   return lines.length > 0 ? lines : ['_(no attachments)_'];
 }
 
+/**
+ * A sync result as the commands print it: each entry without its `attachment` record, which carries the api's
+ * `previews` (several sized copies per image) and would bloat every envelope.
+ *
+ * @param sync - The sync result.
+ * @returns The sync result to print.
+ */
+function trelloCliAttachmentSyncOutput(sync: TrelloCardAttachmentSync): Omit<TrelloCardAttachmentSync, 'entries'> & { readonly entries: readonly Omit<TrelloCardAttachmentSyncEntry, 'attachment'>[] } {
+  return { ...sync, entries: sync.entries.map(({ attachment: _attachment, ...entry }) => entry) };
+}
+
 const renderCommand: TrelloCliCommand = {
   command: 'render <card>',
   describe: 'Render the card as markdown (--out writes it, keeping the notes block across re-renders)',
@@ -273,36 +286,38 @@ const renderCommand: TrelloCliCommand = {
     const card = await getCard(ctx.trelloContext)({ cardId, list: true });
     const comments = commentsLimit > 0 ? await listCardActions(ctx.trelloContext)<Partial<TrelloCommentCardActionData>>({ cardId: card.id, filter: 'commentCard', limit: commentsLimit }) : [];
     const sync = attachmentsDir == null ? undefined : await syncTrelloCardAttachments({ trelloContext: ctx.trelloContext, cardId: card.id, dir: attachmentsDir });
+    const preservedBlocks: TrelloCardMarkdownPreservedBlock[] = [{ name: TRELLO_CLI_CARD_RENDER_NOTES_BLOCK, heading: 'Notes', placeholder: '_(notes written here are kept when the card is re-rendered with --out)_' }];
     const markdown = renderTrelloCardMarkdown({
       card,
       listName: card.list?.name,
       labelNames: (card.labels ?? []).map((x) => x.name || x.color || x.id),
       comments,
-      preservedBlocks: [{ name: TRELLO_CLI_CARD_RENDER_NOTES_BLOCK, heading: 'Notes', placeholder: '_(notes written here are kept when the card is re-rendered with --out)_' }],
+      preservedBlocks,
       sections: sync == null ? undefined : [{ heading: 'Attachments', lines: trelloCliAttachmentSectionLines(sync, out == null ? undefined : dirname(out)) }]
     });
 
-    let written: Maybe<{ readonly path: string; readonly changed: boolean; readonly markdown: string }>;
+    let written: Maybe<WriteMarkdownPreservingBlocksResult>;
 
     if (out != null) {
-      written = await writeMarkdownPreservingBlocks({ path: out, markdown });
+      // Only the blocks rendered here carry forward; a marker pair inside the description or a comment re-renders fresh.
+      written = await writeMarkdownPreservingBlocks({ path: out, markdown, names: preservedBlocks.map((x) => x.name) });
     }
 
     if (argv['raw']) {
       getCliOutputWriter()((written?.markdown ?? markdown).replace(/\n$/, ''));
     } else {
-      ctx.output.result({ cardId: card.id, shortLink: card.shortLink, ...(written == null ? { markdown } : { path: written.path, changed: written.changed, bytes: Buffer.byteLength(written.markdown) }), ...(sync == null ? {} : { attachments: sync }) });
+      ctx.output.result({ cardId: card.id, shortLink: card.shortLink, ...(written == null ? { markdown } : { path: written.path, changed: written.changed, bytes: Buffer.byteLength(written.markdown) }), ...(sync == null ? {} : { attachments: trelloCliAttachmentSyncOutput(sync) }) });
     }
   }
 };
 
 const attachmentsSyncCommand: TrelloCliCommand = {
   command: 'sync <card>',
-  describe: "Mirror the card's uploaded attachments into a directory (cached by size; removed attachments are deleted)",
+  describe: "Mirror the card's uploaded attachments into a directory (cached by size; files of removed attachments are deleted, notes next to kept files stay)",
   builder: (yargs: Argv) => withTrelloCliCardPositional(yargs).option('dir', { type: 'string', demandOption: true, describe: 'The directory to mirror into (relative to the cwd)' }),
   handler: async (argv, ctx) => {
     const cardId = parseTrelloCliCardArg(argv['card']);
-    ctx.output.result(await syncTrelloCardAttachments({ trelloContext: ctx.trelloContext, cardId, dir: resolve(argv['dir'] as string) }));
+    ctx.output.result(trelloCliAttachmentSyncOutput(await syncTrelloCardAttachments({ trelloContext: ctx.trelloContext, cardId, dir: resolve(argv['dir'] as string) })));
   }
 };
 

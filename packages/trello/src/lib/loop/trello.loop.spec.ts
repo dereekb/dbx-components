@@ -265,6 +265,28 @@ describe('renderTrelloCardMarkdown()', () => {
     expect(readTrelloMarkdownPreservedBlocks(previous)).toEqual({ 'agent-state': '- **Branch**: feat/login' });
     expect(mergeTrelloMarkdownPreservedBlocks(renderTrelloCardMarkdown(input), previous)).toBe(previous);
   });
+
+  describe('a marker pair inside the description', () => {
+    const previous = renderTrelloCardMarkdown({ ...input, card: card({ id: 'card-1', name: 'Fix the login page', desc: 'Quoted <!-- quote:begin -->old<!-- quote:end -->' }) }).replace('_(nothing yet)_', '- **Branch**: feat/login');
+    const fresh = renderTrelloCardMarkdown({ ...input, card: card({ id: 'card-1', name: 'Fix the login page', desc: 'Quoted <!-- quote:begin -->new<!-- quote:end -->' }) });
+
+    it('carries only the named blocks forward', () => {
+      const merged = mergeTrelloMarkdownPreservedBlocks(fresh, previous, ['agent-state']);
+      expect(merged).toContain('- **Branch**: feat/login');
+      expect(merged).toContain('<!-- quote:begin -->new<!-- quote:end -->');
+      expect(merged).not.toContain('old');
+    });
+
+    it('carries every block when names is omitted', () => {
+      const merged = mergeTrelloMarkdownPreservedBlocks(fresh, previous);
+      expect(merged).toContain('- **Branch**: feat/login');
+      expect(merged).toContain('<!-- quote:begin -->\nold\n<!-- quote:end -->');
+    });
+
+    it('carries nothing for an empty names list', () => {
+      expect(mergeTrelloMarkdownPreservedBlocks(fresh, previous, [])).toBe(fresh);
+    });
+  });
 });
 
 describe('findTrelloMentions()', () => {

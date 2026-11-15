@@ -7,7 +7,7 @@ import { type FakeTrelloContext, type FakeTrelloRequest, fakeTrelloContext } fro
 import { runTrelloCli } from '../cli';
 import { TRELLO_CLI_CONFIG_DIR_ENV_VAR } from '../config/cli.config';
 import { createTrelloCliContext } from '../context/cli.context';
-import { trelloCardAttachmentFileName } from './trello.cli.loop.fs';
+import { trelloCardAttachmentFileName } from '@dereekb/trello/node';
 
 const BOARD_ID = 'board-1';
 const CARD_ID = '5f0000000000000000000c01';
@@ -265,6 +265,19 @@ describe('trello-cli loop commands', () => {
       expect(third.json?.['data']['changed']).toBe(false);
     });
 
+    it('should not freeze a marker pair written inside the description', async () => {
+      const out = join(dir, 'cards', 'AbCd1234', 'card.md');
+      cards[0] = { ...cards[0], desc: 'Quoted <!-- quote:begin -->first<!-- quote:end -->' };
+      await run(['card', 'render', CARD_ID, '--out', out]);
+
+      cards[0] = { ...cards[0], desc: 'Quoted <!-- quote:begin -->second<!-- quote:end -->' };
+      await run(['card', 'render', CARD_ID, '--out', out]);
+      const written = readFileSync(out, 'utf8');
+
+      expect(written).toContain('<!-- quote:begin -->second<!-- quote:end -->');
+      expect(written).toContain('<!-- notes:begin -->');
+    });
+
     it('should print the markdown itself with --raw', async () => {
       const result = await run(['card', 'render', CARD_ID, '--raw']);
 
@@ -310,6 +323,7 @@ describe('trello-cli loop commands', () => {
       expect(first.exitCode).toBe(0);
       expect(first.json?.['data']['entries'].map((x: { status: string }) => x.status)).toEqual(['downloaded', 'link']);
       expect(first.json?.['data']['removed']).toEqual([orphan]);
+      expect(first.json?.['data']['entries'][0]).not.toHaveProperty('attachment');
       expect(readdirSync(syncDir).sort()).toEqual([trelloCardAttachmentFileName({ id: ATTACHMENT_FILE_ID, name: 'notes.txt', fileName: 'notes.txt' }), 'keep.md'].sort());
       expect(downloads).toHaveLength(1);
 

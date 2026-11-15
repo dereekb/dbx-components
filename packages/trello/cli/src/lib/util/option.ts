@@ -271,19 +271,3 @@ export function parseTrelloCliPosition(value: unknown): TrelloPosition | undefin
 export function withTrelloCliCardPositional(yargs: Argv): Argv {
   return yargs.positional('card', { type: 'string', demandOption: true, describe: 'The card: its link, shortLink or id' });
 }
-
-/**
- * Makes an attachment file name safe to write: strips control characters and path separators.
- *
- * @param name - The attachment's file name.
- * @returns A file name with no directory part.
- */
-export function sanitizeTrelloCliFileName(name: string): string {
-  const safe = name
-    // eslint-disable-next-line no-control-regex -- strip ASCII control characters from a remote file name
-    .replaceAll(/[\x00-\x1f\x7f]/g, '')
-    .replaceAll(/[\\/]/g, '-')
-    .replace(/^\.+/, '')
-    .trim();
-  return safe || 'attachment';
-}

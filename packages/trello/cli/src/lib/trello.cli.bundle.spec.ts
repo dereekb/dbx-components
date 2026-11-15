@@ -364,5 +364,17 @@ describe('trello-cli bundle', () => {
       expect(existsSync(join(distPackage, 'cli/index.esm.js'))).toBe(true);
       expect(existsSync(join(distPackage, 'cli/index.d.ts'))).toBe(true);
     });
+
+    it('should ship a node entry that loads neither yargs nor dbx-cli', () => {
+      const distPackage = join(workspaceRoot, 'dist/packages/trello');
+      const packageJson = JSON.parse(readFileSync(join(distPackage, 'package.json'), 'utf8')) as { readonly exports?: Record<string, unknown> };
+
+      expect(packageJson.exports?.['./node']).toBeDefined();
+      expect(existsSync(join(distPackage, 'node/index.d.ts'))).toBe(true);
+
+      const nodeEntry = readFileSync(join(distPackage, 'node/index.esm.js'), 'utf8');
+      expect(nodeEntry).not.toMatch(/from\s*['"](yargs|@dereekb\/dbx-cli|@dereekb\/trello\/cli)/);
+      expect(nodeEntry).toContain('syncTrelloCardAttachments');
+    });
   });
 });

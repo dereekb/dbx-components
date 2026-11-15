@@ -1,6 +1,6 @@
 ---
 name: trello-cli
-description: "The `trello-cli` command (the `trello-cli` bin of `@dereekb/trello`, run as `npx trello-cli`; this doc ships with that package and prints with `npx trello-cli docs`) for Trello boards, lists, cards, comments, attachments and checklists, Trello search, and a raw `request` to the Trello REST api. Covers setup (`auth login` with an API key + token, the `TRELLO_API_KEY` / `TRELLO_API_TOKEN` env vars, or a token source minting OAuth tokens via `auth token-source set`), choosing a board (`--board`, `config set default-board`, `TRELLO_CLI_BOARD`), card arguments (a link, shortLink or id), `--yes` on deletes, the JSON output, and the error codes (`NOT_CONFIGURED`, `TOKEN_REJECTED`, `SCOPE_DENIED`, `NOT_FOUND`, `RATE_LIMITED`, `BOARD_REQUIRED`, `CONFIRMATION_REQUIRED`, …). Also the board loop commands (`board changes --save`, `board activity`, `board mentions`, `card render --out`, `card attachments sync`), writing a trello-cli plugin (`defineTrelloCliPlugin`, `--extension`, `TRELLO_CLI_EXTENSIONS`, config `extensions`), and the `@dereekb/trello/cli` library (`runTrelloCli`) for building a CLI on the same commands."
+description: "The `trello-cli` command (the `trello-cli` bin of `@dereekb/trello`, run as `npx trello-cli`; this doc ships with that package and prints with `npx trello-cli docs`) for Trello boards, lists, cards, comments, attachments and checklists, Trello search, and a raw `request` to the Trello REST api. Covers setup (`auth login` with an API key + token, the `TRELLO_API_KEY` / `TRELLO_API_TOKEN` env vars, or a token source minting OAuth tokens via `auth token-source set`), choosing a board (`--board`, `config set default-board`, `TRELLO_CLI_BOARD`), card arguments (a link, shortLink or id), `--yes` on deletes, the JSON output, and the error codes (`NOT_CONFIGURED`, `TOKEN_REJECTED`, `SCOPE_DENIED`, `NOT_FOUND`, `RATE_LIMITED`, `BOARD_REQUIRED`, `CONFIRMATION_REQUIRED`, …). Also the board loop commands (`board changes --save`, `board activity`, `board mentions`, `card render --out`, `card attachments sync`), writing a trello-cli plugin (`defineTrelloCliPlugin`, `--extension`, `TRELLO_CLI_EXTENSIONS`, config `extensions`), the `@dereekb/trello/cli` library (`runTrelloCli`) for building a CLI on the same commands, and the `@dereekb/trello/node` file helpers (attachment sync, block-preserving writes)."
 ---
 
 # Trello CLI
@@ -125,7 +125,7 @@ trello-cli card delete <card> --yes
 trello-cli card label <card> [--add a,b] [--remove c]
 trello-cli card member <card> [--add me,alice] [--remove bob]
 trello-cli card render <card> [--out card.md] [--attachments] [--attachments-dir d] [--comments-limit 50] [--raw]
-trello-cli card attachments sync <card> --dir <dir>   # mirror uploads: cached by size, stale files removed
+trello-cli card attachments sync <card> --dir <dir>   # mirror uploads: cached by size, stale files removed, notes kept
 trello-cli card mentions <card> [--username <name>] [--after <actionId>] [--include-self]
 trello-cli card ref "<text>"                          # parse a card ref + every card shortLink; no api call
 ```
@@ -135,7 +135,8 @@ a time (one api call each), so they never race another writer changing the same 
 
 `card render --out f.md` writes the card as markdown with a `## Notes` block between
 `<!-- notes:begin -->` and `<!-- notes:end -->`. Text written inside it survives the next render, and the
-file is only rewritten when its content changed (`data.changed`). `--attachments` mirrors the uploaded
+file is only rewritten when its content changed (`data.changed`). Only the notes block is carried: a
+marker pair inside the description or a comment re-renders fresh. `--attachments` mirrors the uploaded
 files into `<dir of --out>/attachments` (`<attachmentId>__<name>`) and links them from an `Attachments`
 section. `--raw` prints the markdown instead of the JSON envelope.
 
@@ -313,7 +314,9 @@ From `@dereekb/trello`:
 - `findTrelloMentions` / `isTrelloActionAuthoredBy`: `@username` mentions in comment actions, skipping the
   bot's own comments. Each mention carries `authorUsername` and `authorFullName`.
 - `renderTrelloCardMarkdown` / `readTrelloMarkdownPreservedBlocks` / `mergeTrelloMarkdownPreservedBlocks`:
-  a card as markdown with blocks that survive a re-render.
+  a card as markdown with blocks that survive a re-render. Pass `mergeTrelloMarkdownPreservedBlocks(fresh,
+  previous, names)` the names of the blocks you render: without `names` every marker pair in the old file is
+  carried, including one inside a description or comment, which then never updates.
 - `updateTrelloCardLabels`, `matchTrelloList` / `matchTrelloLabel` / `resolveTrelloBoardNames`,
   `normalizeTrelloListName`. By default a name several lists/labels share is refused (`ambiguous_*`) and a
   label name falls back to a unique case-insensitive match. `duplicates: 'first'` takes the first match;
@@ -325,10 +328,22 @@ From `@dereekb/trello`:
   default (a 429 route answers once); pass `rateLimit: true` to exercise it. `trelloFactory({ rateLimit: false })`
   turns it off for any context.
 
+From `@dereekb/trello/node` (node only: `node:fs`, `node:path`; no yargs or dbx-cli, safe to import from a
+library):
+
+- `syncTrelloCardAttachments({ trelloContext, cardId, dir, attachments?, keepFile? })`: mirror a card's uploads
+  as `<attachmentId>__<name>`, cached by size and written through `.partial`. Each entry carries `attachment`
+  (`mimeType`, the api `bytes`); entry `bytes` is the size on disk. Only `<attachmentId>__` files are ever
+  removed: those of attachments no longer on the card, a renamed one's old file, and leftover `.partial`
+  files. A `<file>.<suffix>` beside a current file (an agent's `.note.md`, links included) is kept, and
+  `keepFile(name)` keeps anything else.
+- `trelloCardAttachmentFileName` / `sanitizeTrelloFileName`: the local name (`fileName`, else `name`, else the
+  id), sanitized; a name with nothing left becomes `attachment` (`<id>__attachment`).
+- `writeMarkdownPreservingBlocks({ path, markdown, names? })`: write a render, keeping the old file's blocks
+  (only the `names` ones when given), through a temp file and only when it changed.
+
 From `@dereekb/trello/cli`:
 
-- `syncTrelloCardAttachments({ trelloContext, cardId, dir })`: mirror a card's uploads into a directory.
-- `writeMarkdownPreservingBlocks({ path, markdown })`: write a render, keeping the old file's blocks.
 - `trelloCliBoardStateStore({ stateDir, boardId })`: the saved `{ snapshot, activityWatermark, mentionWatermark }`
   of one board, the state `board changes / activity / mentions --save` use.
 

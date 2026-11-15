@@ -1,11 +1,12 @@
 import { CliError } from '@dereekb/dbx-cli';
 import { addAttachmentToCard, deleteAttachmentFromCard, downloadCardAttachment, getCardAttachment, listCardAttachments } from '@dereekb/trello';
+import { sanitizeTrelloFileName } from '@dereekb/trello/node';
 import { type Maybe } from '@dereekb/util';
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 import type { Argv } from 'yargs';
 import { type TrelloCliCommand } from '../context/cli.command';
-import { parseTrelloCliCardArg, requireTrelloCliConfirmation, sanitizeTrelloCliFileName, withTrelloCliCardPositional } from '../util/option';
+import { parseTrelloCliCardArg, requireTrelloCliConfirmation, withTrelloCliCardPositional } from '../util/option';
 
 const attachmentPositional = (yargs: Argv) => withTrelloCliCardPositional(yargs).positional('attachmentId', { type: 'string', demandOption: true, describe: 'The attachment id (from attachment list)' });
 
@@ -63,7 +64,7 @@ const downloadCommand: TrelloCliCommand = {
       throw new CliError({ message: 'The attachment is a link, not an uploaded file.', code: 'INVALID_ARGUMENT', suggestion: `Open its url instead: ${attachment.url}` });
     }
 
-    const fileName = sanitizeTrelloCliFileName(attachment.fileName || attachment.name);
+    const fileName = sanitizeTrelloFileName(attachment.fileName || attachment.name);
     const out = (argv['out'] as Maybe<string>) ?? '.';
     const isDir = await stat(out)
       .then((x) => x.isDirectory())

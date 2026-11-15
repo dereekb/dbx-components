@@ -11,6 +11,7 @@
     "@dereekb/oauth-resource": "14.25.1",
     "@dereekb/rxjs": "14.25.1",
     "@dereekb/trello": "14.25.1",
+    "@dereekb/trello/node": "14.25.1",
     "@dereekb/util": "14.25.1",
     "yargs": "^18.0.0"
   },

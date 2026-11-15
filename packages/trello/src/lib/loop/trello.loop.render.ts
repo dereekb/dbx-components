@@ -91,15 +91,7 @@ export function trelloMarkdownBlockEnd(name: string): string {
 export function renderTrelloCardMarkdown(input: RenderTrelloCardMarkdownInput): string {
   const { card } = input;
   const labelNames = input.labelNames ?? [];
-  const lines: string[] = [
-    `# ${card.name}`,
-    '',
-    `- **Card ID**: \`${card.id}\``,
-    `- **List**: ${input.listName || '—'}`,
-    `- **Labels**: ${labelNames.length > 0 ? labelNames.join(', ') : '—'}`,
-    `- **URL**: ${card.url ?? card.shortUrl ?? '—'}`,
-    `- **Last activity**: ${card.dateLastActivity ?? '—'}`
-  ];
+  const lines: string[] = [`# ${card.name}`, '', `- **Card ID**: \`${card.id}\``, `- **List**: ${input.listName || '—'}`, `- **Labels**: ${labelNames.length > 0 ? labelNames.join(', ') : '—'}`, `- **URL**: ${card.url ?? card.shortUrl ?? '—'}`, `- **Last activity**: ${card.dateLastActivity ?? '—'}`];
 
   for (const field of input.headerFields ?? []) {
     lines.push(`- **${field.label}**: ${field.value}`);
@@ -169,13 +161,16 @@ export function readTrelloMarkdownPreservedBlocks(markdown: string, names?: Mayb
  *
  * @param fresh - The new render.
  * @param previous - The previous render, or nothing.
+ * @param names - Only carry these blocks forward. Omit it to carry every well-formed block of the previous render,
+ *   including a marker pair that sits inside a description or a comment, which is then frozen across re-renders. Pass
+ *   the names of the blocks you render.
  * @returns The fresh render with the previous block contents carried forward.
  */
-export function mergeTrelloMarkdownPreservedBlocks(fresh: string, previous: Maybe<string>): string {
+export function mergeTrelloMarkdownPreservedBlocks(fresh: string, previous: Maybe<string>, names?: Maybe<readonly string[]>): string {
   let result = fresh;
 
   if (previous != null) {
-    const kept = readTrelloMarkdownPreservedBlocks(previous);
+    const kept = readTrelloMarkdownPreservedBlocks(previous, names);
 
     for (const [name, content] of Object.entries(kept)) {
       const begin = trelloMarkdownBlockBegin(name);

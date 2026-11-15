@@ -16,6 +16,11 @@
       "types": "./cli/index.d.ts",
       "import": "./cli/index.esm.js",
       "default": "./cli/index.esm.js"
+    },
+    "./node": {
+      "types": "./node/index.d.ts",
+      "import": "./node/index.esm.js",
+      "default": "./node/index.esm.js"
     }
   },
   "dbxClaude": {
@@ -33,6 +38,7 @@
               "TRELLO_CLI_EXTENSIONS",
               "TRELLO_CLI_NO_EXTENSIONS",
               "@dereekb/trello/cli",
+              "@dereekb/trello/node",
               "runTrelloCli",
               "TrelloCliPlugin"
             ]
