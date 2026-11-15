@@ -11,6 +11,7 @@ import {
   USER_EXTERNAL_CONNECTION_DATA_SELF_ITEM_KEY as ME,
   USER_EXTERNAL_CONNECTION_DATA_TOO_LARGE_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_DATA_TYPE_NOT_ALLOWED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_DATA_UNREADABLE_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_DATA_VALUE_INVALID_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_PROVIDER_NOT_ALLOWED_ERROR_CODE,
   type UserExternalConnectionDataSetOperation,
@@ -19,12 +20,15 @@ import {
   onCallUpdateModelParams,
   userExternalConnectionIdentity
 } from '@dereekb/firebase';
+import { FIREBASE_SERVER_VALIDATION_ERROR_CODE } from '@dereekb/firebase-server';
 import { mcpMethodIdForDispatch } from '@dereekb/firebase-server/mcp';
+import { userExternalConnectionDataFirestoreCollection } from '@dereekb/firebase-server/model';
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { type Maybe } from '@dereekb/util';
 import { DEMO_MICROSOFT_EXTERNAL_CONNECTION_PROVIDER_TYPE as MICROSOFT } from 'demo-firebase';
 import { type DemoApiAuthorizedUserTestContextFixture, type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoUserExternalConnectionContext } from '../../../test/fixture';
 import { describeMcpMethod, mcpCompactToolNames } from '../../../test/mcp';
+import { randomBytes } from 'node:crypto';
 
 /**
  * A value no error, log or response may ever echo back.
@@ -74,6 +78,29 @@ function signatureSet(itemKey: string, html: string): UserExternalConnectionData
 }
 
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
+  /**
+   * The user's `/uecd` document. Its `exists()` does not decode, so it also works on an undecryptable document.
+   *
+   * @param uid - The user's uid.
+   * @returns The data document.
+   */
+  function dataDocument(uid: string) {
+    return f.instance.userExternalConnectionServerFirestoreCollections.userExternalConnectionDataCollection.documentAccessor().loadDocumentForId(uid);
+  }
+
+  /**
+   * Writes a `/uecd` document the app can no longer decrypt, as if the encryption secret had been rotated.
+   *
+   * @param uid - The user's uid.
+   */
+  async function writeUndecryptableData(uid: string): Promise<void> {
+    const rotated = userExternalConnectionDataFirestoreCollection({ firestoreContext: f.demoFirestoreCollections.firestoreContext, encryptionSecret: randomBytes(32).toString('hex') });
+    await rotated
+      .documentAccessor()
+      .loadDocumentForId(uid)
+      .accessor.set({ uid, d: { [MICROSOFT]: { [MAIL_SIGNATURE]: { [ME]: { v: { html: SENTINEL }, uat: new Date().toISOString() } } } }, uat: new Date() });
+  }
+
   describeCallableRequestTest('userExternalConnection', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
     /**
      * The read/update data callables, bound to one caller.
@@ -193,13 +220,84 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
               await updateData({ providerType: MICROSOFT, set: [signatureSet(ME, '<p>Gone</p>')] });
               await uec.deleteAllUserExternalConnections();
 
-              const providerData = await f.instance.userExternalConnectionDataServerActions.readUserExternalConnectionProviderData({ uid: au.uid, providerType: MICROSOFT });
+              const providerData = await f.instance.userExternalConnectionServerActions.readUserExternalConnectionProviderData({ uid: au.uid, providerType: MICROSOFT });
 
               expect(providerData).toEqual({});
             });
           });
 
+          describe('deleteUserExternalConnectionData', () => {
+            it('should delete the data document and keep the connection and its credentials', async () => {
+              await uec.connect({ providerType: MICROSOFT });
+              await updateData({ providerType: MICROSOFT, set: [signatureSet(ME, '<p>Gone</p>')] });
+
+              expect(await dataDocument(au.uid).exists()).toBe(true);
+
+              await f.instance.userExternalConnectionServerActions.deleteUserExternalConnectionData({ uid: au.uid });
+
+              expect(await dataDocument(au.uid).exists()).toBe(false);
+              expect(await uec.loadUserExternalConnection()).toBeDefined();
+              expect(await uec.loadUserExternalConnectionPrivate()).toBeDefined();
+
+              const read = await readData({ providerType: MICROSOFT });
+
+              expect(read.items).toEqual([]);
+            });
+
+            it('should resolve when the user has no data document', async () => {
+              expect(await dataDocument(au.uid).exists()).toBe(false);
+
+              await expect(f.instance.userExternalConnectionServerActions.deleteUserExternalConnectionData({ uid: au.uid })).resolves.toBeUndefined();
+              expect(await uec.loadUserExternalConnection()).toBeDefined();
+            });
+
+            it('should delete a data document that can no longer be decrypted', async () => {
+              await writeUndecryptableData(au.uid);
+
+              const rejected = await rejectedCall(() => readData({ providerType: MICROSOFT }));
+
+              expect(rejected.code).toBe(USER_EXTERNAL_CONNECTION_DATA_UNREADABLE_ERROR_CODE);
+              expect(rejected.shown).not.toContain(SENTINEL);
+
+              await f.instance.userExternalConnectionServerActions.deleteUserExternalConnectionData({ uid: au.uid });
+
+              expect(await dataDocument(au.uid).exists()).toBe(false);
+
+              const read = await readData({ providerType: MICROSOFT });
+
+              expect(read.items).toEqual([]);
+            });
+          });
+
+          describe('an unreadable data document', () => {
+            it('should refuse update:data without clear', async () => {
+              await writeUndecryptableData(au.uid);
+
+              const rejected = await rejectedCall(() => updateData({ providerType: MICROSOFT, set: [signatureSet(ME, '<p>New</p>')] }));
+
+              expect(rejected.code).toBe(USER_EXTERNAL_CONNECTION_DATA_UNREADABLE_ERROR_CODE);
+              expect(rejected.shown).not.toContain(SENTINEL);
+              expect(await dataDocument(au.uid).exists()).toBe(true);
+            });
+
+            it('should replace it with update:data clear', async () => {
+              await writeUndecryptableData(au.uid);
+
+              const result = await updateData({ providerType: MICROSOFT, clear: true });
+
+              expect(result.items).toEqual([]);
+              expect(await dataDocument(au.uid).exists()).toBe(false);
+            });
+          });
+
           describe('validation', () => {
+            it('should refuse invalid params in the action itself, not only at the callable dispatch', async () => {
+              const rejected = await rejectedCall(() => uec.updateUserExternalConnectionData({ set: [signatureSet(ME, SENTINEL)] } as unknown as UpdateUserExternalConnectionDataParams));
+
+              expect(rejected.code).toBe(FIREBASE_SERVER_VALIDATION_ERROR_CODE);
+              expect(await dataDocument(au.uid).snapshotData()).toBeUndefined();
+            });
+
             it('should refuse a data type the provider does not register', async () => {
               const rejected = await rejectedCall(() => updateData({ providerType: MICROSOFT, set: [{ dataType: 'not_registered', itemKey: ME, value: { html: SENTINEL } }] }));
 
@@ -286,7 +384,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
       demoAuthorizedUserContext({ f }, (u) => {
         const { readData, updateData } = dataCallables(u);
 
-        demoUserExternalConnectionContext({ f, u, createIfNeeded: true }, () => {
+        demoUserExternalConnectionContext({ f, u, createIfNeeded: true }, (uec) => {
           it('should refuse update:data for the admin-only microsoft provider', async () => {
             const rejected = await rejectedCall(() => updateData({ providerType: MICROSOFT, set: [signatureSet(ME, SENTINEL)] }));
 
@@ -309,7 +407,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
           it('should hide the data and data types of providers the caller cannot connect when no provider is named', async () => {
             // staged around the callable, which would refuse it: data the user can no longer reach (e.g. after losing admin)
-            await f.instance.userExternalConnectionDataServerActions.updateUserExternalConnectionData({ uid: u.uid, params: { providerType: MICROSOFT, set: [signatureSet(ME, SENTINEL)] } });
+            await uec.updateUserExternalConnectionData({ providerType: MICROSOFT, set: [signatureSet(ME, SENTINEL)] });
 
             const read = await readData({});
 

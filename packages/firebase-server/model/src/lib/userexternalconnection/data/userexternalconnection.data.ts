@@ -88,7 +88,8 @@ export type UserExternalConnectionStoredDataMap = Record<UserExternalConnectionP
  * e.g. `microsoft → mail_signature → support@example.com → { html }`.
  *
  * Shares its document id (the user's uid) with the user's `UserExternalConnection`. Kept across a disconnect or
- * unlink (preferences survive a reconnect), deleted with the rest of the family by `deleteAllUserExternalConnectionsForUser`.
+ * unlink (preferences survive a reconnect), deleted with the rest of the family by `deleteAllUserExternalConnectionsForUser`,
+ * or on its own by `UserExternalConnectionServerActions.deleteUserExternalConnectionData`.
  *
  * Any future UI that renders a stored value (e.g. an HTML signature) must sanitize it.
  */

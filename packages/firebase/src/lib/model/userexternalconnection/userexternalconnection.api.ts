@@ -205,7 +205,8 @@ export interface UpdateUserExternalConnectionDataParams extends InferredTargetMo
    */
   readonly unset?: Maybe<readonly UserExternalConnectionDataUnsetOperation[]>;
   /**
-   * Drop all of this provider's data first. Written without decrypting, so it also recovers an unreadable document.
+   * Drop all of this provider's data first. It also recovers a document that can no longer be decrypted, by
+   * replacing the whole document: every provider's data is lost then, since none of it can be read.
    */
   readonly clear?: Maybe<boolean>;
 }

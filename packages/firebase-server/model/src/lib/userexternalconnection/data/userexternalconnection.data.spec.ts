@@ -14,7 +14,7 @@ import { type FirebaseServerEnvService } from '@dereekb/firebase-server';
 import { type } from 'arktype';
 import { deriveUserExternalConnectionDataEncryptionSecret, type UserExternalConnectionData, type UserExternalConnectionStoredDataMap, userExternalConnectionDataConverter } from './userexternalconnection.data';
 import { userExternalConnectionDataLimits, userExternalConnectionDataTypeRegistry } from './userexternalconnection.data.registry';
-import { applyUserExternalConnectionDataUpdate, readUserExternalConnectionDataResult, userExternalConnectionProviderDataValues } from './userexternalconnection.data.action.server';
+import { applyUserExternalConnectionDataUpdate, readUserExternalConnectionDataResult, userExternalConnectionProviderDataValues } from './userexternalconnection.data.util';
 import { userExternalConnectionPrivateConverter } from '../userexternalconnection.private';
 import { userExternalConnectionDataConverterConfigFromModuleConfig, userExternalConnectionModuleConfigFactory } from '../userexternalconnection.module';
 

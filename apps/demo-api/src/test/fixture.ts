@@ -114,6 +114,8 @@ import {
   type UserExternalConnectionDocument,
   type UserExternalConnectionFirestoreCollection,
   type UserExternalConnectionProviderType,
+  type UpdateUserExternalConnectionDataParams,
+  type UpdateUserExternalConnectionDataResult,
   CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
   type SyncCalendarResult,
   type SyncAllFlaggedCalendarsResult,
@@ -149,7 +151,6 @@ import {
   type UserExternalConnectionRefreshLeaseConfig,
   type UserExternalConnectionRefreshLeaseHolder,
   UserExternalConnectionServerActions,
-  UserExternalConnectionDataServerActions,
   UserExternalConnectionServerFirestoreCollections
 } from '@dereekb/firebase-server/model';
 import { UserExternalConnectionCalcomUserContextService } from '@dereekb/firebase-server/calcom';
@@ -213,7 +214,6 @@ export interface DemoApiContext {
   get openRouterRunTaskService(): OpenRouterRunTaskService;
   get userExternalConnectionServerFirestoreCollections(): UserExternalConnectionServerFirestoreCollections;
   get userExternalConnectionServerActions(): UserExternalConnectionServerActions;
-  get userExternalConnectionDataServerActions(): UserExternalConnectionDataServerActions;
   get userExternalConnectionAccessor(): UserExternalConnectionAccessor;
   get userExternalConnectionReader(): UserExternalConnectionReader;
   get userExternalConnectionCalcomUserContextService(): UserExternalConnectionCalcomUserContextService;
@@ -307,10 +307,6 @@ export class DemoApiContextFixture<F extends FirebaseAdminTestContextInstance = 
 
   get userExternalConnectionServerActions() {
     return this.instance.userExternalConnectionServerActions;
-  }
-
-  get userExternalConnectionDataServerActions() {
-    return this.instance.userExternalConnectionDataServerActions;
   }
 
   get userExternalConnectionAccessor() {
@@ -417,10 +413,6 @@ export class DemoApiContextFixtureInstance<F extends FirebaseAdminTestContextIns
 
   get userExternalConnectionServerActions() {
     return this.get(UserExternalConnectionServerActions);
-  }
-
-  get userExternalConnectionDataServerActions() {
-    return this.get(UserExternalConnectionDataServerActions);
   }
 
   get userExternalConnectionAccessor() {
@@ -553,10 +545,6 @@ export class DemoApiFunctionContextFixture<F extends FirebaseAdminFunctionTestCo
     return this.instance.userExternalConnectionServerActions;
   }
 
-  get userExternalConnectionDataServerActions() {
-    return this.instance.userExternalConnectionDataServerActions;
-  }
-
   get userExternalConnectionAccessor() {
     return this.instance.userExternalConnectionAccessor;
   }
@@ -661,10 +649,6 @@ export class DemoApiFunctionContextFixtureInstance<F extends FirebaseAdminFuncti
 
   get userExternalConnectionServerActions() {
     return this.get(UserExternalConnectionServerActions);
-  }
-
-  get userExternalConnectionDataServerActions() {
-    return this.get(UserExternalConnectionDataServerActions);
   }
 
   get userExternalConnectionAccessor() {
@@ -2142,6 +2126,10 @@ export class DemoApiUserExternalConnectionTestContextFixture<F extends FirebaseA
   async deleteAllUserExternalConnections(): Promise<void> {
     return this.instance.deleteAllUserExternalConnections();
   }
+
+  async updateUserExternalConnectionData(params: UpdateUserExternalConnectionDataParams): Promise<UpdateUserExternalConnectionDataResult> {
+    return this.instance.updateUserExternalConnectionData(params);
+  }
 }
 
 export class DemoApiUserExternalConnectionTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<UserExternalConnection, UserExternalConnectionDocument, DemoApiFunctionContextFixtureInstance<F>> {
@@ -2199,6 +2187,18 @@ export class DemoApiUserExternalConnectionTestContextInstance<F extends Firebase
 
   async deleteAllUserExternalConnections(): Promise<void> {
     return this.testContext.userExternalConnectionServerActions.deleteAllUserExternalConnectionsForUser({ uid: this.documentId });
+  }
+
+  /**
+   * Writes this user's connection data through the `update:data` action, skipping the callable's authorization (the
+   * `data` role and the provider's connect policy). Stages data the caller could not write themselves.
+   *
+   * @param params - The update.
+   * @returns The provider's item summaries after the write.
+   */
+  async updateUserExternalConnectionData(params: UpdateUserExternalConnectionDataParams): Promise<UpdateUserExternalConnectionDataResult> {
+    const updateUserExternalConnectionData = await this.testContext.userExternalConnectionServerActions.updateUserExternalConnectionData(params);
+    return updateUserExternalConnectionData(this.document);
   }
 }
 

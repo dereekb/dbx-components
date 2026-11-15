@@ -1,11 +1,19 @@
+import { Logger } from '@nestjs/common';
 import { type Maybe, type Milliseconds } from '@dereekb/util';
+import { type TransformAndValidateFunctionResult } from '@dereekb/model';
 import {
   applyUserExternalConnectionEntry,
   applyUserExternalConnectionLogin,
   emptyUserExternalConnection,
   type FirebaseAuthUserId,
   type FirestoreContextReference,
+  type ReadUserExternalConnectionDataParams,
+  readUserExternalConnectionDataParamsType,
+  type ReadUserExternalConnectionDataResult,
   type Transaction,
+  type UpdateUserExternalConnectionDataParams,
+  updateUserExternalConnectionDataParamsType,
+  type UpdateUserExternalConnectionDataResult,
   type UserExternalConnectionDocument,
   type UserExternalConnectionEntry,
   type UserExternalConnectionEntryStatus,
@@ -15,15 +23,17 @@ import {
   type UserExternalConnectionGrantSummary,
   type UserExternalConnectionLogin,
   type UserExternalConnectionLoginIdentity,
+  type UserExternalConnectionProviderData,
   type UserExternalConnectionProviderType,
   iterateFirestoreDocumentSnapshotPairs,
+  userExternalConnectionDataValueByteLength,
   userExternalConnectionEntryForOutcome,
   userExternalConnectionExternalAccountKeys,
   userExternalConnectionLoginForIdentity,
   userExternalConnectionValue,
   userExternalConnectionsWithExternalAccountQuery
 } from '@dereekb/firebase';
-import { type FirebaseServerAuthService, getAuthUserOrUndefined } from '@dereekb/firebase-server';
+import { type FirebaseServerActionsContext, type FirebaseServerAuthService, getAuthUserOrUndefined } from '@dereekb/firebase-server';
 import {
   applyUserExternalConnectionCredentials,
   isUserExternalConnectionCredentialsExpired,
@@ -35,18 +45,39 @@ import {
 } from './userexternalconnection.private';
 import { userExternalConnectionAlreadyExistsError, userExternalConnectionExternalAccountInUseError, userExternalConnectionRefreshLeaseLostError, userExternalConnectionUnlinkLastLoginMethodError } from './userexternalconnection.error';
 import { type UserExternalConnectionProviderPolicyRegistry, userExternalConnectionPolicyForProviderType } from './userexternalconnection.policy';
+import { type UserExternalConnectionData, type UserExternalConnectionDataDocument, type UserExternalConnectionStoredDataMap } from './data/userexternalconnection.data';
+import { type UserExternalConnectionDataLimits, type UserExternalConnectionDataTypeRegistry, userExternalConnectionDataLimits, userExternalConnectionDataTypeRegistry } from './data/userexternalconnection.data.registry';
+import { userExternalConnectionDataUnreadableError } from './data/userexternalconnection.data.error';
+import {
+  applyUserExternalConnectionDataUpdate,
+  assertUserExternalConnectionDataOperationCount,
+  readUserExternalConnectionDataResult,
+  type UserExternalConnectionDataProviderAllowedFunction,
+  userExternalConnectionDataItemSummaries,
+  userExternalConnectionProviderDataValues
+} from './data/userexternalconnection.data.util';
 
 /**
  * Context required by {@link userExternalConnectionServerActions}.
  *
- * Carries BOTH halves of the pair. Nothing else in the workspace should hold the private collection.
+ * Carries BOTH halves of the pair, plus the connection data collection. Nothing else in the workspace should hold
+ * the private collection.
  */
-export interface UserExternalConnectionServerActionsContext extends FirestoreContextReference, UserExternalConnectionFirestoreCollections, UserExternalConnectionServerFirestoreCollections {
+export interface UserExternalConnectionServerActionsContext extends FirebaseServerActionsContext, FirestoreContextReference, UserExternalConnectionFirestoreCollections, UserExternalConnectionServerFirestoreCollections {
   /**
    * The app's per-provider policies. Optional: a missing registry reads as "all defaults", which is
    * exactly the behavior this module had before policies existed.
    */
   readonly userExternalConnectionProviderPolicyRegistry?: Maybe<UserExternalConnectionProviderPolicyRegistry>;
+  /**
+   * The app's registered connection data types. Optional, and it fails closed: a missing registry reads as an empty
+   * one, which refuses every data write and returns no data.
+   */
+  readonly userExternalConnectionDataTypeRegistry?: Maybe<UserExternalConnectionDataTypeRegistry>;
+  /**
+   * Overrides of the connection data limits. Unset limits use `DEFAULT_USER_EXTERNAL_CONNECTION_DATA_LIMITS`.
+   */
+  readonly userExternalConnectionDataLimits?: Maybe<Partial<UserExternalConnectionDataLimits>>;
   /**
    * The app's auth service, used ONLY by the unlink lockout guard to read whether the user still has a
    * Firebase-native login method.
@@ -246,17 +277,53 @@ export interface UserExternalConnectionDeleteAllParams {
   readonly uid: FirebaseAuthUserId;
 }
 
+/**
+ * Extra input for {@link UserExternalConnectionServerActions.readUserExternalConnectionData}, supplied by the
+ * callable rather than by the caller.
+ */
+export interface ReadUserExternalConnectionDataActionInput {
+  /**
+   * The caller's own connection document, already checked for the `data` role. Its id is the uid whose data is read.
+   */
+  readonly userExternalConnectionDocument: UserExternalConnectionDocument;
+  /**
+   * Filters the providers whose data and data types are returned. Omitted means every provider.
+   */
+  readonly isProviderAllowed?: Maybe<UserExternalConnectionDataProviderAllowedFunction>;
+}
+
+/**
+ * Parameters for {@link UserExternalConnectionServerActions.readUserExternalConnectionProviderData}.
+ */
+export interface ReadUserExternalConnectionProviderDataParams {
+  readonly uid: FirebaseAuthUserId;
+  readonly providerType: UserExternalConnectionProviderType;
+}
+
+/**
+ * Parameters for {@link UserExternalConnectionServerActions.deleteUserExternalConnectionData}.
+ */
+export interface DeleteUserExternalConnectionDataParams {
+  readonly uid: FirebaseAuthUserId;
+}
+
 // MARK: Actions
 /**
- * Server-only actions for the UserExternalConnection document pair.
+ * Server-only actions for the UserExternalConnection document pair and the user's connection data.
  *
- * This is the ENTIRE write surface, and ONLY the write surface. The two collections are never exposed
- * for independent mutation, so there is no way for a caller to write one document without the other —
- * and therefore no sync, reconciliation, or drift-detection process to maintain.
+ * This is the ENTIRE write surface of the pair. The two collections are never exposed for independent
+ * mutation, so there is no way for a caller to write one document without the other — and therefore no
+ * sync, reconciliation, or drift-detection process to maintain.
  *
- * Reading is `UserExternalConnectionAccessor` (raw) or `UserExternalConnectionReader` (the one a
+ * Reading the pair is `UserExternalConnectionAccessor` (raw) or `UserExternalConnectionReader` (the one a
  * consumer wants). A read used to live here too, which meant every path that only needed to look at a
  * user's credentials had to hold the write surface to do it.
+ *
+ * The connection data (`uecd`) is read here as well as written: its reads are the `read:data` callable and the
+ * token mint, and each one decrypts and filters through the data type registry the writes validate against. A path
+ * that only reads one provider's data should take a {@link UserExternalConnectionProviderDataReader}. The data actions
+ * validate; they do not authorize. The calling handler is the authorization layer (always the caller's own uid, the
+ * provider's connect policy, and the `data` role on the caller's `/uec` document).
  */
 export abstract class UserExternalConnectionServerActions {
   abstract createUserExternalConnection(params: UserExternalConnectionCreateParams): Promise<UserExternalConnectionDocument>;
@@ -281,7 +348,38 @@ export abstract class UserExternalConnectionServerActions {
    * live data connection to it behind.
    */
   abstract unlinkUserExternalConnectionLogin(params: UserExternalConnectionUnlinkLoginParams): Promise<UserExternalConnectionDocument>;
+  /**
+   * Deletes the user's `uec`, `uecp` and `uecd` documents in one transaction. To delete only the stored connection
+   * data and keep the connections, use {@link UserExternalConnectionServerActions.deleteUserExternalConnectionData}.
+   */
   abstract deleteAllUserExternalConnectionsForUser(params: UserExternalConnectionDeleteAllParams): Promise<void>;
+  /**
+   * Reads the user's connection data, filtered by the params and `isProviderAllowed`, plus the data types the user may
+   * store. Backs the `read:data` callable.
+   */
+  abstract readUserExternalConnectionData(params: ReadUserExternalConnectionDataParams): Promise<TransformAndValidateFunctionResult<ReadUserExternalConnectionDataParams, (input: ReadUserExternalConnectionDataActionInput) => Promise<ReadUserExternalConnectionDataResult>>>;
+  /**
+   * Applies `clear`, then `unset`, then `set` to one provider's connection data in one transaction. Backs the
+   * `update:data` callable.
+   */
+  abstract updateUserExternalConnectionData(params: UpdateUserExternalConnectionDataParams): Promise<TransformAndValidateFunctionResult<UpdateUserExternalConnectionDataParams, (userExternalConnectionDocument: UserExternalConnectionDocument) => Promise<UpdateUserExternalConnectionDataResult>>>;
+  /**
+   * The unwrapped connection data values of one provider — the token mint's read. An empty object when there are none.
+   */
+  abstract readUserExternalConnectionProviderData(params: ReadUserExternalConnectionProviderDataParams): Promise<UserExternalConnectionProviderData>;
+  /**
+   * Deletes the user's whole connection data document, i.e. every provider's data. Their `uec` connections and
+   * `uecp` credentials are kept.
+   *
+   * Server-only. Call it from a server path such as the app's account deletion, an admin tool, a backfill or a
+   * support fix. No callable, model API specifier or CLI command exposes it to users.
+   *
+   * It deletes without reading, so it also removes a document that can no longer be decrypted. A missing document
+   * is a no-op. To clear only one provider's data, call
+   * {@link UserExternalConnectionServerActions.updateUserExternalConnectionData} with `clear: true`. To remove
+   * the connections as well, use {@link UserExternalConnectionServerActions.deleteAllUserExternalConnectionsForUser}.
+   */
+  abstract deleteUserExternalConnectionData(params: DeleteUserExternalConnectionDataParams): Promise<void>;
   /**
    * Recomputes every document's derived `ec` array. A one-off job — see
    * {@link backfillUserExternalConnectionExternalAccountKeysFactory}.
@@ -302,6 +400,16 @@ export abstract class UserExternalConnectionServerActions {
    * {@link releaseUserExternalConnectionRefreshLeaseFactory}.
    */
   abstract releaseUserExternalConnectionRefreshLease(params: ReleaseUserExternalConnectionRefreshLeaseParams): Promise<void>;
+}
+
+/**
+ * The one connection data read the token mint needs.
+ *
+ * Narrower than {@link UserExternalConnectionServerActions} on purpose, like the writers below — a full
+ * `UserExternalConnectionServerActions` satisfies it.
+ */
+export interface UserExternalConnectionProviderDataReader {
+  readUserExternalConnectionProviderData(params: ReadUserExternalConnectionProviderDataParams): Promise<UserExternalConnectionProviderData>;
 }
 
 /**
@@ -356,6 +464,10 @@ export function userExternalConnectionServerActions(context: UserExternalConnect
     linkUserExternalConnectionLogin: linkUserExternalConnectionLoginFactory(context),
     unlinkUserExternalConnectionLogin: unlinkUserExternalConnectionLoginFactory(context),
     deleteAllUserExternalConnectionsForUser: deleteAllUserExternalConnectionsForUserFactory(context),
+    readUserExternalConnectionData: readUserExternalConnectionDataFactory(context),
+    updateUserExternalConnectionData: updateUserExternalConnectionDataFactory(context),
+    readUserExternalConnectionProviderData: readUserExternalConnectionProviderDataFactory(context),
+    deleteUserExternalConnectionData: deleteUserExternalConnectionDataFactory(context),
     backfillUserExternalConnectionExternalAccountKeys: backfillUserExternalConnectionExternalAccountKeysFactory(context),
     backfillUserExternalConnectionLogins: backfillUserExternalConnectionLoginsFactory(context),
     acquireUserExternalConnectionRefreshLease: acquireUserExternalConnectionRefreshLeaseFactory(context),
@@ -821,6 +933,165 @@ export function deleteAllUserExternalConnectionsForUserFactory(context: UserExte
       await privateDocument.accessor.delete();
       await dataDocument.accessor.delete();
     });
+  };
+}
+
+// MARK: Connection Data
+/**
+ * Resolves the context's data type registry, failing closed to an empty one.
+ *
+ * @param context - The actions context.
+ * @returns The registry the data actions validate against.
+ */
+function userExternalConnectionDataTypeRegistryForContext(context: Pick<UserExternalConnectionServerActionsContext, 'userExternalConnectionDataTypeRegistry'>): UserExternalConnectionDataTypeRegistry {
+  return context.userExternalConnectionDataTypeRegistry ?? userExternalConnectionDataTypeRegistry();
+}
+
+/**
+ * Reads a connection data document's stored map, mapping a decrypt failure to `UNREADABLE`.
+ *
+ * @param dataDocument - The data document handle, built at the call site.
+ * @returns The stored map; an empty one when the document does not exist.
+ * @throws {HttpsError} `USER_EXTERNAL_CONNECTION_DATA_UNREADABLE_ERROR` when the document cannot be decrypted.
+ */
+async function readUserExternalConnectionStoredDataMap(dataDocument: UserExternalConnectionDataDocument): Promise<UserExternalConnectionStoredDataMap> {
+  let data: Maybe<UserExternalConnectionData>;
+
+  try {
+    data = await dataDocument.snapshotData();
+  } catch {
+    throw userExternalConnectionDataUnreadableError();
+  }
+
+  return data?.d ?? {};
+}
+
+/**
+ * Creates the `read:data` action: validates the params, then reads the connection data of the user who owns the given
+ * connection document.
+ *
+ * @param context - The actions context.
+ * @returns An async transform-and-validate function that reads connection data.
+ */
+export function readUserExternalConnectionDataFactory(context: UserExternalConnectionServerActionsContext) {
+  const { userExternalConnectionDataCollection, firebaseServerActionTransformFunctionFactory } = context;
+  const registry = userExternalConnectionDataTypeRegistryForContext(context);
+
+  return firebaseServerActionTransformFunctionFactory(readUserExternalConnectionDataParamsType, async (params) => {
+    return async (input: ReadUserExternalConnectionDataActionInput): Promise<ReadUserExternalConnectionDataResult> => {
+      const { userExternalConnectionDocument, isProviderAllowed } = input;
+      const dataDocument = userExternalConnectionDataCollection.documentAccessor().loadDocumentForId(userExternalConnectionDocument.id);
+      const stored = await readUserExternalConnectionStoredDataMap(dataDocument);
+      return readUserExternalConnectionDataResult({ stored, params, registry, isProviderAllowed });
+    };
+  });
+}
+
+/**
+ * Creates the `update:data` action: validates the params, then applies them to the connection data of the user who
+ * owns the given connection document, in one transaction.
+ *
+ * An empty update, with no `set`, no `unset` and no `clear`, returns the current summary without writing. An
+ * undecryptable document can only be replaced by a `clear`, since nothing in it can be preserved.
+ *
+ * @param context - The actions context.
+ * @returns An async transform-and-validate function that updates connection data.
+ */
+export function updateUserExternalConnectionDataFactory(context: UserExternalConnectionServerActionsContext) {
+  const { firestoreContext, userExternalConnectionDataCollection, firebaseServerActionTransformFunctionFactory } = context;
+  const registry = userExternalConnectionDataTypeRegistryForContext(context);
+  const limits = userExternalConnectionDataLimits(context.userExternalConnectionDataLimits);
+  const logger = new Logger('UserExternalConnectionServerActions');
+
+  return firebaseServerActionTransformFunctionFactory(updateUserExternalConnectionDataParamsType, async (params) => {
+    const { providerType, clear } = params;
+    const setCount = params.set?.length ?? 0;
+    const unsetCount = params.unset?.length ?? 0;
+    const isNoop = setCount === 0 && unsetCount === 0 && !clear;
+
+    assertUserExternalConnectionDataOperationCount(setCount + unsetCount, limits);
+
+    return async (userExternalConnectionDocument: UserExternalConnectionDocument): Promise<UpdateUserExternalConnectionDataResult> => {
+      const uid = userExternalConnectionDocument.id;
+
+      const next = await firestoreContext.runTransaction(async (transaction) => {
+        const dataDocumentInTransaction = userExternalConnectionDataCollection.documentAccessorForTransaction(transaction).loadDocumentForId(uid);
+        let current: Maybe<UserExternalConnectionStoredDataMap>;
+        let exists = false;
+
+        try {
+          const data = await dataDocumentInTransaction.snapshotData();
+          exists = data != null;
+          current = data?.d;
+        } catch {
+          // an undecryptable document: only a clear may replace it, since nothing in it can be preserved
+          if (!clear) {
+            throw userExternalConnectionDataUnreadableError();
+          }
+
+          exists = true;
+          current = {};
+        }
+
+        let result: UserExternalConnectionStoredDataMap = current ?? {};
+
+        if (!isNoop) {
+          result = applyUserExternalConnectionDataUpdate({ current, params, registry, limits, now: new Date() });
+
+          if (Object.keys(result).length === 0) {
+            if (exists) {
+              await dataDocumentInTransaction.accessor.delete();
+            }
+          } else {
+            await dataDocumentInTransaction.accessor.set({ uid, d: result, uat: new Date() });
+          }
+        }
+
+        return result;
+      });
+
+      if (!isNoop) {
+        logger.log(`Updated connection data for uid ${uid} provider "${providerType}" (set ${setCount}, unset ${unsetCount}${clear ? ', clear' : ''}; ${userExternalConnectionDataValueByteLength(next)} bytes).`);
+      }
+
+      return { items: userExternalConnectionDataItemSummaries({ stored: next, providerType, registry }) };
+    };
+  });
+}
+
+/**
+ * Creates the token mint's read: one provider's connection data values, unwrapped.
+ *
+ * @param context - The actions context.
+ * @returns The token mint's read, resolving one provider's values (an empty object when there are none).
+ */
+export function readUserExternalConnectionProviderDataFactory(context: Pick<UserExternalConnectionServerActionsContext, 'userExternalConnectionDataCollection' | 'userExternalConnectionDataTypeRegistry'>) {
+  const { userExternalConnectionDataCollection } = context;
+  const registry = userExternalConnectionDataTypeRegistryForContext(context);
+
+  return async (params: ReadUserExternalConnectionProviderDataParams): Promise<UserExternalConnectionProviderData> => {
+    const { uid, providerType } = params;
+    const dataDocument = userExternalConnectionDataCollection.documentAccessor().loadDocumentForId(uid);
+    const stored = await readUserExternalConnectionStoredDataMap(dataDocument);
+    return userExternalConnectionProviderDataValues({ stored: stored[providerType], providerType, registry });
+  };
+}
+
+/**
+ * Creates the server-only delete of a user's whole connection data document. See
+ * {@link UserExternalConnectionServerActions.deleteUserExternalConnectionData}.
+ *
+ * @param context - The actions context.
+ * @returns The server-only delete, removing a uid's `uecd` document without reading it.
+ */
+export function deleteUserExternalConnectionDataFactory(context: Pick<UserExternalConnectionServerActionsContext, 'userExternalConnectionDataCollection'>) {
+  const { userExternalConnectionDataCollection } = context;
+  const logger = new Logger('UserExternalConnectionServerActions');
+
+  return async (params: DeleteUserExternalConnectionDataParams): Promise<void> => {
+    const { uid } = params;
+    await userExternalConnectionDataCollection.documentAccessor().loadDocumentForId(uid).accessor.delete();
+    logger.log(`Deleted the connection data document for uid ${uid}.`);
   };
 }
 

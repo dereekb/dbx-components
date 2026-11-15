@@ -1,13 +1,9 @@
-import { Logger } from '@nestjs/common';
 import { type Maybe } from '@dereekb/util';
 import {
-  type FirebaseAuthUserId,
-  type FirestoreContextReference,
   normalizeUserExternalConnectionDataItemKey,
   type ReadUserExternalConnectionDataParams,
   type ReadUserExternalConnectionDataResult,
   type UpdateUserExternalConnectionDataParams,
-  type UpdateUserExternalConnectionDataResult,
   type UserExternalConnectionDataItemKey,
   type UserExternalConnectionDataItemSummary,
   type UserExternalConnectionDataItems,
@@ -20,184 +16,20 @@ import {
   userExternalConnectionDataTypeSummary,
   userExternalConnectionDataValueByteLength
 } from '@dereekb/firebase';
-import { type UserExternalConnectionDataFirestoreCollectionRef, type UserExternalConnectionStoredDataItems, type UserExternalConnectionStoredDataMap, type UserExternalConnectionStoredProviderData } from './userexternalconnection.data';
-import { type UserExternalConnectionDataLimits, type UserExternalConnectionDataTypeRegistry, userExternalConnectionDataLimits } from './userexternalconnection.data.registry';
-import { userExternalConnectionDataItemKeyInvalidError, userExternalConnectionDataTooLargeError, userExternalConnectionDataTypeNotAllowedError, userExternalConnectionDataUnreadableError, userExternalConnectionDataValueInvalidError } from './userexternalconnection.data.error';
+import { type UserExternalConnectionStoredDataItems, type UserExternalConnectionStoredDataMap, type UserExternalConnectionStoredProviderData } from './userexternalconnection.data';
+import { type UserExternalConnectionDataLimits, type UserExternalConnectionDataTypeRegistry } from './userexternalconnection.data.registry';
+import { userExternalConnectionDataItemKeyInvalidError, userExternalConnectionDataTooLargeError, userExternalConnectionDataTypeNotAllowedError, userExternalConnectionDataValueInvalidError } from './userexternalconnection.data.error';
 
-// MARK: Context
-/**
- * Context required by {@link userExternalConnectionDataServerActions}.
+/*
+ * Pure helpers over a decrypted UserExternalConnectionData map: building read results, unwrapping values, and applying
+ * an update. They do no I/O. The actions that load and write the document live on UserExternalConnectionServerActions.
  */
-export interface UserExternalConnectionDataServerActionsContext extends FirestoreContextReference, UserExternalConnectionDataFirestoreCollectionRef {
-  readonly userExternalConnectionDataTypeRegistry: UserExternalConnectionDataTypeRegistry;
-  readonly userExternalConnectionDataLimits?: Maybe<Partial<UserExternalConnectionDataLimits>>;
-}
 
-// MARK: Inputs
+// MARK: Provider Filter
 /**
  * Decides whether the caller may see a provider's data. Used to filter a read with no provider named.
  */
 export type UserExternalConnectionDataProviderAllowedFunction = (providerType: UserExternalConnectionProviderType) => boolean;
-
-/**
- * Input for {@link UserExternalConnectionDataServerActions.readUserExternalConnectionData}.
- */
-export interface ReadUserExternalConnectionDataInput {
-  readonly uid: FirebaseAuthUserId;
-  readonly params: ReadUserExternalConnectionDataParams;
-  /**
-   * Filters the providers whose data and data types are returned. Omitted means every provider.
-   */
-  readonly isProviderAllowed?: Maybe<UserExternalConnectionDataProviderAllowedFunction>;
-}
-
-/**
- * Input for {@link UserExternalConnectionDataServerActions.updateUserExternalConnectionData}.
- */
-export interface UpdateUserExternalConnectionDataInput {
-  readonly uid: FirebaseAuthUserId;
-  readonly params: UpdateUserExternalConnectionDataParams;
-}
-
-/**
- * Input for {@link UserExternalConnectionDataServerActions.readUserExternalConnectionProviderData}.
- */
-export interface ReadUserExternalConnectionProviderDataInput {
-  readonly uid: FirebaseAuthUserId;
-  readonly providerType: UserExternalConnectionProviderType;
-}
-
-/**
- * Input for {@link UserExternalConnectionDataServerActions.deleteUserExternalConnectionData}.
- */
-export interface DeleteUserExternalConnectionDataInput {
-  readonly uid: FirebaseAuthUserId;
-}
-
-// MARK: Actions
-/**
- * Server actions over a user's {@link UserExternalConnectionData}. Also the NestJS injection token for itself.
- *
- * These validate; they do not authorize. The calling handler is the authorization layer (always the caller's own
- * uid, the provider's connect policy, and the `data` role on the caller's `/uec` document).
- */
-export abstract class UserExternalConnectionDataServerActions {
-  /**
-   * Reads the user's data, filtered by the params and `isProviderAllowed`, plus the data types the user may store.
-   */
-  abstract readUserExternalConnectionData(input: ReadUserExternalConnectionDataInput): Promise<ReadUserExternalConnectionDataResult>;
-  /**
-   * Applies `clear`, then `unset`, then `set` to one provider's data in one transaction.
-   */
-  abstract updateUserExternalConnectionData(input: UpdateUserExternalConnectionDataInput): Promise<UpdateUserExternalConnectionDataResult>;
-  /**
-   * The unwrapped values of one provider — the token mint's read. An empty object when there are none.
-   */
-  abstract readUserExternalConnectionProviderData(input: ReadUserExternalConnectionProviderDataInput): Promise<UserExternalConnectionProviderData>;
-  /**
-   * Deletes the user's data document.
-   */
-  abstract deleteUserExternalConnectionData(input: DeleteUserExternalConnectionDataInput): Promise<void>;
-}
-
-/**
- * Reference to a {@link UserExternalConnectionDataServerActions} instance.
- */
-export interface UserExternalConnectionDataServerActionsRef {
-  readonly userExternalConnectionDataActions: UserExternalConnectionDataServerActions;
-}
-
-/**
- * Creates the {@link UserExternalConnectionDataServerActions}.
- *
- * @param context - The Firestore context, the data collection, the registry and the limits.
- * @returns The actions.
- */
-export function userExternalConnectionDataServerActions(context: UserExternalConnectionDataServerActionsContext): UserExternalConnectionDataServerActions {
-  const { firestoreContext, userExternalConnectionDataCollection, userExternalConnectionDataTypeRegistry: registry } = context;
-  const limits = userExternalConnectionDataLimits(context.userExternalConnectionDataLimits);
-  const logger = new Logger('UserExternalConnectionDataServerActions');
-
-  async function loadStoredDataMap(uid: FirebaseAuthUserId): Promise<UserExternalConnectionStoredDataMap> {
-    const document = userExternalConnectionDataCollection.documentAccessor().loadDocumentForId(uid);
-    let data: Maybe<{ readonly d: UserExternalConnectionStoredDataMap }>;
-
-    try {
-      data = await document.snapshotData();
-    } catch {
-      throw userExternalConnectionDataUnreadableError();
-    }
-
-    return data?.d ?? {};
-  }
-
-  return {
-    readUserExternalConnectionData: async (input) => {
-      const { uid, params, isProviderAllowed } = input;
-      const stored = await loadStoredDataMap(uid);
-      return readUserExternalConnectionDataResult({ stored, params, registry, isProviderAllowed });
-    },
-    updateUserExternalConnectionData: async (input) => {
-      const { uid, params } = input;
-      const { providerType, clear } = params;
-      const setCount = params.set?.length ?? 0;
-      const unsetCount = params.unset?.length ?? 0;
-
-      assertUserExternalConnectionDataOperationCount(setCount + unsetCount, limits);
-
-      const result = await firestoreContext.runTransaction(async (transaction) => {
-        const document = userExternalConnectionDataCollection.documentAccessorForTransaction(transaction).loadDocumentForId(uid);
-        let current: Maybe<UserExternalConnectionStoredDataMap>;
-        let exists = false;
-
-        try {
-          const data = await document.snapshotData();
-          exists = data != null;
-          current = data?.d;
-        } catch {
-          // an undecryptable document: only a clear may replace it, since nothing in it can be preserved
-          if (!clear) {
-            throw userExternalConnectionDataUnreadableError();
-          }
-
-          exists = true;
-          current = {};
-        }
-
-        const isNoop = setCount === 0 && unsetCount === 0 && !clear;
-        let next: UserExternalConnectionStoredDataMap = current ?? {};
-
-        if (!isNoop) {
-          next = applyUserExternalConnectionDataUpdate({ current, params, registry, limits, now: new Date() });
-
-          if (Object.keys(next).length === 0) {
-            if (exists) {
-              await document.accessor.delete();
-            }
-          } else {
-            await document.accessor.set({ uid, d: next, uat: new Date() });
-          }
-        }
-
-        return { next, isNoop };
-      });
-
-      if (!result.isNoop) {
-        logger.log(`Updated connection data for uid ${uid} provider "${providerType}" (set ${setCount}, unset ${unsetCount}${clear ? ', clear' : ''}; ${userExternalConnectionDataValueByteLength(result.next)} bytes).`);
-      }
-
-      return { items: userExternalConnectionDataItemSummaries({ stored: result.next, providerType, registry }) };
-    },
-    readUserExternalConnectionProviderData: async (input) => {
-      const { uid, providerType } = input;
-      const stored = await loadStoredDataMap(uid);
-      return userExternalConnectionProviderDataValues({ stored: stored[providerType], providerType, registry });
-    },
-    deleteUserExternalConnectionData: async (input) => {
-      await userExternalConnectionDataCollection.documentAccessor().loadDocumentForId(input.uid).accessor.delete();
-    }
-  };
-}
 
 // MARK: Read
 /**

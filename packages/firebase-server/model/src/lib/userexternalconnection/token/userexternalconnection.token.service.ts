@@ -18,7 +18,7 @@ import { type UserExternalConnectionCredentials } from '../userexternalconnectio
 import { UserExternalConnectionProviderPolicyRegistry, userExternalConnectionPolicyForProviderType } from '../userexternalconnection.policy';
 import { UserExternalConnectionOAuthProviderRegistry } from '../oauth/userexternalconnection.oauth.registry';
 import { type AbstractUserExternalConnectionOAuthService, normalizeUserExternalConnectionProviderScopes } from '../oauth/userexternalconnection.oauth.service';
-import { UserExternalConnectionDataServerActions } from '../data/userexternalconnection.data.action.server';
+import { type UserExternalConnectionProviderDataReader, UserExternalConnectionServerActions } from '../userexternalconnection.action.server';
 import {
   DEFAULT_USER_EXTERNAL_CONNECTION_TOKEN_MINIMUM_REMAINING,
   DEFAULT_USER_EXTERNAL_CONNECTION_TOKEN_REQUIRED_OIDC_SCOPE,
@@ -40,7 +40,7 @@ export interface UserExternalConnectionTokenMintInput {
   /**
    * Whether to add the caller's stored connection data for this provider (`?include=data`).
    *
-   * Read only AFTER every gate passes, and only when the app wired `UserExternalConnectionDataServerActions`. A data
+   * Read only AFTER every gate passes, and only when the app wired `UserExternalConnectionServerActions`. A data
    * failure never blocks the mint: the token is returned without `data`.
    */
   readonly includeData?: Maybe<boolean>;
@@ -155,7 +155,7 @@ export class UserExternalConnectionTokenApiService {
     @Optional() @Inject(UserExternalConnectionProviderPolicyRegistry) private readonly _policyRegistry?: Maybe<UserExternalConnectionProviderPolicyRegistry>,
     @Optional() @Inject(USER_EXTERNAL_CONNECTION_TOKEN_PREDICATE) private readonly _predicate?: Maybe<UserExternalConnectionTokenPredicate>,
     @Optional() @Inject(UserExternalConnectionTokenApiModuleConfig) private readonly _config?: Maybe<UserExternalConnectionTokenApiModuleConfig>,
-    @Optional() @Inject(UserExternalConnectionDataServerActions) private readonly _dataActions?: Maybe<UserExternalConnectionDataServerActions>
+    @Optional() @Inject(UserExternalConnectionServerActions) private readonly _dataReader?: Maybe<UserExternalConnectionProviderDataReader>
   ) {
     if (!_predicate) {
       this._logger.warn(`No ${USER_EXTERNAL_CONNECTION_TOKEN_PREDICATE} provided — ${USER_EXTERNAL_CONNECTION_TOKEN_API_PATH} will reject every caller. Provide one from the token module's dependency module.`);
@@ -244,9 +244,9 @@ export class UserExternalConnectionTokenApiService {
   private async _readConnectionData(uid: string, providerType: UserExternalConnectionProviderType): Promise<Maybe<UserExternalConnectionProviderData>> {
     let result: Maybe<UserExternalConnectionProviderData>;
 
-    if (this._dataActions) {
+    if (this._dataReader) {
       try {
-        const data = await this._dataActions.readUserExternalConnectionProviderData({ uid, providerType });
+        const data = await this._dataReader.readUserExternalConnectionProviderData({ uid, providerType });
         result = countUserExternalConnectionProviderDataItems(data) > 0 ? data : undefined;
       } catch (e: unknown) {
         const code = (e as Maybe<{ readonly details?: { readonly code?: string } }>)?.details?.code ?? 'UNKNOWN';

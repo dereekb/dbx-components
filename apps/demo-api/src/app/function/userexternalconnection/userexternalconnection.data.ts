@@ -54,13 +54,13 @@ export const userExternalConnectionReadData: DemoReadModelFunction<ReadUserExter
       assertUserExternalConnectionProviderConnectable({ ...connectable, providerType: data.providerType });
     }
 
-    const uid = auth.uid;
+    const readUserExternalConnectionData = await nest.userExternalConnectionActions.readUserExternalConnectionData(data);
 
     return nest.useModel('userExternalConnection', {
       request,
-      key: firestoreModelKey(userExternalConnectionIdentity, uid),
+      key: firestoreModelKey(userExternalConnectionIdentity, auth.uid),
       roles: 'data',
-      use: () => nest.userExternalConnectionDataActions.readUserExternalConnectionData({ uid, params: data, isProviderAllowed: isProviderConnectableFunction(connectable) })
+      use: (x) => readUserExternalConnectionData({ userExternalConnectionDocument: x.document, isProviderAllowed: isProviderConnectableFunction(connectable) })
     });
   }
 });
@@ -87,13 +87,13 @@ export const userExternalConnectionUpdateData: DemoUpdateModelFunction<UpdateUse
       isAdmin: isAdminInRequest(request)
     });
 
-    const uid = auth.uid;
+    const updateUserExternalConnectionData = await nest.userExternalConnectionActions.updateUserExternalConnectionData(data);
 
     return nest.useModel('userExternalConnection', {
       request,
-      key: firestoreModelKey(userExternalConnectionIdentity, uid),
+      key: firestoreModelKey(userExternalConnectionIdentity, auth.uid),
       roles: 'data',
-      use: () => nest.userExternalConnectionDataActions.updateUserExternalConnectionData({ uid, params: data })
+      use: (x) => updateUserExternalConnectionData(x.document)
     });
   }
 });

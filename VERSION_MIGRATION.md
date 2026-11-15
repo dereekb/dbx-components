@@ -2,11 +2,17 @@
 
 ### New
 - **`UserExternalConnectionData` (`/uecd`)**, a server-only model in `@dereekb/firebase-server/model`
-  (`userExternalConnectionDataIdentity`, `UserExternalConnectionDataServerActions`). It stores a user's per-connection
+  (`userExternalConnectionDataIdentity`). Its actions are on `UserExternalConnectionServerActions`:
+  `readUserExternalConnectionData` / `updateUserExternalConnectionData` (transform-and-validate actions over the API
+  params, run against the caller's `/uec` document), `readUserExternalConnectionProviderData` and
+  `deleteUserExternalConnectionData`. The app module takes the data types as `dataTypes`. It stores a user's per-connection
   data (keyed provider type → data type → item key, with the reserved item key `me` for the connection's own account),
   encrypted at rest as one AES-256-GCM string. Like `uecp` it has no rules block, no model service and no `@dbxModel`,
   so it cannot be read from a client SDK, `ModelApiGetService` or `<cli> get`, and it is absent from the manifests.
-  Data is kept on disconnect and unlink, and deleted by `deleteAllUserExternalConnectionsForUser`.
+  Data is kept on disconnect and unlink. `deleteAllUserExternalConnectionsForUser` deletes it along with the
+  connections. `UserExternalConnectionServerActions.deleteUserExternalConnectionData({ uid })` deletes only the
+  data document, for a server path such as account deletion. It never decrypts, so it also removes an unreadable
+  document, and no user-callable route exposes it.
 - **Data type registry** (`@dereekb/firebase`): `UserExternalConnectionDataTypeConfig` / `userExternalConnectionDataTypeConfig`
   (an arktype `valueType`, optional `normalizeItemKey`, `packFile`, `maxItems`, `maxValueBytes`),
   `userExternalConnectionDataTypeConfigLookup`, and the typed views `UserExternalConnectionDataTypings` /
@@ -29,7 +35,7 @@
 - **Token mint `?include=data`.** `GET /api/session/external/:providerType?include=data` attaches the caller's stored data
   for that provider (`UserExternalConnectionAccessTokenResponse.data`), only after every mint gate passed. A data
   failure still returns the token. `userExternalConnectionTokenApiPath(providerType, { includeData: true })` builds the
-  path. No app change is needed: the token module reads the data actions from the app's `UserExternalConnectionModule`.
+  path. No app change is needed: the token module reads the data through the app's `UserExternalConnectionServerActions`.
 - `@dereekb/nestjs`: `deriveAES256GCMEncryptionSecret` (HKDF-SHA256). The data key is derived from
   `USER_EXTERNAL_CONNECTION_ENCRYPTION_SECRET` with a versioned info label, so `uecp` ciphertext cannot be replayed as
   data. **There is no new env var.**

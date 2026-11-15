@@ -10,7 +10,7 @@ import { type AbstractUserExternalConnectionOAuthService } from '../oauth/userex
 import { DEFAULT_USER_EXTERNAL_CONNECTION_TOKEN_MINIMUM_REMAINING, type UserExternalConnectionTokenApiModuleConfig, type UserExternalConnectionTokenPredicate } from './userexternalconnection.token.config';
 import { UserExternalConnectionTokenApiService } from './userexternalconnection.token.service';
 import { userExternalConnectionTokenIncludesData } from './userexternalconnection.token.controller';
-import { type UserExternalConnectionDataServerActions } from '../data/userexternalconnection.data.action.server';
+import { type UserExternalConnectionProviderDataReader } from '../userexternalconnection.action.server';
 
 const EXPORTED = 'zoho_admin';
 const NOT_EXPORTED = 'zoho';
@@ -295,12 +295,12 @@ describe('UserExternalConnectionTokenApiService scope ceilings', () => {
     function makeDataService(input: { readonly predicate?: Maybe<UserExternalConnectionTokenPredicate>; readonly read?: () => Promise<unknown>; readonly withData?: boolean } = {}) {
       const base = makeService({ predicate: input.predicate });
       const readUserExternalConnectionProviderData = vi.fn(input.read ?? (async () => PROVIDER_DATA));
-      const dataActions = { readUserExternalConnectionProviderData } as unknown as UserExternalConnectionDataServerActions;
+      const dataReader = { readUserExternalConnectionProviderData } as unknown as UserExternalConnectionProviderDataReader;
       const reader = { readerForUser: vi.fn(() => vi.fn(() => ({ readUsableUserExternalConnectionCredentials: vi.fn(async () => STORED_CREDENTIALS) }))) } as unknown as UserExternalConnectionReader;
       const oauthRegistry = userExternalConnectionOAuthProviderRegistry([{ providerType: EXPORTED } as unknown as AbstractUserExternalConnectionOAuthService]);
       const policyRegistry = userExternalConnectionProviderPolicyRegistry([{ providerType: EXPORTED, adminOnly: true, tokenExport: true }]);
       const predicate = input.predicate === undefined ? () => true : input.predicate;
-      const service = new UserExternalConnectionTokenApiService(reader, oauthRegistry, policyRegistry, predicate, undefined, input.withData === false ? undefined : dataActions);
+      const service = new UserExternalConnectionTokenApiService(reader, oauthRegistry, policyRegistry, predicate, undefined, input.withData === false ? undefined : dataReader);
       return { ...base, service, readUserExternalConnectionProviderData };
     }
 

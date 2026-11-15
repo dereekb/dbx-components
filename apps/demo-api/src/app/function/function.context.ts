@@ -35,7 +35,6 @@ import {
   StorageFileInitServerActions,
   StorageFileServerActions,
   UserExternalConnectionAccessor,
-  UserExternalConnectionDataServerActions,
   UserExternalConnectionOAuthProviderRegistry,
   UserExternalConnectionProviderPolicyRegistry,
   UserExternalConnectionReader,
@@ -125,10 +124,6 @@ export class DemoApiNestContext extends AbstractFirebaseNestContext<DemoFirebase
 
   get userExternalConnectionAccessor(): UserExternalConnectionAccessor {
     return this.nestApplication.get(UserExternalConnectionAccessor);
-  }
-
-  get userExternalConnectionDataActions(): UserExternalConnectionDataServerActions {
-    return this.nestApplication.get(UserExternalConnectionDataServerActions);
   }
 
   get userExternalConnectionReader(): UserExternalConnectionReader {

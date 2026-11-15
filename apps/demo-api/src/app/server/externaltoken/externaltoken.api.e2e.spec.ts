@@ -302,7 +302,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
                   describe('with stored connection data', () => {
                     beforeEach(async () => {
-                      await f.instance.userExternalConnectionDataServerActions.updateUserExternalConnectionData({ uid: au.uid, params: { providerType: MICROSOFT, set: [{ dataType: MAIL_SIGNATURE, itemKey: 'me', value: { html: '<p>Regards</p>' } }] } });
+                      await uec.updateUserExternalConnectionData({ providerType: MICROSOFT, set: [{ dataType: MAIL_SIGNATURE, itemKey: 'me', value: { html: '<p>Regards</p>' } }] });
                     });
 
                     it('returns this provider’s data, keyed data type → item key', async () => {
@@ -340,7 +340,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
                 });
 
                 it('refuses the grant with ?include=data without returning the stored data', async () => {
-                  await f.instance.userExternalConnectionDataServerActions.updateUserExternalConnectionData({ uid: au.uid, params: { providerType: MICROSOFT, set: [{ dataType: MAIL_SIGNATURE, itemKey: 'me', value: { html: '<p>Regards</p>' } }] } });
+                  await uec.updateUserExternalConnectionData({ providerType: MICROSOFT, set: [{ dataType: MAIL_SIGNATURE, itemKey: 'me', value: { html: '<p>Regards</p>' } }] });
 
                   const res = await oauth.authRequest('get', MICROSOFT_TOKEN_WITH_DATA_PATH).expect(403);
 

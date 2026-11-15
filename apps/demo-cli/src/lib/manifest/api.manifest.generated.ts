@@ -1402,7 +1402,7 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'providerType', typeText: 'UserExternalConnectionProviderType', description: 'The provider whose data to change, e.g. `microsoft`.' },
       { name: 'set', typeText: 'Maybe<readonly UserExternalConnectionDataSetOperation[]>', description: 'Items to set (create or replace).' },
       { name: 'unset', typeText: 'Maybe<readonly UserExternalConnectionDataUnsetOperation[]>', description: 'Items (or whole data types) to remove.' },
-      { name: 'clear', typeText: 'Maybe<boolean>', description: "Drop all of this provider's data first. Written without decrypting, so it also recovers an unreadable document." }
+      { name: 'clear', typeText: 'Maybe<boolean>', description: "Drop all of this provider's data first. It also recovers a document that can no longer be decrypted, by\nreplacing the whole document: every provider's data is lost then, since none of it can be read." }
     ],
     resultTypeDescription: "Result of changing the calling user's connection data. Never carries values.",
     resultFields: [{ name: 'items', typeText: 'readonly UserExternalConnectionDataItemSummary[]', description: "The provider's items after the write." }]
