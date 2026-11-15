@@ -87,8 +87,10 @@ trello-cli board resolve [--list "To Do,Doing"] [--label bug,urgent]   # names â
 ```
 
 `board changes --save` is the polling primitive: the first run reports every card as `added`, later runs
-report `added` / `removed` / `closed` / `reopened` / `moved` / `relabeled` / `renamed` / `commented`, and
-`--save` moves the baseline forward (a second run with nothing changed reports `changes: []`). `--save` on
+report `added` / `removed` / `closed` / `reopened` / `moved` / `relabeled` / `renamed` / `commented` /
+`uncommented` (a comment deleted) / `updated`, and `--save` moves the baseline forward (a second run with
+nothing changed reports `changes: []`). `updated` covers activity none of the other types do (a description,
+due date, checklist, attachment, member or comment edit) and is only reported for a card with no other change. `--save` on
 `activity` / `mentions` reads and stores a watermark, so each run returns only what is new. Saved state
 lives in `<configDir>/state/core/boards/<board>.json`.
 
@@ -302,15 +304,26 @@ The loop commands are thin wrappers over primitives a bot can call directly.
 From `@dereekb/trello`:
 
 - `fetchTrelloBoardSnapshot` / `diffTrelloBoardSnapshots` / `trelloCardFingerprint`: capture a board and
-  report what changed between two captures.
+  report what changed between two captures. `fetchTrelloBoardSnapshotWithCards` also returns the raw cards,
+  lists and labels; pass `cardFields: 'default' | 'all' | [...]` to read full cards in the same request.
+  `buildTrelloBoardSnapshot` builds a snapshot from cards you already read. `fingerprintVersion` appends
+  `|v<n>` to every fingerprint, so bumping it makes every card look changed once.
 - `listTrelloBoardActivitySince`: board actions newer than a watermark (an action id or a date), with a
   page cap and a `truncated` flag.
 - `findTrelloMentions` / `isTrelloActionAuthoredBy`: `@username` mentions in comment actions, skipping the
-  bot's own comments.
+  bot's own comments. Each mention carries `authorUsername` and `authorFullName`.
 - `renderTrelloCardMarkdown` / `readTrelloMarkdownPreservedBlocks` / `mergeTrelloMarkdownPreservedBlocks`:
   a card as markdown with blocks that survive a re-render.
 - `updateTrelloCardLabels`, `matchTrelloList` / `matchTrelloLabel` / `resolveTrelloBoardNames`,
-  `normalizeTrelloListName`, `probeTrelloAuth`.
+  `normalizeTrelloListName`. By default a name several lists/labels share is refused (`ambiguous_*`) and a
+  label name falls back to a unique case-insensitive match. `duplicates: 'first'` takes the first match;
+  `caseInsensitiveFallback: false` makes label names exact. `resolveTrelloBoardNames` takes them as
+  `listMatch` / `labelMatch`. A problem lists its `candidates`.
+- `probeTrelloAuth({ trelloContext, timeoutMs })`: reads `/members/me` and never throws. On timeout it aborts
+  the request. A 429 is reported as `RATE_LIMITED`.
+- `fakeTrelloContext({ routes })`: a context backed by a route table, for tests. The rate limiter is off by
+  default (a 429 route answers once); pass `rateLimit: true` to exercise it. `trelloFactory({ rateLimit: false })`
+  turns it off for any context.
 
 From `@dereekb/trello/cli`:
 

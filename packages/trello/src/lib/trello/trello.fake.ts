@@ -3,6 +3,7 @@ import { type FetchHandler } from '@dereekb/util/fetch';
 import { TRELLO_API_URL } from '../trello.type';
 import { type TrelloConfig } from '../trello.config';
 import { type LogTrelloServerErrorFunction } from '../trello.error.api';
+import { type TrelloRateLimitedFetchHandlerConfig } from '../trello.limit';
 import { type TrelloContextRef, trelloFactory } from './trello.factory';
 
 /**
@@ -34,6 +35,11 @@ export interface FakeTrelloRequest {
    * The request body, parsed as JSON when it was JSON.
    */
   readonly body?: unknown;
+  /**
+   * The request's abort signal. A route still pending when it aborts is abandoned, and the request rejects with the
+   * abort reason, as a real fetch would.
+   */
+  readonly signal: AbortSignal;
 }
 
 /**
@@ -66,6 +72,15 @@ export interface FakeTrelloContextConfig {
    * Error logger. Defaults to a no-op so expected failures stay quiet.
    */
   readonly logTrelloServerErrorFunction?: Maybe<LogTrelloServerErrorFunction>;
+  /**
+   * Whether requests go through the real rate limiter. Defaults to `false` (or `true` when `rateLimiterConfig` is
+   * passed): a busy spec is not throttled, and a 429 route is answered and recorded once rather than retried.
+   */
+  readonly rateLimit?: Maybe<boolean>;
+  /**
+   * Rate limiter config, when `rateLimit` is on.
+   */
+  readonly rateLimiterConfig?: Maybe<TrelloRateLimitedFetchHandlerConfig>;
 }
 
 /**
@@ -84,8 +99,9 @@ export interface FakeTrelloContext extends TrelloContextRef {
  * `@dereekb/trello` exposes its seam at the fetch boundary — every api function is `fn(context)(input)` and every one
  * of them lands on `context.fetch` / `context.fetchJson`. So the fake replaces the transport, not a client interface:
  * the context comes from the real {@link trelloFactory} with a `fetchHandler` standing in for the network, so the auth
- * header, the ok-response check, the rate limiter and the typed-error translation (a 401 becomes a
- * `TrelloInvalidTokenError`) are all the real thing. Framework-free, so any test runner can use it.
+ * header, the ok-response check, the timeout and the typed-error translation (a 401 becomes a
+ * `TrelloInvalidTokenError`) are all the real thing. The rate limiter is off unless `rateLimit` is passed, so a spec is
+ * never throttled and a 429 is not retried. Framework-free, so any test runner can use it.
  *
  * @param config - The route table, the optional fallback, and credential overrides.
  * @returns The fake context plus the recorded request log.
@@ -123,7 +139,8 @@ export function fakeTrelloContext(config: FakeTrelloContextConfig = {}): FakeTre
       query: url.searchParams,
       url: request.url,
       headers: request.headers,
-      body
+      body,
+      signal: request.signal
     };
 
     requests.push(recorded);
@@ -136,15 +153,36 @@ export function fakeTrelloContext(config: FakeTrelloContextConfig = {}): FakeTre
       response = new Response(`fakeTrelloContext: no route for "${key}"`, { status: 404 });
     } else {
       const route = matchedKey == null ? config.fallback : routes[matchedKey];
-      const value = typeof route === 'function' ? await (route as (request: FakeTrelloRequest) => unknown)(recorded) : route;
+      const value = typeof route === 'function' ? await abortableTrelloRoute(Promise.resolve((route as (request: FakeTrelloRequest) => unknown)(recorded)), request.signal) : route;
       response = value instanceof Response ? value : new Response(JSON.stringify(value ?? null), { status: 200, headers: { 'content-type': 'application/json' } });
     }
 
     return response;
   };
 
-  const { trelloContext } = trelloFactory({ fetchHandler, logTrelloServerErrorFunction: config.logTrelloServerErrorFunction ?? (() => undefined) })(trelloConfig);
+  const rateLimit = config.rateLimit ?? config.rateLimiterConfig != null;
+  const { trelloContext } = trelloFactory({ fetchHandler, rateLimit, rateLimiterConfig: config.rateLimiterConfig, logTrelloServerErrorFunction: config.logTrelloServerErrorFunction ?? (() => undefined) })(trelloConfig);
   return { trelloContext, requests };
+}
+
+/**
+ * Settles with the route's value, or rejects with the abort reason once the request's signal aborts.
+ *
+ * @param value - The route's pending value.
+ * @param signal - The request's abort signal.
+ * @returns The route's value, unless the request aborted first.
+ */
+function abortableTrelloRoute(value: Promise<unknown>, signal: AbortSignal): Promise<unknown> {
+  return new Promise<unknown>((resolve, reject) => {
+    const onAbort = () => reject(signal.reason);
+
+    if (signal.aborted) {
+      onAbort();
+    } else {
+      signal.addEventListener('abort', onAbort, { once: true });
+      value.then(resolve, reject).finally(() => signal.removeEventListener('abort', onAbort));
+    }
+  });
 }
 
 /**

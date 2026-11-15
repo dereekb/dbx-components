@@ -97,7 +97,7 @@ const snapshotCommand: TrelloCliCommand = {
 
 const changesCommand: TrelloCliCommand = {
   command: 'changes',
-  describe: 'Diff the board against the saved snapshot: added, removed, closed, reopened, moved, relabeled, renamed, commented',
+  describe: 'Diff the board against the saved snapshot: added, removed, closed, reopened, moved, relabeled, renamed, commented, uncommented, updated',
   requires: 'board',
   builder: (yargs: Argv) =>
     yargs

@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { fakeTrelloContext } from '../trello/trello.fake';
 import { type TrelloAction, type TrelloCard, type TrelloCommentCardActionData, type TrelloLabel } from '../trello/trello.api.card.type';
 import { type TrelloList } from '../trello/trello.api.list.type';
-import { diffTrelloBoardSnapshots, fetchTrelloBoardSnapshot, trelloCardFingerprint, type TrelloBoardSnapshot } from './trello.loop.snapshot';
+import { buildTrelloBoardSnapshot, diffTrelloBoardSnapshots, fetchTrelloBoardSnapshot, fetchTrelloBoardSnapshotWithCards, TRELLO_BOARD_SNAPSHOT_CARD_FIELDS, trelloCardFingerprint, type TrelloBoardSnapshot } from './trello.loop.snapshot';
 import { listTrelloBoardActivitySince } from './trello.loop.activity';
 import { mergeTrelloMarkdownPreservedBlocks, readTrelloMarkdownPreservedBlocks, renderTrelloCardMarkdown } from './trello.loop.render';
 import { findTrelloMentions, isTrelloActionAuthoredBy } from './trello.loop.mention';
-import { matchTrelloList, normalizeTrelloListName, resolveTrelloBoardNames } from './trello.loop.board';
+import { matchTrelloLabel, matchTrelloList, normalizeTrelloListName, resolveTrelloBoardNames } from './trello.loop.board';
 import { updateTrelloCardLabels } from './trello.loop.label';
 import { probeTrelloAuth } from './trello.loop.auth';
 
@@ -21,7 +21,27 @@ const LABELS: TrelloLabel[] = [
 ];
 
 function card(overrides: Partial<TrelloCard> & { readonly id: string }): TrelloCard {
-  return { name: overrides.id, desc: '', closed: false, idBoard: 'board-1', idList: 'list-todo', idMembers: [], idLabels: [], idChecklists: [], labels: [], pos: 1, due: null, dueComplete: false, start: null, url: `https://trello.com/c/${overrides.id}`, shortUrl: '', shortLink: `sl-${overrides.id}`, dateLastActivity: '2026-11-01T00:00:00.000Z', badges: { comments: 0 }, ...overrides };
+  return {
+    name: overrides.id,
+    desc: '',
+    closed: false,
+    idBoard: 'board-1',
+    idList: 'list-todo',
+    idMembers: [],
+    idLabels: [],
+    idChecklists: [],
+    labels: [],
+    pos: 1,
+    due: null,
+    dueComplete: false,
+    start: null,
+    url: `https://trello.com/c/${overrides.id}`,
+    shortUrl: '',
+    shortLink: `sl-${overrides.id}`,
+    dateLastActivity: '2026-11-01T00:00:00.000Z',
+    badges: { comments: 0 },
+    ...overrides
+  };
 }
 
 function comment(id: string, text: string, overrides: Partial<TrelloAction<TrelloCommentCardActionData>> = {}): TrelloAction<TrelloCommentCardActionData> {
@@ -43,6 +63,49 @@ describe('fetchTrelloBoardSnapshot()', () => {
     expect(snapshot.cards.map((c) => c.id)).toEqual(['card-a', 'card-b']);
     expect(snapshot.cards[1].idLabels).toEqual(['label-bug', 'label-ready']);
     expect(snapshot.cards[1].fingerprint).toBe(trelloCardFingerprint(card({ id: 'card-b', idLabels: ['label-bug', 'label-ready'] })));
+    expect(fake.requests.find((r) => r.path === '/boards/board-1/cards')?.query.get('fields')).toBe(TRELLO_BOARD_SNAPSHOT_CARD_FIELDS);
+  });
+
+  it('reads full cards with cardFields and returns them next to the snapshot', async () => {
+    const cards = [card({ id: 'card-a', desc: 'the description' })];
+
+    const all = fakeTrelloContext({ routes: boardRoutes(cards) });
+    const withCards = await fetchTrelloBoardSnapshotWithCards({ trelloContext: all.trelloContext, boardId: 'board-1', cardFields: 'all', now: () => new Date('2026-11-14T00:00:00.000Z') });
+    expect(all.requests).toHaveLength(3);
+    expect(all.requests.find((r) => r.path === '/boards/board-1/cards')?.query.get('fields')).toBe('all');
+    expect(withCards.cards[0].desc).toBe('the description');
+    expect(withCards.lists).toEqual(LISTS);
+    expect(withCards.labels).toEqual(LABELS);
+    expect(withCards.snapshot.cards.map((c) => c.id)).toEqual(['card-a']);
+
+    const byDefault = fakeTrelloContext({ routes: boardRoutes(cards) });
+    await fetchTrelloBoardSnapshot({ trelloContext: byDefault.trelloContext, boardId: 'board-1', cardFields: 'default' });
+    expect(byDefault.requests.find((r) => r.path === '/boards/board-1/cards')?.query.has('fields')).toBe(false);
+
+    const listed = fakeTrelloContext({ routes: boardRoutes(cards) });
+    await fetchTrelloBoardSnapshot({ trelloContext: listed.trelloContext, boardId: 'board-1', cardFields: ['desc', 'name', ' url '] });
+    expect(listed.requests.find((r) => r.path === '/boards/board-1/cards')?.query.get('fields')).toBe(`${TRELLO_BOARD_SNAPSHOT_CARD_FIELDS},desc,url`);
+  });
+});
+
+describe('buildTrelloBoardSnapshot()', () => {
+  it('builds the same snapshot as a fetch from already-read cards, without a request', async () => {
+    const cards = [card({ id: 'card-b', idLabels: ['label-ready', 'label-bug'], badges: { comments: 2 } }), card({ id: 'card-a' })];
+    const fake = fakeTrelloContext({ routes: boardRoutes(cards) });
+    const fetched = await fetchTrelloBoardSnapshot({ trelloContext: fake.trelloContext, boardId: 'board-1', now: () => new Date('2026-11-14T00:00:00.000Z') });
+    const built = buildTrelloBoardSnapshot({ boardId: 'board-1', cards, lists: LISTS, labels: LABELS, fetchedAt: new Date('2026-11-14T00:00:00.000Z') });
+
+    expect(built).toEqual(fetched);
+    expect(built.cards[1].commentCount).toBe(2);
+    expect(buildTrelloBoardSnapshot({ boardId: 'board-1', cards, lists: LISTS, labels: LABELS, fetchedAt: '2026-11-15T00:00:00.000Z', cardFilter: 'all' })).toMatchObject({ fetchedAt: '2026-11-15T00:00:00.000Z', cardFilter: 'all' });
+  });
+
+  it('appends the fingerprint version to every card', () => {
+    const cards = [card({ id: 'card-a' })];
+    const snapshot = buildTrelloBoardSnapshot({ boardId: 'board-1', cards, lists: LISTS, labels: LABELS, fetchedAt: '2026-11-14T00:00:00.000Z', fingerprintVersion: 2 });
+
+    expect(trelloCardFingerprint(cards[0], 2)).toBe(`${trelloCardFingerprint(cards[0])}|v2`);
+    expect(snapshot.cards[0].fingerprint).toBe(trelloCardFingerprint(cards[0], 2));
   });
 });
 
@@ -70,6 +133,32 @@ describe('diffTrelloBoardSnapshots()', () => {
     expect(diff.changes.find((c) => c.type === 'relabeled')).toMatchObject({ addedLabelIds: ['label-ready'], removedLabelIds: ['label-bug'] });
     expect(diff.changes.find((c) => c.type === 'renamed')).toMatchObject({ name: 'New name', previousName: 'Old name' });
     expect(diff.changes.find((c) => c.type === 'commented')?.newCommentCount).toBe(2);
+  });
+
+  it('reports updated for an activity-only change, but not alongside a move or rename', async () => {
+    const previous = await snapshotOf([card({ id: 'card-a' }), card({ id: 'card-b' }), card({ id: 'card-c' })], '2026-11-13T00:00:00.000Z');
+    const later = '2026-11-02T00:00:00.000Z';
+    const next = await snapshotOf([card({ id: 'card-a', dateLastActivity: later }), card({ id: 'card-b', dateLastActivity: later, idList: 'list-doing' }), card({ id: 'card-c', dateLastActivity: later, name: 'Renamed' })], '2026-11-14T00:00:00.000Z');
+    const diff = diffTrelloBoardSnapshots(previous, next);
+
+    expect(diff.changes.map((c) => `${c.type}:${c.cardId}`)).toEqual(['updated:card-a', 'moved:card-b', 'renamed:card-c']);
+    expect(diff.changes[0]).toEqual({ type: 'updated', cardId: 'card-a', shortLink: 'sl-card-a', name: 'card-a', previousDateLastActivity: '2026-11-01T00:00:00.000Z', dateLastActivity: later });
+  });
+
+  it('reports a comment-count decrease as uncommented', async () => {
+    const previous = await snapshotOf([card({ id: 'card-a', badges: { comments: 3 } })], '2026-11-13T00:00:00.000Z');
+    const next = await snapshotOf([card({ id: 'card-a', badges: { comments: 1 }, dateLastActivity: '2026-11-02T00:00:00.000Z' })], '2026-11-14T00:00:00.000Z');
+
+    expect(diffTrelloBoardSnapshots(previous, next).changes).toEqual([{ type: 'uncommented', cardId: 'card-a', shortLink: 'sl-card-a', name: 'card-a', removedCommentCount: 2 }]);
+  });
+
+  it('reports every card as updated after a fingerprint version bump', async () => {
+    const cards = [card({ id: 'card-a' }), card({ id: 'card-b' })];
+    const previous = buildTrelloBoardSnapshot({ boardId: 'board-1', cards, lists: LISTS, labels: LABELS, fetchedAt: '2026-11-13T00:00:00.000Z', fingerprintVersion: 1 });
+    const next = buildTrelloBoardSnapshot({ boardId: 'board-1', cards, lists: LISTS, labels: LABELS, fetchedAt: '2026-11-14T00:00:00.000Z', fingerprintVersion: 2 });
+
+    expect(diffTrelloBoardSnapshots(previous, next).changes.map((c) => `${c.type}:${c.cardId}`)).toEqual(['updated:card-a', 'updated:card-b']);
+    expect(diffTrelloBoardSnapshots(next, next).changes).toEqual([]);
   });
 
   it('reports nothing for an unchanged board', async () => {
@@ -186,7 +275,7 @@ describe('findTrelloMentions()', () => {
     const all = findTrelloMentions({ actions, username: '@bot', exclude: bot });
 
     expect(all.mentions.map((m) => m.actionId)).toEqual(['c1', 'c4']);
-    expect(all.mentions[0]).toMatchObject({ cardId: 'card-1', authorUsername: 'human', text: 'hey @bot look' });
+    expect(all.mentions[0]).toMatchObject({ cardId: 'card-1', authorUsername: 'human', authorFullName: 'A Human', text: 'hey @bot look' });
     expect(all.newestMentionId).toBe('c4');
     expect(findTrelloMentions({ actions, username: 'bot', exclude: bot, afterActionId: 'c1' }).mentions.map((m) => m.actionId)).toEqual(['c4']);
     expect(findTrelloMentions({ actions, username: 'bot', afterActionId: 'c4' })).toEqual({ mentions: [], newestMentionId: 'c4' });
@@ -216,6 +305,67 @@ describe('board names', () => {
     expect(names.listIds).toEqual({ 'To do': 'list-todo' });
     expect(names.labelIds).toEqual({ ready: 'label-ready' });
     expect(names.missing.map((m) => `${m.kind}:${m.name}:${m.code}`)).toEqual(['list:Done:unknown_list', 'label:nope:unknown_label']);
+  });
+});
+
+describe('board name matching options', () => {
+  const UP_NEXT: TrelloList[] = [
+    { id: 'list-up-next', name: 'Up next', closed: false, idBoard: 'board-1', pos: 1 },
+    { id: 'list-up-next-old', name: 'Up next (old)', closed: false, idBoard: 'board-1', pos: 2 }
+  ];
+  const QUESTION_LABELS: TrelloLabel[] = [
+    { id: 'label-question', idBoard: 'board-1', name: 'Claude Question', color: 'purple' },
+    { id: 'label-question-2', idBoard: 'board-1', name: 'Claude Question', color: 'blue' },
+    { id: 'label-done', idBoard: 'board-1', name: 'Done', color: 'green' },
+    { id: 'label-wip-1', idBoard: 'board-1', name: 'WIP', color: 'red' },
+    { id: 'label-wip-2', idBoard: 'board-1', name: 'wip', color: 'orange' }
+  ];
+
+  it('refuses a list name several lists share by default, and takes the first with duplicates: first (validate.ts lists)', () => {
+    expect(matchTrelloList({ lists: UP_NEXT, list: 'up next' })).toMatchObject({
+      ok: false,
+      code: 'ambiguous_list',
+      candidates: [
+        { id: 'list-up-next', name: 'Up next' },
+        { id: 'list-up-next-old', name: 'Up next (old)' }
+      ]
+    });
+    expect(matchTrelloList({ lists: UP_NEXT, list: 'up next', duplicates: 'first' })).toMatchObject({ ok: true, list: { id: 'list-up-next' } });
+    expect(matchTrelloList({ lists: UP_NEXT, list: 'Done', duplicates: 'first' })).toMatchObject({ ok: false, code: 'unknown_list', candidates: [{ id: 'list-up-next' }, { id: 'list-up-next-old' }] });
+  });
+
+  it('matches labels exactly, case-sensitively and first-wins with no fallback (validate.ts labels)', () => {
+    const validate = { duplicates: 'first', caseInsensitiveFallback: false } as const;
+
+    expect(matchTrelloLabel({ labels: QUESTION_LABELS, label: 'Claude Question', ...validate })).toMatchObject({ ok: true, label: { id: 'label-question' } });
+    expect(matchTrelloLabel({ labels: QUESTION_LABELS, label: 'claude question', ...validate })).toMatchObject({ ok: false, code: 'unknown_label' });
+    expect(matchTrelloLabel({ labels: QUESTION_LABELS, label: 'done', ...validate })).toMatchObject({ ok: false, code: 'unknown_label' });
+    expect(matchTrelloLabel({ labels: QUESTION_LABELS, label: 'Done', ...validate })).toMatchObject({ ok: true, label: { id: 'label-done' } });
+  });
+
+  it('takes the first exact label match, else a unique case-insensitive one (card-target.ts labels)', () => {
+    const cardTarget = { duplicates: 'first' } as const;
+
+    expect(matchTrelloLabel({ labels: QUESTION_LABELS, label: 'Claude Question', ...cardTarget })).toMatchObject({ ok: true, label: { id: 'label-question' } });
+    expect(matchTrelloLabel({ labels: QUESTION_LABELS, label: 'claude question', ...cardTarget })).toMatchObject({ ok: false, code: 'ambiguous_label' });
+    expect(matchTrelloLabel({ labels: QUESTION_LABELS, label: 'done', ...cardTarget })).toMatchObject({ ok: true, label: { id: 'label-done' } });
+    expect(matchTrelloLabel({ labels: QUESTION_LABELS, label: 'WIP', ...cardTarget })).toMatchObject({ ok: true, label: { id: 'label-wip-1' } });
+    expect(matchTrelloLabel({ labels: QUESTION_LABELS, label: 'Wip', ...cardTarget })).toMatchObject({ ok: false, code: 'ambiguous_label', candidates: [{ id: 'label-wip-1' }, { id: 'label-wip-2' }] });
+  });
+
+  it('keeps the defaults: an exact duplicate is refused and a case-insensitive fallback applies', () => {
+    expect(matchTrelloLabel({ labels: QUESTION_LABELS, label: 'Claude Question' })).toMatchObject({ ok: false, code: 'ambiguous_label' });
+    expect(matchTrelloLabel({ labels: QUESTION_LABELS, label: 'done' })).toMatchObject({ ok: true, label: { id: 'label-done' } });
+  });
+
+  it('passes list and label options through resolveTrelloBoardNames', async () => {
+    const fake = fakeTrelloContext({ routes: { 'GET /boards/board-1/lists': UP_NEXT, 'GET /boards/board-1/labels': QUESTION_LABELS } });
+    const names = await resolveTrelloBoardNames({ trelloContext: fake.trelloContext, boardId: 'board-1', lists: ['Up next'], labels: ['Claude Question', 'claude question'], listMatch: { duplicates: 'first' }, labelMatch: { duplicates: 'first', caseInsensitiveFallback: false } });
+
+    expect(names.listIds).toEqual({ 'Up next': 'list-up-next' });
+    expect(names.labelIds).toEqual({ 'Claude Question': 'label-question' });
+    expect(names.missing.map((m) => `${m.kind}:${m.name}:${m.code}`)).toEqual(['label:claude question:unknown_label']);
+    expect(names.missing[0].candidates.map((c) => c.id)).toEqual(QUESTION_LABELS.map((l) => l.id));
   });
 });
 
@@ -253,5 +403,22 @@ describe('probeTrelloAuth()', () => {
   it('maps a 401 to TOKEN_REJECTED without throwing', async () => {
     const fake = fakeTrelloContext({ routes: { 'GET /members/me': new Response('invalid token', { status: 401 }) } });
     expect(await probeTrelloAuth({ trelloContext: fake.trelloContext })).toMatchObject({ ok: false, code: 'TOKEN_REJECTED', status: 401 });
+  });
+
+  it('maps a 429 to RATE_LIMITED', async () => {
+    const fake = fakeTrelloContext({ routes: { 'GET /members/me': () => new Response('API_TOKEN_LIMIT_EXCEEDED', { status: 429 }) } });
+    expect(await probeTrelloAuth({ trelloContext: fake.trelloContext })).toMatchObject({ ok: false, code: 'RATE_LIMITED', status: 429 });
+    expect(fake.requests).toHaveLength(1);
+  });
+
+  it('aborts the in-flight request on timeout', async () => {
+    const fake = fakeTrelloContext({ routes: { 'GET /members/me': () => new Promise(() => undefined) } });
+    const startedAt = Date.now();
+    const result = await probeTrelloAuth({ trelloContext: fake.trelloContext, timeoutMs: 50 });
+
+    expect(result).toMatchObject({ ok: false, code: 'TIMEOUT' });
+    expect(Date.now() - startedAt).toBeLessThan(2000);
+    expect(fake.requests).toHaveLength(1);
+    expect(fake.requests[0].signal.aborted).toBe(true);
   });
 });

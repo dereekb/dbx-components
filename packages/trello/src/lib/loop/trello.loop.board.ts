@@ -28,12 +28,58 @@ export function normalizeTrelloListName(name: Maybe<string>): string {
 export type TrelloBoardNameProblemCode = 'unknown_list' | 'ambiguous_list' | 'unknown_label' | 'ambiguous_label';
 
 /**
+ * A list or label a {@link TrelloBoardNameProblem} names as a candidate.
+ */
+export interface TrelloBoardNameCandidate {
+  readonly id: string;
+  readonly name: string;
+}
+
+/**
  * A failed match, with a message that names the candidates.
  */
 export interface TrelloBoardNameProblem {
   readonly ok: false;
   readonly code: TrelloBoardNameProblemCode;
   readonly message: string;
+  /**
+   * For an `ambiguous_*` problem, the lists/labels the name matched. For an `unknown_*` problem, every list/label on
+   * the board, so a caller can build its own (e.g. capped) hint.
+   */
+  readonly candidates: readonly TrelloBoardNameCandidate[];
+}
+
+/**
+ * What {@link matchTrelloList} / {@link matchTrelloLabel} do when a name matches several lists/labels:
+ *
+ * - `refuse`: report an `ambiguous_*` problem (the default).
+ * - `first`: take the first match in the order the board returned them (for lists, the leftmost).
+ */
+export type TrelloBoardNameDuplicates = 'refuse' | 'first';
+
+/**
+ * Options for {@link matchTrelloList}.
+ */
+export interface MatchTrelloListOptions {
+  /**
+   * What to do when a name matches several lists. Defaults to `refuse`.
+   */
+  readonly duplicates?: Maybe<TrelloBoardNameDuplicates>;
+}
+
+/**
+ * Options for {@link matchTrelloLabel}.
+ */
+export interface MatchTrelloLabelOptions {
+  /**
+   * What to do when a name exactly matches several labels. Defaults to `refuse`.
+   */
+  readonly duplicates?: Maybe<TrelloBoardNameDuplicates>;
+  /**
+   * Whether a name with no exact (case-sensitive) match falls back to a case-insensitive one. The fallback is a guess,
+   * so it only ever takes a unique match, whatever {@link duplicates} says. Defaults to `true`.
+   */
+  readonly caseInsensitiveFallback?: Maybe<boolean>;
 }
 
 /**
@@ -42,15 +88,27 @@ export interface TrelloBoardNameProblem {
 export type TrelloListMatch = { readonly ok: true; readonly list: TrelloList } | TrelloBoardNameProblem;
 
 /**
+ * Input for {@link matchTrelloList}.
+ */
+export interface MatchTrelloListInput extends MatchTrelloListOptions {
+  /**
+   * The board's lists.
+   */
+  readonly lists: readonly TrelloList[];
+  /**
+   * A list id or name.
+   */
+  readonly list: string;
+}
+
+/**
  * Matches a list reference against a board's lists: an exact id first, then a {@link normalizeTrelloListName} match.
- * A name that matches several lists is refused rather than guessed.
+ * A name that matches several lists is refused rather than guessed, unless `duplicates` is `first`.
  *
- * @param input - The lists and the reference.
- * @param input.lists - The board's lists.
- * @param input.list - A list id or name.
+ * @param input - The lists, the reference and the match options.
  * @returns The list, or an `unknown_list` / `ambiguous_list` problem.
  */
-export function matchTrelloList(input: { readonly lists: readonly TrelloList[]; readonly list: string }): TrelloListMatch {
+export function matchTrelloList(input: MatchTrelloListInput): TrelloListMatch {
   const { lists } = input;
   const ref = input.list.trim();
   const byId = lists.find((list) => list.id === ref);
@@ -59,12 +117,12 @@ export function matchTrelloList(input: { readonly lists: readonly TrelloList[]; 
 
   if (byId != null) {
     result = { ok: true, list: byId };
-  } else if (named.length === 1) {
+  } else if (named.length === 1 || (named.length > 1 && input.duplicates === 'first')) {
     result = { ok: true, list: named[0] };
   } else if (named.length > 1) {
-    result = { ok: false, code: 'ambiguous_list', message: `"${ref}" matches ${named.length} lists: ${named.map((list) => `"${list.name}" (${list.id})`).join(', ')}. Pass the list id instead.` };
+    result = { ok: false, code: 'ambiguous_list', message: `"${ref}" matches ${named.length} lists: ${named.map((list) => `"${list.name}" (${list.id})`).join(', ')}. Pass the list id instead.`, candidates: named.map(trelloBoardNameCandidate) };
   } else {
-    result = { ok: false, code: 'unknown_list', message: `No list "${ref}" on the board. Lists: ${lists.map((list) => `"${list.name}"`).join(', ') || '(none)'}.` };
+    result = { ok: false, code: 'unknown_list', message: `No list "${ref}" on the board. Lists: ${lists.map((list) => `"${list.name}"`).join(', ') || '(none)'}.`, candidates: lists.map(trelloBoardNameCandidate) };
   }
 
   return result;
@@ -76,33 +134,51 @@ export function matchTrelloList(input: { readonly lists: readonly TrelloList[]; 
 export type TrelloLabelMatch = { readonly ok: true; readonly label: TrelloLabel } | TrelloBoardNameProblem;
 
 /**
- * Matches a label reference against a board's labels: an exact id, then an exact name, then a case-insensitive name.
- * A name shared by several labels is refused rather than guessed.
+ * Input for {@link matchTrelloLabel}.
+ */
+export interface MatchTrelloLabelInput extends MatchTrelloLabelOptions {
+  /**
+   * The board's labels.
+   */
+  readonly labels: readonly TrelloLabel[];
+  /**
+   * A label id or name.
+   */
+  readonly label: string;
+}
+
+/**
+ * Matches a label reference against a board's labels: an exact id, then an exact name, then (unless
+ * `caseInsensitiveFallback` is `false`) a unique case-insensitive name. A name shared by several labels is refused
+ * rather than guessed, unless `duplicates` is `first`, which takes the first exact match.
  *
- * @param input - The labels and the reference.
- * @param input.labels - The board's labels.
- * @param input.label - A label id or name.
+ * @param input - The labels, the reference and the match options.
  * @returns The label, or an `unknown_label` / `ambiguous_label` problem.
  */
-export function matchTrelloLabel(input: { readonly labels: readonly TrelloLabel[]; readonly label: string }): TrelloLabelMatch {
+export function matchTrelloLabel(input: MatchTrelloLabelInput): TrelloLabelMatch {
   const { labels } = input;
   const ref = input.label.trim();
   const byId = labels.find((label) => label.id === ref);
   const exact = labels.filter((label) => label.name === ref);
-  const named = exact.length > 0 ? exact : labels.filter((label) => label.name.toLowerCase() === ref.toLowerCase());
+  const insensitive = exact.length === 0 && input.caseInsensitiveFallback !== false ? labels.filter((label) => label.name.toLowerCase() === ref.toLowerCase()) : [];
+  const named = exact.length > 0 ? exact : insensitive;
   let result: TrelloLabelMatch;
 
   if (byId != null) {
     result = { ok: true, label: byId };
-  } else if (named.length === 1) {
+  } else if (named.length === 1 || (exact.length > 1 && input.duplicates === 'first')) {
     result = { ok: true, label: named[0] };
   } else if (named.length > 1) {
-    result = { ok: false, code: 'ambiguous_label', message: `"${ref}" matches ${named.length} labels: ${named.map((label) => `${label.color ?? 'no color'} (${label.id})`).join(', ')}. Pass the label id instead.` };
+    result = { ok: false, code: 'ambiguous_label', message: `"${ref}" matches ${named.length} labels: ${named.map((label) => `${label.color ?? 'no color'} (${label.id})`).join(', ')}. Pass the label id instead.`, candidates: named.map(trelloBoardNameCandidate) };
   } else {
-    result = { ok: false, code: 'unknown_label', message: `No label "${ref}" on the board. Labels: ${labels.map((label) => `"${label.name}"`).join(', ') || '(none)'}.` };
+    result = { ok: false, code: 'unknown_label', message: `No label "${ref}" on the board. Labels: ${labels.map((label) => `"${label.name}"`).join(', ') || '(none)'}.`, candidates: labels.map(trelloBoardNameCandidate) };
   }
 
   return result;
+}
+
+function trelloBoardNameCandidate(item: TrelloList | TrelloLabel): TrelloBoardNameCandidate {
+  return { id: item.id, name: item.name };
 }
 
 /**
@@ -118,6 +194,14 @@ export interface ResolveTrelloBoardNamesInput extends TrelloContextRef {
    * Label names (or ids) the caller's config refers to.
    */
   readonly labels?: Maybe<readonly string[]>;
+  /**
+   * How list names are matched. Defaults to refusing a name several lists share.
+   */
+  readonly listMatch?: Maybe<MatchTrelloListOptions>;
+  /**
+   * How label names are matched. Defaults to refusing a name several labels share, with a case-insensitive fallback.
+   */
+  readonly labelMatch?: Maybe<MatchTrelloLabelOptions>;
 }
 
 /**
@@ -128,6 +212,10 @@ export interface TrelloBoardMissingName {
   readonly name: string;
   readonly code: TrelloBoardNameProblemCode;
   readonly message: string;
+  /**
+   * See {@link TrelloBoardNameProblem.candidates}.
+   */
+  readonly candidates: readonly TrelloBoardNameCandidate[];
 }
 
 /**
@@ -166,22 +254,22 @@ export async function resolveTrelloBoardNames(input: ResolveTrelloBoardNamesInpu
   const missing: TrelloBoardMissingName[] = [];
 
   for (const name of input.lists ?? []) {
-    const match = matchTrelloList({ lists, list: name });
+    const match = matchTrelloList({ ...input.listMatch, lists, list: name });
 
     if (match.ok) {
       listIds[name] = match.list.id;
     } else {
-      missing.push({ kind: 'list', name, code: match.code, message: match.message });
+      missing.push({ kind: 'list', name, code: match.code, message: match.message, candidates: match.candidates });
     }
   }
 
   for (const name of input.labels ?? []) {
-    const match = matchTrelloLabel({ labels, label: name });
+    const match = matchTrelloLabel({ ...input.labelMatch, labels, label: name });
 
     if (match.ok) {
       labelIds[name] = match.label.id;
     } else {
-      missing.push({ kind: 'label', name, code: match.code, message: match.message });
+      missing.push({ kind: 'label', name, code: match.code, message: match.message, candidates: match.candidates });
     }
   }
 

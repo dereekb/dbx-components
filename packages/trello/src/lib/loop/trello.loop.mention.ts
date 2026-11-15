@@ -44,6 +44,10 @@ export interface TrelloMention {
   readonly date: string;
   readonly authorId: TrelloMemberId;
   readonly authorUsername: Maybe<string>;
+  /**
+   * The author's full name (`memberCreator.fullName`), when Trello included it.
+   */
+  readonly authorFullName: Maybe<string>;
   readonly text: string;
 }
 
@@ -123,7 +127,7 @@ export function findTrelloMentions(input: FindTrelloMentionsInput): FindTrelloMe
       const isNew = afterActionId == null || action.id > afterActionId;
 
       if (action.type === 'commentCard' && isNew && text.length > 0 && pattern.test(text) && !(exclude != null && isTrelloActionAuthoredBy(action, exclude))) {
-        mentions.push({ actionId: action.id, cardId: data?.card?.id ?? null, date: action.date, authorId: action.idMemberCreator, authorUsername: action.memberCreator?.username ?? null, text });
+        mentions.push({ actionId: action.id, cardId: data?.card?.id ?? null, date: action.date, authorId: action.idMemberCreator, authorUsername: action.memberCreator?.username ?? null, authorFullName: action.memberCreator?.fullName ?? null, text });
         newestMentionId = action.id;
       }
     }

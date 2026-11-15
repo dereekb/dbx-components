@@ -5,7 +5,7 @@ import { type TrelloContextRef } from '../trello/trello.factory';
 import { listBoardLabels } from '../trello/trello.api.board';
 import { addLabelToCard, getCard, removeLabelFromCard } from '../trello/trello.api.card';
 import { type TrelloLabel } from '../trello/trello.api.card.type';
-import { matchTrelloLabel, type TrelloBoardMissingName } from './trello.loop.board';
+import { matchTrelloLabel, type MatchTrelloLabelOptions, type TrelloBoardMissingName } from './trello.loop.board';
 
 /**
  * Input for {@link updateTrelloCardLabels}.
@@ -35,6 +35,10 @@ export interface UpdateTrelloCardLabelsInput extends TrelloContextRef {
    * The card's board, used to read its labels when `boardLabels` is not passed. Read from the card otherwise.
    */
   readonly boardId?: Maybe<TrelloBoardId>;
+  /**
+   * How label names are matched. Defaults to {@link matchTrelloLabel}'s defaults.
+   */
+  readonly labelMatch?: Maybe<MatchTrelloLabelOptions>;
 }
 
 /**
@@ -83,12 +87,12 @@ export async function updateTrelloCardLabels(input: UpdateTrelloCardLabelsInput)
     const labels: TrelloLabel[] = [];
 
     for (const ref of refs ?? []) {
-      const match = matchTrelloLabel({ labels: boardLabels, label: ref });
+      const match = matchTrelloLabel({ ...input.labelMatch, labels: boardLabels, label: ref });
 
       if (match.ok) {
         labels.push(match.label);
       } else {
-        unresolved.push({ kind: 'label', name: ref, code: match.code, message: match.message });
+        unresolved.push({ kind: 'label', name: ref, code: match.code, message: match.message, candidates: match.candidates });
       }
     }
 

@@ -48,6 +48,13 @@ export interface TrelloFactoryConfig {
    */
   readonly rateLimiterConfig?: Maybe<TrelloRateLimitedFetchHandlerConfig>;
   /**
+   * Whether requests go through the rate limiter: its waits and its one retry of a 429. Defaults to `true`.
+   *
+   * Pass `false` for a test transport (see `fakeTrelloContext`), so a busy spec is not throttled and a 429 route
+   * answers once. The context still exposes a `trelloRateLimiter`; nothing waits on it.
+   */
+  readonly rateLimit?: Maybe<boolean>;
+  /**
    * Optional custom error logger.
    */
   readonly logTrelloServerErrorFunction?: LogTrelloServerErrorFunction;
@@ -82,7 +89,8 @@ export type TrelloFactory = (config: TrelloConfig) => Trello;
  */
 export function trelloFactory(factoryConfig: TrelloFactoryConfig = {}): TrelloFactory {
   const { logTrelloServerErrorFunction, fetchHandler: innerFetchHandler } = factoryConfig;
-  const fetchHandler = trelloRateLimitedFetchHandler(factoryConfig.rateLimiterConfig);
+  const rateLimitedFetchHandler = trelloRateLimitedFetchHandler(factoryConfig.rateLimiterConfig);
+  const fetchHandler: Maybe<FetchHandler> = factoryConfig.rateLimit === false ? undefined : rateLimitedFetchHandler;
 
   // the inner handler replaces the network call itself, UNDER the rate limiter and the ok-check, so a
   // spec intercepting requests sees exactly what would have been sent and its responses are handled
@@ -131,7 +139,7 @@ export function trelloFactory(factoryConfig: TrelloFactoryConfig = {}): TrelloFa
           Authorization: await authorizationHeader()
         }
       }),
-      fetchHandler,
+      ...(fetchHandler ? { fetchHandler } : undefined),
       ...(makeFetch ? { makeFetch } : undefined),
       timeout: 20 * 1000,
       requireOkResponse: true,
@@ -168,7 +176,7 @@ export function trelloFactory(factoryConfig: TrelloFactoryConfig = {}): TrelloFa
       fetch,
       fetchJson: fetchJsonInst,
       config,
-      trelloRateLimiter: fetchHandler._rateLimiter
+      trelloRateLimiter: rateLimitedFetchHandler._rateLimiter
     };
 
     const trello: Trello = {
