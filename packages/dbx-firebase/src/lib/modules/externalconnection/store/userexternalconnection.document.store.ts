@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { type UserExternalConnection, type UserExternalConnectionDocument, type UserExternalConnectionFirestoreCollection, type UserExternalConnectionFirestoreCollections, UserExternalConnectionFunctions } from '@dereekb/firebase';
-import { AbstractDbxFirebaseDocumentStore, firebaseDocumentStoreCreateFunction, firebaseDocumentStoreUpdateFunction } from '../../../model/modules/store';
+import { AbstractDbxFirebaseDocumentStore, firebaseDocumentStoreCreateFunction, firebaseDocumentStoreCrudFunction } from '../../../model/modules/store';
 
 /**
  * Injection token for the app's UserExternalConnection collection.
@@ -37,12 +37,17 @@ export class UserExternalConnectionDocumentStore extends AbstractDbxFirebaseDocu
 
   /**
    * Disconnects the user from a provider's DATA connection. The provider's login link is retained.
+   *
+   * Not a `firebaseDocumentStoreUpdateFunction`: that injects the store's key, and the UserExternalConnection calls
+   * take none (the server acts on the caller's own document, from their auth, and refuses a `key`).
    */
-  readonly disconnectUserExternalConnection = firebaseDocumentStoreUpdateFunction(this, this.userExternalConnectionFunctions.userExternalConnection.updateUserExternalConnection.disconnect);
+  readonly disconnectUserExternalConnection = firebaseDocumentStoreCrudFunction(this.userExternalConnectionFunctions.userExternalConnection.updateUserExternalConnection.disconnect);
 
   /**
    * Removes a provider as a login method. Strictly more than a disconnect — it takes the data
    * connection and its credentials with it.
+   *
+   * Sends no key, like {@link disconnectUserExternalConnection}.
    */
-  readonly unlinkUserExternalConnectionLogin = firebaseDocumentStoreUpdateFunction(this, this.userExternalConnectionFunctions.userExternalConnection.updateUserExternalConnection.unlink);
+  readonly unlinkUserExternalConnectionLogin = firebaseDocumentStoreCrudFunction(this.userExternalConnectionFunctions.userExternalConnection.updateUserExternalConnection.unlink);
 }

@@ -1,5 +1,6 @@
 import { demoCallModel } from './../model/crud.functions';
 import {
+  firestoreModelKey,
   MICROSOFT_MAIL_SIGNATURE_MAX_VALUE_BYTES,
   MICROSOFT_MAIL_SIGNATURE_USER_EXTERNAL_CONNECTION_DATA_TYPE as MAIL_SIGNATURE,
   type ReadUserExternalConnectionDataParams,
@@ -415,6 +416,67 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             expect(read.items.some((x) => x.providerType === MICROSOFT)).toBe(false);
             expect(read.dataTypes.some((x) => x.providerType === MICROSOFT)).toBe(false);
             expect(JSON.stringify(read)).not.toContain(SENTINEL);
+          });
+        });
+      });
+    });
+
+    // the data callables take no target key: they act on the caller's own /uec document, from their auth. Most model
+    // callables let an admin target another user's document by key; these refuse any key, so an admin cannot read or
+    // overwrite someone else's connection data
+    describe("another user's data", () => {
+      demoAuthorizedUserContext({ f }, (owner) => {
+        demoUserExternalConnectionContext({ f, u: owner, createIfNeeded: true }, (ownerUec) => {
+          demoAuthorizedUserAdminContext({ f }, (admin) => {
+            demoUserExternalConnectionContext({ f, u: admin, createIfNeeded: true }, (adminUec) => {
+              const { readData, updateData } = dataCallables(admin);
+              const ownerKey = () => firestoreModelKey(userExternalConnectionIdentity, owner.uid);
+
+              beforeEach(async () => {
+                await ownerUec.updateUserExternalConnectionData({ providerType: MICROSOFT, set: [signatureSet(ME, SENTINEL)] });
+              });
+
+              it("should refuse an admin reading another user's data by key", async () => {
+                const rejected = await rejectedCall(() => readData({ key: ownerKey(), providerType: MICROSOFT } as unknown as ReadUserExternalConnectionDataParams));
+
+                expect(rejected.code).toBe(FIREBASE_SERVER_VALIDATION_ERROR_CODE);
+                expect(rejected.shown).not.toContain(SENTINEL);
+              });
+
+              it("should refuse an admin writing another user's data by key, leaving both users' data untouched", async () => {
+                const rejected = await rejectedCall(() => updateData({ key: ownerKey(), providerType: MICROSOFT, clear: true } as unknown as UpdateUserExternalConnectionDataParams));
+
+                expect(rejected.code).toBe(FIREBASE_SERVER_VALIDATION_ERROR_CODE);
+
+                const ownerData = await f.instance.userExternalConnectionServerActions.readUserExternalConnectionProviderData({ uid: owner.uid, providerType: MICROSOFT });
+                expect(ownerData[MAIL_SIGNATURE]?.[ME]).toEqual({ html: SENTINEL });
+                expect(await dataDocument(admin.uid).snapshotData()).toBeUndefined();
+              });
+
+              it("should refuse a key even when it is the caller's own, since the call takes none", async () => {
+                const ownKey = firestoreModelKey(userExternalConnectionIdentity, admin.uid);
+                const rejected = await rejectedCall(() => readData({ key: ownKey, providerType: MICROSOFT } as unknown as ReadUserExternalConnectionDataParams));
+
+                expect(rejected.code).toBe(FIREBASE_SERVER_VALIDATION_ERROR_CODE);
+              });
+
+              it('should refuse a key in the action itself, so a relaxed callModel validation mode cannot let one through', async () => {
+                const rejected = await rejectedCall(() => adminUec.updateUserExternalConnectionData({ key: ownerKey(), providerType: MICROSOFT, clear: true } as unknown as UpdateUserExternalConnectionDataParams));
+
+                expect(rejected.code).toBe(FIREBASE_SERVER_VALIDATION_ERROR_CODE);
+              });
+
+              it("should act on the caller's own data only, never the other user's", async () => {
+                const updated = await updateData({ providerType: MICROSOFT, set: [signatureSet(ME, '<p>Mine</p>')] });
+
+                expect(updated.items.length).toBe(1);
+
+                const read = await readData({ providerType: MICROSOFT });
+
+                expect(read.data?.[MICROSOFT]?.[MAIL_SIGNATURE]?.[ME]).toEqual({ html: '<p>Mine</p>' });
+                expect(JSON.stringify(read)).not.toContain(SENTINEL);
+              });
+            });
           });
         });
       });

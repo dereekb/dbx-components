@@ -17,9 +17,8 @@ import { type DemoReadModelFunction } from '../function.context';
  * the one place the check is needed — every later step of the handoff is bound to the state minted
  * here — and it covers both modes.
  *
- * The state is always minted for the caller's own document: it is keyed by uid, so the key is built
- * here rather than taken from `key` (which the client's document store injects, but which cannot name
- * anything else the caller could act on). The `connect` role is asserted against that document, which
+ * The state is always minted for the caller's own document, built here from their uid: the params take no
+ * `key`, and one sent anyway fails validation, admins included. The `connect` role is asserted against that document, which
  * therefore has to exist — a user creates it before connecting anything.
  *
  * A `connect` may name a `scopePreset` ("Read" / "Read + Write"). It is checked against the mounted

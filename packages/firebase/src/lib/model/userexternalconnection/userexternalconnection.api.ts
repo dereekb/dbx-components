@@ -1,6 +1,5 @@
 import { type, type Type } from 'arktype';
 import { type Maybe } from '@dereekb/util';
-import { type InferredTargetModelParams, inferredTargetModelParamsType } from '../../common/model/model/model.param';
 import { callModelFirebaseFunctionMapFactory, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCreateFunction, type ModelFirebaseCrudFunction, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap } from '../../client';
 import { type UserExternalConnectionTypes } from './userexternalconnection';
 import { type UserExternalConnectionProviderType } from './userexternalconnection.id';
@@ -14,11 +13,23 @@ import { type UserExternalConnectionDataItemKey, type UserExternalConnectionData
  * Deliberately empty: the document is keyed by uid, so there is nothing to target and nothing to
  * seed it with — providers arrive one at a time through the OAuth flow, never at creation.
  *
+ *
+ * Always the caller's own connection, resolved from their auth. There is no target `key`, so no caller, an admin
+ * included, can act on another user's connection; a `key` sent anyway is refused.
+ *
  * @dbxModelApiParams
  */
 export interface CreateUserExternalConnectionParams {}
 
-export const createUserExternalConnectionParamsType = /* @__PURE__ */ type({}) as Type<CreateUserExternalConnectionParams>;
+/**
+ * Base ArkType for every UserExternalConnection call's params. None of the calls takes a target `key`: each one acts on
+ * the caller's own document, resolved from their auth. A `key` is refused ("key must be undefined") instead of silently
+ * ignored, so a caller who meant another user (an admin, say) learns that the call cannot do that. The callModel
+ * dispatch and the server action's own transform both apply it.
+ */
+const userExternalConnectionCallerParamsType = /* @__PURE__ */ type({ 'key?': 'undefined' });
+
+export const createUserExternalConnectionParamsType = /* @__PURE__ */ userExternalConnectionCallerParamsType as Type<CreateUserExternalConnectionParams>;
 
 // MARK: Update
 /**
@@ -27,18 +38,19 @@ export const createUserExternalConnectionParamsType = /* @__PURE__ */ type({}) a
  * This is the ONLY write path a client has to the connection pair. There is deliberately no connect
  * or update params type here: connecting requires credentials, which only the server ever sees.
  *
- * If no target model is provided, the current user's connection document is assumed.
+ * Always the caller's own connection, resolved from their auth. There is no target `key`, so no caller, an admin
+ * included, can act on another user's connection; a `key` sent anyway is refused.
  *
  * @dbxModelApiParams
  */
-export interface DisconnectUserExternalConnectionParams extends InferredTargetModelParams {
+export interface DisconnectUserExternalConnectionParams {
   /**
    * The provider type to disconnect from.
    */
   readonly providerType: UserExternalConnectionProviderType;
 }
 
-export const disconnectUserExternalConnectionParamsType = /* @__PURE__ */ inferredTargetModelParamsType.merge(
+export const disconnectUserExternalConnectionParamsType = /* @__PURE__ */ userExternalConnectionCallerParamsType.merge(
   type({
     providerType: 'string'
   })
@@ -48,9 +60,12 @@ export const disconnectUserExternalConnectionParamsType = /* @__PURE__ */ inferr
 /**
  * Parameters for beginning an OAuth connect handoff for a provider.
  *
+ * Always the caller's own connection, resolved from their auth. There is no target `key`, so no caller, an admin
+ * included, can act on another user's connection; a `key` sent anyway is refused.
+ *
  * @dbxModelApiParams
  */
-export interface ReadUserExternalConnectionAuthorizeStateParams extends InferredTargetModelParams {
+export interface ReadUserExternalConnectionAuthorizeStateParams {
   /**
    * The provider type to begin connecting to.
    */
@@ -76,7 +91,7 @@ export interface ReadUserExternalConnectionAuthorizeStateParams extends Inferred
   readonly scopePreset?: Maybe<UserExternalConnectionScopePresetKey>;
 }
 
-export const readUserExternalConnectionAuthorizeStateParamsType = /* @__PURE__ */ inferredTargetModelParamsType.merge(
+export const readUserExternalConnectionAuthorizeStateParamsType = /* @__PURE__ */ userExternalConnectionCallerParamsType.merge(
   type({
     providerType: 'string',
     'mode?': "'connect' | 'link'",
@@ -93,18 +108,19 @@ export const readUserExternalConnectionAuthorizeStateParamsType = /* @__PURE__ *
  * link AND the data connection and its credentials. "Stop using my Discord token" and "Discord is no
  * longer how I log in" are different requests, so they are different calls.
  *
- * If no target model is provided, the current user's connection document is assumed.
+ * Always the caller's own connection, resolved from their auth. There is no target `key`, so no caller, an admin
+ * included, can act on another user's connection; a `key` sent anyway is refused.
  *
  * @dbxModelApiParams
  */
-export interface UnlinkUserExternalConnectionLoginParams extends InferredTargetModelParams {
+export interface UnlinkUserExternalConnectionLoginParams {
   /**
    * The provider type to unlink.
    */
   readonly providerType: UserExternalConnectionProviderType;
 }
 
-export const unlinkUserExternalConnectionLoginParamsType = /* @__PURE__ */ inferredTargetModelParamsType.merge(
+export const unlinkUserExternalConnectionLoginParamsType = /* @__PURE__ */ userExternalConnectionCallerParamsType.merge(
   type({
     providerType: 'string'
   })
@@ -114,11 +130,13 @@ export const unlinkUserExternalConnectionLoginParamsType = /* @__PURE__ */ infer
 /**
  * Parameters for reading the calling user's stored connection data (`UserExternalConnectionData`).
  *
- * Always reads the caller's own data. Every filter is optional: omit them all to read everything the caller may use.
+ * Always reads the caller's own data, resolved from their auth. There is no target `key`, so no caller, an admin
+ * included, can read another user's data; a `key` sent anyway is refused by {@link readUserExternalConnectionDataParamsType}.
+ * Every filter is optional: omit them all to read everything the caller may use.
  *
  * @dbxModelApiParams
  */
-export interface ReadUserExternalConnectionDataParams extends InferredTargetModelParams {
+export interface ReadUserExternalConnectionDataParams {
   /**
    * Only this provider's data. Omit for every provider the caller may use.
    */
@@ -137,7 +155,7 @@ export interface ReadUserExternalConnectionDataParams extends InferredTargetMode
   readonly keysOnly?: Maybe<boolean>;
 }
 
-export const readUserExternalConnectionDataParamsType = /* @__PURE__ */ inferredTargetModelParamsType.merge(
+export const readUserExternalConnectionDataParamsType = /* @__PURE__ */ userExternalConnectionCallerParamsType.merge(
   type({
     'providerType?': 'string',
     'dataType?': 'string',
@@ -189,9 +207,12 @@ export interface UserExternalConnectionDataUnsetOperation {
  *
  * Applies `clear`, then every `unset`, then every `set`, in one transaction.
  *
+ * Always changes the caller's own data, resolved from their auth. There is no target `key`, so no caller, an admin
+ * included, can change another user's data; a `key` sent anyway is refused by {@link updateUserExternalConnectionDataParamsType}.
+ *
  * @dbxModelApiParams
  */
-export interface UpdateUserExternalConnectionDataParams extends InferredTargetModelParams {
+export interface UpdateUserExternalConnectionDataParams {
   /**
    * The provider whose data to change, e.g. `microsoft`.
    */
@@ -211,7 +232,7 @@ export interface UpdateUserExternalConnectionDataParams extends InferredTargetMo
   readonly clear?: Maybe<boolean>;
 }
 
-export const updateUserExternalConnectionDataParamsType = /* @__PURE__ */ inferredTargetModelParamsType.merge(
+export const updateUserExternalConnectionDataParamsType = /* @__PURE__ */ userExternalConnectionCallerParamsType.merge(
   type({
     providerType: 'string',
     'set?': type({ dataType: 'string', itemKey: 'string', value: 'Record<string, unknown>' }).array(),

@@ -39,15 +39,16 @@ function isProviderConnectableFunction(input: Omit<Parameters<typeof assertUserE
  * Reads the caller's own stored connection data (`UserExternalConnectionData`), decrypted server-side, plus the data
  * types the caller may store.
  *
- * Always the caller's own uid: `key` is ignored, as in every UserExternalConnection callable. A named provider must be
- * connectable by the caller; with no provider named, the result is filtered to the providers that are. The `data` role
- * is asserted on the caller's `/uec` document, which therefore has to exist.
+ * Always the caller's own uid, from their auth: the params take no `key`, and one sent anyway fails validation, admins
+ * included. A named provider must be connectable by the caller; with no provider named, the result is filtered to the
+ * providers that are. The `data` role is asserted on the caller's `/uec` document, which therefore has to exist.
  */
 export const userExternalConnectionReadData: DemoReadModelFunction<ReadUserExternalConnectionDataParams, ReadUserExternalConnectionDataResult> = withApiDetails({
   inputType: readUserExternalConnectionDataParamsType,
   mcp: { readOnly: true },
   fn: async (request) => {
     const { nest, data, auth } = request;
+    const key = firestoreModelKey(userExternalConnectionIdentity, auth.uid);
     const connectable = { oauthRegistry: nest.userExternalConnectionOAuthRegistry, policyRegistry: nest.userExternalConnectionProviderPolicyRegistry, isAdmin: isAdminInRequest(request) };
 
     if (data.providerType != null) {
@@ -58,7 +59,7 @@ export const userExternalConnectionReadData: DemoReadModelFunction<ReadUserExter
 
     return nest.useModel('userExternalConnection', {
       request,
-      key: firestoreModelKey(userExternalConnectionIdentity, auth.uid),
+      key,
       roles: 'data',
       use: (x) => readUserExternalConnectionData({ userExternalConnectionDocument: x.document, isProviderAllowed: isProviderConnectableFunction(connectable) })
     });
@@ -67,6 +68,9 @@ export const userExternalConnectionReadData: DemoReadModelFunction<ReadUserExter
 
 /**
  * Saves or removes the caller's own stored connection data for one provider, encrypted at rest.
+ *
+ * Always the caller's own uid, from their auth: the params take no `key`, and one sent anyway fails validation, admins
+ * included.
  *
  * A `set` is a reversible preference, so it stays on the write surface; `unset` and `clear` escalate to destructive.
  * Every value is validated against the data type the demo registered (`DEMO_USER_EXTERNAL_CONNECTION_DATA_TYPES`).
@@ -79,6 +83,7 @@ export const userExternalConnectionUpdateData: DemoUpdateModelFunction<UpdateUse
   },
   fn: async (request) => {
     const { nest, data, auth } = request;
+    const key = firestoreModelKey(userExternalConnectionIdentity, auth.uid);
 
     assertUserExternalConnectionProviderConnectable({
       oauthRegistry: nest.userExternalConnectionOAuthRegistry,
@@ -91,7 +96,7 @@ export const userExternalConnectionUpdateData: DemoUpdateModelFunction<UpdateUse
 
     return nest.useModel('userExternalConnection', {
       request,
-      key: firestoreModelKey(userExternalConnectionIdentity, auth.uid),
+      key,
       roles: 'data',
       use: (x) => updateUserExternalConnectionData(x.document)
     });

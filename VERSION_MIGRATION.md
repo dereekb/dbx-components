@@ -25,7 +25,8 @@
 - **Model API specifiers on `userExternalConnection`**: `read:data` (`ReadUserExternalConnectionDataParams`: optional
   `providerType` / `dataType` / `itemKey` / `keysOnly`; returns `data`, keys-only `items` and the `dataTypes` the caller
   may store) and `update:data` (`UpdateUserExternalConnectionDataParams`: `clear`, then `unset`, then `set`, in one
-  transaction). Both act on the caller's own uid only, assert the new `data` role on the caller's `/uec` document, and
+  transaction). Both act on the caller's own uid only, with no target `key` (see Adopt). They assert the new `data`
+  role on the caller's `/uec` document, and
   apply the provider's connect policy (an `adminOnly` provider needs an admin). On MCP, `read:data` is a read method and
   `update:data` a write method whose `unset` / `clear` escalate to destructive.
 - **Error codes** (`@dereekb/firebase`): `USER_EXTERNAL_CONNECTION_DATA_TYPE_NOT_ALLOWED_ERROR`,
@@ -57,13 +58,19 @@
   `<App>UserExternalConnectionDataTypings` interface beside it.
 - Pass `dataTypes` (and optionally `dataLimits`) to the app's `UserExternalConnectionModule` config.
 - Add `read:data` / `update:data` handlers (see `apps/demo-api/src/app/function/userexternalconnection/userexternalconnection.data.ts`)
-  to the CRUD map's `userExternalConnection` read and update specifier handlers, and a
-  `userExternalConnectionDataActions` getter to the function context. Grant the `data` role to the owner in the
-  `userExternalConnection` role map (a full-access owner map already includes it).
+  to the CRUD map's `userExternalConnection` read and update specifier handlers. They call the data actions on the
+  existing `userExternalConnectionActions` getter (`UserExternalConnectionServerActions`). Grant the `data` role to the
+  owner in the `userExternalConnection` role map (a full-access owner map already includes it).
 - In the app CLI, pass `externalConnectionData: { dataTypes, adapters }` to `runCli`, then regenerate the API and MCP
   manifests.
 - Nothing is required of an app that does not register data types: with no `dataTypes` the registry is empty and every
   write is refused.
+- **No UserExternalConnection call takes a target `key` any more** (create, `read:authorizeState`, `update:disconnect`,
+  `update:unlink`, `read:data`, `update:data`). Each acts on the caller's own document, from their auth, and a `key`
+  sent anyway fails validation (`VALIDATION_ERROR`, "key must be undefined"), admins included. The params types no
+  longer extend `InferredTargetModelParams`. `UserExternalConnectionDocumentStore` no longer sends the key. Client code
+  that calls `disconnect` / `unlink` through `firebaseDocumentStoreUpdateFunction` (which injects the store's key) must
+  call the function directly instead, e.g. with `firebaseDocumentStoreCrudFunction`.
 
 ## Migration to v14.26.x — external connection scope presets + token scope ceilings
 

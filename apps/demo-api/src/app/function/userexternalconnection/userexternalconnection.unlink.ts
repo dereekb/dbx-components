@@ -12,8 +12,8 @@ import { type DemoUpdateModelFunction } from '../function.context';
  *
  * Refused server-side when it would leave the account with no way to sign back in.
  *
- * The target is always the caller's own pair, for the same reason the disconnect's is: the document is
- * keyed by uid, so the key is built here rather than taken from `key`.
+ * The target is always the caller's own pair, built here from their uid: the params take no `key`, and one
+ * sent anyway fails validation, admins included.
  */
 export const userExternalConnectionUpdateUnlink: DemoUpdateModelFunction<UnlinkUserExternalConnectionLoginParams> = withApiDetails({
   inputType: unlinkUserExternalConnectionLoginParamsType,
