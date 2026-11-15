@@ -1,9 +1,8 @@
 import { CliError } from '@dereekb/dbx-cli';
-import { type MicrosoftGraphChat, type MicrosoftGraphItemBody, MICROSOFT_GRAPH_TEAMS_SEND_MIN_INTERVAL_MS, MicrosoftGraphError } from '@dereekb/microsoft';
+import { type MicrosoftGraphChat, type MicrosoftGraphItemBody, MICROSOFT_GRAPH_TEAMS_SEND_MIN_INTERVAL_MS } from '@dereekb/microsoft';
 import { type Maybe, type Milliseconds, waitForMs } from '@dereekb/util';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { MSGRAPH_CLI_NAME } from '../config/cli.config';
 import { isMsGraphCliHtmlFile } from './mail.write';
 
 /**
@@ -57,42 +56,6 @@ export async function awaitMsGraphCliTeamsSendSlot(config: MsGraphCliTeamsSendGa
   await mkdir(config.configDir, { recursive: true, mode: 0o700 });
   await writeFile(path, JSON.stringify({ lastSendAt: now() }), { mode: 0o600 });
   return waited;
-}
-
-/**
- * Turns the 403 of an admin-consent-only Teams call into a `SCOPE_DENIED` that explains no standard preset grants the scope.
- *
- * @param error - The thrown value.
- * @param scope - The admin-consent scope the call needs.
- * @returns The mapped error, or the original when it is not a 403.
- */
-export function msGraphCliTeamsAdminScopeError(error: unknown, scope: string): unknown {
-  let result = error;
-
-  if (error instanceof MicrosoftGraphError && error.status === 403) {
-    result = new CliError({
-      message: error.message,
-      code: 'SCOPE_DENIED',
-      suggestion: `This call needs ${scope}, which needs admin consent. Neither standard preset (Read, Read + Write) grants it, so the call only works through a token source whose connection a tenant admin consented with ${scope} for the organization. Compare the token's scopes with: ${MSGRAPH_CLI_NAME} auth show`
-    });
-  }
-
-  return result;
-}
-
-/**
- * Runs an admin-consent-only call, mapping its 403 to the Admin-preset suggestion.
- *
- * @param scope - The admin-consent scope the call needs.
- * @param run - The call.
- * @returns The call's result.
- */
-export async function runMsGraphCliTeamsAdminCall<T>(scope: string, run: () => Promise<T>): Promise<T> {
-  try {
-    return await run();
-  } catch (e) {
-    throw msGraphCliTeamsAdminScopeError(e, scope);
-  }
 }
 
 /**

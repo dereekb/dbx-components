@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CliError, DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR, buildErrorOutput, configureOutputOptions, sanitizeString } from '@dereekb/dbx-cli';
@@ -18,6 +18,7 @@ import { MAIL_MAILBOXES_CHECK_COMMAND } from './commands/mail.mailboxes.command'
 import { CALENDAR_CREATE_COMMAND, CALENDAR_DELETE_COMMAND } from './commands/calendar.command';
 import { FILES_DELETE_COMMAND, FILES_MOVE_COMMAND, FILES_UPLOAD_COMMAND } from './commands/files.command';
 import { MAIL_AUTO_REPLY_OFF_COMMAND, MAIL_AUTO_REPLY_RESTORE_COMMAND } from './commands/mail.auto.reply.command';
+import { TEAMS_CHAT_SEARCH_COMMAND, isMsGraphCliTeamsChatArchiveSearch } from './commands/teams.command';
 
 // what the entry point does at startup
 configureMsGraphCliOutput();
@@ -32,12 +33,13 @@ const MINTED_ACCESS_TOKEN = 'minted-graph-token';
  * @param options - The app settings the bundle carries, or a refusal instead of a bundle.
  * @param options.settings - The bundle's `settings` (the app's unpacked connection data).
  * @param options.fail - Print a refusal envelope and exit 1 instead.
+ * @param options.scopes - The bundle's scopes, instead of User.Read Mail.Read Calendars.Read.
  * @returns The command and its run log.
  */
-function fakeTokenSourceCommand(dir: string, options?: { readonly settings?: Record<string, unknown>; readonly fail?: boolean }) {
+function fakeTokenSourceCommand(dir: string, options?: { readonly settings?: Record<string, unknown>; readonly fail?: boolean; readonly scopes?: string[] }) {
   const runsPath = join(dir, 'runs.ndjson');
   const scriptPath = join(dir, `token-source${options ? '-custom' : ''}.cjs`);
-  const bundle = { uid: 'user-1', providerType: 'microsoft', accessToken: MINTED_ACCESS_TOKEN, scopes: ['User.Read', 'Mail.Read', 'Calendars.Read'], expiresAt: new Date(Date.now() + MS_IN_HOUR).toISOString(), ...(options?.settings ? { settings: options.settings } : {}) };
+  const bundle = { uid: 'user-1', providerType: 'microsoft', accessToken: MINTED_ACCESS_TOKEN, scopes: options?.scopes ?? ['User.Read', 'Mail.Read', 'Calendars.Read'], expiresAt: new Date(Date.now() + MS_IN_HOUR).toISOString(), ...(options?.settings ? { settings: options.settings } : {}) };
 
   writeFileSync(
     scriptPath,
@@ -837,6 +839,102 @@ describe('msgraph-cli', () => {
       expect(data.requests[0]).toEqual({ method: 'POST', url: '/me/drive/root:/Docs/big.bin:/createUploadSession', body: { item: { '@microsoft.graph.conflictBehavior': 'rename' } } });
       expect(data.note).toContain('1 chunk PUT(s)');
       expect(calls).toHaveLength(0);
+    });
+  });
+
+  describe('teams chat search', () => {
+    async function connect(fetchHandler: FetchHandler, scopes?: string[]) {
+      const tokenSource = scopes ? fakeTokenSourceCommand(join(dir, 'scoped'), { scopes }) : source;
+      await createMsGraphCliAuthMiddleware({ skipCommands: new Set(), env: { ...env, MSGRAPH_CLI_TOKEN_COMMAND: tokenSource.command }, graphFactoryConfig: { fetchHandler } })({ _: ['teams', 'chat', 'search'], $0: 'msgraph-cli' });
+    }
+
+    function runSearch(argv: Record<string, unknown>): Promise<void> {
+      return (TEAMS_CHAT_SEARCH_COMMAND.handler as (argv: unknown) => Promise<void>)({ _: ['teams', 'chat', 'search'], $0: 'msgraph-cli', ...argv });
+    }
+
+    function printed(log: { mock: { calls: unknown[][] } }) {
+      return JSON.parse(log.mock.calls[0][0] as string);
+    }
+
+    // the Read + Write preset's Teams scopes
+    const READ_WRITE_TEAMS_SCOPES = ['User.Read', 'Chat.Read', 'Chat.ReadWrite', 'ChannelMessage.Send'];
+
+    it('should refuse a Graph search before any Graph call when the token lacks the admin-consent scope', async () => {
+      mkdirSync(join(dir, 'scoped'));
+      const graph = interceptGraph({ status: 200, body: {} });
+      await connect(graph.fetchHandler, READ_WRITE_TEAMS_SCOPES);
+      const exit = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+      await runSearch({ query: 'budget' });
+
+      expect(exit).toHaveBeenCalledWith(1);
+      expect(graph.requests).toHaveLength(0);
+      expect(printed(log).code).toBe('ADMIN_CONSENT_REQUIRED');
+      expect(printed(log).suggestion).toContain('--dir');
+    });
+
+    it('should POST /search/query for chatMessage and page with --all-pages until no more results', async () => {
+      // models: search-concept-chat-messages — value[0].hitsContainers[0] with hits, total, moreResultsAvailable
+      mkdirSync(join(dir, 'scoped'));
+      const bodies: unknown[] = [];
+      await connect(
+        async (request: Request) => {
+          const body = (await request.json()) as { requests: { from: number }[] };
+          bodies.push(body);
+          const from = body.requests[0].from;
+          const hits = from === 0 ? [{ hitId: 'h1', summary: 'the <c0>budget</c0>', resource: { id: 'm1', chatId: '19:c' } }] : [{ hitId: 'h2', resource: { id: 'm2', chatId: '19:c' } }];
+          return new Response(JSON.stringify({ value: [{ searchTerms: ['budget'], hitsContainers: [{ hits, total: 1, moreResultsAvailable: from === 0 }] }] }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+        },
+        [...READ_WRITE_TEAMS_SCOPES, 'ChannelMessage.Read.All']
+      );
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+      await runSearch({ query: 'budget from:ada', allPages: true, top: 99 });
+
+      expect(bodies[0]).toEqual({ requests: [{ entityTypes: ['chatMessage'], query: { queryString: 'budget from:ada' }, from: 0, size: 25 }] });
+      expect(bodies).toHaveLength(2);
+      expect(printed(log).data).toEqual({ hits: [expect.objectContaining({ id: 'm1', chatId: '19:c', snippet: 'the budget' }), expect.objectContaining({ id: 'm2' })], moreResultsAvailable: false });
+    });
+
+    it('should return nextOffset when one page leaves more results', async () => {
+      mkdirSync(join(dir, 'scoped'));
+      await connect(async () => new Response(JSON.stringify({ value: [{ hitsContainers: [{ hits: [{ hitId: 'h1', resource: { id: 'm1' } }], moreResultsAvailable: true }] }] }), { status: 200, headers: { 'Content-Type': 'application/json' } }), ['ChannelMessage.Read.All']);
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+      await runSearch({ query: 'budget', offset: 25 });
+
+      expect(printed(log).data).toMatchObject({ moreResultsAvailable: true, nextOffset: 26 });
+    });
+
+    it('should refuse archive-only options on a Graph search', async () => {
+      const graph = interceptGraph({ status: 200, body: {} });
+      await connect(graph.fetchHandler);
+      const exit = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+      await runSearch({ query: 'budget', from: 'ada', since: '2026-11-01' });
+
+      expect(exit).toHaveBeenCalledWith(1);
+      expect(graph.requests).toHaveLength(0);
+      expect(printed(log).code).toBe('INVALID_ARGUMENT');
+      expect(printed(log).error).toContain('--from, --since');
+    });
+
+    it('should run an archive search (--dir) without a token source', async () => {
+      const middlewareArgv = { _: ['teams', 'chat', 'search'], $0: 'msgraph-cli', dir: join(dir, 'archive') };
+      expect(isMsGraphCliTeamsChatArchiveSearch(middlewareArgv)).toBe(true);
+      expect(isMsGraphCliTeamsChatArchiveSearch({ _: ['teams', 'chat', 'search'] })).toBe(false);
+      const exit = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+      // no MSGRAPH_CLI_TOKEN_COMMAND and no saved source: only the skip keeps NOT_CONFIGURED away
+      await createMsGraphCliAuthMiddleware({ skipCommands: new Set(), skip: isMsGraphCliTeamsChatArchiveSearch, env })(middlewareArgv);
+      expect(exit).not.toHaveBeenCalled();
+
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+      await runSearch({ query: 'x', dir: join(dir, 'archive') });
+      // an empty directory is no dump: the archive search ran (and refused it) without asking for a token
+      expect(printed(log).code).toBe('INVALID_ARGUMENT');
+      expect(printed(log).error).toContain('holds no teams chat dump');
     });
   });
 

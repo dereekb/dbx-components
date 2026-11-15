@@ -6,8 +6,8 @@ import { type Maybe } from '@dereekb/util';
  */
 export interface MsGraphCliTeamsHtmlToMarkdownOptions {
   /**
-   * Returns the link target of an `<img>`: for an inline image (hosted content) its local file, else undefined to
-   * render `[image: not downloaded]`. Called with the hosted content id when the source is a hostedContents
+   * Returns the link target of an `<img>` or `<video>`: for an inline image or clip (hosted content) its local file,
+   * else undefined to render `[image: not downloaded]` / `[video: not downloaded]`. Called with the hosted content id when the source is a hostedContents
    * `$value` URL, else with undefined. Without it, inline images render as not downloaded and other images link
    * their http(s) source.
    */
@@ -91,6 +91,7 @@ const PLACEHOLDER = '\u0000';
  * - `<emoji alt>` → its alt text, `<customemoji alt>` → `:alt:`;
  * - an inline image (hostedContents) → `![image](<local file>)` or `[image: not downloaded]`; another http(s) image →
  *   `![image](src)`;
+ * - a video clip (`<video src>`, hostedContents) → `[video](<local file>)` or `[video: not downloaded]`;
  * - `<attachment id>` → `[attachment: <name>]`;
  * - every other tag (`<systemEventMessage/>` included) is dropped;
  * - entities are decoded, and runs of blank lines collapse to one.
@@ -118,17 +119,19 @@ export function msGraphCliTeamsHtmlToMarkdown(html: string, options?: Maybe<MsGr
     return hold(`\n${fence}\n${text}\n${fence}\n`);
   }
 
-  function convertImage(attributes: string): string {
+  function convertMedia(attributes: string, kind: 'image' | 'video'): string {
     const src = htmlAttribute(attributes, 'src') ?? '';
     const hostedContentId = microsoftGraphChatMessageHostedContentRefs({ body: { contentType: 'html', content: src } })[0]?.hostedContentId;
+    // a Markdown image cannot show a video, so a video is a plain link
+    const link = (target: string) => (kind === 'image' ? `![image](${markdownLinkTarget(target)})` : `[video](${markdownLinkTarget(target)})`);
     let result: string;
 
     if (hostedContentId == null) {
       const target = options?.image ? options.image(undefined, src) : src;
-      result = target && isMsGraphCliSafeLink(target, false) ? `![image](${markdownLinkTarget(target)})` : '[image]';
+      result = target && isMsGraphCliSafeLink(target, false) ? link(target) : `[${kind}]`;
     } else {
       const local = options?.image?.(hostedContentId, src);
-      result = local ? `![image](${markdownLinkTarget(local)})` : '[image: not downloaded]';
+      result = local ? link(local) : `[${kind}: not downloaded]`;
     }
 
     return hold(result);
@@ -151,7 +154,9 @@ export function msGraphCliTeamsHtmlToMarkdown(html: string, options?: Maybe<MsGr
     // HTML whitespace is not significant
     text = text.replaceAll(/[ \t\n]+/g, ' ');
 
-    text = text.replaceAll(/<img\b([^>]*)>/gi, (_m: string, attributes: string) => convertImage(attributes));
+    text = text.replaceAll(/<img\b([^>]*)>/gi, (_m: string, attributes: string) => convertMedia(attributes, 'image'));
+    // Teams' short video clips; the element's text is only a fallback label
+    text = text.replaceAll(/<video\b([^>]*)>(?:[\s\S]*?<\/video>)?/gi, (_m: string, attributes: string) => convertMedia(attributes, 'video'));
     text = text.replaceAll(/<attachment\b([^>]*)>(?:[\s\S]*?<\/attachment>)?/gi, (_m: string, attributes: string) => {
       const id = htmlAttribute(attributes, 'id');
       const name = id ? options?.attachmentName?.(id) : undefined;

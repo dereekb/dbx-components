@@ -13,6 +13,7 @@ export * from './graph.mail.write.api';
 export * from './graph.mailbox.settings.api';
 export * from './graph.page';
 export * from './graph.raw.api';
+export * from './graph.search.api';
 export * from './graph.teams.api';
 export * from './graph.type';
 export * from './graph.upload.api';

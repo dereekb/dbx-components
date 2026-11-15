@@ -34,6 +34,10 @@ export interface CreateMsGraphCliAuthMiddlewareConfig {
    */
   readonly skipCommands: ReadonlySet<string>;
   /**
+   * Also skips a run this returns true for, e.g. `teams chat search --dir`, which reads files on disk only.
+   */
+  readonly skip?: Maybe<(argv: Arguments) => boolean>;
+  /**
    * The environment to read the config dir and token-source env vars from. Defaults to `process.env`.
    */
   readonly env?: Maybe<NodeJS.ProcessEnv>;
@@ -78,7 +82,7 @@ export function createMsGraphCliAuthMiddleware(config: CreateMsGraphCliAuthMiddl
   return async (argv: Arguments) => {
     const command = argv._?.[0];
 
-    if (typeof command !== 'string' || !config.skipCommands.has(command)) {
+    if ((typeof command !== 'string' || !config.skipCommands.has(command)) && !config.skip?.(argv)) {
       try {
         _cliContextSlot.set(await resolveMsGraphCliContext(argv as MsGraphCliAuthArgs, config));
       } catch (e) {

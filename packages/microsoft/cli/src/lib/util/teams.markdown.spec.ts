@@ -42,6 +42,14 @@ describe('msGraphCliTeamsHtmlToMarkdown()', () => {
     expect(msGraphCliTeamsHtmlToMarkdown('<img src="data:image/png;base64,AAAA">')).toBe('[image]');
   });
 
+  it('links a downloaded video clip and drops its fallback label', () => {
+    // models: live 2026-11-14 — a clip body is <div><video src="…/hostedContents/…/$value" data-duration …>Video-Clip</video></div>
+    const image = (id: unknown) => (id === 'aWQ9eA==' ? 'stem/hosted/ab12cd34.mp4' : undefined);
+    expect(msGraphCliTeamsHtmlToMarkdown(`<div><video src="${HOSTED_SRC}" data-duration="PT5S" width="320" height="240">Video-Clip</video></div>`, { image })).toBe('[video](stem/hosted/ab12cd34.mp4)');
+    expect(msGraphCliTeamsHtmlToMarkdown(`<video src="${HOSTED_SRC}"></video>`)).toBe('[video: not downloaded]');
+    expect(msGraphCliTeamsHtmlToMarkdown('<video src="javascript:alert(1)"></video>')).toBe('[video]');
+  });
+
   it('names an <attachment id> by its attachment', () => {
     expect(msGraphCliTeamsHtmlToMarkdown('<attachment id="a1"></attachment>', { attachmentName: (id) => (id === 'a1' ? 'report.pdf' : undefined) })).toBe('[attachment: report.pdf]');
     expect(msGraphCliTeamsHtmlToMarkdown('<attachment id="a2"></attachment>')).toBe('[attachment]');

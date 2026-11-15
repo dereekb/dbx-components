@@ -3,13 +3,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CliError } from '@dereekb/dbx-cli';
-import { MICROSOFT_GRAPH_CHANNEL_MESSAGE_READ_SCOPE, MicrosoftGraphError } from '@dereekb/microsoft';
-import { type FetchResponseError } from '@dereekb/util/fetch';
-import { awaitMsGraphCliTeamsSendSlot, msGraphCliChatOutput, msGraphCliTeamsAdminScopeError, parseMsGraphCliTeamsWithNames, readMsGraphCliTeamsBody } from './teams';
-
-function graphError(code: string, message: string, status: number): MicrosoftGraphError {
-  return new MicrosoftGraphError({ code, message }, { response: new Response(null, { status }) } as unknown as FetchResponseError);
-}
+import { awaitMsGraphCliTeamsSendSlot, msGraphCliChatOutput, parseMsGraphCliTeamsWithNames, readMsGraphCliTeamsBody } from './teams';
 
 describe('teams helpers', () => {
   let dir: string;
@@ -34,21 +28,6 @@ describe('teams helpers', () => {
     clock += 5000;
     expect(await awaitMsGraphCliTeamsSendSlot(config)).toBe(0);
     expect(waits).toEqual([700]);
-  });
-
-  it('turns a 403 on an admin-only call into SCOPE_DENIED saying no standard preset grants the scope', () => {
-    // models: D6 live error text (channel messages read with a Read + Write token)
-    const error = graphError('Forbidden', "Missing scope permissions on the request. API requires one of 'ChannelMessage.Read.All, Group.Read.All, Group.ReadWrite.All'. Scopes on the request 'Chat.ReadWrite, User.Read'", 403);
-    const mapped = msGraphCliTeamsAdminScopeError(error, MICROSOFT_GRAPH_CHANNEL_MESSAGE_READ_SCOPE) as CliError;
-
-    expect(mapped).toBeInstanceOf(CliError);
-    expect(mapped.code).toBe('SCOPE_DENIED');
-    expect(mapped.suggestion).toContain('Neither standard preset');
-    expect(mapped.suggestion).not.toContain('Admin preset');
-    expect(mapped.suggestion).toContain('ChannelMessage.Read.All');
-
-    const notFound = graphError('NotFound', 'x', 404);
-    expect(msGraphCliTeamsAdminScopeError(notFound, MICROSOFT_GRAPH_CHANNEL_MESSAGE_READ_SCOPE)).toBe(notFound);
   });
 
   it('takes exactly one of --text, --html or --file', async () => {

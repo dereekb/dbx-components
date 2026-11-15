@@ -149,3 +149,16 @@ const MICROSOFT_GRAPH_ADMIN_CONSENT_SCOPE_SET = new Set(MICROSOFT_GRAPH_ADMIN_CO
 export function isMicrosoftGraphAdminConsentScope(scope: MicrosoftGraphScope): boolean {
   return MICROSOFT_GRAPH_ADMIN_CONSENT_SCOPE_SET.has(normalizeMicrosoftGraphScope(scope).toLowerCase());
 }
+
+/**
+ * Returns whether a list of granted scopes holds a scope, comparing without case and without the Graph resource
+ * prefix.
+ *
+ * @param granted - The granted scopes, e.g. a token's.
+ * @param scope - The scope looked for.
+ * @returns True when it is granted.
+ */
+export function isMicrosoftGraphScopeGranted(granted: Maybe<readonly string[]>, scope: MicrosoftGraphScope): boolean {
+  const wanted = normalizeMicrosoftGraphScope(scope).toLowerCase();
+  return (granted ?? []).some((x) => normalizeMicrosoftGraphScope(x).toLowerCase() === wanted);
+}

@@ -1,6 +1,6 @@
 ---
 name: msgraph-cli
-description: "The `msgraph-cli` command (the `msgraph-cli` bin of `@dereekb/microsoft`, run as `npx msgraph-cli`; this doc ships with that package and prints with `npx msgraph-cli docs`) for a user's Outlook mail, shared mailboxes, automatic replies, calendar, OneDrive / SharePoint files and Teams chats and channels through Microsoft Graph, plus a raw Graph `request`. Bulk downloads: `files download-folder` copies a SharePoint / OneDrive folder to disk recursively and re-syncs it on re-run, `mail dump` dumps a folder (delta), a filtered list or a search, with `--attachments-only`, and `teams chat dump` keeps an incremental archive of Teams chats (JSON + Markdown per message, inline images, optional file attachments). It authenticates ONLY through a token source: each run borrows an access token minted from an app's Microsoft external connection by `<app>-cli external-token <providerType>` (no `auth login`). Covers setup (`auth token-source set/use/show/clear`, `auth show`), the global `--token-source` option and the `MSGRAPH_CLI_TOKEN_SOURCE` / `MSGRAPH_CLI_TOKEN_COMMAND` / `MSGRAPH_CLI_CONFIG_DIR` env vars, the Read / Read + Write presets and which commands need which scope, `--yes` / `--dry-run` on writes, the JSON output, and the error codes (`NOT_CONFIGURED`, `TOKEN_REJECTED`, `SCOPE_DENIED`, `CONFIRMATION_REQUIRED`, `RATE_LIMITED`, `NOT_FOUND`, `ABORTED`, `INSUFFICIENT_SPACE`, …)."
+description: "The `msgraph-cli` command (the `msgraph-cli` bin of `@dereekb/microsoft`, run as `npx msgraph-cli`; this doc ships with that package and prints with `npx msgraph-cli docs`) for a user's Outlook mail, shared mailboxes, automatic replies, calendar, OneDrive / SharePoint files and Teams chats and channels through Microsoft Graph, plus a raw Graph `request`. Bulk downloads: `files download-folder` copies a SharePoint / OneDrive folder to disk recursively and re-syncs it on re-run, `mail dump` dumps a folder (delta), a filtered list or a search, with `--attachments-only`, and `teams chat dump` keeps an incremental archive of Teams chats (JSON + Markdown per message, inline images and video clips, optional file attachments). `teams chat search` searches Teams messages through Graph (KQL; needs organization admin consent) or, with `--dir`, searches a `teams chat dump` archive on disk with no token or scope. It authenticates ONLY through a token source: each run borrows an access token minted from an app's Microsoft external connection by `<app>-cli external-token <providerType>` (no `auth login`). Covers setup (`auth token-source set/use/show/clear`, `auth show`), the global `--token-source` option and the `MSGRAPH_CLI_TOKEN_SOURCE` / `MSGRAPH_CLI_TOKEN_COMMAND` / `MSGRAPH_CLI_CONFIG_DIR` env vars, the Read / Read + Write presets and which commands need which scope, the commands that need organization (admin) consent and how they are flagged and refused, `--yes` / `--dry-run` on writes, the JSON output, and the error codes (`NOT_CONFIGURED`, `TOKEN_REJECTED`, `SCOPE_DENIED`, `ADMIN_CONSENT_REQUIRED`, `CONFIRMATION_REQUIRED`, `RATE_LIMITED`, `NOT_FOUND`, `ABORTED`, `INSUFFICIENT_SPACE`, …)."
 ---
 
 # Microsoft Graph CLI
@@ -58,7 +58,7 @@ msgraph-cli auth token-source use <name>          # `use default` returns to the
 msgraph-cli auth token-source show                # alias: list. Saved sources, the one in effect, env overrides (never the token)
 msgraph-cli auth token-source clear [--name <name>]
 msgraph-cli auth token-source refresh [--name <name>]  # drop the cached token: the next command mints again and re-reads the app's server defaults
-msgraph-cli auth show [--token-source <name>]     # the active source, its token's scopes and expiry; fails when it cannot mint
+msgraph-cli auth show [--token-source <name>]     # the active source, its token's scopes and expiry, and which admin-consent commands it can run; fails when it cannot mint
 msgraph-cli config set signature-file <path>      # appended to new messages, replies and forwards from your own mailbox
 msgraph-cli config set signature-file <path> --mailbox <addr>  # the signature of mail sent from / as <addr>
 msgraph-cli config set mailboxes a@x.com,b@x.com  # shared mailboxes for `mail mailboxes check`
@@ -303,14 +303,17 @@ polls Graph's copy monitor until the copy finishes. `delete --hard` deletes perm
 msgraph-cli teams list | channels <team> | presence [--user <id>] | files <team> <channel>
 msgraph-cli teams chats [--with "Ada,Grace"] [--topic …] [--type …]
 msgraph-cli teams chat messages <chat> [--since <iso>] [--top 50]   # --since: messages CREATED after it (not a change feed)
+msgraph-cli teams chat search "<KQL>" [--top 25] [--offset N] [--all-pages [--max-pages 10]]   # Graph search; org admin consent (ChannelMessage.Read.All)
+msgraph-cli teams chat search "<words>" --dir <dumpDir> [--regex] [--case-sensitive] [--chat <id>] [--with "Ada"] [--topic …] [--type …]
+   #       [--from <name>] [--since <iso>] [--until <iso>] [--no-deleted] [--top 50]   # search a teams chat dump on disk; no token or scope
 msgraph-cli teams chat dump <chat> | --all-chats | --with "Ada,Grace" [--topic …] [--type …] --dir <dir>   # incremental archive; re-run to update
    # also: [--since <iso>] [--lookback 7] [--attachments] [--no-hosted-contents] [--no-markdown] [--prune]
    #       [--max-messages 5000] [--max-bytes N] [--concurrency 3 (max 4)] [--idle-timeout 60]
 msgraph-cli teams chat send <chat> --text "…" | --html "…" | --file msg.html
 msgraph-cli teams chat delete <chat> <message> [--undo] --yes
 msgraph-cli teams channel send <team> <channel> --text "…"      # also: reply <team> <channel> <message>
-msgraph-cli teams channel messages <team> <channel> [--replies]  # admin consent only; no standard preset
-msgraph-cli teams channel delete <team> <channel> <message> --yes  # admin consent only; no standard preset
+msgraph-cli teams channel messages <team> <channel> [--replies]  # org admin consent (ChannelMessage.Read.All); no standard preset
+msgraph-cli teams channel delete <team> <channel> <message> --yes  # org admin consent (ChannelMessage.ReadWrite); no standard preset
 ```
 
 Every send (`chat send`, `channel send`, `channel reply`) needs `--yes`. Teams takes at most one message
@@ -323,6 +326,47 @@ locally and never echoes the chats that did not match. `chat delete --undo` rest
 creation time for older messages: it returns the messages **created** after the instant, and edits, deletes and
 reactions to older messages only sometimes. Use it to read what is new, not to find what changed; `teams chat dump`
 handles changes with its lookback.
+
+#### Search chats (teams chat search)
+
+`teams chat search` has two modes. Pick one with `--dir`.
+
+- **Graph search** (no `--dir`) sends the query as KQL to Graph's Microsoft Search (`POST /search/query`, entity type
+  `chatMessage`). It covers the 1:1, group, meeting and channel messages you can see, by relevance.
+  - **Needs organization admin consent.** Graph refuses a Teams message search unless the token holds
+    `ChannelMessage.Read.All` as well as `Chat.Read`, even when it would only return chat messages. Live (2026-11-14), a
+    Read + Write token was refused with 403: "requires the following permissions: Chat.Read or Chat.ReadWrite,
+    ChannelMessage.Read.All". Only a tenant admin can consent to `ChannelMessage.Read.All`, so this mode runs only on a
+    connection an admin consented. A token without it is refused before any Graph call with `ADMIN_CONSENT_REQUIRED`
+    (see [Commands that need organization consent](#commands-that-need-organization-admin-consent)).
+  - **KQL.** Teams messages take `from:`, `to:` (1:1 only partly), `hasAttachment:`, `IsRead:`, `IsMentioned:`,
+    `mentions:<user id without hyphens>` and `sent` (`sent>=2026-11-01`), e.g. `"budget from:ada sent>=2026-11-01"`.
+    The archive-only options (`--from`, `--since`, `--with`, …) are refused with `INVALID_ARGUMENT`: put them in the KQL.
+  - **Paging.** One run reads one page of `--top` results (at most 25, the default) from `--offset` (default 0).
+    `--all-pages` reads pages until Graph has no more, up to `--max-pages` (default 10). Graph pages through at most
+    1,000 results for a query, and cannot sort them.
+  - **Output.** `{ hits: [{ id, chatId, channelIdentity?, createdDateTime, from, snippet, webUrl }], moreResultsAvailable,
+    nextOffset? }`. `snippet` is Graph's summary with its highlight tags removed. A hit has no body: read the message with
+    `teams chat messages <chatId>`, or follow `webUrl`. The response shape follows Graph's documentation and has not been
+    checked against a live admin-consented tenant yet.
+- **Archive search** (`--dir <dumpDir>`) searches a directory written by `teams chat dump`. It makes no Graph call, so it
+  needs no token, scope or token source, and works with any preset. Archive first, then search as often as you like;
+  re-run the dump to bring the archive up to date.
+  - **Query.** Every word must appear (`"quoted phrases"` stay together), ignoring case unless `--case-sensitive`.
+    `--regex` takes the query as a JavaScript regular expression. `""` matches every message, so the filters alone
+    pick them. It searches each message's subject, body text (as in its `.md`) and attachment names.
+  - **Filters.** `--chat <id>`, `--with` / `--topic` / `--type` (matched against each chat's `chat.json`, like
+    `teams chats`), `--from` (a substring of the sender's name), `--since` / `--until` (creation time; message files are
+    named by it, so files outside the range are skipped unread). Messages deleted after they were archived are searched
+    and flagged `deleted: true`; `--no-deleted` skips them.
+  - **Output.** `{ dir, chats, scanned, matches, hits, truncated }`, newest first. `--top` (default 50) caps `hits`;
+    `matches` counts every match and `truncated` says whether `--top` dropped some. Each hit is `{ id, chatId, chat,
+    createdDateTime, from, snippet, file, deleted? }`: `chat` is the topic, else the members' names; `snippet` is the
+    text around the first match; `file` is the message's `.md` (`.json` when the dump wrote no Markdown) relative to
+    `--dir`. A dump `--offset` / `--all-pages` / `--max-pages` is refused (`INVALID_ARGUMENT`).
+  - **Cost.** It reads the JSON of every message in range, so a large archive takes seconds: narrow it with `--chat`,
+    `--with` or `--since` when you can.
+  - **Privacy.** Unlike `teams chat dump`, the output carries message text, sender names and chat names: it is a search.
 
 #### Archive chats to disk (teams chat dump)
 
@@ -354,7 +398,7 @@ handles changes with its lookback.
   a file already on disk is not downloaded again. Quoted messages, cards and meeting links have nothing to download;
   they stay in the `.json`. The `.md` comes last (`--no-markdown` skips it): a `### <sender> · <created>` header with
   `(edited …)` / `(deleted …)` markers, the body converted from Teams HTML (bold, italics, strikethrough, code, quotes,
-  lists, links, `@mentions`, emoji, local image links; runs of blank lines collapse to one), and a list of attachments
+  lists, links, `@mentions`, emoji, local image links, and `[video](…)` links to the clips; runs of blank lines collapse to one), and a list of attachments
   (`[not downloaded]` when one failed). System events (members added, chat renamed, …) are archived like messages and
   render as `_membersAdded_`.
 - **Change detection.** The first run reads the chat's whole history (or back to `--since`). Each later run reads
@@ -460,7 +504,33 @@ Every scope in them is user-consentable, so connecting never needs an administra
 | `--mailbox` / `--send-as` (shared mailboxes) | Read + Write (`*.Shared`) **and** an Exchange permission on that mailbox |
 | `teams list/channels/chats/chat …/presence`, `teams channel send/reply` | Read + Write |
 | `teams chat dump` | Read + Write (`Chat.Read`). `--attachments` also uses `Files.Read.All`, which both presets carry |
+| `teams chat search` (Graph) | `Chat.Read` **and** `ChannelMessage.Read.All` (admin consent) |
+| `teams chat search --dir` | Nothing: it reads a dump on disk |
 | `teams channel messages/delete` | `ChannelMessage.Read.All` / `ChannelMessage.ReadWrite` (admin consent). Neither Read nor Read + Write grants them, so these run only on a connection a tenant admin consented with them for the organization |
+
+### Commands that need organization (admin) consent
+
+Some Graph scopes can only be consented to by a tenant admin, for the whole organization. Neither standard preset
+carries one, so the commands that need them run only through a token source whose connection an admin consented:
+
+| Command | Admin-consent scope | Without it |
+| --- | --- | --- |
+| `teams chat search` (Graph) | `ChannelMessage.Read.All` | `teams chat dump`, then `teams chat search --dir` |
+| `teams channel messages` | `ChannelMessage.Read.All` | none |
+| `teams channel delete` | `ChannelMessage.ReadWrite` | none |
+
+They are marked three ways:
+
+- **Help.** Their `--help` description carries `[org admin consent: <scope>]`.
+- **Refused up front.** Before any Graph call, the command checks the token's granted scopes. When they are known and
+  lack the scope, it fails with `ADMIN_CONSENT_REQUIRED` and a suggestion naming the scope (and the alternative, if
+  any), so no request is sent. A token that reports no scopes is let through, and a Graph 403 then maps to
+  `SCOPE_DENIED` with the same suggestion.
+- **`auth show`** lists them under `adminConsent` with `available: true|false` for the active token:
+  `[{ "command": "teams chat search", "scope": "ChannelMessage.Read.All", "available": false }, …]`.
+
+The list is `MSGRAPH_CLI_ADMIN_CONSENT_COMMANDS` in `@dereekb/microsoft/cli`; the admin-consent scopes are
+`MICROSOFT_GRAPH_ADMIN_CONSENT_SCOPES` in `@dereekb/microsoft`.
 
 ## Output Format
 
@@ -477,7 +547,8 @@ Every scope in them is user-consentable, so connecting never needs an administra
 | --- | --- | --- |
 | `NOT_CONFIGURED` | No token source is configured (exit 4) | `msgraph-cli auth token-source set "<app>-cli external-token <providerType> --env <preset>"` |
 | `TOKEN_REJECTED` | Graph returned 401; the cached token was already cleared | Re-run; if it repeats, `msgraph-cli auth show` |
-| `SCOPE_DENIED` | Graph returned 403: the grant lacks the scope (or, with `--mailbox`, the Exchange permission) | Reconnect with Read + Write. Channel reads/deletes need an admin-consented grant that no standard preset gives |
+| `SCOPE_DENIED` | Graph returned 403: the grant lacks the scope (or, with `--mailbox`, the Exchange permission) | Reconnect with Read + Write. Channel reads/deletes and Graph chat search need an admin-consented grant that no standard preset gives |
+| `ADMIN_CONSENT_REQUIRED` | An admin-consent command (`teams chat search` without `--dir`, `teams channel messages/delete`) was refused before any Graph call: the token's scopes lack the scope it needs | Use a token source whose connection a tenant admin consented with that scope; for chat search, `teams chat search --dir <dump>` instead. `auth show` lists what the token can run |
 | `CONFIRMATION_REQUIRED` | A send / delete / settings change ran without `--yes` | Re-run with `--yes`, or `--dry-run` to preview |
 | `RATE_LIMITED` | Graph returned 429. It is retried automatically up to 3 times, honoring `Retry-After`; this code shows only when it persists | Wait and retry |
 | `NOT_FOUND` | No item, mailbox, library or saved auto-reply backup | Check the id / path / `--mailbox`; mutable mail ids change when a message moves |
@@ -515,6 +586,7 @@ token command fails, msgraph-cli shows the **app CLI's** code and suggestion (ex
 - **`auth token-source show` vs `auth show`.** `token-source show` never runs the command; `auth show` mints when nothing is cached.
 - **Graph cannot list the shared mailboxes a user may open.** Save them with `config set mailboxes …`, then `mail mailboxes check`.
 - **Channel reads and deletes need admin consent** (`ChannelMessage.Read.All` / `.ReadWrite`), even for the user's own posts.
+- **Graph's Teams message search needs admin consent too** (`ChannelMessage.Read.All`), even when it would only return 1:1 and group chat messages. Without it, search a `teams chat dump` archive with `teams chat search --dir`.
 - **Graph's `lastModifiedDateTime` filter on chat messages acts on creation time for older messages.** It returns the messages created after the instant, and edits, deletes and reactions to older ones only sometimes, so `teams chat messages --since` is not a change feed and `teams chat dump` re-reads a lookback window instead.
 - **`teams chat dump` does not see hard deletes.** A message a retention policy purged simply stops coming back; there is no delegated delta or tombstone for chats, so its archived files stay.
 - **`teams chat dump` keeps no edit history.** Graph keeps only the current version of a message, and the dump rewrites a changed message in place.

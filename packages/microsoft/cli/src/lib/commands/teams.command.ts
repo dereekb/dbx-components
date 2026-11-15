@@ -1,14 +1,17 @@
 import {
   type MicrosoftGraphChat,
+  type MicrosoftGraphChatMessageSearchResource,
   type MicrosoftGraphChatType,
   type MicrosoftGraphContext,
   type MicrosoftGraphItemBody,
   type MicrosoftGraphRequestInput,
-  MICROSOFT_GRAPH_CHANNEL_MESSAGE_READ_SCOPE,
-  MICROSOFT_GRAPH_CHANNEL_MESSAGE_WRITE_SCOPE,
+  type MicrosoftGraphSearchResponse,
+  MICROSOFT_GRAPH_CHAT_MESSAGE_SEARCH_MAX_SIZE,
+  MICROSOFT_GRAPH_SEARCH_MAX_RESULTS,
   microsoftGraphChannelFilesFolderRequest,
   microsoftGraphChannelMessagesRequest,
   microsoftGraphChatMatches,
+  microsoftGraphChatMessageSearchRequest,
   microsoftGraphChatMessagesRequest,
   microsoftGraphChatsRequest,
   microsoftGraphJoinedTeamsRequest,
@@ -19,19 +22,24 @@ import {
   microsoftGraphSendChatMessageRequest,
   microsoftGraphSoftDeleteChannelMessageRequest,
   microsoftGraphSoftDeleteChatMessageRequest,
-  microsoftGraphTeamChannelsRequest
+  microsoftGraphTeamChannelsRequest,
+  readMicrosoftGraphSearchResponsePage
 } from '@dereekb/microsoft';
-import { cliConcurrencyOption, cliConcurrencyValue, withCliInterruptSignal } from '@dereekb/dbx-cli';
+import { CliError, cliConcurrencyOption, cliConcurrencyValue, withCliInterruptSignal, wrapCommandHandler } from '@dereekb/dbx-cli';
+import { type Maybe } from '@dereekb/util';
 import type { Argv, CommandModule } from 'yargs';
 import { msGraphCliPaths } from '../config/cli.config';
+import { type MsGraphCliContext } from '../context/cli.context';
 import { msGraphCommandHandler } from '../middleware/auth.middleware';
+import { MSGRAPH_CLI_TEAMS_CHANNEL_DELETE_ADMIN_CONSENT, MSGRAPH_CLI_TEAMS_CHANNEL_MESSAGES_ADMIN_CONSENT, MSGRAPH_CLI_TEAMS_CHAT_SEARCH_ADMIN_CONSENT, msGraphCliAdminConsentTag, runMsGraphCliAdminConsentCall } from '../util/admin.consent';
 import { parseMsGraphCliDateOption } from '../util/option';
 import { parseMsGraphCliEnumOption } from '../util/auto.reply';
 import { msGraphCliConfirmOptions, msGraphCliDryRunOptions, msGraphCliDryRunOutput, requireMsGraphCliConfirmation } from '../util/mail.write';
 import { msGraphCliIdleTimeoutMs, msGraphCliIdleTimeoutOption } from '../util/file.download';
 import { outputMsGraphCliResult } from '../util/output';
 import { DEFAULT_MSGRAPH_CLI_TEAMS_CHAT_DUMP_LOOKBACK_DAYS, DEFAULT_MSGRAPH_CLI_TEAMS_CHAT_DUMP_MAX_MESSAGES, MSGRAPH_CLI_TEAMS_CHAT_DUMP_CONCURRENCY, dumpMsGraphCliTeamsChats } from '../util/teams.chat.dump';
-import { MSGRAPH_CLI_TEAMS_TERMS_NOTE, awaitMsGraphCliTeamsSendSlot, msGraphCliChatOutput, parseMsGraphCliTeamsWithNames, readMsGraphCliTeamsBody, runMsGraphCliTeamsAdminCall } from '../util/teams';
+import { DEFAULT_MSGRAPH_CLI_TEAMS_CHAT_DUMP_SEARCH_TOP, type MsGraphCliTeamsChatSearchHit, msGraphCliTeamsChatSearchHitFromGraph, searchMsGraphCliTeamsChatDump } from '../util/teams.chat.search';
+import { MSGRAPH_CLI_TEAMS_TERMS_NOTE, awaitMsGraphCliTeamsSendSlot, msGraphCliChatOutput, parseMsGraphCliTeamsWithNames, readMsGraphCliTeamsBody } from '../util/teams';
 
 const CHAT_TYPES: readonly MicrosoftGraphChatType[] = ['oneOnOne', 'group', 'meeting'];
 
@@ -234,10 +242,156 @@ export const TEAMS_CHAT_DUMP_COMMAND: CommandModule = {
   })
 };
 
+/**
+ * How many result pages `teams chat search --all-pages` reads by default (25 results each).
+ */
+export const DEFAULT_MSGRAPH_CLI_TEAMS_CHAT_SEARCH_MAX_PAGES = 10;
+
+/**
+ * The options only an archive search (`--dir`) reads, by argv key and flag.
+ */
+const TEAMS_CHAT_SEARCH_ARCHIVE_OPTIONS: readonly (readonly [string, string])[] = [
+  ['chat', '--chat'],
+  ['with', '--with'],
+  ['topic', '--topic'],
+  ['type', '--type'],
+  ['from', '--from'],
+  ['since', '--since'],
+  ['until', '--until'],
+  ['regex', '--regex'],
+  ['caseSensitive', '--case-sensitive'],
+  ['deleted', '--no-deleted']
+];
+
+/**
+ * The options only a Graph search reads.
+ */
+const TEAMS_CHAT_SEARCH_GRAPH_OPTIONS: readonly (readonly [string, string])[] = [
+  ['offset', '--offset'],
+  ['allPages', '--all-pages'],
+  ['maxPages', '--max-pages']
+];
+
+interface RefuseTeamsChatSearchOptionsInput {
+  readonly argv: any;
+  /**
+   * The options this mode does not take, by argv key and flag.
+   */
+  readonly options: readonly (readonly [string, string])[];
+  readonly message: string;
+  readonly suggestion: string;
+}
+
+function refuseTeamsChatSearchOptions({ argv, options, message, suggestion }: RefuseTeamsChatSearchOptionsInput): void {
+  // --deleted defaults to true, so only --no-deleted counts as given
+  const given = options.filter(([key]) => argv[key] != null && !(key === 'deleted' && argv[key] === true)).map(([, flag]) => flag);
+
+  if (given.length > 0) {
+    throw new CliError({ message: `${message}: ${given.join(', ')}.`, code: 'INVALID_ARGUMENT', suggestion });
+  }
+}
+
+async function searchTeamsChatsThroughGraph(argv: any, { graphContext, tokenSource }: MsGraphCliContext): Promise<void> {
+  refuseTeamsChatSearchOptions({ argv, options: TEAMS_CHAT_SEARCH_ARCHIVE_OPTIONS, message: 'A Graph search takes its filters as KQL, not', suggestion: 'Put them in the query (from:ada sent>=2026-11-01 IsMentioned:true), or search a teams chat dump with --dir, where these options apply.' });
+  const size = Math.min(argv.top ?? MICROSOFT_GRAPH_CHAT_MESSAGE_SEARCH_MAX_SIZE, MICROSOFT_GRAPH_CHAT_MESSAGE_SEARCH_MAX_SIZE);
+  const maxPages = argv.allPages ? (argv.maxPages ?? DEFAULT_MSGRAPH_CLI_TEAMS_CHAT_SEARCH_MAX_PAGES) : 1;
+  const hits: MsGraphCliTeamsChatSearchHit[] = [];
+  let offset = Math.max(0, argv.offset ?? 0);
+  let more = true;
+  let pages = 0;
+
+  await runMsGraphCliAdminConsentCall({
+    tokenSource,
+    requirement: MSGRAPH_CLI_TEAMS_CHAT_SEARCH_ADMIN_CONSENT,
+    run: async () => {
+      while (more && pages < maxPages && offset < MICROSOFT_GRAPH_SEARCH_MAX_RESULTS) {
+        const response = (await get(graphContext, microsoftGraphChatMessageSearchRequest({ queryString: String(argv.query), from: offset, size }))) as MicrosoftGraphSearchResponse<MicrosoftGraphChatMessageSearchResource>;
+        const page = readMicrosoftGraphSearchResponsePage(response);
+        hits.push(...page.hits.map(msGraphCliTeamsChatSearchHitFromGraph));
+        offset += page.hits.length;
+        more = page.moreResultsAvailable && page.hits.length > 0;
+        pages += 1;
+      }
+    }
+  });
+
+  outputMsGraphCliResult({ hits, moreResultsAvailable: more, ...(more ? { nextOffset: offset } : undefined) });
+}
+
+async function searchTeamsChatDump(argv: any): Promise<void> {
+  refuseTeamsChatSearchOptions({ argv, options: TEAMS_CHAT_SEARCH_GRAPH_OPTIONS, message: 'An archive search (--dir) returns every match newest first, so it does not take', suggestion: 'Use --top to return more hits.' });
+  const result = await searchMsGraphCliTeamsChatDump({
+    dir: String(argv.dir),
+    query: String(argv.query ?? ''),
+    regex: argv.regex,
+    caseSensitive: argv.caseSensitive,
+    chatId: argv.chat,
+    withNames: parseMsGraphCliTeamsWithNames(argv.with),
+    topic: argv.topic,
+    chatType: parseMsGraphCliEnumOption('type', argv.type, CHAT_TYPES),
+    from: argv.from,
+    since: parseMsGraphCliDateOption('since', argv.since),
+    until: parseMsGraphCliDateOption('until', argv.until),
+    includeDeleted: argv.deleted ?? true,
+    top: argv.top
+  });
+
+  outputMsGraphCliResult(result);
+}
+
+const searchTeamsChatsThroughGraphHandler = msGraphCommandHandler(searchTeamsChatsThroughGraph);
+const searchTeamsChatDumpHandler = wrapCommandHandler(searchTeamsChatDump);
+
+/**
+ * `teams chat search`: Graph's Teams message search (KQL; organization admin consent), or with `--dir` a search of a
+ * `teams chat dump` archive on disk, which needs no token or scope.
+ */
+export const TEAMS_CHAT_SEARCH_COMMAND: CommandModule = {
+  command: 'search <query>',
+  describe: `Search Teams messages through Graph (KQL, by relevance) ${msGraphCliAdminConsentTag(MSGRAPH_CLI_TEAMS_CHAT_SEARCH_ADMIN_CONSENT)}, or with --dir search a teams chat dump on disk (no Graph call, any preset)`,
+  builder: (yargs: Argv) =>
+    yargs
+      .positional('query', { type: 'string', demandOption: true, describe: 'Graph: KQL, e.g. budget from:ada sent>=2026-11-01 IsMentioned:true. --dir: words that must all appear ("quoted phrase" kept together; "" matches every message), or a regular expression with --regex' })
+      .option('dir', { type: 'string', describe: 'Search this teams chat dump directory instead of Graph' })
+      .option('top', { type: 'number', describe: `Graph: results per page (at most ${MICROSOFT_GRAPH_CHAT_MESSAGE_SEARCH_MAX_SIZE}). --dir: the most hits, newest first (default ${DEFAULT_MSGRAPH_CLI_TEAMS_CHAT_DUMP_SEARCH_TOP})` })
+      .option('offset', { type: 'number', describe: 'Graph: the 0-based result to start at (a previous nextOffset)' })
+      .option('all-pages', { type: 'boolean', describe: `Graph: read pages until no more results (Graph pages through at most ${MICROSOFT_GRAPH_SEARCH_MAX_RESULTS})` })
+      .option('max-pages', { type: 'number', describe: `Graph: with --all-pages, the most pages to read (default ${DEFAULT_MSGRAPH_CLI_TEAMS_CHAT_SEARCH_MAX_PAGES})` })
+      .option('chat', { type: 'string', describe: '--dir: only this chat id' })
+      .option('with', { type: 'string', array: true, describe: '--dir: only chats whose members include all these names or addresses (repeat, or comma-separated)' })
+      .option('topic', { type: 'string', describe: '--dir: only chats whose topic contains this' })
+      .option('type', { type: 'string', describe: `--dir: only chats of this type: ${CHAT_TYPES.join(' | ')}` })
+      .option('from', { type: 'string', describe: "--dir: only messages whose sender's name contains this (Graph: put from:<name> in the KQL)" })
+      .option('since', { type: 'string', describe: '--dir: only messages created at or after this ISO 8601 date/time (Graph: sent>=<date> in the KQL)' })
+      .option('until', { type: 'string', describe: '--dir: only messages created before this ISO 8601 date/time' })
+      .option('regex', { type: 'boolean', describe: '--dir: the query is a JavaScript regular expression' })
+      .option('case-sensitive', { type: 'boolean', describe: '--dir: match case' })
+      .option('deleted', { type: 'boolean', describe: '--dir: also search messages deleted after they were archived (default; --no-deleted skips them)' })
+      .example([
+        ['$0 teams chat search "budget from:ada sent>=2026-11-01"', 'Graph search; needs a connection a tenant admin consented with ChannelMessage.Read.All'],
+        ['$0 teams chat search "quarterly budget" --dir ./teams --with Ada --since 2026-01-01', 'Search an archive made by teams chat dump; no Graph call'],
+        [String.raw`$0 teams chat search "invoice #\d+" --regex --dir ./teams --top 200`, 'A regular expression over the whole archive']
+      ]),
+  handler: (argv: any) => (argv.dir == null ? searchTeamsChatsThroughGraphHandler(argv) : searchTeamsChatDumpHandler(argv))
+};
+
+/**
+ * Whether a run is `teams chat search --dir`, which searches files on disk and needs no token source.
+ *
+ * @param argv - The parsed arguments.
+ * @param argv._ - The command path, e.g. `['teams', 'chat', 'search']`.
+ * @param argv.dir - The `--dir` option.
+ * @returns True for an archive search.
+ */
+export function isMsGraphCliTeamsChatArchiveSearch(argv: { readonly _?: Maybe<readonly (string | number)[]>; readonly dir?: unknown }): boolean {
+  const [a, b, c] = argv._ ?? [];
+  return a === 'teams' && b === 'chat' && c === 'search' && argv.dir != null;
+}
+
 const TEAMS_CHAT_COMMAND: CommandModule = {
   command: 'chat',
-  describe: 'Read, archive, send and delete chat messages',
-  builder: (yargs: Argv) => yargs.command(TEAMS_CHAT_MESSAGES_COMMAND).command(TEAMS_CHAT_DUMP_COMMAND).command(TEAMS_CHAT_SEND_COMMAND).command(TEAMS_CHAT_DELETE_COMMAND).demandCommand(1, 'Please specify a chat subcommand.'),
+  describe: 'Read, search, archive, send and delete chat messages',
+  builder: (yargs: Argv) => yargs.command(TEAMS_CHAT_MESSAGES_COMMAND).command(TEAMS_CHAT_SEARCH_COMMAND).command(TEAMS_CHAT_DUMP_COMMAND).command(TEAMS_CHAT_SEND_COMMAND).command(TEAMS_CHAT_DELETE_COMMAND).demandCommand(1, 'Please specify a chat subcommand.'),
   handler: () => undefined
 };
 
@@ -262,26 +416,26 @@ export const TEAMS_CHANNEL_REPLY_COMMAND: CommandModule = {
 
 export const TEAMS_CHANNEL_MESSAGES_COMMAND: CommandModule = {
   command: 'messages <team> <channel>',
-  describe: `List a channel's messages. Needs ${MICROSOFT_GRAPH_CHANNEL_MESSAGE_READ_SCOPE} (admin consent; neither the Read nor the Read + Write preset grants it), even for your own posts`,
+  describe: `List a channel's messages. ${msGraphCliAdminConsentTag(MSGRAPH_CLI_TEAMS_CHANNEL_MESSAGES_ADMIN_CONSENT)} Neither the Read nor the Read + Write preset grants it, even for your own posts`,
   builder: (yargs: Argv) => channelPositionals(yargs).option('replies', { type: 'boolean', default: false, describe: "Include each message's replies" }).option('top', { type: 'number', describe: 'Messages to return (at most 50)' }),
-  handler: msGraphCommandHandler(async (argv: any, { graphContext }) => {
+  handler: msGraphCommandHandler(async (argv: any, { graphContext, tokenSource }) => {
     const request = microsoftGraphChannelMessagesRequest({ teamId: String(argv.team), channelId: String(argv.channel), top: argv.top, replies: argv.replies });
-    outputMsGraphCliResult(await runMsGraphCliTeamsAdminCall(MICROSOFT_GRAPH_CHANNEL_MESSAGE_READ_SCOPE, () => get(graphContext, request)));
+    outputMsGraphCliResult(await runMsGraphCliAdminConsentCall({ tokenSource, requirement: MSGRAPH_CLI_TEAMS_CHANNEL_MESSAGES_ADMIN_CONSENT, run: () => get(graphContext, request) }));
   })
 };
 
 export const TEAMS_CHANNEL_DELETE_COMMAND: CommandModule = {
   command: 'delete <team> <channel> <message>',
-  describe: `Soft-delete a channel message. Needs ${MICROSOFT_GRAPH_CHANNEL_MESSAGE_WRITE_SCOPE} (admin consent; neither the Read nor the Read + Write preset grants it), even for your own post. Needs --yes`,
+  describe: `Soft-delete a channel message. ${msGraphCliAdminConsentTag(MSGRAPH_CLI_TEAMS_CHANNEL_DELETE_ADMIN_CONSENT)} Neither the Read nor the Read + Write preset grants it, even for your own post. Needs --yes`,
   builder: (yargs: Argv) => channelPositionals(msGraphCliConfirmOptions(msGraphCliDryRunOptions(yargs), 'Confirm the delete')).positional('message', { type: 'string', demandOption: true, describe: 'The message id' }),
-  handler: msGraphCommandHandler(async (argv: any, { graphContext }) => {
+  handler: msGraphCommandHandler(async (argv: any, { graphContext, tokenSource }) => {
     const request = microsoftGraphSoftDeleteChannelMessageRequest({ teamId: String(argv.team), channelId: String(argv.channel), messageId: String(argv.message) });
 
     if (argv.dryRun) {
       outputMsGraphCliResult(msGraphCliDryRunOutput([request]));
     } else {
       requireMsGraphCliConfirmation({ yes: argv.yes, action: 'delete the channel message' });
-      await runMsGraphCliTeamsAdminCall(MICROSOFT_GRAPH_CHANNEL_MESSAGE_WRITE_SCOPE, () => get(graphContext, request));
+      await runMsGraphCliAdminConsentCall({ tokenSource, requirement: MSGRAPH_CLI_TEAMS_CHANNEL_DELETE_ADMIN_CONSENT, run: () => get(graphContext, request) });
       outputMsGraphCliResult({ id: String(argv.message), deleted: true });
     }
   })
