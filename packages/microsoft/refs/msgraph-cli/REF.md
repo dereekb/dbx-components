@@ -165,15 +165,25 @@ from disk. `config export` refuses a signature that shows a local image. `--dry-
 server signature too (it may mint); when the token source fails, the preview omits it and adds
 `warnings: ["server defaults unavailable (<code>)"]`.
 
-Where to save one, for everyone and every machine:
+Nothing fills the store in for you: Graph cannot read the Outlook signature, so it stays empty until a person
+or a model saves one. Save it once, and every machine that mints through the app gets it:
 
-- **Through MCP:** "To save a signature for everyone and every machine, call the app MCP's `userExternalConnection` `update:data`
-  (`{ providerType: 'microsoft', set: [{ dataType: 'mail_signature', itemKey: 'support@x.com' | 'me', value: { html } }] }`).
-- **Through the CLI:** or `<app>-cli connection-data set microsoft mail_signature <me|address> --file sig.html`
-  (everyday login). `msgraph-cli config export | <app>-cli connection-data import microsoft --file -` uploads
-  every local signature at once.
-- **Then refresh:** "then `msgraph-cli auth token-source refresh`." The cached token keeps the old defaults
-  until it expires otherwise.
+- **Through MCP** (a model can do this at any time): call the app MCP method
+  `userExternalConnection.update.data` with `<prefix>_api_write`:
+  `{ providerType: 'microsoft', set: [{ dataType: 'mail_signature', itemKey: 'me' | 'support@x.com', value: { html: '<p>…</p>' } }] }`.
+  `value` holds exactly one of `html` or `text`, at most 64 KB; there are at most 50 items. Removing goes through
+  `<prefix>_api_destructive`: `unset: [{ dataType: 'mail_signature', itemKey: 'me' }]`, or `clear: true` for all of
+  the provider's data. `userExternalConnection.read.data` lists what is stored.
+- **Through the CLI:** `<app>-cli connection-data set microsoft mail_signature <me|address> --file sig.html`
+  (everyday login; `connection-data list` / `unset` too). `msgraph-cli config export | <app>-cli connection-data
+  import microsoft --file -` uploads every local signature at once.
+- **Then refresh:** run `msgraph-cli auth token-source refresh`. A saved signature arrives with the next minted
+  token, so until then (or until the cached token expires, within the hour) msgraph-cli keeps the old defaults.
+
+For app developers: the token carries `settings` only when the app CLI registers a data adapter for the provider
+(`passthroughCliExternalConnectionDataAdapter({ dataTypes: [MICROSOFT_MAIL_SIGNATURE_USER_EXTERNAL_CONNECTION_DATA_TYPE] })`
+from `@dereekb/dbx-cli`), which makes `external-token` mint with `?include=data`. Without one, msgraph-cli falls back
+to the local signature files.
 
 Every auto-reply change first saves the current setting to `<configDir>/auto-reply.backup.json`.
 `restore` swaps the saved and current settings, so a second `restore` undoes the first. `set` takes
