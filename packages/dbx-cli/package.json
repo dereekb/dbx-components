@@ -67,6 +67,36 @@
       "default": "./validate/index.js"
     }
   },
+  "dbxClaude": {
+    "refs": [
+      {
+        "name": "package-refs",
+        "triggers": [
+          {
+            "words": [
+              "package ref",
+              "package refs",
+              "package-shipped ref",
+              "dbxClaude",
+              "createPackageRefsDocsCommand",
+              "validatePackageRefs"
+            ]
+          },
+          {
+            "pathContains": [
+              "/refs/"
+            ],
+            "suffixes": [
+              "REF.md"
+            ],
+            "capabilities": [
+              "dbx-components"
+            ]
+          }
+        ]
+      }
+    ]
+  },
   "peerDependencies": {
     "@dereekb/date": "14.25.1",
     "@dereekb/firebase": "14.25.1",

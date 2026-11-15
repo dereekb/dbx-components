@@ -258,7 +258,9 @@ export function fetchRequestFactory(config: FetchRequestFactoryInput): FetchRequ
       init = await buildRequestInit(fixedRequest, init ?? undefined);
       const request = await makeRequest(fixedRequest, init);
 
-      (request as RequestWithTimeout).timeout = timeout; // copy/set timeout on the request directly
+      // Request drops the non-standard timeout, so copy it onto the request: the per-request value when the
+      // init carries one (it was merged over the configured default above), else the configured default
+      (request as RequestWithTimeout).timeout = (init as Maybe<RequestInitWithTimeout>)?.timeout ?? timeout;
       return request;
     } catch (e) {
       if (e instanceof FetchRequestFactoryError) {

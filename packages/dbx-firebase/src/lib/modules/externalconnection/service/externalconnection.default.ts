@@ -1,7 +1,25 @@
-import { type KnownUserExternalConnectionProviderType, CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, TRELLO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, ZOOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE } from '@dereekb/firebase';
+import {
+  type KnownUserExternalConnectionProviderType,
+  CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  MICROSOFT_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  MICROSOFT_USER_EXTERNAL_CONNECTION_SCOPE_PRESETS,
+  TRELLO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  ZOOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  USER_EXTERNAL_CONNECTION_OVER_GRANTED_ERROR_CODE,
+  type UserExternalConnectionScopePreset
+} from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { type DbxActionConfirmConfig } from '@dereekb/dbx-web';
-import { type DbxFirebaseExternalConnectionConnectFunction, type DbxFirebaseExternalConnectionProvider, type DbxFirebaseExternalConnectionProviderAssets, type DbxFirebaseExternalConnectionProviderEntry, type DbxFirebaseExternalConnectionSignInConfig } from './externalconnection';
+import {
+  type DbxFirebaseExternalConnectionConnectErrorMessages,
+  type DbxFirebaseExternalConnectionConnectFunction,
+  type DbxFirebaseExternalConnectionProvider,
+  type DbxFirebaseExternalConnectionProviderAssets,
+  type DbxFirebaseExternalConnectionProviderEntry,
+  type DbxFirebaseExternalConnectionSignInConfig
+} from './externalconnection';
 
 /**
  * Default presentation for Cal.com.
@@ -72,6 +90,37 @@ export const DBX_FIREBASE_EXTERNAL_CONNECTION_TRELLO_PROVIDER: DbxFirebaseExtern
 };
 
 /**
+ * Default presentation for Microsoft (Microsoft Graph).
+ *
+ * Declares the default Read / Read + Write scope presets, so the connect list renders one connect
+ * button per preset and a chip naming the preset the current grant covers. An app whose server declares
+ * its own presets mirrors them through `dbxFirebaseKnownExternalConnectionProvider({ scopePresets })`.
+ *
+ * Also declares a `connectConfirm` notice telling administrators to leave Microsoft's "Consent on behalf of
+ * your organization" checkbox unticked (Entra offers no way to hide it), and the copy for a connect the
+ * server refused as over-granted. To drop the notice, spread this constant and set `connectConfirm` to
+ * `undefined` — `dbxFirebaseKnownExternalConnectionProvider` treats an undefined override as "keep the known one".
+ */
+export const DBX_FIREBASE_EXTERNAL_CONNECTION_MICROSOFT_PROVIDER: DbxFirebaseExternalConnectionProvider = {
+  providerType: MICROSOFT_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  assets: {
+    providerName: 'Microsoft',
+    icon: 'mail',
+    description: 'Connect your Microsoft 365 account to read your mail, calendar and files.'
+  },
+  scopePresets: MICROSOFT_USER_EXTERNAL_CONNECTION_SCOPE_PRESETS,
+  connectConfirm: {
+    title: 'Connect Microsoft',
+    prompt: 'If you are a Microsoft 365 administrator, Microsoft may show a "Consent on behalf of your organization" checkbox. Leave it unticked: ticking it gives this app the same access for every user in your organization, without asking them.',
+    confirmText: 'Continue to Microsoft'
+  },
+  connectErrorMessages: {
+    [USER_EXTERNAL_CONNECTION_OVER_GRANTED_ERROR_CODE]:
+      "Microsoft granted more access than the option you picked, so the connection was not saved. This happens when this app already holds consent for more: an earlier connection (disconnecting or switching does not remove Microsoft's consent), or an administrator consenting for your whole organization. Remove the extra access, then connect again. You can revoke your own consent at https://myapps.microsoft.com (the app → Manage your application → Revoke permissions). An administrator removes an organization-wide consent in Microsoft Entra (Enterprise apps → the app → Permissions → Admin consent → Revoke permission)."
+  }
+};
+
+/**
  * The library's provider for each known third-party service, keyed by provider type.
  *
  * Every service the workspace ships a server-side OAuth adapter for appears here, so an app that
@@ -82,7 +131,8 @@ export const DBX_FIREBASE_KNOWN_EXTERNAL_CONNECTION_PROVIDERS: Record<KnownUserE
   zoom: DBX_FIREBASE_EXTERNAL_CONNECTION_ZOOM_PROVIDER,
   discord: DBX_FIREBASE_EXTERNAL_CONNECTION_DISCORD_PROVIDER,
   zoho: DBX_FIREBASE_EXTERNAL_CONNECTION_ZOHO_PROVIDER,
-  trello: DBX_FIREBASE_EXTERNAL_CONNECTION_TRELLO_PROVIDER
+  trello: DBX_FIREBASE_EXTERNAL_CONNECTION_TRELLO_PROVIDER,
+  microsoft: DBX_FIREBASE_EXTERNAL_CONNECTION_MICROSOFT_PROVIDER
 };
 
 /**
@@ -111,6 +161,18 @@ export interface DbxFirebaseKnownExternalConnectionProviderConfig {
    */
   readonly disconnectConfirm?: Maybe<DbxActionConfirmConfig>;
   /**
+   * Overrides the confirmation shown before connecting, reconnecting or switching presets.
+   *
+   * An undefined value keeps the known provider's. To drop a known confirm (e.g. the Microsoft
+   * notice), spread the library constant and set `connectConfirm: undefined` instead.
+   */
+  readonly connectConfirm?: Maybe<DbxActionConfirmConfig>;
+  /**
+   * Overrides the copy shown for each reason code a refused connect reports. Replaces the known
+   * provider's messages as a whole.
+   */
+  readonly connectErrorMessages?: Maybe<DbxFirebaseExternalConnectionConnectErrorMessages>;
+  /**
    * Turns the known provider into a LOGIN provider too.
    *
    * No known provider declares one — a connectable service is not automatically a login provider, and
@@ -118,6 +180,11 @@ export interface DbxFirebaseKnownExternalConnectionProviderConfig {
    * hand-spreading the library const.
    */
   readonly signIn?: Maybe<DbxFirebaseExternalConnectionSignInConfig>;
+  /**
+   * Overrides the known provider's scope presets — e.g. to mirror a server that declared its own
+   * presets for the provider. Must match the server's presets.
+   */
+  readonly scopePresets?: Maybe<readonly UserExternalConnectionScopePreset[]>;
 }
 
 /**
@@ -128,7 +195,7 @@ export interface DbxFirebaseKnownExternalConnectionProviderConfig {
  * @throws {Error} When there is no known provider for the given type.
  */
 export function dbxFirebaseKnownExternalConnectionProvider(config: DbxFirebaseKnownExternalConnectionProviderConfig): DbxFirebaseExternalConnectionProvider {
-  const { providerType, assets, authorizePath, connect, disconnectConfirm, signIn } = config;
+  const { providerType, assets, authorizePath, connect, disconnectConfirm, connectConfirm, connectErrorMessages, signIn, scopePresets } = config;
   const known = DBX_FIREBASE_KNOWN_EXTERNAL_CONNECTION_PROVIDERS[providerType];
 
   if (known == null) {
@@ -141,7 +208,10 @@ export function dbxFirebaseKnownExternalConnectionProvider(config: DbxFirebaseKn
     authorizePath: authorizePath ?? known.authorizePath,
     connect: connect ?? known.connect,
     disconnectConfirm: disconnectConfirm ?? known.disconnectConfirm,
-    signIn: signIn ?? known.signIn
+    connectConfirm: connectConfirm ?? known.connectConfirm,
+    connectErrorMessages: connectErrorMessages ?? known.connectErrorMessages,
+    signIn: signIn ?? known.signIn,
+    scopePresets: scopePresets ?? known.scopePresets
   };
 }
 

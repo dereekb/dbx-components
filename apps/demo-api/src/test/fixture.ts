@@ -114,6 +114,8 @@ import {
   type UserExternalConnectionDocument,
   type UserExternalConnectionFirestoreCollection,
   type UserExternalConnectionProviderType,
+  type UpdateUserExternalConnectionDataParams,
+  type UpdateUserExternalConnectionDataResult,
   CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
   type SyncCalendarResult,
   type SyncAllFlaggedCalendarsResult,
@@ -2124,6 +2126,10 @@ export class DemoApiUserExternalConnectionTestContextFixture<F extends FirebaseA
   async deleteAllUserExternalConnections(): Promise<void> {
     return this.instance.deleteAllUserExternalConnections();
   }
+
+  async updateUserExternalConnectionData(params: UpdateUserExternalConnectionDataParams): Promise<UpdateUserExternalConnectionDataResult> {
+    return this.instance.updateUserExternalConnectionData(params);
+  }
 }
 
 export class DemoApiUserExternalConnectionTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<UserExternalConnection, UserExternalConnectionDocument, DemoApiFunctionContextFixtureInstance<F>> {
@@ -2181,6 +2187,18 @@ export class DemoApiUserExternalConnectionTestContextInstance<F extends Firebase
 
   async deleteAllUserExternalConnections(): Promise<void> {
     return this.testContext.userExternalConnectionServerActions.deleteAllUserExternalConnectionsForUser({ uid: this.documentId });
+  }
+
+  /**
+   * Writes this user's connection data through the `update:data` action, skipping the callable's authorization (the
+   * `data` role and the provider's connect policy). Stages data the caller could not write themselves.
+   *
+   * @param params - The update.
+   * @returns The provider's item summaries after the write.
+   */
+  async updateUserExternalConnectionData(params: UpdateUserExternalConnectionDataParams): Promise<UpdateUserExternalConnectionDataResult> {
+    const updateUserExternalConnectionData = await this.testContext.userExternalConnectionServerActions.updateUserExternalConnectionData(params);
+    return updateUserExternalConnectionData(this.document);
   }
 }
 

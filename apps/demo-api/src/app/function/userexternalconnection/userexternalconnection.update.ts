@@ -9,9 +9,8 @@ import { type DemoUpdateModelFunction } from '../function.context';
  * credentials and its public entry in a single transaction, and recomputes the connected-provider
  * array from the result.
  *
- * The target is always the caller's own pair: it is keyed by uid, so the key is built here rather
- * than taken from `key` (which the client's document store injects, but which cannot name anything
- * else the caller could act on). The `disconnect` role is still asserted against that document so
+ * The target is always the caller's own pair, built here from their uid: the params take no `key`, and one
+ * sent anyway fails validation, admins included. The `disconnect` role is still asserted against that document so
  * the model's permission map — not this function — decides whether the write is allowed.
  */
 export const userExternalConnectionUpdateDisconnect: DemoUpdateModelFunction<DisconnectUserExternalConnectionParams> = withApiDetails({

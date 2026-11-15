@@ -1,14 +1,43 @@
-import { Controller, Get, Header, HttpException, HttpStatus, Inject, Param, Req } from '@nestjs/common';
+import { Controller, Get, Header, HttpException, HttpStatus, Inject, Param, Query, Req } from '@nestjs/common';
 import { type Request } from 'express';
-import { type UserExternalConnectionAccessToken, type UserExternalConnectionProviderType } from '@dereekb/firebase';
+import { type Maybe } from '@dereekb/util';
+import {
+  type UserExternalConnectionAccessTokenResponse,
+  type UserExternalConnectionProviderType,
+  USER_EXTERNAL_CONNECTION_TOKEN_EXPORT_NOT_ALLOWED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_TOKEN_INCLUDE_DATA,
+  USER_EXTERNAL_CONNECTION_TOKEN_INCLUDE_QUERY_PARAM,
+  USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE
+} from '@dereekb/firebase';
 import { type FirebaseServerAuthenticatedRequest } from '@dereekb/firebase-server';
 import { UserExternalConnectionTokenApiService } from './userexternalconnection.token.service';
+
+/**
+ * Error codes whose `data` the controller passes back to the caller.
+ *
+ * An allowlist so only data the mint's own gates built (the provider and the excess scopes) leaves the
+ * server; data attached by any other failure stays put.
+ */
+const USER_EXTERNAL_CONNECTION_TOKEN_ERROR_CODES_WITH_DATA: ReadonlySet<string> = new Set<string>([USER_EXTERNAL_CONNECTION_TOKEN_EXPORT_NOT_ALLOWED_ERROR_CODE, USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE]);
 
 /**
  * Route prefix the token controller is mounted at. Under the `/api` global route prefix the route
  * becomes `GET /api/session/external/:providerType`, inside the session API's protected path.
  */
 export const USER_EXTERNAL_CONNECTION_TOKEN_API_ROUTE_PREFIX = 'session/external';
+
+/**
+ * Whether an `include` query value asks for the caller's connection data.
+ *
+ * Comma-separated and trimmed; unknown values are ignored. A repeated query (`?include=a&include=data`) is accepted.
+ *
+ * @param include - The raw `include` query value.
+ * @returns True when it contains `data`.
+ */
+export function userExternalConnectionTokenIncludesData(include: unknown): boolean {
+  const values = (Array.isArray(include) ? include : [include]).filter((x): x is string => typeof x === 'string');
+  return values.some((value) => value.split(',').some((part) => part.trim() === USER_EXTERNAL_CONNECTION_TOKEN_INCLUDE_DATA));
+}
 
 /**
  * REST controller that mints the caller's access token for one of their external connections.
@@ -25,15 +54,16 @@ export class UserExternalConnectionTokenApiController {
    *
    * @param req - The Express request carrying auth credentials on `req.auth`.
    * @param providerType - The provider whose access token to mint.
-   * @returns The {@link UserExternalConnectionAccessToken}.
+   * @param include - The optional `include` query; `data` adds the caller's connection data for this provider.
+   * @returns The {@link UserExternalConnectionAccessTokenResponse}.
    */
   @Get(':providerType')
   @Header('Cache-Control', 'no-store')
-  async getAccessToken(@Req() req: Request, @Param('providerType') providerType: UserExternalConnectionProviderType): Promise<UserExternalConnectionAccessToken> {
+  async getAccessToken(@Req() req: Request, @Param('providerType') providerType: UserExternalConnectionProviderType, @Query(USER_EXTERNAL_CONNECTION_TOKEN_INCLUDE_QUERY_PARAM) include?: Maybe<string | string[]>): Promise<UserExternalConnectionAccessTokenResponse> {
     const auth = (req as FirebaseServerAuthenticatedRequest).auth;
 
     try {
-      return await this.tokenService.mintAccessToken({ auth, providerType });
+      return await this.tokenService.mintAccessToken({ auth, providerType, includeData: userExternalConnectionTokenIncludesData(include) });
     } catch (error: any) {
       throw this._toHttpException(error);
     }
@@ -49,7 +79,8 @@ export class UserExternalConnectionTokenApiController {
       const message = error?.message ?? 'Internal server error';
       // prefer the specific code under `details` over the coarse functions code ('permission-denied')
       const code = error?.details?.code ?? error?.code;
-      result = new HttpException({ statusCode: status, message, code }, status);
+      const data = USER_EXTERNAL_CONNECTION_TOKEN_ERROR_CODES_WITH_DATA.has(code) ? error?.details?.data : undefined;
+      result = new HttpException({ statusCode: status, message, code, ...(data == null ? {} : { data }) }, status);
     }
 
     return result;

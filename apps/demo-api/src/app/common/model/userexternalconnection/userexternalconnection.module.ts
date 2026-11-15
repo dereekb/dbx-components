@@ -1,6 +1,14 @@
 import { type InjectionToken, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { DEMO_DISCORD_EXTERNAL_CONNECTION_PROVIDER_TYPE, DEMO_TRELLO_BOT_EXTERNAL_CONNECTION_PROVIDER_TYPE, DEMO_TRELLO_EXTERNAL_CONNECTION_PROVIDER_TYPE, DEMO_ZOHO_ADMIN_EXTERNAL_CONNECTION_PROVIDER_TYPE, DemoFirestoreCollections } from 'demo-firebase';
+import {
+  DEMO_DISCORD_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  DEMO_MICROSOFT_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  DEMO_TRELLO_BOT_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  DEMO_TRELLO_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  DEMO_USER_EXTERNAL_CONNECTION_DATA_TYPES,
+  DEMO_ZOHO_ADMIN_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  DemoFirestoreCollections
+} from 'demo-firebase';
 import { type UserExternalConnectionSignInDelegate, appUserExternalConnectionModuleMetadata, autoCreateUserSignInDelegate } from '@dereekb/firebase-server/model';
 import { DemoApiAuthModule, DemoApiAuthService, DemoApiFirestoreModule } from '../../firebase';
 
@@ -66,12 +74,18 @@ export const DEMO_USER_EXTERNAL_CONNECTION_SIGN_IN_DELEGATE: InjectionToken = 'D
  * (any user may connect the account a bot acts as) and NOT unique (several users may connect the same
  * bot account). The token API's own admin predicate still gates the mint. The plain `trello` connection
  * is a member's own account, so it is unique and never exported.
+ *
+ * `microsoft` is admin-only, exportable and unique: one Microsoft connection per admin, connected with a
+ * Read or Read + Write scope preset and minted out to a CLI under an OIDC scope ceiling.
  */
 @Module(
   appUserExternalConnectionModuleMetadata({
     dependencyModule: DemoApiFirestoreModule,
     appCollectionsToken: DemoFirestoreCollections,
     imports: [ConfigModule, DemoApiAuthModule],
+    // the connection data (`uecd`) types: Microsoft mail signatures, read by msgraph-cli as server defaults. The
+    // encryption key is derived from USER_EXTERNAL_CONNECTION_ENCRYPTION_SECRET, so no new secret is needed.
+    dataTypes: DEMO_USER_EXTERNAL_CONNECTION_DATA_TYPES,
     providerPolicies: [
       {
         providerType: DEMO_DISCORD_EXTERNAL_CONNECTION_PROVIDER_TYPE,
@@ -107,6 +121,20 @@ export const DEMO_USER_EXTERNAL_CONNECTION_SIGN_IN_DELEGATE: InjectionToken = 'D
         // stated rather than defaulted: several users may each connect the same bot account. Also
         // deliberately NOT adminOnly, unlike zoho_admin — a board bot is not an org administrator
         unique: false
+      },
+      {
+        providerType: DEMO_MICROSOFT_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+        // minted out to msgraph-cli, capped by the token.external.microsoft_read / _admin OIDC scope
+        // ceilings (see DemoExternalConnectionTokenApiModule); Microsoft cannot narrow, so a grant
+        // wider than the caller's ceiling is refused
+        tokenExport: true,
+        // the connection reads an org mailbox, so only an admin may consent to it
+        adminOnly: true,
+        // one Microsoft account is one demo user
+        unique: true,
+        // stated rather than defaulted: Entra issues every consented Graph scope, so a connect that comes back
+        // wider than its preset (an org-wide or never-revoked consent) is refused rather than stored
+        onOverGrant: 'block'
       }
     ],
     signIn: {

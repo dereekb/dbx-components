@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { MISSING_ENDPOINT_OIDC_SCOPE_ERROR_CODE } from '@dereekb/firebase-server';
-import { EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE, USER_EXTERNAL_CONNECTION_TOKEN_EXPORT_NOT_ALLOWED_ERROR_CODE, USER_EXTERNAL_CONNECTION_TOKEN_FORBIDDEN_ERROR_CODE } from '@dereekb/firebase';
+import { EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE, USER_EXTERNAL_CONNECTION_TOKEN_EXPORT_NOT_ALLOWED_ERROR_CODE, USER_EXTERNAL_CONNECTION_TOKEN_FORBIDDEN_ERROR_CODE, USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { type UserExternalConnectionReader } from '../userexternalconnection.reader.service';
 import { type UserExternalConnectionCredentials } from '../userexternalconnection.private';
@@ -9,6 +9,8 @@ import { userExternalConnectionOAuthProviderRegistry } from '../oauth/userextern
 import { type AbstractUserExternalConnectionOAuthService } from '../oauth/userexternalconnection.oauth.service';
 import { DEFAULT_USER_EXTERNAL_CONNECTION_TOKEN_MINIMUM_REMAINING, type UserExternalConnectionTokenApiModuleConfig, type UserExternalConnectionTokenPredicate } from './userexternalconnection.token.config';
 import { UserExternalConnectionTokenApiService } from './userexternalconnection.token.service';
+import { userExternalConnectionTokenIncludesData } from './userexternalconnection.token.controller';
+import { type UserExternalConnectionProviderDataReader } from '../userexternalconnection.action.server';
 
 const EXPORTED = 'zoho_admin';
 const NOT_EXPORTED = 'zoho';
@@ -135,5 +137,242 @@ describe('UserExternalConnectionTokenApiService', () => {
     const { service } = makeService({ config: { allowedClientIds: (clientId) => clientId === CLIENT_ID } });
     const result = await service.mintAccessToken({ auth: oidcAuth(), providerType: EXPORTED });
     expect(result.accessToken).toBe('access-token');
+  });
+});
+
+describe('UserExternalConnectionTokenApiService scope ceilings', () => {
+  const GRAPH = 'graph';
+  const ZOHO = 'zoho_admin';
+  const READ_SCOPE = 'token.external.graph_read';
+  const ADMIN_SCOPE = 'token.external.graph_admin';
+  const EMPTY_SCOPE = 'token.external.graph_none';
+  const ZOHO_SCOPE = 'token.external.zoho_read';
+  const READ_SCOPES = ['User.Read', 'Mail.Read'];
+  const WRITE_SCOPES = ['Mail.ReadWrite'];
+
+  const CONFIG: UserExternalConnectionTokenApiModuleConfig = {
+    providerScopes: [
+      { providerType: GRAPH, oidcScopeCeilings: { [READ_SCOPE]: READ_SCOPES, [ADMIN_SCOPE]: [...READ_SCOPES, ...WRITE_SCOPES], [EMPTY_SCOPE]: [] } },
+      { providerType: ZOHO, oidcScopeCeilings: { [ZOHO_SCOPE]: ['ZohoCRM.modules.ALL'] } }
+    ]
+  };
+
+  interface MakeCeilingServiceInput {
+    readonly grantedScopes?: Maybe<string[]>;
+    readonly zohoScopes?: Maybe<string[]>;
+    readonly config?: Maybe<UserExternalConnectionTokenApiModuleConfig>;
+  }
+
+  function makeCeilingService(input: MakeCeilingServiceInput = {}) {
+    const graphCredentials: UserExternalConnectionCredentials = { ...STORED_CREDENTIALS, accessToken: 'stored-graph-token', scopes: input.grantedScopes === undefined ? [...READ_SCOPES, ...WRITE_SCOPES] : input.grantedScopes, extra: { tenantId: 'tenant-1', secret: 'x' } };
+    const zohoCredentials: UserExternalConnectionCredentials = { ...STORED_CREDENTIALS, scopes: input.zohoScopes === undefined ? ['ZohoCRM.modules.ALL'] : input.zohoScopes };
+
+    const readUsableUserExternalConnectionCredentials = vi.fn(async () => graphCredentials);
+    const readerForProvider = vi.fn((providerType: string) => ({ readUsableUserExternalConnectionCredentials: providerType === GRAPH ? readUsableUserExternalConnectionCredentials : async () => zohoCredentials }));
+    const reader = { readerForUser: vi.fn(() => readerForProvider) } as unknown as UserExternalConnectionReader;
+
+    // case-insensitive canonicalization, like Microsoft's
+    const canonical = new Map([...READ_SCOPES, ...WRITE_SCOPES].map((x) => [x.toLowerCase(), x]));
+    const graphService = {
+      providerType: GRAPH,
+      exportedCredentialExtraKeys: ['tenantId'],
+      normalizeScopes: (scopes: readonly string[]) => scopes.map((x) => canonical.get(x.toLowerCase()) ?? x)
+    } as unknown as AbstractUserExternalConnectionOAuthService;
+
+    const oauthRegistry = userExternalConnectionOAuthProviderRegistry([graphService, { providerType: ZOHO } as AbstractUserExternalConnectionOAuthService]);
+    const policyRegistry = userExternalConnectionProviderPolicyRegistry([
+      { providerType: GRAPH, adminOnly: true, tokenExport: true },
+      { providerType: ZOHO, adminOnly: true, tokenExport: true }
+    ]);
+
+    const service = new UserExternalConnectionTokenApiService(reader, oauthRegistry, policyRegistry, () => true, input.config === undefined ? CONFIG : input.config);
+    return { service, readUsableUserExternalConnectionCredentials };
+  }
+
+  function oidcAuthWith(...scopes: string[]) {
+    return oidcAuth(['openid', EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE, ...scopes].join(' '));
+  }
+
+  async function rejectionOf(fn: () => Promise<unknown>): Promise<any> {
+    let caught: any;
+
+    try {
+      await fn();
+    } catch (e) {
+      caught = e;
+    }
+
+    return caught;
+  }
+
+  it('should mint the stored token when the grant fits the read ceiling', async () => {
+    const { service } = makeCeilingService({ grantedScopes: READ_SCOPES });
+    const result = await service.mintAccessToken({ auth: oidcAuthWith(READ_SCOPE), providerType: GRAPH });
+
+    expect(result.accessToken).toBe('stored-graph-token');
+    expect(result.scopes).toEqual(READ_SCOPES);
+    expect(result.extra).toEqual({ tenantId: 'tenant-1' });
+    expect((result as any).refreshToken).toBeUndefined();
+  });
+
+  it('should refuse a grant reaching past the ceiling, naming the excess scopes and never returning the token', async () => {
+    const { service } = makeCeilingService();
+    const caught = await rejectionOf(() => service.mintAccessToken({ auth: oidcAuthWith(READ_SCOPE), providerType: GRAPH }));
+
+    expect(caught?.details?.code).toBe(USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE);
+    expect(caught?.details?.data?.excessScopes).toEqual(WRITE_SCOPES);
+    expect(JSON.stringify(caught?.details ?? {})).not.toContain('stored-graph-token');
+  });
+
+  it('should union the ceilings of every mapped OIDC scope the caller holds', async () => {
+    const { service } = makeCeilingService();
+    const result = await service.mintAccessToken({ auth: oidcAuthWith(READ_SCOPE, ADMIN_SCOPE), providerType: GRAPH });
+    expect(result.scopes).toEqual([...READ_SCOPES, ...WRITE_SCOPES]);
+  });
+
+  it('should normalize the grant before comparing it with the ceiling', async () => {
+    const { service } = makeCeilingService({ grantedScopes: ['user.read', 'mail.read'] });
+    const result = await service.mintAccessToken({ auth: oidcAuthWith(READ_SCOPE), providerType: GRAPH });
+
+    expect(result.accessToken).toBe('stored-graph-token');
+    expect(result.scopes).toEqual(['user.read', 'mail.read']);
+  });
+
+  it('should refuse an unknown grant under a ceiling', async () => {
+    const { service } = makeCeilingService({ grantedScopes: null });
+    const caught = await rejectionOf(() => service.mintAccessToken({ auth: oidcAuthWith(READ_SCOPE), providerType: GRAPH }));
+
+    expect(caught?.details?.code).toBe(USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE);
+    expect(caught?.details?.data?.excessScopes).toBeUndefined();
+  });
+
+  it('should fail closed when the held OIDC scope maps to an empty ceiling', async () => {
+    const { service } = makeCeilingService({ grantedScopes: READ_SCOPES });
+    expect(await codeOfRejection(() => service.mintAccessToken({ auth: oidcAuthWith(EMPTY_SCOPE), providerType: GRAPH }))).toBe(USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE);
+  });
+
+  it('should refuse an OIDC caller holding none of the provider mapped scopes before reading the connection', async () => {
+    const { service, readUsableUserExternalConnectionCredentials } = makeCeilingService();
+    expect(await codeOfRejection(() => service.mintAccessToken({ auth: oidcAuthWith(), providerType: GRAPH }))).toBe(USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE);
+    expect(readUsableUserExternalConnectionCredentials).not.toHaveBeenCalled();
+  });
+
+  it('should give a non-OIDC caller no ceiling', async () => {
+    const { service } = makeCeilingService({ config: { ...CONFIG, allowNonOidcCallers: true } });
+    const result = await service.mintAccessToken({ auth: { uid: 'u1', token: {} } as any, providerType: GRAPH });
+    expect(result.accessToken).toBe('stored-graph-token');
+  });
+
+  it('should mint the stored token with no providerScopes entry', async () => {
+    const { service } = makeCeilingService({ config: {} });
+    const result = await service.mintAccessToken({ auth: oidcAuthWith(), providerType: GRAPH });
+    expect(result.accessToken).toBe('stored-graph-token');
+  });
+
+  describe('a provider without normalizeScopes', () => {
+    it('should mint unchanged when its grant fits the ceiling', async () => {
+      const { service } = makeCeilingService();
+      const result = await service.mintAccessToken({ auth: oidcAuthWith(ZOHO_SCOPE), providerType: ZOHO });
+      expect(result.accessToken).toBe('access-token');
+      expect(result.scopes).toEqual(['ZohoCRM.modules.ALL']);
+    });
+
+    it('should refuse when its grant exceeds the ceiling', async () => {
+      const { service } = makeCeilingService({ zohoScopes: ['ZohoCRM.modules.ALL', 'ZohoRecruit.modules.ALL'] });
+      expect(await codeOfRejection(() => service.mintAccessToken({ auth: oidcAuthWith(ZOHO_SCOPE), providerType: ZOHO }))).toBe(USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE);
+    });
+
+    it('should mint unchanged with no providerScopes entry (the zoho path)', async () => {
+      const { service } = makeCeilingService({ config: {} });
+      const result = await service.mintAccessToken({ auth: oidcAuthWith(), providerType: ZOHO });
+      expect(result.accessToken).toBe('access-token');
+    });
+  });
+
+  describe('include data', () => {
+    const PROVIDER_DATA = { mail_signature: { me: { html: '<p>sig</p>' } } };
+
+    function makeDataService(input: { readonly predicate?: Maybe<UserExternalConnectionTokenPredicate>; readonly read?: () => Promise<unknown>; readonly withData?: boolean } = {}) {
+      const base = makeService({ predicate: input.predicate });
+      const readUserExternalConnectionProviderData = vi.fn(input.read ?? (async () => PROVIDER_DATA));
+      const dataReader = { readUserExternalConnectionProviderData } as unknown as UserExternalConnectionProviderDataReader;
+      const reader = { readerForUser: vi.fn(() => vi.fn(() => ({ readUsableUserExternalConnectionCredentials: vi.fn(async () => STORED_CREDENTIALS) }))) } as unknown as UserExternalConnectionReader;
+      const oauthRegistry = userExternalConnectionOAuthProviderRegistry([{ providerType: EXPORTED } as unknown as AbstractUserExternalConnectionOAuthService]);
+      const policyRegistry = userExternalConnectionProviderPolicyRegistry([{ providerType: EXPORTED, adminOnly: true, tokenExport: true }]);
+      const predicate = input.predicate === undefined ? () => true : input.predicate;
+      const service = new UserExternalConnectionTokenApiService(reader, oauthRegistry, policyRegistry, predicate, undefined, input.withData === false ? undefined : dataReader);
+      return { ...base, service, readUserExternalConnectionProviderData };
+    }
+
+    it('should attach the provider data after every gate passes', async () => {
+      const { service, readUserExternalConnectionProviderData } = makeDataService();
+      const result = await service.mintAccessToken({ auth: oidcAuth(), providerType: EXPORTED, includeData: true });
+
+      expect(result.data).toEqual(PROVIDER_DATA);
+      expect(result.accessToken).toBe('access-token');
+      expect(readUserExternalConnectionProviderData).toHaveBeenCalledWith({ uid: 'u1', providerType: EXPORTED });
+    });
+
+    it('should not read data without includeData', async () => {
+      const { service, readUserExternalConnectionProviderData } = makeDataService();
+      const result = await service.mintAccessToken({ auth: oidcAuth(), providerType: EXPORTED });
+
+      expect(result.data).toBeUndefined();
+      expect(readUserExternalConnectionProviderData).not.toHaveBeenCalled();
+    });
+
+    it('should never read data when a gate refuses', async () => {
+      const { service, readUserExternalConnectionProviderData } = makeDataService({ predicate: () => false });
+
+      expect(await codeOfRejection(() => service.mintAccessToken({ auth: oidcAuth(), providerType: EXPORTED, includeData: true }))).toBe(USER_EXTERNAL_CONNECTION_TOKEN_FORBIDDEN_ERROR_CODE);
+      expect(readUserExternalConnectionProviderData).not.toHaveBeenCalled();
+    });
+
+    it('should never read data when the provider does not export tokens', async () => {
+      const { service, readUserExternalConnectionProviderData } = makeDataService();
+
+      expect(await codeOfRejection(() => service.mintAccessToken({ auth: oidcAuth(), providerType: NOT_EXPORTED, includeData: true }))).toBe(USER_EXTERNAL_CONNECTION_TOKEN_EXPORT_NOT_ALLOWED_ERROR_CODE);
+      expect(readUserExternalConnectionProviderData).not.toHaveBeenCalled();
+    });
+
+    it('should still return the token when reading the data fails', async () => {
+      const { service } = makeDataService({
+        read: async () => {
+          throw new Error('unreadable');
+        }
+      });
+      const result = await service.mintAccessToken({ auth: oidcAuth(), providerType: EXPORTED, includeData: true });
+
+      expect(result.accessToken).toBe('access-token');
+      expect(result.data).toBeUndefined();
+    });
+
+    it('should omit data when there is none', async () => {
+      const { service } = makeDataService({ read: async () => ({}) });
+      const result = await service.mintAccessToken({ auth: oidcAuth(), providerType: EXPORTED, includeData: true });
+
+      expect('data' in result).toBe(false);
+    });
+
+    it('should omit data when the data actions are not provided', async () => {
+      const { service } = makeDataService({ withData: false });
+      const result = await service.mintAccessToken({ auth: oidcAuth(), providerType: EXPORTED, includeData: true });
+
+      expect('data' in result).toBe(false);
+    });
+  });
+});
+
+describe('userExternalConnectionTokenIncludesData()', () => {
+  it('should detect data in a comma-separated list', () => {
+    expect(userExternalConnectionTokenIncludesData('data')).toBe(true);
+    expect(userExternalConnectionTokenIncludesData('other, data')).toBe(true);
+    expect(userExternalConnectionTokenIncludesData(['other', 'data'])).toBe(true);
+  });
+
+  it('should ignore unknown and missing values', () => {
+    expect(userExternalConnectionTokenIncludesData(undefined)).toBe(false);
+    expect(userExternalConnectionTokenIncludesData('database')).toBe(false);
+    expect(userExternalConnectionTokenIncludesData('')).toBe(false);
   });
 });

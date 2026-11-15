@@ -24,6 +24,11 @@
       "import": "./trello/index.esm.js",
       "default": "./trello/index.esm.js"
     },
+    "./microsoft": {
+      "types": "./microsoft/index.d.ts",
+      "import": "./microsoft/index.esm.js",
+      "default": "./microsoft/index.esm.js"
+    },
     "./mailgun": {
       "types": "./mailgun/index.d.ts",
       "import": "./mailgun/index.esm.js",
@@ -63,6 +68,7 @@
     "@dereekb/dbx-core": "14.25.1",
     "@dereekb/discord": "14.25.1",
     "@dereekb/firebase": "14.25.1",
+    "@dereekb/microsoft": "14.25.1",
     "@dereekb/model": "14.25.1",
     "@dereekb/nestjs": "14.25.1",
     "@dereekb/oauth-resource": "14.25.1",

@@ -26,6 +26,7 @@ import {
   type DbxFirebaseModelTypesServiceConfig,
   type DbxFirebaseModelTypesServiceEntry,
   type DbxFirebaseExternalConnectionProviderEntry,
+  DBX_FIREBASE_EXTERNAL_CONNECTION_MICROSOFT_PROVIDER,
   DBX_FIREBASE_EXTERNAL_CONNECTION_TRELLO_PROVIDER,
   DBX_FIREBASE_EXTERNAL_CONNECTION_ZOHO_PROVIDER,
   dbxFirebaseKnownExternalConnectionProvider,
@@ -75,6 +76,7 @@ import {
   DEMO_ZOHO_EXTERNAL_CONNECTION_PROVIDER_TYPE,
   DEMO_ZOHO_ADMIN_EXTERNAL_CONNECTION_PROVIDER_TYPE,
   DEMO_TRELLO_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  DEMO_MICROSOFT_EXTERNAL_CONNECTION_PROVIDER_TYPE,
   DEMO_TRELLO_BOT_EXTERNAL_CONNECTION_PROVIDER_TYPE,
   DEMO_FORM_SPACE_TYPE_CONFIG_SERVICE,
   ProfileFunctions
@@ -124,6 +126,9 @@ import { META_REDUCERS, ROOT_REDUCER } from './app/state/app.state';
  * `trello_bot` is a second Trello connection to the account a board bot acts as, minted out to demo-cli.
  * Unlike `zoho_admin` it is open to every user. It reuses the known Trello presentation, whose lack of a
  * fixed `authorizePath` lets the override route it to `/oauth/trello_bot/authorize`.
+ *
+ * `microsoft` is admin-only and declares the Read / Read + Write scope presets, so it renders one connect
+ * button per preset and a chip naming the preset the current grant covers.
  */
 export const DEMO_EXTERNAL_CONNECTION_PROVIDERS: DbxFirebaseExternalConnectionProviderEntry[] = [
   DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER_TYPE,
@@ -153,6 +158,11 @@ export const DEMO_EXTERNAL_CONNECTION_PROVIDERS: DbxFirebaseExternalConnectionPr
       providerName: 'Trello (Bot)',
       description: 'Connect the Trello account a bot acts as. Its access token can be minted out to demo-cli.'
     }
+  },
+  {
+    ...DBX_FIREBASE_EXTERNAL_CONNECTION_MICROSOFT_PROVIDER,
+    providerType: DEMO_MICROSOFT_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+    adminOnly: true
   }
 ];
 

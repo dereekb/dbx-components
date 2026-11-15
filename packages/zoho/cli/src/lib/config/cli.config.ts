@@ -1,5 +1,23 @@
 import { filterUndefinedValues, type Maybe } from '@dereekb/util';
-import { CLI_CONFIG_FILE_MODE, type CliCommandOutputConfig, type CliOutputConfig, mergeOutputConfig as dbxMergeOutputConfig } from '@dereekb/dbx-cli';
+import {
+  CLI_CONFIG_FILE_MODE,
+  type CliActiveTokenSource,
+  type CliCommandOutputConfig,
+  type CliOutputConfig,
+  type CliTokenSourceConfig,
+  type CliTokenSourceJsonConfigStore,
+  type CliTokenSourceName,
+  type CliTokenSourceOrigin,
+  type CliTokenSourceResolver,
+  type CliTokenSourceSelection,
+  DEFAULT_CLI_TOKEN_SOURCE_NAME,
+  assertCliTokenSourceName,
+  cliTokenSourceEnvVarNames,
+  cliTokenSourceJsonConfigStore,
+  cliTokenSourceResolver,
+  cliTokenSourceSelectionFromArgv,
+  mergeOutputConfig as dbxMergeOutputConfig
+} from '@dereekb/dbx-cli';
 import { readJsonFile, removeFile, writeJsonFile } from '@dereekb/nestjs';
 import { type ZohoAccountsApiUrlKey, type ZohoApiUrlKey, type ZohoProduct } from '@dereekb/zoho';
 import { join } from 'node:path';
@@ -78,16 +96,18 @@ export type ZohoCliCommandOutputConfig = CliCommandOutputConfig;
 export type ZohoCliOutputConfig = CliOutputConfig;
 
 /**
+ * The CLI's binary name, which derives its token-source env var names.
+ */
+export const ZOHO_CLI_NAME = 'zoho-cli';
+
+/**
  * A saved token source: a command that prints a short-lived Zoho access token bundle when run as a
  * dbx-cli credential process (e.g. `demo-cli external-token zoho_admin`).
  *
- * Holds no secret itself. The bundle it prints is captured in-process and never echoed.
+ * dbx-cli's {@link CliTokenSourceConfig} plus the Zoho environment its calls go to. Holds no secret
+ * itself. The bundle it prints is captured in-process and never echoed.
  */
-export interface ZohoCliTokenSourceConfig {
-  /**
-   * Shell command to run, e.g. `demo-cli external-token zoho_admin`.
-   */
-  readonly command: string;
+export interface ZohoCliTokenSourceConfig extends CliTokenSourceConfig {
   /**
    * The Zoho environment the products the token covers are called in. Defaults to `production`.
    *
@@ -101,12 +121,12 @@ export interface ZohoCliTokenSourceConfig {
 /**
  * Name of a saved token source, e.g. `dev` or `prod`.
  */
-export type ZohoCliTokenSourceName = string;
+export type ZohoCliTokenSourceName = CliTokenSourceName;
 
 /**
  * The name of the unnamed `tokenSource` block, the source used when nothing selects another one.
  */
-export const DEFAULT_ZOHO_CLI_TOKEN_SOURCE_NAME: ZohoCliTokenSourceName = 'default';
+export const DEFAULT_ZOHO_CLI_TOKEN_SOURCE_NAME: ZohoCliTokenSourceName = DEFAULT_CLI_TOKEN_SOURCE_NAME;
 
 /**
  * Full CLI config file structure.
@@ -204,88 +224,30 @@ function envVar(key: string, servicePrefix?: string): Maybe<string> {
  * Environment variable that sets the token source command for one run, winning over the saved
  * selection. A {@link ZOHO_CLI_TOKEN_SOURCE_ENV_VAR} name or a `--token-source` flag wins over it.
  */
-export const ZOHO_CLI_TOKEN_COMMAND_ENV_VAR = 'ZOHO_CLI_TOKEN_COMMAND';
+export const ZOHO_CLI_TOKEN_COMMAND_ENV_VAR = cliTokenSourceEnvVarNames(ZOHO_CLI_NAME).tokenCommand;
 
 /**
  * Environment variable that selects a saved token source by name, like dbx-cli's `<CLINAME>_ENV`.
  * Wins over {@link ZOHO_CLI_TOKEN_COMMAND_ENV_VAR} and the saved selection; `--token-source` wins over it.
  */
-export const ZOHO_CLI_TOKEN_SOURCE_ENV_VAR = 'ZOHO_CLI_TOKEN_SOURCE';
+export const ZOHO_CLI_TOKEN_SOURCE_ENV_VAR = cliTokenSourceEnvVarNames(ZOHO_CLI_NAME).tokenSource;
 
 /**
  * Where the active token source was selected: the `--token-source` flag, an env var
  * ({@link ZOHO_CLI_TOKEN_SOURCE_ENV_VAR} or {@link ZOHO_CLI_TOKEN_COMMAND_ENV_VAR}), or the config file.
  */
-export type ZohoCliTokenSourceOrigin = 'flag' | 'env' | 'config';
+export type ZohoCliTokenSourceOrigin = CliTokenSourceOrigin;
 
 /**
- * The token source in effect for a run, and where it came from.
+ * The token source in effect for a run, its origin, and its name (unset for a
+ * {@link ZOHO_CLI_TOKEN_COMMAND_ENV_VAR} command, which is not a saved source).
  */
-export interface ZohoCliActiveTokenSource extends ZohoCliTokenSourceConfig {
-  readonly origin: ZohoCliTokenSourceOrigin;
-  /**
-   * The saved source's name. Unset for a {@link ZOHO_CLI_TOKEN_COMMAND_ENV_VAR} command, which is not a saved source.
-   */
-  readonly name?: Maybe<ZohoCliTokenSourceName>;
-}
+export type ZohoCliActiveTokenSource = CliActiveTokenSource<ZohoCliTokenSourceConfig>;
 
 /**
- * Per-run token source selection that does not come from the environment.
+ * Per-run token source selection that does not come from the environment (the `--token-source` flag).
  */
-export interface ZohoCliTokenSourceSelection {
-  /**
-   * The name passed with `--token-source`. Wins over every other selection.
-   */
-  readonly tokenSourceName?: Maybe<ZohoCliTokenSourceName>;
-}
-
-/**
- * Reads the `--token-source` flag off parsed yargs arguments.
- *
- * @param argv - The parsed arguments.
- * @returns The selection, with the trimmed name when the flag is set and not blank.
- */
-export function zohoCliTokenSourceSelectionFromArgv(argv: Maybe<{ readonly tokenSource?: unknown }>): ZohoCliTokenSourceSelection {
-  const name = typeof argv?.tokenSource === 'string' ? argv.tokenSource.trim() : '';
-  return name ? { tokenSourceName: name } : {};
-}
-
-/**
- * Returns the command set by the {@link ZOHO_CLI_TOKEN_COMMAND_ENV_VAR} override, if any.
- *
- * @returns The trimmed command, or undefined when the variable is unset or blank.
- */
-export function zohoCliTokenCommandFromEnv(): Maybe<string> {
-  return process.env[ZOHO_CLI_TOKEN_COMMAND_ENV_VAR]?.trim() || undefined;
-}
-
-/**
- * Returns the token source name selected by {@link ZOHO_CLI_TOKEN_SOURCE_ENV_VAR}, if any.
- *
- * @returns The trimmed name, or undefined when the variable is unset or blank.
- */
-export function zohoCliTokenSourceNameFromEnv(): Maybe<ZohoCliTokenSourceName> {
-  return process.env[ZOHO_CLI_TOKEN_SOURCE_ENV_VAR]?.trim() || undefined;
-}
-
-const ZOHO_CLI_TOKEN_SOURCE_NAME_REGEX = /^[a-z0-9][a-z0-9_-]*$/i;
-
-/**
- * Checks a token source name before it is saved: letters, digits, `_` and `-`, starting with a letter or digit.
- *
- * @param name - The name to check.
- * @returns The trimmed name.
- * @throws {Error} When the name is blank or holds other characters.
- */
-export function assertZohoCliTokenSourceName(name: string): ZohoCliTokenSourceName {
-  const trimmed = name.trim();
-
-  if (!ZOHO_CLI_TOKEN_SOURCE_NAME_REGEX.test(trimmed)) {
-    throw new Error(`Invalid token source name "${trimmed}": use letters, digits, "_" and "-", starting with a letter or digit.`);
-  }
-
-  return trimmed;
-}
+export type ZohoCliTokenSourceSelection = CliTokenSourceSelection;
 
 /**
  * Reads a saved token source's api mode, rejecting an unknown value rather than quietly treating it
@@ -309,6 +271,61 @@ function readZohoCliTokenSourceApiMode(value: unknown, name: ZohoCliTokenSourceN
 }
 
 /**
+ * Creates zoho-cli's token-source selection rules: dbx-cli's {@link cliTokenSourceResolver} for
+ * `zoho-cli`, reading (and checking) each saved source's `apiMode`.
+ *
+ * @returns The resolver. It reads the env vars on each call.
+ */
+export function zohoCliTokenSourceResolver(): CliTokenSourceResolver<ZohoCliTokenSourceConfig> {
+  return cliTokenSourceResolver<ZohoCliTokenSourceConfig>({
+    cliName: ZOHO_CLI_NAME,
+    readExtra: (block, name) => {
+      const apiMode = readZohoCliTokenSourceApiMode(block.apiMode, name);
+      return apiMode ? { apiMode } : {};
+    }
+  });
+}
+
+/**
+ * Reads the `--token-source` flag off parsed yargs arguments.
+ *
+ * @param argv - The parsed arguments.
+ * @returns The selection, with the trimmed name when the flag is set and not blank.
+ */
+export function zohoCliTokenSourceSelectionFromArgv(argv: Maybe<{ readonly tokenSource?: unknown }>): ZohoCliTokenSourceSelection {
+  return cliTokenSourceSelectionFromArgv(argv);
+}
+
+/**
+ * Returns the command set by the {@link ZOHO_CLI_TOKEN_COMMAND_ENV_VAR} override, if any.
+ *
+ * @returns The trimmed command, or undefined when the variable is unset or blank.
+ */
+export function zohoCliTokenCommandFromEnv(): Maybe<string> {
+  return zohoCliTokenSourceResolver().tokenCommandFromEnv();
+}
+
+/**
+ * Returns the token source name selected by {@link ZOHO_CLI_TOKEN_SOURCE_ENV_VAR}, if any.
+ *
+ * @returns The trimmed name, or undefined when the variable is unset or blank.
+ */
+export function zohoCliTokenSourceNameFromEnv(): Maybe<ZohoCliTokenSourceName> {
+  return zohoCliTokenSourceResolver().tokenSourceNameFromEnv();
+}
+
+/**
+ * Checks a token source name before it is saved: letters, digits, `_` and `-`, starting with a letter or digit.
+ *
+ * @param name - The name to check.
+ * @returns The trimmed name.
+ * @throws {Error} When the name is blank or holds other characters.
+ */
+export function assertZohoCliTokenSourceName(name: string): ZohoCliTokenSourceName {
+  return assertCliTokenSourceName(name);
+}
+
+/**
  * Returns the block a token source name is stored in, as stored: {@link DEFAULT_ZOHO_CLI_TOKEN_SOURCE_NAME}
  * is the `tokenSource` block, any other name an entry of `tokenSources`.
  *
@@ -317,15 +334,7 @@ function readZohoCliTokenSourceApiMode(value: unknown, name: ZohoCliTokenSourceN
  * @returns The stored block, unvalidated, or undefined when none is stored under the name.
  */
 export function zohoCliSavedTokenSourceBlock(fileConfig: Maybe<Pick<ZohoCliConfig, 'tokenSource' | 'tokenSources'>>, name: ZohoCliTokenSourceName): Maybe<ZohoCliTokenSourceConfig> {
-  let result: Maybe<ZohoCliTokenSourceConfig>;
-
-  if (name === DEFAULT_ZOHO_CLI_TOKEN_SOURCE_NAME) {
-    result = fileConfig?.tokenSource;
-  } else if (fileConfig?.tokenSources != null && Object.hasOwn(fileConfig.tokenSources, name)) {
-    result = fileConfig.tokenSources[name];
-  }
-
-  return result;
+  return zohoCliTokenSourceResolver().savedTokenSourceBlock(fileConfig, name);
 }
 
 /**
@@ -338,16 +347,7 @@ export function zohoCliSavedTokenSourceBlock(fileConfig: Maybe<Pick<ZohoCliConfi
  * @throws {Error} When the saved source has an unknown api mode.
  */
 export function zohoCliSavedTokenSource(fileConfig: Maybe<Pick<ZohoCliConfig, 'tokenSource' | 'tokenSources'>>, name: ZohoCliTokenSourceName): Maybe<ZohoCliTokenSourceConfig> {
-  const block = zohoCliSavedTokenSourceBlock(fileConfig, name);
-  const command = block?.command?.trim();
-  let result: Maybe<ZohoCliTokenSourceConfig>;
-
-  if (command) {
-    const apiMode = readZohoCliTokenSourceApiMode(block?.apiMode, name);
-    result = apiMode ? { command, apiMode } : { command };
-  }
-
-  return result;
+  return zohoCliTokenSourceResolver().savedTokenSource(fileConfig, name);
 }
 
 /**
@@ -358,11 +358,7 @@ export function zohoCliSavedTokenSource(fileConfig: Maybe<Pick<ZohoCliConfig, 't
  * @returns The names of the sources with a non-blank command.
  */
 export function zohoCliSavedTokenSourceNames(fileConfig: Maybe<Pick<ZohoCliConfig, 'tokenSource' | 'tokenSources'>>): ZohoCliTokenSourceName[] {
-  const named = Object.entries(fileConfig?.tokenSources ?? {})
-    .filter(([name, block]) => name !== DEFAULT_ZOHO_CLI_TOKEN_SOURCE_NAME && Boolean(block?.command?.trim()))
-    .map(([name]) => name);
-
-  return fileConfig?.tokenSource?.command?.trim() ? [DEFAULT_ZOHO_CLI_TOKEN_SOURCE_NAME, ...named] : named;
+  return zohoCliTokenSourceResolver().savedTokenSourceNames(fileConfig);
 }
 
 /**
@@ -372,25 +368,11 @@ export function zohoCliSavedTokenSourceNames(fileConfig: Maybe<Pick<ZohoCliConfi
  * @returns E.g. `--token-source`, `ZOHO_CLI_TOKEN_SOURCE`, `ZOHO_CLI_TOKEN_COMMAND`, or `config file`.
  */
 export function zohoCliTokenSourceOriginLabel(active: Pick<ZohoCliActiveTokenSource, 'origin' | 'name'>): string {
-  let result: string;
-
-  switch (active.origin) {
-    case 'flag':
-      result = '--token-source';
-      break;
-    case 'env':
-      result = active.name == null ? ZOHO_CLI_TOKEN_COMMAND_ENV_VAR : ZOHO_CLI_TOKEN_SOURCE_ENV_VAR;
-      break;
-    default:
-      result = 'config file';
-      break;
-  }
-
-  return result;
+  return zohoCliTokenSourceResolver().originLabel(active);
 }
 
 /**
- * Resolves the active token source — the same "one selected source wins" rule dbx-cli applies to envs:.
+ * Resolves the active token source — the same "one selected source wins" rule dbx-cli applies to envs:
  *
  * 1. `--token-source <name>` ({@link ZohoCliTokenSourceSelection.tokenSourceName}),
  * 2. a {@link ZOHO_CLI_TOKEN_SOURCE_ENV_VAR} name,
@@ -407,38 +389,7 @@ export function zohoCliTokenSourceOriginLabel(active: Pick<ZohoCliActiveTokenSou
  * @throws {Error} When a selected name has no saved source, or the selected source has an unknown api mode.
  */
 export function resolveZohoCliActiveTokenSource(fileConfig: Maybe<Pick<ZohoCliConfig, 'tokenSource' | 'tokenSources' | 'activeTokenSource'>>, selection?: Maybe<ZohoCliTokenSourceSelection>): Maybe<ZohoCliActiveTokenSource> {
-  const flagName = selection?.tokenSourceName?.trim() || undefined;
-  const envName = zohoCliTokenSourceNameFromEnv();
-  const envCommand = zohoCliTokenCommandFromEnv();
-  const savedName = fileConfig?.activeTokenSource?.trim() || undefined;
-  let selected: Maybe<{ readonly origin: ZohoCliTokenSourceOrigin; readonly name: ZohoCliTokenSourceName }>;
-  let result: Maybe<ZohoCliActiveTokenSource>;
-
-  if (flagName) {
-    selected = { origin: 'flag', name: flagName };
-  } else if (envName) {
-    selected = { origin: 'env', name: envName };
-  } else if (envCommand) {
-    result = { command: envCommand, origin: 'env' };
-  } else if (savedName) {
-    selected = { origin: 'config', name: savedName };
-  } else if (fileConfig?.tokenSource?.command?.trim()) {
-    selected = { origin: 'config', name: DEFAULT_ZOHO_CLI_TOKEN_SOURCE_NAME };
-  }
-
-  if (selected) {
-    const { origin, name } = selected;
-    const saved = zohoCliSavedTokenSource(fileConfig, name);
-
-    if (!saved) {
-      const names = zohoCliSavedTokenSourceNames(fileConfig);
-      throw new Error(`Unknown token source "${name}" (from ${zohoCliTokenSourceOriginLabel(selected)}). Saved token sources: ${names.length > 0 ? names.join(', ') : 'none'}. Save it with: zoho-cli auth token-source set "<command>" --name ${name}`);
-    }
-
-    result = { ...saved, origin, name };
-  }
-
-  return result;
+  return zohoCliTokenSourceResolver().resolveActiveTokenSource(fileConfig, selection);
 }
 
 /**
@@ -869,6 +820,16 @@ export async function mergeCliConfig(updates: ZohoCliConfigUpdate): Promise<Zoho
 export type ZohoCliTokenSourceConfigUpdate = Partial<Pick<ZohoCliConfig, 'tokenSource' | 'tokenSources' | 'activeTokenSource'>>;
 
 /**
+ * The config file as dbx-cli's token-source store, which reads it raw and writes back only the
+ * token-source keys.
+ *
+ * @returns The store over {@link getConfigFilePath}.
+ */
+export function zohoCliTokenSourceConfigStore(): CliTokenSourceJsonConfigStore<ZohoCliTokenSourceConfig, ZohoCliConfig> {
+  return cliTokenSourceJsonConfigStore<ZohoCliTokenSourceConfig, ZohoCliConfig>({ configDir: getConfigDir(), configFilePath: getConfigFilePath() });
+}
+
+/**
  * Updates the token-source keys (`tokenSource`, `tokenSources`, `activeTokenSource`) of the stored config file.
  *
  * A key present in the update replaces the stored value, and a key present as `undefined` removes it;
@@ -880,17 +841,9 @@ export type ZohoCliTokenSourceConfigUpdate = Partial<Pick<ZohoCliConfig, 'tokenS
  * @param update - The keys to replace or remove.
  * @returns The config file as written, or `undefined` when nothing was written.
  */
-export async function updateCliTokenSourceConfig(update: ZohoCliTokenSourceConfigUpdate): Promise<Maybe<ZohoCliConfig>> {
-  const existing = await loadCliConfigFile();
-  let result: Maybe<ZohoCliConfig>;
-
-  if (existing != null || Object.values(update).some((x) => x != null)) {
-    // without an existing file the result holds only the token-source keys; every reader treats `shared` as optional on disk
-    result = { ...existing, ...update } as ZohoCliConfig;
-    await saveCliConfig(result);
-  }
-
-  return result;
+export function updateCliTokenSourceConfig(update: ZohoCliTokenSourceConfigUpdate): Promise<Maybe<ZohoCliConfig>> {
+  // without an existing file the result holds only the token-source keys; every reader treats `shared` as optional on disk
+  return zohoCliTokenSourceConfigStore().updateConfigFile(update);
 }
 
 /**

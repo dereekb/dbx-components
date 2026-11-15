@@ -216,6 +216,46 @@
       "relatedSlugs": [
         "make-url-search-params"
       ]
+    },
+    {
+      "slug": "parse-retry-after-header",
+      "name": "parseRetryAfterHeader",
+      "kind": "function",
+      "category": "fetch",
+      "module": "@dereekb/util/fetch",
+      "subpath": "retry.after",
+      "signature": "parseRetryAfterHeader(value: Maybe<string>, now?: Maybe<Date>): Maybe<Milliseconds>",
+      "description": "Parses an HTTP `Retry-After` header: either delay-seconds (`120`) or an HTTP-date (`Wed, 21 Oct 2026 07:28:00 GMT`).",
+      "params": [
+        {
+          "name": "value",
+          "type": "Maybe<string>",
+          "description": "- The header value.",
+          "optional": false
+        },
+        {
+          "name": "now",
+          "type": "Maybe<Date>",
+          "description": "- The current time, for an HTTP-date. Defaults to now.",
+          "optional": true
+        }
+      ],
+      "returns": "The milliseconds to wait (0 for a date in the past), or undefined when the header is absent or unparseable.",
+      "tags": [
+        "fetch",
+        "http",
+        "retry",
+        "retry-after",
+        "throttle",
+        "429",
+        "503",
+        "rate-limit",
+        "parse",
+        "after",
+        "header",
+        "parseretryafterheader"
+      ],
+      "example": "parseRetryAfterHeader('120'); // 120000\nparseRetryAfterHeader(response.headers.get('Retry-After')); // undefined when absent"
     }
   ]
 }

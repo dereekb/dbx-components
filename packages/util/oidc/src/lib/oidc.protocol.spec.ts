@@ -111,6 +111,7 @@ describe('refreshAccessToken()', () => {
     expect(params.get('grant_type')).toBe('refresh_token');
     expect(params.get('refresh_token')).toBe('rt-1');
     expect(params.has('client_secret')).toBe(false);
+    expect(params.has('scope')).toBe(false);
   });
 });
 

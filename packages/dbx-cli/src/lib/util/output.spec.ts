@@ -1,5 +1,5 @@
-import { describe, it, expect, afterEach, beforeEach } from 'vitest';
-import { CliError, buildErrorOutput, configureCliSecretPatterns, configureOutputOptions, DEFAULT_CLI_HTTP_TIMEOUT_MS, DEFAULT_CLI_SECRET_PATTERNS, getCliTimeoutMs, outputResult, sanitizeString, setCliTimeoutMs, tracedFetch } from './output';
+import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
+import { CliError, CliHttpError, buildErrorOutput, cliCollectionPickApplier, configureCliSecretPatterns, configureOutputOptions, DEFAULT_CLI_HTTP_TIMEOUT_MS, DEFAULT_CLI_SECRET_PATTERNS, getCliTimeoutMs, outputResult, sanitizeString, setCliTimeoutMs, tracedFetch } from './output';
 
 describe('output util', () => {
   beforeEach(() => {
@@ -150,6 +150,104 @@ describe('output util', () => {
       const result = { key: 'pr/abc', data: { uid: 'abc', n: 'Name' } };
       const output = captureOutput(() => outputResult(result, undefined, { applyPick: (r, pick) => ({ ...r, data: pick(r.data) }) }));
       expect(output.data).toEqual(result);
+    });
+
+    describe('cliCollectionPickApplier', () => {
+      const page = {
+        '@odata.context': 'c',
+        value: [
+          { id: '1', subject: 's' },
+          { id: '2', subject: 't' }
+        ],
+        '@odata.nextLink': 'n'
+      };
+
+      it('picks each item under the items key and keeps the page fields', () => {
+        configureOutputOptions({ pick: 'id' });
+        const output = captureOutput(() => outputResult(page, undefined, { applyPick: cliCollectionPickApplier('value') }));
+        expect(output.data).toEqual({ '@odata.context': 'c', value: [{ id: '1' }, { id: '2' }], '@odata.nextLink': 'n' });
+      });
+
+      it('picks at the top level when the items key holds no array', () => {
+        configureOutputOptions({ pick: 'id' });
+        const output = captureOutput(() => outputResult({ id: '1', subject: 's', value: 'x' }, undefined, { applyPick: cliCollectionPickApplier('value') }));
+        expect(output.data).toEqual({ id: '1' });
+      });
+
+      it('maps a bare array per item', () => {
+        configureOutputOptions({ pick: 'id' });
+        const output = captureOutput(() => outputResult([{ id: '1', subject: 's' }], undefined, { applyPick: cliCollectionPickApplier('value') }));
+        expect(output.data).toEqual([{ id: '1' }]);
+      });
+    });
+
+    describe('no-match warning', () => {
+      function captureWarning(fn: () => void): { readonly output: any; readonly warnings: string[] } {
+        const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+        try {
+          const output = captureOutput(fn);
+          return { output, warnings: spy.mock.calls.map((x) => String(x[0])) };
+        } finally {
+          spy.mockRestore();
+        }
+      }
+
+      it('warns on stderr, naming the available fields, when the pick matches nothing', () => {
+        configureOutputOptions({ pick: 'nope' });
+        const { output, warnings } = captureWarning(() => outputResult({ a: 1 }));
+        expect(output.data).toEqual({});
+        expect(warnings).toHaveLength(1);
+        expect(warnings[0]).toContain('matched no fields');
+        expect(warnings[0]).toContain('a');
+      });
+
+      it('warns when the pick matches no field of any collection item', () => {
+        configureOutputOptions({ pick: 'nope' });
+        const { warnings } = captureWarning(() => outputResult({ value: [{ id: '1' }] }, undefined, { applyPick: cliCollectionPickApplier('value') }));
+        expect(warnings).toHaveLength(1);
+        expect(warnings[0]).toContain('id');
+      });
+
+      it('does not warn when the pick matches', () => {
+        configureOutputOptions({ pick: 'a' });
+        expect(captureWarning(() => outputResult({ a: 1, b: 2 })).warnings).toHaveLength(0);
+      });
+
+      it('does not warn for an empty array, primitives, or no pick', () => {
+        configureOutputOptions({ pick: 'a' });
+        expect(captureWarning(() => outputResult([])).warnings).toHaveLength(0);
+        expect(captureWarning(() => outputResult('text')).warnings).toHaveLength(0);
+        configureOutputOptions({});
+        expect(captureWarning(() => outputResult({ a: 1 })).warnings).toHaveLength(0);
+      });
+
+      it('leaves meta untouched', () => {
+        configureOutputOptions({ pick: 'a' });
+        const { output } = captureWarning(() => outputResult({ a: 1, b: 2 }, { count: 2 }));
+        expect(output.meta).toEqual({ count: 2 });
+      });
+    });
+  });
+
+  describe('serverCode and data in the error envelope', () => {
+    it('prints serverCode and data for a CliError carrying them', () => {
+      const output = buildErrorOutput(new CliError({ message: 'm', code: 'AUTH_FORBIDDEN', serverCode: 'SERVER_CODE', suggestion: 's', data: { report: true } }));
+      expect(output).toEqual({ ok: false, error: 'm', code: 'AUTH_FORBIDDEN', serverCode: 'SERVER_CODE', suggestion: 's', data: { report: true } });
+      expect(Object.keys(output)).toEqual(['ok', 'error', 'code', 'serverCode', 'suggestion', 'data']);
+    });
+
+    it('omits serverCode and data when unset', () => {
+      const output = buildErrorOutput(new CliError({ message: 'm', code: 'X' }));
+      expect(output).not.toHaveProperty('serverCode');
+      expect(output).not.toHaveProperty('data');
+    });
+
+    it('a CliHttpError keeps its status and prints its serverCode', () => {
+      const error = new CliHttpError({ message: 'm', code: 'AUTH_FORBIDDEN', status: 403, serverCode: 'MISSING_ENDPOINT_OIDC_SCOPE_ERROR' });
+      expect(error.status).toBe(403);
+      expect(error.serverCode).toBe('MISSING_ENDPOINT_OIDC_SCOPE_ERROR');
+      expect(buildErrorOutput(error)).toMatchObject({ code: 'AUTH_FORBIDDEN', serverCode: 'MISSING_ENDPOINT_OIDC_SCOPE_ERROR' });
     });
   });
 });

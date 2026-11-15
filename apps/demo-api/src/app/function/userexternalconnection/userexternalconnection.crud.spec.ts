@@ -4,8 +4,10 @@ import {
   type CreateUserExternalConnectionParams,
   DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as DISCORD,
   type DisconnectUserExternalConnectionParams,
+  firestoreModelKey,
   type OnCallCreateModelResult,
   type ReadUserExternalConnectionAuthorizeStateParams,
+  type UnlinkUserExternalConnectionLoginParams,
   type UserExternalConnectionAuthorizeStateResult,
   USER_EXTERNAL_CONNECTION_PROVIDER_NOT_ALLOWED_ERROR_CODE,
   TRELLO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as TRELLO,
@@ -17,6 +19,7 @@ import {
   userExternalConnectionIdentity
 } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
+import { FIREBASE_SERVER_VALIDATION_ERROR_CODE } from '@dereekb/firebase-server';
 import { UserExternalConnectionOAuthProviderRegistry, UserExternalConnectionStateCoder, type UserExternalConnectionStateActor } from '@dereekb/firebase-server/model';
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { DEMO_TRELLO_BOT_EXTERNAL_CONNECTION_PROVIDER_TYPE as TRELLO_BOT, DEMO_ZOHO_ADMIN_EXTERNAL_CONNECTION_PROVIDER_TYPE as ZOHO_ADMIN } from 'demo-firebase';
@@ -434,6 +437,69 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
           it('should still refuse an admin a provider that is not mounted', async () => {
             expect(await errorCodeFor(() => callAuthorizeState({ providerType: ZOOM }))).toBe(USER_EXTERNAL_CONNECTION_PROVIDER_NOT_ALLOWED_ERROR_CODE);
+          });
+        });
+      });
+    });
+
+    // none of the UserExternalConnection callables takes a target key: each acts on the caller's own document, from
+    // their auth. Most model callables let an admin target another user's document by key; these refuse any key
+    describe("another user's connection", () => {
+      demoAuthorizedUserContext({ f }, (owner) => {
+        demoUserExternalConnectionContext({ f, u: owner, createIfNeeded: true }, (ownerUec) => {
+          demoAuthorizedUserAdminContext({ f }, (admin) => {
+            demoUserExternalConnectionContext({ f, u: admin, createIfNeeded: true }, (adminUec) => {
+              const ownerKey = () => firestoreModelKey(userExternalConnectionIdentity, owner.uid);
+
+              beforeEach(async () => {
+                await ownerUec.connect({ providerType: CALCOM });
+                await adminUec.connect({ providerType: CALCOM });
+              });
+
+              it('should refuse an admin disconnecting another user by key, leaving both connections in place', async () => {
+                const params = { key: ownerKey(), providerType: CALCOM } as unknown as DisconnectUserExternalConnectionParams;
+
+                expect(await errorCodeFor(() => admin.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(userExternalConnectionIdentity, params, 'disconnect')))).toBe(FIREBASE_SERVER_VALIDATION_ERROR_CODE);
+                expect((await ownerUec.loadUserExternalConnection())?.c).toEqual([CALCOM]);
+                expect((await adminUec.loadUserExternalConnection())?.c).toEqual([CALCOM]);
+              });
+
+              it('should refuse an admin unlinking another user by key, leaving both connections in place', async () => {
+                const params = { key: ownerKey(), providerType: CALCOM } as unknown as UnlinkUserExternalConnectionLoginParams;
+
+                expect(await errorCodeFor(() => admin.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(userExternalConnectionIdentity, params, 'unlink')))).toBe(FIREBASE_SERVER_VALIDATION_ERROR_CODE);
+                expect((await ownerUec.loadUserExternalConnection())?.c).toEqual([CALCOM]);
+                expect((await adminUec.loadUserExternalConnection())?.c).toEqual([CALCOM]);
+              });
+
+              it('should refuse an admin minting an authorize state for another user by key', async () => {
+                const params = { key: ownerKey(), providerType: CALCOM } as unknown as ReadUserExternalConnectionAuthorizeStateParams;
+
+                expect(await errorCodeFor(() => admin.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(userExternalConnectionIdentity, params, 'authorizeState')))).toBe(FIREBASE_SERVER_VALIDATION_ERROR_CODE);
+              });
+
+              it('should refuse a key on create', async () => {
+                const params = { key: ownerKey() } as unknown as CreateUserExternalConnectionParams;
+
+                expect(await errorCodeFor(() => admin.callWrappedFunction(demoCallModelWrappedFn, onCallCreateModelParams(userExternalConnectionIdentity, params)))).toBe(FIREBASE_SERVER_VALIDATION_ERROR_CODE);
+              });
+
+              it("should refuse a key even when it is the caller's own, since the calls take none", async () => {
+                const params = { key: firestoreModelKey(userExternalConnectionIdentity, admin.uid), providerType: CALCOM } as unknown as DisconnectUserExternalConnectionParams;
+
+                expect(await errorCodeFor(() => admin.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(userExternalConnectionIdentity, params, 'disconnect')))).toBe(FIREBASE_SERVER_VALIDATION_ERROR_CODE);
+                expect((await adminUec.loadUserExternalConnection())?.c).toEqual([CALCOM]);
+              });
+
+              it('should disconnect only the caller when no key is sent', async () => {
+                const params: DisconnectUserExternalConnectionParams = { providerType: CALCOM };
+
+                await admin.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(userExternalConnectionIdentity, params, 'disconnect'));
+
+                expect((await adminUec.loadUserExternalConnection())?.c).toEqual([]);
+                expect((await ownerUec.loadUserExternalConnection())?.c).toEqual([CALCOM]);
+              });
+            });
           });
         });
       });

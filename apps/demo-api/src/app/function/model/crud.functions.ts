@@ -32,6 +32,7 @@ import { oidcEntryDeleteToken } from '../oidc/oidcentry.delete';
 import { userExternalConnectionUpdateDisconnect } from '../userexternalconnection/userexternalconnection.update';
 import { userExternalConnectionUpdateUnlink } from '../userexternalconnection/userexternalconnection.unlink';
 import { userExternalConnectionReadAuthorizeState } from '../userexternalconnection/userexternalconnection.read';
+import { userExternalConnectionReadData, userExternalConnectionUpdateData } from '../userexternalconnection/userexternalconnection.data';
 import { userExternalConnectionCreate } from '../userexternalconnection/userexternalconnection.create';
 import { openRouterPromptCreateTemplate } from '../openrouter/openrouterprompt.create';
 import { openRouterPromptPreviewTemplate } from '../openrouter/openrouterprompt.invoke';
@@ -94,7 +95,8 @@ export const DEMO_READ_MODEL_MAP: DemoOnCallReadModelMap = {
   // version and the code-definition fallback to return what the app actually serves.
   openRouterPrompt: openRouterPromptRead,
   userExternalConnection: onCallSpecifierHandler({
-    authorizeState: userExternalConnectionReadAuthorizeState
+    authorizeState: userExternalConnectionReadAuthorizeState,
+    data: userExternalConnectionReadData
   }),
   notificationTaskBot: onCallSpecifierHandler({
     optOuts: notificationTaskBotReadOptOuts
@@ -164,7 +166,8 @@ export const DEMO_UPDATE_MODEL_MAP: DemoOnCallUpdateModelMap = {
   }),
   userExternalConnection: onCallSpecifierHandler({
     disconnect: userExternalConnectionUpdateDisconnect,
-    unlink: userExternalConnectionUpdateUnlink
+    unlink: userExternalConnectionUpdateUnlink,
+    data: userExternalConnectionUpdateData
   }),
   openRouterPrompt: openRouterPromptUpdate,
   // Edits the head version in place. The action refuses a version that a newer one has locked.

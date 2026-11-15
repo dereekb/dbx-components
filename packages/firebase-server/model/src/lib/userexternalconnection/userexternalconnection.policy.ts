@@ -1,6 +1,6 @@
 import { type Maybe } from '@dereekb/util';
-import { type UserExternalConnectionProviderType } from '@dereekb/firebase';
-import { userExternalConnectionProviderNotAllowedError } from './userexternalconnection.error';
+import { type UserExternalConnectionProviderType, type UserExternalConnectionScopePresetKey } from '@dereekb/firebase';
+import { userExternalConnectionProviderNotAllowedError, userExternalConnectionScopePresetNotAllowedError } from './userexternalconnection.error';
 import { type UserExternalConnectionOAuthProviderRegistry } from './oauth/userexternalconnection.oauth.registry';
 
 /**
@@ -14,6 +14,15 @@ import { type UserExternalConnectionOAuthProviderRegistry } from './oauth/userex
  *   (a team's shared Zoom account, say), and incompatible with using that provider to sign in.
  */
 export type UserExternalConnectionCollisionPolicy = 'block' | 'transfer' | 'allow';
+
+/**
+ * What happens when a CONNECT's code exchange grants provider scopes the round trip did not request.
+ *
+ * - `block` — refuse the connect. Nothing is stored, an existing connection is left exactly as it was, and the
+ *   browser returns to the failure url carrying `USER_EXTERNAL_CONNECTION_OVER_GRANTED`. The default.
+ * - `allow` — store the connection with what was actually granted (its `ca` then covers more than the preset).
+ */
+export type UserExternalConnectionOverGrantPolicy = 'block' | 'allow';
 
 /**
  * Per-provider rules the connect and sign-in paths enforce.
@@ -82,6 +91,20 @@ export interface UserExternalConnectionProviderPolicy {
    * exported at all.
    */
   readonly tokenExport?: Maybe<boolean>;
+  /**
+   * What to do when a CONNECT's code exchange grants scopes beyond what the connect requested. Defaults to `block`.
+   *
+   * Why it exists: some providers issue every scope the user (or an administrator, for the whole organization)
+   * ever consented to, whatever the request named. Microsoft Entra does — so an organization-wide consent, or a
+   * user's earlier Read + Write consent that a disconnect never revoked, silently turns a "Read" connect into a
+   * Read + Write connection. `block` refuses that connect instead of storing the wider grant.
+   *
+   * Enforced only when the provider knows what it requested: a resolved scope preset, or the OAuth service's
+   * `requestedScopesForScopePreset()`. A provider with neither (no presets) is never checked.
+   *
+   * Connects only. A sign-in with {@link signInConnects} stores whatever its exchange granted.
+   */
+  readonly onOverGrant?: Maybe<UserExternalConnectionOverGrantPolicy>;
 }
 
 /**
@@ -89,7 +112,8 @@ export interface UserExternalConnectionProviderPolicy {
  *
  * Every field is the restrictive option: an unlisted provider behaves exactly as it did before
  * policies existed (shared accounts permitted, connect-only), so adding the registry changes no
- * existing app's behavior.
+ * existing app's behavior. `onOverGrant`'s `block` only bites a provider that declares what it requested
+ * (scope presets — Microsoft, new in v14.26).
  */
 export const DEFAULT_USER_EXTERNAL_CONNECTION_PROVIDER_POLICY: Omit<Required<UserExternalConnectionProviderPolicy>, 'providerType'> = {
   unique: false,
@@ -97,7 +121,8 @@ export const DEFAULT_USER_EXTERNAL_CONNECTION_PROVIDER_POLICY: Omit<Required<Use
   signInConnects: false,
   onCollision: 'block',
   adminOnly: false,
-  tokenExport: false
+  tokenExport: false,
+  onOverGrant: 'block'
 };
 
 /**
@@ -121,6 +146,7 @@ export interface UserExternalConnectionResolvedProviderPolicy {
   readonly onCollision: UserExternalConnectionCollisionPolicy;
   readonly adminOnly: boolean;
   readonly tokenExport: boolean;
+  readonly onOverGrant: UserExternalConnectionOverGrantPolicy;
 }
 
 /**
@@ -141,7 +167,8 @@ export function resolveUserExternalConnectionProviderPolicy(providerType: UserEx
     signInConnects: policy?.signInConnects ?? DEFAULT_USER_EXTERNAL_CONNECTION_PROVIDER_POLICY.signInConnects ?? false,
     onCollision: policy?.onCollision ?? DEFAULT_USER_EXTERNAL_CONNECTION_PROVIDER_POLICY.onCollision ?? 'block',
     adminOnly: policy?.adminOnly ?? DEFAULT_USER_EXTERNAL_CONNECTION_PROVIDER_POLICY.adminOnly ?? false,
-    tokenExport: policy?.tokenExport ?? DEFAULT_USER_EXTERNAL_CONNECTION_PROVIDER_POLICY.tokenExport ?? false
+    tokenExport: policy?.tokenExport ?? DEFAULT_USER_EXTERNAL_CONNECTION_PROVIDER_POLICY.tokenExport ?? false,
+    onOverGrant: policy?.onOverGrant ?? DEFAULT_USER_EXTERNAL_CONNECTION_PROVIDER_POLICY.onOverGrant ?? 'block'
   };
 }
 
@@ -200,6 +227,13 @@ export interface AssertUserExternalConnectionProviderConnectableInput {
    * Whether the caller is an admin, by the app's own definition (typically `isAdminInRequest(request)`).
    */
   readonly isAdmin: boolean;
+  /**
+   * The scope preset the connect asks for, when it named one (`ReadUserExternalConnectionAuthorizeStateParams.scopePreset`).
+   *
+   * Asserted to be one of the mounted provider's declared presets. Absent skips the check — the
+   * provider's default preset (if any) then applies.
+   */
+  readonly scopePreset?: Maybe<UserExternalConnectionScopePresetKey>;
 }
 
 /**
@@ -214,16 +248,21 @@ export interface AssertUserExternalConnectionProviderConnectableInput {
  *
  * @param input - The registries, provider and caller's admin status.
  * @returns The provider's resolved policy.
- * @throws A precondition-conflict HttpsError when the provider is not mounted or is admin-only and the caller is not an admin.
+ * @throws {HttpsError} A precondition-conflict error when the provider is not mounted or is admin-only and the caller is not an admin, or a bad-request error when the requested scope preset is not one the provider declares.
  */
 export function assertUserExternalConnectionProviderConnectable(input: AssertUserExternalConnectionProviderConnectableInput): UserExternalConnectionResolvedProviderPolicy {
-  const { oauthRegistry, policyRegistry, providerType, isAdmin } = input;
+  const { oauthRegistry, policyRegistry, providerType, isAdmin, scopePreset } = input;
   oauthRegistry.assertHasAuthorizeFlowForProviderType(providerType);
 
   const policy = userExternalConnectionPolicyForProviderType(policyRegistry, providerType);
 
   if (policy.adminOnly && !isAdmin) {
     throw userExternalConnectionProviderNotAllowedError(providerType);
+  }
+
+  // checked after the admin gate, so a non-admin probing presets learns nothing about admin-only providers
+  if (scopePreset != null && oauthRegistry.serviceForProviderType(providerType)?.scopePresetForKey(scopePreset) == null) {
+    throw userExternalConnectionScopePresetNotAllowedError(providerType, scopePreset);
   }
 
   return policy;
