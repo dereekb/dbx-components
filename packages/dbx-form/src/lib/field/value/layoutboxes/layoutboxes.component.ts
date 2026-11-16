@@ -232,13 +232,15 @@ export class DbxLayoutBoxesComponent<T = unknown> {
    */
   readonly rowItemConfigsSignal = computed<Maybe<DbxInjectionComponentConfig>[]>(
     () => {
+      const value = this.valueSignal();
+      const length = this.lengthSignal();
       const item = this.itemSignal();
       let configs: Maybe<DbxInjectionComponentConfig>[];
 
       if (typeof item === 'function') {
-        configs = this.valueSignal().map((x, index) => item(x, index));
+        configs = value.map((x, index) => item(x, index));
       } else {
-        configs = Array.from({ length: this.lengthSignal() }, () => item);
+        configs = Array.from({ length: length }, () => item);
       }
 
       return configs;

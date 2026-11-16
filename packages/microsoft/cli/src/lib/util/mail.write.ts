@@ -420,7 +420,7 @@ export interface ReadMsGraphCliSignatureInput {
 }
 
 /**
- * Reads the signature a command appends. The first that applies wins:
+ * Reads the signature a command appends. The first that applies wins:.
  *
  * 1. `--no-signature`: none.
  * 2. `--signature-file`.

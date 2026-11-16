@@ -28,7 +28,7 @@ export interface MicrosoftGraphWorkbookWorksheet {
 /**
  * A cell value as Graph returns it: a string, number or boolean. An empty cell is an empty string.
  */
-export type MicrosoftGraphWorkbookCellValue = string | number | boolean | null;
+export type MicrosoftGraphWorkbookCellValue = Maybe<string | number | boolean>;
 
 /**
  * A rectangular block of cells.

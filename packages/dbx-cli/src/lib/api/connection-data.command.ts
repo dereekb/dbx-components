@@ -297,7 +297,9 @@ async function readSetValue(input: ReadSetValueInput): Promise<UserExternalConne
     throw new CliError({ message: 'Give the value with exactly one of --file or --json.', code: 'INVALID_ARGUMENT' });
   }
 
-  if (file != null) {
+  if (file == null) {
+    result = parseJsonObject(await readTextInput(json as string, '--json', true), '--json');
+  } else {
     const packFile = lookup.configFor(providerType, dataType)?.packFile;
 
     if (!packFile) {
@@ -312,8 +314,6 @@ async function readSetValue(input: ReadSetValueInput): Promise<UserExternalConne
       // the file's content never reaches the error
       throw new CliError({ message: `The file could not be converted to a "${dataType}" value.`, code: 'INVALID_ARGUMENT' });
     }
-  } else {
-    result = parseJsonObject(await readTextInput(json as string, '--json', true), '--json');
   }
 
   return result;

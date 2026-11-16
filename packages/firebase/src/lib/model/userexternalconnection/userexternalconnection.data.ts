@@ -258,7 +258,7 @@ export function userExternalConnectionDataTypeConfigLookup(configs: Maybe<readon
   return {
     configs: allConfigs,
     configFor: (providerType, dataType) => byProvider.get(providerType)?.get(dataType),
-    configsFor: (providerType) => [...(byProvider.get(providerType)?.values() ?? [])]
+    configsFor: (providerType) => Array.from(byProvider.get(providerType)?.values() ?? [])
   };
 }
 

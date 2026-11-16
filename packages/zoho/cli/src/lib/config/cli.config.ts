@@ -372,7 +372,7 @@ export function zohoCliTokenSourceOriginLabel(active: Pick<ZohoCliActiveTokenSou
 }
 
 /**
- * Resolves the active token source — the same "one selected source wins" rule dbx-cli applies to envs:
+ * Resolves the active token source — the same "one selected source wins" rule dbx-cli applies to envs:.
  *
  * 1. `--token-source <name>` ({@link ZohoCliTokenSourceSelection.tokenSourceName}),
  * 2. a {@link ZOHO_CLI_TOKEN_SOURCE_ENV_VAR} name,

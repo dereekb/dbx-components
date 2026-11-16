@@ -180,7 +180,7 @@ export interface MicrosoftGraphStreamResponse {
   /**
    * The body, read as it arrives. Null when the response has none (e.g. a 204).
    */
-  readonly body: ReadableStream<Uint8Array> | null;
+  readonly body: Maybe<ReadableStream<Uint8Array>>;
   /**
    * The declared `Content-Length`, when present and the body is not content-encoded (a decoded body's
    * length differs from it).

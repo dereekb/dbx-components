@@ -472,7 +472,7 @@ export function zohoCliTokenSourceStatusError(input: ZohoCliTokenSourceStatusErr
 
 // MARK: Commands
 /**
- * zoho-cli's `auth token-source` config for dbx-cli's token-source commands: the config file store,
+ * Zoho-cli's `auth token-source` config for dbx-cli's token-source commands: the config file store,
  * the resolver, and the Zoho hooks — `set --api-mode` (keeping a replaced source's stored mode when
  * omitted, and storing only `sandbox`), the `apiMode` each source is listed with, and the cached
  * token's covered products and datacenter.
