@@ -5,7 +5,7 @@
  * `@dereekb/dbx-cli` can share them without depending on `@dereekb/firebase-server`. Import them from
  * `@dereekb/firebase` going forward.
  */
-// eslint-disable-next-line dereekb-util/no-sister-re-export -- backward-compatible facade: the docs API wire contract moved to @dereekb/firebase (v14.27) so @dereekb/dbx-cli can share it; downstream specs still import it from here
+ 
 export {
   DOCS_API_PATH,
   type DocsManifestSection,
