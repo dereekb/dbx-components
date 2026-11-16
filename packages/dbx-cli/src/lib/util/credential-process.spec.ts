@@ -64,6 +64,19 @@ describe('runCliCredentialProcess()', () => {
     expect(error.suggestion).toBe('Log in again.');
   });
 
+  it('carries the error envelope serverCode onto the CliError', async () => {
+    const error = await captureError(runCliCredentialProcess({ command: nodeCommand('console.log(JSON.stringify({ ok: false, error: "Not allowed.", code: "AUTH_FORBIDDEN", serverCode: "SERVER_CODE", suggestion: "Log in again.", data: { x: 1 } })); process.exit(1)') }));
+    expect(error.code).toBe('AUTH_FORBIDDEN');
+    expect(error.serverCode).toBe('SERVER_CODE');
+    expect(error.data).toBeUndefined();
+  });
+
+  it('carries a nested error object serverCode onto the CliError', async () => {
+    const error = await captureError(runCliCredentialProcess({ command: nodeCommand('console.log(JSON.stringify({ ok: false, error: { message: "Not allowed.", code: "AUTH_FORBIDDEN", serverCode: "SERVER_CODE" } })); process.exit(1)') }));
+    expect(error.message).toBe('Not allowed.');
+    expect(error.serverCode).toBe('SERVER_CODE');
+  });
+
   it('throws a generic CliError on a non-zero exit without an error envelope', async () => {
     const error = await captureError(runCliCredentialProcess({ command: nodeCommand('process.stdout.write("secret-" + "token-value"); process.exit(3)') }));
     expect(error.code).toBe(CLI_CREDENTIAL_PROCESS_FAILED_ERROR_CODE);

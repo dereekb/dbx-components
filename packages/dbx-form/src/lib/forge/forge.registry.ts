@@ -16,6 +16,7 @@ import { type FORGE_DATETIME_FIELD_TYPE, type DbxForgeDateTimeFieldDef } from '.
 import { type FORGE_FIXEDDATERANGE_FIELD_TYPE, type DbxForgeFixedDateRangeFieldDef } from './field/value/date/fixeddaterange.field';
 import { type FORGE_TIMEDURATION_FIELD_TYPE, type DbxForgeTimeDurationFieldDef } from './field/value/duration/duration.field';
 import { type FORGE_WEBSITE_URL_FIELD_TYPE, type DbxForgeWebsiteUrlFieldDef } from './field/value/website/website.field';
+import { type FORGE_LAYOUT_BOXES_FIELD_TYPE, type DbxForgeLayoutBoxesFieldDef } from './field/value/layoutboxes/layoutboxes.field';
 
 // Selection field types
 import type { DbxForgeSearchableTextFieldDef, DbxForgeSearchableChipFieldDef, DBX_FORGE_SEARCHABLE_TEXT_FIELD_TYPE_NAME, DBX_FORGE_SEARCHABLE_CHIP_FIELD_TYPE_NAME } from './field/selection/searchable/searchable.field';
@@ -46,6 +47,7 @@ declare module '@ng-forge/dynamic-forms' {
     [FORGE_FIXEDDATERANGE_FIELD_TYPE]: DbxForgeFixedDateRangeFieldDef;
     [FORGE_TIMEDURATION_FIELD_TYPE]: DbxForgeTimeDurationFieldDef;
     [FORGE_WEBSITE_URL_FIELD_TYPE]: DbxForgeWebsiteUrlFieldDef;
+    [FORGE_LAYOUT_BOXES_FIELD_TYPE]: DbxForgeLayoutBoxesFieldDef<any>;
     [DBX_FORGE_SEARCHABLE_TEXT_FIELD_TYPE_NAME]: DbxForgeSearchableTextFieldDef<any, any, any>;
     [DBX_FORGE_SEARCHABLE_CHIP_FIELD_TYPE_NAME]: DbxForgeSearchableChipFieldDef<any, any, any>;
     [FORGE_PICKABLE_CHIP_FIELD_TYPE]: DbxForgePickableChipFieldDef<any, any, any>;

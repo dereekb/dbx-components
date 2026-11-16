@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "summary": "The dbx-components demo stack: the demo-api dev MCP (demo-api-mcp-dev) on :9901, served by the dockerized Firebase emulators",
+  "offerings": [
+    {
+      "key": "demo-api-mcp",
+      "title": "demo-api dev MCP (:9901)",
+      "description": "The demo-api app's MCP endpoint (demo-api-mcp-dev in .mcp.json, http://localhost:9901/mcp): the compact demo_* call-model tools over the guestbook/profile sample models, against the local Firebase emulators. Served by the demo-api-server docker container under the dbx-claude serve supervisor (demo-api:build-watch), so it restarts on every demo-api rebuild. OAuth-guarded; the browser login leg needs ./serve-web.sh (:9010). Free and local.",
+      "keywords": ["demo-api-mcp", "demo-api-mcp-dev", "demo-api MCP", "demo api MCP server", "dev MCP endpoint", "call-model MCP tools"],
+      "searchOnly": ["demo-api", "mcp", "9901", "emulators", "guestbook"],
+      "ref": "demo-api-mcp",
+      "start": "dbx-claude serve server --project dbx-components",
+      "doctor": { "serve": true, "url": "http://localhost:9901/mcp" },
+      "disruptedBy": ["implement"],
+      "requires": ["Docker, with the demo-api-server container served through dbx-claude (dbx-claude serve server)", "./serve-web.sh (the demo app on :9010) for the OAuth login leg of /mcp → Authenticate"]
+    }
+  ]
+}

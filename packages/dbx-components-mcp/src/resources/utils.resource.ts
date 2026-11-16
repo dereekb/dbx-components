@@ -2,7 +2,8 @@
  * Utils MCP resources.
  *
  * Exposes the merged utility registry — opted-in via `@dbxUtil` JSDoc
- * tags across @dereekb/util, @dereekb/date, @dereekb/rxjs, @dereekb/model
+ * tags across @dereekb/util, @dereekb/util/fetch, @dereekb/date, @dereekb/rxjs,
+ * @dereekb/model, @dereekb/firebase, @dereekb/firebase-server, @dereekb/dbx-web
  * (plus any downstream packages) — as read-only resources for clients
  * that prefer browsing data over calling `dbx_util_lookup`.
  */

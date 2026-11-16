@@ -1,0 +1,209 @@
+{
+  "version": 1,
+  "source": "@dereekb/dbx-web",
+  "module": "@dereekb/dbx-web",
+  "generatedAt": "1970-01-01T00:00:00.000Z",
+  "generator": "@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs",
+  "entries": [
+    {
+      "slug": "convert-to-pojo-server-error-response",
+      "name": "convertToPOJOServerErrorResponse",
+      "kind": "function",
+      "category": "http-error",
+      "module": "@dereekb/dbx-web",
+      "subpath": "error/error.api",
+      "signature": "convertToPOJOServerErrorResponse(httpError: HttpErrorResponse | object): ServerError",
+      "description": "Converts an HTTP error response into a plain JSON-serializable {@link ServerError} object, for example to store in NgRx state.\n\nRuns the input through {@link convertToServerErrorResponse}, then deep-copies `data` through `JSON.stringify`/`JSON.parse`.\nNon-serializable data is removed with a console warning. A falsy input returns an empty object.",
+      "params": [
+        {
+          "name": "httpError",
+          "type": "HttpErrorResponse | object",
+          "description": "- The HTTP error response or generic error object to convert.",
+          "optional": false
+        }
+      ],
+      "returns": "A plain JSON-serializable {@link ServerError} object.",
+      "tags": [
+        "http",
+        "error",
+        "server-error",
+        "response",
+        "convert",
+        "pojo",
+        "serializable",
+        "json",
+        "ngrx",
+        "http-error",
+        "to",
+        "server",
+        "converttopojoservererrorresponse"
+      ],
+      "example": "const pojoError = convertToPOJOServerErrorResponse(httpErrorResponse);\nconsole.log(pojoError.code, pojoError.message);",
+      "relatedSlugs": [
+        "convert-to-server-error-response",
+        "convert-server-error-params",
+        "catch-error-server-params"
+      ]
+    },
+    {
+      "slug": "convert-to-server-error-response",
+      "name": "convertToServerErrorResponse",
+      "kind": "function",
+      "category": "http-error",
+      "module": "@dereekb/dbx-web",
+      "subpath": "error/error.api",
+      "signature": "convertToServerErrorResponse(error: HttpErrorResponse | object): ServerErrorResponse | undefined",
+      "description": "Converts an {@link HttpErrorResponse} (or any other thrown error object) into a {@link ServerErrorResponse} that reads well in `<dbx-error>` and `dbxActionSnackbarError`.\n\nFor an {@link HttpErrorResponse}:\n- Only a plain JSON-object body is read. Its `code` and `message` are used when they are non-empty strings, and a non-empty string `error` is used as the message when there is no `message` (as sent by `{ error, code }` APIs). The whole body is kept as `data`.\n- Other bodies (`null`, text/HTML, a `ProgressEvent`, a `Blob`) are not used as the message and are not stored in `data`.\n- When the body has no code, the code is {@link HTTP_NETWORK_ERROR_CODE} for status 0 (no response) and {@link HTTP_ERROR_CODE} otherwise.\n- When the body has no message, the message is {@link HTTP_NETWORK_ERROR_MESSAGE} for status 0, then the `statusText` (unless it is Angular's placeholder `''`, `'OK'` or `'Unknown Error'`), then `Request failed with status <status>.`.\n- A 401 response returns an {@link UnauthorizedServerErrorResponse}, whose message defaults to `'Unauthorized'`.\n\nA {@link ServerErrorResponse} input (including `FirebaseServerError`) is returned unchanged, so the function is idempotent.\nAny other object keeps its string `code` (default {@link DEFAULT_READABLE_ERROR_CODE}), numeric `status` (default 0) and `message`.\nA falsy input returns `undefined`.\n\nThe result always has a code, because `toReadableError()` only keeps a server error's own message when it has one.\n\nIn an `HttpClient` request chain, use {@link catchServerErrorResponse} instead of calling this directly.",
+      "params": [
+        {
+          "name": "error",
+          "type": "HttpErrorResponse | object",
+          "description": "- The HTTP error response or generic error object to convert.",
+          "optional": false
+        }
+      ],
+      "returns": "A {@link ServerErrorResponse} derived from the error, or `undefined` if the input is falsy.",
+      "tags": [
+        "http",
+        "httpclient",
+        "error",
+        "readable",
+        "server-error",
+        "response",
+        "convert",
+        "decode",
+        "status",
+        "client",
+        "http-error",
+        "to",
+        "server",
+        "converttoservererrorresponse"
+      ],
+      "example": "const serverError = convertToServerErrorResponse(httpErrorResponse);\nif (serverError) {\n  console.log(serverError.status, serverError.code, serverError.message);\n}",
+      "relatedSlugs": [
+        "catch-server-error-response",
+        "convert-to-pojo-server-error-response",
+        "convert-https-callable-error-to-readable-error",
+        "firebase-server-error"
+      ]
+    },
+    {
+      "slug": "catch-server-error-response",
+      "name": "catchServerErrorResponse",
+      "kind": "function",
+      "category": "http-error",
+      "module": "@dereekb/dbx-web",
+      "subpath": "error/error.api",
+      "signature": "catchServerErrorResponse(): MonoTypeOperatorFunction<T>",
+      "description": "RxJS operator for an `HttpClient` request chain that rethrows an {@link HttpErrorResponse} as the {@link ServerErrorResponse} built by {@link convertToServerErrorResponse}.\n\nWithout it, `toReadableError()` (used by `dbxActionSnackbarError` and `<dbx-error>`) shows Angular's \"Http failure response for <url>\" text and loses the server's code and message.\n\nPlace it directly after the `HttpClient` call. Only an {@link HttpErrorResponse} is converted; any other error (a `CodedError`, `ServerErrorResponse` or `FirebaseServerError`) is rethrown unchanged.\nErrors are never swallowed and values pass through untouched.\n\nThe NgRx-effect counterpart, which emits an error action instead of rethrowing, is {@link catchErrorServerParams}.",
+      "params": [],
+      "returns": "An operator that rethrows HTTP errors as {@link ServerErrorResponse} values.",
+      "tags": [
+        "http",
+        "httpclient",
+        "error",
+        "readable",
+        "server-error",
+        "response",
+        "catch",
+        "rxjs",
+        "operator",
+        "action",
+        "http-error",
+        "server",
+        "catchservererrorresponse"
+      ],
+      "example": "readonly handleSave: WorkUsingObservable<SaveParams, SaveResult> = (params) => this.http.post<SaveResult>('/api/save', params).pipe(catchServerErrorResponse());\n// template: <button dbxAction dbxActionSnackbarError [dbxActionHandler]=\"handleSave\">Save</button>",
+      "relatedSlugs": [
+        "convert-to-server-error-response",
+        "catch-error-server-params",
+        "convert-https-callable-error-to-readable-error"
+      ]
+    },
+    {
+      "slug": "convert-server-error-params",
+      "name": "convertServerErrorParams",
+      "kind": "function",
+      "category": "http-error",
+      "module": "@dereekb/dbx-web",
+      "subpath": "error/state",
+      "signature": "convertServerErrorParams(httpError: HttpErrorResponse | object): ServerErrorParams",
+      "description": "Converts an HTTP error response into {@link ServerErrorParams} suitable for dispatching as an NgRx action prop.\n\nThe error is converted with {@link convertToPOJOServerErrorResponse}, so it is a plain JSON-serializable object that is safe to keep in the store.",
+      "params": [
+        {
+          "name": "httpError",
+          "type": "HttpErrorResponse | object",
+          "description": "- The HTTP error response or generic error object to convert.",
+          "optional": false
+        }
+      ],
+      "returns": "A {@link ServerErrorParams} object wrapping the converted server error.",
+      "tags": [
+        "http",
+        "error",
+        "server-error",
+        "response",
+        "convert",
+        "ngrx",
+        "action",
+        "params",
+        "http-error",
+        "server",
+        "convertservererrorparams"
+      ],
+      "example": "const params = convertServerErrorParams(httpErrorResponse);\nstore.dispatch(myErrorAction(params));",
+      "relatedSlugs": [
+        "catch-error-server-params",
+        "convert-to-pojo-server-error-response",
+        "catch-server-error-response"
+      ]
+    },
+    {
+      "slug": "catch-error-server-params",
+      "name": "catchErrorServerParams",
+      "kind": "function",
+      "category": "http-error",
+      "module": "@dereekb/dbx-web",
+      "subpath": "error/state",
+      "signature": "catchErrorServerParams(action: ActionCreator<T, (props: E) => E & Action<T>>, mapError?: (error: ServerErrorParams) => E): MonoTypeOperatorFunction<E & Action<T>>",
+      "description": "RxJS operator for NgRx effects that catches HTTP errors, converts them to {@link ServerErrorParams}, and emits the given NgRx action instead of erroring.\n\nOutside NgRx (for example a `dbxActionHandler` that calls `HttpClient`), use `catchServerErrorResponse()` instead, which rethrows the converted error.",
+      "params": [
+        {
+          "name": "action",
+          "type": "ActionCreator<T, (props: E) => E & Action<T>>",
+          "description": "- The NgRx action creator to dispatch with the converted error params.",
+          "optional": false
+        },
+        {
+          "name": "mapError",
+          "type": "(error: ServerErrorParams) => E",
+          "description": "- Optional function to transform the {@link ServerErrorParams} before dispatching. Defaults to identity.",
+          "optional": true
+        }
+      ],
+      "returns": "An RxJS operator that catches errors and emits the corresponding error action.",
+      "tags": [
+        "http",
+        "error",
+        "server-error",
+        "response",
+        "catch",
+        "ngrx",
+        "effect",
+        "action",
+        "rxjs",
+        "operator",
+        "http-error",
+        "server",
+        "params",
+        "catcherrorserverparams"
+      ],
+      "example": "return this.actions$.pipe(\n  ofType(myAction),\n  switchMap(() => this.api.getData().pipe(\n    catchErrorServerParams(myErrorAction)\n  ))\n);",
+      "relatedSlugs": [
+        "convert-server-error-params",
+        "catch-server-error-response",
+        "convert-to-server-error-response"
+      ]
+    }
+  ]
+}

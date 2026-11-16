@@ -2,9 +2,9 @@ import { webcrypto } from 'node:crypto';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { type Maybe, waitForMs } from '@dereekb/util';
-import { CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, UserExternalConnectionFunctions, type UserExternalConnectionProviderType, ZOOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE } from '@dereekb/firebase';
+import { CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, type ReadUserExternalConnectionAuthorizeStateParams, UserExternalConnectionFunctions, type UserExternalConnectionProviderType, ZOOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE } from '@dereekb/firebase';
 import { type DbxFirebaseExternalConnectionAuthorizeState, type DbxFirebaseExternalConnectionNavigateFunction, type DbxFirebaseExternalConnectionProvider, type DbxFirebaseExternalConnectionProviderEntry, DbxFirebaseExternalConnectionsConfig } from './externalconnection';
-import { DbxFirebaseExternalConnectionService, navigateAndWaitForPageToLeave, readExternalConnectionSignInFailureFromUrl, readExternalConnectionSignInTicketFromUrl } from './externalconnection.service';
+import { DbxFirebaseExternalConnectionService, navigateAndWaitForPageToLeave, readExternalConnectionConnectFailureFromUrl, readExternalConnectionSignInFailureFromUrl, readExternalConnectionSignInTicketFromUrl } from './externalconnection.service';
 import { EXTERNAL_CONNECTION_SIGN_IN_VERIFIER_STORAGE_KEY } from './externalconnection';
 
 const TEST_PROVIDER_TYPE: UserExternalConnectionProviderType = CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE;
@@ -69,6 +69,10 @@ interface TestService {
    * Every provider type the authorizeState callable was asked to mint for, in order.
    */
   readonly mintedFor: UserExternalConnectionProviderType[];
+  /**
+   * Every params object the authorizeState callable was called with, in order.
+   */
+  readonly mintedParams: ReadUserExternalConnectionAuthorizeStateParams[];
 }
 
 /**
@@ -81,6 +85,7 @@ function testService(input: TestServiceInput = {}): TestService {
   const { navigate, providers, mintAuthorizeState, mintState, withoutFunctions } = input;
   const navigatedTo: string[] = [];
   const mintedFor: UserExternalConnectionProviderType[] = [];
+  const mintedParams: ReadUserExternalConnectionAuthorizeStateParams[] = [];
 
   const config: DbxFirebaseExternalConnectionsConfig = {
     providers: providers ?? [testProvider],
@@ -96,8 +101,10 @@ function testService(input: TestServiceInput = {}): TestService {
   const userExternalConnectionFunctions = {
     userExternalConnection: {
       readUserExternalConnection: {
-        authorizeState: async ({ providerType }: { providerType: UserExternalConnectionProviderType }) => {
+        authorizeState: async (params: ReadUserExternalConnectionAuthorizeStateParams) => {
+          const { providerType } = params;
           mintedFor.push(providerType);
+          mintedParams.push(params);
           return { state: mintState ? await mintState(providerType) : TEST_STATE };
         }
       }
@@ -114,7 +121,7 @@ function testService(input: TestServiceInput = {}): TestService {
     ]
   });
 
-  return { service: TestBed.inject(DbxFirebaseExternalConnectionService), navigatedTo, mintedFor };
+  return { service: TestBed.inject(DbxFirebaseExternalConnectionService), navigatedTo, mintedFor, mintedParams };
 }
 
 afterEach(() => {
@@ -209,6 +216,23 @@ describe('DbxFirebaseExternalConnectionService', () => {
 
       expect(mintedFor).toEqual([TEST_PROVIDER_TYPE]);
       expect(navigatedTo).toEqual([`${TEST_AUTHORIZE_URL}?state=${TEST_STATE}`]);
+    });
+
+    it('should mint the state for the chosen scope preset', async () => {
+      const { service, mintedParams, navigatedTo } = testService();
+
+      await service.connectToProvider(TEST_PROVIDER_TYPE, { scopePreset: 'readwrite' });
+
+      expect(mintedParams).toEqual([{ providerType: TEST_PROVIDER_TYPE, mode: 'connect', scopePreset: 'readwrite' }]);
+      expect(navigatedTo).toEqual([`${TEST_AUTHORIZE_URL}?state=${TEST_STATE}`]);
+    });
+
+    it('should mint the state with no scope preset when none is chosen', async () => {
+      const { service, mintedParams } = testService();
+
+      await service.connectToProvider(TEST_PROVIDER_TYPE);
+
+      expect(mintedParams[0].scopePreset).toBeUndefined();
     });
 
     it('should not navigate when the state could not be minted', async () => {
@@ -433,6 +457,65 @@ describe('DbxFirebaseExternalConnectionService sign-in', () => {
 
     await expect(service.handleSignInRedirectResult('https://app.example/app/home?ticket=abc')).rejects.toThrow();
     expect(sessionStorage.getItem(EXTERNAL_CONNECTION_SIGN_IN_VERIFIER_STORAGE_KEY)).toBeNull();
+  });
+});
+
+describe('DbxFirebaseExternalConnectionService connect redirect', () => {
+  const TEST_CONNECT_FAILURE_URL = `https://app.example/app/settings?connectError=USER_EXTERNAL_CONNECTION_OVER_GRANTED&connectErrorProvider=${TEST_PROVIDER_TYPE}`;
+
+  it('should record nothing when the landing url carries no failure', () => {
+    const { service } = testService();
+
+    expect(service.handleConnectRedirectResult('https://app.example/app/settings')).toBeUndefined();
+    expect(service.connectFailure()).toBeUndefined();
+  });
+
+  it('should record a reported failure', () => {
+    const { service } = testService();
+
+    expect(service.handleConnectRedirectResult(TEST_CONNECT_FAILURE_URL)).toEqual({ providerType: TEST_PROVIDER_TYPE, errorCode: 'USER_EXTERNAL_CONNECTION_OVER_GRANTED' });
+    expect(service.connectFailure()).toEqual({ providerType: TEST_PROVIDER_TYPE, errorCode: 'USER_EXTERNAL_CONNECTION_OVER_GRANTED' });
+  });
+
+  it('should clear a recorded failure', () => {
+    const { service } = testService();
+    service.handleConnectRedirectResult(TEST_CONNECT_FAILURE_URL);
+
+    service.clearConnectFailure();
+
+    expect(service.connectFailure()).toBeUndefined();
+  });
+
+  it('should clear a recorded failure when a new connect starts', async () => {
+    const { service, navigatedTo } = testService();
+    service.handleConnectRedirectResult(TEST_CONNECT_FAILURE_URL);
+
+    await service.connectToProvider(TEST_PROVIDER_TYPE);
+
+    expect(service.connectFailure()).toBeUndefined();
+    expect(navigatedTo).toEqual([`${TEST_AUTHORIZE_URL}?state=${TEST_STATE}`]);
+  });
+});
+
+describe('readExternalConnectionConnectFailureFromUrl()', () => {
+  it('should read the reason code and the provider', () => {
+    expect(readExternalConnectionConnectFailureFromUrl('https://app.example/app/settings?connectError=USER_EXTERNAL_CONNECTION_OVER_GRANTED&connectErrorProvider=microsoft')).toEqual({ providerType: 'microsoft', errorCode: 'USER_EXTERNAL_CONNECTION_OVER_GRANTED' });
+  });
+
+  it('should return nothing when the provider is missing', () => {
+    expect(readExternalConnectionConnectFailureFromUrl('https://app.example/app/settings?connectError=USER_EXTERNAL_CONNECTION_OVER_GRANTED')).toBeUndefined();
+  });
+
+  it('should return nothing when the reason code is missing', () => {
+    expect(readExternalConnectionConnectFailureFromUrl('https://app.example/app/settings?connectErrorProvider=microsoft')).toBeUndefined();
+  });
+
+  it('should return nothing for a url with no failure', () => {
+    expect(readExternalConnectionConnectFailureFromUrl('https://app.example/app/settings')).toBeUndefined();
+  });
+
+  it('should return nothing for a url that does not parse', () => {
+    expect(readExternalConnectionConnectFailureFromUrl('not a url')).toBeUndefined();
   });
 });
 

@@ -303,7 +303,8 @@
       "relatedSlugs": [
         "error-snackbar",
         "error-view",
-        "loading"
+        "loading",
+        "error-widget-service"
       ],
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
@@ -318,7 +319,7 @@
       "selector": "[dbxActionSnackbarError]",
       "className": "DbxActionSnackbarErrorDirective",
       "module": "@dereekb/dbx-web",
-      "description": "Displays action errors in a snackbar notification.\n\nSubscribes to the action context's error stream and shows a snackbar via {@link DbxErrorSnackbarService}\nwhenever an error occurs. Accepts an optional configuration or a duration in milliseconds as input.",
+      "description": "Displays action errors in a snackbar notification.\n\nSubscribes to the action context's error stream and shows a snackbar via {@link DbxErrorSnackbarService}\nwhenever an error occurs. Accepts an optional configuration or a duration in milliseconds as input.\n\nHandler errors pass through `toReadableError()`. Pipe an `HttpClient` call through `catchServerErrorResponse()`\nso the server's message and code show instead of Angular's \"Http failure response…\" text.",
       "inputs": [
         {
           "name": "dbxActionSnackbarError",
@@ -330,7 +331,8 @@
       ],
       "outputs": [],
       "relatedSlugs": [
-        "action-snackbar"
+        "action-snackbar",
+        "error-snackbar-service"
       ],
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
@@ -349,13 +351,36 @@
       "inputs": [],
       "outputs": [],
       "relatedSlugs": [
-        "error"
+        "error",
+        "error-snackbar-service"
       ],
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "example": "// Triggered via DbxErrorSnackbarService.showError(error)",
+      "example": "// Triggered via DbxErrorSnackbarService.showSnackbarError(error)",
       "minimalExample": "<dbx-error-snackbar></dbx-error-snackbar>"
+    },
+    {
+      "slug": "error-snackbar-service",
+      "category": "feedback",
+      "kind": "service",
+      "selector": "",
+      "className": "DbxErrorSnackbarService",
+      "module": "@dereekb/dbx-web",
+      "description": "Application-wide service that shows any {@link ErrorInput} as an error in a Material snackbar.\n\nWraps {@link DbxErrorSnackbarComponent} with configurable defaults. Inject this service\nto programmatically show error snackbars from any component or service.\n\nIn templates, prefer `dbxActionSnackbarError` on a `dbxAction`, which calls this service for every action error.\n\n{@link DbxErrorSnackbarService.setDefaultConfig} sets the app-wide snackbar defaults. The config passed to\n{@link DbxErrorSnackbarService.showSnackbarError} overrides them per call; its `undefined` values keep the defaults.",
+      "inputs": [],
+      "outputs": [],
+      "relatedSlugs": [
+        "error-snackbar",
+        "action-snackbar-error",
+        "error",
+        "error-widget-service"
+      ],
+      "skillRefs": [
+        "dbx__ref__dbx-component-patterns"
+      ],
+      "example": "const snackbar = inject(DbxErrorSnackbarService);\nsnackbar.setDefaultConfig({ ...DEFAULT_DBX_ERROR_SNACKBAR_CONFIG, duration: 8000 }); // app-wide default\nsnackbar.showSnackbarError(error, { verticalPosition: 'top' }); // per-call config wins",
+      "minimalExample": "inject(DbxErrorSnackbarService).showSnackbarError(error);"
     },
     {
       "slug": "error-view",
@@ -402,6 +427,26 @@
       ],
       "example": "<dbx-error-view [error]=\"error\">\n  <dbx-button text=\"Retry\" [dbxAction]=\"retryAction\"></dbx-button>\n</dbx-error-view>",
       "minimalExample": "<dbx-error-view [error]=\"error\"></dbx-error-view>"
+    },
+    {
+      "slug": "error-widget-service",
+      "category": "feedback",
+      "kind": "service",
+      "selector": "",
+      "className": "DbxErrorWidgetService",
+      "module": "@dereekb/dbx-web",
+      "description": "App-wide registry that maps an error code to custom error widget views.\n\nRegister an entry per error code to change how that error renders:\n- `errorComponentClass` is the inline view rendered inside `<dbx-error>` in place of the default message.\n- `widgetComponentClass` is the popover/details view opened from `<dbx-error>`.\n\nWidget components extend `AbstractDbxErrorWidgetComponent` to read the error's `code`, `message` and `data`.\n{@link DbxErrorWidgetService.register} replaces any existing entry with the same error code, so register both classes in one call.\n\nThe service is provided automatically. Register widgets at startup, for example in `provideAppInitializer()`.\nThe `HTTP_NETWORK_ERROR_CODE` code (set by `convertToServerErrorResponse()` when the server could not be reached) can drive an \"offline\" view.\n\nIt has two default widgets:\n\n- default: used in cases where an error has been registered by its error code\n- unknown: used in cases where an error has an error code that has not been registered\n\nBy default the DbxErrorDefaultErrorWidgetComponent is registered to both the default and unknown error entries.",
+      "inputs": [],
+      "outputs": [],
+      "relatedSlugs": [
+        "error",
+        "error-snackbar-service"
+      ],
+      "skillRefs": [
+        "dbx__ref__dbx-component-patterns"
+      ],
+      "example": "provideAppInitializer(() => {\n  inject(DbxErrorWidgetService).register({ code: 'NAME_TAKEN', errorComponentClass: NameTakenErrorComponent, widgetComponentClass: NameTakenErrorWidgetComponent });\n});\n// NameTakenErrorComponent extends AbstractDbxErrorWidgetComponent to read this.code / this.message / this.data.",
+      "minimalExample": "inject(DbxErrorWidgetService).register({ code: HTTP_NETWORK_ERROR_CODE, errorComponentClass: AppOfflineErrorComponent });"
     },
     {
       "slug": "basic-loading",

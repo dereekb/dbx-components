@@ -1,6 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import {
   addAttachmentToCard,
+  addCheckItemToChecklist,
+  addChecklistToCard,
   addCommentToCard,
   addLabelToCard,
   addMemberToCard,
@@ -11,26 +13,39 @@ import {
   deleteAttachmentFromCard,
   deleteBoard,
   deleteCard,
+  deleteCheckItemFromCard,
+  deleteChecklist,
+  deleteCommentOnCard,
   deleteWebhook,
   downloadCardAttachment,
   getBoard,
   getCard,
   getCardAttachment,
+  getChecklist,
   getList,
   getMe,
   getMember,
   getWebhook,
+  listBoardActions,
   listBoardCards,
   listBoardLabels,
   listBoardLists,
   listBoardMembers,
   listCardActions,
   listCardAttachments,
+  listCardChecklists,
   listCardsInList,
+  listMemberBoards,
   listWebhooksForToken,
+  removeLabelFromCard,
+  removeMemberFromCard,
+  searchTrello,
   trelloFactory,
   updateBoard,
   updateCard,
+  updateCardCheckItem,
+  updateChecklist,
+  updateCommentOnCard,
   updateList,
   updateWebhook,
   type Trello,
@@ -87,6 +102,10 @@ export class TrelloApi {
     return listBoardLabels(this.trelloContext);
   }
 
+  get listBoardActions() {
+    return listBoardActions(this.trelloContext);
+  }
+
   // MARK: Lists
   get getList() {
     return getList(this.trelloContext);
@@ -137,6 +156,22 @@ export class TrelloApi {
     return listCardActions(this.trelloContext);
   }
 
+  get removeLabelFromCard() {
+    return removeLabelFromCard(this.trelloContext);
+  }
+
+  get removeMemberFromCard() {
+    return removeMemberFromCard(this.trelloContext);
+  }
+
+  get updateCommentOnCard() {
+    return updateCommentOnCard(this.trelloContext);
+  }
+
+  get deleteCommentOnCard() {
+    return deleteCommentOnCard(this.trelloContext);
+  }
+
   // MARK: Card Attachments
   get listCardAttachments() {
     return listCardAttachments(this.trelloContext);
@@ -158,6 +193,39 @@ export class TrelloApi {
     return downloadCardAttachment(this.trelloContext);
   }
 
+  // MARK: Card Checklists
+  get listCardChecklists() {
+    return listCardChecklists(this.trelloContext);
+  }
+
+  get getChecklist() {
+    return getChecklist(this.trelloContext);
+  }
+
+  get addChecklistToCard() {
+    return addChecklistToCard(this.trelloContext);
+  }
+
+  get updateChecklist() {
+    return updateChecklist(this.trelloContext);
+  }
+
+  get deleteChecklist() {
+    return deleteChecklist(this.trelloContext);
+  }
+
+  get addCheckItemToChecklist() {
+    return addCheckItemToChecklist(this.trelloContext);
+  }
+
+  get updateCardCheckItem() {
+    return updateCardCheckItem(this.trelloContext);
+  }
+
+  get deleteCheckItemFromCard() {
+    return deleteCheckItemFromCard(this.trelloContext);
+  }
+
   // MARK: Members
   get getMember() {
     return getMember(this.trelloContext);
@@ -165,6 +233,15 @@ export class TrelloApi {
 
   get getMe() {
     return getMe(this.trelloContext);
+  }
+
+  get listMemberBoards() {
+    return listMemberBoards(this.trelloContext);
+  }
+
+  // MARK: Search
+  get searchTrello() {
+    return searchTrello(this.trelloContext);
   }
 
   // MARK: Webhooks

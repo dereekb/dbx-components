@@ -98,4 +98,10 @@ describe('checkTokenSource()', () => {
 
     expect(checkTokenSource(status)).toEqual({ name: 'token-source', status: 'fail', message: 'Token source "env-cmd" (from ZOHO_CLI_TOKEN_COMMAND) failed: not logged in' });
   });
+
+  it("should carry a failing source's suggestion", () => {
+    const status = { active: { command: 'env-cmd', origin: 'env' }, error: 'external-token zoho_admin failed: Forbidden', errorCode: 'AUTH_FORBIDDEN', suggestion: 'Re-mint the credential.' } as unknown as ZohoCliTokenSourceStatus;
+
+    expect(checkTokenSource(status)).toEqual({ name: 'token-source', status: 'fail', message: 'Token source "env-cmd" (from ZOHO_CLI_TOKEN_COMMAND) failed: external-token zoho_admin failed: Forbidden', suggestion: 'Re-mint the credential.' });
+  });
 });

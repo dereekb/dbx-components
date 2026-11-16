@@ -83,6 +83,14 @@ describe('cliAuthFailureErrorMapper', () => {
     expect(result?.suggestion).toContain('lacks the scope');
   });
 
+  it('keeps the error serverCode on the envelope it builds', () => {
+    setContext();
+
+    const result = cliAuthFailureErrorMapper(new CliHttpError({ message: 'forbidden', code: 'AUTH_FORBIDDEN', status: 403, serverCode: CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE }));
+
+    expect(result?.serverCode).toBe(CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE);
+  });
+
   it('ignores errors that are not a 401/403 CliHttpError', () => {
     setContext();
 

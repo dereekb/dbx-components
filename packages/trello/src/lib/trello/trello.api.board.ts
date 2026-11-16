@@ -100,6 +100,10 @@ export function listBoardLists(context: TrelloContext): ListBoardListsFunction {
 export interface ListBoardCardsInput {
   readonly boardId: TrelloBoardId;
   readonly filter?: 'all' | 'closed' | 'none' | 'open' | 'visible';
+  /**
+   * Comma-separated list of card fields to return, or `all`. Trello returns its default field set when omitted.
+   */
+  readonly fields?: string;
 }
 
 export type ListBoardCardsFunction = (input: ListBoardCardsInput) => Promise<ReadonlyArray<TrelloCard>>;
@@ -145,9 +149,13 @@ export function listBoardLabels(context: TrelloContext): ListBoardLabelsFunction
 export interface ListBoardMembersInput {
   readonly boardId: TrelloBoardId;
   /**
-   * Optional member id filter. Pass to list a specific board member.
+   * Optional member id filter. When set, only that member is returned (an empty array when they are not on the board).
    */
   readonly memberId?: TrelloMemberId;
+  /**
+   * Comma-separated list of member fields to return, or `all`.
+   */
+  readonly fields?: string;
 }
 
 export type ListBoardMembersFunction = (input: ListBoardMembersInput) => Promise<ReadonlyArray<TrelloMember>>;
@@ -159,7 +167,12 @@ export type ListBoardMembersFunction = (input: ListBoardMembersInput) => Promise
  * @returns Lists all members of a board.
  */
 export function listBoardMembers(context: TrelloContext): ListBoardMembersFunction {
-  return (input) => context.fetchJson(`/boards/${input.boardId}/members`, 'GET');
+  return async (input) => {
+    const { boardId, memberId, fields } = input;
+    const queryString = makeUrlSearchParams({ fields });
+    const members: ReadonlyArray<TrelloMember> = await context.fetchJson(`/boards/${boardId}/members?${queryString}`, 'GET');
+    return memberId ? members.filter((member) => member.id === memberId) : members;
+  };
 }
 
 export interface ListBoardActionsInput {

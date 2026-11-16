@@ -1,9 +1,11 @@
 import { type, type Type } from 'arktype';
 import { type Maybe } from '@dereekb/util';
-import { type InferredTargetModelParams, inferredTargetModelParamsType } from '../../common/model/model/model.param';
+import { clearable } from '@dereekb/model';
 import { callModelFirebaseFunctionMapFactory, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCreateFunction, type ModelFirebaseCrudFunction, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap } from '../../client';
 import { type UserExternalConnectionTypes } from './userexternalconnection';
 import { type UserExternalConnectionProviderType } from './userexternalconnection.id';
+import { type UserExternalConnectionScopePresetKey } from './userexternalconnection.preset';
+import { type UserExternalConnectionDataItemKey, type UserExternalConnectionDataItemSummary, type UserExternalConnectionDataMap, type UserExternalConnectionDataTypeKey, type UserExternalConnectionDataTypeSummary, type UserExternalConnectionDataValue } from './userexternalconnection.data';
 
 // MARK: Create
 /**
@@ -12,11 +14,23 @@ import { type UserExternalConnectionProviderType } from './userexternalconnectio
  * Deliberately empty: the document is keyed by uid, so there is nothing to target and nothing to
  * seed it with — providers arrive one at a time through the OAuth flow, never at creation.
  *
+ *
+ * Always the caller's own connection, resolved from their auth. There is no target `key`, so no caller, an admin
+ * included, can act on another user's connection; a `key` sent anyway is refused.
+ *
  * @dbxModelApiParams
  */
 export interface CreateUserExternalConnectionParams {}
 
-export const createUserExternalConnectionParamsType = /* @__PURE__ */ type({}) as Type<CreateUserExternalConnectionParams>;
+/**
+ * Base ArkType for every UserExternalConnection call's params. None of the calls takes a target `key`: each one acts on
+ * the caller's own document, resolved from their auth. A `key` is refused ("key must be undefined") instead of silently
+ * ignored, so a caller who meant another user (an admin, say) learns that the call cannot do that. The callModel
+ * dispatch and the server action's own transform both apply it.
+ */
+const userExternalConnectionCallerParamsType = /* @__PURE__ */ type({ 'key?': 'undefined' });
+
+export const createUserExternalConnectionParamsType = /* @__PURE__ */ userExternalConnectionCallerParamsType as Type<CreateUserExternalConnectionParams>;
 
 // MARK: Update
 /**
@@ -25,18 +39,19 @@ export const createUserExternalConnectionParamsType = /* @__PURE__ */ type({}) a
  * This is the ONLY write path a client has to the connection pair. There is deliberately no connect
  * or update params type here: connecting requires credentials, which only the server ever sees.
  *
- * If no target model is provided, the current user's connection document is assumed.
+ * Always the caller's own connection, resolved from their auth. There is no target `key`, so no caller, an admin
+ * included, can act on another user's connection; a `key` sent anyway is refused.
  *
  * @dbxModelApiParams
  */
-export interface DisconnectUserExternalConnectionParams extends InferredTargetModelParams {
+export interface DisconnectUserExternalConnectionParams {
   /**
    * The provider type to disconnect from.
    */
   readonly providerType: UserExternalConnectionProviderType;
 }
 
-export const disconnectUserExternalConnectionParamsType = /* @__PURE__ */ inferredTargetModelParamsType.merge(
+export const disconnectUserExternalConnectionParamsType = /* @__PURE__ */ userExternalConnectionCallerParamsType.merge(
   type({
     providerType: 'string'
   })
@@ -46,9 +61,12 @@ export const disconnectUserExternalConnectionParamsType = /* @__PURE__ */ inferr
 /**
  * Parameters for beginning an OAuth connect handoff for a provider.
  *
+ * Always the caller's own connection, resolved from their auth. There is no target `key`, so no caller, an admin
+ * included, can act on another user's connection; a `key` sent anyway is refused.
+ *
  * @dbxModelApiParams
  */
-export interface ReadUserExternalConnectionAuthorizeStateParams extends InferredTargetModelParams {
+export interface ReadUserExternalConnectionAuthorizeStateParams {
   /**
    * The provider type to begin connecting to.
    */
@@ -64,12 +82,21 @@ export interface ReadUserExternalConnectionAuthorizeStateParams extends Inferred
    * Absent means `connect`, so a client minting a state before `link` existed still gets one.
    */
   readonly mode?: Maybe<'connect' | 'link'>;
+  /**
+   * Key of the scope preset to connect with, for a provider that declares scope presets.
+   *
+   * Only applies to the `connect` mode; ignored for `link`. Absent means the provider's default preset
+   * (or no preset at all when the provider declares none). A key the provider does not declare is
+   * refused with `USER_EXTERNAL_CONNECTION_SCOPE_PRESET_NOT_ALLOWED`.
+   */
+  readonly scopePreset?: Maybe<UserExternalConnectionScopePresetKey>;
 }
 
-export const readUserExternalConnectionAuthorizeStateParamsType = /* @__PURE__ */ inferredTargetModelParamsType.merge(
+export const readUserExternalConnectionAuthorizeStateParamsType = /* @__PURE__ */ userExternalConnectionCallerParamsType.merge(
   type({
     providerType: 'string',
-    'mode?': "'connect' | 'link'"
+    'mode?': clearable("'connect' | 'link'"),
+    'scopePreset?': clearable('string')
   })
 ) as Type<ReadUserExternalConnectionAuthorizeStateParams>;
 
@@ -82,22 +109,148 @@ export const readUserExternalConnectionAuthorizeStateParamsType = /* @__PURE__ *
  * link AND the data connection and its credentials. "Stop using my Discord token" and "Discord is no
  * longer how I log in" are different requests, so they are different calls.
  *
- * If no target model is provided, the current user's connection document is assumed.
+ * Always the caller's own connection, resolved from their auth. There is no target `key`, so no caller, an admin
+ * included, can act on another user's connection; a `key` sent anyway is refused.
  *
  * @dbxModelApiParams
  */
-export interface UnlinkUserExternalConnectionLoginParams extends InferredTargetModelParams {
+export interface UnlinkUserExternalConnectionLoginParams {
   /**
    * The provider type to unlink.
    */
   readonly providerType: UserExternalConnectionProviderType;
 }
 
-export const unlinkUserExternalConnectionLoginParamsType = /* @__PURE__ */ inferredTargetModelParamsType.merge(
+export const unlinkUserExternalConnectionLoginParamsType = /* @__PURE__ */ userExternalConnectionCallerParamsType.merge(
   type({
     providerType: 'string'
   })
 ) as Type<UnlinkUserExternalConnectionLoginParams>;
+
+// MARK: Data
+/**
+ * Parameters for reading the calling user's stored connection data (`UserExternalConnectionData`).
+ *
+ * Always reads the caller's own data, resolved from their auth. There is no target `key`, so no caller, an admin
+ * included, can read another user's data; a `key` sent anyway is refused by {@link readUserExternalConnectionDataParamsType}.
+ * Every filter is optional: omit them all to read everything the caller may use.
+ *
+ * @dbxModelApiParams
+ */
+export interface ReadUserExternalConnectionDataParams {
+  /**
+   * Only this provider's data. Omit for every provider the caller may use.
+   */
+  readonly providerType?: Maybe<UserExternalConnectionProviderType>;
+  /**
+   * Only this data type, e.g. `mail_signature`.
+   */
+  readonly dataType?: Maybe<UserExternalConnectionDataTypeKey>;
+  /**
+   * Only this item, e.g. `me` or a mailbox address.
+   */
+  readonly itemKey?: Maybe<UserExternalConnectionDataItemKey>;
+  /**
+   * Return item summaries only, without values.
+   */
+  readonly keysOnly?: Maybe<boolean>;
+}
+
+export const readUserExternalConnectionDataParamsType = /* @__PURE__ */ userExternalConnectionCallerParamsType.merge(
+  type({
+    'providerType?': clearable('string'),
+    'dataType?': clearable('string'),
+    'itemKey?': clearable('string'),
+    'keysOnly?': clearable('boolean')
+  })
+) as Type<ReadUserExternalConnectionDataParams>;
+
+/**
+ * Result of reading the calling user's connection data.
+ */
+export interface ReadUserExternalConnectionDataResult {
+  /**
+   * The values, keyed provider type → data type → item key. Absent with `keysOnly`.
+   */
+  readonly data?: UserExternalConnectionDataMap;
+  /**
+   * A summary of every matching item.
+   */
+  readonly items: readonly UserExternalConnectionDataItemSummary[];
+  /**
+   * The data types the caller may store (for the matching provider), so a caller can discover what to save.
+   */
+  readonly dataTypes: readonly UserExternalConnectionDataTypeSummary[];
+}
+
+/**
+ * Sets one item.
+ */
+export interface UserExternalConnectionDataSetOperation {
+  readonly dataType: UserExternalConnectionDataTypeKey;
+  readonly itemKey: UserExternalConnectionDataItemKey;
+  /**
+   * The value, validated against the data type's registered shape.
+   */
+  readonly value: UserExternalConnectionDataValue;
+}
+
+/**
+ * Removes one item, or a whole data type when `itemKey` is omitted.
+ */
+export interface UserExternalConnectionDataUnsetOperation {
+  readonly dataType: UserExternalConnectionDataTypeKey;
+  readonly itemKey?: Maybe<UserExternalConnectionDataItemKey>;
+}
+
+/**
+ * Parameters for changing the calling user's stored data for one provider.
+ *
+ * Applies `clear`, then every `unset`, then every `set`, in one transaction.
+ *
+ * Always changes the caller's own data, resolved from their auth. There is no target `key`, so no caller, an admin
+ * included, can change another user's data; a `key` sent anyway is refused by {@link updateUserExternalConnectionDataParamsType}.
+ *
+ * @dbxModelApiParams
+ */
+export interface UpdateUserExternalConnectionDataParams {
+  /**
+   * The provider whose data to change, e.g. `microsoft`.
+   */
+  readonly providerType: UserExternalConnectionProviderType;
+  /**
+   * Items to set (create or replace).
+   */
+  readonly set?: Maybe<readonly UserExternalConnectionDataSetOperation[]>;
+  /**
+   * Items (or whole data types) to remove.
+   */
+  readonly unset?: Maybe<readonly UserExternalConnectionDataUnsetOperation[]>;
+  /**
+   * Drop all of this provider's data first. It also recovers a document that can no longer be decrypted, by
+   * replacing the whole document: every provider's data is lost then, since none of it can be read.
+   */
+  readonly clear?: Maybe<boolean>;
+}
+
+export const updateUserExternalConnectionDataParamsType = /* @__PURE__ */ userExternalConnectionCallerParamsType.merge(
+  type({
+    providerType: 'string',
+    'set?': clearable(type({ dataType: 'string', itemKey: 'string', value: 'Record<string, unknown>' }).array()),
+    'unset?': clearable(type({ dataType: 'string', 'itemKey?': clearable('string') }).array()),
+    'clear?': clearable('boolean')
+  })
+) as Type<UpdateUserExternalConnectionDataParams>;
+
+/**
+ * Result of changing the calling user's connection data. Never carries values.
+ */
+export interface UpdateUserExternalConnectionDataResult {
+  /**
+   * The provider's items after the write.
+   */
+  readonly items: readonly UserExternalConnectionDataItemSummary[];
+}
 
 /**
  * The opaque, short-lived `state` to carry through a provider's OAuth handoff.
@@ -145,6 +298,13 @@ export type UserExternalConnectionModelCrudFunctionsConfig = {
        * decides how the state is signed and how long it lives.
        */
       authorizeState: [ReadUserExternalConnectionAuthorizeStateParams, UserExternalConnectionAuthorizeStateResult];
+      /**
+       * Reads the caller's stored connection data (UserExternalConnectionData): per-provider settings such as default
+       * mail signatures, decrypted server-side. Also returns the data types the caller may store.
+       *
+       * Example: `{ providerType: 'microsoft', dataType: 'mail_signature' }`. Use `keysOnly: true` to list items without values.
+       */
+      data: [ReadUserExternalConnectionDataParams, ReadUserExternalConnectionDataResult];
     };
     update: {
       /**
@@ -162,12 +322,22 @@ export type UserExternalConnectionModelCrudFunctionsConfig = {
        * would leave the account with no way to sign back in.
        */
       unlink: UnlinkUserExternalConnectionLoginParams;
+      /**
+       * Saves or removes the caller's stored connection data for one provider, encrypted at rest. The app CLI hands it
+       * to the provider's CLI as DEFAULT settings when it mints a token (explicit local config and flags still win).
+       *
+       * Example (a default msgraph-cli signature for a shared mailbox):
+       * `{ providerType: 'microsoft', set: [{ dataType: 'mail_signature', itemKey: 'support@example.com', value: { html: '<p>…</p>' } }] }`.
+       * Use `itemKey: 'me'` for your own mailbox. `unset` removes items; `clear: true` removes everything for the provider.
+       * Call `read` `data` first to see which data types are allowed.
+       */
+      data: [UpdateUserExternalConnectionDataParams, UpdateUserExternalConnectionDataResult];
     };
   };
 };
 
 export const USER_EXTERNAL_CONNECTION_MODEL_CRUD_FUNCTIONS_CONFIG: ModelFirebaseCrudFunctionConfigMap<UserExternalConnectionModelCrudFunctionsConfig, UserExternalConnectionTypes> = {
-  userExternalConnection: ['create', 'read:authorizeState', 'update:disconnect,unlink']
+  userExternalConnection: ['create', 'read:authorizeState,data', 'update:data,disconnect,unlink']
 };
 
 /**
@@ -180,10 +350,12 @@ export abstract class UserExternalConnectionFunctions implements ModelFirebaseFu
     createUserExternalConnection: ModelFirebaseCreateFunction<CreateUserExternalConnectionParams>;
     readUserExternalConnection: {
       authorizeState: ModelFirebaseCrudFunction<ReadUserExternalConnectionAuthorizeStateParams, UserExternalConnectionAuthorizeStateResult>;
+      data: ModelFirebaseCrudFunction<ReadUserExternalConnectionDataParams, ReadUserExternalConnectionDataResult>;
     };
     updateUserExternalConnection: {
       disconnect: ModelFirebaseCrudFunction<DisconnectUserExternalConnectionParams>;
       unlink: ModelFirebaseCrudFunction<UnlinkUserExternalConnectionLoginParams>;
+      data: ModelFirebaseCrudFunction<UpdateUserExternalConnectionDataParams, UpdateUserExternalConnectionDataResult>;
     };
   };
 }

@@ -3,6 +3,7 @@ import { CalcomUserExternalConnectionOAuthService } from '@dereekb/firebase-serv
 import { DiscordUserExternalConnectionOAuthService } from '@dereekb/firebase-server/discord';
 import { ZohoUserExternalConnectionOAuthService, zohoUserExternalConnectionOAuthServiceToken } from '@dereekb/firebase-server/zoho';
 import { TrelloUserExternalConnectionOAuthService, trelloUserExternalConnectionOAuthServiceToken } from '@dereekb/firebase-server/trello';
+import { MicrosoftUserExternalConnectionOAuthService } from '@dereekb/firebase-server/microsoft';
 import { UserExternalConnectionOAuthProviderRegistry, UserExternalConnectionReader, userExternalConnectionOAuthProviderRegistryProvider, userExternalConnectionReaderProvider } from '@dereekb/firebase-server/model';
 import { DEMO_TRELLO_BOT_EXTERNAL_CONNECTION_PROVIDER_TYPE, DEMO_ZOHO_ADMIN_EXTERNAL_CONNECTION_PROVIDER_TYPE } from 'demo-firebase';
 import { UserExternalConnectionModule } from '../common/model/userexternalconnection';
@@ -17,6 +18,7 @@ import { DemoApiDiscordModule, DemoDiscordOAuthConnectionModule } from './discor
 import { DemoApiCalcomModule } from './calcom';
 import { DemoApiZohoModule } from './zoho';
 import { DemoApiTrelloModule } from './trello';
+import { DemoApiMicrosoftModule } from './microsoft';
 
 /**
  * Every external-connection OAuth service this app has mounted endpoints for.
@@ -34,14 +36,30 @@ export const DEMO_API_EXTERNAL_CONNECTION_OAUTH_SERVICES = [
   ZohoUserExternalConnectionOAuthService,
   zohoUserExternalConnectionOAuthServiceToken(DEMO_ZOHO_ADMIN_EXTERNAL_CONNECTION_PROVIDER_TYPE),
   TrelloUserExternalConnectionOAuthService,
-  trelloUserExternalConnectionOAuthServiceToken(DEMO_TRELLO_BOT_EXTERNAL_CONNECTION_PROVIDER_TYPE)
+  trelloUserExternalConnectionOAuthServiceToken(DEMO_TRELLO_BOT_EXTERNAL_CONNECTION_PROVIDER_TYPE),
+  MicrosoftUserExternalConnectionOAuthService
 ];
 
 @Module({
   // UserExternalConnectionModule is imported for the accessor and actions the reader is built from.
   // This is also the only module that can see the registry, which is why the reader is provided here
   // rather than alongside them.
-  imports: [UserExternalConnectionModule, DemoApiStripeModule, DemoApiZoomModule, DemoApiVapiAiModule, DemoApiOpenAIModule, DemoOpenRouterModule, DemoApiTypeformModule, DemoApiTwilioWebhookModule, DemoApiDiscordModule, DemoDiscordOAuthConnectionModule, DemoApiCalcomModule, DemoApiZohoModule, DemoApiTrelloModule],
+  imports: [
+    UserExternalConnectionModule,
+    DemoApiStripeModule,
+    DemoApiZoomModule,
+    DemoApiVapiAiModule,
+    DemoApiOpenAIModule,
+    DemoOpenRouterModule,
+    DemoApiTypeformModule,
+    DemoApiTwilioWebhookModule,
+    DemoApiDiscordModule,
+    DemoDiscordOAuthConnectionModule,
+    DemoApiCalcomModule,
+    DemoApiZohoModule,
+    DemoApiTrelloModule,
+    DemoApiMicrosoftModule
+  ],
   providers: [userExternalConnectionOAuthProviderRegistryProvider(DEMO_API_EXTERNAL_CONNECTION_OAUTH_SERVICES), userExternalConnectionReaderProvider()],
   exports: [UserExternalConnectionOAuthProviderRegistry, UserExternalConnectionReader]
 })

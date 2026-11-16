@@ -15,8 +15,8 @@ export const TRELLO_OAUTH_AUTHORIZE_URL = 'https://auth.atlassian.com/authorize'
  *
  * Trello's confidential-client guide names this URL in its "Token endpoint URL" bullet and in both code
  * samples, while one paragraph of prose says `/authorize/oauth/token`; Atlassian's own 3LO uses
- * `/oauth/token`. Unverified against the live server (`tools/scripts/trello-oauth2-spike.mjs` checks
- * it), so it is kept in this one constant.
+ * `/oauth/token`. Verified against Atlassian's live server on 2026-11-16: the demo's `trello_bot` connect
+ * exchanged its authorization code here. It stays in this one constant in case Atlassian moves it.
  *
  * The body is JSON, unlike Discord's form-encoded token endpoint.
  */

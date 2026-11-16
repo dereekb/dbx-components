@@ -1,6 +1,6 @@
 import { FetchResponseError } from '@dereekb/util/fetch';
-import { describe, expect, it } from 'vitest';
-import { parseTrelloApiError, TrelloInvalidTokenError, TrelloServerFetchResponseError, TrelloTooManyRequestsError } from './trello.error.api';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { logTrelloServerErrorFunction, parseTrelloApiError, TrelloServerError, TrelloInvalidTokenError, TrelloServerFetchResponseError, TrelloTooManyRequestsError } from './trello.error.api';
 
 function makeFetchResponseError(status: number, body: string, headers: Record<string, string> = {}): FetchResponseError {
   const response = new Response(body, { status, headers });
@@ -42,5 +42,34 @@ describe('parseTrelloApiError()', () => {
     const parsed = await parseTrelloApiError(error);
 
     expect(parsed?.data.bodyJson).toEqual({ message: 'something broke', code: 12345 });
+  });
+});
+
+describe('logTrelloServerErrorFunction()', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('logs a fetch response error to stderr, never stdout', async () => {
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const parsed = await parseTrelloApiError(makeFetchResponseError(401, 'invalid token'));
+
+    logTrelloServerErrorFunction('Test')(parsed as TrelloServerFetchResponseError);
+
+    expect(logSpy).not.toHaveBeenCalled();
+    expect(errorSpy).toHaveBeenCalledTimes(1);
+    expect(errorSpy.mock.calls[0][0]).toBe('TestError(401): ');
+  });
+
+  it('logs a plain server error to stderr, never stdout', () => {
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    logTrelloServerErrorFunction('Test')(new TrelloServerError('boom', { status: 500, bodyText: 'boom' }));
+
+    expect(logSpy).not.toHaveBeenCalled();
+    expect(errorSpy).toHaveBeenCalledTimes(1);
+    expect(errorSpy.mock.calls[0][0]).toBe('TestError(status:500): ');
   });
 });

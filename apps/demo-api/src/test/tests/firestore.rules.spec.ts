@@ -110,6 +110,36 @@ describe('firestore.rules', () => {
       });
     });
 
+    describe('uecd (UserExternalConnectionData)', () => {
+      beforeEach(async () => {
+        await f.withSecurityRulesDisabled(async (firestore) => {
+          await setDoc(doc(firestore, 'uecd', OWNER_UID), { uid: OWNER_UID, d: 'encrypted', uat: new Date() });
+        });
+      });
+
+      // There is deliberately NO match block for /uecd either: the data is read and written only through
+      // the userExternalConnection read:data / update:data callables and the token mint.
+      it('should deny the owner reading their own connection data', async () => {
+        await assertFails(getDoc(doc(f.firestoreForUser(OWNER_UID), 'uecd', OWNER_UID)));
+      });
+
+      it('should deny an unauthenticated read of the connection data', async () => {
+        await assertFails(getDoc(doc(f.unauthenticatedFirestore(), 'uecd', OWNER_UID)));
+      });
+
+      it('should deny listing/querying the connection data collection', async () => {
+        await assertFails(getDocs(collection(f.firestoreForUser(OWNER_UID), 'uecd')));
+      });
+
+      it('should deny the owner writing their own connection data', async () => {
+        await assertFails(setDoc(doc(f.firestoreForUser(OWNER_UID), 'uecd', OWNER_UID), { d: 'tampered' }));
+      });
+
+      it('should deny an unauthenticated write of the connection data', async () => {
+        await assertFails(setDoc(doc(f.unauthenticatedFirestore(), 'uecd', OWNER_UID), { d: 'tampered' }));
+      });
+    });
+
     describe('fsp (FormSpace)', () => {
       const OWNER_FORM_SPACE = 'ownerformspace';
       const OTHER_FORM_SPACE = 'otherformspace';

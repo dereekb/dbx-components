@@ -47,7 +47,7 @@ describe('scanFirestoreRules()', () => {
     }
 
     // every model the rules file has NO match block for at all
-    for (const collection of ['sys', 'sysp', 'pp', 'uecp']) {
+    for (const collection of ['sys', 'sysp', 'pp', 'uecp', 'uecd']) {
       it(`reports ${collection} as unmatched and server-only`, () => {
         const entry = firestoreRulesAccessForCollection(scan, collection);
         expect(entry.get).toBe('unmatched');

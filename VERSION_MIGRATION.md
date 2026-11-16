@@ -1,3 +1,174 @@
+## Migration to v14.26.x — UserExternalConnectionData: encrypted per-user connection defaults
+
+### New
+- **`UserExternalConnectionData` (`/uecd`)**, a server-only model in `@dereekb/firebase-server/model`
+  (`userExternalConnectionDataIdentity`). Its actions are on `UserExternalConnectionServerActions`:
+  `readUserExternalConnectionData` / `updateUserExternalConnectionData` (transform-and-validate actions over the API
+  params, run against the caller's `/uec` document), `readUserExternalConnectionProviderData` and
+  `deleteUserExternalConnectionData`. The app module takes the data types as `dataTypes`. It stores a user's per-connection
+  data (keyed provider type → data type → item key, with the reserved item key `me` for the connection's own account),
+  encrypted at rest as one AES-256-GCM string. Like `uecp` it has no rules block, no model service and no `@dbxModel`,
+  so it cannot be read from a client SDK, `ModelApiGetService` or `<cli> get`, and it is absent from the manifests.
+  Data is kept on disconnect and unlink. `deleteAllUserExternalConnectionsForUser` deletes it along with the
+  connections. `UserExternalConnectionServerActions.deleteUserExternalConnectionData({ uid })` deletes only the
+  data document, for a server path such as account deletion. It never decrypts, so it also removes an unreadable
+  document, and no user-callable route exposes it.
+- **Data type registry** (`@dereekb/firebase`): `UserExternalConnectionDataTypeConfig` / `userExternalConnectionDataTypeConfig`
+  (an arktype `valueType`, optional `normalizeItemKey`, `packFile`, `maxItems`, `maxValueBytes`),
+  `userExternalConnectionDataTypeConfigLookup`, and the typed views `UserExternalConnectionDataTypings` /
+  `TypedUserExternalConnectionDataMap` / `readUserExternalConnectionDataItem`. The registry fails closed: an
+  unregistered provider or data type is refused. Limits default to 32 KiB per value, 50 items per data type, 256 KiB per
+  document and 50 operations per update.
+- **Microsoft mail signatures**: `microsoftMailSignatureUserExternalConnectionDataTypeConfig(providerType)` registers
+  `mail_signature` (`{ html } | { text }`, exactly one, up to 64 KiB; item keys `me` or a lowercased sending address via
+  `microsoftMailSignatureItemKey`; `.html` files pack to `{ html }`). Typings: `MicrosoftUserExternalConnectionDataTypes`.
+- **Model API specifiers on `userExternalConnection`**: `read:data` (`ReadUserExternalConnectionDataParams`: optional
+  `providerType` / `dataType` / `itemKey` / `keysOnly`; returns `data`, keys-only `items` and the `dataTypes` the caller
+  may store) and `update:data` (`UpdateUserExternalConnectionDataParams`: `clear`, then `unset`, then `set`, in one
+  transaction). Both act on the caller's own uid only, with no target `key` (see Adopt). They assert the new `data`
+  role on the caller's `/uec` document, and
+  apply the provider's connect policy (an `adminOnly` provider needs an admin). On MCP, `read:data` is a read method and
+  `update:data` a write method whose `unset` / `clear` escalate to destructive.
+- **Error codes** (`@dereekb/firebase`): `USER_EXTERNAL_CONNECTION_DATA_TYPE_NOT_ALLOWED_ERROR`,
+  `..._DATA_ITEM_KEY_INVALID_ERROR`, `..._DATA_VALUE_INVALID_ERROR`, `..._DATA_TOO_LARGE_ERROR` (400) and
+  `..._DATA_UNREADABLE_ERROR` (500; `update:data` with `clear: true` replaces an unreadable document). Errors carry
+  paths and counts, never values.
+- **Token mint `?include=data`.** `GET /api/session/external/:providerType?include=data` attaches the caller's stored data
+  for that provider (`UserExternalConnectionAccessTokenResponse.data`), only after every mint gate passed. A data
+  failure still returns the token. `userExternalConnectionTokenApiPath(providerType, { includeData: true })` builds the
+  path. No app change is needed: the token module reads the data through the app's `UserExternalConnectionServerActions`.
+- `@dereekb/nestjs`: `deriveAES256GCMEncryptionSecret` (HKDF-SHA256). The data key is derived from
+  `USER_EXTERNAL_CONNECTION_ENCRYPTION_SECRET` with a versioned info label, so `uecp` ciphertext cannot be replayed as
+  data. **There is no new env var.**
+- **`@dereekb/dbx-cli`**: `CreateCliInput.externalConnectionData` (`CliExternalConnectionDataConfig`: `dataTypes` plus
+  per-provider `adapters`), `passthroughCliExternalConnectionDataAdapter`, `summarizeCliExternalConnectionSettings`, and
+  `CliExternalConnectionTokenBundle.settings`. `external-token` requests `?include=data` only for a provider with an
+  adapter and forwards only the adapter's `unpack` output as `settings`. New `connection-data` command group
+  (`list` / `get` / `set` / `unset` / `import`, on the everyday login). Token sources cache `settings` in their entry
+  (keys only in reports) and gain `auth token-source refresh`.
+- **msgraph-cli server defaults.** A token source whose bundle carries `mail_signature` settings supplies default
+  signatures: `--no-signature` > `--signature-file` > the local file for that address > the server item for that
+  address > none, and a shared mailbox never falls back to `me`. Server HTML is used as-is (web image URLs, no local
+  embedding). `--dry-run` resolves it too, and degrades to a warning when the token source fails. New
+  `msgraph-cli config export` prints the local signatures as importable settings (refusing local images).
+
+### Adopt
+- Declare the app's registry in its `-firebase` component (e.g. `DEMO_USER_EXTERNAL_CONNECTION_DATA_TYPES` with
+  `microsoftMailSignatureUserExternalConnectionDataTypeConfig(<your microsoft provider type>)`) and a hand-written
+  `<App>UserExternalConnectionDataTypings` interface beside it.
+- Pass `dataTypes` (and optionally `dataLimits`) to the app's `UserExternalConnectionModule` config.
+- Add `read:data` / `update:data` handlers (see `apps/demo-api/src/app/function/userexternalconnection/userexternalconnection.data.ts`)
+  to the CRUD map's `userExternalConnection` read and update specifier handlers. They call the data actions on the
+  existing `userExternalConnectionActions` getter (`UserExternalConnectionServerActions`). Grant the `data` role to the
+  owner in the `userExternalConnection` role map (a full-access owner map already includes it).
+- In the app CLI, pass `externalConnectionData: { dataTypes, adapters }` to `runCli`, then regenerate the API and MCP
+  manifests.
+- Nothing is required of an app that does not register data types: with no `dataTypes` the registry is empty and every
+  write is refused.
+- **No UserExternalConnection call takes a target `key` any more** (create, `read:authorizeState`, `update:disconnect`,
+  `update:unlink`, `read:data`, `update:data`). Each acts on the caller's own document, from their auth, and a `key`
+  sent anyway fails validation (`VALIDATION_ERROR`, "key must be undefined"), admins included. The params types no
+  longer extend `InferredTargetModelParams`. `UserExternalConnectionDocumentStore` no longer sends the key. Client code
+  that calls `disconnect` / `unlink` through `firebaseDocumentStoreUpdateFunction` (which injects the store's key) must
+  call the function directly instead, e.g. with `firebaseDocumentStoreCrudFunction`.
+
+## Migration to v14.26.x — external connection scope presets + token scope ceilings
+
+### New
+- **Connect-time scope presets.** A provider's OAuth config takes `scopePresets` (`{ key, label, description?, scopes }`,
+  `UserExternalConnectionScopePreset` from `@dereekb/firebase`) and an optional `defaultScopePreset`, both passed through
+  `userExternalConnectionOAuthServiceConfigFactory`. `assertValidConfig` rejects duplicate keys and a default that names no
+  preset. `ReadUserExternalConnectionAuthorizeStateParams` gains `scopePreset` (connect mode only); the connect state
+  carries it, the PKCE re-mint keeps it, and the `/authorize` route resolves it (else the default) and hands the resolved
+  preset to the adapter as `UserExternalConnectionOAuthAuthorizeUrlInput.scopePreset`. An unknown key is refused there
+  the same way as a bad state.
+- **`assertUserExternalConnectionProviderConnectable({ scopePreset })`** refuses a preset the mounted provider does not
+  declare with `USER_EXTERNAL_CONNECTION_SCOPE_PRESET_NOT_ALLOWED` (400).
+- **Provider hooks** on `AbstractUserExternalConnectionOAuthService`: `normalizeScopes?(scopes)` canonicalizes scope
+  strings so the token mint can compare a connection's grant with a caller's ceiling, plus `scopePresets`,
+  `defaultScopePreset` and `scopePresetForKey(key)`.
+- **Token scope ceilings.** `UserExternalConnectionTokenApiModuleConfig.providerScopes`
+  (`{ providerType, oidcScopeCeilings: { [oidcScope]: providerScopes[] } }[]`) caps what a caller may mint by its OIDC
+  scopes; the ceiling is the union over the mapped scopes it holds. The mint hands out the connection's stored token
+  unchanged, and under a ceiling only when the connection's whole grant fits inside it (an unknown grant never fits). It
+  never narrows a token: no provider issues one narrower than the connection's grant (Microsoft Entra accepts a scope
+  subset on a refresh but still issues every consented Graph scope), so a read-only caller needs a connection made with a
+  read-only preset. A non-OIDC caller, or a provider absent from `providerScopes`, gets no ceiling.
+- **Token error code** (`@dereekb/firebase`): `USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR` (403): the
+  connection's grant reaches past the caller's ceiling (`data: { providerType, excessScopes }`; no `excessScopes` when
+  the grant is unknown), or the caller holds none of the provider's mapped OIDC scopes (`data: { providerType }`). The
+  mint controller now returns the error `data` for it (and for `..._EXPORT_NOT_ALLOWED_ERROR`).
+- `@dereekb/dbx-firebase`: `DbxFirebaseExternalConnectionProvider.scopePresets` (also a
+  `dbxFirebaseKnownExternalConnectionProvider` override). A provider with presets gets one connect action per preset
+  ("Connect: Read"), "Switch to <label>" actions once connected, and a chip with the preset its granted scopes cover
+  (`DbxFirebaseExternalConnectionRow.scopePreset`). `connectToProvider(providerType, { scopePreset })`, and
+  `mintAuthorizeStateForProvider` / `authorizeUrlWithStateForProvider` take a mode or an options object
+  (`{ mode, scopePreset }`).
+- **Over-granted connects are refused by default.** `UserExternalConnectionProviderPolicy.onOverGrant: 'block' | 'allow'`
+  (default `block`) refuses a CONNECT whose code exchange granted scopes beyond what the round trip requested: nothing is
+  stored, an existing connection is left as it was, and the entry is not marked `error`. Enforced only when the provider
+  knows what it requested (a resolved preset, or the new overridable `requestedScopesForScopePreset()` hook on
+  `AbstractUserExternalConnectionOAuthService`); connects only. New `USER_EXTERNAL_CONNECTION_OVER_GRANTED` (403,
+  `userExternalConnectionOverGrantedError`) and its allowlist `USER_EXTERNAL_CONNECTION_CONNECT_REPORTABLE_ERROR_CODES`
+  (`@dereekb/firebase`, read with `userExternalConnectionConnectErrorCode`).
+- **Connect failure redirect params.** A refused connect returns to the failure url carrying `connectError` and
+  `connectErrorProvider` (`USER_EXTERNAL_CONNECTION_CONNECT_ERROR_PARAM` / `_PROVIDER_PARAM`, built by
+  `userExternalConnectionConnectFailureRedirectUrl`); other connect failures keep the bare failure url.
+- **`normalizeUserExternalConnectionProviderScopes(oauthService, scopes)`** is exported from the OAuth service module; the
+  connect's over-grant check and the token mint share it.
+- **`packages/microsoft/SETUP.md`** documents the app registration, the "Consent on behalf of your organization" checkbox
+  (it cannot be disabled — leave it unticked) and how to find and revoke tenant-wide or per-user consent.
+- **`@dereekb/dbx-firebase` connect notice and refusal banner.** `DbxFirebaseExternalConnectionProvider.connectConfirm`
+  (a `DbxActionConfirmConfig`, shown before Connect, a preset connect, Reconnect and "Switch to") and `connectErrorMessages`
+  (copy per reported code, over `DEFAULT_DBX_FIREBASE_EXTERNAL_CONNECTION_CONNECT_ERROR_MESSAGES`), both also
+  `dbxFirebaseKnownExternalConnectionProvider` overrides. `DbxFirebaseExternalConnectionService.connectFailure` (a signal),
+  `handleConnectRedirectResult(url?)` (synchronous, leaves the url as is) and `clearConnectFailure()`;
+  `connectToProvider` clears a recorded failure. `readExternalConnectionConnectFailureFromUrl`,
+  `EXTERNAL_CONNECTION_CONNECT_ERROR_PARAM` / `_PROVIDER_PARAM` and `dbxFirebaseExternalConnectionConnectFailureReadableError`
+  are exported. `provideDbxFirebaseExternalConnections({ handleConnectRedirectResult })` (default true) records the failure
+  on app start, and `dbx-firebase-external-connections` renders it as a `<dbx-error>` banner above the list.
+- **Microsoft default notice.** `DBX_FIREBASE_EXTERNAL_CONNECTION_MICROSOFT_PROVIDER` declares a `connectConfirm` telling
+  administrators to leave "Consent on behalf of your organization" unticked, plus over-grant copy explaining how to revoke
+  the extra consent. To drop the notice, spread the constant and set `connectConfirm: undefined`.
+- **`@dereekb/dbx-cli` error envelope.** `CliError.serverCode` / `CliError.data` (constructed from a `CliErrorInput`), and
+  the error envelope's `serverCode?` / `data?` (`CliHttpError` inherits `serverCode`). `runCliCredentialProcess` carries a
+  child's `serverCode`, and `CliTokenSourceStatus` / `CliTokenSourceReport` gain `serverCode`.
+- `@dereekb/dbx-cli`: `cliTokenSourceStatusError` (the error a report command throws for a failing active token source),
+  `CLI_TOKEN_SOURCE_FAILED_ERROR_CODE`, `CLI_TOKEN_SOURCE_UNKNOWN_ERROR_CODE`,
+  `describeExternalConnectionTokenFailureSuggestion` and `cliCollectionPickApplier` (applies `--pick` to each item of a
+  collection page).
+
+### Changed
+- `AssertUserExternalConnectionProviderConnectableInput`, `UserExternalConnectionOAuthAuthorizeUrlInput`,
+  `MintUserExternalConnectionConnectStateInput` and `UserExternalConnectionConnectStateActor` each gain an optional
+  field; existing callers compile unchanged.
+- The Microsoft adapter always requests `User.Read` beside the preset's scopes (`requestedScopesForScopePreset()`); the
+  default presets' authorize urls are unchanged, while a custom preset without `User.Read` now also requests it.
+- `external-token` failures print the server's code as `serverCode` (`code` is unchanged), and their suggestions are
+  handoff-aware: a handoff credential is told to re-mint through the MCP CLI token tool, never to run `auth login`.
+- An unknown token-source name fails with `TOKEN_SOURCE_UNKNOWN` (was `ERROR`); the save hint moved from the message to
+  `suggestion`.
+- `--pick` prints a stderr warning naming the available fields when it matches nothing. msgraph-cli applies it to each
+  item of a collection page (`value[]`).
+- **zoho-cli `auth show` / `auth check` print `ok: false` and exit 1 when the active token source fails** (msgraph-cli
+  `auth show` too). The full report stays under `data`, so scripts reading `.data` keep working; scripts keyed on `ok` or
+  the exit code now see the failure.
+- `ZohoCliTokenSourceStatus` / `ZohoCliTokenSourceReport` extend dbx-cli's types and carry `errorCode` / `serverCode` /
+  `suggestion`; zoho-cli `doctor`'s token-source check carries `suggestion`.
+
+### Adopt
+- **Forward `scopePreset` in the app's `read:authorizeState` handler** — pass `data.scopePreset` (connect mode only) to
+  `assertUserExternalConnectionProviderConnectable` and to `mintState({ uid, providerType, scopePreset })`. Optional:
+  without it every connect uses the provider's default preset, and the per-preset connect buttons all connect with it.
+- To cap what each CLI login may mint, declare per-provider OIDC scopes (e.g. `token.external.<provider>_read` /
+  `_admin`) in the scope union and the OIDC `claims` (as `[]`), assign them through the admin-only `external-token`
+  profile, and list them in `providerScopes`. A CLI branching on mint errors should handle
+  `..._SCOPE_FORBIDDEN_ERROR`.
+- Nothing is required for the over-grant refusal. Declare `onOverGrant: 'allow'` on a provider's policy to store wider
+  grants instead. An app with its own connect UI should read `connectError` / `connectErrorProvider` off the failure url —
+  with `@dereekb/dbx-firebase`, read `DbxFirebaseExternalConnectionService.connectFailure` (recorded on app start) and
+  render it with `dbxFirebaseExternalConnectionConnectFailureReadableError`.
+
 ## Migration to v14.22.x — dynamic docs sources
 
 ### New

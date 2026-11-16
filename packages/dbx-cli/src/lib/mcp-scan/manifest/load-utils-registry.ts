@@ -68,7 +68,8 @@ export const DEFAULT_BUNDLED_FILENAMES = [
   'dereekb-rxjs.utils.mcp.generated.json',
   'dereekb-model.utils.mcp.generated.json',
   'dereekb-firebase.utils.mcp.generated.json',
-  'dereekb-firebase-server.utils.mcp.generated.json'
+  'dereekb-firebase-server.utils.mcp.generated.json',
+  'dereekb-dbx-web.utils.mcp.generated.json'
 ] as const;
 
 const DEFAULT_BUNDLED_PATHS: BundledUtilManifestPathsFactory = () => {

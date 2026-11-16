@@ -1,0 +1,182 @@
+// MARK: Mixin
+@mixin core() {
+  // MARK: Editor
+  .dbx-layout-boxes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--dbx-padding-3);
+    width: 100%;
+  }
+
+  .dbx-layout-boxes-canvas-cell {
+    display: flex;
+    justify-content: center;
+    flex: 2 1 320px;
+    min-width: 0;
+  }
+
+  .dbx-layout-boxes-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--dbx-padding-2);
+    flex: 1 1 var(--dbx-layout-boxes-list-min-width, 240px);
+    min-width: min(100%, var(--dbx-layout-boxes-list-min-width, 240px));
+  }
+
+  .dbx-layout-boxes-list-below {
+    flex-direction: column;
+    align-items: stretch;
+
+    .dbx-layout-boxes-canvas-cell,
+    .dbx-layout-boxes-list {
+      flex: 0 0 auto;
+      width: 100%;
+    }
+  }
+
+  .dbx-layout-boxes-cap-warning {
+    margin: 0;
+  }
+
+  .dbx-layout-boxes-items {
+    display: flex;
+    flex-direction: column;
+    gap: var(--dbx-padding-1);
+  }
+
+  .dbx-layout-boxes-item {
+    display: flex;
+    align-items: center;
+    gap: var(--dbx-padding-2);
+    padding: var(--dbx-padding-1) var(--dbx-padding-2);
+    border-radius: var(--mat-sys-corner-small);
+    cursor: pointer;
+  }
+
+  .dbx-layout-boxes-item-selected {
+    background: var(--dbx-layout-boxes-item-selected-color, var(--mat-sys-primary-container));
+    color: var(--dbx-layout-boxes-item-selected-on-color, var(--mat-sys-on-primary-container));
+  }
+
+  .dbx-layout-boxes-item-number {
+    flex-shrink: 0;
+  }
+
+  .dbx-layout-boxes-item-content {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .dbx-layout-boxes-item-remove {
+    flex-shrink: 0;
+  }
+
+  .dbx-layout-boxes-add {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--dbx-padding-2);
+  }
+
+  // MARK: Canvas
+  .dbx-layout-boxes-canvas {
+    display: block;
+    position: relative;
+    box-sizing: border-box;
+    width: 100%;
+    aspect-ratio: var(--dbx-layout-boxes-canvas-ratio-current, 1);
+    max-height: var(--dbx-layout-boxes-canvas-max-height, 70vh);
+    max-width: calc(var(--dbx-layout-boxes-canvas-max-height, 70vh) * var(--dbx-layout-boxes-canvas-ratio-current, 1));
+    margin: 0 auto;
+    overflow: hidden;
+    user-select: none;
+    background: var(--dbx-layout-boxes-canvas-background, var(--mat-sys-surface-container));
+    border-radius: var(--mat-sys-corner-extra-small);
+  }
+
+  .dbx-layout-boxes-canvas-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+    pointer-events: none;
+  }
+
+  .dbx-layout-boxes-box {
+    --dbx-layout-boxes-box-color-resolved: var(--dbx-layout-boxes-box-color, var(--mat-sys-primary));
+
+    position: absolute;
+    box-sizing: border-box;
+    border: 2px solid var(--dbx-layout-boxes-box-color-resolved);
+    background: color-mix(in srgb, var(--dbx-layout-boxes-box-color-resolved) var(--dbx-layout-boxes-box-fill-tone, 12%), transparent);
+    touch-action: none;
+    cursor: move;
+    outline: none;
+
+    &:focus-visible {
+      outline: 2px solid var(--mat-sys-on-surface);
+      outline-offset: 1px;
+    }
+  }
+
+  .dbx-layout-boxes-box.dbx-color {
+    --dbx-layout-boxes-box-color-resolved: var(--dbx-bg-color-current);
+  }
+
+  .dbx-layout-boxes-box-selected {
+    border-style: dashed;
+    z-index: 1;
+  }
+
+  .dbx-layout-boxes-canvas-readonly .dbx-layout-boxes-box {
+    cursor: default;
+  }
+
+  .dbx-layout-boxes-box-number {
+    position: absolute;
+    top: 2px;
+    left: 4px;
+    font: var(--mat-sys-label-medium);
+    color: var(--mat-sys-on-surface);
+    pointer-events: none;
+  }
+
+  .dbx-layout-boxes-handle {
+    position: absolute;
+    width: var(--dbx-layout-boxes-handle-size, 12px);
+    height: var(--dbx-layout-boxes-handle-size, 12px);
+    background: var(--dbx-layout-boxes-box-color-resolved);
+    border: 1px solid var(--mat-sys-surface);
+    box-sizing: border-box;
+    touch-action: none;
+  }
+
+  .dbx-layout-boxes-handle-nw {
+    left: calc(var(--dbx-layout-boxes-handle-size, 12px) / -2);
+    top: calc(var(--dbx-layout-boxes-handle-size, 12px) / -2);
+    cursor: nwse-resize;
+  }
+
+  .dbx-layout-boxes-handle-ne {
+    right: calc(var(--dbx-layout-boxes-handle-size, 12px) / -2);
+    top: calc(var(--dbx-layout-boxes-handle-size, 12px) / -2);
+    cursor: nesw-resize;
+  }
+
+  .dbx-layout-boxes-handle-sw {
+    left: calc(var(--dbx-layout-boxes-handle-size, 12px) / -2);
+    bottom: calc(var(--dbx-layout-boxes-handle-size, 12px) / -2);
+    cursor: nesw-resize;
+  }
+
+  .dbx-layout-boxes-handle-se {
+    right: calc(var(--dbx-layout-boxes-handle-size, 12px) / -2);
+    bottom: calc(var(--dbx-layout-boxes-handle-size, 12px) / -2);
+    cursor: nwse-resize;
+  }
+}
+
+@mixin theme($theme-config) {
+  // No theme-specific styles for the layout boxes field at present.
+}

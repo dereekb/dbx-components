@@ -1,14 +1,23 @@
 import { Logger } from '@nestjs/common';
 import { type Request } from 'express';
-import { type FirebaseAuthUserId, type UserExternalConnectionProviderType } from '@dereekb/firebase';
-import { cachedGetter, generatePkceCodeChallenge, generatePkceMaterial, type Maybe, type WebsiteUrl } from '@dereekb/util';
+import { type FirebaseAuthUserId, type UserExternalConnectionCapability, type UserExternalConnectionProviderType, type UserExternalConnectionScopePreset, type UserExternalConnectionScopePresetKey } from '@dereekb/firebase';
+import { cachedGetter, excludeValuesFromArray, generatePkceCodeChallenge, generatePkceMaterial, type Maybe, unique, type WebsiteUrl } from '@dereekb/util';
 import { type UserExternalConnectionCredentials } from '../userexternalconnection.private';
 import { type UserExternalConnectionAccessor } from '../userexternalconnection.accessor.service';
 import { type UserExternalConnectionServerActions } from '../userexternalconnection.action.server';
 import { type UserExternalConnectionSignInIdentity, type UserExternalConnectionSignInService } from '../userexternalconnection.signin';
 import { type UserExternalConnectionProviderPolicyRegistry, userExternalConnectionPolicyForProviderType } from '../userexternalconnection.policy';
-import { userExternalConnectionLinkNotEnabledError, userExternalConnectionSignInErrorCode, userExternalConnectionSignInIdentityUnavailableError, userExternalConnectionSignInNotEnabledError } from '../userexternalconnection.error';
 import {
+  USER_EXTERNAL_CONNECTION_OVER_GRANTED_ERROR_CODE,
+  userExternalConnectionConnectErrorCode,
+  userExternalConnectionLinkNotEnabledError,
+  userExternalConnectionOverGrantedError,
+  userExternalConnectionSignInErrorCode,
+  userExternalConnectionSignInIdentityUnavailableError,
+  userExternalConnectionSignInNotEnabledError
+} from '../userexternalconnection.error';
+import {
+  type UserExternalConnectionConnectStateActor,
   type UserExternalConnectionLinkStateActor,
   type UserExternalConnectionSignInStateActor,
   type UserExternalConnectionStateActor,
@@ -168,6 +177,14 @@ export interface UserExternalConnectionOAuthAuthorizeUrlInput {
    * scopes; `connect` wants the data scopes, which are usually neither a superset nor a subset.
    */
   readonly mode?: Maybe<UserExternalConnectionStateMode>;
+  /**
+   * The scope preset the connect requests, already resolved: the preset the state names, else the
+   * config's default preset, else none.
+   *
+   * Only ever set for a `connect`. An adapter whose provider declares presets requests
+   * `scopePreset.scopes` instead of its own fixed data scopes.
+   */
+  readonly scopePreset?: Maybe<UserExternalConnectionScopePreset>;
 }
 
 /**
@@ -295,6 +312,69 @@ export function userExternalConnectionSignInFailureRedirectUrl(input: UserExtern
   }
 
   return url.toString();
+}
+
+/**
+ * The query parameter a failed CONNECT returns its reason code on.
+ */
+export const USER_EXTERNAL_CONNECTION_CONNECT_ERROR_PARAM = 'connectError';
+
+/**
+ * The query parameter a failed CONNECT names its provider on, so the page can say which connection failed.
+ */
+export const USER_EXTERNAL_CONNECTION_CONNECT_ERROR_PROVIDER_PARAM = 'connectErrorProvider';
+
+export interface UserExternalConnectionConnectFailureRedirectUrlInput {
+  /**
+   * The configured connect failure URL.
+   */
+  readonly baseUrl: WebsiteUrl;
+  /**
+   * The provider whose connect failed.
+   */
+  readonly providerType: UserExternalConnectionProviderType;
+  /**
+   * The allowlisted reason code, when the failure carried a reportable one.
+   */
+  readonly errorCode?: Maybe<string>;
+}
+
+/**
+ * Builds the URL a failed CONNECT redirects to.
+ *
+ * The connect twin of {@link userExternalConnectionSignInFailureRedirectUrl}. Without a reportable code it returns
+ * the base URL unchanged; with one it adds the code and the provider, keeping the base's own query (e.g.
+ * `?connect=failed`).
+ *
+ * @param input - The base URL, the provider, and the allowlisted reason code.
+ * @returns The redirect URL, carrying the reason when there was one.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function userExternalConnectionConnectFailureRedirectUrl(input: UserExternalConnectionConnectFailureRedirectUrlInput): WebsiteUrl {
+  let result: WebsiteUrl = input.baseUrl;
+
+  if (input.errorCode) {
+    const url = new URL(input.baseUrl);
+    url.searchParams.set(USER_EXTERNAL_CONNECTION_CONNECT_ERROR_PARAM, input.errorCode);
+    url.searchParams.set(USER_EXTERNAL_CONNECTION_CONNECT_ERROR_PROVIDER_PARAM, input.providerType);
+    result = url.toString();
+  }
+
+  return result;
+}
+
+/**
+ * Normalizes scopes through the provider's `normalizeScopes` hook (when it has one) and dedupes them.
+ *
+ * Shared by the connect's over-grant check and the token mint's ceiling check, so both compare scopes the same way.
+ *
+ * @param oauthService - The provider's mounted OAuth service, if any.
+ * @param scopes - The scopes to normalize.
+ * @returns The normalized, deduped scopes.
+ */
+export function normalizeUserExternalConnectionProviderScopes(oauthService: Maybe<AbstractUserExternalConnectionOAuthService>, scopes: readonly UserExternalConnectionCapability[]): UserExternalConnectionCapability[] {
+  return unique(oauthService?.normalizeScopes ? oauthService.normalizeScopes(scopes) : [...scopes]);
 }
 
 /**
@@ -501,6 +581,103 @@ export abstract class AbstractUserExternalConnectionOAuthService {
   revokeCredentials?(input: UserExternalConnectionOAuthRevokeCredentialsInput): Promise<void>;
 
   /**
+   * PROVIDER (optional): normalizes provider scope strings to their canonical form, so requested,
+   * ceiling and granted scopes compare equal regardless of how a caller spelled them (e.g. Microsoft's
+   * `https://graph.microsoft.com/Mail.Read` vs `mail.read` vs `Mail.Read`).
+   *
+   * PUBLIC for the same reason as `refreshCredentials`: the token mint reaches it through the registry.
+   * Absent means scopes are compared exactly as given.
+   *
+   * @param scopes - The scopes to normalize.
+   * @returns The normalized scopes.
+   */
+  normalizeScopes?(scopes: readonly UserExternalConnectionCapability[]): UserExternalConnectionCapability[];
+
+  /**
+   * The scope presets a user picks from when connecting this provider. Empty when it declares none.
+   *
+   * @returns The configured presets.
+   */
+  get scopePresets(): readonly UserExternalConnectionScopePreset[] {
+    return this.config.userExternalConnectionOAuth.scopePresets ?? [];
+  }
+
+  /**
+   * The preset a connect uses when the request names none, if any.
+   *
+   * @returns The default preset.
+   */
+  get defaultScopePreset(): Maybe<UserExternalConnectionScopePreset> {
+    return this.scopePresetForKey(this.config.userExternalConnectionOAuth.defaultScopePreset);
+  }
+
+  /**
+   * Returns the declared scope preset with the given key.
+   *
+   * @param key - The preset key to look up.
+   * @returns The preset, or undefined when the key is absent or not declared.
+   */
+  scopePresetForKey(key: Maybe<UserExternalConnectionScopePresetKey>): Maybe<UserExternalConnectionScopePreset> {
+    return key == null ? undefined : this.scopePresets.find((preset) => preset.key === key);
+  }
+
+  /**
+   * The provider scopes a round trip requests for the resolved preset — what the over-grant check compares the
+   * exchange's grant against. Defaults to the preset's scopes. An adapter that requests anything beyond the preset
+   * overrides it AND builds its authorize url from it, so the request and the check cannot drift.
+   *
+   * @param scopePreset - The preset the connect resolved to, if any.
+   * @returns The requested scopes, or nullish when unknown (the over-grant check is then skipped).
+   */
+  requestedScopesForScopePreset(scopePreset: Maybe<UserExternalConnectionScopePreset>): Maybe<readonly UserExternalConnectionCapability[]> {
+    return scopePreset?.scopes;
+  }
+
+  /**
+   * The preset a connect actor resolves to: the one its state named, else the configured default.
+   *
+   * @param actor - The connect actor.
+   * @returns The preset, or undefined when none is named, declared or defaulted.
+   */
+  protected scopePresetForConnectActor(actor: UserExternalConnectionConnectStateActor): Maybe<UserExternalConnectionScopePreset> {
+    return this.scopePresetForKey(actor.scopePreset ?? this.config.userExternalConnectionOAuth.defaultScopePreset);
+  }
+
+  /**
+   * Refuses a CONNECT whose exchange granted scopes the round trip did not request, when the policy's
+   * `onOverGrant` is `block` (the default).
+   *
+   * Some providers (Microsoft Entra) issue every scope ever consented for the resource, so a consent that predates
+   * the connect — an organization-wide consent, or an earlier, never-revoked consent for more — widens it silently.
+   *
+   * Skipped when the requested scopes are unknown, and when the exchange reported no scopes: a token response that
+   * omits `scope` is for what was requested. Under-grants are accepted.
+   *
+   * @param actor - The connect actor.
+   * @param exchanged - The credentials the code exchange produced.
+   * @throws {Error} The over-granted error, when refused.
+   */
+  protected assertConnectGrantWithinRequest(actor: UserExternalConnectionConnectStateActor, exchanged: UserExternalConnectionCredentials): void {
+    if (this.policy.onOverGrant === 'block') {
+      const scopePreset = this.scopePresetForConnectActor(actor);
+      const requested = this.requestedScopesForScopePreset(scopePreset);
+      const granted = exchanged.scopes;
+
+      if (requested?.length && granted?.length) {
+        const requestedScopes = normalizeUserExternalConnectionProviderScopes(this, requested);
+        const grantedScopes = normalizeUserExternalConnectionProviderScopes(this, granted);
+        const extraScopes = excludeValuesFromArray(grantedScopes, requestedScopes);
+
+        if (extraScopes.length) {
+          const { providerType } = this;
+          this.logger.warn(`Refused a "${providerType}" connect for uid "${actor.uid}" (preset "${scopePreset?.key ?? ''}"): the grant carried scopes it did not request: ${extraScopes.join(' ')}`);
+          throw userExternalConnectionOverGrantedError({ providerType, scopePreset: scopePreset?.key, requestedScopes, grantedScopes, extraScopes });
+        }
+      }
+    }
+  }
+
+  /**
    * Carries the stored refresh token forward when a provider's exchange returned none.
    *
    * The paired write replaces a provider's credentials wholesale, so persisting an exchange that
@@ -566,23 +743,33 @@ export abstract class AbstractUserExternalConnectionOAuthService {
       } else if (isUserExternalConnectionLinkStateActor(actor) && !this.policy.signIn) {
         this.logger.warn(`Rejected a link authorize request: "${this.providerType}" is not enabled for sign-in.`);
       } else {
-        let authorizeState: UserExternalConnectionOAuthState = state;
-        let codeChallenge: Maybe<string>;
+        // only a connect carries a preset; a link runs the sign-in scopes
+        const requestedScopePresetKey = actor.mode === 'connect' ? actor.scopePreset : undefined;
+        const scopePreset = actor.mode === 'connect' ? this.scopePresetForConnectActor(actor) : undefined;
 
-        if (actor.codeVerifier) {
-          codeChallenge = await generatePkceCodeChallenge(actor.codeVerifier);
-        } else if (this.requirePkce) {
-          // re-minting resets the state's expiry window; acceptable, since the user is only now being
-          // sent to the provider and the window is meant to bound the handoff from this point on
-          const material = await generatePkceMaterial();
-          const { uid, mode } = actor;
-          const providerType = this.providerType;
+        if (requestedScopePresetKey != null && scopePreset == null) {
+          // the callable validates the key before minting, so an unknown one means the presets changed
+          // mid-flight or the state did not come from this app's callable
+          this.logger.warn(`Rejected an authorize request naming the unknown scope preset "${requestedScopePresetKey}".`);
+        } else {
+          let authorizeState: UserExternalConnectionOAuthState = state;
+          let codeChallenge: Maybe<string>;
 
-          authorizeState = mode === 'link' ? this.stateCoder.mintState({ mode, uid, providerType, codeVerifier: material.codeVerifier }) : this.stateCoder.mintState({ uid, providerType, codeVerifier: material.codeVerifier });
-          codeChallenge = material.codeChallenge;
+          if (actor.codeVerifier) {
+            codeChallenge = await generatePkceCodeChallenge(actor.codeVerifier);
+          } else if (this.requirePkce) {
+            // re-minting resets the state's expiry window; acceptable, since the user is only now being
+            // sent to the provider and the window is meant to bound the handoff from this point on
+            const material = await generatePkceMaterial();
+            const { uid, mode } = actor;
+            const providerType = this.providerType;
+
+            authorizeState = mode === 'link' ? this.stateCoder.mintState({ mode, uid, providerType, codeVerifier: material.codeVerifier }) : this.stateCoder.mintState({ uid, providerType, codeVerifier: material.codeVerifier, scopePreset: requestedScopePresetKey });
+            codeChallenge = material.codeChallenge;
+          }
+
+          result = this.authorizeUrlForState({ state: authorizeState, codeChallenge, mode: actor.mode, scopePreset });
         }
-
-        result = this.authorizeUrlForState({ state: authorizeState, codeChallenge, mode: actor.mode });
       }
     }
 
@@ -761,6 +948,8 @@ export abstract class AbstractUserExternalConnectionOAuthService {
       } else if (isUserExternalConnectionLinkStateActor(actor)) {
         successUrlForActor = await this.completeLinkCallback(actor, exchanged);
       } else {
+        // before the refresh-token carry-forward, so a refusal costs no Firestore read
+        this.assertConnectGrantWithinRequest(actor, exchanged);
         const credentials = await this.credentialsRetainingStoredRefreshToken({ uid: actor.uid, credentials: exchanged });
 
         await this.userExternalConnectionActions.connectUserExternalConnection({ uid: actor.uid, providerType, credentials });
@@ -771,6 +960,7 @@ export abstract class AbstractUserExternalConnectionOAuthService {
       this.logger.error(`Failed completing the "${providerType}" OAuth handoff: `, e);
 
       isSignIn = isSignIn || (actor != null && isUserExternalConnectionSignInStateActor(actor));
+      const connectErrorCode = userExternalConnectionConnectErrorCode(e);
 
       if (isSignIn) {
         // a failed sign-in has no session to return to the connect settings page with, so it goes
@@ -782,13 +972,21 @@ export abstract class AbstractUserExternalConnectionOAuthService {
         // carrying the same allowlisted reason a refused sign-in reports, since the two are refused for
         // the same reasons and the page needs to be able to say which
         failureUrlForActor = userExternalConnectionSignInFailureRedirectUrl({ baseUrl: this.failureUrl, errorCode: userExternalConnectionSignInErrorCode(e) });
+      } else if (actor != null) {
+        // a failed CONNECT returns to the connect failure url, carrying an ALLOWLISTED reason when there is one
+        failureUrlForActor = userExternalConnectionConnectFailureRedirectUrl({ baseUrl: this.failureUrl, providerType, errorCode: connectErrorCode });
       }
+
+      // a refused over-grant is NOT marked: the refused connect wrote nothing, so any prior connection is still
+      // exactly what it was. Marking it would break a working Read + Write connection on a refused "Switch to
+      // Read", and leave an `error` entry with no credentials on a refused first connect.
+      const isOverGrantRefusal = connectErrorCode === USER_EXTERNAL_CONNECTION_OVER_GRANTED_ERROR_CODE;
 
       // a DENIED sign-in has no uid at all, and a connect whose state failed to verify has no actor —
       // there is nothing to mark in either case. A failed LINK is deliberately not marked either: it
       // says nothing about whether the DATA connection's credentials still work, and marking it would
       // put a working connection into the `error` status.
-      if (actor != null && actor.mode === 'connect') {
+      if (actor != null && actor.mode === 'connect' && !isOverGrantRefusal) {
         await this.userExternalConnectionActions
           .markUserExternalConnectionError({
             uid: actor.uid,

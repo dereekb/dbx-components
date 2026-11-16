@@ -48,6 +48,12 @@ export const DOC_FORM_ROUTES = [
     ref: 'doc.form.texteditor'
   },
   {
+    icon: 'crop_free',
+    title: '2D Fields',
+    detail: 'layout boxes and area fields',
+    ref: 'doc.form.2d'
+  },
+  {
     icon: 'table_view',
     title: 'Wrappers',
     detail: 'form wrappers',

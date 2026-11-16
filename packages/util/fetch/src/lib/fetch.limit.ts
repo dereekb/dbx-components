@@ -29,8 +29,15 @@ export interface RateLimitedFetchHandlerConfig<T extends PromiseRateLimiter> {
    * Return true if the response should be retried. Should typically also only return true if the response is a throttle error by the remote server.
    *
    * The response is only allowed to be retried once not guranteed to be retried if it returns true on a second retry.
+   *
+   * Only called when there is a response: an error without one (an abort, a timeout, a network failure) is rethrown
+   * to the caller untouched.
+   *
+   * @param response - The response, or the response of the thrown FetchResponseError.
+   * @param fetchResponseError - The error the fetch threw for a non-ok response, if any.
+   * @param request - The request that was sent, e.g. to only retry idempotent methods.
    */
-  updateWithResponse(response: Response, fetchResponseError?: Maybe<FetchResponseError>): PromiseOrValue<boolean>;
+  updateWithResponse(response: Response, fetchResponseError?: Maybe<FetchResponseError>, request?: Request): PromiseOrValue<boolean>;
 }
 
 /**
@@ -57,11 +64,16 @@ export function rateLimitedFetchHandler<T extends PromiseRateLimiter>(config: Ra
       try {
         response = await makeFetch(request.clone());
       } catch (e) {
+        // an abort, timeout or network error carries no response: there is nothing to rate-limit on, so it reaches the caller as-is
+        if ((e as Maybe<Partial<FetchResponseError>>)?.response == null) {
+          throw e;
+        }
+
         fetchResponseError = e as FetchResponseError;
         response = fetchResponseError.response;
       }
 
-      const shouldRetry = await updateWithResponse(response, fetchResponseError);
+      const shouldRetry = await updateWithResponse(response, fetchResponseError, request);
 
       if (shouldRetry && retriesAttempted < maxRetries) {
         response = await tryFetch(retriesAttempted + 1);

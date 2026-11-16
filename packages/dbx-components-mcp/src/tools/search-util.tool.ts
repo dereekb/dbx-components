@@ -24,7 +24,7 @@ const DBX_UTIL_SEARCH_TOOL: Tool = {
   description: [
     'Search the @dereekb/* utility registry by keyword(s). Returns ranked candidates — pick one, then call `dbx_util_lookup` with the slug/name.',
     '',
-    'Covers utilities tagged with `@dbxUtil` across @dereekb/util, @dereekb/date, @dereekb/rxjs, @dereekb/model, plus any downstream manifests registered via `dbx-mcp.config.json`.',
+    'Covers utilities tagged with `@dbxUtil` across @dereekb/util, @dereekb/util/fetch, @dereekb/date, @dereekb/rxjs, @dereekb/model, @dereekb/firebase, @dereekb/firebase-server, @dereekb/dbx-web, plus any downstream manifests registered via `dbx-mcp.config.json`.',
     '',
     'Query strategy:',
     '  • Space-separated tokens are ANDed (every token must contribute at least some score).',

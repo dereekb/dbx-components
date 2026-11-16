@@ -557,8 +557,14 @@ demo-cli external-token zoho_admin --env external-token
 | Status | `code` | What it means |
 |---|---|---|
 | 401 | `AUTH_UNAUTHORIZED` | The login expired. Run `auth login` again. |
-| 403 | `AUTH_FORBIDDEN` | Several causes: the login lacks `token.external`, the client is not allowed, the user is not permitted, or the provider is not exported. The server's code is in the message. |
+| 403 | `AUTH_FORBIDDEN` | Several causes: the login lacks `token.external`, the client is not allowed, the user is not permitted, or the provider is not exported. |
 | 404 / 409 | `NOT_FOUND` / `API_ERROR` | The user has not connected that provider in the app. |
+
+`code` stays the generic one above, so scripts keyed on `AUTH_FORBIDDEN` keep working. The server's own
+code (for example `USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR`) is in `serverCode`, and still
+in the message, so a script can branch on it. The 401 / 403 suggestions depend on the credential: a
+handoff credential (`auth handoff`) is told to re-mint through the app's MCP CLI token tool, never to run
+`auth login`.
 
 ### Output modes
 
@@ -570,7 +576,7 @@ demo-cli external-token zoho_admin --env external-token
   `expiresAt` and `extra`, plus the env's `hints`. It writes that line with `process.stdout.write`,
   never through `outputResult`, so `--dump-dir`, `--pick` and `--pretty` never see the raw token. The
   command also never touches the dataset cache.
-- **Errors** print the `{ ok: false, error, code, suggestion? }` envelope on stdout in both modes.
+- **Errors** print the `{ ok: false, error, code, serverCode?, suggestion? }` envelope on stdout in both modes.
 
 ### Consuming the token from another CLI
 
@@ -583,6 +589,11 @@ zoho-cli auth check
 
 Every Zoho product that the token's scopes cover uses the minted token and its datacenter. The other
 products keep `zoho-cli`'s own credentials. `zoho-cli auth token-source clear` puts things back.
+
+When the active source cannot produce a token, a token-source CLI's `auth show` (and `zoho-cli auth
+check`) fails: it prints `{ ok: false, error, code, serverCode?, suggestion, data }` and exits 1. `code`
+and `serverCode` are the source command's own (for example `AUTH_FORBIDDEN` from a refused mint), and
+the full report stays under `data`.
 
 When you mint from more than one env of the app, save one source per env by name and pick one per run.
 A source can also send its calls to the Zoho sandboxes:
@@ -605,14 +616,70 @@ const bundle = await runCliCredentialProcess<CliExternalConnectionTokenBundle>({
 It runs the command through the shell with `DBX_CLI_CREDENTIAL_PROCESS=1` set. Stdin is ignored,
 stderr goes straight to your terminal, and stdout is captured in-process. Stdout can be a bare JSON
 object or a `{ ok: true, data }` envelope; if the whole output doesn't parse, the last non-empty line
-is tried. An `{ ok: false, error, code }` envelope is thrown as the child's own `CliError`, and this is
-checked before the exit code.
+is tried. An `{ ok: false, error, code }` envelope is thrown as the child's own `CliError`, including its
+`serverCode`, and this is checked before the exit code.
 
 Anything else throws `CREDENTIAL_PROCESS_FAILED` (the process could not start, or exited non-zero),
 `CREDENTIAL_PROCESS_TIMEOUT` (it ran past `timeoutMs`: 60s by default, `0` disables it) or
 `CREDENTIAL_PROCESS_INVALID_OUTPUT` (stdout held no usable JSON object). These errors never echo
 stdout. A command that hands out a secret should check `isCliCredentialProcess()` and print a
 redacted value whenever it is false.
+
+### Connection defaults (`?include=data`, `settings`, `connection-data`)
+
+An app can store per-user, per-connection defaults on the server (`UserExternalConnectionData`, `/uecd`), for example the
+signature msgraph-cli appends to mail sent from a mailbox. The data is encrypted at rest and never readable from a client
+SDK. The app CLI writes it through the model API and hands it to a consuming CLI on the token mint, so the consumer gets
+its defaults in every environment with no per-machine setup.
+
+Wire it with `externalConnectionData` next to `externalConnectionToken`:
+
+```ts
+runCli({
+  cliName: 'demo-cli',
+  externalConnectionToken: true,
+  externalConnectionData: {
+    // the same registry the API's UserExternalConnectionModule validates against (`dataTypes`)
+    dataTypes: DEMO_USER_EXTERNAL_CONNECTION_DATA_TYPES,
+    // only providers with an adapter request ?include=data, and only the adapter's output leaves the app CLI
+    adapters: {
+      [DEMO_MICROSOFT_EXTERNAL_CONNECTION_PROVIDER_TYPE]: passthroughCliExternalConnectionDataAdapter({ dataTypes: [MICROSOFT_MAIL_SIGNATURE_USER_EXTERNAL_CONNECTION_DATA_TYPE] })
+    }
+  }
+});
+```
+
+- **The mint.** For a provider with an adapter, `external-token` calls the token API with `?include=data`
+  (`userExternalConnectionTokenApiPath(providerType, { includeData: true })`). The server attaches the caller's stored
+  data for that provider only, and only after every mint gate passed; a refused mint never returns data, and a data
+  failure returns the token without it. The adapter's `unpack` turns the data into the bundle's `settings`. The raw
+  `data` is never forwarded, and an `unpack` that throws prints a warning and returns the token without `settings`.
+- **The bundle.** `CliExternalConnectionTokenBundle.settings` is consumer-defined JSON that the consumer applies as
+  defaults below its own config and flags. Redacted output (a direct run) shows its keys only
+  (`summarizeCliExternalConnectionSettings`).
+- **Token sources.** A token-source CLI caches `settings` inside its 0600 token entry with the token's `expiresAt`, and
+  its report and `auth show` list keys only. After changing the stored data, run `<consumer> auth token-source refresh`
+  to drop the cached entry so the next call re-mints and re-reads it.
+- **Adapters.** `passthroughCliExternalConnectionDataAdapter({ dataTypes })` keeps the settings keys equal to the data
+  type keys, the shape msgraph-cli reads. Write your own `CliExternalConnectionDataAdapter` (`unpack`, and optionally
+  `pack` for `connection-data import`) when the consumer's settings differ from the stored shape.
+
+`connection-data` manages the stored data on the everyday login (it calls `read:data` / `update:data` on
+`userExternalConnection`, so it needs `model.read` / `model.update`, not `token.external`):
+
+```sh
+demo-cli connection-data list                       # data types you may store, and your items (keys and sizes only)
+demo-cli connection-data get microsoft mail_signature me
+demo-cli connection-data set microsoft mail_signature me --file signature.html   # packed by the data type (.html → { html })
+demo-cli connection-data set microsoft mail_signature support@example.com --json '{"text":"Support team"}'
+demo-cli connection-data unset microsoft mail_signature support@example.com
+demo-cli connection-data import microsoft --file msgraph-settings.json --replace  # e.g. `msgraph-cli config export` output
+msgraph-cli auth token-source refresh               # pick the change up now rather than at the token's expiry
+```
+
+The server validates every value against its registered data type, refuses unknown data types and invalid item keys,
+and never echoes a value in an error. See `UserExternalConnectionData` in `@dereekb/firebase-server/model` for the
+model, and the msgraph-cli REF for the signature precedence.
 
 ## Enum values
 
@@ -659,6 +726,55 @@ demo-cli info --enum NotificationSendState         # the value table, then Used 
 - `--json` `data` is exactly the MCP tool's output (`mode`: `overview` / `search` / `model` / `enum`). Both surfaces
   share `resolveModelManifestInfoOutput` from `@dereekb/firebase/manifest`.
 - `disableInfo: true` drops the command, e.g. when the app registers its own `info`.
+
+## Bulk downloads (for CLI authors)
+
+`src/lib/download` is a shared engine for commands that copy many remote files into a local folder and can be
+re-run to resume. It has three parts:
+
+- **Opener + `downloadCliFile`** — streams one file to disk. The body goes to a partial file that is renamed
+  into place only once complete, so an interrupted run never leaves a truncated file under the real name. A
+  body that stops sending bytes for `idleTimeout` (60 s by default; the timer starts once `open` resolves, so the
+  wait for headers is not counted) throws `CliDownloadStalledError`. A short body throws
+  `CliDownloadIncompleteError`, and cancelling throws `CliDownloadAbortedError`.
+- **Manifest store (`cliDownloadManifestStore`)** — reads and writes the JSON file that records what was written.
+  Writes are atomic (mode 0600) and serialized. Call `saveSoon` after each file and `flush` before exiting.
+- **Runner (`runCliBulkDownload`)** — runs tasks `concurrency` at a time through `runCliTaskWithRetry`: 4 attempts
+  with 1–60 s equal-jitter backoff, and a classifier `retryAfter` honored for up to 5 minutes. It also enforces
+  `maxTasks` / `maxBytes` budgets and a consecutive-failure breaker (`TOO_MANY_FAILURES`). On a fatal failure or
+  an abort, it cancels the in-flight tasks and awaits them before rethrowing.
+
+```ts
+await ensureCliPrivateDir(dir); // 0700
+const store = cliDownloadManifestStore<MyManifest>({ dir, fileName: '.my-cli-download.json', empty: () => ({ version: 1, files: {} }), accept: acceptMyManifest });
+const manifest = await store.read();
+const classify = composeCliDownloadFailureClassifiers(myApiFailureClassifier, defaultCliDownloadFailureClassifier);
+
+await withCliInterruptSignal(async (signal) => {
+  try {
+    return await runCliBulkDownload({
+      tasks: items.filter((x) => !manifest.files[x.id]).map((x) => ({
+        key: x.id,
+        bytes: x.size,
+        run: (taskSignal) => downloadCliFile({ open: (s) => openMyItem(x.id, s), out: resolveCliDirChildPath(dir, x.name), signal: taskSignal, mtime: x.modified }).then((r) => r.bytes)
+      })),
+      concurrency: cliConcurrencyValue(argv.concurrency, { default: 4, max: 8 }),
+      classify,
+      signal,
+      onTaskDone: (task) => { manifest.files[task.key] = { at: new Date().toISOString() }; store.saveSoon(manifest); }
+    });
+  } finally {
+    await store.flush(); // an interrupted run keeps what it finished
+  }
+});
+```
+
+- `resolveCliDirChildPath` refuses a name that escapes the folder; `cliAvailableBytes` supports a free-space
+  pre-check, and `isCliDirEmptyOrMissing` a "refuse a non-empty folder without a manifest" check.
+- `cliIdleTimeoutOption` / `cliConcurrencyOption` add the shared `--idle-timeout` / `--concurrency` flags.
+- The first Ctrl+C aborts the signal from `withCliInterruptSignal`, which lets the run save its manifest. A second
+  Ctrl+C exits immediately.
+- Keep output to counts, bytes and failure codes (`failedCodes`). Task `key`s are never printed.
 
 ## Build-time API manifest
 

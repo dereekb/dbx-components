@@ -144,6 +144,27 @@ describe('extractUiEntries — directives, pipes, services', () => {
     expect(result.entries[0].kind).toBe('service');
     expect(result.entries[0].selector).toBe('');
   });
+
+  it('detects @Service services', () => {
+    const project = projectWith({
+      '/proj/src/widget.service.ts': `
+        import { Service } from '@angular/core';
+        /**
+         * Error widget registry.
+         * @dbxWebComponent
+         * @dbxWebSlug error-widget-service
+         * @dbxWebCategory feedback
+         */
+        @Service()
+        export class DbxErrorWidgetService {}
+      `
+    });
+    const result = extractUiEntries({ project });
+    expect(result.entries.length).toBe(1);
+    expect(result.entries[0].kind).toBe('service');
+    expect(result.entries[0].slug).toBe('error-widget-service');
+    expect(result.entries[0].selector).toBe('');
+  });
 });
 
 describe('extractUiEntries — outputs', () => {

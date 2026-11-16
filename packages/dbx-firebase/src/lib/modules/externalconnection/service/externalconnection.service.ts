@@ -6,11 +6,17 @@ import {
   DEFAULT_EXTERNAL_CONNECTION_AUTHORIZE_PATH_FACTORY,
   DEFAULT_EXTERNAL_CONNECTION_SIGN_IN_PATH_FACTORY,
   DEFAULT_EXTERNAL_CONNECTION_TOKEN_PATH_FACTORY,
+  EXTERNAL_CONNECTION_CONNECT_ERROR_PARAM,
+  EXTERNAL_CONNECTION_CONNECT_ERROR_PROVIDER_PARAM,
   EXTERNAL_CONNECTION_SIGN_IN_ERROR_PARAM,
   EXTERNAL_CONNECTION_SIGN_IN_TICKET_PARAM,
   EXTERNAL_CONNECTION_SIGN_IN_VERIFIER_STORAGE_KEY,
   type DbxFirebaseExternalConnectionAuthorizeMode,
   type DbxFirebaseExternalConnectionAuthorizeState,
+  type DbxFirebaseExternalConnectionAuthorizeStateOptions,
+  type DbxFirebaseExternalConnectionConnectFailure,
+  type DbxFirebaseExternalConnectionConnectOptions,
+  dbxFirebaseExternalConnectionAuthorizeStateOptions,
   type DbxFirebaseExternalConnectionProvider,
   type DbxFirebaseExternalConnectionProviderAssets,
   DbxFirebaseExternalConnectionsConfig
@@ -144,6 +150,17 @@ export class DbxFirebaseExternalConnectionService {
    */
   readonly signInErrorCode = this._signInErrorCode.asReadonly();
 
+  private readonly _connectFailure = signal<Maybe<DbxFirebaseExternalConnectionConnectFailure>>(undefined);
+
+  /**
+   * The refused connect the last connect redirect reported, when it reported one.
+   *
+   * A signal for the same reason as {@link signInErrorCode}: the redirect is read in the app initializer,
+   * before the settings page that renders it exists. Cleared by the next {@link connectToProvider} and by
+   * {@link clearConnectFailure}.
+   */
+  readonly connectFailure = this._connectFailure.asReadonly();
+
   private readonly _providers = new Map<UserExternalConnectionProviderType, DbxFirebaseExternalConnectionProvider>();
   private readonly _assets = new Map<UserExternalConnectionProviderType, DbxFirebaseExternalConnectionProviderAssets>();
 
@@ -258,17 +275,19 @@ export class DbxFirebaseExternalConnectionService {
    * creates it on load; a custom UI that reaches this call by another route has to create it too.
    *
    * @param providerType - The provider the state is for.
-   * @param mode - Which handoff the state begins. Defaults to `connect`.
+   * @param modeOrOptions - Which handoff the state begins (defaults to `connect`), or the full options carrying the mode and the scope preset to connect with.
    * @returns The state to send on the authorize request.
    */
-  async mintAuthorizeStateForProvider(providerType: UserExternalConnectionProviderType, mode?: Maybe<DbxFirebaseExternalConnectionAuthorizeMode>): Promise<DbxFirebaseExternalConnectionAuthorizeState> {
+  async mintAuthorizeStateForProvider(providerType: UserExternalConnectionProviderType, modeOrOptions?: Maybe<DbxFirebaseExternalConnectionAuthorizeMode | DbxFirebaseExternalConnectionAuthorizeStateOptions>): Promise<DbxFirebaseExternalConnectionAuthorizeState> {
+    const { mode, scopePreset } = dbxFirebaseExternalConnectionAuthorizeStateOptions(modeOrOptions);
     const userExternalConnectionFunctions = this._userExternalConnectionFunctions;
 
     if (!userExternalConnectionFunctions) {
       throw new Error(`DbxFirebaseExternalConnectionService: cannot mint an authorize state for "${providerType}" because UserExternalConnectionFunctions was not provided. Add the userExternalConnection functions to the app's functions config map, or configure mintAuthorizeState: false.`);
     }
 
-    const { state } = await userExternalConnectionFunctions.userExternalConnection.readUserExternalConnection.authorizeState({ providerType, mode: mode ?? undefined });
+    // a preset only applies to a connect; a link runs the sign-in scopes
+    const { state } = await userExternalConnectionFunctions.userExternalConnection.readUserExternalConnection.authorizeState({ providerType, mode: mode ?? undefined, scopePreset: mode === 'link' ? undefined : (scopePreset ?? undefined) });
     return state;
   }
 
@@ -277,15 +296,15 @@ export class DbxFirebaseExternalConnectionService {
    * is enabled.
    *
    * @param providerType - The provider to resolve.
-   * @param mode - Which handoff the state begins. Defaults to `connect`.
+   * @param modeOrOptions - Which handoff the state begins (defaults to `connect`), or the full options carrying the mode and the scope preset to connect with.
    * @returns The authorize url, or null when the provider is not registered.
    */
-  async authorizeUrlWithStateForProvider(providerType: UserExternalConnectionProviderType, mode?: Maybe<DbxFirebaseExternalConnectionAuthorizeMode>): Promise<Maybe<string>> {
+  async authorizeUrlWithStateForProvider(providerType: UserExternalConnectionProviderType, modeOrOptions?: Maybe<DbxFirebaseExternalConnectionAuthorizeMode | DbxFirebaseExternalConnectionAuthorizeStateOptions>): Promise<Maybe<string>> {
     const authorizeUrl = this.authorizeUrlForProvider(providerType);
     let result = authorizeUrl;
 
     if (authorizeUrl && this.mintsAuthorizeState) {
-      const state = await this.mintAuthorizeStateForProvider(providerType, mode);
+      const state = await this.mintAuthorizeStateForProvider(providerType, modeOrOptions);
       // appended as text rather than through URL, since an app that shares an origin with its API
       // configures no authorizeOrigin and the path stays relative
       result = fixExtraQueryParameters(`${authorizeUrl}?state=${encodeURIComponent(state)}`);
@@ -322,10 +341,14 @@ export class DbxFirebaseExternalConnectionService {
    * straight to its failure url, so a "connect" that skipped it would look like it worked and land
    * the user back on the settings page unconnected.
    *
+   * Clears any recorded {@link connectFailure} first: a new attempt supersedes the refusal it was reported for.
+   *
    * @param providerType - The provider to connect.
+   * @param options - Optional connect options, e.g. the scope preset to connect with.
    * @returns Resolves once the authorize page is actually opening, and rejects when it never opened.
    */
-  async connectToProvider(providerType: UserExternalConnectionProviderType): Promise<void> {
+  async connectToProvider(providerType: UserExternalConnectionProviderType, options?: Maybe<DbxFirebaseExternalConnectionConnectOptions>): Promise<void> {
+    this.clearConnectFailure();
     const provider = this.getProvider(providerType);
 
     if (!provider) {
@@ -333,17 +356,20 @@ export class DbxFirebaseExternalConnectionService {
     }
 
     const navigate = this.config.navigate ?? DEFAULT_EXTERNAL_CONNECTION_NAVIGATE_FUNCTION;
+    const scopePresetKey = options?.scopePreset ?? undefined;
+    const stateOptions: DbxFirebaseExternalConnectionAuthorizeStateOptions = { mode: 'connect', scopePreset: scopePresetKey };
 
     if (provider.connect) {
       await provider.connect({
         providerType,
         provider,
         authorizeUrl: this.authorizeUrlForProvider(providerType),
-        mintAuthorizeState: () => this.mintAuthorizeStateForProvider(providerType),
+        mintAuthorizeState: () => this.mintAuthorizeStateForProvider(providerType, stateOptions),
+        scopePreset: scopePresetKey == null ? undefined : provider.scopePresets?.find((x) => x.key === scopePresetKey),
         navigate
       });
     } else {
-      const authorizeUrl = await this.authorizeUrlWithStateForProvider(providerType);
+      const authorizeUrl = await this.authorizeUrlWithStateForProvider(providerType, stateOptions);
 
       if (!authorizeUrl) {
         throw new Error(`DbxFirebaseExternalConnectionService: no authorize url could be resolved for "${providerType}".`);
@@ -540,6 +566,34 @@ export class DbxFirebaseExternalConnectionService {
     this._signInErrorCode.set(undefined);
   }
 
+  // MARK: Connect Redirect
+  /**
+   * Records the refused connect the current URL reports, when it reports one.
+   *
+   * Safe to call unconditionally on app start: it is synchronous, makes no network call, and a url
+   * carrying no failure records nothing. The url is left as it is, as {@link handleSignInRedirectResult}
+   * leaves it; the recorded failure clears on the next connect or through {@link clearConnectFailure}.
+   *
+   * @param url - The url to read from. Defaults to the current location.
+   * @returns The reported failure, or undefined when the url carries none.
+   */
+  handleConnectRedirectResult(url: string = window.location.href): Maybe<DbxFirebaseExternalConnectionConnectFailure> {
+    const failure = readExternalConnectionConnectFailureFromUrl(url);
+
+    if (failure != null) {
+      this._connectFailure.set(failure);
+    }
+
+    return failure;
+  }
+
+  /**
+   * Clears the recorded connect failure, e.g. once the settings page that showed it is left.
+   */
+  clearConnectFailure(): void {
+    this._connectFailure.set(undefined);
+  }
+
   /**
    * Posts a ticket and its verifier to the provider's token endpoint.
    *
@@ -647,6 +701,35 @@ export function readExternalConnectionSignInFailureFromUrl(url: string): Maybe<s
     result = new URL(url).searchParams.get(EXTERNAL_CONNECTION_SIGN_IN_ERROR_PARAM) ?? undefined;
   } catch {
     // a url that does not parse carries no reason
+  }
+
+  return result;
+}
+
+/**
+ * Reads the refused connect a connect failure redirect came back with.
+ *
+ * Both {@link EXTERNAL_CONNECTION_CONNECT_ERROR_PARAM} and {@link EXTERNAL_CONNECTION_CONNECT_ERROR_PROVIDER_PARAM}
+ * must be present: a code with no provider cannot be attributed to a row, and a provider with no code is no failure.
+ *
+ * @param url - The url to read.
+ * @returns The refused connect, or undefined when the url carries none.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function readExternalConnectionConnectFailureFromUrl(url: string): Maybe<DbxFirebaseExternalConnectionConnectFailure> {
+  let result: Maybe<DbxFirebaseExternalConnectionConnectFailure>;
+
+  try {
+    const { searchParams } = new URL(url);
+    const errorCode = searchParams.get(EXTERNAL_CONNECTION_CONNECT_ERROR_PARAM);
+    const providerType = searchParams.get(EXTERNAL_CONNECTION_CONNECT_ERROR_PROVIDER_PARAM);
+
+    if (errorCode && providerType) {
+      result = { providerType, errorCode };
+    }
+  } catch {
+    // a url that does not parse carries no failure
   }
 
   return result;

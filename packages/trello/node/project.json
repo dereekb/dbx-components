@@ -1,0 +1,39 @@
+{
+  "name": "trello-node",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/trello/node/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build-base": {
+      "dependsOn": [
+        {
+          "projects": ["trello"],
+          "target": "build-base"
+        },
+        {
+          "projects": ["util"],
+          "target": "build"
+        }
+      ],
+      "metadata": {
+        "description": "The @dereekb/trello/node entry (rollup, inferred from rollup.config.cjs): compiles into dist/packages/trello/node and is named by the parent's `./node` export. The node-only file-system helpers of the board loop kit (attachment sync, block-preserving markdown writes): it imports node:fs and node:path but neither yargs nor @dereekb/dbx-cli, so a library such as dbx-claude can import it without the CLI's runtime. An explicit edge to trello:build-base, NOT `^build`: `^build` would resolve to trello:build, which depends on this very target -- a hard cycle. util is another family, so its ROOT `build` is the edge (the finalized copy TypeScript resolves `exports` against). The parent's `build` aggregates this target, so the entry point has no `build` of its own."
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["default", "^production"],
+      "outputs": [],
+      "options": {
+        "commands": ["npx tsc -p packages/trello/node/tsconfig.lib.json --noEmit", "npx tsc -p packages/trello/node/tsconfig.spec.json --noEmit"],
+        "cwd": "{workspaceRoot}",
+        "parallel": false
+      }
+    }
+  }
+}

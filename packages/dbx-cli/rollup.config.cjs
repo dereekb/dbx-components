@@ -32,7 +32,11 @@ const options = {
   optimization: true,
   sourceMap: false,
   extractLicenses: true,
-  assets: [{ glob: 'LICENSE', input: '.', output: '.' }]
+  assets: [
+    { glob: 'LICENSE', input: '.', output: '.' },
+    // the agent docs (dbx-claude refs) this package ships; see refs/package-refs/REF.md
+    { glob: '**/*.md', input: 'packages/dbx-cli/refs', output: 'refs' }
+  ]
 };
 
 module.exports = (async () => {

@@ -157,23 +157,46 @@ function formatEntry(entry: UiComponentEntry, depth: Depth): string {
   return depth === 'brief' ? formatBrief(entry) : formatFull(entry);
 }
 
+/**
+ * Services have no selector or inputs, and their examples are TypeScript rather than template markup.
+ *
+ * @param entry - The entry to check.
+ * @returns True if the entry is a service.
+ */
+function isServiceEntry(entry: UiComponentEntry): boolean {
+  return entry.kind === 'service';
+}
+
+/**
+ * Returns the code-fence language for an entry's examples.
+ *
+ * @param entry - The entry being rendered.
+ * @returns `ts` for services, `html` for everything else.
+ */
+function exampleFenceLanguage(entry: UiComponentEntry): string {
+  return isServiceEntry(entry) ? 'ts' : 'html';
+}
+
 function formatBrief(entry: UiComponentEntry): string {
   const minimal = entry.minimalExample ?? '';
-  const lines: string[] = [`## ${entry.className}`, '', `**slug:** \`${entry.slug}\` · **kind:** \`${entry.kind}\` · **category:** \`${entry.category}\` · **selector:** \`${entry.selector}\``, '', entry.description];
+  const selectorPart = isServiceEntry(entry) ? '' : ` · **selector:** \`${entry.selector}\``;
+  const lines: string[] = [`## ${entry.className}`, '', `**slug:** \`${entry.slug}\` · **kind:** \`${entry.kind}\` · **category:** \`${entry.category}\`${selectorPart}`, '', entry.description];
   if (minimal.length > 0) {
-    lines.push('', '```html', minimal, '```');
+    lines.push('', '```' + exampleFenceLanguage(entry), minimal, '```');
   }
   return lines.join('\n');
 }
 
 function formatFull(entry: UiComponentEntry): string {
-  const sections: string[] = [formatHeader(entry), entry.description, formatInputsTable(entry), formatOutputsTable(entry), formatContentProjection(entry), formatExampleSection(entry), formatRelated(entry), formatSkillRefs(entry)];
+  const isService = isServiceEntry(entry);
+  const sections: string[] = [formatHeader(entry), entry.description, isService ? '' : formatInputsTable(entry), isService ? '' : formatOutputsTable(entry), formatContentProjection(entry), formatExampleSection(entry), formatRelated(entry), formatSkillRefs(entry)];
   const filtered = sections.filter((s) => s.length > 0);
   return filtered.join('\n\n');
 }
 
 function formatHeader(entry: UiComponentEntry): string {
-  const lines: string[] = [`# ${entry.className}`, '', `- **slug:** \`${entry.slug}\``, `- **kind:** \`${entry.kind}\``, `- **category:** \`${entry.category}\``, `- **selector:** \`${entry.selector}\``, `- **module:** \`${entry.module}\``];
+  const selectorLines: string[] = isServiceEntry(entry) ? [] : [`- **selector:** \`${entry.selector}\``];
+  const lines: string[] = [`# ${entry.className}`, '', `- **slug:** \`${entry.slug}\``, `- **kind:** \`${entry.kind}\``, `- **category:** \`${entry.category}\``, ...selectorLines, `- **module:** \`${entry.module}\``];
   return lines.join('\n');
 }
 
@@ -222,12 +245,13 @@ function formatExampleSection(entry: UiComponentEntry): string {
   const minimal = entry.minimalExample ?? '';
   let result = '';
   if (example.length > 0 || minimal.length > 0) {
+    const fence = '```' + exampleFenceLanguage(entry);
     const lines: string[] = ['## Example'];
     if (example.length > 0) {
-      lines.push('', '```html', example, '```');
+      lines.push('', fence, example, '```');
     }
     if (minimal.length > 0) {
-      lines.push('', '### Minimal', '', '```html', minimal, '```');
+      lines.push('', '### Minimal', '', fence, minimal, '```');
     }
     result = lines.join('\n');
   }

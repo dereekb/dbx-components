@@ -22,7 +22,7 @@ import { type DbxTool } from './types.js';
 const DBX_UTIL_LOOKUP_TOOL: Tool = {
   name: 'dbx_util_lookup',
   description: [
-    'Look up utility functions, classes, factories, and constants opted in across @dereekb/util, @dereekb/date, @dereekb/rxjs, @dereekb/model (and any downstream packages that registered a utils manifest).',
+    'Look up utility functions, classes, factories, and constants opted in across @dereekb/util, @dereekb/util/fetch, @dereekb/date, @dereekb/rxjs, @dereekb/model, @dereekb/firebase, @dereekb/firebase-server, @dereekb/dbx-web (and any downstream packages that registered a utils manifest).',
     '',
     'The `topic` accepts:',
     '  • a registry slug ("expiration-details", "is-throttled", …);',

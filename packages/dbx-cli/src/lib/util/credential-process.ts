@@ -93,8 +93,8 @@ export interface RunCliCredentialProcessInput {
  *
  * - a bare JSON object — returned as-is;
  * - a dbx-cli success envelope `{ ok: true, data }` — `data` is returned;
- * - a dbx-cli error envelope `{ ok: false, error, code, suggestion? }` — thrown as a {@link CliError}
- *   carrying the child's message, code and suggestion.
+ * - a dbx-cli error envelope `{ ok: false, error, code, serverCode?, suggestion? }` — thrown as a {@link CliError}
+ *   carrying the child's message, code, serverCode and suggestion (its `data` does not cross);
  *
  * When the whole stdout is not JSON, its last non-empty line is tried instead. Failures never echo the
  * captured stdout, since it may hold a secret.
@@ -240,12 +240,14 @@ function isJsonObject(value: unknown): value is Record<string, unknown> {
 
 function cliErrorFromErrorEnvelope(envelope: Record<string, unknown>): CliError {
   const rawError = envelope['error'];
-  // dbx-cli emits `{ ok: false, error: string, code, suggestion? }`; also accept a nested `error: { message, code, suggestion }` object.
+  // dbx-cli emits `{ ok: false, error: string, code, serverCode?, suggestion? }`; also accept a nested `error: { message, code, serverCode, suggestion }` object.
+  // The child's `data` (a report) does not cross the boundary.
   const nested = isJsonObject(rawError) ? rawError : undefined;
   const message = (typeof rawError === 'string' ? rawError : undefined) ?? asString(nested?.['message']) ?? 'The credential process failed.';
   const code = asString(envelope['code']) ?? asString(nested?.['code']) ?? CLI_CREDENTIAL_PROCESS_ERROR_CODE;
+  const serverCode = asString(envelope['serverCode']) ?? asString(nested?.['serverCode']);
   const suggestion = asString(envelope['suggestion']) ?? asString(nested?.['suggestion']);
-  return new CliError({ message, code, ...(suggestion ? { suggestion } : {}) });
+  return new CliError({ message, code, ...(serverCode ? { serverCode } : {}), ...(suggestion ? { suggestion } : {}) });
 }
 
 function asString(value: unknown): Maybe<string> {

@@ -11,10 +11,13 @@ import { filterMaybe } from '@dereekb/rxjs';
  * Subscribes to the action context's error stream and shows a snackbar via {@link DbxErrorSnackbarService}
  * whenever an error occurs. Accepts an optional configuration or a duration in milliseconds as input.
  *
+ * Handler errors pass through `toReadableError()`. Pipe an `HttpClient` call through `catchServerErrorResponse()`
+ * so the server's message and code show instead of Angular's "Http failure response…" text.
+ *
  * @dbxWebComponent
  * @dbxWebSlug action-snackbar-error
  * @dbxWebCategory action
- * @dbxWebRelated action-snackbar
+ * @dbxWebRelated action-snackbar, error-snackbar-service
  * @dbxWebSkillRefs dbx__ref__dbx-component-patterns
  * @dbxWebMinimalExample ```html
  * <div [dbxActionSnackbarError]></div>

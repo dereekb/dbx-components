@@ -195,6 +195,29 @@ describe('fetchRequestFactory()', () => {
             });
           });
         });
+
+        describe('base url with a path and an absolute url input whose path contains dots', () => {
+          const factory = testFetch.fetchRequestFactory({
+            baseUrl: 'https://graph.microsoft.com/v1.0'
+          });
+
+          it('should use an absolute url with an email address in its path as is', async () => {
+            const nextLink = 'https://graph.microsoft.com/v1.0/users/support@hellosubs.co/mailFolders/inbox/messages?%24top=3&%24skip=3';
+            const result = await factory(nextLink);
+            expect(result.url).toBe(new URL(nextLink).href);
+          });
+
+          it('should use an absolute url with several dotted folder parts as is', async () => {
+            const url = 'https://graph.microsoft.com/v1.0/drives/x/root:/report.v2/file.txt:/children';
+            const result = await factory(url);
+            expect(result.url).toBe(new URL(url).href);
+          });
+
+          it('should still append a relative path with dots to the base url', async () => {
+            const result = await factory('/users/support@hellosubs.co/messages');
+            expect(result.url).toBe('https://graph.microsoft.com/v1.0/users/support@hellosubs.co/messages');
+          });
+        });
       });
     });
   });

@@ -1,18 +1,26 @@
 import request from 'supertest';
 import {
   EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE,
+  MICROSOFT_GRAPH_READ_SCOPES,
+  MICROSOFT_GRAPH_READ_WRITE_SCOPES,
+  MICROSOFT_MAIL_SIGNATURE_USER_EXTERNAL_CONNECTION_DATA_TYPE as MAIL_SIGNATURE,
+  MICROSOFT_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as MICROSOFT,
   USER_EXTERNAL_CONNECTION_PROVIDER_NOT_CONNECTED_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_TOKEN_EXPORT_NOT_ALLOWED_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_TOKEN_FORBIDDEN_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE,
   type UserExternalConnectionAccessToken,
+  type UserExternalConnectionAccessTokenResponse,
   userExternalConnectionTokenApiPath,
   TRELLO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as TRELLO,
   ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as ZOHO
 } from '@dereekb/firebase';
 import { type FirebaseServerEnvService, MISSING_ENDPOINT_OIDC_SCOPE_ERROR_CODE } from '@dereekb/firebase-server';
 import { oAuthAuthorizedSuperTestContextFactory } from '@dereekb/firebase-server/test';
+import { type MicrosoftOAuthAccessToken, type MicrosoftOAuthRefreshTokenInput } from '@dereekb/microsoft';
+import { MicrosoftOAuthApi } from '@dereekb/microsoft/nestjs';
 import { MS_IN_MINUTE } from '@dereekb/util';
-import { DEMO_TRELLO_BOT_EXTERNAL_CONNECTION_PROVIDER_TYPE as TRELLO_BOT, DEMO_ZOHO_ADMIN_EXTERNAL_CONNECTION_PROVIDER_TYPE as ZOHO_ADMIN, EXTERNAL_TOKEN_OIDC_PROVIDER_PROFILE_KEY } from 'demo-firebase';
+import { DEMO_TRELLO_BOT_EXTERNAL_CONNECTION_PROVIDER_TYPE as TRELLO_BOT, DEMO_ZOHO_ADMIN_EXTERNAL_CONNECTION_PROVIDER_TYPE as ZOHO_ADMIN, EXTERNAL_TOKEN_OIDC_PROVIDER_PROFILE_KEY, MICROSOFT_ADMIN_EXTERNAL_TOKEN_OIDC_SCOPE, MICROSOFT_READ_EXTERNAL_TOKEN_OIDC_SCOPE } from 'demo-firebase';
 import { DEMO_EXTERNAL_CONNECTION_TOKEN_OIDC_CLIENT_IDS_ENV_KEY, demoExternalConnectionTokenApiModuleConfigFactory } from './externaltoken.module';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoOAuthAuthorizedSuperTestContext, demoUserExternalConnectionContext, demoUserExternalConnectionTestCredentials } from '../../../test/fixture';
 
@@ -22,6 +30,8 @@ const ZOHO_ADMIN_TOKEN_PATH = `/api${userExternalConnectionTokenApiPath(ZOHO_ADM
 const ZOHO_TOKEN_PATH = `/api${userExternalConnectionTokenApiPath(ZOHO)}`;
 const TRELLO_BOT_TOKEN_PATH = `/api${userExternalConnectionTokenApiPath(TRELLO_BOT)}`;
 const TRELLO_TOKEN_PATH = `/api${userExternalConnectionTokenApiPath(TRELLO)}`;
+const MICROSOFT_TOKEN_PATH = `/api${userExternalConnectionTokenApiPath(MICROSOFT)}`;
+const MICROSOFT_TOKEN_WITH_DATA_PATH = `/api${userExternalConnectionTokenApiPath(MICROSOFT, { includeData: true })}`;
 
 /**
  * OAuth fixture shaped like demo-cli's dedicated `external-token` env: a client assigned the admin-only
@@ -36,6 +46,28 @@ const demoOAuthSuperTestContextWithExternalTokenScope = oAuthAuthorizedSuperTest
   providerProfiles: [EXTERNAL_TOKEN_OIDC_PROVIDER_PROFILE_KEY],
   scopes: `openid offline_access ${EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE}`
 });
+
+/**
+ * The `external-token` fixture plus the `token.external.microsoft_read` ceiling scope: a `microsoft`
+ * mint is capped at the Read preset's Graph scopes.
+ */
+const demoOAuthSuperTestContextWithMicrosoftReadScope = oAuthAuthorizedSuperTestContextFactory({
+  clientName: 'demo-external-token-microsoft-read-oauth-context',
+  providerProfiles: [EXTERNAL_TOKEN_OIDC_PROVIDER_PROFILE_KEY],
+  scopes: `openid offline_access ${EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE} ${MICROSOFT_READ_EXTERNAL_TOKEN_OIDC_SCOPE}`
+});
+
+/**
+ * The `external-token` fixture plus the `token.external.microsoft_admin` ceiling scope: a `microsoft`
+ * mint is capped at the Read + Write preset's Graph scopes.
+ */
+const demoOAuthSuperTestContextWithMicrosoftAdminScope = oAuthAuthorizedSuperTestContextFactory({
+  clientName: 'demo-external-token-microsoft-admin-oauth-context',
+  providerProfiles: [EXTERNAL_TOKEN_OIDC_PROVIDER_PROFILE_KEY],
+  scopes: `openid offline_access ${EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE} ${MICROSOFT_ADMIN_EXTERNAL_TOKEN_OIDC_SCOPE}`
+});
+
+const MICROSOFT_TENANT_ID = '11111111-2222-3333-4444-555555555555';
 
 /**
  * The provider values a real Zoho connection stores beside its tokens. `apiDomain` + `location` are on
@@ -197,6 +229,195 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
               it('reports the provider as not connected', async () => {
                 const res = await oauth.authRequest('get', ZOHO_ADMIN_TOKEN_PATH).expect(409);
                 expect(res.body.code).toBe(USER_EXTERNAL_CONNECTION_PROVIDER_NOT_CONNECTED_ERROR_CODE);
+              });
+            });
+          });
+        });
+      });
+    });
+
+    describe('with a microsoft connection', () => {
+      let oauthApi: MicrosoftOAuthApi;
+      let refreshInputs: MicrosoftOAuthRefreshTokenInput[];
+
+      beforeEach(() => {
+        oauthApi = f.instance.apiNestContext.nestApplication.get(MicrosoftOAuthApi);
+        refreshInputs = [];
+
+        // a mint of a fresh stored token makes no Microsoft call; shadow the refresh with an OWN property
+        // that records any call, so each case can assert none happened
+        Object.defineProperty(oauthApi, 'refreshToAccessToken', {
+          configurable: true,
+          writable: true,
+          value: async (input: MicrosoftOAuthRefreshTokenInput): Promise<MicrosoftOAuthAccessToken> => {
+            refreshInputs.push(input);
+            return { accessToken: 'microsoft-refreshed-access-token', refreshToken: 'rotated-refresh-token', scopes: [...MICROSOFT_GRAPH_READ_WRITE_SCOPES], expiresIn: 3600, expiresAt: new Date(Date.now() + 3600 * 1000) };
+          }
+        });
+      });
+
+      afterEach(() => {
+        Reflect.deleteProperty(oauthApi, 'refreshToAccessToken');
+      });
+
+      function microsoftCredentials(scopes: readonly string[]) {
+        return demoUserExternalConnectionTestCredentials({
+          accessToken: 'microsoft-stored-access-token',
+          refreshToken: 'microsoft-refresh-token',
+          tokenType: 'Bearer',
+          scopes: [...scopes],
+          expiresAt: new Date(Date.now() + MS_IN_MINUTE * 30).toISOString(),
+          extra: { tenantId: MICROSOFT_TENANT_ID }
+        });
+      }
+
+      describe('admin caller holding the microsoft_read ceiling', () => {
+        demoAuthorizedUserAdminContext({ f }, (au) => {
+          demoUserExternalConnectionContext({ f, u: au }, (uec) => {
+            demoOAuthSuperTestContextWithMicrosoftReadScope({ f, u: au }, (oauth) => {
+              describe('and a read connection', () => {
+                beforeEach(async () => {
+                  await uec.connect({ providerType: MICROSOFT, credentials: microsoftCredentials(MICROSOFT_GRAPH_READ_SCOPES) });
+                });
+
+                it('mints the stored token, without a Microsoft round trip', async () => {
+                  const res = await oauth.authRequest('get', MICROSOFT_TOKEN_PATH).expect(200);
+                  const result = res.body as UserExternalConnectionAccessToken;
+
+                  expect(refreshInputs.length).toBe(0);
+                  expect(result.scopes).toEqual([...MICROSOFT_GRAPH_READ_SCOPES]);
+                  expect(result.accessToken).toBe('microsoft-stored-access-token');
+                  expect(result.extra).toEqual({ tenantId: MICROSOFT_TENANT_ID });
+                  expect(JSON.stringify(result)).not.toContain('refresh-token');
+                });
+
+                describe('?include=data', () => {
+                  it('returns no data when the caller has none stored', async () => {
+                    const res = await oauth.authRequest('get', MICROSOFT_TOKEN_WITH_DATA_PATH).expect(200);
+                    const result = res.body as UserExternalConnectionAccessTokenResponse;
+
+                    expect(result.accessToken).toBe('microsoft-stored-access-token');
+                    expect(result.data).toBeUndefined();
+                  });
+
+                  describe('with stored connection data', () => {
+                    beforeEach(async () => {
+                      await uec.updateUserExternalConnectionData({ providerType: MICROSOFT, set: [{ dataType: MAIL_SIGNATURE, itemKey: 'me', value: { html: '<p>Regards</p>' } }] });
+                    });
+
+                    it('returns this provider’s data, keyed data type → item key', async () => {
+                      const res = await oauth.authRequest('get', MICROSOFT_TOKEN_WITH_DATA_PATH).expect(200);
+                      const result = res.body as UserExternalConnectionAccessTokenResponse;
+
+                      expect(result.accessToken).toBe('microsoft-stored-access-token');
+                      expect(result.data).toEqual({ [MAIL_SIGNATURE]: { me: { html: '<p>Regards</p>' } } });
+                    });
+
+                    it('marks the response uncacheable', async () => {
+                      const res = await oauth.authRequest('get', MICROSOFT_TOKEN_WITH_DATA_PATH).expect(200);
+                      expect(res.headers['cache-control']).toBe('no-store');
+                    });
+
+                    it('returns no data without the parameter', async () => {
+                      const res = await oauth.authRequest('get', MICROSOFT_TOKEN_PATH).expect(200);
+                      const result = res.body as UserExternalConnectionAccessTokenResponse;
+
+                      expect(result.data).toBeUndefined();
+                      expect(JSON.stringify(result)).not.toContain('Regards');
+                    });
+
+                    it('ignores an unknown include value', async () => {
+                      const res = await oauth.authRequest('get', `${MICROSOFT_TOKEN_PATH}?include=other`).expect(200);
+                      expect((res.body as UserExternalConnectionAccessTokenResponse).data).toBeUndefined();
+                    });
+                  });
+                });
+              });
+
+              describe('and a read + write connection', () => {
+                beforeEach(async () => {
+                  await uec.connect({ providerType: MICROSOFT, credentials: microsoftCredentials(MICROSOFT_GRAPH_READ_WRITE_SCOPES) });
+                });
+
+                it('refuses the grant with ?include=data without returning the stored data', async () => {
+                  await uec.updateUserExternalConnectionData({ providerType: MICROSOFT, set: [{ dataType: MAIL_SIGNATURE, itemKey: 'me', value: { html: '<p>Regards</p>' } }] });
+
+                  const res = await oauth.authRequest('get', MICROSOFT_TOKEN_WITH_DATA_PATH).expect(403);
+
+                  expect(res.body.code).toBe(USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE);
+                  expect(JSON.stringify(res.body)).not.toContain('Regards');
+                });
+
+                it('refuses the grant, which exceeds the read ceiling, without returning its token', async () => {
+                  const res = await oauth.authRequest('get', MICROSOFT_TOKEN_PATH).expect(403);
+
+                  expect(res.body.code).toBe(USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE);
+                  expect(res.body.data?.excessScopes).toEqual(MICROSOFT_GRAPH_READ_WRITE_SCOPES.filter((scope) => !MICROSOFT_GRAPH_READ_SCOPES.includes(scope)));
+                  expect(JSON.stringify(res.body)).not.toContain('access-token');
+                  expect(refreshInputs.length).toBe(0);
+                });
+
+                it('ignores a ?scopes= parameter: the grant is still refused under the read ceiling', async () => {
+                  const res = await oauth.authRequest('get', `${MICROSOFT_TOKEN_PATH}?scopes=Mail.Read`).expect(403);
+
+                  expect(res.body.code).toBe(USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE);
+                  expect(JSON.stringify(res.body)).not.toContain('access-token');
+                  expect(refreshInputs.length).toBe(0);
+                });
+              });
+            });
+          });
+        });
+      });
+
+      describe('admin caller holding the microsoft_admin ceiling', () => {
+        demoAuthorizedUserAdminContext({ f }, (au) => {
+          demoUserExternalConnectionContext({ f, u: au }, (uec) => {
+            demoOAuthSuperTestContextWithMicrosoftAdminScope({ f, u: au }, (oauth) => {
+              it('mints a read connection, whose grant fits inside the ceiling', async () => {
+                await uec.connect({ providerType: MICROSOFT, credentials: microsoftCredentials(MICROSOFT_GRAPH_READ_SCOPES) });
+
+                const res = await oauth.authRequest('get', MICROSOFT_TOKEN_PATH).expect(200);
+                expect((res.body as UserExternalConnectionAccessToken).scopes).toEqual([...MICROSOFT_GRAPH_READ_SCOPES]);
+              });
+
+              it('mints a read + write token from a read + write connection', async () => {
+                await uec.connect({ providerType: MICROSOFT, credentials: microsoftCredentials(MICROSOFT_GRAPH_READ_WRITE_SCOPES) });
+
+                const res = await oauth.authRequest('get', MICROSOFT_TOKEN_PATH).expect(200);
+                expect((res.body as UserExternalConnectionAccessToken).scopes).toEqual([...MICROSOFT_GRAPH_READ_WRITE_SCOPES]);
+              });
+            });
+          });
+        });
+      });
+
+      describe('admin caller holding token.external but no microsoft ceiling', () => {
+        demoAuthorizedUserAdminContext({ f }, (au) => {
+          demoUserExternalConnectionContext({ f, u: au }, (uec) => {
+            demoOAuthSuperTestContextWithExternalTokenScope({ f, u: au }, (oauth) => {
+              it('is refused a microsoft token outright', async () => {
+                await uec.connect({ providerType: MICROSOFT, credentials: microsoftCredentials(MICROSOFT_GRAPH_READ_WRITE_SCOPES) });
+
+                const res = await oauth.authRequest('get', MICROSOFT_TOKEN_PATH).expect(403);
+                expect(res.body.code).toBe(USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE);
+                expect(JSON.stringify(res.body)).not.toContain('microsoft-stored-access-token');
+              });
+            });
+          });
+        });
+      });
+
+      describe('non-admin caller', () => {
+        demoAuthorizedUserContext({ f }, (u) => {
+          demoUserExternalConnectionContext({ f, u }, (uec) => {
+            demoOAuthAuthorizedSuperTestContext({ f, u }, (oauth) => {
+              it('is refused by the admin predicate', async () => {
+                // staged directly: microsoft is adminOnly to connect, but the token API must not rely on that
+                await uec.connect({ providerType: MICROSOFT, credentials: microsoftCredentials(MICROSOFT_GRAPH_READ_SCOPES) });
+
+                const res = await oauth.authRequest('get', MICROSOFT_TOKEN_PATH).expect(403);
+                expect(res.body.code).toBe(USER_EXTERNAL_CONNECTION_TOKEN_FORBIDDEN_ERROR_CODE);
               });
             });
           });

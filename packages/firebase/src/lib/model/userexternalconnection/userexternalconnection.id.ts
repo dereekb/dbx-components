@@ -24,7 +24,7 @@ export type UserExternalConnectionProviderType = string;
 /**
  * Known third-party services the workspace ships provider support for.
  */
-export type KnownUserExternalConnectionProviderType = 'calcom' | 'zoom' | 'discord' | 'zoho' | 'trello';
+export type KnownUserExternalConnectionProviderType = 'calcom' | 'zoom' | 'discord' | 'zoho' | 'trello' | 'microsoft';
 
 /**
  * Provider type for Cal.com.
@@ -58,6 +58,16 @@ export const ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE: KnownUserExternalConne
  * account, say); this is the default one.
  */
 export const TRELLO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE: KnownUserExternalConnectionProviderType = 'trello';
+
+/**
+ * Provider type for Microsoft (Microsoft Graph through a single-tenant Entra ID app registration).
+ *
+ * One connection per user, connected with a scope preset (Read, or Read + Write). Entra puts every Graph
+ * scope the user has consented to in each access token, whatever a request names. So the preset decides
+ * what a minted token carries; a token cannot be narrowed below it. An app may register it under its own
+ * provider type (e.g. `ms_graph`) through the adapter's `providerType` override.
+ */
+export const MICROSOFT_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE: KnownUserExternalConnectionProviderType = 'microsoft';
 
 /**
  * A capability/scope string granted by a third-party provider (e.g. an OAuth scope).

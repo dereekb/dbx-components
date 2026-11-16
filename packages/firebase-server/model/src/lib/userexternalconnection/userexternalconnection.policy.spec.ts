@@ -2,13 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { USER_EXTERNAL_CONNECTION_PROVIDER_NOT_ALLOWED_ERROR_CODE } from './userexternalconnection.error';
 import { userExternalConnectionOAuthProviderRegistry } from './oauth/userexternalconnection.oauth.registry';
 import { type AbstractUserExternalConnectionOAuthService } from './oauth/userexternalconnection.oauth.service';
-import { CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as CALCOM, DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as DISCORD } from '@dereekb/firebase';
+import { CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as CALCOM, DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as DISCORD, USER_EXTERNAL_CONNECTION_SCOPE_PRESET_NOT_ALLOWED_ERROR_CODE } from '@dereekb/firebase';
+import { type Maybe } from '@dereekb/util';
 import { assertUserExternalConnectionProviderConnectable, resolveUserExternalConnectionProviderPolicy, userExternalConnectionPolicyForProviderType, userExternalConnectionProviderPolicyRegistry } from './userexternalconnection.policy';
 
 describe('resolveUserExternalConnectionProviderPolicy()', () => {
   it('should default an undeclared provider to the restrictive policy', () => {
     // an unlisted provider must behave exactly as it did before policies existed
-    expect(resolveUserExternalConnectionProviderPolicy(CALCOM)).toEqual({ providerType: CALCOM, unique: false, signIn: false, signInConnects: false, onCollision: 'block', adminOnly: false, tokenExport: false });
+    expect(resolveUserExternalConnectionProviderPolicy(CALCOM)).toEqual({ providerType: CALCOM, unique: false, signIn: false, signInConnects: false, onCollision: 'block', adminOnly: false, tokenExport: false, onOverGrant: 'block' });
   });
 
   it('should NOT enable sign-in by default', () => {
@@ -31,27 +32,34 @@ describe('resolveUserExternalConnectionProviderPolicy()', () => {
 
   it('should fall back for an explicitly null field', () => {
     // `Maybe` permits an explicit null, which `??` alone would pass straight through
-    expect(resolveUserExternalConnectionProviderPolicy(DISCORD, { providerType: DISCORD, unique: null, signIn: null, signInConnects: null, onCollision: null, adminOnly: null, tokenExport: null })).toEqual({
+    expect(resolveUserExternalConnectionProviderPolicy(DISCORD, { providerType: DISCORD, unique: null, signIn: null, signInConnects: null, onCollision: null, adminOnly: null, tokenExport: null, onOverGrant: null })).toEqual({
       providerType: DISCORD,
       unique: false,
       signIn: false,
       signInConnects: false,
       onCollision: 'block',
       adminOnly: false,
-      tokenExport: false
+      tokenExport: false,
+      onOverGrant: 'block'
     });
   });
 
   it('should keep the declared values', () => {
-    expect(resolveUserExternalConnectionProviderPolicy(DISCORD, { providerType: DISCORD, unique: true, signIn: true, signInConnects: true, onCollision: 'transfer', tokenExport: true })).toEqual({
+    expect(resolveUserExternalConnectionProviderPolicy(DISCORD, { providerType: DISCORD, unique: true, signIn: true, signInConnects: true, onCollision: 'transfer', tokenExport: true, onOverGrant: 'allow' })).toEqual({
       providerType: DISCORD,
       unique: true,
       signIn: true,
       signInConnects: true,
       onCollision: 'transfer',
       adminOnly: false,
-      tokenExport: true
+      tokenExport: true,
+      onOverGrant: 'allow'
     });
+  });
+
+  it('should block over-granted connects by default', () => {
+    expect(resolveUserExternalConnectionProviderPolicy(CALCOM).onOverGrant).toBe('block');
+    expect(resolveUserExternalConnectionProviderPolicy(DISCORD, { providerType: DISCORD, unique: true }).onOverGrant).toBe('block');
   });
 });
 
@@ -59,7 +67,7 @@ describe('userExternalConnectionProviderPolicyRegistry()', () => {
   const registry = userExternalConnectionProviderPolicyRegistry([{ providerType: DISCORD, unique: true, signIn: true }]);
 
   it('should resolve a declared provider', () => {
-    expect(registry.policyForProviderType(DISCORD)).toEqual({ providerType: DISCORD, unique: true, signIn: true, signInConnects: false, onCollision: 'block', adminOnly: false, tokenExport: false });
+    expect(registry.policyForProviderType(DISCORD)).toEqual({ providerType: DISCORD, unique: true, signIn: true, signInConnects: false, onCollision: 'block', adminOnly: false, tokenExport: false, onOverGrant: 'block' });
   });
 
   it('should refuse a provider that is both adminOnly and signIn', () => {
@@ -68,18 +76,18 @@ describe('userExternalConnectionProviderPolicyRegistry()', () => {
   });
 
   it('should allow an adminOnly provider that does not sign in', () => {
-    expect(userExternalConnectionProviderPolicyRegistry([{ providerType: CALCOM, adminOnly: true, tokenExport: true }]).policyForProviderType(CALCOM)).toEqual({ providerType: CALCOM, unique: false, signIn: false, signInConnects: false, onCollision: 'block', adminOnly: true, tokenExport: true });
+    expect(userExternalConnectionProviderPolicyRegistry([{ providerType: CALCOM, adminOnly: true, tokenExport: true }]).policyForProviderType(CALCOM)).toEqual({ providerType: CALCOM, unique: false, signIn: false, signInConnects: false, onCollision: 'block', adminOnly: true, tokenExport: true, onOverGrant: 'block' });
   });
 
   it('should resolve an undeclared provider to the defaults', () => {
-    expect(registry.policyForProviderType(CALCOM)).toEqual({ providerType: CALCOM, unique: false, signIn: false, signInConnects: false, onCollision: 'block', adminOnly: false, tokenExport: false });
+    expect(registry.policyForProviderType(CALCOM)).toEqual({ providerType: CALCOM, unique: false, signIn: false, signInConnects: false, onCollision: 'block', adminOnly: false, tokenExport: false, onOverGrant: 'block' });
   });
 });
 
 describe('userExternalConnectionPolicyForProviderType()', () => {
   it('should treat a missing registry as all defaults', () => {
     // the registry is optional, so every enforcement site would otherwise repeat this fallback
-    expect(userExternalConnectionPolicyForProviderType(null, DISCORD)).toEqual({ providerType: DISCORD, unique: false, signIn: false, signInConnects: false, onCollision: 'block', adminOnly: false, tokenExport: false });
+    expect(userExternalConnectionPolicyForProviderType(null, DISCORD)).toEqual({ providerType: DISCORD, unique: false, signIn: false, signInConnects: false, onCollision: 'block', adminOnly: false, tokenExport: false, onOverGrant: 'block' });
   });
 });
 
@@ -116,5 +124,31 @@ describe('assertUserExternalConnectionProviderConnectable()', () => {
 
   it('should still refuse an unmounted provider, even to an admin', () => {
     expectNotAllowed(() => assertUserExternalConnectionProviderConnectable({ oauthRegistry, policyRegistry, providerType: UNMOUNTED, isAdmin: true }));
+  });
+
+  describe('scopePreset', () => {
+    const PRESET_PROVIDER = 'presets';
+    const presetService = { providerType: PRESET_PROVIDER, scopePresetForKey: (key: Maybe<string>) => (key === 'read' ? { key: 'read', label: 'Read', scopes: ['read'] } : undefined) } as unknown as AbstractUserExternalConnectionOAuthService;
+    const presetOAuthRegistry = userExternalConnectionOAuthProviderRegistry([presetService]);
+
+    it('should allow a declared preset', () => {
+      expect(() => assertUserExternalConnectionProviderConnectable({ oauthRegistry: presetOAuthRegistry, providerType: PRESET_PROVIDER, isAdmin: false, scopePreset: 'read' })).not.toThrow();
+    });
+
+    it('should allow no preset', () => {
+      expect(() => assertUserExternalConnectionProviderConnectable({ oauthRegistry: presetOAuthRegistry, providerType: PRESET_PROVIDER, isAdmin: false })).not.toThrow();
+    });
+
+    it('should refuse an undeclared preset with the scope-preset-not-allowed error', () => {
+      let error: unknown;
+
+      try {
+        assertUserExternalConnectionProviderConnectable({ oauthRegistry: presetOAuthRegistry, providerType: PRESET_PROVIDER, isAdmin: false, scopePreset: 'admin' });
+      } catch (e) {
+        error = e;
+      }
+
+      expect((error as { details?: { code?: string } })?.details?.code).toBe(USER_EXTERNAL_CONNECTION_SCOPE_PRESET_NOT_ALLOWED_ERROR_CODE);
+    });
   });
 });

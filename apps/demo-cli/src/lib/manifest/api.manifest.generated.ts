@@ -26,6 +26,7 @@ import {
   readNotificationTaskBotOptOutsParamsType,
   readStorageFileMetadataParamsType,
   readUserExternalConnectionAuthorizeStateParamsType,
+  readUserExternalConnectionDataParamsType,
   regenerateStorageFileGroupContentParamsType,
   removeFormSpaceFileParamsType,
   reopenFormSpaceParamsType,
@@ -46,7 +47,8 @@ import {
   updateNotificationUserParamsType,
   updateOidcClientParamsType,
   updateStorageFileGroupParamsType,
-  updateStorageFileParamsType
+  updateStorageFileParamsType,
+  updateUserExternalConnectionDataParamsType
 } from '@dereekb/firebase';
 import { createOpenRouterPromptVersionParamsType, createOpenRouterTemplateParamsType, previewOpenRouterTemplateParamsType, queryOpenRouterPromptsParamsType, readOpenRouterPromptParamsType, updateOpenRouterPromptParamsType, updateOpenRouterPromptVersionParamsType } from '@dereekb/openrouter/firebase';
 import {
@@ -71,7 +73,7 @@ import {
 } from 'demo-firebase';
 import { type CliApiManifest, type CliGeneratedManifestStamp, type CliModelManifest, type CliEnumManifest } from '@dereekb/dbx-cli';
 
-export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.24.0' };
+export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.25.1' };
 
 export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
   {
@@ -1327,7 +1329,8 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     sourceFile: 'packages/firebase/src/lib/model/userexternalconnection/userexternalconnection.api.ts',
     description:
       'Creates the calling user\'s connection document.\n\nEvery other client-reachable operation asserts a role against this document, so it must exist\nbefore a user can begin a connect. Creating it is its own call — rather than a side effect of\nthe first connect — so that "may this user have external connections at all?" is decided in\none place instead of being folded into the OAuth handoff.\n\nThrows when the document already exists.',
-    paramsTypeDescription: "Parameters for creating the calling user's connection document.\n\nDeliberately empty: the document is keyed by uid, so there is nothing to target and nothing to\nseed it with — providers arrive one at a time through the OAuth flow, never at creation."
+    paramsTypeDescription:
+      "Parameters for creating the calling user's connection document.\n\nDeliberately empty: the document is keyed by uid, so there is nothing to target and nothing to\nseed it with — providers arrive one at a time through the OAuth flow, never at creation.\n\n\nAlways the caller's own connection, resolved from their auth. There is no target `key`, so no caller, an admin\nincluded, can act on another user's connection; a `key` sent anyway is refused."
   },
   {
     model: 'userExternalConnection',
@@ -1339,7 +1342,7 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     groupName: 'UserExternalConnection',
     sourceFile: 'packages/firebase/src/lib/model/userexternalconnection/userexternalconnection.api.ts',
     description: 'Mints the short-lived `state` that begins an OAuth connect handoff for a provider.\n\nA read rather than an update: it changes nothing, it just proves who is asking. The app\ndecides how the state is signed and how long it lives.',
-    paramsTypeDescription: 'Parameters for beginning an OAuth connect handoff for a provider.',
+    paramsTypeDescription: "Parameters for beginning an OAuth connect handoff for a provider.\n\nAlways the caller's own connection, resolved from their auth. There is no target `key`, so no caller, an admin\nincluded, can act on another user's connection; a `key` sent anyway is refused.",
     paramsFields: [
       { name: 'providerType', typeText: 'UserExternalConnectionProviderType', description: 'The provider type to begin connecting to.' },
       {
@@ -1347,11 +1350,65 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
         typeText: "Maybe<'connect' | 'link'>",
         description:
           'Which handoff the state begins. Defaults to `connect`.\n\n- `connect` — attach the provider as a DATA connection, with the data scopes.\n- `link` — make the provider a LOGIN METHOD for the already-signed-in caller, with the sign-in\n  scopes. A separate round trip because the two scope sets are not guaranteed to be the same,\n  so a data grant cannot be assumed to cover an identity read.\n\nAbsent means `connect`, so a client minting a state before `link` existed still gets one.'
+      },
+      {
+        name: 'scopePreset',
+        typeText: 'Maybe<UserExternalConnectionScopePresetKey>',
+        description:
+          "Key of the scope preset to connect with, for a provider that declares scope presets.\n\nOnly applies to the `connect` mode; ignored for `link`. Absent means the provider's default preset\n(or no preset at all when the provider declares none). A key the provider does not declare is\nrefused with `USER_EXTERNAL_CONNECTION_SCOPE_PRESET_NOT_ALLOWED`."
       }
     ],
     resultTypeDescription:
       "The opaque, short-lived `state` to carry through a provider's OAuth handoff.\n\nMinting it requires an authenticated call, because a top-level navigation to the provider's\nauthorize endpoint carries no credentials and the server must already know who is connecting. The\nclient's only job is to pass this through — it must never append its ID token to the redirect.",
     resultFields: [{ name: 'state', typeText: 'string', description: 'The state to send on the authorize request.' }]
+  },
+  {
+    model: 'userExternalConnection',
+    verb: 'read',
+    specifier: 'data',
+    paramsTypeName: 'ReadUserExternalConnectionDataParams',
+    paramsValidator: readUserExternalConnectionDataParamsType,
+    resultTypeName: 'ReadUserExternalConnectionDataResult',
+    groupName: 'UserExternalConnection',
+    sourceFile: 'packages/firebase/src/lib/model/userexternalconnection/userexternalconnection.api.ts',
+    description:
+      "Reads the caller's stored connection data (UserExternalConnectionData): per-provider settings such as default\nmail signatures, decrypted server-side. Also returns the data types the caller may store.\n\nExample: `{ providerType: 'microsoft', dataType: 'mail_signature' }`. Use `keysOnly: true` to list items without values.",
+    paramsTypeDescription:
+      "Parameters for reading the calling user's stored connection data (`UserExternalConnectionData`).\n\nAlways reads the caller's own data, resolved from their auth. There is no target `key`, so no caller, an admin\nincluded, can read another user's data; a `key` sent anyway is refused by {@link readUserExternalConnectionDataParamsType}.\nEvery filter is optional: omit them all to read everything the caller may use.",
+    paramsFields: [
+      { name: 'providerType', typeText: 'Maybe<UserExternalConnectionProviderType>', description: "Only this provider's data. Omit for every provider the caller may use." },
+      { name: 'dataType', typeText: 'Maybe<UserExternalConnectionDataTypeKey>', description: 'Only this data type, e.g. `mail_signature`.' },
+      { name: 'itemKey', typeText: 'Maybe<UserExternalConnectionDataItemKey>', description: 'Only this item, e.g. `me` or a mailbox address.' },
+      { name: 'keysOnly', typeText: 'Maybe<boolean>', description: 'Return item summaries only, without values.' }
+    ],
+    resultTypeDescription: "Result of reading the calling user's connection data.",
+    resultFields: [
+      { name: 'data', typeText: 'UserExternalConnectionDataMap', description: 'The values, keyed provider type → data type → item key. Absent with `keysOnly`.' },
+      { name: 'items', typeText: 'readonly UserExternalConnectionDataItemSummary[]', description: 'A summary of every matching item.' },
+      { name: 'dataTypes', typeText: 'readonly UserExternalConnectionDataTypeSummary[]', description: 'The data types the caller may store (for the matching provider), so a caller can discover what to save.' }
+    ]
+  },
+  {
+    model: 'userExternalConnection',
+    verb: 'update',
+    specifier: 'data',
+    paramsTypeName: 'UpdateUserExternalConnectionDataParams',
+    paramsValidator: updateUserExternalConnectionDataParamsType,
+    resultTypeName: 'UpdateUserExternalConnectionDataResult',
+    groupName: 'UserExternalConnection',
+    sourceFile: 'packages/firebase/src/lib/model/userexternalconnection/userexternalconnection.api.ts',
+    description:
+      "Saves or removes the caller's stored connection data for one provider, encrypted at rest. The app CLI hands it\nto the provider's CLI as DEFAULT settings when it mints a token (explicit local config and flags still win).\n\nExample (a default msgraph-cli signature for a shared mailbox):\n`{ providerType: 'microsoft', set: [{ dataType: 'mail_signature', itemKey: 'support@example.com', value: { html: '<p>…</p>' } }] }`.\nUse `itemKey: 'me'` for your own mailbox. `unset` removes items; `clear: true` removes everything for the provider.\nCall `read` `data` first to see which data types are allowed.",
+    paramsTypeDescription:
+      "Parameters for changing the calling user's stored data for one provider.\n\nApplies `clear`, then every `unset`, then every `set`, in one transaction.\n\nAlways changes the caller's own data, resolved from their auth. There is no target `key`, so no caller, an admin\nincluded, can change another user's data; a `key` sent anyway is refused by {@link updateUserExternalConnectionDataParamsType}.",
+    paramsFields: [
+      { name: 'providerType', typeText: 'UserExternalConnectionProviderType', description: 'The provider whose data to change, e.g. `microsoft`.' },
+      { name: 'set', typeText: 'Maybe<readonly UserExternalConnectionDataSetOperation[]>', description: 'Items to set (create or replace).' },
+      { name: 'unset', typeText: 'Maybe<readonly UserExternalConnectionDataUnsetOperation[]>', description: 'Items (or whole data types) to remove.' },
+      { name: 'clear', typeText: 'Maybe<boolean>', description: "Drop all of this provider's data first. It also recovers a document that can no longer be decrypted, by\nreplacing the whole document: every provider's data is lost then, since none of it can be read." }
+    ],
+    resultTypeDescription: "Result of changing the calling user's connection data. Never carries values.",
+    resultFields: [{ name: 'items', typeText: 'readonly UserExternalConnectionDataItemSummary[]', description: "The provider's items after the write." }]
   },
   {
     model: 'userExternalConnection',
@@ -1364,7 +1421,7 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     description:
       "Disconnects the current user from the given provider.\n\nRemoves the provider's credentials and its entry in one transaction, and recomputes the\nconnected-provider array from the result. The provider's LOGIN LINK is retained — a data\nconnection ending says nothing about whether the provider is still a way to sign in.",
     paramsTypeDescription:
-      "Parameters for disconnecting the current user from a third-party provider.\n\nThis is the ONLY write path a client has to the connection pair. There is deliberately no connect\nor update params type here: connecting requires credentials, which only the server ever sees.\n\nIf no target model is provided, the current user's connection document is assumed.",
+      "Parameters for disconnecting the current user from a third-party provider.\n\nThis is the ONLY write path a client has to the connection pair. There is deliberately no connect\nor update params type here: connecting requires credentials, which only the server ever sees.\n\nAlways the caller's own connection, resolved from their auth. There is no target `key`, so no caller, an admin\nincluded, can act on another user's connection; a `key` sent anyway is refused.",
     paramsFields: [{ name: 'providerType', typeText: 'UserExternalConnectionProviderType', description: 'The provider type to disconnect from.' }]
   },
   {
@@ -1377,7 +1434,7 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     sourceFile: 'packages/firebase/src/lib/model/userexternalconnection/userexternalconnection.api.ts',
     description: 'Removes the given provider as a login method for the current user.\n\nRemoves the login link, the entry, and the credentials in one transaction. Refused when it\nwould leave the account with no way to sign back in.',
     paramsTypeDescription:
-      'Parameters for removing a provider as a LOGIN METHOD for the current user.\n\nDistinct from {@link DisconnectUserExternalConnectionParams}, and strictly larger: a disconnect\ndrops the data connection and leaves the login link in place, whereas an unlink removes the login\nlink AND the data connection and its credentials. "Stop using my Discord token" and "Discord is no\nlonger how I log in" are different requests, so they are different calls.\n\nIf no target model is provided, the current user\'s connection document is assumed.',
+      'Parameters for removing a provider as a LOGIN METHOD for the current user.\n\nDistinct from {@link DisconnectUserExternalConnectionParams}, and strictly larger: a disconnect\ndrops the data connection and leaves the login link in place, whereas an unlink removes the login\nlink AND the data connection and its credentials. "Stop using my Discord token" and "Discord is no\nlonger how I log in" are different requests, so they are different calls.\n\nAlways the caller\'s own connection, resolved from their auth. There is no target `key`, so no caller, an admin\nincluded, can act on another user\'s connection; a `key` sent anyway is refused.',
     paramsFields: [{ name: 'providerType', typeText: 'UserExternalConnectionProviderType', description: 'The provider type to unlink.' }]
   }
 ];

@@ -2,6 +2,10 @@ import { type Maybe } from '@dereekb/util';
 import { type TrelloActionId, type TrelloBoardId, type TrelloCardId, type TrelloChecklistId, type TrelloLabelId, type TrelloListId, type TrelloMemberId } from '../trello.type';
 import { type TrelloLabelColor, type TrelloMaybeDateString, type TrelloPosition } from '../shared/trello.type';
 import { type TrelloMember } from './trello.api.member.type';
+import { type TrelloAttachment } from './trello.api.card.attachment.type';
+import { type TrelloChecklist } from './trello.api.card.checklist.type';
+import { type TrelloBoard } from './trello.api.board.type';
+import { type TrelloList } from './trello.api.list.type';
 
 /**
  * Trello label.
@@ -116,6 +120,32 @@ export interface UpdateCardBody {
  *
  * @see https://developer.atlassian.com/cloud/trello/rest/api-group-actions/
  */
+/**
+ * A custom field value on a card.
+ *
+ * @see https://developer.atlassian.com/cloud/trello/rest/api-group-customfielditems/
+ */
+export interface TrelloCustomFieldItem {
+  readonly id: string;
+  readonly idCustomField: string;
+  readonly idModel: string;
+  readonly value?: Maybe<Record<string, string>>;
+  readonly idValue?: Maybe<string>;
+}
+
+/**
+ * A card plus the nested resources `getCard` can expand. Each expansion is present only when it was requested.
+ */
+export interface TrelloCardWithExpansions extends TrelloCard {
+  readonly attachments?: ReadonlyArray<TrelloAttachment>;
+  readonly checklists?: ReadonlyArray<TrelloChecklist>;
+  readonly members?: ReadonlyArray<TrelloMember>;
+  readonly actions?: ReadonlyArray<TrelloAction>;
+  readonly board?: TrelloBoard;
+  readonly list?: TrelloList;
+  readonly customFieldItems?: ReadonlyArray<TrelloCustomFieldItem>;
+}
+
 export interface TrelloAction<D = unknown> {
   readonly id: TrelloActionId;
   readonly idMemberCreator: TrelloMemberId;
@@ -127,6 +157,19 @@ export interface TrelloAction<D = unknown> {
    * `member=true` (the default). Omitted otherwise.
    */
   readonly memberCreator?: TrelloMember;
+  /**
+   * The app (Power-Up or REST client) that created the action, or `null` when a person acted in Trello itself.
+   */
+  readonly appCreator?: Maybe<TrelloActionAppCreator>;
+}
+
+/**
+ * The app that created a {@link TrelloAction}.
+ */
+export interface TrelloActionAppCreator {
+  readonly id: string;
+  readonly name?: Maybe<string>;
+  readonly idPlugin?: Maybe<string>;
 }
 
 export interface TrelloCommentCardActionData {
