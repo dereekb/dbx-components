@@ -1,0 +1,76 @@
+{
+  "name": "llm",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/llm/src",
+  "projectType": "library",
+  "tags": ["publishable"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/packages/llm"],
+      "options": {
+        "color": true,
+        "command": "node tools/scripts/finalize-esm-exports.mjs dist/packages/llm"
+      },
+      "dependsOn": [
+        "build-base",
+        {
+          "projects": ["llm-openai", "llm-openrouter", "llm-zenmux", "llm-node", "llm-test"],
+          "target": "build-base"
+        }
+      ],
+      "metadata": {
+        "description": "The nested case. dist/packages/llm is ONE npm package with 7 entry points (root, /decision, /openai, /openrouter, /zenmux, /node, /test), not 6 packages: /decision is a second rollup input of THIS project, and llm-openai / llm-openrouter / llm-zenmux / llm-node / llm-test compile INTO this directory and are named by this package's own dist `exports`. So this target is the sole deliverable and the sole owner of the directory, and the children deliberately have no `build` of their own. The finalize stays this target's own command, so it runs after every entry point is built -- dependsOn does not order its own entries."
+      }
+    },
+    "build-base": {
+      "dependsOn": ["^build"],
+      "metadata": {
+        "description": "`^build`, NOT the `^build-base` @nx/rollup/plugin infers. @nx/js remaps @dereekb/* imports to the dist DIRECTORY, so TypeScript reads that directory's package.json `exports` to resolve them -- and rollup writes `.` as {import, types} until that dependency's own `build` reorders it. `^build-base` would compile this package against un-finalized dependencies."
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "run-all-tests": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "description": "run llm tests",
+            "command": "npx nx test llm"
+          },
+          {
+            "description": "run llm-openai tests",
+            "command": "npx nx test llm-openai"
+          },
+          {
+            "description": "run llm-openrouter tests",
+            "command": "npx nx test llm-openrouter"
+          },
+          {
+            "description": "run llm-zenmux tests",
+            "command": "npx nx test llm-zenmux"
+          },
+          {
+            "description": "run llm-node tests",
+            "command": "npx nx test llm-node"
+          },
+          {
+            "description": "run llm-test tests",
+            "command": "npx nx test llm-test"
+          }
+        ],
+        "color": true,
+        "parallel": false
+      }
+    },
+    "ci-publish-npmjs": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cd ./dist/packages/llm && npm publish --access public --tag latest"
+      }
+    }
+  }
+}

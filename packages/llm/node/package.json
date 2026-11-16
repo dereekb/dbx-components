@@ -1,0 +1,6 @@
+{
+  "name": "@dereekb/llm/node",
+  "version": "14.26.0",
+  "sideEffects": false,
+  "type": "module"
+}
