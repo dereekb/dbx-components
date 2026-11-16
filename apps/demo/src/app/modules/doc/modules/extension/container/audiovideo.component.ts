@@ -164,7 +164,7 @@ export class DocExtensionAudioVideoComponent {
 
     if ((item.kind === 'image' || item.kind === 'gif') && item.src) {
       this.dbxWebFilePreviewService.openPreviewDialog({
-        srcUrl: new URL(item.src, window.location.href).href as WebsiteUrlWithPrefix,
+        srcUrl: new URL(item.src, document.baseURI).href as WebsiteUrlWithPrefix,
         embedMimeType: item.kind === 'gif' ? 'image/gif' : 'image/jpeg'
       });
     }

@@ -118,13 +118,15 @@ export class DbxGalleryViewComponent<T> extends AbstractDbxListGridViewDirective
 /**
  * A single gallery tile. Renders the top slot, the presentation slot inside an aspect-ratio box, and the bottom slot.
  *
- * Clicks inside the top and bottom slots do not reach the tile, so action buttons there do not select the item.
+ * Clicks inside the top and bottom slots do not reach the tile, so action buttons there do not select the item. The slots carry
+ * the `dbx-override-click-ignore` class (`DBX_OVERRIDE_CLICK_IGNORE_CLASS`) so the list item's clickable anchor does not redirect their clicks to itself, and
+ * the host then stops them from bubbling to the anchor.
  */
 @Component({
   selector: 'dbx-gallery-item',
   template: `
     @if (topConfigSignal()) {
-      <div class="dbx-gallery-item-slot dbx-gallery-item-top">
+      <div class="dbx-gallery-item-slot dbx-gallery-item-top dbx-override-click-ignore">
         <dbx-injection [config]="topConfigSignal()"></dbx-injection>
       </div>
     }
@@ -132,7 +134,7 @@ export class DbxGalleryViewComponent<T> extends AbstractDbxListGridViewDirective
       <dbx-injection [config]="presentationConfigSignal()"></dbx-injection>
     </div>
     @if (bottomConfigSignal()) {
-      <div class="dbx-gallery-item-slot dbx-gallery-item-bottom">
+      <div class="dbx-gallery-item-slot dbx-gallery-item-bottom dbx-override-click-ignore">
         <dbx-injection [config]="bottomConfigSignal()"></dbx-injection>
       </div>
     }

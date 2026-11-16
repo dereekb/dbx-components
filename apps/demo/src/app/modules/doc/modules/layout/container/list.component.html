@@ -88,7 +88,7 @@
 
       <doc-feature-example header="dbxListItemSingleSelectionModifier" hint="Adds single selection to a list. Clicking an item selects it and the list view renders it as selected. Works in normal and grid list views.">
         <div style="height: 200px">
-          <doc-item-list dbxListItemModifier [dbxListItemSingleSelectionModifier]="{ allowDeselect: true }" #listSelection="dbxListItemSingleSelection" [state]="staticState$"></doc-item-list>
+          <doc-complex-item-list selectionMode="view" dbxListItemModifier [dbxListItemSingleSelectionModifier]="{ allowDeselect: true }" #listSelection="dbxListItemSingleSelection" [state]="staticState$"></doc-complex-item-list>
         </div>
         <p>Selected: {{ listSelection.store.selectedValueSignal()?.name ?? 'None' }} / Previous: {{ listSelection.store.previousValueSignal()?.name ?? 'None' }}</p>
         <h4>Grid</h4>

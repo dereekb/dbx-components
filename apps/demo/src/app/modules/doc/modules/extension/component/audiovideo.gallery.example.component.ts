@@ -88,10 +88,12 @@ export class DocGalleryAvatarPresentationComponent extends AbstractDbxGallerySlo
 
 /**
  * Muted looping clip presentation. Registered with the playback store, but muted playback does not count toward the limit.
+ *
+ * Binds `[muted]` as a property: Angular applies a static `muted` attribute with setAttribute, which does not mute the element.
  */
 @Component({
   template: `
-    <video class="doc-gallery-clip" [src]="valueSignal().src" autoplay muted loop playsinline dbxAudioVideoPlayback></video>
+    <video class="doc-gallery-clip" [muted]="true" [src]="valueSignal().src" autoplay loop playsinline dbxAudioVideoPlayback></video>
   `,
   styles: `
     .doc-gallery-clip {
@@ -165,7 +167,7 @@ export class DocGalleryActionsComponent extends AbstractDbxGallerySlotDirective<
     if (value.kind === 'color') {
       content = value.color;
     } else if (value.src) {
-      content = new URL(value.src, window.location.href).href;
+      content = new URL(value.src, document.baseURI).href;
     }
 
     void this.copyToClipboard(content ?? value.name);
