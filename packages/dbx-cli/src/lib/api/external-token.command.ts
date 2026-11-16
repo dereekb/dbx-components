@@ -112,7 +112,8 @@ export function buildExternalTokenCommand(options?: Maybe<BuildExternalTokenComm
           },
           {
             redacted: true,
-            note: `The raw token is only printed when run as a credential process (${DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR}=1), e.g. by \`zoho-cli auth token-source set "${context.cliName} ${commandName} ${providerType}"\`.`
+            // the app picks its provider type names (`microsoft`, `ms_graph`, …), so the consumer CLI cannot be named here
+            note: `The raw token is only printed when run as a credential process (${DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR}=1), e.g. by \`<consumer-cli> auth token-source set "${context.cliName} ${commandName} ${providerType}"\`, where <consumer-cli> is the CLI that uses this provider's token (such as zoho-cli or msgraph-cli).`
           }
         );
       }
