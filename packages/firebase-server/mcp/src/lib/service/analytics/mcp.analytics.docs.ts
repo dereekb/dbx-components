@@ -1,5 +1,5 @@
 import { type AnalyticsEventData } from '@dereekb/analytics';
-import { type DocsSearchResult } from '@dereekb/firebase-server';
+import { type DocsSearchResult } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { MCP_DOCS_DISPATCH_MODEL_TYPE, MCP_DOCS_SEARCH_DISPATCH_CALL } from '../tools/mcp.tool.docs-search';
 import { MCP_DOCS_READ_DISPATCH_CALL } from '../tools/mcp.tool.docs-read';

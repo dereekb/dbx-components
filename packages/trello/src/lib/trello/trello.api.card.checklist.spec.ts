@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { type TrelloContext } from './trello.factory';
+import { fakeTrelloContext } from './trello.fake';
 import { addCheckItemToChecklist, addChecklistToCard, deleteChecklist, deleteCheckItemFromCard, getChecklist, listCardChecklists, updateCardCheckItem, updateChecklist } from './trello.api.card.checklist';
 
 function stubContext() {
@@ -68,6 +69,19 @@ describe('trello.api.card.checklist', () => {
       const { context, fetchJson } = stubContext();
       await updateCardCheckItem(context)({ cardId: 'c', checkItemId: 'i', state: 'complete' });
       expect(fetchJson).toHaveBeenCalledWith('/cards/c/checkItem/i', 'PUT', { state: 'complete' });
+    });
+
+    it('sends cleared fields as a query "null" and keeps the rest in the JSON body', async () => {
+      const fake = fakeTrelloContext({ routes: { 'PUT /cards/c/checkItem/i': { id: 'i' } } });
+      await updateCardCheckItem(fake.trelloContext)({ cardId: 'c', checkItemId: 'i', due: null, dueReminder: null, idMember: null, state: 'complete' });
+
+      const request = fake.requests[0];
+      expect(request.method).toBe('PUT');
+      expect(request.path).toBe('/cards/c/checkItem/i');
+      expect(request.query.get('due')).toBe('null');
+      expect(request.query.get('dueReminder')).toBe('null');
+      expect(request.query.get('idMember')).toBe('null');
+      expect(request.body).toEqual({ state: 'complete' });
     });
   });
 

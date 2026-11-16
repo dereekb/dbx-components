@@ -1,18 +1,18 @@
 {
   "name": "@dereekb/trello/cli",
-  "version": "14.26.0",
+  "version": "14.27.0",
   "sideEffects": false,
   "type": "module",
   "peerDependencies": {
-    "@dereekb/date": "14.26.0",
-    "@dereekb/dbx-cli": "14.26.0",
-    "@dereekb/firebase": "14.26.0",
-    "@dereekb/model": "14.26.0",
-    "@dereekb/oauth-resource": "14.26.0",
-    "@dereekb/rxjs": "14.26.0",
-    "@dereekb/trello": "14.26.0",
-    "@dereekb/trello/node": "14.26.0",
-    "@dereekb/util": "14.26.0",
+    "@dereekb/date": "14.27.0",
+    "@dereekb/dbx-cli": "14.27.0",
+    "@dereekb/firebase": "14.27.0",
+    "@dereekb/model": "14.27.0",
+    "@dereekb/oauth-resource": "14.27.0",
+    "@dereekb/rxjs": "14.27.0",
+    "@dereekb/trello": "14.27.0",
+    "@dereekb/trello/node": "14.27.0",
+    "@dereekb/util": "14.27.0",
     "yargs": "^18.0.0"
   },
   "devDependencies": {

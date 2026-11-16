@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { callModelOverHttp, getModelOverHttp, getMultipleModelsOverHttp, MAX_MODEL_ACCESS_MULTI_READ_KEYS } from './call-model.client';
+import { callModelOverHttp, getApiJsonOverHttp, getModelOverHttp, getMultipleModelsOverHttp, MAX_MODEL_ACCESS_MULTI_READ_KEYS } from './call-model.client';
 import { CliHttpError } from '../util/output';
 
 describe('callModelOverHttp', () => {
@@ -206,5 +206,36 @@ describe('getMultipleModelsOverHttp', () => {
     expect(error).toBeInstanceOf(CliHttpError);
     expect(error).toMatchObject({ status: 403, serverCode: 'CALL_MODEL_MISSING_OIDC_SCOPE', code: 'AUTH_FORBIDDEN' });
     expect((error as CliHttpError).suggestion).not.toContain('auth login');
+  });
+});
+
+describe('getApiJsonOverHttp', () => {
+  it('GETs <apiBaseUrl><path> with the bearer header and returns the parsed body', async () => {
+    let captured: { url?: string; init?: RequestInit } = {};
+    const fetcher = (async (input: any, init?: any) => {
+      captured = { url: input as string, init };
+      return new Response(JSON.stringify({ docs: [] }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }) as typeof fetch;
+
+    const result = await getApiJsonOverHttp<{ docs: unknown[] }>({ apiBaseUrl: 'http://localhost/api/', path: '/docs/read?id=a%2Fb', accessToken: 'token-abc', errorPrefix: 'docs read failed', fetcher });
+
+    expect(captured.url).toBe('http://localhost/api/docs/read?id=a%2Fb');
+    expect(captured.init?.method).toBe('GET');
+    expect(captured.init?.body).toBeUndefined();
+    const headers = (captured.init?.headers ?? {}) as Record<string, string>;
+    expect(headers['Authorization']).toBe('Bearer token-abc');
+    expect(result).toEqual({ docs: [] });
+  });
+
+  it('throws a CliHttpError carrying the status and the server code on a non-2xx response', async () => {
+    const fetcher = (async () => new Response(JSON.stringify({ statusCode: 404, message: 'No doc with id "x".', code: 'DOCS_NOT_FOUND' }), { status: 404 })) as typeof fetch;
+
+    const error = await getApiJsonOverHttp({ apiBaseUrl: 'http://localhost/api', path: '/docs/read?id=x', accessToken: 'token', errorPrefix: 'docs read x failed', fetcher }).catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(CliHttpError);
+    expect((error as CliHttpError).status).toBe(404);
+    expect((error as CliHttpError).serverCode).toBe('DOCS_NOT_FOUND');
+    expect((error as CliHttpError).code).toBe('NOT_FOUND');
+    expect((error as CliHttpError).message).toContain('docs read x failed');
   });
 });

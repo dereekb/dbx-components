@@ -158,7 +158,10 @@ const updateCommand: TrelloCliCommand = {
   handler: async (argv, ctx) => {
     const cardId = parseTrelloCliCardArg(argv['card']);
     const desc = await readTrelloCliTextOption({ value: argv['desc'], file: argv['desc-file'] });
-    const dateOption = (value: unknown) => (value === 'none' ? null : String(value));
+    const dateOption = (value: unknown) => {
+      const text = String(value);
+      return ['none', 'null'].includes(text.trim().toLowerCase()) ? null : text;
+    };
     let idLabels: Maybe<TrelloLabelId[]>;
     let idMembers: Maybe<TrelloMemberId[]>;
 

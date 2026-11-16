@@ -1,5 +1,6 @@
 import { makeUrlSearchParams } from '@dereekb/util/fetch';
 import { type TrelloContext } from './trello.factory';
+import { makeTrelloWriteRequest } from '../trello.api.write';
 import { type TrelloActionId, type TrelloCardId, type TrelloLabelId, type TrelloMemberId } from '../trello.type';
 import { type CreateCardBody, type TrelloAction, type TrelloCard, type TrelloCardWithExpansions, type TrelloCommentCardAction, type UpdateCardBody } from './trello.api.card.type';
 
@@ -105,23 +106,27 @@ export type UpdateCardFunction = (input: UpdateCardInput) => Promise<TrelloCard>
 /**
  * Https://developer.atlassian.com/cloud/trello/rest/api-group-cards/#api-cards-id-put.
  *
+ * A `null` `due` / `start` clears that date. It is sent as `?due=null` / `?start=null` rather than in the JSON body,
+ * because Trello ignores a JSON `null` (see {@link makeTrelloWriteRequest}).
+ *
  * @param context - The Trello API context.
  * @returns Updates an existing card.
  */
 export function updateCard(context: TrelloContext): UpdateCardFunction {
   return (input) => {
     const { cardId, idLabels, idMembers, ...rest } = input;
-    const body: Record<string, unknown> = { ...rest };
+    const params: Record<string, unknown> = { ...rest };
 
     if (idLabels) {
-      body['idLabels'] = idLabels.join(',');
+      params['idLabels'] = idLabels.join(',');
     }
 
     if (idMembers) {
-      body['idMembers'] = idMembers.join(',');
+      params['idMembers'] = idMembers.join(',');
     }
 
-    return context.fetchJson(`/cards/${cardId}`, 'PUT', body);
+    const request = makeTrelloWriteRequest({ path: `/cards/${cardId}`, params });
+    return context.fetchJson(request.path, 'PUT', request.body);
   };
 }
 

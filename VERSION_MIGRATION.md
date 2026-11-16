@@ -1,3 +1,43 @@
+## Migration to v14.27.x — dbx-cli `docs` (the app API's docs), docs API wire contract in `@dereekb/firebase`
+
+### New
+- **`<cli> docs list | search <words..> | read <id> [section]`** on every app CLI built with `runCli` / `createCli`.
+  It reads the app API's audience-gated docs (`/api/docs`) over the logged-in session and is the CLI twin of the MCP
+  `search_<prefix>_documentation` tool and the `docs-read` built-in method: the same `DocsApiService`, so the same
+  ranking, scope and audience checks. Markdown by default (`read` prints the raw doc), `--json` for the `{ ok, data }`
+  envelope, and `--pick` / `--dump-dir` switch to JSON. `docs list --sections` lists section ids. It never uses the
+  dataset cache. **Nothing to wire.**
+- `CreateCliInput.disableDocs` (opt out, for an API that does not mount `docsApiModuleMetadata()`) and
+  `CreateCliInput.docsCommandName` (rename the group; default `docs`).
+- `createPackageRefsDocsCommand({ commandName })` and `DEFAULT_PACKAGE_REFS_DOCS_COMMAND_NAME`;
+  `renderPackageRefsDocsIndexMarkdown(refs, cliName, commandName?)`.
+- `@dereekb/dbx-cli`: `getApiJsonOverHttp` (an authenticated `GET <apiBaseUrl><path>` with `--verbose` / `--timeout`
+  support), plus `listDocsOverHttp` / `searchDocsOverHttp` / `readDocOverHttp`, `describeDocsApiFailureSuggestion`,
+  `buildDocsApiCommand`, `DEFAULT_DOCS_API_COMMAND_NAME` and `DOCS_API_NOT_AVAILABLE_ERROR_CODE`.
+- `@dereekb/firebase`: `DOCS_API_SEARCH_PATH` / `DOCS_API_READ_PATH`, the query-param constants
+  (`DOCS_API_SEARCH_QUERY_PARAM`, `DOCS_API_SEARCH_LIMIT_QUERY_PARAM`, `DOCS_API_READ_ID_QUERY_PARAM`,
+  `DOCS_API_READ_SECTION_QUERY_PARAM`) and the path builders `docsApiSearchPath` / `docsApiReadPath`.
+
+### Changed
+- **The docs API wire contract moved from `@dereekb/firebase-server` to `@dereekb/firebase`** (`common/docs`):
+  `DOCS_API_PATH`, `DocsManifestSection`, `DocsSectionSummary`, `DocsListEntry` / `DocsListResult`,
+  `DocsSearchParams` / `DocsSearchResultEntry` / `DocsSearchResult`, `DocsReadParams` / `DocsReadResult`,
+  `DOCS_NOT_FOUND_ERROR_CODE`, `DOCS_SECTION_NOT_FOUND_ERROR_CODE`, `DEFAULT_DOCS_SEARCH_LIMIT` and
+  `MAX_DOCS_SEARCH_LIMIT`. `@dereekb/firebase-server` still re-exports them, so existing imports keep compiling;
+  import them from `@dereekb/firebase` in new code. Server-only names (audiences, manifest entries, config, service,
+  dynamic sources) stay in `@dereekb/firebase-server`.
+- An app CLI that already registers a top-level `docs` command (for example `createPackageRefsDocsCommand`) keeps it:
+  the built-in steps aside. To keep both, pass `commandName: 'refs'` to `createPackageRefsDocsCommand` or
+  `docsCommandName` to `runCli`.
+
+### Check
+- Where the app sets the docs API's `requiredScope` (hellosubs: `hellosubs`, dev and staging), an env with narrowed
+  scopes (hellosubs-cli's `external-token` / `msgraph-*` envs) gets a 403 `MISSING_ENDPOINT_OIDC_SCOPE_ERROR`. Its
+  suggestion says to run on the main env (`--env dev`) or add the scope with `auth setup --scopes` then `auth login`.
+- A doc outside the user's audiences reads as `DOCS_NOT_FOUND`, exactly like a missing one; `docs list` shows only
+  readable docs.
+- hellosubs-cli needs no change after the upgrade: `hellosubs-cli docs read admin/hellosubs/trello/trello-cli-setup`.
+
 ## Migration to v14.26.x — UserExternalConnectionData: encrypted per-user connection defaults
 
 ### New

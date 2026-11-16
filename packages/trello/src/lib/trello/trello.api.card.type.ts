@@ -106,8 +106,14 @@ export interface UpdateCardBody {
   readonly idBoard?: TrelloBoardId;
   readonly idLabels?: ReadonlyArray<TrelloLabelId>;
   readonly idMembers?: ReadonlyArray<TrelloMemberId>;
+  /**
+   * ISO date string, or `null` to clear it.
+   */
   readonly due?: TrelloMaybeDateString;
   readonly dueComplete?: boolean;
+  /**
+   * ISO date string, or `null` to clear it.
+   */
   readonly start?: TrelloMaybeDateString;
   readonly pos?: TrelloPosition;
   readonly subscribed?: boolean;

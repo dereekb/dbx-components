@@ -1,4 +1,5 @@
-import { DOCS_NOT_FOUND_ERROR_CODE, DOCS_SECTION_NOT_FOUND_ERROR_CODE, notFoundError, type FirebaseServerAuthData } from '@dereekb/firebase-server';
+import { DOCS_NOT_FOUND_ERROR_CODE, DOCS_SECTION_NOT_FOUND_ERROR_CODE } from '@dereekb/firebase';
+import { notFoundError, type FirebaseServerAuthData } from '@dereekb/firebase-server';
 import { describe, expect, it } from 'vitest';
 import { type McpAnalyticsEvent } from './mcp.analytics.handler';
 import { MCP_DOCS_READ_ANALYTICS_EVENT_NAME, MCP_DOCS_READ_ANALYTICS_KEY, MCP_DOCS_SEARCH_ANALYTICS_EVENT_NAME, MCP_DOCS_SEARCH_ANALYTICS_KEY, mcpDocsAnalyticsToolConfigs, mcpDocsReadAnalyticsEventData, mcpDocsSearchAnalyticsEventData } from './mcp.analytics.docs';

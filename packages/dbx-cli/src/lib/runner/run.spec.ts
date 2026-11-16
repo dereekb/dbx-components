@@ -5,6 +5,8 @@ import { getCliContext } from '../context/cli.context';
 import type { CliContext } from '../context/cli.context';
 import type { CliEnumManifest, CliModelManifest } from '../manifest/types';
 import { firestoreModelIdentity, notificationTemplateTypeInfoRecord } from '@dereekb/firebase';
+import { createPackageRefsDocsCommand } from '../package-refs/package-refs.command.factory';
+import { type EmbeddedPackageRefs } from '../package-refs/package-refs';
 
 const MODEL_MANIFEST: CliModelManifest = [
   {
@@ -158,6 +160,69 @@ describe('createCli() external-token opt-in', () => {
 
   it('does NOT register external-token by default', async () => {
     expect(await getRootHelp({ cliName: 'demo-cli' })).not.toContain('external-token');
+  });
+});
+
+describe('createCli() docs auto-wiring', () => {
+  const BUILT_IN_DOCS_DESCRIBE = "Read the app's docs from its API";
+  const PACKAGE_REFS_DESCRIBE = 'Print the agent docs shipped with @acme/pkg';
+  const REFS: EmbeddedPackageRefs = { packageName: '@acme/pkg', refs: [{ name: 'alpha', content: '# Alpha\n' }] };
+
+  async function getFlatHelp(input: Parameters<typeof createCli>[0]): Promise<string> {
+    return (await getRootHelp(input)).replaceAll(/\s+/g, ' ');
+  }
+
+  it('registers the built-in docs group by default', async () => {
+    const help = await getFlatHelp({ cliName: 'demo-cli' });
+    expect(help).toContain(BUILT_IN_DOCS_DESCRIBE);
+    expect(help).toContain('demo-cli docs');
+  });
+
+  it('does NOT register the docs group when disableDocs is true', async () => {
+    expect(await getFlatHelp({ cliName: 'demo-cli', disableDocs: true })).not.toContain(BUILT_IN_DOCS_DESCRIBE);
+  });
+
+  it('registers the docs group under docsCommandName', async () => {
+    const help = await getFlatHelp({ cliName: 'demo-cli', docsCommandName: 'app-docs' });
+    expect(help).toContain('demo-cli app-docs');
+    expect(help).not.toContain('demo-cli docs ');
+  });
+
+  it('steps aside for an app config command named docs', async () => {
+    const help = await getFlatHelp({ cliName: 'demo-cli', configCommands: [createPackageRefsDocsCommand({ cliName: 'demo-cli', refs: REFS })] });
+    expect(help).toContain(PACKAGE_REFS_DESCRIBE);
+    expect(help).not.toContain(BUILT_IN_DOCS_DESCRIBE);
+  });
+
+  it('runs the app docs config command without a login when the built-in steps aside', async () => {
+    const lines: string[] = [];
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation((arg: unknown) => {
+      lines.push(String(arg));
+    });
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation((code?: string | number | null): never => {
+      throw new Error(`process.exit:${code ?? 0}`);
+    });
+
+    try {
+      // a cliName with no config dir, so there are no tokens on disk: the auth middleware would exit if it ran
+      await createCli({ cliName: 'dbx-cli-docs-spec-no-tokens', configCommands: [createPackageRefsDocsCommand({ cliName: 'dbx-cli-docs-spec-no-tokens', refs: REFS })], argv: ['docs', '--json'] })
+        .exitProcess(false)
+        .parseAsync(['docs', '--json']);
+    } finally {
+      consoleSpy.mockRestore();
+      exitSpy.mockRestore();
+    }
+
+    const parsed = JSON.parse(lines.join(''));
+    expect(parsed.ok).toBe(true);
+    expect(parsed.data.packageName).toBe('@acme/pkg');
+  });
+
+  it('keeps both when the package refs command is renamed', async () => {
+    const help = await getFlatHelp({ cliName: 'demo-cli', configCommands: [createPackageRefsDocsCommand({ cliName: 'demo-cli', refs: REFS, commandName: 'refs' })] });
+    expect(help).toContain('demo-cli refs');
+    expect(help).toContain(PACKAGE_REFS_DESCRIBE);
+    expect(help).toContain(BUILT_IN_DOCS_DESCRIBE);
   });
 });
 

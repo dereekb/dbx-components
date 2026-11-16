@@ -223,16 +223,17 @@ export function buildPackageRefsDocsIndex(refs: EmbeddedPackageRefs): PackageRef
  * Renders the docs index as markdown.
  *
  * @param refs - The embedded refs.
- * @param cliName - The CLI's binary name, used in the closing `Run:` line.
+ * @param cliName - The CLI's binary name, used in the heading and the closing `Run:` line.
+ * @param commandName - The docs command's name, used in the heading and the closing `Run:` line. Defaults to `docs`.
  * @returns The markdown index.
  */
-export function renderPackageRefsDocsIndexMarkdown(refs: EmbeddedPackageRefs, cliName: string): string {
+export function renderPackageRefsDocsIndexMarkdown(refs: EmbeddedPackageRefs, cliName: string, commandName: string = 'docs'): string {
   const rows = buildPackageRefsDocsIndex(refs).map((entry) => {
     const description = entry.description == null ? '' : ` — ${entry.description}`;
     return `- \`${entry.topic}\`: ${entry.title}${description}`;
   });
 
-  return [`# ${cliName} docs`, '', `Agent docs shipped with \`${refs.packageName}\`.`, '', ...rows, '', `Run: ${cliName} docs <topic>`, ''].join('\n');
+  return [`# ${cliName} ${commandName}`, '', `Agent docs shipped with \`${refs.packageName}\`.`, '', ...rows, '', `Run: ${cliName} ${commandName} <topic>`, ''].join('\n');
 }
 
 function packageRefDocKeys(ref: EmbeddedPackageRef): string[] {

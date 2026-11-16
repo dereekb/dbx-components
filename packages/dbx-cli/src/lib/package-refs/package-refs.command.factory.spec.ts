@@ -40,12 +40,12 @@ describe('createPackageRefsDocsCommand()', () => {
     exitSpy.mockRestore();
   });
 
-  async function run(args: readonly string[]): Promise<Error | undefined> {
+  async function run(args: readonly string[], commandName?: string): Promise<Error | undefined> {
     let captured: Error | undefined;
 
     try {
       await yargs([...args])
-        .command(createPackageRefsDocsCommand({ cliName: 'acme-cli', refs: TEST_REFS }))
+        .command(createPackageRefsDocsCommand({ cliName: 'acme-cli', refs: TEST_REFS, commandName }))
         .strict()
         .exitProcess(false)
         .fail(false)
@@ -103,5 +103,21 @@ describe('createPackageRefsDocsCommand()', () => {
     const output = JSON.parse(stdout);
     expect(output.code).toBe(DOCS_TOPIC_AMBIGUOUS_ERROR_CODE);
     expect(output.suggestion).toContain('alpha/shared, beta/shared');
+  });
+
+  describe('commandName', () => {
+    it('should register the command under the given name', async () => {
+      expect(await run(['refs'], 'refs')).toBeUndefined();
+      expect(stdout).toContain('# acme-cli refs');
+      expect(stdout).toContain('Run: acme-cli refs <topic>');
+    });
+
+    it('should name the command in the not-found suggestion', async () => {
+      const error = await run(['refs', 'nope'], 'refs');
+      expect(error?.message).toBe('process.exit:1');
+      const output = JSON.parse(stdout);
+      expect(output.code).toBe(DOCS_TOPIC_NOT_FOUND_ERROR_CODE);
+      expect(output.suggestion).toContain('Run: acme-cli refs');
+    });
   });
 });

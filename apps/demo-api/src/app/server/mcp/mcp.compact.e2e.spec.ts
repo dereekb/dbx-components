@@ -1,6 +1,6 @@
 import { type CallToolResult, type Tool } from '@modelcontextprotocol/server';
 import { buildMcpToolName, ENUM_INFO_TOOL_NAME, type EnumInfoToolListOutput, MCP_ALWAYS_LOAD_META_KEY, MCP_DOCS_READ_TOOL_NAME, MODEL_GET_TOOL_NAME } from '@dereekb/firebase-server/mcp';
-import { type DocsSearchResult } from '@dereekb/firebase-server';
+import { type DocsSearchResult } from '@dereekb/firebase';
 import { type ModelManifestInfoEnumOutput, type ModelManifestInfoModelOutput, type ModelManifestInfoOverviewOutput, type ModelManifestInfoSearchOutput } from '@dereekb/firebase/manifest';
 import { guestbookIdentity, type EntryDetailsGuestbookEntryResult } from 'demo-firebase';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoAuthorizedUserContextFactory, demoGuestbookContext, demoGuestbookEntryContext, type DemoApiAuthorizedUserTestContextFixture } from '../../../test/fixture';

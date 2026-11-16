@@ -23,6 +23,8 @@ interface InterceptedRequest {
   readonly url: string;
   readonly path: string;
   readonly authorization: string | null;
+  readonly query: URLSearchParams;
+  readonly body?: unknown;
 }
 
 type FakeRoute = unknown | ((request: InterceptedRequest) => unknown);
@@ -38,7 +40,16 @@ function interceptTrello(routes: Record<string, FakeRoute>) {
   const requests: InterceptedRequest[] = [];
   const fetchHandler: FetchHandler = async (request: Request) => {
     const url = new URL(request.url);
-    const recorded: InterceptedRequest = { method: request.method.toUpperCase(), url: request.url, path: url.pathname.replace(/^\/1/, ''), authorization: request.headers.get('Authorization') };
+    const bodyText = request.body == null ? undefined : await request.clone().text();
+    let body: unknown;
+
+    try {
+      body = bodyText == null || bodyText.length === 0 ? undefined : JSON.parse(bodyText);
+    } catch {
+      body = bodyText;
+    }
+
+    const recorded: InterceptedRequest = { method: request.method.toUpperCase(), url: request.url, path: url.pathname.replace(/^\/1/, ''), authorization: request.headers.get('Authorization'), query: url.searchParams, body };
     requests.push(recorded);
     const route = routes[`${recorded.method} ${recorded.path}`];
     const value = typeof route === 'function' ? (route as (x: InterceptedRequest) => unknown)(recorded) : route;
@@ -492,6 +503,49 @@ describe('trello-cli', () => {
       expect(query.get('attachments')).toBe('true');
       expect(query.get('checklists')).toBe('all');
       expect(query.get('members')).toBe('true');
+    });
+
+    describe('card update dates', () => {
+      async function runUpdate(args: string[]) {
+        const trello = interceptTrello({ 'PUT /cards/AbCd1234': { id: 'card-1' } });
+        const result = await run(['card', 'update', 'AbCd1234', ...args], { env: keyEnv, fetchHandler: trello.fetchHandler });
+        expect(result.json?.['ok']).toBe(true);
+        expect(trello.requests).toHaveLength(1);
+        const request = trello.requests[0];
+        expect(request.method).toBe('PUT');
+        return request;
+      }
+
+      it('should clear the due date with --due none as a query "null" and no JSON body', async () => {
+        const request = await runUpdate(['--due', 'none']);
+        expect(request.query.get('due')).toBe('null');
+        expect(request.body).toBeUndefined();
+      });
+
+      it('should clear the start date with --start none as a query "null" and no JSON body', async () => {
+        const request = await runUpdate(['--start', 'none']);
+        expect(request.query.get('start')).toBe('null');
+        expect(request.body).toBeUndefined();
+      });
+
+      it('should clear both dates in the query and keep the other fields in the JSON body', async () => {
+        const request = await runUpdate(['--due', 'none', '--start', 'none', '--name', 'Renamed']);
+        expect(request.query.get('due')).toBe('null');
+        expect(request.query.get('start')).toBe('null');
+        expect(request.body).toEqual({ name: 'Renamed' });
+      });
+
+      it('should send a set due date in the JSON body', async () => {
+        const request = await runUpdate(['--due', '2026-12-01']);
+        expect(request.query.has('due')).toBe(false);
+        expect(request.body).toEqual({ due: '2026-12-01' });
+      });
+
+      it.each(['NONE', 'null'])('should also clear the due date with --due %s', async (value) => {
+        const request = await runUpdate(['--due', value]);
+        expect(request.query.get('due')).toBe('null');
+        expect(request.body).toBeUndefined();
+      });
     });
   });
 });

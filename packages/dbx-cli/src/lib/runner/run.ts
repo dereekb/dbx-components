@@ -17,6 +17,8 @@ import { type Maybe } from '@dereekb/util';
 import { type CliEnvDefault } from '../config/env';
 import { buildCliPaths } from '../config/paths';
 import { type CliContext, getCliContext } from '../context/cli.context';
+import { buildDocsApiCommand } from '../docs-api/docs-api.command';
+import { DEFAULT_DOCS_API_COMMAND_NAME } from '../docs-api/docs-api.client';
 import { createDoctorCommand, type DoctorCheck } from '../doctor/doctor.command.factory';
 import { createEnvCommand } from '../env/env.command.factory';
 import { buildEnumInfoCommand } from '../manifest/build-enum-info-command';
@@ -163,6 +165,19 @@ export interface CreateCliInput extends CliLifecycleHooks {
    */
   readonly disableInfo?: boolean;
   /**
+   * Disable the built-in `docs` group, which reads the app API's audience-gated docs at `/api/docs`
+   * (`docs list` / `search` / `read`). It is on by default; disable it for an app whose API does not mount the
+   * docs API. An app command already named `docs` replaces it without this flag.
+   */
+  readonly disableDocs?: boolean;
+  /**
+   * Name of the built-in docs group. Defaults to `docs`. Rename it to register an app command (such as
+   * `createPackageRefsDocsCommand`) under `docs` while keeping the built-in.
+   *
+   * @default 'docs'
+   */
+  readonly docsCommandName?: Maybe<string>;
+  /**
    * The app-supplied direct-Firestore binding — `cliFirestoreBinding({ collections, models })`.
    *
    * `dbx-cli` cannot import an app's collections factory, so this one option is what makes the
@@ -281,7 +296,7 @@ export interface CreateCliInput extends CliLifecycleHooks {
  * Top-level CLI builder.
  *
  * Wires the standard yargs setup (global flags, auth/output middleware, the built-in `auth`, `env`,
- * `doctor`, and `call` commands), and returns a yargs parser ready to be `.parse()`-d.
+ * `doctor`, `call` and `docs` commands), and returns a yargs parser ready to be `.parse()`-d.
  *
  * App CLIs become a thin `index.ts` that imports `createCli`, registers any app-specific commands,
  * and calls `.parse()`.
@@ -304,6 +319,9 @@ export interface CreateCliInput extends CliLifecycleHooks {
  *   if {@link CreateCliInput.enumManifest} is provided.
  * @param input.disableInfo - When `true`, suppresses the auto-wired auth-free `info` command that
  *   otherwise registers whenever {@link CreateCliInput.modelManifest} or {@link CreateCliInput.enumManifest} is provided.
+ * @param input.disableDocs - When `true`, omits the built-in authenticated `docs` group (the app API's docs). An app
+ *   command already named {@link CreateCliInput.docsCommandName} replaces it without this flag.
+ * @param input.docsCommandName - Name of the built-in docs group (default `docs`).
  * @param input.firestore - The app-supplied direct-Firestore binding; enables `firestore-get` / `firestore-query`.
  * @param input.firestoreQueryManifest - The generated Firestore query catalog; enables `firestore-queries`.
  * @param input.dataCache - Enables the recorded dataset cache: the `cache` command group plus the `--cache` / `--refresh` global flags.
@@ -393,6 +411,16 @@ export function createCli(input: CreateCliInput): Argv {
 
   if (input.externalConnectionData) {
     builtInApiCommands.push(buildConnectionDataCommand({ cliName, config: input.externalConnectionData }));
+  }
+
+  // the app wins a name clash: a top-level app command already named like the docs group (e.g.
+  // `createPackageRefsDocsCommand`) replaces the built-in, so the name never lands in both the
+  // auth-skipping config list and the authenticated API list
+  const docsCommandName = input.docsCommandName ?? DEFAULT_DOCS_API_COMMAND_NAME;
+  const appCommandNames = new Set([...(input.configCommands ?? []), ...(input.apiCommands ?? [])].map((c) => commandName(c)));
+
+  if (input.disableDocs !== true && !appCommandNames.has(docsCommandName)) {
+    builtInApiCommands.push(buildDocsApiCommand({ cliName, commandName: docsCommandName }));
   }
 
   const actionCommands = buildActionCommands(input.actionCommands ?? []);

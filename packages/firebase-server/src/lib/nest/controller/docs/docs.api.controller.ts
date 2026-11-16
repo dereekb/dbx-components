@@ -2,7 +2,8 @@ import { Controller, Get, Header, HttpException, HttpStatus, Inject, Query, Req 
 import { type Request } from 'express';
 import { type FirebaseServerAuthenticatedRequest } from '../auth.context.server';
 import { DOCS_API_ROUTE_PREFIX } from './docs.api.config';
-import { DocsApiService, type DocsListResult, type DocsReadResult, type DocsSearchResult } from './docs.api.service';
+import { DOCS_API_READ_ID_QUERY_PARAM, DOCS_API_READ_SECTION_QUERY_PARAM, DOCS_API_SEARCH_LIMIT_QUERY_PARAM, DOCS_API_SEARCH_QUERY_PARAM, type DocsListResult, type DocsReadResult, type DocsSearchResult } from '@dereekb/firebase';
+import { DocsApiService } from './docs.api.service';
 
 /**
  * Cache-Control applied to every docs response: the content depends on the caller's audiences.
@@ -45,7 +46,7 @@ export class DocsApiController {
    */
   @Get('search')
   @Header('Cache-Control', DOCS_API_CACHE_CONTROL)
-  searchDocs(@Req() req: Request, @Query('q') q?: string, @Query('limit') limit?: string): DocsSearchResult {
+  searchDocs(@Req() req: Request, @Query(DOCS_API_SEARCH_QUERY_PARAM) q?: string, @Query(DOCS_API_SEARCH_LIMIT_QUERY_PARAM) limit?: string): DocsSearchResult {
     const parsedLimit = limit == null ? undefined : Number.parseInt(limit, 10);
     return this._run(() => this.docsService.searchDocs((req as FirebaseServerAuthenticatedRequest).auth, { query: q ?? '', limit: Number.isNaN(parsedLimit) ? undefined : parsedLimit }));
   }
@@ -60,7 +61,7 @@ export class DocsApiController {
    */
   @Get('read')
   @Header('Cache-Control', DOCS_API_CACHE_CONTROL)
-  readDoc(@Req() req: Request, @Query('id') id?: string, @Query('section') section?: string): DocsReadResult {
+  readDoc(@Req() req: Request, @Query(DOCS_API_READ_ID_QUERY_PARAM) id?: string, @Query(DOCS_API_READ_SECTION_QUERY_PARAM) section?: string): DocsReadResult {
     return this._run(() => this.docsService.readDoc((req as FirebaseServerAuthenticatedRequest).auth, { id: id ?? '', section }));
   }
 

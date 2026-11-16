@@ -1,5 +1,6 @@
 import { makeUrlSearchParams } from '@dereekb/util/fetch';
 import { type TrelloContext } from './trello.factory';
+import { makeTrelloWriteRequest } from '../trello.api.write';
 import { type TrelloCardId, type TrelloChecklistId, type TrelloCheckItemId } from '../trello.type';
 import { type AddCheckItemToChecklistBody, type AddChecklistToCardBody, type TrelloCheckItem, type TrelloChecklist, type UpdateCardCheckItemBody, type UpdateChecklistBody } from './trello.api.card.checklist.type';
 
@@ -159,13 +160,17 @@ export type UpdateCardCheckItemFunction = (input: UpdateCardCheckItemInput) => P
 /**
  * Https://developer.atlassian.com/cloud/trello/rest/api-group-cards/#api-cards-id-checkitem-idcheckitem-put.
  *
+ * A `null` `due` / `dueReminder` / `idMember` clears that field. It is sent as `?<field>=null` rather than in the JSON
+ * body, because Trello ignores a JSON `null` (see {@link makeTrelloWriteRequest}).
+ *
  * @param context - The Trello API context.
  * @returns Updates (ticks, renames, moves or reassigns) an item on a card's checklist.
  */
 export function updateCardCheckItem(context: TrelloContext): UpdateCardCheckItemFunction {
   return (input) => {
-    const { cardId, checkItemId, ...body } = input;
-    return context.fetchJson(`/cards/${cardId}/checkItem/${checkItemId}`, 'PUT', body);
+    const { cardId, checkItemId, ...params } = input;
+    const request = makeTrelloWriteRequest({ path: `/cards/${cardId}/checkItem/${checkItemId}`, params });
+    return context.fetchJson(request.path, 'PUT', request.body);
   };
 }
 

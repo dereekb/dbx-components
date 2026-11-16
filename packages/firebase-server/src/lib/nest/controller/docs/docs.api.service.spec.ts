@@ -8,7 +8,8 @@ import { MISSING_ENDPOINT_OIDC_SCOPE_ERROR_CODE } from '../api.scope';
 import { DOCS_AUDIENCE_ANY, docsAudienceReaderForRoles, type DocsApiModuleConfig, type DocsAudienceReader } from './docs.api.config';
 import { DOCS_MANIFEST_VERSION, extractDocsMarkdownSections, slugifyDocsHeading, splitDocsMarkdownSections, type DocsManifest, type DocsManifestEntry } from './docs.api.manifest';
 import { type DynamicDocsEntry, type DynamicDocsSource } from './docs.api.dynamic';
-import { DOCS_NOT_FOUND_ERROR_CODE, DOCS_SECTION_NOT_FOUND_ERROR_CODE, DocsApiService } from './docs.api.service';
+import { DOCS_NOT_FOUND_ERROR_CODE, DOCS_SECTION_NOT_FOUND_ERROR_CODE } from '@dereekb/firebase';
+import { DocsApiService } from './docs.api.service';
 
 const ANY_DOC = '---\naudience: any\n---\n# Welcome\n\nHello everyone.\n\n## Getting Around\n\nUse the menu.\n';
 const ADMIN_DOC = '---\naudience: [admin]\n---\n# Admin Runbook\n\nSecret admin steps.\n\n## Rotate Keys\n\nRotate the signing keys.\n\n### Verify\n\nCheck the JWKS.\n\n## Backups\n\nNightly.\n';

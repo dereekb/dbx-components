@@ -4,3 +4,4 @@ export * from './docs.api.dynamic';
 export * from './docs.api.service';
 export * from './docs.api.controller';
 export * from './docs.api.module';
+export * from './docs.api.compat';

@@ -84,7 +84,16 @@ export interface UpdateCardCheckItemBody {
    */
   readonly idChecklist?: TrelloChecklistId;
   readonly pos?: TrelloPosition;
+  /**
+   * ISO date string, or `null` to clear it.
+   */
   readonly due?: TrelloMaybeDateString;
+  /**
+   * Minutes before the due date to send a reminder, or `null` to clear it.
+   */
   readonly dueReminder?: Maybe<number>;
+  /**
+   * The member assigned to the item, or `null` to clear it.
+   */
   readonly idMember?: Maybe<TrelloMemberId>;
 }

@@ -1,6 +1,7 @@
 import { type AnalyticsEventData, type AnalyticsEventName } from '@dereekb/analytics';
 import { DEFAULT_MCP_ANALYTICS_EVENT_NAME, MCP_DOCS_READ_ANALYTICS_EVENT_NAME, MCP_DOCS_READ_TOOL_NAME, MCP_DOCS_SEARCH_ANALYTICS_EVENT_NAME, MODEL_GET_TOOL_NAME } from '@dereekb/firebase-server/mcp';
-import { DOCS_SECTION_NOT_FOUND_ERROR_CODE, FirebaseServerAnalyticsService } from '@dereekb/firebase-server';
+import { DOCS_SECTION_NOT_FOUND_ERROR_CODE } from '@dereekb/firebase';
+import { FirebaseServerAnalyticsService } from '@dereekb/firebase-server';
 import { type Maybe } from '@dereekb/util';
 import { guestbookIdentity } from 'demo-firebase';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserAdminContext } from '../../../test/fixture';

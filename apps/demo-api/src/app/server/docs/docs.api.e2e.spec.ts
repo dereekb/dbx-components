@@ -1,5 +1,6 @@
 import request from 'supertest';
-import { DOCS_API_CACHE_CONTROL, DOCS_NOT_FOUND_ERROR_CODE, DOCS_SECTION_NOT_FOUND_ERROR_CODE, FIREBASE_SERVER_DOCS_API_PROTECTED_PATH, type DocsListResult, type DocsReadResult, type DocsSearchResult } from '@dereekb/firebase-server';
+import { DOCS_NOT_FOUND_ERROR_CODE, DOCS_SECTION_NOT_FOUND_ERROR_CODE, type DocsListResult, type DocsReadResult, type DocsSearchResult } from '@dereekb/firebase';
+import { DOCS_API_CACHE_CONTROL, FIREBASE_SERVER_DOCS_API_PROTECTED_PATH } from '@dereekb/firebase-server';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoAuthorizedUserContextFactory, demoOAuthAuthorizedSuperTestContext } from '../../../test/fixture';
 import { DEMO_NOTIFICATION_TYPES_DOC_ID } from './docs.notification';
 

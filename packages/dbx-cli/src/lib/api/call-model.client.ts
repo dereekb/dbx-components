@@ -196,6 +196,45 @@ export async function getMultipleModelsOverHttpChunked<T = unknown>(input: GetMu
   return { results: mergedResults, errors: mergedErrors };
 }
 
+export interface GetApiJsonOverHttpInput {
+  /**
+   * The env's API base URL — carries the `/api` prefix. A trailing slash is trimmed.
+   */
+  readonly apiBaseUrl: string;
+  /**
+   * Path under the base URL, query string included — e.g. `docsApiReadPath({ id })`.
+   */
+  readonly path: string;
+  readonly accessToken: string;
+  /**
+   * Prefixes the error message, e.g. `docs read guestbook/signing failed`.
+   */
+  readonly errorPrefix: string;
+  /**
+   * Custom fetch implementation for tests.
+   */
+  readonly fetcher?: typeof fetch;
+}
+
+/**
+ * Sends a bearer-authenticated `GET <apiBaseUrl><path>` and parses the JSON response.
+ *
+ * Goes through the same traced transport as the model routes, so `--verbose` and `--timeout` apply. A non-2xx
+ * response throws a {@link CliHttpError} carrying the HTTP status and the server's `code` as `serverCode`.
+ *
+ * @param input - The base URL, path, access token, error prefix and optional fetch override.
+ * @returns The parsed JSON response body cast to `T`.
+ */
+export async function getApiJsonOverHttp<T = unknown>(input: GetApiJsonOverHttpInput): Promise<T> {
+  return requestJson<T>({
+    method: 'GET',
+    url: `${trimSlash(input.apiBaseUrl)}${input.path}`,
+    accessToken: input.accessToken,
+    fetcher: input.fetcher,
+    errorPrefix: input.errorPrefix
+  });
+}
+
 interface RequestJsonInput {
   readonly method: 'GET' | 'POST';
   readonly url: string;

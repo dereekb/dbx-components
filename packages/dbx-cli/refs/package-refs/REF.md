@@ -1,6 +1,6 @@
 ---
 name: package-refs
-description: "How a package ships its own agent docs (dbx-claude refs) inside its npm package, so the doc an agent reads matches the installed version. Covers the layout (`refs/<name>/REF.md` plus flat `references/<doc>.md` sub-docs), the `package.json` `dbxClaude.refs` declaration (only `name` + `triggers`; packages can only suggest), the rollup asset line, embedding the same files in a CLI bundle with `?raw` imports and an esbuild `.md` text loader, the shared `<cli> docs [topic]` command (`createPackageRefsDocsCommand`), the `validatePackageRefs` spec, how dbx-claude discovers and resolves package refs (`references.packages`, precedence, ids, shadowing), and moving a bundled dbx-claude ref into its package. Ships with `@dereekb/dbx-cli`."
+description: "How a package ships its own agent docs (dbx-claude refs) inside its npm package, so the doc an agent reads matches the installed version. Covers the layout (`refs/<name>/REF.md` plus flat `references/<doc>.md` sub-docs), the `package.json` `dbxClaude.refs` declaration (only `name` + `triggers`; packages can only suggest), the rollup asset line, embedding the same files in a CLI bundle with `?raw` imports and an esbuild `.md` text loader, the shared `<cli> docs [topic]` command (`createPackageRefsDocsCommand`, renamable with `commandName` because `runCli` app CLIs reserve `docs` for the app API's docs), the `validatePackageRefs` spec, how dbx-claude discovers and resolves package refs (`references.packages`, precedence, ids, shadowing), and moving a bundled dbx-claude ref into its package. Ships with `@dereekb/dbx-cli`."
 ---
 
 # Package-shipped refs
@@ -108,11 +108,19 @@ A package CLI embeds the same files, so a single-file CLI download carries its d
    const configCommands = [AUTH_COMMAND, CONFIG_COMMAND, outputCommand, createPackageRefsDocsCommand({ cliName: MSGRAPH_CLI_NAME, refs: MSGRAPH_CLI_PACKAGE_REFS })];
    ```
 
+   `commandName` (default `docs`, `DEFAULT_PACKAGE_REFS_DOCS_COMMAND_NAME`) renames the command; the index heading
+   and the `Run:` hints follow it.
+
 `<cli> docs` prints a markdown index; `<cli> docs <ref>` prints REF.md verbatim (frontmatter
 included, byte-identical to what dbx-claude serves); `<cli> docs <ref>/<doc>` prints a sub-doc, and a
 bare `<doc>` works when exactly one ref has it. `--json` wraps either in the `{ ok, data }` envelope.
 Errors: `DOCS_TOPIC_NOT_FOUND` (unknown topic) and `DOCS_TOPIC_AMBIGUOUS` (a bare doc two refs share);
 both list the topics in `suggestion`.
+
+In an app CLI built with `runCli` / `createCli`, `docs` is the built-in, authenticated group that reads the app
+API's docs (`docs list | search | read`). Register package refs there as `createPackageRefsDocsCommand({ cliName,
+refs, commandName: 'refs' })` to keep both. An app command named `docs` still works: the built-in steps aside (or
+rename it with `runCli({ docsCommandName })`). Standalone yargs CLIs such as msgraph-cli and trello-cli keep `docs`.
 
 Nx's `^production` input already invalidates the CLI bundle and its tests when a REF.md changes, so
 the embedded copy cannot go stale.

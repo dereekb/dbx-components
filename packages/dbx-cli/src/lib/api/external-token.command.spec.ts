@@ -100,6 +100,26 @@ describe('buildExternalTokenCommand()', () => {
     expect((init.headers as Record<string, string>)['Authorization']).toBe('Bearer cli-access-token');
   });
 
+  it('does not name zoho-cli as the consumer in the redaction note for a non-Zoho provider', async () => {
+    await runExternalToken((async () => jsonResponse({ ...MINTED_TOKEN, providerType: 'microsoft', scopes: ['User.Read'], extra: { tenantId: 'tenant-1' } })) as unknown as typeof fetch, 'microsoft');
+
+    const parsed = JSON.parse(stdout.join(''));
+    expect(parsed.meta.note).toContain('"demo-cli external-token microsoft"');
+    expect(parsed.meta.note).not.toContain('`zoho-cli auth token-source set');
+  });
+
+  it("names the app's own provider type in the help, and no consumer CLI", async () => {
+    await yargs(['external-token', '--help'])
+      .command(buildExternalTokenCommand({ cliName: 'demo-cli', dataAdapters: { ms_graph: passthroughCliExternalConnectionDataAdapter({ dataTypes: ['mail_signature'] }) } }))
+      .exitProcess(false)
+      .parseAsync();
+
+    const help = stdout.join('');
+    expect(help).toContain('e.g. "ms_graph"');
+    expect(help).toContain('<consumer-cli> auth token-source set');
+    expect(help).not.toContain('zoho');
+  });
+
   it('redacts the token when not run as a credential process', async () => {
     await runExternalToken((async () => jsonResponse(MINTED_TOKEN)) as unknown as typeof fetch);
 
@@ -109,6 +129,7 @@ describe('buildExternalTokenCommand()', () => {
     const parsed = JSON.parse(output);
     expect(parsed.ok).toBe(true);
     expect(parsed.meta.redacted).toBe(true);
+    expect(parsed.meta.note).toContain('`<consumer-cli> auth token-source set "demo-cli external-token zoho_admin"`');
     expect(parsed.data).toEqual({
       uid: 'user-1',
       providerType: 'zoho_admin',
