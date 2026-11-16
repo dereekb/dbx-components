@@ -171,6 +171,11 @@ export type DownloadCardAttachmentFunction = (input: DownloadCardAttachmentInput
  * The configured Trello fetch automatically attaches the OAuth `Authorization` header required by Trello
  * for private file downloads.
  *
+ * Only a key + token context can download. Trello refuses an OAuth 2.0 bearer token here with a 401
+ * ("unauthorized permission requested") on both `api.trello.com` and `trello.com`, although the same token reads
+ * the attachment's metadata (verified live 2026-11-16). A bearer-mode caller downloads through a key + token context
+ * for the same member.
+ *
  * @param context - The Trello API context.
  * @returns Downloads the attachment bytes along with its metadata.
  *

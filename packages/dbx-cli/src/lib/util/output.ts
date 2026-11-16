@@ -104,6 +104,58 @@ let _secretPatterns: CliSecretPattern[] = [...DEFAULT_CLI_SECRET_PATTERNS];
 let _errorMapper: Maybe<CliErrorMapper>;
 let _verbose = false;
 let _timeoutMs: Maybe<number> = DEFAULT_CLI_HTTP_TIMEOUT_MS;
+let _outputWriter: Maybe<CliOutputWriter>;
+let _outputWarnings: string[] = [];
+
+/**
+ * Writes one rendered stdout envelope. The default calls `console.log`.
+ */
+export type CliOutputWriter = (line: string) => void;
+
+/**
+ * Replaces the writer {@link outputResult} and {@link outputError} print their envelope with, e.g. to capture output
+ * when a CLI runs in-process. Pass nothing to restore the default (`console.log`).
+ *
+ * @param writer - The writer, or nothing for the default.
+ */
+export function configureCliOutputWriter(writer?: Maybe<CliOutputWriter>): void {
+  _outputWriter = writer;
+}
+
+/**
+ * Returns the active output writer.
+ *
+ * @returns The configured writer, or the default that calls `console.log` at write time.
+ */
+export function getCliOutputWriter(): CliOutputWriter {
+  return _outputWriter ?? ((line: string) => console.log(line));
+}
+
+/**
+ * Adds process-wide warnings that every following {@link outputResult} envelope carries as `meta.warnings`, e.g. a
+ * plugin that failed to load while core commands keep working.
+ *
+ * @param warnings - The warnings to add.
+ */
+export function appendCliOutputWarnings(warnings: readonly string[]): void {
+  _outputWarnings = [..._outputWarnings, ...warnings];
+}
+
+/**
+ * Clears the warnings added with {@link appendCliOutputWarnings}.
+ */
+export function clearCliOutputWarnings(): void {
+  _outputWarnings = [];
+}
+
+/**
+ * Returns the warnings added with {@link appendCliOutputWarnings}.
+ *
+ * @returns The current warnings.
+ */
+export function getCliOutputWarnings(): readonly string[] {
+  return _outputWarnings;
+}
 
 /**
  * Configures output options from parsed CLI arguments.
@@ -526,8 +578,10 @@ export function outputResult<T>(data: T, meta?: Record<string, unknown>, options
     outputData = data;
   }
 
-  const output: CliSuccessOutput<unknown> = { ok: true, data: outputData, ...(meta ? { meta } : {}) };
-  console.log(stringifyEnvelope(output));
+  const warnings = _outputWarnings.length > 0 ? [...((meta?.['warnings'] as Maybe<string[]>) ?? []), ..._outputWarnings] : undefined;
+  const finalMeta = warnings == null ? meta : { ...meta, warnings };
+  const output: CliSuccessOutput<unknown> = { ok: true, data: outputData, ...(finalMeta ? { meta: finalMeta } : {}) };
+  getCliOutputWriter()(stringifyEnvelope(output));
 }
 
 /**
@@ -539,7 +593,7 @@ export function outputResult<T>(data: T, meta?: Record<string, unknown>, options
  */
 export function outputError(error: unknown): void {
   const output = buildErrorOutput(error);
-  console.log(stringifyEnvelope(output));
+  getCliOutputWriter()(stringifyEnvelope(output));
 }
 
 /**

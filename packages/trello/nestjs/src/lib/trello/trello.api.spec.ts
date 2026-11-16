@@ -2,7 +2,7 @@ import { Module, type DynamicModule } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { expectFail, expectFailAssertErrorType, itShouldFail } from '@dereekb/util/test';
-import { TrelloServerFetchResponseError, type TrelloBoardId, type TrelloCard, type TrelloCardId, type TrelloCommentCardActionData, type TrelloLabelId, type TrelloListId, type TrelloMember } from '@dereekb/trello';
+import { TrelloServerFetchResponseError, type TrelloBoardId, type TrelloCard, type TrelloCardId, type TrelloChecklist, type TrelloCommentCardActionData, type TrelloLabelId, type TrelloListId, type TrelloMember } from '@dereekb/trello';
 import { TrelloApi } from './trello.api';
 import { appTrelloModuleMetadata } from './trello.module';
 
@@ -65,6 +65,20 @@ describe('trello.api', () => {
       itShouldFail('with a TrelloServerFetchResponseError when the member does not exist', async () => {
         await expectFail(() => api.getMember({ memberId: NON_EXISTENT_TRELLO_ID }), expectFailAssertErrorType(TrelloServerFetchResponseError));
       });
+    });
+  });
+
+  describe('listMemberBoards()', () => {
+    it('lists the authenticated member\'s boards', async () => {
+      const boards = await api.listMemberBoards({ filter: 'open', fields: 'name,closed' });
+      expect(Array.isArray(boards)).toBe(true);
+    });
+  });
+
+  describe('searchTrello()', () => {
+    it('returns the searched model collections', async () => {
+      const result = await api.searchTrello({ query: 'test', modelTypes: ['boards'], boardsLimit: 1 });
+      expect(Array.isArray(result.boards)).toBe(true);
     });
   });
 
@@ -288,6 +302,38 @@ describe('trello.api', () => {
           });
         });
 
+        describe('comment editing', () => {
+          it('edits and deletes a comment', async () => {
+            const action = await api.addCommentToCard({ cardId, text: `comment to edit ${Date.now()}` });
+
+            const edited = await api.updateCommentOnCard({ cardId, actionId: action.id, text: 'edited comment' });
+            expect(edited.data.text).toBe('edited comment');
+
+            await api.deleteCommentOnCard({ cardId, actionId: action.id });
+            const comments = await api.listCardActions({ cardId, filter: 'commentCard' });
+            expect(comments.find((x) => x.id === action.id)).toBeUndefined();
+          });
+        });
+
+        describe('getCard() expansions', () => {
+          it('includes the requested checklists and members', async () => {
+            const card = await api.getCard({ cardId, checklists: 'all', members: true });
+            expect(Array.isArray(card.checklists)).toBe(true);
+            expect(Array.isArray(card.members)).toBe(true);
+          });
+        });
+
+        describe('removeMemberFromCard()', () => {
+          it('removes a member added to the card', async () => {
+            const me = await api.getMe();
+            await api.addMemberToCard({ cardId, memberId: me.id });
+            await api.removeMemberFromCard({ cardId, memberId: me.id });
+
+            const card = await api.getCard({ cardId });
+            expect(card.idMembers).not.toContain(me.id);
+          });
+        });
+
         describe('addCommentToCard()', () => {
           it('posts a comment and returns it as a commentCard action', async () => {
             const text = `addCommentToCard test ${Date.now()}`;
@@ -373,6 +419,61 @@ describe('trello.api', () => {
           });
         });
 
+        describe('checklists', () => {
+          let checklist: TrelloChecklist;
+
+          beforeEach(async () => {
+            checklist = await api.addChecklistToCard({ cardId, name: `checklist ${Date.now()}` });
+          });
+
+          it('round-trips a checklist and its items', async () => {
+            expect(checklist.idCard).toBe(cardId);
+
+            const first = await api.addCheckItemToChecklist({ checklistId: checklist.id, name: 'first item' });
+            const second = await api.addCheckItemToChecklist({ checklistId: checklist.id, name: 'second item', checked: true });
+            expect(first.state).toBe('incomplete');
+            expect(second.state).toBe('complete');
+
+            const ticked = await api.updateCardCheckItem({ cardId, checkItemId: first.id, state: 'complete' });
+            expect(ticked.state).toBe('complete');
+
+            const checklists = await api.listCardChecklists({ cardId });
+            const readBack = checklists.find((x) => x.id === checklist.id);
+            expect(readBack).toBeDefined();
+            expect(readBack?.checkItems?.map((x) => x.state)).toEqual(['complete', 'complete']);
+
+            const card = await api.getCard({ cardId });
+            expect(card.idChecklists).toContain(checklist.id);
+          });
+
+          it('renames the checklist with updateChecklist()', async () => {
+            const renamed = await api.updateChecklist({ checklistId: checklist.id, name: 'renamed checklist' });
+            expect(renamed.name).toBe('renamed checklist');
+
+            const fetched = await api.getChecklist({ checklistId: checklist.id });
+            expect(fetched.name).toBe('renamed checklist');
+          });
+
+          it('removes an item with deleteCheckItemFromCard()', async () => {
+            const item = await api.addCheckItemToChecklist({ checklistId: checklist.id, name: 'doomed item' });
+            await api.deleteCheckItemFromCard({ cardId, checkItemId: item.id });
+
+            const fetched = await api.getChecklist({ checklistId: checklist.id });
+            expect(fetched.checkItems ?? []).toHaveLength(0);
+          });
+
+          it('removes the checklist with deleteChecklist()', async () => {
+            await api.deleteChecklist({ checklistId: checklist.id });
+
+            const checklists = await api.listCardChecklists({ cardId });
+            expect(checklists.find((x) => x.id === checklist.id)).toBeUndefined();
+          });
+
+          itShouldFail('with a TrelloServerFetchResponseError when the checklist does not exist', async () => {
+            await expectFail(() => api.getChecklist({ checklistId: NON_EXISTENT_TRELLO_ID }), expectFailAssertErrorType(TrelloServerFetchResponseError));
+          });
+        });
+
         describe('addLabelToCard()', () => {
           describe('a label exists on the board', () => {
             let labelId: TrelloLabelId;
@@ -388,6 +489,14 @@ describe('trello.api', () => {
             it('adds the label to the card', async () => {
               const result = await api.addLabelToCard({ cardId, labelId });
               expect(result).toContain(labelId);
+            });
+
+            it('removes only that label with removeLabelFromCard()', async () => {
+              await api.addLabelToCard({ cardId, labelId });
+              await api.removeLabelFromCard({ cardId, labelId });
+
+              const card = await api.getCard({ cardId });
+              expect(card.idLabels).not.toContain(labelId);
             });
           });
         });

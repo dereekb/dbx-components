@@ -16,12 +16,16 @@
       "dependsOn": [
         "build-base",
         {
-          "projects": ["trello-nestjs"],
+          "projects": ["trello-nestjs", "trello-cli", "trello-node"],
           "target": "build-base"
+        },
+        {
+          "projects": ["trello-cli"],
+          "target": "build-bin"
         }
       ],
       "metadata": {
-        "description": "The nested case. dist/packages/trello is ONE npm package with 2 rollup entry points, not 2 packages: trello-nestjs compiles INTO this directory and is named by this package's own dist `exports`. So this target is the sole deliverable and the sole owner of the directory, and the child deliberately has no `build` of its own -- there is nothing it could publish.  What changed: the sequential `npx nx run <child>:build-base` shell-outs became dependsOn EDGES. Each of those was a separate Nx process with its own task graph, so nothing deduped and `parallel: false` was the only ordering; now it is one process, one graph, and Nx schedules it concurrently. The finalize stays this target's own command, so it runs after every entry point is built -- dependsOn does not order its own entries, which is exactly why the post-step must not be a sibling list item.  Outputs stay the whole directory, which is correct HERE precisely because this task is its only writer: the cache payload is always complete, so the restore that remove()s the directory always puts all of it back."
+        "description": "The nested case. dist/packages/trello is ONE npm package with 4 rollup entry points (the core, nestjs, cli and node), not 4 packages: trello-nestjs, trello-cli and trello-node compile INTO this directory and are named by this package's own dist `exports`. So this target is the sole deliverable and the sole owner of the directory, and the children deliberately have no `build` of their own -- there is nothing it could publish.  What changed: the sequential `npx nx run <child>:build-base` shell-outs became dependsOn EDGES. Each of those was a separate Nx process with its own task graph, so nothing deduped and `parallel: false` was the only ordering; now it is one process, one graph, and Nx schedules it concurrently. The finalize stays this target's own command, so it runs after every entry point is built -- dependsOn does not order its own entries, which is exactly why the post-step must not be a sibling list item.  Outputs stay the whole directory, which is correct HERE precisely because this task is its only writer: the cache payload is always complete, so the restore that remove()s the directory always puts all of it back."
       }
     },
     "build-base": {
@@ -45,6 +49,14 @@
           {
             "description": "run trello-nestjs tests",
             "command": "npx nx test trello-nestjs"
+          },
+          {
+            "description": "run trello-cli tests",
+            "command": "npx nx test trello-cli"
+          },
+          {
+            "description": "run trello-node tests",
+            "command": "npx nx test trello-node"
           }
         ],
         "color": true,

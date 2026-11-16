@@ -20,6 +20,7 @@ export * from './scan-helpers/scan-extract-utils.js';
 export * from './scan-helpers/firestore-model-extract-utils.js';
 export * from './output';
 export * from './package-refs';
+export * from './plugin';
 export * from './route';
 export * from './runner';
 export * from './token-source';

@@ -10,6 +10,7 @@ export type TrelloMemberId = TrelloId;
 export type TrelloLabelId = TrelloId;
 export type TrelloActionId = TrelloId;
 export type TrelloChecklistId = TrelloId;
+export type TrelloCheckItemId = TrelloId;
 export type TrelloAttachmentId = TrelloId;
 export type TrelloWebhookId = TrelloId;
 export type TrelloOrganizationId = TrelloId;
@@ -49,7 +50,9 @@ export const TRELLO_API_URL = 'https://api.trello.com/1';
  *
  * Kept apart from {@link TRELLO_API_URL}, which the legacy key+token mode uses unchanged. Trello's OAuth
  * 2.0 guides call `https://trello.com/1` while the webhooks guide uses `https://api.trello.com/1`; the
- * latter is the default here, unverified against the live server, so flipping it is a one-constant change.
+ * latter is the default here. Verified against the live server on 2026-11-16: it accepts the bearer token for
+ * reads, writes, search and uploads. Attachment downloads refuse a bearer token on both hosts (see
+ * `downloadCardAttachment`). It stays a one-constant change in case that moves.
  */
 export const TRELLO_OAUTH_API_URL = 'https://api.trello.com/1';
 

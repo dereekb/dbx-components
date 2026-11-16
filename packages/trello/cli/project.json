@@ -1,0 +1,91 @@
+{
+  "name": "trello-cli",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/trello/cli/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build-base": {
+      "dependsOn": [
+        {
+          "projects": ["trello", "trello-node"],
+          "target": "build-base"
+        },
+        {
+          "projects": ["dbx-cli", "util"],
+          "target": "build"
+        }
+      ],
+      "metadata": {
+        "description": "The @dereekb/trello/cli LIBRARY entry (rollup, inferred from rollup.config.cjs): compiles into dist/packages/trello/cli and is named by the parent's `./cli` export. An explicit edge to trello:build-base, NOT `^build`: `^build` would resolve to trello:build, which depends on this very target -- a hard cycle. trello-node is an in-family sibling entry (like zoho-cli -> zoho-nestjs), so its `build-base` is the edge too, and package.json lists it as a peer. dbx-cli and util are other families, so their ROOT `build` is the edge (the finalized copy TypeScript resolves `exports` against). package.json also lists dbx-cli's typed peers (date, firebase, model, oauth-resource, rxjs) with no source usage, as dbx-cli/test does: dbx-cli's .d.ts files import them, and an undeclared one resolves to its SOURCE through the tsconfig paths, which fails the rollup declaration pass with TS6059 (outside rootDir). dbx-cli:build already builds them. The parent's `build` aggregates this target, so the entry point has no `build` of its own."
+      }
+    },
+    "build-bin": {
+      "dependsOn": [
+        {
+          "projects": ["trello"],
+          "target": "build-base"
+        }
+      ],
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "dist/packages/trello/bin",
+        "outputFileName": "index.js",
+        "main": "packages/trello/cli/src/main.ts",
+        "tsConfig": "packages/trello/cli/tsconfig.lib.json",
+        "format": ["esm"],
+        "platform": "node",
+        "target": "node20",
+        "bundle": true,
+        "thirdParty": false,
+        "skipTypeCheck": true,
+        "declaration": false,
+        "external": ["class-validator", "class-transformer"],
+        "esbuildOptions": {
+          "banner": {
+            "js": "#!/usr/bin/env node\nimport { createRequire as __createRequire } from 'node:module';\nconst require = __createRequire(import.meta.url);"
+          },
+          "logOverride": {
+            "ignored-bare-import": "error"
+          },
+          "loader": {
+            ".md": "text"
+          }
+        },
+        "assets": []
+      },
+      "configurations": {
+        "production": {
+          "minify": true,
+          "sourcemap": false
+        }
+      },
+      "metadata": {
+        "description": "The trello-cli EXECUTABLE (the `trello-cli` bin of @dereekb/trello): src/main.ts bundled with the @dereekb/* sources inlined and npm packages left external, the package refs embedded through the `.md` text loader. It writes its own directory (dist/packages/trello/bin), so each dist directory has one writer. The edge to trello:build-base orders it after the parent's rollup, which clears dist/packages/trello."
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["default", "^production"],
+      "outputs": [],
+      "options": {
+        "commands": ["npx tsc -p packages/trello/cli/tsconfig.lib.json --noEmit", "npx tsc -p packages/trello/cli/tsconfig.spec.json --noEmit"],
+        "cwd": "{workspaceRoot}",
+        "parallel": false
+      }
+    },
+    "test": {
+      "dependsOn": ["build-base", "build-bin"],
+      "metadata": {
+        "description": "trello.cli.bundle.spec.ts runs the BUILT binary (dist/packages/trello/bin/index.js) and reads the parent's dist package.json / refs, so both entry points are built first. The nx default test.dependsOn [\"build\"] names a target this entry point does not have (see build-base) and is skipped silently."
+      }
+    }
+  }
+}
