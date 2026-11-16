@@ -1,0 +1,13 @@
+@use 'sass:map';
+@use '../../style/theming';
+
+// MARK: Mixin
+// Styles for the @dereekb/dbx-form/llm generation-flow components.
+@mixin core() {
+  .dbx-llm-flow-section {
+    display: block;
+  }
+}
+
+@mixin theme($theme-config) {
+}

@@ -10,6 +10,7 @@
   "exclude": [
     "mapbox/**",
     "calendar/**",
+    "llm/**",
     "quiz/**",
     "**/*.spec.ts",
     "vite.config.ts",

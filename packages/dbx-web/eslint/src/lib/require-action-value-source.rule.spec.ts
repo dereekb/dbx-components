@@ -42,6 +42,11 @@ describe('require-action-value-source rule', () => {
       expect(errors).toHaveLength(0);
     });
 
+    it('[dbxLlmFlowSectionRun] on the trigger element is a value source', () => {
+      const errors = lintTemplate(`<dbx-button dbxAction dbxActionButton [dbxActionHandler]="h" [dbxLlmFlowSectionRun]="kind"></dbx-button>`);
+      expect(errors).toHaveLength(0);
+    });
+
     it('no trigger present is out of scope', () => {
       const errors = lintTemplate(`<div dbxAction [dbxActionHandler]="h"><dbx-button></dbx-button></div>`);
       expect(errors).toHaveLength(0);

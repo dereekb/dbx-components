@@ -1,0 +1,15 @@
+{
+  "name": "dbx-form-llm",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "packages/dbx-form/llm/src",
+  "prefix": "dbx",
+  "metadata": {
+    "description": "A SECONDARY ENTRY POINT of @dereekb/dbx-form, not a package of its own: it compiles into dist/packages/dbx-form/llm and is named by that package's dist `exports` under \"./quiz\".  It has no build target, and that is deliberate. ng-packagr's discoverPackages globs `**/ng-package.json` under packages/dbx-form and builds every match as a secondary entry point, so `dbx-form:build-base` ALONE already writes this directory.  A standalone build-base here was a DUPLICATE WRITER of dbx-form's dist -- and worse, running it standalone made ng-packagr treat this as a PRIMARY entry point, which falls back to the schema default `dest: \"dist\"` and wrote a stray packages/dbx-form/llm/dist/ next to the source.  Consumers still resolve correctly: @nx/js updatePaths binds \"@dereekb/dbx-form/llm\" to dist/packages/dbx-form/llm off the PARENT dependency's outputs (its \"check for secondary entrypoints\" pass), and `^build` onto a project with no `build` creates a dummy task and recurses to its dependencies, landing on `dbx-form:build`."
+  },
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Component, signal, viewChild } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { delay, of } from 'rxjs';
@@ -7,9 +7,11 @@ import { type Maybe } from '@dereekb/util';
 import { DbxActionDirective } from '../context/action.directive';
 import { DbxActionValueDirective } from './action.value.directive';
 import { DbxActionValueTriggerDirective } from './action.value.trigger.directive';
-import { type DbxActionValueGetterValueGetterFunction } from './action.value.trigger.instance';
+import { type DbxActionValueGetterValueGetterFunction, DbxActionValueGetterInstance } from './action.value.trigger.instance';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { DbxActionContextMachineAsService } from '../../action.machine';
+import { DbxActionState } from '../../action';
+import { filter, firstValueFrom } from 'rxjs';
 
 describe('DbxActionContextStoreSourceInstance.valueSnapshot()', () => {
   let source: DbxActionContextMachineAsService<number>;
@@ -168,3 +170,70 @@ describe('DbxActionValueTriggerDirective value snapshot', () => {
     expect(sourceInstance().valueSnapshot()).toBeUndefined();
   });
 });
+
+describe('DbxActionValueGetterInstance', () => {
+  let source: DbxActionContextMachineAsService<number>;
+  let sourceInstance: DbxActionContextStoreSourceInstance<number>;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({});
+    source = TestBed.runInInjectionContext(() => new DbxActionContextMachineAsService<number>());
+    sourceInstance = new DbxActionContextStoreSourceInstance(source);
+  });
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
+  });
+
+  it('should register no value snapshot when registerValueSnapshot is false', () => {
+    const valueGetter = vi.fn(() => 1);
+    const instance = new DbxActionValueGetterInstance<number>({ source: sourceInstance, valueGetter, registerValueSnapshot: false });
+    instance.init();
+
+    expect(sourceInstance.valueSnapshot()).toBeUndefined();
+    expect(valueGetter).not.toHaveBeenCalled();
+
+    instance.destroy();
+  });
+
+  it('should ready the value from the getter when triggered', async () => {
+    const valueGetter = vi.fn(() => 2);
+    const instance = new DbxActionValueGetterInstance<number>({ source: sourceInstance, valueGetter, registerValueSnapshot: false });
+    instance.init();
+
+    sourceInstance.trigger();
+    const state = await firstValueFrom(sourceInstance.actionState$.pipe(filterState(DbxActionState.VALUE_READY)));
+
+    expect(state).toBe(DbxActionState.VALUE_READY);
+    expect(valueGetter).toHaveBeenCalledTimes(1);
+
+    instance.destroy();
+  });
+
+  it('should never call a getter initialized after an earlier trigger has already resolved', async () => {
+    const firstGetter = vi.fn(() => 1);
+    const firstInstance = new DbxActionValueGetterInstance<number>({ source: sourceInstance, valueGetter: firstGetter });
+    firstInstance.init();
+
+    sourceInstance.trigger();
+    await firstValueFrom(sourceInstance.actionState$.pipe(filterState(DbxActionState.VALUE_READY)));
+    sourceInstance.resolve(1);
+    await firstValueFrom(sourceInstance.actionState$.pipe(filterState(DbxActionState.RESOLVED)));
+
+    const lateGetter = vi.fn(() => 2);
+    const lateInstance = new DbxActionValueGetterInstance<number>({ source: sourceInstance, valueGetter: lateGetter, registerValueSnapshot: false });
+    lateInstance.init();
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    expect(firstGetter).toHaveBeenCalledTimes(1);
+    expect(lateGetter).not.toHaveBeenCalled();
+
+    firstInstance.destroy();
+    lateInstance.destroy();
+  });
+});
+
+function filterState(state: DbxActionState) {
+  return filter((x: DbxActionState) => x === state);
+}

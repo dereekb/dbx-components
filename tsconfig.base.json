@@ -45,6 +45,7 @@
       "@dereekb/dbx-firebase/style-demo": ["./packages/dbx-firebase/style-demo/src/index.ts"],
       "@dereekb/dbx-form": ["./packages/dbx-form/src/index.ts"],
       "@dereekb/dbx-form/calendar": ["./packages/dbx-form/calendar/src/index.ts"],
+      "@dereekb/dbx-form/llm": ["./packages/dbx-form/llm/src/index.ts"],
       "@dereekb/dbx-form/mapbox": ["./packages/dbx-form/mapbox/src/index.ts"],
       "@dereekb/dbx-form/quiz": ["./packages/dbx-form/quiz/src/index.ts"],
       "@dereekb/dbx-form/style-demo": ["./packages/dbx-form/style-demo/src/index.ts"],
