@@ -1,3 +1,4 @@
+export * from './adapter';
 export * from './decision';
 export * from './dispatch';
 export * from './model';

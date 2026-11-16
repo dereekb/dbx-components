@@ -40,3 +40,19 @@ export function isLlmDecisionModelId(model: Maybe<LlmModelId>): boolean {
   const slug = model?.trim().toLowerCase();
   return slug == null || slug === '' ? false : slug.startsWith(`${LLM_DECISION_MODEL_NAMESPACE}/`) || LLM_BARE_DECISION_MODEL_REGEX.test(slug);
 }
+
+/**
+ * Why a model cannot be a host's decision model, or `undefined` when it can.
+ *
+ * The model slug is the ONLY thing that says which inference surface a request belongs to ({@link isLlmDecisionModelId}),
+ * and a wrong guess fails at the provider rather than with an error anyone can read: a completion slug sent to a
+ * gateway's decision route is refused by the route. So a host checks its configured decision model FREE — at readiness,
+ * or when it builds its dispatcher — instead of on every billed call.
+ *
+ * @param model - The configured decision model; absent ⇒ the host's default applies (the library ships no default
+ *   decision slug).
+ * @returns The refusal message, or `undefined`.
+ */
+export function llmDecisionModelIssue(model: Maybe<LlmModelId>): Maybe<string> {
+  return model == null || isLlmDecisionModelId(model) ? undefined : `the decision model '${model}' is not a decision model (a '${LLM_DECISION_MODEL_NAMESPACE}/…' Jev slug): a decision is served by a gateway's decision route, which refuses a completion model's slug`;
+}

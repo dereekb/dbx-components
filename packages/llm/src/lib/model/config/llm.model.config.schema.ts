@@ -122,12 +122,14 @@ export interface LlmCompletionProviderEntry extends LlmProviderEntryBase {
   readonly usageAccounting?: boolean;
   /**
    * The account-metering source for this provider's quota reads — one of the schema's meterings, or
-   * {@link LLM_PROVIDER_FACET_NONE}. Absent ⇒ the host infers one; a provider that meters nothing should say `'none'`.
+   * {@link LLM_PROVIDER_FACET_NONE}. Absent ⇒ inferred from the provider's base URL by a registered metering adapter
+   * (`llmProviderMeteringOf`); a provider that meters nothing should say `'none'`.
    */
   readonly metering?: LlmProviderStatusProviderId;
   /**
    * The decision route this provider serves decisions through — one of the schema's decision routes, or
-   * {@link LLM_PROVIDER_FACET_NONE}. Absent ⇒ derived from {@link transport}.
+   * {@link LLM_PROVIDER_FACET_NONE}. Absent ⇒ the route a registered decision adapter serves for the transport
+   * (`llmProviderDecisionRouteOf`), else `'none'`.
    */
   readonly decision?: LlmStrategyId;
 }

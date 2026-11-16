@@ -198,6 +198,79 @@ const { tiers, defaultTier } = resolveLlmModelTiers({ base: BUILT_IN_TIERS, mode
 const { providers, gaps } = resolveLlmProviderConfigs({ providers: effective.providers, schema, apiKeyOf: ({ entry }) => keys[entry.apiKeyEnv] });
 ```
 
+## Model routing
+
+A host moves a capability to another model without touching code. Routing rules map capabilities — by key or by tag —
+onto a tier or a slug, and one precedence ladder decides what each call runs on, so a dispatcher and a report that
+explains the choice read the same answer.
+
+- **Rules.** `compileLlmModelRouting({ routing, capabilities, tiers, providers, label })` compiles an
+  `LlmModelRoutingConfig` (`{ tiers?, defaultTier?, rules? }`) into an `LlmCompiledModelRouting`: capability →
+  `LlmCapabilityRoute` (`{ model, tier?, provider?, maxOutputTokens?, reasoning? }`). A rule targets `capabilities`
+  and/or `tags` and routes to a `tier` or a `model` slug (the slug wins when both are set). A capability-key match beats
+  any tag match; within a level the first rule wins. It fails loud at startup on an unknown capability, a tag no
+  capability carries, an unknown tier, an unknown provider (when you pass `providers`), or a rule with no target or no
+  route. Merge `routing.tiers` and `routing.defaultTier` into your tiers with `resolveLlmModelTiers` first.
+- **Model.** `resolveLlmCapabilityModel({ override, descriptor, route, tiers, defaultTier })`: the call's own slug >
+  its tier > the route > the capability's slug > its tier > the default tier. The result names the rung that won
+  (`source`), and the default tier is resolved first, so a bad default fails on every path.
+- **Output controls.** `resolveLlmCapabilityOutputControls(…)`: `maxOutputTokens` follows route > capability > tier
+  and is absent when nothing sets it; `reasoning` follows the call > route > capability > tier > `reasoningDefault`
+  (usually `LLM_REASONING_OFF`, `{ enabled: false }`).
+- **Provider.** `resolveLlmCapabilityProvider({ route, model, bindings, defaultProvider })`: the route's provider (a
+  host policy) > the slug's binding (`llmModelProviderBindings`, an entitlement) > your default.
+- **Vision.** `llmCapabilityVisionOf({ …, visionByModel })` — the slug a capability bills and whether it accepts images.
+
+```ts
+import { compileLlmModelRouting, llmModelProviderBindings, resolveLlmCapabilityModel, resolveLlmCapabilityProvider, resolveLlmModelTiers } from '@dereekb/llm';
+
+const { tiers, defaultTier } = resolveLlmModelTiers({ base: BUILT_IN_TIERS, modelTiers: { ...routing.tiers, ...profile?.tiers }, defaultTier: routing.defaultTier });
+const routes = compileLlmModelRouting({ routing, capabilities: [{ capability: 'reply-line', tags: ['dialog'] }, { capability: 'summarize' }], tiers, providers: ['local', 'openrouter'] });
+
+const route = routes.get('reply-line');
+const { model, source } = resolveLlmCapabilityModel({ descriptor: { tier: 'fast' }, route, tiers, defaultTier });
+const { provider } = resolveLlmCapabilityProvider({ route, model, bindings: llmModelProviderBindings(effective), defaultProvider: 'openrouter' });
+```
+
+## Adapters
+
+Provider entries (`/openai`, `/openrouter`, `/zenmux`, or your own) export adapters. Register them once, then turn
+your configured providers into strategies through them: a new transport is a new adapter, never an edited switch, and
+a provider naming one you did not register fails loud, listing the ones you did.
+
+- **Facets.** `completion` adapters are keyed by transport and mint an `LlmStrategy`; `decision` adapters are keyed by
+  decision route and mint an `LlmDecisionStrategy`. Three account facets are keyed by metering id: `metering` (an
+  `LlmProviderStatusSource`, plus the account's cost basis), `bill` (an `LlmCallBillReader`) and `credentialProbe` (an
+  `LlmCredentialProbe` that replaces a transport's generic key check).
+- **Registry.** `makeLlmAdapterRegistry(adapters)`; a second adapter for the same facet and kind throws. Read it with
+  `llmAdapterOf`, `resolveLlmAdapter` (throws naming the registered kinds), `llmAdaptersOf` and `llmAdapterKindsOf`.
+  `llmModelConfigListsOf(adapters)` gives `makeLlmModelConfigSchema` its `transports`, `meterings` and
+  `decisionRoutes`.
+- **Strategies.** `makeLlmProviderStrategies({ providers, adapters, defaultModel, maxOutputTokens, timeoutMs,
+  visionByModel, reasoningOffByModel })` builds one strategy per resolved provider (`resolveLlmProviderConfigs`),
+  registered under the provider's own name. Construction is inert.
+- **Accounts.** `resolveLlmProviderAccount({ provider, adapters })` decides which account a provider bills — its
+  declared `metering`, else the metering adapter that recognizes its base URL, else `none` — and every account fact
+  follows that one answer: cost basis, status source, credential probe and bill reader. `llmProviderBaseUrlOf` and
+  `llmProviderMeteringOf` answer the parts for a report.
+- **Decisions.** `llmProviderDecisionRouteOf` reads a provider's declared `decision`, else the route a decision adapter
+  serves for its transport, else `none` — never its base URL. `llmDecisionCapableProviders({ providers, adapters,
+  routePreference })` keeps the routed, keyed providers in your route order (default: registration order), then
+  provider order; the first is the lane's default. `makeLlmDecisionStrategies(…)` builds the decision registry (empty
+  when nothing can serve), `llmDecisionStrategyKinds(adapters)` tells a decision call record from a completion one, and
+  `llmDecisionModelIssue(model)` refuses a completion slug before any call is made.
+
+```ts
+import { llmModelConfigListsOf, makeLlmAdapterRegistry, makeLlmDecisionStrategies, makeLlmModelConfigSchema, makeLlmProviderStrategies, makeLlmStrategyRegistry, resolveLlmProviderConfigs } from '@dereekb/llm';
+
+const adapters = makeLlmAdapterRegistry(PROVIDER_ADAPTERS); // the adapters your provider entries export
+const schema = makeLlmModelConfigSchema({ ...llmModelConfigListsOf(adapters), label: 'my-app models' });
+const { providers } = resolveLlmProviderConfigs({ providers: effective.providers, schema, apiKeyOf: ({ entry }) => keys[entry.apiKeyEnv] });
+
+const strategies = makeLlmStrategyRegistry(makeLlmProviderStrategies({ providers, adapters, defaultModel, timeoutMs: 60_000 }));
+const decisions = makeLlmDecisionStrategies({ providers, adapters, routePreference: ['zenmux', 'openrouter'] });
+```
+
 ## Decisions
 
 A decision is `(state, questions) → answers`: the caller declares the answer space up front as typed questions and
