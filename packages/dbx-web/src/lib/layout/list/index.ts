@@ -3,6 +3,7 @@ export * from './grid';
 export * from './meta';
 export * from './group';
 export * from './modifier';
+export * from './selection';
 export * from './list.content.empty.component';
 export * from './list.component';
 export * from './list.directive';

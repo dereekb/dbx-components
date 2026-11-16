@@ -83,7 +83,7 @@ export class DbxValueListGridSizeDirective {
       }
       <div [gdGap]="gridConfigSignal().gap" [gdColumns]="gridConfigSignal().columns">
         @for (item of itemsSignal(); track trackByFunctionSignal()($index, item)) {
-          <dbx-anchor class="dbx-list-grid-view-item" matRipple [matRippleDisabled]="rippleDisabledOnItem(item)" [anchor]="item.anchor" [disabled]="item.disabled" (click)="onClickItem(item)">
+          <dbx-anchor class="dbx-list-grid-view-item" [class.dbx-list-grid-view-item-selected]="item.selected" [attr.aria-selected]="item.selected ? true : null" matRipple [matRippleDisabled]="rippleDisabledOnItem(item)" [anchor]="item.anchor" [disabled]="item.disabled" (click)="onClickItem(item)">
             <div dbx-injection [config]="item.config"></div>
           </dbx-anchor>
         }

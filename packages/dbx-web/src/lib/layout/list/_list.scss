@@ -704,6 +704,15 @@ $list-item-padded-min-height: 42px;
     border-bottom-color: var(--mat-divider-color);
     border-bottom-width: var(--mat-divider-width);
   }
+
+  // Selected grid item (item.selected, e.g. from dbxListItemSingleSelectionModifier). Rings the item and tints it
+  // with the list's selected tone.
+  .dbx-list-grid-view-item.dbx-list-grid-view-item-selected {
+    outline: var(--dbx-list-grid-view-item-selected-outline-width, 2px) solid var(--dbx-list-grid-view-item-selected-outline-color, var(--mat-sys-primary));
+    outline-offset: var(--dbx-list-grid-view-item-selected-outline-offset, 2px);
+    background: var(--dbx-list-grid-view-item-selected-background, var(--dbx-list-item-selected-color, var(--mat-sys-primary-container)));
+    border-radius: var(--dbx-list-grid-view-item-selected-radius, var(--mat-sys-corner-small, 4px));
+  }
 }
 
 @mixin theme($theme-config) {

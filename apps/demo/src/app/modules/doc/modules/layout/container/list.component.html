@@ -86,6 +86,18 @@
         </div>
       </doc-feature-example>
 
+      <doc-feature-example header="dbxListItemSingleSelectionModifier" hint="Adds single selection to a list. Clicking an item selects it and the list view renders it as selected. Works in normal and grid list views.">
+        <div style="height: 200px">
+          <doc-item-list dbxListItemModifier [dbxListItemSingleSelectionModifier]="{ allowDeselect: true }" #listSelection="dbxListItemSingleSelection" [state]="staticState$"></doc-item-list>
+        </div>
+        <p>Selected: {{ listSelection.store.selectedValueSignal()?.name ?? 'None' }} / Previous: {{ listSelection.store.previousValueSignal()?.name ?? 'None' }}</p>
+        <h4>Grid</h4>
+        <div style="height: 200px">
+          <doc-item-list-grid dbxListItemModifier dbxListItemSingleSelectionModifier #gridSelection="dbxListItemSingleSelection" [state]="staticState$"></doc-item-list-grid>
+        </div>
+        <p>Selected: {{ gridSelection.store.selectedValueSignal()?.name ?? 'None' }} / Previous: {{ gridSelection.store.previousValueSignal()?.name ?? 'None' }}</p>
+      </doc-feature-example>
+
       <doc-feature-example header="dbxListItemDisableRippleModifier" hint="Used to disable ripples conditionally on a per-item basis using a function.">
         <div style="height: 200px">
           <doc-complex-item-list dbxListItemModifier [dbxListItemDisableRippleModifier]="disableAllRipples" [state]="stateWithAnchors$" [dbxListItemModifier]="inputDbxListItemModifier"></doc-complex-item-list>

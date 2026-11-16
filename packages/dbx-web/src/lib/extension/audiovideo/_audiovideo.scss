@@ -1,0 +1,102 @@
+@use '../../style/theming';
+
+// MARK: Variables
+$dbx-gallery-item-radius: var(--mat-sys-corner-small, 4px);
+$dbx-gallery-item-slot-padding: var(--dbx-padding-1, 4px);
+$dbx-gallery-item-slot-min-height: 32px;
+$dbx-gallery-item-scrim-strength: 55%;
+$dbx-image-hover-preview-radius: var(--mat-sys-corner-medium, 12px);
+$dbx-image-hover-preview-padding: 4px;
+
+// MARK: Mixin
+@mixin core() {
+  // MARK: Gallery
+  .dbx-gallery-item {
+    --dbx-gallery-item-radius-resolved: var(--dbx-gallery-item-radius, #{$dbx-gallery-item-radius});
+
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: var(--dbx-gallery-item-radius-resolved);
+    background: var(--dbx-gallery-item-background, var(--mat-sys-surface-container));
+    color: var(--dbx-gallery-item-color, var(--mat-sys-on-surface));
+  }
+
+  .dbx-gallery-item-presentation {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    background: var(--dbx-gallery-item-presentation-background, var(--mat-sys-surface-container-high));
+
+    // the injected presentation fills the aspect-ratio box
+    > dbx-injection,
+    > dbx-injection > * {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  .dbx-gallery-item-slot {
+    display: flex;
+    align-items: center;
+    min-height: var(--dbx-gallery-item-slot-min-height, #{$dbx-gallery-item-slot-min-height});
+    padding: var(--dbx-gallery-item-slot-padding, #{$dbx-gallery-item-slot-padding});
+    cursor: default;
+
+    > dbx-injection {
+      display: block;
+      width: 100%;
+    }
+  }
+
+  // overlay mode draws the top and bottom slots over the presentation, on a scrim
+  .dbx-gallery-item.dbx-gallery-item-overlay {
+    .dbx-gallery-item-slot {
+      position: absolute;
+      left: 0;
+      right: 0;
+      z-index: 1;
+      color: var(--dbx-gallery-item-scrim-color, var(--mat-sys-inverse-on-surface));
+    }
+
+    .dbx-gallery-item-top {
+      top: 0;
+      background: linear-gradient(to bottom, var(--dbx-gallery-item-scrim, color-mix(in srgb, var(--mat-sys-scrim) #{$dbx-gallery-item-scrim-strength}, transparent)), transparent);
+    }
+
+    .dbx-gallery-item-bottom {
+      bottom: 0;
+      background: linear-gradient(to top, var(--dbx-gallery-item-scrim, color-mix(in srgb, var(--mat-sys-scrim) #{$dbx-gallery-item-scrim-strength}, transparent)), transparent);
+    }
+  }
+
+  .dbx-gallery-image-presentation-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  // MARK: Image Hover Preview
+  .dbx-image-hover-preview-panel {
+    pointer-events: none;
+  }
+
+  .dbx-image-hover-preview {
+    display: block;
+    padding: var(--dbx-image-hover-preview-padding, #{$dbx-image-hover-preview-padding});
+    border-radius: var(--dbx-image-hover-preview-radius, #{$dbx-image-hover-preview-radius});
+    background: var(--dbx-image-hover-preview-background, var(--mat-sys-surface-container-highest));
+    pointer-events: none;
+  }
+
+  .dbx-image-hover-preview-img {
+    display: block;
+    border-radius: inherit;
+    object-fit: contain;
+  }
+}
+
+@mixin theme($theme-config) {
+}

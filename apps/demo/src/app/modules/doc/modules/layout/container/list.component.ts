@@ -17,6 +17,7 @@ import {
   DbxListItemAnchorModifierDirective,
   DbxListItemIsSelectedModifierDirective,
   DbxListItemDisableRippleModifierDirective,
+  DbxListItemSingleSelectionModifierDirective,
   DbxListTitleGroupDirective,
   DbxListEmptyContentComponent
 } from '@dereekb/dbx-web';
@@ -57,6 +58,7 @@ import { DocItemListAccordionComponent } from '../component/item.list.accordion.
     DbxListItemAnchorModifierDirective,
     DbxListItemIsSelectedModifierDirective,
     DbxListItemDisableRippleModifierDirective,
+    DbxListItemSingleSelectionModifierDirective,
     DbxListTitleGroupDirective,
     DbxListEmptyContentComponent,
     JsonPipe

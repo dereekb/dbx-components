@@ -1,0 +1,61 @@
+<dbx-content-container>
+  <doc-feature-layout header="Audio/Video" hint="Coordinate audio/video playback, preview images on hover and show media in a gallery.">
+    <!-- Playback -->
+    <doc-feature-example header="dbxAudioVideoPlayback" hint="Registers an audio or video element with the app-wide playback store. Only one plays at a time by default.">
+      <p>Play one tone, then another. The first one pauses.</p>
+      @for (tone of tones; track tone) {
+        <div class="dbx-pb2">
+          <audio controls preload="none" dbxAudioVideoPlayback [src]="assetsPath + '/' + tone + '.mp3'"></audio>
+        </div>
+      }
+      <dbx-detail-block icon="graphic_eq" header="App-wide store">
+        <p>Playing: {{ appPlaybackStore.playingCountSignal() }} / Registered: {{ appPlaybackStore.registeredCountSignal() }}</p>
+      </dbx-detail-block>
+    </doc-feature-example>
+
+    <!-- Playback Group -->
+    <doc-feature-example header="dbxAudioVideoPlaybackGroup" hint="Provides a separate playback store for the media inside it, with its own limit and overflow mode.">
+      <div [dbxAudioVideoPlaybackGroup]="{ maxPlaying: groupMaxPlaying(), overflowMode: groupOverflowMode() }" #group="dbxAudioVideoPlaybackGroup">
+        <div class="dbx-pb3">
+          @for (option of maxPlayingOptions; track option) {
+            <dbx-button [text]="'Max ' + option" [raised]="groupMaxPlaying() === option" (buttonClick)="groupMaxPlaying.set(option)"></dbx-button>
+          }
+          <dbx-button [text]="'Mode: ' + groupOverflowMode()" stroked (buttonClick)="toggleOverflowMode()"></dbx-button>
+          <dbx-button text="Pause all" icon="pause" stroked (buttonClick)="group.store.pauseAll()"></dbx-button>
+        </div>
+        @for (tone of tones; track tone) {
+          <div class="dbx-pb2">
+            <audio controls loop preload="none" dbxAudioVideoPlayback [src]="assetsPath + '/' + tone + '.mp3'"></audio>
+          </div>
+        }
+        <video controls loop preload="metadata" width="320" dbxAudioVideoPlayback [src]="assetsPath + '/test-pattern.mp4'"></video>
+        <dbx-detail-block icon="graphic_eq" header="Group store">
+          <p>Playing: {{ group.store.playingCountSignal() }} of max {{ group.store.maxPlayingSignal() }} ({{ group.store.overflowModeSignal() }})</p>
+        </dbx-detail-block>
+      </div>
+    </doc-feature-example>
+
+    <!-- Hover Preview -->
+    <doc-feature-example header="dbxImageHoverPreview" hint="Shows a larger preview of an image while hovering it.">
+      <div class="dbx-flex-bar">
+        @for (image of images; track image) {
+          <img class="dbx-pr3" [src]="image" alt="Hover to preview" width="120" height="90" style="object-fit: cover" [dbxImageHoverPreview]="image" />
+        }
+      </div>
+    </doc-feature-example>
+
+    <!-- Gallery -->
+    <doc-feature-example header="dbx-gallery" hint="Media gallery with presentation, top and bottom slots per item, and single selection via dbxListItemSingleSelectionModifier.">
+      <div class="dbx-pb3">
+        <dbx-button text="Add 10 colors" icon="add" stroked (buttonClick)="addColors()"></dbx-button>
+        <dbx-button text="Reset" icon="restart_alt" stroked (buttonClick)="resetGallery()"></dbx-button>
+      </div>
+      <dbx-detail-block icon="check_circle" header="Selection">
+        <p>Selected: {{ selectionStore.selectedValueSignal()?.name ?? 'None' }}</p>
+        <p>Previously selected: {{ selectionStore.previousValueSignal()?.name ?? 'None' }}</p>
+        <p class="dbx-hint">Last selectionChange: {{ lastSelectionChange()?.previous?.value?.name ?? 'None' }} → {{ lastSelectionChange()?.selected?.value?.name ?? 'None' }}</p>
+      </dbx-detail-block>
+      <dbx-gallery [state]="galleryStateSignal()" [galleryConfig]="galleryConfig" dbxListItemModifier dbxListItemSingleSelectionModifier (selectionChange)="onSelectionChange($event)"></dbx-gallery>
+    </doc-feature-example>
+  </doc-feature-layout>
+</dbx-content-container>

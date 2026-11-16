@@ -53,7 +53,7 @@ export interface DbxValueListViewConfig<T, I extends DbxValueListItem<T> = DbxVa
           </div>
         }
         <dbx-anchor [anchor]="item.anchor" [disabled]="item.disabled">
-          <a mat-list-item class="dbx-list-view-item" [disabled]="item.disabled" [disableRipple]="rippleDisabledOnItem(item)" (click)="onClickItem(item)" (keydown.enter)="onClickItem(item)">
+          <a mat-list-item class="dbx-list-view-item" [disabled]="item.disabled" [activated]="!!item.selected" [disableRipple]="rippleDisabledOnItem(item)" (click)="onClickItem(item)" (keydown.enter)="onClickItem(item)">
             @if (item.icon) {
               <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
             }

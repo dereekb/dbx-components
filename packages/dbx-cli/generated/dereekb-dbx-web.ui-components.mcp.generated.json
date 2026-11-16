@@ -2871,6 +2871,211 @@
       "minimalExample": "<div class=\"dbx-timeline\">\n<div dbxTimelineItem>...</div>\n<div dbxTimelineItem [dbxTimelineItemCurrent]=\"true\" dbxColor=\"primary\">...</div>\n</div>"
     },
     {
+      "slug": "gallery",
+      "category": "list",
+      "kind": "component",
+      "selector": "dbx-gallery",
+      "className": "DbxGalleryComponent",
+      "module": "@dereekb/dbx-web",
+      "description": "Image / media gallery. Renders values as tiles in a responsive grid, where each tile has three injected slots: a\npresentation (an image, a solid color, an avatar, a clip, …) and top/bottom bars (labels, copy/delete/load buttons, …).\n\nBuilt on dbx-list, so it accepts `[state]`, emits `clickItem` and `loadMore`, and supports the `empty`/`emptyLoading` content\nslots. Add `dbxListItemModifier dbxListItemSingleSelectionModifier` to let the user select one tile.",
+      "inputs": [
+        {
+          "name": "galleryConfig",
+          "type": "Maybe<DbxGalleryConfig<T>>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "presentation",
+          "type": "Maybe<DbxGallerySlotConfig<T>>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "top",
+          "type": "Maybe<DbxGallerySlotConfig<T>>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "bottom",
+          "type": "Maybe<DbxGallerySlotConfig<T>>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "keyForValue",
+          "type": "Maybe<(value: T) => Maybe<string>>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "grid",
+          "type": "Maybe<Partial<DbxValueListGridItemViewGridSizeConfig>>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "slotMode",
+          "type": "Maybe<DbxGallerySlotMode>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "aspectRatio",
+          "type": "Maybe<string>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "hasMore",
+          "type": "Maybe<boolean>",
+          "description": "",
+          "required": false,
+          "default": "undefined"
+        },
+        {
+          "name": "disabled",
+          "type": "Maybe<boolean>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "selectionMode",
+          "type": "Maybe<DbxListSelectionMode>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "state",
+          "type": "Maybe<ObservableOrValue<S>>",
+          "description": "",
+          "required": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "clickItem",
+          "emits": "T",
+          "description": ""
+        },
+        {
+          "name": "loadMore",
+          "emits": "void",
+          "description": ""
+        }
+      ],
+      "relatedSlugs": [
+        "gallery-image-presentation",
+        "list-item-single-selection-modifier",
+        "image-hover-preview",
+        "list-grid-view"
+      ],
+      "example": "<dbx-gallery [state]=\"state$\" [galleryConfig]=\"galleryConfig\" slotMode=\"overlay\" dbxListItemModifier dbxListItemSingleSelectionModifier (selectionChange)=\"onSelect($event)\"></dbx-gallery>\n```\n\n```ts\ngalleryConfig: DbxGalleryConfig<MyItem> = {\n  presentation: (x) => (x.kind === 'image' ? { componentClass: DbxGalleryImagePresentationComponent, data: { hoverPreview: true } } : { componentClass: MyColorPresentationComponent }),\n  bottom: { componentClass: MyActionsComponent, data: { onDelete: (x: MyItem) => this.delete(x) } },\n  keyForValue: (x) => x.id\n};",
+      "minimalExample": "<dbx-gallery [state]=\"imagesState$\"></dbx-gallery>"
+    },
+    {
+      "slug": "gallery-image-presentation",
+      "category": "list",
+      "kind": "component",
+      "selector": "dbx-gallery-image-presentation",
+      "className": "DbxGalleryImagePresentationComponent",
+      "module": "@dereekb/dbx-web",
+      "description": "Built-in gallery presentation that renders a {@link DbxGalleryImageValue} as a lazily loaded image.\n\nThis is the gallery's default presentation when none is configured.",
+      "inputs": [],
+      "outputs": [],
+      "relatedSlugs": [
+        "gallery",
+        "image-hover-preview"
+      ],
+      "minimalExample": "galleryConfig: DbxGalleryConfig<DbxGalleryImageValue> = {\npresentation: { componentClass: DbxGalleryImagePresentationComponent, data: { fit: 'contain', hoverPreview: true } }\n};"
+    },
+    {
+      "slug": "image-hover-preview",
+      "category": "overlay",
+      "kind": "directive",
+      "selector": "[dbxImageHoverPreview]",
+      "className": "DbxImageHoverPreviewDirective",
+      "module": "@dereekb/dbx-web",
+      "description": "Shows a larger preview of an image in a floating panel while the pointer hovers over the host element.\n\nThe panel is positioned next to the host and does not block the pointer, so it closes as soon as the pointer leaves the host.",
+      "inputs": [
+        {
+          "name": "dbxImageHoverPreview",
+          "type": "Maybe<DbxImageHoverPreviewInput>",
+          "description": "",
+          "required": false,
+          "default": "undefined"
+        }
+      ],
+      "outputs": [],
+      "relatedSlugs": [
+        "gallery"
+      ],
+      "example": "<img [src]=\"thumbnailUrl\" [dbxImageHoverPreview]=\"{ src: fullUrl, alt: 'Photo', maxWidth: '640px', openDelay: 500 }\" />",
+      "minimalExample": "<img src=\"/assets/thumb.jpg\" [dbxImageHoverPreview]=\"'/assets/full.jpg'\" />"
+    },
+    {
+      "slug": "audio-video-playback",
+      "category": "misc",
+      "kind": "directive",
+      "selector": "audio[dbxAudioVideoPlayback], video[dbxAudioVideoPlayback]",
+      "className": "DbxAudioVideoPlaybackDirective",
+      "module": "@dereekb/dbx-web",
+      "description": "Registers an `<audio>` or `<video>` element with the nearest {@link DbxAudioVideoPlaybackStore}, so that starting it pauses\nother media once the playing limit is reached (one at a time by default).\n\nUses the app-wide store unless the element is inside a {@link DbxAudioVideoPlaybackGroupDirective}. Muted playback does not\ncount toward the limit unless `includeMuted` is set.",
+      "inputs": [
+        {
+          "name": "dbxAudioVideoPlayback",
+          "type": "Maybe<DbxAudioVideoPlaybackDirectiveConfig>",
+          "description": "",
+          "required": false,
+          "default": "undefined"
+        }
+      ],
+      "outputs": [],
+      "relatedSlugs": [
+        "audio-video-playback-group",
+        "gallery"
+      ],
+      "example": "<video controls [dbxAudioVideoPlayback]=\"{ includeMuted: true }\" #playback=\"dbxAudioVideoPlayback\" src=\"/assets/clip.mp4\"></video>\n<span>{{ playback.isPlayingSignal() ? 'Playing' : 'Stopped' }}</span>",
+      "minimalExample": "<audio controls dbxAudioVideoPlayback src=\"/assets/a.mp3\"></audio>"
+    },
+    {
+      "slug": "audio-video-playback-group",
+      "category": "misc",
+      "kind": "directive",
+      "selector": "[dbxAudioVideoPlaybackGroup]",
+      "className": "DbxAudioVideoPlaybackGroupDirective",
+      "module": "@dereekb/dbx-web",
+      "description": "Provides a scoped {@link DbxAudioVideoPlaybackStore} for the media inside it, so they are coordinated separately from the\napp-wide store and can use their own playing limit and overflow mode.",
+      "inputs": [
+        {
+          "name": "dbxAudioVideoPlaybackGroup",
+          "type": "Maybe<DbxAudioVideoPlaybackGroupConfig>",
+          "description": "",
+          "required": false,
+          "default": "undefined"
+        },
+        {
+          "name": "maxPlaying",
+          "type": "Maybe<number>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "overflowMode",
+          "type": "Maybe<DbxAudioVideoPlaybackOverflowMode>",
+          "description": "",
+          "required": false
+        }
+      ],
+      "outputs": [],
+      "relatedSlugs": [
+        "audio-video-playback"
+      ],
+      "example": "<div [dbxAudioVideoPlaybackGroup]=\"{ maxPlaying: 1, overflowMode: 'pause_newest' }\" #group=\"dbxAudioVideoPlaybackGroup\">\n  <video controls dbxAudioVideoPlayback src=\"/assets/clip.mp4\"></video>\n  <button (click)=\"group.store.pauseAll()\">Pause all</button>\n</div>",
+      "minimalExample": "<div dbxAudioVideoPlaybackGroup [maxPlaying]=\"2\">\n<audio controls dbxAudioVideoPlayback src=\"/assets/a.mp3\"></audio>\n<audio controls dbxAudioVideoPlayback src=\"/assets/b.mp3\"></audio>\n<audio controls dbxAudioVideoPlayback src=\"/assets/c.mp3\"></audio>\n</div>"
+    },
+    {
       "slug": "two-column",
       "category": "layout",
       "kind": "component",
@@ -3040,6 +3245,39 @@
       ],
       "example": "<dbx-list-view [config]=\"rowConfig\" dbxListTitleGroup></dbx-list-view>",
       "minimalExample": "<dbx-list-title-group-header></dbx-list-title-group-header>"
+    },
+    {
+      "slug": "list-item-single-selection-modifier",
+      "category": "list",
+      "kind": "directive",
+      "selector": "[dbxListItemSingleSelectionModifier]",
+      "className": "DbxListItemSingleSelectionModifierDirective",
+      "module": "@dereekb/dbx-web",
+      "description": "Adds single selection to a list. Clicking an item selects it, and the selected item is rendered as selected by the list view.\n\nUses a parent {@link DbxListSingleSelectionStore} when one is provided, so a page can share the selection with other\ncomponents; otherwise the directive gets its own store. Use alongside `dbxListItemModifier` on the list.\n\nBecause the items get a clickable anchor, the list no longer emits `clickItem` for them; use `selectionChange` instead.",
+      "inputs": [
+        {
+          "name": "dbxListItemSingleSelectionModifier",
+          "type": "Maybe<DbxListSingleSelectionConfig>",
+          "description": "",
+          "required": false,
+          "default": "undefined"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "selectionChange",
+          "emits": "DbxListSingleSelectionChange<T>",
+          "description": ""
+        }
+      ],
+      "relatedSlugs": [
+        "list",
+        "list-view",
+        "list-grid-view",
+        "gallery"
+      ],
+      "example": "<my-list [state]=\"state$\" dbxListItemModifier [dbxListItemSingleSelectionModifier]=\"{ allowDeselect: true }\" #selection=\"dbxListItemSingleSelection\"></my-list>\n<p>Selected: {{ selection.store.selectedValueSignal()?.name }}</p>",
+      "minimalExample": "<my-list [state]=\"state$\" dbxListItemModifier dbxListItemSingleSelectionModifier (selectionChange)=\"onSelectionChange($event)\"></my-list>"
     },
     {
       "slug": "anchor",

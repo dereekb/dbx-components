@@ -94,6 +94,12 @@ export const DOC_EXTENSION_ROUTES = [
     title: 'MCP Connect',
     detail: 'dbx-mcp-connect-button',
     ref: 'doc.extension.mcp'
+  },
+  {
+    icon: 'perm_media',
+    title: 'Audio/Video',
+    detail: 'dbxAudioVideoPlayback, dbxImageHoverPreview, dbx-gallery',
+    ref: 'doc.extension.audiovideo'
   }
 ];
 
