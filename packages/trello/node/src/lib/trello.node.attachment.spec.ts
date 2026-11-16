@@ -216,6 +216,26 @@ describe('syncTrelloCardAttachments()', () => {
     expect(existsSync(join(dir, `${trelloCardAttachmentFileName(attachments[0])}.partial`))).toBe(false);
   });
 
+  it('downloads the bytes through downloadTrelloContext and reads the attachments through trelloContext', async () => {
+    attachments = [upload(FILE_ID, 'notes.txt')];
+    const downloadedWith: string[] = [];
+    const downloadFake = fakeTrelloContext({
+      routes: {
+        [`GET /cards/${CARD_ID}/attachments/*/download/*`]: (request: FakeTrelloRequest) => {
+          downloadedWith.push(request.path);
+          return new Response('hello');
+        }
+      }
+    });
+
+    const result = await syncTrelloCardAttachments({ trelloContext: fake.trelloContext, downloadTrelloContext: downloadFake.trelloContext, cardId: CARD_ID, dir });
+
+    expect(result.entries.map((x) => x.status)).toEqual(['downloaded']);
+    expect(downloads).toEqual([]);
+    expect(downloadedWith).toHaveLength(1);
+    expect(readFileSync(join(dir, trelloCardAttachmentFileName(attachments[0])), 'utf8')).toBe('hello');
+  });
+
   it('keeps an orphan keepFile returns true for', async () => {
     const orphan = `${ORPHAN_ID}__kept.txt`;
     const dropped = `${ORPHAN_ID}__dropped.txt`;

@@ -19,4 +19,5 @@ export * from './loop/trello.cli.loop.fs';
 export * from './middleware/auth.middleware';
 export * from './plugin/trello.cli.plugin';
 export * from './util/option';
+export * from './util/download';
 export * from './util/output';

@@ -59,6 +59,14 @@ export interface TrelloCardAttachmentSync {
  */
 export interface SyncTrelloCardAttachmentsInput {
   readonly trelloContext: TrelloContext;
+  /**
+   * The context the file bytes are downloaded with. Defaults to {@link trelloContext}.
+   *
+   * Trello's attachment download endpoint refuses OAuth 2.0 bearer tokens (401 "unauthorized permission requested"),
+   * while the same token reads the attachment's metadata. A caller running on a bearer context passes a key + token
+   * context for the same member here; everything else still goes through {@link trelloContext}.
+   */
+  readonly downloadTrelloContext?: Maybe<TrelloContext>;
   readonly cardId: TrelloCardId;
   /**
    * The directory to mirror the card's uploaded attachments into. Created when missing.
@@ -119,7 +127,7 @@ export function trelloCardAttachmentFileName(attachment: Pick<TrelloAttachment, 
 export async function syncTrelloCardAttachments(input: SyncTrelloCardAttachmentsInput): Promise<TrelloCardAttachmentSync> {
   const { trelloContext, cardId, dir, keepFile } = input;
   const attachments = input.attachments ?? (await listCardAttachments(trelloContext)({ cardId }));
-  const download = downloadCardAttachment(trelloContext);
+  const download = downloadCardAttachment(input.downloadTrelloContext ?? trelloContext);
   const entries: TrelloCardAttachmentSyncEntry[] = [];
 
   await mkdir(dir, { recursive: true });

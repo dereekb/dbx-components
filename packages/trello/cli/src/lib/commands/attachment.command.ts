@@ -3,9 +3,10 @@ import { addAttachmentToCard, deleteAttachmentFromCard, downloadCardAttachment, 
 import { sanitizeTrelloFileName } from '@dereekb/trello/node';
 import { type Maybe } from '@dereekb/util';
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
-import { basename, join } from 'node:path';
+import { basename, join, sep } from 'node:path';
 import type { Argv } from 'yargs';
 import { type TrelloCliCommand } from '../context/cli.command';
+import { trelloCliDownloadError } from '../util/download';
 import { parseTrelloCliCardArg, requireTrelloCliConfirmation, withTrelloCliCardPositional } from '../util/option';
 
 const attachmentPositional = (yargs: Argv) => withTrelloCliCardPositional(yargs).positional('attachmentId', { type: 'string', demandOption: true, describe: 'The attachment id (from attachment list)' });
@@ -54,7 +55,7 @@ const addCommand: TrelloCliCommand = {
 const downloadCommand: TrelloCliCommand = {
   command: 'download <card> <attachmentId>',
   describe: 'Download an uploaded attachment to a file (stdout gets the path and byte count, never the bytes)',
-  builder: (yargs: Argv) => attachmentPositional(yargs).option('out', { type: 'string', describe: 'The file to write, or an existing directory to write into (default: the current directory)' }),
+  builder: (yargs: Argv) => attachmentPositional(yargs).option('out', { type: 'string', describe: 'The file to write, or a directory to write into: an existing one, or one ending in "/" (created when missing). Default: the current directory' }),
   handler: async (argv, ctx) => {
     const cardId = parseTrelloCliCardArg(argv['card']);
     const attachmentId = String(argv['attachmentId']);
@@ -66,16 +67,23 @@ const downloadCommand: TrelloCliCommand = {
 
     const fileName = sanitizeTrelloFileName(attachment.fileName || attachment.name);
     const out = (argv['out'] as Maybe<string>) ?? '.';
-    const isDir = await stat(out)
-      .then((x) => x.isDirectory())
-      .catch(() => false);
+    const isDir =
+      out.endsWith('/') ||
+      out.endsWith(sep) ||
+      (await stat(out)
+        .then((x) => x.isDirectory())
+        .catch(() => false));
     const path = isDir ? join(out, fileName) : out;
-    const download = await downloadCardAttachment(ctx.trelloContext)({ cardId, attachmentId, attachment });
-    const bytes = new Uint8Array(await download.arrayBuffer());
+    let bytes: Uint8Array;
 
-    if (!isDir) {
-      await mkdir(join(path, '..'), { recursive: true });
+    try {
+      const download = await downloadCardAttachment(ctx.downloadTrelloContext)({ cardId, attachmentId, attachment });
+      bytes = new Uint8Array(await download.arrayBuffer());
+    } catch (e) {
+      throw trelloCliDownloadError(e, ctx);
     }
+
+    await mkdir(isDir ? out : join(path, '..'), { recursive: true });
 
     await writeFile(path, bytes);
     ctx.output.result({ file: path, bytes: bytes.length, attachmentId, mimeType: attachment.mimeType ?? null });

@@ -1,4 +1,4 @@
-import { CliError, getCliOutputWriter } from '@dereekb/dbx-cli';
+import { CliError, appendCliOutputWarnings, getCliOutputWriter } from '@dereekb/dbx-cli';
 import {
   type ListBoardCardsInput,
   type TrelloAction,
@@ -24,6 +24,7 @@ import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import type { Argv } from 'yargs';
 import { type TrelloCliCommand } from '../context/cli.command';
 import { type TrelloCliContext } from '../context/cli.context';
+import { trelloCliAttachmentSyncWarning } from '../util/download';
 import { parseTrelloCliCardArg, parseTrelloCliListOption, withTrelloCliCardPositional } from '../util/option';
 import { type TrelloCardAttachmentSync, type TrelloCardAttachmentSyncEntry, type WriteMarkdownPreservingBlocksResult, syncTrelloCardAttachments, writeMarkdownPreservingBlocks } from '@dereekb/trello/node';
 import { trelloCliBoardStateStore } from './trello.cli.loop.fs';
@@ -248,6 +249,27 @@ export function trelloCliAttachmentSectionLines(sync: TrelloCardAttachmentSync, 
  * @param sync - The sync result.
  * @returns The sync result to print.
  */
+/**
+ * Mirrors a card's attachments for a command: metadata through the run's context, file bytes through its download
+ * context (a key + token pair in token-source mode, when one is configured). On a bearer-only run whose downloads failed,
+ * adds a `meta.warnings` entry explaining why.
+ *
+ * @param ctx - The run's context.
+ * @param cardId - The card.
+ * @param dir - The directory to mirror into.
+ * @returns The sync result.
+ */
+async function syncTrelloCliCardAttachments(ctx: TrelloCliContext, cardId: TrelloCardId, dir: string): Promise<TrelloCardAttachmentSync> {
+  const sync = await syncTrelloCardAttachments({ trelloContext: ctx.trelloContext, downloadTrelloContext: ctx.downloadTrelloContext, cardId, dir });
+  const warning = trelloCliAttachmentSyncWarning(sync, ctx);
+
+  if (warning) {
+    appendCliOutputWarnings([warning]);
+  }
+
+  return sync;
+}
+
 function trelloCliAttachmentSyncOutput(sync: TrelloCardAttachmentSync): Omit<TrelloCardAttachmentSync, 'entries'> & { readonly entries: readonly Omit<TrelloCardAttachmentSyncEntry, 'attachment'>[] } {
   return { ...sync, entries: sync.entries.map(({ attachment: _attachment, ...entry }) => entry) };
 }
@@ -285,7 +307,7 @@ const renderCommand: TrelloCliCommand = {
 
     const card = await getCard(ctx.trelloContext)({ cardId, list: true });
     const comments = commentsLimit > 0 ? await listCardActions(ctx.trelloContext)<Partial<TrelloCommentCardActionData>>({ cardId: card.id, filter: 'commentCard', limit: commentsLimit }) : [];
-    const sync = attachmentsDir == null ? undefined : await syncTrelloCardAttachments({ trelloContext: ctx.trelloContext, cardId: card.id, dir: attachmentsDir });
+    const sync = attachmentsDir == null ? undefined : await syncTrelloCliCardAttachments(ctx, card.id, attachmentsDir);
     const preservedBlocks: TrelloCardMarkdownPreservedBlock[] = [{ name: TRELLO_CLI_CARD_RENDER_NOTES_BLOCK, heading: 'Notes', placeholder: '_(notes written here are kept when the card is re-rendered with --out)_' }];
     const markdown = renderTrelloCardMarkdown({
       card,
@@ -317,7 +339,7 @@ const attachmentsSyncCommand: TrelloCliCommand = {
   builder: (yargs: Argv) => withTrelloCliCardPositional(yargs).option('dir', { type: 'string', demandOption: true, describe: 'The directory to mirror into (relative to the cwd)' }),
   handler: async (argv, ctx) => {
     const cardId = parseTrelloCliCardArg(argv['card']);
-    ctx.output.result(trelloCliAttachmentSyncOutput(await syncTrelloCardAttachments({ trelloContext: ctx.trelloContext, cardId, dir: resolve(argv['dir'] as string) })));
+    ctx.output.result(trelloCliAttachmentSyncOutput(await syncTrelloCliCardAttachments(ctx, cardId, resolve(argv['dir'] as string))));
   }
 };
 

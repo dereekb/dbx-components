@@ -47,6 +47,13 @@ npx trello-cli auth show
 npx trello-cli config set default-board https://trello.com/b/AbCd1234/my-board
 ```
 
+**Attachment downloads need a key + token.** Trello's download endpoint refuses OAuth 2.0 tokens (401
+`unauthorized permission requested`), while the same token reads, writes and uploads everything else. With a
+token source (C), also set up A or B for the **same member**: trello-cli then uses that pair for
+`attachment download`, `card attachments sync` and `card render --attachments` only. `auth show` reports it under
+`download` (with a `warning` when the pair is another member). Without a pair those downloads fail with
+`DOWNLOAD_NEEDS_KEY_TOKEN`, and the token source's cached token is kept.
+
 ## Quick Reference
 
 ### Auth, Config, Docs
@@ -155,7 +162,7 @@ trello-cli comment delete <card> <commentId> --yes
 trello-cli attachment list <card>
 trello-cli attachment add <card> --file ./shot.png [--name …] [--set-cover]
 trello-cli attachment add <card> --url https://… [--name …]
-trello-cli attachment download <card> <attachmentId> [--out <file|dir>]   # prints { file, bytes }, never the bytes
+trello-cli attachment download <card> <attachmentId> [--out <file|dir/>]  # prints { file, bytes }, never the bytes; a trailing / makes the dir
 trello-cli attachment delete <card> <attachmentId> --yes
 ```
 
@@ -222,6 +229,7 @@ stderr only, so stdout is always parseable. A plugin that failed to load adds a 
 | `BOARD_REQUIRED` | 1 | The command needs a board: pass `--board` or set `default-board`. |
 | `INVALID_ARGUMENT` | 1 | A bad card / board / list / label argument or option. |
 | `CONFIRMATION_REQUIRED` | 1 | A delete without `--yes`. |
+| `DOWNLOAD_NEEDS_KEY_TOKEN` | 1 | A token-source run tried to download an attachment with no key + token pair. Trello refuses OAuth 2.0 tokens there: set `TRELLO_API_KEY` + `TRELLO_API_TOKEN` (or `auth login`) for the same member. `card attachments sync` reports these per entry and adds a `meta.warnings` line instead. |
 | `DOCTOR_FAILED` | 1 | `doctor` found a failing check (see `data.checks`). |
 | `PLUGIN_LOAD_FAILED` | 1 | A host-built CLI with `strictPlugins` had a plugin fail to load (see `data.plugins`). |
 
@@ -331,12 +339,14 @@ From `@dereekb/trello`:
 From `@dereekb/trello/node` (node only: `node:fs`, `node:path`; no yargs or dbx-cli, safe to import from a
 library):
 
-- `syncTrelloCardAttachments({ trelloContext, cardId, dir, attachments?, keepFile? })`: mirror a card's uploads
+- `syncTrelloCardAttachments({ trelloContext, downloadTrelloContext?, cardId, dir, attachments?, keepFile? })`: mirror a card's uploads
   as `<attachmentId>__<name>`, cached by size and written through `.partial`. Each entry carries `attachment`
   (`mimeType`, the api `bytes`); entry `bytes` is the size on disk. Only `<attachmentId>__` files are ever
   removed: those of attachments no longer on the card, a renamed one's old file, and leftover `.partial`
   files. A `<file>.<suffix>` beside a current file (an agent's `.note.md`, links included) is kept, and
   `keepFile(name)` keeps anything else.
+  `downloadTrelloContext` downloads the bytes (pass a key + token context when `trelloContext` is an OAuth 2.0
+  bearer one, which Trello's download endpoint refuses).
 - `trelloCardAttachmentFileName` / `sanitizeTrelloFileName`: the local name (`fileName`, else `name`, else the
   id), sanitized; a name with nothing left becomes `attachment` (`<id>__attachment`).
 - `writeMarkdownPreservingBlocks({ path, markdown, names? })`: write a render, keeping the old file's blocks
@@ -352,6 +362,8 @@ From `@dereekb/trello/cli`:
 - `search --here` and every list / label name lookup cost one extra call to read the board.
 - `list unarchive` takes the list id: archived lists are not matched by name.
 - `card get --comments` returns at most the newest 50 comments; use `comment list --limit` for more.
+- Attachment downloads with an OAuth 2.0 token fail (see Setup). Without a key + token pair, each failed download
+  also re-mints the token once, since the bearer client retries a 401 after resetting it.
 
 ## When Uncertain
 

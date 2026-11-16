@@ -1,11 +1,12 @@
 import { CliError, buildCliTokenSourceAuthCommand } from '@dereekb/dbx-cli';
-import { type TrelloFactoryConfig, probeTrelloAuth, trelloFactory } from '@dereekb/trello';
+import { type TrelloFactoryConfig, type TrelloMemberId, probeTrelloAuth, trelloFactory } from '@dereekb/trello';
 import { type Maybe } from '@dereekb/util';
 import type { Argv } from 'yargs';
 import { trelloCliCredentialsStore, trelloCliPaths, trelloCliTokenSourceCommandConfig } from '../config/cli.config';
 import { type TrelloCliCommand } from '../context/cli.command';
 import { type TrelloCliContext } from '../context/cli.context';
 import { TRELLO_CLI_NOT_CONFIGURED_SUGGESTION } from '../middleware/auth.middleware';
+import { TRELLO_CLI_DOWNLOAD_NEEDS_KEY_TOKEN_SUGGESTION } from '../util/download';
 import { parseTrelloCliApiUrl } from '../util/option';
 import { trelloCliStderrLogger } from '../util/output';
 
@@ -39,7 +40,35 @@ export async function trelloCliAuthShowReport(ctx: TrelloCliContext): Promise<Re
       throw new CliError({ message: probe.message, code: probe.code, suggestion: 'Check the credentials: a revoked token answers 401, a token without access to the member answers 403.', data: base });
     }
 
-    result = { ...base, member: probe.member };
+    result = { ...base, member: probe.member, ...(ctx.auth.mode === 'token-source' ? { download: await trelloCliDownloadAuthReport(ctx, probe.member.id) } : {}) };
+  }
+
+  return result;
+}
+
+/**
+ * The `download` part of the `auth show` report in token-source mode: where the key + token pair attachment downloads
+ * use came from and the member it acts as, or what to configure when there is none. Never throws: the run's own
+ * credentials work, so a broken download pair is reported, not raised.
+ *
+ * @param ctx - The run's context.
+ * @param memberId - The member the token source acts as, to flag a pair for another member.
+ * @returns The report.
+ */
+async function trelloCliDownloadAuthReport(ctx: TrelloCliContext, memberId: TrelloMemberId): Promise<Record<string, unknown>> {
+  const source = ctx.auth.downloadSource;
+  let result: Record<string, unknown>;
+
+  if (source == null) {
+    result = { source: null, suggestion: TRELLO_CLI_DOWNLOAD_NEEDS_KEY_TOKEN_SUGGESTION };
+  } else {
+    const probe = await probeTrelloAuth({ trelloContext: ctx.downloadTrelloContext });
+
+    if (probe.ok) {
+      result = { source, member: probe.member, ...(probe.member.id === memberId ? {} : { warning: `The download pair acts as @${probe.member.username}, not as the token source's member. Downloads only work for cards that member can see.` }) };
+    } else {
+      result = { source, error: probe.message, code: probe.code };
+    }
   }
 
   return result;

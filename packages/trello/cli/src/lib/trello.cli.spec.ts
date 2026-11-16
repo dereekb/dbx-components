@@ -72,8 +72,8 @@ function fakeTokenSourceCommand(dir: string) {
 
   writeFileSync(
     scriptPath,
-    `const fs = require('node:fs');
-fs.appendFileSync(${JSON.stringify(runsPath)}, 'run\\n');
+    String.raw`const fs = require('node:fs');
+fs.appendFileSync(${JSON.stringify(runsPath)}, 'run\n');
 if (process.env[${JSON.stringify(DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR)}] !== '1') {
   process.stdout.write(JSON.stringify({ ok: false, error: 'not run as a credential process', code: 'NOT_CREDENTIAL_PROCESS' }));
   process.exit(1);
@@ -218,6 +218,63 @@ describe('trello-cli', () => {
 
       expect(result.json?.['data']).toMatchObject({ mode: 'token-source' });
       expect(trello.requests[0].authorization).toBe(`Bearer ${MINTED_ACCESS_TOKEN}`);
+    });
+
+    describe('attachment downloads in token-source mode', () => {
+      const CARD = '5f0000000000000000000c01';
+      const ATTACHMENT = 'a0000000000000000000a001';
+      const ATTACHMENT_ROUTE = `GET /cards/${CARD}/attachments/${ATTACHMENT}`;
+      const DOWNLOAD_ROUTE = `GET /cards/${CARD}/attachments/${ATTACHMENT}/download/notes.txt`;
+      const ATTACHMENT_JSON = { id: ATTACHMENT, name: 'notes.txt', fileName: 'notes.txt', isUpload: true, bytes: 5, mimeType: 'text/plain', url: 'https://trello.com/x' };
+
+      // Trello refuses a bearer token on the download endpoint and accepts the key + token OAuth header
+      function downloadRoute(x: InterceptedRequest) {
+        return x.authorization?.startsWith('OAuth ') ? new Response('hello') : new Response('unauthorized permission requested', { status: 401 });
+      }
+
+      it('should download with the key + token pair and read the attachment with the bearer token', async () => {
+        const source = fakeTokenSourceCommand(dir);
+        const trello = interceptTrello({ [ATTACHMENT_ROUTE]: ATTACHMENT_JSON, [DOWNLOAD_ROUTE]: downloadRoute });
+        const outDir = join(dir, 'out');
+        const result = await run(['attachment', 'download', CARD, ATTACHMENT, '--out', `${outDir}/`], { env: { TRELLO_CLI_TOKEN_COMMAND: source.command, TRELLO_API_KEY: 'key-1', TRELLO_API_TOKEN: 'token-1' }, fetchHandler: trello.fetchHandler });
+
+        expect(result.exitCode).toBe(0);
+        expect(result.json?.['data']).toMatchObject({ bytes: 5, attachmentId: ATTACHMENT });
+        expect(readFileSync(join(outDir, 'notes.txt'), 'utf8')).toBe('hello');
+        expect(trello.requests.map((x) => [x.path, x.authorization?.split(' ')[0]])).toEqual([
+          [`/cards/${CARD}/attachments/${ATTACHMENT}`, 'Bearer'],
+          [`/cards/${CARD}/attachments/${ATTACHMENT}/download/notes.txt`, 'OAuth']
+        ]);
+      });
+
+      it('should fail a bearer-only download with DOWNLOAD_NEEDS_KEY_TOKEN and keep the cached token', async () => {
+        const source = fakeTokenSourceCommand(dir);
+        const trello = interceptTrello({ [ATTACHMENT_ROUTE]: ATTACHMENT_JSON, [DOWNLOAD_ROUTE]: downloadRoute });
+        const result = await run(['attachment', 'download', CARD, ATTACHMENT, '--out', join(dir, 'out.txt')], { env: { TRELLO_CLI_TOKEN_COMMAND: source.command }, fetchHandler: trello.fetchHandler });
+
+        expect(result.exitCode).toBe(1);
+        expect(result.json?.['code']).toBe('DOWNLOAD_NEEDS_KEY_TOKEN');
+        expect(result.json?.['suggestion']).toContain('TRELLO_API_KEY');
+        expect(readFileSync(join(dir, 'config', '.tokens.json'), 'utf8')).toContain(MINTED_ACCESS_TOKEN);
+      });
+
+      it('should report the download pair and its member in auth show', async () => {
+        const source = fakeTokenSourceCommand(dir);
+        const trello = interceptTrello({ 'GET /members/me': ME });
+        const result = await run(['auth', 'show'], { env: { TRELLO_CLI_TOKEN_COMMAND: source.command, TRELLO_API_KEY: 'key-1', TRELLO_API_TOKEN: 'token-1' }, fetchHandler: trello.fetchHandler });
+
+        expect(result.json?.['data']).toMatchObject({ mode: 'token-source', download: { source: 'env (TRELLO_API_KEY + TRELLO_API_TOKEN)', member: { id: ME.id } } });
+        expect(result.json?.['data']['download']['warning']).toBeUndefined();
+      });
+
+      it('should say what to configure in auth show when there is no download pair', async () => {
+        const source = fakeTokenSourceCommand(dir);
+        const trello = interceptTrello({ 'GET /members/me': ME });
+        const result = await run(['auth', 'show'], { env: { TRELLO_CLI_TOKEN_COMMAND: source.command }, fetchHandler: trello.fetchHandler });
+
+        expect(result.json?.['data']['download']).toMatchObject({ source: null });
+        expect(result.json?.['data']['download']['suggestion']).toContain('TRELLO_API_KEY');
+      });
     });
   });
 

@@ -34,6 +34,14 @@ export interface TrelloCliAuthInfo {
    * Where the credentials came from, e.g. `env`, `config`, `flag`, or `token-source "dev" (config)`.
    */
   readonly source: string;
+  /**
+   * Where the key + token pair attachment downloads use came from, in `token-source` mode.
+   *
+   * Trello's attachment download endpoint refuses OAuth 2.0 bearer tokens, so a token-source run also picks up a
+   * configured pair (`TRELLO_API_KEY` + `TRELLO_API_TOKEN`, then the `auth login` pair) for downloads only. Unset when
+   * no pair is configured, and in the other modes, where downloads use the run's own credentials.
+   */
+  readonly downloadSource?: Maybe<string>;
 }
 
 /**
@@ -64,6 +72,11 @@ export interface TrelloCliContext {
    * run has no credentials (only possible for a `requires: 'none'` command).
    */
   readonly trelloContext: TrelloContext;
+  /**
+   * The context attachment bytes are downloaded with: the key + token pair of {@link TrelloCliAuthInfo.downloadSource}
+   * when one is set, else {@link trelloContext}. Use it for `downloadCardAttachment` / `syncTrelloCardAttachments`.
+   */
+  readonly downloadTrelloContext: TrelloContext;
   readonly auth: TrelloCliAuthInfo;
   /**
    * The board in effect (an id or shortLink), or undefined when none is set.
@@ -107,6 +120,10 @@ export interface CreateTrelloCliContextConfig {
    * The authenticated context, or undefined when the run has no credentials.
    */
   readonly trelloContext?: Maybe<TrelloContext>;
+  /**
+   * The context attachment downloads use. Defaults to {@link trelloContext}.
+   */
+  readonly downloadTrelloContext?: Maybe<TrelloContext>;
   /**
    * The error {@link TrelloCliContext.trelloContext} throws when there is no context. Defaults to a `NOT_CONFIGURED`.
    */
@@ -163,6 +180,9 @@ export function createTrelloCliContext(config: CreateTrelloCliContextConfig): Tr
     cliName,
     get trelloContext() {
       return requireTrelloContext();
+    },
+    get downloadTrelloContext() {
+      return config.downloadTrelloContext ?? requireTrelloContext();
     },
     auth: config.auth ?? { mode: trelloContext == null ? 'none' : 'host', source: trelloContext == null ? 'none' : 'host' },
     board,

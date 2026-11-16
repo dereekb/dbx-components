@@ -27,6 +27,10 @@ export interface TrelloCliGlobalArgs {
  */
 export interface TrelloCliResolvedAuth {
   readonly trelloContext: TrelloContext;
+  /**
+   * The key + token context attachment downloads use, in `token-source` mode when a pair is configured.
+   */
+  readonly downloadTrelloContext?: Maybe<TrelloContext>;
   readonly auth: TrelloCliAuthInfo;
   /**
    * The token source minting the bearer token, in `token-source` mode.
@@ -58,11 +62,47 @@ export interface ResolveTrelloCliAuthInput {
 }
 
 /**
+ * A key + token pair found by {@link findTrelloCliKeyTokenPair}.
+ */
+interface TrelloCliKeyTokenPair {
+  readonly config: TrelloConfig;
+  readonly source: string;
+}
+
+/**
+ * Finds a key + token pair: `TRELLO_API_KEY` + `TRELLO_API_TOKEN`, then the pair saved by `auth login`.
+ *
+ * @param env - The environment to read.
+ * @param paths - The CLI's paths, locating the saved pair.
+ * @param apiUrl - The `--api-url` override, if any.
+ * @returns The pair as a Trello config plus where it came from, or undefined when none is configured.
+ */
+async function findTrelloCliKeyTokenPair(env: NodeJS.ProcessEnv, paths: CliPaths, apiUrl: Maybe<string>): Promise<Maybe<TrelloCliKeyTokenPair>> {
+  const withApiUrl = apiUrl ? { apiUrl } : {};
+  const envKey = env[TRELLO_API_KEY_ENV_VAR]?.trim();
+  const envToken = env[TRELLO_API_TOKEN_ENV_VAR]?.trim();
+  let result: Maybe<TrelloCliKeyTokenPair>;
+
+  if (envKey && envToken) {
+    result = { config: { apiKey: envKey, apiToken: envToken, ...withApiUrl }, source: `env (${TRELLO_API_KEY_ENV_VAR} + ${TRELLO_API_TOKEN_ENV_VAR})` };
+  } else {
+    const saved = await trelloCliCredentialsStore(paths).read();
+
+    if (saved?.apiKey && saved.apiToken) {
+      result = { config: { apiKey: saved.apiKey, apiToken: saved.apiToken, ...withApiUrl }, source: 'saved (auth login)' };
+    }
+  }
+
+  return result;
+}
+
+/**
  * Resolves the run's credentials. The first match wins.
  *
  * 1. the active token source (`--token-source`, `TRELLO_CLI_TOKEN_SOURCE`, `TRELLO_CLI_TOKEN_COMMAND`, the saved
  *    selection): an OAuth bearer token minted by `<app-cli> external-token trello`. A 401 clears its cached token and
- *    retries once.
+ *    retries once. Trello's attachment download endpoint refuses OAuth 2.0 tokens, so a key + token pair found as in
+ *    step 2 is also picked up, for attachment downloads only (`downloadTrelloContext`).
  * 2. `TRELLO_API_KEY` + `TRELLO_API_TOKEN`, then the pair saved by `auth login` (`credentials.json`, mode 0600).
  *
  * @param input - The arguments, env, paths and client overrides.
@@ -91,30 +131,21 @@ export async function resolveTrelloCliAuth(input: ResolveTrelloCliAuthInput = {}
       { resetAccessToken: () => tokenSource.resetToken() }
     );
     const { trelloContext } = factory({ accessTokenProvider, ...withApiUrl });
-    result = { trelloContext, tokenSource, auth: { mode: 'token-source', source: `token-source ${resolver.originLabel(active)}` } };
+    const downloadPair = await findTrelloCliKeyTokenPair(env, paths, apiUrl);
+    result = {
+      trelloContext,
+      tokenSource,
+      downloadTrelloContext: downloadPair ? factory(downloadPair.config).trelloContext : undefined,
+      auth: { mode: 'token-source', source: `token-source ${resolver.originLabel(active)}`, downloadSource: downloadPair?.source }
+    };
   } else {
-    const envKey = env[TRELLO_API_KEY_ENV_VAR]?.trim();
-    const envToken = env[TRELLO_API_TOKEN_ENV_VAR]?.trim();
-    let config: Maybe<TrelloConfig>;
-    let source: Maybe<string>;
+    const pair = await findTrelloCliKeyTokenPair(env, paths, apiUrl);
 
-    if (envKey && envToken) {
-      config = { apiKey: envKey, apiToken: envToken, ...withApiUrl };
-      source = `env (${TRELLO_API_KEY_ENV_VAR} + ${TRELLO_API_TOKEN_ENV_VAR})`;
-    } else {
-      const saved = await trelloCliCredentialsStore(paths).read();
-
-      if (saved?.apiKey && saved.apiToken) {
-        config = { apiKey: saved.apiKey, apiToken: saved.apiToken, ...withApiUrl };
-        source = 'saved (auth login)';
-      }
-    }
-
-    if (config == null || source == null) {
+    if (pair == null) {
       throw new CliError({ message: 'No Trello credentials are configured.', code: 'NOT_CONFIGURED', suggestion: TRELLO_CLI_NOT_CONFIGURED_SUGGESTION });
     }
 
-    result = { trelloContext: factory(config).trelloContext, auth: { mode: 'key-token', source } };
+    result = { trelloContext: factory(pair.config).trelloContext, auth: { mode: 'key-token', source: pair.source } };
   }
 
   return result;
@@ -210,6 +241,7 @@ export function createTrelloCliContextProvider(config: CreateTrelloCliContextPro
 
     return createTrelloCliContext({
       trelloContext: resolved?.trelloContext,
+      downloadTrelloContext: resolved?.downloadTrelloContext,
       notConfiguredError,
       auth: resolved?.auth ?? { mode: 'none', source: 'none' },
       board: resolveTrelloCliBoard({ argv, configFile, env }),
