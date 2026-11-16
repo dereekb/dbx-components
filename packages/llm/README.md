@@ -37,6 +37,55 @@ These rules are enforced, not just documented:
   entry may import `@dereekb/openrouter`.
 - The browser entries compile with `types: []`, so a Node API or `process` reference fails the build's typecheck.
 
+## Strategy contract
+
+A **strategy** is one configured backend: an `LlmRequest` goes in, an `LlmCompletion` comes out, and it never parses
+the reply. `id` names the instance; `kind` names the transport (it defaults to `id`; read it with `llmStrategyKind`),
+so several instances of one transport can be registered side by side.
+
+- **Call types.** `LlmRequest` carries the prompt and capability, the per-call model, output cap and reasoning, the
+  cache split, the prompt segments, a prior thread and image attachments. `LlmCompletion` carries the text, which
+  strategy and model served it, usage and timing. `LlmDispatchResult` is a completion plus what a dispatcher adds:
+  attempts, validation errors, decode status and the reply repair. Host data rides `meta`: the library never reads it
+  and strategies echo it. `LlmRunner` is the text-in / text-out seam a strategy can call instead of its transport.
+- **Registry.** `makeLlmStrategyRegistry(seed)` answers `get(id)` and `getBy('kind', kind)` (the last registered
+  instance of that transport); `llmStrategyInstancesOfKind` lists them all. It is built on `createKeyedRegistry`, a
+  generic multi-index registry.
+- **Readiness.** Three optional seams: `healthCheck` (no network), `credentialProbe` (one free authenticated request)
+  and `providerStatus` (account windows and balance). `verifyLlmStrategies` throws when a required strategy is
+  missing or not ready; `probeLlmCredentials` and `readLlmProviderStatus` report and never throw (one status read per
+  account).
+- **Quota gate.** `evaluateLlmQuotaGate({ report })` refuses only when a measured window is above the ceiling (90% by
+  default) and fails open whenever nothing is measured.
+- **Usage and bills.** `llmUsageFrom(raw, { costBasis })` folds a provider usage block: token counts default to `0`,
+  every other field is omitted when not reported (absent is not zero), and numeric-string costs are parsed. An
+  `LlmCallBillReader` reads what a call billed, later, by its generation id.
+- **Prompt segments.** An `LlmPromptSegment` carries its exact bytes (trailing separator included) and an open
+  `origin`. `joinLlmPromptSegments` builds the sent string, `llmPromptCacheSegmentsOf` splits it for provider caching
+  (the prefix is everything before the first volatile segment), `llmPromptSegmentSpans` derives highlight spans, and
+  `isLlmPromptSegment` / `isLlmPromptSegmentArray` guard persisted payloads.
+
+```ts
+import { makeLlmStrategyRegistry, verifyLlmStrategies, type LlmStrategy } from '@dereekb/llm';
+
+const echo: LlmStrategy = {
+  id: 'echo',
+  describe: 'Replies with the prompt',
+  caching: 'none',
+  complete: async (request) => ({ text: request.prompt, strategyId: 'echo', capability: request.capability })
+};
+
+const strategies = makeLlmStrategyRegistry([echo]);
+await verifyLlmStrategies({ strategies, required: ['echo'] }); // throws when a required strategy is missing or not ready
+```
+
+```ts
+import { evaluateLlmQuotaGate, readLlmProviderStatus } from '@dereekb/llm';
+
+const report = await readLlmProviderStatus({ strategies, required: ['gateway'] });
+const verdict = evaluateLlmQuotaGate({ report }); // { allowed, reason, usedFraction? }
+```
+
 ## Utilities
 
 ### sha256Hex
