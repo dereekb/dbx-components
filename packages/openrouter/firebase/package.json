@@ -6,6 +6,7 @@
   "peerDependencies": {
     "@dereekb/date": "14.30.0",
     "@dereekb/firebase": "14.30.0",
+    "@dereekb/llm": "14.30.0",
     "@dereekb/model": "14.30.0",
     "@dereekb/openrouter": "14.30.0",
     "@dereekb/rxjs": "14.30.0",

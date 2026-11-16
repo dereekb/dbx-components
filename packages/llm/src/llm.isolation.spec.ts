@@ -95,4 +95,15 @@ describe('@dereekb/llm isolation', () => {
   it('should import its own modules relatively', () => {
     expect(importersOf(sources, isPackage('@dereekb/llm'))).toEqual([]);
   });
+
+  it('should serve the decision lane from the root and /decision entries as one copy', async () => {
+    const root = await import('./index');
+    const decision = await import('./decision');
+
+    expect(decision.LlmDecisionAnswerFaultError).toBe(root.LlmDecisionAnswerFaultError);
+    expect(decision.LlmDecisionDeclarationError).toBe(root.LlmDecisionDeclarationError);
+    expect(decision.llmChoiceQuestion).toBe(root.llmChoiceQuestion);
+    expect(Object.keys(decision).length).toBeGreaterThan(0);
+    expect(Object.keys(root)).toEqual(expect.arrayContaining(Object.keys(decision)));
+  });
 });

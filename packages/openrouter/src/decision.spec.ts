@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- this spec pins the deprecated @dereekb/openrouter decision aliases */
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
@@ -29,6 +30,15 @@ describe('@dereekb/openrouter/decision', () => {
 
     expect(entry['openRouterDecision']).toBeUndefined();
     expect(entry['systemOneCreate']).toBeUndefined();
+  });
+
+  it('should not re-export the @dereekb/llm names', async () => {
+    // The entry carries the deprecated aliases only; the new names are imported from @dereekb/llm/decision.
+    const entry: Record<string, unknown> = await import('./decision');
+
+    expect(entry['llmChoiceQuestion']).toBeUndefined();
+    expect(entry['readLlmDecisionAnswers']).toBeUndefined();
+    expect(entry['LlmDecisionAnswerFaultError']).toBeUndefined();
   });
 
   it('should keep openrouter.sdk.ts the only module importing @openrouter/sdk', () => {

@@ -1,5 +1,6 @@
+import { isLlmDecisionModelId } from '@dereekb/llm';
 import { type Maybe, mergeObjects } from '@dereekb/util';
-import { type OpenRouterModelId, isOpenRouterSystemOneModelId } from './openrouter.type';
+import { type OpenRouterModelId } from './openrouter.type';
 
 /**
  * Reasoning effort accepted by OpenRouter's `reasoning.effort`.
@@ -306,7 +307,7 @@ export function mergeOpenRouterModelConfig(configs: Maybe<OpenRouterModelConfig>
 /**
  * Result of validating an {@link OpenRouterModelConfig}.
  *
- * Also the package's general validation shape — `validateOpenRouterDecisionQuestions` and
+ * Also the package's general validation shape — `validateLlmDecisionQuestions` and
  * `validateOpenRouterDecisionRequest` report through it too, so a caller publishing a prompt can gather
  * config problems and question problems into one surface rather than branching on which produced them.
  */
@@ -364,11 +365,11 @@ export function validateOpenRouterModelConfig(config: Maybe<OpenRouterModelConfi
     // a stored prompt version is refused when it is written, rather than failing in a sweep days later
     // with an error that names neither the prompt nor the reason.
     const declaredModels = [config.model, ...(config.models ?? [])].filter(Boolean) as OpenRouterModelId[];
-    const systemOneModels = declaredModels.filter((x) => isOpenRouterSystemOneModelId(x));
+    const systemOneModels = declaredModels.filter((x) => isLlmDecisionModelId(x));
 
     if (decision) {
       declaredModels
-        .filter((x) => !isOpenRouterSystemOneModelId(x))
+        .filter((x) => !isLlmDecisionModelId(x))
         .forEach((model) => {
           errors.push(`\`${model}\` is not a System One model, and only a System One model answers a decision. Name a \`typesafe/…\` model (see DEFAULT_OPENROUTER_SYSTEM_ONE_MODEL_ID).`);
         });

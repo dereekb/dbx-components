@@ -8,6 +8,7 @@
     "@dereekb/date": "14.30.0",
     "@dereekb/firebase": "14.30.0",
     "@dereekb/firebase-server": "14.30.0",
+    "@dereekb/llm": "14.30.0",
     "@dereekb/model": "14.30.0",
     "@dereekb/nestjs": "14.30.0",
     "@dereekb/openrouter": "14.30.0",

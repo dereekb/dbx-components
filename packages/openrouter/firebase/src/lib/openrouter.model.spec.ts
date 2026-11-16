@@ -1,3 +1,4 @@
+import { llmChoiceQuestion, llmNoulQuestion, llmScoreQuestion } from '@dereekb/llm/decision';
 import { describe, expect, it } from 'vitest';
 import { type OpenRouterModelConfig } from '@dereekb/openrouter';
 import { OPENROUTER_PROMPT_VERSION_ID_DIGITS, openRouterPromptVersionId, openRouterPromptVersionNumberFromId } from './openrouter.id';
@@ -265,5 +266,57 @@ describe('openRouterResolvedPromptForVersion()', () => {
 
   it('should default a missing config to an empty object', () => {
     expect(openRouterResolvedPromptForVersion('p', { cat: new Date(), v: 1 }).config).toEqual({});
+  });
+});
+
+describe('stored decision fields', () => {
+  /**
+   * Stored literals copied from `packages/openrouter/src/lib/openrouter.decision.stored.spec.ts`, captured from the
+   * code before the decision vocabulary moved to `@dereekb/llm`. Copied rather than imported: Nx file inputs are per
+   * project.
+   */
+  const STORED_QUESTIONS_JSON =
+    '{"team":{"type":"choice","instructions":{"question":"Which team should own `ticket`?","inspect":["ticket.subject","ticket.body"]},"options":{"billing":{"what":"Charges, invoices, refunds, or subscriptions","not_for":"Anything about signing in","examples":["I was charged twice"]},"access":{"what":"Sign-in, passwords, or permissions","not_for":"Anything about money"},"other":null}},"urgency":{"type":"score","instructions":"How urgent is `ticket`?","levels":[{"what":"Nothing is blocked"},{"what":"Money or access is blocked right now","signals":["locked out"]}]},"spam":{"type":"noul","instructions":"`ticket` is unsolicited marketing rather than a real support request.","means":{"true":"the message advertises something","false":"a person is asking for help"}},"reply":{"type":"noul","instructions":"`ticket` asks for a reply."},"tone":{"type":"choice","instructions":"Which tone does `ticket.body` take?","options":{"calm":"measured and polite","upset":"frustrated or angry"}}}';
+  const STORED_STATE_JSON = '{"ticket":{"subject":"Locked out","body":"I cannot sign in since this morning."}}';
+  const STORED_ANSWERS_JSON =
+    '{"team":{"type":"choice","choice":"access","probabilities":{"billing":0.1,"access":0.85,"other":0.05},"confidence":0.8},"urgency":{"type":"score","score":1,"legend":{"0":{"what":"Nothing is blocked"},"1":{"what":"Money or access is blocked right now","signals":["locked out"]}},"probabilities":{"0":0.25,"1":0.75},"confidence":0.7},"spam":{"type":"noul","noul":0.05},"reply":{"type":"noul","noul":0.9},"tone":{"type":"choice","choice":"upset"}}';
+
+  const STORED_QUESTIONS = {
+    team: llmChoiceQuestion(
+      { question: 'Which team should own `ticket`?', inspect: ['ticket.subject', 'ticket.body'] },
+      {
+        billing: { what: 'Charges, invoices, refunds, or subscriptions', not_for: 'Anything about signing in', examples: ['I was charged twice'] },
+        access: { what: 'Sign-in, passwords, or permissions', not_for: 'Anything about money' },
+        other: null
+      }
+    ),
+    urgency: llmScoreQuestion('How urgent is `ticket`?', [{ what: 'Nothing is blocked' }, { what: 'Money or access is blocked right now', signals: ['locked out'] }]),
+    spam: llmNoulQuestion('`ticket` is unsolicited marketing rather than a real support request.', { true: 'the message advertises something', false: 'a person is asking for help' }),
+    reply: llmNoulQuestion('`ticket` asks for a reply.'),
+    tone: llmChoiceQuestion('Which tone does `ticket.body` take?', { calm: 'measured and polite', upset: 'frustrated or angry' })
+  };
+
+  it('should read stored prompt version questions as the llm-built map and write them back byte for byte', () => {
+    const back = openRouterPromptVersionConverter.mapFunctions.from({ cat: new Date(), v: 1, q: STORED_QUESTIONS_JSON } as never);
+
+    expect(back.q).toEqual(STORED_QUESTIONS);
+    expect(openRouterPromptVersionConverter.mapFunctions.to(back).q).toBe(STORED_QUESTIONS_JSON);
+  });
+
+  it('should round-trip a run task state, questions and answers byte for byte', () => {
+    const back = openRouterRunTaskConverter.mapFunctions.from({ s: 0, qat: new Date(), at: 0, pk: 'p', pv: 1, in: [], st: STORED_STATE_JSON, q: STORED_QUESTIONS_JSON, an: STORED_ANSWERS_JSON } as never);
+    const data = openRouterRunTaskConverter.mapFunctions.to(back);
+
+    expect(data.st).toBe(STORED_STATE_JSON);
+    expect(data.q).toBe(STORED_QUESTIONS_JSON);
+    expect(data.an).toBe(STORED_ANSWERS_JSON);
+  });
+
+  it('should carry the stored questions to the resolved prompt unchanged', () => {
+    const version = openRouterPromptVersionConverter.mapFunctions.from({ cat: new Date(), v: 1, q: STORED_QUESTIONS_JSON } as never);
+    const resolved = openRouterResolvedPromptForVersion('p', version);
+
+    expect(resolved.questions).toEqual(STORED_QUESTIONS);
+    expect(JSON.stringify(resolved.questions)).toBe(STORED_QUESTIONS_JSON);
   });
 });

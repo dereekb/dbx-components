@@ -1,8 +1,9 @@
+import { isLlmDecisionModelId } from '@dereekb/llm';
 import { type Maybe, filterUndefinedValues } from '@dereekb/util';
 import { type CallModelInput, type OpenResponsesResult, type OpenRouterCore, type RequestOptions, type ResponsesRequest, type StateAccessor, type Tool, ModelResult, callModel, convertToolsToAPIFormat, responsesSend, stepCountIs } from './openrouter.sdk';
 import { type OpenRouterHostedToolConfig, type OpenRouterModelConfig } from './openrouter.config';
 import { type OpenRouterPromptRequest } from './openrouter.request';
-import { type OpenRouterGenerationId, type OpenRouterModelId, type OpenRouterRunError, type OpenRouterRunUsage, isOpenRouterSystemOneModelId } from './openrouter.type';
+import { type OpenRouterGenerationId, type OpenRouterModelId, type OpenRouterRunError, type OpenRouterRunUsage } from './openrouter.type';
 
 /**
  * A model config split into the part that goes on the request and the part that controls how the
@@ -147,7 +148,7 @@ export class OpenRouterSystemOneModelOnCompletionArmError extends Error {
  * @throws {OpenRouterSystemOneModelOnCompletionArmError} When the config names a System One model.
  */
 function assertOpenRouterCompletionModel(config: Maybe<OpenRouterModelConfig>): void {
-  const model = [config?.model, ...(config?.models ?? [])].filter(Boolean).find((x) => isOpenRouterSystemOneModelId(x));
+  const model = [config?.model, ...(config?.models ?? [])].filter(Boolean).find((x) => isLlmDecisionModelId(x));
 
   if (model != null) {
     throw new OpenRouterSystemOneModelOnCompletionArmError(model);

@@ -1,17 +1,8 @@
+import { type LlmDecisionQuestions, validateLlmDecisionQuestions } from '@dereekb/llm';
 import { type FirebaseServerActionsContext, badRequestError, preconditionConflictError } from '@dereekb/firebase-server';
 import { type FirebaseAuthUserId, type FirestoreContextReference, type FirestoreModelKey, type OnCallCreateModelResult, firestoreModelId, firestoreModelKeyParentKey, getDocumentSnapshotDataTuples } from '@dereekb/firebase';
 import { type Maybe, range, runAsyncTasksForValues, unique } from '@dereekb/util';
-import {
-  type OpenRouterDecisionQuestions,
-  type OpenRouterModelConfig,
-  type OpenRouterPromptDefinition,
-  type OpenRouterPromptKey,
-  type OpenRouterPromptSeedMessage,
-  type OpenRouterTemplateReviewRecord,
-  type OpenRouterTemplateTypeKey,
-  validateOpenRouterDecisionQuestions,
-  validateOpenRouterModelConfig
-} from '@dereekb/openrouter';
+import { type OpenRouterModelConfig, type OpenRouterPromptDefinition, type OpenRouterPromptKey, type OpenRouterPromptSeedMessage, type OpenRouterTemplateReviewRecord, type OpenRouterTemplateTypeKey, validateOpenRouterModelConfig } from '@dereekb/openrouter';
 import {
   type CreateOpenRouterTemplateParams,
   type CreateOpenRouterPromptVersionParams,
@@ -122,7 +113,7 @@ function openRouterTemplateVersionContentForUpdate(version: OpenRouterPromptVers
     instructions: params.instructions === undefined ? stored.instructions : params.instructions,
     messages: params.messages === undefined ? stored.messages : openRouterSeedMessagesForParams(params.messages),
     config: params.config === undefined ? version.c : (params.config as Maybe<OpenRouterModelConfig>),
-    questions: params.questions === undefined ? stored.questions : (params.questions as Maybe<OpenRouterDecisionQuestions>)
+    questions: params.questions === undefined ? stored.questions : (params.questions as Maybe<LlmDecisionQuestions>)
   };
 }
 
@@ -529,7 +520,7 @@ export function createOpenRouterPromptVersionFactory(context: OpenRouterPromptSe
 
     return async (document: OpenRouterPromptDocument, options?: Maybe<OpenRouterPromptVersionWriteOptions>): Promise<CreateOpenRouterPromptVersionResult> => {
       const modelConfig = (config ?? undefined) as Maybe<OpenRouterModelConfig>;
-      const modelQuestions = (questions ?? undefined) as Maybe<OpenRouterDecisionQuestions>;
+      const modelQuestions = (questions ?? undefined) as Maybe<LlmDecisionQuestions>;
       const templateType: Maybe<OpenRouterTemplateTypeKey> = (await document.snapshotData())?.tt;
       let validation: { readonly valid: boolean; readonly warnings: string[]; readonly errors: string[] };
       let templateContent: Maybe<OpenRouterTemplateVersionContent>;
@@ -560,7 +551,7 @@ export function createOpenRouterPromptVersionFactory(context: OpenRouterPromptSe
       }
 
       if (modelQuestions != null && templateType == null) {
-        const questionValidation = validateOpenRouterDecisionQuestions(modelQuestions);
+        const questionValidation = validateLlmDecisionQuestions(modelQuestions);
 
         if (!questionValidation.valid) {
           throw new Error(`Cannot create a version of OpenRouterPrompt "${document.id}": ${questionValidation.errors.join(' ')}`);
@@ -659,7 +650,7 @@ export function updateOpenRouterPromptVersionFactory(context: OpenRouterPromptSe
 
     return async (document: OpenRouterPromptVersionDocument, options?: Maybe<OpenRouterPromptVersionWriteOptions>): Promise<UpdateOpenRouterPromptVersionResult> => {
       const inputConfig = config as Maybe<OpenRouterModelConfig>;
-      const inputQuestions = questions as Maybe<OpenRouterDecisionQuestions>;
+      const inputQuestions = questions as Maybe<LlmDecisionQuestions>;
       const promptKey = firestoreModelId(firestoreModelKeyParentKey(document) as FirestoreModelKey);
       const templateType: Maybe<OpenRouterTemplateTypeKey> = (await openRouterPromptCollection.documentAccessor().loadDocumentForId(promptKey).snapshotData())?.tt;
       let templateCheck: Maybe<{ readonly payload: string; readonly content: OpenRouterTemplateVersionContent; readonly warnings: string[]; readonly review: Maybe<OpenRouterTemplateReviewRecord> }>;
@@ -750,7 +741,7 @@ export function updateOpenRouterPromptVersionFactory(context: OpenRouterPromptSe
         }
 
         if (nextQuestions != null) {
-          const questionValidation = validateOpenRouterDecisionQuestions(nextQuestions);
+          const questionValidation = validateLlmDecisionQuestions(nextQuestions);
 
           if (!questionValidation.valid) {
             throw new Error(`Cannot update OpenRouterPromptVersion "${document.key}": ${questionValidation.errors.join(' ')}`);
@@ -873,7 +864,7 @@ export function seedOpenRouterPromptsFactory(context: OpenRouterPromptServerActi
         // quiet ones — an eleven-level Score looks entirely reasonable and is rejected by the route — so
         // a seed that published one would produce a prompt that resolves, validates, and then fails
         // every time it is asked.
-        const questionValidation = validateOpenRouterDecisionQuestions(definition.questions);
+        const questionValidation = validateLlmDecisionQuestions(definition.questions);
 
         if (!questionValidation.valid) {
           throw new Error(`Cannot seed OpenRouterPrompt "${promptKey}": ${questionValidation.errors.join(' ')}`);

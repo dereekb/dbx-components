@@ -1,8 +1,8 @@
+import { llmChoiceQuestion, llmNoulQuestion, llmScoreQuestion } from '@dereekb/llm';
 import { describe, expect, it } from 'vitest';
 import { OpenRouterCore } from '@openrouter/sdk/core';
 import { openRouterDecisionRequest } from './openrouter.decision';
 import { openRouterDecision } from './openrouter.decision.call';
-import { openRouterChoiceQuestion, openRouterNoulQuestion, openRouterScoreQuestion } from './openrouter.decision.question';
 import { OPENROUTER_JEV_1_13_MODEL_ID } from './openrouter.type';
 
 /**
@@ -53,7 +53,7 @@ const PROBE_STATE = {
 };
 
 const PROBE_QUESTIONS = {
-  topic: openRouterChoiceQuestion(
+  topic: llmChoiceQuestion(
     { question: 'Which team should own `ticket`?', inspect: ['ticket.subject', 'ticket.body'] },
     {
       billing: { what: 'Charges, invoices, refunds, or subscriptions', not_for: 'Order tracking or account access', examples: ['I was charged twice'] },
@@ -61,8 +61,8 @@ const PROBE_QUESTIONS = {
       other: { what: 'Anything the other options do not cover' }
     }
   ),
-  urgency: openRouterScoreQuestion('How urgent is `ticket`?', [{ what: 'No deadline is mentioned and nothing is blocked' }, { what: 'Something is inconvenient but the sender can keep working' }, { what: 'The sender names a deadline within the week' }, { what: 'Money or access is blocked right now' }]),
-  refundRequested: openRouterNoulQuestion('`ticket` asks for money to be returned.', { true: 'the sender asks for a refund or reversal', false: 'the sender asks for anything else' })
+  urgency: llmScoreQuestion('How urgent is `ticket`?', [{ what: 'No deadline is mentioned and nothing is blocked' }, { what: 'Something is inconvenient but the sender can keep working' }, { what: 'The sender names a deadline within the week' }, { what: 'Money or access is blocked right now' }]),
+  refundRequested: llmNoulQuestion('`ticket` asks for money to be returned.', { true: 'the sender asks for a refund or reversal', false: 'the sender asks for anything else' })
 } as const;
 
 describe.skipIf(!CREDENTIALS_PRESENT)('System One live probes', () => {

@@ -1,3 +1,4 @@
+import { LlmDecisionAnswerFaultError, LlmDecisionDeclarationError } from '@dereekb/llm';
 import { describe, expect, it } from 'vitest';
 import { type OpenRouterRunTask, OpenRouterRunTaskState, openRouterRunTasksReclaimableQuery, openRouterRunTasksRunnableQuery } from '@dereekb/openrouter/firebase';
 import { OpenRouterPromptResolutionError } from './openrouter.prompt.service';
@@ -187,6 +188,14 @@ describe('error extraction', () => {
 
   it('should return undefined for a primitive', () => {
     expect(openRouterErrorCode('boom')).toBeUndefined();
+  });
+
+  it('should keep the legacy stored code for a decision answer fault', () => {
+    expect(openRouterErrorCode(new LlmDecisionAnswerFaultError([{ kind: 'answer-missing', question: 'a', detail: 'no answer was returned' }]))).toBe('OpenRouterDecisionAnswerFaultError');
+  });
+
+  it('should keep the legacy stored code for a decision declaration error', () => {
+    expect(openRouterErrorCode(new LlmDecisionDeclarationError(['x']))).toBe('OpenRouterDecisionDeclarationError');
   });
 
   it('should read a message off an Error and stringify anything else', () => {

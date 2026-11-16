@@ -144,6 +144,118 @@ try {
 }
 ```
 
+## Decisions
+
+A decision is `(state, questions) → answers`: the caller declares the answer space up front as typed questions and
+a decision model (TypeSafe's Jev, served by OpenRouter and ZenMux) returns a position inside it plus a calibrated
+distribution — no prompt string and no reply text. Three primitives:
+
+| Builder | Asks | Answer |
+|---|---|---|
+| `llmChoiceQuestion(instructions, options)` | which of these options? | `choice`, one of the declared options; `probabilities` over every option summing to 1; `confidence` |
+| `llmScoreQuestion(instructions, levels)` | which level on this rubric? | a `score` that may land between two levels, the distribution, `confidence` |
+| `llmNoulQuestion(instructions, means?)` | is this true? | `noul` 0..1 — the probability is the uncertainty |
+
+A Choice is RELATIVE (something always wins, even when two options are indistinguishable); a Noul is ABSOLUTE. Ask
+"none of these fits" as a Noul beside the Choice. The question map is both the batching unit and the cost unit: the
+state is ingested once and every question is evaluated against it independently, so declare every question an input
+could need in one map.
+
+### Declaring
+
+- Every declaration surface takes a string, an object or an array (structured entries — `{ question, inspect }`,
+  `{ what, not_for, examples }`, `{ what, signals }`), carried to the wire verbatim.
+- Name state fields in backticks (`` `ticket.body` ``); `llmDecisionStatePaths` reads them back so a spec can pin
+  them.
+- `validateLlmDecisionQuestions` fails at the DECLARATION, naming the question, rather than as a 4xx about a body:
+  no questions, blank instructions, a Choice outside 1..255 options (`LLM_DECISION_CHOICE_OPTIONS_MAX`), a Score
+  outside 2..10 levels. The limits are transport limits of the decision route on every gateway. It returns
+  `LlmDecisionValidation` (`{ valid, errors, warnings }`); a builder that refuses throws
+  `LlmDecisionDeclarationError` (its `errors`, plus the `decision` key when a declared decision asked).
+
+### On the wire
+
+- `llmDecisionRequestBody({ model, state, questions })` builds exactly `{ model, state, questions }`, in that order,
+  field by field — ZenMux answers 400 to any other key, so a host-extended request cannot leak one. The bytes equal
+  OpenRouter's `/systemone` body for the same input.
+- `llmDecisionWireQuestion` is the per-question mapping (an undescribed option is an explicit `null`; a Noul with no
+  `means` omits `criteria`).
+- `isLlmDecisionModelId` is the routing guard: decision models are not in a gateway's `/models` catalog, so the id
+  (`typesafe/jev-1.13`, or bare `jev-…`) is the only discriminator.
+
+### Reading
+
+- `readLlmDecisionAnswers({ questions, raw })` membership-checks every answer against the question that asked it and
+  returns the typed answers or EVERY fault (`answer-missing`, `answer-mistyped`, `choice-off-option`,
+  `value-out-of-range`). Past it, a `choice` is a declared option, a `score` is in range and a `noul` is a
+  probability — no consumer re-checks. A transport throws `LlmDecisionAnswerFaultError` with the faults.
+- `asLlmDecisionConfidenceBand`, `llmDecisionChoiceRanking`, `mapLlmDecisionChoiceRows` and
+  `llmChoiceCertaintyOf` (sure / nested / split / diffuse / unread, with site-owned floors) read a Choice's answer.
+
+### Strategies
+
+- `LlmDecisionStrategy` is the decision sibling of `LlmStrategy`: `decide(request, options?)` takes
+  `LlmDecisionRequest` (`{ state, questions, model }`) and returns `LlmDecisionResult` (the answering versioned
+  `model`, `answers`, `usage`, `provider`, `generationId`). It throws rather than returning partial answers. Its
+  `healthCheck` / `credentialProbe` report `LlmStrategyHealth`, the completion lane's verdict.
+- `makeLlmDecisionStrategyRegistry(seed)` — the same id / kind registry; `getBy('kind', k)` is the LAST registered
+  instance, `values()[0]` the first.
+- `DEFAULT_LLM_DECISION_TIMEOUT_MS` (10s) is declared here and enforced by each transport.
+- `LlmDecisionTransportError` (`status`, `body`) and `isRetryableLlmDecisionError` (429 / 5xx / socket failures,
+  never an abort) — the completion lane's retry posture; no retry loop lives here.
+- `defineLlmDecision(descriptor)` declares a decision over one typed input: `state(input)` and `questions(input)`.
+  Validation is lazy — `asRequest({ input, model })` validates and throws `LlmDecisionDeclarationError` naming the
+  decision — and `decide({ strategy, input, model, options })` runs it.
+- `LlmDecisionDispatchRequest` is what a dispatcher's decision lane takes: the consuming `capability`, the declared
+  `decision`, its `input`, host `meta`, model / tier overrides, `stage` and an optional `stamp`.
+
+```ts
+import { llmChoiceQuestion, llmDecisionRequestBody, llmNoulQuestion, readLlmDecisionAnswers } from '@dereekb/llm/decision';
+
+const questions = {
+  team: llmChoiceQuestion('Which team should own `ticket`?', { billing: 'Charges and refunds', access: 'Sign-in and permissions' }),
+  spam: llmNoulQuestion('`ticket` is unsolicited marketing rather than a real request.')
+};
+
+const body = llmDecisionRequestBody({ model: 'typesafe/jev-1.13', state: { ticket }, questions });
+// … send `body` to the gateway's decision route …
+const read = readLlmDecisionAnswers({ questions, raw: reply.answers });
+read.answers?.team.choice; // 'billing' | 'access'
+```
+
+```ts
+import { defineLlmDecision, llmChoiceQuestion } from '@dereekb/llm/decision';
+
+const pickTeam = defineLlmDecision({
+  decision: 'pick-team',
+  describe: 'route one support ticket to its team',
+  state: (input: { readonly ticket: string }) => ({ ticket: input.ticket }),
+  questions: () => ({ team: llmChoiceQuestion('Which team should own `ticket`?', { billing: 'Charges', access: 'Sign-in' }) })
+});
+
+const { answers } = await pickTeam.decide({ strategy, input: { ticket }, model: 'typesafe/jev-1.13' });
+```
+
+### Coming from `@dereekb/openrouter`
+
+The vocabulary moved here from `@dereekb/openrouter` under neutral names. JSON shapes are unchanged, and the old
+names remain as `@deprecated` aliases of the same values and classes.
+
+| `@dereekb/openrouter` | `@dereekb/llm` |
+|---|---|
+| `OpenRouterDecision…` | `LlmDecision…` |
+| `openRouterDecision…` (option names, ranking, state paths, wire question) | `llmDecision…` |
+| `openRouter{Choice,Score,Noul}Question` | `llm{Choice,Score,Noul}Question` |
+| `OPENROUTER_DECISION_…` | `LLM_DECISION_…` |
+| `{is,as,map,validate,read}OpenRouterDecision…` | `{is,as,map,validate,read}LlmDecision…` |
+| `OpenRouterStorableDecisionState` | `LlmStorableDecisionState` |
+| `OpenRouterSystemOneModelId` / `isOpenRouterSystemOneModelId` / `OPENROUTER_SYSTEM_ONE_MODEL_NAMESPACE` | `LlmDecisionModelId` / `isLlmDecisionModelId` / `LLM_DECISION_MODEL_NAMESPACE` |
+
+What stays in `@dereekb/openrouter`: `openRouterDecisionRequest`, `openRouterDecisionRequestBody` (the SDK's
+`DecisionsRequest`, with OpenRouter's session id and trace), `splitOpenRouterDecisionModelConfig`,
+`validateOpenRouterDecisionRequest`, `openRouterRunUsageFromDecisionsUsage`, the `OPENROUTER_JEV_*` ids,
+`DEFAULT_OPENROUTER_SYSTEM_ONE_MODEL_ID` and the `openRouterDecision` transport.
+
 ## Utilities
 
 ### sha256Hex

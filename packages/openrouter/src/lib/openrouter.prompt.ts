@@ -1,6 +1,6 @@
+import { type LlmDecisionQuestions } from '@dereekb/llm';
 import { type Maybe } from '@dereekb/util';
 import { type OpenRouterModelConfig } from './openrouter.config';
-import { type OpenRouterDecisionQuestions } from './openrouter.decision.question';
 import { type OpenRouterInputRole } from './openrouter.input';
 import { type OpenRouterTemplateTypeKey } from './openrouter.template';
 import { type OpenRouterPromptKey, type OpenRouterPromptVersionNumber } from './openrouter.type';
@@ -61,7 +61,7 @@ export interface OpenRouterResolvedPrompt {
    * These are the STATIC half of a decision's answer space, the counterpart of `messages`. A caller may
    * declare further questions per call; they merge over these by id. See `openRouterDecisionRequest`.
    */
-  readonly questions?: Maybe<OpenRouterDecisionQuestions>;
+  readonly questions?: Maybe<LlmDecisionQuestions>;
   /**
    * The template half of the version, present when the prompt is a message TEMPLATE.
    *

@@ -1,3 +1,4 @@
+import { LlmDecisionAnswerFaultError, LlmDecisionDeclarationError, type LlmDecisionQuestions, type LlmStorableDecisionState } from '@dereekb/llm';
 import { type FirebaseStorageContext } from '@dereekb/firebase';
 import { type FirebaseServerEnvService } from '@dereekb/firebase-server';
 import { type Maybe, type Milliseconds, MS_IN_MINUTE, addMilliseconds, concatArraysUnique, filterMaybeArrayValues, filterUndefinedValues, filterUniqueValues, mergeArrays, randomNumberFactory } from '@dereekb/util';
@@ -5,7 +6,6 @@ import {
   type OpenRouterAttachedFileReference,
   type OpenRouterCallResult,
   type OpenRouterCore,
-  type OpenRouterDecisionQuestions,
   type OpenRouterDecisionResult,
   type OpenRouterDeferredToolResolution,
   type OpenRouterFileReference,
@@ -17,7 +17,6 @@ import {
   type OpenRouterRequestTrace,
   type OpenRouterRunError,
   type OpenRouterRunTaskKey,
-  type OpenRouterStorableDecisionState,
   type Tool,
   callModelForOpenRouterRequest,
   openRouterDecision,
@@ -122,11 +121,11 @@ export interface OpenRouterEnqueueRunTaskParams {
    * only discriminator: which surface a request needs is a property of the request, and a second field
    * declaring it is a second thing that can disagree.
    */
-  readonly state?: Maybe<OpenRouterStorableDecisionState>;
+  readonly state?: Maybe<LlmStorableDecisionState>;
   /**
    * Questions declared for THIS run, merged over the prompt version's own stored questions.
    */
-  readonly questions?: Maybe<OpenRouterDecisionQuestions>;
+  readonly questions?: Maybe<LlmDecisionQuestions>;
   /**
    * Whether to run the task immediately rather than leaving it for the next sweep.
    *
@@ -614,7 +613,7 @@ export function openRouterRunTaskService(config: OpenRouterRunTaskServiceConfig)
    * @param state - The content to judge.
    * @returns What the attempt did.
    */
-  async function executeDecisionRunTaskData(document: OpenRouterRunTaskDocument, task: OpenRouterRunTask, state: OpenRouterStorableDecisionState): Promise<OpenRouterRunTaskExecutionResult> {
+  async function executeDecisionRunTaskData(document: OpenRouterRunTaskDocument, task: OpenRouterRunTask, state: LlmStorableDecisionState): Promise<OpenRouterRunTaskExecutionResult> {
     const key = document.id;
     let executionResult: OpenRouterRunTaskExecutionResult;
 
@@ -887,7 +886,22 @@ export function hasUnresolvedOpenRouterPendingToolCalls(pending: Maybe<readonly 
 }
 
 /**
+ * COMPAT: the run-task error code a decision answer fault has always been stored under. The class moved to
+ * `@dereekb/llm` as `LlmDecisionAnswerFaultError`, and the stored code must not change with the rename, or a dashboard
+ * or alert keyed on it silently stops matching.
+ */
+const LEGACY_DECISION_ANSWER_FAULT_ERROR_CODE = 'OpenRouterDecisionAnswerFaultError';
+
+/**
+ * COMPAT: the run-task error code a decision declaration error has always been stored under — see
+ * {@link LEGACY_DECISION_ANSWER_FAULT_ERROR_CODE}.
+ */
+const LEGACY_DECISION_DECLARATION_ERROR_CODE = 'OpenRouterDecisionDeclarationError';
+
+/**
  * Extracts an error code from a thrown value.
+ *
+ * The two decision errors that moved to `@dereekb/llm` keep their legacy codes, so stored run tasks do not drift.
  *
  * @param e - The thrown value.
  * @returns The code, when one is discernible.
@@ -897,7 +911,11 @@ export function hasUnresolvedOpenRouterPendingToolCalls(pending: Maybe<readonly 
 export function openRouterErrorCode(e: unknown): Maybe<string> {
   let result: Maybe<string>;
 
-  if (e != null && typeof e === 'object') {
+  if (e instanceof LlmDecisionAnswerFaultError) {
+    result = LEGACY_DECISION_ANSWER_FAULT_ERROR_CODE;
+  } else if (e instanceof LlmDecisionDeclarationError) {
+    result = LEGACY_DECISION_DECLARATION_ERROR_CODE;
+  } else if (e != null && typeof e === 'object') {
     const candidate = (e as { code?: unknown; name?: unknown }).code ?? (e as { name?: unknown }).name;
 
     if (candidate != null) {

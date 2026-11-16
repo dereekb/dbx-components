@@ -1,3 +1,4 @@
+import { llmChoiceQuestion, type LlmDecisionQuestions, llmNoulQuestion } from '@dereekb/llm';
 import { beforeEach, describe, expect, it } from 'vitest';
 import * as z from 'zod/v4';
 import { firestoreModelKey } from '@dereekb/firebase';
@@ -5,7 +6,7 @@ import { firebaseServerActionsContext } from '@dereekb/firebase-server';
 import { adminFirestoreFactory } from '@dereekb/firebase-server/test';
 import { MS_IN_HOUR, type Maybe } from '@dereekb/util';
 import { OpenRouterWebhookController, OpenRouterWebhookService } from '@dereekb/nestjs/openrouter';
-import { type OpenRouterCore, type OpenRouterDecisionQuestions, type OpenRouterModelConfig, type OpenRouterPromptDefinition, type Tool, OPENROUTER_JEV_1_13_MODEL_ID, openRouterChoiceQuestion, openRouterFileSearchTool, openRouterGeneration, openRouterNoulQuestion, tool } from '@dereekb/openrouter';
+import { type OpenRouterCore, type OpenRouterModelConfig, type OpenRouterPromptDefinition, type Tool, OPENROUTER_JEV_1_13_MODEL_ID, openRouterFileSearchTool, openRouterGeneration, tool } from '@dereekb/openrouter';
 import { OpenRouterCore as OpenRouterClient } from '@openrouter/sdk/core';
 import {
   OPENROUTER_RUN_TASK_MAX_AGE,
@@ -30,9 +31,9 @@ import { reconcileOpenRouterRunTaskFromBroadcast, openRouterRunTaskKeyFromBroadc
 const TEST_PROMPT_KEY = 'test-prompt';
 const TEST_MODEL_CONFIG: OpenRouterModelConfig = { model: 'openai/gpt-5.1', provider: { only: ['openai'], allowFallbacks: false, requireParameters: true } };
 const TEST_DECISION_MODEL_CONFIG: OpenRouterModelConfig = { model: OPENROUTER_JEV_1_13_MODEL_ID };
-const TEST_DECISION_QUESTIONS: OpenRouterDecisionQuestions = {
-  urgent: openRouterNoulQuestion('`ticket.body` needs action today.'),
-  team: openRouterChoiceQuestion('Which team should own `ticket`?', { billing: 'money', access: 'sign-in' })
+const TEST_DECISION_QUESTIONS: LlmDecisionQuestions = {
+  urgent: llmNoulQuestion('`ticket.body` needs action today.'),
+  team: llmChoiceQuestion('Which team should own `ticket`?', { billing: 'money', access: 'sign-in' })
 };
 const TEST_DECISION_STATE = { ticket: { body: 'I was charged twice and need a refund before Friday.' } };
 const TEST_DECISION_ANSWERS = { urgent: { type: 'noul', noul: 0.9 }, team: { type: 'choice', choice: 'billing', probabilities: { billing: 0.95, access: 0.05 } } };
@@ -129,7 +130,7 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
       /**
        * Questions to publish on the version, making the prompt a DECISION prompt.
        */
-      readonly questions?: OpenRouterDecisionQuestions;
+      readonly questions?: LlmDecisionQuestions;
       /**
        * What the fake System One model should answer a DECISION request with.
        */
@@ -936,7 +937,7 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
       it('should merge a run`s own questions over the version`s stored ones', async () => {
         const stack = await buildStack({ promptKey: 'decision-merge', questions: TEST_DECISION_QUESTIONS, decisionReply: { answers: { ...TEST_DECISION_ANSWERS, extra: { type: 'noul', noul: 0.1 } } } });
 
-        await stack.service.enqueueRunTask({ key: 'decide_merge', promptKey: 'decision-merge', state: TEST_DECISION_STATE, questions: { extra: openRouterNoulQuestion('`ticket.body` mentions a date.') } });
+        await stack.service.enqueueRunTask({ key: 'decide_merge', promptKey: 'decision-merge', state: TEST_DECISION_STATE, questions: { extra: llmNoulQuestion('`ticket.body` mentions a date.') } });
         await openRouterRunTaskSweep({ service: stack.service, pageSize: 5 });
 
         expect(Object.keys(stack.fake.requests[0]['questions'] as object).sort()).toEqual(['extra', 'team', 'urgent']);

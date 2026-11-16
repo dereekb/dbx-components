@@ -44,12 +44,13 @@ export function makeLlmStrategyRegistry(seed: ReadonlyArray<LlmStrategy>): LlmSt
  * The TRANSPORT of one strategy — {@link LlmStrategy.kind} when it declares one, else its {@link LlmStrategy.id} (a
  * single-instance strategy / a spec fake, where the two are the same string).
  *
- * The ONE place that default lives, so no reporter has to remember it.
+ * The ONE place that default lives, so no reporter has to remember it. Completion and decision strategies share the
+ * rule, so it reads only the `id` and `kind` both carry.
  *
  * @param strategy - The strategy to read.
  * @returns The transport kind.
  */
-export function llmStrategyKind(strategy: LlmStrategy): LlmStrategyId {
+export function llmStrategyKind(strategy: Pick<LlmStrategy, 'id' | 'kind'>): LlmStrategyId {
   return strategy.kind ?? strategy.id;
 }
 

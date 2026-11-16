@@ -1,9 +1,9 @@
+import { type LlmDecisionQuestions } from '@dereekb/llm';
 import { type Maybe, type SmsTextSegmentDetails, smsTextSegmentDetails } from '@dereekb/util';
 import {
   type AppOpenRouterTemplateTypeConfigService,
   type OpenRouterAttachedFileReference,
   type OpenRouterCore,
-  type OpenRouterDecisionQuestions,
   type OpenRouterGenerationId,
   type OpenRouterInput,
   type OpenRouterModelConfig,
@@ -70,7 +70,7 @@ export interface OpenRouterTemplateVersionContent {
   /**
    * Never allowed on a template version. Carried so the shape check can refuse it.
    */
-  readonly questions?: Maybe<OpenRouterDecisionQuestions>;
+  readonly questions?: Maybe<LlmDecisionQuestions>;
 }
 
 /**
