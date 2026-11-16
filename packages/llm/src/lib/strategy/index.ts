@@ -1,5 +1,6 @@
 export * from './llm.call.bill';
 export * from './llm.credential.probe';
+export * from './llm.error';
 export * from './llm.provider.status';
 export * from './llm.strategy';
 export * from './llm.strategy.health';

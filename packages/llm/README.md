@@ -86,6 +86,64 @@ const report = await readLlmProviderStatus({ strategies, required: ['gateway'] }
 const verdict = evaluateLlmQuotaGate({ report }); // { allowed, reason, usedFraction? }
 ```
 
+## Call records and observability
+
+What a dispatcher records about each call, and the seams a host observes it through.
+
+- **Errors.** `isAbortError` (a client deadline or cancel), `isRetryableLlmError` (an identical resend could succeed:
+  connection failures, 429, 5xx, raw socket failures; never another 4xx) and `llmErrorSummaryOf` (one bounded log
+  line naming what was thrown). Test `isAbortError` first: a connection timeout matches both.
+- **Decode failures.** The six `LlmDecodeFailureClass`es, `classifyLlmDecodeFailure` (the failure family) and
+  `classifyLlmReplyOutcome` (what the reply looked like), the finish-reason predicates (`isLlmLengthCappedFinish`,
+  `isLlmCleanStopFinish`, `isLlmReasoningOnlyReply`), the two sentinels a dispatcher stamps on a synthesized reply
+  (`LLM_TIMEOUT_FINISH_REASON`, `LLM_TRANSPORT_FINISH_REASON`) and the bounded excerpt helpers.
+- **Retry lever.** `chooseLlmRetryLever` picks the ONE thing the next attempt changes (budget, model, reasoning off /
+  low, structured output off, or nothing, with the reason); `applyLlmRetryLever` applies it.
+- **Call records.** `LlmCallRecord`, `LlmCallStartRecord`, `LlmDecodeFailureRecord` and their event-type tags. A host's
+  own fields sit at the top level: pass them as `H`. `llmCallTelemetry` projects the per-call telemetry block.
+- **Call context.** `makeLlmCallContext` records spans, marks, children and detached roots into a nested profile;
+  gaps, breadcrumbs and swallows go to the host's callbacks with the context's attribution, timing on or off.
+  `noopLlmCallContext()` is the shared do-nothing context.
+- **Taps.** `makeLlmDispatchTapRegistry` is a read-only observation seam: a tap that throws is counted in `health()`,
+  never propagated. `makeLlmDispatchCollector` keeps every event.
+- **Swallow sites.** `LlmSwallowSink`, the declaration vocabulary, `LLM_SWALLOW_SITES` (the library's declared
+  fail-open catches) and `makeLlmSwallowSiteRegistry` to merge them with a host's own.
+
+```ts
+import { makeLlmCallContext, type LlmCallRecord } from '@dereekb/llm';
+
+interface RequestAttribution {
+  readonly requestId?: string;
+  readonly tenantId?: string;
+}
+
+type AppCallRecord = LlmCallRecord<RequestAttribution>; // requestId / tenantId sit beside capability, prompt, result…
+
+const context = makeLlmCallContext<RequestAttribution>({
+  label: 'request',
+  attribution: { requestId: 'r1' },
+  onDiag: (record, attribution) => logger.debug({ ...attribution, ...record }),
+  onSwallow: (site, cause, attribution) => logger.warn({ site, cause, ...attribution })
+});
+
+await context.child('attempt-1').timeAsync('complete', () => strategy.complete(request));
+const profile = context.profile(); // nested spans, marks, breadcrumbs and swallows
+```
+
+```ts
+import { isAbortError, isRetryableLlmError, llmErrorSummaryOf } from '@dereekb/llm';
+
+try {
+  return await strategy.complete(request);
+} catch (error) {
+  if (isAbortError(error) || isRetryableLlmError(error)) {
+    logger.info(`resending: ${llmErrorSummaryOf(error)}`);
+  }
+
+  throw error;
+}
+```
+
 ## Utilities
 
 ### sha256Hex

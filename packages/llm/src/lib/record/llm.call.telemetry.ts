@@ -1,0 +1,97 @@
+/**
+ * The ONE shared projector of a completion into the uniform per-call telemetry block every record a host writes about
+ * an LLM call spreads (the cost-observability surface), so a reader can attribute cost and tier per call regardless
+ * of which call site produced the record.
+ *
+ * It is ALSO the one block a dispatch tap reads: a tap is handed the dispatch's raw {@link LlmDispatchResult} on the
+ * complete event and calls this projector on it, rather than receiving a second, hand-built copy of the same fields.
+ * That is the whole anti-drift rule — the object handed to a tap is the record handed to the host's log, so a tap
+ * payload and a logged payload can never become two hand-maintained projections of one call.
+ */
+
+import type { Milliseconds } from '@dereekb/util';
+import type { LlmModelId, LlmStrategyId } from '../model/llm.value';
+import type { LlmDispatchResult, LlmReplyRepair, LlmReplyRepairSummary } from '../strategy/llm.strategy';
+import type { LlmUsage } from '../strategy/llm.usage';
+
+/**
+ * The uniform LLM-call telemetry block spread into a record's payload — `strategyId` always, plus the cost and tier
+ * fields ({@link LlmDispatchResult.model} / {@link LlmDispatchResult.usage} / {@link LlmDispatchResult.latencyMs})
+ * when the producing call captured them (a client strategy does; an injected runner carries none).
+ */
+export interface LlmCallTelemetry {
+  /**
+   * The strategy INSTANCE that served the call (always present) — e.g. `'openrouter'`, `'account-a'`.
+   */
+  readonly strategyId: LlmStrategyId;
+  /**
+   * The transport LANE that served the call (`LlmStrategy.kind ?? id`) — e.g. `'openrouter-decisions'`. The A/B axis
+   * a usage ledger folds by strategy on. Absent on a result that predates the column (those fold by
+   * {@link strategyId}).
+   */
+  readonly strategyKind?: LlmStrategyId;
+  /**
+   * The model that actually served the call; absent on an injected runner.
+   */
+  readonly model?: LlmModelId;
+  /**
+   * The upstream endpoint that served the call ({@link LlmDispatchResult.provider}) — the routing evidence a later
+   * "which endpoints honour the reasoning floor" decision needs. Absent on an injected runner or when not echoed.
+   */
+  readonly provider?: string;
+  /**
+   * Token usage (+ optional provider dollar cost) for the call; absent on an injected runner.
+   */
+  readonly usage?: LlmUsage;
+  /**
+   * Wall-clock time around the model call; absent on an injected runner.
+   */
+  readonly latencyMs?: Milliseconds;
+  /**
+   * The provider's generation id ({@link LlmDispatchResult.generationId}); absent on an injected runner or when not
+   * echoed.
+   */
+  readonly generationId?: string;
+  /**
+   * Why generation stopped ({@link LlmDispatchResult.finishReason}, e.g. `'stop'` / `'length'`); absent on an
+   * injected runner or when not echoed.
+   */
+  readonly finishReason?: string;
+  /**
+   * How the dispatcher's reply-repair lane repaired this reply ({@link LlmDispatchResult.repair}) — the BOUNDED
+   * summary, never the original text. Absent when no repair ran, so an unrepaired row stays byte-identical.
+   */
+  readonly repair?: LlmReplyRepairSummary;
+}
+
+/**
+ * The bounded summary of a reply repair — every field but the original text.
+ *
+ * @param repair - The repair riding a result.
+ * @returns Its bounded summary.
+ */
+function llmReplyRepairSummaryOf(repair: LlmReplyRepair): LlmReplyRepairSummary {
+  return { tier: repair.tier, attempt: repair.attempt, verdict: repair.verdict, score: repair.score, ...(repair.ops == null ? {} : { ops: repair.ops }) };
+}
+
+/**
+ * Project a completion into the uniform {@link LlmCallTelemetry} block — `strategyId` always, and every other field
+ * only when present (conditionally omitted, never `undefined`, so a field-less result stays byte-stable when spread
+ * into a record). A plain `LlmCompletion` fits the parameter too.
+ *
+ * @param raw - The completion to project.
+ * @returns The uniform telemetry block to spread into a record's payload.
+ */
+export function llmCallTelemetry(raw: LlmDispatchResult): LlmCallTelemetry {
+  return {
+    strategyId: raw.strategyId,
+    ...(raw.strategyKind == null ? {} : { strategyKind: raw.strategyKind }),
+    ...(raw.model == null ? {} : { model: raw.model }),
+    ...(raw.provider == null ? {} : { provider: raw.provider }),
+    ...(raw.usage == null ? {} : { usage: raw.usage }),
+    ...(raw.latencyMs == null ? {} : { latencyMs: raw.latencyMs }),
+    ...(raw.generationId == null ? {} : { generationId: raw.generationId }),
+    ...(raw.finishReason == null ? {} : { finishReason: raw.finishReason }),
+    ...(raw.repair == null ? {} : { repair: llmReplyRepairSummaryOf(raw.repair) })
+  };
+}
