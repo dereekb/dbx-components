@@ -1,6 +1,6 @@
 ---
 name: trello-cli
-description: "The `trello-cli` command (the `trello-cli` bin of `@dereekb/trello`, run as `npx trello-cli`; this doc ships with that package and prints with `npx trello-cli docs`) for Trello boards, lists, cards, comments, attachments and checklists, Trello search, and a raw `request` to the Trello REST api. Covers setup (`auth login` with an API key + token, the `TRELLO_API_KEY` / `TRELLO_API_TOKEN` env vars, or a token source minting OAuth tokens via `auth token-source set`), choosing a board (`--board`, `config set default-board`, `TRELLO_CLI_BOARD`), card arguments (a link, shortLink or id), `--yes` on deletes, the JSON output, and the error codes (`NOT_CONFIGURED`, `TOKEN_REJECTED`, `SCOPE_DENIED`, `NOT_FOUND`, `RATE_LIMITED`, `BOARD_REQUIRED`, `CONFIRMATION_REQUIRED`, …). Also the board loop commands (`board changes --save`, `board activity`, `board mentions`, `card render --out`, `card attachments sync`), writing a trello-cli plugin (`defineTrelloCliPlugin`, `--extension`, `TRELLO_CLI_EXTENSIONS`, config `extensions`), the `@dereekb/trello/cli` library (`runTrelloCli`) for building a CLI on the same commands, and the `@dereekb/trello/node` file helpers (attachment sync, block-preserving writes)."
+description: "The `trello-cli` command (the `trello-cli` bin of `@dereekb/trello`, run as `npx trello-cli`; this doc ships with that package and prints with `npx trello-cli docs`) for Trello boards, lists, cards, comments, attachments and checklists, Trello search, and a raw `request` to the Trello REST api. Covers setup (`auth login` with an API key + token, the `TRELLO_API_KEY` / `TRELLO_API_TOKEN` env vars, or a token source minting OAuth tokens via `auth token-source set`; attachment downloads refuse OAuth 2.0 tokens and need a key + token too: `DOWNLOAD_NEEDS_KEY_TOKEN`), choosing a board (`--board`, `config set default-board`, `TRELLO_CLI_BOARD`), card arguments (a link, shortLink or id), `--yes` on deletes, the JSON output, and the error codes (`NOT_CONFIGURED`, `TOKEN_REJECTED`, `SCOPE_DENIED`, `NOT_FOUND`, `RATE_LIMITED`, `BOARD_REQUIRED`, `CONFIRMATION_REQUIRED`, …). Also the board loop commands (`board changes --save`, `board activity`, `board mentions`, `card render --out`, `card attachments sync`), writing a trello-cli plugin (`defineTrelloCliPlugin`, `--extension`, `TRELLO_CLI_EXTENSIONS`, config `extensions`), the `@dereekb/trello/cli` library (`runTrelloCli`) for building a CLI on the same commands, and the `@dereekb/trello/node` file helpers (attachment sync, block-preserving writes)."
 ---
 
 # Trello CLI
@@ -33,7 +33,8 @@ This is a first-party CLI built on `@dereekb/trello`. It replaces the third-part
 Pick one. The first one found wins: a token source, then `TRELLO_API_KEY` + `TRELLO_API_TOKEN`, then the saved pair.
 
 ```bash
-# A. API key + token (key from https://trello.com/power-ups/admin, token from the key's "Token" link).
+# A. API key + token. The key is on your Power-Up's "API key" tab (https://trello.com/power-ups/admin).
+npx trello-cli auth login --key "$KEY"                    # prints authorizeUrl: open it as the member, allow, copy the token
 npx trello-cli auth login --key "$KEY" --token "$TOKEN"   # checks the pair, then saves it (0600)
 
 # B. Env vars (the same names @dereekb/trello/nestjs reads, so a workspace .env configures both).
@@ -51,8 +52,10 @@ npx trello-cli config set default-board https://trello.com/b/AbCd1234/my-board
 `unauthorized permission requested`), while the same token reads, writes and uploads everything else. With a
 token source (C), also set up A or B for the **same member**: trello-cli then uses that pair for
 `attachment download`, `card attachments sync` and `card render --attachments` only. `auth show` reports it under
-`download` (with a `warning` when the pair is another member). Without a pair those downloads fail with
-`DOWNLOAD_NEEDS_KEY_TOKEN`, and the token source's cached token is kept.
+`download` (with a `warning` when the pair is another member), and `doctor` checks it. Without a pair those downloads
+fail with `DOWNLOAD_NEEDS_KEY_TOKEN`, and the token source's cached token is kept. To get the pair, run
+`trello-cli auth login --key "$KEY"`: with a token source active it asks for a `read` token, which is all a download
+needs.
 
 ## Quick Reference
 
@@ -60,6 +63,7 @@ token source (C), also set up A or B for the **same member**: trello-cli then us
 
 ```bash
 trello-cli auth show                       # mode, source, member; fails when the credentials do not work
+trello-cli auth login --key K              # print the url that grants a token (--scope read|read,write, --expiration)
 trello-cli auth login --key K --token T    # save a pair (--no-verify skips the check)
 trello-cli auth logout                     # delete the saved pair
 trello-cli auth token-source set|use|show|clear …
@@ -68,7 +72,7 @@ trello-cli config set default-board <board>
 trello-cli config unset default-board
 trello-cli output …                        # saved --pick / --dump-dir per command
 trello-cli docs [topic]                    # this doc
-trello-cli doctor                          # config, credentials, board, plugins (exit 1 when a check fails)
+trello-cli doctor                          # config, credentials, download pair, board, plugins (exit 1 when a check fails)
 trello-cli extensions                      # the plugins: source, path, version, status, commands
 ```
 

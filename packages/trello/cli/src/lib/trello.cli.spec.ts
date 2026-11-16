@@ -275,6 +275,36 @@ describe('trello-cli', () => {
         expect(result.json?.['data']['download']).toMatchObject({ source: null });
         expect(result.json?.['data']['download']['suggestion']).toContain('TRELLO_API_KEY');
       });
+
+      it('should print a read-only token url from auth login --key without --token while a token source is active', async () => {
+        const source = fakeTokenSourceCommand(dir);
+        const result = await run(['auth', 'login', '--key', 'key-1'], { env: { TRELLO_CLI_TOKEN_COMMAND: source.command } });
+
+        expect(result.exitCode).toBe(0);
+        expect(result.json?.['data']).toMatchObject({ saved: false, scopes: ['read'], expiration: 'never' });
+        expect(result.json?.['data']['authorizeUrl']).toBe('https://trello.com/1/authorize?key=key-1&response_type=token&scope=read&expiration=never&name=trello-cli');
+        expect(source.runs()).toBe(0);
+      });
+
+      it('should warn in doctor when there is no download pair', async () => {
+        const source = fakeTokenSourceCommand(dir);
+        const trello = interceptTrello({ 'GET /members/me': ME });
+        const result = await run(['doctor'], { env: { TRELLO_CLI_TOKEN_COMMAND: source.command }, fetchHandler: trello.fetchHandler });
+        const download = ((result.json?.['data']?.['checks'] ?? []) as { name: string; status: string; message: string }[]).find((x) => x.name === 'download');
+
+        expect(result.json?.['ok']).toBe(true);
+        expect(download?.status).toBe('warn');
+        expect(download?.message).toContain('DOWNLOAD_NEEDS_KEY_TOKEN');
+      });
+
+      it('should pass the download check in doctor when the pair acts as the same member', async () => {
+        const source = fakeTokenSourceCommand(dir);
+        const trello = interceptTrello({ 'GET /members/me': ME });
+        const result = await run(['doctor'], { env: { TRELLO_CLI_TOKEN_COMMAND: source.command, TRELLO_API_KEY: 'key-1', TRELLO_API_TOKEN: 'token-1' }, fetchHandler: trello.fetchHandler });
+        const download = ((result.json?.['data']?.['checks'] ?? []) as { name: string; status: string }[]).find((x) => x.name === 'download');
+
+        expect(download?.status).toBe('pass');
+      });
     });
   });
 

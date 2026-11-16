@@ -1,7 +1,7 @@
 import { CliError, buildCliTokenSourceAuthCommand } from '@dereekb/dbx-cli';
-import { type TrelloFactoryConfig, type TrelloMemberId, probeTrelloAuth, trelloFactory } from '@dereekb/trello';
+import { ALL_TRELLO_API_TOKEN_EXPIRATIONS, ALL_TRELLO_API_TOKEN_SCOPES, type TrelloApiKey, type TrelloApiToken, type TrelloApiTokenExpiration, type TrelloApiTokenScope, type TrelloFactoryConfig, type TrelloMemberId, probeTrelloAuth, trelloApiTokenAuthorizeUrl, trelloFactory } from '@dereekb/trello';
 import { type Maybe } from '@dereekb/util';
-import type { Argv } from 'yargs';
+import type { Arguments, Argv } from 'yargs';
 import { trelloCliCredentialsStore, trelloCliPaths, trelloCliTokenSourceCommandConfig } from '../config/cli.config';
 import { type TrelloCliCommand } from '../context/cli.command';
 import { type TrelloCliContext } from '../context/cli.context';
@@ -47,6 +47,33 @@ export async function trelloCliAuthShowReport(ctx: TrelloCliContext): Promise<Re
 }
 
 /**
+ * The `download` part of the `auth show` report (see {@link trelloCliDownloadAuthReport}). Never carries a secret.
+ */
+export interface TrelloCliDownloadAuthReport {
+  /**
+   * Where the key + token pair came from, or null when token-source mode has none.
+   */
+  readonly source: Maybe<string>;
+  /**
+   * The member the pair acts as, when it works.
+   */
+  readonly member?: Maybe<{ readonly id: TrelloMemberId; readonly username: string; readonly fullName: string }>;
+  /**
+   * Set when the pair acts as another member than the token source.
+   */
+  readonly warning?: Maybe<string>;
+  /**
+   * What to configure, when there is no pair.
+   */
+  readonly suggestion?: Maybe<string>;
+  /**
+   * The probe's message and code, when the pair does not work.
+   */
+  readonly error?: Maybe<string>;
+  readonly code?: Maybe<string>;
+}
+
+/**
  * The `download` part of the `auth show` report in token-source mode: where the key + token pair attachment downloads
  * use came from and the member it acts as, or what to configure when there is none. Never throws: the run's own
  * credentials work, so a broken download pair is reported, not raised.
@@ -55,9 +82,9 @@ export async function trelloCliAuthShowReport(ctx: TrelloCliContext): Promise<Re
  * @param memberId - The member the token source acts as, to flag a pair for another member.
  * @returns The report.
  */
-async function trelloCliDownloadAuthReport(ctx: TrelloCliContext, memberId: TrelloMemberId): Promise<Record<string, unknown>> {
+export async function trelloCliDownloadAuthReport(ctx: TrelloCliContext, memberId: TrelloMemberId): Promise<TrelloCliDownloadAuthReport> {
   const source = ctx.auth.downloadSource;
-  let result: Record<string, unknown>;
+  let result: TrelloCliDownloadAuthReport;
 
   if (source == null) {
     result = { source: null, suggestion: TRELLO_CLI_DOWNLOAD_NEEDS_KEY_TOKEN_SUGGESTION };
@@ -72,6 +99,103 @@ async function trelloCliDownloadAuthReport(ctx: TrelloCliContext, memberId: Trel
   }
 
   return result;
+}
+
+/**
+ * Input for {@link saveTrelloCliKeyTokenPair}.
+ */
+interface SaveTrelloCliKeyTokenPairInput {
+  readonly apiKey: TrelloApiKey;
+  readonly apiToken: TrelloApiToken;
+  readonly argv: Arguments;
+  readonly ctx: TrelloCliContext;
+  readonly trelloFactoryConfig?: Maybe<TrelloFactoryConfig>;
+}
+
+/**
+ * Checks a key + token pair against Trello (unless `--no-verify`), then saves it and prints the result.
+ *
+ * @param input - The pair, the parsed arguments, the context and the client overrides.
+ * @throws {CliError} The probe's code when Trello rejects the pair; nothing is saved then.
+ */
+async function saveTrelloCliKeyTokenPair(input: SaveTrelloCliKeyTokenPairInput): Promise<void> {
+  const { apiKey, apiToken, argv, ctx } = input;
+  let member: Maybe<unknown>;
+
+  if (argv['verify'] !== false) {
+    const apiUrl = parseTrelloCliApiUrl(argv['apiUrl']);
+    const { trelloContext } = trelloFactory({ logTrelloServerErrorFunction: trelloCliStderrLogger(argv['verbose'] === true), ...input.trelloFactoryConfig })({ apiKey, apiToken, ...(apiUrl ? { apiUrl } : {}) });
+    const probe = await probeTrelloAuth({ trelloContext });
+
+    if (!probe.ok) {
+      throw new CliError({ message: `Trello rejected the key + token: ${probe.message}`, code: probe.code, suggestion: 'Nothing was saved. Check the key and token, or pass --no-verify to save them anyway.' });
+    }
+
+    member = probe.member;
+  }
+
+  const store = trelloCliCredentialsStore(trelloCliPaths());
+  await store.write({ apiKey, apiToken });
+  ctx.output.result({ saved: true, path: store.filePath, verified: member != null, member: member ?? null });
+}
+
+/**
+ * Input for {@link trelloCliApiTokenAuthorizeReport}.
+ */
+export interface TrelloCliApiTokenAuthorizeReportInput {
+  readonly apiKey: TrelloApiKey;
+  /**
+   * The `--scope` value: comma-separated scopes, or undefined for the default.
+   */
+  readonly scope?: unknown;
+  /**
+   * The `--expiration` value.
+   */
+  readonly expiration?: unknown;
+  readonly ctx: Pick<TrelloCliContext, 'auth' | 'cliName'>;
+}
+
+/**
+ * The `auth login --key <key>` report (no `--token`): the url that grants the member's API token for the key, the
+ * scopes it asks for, and the command to run with the token. Prints no secret: the API key is the public half.
+ *
+ * The scopes default to `read` when a token source is active, since the pair then only downloads attachments (Trello's
+ * download endpoint refuses OAuth 2.0 tokens), and to `read,write` otherwise.
+ *
+ * @param input - The key, the `--scope` / `--expiration` values and the context.
+ * @returns The report.
+ * @throws {CliError} `INVALID_ARGUMENT` for an unknown scope.
+ */
+export function trelloCliApiTokenAuthorizeReport(input: TrelloCliApiTokenAuthorizeReportInput): Record<string, unknown> {
+  const { apiKey, ctx } = input;
+  const forDownloads = ctx.auth.mode === 'token-source';
+  const scopeArg = typeof input.scope === 'string' && input.scope.trim() ? input.scope : undefined;
+  const scopes = (scopeArg ?? (forDownloads ? 'read' : 'read,write'))
+    .split(',')
+    .map((x) => x.trim())
+    .filter(Boolean);
+  const unknownScopes = scopes.filter((x) => !(ALL_TRELLO_API_TOKEN_SCOPES as readonly string[]).includes(x));
+
+  if (unknownScopes.length > 0) {
+    throw new CliError({ message: `Unknown scope(s): ${unknownScopes.join(', ')}.`, code: 'INVALID_ARGUMENT', suggestion: `Use ${ALL_TRELLO_API_TOKEN_SCOPES.join(', ')} (comma-separated).` });
+  }
+
+  const expiration = (input.expiration as Maybe<TrelloApiTokenExpiration>) ?? 'never';
+  const authorizeUrl = trelloApiTokenAuthorizeUrl({ apiKey, scopes: scopes as TrelloApiTokenScope[], expiration, name: ctx.cliName });
+
+  return {
+    saved: false,
+    authorizeUrl,
+    scopes,
+    expiration,
+    use: forDownloads ? 'attachment downloads (a token source is active and handles everything else)' : 'every command',
+    steps: [
+      `Open authorizeUrl in a browser signed in to Trello as the member the CLI should act as${forDownloads ? ' (the same member as the token source)' : ''}.`,
+      'Allow access, then copy the token Trello shows.',
+      `Run: ${ctx.cliName} auth login --key <key> --token <token>`,
+      `Check it with: ${ctx.cliName} ${forDownloads ? 'doctor' : 'auth show'}`
+    ]
+  };
 }
 
 /**
@@ -90,34 +214,28 @@ export function trelloCliAuthCommand(config: TrelloCliAuthCommandConfig = {}): T
 
   const login: TrelloCliCommand = {
     command: 'login',
-    describe: 'Save an API key + token pair (to <configDir>/credentials.json, mode 0600), checking it against Trello first',
+    describe: 'Save an API key + token pair (to <configDir>/credentials.json, mode 0600), checking it against Trello first. Without --token, prints the url that grants the token',
     requires: 'none',
     builder: (yargs: Argv) =>
       yargs
-        .option('key', { type: 'string', demandOption: true, describe: 'The API key (https://trello.com/power-ups/admin)' })
-        .option('token', { type: 'string', demandOption: true, describe: "The member's API token" })
+        .option('key', { type: 'string', demandOption: true, describe: "The API key (the Power-Up's API key tab, https://trello.com/power-ups/admin)" })
+        .option('token', { type: 'string', describe: "The member's API token. Omit it to get the url that grants one" })
+        .option('scope', { type: 'string', describe: 'Without --token: the scopes the url asks for (read, write, account; comma-separated). Default: read with a token source (the pair is only used for downloads), else read,write' })
+        .option('expiration', { type: 'string', choices: [...ALL_TRELLO_API_TOKEN_EXPIRATIONS], default: 'never', describe: 'Without --token: how long the granted token lives' })
         .option('verify', { type: 'boolean', default: true, describe: 'Check the pair against Trello before saving (--no-verify to skip)' })
-        .example([['$0 auth login --key "$KEY" --token "$TOKEN"', 'Save and check a key + token pair']]),
+        .example([
+          ['$0 auth login --key "$KEY"', 'Print the url that grants a token for the key, and what to run next'],
+          ['$0 auth login --key "$KEY" --token "$TOKEN"', 'Save and check a key + token pair']
+        ]),
     handler: async (argv, ctx) => {
       const apiKey = String(argv['key']).trim();
-      const apiToken = String(argv['token']).trim();
-      let member: Maybe<unknown>;
+      const tokenArg = typeof argv['token'] === 'string' ? argv['token'].trim() : '';
 
-      if (argv['verify'] !== false) {
-        const apiUrl = parseTrelloCliApiUrl(argv['apiUrl']);
-        const { trelloContext } = trelloFactory({ logTrelloServerErrorFunction: trelloCliStderrLogger(argv['verbose'] === true), ...config.trelloFactoryConfig })({ apiKey, apiToken, ...(apiUrl ? { apiUrl } : {}) });
-        const probe = await probeTrelloAuth({ trelloContext });
-
-        if (!probe.ok) {
-          throw new CliError({ message: `Trello rejected the key + token: ${probe.message}`, code: probe.code, suggestion: 'Nothing was saved. Check the key and token, or pass --no-verify to save them anyway.' });
-        }
-
-        member = probe.member;
+      if (tokenArg) {
+        await saveTrelloCliKeyTokenPair({ apiKey, apiToken: tokenArg, argv, ctx, trelloFactoryConfig: config.trelloFactoryConfig });
+      } else {
+        ctx.output.result(trelloCliApiTokenAuthorizeReport({ apiKey, scope: argv['scope'], expiration: argv['expiration'], ctx }));
       }
-
-      const store = trelloCliCredentialsStore(trelloCliPaths());
-      await store.write({ apiKey, apiToken });
-      ctx.output.result({ saved: true, path: store.filePath, verified: member != null, member: member ?? null });
     }
   };
 

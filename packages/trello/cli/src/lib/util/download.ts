@@ -13,7 +13,7 @@ export const TRELLO_CLI_DOWNLOAD_NEEDS_KEY_TOKEN_ERROR_CODE = 'DOWNLOAD_NEEDS_KE
 /**
  * What to do about a {@link TRELLO_CLI_DOWNLOAD_NEEDS_KEY_TOKEN_ERROR_CODE}.
  */
-export const TRELLO_CLI_DOWNLOAD_NEEDS_KEY_TOKEN_SUGGESTION = `Trello's attachment download refuses OAuth 2.0 tokens. Set ${TRELLO_API_KEY_ENV_VAR} + ${TRELLO_API_TOKEN_ENV_VAR} (or run: ${TRELLO_CLI_NAME} auth login) for the same member; a token-source run then uses that pair for downloads only.`;
+export const TRELLO_CLI_DOWNLOAD_NEEDS_KEY_TOKEN_SUGGESTION = `Trello's attachment download refuses OAuth 2.0 tokens. Set ${TRELLO_API_KEY_ENV_VAR} + ${TRELLO_API_TOKEN_ENV_VAR} for the same member, or run ${TRELLO_CLI_NAME} auth login --key <key> to get the url that grants a read token and save the pair. A token-source run then uses that pair for downloads only.`;
 
 /**
  * Whether the run downloads attachments with an OAuth 2.0 bearer token alone: `token-source` mode with no key + token

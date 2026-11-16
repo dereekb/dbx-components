@@ -5,6 +5,7 @@ import { trelloCliConfigStore, trelloCliPaths } from '../config/cli.config';
 import { type TrelloCliCommand } from '../context/cli.command';
 import { type TrelloCliContext } from '../context/cli.context';
 import { TRELLO_CLI_NOT_CONFIGURED_SUGGESTION } from '../middleware/auth.middleware';
+import { trelloCliDownloadAuthReport } from './auth.command';
 
 /**
  * One `doctor` finding.
@@ -36,7 +37,8 @@ export interface TrelloCliDoctorCommandConfig {
 }
 
 /**
- * The built-in checks: the config file parses, credentials are configured and work, and the board (when set) resolves.
+ * The built-in checks: the config file parses, credentials are configured and work, a token-source run has a working
+ * key + token pair for attachment downloads (`download`; a missing pair warns), and the board (when set) resolves.
  *
  * @param ctx - The run's context.
  * @returns The findings.
@@ -56,6 +58,19 @@ export async function trelloCliCoreDoctorChecks(ctx: TrelloCliContext): Promise<
   } else {
     const probe = await probeTrelloAuth({ trelloContext: ctx.trelloContext });
     checks.push(probe.ok ? { name: 'auth', status: 'pass', message: `${ctx.auth.mode} via ${ctx.auth.source} as @${probe.member.username}` } : { name: 'auth', status: 'fail', message: `${ctx.auth.mode} via ${ctx.auth.source}: ${probe.code} ${probe.message}` });
+
+    // Trello's attachment download endpoint refuses OAuth 2.0 tokens, so a token-source run needs a key + token pair to download
+    if (probe.ok && ctx.auth.mode === 'token-source') {
+      const download = await trelloCliDownloadAuthReport(ctx, probe.member.id);
+
+      if (download.source == null) {
+        checks.push({ name: 'download', status: 'warn', message: `attachment downloads will fail (DOWNLOAD_NEEDS_KEY_TOKEN). ${download.suggestion}` });
+      } else if (download.error == null) {
+        checks.push({ name: 'download', status: download.warning ? 'warn' : 'pass', message: download.warning ?? `key + token via ${download.source} as @${download.member?.username}` });
+      } else {
+        checks.push({ name: 'download', status: 'fail', message: `key + token via ${download.source}: ${download.code} ${download.error}` });
+      }
+    }
 
     if (probe.ok && ctx.board != null) {
       try {
