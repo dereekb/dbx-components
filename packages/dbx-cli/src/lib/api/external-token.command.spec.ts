@@ -108,6 +108,18 @@ describe('buildExternalTokenCommand()', () => {
     expect(parsed.meta.note).not.toContain('`zoho-cli auth token-source set');
   });
 
+  it("names the app's own provider type in the help, and no consumer CLI", async () => {
+    await yargs(['external-token', '--help'])
+      .command(buildExternalTokenCommand({ cliName: 'demo-cli', dataAdapters: { ms_graph: passthroughCliExternalConnectionDataAdapter({ dataTypes: ['mail_signature'] }) } }))
+      .exitProcess(false)
+      .parseAsync();
+
+    const help = stdout.join('');
+    expect(help).toContain('e.g. "ms_graph"');
+    expect(help).toContain('<consumer-cli> auth token-source set');
+    expect(help).not.toContain('zoho');
+  });
+
   it('redacts the token when not run as a credential process', async () => {
     await runExternalToken((async () => jsonResponse(MINTED_TOKEN)) as unknown as typeof fetch);
 

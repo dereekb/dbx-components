@@ -70,11 +70,14 @@ export function buildExternalTokenCommand(options?: Maybe<BuildExternalTokenComm
   const cliName = options?.cliName ?? '<cli>';
   const fetcher = options?.fetcher;
   const dataAdapters = options?.dataAdapters;
+  // provider type names are app-chosen (`microsoft`, `ms_graph`, …), so only offer one this app configured
+  const exampleProviderType = dataAdapters == null ? undefined : Object.keys(dataAdapters)[0];
+  const providerTypeExample = exampleProviderType == null ? '' : `, e.g. "${exampleProviderType}"`;
 
   return {
     command: `${commandName} <providerType>`,
-    describe: `Mint a short-lived access token for one of your external connections (e.g. zoho_admin). Prints it REDACTED; the raw token is only written for a credential process (${DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR}=1), e.g. \`zoho-cli auth token-source set "${cliName} ${commandName} zoho_admin"\`.`,
-    builder: (yargs: Argv) => yargs.positional('providerType', { type: 'string', demandOption: true, describe: 'The external connection provider type, e.g. "zoho_admin".' }),
+    describe: `Mint a short-lived access token for one of your external connections. Prints it REDACTED; the raw token is only written for a credential process (${DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR}=1), e.g. \`<consumer-cli> auth token-source set "${cliName} ${commandName} <providerType>"\`.`,
+    builder: (yargs: Argv) => yargs.positional('providerType', { type: 'string', demandOption: true, describe: `The external connection provider type${providerTypeExample}.` }),
     handler: wrapCommandHandler(async (argv: any) => {
       const context: CliContext = requireCliContext();
       const providerType = String(argv.providerType);
@@ -112,7 +115,7 @@ export function buildExternalTokenCommand(options?: Maybe<BuildExternalTokenComm
           },
           {
             redacted: true,
-            // the app picks its provider type names (`microsoft`, `ms_graph`, …), so the consumer CLI cannot be named here
+            // the consumer CLI cannot be named here: dbx-cli has no map from an app-chosen provider type to it
             note: `The raw token is only printed when run as a credential process (${DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR}=1), e.g. by \`<consumer-cli> auth token-source set "${context.cliName} ${commandName} ${providerType}"\`, where <consumer-cli> is the CLI that uses this provider's token (such as zoho-cli or msgraph-cli).`
           }
         );

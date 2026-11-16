@@ -63,7 +63,7 @@ msgraph-cli config set signature-file <path>      # appended to new messages, re
 msgraph-cli config set signature-file <path> --mailbox <addr>  # the signature of mail sent from / as <addr>
 msgraph-cli config set mailboxes a@x.com,b@x.com  # shared mailboxes for `mail mailboxes check`
 msgraph-cli config get | unset <key>
-msgraph-cli config export                          # the local signatures as connection settings, for `<app>-cli connection-data import microsoft --file -`
+msgraph-cli config export                          # the local signatures as connection settings, for `<app>-cli connection-data import <providerType> --file -`
 msgraph-cli output set|show|clear                 # saved --pick / --dump-dir defaults
 msgraph-cli docs [topic]                          # these docs
 ```
@@ -166,17 +166,19 @@ server signature too (it may mint); when the token source fails, the preview omi
 `warnings: ["server defaults unavailable (<code>)"]`.
 
 Nothing fills the store in for you: Graph cannot read the Outlook signature, so it stays empty until a person
-or a model saves one. Save it once, and every machine that mints through the app gets it:
+or a model saves one. Save it once, and every machine that mints through the app gets it. `<providerType>` is the
+app's name for its Microsoft connection: `microsoft` in the demo, but each app picks its own, and any other name is
+refused (`PROVIDER_NOT_ALLOWED`). `userExternalConnection.read.data` lists the app's data types with their provider.
 
 - **Through MCP** (a model can do this at any time): call the app MCP method
   `userExternalConnection.update.data` with `<prefix>_api_write`:
-  `{ providerType: 'microsoft', set: [{ dataType: 'mail_signature', itemKey: 'me' | 'support@x.com', value: { html: '<p>…</p>' } }] }`.
+  `{ providerType: '<providerType>', set: [{ dataType: 'mail_signature', itemKey: 'me' | 'support@x.com', value: { html: '<p>…</p>' } }] }`.
   `value` holds exactly one of `html` or `text`, at most 64 KB; there are at most 50 items. Removing goes through
   `<prefix>_api_destructive`: `unset: [{ dataType: 'mail_signature', itemKey: 'me' }]`, or `clear: true` for all of
   the provider's data. `userExternalConnection.read.data` lists what is stored.
-- **Through the CLI:** `<app>-cli connection-data set microsoft mail_signature <me|address> --file sig.html`
+- **Through the CLI:** `<app>-cli connection-data set <providerType> mail_signature <me|address> --file sig.html`
   (everyday login; `connection-data list` / `unset` too). `msgraph-cli config export | <app>-cli connection-data
-  import microsoft --file -` uploads every local signature at once.
+  import <providerType> --file -` uploads every local signature at once.
 - **Then refresh:** run `msgraph-cli auth token-source refresh`. A saved signature arrives with the next minted
   token, so until then (or until the cached token expires, within the hour) msgraph-cli keeps the old defaults.
 

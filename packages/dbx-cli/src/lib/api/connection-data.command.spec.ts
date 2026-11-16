@@ -6,7 +6,7 @@ import yargs from 'yargs';
 import { MICROSOFT_MAIL_SIGNATURE_USER_EXTERNAL_CONNECTION_DATA_TYPE, microsoftMailSignatureUserExternalConnectionDataTypeConfig } from '@dereekb/firebase';
 import { type CliContext, setCliContext } from '../context/cli.context';
 import { configureOutputOptions } from '../util/output';
-import { CONNECTION_DATA_REFRESH_HINT, buildConnectionDataCommand, readImportSettings } from './connection-data.command';
+import { CONNECTION_DATA_REFRESH_HINT, buildConnectionDataCommand, connectionDataHelpExamples, readImportSettings } from './connection-data.command';
 import { type CliExternalConnectionDataConfig, passthroughCliExternalConnectionDataAdapter } from './external-connection-data';
 
 const VALUE_SENTINEL = 'sentinel-connection-data-value-5678';
@@ -150,12 +150,62 @@ describe('buildConnectionDataCommand()', () => {
     writeFileSync(file, '{}');
 
     await expect(run(['connection-data', 'import', 'zoho', '--file', file])).rejects.toThrow('process.exit:1');
-    expect(JSON.parse(stdout.join('')).code).toBe('INVALID_ARGUMENT');
+    const parsed = JSON.parse(stdout.join(''));
+    expect(parsed.code).toBe('INVALID_ARGUMENT');
+    // zoho is not a provider this config knows, so `set zoho …` would be refused too: point at the importable ones
+    expect(parsed.suggestion).toContain('demo-cli imports settings for: microsoft');
+    expect(parsed.suggestion).not.toContain('set zoho');
+  });
+
+  it('suggests set when import is refused for a known provider without a pack adapter', async () => {
+    const file = join(tempDir, 'settings.json');
+    writeFileSync(file, '{}');
+
+    await expect(run(['connection-data', 'import', 'microsoft', '--file', file], { dataTypes: CONFIG.dataTypes, adapters: {} })).rejects.toThrow('process.exit:1');
+    expect(JSON.parse(stdout.join('')).suggestion).toContain('demo-cli connection-data set microsoft <dataType> <itemKey> --json');
+  });
+
+  it("names the app's own provider type in the help, not the demo's", async () => {
+    const msGraphConfig: CliExternalConnectionDataConfig = {
+      dataTypes: [microsoftMailSignatureUserExternalConnectionDataTypeConfig('ms_graph')],
+      adapters: { ms_graph: passthroughCliExternalConnectionDataAdapter({ dataTypes: [MICROSOFT_MAIL_SIGNATURE_USER_EXTERNAL_CONNECTION_DATA_TYPE] }) }
+    };
+
+    for (const subcommand of ['import', 'set']) {
+      stdout = [];
+      await yargs(['connection-data', subcommand, '--help'])
+        .command(buildConnectionDataCommand({ cliName: 'demo-cli', config: msGraphConfig }))
+        .exitProcess(false)
+        .parseAsync();
+
+      const help = stdout.join('');
+      expect(help).toContain('e.g. "ms_graph"');
+      expect(help).toContain(`${subcommand} ms_graph`);
+      expect(help).not.toContain('microsoft');
+    }
   });
 
   it('reports a missing file without its content', async () => {
     await expect(run(['connection-data', 'import', 'microsoft', '--file', join(tempDir, 'missing.json')])).rejects.toThrow('process.exit:1');
     expect(JSON.parse(stdout.join('')).error).toContain('ENOENT');
+  });
+});
+
+describe('connectionDataHelpExamples()', () => {
+  it('takes the provider and data type from the config', () => {
+    const examples = connectionDataHelpExamples({
+      dataTypes: [microsoftMailSignatureUserExternalConnectionDataTypeConfig('ms_graph')],
+      adapters: { ms_graph: passthroughCliExternalConnectionDataAdapter({ dataTypes: [MICROSOFT_MAIL_SIGNATURE_USER_EXTERNAL_CONNECTION_DATA_TYPE] }), zoho_read: { unpack: () => undefined } }
+    });
+
+    expect(examples.providerTypes).toEqual(['ms_graph', 'zoho_read']);
+    expect(examples.providerType).toBe('ms_graph');
+    expect(examples.dataType?.dataType).toBe(MICROSOFT_MAIL_SIGNATURE_USER_EXTERNAL_CONNECTION_DATA_TYPE);
+    expect(examples.importProviderTypes).toEqual(['ms_graph']);
+  });
+
+  it('is empty without a config', () => {
+    expect(connectionDataHelpExamples(undefined)).toEqual({ providerTypes: [], providerType: undefined, dataType: undefined, importProviderTypes: [] });
   });
 });
 

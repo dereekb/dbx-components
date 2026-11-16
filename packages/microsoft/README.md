@@ -47,12 +47,12 @@ New messages, replies and forwards then get the signature of the address they ar
 
 For one command, `--signature-file <file>` uses another file and `--no-signature` leaves it off. `config unset signature-file [--mailbox <address>]` removes one.
 
-**Signatures from the app (server defaults).** An app built on dbx-components can store your signatures (`mail_signature` connection data, encrypted per user) so every machine and every Claude environment gets them with no local setup. Its CLI mints with them, and msgraph-cli caches them with the token. The order is: `--no-signature` > `--signature-file` > the local signature for the sending address > the app's signature for that address (`me` for your own mailbox) > none. A shared mailbox never falls back to yours. Server signatures are used as stored, so their images must be web (https) URLs.
+**Signatures from the app (server defaults).** An app built on dbx-components can store your signatures (`mail_signature` connection data, encrypted per user) so every machine and every Claude environment gets them with no local setup. Its CLI mints with them, and msgraph-cli caches them with the token. The order is: `--no-signature` > `--signature-file` > the local signature for the sending address > the app's signature for that address (`me` for your own mailbox) > none. A shared mailbox never falls back to yours. Server signatures are used as stored, so their images must be web (https) URLs. `<providerType>` below is the app's name for its Microsoft connection: `microsoft` in the demo, but each app picks its own.
 
 ```bash
-<app>-cli connection-data set microsoft mail_signature me --file signature.html
-<app>-cli connection-data set microsoft mail_signature billing@example.com --file billing-signature.html
-msgraph-cli config export | <app>-cli connection-data import microsoft --file -   # upload every local signature
+<app>-cli connection-data set <providerType> mail_signature me --file signature.html
+<app>-cli connection-data set <providerType> mail_signature billing@example.com --file billing-signature.html
+msgraph-cli config export | <app>-cli connection-data import <providerType> --file -   # upload every local signature
 msgraph-cli auth token-source refresh                                            # apply now instead of at the next mint
 ```
 

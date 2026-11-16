@@ -42,6 +42,56 @@ export const CONNECTION_DATA_MODEL_SPECIFIER = 'data';
 export const CONNECTION_DATA_REFRESH_HINT = 'Connection defaults are read when a token is minted; run `<consumer-cli> auth token-source refresh` (e.g. `msgraph-cli auth token-source refresh`) to apply them now.';
 
 /**
+ * Example values for the connection-data help text, taken from the app's own config.
+ *
+ * Provider type names are app-chosen (the demo's `microsoft`, another app's `ms_graph`), so help text that hardcodes
+ * one hands every other app a command it refuses.
+ */
+export interface ConnectionDataHelpExamples {
+  /**
+   * Every provider type the config names, through a data type or an adapter.
+   */
+  readonly providerTypes: readonly UserExternalConnectionProviderType[];
+  /**
+   * The first configured provider type, when there is one.
+   */
+  readonly providerType?: Maybe<UserExternalConnectionProviderType>;
+  /**
+   * The first registered data type, when there is one.
+   */
+  readonly dataType?: Maybe<UserExternalConnectionDataTypeConfig>;
+  /**
+   * Every provider type whose adapter can `pack` settings, i.e. supports `import`.
+   */
+  readonly importProviderTypes: readonly UserExternalConnectionProviderType[];
+}
+
+/**
+ * Picks the help-text example values from an app's connection-data config.
+ *
+ * @param config - The app's connection-data config.
+ * @returns The example values; empty when the config names no provider.
+ *
+ * @example
+ * ```typescript
+ * const examples = connectionDataHelpExamples({ adapters: { ms_graph: adapter } });
+ * // examples.providerType === 'ms_graph'
+ * ```
+ */
+export function connectionDataHelpExamples(config: Maybe<CliExternalConnectionDataConfig>): ConnectionDataHelpExamples {
+  const dataTypes = config?.dataTypes ?? [];
+  const adapterEntries = Object.entries(config?.adapters ?? {});
+  const providerTypes = Array.from(new Set([...dataTypes.map((x) => x.providerType), ...adapterEntries.map(([providerType]) => providerType)]));
+
+  return {
+    providerTypes,
+    providerType: providerTypes[0],
+    dataType: dataTypes[0],
+    importProviderTypes: adapterEntries.filter(([, adapter]) => adapter.pack != null).map(([providerType]) => providerType)
+  };
+}
+
+/**
  * Input to {@link buildConnectionDataCommand}.
  */
 export interface BuildConnectionDataCommandInput {
@@ -80,11 +130,17 @@ export function buildConnectionDataCommand(input?: Maybe<BuildConnectionDataComm
   const config = input?.config;
   const lookup = userExternalConnectionDataTypeConfigLookup(config?.dataTypes);
   const loginNote = 'Needs a login with model.read / model.update (your everyday env, not an external-token env).';
+  const examples = connectionDataHelpExamples(config);
+  const providerTypeExample = examples.providerType == null ? '' : `, e.g. "${examples.providerType}"`;
+  const exampleDataType = examples.dataType;
+  const dataTypeExample = exampleDataType == null ? '' : `, e.g. "${exampleDataType.dataType}"`;
+  const setExamples: [string, string][] = exampleDataType == null ? [] : [[`$0 ${commandName} set ${exampleDataType.providerType} ${exampleDataType.dataType} <itemKey> --file <file>`, `Save one "${exampleDataType.label}" item from a file`]];
+  const importExampleProviderType = examples.importProviderTypes[0] ?? '<providerType>';
 
   const listCommand: CommandModule = {
     command: 'list [providerType]',
     describe: 'List your stored items (keys and sizes, never values) and the data types you may store',
-    builder: (yargs: Argv) => yargs.positional('providerType', { type: 'string', describe: 'Only this provider, e.g. "microsoft"' }),
+    builder: (yargs: Argv) => yargs.positional('providerType', { type: 'string', describe: `Only this provider${providerTypeExample}` }),
     handler: wrapCommandHandler(async (argv: any) => {
       const providerType = optionalString(argv.providerType);
       const result = await readConnectionData(requireCliContext(), { ...(providerType ? { providerType } : {}), keysOnly: true });
@@ -97,8 +153,8 @@ export function buildConnectionDataCommand(input?: Maybe<BuildConnectionDataComm
     describe: 'Print your stored values for a provider, optionally one data type or item',
     builder: (yargs: Argv) =>
       yargs
-        .positional('providerType', { type: 'string', demandOption: true, describe: 'The provider, e.g. "microsoft"' })
-        .positional('dataType', { type: 'string', describe: 'Only this data type, e.g. "mail_signature"' })
+        .positional('providerType', { type: 'string', demandOption: true, describe: `The provider${providerTypeExample}` })
+        .positional('dataType', { type: 'string', describe: `Only this data type${dataTypeExample}` })
         .positional('itemKey', { type: 'string', describe: 'Only this item, e.g. "me" or an email address' }),
     handler: wrapCommandHandler(async (argv: any) => {
       const providerType = String(argv.providerType);
@@ -115,14 +171,14 @@ export function buildConnectionDataCommand(input?: Maybe<BuildConnectionDataComm
     describe: 'Save one item, from --file (packed by the data type) or --json',
     builder: (yargs: Argv) =>
       yargs
-        .positional('providerType', { type: 'string', demandOption: true, describe: 'The provider, e.g. "microsoft"' })
-        .positional('dataType', { type: 'string', demandOption: true, describe: 'The data type, e.g. "mail_signature"' })
+        .positional('providerType', { type: 'string', demandOption: true, describe: `The provider${providerTypeExample}` })
+        .positional('dataType', { type: 'string', demandOption: true, describe: `The data type${dataTypeExample}` })
         .positional('itemKey', { type: 'string', demandOption: true, describe: 'The item key, e.g. "me" or an email address' })
         .option('file', { type: 'string', describe: 'Read the value from a file (or - for stdin), converted by the data type (e.g. an .html signature)' })
         .option('json', { type: 'string', describe: 'The value as a JSON object (or - to read it from stdin)' })
         .nargs('file', 1)
         .nargs('json', 1)
-        .example([[`$0 ${commandName} set microsoft mail_signature me --file signature.html`, 'Save your own mail signature']]),
+        .example(setExamples),
     handler: wrapCommandHandler(async (argv: any) => {
       const providerType = String(argv.providerType);
       const dataType = String(argv.dataType);
@@ -138,8 +194,8 @@ export function buildConnectionDataCommand(input?: Maybe<BuildConnectionDataComm
     describe: 'Remove one item, or a whole data type when no item key is given',
     builder: (yargs: Argv) =>
       yargs
-        .positional('providerType', { type: 'string', demandOption: true, describe: 'The provider, e.g. "microsoft"' })
-        .positional('dataType', { type: 'string', demandOption: true, describe: 'The data type, e.g. "mail_signature"' })
+        .positional('providerType', { type: 'string', demandOption: true, describe: `The provider${providerTypeExample}` })
+        .positional('dataType', { type: 'string', demandOption: true, describe: `The data type${dataTypeExample}` })
         .positional('itemKey', { type: 'string', describe: 'The item key. Omit to remove every item of the data type.' }),
     handler: wrapCommandHandler(async (argv: any) => {
       const providerType = String(argv.providerType);
@@ -156,17 +212,20 @@ export function buildConnectionDataCommand(input?: Maybe<BuildConnectionDataComm
     describe: "Save a consuming CLI's exported settings (e.g. `msgraph-cli config export`) as stored data",
     builder: (yargs: Argv) =>
       yargs
-        .positional('providerType', { type: 'string', demandOption: true, describe: 'The provider, e.g. "microsoft"' })
+        .positional('providerType', { type: 'string', demandOption: true, describe: `The provider${providerTypeExample}` })
         .option('file', { type: 'string', demandOption: true, describe: 'The settings JSON file, or - for stdin. A `{ ok, data }` CLI envelope is accepted.' })
         .option('replace', { type: 'boolean', default: false, describe: "Drop the provider's other stored data first" })
         .nargs('file', 1)
-        .example([[`msgraph-cli config export | $0 ${commandName} import microsoft --file -`, 'Store your local msgraph-cli signatures for every machine']]),
+        .example([[`<consumer-cli> config export | $0 ${commandName} import ${importExampleProviderType} --file -`, "Store a consuming CLI's exported settings (e.g. msgraph-cli's signatures) for every machine"]]),
     handler: wrapCommandHandler(async (argv: any) => {
       const providerType = String(argv.providerType);
       const adapter = adapterFor(config, providerType);
 
       if (!adapter?.pack) {
-        throw new CliError({ message: `${commandName} import is not available for "${providerType}": ${cli} has no settings adapter for it.`, code: 'INVALID_ARGUMENT', suggestion: `Use \`${cli} ${commandName} set ${providerType} <dataType> <itemKey> --json …\` instead.` });
+        // an unknown provider (e.g. another app's name for it) would be refused by `set` too, so point at the ones that work
+        const importable = examples.importProviderTypes.length > 0 ? examples.importProviderTypes.join(', ') : 'none';
+        const suggestion = examples.providerTypes.includes(providerType) ? `Use \`${cli} ${commandName} set ${providerType} <dataType> <itemKey> --json …\` instead.` : `${cli} imports settings for: ${importable}. Run \`${cli} ${commandName} list\` for the data types you may store.`;
+        throw new CliError({ message: `${commandName} import is not available for "${providerType}": ${cli} has no settings adapter for it.`, code: 'INVALID_ARGUMENT', suggestion });
       }
 
       const settings = readImportSettings(await readTextInput(String(argv.file), '--file'));

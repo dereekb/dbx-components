@@ -252,7 +252,7 @@ export function msGraphCliConfigCommand(storeOverride?: Maybe<MsGraphCliConfigSt
   const exportCommand: CommandModule = {
     command: 'export',
     describe: "Print the saved signatures as connection settings, to store them in the app (everyone's machines get them as server defaults)",
-    builder: (yargs: Argv) => yargs.example([['$0 config export | <app>-cli connection-data import microsoft --file -', 'Save your local signatures to the app, then run msgraph-cli auth token-source refresh']]),
+    builder: (yargs: Argv) => yargs.example([['$0 config export | <app-cli> connection-data import <providerType> --file -', "Save your local signatures to the app (<providerType> is the app's Microsoft connection, e.g. the demo's microsoft), then run msgraph-cli auth token-source refresh"]]),
     handler: wrapCommandHandler(async () => {
       outputResult(await msGraphCliConfigExport(await configStoreFor(storeOverride).loadConfigFile()));
     })
