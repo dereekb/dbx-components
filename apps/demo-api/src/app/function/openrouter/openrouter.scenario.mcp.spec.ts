@@ -28,10 +28,11 @@ import { callMcpMethod, describeMcpMethod, searchMcpMethods } from '../../../tes
  */
 
 /**
- * Set to run the `live` block against the real API. Everything else runs on the emulator alone and
- * needs no credentials — the same gate the openrouter package's live block uses.
+ * Whether the `live` block runs against the real API: `OPENROUTER_LIVE_SPECS` is `1` or `true` — the same
+ * gate the openrouter package's live probes use. The app reads `OPENROUTER_API_KEY` itself. Everything else
+ * runs on the emulator alone and needs no credentials.
  */
-const OPENROUTER_LIVE_API_KEY = process.env['OPENROUTER_API_KEY'];
+const RUN_OPENROUTER_LIVE_SPECS = process.env['OPENROUTER_LIVE_SPECS'] === '1' || process.env['OPENROUTER_LIVE_SPECS']?.toLowerCase() === 'true';
 
 /**
  * Model the live block runs against. A free model by default: this asserts that a run completes with
@@ -183,7 +184,7 @@ demoApiFunctionContextFactory((f) => {
         });
 
         // MARK: The live block — the plan's end-to-end bullet, driven from the MCP side
-        describe.skipIf(!OPENROUTER_LIVE_API_KEY)('live', () => {
+        describe.skipIf(!RUN_OPENROUTER_LIVE_SPECS)('live', () => {
           it('should drain a run published over MCP and resolve its stored generation id', async () => {
             // The cap is generous on purpose: a hybrid reasoning model spends output tokens on reasoning
             // first, so a tight one truncates the answer away and leaves `o` empty on an otherwise fine run.

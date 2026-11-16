@@ -20,17 +20,23 @@ import { OPENROUTER_JEV_1_13_MODEL_ID } from './openrouter.type';
  *
  * ## Running
  *
- * Skipped unless `OPENROUTER_API_KEY` is set, because these make real calls. They are cheap: input is
- * billed at $0.042 per million tokens and output is free, so one run of this file costs a fraction of a
- * cent.
+ * Skipped unless `OPENROUTER_LIVE_SPECS` is `1` or `true`, because these make real calls with
+ * `OPENROUTER_API_KEY`. The key alone never enables them (see "Live probes" in the package README).
+ * They are cheap: input is billed at $0.042 per million tokens and output is free, so one run of this
+ * file costs a fraction of a cent.
  *
  * ```
- * OPENROUTER_API_KEY=sk-or-… npx nx test openrouter
- * OPENROUTER_TEST_DECISION_MODEL_ID=typesafe/jev-latest npx nx test openrouter
+ * OPENROUTER_LIVE_SPECS=1 npx nx test openrouter --skip-nx-cache
+ * OPENROUTER_LIVE_SPECS=1 OPENROUTER_TEST_DECISION_MODEL_ID=typesafe/jev-latest npx nx test openrouter --skip-nx-cache
  * ```
  */
 const OPENROUTER_API_KEY = process.env['OPENROUTER_API_KEY'];
-const CREDENTIALS_PRESENT = Boolean(OPENROUTER_API_KEY);
+
+/**
+ * Whether to run the live probes: `OPENROUTER_LIVE_SPECS` is `1` or `true`. Never inferred from the key,
+ * which Nx always loads from the workspace `.env.local` / `.env` and an empty override cannot blank.
+ */
+const RUN_OPENROUTER_LIVE_SPECS = process.env['OPENROUTER_LIVE_SPECS'] === '1' || process.env['OPENROUTER_LIVE_SPECS']?.toLowerCase() === 'true';
 
 const DECISION_MODEL = process.env['OPENROUTER_TEST_DECISION_MODEL_ID'] ?? OPENROUTER_JEV_1_13_MODEL_ID;
 
@@ -65,7 +71,7 @@ const PROBE_QUESTIONS = {
   refundRequested: llmNoulQuestion('`ticket` asks for money to be returned.', { true: 'the sender asks for a refund or reversal', false: 'the sender asks for anything else' })
 } as const;
 
-describe.skipIf(!CREDENTIALS_PRESENT)('System One live probes', () => {
+describe.skipIf(!RUN_OPENROUTER_LIVE_SPECS)('System One live probes', () => {
   const client = new OpenRouterCore({ apiKey: OPENROUTER_API_KEY as string });
 
   it('should answer all three primitives in one call', async () => {

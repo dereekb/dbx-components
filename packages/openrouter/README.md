@@ -606,7 +606,7 @@ The opt-in template-text notification type sends any template by key:
   for plain prompts (additive).
 ## Live probes
 
-Two blocks make real API calls, both skipped unless `OPENROUTER_API_KEY` is set:
+Four blocks make real (some billed) API calls. All are skipped unless `OPENROUTER_LIVE_SPECS` is `1` or `true`:
 
 - `openrouter.filesearch.spike.spec.ts` — the `file_search` passthrough probes. Deliberately cheap: a
   free model by default, and the file_search probe fails at the store lookup before anything is billed.
@@ -624,10 +624,22 @@ Two blocks make real API calls, both skipped unless `OPENROUTER_API_KEY` is set:
   this repo consumes the models yet, so the same server actions the callModel MCP surfaces are called
   directly instead.
 
+- The demo app's `live` blocks in `apps/demo-api` (`storagefile.resume.scenario.spec.ts`,
+  `openrouter.scenario.mcp.spec.ts`) use the same flag.
+- The flag is separate from the key on purpose. Nx loads the workspace `.env.local` and the committed
+  `.env` (`OPENROUTER_API_KEY=placeholder`) into every test task, and its bundled `dotenv-expand` treats
+  an empty override as unset and writes the file value back. A key check would run the probes on every
+  local run, and on CI against the placeholder.
+- Keep `OPENROUTER_LIVE_SPECS` out of `.env` and `.env.local`. To force it off over a dotenv value, pass
+  `0`, not an empty value.
+- `nx test` is cached without hashing env vars, so pass `--skip-nx-cache` whenever the flag changes:
+  `OPENROUTER_LIVE_SPECS=1 npx nx test openrouter --skip-nx-cache`.
+
 | Variable | Purpose |
 |---|---|
-| `OPENROUTER_API_KEY` | Enables the live probes. |
-| `OPENROUTER_TEST_MODEL_ID` | Model for the general probe and the end-to-end run. Defaults to `nvidia/nemotron-nano-9b-v2:free`. |
+| `OPENROUTER_LIVE_SPECS` | `1` / `true` runs the live probes. Off by default. |
+| `OPENROUTER_API_KEY` | The key the live probes call with. Its presence alone never runs them. |
+| `OPENROUTER_TEST_MODEL_ID` | Model for the general probe and the end-to-end run. Defaults to `nvidia/nemotron-nano-9b-v2:free` in code; the committed `.env` sets `openai/gpt-5.6-luna` and Nx loads it, so set this explicitly for a free run. |
 | `OPENROUTER_FILE_SEARCH_MODEL_ID` | Model for the file_search probe. Must be an OpenAI model. |
 | `OPENROUTER_FILE_SEARCH_VECTOR_STORE_ID` | A real `vs_…`; upgrades the probe to the full grounded assertion. |
 | `OPENROUTER_TEST_DECISION_MODEL_ID` | System One model for the decision probes. Defaults to `typesafe/jev-1.13`. Its own knob because the two arms cannot share one value. |

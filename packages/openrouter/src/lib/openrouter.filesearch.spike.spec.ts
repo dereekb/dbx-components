@@ -41,18 +41,25 @@ import { openRouterFileSearchTool, openRouterProviderPinnedTo } from './openrout
  *
  * ## Running
  *
- * Skipped unless `OPENROUTER_API_KEY` is set, because these make real calls. They are deliberately
- * cheap: the default model is free, and the file_search probe fails at the store lookup before any
- * generation is billed.
+ * Skipped unless `OPENROUTER_LIVE_SPECS` is `1` or `true`, because these make real calls with
+ * `OPENROUTER_API_KEY`. The key alone never enables them (see "Live probes" in the package README).
+ * They are deliberately cheap: the file_search probes fail at the store lookup before any generation
+ * is billed, and the general probe runs on `OPENROUTER_TEST_MODEL_ID` (free in code, but the committed
+ * `.env` pins a paid model, so override it for a free run).
  *
  * ```
- * OPENROUTER_API_KEY=sk-or-… pnpm nx test openrouter
- * OPENROUTER_TEST_MODEL_ID=deepseek/deepseek-v4-flash pnpm nx test openrouter
- * OPENROUTER_FILE_SEARCH_VECTOR_STORE_ID=vs_… pnpm nx test openrouter   # the full end-to-end assertion
+ * OPENROUTER_LIVE_SPECS=1 npx nx test openrouter --skip-nx-cache
+ * OPENROUTER_LIVE_SPECS=1 OPENROUTER_TEST_MODEL_ID=deepseek/deepseek-v4-flash npx nx test openrouter --skip-nx-cache
+ * OPENROUTER_LIVE_SPECS=1 OPENROUTER_FILE_SEARCH_VECTOR_STORE_ID=vs_… npx nx test openrouter --skip-nx-cache   # the full end-to-end assertion
  * ```
  */
 const OPENROUTER_API_KEY = process.env['OPENROUTER_API_KEY'];
-const CREDENTIALS_PRESENT = Boolean(OPENROUTER_API_KEY);
+
+/**
+ * Whether to run the live probes: `OPENROUTER_LIVE_SPECS` is `1` or `true`. Never inferred from the key,
+ * which Nx always loads from the workspace `.env.local` / `.env` and an empty override cannot blank.
+ */
+const RUN_OPENROUTER_LIVE_SPECS = process.env['OPENROUTER_LIVE_SPECS'] === '1' || process.env['OPENROUTER_LIVE_SPECS']?.toLowerCase() === 'true';
 
 /**
  * Model used by the live probes. Free by default — override for a specific provider.
@@ -104,7 +111,7 @@ export async function postOpenRouterResponse(apiKey: string, body: Record<string
   return { status: response.status, body: (await response.json()) as OpenRouterProbeResponse };
 }
 
-describe.skipIf(!CREDENTIALS_PRESENT)('OpenRouter live probes', () => {
+describe.skipIf(!RUN_OPENROUTER_LIVE_SPECS)('OpenRouter live probes', () => {
   it('should accept the request shape this package emits', async () => {
     const { status, body } = await postOpenRouterResponse(OPENROUTER_API_KEY as string, {
       model: TEST_MODEL,

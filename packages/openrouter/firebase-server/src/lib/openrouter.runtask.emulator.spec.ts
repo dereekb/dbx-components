@@ -39,8 +39,15 @@ const TEST_DECISION_STATE = { ticket: { body: 'I was charged twice and need a re
 const TEST_DECISION_ANSWERS = { urgent: { type: 'noul', noul: 0.9 }, team: { type: 'choice', choice: 'billing', probabilities: { billing: 0.95, access: 0.05 } } };
 
 /**
- * Set to run the `live end-to-end` block against the real API. Every other block runs against a fake
- * client and needs no credentials.
+ * Whether the `live end-to-end` block runs against the real API: `OPENROUTER_LIVE_SPECS` is `1` or `true`.
+ * Every other block runs against a fake client and needs no credentials. Never inferred from the key, which
+ * Nx always loads from the workspace `.env.local` / `.env` and an empty override cannot blank — the same
+ * gate the openrouter package's own live probes use.
+ */
+const RUN_OPENROUTER_LIVE_SPECS = process.env['OPENROUTER_LIVE_SPECS'] === '1' || process.env['OPENROUTER_LIVE_SPECS']?.toLowerCase() === 'true';
+
+/**
+ * The key the `live end-to-end` block calls with.
  */
 const OPENROUTER_LIVE_API_KEY = process.env['OPENROUTER_API_KEY'];
 const LIVE_TEST_MODEL = process.env['OPENROUTER_TEST_MODEL_ID'] ?? 'nvidia/nemotron-nano-9b-v2:free';
@@ -1199,7 +1206,7 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
     });
 
     // MARK: End-to-end against the live API
-    describe.skipIf(!OPENROUTER_LIVE_API_KEY)('live end-to-end', () => {
+    describe.skipIf(!RUN_OPENROUTER_LIVE_SPECS)('live end-to-end', () => {
       it('should drain a real run and resolve its stored generation id', async () => {
         // The plan's end-to-end bullet, minus the one part this repo cannot reach: no app here consumes
         // the models, so there is no model API for the callModel MCP to drive. Everything else is the
