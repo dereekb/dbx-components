@@ -144,6 +144,60 @@ try {
 }
 ```
 
+## Model configuration
+
+Which models a host runs, and which backend serves each one, is configuration rather than code. The library holds the
+pure half — the file shape, a fail-loud parse, the overlay of a host's built-ins, and resolution. It reads no
+environment variable and no file: `/node` does that, and a browser host passes the parsed JSON in.
+
+- **Tiers.** A capability names a tier (`fast`, `strong`, or any key a host adds), never a slug.
+  `resolveLlmModelTiers({ base, modelTiers, defaultTier })` merges the host's declaration over its own base map and
+  fails loud when the default tier (`fast` unless set) is missing; `resolveLlmModelTier` fails loud on an unknown key.
+  A tier value is a slug or `{ model, maxOutputTokens?, reasoning? }` — read it with `llmTierModelOf` /
+  `llmTierConfigOf`. The library ships no slugs.
+- **The file.** `parseLlmModelConfigFile({ raw, source, schema })` validates a `models.json`-shaped object: named
+  `providers`, `profiles` (complete tier maps), per-slug `models` facts, `active`, and the unread `notes` / `$schema`.
+  An unknown key, an illegal value or a malformed tier throws an error naming the file and the entry, so a typo
+  reddens startup instead of billing the model you meant to leave. A provider names the env var holding its key
+  (`apiKeyEnv`), never the key.
+- **Schema and extensions.** `makeLlmModelConfigSchema({ label, transports, meterings, decisionRoutes,
+  implicitProviders, retiredKeys, extension })` sets the legal values and the error label. An extension adds provider
+  and model keys with their parsers, transports it owns (providers that serve no completions), patch entries (an entry
+  with no transport, base URL or key var that extends the built-in provider of the same name) and metering sources. A
+  retired key fails with the remedy you register.
+- **Overlay.** `overlayLlmModelConfigFile({ base, file, source, schema })` lays a host's file over its built-ins. A
+  provider, profile or per-slug entry the file names replaces the built-in whole — a half-replaced provider would bill
+  one account at another's endpoint — and every `models[slug].provider` is then checked against the merged providers.
+- **Resolution.** `resolveLlmModelProfile({ file, override, schema })` picks the active profile: the override wins,
+  `off` / `none` select nothing, and a name the file lacks throws. `llmModelReasoningOffEncodings`,
+  `llmModelVisionCapabilities`, `llmModelPromptAddenda` and `llmModelProviderBindings` project the per-slug facts.
+  `resolveLlmProviderConfigs({ providers, schema, apiKeyOf })` turns declared providers into `LlmProviderConfig`s that
+  carry the key value, and lists the declared providers whose key is missing.
+- **Wire vocabulary.** `LLM_REASONING_OFF_ENCODINGS` (how an OpenAI-compatible wire says "reasoning off":
+  `effort-none`, `effort-minimal`, `nested-disabled`, `omit`), `llmReasoningOffEncodingFor` (the slug's own, then the
+  fallback, then `effort-none`), `LLM_TOKEN_LIMIT_PARAMS`, and the per-slug `LlmModelReasoningOffMap` /
+  `LlmModelVisionMap` the transports read.
+
+```json
+{
+  "active": "balanced",
+  "providers": { "local": { "transport": "openai", "baseUrl": "http://192.168.1.50:8000/v1", "apiKeyEnv": "LOCAL_API_KEY" } },
+  "profiles": { "balanced": { "fast": "local/qwen-27b", "strong": "deepseek/deepseek-v4.1-flash" } },
+  "models": { "local/qwen-27b": { "provider": "local", "reasoningOff": "omit" } }
+}
+```
+
+```ts
+import { makeLlmModelConfigSchema, overlayLlmModelConfigFile, parseLlmModelConfigFile, resolveLlmModelProfile, resolveLlmModelTiers, resolveLlmProviderConfigs } from '@dereekb/llm';
+
+const schema = makeLlmModelConfigSchema({ label: 'my-app models', transports: ['openai', 'openrouter'] });
+const file = parseLlmModelConfigFile({ raw: JSON.parse(text), source: 'models.json', schema });
+const effective = overlayLlmModelConfigFile({ base: BUILT_IN_MODEL_CONFIG, file, source: 'models.json', schema });
+const profile = resolveLlmModelProfile({ file: effective, override: requestedProfile, schema });
+const { tiers, defaultTier } = resolveLlmModelTiers({ base: BUILT_IN_TIERS, modelTiers: profile?.tiers });
+const { providers, gaps } = resolveLlmProviderConfigs({ providers: effective.providers, schema, apiKeyOf: ({ entry }) => keys[entry.apiKeyEnv] });
+```
+
 ## Decisions
 
 A decision is `(state, questions) → answers`: the caller declares the answer space up front as typed questions and
