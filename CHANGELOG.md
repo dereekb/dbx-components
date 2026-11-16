@@ -1,3 +1,25 @@
+# [14.26.0](https://github.com/dereekb/dbx-components/compare/v14.25.1-dev...v14.26.0) (2026-11-16)
+
+### Bug Fixes
+
+- **dbx-cli:** walk Omit/Partial heritage clauses in forge field scan ([05be109d](https://github.com/dereekb/dbx-components/commit/05be109dafba5f4ba84a21d99ea4f9bca7deff0e))
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes + peer dep sync ([dd7b0378](https://github.com/dereekb/dbx-components/commit/dd7b0378af6d5de45833245a59d7d3bfde9a6c4d))
+
+### Documentation
+
+- **demo:** move layout boxes demo to /doc/form/2d with config examples ([1e3d6e8d](https://github.com/dereekb/dbx-components/commit/1e3d6e8dc2e1438595a7783eba6a1c51c1d3ed7c))
+
+### Features
+
+- **dbx-form:** add layout boxes field with injected box rows ([2130b218](https://github.com/dereekb/dbx-components/commit/2130b21859c207dea241ed96fb3ce0e5f1ffd950))
+- **dbx-form:** pick a layout boxes row component per box ([99cff3c8](https://github.com/dereekb/dbx-components/commit/99cff3c8dd8eaedd108bc44fe562036592c31f38))
+- **dbx-web:** catchServerErrorResponse + MCP-discoverable error utils ([4c7f897d](https://github.com/dereekb/dbx-components/commit/4c7f897d3ff1844901e2fda98fc1a833f59d7eb7))
+- microsoft-cli ([#59](https://github.com/dereekb/dbx-components/issues/59)) ([7d5e1fe3](https://github.com/dereekb/dbx-components/commit/7d5e1fe3578d7b69ec625659783ca39c2c5cdff4)), closes [#59](https://github.com/dereekb/dbx-components/issues/59) [high-water](https://github.com/hi/issues/water)
+- trello-cli ([#60](https://github.com/dereekb/dbx-components/issues/60)) ([4de9c02a](https://github.com/dereekb/dbx-components/commit/4de9c02a99bc980357c9d700f380704291061b05)), closes [#60](https://github.com/dereekb/dbx-components/issues/60)
+
 ## [14.25.1](https://github.com/dereekb/dbx-components/compare/v14.25.0-dev...v14.25.1) (2026-11-04)
 
 ### Bug Fixes

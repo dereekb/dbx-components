@@ -1,9 +1,9 @@
 {
   "name": "@dereekb/util/oidc",
-  "version": "14.25.1",
+  "version": "14.26.0",
   "type": "module",
   "sideEffects": false,
   "peerDependencies": {
-    "@dereekb/util": "14.25.1"
+    "@dereekb/util": "14.26.0"
   }
 }
