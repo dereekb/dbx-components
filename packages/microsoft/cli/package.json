@@ -1,16 +1,16 @@
 {
   "name": "@dereekb/microsoft/cli",
-  "version": "14.26.0",
+  "version": "14.27.0",
   "sideEffects": false,
   "type": "module",
   "bin": {
     "msgraph-cli": "index.js"
   },
   "peerDependencies": {
-    "@dereekb/dbx-cli": "14.26.0",
-    "@dereekb/firebase": "14.26.0",
-    "@dereekb/microsoft": "14.26.0",
-    "@dereekb/util": "14.26.0",
+    "@dereekb/dbx-cli": "14.27.0",
+    "@dereekb/firebase": "14.27.0",
+    "@dereekb/microsoft": "14.27.0",
+    "@dereekb/util": "14.27.0",
     "yargs": "^18.0.0"
   },
   "devDependencies": {

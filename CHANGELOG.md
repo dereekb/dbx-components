@@ -1,3 +1,19 @@
+# [14.27.0](https://github.com/dereekb/dbx-components/compare/v14.26.0-dev...v14.27.0) (2026-11-16)
+
+### Bug Fixes
+
+- **dbx-cli,microsoft:** use the app's provider type in help and hints ([6d61f11c](https://github.com/dereekb/dbx-components/commit/6d61f11c7e4ae722c8b3570cdfcb2d1341b9d4e1))
+- **dbx-cli:** name a generic consumer CLI in the external-token note ([1447c0c3](https://github.com/dereekb/dbx-components/commit/1447c0c37ecd16bb29a4adf7e783a40ef24d0782))
+- **trello:** clear dates with a query "null", not a JSON null ([22caa0fb](https://github.com/dereekb/dbx-components/commit/22caa0fbc3d83bf6fc3a8a1ffea6960a8ff55b4c))
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes + peer dep sync ([15161904](https://github.com/dereekb/dbx-components/commit/15161904909258a3136b4e8f087d4b332c265e66))
+
+### Features
+
+- **dbx-cli:** built-in docs command for the app API's docs ([445a4b1f](https://github.com/dereekb/dbx-components/commit/445a4b1fdee1727feafc1bb3f9ee7723f271b329))
+
 # [14.26.0](https://github.com/dereekb/dbx-components/compare/v14.25.1-dev...v14.26.0) (2026-11-16)
 
 ### Bug Fixes
