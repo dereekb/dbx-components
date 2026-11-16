@@ -1,6 +1,6 @@
-import { computed, Directive, effect, inject, input, untracked } from '@angular/core';
+import { computed, DestroyRef, Directive, effect, inject, input, untracked } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { clean, SimpleStorageAccessorFactory } from '@dereekb/dbx-core';
+import { SimpleStorageAccessorFactory } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 import { DBX_LLM_FLOW_STORAGE_PREFIX, type DbxLlmFlowConfig } from './llm.flow';
 import { DbxLlmFlowStore } from './llm.flow.store';
@@ -28,6 +28,8 @@ export class DbxLlmFlowDirective {
   readonly store = inject(DbxLlmFlowStore);
   readonly storageAccessorFactory = inject(SimpleStorageAccessorFactory, { optional: true });
 
+  private readonly _destroyRef = inject(DestroyRef);
+
   readonly dbxLlmFlow = input<Maybe<DbxLlmFlowConfig | ''>>();
 
   /**
@@ -53,8 +55,10 @@ export class DbxLlmFlowDirective {
 
         if (this._storageSync == null && this.storageAccessorFactory != null) {
           const accessor = this.storageAccessorFactory.createStorageAccessor<DbxLlmFlowPersistedState>({ prefix: DBX_LLM_FLOW_STORAGE_PREFIX });
-          this._storageSync = clean(new DbxLlmFlowStorageSync({ store: this.store, accessor, storageKey$: this._storageKey$, debounceTime: config?.persistence?.debounceTime, maxRunsPerSection: config?.persistence?.maxRunsPerSection }));
-          this._storageSync.init();
+          const storageSync = new DbxLlmFlowStorageSync({ store: this.store, accessor, storageKey$: this._storageKey$, debounceTime: config?.persistence?.debounceTime, maxRunsPerSection: config?.persistence?.maxRunsPerSection });
+          this._destroyRef.onDestroy(() => storageSync.destroy()); // the effect body is not an injection context, so clean() can not be used here
+          this._storageSync = storageSync;
+          storageSync.init();
         }
       });
     });

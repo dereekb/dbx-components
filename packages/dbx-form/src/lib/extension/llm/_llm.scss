@@ -3,9 +3,187 @@
 
 // MARK: Mixin
 // Styles for the @dereekb/dbx-form/llm generation-flow components.
+//
+// Override points:
+// --dbx-llm-flow-section-gap: space between sections in a flow.
+// --dbx-llm-flow-section-border: border of a section.
+// --dbx-llm-flow-output-max-height: max height of the default output before it scrolls.
+// --dbx-llm-flow-mono-font-family: font family of the raw input and the default output.
 @mixin core() {
+  .dbx-llm-flow {
+    display: flex;
+    flex-direction: column;
+    gap: var(--dbx-llm-flow-section-gap, var(--dbx-padding-3));
+  }
+
   .dbx-llm-flow-section {
     display: block;
+    padding: var(--dbx-padding-3);
+    border: var(--dbx-llm-flow-section-border, 1px solid var(--mat-sys-outline-variant));
+    border-radius: var(--mat-sys-corner-medium);
+
+    .dbx-llm-flow-section-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--dbx-padding-2);
+    }
+
+    .dbx-llm-flow-section-header-label,
+    .dbx-llm-flow-section-header-actions,
+    .dbx-llm-flow-section-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--dbx-padding-2);
+    }
+
+    .dbx-llm-flow-section-hint {
+      margin-top: var(--dbx-padding-1);
+    }
+
+    .dbx-llm-flow-section-body {
+      display: flex;
+      flex-direction: column;
+      gap: var(--dbx-padding-2);
+      margin-top: var(--dbx-padding-2);
+    }
+  }
+
+  .dbx-llm-flow-section-run-buttons {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--dbx-padding-2);
+  }
+
+  // MARK: Raw Input
+  .dbx-llm-flow-section-raw-input {
+    display: block;
+
+    .dbx-llm-flow-section-raw-input-field {
+      width: 100%;
+    }
+
+    .dbx-llm-flow-section-raw-input-textarea {
+      font-family: var(--dbx-llm-flow-mono-font-family, monospace);
+      font-size: 0.9em;
+    }
+
+    .dbx-llm-flow-section-raw-input-issues {
+      margin: var(--dbx-padding-1) 0 0;
+      padding-left: var(--dbx-padding-4);
+      color: var(--mat-sys-error);
+    }
+  }
+
+  .dbx-llm-flow-section-raw-input.dbx-llm-flow-section-raw-input-overridden .dbx-llm-flow-section-raw-input-override {
+    padding: var(--dbx-padding-1) var(--dbx-padding-2);
+    margin-bottom: var(--dbx-padding-1);
+    border-radius: var(--mat-sys-corner-small);
+    background: var(--mat-sys-surface-container-high);
+  }
+
+  // MARK: Output
+  .dbx-llm-flow-section-output {
+    display: block;
+
+    .dbx-llm-flow-section-output-text {
+      margin: 0;
+      padding: var(--dbx-padding-2);
+      max-height: var(--dbx-llm-flow-output-max-height, 480px);
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: var(--dbx-llm-flow-mono-font-family, monospace);
+      font-size: 0.9em;
+      border-radius: var(--mat-sys-corner-small);
+      background: var(--mat-sys-surface-container);
+    }
+  }
+
+  // MARK: History
+  .dbx-llm-flow-section-history-button-badge {
+    display: inline-block;
+  }
+
+  .dbx-llm-flow-section-history-list {
+    display: block;
+
+    .dbx-llm-flow-section-history-group + .dbx-llm-flow-section-history-group {
+      margin-top: var(--dbx-padding-3);
+    }
+
+    .dbx-llm-flow-section-history-group-label {
+      margin-bottom: var(--dbx-padding-1);
+    }
+
+    .dbx-llm-flow-section-history-row {
+      display: flex;
+      align-items: center;
+      gap: var(--dbx-padding-2);
+      padding: var(--dbx-padding-1) var(--dbx-padding-2);
+      border-radius: var(--mat-sys-corner-small);
+
+      &.dbx-llm-flow-section-history-row-selected {
+        background: var(--mat-sys-secondary-container);
+      }
+
+      &[data-state='failed'] .dbx-llm-flow-section-history-row-icon {
+        color: var(--mat-sys-error);
+      }
+    }
+
+    .dbx-llm-flow-section-history-row-main {
+      display: flex;
+      flex: 1 1 auto;
+      flex-direction: column;
+      align-items: flex-start;
+      min-width: 0;
+      padding: 0;
+      border: none;
+      background: none;
+      color: inherit;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+
+      &:disabled {
+        cursor: default;
+        opacity: 0.6;
+      }
+    }
+
+    .dbx-llm-flow-section-history-row-title {
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  // MARK: Form Panel
+  .dbx-llm-flow-section-form-panel {
+    display: block;
+
+    .dbx-llm-flow-section-form-panel-header {
+      margin-bottom: var(--dbx-padding-2);
+    }
+
+    .dbx-llm-flow-section-form-panel-body {
+      display: flex;
+      flex-direction: column;
+      gap: var(--dbx-padding-2);
+    }
+
+    .dbx-llm-flow-section-form-panel-detach .dbx-llm-flow-section-form-panel-body {
+      padding: var(--dbx-padding-2);
+    }
+
+    .dbx-llm-flow-section-form-panel-actions {
+      display: flex;
+      justify-content: flex-end;
+    }
   }
 }
 

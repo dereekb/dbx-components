@@ -14,6 +14,7 @@ import { DocExtensionWebFilePreviewComponent } from './container/webfilepreview.
 import { DocExtensionHelpComponent } from './container/help.component';
 import { DocExtensionOidcComponent } from './container/oidc.component';
 import { DocExtensionQuizComponent } from './container/quiz.component';
+import { DocExtensionLlmComponent } from './container/llm.component';
 import { DocExtensionBrowserAgentComponent } from './container/browseragent.component';
 import { DocExtensionMcpComponent } from './container/mcp.component';
 
@@ -108,6 +109,12 @@ export const DOC_EXTENSION_QUIZ_STATE: Ng2StateDeclaration = {
   component: DocExtensionQuizComponent
 };
 
+export const DOC_EXTENSION_LLM_STATE: Ng2StateDeclaration = {
+  url: '/llm',
+  name: 'doc.extension.llm',
+  component: DocExtensionLlmComponent
+};
+
 export const DOC_EXTENSION_BROWSER_AGENT_STATE: Ng2StateDeclaration = {
   url: '/browseragent',
   name: 'doc.extension.browseragent',
@@ -137,6 +144,7 @@ export const STATES: Ng2StateDeclaration[] = [
   DOC_EXTENSION_HELP_STATE,
   DOC_EXTENSION_OIDC_STATE,
   DOC_EXTENSION_QUIZ_STATE,
+  DOC_EXTENSION_LLM_STATE,
   DOC_EXTENSION_BROWSER_AGENT_STATE,
   DOC_EXTENSION_MCP_STATE
 ];

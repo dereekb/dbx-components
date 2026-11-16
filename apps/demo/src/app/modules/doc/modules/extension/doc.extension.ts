@@ -78,6 +78,12 @@ export const DOC_EXTENSION_ROUTES = [
     ref: 'doc.extension.quiz'
   },
   {
+    icon: 'auto_awesome',
+    title: 'LLM Flow',
+    detail: 'dbx-form/llm',
+    ref: 'doc.extension.llm'
+  },
+  {
     icon: 'devices',
     title: 'Browser Agent',
     detail: 'dbx-browser-agent-view',

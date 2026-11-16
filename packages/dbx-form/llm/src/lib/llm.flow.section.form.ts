@@ -1,4 +1,4 @@
-import { DestroyRef, inject } from '@angular/core';
+import { DestroyRef, inject, type Type } from '@angular/core';
 import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { DbxFormState, DbxMutableForm, stripEmptyForgeValues } from '@dereekb/dbx-form';
 import { SubscriptionObject } from '@dereekb/rxjs';
@@ -163,4 +163,25 @@ export function dbxLlmFlowSectionFormInjectionConfig<T, F = unknown>(config: Dbx
       bindDbxLlmFlowSectionFormInInjectionContext(target);
     }
   };
+}
+
+/**
+ * Creates the injection config that renders a section's form component, auto-bound to the target unless autoBindForm is false.
+ *
+ * Memoize the result: injection configs compare init by reference.
+ *
+ * @param formComponent - The section config's form component.
+ * @param autoBindForm - The section config's autoBindForm. Defaults to true.
+ * @param target - The binding target.
+ * @returns The injection config, or undefined when there is no form component.
+ */
+export function dbxLlmFlowSectionFormComponentInjectionConfig<F = unknown>(formComponent: Maybe<Type<unknown>>, autoBindForm: Maybe<boolean>, target: DbxLlmFlowSectionFormBindingTarget<F>): Maybe<DbxInjectionComponentConfig> {
+  let result: Maybe<DbxInjectionComponentConfig>;
+
+  if (formComponent != null) {
+    const config: DbxInjectionComponentConfig = { componentClass: formComponent };
+    result = autoBindForm === false ? config : dbxLlmFlowSectionFormInjectionConfig(config, target);
+  }
+
+  return result;
 }

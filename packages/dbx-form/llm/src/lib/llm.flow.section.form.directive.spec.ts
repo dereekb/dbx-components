@@ -49,7 +49,7 @@ const SECTION: DbxLlmFlowSectionConfig<TestFormValue> = { key: 'brief', hasForm:
           <dbx-test-llm-form dbxLlmFlowSectionForm></dbx-test-llm-form>
         }
         @if (showInjected()) {
-          <dbx-injection [config]="injectionConfig()"></dbx-injection>
+          <dbx-injection [config]="injectionConfigSignal()"></dbx-injection>
         }
       </div>
     </div>
@@ -62,7 +62,7 @@ class TestLlmFormHostComponent {
   readonly showInjected = signal(false);
 
   readonly section = viewChild.required(DbxLlmFlowSectionDirective);
-  readonly injectionConfig = computed(() => dbxLlmFlowSectionFormInjectionConfig({ componentClass: TestLlmFormComponent }, this.section().sectionStore));
+  readonly injectionConfigSignal = computed(() => dbxLlmFlowSectionFormInjectionConfig({ componentClass: TestLlmFormComponent }, this.section().sectionStore));
 }
 
 const TEST_PROVIDERS = [provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }];

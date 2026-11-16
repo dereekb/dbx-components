@@ -62,6 +62,10 @@ export class LandingLayoutComponent {
         {
           name: '@dereekb/dbx-form/quiz',
           description: 'Quiz and assessment components'
+        },
+        {
+          name: '@dereekb/dbx-form/llm',
+          description: 'LLM generation-flow components: chained sections of input, runs, history and output'
         }
       ]
     },
