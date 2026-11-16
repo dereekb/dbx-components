@@ -1,5 +1,6 @@
 import { type, type Type } from 'arktype';
 import { type Maybe } from '@dereekb/util';
+import { clearable } from '@dereekb/model';
 import { callModelFirebaseFunctionMapFactory, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCreateFunction, type ModelFirebaseCrudFunction, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap } from '../../client';
 import { type UserExternalConnectionTypes } from './userexternalconnection';
 import { type UserExternalConnectionProviderType } from './userexternalconnection.id';
@@ -94,8 +95,8 @@ export interface ReadUserExternalConnectionAuthorizeStateParams {
 export const readUserExternalConnectionAuthorizeStateParamsType = /* @__PURE__ */ userExternalConnectionCallerParamsType.merge(
   type({
     providerType: 'string',
-    'mode?': "'connect' | 'link'",
-    'scopePreset?': 'string'
+    'mode?': clearable("'connect' | 'link'"),
+    'scopePreset?': clearable('string')
   })
 ) as Type<ReadUserExternalConnectionAuthorizeStateParams>;
 
@@ -157,10 +158,10 @@ export interface ReadUserExternalConnectionDataParams {
 
 export const readUserExternalConnectionDataParamsType = /* @__PURE__ */ userExternalConnectionCallerParamsType.merge(
   type({
-    'providerType?': 'string',
-    'dataType?': 'string',
-    'itemKey?': 'string',
-    'keysOnly?': 'boolean'
+    'providerType?': clearable('string'),
+    'dataType?': clearable('string'),
+    'itemKey?': clearable('string'),
+    'keysOnly?': clearable('boolean')
   })
 ) as Type<ReadUserExternalConnectionDataParams>;
 
@@ -235,9 +236,9 @@ export interface UpdateUserExternalConnectionDataParams {
 export const updateUserExternalConnectionDataParamsType = /* @__PURE__ */ userExternalConnectionCallerParamsType.merge(
   type({
     providerType: 'string',
-    'set?': type({ dataType: 'string', itemKey: 'string', value: 'Record<string, unknown>' }).array(),
-    'unset?': type({ dataType: 'string', 'itemKey?': 'string' }).array(),
-    'clear?': 'boolean'
+    'set?': clearable(type({ dataType: 'string', itemKey: 'string', value: 'Record<string, unknown>' }).array()),
+    'unset?': clearable(type({ dataType: 'string', 'itemKey?': clearable('string') }).array()),
+    'clear?': clearable('boolean')
   })
 ) as Type<UpdateUserExternalConnectionDataParams>;
 
