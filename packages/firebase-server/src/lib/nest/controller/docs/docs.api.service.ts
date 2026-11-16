@@ -2,126 +2,30 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { type Maybe, buildRankedSearchEntries, rankSearchEntries, RANKED_SEARCH_NAME_WEIGHTS, RANKED_SEARCH_SLUG_WEIGHTS, RANKED_SEARCH_TAG_WEIGHTS, RANKED_SEARCH_TEXT_WEIGHTS, type RankedSearchEntry } from '@dereekb/util';
-import { type OidcScopeTerm } from '@dereekb/firebase';
+import {
+  DEFAULT_DOCS_SEARCH_LIMIT,
+  DOCS_API_PATH,
+  DOCS_API_READ_PATH,
+  DOCS_API_SEARCH_PATH,
+  DOCS_NOT_FOUND_ERROR_CODE,
+  DOCS_SECTION_NOT_FOUND_ERROR_CODE,
+  MAX_DOCS_SEARCH_LIMIT,
+  type DocsListResult,
+  type DocsManifestSection,
+  type DocsReadParams,
+  type DocsReadResult,
+  type DocsSearchParams,
+  type DocsSearchResult,
+  type DocsSectionSummary,
+  type OidcScopeTerm
+} from '@dereekb/firebase';
 import { notFoundError, unauthenticatedError } from '../../../function/error';
 import { assertEndpointOidcScope, oidcScopesFromRequestAuth } from '../api.scope';
 import { type FirebaseServerAuthData } from '../auth.context.server';
 import { resolveSecureAssetPath } from '../download/download.api.config';
-import { DEFAULT_DOCS_MAX_READ_LENGTH, DOCS_API_PATH, DOCS_AUDIENCE_ANY, DOCS_AUDIENCE_READER, DocsApiModuleConfig, type DocsAudience, type DocsAudienceReader } from './docs.api.config';
-import { extractDocsMarkdownSections, readDocsManifestJson, splitDocsMarkdownSections, type DocsManifest, type DocsManifestEntry, type DocsManifestSection } from './docs.api.manifest';
+import { DEFAULT_DOCS_MAX_READ_LENGTH, DOCS_AUDIENCE_ANY, DOCS_AUDIENCE_READER, DocsApiModuleConfig, type DocsAudience, type DocsAudienceReader } from './docs.api.config';
+import { extractDocsMarkdownSections, readDocsManifestJson, splitDocsMarkdownSections, type DocsManifest, type DocsManifestEntry } from './docs.api.manifest';
 import { DYNAMIC_DOCS_SOURCES, type DynamicDocsEntry, type DynamicDocsSource } from './docs.api.dynamic';
-
-// MARK: Errors
-/**
- * Error code for a doc that does not exist OR that the caller may not see. Both cases share one 404 so a caller
- * cannot probe for hidden doc ids.
- */
-export const DOCS_NOT_FOUND_ERROR_CODE = 'DOCS_NOT_FOUND';
-
-/**
- * Error code for a section id that a visible doc does not have.
- */
-export const DOCS_SECTION_NOT_FOUND_ERROR_CODE = 'DOCS_SECTION_NOT_FOUND';
-
-/**
- * Default number of search results.
- */
-export const DEFAULT_DOCS_SEARCH_LIMIT = 8;
-
-/**
- * Maximum number of search results.
- */
-export const MAX_DOCS_SEARCH_LIMIT = 50;
-
-// MARK: Results
-/**
- * A section heading as returned by the docs API.
- */
-export type DocsSectionSummary = Pick<DocsManifestSection, 'id' | 'title'>;
-
-/**
- * One doc in a {@link DocsListResult}.
- */
-export interface DocsListEntry {
-  readonly id: string;
-  readonly title: string;
-  readonly description?: string;
-  readonly tags?: readonly string[];
-  readonly sections: readonly DocsManifestSection[];
-}
-
-/**
- * Result of {@link DocsApiService.listDocs}: the docs visible to the caller.
- */
-export interface DocsListResult {
-  readonly docs: readonly DocsListEntry[];
-}
-
-/**
- * Input for {@link DocsApiService.searchDocs}.
- */
-export interface DocsSearchParams {
-  readonly query: string;
-  readonly limit?: Maybe<number>;
-}
-
-/**
- * One search hit: a doc (no `section`) or one of its sections.
- */
-export interface DocsSearchResultEntry {
-  readonly id: string;
-  readonly title: string;
-  readonly section?: DocsSectionSummary;
-  /**
-   * The doc's manifest description. Present on doc hits only.
-   */
-  readonly description?: string;
-}
-
-/**
- * Result of {@link DocsApiService.searchDocs}.
- */
-export interface DocsSearchResult {
-  readonly total: number;
-  readonly results: readonly DocsSearchResultEntry[];
-  /**
-   * True when no doc matched every query word, so {@link results} match only some of them. Omitted otherwise.
-   */
-  readonly partial?: boolean;
-}
-
-/**
- * Input for {@link DocsApiService.readDoc}.
- */
-export interface DocsReadParams {
-  readonly id: string;
-  /**
-   * A section id from the doc's `sections`. Reads the whole doc when unset.
-   */
-  readonly section?: Maybe<string>;
-}
-
-/**
- * Result of {@link DocsApiService.readDoc}.
- */
-export interface DocsReadResult {
-  readonly id: string;
-  readonly title: string;
-  readonly description?: string;
-  readonly section?: DocsSectionSummary;
-  /**
-   * The doc's sections. Present when the whole doc was read.
-   */
-  readonly sections?: readonly DocsSectionSummary[];
-  /**
-   * The markdown (frontmatter removed).
-   */
-  readonly content: string;
-  /**
-   * True when the content was cut at the configured maximum read length.
-   */
-  readonly truncated?: boolean;
-}
 
 // MARK: State
 interface DynamicDocsLoadedEntry extends DynamicDocsEntry {
@@ -263,7 +167,7 @@ export class DocsApiService {
    * @throws {HttpsError} A `401` for an anonymous caller, or a `403` when an OIDC caller lacks the required scope.
    */
   searchDocs(auth: Maybe<FirebaseServerAuthData>, params: DocsSearchParams): DocsSearchResult {
-    const audiences = this._authorize(auth, `${DOCS_API_PATH}/search`);
+    const audiences = this._authorize(auth, DOCS_API_SEARCH_PATH);
     const limit = Math.min(Math.max(1, Math.floor(params.limit ?? DEFAULT_DOCS_SEARCH_LIMIT)), MAX_DOCS_SEARCH_LIMIT);
     const entries = this._loadState().searchEntries;
     const filter = (candidate: DocsSearchCandidate) => isDocsEntryVisible(candidate.entry, audiences);
@@ -296,7 +200,7 @@ export class DocsApiService {
    *   ({@link DOCS_SECTION_NOT_FOUND_ERROR_CODE}) for an unknown section of a visible doc.
    */
   readDoc(auth: Maybe<FirebaseServerAuthData>, params: DocsReadParams): DocsReadResult {
-    const audiences = this._authorize(auth, `${DOCS_API_PATH}/read`);
+    const audiences = this._authorize(auth, DOCS_API_READ_PATH);
     const { id, section: sectionId } = params;
     const loaded = this._loadState().docs.get(id);
     const content = loaded != null && isDocsEntryVisible(loaded.entry, audiences) ? this._readDocContent(loaded) : undefined;

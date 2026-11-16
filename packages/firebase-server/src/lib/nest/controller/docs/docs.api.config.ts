@@ -10,11 +10,6 @@ import { type FirebaseServerAuthData } from '../auth.context.server';
 export const DOCS_API_ROUTE_PREFIX = 'docs';
 
 /**
- * Path (relative to the API base URL) of the docs API.
- */
-export const DOCS_API_PATH = '/docs';
-
-/**
  * Path prefix apps must add to their OIDC `protectedPaths` so the bearer-token middleware authenticates the docs
  * API. Unlike `/api/download` (which carries its own signed token), every docs route needs a bearer token.
  */

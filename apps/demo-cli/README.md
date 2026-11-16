@@ -215,6 +215,22 @@ cleared by `demo-cli auth logout`. `demo-cli doctor` reports `sessionFromCache` 
 `firestore-session` check, next to the resolved read preference, the invocable query-entry count, and
 the server-only model count.
 
+## Docs
+
+`runCli` registers the built-in `docs` group, which reads demo-api's audience-gated docs (`/api/docs`) after
+`auth login`. Nothing in `src/index.ts` wires it.
+
+```bash
+demo-cli docs list --sections
+demo-cli docs search guestbook
+demo-cli docs read getting-started
+demo-cli docs read notification/types --json
+```
+
+The file docs (`apps/demo-api/src/assets/docs/`) need a built `docs.manifest.json`; the dynamic
+`notification/types` doc is always served. See [App docs](../../packages/dbx-cli/README.md#app-docs-docs) for the
+flags, output modes and errors.
+
 ## Tests
 
 ```bash

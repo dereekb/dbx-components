@@ -727,6 +727,68 @@ demo-cli info --enum NotificationSendState         # the value table, then Used 
   share `resolveModelManifestInfoOutput` from `@dereekb/firebase/manifest`.
 - `disableInfo: true` drops the command, e.g. when the app registers its own `info`.
 
+## App docs (`docs`)
+
+Every app CLI built with `runCli` / `createCli` gets an authenticated `docs` group. It reads the app API's
+audience-gated docs (the `@dereekb/firebase-server` docs API at `/api/docs`) over the logged-in session. It is the CLI
+twin of the MCP `search_<prefix>_documentation` tool and the `docs-read` built-in method, and it shares their results:
+REST and MCP both call `DocsApiService`, so the ranking and the scope and audience checks are the same.
+
+```bash
+demo-cli docs list                                 # the docs you can read: id, title, description, tags
+demo-cli docs list --sections                      # ...plus each doc's section ids
+demo-cli docs search guestbook signing --limit 3   # keyword search; titles, tags, descriptions and section headings
+demo-cli docs read getting-started                 # the raw markdown on stdout, frontmatter removed
+demo-cli docs read guestbook/signing writing-an-entry   # one section
+demo-cli docs read guestbook/signing --json        # {"ok":true,"data":{"id":…,"title":…,"content":…}}
+```
+
+- `search` sends `q` and `limit` only. `--limit` defaults to 8 and is capped at 50. When no doc matches every word, the
+  server falls back to any word and marks the result `partial`.
+- `read` prints `content` plus a newline and nothing else, so it pipes cleanly. When the server cut the doc at its
+  maximum read length, one stderr line suggests reading it by section.
+- A bare `docs` exits with "Specify a docs subcommand".
+
+### Wiring
+
+Nothing to wire: `createCli` registers the group as an API command, so the auth middleware always runs first.
+
+- `disableDocs: true` drops it, for an app whose API does not mount `docsApiModuleMetadata()`.
+- `docsCommandName` renames it (default `docs`).
+- **The app wins a name clash.** If `configCommands` or `apiCommands` already holds a top-level command with the
+  group's name (for example `createPackageRefsDocsCommand(...)`), the built-in is not registered. To keep both, rename
+  one: `runCli({ docsCommandName: 'app-docs' })`, or `createPackageRefsDocsCommand({ cliName, refs, commandName: 'refs' })`.
+
+### Output modes
+
+- Markdown by default for all three subcommands.
+- `--json` prints `{ ok: true, data }`, where `data` is the server's `DocsListResult` / `DocsSearchResult` /
+  `DocsReadResult` (from `@dereekb/firebase`). `--pick` applies to each doc (`list`), each hit (`search`) or the top
+  level (`read`), and `--dump-dir` writes the envelope too.
+- An explicit `--pick`, `--dump-dir`, `--set-pick` or `--set-dump-dir` switches the command to JSON rather than being
+  ignored.
+- The dataset cache never applies (`--cache` / `--refresh` do nothing here). The responses are `private, no-store` and
+  differ per user, the cache key carries no user identity, and every call is one cheap GET.
+
+### Access: scope and audience
+
+Every request needs a login. When the app sets the docs API's `requiredScope` (hellosubs sets `hellosubs` in dev and
+staging), the login must also carry that scope. Each doc is then shown only to callers holding one of its audiences.
+
+| Case | HTTP | `code` | `serverCode` | Suggestion |
+|---|---|---|---|---|
+| Login expired or revoked | 401 | `AUTH_UNAUTHORIZED` | — | Log in again (re-mint for a handoff credential). |
+| The login lacks the docs scope | 403 | `AUTH_FORBIDDEN` | `MISSING_ENDPOINT_OIDC_SCOPE_ERROR` | Use an env whose scopes include it, or `auth setup --scopes` then `auth login`. The message names the scope. |
+| Any other 403 | 403 | `AUTH_FORBIDDEN` | the server's | The generic role / permission text. |
+| Doc missing, **or outside your audiences** | 404 | `NOT_FOUND` | `DOCS_NOT_FOUND` | Hidden docs read as not found, so ids cannot be probed. Use `docs list` / `docs search`. |
+| Unknown section | 404 | `NOT_FOUND` | `DOCS_SECTION_NOT_FOUND` | Use a section id the error lists, or read the whole doc. |
+| The API serves no docs route | 404 | `DOCS_API_NOT_AVAILABLE` | — | Check the env's `apiBaseUrl`, or that the API imports `docsApiModuleMetadata()`. |
+
+An audience miss is never a 403: `list` and `search` leave the doc out, and `read` answers `DOCS_NOT_FOUND`.
+
+An env with narrowed scopes does not carry the app scope. For example, hellosubs-cli's `external-token` and `msgraph-*`
+envs answer `docs` with the 403 above; run it on the main env instead (`hellosubs-cli docs list --env dev`).
+
 ## Bulk downloads (for CLI authors)
 
 `src/lib/download` is a shared engine for commands that copy many remote files into a local folder and can be
@@ -963,7 +1025,8 @@ cover `serve`. The dbx-components workspace itself runs the locally built bundle
 `dbx-cli-generate-docs-manifest` builds `docs.manifest.json` for an API app's audience-gated docs: the markdown under
 `apps/<app>-api/src/assets/docs/` that the `@dereekb/firebase-server` docs API (`/api/docs`) and the MCP documentation
 tools serve. The server only serves docs listed in the manifest, refuses any whose bytes no longer match it, and shows
-each doc only to callers holding one of its audiences.
+each doc only to callers holding one of its audiences. App CLIs read them with `<cli> docs` (see
+[App docs](#app-docs-docs)).
 
 Each doc declares its audience in frontmatter. `any` means any authenticated caller; every other audience must be in
 `--audiences`:

@@ -1,4 +1,5 @@
 import { type Maybe } from '@dereekb/util';
+import { type DocsManifestSection } from '@dereekb/firebase';
 import { type DocsAudience } from './docs.api.config';
 
 // MARK: Manifest
@@ -7,15 +8,6 @@ import { type DocsAudience } from './docs.api.config';
  * the manifest; a manifest with any other version is ignored.
  */
 export const DOCS_MANIFEST_VERSION = 1;
-
-/**
- * One section (H2/H3 heading) of a doc.
- */
-export interface DocsManifestSection {
-  readonly id: string;
-  readonly title: string;
-  readonly depth: 2 | 3;
-}
 
 /**
  * One doc in the manifest.

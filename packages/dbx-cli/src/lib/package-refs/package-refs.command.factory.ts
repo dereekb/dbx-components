@@ -1,4 +1,5 @@
 import type { Argv, CommandModule } from 'yargs';
+import { type Maybe } from '@dereekb/util';
 import { CliError, outputResult } from '../util/output';
 import { wrapCommandHandler } from '../util/handler';
 import { buildPackageRefsDocsIndex, type EmbeddedPackageRefs, renderPackageRefsDocsIndexMarkdown, resolvePackageRefsDocsTopic } from './package-refs';
@@ -14,6 +15,11 @@ export const DOCS_TOPIC_NOT_FOUND_ERROR_CODE = 'DOCS_TOPIC_NOT_FOUND';
 export const DOCS_TOPIC_AMBIGUOUS_ERROR_CODE = 'DOCS_TOPIC_AMBIGUOUS';
 
 /**
+ * Default name of the command {@link createPackageRefsDocsCommand} registers.
+ */
+export const DEFAULT_PACKAGE_REFS_DOCS_COMMAND_NAME = 'docs';
+
+/**
  * Configuration for {@link createPackageRefsDocsCommand}.
  */
 export interface CreatePackageRefsDocsCommandConfig {
@@ -25,6 +31,13 @@ export interface CreatePackageRefsDocsCommandConfig {
    * The refs the package ships, embedded through `?raw` imports.
    */
   readonly refs: EmbeddedPackageRefs;
+  /**
+   * The command's name. Defaults to {@link DEFAULT_PACKAGE_REFS_DOCS_COMMAND_NAME}.
+   *
+   * In a `runCli` / `createCli` app CLI, `docs` is the built-in group that reads the app API's docs; register the
+   * package refs under another name (e.g. `refs`) to keep both. Registered as `docs`, they replace the built-in.
+   */
+  readonly commandName?: Maybe<string>;
 }
 
 /**
@@ -52,26 +65,28 @@ export interface PackageRefsDocsTopicOutput {
  * - `<cli> docs <ref>/<doc>` prints a sub-doc; a bare `<doc>` works when exactly one ref has it.
  * - `--json` wraps either in the standard `{ ok, data }` envelope.
  *
- * Register it with the CLI's config commands: it needs no auth and its output must not be filtered.
+ * Register it with the CLI's config commands: it needs no auth and its output must not be filtered. In a `runCli` app
+ * CLI, pass `commandName` (e.g. `refs`) to keep the built-in `docs` group that reads the app API's docs.
  *
  * @param config - The CLI name and the embedded refs.
- * @returns A yargs `CommandModule` for `docs [topic]`.
+ * @returns A yargs `CommandModule` for `<commandName> [topic]`.
  * @throws {CliError} `DOCS_TOPIC_NOT_FOUND` for an unknown topic, `DOCS_TOPIC_AMBIGUOUS` for a bare doc key two refs share.
  * @__NO_SIDE_EFFECTS__
  */
 export function createPackageRefsDocsCommand(config: CreatePackageRefsDocsCommandConfig): CommandModule {
   const { cliName, refs } = config;
+  const commandName = config.commandName ?? DEFAULT_PACKAGE_REFS_DOCS_COMMAND_NAME;
 
   return {
-    command: 'docs [topic]',
+    command: `${commandName} [topic]`,
     describe: `Print the agent docs shipped with ${refs.packageName} (an index, or one topic)`,
     builder: (yargs: Argv) =>
       yargs
         .positional('topic', { type: 'string', describe: 'A ref name, <ref>/<doc>, or a sub-doc name' })
         .option('json', { type: 'boolean', default: false, describe: 'Print a JSON envelope instead of markdown' })
         .example([
-          [`$0 docs`, 'List the topics'],
-          [`$0 docs ${refs.refs[0]?.name ?? '<ref>'}`, 'Print one ref']
+          [`$0 ${commandName}`, 'List the topics'],
+          [`$0 ${commandName} ${refs.refs[0]?.name ?? '<ref>'}`, 'Print one ref']
         ]),
     handler: wrapCommandHandler(async (argv: any) => {
       const topic: string | undefined = argv.topic;
@@ -82,7 +97,7 @@ export function createPackageRefsDocsCommand(config: CreatePackageRefsDocsComman
           const output: PackageRefsDocsIndexOutput = { packageName: refs.packageName, topics: buildPackageRefsDocsIndex(refs) };
           outputResult(output);
         } else {
-          process.stdout.write(renderPackageRefsDocsIndexMarkdown(refs, cliName));
+          process.stdout.write(renderPackageRefsDocsIndexMarkdown(refs, cliName, commandName));
         }
       } else {
         const resolved = resolvePackageRefsDocsTopic(refs, topic);
@@ -92,7 +107,7 @@ export function createPackageRefsDocsCommand(config: CreatePackageRefsDocsComman
           throw new CliError({
             message: isAmbiguous ? `Docs topic "${topic}" matches more than one ref.` : `No docs topic "${topic}".`,
             code: isAmbiguous ? DOCS_TOPIC_AMBIGUOUS_ERROR_CODE : DOCS_TOPIC_NOT_FOUND_ERROR_CODE,
-            suggestion: `${isAmbiguous ? 'Use one of' : 'Topics'}: ${resolved.candidates.join(', ')}. Run: ${cliName} docs`
+            suggestion: `${isAmbiguous ? 'Use one of' : 'Topics'}: ${resolved.candidates.join(', ')}. Run: ${cliName} ${commandName}`
           });
         }
 
