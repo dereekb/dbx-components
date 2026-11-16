@@ -128,7 +128,7 @@ trello-cli search "<query>" [--here] [--type cards,boards,…] [--limit 20] [--n
 ```bash
 trello-cli card get <card> [--comments] [--attachments] [--checklists] [--members] [--all]
 trello-cli card create --list "<name|id>" --name "<title>" [--desc …|--desc-file f] [--labels a,b] [--members me,bob] [--due 2026-12-01] [--pos top]
-trello-cli card update <card> [--name …] [--desc …|--desc-file f] [--due <iso>|none] [--due-complete] [--start …] [--labels a,b] [--members …]
+trello-cli card update <card> [--name …] [--desc …|--desc-file f] [--due <iso>|none] [--due-complete] [--start <iso>|none] [--labels a,b] [--members …]
 trello-cli card move <card> --list "<name|id>" [--to-board <board>] [--pos top|bottom]
 trello-cli card archive <card>
 trello-cli card unarchive <card>
@@ -143,6 +143,9 @@ trello-cli card ref "<text>"                          # parse a card ref + every
 
 `card update --labels/--members` REPLACE the whole set. `card label` / `card member` add and remove one at
 a time (one api call each), so they never race another writer changing the same card.
+
+`card update --due none` / `--start none` clear the date. trello-cli sends a cleared field as `?due=null`,
+since Trello ignores a JSON `null` in a body.
 
 `card render --out f.md` writes the card as markdown with a `## Notes` block between
 `<!-- notes:begin -->` and `<!-- notes:end -->`. Text written inside it survives the next render, and the
@@ -189,10 +192,14 @@ trello-cli checklist item delete <card> <itemId> --yes
 trello-cli request GET /members/me
 trello-cli request GET /boards/<id>/cards --query '{"fields":"name,idList"}'
 trello-cli request PUT /cards/<id> --body '{"name":"New title"}'
+trello-cli request PUT /cards/<id>/checkItem/<itemId> --query '{"due":"null"}'
 ```
 
 The path is relative to `https://api.trello.com/1`. An absolute url is accepted only on that host, so a
 raw request can never send the credentials elsewhere.
+
+To clear a field that has no CLI flag, send the string `null` in `--query`, not a JSON `null` in `--body`:
+Trello ignores a JSON `null` and leaves the field as it is.
 
 ## Global Options and Env Vars
 
