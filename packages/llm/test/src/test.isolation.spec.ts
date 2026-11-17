@@ -87,4 +87,14 @@ describe('@dereekb/llm/test isolation', () => {
   it('should import its own modules relatively', () => {
     expect(importersOf(sources, isPackage('@dereekb/llm/test'))).toEqual([]);
   });
+
+  it('should never import a provider entry, specs included, so no spec can build a real transport', () => {
+    // /test is adapter-agnostic (hosts inject adapters), and a spec here only ever runs fakes: no billed call by default.
+    const isProviderEntry = (specifier: string) => ['@dereekb/llm/openai', '@dereekb/llm/openrouter', '@dereekb/llm/zenmux'].some((name) => isPackage(name)(specifier));
+    expect(importersOf(scanSrc(true), isProviderEntry)).toEqual([]);
+  });
+
+  it('should import no vitest outside a spec, so the entry needs no vitest peer and runs outside a test runner', () => {
+    expect(importersOf(sources, isPackage('vitest'))).toEqual([]);
+  });
 });

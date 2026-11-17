@@ -541,6 +541,7 @@ how a spec stays hermetic.
   | `tierModels` | `LLM_MODEL` (`fast`), `LLM_MODEL_STRONG` (`strong`) | One slug per tier; wins over the same key in `modelTiers`. |
   | `defaultTier` | `LLM_DEFAULT_TIER` | Which tier is the default. |
   | `decodeRetryTier` | `LLM_DECODE_RETRY_TIER` | Which tier a malformed reply retries on (`off` keeps the same model). |
+  | `decisionProvider` | `LLM_DECISION_PROVIDER` | The decision-lane provider pin (a provider id). |
 
 - **The file.** `loadEffectiveLlmModelConfigFile({ schema, base, defaultPath })` reads the path the env names, else
   `defaultPath` — the explicit path fails loud when missing, while a missing `defaultPath` just means the built-ins —
@@ -585,6 +586,97 @@ const { strategies, defaultProviderId, gaps } = makeLlmStrategiesFromEnv({
   defaultModel: resolveLlmModelTier(tiers, defaultTier),
   reasoningOffByModel: llmModelReasoningOffEncodings(loaded.file),
   visionByModel: llmModelVisionCapabilities(loaded.file)
+});
+```
+
+## Test infrastructure (`@dereekb/llm/test`)
+
+`/test` is Node-only test infrastructure: no browser entry imports it, and it never imports `vitest`, so a plain Node
+harness (a benchmark CLI) can use it too. Nothing in it bills unless a live lane is UNLOCKED and keyed — tapes and
+scripts make no network call, and the lane's helpers answer `undefined` while it is locked.
+
+- **Tape replay.** `makeLlmTapeStrategy({ turns })` serves recorded completions. A turn matches on its capability plus
+  `hashLlmTapePrompt(prompt)` (the first 12 hex chars of `sha256Hex`, byte-equal to a `node:crypto` digest): hash
+  first, so a byte-identical replay consumes the tape in exact order whatever the dispatch order, then the next
+  unconsumed turn of the same capability (an `order` match — the prompt drifted, the run still completes). With nothing
+  left to serve it throws `LlmTapeStrategyError` — `tape-exhausted` (more calls than the recording) or
+  `capability-drift` (the call sequence changed) — which TRUNCATES the replay at that call: calls already served stay
+  readable, nothing past it ran. A served completion keeps the recorded tokens and forces `cost` to `0`. After the run,
+  `matches()` (with each request's prompt and digest, for diffs), `unconsumed()` and `failures()` (recorded even when
+  a host swallows the throw) feed a report; `isLlmTapeStrategyError` checks the shape, not the prototype.
+- **Scripted completions.** `makeScriptedLlmStrategy` answers each call from `respond(request, call)`, else
+  `byCapability[capability]` (a reply or a list with its own counter), else `replies` (in order). A list repeats its
+  last entry once spent; an empty list is no reply, and a call nothing answers throws, naming the id, capability and
+  call. A reply is a text, a completion spec (`{ text, usage, finishReason, … }`) or an `Error` the call throws — how a
+  spec drives a transport failure. Pass `requests` to collect every request, including the ones that threw.
+- **Scripted decisions.** `makeScriptedLlmDecisionStrategy({ script })` reads the script's answers through
+  `readLlmDecisionAnswers`, so an under-answered or malformed script is refused with `LlmDecisionAnswerFaultError`
+  exactly as a live transport would; usage is a zero-cost reading. Build answers with the root entry's
+  `llmDecisionChoiceAnswerOf` / `llmDecisionScoreAnswerOf` / `llmDecisionNoulAnswerOf`, which are well-formed by
+  construction, so a script states only which option won and how surely.
+- **The live lane.** `makeLlmLiveLane({ schema, adapters, … })` is the billed-spec lane as one factory. Its switch
+  and verdict names (`names`, merged over `DEFAULT_LLM_LIVE_LANE_ENV_NAMES`) and provider / model names (`envNames`,
+  `/node`'s `DEFAULT_LLM_ENV_NAMES`) are injected, and so is the provider resolver (`resolveProviders`, defaulting to
+  `/node`'s `resolveLlmProvidersFromEnv`). `liveStrategyFromEnv()` answers the live handle (`strategyId`, `model`,
+  `apiKeyEnv`, `makeStrategy()`), or `undefined` when the run must skip: locked, keyless, a `dead` credential verdict,
+  an `exhausted` quota verdict, or no model. The model is the default tier's variable (`LLM_MODEL`), else the active
+  profile's default tier, else the host's `defaultModel` (a slug, or a function of the provider and its base URL that
+  answers `undefined` for a provider with no safe default). Verdicts fail open: an absent or unrecognized one reads
+  `unchecked` and never vetoes. Every skip past the lock is logged. `makeLiveStrategy()` /
+  `liveStrategyBinding()` build inside an open gate (and throw when nothing resolves — the gate is wrong);
+  `liveDecisionStrategyFromEnv()` answers the decision backend, pinned by `LLM_DECISION_PROVIDER`, with no veto of its
+  own (pair it with `liveStrategyFromEnv` in the gate). The built strategy is wrapped by
+  `decorateLlmLiveStrategyAuthFailures`: a `401` / `403` is rethrown naming the key's variable, never the key.
+
+  | Field | Default var | Meaning |
+  |---|---|---|
+  | `unlock` | `LLM_LIVE_SPECS` | Opts the billed lane in (`1` / `true`). |
+  | `skipCredentialProbe` | `LLM_LIVE_SPECS_SKIP_CREDENTIAL_PROBE` | Runs without the credential probe, clearing a stale credential verdict. |
+  | `skipQuotaProbe` | `LLM_LIVE_SPECS_SKIP_QUOTA_PROBE` | Runs without the quota read, clearing a stale quota verdict. |
+  | `credentialVerdict` | `LLM_CREDENTIAL_VERDICT` | `live` / `dead` / `unchecked`, stamped by the setup. |
+  | `credentialDetail` | `LLM_CREDENTIAL_DETAIL` | The provider's own words behind a `dead` verdict. |
+  | `quotaVerdict` | `LLM_QUOTA_VERDICT` | `ok` / `exhausted` / `unchecked`, stamped by the setup. |
+  | `quotaDetail` | `LLM_QUOTA_DETAIL` | The measured headroom line. |
+  | `quotaMaxUsed` | `LLM_QUOTA_MAX_USED` | The 0–1 ceiling of the tightest quota window (a percent like `90` is ignored). |
+
+- **The setup gate.** `lane.makeGlobalSetup()` is a vitest `globalSetup`; it runs once in the main process, so what it
+  writes reaches every worker. Locked, it strips every provider key (the env defaults, the `apiKeyEnv`s in
+  `modelConfig.base`, and `extraProviderKeyNames`) and does nothing else — no file read, no request; pass
+  `hermetic: false` to keep them. Unlocked, it resolves first (a malformed models file or an unknown profile throws
+  before anything is billed), logs the lane once, probes every keyed provider's credential and reads its quota, and
+  stamps both verdicts. A skip flag deletes that half's stale verdict instead. `isLlmEnvFlagEnabled`, the verdict
+  codecs (`llmCredentialVerdictFromEnv`, `toLlmQuotaVerdictEnv`, …) and `parseLlmQuotaMaxUsed` are exported for hosts
+  that wire their own.
+- **A/B regression gate.** `llmAbRegressionVerdictOf({ controlHits, controlTrials, treatmentHits, treatmentTrials })`
+  runs a one-sided Fisher exact test at `LLM_AB_REGRESSION_ALPHA` (0.05). A raw count comparison's false-positive rate
+  climbs toward 50% as trials grow; this one stays under alpha. It only looks for the treatment arm being worse:
+  `regressed: false` means "not shown to regress", never "shown equivalent".
+
+```ts
+// llm.live.lane.ts — the host's one lane
+import { makeLlmLiveLane } from '@dereekb/llm/test';
+
+export const LIVE_LANE = makeLlmLiveLane({
+  schema,
+  adapters,
+  modelConfig: { defaultPath: join(homedir(), '.my-app', 'models.json'), base: BUILT_IN_MODEL_CONFIG },
+  defaultModel: ({ baseUrl }) => (baseUrl === DEFAULT_LLM_OPENAI_BASE_URL ? undefined : 'vendor/model-flash'),
+  label: 'my-app'
+});
+
+// vitest.llm-live-setup.mts
+export default LIVE_LANE.makeGlobalSetup();
+
+// vitest.config.mts — test: { globalSetup: ['./vitest.llm-live-setup.mts'] }
+
+// summarize.llm.spec.ts
+const LIVE = LIVE_LANE.liveStrategyFromEnv();
+
+describe.skipIf(LIVE == null)('summarize (live)', () => {
+  it('should summarize', async () => {
+    const strategy = LIVE_LANE.makeLiveStrategy();
+    // ...
+  });
 });
 ```
 

@@ -167,6 +167,11 @@ export interface LlmEnvNames {
    * Which tier a malformed completion is retried on (`off` pins retries to the same model).
    */
   readonly decodeRetryTier: LlmEnvVarNames;
+  /**
+   * The decision-lane provider pin (a provider id). Read by hosts that pick a decision backend, and by the `/test` live
+   * lane. Optional so existing literals stay valid; absent ⇒ never read.
+   */
+  readonly decisionProvider?: Maybe<LlmEnvVarNames>;
 }
 
 /**
@@ -186,7 +191,8 @@ export const DEFAULT_LLM_ENV_NAMES: LlmEnvNames = {
   modelTiers: ['LLM_MODEL_TIERS'],
   tierModels: { fast: ['LLM_MODEL'], strong: ['LLM_MODEL_STRONG'] },
   defaultTier: ['LLM_DEFAULT_TIER'],
-  decodeRetryTier: ['LLM_DECODE_RETRY_TIER']
+  decodeRetryTier: ['LLM_DECODE_RETRY_TIER'],
+  decisionProvider: ['LLM_DECISION_PROVIDER']
 };
 
 /**

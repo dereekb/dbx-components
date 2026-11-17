@@ -87,4 +87,8 @@ describe('DEFAULT_LLM_ENV_NAMES', () => {
       ['openrouter', true]
     ]);
   });
+
+  it('should name the decision-lane provider pin', () => {
+    expect(DEFAULT_LLM_ENV_NAMES.decisionProvider).toEqual(['LLM_DECISION_PROVIDER']);
+  });
 });
