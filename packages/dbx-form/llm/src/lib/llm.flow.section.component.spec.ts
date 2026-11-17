@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { Component, inject, signal, viewChildren } from '@angular/core';
+import { Component, inject, signal, viewChild, viewChildren } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { type FormConfig, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
-import { AbstractSyncForgeFormDirective, DbxForgeFormComponent, dbxForgeTextField, provideDbxForgeFormContext, provideDbxForgeFormFieldDeclarations, provideDbxFormConfiguration } from '@dereekb/dbx-form';
+import { AbstractSyncForgeFormDirective, DbxForgeFormComponent, dbxForgeNumberField, dbxForgeTextField, provideDbxForgeFormContext, provideDbxForgeFormFieldDeclarations, provideDbxFormConfiguration } from '@dereekb/dbx-form';
 import { type Maybe, waitForMs } from '@dereekb/util';
 import { EMPTY, firstValueFrom, of } from 'rxjs';
 import { DbxRouterTransitionService } from '@dereekb/dbx-core';
@@ -74,16 +74,30 @@ class TestLlmSectionHostComponent {
   readonly outputs = viewChildren(TestLlmSectionOutputComponent);
 }
 
+interface TestDraftValue {
+  readonly count?: number;
+}
+
+const DRAFT: DbxLlmFlowSectionConfig<TestDraftValue, string> = {
+  key: 'draft',
+  label: 'Draft',
+  optionFields: [dbxForgeNumberField({ key: 'count', label: 'Count' })],
+  initialDraft: { formValue: { count: 2 }, rawInput: 'the text' },
+  rawInput: { mode: 'readonly' },
+  kinds: [{ kind: 'run', text: 'Render', handler: () => of('rendered') }]
+};
+
 @Component({
   template: `
     <div [dbxLlmFlow]="{}">
-      <dbx-llm-flow-section class="test-brief" [config]="briefConfig"></dbx-llm-flow-section>
+      <dbx-llm-flow-section class="test-draft" [config]="draftConfig"></dbx-llm-flow-section>
     </div>
   `,
   imports: [DbxLlmFlowDirective, DbxLlmFlowSectionComponent]
 })
-class TestLlmSectionInputPlacementHostComponent {
-  readonly briefConfig: DbxLlmFlowSectionConfig<TestBriefValue, string> = { ...BRIEF, formPlacement: 'input' };
+class TestLlmSectionOptionFieldsHostComponent {
+  readonly draftConfig = DRAFT;
+  readonly section = viewChild.required(DbxLlmFlowSectionComponent);
 }
 
 const TEST_PROVIDERS = [provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }, { provide: DbxRouterTransitionService, useValue: { transitions$: EMPTY } }];
@@ -258,38 +272,84 @@ describe('DbxLlmFlowSectionComponent', () => {
   });
 });
 
-describe('DbxLlmFlowSectionComponent with the form placed in the input', () => {
-  let fixture: ComponentFixture<TestLlmSectionInputPlacementHostComponent>;
+describe('DbxLlmFlowSectionComponent with option fields', () => {
+  let fixture: ComponentFixture<TestLlmSectionOptionFieldsHostComponent>;
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({ imports: [TestLlmSectionInputPlacementHostComponent], providers: TEST_PROVIDERS }).compileComponents();
-    fixture = TestBed.createComponent(TestLlmSectionInputPlacementHostComponent);
+  async function settle(): Promise<void> {
     fixture.detectChanges();
     await fixture.whenStable();
     await waitForMs(50);
     fixture.detectChanges();
+  }
+
+  function draftElement(): HTMLElement {
+    return (fixture.nativeElement as HTMLElement).querySelector('.test-draft') as HTMLElement;
+  }
+
+  function countInput(): Maybe<HTMLInputElement> {
+    return draftElement().querySelector('.dbx-llm-flow-section-raw-input-field input[type=number]');
+  }
+
+  function draft() {
+    return fixture.componentInstance.section().sectionStore.section?.draft;
+  }
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [TestLlmSectionOptionFieldsHostComponent], providers: TEST_PROVIDERS }).compileComponents();
+    fixture = TestBed.createComponent(TestLlmSectionOptionFieldsHostComponent);
+    await settle();
+
+    // forge renders the fields asynchronously
+    for (let i = 0; i < 50 && !countInput(); i += 1) {
+      await settle();
+    }
+
+    await settle();
   });
 
   afterEach(() => {
     fixture?.destroy();
   });
 
-  function briefElement(): HTMLElement {
-    return (fixture.nativeElement as HTMLElement).querySelector('.test-brief') as HTMLElement;
-  }
+  it('should render the option fields in the raw input form, under the textarea, with no separate form', () => {
+    const main = draftElement().querySelector('dbx-llm-flow-section-raw-input .dbx-llm-flow-section-raw-input-main') as HTMLElement;
+    const form = main.querySelector(':scope > .dbx-llm-flow-section-raw-input-field') as HTMLElement;
 
-  it('should show the form in a content pit under the raw input field, in the measured column, and not above the raw input', () => {
-    const main = briefElement().querySelector('dbx-llm-flow-section-raw-input .dbx-llm-flow-section-raw-input-main') as HTMLElement;
-    const children = Array.from(main.children);
-    expect(children[0].matches('.dbx-llm-flow-section-raw-input-field')).toBe(true);
-    expect(children[1].matches('.dbx-llm-flow-section-form.dbx-content-pit')).toBe(true);
-    expect(children[1].querySelector('dbx-test-llm-section-form')).not.toBeNull();
-    expect(briefElement().querySelector('.dbx-llm-flow-section-body > .dbx-llm-flow-section-form')).toBeNull();
+    expect(main.children.length).toBe(1);
+    expect(form.querySelector('.dbx-llm-flow-section-raw-input-text textarea')).not.toBeNull();
+    expect(countInput()).not.toBeNull();
+    expect(draftElement().querySelector('.dbx-llm-flow-section-form')).toBeNull();
   });
 
-  it('should keep the run buttons beside the column, following its height', () => {
-    const row = briefElement().querySelector('.dbx-llm-flow-section-raw-input-row') as HTMLElement;
+  it('should seed the options with the form value, and keep the raw input text', () => {
+    expect(countInput()?.value).toBe('2');
+    expect((draftElement().querySelector('.dbx-llm-flow-section-raw-input-text textarea') as HTMLTextAreaElement).value).toBe('the text');
+  });
+
+  it('should push option changes to the form value without changing the raw input, even when the raw input is readonly', async () => {
+    const input = countInput() as HTMLInputElement;
+    const beforeInput = new InputEvent('beforeinput', { cancelable: true, bubbles: true, inputType: 'insertText', data: '5' });
+    input.dispatchEvent(beforeInput);
+    expect(beforeInput.defaultPrevented).toBe(false);
+
+    input.value = '5';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await settle();
+    await settle();
+
+    expect(draft()?.formValue).toEqual({ count: 5 });
+    expect(draft()?.rawInput).toBe('the text');
+  });
+
+  it('should keep the run buttons beside the form column, following its height', () => {
+    const row = draftElement().querySelector('.dbx-llm-flow-section-raw-input-row') as HTMLElement;
     expect(row.querySelector(':scope > .dbx-llm-flow-section-raw-input-main')).not.toBeNull();
     expect(row.querySelector(':scope > dbx-llm-flow-section-run-buttons.dbx-height-sync-follower')).not.toBeNull();
+  });
+
+  it('should list the options of a run in its history description', () => {
+    const sectionStore = fixture.componentInstance.section().sectionStore;
+    const description = sectionStore.describeRun({ id: 'r1', sectionKey: 'draft', kind: 'run', input: { formValue: { count: 3 }, rawInput: 'x', rawInputOverridden: false }, state: 'success', startedAt: new Date() } as never);
+    expect(description.detail).toBe('Count: 3');
   });
 });

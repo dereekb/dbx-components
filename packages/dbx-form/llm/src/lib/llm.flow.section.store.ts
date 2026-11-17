@@ -22,7 +22,7 @@ import {
   type DbxLlmFlowSectionKey,
   type DbxLlmFlowSectionState
 } from './llm.flow';
-import { dbxLlmFlowSectionAncestorKeys, dbxLlmFlowSectionInputSource, dbxLlmFlowSectionRawInputMode, dbxLlmFlowSectionSelectedRuns } from './llm.flow.state';
+import { dbxLlmFlowSectionAncestorKeys, dbxLlmFlowSectionInputSource, dbxLlmFlowSectionOptionsDescription, dbxLlmFlowSectionRawInputFollowsForm, dbxLlmFlowSectionRawInputMode, dbxLlmFlowSectionSelectedRuns } from './llm.flow.state';
 import { DbxLlmFlowStore, type DbxLlmFlowStoreStartRunResult } from './llm.flow.store';
 
 /**
@@ -143,16 +143,16 @@ export class DbxLlmFlowSectionStore<F = unknown, O = unknown> extends DbxLlmFlow
   );
 
   readonly formHidden$: Observable<boolean> = combineLatest([this.rawInputOverridden$, this.config$]).pipe(
-    map(([overridden, config]) => overridden && config?.rawInput?.oneWayFormMode === 'hide'),
+    map(([overridden, config]) => overridden && config?.rawInput?.oneWayFormMode === 'hide' && dbxLlmFlowSectionRawInputFollowsForm(config)),
     distinctUntilChanged(),
     shareReplay(1)
   );
 
   /**
-   * Whether bound forms are locked: while restoring, while the section runs, or while the raw input is overridden.
+   * Whether bound forms are locked: while restoring, while the section runs, or while the raw input is overridden and follows the form.
    */
-  readonly formLocked$: Observable<boolean> = combineLatest([this.section$, this.flowStore.restoring$]).pipe(
-    map(([section, restoring]) => restoring || section?.activeRunId != null || Boolean(section?.draft.rawInputOverridden)),
+  readonly formLocked$: Observable<boolean> = combineLatest([this.section$, this.config$, this.flowStore.restoring$]).pipe(
+    map(([section, config, restoring]) => restoring || section?.activeRunId != null || (Boolean(section?.draft.rawInputOverridden) && dbxLlmFlowSectionRawInputFollowsForm(config))),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -343,14 +343,18 @@ export class DbxLlmFlowSectionStore<F = unknown, O = unknown> extends DbxLlmFlow
   }
 
   /**
-   * Describes a run for history rows, using the section's describeRun(), then the flow's, then a default.
+   * Describes a run for history rows, using the section's describeRun(), then the flow's, then a default. Without a detail, the detail lists
+   * the run's options when the section has option fields.
    *
    * @param run - The run.
    * @returns The description.
    */
   describeRun(run: DbxLlmFlowRun): DbxLlmFlowRunDescription {
-    const describe = this.config?.describeRun ?? this.flowStore.flowConfig?.describeRun;
-    return describe?.(run) ?? { title: run.id };
+    const config = this.config;
+    const describe = config?.describeRun ?? this.flowStore.flowConfig?.describeRun;
+    const description = describe?.(run) ?? { title: run.id };
+    const optionsDetail = description.detail ? undefined : dbxLlmFlowSectionOptionsDescription(config?.optionFields, run.input.formValue);
+    return optionsDetail ? { ...description, detail: optionsDetail } : description;
   }
 
   // MARK: Draft

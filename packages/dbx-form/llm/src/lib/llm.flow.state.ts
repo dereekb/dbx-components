@@ -1,5 +1,6 @@
 import { type ArrayOrValue, areEqualPOJOValues, asArray, findNonJsonCompatibleValue, jsonIncompatibilityMessage, type Maybe } from '@dereekb/util';
 import { stripEmptyForgeValues } from '@dereekb/dbx-form';
+import { type FieldDef } from '@ng-forge/dynamic-forms';
 import {
   DBX_LLM_FLOW_RUN_CANCELLED_ERROR_CODE,
   DBX_LLM_FLOW_RUN_INTERRUPTED_ERROR_CODE,
@@ -64,17 +65,97 @@ export function initialDbxLlmFlowState(): DbxLlmFlowState {
  * @returns True when the section has a form.
  */
 export function dbxLlmFlowSectionHasForm(config: Maybe<DbxLlmFlowAnySectionConfig>): boolean {
-  return config?.hasForm ?? config?.formComponent != null;
+  return config?.hasForm ?? (config?.formComponent != null || dbxLlmFlowSectionHasOptionFields(config));
 }
 
 /**
- * The raw input mode of the section. Defaults to 'two-way' with a form and 'editable' without.
+ * Whether the section declares option fields, shown in the raw input's form.
+ *
+ * @param config - The section config.
+ * @returns True when the section has at least one option field.
+ */
+export function dbxLlmFlowSectionHasOptionFields(config: Maybe<DbxLlmFlowAnySectionConfig>): boolean {
+  return Boolean(config?.optionFields?.length);
+}
+
+interface DbxLlmFlowOptionFieldShape {
+  readonly key?: string;
+  readonly type?: string;
+  readonly label?: unknown;
+  readonly fields?: readonly FieldDef<unknown>[];
+}
+
+function dbxLlmFlowOptionValueText(value: unknown): Maybe<string> {
+  let text: Maybe<string>;
+
+  if (Array.isArray(value)) {
+    text = value.length ? value.map((x) => (typeof x === 'object' && x != null ? JSON.stringify(x) : String(x))).join(', ') : undefined;
+  } else if (typeof value === 'object' && value != null) {
+    text = JSON.stringify(value);
+  } else if (value != null && value !== '') {
+    text = String(value);
+  }
+
+  return text;
+}
+
+function collectDbxLlmFlowOptionParts(fields: readonly FieldDef<unknown>[], value: unknown, parts: string[]): void {
+  const values = typeof value === 'object' && value != null ? (value as Record<string, unknown>) : undefined;
+
+  for (const field of fields) {
+    const { key, type, label, fields: children } = field as DbxLlmFlowOptionFieldShape;
+
+    if (children != null) {
+      // a group nests its fields' values under its key; rows and containers don't
+      collectDbxLlmFlowOptionParts(children, type === 'group' && key ? values?.[key] : value, parts);
+    } else if (key) {
+      const text = dbxLlmFlowOptionValueText(values?.[key]);
+
+      if (text != null) {
+        parts.push(`${typeof label === 'string' && label ? label : key}: ${text}`);
+      }
+    }
+  }
+}
+
+/**
+ * Describes the options of a run for its history row: "Label: value" for each option field that has a value, joined by " · ". Groups nest
+ * values under their key; rows and containers don't.
+ *
+ * @param optionFields - The section's option fields.
+ * @param formValue - The run's form value (its options).
+ * @returns The description, or undefined when no option has a value.
+ */
+export function dbxLlmFlowSectionOptionsDescription(optionFields: Maybe<readonly FieldDef<unknown>[]>, formValue: unknown): Maybe<string> {
+  const parts: string[] = [];
+
+  if (optionFields?.length) {
+    collectDbxLlmFlowOptionParts(optionFields, formValue, parts);
+  }
+
+  return parts.length ? parts.join(' · ') : undefined;
+}
+
+/**
+ * Whether the section's raw input is generated from its form value: the section has a form, its raw input config does not set the source to
+ * "parent", and it has no option fields. Such a form (option fields, or a "parent" source) only adds options to the parent's output, and
+ * never changes the raw input.
+ *
+ * @param config - The section config.
+ * @returns True when the raw input follows the form value.
+ */
+export function dbxLlmFlowSectionRawInputFollowsForm(config: Maybe<DbxLlmFlowAnySectionConfig>): boolean {
+  return dbxLlmFlowSectionHasForm(config) && config?.rawInput?.source !== 'parent' && !dbxLlmFlowSectionHasOptionFields(config);
+}
+
+/**
+ * The raw input mode of the section. Defaults to 'two-way' when the raw input follows the form, and 'editable' otherwise.
  *
  * @param config - The section config.
  * @returns The raw input mode.
  */
 export function dbxLlmFlowSectionRawInputMode(config: Maybe<DbxLlmFlowAnySectionConfig>): DbxLlmFlowRawInputMode {
-  return config?.rawInput?.mode ?? (dbxLlmFlowSectionHasForm(config) ? 'two-way' : 'editable');
+  return config?.rawInput?.mode ?? (dbxLlmFlowSectionRawInputFollowsForm(config) ? 'two-way' : 'editable');
 }
 
 /**
@@ -94,7 +175,7 @@ export function dbxLlmFlowSectionInputSource(section: Maybe<DbxLlmFlowSectionSta
 
   if (section?.draft.rawInputOverridden) {
     source = 'manual';
-  } else if (dbxLlmFlowSectionHasForm(config) && config?.rawInput?.source !== 'parent') {
+  } else if (dbxLlmFlowSectionRawInputFollowsForm(config)) {
     source = 'form';
   } else if (section?.followedParentRunId != null) {
     source = 'parent';
@@ -501,17 +582,20 @@ function storeDraftChange(m: DbxLlmFlowStateMutator, key: DbxLlmFlowSectionKey, 
   const hasFormValue = 'formValue' in input;
   const formValueError = hasFormValue ? jsonIssueMessage(input.formValue) : undefined;
   const formValue = hasFormValue && !formValueError ? input.formValue : base.formValue;
-  const rawInputOverridden = dbxLlmFlowSectionHasForm(config) ? Boolean(input.rawInputOverridden ?? (input.rawInput != null && !hasFormValue)) : Boolean(input.rawInputOverridden);
-  const rawInput = input.rawInput ?? (rawInputOverridden ? base.rawInput : toRawInputForConfig(config, formValue));
+  const followsForm = dbxLlmFlowSectionRawInputFollowsForm(config);
+  const rawInputOverridden = followsForm ? Boolean(input.rawInputOverridden ?? (input.rawInput != null && !hasFormValue)) : Boolean(input.rawInputOverridden);
+  const keepsRawInput = rawInputOverridden || (!followsForm && dbxLlmFlowSectionHasForm(config));
+  const rawInput = input.rawInput ?? (keepsRawInput ? base.rawInput : toRawInputForConfig(config, formValue));
   return { draft: { formValue, rawInput, rawInputOverridden }, formValueError };
 }
 
 function initialSectionDraft(config: Maybe<DbxLlmFlowAnySectionConfig>): DbxLlmFlowSectionInput {
   const initial = config?.initialDraft;
   const formValue = initial?.formValue;
+  const generatedRawInput = dbxLlmFlowSectionRawInputFollowsForm(config) || !dbxLlmFlowSectionHasForm(config) ? toRawInputForConfig(config, formValue) : '';
   return {
     formValue,
-    rawInput: initial?.rawInput ?? toRawInputForConfig(config, formValue),
+    rawInput: initial?.rawInput ?? generatedRawInput,
     rawInputOverridden: Boolean(initial?.rawInputOverridden)
   };
 }
@@ -580,7 +664,7 @@ function cascadeToChild(m: DbxLlmFlowStateMutator, parentRun: DbxLlmFlowRun, chi
 
 /**
  * The draft update a section derives from its parent run's output: the config's fromParentOutput(), or a string output as the raw input of a
- * section without a form.
+ * section whose raw input does not follow a form (no form, or a raw input source of "parent").
  *
  * @param config - The section config.
  * @param parentRun - The parent run.
@@ -593,7 +677,7 @@ function parentOutputDraftUpdate(config: Maybe<DbxLlmFlowAnySectionConfig>, pare
 
   if (fromParentOutput) {
     update = fromParentOutput({ parentRun, parentOutput: parentRun.output, draft });
-  } else if (!dbxLlmFlowSectionHasForm(config) && typeof parentRun.output === 'string') {
+  } else if (!dbxLlmFlowSectionRawInputFollowsForm(config) && typeof parentRun.output === 'string') {
     update = { rawInput: parentRun.output };
   }
 
@@ -969,7 +1053,8 @@ export interface DbxLlmFlowSetDraftFormValueInput {
  * Applies a value pushed by a bound form.
  *
  * - A non-JSON value is rejected into the input issues.
- * - Ignored while the raw input is overridden.
+ * - Regenerates the raw input when it follows the form. Ignored while that raw input is overridden.
+ * - Keeps the raw input (and its override) when the form only adds options to the parent's output (a raw input source of "parent").
  * - A value deep-equal to the draft returns the same state (the echo no-op that ends multi-instance sync ping-pong).
  *
  * @param state - The state.
@@ -980,9 +1065,10 @@ export interface DbxLlmFlowSetDraftFormValueInput {
 export function dbxLlmFlowStateWithDraftFormValue(state: DbxLlmFlowState, input: DbxLlmFlowSetDraftFormValueInput, context: DbxLlmFlowStateContext): DbxLlmFlowState {
   const { key, bindingId, formValue } = input;
   const section = state.sections[key];
+  const followsForm = dbxLlmFlowSectionRawInputFollowsForm(context.sectionConfig(key));
   let result = state;
 
-  if (section != null && !section.draft.rawInputOverridden) {
+  if (section != null && (!followsForm || !section.draft.rawInputOverridden)) {
     const m = new DbxLlmFlowStateMutator(state, context);
     const formValueError = jsonIssueMessage(formValue);
 
@@ -997,7 +1083,7 @@ export function dbxLlmFlowStateWithDraftFormValue(state: DbxLlmFlowState, input:
         m.setSection({ ...next, inputIssues: dbxLlmFlowSectionInputIssues(next, m.config(key)) });
       }
     } else {
-      const draft: DbxLlmFlowSectionInput = { formValue, rawInput: toRawInputForConfig(m.config(key), formValue), rawInputOverridden: false };
+      const draft: DbxLlmFlowSectionInput = followsForm ? { formValue, rawInput: toRawInputForConfig(m.config(key), formValue), rawInputOverridden: false } : { ...section.draft, formValue };
       applyDraft(m, key, { draft, draftSource: bindingId });
     }
 
@@ -1037,7 +1123,8 @@ export interface DbxLlmFlowPasteRawInputInput {
  * Applies pasted (or typed) raw input.
  *
  * - two-way: parses the text back into the form value. A paste regenerates the raw input from the parsed value, while typed text is kept as
- *   typed. Text that fails to parse overrides the form with a parse error until it parses.
+ *   typed. Text that fails to parse overrides the form with a parse error until it parses. A section whose raw input does not follow its form
+ *   (a raw input source of "parent") behaves as editable.
  * - one-way: keeps the exact pasted text and sets the override. Typed text is ignored.
  * - editable: keeps the exact text and sets the override.
  * - readonly: ignored.
@@ -1056,10 +1143,9 @@ export function dbxLlmFlowStateWithPastedRawInput(state: DbxLlmFlowState, input:
 
   if (section != null && mode !== 'readonly' && !(input.typed && mode === 'one-way')) {
     const m = new DbxLlmFlowStateMutator(state, context);
-    const hasForm = dbxLlmFlowSectionHasForm(config);
     let change: Maybe<ApplyDraftInput>;
 
-    if (mode === 'two-way' && hasForm) {
+    if (mode === 'two-way' && dbxLlmFlowSectionRawInputFollowsForm(config)) {
       let parseError: Maybe<string>;
       let parsed: unknown;
 
@@ -1087,8 +1173,9 @@ export function dbxLlmFlowStateWithPastedRawInput(state: DbxLlmFlowState, input:
 }
 
 /**
- * Clears the raw input override and regenerates the raw input: from the form value, or for a section without a form, from the output of the
- * followed parent run. A section without a form that follows no parent run only clears the override.
+ * Clears the raw input override and regenerates the raw input: from the form value when the raw input follows the form, otherwise (no form,
+ * or a raw input source of "parent") from the output of the followed parent run. Such a section that follows no parent run only clears the
+ * override.
  *
  * @param state - The state.
  * @param key - The section key.
@@ -1105,7 +1192,7 @@ export function dbxLlmFlowStateWithRevertedRawInput(state: DbxLlmFlowState, key:
     const formValue = section.draft.formValue;
     let draft: DbxLlmFlowSectionInput;
 
-    if (dbxLlmFlowSectionHasForm(config)) {
+    if (dbxLlmFlowSectionRawInputFollowsForm(config)) {
       draft = { formValue, rawInput: toRawInputForConfig(config, formValue), rawInputOverridden: false };
     } else {
       const parentRun = section.followedParentRunId == null ? undefined : m.run(section.followedParentRunId);

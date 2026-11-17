@@ -2,7 +2,7 @@ import { Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NgTemplateOutlet } from '@angular/common';
 import { cleanSubscription, DBX_INJECTION_COMPONENT_DATA, DbxInjectionComponent } from '@dereekb/dbx-core';
-import { DbxColorDirective, DbxContentPitDirective, DbxDetachContentComponent, DbxDetachControlsComponent, DbxHeightSyncFollowerDirective, DbxIconTileComponent } from '@dereekb/dbx-web';
+import { DbxColorDirective, DbxDetachContentComponent, DbxDetachControlsComponent, DbxHeightSyncFollowerDirective, DbxIconTileComponent } from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';
 import { distinctUntilChanged, filter, map, pairwise, withLatestFrom } from 'rxjs';
 import { type DbxLlmFlowSectionFormPopoutMode } from './llm.flow';
@@ -57,7 +57,7 @@ export interface DbxLlmFlowSectionFormPanelData {
     <ng-template #panelBody>
       <div class="dbx-llm-flow-section-form-panel-body">
         @if (formInjectionConfigSignal(); as formConfig) {
-          @if (!formHiddenSignal() && !formInInputSignal()) {
+          @if (!formHiddenSignal()) {
             <div class="dbx-llm-flow-section-form">
               <dbx-injection [config]="formConfig"></dbx-injection>
             </div>
@@ -65,11 +65,6 @@ export interface DbxLlmFlowSectionFormPanelData {
         }
         @if (displaySignal().rawInput) {
           <dbx-llm-flow-section-raw-input>
-            @if (formInInputSignal() && !formHiddenSignal() && formInjectionConfigSignal()) {
-              <div class="dbx-llm-flow-section-form" dbxContentPit dbxLlmFlowSectionRawInputBelow>
-                <dbx-injection [config]="formInjectionConfigSignal()"></dbx-injection>
-              </div>
-            }
             <dbx-llm-flow-section-run-buttons dbxHeightSyncFollower></dbx-llm-flow-section-run-buttons>
           </dbx-llm-flow-section-raw-input>
         } @else {
@@ -83,7 +78,7 @@ export interface DbxLlmFlowSectionFormPanelData {
   host: {
     class: 'dbx-llm-flow-section-form-panel'
   },
-  imports: [NgTemplateOutlet, DbxInjectionComponent, DbxDetachContentComponent, DbxDetachControlsComponent, DbxHeightSyncFollowerDirective, DbxColorDirective, DbxContentPitDirective, DbxIconTileComponent, DbxLlmFlowSectionRawInputComponent, DbxLlmFlowSectionRunButtonsComponent]
+  imports: [NgTemplateOutlet, DbxInjectionComponent, DbxDetachContentComponent, DbxDetachControlsComponent, DbxHeightSyncFollowerDirective, DbxColorDirective, DbxIconTileComponent, DbxLlmFlowSectionRawInputComponent, DbxLlmFlowSectionRunButtonsComponent]
 })
 export class DbxLlmFlowSectionFormPanelComponent {
   readonly sectionStore = inject(DbxLlmFlowSectionStore);
@@ -103,11 +98,6 @@ export class DbxLlmFlowSectionFormPanelComponent {
     return this.sectionDisplay?.displaySignal() ?? dbxLlmFlowSectionResolvedDisplayConfig(config?.display, undefined);
   });
   readonly formInjectionConfigSignal = computed(() => dbxLlmFlowSectionFormComponentInjectionConfig(this.formComponentSignal(), this.autoBindFormSignal(), this.sectionStore));
-  readonly formInInputSignal = computed(() => {
-    const display = this.displaySignal();
-    const formPlacement = this.configSignal()?.formPlacement;
-    return formPlacement === 'input' && display.rawInput;
-  });
 
   constructor() {
     // close when a run starts and the config asks for it

@@ -1,7 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Component, signal, viewChild } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideDbxForgeFormFieldDeclarations, provideDbxFormConfiguration } from '@dereekb/dbx-form';
 import { type Maybe, waitForMs } from '@dereekb/util';
+import { DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
 import { type DbxLlmFlowAnySectionConfig } from './llm.flow';
 import { defaultDbxLlmFlowToRawInput } from './llm.flow.state';
 import { DbxLlmFlowDirective } from './llm.flow.directive';
@@ -18,6 +20,10 @@ const TWO_WAY: DbxLlmFlowAnySectionConfig = {
 const ONE_WAY: DbxLlmFlowAnySectionConfig = { ...TWO_WAY, rawInput: { mode: 'one-way' } };
 
 const EDITABLE: DbxLlmFlowAnySectionConfig = { key: 'outline', rawInput: { mode: 'editable' } };
+
+const READONLY: DbxLlmFlowAnySectionConfig = { key: 'render', rawInput: { mode: 'readonly', rows: 2 }, initialDraft: { rawInput: 'fixed' } };
+
+const TEST_PROVIDERS = [provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }];
 
 @Component({
   template: `
@@ -70,7 +76,7 @@ describe('DbxLlmFlowSectionRawInputComponent', () => {
   }
 
   function beforeInput(): InputEvent {
-    const event = new InputEvent('beforeinput', { cancelable: true, inputType: 'insertText', data: 'x' });
+    const event = new InputEvent('beforeinput', { cancelable: true, bubbles: true, inputType: 'insertText', data: 'x' });
     textarea().dispatchEvent(event);
     return event;
   }
@@ -93,10 +99,17 @@ describe('DbxLlmFlowSectionRawInputComponent', () => {
     host = fixture.componentInstance;
     host.config.set(config);
     await settle();
+
+    // forge renders the textarea field asynchronously
+    for (let i = 0; i < 50 && !textarea(); i += 1) {
+      await settle();
+    }
+
+    await settle();
   }
 
   beforeEach(async () => {
-    await TestBed.configureTestingModule({ imports: [TestRawInputHostComponent] }).compileComponents();
+    await TestBed.configureTestingModule({ imports: [TestRawInputHostComponent], providers: TEST_PROVIDERS }).compileComponents();
   });
 
   afterEach(() => {
@@ -192,6 +205,41 @@ describe('DbxLlmFlowSectionRawInputComponent', () => {
       expect(draft()?.rawInput).toBe('hello');
       expect(source()).toBe('manual');
       expect(element().querySelector('.dbx-llm-flow-section-raw-input-revert')).toBeNull();
+    });
+  });
+
+  describe('readonly', () => {
+    beforeEach(async () => {
+      await setup(READONLY);
+    });
+
+    it('should show the text in a readonly forge textarea with the configured rows', () => {
+      expect(textarea().value).toBe('fixed');
+      expect(textarea().readOnly).toBe(true);
+      expect(textarea().rows).toBe(2);
+    });
+
+    it('should ignore a paste', async () => {
+      paste('other');
+      await settle();
+
+      expect(draft()?.rawInput).toBe('fixed');
+      expect(draft()?.rawInputOverridden).toBeFalsy();
+    });
+  });
+
+  describe('copy button', () => {
+    it('should show a copy button in the field, disabled while there is no text', async () => {
+      await setup(EDITABLE);
+      const copyButton = () => element().querySelector('.dbx-llm-flow-section-raw-input-field button') as Maybe<HTMLButtonElement>;
+
+      expect(copyButton()).not.toBeNull();
+      expect(copyButton()?.disabled).toBe(true);
+
+      await type('hello');
+      await settle();
+
+      expect(copyButton()?.disabled).toBe(false);
     });
   });
 

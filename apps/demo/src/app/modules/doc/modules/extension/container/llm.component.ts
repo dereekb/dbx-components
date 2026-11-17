@@ -1,6 +1,7 @@
 import { Component, computed, signal, viewChild } from '@angular/core';
 import { JsonPipe } from '@angular/common';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { dbxForgeNumberField } from '@dereekb/dbx-form';
 import { DbxButtonComponent, DbxContentContainerDirective, DbxContentPitDirective, DbxFlexGroupDirective, DbxFlexSizeDirective } from '@dereekb/dbx-web';
 import { type DbxLlmFlowConfig, DbxLlmFlowComponent, DbxLlmFlowDirective, type DbxLlmFlowRun, type DbxLlmFlowRunId, DbxLlmFlowSectionComponent, type DbxLlmFlowSectionConfig, type DbxLlmFlowState, defaultDbxLlmFlowToRawInput } from '@dereekb/dbx-form/llm';
 import { type Maybe } from '@dereekb/util';
@@ -9,13 +10,14 @@ import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import {
   DOC_EXTENSION_LLM_BRIEF_TOPIC_MAX_LENGTH,
+  DOC_EXTENSION_LLM_DRAFT_MAX_RENDER_COUNT,
+  DOC_EXTENSION_LLM_DRAFT_MIN_RENDER_COUNT,
   DocExtensionLlmBriefFormComponent,
   type DocExtensionLlmBriefFormValue,
   type DocExtensionLlmBriefTone,
   docExtensionLlmFakeHandler,
   DocExtensionLlmMoodInputComponent,
   type DocExtensionLlmMoodValue,
-  DocExtensionLlmDraftCountInputComponent,
   docExtensionLlmDraftRenderCount,
   type DocExtensionLlmDraftValue,
   type DocExtensionLlmSwatchOutput,
@@ -155,7 +157,7 @@ export const DOC_EXTENSION_LLM_OUTLINE_SECTION: DbxLlmFlowSectionConfig<unknown,
   label: 'Outline',
   hint: 'No form: the JSON outline from the Brief\'s "Outline" run becomes this editable input (fromParentOutput). Edit the JSON directly: validateInput shows an error and blocks Expand until it is JSON with a "points" array. Follows only the "Outline" run kind, so a quick draft does not cascade here.',
   followParentKinds: ['plan'],
-  rawInput: { mode: 'editable', minRows: 6, label: 'Outline JSON' },
+  rawInput: { mode: 'editable', rows: 8, label: 'Outline JSON' },
   fromParentOutput: ({ parentOutput }) => ({ rawInput: defaultDbxLlmFlowToRawInput(parentOutput) }),
   validateInput: (input) => validateOutlineInput(input.rawInput),
   kinds: [
@@ -174,14 +176,20 @@ export const DOC_EXTENSION_LLM_DRAFT_SECTION: DbxLlmFlowSectionConfig<DocExtensi
   key: 'draft',
   parentKey: 'outline',
   label: 'Draft',
-  hint: 'A custom input and a custom, non-text output. The render count (N) is a custom form placed in the input (formPlacement "input"), so Render stretches to cover the raw input and the form. Each Render makes N images, and the outputComponent shows every render in a dbx-gallery, newest first. The read-only raw input is the expanded outline, copied into the form value (rawInput source "parent"). With auto-run on, a successful Expand renders automatically.',
-  formComponent: DocExtensionLlmDraftCountInputComponent,
-  formPlacement: 'input',
-  formPopout: false,
+  hint: 'Options and a custom, non-text output. The read-only raw input is the expanded outline, and the render count (N) is an option field (optionFields) in the same forge form, under the input, so Render stretches to cover both. Each run keeps its options: the history lists them and picking a run restores them. Each Render makes N images, and the outputComponent shows every render in a dbx-gallery, newest first. With auto-run on, a successful Expand renders automatically.',
+  optionFields: [
+    dbxForgeNumberField({
+      key: 'count',
+      label: 'Renders (N)',
+      hint: 'Each Render makes N images.',
+      min: DOC_EXTENSION_LLM_DRAFT_MIN_RENDER_COUNT,
+      max: DOC_EXTENSION_LLM_DRAFT_MAX_RENDER_COUNT,
+      step: 1,
+      enforceStep: true
+    })
+  ],
   initialDraft: { formValue: { count: 1 } },
-  rawInput: { mode: 'readonly', source: 'parent' },
-  toRawInput: (formValue) => formValue?.text ?? '',
-  fromParentOutput: ({ parentOutput, draft }) => ({ formValue: { ...draft.formValue, text: typeof parentOutput === 'string' ? parentOutput : '' } }),
+  rawInput: { mode: 'readonly' },
   outputComponent: DocExtensionLlmSwatchesOutputComponent,
   kinds: [
     {
@@ -210,7 +218,7 @@ export const DOC_EXTENSION_LLM_RENDER_SECTION: DbxLlmFlowSectionConfig<unknown, 
   key: 'render',
   parentKey: 'prompt',
   label: 'Render',
-  rawInput: { mode: 'readonly', minRows: 2 },
+  rawInput: { mode: 'readonly', rows: 2 },
   outputComponent: DocExtensionLlmTakesOutputComponent,
   kinds: [
     {

@@ -35,8 +35,8 @@ const STATUS_COLOR: Record<DbxLlmFlowSectionStatus, Maybe<DbxThemeColor>> = {
  * with the run buttons to its right, the last error and the output. The section reads top to bottom: input, run, output.
  *
  * The run buttons (one per run kind, stacked) take the raw input field's height through dbxHeightSync. When the raw input is hidden, they sit
- * in an actions row below the form instead. With the config's formPlacement set to "input", the form sits under the raw input field instead
- * of above it, and the run buttons stretch to cover the field and the form.
+ * in an actions row below the form instead. A section's optionFields render in the raw input's form, under the field, so the run buttons
+ * stretch to cover the field and the options.
  *
  * With the display's stepNumber option on (the default), an icon tile before the label shows the section's step number in its chain: 1 for
  * a root section, plus one per ancestor.
@@ -84,18 +84,13 @@ const STATUS_COLOR: Record<DbxLlmFlowSectionStatus, Maybe<DbxThemeColor>> = {
       }
     }
     <div class="dbx-llm-flow-section-body">
-      @if (showFormSignal() && !formInInputSignal()) {
+      @if (showFormSignal()) {
         <div class="dbx-llm-flow-section-form" dbxContentPit>
           <dbx-injection [config]="formInjectionConfigSignal()"></dbx-injection>
         </div>
       }
       @if (displaySignal().rawInput) {
         <dbx-llm-flow-section-raw-input>
-          @if (showFormSignal() && formInInputSignal()) {
-            <div class="dbx-llm-flow-section-form" dbxContentPit dbxLlmFlowSectionRawInputBelow>
-              <dbx-injection [config]="formInjectionConfigSignal()"></dbx-injection>
-            </div>
-          }
           @if (displaySignal().runButtons) {
             <dbx-llm-flow-section-run-buttons dbxHeightSyncFollower></dbx-llm-flow-section-run-buttons>
           }
@@ -185,14 +180,6 @@ export class DbxLlmFlowSectionComponent implements DbxLlmFlowSectionDisplay {
     return display.form && formInjectionConfig != null;
   });
   readonly popoutEnabledSignal = computed(() => this.configSignal()?.formPopout !== false);
-  /**
-   * Whether the form is shown under the raw input field, inside the input row, rather than above the raw input.
-   */
-  readonly formInInputSignal = computed(() => {
-    const display = this.displaySignal();
-    const formPlacement = this.configSignal()?.formPlacement;
-    return formPlacement === 'input' && display.rawInput;
-  });
   readonly showFormSignal = computed(() => {
     const showFormControls = this.showFormControlsSignal();
     const formVisible = this.formVisibleSignal();

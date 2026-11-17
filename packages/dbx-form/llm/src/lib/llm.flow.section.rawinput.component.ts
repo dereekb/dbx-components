@@ -1,14 +1,12 @@
-import { afterNextRender, Component, computed, DestroyRef, ElementRef, inject, input, viewChild } from '@angular/core';
+import { Component, computed, inject, input, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { CdkTextareaAutosize, TextFieldModule } from '@angular/cdk/text-field';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
 import { DbxButtonComponent, DbxHeightSyncDirective, DbxHeightSyncSourceDirective, injectCopyToClipboardFunctionWithSnackbarMessage } from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';
 import { type DbxLlmFlowSectionInputSource } from './llm.flow';
-import { dbxLlmFlowSectionHasForm } from './llm.flow.state';
+import { dbxLlmFlowSectionRawInputFollowsForm } from './llm.flow.state';
 import { DbxLlmFlowSectionStore } from './llm.flow.section.store';
+import { DbxLlmFlowSectionRawInputFormComponent } from './llm.flow.section.rawinput.form.component';
 
 /**
  * Default label of the raw input field.
@@ -16,14 +14,9 @@ import { DbxLlmFlowSectionStore } from './llm.flow.section.store';
 export const DEFAULT_DBX_LLM_FLOW_SECTION_RAW_INPUT_LABEL = 'Input';
 
 /**
- * Default minimum number of rows of the raw input field.
+ * Default number of visible rows of the raw input field.
  */
-export const DEFAULT_DBX_LLM_FLOW_SECTION_RAW_INPUT_MIN_ROWS = 3;
-
-/**
- * Default maximum number of rows of the raw input field.
- */
-export const DEFAULT_DBX_LLM_FLOW_SECTION_RAW_INPUT_MAX_ROWS = 16;
+export const DEFAULT_DBX_LLM_FLOW_SECTION_RAW_INPUT_ROWS = 5;
 
 /**
  * The message the raw input shows about where its text comes from.
@@ -46,28 +39,23 @@ const RAW_INPUT_SOURCE_ICONS: Record<DbxLlmFlowSectionInputSource, string> = {
 };
 
 /**
- * Shows the raw input of the nearest section.
+ * Shows the raw input of the nearest section, in a forge textarea with a fixed number of rows (longer text scrolls, and the field can be resized
+ * by dragging).
  *
  * The text can be typed into in `two-way` mode (parsed back into the form as it is typed) and `editable` mode. In `one-way` mode a paste or a
  * drop replaces the whole text through the section store, and the field stays focusable so the context-menu and mobile paste work.
  *
  * Also shows where the text comes from (the form, the parent's output, or manual input, with a revert action when manual input overrides
- * generated input), the section's input issues (outlining the field in the error color) and a copy button. The field re-measures its
- * autosize height when its width changes and when web fonts finish loading, so the text is not clipped.
+ * generated input), the section's input issues (outlining the field in the error color) and a copy button. The section's option fields render
+ * in the same forge form, under the textarea (see DbxLlmFlowSectionRawInputFormComponent).
  *
- * Projected content renders to the right of the field, centered on it. Content marked dbxLlmFlowSectionRawInputBelow renders under the field,
- * in the same column. The host is a dbxHeightSync group with that column as its source (its content box: the column carries the field's
- * vertical padding), so projected content marked dbxHeightSyncFollower takes the height of the field's outlined box plus the content under
- * it. The section projects its run buttons beside the field, and its form under the field when the form placement is "input".
+ * Projected content renders to the right of the form, centered on it. The host is a dbxHeightSync group with the form's column as its source
+ * (its content box: the column carries the field's vertical padding), so projected content marked dbxHeightSyncFollower takes the height of the
+ * textarea's outlined box plus the options under it. The section projects its run buttons beside the form.
  *
  * @example
  * ```html
  * <dbx-llm-flow-section-raw-input>
- *   <dbx-llm-flow-section-run-buttons dbxHeightSyncFollower></dbx-llm-flow-section-run-buttons>
- * </dbx-llm-flow-section-raw-input>
- *
- * <dbx-llm-flow-section-raw-input>
- *   <div dbxContentPit dbxLlmFlowSectionRawInputBelow>...</div>
  *   <dbx-llm-flow-section-run-buttons dbxHeightSyncFollower></dbx-llm-flow-section-run-buttons>
  * </dbx-llm-flow-section-raw-input>
  * ```
@@ -87,24 +75,17 @@ const RAW_INPUT_SOURCE_ICONS: Record<DbxLlmFlowSectionInputSource, string> = {
     }
     <div class="dbx-llm-flow-section-raw-input-row">
       <div class="dbx-llm-flow-section-raw-input-main" dbxHeightSyncSource="content-box">
-        <mat-form-field class="dbx-llm-flow-section-raw-input-field" appearance="outline" subscriptSizing="dynamic">
-          <mat-label>{{ labelSignal() }}</mat-label>
-          <textarea
-            #textarea
-            matInput
-            cdkTextareaAutosize
-            class="dbx-llm-flow-section-raw-input-textarea"
-            [cdkAutosizeMinRows]="minRowsSignal()"
-            [cdkAutosizeMaxRows]="maxRowsSignal()"
-            [readonly]="readonlySignal()"
-            [value]="rawInputSignal()"
-            (beforeinput)="onBeforeInput($event)"
-            (paste)="onPaste($event)"
-            (drop)="onDrop($event)"
-            (input)="onInput($event)"></textarea>
-          <dbx-button matSuffix icon="content_copy" ariaLabel="Copy the raw input" [iconOnly]="true" [flat]="true" [disabled]="!rawInputSignal()" (buttonClick)="copyRawInput()"></dbx-button>
-        </mat-form-field>
-        <ng-content select="[dbxLlmFlowSectionRawInputBelow]"></ng-content>
+        <dbx-llm-flow-section-raw-input-form
+          class="dbx-llm-flow-section-raw-input-field"
+          [label]="labelSignal()"
+          [rows]="rowsSignal()"
+          [readonlyText]="readonlySignal()"
+          [copyDisabled]="!rawInputSignal()"
+          (copyClick)="copyRawInput()"
+          (beforeinput)="onBeforeInput($event)"
+          (paste)="onPaste($event)"
+          (drop)="onDrop($event)"
+          (input)="onInput($event)"></dbx-llm-flow-section-raw-input-form>
       </div>
       <ng-content></ng-content>
     </div>
@@ -127,15 +108,13 @@ const RAW_INPUT_SOURCE_ICONS: Record<DbxLlmFlowSectionInputSource, string> = {
     '[attr.data-source]': 'inputSourceSignal()'
   },
   hostDirectives: [DbxHeightSyncDirective],
-  imports: [MatFormFieldModule, MatIconModule, MatInputModule, TextFieldModule, DbxButtonComponent, DbxHeightSyncSourceDirective]
+  imports: [MatIconModule, DbxButtonComponent, DbxHeightSyncSourceDirective, DbxLlmFlowSectionRawInputFormComponent]
 })
 export class DbxLlmFlowSectionRawInputComponent {
   readonly sectionStore = inject(DbxLlmFlowSectionStore);
 
   private readonly _copyToClipboard = injectCopyToClipboardFunctionWithSnackbarMessage();
-  private readonly _destroyRef = inject(DestroyRef);
-  private readonly _autosize = viewChild(CdkTextareaAutosize);
-  private readonly _textarea = viewChild('textarea', { read: ElementRef<HTMLTextAreaElement> });
+  private readonly _form = viewChild.required(DbxLlmFlowSectionRawInputFormComponent);
 
   /**
    * Overrides the label from the section config.
@@ -151,15 +130,14 @@ export class DbxLlmFlowSectionRawInputComponent {
   readonly followsParentRunSignal = toSignal(this.sectionStore.followsParentRun$, { initialValue: false });
   readonly parentConfigSignal = toSignal(this.sectionStore.parentConfig$);
 
-  readonly hasFormSignal = computed(() => dbxLlmFlowSectionHasForm(this.configSignal()));
+  readonly followsFormSignal = computed(() => dbxLlmFlowSectionRawInputFollowsForm(this.configSignal()));
   readonly labelSignal = computed(() => {
     const label = this.label();
     const configLabel = this.configSignal()?.rawInput?.label;
     return label ?? configLabel ?? DEFAULT_DBX_LLM_FLOW_SECTION_RAW_INPUT_LABEL;
   });
   readonly hintSignal = computed(() => this.configSignal()?.rawInput?.hint);
-  readonly minRowsSignal = computed(() => this.configSignal()?.rawInput?.minRows ?? DEFAULT_DBX_LLM_FLOW_SECTION_RAW_INPUT_MIN_ROWS);
-  readonly maxRowsSignal = computed(() => this.configSignal()?.rawInput?.maxRows ?? DEFAULT_DBX_LLM_FLOW_SECTION_RAW_INPUT_MAX_ROWS);
+  readonly rowsSignal = computed(() => this.configSignal()?.rawInput?.rows ?? DEFAULT_DBX_LLM_FLOW_SECTION_RAW_INPUT_ROWS);
   readonly readonlySignal = computed(() => this.modeSignal() === 'readonly');
 
   /**
@@ -183,7 +161,7 @@ export class DbxLlmFlowSectionRawInputComponent {
     const typeable = this.typeableSignal();
     const config = this.configSignal();
     const source = this.inputSourceSignal();
-    const hasForm = this.hasFormSignal();
+    const followsForm = this.followsFormSignal();
     const followsParentRun = this.followsParentRunSignal();
     const parentConfig = this.parentConfigSignal();
     const parentLabel = parentConfig?.label ?? parentConfig?.key;
@@ -199,7 +177,7 @@ export class DbxLlmFlowSectionRawInputComponent {
           message = { source, icon, text: `Generated from the ${parentLabel ?? 'parent'} output.` };
           break;
         case 'manual':
-          if (hasForm) {
+          if (followsForm) {
             message = { source, icon, text: 'Manual input. It overrides the form.', revertText: 'Revert to form' };
           } else if (followsParentRun) {
             message = { source, icon, text: `Edited manually. It overrides the ${parentLabel ?? 'parent'} output.`, revertText: `Revert to ${parentLabel ?? 'parent'} output` };
@@ -216,65 +194,37 @@ export class DbxLlmFlowSectionRawInputComponent {
     return message;
   });
 
-  constructor() {
-    // cdkTextareaAutosize only re-measures when the text changes, so also re-measure when a width change re-wraps the text, and when web fonts
-    // finish loading (a measurement made with the fallback font clips the text)
-    afterNextRender(() => {
-      const textarea = this._textarea()?.nativeElement;
-      const remeasure = () => this._autosize()?.resizeToFitContent(true);
-
-      if (textarea != null && typeof ResizeObserver !== 'undefined') {
-        let width: Maybe<number>;
-        const observer = new ResizeObserver(() => {
-          const nextWidth = textarea.clientWidth;
-
-          if (nextWidth !== width) {
-            width = nextWidth;
-            remeasure();
-          }
-        });
-
-        observer.observe(textarea);
-        this._destroyRef.onDestroy(() => observer.disconnect());
-      }
-
-      const fonts = textarea?.ownerDocument.fonts;
-
-      if (fonts != null) {
-        void fonts.ready.then(remeasure);
-        fonts.addEventListener('loadingdone', remeasure);
-        this._destroyRef.onDestroy(() => fonts.removeEventListener('loadingdone', remeasure));
-      }
-    });
-  }
-
+  // the form's events bubble here: only those of the raw input textarea are handled, never an option field's
   onBeforeInput(event: Event): void {
-    if (!this.typeableSignal()) {
+    if (this._form().isTextareaTarget(event.target) && !this.typeableSignal()) {
       event.preventDefault();
     }
   }
 
   onPaste(event: ClipboardEvent): void {
-    if (!this.typeableSignal()) {
+    if (this._form().isTextareaTarget(event.target) && !this.typeableSignal()) {
       event.preventDefault();
       this._pasteText(event.clipboardData?.getData('text/plain'));
     }
   }
 
   onDrop(event: DragEvent): void {
-    if (!this.typeableSignal()) {
+    if (this._form().isTextareaTarget(event.target) && !this.typeableSignal()) {
       event.preventDefault();
       this._pasteText(event.dataTransfer?.getData('text/plain'));
     }
   }
 
   onInput(event: Event): void {
-    const textarea = event.target as HTMLTextAreaElement;
+    const form = this._form();
+    const target = event.target;
 
-    if (this.typeableSignal()) {
-      this.sectionStore.setRawInput(textarea.value);
-    } else {
-      textarea.value = this.rawInputSignal(); // restore text an IME inserted past beforeinput
+    if (form.isTextareaTarget(target)) {
+      if (this.typeableSignal()) {
+        this.sectionStore.setRawInput(target.value);
+      } else {
+        form.restoreText(); // restore text an IME inserted past beforeinput
+      }
     }
   }
 

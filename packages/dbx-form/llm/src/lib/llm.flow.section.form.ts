@@ -6,7 +6,13 @@ import { areEqualPOJOValues, type Destroyable, type Maybe } from '@dereekb/util'
 import { combineLatest, distinctUntilChanged, filter, first, map, switchMap, withLatestFrom } from 'rxjs';
 import { DBX_LLM_FLOW_SECTION_FORM_DISABLED_KEY, type DbxLlmFlowSectionFormBindingTarget } from './llm.flow';
 
-const BOUND_FORMS = new WeakSet<DbxMutableForm<unknown>>();
+/**
+ * The parts of a form that bindDbxLlmFlowSectionForm() uses: a DbxMutableForm, or an adapter onto part of a form (like the options group of the
+ * raw input's form).
+ */
+export type DbxLlmFlowSectionBindableForm<F = unknown> = Pick<DbxMutableForm<F>, 'currentValue' | 'stream$' | 'setValue' | 'setDisabled'>;
+
+const BOUND_FORMS = new WeakSet<DbxLlmFlowSectionBindableForm<unknown>>();
 
 interface DbxLlmFlowSectionFormBindingValueRef {
   readonly value: unknown;
@@ -18,12 +24,12 @@ interface DbxLlmFlowSectionFormBindingValueRef {
  * @param form - The form.
  * @returns True if bound.
  */
-export function isDbxLlmFlowSectionFormBound(form: DbxMutableForm<unknown>): boolean {
+export function isDbxLlmFlowSectionFormBound(form: DbxLlmFlowSectionBindableForm<unknown>): boolean {
   return BOUND_FORMS.has(form);
 }
 
 export interface BindDbxLlmFlowSectionFormConfig<F = unknown> {
-  readonly form: DbxMutableForm<F>;
+  readonly form: DbxLlmFlowSectionBindableForm<F>;
   readonly target: DbxLlmFlowSectionFormBindingTarget<F>;
 }
 
@@ -51,7 +57,7 @@ export function bindDbxLlmFlowSectionForm<F = unknown>(config: BindDbxLlmFlowSec
   let lastValue: DbxLlmFlowSectionFormBindingValueRef | undefined;
   let seedEcho: DbxLlmFlowSectionFormBindingValueRef | undefined;
 
-  BOUND_FORMS.add(form as DbxMutableForm<unknown>);
+  BOUND_FORMS.add(form as DbxLlmFlowSectionBindableForm<unknown>);
 
   function pushValue(value: unknown): void {
     if (lastValue == null || !areEqualPOJOValues(lastValue.value, value)) {
@@ -117,7 +123,7 @@ export function bindDbxLlmFlowSectionForm<F = unknown>(config: BindDbxLlmFlowSec
 
   return {
     destroy: () => {
-      BOUND_FORMS.delete(form as DbxMutableForm<unknown>);
+      BOUND_FORMS.delete(form as DbxLlmFlowSectionBindableForm<unknown>);
       seedSub.destroy();
       pushSub.destroy();
       validSub.destroy();

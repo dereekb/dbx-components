@@ -9,6 +9,7 @@ export * from './llm.flow.section.directive';
 export * from './llm.flow.section.run.directive';
 export * from './llm.flow.section.form';
 export * from './llm.flow.section.form.directive';
+export * from './llm.flow.section.rawinput.form.component';
 export * from './llm.flow.section.rawinput.component';
 export * from './llm.flow.section.run.buttons.component';
 export * from './llm.flow.section.history.list.component';

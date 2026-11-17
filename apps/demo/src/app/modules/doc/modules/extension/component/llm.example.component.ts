@@ -1,7 +1,5 @@
 import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { AbstractSyncForgeFormDirective, DBX_FORGE_FORM_COMPONENT_TEMPLATE, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule, dbxForgeNumberField, dbxForgeRow, dbxForgeTextAreaField, dbxForgeTextField, dbxForgeValueSelectionField } from '@dereekb/dbx-form';
 import { DbxLlmFlowSectionFormBindingTarget, type DbxLlmFlowRun, type DbxLlmFlowRunValue, DbxLlmFlowSectionStore } from '@dereekb/dbx-form/llm';
 import { cleanSubscription } from '@dereekb/dbx-core';
@@ -179,13 +177,9 @@ export class DocExtensionLlmTakesOutputComponent {
 
 // MARK: Draft Render Count
 /**
- * Form value of the chain's draft section: the text from the Outline's output, and how many images one Render makes.
+ * Form value of the chain's draft section: its options (optionFields), how many images one Render makes. The raw input is the Outline's output.
  */
 export interface DocExtensionLlmDraftValue {
-  /**
-   * The Outline's output, copied in by fromParentOutput(). The raw input shows it.
-   */
-  readonly text?: Maybe<string>;
   /**
    * How many images one Render makes.
    */
@@ -204,52 +198,6 @@ export const DOC_EXTENSION_LLM_DRAFT_MAX_RENDER_COUNT = 8;
 export function docExtensionLlmDraftRenderCount(count: Maybe<number>): number {
   const value = Math.round(Number(count) || DOC_EXTENSION_LLM_DRAFT_MIN_RENDER_COUNT);
   return Math.min(DOC_EXTENSION_LLM_DRAFT_MAX_RENDER_COUNT, Math.max(DOC_EXTENSION_LLM_DRAFT_MIN_RENDER_COUNT, value));
-}
-
-/**
- * A custom input on the binding contract for the draft section's render count. Shown under the raw input (formPlacement "input"). Keeps the
- * rest of the form value (the Outline text) when the count changes, since a form change rebuilds the raw input from the form value.
- */
-@Component({
-  selector: 'doc-extension-llm-draft-count-input',
-  template: `
-    <mat-form-field class="doc-extension-llm-draft-count-field" appearance="outline" subscriptSizing="dynamic">
-      <mat-label>Renders (N)</mat-label>
-      <input matInput type="number" [min]="minCount" [max]="maxCount" [value]="countSignal()" [disabled]="lockedSignal()" (input)="onCountInput($event)" />
-      <mat-hint>Each Render makes N images.</mat-hint>
-    </mat-form-field>
-  `,
-  styles: `
-    .doc-extension-llm-draft-count-field {
-      width: 220px;
-    }
-  `,
-  imports: [MatFormFieldModule, MatInputModule]
-})
-export class DocExtensionLlmDraftCountInputComponent {
-  readonly target = inject(DbxLlmFlowSectionFormBindingTarget<DocExtensionLlmDraftValue>);
-
-  readonly minCount = DOC_EXTENSION_LLM_DRAFT_MIN_RENDER_COUNT;
-  readonly maxCount = DOC_EXTENSION_LLM_DRAFT_MAX_RENDER_COUNT;
-
-  private readonly _binding = this.target.registerFormBinding();
-  private readonly _value = signal<DocExtensionLlmDraftValue>({});
-
-  readonly lockedSignal = toSignal(this.target.formLocked$, { initialValue: false });
-  readonly countSignal = computed(() => docExtensionLlmDraftRenderCount(this._value().count));
-
-  constructor() {
-    cleanSubscription(this.target.formSeed$(this._binding.id).subscribe((value: Maybe<DocExtensionLlmDraftValue>) => this._value.set(value ?? {})));
-    this.target.setFormValid(this._binding.id, true);
-    inject(DestroyRef).onDestroy(() => this._binding.destroy());
-  }
-
-  onCountInput(event: Event): void {
-    const count = docExtensionLlmDraftRenderCount((event.target as HTMLInputElement).valueAsNumber);
-    const next = { ...this._value(), count };
-    this._value.set(next);
-    this.target.setDraftFormValue(this._binding.id, next);
-  }
 }
 
 // MARK: Swatches Output

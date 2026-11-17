@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { type Maybe } from '@dereekb/util';
 import { DBX_LLM_FLOW_RUN_INTERRUPTED_ERROR_CODE, DBX_LLM_FLOW_RUN_NON_JSON_OUTPUT_ERROR_CODE, type DbxLlmFlowAnySectionConfig, type DbxLlmFlowConfig, type DbxLlmFlowRun, type DbxLlmFlowRunKind, type DbxLlmFlowSectionKey, type DbxLlmFlowState } from './llm.flow';
 import {
   type DbxLlmFlowStateContext,
@@ -11,6 +10,7 @@ import {
   dbxLlmFlowStateWithCompletedRun,
   dbxLlmFlowStateWithConsumedRunRequest,
   dbxLlmFlowStateWithDraft,
+  dbxLlmFlowSectionOptionsDescription,
   dbxLlmFlowStateWithDraftFormValue,
   dbxLlmFlowStateWithFailedRun,
   dbxLlmFlowStateWithFormValid,
@@ -426,21 +426,62 @@ describe('llm.flow.state', () => {
       expect(inputSource(flow, 'b')).toBe('parent');
     });
 
-    it('should name the parent as the source of a form section whose raw input source is "parent"', () => {
-      const optionsB: DbxLlmFlowAnySectionConfig = {
-        key: 'b',
-        parentKey: 'a',
-        hasForm: true,
-        rawInput: { mode: 'readonly', source: 'parent' },
-        toRawInput: (formValue) => (formValue as Maybe<{ text?: string }>)?.text ?? '',
-        fromParentOutput: ({ parentOutput, draft }) => ({ formValue: { ...(draft.formValue as object), text: parentOutput } })
-      };
+    describe('a form section whose raw input source is "parent"', () => {
+      const OPTIONS_B: DbxLlmFlowAnySectionConfig = { key: 'b', parentKey: 'a', hasForm: true, initialDraft: { formValue: { count: 1 } }, rawInput: { source: 'parent' } };
 
+      it('should start with an empty raw input, not one generated from the form value', () => {
+        const flow = makeFlow([FORM_A, OPTIONS_B]);
+        expect(flow.state.sections['b'].draft.rawInput).toBe('');
+        expect(inputSource(flow, 'b')).toBe('none');
+      });
+
+      it('should take a string parent output as the raw input, keeping the form value', () => {
+        const flow = makeFlow([FORM_A, OPTIONS_B]);
+        run(flow, 'a', 'a1', 'outline');
+
+        expect(flow.state.sections['b'].draft.rawInput).toBe('outline');
+        expect(flow.state.sections['b'].draft.formValue).toEqual({ count: 1 });
+        expect(inputSource(flow, 'b')).toBe('parent');
+      });
+
+      it('should keep the raw input when the form value changes', () => {
+        const flow = makeFlow([FORM_A, OPTIONS_B]);
+        run(flow, 'a', 'a1', 'outline');
+        flow.state = dbxLlmFlowStateWithDraftFormValue(flow.state, { key: 'b', bindingId: 1, formValue: { count: 3 } }, flow.context);
+
+        expect(flow.state.sections['b'].draft).toEqual({ formValue: { count: 3 }, rawInput: 'outline', rawInputOverridden: false });
+        expect(inputSource(flow, 'b')).toBe('parent');
+      });
+
+      it('should default to editable: typed text overrides the parent output without parsing into the form', () => {
+        const flow = makeFlow([FORM_A, OPTIONS_B]);
+        run(flow, 'a', 'a1', 'outline');
+        type(flow, 'b', '{"count":5}');
+
+        expect(flow.state.sections['b'].draft).toEqual({ formValue: { count: 1 }, rawInput: '{"count":5}', rawInputOverridden: true });
+        expect(inputSource(flow, 'b')).toBe('manual');
+      });
+
+      it('should accept form changes while the raw input is overridden, and revert to the parent output', () => {
+        const flow = makeFlow([FORM_A, OPTIONS_B]);
+        run(flow, 'a', 'a1', 'outline');
+        type(flow, 'b', 'my text');
+        flow.state = dbxLlmFlowStateWithDraftFormValue(flow.state, { key: 'b', bindingId: 1, formValue: { count: 2 } }, flow.context);
+
+        expect(flow.state.sections['b'].draft).toEqual({ formValue: { count: 2 }, rawInput: 'my text', rawInputOverridden: true });
+
+        flow.state = dbxLlmFlowStateWithRevertedRawInput(flow.state, 'b', flow.context);
+        expect(flow.state.sections['b'].draft).toEqual({ formValue: { count: 2 }, rawInput: 'outline', rawInputOverridden: false });
+      });
+    });
+
+    it('should treat a section with option fields like a raw input source of "parent"', () => {
+      const optionsB: DbxLlmFlowAnySectionConfig = { key: 'b', parentKey: 'a', optionFields: [{ key: 'count', type: 'input' } as never], initialDraft: { formValue: { count: 1 } } };
       const flow = makeFlow([FORM_A, optionsB]);
-      expect(inputSource(flow, 'b')).toBe('none');
-
       run(flow, 'a', 'a1', 'outline');
-      expect(flow.state.sections['b'].draft.rawInput).toBe('outline');
+      flow.state = dbxLlmFlowStateWithDraftFormValue(flow.state, { key: 'b', bindingId: 1, formValue: { count: 4 } }, flow.context);
+
+      expect(flow.state.sections['b'].draft).toEqual({ formValue: { count: 4 }, rawInput: 'outline', rawInputOverridden: false });
       expect(inputSource(flow, 'b')).toBe('parent');
     });
 
@@ -557,5 +598,32 @@ describe('llm.flow.state', () => {
       expect(runs['r1'].state).toBe('failed');
       expect(runs['r1'].error?.code).toBe(DBX_LLM_FLOW_RUN_INTERRUPTED_ERROR_CODE);
     });
+  });
+});
+
+describe('dbxLlmFlowSectionOptionsDescription()', () => {
+  const FIELDS = [
+    { key: 'count', type: 'input', label: 'Renders (N)' },
+    {
+      type: 'row',
+      fields: [
+        { key: 'style', type: 'select', label: 'Style' },
+        { key: 'tags', type: 'input' }
+      ]
+    },
+    { key: 'advanced', type: 'group', fields: [{ key: 'seed', type: 'input', label: 'Seed' }] }
+  ] as never[];
+
+  it('should list the options with values by label, falling back to the key, through rows and groups', () => {
+    expect(dbxLlmFlowSectionOptionsDescription(FIELDS, { count: 4, style: 'flat', tags: ['a', 'b'], advanced: { seed: 7 } })).toBe('Renders (N): 4 · Style: flat · tags: a, b · Seed: 7');
+  });
+
+  it('should skip options without a value', () => {
+    expect(dbxLlmFlowSectionOptionsDescription(FIELDS, { count: 2, style: '', tags: [] })).toBe('Renders (N): 2');
+  });
+
+  it('should return undefined without option fields or values', () => {
+    expect(dbxLlmFlowSectionOptionsDescription(undefined, { count: 2 })).toBeUndefined();
+    expect(dbxLlmFlowSectionOptionsDescription(FIELDS, undefined)).toBeUndefined();
   });
 });

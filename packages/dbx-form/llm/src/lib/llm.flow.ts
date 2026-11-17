@@ -3,6 +3,7 @@ import { type Observable } from 'rxjs';
 import { type Work } from '@dereekb/rxjs';
 import { type ArrayOrValue, type DestroyFunction, type ErrorInput, type JsonCompatible, type Maybe, type ModelIdFactory, type ReadableError, sequentialIncrementingNumberStringModelIdFactory, toReadableError } from '@dereekb/util';
 import { type DbxButtonStyle } from '@dereekb/dbx-web';
+import { type FieldDef } from '@ng-forge/dynamic-forms';
 
 // MARK: Keys
 /**
@@ -281,8 +282,11 @@ export type DbxLlmFlowRawInputOneWayFormMode = 'lock' | 'hide';
 export interface DbxLlmFlowSectionRawInputConfig {
   readonly mode?: Maybe<DbxLlmFlowRawInputMode>;
   readonly oneWayFormMode?: Maybe<DbxLlmFlowRawInputOneWayFormMode>;
-  readonly minRows?: Maybe<number>;
-  readonly maxRows?: Maybe<number>;
+  /**
+   * Number of visible rows of the raw input field. The field doesn't grow with its text: longer text scrolls, and the field can be resized by
+   * dragging. Defaults to DEFAULT_DBX_LLM_FLOW_SECTION_RAW_INPUT_ROWS.
+   */
+  readonly rows?: Maybe<number>;
   readonly label?: Maybe<string>;
   readonly hint?: Maybe<string>;
   /**
@@ -290,10 +294,12 @@ export interface DbxLlmFlowSectionRawInputConfig {
    */
   readonly showSource?: Maybe<boolean>;
   /**
-   * Where the raw input comes from, for the source message. Defaults to "form" for a section with a form, otherwise the parent's output.
+   * Where the raw input comes from. Defaults to "form" for a section with a form, otherwise the parent's output.
    *
-   * Set "parent" on a section whose form only adds options to its parent's output (fromParentOutput() copies the output into the form value,
-   * and toRawInput() reads it back), so the message names the parent instead of the form.
+   * Set "parent" on a section whose form only adds options to its parent's output. The raw input then follows the parent's output like a
+   * section without a form (a string output becomes the raw input, or fromParentOutput() sets it), and the form value never changes it: a form
+   * change keeps the raw input, typed text overrides it instead of parsing into the form, and the form stays unlocked while it is overridden.
+   * The source message names the parent instead of the form.
    */
   readonly source?: Maybe<DbxLlmFlowSectionRawInputSource>;
 }
@@ -302,15 +308,6 @@ export interface DbxLlmFlowSectionRawInputConfig {
  * Where a section's raw input comes from, as configured on DbxLlmFlowSectionRawInputConfig.
  */
 export type DbxLlmFlowSectionRawInputSource = Extract<DbxLlmFlowSectionInputSource, 'form' | 'parent'>;
-
-/**
- * Where a section's form is shown.
- *
- * - above: in a content pit above the raw input (the default).
- * - input: in a content pit under the raw input field, inside the input row, so the run buttons beside the field stretch to cover the field and
- *   the form. Falls back to above when the raw input is hidden.
- */
-export type DbxLlmFlowSectionFormPlacement = 'above' | 'input';
 
 export interface DbxLlmFlowFromParentOutputInput<F = unknown, P = unknown> {
   readonly parentRun: DbxLlmFlowRun<unknown, P>;
@@ -391,7 +388,7 @@ export interface DbxLlmFlowSectionConfig<F = unknown, O = unknown> {
    */
   readonly hasForm?: Maybe<boolean>;
   /**
-   * Converts the form value to the raw input. Defaults to pretty JSON.
+   * Converts the form value to the raw input. Defaults to pretty JSON. Unused when the raw input source is "parent".
    */
   readonly toRawInput?: Maybe<(formValue: Maybe<F>) => string>;
   /**
@@ -401,7 +398,7 @@ export interface DbxLlmFlowSectionConfig<F = unknown, O = unknown> {
   /**
    * Updates the draft from the parent's output. Returns undefined to keep the draft.
    *
-   * Defaults to using a string output as the raw input of a section without a form.
+   * Defaults to using a string output as the raw input of a section without a form, or of one whose raw input source is "parent".
    */
   readonly fromParentOutput?: Maybe<(input: DbxLlmFlowFromParentOutputInput<F>) => Maybe<Partial<DbxLlmFlowSectionInput<F>>>>;
   /**
@@ -410,11 +407,19 @@ export interface DbxLlmFlowSectionConfig<F = unknown, O = unknown> {
   readonly validateInput?: Maybe<(input: DbxLlmFlowSectionInput<F>) => Maybe<ArrayOrValue<string>>>;
   readonly allowEmptyInput?: Maybe<boolean>;
   readonly rawInput?: Maybe<DbxLlmFlowSectionRawInputConfig>;
+  /**
+   * The form shown above the raw input, in a content pit. Don't combine with optionFields: both are the section's form value.
+   */
   readonly formComponent?: Maybe<Type<unknown>>;
   /**
-   * Where the form is shown. Defaults to "above".
+   * Forge fields of the section's options. They render in the raw input's forge form, in an "options" group under the textarea, so the run
+   * buttons beside the field stretch to cover the field and the options.
+   *
+   * The options are the section's form value: every run snapshots them in its input, picking a run restores them, and the history rows list
+   * them when describeRun gives no detail. The form only adds options, so the raw input follows the parent's output like a raw input source of
+   * "parent". Requires the raw input to be shown. Don't combine with formComponent.
    */
-  readonly formPlacement?: Maybe<DbxLlmFlowSectionFormPlacement>;
+  readonly optionFields?: Maybe<readonly FieldDef<any>[]>;
   /**
    * Whether to bind formComponent to the section automatically. Defaults to true.
    */

@@ -70,8 +70,8 @@
       gap: var(--dbx-padding-2);
     }
 
-    // the field, and content projected under it (a form placed in the input). The height sync source. It carries the 6px vertical padding
-    // dbx gives a form field, moved off the field, so its content box is the outlined box plus the content under it.
+    // the raw input's forge form: the textarea, then the section's option fields. The height sync source. It carries the 6px vertical padding
+    // dbx gives a form field, moved off the textarea's mat-form-field, so its content box starts at the textarea's outlined box.
     .dbx-llm-flow-section-raw-input-main {
       display: flex;
       flex: 1 1 0;
@@ -81,7 +81,11 @@
       padding-block: 6px;
 
       > .dbx-llm-flow-section-raw-input-field {
-        padding-block: 0;
+        display: block;
+
+        .dbx-llm-flow-section-raw-input-text .mat-mdc-form-field {
+          padding-block: 0;
+        }
       }
     }
 
@@ -116,7 +120,7 @@
       margin-top: var(--dbx-padding-1);
     }
 
-    .dbx-llm-flow-section-raw-input-textarea {
+    .dbx-llm-flow-section-raw-input-text textarea {
       font-family: var(--dbx-llm-flow-mono-font-family, monospace);
       font-size: 0.9em;
     }
@@ -152,7 +156,7 @@
       }
     }
 
-    &.dbx-llm-flow-section-raw-input-invalid .dbx-llm-flow-section-raw-input-field {
+    &.dbx-llm-flow-section-raw-input-invalid .dbx-llm-flow-section-raw-input-text {
       --mat-form-field-outlined-outline-color: var(--mat-sys-error);
       --mat-form-field-outlined-hover-outline-color: var(--mat-sys-error);
       --mat-form-field-outlined-focus-outline-color: var(--mat-sys-error);
