@@ -36,3 +36,14 @@
 @function get-dbx-extension-calendar-enabled($theme-config) {
   @return get-dbx-extension-config-var($theme-config, 'calendar');
 }
+
+// llm is enabled when the key is absent, so themes built before the key existed still include it.
+@function get-dbx-extension-llm-enabled($theme-config) {
+  $enabled: get-dbx-extension-config-var($theme-config, 'llm');
+
+  @if ($enabled == null) {
+    $enabled: 1;
+  }
+
+  @return $enabled;
+}

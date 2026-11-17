@@ -1,6 +1,7 @@
 @use '../style/config';
 @use '../style/theming';
 @use './calendar/calendar';
+@use './llm/llm';
 
 @mixin all-extension-core($theme-config) {
   $calendar-enabled: 1;
@@ -11,6 +12,16 @@
 
   @if ($calendar-enabled == 1) {
     @include calendar.core();
+  }
+
+  $llm-enabled: 1;
+
+  @if ($theme-config != null) {
+    $llm-enabled: config.get-dbx-extension-llm-enabled($theme-config);
+  }
+
+  @if ($llm-enabled == 1) {
+    @include llm.core();
   }
 }
 
@@ -26,5 +37,15 @@
 
   @if ($calendar-enabled == 1) {
     @include calendar.theme($theme-config);
+  }
+
+  $llm-enabled: 1;
+
+  @if ($theme-config != null) {
+    $llm-enabled: config.get-dbx-extension-llm-enabled($theme-config);
+  }
+
+  @if ($llm-enabled == 1) {
+    @include llm.theme($theme-config);
   }
 }

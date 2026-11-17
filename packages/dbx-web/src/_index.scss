@@ -30,6 +30,8 @@
     @include mat.all-component-themes($theme-config);
     @include mat.system-level-colors($theme-config);
     @include mat.system-level-typography($theme-config);
+    // `--mat-sys-level0..5` box-shadows, read by the elevated dbx surfaces (content-elevate, prompt box, floating buttons, …)
+    @include mat.system-level-elevation($theme-config);
     @include dbx-theme.all-component-themes($theme-config);
   }
 

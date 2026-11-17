@@ -86,6 +86,32 @@
         </div>
       </doc-feature-example>
 
+      <doc-feature-example header="dbxListItemSingleSelectionModifier" hint="Adds single selection to a list. Clicking an item selects it and the list view renders it as selected. Works in normal and grid list views.">
+        <div style="height: 200px">
+          <doc-complex-item-list selectionMode="view" dbxListItemModifier [dbxListItemSingleSelectionModifier]="{ allowDeselect: true }" #listSelection="dbxListItemSingleSelection" [state]="staticState$"></doc-complex-item-list>
+        </div>
+        <p>Selected: {{ listSelection.store.selectedValueSignal()?.name ?? 'None' }} / Previous: {{ listSelection.store.previousValueSignal()?.name ?? 'None' }}</p>
+        <h4>Grid</h4>
+        <div style="height: 200px">
+          <doc-item-list-grid dbxListItemModifier dbxListItemSingleSelectionModifier #gridSelection="dbxListItemSingleSelection" [state]="staticState$"></doc-item-list-grid>
+        </div>
+        <p>Selected: {{ gridSelection.store.selectedValueSignal()?.name ?? 'None' }} / Previous: {{ gridSelection.store.previousValueSignal()?.name ?? 'None' }}</p>
+      </doc-feature-example>
+
+      <doc-feature-example header="dbxListDragDrop" hint="Lets the user reorder the items of a dbx-list-view or dbx-list-grid-view list (including dbx-gallery) by dragging them. The list does not reorder itself; write the itemDrop event's values back to the list's source.">
+        <p>Drag a row to move it. The list is height-limited, so dragging near its top or bottom edge scrolls it.</p>
+        <div style="height: 240px">
+          <doc-custom-item-list dbxListDragDrop (itemDrop)="dragDropListValues.set($event.values)" [state]="dragDropListStateSignal()"></doc-custom-item-list>
+        </div>
+        <p>First 3: {{ dragDropFirstNames(dragDropListValues()) }}</p>
+        <h4>Grid</h4>
+        <div style="height: 240px">
+          <doc-item-list-grid [dbxListDragDrop]="{ disabled: dragDropGridDisabled() }" (itemDrop)="dragDropGridValues.set($event.values)" [state]="dragDropGridStateSignal()"></doc-item-list-grid>
+        </div>
+        <p>First 3: {{ dragDropFirstNames(dragDropGridValues()) }}</p>
+        <button mat-stroked-button (click)="dragDropGridDisabled.set(!dragDropGridDisabled())">{{ dragDropGridDisabled() ? 'Enable' : 'Disable' }} dragging</button>
+      </doc-feature-example>
+
       <doc-feature-example header="dbxListItemDisableRippleModifier" hint="Used to disable ripples conditionally on a per-item basis using a function.">
         <div style="height: 200px">
           <doc-complex-item-list dbxListItemModifier [dbxListItemDisableRippleModifier]="disableAllRipples" [state]="stateWithAnchors$" [dbxListItemModifier]="inputDbxListItemModifier"></doc-complex-item-list>
