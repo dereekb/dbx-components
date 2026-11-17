@@ -3,6 +3,7 @@ import { type Maybe } from '../value/maybe.type';
 /**
  * A primitive value that survives a JSON round trip unchanged.
  */
+// eslint-disable-next-line dereekb-util/prefer-maybe-type -- JSON has `null` but no `undefined`, so Maybe<T> would widen the type.
 export type JsonPrimitive = string | number | boolean | null;
 
 /**
@@ -113,6 +114,35 @@ function findNonJsonCompatibleValueAtPath(value: unknown, path: string, ancestor
   return result;
 }
 
+function findNonJsonCompatibleValueInArray(value: readonly unknown[], path: string, ancestors: Set<object>): Maybe<JsonIncompatibility> {
+  let result: Maybe<JsonIncompatibility>;
+
+  for (const [i, item] of value.entries()) {
+    const itemPath = `${path}[${i}]`;
+    result = item === undefined ? { path: itemPath, reason: 'undefined_in_array' } : findNonJsonCompatibleValueAtPath(item, itemPath, ancestors);
+
+    if (result) {
+      break;
+    }
+  }
+
+  return result;
+}
+
+function findNonJsonCompatibleValueInRecord(value: object, path: string, ancestors: Set<object>): Maybe<JsonIncompatibility> {
+  let result: Maybe<JsonIncompatibility>;
+
+  for (const key of Object.keys(value)) {
+    result = findNonJsonCompatibleValueAtPath((value as Record<string, unknown>)[key], jsonPathWithKey(path, key), ancestors);
+
+    if (result) {
+      break;
+    }
+  }
+
+  return result;
+}
+
 function findNonJsonCompatibleValueInObject(value: object, path: string, ancestors: Set<object>): Maybe<JsonIncompatibility> {
   let result: Maybe<JsonIncompatibility>;
   const objectReason = jsonIncompatibilityReasonForObject(value);
@@ -123,27 +153,7 @@ function findNonJsonCompatibleValueInObject(value: object, path: string, ancesto
     result = { path, reason: 'circular' };
   } else {
     ancestors.add(value);
-
-    if (Array.isArray(value)) {
-      for (let i = 0; i < value.length; i += 1) {
-        const itemPath = `${path}[${i}]`;
-        const item: unknown = value[i];
-        result = item === undefined ? { path: itemPath, reason: 'undefined_in_array' } : findNonJsonCompatibleValueAtPath(item, itemPath, ancestors);
-
-        if (result) {
-          break;
-        }
-      }
-    } else {
-      for (const key of Object.keys(value)) {
-        result = findNonJsonCompatibleValueAtPath((value as Record<string, unknown>)[key], jsonPathWithKey(path, key), ancestors);
-
-        if (result) {
-          break;
-        }
-      }
-    }
-
+    result = Array.isArray(value) ? findNonJsonCompatibleValueInArray(value, path, ancestors) : findNonJsonCompatibleValueInRecord(value, path, ancestors);
     ancestors.delete(value);
   }
 

@@ -1,5 +1,5 @@
 import { computed, DestroyRef, Directive, ElementRef, inject, input, model, signal } from '@angular/core';
-import { type DestroyFunction, type Maybe } from '@dereekb/util';
+import { type DestroyFunction, lastValue, type Maybe } from '@dereekb/util';
 
 /**
  * Which box of a source element is measured.
@@ -139,7 +139,7 @@ export class DbxHeightSyncSourceDirective {
       const element = this.elementRef.nativeElement;
       const registration = group.registerSource();
       const observer = new ResizeObserver((entries) => {
-        const entry = entries[entries.length - 1];
+        const entry = lastValue(entries);
         const height = this.boxSignal() === 'content-box' ? entry.contentRect.height : element.getBoundingClientRect().height;
         registration.setHeight(height);
       });

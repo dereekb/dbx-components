@@ -91,7 +91,7 @@ export function dbxAudioVideoPlaybackIdsToPause(input: DbxAudioVideoPlaybackIdsT
 
     // the limit is at least 1, so there are always enough other media to pause and the started media keeps playing
     const others = playing.filter((x) => x !== startedId);
-    const ordered = mode === 'pause_oldest' ? others : others.reverse();
+    const ordered = mode === 'pause_oldest' ? others : others.toReversed();
     result = ordered.slice(0, overflowCount);
   }
 

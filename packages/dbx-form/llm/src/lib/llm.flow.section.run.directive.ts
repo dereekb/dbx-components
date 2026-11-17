@@ -41,9 +41,9 @@ export class DbxLlmFlowSectionRunDirective<F = unknown, O = unknown> extends Abs
   readonly sectionStore = inject(DbxLlmFlowSectionStore<F, O>);
 
   /**
-   * The run kind. Defaults to DEFAULT_DBX_LLM_FLOW_RUN_KIND.
+   * The run kind. Defaults to DEFAULT_DBX_LLM_FLOW_RUN_KIND, including when the attribute is set without a value (an empty string).
    */
-  readonly dbxLlmFlowSectionRun = input<Maybe<DbxLlmFlowRunKind | ''>>();
+  readonly dbxLlmFlowSectionRun = input<Maybe<DbxLlmFlowRunKind>>();
   readonly kindSignal = computed(() => dbxLlmFlowRunKind(this.dbxLlmFlowSectionRun() || undefined));
 
   private readonly _kind$ = toObservable(this.kindSignal);

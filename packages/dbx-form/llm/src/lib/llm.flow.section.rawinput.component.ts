@@ -2,7 +2,7 @@ import { Component, computed, DestroyRef, ElementRef, inject, input, signal, vie
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatIconModule } from '@angular/material/icon';
 import { DbxButtonComponent, DbxHeightSyncDirective, DbxHeightSyncSourceDirective, injectCopyToClipboardFunctionWithSnackbarMessage } from '@dereekb/dbx-web';
-import { type Maybe } from '@dereekb/util';
+import { lastValue, type Maybe } from '@dereekb/util';
 import { type DbxLlmFlowSectionInputSource } from './llm.flow';
 import { dbxLlmFlowSectionRawInputFollowsForm } from './llm.flow.state';
 import { DbxLlmFlowSectionStore } from './llm.flow.section.store';
@@ -261,7 +261,7 @@ export class DbxLlmFlowSectionRawInputComponent {
     if (typeof ResizeObserver !== 'undefined') {
       const element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
       const observer = new ResizeObserver((entries) => {
-        const width = entries[entries.length - 1].contentRect.width;
+        const width = lastValue(entries).contentRect.width;
         this._setStacked(width > 0 && width < DBX_LLM_FLOW_SECTION_RAW_INPUT_STACK_WIDTH);
       });
 

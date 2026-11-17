@@ -1,4 +1,4 @@
-import { type ArrayOrValue, areEqualPOJOValues, asArray, filterMaybeArrayValues, findNonJsonCompatibleValue, jsonIncompatibilityMessage, type Maybe, pruneTreesFunction } from '@dereekb/util';
+import { type ArrayOrValue, areEqualPOJOValues, asArray, filterMaybeArrayValues, findNonJsonCompatibleValue, jsonIncompatibilityMessage, lastValue, type Maybe, pruneTreesFunction } from '@dereekb/util';
 import { stripEmptyForgeValues } from '@dereekb/dbx-form';
 import { type FieldDef } from '@ng-forge/dynamic-forms';
 import {
@@ -95,11 +95,24 @@ function dbxLlmFlowOptionValueText(value: unknown): Maybe<string> {
     text = value.length ? value.map((x) => (typeof x === 'object' && x != null ? JSON.stringify(x) : String(x))).join(', ') : undefined;
   } else if (typeof value === 'object' && value != null) {
     text = JSON.stringify(value);
-  } else if (value != null && value !== '') {
+  } else if (typeof value === 'string') {
+    text = value || undefined;
+  } else if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') {
     text = String(value);
   }
 
   return text;
+}
+
+function dbxLlmFlowOptionFieldPart(key: string, label: unknown, value: unknown): Maybe<string> {
+  const text = dbxLlmFlowOptionValueText(value);
+  let part: Maybe<string>;
+
+  if (text != null) {
+    part = `${typeof label === 'string' && label ? label : key}: ${text}`;
+  }
+
+  return part;
 }
 
 function collectDbxLlmFlowOptionParts(fields: readonly FieldDef<unknown>[], value: unknown, parts: string[]): void {
@@ -112,10 +125,10 @@ function collectDbxLlmFlowOptionParts(fields: readonly FieldDef<unknown>[], valu
       // a group nests its fields' values under its key; rows and containers don't
       collectDbxLlmFlowOptionParts(children, type === 'group' && key ? values?.[key] : value, parts);
     } else if (key) {
-      const text = dbxLlmFlowOptionValueText(values?.[key]);
+      const part = dbxLlmFlowOptionFieldPart(key, label, values?.[key]);
 
-      if (text != null) {
-        parts.push(`${typeof label === 'string' && label ? label : key}: ${text}`);
+      if (part != null) {
+        parts.push(part);
       }
     }
   }
@@ -655,7 +668,7 @@ function cascadeToChild(m: DbxLlmFlowStateMutator, parentRun: DbxLlmFlowRun, chi
     const latestPerKind = new Map<DbxLlmFlowRunKind, DbxLlmFlowRun>();
     childRuns.forEach((x) => latestPerKind.set(x.kind, x));
     const anchors = Array.from(latestPerKind.values()).sort(compareRunsByStart);
-    const latest = anchors[anchors.length - 1];
+    const latest = lastValue(anchors);
 
     applyDraft(m, childKey, { draft: { ...latest.input } });
     m.updateSection(childKey, { selectedRunIds: anchors.map((x) => x.id) });
@@ -1139,6 +1152,28 @@ export interface DbxLlmFlowPasteRawInputInput {
   readonly typed?: Maybe<boolean>;
 }
 
+function parseTwoWayRawInputDraftChange(config: Maybe<DbxLlmFlowAnySectionConfig>, input: DbxLlmFlowPasteRawInputInput, currentFormValue: unknown): ApplyDraftInput {
+  const { rawInput } = input;
+  let parseError: Maybe<string>;
+  let parsed: unknown;
+  let change: ApplyDraftInput;
+
+  try {
+    parsed = (config?.fromRawInput ?? defaultDbxLlmFlowFromRawInput)(rawInput);
+    parseError = jsonIssueMessage(parsed);
+  } catch (e) {
+    parseError = `The input could not be parsed: ${(e as Error)?.message ?? e}`;
+  }
+
+  if (parseError == null) {
+    change = { draft: { formValue: parsed, rawInput: input.typed ? rawInput : toRawInputForConfig(config, parsed), rawInputOverridden: false } };
+  } else {
+    change = { draft: { formValue: currentFormValue, rawInput, rawInputOverridden: true }, rawInputParseError: parseError };
+  }
+
+  return change;
+}
+
 /**
  * Applies pasted (or typed) raw input.
  *
@@ -1163,27 +1198,7 @@ export function dbxLlmFlowStateWithPastedRawInput(state: DbxLlmFlowState, input:
 
   if (section != null && mode !== 'readonly' && !(input.typed && mode === 'one-way')) {
     const m = new DbxLlmFlowStateMutator(state, context);
-    let change: Maybe<ApplyDraftInput>;
-
-    if (mode === 'two-way' && dbxLlmFlowSectionRawInputFollowsForm(config)) {
-      let parseError: Maybe<string>;
-      let parsed: unknown;
-
-      try {
-        parsed = (config?.fromRawInput ?? defaultDbxLlmFlowFromRawInput)(rawInput);
-        parseError = jsonIssueMessage(parsed);
-      } catch (e) {
-        parseError = `The input could not be parsed: ${(e as Error)?.message ?? e}`;
-      }
-
-      if (parseError == null) {
-        change = { draft: { formValue: parsed, rawInput: input.typed ? rawInput : toRawInputForConfig(config, parsed), rawInputOverridden: false } };
-      } else {
-        change = { draft: { formValue: section.draft.formValue, rawInput, rawInputOverridden: true }, rawInputParseError: parseError };
-      }
-    } else {
-      change = { draft: { formValue: section.draft.formValue, rawInput, rawInputOverridden: true } };
-    }
+    const change: ApplyDraftInput = mode === 'two-way' && dbxLlmFlowSectionRawInputFollowsForm(config) ? parseTwoWayRawInputDraftChange(config, input, section.draft.formValue) : { draft: { formValue: section.draft.formValue, rawInput, rawInputOverridden: true } };
 
     applyDraft(m, key, change);
     result = m.finish();

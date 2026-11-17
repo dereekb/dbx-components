@@ -1,5 +1,5 @@
 import { Directive, effect, inject, input, output } from '@angular/core';
-import { type Maybe, type Modifier } from '@dereekb/util';
+import { lastValue, type Maybe, type Modifier } from '@dereekb/util';
 import { cleanSubscription } from '@dereekb/dbx-core';
 import { combineLatest, distinctUntilChanged, filter, map, type Observable, pairwise, skip, startWith } from 'rxjs';
 import { type DbxValueListItem } from '../list.view.value';
@@ -85,10 +85,7 @@ export class DbxListItemSingleSelectionModifierDirective<T> extends AbstractDbxV
    */
   private readonly _selectionModifierNotLast$: Observable<boolean> = this.dbxValueListItemModifier.modifiers$.pipe(
     filter((modifiers) => modifiers.has(DBX_LIST_ITEM_SINGLE_SELECTION_MODIFIER_KEY)),
-    map((modifiers) => {
-      const keys = Array.from(modifiers.keys());
-      return keys[keys.length - 1] !== DBX_LIST_ITEM_SINGLE_SELECTION_MODIFIER_KEY;
-    }),
+    map((modifiers) => lastValue(Array.from(modifiers.keys())) !== DBX_LIST_ITEM_SINGLE_SELECTION_MODIFIER_KEY),
     distinctUntilChanged(),
     filter((notLast) => notLast)
   );
