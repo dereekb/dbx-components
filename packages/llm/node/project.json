@@ -10,6 +10,10 @@
         {
           "projects": ["llm"],
           "target": "build-base"
+        },
+        {
+          "projects": ["util"],
+          "target": "build"
         }
       ],
       "metadata": {

@@ -1,5 +1,9 @@
 /**
- * `@dereekb/llm/node` — the Node-only half of the family: model-config file IO, environment variables to provider configs, the craft-folder
- * loader and the craft markdown to TypeScript compiler. Empty until the Node helpers land.
+ * `@dereekb/llm/node` — the Node-only half of the family: the environment vocabulary, model config file IO, profile and
+ * tier selection from the environment, and environment variables to provider configs. The craft-folder loader and the
+ * craft markdown to TypeScript compiler land here later.
  */
-export {};
+export * from './llm.node.env';
+export * from './llm.node.model.config.file';
+export * from './llm.node.model.profile';
+export * from './llm.node.provider';

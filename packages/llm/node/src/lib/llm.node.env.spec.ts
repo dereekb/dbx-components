@@ -1,0 +1,90 @@
+import { describe, expect, it } from 'vitest';
+import { DEFAULT_LLM_ENV_NAMES, firstLlmEnvEntry, firstLlmEnvValue, hasLlmProviderKeyInEnv, type LlmEnvNames, llmEnvApiKeyNamesOf } from './llm.node.env';
+
+describe('firstLlmEnvEntry()', () => {
+  it('should return the first set name in priority order, naming it', () => {
+    expect(firstLlmEnvEntry({ env: { HOST_KEY: 'host', VENDOR_KEY: 'vendor' }, names: ['HOST_KEY', 'VENDOR_KEY'] })).toEqual({ name: 'HOST_KEY', value: 'host' });
+    expect(firstLlmEnvEntry({ env: { VENDOR_KEY: 'vendor' }, names: ['HOST_KEY', 'VENDOR_KEY'] })).toEqual({ name: 'VENDOR_KEY', value: 'vendor' });
+  });
+
+  it('should treat a whitespace-only value as unset', () => {
+    expect(firstLlmEnvEntry({ env: { HOST_KEY: '   ', VENDOR_KEY: 'vendor' }, names: ['HOST_KEY', 'VENDOR_KEY'] })).toEqual({ name: 'VENDOR_KEY', value: 'vendor' });
+    expect(firstLlmEnvEntry({ env: { HOST_KEY: '\n' }, names: ['HOST_KEY'] })).toBeUndefined();
+  });
+
+  it('should trim the value', () => {
+    expect(firstLlmEnvEntry({ env: { HOST_KEY: '  sk-1\n' }, names: ['HOST_KEY'] })).toEqual({ name: 'HOST_KEY', value: 'sk-1' });
+  });
+
+  it('should read nothing for an empty name list', () => {
+    expect(firstLlmEnvEntry({ env: { HOST_KEY: 'host' }, names: [] })).toBeUndefined();
+  });
+
+  it('should return undefined when no name is set', () => {
+    expect(firstLlmEnvEntry({ env: {}, names: ['HOST_KEY'] })).toBeUndefined();
+  });
+});
+
+describe('firstLlmEnvValue()', () => {
+  it('should return the trimmed value of the first set name', () => {
+    expect(firstLlmEnvValue({ env: { HOST_KEY: '', VENDOR_KEY: ' vendor ' }, names: ['HOST_KEY', 'VENDOR_KEY'] })).toBe('vendor');
+  });
+
+  it('should return undefined when no name is set', () => {
+    expect(firstLlmEnvValue({ env: { OTHER: 'x' }, names: ['HOST_KEY'] })).toBeUndefined();
+  });
+});
+
+describe('llmEnvApiKeyNamesOf()', () => {
+  it('should list every env-default key name in provider then priority order', () => {
+    expect(llmEnvApiKeyNamesOf()).toEqual(['OPENAI_API_KEY', 'OPENROUTER_API_KEY']);
+  });
+
+  it('should honour custom names', () => {
+    const names: LlmEnvNames = {
+      ...DEFAULT_LLM_ENV_NAMES,
+      providers: [
+        { id: 'openai', apiKey: ['HOST_OPENAI_KEY', 'OPENAI_API_KEY'] },
+        { id: 'openrouter', apiKey: ['HOST_OPENROUTER_KEY'], fallback: true }
+      ]
+    };
+
+    expect(llmEnvApiKeyNamesOf(names)).toEqual(['HOST_OPENAI_KEY', 'OPENAI_API_KEY', 'HOST_OPENROUTER_KEY']);
+  });
+});
+
+describe('hasLlmProviderKeyInEnv()', () => {
+  it('should be true when any env-default key is set', () => {
+    expect(hasLlmProviderKeyInEnv({ env: { OPENROUTER_API_KEY: 'sk-or' } })).toBe(true);
+    expect(hasLlmProviderKeyInEnv({ env: { OPENAI_API_KEY: 'sk-oa' } })).toBe(true);
+  });
+
+  it('should be false when no key is set', () => {
+    expect(hasLlmProviderKeyInEnv({ env: { UNRELATED: 'x' } })).toBe(false);
+  });
+
+  it('should be false when every key is blank', () => {
+    expect(hasLlmProviderKeyInEnv({ env: { OPENAI_API_KEY: '  ', OPENROUTER_API_KEY: '' } })).toBe(false);
+  });
+
+  it('should read the custom names only', () => {
+    const names: LlmEnvNames = { ...DEFAULT_LLM_ENV_NAMES, providers: [{ id: 'openai', apiKey: ['HOST_OPENAI_KEY'] }] };
+    expect(hasLlmProviderKeyInEnv({ env: { OPENAI_API_KEY: 'sk-oa' }, names })).toBe(false);
+    expect(hasLlmProviderKeyInEnv({ env: { HOST_OPENAI_KEY: 'sk-oa' }, names })).toBe(true);
+  });
+});
+
+describe('DEFAULT_LLM_ENV_NAMES', () => {
+  it('should use vendor or LLM_-prefixed names only', () => {
+    const varNames = [...JSON.stringify(DEFAULT_LLM_ENV_NAMES).matchAll(/"([A-Z][A-Z0-9_]+)"/g)].map((match) => match[1]);
+    expect(varNames.length).toBeGreaterThan(0);
+    expect(varNames.filter((name) => !/^(OPENAI|OPENROUTER|LLM)_/.test(name))).toEqual([]);
+  });
+
+  it('should rank openai first and openrouter as the fallback', () => {
+    expect(DEFAULT_LLM_ENV_NAMES.providers.map((provider) => [provider.id, provider.fallback === true])).toEqual([
+      ['openai', false],
+      ['openrouter', true]
+    ]);
+  });
+});

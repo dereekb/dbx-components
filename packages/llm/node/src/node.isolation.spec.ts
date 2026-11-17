@@ -84,6 +84,12 @@ describe('@dereekb/llm/node isolation', () => {
     expect(importersOf(sources, isPackage('@dereekb/llm/decision'))).toEqual([]);
   });
 
+  it('should import no sibling entry, specs included', () => {
+    // llm-node:build-base has no edge to a sibling entry's build, so such an import would race the build
+    const siblings = ['@dereekb/llm/openai', '@dereekb/llm/openrouter', '@dereekb/llm/zenmux', '@dereekb/llm/test'];
+    expect(importersOf(scanSrc(true), (specifier) => siblings.some((sibling) => isPackage(sibling)(specifier)))).toEqual([]);
+  });
+
   it('should import its own modules relatively', () => {
     expect(importersOf(sources, isPackage('@dereekb/llm/node'))).toEqual([]);
   });

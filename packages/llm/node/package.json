@@ -2,5 +2,9 @@
   "name": "@dereekb/llm/node",
   "version": "14.26.0",
   "sideEffects": false,
-  "type": "module"
+  "type": "module",
+  "peerDependencies": {
+    "@dereekb/llm": "14.26.0",
+    "@dereekb/util": "14.26.0"
+  }
 }
