@@ -86,6 +86,8 @@
         <dbx-button [text]="'Title: ' + galleryTopSlotMode()" stroked (buttonClick)="galleryTopSlotMode.set(toggleSlotMode(galleryTopSlotMode()))"></dbx-button>
         <dbx-button-spacer></dbx-button-spacer>
         <dbx-button [text]="'Controls: ' + galleryBottomSlotMode()" stroked (buttonClick)="galleryBottomSlotMode.set(toggleSlotMode(galleryBottomSlotMode()))"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [text]="'Dragging: ' + (galleryDragDisabled() ? 'off' : 'on')" [icon]="galleryDragDisabled() ? 'block' : 'drag_indicator'" stroked (buttonClick)="galleryDragDisabled.set(!galleryDragDisabled())"></dbx-button>
       </div>
       <div class="dbx-pb3">
         @for (option of galleryItemMinWidthOptions; track option.value) {
@@ -104,7 +106,11 @@
         <p class="dbx-hint">Last selectionChange: {{ lastSelectionChange()?.previous?.value?.name ?? 'None' }} → {{ lastSelectionChange()?.selected?.value?.name ?? 'None' }}</p>
       </dbx-detail-block>
       <dbx-detail-block icon="drag_indicator" header="Reorder">
-        <p class="dbx-hint">Drag a tile by its presentation to move it. The buttons in the top and bottom slots do not start a drag.</p>
+        <p class="dbx-hint">
+          Drag a tile by its presentation to move it. The buttons in the top and bottom slots do not start a drag. Turn dragging off with the Dragging button, which sets
+          <code>disabled</code>
+          on the dbxListDragDrop config.
+        </p>
         <p>Last move: {{ lastGalleryItemDrop() ? lastGalleryItemDrop()?.value?.name + ' ' + lastGalleryItemDrop()?.previousIndex + ' → ' + lastGalleryItemDrop()?.currentIndex : 'None' }}</p>
       </dbx-detail-block>
       <dbx-gallery
@@ -117,7 +123,7 @@
         dbxListItemModifier
         dbxListItemSingleSelectionModifier
         (selectionChange)="onSelectionChange($event)"
-        dbxListDragDrop
+        [dbxListDragDrop]="galleryDragDropConfig()"
         (itemDrop)="onGalleryItemDrop($event)"></dbx-gallery>
     </doc-feature-example>
   </doc-feature-layout>

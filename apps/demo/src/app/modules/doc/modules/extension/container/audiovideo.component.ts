@@ -19,6 +19,7 @@ import {
   DbxListItemSingleSelectionModifierDirective,
   DbxListSingleSelectionStore,
   type DbxListSingleSelectionChange,
+  type DbxListDragDropConfig,
   DbxListDragDropDirective,
   type DbxListItemDropEvent,
   DbxValueListItemModifierDirective,
@@ -131,6 +132,8 @@ export class DocExtensionAudioVideoComponent {
   readonly galleryStateSignal = computed(() => successResult(this.galleryItems()));
   readonly lastSelectionChange = signal<DbxListSingleSelectionChange<DocGalleryItem> | undefined>(undefined);
   readonly lastGalleryItemDrop = signal<Maybe<DbxListItemDropEvent<DocGalleryItem>>>(undefined);
+  readonly galleryDragDisabled = signal(false);
+  readonly galleryDragDropConfig = computed<DbxListDragDropConfig>(() => ({ disabled: this.galleryDragDisabled() }));
   readonly galleryTopSlotMode = signal<DbxGallerySlotMode>('overlay');
   readonly galleryBottomSlotMode = signal<DbxGallerySlotMode>('stacked');
   readonly galleryItemMinWidthOptions = [
