@@ -304,6 +304,37 @@ export abstract class McpModuleConfig {
    * empty array leaves only the `token.cli` scope filter and the minter's own predicate.
    */
   readonly cliTokenRequiredRoles?: ReadonlyArray<AuthRole>;
+  /**
+   * Additional binaries the `cli-token` tool can hand out by name beside the CLI itself (other CLIs the
+   * app serves from its secure root, for example). Only applies when an {@link McpCliTokenMinter} is wired.
+   *
+   * When set, the tool gains an `includeDownloads` input listing these names, and the minter receives
+   * the requested ones in {@link McpCliTokenMintInput.includeDownloads}. The minter mints the URLs; the
+   * library never does. Leave it unset and the tool is unchanged.
+   *
+   * Each name is validated at boot against `MCP_CLI_TOKEN_DOWNLOAD_NAME_PATTERN`, because it is
+   * interpolated into the rendered `curl -fsSL -o <name> "<url>"` command. An invalid or duplicate name
+   * fails the boot.
+   */
+  readonly cliTokenAdditionalDownloads?: readonly McpCliTokenAdditionalDownload[];
+}
+
+/**
+ * A binary the `cli-token` tool can hand out by name beside the CLI itself. See
+ * {@link McpModuleConfig.cliTokenAdditionalDownloads}.
+ */
+export interface McpCliTokenAdditionalDownload {
+  /**
+   * The binary's file name (`msgraph-cli`), which is also the name a caller requests it by.
+   *
+   * Must match `MCP_CLI_TOKEN_DOWNLOAD_NAME_PATTERN` (lowercase letters, digits, `.`, `_` and `-`, not
+   * starting with `.`, `_` or `-`): it is written into a shell command unquoted.
+   */
+  readonly name: string;
+  /**
+   * One line describing the binary, listed in the tool's `includeDownloads` input description.
+   */
+  readonly description: string;
 }
 
 /**
@@ -506,6 +537,38 @@ export interface McpCliTokenMintInput {
    * to the service default (`refresh`) and the handoff stays coupled to the CLI client's registration.
    */
   readonly credentialType?: Maybe<CliTokenCredentialType>;
+  /**
+   * Names of the additional downloads to mint signed URLs for, from
+   * {@link McpModuleConfig.cliTokenAdditionalDownloads}.
+   *
+   * The tool has already dropped names that are not configured and removed duplicates, and leaves the
+   * field out when nothing remains. Independent of {@link includeDownloadUrl}, which covers the CLI only.
+   * Best-effort: a minter leaves a missing artifact out of {@link McpCliTokenMintResult.additionalDownloads}
+   * rather than failing the mint.
+   */
+  readonly includeDownloads?: Maybe<readonly string[]>;
+}
+
+/**
+ * One additional download minted for a {@link McpCliTokenMintInput.includeDownloads} request.
+ */
+export interface McpCliTokenMintAdditionalDownload {
+  /**
+   * The requested name. The tool only renders entries whose name was requested.
+   */
+  readonly name: string;
+  /**
+   * A signed download URL for the binary.
+   */
+  readonly downloadUrl: string;
+  /**
+   * SHA-256 of the artifact behind {@link downloadUrl}, so the caller can verify what it fetched.
+   */
+  readonly downloadSha256?: Maybe<string>;
+  /**
+   * The artifact's version, when the app knows it.
+   */
+  readonly version?: Maybe<string>;
 }
 
 /**
@@ -546,6 +609,11 @@ export interface McpCliTokenMintResult {
    * machine can run unmodified.
    */
   readonly envName?: string;
+  /**
+   * The additional downloads minted for {@link McpCliTokenMintInput.includeDownloads}. Best-effort, like
+   * {@link downloadUrl}: an artifact that is missing is left out and does not fail the mint.
+   */
+  readonly additionalDownloads?: Maybe<readonly McpCliTokenMintAdditionalDownload[]>;
 }
 
 /**
