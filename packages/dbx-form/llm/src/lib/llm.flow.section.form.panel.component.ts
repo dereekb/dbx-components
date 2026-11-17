@@ -2,11 +2,12 @@ import { Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NgTemplateOutlet } from '@angular/common';
 import { cleanSubscription, DBX_INJECTION_COMPONENT_DATA, DbxInjectionComponent } from '@dereekb/dbx-core';
-import { DbxDetachContentComponent, DbxDetachControlsComponent, DbxHeightSyncFollowerDirective } from '@dereekb/dbx-web';
+import { DbxColorDirective, DbxContentPitDirective, DbxDetachContentComponent, DbxDetachControlsComponent, DbxHeightSyncFollowerDirective, DbxIconTileComponent } from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';
 import { distinctUntilChanged, filter, map, pairwise, withLatestFrom } from 'rxjs';
 import { type DbxLlmFlowSectionFormPopoutMode } from './llm.flow';
 import { DbxLlmFlowSectionStore } from './llm.flow.section.store';
+import { DbxLlmFlowSectionDisplay, dbxLlmFlowSectionResolvedDisplayConfig } from './llm.flow.section.display';
 import { dbxLlmFlowSectionFormComponentInjectionConfig } from './llm.flow.section.form';
 import { DbxLlmFlowSectionRawInputComponent } from './llm.flow.section.rawinput.component';
 import { DbxLlmFlowSectionRunButtonsComponent } from './llm.flow.section.run.buttons.component';
@@ -23,34 +24,52 @@ export interface DbxLlmFlowSectionFormPanelData {
 
 /**
  * The shared pop-out content of a section: a header, a second live instance of the section's form, and the raw input with the run buttons to
- * its right (or below the form when the raw input is hidden), laid out like the inline section.
+ * its right (or below the form when the raw input is hidden), laid out like the inline section, including the form placement.
  *
- * Created with the section's Injector, so it shares the section store; the form stays in sync with the inline form through the store. It
- * closes through the section store (closeFormPopout()), including on run start when the section's formPopout config sets closeOnRun.
+ * Created with the section's Injector, so it shares the section store and the section's resolved display (DbxLlmFlowSectionDisplay); the
+ * form stays in sync with the inline form through the store. It closes through the section store (closeFormPopout()), including on run start
+ * when the section's formPopout config sets closeOnRun.
+ *
+ * With the section's stepNumber display option on (the default), the title (the dialog header, or the detach window's control bar) shows the
+ * section's step number in an icon tile before the label, like the section header.
  */
 @Component({
   selector: 'dbx-llm-flow-section-form-panel',
   template: `
     @if (isDetachedSignal()) {
       <dbx-detach-content class="dbx-llm-flow-section-form-panel-detach">
-        <dbx-detach-controls controls [header]="labelSignal()"></dbx-detach-controls>
+        <dbx-detach-controls controls [header]="labelSignal()">
+          @if (displaySignal().stepNumber) {
+            <dbx-icon-tile class="dbx-llm-flow-section-step-number" [round]="true" dbxColor="primary">{{ stepNumberSignal() }}</dbx-icon-tile>
+          }
+        </dbx-detach-controls>
         <ng-container [ngTemplateOutlet]="panelBody"></ng-container>
       </dbx-detach-content>
     } @else {
-      <div class="dbx-llm-flow-section-form-panel-header dbx-text-title-medium">{{ labelSignal() }}</div>
+      <div class="dbx-llm-flow-section-form-panel-header dbx-text-title-medium">
+        @if (displaySignal().stepNumber) {
+          <dbx-icon-tile class="dbx-llm-flow-section-step-number" [round]="true" dbxColor="primary">{{ stepNumberSignal() }}</dbx-icon-tile>
+        }
+        <span class="dbx-llm-flow-section-form-panel-label">{{ labelSignal() }}</span>
+      </div>
       <ng-container [ngTemplateOutlet]="panelBody"></ng-container>
     }
     <ng-template #panelBody>
       <div class="dbx-llm-flow-section-form-panel-body">
         @if (formInjectionConfigSignal(); as formConfig) {
-          @if (!formHiddenSignal()) {
+          @if (!formHiddenSignal() && !formInInputSignal()) {
             <div class="dbx-llm-flow-section-form">
               <dbx-injection [config]="formConfig"></dbx-injection>
             </div>
           }
         }
-        @if (showRawInputSignal()) {
+        @if (displaySignal().rawInput) {
           <dbx-llm-flow-section-raw-input>
+            @if (formInInputSignal() && !formHiddenSignal() && formInjectionConfigSignal()) {
+              <div class="dbx-llm-flow-section-form" dbxContentPit dbxLlmFlowSectionRawInputBelow>
+                <dbx-injection [config]="formInjectionConfigSignal()"></dbx-injection>
+              </div>
+            }
             <dbx-llm-flow-section-run-buttons dbxHeightSyncFollower></dbx-llm-flow-section-run-buttons>
           </dbx-llm-flow-section-raw-input>
         } @else {
@@ -64,21 +83,31 @@ export interface DbxLlmFlowSectionFormPanelData {
   host: {
     class: 'dbx-llm-flow-section-form-panel'
   },
-  imports: [NgTemplateOutlet, DbxInjectionComponent, DbxDetachContentComponent, DbxDetachControlsComponent, DbxHeightSyncFollowerDirective, DbxLlmFlowSectionRawInputComponent, DbxLlmFlowSectionRunButtonsComponent]
+  imports: [NgTemplateOutlet, DbxInjectionComponent, DbxDetachContentComponent, DbxDetachControlsComponent, DbxHeightSyncFollowerDirective, DbxColorDirective, DbxContentPitDirective, DbxIconTileComponent, DbxLlmFlowSectionRawInputComponent, DbxLlmFlowSectionRunButtonsComponent]
 })
 export class DbxLlmFlowSectionFormPanelComponent {
   readonly sectionStore = inject(DbxLlmFlowSectionStore);
   readonly data = inject<Maybe<DbxLlmFlowSectionFormPanelData>>(DBX_INJECTION_COMPONENT_DATA, { optional: true });
+  readonly sectionDisplay = inject(DbxLlmFlowSectionDisplay, { optional: true });
 
   readonly configSignal = toSignal(this.sectionStore.config$);
   readonly formHiddenSignal = toSignal(this.sectionStore.formHidden$, { initialValue: false });
   readonly formComponentSignal = toSignal(this.sectionStore.config$.pipe(map((x) => x?.formComponent)));
   readonly autoBindFormSignal = toSignal(this.sectionStore.config$.pipe(map((x) => x?.autoBindForm)));
+  readonly stepNumberSignal = toSignal(this.sectionStore.stepNumber$, { initialValue: 1 });
 
   readonly isDetachedSignal = computed(() => this.data?.mode === 'detach');
   readonly labelSignal = computed(() => this.configSignal()?.label ?? 'Input');
-  readonly showRawInputSignal = computed(() => this.configSignal()?.display?.rawInput !== false);
+  readonly displaySignal = computed(() => {
+    const config = this.configSignal();
+    return this.sectionDisplay?.displaySignal() ?? dbxLlmFlowSectionResolvedDisplayConfig(config?.display, undefined);
+  });
   readonly formInjectionConfigSignal = computed(() => dbxLlmFlowSectionFormComponentInjectionConfig(this.formComponentSignal(), this.autoBindFormSignal(), this.sectionStore));
+  readonly formInInputSignal = computed(() => {
+    const display = this.displaySignal();
+    const formPlacement = this.configSignal()?.formPlacement;
+    return formPlacement === 'input' && display.rawInput;
+  });
 
   constructor() {
     // close when a run starts and the config asks for it

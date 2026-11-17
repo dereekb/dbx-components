@@ -80,10 +80,10 @@ export function dbxLlmFlowSectionRawInputMode(config: Maybe<DbxLlmFlowAnySection
 /**
  * Where the section's raw input comes from.
  *
- * - manual: the raw input is overridden, or the section has no form and no parent run but has text.
- * - form: the section has a form.
- * - parent: the section has no form and follows a parent run.
- * - none: the section has no form, follows no parent run and has no text.
+ * - manual: the raw input is overridden, or the section takes its input from its parent but follows no parent run and has text.
+ * - form: the section has a form, and its raw input config does not set the source to "parent".
+ * - parent: the section takes its input from its parent (no form, or a raw input source of "parent") and follows a parent run.
+ * - none: the section takes its input from its parent, follows no parent run and has no text.
  *
  * @param section - The section state.
  * @param config - The section config.
@@ -94,7 +94,7 @@ export function dbxLlmFlowSectionInputSource(section: Maybe<DbxLlmFlowSectionSta
 
   if (section?.draft.rawInputOverridden) {
     source = 'manual';
-  } else if (dbxLlmFlowSectionHasForm(config)) {
+  } else if (dbxLlmFlowSectionHasForm(config) && config?.rawInput?.source !== 'parent') {
     source = 'form';
   } else if (section?.followedParentRunId != null) {
     source = 'parent';

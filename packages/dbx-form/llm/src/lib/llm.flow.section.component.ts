@@ -1,11 +1,12 @@
-import { Component, computed, contentChild, DestroyRef, effect, inject, Injector, input, untracked } from '@angular/core';
+import { Component, computed, contentChild, DestroyRef, effect, forwardRef, inject, Injector, input, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatDialog, type MatDialogRef } from '@angular/material/dialog';
 import { cleanSubscription, DbxInjectionComponent } from '@dereekb/dbx-core';
-import { DbxButtonComponent, DbxChipDirective, DbxContentPitDirective, type DbxDetachInstance, DbxDetachService, DbxErrorComponent, DbxHeightSyncFollowerDirective, type DbxThemeColor } from '@dereekb/dbx-web';
+import { DbxButtonComponent, DbxChipDirective, DbxContentPitDirective, type DbxDetachInstance, DbxDetachService, DbxColorDirective, DbxErrorComponent, DbxHeightSyncFollowerDirective, DbxIconTileComponent, type DbxThemeColor } from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';
 import { filter, map } from 'rxjs';
 import { type DbxLlmFlowSectionDisplayConfig, type DbxLlmFlowSectionFormPopoutMode } from './llm.flow';
+import { DbxLlmFlowSectionDisplay, dbxLlmFlowSectionResolvedDisplayConfig } from './llm.flow.section.display';
 import { DbxLlmFlowSectionDirective } from './llm.flow.section.directive';
 import { DbxLlmFlowSectionStore, type DbxLlmFlowSectionStatus } from './llm.flow.section.store';
 import { dbxLlmFlowSectionFormComponentInjectionConfig } from './llm.flow.section.form';
@@ -30,35 +31,15 @@ const STATUS_COLOR: Record<DbxLlmFlowSectionStatus, Maybe<DbxThemeColor>> = {
 };
 
 /**
- * Fully resolved display toggles of a section.
- */
-export type DbxLlmFlowSectionResolvedDisplayConfig = Required<{ readonly [K in keyof DbxLlmFlowSectionDisplayConfig]: boolean }>;
-
-/**
- * Resolves the display toggles of a section. Every part is shown unless turned off. The display input overrides the config.
- *
- * @param configDisplay - The section config's display.
- * @param inputDisplay - The component's display input.
- * @returns The resolved toggles.
- */
-export function dbxLlmFlowSectionResolvedDisplayConfig(configDisplay: Maybe<DbxLlmFlowSectionDisplayConfig>, inputDisplay: Maybe<DbxLlmFlowSectionDisplayConfig>): DbxLlmFlowSectionResolvedDisplayConfig {
-  const display = { ...configDisplay, ...inputDisplay };
-  return {
-    header: display.header !== false,
-    form: display.form !== false,
-    rawInput: display.rawInput !== false,
-    runButtons: display.runButtons !== false,
-    history: display.history !== false,
-    output: display.output !== false
-  };
-}
-
-/**
  * A step of an LLM flow: a header (label, status, form toggle, pop-out and history buttons), the form (inside a content pit), the raw input
  * with the run buttons to its right, the last error and the output. The section reads top to bottom: input, run, output.
  *
  * The run buttons (one per run kind, stacked) take the raw input field's height through dbxHeightSync. When the raw input is hidden, they sit
- * in an actions row below the form instead.
+ * in an actions row below the form instead. With the config's formPlacement set to "input", the form sits under the raw input field instead
+ * of above it, and the run buttons stretch to cover the field and the form.
+ *
+ * With the display's stepNumber option on (the default), an icon tile before the label shows the section's step number in its chain: 1 for
+ * a root section, plus one per ancestor.
  *
  * Registers the section through its DbxLlmFlowSectionDirective host directive. Content projected with dbxLlmFlowSectionOutput replaces the
  * default output, and can inject the DbxLlmFlowSectionStore.
@@ -69,6 +50,7 @@ export function dbxLlmFlowSectionResolvedDisplayConfig(configDisplay: Maybe<DbxL
  * ```html
  * <dbx-llm-flow-section [config]="briefConfig"></dbx-llm-flow-section>
  * <dbx-llm-flow-section [config]="outlineConfig" parentKey="brief" [display]="{ rawInput: false }"></dbx-llm-flow-section>
+ * <dbx-llm-flow-section [config]="draftConfig" parentKey="outline" [display]="{ stepNumber: true }"></dbx-llm-flow-section>
  * ```
  */
 @Component({
@@ -77,13 +59,16 @@ export function dbxLlmFlowSectionResolvedDisplayConfig(configDisplay: Maybe<DbxL
     @if (displaySignal().header) {
       <div class="dbx-llm-flow-section-header">
         <div class="dbx-llm-flow-section-header-label">
+          @if (displaySignal().stepNumber) {
+            <dbx-icon-tile class="dbx-llm-flow-section-step-number" [round]="true" dbxColor="primary">{{ stepNumberSignal() }}</dbx-icon-tile>
+          }
           <span class="dbx-llm-flow-section-label dbx-text-title-medium">{{ labelSignal() }}</span>
           <dbx-chip class="dbx-llm-flow-section-status" [small]="true" [color]="statusColorSignal()">{{ statusTextSignal() }}</dbx-chip>
         </div>
         <span class="dbx-spacer"></span>
         <div class="dbx-llm-flow-section-header-actions">
           @if (showFormControlsSignal()) {
-            <dbx-button [icon]="formVisibleSignal() ? 'expand_less' : 'expand_more'" [ariaLabel]="formVisibleSignal() ? 'Hide the form' : 'Show the form'" [iconOnly]="true" [flat]="true" (buttonClick)="toggleFormVisible()"></dbx-button>
+            <dbx-button [icon]="formVisibleSignal() ? 'expand_more' : 'expand_less'" [ariaLabel]="formVisibleSignal() ? 'Hide the form' : 'Show the form'" [iconOnly]="true" [flat]="true" (buttonClick)="toggleFormVisible()"></dbx-button>
             @if (popoutEnabledSignal()) {
               <dbx-button icon="open_in_new" ariaLabel="Open the form in a dialog" [iconOnly]="true" [flat]="true" (buttonClick)="openFormPopout('dialog')"></dbx-button>
               <dbx-button icon="picture_in_picture_alt" ariaLabel="Open the form in a floating window" [iconOnly]="true" [flat]="true" (buttonClick)="openFormPopout('detach')"></dbx-button>
@@ -99,13 +84,18 @@ export function dbxLlmFlowSectionResolvedDisplayConfig(configDisplay: Maybe<DbxL
       }
     }
     <div class="dbx-llm-flow-section-body">
-      @if (showFormSignal()) {
+      @if (showFormSignal() && !formInInputSignal()) {
         <div class="dbx-llm-flow-section-form" dbxContentPit>
           <dbx-injection [config]="formInjectionConfigSignal()"></dbx-injection>
         </div>
       }
       @if (displaySignal().rawInput) {
         <dbx-llm-flow-section-raw-input>
+          @if (showFormSignal() && formInInputSignal()) {
+            <div class="dbx-llm-flow-section-form" dbxContentPit dbxLlmFlowSectionRawInputBelow>
+              <dbx-injection [config]="formInjectionConfigSignal()"></dbx-injection>
+            </div>
+          }
           @if (displaySignal().runButtons) {
             <dbx-llm-flow-section-run-buttons dbxHeightSyncFollower></dbx-llm-flow-section-run-buttons>
           }
@@ -136,10 +126,24 @@ export function dbxLlmFlowSectionResolvedDisplayConfig(configDisplay: Maybe<DbxL
     '[attr.data-status]': 'statusSignal()',
     '[class.dbx-llm-flow-section-running]': `statusSignal() === 'running'`
   },
+  providers: [{ provide: DbxLlmFlowSectionDisplay, useExisting: forwardRef(() => DbxLlmFlowSectionComponent) }],
   hostDirectives: [{ directive: DbxLlmFlowSectionDirective, inputs: ['dbxLlmFlowSection: config', 'parentKey'] }],
-  imports: [DbxInjectionComponent, DbxButtonComponent, DbxChipDirective, DbxContentPitDirective, DbxErrorComponent, DbxHeightSyncFollowerDirective, DbxLlmFlowSectionRawInputComponent, DbxLlmFlowSectionRunButtonsComponent, DbxLlmFlowSectionHistoryButtonComponent, DbxLlmFlowSectionOutputComponent]
+  imports: [
+    DbxInjectionComponent,
+    DbxButtonComponent,
+    DbxChipDirective,
+    DbxColorDirective,
+    DbxContentPitDirective,
+    DbxErrorComponent,
+    DbxHeightSyncFollowerDirective,
+    DbxIconTileComponent,
+    DbxLlmFlowSectionRawInputComponent,
+    DbxLlmFlowSectionRunButtonsComponent,
+    DbxLlmFlowSectionHistoryButtonComponent,
+    DbxLlmFlowSectionOutputComponent
+  ]
 })
-export class DbxLlmFlowSectionComponent {
+export class DbxLlmFlowSectionComponent implements DbxLlmFlowSectionDisplay {
   readonly sectionStore = inject(DbxLlmFlowSectionStore);
   readonly injector = inject(Injector);
   readonly matDialog = inject(MatDialog);
@@ -156,6 +160,7 @@ export class DbxLlmFlowSectionComponent {
   readonly statusSignal = toSignal(this.sectionStore.status$, { initialValue: 'idle' as DbxLlmFlowSectionStatus });
   readonly formHiddenSignal = toSignal(this.sectionStore.formHidden$, { initialValue: false });
   readonly lastFailedRunSignal = toSignal(this.sectionStore.lastFailedRun$);
+  readonly stepNumberSignal = toSignal(this.sectionStore.stepNumber$, { initialValue: 1 });
   readonly formComponentSignal = toSignal(this.sectionStore.config$.pipe(map((x) => x?.formComponent)));
   readonly autoBindFormSignal = toSignal(this.sectionStore.config$.pipe(map((x) => x?.autoBindForm)));
 
@@ -180,6 +185,14 @@ export class DbxLlmFlowSectionComponent {
     return display.form && formInjectionConfig != null;
   });
   readonly popoutEnabledSignal = computed(() => this.configSignal()?.formPopout !== false);
+  /**
+   * Whether the form is shown under the raw input field, inside the input row, rather than above the raw input.
+   */
+  readonly formInInputSignal = computed(() => {
+    const display = this.displaySignal();
+    const formPlacement = this.configSignal()?.formPlacement;
+    return formPlacement === 'input' && display.rawInput;
+  });
   readonly showFormSignal = computed(() => {
     const showFormControls = this.showFormControlsSignal();
     const formVisible = this.formVisibleSignal();

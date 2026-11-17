@@ -2001,6 +2001,58 @@
       "componentScope": "list"
     },
     {
+      "cssVariable": "--dbx-list-drag-placeholder-opacity",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "list drag placeholder opacity"
+      ],
+      "description": "Component-scoped override point (`list`) read in `packages/dbx-web/src/lib/layout/list/_list.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `0.4`.",
+      "defaults": {
+        "light": "0.4"
+      },
+      "componentScope": "list"
+    },
+    {
+      "cssVariable": "--dbx-list-drag-preview-background",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "list drag preview background"
+      ],
+      "description": "Component-scoped override point (`list`) read in `packages/dbx-web/src/lib/layout/list/_list.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-surface-container-high)`.",
+      "defaults": {
+        "light": "var(--mat-sys-surface-container-high)"
+      },
+      "componentScope": "list"
+    },
+    {
+      "cssVariable": "--dbx-list-drag-preview-shadow",
+      "source": "dbx-web",
+      "role": "shadow",
+      "intents": [
+        "list drag preview shadow"
+      ],
+      "description": "Component-scoped override point (`list`) read in `packages/dbx-web/src/lib/layout/list/_list.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-level3)`.",
+      "defaults": {
+        "light": "var(--mat-sys-level3)"
+      },
+      "componentScope": "list"
+    },
+    {
+      "cssVariable": "--dbx-list-drag-transition-duration",
+      "source": "dbx-web",
+      "role": "motion",
+      "intents": [
+        "list drag transition duration"
+      ],
+      "description": "Component-scoped override point (`list`) read in `packages/dbx-web/src/lib/layout/list/_list.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `250ms`.",
+      "defaults": {
+        "light": "250ms"
+      },
+      "componentScope": "list"
+    },
+    {
       "cssVariable": "--dbx-list-empty-content-padding",
       "source": "dbx-web",
       "role": "spacing",

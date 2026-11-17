@@ -68,8 +68,8 @@ export const DBX_LLM_FLOW_SECTION_HISTORY_DATE_TIME_FORMAT = 'MMM d, h:mm:ss a';
  * Each row shows the run's description, its start time with seconds, its kind label (when the section has several kinds), and marks the
  * section's primary selection (the run whose output is shown).
  *
- * Clicking a row loads the run (its input, and the latest runs of every descendant section made from it). The secondary actions are
- * "Load with parents" (also loads the run's ancestors) and "Reroll" (reruns the same input). Loading is disabled while the section runs.
+ * Clicking a row loads the run (its input, and the latest runs of every descendant section made from it). A run with a parent also has a
+ * "Load with parents" action that loads the run's ancestors too. Loading is disabled while the section runs.
  *
  * @example
  * ```html
@@ -103,7 +103,6 @@ export const DBX_LLM_FLOW_SECTION_HISTORY_DATE_TIME_FORMAT = 'MMM d, h:mm:ss a';
             @if (row.run.parentRunId) {
               <dbx-button icon="account_tree" ariaLabel="Load with parents" [iconOnly]="true" [flat]="true" [disabled]="isRunningSignal()" (buttonClick)="loadRun(row.run, true)"></dbx-button>
             }
-            <dbx-button icon="replay" ariaLabel="Reroll" [iconOnly]="true" [flat]="true" [disabled]="isRunningSignal()" (buttonClick)="rerun(row.run)"></dbx-button>
           </div>
         }
       </div>
@@ -179,9 +178,5 @@ export class DbxLlmFlowSectionHistoryListComponent {
   loadRun(run: DbxLlmFlowRun, withAncestors: boolean): void {
     const loaded = this.sectionStore.loadRun(run.id, withAncestors);
     this.runLoaded.emit({ run, withAncestors, loaded });
-  }
-
-  rerun(run: DbxLlmFlowRun): void {
-    this.sectionStore.rerun(run.id);
   }
 }

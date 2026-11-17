@@ -7,7 +7,6 @@
 // Override points:
 // --dbx-llm-flow-section-gap: space between sections in a flow.
 // --dbx-llm-flow-section-border: border of a section.
-// --dbx-llm-flow-output-max-height: max height of the default output before it scrolls.
 // --dbx-llm-flow-mono-font-family: font family of the raw input and the default output.
 // --dbx-llm-flow-run-buttons-min-width: min width of the run buttons beside the raw input.
 @mixin core() {
@@ -63,17 +62,27 @@
   .dbx-llm-flow-section-raw-input {
     display: block;
 
-    // the field, with projected content (the run buttons) to its right. Centered, so content that takes the field's content-box height lines
-    // up with the outlined box inside the field's vertical padding.
+    // the field column, with projected content (the run buttons) to its right. Centered, so content that takes the column's content-box
+    // height lines up with the field's outlined box and the content under it, inside the column's vertical padding.
     .dbx-llm-flow-section-raw-input-row {
       display: flex;
       align-items: center;
       gap: var(--dbx-padding-2);
     }
 
-    .dbx-llm-flow-section-raw-input-field {
+    // the field, and content projected under it (a form placed in the input). The height sync source. It carries the 6px vertical padding
+    // dbx gives a form field, moved off the field, so its content box is the outlined box plus the content under it.
+    .dbx-llm-flow-section-raw-input-main {
+      display: flex;
       flex: 1 1 0;
+      flex-direction: column;
+      gap: var(--dbx-padding-2);
       min-width: 0;
+      padding-block: 6px;
+
+      > .dbx-llm-flow-section-raw-input-field {
+        padding-block: 0;
+      }
     }
 
     // run buttons beside the field share the field's height (dbxHeightSyncFollower sets it)
@@ -157,18 +166,22 @@
   .dbx-llm-flow-section-output {
     display: block;
 
-    .dbx-llm-flow-section-output-text {
-      margin: 0;
-      padding: var(--dbx-padding-2);
-      max-height: var(--dbx-llm-flow-output-max-height, 480px);
-      overflow: auto;
-      white-space: pre-wrap;
-      word-break: break-word;
-      font-family: var(--dbx-llm-flow-mono-font-family, monospace);
-      font-size: 0.9em;
-      border-radius: var(--mat-sys-corner-small);
-      background: var(--mat-sys-surface-container);
+    .dbx-llm-flow-section-output-off-branch {
+      margin-bottom: var(--dbx-padding-1);
     }
+  }
+
+  // MARK: Step Number
+  // the section's step number in its chain, as a round icon tile before the label (section header and form pop-out dialog title). Sized
+  // through the icon tile's variables.
+  .dbx-llm-flow-section-step-number {
+    flex: 0 0 auto;
+    --dbx-icon-tile-padding: 0;
+    --dbx-icon-tile-width: 28px;
+    --dbx-icon-tile-height: 28px;
+    --dbx-icon-tile-min-width: 28px;
+    --dbx-icon-tile-font-size: var(--mat-sys-label-large-size, 14px);
+    --dbx-icon-tile-font-weight: 600;
   }
 
   // MARK: History
@@ -236,6 +249,9 @@
     display: block;
 
     .dbx-llm-flow-section-form-panel-header {
+      display: flex;
+      align-items: center;
+      gap: var(--dbx-padding-2);
       margin-bottom: var(--dbx-padding-2);
     }
 
@@ -247,6 +263,15 @@
 
     .dbx-llm-flow-section-form-panel-detach .dbx-llm-flow-section-form-panel-body {
       padding: var(--dbx-padding-2);
+    }
+
+    // the step number in the detach window's control bar, before the label. Smaller, to fit the bar.
+    .dbx-detach-controls > .dbx-llm-flow-section-step-number {
+      margin-right: var(--dbx-padding-2);
+      --dbx-icon-tile-width: 24px;
+      --dbx-icon-tile-height: 24px;
+      --dbx-icon-tile-min-width: 24px;
+      --dbx-icon-tile-font-size: var(--mat-sys-label-medium-size, 12px);
     }
 
     .dbx-llm-flow-section-form-panel-actions {

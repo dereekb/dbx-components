@@ -361,15 +361,15 @@
       "componentScope": "llm"
     },
     {
-      "cssVariable": "--dbx-llm-flow-output-max-height",
+      "cssVariable": "--dbx-llm-flow-run-buttons-min-width",
       "source": "dbx-form",
       "role": "size",
       "intents": [
-        "llm flow output max height"
+        "llm flow run buttons min width"
       ],
-      "description": "Component-scoped override point (`llm`) read in `packages/dbx-form/src/lib/extension/llm/_llm.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `480px`.",
+      "description": "Component-scoped override point (`llm`) read in `packages/dbx-form/src/lib/extension/llm/_llm.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `120px`.",
       "defaults": {
-        "light": "480px"
+        "light": "120px"
       },
       "componentScope": "llm"
     },

@@ -1,13 +1,16 @@
 import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { AbstractSyncForgeFormDirective, DBX_FORGE_FORM_COMPONENT_TEMPLATE, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule, dbxForgeNumberField, dbxForgeRow, dbxForgeTextAreaField, dbxForgeTextField, dbxForgeValueSelectionField } from '@dereekb/dbx-form';
-import { DbxLlmFlowSectionFormBindingTarget, type DbxLlmFlowRunValue, DbxLlmFlowSectionStore } from '@dereekb/dbx-form/llm';
+import { DbxLlmFlowSectionFormBindingTarget, type DbxLlmFlowRun, type DbxLlmFlowRunValue, DbxLlmFlowSectionStore } from '@dereekb/dbx-form/llm';
 import { cleanSubscription } from '@dereekb/dbx-core';
-import { DbxButtonComponent } from '@dereekb/dbx-web';
-import { type Work } from '@dereekb/rxjs';
+import { DbxButtonComponent, type DbxGalleryConfig, DbxGalleryComponent } from '@dereekb/dbx-web';
+import { successResult, type Work } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
 import { delay, type Observable, of, switchMap, throwError, timer } from 'rxjs';
+import { DocGalleryColorPresentationComponent, type DocGalleryItem, DocGalleryLabelComponent } from './audiovideo.gallery.example.component';
 
 // MARK: Fake Handlers
 /**
@@ -172,4 +175,154 @@ export interface DocExtensionLlmTakesOutput {
 export class DocExtensionLlmTakesOutputComponent {
   readonly sectionStore = inject(DbxLlmFlowSectionStore<unknown, DocExtensionLlmTakesOutput>);
   readonly outputSignal = toSignal(this.sectionStore.selectedOutput$);
+}
+
+// MARK: Draft Render Count
+/**
+ * Form value of the chain's draft section: the text from the Outline's output, and how many images one Render makes.
+ */
+export interface DocExtensionLlmDraftValue {
+  /**
+   * The Outline's output, copied in by fromParentOutput(). The raw input shows it.
+   */
+  readonly text?: Maybe<string>;
+  /**
+   * How many images one Render makes.
+   */
+  readonly count?: Maybe<number>;
+}
+
+export const DOC_EXTENSION_LLM_DRAFT_MIN_RENDER_COUNT = 1;
+export const DOC_EXTENSION_LLM_DRAFT_MAX_RENDER_COUNT = 8;
+
+/**
+ * Clamps a render count to the allowed range, defaulting to the minimum.
+ *
+ * @param count - The count.
+ * @returns The clamped count.
+ */
+export function docExtensionLlmDraftRenderCount(count: Maybe<number>): number {
+  const value = Math.round(Number(count) || DOC_EXTENSION_LLM_DRAFT_MIN_RENDER_COUNT);
+  return Math.min(DOC_EXTENSION_LLM_DRAFT_MAX_RENDER_COUNT, Math.max(DOC_EXTENSION_LLM_DRAFT_MIN_RENDER_COUNT, value));
+}
+
+/**
+ * A custom input on the binding contract for the draft section's render count. Shown under the raw input (formPlacement "input"). Keeps the
+ * rest of the form value (the Outline text) when the count changes, since a form change rebuilds the raw input from the form value.
+ */
+@Component({
+  selector: 'doc-extension-llm-draft-count-input',
+  template: `
+    <mat-form-field class="doc-extension-llm-draft-count-field" appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Renders (N)</mat-label>
+      <input matInput type="number" [min]="minCount" [max]="maxCount" [value]="countSignal()" [disabled]="lockedSignal()" (input)="onCountInput($event)" />
+      <mat-hint>Each Render makes N images.</mat-hint>
+    </mat-form-field>
+  `,
+  styles: `
+    .doc-extension-llm-draft-count-field {
+      width: 220px;
+    }
+  `,
+  imports: [MatFormFieldModule, MatInputModule]
+})
+export class DocExtensionLlmDraftCountInputComponent {
+  readonly target = inject(DbxLlmFlowSectionFormBindingTarget<DocExtensionLlmDraftValue>);
+
+  readonly minCount = DOC_EXTENSION_LLM_DRAFT_MIN_RENDER_COUNT;
+  readonly maxCount = DOC_EXTENSION_LLM_DRAFT_MAX_RENDER_COUNT;
+
+  private readonly _binding = this.target.registerFormBinding();
+  private readonly _value = signal<DocExtensionLlmDraftValue>({});
+
+  readonly lockedSignal = toSignal(this.target.formLocked$, { initialValue: false });
+  readonly countSignal = computed(() => docExtensionLlmDraftRenderCount(this._value().count));
+
+  constructor() {
+    cleanSubscription(this.target.formSeed$(this._binding.id).subscribe((value: Maybe<DocExtensionLlmDraftValue>) => this._value.set(value ?? {})));
+    this.target.setFormValid(this._binding.id, true);
+    inject(DestroyRef).onDestroy(() => this._binding.destroy());
+  }
+
+  onCountInput(event: Event): void {
+    const count = docExtensionLlmDraftRenderCount((event.target as HTMLInputElement).valueAsNumber);
+    const next = { ...this._value(), count };
+    this._value.set(next);
+    this.target.setDraftFormValue(this._binding.id, next);
+  }
+}
+
+// MARK: Swatches Output
+/**
+ * JSON-safe output of the chain's draft section: the colors one Render made.
+ */
+export interface DocExtensionLlmSwatchOutput {
+  readonly colors: readonly string[];
+}
+
+/**
+ * Returns a color for a render, spreading the hue by the golden angle from a hash of the seed, so consecutive renders differ.
+ *
+ * @param seed - The run id.
+ * @returns A CSS hsl() color.
+ */
+export function docExtensionLlmSwatchColor(seed: string): string {
+  let hash = 0;
+
+  for (const char of seed) {
+    hash = Math.trunc(hash * 31 + (char.codePointAt(0) ?? 0)) % 1_000_003;
+  }
+
+  const hue = Math.round((hash * 137.5) % 360);
+  return `hsl(${hue} 65% 55%)`;
+}
+
+/**
+ * Custom, non-text output component of the chain's draft section: shows the images of every render of the section (every successful run's
+ * colors) in a dbx-gallery, newest first. Injects the section store to read the runs.
+ */
+@Component({
+  selector: 'doc-extension-llm-swatches-output',
+  template: `
+    @if (itemsSignal().length) {
+      <dbx-gallery [state]="stateSignal()" [galleryConfig]="galleryConfig" itemMinWidth="120px" topSlotMode="overlay"></dbx-gallery>
+    } @else {
+      <p class="dbx-hint">No renders yet. Render the draft.</p>
+    }
+  `,
+  imports: [DbxGalleryComponent]
+})
+export class DocExtensionLlmSwatchesOutputComponent {
+  readonly sectionStore = inject(DbxLlmFlowSectionStore<unknown, DocExtensionLlmSwatchOutput>);
+
+  readonly runsSignal = toSignal(this.sectionStore.runs$, { initialValue: [] as DbxLlmFlowRun<unknown, DocExtensionLlmSwatchOutput>[] });
+
+  readonly itemsSignal = computed<DocGalleryItem[]>(() => {
+    const renders = this.runsSignal()
+      .filter((run) => run.state === 'success')
+      .map((run) => {
+        const colors: readonly string[] = run.output?.colors ?? [];
+        return { run, colors };
+      })
+      .filter((x) => x.colors.length > 0)
+      .sort((a, b) => new Date(b.run.startedAt).getTime() - new Date(a.run.startedAt).getTime());
+
+    return renders.flatMap(({ run, colors }, i) => {
+      const renderNumber = renders.length - i;
+      return colors.map((color, j) => ({
+        id: `${run.id}_${j}`,
+        name: colors.length > 1 ? `Render ${renderNumber} · ${j + 1}/${colors.length}` : `Render ${renderNumber}`,
+        kind: 'color' as const,
+        color
+      }));
+    });
+  });
+
+  readonly stateSignal = computed(() => successResult(this.itemsSignal()));
+
+  readonly galleryConfig: DbxGalleryConfig<DocGalleryItem> = {
+    keyForValue: (x) => x.id,
+    presentation: { componentClass: DocGalleryColorPresentationComponent },
+    top: { componentClass: DocGalleryLabelComponent }
+  };
 }

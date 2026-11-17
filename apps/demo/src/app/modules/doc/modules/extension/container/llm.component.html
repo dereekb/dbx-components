@@ -1,13 +1,17 @@
 <dbx-content-container>
   <doc-feature-layout header="LLM Flow" hint="@dereekb/dbx-form/llm - Generation flows: sections of form input, raw input, run buttons, history and output, where one step's output seeds the next.">
-    <doc-feature-example header="dbx-llm-flow" hint="A config-driven chain: Brief → Outline → Draft. Run Outline, then reload an older Brief run from its history to restore every descendant. Pop the Brief form out to a dialog or a floating window: both stay in sync with the inline form.">
+    <doc-feature-example
+      header="dbx-llm-flow"
+      hint="A config-driven chain: Brief → Outline → Draft. Run Outline, then reload an older Brief run from its history to restore every descendant. Pop the Brief form out to a dialog or a floating window: both stay in sync with the inline form. Step numbers marks each section with its place in the chain.">
       <div class="dbx-flex-bar">
+        <dbx-button [text]="stepNumberSignal() ? 'Step numbers: on' : 'Step numbers: off'" icon="format_list_numbered" [buttonStyle]="{ type: 'stroked' }" (buttonClick)="toggleStepNumber()"></dbx-button>
         <dbx-button [text]="autoRunDraftSignal() ? 'Draft auto-run: on' : 'Draft auto-run: off'" icon="bolt" [buttonStyle]="{ type: 'stroked' }" (buttonClick)="toggleAutoRunDraft()"></dbx-button>
       </div>
       <dbx-llm-flow [config]="chainConfigSignal()"></dbx-llm-flow>
     </doc-feature-example>
     <doc-feature-example header="[dbxLlmFlow] columns" hint="A lab-style layout with individual sections: a custom, non-forge input on the binding contract, two run kinds, a custom output component, an exclusive run lane, a storage key per world and server history import.">
       <div class="dbx-flex-bar">
+        <dbx-button [text]="stepNumberSignal() ? 'Step numbers: on' : 'Step numbers: off'" icon="format_list_numbered" [buttonStyle]="{ type: 'stroked' }" (buttonClick)="toggleStepNumber()"></dbx-button>
         <dbx-button [text]="exclusiveRunsSignal() ? 'Exclusive runs: on' : 'Exclusive runs: off'" icon="lock" [buttonStyle]="{ type: 'stroked' }" (buttonClick)="toggleExclusiveRuns()"></dbx-button>
         @for (world of worlds; track world) {
           <dbx-button [text]="'World: ' + world" icon="public" [buttonStyle]="world === worldSignal() ? { type: 'flat', color: 'primary' } : { type: 'stroked' }" (buttonClick)="selectWorld(world)"></dbx-button>
@@ -17,10 +21,10 @@
       <div #labFlow="dbxLlmFlow" [dbxLlmFlow]="labConfigSignal()" [storageKey]="labStorageKeySignal()">
         <div dbxFlexGroup>
           <div [dbxFlexSize]="3">
-            <dbx-llm-flow-section [config]="promptConfig"></dbx-llm-flow-section>
+            <dbx-llm-flow-section [config]="promptConfig" [display]="{ stepNumber: stepNumberSignal() }"></dbx-llm-flow-section>
           </div>
           <div [dbxFlexSize]="3">
-            <dbx-llm-flow-section [config]="renderConfig" parentKey="prompt"></dbx-llm-flow-section>
+            <dbx-llm-flow-section [config]="renderConfig" parentKey="prompt" [display]="{ stepNumber: stepNumberSignal() }"></dbx-llm-flow-section>
           </div>
         </div>
       </div>

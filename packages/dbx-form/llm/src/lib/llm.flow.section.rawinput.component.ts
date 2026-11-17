@@ -55,13 +55,19 @@ const RAW_INPUT_SOURCE_ICONS: Record<DbxLlmFlowSectionInputSource, string> = {
  * generated input), the section's input issues (outlining the field in the error color) and a copy button. The field re-measures its
  * autosize height when its width changes and when web fonts finish loading, so the text is not clipped.
  *
- * Projected content renders to the right of the field, centered on it. The host is a dbxHeightSync group with the field as its source (its
- * content box, so the form field's vertical padding is left out), so projected content marked dbxHeightSyncFollower takes the height of the
- * field's outlined box. The section projects its run buttons there.
+ * Projected content renders to the right of the field, centered on it. Content marked dbxLlmFlowSectionRawInputBelow renders under the field,
+ * in the same column. The host is a dbxHeightSync group with that column as its source (its content box: the column carries the field's
+ * vertical padding), so projected content marked dbxHeightSyncFollower takes the height of the field's outlined box plus the content under
+ * it. The section projects its run buttons beside the field, and its form under the field when the form placement is "input".
  *
  * @example
  * ```html
  * <dbx-llm-flow-section-raw-input>
+ *   <dbx-llm-flow-section-run-buttons dbxHeightSyncFollower></dbx-llm-flow-section-run-buttons>
+ * </dbx-llm-flow-section-raw-input>
+ *
+ * <dbx-llm-flow-section-raw-input>
+ *   <div dbxContentPit dbxLlmFlowSectionRawInputBelow>...</div>
  *   <dbx-llm-flow-section-run-buttons dbxHeightSyncFollower></dbx-llm-flow-section-run-buttons>
  * </dbx-llm-flow-section-raw-input>
  * ```
@@ -80,23 +86,26 @@ const RAW_INPUT_SOURCE_ICONS: Record<DbxLlmFlowSectionInputSource, string> = {
       </div>
     }
     <div class="dbx-llm-flow-section-raw-input-row">
-      <mat-form-field class="dbx-llm-flow-section-raw-input-field" appearance="outline" subscriptSizing="dynamic" dbxHeightSyncSource="content-box">
-        <mat-label>{{ labelSignal() }}</mat-label>
-        <textarea
-          #textarea
-          matInput
-          cdkTextareaAutosize
-          class="dbx-llm-flow-section-raw-input-textarea"
-          [cdkAutosizeMinRows]="minRowsSignal()"
-          [cdkAutosizeMaxRows]="maxRowsSignal()"
-          [readonly]="readonlySignal()"
-          [value]="rawInputSignal()"
-          (beforeinput)="onBeforeInput($event)"
-          (paste)="onPaste($event)"
-          (drop)="onDrop($event)"
-          (input)="onInput($event)"></textarea>
-        <dbx-button matSuffix icon="content_copy" ariaLabel="Copy the raw input" [iconOnly]="true" [flat]="true" [disabled]="!rawInputSignal()" (buttonClick)="copyRawInput()"></dbx-button>
-      </mat-form-field>
+      <div class="dbx-llm-flow-section-raw-input-main" dbxHeightSyncSource="content-box">
+        <mat-form-field class="dbx-llm-flow-section-raw-input-field" appearance="outline" subscriptSizing="dynamic">
+          <mat-label>{{ labelSignal() }}</mat-label>
+          <textarea
+            #textarea
+            matInput
+            cdkTextareaAutosize
+            class="dbx-llm-flow-section-raw-input-textarea"
+            [cdkAutosizeMinRows]="minRowsSignal()"
+            [cdkAutosizeMaxRows]="maxRowsSignal()"
+            [readonly]="readonlySignal()"
+            [value]="rawInputSignal()"
+            (beforeinput)="onBeforeInput($event)"
+            (paste)="onPaste($event)"
+            (drop)="onDrop($event)"
+            (input)="onInput($event)"></textarea>
+          <dbx-button matSuffix icon="content_copy" ariaLabel="Copy the raw input" [iconOnly]="true" [flat]="true" [disabled]="!rawInputSignal()" (buttonClick)="copyRawInput()"></dbx-button>
+        </mat-form-field>
+        <ng-content select="[dbxLlmFlowSectionRawInputBelow]"></ng-content>
+      </div>
       <ng-content></ng-content>
     </div>
     @if (hintSignal()) {
@@ -164,10 +173,14 @@ export class DbxLlmFlowSectionRawInputComponent {
   /**
    * The input issues to show. While the section waits on its parent's first run, the source message explains the empty input instead.
    */
-  readonly shownInputIssuesSignal = computed(() => (this.inputSourceSignal() === 'none' ? [] : this.inputIssuesSignal()));
+  readonly shownInputIssuesSignal = computed(() => {
+    const inputIssues = this.inputIssuesSignal();
+    return this.inputSourceSignal() === 'none' ? [] : inputIssues;
+  });
   readonly invalidSignal = computed(() => this.shownInputIssuesSignal().length > 0);
 
   readonly sourceMessageSignal = computed<Maybe<DbxLlmFlowSectionRawInputSourceMessage>>(() => {
+    const typeable = this.typeableSignal();
     const config = this.configSignal();
     const source = this.inputSourceSignal();
     const hasForm = this.hasFormSignal();
@@ -180,7 +193,7 @@ export class DbxLlmFlowSectionRawInputComponent {
     if (config?.rawInput?.showSource !== false) {
       switch (source) {
         case 'form':
-          message = { source, icon, text: this.typeableSignal() ? 'Generated from the form. Edits here update the form.' : 'Generated from the form.' };
+          message = { source, icon, text: typeable ? 'Generated from the form. Edits here update the form.' : 'Generated from the form.' };
           break;
         case 'parent':
           message = { source, icon, text: `Generated from the ${parentLabel ?? 'parent'} output.` };

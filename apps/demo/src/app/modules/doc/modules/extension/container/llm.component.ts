@@ -15,6 +15,12 @@ import {
   docExtensionLlmFakeHandler,
   DocExtensionLlmMoodInputComponent,
   type DocExtensionLlmMoodValue,
+  DocExtensionLlmDraftCountInputComponent,
+  docExtensionLlmDraftRenderCount,
+  type DocExtensionLlmDraftValue,
+  type DocExtensionLlmSwatchOutput,
+  DocExtensionLlmSwatchesOutputComponent,
+  docExtensionLlmSwatchColor,
   type DocExtensionLlmTakesOutput,
   DocExtensionLlmTakesOutputComponent
 } from '../component/llm.example.component';
@@ -164,13 +170,26 @@ export const DOC_EXTENSION_LLM_OUTLINE_SECTION: DbxLlmFlowSectionConfig<unknown,
   ]
 };
 
-export const DOC_EXTENSION_LLM_DRAFT_SECTION: DbxLlmFlowSectionConfig<unknown, string> = {
+export const DOC_EXTENSION_LLM_DRAFT_SECTION: DbxLlmFlowSectionConfig<DocExtensionLlmDraftValue, DocExtensionLlmSwatchOutput> = {
   key: 'draft',
   parentKey: 'outline',
   label: 'Draft',
-  hint: 'Read-only raw input from the expanded outline. With auto-run on, a successful Expand runs Polish automatically.',
-  rawInput: { mode: 'readonly' },
-  kinds: [{ kind: 'run', text: 'Polish', handler: docExtensionLlmFakeHandler((value) => `${value.input.rawInput}\n\n(polished)`) }]
+  hint: 'A custom input and a custom, non-text output. The render count (N) is a custom form placed in the input (formPlacement "input"), so Render stretches to cover the raw input and the form. Each Render makes N images, and the outputComponent shows every render in a dbx-gallery, newest first. The read-only raw input is the expanded outline, copied into the form value (rawInput source "parent"). With auto-run on, a successful Expand renders automatically.',
+  formComponent: DocExtensionLlmDraftCountInputComponent,
+  formPlacement: 'input',
+  formPopout: false,
+  initialDraft: { formValue: { count: 1 } },
+  rawInput: { mode: 'readonly', source: 'parent' },
+  toRawInput: (formValue) => formValue?.text ?? '',
+  fromParentOutput: ({ parentOutput, draft }) => ({ formValue: { ...draft.formValue, text: typeof parentOutput === 'string' ? parentOutput : '' } }),
+  outputComponent: DocExtensionLlmSwatchesOutputComponent,
+  kinds: [
+    {
+      kind: 'run',
+      text: 'Render',
+      handler: docExtensionLlmFakeHandler((value) => ({ colors: Array.from({ length: docExtensionLlmDraftRenderCount(value.input.formValue?.count) }, (_, i) => docExtensionLlmSwatchColor(`${value.runId}_${i}`)) }))
+    }
+  ]
 };
 
 // MARK: Lab Configs
@@ -212,14 +231,23 @@ export class DocExtensionLlmComponent {
   readonly chainFlow = viewChild(DbxLlmFlowComponent);
   readonly labFlow = viewChild('labFlow', { read: DbxLlmFlowDirective });
 
+  // MARK: Step Numbers
+  /**
+   * Whether the sections of both examples show their step number in the chain. The chain passes it through each section config's display, the
+   * lab through each section's display input.
+   */
+  readonly stepNumberSignal = signal(true);
+
   // MARK: Chain
   readonly autoRunDraftSignal = signal(true);
 
   readonly chainConfigSignal = computed<DbxLlmFlowConfig>(() => {
     const autoRunAfterParent = this.autoRunDraftSignal();
+    const stepNumber = this.stepNumberSignal();
+    const sections = [DOC_EXTENSION_LLM_BRIEF_SECTION, DOC_EXTENSION_LLM_OUTLINE_SECTION, { ...DOC_EXTENSION_LLM_DRAFT_SECTION, autoRunAfterParent }].map((section) => ({ ...section, display: { ...section.display, stepNumber } }));
     return {
-      persistence: { storageKey: 'doc-extension-llm-chain-v2' },
-      sections: [DOC_EXTENSION_LLM_BRIEF_SECTION, DOC_EXTENSION_LLM_OUTLINE_SECTION, { ...DOC_EXTENSION_LLM_DRAFT_SECTION, autoRunAfterParent }]
+      persistence: { storageKey: 'doc-extension-llm-chain-v3' },
+      sections
     };
   });
 
@@ -240,6 +268,10 @@ export class DocExtensionLlmComponent {
 
   // MARK: State
   readonly chainStateSignal = toSignal(toObservable(this.chainFlow).pipe(switchMap((flow) => (flow ? flow.flowDirective.store.state$.pipe(map((state) => ({ runTree: docExtensionLlmRunTree(state), state }))) : of(null)))));
+
+  toggleStepNumber(): void {
+    this.stepNumberSignal.update((x) => !x);
+  }
 
   toggleAutoRunDraft(): void {
     this.autoRunDraftSignal.update((x) => !x);

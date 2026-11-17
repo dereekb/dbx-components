@@ -289,7 +289,28 @@ export interface DbxLlmFlowSectionRawInputConfig {
    * Whether to show where the raw input comes from (the form, the parent's output, or manual input) above the field. Defaults to true.
    */
   readonly showSource?: Maybe<boolean>;
+  /**
+   * Where the raw input comes from, for the source message. Defaults to "form" for a section with a form, otherwise the parent's output.
+   *
+   * Set "parent" on a section whose form only adds options to its parent's output (fromParentOutput() copies the output into the form value,
+   * and toRawInput() reads it back), so the message names the parent instead of the form.
+   */
+  readonly source?: Maybe<DbxLlmFlowSectionRawInputSource>;
 }
+
+/**
+ * Where a section's raw input comes from, as configured on DbxLlmFlowSectionRawInputConfig.
+ */
+export type DbxLlmFlowSectionRawInputSource = Extract<DbxLlmFlowSectionInputSource, 'form' | 'parent'>;
+
+/**
+ * Where a section's form is shown.
+ *
+ * - above: in a content pit above the raw input (the default).
+ * - input: in a content pit under the raw input field, inside the input row, so the run buttons beside the field stretch to cover the field and
+ *   the form. Falls back to above when the raw input is hidden.
+ */
+export type DbxLlmFlowSectionFormPlacement = 'above' | 'input';
 
 export interface DbxLlmFlowFromParentOutputInput<F = unknown, P = unknown> {
   readonly parentRun: DbxLlmFlowRun<unknown, P>;
@@ -324,6 +345,13 @@ export interface DbxLlmFlowSectionDisplayConfig {
   readonly runButtons?: Maybe<boolean>;
   readonly history?: Maybe<boolean>;
   readonly output?: Maybe<boolean>;
+  /**
+   * Shows the section's step number in its chain (1 for a root section, plus one per ancestor) in an icon tile before the label, in the
+   * header and in the form pop-out dialog's title.
+   *
+   * On by default.
+   */
+  readonly stepNumber?: Maybe<boolean>;
 }
 
 export interface DbxLlmFlowRunDescription {
@@ -383,6 +411,10 @@ export interface DbxLlmFlowSectionConfig<F = unknown, O = unknown> {
   readonly allowEmptyInput?: Maybe<boolean>;
   readonly rawInput?: Maybe<DbxLlmFlowSectionRawInputConfig>;
   readonly formComponent?: Maybe<Type<unknown>>;
+  /**
+   * Where the form is shown. Defaults to "above".
+   */
+  readonly formPlacement?: Maybe<DbxLlmFlowSectionFormPlacement>;
   /**
    * Whether to bind formComponent to the section automatically. Defaults to true.
    */

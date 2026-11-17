@@ -3,6 +3,7 @@ export * from './llm.flow.state';
 export * from './llm.flow.store';
 export * from './llm.flow.storage';
 export * from './llm.flow.section.store';
+export * from './llm.flow.section.display';
 export * from './llm.flow.directive';
 export * from './llm.flow.section.directive';
 export * from './llm.flow.section.run.directive';

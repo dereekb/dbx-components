@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { type Maybe } from '@dereekb/util';
 import { DBX_LLM_FLOW_RUN_INTERRUPTED_ERROR_CODE, DBX_LLM_FLOW_RUN_NON_JSON_OUTPUT_ERROR_CODE, type DbxLlmFlowAnySectionConfig, type DbxLlmFlowConfig, type DbxLlmFlowRun, type DbxLlmFlowRunKind, type DbxLlmFlowSectionKey, type DbxLlmFlowState } from './llm.flow';
 import {
   type DbxLlmFlowStateContext,
@@ -422,6 +423,24 @@ describe('llm.flow.state', () => {
       flow.state = dbxLlmFlowStateWithRevertedRawInput(flow.state, 'b', flow.context);
       expect(flow.state.sections['b'].draft.rawInput).toBe('outline');
       expect(flow.state.sections['b'].draft.rawInputOverridden).toBe(false);
+      expect(inputSource(flow, 'b')).toBe('parent');
+    });
+
+    it('should name the parent as the source of a form section whose raw input source is "parent"', () => {
+      const optionsB: DbxLlmFlowAnySectionConfig = {
+        key: 'b',
+        parentKey: 'a',
+        hasForm: true,
+        rawInput: { mode: 'readonly', source: 'parent' },
+        toRawInput: (formValue) => (formValue as Maybe<{ text?: string }>)?.text ?? '',
+        fromParentOutput: ({ parentOutput, draft }) => ({ formValue: { ...(draft.formValue as object), text: parentOutput } })
+      };
+
+      const flow = makeFlow([FORM_A, optionsB]);
+      expect(inputSource(flow, 'b')).toBe('none');
+
+      run(flow, 'a', 'a1', 'outline');
+      expect(flow.state.sections['b'].draft.rawInput).toBe('outline');
       expect(inputSource(flow, 'b')).toBe('parent');
     });
 

@@ -22,7 +22,7 @@ import {
   type DbxLlmFlowSectionKey,
   type DbxLlmFlowSectionState
 } from './llm.flow';
-import { dbxLlmFlowSectionInputSource, dbxLlmFlowSectionRawInputMode, dbxLlmFlowSectionSelectedRuns } from './llm.flow.state';
+import { dbxLlmFlowSectionAncestorKeys, dbxLlmFlowSectionInputSource, dbxLlmFlowSectionRawInputMode, dbxLlmFlowSectionSelectedRuns } from './llm.flow.state';
 import { DbxLlmFlowStore, type DbxLlmFlowStoreStartRunResult } from './llm.flow.store';
 
 /**
@@ -123,6 +123,15 @@ export class DbxLlmFlowSectionStore<F = unknown, O = unknown> extends DbxLlmFlow
     map((x) => x?.parentKey),
     distinctUntilChanged(),
     switchMap((parentKey) => (parentKey == null ? of(undefined) : this.flowStore.sectionConfig$(parentKey))),
+    shareReplay(1)
+  );
+
+  /**
+   * The section's step number in its chain: 1 for a root section, plus one per registered ancestor.
+   */
+  readonly stepNumber$: Observable<number> = combineLatest([this.key$, this.flowStore.sections$]).pipe(
+    map(([key, sections]) => dbxLlmFlowSectionAncestorKeys({ sections }, key).length + 1),
+    distinctUntilChanged(),
     shareReplay(1)
   );
 
