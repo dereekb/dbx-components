@@ -54,7 +54,8 @@ so several instances of one transport can be registered side by side.
 - **Readiness.** Three optional seams: `healthCheck` (no network), `credentialProbe` (one free authenticated request)
   and `providerStatus` (account windows and balance). `verifyLlmStrategies` throws when a required strategy is
   missing or not ready; `probeLlmCredentials` and `readLlmProviderStatus` report and never throw (one status read per
-  account).
+  account). The first two read any registry whose strategies carry the two seams; the decision lane's siblings live
+  in `/decision` (see [Strategies](#strategies)).
 - **Quota gate.** `evaluateLlmQuotaGate({ report })` refuses only when a measured window is above the ceiling (90% by
   default) and fails open whenever nothing is measured.
 - **Usage and bills.** `llmUsageFrom(raw, { costBasis })` folds a provider usage block: token counts default to `0`,
@@ -328,6 +329,11 @@ could need in one map.
   `healthCheck` / `credentialProbe` report `LlmStrategyHealth`, the completion lane's verdict.
 - `makeLlmDecisionStrategyRegistry(seed)` — the same id / kind registry; `getBy('kind', k)` is the LAST registered
   instance, `values()[0]` the first.
+- `verifyLlmDecisionStrategies({ strategies, required })` and `probeLlmDecisionCredentials({ strategies, required,
+  signal })` gate launch on the decision backends. They run the completion aggregators over an
+  `LlmDecisionStrategyRegistry` and return the same `LlmStrategiesHealthReport`: verify throws one aggregated error,
+  probe reports and never throws, a strategy without the seam counts as ready, and a throwing seam is recorded as an
+  error issue. Issues and errors name a "decision strategy".
 - `DEFAULT_LLM_DECISION_TIMEOUT_MS` (10s) is declared here and enforced by each transport.
 - `LlmDecisionTransportError` (`status`, `body`) and `isRetryableLlmDecisionError` (429 / 5xx / socket failures,
   never an abort) — the completion lane's retry posture; no retry loop lives here.

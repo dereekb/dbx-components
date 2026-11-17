@@ -112,6 +112,32 @@ describe('verifyLlmStrategies', () => {
     await expect(verifyLlmStrategies({ strategies, required: ['a'] })).rejects.toThrow(/a: healthCheck threw: kaboom/);
   });
 
+  it('calls each seam as a method, so a class-based strategy keeps its `this`', async () => {
+    class ClassStrategy {
+      readonly id = 'a';
+      readonly describe = 'class a';
+      readonly caching = 'none' as const;
+      private readonly verdict: LlmStrategyHealth = { ready: false, issues: [{ severity: 'error', message: 'from this' }] };
+
+      async complete(): Promise<never> {
+        throw new Error('unused');
+      }
+
+      async healthCheck(): Promise<LlmStrategyHealth> {
+        return this.verdict;
+      }
+
+      async credentialProbe(): Promise<LlmStrategyHealth> {
+        return this.verdict;
+      }
+    }
+
+    const strategies = makeLlmStrategyRegistry([new ClassStrategy()]);
+
+    await expect(verifyLlmStrategies({ strategies, required: ['a'] })).rejects.toThrow('required LLM strategy is not ready:\n  - a: from this');
+    expect((await probeLlmCredentials({ strategies, required: ['a'] })).checked[0]?.health.issues[0]?.message).toBe('from this');
+  });
+
   it('aggregates EVERY unready required strategy into one error', async () => {
     const strategies = makeLlmStrategyRegistry([fakeStrategy('a', async () => ({ ready: false, issues: [{ severity: 'error', message: 'aerr' }] })), fakeStrategy('b', async () => ({ ready: false, issues: [{ severity: 'error', message: 'berr' }] }))]);
 

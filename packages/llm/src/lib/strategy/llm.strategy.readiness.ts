@@ -8,14 +8,21 @@
  * - {@link readLlmProviderStatus} — `providerStatus` (account windows and balance, one read per account). Reports,
  *   never throws.
  *
+ * The first two are thin wrappers over a lane-agnostic core ({@link verifyLlmReadiness} /
+ * {@link probeLlmReadinessCredentials}) that reads any registry of strategies carrying the two shared seams, so the
+ * decision lane's siblings (`verifyLlmDecisionStrategies` / `probeLlmDecisionCredentials` in `/decision`) reuse the
+ * same per-strategy verdict logic without this module importing the decision contract.
+ *
  * And the quota gate, {@link evaluateLlmQuotaGate}, which draws the throttle line over a provider-status report.
  */
 
 import { type Maybe, type PercentDecimal } from '@dereekb/util';
 import { type LlmStrategyId } from '../model/llm.value';
 import { type LlmProviderStatus, type LlmProviderStatusProviderId, type LlmQuotaWindow, tightestLlmQuotaWindow } from './llm.provider.status';
+import { type LlmCredentialProbeOptions, type LlmStrategy } from './llm.strategy';
 import { type LlmStrategyHealth } from './llm.strategy.health';
 import { type LlmStrategyRegistry } from './llm.strategy.registry';
+import { type KeyedRegistry } from '../util/keyed.registry';
 
 /**
  * Per-strategy entry in the aggregated readiness report.
@@ -50,18 +57,59 @@ export interface LlmStrategiesHealthReport {
 }
 
 /**
+ * The two readiness seams the aggregators run, as one strategy declares them. `LlmStrategy` and the decision lane's
+ * `LlmDecisionStrategy` declare both with the same signatures and the same {@link LlmStrategyHealth} verdict, so one
+ * aggregator serves either lane.
+ */
+export type LlmReadinessCheckedStrategy = Pick<LlmStrategy, 'healthCheck' | 'credentialProbe'>;
+
+/**
+ * The read side of a strategy registry the readiness aggregators need: the id lookup. Both
+ * {@link LlmStrategyRegistry} and the decision lane's `LlmDecisionStrategyRegistry` satisfy it, so this module never
+ * imports the decision contract.
+ */
+export type LlmReadinessStrategyRegistry = Pick<KeyedRegistry<LlmReadinessCheckedStrategy, LlmStrategyId>, 'get'>;
+
+/**
+ * The wording a readiness aggregator uses for the strategies it checks, in the issues it synthesizes and the error
+ * it throws.
+ */
+export interface LlmReadinessLane {
+  /**
+   * One strategy of this lane — `'LLM strategy'`.
+   */
+  readonly singular: string;
+  /**
+   * Several strategies of this lane — `'LLM strategies'`.
+   */
+  readonly plural: string;
+}
+
+/**
+ * The completion lane's wording, and the default {@link VerifyLlmStrategiesConfig.lane}.
+ */
+export const LLM_STRATEGY_READINESS_LANE: LlmReadinessLane = { singular: 'LLM strategy', plural: 'LLM strategies' };
+
+/**
  * Config for {@link verifyLlmStrategies}.
  */
 export interface VerifyLlmStrategiesConfig {
   /**
    * The registry to check. REQUIRED: there is no shared default to fall back to, and a verify that silently
    * checked an empty table would report a keyless host as ready.
+   *
+   * Typed structurally, so a decision registry is accepted too; `verifyLlmDecisionStrategies` (in `/decision`) is
+   * the decision lane's named entry and words its report for that lane.
    */
-  readonly strategies: LlmStrategyRegistry;
+  readonly strategies: LlmReadinessStrategyRegistry;
   /**
    * The ids that MUST be ready. Empty ⇒ no-op (resolves a ready, empty report; touches no strategy).
    */
   readonly required: ReadonlyArray<LlmStrategyId>;
+  /**
+   * The wording for the synthesized issues and the thrown error. Defaults to {@link LLM_STRATEGY_READINESS_LANE}.
+   */
+  readonly lane?: LlmReadinessLane;
   /**
    * Optional hook handed the FULL report (errors + warnings) BEFORE any throw — for host-side logging.
    *
@@ -82,37 +130,60 @@ function errorText(error: unknown): string {
 }
 
 /**
- * Run each REQUIRED strategy's `LlmStrategy.healthCheck` and FAIL LOUDLY (throw one aggregated error)
- * when any required backend is missing or not ready — a startup gate, instead of a lazy throw mid-run.
- * A required id that is unregistered, or whose healthCheck returns `ready:false`, blocks; a strategy with no
- * healthCheck is treated as ready (the seam is opt-in). Defensive: a contract-violating healthCheck throw is
- * caught and recorded as an error issue (never propagated raw). `onReport` (if given) sees the full report —
- * including warnings on ready strategies — on BOTH paths, before any throw. An empty required set is a true
- * no-op (no strategy touched) ⇒ resolves `{ ready: true, checked: [] }`.
- *
- * @param config - The registry, required ids, and optional report hook.
- * @returns The aggregated readiness report (on success).
+ * One readiness seam, as {@link checkLlmReadinessSeam} runs it.
  */
-export async function verifyLlmStrategies(config: VerifyLlmStrategiesConfig): Promise<LlmStrategiesHealthReport> {
-  const registry = config.strategies;
+interface LlmReadinessSeamCheck {
+  /**
+   * The seam's member name, quoted when a contract-violating call throws.
+   */
+  readonly name: 'healthCheck' | 'credentialProbe';
+  /**
+   * Run the seam on one strategy, as a method call.
+   *
+   * @param strategy - The registered strategy.
+   * @returns The pending verdict, or `undefined` when the strategy does not declare the seam.
+   */
+  readonly run: (strategy: LlmReadinessCheckedStrategy) => Maybe<Promise<LlmStrategyHealth>>;
+}
+
+/**
+ * Config for {@link checkLlmReadinessSeam}.
+ */
+interface CheckLlmReadinessSeamConfig {
+  readonly strategies: LlmReadinessStrategyRegistry;
+  readonly required: ReadonlyArray<LlmStrategyId>;
+  readonly lane: LlmReadinessLane;
+  readonly seam: LlmReadinessSeamCheck;
+}
+
+/**
+ * The per-strategy verdict logic both aggregators share, in required-id order: an unregistered id is a synthesized
+ * `ready:false`, a strategy without the seam is ready (the seam is opt-in), and a contract-violating throw is caught
+ * and recorded as an error issue (never propagated raw).
+ *
+ * @param config - The registry, the required ids, the lane wording and the seam to run.
+ * @returns One report entry per required id.
+ */
+async function checkLlmReadinessSeam(config: CheckLlmReadinessSeamConfig): Promise<ReadonlyArray<LlmStrategyHealthReport>> {
+  const { strategies, required, lane, seam } = config;
   const checked: LlmStrategyHealthReport[] = [];
 
-  for (const id of config.required) {
-    const strategy = registry.get(id);
+  for (const id of required) {
+    const strategy = strategies.get(id);
     let entry: LlmStrategyHealthReport;
 
     if (strategy == null) {
-      entry = { id, registered: false, health: { ready: false, issues: [{ severity: 'error', message: `no LLM strategy registered for '${id}'` }] } };
-    } else if (strategy.healthCheck == null) {
-      entry = { id, registered: true, health: { ready: true, issues: [] } };
+      entry = { id, registered: false, health: { ready: false, issues: [{ severity: 'error', message: `no ${lane.singular} registered for '${id}'` }] } };
     } else {
       let health: LlmStrategyHealth;
 
       try {
-        health = await strategy.healthCheck();
+        const pending = seam.run(strategy);
+        health = pending == null ? { ready: true, issues: [] } : await pending;
       } catch (error) {
-        // The contract says healthCheck never throws; be robust anyway and record the violation as an error.
-        health = { ready: false, issues: [{ severity: 'error', message: `healthCheck threw: ${errorText(error)}` }] };
+        // The contract says neither seam throws; be robust anyway and record the violation as an error. The verdict
+        // IS the report, so a caller sees the violation instead of a raw rejection.
+        health = { ready: false, issues: [{ severity: 'error', message: `${seam.name} threw: ${errorText(error)}` }] };
       }
 
       entry = { id, registered: true, health };
@@ -121,6 +192,24 @@ export async function verifyLlmStrategies(config: VerifyLlmStrategiesConfig): Pr
     checked.push(entry);
   }
 
+  return checked;
+}
+
+/**
+ * Run each REQUIRED strategy's `LlmStrategy.healthCheck` and FAIL LOUDLY (throw one aggregated error)
+ * when any required backend is missing or not ready — a startup gate, instead of a lazy throw mid-run.
+ * A required id that is unregistered, or whose healthCheck returns `ready:false`, blocks; a strategy with no
+ * healthCheck is treated as ready (the seam is opt-in). Defensive: a contract-violating healthCheck throw is
+ * caught and recorded as an error issue (never propagated raw). `onReport` (if given) sees the full report —
+ * including warnings on ready strategies — on BOTH paths, before any throw. An empty required set is a true
+ * no-op (no strategy touched) ⇒ resolves `{ ready: true, checked: [] }`.
+ *
+ * @param config - The registry, required ids, optional lane wording, and optional report hook.
+ * @returns The aggregated readiness report (on success).
+ */
+export async function verifyLlmStrategies(config: VerifyLlmStrategiesConfig): Promise<LlmStrategiesHealthReport> {
+  const lane = config.lane ?? LLM_STRATEGY_READINESS_LANE;
+  const checked = await checkLlmReadinessSeam({ strategies: config.strategies, required: config.required, lane, seam: { name: 'healthCheck', run: (strategy) => strategy.healthCheck?.() } });
   const ready = checked.every((entry) => entry.health.ready);
   const report: LlmStrategiesHealthReport = { ready, checked };
   config.onReport?.(report);
@@ -135,7 +224,8 @@ export async function verifyLlmStrategies(config: VerifyLlmStrategiesConfig): Pr
             .map((issue) => issue.message)
             .join('; ')}`
       );
-    throw new Error(`required LLM strateg${checked.length === 1 ? 'y is' : 'ies are'} not ready:\n${lines.join('\n')}`);
+    const subject = checked.length === 1 ? `${lane.singular} is` : `${lane.plural} are`;
+    throw new Error(`required ${subject} not ready:\n${lines.join('\n')}`);
   }
 
   return report;
@@ -146,13 +236,18 @@ export async function verifyLlmStrategies(config: VerifyLlmStrategiesConfig): Pr
  */
 export interface ProbeLlmCredentialsConfig {
   /**
-   * The registry to probe. REQUIRED, for {@link VerifyLlmStrategiesConfig.strategies}' reason.
+   * The registry to probe. REQUIRED, for {@link VerifyLlmStrategiesConfig.strategies}' reason; typed structurally
+   * for the same reason too (`probeLlmDecisionCredentials` is the decision lane's named entry).
    */
-  readonly strategies: LlmStrategyRegistry;
+  readonly strategies: LlmReadinessStrategyRegistry;
   /**
    * The ids whose CREDENTIALS to verify. Empty ⇒ no-op (resolves a ready, empty report; opens no socket).
    */
   readonly required: ReadonlyArray<LlmStrategyId>;
+  /**
+   * The wording for the synthesized issues. Defaults to {@link LLM_STRATEGY_READINESS_LANE}.
+   */
+  readonly lane?: LlmReadinessLane;
   /**
    * An EXTERNAL cancellation signal threaded to every probe.
    */
@@ -177,39 +272,12 @@ export interface ProbeLlmCredentialsConfig {
  * A required id that is unregistered reports `ready:false`; a strategy with no `credentialProbe` is treated as
  * ready (the seam is opt-in, exactly as with `healthCheck`).
  *
- * @param config - The registry, the ids to probe, and optional cancellation / report hook.
+ * @param config - The registry, the ids to probe, optional lane wording, and optional cancellation / report hook.
  * @returns The aggregated credential report.
  */
 export async function probeLlmCredentials(config: ProbeLlmCredentialsConfig): Promise<LlmStrategiesHealthReport> {
-  const registry = config.strategies;
-  const options = config.signal == null ? undefined : { signal: config.signal };
-  const checked: LlmStrategyHealthReport[] = [];
-
-  for (const id of config.required) {
-    const strategy = registry.get(id);
-    let entry: LlmStrategyHealthReport;
-
-    if (strategy == null) {
-      entry = { id, registered: false, health: { ready: false, issues: [{ severity: 'error', message: `no LLM strategy registered for '${id}'` }] } };
-    } else if (strategy.credentialProbe == null) {
-      entry = { id, registered: true, health: { ready: true, issues: [] } };
-    } else {
-      let health: LlmStrategyHealth;
-
-      try {
-        health = await strategy.credentialProbe(options);
-      } catch (error) {
-        // The contract says credentialProbe never throws; be robust anyway and record the violation as an
-        // error. Health channel: the verdict IS the report, and this function never propagates.
-        health = { ready: false, issues: [{ severity: 'error', message: `credentialProbe threw: ${errorText(error)}` }] };
-      }
-
-      entry = { id, registered: true, health };
-    }
-
-    checked.push(entry);
-  }
-
+  const options: Maybe<LlmCredentialProbeOptions> = config.signal == null ? undefined : { signal: config.signal };
+  const checked = await checkLlmReadinessSeam({ strategies: config.strategies, required: config.required, lane: config.lane ?? LLM_STRATEGY_READINESS_LANE, seam: { name: 'credentialProbe', run: (strategy) => strategy.credentialProbe?.(options) } });
   const report: LlmStrategiesHealthReport = { ready: checked.every((entry) => entry.health.ready), checked };
   config.onReport?.(report);
   return report;
