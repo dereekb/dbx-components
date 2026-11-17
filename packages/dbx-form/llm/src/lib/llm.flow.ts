@@ -152,6 +152,10 @@ export interface DbxLlmFlowSectionState<F = unknown> {
   readonly followedParentRunId?: Maybe<DbxLlmFlowRunId>;
   readonly lastFailedRunId?: Maybe<DbxLlmFlowRunId>;
   /**
+   * Whether the section is collapsed to its header. Persisted, and kept by a reset (it is layout, not content).
+   */
+  readonly collapsed?: Maybe<boolean>;
+  /**
    * Message of the last raw input parse failure.
    */
   readonly rawInputParseError?: Maybe<string>;

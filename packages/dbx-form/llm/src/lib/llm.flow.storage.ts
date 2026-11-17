@@ -30,6 +30,10 @@ export interface DbxLlmFlowPersistedSection {
   readonly selectedRunIds: readonly DbxLlmFlowRunId[];
   readonly followedParentRunId?: Maybe<DbxLlmFlowRunId>;
   readonly lastFailedRunId?: Maybe<DbxLlmFlowRunId>;
+  /**
+   * Only written when the section is collapsed.
+   */
+  readonly collapsed?: Maybe<boolean>;
 }
 
 /**
@@ -69,7 +73,15 @@ export function dbxLlmFlowPersistedStateFromState(state: DbxLlmFlowState, config
     section.selectedRunIds.forEach(keepWithLineage);
     keepWithLineage(section.followedParentRunId);
     keepWithLineage(section.lastFailedRunId);
-    sections[section.key] = { key: section.key, parentKey: section.parentKey, draft: section.draft, selectedRunIds: section.selectedRunIds, followedParentRunId: section.followedParentRunId, lastFailedRunId: section.lastFailedRunId };
+    sections[section.key] = {
+      key: section.key,
+      parentKey: section.parentKey,
+      draft: section.draft,
+      selectedRunIds: section.selectedRunIds,
+      followedParentRunId: section.followedParentRunId,
+      lastFailedRunId: section.lastFailedRunId,
+      ...(section.collapsed ? { collapsed: true } : undefined)
+    };
   }
 
   for (const run of Object.values(state.runs)) {
@@ -139,7 +151,7 @@ export interface DbxLlmFlowResetInput {
 }
 
 /**
- * Resets every section to its initial draft and drops every run and run request. Mount counts and run bridges are kept, and every revision bumps so forms re-seed.
+ * Resets every section to its initial draft and drops every run and run request. Mount counts, run bridges and the collapsed state are kept, and every revision bumps so forms re-seed.
  *
  * A run that finishes after the reset is dropped, since its run no longer exists.
  *
@@ -152,7 +164,8 @@ export function dbxLlmFlowStateWithReset(state: DbxLlmFlowState, input: DbxLlmFl
   const sections: Record<DbxLlmFlowSectionKey, DbxLlmFlowSectionState> = {};
 
   for (const section of Object.values(state.sections)) {
-    sections[section.key] = sectionWithRuntimeFields(initialDbxLlmFlowSectionState(section.key, section.parentKey, context.sectionConfig(section.key)), section, context);
+    const initial = initialDbxLlmFlowSectionState(section.key, section.parentKey, context.sectionConfig(section.key));
+    sections[section.key] = sectionWithRuntimeFields({ ...initial, collapsed: section.collapsed }, section, context);
   }
 
   return { sections, runs: {}, runRequests: {}, restoring: input.restoring, storageKey: input.storageKey ?? undefined };
@@ -185,7 +198,9 @@ export function dbxLlmFlowStateWithRestoredPersistedState(state: DbxLlmFlowState
       draft: saved?.draft ?? initial.draft,
       selectedRunIds: (saved?.selectedRunIds ?? []).filter((id) => runs[id]?.state === 'success'),
       followedParentRunId: existingRunId(saved?.followedParentRunId),
-      lastFailedRunId: existingRunId(saved?.lastFailedRunId)
+      lastFailedRunId: existingRunId(saved?.lastFailedRunId),
+      // a section with nothing saved keeps its current layout
+      collapsed: saved == null ? current?.collapsed : saved.collapsed === true || undefined
     };
 
     sections[key] = sectionWithRuntimeFields(base, current, context);

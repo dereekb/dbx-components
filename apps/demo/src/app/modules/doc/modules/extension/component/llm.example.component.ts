@@ -3,7 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { AbstractSyncForgeFormDirective, DBX_FORGE_FORM_COMPONENT_TEMPLATE, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule, dbxForgeNumberField, dbxForgeRow, dbxForgeTextAreaField, dbxForgeTextField, dbxForgeValueSelectionField } from '@dereekb/dbx-form';
 import { DbxLlmFlowSectionFormBindingTarget, type DbxLlmFlowRun, type DbxLlmFlowRunValue, DbxLlmFlowSectionStore } from '@dereekb/dbx-form/llm';
 import { cleanSubscription } from '@dereekb/dbx-core';
-import { DbxButtonComponent, type DbxGalleryConfig, DbxGalleryComponent } from '@dereekb/dbx-web';
+import { DbxButtonComponent, DbxButtonSpacerDirective, type DbxGalleryConfig, DbxGalleryComponent } from '@dereekb/dbx-web';
 import { successResult, type Work } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
@@ -111,11 +111,14 @@ export const DOC_EXTENSION_LLM_MOODS = ['calm', 'tense', 'bright', 'moody', 'epi
     <div class="dbx-label dbx-small">Moods (a custom input on the binding contract)</div>
     <div class="dbx-flex-bar">
       @for (mood of moods; track mood) {
+        @if (!$first) {
+          <dbx-button-spacer></dbx-button-spacer>
+        }
         <dbx-button [text]="mood" [disabled]="lockedSignal()" [buttonStyle]="selectedMoodsSignal().has(mood) ? selectedStyle : unselectedStyle" (buttonClick)="toggleMood(mood)"></dbx-button>
       }
     </div>
   `,
-  imports: [DbxButtonComponent]
+  imports: [DbxButtonComponent, DbxButtonSpacerDirective]
 })
 export class DocExtensionLlmMoodInputComponent {
   readonly target = inject(DbxLlmFlowSectionFormBindingTarget<DocExtensionLlmMoodValue>);

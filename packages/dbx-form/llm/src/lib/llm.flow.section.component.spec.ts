@@ -205,6 +205,7 @@ describe('DbxLlmFlowSectionComponent', () => {
       expect(briefElement().querySelector('.dbx-llm-flow-section-body dbx-test-llm-section-form')).not.toBeNull(); // hidden, not destroyed
       expect(briefElement().querySelector('.dbx-llm-flow-section-body dbx-llm-flow-section-run-buttons')).not.toBeNull();
       expect(isCollapsed(outlineElement())).toBe(false); // per section
+      expect(brief().sectionStore.section?.collapsed).toBe(true); // kept in the flow state, so it is persisted
 
       collapseButton(briefElement())?.click();
       await settle();

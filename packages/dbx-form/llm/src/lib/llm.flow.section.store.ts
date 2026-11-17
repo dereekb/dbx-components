@@ -68,11 +68,6 @@ export class DbxLlmFlowSectionStore<F = unknown, O = unknown> extends DbxLlmFlow
   readonly formVisible = signal(true);
 
   /**
-   * Whether the section is collapsed to its header.
-   */
-  readonly collapsed = signal(false);
-
-  /**
    * The open form pop-out, if any.
    */
   readonly popout = signal<Maybe<DbxLlmFlowSectionFormPopoutMode>>(undefined);
@@ -87,6 +82,14 @@ export class DbxLlmFlowSectionStore<F = unknown, O = unknown> extends DbxLlmFlow
   readonly section$: Observable<Maybe<DbxLlmFlowSectionState<F>>> = this.key$.pipe(
     switchMap((key) => this.flowStore.section$(key) as Observable<Maybe<DbxLlmFlowSectionState<F>>>),
     shareReplay(1)
+  );
+
+  /**
+   * Whether the section is collapsed to its header. Kept in the flow state, so it is persisted with the flow.
+   */
+  readonly collapsed$: Observable<boolean> = this.section$.pipe(
+    map((x) => x?.collapsed === true),
+    distinctUntilChanged()
   );
 
   readonly draft$: Observable<Maybe<DbxLlmFlowSectionInput<F>>> = this.section$.pipe(
@@ -438,11 +441,11 @@ export class DbxLlmFlowSectionStore<F = unknown, O = unknown> extends DbxLlmFlow
   }
 
   setCollapsed(collapsed: boolean): void {
-    this.collapsed.set(collapsed);
+    this.flowStore.setCollapsed(this.key, collapsed);
   }
 
   toggleCollapsed(): void {
-    this.collapsed.update((x) => !x);
+    this.setCollapsed(this.section?.collapsed !== true);
   }
 
   /**

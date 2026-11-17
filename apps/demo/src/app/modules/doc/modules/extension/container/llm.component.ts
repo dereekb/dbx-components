@@ -2,7 +2,7 @@ import { Component, computed, signal, viewChild } from '@angular/core';
 import { JsonPipe } from '@angular/common';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { dbxForgeNumberField } from '@dereekb/dbx-form';
-import { DbxButtonComponent, DbxContentContainerDirective, DbxContentPitDirective, DbxFlexGroupDirective, DbxFlexSizeDirective } from '@dereekb/dbx-web';
+import { DbxButtonComponent, DbxButtonSpacerDirective, DbxContentContainerDirective, DbxContentPitDirective, DbxFlexGroupDirective, DbxFlexSizeDirective } from '@dereekb/dbx-web';
 import { type DbxLlmFlowConfig, DbxLlmFlowComponent, DbxLlmFlowDirective, type DbxLlmFlowRun, type DbxLlmFlowRunId, DbxLlmFlowSectionComponent, type DbxLlmFlowSectionConfig, type DbxLlmFlowState, defaultDbxLlmFlowToRawInput } from '@dereekb/dbx-form/llm';
 import { type Maybe } from '@dereekb/util';
 import { map, of, switchMap } from 'rxjs';
@@ -233,7 +233,7 @@ export type DocExtensionLlmWorld = 'north' | 'south';
 
 @Component({
   templateUrl: './llm.component.html',
-  imports: [DbxContentContainerDirective, DbxContentPitDirective, DbxButtonComponent, DbxFlexGroupDirective, DbxFlexSizeDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxLlmFlowComponent, DbxLlmFlowDirective, DbxLlmFlowSectionComponent, JsonPipe]
+  imports: [DbxContentContainerDirective, DbxContentPitDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxFlexGroupDirective, DbxFlexSizeDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxLlmFlowComponent, DbxLlmFlowDirective, DbxLlmFlowSectionComponent, JsonPipe]
 })
 export class DocExtensionLlmComponent {
   readonly chainFlow = viewChild(DbxLlmFlowComponent);

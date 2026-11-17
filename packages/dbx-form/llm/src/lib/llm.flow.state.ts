@@ -1110,6 +1110,23 @@ export function dbxLlmFlowStateWithFormValid(state: DbxLlmFlowState, input: DbxL
   return section != null && !isSameMaybe(section.formValid, input.valid) ? { ...state, sections: { ...state.sections, [input.key]: { ...section, formValid: input.valid } } } : state;
 }
 
+export interface DbxLlmFlowSetCollapsedInput {
+  readonly key: DbxLlmFlowSectionKey;
+  readonly collapsed: boolean;
+}
+
+/**
+ * Sets whether a section is collapsed to its header.
+ *
+ * @param state - The state.
+ * @param input - The collapsed state.
+ * @returns The new state.
+ */
+export function dbxLlmFlowStateWithCollapsed(state: DbxLlmFlowState, input: DbxLlmFlowSetCollapsedInput): DbxLlmFlowState {
+  const section = state.sections[input.key];
+  return section != null && Boolean(section.collapsed) !== input.collapsed ? { ...state, sections: { ...state.sections, [input.key]: { ...section, collapsed: input.collapsed } } } : state;
+}
+
 export interface DbxLlmFlowPasteRawInputInput {
   readonly key: DbxLlmFlowSectionKey;
   readonly rawInput: string;

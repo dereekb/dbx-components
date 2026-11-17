@@ -43,6 +43,7 @@ const STATUS_COLOR: Record<DbxLlmFlowSectionStatus, Maybe<DbxThemeColor>> = {
  *
  * The collapse button at the end of the header's button row (the display's collapse option, on by default) collapses the section to its
  * header. The hint and the body are hidden with CSS, not destroyed, so a running action, the form binding and the raw input keep their state.
+ * The collapsed state is kept in the flow state, so a persisted flow restores it.
  *
  * Registers the section through its DbxLlmFlowSectionDirective host directive. Content projected with dbxLlmFlowSectionOutput replaces the
  * default output, and can inject the DbxLlmFlowSectionStore.
@@ -163,6 +164,7 @@ export class DbxLlmFlowSectionComponent implements DbxLlmFlowSectionDisplay {
   readonly configSignal = toSignal(this.sectionStore.config$);
   readonly statusSignal = toSignal(this.sectionStore.status$, { initialValue: 'idle' as DbxLlmFlowSectionStatus });
   readonly formHiddenSignal = toSignal(this.sectionStore.formHidden$, { initialValue: false });
+  readonly collapsedStateSignal = toSignal(this.sectionStore.collapsed$, { initialValue: false });
   readonly lastFailedRunSignal = toSignal(this.sectionStore.lastFailedRun$);
   readonly stepNumberSignal = toSignal(this.sectionStore.stepNumber$, { initialValue: 1 });
   readonly formComponentSignal = toSignal(this.sectionStore.config$.pipe(map((x) => x?.formComponent)));
@@ -177,7 +179,7 @@ export class DbxLlmFlowSectionComponent implements DbxLlmFlowSectionDisplay {
    */
   readonly collapsedSignal = computed(() => {
     const display = this.displaySignal();
-    const collapsed = this.sectionStore.collapsed();
+    const collapsed = this.collapsedStateSignal();
     return display.header && display.collapse && collapsed;
   });
   readonly showActionsRowSignal = computed(() => {

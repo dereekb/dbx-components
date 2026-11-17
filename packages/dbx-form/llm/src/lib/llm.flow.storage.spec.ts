@@ -5,8 +5,8 @@ import { type Maybe } from '@dereekb/util';
 import { BehaviorSubject, firstValueFrom, type Observable, throwError } from 'rxjs';
 import { DBX_LLM_FLOW_RUN_INTERRUPTED_ERROR_CODE, type DbxLlmFlowAnySectionConfig, type DbxLlmFlowRun, type DbxLlmFlowState } from './llm.flow';
 import { DbxLlmFlowStore } from './llm.flow.store';
-import { type DbxLlmFlowPersistedState, DbxLlmFlowStorageSync, dbxLlmFlowPersistedStateFromState, dbxLlmFlowStateWithRestoredPersistedState } from './llm.flow.storage';
-import { initialDbxLlmFlowState } from './llm.flow.state';
+import { type DbxLlmFlowPersistedState, DbxLlmFlowStorageSync, dbxLlmFlowPersistedStateFromState, dbxLlmFlowStateWithReset, dbxLlmFlowStateWithRestoredPersistedState } from './llm.flow.storage';
+import { dbxLlmFlowStateWithCollapsed, initialDbxLlmFlowState } from './llm.flow.state';
 
 const SECTION: DbxLlmFlowAnySectionConfig = { key: 's', hasForm: true, initialDraft: { formValue: { topic: 'initial' } } };
 
@@ -82,6 +82,63 @@ describe('dbxLlmFlowStateWithRestoredPersistedState()', () => {
   it('should restore a blank state from an unknown version', () => {
     const result = dbxLlmFlowStateWithRestoredPersistedState(initialDbxLlmFlowState(), { v: 2 } as unknown as DbxLlmFlowPersistedState, { now: new Date(), sectionConfig: () => undefined, nextRequestId: () => 1 });
     expect(result.runs).toEqual({});
+  });
+});
+
+describe('collapsed sections', () => {
+  const context = { now: new Date(100), sectionConfig: () => undefined, nextRequestId: () => 1 };
+
+  function stateWithSections(collapsed: Record<string, boolean>): DbxLlmFlowState {
+    const sections: DbxLlmFlowState['sections'] = {};
+
+    for (const [key, value] of Object.entries(collapsed)) {
+      sections[key] = { key, draft: { rawInput: '' }, selectedRunIds: [], draftRevision: 0, mountCount: 1, collapsed: value || undefined };
+    }
+
+    return { ...initialDbxLlmFlowState(), sections };
+  }
+
+  it('should set the collapsed state, keeping the same state when it does not change', () => {
+    const state = stateWithSections({ a: false });
+    const collapsed = dbxLlmFlowStateWithCollapsed(state, { key: 'a', collapsed: true });
+
+    expect(collapsed.sections['a'].collapsed).toBe(true);
+    expect(dbxLlmFlowStateWithCollapsed(collapsed, { key: 'a', collapsed: true })).toBe(collapsed);
+    expect(dbxLlmFlowStateWithCollapsed(state, { key: 'a', collapsed: false })).toBe(state);
+    expect(dbxLlmFlowStateWithCollapsed(state, { key: 'missing', collapsed: true })).toBe(state);
+    expect(dbxLlmFlowStateWithCollapsed(collapsed, { key: 'a', collapsed: false }).sections['a'].collapsed).toBe(false);
+  });
+
+  it('should persist only the collapsed sections', () => {
+    const persisted = dbxLlmFlowPersistedStateFromState(stateWithSections({ a: true, b: false }));
+
+    expect(persisted.sections['a'].collapsed).toBe(true);
+    expect('collapsed' in persisted.sections['b']).toBe(false);
+  });
+
+  it('should restore the saved collapsed state, and keep the current one for a section with nothing saved', () => {
+    const current = stateWithSections({ a: false, b: true, c: true });
+    const persisted: DbxLlmFlowPersistedState = {
+      v: 1,
+      sections: {
+        a: { key: 'a', draft: { rawInput: '' }, selectedRunIds: [], collapsed: true },
+        b: { key: 'b', draft: { rawInput: '' }, selectedRunIds: [] }
+      },
+      runs: {}
+    };
+
+    const result = dbxLlmFlowStateWithRestoredPersistedState(current, persisted, context);
+
+    expect(result.sections['a'].collapsed).toBe(true);
+    expect(result.sections['b'].collapsed).toBeFalsy();
+    expect(result.sections['c'].collapsed).toBe(true);
+  });
+
+  it('should keep the collapsed state through a reset', () => {
+    const result = dbxLlmFlowStateWithReset(stateWithSections({ a: true, b: false }), { restoring: false }, context);
+
+    expect(result.sections['a'].collapsed).toBe(true);
+    expect(result.sections['b'].collapsed).toBeFalsy();
   });
 });
 

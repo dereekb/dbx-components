@@ -37,6 +37,7 @@ import {
   dbxLlmFlowStateWithDraftFormValue,
   dbxLlmFlowStateWithFailedRun,
   dbxLlmFlowStateWithFormValid,
+  dbxLlmFlowStateWithCollapsed,
   dbxLlmFlowStateWithImportedRuns,
   dbxLlmFlowStateWithLoadedRun,
   dbxLlmFlowStateWithPastedRawInput,
@@ -309,6 +310,16 @@ export class DbxLlmFlowStore extends ComponentStore<DbxLlmFlowState> {
 
   setFormValid(key: DbxLlmFlowSectionKey, valid: Maybe<boolean>): void {
     this._updateState((state) => dbxLlmFlowStateWithFormValid(state, { key, valid }));
+  }
+
+  /**
+   * Collapses a section to its header, or expands it. Persisted with the flow.
+   *
+   * @param key - The section key.
+   * @param collapsed - Whether the section is collapsed.
+   */
+  setCollapsed(key: DbxLlmFlowSectionKey, collapsed: boolean): void {
+    this._updateState((state) => dbxLlmFlowStateWithCollapsed(state, { key, collapsed }));
   }
 
   /**
