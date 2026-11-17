@@ -1,7 +1,7 @@
 import { Directive, input } from '@angular/core';
 
 /**
- * Applies elevation (box-shadow) styling to the host element, giving it a raised card appearance.
+ * Applies elevated styling to the host element: a raised tonal surface (`surface-bright` with a wash of the active dbxColor), with no shadow.
  * Elevation is enabled by default and can be toggled off.
  *
  * @dbxWebComponent

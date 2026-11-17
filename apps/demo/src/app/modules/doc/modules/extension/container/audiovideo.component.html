@@ -85,12 +85,32 @@
         <dbx-button-spacer></dbx-button-spacer>
         <dbx-button [text]="'Controls: ' + galleryBottomSlotMode()" stroked (buttonClick)="galleryBottomSlotMode.set(toggleSlotMode(galleryBottomSlotMode()))"></dbx-button>
       </div>
+      <div class="dbx-pb3">
+        @for (option of galleryItemMinWidthOptions; track option.value) {
+          <dbx-button [text]="option.label" [raised]="galleryItemMinWidth() === option.value" (buttonClick)="galleryItemMinWidth.set(option.value)"></dbx-button>
+          <dbx-button-spacer></dbx-button-spacer>
+        }
+        @for (option of galleryColumnsOptions; track option.label) {
+          <dbx-button [text]="option.label" [raised]="galleryColumns() === option.value" (buttonClick)="galleryColumns.set(option.value)"></dbx-button>
+          <dbx-button-spacer></dbx-button-spacer>
+        }
+      </div>
+      <p class="dbx-hint">itemMinWidth: {{ galleryItemMinWidth() }}, columns: {{ galleryColumns() ?? 'auto' }}. Items grow to share the row, and the row drops to fewer columns when items would be narrower than itemMinWidth.</p>
       <dbx-detail-block icon="check_circle" header="Selection">
         <p>Selected: {{ selectionStore.selectedValueSignal()?.name ?? 'None' }}</p>
         <p>Previously selected: {{ selectionStore.previousValueSignal()?.name ?? 'None' }}</p>
         <p class="dbx-hint">Last selectionChange: {{ lastSelectionChange()?.previous?.value?.name ?? 'None' }} → {{ lastSelectionChange()?.selected?.value?.name ?? 'None' }}</p>
       </dbx-detail-block>
-      <dbx-gallery [state]="galleryStateSignal()" [galleryConfig]="galleryConfig" [topSlotMode]="galleryTopSlotMode()" [bottomSlotMode]="galleryBottomSlotMode()" dbxListItemModifier dbxListItemSingleSelectionModifier (selectionChange)="onSelectionChange($event)"></dbx-gallery>
+      <dbx-gallery
+        [state]="galleryStateSignal()"
+        [galleryConfig]="galleryConfig"
+        [topSlotMode]="galleryTopSlotMode()"
+        [bottomSlotMode]="galleryBottomSlotMode()"
+        [itemMinWidth]="galleryItemMinWidth()"
+        [columns]="galleryColumns()"
+        dbxListItemModifier
+        dbxListItemSingleSelectionModifier
+        (selectionChange)="onSelectionChange($event)"></dbx-gallery>
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

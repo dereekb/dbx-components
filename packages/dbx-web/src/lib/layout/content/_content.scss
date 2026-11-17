@@ -33,7 +33,7 @@ $dbx-border-opacity-default: 20%;
   }
 
   /// @dbx-utility content-elevate
-  /// @intent padded content surface lifted above its surroundings — the mirror of `.dbx-content-pit`. Per Material 3, elevation is communicated primarily with color (the brightest `surface-bright` tone, always lighter than the pit's `surface-dim` in both light and dark) plus a soft lift shadow for protection against the background, so it reads as raised and stays clearly distinct from the recessed pit. Tonal by default — a low-opacity wash of the active dbxColor over `surface-bright`; rounded by default, opt out with `.dbx-corners-none`. Override `--dbx-content-elevate-tone` (percentage) to tune the wash, `--dbx-content-elevate-bg` to replace the background outright, or `--dbx-content-elevate-shadow` to retune/remove (`none`) the shadow.
+  /// @intent padded content surface lifted above its surroundings — the mirror of `.dbx-content-pit`. Elevation is communicated with color alone (the brightest `surface-bright` tone, always lighter than the pit's `surface-dim` in both light and dark), with no shadow, so it reads as raised and stays clearly distinct from the recessed pit. Tonal by default — a low-opacity wash of the active dbxColor over `surface-bright`; rounded by default, opt out with `.dbx-corners-none`. Override `--dbx-content-elevate-tone` (percentage) to tune the wash, or `--dbx-content-elevate-bg` to replace the background outright.
   /// @role layout
   /// @see-also dbx-content-border, dbx-content-pit, dbx-corners-none
   .dbx-content-elevate {
@@ -297,16 +297,13 @@ $dbx-border-opacity-default: 20%;
   // Elevated surface ("positive elevation"): the tonal mirror of the pit. It sits on
   // `surface-bright` — the brightest M3 surface tone — so it reads lighter than its surroundings
   // (and always lighter than the pit's `surface-dim`, in BOTH themes, since dim/bright are the one
-  // M3 pairing with a stable luminance ordering). It also carries a soft M3 shadow: per M3 the lift
-  // is communicated primarily with color, and the subtle shadow is the sanctioned "protection
-  // against a background" that sells the raise. Tonal by default — a low-opacity wash of the active
+  // M3 pairing with a stable luminance ordering). The lift is communicated with color only — no
+  // shadow. Tonal by default — a low-opacity wash of the active
   // dbxColor (`--dbx-bg-color-current`, primary by default, driven by an ancestor/host `[dbxColor]`)
-  // over `surface-bright`. Override `--dbx-content-elevate-tone` (percentage) to tune the wash,
-  // `--dbx-content-elevate-bg` to replace the background outright, or `--dbx-content-elevate-shadow`
-  // to retune/remove (`none`) the lift shadow.
+  // over `surface-bright`. Override `--dbx-content-elevate-tone` (percentage) to tune the wash, or
+  // `--dbx-content-elevate-bg` to replace the background outright.
   .dbx-content-elevate {
     background: var(--dbx-content-elevate-bg, color-mix(in srgb, #{theming.$dbx-bg-color} var(--dbx-content-elevate-tone, 8%), var(--mat-sys-surface-bright)));
-    box-shadow: var(--dbx-content-elevate-shadow, var(--mat-sys-level1));
   }
 
   .dbx-content-border {

@@ -47,14 +47,27 @@ describe('DbxAudioVideoPlaybackStore', () => {
     expect(store.playingSignal()).toEqual(['b']);
   });
 
-  it('should pause the newest media in pause_newest mode', () => {
+  it('should keep the started media playing in pause_newest mode', () => {
     store.setOverflowMode('pause_newest');
     store.notifyPlaying('a');
     store.notifyPlaying('b');
 
+    expect(a.pause).toHaveBeenCalledTimes(1);
+    expect(b.pause).not.toHaveBeenCalled();
+    expect(store.playingSignal()).toEqual(['b']);
+  });
+
+  it('should pause the newest other media in pause_newest mode', () => {
+    store.setOverflowMode('pause_newest');
+    store.setMaxPlaying(2);
+    store.notifyPlaying('a');
+    store.notifyPlaying('b');
+    store.notifyPlaying('c');
+
     expect(a.pause).not.toHaveBeenCalled();
     expect(b.pause).toHaveBeenCalledTimes(1);
-    expect(store.playingSignal()).toEqual(['a']);
+    expect(c.pause).not.toHaveBeenCalled();
+    expect(store.playingSignal()).toEqual(['a', 'c']);
   });
 
   it('should allow up to maxPlaying media', () => {

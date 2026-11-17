@@ -25,7 +25,7 @@ import {
   DEFAULT_DBX_IMAGE_HOVER_PREVIEW_MAX_WIDTH,
   DEFAULT_DBX_IMAGE_HOVER_PREVIEW_OPEN_DELAY
 } from '@dereekb/dbx-web';
-import { type WebsiteUrlWithPrefix } from '@dereekb/util';
+import { type Maybe, type WebsiteUrlWithPrefix } from '@dereekb/util';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { type DocGalleryActionsData, DocGalleryActionsComponent, DocGalleryAvatarPresentationComponent, DocGalleryClipPresentationComponent, DocGalleryColorPresentationComponent, type DocGalleryItem, DocGalleryLabelComponent } from '../component/audiovideo.gallery.example.component';
@@ -129,6 +129,18 @@ export class DocExtensionAudioVideoComponent {
   readonly lastSelectionChange = signal<DbxListSingleSelectionChange<DocGalleryItem> | undefined>(undefined);
   readonly galleryTopSlotMode = signal<DbxGallerySlotMode>('overlay');
   readonly galleryBottomSlotMode = signal<DbxGallerySlotMode>('stacked');
+  readonly galleryItemMinWidthOptions = [
+    { label: 'Small', value: '100px' },
+    { label: 'Medium', value: '160px' },
+    { label: 'Large', value: '240px' }
+  ];
+  readonly galleryItemMinWidth = signal('160px');
+  readonly galleryColumnsOptions: { readonly label: string; readonly value: Maybe<number> }[] = [
+    { label: 'Auto columns', value: undefined },
+    { label: '3 columns', value: 3 },
+    { label: '6 columns', value: 6 }
+  ];
+  readonly galleryColumns = signal<Maybe<number>>(undefined);
 
   readonly actionsData: DocGalleryActionsData = {
     onDelete: (item) => this.deleteItem(item),

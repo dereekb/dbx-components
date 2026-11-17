@@ -909,19 +909,6 @@
       "componentScope": "content"
     },
     {
-      "cssVariable": "--dbx-content-elevate-shadow",
-      "source": "dbx-web",
-      "role": "shadow",
-      "intents": [
-        "content elevate shadow"
-      ],
-      "description": "Component-scoped override point (`content`) read in `packages/dbx-web/src/lib/layout/content/_content.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-level1)`.",
-      "defaults": {
-        "light": "var(--mat-sys-level1)"
-      },
-      "componentScope": "content"
-    },
-    {
       "cssVariable": "--dbx-content-elevate-tone",
       "source": "dbx-web",
       "role": "misc",
@@ -1476,9 +1463,9 @@
       "intents": [
         "gallery item background"
       ],
-      "description": "Component-scoped override point (`audiovideo`) read in `packages/dbx-web/src/lib/extension/audiovideo/_audiovideo.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-surface-container)`.",
+      "description": "Component-scoped override point (`audiovideo`) read in `packages/dbx-web/src/lib/extension/audiovideo/_audiovideo.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-list-item-card-background, var(--mat-sys-surface-container))`.",
       "defaults": {
-        "light": "var(--mat-sys-surface-container)"
+        "light": "var(--dbx-list-item-card-background, var(--mat-sys-surface-container))"
       },
       "componentScope": "audiovideo"
     },
@@ -1516,9 +1503,9 @@
         "gallery item radius",
         "gallery item radius radius"
       ],
-      "description": "Component-scoped override point (`audiovideo`) read in `packages/dbx-web/src/lib/extension/audiovideo/_audiovideo.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-corner-small, 4px)`.",
+      "description": "Component-scoped override point (`audiovideo`) read in `packages/dbx-web/src/lib/extension/audiovideo/_audiovideo.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-list-item-card-border-radius, var(--mat-sys-corner-small, 4px))`.",
       "defaults": {
-        "light": "var(--mat-sys-corner-small, 4px)"
+        "light": "var(--dbx-list-item-card-border-radius, var(--mat-sys-corner-small, 4px))"
       },
       "componentScope": "audiovideo"
     },
@@ -1532,7 +1519,7 @@
       ],
       "description": "Component-scoped token (`audiovideo`) declared in `packages/dbx-web/src/lib/extension/audiovideo/_audiovideo.scss`. Add a sassdoc `///` block above the declaration for richer guidance.",
       "defaults": {
-        "light": "var(--dbx-gallery-item-radius, var(--mat-sys-corner-small, 4px))"
+        "light": "var(--dbx-gallery-item-radius, var(--dbx-list-item-card-border-radius, var(--mat-sys-corner-small, 4px)))"
       },
       "componentScope": "audiovideo"
     },
@@ -1597,9 +1584,9 @@
         "gallery padding",
         "gallery padding spacing"
       ],
-      "description": "Component-scoped override point (`audiovideo`) read in `packages/dbx-web/src/lib/extension/audiovideo/_audiovideo.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-padding-2, 6px)`.",
+      "description": "Component-scoped override point (`audiovideo`) read in `packages/dbx-web/src/lib/extension/audiovideo/_audiovideo.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-shadow-gutter, 4px)`.",
       "defaults": {
-        "light": "var(--dbx-padding-2, 6px)"
+        "light": "var(--dbx-shadow-gutter, 4px)"
       },
       "componentScope": "audiovideo"
     },
@@ -1762,9 +1749,9 @@
         "image hover preview padding",
         "image hover preview padding spacing"
       ],
-      "description": "Component-scoped override point (`audiovideo`) read in `packages/dbx-web/src/lib/extension/audiovideo/_audiovideo.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `4px`.",
+      "description": "Component-scoped override point (`audiovideo`) read in `packages/dbx-web/src/lib/extension/audiovideo/_audiovideo.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-padding-1, 2px)`.",
       "defaults": {
-        "light": "4px"
+        "light": "var(--dbx-padding-1, 2px)"
       },
       "componentScope": "audiovideo"
     },
@@ -1779,6 +1766,19 @@
       "description": "Component-scoped override point (`audiovideo`) read in `packages/dbx-web/src/lib/extension/audiovideo/_audiovideo.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-corner-medium, 12px)`.",
       "defaults": {
         "light": "var(--mat-sys-corner-medium, 12px)"
+      },
+      "componentScope": "audiovideo"
+    },
+    {
+      "cssVariable": "--dbx-image-hover-preview-shadow",
+      "source": "dbx-web",
+      "role": "shadow",
+      "intents": [
+        "image hover preview shadow"
+      ],
+      "description": "Component-scoped override point (`audiovideo`) read in `packages/dbx-web/src/lib/extension/audiovideo/_audiovideo.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-level3)`.",
+      "defaults": {
+        "light": "var(--mat-sys-level3)"
       },
       "componentScope": "audiovideo"
     },
@@ -2074,11 +2074,11 @@
         "list grid view item selected radius",
         "list grid view item selected radius radius"
       ],
-      "description": "Component-scoped override point (`list`) read in `packages/dbx-web/src/lib/layout/list/_list.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-corner-small, 4px)`.",
+      "description": "Component-scoped override point (`audiovideo`) read in `packages/dbx-web/src/lib/extension/audiovideo/_audiovideo.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-gallery-item-radius, var(--dbx-list-item-card-border-radius, var(--mat-sys-corner-small, 4px)))`.",
       "defaults": {
-        "light": "var(--mat-sys-corner-small, 4px)"
+        "light": "var(--dbx-gallery-item-radius, var(--dbx-list-item-card-border-radius, var(--mat-sys-corner-small, 4px)))"
       },
-      "componentScope": "list"
+      "componentScope": "audiovideo"
     },
     {
       "cssVariable": "--dbx-list-item-active-color",
@@ -2128,11 +2128,11 @@
       "intents": [
         "list item card background"
       ],
-      "description": "Component-scoped override point (`list`) read in `packages/dbx-web/src/lib/layout/list/_list.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-surface-container)`.",
+      "description": "Component-scoped override point (`audiovideo`) read in `packages/dbx-web/src/lib/extension/audiovideo/_audiovideo.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-surface-container)`.",
       "defaults": {
         "light": "var(--mat-sys-surface-container)"
       },
-      "componentScope": "list"
+      "componentScope": "audiovideo"
     },
     {
       "cssVariable": "--dbx-list-item-card-border-radius",
@@ -2142,11 +2142,11 @@
         "list item card border radius",
         "list item card border radius radius"
       ],
-      "description": "Component-scoped override point (`list`) read in `packages/dbx-web/src/lib/layout/list/_list.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-corner-large, calc(var(--mat-chip-container-shape-radius) * 2))`.",
+      "description": "Component-scoped override point (`audiovideo`) read in `packages/dbx-web/src/lib/extension/audiovideo/_audiovideo.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-corner-small, 4px)`.",
       "defaults": {
-        "light": "var(--mat-sys-corner-large, calc(var(--mat-chip-container-shape-radius) * 2))"
+        "light": "var(--mat-sys-corner-small, 4px)"
       },
-      "componentScope": "list"
+      "componentScope": "audiovideo"
     },
     {
       "cssVariable": "--dbx-list-item-hover-state-layer-opacity",

@@ -25,10 +25,12 @@ export interface DbxAudioVideoPlaybackRef {
 }
 
 /**
- * What to do when starting a media would go over the playing limit.
+ * Which of the other playing media to pause when starting a media would go over the playing limit.
  *
- * - `pause_oldest`: the new media keeps playing and the media that started earliest is paused.
- * - `pause_newest`: the new media is paused and the media already playing keep playing.
+ * The media that just started always keeps playing, so the two modes only differ when more than one media may play at a time.
+ *
+ * - `pause_oldest`: the media that started earliest are paused.
+ * - `pause_newest`: the media that started most recently are paused, so the earliest started media keep playing.
  */
 export type DbxAudioVideoPlaybackOverflowMode = 'pause_oldest' | 'pause_newest';
 
@@ -59,9 +61,9 @@ export interface DbxAudioVideoPlaybackIdsToPauseInput {
    */
   readonly overflowMode?: Maybe<DbxAudioVideoPlaybackOverflowMode>;
   /**
-   * Id of the media that just started playing, if any.
+   * Id of the media that just started playing, if any. This media is never paused.
    *
-   * In `pause_newest` mode this media is paused first. When not set, the most recently started media are paused instead.
+   * When not set, for example when the limit is lowered, the overflow mode picks from all playing media.
    */
   readonly startedId?: Maybe<DbxAudioVideoPlaybackId>;
 }
@@ -75,7 +77,8 @@ export interface DbxAudioVideoPlaybackIdsToPauseInput {
  * @example
  * ```ts
  * dbxAudioVideoPlaybackIdsToPause({ playing: ['a', 'b'], maxPlaying: 1, startedId: 'b' }); // ['a']
- * dbxAudioVideoPlaybackIdsToPause({ playing: ['a', 'b'], maxPlaying: 1, startedId: 'b', overflowMode: 'pause_newest' }); // ['b']
+ * dbxAudioVideoPlaybackIdsToPause({ playing: ['a', 'b', 'c'], maxPlaying: 2, startedId: 'c' }); // ['a']
+ * dbxAudioVideoPlaybackIdsToPause({ playing: ['a', 'b', 'c'], maxPlaying: 2, startedId: 'c', overflowMode: 'pause_newest' }); // ['b']
  * ```
  */
 export function dbxAudioVideoPlaybackIdsToPause(input: DbxAudioVideoPlaybackIdsToPauseInput): DbxAudioVideoPlaybackId[] {
@@ -86,18 +89,10 @@ export function dbxAudioVideoPlaybackIdsToPause(input: DbxAudioVideoPlaybackIdsT
   if (overflowCount > 0) {
     const mode = overflowMode ?? DEFAULT_DBX_AUDIO_VIDEO_PLAYBACK_OVERFLOW_MODE;
 
-    if (mode === 'pause_oldest') {
-      result = playing.filter((x) => x !== startedId).slice(0, overflowCount);
-
-      // the started media is only paused when nothing else can be
-      if (result.length < overflowCount && startedId != null) {
-        result.push(startedId);
-      }
-    } else {
-      const newestFirst = [...playing].reverse();
-      const ordered = startedId != null && playing.includes(startedId) ? [startedId, ...newestFirst.filter((x) => x !== startedId)] : newestFirst;
-      result = ordered.slice(0, overflowCount);
-    }
+    // the limit is at least 1, so there are always enough other media to pause and the started media keeps playing
+    const others = playing.filter((x) => x !== startedId);
+    const ordered = mode === 'pause_oldest' ? others : others.reverse();
+    result = ordered.slice(0, overflowCount);
   }
 
   return result;

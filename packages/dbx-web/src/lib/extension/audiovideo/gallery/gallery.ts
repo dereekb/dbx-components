@@ -31,9 +31,9 @@ export const DEFAULT_DBX_GALLERY_SLOT_MODE: DbxGallerySlotMode = 'stacked';
 export const DEFAULT_DBX_GALLERY_ASPECT_RATIO = '1 / 1';
 
 /**
- * Default gallery grid columns.
+ * Default minimum width of a gallery item.
  */
-export const DEFAULT_DBX_GALLERY_GRID_COLUMNS = 'repeat(auto-fill, minmax(160px, 1fr))';
+export const DEFAULT_DBX_GALLERY_ITEM_MIN_WIDTH = '160px';
 
 /**
  * Default gallery grid gap.
@@ -63,7 +63,22 @@ export interface DbxGalleryConfig<T> {
    */
   readonly keyForValue?: Maybe<(value: T) => Maybe<string>>;
   /**
-   * Grid size. Defaults to {@link DEFAULT_DBX_GALLERY_GRID_COLUMNS} columns with a {@link DEFAULT_DBX_GALLERY_GRID_GAP} gap.
+   * Minimum CSS width of each item. Items grow to share the row width equally, and the row fits as many items as are at least
+   * this wide. Defaults to {@link DEFAULT_DBX_GALLERY_ITEM_MIN_WIDTH}.
+   *
+   * The item height follows from the width and {@link aspectRatio}.
+   */
+  readonly itemMinWidth?: Maybe<string>;
+  /**
+   * Maximum number of columns. The row drops to fewer columns when the items would be narrower than {@link itemMinWidth}.
+   *
+   * Set `itemMinWidth` to `'0px'` to always show exactly this many columns. When not set, the number of columns only depends on {@link itemMinWidth}.
+   */
+  readonly columns?: Maybe<number>;
+  /**
+   * Raw grid size. `grid.columns` is a CSS `grid-template-columns` value that replaces the columns built from {@link itemMinWidth} and {@link columns}.
+   *
+   * The gap defaults to {@link DEFAULT_DBX_GALLERY_GRID_GAP}.
    */
   readonly grid?: Maybe<Partial<DbxValueListGridItemViewGridSizeConfig>>;
   /**
@@ -115,6 +130,50 @@ export abstract class DbxGalleryItem<T = unknown> {
   abstract readonly itemSignal: Signal<DbxValueListItem<T>>;
   abstract readonly valueSignal: Signal<T>;
   abstract readonly selectedSignal: Signal<boolean>;
+}
+
+/**
+ * Input for {@link dbxGalleryGridColumns}.
+ */
+export interface DbxGalleryGridColumnsInput {
+  /**
+   * Minimum CSS width of each item. Defaults to {@link DEFAULT_DBX_GALLERY_ITEM_MIN_WIDTH}.
+   */
+  readonly itemMinWidth?: Maybe<string>;
+  /**
+   * Maximum number of columns. Ignored when null/undefined or less than 1.
+   */
+  readonly columns?: Maybe<number>;
+  /**
+   * CSS gap between columns. Used to size the columns when {@link columns} is set. Defaults to {@link DEFAULT_DBX_GALLERY_GRID_GAP}.
+   */
+  readonly gap?: Maybe<string>;
+}
+
+/**
+ * Returns the CSS `grid-template-columns` value for a gallery: as many columns as fit at {@link DbxGalleryGridColumnsInput.itemMinWidth},
+ * capped at {@link DbxGalleryGridColumnsInput.columns} when set.
+ *
+ * @param input - The item min width, max columns and gap.
+ * @returns The `grid-template-columns` value.
+ *
+ * @example
+ * ```ts
+ * dbxGalleryGridColumns({}); // 'repeat(auto-fill, minmax(160px, 1fr))'
+ * dbxGalleryGridColumns({ itemMinWidth: '100px', columns: 4, gap: '8px' }); // 'repeat(auto-fill, minmax(max(100px, calc((100% - 3 * 8px) / 4)), 1fr))'
+ * ```
+ */
+export function dbxGalleryGridColumns(input: DbxGalleryGridColumnsInput): string {
+  const { columns, itemMinWidth, gap } = input;
+  let minWidth = itemMinWidth ?? DEFAULT_DBX_GALLERY_ITEM_MIN_WIDTH;
+
+  // a column is never narrower than 1/columns of the row, so no more than that many columns fit
+  if (columns != null && columns >= 1) {
+    const count = Math.floor(columns);
+    minWidth = `max(${minWidth}, calc((100% - ${count - 1} * ${gap ?? DEFAULT_DBX_GALLERY_GRID_GAP}) / ${count}))`;
+  }
+
+  return `repeat(auto-fill, minmax(${minWidth}, 1fr))`;
 }
 
 /**

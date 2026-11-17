@@ -41,7 +41,7 @@ export const DEFAULT_DBX_IMAGE_HOVER_PREVIEW_MAX_HEIGHT = '480px';
     <img class="dbx-image-hover-preview-img" [src]="data.src" [attr.alt]="data.alt ?? ''" [style.max-width]="maxWidthSignal()" [style.max-height]="maxHeightSignal()" />
   `,
   host: {
-    class: 'dbx-image-hover-preview mat-elevation-z8'
+    class: 'dbx-image-hover-preview'
   },
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true

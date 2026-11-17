@@ -28,8 +28,13 @@ describe('dbxAudioVideoPlaybackIdsToPause()', () => {
   });
 
   describe('pause_newest', () => {
-    it('should pause the started media', () => {
-      expect(dbxAudioVideoPlaybackIdsToPause({ playing: ['a', 'b'], maxPlaying: 1, startedId: 'b', overflowMode: 'pause_newest' })).toEqual(['b']);
+    it('should not pause the started media', () => {
+      expect(dbxAudioVideoPlaybackIdsToPause({ playing: ['a', 'b'], maxPlaying: 1, startedId: 'b', overflowMode: 'pause_newest' })).toEqual(['a']);
+    });
+
+    it('should pause the newest media other than the started one', () => {
+      expect(dbxAudioVideoPlaybackIdsToPause({ playing: ['a', 'b', 'c'], maxPlaying: 2, startedId: 'c', overflowMode: 'pause_newest' })).toEqual(['b']);
+      expect(dbxAudioVideoPlaybackIdsToPause({ playing: ['a', 'b', 'c'], maxPlaying: 1, startedId: 'c', overflowMode: 'pause_newest' })).toEqual(['b', 'a']);
     });
 
     it('should pause the newest media when no media just started', () => {

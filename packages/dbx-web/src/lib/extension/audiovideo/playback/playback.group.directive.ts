@@ -14,7 +14,7 @@ export interface DbxAudioVideoPlaybackGroupConfig {
    */
   readonly maxPlaying?: Maybe<number>;
   /**
-   * What to do when starting a media goes over the limit. Defaults to `pause_oldest`.
+   * Which of the other playing media to pause when starting a media goes over the limit. Defaults to `pause_oldest`.
    */
   readonly overflowMode?: Maybe<DbxAudioVideoPlaybackOverflowMode>;
 }
@@ -38,7 +38,7 @@ export interface DbxAudioVideoPlaybackGroupConfig {
  *
  * @example
  * ```html
- * <div [dbxAudioVideoPlaybackGroup]="{ maxPlaying: 1, overflowMode: 'pause_newest' }" #group="dbxAudioVideoPlaybackGroup">
+ * <div [dbxAudioVideoPlaybackGroup]="{ maxPlaying: 2, overflowMode: 'pause_newest' }" #group="dbxAudioVideoPlaybackGroup">
  *   <video controls dbxAudioVideoPlayback src="/assets/clip.mp4"></video>
  *   <button (click)="group.store.pauseAll()">Pause all</button>
  * </div>

@@ -1,20 +1,24 @@
 @use '../../style/theming';
 
 // MARK: Variables
-$dbx-gallery-padding: var(--dbx-padding-2, 6px);
-$dbx-gallery-item-radius: var(--mat-sys-corner-small, 4px);
+$dbx-gallery-padding: var(--dbx-shadow-gutter, 4px);
+// tiles follow the app's list card theming (`--dbx-list-item-card-*`) unless the gallery tokens are set
+$dbx-gallery-item-radius: var(--dbx-list-item-card-border-radius, var(--mat-sys-corner-small, 4px));
+$dbx-gallery-item-background: var(--dbx-list-item-card-background, var(--mat-sys-surface-container));
 $dbx-gallery-item-slot-padding: var(--dbx-padding-1, 4px);
 $dbx-gallery-item-slot-min-height: 32px;
 $dbx-gallery-item-scrim-strength: 55%;
 $dbx-image-hover-preview-radius: var(--mat-sys-corner-medium, 12px);
-$dbx-image-hover-preview-padding: 4px;
+$dbx-image-hover-preview-padding: var(--dbx-padding-1, 2px);
 
 // MARK: Mixin
 @mixin core() {
   // MARK: Gallery
   // Space between the grid and the list's scroll edge, so the selected item's outline (drawn outside the item) is not clipped.
-  // Override point: `--dbx-gallery-padding`.
+  // Defaults to the shadow gutter. Override point: `--dbx-gallery-padding`.
+  // The grid view host is inline by default, where side padding would not push the block-level grid inward.
   .dbx-gallery .dbx-list-grid-view {
+    display: block;
     padding: var(--dbx-gallery-padding, #{$dbx-gallery-padding});
   }
 
@@ -26,8 +30,13 @@ $dbx-image-hover-preview-padding: 4px;
     flex-direction: column;
     overflow: hidden;
     border-radius: var(--dbx-gallery-item-radius-resolved);
-    background: var(--dbx-gallery-item-background, var(--mat-sys-surface-container));
+    background: var(--dbx-gallery-item-background, #{$dbx-gallery-item-background});
     color: var(--dbx-gallery-item-color, var(--mat-sys-on-surface));
+  }
+
+  // the selected outline follows the tile's corners
+  .dbx-gallery .dbx-list-grid-view-item.dbx-list-grid-view-item-selected {
+    border-radius: var(--dbx-list-grid-view-item-selected-radius, var(--dbx-gallery-item-radius, #{$dbx-gallery-item-radius}));
   }
 
   .dbx-gallery-item-presentation {
@@ -94,6 +103,7 @@ $dbx-image-hover-preview-padding: 4px;
     padding: var(--dbx-image-hover-preview-padding, #{$dbx-image-hover-preview-padding});
     border-radius: var(--dbx-image-hover-preview-radius, #{$dbx-image-hover-preview-radius});
     background: var(--dbx-image-hover-preview-background, var(--mat-sys-surface-container-highest));
+    box-shadow: var(--dbx-image-hover-preview-shadow, var(--mat-sys-level3));
     pointer-events: none;
   }
 

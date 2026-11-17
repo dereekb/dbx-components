@@ -66,18 +66,9 @@ export class DocGalleryColorPresentationComponent extends AbstractDbxGallerySlot
  */
 @Component({
   template: `
-    <div class="doc-gallery-avatar">
+    <div class="dbx-flex-center dbx-w100 dbx-h100">
       <dbx-avatar [avatarName]="valueSignal().name" [avatarUrl]="avatarUrlSignal()" avatarSize="large"></dbx-avatar>
     </div>
-  `,
-  styles: `
-    .doc-gallery-avatar {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      height: 100%;
-    }
   `,
   imports: [DbxAvatarComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -113,24 +104,16 @@ export class DocGalleryClipPresentationComponent extends AbstractDbxGallerySlotD
  */
 @Component({
   template: `
-    <div class="doc-gallery-label">
-      <span class="doc-gallery-label-name">{{ valueSignal().name }}</span>
+    <div class="dbx-flex doc-gallery-label">
+      <span class="dbx-flex-fill-0 dbx-text-truncate">{{ valueSignal().name }}</span>
       <span class="dbx-hint">{{ valueSignal().kind }}</span>
     </div>
   `,
   styles: `
     .doc-gallery-label {
-      display: flex;
       align-items: center;
-      justify-content: space-between;
       gap: 4px;
       font-size: 12px;
-    }
-
-    .doc-gallery-label-name {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush

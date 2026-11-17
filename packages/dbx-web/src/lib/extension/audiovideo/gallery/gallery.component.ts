@@ -11,7 +11,6 @@ import { AbstractDbxValueListViewItemComponent } from '../../../layout/list/list
 import { provideDbxListViewWrapper } from '../../../layout/list/list.wrapper';
 import {
   DEFAULT_DBX_GALLERY_ASPECT_RATIO,
-  DEFAULT_DBX_GALLERY_GRID_COLUMNS,
   DEFAULT_DBX_GALLERY_GRID_GAP,
   DEFAULT_DBX_GALLERY_SLOT_MODE,
   DbxGalleryContext,
@@ -19,6 +18,7 @@ import {
   type DbxGalleryConfig,
   type DbxGallerySlotConfig,
   type DbxGallerySlotMode,
+  dbxGalleryGridColumns,
   dbxGallerySlotInjectionConfig,
   isSameDbxGallerySlotInjectionConfig
 } from './gallery';
@@ -71,6 +71,8 @@ export class DbxGalleryComponent<T> extends AbstractDbxListWrapperDirective<T> i
   readonly bottom = input<Maybe<DbxGallerySlotConfig<T>>>();
   readonly keyForValue = input<Maybe<(value: T) => Maybe<string>>>();
   readonly grid = input<Maybe<Partial<DbxValueListGridItemViewGridSizeConfig>>>();
+  readonly itemMinWidth = input<Maybe<string>>();
+  readonly columns = input<Maybe<number>>();
   readonly slotMode = input<Maybe<DbxGallerySlotMode>>();
   readonly topSlotMode = input<Maybe<DbxGallerySlotMode>>();
   readonly bottomSlotMode = input<Maybe<DbxGallerySlotMode>>();
@@ -85,6 +87,8 @@ export class DbxGalleryComponent<T> extends AbstractDbxListWrapperDirective<T> i
       bottom: this.bottom() ?? config?.bottom,
       keyForValue: this.keyForValue() ?? config?.keyForValue,
       grid: this.grid() ?? config?.grid,
+      itemMinWidth: this.itemMinWidth() ?? config?.itemMinWidth,
+      columns: this.columns() ?? config?.columns,
       slotMode: this.slotMode() ?? config?.slotMode,
       topSlotMode: this.topSlotMode() ?? config?.topSlotMode,
       bottomSlotMode: this.bottomSlotMode() ?? config?.bottomSlotMode,
@@ -117,8 +121,9 @@ export class DbxGalleryViewComponent<T> extends AbstractDbxListGridViewDirective
   readonly galleryContext = inject(DbxGalleryContext<T>);
 
   readonly gridSignal = computed<Partial<DbxValueListGridItemViewGridSizeConfig>>(() => {
-    const grid = this.galleryContext.galleryConfigSignal().grid;
-    return { columns: grid?.columns ?? DEFAULT_DBX_GALLERY_GRID_COLUMNS, gap: grid?.gap ?? DEFAULT_DBX_GALLERY_GRID_GAP };
+    const { grid, itemMinWidth, columns } = this.galleryContext.galleryConfigSignal();
+    const gap = grid?.gap ?? DEFAULT_DBX_GALLERY_GRID_GAP;
+    return { columns: grid?.columns ?? dbxGalleryGridColumns({ itemMinWidth, columns, gap }), gap };
   });
 
   readonly config: DbxValueListGridViewConfig<DbxValueAsListItem<T>> = {
