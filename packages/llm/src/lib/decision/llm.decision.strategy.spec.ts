@@ -70,3 +70,36 @@ describe('isRetryableLlmDecisionError()', () => {
     expect(isRetryableLlmDecisionError(new DOMException('stopped', name))).toBe(false);
   });
 });
+
+describe('LlmDecisionTransportError cause', () => {
+  /**
+   * A status-less transport failure wrapping the given cause.
+   *
+   * @param cause - The wrapped failure.
+   * @returns The error.
+   */
+  function wrapped(cause: unknown): LlmDecisionTransportError {
+    return new LlmDecisionTransportError({ message: 'the route could not be reached', cause });
+  }
+
+  it('should keep the wrapped failure as its cause', () => {
+    const cause = new TypeError('fetch failed');
+    expect(wrapped(cause).cause).toBe(cause);
+  });
+
+  it('should have no own cause property when none was given', () => {
+    expect(Object.prototype.hasOwnProperty.call(new LlmDecisionTransportError({ message: 'x' }), 'cause')).toBe(false);
+  });
+
+  it('should retry a wrapped socket failure', () => {
+    expect(isRetryableLlmDecisionError(wrapped(new TypeError('fetch failed')))).toBe(true);
+    expect(isRetryableLlmDecisionError(wrapped({ cause: { code: 'ECONNRESET' } }))).toBe(true);
+  });
+
+  it('should not retry a wrapped DNS miss, an answered status, an abort cause or a cause-less error', () => {
+    expect(isRetryableLlmDecisionError(wrapped(Object.assign(new Error('getaddrinfo ENOTFOUND zenmux.test'), { code: 'ENOTFOUND' })))).toBe(false);
+    expect(isRetryableLlmDecisionError(new LlmDecisionTransportError({ message: 'refused', status: 400, cause: new TypeError('fetch failed') }))).toBe(false);
+    expect(isRetryableLlmDecisionError(wrapped(new DOMException('stopped', 'AbortError')))).toBe(false);
+    expect(isRetryableLlmDecisionError(new LlmDecisionTransportError({ message: 'x' }))).toBe(false);
+  });
+});

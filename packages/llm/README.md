@@ -472,6 +472,50 @@ const decisions = makeLlmOpenRouterDecisionStrategy({ apiKey });
 const { answers, usage } = await decisions.decide({ model: 'typesafe/jev-1.13', state: { ticket }, questions: { spam: llmNoulQuestion('`ticket` is unsolicited marketing.') } });
 ```
 
+## ZenMux (`@dereekb/llm/zenmux`)
+
+ZenMux is a gateway: its chat rides the `/openai` transport, and this entry holds everything else — the account (cost
+basis, quota status, per-call bills, the credential probe) and the decision route `POST {baseUrl}/systemone`. It talks
+plain `fetch`, so it needs no SDK, and never reads the environment: the host passes every key in.
+
+- **Three credentials.** The SUBSCRIPTION inference key covers chat, decisions and the probe. The PAY-AS-YOU-GO
+  inference key covers bills, and reads every call's bill, the subscription's included. The MANAGEMENT API key
+  covers quota status; both inference keys get `403 Invalid API key` there.
+- **Cost basis.** A synchronous `cost` is the pre-discount LIST amount (`ZENMUX_SYNC_COST_BASIS = 'list'`), an upper
+  bound: measured over 406 calls, three of 17 slugs billed half of it. `zenmuxCostBasisFor` / `isZenmuxMeteredProvider`
+  are the registry-free form of the rule — a declared `metering` wins, else the URL must parse as `zenmux.ai` or a
+  subdomain (`isZenmuxBaseUrl`; a look-alike host never qualifies).
+- **Bills.** `makeZenmuxGenerationBillReader` reads `management/generation?id=`. A call bills 3–5 minutes after it is
+  made, so a `404` reads `pending`; a refused key reads `failed` in ZenMux's own words.
+- **Quota status.** `makeZenmuxProviderStatusSource` reads `subscription/detail`, `payg/balance` and `flow_rate` in
+  parallel. A partial read stays `available` with a warning per failed endpoint; a missing management key reads
+  `available: false` with an error naming `ZENMUX_MANAGEMENT_API_KEY` (or your `managementApiKeyEnv`). Status and bill
+  reads go to `zenmuxAccountBaseUrlOf(baseUrl)`: a ZenMux URL keeps its host, anything else (a LAN proxy declared
+  `metering: 'zenmux'`) reads the account at `DEFAULT_ZENMUX_BASE_URL`.
+- **Credential probe.** `GET /models` answers 200 to any bearer, so `probeZenmuxCredential` asks two auth-gated,
+  never-billed questions instead: a chat completion naming a model no gateway serves (a live subscription key gets
+  `404`), then, only if refused, a bill lookup of a made-up id (a live pay-as-you-go key gets `404`).
+- **Decisions.** `makeZenmuxDecisionStrategy` (`kind: 'zenmux-systemone'`) sends exactly `{ model, state, questions }`
+  via `llmDecisionRequestBody` — ZenMux answers `400` to any other key. The generation id comes from the
+  `X-ZenMux-RequestId` header. Two lax reads: a type-less answer takes its question's declared type, and `usage` is read
+  field by field. A socket failure wraps as `LlmDecisionTransportError` with the failure as its `cause`, so a reset
+  retries under `isRetryableLlmDecisionError`.
+
+`makeZenmuxLlmAdapters(config)` returns the decision route `zenmux`, plus the `zenmux` metering, bill and
+credential-probe adapters. The decision route is never derived: a provider declares `decision: 'zenmux'`. Register the
+array before `/openrouter`'s, or pass a `routePreference`, when ZenMux should be the default decision route. Without a
+`billApiKey`, a subscription provider's bill reads fail `403`, so pass the pay-as-you-go key. The entry's swallow sites
+are `ZENMUX_SWALLOW_SITES`.
+
+```ts
+import { makeLlmAdapterRegistry } from '@dereekb/llm';
+import { LLM_OPENAI_ADAPTERS } from '@dereekb/llm/openai';
+import { DEFAULT_ZENMUX_BASE_URL, makeZenmuxLlmAdapters } from '@dereekb/llm/zenmux';
+
+const adapters = makeLlmAdapterRegistry([...LLM_OPENAI_ADAPTERS, ...makeZenmuxLlmAdapters({ managementApiKey, managementApiKeyEnv, billApiKey })]);
+const zenmux = { transport: 'openai', baseUrl: DEFAULT_ZENMUX_BASE_URL, apiKeyEnv: 'ZENMUX_API_KEY', metering: 'zenmux', decision: 'zenmux', usageAccounting: true };
+```
+
 ## Utilities
 
 ### sha256Hex

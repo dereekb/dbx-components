@@ -208,6 +208,10 @@ export interface LlmDecisionTransportErrorConfig {
    * The response body, when one was read.
    */
   readonly body?: Maybe<string>;
+  /**
+   * The failure this wraps (a socket error) — the ES2022 `Error.cause`.
+   */
+  readonly cause?: unknown;
 }
 
 /**
@@ -216,6 +220,9 @@ export interface LlmDecisionTransportErrorConfig {
  * It carries `status` so the SHARED {@link isRetryableLlmError} can classify it — that classifier already tolerates
  * a raw `{status}`, so the decision lane inherits the completion lane's retry posture (429 and the 5xx range retry;
  * a 400 never does) rather than declaring a second, drifting one.
+ *
+ * A transport-level failure has no status, so a transport wraps it with the socket error as its `cause` (the ES2022
+ * `Error.cause`): {@link isRetryableLlmDecisionError} reads that cause, so a reset socket reads retryable.
  */
 export class LlmDecisionTransportError extends Error {
   /**
@@ -228,7 +235,8 @@ export class LlmDecisionTransportError extends Error {
   readonly body: Maybe<string>;
 
   constructor(config: LlmDecisionTransportErrorConfig) {
-    super(config.message);
+    // No `cause` class field: `useDefineForClassFields` would reset it to `undefined` after `super`.
+    super(config.message, config.cause === undefined ? undefined : { cause: config.cause });
     this.name = 'LlmDecisionTransportError';
     this.status = config.status;
     this.body = config.body;
@@ -239,11 +247,14 @@ export class LlmDecisionTransportError extends Error {
  * Whether a decision throw is worth another attempt — the SHARED classifier, so this lane and the completion lane
  * cannot drift apart on what "retryable" means. An abort is never retryable here: the caller cancelled.
  *
+ * A STATUS-LESS {@link LlmDecisionTransportError} (the route was never reached) is classified by its `cause`: a
+ * retryable socket failure (a reset, a `fetch failed`) retries, an abort cause never does.
+ *
  * No retry loop lives here; a caller or dispatcher decides whether to resend.
  *
  * @param error - The thrown value.
  * @returns Whether to retry.
  */
 export function isRetryableLlmDecisionError(error: unknown): boolean {
-  return !isAbortError(error) && isRetryableLlmError(error);
+  return !isAbortError(error) && (isRetryableLlmError(error) || (error instanceof LlmDecisionTransportError && error.status == null && error.cause != null && !isAbortError(error.cause) && isRetryableLlmError(error.cause)));
 }
