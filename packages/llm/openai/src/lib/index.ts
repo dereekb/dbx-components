@@ -1,7 +1,10 @@
 /**
  * `@dereekb/llm/openai` — the OpenAI-compatible chat strategy (OpenAI, ZenMux chat, a local vLLM) and its completion adapter.
  *
- * The `openai` SDK is an optional peer loaded lazily from one boundary module, `lib/openai.sdk.ts`, so importing this
- * entry never evaluates it. Empty until the OpenAI-compatible strategy lands.
+ * The `openai` SDK is an optional peer loaded lazily from one boundary module, `lib/openai.sdk.ts` (left out of this
+ * barrel), so importing this entry never evaluates it.
  */
-export {};
+export * from './openai.chat';
+export * from './openai.strategy';
+export * from './openai.adapter';
+export * from './openai.swallow';

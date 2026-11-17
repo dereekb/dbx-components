@@ -24,6 +24,23 @@ vi.mock('@openrouter/sdk', () => {
   return {};
 });
 
+// The subpaths the decision boundary loads lazily: a static import of any of them would evaluate the SDK, which the
+// root-id mock alone cannot see.
+vi.mock('@openrouter/sdk/core', () => {
+  probe.openRouterSdk = true;
+  return {};
+});
+
+vi.mock('@openrouter/sdk/funcs/systemOneCreate', () => {
+  probe.openRouterSdk = true;
+  return {};
+});
+
+vi.mock('@openrouter/sdk/lib/http', () => {
+  probe.openRouterSdk = true;
+  return {};
+});
+
 const SRC_DIR = import.meta.dirname;
 const NODE_BUILTINS = new Set(builtinModules);
 const SPECIFIER_REGEX = /(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s+|\brequire\s*\(\s*)(['"])([^'"\n]+)\1/g;
@@ -63,6 +80,23 @@ function isPackage(name: string): (specifier: string) => boolean {
   return (specifier) => specifier === name || specifier.startsWith(`${name}/`);
 }
 
+function escapeRegex(value: string): string {
+  return value.replaceAll(/[.*+?^${}()|[\]\\/]/g, String.raw`\$&`);
+}
+
+/**
+ * The value (non-`type`) static imports and the re-exports of `sdk` (or a subpath) in the boundary file — each one
+ * would evaluate the SDK when the entry loads. `import type` (erased) and `import('…')` (deferred) are the only legal
+ * forms.
+ */
+function staticImportsOf(files: ScannedFile[], boundary: string, sdk: string): string[] {
+  const code = files.find((file) => file.path === boundary)?.code ?? '';
+  const specifier = `['"]${escapeRegex(sdk)}(?:/[^'"]*)?['"]`;
+  const staticImport = new RegExp(String.raw`\bimport\s+(?!type\b)[^'"(]*\bfrom\s*${specifier}`, 'g');
+  const reExport = new RegExp(String.raw`\bexport\s[^'"]*\bfrom\s*${specifier}`, 'g');
+  return [...Array.from(code.matchAll(staticImport), (match) => match[0]), ...Array.from(code.matchAll(reExport), (match) => match[0])];
+}
+
 describe('@dereekb/llm/openrouter isolation', () => {
   const sources = scanSrc(false);
 
@@ -84,13 +118,19 @@ describe('@dereekb/llm/openrouter isolation', () => {
   });
 
   it('should import openai only from lib/openrouter.openai.sdk.ts', () => {
-    // a subset check while the boundary does not exist yet; tightened to exactly [boundary] once it lands
-    expect(importersOf(sources, isPackage('openai')).filter((path) => path !== 'lib/openrouter.openai.sdk.ts')).toEqual([]);
+    expect(importersOf(sources, isPackage('openai'))).toEqual(['lib/openrouter.openai.sdk.ts']);
   });
 
   it('should import @openrouter/sdk only from lib/openrouter.sdk.ts', () => {
-    // a subset check while the boundary does not exist yet; tightened to exactly [boundary] once it lands
-    expect(importersOf(sources, isPackage('@openrouter/sdk')).filter((path) => path !== 'lib/openrouter.sdk.ts')).toEqual([]);
+    expect(importersOf(sources, isPackage('@openrouter/sdk'))).toEqual(['lib/openrouter.sdk.ts']);
+  });
+
+  it('should reach openai from its boundary only through import() or import type', () => {
+    expect(staticImportsOf(sources, 'lib/openrouter.openai.sdk.ts', 'openai')).toEqual([]);
+  });
+
+  it('should reach @openrouter/sdk from its boundary only through import() or import type', () => {
+    expect(staticImportsOf(sources, 'lib/openrouter.sdk.ts', '@openrouter/sdk')).toEqual([]);
   });
 
   it('should never import @dereekb/openrouter, specs included', () => {

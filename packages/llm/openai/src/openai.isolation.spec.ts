@@ -63,6 +63,23 @@ function isPackage(name: string): (specifier: string) => boolean {
   return (specifier) => specifier === name || specifier.startsWith(`${name}/`);
 }
 
+function escapeRegex(value: string): string {
+  return value.replaceAll(/[.*+?^${}()|[\]\\/]/g, String.raw`\$&`);
+}
+
+/**
+ * The value (non-`type`) static imports and the re-exports of `sdk` (or a subpath) in the boundary file — each one
+ * would evaluate the SDK when the entry loads. `import type` (erased) and `import('…')` (deferred) are the only legal
+ * forms.
+ */
+function staticImportsOf(files: ScannedFile[], boundary: string, sdk: string): string[] {
+  const code = files.find((file) => file.path === boundary)?.code ?? '';
+  const specifier = `['"]${escapeRegex(sdk)}(?:/[^'"]*)?['"]`;
+  const staticImport = new RegExp(String.raw`\bimport\s+(?!type\b)[^'"(]*\bfrom\s*${specifier}`, 'g');
+  const reExport = new RegExp(String.raw`\bexport\s[^'"]*\bfrom\s*${specifier}`, 'g');
+  return [...Array.from(code.matchAll(staticImport), (match) => match[0]), ...Array.from(code.matchAll(reExport), (match) => match[0])];
+}
+
 describe('@dereekb/llm/openai isolation', () => {
   const sources = scanSrc(false);
 
@@ -84,8 +101,11 @@ describe('@dereekb/llm/openai isolation', () => {
   });
 
   it('should import openai only from lib/openai.sdk.ts', () => {
-    // a subset check while the boundary does not exist yet; tightened to exactly [boundary] once it lands
-    expect(importersOf(sources, isPackage('openai')).filter((path) => path !== 'lib/openai.sdk.ts')).toEqual([]);
+    expect(importersOf(sources, isPackage('openai'))).toEqual(['lib/openai.sdk.ts']);
+  });
+
+  it('should reach openai from its boundary only through import() or import type', () => {
+    expect(staticImportsOf(sources, 'lib/openai.sdk.ts', 'openai')).toEqual([]);
   });
 
   it('should import no @openrouter/sdk', () => {

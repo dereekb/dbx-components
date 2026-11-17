@@ -381,7 +381,96 @@ names remain as `@deprecated` aliases of the same values and classes.
 What stays in `@dereekb/openrouter`: `openRouterDecisionRequest`, `openRouterDecisionRequestBody` (the SDK's
 `DecisionsRequest`, with OpenRouter's session id and trace), `splitOpenRouterDecisionModelConfig`,
 `validateOpenRouterDecisionRequest`, `openRouterRunUsageFromDecisionsUsage`, the `OPENROUTER_JEV_*` ids,
-`DEFAULT_OPENROUTER_SYSTEM_ONE_MODEL_ID` and the `openRouterDecision` transport.
+`DEFAULT_OPENROUTER_SYSTEM_ONE_MODEL_ID` and the `openRouterDecision` transport. `@dereekb/llm/openrouter`
+carries its own decision transport (`makeLlmOpenRouterDecisionStrategy`) and usage flattening
+(`llmUsageFromOpenRouterDecisionsUsage`) and never imports `@dereekb/openrouter`.
+
+## OpenAI-compatible chat (`@dereekb/llm/openai`)
+
+`makeLlmOpenAiStrategy(config)` reaches any OpenAI-compatible chat-completions endpoint — bare OpenAI, ZenMux, a local
+vLLM — over the optional `openai` peer.
+
+- Messages are plain strings, so the provider's implicit prefix caching applies (`caching: 'auto-prefix'`).
+- A request with `responseSchemaHint` sends a strict `json_schema` `response_format` named by the capability.
+- Reasoning rides the flat `reasoning_effort`. An explicit OFF (`reasoning.enabled === false`) is encoded per
+  `reasoningOffEncoding` / `reasoningOffByModel` rather than dropped; `LLM_OPENAI_REASONING_OFF_PARAMS` shows each wire
+  shape (`llmOpenAiReasoningParamsOf` builds it).
+- The cap rides under `tokenLimitParam` (`max_tokens` or `max_completion_tokens`); `usage: { include: true }` is an
+  opt-in (`usageAccounting`); a volunteered `usage.cost` is read either way and stamped with `costBasis` when set.
+- Images ride only for slugs `visionByModel` marks; `attachmentsSent` on the result says what rode.
+- There is no built-in model: set `defaultModel` or pass `request.model`, else the call fails loud.
+- Seams: `run` (an `LlmRunner`), `client` (an `LlmOpenAiChatClient` — a fake, or your own SDK client) and
+  `probeFetch`. The real client is built lazily with `maxRetries: 0` (the dispatcher retries) and never reads
+  `OPENAI_ORG_ID` / `OPENAI_PROJECT_ID`. In a browser pass `dangerouslyAllowBrowser: true` or inject a client — with
+  user-held keys only.
+- Credentials: `credentialProbe` GETs `{baseUrl}/models` (a 404 is a ready warning); `credentialProbeSource` replaces
+  it; `providerStatus` / `providerStatusId` exist only with a `providerStatusSource`.
+
+`LLM_OPENAI_ADAPTERS` registers the completion transport `openai` (default base URL `https://api.openai.com/v1`).
+`llmOpenAiStrategyConfigOf` is its mapping, exported so a host can extend it in its own adapter:
+
+| strategy config | from the adapter config |
+| --- | --- |
+| `id`, `apiKey` | `provider.id`, `provider.apiKey` |
+| `baseUrl`, `defaultModel`, `maxOutputTokens`, `timeoutMs` | the same names |
+| `tokenLimitParam`, `reasoningOffEncoding`, `usageAccounting` | `provider.tokenLimitParam`, `provider.reasoningOff`, `provider.usageAccounting` |
+| `reasoningOffByModel`, `visionByModel`, `costBasis`, `providerStatusSource` | the same names |
+| `credentialProbeSource`, `probeFetch` | `credentialProbe`, `fetch` |
+
+The entry's swallow sites are `LLM_OPENAI_SWALLOW_SITES`; register them beside the root's:
+`makeLlmSwallowSiteRegistry([...Object.values(LLM_SWALLOW_SITES), ...Object.values(LLM_OPENAI_SWALLOW_SITES)])`.
+
+```ts
+import { makeLlmAdapterRegistry, makeLlmProviderStrategies, makeLlmStrategyRegistry } from '@dereekb/llm';
+import { LLM_OPENAI_ADAPTERS, makeLlmOpenAiStrategy } from '@dereekb/llm/openai';
+import { LLM_OPENROUTER_ADAPTERS } from '@dereekb/llm/openrouter';
+
+const gateway = makeLlmOpenAiStrategy({ id: 'gateway', apiKey, baseUrl: 'https://zenmux.ai/api/v1', defaultModel: 'vendor/model-flash', tokenLimitParam: 'max_completion_tokens' });
+const completion = await gateway.complete({ prompt, capability: 'summarize', responseSchemaHint: schema });
+
+// or build every configured provider through the adapters
+const adapters = makeLlmAdapterRegistry([...LLM_OPENAI_ADAPTERS, ...LLM_OPENROUTER_ADAPTERS]);
+const strategies = makeLlmStrategyRegistry(makeLlmProviderStrategies({ providers, adapters, defaultModel: 'vendor/model-flash' }));
+```
+
+## OpenRouter (`@dereekb/llm/openrouter`)
+
+**Chat** — `makeLlmOpenRouterStrategy(config)`, over the optional `openai` peer pointed at OpenRouter:
+
+- An `anthropic/` route sends the prompt's stable prefix as a `cache_control: { type: 'ephemeral' }` block, and a
+  chained follow-up adds a history breakpoint on the last replayed turn; other routes get the plain prompt
+  (`caching: 'breakpoint'`).
+- `usage: { include: true }` rides every call, so the reply carries `cost`; the request's reasoning config rides as
+  OpenRouter's nested `reasoning` object; the served upstream `provider` is echoed; `native_finish_reason` is the
+  finish-reason fallback.
+- No built-in model. The same seams, browser rule, `costBasis` / `providerStatusSource` / `credentialProbeSource`
+  facets as `/openai`; the generic credential probe is `GET {baseUrl}/key`.
+
+**Decisions** — `makeLlmOpenRouterDecisionStrategy(config)` posts to `{baseUrl}/systemone` through the optional
+`@openrouter/sdk` peer, loaded lazily (the core client plus `systemOneCreate`, `retries: none`):
+
+- The body is `llmDecisionRequestBody`; answers are membership-checked (`LlmDecisionAnswerFaultError`); usage comes from
+  `llmUsageFromOpenRouterDecisionsUsage` and carries the gateway's exact, synchronous `cost`.
+- The per-call timeout (`DEFAULT_LLM_DECISION_TIMEOUT_MS` unless set) holds even when you pass a signal.
+- Failures: a timeout or abort rejects with the native reason (`isAbortError`), a socket failure with the native fetch
+  error (retryable), an HTTP answer with `LlmDecisionTransportError` (`status`, `body`).
+- Seams: `decisionsCreate` (replaces the SDK call), `decisionsFetch` (a fake socket under the real SDK) and
+  `probeFetch`.
+
+`LLM_OPENROUTER_ADAPTERS` registers the completion transport `openrouter` (default `https://openrouter.ai/api/v1`) and
+the decision route `openrouter` (`strategyKind: 'openrouter-decisions'`, derived for every `openrouter`-transport
+provider). The completion mapping (`llmOpenRouterStrategyConfigOf`) ignores the provider's `reasoningOff`,
+`tokenLimitParam` and `usageAccounting` — this wire has one spelling for each. The entry's swallow sites are
+`LLM_OPENROUTER_SWALLOW_SITES`; register them beside the root's the same way.
+
+```ts
+import { llmNoulQuestion } from '@dereekb/llm';
+import { makeLlmOpenRouterDecisionStrategy, makeLlmOpenRouterStrategy } from '@dereekb/llm/openrouter';
+
+const chat = makeLlmOpenRouterStrategy({ apiKey, defaultModel: 'anthropic/claude-opus-4.8' });
+const decisions = makeLlmOpenRouterDecisionStrategy({ apiKey });
+const { answers, usage } = await decisions.decide({ model: 'typesafe/jev-1.13', state: { ticket }, questions: { spam: llmNoulQuestion('`ticket` is unsolicited marketing.') } });
+```
 
 ## Utilities
 
