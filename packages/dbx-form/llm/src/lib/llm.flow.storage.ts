@@ -2,8 +2,8 @@ import { type LimitedStorageAccessor } from '@dereekb/dbx-core';
 import { type Destroyable, type Maybe, type Milliseconds, type UnixDateTimeMillisecondsNumber } from '@dereekb/util';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { catchError, concatMap, debounceTime, defer, distinctUntilChanged, EMPTY, filter, first, map, type Observable, of, switchMap, tap } from 'rxjs';
-import { DEFAULT_DBX_LLM_FLOW_MAX_PERSISTED_RUNS_PER_SECTION, type DbxLlmFlowRun, type DbxLlmFlowRunId, type DbxLlmFlowSectionInput, type DbxLlmFlowSectionKey, type DbxLlmFlowSectionState, type DbxLlmFlowState } from './llm.flow';
-import { type DbxLlmFlowStateContext, dbxLlmFlowRunLineage, dbxLlmFlowRunsWithInterruptedRuns, dbxLlmFlowSectionInputIssues, initialDbxLlmFlowSectionState } from './llm.flow.state';
+import { type DbxLlmFlowHistoryConfig, type DbxLlmFlowRun, type DbxLlmFlowRunId, type DbxLlmFlowSectionInput, type DbxLlmFlowSectionKey, type DbxLlmFlowSectionState, type DbxLlmFlowState } from './llm.flow';
+import { type DbxLlmFlowHistoryLimits, type DbxLlmFlowStateContext, dbxLlmFlowHistoryLimits, dbxLlmFlowHistoryRunIdsToKeep, dbxLlmFlowRunsWithInterruptedRuns, dbxLlmFlowSectionInputIssues, dbxLlmFlowStateWithPrunedRuns, initialDbxLlmFlowSectionState } from './llm.flow.state';
 import { type DbxLlmFlowStore } from './llm.flow.store';
 
 /**
@@ -47,32 +47,26 @@ export interface DbxLlmFlowPersistedState {
 
 export interface DbxLlmFlowPersistedStateFromStateConfig {
   /**
-   * Max runs kept per section, besides the runs that are always kept. Defaults to DEFAULT_DBX_LLM_FLOW_MAX_PERSISTED_RUNS_PER_SECTION.
+   * The history limits. Defaults to the default limits.
    */
-  readonly maxRunsPerSection?: Maybe<number>;
+  readonly history?: Maybe<DbxLlmFlowHistoryConfig>;
 }
 
 /**
  * Creates the persisted state from the flow state.
  *
- * Runs are pruned: active, selected, anchor (followed parent) and last-failed runs are always kept with their lineage, then the newest runs of each section up to the max.
+ * Runs are pruned by the history rules (see DbxLlmFlowHistoryConfig). The store prunes the same way in memory, so this only removes runs when
+ * the limits are lower here, such as after a storage quota error.
  *
  * @param state - The flow state.
  * @param config - Optional config.
  * @returns The persisted state.
  */
 export function dbxLlmFlowPersistedStateFromState(state: DbxLlmFlowState, config?: Maybe<DbxLlmFlowPersistedStateFromStateConfig>): DbxLlmFlowPersistedState {
-  const maxRunsPerSection = config?.maxRunsPerSection ?? DEFAULT_DBX_LLM_FLOW_MAX_PERSISTED_RUNS_PER_SECTION;
-  const keep = new Set<DbxLlmFlowRunId>();
-  const keepWithLineage = (id: Maybe<DbxLlmFlowRunId>) => dbxLlmFlowRunLineage(state, id).forEach((x) => keep.add(x.id));
+  const keep = dbxLlmFlowHistoryRunIdsToKeep(state, dbxLlmFlowHistoryLimits(config?.history));
   const sections: Record<DbxLlmFlowSectionKey, DbxLlmFlowPersistedSection> = {};
-  const runsBySection = new Map<DbxLlmFlowSectionKey, DbxLlmFlowRun[]>();
 
   for (const section of Object.values(state.sections)) {
-    keepWithLineage(section.activeRunId);
-    section.selectedRunIds.forEach(keepWithLineage);
-    keepWithLineage(section.followedParentRunId);
-    keepWithLineage(section.lastFailedRunId);
     sections[section.key] = {
       key: section.key,
       parentKey: section.parentKey,
@@ -84,30 +78,13 @@ export function dbxLlmFlowPersistedStateFromState(state: DbxLlmFlowState, config
     };
   }
 
-  for (const run of Object.values(state.runs)) {
-    const list = runsBySection.get(run.sectionKey) ?? [];
-    list.push(run);
-    runsBySection.set(run.sectionKey, list);
-  }
-
-  // Reversed before the stable sort, so later runs win ties.
-  runsBySection.forEach((list) =>
-    list
-      .reverse()
-      .sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime())
-      .slice(0, Math.max(0, maxRunsPerSection))
-      .forEach((x) => keep.add(x.id))
-  );
-
   const runs: Record<DbxLlmFlowRunId, DbxLlmFlowPersistedRun> = {};
 
-  keep.forEach((id) => {
-    const run = state.runs[id];
-
-    if (run != null) {
-      runs[id] = { ...run, startedAt: run.startedAt.getTime(), finishedAt: run.finishedAt?.getTime() };
+  for (const run of Object.values(state.runs)) {
+    if (keep.has(run.id)) {
+      runs[run.id] = { ...run, startedAt: run.startedAt.getTime(), finishedAt: run.finishedAt?.getTime() };
     }
-  });
+  }
 
   return { v: 1, sections, runs };
 }
@@ -174,7 +151,8 @@ export function dbxLlmFlowStateWithReset(state: DbxLlmFlowState, input: DbxLlmFl
 /**
  * Restores a persisted state and ends restoring.
  *
- * Persisted running runs become failed with DBX_LLM_FLOW_RUN_INTERRUPTED_ERROR_CODE, runtime fields reset, every revision bumps so forms re-seed, and selections are filtered to runs that exist and succeeded.
+ * Persisted running runs become failed with DBX_LLM_FLOW_RUN_INTERRUPTED_ERROR_CODE, runtime fields reset, every revision bumps so forms re-seed, and selections are filtered to runs that exist and succeeded. The
+ * history is pruned to the flow's limits, which may be lower than when it was saved.
  *
  * @param state - The current state. Its mounted sections and runtime counts are kept.
  * @param persisted - The persisted state. An unknown version or undefined restores a blank state.
@@ -206,7 +184,7 @@ export function dbxLlmFlowStateWithRestoredPersistedState(state: DbxLlmFlowState
     sections[key] = sectionWithRuntimeFields(base, current, context);
   });
 
-  return { sections, runs, runRequests: {}, restoring: false, storageKey: state.storageKey };
+  return dbxLlmFlowStateWithPrunedRuns({ sections, runs, runRequests: {}, restoring: false, storageKey: state.storageKey }, context.flowConfig?.history);
 }
 
 /**
@@ -232,26 +210,31 @@ export interface DbxLlmFlowStorageSyncConfig {
    */
   readonly storageKey$: Observable<Maybe<string>>;
   readonly debounceTime?: Maybe<Milliseconds>;
-  readonly maxRunsPerSection?: Maybe<number>;
 }
 
 /**
  * Keeps a DbxLlmFlowStore in sync with storage.
  *
- * Writes are debounced and blocked while restoring. Read errors restore a blank state. On a quota error the max runs per section is halved and the write retried.
+ * Writes are debounced and blocked while restoring. Read errors restore a blank state. Runs are pruned by the store's history limits (the flow
+ * config's history). On a quota error the limits of what is written are halved and the write retried; the history in memory is unchanged.
  */
 export class DbxLlmFlowStorageSync implements Destroyable {
   private readonly _keySub = new SubscriptionObject();
   private readonly _saveSub = new SubscriptionObject();
   private readonly _lastWritten = new Map<string, string>();
-  private _maxRunsPerSection: number;
+  private _quotaDivisor = 1;
 
-  constructor(readonly config: DbxLlmFlowStorageSyncConfig) {
-    this._maxRunsPerSection = config.maxRunsPerSection ?? DEFAULT_DBX_LLM_FLOW_MAX_PERSISTED_RUNS_PER_SECTION;
-  }
+  constructor(readonly config: DbxLlmFlowStorageSyncConfig) {}
 
-  get maxRunsPerSection(): number {
-    return this._maxRunsPerSection;
+  /**
+   * The history limits of what is written: the store's limits, halved after each quota error (a limit above 0 stays at least 1).
+   *
+   * @returns The limits.
+   */
+  get historyLimits(): DbxLlmFlowHistoryLimits {
+    const limits = dbxLlmFlowHistoryLimits(this.config.store.flowConfig?.history);
+    const divide = (x: number) => Math.max(Math.min(x, 1), Math.floor(x / this._quotaDivisor));
+    return { maxRootRuns: divide(limits.maxRootRuns), maxLeafRuns: divide(limits.maxLeafRuns) };
   }
 
   init(): void {
@@ -269,7 +252,7 @@ export class DbxLlmFlowStorageSync implements Destroyable {
       .pipe(
         filter((x) => !x.restoring && x.storageKey != null),
         debounceTime(this.config.debounceTime ?? DEFAULT_DBX_LLM_FLOW_STORAGE_DEBOUNCE_TIME),
-        concatMap((x) => this._write(x, this._maxRunsPerSection))
+        concatMap((x) => this._write(x))
       )
       .subscribe();
   }
@@ -282,7 +265,7 @@ export class DbxLlmFlowStorageSync implements Destroyable {
   saveNow(): Observable<void> {
     return defer(() => {
       const state = this.config.store.currentState();
-      return state.restoring || state.storageKey == null ? of(undefined) : this._write(state, this._maxRunsPerSection);
+      return state.restoring || state.storageKey == null ? of(undefined) : this._write(state);
     });
   }
 
@@ -309,9 +292,10 @@ export class DbxLlmFlowStorageSync implements Destroyable {
     });
   }
 
-  private _write(state: DbxLlmFlowState, maxRunsPerSection: number): Observable<void> {
+  private _write(state: DbxLlmFlowState): Observable<void> {
     const key = state.storageKey as string;
-    const persisted = dbxLlmFlowPersistedStateFromState(state, { maxRunsPerSection });
+    const history = this.historyLimits;
+    const persisted = dbxLlmFlowPersistedStateFromState(state, { history });
     const json = JSON.stringify(persisted);
     let result: Observable<void>;
 
@@ -323,9 +307,9 @@ export class DbxLlmFlowStorageSync implements Destroyable {
         catchError((e) => {
           let retry: Observable<void> = of(undefined);
 
-          if (isDbxLlmFlowStorageQuotaError(e) && maxRunsPerSection > 1) {
-            this._maxRunsPerSection = Math.floor(maxRunsPerSection / 2);
-            retry = this._write(state, this._maxRunsPerSection);
+          if (isDbxLlmFlowStorageQuotaError(e) && (history.maxRootRuns > 1 || history.maxLeafRuns > 1)) {
+            this._quotaDivisor *= 2;
+            retry = this._write(state);
           }
 
           return retry;

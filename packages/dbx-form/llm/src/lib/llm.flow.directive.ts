@@ -55,7 +55,7 @@ export class DbxLlmFlowDirective {
 
         if (this._storageSync == null && this.storageAccessorFactory != null) {
           const accessor = this.storageAccessorFactory.createStorageAccessor<DbxLlmFlowPersistedState>({ prefix: DBX_LLM_FLOW_STORAGE_PREFIX });
-          const storageSync = new DbxLlmFlowStorageSync({ store: this.store, accessor, storageKey$: this._storageKey$, debounceTime: config?.persistence?.debounceTime, maxRunsPerSection: config?.persistence?.maxRunsPerSection });
+          const storageSync = new DbxLlmFlowStorageSync({ store: this.store, accessor, storageKey$: this._storageKey$, debounceTime: config?.persistence?.debounceTime });
           this._destroyRef.onDestroy(() => storageSync.destroy()); // the effect body is not an injection context, so clean() can not be used here
           this._storageSync = storageSync;
           storageSync.init();

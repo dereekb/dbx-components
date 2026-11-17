@@ -27,7 +27,7 @@ function makeRun(id: string, startedAt: number, extra?: Partial<DbxLlmFlowRun>):
 }
 
 describe('dbxLlmFlowPersistedStateFromState()', () => {
-  it('should keep selected runs with their lineage, then the newest runs per section', () => {
+  it('should keep selected runs with their lineage, then the newest root runs per section', () => {
     const runs: Record<string, DbxLlmFlowRun> = {
       p1: makeRun('p1', 1, { sectionKey: 'p' }),
       old: makeRun('old', 2, { parentRunId: 'p1' }),
@@ -45,7 +45,7 @@ describe('dbxLlmFlowPersistedStateFromState()', () => {
       }
     };
 
-    const persisted = dbxLlmFlowPersistedStateFromState(state, { maxRunsPerSection: 2 });
+    const persisted = dbxLlmFlowPersistedStateFromState(state, { history: { maxRootRuns: 2, maxLeafRuns: 2 } });
     expect(Object.keys(persisted.runs).sort()).toEqual(['b', 'c', 'old', 'p1']);
     expect(persisted.runs['c'].startedAt).toBe(12);
     // eslint-disable-next-line unicorn/prefer-structured-clone -- checks the JSON round trip
@@ -159,8 +159,12 @@ describe('DbxLlmFlowStorageSync', () => {
     sync = undefined;
   });
 
-  function startSync(accessor = makeAccessor(), maxRunsPerSection?: number) {
-    sync = new DbxLlmFlowStorageSync({ store: flowStore, accessor, storageKey$: storageKey, debounceTime: 0, maxRunsPerSection });
+  function startSync(accessor = makeAccessor(), maxRuns?: number) {
+    if (maxRuns != null) {
+      flowStore.setFlowConfig({ history: { maxRootRuns: maxRuns, maxLeafRuns: maxRuns } });
+    }
+
+    sync = new DbxLlmFlowStorageSync({ store: flowStore, accessor, storageKey$: storageKey, debounceTime: 0 });
     sync.init();
     return accessor;
   }
@@ -225,7 +229,7 @@ describe('DbxLlmFlowStorageSync', () => {
     expect((await firstValueFrom(accessor.get('one')))?.sections['s'].draft.formValue).toEqual({ topic: 'initial' });
   });
 
-  it('should halve the max runs per section on a quota error', async () => {
+  it('should halve the history limits of what is written on a quota error, keeping the history in memory', async () => {
     const accessor = makeAccessor();
     const originalSet = accessor.set.bind(accessor);
 
@@ -242,7 +246,8 @@ describe('DbxLlmFlowStorageSync', () => {
     }
 
     await wait();
-    expect(sync?.maxRunsPerSection).toBe(2);
+    expect(sync?.historyLimits).toEqual({ maxRootRuns: 2, maxLeafRuns: 2 });
     expect(Object.keys((await firstValueFrom(accessor.get('one')))?.runs ?? {}).length).toBe(2);
+    expect(Object.keys(flowStore.currentState().runs).length).toBe(5);
   });
 });

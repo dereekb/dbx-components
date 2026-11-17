@@ -1,14 +1,17 @@
-import { type ArrayOrValue, areEqualPOJOValues, asArray, findNonJsonCompatibleValue, jsonIncompatibilityMessage, type Maybe } from '@dereekb/util';
+import { type ArrayOrValue, areEqualPOJOValues, asArray, filterMaybeArrayValues, findNonJsonCompatibleValue, jsonIncompatibilityMessage, type Maybe, pruneTreesFunction } from '@dereekb/util';
 import { stripEmptyForgeValues } from '@dereekb/dbx-form';
 import { type FieldDef } from '@ng-forge/dynamic-forms';
 import {
   DBX_LLM_FLOW_RUN_CANCELLED_ERROR_CODE,
   DBX_LLM_FLOW_RUN_INTERRUPTED_ERROR_CODE,
   DBX_LLM_FLOW_RUN_NON_JSON_OUTPUT_ERROR_CODE,
+  DEFAULT_DBX_LLM_FLOW_HISTORY_MAX_LEAF_RUNS,
+  DEFAULT_DBX_LLM_FLOW_HISTORY_MAX_ROOT_RUNS,
   DEFAULT_DBX_LLM_FLOW_RUN_KIND,
   type DbxLlmFlowAnySectionConfig,
   type DbxLlmFlowConfig,
   type DbxLlmFlowFormBindingId,
+  type DbxLlmFlowHistoryConfig,
   type DbxLlmFlowRawInputMode,
   type DbxLlmFlowRun,
   type DbxLlmFlowRunAvailability,
@@ -874,7 +877,7 @@ export function dbxLlmFlowStateWithCompletedRun(state: DbxLlmFlowState, input: D
         }
       }
 
-      result = m.finish();
+      result = dbxLlmFlowStateWithPrunedRuns(m.finish(), context.flowConfig?.history);
     }
   }
 
@@ -906,7 +909,7 @@ export function dbxLlmFlowStateWithFailedRun(state: DbxLlmFlowState, input: DbxL
       m.updateSection(run.sectionKey, { activeRunId: undefined, lastFailedRunId: run.id });
     }
 
-    result = m.finish();
+    result = dbxLlmFlowStateWithPrunedRuns(m.finish(), context.flowConfig?.history);
   }
 
   return result;
@@ -1395,7 +1398,83 @@ export function dbxLlmFlowStateWithImportedRuns(state: DbxLlmFlowState, input: D
     ordered.forEach((run) => selectRun(m, run, 'restore', []));
   }
 
-  return { state: m.finish(), imported: imported.map((x) => x.id), skipped };
+  return { state: dbxLlmFlowStateWithPrunedRuns(m.finish(), context.flowConfig?.history), imported: imported.map((x) => x.id), skipped };
+}
+
+// MARK: History
+/**
+ * Resolved limits of a flow's run history.
+ */
+export interface DbxLlmFlowHistoryLimits {
+  readonly maxRootRuns: number;
+  readonly maxLeafRuns: number;
+}
+
+/**
+ * Resolves the history limits of a config, filling in the defaults.
+ *
+ * @param config - The history config.
+ * @returns The limits.
+ */
+export function dbxLlmFlowHistoryLimits(config: Maybe<DbxLlmFlowHistoryConfig>): DbxLlmFlowHistoryLimits {
+  return {
+    maxRootRuns: Math.max(0, config?.maxRootRuns ?? DEFAULT_DBX_LLM_FLOW_HISTORY_MAX_ROOT_RUNS),
+    maxLeafRuns: Math.max(0, config?.maxLeafRuns ?? DEFAULT_DBX_LLM_FLOW_HISTORY_MAX_LEAF_RUNS)
+  };
+}
+
+const pruneDbxLlmFlowRuns = pruneTreesFunction<DbxLlmFlowRun, DbxLlmFlowRunId>({
+  readId: (x) => x.id,
+  readParentId: (x) => x.parentRunId,
+  readOrder: (x) => x.startedAt.getTime(),
+  readRootGroup: (x) => x.sectionKey,
+  isPreferredLeaf: (x) => x.state === 'success'
+});
+
+/**
+ * Returns the ids of the runs the history keeps. See DbxLlmFlowHistoryConfig for the rules.
+ *
+ * @param state - The state.
+ * @param limits - The history limits.
+ * @returns The ids of the runs to keep.
+ */
+export function dbxLlmFlowHistoryRunIdsToKeep(state: Pick<DbxLlmFlowState, 'runs' | 'sections'>, limits: DbxLlmFlowHistoryLimits): Set<DbxLlmFlowRunId> {
+  const runs = Object.values(state.runs);
+  const pinnedIds: Maybe<DbxLlmFlowRunId>[] = runs.filter((x) => x.state === 'running').map((x) => x.id);
+
+  for (const section of Object.values(state.sections)) {
+    pinnedIds.push(section.activeRunId, ...section.selectedRunIds, section.followedParentRunId, section.lastFailedRunId);
+  }
+
+  const { keep } = pruneDbxLlmFlowRuns({ items: runs, maxRoots: limits.maxRootRuns, maxLeaves: limits.maxLeafRuns, pinnedIds: filterMaybeArrayValues(pinnedIds) });
+  return new Set(keep.map((x) => x.id));
+}
+
+/**
+ * Prunes the run history to its limits. See DbxLlmFlowHistoryConfig for the rules.
+ *
+ * @param state - The state.
+ * @param config - The history config. Undefined uses the default limits.
+ * @returns The pruned state, or the same state when nothing is pruned.
+ */
+export function dbxLlmFlowStateWithPrunedRuns(state: DbxLlmFlowState, config: Maybe<DbxLlmFlowHistoryConfig>): DbxLlmFlowState {
+  const keep = dbxLlmFlowHistoryRunIdsToKeep(state, dbxLlmFlowHistoryLimits(config));
+  let result = state;
+
+  if (keep.size !== Object.keys(state.runs).length) {
+    // in the original order, which breaks start-time ties
+    const runs: Record<DbxLlmFlowRunId, DbxLlmFlowRun> = {};
+
+    for (const [id, run] of Object.entries(state.runs)) {
+      if (keep.has(id)) {
+        runs[id] = run;
+      }
+    }
+
+    result = { ...state, runs };
+  }
+
+  return result;
 }
 
 // MARK: Restore

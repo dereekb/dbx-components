@@ -84,7 +84,15 @@ export const DBX_LLM_FLOW_RUN_NON_JSON_OUTPUT_ERROR_CODE = 'DBX_LLM_FLOW_RUN_NON
  */
 export const DBX_LLM_FLOW_STORAGE_PREFIX = 'dbx_llm_flow';
 
-export const DEFAULT_DBX_LLM_FLOW_MAX_PERSISTED_RUNS_PER_SECTION = 25;
+/**
+ * Default max root runs a flow's history keeps per section. See DbxLlmFlowHistoryConfig.
+ */
+export const DEFAULT_DBX_LLM_FLOW_HISTORY_MAX_ROOT_RUNS = 25;
+
+/**
+ * Default max leaf runs a flow's history keeps per root section's tree. See DbxLlmFlowHistoryConfig.
+ */
+export const DEFAULT_DBX_LLM_FLOW_HISTORY_MAX_LEAF_RUNS = 25;
 
 // MARK: State
 /**
@@ -449,8 +457,31 @@ export type DbxLlmFlowAnySectionConfig = DbxLlmFlowSectionConfig<any, any>;
 
 export interface DbxLlmFlowPersistenceConfig {
   readonly storageKey?: Maybe<string>;
-  readonly maxRunsPerSection?: Maybe<number>;
   readonly debounceTime?: Maybe<number>;
+}
+
+/**
+ * Limits of a flow's run history, which is a tree: a child section's run points at the parent section's run it followed (Brief → Outline →
+ * Draft). The history is pruned in memory whenever a run finishes, runs are imported or a persisted flow is restored, and the same rules decide
+ * what is saved, so the history list and the storage agree.
+ *
+ * - Root runs (runs with no parent run, such as each Brief) are capped per section. The oldest roots past the limit are pruned with their
+ *   branches.
+ * - Leaf runs (runs with no child runs) are capped per root section's tree. Past the limit the oldest leaf is pruned first; a pruned leaf can
+ *   leave its parent as a leaf, which is then pruned in turn, so only leaves are ever removed and no kept run loses its parent. Each kept root
+ *   keeps its latest leaf (the latest successful one, if any) and the path to it, even past the limit.
+ * - Runs in use are always kept with their parents: active runs, selected runs, the parent runs sections follow and each section's last failed
+ *   run.
+ */
+export interface DbxLlmFlowHistoryConfig {
+  /**
+   * Max root runs kept per section. Defaults to DEFAULT_DBX_LLM_FLOW_HISTORY_MAX_ROOT_RUNS.
+   */
+  readonly maxRootRuns?: Maybe<number>;
+  /**
+   * Max leaf runs kept per root section's tree. Defaults to DEFAULT_DBX_LLM_FLOW_HISTORY_MAX_LEAF_RUNS.
+   */
+  readonly maxLeafRuns?: Maybe<number>;
 }
 
 export interface DbxLlmFlowConfig {
@@ -462,6 +493,10 @@ export interface DbxLlmFlowConfig {
   readonly runIdFactory?: Maybe<ModelIdFactory>;
   readonly describeRun?: Maybe<DbxLlmFlowDescribeRunFunction>;
   readonly persistence?: Maybe<DbxLlmFlowPersistenceConfig>;
+  /**
+   * Limits of the run history. Applies in memory and to what is persisted.
+   */
+  readonly history?: Maybe<DbxLlmFlowHistoryConfig>;
 }
 
 // MARK: Binding Contract

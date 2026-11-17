@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { DBX_LLM_FLOW_RUN_INTERRUPTED_ERROR_CODE, DBX_LLM_FLOW_RUN_NON_JSON_OUTPUT_ERROR_CODE, type DbxLlmFlowAnySectionConfig, type DbxLlmFlowConfig, type DbxLlmFlowRun, type DbxLlmFlowRunKind, type DbxLlmFlowSectionKey, type DbxLlmFlowState } from './llm.flow';
 import {
   type DbxLlmFlowStateContext,
+  dbxLlmFlowHistoryLimits,
+  dbxLlmFlowHistoryRunIdsToKeep,
   dbxLlmFlowRunLineage,
   dbxLlmFlowRunsWithInterruptedRuns,
   dbxLlmFlowSectionInputSource,
@@ -17,6 +19,7 @@ import {
   dbxLlmFlowStateWithImportedRuns,
   dbxLlmFlowStateWithLoadedRun,
   dbxLlmFlowStateWithPastedRawInput,
+  dbxLlmFlowStateWithPrunedRuns,
   dbxLlmFlowStateWithRegisteredSection,
   dbxLlmFlowStateWithRevertedRawInput,
   dbxLlmFlowStateWithRunBridge,
@@ -625,5 +628,75 @@ describe('dbxLlmFlowSectionOptionsDescription()', () => {
   it('should return undefined without option fields or values', () => {
     expect(dbxLlmFlowSectionOptionsDescription(undefined, { count: 2 })).toBeUndefined();
     expect(dbxLlmFlowSectionOptionsDescription(FIELDS, undefined)).toBeUndefined();
+  });
+});
+
+describe('history pruning', () => {
+  const HISTORY_SECTIONS: Record<string, DbxLlmFlowSectionKey> = { b: 'brief', o: 'outline', d: 'draft' };
+
+  // the section comes from the id's first letter: b(rief), o(utline), d(raft)
+  function historyRun(id: string, startedAt: number, parentRunId?: string): DbxLlmFlowRun {
+    return { id, sectionKey: HISTORY_SECTIONS[id[0]], kind: 'run', parentRunId, input: { rawInput: id }, state: 'success', startedAt: new Date(startedAt), finishedAt: new Date(startedAt + 1) };
+  }
+
+  function failed(run: DbxLlmFlowRun): DbxLlmFlowRun {
+    return { ...run, state: 'failed' };
+  }
+
+  function historyState(runs: DbxLlmFlowRun[], sections?: Partial<Record<DbxLlmFlowSectionKey, Partial<DbxLlmFlowState['sections'][string]>>>): DbxLlmFlowState {
+    const sectionStates: DbxLlmFlowState['sections'] = {};
+
+    for (const key of ['brief', 'outline', 'draft']) {
+      sectionStates[key] = { key, draft: { rawInput: '' }, selectedRunIds: [], draftRevision: 0, mountCount: 1, ...sections?.[key] };
+    }
+
+    return { ...initialDbxLlmFlowState(), sections: sectionStates, runs: Object.fromEntries(runs.map((x) => [x.id, x])) };
+  }
+
+  function kept(state: DbxLlmFlowState, maxRootRuns: number, maxLeafRuns: number): string[] {
+    return Array.from(dbxLlmFlowHistoryRunIdsToKeep(state, { maxRootRuns, maxLeafRuns })).sort();
+  }
+
+  it('should default both limits to 25', () => {
+    expect(dbxLlmFlowHistoryLimits(undefined)).toEqual({ maxRootRuns: 25, maxLeafRuns: 25 });
+    expect(dbxLlmFlowHistoryLimits({ maxLeafRuns: 3 })).toEqual({ maxRootRuns: 25, maxLeafRuns: 3 });
+  });
+
+  it('should keep every root up to the limit with the path to its latest leaf, and prune the older leaves oldest first', () => {
+    const runs: DbxLlmFlowRun[] = [];
+
+    for (const i of [1, 2, 3]) {
+      runs.push(historyRun(`b${i}`, i * 100), historyRun(`o${i}`, i * 100 + 10, `b${i}`), historyRun(`d${i}old`, i * 100 + 20, `o${i}`), historyRun(`d${i}new`, i * 100 + 30, `o${i}`));
+    }
+
+    expect(kept(historyState(runs), 3, 3)).toEqual(['b1', 'b2', 'b3', 'd1new', 'd2new', 'd3new', 'o1', 'o2', 'o3']);
+  });
+
+  it('should always keep the runs in use with their parents', () => {
+    const runs = [historyRun('b1', 100), historyRun('o1', 110, 'b1'), historyRun('b2', 200), historyRun('b3', 300), failed(historyRun('bfailed', 400))];
+    const state = historyState(runs, { outline: { selectedRunIds: ['o1'] }, brief: { lastFailedRunId: 'bfailed' } });
+    expect(kept(state, 1, 1)).toEqual(['b1', 'bfailed', 'o1']);
+  });
+
+  it('should protect the latest successful leaf over a newer failed one', () => {
+    const runs = [historyRun('b', 1), historyRun('o', 10, 'b'), historyRun('dok', 20, 'o'), failed(historyRun('dfailed', 30, 'o'))];
+    expect(kept(historyState(runs), 3, 1)).toEqual(['b', 'dok', 'o']);
+  });
+
+  it('should return the same state when nothing is pruned, and keep the run order', () => {
+    const state = historyState([historyRun('b2', 200), historyRun('b1', 100), historyRun('b3', 300)]);
+    expect(dbxLlmFlowStateWithPrunedRuns(state, undefined)).toBe(state);
+
+    const pruned = dbxLlmFlowStateWithPrunedRuns(state, { maxRootRuns: 2 });
+    expect(Object.keys(pruned.runs)).toEqual(['b2', 'b3']);
+  });
+
+  it('should prune the history in memory when a run finishes', () => {
+    const flow = makeFlow([FORM_A, TEXT_B], { history: { maxRootRuns: 2, maxLeafRuns: 2 } });
+    run(flow, 'a', 'a1', 'one');
+    run(flow, 'a', 'a2', 'two');
+    run(flow, 'a', 'a3', 'three');
+
+    expect(Object.keys(flow.state.runs)).toEqual(['a2', 'a3']);
   });
 });
