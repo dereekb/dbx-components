@@ -348,6 +348,59 @@
       "componentScope": "layoutboxes"
     },
     {
+      "cssVariable": "--dbx-llm-flow-mono-font-family",
+      "source": "dbx-form",
+      "role": "typography",
+      "intents": [
+        "llm flow mono font family"
+      ],
+      "description": "Component-scoped override point (`llm`) read in `packages/dbx-form/src/lib/extension/llm/_llm.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `monospace`.",
+      "defaults": {
+        "light": "monospace"
+      },
+      "componentScope": "llm"
+    },
+    {
+      "cssVariable": "--dbx-llm-flow-run-buttons-min-width",
+      "source": "dbx-form",
+      "role": "size",
+      "intents": [
+        "llm flow run buttons min width"
+      ],
+      "description": "Component-scoped override point (`llm`) read in `packages/dbx-form/src/lib/extension/llm/_llm.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `120px`.",
+      "defaults": {
+        "light": "120px"
+      },
+      "componentScope": "llm"
+    },
+    {
+      "cssVariable": "--dbx-llm-flow-section-border",
+      "source": "dbx-form",
+      "role": "misc",
+      "intents": [
+        "llm flow section border"
+      ],
+      "description": "Component-scoped override point (`llm`) read in `packages/dbx-form/src/lib/extension/llm/_llm.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `1px solid var(--mat-sys-outline-variant)`.",
+      "defaults": {
+        "light": "1px solid var(--mat-sys-outline-variant)"
+      },
+      "componentScope": "llm"
+    },
+    {
+      "cssVariable": "--dbx-llm-flow-section-gap",
+      "source": "dbx-form",
+      "role": "spacing",
+      "intents": [
+        "llm flow section gap",
+        "llm flow section gap spacing"
+      ],
+      "description": "Component-scoped override point (`llm`) read in `packages/dbx-form/src/lib/extension/llm/_llm.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-padding-3)`.",
+      "defaults": {
+        "light": "var(--dbx-padding-3)"
+      },
+      "componentScope": "llm"
+    },
+    {
       "cssVariable": "--dbx-phone-field-country-selector-width",
       "source": "dbx-form",
       "role": "size",

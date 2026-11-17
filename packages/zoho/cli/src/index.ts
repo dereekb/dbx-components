@@ -9,11 +9,9 @@ import { DESK_COMMAND } from './lib/commands/desk.command';
 import { SIGN_COMMAND } from './lib/commands/sign.command';
 import { ANALYTICS_COMMAND } from './lib/commands/analytics.command';
 import { REQUEST_COMMAND } from './lib/commands/request.command';
-import { createAuthMiddleware } from './lib/middleware/auth.middleware';
+import { createAuthMiddleware, exitZohoCliCommandWithError } from './lib/middleware/auth.middleware';
 import { clearOutputConfig, loadCliConfigFile, mergeCliConfig, ZOHO_CLI_TOKEN_COMMAND_ENV_VAR, ZOHO_CLI_TOKEN_SOURCE_ENV_VAR } from './lib/config/cli.config';
-// Importing this module registers the Zoho secret-redaction pattern + Zoho-aware error mapper
-// with @dereekb/dbx-cli. The named import keeps the side effects scoped to this entry point.
-import { outputError } from './lib/util/output';
+import { configureZohoCliOutput } from './lib/util/output';
 
 const outputCommand = createOutputCommand({
   cliName: 'zoho-cli',
@@ -55,6 +53,9 @@ const outputMiddleware = createOutputMiddleware({
 });
 
 async function main() {
+  // register the Zoho secret-redaction pattern + Zoho-aware error mapper with @dereekb/dbx-cli before anything can fail
+  configureZohoCliOutput();
+
   try {
     await yargs(hideBin(process.argv))
       .scriptName('zoho-cli')
@@ -64,7 +65,7 @@ async function main() {
         type: 'boolean',
         default: false,
         global: true,
-        describe: 'Verbose output'
+        describe: 'Verbose output (adds one line per Zoho API error on stderr; stdout stays a single JSON line)'
       })
       .option('dump-dir', {
         type: 'string',
@@ -108,8 +109,7 @@ async function main() {
       .wrap(Math.min(120, process.stdout.columns || 80))
       .parse();
   } catch (e) {
-    outputError(e);
-    process.exit(1);
+    await exitZohoCliCommandWithError(e);
   }
 }
 

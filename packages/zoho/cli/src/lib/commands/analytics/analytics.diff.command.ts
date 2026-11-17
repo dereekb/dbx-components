@@ -1,9 +1,9 @@
 import type { CommandModule, Argv } from 'yargs';
 import { readFile } from 'node:fs/promises';
 import { noop } from '@dereekb/util';
-import { type ZohoAnalyticsImportFileType, type ZohoAnalyticsSchemaDiff, isZohoAnalyticsSchemaDiffClean, zohoAnalyticsRowDataFromFileContent, zohoAnalyticsSchemaDiff } from '@dereekb/zoho';
-import { getAnalyticsApi } from '../../middleware/auth.middleware';
-import { outputResult, outputError } from '../../util/output';
+import { type ZohoAnalyticsImportFileType, type ZohoAnalyticsSchemaDiff, isZohoAnalyticsSchemaDiffClean, zohoAnalyticsRowDataFromFileContent, zohoAnalyticsSchemaDiff, zohoAnalyticsGetTableMetadata } from '@dereekb/zoho';
+import { getAnalyticsContext, exitZohoCliCommandWithError } from '../../middleware/auth.middleware';
+import { outputResult } from '../../util/output';
 import { inferFileType } from './analytics.import.command';
 
 /**
@@ -43,7 +43,7 @@ const diffSchemaCommand: CommandModule = {
       .option('quiet', { type: 'boolean', default: false, describe: 'Report only through the exit code, printing nothing' }),
   handler: async (argv: any) => {
     try {
-      const api = getAnalyticsApi(argv);
+      const analyticsContext = getAnalyticsContext(argv);
       const fileType = (argv.fileType as ZohoAnalyticsImportFileType) ?? inferFileType(argv.file);
 
       if (fileType == null) {
@@ -52,7 +52,7 @@ const diffSchemaCommand: CommandModule = {
 
       const content = await readFile(argv.file, 'utf8');
       const rowData = zohoAnalyticsRowDataFromFileContent({ content, fileType, delimiter: argv.delimiter });
-      const { data } = await api.getTableMetadata({ workspaceId: argv.workspaceId, viewId: argv.viewId });
+      const { data } = await zohoAnalyticsGetTableMetadata(analyticsContext)({ workspaceId: argv.workspaceId, viewId: argv.viewId });
 
       const diff = zohoAnalyticsSchemaDiff({ ...rowData, columns: data.columns ?? [], maxSamples: argv.maxSamples });
       const clean = isZohoAnalyticsSchemaDiffClean(diff, { strict: argv.strict });
@@ -66,8 +66,7 @@ const diffSchemaCommand: CommandModule = {
         process.exit(1);
       }
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };

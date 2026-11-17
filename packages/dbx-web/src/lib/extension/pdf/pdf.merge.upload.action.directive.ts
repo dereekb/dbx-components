@@ -1,18 +1,18 @@
 import { Directive, inject } from '@angular/core';
-import { first, switchMap } from 'rxjs';
-import { DbxActionContextStoreSourceInstance, cleanSubscriptionWithLockSet } from '@dereekb/dbx-core';
+import { first } from 'rxjs';
+import { AbstractDbxActionValueGetterDirective, type AbstractDbxActionValueGetterDirectiveConfig } from '@dereekb/dbx-core';
 import { DbxPdfMergeEditorStore } from './pdf.merge.editor.store';
 
 /**
- * Bridges an ancestor `dbxAction` to an ancestor {@link DbxPdfMergeEditorStore}: when the action's `triggered$` fires, the directive reads the latest `mergeOutput$` from the store and calls `source.readyValue(blob)` so the action handler runs with the merged PDF.
+ * Bridges an ancestor `dbxAction` to an ancestor {@link DbxPdfMergeEditorStore}: when the action is triggered, the directive reads the latest `mergeOutput$` from the store and readies it as the action value so the action handler runs with the merged PDF.
  *
  * Action-aware companion to {@link DbxPdfMergeUploadButtonDirective}, which is intentionally action-blind. Together with the stock `dbxActionButton`, all three compose on a single `<dbx-button>`:
  *
  * - `dbxActionButton` fires `source.trigger()` on click and reflects the action's working/disabled state on the button.
  * - `dbxPdfMergeUploadButton` opens the merge dialog and only allows the click to propagate if the user confirms.
- * - `dbxPdfMergeUploadAction` (this directive) listens for `triggered$` and supplies the store's merge output to the action.
+ * - `dbxPdfMergeUploadAction` (this directive) supplies the store's merge output to the action when it is triggered.
  *
- * The trigger-then-readyValue ordering matches the canonical {@link DbxActionContextStoreSourceInstance.triggerWithValue} flow — `readyValue` is only honored after `trigger()` has moved the state out of `IDLE`, so listening to `triggered$` is what makes the value actually reach the handler.
+ * Extends {@link AbstractDbxActionValueGetterDirective}, which calls the getter on each TRIGGERED edge. No value snapshot is registered, since reading the merge output starts a merge.
  *
  * @example
  * ```html
@@ -26,16 +26,15 @@ import { DbxPdfMergeEditorStore } from './pdf.merge.editor.store';
 @Directive({
   selector: '[dbxPdfMergeUploadAction]'
 })
-export class DbxPdfMergeUploadActionDirective {
-  readonly source = inject<DbxActionContextStoreSourceInstance<Blob, unknown>>(DbxActionContextStoreSourceInstance);
+export class DbxPdfMergeUploadActionDirective extends AbstractDbxActionValueGetterDirective<Blob> {
   readonly store = inject(DbxPdfMergeEditorStore);
 
   constructor() {
-    cleanSubscriptionWithLockSet({
-      lockSet: this.source.lockSet,
-      sub: this.source.triggered$.pipe(switchMap(() => this.store.mergeOutput$.pipe(first()))).subscribe((blob) => {
-        this.source.readyValue(blob);
-      })
-    });
+    super();
+    this.setValueGetterFunction(() => this.store.mergeOutput$.pipe(first()));
+  }
+
+  protected override valueGetterConfig(): AbstractDbxActionValueGetterDirectiveConfig {
+    return { registerValueSnapshot: false };
   }
 }

@@ -18,6 +18,20 @@ export interface DbxActionValueGetterDirectiveComputeInputsConfig<T> {
 }
 
 /**
+ * Optional configuration returned by {@link AbstractDbxActionValueGetterDirective.valueGetterConfig}.
+ */
+export interface AbstractDbxActionValueGetterDirectiveConfig {
+  /**
+   * Whether or not to register the value getter as the action's value snapshot.
+   *
+   * Set to false for getters that have side effects, since snapshots call the getter without triggering the action.
+   *
+   * Defaults to true.
+   */
+  readonly registerValueSnapshot?: Maybe<boolean>;
+}
+
+/**
  * Abstract base class for directives that retrieve a value when the action is triggered.
  *
  * Creates and manages a {@link DbxActionValueGetterInstance} internally, providing
@@ -33,13 +47,28 @@ export abstract class AbstractDbxActionValueGetterDirective<T> {
 
   readonly source = inject(DbxActionContextStoreSourceInstance<T, unknown>);
 
-  private readonly _triggerInstance: DbxActionValueGetterInstance<T> = new DbxActionValueGetterInstance<T>({
-    source: this.source
-  });
+  private readonly _triggerInstance: DbxActionValueGetterInstance<T>;
 
   constructor() {
+    const config = this.valueGetterConfig();
+    this._triggerInstance = new DbxActionValueGetterInstance<T>({
+      source: this.source,
+      registerValueSnapshot: config?.registerValueSnapshot
+    });
+
     this._triggerInstance.init();
     clean(this._triggerInstance);
+  }
+
+  /**
+   * Returns the configuration used to create the value getter instance.
+   *
+   * Called from the constructor, so overrides must not depend on subclass fields. Override it to return `{ registerValueSnapshot: false }` for getters with side effects.
+   *
+   * @returns The configuration, or undefined for the defaults.
+   */
+  protected valueGetterConfig(): Maybe<AbstractDbxActionValueGetterDirectiveConfig> {
+    return undefined;
   }
 
   setValueGetterFunction(valueGetterFunction: Maybe<DbxActionValueGetterValueGetterFunction<T>>) {

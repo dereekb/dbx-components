@@ -155,7 +155,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         expect(res.body.scopes_supported).not.toContain('reports');
       });
 
-      // `token.cli` is the deliberate exception demo-api's own `scopesSupported` filter adds back: an
+      // `token.cli` is the deliberate exception demo-api lists in `advertisedAssignmentOnlyScopes`: an
       // MCP connector that never requests it could never mint a CLI credential, and advertising it is
       // safe because the consent builder withholds it from any client lacking the `cli-handoff`
       // profile. Advertised ≠ granted — see the unlock-gate drop test below.
@@ -163,9 +163,11 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         const res = await request(app.getHttpServer()).get('/.well-known/oauth-protected-resource').expect(200);
 
         expect(res.body.scopes_supported).toContain(CLI_TOKEN_OIDC_SCOPE);
+        // outside production token.cli is both in the base list and listed; the controller does not repeat it
+        expect(res.body.scopes_supported.filter((scope: string) => scope === CLI_TOKEN_OIDC_SCOPE)).toHaveLength(1);
       });
 
-      // Not added back by the filter: outside production (which a test run is) the `external-token`
+      // Not listed in `advertisedAssignmentOnlyScopes`: outside production (which a test run is) the `external-token`
       // profile is a default profile, so token.external is in the base list on its own and an agent's
       // self-registered connector requests it. Still admin-only and capped at 8 hours at consent.
       it('should advertise token.external outside production', async () => {

@@ -1,10 +1,10 @@
 {
   "name": "@dereekb/trello/node",
-  "version": "14.27.0",
+  "version": "14.28.0",
   "sideEffects": false,
   "type": "module",
   "peerDependencies": {
-    "@dereekb/trello": "14.27.0",
-    "@dereekb/util": "14.27.0"
+    "@dereekb/trello": "14.28.0",
+    "@dereekb/util": "14.28.0"
   }
 }

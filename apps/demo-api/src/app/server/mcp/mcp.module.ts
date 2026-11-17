@@ -46,23 +46,22 @@ export function demoMcpModuleConfigFactory(envService: FirebaseServerEnvService,
     //   (they reach data through callModel), and asking for it would put every admin MCP grant in the
     //   widened admin-only-scope TTL tier for no benefit.
     //
-    // token.cli is added BACK: it is assignment-only, so `clientRequestableScopesSupported` drops it
-    // from the base list, and a connector that never asks for it can never mint a CLI credential. It
-    // is safe to advertise to every MCP client because the unlock gate is per-client — the consent
+    // The filter only narrows: its input has already dropped the assignment-only scopes, so a gated
+    // scope is advertised through `advertisedAssignmentOnlyScopes` below, never from here.
+    scopesSupported: (requestableScopes) => requestableScopes.filter((scope) => scope !== SERVICE_TOKEN_OIDC_SCOPE && scope !== FIRESTORE_SESSION_OIDC_SCOPE),
+    // token.cli is listed: it is assignment-only, so `clientRequestableScopesSupported` drops it from
+    // the base list, and a connector that never asks for it can never mint a CLI credential. It is
+    // safe to advertise to every MCP client because the unlock gate is per-client — the consent
     // builder withholds it from any client without the `cli-handoff` profile, which lands it in the
     // submit's `rejected` set rather than failing the authorization. Assigning that profile is
-    // therefore the switch that selects which clients can actually obtain it.
+    // therefore the switch that selects which clients can actually obtain it. Outside production
+    // `cli-handoff` is a default profile, so `token.cli` is already in the base list and the
+    // controller does not repeat it.
     //
-    // token.external is NOT added back: outside production its `external-token` profile is a default
+    // token.external is NOT listed: outside production its `external-token` profile is a default
     // profile, so it is already in the base list and an agent's connector requests it; in a deployed
     // environment it stays unadvertised and only demo-cli's dedicated `external-token` env asks for it.
-    scopesSupported: (allScopes) => {
-      const base = allScopes.filter((scope) => scope !== SERVICE_TOKEN_OIDC_SCOPE && scope !== FIRESTORE_SESSION_OIDC_SCOPE);
-      // Already present outside production, where `cli-handoff` is a default profile and `token.cli`
-      // is therefore no longer assignment-only. Appended only when the base list omits it — i.e. in a
-      // deployed environment, where an assigned client still needs it advertised to request it.
-      return base.includes(CLI_TOKEN_OIDC_SCOPE) ? base : [...base, CLI_TOKEN_OIDC_SCOPE];
-    },
+    advertisedAssignmentOnlyScopes: [CLI_TOKEN_OIDC_SCOPE],
     serverName: 'demo-api-mcp',
     serverVersion,
     serverInstructions: 'Demo API MCP tools for the dbx-components guestbook/profile sample models. Generated from the callModel _apiDetails tree.',

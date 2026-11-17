@@ -8068,6 +8068,76 @@
       "example": "flattenObject({ a: 1, b: { c: 2, d: { e: 3 } } });\n// { a: 1, 'b.c': 2, 'b.d.e': 3 }\n\nflattenObject({ a: { b: 1 } }, { separator: '_' });\n// { a_b: 1 }\n\nflattenObject({ a: { b: { c: 1 } } }, { maxDepth: 1 });\n// { 'a.b': { c: 1 } }"
     },
     {
+      "slug": "find-non-json-compatible-value",
+      "name": "findNonJsonCompatibleValue",
+      "kind": "function",
+      "category": "object",
+      "module": "@dereekb/util",
+      "subpath": "object/object.json",
+      "signature": "findNonJsonCompatibleValue(value: unknown): Maybe<JsonIncompatibility>",
+      "description": "Finds the first value inside the input that would not survive a JSON round trip (`JSON.parse(JSON.stringify(value))`) unchanged.\n\nRejects functions, symbols, bigints, `NaN`/`Infinity`, `Date`/`RegExp`/`Map`/`Set` values, class instances, `undefined` array items and circular references.\n`undefined` object properties are allowed, since they are dropped and the round-tripped value is equivalent.",
+      "params": [
+        {
+          "name": "value",
+          "type": "unknown",
+          "description": "- The value to check.",
+          "optional": false
+        }
+      ],
+      "returns": "The first incompatibility with its path, or undefined when the value is JSON-compatible.",
+      "tags": [
+        "json",
+        "serializable",
+        "compatible",
+        "check",
+        "validate",
+        "round-trip",
+        "path",
+        "object",
+        "find",
+        "non",
+        "value",
+        "findnonjsoncompatiblevalue"
+      ],
+      "example": "findNonJsonCompatibleValue({ a: [1, { b: new Date() }] });\n// { path: 'a[1].b', reason: 'date' }",
+      "relatedSlugs": [
+        "is-json-compatible-value"
+      ]
+    },
+    {
+      "slug": "is-json-compatible-value",
+      "name": "isJsonCompatibleValue",
+      "kind": "function",
+      "category": "object",
+      "module": "@dereekb/util",
+      "subpath": "object/object.json",
+      "signature": "isJsonCompatibleValue(value: T): value is T & JsonCompatible<T>",
+      "description": "Whether or not the value survives a JSON round trip unchanged. See {@link findNonJsonCompatibleValue}.",
+      "params": [
+        {
+          "name": "value",
+          "type": "T",
+          "description": "- The value to check.",
+          "optional": false
+        }
+      ],
+      "returns": "True when the value is JSON-compatible.",
+      "tags": [
+        "json",
+        "serializable",
+        "compatible",
+        "check",
+        "is",
+        "round-trip",
+        "object",
+        "value",
+        "isjsoncompatiblevalue"
+      ],
+      "relatedSlugs": [
+        "find-non-json-compatible-value"
+      ]
+    },
+    {
       "slug": "object-keys-equality-comparator-function",
       "name": "objectKeysEqualityComparatorFunction",
       "kind": "factory",
@@ -13258,6 +13328,45 @@
         "flatten-tree",
         "flatten-tree-to-array",
         "expand-flatten-tree-function"
+      ]
+    },
+    {
+      "slug": "prune-trees-function",
+      "name": "pruneTreesFunction",
+      "kind": "factory",
+      "category": "tree",
+      "module": "@dereekb/util",
+      "subpath": "tree/tree.prune",
+      "signature": "pruneTreesFunction(config: PruneTreesFunctionConfig<T, K>): PruneTreesFunction<T, K>",
+      "description": "Creates a {@link PruneTreesFunction}, which prunes a flat list of trees (items linked by parent id), oldest first, such as a history of\ngenerations where each one derives from a parent generation.\n\n- Roots are capped per root group. The oldest roots past maxRoots are removed with their descendants.\n- Leaves are capped per root group's trees. Past maxLeaves the oldest leaf is removed first. Removing a leaf can leave its parent as a leaf,\n  which is then removed in turn, so only leaves are ever removed and no kept item loses its parent.\n- Each kept root protects the path to its newest (preferred) leaf, even past maxLeaves, so every kept root keeps its latest result.\n- Pinned items are always kept with their ancestors.",
+      "params": [
+        {
+          "name": "config",
+          "type": "PruneTreesFunctionConfig<T, K>",
+          "description": "- How to read the items.",
+          "optional": false
+        }
+      ],
+      "returns": "The prune function.",
+      "tags": [
+        "tree",
+        "prune",
+        "history",
+        "limit",
+        "leaf",
+        "root",
+        "parent",
+        "lineage",
+        "retention",
+        "oldest",
+        "trees",
+        "function",
+        "prunetreesfunction"
+      ],
+      "example": "const pruneRuns = pruneTreesFunction<Run>({ readId: (x) => x.id, readParentId: (x) => x.parentId, readOrder: (x) => x.createdAt.getTime() });\nconst { keep } = pruneRuns({ items: runs, maxRoots: 25, maxLeaves: 25, pinnedIds: [selectedRunId] });",
+      "relatedSlugs": [
+        "expand-trees",
+        "flatten-tree-to-array-function"
       ]
     },
     {

@@ -1,9 +1,10 @@
 import type { CommandModule, Argv } from 'yargs';
-import { getDeskApi } from '../../middleware/auth.middleware';
+import { getDeskContext, exitZohoCliCommandWithError } from '../../middleware/auth.middleware';
 import { noop } from '@dereekb/util';
-import { outputResult, outputError } from '../../util/output';
+import { outputResult } from '../../util/output';
 import { withDeskPagination } from '../../util/args';
 import { runPaginatedList, ZOHO_DESK_PAGINATION_ADAPTER } from '../../util/pagination';
+import { zohoDeskGetTicketActivities } from '@dereekb/zoho';
 
 const activitiesListCommand: CommandModule = {
   command: 'list <ticketId>',
@@ -11,11 +12,11 @@ const activitiesListCommand: CommandModule = {
   builder: (yargs: Argv) => withDeskPagination(yargs).positional('ticketId', { type: 'string', demandOption: true, describe: 'Ticket ID' }),
   handler: async (argv: any) => {
     try {
-      const api = getDeskApi(argv);
+      const deskContext = getDeskContext(argv);
       const initialInput = { ticketId: argv.ticketId, from: argv.from, limit: argv.limit };
       const outcome = await runPaginatedList({
         initialInput,
-        fetchPage: (input) => api.getTicketActivities(input),
+        fetchPage: (input) => zohoDeskGetTicketActivities(deskContext)(input),
         adapter: ZOHO_DESK_PAGINATION_ADAPTER,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,
@@ -27,8 +28,7 @@ const activitiesListCommand: CommandModule = {
         outputResult(result.data, { from: argv.from, limit: argv.limit, count: result.data?.length });
       }
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };

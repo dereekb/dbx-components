@@ -1,9 +1,10 @@
 import type { CommandModule, Argv } from 'yargs';
-import { getDeskApi } from '../../middleware/auth.middleware';
+import { getDeskContext, exitZohoCliCommandWithError } from '../../middleware/auth.middleware';
 import { noop } from '@dereekb/util';
-import { outputResult, outputError } from '../../util/output';
+import { outputResult } from '../../util/output';
 import { withDeskPagination } from '../../util/args';
 import { runPaginatedList, ZOHO_DESK_PAGINATION_ADAPTER } from '../../util/pagination';
+import { zohoDeskGetAgentById, zohoDeskGetAgents, zohoDeskGetMyInfo } from '@dereekb/zoho';
 
 const agentsListCommand: CommandModule = {
   command: 'list',
@@ -12,11 +13,11 @@ const agentsListCommand: CommandModule = {
     withDeskPagination(yargs).option('department-id', { type: 'string', describe: 'Filter by department ID' }).option('status', { type: 'string', describe: 'Filter by status (active, disabled)' }).option('include', { type: 'string', describe: 'Comma-separated includes (e.g. role,profile,departments)' }),
   handler: async (argv: any) => {
     try {
-      const api = getDeskApi(argv);
+      const deskContext = getDeskContext(argv);
       const initialInput = { from: argv.from, limit: argv.limit, departmentId: argv.departmentId, status: argv.status, include: argv.include };
       const outcome = await runPaginatedList({
         initialInput,
-        fetchPage: (input) => api.getAgents(input),
+        fetchPage: (input) => zohoDeskGetAgents(deskContext)(input),
         adapter: ZOHO_DESK_PAGINATION_ADAPTER,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,
@@ -28,8 +29,7 @@ const agentsListCommand: CommandModule = {
         outputResult(result.data, { from: argv.from, limit: argv.limit, count: result.data?.length });
       }
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -40,12 +40,11 @@ const agentsGetCommand: CommandModule = {
   builder: (yargs: Argv) => yargs.positional('agentId', { type: 'string', demandOption: true, describe: 'Agent ID' }).option('include', { type: 'string', describe: 'Comma-separated includes' }),
   handler: async (argv: any) => {
     try {
-      const api = getDeskApi(argv);
-      const result = await api.getAgentById({ agentId: argv.agentId, include: argv.include });
+      const deskContext = getDeskContext(argv);
+      const result = await zohoDeskGetAgentById(deskContext)({ agentId: argv.agentId, include: argv.include });
       outputResult(result);
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -56,12 +55,11 @@ const agentsMyInfoCommand: CommandModule = {
   builder: (yargs: Argv) => yargs,
   handler: async (argv: any) => {
     try {
-      const api = getDeskApi(argv);
-      const result = await api.getMyInfo();
+      const deskContext = getDeskContext(argv);
+      const result = await zohoDeskGetMyInfo(deskContext)();
       outputResult(result);
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };

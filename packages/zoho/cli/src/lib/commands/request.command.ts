@@ -1,6 +1,6 @@
 import type { CommandModule, Argv } from 'yargs';
-import { getRecruitApi, getCrmApi, getDeskApi, getSignApi } from '../middleware/auth.middleware';
-import { outputResult, outputError } from '../util/output';
+import { getRecruitContext, getCrmContext, getDeskContext, getSignContext, exitZohoCliCommandWithError } from '../middleware/auth.middleware';
+import { outputResult } from '../util/output';
 
 export const REQUEST_COMMAND: CommandModule = {
   command: 'request <product> <method> <path>',
@@ -28,16 +28,16 @@ export const REQUEST_COMMAND: CommandModule = {
 
       switch (product) {
         case 'recruit':
-          productContext = getRecruitApi(argv).recruitContext;
+          productContext = getRecruitContext(argv);
           break;
         case 'crm':
-          productContext = getCrmApi(argv).crmContext;
+          productContext = getCrmContext(argv);
           break;
         case 'desk':
-          productContext = getDeskApi(argv).deskContext;
+          productContext = getDeskContext(argv);
           break;
         case 'sign':
-          productContext = getSignApi(argv).signContext;
+          productContext = getSignContext(argv);
           break;
         default:
           throw new Error(`Unknown product: ${product}`);
@@ -62,8 +62,7 @@ export const REQUEST_COMMAND: CommandModule = {
       const result = await productContext.fetchJson(url, fetchOptions as any);
       outputResult(result);
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };

@@ -107,5 +107,11 @@
         <div class="dbx-primary-bg dbx-color-bg" [dbxFlexSize]="2">2</div>
       </div>
     </doc-feature-example>
+    <doc-feature-example header="dbxHeightSync" hint="Groups elements whose heights stay in sync: dbxHeightSyncFollower elements take the height of the tallest dbxHeightSyncSource. Drag the text area's corner to resize it.">
+      <div dbxHeightSync style="display: flex; gap: 8px; align-items: flex-start">
+        <textarea dbxHeightSyncSource aria-label="Height sync source" rows="3" style="flex: 1; resize: vertical" placeholder="The source. Drag the corner to resize."></textarea>
+        <div dbxHeightSyncFollower class="dbx-primary-bg dbx-color-bg text-center" style="width: 160px; display: flex; align-items: center; justify-content: center">Follower</div>
+      </div>
+    </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

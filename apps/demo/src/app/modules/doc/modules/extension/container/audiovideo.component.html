@@ -1,0 +1,130 @@
+<dbx-content-container>
+  <doc-feature-layout header="Audio/Video" hint="Coordinate audio/video playback, preview images on hover and show media in a gallery.">
+    <!-- Playback -->
+    <doc-feature-example header="dbxAudioVideoPlayback" hint="Registers an audio or video element with the app-wide playback store. Only one plays at a time by default.">
+      <p>Play one tone, then another. The first one pauses.</p>
+      @for (tone of tones; track tone) {
+        <div class="dbx-pb2">
+          <audio controls preload="none" dbxAudioVideoPlayback [src]="assetsPath + '/' + tone + '.mp3'"></audio>
+        </div>
+      }
+      <dbx-detail-block icon="graphic_eq" header="App-wide store">
+        <p>Playing: {{ appPlaybackStore.playingCountSignal() }} / Registered: {{ appPlaybackStore.registeredCountSignal() }}</p>
+      </dbx-detail-block>
+    </doc-feature-example>
+
+    <!-- Playback Group -->
+    <doc-feature-example header="dbxAudioVideoPlaybackGroup" hint="Provides a separate playback store for the media inside it, with its own limit and overflow mode.">
+      <div [dbxAudioVideoPlaybackGroup]="{ maxPlaying: groupMaxPlaying(), overflowMode: groupOverflowMode() }" #group="dbxAudioVideoPlaybackGroup">
+        <div class="dbx-pb3">
+          @for (option of maxPlayingOptions; track option) {
+            <dbx-button [text]="'Max ' + option" [raised]="groupMaxPlaying() === option" (buttonClick)="groupMaxPlaying.set(option)"></dbx-button>
+            <dbx-button-spacer></dbx-button-spacer>
+          }
+          <dbx-button [text]="'Mode: ' + groupOverflowMode()" stroked (buttonClick)="toggleOverflowMode()"></dbx-button>
+          <dbx-button-spacer></dbx-button-spacer>
+          <dbx-button text="Pause all" icon="pause" stroked (buttonClick)="group.store.pauseAll()"></dbx-button>
+        </div>
+        @for (tone of tones; track tone) {
+          <div class="dbx-pb2">
+            <audio controls loop preload="none" dbxAudioVideoPlayback [src]="assetsPath + '/' + tone + '.mp3'"></audio>
+          </div>
+        }
+        <video controls loop preload="metadata" width="320" dbxAudioVideoPlayback [src]="assetsPath + '/test-pattern.mp4'"></video>
+        <dbx-detail-block icon="graphic_eq" header="Group store">
+          <p>Playing: {{ group.store.playingCountSignal() }} of max {{ group.store.maxPlayingSignal() }} ({{ group.store.overflowModeSignal() }})</p>
+        </dbx-detail-block>
+      </div>
+    </doc-feature-example>
+
+    <!-- Hover Preview -->
+    <doc-feature-example header="dbxImageHoverPreview" hint="Shows a larger preview of an image while hovering it. Pass an image url, or a config to change the delay and size.">
+      <p>Default: opens {{ hoverPreviewDefaults.openDelay }}ms after the pointer enters (so it does not flash while the pointer passes over), closes as soon as the pointer leaves, and is at most {{ hoverPreviewDefaults.maxWidth }} × {{ hoverPreviewDefaults.maxHeight }}.</p>
+      <div class="dbx-flex-bar dbx-pb3">
+        @for (image of images; track image) {
+          <img class="dbx-pr3" [src]="image" alt="Hover to preview" width="120" height="90" style="object-fit: cover" [dbxImageHoverPreview]="image" />
+        }
+      </div>
+      <p>Configured: opens immediately and is at most 240px × 240px.</p>
+      <div class="dbx-flex-bar dbx-pb3">
+        @for (preview of configuredImagePreviews; track preview.src) {
+          <img class="dbx-pr3" [src]="preview.src" alt="Hover to preview" width="120" height="90" style="object-fit: cover" [dbxImageHoverPreview]="preview" />
+        }
+      </div>
+      <dbx-detail-block icon="tune" header="Config">
+        <p>
+          <code>openDelay</code>
+          — ms to wait after the pointer enters before opening. Defaults to {{ hoverPreviewDefaults.openDelay }}.
+        </p>
+        <p>
+          <code>closeDelay</code>
+          — ms to wait after the pointer leaves before closing. Defaults to 0.
+        </p>
+        <p>
+          <code>maxWidth</code>
+          /
+          <code>maxHeight</code>
+          — max CSS size of the preview image. Default to {{ hoverPreviewDefaults.maxWidth }}.
+        </p>
+        <p>
+          <code>alt</code>
+          ,
+          <code>disabled</code>
+        </p>
+      </dbx-detail-block>
+    </doc-feature-example>
+
+    <!-- Gallery -->
+    <doc-feature-example
+      header="dbx-gallery"
+      hint="Media gallery with presentation, top and bottom slots per item, single selection via dbxListItemSingleSelectionModifier, and drag-to-reorder via dbxListDragDrop. Each of the top and bottom slots is either stacked outside the presentation or overlaid on it (slotMode, topSlotMode, bottomSlotMode).">
+      <div class="dbx-pb3">
+        <dbx-button text="Add 10 colors" icon="add" stroked (buttonClick)="addColors()"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button text="Reset" icon="restart_alt" stroked (buttonClick)="resetGallery()"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [text]="'Title: ' + galleryTopSlotMode()" stroked (buttonClick)="galleryTopSlotMode.set(toggleSlotMode(galleryTopSlotMode()))"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [text]="'Controls: ' + galleryBottomSlotMode()" stroked (buttonClick)="galleryBottomSlotMode.set(toggleSlotMode(galleryBottomSlotMode()))"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [text]="'Dragging: ' + (galleryDragDisabled() ? 'off' : 'on')" [icon]="galleryDragDisabled() ? 'block' : 'drag_indicator'" stroked (buttonClick)="galleryDragDisabled.set(!galleryDragDisabled())"></dbx-button>
+      </div>
+      <div class="dbx-pb3">
+        @for (option of galleryItemMinWidthOptions; track option.value) {
+          <dbx-button [text]="option.label" [raised]="galleryItemMinWidth() === option.value" (buttonClick)="galleryItemMinWidth.set(option.value)"></dbx-button>
+          <dbx-button-spacer></dbx-button-spacer>
+        }
+        @for (option of galleryColumnsOptions; track option.label) {
+          <dbx-button [text]="option.label" [raised]="galleryColumns() === option.value" (buttonClick)="galleryColumns.set(option.value)"></dbx-button>
+          <dbx-button-spacer></dbx-button-spacer>
+        }
+      </div>
+      <p class="dbx-hint">itemMinWidth: {{ galleryItemMinWidth() }}, columns: {{ galleryColumns() ?? 'auto' }}. Items grow to share the row, and the row drops to fewer columns when items would be narrower than itemMinWidth.</p>
+      <dbx-detail-block icon="check_circle" header="Selection">
+        <p>Selected: {{ selectionStore.selectedValueSignal()?.name ?? 'None' }}</p>
+        <p>Previously selected: {{ selectionStore.previousValueSignal()?.name ?? 'None' }}</p>
+        <p class="dbx-hint">Last selectionChange: {{ lastSelectionChange()?.previous?.value?.name ?? 'None' }} → {{ lastSelectionChange()?.selected?.value?.name ?? 'None' }}</p>
+      </dbx-detail-block>
+      <dbx-detail-block icon="drag_indicator" header="Reorder">
+        <p class="dbx-hint">
+          Drag a tile by its presentation to move it. The buttons in the top and bottom slots do not start a drag. Turn dragging off with the Dragging button, which sets
+          <code>disabled</code>
+          on the dbxListDragDrop config.
+        </p>
+        <p>Last move: {{ lastGalleryItemDrop() ? lastGalleryItemDrop()?.value?.name + ' ' + lastGalleryItemDrop()?.previousIndex + ' → ' + lastGalleryItemDrop()?.currentIndex : 'None' }}</p>
+      </dbx-detail-block>
+      <dbx-gallery
+        [state]="galleryStateSignal()"
+        [galleryConfig]="galleryConfig"
+        [topSlotMode]="galleryTopSlotMode()"
+        [bottomSlotMode]="galleryBottomSlotMode()"
+        [itemMinWidth]="galleryItemMinWidth()"
+        [columns]="galleryColumns()"
+        dbxListItemModifier
+        dbxListItemSingleSelectionModifier
+        (selectionChange)="onSelectionChange($event)"
+        [dbxListDragDrop]="galleryDragDropConfig()"
+        (itemDrop)="onGalleryItemDrop($event)"></dbx-gallery>
+    </doc-feature-example>
+  </doc-feature-layout>
+</dbx-content-container>

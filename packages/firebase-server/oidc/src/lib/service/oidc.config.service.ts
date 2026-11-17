@@ -110,7 +110,8 @@ export class OidcProviderConfigService {
    * unassigned client from requesting a scope it can never be granted.
    *
    * A resource MAY still advertise an assignment-only scope deliberately (demo-api does for
-   * `token.cli`, so an MCP connector can ask for it at all). That is not fatal for the clients
+   * `token.cli`, through `McpModuleConfig.advertisedAssignmentOnlyScopes`, so an MCP connector can
+   * ask for it at all). That is not fatal for the clients
    * lacking the profile: the consent URL builder withholds the scope from them, so it lands in the
    * submit's `rejected` set and the flow completes without it — the same treatment an admin-only
    * scope gets for a non-admin.

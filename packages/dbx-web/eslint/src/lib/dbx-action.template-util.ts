@@ -33,7 +33,7 @@ export const DBX_ACTION_TRIGGER_SELECTORS: readonly string[] = ['dbxActionButton
  * Includes the bare `dbxActionValue` (which readies the empty-string sentinel on
  * trigger) and every directive that calls `readyValue()`/`reject()` off `triggered$`.
  */
-export const DBX_ACTION_VALUE_SOURCE_SELECTORS: readonly string[] = ['dbxActionValue', 'dbxActionValueGetter', 'dbxActionValueStream', 'dbxActionForm', 'dbxActionConfirm', 'dbxActionDialog', 'dbxActionPopover', 'dbxPdfMergeUploadAction'];
+export const DBX_ACTION_VALUE_SOURCE_SELECTORS: readonly string[] = ['dbxActionValue', 'dbxActionValueGetter', 'dbxActionValueStream', 'dbxActionForm', 'dbxActionConfirm', 'dbxActionDialog', 'dbxActionPopover', 'dbxPdfMergeUploadAction', 'dbxLlmFlowSectionRun'];
 
 /**
  * Selectors that present/handle an action's error.

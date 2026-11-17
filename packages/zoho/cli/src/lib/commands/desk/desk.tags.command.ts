@@ -1,9 +1,10 @@
 import type { CommandModule, Argv } from 'yargs';
-import { getDeskApi } from '../../middleware/auth.middleware';
+import { getDeskContext, exitZohoCliCommandWithError } from '../../middleware/auth.middleware';
 import { noop } from '@dereekb/util';
-import { outputResult, outputError } from '../../util/output';
+import { outputResult } from '../../util/output';
 import { withDeskPagination } from '../../util/args';
 import { runPaginatedList, ZOHO_DESK_PAGINATION_ADAPTER } from '../../util/pagination';
+import { zohoDeskAssociateTicketTags, zohoDeskDissociateTicketTag, zohoDeskGetAllTags, zohoDeskGetTicketTags, zohoDeskSearchTags } from '@dereekb/zoho';
 
 const tagsListCommand: CommandModule = {
   command: 'list',
@@ -11,11 +12,11 @@ const tagsListCommand: CommandModule = {
   builder: (yargs: Argv) => withDeskPagination(yargs).option('department-id', { alias: 'd', type: 'string', demandOption: true, describe: 'Department ID' }),
   handler: async (argv: any) => {
     try {
-      const api = getDeskApi(argv);
+      const deskContext = getDeskContext(argv);
       const initialInput = { from: argv.from, limit: argv.limit, departmentId: argv.departmentId };
       const outcome = await runPaginatedList({
         initialInput,
-        fetchPage: (input) => api.getAllTags(input),
+        fetchPage: (input) => zohoDeskGetAllTags(deskContext)(input),
         adapter: ZOHO_DESK_PAGINATION_ADAPTER,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,
@@ -27,8 +28,7 @@ const tagsListCommand: CommandModule = {
         outputResult(result.data, { count: result.data?.length });
       }
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -39,11 +39,11 @@ const tagsSearchCommand: CommandModule = {
   builder: (yargs: Argv) => withDeskPagination(yargs).option('department-id', { alias: 'd', type: 'string', describe: 'Department ID' }).option('query', { alias: 'q', type: 'string', demandOption: true, describe: 'Search string' }),
   handler: async (argv: any) => {
     try {
-      const api = getDeskApi(argv);
+      const deskContext = getDeskContext(argv);
       const initialInput = { from: argv.from, limit: argv.limit, departmentId: argv.departmentId, searchVal: argv.query };
       const outcome = await runPaginatedList({
         initialInput,
-        fetchPage: (input) => api.searchTags(input),
+        fetchPage: (input) => zohoDeskSearchTags(deskContext)(input),
         adapter: ZOHO_DESK_PAGINATION_ADAPTER,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,
@@ -55,8 +55,7 @@ const tagsSearchCommand: CommandModule = {
         outputResult(result.data, { count: result.data?.length });
       }
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -67,12 +66,11 @@ const tagsForTicketCommand: CommandModule = {
   builder: (yargs: Argv) => yargs.positional('ticketId', { type: 'string', demandOption: true, describe: 'Ticket ID' }),
   handler: async (argv: any) => {
     try {
-      const api = getDeskApi(argv);
-      const result = await api.getTicketTags({ ticketId: argv.ticketId });
+      const deskContext = getDeskContext(argv);
+      const result = await zohoDeskGetTicketTags(deskContext)({ ticketId: argv.ticketId });
       outputResult(result);
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -83,13 +81,12 @@ const tagsAssociateCommand: CommandModule = {
   builder: (yargs: Argv) => yargs.positional('ticketId', { type: 'string', demandOption: true, describe: 'Ticket ID' }).option('tags', { type: 'string', demandOption: true, describe: 'Comma-separated tag names' }),
   handler: async (argv: any) => {
     try {
-      const api = getDeskApi(argv);
+      const deskContext = getDeskContext(argv);
       const tags = (argv.tags as string).split(',').map((t: string) => t.trim());
-      const result = await api.associateTicketTags({ ticketId: argv.ticketId, tags });
+      const result = await zohoDeskAssociateTicketTags(deskContext)({ ticketId: argv.ticketId, tags });
       outputResult(result);
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -100,12 +97,11 @@ const tagsDissociateCommand: CommandModule = {
   builder: (yargs: Argv) => yargs.positional('ticketId', { type: 'string', demandOption: true, describe: 'Ticket ID' }).option('tag-id', { type: 'string', demandOption: true, describe: 'Tag ID to remove' }),
   handler: async (argv: any) => {
     try {
-      const api = getDeskApi(argv);
-      await api.dissociateTicketTag({ ticketId: argv.ticketId, tagId: argv.tagId });
+      const deskContext = getDeskContext(argv);
+      await zohoDeskDissociateTicketTag(deskContext)({ ticketId: argv.ticketId, tagId: argv.tagId });
       outputResult({ removed: true });
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };

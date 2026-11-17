@@ -1,10 +1,11 @@
 import { createContextSlot } from '@dereekb/dbx-cli';
 import type { MiddlewareFunction } from 'yargs';
-import { loadCliConfig, configuredProducts, zohoCliTokenSourceSelectionFromArgv } from '../config/cli.config';
+import type { Maybe } from '@dereekb/util';
+import type { ZohoAnalyticsContext, ZohoCrmContext, ZohoDeskContext, ZohoRecruitContext, ZohoSignContext } from '@dereekb/zoho';
+import { loadCliConfig, configuredProducts, zohoCliTokenSourceSelectionFromArgv, type ZohoCliProduct } from '../config/cli.config';
 import { loadZohoCliResolvedTokenSource } from '../config/token.source';
 import { createCliContext, type ZohoCliContext } from '../context/cli.context';
-import { outputError } from '../util/output';
-import type { ZohoRecruitApi, ZohoCrmApi, ZohoDeskApi, ZohoSignApi, ZohoAnalyticsApi } from '@dereekb/zoho/nestjs';
+import { isZohoCliTokenRejectedError, outputError } from '../util/output';
 
 /**
  * Module-level context set by the auth middleware.
@@ -15,6 +16,12 @@ import type { ZohoRecruitApi, ZohoCrmApi, ZohoDeskApi, ZohoSignApi, ZohoAnalytic
 const _cliContextSlot = createContextSlot<ZohoCliContext>({
   notInitializedMessage: 'CLI context not initialized. This is a bug.'
 });
+
+/**
+ * The products this run's command requested a client for (through `getRecruitContext()` etc.), so a rejected token is
+ * cleared for exactly those products.
+ */
+const _requestedProducts = new Set<ZohoCliProduct>();
 
 /**
  * How to set up a token source instead of credentials, appended to the "not configured" errors.
@@ -56,7 +63,7 @@ export function createAuthMiddleware(skipCommands: ReadonlySet<string>): Middlew
         process.exit(4);
       }
 
-      _cliContextSlot.set(createCliContext(config, tokenSource));
+      setCliContext(createCliContext(config, tokenSource));
     } catch (e) {
       outputError(e);
       process.exit(4);
@@ -67,7 +74,7 @@ export function createAuthMiddleware(skipCommands: ReadonlySet<string>): Middlew
 /**
  * Retrieves the {@link ZohoCliContext} previously populated by {@link createAuthMiddleware}.
  *
- * @param _argv - Currently unused; kept for symmetry with `getRecruitApi`/`getCrmApi`/`getDeskApi` and to allow future per-argv routing without breaking call sites.
+ * @param _argv - Currently unused; kept for symmetry with `getRecruitContext`/`getCrmContext`/`getDeskContext` and to allow future per-argv routing without breaking call sites.
  * @returns The active CLI context for the current command invocation.
  * @throws {Error} When the auth middleware has not yet run (indicates a wiring bug).
  */
@@ -76,92 +83,137 @@ export function getCliContext(_argv?: any): ZohoCliContext {
 }
 
 /**
- * Returns the configured {@link ZohoRecruitApi} for the active command.
+ * Installs the {@link ZohoCliContext} for this run (the auth middleware does), and starts a fresh record of the products
+ * the run's command requests. Pass `undefined` to clear it.
+ *
+ * @param context - The context, or undefined to clear.
+ */
+export function setCliContext(context: Maybe<ZohoCliContext>): void {
+  _cliContextSlot.set(context);
+  _requestedProducts.clear();
+}
+
+/**
+ * Returns the {@link ZohoCliContext} when the auth middleware built one, without throwing. Commands that skip the auth
+ * middleware (`auth`, `doctor`) have none.
+ *
+ * @returns The active CLI context, or undefined.
+ */
+export function peekCliContext(): Maybe<ZohoCliContext> {
+  return _cliContextSlot.get();
+}
+
+/**
+ * Returns the products this run's command requested a client for.
+ *
+ * @returns The requested products, in request order.
+ */
+export function requestedZohoCliProducts(): ZohoCliProduct[] {
+  return Array.from(_requestedProducts);
+}
+
+/**
+ * Returns the configured product context, recording the product as requested by this run's command.
+ *
+ * @param product - The product.
+ * @param value - The product's context, when configured.
+ * @param notConfiguredMessage - The error message when it is not.
+ * @returns The context.
+ * @throws {Error} When the product is not configured.
+ */
+function requireProductContext<T>(product: ZohoCliProduct, value: Maybe<T>, notConfiguredMessage: string): T {
+  if (!value) {
+    throw new Error(notConfiguredMessage);
+  }
+
+  _requestedProducts.add(product);
+  return value;
+}
+
+/**
+ * Returns the configured {@link ZohoRecruitContext} for the active command.
  *
  * @param argv - The yargs-parsed arguments object; forwarded to {@link getCliContext}.
- * @returns The Recruit API client.
+ * @returns The Recruit context.
  * @throws {Error} When Recruit is not configured with valid credentials, instructing the user how to run `zoho-cli auth setup`.
  */
-export function getRecruitApi(argv: any): ZohoRecruitApi {
-  const { recruitApi } = getCliContext(argv);
-
-  if (!recruitApi) {
-    throw new Error(`Recruit not configured. Run: zoho-cli auth setup --client-id X --client-secret Y --token Z, ${TOKEN_SOURCE_SETUP_HINT}`);
-  }
-
-  return recruitApi;
+export function getRecruitContext(argv: any): ZohoRecruitContext {
+  return requireProductContext('recruit', getCliContext(argv).recruitContext, `Recruit not configured. Run: zoho-cli auth setup --client-id X --client-secret Y --token Z, ${TOKEN_SOURCE_SETUP_HINT}`);
 }
 
 /**
- * Returns the configured {@link ZohoCrmApi} for the active command.
+ * Returns the configured {@link ZohoCrmContext} for the active command.
  *
  * @param argv - The yargs-parsed arguments object; forwarded to {@link getCliContext}.
- * @returns The CRM API client.
+ * @returns The CRM context.
  * @throws {Error} When CRM is not configured with valid credentials, instructing the user how to run `zoho-cli auth setup --product crm`.
  */
-export function getCrmApi(argv: any): ZohoCrmApi {
-  const { crmApi } = getCliContext(argv);
-
-  if (!crmApi) {
-    throw new Error(`CRM not configured. Run: zoho-cli auth setup --product crm --client-id X --client-secret Y --token Z, ${TOKEN_SOURCE_SETUP_HINT}`);
-  }
-
-  return crmApi;
+export function getCrmContext(argv: any): ZohoCrmContext {
+  return requireProductContext('crm', getCliContext(argv).crmContext, `CRM not configured. Run: zoho-cli auth setup --product crm --client-id X --client-secret Y --token Z, ${TOKEN_SOURCE_SETUP_HINT}`);
 }
 
 /**
- * Returns the configured {@link ZohoDeskApi} for the active command.
+ * Returns the configured {@link ZohoDeskContext} for the active command.
  *
  * @param argv - The yargs-parsed arguments object; forwarded to {@link getCliContext}.
- * @returns The Desk API client.
+ * @returns The Desk context.
  * @throws {Error} When Desk is not configured with both valid credentials and an `orgId`, instructing the user how to run `zoho-cli auth setup --product desk`.
  */
-export function getDeskApi(argv: any): ZohoDeskApi {
-  const { deskApi } = getCliContext(argv);
-
-  if (!deskApi) {
-    throw new Error('Desk not configured. Run: zoho-cli auth setup --product desk --client-id X --client-secret Y --token Z --org-id YOUR_ORG_ID (a token source covering Desk also needs an org id: ZOHO_DESK_ORG_ID, auth set --product desk --org-id, or its zohoDeskOrgId hint)');
-  }
-
-  return deskApi;
+export function getDeskContext(argv: any): ZohoDeskContext {
+  return requireProductContext('desk', getCliContext(argv).deskContext, 'Desk not configured. Run: zoho-cli auth setup --product desk --client-id X --client-secret Y --token Z --org-id YOUR_ORG_ID (a token source covering Desk also needs an org id: ZOHO_DESK_ORG_ID, auth set --product desk --org-id, or its zohoDeskOrgId hint)');
 }
 
 /**
- * Returns the configured {@link ZohoSignApi} for the active command.
+ * Returns the configured {@link ZohoSignContext} for the active command.
  *
  * Zoho Sign uses a dedicated OAuth client, so it must be configured with its own credentials
  * (it never falls back to the shared client).
  *
  * @param argv - The yargs-parsed arguments object; forwarded to {@link getCliContext}.
- * @returns The Sign API client.
+ * @returns The Sign context.
  * @throws {Error} When Sign is not configured with its own valid credentials, instructing the user how to run `zoho-cli auth setup --product sign`.
  */
-export function getSignApi(argv: any): ZohoSignApi {
-  const { signApi } = getCliContext(argv);
-
-  if (!signApi) {
-    throw new Error('Sign not configured. Zoho Sign requires its own OAuth client. Run: zoho-cli auth setup --product sign --client-id X --client-secret Y --token Z');
-  }
-
-  return signApi;
+export function getSignContext(argv: any): ZohoSignContext {
+  return requireProductContext('sign', getCliContext(argv).signContext, 'Sign not configured. Zoho Sign requires its own OAuth client. Run: zoho-cli auth setup --product sign --client-id X --client-secret Y --token Z');
 }
 
 /**
- * Returns the configured {@link ZohoAnalyticsApi} for the active command.
+ * Returns the configured {@link ZohoAnalyticsContext} for the active command.
  *
  * Zoho Analytics is treated as a dedicated-OAuth-client product, so it must be configured with its
  * own credentials (it never falls back to the shared client).
  *
  * @param argv - The yargs-parsed arguments object; forwarded to {@link getCliContext}.
- * @returns The Analytics API client.
+ * @returns The Analytics context.
  * @throws {Error} When Analytics is not configured with its own valid credentials, instructing the user how to run `zoho-cli auth setup --product analytics`.
  */
-export function getAnalyticsApi(argv: any): ZohoAnalyticsApi {
-  const { analyticsApi } = getCliContext(argv);
+export function getAnalyticsContext(argv: any): ZohoAnalyticsContext {
+  return requireProductContext('analytics', getCliContext(argv).analyticsContext, 'Analytics not configured. Zoho Analytics requires its own OAuth client. Run: zoho-cli auth setup --product analytics --client-id X --client-secret Y --token Z --org-id YOUR_ORG_ID');
+}
 
-  if (!analyticsApi) {
-    throw new Error('Analytics not configured. Zoho Analytics requires its own OAuth client. Run: zoho-cli auth setup --product analytics --client-id X --client-secret Y --token Z --org-id YOUR_ORG_ID');
+/**
+ * The failure path of every zoho-cli command handler: prints the error envelope as one JSON line on stdout and exits 1.
+ *
+ * When Zoho rejected the access token (`TOKEN_REJECTED`) after the command requested a product client, it first AWAITS
+ * clearing the cached token behind those products (the token source's `.tokens.json` entry, or an own grant's memory +
+ * file entry), so the next run mints a new token instead of reading the rejected one back. Awaiting matters: exiting
+ * straight after printing could cut off the library's own fire-and-forget reset.
+ *
+ * @param error - The thrown value.
+ * @returns Never resolves normally; the process exits.
+ */
+export async function exitZohoCliCommandWithError(error: unknown): Promise<never> {
+  const context = peekCliContext();
+  const requested = requestedZohoCliProducts();
+
+  if (context && requested.length > 0 && isZohoCliTokenRejectedError(error)) {
+    const tokenSourceProducts = context.tokenSource?.products;
+    const coveredByTokenSource = tokenSourceProducts != null && requested.some((x) => tokenSourceProducts.includes(x));
+    await context.resetCachedTokens(requested);
+    outputError(error, { tokenSource: coveredByTokenSource });
+  } else {
+    outputError(error);
   }
 
-  return analyticsApi;
+  return process.exit(1);
 }

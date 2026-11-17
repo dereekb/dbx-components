@@ -1,9 +1,10 @@
 import type { CommandModule, Argv } from 'yargs';
-import { getDeskApi } from '../../middleware/auth.middleware';
+import { getDeskContext, exitZohoCliCommandWithError } from '../../middleware/auth.middleware';
 import { noop } from '@dereekb/util';
-import { outputResult, outputError } from '../../util/output';
+import { outputResult } from '../../util/output';
 import { withDeskPagination } from '../../util/args';
 import { runPaginatedList, ZOHO_DESK_PAGINATION_ADAPTER } from '../../util/pagination';
+import { zohoDeskGetTicketThreadById, zohoDeskGetTicketThreads } from '@dereekb/zoho';
 
 const threadsListCommand: CommandModule = {
   command: 'list <ticketId>',
@@ -11,11 +12,11 @@ const threadsListCommand: CommandModule = {
   builder: (yargs: Argv) => withDeskPagination(yargs).positional('ticketId', { type: 'string', demandOption: true, describe: 'Ticket ID' }).option('include', { type: 'string', describe: 'Comma-separated includes' }),
   handler: async (argv: any) => {
     try {
-      const api = getDeskApi(argv);
+      const deskContext = getDeskContext(argv);
       const initialInput = { ticketId: argv.ticketId, from: argv.from, limit: argv.limit, include: argv.include };
       const outcome = await runPaginatedList({
         initialInput,
-        fetchPage: (input) => api.getTicketThreads(input),
+        fetchPage: (input) => zohoDeskGetTicketThreads(deskContext)(input),
         adapter: ZOHO_DESK_PAGINATION_ADAPTER,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,
@@ -27,8 +28,7 @@ const threadsListCommand: CommandModule = {
         outputResult(result.data, { from: argv.from, limit: argv.limit, count: result.data?.length });
       }
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -39,12 +39,11 @@ const threadsGetCommand: CommandModule = {
   builder: (yargs: Argv) => yargs.positional('ticketId', { type: 'string', demandOption: true, describe: 'Ticket ID' }).positional('threadId', { type: 'string', demandOption: true, describe: 'Thread ID' }).option('include', { type: 'string', describe: 'Comma-separated includes' }),
   handler: async (argv: any) => {
     try {
-      const api = getDeskApi(argv);
-      const result = await api.getTicketThreadById({ ticketId: argv.ticketId, threadId: argv.threadId, include: argv.include });
+      const deskContext = getDeskContext(argv);
+      const result = await zohoDeskGetTicketThreadById(deskContext)({ ticketId: argv.ticketId, threadId: argv.threadId, include: argv.include });
       outputResult(result);
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };

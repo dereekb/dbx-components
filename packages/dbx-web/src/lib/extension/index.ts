@@ -12,3 +12,4 @@ export * from './help';
 export * from './image';
 export * from './pdf';
 export * from './mcp';
+export * from './audiovideo';

@@ -78,6 +78,12 @@ export const DOC_EXTENSION_ROUTES = [
     ref: 'doc.extension.quiz'
   },
   {
+    icon: 'auto_awesome',
+    title: 'LLM Flow',
+    detail: 'dbx-form/llm',
+    ref: 'doc.extension.llm'
+  },
+  {
     icon: 'devices',
     title: 'Browser Agent',
     detail: 'dbx-browser-agent-view',
@@ -88,6 +94,12 @@ export const DOC_EXTENSION_ROUTES = [
     title: 'MCP Connect',
     detail: 'dbx-mcp-connect-button',
     ref: 'doc.extension.mcp'
+  },
+  {
+    icon: 'perm_media',
+    title: 'Audio/Video',
+    detail: 'dbxAudioVideoPlayback, dbxImageHoverPreview, dbx-gallery',
+    ref: 'doc.extension.audiovideo'
   }
 ];
 

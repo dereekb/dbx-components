@@ -1752,7 +1752,7 @@
         }
       ],
       "role": "layout",
-      "intent": "padded content surface lifted above its surroundings — the mirror of `.dbx-content-pit`. Per Material 3, elevation is communicated primarily with color (the brightest `surface-bright` tone, always lighter than the pit's `surface-dim` in both light and dark) plus a soft lift shadow for protection against the background, so it reads as raised and stays clearly distinct from the recessed pit. Tonal by default — a low-opacity wash of the active dbxColor over `surface-bright`; rounded by default, opt out with `.dbx-corners-none`. Override `--dbx-content-elevate-tone` (percentage) to tune the wash, `--dbx-content-elevate-bg` to replace the background outright, or `--dbx-content-elevate-shadow` to retune/remove (`none`) the shadow.",
+      "intent": "padded content surface lifted above its surroundings — the mirror of `.dbx-content-pit`. Elevation is communicated with color alone (the brightest `surface-bright` tone, always lighter than the pit's `surface-dim` in both light and dark), with no shadow, so it reads as raised and stays clearly distinct from the recessed pit. Tonal by default — a low-opacity wash of the active dbxColor over `surface-bright`; rounded by default, opt out with `.dbx-corners-none`. Override `--dbx-content-elevate-tone` (percentage) to tune the wash, or `--dbx-content-elevate-bg` to replace the background outright.",
       "seeAlso": [
         "dbx-content-border",
         "dbx-content-pit",
@@ -3061,7 +3061,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 632,
+      "line": 666,
       "declarations": [
         {
           "property": "height",
@@ -3082,7 +3082,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 338,
+      "line": 372,
       "declarations": [
         {
           "property": "--dbx-list-card-items-list-gap",
@@ -3111,7 +3111,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 467,
+      "line": 501,
       "declarations": [
         {
           "property": "--dbx-list-detail-item-padding-resolved",
@@ -3176,7 +3176,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 564,
+      "line": 598,
       "declarations": [
         {
           "property": "display",
@@ -3225,7 +3225,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 586,
+      "line": 620,
       "declarations": [
         {
           "property": "background",
@@ -3255,7 +3255,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 525,
+      "line": 559,
       "declarations": [
         {
           "property": "display",
@@ -3322,7 +3322,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 546,
+      "line": 580,
       "declarations": [
         {
           "property": "align-self",
@@ -3357,7 +3357,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 647,
+      "line": 681,
       "declarations": [
         {
           "property": "padding",
@@ -3377,7 +3377,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 300,
+      "line": 334,
       "declarations": [
         {
           "property": "min-height",
@@ -3406,7 +3406,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 309,
+      "line": 343,
       "declarations": [
         {
           "property": "min-height",
@@ -3432,7 +3432,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 607,
+      "line": 641,
       "declarations": [
         {
           "property": "cursor",
@@ -3449,7 +3449,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 619,
+      "line": 653,
       "declarations": [
         {
           "property": "padding",
@@ -3469,7 +3469,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 392,
+      "line": 426,
       "declarations": [
         {
           "property": "--dbx-list-item-border-radius",
@@ -3496,7 +3496,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 281,
+      "line": 315,
       "declarations": [],
       "role": "state",
       "intent": "pin `.dbx-list-view-group-header` rows to the top of the list while scrolling"
@@ -3507,7 +3507,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 409,
+      "line": 443,
       "declarations": [
         {
           "property": "display",
@@ -3534,7 +3534,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 258,
+      "line": 292,
       "declarations": [],
       "role": "spacing",
       "intent": "strip the leading + trailing padding around `mdc-list-item--with-trailing-meta` rows so meta-only items hug their container"

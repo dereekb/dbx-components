@@ -1,7 +1,8 @@
 import { toReadableError, type Destroyable, type DestroyFunction, type Initialized, type Maybe, type ReadableError } from '@dereekb/util';
-import { switchMap, map, catchError, of, first, BehaviorSubject, type Observable, shareReplay, combineLatestWith } from 'rxjs';
+import { switchMap, map, catchError, of, first, BehaviorSubject, type Observable, shareReplay, combineLatestWith, distinctUntilChanged, filter, take } from 'rxjs';
 import { type ObservableOrValue, SubscriptionObject, type IsModifiedFunction, asObservable, returnIfIs, filterMaybe, type IsEqualFunction, makeIsModifiedFunctionObservable } from '@dereekb/rxjs';
 import { type DbxActionContextStoreSourceInstance } from '../../action.store.source';
+import { DbxActionState } from '../../action';
 
 /**
  * Function that retrieves the input value for an action when triggered.
@@ -40,12 +41,20 @@ export interface DbxActionValueGetterInstanceConfig<T> {
   readonly valueGetter?: Maybe<DbxActionValueGetterValueGetterFunction<T>>;
   readonly isEqualFunction?: Maybe<IsEqualFunction<T>>;
   readonly isModifiedFunction?: Maybe<IsModifiedFunction<T>>;
+  /**
+   * Whether or not to register the value getter as the action's value snapshot.
+   *
+   * Set to false for getters that have side effects (starting a merge, recording a run, etc.), since snapshots call the getter without triggering the action.
+   *
+   * Defaults to true.
+   */
+  readonly registerValueSnapshot?: Maybe<boolean>;
 }
 
 /**
  * Utility class that handles the trigger-to-value-ready phase of the action lifecycle.
  *
- * When initialized, it subscribes to the source's `triggered$` stream. On each trigger,
+ * When initialized, it subscribes to the TRIGGERED edge of the source's state. On each trigger,
  * it calls the configured {@link DbxActionValueGetterValueGetterFunction} to retrieve the value,
  * runs an optional {@link IsModifiedFunction} check, and either calls `readyValue()` with
  * the retrieved value or `reject()` if the value is null/undefined or an error occurred.
@@ -70,12 +79,14 @@ export class DbxActionValueGetterInstance<T> implements Initialized, Destroyable
   }).pipe(shareReplay(1));
 
   readonly source: DbxActionContextStoreSourceInstance<T, unknown>;
+  readonly registerValueSnapshot: boolean;
 
   private readonly _triggeredSub = new SubscriptionObject();
   private _unregisterValueSnapshot: Maybe<DestroyFunction>;
 
   constructor(config: DbxActionValueGetterInstanceConfig<T>) {
     this.source = config.source;
+    this.registerValueSnapshot = config.registerValueSnapshot ?? true;
     this.setValueGetterFunction(config.valueGetter);
     this.setIsModifiedFunction(config.isModifiedFunction);
     this.setIsEqualFunction(config.isEqualFunction);
@@ -94,8 +105,17 @@ export class DbxActionValueGetterInstance<T> implements Initialized, Destroyable
   }
 
   init(): void {
-    // Ready the value after the source is triggered. Do modified check one last time.
-    this._triggeredSub.subscription = this.source.triggered$.pipe(switchMap(() => this._valueResult())).subscribe((result: DbxActionValueGetterResult<T>) => {
+    // Ready the value on each TRIGGERED edge of the underlying state. Do modified check one last time.
+    //
+    // The raw state is used instead of triggered$ (whose shareReplay replays a stale trigger to late subscribers) and
+    // instead of actionState$ (which maps disabled states to DISABLED and would fake a second edge whenever a disable key toggles mid-trigger).
+    const triggeredEdge$ = this.source.state$.pipe(
+      map((x) => x.actionState),
+      distinctUntilChanged(),
+      filter((x) => x === DbxActionState.TRIGGERED)
+    );
+
+    this._triggeredSub.subscription = triggeredEdge$.pipe(switchMap(() => this._valueResult().pipe(take(1)))).subscribe((result: DbxActionValueGetterResult<T>) => {
       if (result.value == null) {
         this.source.reject(result.reject);
       } else {
@@ -103,7 +123,9 @@ export class DbxActionValueGetterInstance<T> implements Initialized, Destroyable
       }
     });
 
-    this._unregisterValueSnapshot = this.source.registerValueSnapshot(() => this.valueSnapshot());
+    if (this.registerValueSnapshot) {
+      this._unregisterValueSnapshot = this.source.registerValueSnapshot(() => this.valueSnapshot());
+    }
   }
 
   /**

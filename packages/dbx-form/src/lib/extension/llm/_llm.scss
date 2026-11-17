@@ -1,0 +1,323 @@
+@use 'sass:map';
+@use '../../style/theming';
+
+// MARK: Mixin
+// Styles for the @dereekb/dbx-form/llm generation-flow components.
+//
+// Override points:
+// --dbx-llm-flow-section-gap: space between sections in a flow.
+// --dbx-llm-flow-section-border: border of a section.
+// --dbx-llm-flow-mono-font-family: font family of the raw input and the default output.
+// --dbx-llm-flow-run-buttons-min-width: min width of the run buttons beside the raw input.
+@mixin core() {
+  .dbx-llm-flow {
+    display: flex;
+    flex-direction: column;
+    gap: var(--dbx-llm-flow-section-gap, var(--dbx-padding-3));
+  }
+
+  .dbx-llm-flow-section {
+    display: block;
+    padding: var(--dbx-padding-3);
+    border: var(--dbx-llm-flow-section-border, 1px solid var(--mat-sys-outline-variant));
+    border-radius: var(--mat-sys-corner-medium);
+
+    .dbx-llm-flow-section-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--dbx-padding-2);
+    }
+
+    .dbx-llm-flow-section-header-label,
+    .dbx-llm-flow-section-header-actions,
+    .dbx-llm-flow-section-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--dbx-padding-2);
+    }
+
+    .dbx-llm-flow-section-hint {
+      margin-top: var(--dbx-padding-1);
+    }
+
+    .dbx-llm-flow-section-body {
+      display: flex;
+      flex-direction: column;
+      gap: var(--dbx-padding-2);
+      margin-top: var(--dbx-padding-2);
+    }
+
+    // collapsed to the header: hidden, not destroyed, so running actions and the form binding keep their state
+    &.dbx-llm-flow-section-collapsed {
+      > .dbx-llm-flow-section-hint,
+      > .dbx-llm-flow-section-body {
+        display: none;
+      }
+    }
+  }
+
+  // one button per run kind, stacked
+  .dbx-llm-flow-section-run-buttons {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--dbx-padding-2);
+  }
+
+  // MARK: Raw Input
+  .dbx-llm-flow-section-raw-input {
+    display: block;
+
+    // the field column, with projected content (the run buttons) to its right. Centered, so content that takes the column's content-box
+    // height lines up with the field's outlined box and the content under it, inside the column's vertical padding.
+    .dbx-llm-flow-section-raw-input-row {
+      display: flex;
+      align-items: center;
+      gap: var(--dbx-padding-2);
+    }
+
+    // the raw input's forge form: the textarea, then the section's option fields. The height sync source. It carries the 6px vertical padding
+    // dbx gives a form field, moved off the textarea's mat-form-field, so its content box starts at the textarea's outlined box.
+    .dbx-llm-flow-section-raw-input-main {
+      display: flex;
+      flex: 1 1 0;
+      flex-direction: column;
+      gap: var(--dbx-padding-2);
+      min-width: 0;
+      padding-block: 6px;
+
+      > .dbx-llm-flow-section-raw-input-field {
+        display: block;
+
+        .dbx-llm-flow-section-raw-input-text .mat-mdc-form-field {
+          padding-block: 0;
+        }
+      }
+    }
+
+    // run buttons beside the field share the field's height (dbxHeightSyncFollower sets it)
+    .dbx-llm-flow-section-raw-input-row > .dbx-llm-flow-section-run-buttons {
+      display: flex;
+      flex: 0 0 auto;
+      gap: var(--dbx-padding-1);
+      min-width: var(--dbx-llm-flow-run-buttons-min-width, 120px);
+
+      > dbx-button {
+        display: flex;
+
+        > dbx-progress-spinner-button {
+          display: flex;
+          flex: 1 1 auto;
+        }
+
+        .mat-mdc-button-base {
+          width: 100%;
+        }
+      }
+    }
+
+    // beside the field the buttons, one above the other, split the synced height, so they may shrink below the default button height to fit a
+    // short field
+    &:not(.dbx-llm-flow-section-raw-input-stacked) .dbx-llm-flow-section-raw-input-row > .dbx-llm-flow-section-run-buttons > dbx-button {
+      flex: 1 1 0;
+      min-height: 0;
+
+      > dbx-progress-spinner-button {
+        min-height: 0;
+      }
+
+      .mat-mdc-button-base {
+        height: 100%;
+        min-height: 0;
+      }
+    }
+
+    // stacked (a narrow raw input): the run buttons move under the form column, as a row that fills the width and wraps. The height sync is
+    // off and the buttons don't stretch, so they keep the default button height.
+    &.dbx-llm-flow-section-raw-input-stacked {
+      .dbx-llm-flow-section-raw-input-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .dbx-llm-flow-section-raw-input-row > .dbx-llm-flow-section-run-buttons {
+        flex-flow: row wrap;
+        min-width: 0;
+
+        > dbx-button {
+          flex: 1 1 auto;
+        }
+      }
+    }
+
+    .dbx-llm-flow-section-raw-input-hint {
+      margin-top: var(--dbx-padding-1);
+    }
+
+    .dbx-llm-flow-section-raw-input-text textarea {
+      font-family: var(--dbx-llm-flow-mono-font-family, monospace);
+      font-size: 0.9em;
+    }
+
+    .dbx-llm-flow-section-raw-input-issues {
+      margin: var(--dbx-padding-1) 0 0;
+      padding-left: var(--dbx-padding-4);
+      color: var(--mat-sys-error);
+    }
+
+    .dbx-llm-flow-section-raw-input-source {
+      display: flex;
+      align-items: center;
+      gap: var(--dbx-padding-1);
+      min-height: 32px;
+      margin-bottom: var(--dbx-padding-1);
+      color: var(--mat-sys-on-surface-variant);
+
+      .dbx-llm-flow-section-raw-input-source-icon {
+        flex: 0 0 auto;
+        width: 18px;
+        height: 18px;
+        font-size: 18px;
+      }
+
+      &[data-source='manual'] {
+        padding: 0 var(--dbx-padding-2);
+        border-radius: var(--mat-sys-corner-small);
+        background: var(--mat-sys-surface-container-high);
+        color: var(--mat-sys-on-surface);
+      }
+    }
+
+    &.dbx-llm-flow-section-raw-input-invalid .dbx-llm-flow-section-raw-input-text {
+      --mat-form-field-outlined-outline-color: var(--mat-sys-error);
+      --mat-form-field-outlined-hover-outline-color: var(--mat-sys-error);
+      --mat-form-field-outlined-focus-outline-color: var(--mat-sys-error);
+      --mat-form-field-outlined-label-text-color: var(--mat-sys-error);
+      --mat-form-field-outlined-hover-label-text-color: var(--mat-sys-error);
+      --mat-form-field-outlined-focus-label-text-color: var(--mat-sys-error);
+    }
+  }
+
+  // MARK: Output
+  .dbx-llm-flow-section-output {
+    display: block;
+
+    .dbx-llm-flow-section-output-off-branch {
+      margin-bottom: var(--dbx-padding-1);
+    }
+  }
+
+  // MARK: Step Number
+  // the section's step number in its chain, as a round icon tile before the label (section header and form pop-out dialog title). Sized
+  // through the icon tile's variables.
+  .dbx-llm-flow-section-step-number {
+    flex: 0 0 auto;
+    --dbx-icon-tile-padding: 0;
+    --dbx-icon-tile-width: 28px;
+    --dbx-icon-tile-height: 28px;
+    --dbx-icon-tile-min-width: 28px;
+    --dbx-icon-tile-font-size: var(--mat-sys-label-large-size, 14px);
+    --dbx-icon-tile-font-weight: 600;
+  }
+
+  // MARK: History
+  .dbx-llm-flow-section-history-button-badge {
+    display: inline-block;
+  }
+
+  .dbx-llm-flow-section-history-list {
+    display: block;
+
+    .dbx-llm-flow-section-history-group + .dbx-llm-flow-section-history-group {
+      margin-top: var(--dbx-padding-3);
+    }
+
+    .dbx-llm-flow-section-history-group-label {
+      margin-bottom: var(--dbx-padding-1);
+    }
+
+    .dbx-llm-flow-section-history-row {
+      display: flex;
+      align-items: center;
+      gap: var(--dbx-padding-2);
+      padding: var(--dbx-padding-1) var(--dbx-padding-2);
+      border-radius: var(--mat-sys-corner-small);
+
+      &.dbx-llm-flow-section-history-row-selected {
+        background: var(--mat-sys-secondary-container);
+      }
+
+      &[data-state='failed'] .dbx-llm-flow-section-history-row-icon {
+        color: var(--mat-sys-error);
+      }
+    }
+
+    .dbx-llm-flow-section-history-row-main {
+      display: flex;
+      flex: 1 1 auto;
+      flex-direction: column;
+      align-items: flex-start;
+      min-width: 0;
+      padding: 0;
+      border: none;
+      background: none;
+      color: inherit;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+
+      &:disabled {
+        cursor: default;
+        opacity: 0.6;
+      }
+    }
+
+    .dbx-llm-flow-section-history-row-title {
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  // MARK: Form Panel
+  .dbx-llm-flow-section-form-panel {
+    display: block;
+
+    .dbx-llm-flow-section-form-panel-header {
+      display: flex;
+      align-items: center;
+      gap: var(--dbx-padding-2);
+      margin-bottom: var(--dbx-padding-2);
+    }
+
+    .dbx-llm-flow-section-form-panel-body {
+      display: flex;
+      flex-direction: column;
+      gap: var(--dbx-padding-2);
+    }
+
+    .dbx-llm-flow-section-form-panel-detach .dbx-llm-flow-section-form-panel-body {
+      padding: var(--dbx-padding-2);
+    }
+
+    // the step number in the detach window's control bar, before the label. Smaller, to fit the bar.
+    .dbx-detach-controls > .dbx-llm-flow-section-step-number {
+      margin-right: var(--dbx-padding-2);
+      --dbx-icon-tile-width: 24px;
+      --dbx-icon-tile-height: 24px;
+      --dbx-icon-tile-min-width: 24px;
+      --dbx-icon-tile-font-size: var(--mat-sys-label-medium-size, 12px);
+    }
+
+    .dbx-llm-flow-section-form-panel-actions {
+      display: flex;
+      justify-content: flex-end;
+    }
+  }
+}
+
+@mixin theme($theme-config) {
+}

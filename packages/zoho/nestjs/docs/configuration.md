@@ -84,6 +84,12 @@ export class AppZohoCrmModule {}
 
 `ZohoCrmApi` is exported by `AppZohoCrmModule` and can be injected into any service that imports it.
 
+> The token cache helpers are also importable without NestJS: `ZohoAccountsAccessTokenCacheService` (undecorated),
+> `memoryZohoAccountsAccessTokenCacheService` and `mergeZohoAccountsAccessTokenCacheServices` from `@dereekb/zoho`, and
+> `fileZohoAccountsAccessTokenCacheService` from the node-only `@dereekb/zoho/node`. `@dereekb/zoho/nestjs` re-exports the
+> same bindings, so the `/nestjs` imports shown here stay valid and `ZohoAccountsAccessTokenCacheService` is the same
+> injection token.
+
 ---
 
 ## Setting Up Zoho Recruit

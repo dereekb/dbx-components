@@ -1,8 +1,8 @@
 import type { CommandModule, Argv } from 'yargs';
 import { type Maybe, noop } from '@dereekb/util';
-import { type ZohoAnalyticsWorkspaceId } from '@dereekb/zoho';
-import { getAnalyticsApi } from '../../middleware/auth.middleware';
-import { outputResult, outputError } from '../../util/output';
+import { type ZohoAnalyticsWorkspaceId, zohoAnalyticsDeleteWorkspace, zohoAnalyticsGetAllWorkspaces, zohoAnalyticsGetOwnedWorkspaces, zohoAnalyticsGetSharedWorkspaces, zohoAnalyticsGetWorkspaceDetails } from '@dereekb/zoho';
+import { getAnalyticsContext, exitZohoCliCommandWithError } from '../../middleware/auth.middleware';
+import { outputResult } from '../../util/output';
 
 const workspacesListCommand: CommandModule = {
   command: 'list',
@@ -10,21 +10,20 @@ const workspacesListCommand: CommandModule = {
   builder: (yargs: Argv) => yargs.option('owned', { type: 'boolean', describe: 'Only workspaces owned by the authenticated user' }).option('shared', { type: 'boolean', describe: 'Only workspaces shared with the authenticated user' }),
   handler: async (argv: any) => {
     try {
-      const api = getAnalyticsApi(argv);
+      const analyticsContext = getAnalyticsContext(argv);
 
       if (argv.owned) {
-        const result = await api.getOwnedWorkspaces();
+        const result = await zohoAnalyticsGetOwnedWorkspaces(analyticsContext)();
         outputResult(result.data.workspaces, { count: result.data.workspaces?.length });
       } else if (argv.shared) {
-        const result = await api.getSharedWorkspaces();
+        const result = await zohoAnalyticsGetSharedWorkspaces(analyticsContext)();
         outputResult(result.data.workspaces, { count: result.data.workspaces?.length });
       } else {
-        const result = await api.getAllWorkspaces();
+        const result = await zohoAnalyticsGetAllWorkspaces(analyticsContext)();
         outputResult(result.data);
       }
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -35,12 +34,11 @@ const workspacesGetCommand: CommandModule = {
   builder: (yargs: Argv) => yargs.positional('workspaceId', { type: 'string', demandOption: true, describe: 'Workspace ID' }),
   handler: async (argv: any) => {
     try {
-      const api = getAnalyticsApi(argv);
-      const result = await api.getWorkspaceDetails({ workspaceId: argv.workspaceId });
+      const analyticsContext = getAnalyticsContext(argv);
+      const result = await zohoAnalyticsGetWorkspaceDetails(analyticsContext)({ workspaceId: argv.workspaceId });
       outputResult(result.data.workspaces);
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -77,13 +75,12 @@ const workspacesDeleteCommand: CommandModule = {
   handler: async (argv: any) => {
     try {
       const workspaceId = confirmedDeleteWorkspaceId(argv.workspaceId, argv.confirm);
-      const api = getAnalyticsApi(argv);
-      await api.deleteWorkspace({ workspaceId });
+      const analyticsContext = getAnalyticsContext(argv);
+      await zohoAnalyticsDeleteWorkspace(analyticsContext)({ workspaceId });
       // a successful delete is a 204 with no body, so there is nothing to echo back but the target
       outputResult({ deleted: true, workspaceId });
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };

@@ -3,9 +3,9 @@ import { readFile } from 'node:fs/promises';
 import { basename, extname } from 'node:path';
 import { type Maybe, noop } from '@dereekb/util';
 import { makeFileForFetch } from '@dereekb/util/fetch';
-import { type ZohoAnalyticsImportFileType, type ZohoAnalyticsImportOnError, type ZohoAnalyticsImportType, type ZohoAnalyticsName, isZohoAnalyticsJobComplete } from '@dereekb/zoho';
-import { getAnalyticsApi } from '../../middleware/auth.middleware';
-import { outputResult, outputError } from '../../util/output';
+import { type ZohoAnalyticsImportFileType, type ZohoAnalyticsImportOnError, type ZohoAnalyticsImportType, type ZohoAnalyticsName, isZohoAnalyticsJobComplete, zohoAnalyticsCreateImportJobInNewTable, zohoAnalyticsGetImportJob, zohoAnalyticsImportDataInNewTable, zohoAnalyticsImportDataInTable, zohoAnalyticsImportDataInTableAndAwaitJob } from '@dereekb/zoho';
+import { getAnalyticsContext, exitZohoCliCommandWithError } from '../../middleware/auth.middleware';
+import { outputResult } from '../../util/output';
 
 const IMPORT_TYPES: ZohoAnalyticsImportType[] = ['append', 'truncateadd', 'updateadd'];
 const ON_ERROR_MODES: ZohoAnalyticsImportOnError[] = ['abort', 'skiprow', 'setcolumnempty'];
@@ -85,7 +85,7 @@ const importDataCommand: CommandModule = {
       .option('matching-columns', { type: 'string', describe: 'Comma-separated columns to match on. Required for the updateadd mode' }),
   handler: async (argv: any) => {
     try {
-      const api = getAnalyticsApi(argv);
+      const analyticsContext = getAnalyticsContext(argv);
       const importType = argv.mode as ZohoAnalyticsImportType;
       const matchingColumns = importMatchingColumns(importType, argv.matchingColumns as Maybe<string>);
       const file = await readImportFile(argv.file);
@@ -97,16 +97,15 @@ const importDataCommand: CommandModule = {
       };
 
       if (argv.async) {
-        const result = await api.importDataInTableAndAwaitJob({ workspaceId: argv.workspaceId, viewId: argv.viewId, file, config });
+        const result = await zohoAnalyticsImportDataInTableAndAwaitJob(analyticsContext)({ workspaceId: argv.workspaceId, viewId: argv.viewId, file, config });
         const { jobCode, jobStatus, jobInfo } = result.data;
         outputResult({ jobCode, jobStatus, ...jobInfo }, { complete: isZohoAnalyticsJobComplete(jobCode) });
       } else {
-        const result = await api.importDataInTable({ workspaceId: argv.workspaceId, viewId: argv.viewId, file, config });
+        const result = await zohoAnalyticsImportDataInTable(analyticsContext)({ workspaceId: argv.workspaceId, viewId: argv.viewId, file, config });
         outputResult(result.data);
       }
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -117,7 +116,7 @@ const importNewTableCommand: CommandModule = {
   builder: (yargs: Argv) => withImportOptions(yargs).positional('workspaceId', { type: 'string', demandOption: true, describe: 'Workspace ID' }).positional('tableName', { type: 'string', demandOption: true, describe: 'Name of the table to create' }),
   handler: async (argv: any) => {
     try {
-      const api = getAnalyticsApi(argv);
+      const analyticsContext = getAnalyticsContext(argv);
       const file = await readImportFile(argv.file);
       const config = {
         tableName: argv.tableName,
@@ -126,15 +125,14 @@ const importNewTableCommand: CommandModule = {
       };
 
       if (argv.async) {
-        const result = await api.createImportJobInNewTable({ workspaceId: argv.workspaceId, file, config });
+        const result = await zohoAnalyticsCreateImportJobInNewTable(analyticsContext)({ workspaceId: argv.workspaceId, file, config });
         outputResult(result.data);
       } else {
-        const result = await api.importDataInNewTable({ workspaceId: argv.workspaceId, file, config });
+        const result = await zohoAnalyticsImportDataInNewTable(analyticsContext)({ workspaceId: argv.workspaceId, file, config });
         outputResult(result.data);
       }
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -145,12 +143,11 @@ const importJobCommand: CommandModule = {
   builder: (yargs: Argv) => yargs.positional('workspaceId', { type: 'string', demandOption: true, describe: 'Workspace ID' }).positional('jobId', { type: 'string', demandOption: true, describe: 'Import job ID' }),
   handler: async (argv: any) => {
     try {
-      const api = getAnalyticsApi(argv);
-      const result = await api.getImportJob({ workspaceId: argv.workspaceId, jobId: argv.jobId });
+      const analyticsContext = getAnalyticsContext(argv);
+      const result = await zohoAnalyticsGetImportJob(analyticsContext)({ workspaceId: argv.workspaceId, jobId: argv.jobId });
       outputResult(result.data, { complete: isZohoAnalyticsJobComplete(result.data.jobCode) });
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };

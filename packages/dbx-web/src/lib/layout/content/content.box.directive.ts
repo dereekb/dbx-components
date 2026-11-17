@@ -1,7 +1,7 @@
 import { Directive, input } from '@angular/core';
 
 /**
- * Wraps content in a box container with optional elevation (card-like shadow) and wide layout.
+ * Wraps content in a box container with optional elevation (a raised tonal surface, see `.dbx-content-elevate`) and wide layout.
  * Both `elevate` and `wide` default to `true`.
  *
  * @dbxWebComponent

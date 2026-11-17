@@ -193,7 +193,9 @@ $default-notice-color: #f28600;
     // help enabled by default
     'help': 1,
     // mapbox enabled by default
-    'mapbox': 1
+    'mapbox': 1,
+    // llm (dbx-form/llm) enabled by default
+    'llm': 1
   );
 
   @if ($input-dbx-theme-extension-config != null) {

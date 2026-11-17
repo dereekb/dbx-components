@@ -1516,7 +1516,7 @@
       "selector": "dbx-content-box, [dbxContentBox]",
       "className": "DbxContentBoxDirective",
       "module": "@dereekb/dbx-web",
-      "description": "Wraps content in a box container with optional elevation (card-like shadow) and wide layout.\nBoth `elevate` and `wide` default to `true`.",
+      "description": "Wraps content in a box container with optional elevation (a raised tonal surface, see `.dbx-content-elevate`) and wide layout.\nBoth `elevate` and `wide` default to `true`.",
       "inputs": [
         {
           "name": "elevate",
@@ -1616,7 +1616,7 @@
       "selector": "dbx-content-elevate,[dbxContentElevate]",
       "className": "DbxContentElevateDirective",
       "module": "@dereekb/dbx-web",
-      "description": "Applies elevation (box-shadow) styling to the host element, giving it a raised card appearance.\nElevation is enabled by default and can be toggled off.",
+      "description": "Applies elevated styling to the host element: a raised tonal surface (`surface-bright` with a wash of the active dbxColor), with no shadow.\nElevation is enabled by default and can be toggled off.",
       "inputs": [
         {
           "name": "elevate",
@@ -1765,6 +1765,81 @@
       ],
       "example": "<div dbxFlexGroup>\n  <div dbxFlexSize=\"2\">Twice as wide</div>\n  <div dbxFlexSize=\"1\">Narrow</div>\n</div>",
       "minimalExample": "<div dbxFlexSize=\"1\"></div>"
+    },
+    {
+      "slug": "height-sync",
+      "category": "layout",
+      "kind": "directive",
+      "selector": "[dbxHeightSync]",
+      "className": "DbxHeightSyncDirective",
+      "module": "@dereekb/dbx-web",
+      "description": "Groups elements whose heights are kept in sync. Elements marked with {@link DbxHeightSyncSourceDirective} are measured, and elements marked\nwith {@link DbxHeightSyncFollowerDirective} take the tallest source's height. Followers are never measured, so there is no feedback loop.\n\nSources and followers find the group through dependency injection, so they can sit inside child components or projected content.",
+      "inputs": [
+        {
+          "name": "dbxHeightSyncDisabled",
+          "type": "Maybe<boolean>",
+          "description": "Turns the sync off: followers drop the synced height and keep their natural one. Sources are still measured. Use it when a layout change\ntakes the followers out of line with the sources, such as a row that stacks into a column on a narrow screen.\n\nA model, so the element's own component can set it when the group is one of its host directives.",
+          "required": false,
+          "default": "false"
+        }
+      ],
+      "outputs": [],
+      "relatedSlugs": [
+        "height-sync-source",
+        "height-sync-follower",
+        "flex-group"
+      ],
+      "skillRefs": [
+        "dbx__ref__dbx-ui-building-blocks"
+      ],
+      "example": "<div class=\"dbx-flex\" dbxHeightSync [dbxHeightSyncDisabled]=\"isNarrow\">\n  <mat-form-field dbxHeightSyncSource>...</mat-form-field>\n  <dbx-button dbxHeightSyncFollower text=\"Run\"></dbx-button>\n</div>",
+      "minimalExample": "<div dbxHeightSync><textarea dbxHeightSyncSource></textarea><button dbxHeightSyncFollower>Run</button></div>"
+    },
+    {
+      "slug": "height-sync-source",
+      "category": "layout",
+      "kind": "directive",
+      "selector": "[dbxHeightSyncSource]",
+      "className": "DbxHeightSyncSourceDirective",
+      "module": "@dereekb/dbx-web",
+      "description": "Marks an element whose height drives the followers of the nearest {@link DbxHeightSyncDirective}. Measures its height with a ResizeObserver:\nthe border box by default, or the content box with `dbxHeightSyncSource=\"content-box\"`. Does nothing without a group.",
+      "inputs": [
+        {
+          "name": "dbxHeightSyncSource",
+          "type": "Maybe<DbxHeightSyncSourceBox | ''>",
+          "description": "Which box to measure. Defaults to the border box.",
+          "required": false
+        }
+      ],
+      "outputs": [],
+      "relatedSlugs": [
+        "height-sync",
+        "height-sync-follower"
+      ],
+      "skillRefs": [
+        "dbx__ref__dbx-ui-building-blocks"
+      ],
+      "example": "<mat-form-field dbxHeightSyncSource=\"content-box\">...</mat-form-field>",
+      "minimalExample": "<div dbxHeightSync><div dbxHeightSyncSource>Measured</div></div>"
+    },
+    {
+      "slug": "height-sync-follower",
+      "category": "layout",
+      "kind": "directive",
+      "selector": "[dbxHeightSyncFollower]",
+      "className": "DbxHeightSyncFollowerDirective",
+      "module": "@dereekb/dbx-web",
+      "description": "Marks an element that takes the height of the nearest {@link DbxHeightSyncDirective}'s tallest source. Sets a border-box height once a\nsource is measured. Does nothing without a group.",
+      "inputs": [],
+      "outputs": [],
+      "relatedSlugs": [
+        "height-sync",
+        "height-sync-source"
+      ],
+      "skillRefs": [
+        "dbx__ref__dbx-ui-building-blocks"
+      ],
+      "minimalExample": "<div dbxHeightSync><div dbxHeightSyncSource>Measured</div><div dbxHeightSyncFollower>Follows</div></div>"
     },
     {
       "slug": "list",
@@ -2871,6 +2946,236 @@
       "minimalExample": "<div class=\"dbx-timeline\">\n<div dbxTimelineItem>...</div>\n<div dbxTimelineItem [dbxTimelineItemCurrent]=\"true\" dbxColor=\"primary\">...</div>\n</div>"
     },
     {
+      "slug": "gallery",
+      "category": "list",
+      "kind": "component",
+      "selector": "dbx-gallery",
+      "className": "DbxGalleryComponent",
+      "module": "@dereekb/dbx-web",
+      "description": "Image / media gallery. Renders values as tiles in a responsive grid, where each tile has three injected slots: a\npresentation (an image, a solid color, an avatar, a clip, …) and top/bottom bars (labels, copy/delete/load buttons, …).\n\nBuilt on dbx-list, so it accepts `[state]`, emits `clickItem` and `loadMore`, and supports the `empty`/`emptyLoading` content\nslots. Add `dbxListItemModifier dbxListItemSingleSelectionModifier` to let the user select one tile, and `dbxListDragDrop` to let the\nuser reorder the tiles by dragging them. Drags start from the presentation slot; the top and bottom slots do not start a drag, so their\nbuttons keep working.",
+      "inputs": [
+        {
+          "name": "galleryConfig",
+          "type": "Maybe<DbxGalleryConfig<T>>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "presentation",
+          "type": "Maybe<DbxGallerySlotConfig<T>>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "top",
+          "type": "Maybe<DbxGallerySlotConfig<T>>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "bottom",
+          "type": "Maybe<DbxGallerySlotConfig<T>>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "keyForValue",
+          "type": "Maybe<(value: T) => Maybe<string>>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "grid",
+          "type": "Maybe<Partial<DbxValueListGridItemViewGridSizeConfig>>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "itemMinWidth",
+          "type": "Maybe<string>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "columns",
+          "type": "Maybe<number>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "slotMode",
+          "type": "Maybe<DbxGallerySlotMode>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "topSlotMode",
+          "type": "Maybe<DbxGallerySlotMode>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "bottomSlotMode",
+          "type": "Maybe<DbxGallerySlotMode>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "aspectRatio",
+          "type": "Maybe<string>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "hasMore",
+          "type": "Maybe<boolean>",
+          "description": "",
+          "required": false,
+          "default": "undefined"
+        },
+        {
+          "name": "disabled",
+          "type": "Maybe<boolean>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "selectionMode",
+          "type": "Maybe<DbxListSelectionMode>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "state",
+          "type": "Maybe<ObservableOrValue<S>>",
+          "description": "",
+          "required": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "clickItem",
+          "emits": "T",
+          "description": ""
+        },
+        {
+          "name": "loadMore",
+          "emits": "void",
+          "description": ""
+        }
+      ],
+      "relatedSlugs": [
+        "gallery-image-presentation",
+        "list-item-single-selection-modifier",
+        "list-drag-drop",
+        "image-hover-preview",
+        "list-grid-view"
+      ],
+      "example": "<dbx-gallery [state]=\"state$\" [galleryConfig]=\"galleryConfig\" topSlotMode=\"overlay\" dbxListItemModifier dbxListItemSingleSelectionModifier (selectionChange)=\"onSelect($event)\"></dbx-gallery>\n<dbx-gallery [state]=\"itemsState\" [galleryConfig]=\"galleryConfig\" dbxListDragDrop (itemDrop)=\"items.set($event.values)\"></dbx-gallery>\n```\n\n```ts\ngalleryConfig: DbxGalleryConfig<MyItem> = {\n  presentation: (x) => (x.kind === 'image' ? { componentClass: DbxGalleryImagePresentationComponent, data: { hoverPreview: true } } : { componentClass: MyColorPresentationComponent }),\n  bottom: { componentClass: MyActionsComponent, data: { onDelete: (x: MyItem) => this.delete(x) } },\n  keyForValue: (x) => x.id\n};",
+      "minimalExample": "<dbx-gallery [state]=\"imagesState$\"></dbx-gallery>"
+    },
+    {
+      "slug": "gallery-image-presentation",
+      "category": "list",
+      "kind": "component",
+      "selector": "dbx-gallery-image-presentation",
+      "className": "DbxGalleryImagePresentationComponent",
+      "module": "@dereekb/dbx-web",
+      "description": "Built-in gallery presentation that renders a {@link DbxGalleryImageValue} as a lazily loaded image.\n\nThis is the gallery's default presentation when none is configured.",
+      "inputs": [],
+      "outputs": [],
+      "relatedSlugs": [
+        "gallery",
+        "image-hover-preview"
+      ],
+      "minimalExample": "galleryConfig: DbxGalleryConfig<DbxGalleryImageValue> = {\npresentation: { componentClass: DbxGalleryImagePresentationComponent, data: { fit: 'contain', hoverPreview: true } }\n};"
+    },
+    {
+      "slug": "image-hover-preview",
+      "category": "overlay",
+      "kind": "directive",
+      "selector": "[dbxImageHoverPreview]",
+      "className": "DbxImageHoverPreviewDirective",
+      "module": "@dereekb/dbx-web",
+      "description": "Shows a larger preview of an image in a floating panel while the pointer hovers over the host element.\n\nThe panel is positioned next to the host and does not block the pointer, so it closes as soon as the pointer leaves the host.\n\nThe panel opens after {@link DEFAULT_DBX_IMAGE_HOVER_PREVIEW_OPEN_DELAY} (250ms) so it does not flash while the pointer passes over;\nset `openDelay: 0` to open it immediately. The image is limited to 480px by 480px (`DEFAULT_DBX_IMAGE_HOVER_PREVIEW_MAX_WIDTH` /\n`DEFAULT_DBX_IMAGE_HOVER_PREVIEW_MAX_HEIGHT`) unless `maxWidth` / `maxHeight` are set.",
+      "inputs": [
+        {
+          "name": "dbxImageHoverPreview",
+          "type": "Maybe<DbxImageHoverPreviewInput>",
+          "description": "",
+          "required": false,
+          "default": "undefined"
+        }
+      ],
+      "outputs": [],
+      "relatedSlugs": [
+        "gallery"
+      ],
+      "example": "<img [src]=\"thumbnailUrl\" [dbxImageHoverPreview]=\"{ src: fullUrl, alt: 'Photo', maxWidth: '640px', openDelay: 500 }\" />",
+      "minimalExample": "<img src=\"/assets/thumb.jpg\" [dbxImageHoverPreview]=\"'/assets/full.jpg'\" />"
+    },
+    {
+      "slug": "audio-video-playback",
+      "category": "misc",
+      "kind": "directive",
+      "selector": "audio[dbxAudioVideoPlayback], video[dbxAudioVideoPlayback]",
+      "className": "DbxAudioVideoPlaybackDirective",
+      "module": "@dereekb/dbx-web",
+      "description": "Registers an `<audio>` or `<video>` element with the nearest {@link DbxAudioVideoPlaybackStore}, so that starting it pauses\nother media once the playing limit is reached (one at a time by default).\n\nUses the app-wide store unless the element is inside a {@link DbxAudioVideoPlaybackGroupDirective}. Muted playback does not\ncount toward the limit unless `includeMuted` is set.",
+      "inputs": [
+        {
+          "name": "dbxAudioVideoPlayback",
+          "type": "Maybe<DbxAudioVideoPlaybackDirectiveConfig>",
+          "description": "",
+          "required": false,
+          "default": "undefined"
+        }
+      ],
+      "outputs": [],
+      "relatedSlugs": [
+        "audio-video-playback-group",
+        "gallery"
+      ],
+      "example": "<video controls [dbxAudioVideoPlayback]=\"{ includeMuted: true }\" #playback=\"dbxAudioVideoPlayback\" src=\"/assets/clip.mp4\"></video>\n<span>{{ playback.isPlayingSignal() ? 'Playing' : 'Stopped' }}</span>",
+      "minimalExample": "<audio controls dbxAudioVideoPlayback src=\"/assets/a.mp3\"></audio>"
+    },
+    {
+      "slug": "audio-video-playback-group",
+      "category": "misc",
+      "kind": "directive",
+      "selector": "[dbxAudioVideoPlaybackGroup]",
+      "className": "DbxAudioVideoPlaybackGroupDirective",
+      "module": "@dereekb/dbx-web",
+      "description": "Provides a scoped {@link DbxAudioVideoPlaybackStore} for the media inside it, so they are coordinated separately from the\napp-wide store and can use their own playing limit and overflow mode.",
+      "inputs": [
+        {
+          "name": "dbxAudioVideoPlaybackGroup",
+          "type": "Maybe<DbxAudioVideoPlaybackGroupConfig>",
+          "description": "",
+          "required": false,
+          "default": "undefined"
+        },
+        {
+          "name": "maxPlaying",
+          "type": "Maybe<number>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "overflowMode",
+          "type": "Maybe<DbxAudioVideoPlaybackOverflowMode>",
+          "description": "",
+          "required": false
+        }
+      ],
+      "outputs": [],
+      "relatedSlugs": [
+        "audio-video-playback"
+      ],
+      "example": "<div [dbxAudioVideoPlaybackGroup]=\"{ maxPlaying: 2, overflowMode: 'pause_newest' }\" #group=\"dbxAudioVideoPlaybackGroup\">\n  <video controls dbxAudioVideoPlayback src=\"/assets/clip.mp4\"></video>\n  <button (click)=\"group.store.pauseAll()\">Pause all</button>\n</div>",
+      "minimalExample": "<div dbxAudioVideoPlaybackGroup [maxPlaying]=\"2\">\n<audio controls dbxAudioVideoPlayback src=\"/assets/a.mp3\"></audio>\n<audio controls dbxAudioVideoPlayback src=\"/assets/b.mp3\"></audio>\n<audio controls dbxAudioVideoPlayback src=\"/assets/c.mp3\"></audio>\n</div>"
+    },
+    {
       "slug": "two-column",
       "category": "layout",
       "kind": "component",
@@ -2995,6 +3300,38 @@
       "minimalExample": "<dbx-list-accordion-view [config]=\"rowConfig\"></dbx-list-accordion-view>"
     },
     {
+      "slug": "list-drag-drop",
+      "category": "list",
+      "kind": "directive",
+      "selector": "[dbxListDragDrop]",
+      "className": "DbxListDragDropDirective",
+      "module": "@dereekb/dbx-web",
+      "description": "Lets the user reorder a list's items by dragging them. Works with lists that render with dbx-list-view or dbx-list-grid-view,\nincluding dbx-gallery.\n\nThe list does not reorder itself. When the user drops an item, `itemDrop` emits the list's values in their new order; write\nthem back to the list's source right away (for example, a signal that feeds `[state]`). Until the new order arrives, the dropped\nitem shows at its old position.\n\nLimits:\n- Items can only move within their own group (see `dbxListTitleGroup`).\n- Paged lists only reorder the items that are loaded.\n- There is no keyboard support.\n- The list view does not render its separators while drag-drop is on.\n- Disabled items, and all items while the list is disabled, cannot be dragged.\n- `values` assumes the view maps each value to one item and keeps their order, which dbx-gallery and the usual list configs do.\n\nTouch drags start after a short hold (see `DEFAULT_DBX_LIST_DRAG_START_DELAY`) so the list can still be scrolled.",
+      "inputs": [
+        {
+          "name": "dbxListDragDrop",
+          "type": "Maybe<DbxListDragDropConfig>",
+          "description": "",
+          "required": false,
+          "default": "undefined"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "itemDrop",
+          "emits": "DbxListItemDropEvent<T>",
+          "description": "Emits when the user drops an item at a new position."
+        }
+      ],
+      "relatedSlugs": [
+        "list-view",
+        "list-grid-view",
+        "gallery"
+      ],
+      "example": "<dbx-gallery [state]=\"state\" dbxListDragDrop (itemDrop)=\"items.set($event.values)\"></dbx-gallery>\n<my-list [state]=\"state\" [dbxListDragDrop]=\"{ disabled: locked() }\" (itemDrop)=\"onItemDrop($event)\"></my-list>\n```\n\n```ts\nreadonly items = signal<MyItem[]>([]);\nreadonly state = computed(() => successResult(this.items()));",
+      "minimalExample": "<my-list [state]=\"state\" dbxListDragDrop (itemDrop)=\"items.set($event.values)\"></my-list>"
+    },
+    {
       "slug": "list-grid-view",
       "category": "list",
       "kind": "component",
@@ -3040,6 +3377,39 @@
       ],
       "example": "<dbx-list-view [config]=\"rowConfig\" dbxListTitleGroup></dbx-list-view>",
       "minimalExample": "<dbx-list-title-group-header></dbx-list-title-group-header>"
+    },
+    {
+      "slug": "list-item-single-selection-modifier",
+      "category": "list",
+      "kind": "directive",
+      "selector": "[dbxListItemSingleSelectionModifier]",
+      "className": "DbxListItemSingleSelectionModifierDirective",
+      "module": "@dereekb/dbx-web",
+      "description": "Adds single selection to a list. Clicking an item selects it, and the selected item is rendered as selected by the list view.\n\nUses a parent {@link DbxListSingleSelectionStore} when one is provided, so a page can share the selection with other\ncomponents; otherwise the directive gets its own store. Use alongside `dbxListItemModifier` on the list.\n\nBecause the items get a clickable anchor, the list no longer emits `clickItem` for them; use `selectionChange` instead.",
+      "inputs": [
+        {
+          "name": "dbxListItemSingleSelectionModifier",
+          "type": "Maybe<DbxListSingleSelectionConfig>",
+          "description": "",
+          "required": false,
+          "default": "undefined"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "selectionChange",
+          "emits": "DbxListSingleSelectionChange<T>",
+          "description": ""
+        }
+      ],
+      "relatedSlugs": [
+        "list",
+        "list-view",
+        "list-grid-view",
+        "gallery"
+      ],
+      "example": "<my-list [state]=\"state$\" dbxListItemModifier [dbxListItemSingleSelectionModifier]=\"{ allowDeselect: true }\" #selection=\"dbxListItemSingleSelection\"></my-list>\n<p>Selected: {{ selection.store.selectedValueSignal()?.name }}</p>",
+      "minimalExample": "<my-list [state]=\"state$\" dbxListItemModifier dbxListItemSingleSelectionModifier (selectionChange)=\"onSelectionChange($event)\"></my-list>"
     },
     {
       "slug": "anchor",

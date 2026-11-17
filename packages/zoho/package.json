@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/zoho",
-  "version": "14.27.0",
+  "version": "14.28.0",
   "sideEffects": false,
   "type": "module",
   "bin": {
@@ -14,16 +14,21 @@
     },
     "./cli": {
       "default": "./cli/index.js"
+    },
+    "./node": {
+      "types": "./node/index.d.ts",
+      "import": "./node/index.esm.js",
+      "default": "./node/index.esm.js"
     }
   },
   "peerDependencies": {
-    "@dereekb/date": "14.27.0",
-    "@dereekb/dbx-cli": "14.27.0",
-    "@dereekb/firebase": "14.27.0",
-    "@dereekb/model": "14.27.0",
-    "@dereekb/nestjs": "14.27.0",
-    "@dereekb/rxjs": "14.27.0",
-    "@dereekb/util": "14.27.0",
+    "@dereekb/date": "14.28.0",
+    "@dereekb/dbx-cli": "14.28.0",
+    "@dereekb/firebase": "14.28.0",
+    "@dereekb/model": "14.28.0",
+    "@dereekb/nestjs": "14.28.0",
+    "@dereekb/rxjs": "14.28.0",
+    "@dereekb/util": "14.28.0",
     "@nestjs/common": "^12.0.1",
     "@nestjs/config": "^12.0.0",
     "express": "^5.2.1",

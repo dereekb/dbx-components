@@ -1,4 +1,5 @@
-import { Controller, Get, Inject } from '@nestjs/common';
+import { Controller, Get, Inject, Logger } from '@nestjs/common';
+import { unique } from '@dereekb/util';
 import { OidcProviderConfigService } from '@dereekb/firebase-server/oidc';
 import { McpModuleConfig } from '../mcp.config';
 import { type OidcScope } from '@dereekb/firebase';
@@ -14,8 +15,11 @@ export interface OAuthProtectedResourceMetadata {
   /**
    * Scopes the resource accepts (RFC 9728 §2). Advertised so dynamic-registration
    * MCP clients (e.g. the Claude Code CLI) know which scopes to request on the
-   * authorization call — they request this list verbatim, so it carries only scopes
-   * such a client can actually be granted. Omitted when the resolved list is empty.
+   * authorization call — they request this list verbatim. It carries the scopes an
+   * arbitrary client can be granted, plus the app's
+   * {@link McpModuleConfig.advertisedAssignmentOnlyScopes}, which the consent builder
+   * withholds from any client lacking the unlocking provider profile. Omitted when the
+   * resolved list is empty.
    */
   readonly scopes_supported?: ReadonlyArray<OidcScope>;
 }
@@ -39,10 +43,25 @@ export interface OAuthProtectedResourceMetadata {
  */
 @Controller('.well-known')
 export class McpWellKnownController {
+  /**
+   * {@link McpModuleConfig.advertisedAssignmentOnlyScopes}, deduplicated and limited to the scopes the OIDC provider registers.
+   */
+  private readonly _advertisedAssignmentOnlyScopes: readonly OidcScope[];
+
   constructor(
     @Inject(McpModuleConfig) private readonly mcpConfig: McpModuleConfig,
     @Inject(OidcProviderConfigService) private readonly oidcProviderConfigService: OidcProviderConfigService
-  ) {}
+  ) {
+    const registeredScopes = new Set<OidcScope>(oidcProviderConfigService.scopesSupported);
+    const advertisedScopes = unique([...(mcpConfig.advertisedAssignmentOnlyScopes ?? [])]);
+    const unregisteredScopes = advertisedScopes.filter((scope) => !registeredScopes.has(scope));
+
+    if (unregisteredScopes.length > 0) {
+      new Logger(McpWellKnownController.name).warn(`McpModuleConfig.advertisedAssignmentOnlyScopes lists scopes the OIDC provider does not register, so they are not advertised (a dynamic-registration client registering one is rejected): ${unregisteredScopes.join(', ')}`);
+    }
+
+    this._advertisedAssignmentOnlyScopes = advertisedScopes.filter((scope) => registeredScopes.has(scope));
+  }
 
   /**
    * Serves both RFC 9728 discovery URLs — the primary form (§3.1), which inserts the resource's
@@ -60,19 +79,20 @@ export class McpWellKnownController {
   getProtectedResourceMetadata(): OAuthProtectedResourceMetadata {
     const { mcpUrl, oidcIssuer, scopesSupported: scopesFilter } = this.mcpConfig;
 
-    // Base scope list is what the issuer grants an arbitrary client, NOT its full
-    // `scopes_supported`: a dynamic-registration client copies this list verbatim onto
-    // `/authorize`, and a provider-profile-gated scope in it is useless to every client lacking
-    // that profile assignment. The optional filter adjusts the list — usually narrowing it, but
-    // an app may also add a gated scope back so an assigned client can request it at all (the
-    // consent builder withholds it from the unassigned ones, so their flow still completes).
-    const providerScopes = this.oidcProviderConfigService.clientRequestableScopesSupported;
-    const scopes = scopesFilter ? scopesFilter(providerScopes) : providerScopes;
+    // The base list is what the issuer grants an arbitrary client, NOT its full `scopes_supported`:
+    // a dynamic-registration client copies this list verbatim onto `/authorize`, and a
+    // provider-profile-gated scope in it is useless to every client lacking that profile assignment.
+    // The optional filter narrows that list. The app's advertisedAssignmentOnlyScopes are appended
+    // last and deduplicated, so an assigned client can request a gated scope at all (the consent
+    // builder withholds it from the unassigned ones, so their flow still completes).
+    const requestableScopes = this.oidcProviderConfigService.clientRequestableScopesSupported;
+    const filteredScopes = scopesFilter ? scopesFilter(requestableScopes) : requestableScopes;
+    const scopes = unique([...filteredScopes, ...this._advertisedAssignmentOnlyScopes]);
 
     return {
       resource: mcpUrl,
       authorization_servers: [oidcIssuer],
-      ...(scopes.length ? { scopes_supported: [...scopes] } : undefined)
+      ...(scopes.length ? { scopes_supported: scopes } : undefined)
     };
   }
 }

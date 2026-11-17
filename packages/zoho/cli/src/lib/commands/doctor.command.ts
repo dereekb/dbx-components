@@ -1,5 +1,6 @@
 import type { CommandModule, Argv } from 'yargs';
 import type { Maybe } from '@dereekb/util';
+import { type ZohoAccounts, zohoAccountsAccessToken } from '@dereekb/zoho';
 import {
   loadCliConfig,
   loadCliConfigFile,
@@ -20,7 +21,7 @@ import {
   type ZohoCliTokenSourceCoverage
 } from '../config/cli.config';
 import { loadZohoCliTokenSourceStatus, type ZohoCliResolvedTokenSource, type ZohoCliTokenSourceStatus } from '../config/token.source';
-import { createCliContext, toZohoCliProductApis, type ZohoCliProductApi, type ZohoCliProductApis } from '../context/cli.context';
+import { createCliContext, type ZohoCliProductAccounts } from '../context/cli.context';
 import { outputResult } from '../util/output';
 import { access, constants } from 'node:fs';
 import { dirname } from 'node:path';
@@ -166,27 +167,27 @@ function checkConfiguredProducts(products: readonly ZohoCliProduct[]): DoctorChe
 }
 
 async function checkTokenExchanges(config: NonNullable<Awaited<ReturnType<typeof loadCliConfig>>>, products: readonly ZohoCliProduct[], tokenSource: Maybe<ZohoCliResolvedTokenSource>): Promise<DoctorCheck[]> {
-  const productApis: ZohoCliProductApis = toZohoCliProductApis(createCliContext(config, tokenSource));
+  const productAccounts: ZohoCliProductAccounts = createCliContext(config, tokenSource).productAccounts;
   const results: DoctorCheck[] = [];
   for (const product of products) {
-    results.push(await checkTokenExchange(productApis[product], product, tokenSource?.products.includes(product) ?? false));
+    results.push(await checkTokenExchange(productAccounts[product], product, tokenSource?.products.includes(product) ?? false));
   }
   return results;
 }
 
-async function checkTokenExchange(api: Maybe<ZohoCliProductApi>, product: ZohoCliProduct, usesTokenSource: boolean): Promise<DoctorCheck> {
-  if (!api) {
+async function checkTokenExchange(accounts: Maybe<ZohoAccounts>, product: ZohoCliProduct, usesTokenSource: boolean): Promise<DoctorCheck> {
+  if (!accounts) {
     return { name: `${product}-token`, status: 'warn', message: `${product}: API not configured` };
   }
   let result: DoctorCheck;
   try {
     if (usesTokenSource) {
       // no refresh token to exchange: load the token the way every command does, through the token source
-      const token = await api.zohoAccountsApi.accountsContext.loadAccessToken();
+      const token = await accounts.accountsContext.loadAccessToken();
       result = { name: `${product}-token`, status: 'pass', message: `${product}: Token loaded from the token source. Scope: ${token.scope}` };
     } else {
-      // the product's own accounts API, so the reported scope is the grant it authenticates with
-      const tokenResponse = await api.zohoAccountsApi.accessToken();
+      // the product's own accounts client, so the reported scope is the grant it authenticates with
+      const tokenResponse = await zohoAccountsAccessToken(accounts.accountsContext)();
       result = { name: `${product}-token`, status: 'pass', message: `${product}: Token exchange successful. Scope: ${tokenResponse.scope}` };
     }
   } catch (e) {
