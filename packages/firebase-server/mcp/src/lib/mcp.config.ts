@@ -93,15 +93,20 @@ export interface McpReasonParameterConfig {
 }
 
 /**
- * Filter applied to the OIDC provider's advertised scope list when building the MCP
- * protected-resource metadata's `scopes_supported`. Receives every scope the provider
- * issues to an arbitrary client (from `OidcProviderConfigService.clientRequestableScopesSupported`)
- * and returns the list to advertise. Supplied via {@link McpModuleConfig.scopesSupported};
- * when unset, all of them are advertised.
+ * Filter applied to the OIDC provider's scope list when building the MCP protected-resource
+ * metadata's `scopes_supported`. Supplied via {@link McpModuleConfig.scopesSupported}; when unset,
+ * the whole input list is advertised.
  *
- * The argument is NOT the full scope registry: every assignment-only scope (one only an
- * admin-assigned provider profile unlocks) has already been removed. To advertise such a scope,
- * the filter must APPEND it. A predicate that only keeps it returns a list without it, with no error.
+ * The input is `OidcProviderConfigService.clientRequestableScopesSupported`: the provider's scopes
+ * with every assignment-only (provider-profile-gated, non-default) scope ALREADY removed. A filter
+ * can therefore only narrow the list. A keep-only predicate that names a gated scope
+ * (`scopes.filter((s) => … || s === 'token.cli')`) keeps nothing for that scope in a deployed
+ * environment, yet passes outside production, where a default profile unlocks the scope and leaves
+ * it in the input. To advertise a gated scope, list it in
+ * {@link McpModuleConfig.advertisedAssignmentOnlyScopes}, which is appended after this filter runs.
+ *
+ * A spec that hands the filter `Object.keys(providerConfig.claims)` hides the same mistake, because
+ * that list still holds the gated scopes. Test with the requestable list instead.
  */
 export type McpScopesSupportedFilter = (requestableScopes: readonly OidcScope[]) => readonly OidcScope[];
 
@@ -151,25 +156,48 @@ export abstract class McpModuleConfig {
    * the MCP resource advertises the scopes the issuer grants an arbitrary client
    * without the app restating them. Scopes only an admin-assigned provider profile
    * unlocks are excluded from that base list, since an unassigned client can never
-   * be granted one. Provide this to narrow the set further — or to add such a gated
-   * scope back deliberately, which is safe: the consent URL builder withholds it
-   * from any client whose profiles do not unlock it, so that client's flow completes
-   * without it rather than failing. When unset, the whole base list is advertised.
+   * be granted one. Provide this to narrow the set further. It can only narrow: to
+   * advertise a gated scope, list it in {@link advertisedAssignmentOnlyScopes}, which
+   * is appended after this filter runs. When unset, the whole base list is advertised.
    *
    * Advertising these matters because dynamic-registration MCP clients (the Claude
    * Code CLI) read `scopes_supported` to decide which scopes to request on the
    * authorization call; with none advertised they authorize with no `scope`, leaving
    * the OIDC provider nothing to grant and ending the interaction in `access_denied`.
    *
-   * To add a gated scope back, APPEND it: the base list never contains one, so
-   * `scopes.filter((scope) => ... || scope === CLI_TOKEN_OIDC_SCOPE)` cannot advertise
-   * `token.cli`. A spec that hands the filter `Object.keys(providerConfig.claims)` hides this
-   * mistake, because that list still holds the gated scopes. Test with the requestable list instead.
-   *
-   * @example (scopes) => scopes.filter((scope) => scope === 'openid' || scope.startsWith('model.'))
-   * @example (scopes) => (scopes.includes(CLI_TOKEN_OIDC_SCOPE) ? scopes : [...scopes, CLI_TOKEN_OIDC_SCOPE])
+   * @example (requestableScopes) => requestableScopes.filter((scope) => scope !== SERVICE_TOKEN_OIDC_SCOPE)
    */
   readonly scopesSupported?: McpScopesSupportedFilter;
+
+  /**
+   * Optional assignment-only (provider-profile-gated) scopes to advertise in the protected-resource
+   * discovery document's `scopes_supported` anyway.
+   *
+   * A dynamic-registration MCP connector requests exactly the advertised list, so a gated scope
+   * missing from it can never be granted to that connector, even when an admin assigns the
+   * unlocking profile. Without `token.cli` here, for example, a connector can never mint a CLI
+   * handoff in a deployed environment.
+   *
+   * Semantics:
+   * - Appended AFTER the {@link scopesSupported} filter runs, so a filter can neither drop a listed
+   *   scope nor be responsible for adding it back. (The filter cannot add it back reliably anyway:
+   *   its input has the assignment-only scopes already removed.)
+   * - Deduplicated. A listed scope that is already in the list (for example outside production,
+   *   where a default profile unlocks it) is not repeated. The final list keeps first-occurrence
+   *   order, so listed scopes not already present come last.
+   * - A listed scope the OIDC provider does not register (not a `claims` key) is never advertised,
+   *   and one warning naming it is logged at boot. A dynamic-registration client that registers an
+   *   unsupported scope is rejected, so advertising one would break every connector's registration.
+   * - A listed scope does not have to be assignment-only in the current environment. Outside
+   *   production it usually is not, and the deduplication covers it.
+   *
+   * Advertising a gated scope widens nothing: the consent URL builder withholds it from any client
+   * whose profiles do not unlock it, so that client's flow completes without it rather than failing.
+   * Assigning the profile stays the real switch.
+   *
+   * @example [CLI_TOKEN_OIDC_SCOPE, EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE]
+   */
+  readonly advertisedAssignmentOnlyScopes?: readonly OidcScope[];
 
   /**
    * Optional name advertised on the MCP `initialize` handshake. Defaults to

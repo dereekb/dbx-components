@@ -1,3 +1,29 @@
+## Migration to v14.28.x — McpModuleConfig.advertisedAssignmentOnlyScopes
+
+### New
+- **`McpModuleConfig.advertisedAssignmentOnlyScopes`** (`@dereekb/firebase-server/mcp`): an optional
+  `readonly OidcScope[]` of provider-profile-gated scopes the MCP protected-resource document advertises anyway, so a
+  dynamic-registration connector (which requests the advertised list verbatim) can ask for them at all.
+  `McpWellKnownController` appends them to `scopes_supported` AFTER the `scopesSupported` filter runs, so a filter
+  cannot drop them. The final list is deduplicated, so a listed scope a default profile already unlocks (as outside
+  production) is not repeated. A listed scope the OIDC provider does not register (not a `claims` key) is never
+  advertised, and the controller logs one warning at boot naming it. Advertising widens nothing: the consent URL
+  builder still withholds a gated scope from any client whose profiles do not unlock it, so assigning the profile
+  stays the switch.
+- `McpScopesSupportedFilter`'s parameter is renamed `requestableScopes`, and its docs now state the input contract:
+  it is `OidcProviderConfigService.clientRequestableScopesSupported`, which has ALREADY dropped the assignment-only
+  scopes. The filter only narrows. Its type and behaviour are unchanged.
+
+### Adopt
+- Move any scope your `scopesSupported` filter appends (`token.cli`, `token.external`, the external-token ceilings, …)
+  to `advertisedAssignmentOnlyScopes`, and keep the filter for narrowing only. Append-style filters keep working
+  (the controller dedupes), but they are easy to get wrong: a keep-only predicate that names a gated scope
+  (`scopes.filter((s) => … || GATED.has(s))`) keeps nothing in a deployed environment, because the gated scope is
+  not in its input there. It still passes outside production, where a default profile unlocks the scope, and it
+  passes any spec that feeds the filter the full claims list. See `demoMcpModuleConfigFactory` in
+  `apps/demo-api/src/app/server/mcp/mcp.module.ts`, and its `mcp.module.spec.ts` for a spec that builds a real
+  `OidcProviderConfigService` so the production shape is covered.
+
 ## Migration to v14.27.x — dbx-cli `docs` (the app API's docs), docs API wire contract in `@dereekb/firebase`
 
 ### New
