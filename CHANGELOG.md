@@ -1,3 +1,20 @@
+# [14.28.0](https://github.com/dereekb/dbx-components/compare/v14.27.0-dev...v14.28.0) (2026-11-17)
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes + peer dep sync ([7865bff1](https://github.com/dereekb/dbx-components/commit/7865bff1b6389bacfdf1008a34263af4148fe87f))
+
+### Code Refactoring
+
+- resolve SonarCloud findings from dbx-form-llm ([#61](https://github.com/dereekb/dbx-components/issues/61)) ([07188fac](https://github.com/dereekb/dbx-components/commit/07188fac017f4e0623e41bda8e51398b2b1d3ade)), closes [#61](https://github.com/dereekb/dbx-components/issues/61)
+
+### Features
+
+- dbx-form-llm ([#61](https://github.com/dereekb/dbx-components/issues/61)) ([da029e5b](https://github.com/dereekb/dbx-components/commit/da029e5b4da50e853d3e13b6361dab9efea8b63c)), closes [#61](https://github.com/dereekb/dbx-components/issues/61)
+- **firebase-server-mcp:** add named additional downloads to cli-token ([5282538f](https://github.com/dereekb/dbx-components/commit/5282538f753f4e599331d8450dce3abca0a2a1dc))
+- **firebase-server-mcp:** declare advertised assignment-only scopes ([1c6adbc7](https://github.com/dereekb/dbx-components/commit/1c6adbc7d3fbfe6481977d31e1b21ba041b81eb7))
+- **zoho:** drop NestJS from zoho-cli; JSON error on a bad token ([06c2c448](https://github.com/dereekb/dbx-components/commit/06c2c448fae8a0b9323e5a079c8f952680016913))
+
 # [14.27.0](https://github.com/dereekb/dbx-components/compare/v14.26.0-dev...v14.27.0) (2026-11-16)
 
 ### Bug Fixes
