@@ -70,7 +70,8 @@ describe('@dereekb/llm isolation', () => {
     expect(sources.map((file) => file.path)).toEqual(expect.arrayContaining(['decision.ts', 'index.ts']));
   });
 
-  it('should load the root and /decision entries without evaluating an SDK', async () => {
+  // The first import transforms the whole root entry from source, which can outrun the 5s default under a parallel run.
+  it('should load the root and /decision entries without evaluating an SDK', { timeout: 30_000 }, async () => {
     await import('./index');
     await import('./decision');
     expect(probe).toEqual({ openai: false, openRouterSdk: false });

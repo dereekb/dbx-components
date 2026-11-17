@@ -277,7 +277,7 @@ const decisions = makeLlmDecisionStrategies({ providers, adapters, routePreferen
 
 The contracts a prompt is built against: the capability a call is made for, the slot layout that orders a prompt, the
 contributor seam that supplements it, the live context a capability renders and the templates that supply authored
-text. The assembly that turns them into bytes lands next.
+text, and the assembly that turns them into bytes.
 
 - **Capabilities.** An `LlmCapabilityDescriptor` is one capability's reply contract: its key, its reply protocol (`json`,
   `json-envelope` or `line`; `resolveLlmReplyProtocol` applies request, then descriptor, then the host default), its
@@ -305,6 +305,24 @@ text. The assembly that turns them into bytes lands next.
   `instructions`, `context`, the last split at `{{liveContext}}`) with their `source`, plus a by-key lookup for
   contributors. `tieredLlmPromptTemplateResolver` is the library's: tiers lowest first, the last definition of a key
   wins, a capability-scoped template beats a shared one. A host with another cascade supplies its own resolver.
+- **Assembly.** `composeLlmCapabilityPrompt` is the one prompt pipeline: it renders the request's live context, looks
+  the descriptor up through the injected `descriptorOf`, awaits the template resolver once, resolves the contributors in
+  registry order and assembles. `assembleLlmCapabilityPrompt` is its synchronous last step (resolved templates and
+  contributions in, segments out) for previews and goldens. The layout drives it: each slot, in order, holds what its
+  role says — contributions (frames, the model addendum, craft notes stable then volatile), the reply protocol (the
+  `reply-protocol` template, or the built-in line protocol for a `line` call), at most one amendment (must-resolve for a
+  JSON protocol and a `mustResolve` descriptor; line-manner for a `line` call with `lineManner`), the `instructions`
+  template, the `context` template split at its first `{{liveContext}}`, the output contract (JSON protocols with a
+  descriptor) and the live blocks with the live slot's contributions merged at their anchors. Each piece is closed by
+  its slot's separator; bytes with no slot to land in fail loud. The result is `{ segments, prompt, cacheSegments }`, the
+  last two derived from the segments. An empty live context still places one empty volatile segment, and an all-stable
+  one forces its last block volatile, so the cache split never moves past the live context.
+- **Output contract.** `renderLlmOutputContract` renders the contract schema (the descriptor's `contractSchemaHint()`,
+  or a per-call override) as one bullet per field — name, type label, required or optional, the field's description —
+  expanding an array of objects into an indented block where that delivers prose.
+- **Texts.** The line protocol, the must-resolve and line-manner amendments and the contract's intro and footer have
+  library defaults (`DEFAULT_LLM_PROMPT_ASSEMBLY_TEXTS`); a host passes its own exact text through `texts`, and one call
+  its own footer through `contractFooter`.
 
 A layout with a host frame slot, one contributor that fills it, and a live-slot contribution anchored among the
 capability's blocks:
@@ -351,6 +369,45 @@ const templateResolver = tieredLlmPromptTemplateResolver({
 
 const templates = await templateResolver({ request: { capability: 'summarize', renderLiveContext: () => [] }, descriptor: undefined });
 templates.roles.instructions?.source; // 'app'
+```
+
+A three-capability host composing a prompt: a `brand-voice` frame before the default slots, the tiered resolver above,
+a `descriptorOf` over a `Map`, and the `brandVoice` contributor from the first example:
+
+```ts
+import { composeLlmCapabilityPrompt, DEFAULT_LLM_PROMPT_LAYOUT, type LlmCapabilityDescriptor, makeLlmPromptLayout } from '@dereekb/llm';
+
+const layout = makeLlmPromptLayout([{ id: 'brand-voice', role: 'frame', occupancy: 'single', separator: '\n\n' }, ...DEFAULT_LLM_PROMPT_LAYOUT]);
+const descriptors = new Map<string, LlmCapabilityDescriptor>([
+  ['summarize', summarizeDescriptor],
+  ['classify', classifyDescriptor],
+  ['reply', replyDescriptor]
+]);
+
+const composed = await composeLlmCapabilityPrompt({
+  request: { capability: 'summarize', renderLiveContext: () => blocks },
+  layout,
+  descriptorOf: (capability) => descriptors.get(capability),
+  templateResolver,
+  contributors: [brandVoice]
+});
+
+composed.prompt; // the bytes sent
+composed.cacheSegments; // { cachePrefix, volatileSuffix } — the split never moves past the live context
+```
+
+The output contract on its own:
+
+```ts
+import { renderLlmOutputContract } from '@dereekb/llm';
+
+renderLlmOutputContract({ schema: { type: 'object', properties: { summary: { type: 'string', description: 'two sentences' } }, required: ['summary'] } });
+// ## Output contract
+//
+// Return a JSON object with these fields:
+// - `summary` (string, required): two sentences
+//
+// Use these field names exactly, and leave out an optional field rather than invent a value for it.
 ```
 
 ## Decisions

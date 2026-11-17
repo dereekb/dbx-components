@@ -70,7 +70,8 @@ export interface LlmDispatchRequest {
    */
   readonly responseSchemaHint?: unknown;
   /**
-   * An override for the CLOSING sentence of the prompt's output contract. Omitted ⇒ the default sentence. Root-only,
+   * An override for the CLOSING sentence of the prompt's output contract. Omitted ⇒ the host's
+   * `texts.outputContractFooter`, else `DEFAULT_LLM_OUTPUT_CONTRACT_FOOTER`; `''` drops the footer. Root-only,
    * like every other assembly input: a chained follow-up replays the root turn, so the contract already rides its
    * thread.
    */

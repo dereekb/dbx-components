@@ -33,13 +33,16 @@ export const LLM_PROMPT_SLOT_ROLES = ['model-addendum', 'frame', 'reply-protocol
  * - `contract` — assembly: the output contract, JSON protocols only.
  * - `craft` — contributed: selected notes, stable ones first then volatile, each group in contribution order.
  * - `live` — assembly + contributed: the capability's live blocks with this slot's contributions merged at their
- *   anchors (before the empty-block filter); the separator joins blocks and `lastSeparator` follows the last.
- * - `context-post` — assembly: the `context` template after the marker, raw, only when non-empty (later markers stay
- *   literal).
+ *   anchors (before the empty-block filter); the separator joins blocks and `lastSeparator` follows the last. Every
+ *   assembled layout declares one; an empty live context still places one empty volatile segment (the cache boundary).
+ * - `context-post` — assembly: the `context` template after the marker, only when non-empty (later markers stay
+ *   literal), closed by the slot's separator (`''` in the default layout, so the template's bytes end as written).
  * - `correction` — dispatcher: a retry's correction appended to the sent prompt. The assembly skips it; declaring it
  *   names its segment id and separator.
  * - `follow-up` — dispatcher: a chained turn's whole message. The assembly skips it; declaring it names its segment id
  *   and separator.
+ *
+ * Bytes the assembly has for a role the layout does not declare fail loud.
  */
 export type LlmPromptSlotRole = (typeof LLM_PROMPT_SLOT_ROLES)[number];
 
