@@ -7,17 +7,23 @@ import {
   type DbxAudioVideoPlaybackOverflowMode,
   DbxAudioVideoPlaybackStore,
   DbxButtonComponent,
+  DbxButtonSpacerDirective,
   DbxContentContainerDirective,
   DbxDetailBlockComponent,
   type DbxGalleryConfig,
   DbxGalleryComponent,
   DbxGalleryImagePresentationComponent,
+  type DbxGallerySlotMode,
+  type DbxImageHoverPreviewConfig,
   DbxImageHoverPreviewDirective,
   DbxListItemSingleSelectionModifierDirective,
   DbxListSingleSelectionStore,
   type DbxListSingleSelectionChange,
   DbxValueListItemModifierDirective,
-  DbxWebFilePreviewService
+  DbxWebFilePreviewService,
+  DEFAULT_DBX_IMAGE_HOVER_PREVIEW_MAX_HEIGHT,
+  DEFAULT_DBX_IMAGE_HOVER_PREVIEW_MAX_WIDTH,
+  DEFAULT_DBX_IMAGE_HOVER_PREVIEW_OPEN_DELAY
 } from '@dereekb/dbx-web';
 import { type WebsiteUrlWithPrefix } from '@dereekb/util';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
@@ -88,6 +94,7 @@ function makeDocGalleryItems(): DocGalleryItem[] {
     DbxValueListItemModifierDirective,
     DbxListItemSingleSelectionModifierDirective,
     DbxButtonComponent,
+    DbxButtonSpacerDirective,
     DbxDetailBlockComponent
   ],
   providers: [DbxListSingleSelectionStore],
@@ -112,12 +119,16 @@ export class DocExtensionAudioVideoComponent {
 
   // MARK: Hover Preview
   readonly images = [1, 2, 3].map((x) => `${AUDIO_VIDEO_ASSETS_PATH}/image-${x}.jpg`);
+  readonly configuredImagePreviews: DbxImageHoverPreviewConfig[] = this.images.map((src) => ({ src, openDelay: 0, maxWidth: '240px', maxHeight: '240px' }));
+  readonly hoverPreviewDefaults = { openDelay: DEFAULT_DBX_IMAGE_HOVER_PREVIEW_OPEN_DELAY, maxWidth: DEFAULT_DBX_IMAGE_HOVER_PREVIEW_MAX_WIDTH, maxHeight: DEFAULT_DBX_IMAGE_HOVER_PREVIEW_MAX_HEIGHT };
 
   // MARK: Gallery
   private _nextColorIndex = 30;
   readonly galleryItems = signal<DocGalleryItem[]>(makeDocGalleryItems());
   readonly galleryStateSignal = computed(() => successResult(this.galleryItems()));
   readonly lastSelectionChange = signal<DbxListSingleSelectionChange<DocGalleryItem> | undefined>(undefined);
+  readonly galleryTopSlotMode = signal<DbxGallerySlotMode>('overlay');
+  readonly galleryBottomSlotMode = signal<DbxGallerySlotMode>('stacked');
 
   readonly actionsData: DocGalleryActionsData = {
     onDelete: (item) => this.deleteItem(item),
@@ -149,6 +160,10 @@ export class DocExtensionAudioVideoComponent {
     top: { componentClass: DocGalleryLabelComponent },
     bottom: { componentClass: DocGalleryActionsComponent, data: this.actionsData }
   };
+
+  toggleSlotMode(mode: DbxGallerySlotMode): DbxGallerySlotMode {
+    return mode === 'overlay' ? 'stacked' : 'overlay';
+  }
 
   onSelectionChange(change: DbxListSingleSelectionChange<DocGalleryItem>) {
     this.lastSelectionChange.set(change);

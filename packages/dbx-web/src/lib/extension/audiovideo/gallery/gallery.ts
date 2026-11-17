@@ -13,12 +13,17 @@ import { type DbxValueListGridItemViewGridSizeConfig } from '../../../layout/lis
 export type DbxGallerySlotConfig<T> = DbxInjectionComponentConfig | ((value: T) => Maybe<DbxInjectionComponentConfig>);
 
 /**
- * How the top and bottom slots are laid out around the presentation slot.
+ * How a top or bottom slot is laid out around the presentation slot.
  *
- * - `stacked`: the top slot is above the presentation and the bottom slot is below it.
- * - `overlay`: the top and bottom slots are drawn over the presentation, on a scrim.
+ * - `stacked`: the slot sits outside the presentation — the top slot above it, the bottom slot below it.
+ * - `overlay`: the slot is drawn over the edge of the presentation, on a scrim.
  */
 export type DbxGallerySlotMode = 'stacked' | 'overlay';
+
+/**
+ * Default slot mode.
+ */
+export const DEFAULT_DBX_GALLERY_SLOT_MODE: DbxGallerySlotMode = 'stacked';
 
 /**
  * Default aspect ratio of the presentation slot.
@@ -62,9 +67,19 @@ export interface DbxGalleryConfig<T> {
    */
   readonly grid?: Maybe<Partial<DbxValueListGridItemViewGridSizeConfig>>;
   /**
-   * How the top and bottom slots are laid out. Defaults to `stacked`.
+   * How the top and bottom slots are laid out. Defaults to {@link DEFAULT_DBX_GALLERY_SLOT_MODE}.
+   *
+   * Use {@link topSlotMode} / {@link bottomSlotMode} to lay out one slot differently, for example a label over the image with actions below it.
    */
   readonly slotMode?: Maybe<DbxGallerySlotMode>;
+  /**
+   * How the top slot is laid out. Overrides {@link slotMode} for the top slot.
+   */
+  readonly topSlotMode?: Maybe<DbxGallerySlotMode>;
+  /**
+   * How the bottom slot is laid out. Overrides {@link slotMode} for the bottom slot.
+   */
+  readonly bottomSlotMode?: Maybe<DbxGallerySlotMode>;
   /**
    * CSS aspect ratio of the presentation slot. Defaults to {@link DEFAULT_DBX_GALLERY_ASPECT_RATIO}.
    */

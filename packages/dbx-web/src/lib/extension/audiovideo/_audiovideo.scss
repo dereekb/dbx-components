@@ -1,6 +1,7 @@
 @use '../../style/theming';
 
 // MARK: Variables
+$dbx-gallery-padding: var(--dbx-padding-2, 6px);
 $dbx-gallery-item-radius: var(--mat-sys-corner-small, 4px);
 $dbx-gallery-item-slot-padding: var(--dbx-padding-1, 4px);
 $dbx-gallery-item-slot-min-height: 32px;
@@ -11,6 +12,12 @@ $dbx-image-hover-preview-padding: 4px;
 // MARK: Mixin
 @mixin core() {
   // MARK: Gallery
+  // Space between the grid and the list's scroll edge, so the selected item's outline (drawn outside the item) is not clipped.
+  // Override point: `--dbx-gallery-padding`.
+  .dbx-gallery .dbx-list-grid-view {
+    padding: var(--dbx-gallery-padding, #{$dbx-gallery-padding});
+  }
+
   .dbx-gallery-item {
     --dbx-gallery-item-radius-resolved: var(--dbx-gallery-item-radius, #{$dbx-gallery-item-radius});
 
@@ -51,22 +58,21 @@ $dbx-image-hover-preview-padding: 4px;
     }
   }
 
-  // overlay mode draws the top and bottom slots over the presentation, on a scrim
-  .dbx-gallery-item.dbx-gallery-item-overlay {
-    .dbx-gallery-item-slot {
-      position: absolute;
-      left: 0;
-      right: 0;
-      z-index: 1;
-      color: var(--dbx-gallery-item-scrim-color, var(--mat-sys-inverse-on-surface));
-    }
+  // overlay slot mode draws the slot over the edge of the presentation, on a scrim. Set per slot, so a label can sit over
+  // the image while the actions stay below it.
+  .dbx-gallery-item-slot.dbx-gallery-item-slot-overlay {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 1;
+    color: var(--dbx-gallery-item-scrim-color, var(--mat-sys-inverse-on-surface));
 
-    .dbx-gallery-item-top {
+    &.dbx-gallery-item-top {
       top: 0;
       background: linear-gradient(to bottom, var(--dbx-gallery-item-scrim, color-mix(in srgb, var(--mat-sys-scrim) #{$dbx-gallery-item-scrim-strength}, transparent)), transparent);
     }
 
-    .dbx-gallery-item-bottom {
+    &.dbx-gallery-item-bottom {
       bottom: 0;
       background: linear-gradient(to top, var(--dbx-gallery-item-scrim, color-mix(in srgb, var(--mat-sys-scrim) #{$dbx-gallery-item-scrim-strength}, transparent)), transparent);
     }

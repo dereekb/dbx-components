@@ -19,8 +19,10 @@
         <div class="dbx-pb3">
           @for (option of maxPlayingOptions; track option) {
             <dbx-button [text]="'Max ' + option" [raised]="groupMaxPlaying() === option" (buttonClick)="groupMaxPlaying.set(option)"></dbx-button>
+            <dbx-button-spacer></dbx-button-spacer>
           }
           <dbx-button [text]="'Mode: ' + groupOverflowMode()" stroked (buttonClick)="toggleOverflowMode()"></dbx-button>
+          <dbx-button-spacer></dbx-button-spacer>
           <dbx-button text="Pause all" icon="pause" stroked (buttonClick)="group.store.pauseAll()"></dbx-button>
         </div>
         @for (tone of tones; track tone) {
@@ -36,26 +38,59 @@
     </doc-feature-example>
 
     <!-- Hover Preview -->
-    <doc-feature-example header="dbxImageHoverPreview" hint="Shows a larger preview of an image while hovering it.">
-      <div class="dbx-flex-bar">
+    <doc-feature-example header="dbxImageHoverPreview" hint="Shows a larger preview of an image while hovering it. Pass an image url, or a config to change the delay and size.">
+      <p>Default: opens {{ hoverPreviewDefaults.openDelay }}ms after the pointer enters (so it does not flash while the pointer passes over), closes as soon as the pointer leaves, and is at most {{ hoverPreviewDefaults.maxWidth }} × {{ hoverPreviewDefaults.maxHeight }}.</p>
+      <div class="dbx-flex-bar dbx-pb3">
         @for (image of images; track image) {
           <img class="dbx-pr3" [src]="image" alt="Hover to preview" width="120" height="90" style="object-fit: cover" [dbxImageHoverPreview]="image" />
         }
       </div>
+      <p>Configured: opens immediately and is at most 240px × 240px.</p>
+      <div class="dbx-flex-bar dbx-pb3">
+        @for (preview of configuredImagePreviews; track preview.src) {
+          <img class="dbx-pr3" [src]="preview.src" alt="Hover to preview" width="120" height="90" style="object-fit: cover" [dbxImageHoverPreview]="preview" />
+        }
+      </div>
+      <dbx-detail-block icon="tune" header="Config">
+        <p>
+          <code>openDelay</code>
+          — ms to wait after the pointer enters before opening. Defaults to {{ hoverPreviewDefaults.openDelay }}.
+        </p>
+        <p>
+          <code>closeDelay</code>
+          — ms to wait after the pointer leaves before closing. Defaults to 0.
+        </p>
+        <p>
+          <code>maxWidth</code>
+          /
+          <code>maxHeight</code>
+          — max CSS size of the preview image. Default to {{ hoverPreviewDefaults.maxWidth }}.
+        </p>
+        <p>
+          <code>alt</code>
+          ,
+          <code>disabled</code>
+        </p>
+      </dbx-detail-block>
     </doc-feature-example>
 
     <!-- Gallery -->
-    <doc-feature-example header="dbx-gallery" hint="Media gallery with presentation, top and bottom slots per item, and single selection via dbxListItemSingleSelectionModifier.">
+    <doc-feature-example header="dbx-gallery" hint="Media gallery with presentation, top and bottom slots per item, and single selection via dbxListItemSingleSelectionModifier. Each of the top and bottom slots is either stacked outside the presentation or overlaid on it (slotMode, topSlotMode, bottomSlotMode).">
       <div class="dbx-pb3">
         <dbx-button text="Add 10 colors" icon="add" stroked (buttonClick)="addColors()"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
         <dbx-button text="Reset" icon="restart_alt" stroked (buttonClick)="resetGallery()"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [text]="'Title: ' + galleryTopSlotMode()" stroked (buttonClick)="galleryTopSlotMode.set(toggleSlotMode(galleryTopSlotMode()))"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [text]="'Controls: ' + galleryBottomSlotMode()" stroked (buttonClick)="galleryBottomSlotMode.set(toggleSlotMode(galleryBottomSlotMode()))"></dbx-button>
       </div>
       <dbx-detail-block icon="check_circle" header="Selection">
         <p>Selected: {{ selectionStore.selectedValueSignal()?.name ?? 'None' }}</p>
         <p>Previously selected: {{ selectionStore.previousValueSignal()?.name ?? 'None' }}</p>
         <p class="dbx-hint">Last selectionChange: {{ lastSelectionChange()?.previous?.value?.name ?? 'None' }} → {{ lastSelectionChange()?.selected?.value?.name ?? 'None' }}</p>
       </dbx-detail-block>
-      <dbx-gallery [state]="galleryStateSignal()" [galleryConfig]="galleryConfig" dbxListItemModifier dbxListItemSingleSelectionModifier (selectionChange)="onSelectionChange($event)"></dbx-gallery>
+      <dbx-gallery [state]="galleryStateSignal()" [galleryConfig]="galleryConfig" [topSlotMode]="galleryTopSlotMode()" [bottomSlotMode]="galleryBottomSlotMode()" dbxListItemModifier dbxListItemSingleSelectionModifier (selectionChange)="onSelectionChange($event)"></dbx-gallery>
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

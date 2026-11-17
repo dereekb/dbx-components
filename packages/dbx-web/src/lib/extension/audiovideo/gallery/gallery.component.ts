@@ -9,7 +9,19 @@ import { provideDbxListView } from '../../../layout/list/list.view';
 import { type DbxValueAsListItem } from '../../../layout/list/list.view.value';
 import { AbstractDbxValueListViewItemComponent } from '../../../layout/list/list.view.value.item.directive';
 import { provideDbxListViewWrapper } from '../../../layout/list/list.wrapper';
-import { DEFAULT_DBX_GALLERY_ASPECT_RATIO, DEFAULT_DBX_GALLERY_GRID_COLUMNS, DEFAULT_DBX_GALLERY_GRID_GAP, DbxGalleryContext, DbxGalleryItem, type DbxGalleryConfig, type DbxGallerySlotConfig, type DbxGallerySlotMode, dbxGallerySlotInjectionConfig, isSameDbxGallerySlotInjectionConfig } from './gallery';
+import {
+  DEFAULT_DBX_GALLERY_ASPECT_RATIO,
+  DEFAULT_DBX_GALLERY_GRID_COLUMNS,
+  DEFAULT_DBX_GALLERY_GRID_GAP,
+  DEFAULT_DBX_GALLERY_SLOT_MODE,
+  DbxGalleryContext,
+  DbxGalleryItem,
+  type DbxGalleryConfig,
+  type DbxGallerySlotConfig,
+  type DbxGallerySlotMode,
+  dbxGallerySlotInjectionConfig,
+  isSameDbxGallerySlotInjectionConfig
+} from './gallery';
 import { DbxGalleryImagePresentationComponent } from './gallery.image.presentation.component';
 
 // MARK: Gallery
@@ -30,7 +42,7 @@ import { DbxGalleryImagePresentationComponent } from './gallery.image.presentati
  *
  * @example
  * ```html
- * <dbx-gallery [state]="state$" [galleryConfig]="galleryConfig" slotMode="overlay" dbxListItemModifier dbxListItemSingleSelectionModifier (selectionChange)="onSelect($event)"></dbx-gallery>
+ * <dbx-gallery [state]="state$" [galleryConfig]="galleryConfig" topSlotMode="overlay" dbxListItemModifier dbxListItemSingleSelectionModifier (selectionChange)="onSelect($event)"></dbx-gallery>
  * ```
  *
  * ```ts
@@ -60,6 +72,8 @@ export class DbxGalleryComponent<T> extends AbstractDbxListWrapperDirective<T> i
   readonly keyForValue = input<Maybe<(value: T) => Maybe<string>>>();
   readonly grid = input<Maybe<Partial<DbxValueListGridItemViewGridSizeConfig>>>();
   readonly slotMode = input<Maybe<DbxGallerySlotMode>>();
+  readonly topSlotMode = input<Maybe<DbxGallerySlotMode>>();
+  readonly bottomSlotMode = input<Maybe<DbxGallerySlotMode>>();
   readonly aspectRatio = input<Maybe<string>>();
 
   readonly galleryConfigSignal: Signal<DbxGalleryConfig<T>> = computed(() => {
@@ -72,6 +86,8 @@ export class DbxGalleryComponent<T> extends AbstractDbxListWrapperDirective<T> i
       keyForValue: this.keyForValue() ?? config?.keyForValue,
       grid: this.grid() ?? config?.grid,
       slotMode: this.slotMode() ?? config?.slotMode,
+      topSlotMode: this.topSlotMode() ?? config?.topSlotMode,
+      bottomSlotMode: this.bottomSlotMode() ?? config?.bottomSlotMode,
       aspectRatio: this.aspectRatio() ?? config?.aspectRatio
     };
   });
@@ -126,7 +142,7 @@ export class DbxGalleryViewComponent<T> extends AbstractDbxListGridViewDirective
   selector: 'dbx-gallery-item',
   template: `
     @if (topConfigSignal()) {
-      <div class="dbx-gallery-item-slot dbx-gallery-item-top dbx-override-click-ignore">
+      <div class="dbx-gallery-item-slot dbx-gallery-item-top dbx-override-click-ignore" [class.dbx-gallery-item-slot-overlay]="topSlotModeSignal() === 'overlay'">
         <dbx-injection [config]="topConfigSignal()"></dbx-injection>
       </div>
     }
@@ -134,14 +150,13 @@ export class DbxGalleryViewComponent<T> extends AbstractDbxListGridViewDirective
       <dbx-injection [config]="presentationConfigSignal()"></dbx-injection>
     </div>
     @if (bottomConfigSignal()) {
-      <div class="dbx-gallery-item-slot dbx-gallery-item-bottom dbx-override-click-ignore">
+      <div class="dbx-gallery-item-slot dbx-gallery-item-bottom dbx-override-click-ignore" [class.dbx-gallery-item-slot-overlay]="bottomSlotModeSignal() === 'overlay'">
         <dbx-injection [config]="bottomConfigSignal()"></dbx-injection>
       </div>
     }
   `,
   host: {
     class: 'dbx-gallery-item',
-    '[class.dbx-gallery-item-overlay]': 'slotModeSignal() === "overlay"',
     '[class.dbx-gallery-item-selected]': 'selectedSignal()',
     '(click)': 'stopSlotEventPropagation($event)',
     '(mousedown)': 'stopSlotEventPropagation($event)',
@@ -157,7 +172,15 @@ export class DbxGalleryItemComponent<T> extends AbstractDbxValueListViewItemComp
   readonly valueSignal: Signal<T> = this.itemValueSignal;
   readonly selectedSignal: Signal<boolean> = computed(() => Boolean(this.itemSignal().selected));
 
-  readonly slotModeSignal = computed(() => this.galleryContext.galleryConfigSignal().slotMode ?? 'stacked');
+  readonly topSlotModeSignal = computed(() => {
+    const { topSlotMode, slotMode } = this.galleryContext.galleryConfigSignal();
+    return topSlotMode ?? slotMode ?? DEFAULT_DBX_GALLERY_SLOT_MODE;
+  });
+
+  readonly bottomSlotModeSignal = computed(() => {
+    const { bottomSlotMode, slotMode } = this.galleryContext.galleryConfigSignal();
+    return bottomSlotMode ?? slotMode ?? DEFAULT_DBX_GALLERY_SLOT_MODE;
+  });
   readonly aspectRatioSignal = computed(() => this.galleryContext.galleryConfigSignal().aspectRatio ?? DEFAULT_DBX_GALLERY_ASPECT_RATIO);
 
   readonly presentationConfigSignal = computed(() => dbxGallerySlotInjectionConfig(this.galleryContext.galleryConfigSignal().presentation ?? { componentClass: DbxGalleryImagePresentationComponent }, this.valueSignal()), { equal: isSameDbxGallerySlotInjectionConfig });

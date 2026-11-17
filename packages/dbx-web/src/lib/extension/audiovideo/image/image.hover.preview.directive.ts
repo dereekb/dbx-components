@@ -48,6 +48,10 @@ export const DBX_IMAGE_HOVER_PREVIEW_POSITIONS: ConnectedPosition[] = [
  *
  * The panel is positioned next to the host and does not block the pointer, so it closes as soon as the pointer leaves the host.
  *
+ * The panel opens after {@link DEFAULT_DBX_IMAGE_HOVER_PREVIEW_OPEN_DELAY} (250ms) so it does not flash while the pointer passes over;
+ * set `openDelay: 0` to open it immediately. The image is limited to 480px by 480px (`DEFAULT_DBX_IMAGE_HOVER_PREVIEW_MAX_WIDTH` /
+ * `DEFAULT_DBX_IMAGE_HOVER_PREVIEW_MAX_HEIGHT`) unless `maxWidth` / `maxHeight` are set.
+ *
  * @dbxWebComponent
  * @dbxWebSlug image-hover-preview
  * @dbxWebCategory overlay
