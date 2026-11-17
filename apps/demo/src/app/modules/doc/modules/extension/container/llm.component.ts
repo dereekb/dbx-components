@@ -98,7 +98,7 @@ export const DOC_EXTENSION_LLM_BRIEF_SECTION: DbxLlmFlowSectionConfig<DocExtensi
   ],
   describeRun: (run) => {
     const formValue = run.input.formValue as Maybe<DocExtensionLlmBriefFormValue>;
-    return { title: briefTopic(formValue), detail: `${run.kind === 'plan' ? 'Outline' : 'Quick draft'} · ${formValue?.tone ?? 'casual'}` };
+    return { title: briefTopic(formValue), detail: `${formValue?.tone ?? 'casual'} · ${formValue?.paragraphs ?? 3} paragraphs` };
   }
 };
 

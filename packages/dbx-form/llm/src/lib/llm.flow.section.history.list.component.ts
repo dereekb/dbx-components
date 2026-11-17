@@ -1,11 +1,12 @@
-import { Component, computed, inject, input, output } from '@angular/core';
+import { Component, computed, inject, input, LOCALE_ID, output } from '@angular/core';
+import { formatDate } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatIconModule } from '@angular/material/icon';
-import { DateDistancePipe } from '@dereekb/dbx-core';
 import { DbxButtonComponent, DbxChipDirective } from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';
+import { isSameDay } from 'date-fns';
 import { map } from 'rxjs';
-import { type DbxLlmFlowRun, type DbxLlmFlowRunDescription, type DbxLlmFlowRunState } from './llm.flow';
+import { type DbxLlmFlowRun, type DbxLlmFlowRunDescription, type DbxLlmFlowRunKind, type DbxLlmFlowRunState } from './llm.flow';
 import { DbxLlmFlowSectionStore } from './llm.flow.section.store';
 
 /**
@@ -15,6 +16,17 @@ export interface DbxLlmFlowSectionHistoryRow {
   readonly run: DbxLlmFlowRun;
   readonly description: DbxLlmFlowRunDescription;
   readonly icon: string;
+  /**
+   * Label of the run's kind: the kind config's text, or the kind itself.
+   */
+  readonly kindLabel: string;
+  /**
+   * When the run started: a time with seconds, prefixed with the date when the run is not from today.
+   */
+  readonly startedAtText: string;
+  /**
+   * Whether the run is the section's primary selection (the run whose output the section shows).
+   */
   readonly selected: boolean;
 }
 
@@ -42,7 +54,19 @@ const RUN_STATE_ICONS: Record<DbxLlmFlowRunState, string> = {
 };
 
 /**
+ * Date format of a history row's start time when the run is from today.
+ */
+export const DBX_LLM_FLOW_SECTION_HISTORY_TIME_FORMAT = 'h:mm:ss a';
+
+/**
+ * Date format of a history row's start time when the run is not from today.
+ */
+export const DBX_LLM_FLOW_SECTION_HISTORY_DATE_TIME_FORMAT = 'MMM d, h:mm:ss a';
+
+/**
  * Lists the runs of the nearest section, newest first, in two groups: runs made from the currently followed parent run, and other branches.
+ * Each row shows the run's description, its start time with seconds, its kind label (when the section has several kinds), and marks the
+ * section's primary selection (the run whose output is shown).
  *
  * Clicking a row loads the run (its input, and the latest runs of every descendant section made from it). The secondary actions are
  * "Load with parents" (also loads the run's ancestors) and "Reroll" (reruns the same input). Loading is disabled while the section runs.
@@ -68,10 +92,10 @@ const RUN_STATE_ICONS: Record<DbxLlmFlowRunState, string> = {
               @if (row.description.detail) {
                 <span class="dbx-llm-flow-section-history-row-detail dbx-hint dbx-small">{{ row.description.detail }}</span>
               }
-              <span class="dbx-llm-flow-section-history-row-time dbx-hint dbx-small">{{ row.run.startedAt | dateDistance }}</span>
+              <span class="dbx-llm-flow-section-history-row-time dbx-hint dbx-small">{{ row.startedAtText }}</span>
             </button>
             @if (showKindsSignal()) {
-              <dbx-chip [small]="true">{{ row.run.kind }}</dbx-chip>
+              <dbx-chip [small]="true">{{ row.kindLabel }}</dbx-chip>
             }
             @if (row.selected) {
               <dbx-chip [small]="true" color="primary">selected</dbx-chip>
@@ -90,10 +114,11 @@ const RUN_STATE_ICONS: Record<DbxLlmFlowRunState, string> = {
   host: {
     class: 'dbx-llm-flow-section-history-list'
   },
-  imports: [MatIconModule, DbxButtonComponent, DbxChipDirective, DateDistancePipe]
+  imports: [MatIconModule, DbxButtonComponent, DbxChipDirective]
 })
 export class DbxLlmFlowSectionHistoryListComponent {
   readonly sectionStore = inject(DbxLlmFlowSectionStore);
+  readonly locale = inject(LOCALE_ID);
 
   /**
    * Whether to show each run's kind. Defaults to showing kinds when the section has more than one run kind.
@@ -105,7 +130,7 @@ export class DbxLlmFlowSectionHistoryListComponent {
   readonly configSignal = toSignal(this.sectionStore.config$);
   readonly isRunningSignal = toSignal(this.sectionStore.isRunning$, { initialValue: false });
   readonly historyGroupsSignal = toSignal(this.sectionStore.historyGroups$);
-  readonly selectedRunIdsSignal = toSignal(this.sectionStore.selectedRuns$.pipe(map((x) => new Set(x.map((y) => y.id)))), { initialValue: new Set<string>() });
+  readonly selectedRunIdSignal = toSignal(this.sectionStore.selectedRun$.pipe(map((x) => x?.id)));
 
   readonly showKindsSignal = computed(() => {
     const showKinds = this.showKinds();
@@ -113,12 +138,26 @@ export class DbxLlmFlowSectionHistoryListComponent {
     return showKinds ?? kindsCount > 1;
   });
 
+  readonly kindLabelsSignal = computed(() => {
+    const kinds = this.configSignal()?.kinds ?? [];
+    return new Map<DbxLlmFlowRunKind, string>(kinds.map((x) => [x.kind, x.text ?? x.kind]));
+  });
+
   readonly groupsSignal = computed(() => {
     const historyGroups = this.historyGroupsSignal();
-    const selectedRunIds = this.selectedRunIdsSignal();
+    const selectedRunId = this.selectedRunIdSignal();
+    const kindLabels = this.kindLabelsSignal();
+    const now = new Date();
     this.configSignal(); // describeRun may come from the config
 
-    const toRow = (run: DbxLlmFlowRun): DbxLlmFlowSectionHistoryRow => ({ run, description: this.sectionStore.describeRun(run), icon: RUN_STATE_ICONS[run.state], selected: selectedRunIds.has(run.id) });
+    const toRow = (run: DbxLlmFlowRun): DbxLlmFlowSectionHistoryRow => ({
+      run,
+      description: this.sectionStore.describeRun(run),
+      icon: RUN_STATE_ICONS[run.state],
+      kindLabel: kindLabels.get(run.kind) ?? run.kind,
+      startedAtText: formatDate(run.startedAt, isSameDay(run.startedAt, now) ? DBX_LLM_FLOW_SECTION_HISTORY_TIME_FORMAT : DBX_LLM_FLOW_SECTION_HISTORY_DATE_TIME_FORMAT, this.locale),
+      selected: run.id === selectedRunId
+    });
     const groups: DbxLlmFlowSectionHistoryRowGroup[] = [];
 
     if (historyGroups?.current.length) {

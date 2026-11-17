@@ -2,7 +2,7 @@ import { Component, computed, contentChild, DestroyRef, effect, inject, Injector
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatDialog, type MatDialogRef } from '@angular/material/dialog';
 import { cleanSubscription, DbxInjectionComponent } from '@dereekb/dbx-core';
-import { DbxButtonComponent, DbxChipDirective, type DbxDetachInstance, DbxDetachService, DbxErrorComponent, type DbxThemeColor } from '@dereekb/dbx-web';
+import { DbxButtonComponent, DbxChipDirective, DbxContentPitDirective, type DbxDetachInstance, DbxDetachService, DbxErrorComponent, type DbxThemeColor } from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';
 import { filter, map } from 'rxjs';
 import { type DbxLlmFlowSectionDisplayConfig, type DbxLlmFlowSectionFormPopoutMode } from './llm.flow';
@@ -54,8 +54,8 @@ export function dbxLlmFlowSectionResolvedDisplayConfig(configDisplay: Maybe<DbxL
 }
 
 /**
- * A step of an LLM flow: a header (label, status, form toggle, pop-out, history and run buttons), the form, the raw input, the last error and
- * the output.
+ * A step of an LLM flow: a header (label, status, form toggle, pop-out, history and run buttons), the form (inside a content pit), the raw
+ * input, the last error and the output.
  *
  * Registers the section through its DbxLlmFlowSectionDirective host directive. Content projected with dbxLlmFlowSectionOutput replaces the
  * default output, and can inject the DbxLlmFlowSectionStore.
@@ -100,7 +100,7 @@ export function dbxLlmFlowSectionResolvedDisplayConfig(configDisplay: Maybe<DbxL
     }
     <div class="dbx-llm-flow-section-body">
       @if (showFormSignal()) {
-        <div class="dbx-llm-flow-section-form">
+        <div class="dbx-llm-flow-section-form" dbxContentPit>
           <dbx-injection [config]="formInjectionConfigSignal()"></dbx-injection>
         </div>
       }
@@ -131,7 +131,7 @@ export function dbxLlmFlowSectionResolvedDisplayConfig(configDisplay: Maybe<DbxL
     '[class.dbx-llm-flow-section-running]': `statusSignal() === 'running'`
   },
   hostDirectives: [{ directive: DbxLlmFlowSectionDirective, inputs: ['dbxLlmFlowSection: config', 'parentKey'] }],
-  imports: [DbxInjectionComponent, DbxButtonComponent, DbxChipDirective, DbxErrorComponent, DbxLlmFlowSectionRawInputComponent, DbxLlmFlowSectionRunButtonsComponent, DbxLlmFlowSectionHistoryButtonComponent, DbxLlmFlowSectionOutputComponent]
+  imports: [DbxInjectionComponent, DbxButtonComponent, DbxChipDirective, DbxContentPitDirective, DbxErrorComponent, DbxLlmFlowSectionRawInputComponent, DbxLlmFlowSectionRunButtonsComponent, DbxLlmFlowSectionHistoryButtonComponent, DbxLlmFlowSectionOutputComponent]
 })
 export class DbxLlmFlowSectionComponent {
   readonly sectionStore = inject(DbxLlmFlowSectionStore);
