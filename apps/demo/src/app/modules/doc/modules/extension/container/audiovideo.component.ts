@@ -19,6 +19,8 @@ import {
   DbxListItemSingleSelectionModifierDirective,
   DbxListSingleSelectionStore,
   type DbxListSingleSelectionChange,
+  DbxListDragDropDirective,
+  type DbxListItemDropEvent,
   DbxValueListItemModifierDirective,
   DbxWebFilePreviewService,
   DEFAULT_DBX_IMAGE_HOVER_PREVIEW_MAX_HEIGHT,
@@ -93,6 +95,7 @@ function makeDocGalleryItems(): DocGalleryItem[] {
     DbxGalleryComponent,
     DbxValueListItemModifierDirective,
     DbxListItemSingleSelectionModifierDirective,
+    DbxListDragDropDirective,
     DbxButtonComponent,
     DbxButtonSpacerDirective,
     DbxDetailBlockComponent
@@ -127,6 +130,7 @@ export class DocExtensionAudioVideoComponent {
   readonly galleryItems = signal<DocGalleryItem[]>(makeDocGalleryItems());
   readonly galleryStateSignal = computed(() => successResult(this.galleryItems()));
   readonly lastSelectionChange = signal<DbxListSingleSelectionChange<DocGalleryItem> | undefined>(undefined);
+  readonly lastGalleryItemDrop = signal<Maybe<DbxListItemDropEvent<DocGalleryItem>>>(undefined);
   readonly galleryTopSlotMode = signal<DbxGallerySlotMode>('overlay');
   readonly galleryBottomSlotMode = signal<DbxGallerySlotMode>('stacked');
   readonly galleryItemMinWidthOptions = [
@@ -179,6 +183,11 @@ export class DocExtensionAudioVideoComponent {
 
   onSelectionChange(change: DbxListSingleSelectionChange<DocGalleryItem>) {
     this.lastSelectionChange.set(change);
+  }
+
+  onGalleryItemDrop(event: DbxListItemDropEvent<DocGalleryItem>) {
+    this.galleryItems.set(event.values);
+    this.lastGalleryItemDrop.set(event);
   }
 
   deleteItem(item: DocGalleryItem) {

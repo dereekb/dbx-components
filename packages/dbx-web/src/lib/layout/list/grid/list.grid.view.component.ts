@@ -10,6 +10,7 @@ import { DbxInjectionComponent } from '@dereekb/dbx-core';
 import { DbxAnchorComponent } from '../../../router/layout/anchor/anchor.component';
 import { FlexLayoutModule } from '@ngbracket/ngx-layout';
 import { type DbxValueListItemGroup } from '../group/list.view.value.group';
+import { type CdkDragDrop, CdkDrag, CdkDropList } from '@angular/cdk/drag-drop';
 
 /**
  * Configuration for a {@link DbxValueListGridViewComponent}. Extends the standard list view config with optional grid layout sizing.
@@ -67,6 +68,8 @@ export class DbxValueListGridSizeDirective {
 /**
  * Renders a single group of items within a CSS grid layout, including optional header/footer and ripple effects on items.
  *
+ * When a {@link DbxListDragDropDelegate} is available (see `dbxListDragDrop`), the items can be reordered by dragging them.
+ *
  * @example
  * ```html
  * <dbx-list-grid-view-content-group [group]="group"></dbx-list-grid-view-content-group>
@@ -81,13 +84,35 @@ export class DbxValueListGridSizeDirective {
           <dbx-injection [config]="headerConfigSignal()"></dbx-injection>
         </div>
       }
-      <div [gdGap]="gridConfigSignal().gap" [gdColumns]="gridConfigSignal().columns">
-        @for (item of itemsSignal(); track trackByFunctionSignal()($index, item)) {
-          <dbx-anchor class="dbx-list-grid-view-item" [class.dbx-list-grid-view-item-selected]="item.selected" [attr.aria-selected]="item.selected ? true : null" matRipple [matRippleDisabled]="rippleDisabledOnItem(item)" [anchor]="item.anchor" [disabled]="item.disabled" (click)="onClickItem(item)">
-            <div dbx-injection [config]="item.config"></div>
-          </dbx-anchor>
-        }
-      </div>
+      @if (dragDropEnabled) {
+        <div [gdGap]="gridConfigSignal().gap" [gdColumns]="gridConfigSignal().columns" cdkDropList cdkDropListOrientation="mixed" [cdkDropListDisabled]="dragDisabledSignal()" (cdkDropListDropped)="onDrop($event)">
+          @for (item of itemsSignal(); track trackByFunctionSignal()($index, item)) {
+            <dbx-anchor
+              class="dbx-list-grid-view-item"
+              [class.dbx-list-grid-view-item-selected]="item.selected"
+              [attr.aria-selected]="item.selected ? true : null"
+              matRipple
+              [matRippleDisabled]="rippleDisabledOnItem(item)"
+              [anchor]="item.anchor"
+              [disabled]="item.disabled"
+              (click)="onClickItem(item)"
+              cdkDrag
+              [cdkDragDisabled]="item.disabled"
+              [cdkDragStartDelay]="dragStartDelaySignal()"
+              cdkDragPreviewContainer="parent">
+              <div dbx-injection [config]="item.config"></div>
+            </dbx-anchor>
+          }
+        </div>
+      } @else {
+        <div [gdGap]="gridConfigSignal().gap" [gdColumns]="gridConfigSignal().columns">
+          @for (item of itemsSignal(); track trackByFunctionSignal()($index, item)) {
+            <dbx-anchor class="dbx-list-grid-view-item" [class.dbx-list-grid-view-item-selected]="item.selected" [attr.aria-selected]="item.selected ? true : null" matRipple [matRippleDisabled]="rippleDisabledOnItem(item)" [anchor]="item.anchor" [disabled]="item.disabled" (click)="onClickItem(item)">
+              <div dbx-injection [config]="item.config"></div>
+            </dbx-anchor>
+          }
+        </div>
+      }
       @if (footerConfigSignal()) {
         <div class="dbx-list-view-group-footer">
           <dbx-injection [config]="footerConfigSignal()"></dbx-injection>
@@ -99,7 +124,7 @@ export class DbxValueListGridSizeDirective {
     class: 'dbx-list-view-group',
     '[class]': 'cssClassSignal()'
   },
-  imports: [DbxInjectionComponent, DbxAnchorComponent, FlexLayoutModule, MatRipple]
+  imports: [DbxInjectionComponent, DbxAnchorComponent, FlexLayoutModule, MatRipple, CdkDropList, CdkDrag]
 })
 export class DbxValueListGridViewContentGroupComponent<G, T, I extends DbxValueListItem<T> = DbxValueListItem<T>> {
   readonly dbxValueListGridViewContentComponent = inject(DbxValueListGridViewContentComponent<T>);
@@ -112,6 +137,17 @@ export class DbxValueListGridViewContentGroupComponent<G, T, I extends DbxValueL
   readonly headerConfigSignal = computed(() => this.group()?.headerConfig);
   readonly footerConfigSignal = computed(() => this.group()?.footerConfig);
   readonly cssClassSignal = computed(() => spaceSeparatedCssClasses(this.group()?.cssClasses));
+
+  /**
+   * Whether drag-to-reorder is on. Does not change for the life of the component.
+   */
+  readonly dragDropEnabled = this.dbxValueListGridViewContentComponent.dragDropDelegate != null;
+  readonly dragDisabledSignal = this.dbxValueListGridViewContentComponent.dragDisabledSignal;
+  readonly dragStartDelaySignal = this.dbxValueListGridViewContentComponent.dragStartDelaySignal;
+
+  onDrop(event: CdkDragDrop<unknown>): void {
+    this.dbxValueListGridViewContentComponent.dropItemInGroup(this.itemsSignal(), event.previousIndex, event.currentIndex);
+  }
 
   onClickItem(item: I) {
     this.dbxValueListGridViewContentComponent.onClickItem(item);

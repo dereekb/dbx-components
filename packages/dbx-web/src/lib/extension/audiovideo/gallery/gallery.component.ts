@@ -30,12 +30,14 @@ import { DbxGalleryImagePresentationComponent } from './gallery.image.presentati
  * presentation (an image, a solid color, an avatar, a clip, …) and top/bottom bars (labels, copy/delete/load buttons, …).
  *
  * Built on dbx-list, so it accepts `[state]`, emits `clickItem` and `loadMore`, and supports the `empty`/`emptyLoading` content
- * slots. Add `dbxListItemModifier dbxListItemSingleSelectionModifier` to let the user select one tile.
+ * slots. Add `dbxListItemModifier dbxListItemSingleSelectionModifier` to let the user select one tile, and `dbxListDragDrop` to let the
+ * user reorder the tiles by dragging them. Drags start from the presentation slot; the top and bottom slots do not start a drag, so their
+ * buttons keep working.
  *
  * @dbxWebComponent
  * @dbxWebSlug gallery
  * @dbxWebCategory list
- * @dbxWebRelated gallery-image-presentation, list-item-single-selection-modifier, image-hover-preview, list-grid-view
+ * @dbxWebRelated gallery-image-presentation, list-item-single-selection-modifier, list-drag-drop, image-hover-preview, list-grid-view
  * @dbxWebMinimalExample ```html
  * <dbx-gallery [state]="imagesState$"></dbx-gallery>
  * ```
@@ -43,6 +45,7 @@ import { DbxGalleryImagePresentationComponent } from './gallery.image.presentati
  * @example
  * ```html
  * <dbx-gallery [state]="state$" [galleryConfig]="galleryConfig" topSlotMode="overlay" dbxListItemModifier dbxListItemSingleSelectionModifier (selectionChange)="onSelect($event)"></dbx-gallery>
+ * <dbx-gallery [state]="itemsState" [galleryConfig]="galleryConfig" dbxListDragDrop (itemDrop)="items.set($event.values)"></dbx-gallery>
  * ```
  *
  * ```ts
@@ -141,7 +144,8 @@ export class DbxGalleryViewComponent<T> extends AbstractDbxListGridViewDirective
  *
  * Clicks inside the top and bottom slots do not reach the tile, so action buttons there do not select the item. The slots carry
  * the `dbx-override-click-ignore` class (`DBX_OVERRIDE_CLICK_IGNORE_CLASS`) so the list item's clickable anchor does not redirect their clicks to itself, and
- * the host then stops them from bubbling to the anchor.
+ * the host then stops them from bubbling to the anchor. Their `mousedown` is stopped too, so with `dbxListDragDrop` a drag only starts from
+ * the presentation slot.
  */
 @Component({
   selector: 'dbx-gallery-item',

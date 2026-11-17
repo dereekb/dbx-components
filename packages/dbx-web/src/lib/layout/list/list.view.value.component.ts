@@ -6,12 +6,15 @@ import { AbstractDbxValueListViewDirective } from './list.view.value.directive';
 import { DbxInjectionComponent, anchorTypeForAnchor } from '@dereekb/dbx-core';
 import { type DbxValueListViewSeparatorConfig, dbxValueListItemSeparatorConfigs } from './list.view.value.separator';
 import { DbxListView } from './list.view';
-import { type Maybe, spaceSeparatedCssClasses } from '@dereekb/util';
+import { type IndexNumber, type Maybe, spaceSeparatedCssClasses } from '@dereekb/util';
 import { type DbxValueListItemGroup, DbxValueListViewGroupDelegate, defaultDbxValueListViewGroupDelegate } from './group/list.view.value.group';
 import { asObservable } from '@dereekb/rxjs';
 import { MatListModule, MatNavList } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { DbxAnchorComponent } from '../../router/layout/anchor/anchor.component';
+import { NgTemplateOutlet } from '@angular/common';
+import { type CdkDragDrop, CdkDrag, CdkDropList, type DragStartDelay } from '@angular/cdk/drag-drop';
+import { DbxListDragDropDelegate, DEFAULT_DBX_LIST_DRAG_START_DELAY, dbxListItemDropEvent } from './dragdrop/list.drag.drop';
 
 /**
  * Configuration for a {@link DbxValueListViewComponent}. Extends the base config with an option to emit click events for all items, including those with anchors.
@@ -32,6 +35,9 @@ export interface DbxValueListViewConfig<T, I extends DbxValueListItem<T> = DbxVa
  * a list of items using `mat-list-item`, and an optional footer. When the content component has a separator config,
  * separators are injected between (and around) the group's items wherever its `showSeparator` function returns true.
  *
+ * When a {@link DbxListDragDropDelegate} is available (see `dbxListDragDrop`), the items can be reordered by dragging them. Separators are
+ * not rendered while drag-drop is on.
+ *
  * @example
  * ```html
  * <dbx-list-view-content-group [group]="group"></dbx-list-view-content-group>
@@ -40,49 +46,77 @@ export interface DbxValueListViewConfig<T, I extends DbxValueListItem<T> = DbxVa
 @Component({
   selector: 'dbx-list-view-content-group',
   template: `
-    <div class="dbx-list-view-group-content">
+    @if (dragDropEnabled) {
+      <div class="dbx-list-view-group-content" cdkDropList cdkDropListLockAxis="y" [cdkDropListDisabled]="dragDisabledSignal()" (cdkDropListDropped)="onDrop($event)">
+        <ng-container *ngTemplateOutlet="header"></ng-container>
+        @for (item of itemsSignal(); track trackByFunctionSignal()($index, item)) {
+          <dbx-anchor [anchor]="item.anchor" [disabled]="item.disabled" cdkDrag [cdkDragDisabled]="item.disabled" [cdkDragStartDelay]="dragStartDelaySignal()" cdkDragPreviewContainer="parent">
+            <a mat-list-item class="dbx-list-view-item" [disabled]="item.disabled" [activated]="!!item.selected" [disableRipple]="rippleDisabledOnItem(item)" (click)="onClickItem(item)" (keydown.enter)="onClickItem(item)">
+              @if (item.icon) {
+                <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+              }
+              <dbx-injection [config]="item.config"></dbx-injection>
+              @if (item.metaConfig) {
+                <span matListItemMeta>
+                  <dbx-injection [config]="item.metaConfig"></dbx-injection>
+                </span>
+              }
+            </a>
+          </dbx-anchor>
+        }
+        <ng-container *ngTemplateOutlet="footer"></ng-container>
+      </div>
+    } @else {
+      <div class="dbx-list-view-group-content">
+        <ng-container *ngTemplateOutlet="header"></ng-container>
+        @for (item of itemsSignal(); track trackByFunctionSignal()($index, item)) {
+          @if (separatorsSignal()[$index]; as separator) {
+            <div class="dbx-list-view-item-separator">
+              <dbx-injection [config]="separator"></dbx-injection>
+            </div>
+          }
+          <dbx-anchor [anchor]="item.anchor" [disabled]="item.disabled">
+            <a mat-list-item class="dbx-list-view-item" [disabled]="item.disabled" [activated]="!!item.selected" [disableRipple]="rippleDisabledOnItem(item)" (click)="onClickItem(item)" (keydown.enter)="onClickItem(item)">
+              @if (item.icon) {
+                <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+              }
+              <dbx-injection [config]="item.config"></dbx-injection>
+              @if (item.metaConfig) {
+                <span matListItemMeta>
+                  <dbx-injection [config]="item.metaConfig"></dbx-injection>
+                </span>
+              }
+            </a>
+          </dbx-anchor>
+        }
+        @if (trailingSeparatorSignal(); as trailingSeparator) {
+          <div class="dbx-list-view-item-separator">
+            <dbx-injection [config]="trailingSeparator"></dbx-injection>
+          </div>
+        }
+        <ng-container *ngTemplateOutlet="footer"></ng-container>
+      </div>
+    }
+    <ng-template #header>
       @if (headerConfigSignal()) {
         <div class="dbx-list-view-group-header">
           <dbx-injection [config]="headerConfigSignal()"></dbx-injection>
         </div>
       }
-      @for (item of itemsSignal(); track trackByFunctionSignal()($index, item)) {
-        @if (separatorsSignal()[$index]; as separator) {
-          <div class="dbx-list-view-item-separator">
-            <dbx-injection [config]="separator"></dbx-injection>
-          </div>
-        }
-        <dbx-anchor [anchor]="item.anchor" [disabled]="item.disabled">
-          <a mat-list-item class="dbx-list-view-item" [disabled]="item.disabled" [activated]="!!item.selected" [disableRipple]="rippleDisabledOnItem(item)" (click)="onClickItem(item)" (keydown.enter)="onClickItem(item)">
-            @if (item.icon) {
-              <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
-            }
-            <dbx-injection [config]="item.config"></dbx-injection>
-            @if (item.metaConfig) {
-              <span matListItemMeta>
-                <dbx-injection [config]="item.metaConfig"></dbx-injection>
-              </span>
-            }
-          </a>
-        </dbx-anchor>
-      }
-      @if (trailingSeparatorSignal(); as trailingSeparator) {
-        <div class="dbx-list-view-item-separator">
-          <dbx-injection [config]="trailingSeparator"></dbx-injection>
-        </div>
-      }
+    </ng-template>
+    <ng-template #footer>
       @if (footerConfigSignal()) {
         <div class="dbx-list-view-group-footer">
           <dbx-injection [config]="footerConfigSignal()"></dbx-injection>
         </div>
       }
-    </div>
+    </ng-template>
   `,
   host: {
     class: 'dbx-list-view-group',
     '[class]': 'cssClassSignal()'
   },
-  imports: [DbxInjectionComponent, DbxAnchorComponent, MatListModule, MatIconModule]
+  imports: [DbxInjectionComponent, DbxAnchorComponent, MatListModule, MatIconModule, NgTemplateOutlet, CdkDropList, CdkDrag]
 })
 export class DbxValueListViewContentGroupComponent<G, T, I extends DbxValueListItem<T> = DbxValueListItem<T>> {
   readonly dbxValueListViewContentComponent = inject(DbxValueListViewContentComponent<T>);
@@ -96,6 +130,17 @@ export class DbxValueListViewContentGroupComponent<G, T, I extends DbxValueListI
   readonly headerConfigSignal = computed(() => this.group()?.headerConfig);
   readonly footerConfigSignal = computed(() => this.group()?.footerConfig);
   readonly cssClassSignal = computed(() => spaceSeparatedCssClasses(this.group()?.cssClasses));
+
+  /**
+   * Whether drag-to-reorder is on. Does not change for the life of the component.
+   */
+  readonly dragDropEnabled = this.dbxValueListViewContentComponent.dragDropDelegate != null;
+  readonly dragDisabledSignal = this.dbxValueListViewContentComponent.dragDisabledSignal;
+  readonly dragStartDelaySignal = this.dbxValueListViewContentComponent.dragStartDelaySignal;
+
+  onDrop(event: CdkDragDrop<unknown>): void {
+    this.dbxValueListViewContentComponent.dropItemInGroup(this.itemsSignal(), event.previousIndex, event.currentIndex);
+  }
 
   onClickItem(item: I) {
     this.dbxValueListViewContentComponent.onClickItem(item);
@@ -167,6 +212,20 @@ export class DbxValueListViewContentComponent<T, I extends DbxValueListItem<T> =
   readonly groupsSignal = toSignal(this.groups$);
   readonly disabledSignal = toSignal(this.dbxListView.disabled$);
 
+  /**
+   * The drag-drop delegate, when drag-to-reorder is on for this list. See {@link DbxListDragDropDelegate}.
+   */
+  readonly dragDropDelegate = inject<Maybe<DbxListDragDropDelegate<T>>>(DbxListDragDropDelegate, { optional: true });
+
+  /**
+   * Whether dragging is disabled, either by the drag-drop config or because the list is disabled.
+   */
+  readonly dragDisabledSignal: Signal<boolean> = computed(() => {
+    const listDisabled = Boolean(this.disabledSignal());
+    return listDisabled || Boolean(this.dragDropDelegate?.configSignal()?.disabled);
+  });
+  readonly dragStartDelaySignal: Signal<DragStartDelay> = computed(() => this.dragDropDelegate?.configSignal()?.dragStartDelay ?? DEFAULT_DBX_LIST_DRAG_START_DELAY);
+
   onClickItem(item: I) {
     // do not emit clicks for disabled items.
     if (!item.disabled && (this.emitAllClicks() || !item.anchor || anchorTypeForAnchor(item.anchor) === 'plain')) {
@@ -177,6 +236,25 @@ export class DbxValueListViewContentComponent<T, I extends DbxValueListItem<T> =
 
   onClickValue(value: T) {
     this.dbxListView.clickValue?.emit(value);
+  }
+
+  /**
+   * Passes an item that was dropped within one of the list's groups to the drag-drop delegate.
+   *
+   * @param groupItems - The items of the group the item was moved in.
+   * @param previousGroupIndex - The item's index in the group before the move.
+   * @param currentGroupIndex - The item's index in the group after the move.
+   */
+  dropItemInGroup(groupItems: DbxValueListItemConfig<T, I>[], previousGroupIndex: IndexNumber, currentGroupIndex: IndexNumber): void {
+    const delegate = this.dragDropDelegate;
+
+    if (delegate) {
+      const event = dbxListItemDropEvent<T, I>({ flatItems: this.items() ?? [], groupItems, previousGroupIndex, currentGroupIndex });
+
+      if (event) {
+        delegate.dropItem(event);
+      }
+    }
   }
 
   rippleDisabledOnItem(item: I): boolean {

@@ -75,7 +75,9 @@
     </doc-feature-example>
 
     <!-- Gallery -->
-    <doc-feature-example header="dbx-gallery" hint="Media gallery with presentation, top and bottom slots per item, and single selection via dbxListItemSingleSelectionModifier. Each of the top and bottom slots is either stacked outside the presentation or overlaid on it (slotMode, topSlotMode, bottomSlotMode).">
+    <doc-feature-example
+      header="dbx-gallery"
+      hint="Media gallery with presentation, top and bottom slots per item, single selection via dbxListItemSingleSelectionModifier, and drag-to-reorder via dbxListDragDrop. Each of the top and bottom slots is either stacked outside the presentation or overlaid on it (slotMode, topSlotMode, bottomSlotMode).">
       <div class="dbx-pb3">
         <dbx-button text="Add 10 colors" icon="add" stroked (buttonClick)="addColors()"></dbx-button>
         <dbx-button-spacer></dbx-button-spacer>
@@ -101,6 +103,10 @@
         <p>Previously selected: {{ selectionStore.previousValueSignal()?.name ?? 'None' }}</p>
         <p class="dbx-hint">Last selectionChange: {{ lastSelectionChange()?.previous?.value?.name ?? 'None' }} → {{ lastSelectionChange()?.selected?.value?.name ?? 'None' }}</p>
       </dbx-detail-block>
+      <dbx-detail-block icon="drag_indicator" header="Reorder">
+        <p class="dbx-hint">Drag a tile by its presentation to move it. The buttons in the top and bottom slots do not start a drag.</p>
+        <p>Last move: {{ lastGalleryItemDrop() ? lastGalleryItemDrop()?.value?.name + ' ' + lastGalleryItemDrop()?.previousIndex + ' → ' + lastGalleryItemDrop()?.currentIndex : 'None' }}</p>
+      </dbx-detail-block>
       <dbx-gallery
         [state]="galleryStateSignal()"
         [galleryConfig]="galleryConfig"
@@ -110,7 +116,9 @@
         [columns]="galleryColumns()"
         dbxListItemModifier
         dbxListItemSingleSelectionModifier
-        (selectionChange)="onSelectionChange($event)"></dbx-gallery>
+        (selectionChange)="onSelectionChange($event)"
+        dbxListDragDrop
+        (itemDrop)="onGalleryItemDrop($event)"></dbx-gallery>
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

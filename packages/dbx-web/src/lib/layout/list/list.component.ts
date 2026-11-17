@@ -7,10 +7,14 @@ import { invertMaybeBoolean, type Maybe, type Milliseconds } from '@dereekb/util
 import { type DbxListSelectionMode, type DbxListView, type ListSelectionState } from './list.view';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DbxLoadingComponent } from '../../loading/loading.component';
+import { CdkScrollable } from '@angular/cdk/scrolling';
 
 // MARK: DbxListInternalContentDirective
 /**
  * Internal directive used by {@link DbxListComponent} to track the scrollable content area and forward scroll events.
+ *
+ * The content area is registered as a {@link CdkScrollable}, so dragged items (see `dbxListDragDrop`) auto-scroll it, and CDK overlays
+ * anchored inside the list follow its scrolling.
  *
  * @example
  * ```html
@@ -19,6 +23,7 @@ import { DbxLoadingComponent } from '../../loading/loading.component';
  */
 @Directive({
   selector: '[dbxListInternalContent]',
+  hostDirectives: [CdkScrollable],
   host: {
     class: 'd-block dbx-list-content',
     '[class.dbx-list-content-hidden]': 'hide()'

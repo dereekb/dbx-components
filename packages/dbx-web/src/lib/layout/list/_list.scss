@@ -106,6 +106,40 @@ $list-item-padded-min-height: 42px;
       --mat-list-list-item-container-shape: var(--dbx-list-item-radius-resolved);
     }
 
+    // MARK: Drag-Drop
+    // Drag-to-reorder (`dbxListDragDrop`). `dbx-anchor`'s host is inline, and an inline box around a block row gives the CDK bad
+    // measurements, so draggable rows are blocks. Grid items are already blockified by the grid.
+    .dbx-list-view-group-content > dbx-anchor.cdk-drag {
+      display: block;
+    }
+
+    .dbx-list-view-group-content > dbx-anchor.cdk-drag-placeholder,
+    .dbx-list-grid-view-item.cdk-drag-placeholder {
+      opacity: var(--dbx-list-drag-placeholder-opacity, 0.4);
+    }
+
+    .dbx-list-view-group-content > dbx-anchor.cdk-drag-preview,
+    .dbx-list-grid-view-item.cdk-drag-preview {
+      box-shadow: var(--dbx-list-drag-preview-shadow, var(--mat-sys-level3));
+    }
+
+    // The dragged row rounds all of its corners and gets a surface, since rows are transparent.
+    .dbx-list-view-group-content > dbx-anchor.cdk-drag-preview {
+      border-radius: var(--dbx-list-item-radius-resolved);
+      background: var(--dbx-list-drag-preview-background, var(--mat-sys-surface-container-high));
+    }
+
+    .dbx-list-view-group-content > dbx-anchor.cdk-drag-preview .dbx-list-view-item {
+      --mat-list-list-item-container-shape: var(--dbx-list-item-radius-resolved);
+    }
+
+    // The list view slides the other rows aside while dragging, and the dropped row into place. The grid view moves its items
+    // in the DOM instead, so a transition does nothing there.
+    .dbx-list-view-group-content.cdk-drop-list-dragging > dbx-anchor.cdk-drag:not(.cdk-drag-placeholder),
+    .dbx-list-view-group-content > dbx-anchor.cdk-drag-animating {
+      transition: transform var(--dbx-list-drag-transition-duration, 250ms) cubic-bezier(0, 0, 0.2, 1);
+    }
+
     // Any hovered / focused / selected / activated / active-route row rounds all four corners. These must
     // out-specify the per-position first/last/only rules above — and the value-list ones
     // (`.dbx-list-view-group-content > dbx-anchor:first-of-type .dbx-list-view-item`) carry an element +

@@ -19,12 +19,13 @@ import {
   DbxListItemDisableRippleModifierDirective,
   DbxListItemSingleSelectionModifierDirective,
   DbxListTitleGroupDirective,
+  DbxListDragDropDirective,
   DbxListEmptyContentComponent
 } from '@dereekb/dbx-web';
 import { type CustomDocValue, DocCustomItemListComponent } from './../component/item.list.custom.component';
 import { type ListLoadingState, mapLoadingStateResults, successResult, beginLoading } from '@dereekb/rxjs';
 import { BehaviorSubject, map, switchMap, startWith, type Observable, delay, of } from 'rxjs';
-import { ChangeDetectorRef, Component, type OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, type OnInit, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type DocValue, type DocValueWithSelection, makeDocValues } from '../component/item.list';
 import { type Maybe, takeFront } from '@dereekb/util';
@@ -60,6 +61,7 @@ import { DocItemListAccordionComponent } from '../component/item.list.accordion.
     DbxListItemDisableRippleModifierDirective,
     DbxListItemSingleSelectionModifierDirective,
     DbxListTitleGroupDirective,
+    DbxListDragDropDirective,
     DbxListEmptyContentComponent,
     JsonPipe
   ]
@@ -157,6 +159,12 @@ export class DocLayoutListComponent implements OnInit {
 
   readonly staticState$: Observable<ListLoadingState<DocValue>> = of(successResult(this.makeValues()));
 
+  readonly dragDropListValues = signal<DocValue[]>(makeDocValues(20));
+  readonly dragDropListStateSignal = computed(() => successResult(this.dragDropListValues()));
+  readonly dragDropGridValues = signal<DocValue[]>(makeDocValues(20));
+  readonly dragDropGridStateSignal = computed(() => successResult(this.dragDropGridValues()));
+  readonly dragDropGridDisabled = signal(false);
+
   readonly count$ = this.state$.pipe(map((x) => x.value?.length ?? 0));
   readonly countSignal = toSignal(this.count$, { initialValue: 0 });
 
@@ -252,6 +260,13 @@ export class DocLayoutListComponent implements OnInit {
 
   makeValues() {
     return makeDocValues(this.numberToLoadPerUpdate);
+  }
+
+  dragDropFirstNames(values: DocValue[]): string {
+    return values
+      .slice(0, 3)
+      .map((x) => x.name.split('-')[0])
+      .join(', ');
   }
 
   disableAllRipples = () => true;
