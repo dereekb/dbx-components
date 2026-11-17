@@ -174,7 +174,7 @@ export function classifyZohoCliError(error: unknown): Maybe<ZohoCliErrorClassifi
 
   if (code != null) {
     const rawMessage = error instanceof Error ? error.message : '';
-    const message = rawMessage ? sanitizeString(rawMessage) : httpStatus != null ? `Zoho request failed with status ${httpStatus}` : 'Zoho request failed';
+    const message = rawMessage ? sanitizeString(rawMessage) : httpStatus == null ? 'Zoho request failed' : `Zoho request failed with status ${httpStatus}`;
     result = { code, message, httpStatus, serverCode };
   }
 

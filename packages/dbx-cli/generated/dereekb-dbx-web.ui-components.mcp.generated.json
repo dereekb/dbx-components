@@ -1774,7 +1774,15 @@
       "className": "DbxHeightSyncDirective",
       "module": "@dereekb/dbx-web",
       "description": "Groups elements whose heights are kept in sync. Elements marked with {@link DbxHeightSyncSourceDirective} are measured, and elements marked\nwith {@link DbxHeightSyncFollowerDirective} take the tallest source's height. Followers are never measured, so there is no feedback loop.\n\nSources and followers find the group through dependency injection, so they can sit inside child components or projected content.",
-      "inputs": [],
+      "inputs": [
+        {
+          "name": "dbxHeightSyncDisabled",
+          "type": "Maybe<boolean>",
+          "description": "Turns the sync off: followers drop the synced height and keep their natural one. Sources are still measured. Use it when a layout change\ntakes the followers out of line with the sources, such as a row that stacks into a column on a narrow screen.\n\nA model, so the element's own component can set it when the group is one of its host directives.",
+          "required": false,
+          "default": "false"
+        }
+      ],
       "outputs": [],
       "relatedSlugs": [
         "height-sync-source",
@@ -1784,7 +1792,7 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "example": "<div class=\"dbx-flex\" dbxHeightSync>\n  <mat-form-field dbxHeightSyncSource>...</mat-form-field>\n  <dbx-button dbxHeightSyncFollower text=\"Run\"></dbx-button>\n</div>",
+      "example": "<div class=\"dbx-flex\" dbxHeightSync [dbxHeightSyncDisabled]=\"isNarrow\">\n  <mat-form-field dbxHeightSyncSource>...</mat-form-field>\n  <dbx-button dbxHeightSyncFollower text=\"Run\"></dbx-button>\n</div>",
       "minimalExample": "<div dbxHeightSync><textarea dbxHeightSyncSource></textarea><button dbxHeightSyncFollower>Run</button></div>"
     },
     {

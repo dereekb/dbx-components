@@ -109,7 +109,7 @@ export function peekCliContext(): Maybe<ZohoCliContext> {
  * @returns The requested products, in request order.
  */
 export function requestedZohoCliProducts(): ZohoCliProduct[] {
-  return [..._requestedProducts];
+  return Array.from(_requestedProducts);
 }
 
 /**

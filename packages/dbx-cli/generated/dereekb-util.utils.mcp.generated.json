@@ -13331,6 +13331,45 @@
       ]
     },
     {
+      "slug": "prune-trees-function",
+      "name": "pruneTreesFunction",
+      "kind": "factory",
+      "category": "tree",
+      "module": "@dereekb/util",
+      "subpath": "tree/tree.prune",
+      "signature": "pruneTreesFunction(config: PruneTreesFunctionConfig<T, K>): PruneTreesFunction<T, K>",
+      "description": "Creates a {@link PruneTreesFunction}, which prunes a flat list of trees (items linked by parent id), oldest first, such as a history of\ngenerations where each one derives from a parent generation.\n\n- Roots are capped per root group. The oldest roots past maxRoots are removed with their descendants.\n- Leaves are capped per root group's trees. Past maxLeaves the oldest leaf is removed first. Removing a leaf can leave its parent as a leaf,\n  which is then removed in turn, so only leaves are ever removed and no kept item loses its parent.\n- Each kept root protects the path to its newest (preferred) leaf, even past maxLeaves, so every kept root keeps its latest result.\n- Pinned items are always kept with their ancestors.",
+      "params": [
+        {
+          "name": "config",
+          "type": "PruneTreesFunctionConfig<T, K>",
+          "description": "- How to read the items.",
+          "optional": false
+        }
+      ],
+      "returns": "The prune function.",
+      "tags": [
+        "tree",
+        "prune",
+        "history",
+        "limit",
+        "leaf",
+        "root",
+        "parent",
+        "lineage",
+        "retention",
+        "oldest",
+        "trees",
+        "function",
+        "prunetreesfunction"
+      ],
+      "example": "const pruneRuns = pruneTreesFunction<Run>({ readId: (x) => x.id, readParentId: (x) => x.parentId, readOrder: (x) => x.createdAt.getTime() });\nconst { keep } = pruneRuns({ items: runs, maxRoots: 25, maxLeaves: 25, pinnedIds: [selectedRunId] });",
+      "relatedSlugs": [
+        "expand-trees",
+        "flatten-tree-to-array-function"
+      ]
+    },
+    {
       "slug": "lat-lng-bound-tuple-function",
       "name": "latLngBoundTupleFunction",
       "kind": "factory",

@@ -7,7 +7,7 @@
     "@dereekb/date": "14.27.0",
     "@dereekb/dbx-cli": "14.27.0",
     "@dereekb/firebase": "14.27.0",
-    "@dereekb/firebase-server/test": "14.26.0",
+    "@dereekb/firebase-server/test": "14.27.0",
     "@dereekb/model": "14.27.0",
     "@dereekb/nestjs": "14.27.0",
     "@dereekb/oauth-resource": "14.27.0",
