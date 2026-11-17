@@ -14,11 +14,14 @@
  * NB: `cachedGetter` caches the first promise, INCLUDING a rejected one — a failed execution is not retried by
  * re-calling `execute`; prepare a fresh prompt to retry.
  *
- * Types only for now: the factory (`makeLlmPromptFactory`), the recorded-turn cap and the configurable
- * degenerate-thread placeholder join this module later.
+ * {@link makeLlmPromptFactory} builds the handles. Every recorded assistant turn is replay-safe: a reply the run marks
+ * degenerate is recorded as {@link LlmPromptFactoryConfig.degenerateThreadPlaceholder}, and a clean reply longer than
+ * {@link LlmPromptFactoryConfig.threadTurnMaxChars} (default {@link DEFAULT_LLM_THREAD_TURN_MAX_CHARS}) is capped with
+ * {@link LLM_THREAD_TURN_TRUNCATION_MARKER} — so a later follow-up never replays, and the provider never re-bills, a
+ * runaway garbage turn.
  */
 
-import { type CachedGetter, type Maybe } from '@dereekb/util';
+import { type CachedGetter, cachedGetter, type Maybe } from '@dereekb/util';
 import { type LlmLeverValidator } from '../reply/llm.reply.validator';
 import { type LlmDispatchResult, type LlmThreadTurn } from '../strategy/llm.strategy';
 
@@ -152,9 +155,11 @@ export interface LlmPromptRunResult<X extends LlmDispatchResult = LlmDispatchRes
   readonly sentTurn: LlmThreadTurn;
   /**
    * Whether this call's reply was DEGENERATE — a malformed / truncated / unparseable completion the dispatch hit a
-   * decode failure on and never recovered. When `true` the chain records the degenerate-thread placeholder as the
-   * assistant turn INSTEAD of the raw (poisoned) reply text, so a later follow-up never replays — and the provider
-   * never re-bills — a garbage turn. Omitted / `false` ⇒ the reply is recorded verbatim (capped).
+   * decode failure on and never recovered. When `true` the chain records the factory's
+   * {@link LlmPromptFactoryConfig.degenerateThreadPlaceholder} as the assistant turn INSTEAD of the raw (poisoned) reply
+   * text, so a later follow-up never replays — and the provider never re-bills — a garbage turn. Omitted / `false` ⇒
+   * the reply text is recorded verbatim, capped at {@link LlmPromptFactoryConfig.threadTurnMaxChars} (default
+   * {@link DEFAULT_LLM_THREAD_TURN_MAX_CHARS}).
    */
   readonly degenerate?: boolean;
 }
@@ -172,7 +177,39 @@ export interface LlmPromptFactoryConfig<R, X extends LlmDispatchResult = LlmDisp
    * canned results.
    */
   readonly runPromptRequest: (params: LlmPromptRunParams<R>) => Promise<LlmPromptRunResult<X>>;
+  /**
+   * The assistant turn recorded for a DEGENERATE reply ({@link LlmPromptRunResult.degenerate}); nullish ⇒
+   * {@link DEFAULT_LLM_DEGENERATE_THREAD_PLACEHOLDER}. A host whose replies are an envelope passes its own, in the
+   * envelope's register.
+   */
+  readonly degenerateThreadPlaceholder?: Maybe<string>;
+  /**
+   * The cap on the characters of any recorded assistant turn; nullish ⇒ {@link DEFAULT_LLM_THREAD_TURN_MAX_CHARS}.
+   * `Number.POSITIVE_INFINITY` never caps. A host whose replies are long documents raises it.
+   */
+  readonly threadTurnMaxChars?: Maybe<number>;
 }
+
+/**
+ * The default stand-in assistant turn recorded for a DEGENERATE reply — JSON-shaped, so a JSON chain stays in
+ * register, and a SUBSTITUTION rather than an omission, so the user / assistant alternation and any "your previous
+ * reply…" follow-up stay coherent. It is what keeps a runaway garbage turn from being replayed by every later
+ * follow-up (and re-billed by the provider each turn).
+ */
+export const DEFAULT_LLM_DEGENERATE_THREAD_PLACEHOLDER = '{"note":"previous reply was malformed/truncated and was discarded"}';
+
+/**
+ * The default cap on the characters of any recorded assistant turn — defense in depth beneath the degenerate
+ * substitution: a clean but huge reply is truncated to this many characters plus {@link LLM_THREAD_TURN_TRUNCATION_MARKER},
+ * so the replayed thread never grows unbounded even when a reply parsed. Sized well above a typical structured reply
+ * (a few thousand characters).
+ */
+export const DEFAULT_LLM_THREAD_TURN_MAX_CHARS = 8_000;
+
+/**
+ * The marker appended when an assistant turn is capped for replay.
+ */
+export const LLM_THREAD_TURN_TRUNCATION_MARKER = ' […truncated for replay]';
 
 /**
  * Creates a new root {@link LlmPrompt} instance from a request.
@@ -181,3 +218,71 @@ export interface LlmPromptFactoryConfig<R, X extends LlmDispatchResult = LlmDisp
  * @typeParam X - The dispatch result type.
  */
 export type LlmPromptFactory<R, X extends LlmDispatchResult = LlmDispatchResult> = (request: R) => LlmPrompt<R, X>;
+
+/**
+ * Build an {@link LlmPromptFactory} over a run seam — the generic execute-once / chain-follow-ups mechanics (see the
+ * module doc for the `fetchPageFactory` lineage).
+ *
+ * Each execution records the sent user turn and a replay-safe assistant turn: the placeholder for a degenerate reply,
+ * else `result.text` capped at the turn limit (a dispatcher that repaired a reply reports the repaired text, which is
+ * what a follow-up replays). A clean, in-bounds reply is recorded byte-identically.
+ *
+ * @param config - The run seam and the recording levers.
+ * @returns The factory.
+ *
+ * @typeParam R - The request type the chain roots on.
+ * @typeParam X - The dispatch result type.
+ *
+ * @example
+ * ```ts
+ * const preparePrompt = makeLlmPromptFactory({ runPromptRequest });
+ * const executed = await preparePrompt(request).execute();
+ * const next = await executed.followUp({ content: 'And the next one?' }).execute();
+ * ```
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function makeLlmPromptFactory<R, X extends LlmDispatchResult = LlmDispatchResult>(config: LlmPromptFactoryConfig<R, X>): LlmPromptFactory<R, X> {
+  const { runPromptRequest } = config;
+  const placeholder = config.degenerateThreadPlaceholder ?? DEFAULT_LLM_DEGENERATE_THREAD_PLACEHOLDER;
+  const maxChars = config.threadTurnMaxChars ?? DEFAULT_LLM_THREAD_TURN_MAX_CHARS;
+
+  function assistantTurnContentOf(ran: LlmPromptRunResult<X>): string {
+    let content: string;
+
+    if (ran.degenerate === true) {
+      content = placeholder;
+    } else if (ran.result.text.length > maxChars) {
+      content = ran.result.text.slice(0, maxChars) + LLM_THREAD_TURN_TRUNCATION_MARKER;
+    } else {
+      content = ran.result.text;
+    }
+
+    return content;
+  }
+
+  function buildPrompt(request: R, previous: Maybe<ExecutedLlmPrompt<R, X>>, followUp: Maybe<LlmPromptFollowUp>): LlmPrompt<R, X> {
+    const prompt: LlmPrompt<R, X> = {
+      request,
+      ...(followUp == null ? {} : { followUp }),
+      ...(previous == null ? {} : { previous }),
+      execute: cachedGetter(async (): Promise<ExecutedLlmPrompt<R, X>> => {
+        const priorThread = previous?.thread ?? [];
+        const ran = await runPromptRequest({ request, thread: priorThread, ...(followUp == null ? {} : { followUp }) });
+        // Record the assistant turn as a REPLAY-SAFE substitution: a degenerate reply becomes the placeholder (never the
+        // poisoned raw text), an over-long clean reply is capped.
+        const thread: ReadonlyArray<LlmThreadTurn> = [...priorThread, ran.sentTurn, { role: 'assistant', content: assistantTurnContentOf(ran) }];
+        const executed: ExecutedLlmPrompt<R, X> = {
+          prompt,
+          result: ran.result,
+          thread,
+          followUp: (nextFollowUp: LlmPromptFollowUp) => buildPrompt(request, executed, nextFollowUp)
+        };
+        return executed;
+      })
+    };
+    return prompt;
+  }
+
+  return (request: R) => buildPrompt(request, undefined, undefined);
+}

@@ -277,7 +277,8 @@ const decisions = makeLlmDecisionStrategies({ providers, adapters, routePreferen
 
 The contracts a prompt is built against: the capability a call is made for, the slot layout that orders a prompt, the
 contributor seam that supplements it, the live context a capability renders and the templates that supply authored
-text, and the assembly that turns them into bytes.
+text, and the assembly that turns them into bytes. Around them sit the helpers a dispatcher and its host share: site
+scopes, prompt handles and chains, a live-context token budget, a cache-prefix watch and two library contributors.
 
 - **Capabilities.** An `LlmCapabilityDescriptor` is one capability's reply contract: its key, its reply protocol (`json`,
   `json-envelope` or `line`; `resolveLlmReplyProtocol` applies request, then descriptor, then the host default), its
@@ -323,6 +324,30 @@ text, and the assembly that turns them into bytes.
 - **Texts.** The line protocol, the must-resolve and line-manner amendments and the contract's intro and footer have
   library defaults (`DEFAULT_LLM_PROMPT_ASSEMBLY_TEXTS`); a host passes its own exact text through `texts`, and one call
   its own footer through `contractFooter`.
+- **Sites.** `mergeLlmPromptSite` merges two sites, the narrower winning (its `kind` and `judge` replace; facts, inputs
+  and supply merge key by key). `withLlmPromptSite({ dispatcher, site })` returns a dispatcher whose every request,
+  dispatched or prepared, carries the site — the request's own site winning, a later wrapper narrower than an earlier
+  one. It never changes a byte; a contributor reading the site does.
+- **Prompt handles.** `makeLlmPromptFactory({ runPromptRequest })` builds `LlmPrompt`s that execute once (a rejected
+  execution is cached too) and chain follow-ups onto the same thread. A recorded reply is capped at 8,000 characters
+  (`threadTurnMaxChars`), and a reply the run marks `degenerate` is recorded as a placeholder
+  (`degenerateThreadPlaceholder`), so no later follow-up replays — and re-bills — a garbage turn.
+- **Chains.** `makeLlmPromptChain({ lead })` is one chained-follow-up instance. `chain.dispatch({ dispatcher, request,
+  previous })` fires a root, or chains a follow-up onto `previous` whose message is the lead plus only the live blocks
+  that changed since the thread last saw them (unchanged ones are named, not re-sent). The instance holds what each
+  handle sent, weakly; two instances never share it.
+- **Budget.** `estimateLlmTokens` is `ceil(length / 4)`; `estimateLlmRequestPromptTokens` estimates a whole request
+  (prompt, replayed thread, response schema). `budgetLlmLiveContextBlocks` keeps a live context under a token budget
+  (default 12,000, less `reservedPrefixTokens`) by shrinking, then dropping, the lowest-priority blocks — never a
+  `required` one, and never blocking a send. `llmBudgetTrimSummaryOf` folds the trim report for a host's log.
+- **Cache watch.** `makeLlmPromptCachePrefixWatch()` hashes each dispatch's cacheable prefix (16 hex chars of SHA-256)
+  and compares it with the previous dispatch of the same capability and partition, naming the first segment — and its
+  key — that moved, or the first one appended. It keeps digests, never prompt bytes.
+- **Library contributors.** `llmModelAddendumPromptContributor({ promptAddendumByModel })` places the resolved model's
+  `promptAddendum` (from `llmModelPromptAddenda(config)`) in the `model-addendum` slot; `llmModelAddendumSegment` mints
+  the same segment, and `restampLlmModelAddendum` swaps a captured prompt's addendum for another model's.
+  `llmAnchoredBlockPromptContributor({ id, reason, blockOf })` places one block a scope supplied among the capability's
+  live blocks, at its anchor.
 
 A layout with a host frame slot, one contributor that fills it, and a live-slot contribution anchored among the
 capability's blocks:
@@ -408,6 +433,47 @@ renderLlmOutputContract({ schema: { type: 'object', properties: { summary: { typ
 // - `summary` (string, required): two sentences
 //
 // Use these field names exactly, and leave out an optional field rather than invent a value for it.
+```
+
+A run scoped to a glossary, with an anchored contributor that places it and a chain over the run's items:
+
+```ts
+import { type LlmAnchoredBlock, llmAnchoredBlockPromptContributor, type LlmDispatchRequest, type LlmPromptSite, makeLlmPromptChain, withLlmPromptSite } from '@dereekb/llm';
+
+interface RunSupply {
+  readonly glossary?: LlmAnchoredBlock;
+}
+
+interface RunRequest extends LlmDispatchRequest {
+  readonly site?: LlmPromptSite<RunSupply>;
+}
+
+// Registered with the dispatcher's contributors.
+const glossary = llmAnchoredBlockPromptContributor<RunRequest>({ id: 'glossary', reason: 'the run supplied a glossary', blockOf: ({ request }) => request.site?.supply?.glossary });
+
+const scoped = withLlmPromptSite<RunRequest>({ dispatcher, site: { supply: { glossary: { text: 'Glossary: SKU = stock-keeping unit.', anchor: { after: 'heading' }, volatile: false } } } });
+const chain = makeLlmPromptChain<RunRequest>();
+
+const first = await chain.dispatch({ dispatcher: scoped, request: itemRequest(items[0]) });
+// Replays `first`'s thread, then sends the lead plus only the live blocks that changed ("Unchanged …" names the rest).
+const second = await chain.dispatch({ dispatcher: scoped, request: itemRequest(items[1]), previous: first });
+```
+
+A budgeted live context:
+
+```ts
+import { budgetLlmLiveContextBlocks, LLM_PROMPT_PREFIX_RESERVE_TOKENS } from '@dereekb/llm';
+
+const budgeted = budgetLlmLiveContextBlocks({
+  blocks: [
+    { key: 'heading', text: '## Live context', priority: 9, required: true, volatile: false },
+    { key: 'history', text: historyText, priority: 1, shrink: [recentHistoryText] }
+  ],
+  reservedPrefixTokens: LLM_PROMPT_PREFIX_RESERVE_TOKENS
+});
+
+const request = { capability: 'summarize', renderLiveContext: () => budgeted.blocks };
+budgeted.trimmed; // [{ priority: 1, action: 'shrunk', savedTokens: … }] when the history had to shrink
 ```
 
 ## Decisions

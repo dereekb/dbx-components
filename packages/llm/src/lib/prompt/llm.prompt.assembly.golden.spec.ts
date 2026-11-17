@@ -20,7 +20,8 @@ import { type LlmPromptContribution, type LlmPromptContributor, resolveLlmPrompt
 import { llmPromptCacheHash } from './llm.prompt.hash';
 import { type LlmPromptLayout } from './llm.prompt.layout';
 import { type LlmLiveContextBlock, type LlmLiveContextInput, llmLiveContextHeadingBlock } from './llm.prompt.live.context';
-import { type LlmPromptSegment, type LlmPromptSegmentOrigin, llmPromptSegmentSpans } from './llm.prompt.segment';
+import { llmModelAddendumContribution, llmModelAddendumPromptContributor, llmModelAddendumSegment } from './llm.prompt.model.addendum';
+import { type LlmPromptSegment, llmPromptSegmentSpans } from './llm.prompt.segment';
 import { type LlmPromptTemplate, type LlmPromptTemplateResolver, type LlmPromptTemplateTier, type LlmResolvedPromptTemplate, type LlmResolvedPromptTemplates } from './llm.prompt.template';
 
 // MARK: Fixture
@@ -264,29 +265,12 @@ const REPLICA_FRAMES: LlmPromptContributor<ReplicaRequest, ReplicaDescriptor> = 
   }
 };
 
-interface ReplicaModelSegmentOrigin extends LlmPromptSegmentOrigin {
-  readonly kind: 'model';
-  readonly model: string;
-  readonly setting: 'promptAddendum';
-}
-
-function modelOrigin(model: string): ReplicaModelSegmentOrigin {
-  return { kind: 'model', model, setting: 'promptAddendum' };
-}
-
 const ADDENDA: Readonly<Record<string, string>> = { 'census/fast': 'ADDENDUM for census/fast' };
 
 /**
- * A stand-in for the model-addendum contributor: the resolved model's addendum, first.
+ * The library's model-addendum contributor: the resolved model's addendum, first.
  */
-const REPLICA_ADDENDUM: LlmPromptContributor<ReplicaRequest, ReplicaDescriptor> = {
-  id: 'model-addendum',
-  slots: ['model-addendum'],
-  resolve: ({ model }) => {
-    const text = model == null ? undefined : ADDENDA[model];
-    return { contributions: model == null || text == null ? [] : [{ contributor: 'model-addendum', slot: 'model-addendum', id: 'model-addendum', key: model, text, origin: modelOrigin(model), reason: 'the resolved model prompt addendum' }] };
-  }
-};
+const REPLICA_ADDENDUM: LlmPromptContributor<ReplicaRequest, ReplicaDescriptor> = llmModelAddendumPromptContributor<ReplicaRequest, ReplicaDescriptor>({ promptAddendumByModel: ADDENDA });
 
 const D_LIVE = '## Live context\n\nDirective: hold the line.\n\nCast:\n- Ben\n- Mara';
 
@@ -462,7 +446,6 @@ describe('the golden replica', () => {
         byKey: () => undefined
       };
       const contribution = (slot: string, text: string, extra: Partial<LlmPromptContribution> = {}): LlmPromptContribution => ({ contributor: 'host', slot, id: slot, text, origin: { kind: 'frame' }, reason: 'spec', ...extra });
-      const addendumReason = 'the resolved model prompt addendum';
       const contributions: ReadonlyArray<LlmPromptContribution> = [
         contribution('D', 'D-SUP', { key: 'sup' }),
         contribution('craft', 'CRAFT-VOLATILE', { key: 'craft-judged', volatile: true }),
@@ -471,7 +454,7 @@ describe('the golden replica', () => {
         contribution('A0.7', 'A07-STYLE'),
         contribution('A0.5', 'A05-PERSPECTIVE'),
         contribution('A0', 'A0-TONE'),
-        contribution('model-addendum', 'ADDENDUM', { contributor: 'model-addendum', key: 'm/x', origin: modelOrigin('m/x'), reason: addendumReason })
+        llmModelAddendumContribution({ model: 'm/x', promptAddendum: 'ADDENDUM' })
       ];
       const assembled = assembleLlmCapabilityPrompt({ layout: LETTERED_LAYOUT, capability: 'test', templates, liveContext: [llmLiveContextHeadingBlock(), { key: 'facts', text: 'facts: here' }], contributions, texts: REPLICA_TEXTS });
 
@@ -480,7 +463,7 @@ describe('the golden replica', () => {
       expect(assembled.segments.filter((segment) => segment.id === 'D').map((segment) => segment.key)).toEqual(['heading', 'facts', 'sup']);
       expect(assembled.prompt).toBe('ADDENDUM\n\nA0-TONE\n\nA05-PERSPECTIVE\n\nA07-STYLE\n\nA-PROTOCOL\n\nB-CAP\n\nC-CTX\nB1-SPEECH\n\nCRAFT-STABLE\n\nCRAFT-VOLATILE\n\n## Live context\n\nfacts: here\n\nD-SUP\nC-POST');
       expect(assembled.cacheSegments.cachePrefix.endsWith('CRAFT-STABLE\n\n')).toBe(true);
-      expect(assembled.segments[0]).toEqual({ id: 'model-addendum', promptSegment: 'ADDENDUM\n\n', origin: { kind: 'model', model: 'm/x', setting: 'promptAddendum' }, key: 'm/x', reason: addendumReason });
+      expect(assembled.segments[0]).toEqual(llmModelAddendumSegment({ model: 'm/x', promptAddendum: 'ADDENDUM', layout: LETTERED_LAYOUT }));
     });
 
     it('should split at the first marker only and keep later markers literal', async () => {

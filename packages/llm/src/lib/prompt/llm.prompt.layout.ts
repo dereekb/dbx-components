@@ -20,7 +20,7 @@ export const LLM_PROMPT_SLOT_ROLES = ['model-addendum', 'frame', 'reply-protocol
  * What fills a slot — the contract the assembly implements. Semantics only: a slot's position is its index in the
  * layout.
  *
- * - `model-addendum` — contributed: the resolved model's prompt addendum.
+ * - `model-addendum` — contributed: the resolved model's prompt addendum (`llmModelAddendumPromptContributor`).
  * - `frame` — contributed: a preamble a host contributor places (a tone, a perspective, a style, a speaker's block). A
  *   frame may sit anywhere in the array, after the contract included.
  * - `reply-protocol` — assembly: the `reply-protocol` template, or the built-in line protocol for a `line` call.

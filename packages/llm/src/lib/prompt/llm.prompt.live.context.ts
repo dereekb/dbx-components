@@ -10,8 +10,8 @@
  * string it replaces whenever the original sections were blank-line separated. Each block becomes one prompt segment
  * in the live slot.
  *
- * The chained follow-up instance (which re-sends only what changed since the thread's last turn) builds on
- * {@link llmChainedFollowUpBody} and {@link mergeLlmChainedFollowUpBase}.
+ * `makeLlmPromptChain` (the chained follow-up instance, which re-sends only what changed since the thread's last turn)
+ * builds on {@link llmChainedFollowUpBody} and {@link mergeLlmChainedFollowUpBase}.
  */
 
 import { type Maybe } from '@dereekb/util';
