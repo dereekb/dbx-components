@@ -48,6 +48,14 @@
       gap: var(--dbx-padding-2);
       margin-top: var(--dbx-padding-2);
     }
+
+    // collapsed to the header: hidden, not destroyed, so running actions and the form binding keep their state
+    &.dbx-llm-flow-section-collapsed {
+      > .dbx-llm-flow-section-hint,
+      > .dbx-llm-flow-section-body {
+        display: none;
+      }
+    }
   }
 
   // one button per run kind, stacked
@@ -90,7 +98,6 @@
     }
 
     // run buttons beside the field share the field's height (dbxHeightSyncFollower sets it)
-    // stacked buttons split the height, so they may shrink below the default button height to fit a short field
     .dbx-llm-flow-section-raw-input-row > .dbx-llm-flow-section-run-buttons {
       display: flex;
       flex: 0 0 auto;
@@ -99,19 +106,48 @@
 
       > dbx-button {
         display: flex;
-        flex: 1 1 0;
-        min-height: 0;
 
         > dbx-progress-spinner-button {
           display: flex;
           flex: 1 1 auto;
-          min-height: 0;
         }
 
         .mat-mdc-button-base {
           width: 100%;
-          height: 100%;
-          min-height: 0;
+        }
+      }
+    }
+
+    // beside the field the buttons, one above the other, split the synced height, so they may shrink below the default button height to fit a
+    // short field
+    &:not(.dbx-llm-flow-section-raw-input-stacked) .dbx-llm-flow-section-raw-input-row > .dbx-llm-flow-section-run-buttons > dbx-button {
+      flex: 1 1 0;
+      min-height: 0;
+
+      > dbx-progress-spinner-button {
+        min-height: 0;
+      }
+
+      .mat-mdc-button-base {
+        height: 100%;
+        min-height: 0;
+      }
+    }
+
+    // stacked (a narrow raw input): the run buttons move under the form column, as a row that fills the width and wraps. The height sync is
+    // off and the buttons don't stretch, so they keep the default button height.
+    &.dbx-llm-flow-section-raw-input-stacked {
+      .dbx-llm-flow-section-raw-input-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .dbx-llm-flow-section-raw-input-row > .dbx-llm-flow-section-run-buttons {
+        flex-flow: row wrap;
+        min-width: 0;
+
+        > dbx-button {
+          flex: 1 1 auto;
         }
       }
     }

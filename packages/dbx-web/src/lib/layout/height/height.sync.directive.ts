@@ -1,4 +1,4 @@
-import { computed, DestroyRef, Directive, ElementRef, inject, input, signal } from '@angular/core';
+import { computed, DestroyRef, Directive, ElementRef, inject, input, model, signal } from '@angular/core';
 import { type DestroyFunction, type Maybe } from '@dereekb/util';
 
 /**
@@ -41,7 +41,7 @@ export interface DbxHeightSyncSourceRegistration {
  *
  * @example
  * ```html
- * <div class="dbx-flex" dbxHeightSync>
+ * <div class="dbx-flex" dbxHeightSync [dbxHeightSyncDisabled]="isNarrow">
  *   <mat-form-field dbxHeightSyncSource>...</mat-form-field>
  *   <dbx-button dbxHeightSyncFollower text="Run"></dbx-button>
  * </div>
@@ -57,11 +57,20 @@ export class DbxHeightSyncDirective {
   private readonly _sourceHeights = signal<ReadonlyMap<number, number>>(new Map());
 
   /**
-   * The height followers take: the tallest source's height in pixels, or undefined until a source is measured.
+   * Turns the sync off: followers drop the synced height and keep their natural one. Sources are still measured. Use it when a layout change
+   * takes the followers out of line with the sources, such as a row that stacks into a column on a narrow screen.
+   *
+   * A model, so the element's own component can set it when the group is one of its host directives.
+   */
+  readonly dbxHeightSyncDisabled = model<Maybe<boolean>>(false);
+
+  /**
+   * The height followers take: the tallest source's height in pixels, or undefined until a source is measured or while the sync is disabled.
    */
   readonly heightSignal = computed<Maybe<number>>(() => {
+    const disabled = this.dbxHeightSyncDisabled();
     const heights = Array.from(this._sourceHeights().values());
-    return heights.length ? Math.max(...heights) : undefined;
+    return !disabled && heights.length ? Math.max(...heights) : undefined;
   });
 
   /**

@@ -4,7 +4,7 @@ import { dbxLlmFlowSectionResolvedDisplayConfig } from './llm.flow.section.displ
 describe('dbxLlmFlowSectionResolvedDisplayConfig()', () => {
   it('should show every part, including the step number, by default', () => {
     const result = dbxLlmFlowSectionResolvedDisplayConfig(undefined, undefined);
-    expect(result).toEqual({ header: true, form: true, rawInput: true, runButtons: true, history: true, output: true, stepNumber: true });
+    expect(result).toEqual({ header: true, form: true, rawInput: true, runButtons: true, history: true, output: true, stepNumber: true, collapse: true });
   });
 
   it('should hide the step number only when turned off', () => {

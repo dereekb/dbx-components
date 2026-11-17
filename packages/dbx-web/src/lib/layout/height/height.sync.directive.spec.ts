@@ -73,6 +73,22 @@ describe('DbxHeightSyncDirective', () => {
     expect(follower().style.height).toBe('');
   });
 
+  it('should drop the followers height while disabled, and restore it when enabled again', () => {
+    group().registerSource().setHeight(48);
+    fixture.detectChanges();
+    expect(follower().style.height).toBe('48px');
+
+    group().dbxHeightSyncDisabled.set(true);
+    fixture.detectChanges();
+    expect(group().heightSignal()).toBeUndefined();
+    expect(follower().style.height).toBe('');
+    expect(follower().style.boxSizing).toBe('');
+
+    group().dbxHeightSyncDisabled.set(false);
+    fixture.detectChanges();
+    expect(follower().style.height).toBe('48px');
+  });
+
   it('should measure the border box unless the source asks for the content box', () => {
     const boxes = fixture.componentInstance.sources().map((x) => x.boxSignal());
     expect(boxes).toEqual(['border-box', 'border-box', 'content-box']);

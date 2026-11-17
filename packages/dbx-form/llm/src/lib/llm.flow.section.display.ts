@@ -24,7 +24,8 @@ export function dbxLlmFlowSectionResolvedDisplayConfig(configDisplay: Maybe<DbxL
     runButtons: display.runButtons !== false,
     history: display.history !== false,
     output: display.output !== false,
-    stepNumber: display.stepNumber !== false
+    stepNumber: display.stepNumber !== false,
+    collapse: display.collapse !== false
   };
 }
 

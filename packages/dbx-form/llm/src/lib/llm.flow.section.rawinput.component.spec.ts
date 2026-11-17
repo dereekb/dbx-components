@@ -1,14 +1,15 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Component, signal, viewChild } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideDbxForgeFormFieldDeclarations, provideDbxFormConfiguration } from '@dereekb/dbx-form';
 import { type Maybe, waitForMs } from '@dereekb/util';
 import { DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
+import { DbxHeightSyncFollowerDirective } from '@dereekb/dbx-web';
 import { type DbxLlmFlowAnySectionConfig } from './llm.flow';
 import { defaultDbxLlmFlowToRawInput } from './llm.flow.state';
 import { DbxLlmFlowDirective } from './llm.flow.directive';
 import { DbxLlmFlowSectionDirective } from './llm.flow.section.directive';
-import { DbxLlmFlowSectionRawInputComponent } from './llm.flow.section.rawinput.component';
+import { DBX_LLM_FLOW_SECTION_RAW_INPUT_STACK_WIDTH, DbxLlmFlowSectionRawInputComponent } from './llm.flow.section.rawinput.component';
 
 const TWO_WAY: DbxLlmFlowAnySectionConfig = {
   key: 'brief',
@@ -23,17 +24,48 @@ const EDITABLE: DbxLlmFlowAnySectionConfig = { key: 'outline', rawInput: { mode:
 
 const READONLY: DbxLlmFlowAnySectionConfig = { key: 'render', rawInput: { mode: 'readonly', rows: 2 }, initialDraft: { rawInput: 'fixed' } };
 
+/**
+ * ResizeObserver stand-in (jsdom has none): resize() reports a size to the observers of an element.
+ */
+class TestResizeObserver {
+  static readonly instances: TestResizeObserver[] = [];
+
+  readonly elements: Element[] = [];
+
+  constructor(readonly callback: ResizeObserverCallback) {
+    TestResizeObserver.instances.push(this);
+  }
+
+  static resize(element: Element, width: number, height: number): void {
+    TestResizeObserver.instances.filter((x) => x.elements.includes(element)).forEach((x) => x.callback([{ target: element, contentRect: { width, height } } as unknown as ResizeObserverEntry], x as unknown as ResizeObserver));
+  }
+
+  observe(element: Element): void {
+    this.elements.push(element);
+  }
+
+  unobserve(): void {
+    // unused
+  }
+
+  disconnect(): void {
+    this.elements.length = 0;
+  }
+}
+
 const TEST_PROVIDERS = [provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }];
 
 @Component({
   template: `
     <div [dbxLlmFlow]="{}">
       <div [dbxLlmFlowSection]="config()">
-        <dbx-llm-flow-section-raw-input></dbx-llm-flow-section-raw-input>
+        <dbx-llm-flow-section-raw-input>
+          <div class="test-follower" dbxHeightSyncFollower></div>
+        </dbx-llm-flow-section-raw-input>
       </div>
     </div>
   `,
-  imports: [DbxLlmFlowDirective, DbxLlmFlowSectionDirective, DbxLlmFlowSectionRawInputComponent]
+  imports: [DbxLlmFlowDirective, DbxLlmFlowSectionDirective, DbxLlmFlowSectionRawInputComponent, DbxHeightSyncFollowerDirective]
 })
 class TestRawInputHostComponent {
   readonly config = signal<DbxLlmFlowAnySectionConfig>(TWO_WAY);
@@ -240,6 +272,60 @@ describe('DbxLlmFlowSectionRawInputComponent', () => {
       await settle();
 
       expect(copyButton()?.disabled).toBe(false);
+    });
+  });
+
+  describe('stacking', () => {
+    function rawInputElement(): HTMLElement {
+      return element().querySelector('dbx-llm-flow-section-raw-input') as HTMLElement;
+    }
+
+    function follower(): HTMLElement {
+      return element().querySelector('.test-follower') as HTMLElement;
+    }
+
+    function isStacked(): boolean {
+      return rawInputElement().classList.contains('dbx-llm-flow-section-raw-input-stacked');
+    }
+
+    async function resize(width: number): Promise<void> {
+      TestResizeObserver.resize(rawInputElement(), width, 200);
+      TestResizeObserver.resize(element().querySelector('.dbx-llm-flow-section-raw-input-main') as HTMLElement, width, 120);
+      await settle();
+    }
+
+    beforeEach(async () => {
+      TestResizeObserver.instances.length = 0;
+      vi.stubGlobal('ResizeObserver', TestResizeObserver);
+      await setup(TWO_WAY);
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('should keep projected content beside the form, following its height, when wide', async () => {
+      await resize(DBX_LLM_FLOW_SECTION_RAW_INPUT_STACK_WIDTH + 200);
+      expect(isStacked()).toBe(false);
+      expect(follower().style.height).toBe('120px');
+    });
+
+    it('should stack projected content under the form, with its natural height, when narrow', async () => {
+      await resize(DBX_LLM_FLOW_SECTION_RAW_INPUT_STACK_WIDTH - 100);
+      expect(isStacked()).toBe(true);
+      expect(follower().style.height).toBe('');
+
+      await resize(DBX_LLM_FLOW_SECTION_RAW_INPUT_STACK_WIDTH + 200);
+      expect(isStacked()).toBe(false);
+      expect(follower().style.height).toBe('120px');
+    });
+
+    it('should not stack while hidden (zero width)', async () => {
+      await resize(DBX_LLM_FLOW_SECTION_RAW_INPUT_STACK_WIDTH - 100);
+      expect(isStacked()).toBe(true);
+
+      await resize(0);
+      expect(isStacked()).toBe(false);
     });
   });
 

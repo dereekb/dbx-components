@@ -68,6 +68,11 @@ export class DbxLlmFlowSectionStore<F = unknown, O = unknown> extends DbxLlmFlow
   readonly formVisible = signal(true);
 
   /**
+   * Whether the section is collapsed to its header.
+   */
+  readonly collapsed = signal(false);
+
+  /**
    * The open form pop-out, if any.
    */
   readonly popout = signal<Maybe<DbxLlmFlowSectionFormPopoutMode>>(undefined);
@@ -430,6 +435,14 @@ export class DbxLlmFlowSectionStore<F = unknown, O = unknown> extends DbxLlmFlow
 
   toggleFormVisible(): void {
     this.formVisible.update((x) => !x);
+  }
+
+  setCollapsed(collapsed: boolean): void {
+    this.collapsed.set(collapsed);
+  }
+
+  toggleCollapsed(): void {
+    this.collapsed.update((x) => !x);
   }
 
   /**

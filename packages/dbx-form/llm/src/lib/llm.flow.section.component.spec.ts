@@ -180,6 +180,47 @@ describe('DbxLlmFlowSectionComponent', () => {
     expect(briefElement().querySelector('.dbx-llm-flow-section-body dbx-test-llm-section-form')).not.toBeNull();
   });
 
+  describe('collapse', () => {
+    function collapseButton(element: HTMLElement): Maybe<HTMLButtonElement> {
+      return element.querySelector('.dbx-llm-flow-section-header-actions > dbx-button.dbx-llm-flow-section-collapse-button button');
+    }
+
+    function isCollapsed(element: HTMLElement): boolean {
+      return element.classList.contains('dbx-llm-flow-section-collapsed');
+    }
+
+    it('should put the collapse button last in the header button row', () => {
+      const actions = briefElement().querySelector('.dbx-llm-flow-section-header-actions') as HTMLElement;
+      expect(actions.lastElementChild?.classList.contains('dbx-llm-flow-section-collapse-button')).toBe(true);
+      expect(collapseButton(briefElement())?.getAttribute('aria-label')).toBe('Collapse the section');
+    });
+
+    it('should collapse the section to its header, keeping the body rendered, and expand it again', async () => {
+      collapseButton(briefElement())?.click();
+      await settle();
+
+      expect(isCollapsed(briefElement())).toBe(true);
+      expect(collapseButton(briefElement())?.getAttribute('aria-label')).toBe('Expand the section');
+      expect(briefElement().querySelector('.dbx-llm-flow-section-header')).not.toBeNull();
+      expect(briefElement().querySelector('.dbx-llm-flow-section-body dbx-test-llm-section-form')).not.toBeNull(); // hidden, not destroyed
+      expect(briefElement().querySelector('.dbx-llm-flow-section-body dbx-llm-flow-section-run-buttons')).not.toBeNull();
+      expect(isCollapsed(outlineElement())).toBe(false); // per section
+
+      collapseButton(briefElement())?.click();
+      await settle();
+      expect(isCollapsed(briefElement())).toBe(false);
+    });
+
+    it('should hide the form toggle while collapsed', async () => {
+      const headerButtonCount = () => briefElement().querySelectorAll('.dbx-llm-flow-section-header-actions > dbx-button').length;
+      const expanded = headerButtonCount();
+
+      brief().toggleCollapsed();
+      await settle();
+      expect(headerButtonCount()).toBe(expanded - 1);
+    });
+  });
+
   it('should open the form in a dialog that shares the section store', async () => {
     brief().openFormPopout('dialog');
     await settle();

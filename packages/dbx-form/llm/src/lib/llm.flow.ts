@@ -349,6 +349,13 @@ export interface DbxLlmFlowSectionDisplayConfig {
    * On by default.
    */
   readonly stepNumber?: Maybe<boolean>;
+  /**
+   * Shows the collapse/expand button at the end of the header's button row. A collapsed section shows only its header; the hint and
+   * everything below stay rendered but hidden, so a running action, the form binding and the raw input keep their state.
+   *
+   * On by default. Needs the header.
+   */
+  readonly collapse?: Maybe<boolean>;
 }
 
 export interface DbxLlmFlowRunDescription {

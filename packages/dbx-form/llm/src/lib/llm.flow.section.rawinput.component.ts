@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, viewChild } from '@angular/core';
+import { Component, computed, DestroyRef, ElementRef, inject, input, signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatIconModule } from '@angular/material/icon';
 import { DbxButtonComponent, DbxHeightSyncDirective, DbxHeightSyncSourceDirective, injectCopyToClipboardFunctionWithSnackbarMessage } from '@dereekb/dbx-web';
@@ -17,6 +17,11 @@ export const DEFAULT_DBX_LLM_FLOW_SECTION_RAW_INPUT_LABEL = 'Input';
  * Default number of visible rows of the raw input field.
  */
 export const DEFAULT_DBX_LLM_FLOW_SECTION_RAW_INPUT_ROWS = 5;
+
+/**
+ * Width in pixels below which the raw input stacks: the projected content (the run buttons) moves under the form instead of beside it.
+ */
+export const DBX_LLM_FLOW_SECTION_RAW_INPUT_STACK_WIDTH = 480;
 
 /**
  * The message the raw input shows about where its text comes from.
@@ -52,6 +57,9 @@ const RAW_INPUT_SOURCE_ICONS: Record<DbxLlmFlowSectionInputSource, string> = {
  * Projected content renders to the right of the form, centered on it. The host is a dbxHeightSync group with the form's column as its source
  * (its content box: the column carries the field's vertical padding), so projected content marked dbxHeightSyncFollower takes the height of the
  * textarea's outlined box plus the options under it. The section projects its run buttons beside the form.
+ *
+ * When the raw input is narrower than DBX_LLM_FLOW_SECTION_RAW_INPUT_STACK_WIDTH (a phone, or a narrow pop-out window) it stacks: the
+ * projected content moves under the form, and the height sync is turned off so it keeps its natural height.
  *
  * @example
  * ```html
@@ -105,6 +113,7 @@ const RAW_INPUT_SOURCE_ICONS: Record<DbxLlmFlowSectionInputSource, string> = {
     '[class.dbx-llm-flow-section-raw-input-overridden]': 'overriddenSignal()',
     '[class.dbx-llm-flow-section-raw-input-typeable]': 'typeableSignal()',
     '[class.dbx-llm-flow-section-raw-input-invalid]': 'invalidSignal()',
+    '[class.dbx-llm-flow-section-raw-input-stacked]': 'stackedSignal()',
     '[attr.data-source]': 'inputSourceSignal()'
   },
   hostDirectives: [DbxHeightSyncDirective],
@@ -115,6 +124,8 @@ export class DbxLlmFlowSectionRawInputComponent {
 
   private readonly _copyToClipboard = injectCopyToClipboardFunctionWithSnackbarMessage();
   private readonly _form = viewChild.required(DbxLlmFlowSectionRawInputFormComponent);
+  private readonly _heightSync = inject(DbxHeightSyncDirective, { self: true });
+  private readonly _stacked = signal(false);
 
   /**
    * Overrides the label from the section config.
@@ -157,6 +168,11 @@ export class DbxLlmFlowSectionRawInputComponent {
   });
   readonly invalidSignal = computed(() => this.shownInputIssuesSignal().length > 0);
 
+  /**
+   * Whether the raw input is narrower than DBX_LLM_FLOW_SECTION_RAW_INPUT_STACK_WIDTH, with the projected content under the form.
+   */
+  readonly stackedSignal = this._stacked.asReadonly();
+
   readonly sourceMessageSignal = computed<Maybe<DbxLlmFlowSectionRawInputSourceMessage>>(() => {
     const typeable = this.typeableSignal();
     const config = this.configSignal();
@@ -193,6 +209,10 @@ export class DbxLlmFlowSectionRawInputComponent {
 
     return message;
   });
+
+  constructor() {
+    this._observeWidth();
+  }
 
   // the form's events bubble here: only those of the raw input textarea are handled, never an option field's
   onBeforeInput(event: Event): void {
@@ -234,6 +254,25 @@ export class DbxLlmFlowSectionRawInputComponent {
 
   revertRawInput(): void {
     this.sectionStore.revertRawInput();
+  }
+
+  // the host's width decides the layout; stacking changes only its height, so there is no feedback loop
+  private _observeWidth(): void {
+    if (typeof ResizeObserver !== 'undefined') {
+      const element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
+      const observer = new ResizeObserver((entries) => {
+        const width = entries[entries.length - 1].contentRect.width;
+        this._setStacked(width > 0 && width < DBX_LLM_FLOW_SECTION_RAW_INPUT_STACK_WIDTH);
+      });
+
+      observer.observe(element);
+      inject(DestroyRef).onDestroy(() => observer.disconnect());
+    }
+  }
+
+  private _setStacked(stacked: boolean): void {
+    this._stacked.set(stacked);
+    this._heightSync.dbxHeightSyncDisabled.set(stacked);
   }
 
   private _pasteText(text: Maybe<string>): void {

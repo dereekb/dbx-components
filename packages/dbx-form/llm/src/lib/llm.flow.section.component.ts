@@ -41,6 +41,9 @@ const STATUS_COLOR: Record<DbxLlmFlowSectionStatus, Maybe<DbxThemeColor>> = {
  * With the display's stepNumber option on (the default), an icon tile before the label shows the section's step number in its chain: 1 for
  * a root section, plus one per ancestor.
  *
+ * The collapse button at the end of the header's button row (the display's collapse option, on by default) collapses the section to its
+ * header. The hint and the body are hidden with CSS, not destroyed, so a running action, the form binding and the raw input keep their state.
+ *
  * Registers the section through its DbxLlmFlowSectionDirective host directive. Content projected with dbxLlmFlowSectionOutput replaces the
  * default output, and can inject the DbxLlmFlowSectionStore.
  *
@@ -68,7 +71,9 @@ const STATUS_COLOR: Record<DbxLlmFlowSectionStatus, Maybe<DbxThemeColor>> = {
         <span class="dbx-spacer"></span>
         <div class="dbx-llm-flow-section-header-actions">
           @if (showFormControlsSignal()) {
-            <dbx-button [icon]="formVisibleSignal() ? 'expand_more' : 'expand_less'" [ariaLabel]="formVisibleSignal() ? 'Hide the form' : 'Show the form'" [iconOnly]="true" [flat]="true" (buttonClick)="toggleFormVisible()"></dbx-button>
+            @if (!collapsedSignal()) {
+              <dbx-button [icon]="formVisibleSignal() ? 'expand_more' : 'expand_less'" [ariaLabel]="formVisibleSignal() ? 'Hide the form' : 'Show the form'" [iconOnly]="true" [flat]="true" (buttonClick)="toggleFormVisible()"></dbx-button>
+            }
             @if (popoutEnabledSignal()) {
               <dbx-button icon="open_in_new" ariaLabel="Open the form in a dialog" [iconOnly]="true" [flat]="true" (buttonClick)="openFormPopout('dialog')"></dbx-button>
               <dbx-button icon="picture_in_picture_alt" ariaLabel="Open the form in a floating window" [iconOnly]="true" [flat]="true" (buttonClick)="openFormPopout('detach')"></dbx-button>
@@ -76,6 +81,9 @@ const STATUS_COLOR: Record<DbxLlmFlowSectionStatus, Maybe<DbxThemeColor>> = {
           }
           @if (displaySignal().history) {
             <dbx-llm-flow-section-history-button></dbx-llm-flow-section-history-button>
+          }
+          @if (displaySignal().collapse) {
+            <dbx-button class="dbx-llm-flow-section-collapse-button" [icon]="collapsedSignal() ? 'unfold_more' : 'unfold_less'" [ariaLabel]="collapsedSignal() ? 'Expand the section' : 'Collapse the section'" [iconOnly]="true" [flat]="true" (buttonClick)="toggleCollapsed()"></dbx-button>
           }
         </div>
       </div>
@@ -119,7 +127,8 @@ const STATUS_COLOR: Record<DbxLlmFlowSectionStatus, Maybe<DbxThemeColor>> = {
   host: {
     class: 'dbx-llm-flow-section',
     '[attr.data-status]': 'statusSignal()',
-    '[class.dbx-llm-flow-section-running]': `statusSignal() === 'running'`
+    '[class.dbx-llm-flow-section-running]': `statusSignal() === 'running'`,
+    '[class.dbx-llm-flow-section-collapsed]': 'collapsedSignal()'
   },
   providers: [{ provide: DbxLlmFlowSectionDisplay, useExisting: forwardRef(() => DbxLlmFlowSectionComponent) }],
   hostDirectives: [{ directive: DbxLlmFlowSectionDirective, inputs: ['dbxLlmFlowSection: config', 'parentKey'] }],
@@ -162,6 +171,15 @@ export class DbxLlmFlowSectionComponent implements DbxLlmFlowSectionDisplay {
   readonly formVisibleSignal = this.sectionStore.formVisible;
 
   readonly displaySignal = computed(() => dbxLlmFlowSectionResolvedDisplayConfig(this.configSignal()?.display, this.display()));
+
+  /**
+   * Whether the section shows only its header. Needs the header and its collapse button, so a section can't be collapsed to nothing.
+   */
+  readonly collapsedSignal = computed(() => {
+    const display = this.displaySignal();
+    const collapsed = this.sectionStore.collapsed();
+    return display.header && display.collapse && collapsed;
+  });
   readonly showActionsRowSignal = computed(() => {
     const display = this.displaySignal();
     return (!display.header && display.history) || (display.runButtons && !display.rawInput);
@@ -214,6 +232,10 @@ export class DbxLlmFlowSectionComponent implements DbxLlmFlowSectionDisplay {
 
   toggleFormVisible(): void {
     this.sectionStore.toggleFormVisible();
+  }
+
+  toggleCollapsed(): void {
+    this.sectionStore.toggleCollapsed();
   }
 
   openFormPopout(mode: DbxLlmFlowSectionFormPopoutMode): void {
