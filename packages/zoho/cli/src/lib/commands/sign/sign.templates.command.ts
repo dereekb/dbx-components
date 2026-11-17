@@ -1,9 +1,10 @@
 import type { CommandModule, Argv } from 'yargs';
 import { noop } from '@dereekb/util';
-import { getSignApi } from '../../middleware/auth.middleware';
-import { outputResult, outputError } from '../../util/output';
+import { getSignContext, exitZohoCliCommandWithError } from '../../middleware/auth.middleware';
+import { outputResult } from '../../util/output';
 import { withSignPagination } from '../../util/args';
 import { runZohoSignPaginatedList } from '../../util/pagination';
+import { zohoSignGetTemplate, zohoSignGetTemplates } from '@dereekb/zoho';
 
 /**
  * Builds the optional `search_columns` filter for the templates list, returning `undefined` when no
@@ -32,7 +33,7 @@ const templatesListCommand: CommandModule = {
       .option('owner-full-name', { type: 'string', describe: 'Filter by owner full name' }),
   handler: async (argv: any) => {
     try {
-      const signApi = getSignApi(argv);
+      const signContext = getSignContext(argv);
       const initialInput = {
         start_index: argv.startIndex,
         row_count: argv.rowCount,
@@ -40,10 +41,9 @@ const templatesListCommand: CommandModule = {
         sort_order: argv.sortOrder,
         search_columns: buildSearchColumns(argv)
       };
-      await runZohoSignPaginatedList({ argv, initialInput, fetchPage: (input) => signApi.getTemplates(input) });
+      await runZohoSignPaginatedList({ argv, initialInput, fetchPage: (input) => zohoSignGetTemplates(signContext)(input) });
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -54,12 +54,11 @@ const templatesGetCommand: CommandModule = {
   builder: (yargs: Argv) => yargs.positional('templateId', { type: 'string', demandOption: true, describe: 'Template ID' }),
   handler: async (argv: any) => {
     try {
-      const signApi = getSignApi(argv);
-      const result = await signApi.getTemplate({ templateId: argv.templateId });
+      const signContext = getSignContext(argv);
+      const result = await zohoSignGetTemplate(signContext)({ templateId: argv.templateId });
       outputResult(result);
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };

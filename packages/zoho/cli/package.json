@@ -13,7 +13,7 @@
     "@dereekb/rxjs": "14.27.0",
     "@dereekb/util": "14.27.0",
     "@dereekb/zoho": "14.27.0",
-    "@dereekb/zoho/nestjs": "14.27.0",
+    "@dereekb/zoho/node": "14.27.0",
     "yargs": "^18.0.0"
   },
   "devDependencies": {

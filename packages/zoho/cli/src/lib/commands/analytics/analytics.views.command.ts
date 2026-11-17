@@ -1,7 +1,8 @@
 import type { CommandModule, Argv } from 'yargs';
 import { noop } from '@dereekb/util';
-import { getAnalyticsApi } from '../../middleware/auth.middleware';
-import { outputResult, outputError } from '../../util/output';
+import { getAnalyticsContext, exitZohoCliCommandWithError } from '../../middleware/auth.middleware';
+import { outputResult } from '../../util/output';
+import { zohoAnalyticsDeleteView, zohoAnalyticsGetTableMetadata, zohoAnalyticsGetViewDetails, zohoAnalyticsGetViews } from '@dereekb/zoho';
 
 const viewsListCommand: CommandModule = {
   command: 'list <workspaceId>',
@@ -9,12 +10,11 @@ const viewsListCommand: CommandModule = {
   builder: (yargs: Argv) => yargs.positional('workspaceId', { type: 'string', demandOption: true, describe: 'Workspace ID' }),
   handler: async (argv: any) => {
     try {
-      const api = getAnalyticsApi(argv);
-      const result = await api.getViews({ workspaceId: argv.workspaceId });
+      const analyticsContext = getAnalyticsContext(argv);
+      const result = await zohoAnalyticsGetViews(analyticsContext)({ workspaceId: argv.workspaceId });
       outputResult(result.data.views, { count: result.data.views?.length });
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -25,12 +25,11 @@ const viewsGetCommand: CommandModule = {
   builder: (yargs: Argv) => yargs.positional('viewId', { type: 'string', demandOption: true, describe: 'View ID (globally unique, no workspace needed)' }),
   handler: async (argv: any) => {
     try {
-      const api = getAnalyticsApi(argv);
-      const result = await api.getViewDetails({ viewId: argv.viewId });
+      const analyticsContext = getAnalyticsContext(argv);
+      const result = await zohoAnalyticsGetViewDetails(analyticsContext)({ viewId: argv.viewId });
       outputResult(result.data.views);
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -41,12 +40,11 @@ const viewsColumnsCommand: CommandModule = {
   builder: (yargs: Argv) => yargs.positional('workspaceId', { type: 'string', demandOption: true, describe: 'Workspace ID' }).positional('viewId', { type: 'string', demandOption: true, describe: 'View ID' }),
   handler: async (argv: any) => {
     try {
-      const api = getAnalyticsApi(argv);
-      const result = await api.getTableMetadata({ workspaceId: argv.workspaceId, viewId: argv.viewId });
+      const analyticsContext = getAnalyticsContext(argv);
+      const result = await zohoAnalyticsGetTableMetadata(analyticsContext)({ workspaceId: argv.workspaceId, viewId: argv.viewId });
       outputResult(result.data.columns, { count: result.data.columns?.length });
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -61,13 +59,12 @@ const viewsDeleteCommand: CommandModule = {
       .option('dependent-views', { type: 'boolean', default: false, describe: 'Also delete the reports, dashboards and query tables built on this view' }),
   handler: async (argv: any) => {
     try {
-      const api = getAnalyticsApi(argv);
-      await api.deleteView({ workspaceId: argv.workspaceId, viewId: argv.viewId, config: { deleteDependentViews: argv.dependentViews } });
+      const analyticsContext = getAnalyticsContext(argv);
+      await zohoAnalyticsDeleteView(analyticsContext)({ workspaceId: argv.workspaceId, viewId: argv.viewId, config: { deleteDependentViews: argv.dependentViews } });
       // a successful delete is a 204 with no body, so there is nothing to echo back but the target
       outputResult({ deleted: true, workspaceId: argv.workspaceId, viewId: argv.viewId, deletedDependentViews: argv.dependentViews });
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };

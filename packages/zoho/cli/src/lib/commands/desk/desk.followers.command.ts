@@ -1,7 +1,8 @@
 import type { CommandModule, Argv } from 'yargs';
-import { getDeskApi } from '../../middleware/auth.middleware';
+import { getDeskContext, exitZohoCliCommandWithError } from '../../middleware/auth.middleware';
 import { noop } from '@dereekb/util';
-import { outputResult, outputError } from '../../util/output';
+import { outputResult } from '../../util/output';
+import { zohoDeskAddTicketFollowers, zohoDeskGetTicketFollowers, zohoDeskRemoveTicketFollowers } from '@dereekb/zoho';
 
 const followersListCommand: CommandModule = {
   command: 'list <ticketId>',
@@ -9,12 +10,11 @@ const followersListCommand: CommandModule = {
   builder: (yargs: Argv) => yargs.positional('ticketId', { type: 'string', demandOption: true, describe: 'Ticket ID' }),
   handler: async (argv: any) => {
     try {
-      const api = getDeskApi(argv);
-      const result = await api.getTicketFollowers({ ticketId: argv.ticketId });
+      const deskContext = getDeskContext(argv);
+      const result = await zohoDeskGetTicketFollowers(deskContext)({ ticketId: argv.ticketId });
       outputResult(result);
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -25,13 +25,12 @@ const followersAddCommand: CommandModule = {
   builder: (yargs: Argv) => yargs.positional('ticketId', { type: 'string', demandOption: true, describe: 'Ticket ID' }).option('agent-ids', { type: 'string', demandOption: true, describe: 'Comma-separated agent IDs' }),
   handler: async (argv: any) => {
     try {
-      const api = getDeskApi(argv);
+      const deskContext = getDeskContext(argv);
       const agentIds = (argv.agentIds as string).split(',').map((id: string) => id.trim());
-      await api.addTicketFollowers({ ticketId: argv.ticketId, agentIds });
+      await zohoDeskAddTicketFollowers(deskContext)({ ticketId: argv.ticketId, agentIds });
       outputResult({ added: true });
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -42,13 +41,12 @@ const followersRemoveCommand: CommandModule = {
   builder: (yargs: Argv) => yargs.positional('ticketId', { type: 'string', demandOption: true, describe: 'Ticket ID' }).option('agent-ids', { type: 'string', demandOption: true, describe: 'Comma-separated agent IDs' }),
   handler: async (argv: any) => {
     try {
-      const api = getDeskApi(argv);
+      const deskContext = getDeskContext(argv);
       const agentIds = (argv.agentIds as string).split(',').map((id: string) => id.trim());
-      await api.removeTicketFollowers({ ticketId: argv.ticketId, agentIds });
+      await zohoDeskRemoveTicketFollowers(deskContext)({ ticketId: argv.ticketId, agentIds });
       outputResult({ removed: true });
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };

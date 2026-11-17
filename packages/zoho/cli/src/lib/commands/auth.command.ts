@@ -49,10 +49,11 @@ import {
   type SetCliTokenSourceResult,
   type UseCliTokenSourceResult
 } from '@dereekb/dbx-cli';
-import { zohoAccountsAuthorizeUrlFactory, zohoAccountsConfigApiUrl, zohoOAuthScopesFromScopeString, type ZohoApiUrlKey, type ZohoOAuthScope } from '@dereekb/zoho';
-import { fileZohoAccountsAccessTokenCacheService } from '@dereekb/zoho/nestjs';
-import { createCliContext, toZohoCliProductApis } from '../context/cli.context';
-import { outputResult, outputError } from '../util/output';
+import { zohoAccountsAccessToken, zohoAccountsAuthorizeUrlFactory, zohoAccountsConfigApiUrl, zohoOAuthScopesFromScopeString, type ZohoApiUrlKey, type ZohoOAuthScope } from '@dereekb/zoho';
+import { fileZohoAccountsAccessTokenCacheService } from '@dereekb/zoho/node';
+import { createCliContext } from '../context/cli.context';
+import { outputResult } from '../util/output';
+import { exitZohoCliCommandWithError } from '../middleware/auth.middleware';
 
 /**
  * Redirect URI `auth setup` uses when `--redirect-uri` is not given. Must match what the API console has registered.
@@ -125,8 +126,7 @@ const authSetupCommand: CommandModule = {
         await handleAuthSetupStep1(ctx);
       }
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -421,8 +421,7 @@ const authSetCommand: CommandModule = {
 
       outputResult({ saved: true, product: product ?? 'shared', configuredProducts: await configuredProductsAfterSave(merged) });
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -464,8 +463,7 @@ const authLoginCommand: CommandModule = {
     try {
       await handleAuthLogin(argv);
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -842,8 +840,7 @@ const authShowCommand: CommandModule = {
 
       outputResult(result);
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -875,28 +872,27 @@ const authCheckCommand: CommandModule = {
         } else {
           // Try token exchange for each configured product
           const context = createCliContext(config, tokenSource);
-          const productApis = toZohoCliProductApis(context);
           const results: Record<string, unknown> = {};
 
           for (const product of products) {
             try {
-              const api = productApis[product];
+              const accounts = context.productAccounts[product];
 
-              if (!api) {
+              if (!accounts) {
                 results[product] = { authenticated: false, error: 'Not configured' };
                 continue;
               }
 
               if (tokenSource?.products.includes(product)) {
                 // A token-source product has no refresh token to exchange: load the token through the
-                // product's accounts API, which runs the token source. Never echo the token itself.
-                const token = await api.zohoAccountsApi.accountsContext.loadAccessToken();
+                // product's accounts client, which runs the token source. Never echo the token itself.
+                const token = await accounts.accountsContext.loadAccessToken();
                 results[product] = { authenticated: true, source: 'tokenSource', scope: token.scope, expiresAt: token.expiresAt.toISOString() };
               } else {
-                // Exchange through the product's own accounts API so the reported scope is the grant
+                // Exchange through the product's own accounts client so the reported scope is the grant
                 // that product actually authenticates with. Only the scope and lifetime are echoed —
                 // never the access token itself.
-                const tokenResponse = await api.zohoAccountsApi.accessToken();
+                const tokenResponse = await zohoAccountsAccessToken(accounts.accountsContext)();
                 results[product] = { authenticated: true, scope: tokenResponse.scope, expiresIn: tokenResponse.expires_in };
               }
             } catch (e) {
@@ -919,8 +915,7 @@ const authCheckCommand: CommandModule = {
         outputResult({ authenticated: false, error: 'No credentials configured. Run: zoho-cli auth login' });
       }
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -1068,8 +1063,7 @@ const authClearCommand: CommandModule = {
       await clearCliConfig();
       outputResult({ cleared: true });
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };

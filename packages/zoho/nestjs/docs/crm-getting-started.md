@@ -51,6 +51,11 @@ const cacheService = fileZohoAccountsAccessTokenCacheService('.tmp/zoho-tokens.j
 const cacheService = mergeZohoAccountsAccessTokenCacheServices([cacheA, cacheB]);
 ```
 
+These helpers are also importable without NestJS: `ZohoAccountsAccessTokenCacheService` (an undecorated abstract class),
+`memoryZohoAccountsAccessTokenCacheService` and `mergeZohoAccountsAccessTokenCacheServices` live in the browser-safe
+`@dereekb/zoho` root, and `fileZohoAccountsAccessTokenCacheService` in the node-only `@dereekb/zoho/node` entry.
+`@dereekb/zoho/nestjs` re-exports the same bindings, so the imports above stay valid and the injection token is unchanged.
+
 ### Module Declaration
 
 Create a dependency module that provides the token cache, then use `appZohoCrmModuleMetadata()` to wire everything together:

@@ -1,9 +1,9 @@
 import type { CommandModule, Argv } from 'yargs';
 import { writeFile } from 'node:fs/promises';
 import { type Maybe, noop } from '@dereekb/util';
-import { type ZohoAnalyticsExportResponseFormat, isZohoAnalyticsJobComplete } from '@dereekb/zoho';
-import { getAnalyticsApi } from '../../middleware/auth.middleware';
-import { outputResult, outputError } from '../../util/output';
+import { type ZohoAnalyticsExportResponseFormat, isZohoAnalyticsJobComplete, zohoAnalyticsCreateExportJobForSqlQuery, zohoAnalyticsDownloadExport, zohoAnalyticsExportData, zohoAnalyticsExportDataAndAwaitJob, zohoAnalyticsGetExportJob } from '@dereekb/zoho';
+import { getAnalyticsContext, exitZohoCliCommandWithError } from '../../middleware/auth.middleware';
+import { outputResult } from '../../util/output';
 
 const EXPORT_FORMATS: ZohoAnalyticsExportResponseFormat[] = ['csv', 'json', 'xml', 'xls', 'pdf', 'html', 'image'];
 
@@ -80,27 +80,26 @@ const exportDataCommand: CommandModule = {
       .option('async', { type: 'boolean', default: false, describe: 'Queue the export as a job and poll it. Required for dashboards, query tables, and tables over a million rows' }),
   handler: async (argv: any) => {
     try {
-      const api = getAnalyticsApi(argv);
+      const analyticsContext = getAnalyticsContext(argv);
       const config = exportConfigFromArgv(argv);
 
       if (argv.async) {
-        const job = await api.exportDataAndAwaitJob({ workspaceId: argv.workspaceId, viewId: argv.viewId, config });
+        const job = await zohoAnalyticsExportDataAndAwaitJob(analyticsContext)({ workspaceId: argv.workspaceId, viewId: argv.viewId, config });
 
         if (isZohoAnalyticsJobComplete(job.data.jobCode)) {
-          const response = await api.downloadExport({ workspaceId: argv.workspaceId, jobId: job.data.jobId });
+          const response = await zohoAnalyticsDownloadExport(analyticsContext)({ workspaceId: argv.workspaceId, jobId: job.data.jobId });
           const body = await handleExportBody(response, argv.out);
           outputResult(body ?? { written: argv.out, jobId: job.data.jobId });
         } else {
           outputResult(job.data, { complete: false });
         }
       } else {
-        const response = await api.exportData({ workspaceId: argv.workspaceId, viewId: argv.viewId, config });
+        const response = await zohoAnalyticsExportData(analyticsContext)({ workspaceId: argv.workspaceId, viewId: argv.viewId, config });
         const body = await handleExportBody(response, argv.out);
         outputResult(body ?? { written: argv.out });
       }
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -111,14 +110,13 @@ const exportQueryCommand: CommandModule = {
   builder: (yargs: Argv) => withExportOptions(yargs).positional('workspaceId', { type: 'string', demandOption: true, describe: 'Workspace ID' }).option('sql', { type: 'string', demandOption: true, describe: 'The SQL SELECT statement to run' }),
   handler: async (argv: any) => {
     try {
-      const api = getAnalyticsApi(argv);
+      const analyticsContext = getAnalyticsContext(argv);
       const config = { ...exportConfigFromArgv(argv), sqlQuery: argv.sql as string };
-      const created = await api.createExportJobForSqlQuery({ workspaceId: argv.workspaceId, config });
-      const job = await api.getExportJob({ workspaceId: argv.workspaceId, jobId: created.data.jobId });
+      const created = await zohoAnalyticsCreateExportJobForSqlQuery(analyticsContext)({ workspaceId: argv.workspaceId, config });
+      const job = await zohoAnalyticsGetExportJob(analyticsContext)({ workspaceId: argv.workspaceId, jobId: created.data.jobId });
       outputResult(job.data, { complete: isZohoAnalyticsJobComplete(job.data.jobCode) });
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -134,19 +132,18 @@ const exportJobCommand: CommandModule = {
       .option('out', { alias: 'o', type: 'string', describe: 'Write the download to this file instead of printing it' }),
   handler: async (argv: any) => {
     try {
-      const api = getAnalyticsApi(argv);
-      const job = await api.getExportJob({ workspaceId: argv.workspaceId, jobId: argv.jobId });
+      const analyticsContext = getAnalyticsContext(argv);
+      const job = await zohoAnalyticsGetExportJob(analyticsContext)({ workspaceId: argv.workspaceId, jobId: argv.jobId });
 
       if (argv.download && isZohoAnalyticsJobComplete(job.data.jobCode)) {
-        const response = await api.downloadExport({ workspaceId: argv.workspaceId, jobId: argv.jobId });
+        const response = await zohoAnalyticsDownloadExport(analyticsContext)({ workspaceId: argv.workspaceId, jobId: argv.jobId });
         const body = await handleExportBody(response, argv.out);
         outputResult(body ?? { written: argv.out });
       } else {
         outputResult(job.data, { complete: isZohoAnalyticsJobComplete(job.data.jobCode) });
       }
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };

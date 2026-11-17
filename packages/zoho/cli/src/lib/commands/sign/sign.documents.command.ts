@@ -2,10 +2,11 @@ import type { CommandModule, Argv } from 'yargs';
 import { noop } from '@dereekb/util';
 import { readFile, writeFile } from 'node:fs/promises';
 import { basename } from 'node:path';
-import { getSignApi } from '../../middleware/auth.middleware';
-import { outputResult, outputError } from '../../util/output';
+import { getSignContext, exitZohoCliCommandWithError } from '../../middleware/auth.middleware';
+import { outputResult } from '../../util/output';
 import { withSignPagination } from '../../util/args';
 import { runZohoSignPaginatedList } from '../../util/pagination';
+import { zohoSignCreateDocument, zohoSignCreateDocumentFromTemplate, zohoSignDeleteDocument, zohoSignDownloadCompletionCertificate, zohoSignDownloadPdf, zohoSignExtendDocument, zohoSignGetDocument, zohoSignGetDocumentFormData, zohoSignGetDocuments, zohoSignGetEmbeddedSigningUrl, zohoSignSendDocumentForSignature, zohoSignUpdateDocument } from '@dereekb/zoho';
 
 /**
  * Builds the optional `search_columns` filter object from the shared search-column options, returning
@@ -42,7 +43,7 @@ const documentsListCommand: CommandModule = {
       .option('form-name', { type: 'string', describe: 'Filter by form name' }),
   handler: async (argv: any) => {
     try {
-      const signApi = getSignApi(argv);
+      const signContext = getSignContext(argv);
       const initialInput = {
         start_index: argv.startIndex,
         row_count: argv.rowCount,
@@ -50,10 +51,9 @@ const documentsListCommand: CommandModule = {
         sort_order: argv.sortOrder,
         search_columns: buildSearchColumns(argv)
       };
-      await runZohoSignPaginatedList({ argv, initialInput, fetchPage: (input) => signApi.getDocuments(input) });
+      await runZohoSignPaginatedList({ argv, initialInput, fetchPage: (input) => zohoSignGetDocuments(signContext)(input) });
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -64,12 +64,11 @@ const documentsGetCommand: CommandModule = {
   builder: (yargs: Argv) => yargs.positional('requestId', { type: 'string', demandOption: true, describe: 'Request (envelope) ID' }),
   handler: async (argv: any) => {
     try {
-      const signApi = getSignApi(argv);
-      const result = await signApi.getDocument({ requestId: argv.requestId });
+      const signContext = getSignContext(argv);
+      const result = await zohoSignGetDocument(signContext)({ requestId: argv.requestId });
       outputResult(result);
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -80,12 +79,11 @@ const documentsFormDataCommand: CommandModule = {
   builder: (yargs: Argv) => yargs.positional('requestId', { type: 'string', demandOption: true, describe: 'Request (envelope) ID' }),
   handler: async (argv: any) => {
     try {
-      const signApi = getSignApi(argv);
-      const result = await signApi.getDocumentFormData({ requestId: argv.requestId });
+      const signContext = getSignContext(argv);
+      const result = await zohoSignGetDocumentFormData(signContext)({ requestId: argv.requestId });
       outputResult(result);
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -100,15 +98,14 @@ const documentsCreateCommand: CommandModule = {
       .option('content-type', { type: 'string', default: 'application/pdf', describe: 'MIME type of the uploaded file' }),
   handler: async (argv: any) => {
     try {
-      const signApi = getSignApi(argv);
+      const signContext = getSignContext(argv);
       const requestData = JSON.parse(argv.data);
       const buffer = await readFile(argv.file);
       const file = new File([buffer], basename(argv.file), { type: argv.contentType });
-      const result = await signApi.createDocument({ requestData, file });
+      const result = await zohoSignCreateDocument(signContext)({ requestData, file });
       outputResult(result);
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -123,13 +120,12 @@ const documentsCreateFromTemplateCommand: CommandModule = {
       .option('quick-send', { type: 'boolean', default: true, describe: 'Send immediately (true) or leave as a draft (false)' }),
   handler: async (argv: any) => {
     try {
-      const signApi = getSignApi(argv);
+      const signContext = getSignContext(argv);
       const data = JSON.parse(argv.data);
-      const result = await signApi.createDocumentFromTemplate({ templateId: argv.templateId, data, isQuickSend: argv.quickSend });
+      const result = await zohoSignCreateDocumentFromTemplate(signContext)({ templateId: argv.templateId, data, isQuickSend: argv.quickSend });
       outputResult(result);
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -140,13 +136,12 @@ const documentsUpdateCommand: CommandModule = {
   builder: (yargs: Argv) => yargs.positional('requestId', { type: 'string', demandOption: true, describe: 'Request (envelope) ID' }).option('data', { type: 'string', demandOption: true, describe: 'JSON partial request data to apply' }),
   handler: async (argv: any) => {
     try {
-      const signApi = getSignApi(argv);
+      const signContext = getSignContext(argv);
       const data = JSON.parse(argv.data);
-      const result = await signApi.updateDocument({ requestId: argv.requestId, data });
+      const result = await zohoSignUpdateDocument(signContext)({ requestId: argv.requestId, data });
       outputResult(result);
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -157,13 +152,12 @@ const documentsSendCommand: CommandModule = {
   builder: (yargs: Argv) => yargs.positional('requestId', { type: 'string', demandOption: true, describe: 'Request (envelope) ID' }).option('data', { type: 'string', describe: 'Optional JSON partial request data to apply before sending' }),
   handler: async (argv: any) => {
     try {
-      const signApi = getSignApi(argv);
+      const signContext = getSignContext(argv);
       const data = argv.data ? JSON.parse(argv.data) : undefined;
-      const result = await signApi.sendDocumentForSignature({ requestId: argv.requestId, data });
+      const result = await zohoSignSendDocumentForSignature(signContext)({ requestId: argv.requestId, data });
       outputResult(result);
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -174,12 +168,11 @@ const documentsExtendCommand: CommandModule = {
   builder: (yargs: Argv) => yargs.positional('requestId', { type: 'string', demandOption: true, describe: 'Request (envelope) ID' }).option('expire-by', { type: 'string', demandOption: true, describe: 'New expiration date string (e.g. "30 November 2024")' }),
   handler: async (argv: any) => {
     try {
-      const signApi = getSignApi(argv);
-      const result = await signApi.extendDocument({ requestId: argv.requestId, expire_by: argv.expireBy });
+      const signContext = getSignContext(argv);
+      const result = await zohoSignExtendDocument(signContext)({ requestId: argv.requestId, expire_by: argv.expireBy });
       outputResult(result);
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -191,12 +184,11 @@ const documentsDeleteCommand: CommandModule = {
     yargs.positional('requestId', { type: 'string', demandOption: true, describe: 'Request (envelope) ID' }).option('recall-inprogress', { type: 'boolean', describe: 'Recall an in-progress request before deleting' }).option('reason', { type: 'string', describe: 'Reason for recalling/deleting' }),
   handler: async (argv: any) => {
     try {
-      const signApi = getSignApi(argv);
-      const result = await signApi.deleteDocument({ requestId: argv.requestId, recall_inprogress: argv.recallInprogress, reason: argv.reason });
+      const signContext = getSignContext(argv);
+      const result = await zohoSignDeleteDocument(signContext)({ requestId: argv.requestId, recall_inprogress: argv.recallInprogress, reason: argv.reason });
       outputResult(result);
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -213,8 +205,8 @@ const documentsDownloadCommand: CommandModule = {
       .option('password', { type: 'string', describe: 'Password for protected documents' }),
   handler: async (argv: any) => {
     try {
-      const signApi = getSignApi(argv);
-      const response = await signApi.downloadPdf({ requestId: argv.requestId, with_coc: argv.withCoc, merge: argv.merge, password: argv.password });
+      const signContext = getSignContext(argv);
+      const response = await zohoSignDownloadPdf(signContext)({ requestId: argv.requestId, with_coc: argv.withCoc, merge: argv.merge, password: argv.password });
 
       if (!response.ok) {
         throw new Error(`Download failed with status ${response.status}`);
@@ -224,8 +216,7 @@ const documentsDownloadCommand: CommandModule = {
       await writeFile(argv.output, buffer);
       outputResult({ saved: true, path: argv.output, bytes: buffer.length });
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -236,8 +227,8 @@ const documentsCertificateCommand: CommandModule = {
   builder: (yargs: Argv) => yargs.positional('requestId', { type: 'string', demandOption: true, describe: 'Request (envelope) ID' }).option('output', { type: 'string', demandOption: true, describe: 'Path to write the certificate to' }),
   handler: async (argv: any) => {
     try {
-      const signApi = getSignApi(argv);
-      const response = await signApi.downloadCompletionCertificate({ requestId: argv.requestId });
+      const signContext = getSignContext(argv);
+      const response = await zohoSignDownloadCompletionCertificate(signContext)({ requestId: argv.requestId });
 
       if (!response.ok) {
         throw new Error(`Certificate download failed with status ${response.status}`);
@@ -247,8 +238,7 @@ const documentsCertificateCommand: CommandModule = {
       await writeFile(argv.output, buffer);
       outputResult({ saved: true, path: argv.output, bytes: buffer.length });
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -263,12 +253,11 @@ const documentsEmbedUrlCommand: CommandModule = {
       .option('host', { type: 'string', demandOption: true, describe: 'Hosting origin embedded in the token (https required in production)' }),
   handler: async (argv: any) => {
     try {
-      const signApi = getSignApi(argv);
-      const result = await signApi.getEmbeddedSigningUrl({ requestId: argv.requestId, actionId: argv.actionId, host: argv.host });
+      const signContext = getSignContext(argv);
+      const result = await zohoSignGetEmbeddedSigningUrl(signContext)({ requestId: argv.requestId, actionId: argv.actionId, host: argv.host });
       outputResult(result);
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };

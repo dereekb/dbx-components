@@ -106,6 +106,7 @@
       "@dereekb/trello/node": ["./packages/trello/node/src/index.ts"],
       "@dereekb/zoho": ["./packages/zoho/src/index.ts"],
       "@dereekb/zoho/nestjs": ["./packages/zoho/nestjs/src/index.ts"],
+      "@dereekb/zoho/node": ["./packages/zoho/node/src/index.ts"],
       "@dereekb/zoom": ["./packages/zoom/src/index.ts"],
       "@dereekb/zoom/nestjs": ["./packages/zoom/nestjs/src/index.ts"],
       "demo-api/test": ["./apps/demo-api/src/test/index.ts"],

@@ -1,7 +1,8 @@
-import { addSeconds } from 'date-fns';
 import { expectFail, itShouldFail, expectFailAssertErrorType } from '@dereekb/util/test';
 import { type DynamicModule, Module, type Provider } from '@nestjs/common';
 import { ZohoAccountsAccessTokenCacheService, fileZohoAccountsAccessTokenCacheService, memoryZohoAccountsAccessTokenCacheService, mergeZohoAccountsAccessTokenCacheServices } from './accounts.service';
+import { ZohoAccountsAccessTokenCacheService as RootZohoAccountsAccessTokenCacheService, memoryZohoAccountsAccessTokenCacheService as rootMemoryZohoAccountsAccessTokenCacheService, mergeZohoAccountsAccessTokenCacheServices as rootMergeZohoAccountsAccessTokenCacheServices } from '@dereekb/zoho';
+import { fileZohoAccountsAccessTokenCacheService as nodeFileZohoAccountsAccessTokenCacheService } from '@dereekb/zoho/node';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { ZohoAccountsApi } from './accounts.api';
 import { ZOHO_RECRUIT_SERVICE_NAME, type ZohoAccessToken, ZohoAccountsAccessTokenError, type ZohoServiceAccessTokenKey } from '@dereekb/zoho';
@@ -83,129 +84,16 @@ describe('accounts.service', () => {
   });
 });
 
-describe('mergeZohoAccountsAccessTokenCacheServices()', () => {
-  describe('instance', () => {
-    const DUMMY_TOKEN_RESULT = {
-      accessToken: 'test',
-      expiresIn: 3600,
-      expiresAt: addSeconds(new Date(), 3600),
-      apiDomain: 'domain',
-      scope: 'test'
-    };
+describe('accounts.service re-exports', () => {
+  // the nest-free entries own these now; the NestJS entry must re-export the SAME bindings so the
+  // ZohoAccountsAccessTokenCacheService injection token (a class object) is unchanged for NestJS apps
+  it('should re-export the same ZohoAccountsAccessTokenCacheService class object from @dereekb/zoho', () => {
+    expect(ZohoAccountsAccessTokenCacheService).toBe(RootZohoAccountsAccessTokenCacheService);
+  });
 
-    let tokenToReturn: ZohoAccessToken | undefined;
-
-    let cachedValueA: ZohoAccessToken | undefined;
-    let cachedValueB: ZohoAccessToken | undefined;
-
-    beforeEach(() => {
-      tokenToReturn = DUMMY_TOKEN_RESULT;
-      cachedValueA = undefined;
-      cachedValueB = undefined;
-    });
-
-    const instance = mergeZohoAccountsAccessTokenCacheServices([
-      {
-        // never return a value...
-        loadZohoAccessTokenCache: (service: ZohoServiceAccessTokenKey) => ({
-          loadCachedToken: async () => undefined,
-          updateCachedToken: async (x) => {
-            cachedValueA = x;
-          },
-          clearCachedToken: async () => {
-            cachedValueA = undefined;
-          }
-        })
-      },
-      {
-        // always return an expired token...
-        loadZohoAccessTokenCache: (service: ZohoServiceAccessTokenKey) => ({
-          loadCachedToken: async () => {
-            return {
-              ...DUMMY_TOKEN_RESULT,
-              expiresAt: new Date(Date.now() - 1000) // expired 1 second ago
-            };
-          },
-          updateCachedToken: async (_x) => {
-            /* noop */
-          },
-          clearCachedToken: async () => {
-            /* noop */
-          }
-        })
-      },
-      memoryZohoAccountsAccessTokenCacheService(),
-      // always return tokenToReturn
-      {
-        loadZohoAccessTokenCache: (service: ZohoServiceAccessTokenKey) => ({
-          loadCachedToken: async () => tokenToReturn,
-          updateCachedToken: async (x) => {
-            cachedValueB = x;
-          },
-          clearCachedToken: async () => {
-            cachedValueB = undefined;
-          }
-        })
-      },
-      {
-        // always throw an error when updating the cache
-        loadZohoAccessTokenCache: (service: ZohoServiceAccessTokenKey) => ({
-          loadCachedToken: async () => undefined,
-          updateCachedToken: async (_x) => {
-            throw new Error('test test test');
-          },
-          clearCachedToken: async () => {
-            /* noop */
-          }
-        })
-      }
-    ]);
-
-    it('should try all services when retrieving a token', async () => {
-      const randomServiceName = `SERVICE_${Math.floor(Math.random() * 100000)}`;
-      const result = await instance.loadZohoAccessTokenCache(randomServiceName).loadCachedToken();
-
-      expect(result).toBeDefined();
-
-      if (result) {
-        expect(result.accessToken).toBe(DUMMY_TOKEN_RESULT.accessToken);
-        expect(result.expiresIn).toBe(DUMMY_TOKEN_RESULT.expiresIn);
-        expect(result.expiresAt).toBeSameSecondAs(DUMMY_TOKEN_RESULT.expiresAt);
-        expect(result.apiDomain).toBe(DUMMY_TOKEN_RESULT.apiDomain);
-        expect(result.scope).toBe(DUMMY_TOKEN_RESULT.scope);
-      }
-    });
-
-    it('should never return an expired token even if a service returns an expired token', async () => {
-      const randomServiceName = `SERVICE_${Math.floor(Math.random() * 100000)}`;
-      tokenToReturn = {
-        ...DUMMY_TOKEN_RESULT,
-        expiresAt: new Date(Date.now() - 1000)
-      };
-
-      expect(tokenToReturn.expiresAt).toBeBefore(new Date());
-
-      let result = await instance.loadZohoAccessTokenCache(randomServiceName).loadCachedToken();
-      expect(result).toBeUndefined();
-
-      tokenToReturn = DUMMY_TOKEN_RESULT;
-
-      result = await instance.loadZohoAccessTokenCache(randomServiceName).loadCachedToken();
-      expect(result).toBeDefined();
-    });
-
-    it('should update all services when updating a token', async () => {
-      const randomServiceName = `SERVICE_${Math.floor(Math.random() * 100000)}`;
-      const cache = instance.loadZohoAccessTokenCache(randomServiceName);
-
-      await cache.updateCachedToken(DUMMY_TOKEN_RESULT);
-
-      expect(cachedValueA).toBe(DUMMY_TOKEN_RESULT);
-      expect(cachedValueB).toBe(DUMMY_TOKEN_RESULT);
-
-      // this one should return the result from the memory cache
-      const resultFromMemory = await cache.loadCachedToken();
-      expect(resultFromMemory).toBe(DUMMY_TOKEN_RESULT);
-    });
+  it('should re-export the same cache helpers', () => {
+    expect(memoryZohoAccountsAccessTokenCacheService).toBe(rootMemoryZohoAccountsAccessTokenCacheService);
+    expect(mergeZohoAccountsAccessTokenCacheServices).toBe(rootMergeZohoAccountsAccessTokenCacheServices);
+    expect(fileZohoAccountsAccessTokenCacheService).toBe(nodeFileZohoAccountsAccessTokenCacheService);
   });
 });

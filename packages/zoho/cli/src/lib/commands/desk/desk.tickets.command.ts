@@ -1,9 +1,10 @@
 import type { CommandModule, Argv } from 'yargs';
-import { getDeskApi } from '../../middleware/auth.middleware';
+import { getDeskContext, exitZohoCliCommandWithError } from '../../middleware/auth.middleware';
 import { noop } from '@dereekb/util';
-import { outputResult, outputError } from '../../util/output';
+import { outputResult } from '../../util/output';
 import { withDeskPagination } from '../../util/args';
 import { runPaginatedList, ZOHO_DESK_PAGINATION_ADAPTER } from '../../util/pagination';
+import { zohoDeskGetAgentsTicketsCount, zohoDeskGetTicketById, zohoDeskGetTicketMetrics, zohoDeskGetTickets, zohoDeskGetTicketsForContact, zohoDeskSearchTickets } from '@dereekb/zoho';
 
 const ticketsListCommand: CommandModule = {
   command: 'list',
@@ -16,11 +17,11 @@ const ticketsListCommand: CommandModule = {
       .option('include', { type: 'string', describe: 'Comma-separated includes (e.g. contacts,assignee,departments,team,isRead)' }),
   handler: async (argv: any) => {
     try {
-      const api = getDeskApi(argv);
+      const deskContext = getDeskContext(argv);
       const initialInput = { from: argv.from, limit: argv.limit, departmentId: argv.departmentId, status: argv.status, sortBy: argv.sortBy, include: argv.include };
       const outcome = await runPaginatedList({
         initialInput,
-        fetchPage: (input) => api.getTickets(input),
+        fetchPage: (input) => zohoDeskGetTickets(deskContext)(input),
         adapter: ZOHO_DESK_PAGINATION_ADAPTER,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,
@@ -32,8 +33,7 @@ const ticketsListCommand: CommandModule = {
         outputResult(result.data, { from: argv.from, limit: argv.limit, count: result.data?.length });
       }
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -44,12 +44,11 @@ const ticketsGetCommand: CommandModule = {
   builder: (yargs: Argv) => yargs.positional('ticketId', { type: 'string', demandOption: true, describe: 'Ticket ID' }).option('include', { type: 'string', describe: 'Comma-separated includes (e.g. contacts,assignee,departments,team,isRead)' }),
   handler: async (argv: any) => {
     try {
-      const api = getDeskApi(argv);
-      const result = await api.getTicketById({ ticketId: argv.ticketId, include: argv.include });
+      const deskContext = getDeskContext(argv);
+      const result = await zohoDeskGetTicketById(deskContext)({ ticketId: argv.ticketId, include: argv.include });
       outputResult(result);
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -67,11 +66,11 @@ const ticketsSearchCommand: CommandModule = {
       .option('priority', { type: 'string', describe: 'Filter by priority' }),
   handler: async (argv: any) => {
     try {
-      const api = getDeskApi(argv);
+      const deskContext = getDeskContext(argv);
       const initialInput = { from: argv.from, limit: argv.limit, subject: argv.subject, status: argv.status, email: argv.email, departmentId: argv.departmentId, channel: argv.channel, priority: argv.priority };
       const outcome = await runPaginatedList({
         initialInput,
-        fetchPage: (input) => api.searchTickets(input),
+        fetchPage: (input) => zohoDeskSearchTickets(deskContext)(input),
         adapter: ZOHO_DESK_PAGINATION_ADAPTER,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,
@@ -83,8 +82,7 @@ const ticketsSearchCommand: CommandModule = {
         outputResult(result.data, { from: argv.from, limit: argv.limit, count: result.data?.length });
       }
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -95,11 +93,11 @@ const ticketsByContactCommand: CommandModule = {
   builder: (yargs: Argv) => withDeskPagination(yargs).positional('contactId', { type: 'string', demandOption: true, describe: 'Contact ID' }),
   handler: async (argv: any) => {
     try {
-      const api = getDeskApi(argv);
+      const deskContext = getDeskContext(argv);
       const initialInput = { contactId: argv.contactId, from: argv.from, limit: argv.limit };
       const outcome = await runPaginatedList({
         initialInput,
-        fetchPage: (input) => api.getTicketsForContact(input),
+        fetchPage: (input) => zohoDeskGetTicketsForContact(deskContext)(input),
         adapter: ZOHO_DESK_PAGINATION_ADAPTER,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,
@@ -111,8 +109,7 @@ const ticketsByContactCommand: CommandModule = {
         outputResult(result.data, { from: argv.from, limit: argv.limit, count: result.data?.length });
       }
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -123,12 +120,11 @@ const ticketsMetricsCommand: CommandModule = {
   builder: (yargs: Argv) => yargs.positional('ticketId', { type: 'string', demandOption: true, describe: 'Ticket ID' }),
   handler: async (argv: any) => {
     try {
-      const api = getDeskApi(argv);
-      const result = await api.getTicketMetrics({ ticketId: argv.ticketId });
+      const deskContext = getDeskContext(argv);
+      const result = await zohoDeskGetTicketMetrics(deskContext)({ ticketId: argv.ticketId });
       outputResult(result);
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -139,13 +135,12 @@ const ticketsAgentCountsCommand: CommandModule = {
   builder: (yargs: Argv) => yargs.option('agent-ids', { type: 'string', demandOption: true, describe: 'Comma-separated agent IDs' }).option('department-id', { type: 'string', describe: 'Filter by department ID' }),
   handler: async (argv: any) => {
     try {
-      const api = getDeskApi(argv);
+      const deskContext = getDeskContext(argv);
       const agentIds = (argv.agentIds as string).split(',').map((id: string) => id.trim());
-      const result = await api.getAgentsTicketsCount({ agentIds, departmentId: argv.departmentId });
+      const result = await zohoDeskGetAgentsTicketsCount(deskContext)({ agentIds, departmentId: argv.departmentId });
       outputResult(result);
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };

@@ -1,7 +1,8 @@
 import type { CommandModule, Argv } from 'yargs';
 import { noop } from '@dereekb/util';
-import { getAnalyticsApi } from '../../middleware/auth.middleware';
-import { outputResult, outputError } from '../../util/output';
+import { getAnalyticsContext, exitZohoCliCommandWithError } from '../../middleware/auth.middleware';
+import { outputResult } from '../../util/output';
+import { zohoAnalyticsAddRow, zohoAnalyticsDeleteRows, zohoAnalyticsUpdateRows } from '@dereekb/zoho';
 
 /**
  * Adds the workspace and view positionals shared by the row commands.
@@ -19,13 +20,12 @@ const rowsAddCommand: CommandModule = {
   builder: (yargs: Argv) => withRowTarget(yargs).option('columns', { type: 'string', demandOption: true, describe: 'Row as a JSON object of column name to value' }),
   handler: async (argv: any) => {
     try {
-      const api = getAnalyticsApi(argv);
+      const analyticsContext = getAnalyticsContext(argv);
       const columns = JSON.parse(argv.columns as string);
-      const result = await api.addRow({ workspaceId: argv.workspaceId, viewId: argv.viewId, config: { columns } });
+      const result = await zohoAnalyticsAddRow(analyticsContext)({ workspaceId: argv.workspaceId, viewId: argv.viewId, config: { columns } });
       outputResult(result.data);
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -41,13 +41,12 @@ const rowsUpdateCommand: CommandModule = {
       .option('add-if-not-exist', { type: 'boolean', default: false, describe: 'Insert a row when the criteria matches nothing' }),
   handler: async (argv: any) => {
     try {
-      const api = getAnalyticsApi(argv);
+      const analyticsContext = getAnalyticsContext(argv);
       const columns = JSON.parse(argv.columns as string);
-      const result = await api.updateRows({ workspaceId: argv.workspaceId, viewId: argv.viewId, config: { columns, criteria: argv.criteria, updateAllRows: argv.allRows, addIfNotExist: argv.addIfNotExist } });
+      const result = await zohoAnalyticsUpdateRows(analyticsContext)({ workspaceId: argv.workspaceId, viewId: argv.viewId, config: { columns, criteria: argv.criteria, updateAllRows: argv.allRows, addIfNotExist: argv.addIfNotExist } });
       outputResult(result.data);
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -58,12 +57,11 @@ const rowsDeleteCommand: CommandModule = {
   builder: (yargs: Argv) => withRowTarget(yargs).option('criteria', { type: 'string', describe: `Filter expression, e.g. "Sales"."Region"='West'` }).option('all-rows', { type: 'boolean', default: false, describe: 'Delete every row. Required when no --criteria is given' }),
   handler: async (argv: any) => {
     try {
-      const api = getAnalyticsApi(argv);
-      const result = await api.deleteRows({ workspaceId: argv.workspaceId, viewId: argv.viewId, config: { criteria: argv.criteria, deleteAllRows: argv.allRows } });
+      const analyticsContext = getAnalyticsContext(argv);
+      const result = await zohoAnalyticsDeleteRows(analyticsContext)({ workspaceId: argv.workspaceId, viewId: argv.viewId, config: { criteria: argv.criteria, deleteAllRows: argv.allRows } });
       outputResult(result.data);
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };

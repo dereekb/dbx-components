@@ -1,9 +1,10 @@
 import type { CommandModule, Argv } from 'yargs';
-import { getCrmApi } from '../middleware/auth.middleware';
+import { getCrmContext, exitZohoCliCommandWithError } from '../middleware/auth.middleware';
 import { noop } from '@dereekb/util';
-import { outputResult, outputError } from '../util/output';
+import { outputResult } from '../util/output';
 import { withPagination, withModule, withRecordId, withFields, withSort } from '../util/args';
 import { runZohoPaginatedList } from '../util/pagination';
+import { zohoCrmDeleteRecord, zohoCrmGetAttachmentsForRecord, zohoCrmGetEmailsForRecord, zohoCrmGetRecordById, zohoCrmGetRecords, zohoCrmInsertRecord, zohoCrmSearchRecords, zohoCrmUpdateRecord, zohoCrmUpsertRecord } from '@dereekb/zoho';
 
 const crmListCommand: CommandModule = {
   command: 'list',
@@ -11,7 +12,7 @@ const crmListCommand: CommandModule = {
   builder: (yargs: Argv) => withSort(withFields(withPagination(withModule(yargs)), true)),
   handler: async (argv: any) => {
     try {
-      const crmApi = getCrmApi(argv);
+      const crmContext = getCrmContext(argv);
       const initialInput = {
         module: argv.module,
         fields: argv.fields,
@@ -20,10 +21,9 @@ const crmListCommand: CommandModule = {
         sort_by: argv.sortBy,
         sort_order: argv.sortOrder
       };
-      await runZohoPaginatedList({ argv, initialInput, fetchPage: (input) => crmApi.getRecords(input) });
+      await runZohoPaginatedList({ argv, initialInput, fetchPage: (input) => zohoCrmGetRecords(crmContext)(input) });
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -34,12 +34,11 @@ const crmGetCommand: CommandModule = {
   builder: (yargs: Argv) => withRecordId(withModule(yargs)),
   handler: async (argv: any) => {
     try {
-      const crmApi = getCrmApi(argv);
-      const result = await crmApi.getRecordById({ module: argv.module, id: argv.id });
+      const crmContext = getCrmContext(argv);
+      const result = await zohoCrmGetRecordById(crmContext)({ module: argv.module, id: argv.id });
       outputResult(result);
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -55,7 +54,7 @@ const crmSearchCommand: CommandModule = {
       .option('phone', { type: 'string', describe: 'Search by phone' }),
   handler: async (argv: any) => {
     try {
-      const crmApi = getCrmApi(argv);
+      const crmContext = getCrmContext(argv);
       const initialInput = {
         module: argv.module,
         criteria: argv.criteria,
@@ -65,10 +64,9 @@ const crmSearchCommand: CommandModule = {
         page: argv.page,
         per_page: argv.perPage
       };
-      await runZohoPaginatedList({ argv, initialInput, fetchPage: (input) => crmApi.searchRecords(input) });
+      await runZohoPaginatedList({ argv, initialInput, fetchPage: (input) => zohoCrmSearchRecords(crmContext)(input) });
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -79,13 +77,12 @@ const crmInsertCommand: CommandModule = {
   builder: (yargs: Argv) => withModule(yargs).option('data', { type: 'string', demandOption: true, describe: 'JSON record data (object or array)' }),
   handler: async (argv: any) => {
     try {
-      const crmApi = getCrmApi(argv);
+      const crmContext = getCrmContext(argv);
       const data = JSON.parse(argv.data);
-      const result = await crmApi.insertRecord({ module: argv.module, data });
+      const result = await zohoCrmInsertRecord(crmContext)({ module: argv.module, data });
       outputResult(result);
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -96,13 +93,12 @@ const crmUpsertCommand: CommandModule = {
   builder: (yargs: Argv) => withModule(yargs).option('data', { type: 'string', demandOption: true, describe: 'JSON record data (object or array, include id for update)' }),
   handler: async (argv: any) => {
     try {
-      const crmApi = getCrmApi(argv);
+      const crmContext = getCrmContext(argv);
       const data = JSON.parse(argv.data);
-      const result = await crmApi.upsertRecord({ module: argv.module, data });
+      const result = await zohoCrmUpsertRecord(crmContext)({ module: argv.module, data });
       outputResult(result);
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -113,13 +109,12 @@ const crmUpdateCommand: CommandModule = {
   builder: (yargs: Argv) => withModule(yargs).option('data', { type: 'string', demandOption: true, describe: 'JSON record data (object or array, must include id)' }),
   handler: async (argv: any) => {
     try {
-      const crmApi = getCrmApi(argv);
+      const crmContext = getCrmContext(argv);
       const data = JSON.parse(argv.data);
-      const result = await crmApi.updateRecord({ module: argv.module, data });
+      const result = await zohoCrmUpdateRecord(crmContext)({ module: argv.module, data });
       outputResult(result);
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -130,13 +125,12 @@ const crmDeleteCommand: CommandModule = {
   builder: (yargs: Argv) => withModule(yargs).option('ids', { type: 'string', demandOption: true, describe: 'Comma-separated record IDs to delete' }),
   handler: async (argv: any) => {
     try {
-      const crmApi = getCrmApi(argv);
+      const crmContext = getCrmContext(argv);
       const ids = (argv.ids as string).split(',').map((id: string) => id.trim());
-      const result = await crmApi.deleteRecord({ module: argv.module, ids });
+      const result = await zohoCrmDeleteRecord(crmContext)({ module: argv.module, ids });
       outputResult(result);
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -147,12 +141,11 @@ const crmEmailsCommand: CommandModule = {
   builder: (yargs: Argv) => withPagination(withRecordId(withModule(yargs))),
   handler: async (argv: any) => {
     try {
-      const crmApi = getCrmApi(argv);
+      const crmContext = getCrmContext(argv);
       const initialInput = { module: argv.module, id: argv.id, page: argv.page, per_page: argv.perPage };
-      await runZohoPaginatedList({ argv, initialInput, fetchPage: (input) => crmApi.getEmailsForRecord(input) });
+      await runZohoPaginatedList({ argv, initialInput, fetchPage: (input) => zohoCrmGetEmailsForRecord(crmContext)(input) });
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -163,12 +156,11 @@ const crmAttachmentsCommand: CommandModule = {
   builder: (yargs: Argv) => withFields(withPagination(withRecordId(withModule(yargs))), true),
   handler: async (argv: any) => {
     try {
-      const crmApi = getCrmApi(argv);
+      const crmContext = getCrmContext(argv);
       const initialInput = { module: argv.module, id: argv.id, fields: argv.fields, page: argv.page, per_page: argv.perPage };
-      await runZohoPaginatedList({ argv, initialInput, fetchPage: (input) => crmApi.getAttachmentsForRecord(input) });
+      await runZohoPaginatedList({ argv, initialInput, fetchPage: (input) => zohoCrmGetAttachmentsForRecord(crmContext)(input) });
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };

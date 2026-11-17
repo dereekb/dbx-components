@@ -12,6 +12,7 @@ import {
   type ZohoOAuthScope
 } from '@dereekb/zoho';
 import { ZOHO_CLI_PRODUCTS, type ZohoCliProduct } from './cli.config';
+import { zohoCliServerErrorLogger } from '../util/output';
 
 // MARK: Scopes
 /**
@@ -91,7 +92,7 @@ export type ZohoCliAuthorizationCodeExchangeResponse = ZohoAccountsRefreshTokenF
  */
 export async function exchangeZohoAuthorizationCode(input: ExchangeZohoAuthorizationCodeInput): Promise<ZohoCliAuthorizationCodeExchangeResponse> {
   const { clientId, clientSecret, region, code, redirectUri } = input;
-  const { oauthClientContext } = zohoAccountsOAuthClientFactory({})({ clientId, clientSecret, apiUrl: region });
+  const { oauthClientContext } = zohoAccountsOAuthClientFactory({ logZohoServerErrorFunction: zohoCliServerErrorLogger('accounts') })({ clientId, clientSecret, apiUrl: region });
   const response = await zohoAccountsRefreshTokenFromAuthorizationCode(oauthClientContext)({ code, redirectUri });
 
   if (!response.refresh_token) {
@@ -122,7 +123,7 @@ export async function loadZohoAuthUserEmail(input: LoadZohoAuthUserEmailInput): 
   let result: Maybe<string>;
 
   try {
-    const { oauthClientContext } = zohoAccountsOAuthClientFactory({})({ clientId, clientSecret, apiUrl: region });
+    const { oauthClientContext } = zohoAccountsOAuthClientFactory({ logZohoServerErrorFunction: zohoCliServerErrorLogger('accounts') })({ clientId, clientSecret, apiUrl: region });
     const userInfo = await zohoAccountsUserInfo(oauthClientContext)({ accessToken });
     result = userInfo.Email ?? undefined;
   } catch {

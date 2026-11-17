@@ -1,9 +1,10 @@
 import type { CommandModule, Argv } from 'yargs';
-import { getDeskApi } from '../../middleware/auth.middleware';
+import { getDeskContext, exitZohoCliCommandWithError } from '../../middleware/auth.middleware';
 import { noop } from '@dereekb/util';
-import { outputResult, outputError } from '../../util/output';
+import { outputResult } from '../../util/output';
 import { withDeskPagination } from '../../util/args';
 import { runPaginatedList, ZOHO_DESK_PAGINATION_ADAPTER } from '../../util/pagination';
+import { zohoDeskCreateTicketComment, zohoDeskDeleteTicketComment, zohoDeskGetTicketCommentById, zohoDeskGetTicketComments } from '@dereekb/zoho';
 
 const commentsListCommand: CommandModule = {
   command: 'list <ticketId>',
@@ -11,11 +12,11 @@ const commentsListCommand: CommandModule = {
   builder: (yargs: Argv) => withDeskPagination(yargs).positional('ticketId', { type: 'string', demandOption: true, describe: 'Ticket ID' }).option('sort-by', { type: 'string', describe: 'Sort field' }),
   handler: async (argv: any) => {
     try {
-      const api = getDeskApi(argv);
+      const deskContext = getDeskContext(argv);
       const initialInput = { ticketId: argv.ticketId, from: argv.from, limit: argv.limit, sortBy: argv.sortBy };
       const outcome = await runPaginatedList({
         initialInput,
-        fetchPage: (input) => api.getTicketComments(input),
+        fetchPage: (input) => zohoDeskGetTicketComments(deskContext)(input),
         adapter: ZOHO_DESK_PAGINATION_ADAPTER,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,
@@ -27,8 +28,7 @@ const commentsListCommand: CommandModule = {
         outputResult(result.data, { from: argv.from, limit: argv.limit, count: result.data?.length });
       }
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -39,12 +39,11 @@ const commentsGetCommand: CommandModule = {
   builder: (yargs: Argv) => yargs.positional('ticketId', { type: 'string', demandOption: true, describe: 'Ticket ID' }).positional('commentId', { type: 'string', demandOption: true, describe: 'Comment ID' }),
   handler: async (argv: any) => {
     try {
-      const api = getDeskApi(argv);
-      const result = await api.getTicketCommentById({ ticketId: argv.ticketId, commentId: argv.commentId });
+      const deskContext = getDeskContext(argv);
+      const result = await zohoDeskGetTicketCommentById(deskContext)({ ticketId: argv.ticketId, commentId: argv.commentId });
       outputResult(result);
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -60,12 +59,11 @@ const commentsCreateCommand: CommandModule = {
       .option('content-type', { type: 'string', default: 'plainText', choices: ['plainText', 'html'] as const, describe: 'Content type' }),
   handler: async (argv: any) => {
     try {
-      const api = getDeskApi(argv);
-      const result = await api.createTicketComment({ ticketId: argv.ticketId, content: argv.content, isPublic: argv.public, contentType: argv.contentType });
+      const deskContext = getDeskContext(argv);
+      const result = await zohoDeskCreateTicketComment(deskContext)({ ticketId: argv.ticketId, content: argv.content, isPublic: argv.public, contentType: argv.contentType });
       outputResult(result);
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };
@@ -76,12 +74,11 @@ const commentsDeleteCommand: CommandModule = {
   builder: (yargs: Argv) => yargs.positional('ticketId', { type: 'string', demandOption: true, describe: 'Ticket ID' }).positional('commentId', { type: 'string', demandOption: true, describe: 'Comment ID' }),
   handler: async (argv: any) => {
     try {
-      const api = getDeskApi(argv);
-      await api.deleteTicketComment({ ticketId: argv.ticketId, commentId: argv.commentId });
+      const deskContext = getDeskContext(argv);
+      await zohoDeskDeleteTicketComment(deskContext)({ ticketId: argv.ticketId, commentId: argv.commentId });
       outputResult({ deleted: true });
     } catch (e) {
-      outputError(e);
-      process.exit(1);
+      await exitZohoCliCommandWithError(e);
     }
   }
 };

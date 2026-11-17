@@ -346,44 +346,43 @@ describe('zoho-cli token source', () => {
 
     it('should override the credentials of the covered products', async () => {
       const { context } = await setupContext();
-      const crmApi = context.crmApi;
-
-      expect(crmApi?.crmContext.config.apiUrl).toBe('https://www.zohoapis.eu/crm');
-      expect(crmApi?.zohoAccountsApi.accountsContext.config.clientId).toBe('');
-      expect(crmApi?.zohoAccountsApi.accountsContext.config.tokenRefresher).toBeDefined();
-      expect(await crmApi?.crmContext.accessTokenStringFactory()).toBe(MINTED_ACCESS_TOKEN);
+      expect(context.crmContext?.config.apiUrl).toBe('https://www.zohoapis.eu/crm');
+      expect(context.productAccounts.crm?.accountsContext.config.clientId).toBe('');
+      expect(context.productAccounts.crm?.accountsContext.config.tokenRefresher).toBeDefined();
+      expect(await context.crmContext?.accessTokenStringFactory()).toBe(MINTED_ACCESS_TOKEN);
     });
 
     it('should keep the credentials of the products the token does not cover', async () => {
       const { context } = await setupContext();
-      const recruitApi = context.recruitApi;
-
-      expect(recruitApi?.recruitContext.config.apiUrl).toBe('https://recruit.zoho.com/recruit');
-      expect(recruitApi?.zohoAccountsApi.accountsContext.config.clientId).toBe('shared-id');
-      expect(recruitApi?.zohoAccountsApi.accountsContext.config.tokenRefresher).toBeUndefined();
-      expect(context.signApi).toBeUndefined();
+      expect(context.recruitContext?.config.apiUrl).toBe('https://recruit.zoho.com/recruit');
+      expect(context.productAccounts.recruit?.accountsContext.config.clientId).toBe('shared-id');
+      expect(context.productAccounts.recruit?.accountsContext.config.tokenRefresher).toBeUndefined();
+      expect(context.signContext).toBeUndefined();
+      expect(context.productAccounts.sign).toBeUndefined();
     });
 
     it('should use the config org id over the hint for a covered org-scoped product', async () => {
       const { context, config, tokenSource } = await setupContext();
 
-      expect(context.deskApi?.deskContext.config.apiUrl).toBe('https://desk.zoho.eu/api/v1');
-      expect(context.deskApi?.deskContext.config.orgId).toBe('config-desk-org');
+      expect(context.deskContext?.config.apiUrl).toBe('https://desk.zoho.eu/api/v1');
+      expect(context.deskContext?.config.orgId).toBe('config-desk-org');
       expect(configuredProducts(config, tokenSource)).toEqual(['recruit', 'crm', 'desk']);
     });
 
-    it('should share one token-source accounts api across the covered products and run the command once', async () => {
+    it('should share one token-source accounts client across the covered products and run the command once', async () => {
       const { context, runs } = await setupContext();
 
-      expect(context.crmApi?.zohoAccountsApi).toBe(context.deskApi?.zohoAccountsApi);
-      await context.crmApi?.crmContext.accessTokenStringFactory();
-      await context.deskApi?.deskContext.accessTokenStringFactory();
+      expect(context.productAccounts.crm).toBeDefined();
+      expect(context.productAccounts.crm).toBe(context.productAccounts.desk);
+      expect(context.productAccounts.crm).not.toBe(context.productAccounts.recruit);
+      await context.crmContext?.accessTokenStringFactory();
+      await context.deskContext?.accessTokenStringFactory();
       expect(runs()).toBe(1);
     });
 
-    it('should re-run the command after a rejected token resets the accounts api', async () => {
+    it('should re-run the command after a rejected token resets the accounts client', async () => {
       const { context, runs } = await setupContext();
-      const loadAccessToken = context.crmApi!.zohoAccountsApi.accountsContext.loadAccessToken;
+      const loadAccessToken = context.productAccounts.crm!.accountsContext.loadAccessToken;
 
       await loadAccessToken();
       await loadAccessToken.resetAccessToken();
@@ -409,8 +408,58 @@ describe('zoho-cli token source', () => {
       const context = createCliContext(config, tokenSource);
 
       expect(tokenSource?.source.apiMode).toBe('sandbox');
-      expect(context.crmApi?.crmContext.config.apiUrl).toBe('https://crmsandbox.zoho.eu/crm');
-      expect(context.deskApi?.deskContext.config.apiUrl).toBe('https://desk.zoho.eu/api/v1');
+      expect(context.crmContext?.config.apiUrl).toBe('https://crmsandbox.zoho.eu/crm');
+      expect(context.deskContext?.config.apiUrl).toBe('https://desk.zoho.eu/api/v1');
+    });
+
+    describe('resetCachedTokens()', () => {
+      function cachedOwnToken(accessToken: string) {
+        return { accessToken, apiDomain: 'https://www.zohoapis.com', scope: 'ZohoRecruit.modules.ALL', expiresIn: 3600, expiresAt: new Date(Date.now() + MS_IN_HOUR).toISOString() };
+      }
+
+      it("should remove the token source's cached token for a covered product and keep the product keys", async () => {
+        const { context, command, runs } = await setupContext();
+        const tokenSourceKey = zohoCliTokenSourceCacheKey(command);
+
+        await context.crmContext?.accessTokenStringFactory();
+        expect(readTokenFile()[tokenSourceKey]).toBeDefined();
+
+        // an own-credential product entry written next to it must survive
+        writeFileSync(getTokenCachePath(), JSON.stringify({ ...readTokenFile(), recruit: cachedOwnToken('recruit-token') }));
+
+        await context.resetCachedTokens(['crm']);
+
+        const file = readTokenFile();
+        expect(file[tokenSourceKey]).toBeUndefined();
+        expect(file['recruit']).toBeDefined();
+
+        // the next request mints a new token instead of reading the rejected one back
+        await context.crmContext?.accessTokenStringFactory();
+        expect(runs()).toBe(2);
+      });
+
+      it("should remove only an own-credential product's own cached token", async () => {
+        const { context, command } = await setupContext();
+        const tokenSourceKey = zohoCliTokenSourceCacheKey(command);
+
+        await context.crmContext?.accessTokenStringFactory();
+        writeFileSync(getTokenCachePath(), JSON.stringify({ ...readTokenFile(), recruit: cachedOwnToken('recruit-token'), sign: cachedOwnToken('sign-token') }));
+
+        // the own grant reads its token from the file
+        expect(await context.recruitContext?.accessTokenStringFactory()).toBe('recruit-token');
+
+        await context.resetCachedTokens(['recruit']);
+
+        const file = readTokenFile();
+        expect(file['recruit']).toBeUndefined();
+        expect(file['sign']).toBeDefined();
+        expect(file[tokenSourceKey]).toBeDefined();
+      });
+
+      it('should ignore products that have no client', async () => {
+        const { context } = await setupContext();
+        await expect(context.resetCachedTokens(['sign', 'analytics'])).resolves.toBeUndefined();
+      });
     });
   });
 
