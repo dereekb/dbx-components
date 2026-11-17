@@ -96,10 +96,14 @@ export interface McpReasonParameterConfig {
  * Filter applied to the OIDC provider's advertised scope list when building the MCP
  * protected-resource metadata's `scopes_supported`. Receives every scope the provider
  * issues to an arbitrary client (from `OidcProviderConfigService.clientRequestableScopesSupported`)
- * and returns the subset to advertise. Supplied via {@link McpModuleConfig.scopesSupported};
+ * and returns the list to advertise. Supplied via {@link McpModuleConfig.scopesSupported};
  * when unset, all of them are advertised.
+ *
+ * The argument is NOT the full scope registry: every assignment-only scope (one only an
+ * admin-assigned provider profile unlocks) has already been removed. To advertise such a scope,
+ * the filter must APPEND it. A predicate that only keeps it returns a list without it, with no error.
  */
-export type McpScopesSupportedFilter = (allScopes: readonly OidcScope[]) => readonly OidcScope[];
+export type McpScopesSupportedFilter = (requestableScopes: readonly OidcScope[]) => readonly OidcScope[];
 
 /**
  * Configuration for the firebase-server/mcp module.
@@ -157,7 +161,13 @@ export abstract class McpModuleConfig {
    * authorization call; with none advertised they authorize with no `scope`, leaving
    * the OIDC provider nothing to grant and ending the interaction in `access_denied`.
    *
-   * @example (allScopes) => allScopes.filter((scope) => scope === 'openid' || scope.startsWith('model.'))
+   * To add a gated scope back, APPEND it: the base list never contains one, so
+   * `scopes.filter((scope) => ... || scope === CLI_TOKEN_OIDC_SCOPE)` cannot advertise
+   * `token.cli`. A spec that hands the filter `Object.keys(providerConfig.claims)` hides this
+   * mistake, because that list still holds the gated scopes. Test with the requestable list instead.
+   *
+   * @example (scopes) => scopes.filter((scope) => scope === 'openid' || scope.startsWith('model.'))
+   * @example (scopes) => (scopes.includes(CLI_TOKEN_OIDC_SCOPE) ? scopes : [...scopes, CLI_TOKEN_OIDC_SCOPE])
    */
   readonly scopesSupported?: McpScopesSupportedFilter;
 
