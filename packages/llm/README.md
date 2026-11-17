@@ -273,6 +273,86 @@ const strategies = makeLlmStrategyRegistry(makeLlmProviderStrategies({ providers
 const decisions = makeLlmDecisionStrategies({ providers, adapters, routePreference: ['zenmux', 'openrouter'] });
 ```
 
+## Prompt building
+
+The contracts a prompt is built against: the capability a call is made for, the slot layout that orders a prompt, the
+contributor seam that supplements it, the live context a capability renders and the templates that supply authored
+text. The assembly that turns them into bytes lands next.
+
+- **Capabilities.** An `LlmCapabilityDescriptor` is one capability's reply contract: its key, its reply protocol (`json`,
+  `json-envelope` or `line`; `resolveLlmReplyProtocol` applies request, then descriptor, then the host default), its
+  routing and output controls (it fits the routing compile and the model precedence as-is), the arktype schema and
+  parser, the schema projections the output contract and `response_format` read, a frames policy keyed by slot id, and
+  `traits` — the host's own flags, which the library never reads.
+- **Dispatch.** `LlmDispatchRequest` is what a capability hands a dispatcher (the live-context renderer, overrides, a
+  validator, a critic, a site, the parent call context, `meta`, an abort `signal`). `LlmDispatcher` dispatches it or
+  prepares an `LlmPrompt`, which executes once and chains follow-ups onto the same thread (`ExecutedLlmPrompt`). Hosts
+  extend the request and result types and pass them as `R` and `X`.
+- **Reply checks.** `LlmLeverValidator` (sync: is it well-formed?), `LlmCritic` (async and billed: is it good? never
+  throws) and `LlmReplyFastFixer` (one cheap call that repairs a mangled JSON reply from the scorer's `LlmReplyJsonShape`).
+- **Layout.** `LlmPromptLayout` is an ordered array of slots `{ id, role, occupancy, separator, lastSeparator? }`. The
+  array is the prompt order; a role only says what fills a slot. `makeLlmPromptLayout` validates one, and
+  `DEFAULT_LLM_PROMPT_LAYOUT` names every slot after its role.
+- **Contributors.** An `LlmPromptContributor` reads the request, descriptor, model and templates once per dispatch and
+  offers contributions for the slots it declares. `resolveLlmPromptContributions` runs contributors in registry order;
+  `assertLlmPromptContributionOccupancy` fails loud on an undeclared slot, an assembly-owned slot or a second
+  contribution to a single slot; `mergeLlmLiveContextContributions` places live-slot contributions among the
+  capability's blocks at their anchors; `llmPromptSupplementsOf` builds a call record's `supplements` rows.
+- **Live context.** `LlmLiveContextBlock`s are keyed sections (`llmLiveContextBlock`, rows blocks, fact rows).
+  `orderLlmLiveContextBlocks` sorts by a sparse rank table with a key tiebreak, so any input order sends the same
+  bytes. `llmChainedFollowUpBody` re-sends only what changed since the thread's last turn.
+- **Templates.** An `LlmPromptTemplateResolver` returns a dispatch's templates per role (`reply-protocol`,
+  `instructions`, `context`, the last split at `{{liveContext}}`) with their `source`, plus a by-key lookup for
+  contributors. `tieredLlmPromptTemplateResolver` is the library's: tiers lowest first, the last definition of a key
+  wins, a capability-scoped template beats a shared one. A host with another cascade supplies its own resolver.
+
+A layout with a host frame slot, one contributor that fills it, and a live-slot contribution anchored among the
+capability's blocks:
+
+```ts
+import { assertLlmPromptContributionOccupancy, type LlmPromptContributor, llmLiveContextBlock, llmLiveContextHeadingBlock, makeLlmPromptLayout, mergeLlmLiveContextContributions, resolveLlmPromptContributions } from '@dereekb/llm';
+import { filterMaybeArrayValues } from '@dereekb/util';
+
+const layout = makeLlmPromptLayout([
+  { id: 'brand-voice', role: 'frame', occupancy: 'single', separator: '\n\n' },
+  { id: 'instructions', role: 'instructions', occupancy: 'single', separator: '\n\n' },
+  { id: 'live', role: 'live', occupancy: 'many', separator: '\n\n', lastSeparator: '' }
+]);
+
+const brandVoice: LlmPromptContributor = {
+  id: 'brand-voice',
+  slots: ['brand-voice', 'live'],
+  resolve: ({ templates }) => ({
+    contributions: [
+      { contributor: 'brand-voice', slot: 'brand-voice', id: 'brand-voice', text: templates.byKey('brand-voice')?.text ?? 'Be warm.', origin: { kind: 'template' }, reason: 'every summarize call speaks in the brand voice' },
+      { contributor: 'brand-voice', slot: 'live', id: 'live', key: 'glossary', text: 'Glossary: SKU = stock-keeping unit.', origin: { kind: 'live-context' }, reason: 'the site supplied a glossary', anchor: { after: 'heading' } }
+    ]
+  })
+};
+
+const blocks = filterMaybeArrayValues([llmLiveContextHeadingBlock(), llmLiveContextBlock({ key: 'subject', lines: ['Subject: a desk lamp'] })]);
+const { contributions } = await resolveLlmPromptContributions([brandVoice], { request, descriptor, templates, liveBlockKeys: blocks.map((block) => block.key) });
+
+assertLlmPromptContributionOccupancy(contributions, layout);
+const live = mergeLlmLiveContextContributions({ blocks, contributions, slot: 'live' }); // heading, glossary, subject
+```
+
+The library's tiered template resolver over a `defaults` and an `app` tier:
+
+```ts
+import { tieredLlmPromptTemplateResolver } from '@dereekb/llm';
+
+const templateResolver = tieredLlmPromptTemplateResolver({
+  tiers: [
+    { source: 'defaults', templates: [{ key: 'instructions', role: 'instructions', text: 'Summarize the input.' }] },
+    { source: 'app', templates: [{ key: 'summarize-instructions', role: 'instructions', capability: 'summarize', text: 'Summarize in two sentences.' }] }
+  ]
+});
+
+const templates = await templateResolver({ request: { capability: 'summarize', renderLiveContext: () => [] }, descriptor: undefined });
+templates.roles.instructions?.source; // 'app'
+```
+
 ## Decisions
 
 A decision is `(state, questions) → answers`: the caller declares the answer space up front as typed questions and
