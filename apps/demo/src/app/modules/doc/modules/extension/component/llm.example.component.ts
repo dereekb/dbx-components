@@ -1,6 +1,6 @@
 import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { AbstractSyncForgeFormDirective, DBX_FORGE_FORM_COMPONENT_TEMPLATE, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule, dbxForgeNumberField, dbxForgeTextAreaField, dbxForgeTextField, dbxForgeValueSelectionField } from '@dereekb/dbx-form';
+import { AbstractSyncForgeFormDirective, DBX_FORGE_FORM_COMPONENT_TEMPLATE, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule, dbxForgeNumberField, dbxForgeRow, dbxForgeTextAreaField, dbxForgeTextField, dbxForgeValueSelectionField } from '@dereekb/dbx-form';
 import { DbxLlmFlowSectionFormBindingTarget, type DbxLlmFlowRunValue, DbxLlmFlowSectionStore } from '@dereekb/dbx-form/llm';
 import { cleanSubscription } from '@dereekb/dbx-core';
 import { DbxButtonComponent } from '@dereekb/dbx-web';
@@ -67,18 +67,25 @@ export class DocExtensionLlmBriefFormComponent extends AbstractSyncForgeFormDire
   readonly formConfig: FormConfig = {
     fields: [
       dbxForgeTextField({ key: 'topic', label: 'Topic', hint: 'What to write about. Include "fail" or "date" to see a failed run or the non-JSON output error.' }),
-      dbxForgeValueSelectionField({
-        key: 'tone',
-        label: 'Tone',
-        props: {
-          options: [
-            { label: 'Casual', value: 'casual' },
-            { label: 'Formal', value: 'formal' },
-            { label: 'Playful', value: 'playful' }
-          ]
-        }
+      dbxForgeRow({
+        fields: [
+          {
+            ...dbxForgeValueSelectionField({
+              key: 'tone',
+              label: 'Tone',
+              props: {
+                options: [
+                  { label: 'Casual', value: 'casual' },
+                  { label: 'Formal', value: 'formal' },
+                  { label: 'Playful', value: 'playful' }
+                ]
+              }
+            }),
+            col: 6
+          },
+          { ...dbxForgeNumberField({ key: 'paragraphs', label: 'Paragraphs', min: 1, max: 6 }), col: 6 }
+        ]
       }),
-      dbxForgeNumberField({ key: 'paragraphs', label: 'Paragraphs', min: 1, max: 6 }),
       dbxForgeTextAreaField({ key: 'notes', label: 'Notes', rows: 2 })
     ]
   } as FormConfig;

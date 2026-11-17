@@ -4,6 +4,7 @@ import {
   type DbxLlmFlowStateContext,
   dbxLlmFlowRunLineage,
   dbxLlmFlowRunsWithInterruptedRuns,
+  dbxLlmFlowSectionInputSource,
   dbxLlmFlowSectionRunAvailability,
   dbxLlmFlowSectionRunRequest,
   dbxLlmFlowStateWithCompletedRun,
@@ -71,6 +72,14 @@ function run(flow: TestFlow, sectionKey: DbxLlmFlowSectionKey, runId: string, ou
 
 function paste(flow: TestFlow, key: DbxLlmFlowSectionKey, rawInput: string) {
   flow.state = dbxLlmFlowStateWithPastedRawInput(flow.state, { key, rawInput }, flow.context);
+}
+
+function type(flow: TestFlow, key: DbxLlmFlowSectionKey, rawInput: string) {
+  flow.state = dbxLlmFlowStateWithPastedRawInput(flow.state, { key, rawInput, typed: true }, flow.context);
+}
+
+function inputSource(flow: TestFlow, key: DbxLlmFlowSectionKey) {
+  return dbxLlmFlowSectionInputSource(flow.state.sections[key], flow.context.sectionConfig(key));
 }
 
 const FORM_A: DbxLlmFlowAnySectionConfig = { key: 'a', hasForm: true, initialDraft: { formValue: { topic: 'cats' } } };
@@ -366,6 +375,63 @@ describe('llm.flow.state', () => {
       const state = flow.state;
       paste(flow, 'a', 'x');
       expect(flow.state).toBe(state);
+    });
+
+    it('should parse typed two-way text into the form value and keep the text as typed', () => {
+      const flow = makeFlow([FORM_A]);
+      type(flow, 'a', '{"topic":"dogs"}');
+      const section = flow.state.sections['a'];
+      expect(section.draft.formValue).toEqual({ topic: 'dogs' });
+      expect(section.draft.rawInput).toBe('{"topic":"dogs"}');
+      expect(section.draft.rawInputOverridden).toBe(false);
+      expect(inputSource(flow, 'a')).toBe('form');
+    });
+
+    it('should override the form with typed two-way text that does not parse, until it parses', () => {
+      const flow = makeFlow([FORM_A]);
+      type(flow, 'a', '{"topic":');
+      expect(flow.state.sections['a'].draft.rawInputOverridden).toBe(true);
+      expect(flow.state.sections['a'].rawInputParseError).toBeDefined();
+      expect(inputSource(flow, 'a')).toBe('manual');
+
+      type(flow, 'a', '{"topic":"dogs"}');
+      expect(flow.state.sections['a'].draft.rawInputOverridden).toBe(false);
+      expect(flow.state.sections['a'].rawInputParseError).toBeUndefined();
+      expect(flow.state.sections['a'].draft.formValue).toEqual({ topic: 'dogs' });
+    });
+
+    it('should ignore typed text in one-way mode', () => {
+      const flow = makeFlow([{ ...FORM_A, rawInput: { mode: 'one-way' } }]);
+      const state = flow.state;
+      type(flow, 'a', 'x');
+      expect(flow.state).toBe(state);
+    });
+
+    it('should mark text typed over a parent output as manual, and revert it to the parent output', () => {
+      const flow = makeFlow([FORM_A, TEXT_B]);
+      expect(inputSource(flow, 'b')).toBe('none');
+
+      run(flow, 'a', 'a1', 'outline');
+      expect(flow.state.sections['b'].draft.rawInput).toBe('outline');
+      expect(inputSource(flow, 'b')).toBe('parent');
+
+      type(flow, 'b', 'my outline');
+      expect(flow.state.sections['b'].draft.rawInputOverridden).toBe(true);
+      expect(inputSource(flow, 'b')).toBe('manual');
+
+      flow.state = dbxLlmFlowStateWithRevertedRawInput(flow.state, 'b', flow.context);
+      expect(flow.state.sections['b'].draft.rawInput).toBe('outline');
+      expect(flow.state.sections['b'].draft.rawInputOverridden).toBe(false);
+      expect(inputSource(flow, 'b')).toBe('parent');
+    });
+
+    it('should replace manual text when a new parent run completes', () => {
+      const flow = makeFlow([FORM_A, TEXT_B]);
+      run(flow, 'a', 'a1', 'outline');
+      type(flow, 'b', 'my outline');
+      run(flow, 'a', 'a2', 'outline 2');
+      expect(flow.state.sections['b'].draft.rawInput).toBe('outline 2');
+      expect(inputSource(flow, 'b')).toBe('parent');
     });
   });
 

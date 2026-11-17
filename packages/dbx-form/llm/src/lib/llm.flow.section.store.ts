@@ -1,7 +1,7 @@
 import { inject, Injectable, type OnDestroy, signal } from '@angular/core';
 import { type DestroyFunction, type Maybe } from '@dereekb/util';
 import { filterMaybe } from '@dereekb/rxjs';
-import { BehaviorSubject, combineLatest, distinctUntilChanged, filter, map, type Observable, shareReplay, switchMap } from 'rxjs';
+import { BehaviorSubject, combineLatest, distinctUntilChanged, filter, map, type Observable, of, shareReplay, switchMap } from 'rxjs';
 import {
   type DbxLlmFlowAnySectionConfig,
   type DbxLlmFlowFormBindingId,
@@ -18,10 +18,11 @@ import {
   DbxLlmFlowSectionFormBindingTarget,
   type DbxLlmFlowSectionFormPopoutMode,
   type DbxLlmFlowSectionInput,
+  type DbxLlmFlowSectionInputSource,
   type DbxLlmFlowSectionKey,
   type DbxLlmFlowSectionState
 } from './llm.flow';
-import { dbxLlmFlowSectionRawInputMode, dbxLlmFlowSectionSelectedRuns } from './llm.flow.state';
+import { dbxLlmFlowSectionInputSource, dbxLlmFlowSectionRawInputMode, dbxLlmFlowSectionSelectedRuns } from './llm.flow.state';
 import { DbxLlmFlowStore, type DbxLlmFlowStoreStartRunResult } from './llm.flow.store';
 
 /**
@@ -96,6 +97,33 @@ export class DbxLlmFlowSectionStore<F = unknown, O = unknown> extends DbxLlmFlow
   readonly rawInputOverridden$: Observable<boolean> = this.draft$.pipe(
     map((x) => Boolean(x?.rawInputOverridden)),
     distinctUntilChanged()
+  );
+
+  /**
+   * Where the raw input comes from: the form, the parent's output, or manual input.
+   */
+  readonly inputSource$: Observable<DbxLlmFlowSectionInputSource> = combineLatest([this.section$, this.config$]).pipe(
+    map(([section, config]) => dbxLlmFlowSectionInputSource(section, config)),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  /**
+   * Whether the section follows a parent run.
+   */
+  readonly followsParentRun$: Observable<boolean> = this.section$.pipe(
+    map((x) => x?.followedParentRunId != null),
+    distinctUntilChanged()
+  );
+
+  /**
+   * The parent section's config, if the section has a registered parent.
+   */
+  readonly parentConfig$: Observable<Maybe<DbxLlmFlowAnySectionConfig>> = this.section$.pipe(
+    map((x) => x?.parentKey),
+    distinctUntilChanged(),
+    switchMap((parentKey) => (parentKey == null ? of(undefined) : this.flowStore.sectionConfig$(parentKey))),
+    shareReplay(1)
   );
 
   readonly rawInputMode$: Observable<DbxLlmFlowRawInputMode> = this.config$.pipe(map(dbxLlmFlowSectionRawInputMode), distinctUntilChanged());
@@ -329,8 +357,12 @@ export class DbxLlmFlowSectionStore<F = unknown, O = unknown> extends DbxLlmFlow
     this.flowStore.setRawInput(this.key, rawInput);
   }
 
-  revertRawInputToForm(): void {
-    this.flowStore.revertRawInputToForm(this.key);
+  /**
+   * Clears the raw input override and regenerates the raw input from the form value, or from the followed parent run's output for a section
+   * without a form.
+   */
+  revertRawInput(): void {
+    this.flowStore.revertRawInput(this.key);
   }
 
   // MARK: Form Binding

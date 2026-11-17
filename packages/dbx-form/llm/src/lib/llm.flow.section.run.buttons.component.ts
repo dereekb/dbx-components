@@ -13,12 +13,8 @@ import { DbxLlmFlowSectionRunDirective } from './llm.flow.section.run.directive'
 export const DEFAULT_DBX_LLM_FLOW_SECTION_RUN_BUTTON_STYLE: DbxButtonStyle = { type: 'raised', color: 'primary' };
 
 /**
- * Default run button icon.
- */
-export const DEFAULT_DBX_LLM_FLOW_SECTION_RUN_BUTTON_ICON = 'play_arrow';
-
-/**
- * Renders one action button per run kind of the nearest section.
+ * Renders one action button per run kind of the nearest section, stacked in a column. Each button's text, icon and style come from its run
+ * kind config. Buttons have no icon unless the kind sets one.
  *
  * Each button is its own dbxAction, with the kind's handler and a dbxLlmFlowSectionRun bridge that records the run in the flow store.
  *
@@ -50,7 +46,6 @@ export class DbxLlmFlowSectionRunButtonsComponent {
         ({
           ...k,
           text: k.text ?? k.kind,
-          icon: k.icon ?? DEFAULT_DBX_LLM_FLOW_SECTION_RUN_BUTTON_ICON,
           buttonStyle: k.buttonStyle ?? DEFAULT_DBX_LLM_FLOW_SECTION_RUN_BUTTON_STYLE
         }) as const
     )

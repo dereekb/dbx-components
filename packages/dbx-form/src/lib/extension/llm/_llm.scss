@@ -9,6 +9,7 @@
 // --dbx-llm-flow-section-border: border of a section.
 // --dbx-llm-flow-output-max-height: max height of the default output before it scrolls.
 // --dbx-llm-flow-mono-font-family: font family of the raw input and the default output.
+// --dbx-llm-flow-run-buttons-min-width: min width of the run buttons beside the raw input.
 @mixin core() {
   .dbx-llm-flow {
     display: flex;
@@ -50,10 +51,11 @@
     }
   }
 
+  // one button per run kind, stacked
   .dbx-llm-flow-section-run-buttons {
     display: inline-flex;
-    flex-wrap: wrap;
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch;
     gap: var(--dbx-padding-2);
   }
 
@@ -61,8 +63,48 @@
   .dbx-llm-flow-section-raw-input {
     display: block;
 
+    // the field, with projected content (the run buttons) to its right. Centered, so content that takes the field's content-box height lines
+    // up with the outlined box inside the field's vertical padding.
+    .dbx-llm-flow-section-raw-input-row {
+      display: flex;
+      align-items: center;
+      gap: var(--dbx-padding-2);
+    }
+
     .dbx-llm-flow-section-raw-input-field {
-      width: 100%;
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
+    // run buttons beside the field share the field's height (dbxHeightSyncFollower sets it)
+    // stacked buttons split the height, so they may shrink below the default button height to fit a short field
+    .dbx-llm-flow-section-raw-input-row > .dbx-llm-flow-section-run-buttons {
+      display: flex;
+      flex: 0 0 auto;
+      gap: var(--dbx-padding-1);
+      min-width: var(--dbx-llm-flow-run-buttons-min-width, 120px);
+
+      > dbx-button {
+        display: flex;
+        flex: 1 1 0;
+        min-height: 0;
+
+        > dbx-progress-spinner-button {
+          display: flex;
+          flex: 1 1 auto;
+          min-height: 0;
+        }
+
+        .mat-mdc-button-base {
+          width: 100%;
+          height: 100%;
+          min-height: 0;
+        }
+      }
+    }
+
+    .dbx-llm-flow-section-raw-input-hint {
+      margin-top: var(--dbx-padding-1);
     }
 
     .dbx-llm-flow-section-raw-input-textarea {
@@ -77,11 +119,38 @@
     }
   }
 
-  .dbx-llm-flow-section-raw-input.dbx-llm-flow-section-raw-input-overridden .dbx-llm-flow-section-raw-input-override {
-    padding: var(--dbx-padding-1) var(--dbx-padding-2);
-    margin-bottom: var(--dbx-padding-1);
-    border-radius: var(--mat-sys-corner-small);
-    background: var(--mat-sys-surface-container-high);
+  .dbx-llm-flow-section-raw-input {
+    .dbx-llm-flow-section-raw-input-source {
+      display: flex;
+      align-items: center;
+      gap: var(--dbx-padding-1);
+      min-height: 32px;
+      margin-bottom: var(--dbx-padding-1);
+      color: var(--mat-sys-on-surface-variant);
+
+      .dbx-llm-flow-section-raw-input-source-icon {
+        flex: 0 0 auto;
+        width: 18px;
+        height: 18px;
+        font-size: 18px;
+      }
+
+      &[data-source='manual'] {
+        padding: 0 var(--dbx-padding-2);
+        border-radius: var(--mat-sys-corner-small);
+        background: var(--mat-sys-surface-container-high);
+        color: var(--mat-sys-on-surface);
+      }
+    }
+
+    &.dbx-llm-flow-section-raw-input-invalid .dbx-llm-flow-section-raw-input-field {
+      --mat-form-field-outlined-outline-color: var(--mat-sys-error);
+      --mat-form-field-outlined-hover-outline-color: var(--mat-sys-error);
+      --mat-form-field-outlined-focus-outline-color: var(--mat-sys-error);
+      --mat-form-field-outlined-label-text-color: var(--mat-sys-error);
+      --mat-form-field-outlined-hover-label-text-color: var(--mat-sys-error);
+      --mat-form-field-outlined-focus-label-text-color: var(--mat-sys-error);
+    }
   }
 
   // MARK: Output

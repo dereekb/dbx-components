@@ -11,6 +11,7 @@ import {
   DOC_EXTENSION_LLM_BRIEF_TOPIC_MAX_LENGTH,
   DocExtensionLlmBriefFormComponent,
   type DocExtensionLlmBriefFormValue,
+  type DocExtensionLlmBriefTone,
   docExtensionLlmFakeHandler,
   DocExtensionLlmMoodInputComponent,
   type DocExtensionLlmMoodValue,
@@ -68,10 +69,50 @@ function validateBriefInput(value: Maybe<DocExtensionLlmBriefFormValue>): Maybe<
   return message;
 }
 
-export const DOC_EXTENSION_LLM_BRIEF_SECTION: DbxLlmFlowSectionConfig<DocExtensionLlmBriefFormValue, string> = {
+// MARK: Outline JSON
+/**
+ * JSON outline returned by the Brief's "Outline" run. It is the editable input of the Outline section.
+ */
+export interface DocExtensionLlmOutline {
+  readonly topic: string;
+  readonly tone: DocExtensionLlmBriefTone;
+  readonly points: readonly string[];
+}
+
+/**
+ * Parses the Outline section's raw input. Throws when the text is not JSON with a "points" array of strings.
+ *
+ * @param rawInput - The raw input.
+ * @returns The outline.
+ */
+export function parseDocExtensionLlmOutline(rawInput: string): DocExtensionLlmOutline {
+  const parsed = JSON.parse(rawInput) as Maybe<Partial<DocExtensionLlmOutline>>;
+
+  if (!Array.isArray(parsed?.points) || !parsed.points.every((x) => typeof x === 'string')) {
+    throw new Error('"points" must be an array of strings.');
+  }
+
+  return parsed as DocExtensionLlmOutline;
+}
+
+function validateOutlineInput(rawInput: string): Maybe<string> {
+  let message: Maybe<string>;
+
+  if (rawInput.trim()) {
+    try {
+      parseDocExtensionLlmOutline(rawInput);
+    } catch (e) {
+      message = `The outline is not valid: ${(e as Error).message}`;
+    }
+  }
+
+  return message;
+}
+
+export const DOC_EXTENSION_LLM_BRIEF_SECTION: DbxLlmFlowSectionConfig<DocExtensionLlmBriefFormValue, DocExtensionLlmOutline | string> = {
   key: 'brief',
   label: 'Brief',
-  hint: 'A forge form with a two-way JSON raw input: paste JSON into the raw input to fill the form, or anything else to override it.',
+  hint: 'A forge form with a two-way JSON raw input: type or paste JSON into the raw input to fill the form. Text that is not valid JSON overrides the form until it parses.',
   formComponent: DocExtensionLlmBriefFormComponent,
   initialDraft: { formValue: { topic: 'Tide pools', tone: 'casual', paragraphs: 3 } },
   validateInput: (input) => validateBriefInput(input.formValue),
@@ -80,12 +121,12 @@ export const DOC_EXTENSION_LLM_BRIEF_SECTION: DbxLlmFlowSectionConfig<DocExtensi
     {
       kind: 'plan',
       text: 'Outline',
-      icon: 'format_list_numbered',
       handler: docExtensionLlmFakeHandler((value) => {
         const formValue = value.input.formValue;
         const paragraphs = Math.max(1, Math.min(6, formValue?.paragraphs ?? 3));
         const topic = briefTopic(formValue);
-        return Array.from({ length: paragraphs }, (_, i) => `${i + 1}. ${topic}: point ${i + 1} (${formValue?.tone ?? 'casual'})`).join('\n');
+        const outline: DocExtensionLlmOutline = { topic, tone: formValue?.tone ?? 'casual', points: Array.from({ length: paragraphs }, (_, i) => `${topic}: point ${i + 1}`) };
+        return outline;
       })
     },
     {
@@ -106,21 +147,19 @@ export const DOC_EXTENSION_LLM_OUTLINE_SECTION: DbxLlmFlowSectionConfig<unknown,
   key: 'outline',
   parentKey: 'brief',
   label: 'Outline',
-  hint: 'No form: the Outline run text becomes this editable raw input. Follows only the "Outline" run kind, so a quick draft does not cascade here.',
+  hint: 'No form: the JSON outline from the Brief\'s "Outline" run becomes this editable input (fromParentOutput). Edit the JSON directly: validateInput shows an error and blocks Expand until it is JSON with a "points" array. Follows only the "Outline" run kind, so a quick draft does not cascade here.',
   followParentKinds: ['plan'],
-  rawInput: { mode: 'editable', minRows: 4 },
+  rawInput: { mode: 'editable', minRows: 6, label: 'Outline JSON' },
+  fromParentOutput: ({ parentOutput }) => ({ rawInput: defaultDbxLlmFlowToRawInput(parentOutput) }),
+  validateInput: (input) => validateOutlineInput(input.rawInput),
   kinds: [
     {
       kind: 'run',
       text: 'Expand',
-      icon: 'edit_note',
-      handler: docExtensionLlmFakeHandler((value) =>
-        value.input.rawInput
-          .split('\n')
-          .filter((x) => x.trim())
-          .map((x) => `${x.replace(/^\d+\.\s*/, '')}. This paragraph expands the point with supporting detail.`)
-          .join('\n\n')
-      )
+      handler: docExtensionLlmFakeHandler((value) => {
+        const outline = parseDocExtensionLlmOutline(value.input.rawInput);
+        return outline.points.map((point) => `${point}. This ${outline.tone} paragraph expands the point with supporting detail.`).join('\n\n');
+      })
     }
   ]
 };
@@ -131,7 +170,7 @@ export const DOC_EXTENSION_LLM_DRAFT_SECTION: DbxLlmFlowSectionConfig<unknown, s
   label: 'Draft',
   hint: 'Read-only raw input from the expanded outline. With auto-run on, a successful Expand runs Polish automatically.',
   rawInput: { mode: 'readonly' },
-  kinds: [{ kind: 'run', text: 'Polish', icon: 'auto_fix_high', handler: docExtensionLlmFakeHandler((value) => `${value.input.rawInput}\n\n(polished)`) }]
+  kinds: [{ kind: 'run', text: 'Polish', handler: docExtensionLlmFakeHandler((value) => `${value.input.rawInput}\n\n(polished)`) }]
 };
 
 // MARK: Lab Configs
@@ -143,8 +182,8 @@ export const DOC_EXTENSION_LLM_PROMPT_SECTION: DbxLlmFlowSectionConfig<DocExtens
   validateInput: (input) => (input.formValue?.moods?.length ? undefined : 'Pick at least one mood.'),
   formPopout: false,
   kinds: [
-    { kind: 'llm', text: 'Compose · billed', icon: 'payments', handler: docExtensionLlmFakeHandler((value) => `A ${(value.input.formValue?.moods ?? []).join(', ')} scene, composed by the LLM.`) },
-    { kind: 'floor', text: 'Compose floor · free', icon: 'memory', buttonStyle: { type: 'stroked' }, handler: docExtensionLlmFakeHandler((value) => `A ${(value.input.formValue?.moods ?? []).join(' and ')} scene.`) }
+    { kind: 'llm', text: 'Compose · billed', handler: docExtensionLlmFakeHandler((value) => `A ${(value.input.formValue?.moods ?? []).join(', ')} scene, composed by the LLM.`) },
+    { kind: 'floor', text: 'Compose floor · free', buttonStyle: { type: 'stroked' }, handler: docExtensionLlmFakeHandler((value) => `A ${(value.input.formValue?.moods ?? []).join(' and ')} scene.`) }
   ]
 };
 
@@ -158,7 +197,6 @@ export const DOC_EXTENSION_LLM_RENDER_SECTION: DbxLlmFlowSectionConfig<unknown, 
     {
       kind: 'render',
       text: 'Render 2',
-      icon: 'image',
       handler: docExtensionLlmFakeHandler((value) => ({ takes: [1, 2].map((i) => ({ id: `${value.runId}-take-${i}`, caption: `Take ${i} of "${value.input.rawInput}"` })) }))
     }
   ]
@@ -180,7 +218,7 @@ export class DocExtensionLlmComponent {
   readonly chainConfigSignal = computed<DbxLlmFlowConfig>(() => {
     const autoRunAfterParent = this.autoRunDraftSignal();
     return {
-      persistence: { storageKey: 'doc-extension-llm-chain' },
+      persistence: { storageKey: 'doc-extension-llm-chain-v2' },
       sections: [DOC_EXTENSION_LLM_BRIEF_SECTION, DOC_EXTENSION_LLM_OUTLINE_SECTION, { ...DOC_EXTENSION_LLM_DRAFT_SECTION, autoRunAfterParent }]
     };
   });

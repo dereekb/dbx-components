@@ -322,7 +322,8 @@ export class DbxLlmFlowStore extends ComponentStore<DbxLlmFlowState> {
   }
 
   /**
-   * Sets typed raw input text. Typed text is never parsed back into the form.
+   * Sets typed raw input text. Ignored in one-way mode. In two-way mode the text is kept as typed and parsed back into the form value when it
+   * parses.
    *
    * @param key - The section key.
    * @param rawInput - The typed text.
@@ -331,7 +332,13 @@ export class DbxLlmFlowStore extends ComponentStore<DbxLlmFlowState> {
     this._updateState((state) => dbxLlmFlowStateWithPastedRawInput(state, { key, rawInput, typed: true }, this.makeContext()));
   }
 
-  revertRawInputToForm(key: DbxLlmFlowSectionKey): void {
+  /**
+   * Clears the raw input override and regenerates the raw input from the form value, or from the followed parent run's output for a section
+   * without a form.
+   *
+   * @param key - The section key.
+   */
+  revertRawInput(key: DbxLlmFlowSectionKey): void {
     this._updateState((state) => dbxLlmFlowStateWithRevertedRawInput(state, key, this.makeContext()));
   }
 

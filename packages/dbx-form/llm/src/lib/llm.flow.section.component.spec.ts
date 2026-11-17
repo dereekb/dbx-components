@@ -117,6 +117,17 @@ describe('DbxLlmFlowSectionComponent', () => {
     expect(buttons.some((x) => x?.includes('Quick draft'))).toBe(true);
   });
 
+  it('should place the run buttons to the right of the raw input field, following its height, and not in the header', () => {
+    const row = briefElement().querySelector('dbx-llm-flow-section-raw-input .dbx-llm-flow-section-raw-input-row') as HTMLElement;
+    expect(row.querySelector(':scope > .dbx-llm-flow-section-raw-input-field')).not.toBeNull();
+    expect(row.querySelector(':scope > dbx-llm-flow-section-run-buttons.dbx-height-sync-follower')).not.toBeNull();
+    expect(briefElement().querySelector('.dbx-llm-flow-section-header dbx-llm-flow-section-run-buttons')).toBeNull();
+  });
+
+  it('should render run buttons without an icon unless the kind sets one', () => {
+    expect(briefElement().querySelector('dbx-llm-flow-section-run-buttons mat-icon')).toBeNull();
+  });
+
   it('should toggle the form', async () => {
     expect(briefElement().querySelector('.dbx-llm-flow-section-body dbx-test-llm-section-form')).not.toBeNull();
 

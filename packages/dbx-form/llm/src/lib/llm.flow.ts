@@ -35,6 +35,16 @@ export type DbxLlmFlowRunRequestId = number;
  */
 export type DbxLlmFlowRunState = 'running' | 'success' | 'failed';
 
+/**
+ * Where a section's raw input comes from.
+ *
+ * - form: generated from the form value.
+ * - parent: generated from the output of the followed parent run.
+ * - manual: typed or pasted. Overrides the form, or the parent's output, when the section has one.
+ * - none: nothing yet. A section without a form is waiting on its parent's first run.
+ */
+export type DbxLlmFlowSectionInputSource = 'form' | 'parent' | 'manual' | 'none';
+
 // MARK: Constants
 export const DEFAULT_DBX_LLM_FLOW_RUN_KIND: DbxLlmFlowRunKind = 'run';
 
@@ -86,7 +96,8 @@ export interface DbxLlmFlowSectionInput<F = unknown> {
    */
   readonly rawInput: string;
   /**
-   * Whether the raw input was pasted/typed over the form value. While overridden, form pushes are ignored and the form is locked.
+   * Whether the raw input was pasted/typed over the generated input: the form value, or the parent's output for a section without a form.
+   * While overridden, form pushes are ignored and the form is locked.
    */
   readonly rawInputOverridden?: Maybe<boolean>;
 }
@@ -227,10 +238,22 @@ export interface DbxLlmFlowRunAvailability {
 }
 
 // MARK: Config
+/**
+ * A run kind of a section, and the run button that triggers it.
+ */
 export interface DbxLlmFlowSectionRunKindConfig<F = unknown, O = unknown> {
   readonly kind: DbxLlmFlowRunKind;
+  /**
+   * Text of the run button. Defaults to the kind.
+   */
   readonly text?: Maybe<string>;
+  /**
+   * Icon of the run button. Defaults to no icon.
+   */
   readonly icon?: Maybe<string>;
+  /**
+   * Style of the run button. Defaults to a raised primary button.
+   */
   readonly buttonStyle?: Maybe<DbxButtonStyle>;
   /**
    * The handler that performs the run. The resolved value is recorded as the run's output.
@@ -241,9 +264,11 @@ export interface DbxLlmFlowSectionRunKindConfig<F = unknown, O = unknown> {
 /**
  * How the raw input reacts to pastes and typing.
  *
- * - two-way: pastes are parsed back into the form value (the default for sections with a form).
- * - one-way: pastes override the raw input; the form is locked or hidden while overridden.
- * - editable: like one-way, and the raw input can also be typed into (the default for sections without a form).
+ * - two-way: typing and pastes are parsed back into the form value. Text that fails to parse overrides the form, with a parse error, until it
+ *   parses (the default for sections with a form).
+ * - one-way: pastes override the raw input; the form is locked or hidden while overridden. The raw input can't be typed into.
+ * - editable: the raw input can be typed into or pasted over, and overrides the form or the parent's output (the default for sections without
+ *   a form).
  * - readonly: the raw input can't be changed.
  */
 export type DbxLlmFlowRawInputMode = 'two-way' | 'one-way' | 'editable' | 'readonly';
@@ -260,6 +285,10 @@ export interface DbxLlmFlowSectionRawInputConfig {
   readonly maxRows?: Maybe<number>;
   readonly label?: Maybe<string>;
   readonly hint?: Maybe<string>;
+  /**
+   * Whether to show where the raw input comes from (the form, the parent's output, or manual input) above the field. Defaults to true.
+   */
+  readonly showSource?: Maybe<boolean>;
 }
 
 export interface DbxLlmFlowFromParentOutputInput<F = unknown, P = unknown> {
@@ -288,6 +317,10 @@ export interface DbxLlmFlowSectionDisplayConfig {
   readonly header?: Maybe<boolean>;
   readonly form?: Maybe<boolean>;
   readonly rawInput?: Maybe<boolean>;
+  /**
+   * The run buttons, one per run kind. They sit to the right of the raw input and take its height, or below the form when the raw input is
+   * hidden.
+   */
   readonly runButtons?: Maybe<boolean>;
   readonly history?: Maybe<boolean>;
   readonly output?: Maybe<boolean>;

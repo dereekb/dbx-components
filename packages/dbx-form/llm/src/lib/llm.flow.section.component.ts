@@ -2,7 +2,7 @@ import { Component, computed, contentChild, DestroyRef, effect, inject, Injector
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatDialog, type MatDialogRef } from '@angular/material/dialog';
 import { cleanSubscription, DbxInjectionComponent } from '@dereekb/dbx-core';
-import { DbxButtonComponent, DbxChipDirective, DbxContentPitDirective, type DbxDetachInstance, DbxDetachService, DbxErrorComponent, type DbxThemeColor } from '@dereekb/dbx-web';
+import { DbxButtonComponent, DbxChipDirective, DbxContentPitDirective, type DbxDetachInstance, DbxDetachService, DbxErrorComponent, DbxHeightSyncFollowerDirective, type DbxThemeColor } from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';
 import { filter, map } from 'rxjs';
 import { type DbxLlmFlowSectionDisplayConfig, type DbxLlmFlowSectionFormPopoutMode } from './llm.flow';
@@ -54,8 +54,11 @@ export function dbxLlmFlowSectionResolvedDisplayConfig(configDisplay: Maybe<DbxL
 }
 
 /**
- * A step of an LLM flow: a header (label, status, form toggle, pop-out, history and run buttons), the form (inside a content pit), the raw
- * input, the last error and the output.
+ * A step of an LLM flow: a header (label, status, form toggle, pop-out and history buttons), the form (inside a content pit), the raw input
+ * with the run buttons to its right, the last error and the output. The section reads top to bottom: input, run, output.
+ *
+ * The run buttons (one per run kind, stacked) take the raw input field's height through dbxHeightSync. When the raw input is hidden, they sit
+ * in an actions row below the form instead.
  *
  * Registers the section through its DbxLlmFlowSectionDirective host directive. Content projected with dbxLlmFlowSectionOutput replaces the
  * default output, and can inject the DbxLlmFlowSectionStore.
@@ -89,9 +92,6 @@ export function dbxLlmFlowSectionResolvedDisplayConfig(configDisplay: Maybe<DbxL
           @if (displaySignal().history) {
             <dbx-llm-flow-section-history-button></dbx-llm-flow-section-history-button>
           }
-          @if (displaySignal().runButtons) {
-            <dbx-llm-flow-section-run-buttons></dbx-llm-flow-section-run-buttons>
-          }
         </div>
       </div>
       @if (hintSignal()) {
@@ -105,14 +105,20 @@ export function dbxLlmFlowSectionResolvedDisplayConfig(configDisplay: Maybe<DbxL
         </div>
       }
       @if (displaySignal().rawInput) {
-        <dbx-llm-flow-section-raw-input></dbx-llm-flow-section-raw-input>
+        <dbx-llm-flow-section-raw-input>
+          @if (displaySignal().runButtons) {
+            <dbx-llm-flow-section-run-buttons dbxHeightSyncFollower></dbx-llm-flow-section-run-buttons>
+          }
+        </dbx-llm-flow-section-raw-input>
       }
-      @if (!displaySignal().header && displaySignal().runButtons) {
+      @if (showActionsRowSignal()) {
         <div class="dbx-llm-flow-section-actions">
-          @if (displaySignal().history) {
+          @if (!displaySignal().header && displaySignal().history) {
             <dbx-llm-flow-section-history-button></dbx-llm-flow-section-history-button>
           }
-          <dbx-llm-flow-section-run-buttons></dbx-llm-flow-section-run-buttons>
+          @if (displaySignal().runButtons && !displaySignal().rawInput) {
+            <dbx-llm-flow-section-run-buttons></dbx-llm-flow-section-run-buttons>
+          }
         </div>
       }
       @if (errorSignal(); as error) {
@@ -131,7 +137,7 @@ export function dbxLlmFlowSectionResolvedDisplayConfig(configDisplay: Maybe<DbxL
     '[class.dbx-llm-flow-section-running]': `statusSignal() === 'running'`
   },
   hostDirectives: [{ directive: DbxLlmFlowSectionDirective, inputs: ['dbxLlmFlowSection: config', 'parentKey'] }],
-  imports: [DbxInjectionComponent, DbxButtonComponent, DbxChipDirective, DbxContentPitDirective, DbxErrorComponent, DbxLlmFlowSectionRawInputComponent, DbxLlmFlowSectionRunButtonsComponent, DbxLlmFlowSectionHistoryButtonComponent, DbxLlmFlowSectionOutputComponent]
+  imports: [DbxInjectionComponent, DbxButtonComponent, DbxChipDirective, DbxContentPitDirective, DbxErrorComponent, DbxHeightSyncFollowerDirective, DbxLlmFlowSectionRawInputComponent, DbxLlmFlowSectionRunButtonsComponent, DbxLlmFlowSectionHistoryButtonComponent, DbxLlmFlowSectionOutputComponent]
 })
 export class DbxLlmFlowSectionComponent {
   readonly sectionStore = inject(DbxLlmFlowSectionStore);
@@ -156,6 +162,10 @@ export class DbxLlmFlowSectionComponent {
   readonly formVisibleSignal = this.sectionStore.formVisible;
 
   readonly displaySignal = computed(() => dbxLlmFlowSectionResolvedDisplayConfig(this.configSignal()?.display, this.display()));
+  readonly showActionsRowSignal = computed(() => {
+    const display = this.displaySignal();
+    return (!display.header && display.history) || (display.runButtons && !display.rawInput);
+  });
   readonly labelSignal = computed(() => {
     const config = this.configSignal();
     return config?.label ?? config?.key;

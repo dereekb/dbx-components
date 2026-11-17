@@ -19,6 +19,7 @@ import {
   type DbxLlmFlowRunRequestId,
   type DbxLlmFlowRunValue,
   type DbxLlmFlowSectionInput,
+  type DbxLlmFlowSectionInputSource,
   type DbxLlmFlowSectionKey,
   type DbxLlmFlowSectionRunKindConfig,
   type DbxLlmFlowSectionState,
@@ -74,6 +75,36 @@ export function dbxLlmFlowSectionHasForm(config: Maybe<DbxLlmFlowAnySectionConfi
  */
 export function dbxLlmFlowSectionRawInputMode(config: Maybe<DbxLlmFlowAnySectionConfig>): DbxLlmFlowRawInputMode {
   return config?.rawInput?.mode ?? (dbxLlmFlowSectionHasForm(config) ? 'two-way' : 'editable');
+}
+
+/**
+ * Where the section's raw input comes from.
+ *
+ * - manual: the raw input is overridden, or the section has no form and no parent run but has text.
+ * - form: the section has a form.
+ * - parent: the section has no form and follows a parent run.
+ * - none: the section has no form, follows no parent run and has no text.
+ *
+ * @param section - The section state.
+ * @param config - The section config.
+ * @returns The input source.
+ */
+export function dbxLlmFlowSectionInputSource(section: Maybe<DbxLlmFlowSectionState>, config: Maybe<DbxLlmFlowAnySectionConfig>): DbxLlmFlowSectionInputSource {
+  let source: DbxLlmFlowSectionInputSource;
+
+  if (section?.draft.rawInputOverridden) {
+    source = 'manual';
+  } else if (dbxLlmFlowSectionHasForm(config)) {
+    source = 'form';
+  } else if (section?.followedParentRunId != null) {
+    source = 'parent';
+  } else if (section?.draft.rawInput) {
+    source = 'manual';
+  } else {
+    source = 'none';
+  }
+
+  return source;
 }
 
 /**
@@ -470,7 +501,7 @@ function storeDraftChange(m: DbxLlmFlowStateMutator, key: DbxLlmFlowSectionKey, 
   const hasFormValue = 'formValue' in input;
   const formValueError = hasFormValue ? jsonIssueMessage(input.formValue) : undefined;
   const formValue = hasFormValue && !formValueError ? input.formValue : base.formValue;
-  const rawInputOverridden = dbxLlmFlowSectionHasForm(config) ? Boolean(input.rawInputOverridden ?? (input.rawInput != null && !hasFormValue)) : false;
+  const rawInputOverridden = dbxLlmFlowSectionHasForm(config) ? Boolean(input.rawInputOverridden ?? (input.rawInput != null && !hasFormValue)) : Boolean(input.rawInputOverridden);
   const rawInput = input.rawInput ?? (rawInputOverridden ? base.rawInput : toRawInputForConfig(config, formValue));
   return { draft: { formValue, rawInput, rawInputOverridden }, formValueError };
 }
@@ -481,7 +512,7 @@ function initialSectionDraft(config: Maybe<DbxLlmFlowAnySectionConfig>): DbxLlmF
   return {
     formValue,
     rawInput: initial?.rawInput ?? toRawInputForConfig(config, formValue),
-    rawInputOverridden: dbxLlmFlowSectionHasForm(config) ? Boolean(initial?.rawInputOverridden) : false
+    rawInputOverridden: Boolean(initial?.rawInputOverridden)
   };
 }
 
@@ -547,19 +578,34 @@ function cascadeToChild(m: DbxLlmFlowStateMutator, parentRun: DbxLlmFlowRun, chi
   }
 }
 
+/**
+ * The draft update a section derives from its parent run's output: the config's fromParentOutput(), or a string output as the raw input of a
+ * section without a form.
+ *
+ * @param config - The section config.
+ * @param parentRun - The parent run.
+ * @param draft - The section's current draft.
+ * @returns The update, or undefined to keep the draft.
+ */
+function parentOutputDraftUpdate(config: Maybe<DbxLlmFlowAnySectionConfig>, parentRun: DbxLlmFlowRun, draft: DbxLlmFlowSectionInput): Maybe<Partial<DbxLlmFlowSectionInput>> {
+  const fromParentOutput = config?.fromParentOutput;
+  let update: Maybe<Partial<DbxLlmFlowSectionInput>>;
+
+  if (fromParentOutput) {
+    update = fromParentOutput({ parentRun, parentOutput: parentRun.output, draft });
+  } else if (!dbxLlmFlowSectionHasForm(config) && typeof parentRun.output === 'string') {
+    update = { rawInput: parentRun.output };
+  }
+
+  return update;
+}
+
 function deriveChildFromParentRun(m: DbxLlmFlowStateMutator, parentRun: DbxLlmFlowRun, childKey: DbxLlmFlowSectionKey, origin: Maybe<DbxLlmFlowSelectRunOrigin>): void {
   const config = m.config(childKey);
   const child = m.section(childKey) as DbxLlmFlowSectionState;
   m.updateSection(childKey, { selectedRunIds: [] });
 
-  const fromParentOutput = config?.fromParentOutput;
-  let update: Maybe<Partial<DbxLlmFlowSectionInput>>;
-
-  if (fromParentOutput) {
-    update = fromParentOutput({ parentRun, parentOutput: parentRun.output, draft: child.draft });
-  } else if (!dbxLlmFlowSectionHasForm(config) && typeof parentRun.output === 'string') {
-    update = { rawInput: parentRun.output };
-  }
+  const update = parentOutputDraftUpdate(config, parentRun, child.draft);
 
   if (update != null) {
     applyDraft(m, childKey, storeDraftChange(m, childKey, { rawInputOverridden: false, ...update }, child.draft));
@@ -982,7 +1028,7 @@ export interface DbxLlmFlowPasteRawInputInput {
   readonly key: DbxLlmFlowSectionKey;
   readonly rawInput: string;
   /**
-   * Whether the text was typed (editable mode) rather than pasted. Typed text is never parsed back into the form.
+   * Whether the text was typed rather than pasted. Typed text is ignored in one-way mode, and kept as typed (not regenerated) in two-way mode.
    */
   readonly typed?: Maybe<boolean>;
 }
@@ -990,8 +1036,10 @@ export interface DbxLlmFlowPasteRawInputInput {
 /**
  * Applies pasted (or typed) raw input.
  *
- * - two-way: parses the text back into the form value and regenerates the raw input. A failed parse falls back to one-way with a message.
- * - one-way / editable: keeps the exact text and sets the override (sections with a form only).
+ * - two-way: parses the text back into the form value. A paste regenerates the raw input from the parsed value, while typed text is kept as
+ *   typed. Text that fails to parse overrides the form with a parse error until it parses.
+ * - one-way: keeps the exact pasted text and sets the override. Typed text is ignored.
+ * - editable: keeps the exact text and sets the override.
  * - readonly: ignored.
  *
  * @param state - The state.
@@ -1006,12 +1054,12 @@ export function dbxLlmFlowStateWithPastedRawInput(state: DbxLlmFlowState, input:
   const mode = dbxLlmFlowSectionRawInputMode(config);
   let result = state;
 
-  if (section != null && mode !== 'readonly' && !(input.typed && mode !== 'editable')) {
+  if (section != null && mode !== 'readonly' && !(input.typed && mode === 'one-way')) {
     const m = new DbxLlmFlowStateMutator(state, context);
     const hasForm = dbxLlmFlowSectionHasForm(config);
     let change: Maybe<ApplyDraftInput>;
 
-    if (mode === 'two-way' && hasForm && !input.typed) {
+    if (mode === 'two-way' && hasForm) {
       let parseError: Maybe<string>;
       let parsed: unknown;
 
@@ -1023,12 +1071,12 @@ export function dbxLlmFlowStateWithPastedRawInput(state: DbxLlmFlowState, input:
       }
 
       if (parseError == null) {
-        change = { draft: { formValue: parsed, rawInput: toRawInputForConfig(config, parsed), rawInputOverridden: false } };
+        change = { draft: { formValue: parsed, rawInput: input.typed ? rawInput : toRawInputForConfig(config, parsed), rawInputOverridden: false } };
       } else {
         change = { draft: { formValue: section.draft.formValue, rawInput, rawInputOverridden: true }, rawInputParseError: parseError };
       }
     } else {
-      change = { draft: { formValue: section.draft.formValue, rawInput, rawInputOverridden: hasForm } };
+      change = { draft: { formValue: section.draft.formValue, rawInput, rawInputOverridden: true } };
     }
 
     applyDraft(m, key, change);
@@ -1039,7 +1087,8 @@ export function dbxLlmFlowStateWithPastedRawInput(state: DbxLlmFlowState, input:
 }
 
 /**
- * Clears the raw input override and regenerates the raw input from the form value.
+ * Clears the raw input override and regenerates the raw input: from the form value, or for a section without a form, from the output of the
+ * followed parent run. A section without a form that follows no parent run only clears the override.
  *
  * @param state - The state.
  * @param key - The section key.
@@ -1052,8 +1101,19 @@ export function dbxLlmFlowStateWithRevertedRawInput(state: DbxLlmFlowState, key:
 
   if (section?.draft.rawInputOverridden || section?.rawInputParseError) {
     const m = new DbxLlmFlowStateMutator(state, context);
+    const config = m.config(key);
     const formValue = section.draft.formValue;
-    applyDraft(m, key, { draft: { formValue, rawInput: toRawInputForConfig(m.config(key), formValue), rawInputOverridden: false } });
+    let draft: DbxLlmFlowSectionInput;
+
+    if (dbxLlmFlowSectionHasForm(config)) {
+      draft = { formValue, rawInput: toRawInputForConfig(config, formValue), rawInputOverridden: false };
+    } else {
+      const parentRun = section.followedParentRunId == null ? undefined : m.run(section.followedParentRunId);
+      const update = parentRun == null ? undefined : parentOutputDraftUpdate(config, parentRun, section.draft);
+      draft = { ...section.draft, ...update, rawInputOverridden: false };
+    }
+
+    applyDraft(m, key, { draft });
     result = m.finish();
   }
 

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Component, signal, viewChild } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { waitForMs } from '@dereekb/util';
+import { type Maybe, waitForMs } from '@dereekb/util';
 import { type DbxLlmFlowAnySectionConfig } from './llm.flow';
 import { defaultDbxLlmFlowToRawInput } from './llm.flow.state';
 import { DbxLlmFlowDirective } from './llm.flow.directive';
@@ -14,6 +14,8 @@ const TWO_WAY: DbxLlmFlowAnySectionConfig = {
   initialDraft: { formValue: { topic: 'a' } },
   validateInput: (input) => ((input.formValue as { topic?: string } | undefined)?.topic ? undefined : 'Topic is required.')
 };
+
+const ONE_WAY: DbxLlmFlowAnySectionConfig = { ...TWO_WAY, rawInput: { mode: 'one-way' } };
 
 const EDITABLE: DbxLlmFlowAnySectionConfig = { key: 'outline', rawInput: { mode: 'editable' } };
 
@@ -55,6 +57,30 @@ describe('DbxLlmFlowSectionRawInputComponent', () => {
     return host.section().sectionStore.section?.draft;
   }
 
+  function source(): Maybe<string> {
+    return element().querySelector('.dbx-llm-flow-section-raw-input-source')?.getAttribute('data-source');
+  }
+
+  function issues(): string[] {
+    return Array.from(element().querySelectorAll('.dbx-llm-flow-section-raw-input-issue')).map((x) => x.textContent?.trim() ?? '');
+  }
+
+  function isInvalid(): boolean {
+    return element().querySelector('dbx-llm-flow-section-raw-input')?.classList.contains('dbx-llm-flow-section-raw-input-invalid') ?? false;
+  }
+
+  function beforeInput(): InputEvent {
+    const event = new InputEvent('beforeinput', { cancelable: true, inputType: 'insertText', data: 'x' });
+    textarea().dispatchEvent(event);
+    return event;
+  }
+
+  async function type(text: string): Promise<void> {
+    textarea().value = text;
+    textarea().dispatchEvent(new Event('input', { bubbles: true }));
+    await settle();
+  }
+
   function paste(text: string): Event {
     const event = new Event('paste', { cancelable: true, bubbles: true });
     Object.defineProperty(event, 'clipboardData', { value: { getData: () => text } });
@@ -82,49 +108,69 @@ describe('DbxLlmFlowSectionRawInputComponent', () => {
       await setup(TWO_WAY);
     });
 
-    it('should show the draft raw input', () => {
+    it('should show the draft raw input, generated from the form', () => {
       expect(textarea().value).toBe(defaultDbxLlmFlowToRawInput({ topic: 'a' }));
+      expect(source()).toBe('form');
+      expect(isInvalid()).toBe(false);
     });
 
-    it('should prevent typing', () => {
-      const event = new InputEvent('beforeinput', { cancelable: true, inputType: 'insertText', data: 'x' });
-      textarea().dispatchEvent(event);
-      expect(event.defaultPrevented).toBe(true);
+    it('should allow typing', () => {
+      expect(beforeInput().defaultPrevented).toBe(false);
     });
 
-    it('should parse a pasted value back into the form value', async () => {
-      const event = paste('{"topic":"b"}');
-      await settle();
+    it('should parse typed JSON back into the form value and keep the text as typed', async () => {
+      await type('{"topic":"b"}');
 
-      expect(event.defaultPrevented).toBe(true);
       expect(draft()?.formValue).toEqual({ topic: 'b' });
       expect(draft()?.rawInputOverridden).toBeFalsy();
-      expect(textarea().value).toBe(defaultDbxLlmFlowToRawInput({ topic: 'b' }));
+      expect(textarea().value).toBe('{"topic":"b"}');
+      expect(source()).toBe('form');
     });
 
-    it('should override the form with unparseable text, show the issue, and revert', async () => {
-      paste('not json');
-      await settle();
+    it('should override the form with typed text that does not parse, show the issue and the error state, and revert', async () => {
+      await type('not json');
 
       expect(draft()?.rawInputOverridden).toBe(true);
       expect(textarea().value).toBe('not json');
-      expect(element().querySelector('.dbx-llm-flow-section-raw-input-override')).not.toBeNull();
-      expect(element().querySelectorAll('.dbx-llm-flow-section-raw-input-issue').length).toBeGreaterThan(0);
+      expect(source()).toBe('manual');
+      expect(issues().length).toBeGreaterThan(0);
+      expect(isInvalid()).toBe(true);
 
-      (element().querySelector('.dbx-llm-flow-section-raw-input-override button') as HTMLButtonElement).click();
+      (element().querySelector('.dbx-llm-flow-section-raw-input-revert button') as HTMLButtonElement).click();
       await settle();
 
       expect(draft()?.rawInputOverridden).toBeFalsy();
-      expect(element().querySelector('.dbx-llm-flow-section-raw-input-override')).toBeNull();
+      expect(source()).toBe('form');
+      expect(isInvalid()).toBe(false);
       expect(textarea().value).toBe(defaultDbxLlmFlowToRawInput({ topic: 'a' }));
     });
 
     it('should show validateInput messages', async () => {
-      paste('{}');
+      await type('{}');
+
+      expect(issues()).toContain('Topic is required.');
+      expect(isInvalid()).toBe(true);
+    });
+  });
+
+  describe('one-way', () => {
+    beforeEach(async () => {
+      await setup(ONE_WAY);
+    });
+
+    it('should prevent typing', () => {
+      expect(beforeInput().defaultPrevented).toBe(true);
+    });
+
+    it('should replace the text with a paste and override the form', async () => {
+      const event = paste('free text');
       await settle();
 
-      const issues = Array.from(element().querySelectorAll('.dbx-llm-flow-section-raw-input-issue')).map((x) => x.textContent?.trim());
-      expect(issues).toContain('Topic is required.');
+      expect(event.defaultPrevented).toBe(true);
+      expect(draft()?.rawInputOverridden).toBe(true);
+      expect(textarea().value).toBe('free text');
+      expect(source()).toBe('manual');
+      expect(element().querySelector('.dbx-llm-flow-section-raw-input-revert')).not.toBeNull();
     });
   });
 
@@ -133,16 +179,26 @@ describe('DbxLlmFlowSectionRawInputComponent', () => {
       await setup(EDITABLE);
     });
 
-    it('should allow typing and store the typed text', async () => {
-      const event = new InputEvent('beforeinput', { cancelable: true, inputType: 'insertText', data: 'x' });
-      textarea().dispatchEvent(event);
-      expect(event.defaultPrevented).toBe(false);
+    it('should show that there is no input yet', () => {
+      expect(source()).toBe('none');
+      expect(issues()).toEqual([]);
+    });
 
-      textarea().value = 'hello';
-      textarea().dispatchEvent(new Event('input', { bubbles: true }));
-      await settle();
+    it('should allow typing and store the typed text as manual input', async () => {
+      expect(beforeInput().defaultPrevented).toBe(false);
+
+      await type('hello');
 
       expect(draft()?.rawInput).toBe('hello');
+      expect(source()).toBe('manual');
+      expect(element().querySelector('.dbx-llm-flow-section-raw-input-revert')).toBeNull();
+    });
+  });
+
+  describe('showSource', () => {
+    it('should hide the source message when showSource is false', async () => {
+      await setup({ ...TWO_WAY, rawInput: { showSource: false } });
+      expect(source()).toBeUndefined();
     });
   });
 });

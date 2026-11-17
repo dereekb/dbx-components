@@ -1767,6 +1767,73 @@
       "minimalExample": "<div dbxFlexSize=\"1\"></div>"
     },
     {
+      "slug": "height-sync",
+      "category": "layout",
+      "kind": "directive",
+      "selector": "[dbxHeightSync]",
+      "className": "DbxHeightSyncDirective",
+      "module": "@dereekb/dbx-web",
+      "description": "Groups elements whose heights are kept in sync. Elements marked with {@link DbxHeightSyncSourceDirective} are measured, and elements marked\nwith {@link DbxHeightSyncFollowerDirective} take the tallest source's height. Followers are never measured, so there is no feedback loop.\n\nSources and followers find the group through dependency injection, so they can sit inside child components or projected content.",
+      "inputs": [],
+      "outputs": [],
+      "relatedSlugs": [
+        "height-sync-source",
+        "height-sync-follower",
+        "flex-group"
+      ],
+      "skillRefs": [
+        "dbx__ref__dbx-ui-building-blocks"
+      ],
+      "example": "<div class=\"dbx-flex\" dbxHeightSync>\n  <mat-form-field dbxHeightSyncSource>...</mat-form-field>\n  <dbx-button dbxHeightSyncFollower text=\"Run\"></dbx-button>\n</div>",
+      "minimalExample": "<div dbxHeightSync><textarea dbxHeightSyncSource></textarea><button dbxHeightSyncFollower>Run</button></div>"
+    },
+    {
+      "slug": "height-sync-source",
+      "category": "layout",
+      "kind": "directive",
+      "selector": "[dbxHeightSyncSource]",
+      "className": "DbxHeightSyncSourceDirective",
+      "module": "@dereekb/dbx-web",
+      "description": "Marks an element whose height drives the followers of the nearest {@link DbxHeightSyncDirective}. Measures its height with a ResizeObserver:\nthe border box by default, or the content box with `dbxHeightSyncSource=\"content-box\"`. Does nothing without a group.",
+      "inputs": [
+        {
+          "name": "dbxHeightSyncSource",
+          "type": "Maybe<DbxHeightSyncSourceBox | ''>",
+          "description": "Which box to measure. Defaults to the border box.",
+          "required": false
+        }
+      ],
+      "outputs": [],
+      "relatedSlugs": [
+        "height-sync",
+        "height-sync-follower"
+      ],
+      "skillRefs": [
+        "dbx__ref__dbx-ui-building-blocks"
+      ],
+      "example": "<mat-form-field dbxHeightSyncSource=\"content-box\">...</mat-form-field>",
+      "minimalExample": "<div dbxHeightSync><div dbxHeightSyncSource>Measured</div></div>"
+    },
+    {
+      "slug": "height-sync-follower",
+      "category": "layout",
+      "kind": "directive",
+      "selector": "[dbxHeightSyncFollower]",
+      "className": "DbxHeightSyncFollowerDirective",
+      "module": "@dereekb/dbx-web",
+      "description": "Marks an element that takes the height of the nearest {@link DbxHeightSyncDirective}'s tallest source. Sets a border-box height once a\nsource is measured. Does nothing without a group.",
+      "inputs": [],
+      "outputs": [],
+      "relatedSlugs": [
+        "height-sync",
+        "height-sync-source"
+      ],
+      "skillRefs": [
+        "dbx__ref__dbx-ui-building-blocks"
+      ],
+      "minimalExample": "<div dbxHeightSync><div dbxHeightSyncSource>Measured</div><div dbxHeightSyncFollower>Follows</div></div>"
+    },
+    {
       "slug": "list",
       "category": "list",
       "kind": "component",

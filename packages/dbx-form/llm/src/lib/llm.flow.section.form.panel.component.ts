@@ -2,7 +2,7 @@ import { Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NgTemplateOutlet } from '@angular/common';
 import { cleanSubscription, DBX_INJECTION_COMPONENT_DATA, DbxInjectionComponent } from '@dereekb/dbx-core';
-import { DbxDetachContentComponent, DbxDetachControlsComponent } from '@dereekb/dbx-web';
+import { DbxDetachContentComponent, DbxDetachControlsComponent, DbxHeightSyncFollowerDirective } from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';
 import { distinctUntilChanged, filter, map, pairwise, withLatestFrom } from 'rxjs';
 import { type DbxLlmFlowSectionFormPopoutMode } from './llm.flow';
@@ -22,7 +22,8 @@ export interface DbxLlmFlowSectionFormPanelData {
 }
 
 /**
- * The shared pop-out content of a section: a header, a second live instance of the section's form, the raw input and the run buttons.
+ * The shared pop-out content of a section: a header, a second live instance of the section's form, and the raw input with the run buttons to
+ * its right (or below the form when the raw input is hidden), laid out like the inline section.
  *
  * Created with the section's Injector, so it shares the section store; the form stays in sync with the inline form through the store. It
  * closes through the section store (closeFormPopout()), including on run start when the section's formPopout config sets closeOnRun.
@@ -49,18 +50,21 @@ export interface DbxLlmFlowSectionFormPanelData {
           }
         }
         @if (showRawInputSignal()) {
-          <dbx-llm-flow-section-raw-input></dbx-llm-flow-section-raw-input>
+          <dbx-llm-flow-section-raw-input>
+            <dbx-llm-flow-section-run-buttons dbxHeightSyncFollower></dbx-llm-flow-section-run-buttons>
+          </dbx-llm-flow-section-raw-input>
+        } @else {
+          <div class="dbx-llm-flow-section-form-panel-actions">
+            <dbx-llm-flow-section-run-buttons></dbx-llm-flow-section-run-buttons>
+          </div>
         }
-        <div class="dbx-llm-flow-section-form-panel-actions">
-          <dbx-llm-flow-section-run-buttons></dbx-llm-flow-section-run-buttons>
-        </div>
       </div>
     </ng-template>
   `,
   host: {
     class: 'dbx-llm-flow-section-form-panel'
   },
-  imports: [NgTemplateOutlet, DbxInjectionComponent, DbxDetachContentComponent, DbxDetachControlsComponent, DbxLlmFlowSectionRawInputComponent, DbxLlmFlowSectionRunButtonsComponent]
+  imports: [NgTemplateOutlet, DbxInjectionComponent, DbxDetachContentComponent, DbxDetachControlsComponent, DbxHeightSyncFollowerDirective, DbxLlmFlowSectionRawInputComponent, DbxLlmFlowSectionRunButtonsComponent]
 })
 export class DbxLlmFlowSectionFormPanelComponent {
   readonly sectionStore = inject(DbxLlmFlowSectionStore);
