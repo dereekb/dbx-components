@@ -76,7 +76,11 @@ describe('LLM_SWALLOW_SITES', () => {
       'llm/strategy-readiness.health-check',
       'llm/strategy-readiness.credential-probe',
       'llm/strategy-readiness.provider-status',
-      'llm/craft-judge.decide'
+      'llm/craft-judge.decide',
+      'llm/reply-envelope.decode',
+      'llm/reply-repair.rebuilt-parse',
+      'llm/reply-repair.fast-fix',
+      'llm/critique-reply.judge'
     ]);
   });
 

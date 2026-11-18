@@ -1,7 +1,7 @@
 /**
  * The reply-protocol vocabulary — how a capability's reply is shaped — and the one precedence every reader of it
- * shares (the prompt assembly, the dispatcher and the critique input). The envelope keys a `json-envelope` reply
- * carries are configured beside this vocabulary later.
+ * shares (the prompt assembly, the dispatcher and the critique input). The keys a `json-envelope` reply carries are
+ * `LlmReplyEnvelopeKeys` (`llm.reply.envelope.ts`), whose readers read every protocol; only `json-envelope` declines.
  */
 
 import { type Maybe } from '@dereekb/util';
@@ -10,7 +10,8 @@ import { type Maybe } from '@dereekb/util';
  * Every reply protocol the library reads, in no particular order.
  *
  * - `json` — the reply is the JSON object itself (the lever), described by the prompt's output contract.
- * - `json-envelope` — the reply is a JSON envelope whose configured key carries the lever, and which can decline.
+ * - `json-envelope` — the reply is a JSON envelope whose configured key carries the lever (`LlmReplyEnvelopeKeys`),
+ *   and which can decline — the only protocol that does.
  * - `line` — the reply is one bare line of prose: no JSON and no output contract; the lever is synthesized from it.
  */
 export const LLM_REPLY_PROTOCOLS = ['json', 'json-envelope', 'line'] as const;

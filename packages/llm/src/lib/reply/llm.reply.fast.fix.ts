@@ -1,7 +1,9 @@
 /**
- * The fast-fix seam — one cheap model call that repairs a mangled JSON reply the deterministic tier could not. A host
- * injects an {@link LlmReplyFastFixer} into its dispatcher's config; the dispatcher hands it the broken reply, the
- * scorer's {@link LlmReplyJsonShape} of it, and its own dispatch. Types only, so the dispatcher imports no capability.
+ * The fast-fix seam: types, the capability key and the lane limits, so the dispatcher imports no capability; the fixer
+ * is `makeLlmReplyFastFixer` (`capability/llm.capability.repair.reply.json.ts`). The fast fix is one cheap model call
+ * that repairs a mangled JSON reply the deterministic tier (`repairLlmReplyJson`) could not. A host injects an
+ * {@link LlmReplyFastFixer} into its dispatcher's config; the dispatcher hands it the broken reply, the scorer's
+ * {@link LlmReplyJsonShape} of it, and its own dispatch.
  */
 
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
@@ -9,6 +11,36 @@ import { type LlmCapabilityKey } from '../model/llm.value';
 import { type LlmCallContext } from '../record/llm.call.context';
 import { type LlmCallMeta, type LlmDispatchResult } from '../strategy/llm.strategy';
 import { type LlmReplyJsonShape } from './llm.reply.json.shape';
+
+/**
+ * The fast-fix capability's key. Unchanged from the source because call records, tapes and censuses key on it; declared
+ * here so a dispatcher's recursion guard (never fast-fix the fixer) imports no capability.
+ */
+export const LLM_REPAIR_REPLY_JSON_CAPABILITY: LlmCapabilityKey = 'RepairReplyJson';
+
+/**
+ * The limits of a dispatcher's fast-fix lane.
+ */
+export interface LlmReplyFastFixLimits {
+  /**
+   * The lowest score a `mangled` reply may carry and still be handed to the fast fix — at least half the object is valid
+   * JSON before the first fault, so the fixer corrects a slip rather than reconstructing a reply.
+   */
+  readonly minScore: number;
+  /**
+   * The longest reply the fast fix is handed (chars).
+   */
+  readonly maxChars: number;
+  /**
+   * How many fast-fix calls one subject dispatch may make.
+   */
+  readonly maxPerDispatch: number;
+}
+
+/**
+ * The default fast-fix lane limits — a score of at least 0.5, at most 16,000 chars, one fix per subject dispatch.
+ */
+export const DEFAULT_LLM_REPLY_FAST_FIX_LIMITS: LlmReplyFastFixLimits = { minScore: 0.5, maxChars: 16_000, maxPerDispatch: 1 };
 
 /**
  * The input the dispatcher hands an {@link LlmReplyFastFixer}. The dispatcher supplies the per-attempt facts; the

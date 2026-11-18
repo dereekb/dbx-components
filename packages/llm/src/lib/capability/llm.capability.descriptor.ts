@@ -4,17 +4,18 @@
  * `response_format` read, a frames policy keyed by slot id, and the host's own `traits`.
  *
  * A descriptor EXTENDS the routing ref (`LlmModelRoutingCapabilityRef`) and the model-precedence ref
- * (`LlmCapabilityModelRef`), so it passes to `compileLlmModelRouting` and `resolveLlmCapabilityModel` as-is. A builder
- * (`defineLlmCapability`) that fills the two memoized projections from the schema joins this module later.
+ * (`LlmCapabilityModelRef`), so it passes to `compileLlmModelRouting` and `resolveLlmCapabilityModel` as-is.
+ * `defineLlmCapability` builds one, filling the two memoized projections from the schema.
  */
 
-import { type Maybe } from '@dereekb/util';
+import { cachedGetter, type Maybe } from '@dereekb/util';
 import { type Type } from 'arktype';
 import { type LlmCapabilityModelRef } from '../model/llm.model.precedence';
 import { type LlmModelRoutingCapabilityRef } from '../model/llm.model.routing';
 import { type LlmCapabilityKey } from '../model/llm.value';
 import { type LlmPromptSlotId } from '../prompt/llm.prompt.layout';
 import { type LlmReplyProtocol } from '../reply/llm.reply.protocol';
+import { projectLlmContractSchema, projectLlmResponseSchema } from './llm.capability.schema';
 
 /**
  * Where a capability's frame value comes from when its own request passes none ({@link LlmCapabilityFramePolicy}):
@@ -82,7 +83,8 @@ export interface LlmCapabilityDescriptor<T = unknown, H extends object = object>
   readonly parseLever: (lever: unknown) => Maybe<T>;
   /**
    * The memoized JSON-Schema projection of {@link responseSchema} (hardened with `additionalProperties: false`,
-   * `$schema` dropped) — computed on first call, then cached. What `response_format` carries.
+   * `$schema` dropped) — computed on first call, then cached. What `response_format` carries. {@link defineLlmCapability}
+   * builds it with `projectLlmResponseSchema`.
    */
   readonly responseSchemaHint: () => unknown;
   /**
@@ -93,7 +95,7 @@ export interface LlmCapabilityDescriptor<T = unknown, H extends object = object>
    *
    * The split is the point: the sentences ride the PROMPT (the output contract, which lands in the cache prefix)
    * rather than `response_format` (an API parameter outside the cache split, and one a grammar-constrained
-   * structured-output backend discards).
+   * structured-output backend discards). {@link defineLlmCapability} builds it with `projectLlmContractSchema`.
    */
   readonly contractSchemaHint: () => unknown;
 }
@@ -105,3 +107,58 @@ export interface LlmCapabilityDescriptor<T = unknown, H extends object = object>
  * @typeParam D - The host's descriptor type.
  */
 export type LlmCapabilityDescriptorOf<D extends LlmCapabilityDescriptor = LlmCapabilityDescriptor> = (capability: LlmCapabilityKey) => Maybe<D>;
+
+/**
+ * The input of {@link defineLlmCapability} — every descriptor field except the two schema hints, which it builds.
+ *
+ * @typeParam T - The parsed (host-mapped) capability output.
+ * @typeParam H - The host's own traits.
+ */
+export interface DefineLlmCapabilityConfig<T = unknown, H extends object = object> extends Omit<LlmCapabilityDescriptor<T, H>, 'responseSchemaHint' | 'contractSchemaHint'> {
+  /**
+   * Project the hints from THIS schema (an un-narrowed base) instead of `responseSchema`. arktype's `toJsonSchema()`
+   * throws on a `.narrow` predicate, so a capability whose enforced schema is narrowed shows and sends its base shape.
+   */
+  readonly hintSchema?: Maybe<Type>;
+  /**
+   * Keep the `description` prose in `responseSchemaHint()` (the `response_format` payload). Default `false`: the prose
+   * rides the output contract (`contractSchemaHint()`) instead. Bound once, when the descriptor is defined — a host with
+   * an environment switch reads it itself and passes the value.
+   */
+  readonly describeResponseSchemaHint?: Maybe<boolean>;
+}
+
+/**
+ * Define a capability descriptor, building its two schema hints from the schema: `responseSchemaHint()` (hardened,
+ * descriptions stripped unless `describeResponseSchemaHint`) and `contractSchemaHint()` (hardened, described). Both
+ * project from the SAME source (`hintSchema` when set, else `responseSchema`), so the shape the model is shown cannot
+ * drift from the shape enforced.
+ *
+ * Lazy: defining projects nothing; each hint projects on its first call and is cached. A projection that throws is not
+ * cached, so a later call retries. Every other field passes through unchanged.
+ *
+ * @param config - The descriptor fields, plus `hintSchema` and `describeResponseSchemaHint`.
+ * @returns The capability descriptor.
+ *
+ * @example
+ * ```ts
+ * const SUMMARIZE = defineLlmCapability({
+ *   capability: 'summarize',
+ *   responseSchema: summarySchema,
+ *   parseLever: (lever) => { const out = summarySchema(lever); return out instanceof type.errors ? undefined : out; }
+ * });
+ * ```
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function defineLlmCapability<T = unknown, H extends object = object>(config: DefineLlmCapabilityConfig<T, H>): LlmCapabilityDescriptor<T, H> {
+  const { hintSchema, describeResponseSchemaHint, ...descriptor } = config;
+  const projected = hintSchema ?? config.responseSchema;
+  const describe = describeResponseSchemaHint === true;
+
+  return {
+    ...descriptor,
+    responseSchemaHint: cachedGetter(() => projectLlmResponseSchema(projected, { describe })),
+    contractSchemaHint: cachedGetter(() => projectLlmContractSchema(projected))
+  };
+}

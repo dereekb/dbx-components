@@ -1,7 +1,8 @@
 /**
  * The reply-JSON shape — what a scorer reads off one model reply that should have been a JSON object: a verdict, a
- * score, and the structural faults it found. Types only; the scorer that returns this shape and the deterministic
- * repair tier join this module's folder later. The fast fixer (`LlmReplyFastFixer`) reads it.
+ * score, and the structural faults it found. Types only; the scorer that returns this shape (`scoreLlmReplyJson`) and
+ * the deterministic repair tier (`repairLlmReplyJson`) live in `llm.reply.repair.ts`. The fast fixer
+ * (`LlmReplyFastFixer`) reads it.
  */
 
 /**
@@ -61,7 +62,7 @@ export interface LlmReplyJsonShape {
    */
   readonly faultAt?: number;
   /**
-   * The recorded faults, in order (capped by the scorer).
+   * The recorded faults, in order (capped at `LLM_REPLY_REPAIR_MAX_RECORDED_FAULTS`).
    */
   readonly faults: ReadonlyArray<LlmReplyJsonFault>;
   /**

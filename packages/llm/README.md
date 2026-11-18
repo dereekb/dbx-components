@@ -291,6 +291,7 @@ scopes, prompt handles and chains, a live-context token budget, a cache-prefix w
   extend the request and result types and pass them as `R` and `X`.
 - **Reply checks.** `LlmLeverValidator` (sync: is it well-formed?), `LlmCritic` (async and billed: is it good? never
   throws) and `LlmReplyFastFixer` (one cheap call that repairs a mangled JSON reply from the scorer's `LlmReplyJsonShape`).
+  Reading, repair, schema projection and the critique policy have their own section, Replies.
 - **Layout.** `LlmPromptLayout` is an ordered array of slots `{ id, role, occupancy, separator, lastSeparator? }`. The
   array is the prompt order; a role only says what fills a slot. `makeLlmPromptLayout` validates one, and
   `DEFAULT_LLM_PROMPT_LAYOUT` names every slot after its role.
@@ -539,6 +540,77 @@ const craft = llmCraftPromptContributor<ShopRequest, ShopDescriptor>({
 });
 
 const site = { kind: 'product-page', facts: { category: 'apparel', brand: 'acme' }, inputs: { brief }, judge: makeLlmCraftJudge({ sites, dispatcher }) };
+```
+
+## Replies
+
+What happens to a reply between the strategy and the capability: it is read per its reply protocol, repaired when it
+nearly parses, validated against the capability's schema, and optionally judged by a billed critic. A capability
+descriptor also carries the two schema projections the request and the prompt read.
+
+- **Protocols and reading.** `json`: the parsed object is the lever, never unwrapped and never declined.
+  `json-envelope`: `LlmReplyEnvelopeKeys` (default `lever` / `answerable` / `rationale`); `answerable: false` declines,
+  a hedged decline keeps its lever, and a bare object reads as the lever. `line`: `llmLineReplyLeverOf` lifts the bare
+  line into `{ line }`. `readLlmReplyLever` classifies `lever` / `declined` / `no-json` / `parse-error`; `llmReplyLeverOf`
+  is the thin wrapper and `llmReplyRationaleOf` reads the rationale. The slicer tries the greedy `{…}` slice, then each
+  balanced top-level object, and never invents a brace. An envelope host passes `llmReplyEnvelopeContractIntro(keys)` as
+  its contract intro.
+- **Repair.** `repairLlmReplyJson` / `scoreLlmReplyJson` walk a reply once and give one of four verdicts: `near-miss`
+  (repaired), `mangled`, `truncated-looking` or `not-json` (below a score of 0.2). Ten deterministic ops (closers,
+  commas, stray closers, control escapes, trailing prose, fences; a second pass escapes inner quotes). A reply that ends
+  inside a string or after `:` / `,` / a key / an opener is never repaired. `llmReplyRepairFidelity` gates every repair:
+  nothing invented, and at least 90% of the 12+-char content literals kept.
+- **Fast fix.** `makeLlmReplyFastFixer({ requestOf, metaOf, envelope })` makes one `RepairReplyJson` call
+  (`maxAttempts: 1`), handed only the broken reply, the subject's schema and a one-line diagnosis. It answers `fixed`, or
+  `missed` with `truncated` / `declined` / `unusable` / `fidelity` / `error`, and never throws.
+  `DEFAULT_LLM_REPLY_FAST_FIX_LIMITS`: a score of at least 0.5, at most 16,000 chars, one fix per dispatch.
+- **Validation.** `llmSchemaLeverValidator(schema)` is a pure schema check: `true`, or `{ error }`, which re-asks. A
+  schema-valid but unusable lever is a legitimate "no decision", not a re-ask.
+- **Schema projection.** `defineLlmCapability` builds `responseSchemaHint()` and `contractSchemaHint()`: `$schema`
+  dropped, `additionalProperties: false` on every object, described literal unions folded back to `enum`, union arm
+  prose hoisted, and descriptions stripped from the `response_format` payload (they ride the output contract). Both are
+  lazy and memoized; `hintSchema` projects a `.narrow`ed schema from its base. `describeResponseSchemaHint` keeps the
+  prose in the payload, per descriptor, default off. `normalizeLlmGeneratedSchema` / `hardenLlmResponseSchemaHint`
+  serve request-supplied hints and other projections, such as a tool's input schema.
+- **Critique.** `compileLlmCritiquePolicy` is fail-loud (unknown capability or tag, no target, or the judge itself);
+  a key match beats a tag match, and the first match wins. `llmCriticFor` gives `{}` unless a rule matches, so off is
+  free. `makeLlmSemanticCritic` fails open with `critique-unusable` / `critique-error` breadcrumbs. `composeLlmCritics`
+  runs critics in order and stops at the first rejection. The judge sees the goal, optional evidence, the subject's live
+  context and the reply (both fenced as data), never the subject's instructions. A critiqued capability costs
+  `1 + attempts` calls. Three recursion guards: the judge request carries no critic, the compile refuses the judge, and
+  the dispatcher clamps `maxAttempts >= 1`.
+- **Built-in capabilities.** `LLM_CRITIQUE_REPLY_DESCRIPTOR` / `LLM_REPAIR_REPLY_JSON_DESCRIPTOR` and their default
+  templates `LLM_CRITIQUE_REPLY_TEMPLATE` / `LLM_REPAIR_REPLY_JSON_TEMPLATE`. Register the descriptors in your
+  `descriptorOf`, add the templates as your lowest tier, and override with a higher tier or your own resolver. Spread a
+  descriptor to add your tags, tier or traits.
+- **Swallow sites.** `llm/reply-envelope.decode`, `llm/reply-repair.rebuilt-parse`, `llm/reply-repair.fast-fix` and
+  `llm/critique-reply.judge`, all in `LLM_SWALLOW_SITES`.
+
+```ts
+import { compileLlmCritiquePolicy, defineLlmCapability, LLM_CRITIQUE_REPLY_DESCRIPTOR, LLM_CRITIQUE_REPLY_TEMPLATE, LLM_REPAIR_REPLY_JSON_DESCRIPTOR, LLM_REPAIR_REPLY_JSON_TEMPLATE, llmCriticFor, llmReplyLeverOf, llmSchemaLeverValidator, type LlmCritiqueBinding } from '@dereekb/llm';
+import { type } from 'arktype';
+
+const summarySchema = type({ summary: type('string').describe('two sentences, plain words') });
+const SUMMARIZE = defineLlmCapability({ capability: 'summarize', tags: ['copy'], responseSchema: summarySchema, parseLever: (lever) => {
+  const out = summarySchema(lever);
+  return out instanceof type.errors ? undefined : out;
+} });
+const DESCRIPTORS = [SUMMARIZE, LLM_CRITIQUE_REPLY_DESCRIPTOR, { ...LLM_REPAIR_REPLY_JSON_DESCRIPTOR, tier: 'fast' }];
+const templates = { source: 'llm', templates: [LLM_CRITIQUE_REPLY_TEMPLATE, LLM_REPAIR_REPLY_JSON_TEMPLATE] }; // the lowest tier
+
+const binding: LlmCritiqueBinding = {
+  policy: compileLlmCritiquePolicy({ critique: { rules: [{ tags: ['copy'], tier: 'fast', maxAttempts: 3 }] }, capabilities: DESCRIPTORS }),
+  dispatch: (request) => dispatcher.dispatch(request)
+};
+
+const goal = 'The summary MUST name the product and its price.';
+const result = await dispatcher.dispatch({
+  capability: 'summarize',
+  renderLiveContext,
+  validate: llmSchemaLeverValidator(summarySchema),
+  ...llmCriticFor({ binding, capability: 'summarize', goal })
+});
+const lever = llmReplyLeverOf(result.text);
 ```
 
 ## Decisions
