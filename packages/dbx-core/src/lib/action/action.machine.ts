@@ -1,5 +1,5 @@
 import { type DbxActionContextSourceReference } from './action.reference';
-import { delay, first } from 'rxjs';
+import { delay, take } from 'rxjs';
 import { type ActionContextStoreSource } from './action.store.source';
 import { DbxActionWorkInstanceDelegate } from './action.handler';
 import { DbxActionContextBaseSource } from './action.holder';
@@ -38,13 +38,32 @@ export interface DbxActionContextMachineConfig<T = unknown, O = unknown> {
  * Configurable machine that handles components of the ActionContextStore lifecycle.
  *
  * It can be configured to activate only once before cleaning itself up. It can be used directly as a DbxActionContextSourceReference in cases where it is created as a one-off action.
+ *
+ * The machine can be constructed anywhere; it does not need an injection context. Whoever creates it owns it and calls
+ * {@link DbxActionContextMachine.destroy}, or wraps it in `clean(...)` to tie it to the current injection context.
+ * A one-time-use machine destroys itself shortly after its first success, and the action snackbar destroys the undo
+ * reference it was handed when it closes. Teardown waits until no work is in flight.
+ *
+ * @example
+ * ```ts
+ * // A one-off action, built outside of any injection context:
+ * const machine = new DbxActionContextMachine<number, void>({ oneTimeUse: true, handleValueReady: (value) => api.restore(value) });
+ * machine.triggerWithValue(5); // destroys itself after it succeeds
+ * ```
+ *
+ * @example
+ * ```ts
+ * // A machine owned by a component, destroyed with it:
+ * readonly machine = clean(new DbxActionContextMachine<MyValue, MyResult>({ oneTimeUse: false, handleValueReady: (value) => this.api.save(value) }));
+ * ```
  */
 export class DbxActionContextMachine<T = unknown, O = unknown> extends DbxActionContextBaseSource<T, O> implements DbxActionContextSourceReference<T, O>, Destroyable {
-  private _isShutdown = true;
+  private _isShutdown = false;
 
   private readonly _config: DbxActionContextMachineConfig<T, O>;
   private readonly _handleValueReadySub = new SubscriptionObject();
   private readonly _successSub = new SubscriptionObject();
+  private readonly _oneTimeUseSub = new SubscriptionObject();
 
   constructor(config: DbxActionContextMachineConfig<T, O>, source?: ActionContextStoreSource<T, O>) {
     super(source);
@@ -64,7 +83,7 @@ export class DbxActionContextMachine<T = unknown, O = unknown> extends DbxAction
 
     // If this is a one-time use, then destroy it after the first success comes through.
     if (config.oneTimeUse) {
-      this.sourceInstance.success$.pipe(first(), delay(1000)).subscribe(() => {
+      this._oneTimeUseSub.subscription = this.sourceInstance.success$.pipe(take(1), delay(1000)).subscribe(() => {
         this.destroy();
       });
     }
@@ -74,11 +93,17 @@ export class DbxActionContextMachine<T = unknown, O = unknown> extends DbxAction
     }
   }
 
+  /**
+   * Destroys the machine and queues the teardown of its store. Safe to call more than once.
+   */
   override destroy(): void {
-    super.destroy();
-    this._handleValueReadySub.destroy();
-    this._successSub.destroy();
-    this._isShutdown = true;
+    if (!this._isShutdown) {
+      this._isShutdown = true;
+      super.destroy();
+      this._handleValueReadySub.destroy();
+      this._successSub.destroy();
+      this._oneTimeUseSub.destroy();
+    }
   }
 
   get config() {

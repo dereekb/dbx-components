@@ -1,5 +1,9 @@
 <div class="dbx-action-snackbar" [ngClass]="snackbarStatusClassSignal()">
-  <span>{{ message }}</span>
+  @if (undoErrorSignal(); as undoError) {
+    <dbx-error [error]="undoError"></dbx-error>
+  } @else {
+    <span>{{ message }}</span>
+  }
   <dbx-spacer></dbx-spacer>
   @switch (completeSignal()) {
     @case (true) {

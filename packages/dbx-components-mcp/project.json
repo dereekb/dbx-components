@@ -29,6 +29,7 @@
         "{workspaceRoot}/packages/dbx-cli/generated/dereekb-dbx-form.forge-fields.mcp.generated.json",
         "{workspaceRoot}/packages/dbx-cli/generated/dereekb-dbx-core.pipes.mcp.generated.json",
         "{workspaceRoot}/packages/dbx-cli/generated/dereekb-dbx-core.actions.mcp.generated.json",
+        "{workspaceRoot}/packages/dbx-cli/generated/dereekb-dbx-web.actions.mcp.generated.json",
         "{workspaceRoot}/packages/dbx-cli/generated/dereekb-dbx-core.filters.mcp.generated.json",
         "{workspaceRoot}/packages/dbx-cli/generated/dereekb-util.utils.mcp.generated.json",
         "{workspaceRoot}/packages/dbx-cli/generated/dereekb-util-fetch.utils.mcp.generated.json",

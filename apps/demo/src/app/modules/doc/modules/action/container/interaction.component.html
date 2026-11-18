@@ -76,11 +76,43 @@
       </doc-action-example-tools>
 
       <h4>Undo</h4>
-      <p>The snackbar is has the capability to add an additional action to the state. For the pre-made available states, this is the undo function.</p>
-      <p>Undo Value: {{ undoValue }}</p>
-      <doc-action-example-tools dbxAction [dbxActionSnackbar] dbxActionSnackbarDefault="do" [dbxActionHandler]="handleAction" [dbxActionSnackbarUndo]="getUndoAction" [dbxActionValueStream]="value$">
+      <p>
+        Add
+        <code>[dbxActionSnackbarUndoWork]</code>
+        beside
+        <code>dbxActionSnackbar</code>
+        to offer "Undo" after the action succeeds. Pass the undo work and its value with
+        <code>[dbxActionSnackbarUndoValue]</code>
+        ; the value is read when the action succeeds. Undo is offered for 10 seconds by default, which
+        <code>[dbxActionSnackbarUndoDuration]</code>
+        overrides. In TypeScript,
+        <code>dbxActionSnackbarUndoWork()</code>
+        builds the same undo for
+        <code>[dbxActionSnackbarUndo]</code>
+        .
+      </p>
+      <p>Undo Value: {{ undoValue() }}</p>
+      <doc-action-example-tools dbxAction [dbxActionSnackbar] dbxActionSnackbarDefault="save" [dbxActionHandler]="handleAction" [dbxActionValueStream]="value$" [dbxActionSnackbarUndoWork]="handleUndo" [dbxActionSnackbarUndoValue]="getUndoValue">
         <dbx-button dbxActionButton text="Do Action With Undo"></dbx-button>
       </doc-action-example-tools>
+
+      <h4>Refused Undo</h4>
+      <p>When the undo work is rejected, the snackbar shows the error and stays open so Undo can be retried or the snackbar closed.</p>
+      <doc-action-example-tools dbxAction dbxActionValue [dbxActionSnackbar] dbxActionSnackbarDefault="delete" [dbxActionHandler]="handleAction" [dbxActionSnackbarUndoWork]="handleRefusedUndo">
+        <dbx-button dbxActionButton text="Delete With Refused Undo"></dbx-button>
+      </doc-action-example-tools>
+
+      <h4>Undo In A List</h4>
+      <p>Each row removes itself on Delete, destroying its action. Undo still restores the row, since the undo work belongs to the page.</p>
+      @for (item of undoItems(); track item.id) {
+        <doc-action-example-tools dbxAction [dbxActionValue]="item" [dbxActionSnackbar] dbxActionSnackbarDefault="delete" [dbxActionHandler]="handleRemoveItem" [dbxActionSnackbarUndoWork]="handleRestoreItem" [dbxActionSnackbarUndoValue]="item">
+          <span>{{ item.name }}</span>
+          <dbx-button dbxActionButton text="Delete"></dbx-button>
+        </doc-action-example-tools>
+      } @empty {
+        <p>All items were deleted.</p>
+      }
+      <dbx-button text="Reset Items" (buttonClick)="resetUndoItems()"></dbx-button>
     </doc-feature-example>
 
     <doc-feature-example header="dbxActionSnackbarError" hint="Used to display the action error in the snackbar.">

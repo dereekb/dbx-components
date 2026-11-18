@@ -3,7 +3,7 @@ import { DBX_ACTION_SNACKBAR_DEFAULTS } from './action.snackbar.default';
 import { Service, InjectionToken, type Type, inject } from '@angular/core';
 import { MatSnackBar, type MatSnackBarConfig, type MatSnackBarRef } from '@angular/material/snack-bar';
 import { type Milliseconds, type Maybe, mergeObjects, MS_IN_SECOND } from '@dereekb/util';
-import { type DbxActionSnackbarDisplayConfig, type DbxActionSnackbarType } from './action.snackbar';
+import { DEFAULT_SNACKBAR_UNDO_DIRECTIVE_DURATION, type DbxActionSnackbarDisplayConfig, type DbxActionSnackbarType } from './action.snackbar';
 import { type DbxActionSnackbarGeneratorInput, type DbxMakeActionSnackbarGeneratorConfiguration, makeDbxActionSnackbarDisplayConfigGeneratorFunction } from './action.snackbar.generator';
 
 /**
@@ -42,7 +42,14 @@ export interface DbxActionSnackbarServiceConfig<C = unknown> {
    */
   readonly defaultDuration?: Milliseconds;
   /**
-   * Default duration for snackbars that include an undo action.
+   * Default duration for snackbars that include an undo action. Defaults to {@link DEFAULT_SNACKBAR_UNDO_DIRECTIVE_DURATION}.
+   *
+   * The undo window of an action snackbar is resolved in this order:
+   * 1. the action's own `duration` (e.g. `dbxActionSnackbarUndoDuration`, or the undo config's `duration`)
+   * 2. the display config's `snackbar.duration`
+   * 3. this `defaultUndoDuration`
+   *
+   * An action snackbar is never closed by MatSnackBar's own timer; the snackbar component closes itself only while the action is idle.
    */
   readonly defaultUndoDuration?: Milliseconds;
   /**
@@ -70,6 +77,7 @@ export class DbxActionSnackbarService<C = DbxActionSnackbarComponent> {
       ...inputConfig,
       componentClass: inputConfig.componentClass ?? (DbxActionSnackbarComponent as unknown as Type<C>),
       defaultDuration: inputConfig.defaultDuration || DEFAULT_SNACKBAR_DIRECTIVE_DURATION,
+      defaultUndoDuration: inputConfig.defaultUndoDuration || DEFAULT_SNACKBAR_UNDO_DIRECTIVE_DURATION,
       eventTypeConfigs: mergeObjects([DBX_ACTION_SNACKBAR_DEFAULTS, inputConfig.eventTypeConfigs]) as DbxActionSnackbarEventMakeConfig
     };
   })(inject<Partial<DbxActionSnackbarServiceConfig<C>>>(DBX_ACTION_SNACKBAR_SERVICE_CONFIG, { optional: true }) ?? {});
@@ -85,38 +93,43 @@ export class DbxActionSnackbarService<C = DbxActionSnackbarComponent> {
   /**
    * Opens a new snackbar with the given display configuration, merging with global defaults.
    *
+   * When the config has an action (e.g. "Undo"), the snackbar owns the action's reference and destroys it once the snackbar is dismissed,
+   * including when a newer snackbar replaces it. The action snackbar is not given a MatSnackBar duration; the component closes itself
+   * after the undo window, and only while the action is idle.
+   *
    * @param config - Display configuration for the snackbar content and behavior.
    * @returns A reference to the opened Material snackbar.
    */
   openSnackbar<T = unknown, O = unknown>(config: DbxActionSnackbarDisplayConfig<T, O>): MatSnackBarRef<C> {
-    const { snackbar: inputSnackbarConfig } = config;
-    const { snackbar: defaultSnackbarConfig, defaultDuration } = this.config;
+    const { snackbar: inputSnackbarConfig, action } = config;
+    const { snackbar: defaultSnackbarConfig, defaultDuration, defaultUndoDuration } = this.config;
+    const { duration: snackbarDuration, ...snackbarConfig } = { ...defaultSnackbarConfig, ...inputSnackbarConfig } as MatSnackBarConfig;
 
-    const matSnackbarConfig: MatSnackBarConfig = {
-      ...defaultSnackbarConfig,
-      ...inputSnackbarConfig,
-      data: config
-    };
+    let matSnackbarConfig: MatSnackBarConfig;
 
-    const duration = config.action?.duration ?? matSnackbarConfig.duration ?? defaultDuration ?? DEFAULT_SNACKBAR_DIRECTIVE_DURATION;
-
-    if (config.action) {
-      // Set the duration on the action and create an updated config for the snackbar data
+    if (action) {
+      // The snackbar component closes itself after the undo window, so MatSnackBar is not given a duration.
       const updatedConfig: DbxActionSnackbarDisplayConfig<T, O> = {
         ...config,
         action: {
-          ...config.action,
-          duration
+          ...action,
+          duration: action.duration ?? snackbarDuration ?? defaultUndoDuration ?? DEFAULT_SNACKBAR_UNDO_DIRECTIVE_DURATION
         }
       };
 
-      matSnackbarConfig.data = updatedConfig;
+      matSnackbarConfig = { ...snackbarConfig, data: updatedConfig };
     } else {
-      // The snackbar does not close here. The duration is passed to the component and it will close it.
-      matSnackbarConfig.duration = duration;
+      matSnackbarConfig = { ...snackbarConfig, data: config, duration: snackbarDuration ?? defaultDuration ?? DEFAULT_SNACKBAR_DIRECTIVE_DURATION };
     }
 
-    return this.matSnackBar.openFromComponent(this.componentClass, matSnackbarConfig);
+    const ref = this.matSnackBar.openFromComponent(this.componentClass, matSnackbarConfig);
+
+    if (action) {
+      // The snackbar owns the action reference, and destroys it once it closes.
+      ref.afterDismissed().subscribe(() => action.reference.destroy());
+    }
+
+    return ref;
   }
 
   /**

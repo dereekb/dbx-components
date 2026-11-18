@@ -25,6 +25,7 @@ export abstract class DbxActionContextBaseSource<T = unknown, O = unknown> imple
   private readonly _inputSource: Maybe<SecondaryActionContextStoreSource<T, O>>;
 
   private readonly _store?: ActionContextStore<T, O>;
+  private _destroyed = false;
   private readonly _store$: Observable<ActionContextStore<T, O>>;
   private readonly _instance: DbxActionContextStoreSourceInstance<T, O>;
 
@@ -48,10 +49,20 @@ export abstract class DbxActionContextBaseSource<T = unknown, O = unknown> imple
     this.success$ = this._instance.success$;
   }
 
+  /**
+   * Destroys this source. Safe to call more than once.
+   *
+   * Only the store this source created is torn down; a secondary store borrowed from an input source belongs to its owner.
+   * {@link ActionContextStore.ngOnDestroy} queues the real teardown, which waits until no work is in flight.
+   */
   destroy(): void {
-    if (this._store) {
-      this._store.ngOnDestroy();
-      this._instance.destroy();
+    if (!this._destroyed) {
+      this._destroyed = true;
+
+      if (this._store) {
+        this._store.ngOnDestroy();
+        this._instance.destroy();
+      }
     }
   }
 

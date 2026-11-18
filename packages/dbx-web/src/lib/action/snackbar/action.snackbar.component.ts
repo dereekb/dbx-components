@@ -1,26 +1,31 @@
-import { Component, type AfterViewInit, inject, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, type AfterViewInit, inject, computed } from '@angular/core';
 import { filterMaybe, LoadingStateType } from '@dereekb/rxjs';
 import { shareReplay, switchMap, startWith, Subject, of, filter, map } from 'rxjs';
 import { MatSnackBarRef, MAT_SNACK_BAR_DATA } from '@angular/material/snack-bar';
 import { MS_IN_SECOND, type Maybe } from '@dereekb/util';
-import { type DbxActionSnackbarDisplayConfig, type DbxActionSnackbarActionConfig } from './action.snackbar';
-import { cleanSubscription, DbxActionDirective, type DbxActionSuccessHandlerFunction, DbxActionSourceDirective, DbxActionSuccessHandlerDirective, completeOnDestroy } from '@dereekb/dbx-core';
+import { DEFAULT_SNACKBAR_UNDO_DIRECTIVE_DURATION, type DbxActionSnackbarDisplayConfig, type DbxActionSnackbarActionConfig } from './action.snackbar';
+import { cleanSubscription, DbxActionDirective, type DbxActionSuccessHandlerFunction, DbxActionSourceDirective, DbxActionSuccessHandlerDirective, DbxActionValueDirective, DbxActionButtonDirective, completeOnDestroy } from '@dereekb/dbx-core';
 import { NgClass } from '@angular/common';
 import { DbxButtonComponent } from '../../button/button.component';
 import { DbxButtonSpacerDirective } from '../../button/button.spacer.directive';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxSpacerDirective } from '../../layout/style/spacer.directive';
+import { DbxErrorComponent } from '../../error/error.component';
 
 /**
  * Renders the content of an action snackbar, including a message, optional close button,
- * and an optional interactive action (e.g. "Undo"). Automatically dismisses after the
- * configured duration or after the action completes successfully.
+ * and an optional interactive action (e.g. "Undo").
+ *
+ * When the snackbar has an action, it closes itself after the action's duration, but only while the action is idle,
+ * so an undo that is working is never cut off. After the action succeeds it shows "Success" and closes shortly after.
+ * If the action is rejected, the error replaces the message and the snackbar stays open so the action can be retried or closed.
  *
  * This component is opened programmatically by {@link DbxActionSnackbarService} and is not used directly in templates.
  */
 @Component({
   templateUrl: './action.snackbar.component.html',
-  imports: [NgClass, DbxActionSourceDirective, DbxActionSuccessHandlerDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxSpacerDirective, DbxActionDirective]
+  imports: [NgClass, DbxActionSourceDirective, DbxActionSuccessHandlerDirective, DbxActionValueDirective, DbxActionButtonDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxSpacerDirective, DbxActionDirective, DbxErrorComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxActionSnackbarComponent implements AfterViewInit {
   readonly snackbarRef = inject(MatSnackBarRef<DbxActionSnackbarComponent>);
@@ -47,6 +52,15 @@ export class DbxActionSnackbarComponent implements AfterViewInit {
   );
 
   readonly sourceInstanceSignal = toSignal(this.sourceInstance$);
+  /**
+   * The error of a rejected action. Only set while the action is rejected.
+   */
+  readonly undoErrorSignal = toSignal(
+    this.sourceInstance$.pipe(
+      switchMap((x) => x.loadingState$),
+      map((x) => x.error)
+    )
+  );
   readonly completeSignal = toSignal(this.complete$);
   readonly loadingStateTypeSignal = toSignal(this.loadingStateType$);
   readonly snackbarStatusClassSignal = computed(() => {
@@ -91,12 +105,9 @@ export class DbxActionSnackbarComponent implements AfterViewInit {
   ngAfterViewInit(): void {
     // Responsible for hiding itself if it has an action.
     if (this.hasAction) {
-      setTimeout(
-        () => {
-          this._durationTimeout.next();
-        },
-        this.snackbarData.action?.duration ?? MS_IN_SECOND * 10
-      );
+      setTimeout(() => {
+        this._durationTimeout.next();
+      }, this.snackbarData.action?.duration ?? DEFAULT_SNACKBAR_UNDO_DIRECTIVE_DURATION);
     }
   }
 

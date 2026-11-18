@@ -18,7 +18,7 @@ export const ACTION_PATTERN_PROVIDE_CONTEXT_UP: ActionExamplePattern = {
 <dbx-button text="Submit" dbxActionButton></dbx-button>`,
     full: `// Parent component creates a programmatic action source and exposes it.
 import { Component, signal } from '@angular/core';
-import { DbxActionContextMachine } from '@dereekb/dbx-core';
+import { clean, DbxActionContextMachine } from '@dereekb/dbx-core';
 
 @Component({
   selector: 'app-parent',
@@ -29,14 +29,9 @@ import { DbxActionContextMachine } from '@dereekb/dbx-core';
   \`
 })
 export class ParentComponent {
-  readonly machine = new DbxActionContextMachine<MyValue, MyResult>();
+  // clean() destroys the machine (and its store) with the component.
+  readonly machine = clean(new DbxActionContextMachine<MyValue, MyResult>({ oneTimeUse: false, handleValueReady: (value) => this.api.save(value) }));
   readonly actionSource = signal(this.machine);
-
-  ngOnInit(): void {
-    this.machine.setHandlerFunction((value, ctx) => {
-      ctx.startWorkingWithLoadingStateObservable(this.api.save(value));
-    });
-  }
 }
 
 // Child consumes the inherited context via dbxAction.

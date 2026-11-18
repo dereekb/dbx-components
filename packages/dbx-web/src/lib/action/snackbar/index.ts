@@ -4,4 +4,6 @@ export * from './action.snackbar.directive';
 export * from './action.snackbar.generator';
 export * from './action.snackbar.module';
 export * from './action.snackbar.service';
+export * from './action.snackbar.undo';
+export * from './action.snackbar.undo.directive';
 export * from './action.snackbar';

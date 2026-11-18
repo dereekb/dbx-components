@@ -6,6 +6,8 @@ import { type DbxActionContextStoreSourceInstance } from '../../action.store.sou
 import { DbxActionDirective } from './action.directive';
 import { DbxActionHandlerDirective } from '../state/action.handler.directive';
 import { callbackTest } from '@dereekb/util/test';
+import { ActionContextStore } from '../../action.store';
+import { vi } from 'vitest';
 
 @Component({
   template: `
@@ -52,6 +54,16 @@ describe('DbxActionDirective', () => {
   describe('dbxAction', () => {
     it('should be created', () => {
       expect(directive).toBeDefined();
+    });
+
+    it('should tear down its own store when the host is destroyed', async () => {
+      const ngOnDestroySpy = vi.spyOn(ActionContextStore.prototype, 'ngOnDestroy');
+
+      fixture.destroy();
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      expect(ngOnDestroySpy).toHaveBeenCalled();
+      ngOnDestroySpy.mockRestore();
     });
 
     describe('DbxActionContextStoreSourceInstance', () => {

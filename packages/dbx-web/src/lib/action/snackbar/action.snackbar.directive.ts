@@ -5,20 +5,31 @@ import { type DbxActionSnackbarDisplayConfig, type DbxActionSnackbarEvent, type 
 import { DbxActionSnackbarService } from './action.snackbar.service';
 import { type DbxActionSnackbarDisplayConfigGeneratorFunction, type DbxActionSnackbarGeneratorInput, type DbxActionSnackbarGeneratorUndoInput } from './action.snackbar.generator';
 import { type LoadingState, LoadingStateType, loadingStateType } from '@dereekb/rxjs';
+import { DbxActionSnackbarUndoSource } from './action.snackbar.undo';
 
 /**
  * Displays a Material snackbar notification when the parent action transitions between loading states
  * (loading, success, error). Supports built-in message presets via `dbxActionSnackbarDefault` and
  * custom generator functions via the `dbxActionSnackbar` input.
  *
+ * To offer "Undo" after a success, bind `[dbxActionSnackbarUndoWork]` (see {@link DbxActionSnackbarUndoWorkDirective}) with the undo work,
+ * or pass an undo getter/config to `[dbxActionSnackbarUndo]`. An explicit `[dbxActionSnackbarUndo]` wins over `[dbxActionSnackbarUndoWork]`.
+ * The snackbar destroys the undo reference when it closes.
+ *
  * @dbxWebComponent
  * @dbxWebSlug action-snackbar
  * @dbxWebCategory action
- * @dbxWebRelated action-snackbar-error, action-confirm, error-snackbar
+ * @dbxWebRelated action-snackbar-undo, action-snackbar-error, action-confirm, error-snackbar
  * @dbxWebSkillRefs dbx__ref__dbx-component-patterns
  * @dbxWebMinimalExample ```html
  * <div [dbxActionSnackbar]="fn"></div>
  * ```
+ *
+ * @dbxAction
+ * @dbxActionSlug snackbar
+ * @dbxActionRole directive
+ * @dbxActionStateInteraction WORKING, RESOLVED, REJECTED
+ * @dbxActionConsumesContext
  *
  * @example
  * ```html
@@ -35,6 +46,8 @@ export class DbxActionSnackbarDirective<T = unknown, O = unknown> implements OnI
   readonly dbxActionSnackbarDefault = input<Maybe<DbxActionSnackbarType>>();
   readonly dbxActionSnackbarUndo = input<Maybe<DbxActionSnackbarGeneratorUndoInput<T, O>>>();
   readonly dbxActionSnackbar = input<Maybe<DbxActionSnackbarDisplayConfigGeneratorFunction>, Maybe<DbxActionSnackbarDisplayConfigGeneratorFunction> | ''>(undefined, { transform: transformEmptyStringInputToUndefined });
+
+  private readonly _undoSource = inject<DbxActionSnackbarUndoSource<T, O>>(DbxActionSnackbarUndoSource, { optional: true, self: true });
 
   protected readonly _sub = cleanSubscriptionWithLockSet({ lockSet: this.source.lockSet });
 
@@ -57,7 +70,7 @@ export class DbxActionSnackbarDirective<T = unknown, O = unknown> implements OnI
   protected buildConfigurationForEvent(event: DbxActionSnackbarEvent<O>): Maybe<DbxActionSnackbarDisplayConfig<T, O>> {
     const input: DbxActionSnackbarGeneratorInput<T, O> = {
       event,
-      undo: event.type === LoadingStateType.SUCCESS ? this.dbxActionSnackbarUndo() : undefined // only show undo on success.
+      undo: event.type === LoadingStateType.SUCCESS ? (this.dbxActionSnackbarUndo() ?? this._undoSource?.snackbarUndoInput()) : undefined // only show undo on success.
     };
 
     const snackbarFunction = this.dbxActionSnackbar();

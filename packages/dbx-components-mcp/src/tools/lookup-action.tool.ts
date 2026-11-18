@@ -7,7 +7,7 @@
  *
  * Reads from an {@link ActionRegistry} supplied at construction time —
  * the server bootstrap composes the registry from the bundled
- * `@dereekb/dbx-core` actions manifest plus any external manifests declared
+ * `@dereekb/dbx-core` and `@dereekb/dbx-web` actions manifests plus any external manifests declared
  * in `dbx-mcp.config.json`.
  *
  *   1. `'list'` / `'catalog'` / `'all'` → catalog
@@ -27,7 +27,7 @@ import { toolError, type DbxTool, type ToolResult } from './types.js';
 const DBX_ACTION_LOOKUP_TOOL: Tool = {
   name: 'dbx_action_lookup',
   description: [
-    'Look up the @dereekb/dbx-core action surface — directives, the underlying `ActionContextStore`, and the `DbxActionState` enum.',
+    'Look up the @dereekb/dbx-core action surface (plus the @dereekb/dbx-web action snackbar directives) — directives, the underlying `ActionContextStore`, and the `DbxActionState` enum.',
     '',
     'The `topic` accepts:',
     '  • a registry slug like "handler", "auto-trigger", "action-context-store", "state-working";',
@@ -379,7 +379,7 @@ function code(value: string): string {
 export interface CreateLookupActionToolInput {
   /**
    * Action registry the tool reads from. The server bootstrap supplies this
-   * after loading the bundled `@dereekb/dbx-core` actions manifest plus any
+   * after loading the bundled `@dereekb/dbx-core` and `@dereekb/dbx-web` actions manifests plus any
    * external manifests declared in `dbx-mcp.config.json`.
    */
   readonly registry: ActionRegistry;

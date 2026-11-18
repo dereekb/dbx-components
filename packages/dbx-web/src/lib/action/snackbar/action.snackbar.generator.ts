@@ -31,9 +31,11 @@ export interface DbxActionSnackbarGeneratorUndoInputConfig<T = unknown, O = unkn
   /**
    * How long the undo button remains visible in the snackbar.
    */
-  readonly duration?: Milliseconds;
+  readonly duration?: Maybe<Milliseconds>;
   /**
    * Factory that returns the action context source reference to trigger for undo.
+   *
+   * Called once per success event. The snackbar destroys the returned reference when it closes.
    */
   readonly getUndoAction: Getter<DbxActionContextSourceReference<T, O>>;
 }
@@ -116,9 +118,11 @@ export function makeDbxActionSnackbarDisplayConfigGeneratorFunction(config: DbxM
 
       if (undoInput) {
         let reference: DbxActionContextSourceReference<T, O>;
+        let duration: Maybe<Milliseconds>;
 
         if (typeof undoInput === 'object') {
           reference = undoInput.getUndoAction();
+          duration = undoInput.duration;
         } else {
           reference = getValueFromGetter(undoInput);
         }
@@ -126,7 +130,8 @@ export function makeDbxActionSnackbarDisplayConfigGeneratorFunction(config: DbxM
         if (reference) {
           building.action = {
             button: undoButtonText ?? 'Undo',
-            reference
+            reference,
+            duration
           };
         } else {
           console.error('Expected action source reference was not provided to undo...');

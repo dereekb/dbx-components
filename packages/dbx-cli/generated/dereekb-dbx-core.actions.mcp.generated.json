@@ -10,7 +10,7 @@
       "slug": "action-context-store",
       "className": "ActionContextStore",
       "module": "@dereekb/dbx-core",
-      "description": "NgRx ComponentStore that manages the reactive state machine for a single action lifecycle.\n\nThis is the central state container for the action system. It tracks the full lifecycle\nof an action from idle through trigger, value preparation, work execution, and resolution\nor rejection. Multiple selectors expose derived reactive streams for each phase.\n\nThe store uses a {@link LockSet} for cleanup coordination: it delays its own destruction\nuntil all in-flight work completes (e.g., a working action finishes), preventing\npremature teardown of subscriptions.\n\nState transitions follow this flow:\n```\nIDLE/DISABLED -> TRIGGERED -> VALUE_READY -> WORKING -> RESOLVED | REJECTED\n```",
+      "description": "NgRx ComponentStore that manages the reactive state machine for a single action lifecycle.\n\nThis is the central state container for the action system. It tracks the full lifecycle\nof an action from idle through trigger, value preparation, work execution, and resolution\nor rejection. Multiple selectors expose derived reactive streams for each phase.\n\nThe store does not need an injection context and is not bound to any `DestroyRef`: whoever creates it\ndestroys it by calling {@link ActionContextStore.ngOnDestroy}. Teardown is coordinated through a {@link LockSet},\nso it waits until all in-flight work completes (e.g., a working action finishes), preventing premature teardown\nof subscriptions.\n\nState transitions follow this flow:\n```\nIDLE/DISABLED -> TRIGGERED -> VALUE_READY -> WORKING -> RESOLVED | REJECTED\n```",
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
