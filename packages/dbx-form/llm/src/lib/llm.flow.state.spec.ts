@@ -347,7 +347,7 @@ describe('llm.flow.state', () => {
 
     it('should block an invalid form unless the raw input is overridden', () => {
       const flow = makeFlow([{ ...FORM_A, rawInput: { mode: 'one-way' } }]);
-      flow.state = dbxLlmFlowStateWithFormValid(flow.state, { key: 'a', valid: false });
+      flow.state = dbxLlmFlowStateWithFormValid(flow.state, { key: 'a', valid: false }, flow.context);
       expect(blockedReason(flow, 'a')).toBe('invalid_form');
       paste(flow, 'a', 'free text');
       expect(blockedReason(flow, 'a')).toBeUndefined();
@@ -971,6 +971,22 @@ describe('view-only state', () => {
       setState(flow, 'settings', { size: 2 });
       const loaded = dbxLlmFlowStateWithLoadedRun(flow.state, { runId: 'a1' }, flow.context);
       expect(loaded.state.sections['settings'].draft.formValue).toEqual({ size: 1 });
+    });
+
+    it("should apply a state run loaded from another branch under the followed parent run, and keep the other branch's state run", () => {
+      const flow = makeFlow([FORM_A, SETTINGS]);
+      run(flow, 'a', 'a1', 'x');
+      setState(flow, 'settings', { size: 1 });
+      const a1StateRunId = stateRun(flow, 'settings')?.id as string;
+      run(flow, 'a', 'a2', 'y');
+      setState(flow, 'settings', { size: 2 });
+
+      flow.state = dbxLlmFlowStateWithLoadedRun(flow.state, { runId: a1StateRunId }, flow.context).state;
+      const current = stateRun(flow, 'settings');
+      expect(flow.state.sections['settings'].draft.formValue).toEqual({ size: 1 });
+      expect(current?.parentRunId).toBe('a2');
+      expect(current?.output).toEqual({ size: 1 });
+      expect(flow.state.runs[a1StateRunId]).toBeDefined();
     });
   });
 });

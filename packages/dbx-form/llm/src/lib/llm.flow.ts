@@ -439,6 +439,8 @@ export interface DbxLlmFlowSectionConfig<F = unknown, O = unknown> {
    * - Each change of the state selects its state run and cascades like a parent run that finished, without auto-running children. Returning to
    *   a state that already has runs below it reselects that state run and restores the latest runs made from it. A state run nothing was made
    *   from is replaced instead of kept.
+   * - The selection always matches the state: loading one of the section's state runs from another branch applies its state under the parent
+   *   run the section follows, and keeps the other branch's state run.
    * - While the state is unset or invalid, nothing is selected and the children follow no parent run, so a child with requireParentRun is
    *   blocked until the state is set up.
    */
