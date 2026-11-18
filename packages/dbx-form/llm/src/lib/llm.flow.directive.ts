@@ -11,6 +11,16 @@ import { type DbxLlmFlowPersistedState, DbxLlmFlowStorageSync } from './llm.flow
  *
  * Persistence needs a SimpleStorageAccessorFactory (see provideDbxStorage()). Without one, the flow is not persisted.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug llm-flow-host
+ * @dbxWebCategory layout
+ * @dbxWebRelated llm-flow-section, llm-flow
+ * @dbxWebMinimalExample ```html
+ * <div [dbxLlmFlow]="flowConfig" [storageKey]="worldKey()">
+ *   <dbx-llm-flow-section [config]="briefConfig"></dbx-llm-flow-section>
+ * </div>
+ * ```
+ *
  * @example
  * ```html
  * <div [dbxLlmFlow]="flowConfig" [storageKey]="worldKey()">

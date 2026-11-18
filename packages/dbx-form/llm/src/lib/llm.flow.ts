@@ -2,7 +2,7 @@ import { type Type } from '@angular/core';
 import { type Observable } from 'rxjs';
 import { type Work } from '@dereekb/rxjs';
 import { type ArrayOrValue, type DestroyFunction, type ErrorInput, type JsonCompatible, type Maybe, type ModelIdFactory, type ReadableError, sequentialIncrementingNumberStringModelIdFactory, toReadableError } from '@dereekb/util';
-import { type DbxButtonStyle } from '@dereekb/dbx-web';
+import { type DbxButtonStyle, type DbxColorInput } from '@dereekb/dbx-web';
 import { type FieldDef } from '@ng-forge/dynamic-forms';
 
 // MARK: Keys
@@ -342,6 +342,8 @@ export type DbxLlmFlowSectionFormPopoutMode = 'dialog' | 'detach';
 
 /**
  * Which parts of a section are shown.
+ *
+ * For a section with no runs, set the section config's viewOnly instead of turning the run parts off.
  */
 export interface DbxLlmFlowSectionDisplayConfig {
   readonly header?: Maybe<boolean>;
@@ -355,12 +357,19 @@ export interface DbxLlmFlowSectionDisplayConfig {
   readonly history?: Maybe<boolean>;
   readonly output?: Maybe<boolean>;
   /**
-   * Shows the section's step number in its chain (1 for a root section, plus one per ancestor) in an icon tile before the label, in the
-   * header and in the form pop-out dialog's title.
+   * Shows the section's step number in its chain (1 for a root section, plus one per ancestor, or the number fixed by the section config's
+   * stepNumber) in an icon tile before the label, in the header and in the form pop-out dialog's title.
    *
    * On by default.
    */
   readonly stepNumber?: Maybe<boolean>;
+  /**
+   * Shows the status chip after the label: the page's chip (DbxLlmFlowSectionComponent's statusChip input) when set, otherwise the run status
+   * (Ready, Running, Done or Failed). A view-only section has no run status, so it shows only the page's chip.
+   *
+   * On by default.
+   */
+  readonly status?: Maybe<boolean>;
   /**
    * Shows the collapse/expand button at the end of the header's button row. A collapsed section shows only its header; the hint and
    * everything below stay rendered but hidden, so a running action, the form binding and the raw input keep their state.
@@ -368,6 +377,17 @@ export interface DbxLlmFlowSectionDisplayConfig {
    * On by default. Needs the header.
    */
   readonly collapse?: Maybe<boolean>;
+}
+
+/**
+ * A status chip a page sets on a section, shown after the label in place of the run status. See DbxLlmFlowSectionDisplayConfig.status.
+ */
+export interface DbxLlmFlowSectionStatusChip {
+  readonly text: string;
+  /**
+   * Color of the chip. Defaults to no color.
+   */
+  readonly color?: Maybe<DbxColorInput>;
 }
 
 export interface DbxLlmFlowRunDescription {
@@ -386,7 +406,23 @@ export interface DbxLlmFlowSectionConfig<F = unknown, O = unknown> {
   readonly label?: Maybe<string>;
   readonly hint?: Maybe<string>;
   /**
-   * Run kinds. Defaults to a single "Run" kind.
+   * Whether the section is view-only: a step with no runs, such as a setup bench before the first run step. It shows its header (step number,
+   * label, the page's status chip, hint and collapse button) and the content projected into the section as its body.
+   *
+   * The form, raw input, run buttons, history and output are off unless the display turns them on, the status chip shows only the chip the
+   * page sets (DbxLlmFlowSectionComponent's statusChip input), and kinds is unused. Its collapsed state is kept in the flow state like any
+   * section's, so it persists with the flow, and a page can collapse it with DbxLlmFlowStore.setCollapsed().
+   */
+  readonly viewOnly?: Maybe<boolean>;
+  /**
+   * Fixes the section's step number, shown in its step tile while the display's stepNumber option is on. Descendants count on from it.
+   * Defaults to the number from the chain: 1 for a root section, plus one per ancestor.
+   *
+   * Set 0 to number a setup step that comes before the first run step.
+   */
+  readonly stepNumber?: Maybe<number>;
+  /**
+   * Run kinds. Defaults to a single "Run" kind. Unused by a view-only section.
    */
   readonly kinds?: Maybe<readonly DbxLlmFlowSectionRunKindConfig<F, O>[]>;
   /**

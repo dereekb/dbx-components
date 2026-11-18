@@ -333,6 +333,31 @@ export function dbxLlmFlowSectionAncestorKeys(state: Pick<DbxLlmFlowState, 'sect
 }
 
 /**
+ * Returns the section's step number in its chain: 1 for a root section, plus one per registered ancestor. The nearest fixed stepNumber in
+ * the chain (the section's own config, then its ancestors' nearest first) re-bases the count, so the section numbers on from it.
+ *
+ * @param state - The state.
+ * @param key - The section key.
+ * @param context - Resolves section configs.
+ * @returns The step number.
+ */
+export function dbxLlmFlowSectionStepNumber(state: Pick<DbxLlmFlowState, 'sections'>, key: DbxLlmFlowSectionKey, context: Pick<DbxLlmFlowStateContext, 'sectionConfig'>): number {
+  const chain = [key, ...dbxLlmFlowSectionAncestorKeys(state, key)];
+  let stepNumber = chain.length;
+
+  for (const [index, chainKey] of chain.entries()) {
+    const fixedStepNumber = context.sectionConfig(chainKey)?.stepNumber;
+
+    if (fixedStepNumber != null) {
+      stepNumber = fixedStepNumber + index;
+      break;
+    }
+  }
+
+  return stepNumber;
+}
+
+/**
  * Returns the keys of every registered descendant of the section.
  *
  * @param state - The state.

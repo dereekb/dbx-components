@@ -1,5 +1,5 @@
 <dbx-content-container>
-  <doc-feature-layout header="LLM Flow" hint="@dereekb/dbx-form/llm - Generation flows: sections of form input, raw input, run buttons, history and output, where one step's output seeds the next.">
+  <doc-feature-layout header="LLM Flow" hint="@dereekb/dbx-form/llm - Generation flows: sections of form input, raw input, run buttons, history and output, plus view-only steps with no runs, where one step's output seeds the next.">
     <doc-feature-example
       header="dbx-llm-flow"
       hint="A config-driven chain: Brief → Outline → Draft. Run Outline, then reload an older Brief run from its history to restore every descendant. Pop the Brief form out to a dialog or a floating window: both stay in sync with the inline form. Step numbers marks each section with its place in the chain.">
@@ -31,6 +31,18 @@
             <dbx-llm-flow-section [config]="renderConfig" parentKey="prompt" [display]="{ stepNumber: stepNumberSignal() }"></dbx-llm-flow-section>
           </div>
         </div>
+      </div>
+    </doc-feature-example>
+    <doc-feature-example header="View-only section" hint="A step with no runs, numbered 0: the header (step number, label, the page's status chip, hint and collapse button) with the projected content as its body. It collapses itself once set up, and its collapsed state persists with the flow.">
+      <div #viewOnlyFlow="dbxLlmFlow" dbxLlmFlow storageKey="doc-extension-llm-view-only-v1">
+        <dbx-llm-flow-section [config]="setupConfig" [statusChip]="setupStatusChipSignal()">
+          <div class="dbx-flex-bar">
+            <dbx-button [text]="setupHostedSignal() ? 'Hosted' : 'Host the world'" icon="dns" [buttonStyle]="setupHostedSignal() ? { type: 'flat', color: 'primary' } : { type: 'stroked' }" (buttonClick)="toggleSetupHosted()"></dbx-button>
+            <dbx-button-spacer></dbx-button-spacer>
+            <dbx-button [text]="setupLookSignal() ? 'Look picked' : 'Pick a Look'" icon="palette" [buttonStyle]="setupLookSignal() ? { type: 'flat', color: 'primary' } : { type: 'stroked' }" (buttonClick)="toggleSetupLook()"></dbx-button>
+          </div>
+        </dbx-llm-flow-section>
+        <dbx-llm-flow-section [config]="promptConfig"></dbx-llm-flow-section>
       </div>
     </doc-feature-example>
     <doc-feature-example header="DbxLlmFlowStore State" hint="The live state of the chain above, with the derived run tree.">

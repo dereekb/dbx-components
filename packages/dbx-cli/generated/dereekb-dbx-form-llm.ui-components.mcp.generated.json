@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "source": "@dereekb/dbx-form/llm",
+  "module": "@dereekb/dbx-form/llm",
+  "generatedAt": "1970-01-01T00:00:00.000Z",
+  "generator": "@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs",
+  "entries": [
+    {
+      "slug": "llm-flow",
+      "category": "layout",
+      "kind": "component",
+      "selector": "dbx-llm-flow",
+      "className": "DbxLlmFlowComponent",
+      "module": "@dereekb/dbx-form/llm",
+      "description": "An LLM flow that renders every section of its config, in order, each with its config's explicit parentKey.\n\nProvides the DbxLlmFlowStore through its DbxLlmFlowDirective host directive. Other content is projected after the sections.\n\nA view-only section in the config renders only its header, since a config-rendered section has no projected body. Place view-only sections\nin a template under [dbxLlmFlow] instead.",
+      "inputs": [],
+      "outputs": [],
+      "contentProjection": "<ng-content></ng-content>",
+      "relatedSlugs": [
+        "llm-flow-section",
+        "llm-flow-host"
+      ],
+      "example": "<dbx-llm-flow [config]=\"flowConfig\" [storageKey]=\"worldKey()\"></dbx-llm-flow>",
+      "minimalExample": "<dbx-llm-flow [config]=\"flowConfig\"></dbx-llm-flow>"
+    },
+    {
+      "slug": "llm-flow-host",
+      "category": "layout",
+      "kind": "directive",
+      "selector": "[dbxLlmFlow]",
+      "className": "DbxLlmFlowDirective",
+      "module": "@dereekb/dbx-form/llm",
+      "description": "Provides a DbxLlmFlowStore for the sections within it, and keeps it in sync with storage when a storage key is set.\n\nPersistence needs a SimpleStorageAccessorFactory (see provideDbxStorage()). Without one, the flow is not persisted.",
+      "inputs": [
+        {
+          "name": "dbxLlmFlow",
+          "type": "Maybe<DbxLlmFlowConfig | ''>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "storageKey",
+          "type": "Maybe<string>",
+          "description": "The storage key. Overrides the config's persistence storage key. Switching keys saves the old key, resets the flow, then restores the new key.",
+          "required": false
+        }
+      ],
+      "outputs": [],
+      "relatedSlugs": [
+        "llm-flow-section",
+        "llm-flow"
+      ],
+      "example": "<div [dbxLlmFlow]=\"flowConfig\" [storageKey]=\"worldKey()\">\n  <dbx-llm-flow-section [config]=\"briefConfig\"></dbx-llm-flow-section>\n</div>",
+      "minimalExample": "<div [dbxLlmFlow]=\"flowConfig\" [storageKey]=\"worldKey()\">\n<dbx-llm-flow-section [config]=\"briefConfig\"></dbx-llm-flow-section>\n</div>"
+    },
+    {
+      "slug": "llm-flow-section",
+      "category": "layout",
+      "kind": "component",
+      "selector": "dbx-llm-flow-section",
+      "className": "DbxLlmFlowSectionComponent",
+      "module": "@dereekb/dbx-form/llm",
+      "description": "A step of an LLM flow: a header (label, status, form toggle, pop-out and history buttons), the form (inside a content pit), the raw input\nwith the run buttons to its right, the last error and the output. The section reads top to bottom: input, run, output.\n\nThe run buttons (one per run kind, stacked) take the raw input field's height through dbxHeightSync. When the raw input is hidden, they sit\nin an actions row below the form instead. A section's optionFields render in the raw input's form, under the field, so the run buttons\nstretch to cover the field and the options.\n\nWith the display's stepNumber option on (the default), an icon tile before the label shows the section's step number in its chain: 1 for\na root section, plus one per ancestor. A section config's stepNumber fixes the number (0 works, e.g. for a setup step before the first run\nstep), and its descendants count on from it.\n\nThe status chip after the label shows the run status (Ready, Running, Done or Failed), or the page's chip when the statusChip input is\nset. The display's status option hides it.\n\nThe collapse button at the end of the header's button row (the display's collapse option, on by default) collapses the section to its\nheader. The hint and the body are hidden with CSS, not destroyed, so a running action, the form binding and the raw input keep their state.\nThe collapsed state is kept in the flow state, so a persisted flow restores it.\n\nRegisters the section through its DbxLlmFlowSectionDirective host directive. Content projected with dbxLlmFlowSectionOutput replaces the\ndefault output, and can inject the DbxLlmFlowSectionStore.\n\nThe form pops out to a dialog or a detach window when the section store's popout signal is set. Both are live-synced with the inline form.\n\nA view-only section (the config's viewOnly) has no runs: the header (step number, label, the page's status chip, hint and collapse button)\nand the projected content as its body. Projected content can inject the DbxLlmFlowSectionStore. Its collapsed state persists with the flow;\na page can collapse it once something is set up with DbxLlmFlowStore.setCollapsed().\n\nThe section config is set with the config input and the parent section with the parentKey input, both through the DbxLlmFlowSectionDirective\nhost directive. In the example below, setupConfig is `{ key: 'setup', label: 'Setup', viewOnly: true, stepNumber: 0 }`: a view-only step\nnumbered 0 with a bench projected as its body, before the run steps numbered 1, 2 and 3.",
+      "inputs": [
+        {
+          "name": "display",
+          "type": "Maybe<DbxLlmFlowSectionDisplayConfig>",
+          "description": "Display toggles. Overrides the config's display.",
+          "required": false
+        },
+        {
+          "name": "statusChip",
+          "type": "Maybe<DbxLlmFlowSectionStatusChip>",
+          "description": "The page's status chip, shown after the label in place of the run status. A view-only section shows only this chip. The display's status\noption hides it.",
+          "required": false
+        }
+      ],
+      "outputs": [],
+      "contentProjection": "Default slot: the body content after the output, such as a view-only section's bench. `[dbxLlmFlowSectionOutput]` slot: replaces the default output.",
+      "relatedSlugs": [
+        "llm-flow",
+        "llm-flow-host"
+      ],
+      "example": "<dbx-llm-flow-section [config]=\"setupConfig\" [statusChip]=\"setupStatusChip()\">\n  <app-setup-bench></app-setup-bench>\n</dbx-llm-flow-section>\n<dbx-llm-flow-section [config]=\"briefConfig\"></dbx-llm-flow-section>\n<dbx-llm-flow-section [config]=\"outlineConfig\" parentKey=\"brief\" [display]=\"{ rawInput: false }\"></dbx-llm-flow-section>\n<dbx-llm-flow-section [config]=\"draftConfig\" parentKey=\"outline\" [display]=\"{ status: false }\"></dbx-llm-flow-section>",
+      "minimalExample": "<dbx-llm-flow-section [config]=\"sectionConfig\"></dbx-llm-flow-section>"
+    }
+  ]
+}

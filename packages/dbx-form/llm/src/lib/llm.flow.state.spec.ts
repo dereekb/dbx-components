@@ -9,6 +9,7 @@ import {
   dbxLlmFlowSectionInputSource,
   dbxLlmFlowSectionRunAvailability,
   dbxLlmFlowSectionRunRequest,
+  dbxLlmFlowSectionStepNumber,
   dbxLlmFlowStateWithCompletedRun,
   dbxLlmFlowStateWithConsumedRunRequest,
   dbxLlmFlowStateWithDraft,
@@ -698,5 +699,54 @@ describe('history pruning', () => {
     run(flow, 'a', 'a3', 'three');
 
     expect(Object.keys(flow.state.runs)).toEqual(['a2', 'a3']);
+  });
+});
+
+describe('dbxLlmFlowSectionStepNumber()', () => {
+  function stepNumbers(flow: TestFlow, keys: DbxLlmFlowSectionKey[]): number[] {
+    return keys.map((key) => dbxLlmFlowSectionStepNumber(flow.state, key, flow.context));
+  }
+
+  it('should number a chain without fixed numbers from 1', () => {
+    const flow = makeFlow([{ key: 'a' }, { key: 'b', parentKey: 'a' }, { key: 'c', parentKey: 'b' }]);
+    expect(stepNumbers(flow, ['a', 'b', 'c'])).toEqual([1, 2, 3]);
+  });
+
+  it('should number on from a root fixed at 0', () => {
+    const flow = makeFlow([
+      { key: 'a', stepNumber: 0 },
+      { key: 'b', parentKey: 'a' },
+      { key: 'c', parentKey: 'b' }
+    ]);
+    expect(stepNumbers(flow, ['a', 'b', 'c'])).toEqual([0, 1, 2]);
+  });
+
+  it('should re-base the count from a fixed number in the middle of the chain', () => {
+    const flow = makeFlow([{ key: 'a' }, { key: 'b', parentKey: 'a', stepNumber: 5 }, { key: 'c', parentKey: 'b' }]);
+    expect(stepNumbers(flow, ['a', 'b', 'c'])).toEqual([1, 5, 6]);
+  });
+
+  it('should use the nearest fixed number when several are in the chain', () => {
+    const flow = makeFlow([
+      { key: 'a', stepNumber: 0 },
+      { key: 'b', parentKey: 'a' },
+      { key: 'c', parentKey: 'b', stepNumber: 10 },
+      { key: 'd', parentKey: 'c' }
+    ]);
+    expect(stepNumbers(flow, ['a', 'b', 'c', 'd'])).toEqual([0, 1, 10, 11]);
+  });
+
+  it('should number separate roots independently', () => {
+    const flow = makeFlow([{ key: 'setup', stepNumber: 0 }, { key: 'prompt' }, { key: 'layout', parentKey: 'prompt' }]);
+    expect(stepNumbers(flow, ['setup', 'prompt', 'layout'])).toEqual([0, 1, 2]);
+  });
+
+  it('should use the config of an unregistered section, or 1', () => {
+    const flow = makeFlow([{ key: 'a' }]);
+    const configs: Record<DbxLlmFlowSectionKey, DbxLlmFlowAnySectionConfig> = { fixed: { key: 'fixed', stepNumber: 0 } };
+    const context = { sectionConfig: (key: DbxLlmFlowSectionKey) => configs[key] };
+
+    expect(dbxLlmFlowSectionStepNumber(flow.state, 'fixed', context)).toBe(0);
+    expect(dbxLlmFlowSectionStepNumber(flow.state, 'unknown', context)).toBe(1);
   });
 });

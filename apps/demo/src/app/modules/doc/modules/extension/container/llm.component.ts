@@ -3,7 +3,7 @@ import { JsonPipe } from '@angular/common';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { dbxForgeNumberField } from '@dereekb/dbx-form';
 import { DbxButtonComponent, DbxButtonSpacerDirective, DbxContentContainerDirective, DbxContentPitDirective, DbxFlexGroupDirective, DbxFlexSizeDirective } from '@dereekb/dbx-web';
-import { type DbxLlmFlowConfig, DbxLlmFlowComponent, DbxLlmFlowDirective, type DbxLlmFlowRun, type DbxLlmFlowRunId, DbxLlmFlowSectionComponent, type DbxLlmFlowSectionConfig, type DbxLlmFlowState, defaultDbxLlmFlowToRawInput } from '@dereekb/dbx-form/llm';
+import { type DbxLlmFlowConfig, DbxLlmFlowComponent, DbxLlmFlowDirective, type DbxLlmFlowRun, type DbxLlmFlowRunId, DbxLlmFlowSectionComponent, type DbxLlmFlowSectionConfig, type DbxLlmFlowSectionStatusChip, type DbxLlmFlowState, defaultDbxLlmFlowToRawInput } from '@dereekb/dbx-form/llm';
 import { type Maybe } from '@dereekb/util';
 import { map, of, switchMap } from 'rxjs';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
@@ -229,6 +229,18 @@ export const DOC_EXTENSION_LLM_RENDER_SECTION: DbxLlmFlowSectionConfig<unknown, 
   ]
 };
 
+// MARK: View-only Configs
+/**
+ * A view-only setup step numbered 0: a bench with no runs before the Prompt step.
+ */
+export const DOC_EXTENSION_LLM_SETUP_SECTION: DbxLlmFlowSectionConfig = {
+  key: 'setup',
+  label: 'Setup',
+  hint: 'Host the world and pick a Look before the Prompt. It collapses itself once both are set.',
+  viewOnly: true,
+  stepNumber: 0
+};
+
 export type DocExtensionLlmWorld = 'north' | 'south';
 
 @Component({
@@ -238,6 +250,7 @@ export type DocExtensionLlmWorld = 'north' | 'south';
 export class DocExtensionLlmComponent {
   readonly chainFlow = viewChild(DbxLlmFlowComponent);
   readonly labFlow = viewChild('labFlow', { read: DbxLlmFlowDirective });
+  readonly viewOnlyFlow = viewChild('viewOnlyFlow', { read: DbxLlmFlowDirective });
 
   // MARK: Step Numbers
   /**
@@ -274,6 +287,34 @@ export class DocExtensionLlmComponent {
 
   readonly labStorageKeySignal = computed(() => `doc-extension-llm-lab-${this.worldSignal()}`);
 
+  // MARK: View-only
+  readonly setupConfig = DOC_EXTENSION_LLM_SETUP_SECTION;
+
+  readonly setupHostedSignal = signal(false);
+  readonly setupLookSignal = signal(false);
+
+  readonly setupReadySignal = computed(() => {
+    const hosted = this.setupHostedSignal();
+    const look = this.setupLookSignal();
+    return hosted && look;
+  });
+
+  readonly setupStatusChipSignal = computed<DbxLlmFlowSectionStatusChip>(() => {
+    const ready = this.setupReadySignal();
+    const hosted = this.setupHostedSignal();
+    let chip: DbxLlmFlowSectionStatusChip;
+
+    if (ready) {
+      chip = { text: 'configured', color: 'ok' };
+    } else if (hosted) {
+      chip = { text: 'needs a Look', color: 'warn' };
+    } else {
+      chip = { text: 'not hosted', color: 'warn' };
+    }
+
+    return chip;
+  });
+
   // MARK: State
   readonly chainStateSignal = toSignal(toObservable(this.chainFlow).pipe(switchMap((flow) => (flow ? flow.flowDirective.store.state$.pipe(map((state) => ({ runTree: docExtensionLlmRunTree(state), state }))) : of(null)))));
 
@@ -291,6 +332,30 @@ export class DocExtensionLlmComponent {
 
   selectWorld(world: DocExtensionLlmWorld): void {
     this.worldSignal.set(world);
+  }
+
+  toggleSetupHosted(): void {
+    this._updateSetup(() => this.setupHostedSignal.update((x) => !x));
+  }
+
+  toggleSetupLook(): void {
+    this._updateSetup(() => this.setupLookSignal.update((x) => !x));
+  }
+
+  /**
+   * Applies a setup change, then collapses the setup section once it becomes ready, or expands it when it no longer is. Only a change of
+   * readiness moves it, so the user's own toggle sticks.
+   *
+   * @param change - Changes the setup.
+   */
+  private _updateSetup(change: () => void): void {
+    const wasReady = this.setupReadySignal();
+    change();
+    const ready = this.setupReadySignal();
+
+    if (ready !== wasReady) {
+      this.viewOnlyFlow()?.store.setCollapsed(DOC_EXTENSION_LLM_SETUP_SECTION.key, ready);
+    }
   }
 
   importLabHistory(): void {

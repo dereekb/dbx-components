@@ -2,10 +2,10 @@ import { Component, computed, contentChild, DestroyRef, effect, forwardRef, inje
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatDialog, type MatDialogRef } from '@angular/material/dialog';
 import { cleanSubscription, DbxInjectionComponent } from '@dereekb/dbx-core';
-import { DbxButtonComponent, DbxChipDirective, DbxContentPitDirective, type DbxDetachInstance, DbxDetachService, DbxColorDirective, DbxErrorComponent, DbxHeightSyncFollowerDirective, DbxIconTileComponent, type DbxThemeColor } from '@dereekb/dbx-web';
+import { DbxButtonComponent, DbxChipDirective, DbxContentPitDirective, type DbxDetachInstance, DbxDetachService, DbxColorDirective, DbxErrorComponent, DbxHeightSyncFollowerDirective, DbxIconTileComponent } from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';
 import { filter, map } from 'rxjs';
-import { type DbxLlmFlowSectionDisplayConfig, type DbxLlmFlowSectionFormPopoutMode } from './llm.flow';
+import { type DbxLlmFlowSectionDisplayConfig, type DbxLlmFlowSectionFormPopoutMode, type DbxLlmFlowSectionStatusChip } from './llm.flow';
 import { DbxLlmFlowSectionDisplay, dbxLlmFlowSectionResolvedDisplayConfig } from './llm.flow.section.display';
 import { DbxLlmFlowSectionDirective } from './llm.flow.section.directive';
 import { DbxLlmFlowSectionStore, type DbxLlmFlowSectionStatus } from './llm.flow.section.store';
@@ -16,18 +16,14 @@ import { DbxLlmFlowSectionRunButtonsComponent } from './llm.flow.section.run.but
 import { DbxLlmFlowSectionHistoryButtonComponent } from './llm.flow.section.history.button.component';
 import { DbxLlmFlowSectionOutputComponent, DbxLlmFlowSectionOutputDirective } from './llm.flow.section.output.component';
 
-const STATUS_TEXT: Record<DbxLlmFlowSectionStatus, string> = {
-  idle: 'Ready',
-  running: 'Running',
-  success: 'Done',
-  failed: 'Failed'
-};
-
-const STATUS_COLOR: Record<DbxLlmFlowSectionStatus, Maybe<DbxThemeColor>> = {
-  idle: 'grey',
-  running: 'primary',
-  success: 'ok',
-  failed: 'warn'
+/**
+ * The status chip of each run status, shown when the page sets no chip of its own.
+ */
+const RUN_STATUS_CHIPS: Readonly<Record<DbxLlmFlowSectionStatus, DbxLlmFlowSectionStatusChip>> = {
+  idle: { text: 'Ready', color: 'grey' },
+  running: { text: 'Running', color: 'primary' },
+  success: { text: 'Done', color: 'ok' },
+  failed: { text: 'Failed', color: 'warn' }
 };
 
 /**
@@ -39,7 +35,11 @@ const STATUS_COLOR: Record<DbxLlmFlowSectionStatus, Maybe<DbxThemeColor>> = {
  * stretch to cover the field and the options.
  *
  * With the display's stepNumber option on (the default), an icon tile before the label shows the section's step number in its chain: 1 for
- * a root section, plus one per ancestor.
+ * a root section, plus one per ancestor. A section config's stepNumber fixes the number (0 works, e.g. for a setup step before the first run
+ * step), and its descendants count on from it.
+ *
+ * The status chip after the label shows the run status (Ready, Running, Done or Failed), or the page's chip when the statusChip input is
+ * set. The display's status option hides it.
  *
  * The collapse button at the end of the header's button row (the display's collapse option, on by default) collapses the section to its
  * header. The hint and the body are hidden with CSS, not destroyed, so a running action, the form binding and the raw input keep their state.
@@ -50,11 +50,31 @@ const STATUS_COLOR: Record<DbxLlmFlowSectionStatus, Maybe<DbxThemeColor>> = {
  *
  * The form pops out to a dialog or a detach window when the section store's popout signal is set. Both are live-synced with the inline form.
  *
+ * A view-only section (the config's viewOnly) has no runs: the header (step number, label, the page's status chip, hint and collapse button)
+ * and the projected content as its body. Projected content can inject the DbxLlmFlowSectionStore. Its collapsed state persists with the flow;
+ * a page can collapse it once something is set up with DbxLlmFlowStore.setCollapsed().
+ *
+ * The section config is set with the config input and the parent section with the parentKey input, both through the DbxLlmFlowSectionDirective
+ * host directive. In the example below, setupConfig is `{ key: 'setup', label: 'Setup', viewOnly: true, stepNumber: 0 }`: a view-only step
+ * numbered 0 with a bench projected as its body, before the run steps numbered 1, 2 and 3.
+ *
+ * @dbxWebComponent
+ * @dbxWebSlug llm-flow-section
+ * @dbxWebCategory layout
+ * @dbxWebRelated llm-flow, llm-flow-host
+ * @dbxWebContentProjection Default slot: the body content after the output, such as a view-only section's bench. `[dbxLlmFlowSectionOutput]` slot: replaces the default output.
+ * @dbxWebMinimalExample ```html
+ * <dbx-llm-flow-section [config]="sectionConfig"></dbx-llm-flow-section>
+ * ```
+ *
  * @example
  * ```html
+ * <dbx-llm-flow-section [config]="setupConfig" [statusChip]="setupStatusChip()">
+ *   <app-setup-bench></app-setup-bench>
+ * </dbx-llm-flow-section>
  * <dbx-llm-flow-section [config]="briefConfig"></dbx-llm-flow-section>
  * <dbx-llm-flow-section [config]="outlineConfig" parentKey="brief" [display]="{ rawInput: false }"></dbx-llm-flow-section>
- * <dbx-llm-flow-section [config]="draftConfig" parentKey="outline" [display]="{ stepNumber: true }"></dbx-llm-flow-section>
+ * <dbx-llm-flow-section [config]="draftConfig" parentKey="outline" [display]="{ status: false }"></dbx-llm-flow-section>
  * ```
  */
 @Component({
@@ -67,7 +87,9 @@ const STATUS_COLOR: Record<DbxLlmFlowSectionStatus, Maybe<DbxThemeColor>> = {
             <dbx-icon-tile class="dbx-llm-flow-section-step-number" [round]="true" dbxColor="primary">{{ stepNumberSignal() }}</dbx-icon-tile>
           }
           <span class="dbx-llm-flow-section-label dbx-text-title-medium">{{ labelSignal() }}</span>
-          <dbx-chip class="dbx-llm-flow-section-status" [small]="true" [color]="statusColorSignal()">{{ statusTextSignal() }}</dbx-chip>
+          @if (statusChipSignal(); as chip) {
+            <dbx-chip class="dbx-llm-flow-section-status" [small]="true" [color]="chip.color">{{ chip.text }}</dbx-chip>
+          }
         </div>
         <span class="dbx-spacer"></span>
         <div class="dbx-llm-flow-section-header-actions">
@@ -129,7 +151,8 @@ const STATUS_COLOR: Record<DbxLlmFlowSectionStatus, Maybe<DbxThemeColor>> = {
     class: 'dbx-llm-flow-section',
     '[attr.data-status]': 'statusSignal()',
     '[class.dbx-llm-flow-section-running]': `statusSignal() === 'running'`,
-    '[class.dbx-llm-flow-section-collapsed]': 'collapsedSignal()'
+    '[class.dbx-llm-flow-section-collapsed]': 'collapsedSignal()',
+    '[class.dbx-llm-flow-section-view-only]': 'viewOnlySignal()'
   },
   providers: [{ provide: DbxLlmFlowSectionDisplay, useExisting: forwardRef(() => DbxLlmFlowSectionComponent) }],
   hostDirectives: [{ directive: DbxLlmFlowSectionDirective, inputs: ['dbxLlmFlowSection: config', 'parentKey'] }],
@@ -159,6 +182,12 @@ export class DbxLlmFlowSectionComponent implements DbxLlmFlowSectionDisplay {
    */
   readonly display = input<Maybe<DbxLlmFlowSectionDisplayConfig>>();
 
+  /**
+   * The page's status chip, shown after the label in place of the run status. A view-only section shows only this chip. The display's status
+   * option hides it.
+   */
+  readonly statusChip = input<Maybe<DbxLlmFlowSectionStatusChip>>();
+
   readonly projectedOutput = contentChild(DbxLlmFlowSectionOutputDirective);
 
   readonly configSignal = toSignal(this.sectionStore.config$);
@@ -172,7 +201,11 @@ export class DbxLlmFlowSectionComponent implements DbxLlmFlowSectionDisplay {
 
   readonly formVisibleSignal = this.sectionStore.formVisible;
 
-  readonly displaySignal = computed(() => dbxLlmFlowSectionResolvedDisplayConfig(this.configSignal()?.display, this.display()));
+  readonly viewOnlySignal = computed(() => this.configSignal()?.viewOnly === true);
+  readonly displaySignal = computed(() => {
+    const config = this.configSignal();
+    return dbxLlmFlowSectionResolvedDisplayConfig(config?.display, this.display(), config?.viewOnly);
+  });
 
   /**
    * Whether the section shows only its header. Needs the header and its collapse button, so a section can't be collapsed to nothing.
@@ -191,8 +224,23 @@ export class DbxLlmFlowSectionComponent implements DbxLlmFlowSectionDisplay {
     return config?.label ?? config?.key;
   });
   readonly hintSignal = computed(() => this.configSignal()?.hint);
-  readonly statusTextSignal = computed(() => STATUS_TEXT[this.statusSignal()]);
-  readonly statusColorSignal = computed(() => STATUS_COLOR[this.statusSignal()]);
+  /**
+   * The status chip after the label: the page's chip when set, otherwise the run status chip (none for a view-only section). Hidden while the
+   * display's status option is off.
+   */
+  readonly statusChipSignal = computed<Maybe<DbxLlmFlowSectionStatusChip>>(() => {
+    const display = this.displaySignal();
+    const statusChip = this.statusChip();
+    const viewOnly = this.viewOnlySignal();
+    const status = this.statusSignal();
+    let chip: Maybe<DbxLlmFlowSectionStatusChip>;
+
+    if (display.status) {
+      chip = statusChip ?? (viewOnly ? undefined : RUN_STATUS_CHIPS[status]);
+    }
+
+    return chip;
+  });
   readonly formInjectionConfigSignal = computed(() => dbxLlmFlowSectionFormComponentInjectionConfig(this.formComponentSignal(), this.autoBindFormSignal(), this.sectionStore));
   readonly showFormControlsSignal = computed(() => {
     const display = this.displaySignal();

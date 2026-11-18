@@ -52,7 +52,7 @@ export interface LoadUiComponentRegistryResult {
 }
 
 // MARK: Defaults
-const DEFAULT_BUNDLED_FILENAMES = ['dereekb-dbx-web.ui-components.mcp.generated.json'] as const;
+const DEFAULT_BUNDLED_FILENAMES = ['dereekb-dbx-web.ui-components.mcp.generated.json', 'dereekb-dbx-form-llm.ui-components.mcp.generated.json'] as const;
 
 const DEFAULT_BUNDLED_PATHS: BundledUiManifestPathsFactory = () => {
   const packageRoot = findPackageRoot(import.meta.url);

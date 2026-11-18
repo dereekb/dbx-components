@@ -315,6 +315,10 @@ export class DbxLlmFlowStore extends ComponentStore<DbxLlmFlowState> {
   /**
    * Collapses a section to its header, or expands it. Persisted with the flow.
    *
+   * The call is ignored for a section that has not registered yet, and switching storage keys restores the saved collapsed state over it. To
+   * collapse a section once something is set up (such as a view-only setup section), call it when the setup state changes, not on every check,
+   * so the user's own toggle sticks.
+   *
    * @param key - The section key.
    * @param collapsed - Whether the section is collapsed.
    */
