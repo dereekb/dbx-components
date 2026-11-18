@@ -7,8 +7,8 @@ import { DbxLlmFlowSectionComponent } from './llm.flow.section.component';
  *
  * Provides the DbxLlmFlowStore through its DbxLlmFlowDirective host directive. Other content is projected after the sections.
  *
- * A view-only section in the config renders only its header, since a config-rendered section has no projected body. Place view-only sections
- * in a template under [dbxLlmFlow] instead.
+ * A view-only section in the config renders its header, and its form when it has a formComponent (the form edits the section's state), since a
+ * config-rendered section has no projected body. Place view-only sections with a custom body in a template under [dbxLlmFlow] instead.
  *
  * @dbxWebComponent
  * @dbxWebSlug llm-flow

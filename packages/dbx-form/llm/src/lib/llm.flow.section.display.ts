@@ -8,8 +8,9 @@ import { type DbxLlmFlowSectionDisplayConfig } from './llm.flow';
 export type DbxLlmFlowSectionResolvedDisplayConfig = Required<{ readonly [K in keyof DbxLlmFlowSectionDisplayConfig]: boolean }>;
 
 /**
- * Resolves the display toggles of a section. Every part is shown unless turned off, except that a view-only section's run parts (form, raw
- * input, run buttons, history and output) are off unless turned on. The display input overrides the config.
+ * Resolves the display toggles of a section. Every part is shown unless turned off, except that a view-only section's run parts (raw input, run
+ * buttons, history and output) are off unless turned on. A view-only section's form stays on by default: it edits the section's state. The
+ * display input overrides the config.
  *
  * @param configDisplay - The section config's display.
  * @param inputDisplay - The component's display input.
@@ -22,7 +23,7 @@ export function dbxLlmFlowSectionResolvedDisplayConfig(configDisplay: Maybe<DbxL
 
   return {
     header: display.header !== false,
-    form: display.form ?? runPart,
+    form: display.form !== false,
     rawInput: display.rawInput ?? runPart,
     runButtons: display.runButtons ?? runPart,
     history: display.history ?? runPart,

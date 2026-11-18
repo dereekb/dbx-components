@@ -37,6 +37,7 @@ import {
   dbxLlmFlowStateWithDraftFormValue,
   dbxLlmFlowStateWithFailedRun,
   dbxLlmFlowStateWithFormValid,
+  dbxLlmFlowStateWithFormValue,
   dbxLlmFlowStateWithCollapsed,
   dbxLlmFlowStateWithImportedRuns,
   dbxLlmFlowStateWithLoadedRun,
@@ -96,6 +97,15 @@ export class DbxLlmFlowStore extends ComponentStore<DbxLlmFlowState> {
   private _nextRequestId: DbxLlmFlowRunRequestId = 0;
   private _nextBindingId: DbxLlmFlowFormBindingId = 0;
   private _defaultRunIdFactory: Maybe<ModelIdFactory>;
+
+  /**
+   * The flow config's run id factory, or a default one.
+   *
+   * @returns The run id factory.
+   */
+  private get _runIdFactory(): ModelIdFactory {
+    return this._flowConfig.value?.runIdFactory ?? (this._defaultRunIdFactory ??= dbxLlmFlowRunIdFactory());
+  }
 
   readonly flowConfig$: Observable<Maybe<DbxLlmFlowConfig>> = this._flowConfig.asObservable();
   readonly sectionConfigs$: Observable<Readonly<Record<DbxLlmFlowSectionKey, DbxLlmFlowAnySectionConfig>>> = this._sectionConfigs.asObservable();
@@ -162,13 +172,24 @@ export class DbxLlmFlowStore extends ComponentStore<DbxLlmFlowState> {
       now: new Date(),
       flowConfig: this._flowConfig.value,
       sectionConfig: (key) => configs[key],
-      nextRequestId: () => (this._nextRequestId += 1)
+      nextRequestId: () => (this._nextRequestId += 1),
+      nextRunId: this._runIdFactory
     };
   }
 
   // MARK: Selectors
   section$(key: DbxLlmFlowSectionKey): Observable<Maybe<DbxLlmFlowSectionState>> {
     return this.select((x) => x.sections[key]);
+  }
+
+  /**
+   * Returns the section's form value: its draft's form value, such as a view-only section's state.
+   *
+   * @param key - The section key.
+   * @returns Observable of the form value.
+   */
+  formValue$<F = unknown>(key: DbxLlmFlowSectionKey): Observable<Maybe<F>> {
+    return this.select((x) => x.sections[key]?.draft.formValue as Maybe<F>);
   }
 
   run$(runId: Maybe<DbxLlmFlowRunId>): Observable<Maybe<DbxLlmFlowRun>> {
@@ -245,7 +266,7 @@ export class DbxLlmFlowStore extends ComponentStore<DbxLlmFlowState> {
 
   // MARK: Runs
   private _nextRunId(state: DbxLlmFlowState): DbxLlmFlowRunId {
-    const factory = this._flowConfig.value?.runIdFactory ?? (this._defaultRunIdFactory ??= dbxLlmFlowRunIdFactory());
+    const factory = this._runIdFactory;
     let id = factory();
 
     while (state.runs[id] != null) {
@@ -309,7 +330,20 @@ export class DbxLlmFlowStore extends ComponentStore<DbxLlmFlowState> {
   }
 
   setFormValid(key: DbxLlmFlowSectionKey, valid: Maybe<boolean>): void {
-    this._updateState((state) => dbxLlmFlowStateWithFormValid(state, { key, valid }));
+    this._updateState((state) => dbxLlmFlowStateWithFormValid(state, { key, valid }, this.makeContext()));
+  }
+
+  /**
+   * Sets the section's form value from the store, such as a view-only section's state, and seeds its bound forms. The raw input is regenerated
+   * when it follows the form. A value deep-equal to the current one is ignored.
+   *
+   * A view-only section records the new state in the run tree. See DbxLlmFlowSectionConfig.viewOnly.
+   *
+   * @param key - The section key.
+   * @param formValue - The form value. Must be JSON-compatible.
+   */
+  setFormValue(key: DbxLlmFlowSectionKey, formValue: unknown): void {
+    this._updateState((state) => dbxLlmFlowStateWithFormValue(state, { key, formValue }, this.makeContext()));
   }
 
   /**

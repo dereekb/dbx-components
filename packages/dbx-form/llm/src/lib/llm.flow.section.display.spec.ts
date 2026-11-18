@@ -29,9 +29,15 @@ describe('dbxLlmFlowSectionResolvedDisplayConfig()', () => {
   });
 
   describe('view-only', () => {
-    it('should turn the run parts off and keep the header, step number, status chip and collapse button on by default', () => {
+    it('should turn the run parts off and keep the header, form, step number, status chip and collapse button on by default', () => {
       const result = dbxLlmFlowSectionResolvedDisplayConfig(undefined, undefined, true);
-      expect(result).toEqual({ header: true, form: false, rawInput: false, runButtons: false, history: false, output: false, stepNumber: true, status: true, collapse: true });
+      expect(result).toEqual({ header: true, form: true, rawInput: false, runButtons: false, history: false, output: false, stepNumber: true, status: true, collapse: true });
+    });
+
+    it('should hide the form, which edits the state, only when turned off', () => {
+      expect(dbxLlmFlowSectionResolvedDisplayConfig({ form: null }, undefined, true).form).toBe(true);
+      expect(dbxLlmFlowSectionResolvedDisplayConfig({ form: false }, undefined, true).form).toBe(false);
+      expect(dbxLlmFlowSectionResolvedDisplayConfig(undefined, { form: false }, true).form).toBe(false);
     });
 
     it('should let an explicit true in the config display turn a run part back on', () => {
@@ -43,10 +49,10 @@ describe('dbxLlmFlowSectionResolvedDisplayConfig()', () => {
     });
 
     it('should keep a run part off when set to null or undefined in either layer', () => {
-      expect(dbxLlmFlowSectionResolvedDisplayConfig({ form: null }, undefined, true).form).toBe(false);
-      expect(dbxLlmFlowSectionResolvedDisplayConfig({ form: undefined }, undefined, true).form).toBe(false);
-      expect(dbxLlmFlowSectionResolvedDisplayConfig(undefined, { form: null }, true).form).toBe(false);
-      expect(dbxLlmFlowSectionResolvedDisplayConfig({ form: true }, { form: undefined }, true).form).toBe(false);
+      expect(dbxLlmFlowSectionResolvedDisplayConfig({ output: null }, undefined, true).output).toBe(false);
+      expect(dbxLlmFlowSectionResolvedDisplayConfig({ output: undefined }, undefined, true).output).toBe(false);
+      expect(dbxLlmFlowSectionResolvedDisplayConfig(undefined, { output: null }, true).output).toBe(false);
+      expect(dbxLlmFlowSectionResolvedDisplayConfig({ output: true }, { output: undefined }, true).output).toBe(false);
     });
 
     it('should resolve the same as before when viewOnly is false, null or undefined', () => {

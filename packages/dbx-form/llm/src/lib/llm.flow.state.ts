@@ -2,6 +2,7 @@ import { type ArrayOrValue, areEqualPOJOValues, asArray, filterMaybeArrayValues,
 import { stripEmptyForgeValues } from '@dereekb/dbx-form';
 import { type FieldDef } from '@ng-forge/dynamic-forms';
 import {
+  DBX_LLM_FLOW_STATE_RUN_KIND,
   DBX_LLM_FLOW_RUN_CANCELLED_ERROR_CODE,
   DBX_LLM_FLOW_RUN_INTERRUPTED_ERROR_CODE,
   DBX_LLM_FLOW_RUN_NON_JSON_OUTPUT_ERROR_CODE,
@@ -27,7 +28,9 @@ import {
   type DbxLlmFlowSectionKey,
   type DbxLlmFlowSectionRunKindConfig,
   type DbxLlmFlowSectionState,
-  type DbxLlmFlowState
+  type DbxLlmFlowState,
+  dbxLlmFlowRunIdFactory,
+  isDbxLlmFlowStateRun
 } from './llm.flow';
 
 // MARK: Context
@@ -39,6 +42,12 @@ export interface DbxLlmFlowStateContext {
   readonly flowConfig?: Maybe<DbxLlmFlowConfig>;
   readonly sectionConfig: (key: DbxLlmFlowSectionKey) => Maybe<DbxLlmFlowAnySectionConfig>;
   readonly nextRequestId: () => DbxLlmFlowRunRequestId;
+  /**
+   * Creates the id of a run a transition records itself, such as a view-only section's state run. Ids already in the state are skipped.
+   *
+   * Defaults to a sequential factory with a per-session prefix.
+   */
+  readonly nextRunId?: Maybe<() => DbxLlmFlowRunId>;
 }
 
 /**
@@ -62,13 +71,23 @@ export function initialDbxLlmFlowState(): DbxLlmFlowState {
 
 // MARK: Config Helpers
 /**
- * Whether the section has a form.
+ * Whether the section has a form. A view-only section counts as having one: its form value is its state, and its raw input follows it.
  *
  * @param config - The section config.
  * @returns True when the section has a form.
  */
 export function dbxLlmFlowSectionHasForm(config: Maybe<DbxLlmFlowAnySectionConfig>): boolean {
-  return config?.hasForm ?? (config?.formComponent != null || dbxLlmFlowSectionHasOptionFields(config));
+  return config?.hasForm ?? (config?.formComponent != null || dbxLlmFlowSectionHasOptionFields(config) || dbxLlmFlowSectionIsViewOnly(config));
+}
+
+/**
+ * Whether the section is view-only. See DbxLlmFlowSectionConfig.viewOnly.
+ *
+ * @param config - The section config.
+ * @returns True for a view-only section.
+ */
+export function dbxLlmFlowSectionIsViewOnly(config: Maybe<DbxLlmFlowAnySectionConfig>): boolean {
+  return config?.viewOnly === true;
 }
 
 /**
@@ -268,7 +287,8 @@ function areEqualStringArrays(a: Maybe<readonly string[]>, b: Maybe<readonly str
 }
 
 /**
- * Computes the issues that block the section's input from running.
+ * Computes the issues that block the section's input from running. A view-only section's issues keep its state from being recorded instead. An
+ * empty input is not an issue of a view-only section: it has no state yet.
  *
  * @param section - The section state.
  * @param config - The section config.
@@ -277,7 +297,7 @@ function areEqualStringArrays(a: Maybe<readonly string[]>, b: Maybe<readonly str
 export function dbxLlmFlowSectionInputIssues(section: Pick<DbxLlmFlowSectionState, 'draft' | 'rawInputParseError' | 'formValueError'>, config: Maybe<DbxLlmFlowAnySectionConfig>): Maybe<string[]> {
   const issues: string[] = [];
 
-  if (!config?.allowEmptyInput && !section.draft.rawInput.trim()) {
+  if (!config?.allowEmptyInput && !dbxLlmFlowSectionIsViewOnly(config) && !section.draft.rawInput.trim()) {
     issues.push('The input is empty.');
   }
 
@@ -552,6 +572,13 @@ class DbxLlmFlowStateMutator {
     this._runs[run.id] = run;
   }
 
+  deleteRun(id: DbxLlmFlowRunId): void {
+    if (this.run(id) != null) {
+      this._runs = this._runs ?? { ...this.original.runs };
+      delete this._runs[id];
+    }
+  }
+
   setRunRequest(key: DbxLlmFlowSectionKey, request: Maybe<DbxLlmFlowRunRequest>): void {
     const current = (this._runRequests ?? this.original.runRequests)[key];
 
@@ -741,7 +768,10 @@ function deriveChildFromParentRun(m: DbxLlmFlowStateMutator, parentRun: DbxLlmFl
     m.updateSection(descendantKey, { selectedRunIds: [], followedParentRunId: undefined });
   }
 
-  if (origin === 'complete' && config?.autoRunAfterParent) {
+  if (dbxLlmFlowSectionIsViewOnly(config)) {
+    // records the state under the new parent run, and cascades on with the same origin
+    syncSectionStateRun(m, childKey, origin ?? 'load');
+  } else if (origin === 'complete' && config?.autoRunAfterParent) {
     const kind = config.autoRunAfterParent === true ? dbxLlmFlowSectionRunKinds(config)[0].kind : config.autoRunAfterParent;
     const updatedChild = m.section(childKey) as DbxLlmFlowSectionState;
 
@@ -752,7 +782,8 @@ function deriveChildFromParentRun(m: DbxLlmFlowStateMutator, parentRun: DbxLlmFl
 }
 
 /**
- * Reconciles the section, then its children, against the parent's current selection. Never auto-runs.
+ * Reconciles the section, then its children, against the parent's current selection. A view-only section also records its current state.
+ * Never auto-runs.
  *
  * @param m - The mutator.
  * @param key - The section key.
@@ -772,10 +803,119 @@ function reconcileSection(m: DbxLlmFlowStateMutator, key: DbxLlmFlowSectionKey, 
 
     if (anchor != null && anchor.id !== section.followedParentRunId) {
       cascadeToChild(m, anchor, key, undefined);
+    } else {
+      syncSectionStateRun(m, key, 'load');
     }
 
     dbxLlmFlowSectionChildKeys(m.state, key).forEach((childKey) => reconcileSection(m, childKey, visited));
   }
+}
+
+// MARK: State Runs
+let defaultStateRunIdFactory: Maybe<() => DbxLlmFlowRunId>;
+
+function nextStateRunId(m: DbxLlmFlowStateMutator): DbxLlmFlowRunId {
+  const factory = m.context.nextRunId ?? (defaultStateRunIdFactory ??= dbxLlmFlowRunIdFactory());
+  let id = factory();
+
+  while (m.run(id) != null) {
+    id = factory();
+  }
+
+  return id;
+}
+
+/**
+ * Drops a state run that is no longer in use: nothing was made from it, and no section selects or follows it. Imported runs are kept.
+ *
+ * @param m - The mutator.
+ * @param run - The state run that was replaced.
+ */
+function dropUnusedStateRun(m: DbxLlmFlowStateMutator, run: Maybe<DbxLlmFlowRun>): void {
+  if (run != null && isDbxLlmFlowStateRun(run) && !run.imported) {
+    const { runs, sections } = m.state;
+    const used = Object.values(runs).some((x) => x.parentRunId === run.id) || Object.values(sections).some((x) => x.selectedRunIds.includes(run.id) || x.followedParentRunId === run.id || x.activeRunId === run.id);
+
+    if (!used) {
+      m.deleteRun(run.id);
+    }
+  }
+}
+
+/**
+ * Keeps a view-only section's selection on its current state. See DbxLlmFlowSectionConfig.viewOnly. Does nothing for other sections.
+ *
+ * The state is recordable while it is set, has no input issues, its bound form isn't invalid, and the section follows a parent run (or has no
+ * registered parent). A recordable state selects its state run: the selected one while it still matches (same parent run, deep-equal state),
+ * else the latest matching state run of the section, else a new one. A new selection cascades to the children with the origin, so returning to a
+ * state restores the latest runs made from it.
+ *
+ * Otherwise the section selects nothing, and the children that follow state runs (with their descendants) follow nothing.
+ *
+ * A replaced state run that nothing was made from is dropped.
+ *
+ * @param m - The mutator.
+ * @param key - The section key.
+ * @param origin - Where the change came from. Only 'complete' can auto-run the children.
+ */
+function syncSectionStateRun(m: DbxLlmFlowStateMutator, key: DbxLlmFlowSectionKey, origin: DbxLlmFlowSelectRunOrigin): void {
+  const section = m.section(key);
+
+  if (section != null && dbxLlmFlowSectionIsViewOnly(m.config(key))) {
+    const state = section.draft.formValue;
+    const selected = m.run(section.selectedRunIds.at(-1));
+    const followsParent = section.parentKey == null || m.section(section.parentKey) == null || section.followedParentRunId != null;
+    const recordable = followsParent && state != null && !section.inputIssues?.length && section.formValid !== false;
+    const isCurrentStateRun = (run: DbxLlmFlowRun) => run.state === 'success' && isDbxLlmFlowStateRun(run) && isSameMaybe(run.parentRunId, section.followedParentRunId) && areEqualPOJOValues(run.input.formValue, state);
+
+    if (recordable) {
+      if (selected == null || !isCurrentStateRun(selected)) {
+        const existing = dbxLlmFlowSectionRuns(m.state, key).findLast(isCurrentStateRun);
+        const now = m.context.now;
+        const run: DbxLlmFlowRun = existing ?? { id: nextStateRunId(m), sectionKey: key, kind: DBX_LLM_FLOW_STATE_RUN_KIND, parentRunId: section.followedParentRunId ?? undefined, input: section.draft, state: 'success', output: state, startedAt: now, finishedAt: now };
+
+        if (existing == null) {
+          m.setRun(run);
+        }
+
+        m.updateSection(key, { selectedRunIds: [run.id] });
+        cascadeToChildren(m, run, origin, []);
+        dropUnusedStateRun(m, selected);
+      }
+    } else if (section.selectedRunIds.length) {
+      m.updateSection(key, { selectedRunIds: [] });
+
+      for (const childKey of dbxLlmFlowSectionChildKeys(m.state, key)) {
+        if (dbxLlmFlowSectionFollowsKind(m.config(childKey), DBX_LLM_FLOW_STATE_RUN_KIND)) {
+          for (const clearKey of [childKey, ...dbxLlmFlowSectionDescendantKeys(m.state, childKey)]) {
+            m.updateSection(clearKey, { selectedRunIds: [], followedParentRunId: undefined });
+          }
+        }
+      }
+
+      dropUnusedStateRun(m, selected);
+    }
+  }
+}
+
+/**
+ * Records the current state of every view-only section, parents first. See DbxLlmFlowSectionConfig.viewOnly.
+ *
+ * Used after a reset or a restore, so the selection of each view-only section matches its state. Never auto-runs.
+ *
+ * @param state - The state.
+ * @param context - The context.
+ * @returns The new state, or the same state when every selection already matches.
+ */
+export function dbxLlmFlowStateWithSyncedStateRuns(state: DbxLlmFlowState, context: DbxLlmFlowStateContext): DbxLlmFlowState {
+  const m = new DbxLlmFlowStateMutator(state, context);
+  const keys = Object.keys(state.sections)
+    .filter((key) => dbxLlmFlowSectionIsViewOnly(context.sectionConfig(key)))
+    .map((key) => ({ key, depth: dbxLlmFlowSectionAncestorKeys(state, key).length }))
+    .sort((a, b) => a.depth - b.depth);
+
+  keys.forEach(({ key }) => syncSectionStateRun(m, key, 'restore'));
+  return m.finish();
 }
 
 // MARK: Registration
@@ -1064,7 +1204,8 @@ export interface DbxLlmFlowLoadDraftInput {
 }
 
 /**
- * Replaces the section's draft from the store (e.g. Reroll). A non-JSON form value is rejected into the input issues.
+ * Replaces the section's draft from the store (e.g. Reroll). A non-JSON form value is rejected into the input issues. A view-only section records
+ * its new state.
  *
  * @param state - The state.
  * @param input - The draft.
@@ -1078,10 +1219,31 @@ export function dbxLlmFlowStateWithDraft(state: DbxLlmFlowState, input: DbxLlmFl
   if (section != null) {
     const m = new DbxLlmFlowStateMutator(state, context);
     applyDraft(m, input.key, storeDraftChange(m, input.key, input.input, section.draft));
+    syncSectionStateRun(m, input.key, 'load');
     result = m.finish();
   }
 
   return result;
+}
+
+export interface DbxLlmFlowSetFormValueInput {
+  readonly key: DbxLlmFlowSectionKey;
+  readonly formValue: unknown;
+}
+
+/**
+ * Sets the section's form value from the store, such as a view-only section's state. Works like a draft load with only the form value: the
+ * raw input is regenerated when it follows the form (clearing its override), and bound forms are seeded. A non-JSON value is rejected into the
+ * input issues. A value deep-equal to the draft's returns the same state.
+ *
+ * @param state - The state.
+ * @param input - The form value.
+ * @param context - The context.
+ * @returns The new state.
+ */
+export function dbxLlmFlowStateWithFormValue(state: DbxLlmFlowState, input: DbxLlmFlowSetFormValueInput, context: DbxLlmFlowStateContext): DbxLlmFlowState {
+  const section = state.sections[input.key];
+  return section == null || areEqualPOJOValues(input.formValue, section.draft.formValue) ? state : dbxLlmFlowStateWithDraft(state, { key: input.key, input: { formValue: input.formValue } }, context);
 }
 
 export interface DbxLlmFlowSetDraftFormValueInput {
@@ -1097,6 +1259,7 @@ export interface DbxLlmFlowSetDraftFormValueInput {
  * - Regenerates the raw input when it follows the form. Ignored while that raw input is overridden.
  * - Keeps the raw input (and its override) when the form only adds options to the parent's output (a raw input source of "parent").
  * - A value deep-equal to the draft returns the same state (the echo no-op that ends multi-instance sync ping-pong).
+ * - A view-only section records its new state.
  *
  * @param state - The state.
  * @param input - The pushed value.
@@ -1128,6 +1291,7 @@ export function dbxLlmFlowStateWithDraftFormValue(state: DbxLlmFlowState, input:
       applyDraft(m, key, { draft, draftSource: bindingId });
     }
 
+    syncSectionStateRun(m, key, 'load');
     result = m.finish();
   }
 
@@ -1142,13 +1306,28 @@ export interface DbxLlmFlowSetFormValidInput {
 /**
  * Sets whether the bound form is valid.
  *
+ * A view-only section's state is only recorded while its form isn't invalid, so with the context its state run is synced too.
+ *
  * @param state - The state.
  * @param input - The validity.
+ * @param context - The context. Needed to sync a view-only section's state run.
  * @returns The new state.
  */
-export function dbxLlmFlowStateWithFormValid(state: DbxLlmFlowState, input: DbxLlmFlowSetFormValidInput): DbxLlmFlowState {
+export function dbxLlmFlowStateWithFormValid(state: DbxLlmFlowState, input: DbxLlmFlowSetFormValidInput, context?: Maybe<DbxLlmFlowStateContext>): DbxLlmFlowState {
   const section = state.sections[input.key];
-  return section != null && !isSameMaybe(section.formValid, input.valid) ? { ...state, sections: { ...state.sections, [input.key]: { ...section, formValid: input.valid } } } : state;
+  let result = state;
+
+  if (section != null && !isSameMaybe(section.formValid, input.valid)) {
+    result = { ...state, sections: { ...state.sections, [input.key]: { ...section, formValid: input.valid } } };
+
+    if (context != null && dbxLlmFlowSectionIsViewOnly(context.sectionConfig(input.key))) {
+      const m = new DbxLlmFlowStateMutator(result, context);
+      syncSectionStateRun(m, input.key, 'load');
+      result = m.finish();
+    }
+  }
+
+  return result;
 }
 
 export interface DbxLlmFlowSetCollapsedInput {
@@ -1226,6 +1405,7 @@ export function dbxLlmFlowStateWithPastedRawInput(state: DbxLlmFlowState, input:
     const change: ApplyDraftInput = mode === 'two-way' && dbxLlmFlowSectionRawInputFollowsForm(config) ? parseTwoWayRawInputDraftChange(config, input, section.draft.formValue) : { draft: { formValue: section.draft.formValue, rawInput, rawInputOverridden: true } };
 
     applyDraft(m, key, change);
+    syncSectionStateRun(m, key, 'load');
     result = m.finish();
   }
 
@@ -1261,6 +1441,7 @@ export function dbxLlmFlowStateWithRevertedRawInput(state: DbxLlmFlowState, key:
     }
 
     applyDraft(m, key, { draft });
+    syncSectionStateRun(m, key, 'load');
     result = m.finish();
   }
 

@@ -3,7 +3,7 @@ import { type Destroyable, type Maybe, type Milliseconds, type UnixDateTimeMilli
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { catchError, concatMap, debounceTime, defer, distinctUntilChanged, EMPTY, filter, first, map, type Observable, of, switchMap, tap } from 'rxjs';
 import { type DbxLlmFlowHistoryConfig, type DbxLlmFlowRun, type DbxLlmFlowRunId, type DbxLlmFlowSectionInput, type DbxLlmFlowSectionKey, type DbxLlmFlowSectionState, type DbxLlmFlowState } from './llm.flow';
-import { type DbxLlmFlowHistoryLimits, type DbxLlmFlowStateContext, dbxLlmFlowHistoryLimits, dbxLlmFlowHistoryRunIdsToKeep, dbxLlmFlowRunsWithInterruptedRuns, dbxLlmFlowSectionInputIssues, dbxLlmFlowStateWithPrunedRuns, initialDbxLlmFlowSectionState } from './llm.flow.state';
+import { type DbxLlmFlowHistoryLimits, type DbxLlmFlowStateContext, dbxLlmFlowHistoryLimits, dbxLlmFlowHistoryRunIdsToKeep, dbxLlmFlowRunsWithInterruptedRuns, dbxLlmFlowSectionInputIssues, dbxLlmFlowStateWithPrunedRuns, dbxLlmFlowStateWithSyncedStateRuns, initialDbxLlmFlowSectionState } from './llm.flow.state';
 import { type DbxLlmFlowStore } from './llm.flow.store';
 
 /**
@@ -130,6 +130,8 @@ export interface DbxLlmFlowResetInput {
 /**
  * Resets every section to its initial draft and drops every run and run request. Mount counts, run bridges and the collapsed state are kept, and every revision bumps so forms re-seed.
  *
+ * Unless restoring, each view-only section then records its initial state (see DbxLlmFlowSectionConfig.viewOnly).
+ *
  * A run that finishes after the reset is dropped, since its run no longer exists.
  *
  * @param state - The state.
@@ -145,7 +147,8 @@ export function dbxLlmFlowStateWithReset(state: DbxLlmFlowState, input: DbxLlmFl
     sections[section.key] = sectionWithRuntimeFields({ ...initial, collapsed: section.collapsed }, section, context);
   }
 
-  return { sections, runs: {}, runRequests: {}, restoring: input.restoring, storageKey: input.storageKey ?? undefined };
+  const reset: DbxLlmFlowState = { sections, runs: {}, runRequests: {}, restoring: input.restoring, storageKey: input.storageKey ?? undefined };
+  return input.restoring ? reset : dbxLlmFlowStateWithSyncedStateRuns(reset, context);
 }
 
 /**
@@ -153,6 +156,9 @@ export function dbxLlmFlowStateWithReset(state: DbxLlmFlowState, input: DbxLlmFl
  *
  * Persisted running runs become failed with DBX_LLM_FLOW_RUN_INTERRUPTED_ERROR_CODE, runtime fields reset, every revision bumps so forms re-seed, and selections are filtered to runs that exist and succeeded. The
  * history is pruned to the flow's limits, which may be lower than when it was saved.
+ *
+ * A view-only section's state is its saved draft's form value, and its saved selection is its state run. A view-only section whose selection
+ * does not match its state (such as one saved before state runs existed) records its state.
  *
  * @param state - The current state. Its mounted sections and runtime counts are kept.
  * @param persisted - The persisted state. An unknown version or undefined restores a blank state.
@@ -184,7 +190,8 @@ export function dbxLlmFlowStateWithRestoredPersistedState(state: DbxLlmFlowState
     sections[key] = sectionWithRuntimeFields(base, current, context);
   });
 
-  return dbxLlmFlowStateWithPrunedRuns({ sections, runs, runRequests: {}, restoring: false, storageKey: state.storageKey }, context.flowConfig?.history);
+  const restored = dbxLlmFlowStateWithSyncedStateRuns({ sections, runs, runRequests: {}, restoring: false, storageKey: state.storageKey }, context);
+  return dbxLlmFlowStateWithPrunedRuns(restored, context.flowConfig?.history);
 }
 
 /**

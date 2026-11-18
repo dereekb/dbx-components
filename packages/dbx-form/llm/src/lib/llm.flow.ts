@@ -50,6 +50,14 @@ export type DbxLlmFlowSectionInputSource = 'form' | 'parent' | 'manual' | 'none'
 export const DEFAULT_DBX_LLM_FLOW_RUN_KIND: DbxLlmFlowRunKind = 'run';
 
 /**
+ * Kind of the runs a view-only section records its state as (a state run). Its input is the section's draft and its output is the state, the
+ * draft's form value. See DbxLlmFlowSectionConfig.viewOnly.
+ *
+ * Reserved: don't use it as the kind of a section's run.
+ */
+export const DBX_LLM_FLOW_STATE_RUN_KIND: DbxLlmFlowRunKind = 'state';
+
+/**
  * Disabled key the run bridge sets on its action while the section can't run.
  */
 export const DBX_LLM_FLOW_SECTION_RUN_DISABLED_KEY = 'dbx_llm_flow_section_run';
@@ -347,6 +355,9 @@ export type DbxLlmFlowSectionFormPopoutMode = 'dialog' | 'detach';
  */
 export interface DbxLlmFlowSectionDisplayConfig {
   readonly header?: Maybe<boolean>;
+  /**
+   * The section's form (formComponent). On by default, also for a view-only section, whose form edits its state.
+   */
   readonly form?: Maybe<boolean>;
   readonly rawInput?: Maybe<boolean>;
   /**
@@ -406,12 +417,30 @@ export interface DbxLlmFlowSectionConfig<F = unknown, O = unknown> {
   readonly label?: Maybe<string>;
   readonly hint?: Maybe<string>;
   /**
-   * Whether the section is view-only: a step with no runs, such as a setup bench before the first run step. It shows its header (step number,
-   * label, the page's status chip, hint and collapse button) and the content projected into the section as its body.
+   * Whether the section is view-only: a step with no runs of its own, such as a setup bench before the first run step. It shows its header (step
+   * number, label, the page's status chip, hint and collapse button), its form when it has a formComponent, and the content projected into the
+   * section as its body.
    *
-   * The form, raw input, run buttons, history and output are off unless the display turns them on, the status chip shows only the chip the
-   * page sets (DbxLlmFlowSectionComponent's statusChip input), and kinds is unused. Its collapsed state is kept in the flow state like any
-   * section's, so it persists with the flow, and a page can collapse it with DbxLlmFlowStore.setCollapsed().
+   * The raw input, run buttons, history and output are off unless the display turns them on, the status chip shows only the chip the page sets
+   * (DbxLlmFlowSectionComponent's statusChip input), and kinds, autoRunAfterParent and requireParentRun are unused. Its collapsed state is kept
+   * in the flow state like any section's, so it persists with the flow, and a page can collapse it with DbxLlmFlowStore.setCollapsed().
+   *
+   * State: a view-only section can hold a JSON value of its own (configuration that is not text in and text out), kept as its draft's form value.
+   * Set it with a bound form (formComponent, or the dbxLlmFlowSectionForm directive), the dbxLlmFlowSectionValue directive, or
+   * DbxLlmFlowSectionStore.setFormValue() / DbxLlmFlowStore.setFormValue(). Declare its starting value with initialDraft.formValue, so a reset
+   * returns to it, and block an incomplete state with validateInput. The state persists with the flow.
+   *
+   * The state is part of the run tree: while it is set, valid (no input issues) and its bound form (if any) is valid, the section records it as a
+   * state run (kind DBX_LLM_FLOW_STATE_RUN_KIND, output the state) under the parent run it follows, and selects it. Child sections follow the state
+   * run like any parent run:
+   *
+   * - Child runs point at the state run, so a run handler reads the state from parentRun.output, or from deeper down with dbxLlmFlowLineageRun().
+   * - Loading a descendant's run with its parents ("Load with parents") restores the state it ran with.
+   * - Each change of the state selects its state run and cascades like a parent run that finished, without auto-running children. Returning to
+   *   a state that already has runs below it reselects that state run and restores the latest runs made from it. A state run nothing was made
+   *   from is replaced instead of kept.
+   * - While the state is unset or invalid, nothing is selected and the children follow no parent run, so a child with requireParentRun is
+   *   blocked until the state is set up.
    */
   readonly viewOnly?: Maybe<boolean>;
   /**
@@ -564,6 +593,32 @@ export abstract class DbxLlmFlowSectionFormBindingTarget<F = unknown> {
  */
 export function dbxLlmFlowRunKind(kind?: Maybe<DbxLlmFlowRunKind>): DbxLlmFlowRunKind {
   return kind ?? DEFAULT_DBX_LLM_FLOW_RUN_KIND;
+}
+
+/**
+ * Whether the run is a state run: the recorded state of a view-only section. See DbxLlmFlowSectionConfig.viewOnly.
+ *
+ * @param run - The run.
+ * @returns True for a state run.
+ */
+export function isDbxLlmFlowStateRun(run: Maybe<Pick<DbxLlmFlowRun, 'kind'>>): boolean {
+  return run?.kind === DBX_LLM_FLOW_STATE_RUN_KIND;
+}
+
+/**
+ * Returns the run of the section in a lineage, such as the state run of a view-only section above the section that runs.
+ *
+ * @param lineage - The lineage, such as DbxLlmFlowRunValue.lineage.
+ * @param sectionKey - The section key.
+ * @returns The section's nearest run in the lineage, if any.
+ *
+ * @example
+ * ```ts
+ * const setup = dbxLlmFlowLineageRun<SetupState>(value.lineage, 'setup')?.output;
+ * ```
+ */
+export function dbxLlmFlowLineageRun<O = unknown>(lineage: readonly DbxLlmFlowRun[], sectionKey: DbxLlmFlowSectionKey): Maybe<DbxLlmFlowRun<unknown, O>> {
+  return lineage.findLast((x) => x.sectionKey === sectionKey) as Maybe<DbxLlmFlowRun<unknown, O>>;
 }
 
 /**

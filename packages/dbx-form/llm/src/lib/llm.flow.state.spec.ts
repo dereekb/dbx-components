@@ -1,5 +1,18 @@
 import { describe, it, expect } from 'vitest';
-import { DBX_LLM_FLOW_RUN_INTERRUPTED_ERROR_CODE, DBX_LLM_FLOW_RUN_NON_JSON_OUTPUT_ERROR_CODE, type DbxLlmFlowAnySectionConfig, type DbxLlmFlowConfig, type DbxLlmFlowRun, type DbxLlmFlowRunKind, type DbxLlmFlowSectionKey, type DbxLlmFlowState } from './llm.flow';
+import { type Maybe } from '@dereekb/util';
+import {
+  DBX_LLM_FLOW_RUN_INTERRUPTED_ERROR_CODE,
+  DBX_LLM_FLOW_RUN_NON_JSON_OUTPUT_ERROR_CODE,
+  DBX_LLM_FLOW_STATE_RUN_KIND,
+  type DbxLlmFlowAnySectionConfig,
+  type DbxLlmFlowConfig,
+  type DbxLlmFlowRun,
+  type DbxLlmFlowRunKind,
+  type DbxLlmFlowSectionKey,
+  type DbxLlmFlowState,
+  dbxLlmFlowLineageRun,
+  isDbxLlmFlowStateRun
+} from './llm.flow';
 import {
   type DbxLlmFlowStateContext,
   dbxLlmFlowHistoryLimits,
@@ -17,6 +30,7 @@ import {
   dbxLlmFlowStateWithDraftFormValue,
   dbxLlmFlowStateWithFailedRun,
   dbxLlmFlowStateWithFormValid,
+  dbxLlmFlowStateWithFormValue,
   dbxLlmFlowStateWithImportedRuns,
   dbxLlmFlowStateWithLoadedRun,
   dbxLlmFlowStateWithPastedRawInput,
@@ -39,6 +53,7 @@ function makeFlow(configs: DbxLlmFlowAnySectionConfig[], flowConfig?: DbxLlmFlow
   const map = new Map(configs.map((x) => [x.key, x]));
   let time = 1000;
   let requestId = 0;
+  let stateRunId = 0;
 
   const context: DbxLlmFlowStateContext = {
     get now() {
@@ -47,7 +62,8 @@ function makeFlow(configs: DbxLlmFlowAnySectionConfig[], flowConfig?: DbxLlmFlow
     },
     flowConfig,
     sectionConfig: (key) => map.get(key),
-    nextRequestId: () => (requestId += 1)
+    nextRequestId: () => (requestId += 1),
+    nextRunId: () => `s${(stateRunId += 1)}`
   };
 
   let state = initialDbxLlmFlowState();
@@ -748,5 +764,213 @@ describe('dbxLlmFlowSectionStepNumber()', () => {
 
     expect(dbxLlmFlowSectionStepNumber(flow.state, 'fixed', context)).toBe(0);
     expect(dbxLlmFlowSectionStepNumber(flow.state, 'unknown', context)).toBe(1);
+  });
+});
+
+describe('view-only state', () => {
+  interface SetupState {
+    readonly hosted?: boolean;
+    readonly look?: string;
+  }
+
+  const SETUP: DbxLlmFlowAnySectionConfig = { key: 'setup', viewOnly: true };
+  const PROMPT: DbxLlmFlowAnySectionConfig = { key: 'prompt', parentKey: 'setup', hasForm: true, initialDraft: { formValue: { mood: 'calm' } }, requireParentRun: true };
+  const RENDER: DbxLlmFlowAnySectionConfig = { key: 'render', parentKey: 'prompt' };
+  const VALIDATED_SETUP: DbxLlmFlowAnySectionConfig = { ...SETUP, validateInput: (input) => ((input.formValue as Maybe<SetupState>)?.hosted ? undefined : 'Host the world.') };
+
+  function setState(flow: TestFlow, key: DbxLlmFlowSectionKey, formValue: unknown) {
+    flow.state = dbxLlmFlowStateWithFormValue(flow.state, { key, formValue }, flow.context);
+  }
+
+  function stateRun(flow: TestFlow, key: DbxLlmFlowSectionKey = 'setup'): Maybe<DbxLlmFlowRun> {
+    const runId = flow.state.sections[key].selectedRunIds.at(-1);
+    return runId == null ? undefined : flow.state.runs[runId];
+  }
+
+  function stateRunIds(flow: TestFlow): string[] {
+    return Object.values(flow.state.runs)
+      .filter(isDbxLlmFlowStateRun)
+      .map((x) => x.id);
+  }
+
+  it('should not record a state run, or report an empty input, while the state is unset', () => {
+    const flow = makeFlow([SETUP, PROMPT]);
+    expect(flow.state.sections['setup'].inputIssues).toBeUndefined();
+    expect(flow.state.runs).toEqual({});
+    expect(dbxLlmFlowSectionRunAvailability(flow.state, 'prompt', flow.context).blockedReason).toBe('parent_run_required');
+  });
+
+  it('should record the state as the selected state run, which the children follow', () => {
+    const flow = makeFlow([SETUP, PROMPT]);
+    setState(flow, 'setup', { look: 'noir' });
+
+    const run = stateRun(flow) as DbxLlmFlowRun;
+    expect(run.kind).toBe(DBX_LLM_FLOW_STATE_RUN_KIND);
+    expect(isDbxLlmFlowStateRun(run)).toBe(true);
+    expect(run.state).toBe('success');
+    expect(run.output).toEqual({ look: 'noir' });
+    expect(run.input.formValue).toEqual({ look: 'noir' });
+    expect(run.parentRunId).toBeUndefined();
+    expect(flow.state.sections['prompt'].followedParentRunId).toBe(run.id);
+    expect(dbxLlmFlowSectionRunAvailability(flow.state, 'prompt', flow.context).canRun).toBe(true);
+  });
+
+  it('should ignore a deep-equal state', () => {
+    const flow = makeFlow([SETUP, PROMPT]);
+    setState(flow, 'setup', { look: 'noir' });
+    const state = flow.state;
+    setState(flow, 'setup', { look: 'noir' });
+    expect(flow.state).toBe(state);
+  });
+
+  it('should record the initial state when the section registers', () => {
+    const flow = makeFlow([{ ...SETUP, initialDraft: { formValue: { look: 'noir' } } }, PROMPT]);
+    expect(stateRun(flow)?.output).toEqual({ look: 'noir' });
+    expect(flow.state.sections['prompt'].followedParentRunId).toBe(stateRun(flow)?.id);
+  });
+
+  it('should record a state pushed by a bound form', () => {
+    const flow = makeFlow([SETUP, PROMPT]);
+    flow.state = dbxLlmFlowStateWithDraftFormValue(flow.state, { key: 'setup', bindingId: 1, formValue: { look: 'noir' } }, flow.context);
+    expect(flow.state.sections['setup'].draftSource).toBe(1);
+    expect(stateRun(flow)?.output).toEqual({ look: 'noir' });
+  });
+
+  it('should hand the state to the runs below it through their parent run and lineage', () => {
+    const flow = makeFlow([SETUP, PROMPT, RENDER]);
+    setState(flow, 'setup', { look: 'noir' });
+    const setupRunId = stateRun(flow)?.id;
+
+    const promptStart = startRun(flow, 'prompt', 'p1');
+    expect(promptStart.value?.parentRun?.output).toEqual({ look: 'noir' });
+    completeRun(flow, 'p1', 'scene');
+    expect(flow.state.runs['p1'].parentRunId).toBe(setupRunId);
+
+    const renderStart = startRun(flow, 'render', 'r1');
+    const lineage = renderStart.value?.lineage ?? [];
+    expect(lineage.map((x) => x.sectionKey)).toEqual(['setup', 'prompt']);
+    expect(dbxLlmFlowLineageRun<SetupState>(lineage, 'setup')?.output).toEqual({ look: 'noir' });
+    expect(dbxLlmFlowLineageRun(lineage, 'unknown')).toBeUndefined();
+  });
+
+  it('should replace a state run nothing was made from, and keep one with runs below it', () => {
+    const flow = makeFlow([SETUP, PROMPT]);
+    setState(flow, 'setup', { look: 'noir' });
+    const noir = stateRun(flow)?.id as string;
+
+    setState(flow, 'setup', { look: 'pastel' });
+    const pastel = stateRun(flow)?.id as string;
+    expect(pastel).not.toBe(noir);
+    expect(stateRunIds(flow)).toEqual([pastel]);
+
+    run(flow, 'prompt', 'p1', 'pastel scene');
+    setState(flow, 'setup', { look: 'neon' });
+    const neon = stateRun(flow)?.id as string;
+    expect(stateRunIds(flow)).toEqual([pastel, neon]);
+    expect(flow.state.sections['prompt'].followedParentRunId).toBe(neon);
+    expect(flow.state.sections['prompt'].selectedRunIds).toEqual([]);
+  });
+
+  it('should reselect an earlier state and restore the latest runs made from it', () => {
+    const flow = makeFlow([SETUP, PROMPT, RENDER]);
+    setState(flow, 'setup', { look: 'noir' });
+    const noir = stateRun(flow)?.id as string;
+    run(flow, 'prompt', 'p1', 'noir scene');
+    run(flow, 'render', 'r1', 'noir render');
+
+    setState(flow, 'setup', { look: 'pastel' });
+    expect(flow.state.sections['prompt'].selectedRunIds).toEqual([]);
+    expect(flow.state.sections['render'].selectedRunIds).toEqual([]);
+    expect(flow.state.sections['render'].followedParentRunId).toBeUndefined();
+
+    setState(flow, 'setup', { look: 'noir' });
+    expect(stateRun(flow)?.id).toBe(noir);
+    expect(flow.state.sections['prompt'].selectedRunIds).toEqual(['p1']);
+    expect(flow.state.sections['render'].selectedRunIds).toEqual(['r1']);
+    expect(stateRunIds(flow)).toEqual([noir]); // the pastel state run had nothing below it
+  });
+
+  it('should restore the state a child ran with when the child run is loaded with its parents', () => {
+    const flow = makeFlow([SETUP, PROMPT]);
+    setState(flow, 'setup', { look: 'noir' });
+    run(flow, 'prompt', 'p1', 'noir scene');
+    setState(flow, 'setup', { look: 'pastel' });
+    run(flow, 'prompt', 'p2', 'pastel scene');
+
+    const loaded = dbxLlmFlowStateWithLoadedRun(flow.state, { runId: 'p1', withAncestors: true }, flow.context);
+    expect(loaded.loaded).toBe(true);
+    expect(loaded.state.sections['setup'].draft.formValue).toEqual({ look: 'noir' });
+    expect(loaded.state.sections['setup'].selectedRunIds).toEqual([flow.state.runs['p1'].parentRunId]);
+    expect(loaded.state.sections['prompt'].selectedRunIds).toEqual(['p1']);
+  });
+
+  it('should select nothing and clear the children while the state is invalid, then restore them', () => {
+    const flow = makeFlow([VALIDATED_SETUP, PROMPT, RENDER]);
+    setState(flow, 'setup', { hosted: false, look: 'noir' });
+    expect(flow.state.sections['setup'].inputIssues).toEqual(['Host the world.']);
+    expect(stateRun(flow)).toBeUndefined();
+
+    setState(flow, 'setup', { hosted: true, look: 'noir' });
+    run(flow, 'prompt', 'p1', 'noir scene');
+    run(flow, 'render', 'r1', 'noir render');
+
+    setState(flow, 'setup', { hosted: false, look: 'noir' });
+    expect(flow.state.sections['setup'].selectedRunIds).toEqual([]);
+    expect(flow.state.sections['prompt'].followedParentRunId).toBeUndefined();
+    expect(flow.state.sections['prompt'].selectedRunIds).toEqual([]);
+    expect(flow.state.sections['render'].selectedRunIds).toEqual([]);
+    expect(dbxLlmFlowSectionRunAvailability(flow.state, 'prompt', flow.context).blockedReason).toBe('parent_run_required');
+
+    setState(flow, 'setup', { hosted: true, look: 'noir' });
+    expect(flow.state.sections['prompt'].selectedRunIds).toEqual(['p1']);
+    expect(flow.state.sections['render'].selectedRunIds).toEqual(['r1']);
+  });
+
+  it('should not record the state while its bound form is invalid', () => {
+    const flow = makeFlow([SETUP, PROMPT]);
+    flow.state = dbxLlmFlowStateWithFormValid(flow.state, { key: 'setup', valid: false }, flow.context);
+    setState(flow, 'setup', { look: 'noir' });
+    expect(stateRun(flow)).toBeUndefined();
+
+    flow.state = dbxLlmFlowStateWithFormValid(flow.state, { key: 'setup', valid: true }, flow.context);
+    expect(stateRun(flow)?.output).toEqual({ look: 'noir' });
+  });
+
+  it('should not auto-run a child when the state changes', () => {
+    const flow = makeFlow([SETUP, { ...PROMPT, autoRunAfterParent: true }]);
+    flow.state = dbxLlmFlowStateWithRunBridge(flow.state, { key: 'prompt', kind: 'run', mounted: true });
+    setState(flow, 'setup', { look: 'noir' });
+    expect(flow.state.sections['prompt'].followedParentRunId).toBe(stateRun(flow)?.id);
+    expect(flow.state.runRequests['prompt']).toBeUndefined();
+  });
+
+  describe('below a run section', () => {
+    const SETTINGS: DbxLlmFlowAnySectionConfig = { key: 'settings', parentKey: 'a', viewOnly: true };
+
+    it('should record the state under the followed parent run only, and auto-run on from a completed parent run', () => {
+      const flow = makeFlow([FORM_A, { ...SETTINGS, initialDraft: { formValue: { size: 1 } } }, { key: 'draft', parentKey: 'settings', autoRunAfterParent: true }]);
+      flow.state = dbxLlmFlowStateWithRunBridge(flow.state, { key: 'draft', kind: 'run', mounted: true });
+      expect(stateRun(flow, 'settings')).toBeUndefined(); // follows no parent run yet
+
+      run(flow, 'a', 'a1', 'outline');
+      const settingsRun = stateRun(flow, 'settings');
+      expect(settingsRun?.parentRunId).toBe('a1');
+      expect(settingsRun?.output).toEqual({ size: 1 });
+      expect(flow.state.sections['draft'].followedParentRunId).toBe(settingsRun?.id);
+      expect(flow.state.runRequests['draft']?.kind).toBe('run');
+    });
+
+    it('should carry the state to a new parent run, and restore it when an earlier parent run is loaded', () => {
+      const flow = makeFlow([FORM_A, SETTINGS]);
+      run(flow, 'a', 'a1', 'x');
+      setState(flow, 'settings', { size: 1 });
+      run(flow, 'a', 'a2', 'y');
+      expect(stateRun(flow, 'settings')?.parentRunId).toBe('a2');
+      expect(stateRun(flow, 'settings')?.output).toEqual({ size: 1 });
+
+      setState(flow, 'settings', { size: 2 });
+      const loaded = dbxLlmFlowStateWithLoadedRun(flow.state, { runId: 'a1' }, flow.context);
+      expect(loaded.state.sections['settings'].draft.formValue).toEqual({ size: 1 });
+    });
   });
 });

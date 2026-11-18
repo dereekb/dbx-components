@@ -50,9 +50,11 @@ const RUN_STATUS_CHIPS: Readonly<Record<DbxLlmFlowSectionStatus, DbxLlmFlowSecti
  *
  * The form pops out to a dialog or a detach window when the section store's popout signal is set. Both are live-synced with the inline form.
  *
- * A view-only section (the config's viewOnly) has no runs: the header (step number, label, the page's status chip, hint and collapse button)
- * and the projected content as its body. Projected content can inject the DbxLlmFlowSectionStore. Its collapsed state persists with the flow;
- * a page can collapse it once something is set up with DbxLlmFlowStore.setCollapsed().
+ * A view-only section (the config's viewOnly) has no runs of its own: the header (step number, label, the page's status chip, hint and collapse
+ * button), its form when it has a formComponent, and the projected content as its body. Projected content can inject the DbxLlmFlowSectionStore.
+ * Its state (its form value) is recorded in the run tree, so child runs carry it and loading a child run with its parents restores it: bind it
+ * with the form, the dbxLlmFlowSectionValue directive, or the store's setFormValue(). Its collapsed state persists with the flow; a page can
+ * collapse it once something is set up with DbxLlmFlowStore.setCollapsed().
  *
  * The section config is set with the config input and the parent section with the parentKey input, both through the DbxLlmFlowSectionDirective
  * host directive. In the example below, setupConfig is `{ key: 'setup', label: 'Setup', viewOnly: true, stepNumber: 0 }`: a view-only step
@@ -70,7 +72,7 @@ const RUN_STATUS_CHIPS: Readonly<Record<DbxLlmFlowSectionStatus, DbxLlmFlowSecti
  * @example
  * ```html
  * <dbx-llm-flow-section [config]="setupConfig" [statusChip]="setupStatusChip()">
- *   <app-setup-bench></app-setup-bench>
+ *   <app-setup-bench [(dbxLlmFlowSectionValue)]="setupState"></app-setup-bench>
  * </dbx-llm-flow-section>
  * <dbx-llm-flow-section [config]="briefConfig"></dbx-llm-flow-section>
  * <dbx-llm-flow-section [config]="outlineConfig" parentKey="brief" [display]="{ rawInput: false }"></dbx-llm-flow-section>

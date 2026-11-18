@@ -97,6 +97,14 @@ export class DbxLlmFlowSectionStore<F = unknown, O = unknown> extends DbxLlmFlow
     distinctUntilChanged()
   );
 
+  /**
+   * The draft's form value. For a view-only section, its state. See DbxLlmFlowSectionConfig.viewOnly.
+   */
+  readonly formValue$: Observable<Maybe<F>> = this.draft$.pipe(
+    map((x) => x?.formValue),
+    distinctUntilChanged()
+  );
+
   readonly rawInput$: Observable<string> = this.draft$.pipe(
     map((x) => x?.rawInput ?? ''),
     distinctUntilChanged()
@@ -369,6 +377,16 @@ export class DbxLlmFlowSectionStore<F = unknown, O = unknown> extends DbxLlmFlow
   // MARK: Draft
   loadDraft(input: Partial<DbxLlmFlowSectionInput<F>>): void {
     this.flowStore.loadDraft(this.key, input);
+  }
+
+  /**
+   * Sets the form value from the store, such as a view-only section's state, and seeds the bound forms. A value deep-equal to the current one is
+   * ignored. See DbxLlmFlowStore.setFormValue().
+   *
+   * @param formValue - The form value. Must be JSON-compatible.
+   */
+  setFormValue(formValue: Maybe<F>): void {
+    this.flowStore.setFormValue(this.key, formValue);
   }
 
   pasteRawInput(rawInput: string): void {
