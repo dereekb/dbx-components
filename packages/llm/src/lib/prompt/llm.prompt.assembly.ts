@@ -133,7 +133,8 @@ export interface LlmPromptGeneratedSegmentOrigin extends LlmPromptSegmentOrigin 
    */
   readonly kind: 'generated';
   /**
-   * What generated it — open; the assembly's own are {@link LlmPromptAssemblyGenerator}.
+   * What generated it — open; the assembly's own are {@link LlmPromptAssemblyGenerator}, the craft contributor's is
+   * `craft-heading`.
    */
   readonly generator: string;
 }

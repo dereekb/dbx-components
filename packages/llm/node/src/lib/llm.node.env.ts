@@ -172,6 +172,11 @@ export interface LlmEnvNames {
    * lane. Optional so existing literals stay valid; absent ⇒ never read.
    */
   readonly decisionProvider?: Maybe<LlmEnvVarNames>;
+  /**
+   * The machine craft-notes folder (`resolveLlmCraftNotesDir`). Optional so existing literals stay valid; absent ⇒
+   * never read.
+   */
+  readonly craftNotesDir?: Maybe<LlmEnvVarNames>;
 }
 
 /**
@@ -192,7 +197,8 @@ export const DEFAULT_LLM_ENV_NAMES: LlmEnvNames = {
   tierModels: { fast: ['LLM_MODEL'], strong: ['LLM_MODEL_STRONG'] },
   defaultTier: ['LLM_DEFAULT_TIER'],
   decodeRetryTier: ['LLM_DECODE_RETRY_TIER'],
-  decisionProvider: ['LLM_DECISION_PROVIDER']
+  decisionProvider: ['LLM_DECISION_PROVIDER'],
+  craftNotesDir: ['LLM_CRAFT_NOTES_DIR']
 };
 
 /**

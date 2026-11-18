@@ -17,7 +17,7 @@ dependency, and its browser entries run unchanged in a browser, a worker or Node
 | `@dereekb/llm/openai` | no | `openai` (optional, lazy) | The OpenAI-compatible chat strategy (OpenAI, ZenMux chat, a local vLLM) and its completion adapter. |
 | `@dereekb/llm/openrouter` | no | `openai` + `@openrouter/sdk` (optional, lazy) | The OpenRouter chat strategy (`cache_control`, strict `response_format`, usage accounting), the OpenRouter decision strategy and their adapters. |
 | `@dereekb/llm/zenmux` | no | none (`fetch`) | ZenMux constants and cost basis, the decision strategy, the quota-status source and the bill reader. |
-| `@dereekb/llm/node` | yes | none | Model-config file IO, environment variables to provider configs, and the craft-folder loader. |
+| `@dereekb/llm/node` | yes | none | Model-config file IO, environment variables to provider configs, the craft-notes folder loader and the craft markdown to TypeScript compiler. |
 | `@dereekb/llm/test` | test infra | none | Tape replay, scripted completion and decision strategies, and the billed-lane test factories. |
 
 ## Browser safety
@@ -347,7 +347,7 @@ scopes, prompt handles and chains, a live-context token budget, a cache-prefix w
   `promptAddendum` (from `llmModelPromptAddenda(config)`) in the `model-addendum` slot; `llmModelAddendumSegment` mints
   the same segment, and `restampLlmModelAddendum` swaps a captured prompt's addendum for another model's.
   `llmAnchoredBlockPromptContributor({ id, reason, blockOf })` places one block a scope supplied among the capability's
-  live blocks, at its anchor.
+  live blocks, at its anchor. The craft contributor has its own section, [Craft notes](#craft-notes).
 
 A layout with a host frame slot, one contributor that fills it, and a live-slot contribution anchored among the
 capability's blocks:
@@ -474,6 +474,71 @@ const budgeted = budgetLlmLiveContextBlocks({
 
 const request = { capability: 'summarize', renderLiveContext: () => budgeted.blocks };
 budgeted.trimmed; // [{ priority: 1, action: 'shrunk', savedTokens: … }] when the history had to shrink
+```
+
+## Craft notes
+
+A craft note is authored know-how about a target (a page type, a reply channel) that a contributor places, verbatim, in
+the `craft` slot of the prompts written for it. Code composes no English around a note. Notes come from ordered tiers,
+are matched against the request's site, are optionally judged by one decision call, and are budgeted.
+
+- **Notes.** A markdown file with a frontmatter block: `id` (`^[a-z0-9][a-z0-9-]{1,63}$`), `title`, `sites`, `where`,
+  `ask`, `floor` (default 0.6), `unserved` (default `omit`), `priority` (default 4, 0–8) and `enabled`. The body is at
+  most 1,500 chars and is never truncated. The frontmatter is a YAML subset (scalars, flow lists, one level of nesting,
+  comments), and every refusal names its line. `parseLlmCraftNote` / `parseLlmCraftNoteSet`.
+- **Sites.** `makeLlmCraftSiteRegistry({ sites })` declares each kind's facts (`closed` / `open` / `boolean`), its
+  free-text inputs and its limits: 4 notes, 3,000 body chars, 8 judged notes and 600 chars per judged input, each
+  overridable per registry and per site. `llmCraftNoteUnknownWhereValues` names a `where` value your vocabulary cannot
+  produce, for an authoring check.
+- **Tiers.** Lowest precedence first; a higher tier shadows by id, and `enabled: false` is a tombstone. A tier is a
+  static array or a per-request reader. `makeLlmCraftNoteRowReader` parses stored rows, memoized, and a tombstone row
+  hides its id whatever text it kept.
+- **Selection.** AND across `where` keys, OR within a list, and a missing fact never matches; then the host guard; rank
+  (priority, then specificity, then id); `judgeMax`; the floor and the unserved posture; the budget.
+  `selectLlmCraftNotes` selects in one step when the verdicts are known.
+- **Judge.** `makeLlmCraftJudge({ sites, dispatcher, available, onUnavailable, swallow })` asks one Noul question per
+  asked note (its `ask` verbatim). Its state is only the named inputs, clipped. It makes at most one call per dispatch,
+  and a fault or an unavailable lane answers nothing (each note takes its `unserved` posture). The call record is
+  stamped `{ craft: { asked, kept } }` under decision `CraftNoteSelect`.
+- **Contributor.** `llmCraftPromptContributor({ sites, tiers, guard, headings, slot, enabled })` gives each group one
+  heading, puts the stable group on the cache prefix and the judged group after it as volatile, and records every cut
+  on the call's `supplements`. A per-request tier that fails to parse logs one `craft-note-invalid` breadcrumb per file.
+
+A note file, `apparel-plain.md`:
+
+```md
+---
+id: apparel-plain
+title: Plain apparel pages
+sites: [product-page]
+where:
+  category: [apparel]
+ask: "`brief` asks for a garment with no logo or print."
+unserved: include
+---
+Name the fabric and the cut first. Never describe a logo the brief did not ask for.
+```
+
+The registry, the tiers and a judged site:
+
+```ts
+import { llmCraftPromptContributor, makeLlmCraftJudge, makeLlmCraftNoteRowReader, makeLlmCraftSiteRegistry } from '@dereekb/llm';
+
+const sites = makeLlmCraftSiteRegistry({
+  sites: {
+    'product-page': { facts: { category: 'closed', brand: 'open' }, inputs: ['brief'] },
+    'support-reply': { facts: { channel: 'closed' }, inputs: ['message'], limits: { maxBytes: 2400 } }
+  }
+});
+const readRows = makeLlmCraftNoteRowReader({ tier: 'workspace', sites });
+
+const craft = llmCraftPromptContributor<ShopRequest, ShopDescriptor>({
+  sites,
+  tiers: [BUILTIN_CRAFT_NOTES, machine.notes, ({ request }) => readRows(request.craftRows)],
+  guard: ({ descriptor }) => descriptor?.traits?.customerFacing === true
+});
+
+const site = { kind: 'product-page', facts: { category: 'apparel', brand: 'acme' }, inputs: { brief }, judge: makeLlmCraftJudge({ sites, dispatcher }) };
 ```
 
 ## Decisions
@@ -751,6 +816,7 @@ how a spec stays hermetic.
   | `defaultTier` | `LLM_DEFAULT_TIER` | Which tier is the default. |
   | `decodeRetryTier` | `LLM_DECODE_RETRY_TIER` | Which tier a malformed reply retries on (`off` keeps the same model). |
   | `decisionProvider` | `LLM_DECISION_PROVIDER` | The decision-lane provider pin (a provider id). |
+  | `craftNotesDir` | `LLM_CRAFT_NOTES_DIR` | The machine craft-notes folder. |
 
 - **The file.** `loadEffectiveLlmModelConfigFile({ schema, base, defaultPath })` reads the path the env names, else
   `defaultPath` — the explicit path fails loud when missing, while a missing `defaultPath` just means the built-ins —
@@ -769,6 +835,24 @@ how a spec stays hermetic.
   default is the explicit selection, else the first keyed non-fallback provider, else the fallback, keyed or not, so a
   missing key fails loud at the call. `gaps` lists every declared provider without a key; scope it to the slugs a run
   can reach with `llmReachableProviderGapsOf`.
+- **Craft notes.** `resolveLlmCraftNotesDir({ defaultDir })` answers the folder the env names, else yours.
+  `loadLlmCraftNotes({ dir, tier, sites, warn })` drops and warns about a bad note, never throws, and reads an absent
+  folder as no notes. `compileLlmCraftNotes` / `writeLlmCraftNotesModule` compile a committed folder into a
+  `*.generated.ts` module (the write refuses on any refusal and is atomic). Register `LLM_NODE_SWALLOW_SITES` beside
+  `LLM_SWALLOW_SITES` for the folder-read site.
+
+  A freshness spec for committed built-ins compares data, and re-emits behind a flag of your own:
+
+  ```ts
+  import { compileLlmCraftNotes, writeLlmCraftNotesModule } from '@dereekb/llm/node';
+
+  const config = { dir: NOTES_DIR, tier: 'builtin', sites, exportName: 'BUILTIN_CRAFT_NOTES', out: OUT_FILE };
+
+  it('keeps the compiled craft notes fresh', () => {
+    if (process.env['SHOP_EMIT_CRAFT_NOTES'] === '1') writeLlmCraftNotesModule(config);
+    expect(compileLlmCraftNotes(config).notes).toEqual(BUILTIN_CRAFT_NOTES);
+  });
+  ```
 
 ```ts
 import { homedir } from 'node:os';

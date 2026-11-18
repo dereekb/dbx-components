@@ -1,7 +1,7 @@
 /**
  * Craft identity — the plain-string names a prompt site and its craft notes are keyed by. Craft notes are authored
  * prompt supplements selected per site; the note model, its loading, its selection and its judge build on these
- * names later. Every name is an open `string`: a host declares its own site vocabulary and note tiers.
+ * names in this folder. Every name is an open `string`: a host declares its own site vocabulary and note tiers.
  */
 
 /**

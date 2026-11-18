@@ -75,7 +75,8 @@ describe('LLM_SWALLOW_SITES', () => {
       'llm/credential-probe.error-body',
       'llm/strategy-readiness.health-check',
       'llm/strategy-readiness.credential-probe',
-      'llm/strategy-readiness.provider-status'
+      'llm/strategy-readiness.provider-status',
+      'llm/craft-judge.decide'
     ]);
   });
 

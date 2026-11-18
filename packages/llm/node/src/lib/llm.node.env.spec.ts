@@ -91,4 +91,8 @@ describe('DEFAULT_LLM_ENV_NAMES', () => {
   it('should name the decision-lane provider pin', () => {
     expect(DEFAULT_LLM_ENV_NAMES.decisionProvider).toEqual(['LLM_DECISION_PROVIDER']);
   });
+
+  it('should name the craft-notes folder', () => {
+    expect(DEFAULT_LLM_ENV_NAMES.craftNotesDir).toEqual(['LLM_CRAFT_NOTES_DIR']);
+  });
 });
