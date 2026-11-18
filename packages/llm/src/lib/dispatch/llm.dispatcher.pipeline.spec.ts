@@ -1,9 +1,11 @@
 /**
- * The single-attempt dispatcher pipeline — the ported dispatcher cases (single-attempt halves) plus the library's own.
+ * The dispatcher pipeline — the ported dispatcher cases (single-attempt halves, pinned to `maxAttempts: 1`) plus the
+ * library's own.
  *
- * Not ported: the cases that rely on a host's shipped default tier map (the library ships no default slug), the
- * host-writer capture gates (they belong to the host's recorder), and every retry-ladder / lever / correction /
- * backoff / bonus / fast-fix / critique / decision case — those arrive with the bounded retry ladder.
+ * Not ported: the cases that rely on a host's shipped default tier map (the library ships no default slug) and the
+ * host-writer capture gates (they belong to the host's recorder). The retry-ladder / lever / correction / backoff /
+ * bonus / critique cases live in `llm.dispatcher.retry.spec.ts`, the fast-fix cases in
+ * `llm.dispatcher.reply.repair.spec.ts`, and the decision lane in `llm.dispatcher.decision.spec.ts`.
  */
 
 import { type } from 'arktype';
@@ -380,28 +382,14 @@ describe('makeLlmDispatcher()', () => {
       expect(result.decodeStatus).toBe('clean');
     });
 
-    it('should drop an invalid reply after one call with an attempt-indexed validation error (maxAttempts 1 / 0 / default)', async () => {
-      for (const maxAttempts of [1, 0, undefined]) {
+    it('should drop an invalid reply after one call with an attempt-indexed validation error (maxAttempts 1 / 0)', async () => {
+      for (const maxAttempts of [1, 0]) {
         const { dispatcher, requests } = setup({ replies: ['{"answer":1}'] });
-        const result = await dispatcher.dispatch(request({ validate: VALID, ...(maxAttempts == null ? {} : { maxAttempts }) }));
+        const result = await dispatcher.dispatch(request({ validate: VALID, maxAttempts }));
 
         expect(requests).toHaveLength(1);
         expect(result).toMatchObject({ attempts: 1, decodeStatus: 'dropped', decodeOutcome: 'schema-invalid', validationErrors: ['attempt 1: answer must be a string'] });
       }
-    });
-
-    it('should route a request critique onto the validated path without calling a critic', async () => {
-      let critiques = 0;
-      const critique = () => {
-        critiques += 1;
-        return Promise.resolve(true as const);
-      };
-      const { dispatcher, requests } = setup({ replies: ['{"answer":"ok"}'] });
-      const result = await dispatcher.dispatch(request({ critique: critique as never }));
-
-      expect(requests).toHaveLength(1);
-      expect(critiques).toBe(0);
-      expect(result).toMatchObject({ attempts: 1, decodeStatus: 'clean' });
     });
   });
 
@@ -410,7 +398,7 @@ describe('makeLlmDispatcher()', () => {
       const text = '{"answer":"cut off mid';
       const { calls, decodeFailures, recorder } = recording();
       const { dispatcher } = setup({ replies: [{ text, finishReason: 'length' }], recorder });
-      const result = await dispatcher.dispatch(request({ capability: 'StrongCap', validate: VALID }));
+      const result = await dispatcher.dispatch(request({ capability: 'StrongCap', validate: VALID, maxAttempts: 1 }));
 
       expect(result).toMatchObject({ attempts: 1, decodeStatus: 'dropped', lengthCapped: true });
       expect(calls).toHaveLength(1);
@@ -584,7 +572,7 @@ describe('makeLlmDispatcher()', () => {
     it('should drop the beat on an abort on the validated path (timeout row, attempts 1)', async () => {
       const { decodeFailures, recorder } = recording();
       const { dispatcher } = setup({ replies: [new APIUserAbortError('aborted')], recorder });
-      const result = await dispatcher.dispatch(request({ validate: VALID }));
+      const result = await dispatcher.dispatch(request({ validate: VALID, maxAttempts: 1 }));
 
       expect(result).toMatchObject({ attempts: 1, decodeStatus: 'dropped', text: '' });
       expect(decodeFailures[0].payload.failures).toEqual([expect.objectContaining({ class: 'timeout' })]);
@@ -593,7 +581,7 @@ describe('makeLlmDispatcher()', () => {
     it('should drop a 429 on the validated path with a transport row, and propagate it on the single-shot path', async () => {
       const { decodeFailures, recorder } = recording();
       const { dispatcher } = setup({ replies: [rateLimited()], recorder });
-      const result = await dispatcher.dispatch(request({ validate: VALID }));
+      const result = await dispatcher.dispatch(request({ validate: VALID, maxAttempts: 1 }));
 
       expect(result.decodeStatus).toBe('dropped');
       expect(decodeFailures[0].payload.failures[0]).toMatchObject({ class: 'transport', transportError: expect.any(String) });
@@ -804,7 +792,7 @@ describe('makeLlmDispatcher()', () => {
       taps.addTap({ id: 't', onDispatchComplete: (event) => void completes.push(event) });
       const { calls, recorder } = recording();
       const { dispatcher } = setup({ replies: ['{"answer":1}'], recorder, taps });
-      await dispatcher.dispatch(request({ validate: VALID }));
+      await dispatcher.dispatch(request({ validate: VALID, maxAttempts: 1 }));
 
       expect(calls[0].failedAttempts).toEqual([expect.objectContaining({ attempt: 1, cause: 'schema-validation', error: 'answer must be a string', text: '{"answer":1}', rawLength: 12 })]);
       expect(completes[0].failedAttempts).toBe(calls[0].failedAttempts);
@@ -822,7 +810,7 @@ describe('makeLlmDispatcher()', () => {
     it('should record a validated-path timeout row', async () => {
       const { calls, recorder } = recording();
       const { dispatcher } = setup({ replies: [new APIUserAbortError('aborted')], recorder });
-      await dispatcher.dispatch(request({ validate: VALID }));
+      await dispatcher.dispatch(request({ validate: VALID, maxAttempts: 1 }));
 
       expect(calls[0].failedAttempts).toEqual([expect.objectContaining({ attempt: 1, cause: 'timeout', text: '' })]);
     });
@@ -833,7 +821,7 @@ describe('makeLlmDispatcher()', () => {
       for (const reply of scenarios) {
         const { calls, recorder } = recording();
         const { dispatcher } = setup({ replies: [reply], recorder });
-        const result = await dispatcher.dispatch(request({ validate: VALID }));
+        const result = await dispatcher.dispatch(request({ validate: VALID, maxAttempts: 1 }));
         const accepted = result.decodeStatus !== 'dropped';
 
         expect(calls[0].failedAttempts?.length ?? 0).toBe((result.attempts ?? 0) - (accepted ? 1 : 0));

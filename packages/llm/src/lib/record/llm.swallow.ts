@@ -209,8 +209,10 @@ export const LLM_SWALLOW_SITES: LlmSwallowSiteRegistry = makeLlmSwallowSiteRegis
   { id: 'llm/reply-envelope.decode', protects: 'a reply whose JSON block does not parse reads as a degenerate decode (no-json / parse-error) the caller retries or drops; the reader never throws', onError: 'degrade', expectation: 'expected', channel: 'diag' },
   // repairLlmReplyJson — the parse of a rebuilt text; the verdict carries it, no sink is called.
   { id: 'llm/reply-repair.rebuilt-parse', protects: 'a rebuilt text that does not parse is never a near-miss; the shape says so and the reply falls through to the fast fix or a re-ask', onError: 'degrade', expectation: 'expected', channel: 'result' },
-  // makeLlmReplyFastFixer — the fixer dispatch's catch.
+  // makeLlmReplyFastFixer — the fixer dispatch's catch; the dispatcher's fast-fix tier — a bound fixer that throws.
   { id: 'llm/reply-repair.fast-fix', protects: 'a fast fix that throws costs the subject nothing but the call; the subject falls through to its ordinary re-ask or drop', onError: 'proceed', expectation: 'degraded', channel: 'diag' },
   // makeLlmSemanticCritic — the judge dispatch's catch.
-  { id: 'llm/critique-reply.judge', protects: 'a judge that throws accepts the reply unjudged rather than taking the subject dispatch down with it', onError: 'proceed', expectation: 'degraded', channel: 'diag' }
+  { id: 'llm/critique-reply.judge', protects: 'a judge that throws accepts the reply unjudged rather than taking the subject dispatch down with it', onError: 'proceed', expectation: 'degraded', channel: 'diag' },
+  // makeLlmDispatcher's decision lane — a consumer's `stamp` that throws.
+  { id: 'llm/decide.stamp', protects: 'a host stamp that throws never costs the decision: the answers return and the call is recorded without a stamp', onError: 'proceed', expectation: 'fault', channel: 'diag' }
 ]);

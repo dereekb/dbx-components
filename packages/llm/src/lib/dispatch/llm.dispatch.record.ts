@@ -222,6 +222,10 @@ export function recordLlmDispatch<R extends LlmDispatchRequest = LlmDispatchRequ
     taps.emitDispatchComplete({ ...callRecord, ...(followUp ? { followUp: true } : {}), ...(decodeFailed ? { decodeFailures, recovered } : {}) });
   }
 
+  if (outcome.critiqueFailure != null) {
+    onGap?.({ kind: 'critique-fail', capability, feedback: outcome.critiqueFailure, text: outcome.result.text });
+  }
+
   const maxPromptTokens = request.maxPromptTokens;
 
   if (maxPromptTokens != null && estimatedPromptTokens > maxPromptTokens) {

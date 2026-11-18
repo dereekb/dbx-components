@@ -13,15 +13,20 @@ import { DEFAULT_LLM_MODEL_TIER, resolveLlmModelTier } from '../model/llm.model.
 import { DEFAULT_LLM_PROMPT_LAYOUT, type LlmPromptSlotRole, llmPromptSlotsOfRole, type LlmPromptLayout, type LlmPromptSlotId } from '../prompt/llm.prompt.layout';
 import { makeLlmPromptCachePrefixWatch } from '../prompt/llm.prompt.cache.watch';
 import { type LlmPromptRunParams, type LlmPromptRunResult, makeLlmPromptFactory } from '../prompt/llm.prompt.thread';
-import { type LlmCallContext, makeLlmCallContext, noopLlmCallContext } from '../record/llm.call.context';
+import { type LlmCallContext } from '../record/llm.call.context';
 import { type LlmCallHostFields } from '../record/llm.call.record';
+import { DEFAULT_LLM_REPLY_FAST_FIX_LIMITS, type LlmReplyFastFixLimits } from '../reply/llm.reply.fast.fix';
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
+import { llmBoundReplyFastFixOf } from './llm.dispatch.attempt';
+import { llmDispatchCorrectionTextsOf } from './llm.dispatch.correction';
+import { makeLlmDispatchDecisionLane } from './llm.dispatch.decision';
+import { llmDecodeRetryModelOf } from './llm.dispatch.ladder';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
 import { composeLlmDispatch, type LlmDispatchComposeSetup } from './llm.dispatch.compose';
-import { isLlmDispatchCancelled, llmDispatchSignalOf, parkLlmDispatchWhilePaused } from './llm.dispatch.control';
+import { isLlmDispatchCancelled, llmDispatchFallbackCallContextOf, llmDispatchSignalOf, llmTransportBackoffMs, parkLlmDispatchWhilePaused } from './llm.dispatch.control';
 import { llmDispatchRecordFieldsOf, type LlmDispatchRecordSinks, isLlmDispatchTapsActive, recordLlmDispatch, recordLlmDispatchStart } from './llm.dispatch.record';
 import { llmDispatchStrategySelectorOf, type LlmDispatchResolveSetup, resolveLlmDispatch } from './llm.dispatch.resolve';
-import { type LlmDispatchAttemptsConfig, runLlmDispatchAttempts, runSingleShotLlmDispatch } from './llm.dispatch.run';
+import { type LlmDispatchAttemptsConfig, llmDispatchMaxAttemptsOf, runLlmDispatchAttempts, runSingleShotLlmDispatch } from './llm.dispatch.run';
 import { type LlmDispatcher } from './llm.dispatcher';
 import { type LlmDispatcherConfig, type LlmDispatchGap } from './llm.dispatcher.config';
 
@@ -40,17 +45,20 @@ function llmPromptSlotIdOfRole(layout: LlmPromptLayout, role: LlmPromptSlotRole,
 /**
  * Build the library dispatcher.
  *
- * Construction resolves the default tier's slug (a tier map missing its default tier throws HERE), the layout's
- * `follow-up` / `model-addendum` slot ids, the cache watch and the strategy selector. The recorder, the taps and the
- * pause gate are held by reference.
+ * Construction resolves the default tier's slug (a tier map missing its default tier throws HERE), the decode-retry
+ * tier's slug (an explicit unknown key throws HERE), the correction words, the layout's `follow-up` / `model-addendum`
+ * / `correction` / `live` slot ids, the cache watch, the strategy selector and the decision lane (a `defaultModel` that
+ * is not a decision model throws HERE). The recorder, the taps and the pause gate are held by reference.
  *
- * Single attempt: a call with neither `validate` nor `critique` is single-shot (the result returned unchanged); a call
- * with either runs the validated path with ONE attempt (stamped `attempts` / `decodeStatus` / `decodeOutcome`). A
- * request `critique` routes the call onto the validated path, but no critic is called and `maxAttempts` is not read yet.
+ * Attempts: a call with neither `validate` nor `critique` is single-shot (the result returned unchanged); a call with
+ * either runs the BOUNDED retry loop — up to `maxAttempts` (default 2) attempts, each rejection re-asking with a
+ * correction and one lever of the retry ladder, the fast-fix tier of the reply-repair lane when `replyFastFix` is
+ * configured, and the request's critic after `validate` passes (root calls only).
  *
  * @param config - The strategies, model routing, prompt pieces and host hooks.
  * @returns The dispatcher.
- * @throws {Error} When the tier map does not hold the default tier.
+ * @throws {Error} When the tier map does not hold the default tier or an explicit decode-retry tier, or when the
+ *   decision lane's `defaultModel` is not a decision model.
  *
  * @example
  * ```ts
@@ -96,6 +104,14 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
     promptCacheWatch: config.promptCacheWatch ?? makeLlmPromptCachePrefixWatch(),
     isRawJsonBlock: config.isRawJsonBlock
   };
+  const escalateModel = llmDecodeRetryModelOf({ modelTiers, decodeRetryTier: config.decodeRetryTier });
+  const corrections = llmDispatchCorrectionTextsOf(config.correctionTexts);
+  const correctionSlotId = llmPromptSlotIdOfRole(layout, 'correction', 'correction');
+  const fastFixLimits: LlmReplyFastFixLimits = { ...DEFAULT_LLM_REPLY_FAST_FIX_LIMITS, ...config.fastFixLimits };
+  const transportBackoff = config.transportBackoff ?? llmTransportBackoffMs;
+  // the fast fixer reaches the dispatcher through this holder, so a fixer call is an ordinary, recorded dispatch
+  const selfDispatch: { dispatch: (request: R) => Promise<X> } = { dispatch: () => Promise.reject(new Error('llm dispatcher: dispatched before construction completed')) };
+  const decisionLane = makeLlmDispatchDecisionLane<H, A>({ decisions: config.decisions, modelTiers, defaultTier, capabilityRoutes, recorder, pause, cancellationSignal, swallow, liveSlotId: llmPromptSlotIdOfRole(layout, 'live', 'live') });
 
   /**
    * Mint one dispatch's call context — nested under the request's parent, else the recorder's root, else a context
@@ -111,7 +127,7 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
     let callContext: Maybe<LlmCallContext<A>> = parented ?? recorder?.newCallContext?.({ label, request, attribution });
 
     if (callContext == null) {
-      callContext = swallow == null ? noopLlmCallContext<A>() : makeLlmCallContext<A>({ label, timing: false, attribution: attribution as A, onSwallow: (site, cause) => swallow(site, cause) });
+      callContext = llmDispatchFallbackCallContextOf<A>({ label, swallow, attribution: attribution as Maybe<A> });
     }
 
     return callContext;
@@ -139,6 +155,7 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
 
     const { tier } = resolved;
     const critique = followUp == null ? request.critique : undefined;
+    const { fastFix, fastFixUnavailable } = llmBoundReplyFastFixOf<R, X>({ replyFastFix: config.replyFastFix, request, protocol: composed.protocol, schemaHint: composed.baseRequest.responseSchemaHint, dispatch: (fixRequest) => selfDispatch.dispatch(fixRequest) });
     const attemptsConfig: LlmDispatchAttemptsConfig = {
       strategy: resolved.strategy,
       baseRequest: composed.baseRequest,
@@ -150,7 +167,19 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
       cancelled: () => isLlmDispatchCancelled(signals),
       pause,
       baseOutputBudget: composed.baseRequest.maxOutputTokens ?? config.defaultMaxOutputTokens,
-      onDecodeAttempt: isLlmDispatchTapsActive(taps) ? (attempt, willRetry) => taps.emitDecodeFailure({ capability, ...(tier == null ? {} : { tier }), attempt, willRetry, ...fields('decode-failure') }) : undefined
+      onDecodeAttempt: isLlmDispatchTapsActive(taps) ? (attempt, willRetry) => taps.emitDecodeFailure({ capability, ...(tier == null ? {} : { tier }), attempt, willRetry, ...fields('decode-failure') }) : undefined,
+      maxAttempts: llmDispatchMaxAttemptsOf(composed.maxAttempts),
+      resolvedModel: resolved.resolvedModel,
+      escalateModel,
+      critique,
+      liveContext: composed.liveContext,
+      lineLeverField: request.lineLeverField,
+      fastFix,
+      fastFixUnavailable,
+      fastFixLimits,
+      corrections,
+      correctionSlotId,
+      transportBackoff
     };
     const outcome = composed.validate == null && critique == null ? await runSingleShotLlmDispatch(attemptsConfig) : await runLlmDispatchAttempts(attemptsConfig);
     const { callProfile } = recordLlmDispatch<R, H, A>({ sinks, request, followUp: isFollowUp, callContext, resolved, composed, outcome, fields });
@@ -163,9 +192,13 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
 
   const preparePrompt = makeLlmPromptFactory<R, X>({ runPromptRequest, degenerateThreadPlaceholder: config.degenerateThreadPlaceholder, threadTurnMaxChars: config.threadTurnMaxChars });
 
+  const dispatch = async (request: R) => (await preparePrompt(request).execute()).result;
+  selfDispatch.dispatch = dispatch;
+
   return {
-    dispatch: async (request: R) => (await preparePrompt(request).execute()).result,
+    dispatch,
     preparePrompt,
-    capabilityVision: (capability, override) => llmCapabilityVisionOf({ override, descriptor: descriptorOf(capability), route: capabilityRoutes?.get(capability), tiers: modelTiers, defaultTier, visionByModel })
+    capabilityVision: (capability, override) => llmCapabilityVisionOf({ override, descriptor: descriptorOf(capability), route: capabilityRoutes?.get(capability), tiers: modelTiers, defaultTier, visionByModel }),
+    ...decisionLane
   };
 }

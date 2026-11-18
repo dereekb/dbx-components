@@ -6,6 +6,8 @@
 
 import { type Maybe } from '@dereekb/util';
 import { type LlmCapabilityDescriptor, type LlmCapabilityDescriptorOf } from '../capability/llm.capability.descriptor';
+import { type LlmDecisionDispatchRequest } from '../decision/llm.decision.descriptor';
+import { type LlmDecisionStrategyRegistry } from '../decision/llm.decision.strategy';
 import { type LlmModelProviderBindingMap } from '../model/config/llm.model.config.resolve';
 import { type LlmCapabilityRoute, type LlmCompiledModelRouting } from '../model/llm.model.routing';
 import { type LlmModelTierMap } from '../model/llm.model.tier';
@@ -21,10 +23,12 @@ import { type LlmCallHostFields, type LlmCallRecord, type LlmCallStartRecord, ty
 import { type LlmDispatchTapRegistry } from '../record/llm.dispatch.tap';
 import { type LlmSwallowSink } from '../record/llm.swallow';
 import { type LlmReplyEnvelopeKeys } from '../reply/llm.reply.envelope';
+import { type LlmReplyFastFixer, type LlmReplyFastFixLimits } from '../reply/llm.reply.fast.fix';
 import { type LlmReplyProtocol } from '../reply/llm.reply.protocol';
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
 import { type LlmStrategyRegistry } from '../strategy/llm.strategy.registry';
-import { type LlmDispatchPauseSignal } from './llm.dispatch.control';
+import { type LlmDispatchPauseSignal, type LlmDispatchTransportBackoff } from './llm.dispatch.control';
+import { type LlmDispatchCorrectionTextOverrides } from './llm.dispatch.correction';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
 
 /**
@@ -125,9 +129,88 @@ export interface LlmDispatchOverBudgetGap {
 }
 
 /**
+ * A root call's critic still rejected the reply when the attempt budget ran out — the rejected reply shipped anyway.
+ */
+export interface LlmDispatchCritiqueFailGap {
+  readonly kind: 'critique-fail';
+  /**
+   * The critiqued capability.
+   */
+  readonly capability: LlmCapabilityKey;
+  /**
+   * The critic's LAST feedback.
+   */
+  readonly feedback: string;
+  /**
+   * The rejected reply that shipped.
+   */
+  readonly text: string;
+}
+
+/**
  * Something the dispatcher noticed that a host may want to file — never a reason to stop the call.
  */
-export type LlmDispatchGap = LlmDispatchRawJsonGap | LlmDispatchOverBudgetGap;
+export type LlmDispatchGap = LlmDispatchRawJsonGap | LlmDispatchOverBudgetGap | LlmDispatchCritiqueFailGap;
+
+/**
+ * The inputs of {@link LlmDispatcherDecisionConfig.newCallContext}.
+ */
+export interface LlmDispatchDecisionCallContextParams {
+  /**
+   * The context label (the consuming capability).
+   */
+  readonly label: string;
+  /**
+   * The decision request, widened to the library type.
+   */
+  readonly request: LlmDecisionDispatchRequest;
+}
+
+/**
+ * The inputs of {@link LlmDispatcherDecisionConfig.recordFieldsOf}.
+ */
+export interface LlmDispatchDecisionRecordFieldsParams<A extends object = object> {
+  /**
+   * Which record the fields are for.
+   */
+  readonly kind: 'start' | 'call';
+  /**
+   * The decision request, widened to the library type.
+   */
+  readonly request: LlmDecisionDispatchRequest;
+  /**
+   * The decision's call context.
+   */
+  readonly callContext: LlmCallContext<A>;
+}
+
+/**
+ * The decision lane of a dispatcher — absent (or an empty registry) ⇒ the dispatcher has no `decide`.
+ */
+export interface LlmDispatcherDecisionConfig<H extends LlmCallHostFields = LlmCallHostFields, A extends object = object> {
+  /**
+   * The decision strategies.
+   */
+  readonly strategies: LlmDecisionStrategyRegistry;
+  /**
+   * The strategy to serve decisions with. Absent ⇒ the first registered; named but unregistered ⇒ no lane.
+   */
+  readonly strategyId?: Maybe<LlmStrategyId>;
+  /**
+   * The decision model that replaces ONLY the default-tier rung (a text tier's slug never reaches a decision strategy).
+   * Refused at construction unless it is a decision model.
+   */
+  readonly defaultModel: LlmModelId;
+  /**
+   * Mints a decision's root call context. Absent ⇒ a context that does not time (reporting its swallows to the
+   * dispatcher's `swallow` sink).
+   */
+  readonly newCallContext?: Maybe<(params: LlmDispatchDecisionCallContextParams) => LlmCallContext<A>>;
+  /**
+   * The host's top-level fields of a decision's start / call record.
+   */
+  readonly recordFieldsOf?: Maybe<(params: LlmDispatchDecisionRecordFieldsParams<A>) => H>;
+}
 
 /**
  * The inputs of {@link LlmDispatcherConfig.onGap}.
@@ -381,6 +464,35 @@ export interface LlmDispatcherConfig<R extends LlmDispatchRequest = LlmDispatchR
    * this. Must keep `text` (a chained follow-up replays it).
    */
   readonly resultOf?: Maybe<(params: LlmDispatchResultParams<R, A>) => X>;
+  // MARK: Retry
+  /**
+   * The tier a decode-class retry escalates the model to. Absent ⇒ `DEFAULT_LLM_DECODE_RETRY_TIER` when the tier map
+   * holds it; `LLM_DECODE_RETRY_TIER_OFF` pins the model rung off; an explicit key missing from the map throws at
+   * construction.
+   */
+  readonly decodeRetryTier?: Maybe<LlmModelTierKey>;
+  /**
+   * Overrides of the reprompt correction words, merged over `DEFAULT_LLM_DISPATCH_CORRECTION_TEXTS`.
+   */
+  readonly correctionTexts?: Maybe<LlmDispatchCorrectionTextOverrides>;
+  /**
+   * The wait before a transport resend. Defaults to `llmTransportBackoffMs`.
+   */
+  readonly transportBackoff?: Maybe<LlmDispatchTransportBackoff>;
+  // MARK: Lanes
+  /**
+   * The fast-fix tier of the reply-repair lane — one cheap repair call on a mangled JSON reply before any re-ask.
+   * Absent ⇒ the deterministic tier only.
+   */
+  readonly replyFastFix?: Maybe<LlmReplyFastFixer<R, X>>;
+  /**
+   * The fast-fix limits, merged over `DEFAULT_LLM_REPLY_FAST_FIX_LIMITS`.
+   */
+  readonly fastFixLimits?: Maybe<Partial<LlmReplyFastFixLimits>>;
+  /**
+   * The decision lane. Absent (or an empty registry) ⇒ no `decide`.
+   */
+  readonly decisions?: Maybe<LlmDispatcherDecisionConfig<H, A>>;
   // MARK: Control
   /**
    * The host pause gate.

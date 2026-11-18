@@ -4,9 +4,12 @@
  */
 
 import { type Maybe } from '@dereekb/util';
+import { LLM_REPLY_REPAIR_FAST_FIX_SWALLOW_SITE } from '../capability/llm.capability.repair.reply.json';
 import { type LlmCallContext } from '../record/llm.call.context';
 import { isLlmCleanStopFinish } from '../record/llm.decode.failure';
 import { DEFAULT_LLM_REPLY_ENVELOPE_KEYS, type LlmReplyEnvelopeKeys, type LlmReplyLeverReading, readLlmReplyLever } from '../reply/llm.reply.envelope';
+import { DEFAULT_LLM_REPLY_FAST_FIX_LIMITS, LLM_REPAIR_REPLY_JSON_CAPABILITY, type LlmReplyFastFixer, type LlmReplyFastFixLimits, type LlmReplyFastFixMissReason, type LlmReplyFastFixOutcome } from '../reply/llm.reply.fast.fix';
+import { type LlmReplyJsonShape } from '../reply/llm.reply.json.shape';
 import { type LlmReplyProtocol } from '../reply/llm.reply.protocol';
 import { repairLlmReplyJson } from '../reply/llm.reply.repair';
 import { type LlmLeverValidator } from '../reply/llm.reply.validator';
@@ -15,6 +18,7 @@ import { isAbortError, isRetryableLlmError, llmErrorSummaryOf } from '../strateg
 import { type LlmDispatchResult, type LlmReplyRepairSummary, type LlmRequest, type LlmStrategy } from '../strategy/llm.strategy';
 import { type LlmDispatchPauseSignal, parkLlmDispatchWhilePaused } from './llm.dispatch.control';
 import { llmTimeoutResultOf, llmTransportResultOf, roundLlmReplyRepairScore } from './llm.dispatch.outcome';
+import { type LlmDispatchRequest } from './llm.dispatch.request';
 
 /**
  * Why a send did not reach a reply: the call was aborted (`timeout`) or its transport failed retryably (`transport`).
@@ -174,9 +178,112 @@ export interface RunLlmReplyRepairLaneConfig {
    */
   readonly read: (text: string) => LlmReplyLeverReading;
   /**
-   * The refusal reason of an object-led, clean-stopped reply the deterministic walk could not repair.
+   * The refusal when no fast fix is bound (`fast-fix-off`, `no-schema`, or the single-shot path's `mangled`) — the
+   * reason an object-led, clean-stopped reply the deterministic walk could not repair is left alone.
    */
   readonly unrepairedRefusal: LlmReplyRepairRefusal;
+  /**
+   * The bound fast fix — absent ⇒ the deterministic tier only.
+   */
+  readonly fastFix?: Maybe<LlmBoundReplyFastFix>;
+  /**
+   * Whether this dispatch already spent its fast-fix calls.
+   */
+  readonly fastFixSpent?: Maybe<boolean>;
+  /**
+   * The fast-fix gates (`maxChars` / `minScore`), defaulting to `DEFAULT_LLM_REPLY_FAST_FIX_LIMITS`. Read only when
+   * {@link fastFix} is bound.
+   */
+  readonly fastFixLimits?: Maybe<Pick<LlmReplyFastFixLimits, 'maxChars' | 'minScore'>>;
+}
+
+/**
+ * The inputs of one bound fast-fix call — the subject reply, its shape, its attempt and the attempt's context.
+ */
+export interface LlmBoundReplyFastFixInput {
+  /**
+   * The subject's served reply text.
+   */
+  readonly text: string;
+  /**
+   * The scorer's read of it.
+   */
+  readonly shape: LlmReplyJsonShape;
+  /**
+   * The 1-based subject attempt.
+   */
+  readonly attempt: number;
+  /**
+   * The subject attempt's context — the fixer's own dispatch nests under it.
+   */
+  readonly callContext: LlmCallContext;
+}
+
+/**
+ * A fast fix BOUND to one dispatch (its request, schema hint and self-dispatch already applied).
+ */
+export type LlmBoundReplyFastFix = (input: LlmBoundReplyFastFixInput) => Promise<LlmReplyFastFixOutcome>;
+
+/**
+ * The inputs of {@link llmBoundReplyFastFixOf}.
+ */
+export interface LlmBoundReplyFastFixConfig<R extends LlmDispatchRequest = LlmDispatchRequest, X extends LlmDispatchResult = LlmDispatchResult> {
+  /**
+   * The host's fast fixer, when configured.
+   */
+  readonly replyFastFix?: Maybe<LlmReplyFastFixer<R, X>>;
+  /**
+   * The subject request.
+   */
+  readonly request: R;
+  /**
+   * The subject's RESOLVED reply protocol.
+   */
+  readonly protocol: LlmReplyProtocol;
+  /**
+   * The subject's resolved response-schema hint.
+   */
+  readonly schemaHint?: unknown;
+  /**
+   * The dispatcher's own dispatch (the fixer call is an ordinary, recorded dispatch).
+   */
+  readonly dispatch: (request: R) => Promise<X>;
+}
+
+/**
+ * The fast-fix binding of one dispatch.
+ */
+export interface LlmBoundReplyFastFixBinding {
+  /**
+   * The bound fix — present only when a fixer is configured, the call is eligible and a schema resolved.
+   */
+  readonly fastFix?: LlmBoundReplyFastFix;
+  /**
+   * The repair-lane refusal when no fix is bound: `no-schema` when the call was eligible but had no schema, else
+   * `fast-fix-off`.
+   */
+  readonly fastFixUnavailable: LlmReplyRepairRefusal;
+}
+
+/**
+ * Bind the host's fast fixer to one dispatch. Never binds on the repair capability itself (the recursion guard), on a
+ * `line` call, or without a configured fixer; an eligible call with no schema hint binds nothing either (`no-schema`).
+ *
+ * @param config - The fixer, the request, the resolved protocol, the schema hint and the self-dispatch.
+ * @returns The binding.
+ */
+export function llmBoundReplyFastFixOf<R extends LlmDispatchRequest = LlmDispatchRequest, X extends LlmDispatchResult = LlmDispatchResult>(config: LlmBoundReplyFastFixConfig<R, X>): LlmBoundReplyFastFixBinding {
+  const { replyFastFix, request, protocol, schemaHint, dispatch } = config;
+  const bindable = replyFastFix != null && request.capability !== LLM_REPAIR_REPLY_JSON_CAPABILITY && protocol !== 'line';
+  let binding: LlmBoundReplyFastFixBinding;
+
+  if (bindable && schemaHint != null) {
+    binding = { fastFix: (input) => replyFastFix({ ...input, request, subjectCapability: request.capability, schemaHint, dispatch }), fastFixUnavailable: 'no-schema' };
+  } else {
+    binding = { fastFixUnavailable: bindable ? 'no-schema' : 'fast-fix-off' };
+  }
+
+  return binding;
 }
 
 /**
@@ -205,6 +312,14 @@ export interface LlmReplyRepairLaneResult {
    * The repair — present iff the reply was repaired.
    */
   readonly repaired?: LlmRepairedReply;
+  /**
+   * Whether the lane spent a fast-fix call.
+   */
+  readonly fastFixCalled: boolean;
+  /**
+   * Why the fast fix missed, when it was called and missed.
+   */
+  readonly fastFixMiss?: LlmReplyFastFixMissReason;
 }
 
 /**
@@ -221,26 +336,65 @@ export function withRepairedLlmReply(served: LlmDispatchResult, summary: LlmRepl
 }
 
 /**
+ * The fast-fix tier of the reply-repair lane — one call of the bound fixer. A throw is swallowed at
+ * `llm/reply-repair.fast-fix` and reads as a `error` miss.
+ *
+ * @param config - The lane config (with a bound {@link RunLlmReplyRepairLaneConfig.fastFix}).
+ * @param shape - The scorer's read of the served reply.
+ * @returns The lane outcome.
+ */
+async function runLlmReplyFastFixTier(config: RunLlmReplyRepairLaneConfig & { readonly fastFix: LlmBoundReplyFastFix }, shape: LlmReplyJsonShape): Promise<LlmReplyRepairLaneResult> {
+  const { served, attempt, attemptContext, read, fastFix } = config;
+  const capability = served.capability;
+  let fixed: LlmReplyFastFixOutcome;
+  let outcome: LlmReplyRepairLaneResult;
+
+  try {
+    fixed = await attemptContext.timeAsync('fast-fix', () => fastFix({ text: served.text, shape, attempt, callContext: attemptContext }));
+  } catch (error) {
+    attemptContext.swallow(LLM_REPLY_REPAIR_FAST_FIX_SWALLOW_SITE, error);
+    fixed = { kind: 'missed', reason: 'error' };
+  }
+
+  if (fixed.kind === 'fixed') {
+    const score = roundLlmReplyRepairScore(shape.score);
+    const summary: LlmReplyRepairSummary = { tier: 'fast-fix', attempt, verdict: shape.verdict, score, ...(fixed.meta == null ? {} : { meta: fixed.meta }) };
+    const result = withRepairedLlmReply(served, summary, fixed.text);
+    attemptContext.diag({ level: 'info', code: 'reply-repaired', fields: { capability, attempt, tier: 'fast-fix', verdict: shape.verdict, score }, message: 'mangled JSON reply repaired by one fast-fix call before any re-ask' });
+    outcome = { repaired: { result, reading: read(result.text), summary }, fastFixCalled: true };
+  } else {
+    attemptContext.diag({ level: 'warn', code: 'reply-fast-fix-miss', fields: { capability, attempt, reason: fixed.reason }, message: 'the fast fix produced no usable lever; falling through to the re-ask / drop' });
+    outcome = { fastFixCalled: true, fastFixMiss: fixed.reason };
+  }
+
+  return outcome;
+}
+
+/**
  * THE REPLY-REPAIR LANE — runs on a degenerate (`no-json` / `parse-error`) JSON reading before any re-ask.
  *
  * 1. A prose-led reply is never touched and files nothing.
  * 2. An object-led reply that did not end on a clean stop is refused (`unclean-finish`).
  * 3. A `near-miss` is repaired by the free deterministic walk (`reply-repaired` diag).
  * 4. A `truncated-looking` reply is refused as such; a `not-json` one as `low-score`.
- * 5. Anything else is refused with {@link RunLlmReplyRepairLaneConfig.unrepairedRefusal}.
+ * 5. With no bound fast fix, anything else is refused with {@link RunLlmReplyRepairLaneConfig.unrepairedRefusal}.
+ * 6. Otherwise the fast-fix tier: refused as `fast-fix-spent` once the dispatch spent its calls, `too-long` past
+ *    `maxChars`, `low-score` under `minScore`; else ONE fixer call — a fix substitutes the reply (`reply-repaired`), a
+ *    miss files `reply-fast-fix-miss` and falls through.
  *
  * A refusal files one `reply-repair-refused` diag.
  *
- * @param config - The served reply, its attempt, its context, the re-read and the unrepaired refusal reason.
- * @returns The repair, when one landed.
+ * @param config - The served reply, its attempt, its context, the re-read, the refusal and the fast-fix binding.
+ * @returns The repair (when one landed) and the fast-fix accounting.
  */
 export async function runLlmReplyRepairLane(config: RunLlmReplyRepairLaneConfig): Promise<LlmReplyRepairLaneResult> {
-  const { served, attempt, attemptContext, read, unrepairedRefusal } = config;
+  const { served, attempt, attemptContext, read, unrepairedRefusal, fastFix, fastFixSpent } = config;
+  const fastFixLimits = config.fastFixLimits ?? DEFAULT_LLM_REPLY_FAST_FIX_LIMITS;
   const { shape, repaired } = repairLlmReplyJson(served.text);
   const capability = served.capability;
   const score = roundLlmReplyRepairScore(shape.score);
   let refusal: Maybe<LlmReplyRepairRefusal>;
-  let outcome: LlmReplyRepairLaneResult = {};
+  let outcome: LlmReplyRepairLaneResult = { fastFixCalled: false };
 
   if (!shape.objectLed) {
     // prose-led: never touched, files nothing
@@ -253,13 +407,21 @@ export async function runLlmReplyRepairLane(config: RunLlmReplyRepairLaneConfig)
       .map(([kind, count]) => `${kind}:${count}`)
       .join(',');
     attemptContext.diag({ level: 'info', code: 'reply-repaired', fields: { capability, attempt, tier: 'deterministic', verdict: shape.verdict, score, ops }, message: 'malformed JSON reply repaired deterministically before any re-ask' });
-    outcome = { repaired: { result, reading: read(result.text), summary } };
+    outcome = { repaired: { result, reading: read(result.text), summary }, fastFixCalled: false };
   } else if (shape.verdict === 'truncated-looking') {
     refusal = 'truncated-looking';
   } else if (shape.verdict === 'not-json') {
     refusal = 'low-score';
-  } else {
+  } else if (fastFix == null) {
     refusal = unrepairedRefusal;
+  } else if (fastFixSpent === true) {
+    refusal = 'fast-fix-spent';
+  } else if (served.text.length > fastFixLimits.maxChars) {
+    refusal = 'too-long';
+  } else if (shape.score < fastFixLimits.minScore) {
+    refusal = 'low-score';
+  } else {
+    outcome = await runLlmReplyFastFixTier({ ...config, fastFix }, shape);
   }
 
   if (refusal != null) {

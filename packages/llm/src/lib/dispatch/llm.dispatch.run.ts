@@ -1,19 +1,42 @@
 /**
- * The dispatcher's attempt policy — the single-shot fast path (no `validate`, no `critique`) and the validated path
- * (one attempt today; the bounded retry ladder replaces {@link runLlmDispatchAttempts}' single pass).
+ * The dispatcher's attempt policy — the single-shot fast path (no `validate`, no `critique`) and the validated path:
+ * the BOUNDED retry loop (corrections, the lever ladder, the transport lane, the truncation pre-read, the bonus
+ * attempt, the fast-fix tier of the reply-repair lane and the critique pass).
  */
 
 import { type Maybe } from '@dereekb/util';
+import { type LlmModelId } from '../model/llm.value';
+import { type LlmPromptSlotId } from '../prompt/llm.prompt.layout';
 import { type LlmCallContext } from '../record/llm.call.context';
 import { type LlmCallAttemptPhase, type LlmCallFailedAttempt } from '../record/llm.call.record';
 import { classifyLlmDecodeFailure, classifyLlmReplyOutcome, isLlmLengthCappedFinish, type LlmDecodeFailureAttempt, type LlmDecodeFailureClass, type LlmRetryCause } from '../record/llm.decode.failure';
-import { type LlmReplyEnvelopeKeys, type LlmReplyLeverReading } from '../reply/llm.reply.envelope';
+import { type LlmCritic } from '../reply/llm.reply.critique';
+import { DEFAULT_LLM_LINE_LEVER_FIELD, llmLineReplyLeverOf, type LlmReplyEnvelopeKeys, type LlmReplyLeverReading } from '../reply/llm.reply.envelope';
+import { DEFAULT_LLM_REPLY_FAST_FIX_LIMITS, type LlmReplyFastFixLimits, type LlmReplyFastFixMissReason } from '../reply/llm.reply.fast.fix';
 import { type LlmReplyProtocol } from '../reply/llm.reply.protocol';
 import { type LlmLeverValidator } from '../reply/llm.reply.validator';
 import { type LlmDecodeStatus, type LlmDispatchResult, type LlmReplyRepairSummary, type LlmRequest, type LlmStrategy } from '../strategy/llm.strategy';
-import { isDegenerateLlmReplyReading, type LlmDispatchAttemptSend, readLlmDispatchReply, runLlmReplyRepairLane, sendLlmDispatchAttempt, validateLlmDispatchLever } from './llm.dispatch.attempt';
-import { type LlmDispatchPauseSignal } from './llm.dispatch.control';
+import { isDegenerateLlmReplyReading, type LlmBoundReplyFastFix, type LlmDispatchAttemptFault, type LlmDispatchAttemptSend, type LlmReplyRepairRefusal, readLlmDispatchReply, runLlmReplyRepairLane, sendLlmDispatchAttempt, validateLlmDispatchLever } from './llm.dispatch.attempt';
+import { delayLlmDispatch, type LlmDispatchPauseSignal, type LlmDispatchTransportBackoff, llmTransportBackoffMs } from './llm.dispatch.control';
+import { DEFAULT_LLM_DISPATCH_CORRECTION_TEXTS, type LlmCorrectionKind, type LlmDispatchCorrectionTexts, llmDispatchCorrectionTextOf, withLlmDispatchCorrection } from './llm.dispatch.correction';
+import { type LlmDispatchRetryLadder, makeLlmDispatchRetryLadder } from './llm.dispatch.ladder';
 import { llmAttemptPhaseOf, llmDecodeFailureAttemptOf, type LlmDispatchOutcome, llmFailedAttemptOf, llmRepairedDecodeAttemptOf } from './llm.dispatch.outcome';
+import { LLM_RETRY_INDUCED_BONUS_ATTEMPTS, type LlmRetryLever } from './llm.retry.lever';
+
+/**
+ * The attempt budget of a validated dispatch that does not set `maxAttempts` — one initial attempt and one retry.
+ */
+export const DEFAULT_LLM_DISPATCH_MAX_ATTEMPTS = 2;
+
+/**
+ * Clamp a requested attempt budget — absent ⇒ {@link DEFAULT_LLM_DISPATCH_MAX_ATTEMPTS}, never below 1.
+ *
+ * @param requested - The request's (or follow-up's) `maxAttempts`.
+ * @returns The budget.
+ */
+export function llmDispatchMaxAttemptsOf(requested?: Maybe<number>): number {
+  return Math.max(1, requested ?? DEFAULT_LLM_DISPATCH_MAX_ATTEMPTS);
+}
 
 /**
  * Receives every decode row as it is recorded, with whether a retry follows it.
@@ -37,7 +60,7 @@ export interface LlmDispatchAttemptsConfig {
    */
   readonly protocol: LlmReplyProtocol;
   /**
-   * The host's envelope keys (read on a `json-envelope` call).
+   * The host's envelope keys (read on a `json-envelope` call, and by the line lift).
    */
   readonly envelope?: Maybe<LlmReplyEnvelopeKeys>;
   /**
@@ -62,13 +85,60 @@ export interface LlmDispatchAttemptsConfig {
   readonly pause?: Maybe<LlmDispatchPauseSignal>;
   /**
    * The completion budget a raised-budget retry climbs from (`baseRequest.maxOutputTokens ?? defaultMaxOutputTokens`).
-   * Read by the retry ladder; the single pass does not raise it.
    */
   readonly baseOutputBudget: number;
   /**
    * Receives every decode row as it is recorded.
    */
   readonly onDecodeAttempt?: Maybe<LlmDispatchDecodeAttemptListener>;
+  /**
+   * The attempt budget, already clamped ({@link llmDispatchMaxAttemptsOf}).
+   */
+  readonly maxAttempts: number;
+  /**
+   * The concrete slug the dispatch resolved to.
+   */
+  readonly resolvedModel: LlmModelId;
+  /**
+   * The decode-retry tier's slug, when one is configured.
+   */
+  readonly escalateModel?: Maybe<LlmModelId>;
+  /**
+   * The semantic critic (root calls only).
+   */
+  readonly critique?: Maybe<LlmCritic>;
+  /**
+   * The critic's subject — the joined live context (`''` on a follow-up).
+   */
+  readonly liveContext?: Maybe<string>;
+  /**
+   * The field a `line` reply's lifted lever names. Defaults to `DEFAULT_LLM_LINE_LEVER_FIELD`.
+   */
+  readonly lineLeverField?: Maybe<string>;
+  /**
+   * The bound fast fix, when one is.
+   */
+  readonly fastFix?: Maybe<LlmBoundReplyFastFix>;
+  /**
+   * The repair-lane refusal when no fast fix is bound. Defaults to `fast-fix-off`.
+   */
+  readonly fastFixUnavailable?: Maybe<LlmReplyRepairRefusal>;
+  /**
+   * The fast-fix limits. Defaults to `DEFAULT_LLM_REPLY_FAST_FIX_LIMITS`.
+   */
+  readonly fastFixLimits?: Maybe<LlmReplyFastFixLimits>;
+  /**
+   * The correction words. Defaults to {@link DEFAULT_LLM_DISPATCH_CORRECTION_TEXTS}.
+   */
+  readonly corrections?: Maybe<LlmDispatchCorrectionTexts>;
+  /**
+   * The layout's `correction` slot id. Defaults to `'correction'`.
+   */
+  readonly correctionSlotId?: Maybe<LlmPromptSlotId>;
+  /**
+   * The wait before a transport resend. Defaults to {@link llmTransportBackoffMs}.
+   */
+  readonly transportBackoff?: Maybe<LlmDispatchTransportBackoff>;
 }
 
 /**
@@ -129,95 +199,333 @@ interface LlmDispatchAttemptLedger {
   readonly failedAttempts: LlmCallFailedAttempt[];
   readonly validationErrors: string[];
   recordDecodeAttempt(row: LlmDecodeFailureAttempt, willRetry: boolean): void;
-  recordFailedAttempt(cause: LlmRetryCause, result: LlmDispatchResult, error?: Maybe<string>): void;
+  recordFailedAttempt(cause: LlmRetryCause, error?: Maybe<string>): void;
 }
 
 /**
- * How one attempt settled.
+ * The correction the next attempt carries.
  */
-interface LlmDispatchAttemptVerdict {
-  readonly result: LlmDispatchResult;
-  readonly accepted: boolean;
-  readonly recovered: boolean;
-  readonly lever?: unknown;
-  readonly failureClass?: LlmDecodeFailureClass;
-  readonly repair?: LlmReplyRepairSummary;
+interface LlmDispatchNextCorrection {
+  readonly error: string;
+  readonly kind: LlmCorrectionKind;
 }
 
 /**
- * The inputs of {@link judgeLlmDispatchAttempt}.
+ * The mutable state of one bounded loop.
  */
-interface JudgeLlmDispatchAttemptConfig {
-  readonly config: LlmDispatchAttemptsConfig;
+interface LlmDispatchLoopState {
+  readonly ladder: LlmDispatchRetryLadder;
+  readonly ledger: LlmDispatchAttemptLedger;
+  readonly attemptPhases: LlmCallAttemptPhase[];
+  readonly texts: LlmDispatchCorrectionTexts;
+  attempts: number;
+  bonusAttempts: number;
+  fastFixCalls: number;
+  request: LlmRequest;
+  result: LlmDispatchResult;
+  sentCorrection?: Maybe<string>;
+  nextCorrection?: Maybe<LlmDispatchNextCorrection>;
+  lengthCapped: boolean;
+  lastFailureClass?: Maybe<LlmDecodeFailureClass>;
+  critiqueFailure?: Maybe<string>;
+  accepted: boolean;
+  recovered: boolean;
+  acceptedLever?: unknown;
+}
+
+/**
+ * One attempt's send, as the branch helpers read it.
+ */
+interface LlmDispatchLoopStep {
   readonly sent: LlmDispatchAttemptSend;
   readonly attempt: number;
-  readonly ledger: LlmDispatchAttemptLedger;
+  readonly budgetLeft: boolean;
 }
 
 /**
- * Decode and validate one delivered reply: read → repair lane (non-`line`, degenerate) → validate. A valid lever, a
- * decline, or a `line` reply that is not JSON is ACCEPTED; an invalid lever records a `schema-validation` row; any other
- * degenerate reading records its classified row.
- *
- * @param input - The attempt-stage config, the send, the attempt ordinal and the ledger.
- * @returns How the attempt settled.
+ * Whether an attempt retries or the loop settles.
  */
-async function judgeLlmDispatchAttempt(input: JudgeLlmDispatchAttemptConfig): Promise<LlmDispatchAttemptVerdict> {
-  const { config, sent, attempt, ledger } = input;
-  const { protocol, validate } = config;
-  const { attemptContext } = sent;
-  const maxOutputTokens = config.baseRequest.maxOutputTokens;
-  const served = sent.result;
-  const line = protocol === 'line';
-  const read = replyReaderOf(config, attemptContext);
-  let reading = read(served.text);
-  let result = served;
-  let repair: LlmReplyRepairSummary | undefined;
-  let verdict: LlmDispatchAttemptVerdict;
+type LlmDispatchLoopNext = 'retry' | 'settle';
 
-  if (!line && isDegenerateLlmReplyReading(reading)) {
-    // L9b: the fast-fix tier binds here; without one an unrepaired object-led reply is refused as `fast-fix-off`.
-    const lane = await runLlmReplyRepairLane({ served, attempt, attemptContext, read, unrepairedRefusal: 'fast-fix-off' });
+/**
+ * A decode row of the current attempt, at the cap it was sent with.
+ *
+ * @param loop - The loop state.
+ * @param config - The row's attempt, class, reply and optional lever / validator error / transport summary.
+ * @returns The row.
+ */
+function loopDecodeRowOf(loop: LlmDispatchLoopState, config: { readonly attempt: number; readonly failureClass: LlmDecodeFailureClass; readonly result: LlmDispatchResult; readonly lever?: Maybe<LlmRetryLever>; readonly validatorError?: Maybe<string>; readonly transportError?: Maybe<string> }): LlmDecodeFailureAttempt {
+  return llmDecodeFailureAttemptOf({ ...config, maxOutputTokens: loop.request.maxOutputTokens });
+}
 
-    if (lane.repaired != null) {
-      result = lane.repaired.result;
-      reading = lane.repaired.reading;
-      repair = lane.repaired.summary;
-    }
+/**
+ * A send that faulted — the transport lane. A `timeout` or `transport` fault resends identical bytes while the budget
+ * lasts and the dispatch is not cancelled; a transport resend waits {@link LlmDispatchAttemptsConfig.transportBackoff}
+ * first. The pending correction is untouched.
+ *
+ * @param config - The attempt-stage config.
+ * @param loop - The loop state.
+ * @param step - The attempt's send.
+ * @returns Whether to retry.
+ */
+async function runLlmDispatchFaultStep(config: LlmDispatchAttemptsConfig, loop: LlmDispatchLoopState, step: LlmDispatchLoopStep): Promise<LlmDispatchLoopNext> {
+  const { sent, attempt, budgetLeft } = step;
+  const fault = sent.fault as LlmDispatchAttemptFault;
+  const { transportError } = sent;
+  const willRetry = !config.cancelled() && budgetLeft;
+  loop.lastFailureClass = fault;
+  const lever = willRetry ? loop.ladder.take({ cause: fault, failed: loop.result, attempt }) : undefined;
+  loop.ledger.recordDecodeAttempt(loopDecodeRowOf(loop, { attempt, failureClass: fault, result: loop.result, lever, transportError }), willRetry);
+  loop.ledger.recordFailedAttempt(fault, transportError);
+
+  if (willRetry && fault === 'transport') {
+    const delayMs = (config.transportBackoff ?? llmTransportBackoffMs)(attempt);
+    config.callContext.diag({ level: 'warn', code: 'transport-backoff', fields: { capability: config.baseRequest.capability, attempt, delayMs, ...(transportError == null ? {} : { error: transportError }) }, message: 'transport failed before reaching the model, backing off before an identical resend' });
+    await sent.attemptContext.timeAsync('transport-backoff', () => delayLlmDispatch(delayMs, config.signal));
   }
 
-  const repairedRow = () => llmRepairedDecodeAttemptOf({ attempt, served, summary: repair as LlmReplyRepairSummary, maxOutputTokens });
+  return willRetry ? 'retry' : 'settle';
+}
 
-  if (reading.kind === 'lever') {
-    const valid = validateLlmDispatchLever({ validate, lever: reading.lever, attemptContext });
+/**
+ * A length-capped reply re-asked BEFORE it is parsed — with budget left, or as the one bonus attempt that undoes a
+ * cap-ended `reasoning-low` retry.
+ *
+ * @param loop - The loop state.
+ * @param step - The attempt's send and whether this is the bonus attempt.
+ * @returns Always `retry`.
+ */
+function runLlmDispatchTruncatedStep(loop: LlmDispatchLoopState, step: LlmDispatchLoopStep & { readonly bonus: boolean }): LlmDispatchLoopNext {
+  const { attempt, bonus } = step;
+  const failureClass: LlmDecodeFailureClass = loop.result.text.trim() === '' ? 'empty-result' : 'length-truncation';
+  loop.lastFailureClass = failureClass;
+  let lever: LlmRetryLever;
 
-    if (valid === true) {
+  if (bonus) {
+    loop.bonusAttempts += 1;
+    lever = loop.ladder.takeBonus({ cause: failureClass, attempt });
+  } else {
+    lever = loop.ladder.take({ cause: failureClass, failed: loop.result, attempt });
+  }
+
+  loop.ledger.recordDecodeAttempt({ ...loopDecodeRowOf(loop, { attempt, failureClass, result: loop.result, lever }), ...(bonus ? { bonus: true } : {}) }, true);
+  loop.ledger.recordFailedAttempt(failureClass);
+  loop.nextCorrection = { error: loop.texts.decode[failureClass], kind: 'contract' };
+  return 'retry';
+}
+
+/**
+ * The read lever of one attempt, with what the repair lane did to it.
+ */
+interface LlmDispatchJudgedReading {
+  readonly served: LlmDispatchResult;
+  readonly reading: LlmReplyLeverReading;
+  readonly repair?: Maybe<LlmReplyRepairSummary>;
+  readonly fastFixMiss?: Maybe<LlmReplyFastFixMissReason>;
+}
+
+/**
+ * A read lever — validate, then critique. A valid, accepted lever settles; a critic's rejection re-asks with a
+ * critique correction (no decode row); an invalid lever re-asks with the validator's error (a decode row only when
+ * the budget is spent, or when the reply was repaired).
+ *
+ * @param config - The attempt-stage config.
+ * @param loop - The loop state.
+ * @param step - The attempt's send and its judged reading.
+ * @returns Whether to retry.
+ */
+async function runLlmDispatchLeverStep(config: LlmDispatchAttemptsConfig, loop: LlmDispatchLoopState, step: LlmDispatchLoopStep & LlmDispatchJudgedReading & { readonly lever: Record<string, unknown> }): Promise<LlmDispatchLoopNext> {
+  const { validate, critique, baseRequest, protocol } = config;
+  const { sent, attempt, budgetLeft, served, repair, lever } = step;
+  const { attemptContext } = sent;
+  const { ledger, ladder } = loop;
+  const repairedRow = (retryLever?: Maybe<LlmRetryLever>) => llmRepairedDecodeAttemptOf({ attempt, served, summary: repair as LlmReplyRepairSummary, maxOutputTokens: loop.request.maxOutputTokens, lever: retryLever });
+  const valid = validateLlmDispatchLever({ validate, lever, attemptContext });
+  let next: LlmDispatchLoopNext = 'settle';
+
+  if (valid === true) {
+    const verdict =
+      critique == null
+        ? true
+        : await attemptContext.timeAsync('critique', () => critique({ capability: baseRequest.capability, ...(baseRequest.meta == null ? {} : { meta: baseRequest.meta }), lever, replyText: loop.result.text, liveContext: config.liveContext ?? '', replyProtocol: protocol, attempt, callContext: attemptContext }));
+
+    if (verdict === true) {
       if (repair != null) {
         ledger.recordDecodeAttempt(repairedRow(), false);
       }
 
-      verdict = { result, accepted: true, recovered: ledger.decodeFailures.length > 0, lever: reading.lever, repair };
+      loop.recovered = ledger.decodeFailures.length > 0;
+      loop.accepted = true;
+      loop.acceptedLever = lever;
     } else {
-      ledger.validationErrors.push(`attempt ${attempt}: ${valid.error}`);
-      ledger.recordDecodeAttempt({ ...llmDecodeFailureAttemptOf({ attempt, failureClass: 'schema-validation', result: served, maxOutputTokens, validatorError: valid.error }), ...(repair == null ? {} : { repaired: repair.tier }) }, false);
-      ledger.recordFailedAttempt('schema-validation', result, valid.error);
-      verdict = { result, accepted: false, recovered: false, failureClass: 'schema-validation', repair };
-    }
-  } else if (reading.kind === 'declined' || (line && isDegenerateLlmReplyReading(reading))) {
-    // a decline (or a `line` reply that is not JSON) is an ANSWER, never a decode failure
-    if (repair != null) {
-      ledger.recordDecodeAttempt(repairedRow(), false);
-    }
+      ledger.validationErrors.push(`attempt ${attempt}: ${verdict.error}`);
 
-    verdict = { result, accepted: true, recovered: repair != null, repair };
+      if (budgetLeft) {
+        loop.nextCorrection = { error: verdict.error, kind: 'critique' };
+        ladder.take({ cause: 'critique', failed: loop.result, attempt });
+        next = 'retry';
+      } else {
+        loop.critiqueFailure = verdict.error;
+      }
+
+      ledger.recordFailedAttempt('critique', verdict.error);
+    }
   } else {
-    const failureClass = classifyLlmDecodeFailure(reading.kind, result);
-    ledger.recordDecodeAttempt(llmDecodeFailureAttemptOf({ attempt, failureClass, result, maxOutputTokens }), false);
-    ledger.recordFailedAttempt(failureClass, result);
-    verdict = { result, accepted: false, recovered: false, failureClass, repair };
+    ledger.validationErrors.push(`attempt ${attempt}: ${valid.error}`);
+    loop.lastFailureClass = 'schema-validation';
+
+    if (budgetLeft) {
+      loop.nextCorrection = { error: valid.error, kind: 'contract' };
+      const retryLever = ladder.take({ cause: 'schema-validation', failed: loop.result, attempt });
+      ledger.recordFailedAttempt('schema-validation', valid.error);
+
+      // an UNREPAIRED intermediate schema miss mints no decode row
+      if (repair != null) {
+        ledger.recordDecodeAttempt(repairedRow(retryLever), true);
+      }
+
+      next = 'retry';
+    } else {
+      ledger.recordDecodeAttempt({ ...loopDecodeRowOf(loop, { attempt, failureClass: 'schema-validation', result: served, validatorError: valid.error }), ...(repair == null ? {} : { repaired: repair.tier }) }, false);
+      ledger.recordFailedAttempt('schema-validation', valid.error);
+    }
   }
 
-  return verdict;
+  return next;
+}
+
+/**
+ * Read one delivered reply — the protocol read, the line lift (a `line` + critique call reads a bare line as a lever)
+ * and the reply-repair lane (non-`line`, degenerate). A repair substitutes the reply and patches the attempt's phase.
+ *
+ * @param config - The attempt-stage config.
+ * @param loop - The loop state.
+ * @param step - The attempt's send.
+ * @returns The judged reading.
+ */
+async function readLlmDispatchLoopReply(config: LlmDispatchAttemptsConfig, loop: LlmDispatchLoopState, step: LlmDispatchLoopStep): Promise<LlmDispatchJudgedReading> {
+  const { protocol, critique, envelope, fastFix } = config;
+  const { sent, attempt } = step;
+  const { attemptContext } = sent;
+  const served = sent.result;
+  const read = replyReaderOf(config, attemptContext);
+  let reading = read(served.text);
+  let repair: Maybe<LlmReplyRepairSummary>;
+  let fastFixMiss: Maybe<LlmReplyFastFixMissReason>;
+
+  if (critique != null && protocol === 'line' && reading.kind === 'no-json') {
+    const lifted = llmLineReplyLeverOf(served.text, { field: config.lineLeverField ?? DEFAULT_LLM_LINE_LEVER_FIELD, envelope });
+
+    if (lifted != null) {
+      reading = { kind: 'lever', lever: lifted };
+    }
+  }
+
+  if (protocol !== 'line' && isDegenerateLlmReplyReading(reading)) {
+    const fastFixLimits = config.fastFixLimits ?? DEFAULT_LLM_REPLY_FAST_FIX_LIMITS;
+    const lane = await runLlmReplyRepairLane({ served, attempt, attemptContext, read, unrepairedRefusal: config.fastFixUnavailable ?? 'fast-fix-off', fastFix, fastFixSpent: loop.fastFixCalls >= fastFixLimits.maxPerDispatch, fastFixLimits });
+    loop.fastFixCalls += lane.fastFixCalled ? 1 : 0;
+    fastFixMiss = lane.fastFixMiss;
+
+    if (lane.repaired != null) {
+      loop.result = lane.repaired.result;
+      reading = lane.repaired.reading;
+      repair = lane.repaired.summary;
+      const last = loop.attemptPhases.length - 1;
+      loop.attemptPhases[last] = { ...loop.attemptPhases[last], repair };
+    }
+  }
+
+  return { served, reading, repair, fastFixMiss };
+}
+
+/**
+ * Judge one delivered reply: read (line lift + repair lane), then a lever is validated / critiqued; a decline (or a
+ * `line` reply that is not JSON) is ACCEPTED; any other degenerate reading records its classified row and re-asks
+ * while the budget lasts.
+ *
+ * @param config - The attempt-stage config.
+ * @param loop - The loop state.
+ * @param step - The attempt's send.
+ * @returns Whether to retry.
+ */
+async function runLlmDispatchReplyStep(config: LlmDispatchAttemptsConfig, loop: LlmDispatchLoopState, step: LlmDispatchLoopStep): Promise<LlmDispatchLoopNext> {
+  const judged = await readLlmDispatchLoopReply(config, loop, step);
+  const { reading, served, repair, fastFixMiss } = judged;
+  const { attempt, budgetLeft } = step;
+  const { ledger } = loop;
+  let next: LlmDispatchLoopNext = 'settle';
+
+  if (reading.kind === 'lever') {
+    next = await runLlmDispatchLeverStep(config, loop, { ...step, ...judged, lever: reading.lever });
+  } else if (reading.kind === 'declined' || (config.protocol === 'line' && isDegenerateLlmReplyReading(reading))) {
+    // a decline (or a `line` reply that is not JSON) is an ANSWER, never a decode failure
+    if (repair != null) {
+      ledger.recordDecodeAttempt(llmRepairedDecodeAttemptOf({ attempt, served, summary: repair, maxOutputTokens: loop.request.maxOutputTokens }), false);
+      loop.recovered = true;
+    }
+
+    loop.accepted = true;
+  } else {
+    const failureClass = classifyLlmDecodeFailure(reading.kind, loop.result);
+    loop.lastFailureClass = failureClass;
+    const lever = budgetLeft ? loop.ladder.take({ cause: failureClass, failed: loop.result, attempt }) : undefined;
+    ledger.recordDecodeAttempt({ ...loopDecodeRowOf(loop, { attempt, failureClass, result: loop.result, lever }), ...(fastFixMiss == null ? {} : { fastFix: 'missed' as const, fastFixMiss }) }, budgetLeft);
+    ledger.recordFailedAttempt(failureClass);
+
+    if (budgetLeft) {
+      loop.nextCorrection = { error: loop.texts.decode[failureClass], kind: 'contract' };
+      next = 'retry';
+    }
+  }
+
+  return next;
+}
+
+/**
+ * Run ONE pass of the bounded loop: compose the attempt's request (the latest correction on the base request, then
+ * every lever taken so far), send it, stamp its phase, and branch — the transport lane, the truncation pre-read, the
+ * bonus attempt, or the reply judgement.
+ *
+ * @param config - The attempt-stage config.
+ * @param loop - The loop state.
+ * @returns Whether to retry.
+ */
+async function runLlmDispatchLoopPass(config: LlmDispatchAttemptsConfig, loop: LlmDispatchLoopState): Promise<LlmDispatchLoopNext> {
+  const { strategy, baseRequest, protocol, callContext, signal, pause, maxAttempts } = config;
+  const attempt = loop.attempts + 1;
+  const { nextCorrection } = loop;
+  let request = baseRequest;
+  loop.sentCorrection = undefined;
+
+  if (nextCorrection != null) {
+    loop.sentCorrection = llmDispatchCorrectionTextOf({ ...nextCorrection, protocol, texts: loop.texts });
+    request = withLlmDispatchCorrection(baseRequest, { text: loop.sentCorrection, kind: nextCorrection.kind, protocol, attempt, slotId: config.correctionSlotId ?? 'correction' });
+  }
+
+  loop.request = loop.ladder.apply(request);
+  loop.attempts = attempt;
+  const budgetLeft = attempt < maxAttempts + loop.bonusAttempts;
+  const sent = await sendLlmDispatchAttempt({ strategy, request: loop.request, attempt, callContext, signal, pause });
+  const retry = loop.ladder.takePending();
+  loop.attemptPhases.push(llmAttemptPhaseOf({ attempt, attemptContext: sent.attemptContext, result: sent.result, retry }));
+  loop.result = sent.result;
+  const lengthCapped = isLlmLengthCappedFinish(sent.result);
+  loop.lengthCapped = loop.lengthCapped || lengthCapped;
+  const step: LlmDispatchLoopStep = { sent, attempt, budgetLeft };
+  let next: LlmDispatchLoopNext;
+
+  if (sent.fault != null) {
+    next = await runLlmDispatchFaultStep(config, loop, step);
+  } else if (lengthCapped && budgetLeft) {
+    next = runLlmDispatchTruncatedStep(loop, { ...step, bonus: false });
+  } else if (lengthCapped && strategy.supportsReasoningParam !== false && loop.bonusAttempts < LLM_RETRY_INDUCED_BONUS_ATTEMPTS && retry?.lever === 'reasoning-low') {
+    next = runLlmDispatchTruncatedStep(loop, { ...step, bonus: true });
+  } else {
+    next = await runLlmDispatchReplyStep(config, loop, step);
+  }
+
+  return next;
 }
 
 /**
@@ -238,60 +546,73 @@ function llmDecodeStatusOf(accepted: boolean, attempts: number): LlmDecodeStatus
 }
 
 /**
- * The VALIDATED path (a `validate` or a `critique` is set) — today a budget of exactly ONE attempt. An abort records a
- * `timeout` row and drops the beat; a retryable transport error a `transport` row (with its summary) and drops; any
- * other throw propagates. A delivered reply is read, repaired (deterministic tier; an unrepaired object-led reply is
- * refused as `fast-fix-off`) and validated. Every failed attempt records its decode row (`willRetry: false`) and its
- * failed-attempt row. The result is stamped `attempts`, `decodeStatus`, `decodeOutcome`, `lengthCapped?`, `lever?` and
- * `validationErrors?`.
+ * The VALIDATED path (a `validate` or a `critique` is set) — the BOUNDED retry loop, up to `maxAttempts` attempts (plus
+ * at most one bonus attempt).
+ *
+ * - **Transport lane.** An abort records a `timeout` row, a retryable transport error a `transport` row (with its
+ *   summary); either resends identical bytes (a transport resend after the backoff) unless the budget is spent or the
+ *   dispatch is cancelled. Any other throw propagates.
+ * - **Truncation.** A length-capped reply is never parsed while budget remains; it re-asks with a raised budget.
+ * - **Reply.** A delivered reply is read, repaired (deterministic tier, then the bound fast fix), validated and
+ *   critiqued. Every rejection re-asks with a `## Correction` block naming only the latest failure, and moves ONE
+ *   lever of the ladder.
+ *
+ * Every rejected attempt records its failed-attempt row (with the correction it was sent with and the retry it
+ * bought); decode rows follow the decode-failure population rules. The result is stamped `attempts`, `decodeStatus`,
+ * `decodeOutcome`, `lengthCapped?`, `lever?` and `validationErrors?`.
  *
  * @param config - The attempt-stage config.
  * @returns The outcome.
  */
 export async function runLlmDispatchAttempts(config: LlmDispatchAttemptsConfig): Promise<LlmDispatchOutcome> {
-  const { strategy, baseRequest, callContext, signal, pause, onDecodeAttempt } = config;
-  const maxOutputTokens = baseRequest.maxOutputTokens;
-  const attempts = 1;
-  const attemptPhases: LlmCallAttemptPhase[] = [];
-  const ledger: LlmDispatchAttemptLedger = {
-    decodeFailures: [],
-    failedAttempts: [],
-    validationErrors: [],
-    recordDecodeAttempt(row, willRetry) {
-      ledger.decodeFailures.push(row);
-      onDecodeAttempt?.(row, willRetry);
+  const { strategy, baseRequest, callContext, onDecodeAttempt } = config;
+  const ladder = makeLlmDispatchRetryLadder({ capability: baseRequest.capability, baseRequest, baseOutputBudget: config.baseOutputBudget, resolvedModel: config.resolvedModel, escalateModel: config.escalateModel, reasoningSupported: strategy.supportsReasoningParam !== false, callContext });
+  const decodeFailures: LlmDecodeFailureAttempt[] = [];
+  const failedAttempts: LlmCallFailedAttempt[] = [];
+  const validationErrors: string[] = [];
+  const loop: LlmDispatchLoopState = {
+    ladder,
+    ledger: {
+      decodeFailures,
+      failedAttempts,
+      validationErrors,
+      recordDecodeAttempt(row, willRetry) {
+        decodeFailures.push(row);
+        onDecodeAttempt?.(row, willRetry);
+      },
+      recordFailedAttempt(cause, error) {
+        // reads the CURRENT attempt: its (possibly repaired) reply, the cap it was sent with, its correction, and the retry this failure bought
+        failedAttempts.push(llmFailedAttemptOf({ attempt: loop.attempts, cause, result: loop.result, maxOutputTokens: loop.request.maxOutputTokens, error, correction: loop.sentCorrection, retry: ladder.pending() }));
+      }
     },
-    recordFailedAttempt(cause, failed, error) {
-      ledger.failedAttempts.push(llmFailedAttemptOf({ attempt: attempts, cause, result: failed, maxOutputTokens, error }));
-    }
+    attemptPhases: [],
+    texts: config.corrections ?? DEFAULT_LLM_DISPATCH_CORRECTION_TEXTS,
+    attempts: 0,
+    bonusAttempts: 0,
+    fastFixCalls: 0,
+    request: baseRequest,
+    result: { text: '', strategyId: strategy.id, capability: baseRequest.capability },
+    lengthCapped: false,
+    accepted: false,
+    recovered: false
   };
-  const sent = await sendLlmDispatchAttempt({ strategy, request: baseRequest, attempt: attempts, callContext, signal, pause });
-  const lengthCapped = isLlmLengthCappedFinish(sent.result);
-  let verdict: LlmDispatchAttemptVerdict;
 
-  if (sent.fault == null) {
-    verdict = await judgeLlmDispatchAttempt({ config, sent, attempt: attempts, ledger });
-  } else {
-    const { fault, transportError, result: failed } = sent;
-    ledger.recordDecodeAttempt(llmDecodeFailureAttemptOf({ attempt: attempts, failureClass: fault, result: failed, maxOutputTokens, transportError }), false);
-    ledger.recordFailedAttempt(fault, failed, transportError);
-    verdict = { result: failed, accepted: false, recovered: false, failureClass: fault };
+  while ((await runLlmDispatchLoopPass(config, loop)) === 'retry') {
+    // each pass sends one attempt
   }
 
-  attemptPhases.push(llmAttemptPhaseOf({ attempt: attempts, attemptContext: sent.attemptContext, result: sent.result, repair: verdict.repair }));
-
-  const { result, accepted, recovered, lever: acceptedLever, failureClass } = verdict;
+  const { result, accepted, recovered, acceptedLever, attempts, lengthCapped, critiqueFailure, attemptPhases } = loop;
   const decodeStatus = llmDecodeStatusOf(accepted, attempts);
-  const decodeOutcome = classifyLlmReplyOutcome(result, accepted ? undefined : failureClass);
+  const decodeOutcome = classifyLlmReplyOutcome(result, accepted ? undefined : (loop.lastFailureClass ?? undefined));
   const lever = acceptedLever === undefined ? undefined : JSON.stringify(acceptedLever);
-  const { validationErrors, decodeFailures, failedAttempts } = ledger;
 
   return {
     result: { ...result, attempts, decodeStatus, decodeOutcome, ...(lengthCapped ? { lengthCapped: true } : {}), ...(lever == null ? {} : { lever }), ...(validationErrors.length > 0 ? { validationErrors } : {}) },
-    finalRequest: baseRequest,
+    finalRequest: loop.request,
     attemptPhases,
     decodeFailures,
     failedAttempts,
-    recovered
+    recovered,
+    ...(critiqueFailure == null ? {} : { critiqueFailure })
   };
 }

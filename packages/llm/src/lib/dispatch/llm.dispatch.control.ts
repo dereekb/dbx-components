@@ -3,8 +3,9 @@
  * signal it forwards to every strategy call (the dispatcher's own signal combined with the request's).
  */
 
-import { type Maybe } from '@dereekb/util';
-import { type LlmCallContext } from '../record/llm.call.context';
+import { type Maybe, type Milliseconds } from '@dereekb/util';
+import { type LlmCallContext, makeLlmCallContext, noopLlmCallContext } from '../record/llm.call.context';
+import { type LlmSwallowSink } from '../record/llm.swallow';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
 
 /**
@@ -149,4 +150,89 @@ export function llmDispatchSignalOf(config: LlmDispatchSignalsConfig): Maybe<Abo
  */
 export function isLlmDispatchCancelled(config: LlmDispatchSignalsConfig): boolean {
   return config.cancellationSignal?.aborted === true || config.request.signal?.aborted === true;
+}
+
+// MARK: Transport backoff
+/**
+ * The first transport-retry backoff, before jitter.
+ */
+export const LLM_TRANSPORT_RETRY_BASE_DELAY_MS: Milliseconds = 500;
+
+/**
+ * The cap of the exponential transport-retry backoff, before jitter.
+ */
+export const LLM_TRANSPORT_RETRY_MAX_DELAY_MS: Milliseconds = 8_000;
+
+/**
+ * The wait before an identical resend after the transport failure of the 1-based `attempt`.
+ */
+export type LlmDispatchTransportBackoff = (attempt: number) => Milliseconds;
+
+/**
+ * The default transport backoff — exponential from {@link LLM_TRANSPORT_RETRY_BASE_DELAY_MS}, capped at
+ * {@link LLM_TRANSPORT_RETRY_MAX_DELAY_MS}, with half-jitter (the wait lands in `[½, 1] ×` the exponential step).
+ *
+ * @param attempt - The 1-based ordinal of the attempt whose transport failed.
+ * @param random - The jitter source (`[0, 1)`).
+ * @returns The wait.
+ */
+export function llmTransportBackoffMs(attempt: number, random: () => number = Math.random): Milliseconds {
+  const exponential = Math.min(LLM_TRANSPORT_RETRY_MAX_DELAY_MS, LLM_TRANSPORT_RETRY_BASE_DELAY_MS * 2 ** Math.max(0, attempt - 1));
+  return Math.round(exponential * (0.5 + random() * 0.5));
+}
+
+/**
+ * Wait `ms`, waking EARLY (never rejecting) on an abort. Returns at once for `ms <= 0` or a pre-aborted signal. Each path
+ * tears the other down, so neither a fired timer nor an abort leaves a listener attached.
+ *
+ * @param ms - The wait.
+ * @param signal - The cancellation signal.
+ */
+export async function delayLlmDispatch(ms: Milliseconds, signal?: Maybe<AbortSignal>): Promise<void> {
+  if (ms > 0 && signal?.aborted !== true) {
+    await new Promise<void>((resolve) => {
+      const handle: { timer?: ReturnType<typeof setTimeout> } = {};
+      const onAbort = (): void => {
+        clearTimeout(handle.timer);
+        resolve();
+      };
+
+      handle.timer = setTimeout(() => {
+        signal?.removeEventListener('abort', onAbort);
+        resolve();
+      }, ms);
+      signal?.addEventListener('abort', onAbort, { once: true });
+    });
+  }
+}
+
+// MARK: Fallback context
+/**
+ * The inputs of {@link llmDispatchFallbackCallContextOf}.
+ */
+export interface LlmDispatchFallbackCallContextConfig<A extends object = object> {
+  /**
+   * The context label.
+   */
+  readonly label: string;
+  /**
+   * Where the context reports its swallows. Absent ⇒ a no-op context.
+   */
+  readonly swallow?: Maybe<LlmSwallowSink>;
+  /**
+   * The context's attribution.
+   */
+  readonly attribution?: Maybe<A>;
+}
+
+/**
+ * The call context of a dispatch (or decision) nothing else minted one for — a context that does not time, reporting its
+ * swallows to the host sink when one is configured, else a no-op context.
+ *
+ * @param config - The label, the swallow sink and the attribution.
+ * @returns The context.
+ */
+export function llmDispatchFallbackCallContextOf<A extends object = object>(config: LlmDispatchFallbackCallContextConfig<A>): LlmCallContext<A> {
+  const { label, swallow, attribution } = config;
+  return swallow == null ? noopLlmCallContext<A>() : makeLlmCallContext<A>({ label, timing: false, attribution: attribution as A, onSwallow: (site, cause) => swallow(site, cause) });
 }

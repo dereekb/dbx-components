@@ -46,6 +46,11 @@ export interface LlmDispatchOutcome {
    * dispatch dropped the beat.
    */
   readonly recovered: boolean;
+  /**
+   * The critic's LAST feedback when the attempt budget ran out on a still-rejected reply — the evidence of the
+   * `critique-fail` gap. Absent otherwise.
+   */
+  readonly critiqueFailure?: string;
 }
 
 /**

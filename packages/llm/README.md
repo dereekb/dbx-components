@@ -636,11 +636,11 @@ replay. Hosts swap their own pieces in through hooks; the dispatcher has no host
 - **Single-shot.** With no `validate` and no `critique` the strategy result comes back unchanged. A reply that nearly
   parses is repaired for free (`reply-repaired` diag, no decode row). An abort only drops the beat when the dispatch is
   cancelled; any other throw propagates, a retryable transport error included.
-- **Validated.** With a `validate` (or a `critique`) the call gets one attempt. An abort or a retryable transport error
-  drops the beat with a `timeout` / `transport` decode row; other throws propagate. The reply is read, repaired, then
-  validated, and the result is stamped `attempts`, `decodeStatus`, `decodeOutcome`, `lengthCapped`, `lever` and
-  `validationErrors`. A decline, or a `line` reply that is not JSON, is accepted. Each rejected attempt records a decode
-  row, a `failedAttempts` row and an `onDecodeFailure` tap event (`willRetry: false`).
+- **Validated.** With a `validate` (or a `critique`) the call runs the bounded retry loop (see Retry and lanes). Each
+  reply is read, repaired, validated, then critiqued, and the result is stamped `attempts`, `decodeStatus`,
+  `decodeOutcome`, `lengthCapped`, `lever` and `validationErrors`. A decline, or a `line` reply that is not JSON, is
+  accepted. Each rejected attempt records a decode row (critique rejections excepted), a `failedAttempts` row and an
+  `onDecodeFailure` tap event whose `willRetry` says whether another attempt follows. Other throws propagate.
 - **Follow-ups.** `preparePrompt(request)` returns an `LlmPrompt` whose `execute()` runs once and whose `followUp(…)`
   chains onto the same thread; `dispatch(request)` equals `preparePrompt(request).execute()` unwrapped. A degenerate
   reply replays as `degenerateThreadPlaceholder`. `makeLlmPromptChain` works over it unchanged: the root renders its
@@ -648,7 +648,7 @@ replay. Hosts swap their own pieces in through hooks; the dispatcher has no host
 - **Records and taps.** `recorder.recordCallStart` fires before the send, `recordCall` once per execution, and
   `recordDecodeFailure` once when any decode row exists. The recorder gets the full record and owns any capture gate.
   `taps` (held by reference) get `onDispatch`, `onDecodeFailure` and `onDispatchComplete` with the same record object.
-  `onGap` gets `prompt-raw-json` and `prompt-over-budget` (the call is still sent).
+  `onGap` gets `prompt-raw-json`, `critique-fail` and `prompt-over-budget` (the call is still sent).
 - **Host data.** `callAttributionOf` overrides the per-call context's attribution, `recordFieldsOf({ kind })` adds the
   host's top-level fields to the `start` / `call` / `decode-failure` records and their tap events, and `resultOf`
   builds the returned `X` from the library result and the `callProfile` snapshot (present when the context times).
@@ -658,8 +658,8 @@ replay. Hosts swap their own pieces in through hooks; the dispatcher has no host
   span, `llm-call-parked` diag). `cancellationSignal` and `request.signal` are combined and forwarded to the strategy;
   either one aborting counts as a cancellation.
 - **Fakes.** `llmDispatcherFromDispatch(fn)` wraps a bare dispatch function as a dispatcher whose prompts run through it.
-- **Not wired yet.** The bounded retry ladder (`maxAttempts`, corrections, levers, backoff), the fast-fix and critique
-  lanes and the decision lane are not part of the dispatcher yet.
+- **Retry and lanes.** The bounded retry ladder, the fast-fix and critique lanes and the decision lane are described in
+  the next section.
 
 ```ts
 import { llmSchemaLeverValidator, makeLlmDispatcher, makeLlmStrategyRegistry, tieredLlmPromptTemplateResolver } from '@dereekb/llm';
@@ -678,6 +678,64 @@ const result = await dispatcher.dispatch({ capability: 'summarize', renderLiveCo
 
 const first = await dispatcher.preparePrompt({ capability: 'summarize', renderLiveContext }).execute();
 const next = await first.followUp({ content: 'Now the second item.' }).execute();
+```
+
+## Retry and lanes
+
+A validated or critiqued dispatch runs a bounded loop: each rejected attempt is re-asked with a correction and at most
+one retry lever, and a mangled JSON reply gets one cheap fast fix before any re-ask. Every rejected attempt lands on
+`LlmCallRecord.failedAttempts` with its `correction` and `retry`. Decisions take their own lane on the same dispatcher.
+
+- **Budget.** `maxAttempts` per request (or per follow-up), default `DEFAULT_LLM_DISPATCH_MAX_ATTEMPTS` (2), clamped to
+  at least 1.
+- **Corrections.** A re-ask carries one volatile segment under the layout's `correction` slot that holds only the latest
+  failure: the validator's error, the critic's feedback or the decode class's words. `correctionTexts` overrides
+  the words (merged over `DEFAULT_LLM_DISPATCH_CORRECTION_TEXTS`, `decode` per class).
+- **Lever ladder.** One lever per retry, chosen by `chooseLlmRetryLever` for the failure's cause: the output budget ×4
+  up to `LLM_RETRY_OUTPUT_BUDGET_CEILING` (it persists for the remaining attempts), the model to `decodeRetryTier`
+  (default `strong` when the tier map has it; `'off'` pins it off; an unknown key throws at construction), reasoning
+  off / low, or structured output off. Each retry files a `retry-lever` diag and stamps `phases.attempts[].retry` and
+  `failedAttempts[].retry`.
+- **Transport lane.** A timeout resends identical bytes at once; a retryable transport error (429, 5xx, a dropped
+  socket) resends them after `transportBackoff` (default `llmTransportBackoffMs`: 500 ms doubling to 8 s, half jitter,
+  with a `transport-backoff` diag). A cancelled dispatch never retries.
+- **Truncation.** A length-capped reply is not parsed while budget remains; `lengthCapped` is sticky on the result. A
+  truncation a lever induced on the last attempt earns one bonus attempt (`LLM_RETRY_INDUCED_BONUS_ATTEMPTS`).
+- **Fast fix.** `replyFastFix` (e.g. `makeLlmReplyFastFixer()`) repairs a mangled reply with one recorded
+  `RepairReplyJson` dispatch, bounded by `fastFixLimits` (`DEFAULT_LLM_REPLY_FAST_FIX_LIMITS`). It never binds on a
+  `RepairReplyJson` call, a `line` call or a call with no schema hint. It fails open: a miss or a throw falls through to
+  the re-ask (`reply-fast-fix-miss` diag, swallow site `llm/reply-repair.fast-fix`). A fixer's `meta` lands on
+  `result.repair.meta`.
+- **Critique.** Root calls only, after `validate` passes. A rejection costs a re-ask with the critic's feedback and a
+  `critique` failed row, never a decode row. A rejection on the last attempt ships the reply and files the
+  `critique-fail` gap. A `line` reply is lifted to a lever under `lineLeverField` (default `line`) so the critic can read
+  it.
+- **Decision lane.** The optional `decisions` block (`strategies`, `strategyId`, `defaultModel`, `newCallContext`,
+  `recordFieldsOf`) adds `decide`, `decisionsSpent`, `resetDecisionsSpent` and the once-per-reset
+  `claimDecisionBudgetWarning`; no block, an empty registry or an unregistered pin leaves all four absent. A
+  `defaultModel` that is not a decision model throws at construction, and it replaces the default-tier rung of the model
+  ladder. Each decision records one start and one call record, its state and questions as two `live`-slot segments.
+  A throwing `stamp` is swallowed at `llm/decide.stamp`. Decision calls fire no taps and never retry.
+
+```ts
+import { llmCriticFor, llmSchemaLeverValidator, makeLlmDecisionStrategyRegistry, makeLlmDispatcher, makeLlmReplyFastFixer } from '@dereekb/llm';
+
+const dispatcher = makeLlmDispatcher({
+  ...config, // strategies, tiers, descriptors and templates as above
+  replyFastFix: makeLlmReplyFastFixer(),
+  decodeRetryTier: 'strong',
+  decisions: { strategies: makeLlmDecisionStrategyRegistry([decisionStrategy]), defaultModel: 'typesafe/jev-1.14' }
+});
+
+const result = await dispatcher.dispatch({
+  capability: 'summarize',
+  renderLiveContext,
+  maxAttempts: 3,
+  validate: llmSchemaLeverValidator(summarySchema),
+  ...llmCriticFor({ binding, capability: 'summarize', goal })
+});
+
+const routed = await dispatcher.decide?.({ capability: 'route-ticket', decision: ROUTE_TICKET, input: { ticket } });
 ```
 
 ## Decisions
@@ -747,8 +805,9 @@ could need in one map.
 - `defineLlmDecision(descriptor)` declares a decision over one typed input: `state(input)` and `questions(input)`.
   Validation is lazy — `asRequest({ input, model })` validates and throws `LlmDecisionDeclarationError` naming the
   decision — and `decide({ strategy, input, model, options })` runs it.
-- `LlmDecisionDispatchRequest` is what a dispatcher's decision lane takes: the consuming `capability`, the declared
-  `decision`, its `input`, host `meta`, model / tier overrides, `stage` and an optional `stamp`.
+- `LlmDecisionDispatchRequest` is what `makeLlmDispatcher`'s decision lane (its `decisions` block) takes: the
+  consuming `capability`, the declared `decision`, its `input`, host `meta`, model / tier overrides, `stage` and an
+  optional `stamp`.
 
 ```ts
 import { llmChoiceQuestion, llmDecisionRequestBody, llmNoulQuestion, readLlmDecisionAnswers } from '@dereekb/llm/decision';

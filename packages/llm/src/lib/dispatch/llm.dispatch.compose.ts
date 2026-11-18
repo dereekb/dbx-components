@@ -115,6 +115,11 @@ export interface LlmComposedDispatch {
    * The lever validator of this call — the request's on the root, the follow-up's on a follow-up.
    */
   readonly validate?: LlmLeverValidator;
+  /**
+   * The attempt budget of this call, as asked — the request's on the root, the follow-up's on a follow-up (clamped by
+   * the attempt stage).
+   */
+  readonly maxAttempts?: number;
 }
 
 /**
@@ -269,7 +274,8 @@ async function composeLlmRootDispatch<R extends LlmDispatchRequest, D extends Ll
     supplements: llmPromptSupplementsOf(composed.contributions, composed.cut),
     liveContext: joinLlmLiveContextBlocks(composed.liveContext),
     cachePrefixHash,
-    ...(request.validate == null ? {} : { validate: request.validate })
+    ...(request.validate == null ? {} : { validate: request.validate }),
+    ...(request.maxAttempts == null ? {} : { maxAttempts: request.maxAttempts })
   };
 }
 
@@ -296,7 +302,7 @@ function composeLlmFollowUpDispatch<R extends LlmDispatchRequest, D extends LlmC
     ...(responseSchemaHint == null ? {} : { responseSchemaHint })
   };
 
-  return { protocol, baseRequest, segments, supplements: [], liveContext: '', ...(followUp.validate == null ? {} : { validate: followUp.validate }) };
+  return { protocol, baseRequest, segments, supplements: [], liveContext: '', ...(followUp.validate == null ? {} : { validate: followUp.validate }), ...(followUp.maxAttempts == null ? {} : { maxAttempts: followUp.maxAttempts }) };
 }
 
 /**

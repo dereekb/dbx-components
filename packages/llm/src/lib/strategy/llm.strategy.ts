@@ -379,6 +379,11 @@ export interface LlmReplyRepairSummary {
    * The deterministic repair ops applied, by kind (deterministic tier only).
    */
   readonly ops?: Readonly<Record<string, number>>;
+  /**
+   * Host data of the fast-fix call that produced the repair (the fixer's own `meta`, e.g. its correlation id) — set on
+   * the `fast-fix` tier only, when the fixer returned one.
+   */
+  readonly meta?: LlmCallMeta;
 }
 
 /**

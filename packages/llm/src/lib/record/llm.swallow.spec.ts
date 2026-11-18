@@ -80,7 +80,8 @@ describe('LLM_SWALLOW_SITES', () => {
       'llm/reply-envelope.decode',
       'llm/reply-repair.rebuilt-parse',
       'llm/reply-repair.fast-fix',
-      'llm/critique-reply.judge'
+      'llm/critique-reply.judge',
+      'llm/decide.stamp'
     ]);
   });
 

@@ -154,6 +154,17 @@ export interface ChooseLlmRetryLeverInput {
 export const LLM_RETRY_BUDGET_RAISE_FACTOR = 4;
 
 /**
+ * The absolute ceiling the `budget` rung raises a dispatch's completion cap to (the chooser's `budgetCeiling` input).
+ */
+export const LLM_RETRY_OUTPUT_BUDGET_CEILING = 32_768;
+
+/**
+ * How many BONUS attempts a dispatcher grants past its attempt cap — when the final attempt was cap-ended by the
+ * `reasoning-low` rung the ladder had just taken, one extra attempt undoes it (`reasoning-off`).
+ */
+export const LLM_RETRY_INDUCED_BONUS_ATTEMPTS = 1;
+
+/**
  * The reasoning band the `reasoning-low` rung flips a reasoning-OFF dispatch to — deliberately the LOWEST band,
  * because the rung exists to buy a little deliberation on the second attempt of a failing dispatch, not to re-price
  * the capability.

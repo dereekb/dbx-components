@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { type LlmCallContext, makeLlmCallContext } from '../record/llm.call.context';
 import { LLM_TIMEOUT_FINISH_REASON, LLM_TRANSPORT_FINISH_REASON } from '../record/llm.decode.failure';
 import { type LlmCompletion, type LlmDispatchResult, type LlmRequest, type LlmStrategy } from '../strategy/llm.strategy';
-import { isDegenerateLlmReplyReading, readLlmDispatchReply, type LlmReplyRepairRefusal, runLlmReplyRepairLane, sendLlmDispatchAttempt, validateLlmDispatchLever } from './llm.dispatch.attempt';
+import { type LlmReplyFastFixOutcome } from '../reply/llm.reply.fast.fix';
+import { isDegenerateLlmReplyReading, type LlmBoundReplyFastFix, llmBoundReplyFastFixOf, readLlmDispatchReply, type LlmReplyRepairRefusal, runLlmReplyRepairLane, sendLlmDispatchAttempt, validateLlmDispatchLever } from './llm.dispatch.attempt';
 
 class APIUserAbortError extends Error {}
 
@@ -96,11 +97,84 @@ describe('runLlmReplyRepairLane()', () => {
     expect(attemptContext.profile().diags?.[0]).toMatchObject({ code: 'reply-repaired', fields: { ops: 'drop-trailing-comma:2' } });
   });
 
-  it('should refuse a mangled reply with the unrepaired refusal reason', async () => {
+  it('should refuse with the unrepaired refusal when no fast fix is bound', async () => {
     const mangled = '{"a":"a long enough value here","b":None}';
 
     expect(refusalOf((await laneOf(mangled, 'stop', 'mangled')).attemptContext)).toBe('mangled');
     expect(refusalOf((await laneOf(mangled, 'stop', 'fast-fix-off')).attemptContext)).toBe('fast-fix-off');
+  });
+});
+
+describe('runLlmReplyRepairLane() fast-fix tier', () => {
+  const MANGLED = '{"a":"a long enough value here","b":None}';
+  const read = (text: string) => readLlmDispatchReply(text, { protocol: 'json' });
+
+  async function fastLaneOf(config: { readonly text?: string; readonly fastFix?: LlmBoundReplyFastFix; readonly fastFixSpent?: boolean; readonly maxChars?: number; readonly minScore?: number }) {
+    const swallows: string[] = [];
+    const attemptContext = makeLlmCallContext({ label: 'attempt-1', timing: true, onSwallow: (site) => void swallows.push(site) });
+    const lane = await runLlmReplyRepairLane({ served: served(config.text ?? MANGLED), attempt: 1, attemptContext, read, unrepairedRefusal: 'no-schema', fastFix: config.fastFix, fastFixSpent: config.fastFixSpent, fastFixLimits: { maxChars: config.maxChars ?? 16_000, minScore: config.minScore ?? 0.5 } });
+    return { lane, attemptContext, swallows };
+  }
+
+  const fixed =
+    (meta?: object): LlmBoundReplyFastFix =>
+    () =>
+      Promise.resolve<LlmReplyFastFixOutcome>({ kind: 'fixed', lever: { a: 'a long enough value here', b: null }, text: '{"a":"a long enough value here","b":null}', ...(meta == null ? {} : { meta }) });
+
+  it('should refuse with the unrepaired refusal when unbound, and with fast-fix-spent / too-long / low-score when gated', async () => {
+    expect(refusalOf((await fastLaneOf({})).attemptContext)).toBe('no-schema');
+    expect(refusalOf((await fastLaneOf({ fastFix: fixed(), fastFixSpent: true })).attemptContext)).toBe('fast-fix-spent');
+    expect(refusalOf((await fastLaneOf({ fastFix: fixed(), maxChars: 10 })).attemptContext)).toBe('too-long');
+    expect(refusalOf((await fastLaneOf({ fastFix: fixed(), minScore: 0.99 })).attemptContext)).toBe('low-score');
+    expect((await fastLaneOf({ fastFix: fixed(), maxChars: 10 })).lane.fastFixCalled).toBe(false);
+  });
+
+  it('should substitute a fixed reply with its summary, meta and diag', async () => {
+    const { lane, attemptContext } = await fastLaneOf({ fastFix: fixed({ fixCallId: 'f1' }) });
+
+    expect(lane.fastFixCalled).toBe(true);
+    expect(lane.repaired?.reading.kind).toBe('lever');
+    expect(lane.repaired?.summary).toMatchObject({ tier: 'fast-fix', attempt: 1, verdict: 'mangled', meta: { fixCallId: 'f1' } });
+    expect(lane.repaired?.result.repair).toMatchObject({ tier: 'fast-fix', originalText: MANGLED });
+    expect(attemptContext.profile().diags?.[0]).toMatchObject({ level: 'info', code: 'reply-repaired', fields: { tier: 'fast-fix', verdict: 'mangled' } });
+    expect(attemptContext.profile().spans.map((span) => span.name)).toEqual(['fast-fix']);
+  });
+
+  it('should report a miss with a warn diag, and a thrown fixer as a swallowed error miss', async () => {
+    const missed = await fastLaneOf({ fastFix: () => Promise.resolve({ kind: 'missed', reason: 'fidelity' }) });
+
+    expect(missed.lane).toEqual({ fastFixCalled: true, fastFixMiss: 'fidelity' });
+    expect(missed.attemptContext.profile().diags?.[0]).toMatchObject({ level: 'warn', code: 'reply-fast-fix-miss', fields: { reason: 'fidelity' } });
+
+    const thrown = await fastLaneOf({ fastFix: () => Promise.reject(new Error('boom')) });
+
+    expect(thrown.lane).toEqual({ fastFixCalled: true, fastFixMiss: 'error' });
+    expect(thrown.swallows).toEqual(['llm/reply-repair.fast-fix']);
+  });
+});
+
+describe('llmBoundReplyFastFixOf()', () => {
+  const renderLiveContext = () => [];
+  const dispatch = () => Promise.resolve(served('{}'));
+  const fixer = (input: unknown) => Promise.resolve<LlmReplyFastFixOutcome>({ kind: 'missed', reason: 'unusable', meta: { input } });
+
+  it('should never bind on the repair capability, on a line call or without a fixer', () => {
+    expect(llmBoundReplyFastFixOf({ replyFastFix: fixer, request: { capability: 'RepairReplyJson', renderLiveContext }, protocol: 'json', schemaHint: {}, dispatch })).toEqual({ fastFixUnavailable: 'fast-fix-off' });
+    expect(llmBoundReplyFastFixOf({ replyFastFix: fixer, request: { capability: 'cap', renderLiveContext }, protocol: 'line', schemaHint: {}, dispatch })).toEqual({ fastFixUnavailable: 'fast-fix-off' });
+    expect(llmBoundReplyFastFixOf({ request: { capability: 'cap', renderLiveContext }, protocol: 'json', schemaHint: {}, dispatch })).toEqual({ fastFixUnavailable: 'fast-fix-off' });
+  });
+
+  it('should refuse as no-schema when eligible without a schema hint', () => {
+    expect(llmBoundReplyFastFixOf({ replyFastFix: fixer, request: { capability: 'cap', renderLiveContext }, protocol: 'json', dispatch })).toEqual({ fastFixUnavailable: 'no-schema' });
+  });
+
+  it('should pass the request, subject capability, schema hint and dispatch to a bound fixer', async () => {
+    const request = { capability: 'cap', renderLiveContext };
+    const schemaHint = { type: 'object' };
+    const { fastFix } = llmBoundReplyFastFixOf({ replyFastFix: fixer, request, protocol: 'json-envelope', schemaHint, dispatch });
+    const outcome = await fastFix?.({ text: 't', shape: {} as never, attempt: 2, callContext: makeLlmCallContext({ label: 'a' }) });
+
+    expect(outcome?.meta).toMatchObject({ input: { request, subjectCapability: 'cap', schemaHint, dispatch, text: 't', attempt: 2 } });
   });
 });
 
