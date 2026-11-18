@@ -613,6 +613,73 @@ const result = await dispatcher.dispatch({
 const lever = llmReplyLeverOf(result.text);
 ```
 
+## Dispatcher
+
+`makeLlmDispatcher` is the library implementation of `LlmDispatcher`. Every call, root or chained follow-up, runs the
+same stages in order: resolve, compose, send, decode, validate, record, then report the thread turn the follow-ups
+replay. Hosts swap their own pieces in through hooks; the dispatcher has no host types of its own.
+
+- **Required config.** `strategies` (an `LlmStrategyRegistry`), `defaultStrategyId`, `defaultMaxOutputTokens`,
+  `modelTiers`, `descriptorOf` and `templateResolver`. The default tier's slug is resolved at construction, so a tier map
+  without it throws there. A selected strategy id that is not registered throws and names the registered ones.
+- **Resolve.** Model by `request.model` › `request.tier` › route › descriptor › default tier; the wire `model` is left
+  unset when it is the default tier's slug. The strategy comes from `selectStrategy` when set, else route provider ›
+  `providerByModel` › `defaultStrategyId`. Output controls follow `resolveLlmCapabilityOutputControls` over
+  `reasoningDefault` (off by default). Debug breadcrumbs `model-route`, `provider-route` and `reasoning-floor` fire once
+  per key.
+- **Compose.** The root runs `composeLlmCapabilityPrompt` over `layout` (default `DEFAULT_LLM_PROMPT_LAYOUT`),
+  `contributors`, `texts` and the schema hints (none on a `line` call; an explicit request hint is hardened). It sends
+  the cache split, attachments (root only) and every placement as call-record `supplements`. `promptCacheWatch`
+  observes the prefix per capability and `cachePartitionOf(request)`, filing `prefix-changed` when it moves.
+  `isRawJsonBlock` turns on the raw-JSON watch (skipped for a `rawJsonContext` descriptor). A follow-up is one segment
+  under the layout's `follow-up` slot id, sent over the replayed `thread` with no cache split and no attachments.
+- **Single-shot.** With no `validate` and no `critique` the strategy result comes back unchanged. A reply that nearly
+  parses is repaired for free (`reply-repaired` diag, no decode row). An abort only drops the beat when the dispatch is
+  cancelled; any other throw propagates, a retryable transport error included.
+- **Validated.** With a `validate` (or a `critique`) the call gets one attempt. An abort or a retryable transport error
+  drops the beat with a `timeout` / `transport` decode row; other throws propagate. The reply is read, repaired, then
+  validated, and the result is stamped `attempts`, `decodeStatus`, `decodeOutcome`, `lengthCapped`, `lever` and
+  `validationErrors`. A decline, or a `line` reply that is not JSON, is accepted. Each rejected attempt records a decode
+  row, a `failedAttempts` row and an `onDecodeFailure` tap event (`willRetry: false`).
+- **Follow-ups.** `preparePrompt(request)` returns an `LlmPrompt` whose `execute()` runs once and whose `followUp(…)`
+  chains onto the same thread; `dispatch(request)` equals `preparePrompt(request).execute()` unwrapped. A degenerate
+  reply replays as `degenerateThreadPlaceholder`. `makeLlmPromptChain` works over it unchanged: the root renders its
+  live context once, and each follow-up sends only the lead and the changed blocks.
+- **Records and taps.** `recorder.recordCallStart` fires before the send, `recordCall` once per execution, and
+  `recordDecodeFailure` once when any decode row exists. The recorder gets the full record and owns any capture gate.
+  `taps` (held by reference) get `onDispatch`, `onDecodeFailure` and `onDispatchComplete` with the same record object.
+  `onGap` gets `prompt-raw-json` and `prompt-over-budget` (the call is still sent).
+- **Host data.** `callAttributionOf` overrides the per-call context's attribution, `recordFieldsOf({ kind })` adds the
+  host's top-level fields to the `start` / `call` / `decode-failure` records and their tap events, and `resultOf`
+  builds the returned `X` from the library result and the `callProfile` snapshot (present when the context times).
+- **Call context.** A dispatch nests under `request.callContext`, else under `recorder.newCallContext`, else under a
+  context that does not time and sends its swallows to `swallow`.
+- **Pause and cancellation.** `pause` (`isPaused` / `waitUntilResumed`) parks a dispatch before it sends (`paused`
+  span, `llm-call-parked` diag). `cancellationSignal` and `request.signal` are combined and forwarded to the strategy;
+  either one aborting counts as a cancellation.
+- **Fakes.** `llmDispatcherFromDispatch(fn)` wraps a bare dispatch function as a dispatcher whose prompts run through it.
+- **Not wired yet.** The bounded retry ladder (`maxAttempts`, corrections, levers, backoff), the fast-fix and critique
+  lanes and the decision lane are not part of the dispatcher yet.
+
+```ts
+import { llmSchemaLeverValidator, makeLlmDispatcher, makeLlmStrategyRegistry, tieredLlmPromptTemplateResolver } from '@dereekb/llm';
+
+const dispatcher = makeLlmDispatcher({
+  strategies: makeLlmStrategyRegistry([strategy]),
+  defaultStrategyId: strategy.id,
+  defaultMaxOutputTokens: 4096,
+  modelTiers: { fast: 'acme/fast', strong: 'acme/strong' },
+  descriptorOf: (capability) => DESCRIPTORS[capability],
+  templateResolver: tieredLlmPromptTemplateResolver({ tiers: [{ source: 'app', templates }] }),
+  recorder: { recordCall: (record) => log.write(record) }
+});
+
+const result = await dispatcher.dispatch({ capability: 'summarize', renderLiveContext, validate: llmSchemaLeverValidator(summarySchema) });
+
+const first = await dispatcher.preparePrompt({ capability: 'summarize', renderLiveContext }).execute();
+const next = await first.followUp({ content: 'Now the second item.' }).execute();
+```
+
 ## Decisions
 
 A decision is `(state, questions) → answers`: the caller declares the answer space up front as typed questions and

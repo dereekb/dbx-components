@@ -12,7 +12,8 @@ import { type LlmDecisionQuestions } from '../decision/llm.decision.question';
 import { type LlmDecisionResult } from '../decision/llm.decision.strategy';
 import { type LlmCapabilityModelOverride, type LlmCapabilityVision } from '../model/llm.model.precedence';
 import { type LlmCapabilityKey } from '../model/llm.value';
-import { type LlmPrompt } from '../prompt/llm.prompt.thread';
+import { joinLlmLiveContextBlocks } from '../prompt/llm.prompt.live.context';
+import { type LlmPrompt, makeLlmPromptFactory } from '../prompt/llm.prompt.thread';
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
 
@@ -86,4 +87,31 @@ export interface LlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequest
    * @returns Whether this caller owns the warning.
    */
   claimDecisionBudgetWarning?(): boolean;
+}
+
+/**
+ * Wrap a bare dispatch function as an {@link LlmDispatcher} — the fake / double helper. `dispatch` is the function;
+ * `preparePrompt` routes every execution (root or follow-up) through it too, reporting the root's sent turn as its
+ * joined live context and a follow-up's as the follow-up's content.
+ *
+ * @param dispatch - The dispatch function.
+ * @returns The dispatcher.
+ *
+ * @example
+ * ```ts
+ * const fake = llmDispatcherFromDispatch(async (request) => ({ text: '{}', strategyId: 'fake', capability: request.capability }));
+ * ```
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function llmDispatcherFromDispatch<R extends LlmDispatchRequest = LlmDispatchRequest, X extends LlmDispatchResult = LlmDispatchResult>(dispatch: (request: R) => Promise<X>): LlmDispatcher<R, X> {
+  return {
+    dispatch,
+    preparePrompt: makeLlmPromptFactory<R, X>({
+      runPromptRequest: async ({ request, followUp }) => {
+        const result = await dispatch(request);
+        return { result, sentTurn: { role: 'user', content: followUp == null ? joinLlmLiveContextBlocks(request.renderLiveContext()) : followUp.content } };
+      }
+    })
+  };
 }

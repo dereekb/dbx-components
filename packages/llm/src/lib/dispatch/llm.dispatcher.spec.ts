@@ -1,5 +1,6 @@
 import { cachedGetter } from '@dereekb/util';
 import { describe, expect, it } from 'vitest';
+import { joinLlmLiveContextBlocks } from '../prompt/llm.prompt.live.context';
 import { type ExecutedLlmPrompt, type LlmPrompt, type LlmPromptFollowUp } from '../prompt/llm.prompt.thread';
 import { type LlmPromptSite } from '../prompt/llm.prompt.site';
 import { noopLlmCallContext } from '../record/llm.call.context';
@@ -7,7 +8,7 @@ import { type LlmCritic, type LlmCritiqueInput } from '../reply/llm.reply.critiq
 import { type LlmReplyFastFixer, type LlmReplyFastFixInput } from '../reply/llm.reply.fast.fix';
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
-import { type LlmDispatcher } from './llm.dispatcher';
+import { type LlmDispatcher, llmDispatcherFromDispatch } from './llm.dispatcher';
 
 interface HostSupply {
   readonly glossary?: ReadonlyArray<string>;
@@ -121,5 +122,39 @@ describe('LlmDispatcher', () => {
     const verdict = await request.critique?.({ capability: 'summarize', meta: request.meta, lever: { summary: 'x' }, replyText: '{"summary":"x"}', liveContext: '## Live context', replyProtocol: 'json', attempt: 1, callContext: noopLlmCallContext() });
 
     expect(verdict).toBe(true);
+  });
+});
+
+describe('llmDispatcherFromDispatch()', () => {
+  const request: LlmDispatchRequest = {
+    capability: 'summarize',
+    renderLiveContext: () => [
+      { key: 'a', text: 'A-BLOCK' },
+      { key: 'b', text: 'B-BLOCK' }
+    ]
+  };
+
+  it('should dispatch through the wrapped function', async () => {
+    const calls: LlmDispatchRequest[] = [];
+    const dispatcher = llmDispatcherFromDispatch(async (r: LlmDispatchRequest) => (calls.push(r), { text: 'reply', strategyId: 'fake', capability: r.capability }));
+
+    expect((await dispatcher.dispatch(request)).text).toBe('reply');
+    expect(calls).toEqual([request]);
+  });
+
+  it('should report the root turn as the joined live context and a follow-up turn as its content', async () => {
+    let reply = 0;
+    const dispatcher = llmDispatcherFromDispatch(async (r: LlmDispatchRequest) => ({ text: `reply-${(reply += 1)}`, strategyId: 'fake', capability: r.capability }));
+    const executed = await dispatcher.preparePrompt(request).execute();
+    const followed = await executed.followUp({ content: 'next' }).execute();
+
+    expect(executed.thread).toEqual([
+      { role: 'user', content: joinLlmLiveContextBlocks(request.renderLiveContext()) },
+      { role: 'assistant', content: 'reply-1' }
+    ]);
+    expect(followed.thread.slice(2)).toEqual([
+      { role: 'user', content: 'next' },
+      { role: 'assistant', content: 'reply-2' }
+    ]);
   });
 });
