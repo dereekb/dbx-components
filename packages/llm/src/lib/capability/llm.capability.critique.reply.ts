@@ -57,20 +57,12 @@ export const LLM_CRITIQUE_UNUSABLE_DIAG_CODE = 'critique-unusable';
 export const LLM_CRITIQUE_ERROR_DIAG_CODE = 'critique-error';
 
 /**
- * The BASE wire shape (un-narrowed) — the hints project from it, because arktype's `toJsonSchema()` throws on a
- * `.narrow`ed schema.
+ * The ENFORCED wire shape — `{ pass, feedback? }` plus the load-bearing narrow: a FAILING verdict MUST carry non-empty
+ * feedback. Encoding it structurally makes "a fail with no feedback" a schema miss the dispatcher's own retry corrects,
+ * instead of a verdict that reprompts the subject with an empty string. The hints project its JSON base (the narrow
+ * has no JSON form).
  */
-export const llmCritiqueOutcomeHintSchema = /*#__PURE__*/ type({
-  pass: 'boolean',
-  'feedback?': 'string'
-});
-
-/**
- * The ENFORCED wire shape — {@link llmCritiqueOutcomeHintSchema} plus the load-bearing narrow: a FAILING verdict MUST
- * carry non-empty feedback. Encoding it structurally makes "a fail with no feedback" a schema miss the dispatcher's own
- * retry corrects, instead of a verdict that reprompts the subject with an empty string.
- */
-export const llmCritiqueOutcomeSchema = /*#__PURE__*/ llmCritiqueOutcomeHintSchema.narrow((value, ctx) => (value.pass === true || (typeof value.feedback === 'string' && value.feedback.trim().length > 0) ? true : ctx.mustBe('a failing verdict carrying non-empty feedback')));
+export const llmCritiqueOutcomeSchema = /*#__PURE__*/ type({ pass: 'boolean', 'feedback?': 'string' }).narrow((value, ctx) => (value.pass === true || (typeof value.feedback === 'string' && value.feedback.trim().length > 0) ? true : ctx.mustBe('a failing verdict carrying non-empty feedback')));
 
 /**
  * One judge verdict, parsed.
@@ -373,7 +365,6 @@ export const LLM_CRITIQUE_REPLY_TEMPLATE: LlmPromptTemplate = { key: 'critique-r
 export const LLM_CRITIQUE_REPLY_DESCRIPTOR: LlmCapabilityDescriptor<LlmCritiqueOutcome> = /*#__PURE__*/ defineLlmCapability({
   capability: LLM_CRITIQUE_REPLY_CAPABILITY,
   responseSchema: llmCritiqueOutcomeSchema,
-  hintSchema: llmCritiqueOutcomeHintSchema,
   parseLever: parseLlmCritiqueOutcomeLever,
   mustResolve: true,
   rawJsonContext: true,

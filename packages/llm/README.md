@@ -33,6 +33,8 @@ The root, `/decision`, `/openai`, `/openrouter` and `/zenmux` entries are browse
   its own boundary.
 - The browser entries have one sibling edge, `/openrouter` → `/openai`, and it is one-way: `/openai` imports no other
   provider entry. The isolation specs pin both directions.
+- The required peers are `@dereekb/util`, `@dereekb/model` (the JSON-Schema export; framework-free and browser-safe)
+  and `arktype`.
 
 These rules are enforced, not just documented:
 
@@ -698,12 +700,15 @@ descriptor also carries the two schema projections the request and the prompt re
   `DEFAULT_LLM_REPLY_FAST_FIX_LIMITS`: a score of at least 0.5, at most 16,000 chars, one fix per dispatch.
 - **Validation.** `llmSchemaLeverValidator(schema)` is a pure schema check: `true`, or `{ error }`, which re-asks. A
   schema-valid but unusable lever is a legitimate "no decision", not a re-ask.
-- **Schema projection.** `defineLlmCapability` builds `responseSchemaHint()` and `contractSchemaHint()`: `$schema`
-  dropped, `additionalProperties: false` on every object, described literal unions folded back to `enum`, union arm
-  prose hoisted, and descriptions stripped from the `response_format` payload (they ride the output contract). Both are
-  lazy and memoized; `hintSchema` projects a `.narrow`ed schema from its base. `describeResponseSchemaHint` keeps the
-  prose in the payload, per descriptor, default off. `normalizeLlmGeneratedSchema` / `hardenLlmResponseSchemaHint`
-  serve request-supplied hints and other projections, such as a tool's input schema.
+- **Schema projection.** `defineLlmCapability` builds `responseSchemaHint()` and `contractSchemaHint()` from
+  `responseSchema`. Each exports through `@dereekb/model` `arktypeToJsonSchemaForExport(schema, { strict: true })`: a
+  `.narrow`ed or morphed schema projects its JSON base, and a type with no JSON form (`Date`, `symbol`, `bigint`, an
+  `undefined` union arm) throws on first projection. Then `@dereekb/model` `toStrictJsonSchema`: `$schema` dropped,
+  `additionalProperties: false` on every object, described literal unions folded back to `enum`, union arm prose
+  hoisted, and descriptions stripped from the `response_format` payload (they ride the output contract). Both hints are
+  lazy and memoized; a projection that throws is not cached. `describeResponseSchemaHint` keeps the prose in the
+  payload, per descriptor, default off. `hardenLlmResponseSchemaHint` (over `toStrictJsonSchema`) serves
+  request-supplied hints; other projections, such as a tool's input schema, call `toStrictJsonSchema` directly.
 - **Critique.** `compileLlmCritiquePolicy` is fail-loud (unknown capability or tag, no target, or the judge itself);
   a key match beats a tag match, and the first match wins. `llmCriticFor` gives `{}` unless a rule matches, so off is
   free. `makeLlmSemanticCritic` fails open with `critique-unusable` / `critique-error` breadcrumbs. `composeLlmCritics`

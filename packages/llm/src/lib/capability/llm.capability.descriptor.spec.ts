@@ -91,20 +91,22 @@ describe('defineLlmCapability()', () => {
     expect(descriptor.responseSchemaHint()).toEqual(descriptor.contractSchemaHint());
   });
 
-  describe('hintSchema', () => {
+  describe('narrowed schemas', () => {
     const base = type({ pass: 'boolean', 'feedback?': 'string' });
     const narrowed = base.narrow((value) => value.pass || value.feedback != null);
 
-    it('defines a narrowed schema without projecting, and projects both hints from hintSchema', () => {
-      const descriptor = defineLlmCapability({ capability: 'classify-intent', responseSchema: narrowed, hintSchema: base, parseLever: (lever) => lever });
+    it('projects both hints of a narrowed responseSchema from its JSON base', () => {
+      const descriptor = defineLlmCapability({ capability: 'classify-intent', responseSchema: narrowed, parseLever: (lever) => lever });
 
       expect(descriptor.responseSchemaHint()).toEqual({ type: 'object', properties: { pass: { type: 'boolean' }, feedback: { type: 'string' } }, required: ['pass'], additionalProperties: false });
       expect(descriptor.contractSchemaHint()).toEqual(descriptor.responseSchemaHint());
+      expect(descriptor.responseSchemaHint()).toEqual(defineLlmCapability({ capability: 'classify-intent', responseSchema: base, parseLever: (lever) => lever }).responseSchemaHint());
     });
 
-    it('throws only when a narrowed schema without hintSchema is first projected', () => {
-      const descriptor = defineLlmCapability({ capability: 'classify-intent', responseSchema: narrowed, parseLever: (lever) => lever });
+    it('throws on the first projection of a type with no JSON form, and again on the next (not cached)', () => {
+      const descriptor = defineLlmCapability({ capability: 'classify-intent', responseSchema: type({ at: 'Date' }), parseLever: (lever) => lever });
 
+      expect(() => descriptor.responseSchemaHint()).toThrow();
       expect(() => descriptor.responseSchemaHint()).toThrow();
       expect(() => descriptor.contractSchemaHint()).toThrow();
     });
@@ -127,7 +129,6 @@ describe('defineLlmCapability()', () => {
     expect(descriptor).toMatchObject({ capability: 'summarize', tags: ['writing'], tier: 'strong', replyProtocol: 'json-envelope', mustResolve: true, rawJsonContext: true, frames: { 'brand-voice': 'context' }, traits: { voice: 'narrator' } });
     expect(descriptor.parseLever).toBe(parseLever);
     expect(descriptor.responseSchema).toBe(DESCRIBED_SCHEMA);
-    expect('hintSchema' in descriptor).toBe(false);
     expect('describeResponseSchemaHint' in descriptor).toBe(false);
 
     const routes = compileLlmModelRouting({ routing: { rules: [{ tags: ['writing'], tier: 'fast' }] }, capabilities: [descriptor], tiers: { fast: 'model/fast', strong: 'model/strong' } });

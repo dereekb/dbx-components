@@ -210,7 +210,7 @@ describe('LLM_CRITIQUE_REPLY_DESCRIPTOR', () => {
     expect(LLM_CRITIQUE_REPLY_DESCRIPTOR).toMatchObject({ capability: LLM_CRITIQUE_REPLY_CAPABILITY, mustResolve: true, rawJsonContext: true, maxOutputTokens: 1024 });
   });
 
-  it('projects its hints from the un-narrowed hint schema', () => {
+  it('projects its hints from the JSON base of its narrowed schema', () => {
     expect(LLM_CRITIQUE_REPLY_DESCRIPTOR.responseSchemaHint()).toEqual({ type: 'object', properties: { pass: { type: 'boolean' }, feedback: { type: 'string' } }, required: ['pass'], additionalProperties: false });
   });
 

@@ -19,6 +19,7 @@
  *   same contract it always did.
  */
 
+import { asJsonSchemaNode, type JsonSchemaNode, readJsonSchemaProperties, readJsonSchemaRequired } from '@dereekb/model';
 import { type Maybe } from '@dereekb/util';
 
 /**
@@ -44,44 +45,6 @@ export const DEFAULT_LLM_OUTPUT_CONTRACT_FOOTER = 'Use these field names exactly
 const LLM_OUTPUT_CONTRACT_INDENT = '    ';
 
 /**
- * One JSON-Schema node as the renderer reads it.
- */
-type LlmJsonSchemaNode = Readonly<Record<string, unknown>>;
-
-/**
- * The node a JSON-Schema value is read as — the value itself when it is an object, else an empty node (which labels
- * `unknown`, carries no description and never expands), so a `false` or `null` node renders instead of throwing.
- *
- * @param value - The JSON-Schema value.
- * @returns The node.
- */
-function llmJsonSchemaNodeOf(value: unknown): LlmJsonSchemaNode {
-  return value != null && typeof value === 'object' ? (value as LlmJsonSchemaNode) : {};
-}
-
-/**
- * A node's properties, in insertion order — none when `properties` is absent or not an object.
- *
- * @param node - The JSON-Schema node.
- * @returns The `[key, child node]` pairs.
- */
-function llmJsonSchemaPropertiesOf(node: LlmJsonSchemaNode): ReadonlyArray<readonly [string, LlmJsonSchemaNode]> {
-  const properties = node['properties'];
-  return properties != null && typeof properties === 'object' ? Object.entries(properties).map(([key, child]) => [key, llmJsonSchemaNodeOf(child)] as const) : [];
-}
-
-/**
- * A node's `required` keys — read only when `required` is an array.
- *
- * @param node - The JSON-Schema node.
- * @returns The required keys.
- */
-function llmJsonSchemaRequiredOf(node: LlmJsonSchemaNode): ReadonlyArray<unknown> {
-  const required = node['required'];
-  return Array.isArray(required) ? required : [];
-}
-
-/**
  * A human-readable type label for a JSON-Schema node — a union (`anyOf` / `oneOf`, a literal `enum`, or a `type`
  * array) joined with `' | '`, one `const` literal, `<item>[]` for an array, `object { k: type, k2?: type }` for an
  * object (recursing, `?` marking an optional key), else the `type` word or `unknown`.
@@ -89,14 +52,14 @@ function llmJsonSchemaRequiredOf(node: LlmJsonSchemaNode): ReadonlyArray<unknown
  * @param node - The JSON-Schema node.
  * @returns The label.
  */
-function llmJsonSchemaTypeLabel(node: LlmJsonSchemaNode): string {
+function llmJsonSchemaTypeLabel(node: JsonSchemaNode): string {
   const nodeType = node['type'];
   const union = node['anyOf'] ?? node['oneOf'];
   const enumValues = node['enum'];
   let label: string;
 
   if (Array.isArray(union)) {
-    label = union.map((branch) => (branch != null && typeof branch === 'object' ? llmJsonSchemaTypeLabel(branch as LlmJsonSchemaNode) : 'unknown')).join(' | ');
+    label = union.map((branch) => (branch != null && typeof branch === 'object' ? llmJsonSchemaTypeLabel(branch as JsonSchemaNode) : 'unknown')).join(' | ');
   } else if (Array.isArray(enumValues)) {
     label = enumValues.map((value) => JSON.stringify(value)).join(' | ');
   } else if (Object.prototype.hasOwnProperty.call(node, 'const')) {
@@ -105,10 +68,10 @@ function llmJsonSchemaTypeLabel(node: LlmJsonSchemaNode): string {
     label = nodeType.filter((entry): entry is string => typeof entry === 'string').join(' | ') || 'unknown';
   } else if (nodeType === 'array') {
     const items = node['items'];
-    label = `${items != null && typeof items === 'object' ? llmJsonSchemaTypeLabel(items as LlmJsonSchemaNode) : 'unknown'}[]`;
+    label = `${items != null && typeof items === 'object' ? llmJsonSchemaTypeLabel(items as JsonSchemaNode) : 'unknown'}[]`;
   } else if (nodeType === 'object' || node['properties'] != null) {
-    const required = llmJsonSchemaRequiredOf(node);
-    const fields = llmJsonSchemaPropertiesOf(node)
+    const required = readJsonSchemaRequired(node);
+    const fields = readJsonSchemaProperties(node)
       .map(([key, child]) => `${key}${required.includes(key) ? '' : '?'}: ${llmJsonSchemaTypeLabel(child)}`)
       .join(', ');
     label = `object { ${fields} }`;
@@ -125,9 +88,9 @@ function llmJsonSchemaTypeLabel(node: LlmJsonSchemaNode): string {
  * @param node - The JSON-Schema node.
  * @returns Whether the node is an array of objects.
  */
-function isLlmJsonSchemaArrayOfObjects(node: LlmJsonSchemaNode): boolean {
+function isLlmJsonSchemaArrayOfObjects(node: JsonSchemaNode): boolean {
   const items = node['items'];
-  return node['type'] === 'array' && items != null && typeof items === 'object' && ((items as LlmJsonSchemaNode)['type'] === 'object' || (items as LlmJsonSchemaNode)['properties'] != null);
+  return node['type'] === 'array' && items != null && typeof items === 'object' && ((items as JsonSchemaNode)['type'] === 'object' || (items as JsonSchemaNode)['properties'] != null);
 }
 
 /**
@@ -137,7 +100,7 @@ function isLlmJsonSchemaArrayOfObjects(node: LlmJsonSchemaNode): boolean {
  * @param node - The JSON-Schema node.
  * @returns The one-line description, or `undefined`.
  */
-function llmOutputContractDescriptionOf(node: LlmJsonSchemaNode): Maybe<string> {
+function llmOutputContractDescriptionOf(node: JsonSchemaNode): Maybe<string> {
   const description = node['description'];
   const collapsed = typeof description === 'string' ? description.replaceAll(/\s+/g, ' ').trim() : '';
   return collapsed === '' ? undefined : collapsed;
@@ -150,7 +113,7 @@ function llmOutputContractDescriptionOf(node: LlmJsonSchemaNode): Maybe<string> 
  * @param node - The JSON-Schema node.
  * @returns The bullet tail.
  */
-function llmOutputContractDescriptionTail(node: LlmJsonSchemaNode): string {
+function llmOutputContractDescriptionTail(node: JsonSchemaNode): string {
   const description = llmOutputContractDescriptionOf(node);
   return description == null ? '' : `: ${description}`;
 }
@@ -163,9 +126,9 @@ function llmOutputContractDescriptionTail(node: LlmJsonSchemaNode): string {
  * @param node - The array-of-objects node.
  * @returns Whether expanding the node delivers prose.
  */
-function llmOutputContractExpansionCarriesProse(node: LlmJsonSchemaNode): boolean {
-  const items = llmJsonSchemaNodeOf(node['items']);
-  return llmJsonSchemaPropertiesOf(items).some(([, child]) => llmOutputContractDescriptionOf(child) != null || (isLlmJsonSchemaArrayOfObjects(child) && llmOutputContractExpansionCarriesProse(child)));
+function llmOutputContractExpansionCarriesProse(node: JsonSchemaNode): boolean {
+  const items = asJsonSchemaNode(node['items']);
+  return readJsonSchemaProperties(items).some(([, child]) => llmOutputContractDescriptionOf(child) != null || (isLlmJsonSchemaArrayOfObjects(child) && llmOutputContractExpansionCarriesProse(child)));
 }
 
 /**
@@ -179,7 +142,7 @@ interface RenderLlmOutputContractFieldConfig {
   /**
    * The property's JSON-Schema node.
    */
-  readonly node: LlmJsonSchemaNode;
+  readonly node: JsonSchemaNode;
   /**
    * Whether the property is in its object's `required` set.
    */
@@ -206,9 +169,9 @@ function renderLlmOutputContractField(config: RenderLlmOutputContractFieldConfig
   let lines: ReadonlyArray<string>;
 
   if (isLlmJsonSchemaArrayOfObjects(node) && (indent === '' || llmOutputContractExpansionCarriesProse(node))) {
-    const items = llmJsonSchemaNodeOf(node['items']);
-    const itemRequired = llmJsonSchemaRequiredOf(items);
-    const subBullets = llmJsonSchemaPropertiesOf(items).flatMap(([itemKey, child]) => renderLlmOutputContractField({ key: itemKey, node: child, isRequired: itemRequired.includes(itemKey), indent: `${indent}${LLM_OUTPUT_CONTRACT_INDENT}` }));
+    const items = asJsonSchemaNode(node['items']);
+    const itemRequired = readJsonSchemaRequired(items);
+    const subBullets = readJsonSchemaProperties(items).flatMap(([itemKey, child]) => renderLlmOutputContractField({ key: itemKey, node: child, isRequired: itemRequired.includes(itemKey), indent: `${indent}${LLM_OUTPUT_CONTRACT_INDENT}` }));
     // The array's own sentence leads the per-item intro, so the header reads as one sentence.
     const intro = description == null ? 'an array where each item is an object with:' : `${description} Each item is an object with:`;
     lines = [`${indent}- \`${key}\` (object[], ${requiredLabel}): ${intro}`, ...subBullets];
@@ -265,10 +228,10 @@ export interface RenderLlmOutputContractConfig {
  * ```
  */
 export function renderLlmOutputContract(config: RenderLlmOutputContractConfig): string {
-  const schema = llmJsonSchemaNodeOf(config.schema);
+  const schema = asJsonSchemaNode(config.schema);
   const intro = config.intro ?? DEFAULT_LLM_OUTPUT_CONTRACT_INTRO;
   const footer = config.footer ?? DEFAULT_LLM_OUTPUT_CONTRACT_FOOTER;
-  const required = llmJsonSchemaRequiredOf(schema);
-  const fields = llmJsonSchemaPropertiesOf(schema).flatMap(([key, node]) => renderLlmOutputContractField({ key, node, isRequired: required.includes(key) }));
+  const required = readJsonSchemaRequired(schema);
+  const fields = readJsonSchemaProperties(schema).flatMap(([key, node]) => renderLlmOutputContractField({ key, node, isRequired: required.includes(key) }));
   return [LLM_OUTPUT_CONTRACT_HEADING, '', ...(intro === '' ? [] : [intro]), ...fields, ...(footer === '' ? [] : ['', footer])].join('\n');
 }

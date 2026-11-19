@@ -116,11 +116,6 @@ export type LlmCapabilityDescriptorOf<D extends LlmCapabilityDescriptor = LlmCap
  */
 export interface DefineLlmCapabilityConfig<T = unknown, H extends object = object> extends Omit<LlmCapabilityDescriptor<T, H>, 'responseSchemaHint' | 'contractSchemaHint'> {
   /**
-   * Project the hints from THIS schema (an un-narrowed base) instead of `responseSchema`. arktype's `toJsonSchema()`
-   * throws on a `.narrow` predicate, so a capability whose enforced schema is narrowed shows and sends its base shape.
-   */
-  readonly hintSchema?: Maybe<Type>;
-  /**
    * Keep the `description` prose in `responseSchemaHint()` (the `response_format` payload). Default `false`: the prose
    * rides the output contract (`contractSchemaHint()`) instead. Bound once, when the descriptor is defined — a host with
    * an environment switch reads it itself and passes the value.
@@ -131,13 +126,14 @@ export interface DefineLlmCapabilityConfig<T = unknown, H extends object = objec
 /**
  * Define a capability descriptor, building its two schema hints from the schema: `responseSchemaHint()` (hardened,
  * descriptions stripped unless `describeResponseSchemaHint`) and `contractSchemaHint()` (hardened, described). Both
- * project from the SAME source (`hintSchema` when set, else `responseSchema`), so the shape the model is shown cannot
- * drift from the shape enforced.
+ * project from `responseSchema`, so the shape the model is shown cannot drift from the shape enforced. A `.narrow`ed or
+ * morphed schema projects its JSON base.
  *
- * Lazy: defining projects nothing; each hint projects on its first call and is cached. A projection that throws is not
- * cached, so a later call retries. Every other field passes through unchanged.
+ * Lazy and memoized: defining projects nothing; each hint projects on its first call and is cached. A projection that
+ * throws (a type with no JSON form, such as `Date`) is not cached, so a later call throws again. Every other field
+ * passes through unchanged.
  *
- * @param config - The descriptor fields, plus `hintSchema` and `describeResponseSchemaHint`.
+ * @param config - The descriptor fields, plus `describeResponseSchemaHint`.
  * @returns The capability descriptor.
  *
  * @example
@@ -152,13 +148,12 @@ export interface DefineLlmCapabilityConfig<T = unknown, H extends object = objec
  * @__NO_SIDE_EFFECTS__
  */
 export function defineLlmCapability<T = unknown, H extends object = object>(config: DefineLlmCapabilityConfig<T, H>): LlmCapabilityDescriptor<T, H> {
-  const { hintSchema, describeResponseSchemaHint, ...descriptor } = config;
-  const projected = hintSchema ?? config.responseSchema;
+  const { describeResponseSchemaHint, ...descriptor } = config;
   const describe = describeResponseSchemaHint === true;
 
   return {
     ...descriptor,
-    responseSchemaHint: cachedGetter(() => projectLlmResponseSchema(projected, { describe })),
-    contractSchemaHint: cachedGetter(() => projectLlmContractSchema(projected))
+    responseSchemaHint: cachedGetter(() => projectLlmResponseSchema(descriptor.responseSchema, { describe })),
+    contractSchemaHint: cachedGetter(() => projectLlmContractSchema(descriptor.responseSchema))
   };
 }
