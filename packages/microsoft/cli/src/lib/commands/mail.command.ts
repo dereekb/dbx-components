@@ -4,6 +4,7 @@ import { type Maybe } from '@dereekb/util';
 import type { Argv, CommandModule } from 'yargs';
 import { msGraphCommandHandler } from '../middleware/auth.middleware';
 import { msGraphCliMailboxOptions, msGraphCliPagingOptions, parseMsGraphCliDateOption, readMsGraphCliIdsOption } from '../util/option';
+import { readMsGraphCliCategoryOption } from '../util/mail.select';
 import { DEFAULT_MSGRAPH_CLI_MAIL_DUMP_MAX_MESSAGES, MSGRAPH_CLI_MAIL_DUMP_CONCURRENCY, dumpMsGraphCliMail } from '../util/mail.dump';
 import { downloadMsGraphCliFile, msGraphCliIdleTimeoutMs, msGraphCliIdleTimeoutOption } from '../util/file.download';
 import { outputMsGraphCliResult } from '../util/output';
@@ -37,6 +38,7 @@ export const MAIL_LIST_COMMAND: CommandModule = {
       .option('from', { type: 'string', describe: "The sender's address" })
       .option('unread', { type: 'boolean', default: false, describe: 'Only unread messages' })
       .option('has-attachments', { type: 'boolean', default: false, describe: 'Only messages with file attachments' })
+      .option('category', { type: 'string', describe: 'Only messages with this Outlook category' })
       .option('select', { type: 'string', describe: 'Comma-separated fields to return instead of the default set (e.g. id,subject,receivedDateTime)' })
       .option('top', { type: 'number', describe: 'Page size (default 25)' })
       .example([
@@ -53,6 +55,7 @@ export const MAIL_LIST_COMMAND: CommandModule = {
       from: argv.from,
       unread: argv.unread,
       hasAttachments: argv.hasAttachments,
+      category: readMsGraphCliCategoryOption(argv.category),
       select: argv.select,
       top: argv.top
     });

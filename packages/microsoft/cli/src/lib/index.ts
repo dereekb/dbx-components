@@ -17,6 +17,7 @@ export * from './util/file.source';
 export * from './util/mail.attach';
 export * from './util/mail.bulk';
 export * from './util/mail.dump';
+export * from './util/mail.select';
 export * from './util/mail.write';
 export * from './util/option';
 export * from './util/output';

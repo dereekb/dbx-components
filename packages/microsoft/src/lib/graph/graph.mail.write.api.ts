@@ -543,6 +543,11 @@ export interface MicrosoftGraphMessageRequestsInput {
    * Waits between `$batch` retries of throttled items. Defaults to a real timer; a spec passes a fake.
    */
   readonly wait?: Maybe<(ms: Milliseconds) => Promise<unknown>>;
+  /**
+   * The longest `Retry-After` the `$batch` retries wait for; an item throttled for longer comes back as its 429.
+   * A run with a time budget passes the seconds it has left.
+   */
+  readonly maxRetryAfterSeconds?: Maybe<number>;
 }
 
 /**
@@ -599,7 +604,7 @@ async function microsoftGraphSingleMessageRequest(request: ReturnType<typeof mic
 }
 
 async function microsoftGraphBatchMessageRequests(batch: ReturnType<typeof microsoftGraphBatch>, input: MicrosoftGraphMessageRequestsInput): Promise<MicrosoftGraphMessageWriteResult[]> {
-  const { responses } = await batch<Maybe<MicrosoftGraphMessage | { readonly error?: MicrosoftGraphErrorData }>>({ requests: microsoftGraphBatchRequestItems(input.requests), wait: input.wait });
+  const { responses } = await batch<Maybe<MicrosoftGraphMessage | { readonly error?: MicrosoftGraphErrorData }>>({ requests: microsoftGraphBatchRequestItems(input.requests), wait: input.wait, maxRetryAfterSeconds: input.maxRetryAfterSeconds });
 
   return responses.map((response, index) => {
     const id = input.ids[index];
@@ -621,6 +626,10 @@ export interface MicrosoftGraphMoveMessagesInput extends MicrosoftGraphMailboxIn
   readonly destination: string;
   readonly copy?: Maybe<boolean>;
   readonly wait?: Maybe<(ms: Milliseconds) => Promise<unknown>>;
+  /**
+   * See {@link MicrosoftGraphMessageRequestsInput.maxRetryAfterSeconds}.
+   */
+  readonly maxRetryAfterSeconds?: Maybe<number>;
 }
 
 /**
@@ -631,7 +640,7 @@ export interface MicrosoftGraphMoveMessagesInput extends MicrosoftGraphMailboxIn
  */
 export function moveMessages(context: MicrosoftGraphContext): (input: MicrosoftGraphMoveMessagesInput) => Promise<MicrosoftGraphMessageWriteResult[]> {
   const send = microsoftGraphMessageRequests(context);
-  return (input) => send({ ids: input.ids, requests: input.ids.map((id) => microsoftGraphMoveMessageRequest({ ...input, id })), wait: input.wait });
+  return (input) => send({ ids: input.ids, requests: input.ids.map((id) => microsoftGraphMoveMessageRequest({ ...input, id })), wait: input.wait, maxRetryAfterSeconds: input.maxRetryAfterSeconds });
 }
 
 export interface MicrosoftGraphDeleteMessagesInput extends MicrosoftGraphMailboxInput {
@@ -641,6 +650,10 @@ export interface MicrosoftGraphDeleteMessagesInput extends MicrosoftGraphMailbox
    */
   readonly hard?: Maybe<boolean>;
   readonly wait?: Maybe<(ms: Milliseconds) => Promise<unknown>>;
+  /**
+   * See {@link MicrosoftGraphMessageRequestsInput.maxRetryAfterSeconds}.
+   */
+  readonly maxRetryAfterSeconds?: Maybe<number>;
 }
 
 /**
@@ -652,7 +665,7 @@ export interface MicrosoftGraphDeleteMessagesInput extends MicrosoftGraphMailbox
  * @param input - The mailbox, ids and hard flag.
  * @returns One request per id.
  */
-export function microsoftGraphDeleteMessagesRequests(input: Omit<MicrosoftGraphDeleteMessagesInput, 'wait'>): MicrosoftGraphRequestInput[] {
+export function microsoftGraphDeleteMessagesRequests(input: Omit<MicrosoftGraphDeleteMessagesInput, 'wait' | 'maxRetryAfterSeconds'>): MicrosoftGraphRequestInput[] {
   return input.ids.map((id) => (input.hard ? microsoftGraphPermanentDeleteMessageRequest({ mailbox: input.mailbox, id }) : microsoftGraphMoveMessageRequest({ ...input, id, destination: MICROSOFT_GRAPH_DELETED_ITEMS_FOLDER })));
 }
 
@@ -664,5 +677,5 @@ export function microsoftGraphDeleteMessagesRequests(input: Omit<MicrosoftGraphD
  */
 export function deleteMessages(context: MicrosoftGraphContext): (input: MicrosoftGraphDeleteMessagesInput) => Promise<MicrosoftGraphMessageWriteResult[]> {
   const send = microsoftGraphMessageRequests(context);
-  return (input) => send({ ids: input.ids, requests: microsoftGraphDeleteMessagesRequests(input), wait: input.wait });
+  return (input) => send({ ids: input.ids, requests: microsoftGraphDeleteMessagesRequests(input), wait: input.wait, maxRetryAfterSeconds: input.maxRetryAfterSeconds });
 }

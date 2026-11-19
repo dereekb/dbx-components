@@ -9,6 +9,11 @@ export interface MicrosoftGraphPage<T> {
    * The absolute URL of the next page, when there is one.
    */
   readonly '@odata.nextLink'?: Maybe<string>;
+  /**
+   * The size of the whole collection, when the request asked for `$count=true` and Graph could count it
+   * (never with `$search`).
+   */
+  readonly '@odata.count'?: Maybe<number>;
 }
 
 export interface MicrosoftGraphEmailAddress {
@@ -51,6 +56,21 @@ export interface MicrosoftGraphMessage {
    * Whether the message is an unsent draft. Only a draft's recipients, subject and body can be changed.
    */
   readonly isDraft?: Maybe<boolean>;
+  /**
+   * The Outlook categories (color labels) on the message, by display name.
+   */
+  readonly categories?: Maybe<string[]>;
+}
+
+/**
+ * The subset of a Graph `mailFolder` this package reads.
+ */
+export interface MicrosoftGraphMailFolder {
+  readonly id: string;
+  readonly displayName?: Maybe<string>;
+  readonly parentFolderId?: Maybe<string>;
+  readonly totalItemCount?: Maybe<number>;
+  readonly unreadItemCount?: Maybe<number>;
 }
 
 /**

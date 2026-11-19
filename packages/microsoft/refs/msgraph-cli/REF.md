@@ -1,6 +1,6 @@
 ---
 name: msgraph-cli
-description: "The `msgraph-cli` command (the `msgraph-cli` bin of `@dereekb/microsoft`, run as `npx msgraph-cli`; this doc ships with that package and prints with `npx msgraph-cli docs`) for a user's Outlook mail, shared mailboxes, automatic replies, calendar, OneDrive / SharePoint files and Teams chats and channels (send, edit with `teams chat edit`, delete) through Microsoft Graph, plus a raw Graph `request`. Bulk mail changes: `mail move` / `mail delete` take hundreds of ids in ONE call (`--ids-file`, which also reads a saved `mail list` output) and send them through `$batch`, 20 per HTTP call. Attachments: `mail reply` / `forward` / `draft create` / `send` attach local files (`--attach`) and OneDrive / SharePoint files (`--attach-item <id or /path>` with `--site` / `--drive`) directly. Calendar: `calendar create` makes an Outlook event (`--start 2026-11-20T15:00 --duration 30m`, `--all-day`), reading local times in the mailbox's time zone. Bulk downloads: `files download-folder` copies a SharePoint / OneDrive folder to disk recursively and re-syncs it on re-run, `mail dump` dumps a folder (delta), a filtered list or a search, with `--attachments-only`, and `teams chat dump` keeps an incremental archive of Teams chats (JSON + Markdown per message, inline images and video clips, optional file attachments). `teams chat search` searches Teams messages through Graph (KQL; needs organization admin consent) or, with `--dir`, searches a `teams chat dump` archive on disk with no token or scope. It authenticates ONLY through a token source: each run borrows an access token minted from an app's Microsoft external connection by `<app>-cli external-token <providerType>` (no `auth login`). Covers setup (`auth token-source set/use/show/clear`, `auth show`), the global `--token-source` option and the `MSGRAPH_CLI_TOKEN_SOURCE` / `MSGRAPH_CLI_TOKEN_COMMAND` / `MSGRAPH_CLI_CONFIG_DIR` env vars, the Read / Read + Write presets and which commands need which scope, the commands that need organization (admin) consent and how they are flagged and refused, `--yes` / `--dry-run` on writes, the JSON output, and the error codes (`NOT_CONFIGURED`, `TOKEN_REJECTED`, `SCOPE_DENIED`, `ADMIN_CONSENT_REQUIRED`, `CONFIRMATION_REQUIRED`, `RATE_LIMITED`, `NOT_FOUND`, `ABORTED`, `INSUFFICIENT_SPACE`, …)."
+description: "The `msgraph-cli` command (the `msgraph-cli` bin of `@dereekb/microsoft`, run as `npx msgraph-cli`; this doc ships with that package and prints with `npx msgraph-cli docs`) for a user's Outlook mail, shared mailboxes, automatic replies, calendar, OneDrive / SharePoint files and Teams chats and channels (send, edit with `teams chat edit`, delete) through Microsoft Graph, plus a raw Graph `request`. Bulk mail changes: `mail delete` / `mail move` select by filter in the same command (`--folder inbox --from <addr>`, `--since`, `--category`, or `--search`), capped per run (`--max-messages`, `--max-seconds`) and re-runnable until `complete: true`, or take hundreds of ids in ONE call (`--ids-file`, which also reads a saved `mail list` output); either way the writes go through `$batch`, 20 per HTTP call. Attachments: `mail reply` / `forward` / `draft create` / `send` attach local files (`--attach`) and OneDrive / SharePoint files (`--attach-item <id or /path>` with `--site` / `--drive`) directly. Calendar: `calendar create` makes an Outlook event (`--start 2026-11-20T15:00 --duration 30m`, `--all-day`), reading local times in the mailbox's time zone. Bulk downloads: `files download-folder` copies a SharePoint / OneDrive folder to disk recursively and re-syncs it on re-run, `mail dump` dumps a folder (delta), a filtered list or a search, with `--attachments-only`, and `teams chat dump` keeps an incremental archive of Teams chats (JSON + Markdown per message, inline images and video clips, optional file attachments). `teams chat search` searches Teams messages through Graph (KQL; needs organization admin consent) or, with `--dir`, searches a `teams chat dump` archive on disk with no token or scope. It authenticates ONLY through a token source: each run borrows an access token minted from an app's Microsoft external connection by `<app>-cli external-token <providerType>` (no `auth login`). Covers setup (`auth token-source set/use/show/clear`, `auth show`), the global `--token-source` option and the `MSGRAPH_CLI_TOKEN_SOURCE` / `MSGRAPH_CLI_TOKEN_COMMAND` / `MSGRAPH_CLI_CONFIG_DIR` env vars, the Read / Read + Write presets and which commands need which scope, the commands that need organization (admin) consent and how they are flagged and refused, `--yes` / `--dry-run` on writes, the JSON output, and the error codes (`NOT_CONFIGURED`, `TOKEN_REJECTED`, `SCOPE_DENIED`, `ADMIN_CONSENT_REQUIRED`, `CONFIRMATION_REQUIRED`, `RATE_LIMITED`, `NOT_FOUND`, `ABORTED`, `INSUFFICIENT_SPACE`, …)."
 ---
 
 # Microsoft Graph CLI
@@ -29,7 +29,7 @@ token-source machinery msgraph-cli is built on is
 4. **Writes that send, delete or change settings need `--yes`.** Without it they fail with `CONFIRMATION_REQUIRED`. Mail writes also take `--dry-run`, which prints the Graph calls without running them. Run `--dry-run` first when unsure.
 5. **Never print or log tokens.** `auth show` and `auth token-source show` never print the token; don't work around that. The CLI redacts JWTs (`eyJ…`) and `Bearer …` in its error output.
 6. **The app side must exist first** (ref `external-connection-token`): a Microsoft connection made in the app with a preset, `tokenExport` on the provider's policy, a `providerScopes` ceiling for the provider, and an app-CLI env preset whose login carries `token.external` **and** the provider's ceiling scope.
-7. **Bulk changes go in ONE call, never a loop.** `mail move` / `mail delete` / `mail copy` take every id at once (as arguments, or `--ids-file`) and batch them through `$batch`, 20 per HTTP call. Deleting 450 messages is one command that takes about a minute, not 450 commands. Collect the ids with `mail list … --all-pages --pick id > ids.json` (that output is a valid `--ids-file`) and pass the file.
+7. **Bulk changes go in ONE command, never a loop.** Select by filter in the same command: `mail delete --mailbox billing@example.com --folder inbox --from noreply@vendor.com --yes` (or `mail move … --to archive`) lists the matching ids itself and sends the writes through `$batch`, 20 per HTTP call. A run acts on at most 1000 messages and stops starting new batches after 90 s. When either cuts it short, the output says `complete: false` with `remaining`: re-run the same command (moved and deleted messages leave the folder). Ids still work (arguments or `--ids-file`), passed all at once. Deleting 450 messages is one command, not 450.
 8. **Attach OneDrive / SharePoint files directly.** `mail reply` / `forward` / `draft create` / `send` take `--attach-item <item id or /path>` (with `--site <url>` or `--drive <id>` for SharePoint): the CLI downloads the file and attaches it. There is no need to download it yourself first.
 
 ## Setup (one time)
@@ -92,7 +92,7 @@ msgraph-cli docs [topic]                          # these docs
 ### Mail (read)
 
 ```bash
-msgraph-cli mail list [--folder inbox] [--since <iso>] [--until <iso>] [--from <addr>] [--unread] [--has-attachments] [--top N]
+msgraph-cli mail list [--folder inbox] [--since <iso>] [--until <iso>] [--from <addr>] [--unread] [--has-attachments] [--category <name>] [--top N]
 msgraph-cli mail search "<KQL>" [--top 25] [--folder inbox] [--all-pages [--max-pages 20]]   # e.g. "from:ada@example.com received>=2026-11-01"
 msgraph-cli mail get <id> [--format text|html] [--select a,b] [--mime --out message.eml]
 msgraph-cli mail get-many <id…> | --ids-file ids.txt                    # $batch, 20 per call, in order
@@ -150,8 +150,11 @@ msgraph-cli mail send <draftId> --yes                                   # or com
 msgraph-cli mail send-bulk --file rows.csv --template body.html --subject "Hi {{name}}" --yes [--limit N] [--progress-file p.json]
 msgraph-cli mail reply <id> [--all] --comment "…" [--attach f.pdf] [--attach-item <id|/path> [--site <url> | --drive <id>]] --yes | --draft
 msgraph-cli mail forward <id> --to a@x.com [--comment "…"] [--attach …] [--attach-item …] --yes | --draft
-msgraph-cli mail move <id…> | --ids-file ids.json --to archive         # $batch, 20 per HTTP call; hundreds of ids in ONE call
-msgraph-cli mail delete <id…> | --ids-file ids.json [--hard] --yes     # also: copy. [--all-results] prints every row
+msgraph-cli mail delete --folder inbox --from <addr> [--since …] [--until …] [--unread] [--has-attachments] [--category <name>] --yes   # selects in the same call
+msgraph-cli mail delete --folder inbox --search "<KQL>" --yes          # search selection (re-run while complete is false)
+msgraph-cli mail move   --folder <id|name> --from <addr> --to archive  # also --whole-folder; [--max-messages 1000] [--max-seconds 90]
+msgraph-cli mail move   <id…> | --ids-file ids.json --to archive        # ids still work; also: copy (ids only)
+msgraph-cli mail delete <id…> | --ids-file ids.json [--hard] --yes      # [--all-results] prints every row
 msgraph-cli mail mailboxes check [a@x.com …] [--no-write]            # probe shared-mailbox read / write
 msgraph-cli mail auto-reply get [--show-messages]
 msgraph-cli mail auto-reply set [--start <t> --end <t> [--tz "<zone>"]] --internal-file in.html [--external-file out.html] [--audience …] --yes
@@ -160,31 +163,64 @@ msgraph-cli mail auto-reply off --yes | restore --yes                  # each sa
 
 #### Bulk move / delete
 
-`mail move`, `mail delete` and `mail copy` take any number of ids in **one** call and send them through Graph
-`$batch`, 20 per HTTP call, retrying throttled items after `Retry-After`. Never loop one id per command: a
-command per message costs a process start, a token read and a round trip each, and 450 of them outlast a tool
-call's time limit, while one `mail delete --ids-file` of 450 ids takes about a minute.
+`mail delete` and `mail move` select their messages **in the same command**: they list the matching ids
+themselves, then send the writes through Graph `$batch`, 20 per HTTP call, retrying throttled items after
+`Retry-After`. Never loop one id per command: a command per message costs a process start, a token read and a round
+trip each, and 450 of them outlast a tool call's time limit.
 
 ```bash
-# 1. Collect the ids. The saved output is a valid --ids-file (no jq needed).
-msgraph-cli mail list --folder inbox --from noreply@example.com --all-pages --top 100 --pick id > ids.json
-# 2. Check the count, then act on all of them at once.
-msgraph-cli mail delete --ids-file ids.json --dry-run      # prints the calls; nothing changes
-msgraph-cli mail delete --ids-file ids.json --yes          # Deleted Items (recoverable); --hard is permanent
-msgraph-cli mail move --ids-file ids.json --to archive
+msgraph-cli mail delete --mailbox billing@example.com --folder inbox --from noreply@vendor.com --dry-run   # count + sample; nothing changes
+msgraph-cli mail delete --mailbox billing@example.com --folder inbox --from noreply@vendor.com --yes       # re-run while complete is false
+msgraph-cli mail move   --mailbox ops@example.com --folder <id> --since 2026-01-01 --to <id>               # between folders
+msgraph-cli mail delete --folder deleteditems --from noreply@vendor.com --hard --yes                       # then purge (permanent)
 ```
 
-- **`--ids-file`** reads ids one per line, a JSON array of ids or of objects with `id`, or the saved JSON output of
-  `mail list` / `mail search` (with or without `--all-pages`).
-- **Selecting with search.** `mail search` (`$search`) returns at most 275 messages however many pages you ask for.
-  For a larger selection use `mail list` filters (`--folder`, `--from`, `--since`, `--until`, `--unread`,
-  `--has-attachments`), or repeat search + delete until the search comes back empty.
-- **Progress.** Above 100 ids, stderr shows one line per 100: `mail delete: 200/450 done, 1 failed`. If a run is cut
-  off, re-running it is safe: a delete moves to Deleted Items again (with immutable ids, the default, the id is
+| Option | Selects |
+| --- | --- |
+| `--folder <id\|name>` | The source folder. Default `inbox`, never every folder |
+| `--from <addr>` | The sender's address |
+| `--since <iso>` / `--until <iso>` | Received at or after / before |
+| `--unread` / `--has-attachments` | Only unread / only with file attachments |
+| `--category <name>` | Only messages with this Outlook category |
+| `--search "<KQL>"` | A `$search` in `--folder` instead of the filters above |
+| `--whole-folder` | Every message in an explicit `--folder`, no filter |
+| `--max-messages <n>` (`--limit`) | The most messages one run acts on (default 1000) |
+| `--max-seconds <s>` | Stop starting new `$batch` calls after this long (default 90; 0 = no limit) |
+
+- **Ids or a selection, never both.** Ids (arguments or `--ids-file`) with any selection option, `--max-messages` or
+  `--max-seconds` are refused (`INVALID_ARGUMENT`). `--search` takes no filter (Graph cannot combine `$search` with
+  `$filter`; put them in the KQL: `from:… received>=… category:"…"`) and no `--whole-folder`. `--folder` alone is
+  refused: add a filter, or `--whole-folder` to act on everything in it. `mail copy` takes ids only.
+- **Folders.** The default is `inbox`, never `/messages` (which includes Deleted Items). A soft delete never selects
+  from `deleteditems` (it would re-move them in place). A selected `--hard` delete only purges `--folder deleteditems`,
+  so every filter-chosen permanent delete was a recoverable soft delete first. A move never targets its own source.
+  These are checked by name before any call, then by resolved folder id after a two-GET pre-flight that also fails
+  early with `NOT_FOUND` on a misspelled `--folder` / `--to`.
+- **Collect, then act.** Every matching id is listed first (`$select=id`, up to 1000 per page, `$count=true`),
+  then written, so deleting cannot shift the paging.
+- **Budget and re-runs.** A run acts on at most `--max-messages` and stops starting new `$batch` calls after
+  `--max-seconds` (counted from the start, token mint included; a throttle wait never outlasts it). Cut short, the
+  output says `complete: false`, `stopped: "max-messages" | "max-seconds"` and `remaining`. Re-run the same command:
+  moved and deleted messages leave the folder, so it continues. Failed rows are counted in `failed`; a re-run picks
+  them up too.
+- **Search.** A `--search` selection is scoped to `--folder` (default `inbox`). Graph's `$search` may stop at 250–1000
+  results without saying so, so from 250 hits the output says `complete: false`, `stopped: "search-cap"` and no
+  `remaining`: re-run until `complete` is true. Hits that already left the folder (the index lags) are skipped and
+  counted in `stale`.
+- **`--dry-run`** runs only the reads (the pre-flight and the listing), needs no `--yes`, and prints `matched`,
+  `toAct`, `complete`, the listing GET and the first 3 write requests.
+- **Ids.** `--ids-file` reads ids one per line, a JSON array of ids or of objects with `id`, or the saved JSON output
+  of `mail list` / `mail search` (with or without `--all-pages`). `mail search` returns at most 275 messages however
+  many pages you ask for.
+- **Progress.** Above 100 messages, stderr shows a line per 100: `mail delete: 200/450 done, 1 failed`. If a run is
+  cut off, re-running it is safe: a delete moves to Deleted Items again (with immutable ids, the default, the id is
   unchanged) and a `--hard` delete answers `404` for the ids already gone.
-- **Output.** `{ total, ok, failed, results }`. Above 50 ids a move or delete lists only the failed rows in
-  `results` and counts the rest in `omitted`; `--all-results` lists every row. `copy` always lists every row,
+- **Output.** `{ total, ok, failed, results }`, plus for a selection `matched`, `complete`, `folder` (and `to` for a
+  move; `stopped`, `remaining`, `stale` when they apply). Above 50 messages a move or delete lists only the failed rows
+  in `results` and counts the rest in `omitted`; `--all-results` lists every row. `copy` always lists every row,
   because each copy's `newId` is its result.
+- **`--hard`** sends `permanentDelete`: it skips Deleted Items and you can't recover it (it sits in Recoverable Items ›
+  Purges until the retention period ends).
 
 #### Attachments
 
@@ -676,7 +712,7 @@ The list is `MSGRAPH_CLI_ADMIN_CONSENT_COMMANDS` in `@dereekb/microsoft/cli`; th
 | `ADMIN_CONSENT_REQUIRED` | An admin-consent command (`teams chat search` without `--dir`, `teams channel messages/edit/delete`) was refused before any Graph call: the token's scopes lack the scope it needs | Use a token source whose connection a tenant admin consented with that scope; for chat search, `teams chat search --dir <dump>` instead. `auth show` lists what the token can run |
 | `CONFIRMATION_REQUIRED` | A send / delete / settings change ran without `--yes` | Re-run with `--yes`, or `--dry-run` to preview |
 | `RATE_LIMITED` | Graph returned 429. It is retried automatically up to 3 times, honoring `Retry-After`; this code shows only when it persists | Wait and retry |
-| `NOT_FOUND` | No item, mailbox, library or saved auto-reply backup | Check the id / path / `--mailbox`; mutable mail ids change when a message moves |
+| `NOT_FOUND` | No item, mail folder, mailbox, library or saved auto-reply backup | Check the id / path / `--mailbox`; mutable mail ids change when a message moves |
 | `SERVICE_UNAVAILABLE` / `TIMEOUT` | Graph is down or did not answer in time. `TIMEOUT` also covers a download that stalled for `--idle-timeout` seconds | Retry; check the Microsoft service status. On a slow connection raise `--idle-timeout` |
 | `DOWNLOAD_INCOMPLETE` | A download ended before its `Content-Length`; no partial file is left | Retry (a bulk download re-run resumes) |
 | `ABORTED` | A download or bulk download was stopped (Ctrl+C); finished files are kept and the manifest saved | Re-run the same command to resume |
@@ -685,7 +721,7 @@ The list is `MSGRAPH_CLI_ADMIN_CONSENT_COMMANDS` in `@dereekb/microsoft/cli`; th
 | `NOT_A_DRAFT` | `mail send <id>` on a message already sent | Use `mail reply` / `mail forward` |
 | `CROSS_DRIVE_MOVE` | `files move` into another drive | `files copy <id> --to-drive <driveId> --wait`, then `files delete <id> --yes` |
 | `TOO_MANY_RECIPIENTS` | `mail send-bulk` has more than 500 rows left and no `--limit` | Pass `--limit` |
-| `INVALID_ARGUMENT` | Bad JSON in `--query` / `--body`, `--all-pages` misuse, a missing id or path, conflicting options | Fix the arguments |
+| `INVALID_ARGUMENT` | Bad JSON in `--query` / `--body`, `--all-pages` misuse, a missing id or path, conflicting options (ids mixed with a selection, `$search` with a filter) | Fix the arguments |
 | `API_ERROR` | Any other Graph error | Read `error` |
 | `ERROR` (exit 4) | Unknown `--token-source` name | Check `auth token-source show` |
 

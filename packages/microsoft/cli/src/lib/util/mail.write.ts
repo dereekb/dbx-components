@@ -704,31 +704,51 @@ export interface RunMsGraphCliMessageWritesInput {
    */
   readonly label: string;
   /**
-   * Receives a progress line after each group when there is more than one group (stderr in the CLI).
+   * Receives a progress line each time the count crosses a multiple of {@link MSGRAPH_CLI_MESSAGE_WRITE_PROGRESS_CHUNK},
+   * plus a final line, when there are more ids than that (stderr in the CLI).
    */
   readonly progress?: Maybe<(line: string) => void>;
+  /**
+   * How many ids each `send` gets. Defaults to {@link MSGRAPH_CLI_MESSAGE_WRITE_PROGRESS_CHUNK}; a run with a time
+   * budget passes 20 (one `$batch` call), so the budget is checked before each call.
+   */
+  readonly groupSize?: Maybe<number>;
+  /**
+   * Checked before every group after the first (so a run always makes progress). When it returns true the rest of
+   * the ids are not sent; they are `ids.slice(results.length)`.
+   */
+  readonly shouldStop?: Maybe<() => boolean>;
 }
 
 /**
- * Sends a move, copy or delete in groups of {@link MSGRAPH_CLI_MESSAGE_WRITE_PROGRESS_CHUNK} ids, reporting progress
- * after each group, so a long run shows how far it got even when it is cut off.
+ * Sends a move, copy or delete in groups, reporting progress as it goes, so a long run shows how far it got even
+ * when it is cut off.
  *
- * @param input - The ids, the sender, the label and the progress sink.
- * @returns Every per-id result, in id order.
+ * @param input - The ids, the sender, the label, the progress sink, the group size and the stop check.
+ * @returns The per-id results of every id sent, in id order.
  */
 export async function runMsGraphCliMessageWrites(input: RunMsGraphCliMessageWritesInput): Promise<MicrosoftGraphMessageWriteResult[]> {
-  const { ids, send, label, progress } = input;
+  const { ids, send, label, progress, shouldStop } = input;
+  const groupSize = input.groupSize ?? MSGRAPH_CLI_MESSAGE_WRITE_PROGRESS_CHUNK;
+  const report = progress && ids.length > MSGRAPH_CLI_MESSAGE_WRITE_PROGRESS_CHUNK ? progress : undefined;
   const results: MicrosoftGraphMessageWriteResult[] = [];
   let failed = 0;
+  let reported = 0;
 
-  for (let start = 0; start < ids.length; start += MSGRAPH_CLI_MESSAGE_WRITE_PROGRESS_CHUNK) {
-    const group = await send(ids.slice(start, start + MSGRAPH_CLI_MESSAGE_WRITE_PROGRESS_CHUNK));
+  for (let start = 0; start < ids.length && (start === 0 || !shouldStop?.()); start += groupSize) {
+    const group = await send(ids.slice(start, start + groupSize));
+    const before = results.length;
     results.push(...group);
     failed += group.filter((x) => x.status < 200 || x.status >= 300).length;
 
-    if (progress && ids.length > MSGRAPH_CLI_MESSAGE_WRITE_PROGRESS_CHUNK) {
-      progress(`${label}: ${results.length}/${ids.length} done, ${failed} failed`);
+    if (report && Math.floor(results.length / MSGRAPH_CLI_MESSAGE_WRITE_PROGRESS_CHUNK) > Math.floor(before / MSGRAPH_CLI_MESSAGE_WRITE_PROGRESS_CHUNK)) {
+      report(`${label}: ${results.length}/${ids.length} done, ${failed} failed`);
+      reported = results.length;
     }
+  }
+
+  if (report && results.length > 0 && reported !== results.length) {
+    report(`${label}: ${results.length}/${ids.length} done, ${failed} failed`);
   }
 
   return results;

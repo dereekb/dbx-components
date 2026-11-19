@@ -5,7 +5,7 @@ import { type MicrosoftGraphContext } from './graph.config';
 import { type MicrosoftGraphErrorData } from './graph.error.api';
 import { MICROSOFT_GRAPH_IMMUTABLE_ID_PREFER, type MicrosoftGraphBodyContentType, type MicrosoftGraphHeaders, microsoftGraphBodyContentTypePrefer, microsoftGraphMaxPageSizePrefer, microsoftGraphPreferHeaderValue } from './graph.header';
 import { type MicrosoftGraphRawRequestInput, type MicrosoftGraphRawResponse, microsoftGraphRequestRaw } from './graph.raw.api';
-import { type MicrosoftGraphAttachment, type MicrosoftGraphMessage, type MicrosoftGraphPage } from './graph.type';
+import { type MicrosoftGraphAttachment, type MicrosoftGraphMailFolder, type MicrosoftGraphMessage, type MicrosoftGraphPage } from './graph.type';
 
 /**
  * The message fields the mail helpers select by default.
@@ -16,6 +16,14 @@ export const MICROSOFT_GRAPH_MESSAGE_SELECT = 'id,subject,bodyPreview,from,toRec
  * The page size `listMessages` / `searchMessages` ask for when none is given.
  */
 export const DEFAULT_MICROSOFT_GRAPH_MESSAGE_PAGE_SIZE = 25;
+
+/**
+ * The largest `$top` a message list takes. Keep `$select` small (e.g. `id`) at this size: a page of large
+ * messages can time out.
+ *
+ * @see https://learn.microsoft.com/en-us/graph/api/user-list-messages?view=graph-rest-1.0#optional-query-parameters
+ */
+export const MICROSOFT_GRAPH_MESSAGE_MAX_PAGE_SIZE = 1000;
 
 /**
  * The lower bound `microsoftGraphMessageListFilter` puts first in a `$filter` that has no date bound of its
@@ -80,6 +88,18 @@ export function microsoftGraphMailboxPath(mailbox: Maybe<EmailAddress>): string 
 export function microsoftGraphMessagesPath(input: { readonly mailbox?: Maybe<EmailAddress>; readonly folder?: Maybe<string> }): string {
   const root = microsoftGraphMailboxPath(input.mailbox);
   return input.folder ? `${root}/mailFolders/${encodeURIComponent(input.folder)}/messages` : `${root}/messages`;
+}
+
+/**
+ * Returns the path of one mail folder.
+ *
+ * @param input - The mailbox and folder.
+ * @param input.mailbox - The mailbox address, if not the signed-in user's own.
+ * @param input.folder - A mail folder id or well-known name (`inbox`, `archive`, `deleteditems`).
+ * @returns The folder path.
+ */
+export function microsoftGraphMailFolderPath(input: { readonly mailbox?: Maybe<EmailAddress>; readonly folder: string }): string {
+  return `${microsoftGraphMailboxPath(input.mailbox)}/mailFolders/${encodeURIComponent(input.folder)}`;
 }
 
 /**
@@ -156,6 +176,10 @@ export interface MicrosoftGraphMessageListFilterInput {
    * Only messages with file attachments.
    */
   readonly hasAttachments?: Maybe<boolean>;
+  /**
+   * Only messages that carry this Outlook category (`categories/any(c:c eq '…')`).
+   */
+  readonly category?: Maybe<string>;
 }
 
 /**
@@ -174,6 +198,9 @@ export interface MicrosoftGraphMessageListFilterInput {
  * ```ts
  * microsoftGraphMessageListFilter({ from: 'ada@example.com', unread: true });
  * // "receivedDateTime ge 1900-01-01T00:00:00Z and from/emailAddress/address eq 'ada@example.com' and isRead eq false"
+ *
+ * microsoftGraphMessageListFilter({ category: "Bob's tag" });
+ * // "receivedDateTime ge 1900-01-01T00:00:00Z and categories/any(c:c eq 'Bob''s tag')"
  * ```
  */
 export function microsoftGraphMessageListFilter(input: MicrosoftGraphMessageListFilterInput): Maybe<string> {
@@ -189,6 +216,10 @@ export function microsoftGraphMessageListFilter(input: MicrosoftGraphMessageList
 
   if (input.hasAttachments) {
     others.push('hasAttachments eq true');
+  }
+
+  if (input.category) {
+    others.push(`categories/any(c:c eq ${microsoftGraphODataStringLiteral(input.category)})`);
   }
 
   const dates: string[] = [];
@@ -220,9 +251,14 @@ export interface MicrosoftGraphListMessagesInput extends MicrosoftGraphMailboxIn
    */
   readonly select?: Maybe<string>;
   /**
-   * The page size. Defaults to {@link DEFAULT_MICROSOFT_GRAPH_MESSAGE_PAGE_SIZE}.
+   * The page size, up to {@link MICROSOFT_GRAPH_MESSAGE_MAX_PAGE_SIZE}. Defaults to {@link DEFAULT_MICROSOFT_GRAPH_MESSAGE_PAGE_SIZE}.
    */
   readonly top?: Maybe<number>;
+  /**
+   * Asks for the size of the whole selection (`$count=true`), returned as `@odata.count` on the first page.
+   * Count a folder rather than every folder: a count over `/messages` may be inflated.
+   */
+  readonly count?: Maybe<boolean>;
 }
 
 /**
@@ -238,7 +274,8 @@ export function microsoftGraphListMessagesRequest(input: MicrosoftGraphListMessa
       $filter: microsoftGraphMessageListFilter(input),
       $orderby: 'receivedDateTime desc',
       $top: input.top ?? DEFAULT_MICROSOFT_GRAPH_MESSAGE_PAGE_SIZE,
-      $select: input.select ?? MICROSOFT_GRAPH_MESSAGE_SELECT
+      $select: input.select ?? MICROSOFT_GRAPH_MESSAGE_SELECT,
+      ...(input.count ? { $count: true } : {})
     },
     headers: microsoftGraphMailHeaders(input)
   };
@@ -254,6 +291,46 @@ export function microsoftGraphListMessagesRequest(input: MicrosoftGraphListMessa
 export function listMessages(context: MicrosoftGraphContext): (input: MicrosoftGraphListMessagesInput) => Promise<MicrosoftGraphPage<MicrosoftGraphMessage>> {
   const request = microsoftGraphRequest(context);
   return (input) => request({ method: 'GET', ...microsoftGraphListMessagesRequest(input) });
+}
+
+// MARK: Folder
+export interface MicrosoftGraphGetMailFolderInput extends Pick<MicrosoftGraphMailboxInput, 'mailbox'> {
+  /**
+   * A mail folder id or well-known name (`inbox`, `archive`, `deleteditems`).
+   */
+  readonly folder: string;
+  /**
+   * Comma-separated fields to select. Defaults to `id,displayName`.
+   */
+  readonly select?: Maybe<string>;
+}
+
+/**
+ * Builds the GET for one mail folder. A well-known name resolves to the folder's id, so two names (or a name and
+ * an id) can be compared by the ids Graph returns.
+ *
+ * @param input - The mailbox, folder and fields.
+ * @returns The request.
+ *
+ * @see https://learn.microsoft.com/en-us/graph/api/mailfolder-get
+ */
+export function microsoftGraphGetMailFolderRequest(input: MicrosoftGraphGetMailFolderInput): MicrosoftGraphMailRequest {
+  return {
+    path: microsoftGraphMailFolderPath(input),
+    query: { $select: input.select ?? 'id,displayName' },
+    headers: undefined
+  };
+}
+
+/**
+ * Reads one mail folder. Requires `Mail.Read` (`Mail.Read.Shared` for another mailbox).
+ *
+ * @param context - Fetch function and access-token source each request is sent with.
+ * @returns Function that loads one mail folder by id or well-known name.
+ */
+export function getMailFolder(context: MicrosoftGraphContext): (input: MicrosoftGraphGetMailFolderInput) => Promise<MicrosoftGraphMailFolder> {
+  const request = microsoftGraphRequest(context);
+  return (input) => request({ method: 'GET', ...microsoftGraphGetMailFolderRequest(input) });
 }
 
 // MARK: Search

@@ -169,6 +169,30 @@ describe('deleteMessages()', () => {
     expect(new URL(requests[0].url).pathname).toBe('/v1.0/me/messages/a/permanentDelete');
     expect(results).toEqual([{ id: 'a', status: 404, error: { code: 'ErrorItemNotFound', message: 'Not found.' } }]);
   });
+
+  it('returns a throttled item as its 429 without waiting when Retry-After exceeds maxRetryAfterSeconds', async () => {
+    const waits: number[] = [];
+    const { graphContext, requests } = recordingGraph(() =>
+      jsonResponse({
+        responses: [
+          { id: '0', status: 201, body: { id: 'a-deleted' } },
+          { id: '1', status: 429, headers: { 'Retry-After': '30' }, body: { error: { code: 'ApplicationThrottled' } } }
+        ]
+      })
+    );
+
+    const results = await deleteMessages(graphContext)({
+      ids: ['a', 'b'],
+      maxRetryAfterSeconds: 5,
+      wait: async (ms) => {
+        waits.push(ms);
+      }
+    });
+
+    expect(requests).toHaveLength(1);
+    expect(waits).toEqual([]);
+    expect(results[1]).toEqual({ id: 'b', status: 429, error: { code: 'ApplicationThrottled' } });
+  });
 });
 
 describe('moveMessages()', () => {

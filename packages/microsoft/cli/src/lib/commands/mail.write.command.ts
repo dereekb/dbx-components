@@ -52,6 +52,7 @@ import {
   runMsGraphCliMessageWrites,
   splitMsGraphCliAttachments
 } from '../util/mail.write';
+import { DEFAULT_MSGRAPH_CLI_SELECTION_FOLDER, MSGRAPH_CLI_MAIL_SELECTION_SUGGESTION, checkMsGraphCliMailSelectionFolders, msGraphCliMailSelectionOptions, msGraphCliMailTargetMode, readMsGraphCliMailSelection, runMsGraphCliMailSelectionWrite } from '../util/mail.select';
 import { msGraphCliMailboxOptions, readMsGraphCliIdsOption } from '../util/option';
 import { outputMsGraphCliResult } from '../util/output';
 
@@ -461,51 +462,98 @@ export const MAIL_FORWARD_COMMAND: CommandModule = {
 };
 
 // MARK: Move / Copy / Delete
-function idsOptions(yargs: Argv) {
+const IDS_POSITIONAL_DESCRIBE = 'Message ids. Pass every id in ONE call: they go through $batch, 20 per HTTP call';
+
+function idsOptions(yargs: Argv, idsDescribe = IDS_POSITIONAL_DESCRIBE) {
   return msGraphCliDryRunOptions(msGraphCliMailboxOptions(yargs))
-    .positional('ids', { type: 'string', array: true, describe: 'Message ids. Pass every id in ONE call: they go through $batch, 20 per HTTP call' })
+    .positional('ids', { type: 'string', array: true, describe: idsDescribe })
     .option('ids-file', { type: 'string', describe: 'A file of message ids: one per line, a JSON array, or the saved JSON output of mail list / mail search (--all-pages --pick id)' })
     .option('all-results', { type: 'boolean', default: false, describe: `Print a row for every id. Default: above ${MSGRAPH_CLI_WRITE_RESULTS_MAX_ROWS} ids a move or delete prints only the failed rows and counts the rest in "omitted"` });
+}
+
+/**
+ * The ids options plus the selection options of `mail delete` / `mail move`.
+ *
+ * @param yargs - The command's yargs.
+ * @returns The yargs, with the options added.
+ */
+function idsOrSelectionOptions(yargs: Argv) {
+  return msGraphCliMailSelectionOptions(idsOptions(yargs, `${IDS_POSITIONAL_DESCRIBE}. Or pass no ids and select by filter in the same call: --folder, --from, --since, --until, --unread, --has-attachments, --category, --search`));
+}
+
+function hasIdsArgument(argv: any): boolean {
+  return (argv.ids ?? []).some((x: unknown) => String(x).length > 0) || Boolean(argv.idsFile);
 }
 
 function progressLine(line: string): void {
   process.stderr.write(`${line}\n`);
 }
 
-async function moveOrCopyHandler(argv: any, graphContext: Parameters<typeof moveMessages>[0], copy: boolean): Promise<void> {
-  const ids = await readMsGraphCliIdsOption({ ids: argv.ids, idsFile: argv.idsFile });
-  const input = { mailbox: argv.mailbox, immutableIds: !argv.mutableIds, destination: String(argv.to), copy };
+function writeResultsMaxRows(argv: any, copy = false): Maybe<number> {
+  // a copy's new ids are its result, so every row is printed
+  return copy || argv.allResults ? undefined : MSGRAPH_CLI_WRITE_RESULTS_MAX_ROWS;
+}
 
-  if (argv.dryRun) {
-    outputMsGraphCliResult(
-      msGraphCliDryRunOutput(
-        ids.map((id) => microsoftGraphMoveMessageRequest({ ...input, id })),
-        ids.length > 1 ? 'Sent through $batch, 20 per HTTP call.' : undefined
-      )
-    );
+async function moveOrCopyHandler(argv: any, graphContext: MicrosoftGraphContext, copy: boolean): Promise<void> {
+  const startedAt = Date.now();
+  const input = { mailbox: argv.mailbox, immutableIds: !argv.mutableIds, destination: String(argv.to), copy };
+  const selection = copy ? undefined : readMsGraphCliMailSelection(argv);
+  const mode = selection ? msGraphCliMailTargetMode({ hasIds: hasIdsArgument(argv), selection }) : 'ids';
+
+  if (selection && mode !== 'ids') {
+    checkMsGraphCliMailSelectionFolders({ command: 'move', folder: selection.folder, to: input.destination });
+    const output = await runMsGraphCliMailSelectionWrite({
+      graphContext,
+      command: 'move',
+      mode,
+      selection,
+      mailbox: input.mailbox,
+      immutableIds: input.immutableIds,
+      to: input.destination,
+      dryRun: argv.dryRun,
+      startedAt,
+      label: 'mail move',
+      verb: 'moves',
+      writeRequest: (id) => microsoftGraphMoveMessageRequest({ ...input, id }),
+      send: (ids, maxRetryAfterSeconds) => moveMessages(graphContext)({ ...input, ids, maxRetryAfterSeconds }),
+      progress: progressLine,
+      maxRows: writeResultsMaxRows(argv)
+    });
+    outputMsGraphCliResult(output);
   } else {
-    const results = await runMsGraphCliMessageWrites({ ids, label: copy ? 'mail copy' : 'mail move', progress: progressLine, send: (group) => moveMessages(graphContext)({ ...input, ids: group }) });
-    // a copy's new ids are its result, so every row is printed
-    outputMsGraphCliResult(msGraphCliWriteResultsOutput(results, { maxRows: copy || argv.allResults ? undefined : MSGRAPH_CLI_WRITE_RESULTS_MAX_ROWS }));
+    const ids = await readMsGraphCliIdsOption({ ids: argv.ids, idsFile: argv.idsFile, suggestion: copy ? undefined : MSGRAPH_CLI_MAIL_SELECTION_SUGGESTION });
+
+    if (argv.dryRun) {
+      outputMsGraphCliResult(
+        msGraphCliDryRunOutput(
+          ids.map((id) => microsoftGraphMoveMessageRequest({ ...input, id })),
+          ids.length > 1 ? 'Sent through $batch, 20 per HTTP call.' : undefined
+        )
+      );
+    } else {
+      const results = await runMsGraphCliMessageWrites({ ids, label: copy ? 'mail copy' : 'mail move', progress: progressLine, send: (group) => moveMessages(graphContext)({ ...input, ids: group }) });
+      outputMsGraphCliResult(msGraphCliWriteResultsOutput(results, { maxRows: writeResultsMaxRows(argv, copy) }));
+    }
   }
 }
 
 export const MAIL_MOVE_COMMAND: CommandModule = {
   command: 'move [ids..]',
-  describe: 'Move messages to a folder: many at once through $batch (20 per HTTP call), with a per-id result. Immutable ids stay the same',
+  describe: `Move messages to a folder: selected by filter in the same call (--folder, default ${DEFAULT_MSGRAPH_CLI_SELECTION_FOLDER}, plus --from/--since/…/--search), or by ids. Many at once through $batch (20 per HTTP call), with a per-id result. Immutable ids stay the same`,
   builder: (yargs: Argv) =>
-    idsOptions(yargs)
+    idsOrSelectionOptions(yargs)
       .option('to', { type: 'string', demandOption: true, describe: 'The destination folder id or well-known name (inbox, archive, deleteditems, junkemail)' })
       .example([
-        ['$0 mail move AAMk1... AAMk2... --to archive', 'Archive two messages'],
-        ['$0 mail list --folder inbox --from alerts@example.com --all-pages --top 100 --pick id > ids.json && $0 mail move --ids-file ids.json --to archive', 'Archive every inbox message from one sender in one call (the list output is a valid --ids-file)']
+        ['$0 mail move --folder inbox --from alerts@example.com --to archive', 'Archive every inbox message from one sender in one call (re-run while complete is false)'],
+        ['$0 mail move --mailbox shared@example.com --folder AAMk... --since 2026-01-01 --to AAMk... --dry-run', 'Count and preview a move between two folders of a shared mailbox'],
+        ['$0 mail move AAMk1... AAMk2... --to archive', 'Archive two messages by id']
       ]),
   handler: msGraphCommandHandler(async (argv: any, { graphContext }) => moveOrCopyHandler(argv, graphContext, false))
 };
 
 export const MAIL_COPY_COMMAND: CommandModule = {
   command: 'copy [ids..]',
-  describe: 'Copy messages to a folder ($batch when several); prints each copy as newId',
+  describe: 'Copy messages to a folder ($batch when several); prints each copy as newId. Ids only (a copy never leaves its folder, so a selection would copy again on every re-run)',
   builder: (yargs: Argv) =>
     idsOptions(yargs)
       .option('to', { type: 'string', demandOption: true, describe: 'The destination folder id or well-known name' })
@@ -515,26 +563,64 @@ export const MAIL_COPY_COMMAND: CommandModule = {
 
 export const MAIL_DELETE_COMMAND: CommandModule = {
   command: 'delete [ids..]',
-  describe: 'Delete messages: moved to Deleted Items (recoverable), or --hard to delete permanently. Many at once through $batch (20 per HTTP call), with a per-id result. Needs --yes',
+  describe: `Delete messages: moved to Deleted Items (recoverable), or --hard to delete permanently. Selected by filter in the same call (--folder, default ${DEFAULT_MSGRAPH_CLI_SELECTION_FOLDER}, plus --from/--since/…/--search), or by ids. Many at once through $batch (20 per HTTP call), with a per-id result. Needs --yes`,
   builder: (yargs: Argv) =>
-    msGraphCliConfirmOptions(idsOptions(yargs))
-      .option('hard', { type: 'boolean', default: false, describe: 'Delete permanently (permanentDelete): skips Deleted Items and cannot be recovered' })
+    msGraphCliConfirmOptions(idsOrSelectionOptions(yargs))
+      .option('hard', {
+        type: 'boolean',
+        default: false,
+        describe: "Delete permanently (permanentDelete): skips Deleted Items and you can't recover it (it sits in Recoverable Items › Purges until the retention period ends). With a filter selection: only from --folder deleteditems"
+      })
       .example([
-        ['$0 mail delete AAMk1... AAMk2... --yes', 'Move two messages to Deleted Items'],
-        ['$0 mail list --folder inbox --from noreply@example.com --all-pages --top 100 --pick id > ids.json && $0 mail delete --ids-file ids.json --yes', 'Delete every inbox message from one sender in one call (hundreds are fine; the list output is a valid --ids-file)'],
-        ['$0 mail delete --ids-file ids.txt --hard --dry-run', 'Print the permanentDelete calls']
+        ['$0 mail delete --mailbox billing@example.com --folder inbox --from noreply@vendor.com --yes', 'Delete every inbox message from one sender in one call (hundreds are fine; re-run while complete is false)'],
+        ['$0 mail delete --folder inbox --from noreply@vendor.com --dry-run', 'Count the matches and print a sample of the calls, writing nothing'],
+        ['$0 mail delete --folder inbox --search "subject:invoice from:ramp.com" --yes', 'Delete the inbox hits of a KQL search'],
+        ['$0 mail delete AAMk1... AAMk2... --yes', 'Move two messages to Deleted Items by id'],
+        ['$0 mail delete --folder deleteditems --from noreply@vendor.com --hard --yes', 'Purge them from Deleted Items (permanent)']
       ]),
   handler: msGraphCommandHandler(async (argv: any, { graphContext }) => {
-    const ids = await readMsGraphCliIdsOption({ ids: argv.ids, idsFile: argv.idsFile });
+    const startedAt = Date.now();
     const input = { mailbox: argv.mailbox, immutableIds: !argv.mutableIds, hard: argv.hard };
+    const selection = readMsGraphCliMailSelection(argv);
+    const mode = msGraphCliMailTargetMode({ hasIds: hasIdsArgument(argv), selection });
+    const action = argv.hard ? 'permanently delete' : 'delete';
 
-    if (argv.dryRun) {
-      const requests: MicrosoftGraphRequestInput[] = microsoftGraphDeleteMessagesRequests({ ...input, ids });
-      outputMsGraphCliResult(msGraphCliDryRunOutput(requests, ids.length > 1 ? 'Sent through $batch, 20 per HTTP call.' : undefined));
+    if (mode === 'ids') {
+      const ids = await readMsGraphCliIdsOption({ ids: argv.ids, idsFile: argv.idsFile, suggestion: MSGRAPH_CLI_MAIL_SELECTION_SUGGESTION });
+
+      if (argv.dryRun) {
+        const requests: MicrosoftGraphRequestInput[] = microsoftGraphDeleteMessagesRequests({ ...input, ids });
+        outputMsGraphCliResult(msGraphCliDryRunOutput(requests, ids.length > 1 ? 'Sent through $batch, 20 per HTTP call.' : undefined));
+      } else {
+        requireMsGraphCliConfirmation({ yes: argv.yes, action: `${action} ${ids.length} message(s)` });
+        const results = await runMsGraphCliMessageWrites({ ids, label: 'mail delete', progress: progressLine, send: (group) => deleteMessages(graphContext)({ ...input, ids: group }) });
+        outputMsGraphCliResult(msGraphCliWriteResultsOutput(results, { maxRows: writeResultsMaxRows(argv) }));
+      }
     } else {
-      requireMsGraphCliConfirmation({ yes: argv.yes, action: `${argv.hard ? 'permanently delete' : 'delete'} ${ids.length} message(s)` });
-      const results = await runMsGraphCliMessageWrites({ ids, label: 'mail delete', progress: progressLine, send: (group) => deleteMessages(graphContext)({ ...input, ids: group }) });
-      outputMsGraphCliResult(msGraphCliWriteResultsOutput(results, { maxRows: argv.allResults ? undefined : MSGRAPH_CLI_WRITE_RESULTS_MAX_ROWS }));
+      checkMsGraphCliMailSelectionFolders({ command: 'delete', folder: selection.folder, hard: input.hard });
+
+      if (!argv.dryRun) {
+        requireMsGraphCliConfirmation({ yes: argv.yes, action: `${action} the selected messages` });
+      }
+
+      const output = await runMsGraphCliMailSelectionWrite({
+        graphContext,
+        command: 'delete',
+        mode,
+        selection,
+        mailbox: input.mailbox,
+        immutableIds: input.immutableIds,
+        hard: input.hard,
+        dryRun: argv.dryRun,
+        startedAt,
+        label: 'mail delete',
+        verb: argv.hard ? 'permanently deletes' : 'deletes',
+        writeRequest: (id) => microsoftGraphDeleteMessagesRequests({ ...input, ids: [id] })[0],
+        send: (ids, maxRetryAfterSeconds) => deleteMessages(graphContext)({ ...input, ids, maxRetryAfterSeconds }),
+        progress: progressLine,
+        maxRows: writeResultsMaxRows(argv)
+      });
+      outputMsGraphCliResult(output);
     }
   })
 };

@@ -87,10 +87,11 @@ export function parseMsGraphCliIdsFileContent(content: string): string[] {
  * @param input - The positional ids and the ids file path.
  * @param input.ids - The positional ids.
  * @param input.idsFile - A file of ids (see {@link parseMsGraphCliIdsFileContent}).
+ * @param input.suggestion - The suggestion of the `No ids given.` refusal, instead of the default.
  * @returns The ids, in order.
  * @throws {CliError} `INVALID_ARGUMENT` when no id is given.
  */
-export async function readMsGraphCliIdsOption(input: { readonly ids?: Maybe<readonly unknown[]>; readonly idsFile?: Maybe<string> }): Promise<string[]> {
+export async function readMsGraphCliIdsOption(input: { readonly ids?: Maybe<readonly unknown[]>; readonly idsFile?: Maybe<string>; readonly suggestion?: Maybe<string> }): Promise<string[]> {
   const ids = (input.ids ?? []).map(String).filter((x) => x.length > 0);
 
   if (input.idsFile) {
@@ -98,7 +99,7 @@ export async function readMsGraphCliIdsOption(input: { readonly ids?: Maybe<read
   }
 
   if (ids.length === 0) {
-    throw new CliError({ message: 'No ids given.', code: 'INVALID_ARGUMENT', suggestion: 'Pass ids as arguments or with --ids-file <file> (one per line, or a JSON array).' });
+    throw new CliError({ message: 'No ids given.', code: 'INVALID_ARGUMENT', suggestion: input.suggestion ?? 'Pass ids as arguments or with --ids-file <file> (one per line, or a JSON array).' });
   }
 
   return ids;
