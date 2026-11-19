@@ -61,6 +61,14 @@
         "include": ["src/lib/**/*.ts"],
         "exclude": ["**/*.spec.ts", "**/*.test.ts"],
         "out": "packages/dbx-cli/generated/dereekb-dbx-firebase.ui-components.mcp.generated.json"
+      },
+      {
+        "project": "packages/dbx-form/llm",
+        "source": "@dereekb/dbx-form/llm",
+        "module": "@dereekb/dbx-form/llm",
+        "include": ["src/lib/**/*.ts"],
+        "exclude": ["**/*.spec.ts", "**/*.test.ts"],
+        "out": "packages/dbx-cli/generated/dereekb-dbx-form-llm.ui-components.mcp.generated.json"
       }
     ]
   },
@@ -97,6 +105,14 @@
         "include": ["src/lib/action/**/*.ts"],
         "exclude": ["**/*.spec.ts", "**/*.test.ts"],
         "out": "packages/dbx-cli/generated/dereekb-dbx-core.actions.mcp.generated.json"
+      },
+      {
+        "project": "packages/dbx-web",
+        "source": "@dereekb/dbx-web",
+        "module": "@dereekb/dbx-web",
+        "include": ["src/lib/action/**/*.ts"],
+        "exclude": ["**/*.spec.ts", "**/*.test.ts"],
+        "out": "packages/dbx-cli/generated/dereekb-dbx-web.actions.mcp.generated.json"
       }
     ]
   },

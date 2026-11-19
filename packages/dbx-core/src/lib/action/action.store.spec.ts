@@ -1,7 +1,7 @@
 import { canReadyValue, ActionContextStore, ACTION_CONTEXT_STORE_LOCKSET_DESTROY_DELAY_TIME, loadingStateForActionContextState, type ActionContextState } from './action.store';
 import { DbxActionState } from './action';
 import { of, first, timeout, delay } from 'rxjs';
-import { containsStringAnyCase } from '@dereekb/util';
+import { containsStringAnyCase, type Maybe } from '@dereekb/util';
 import { isLoadingStateInErrorState, isLoadingStateInSuccessState, isLoadingStateWithDefinedValue, isLoadingStateInIdleState, LoadingStateType, SubscriptionObject } from '@dereekb/rxjs';
 import { TestBed } from '@angular/core/testing';
 import { Injector } from '@angular/core';
@@ -178,6 +178,25 @@ describe('ActionContextStore', () => {
     });
   });
 
+  describe('construction', () => {
+    it('should construct outside of an injection context', () => {
+      let store: Maybe<ActionContextStore>;
+      expect(() => (store = new ActionContextStore())).not.toThrow();
+      store?.ngOnDestroy();
+    });
+  });
+
+  describe('ngOnDestroy()', () => {
+    it('should be idempotent', () => {
+      const destroyOnNextUnlockSpy = vi.spyOn(contextStore.lockSet, 'destroyOnNextUnlock');
+
+      contextStore.ngOnDestroy();
+      contextStore.ngOnDestroy();
+
+      expect(destroyOnNextUnlockSpy).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('lock set destruction', () => {
     it(
       'should not destroy the context while the action is working',
@@ -191,9 +210,8 @@ describe('ActionContextStore', () => {
         // start working
         contextStore.startWorking();
 
-        // now simulate the destroy event.
-        // Don't call ngOnDestroy on the contextStore as it won't do anything. the lockSet watches for the NgInjection to destroy.
-        contextStore.lockSet._cleanDestroy();
+        // now queue the destroy. The store waits until the work is done before tearing down.
+        contextStore.ngOnDestroy();
 
         contextStore.lockSet.isLocked$.pipe(first()).subscribe((isLocked) => {
           expect(isLocked).toBe(true);

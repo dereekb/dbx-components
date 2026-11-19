@@ -1,3 +1,28 @@
+# [14.29.0](https://github.com/dereekb/dbx-components/compare/v14.28.0-dev...v14.29.0) (2026-11-19)
+
+### Bug Fixes
+
+- **dbx-web:** readable refused-undo error in the action snackbar ([ee2ab7d6](https://github.com/dereekb/dbx-components/commit/ee2ab7d66814cdd3858c812a811424a63a6b3069))
+- **dbx-web:** wire snackbar undo and add dbxActionSnackbarUndoWork ([fcd23c91](https://github.com/dereekb/dbx-components/commit/fcd23c912fe7e0c4e6ad68c464f3970b7ed8d18d))
+- **microsoft:** auto-reply set reads local times in mailbox time zone ([87ac3449](https://github.com/dereekb/dbx-components/commit/87ac3449deb314aaeba7b6bc7ef5487ab741a994))
+
+### Build System
+
+- **docker:** raise functions emulator discovery timeout to 60s ([482b7a3c](https://github.com/dereekb/dbx-components/commit/482b7a3c6e1538fffe1ff3ddbd691787aaf112b2))
+- lint fix + mcp regeneration + firestore indexes + peer dep sync ([a10b6403](https://github.com/dereekb/dbx-components/commit/a10b640379f6dda743853342c5d3afe320d15942))
+
+### Code Refactoring
+
+- **dbx-form:** sync llm view-only state runs in the mutator ([11d4e99c](https://github.com/dereekb/dbx-components/commit/11d4e99cd7bf6b5e713c644291afea4071c53806))
+
+### Features
+
+- **dbx-form:** llm flow view-only sections, status chip, step number ([f0632900](https://github.com/dereekb/dbx-components/commit/f06329002c0caec1033c64f75e0f8a587986f9c3))
+- **dbx-form:** record view-only section state in the llm run tree ([41361161](https://github.com/dereekb/dbx-components/commit/413611616b1ae0be5a9b5b0162b95be54e9f7d2d))
+- **microsoft:** msgraph-cli drive attachments, chat edit, calendar tz ([390d541e](https://github.com/dereekb/dbx-components/commit/390d541e2f18be4cf210bb7a34fd72cb9c1826b9))
+- **microsoft:** msgraph-cli filter-selected mail delete/move ([2052203d](https://github.com/dereekb/dbx-components/commit/2052203daff5c995577358c8ab514469e02c6543))
+- **microsoft:** msgraph-cli mail undo, mail tag / untag ([fc842456](https://github.com/dereekb/dbx-components/commit/fc8424562645342236bf3391ba83adf26e590c20))
+
 # [14.28.0](https://github.com/dereekb/dbx-components/compare/v14.27.0-dev...v14.28.0) (2026-11-17)
 
 ### Build System

@@ -11,10 +11,24 @@ import { type DbxLlmFlowPersistedState, DbxLlmFlowStorageSync } from './llm.flow
  *
  * Persistence needs a SimpleStorageAccessorFactory (see provideDbxStorage()). Without one, the flow is not persisted.
  *
- * @example
- * ```html
+ * The directive adds no layout, so the sections can sit in any layout (columns, a grid). To stack them with the flow's gap, as dbx-llm-flow does,
+ * add the dbx-llm-flow class.
+ *
+ * @dbxWebComponent
+ * @dbxWebSlug llm-flow-host
+ * @dbxWebCategory layout
+ * @dbxWebRelated llm-flow-section, llm-flow
+ * @dbxWebMinimalExample ```html
  * <div [dbxLlmFlow]="flowConfig" [storageKey]="worldKey()">
  *   <dbx-llm-flow-section [config]="briefConfig"></dbx-llm-flow-section>
+ * </div>
+ * ```
+ *
+ * @example
+ * ```html
+ * <div class="dbx-llm-flow" [dbxLlmFlow]="flowConfig" [storageKey]="worldKey()">
+ *   <dbx-llm-flow-section [config]="setupConfig"></dbx-llm-flow-section>
+ *   <dbx-llm-flow-section [config]="briefConfig" parentKey="setup"></dbx-llm-flow-section>
  * </div>
  * ```
  */

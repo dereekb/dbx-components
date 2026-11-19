@@ -87,6 +87,29 @@ export function microsoftGraphUpdateAutomaticRepliesRequest(setting: MicrosoftGr
 }
 
 /**
+ * Builds the GET of the user's mailbox time zone (`mailboxSettings/timeZone`): the zone Outlook shows their
+ * calendar in, a Windows or IANA name such as `Pacific Standard Time`.
+ *
+ * @returns The request.
+ *
+ * @see https://learn.microsoft.com/en-us/graph/api/user-get-mailboxsettings
+ */
+export function microsoftGraphGetMailboxTimeZoneRequest(): MicrosoftGraphRequestInput {
+  return { method: 'GET', path: '/me/mailboxSettings/timeZone' };
+}
+
+/**
+ * Reads the user's mailbox time zone. Requires `MailboxSettings.Read`.
+ *
+ * @param context - Fetch function and access-token source each request is sent with.
+ * @returns Function that loads the zone name, or undefined when the mailbox has none set.
+ */
+export function getMailboxTimeZone(context: MicrosoftGraphContext): () => Promise<Maybe<string>> {
+  const request = microsoftGraphRequest(context);
+  return async () => (await request<Maybe<{ readonly value?: Maybe<string> }>>(microsoftGraphGetMailboxTimeZoneRequest()))?.value || undefined;
+}
+
+/**
  * Reads the user's automatic replies. Requires `MailboxSettings.Read`.
  *
  * @param context - Fetch function and access-token source each request is sent with.

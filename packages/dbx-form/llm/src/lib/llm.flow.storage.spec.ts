@@ -6,7 +6,7 @@ import { BehaviorSubject, firstValueFrom, type Observable, throwError } from 'rx
 import { DBX_LLM_FLOW_RUN_INTERRUPTED_ERROR_CODE, type DbxLlmFlowAnySectionConfig, type DbxLlmFlowRun, type DbxLlmFlowState } from './llm.flow';
 import { DbxLlmFlowStore } from './llm.flow.store';
 import { type DbxLlmFlowPersistedState, DbxLlmFlowStorageSync, dbxLlmFlowPersistedStateFromState, dbxLlmFlowStateWithReset, dbxLlmFlowStateWithRestoredPersistedState } from './llm.flow.storage';
-import { dbxLlmFlowStateWithCollapsed, initialDbxLlmFlowState } from './llm.flow.state';
+import { type DbxLlmFlowStateContext, dbxLlmFlowStateWithCollapsed, dbxLlmFlowStateWithFormValue, dbxLlmFlowStateWithRegisteredSection, initialDbxLlmFlowState } from './llm.flow.state';
 
 const SECTION: DbxLlmFlowAnySectionConfig = { key: 's', hasForm: true, initialDraft: { formValue: { topic: 'initial' } } };
 
@@ -249,5 +249,71 @@ describe('DbxLlmFlowStorageSync', () => {
     expect(sync?.historyLimits).toEqual({ maxRootRuns: 2, maxLeafRuns: 2 });
     expect(Object.keys((await firstValueFrom(accessor.get('one')))?.runs ?? {}).length).toBe(2);
     expect(Object.keys(flowStore.currentState().runs).length).toBe(5);
+  });
+});
+
+describe('view-only state', () => {
+  const configs: Record<string, DbxLlmFlowAnySectionConfig> = {
+    setup: { key: 'setup', viewOnly: true, initialDraft: { formValue: { look: 'noir' } } },
+    prompt: { key: 'prompt', parentKey: 'setup' }
+  };
+
+  let stateRunId = 0;
+  const context: DbxLlmFlowStateContext = { now: new Date(100), sectionConfig: (key) => configs[key], nextRequestId: () => 1, nextRunId: () => `s${(stateRunId += 1)}` };
+
+  function mountedState(): DbxLlmFlowState {
+    const state = dbxLlmFlowStateWithRegisteredSection(initialDbxLlmFlowState(), { key: 'setup' }, context);
+    return dbxLlmFlowStateWithRegisteredSection(state, { key: 'prompt', parentKey: 'setup' }, context);
+  }
+
+  function selectedStateRun(state: DbxLlmFlowState): Maybe<DbxLlmFlowRun> {
+    const runId = state.sections['setup'].selectedRunIds.at(-1);
+    return runId == null ? undefined : state.runs[runId];
+  }
+
+  it('should persist the state with its state run, and restore both', () => {
+    const state = dbxLlmFlowStateWithFormValue(mountedState(), { key: 'setup', formValue: { look: 'pastel' } }, context);
+    // eslint-disable-next-line unicorn/prefer-structured-clone -- checks the JSON round trip
+    const persisted = JSON.parse(JSON.stringify(dbxLlmFlowPersistedStateFromState(state))) as DbxLlmFlowPersistedState;
+    const restored = dbxLlmFlowStateWithRestoredPersistedState(dbxLlmFlowStateWithReset(state, { restoring: true }, context), persisted, context);
+    const run = selectedStateRun(restored);
+
+    expect(restored.sections['setup'].draft.formValue).toEqual({ look: 'pastel' });
+    expect(restored.sections['setup'].selectedRunIds).toEqual(state.sections['setup'].selectedRunIds);
+    expect(run?.output).toEqual({ look: 'pastel' });
+    expect(restored.sections['prompt'].followedParentRunId).toBe(run?.id);
+  });
+
+  it('should record the state of a view-only section saved without a state run', () => {
+    const persisted: DbxLlmFlowPersistedState = {
+      v: 1,
+      sections: {
+        setup: { key: 'setup', draft: { formValue: { look: 'neon' }, rawInput: '' }, selectedRunIds: [] },
+        prompt: { key: 'prompt', parentKey: 'setup', draft: { rawInput: '' }, selectedRunIds: [] }
+      },
+      runs: {}
+    };
+
+    const restored = dbxLlmFlowStateWithRestoredPersistedState(dbxLlmFlowStateWithReset(mountedState(), { restoring: true }, context), persisted, context);
+    const run = selectedStateRun(restored);
+
+    expect(run?.output).toEqual({ look: 'neon' });
+    expect(restored.sections['prompt'].followedParentRunId).toBe(run?.id);
+  });
+
+  it('should record the initial state after a reset', () => {
+    const state = dbxLlmFlowStateWithFormValue(mountedState(), { key: 'setup', formValue: { look: 'pastel' } }, context);
+    const reset = dbxLlmFlowStateWithReset(state, { restoring: false }, context);
+    const run = selectedStateRun(reset);
+
+    expect(reset.sections['setup'].draft.formValue).toEqual({ look: 'noir' });
+    expect(run?.output).toEqual({ look: 'noir' });
+    expect(reset.sections['prompt'].followedParentRunId).toBe(run?.id);
+  });
+
+  it('should not record state runs while a reset begins a restore', () => {
+    const reset = dbxLlmFlowStateWithReset(mountedState(), { restoring: true }, context);
+    expect(reset.runs).toEqual({});
+    expect(reset.sections['setup'].selectedRunIds).toEqual([]);
   });
 });

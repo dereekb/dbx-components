@@ -5,7 +5,19 @@ import { readFile } from 'node:fs/promises';
 import type { Argv, CommandModule } from 'yargs';
 import { msGraphCliPaths } from '../config/cli.config';
 import { msGraphCommandHandler } from '../middleware/auth.middleware';
-import { MSGRAPH_CLI_AUTO_REPLY_AUDIENCES, MSGRAPH_CLI_AUTO_REPLY_STATUSES, msGraphCliAutoReplyBackupPath, msGraphCliAutoReplyOutput, parseMsGraphCliDateTimeTimeZoneOption, parseMsGraphCliEnumOption, readMsGraphCliAutoReplyBackup, writeMsGraphCliAutoReplyBackup } from '../util/auto.reply';
+import {
+  MSGRAPH_CLI_AUTO_REPLY_AUDIENCES,
+  MSGRAPH_CLI_AUTO_REPLY_STATUSES,
+  isMsGraphCliZonelessDateTime,
+  msGraphCliAutoReplyBackupPath,
+  msGraphCliAutoReplyOutput,
+  parseMsGraphCliDateTimeTimeZoneOption,
+  parseMsGraphCliEnumOption,
+  parseMsGraphCliMailboxDateTimeOption,
+  readMsGraphCliAutoReplyBackup,
+  readMsGraphCliMailboxTimeZone,
+  writeMsGraphCliAutoReplyBackup
+} from '../util/auto.reply';
 import { msGraphCliConfirmOptions, msGraphCliDryRunOptions, msGraphCliDryRunOutput, msGraphCliTextToHtml, requireMsGraphCliConfirmation } from '../util/mail.write';
 import { outputMsGraphCliResult } from '../util/output';
 
@@ -47,15 +59,17 @@ async function readMessageFile(path: Maybe<string>): Promise<Maybe<string>> {
 }
 
 /**
- * Builds the setting `mail auto-reply set` PATCHes from its options.
+ * Builds the setting `mail auto-reply set` PATCHes from its options. With `--tz`, `--start` / `--end` are wall-clock
+ * times in it; without, a zone-less value is read in `argv.mailboxTz` (the handler reads the mailbox's time zone into
+ * it) and an instant is sent as UTC.
  *
- * @param argv - The parsed options.
+ * @param argv - The parsed options, plus `mailboxTz`.
  * @returns The setting.
  * @throws {CliError} `INVALID_ARGUMENT` when an option is invalid, or `scheduled` lacks its window.
  */
 export async function msGraphCliAutoReplySetSetting(argv: any): Promise<MicrosoftGraphAutomaticRepliesSetting> {
-  const start = parseMsGraphCliDateTimeTimeZoneOption('start', argv.start, argv.tz);
-  const end = parseMsGraphCliDateTimeTimeZoneOption('end', argv.end, argv.tz);
+  const start = argv.tz ? parseMsGraphCliDateTimeTimeZoneOption('start', argv.start, argv.tz) : parseMsGraphCliMailboxDateTimeOption('start', argv.start, argv.mailboxTz);
+  const end = argv.tz ? parseMsGraphCliDateTimeTimeZoneOption('end', argv.end, argv.tz) : parseMsGraphCliMailboxDateTimeOption('end', argv.end, argv.mailboxTz);
   const status = parseMsGraphCliEnumOption('status', argv.status, MSGRAPH_CLI_AUTO_REPLY_STATUSES) ?? (start || end ? 'scheduled' : 'alwaysEnabled');
 
   if (status === 'scheduled' && (!start || !end)) {
@@ -107,15 +121,20 @@ export const MAIL_AUTO_REPLY_SET_COMMAND: CommandModule = {
   builder: (yargs: Argv) =>
     msGraphCliConfirmOptions(msGraphCliDryRunOptions(yargs), AUTO_REPLY_CONFIRM_DESCRIBE)
       .option('status', { type: 'string', describe: `${MSGRAPH_CLI_AUTO_REPLY_STATUSES.join(' | ')} (default: scheduled with --start/--end, else alwaysEnabled)` })
-      .option('start', { type: 'string', describe: 'Window start: an ISO 8601 instant, or a local date-time with --tz' })
-      .option('end', { type: 'string', describe: 'Window end: an ISO 8601 instant, or a local date-time with --tz' })
-      .option('tz', { type: 'string', describe: 'The time zone --start and --end are in, e.g. "Pacific Standard Time"' })
+      .option('start', { type: 'string', describe: "Window start: a local date-time (2026-12-22T17:00, read in --tz, default your mailbox's time zone) or an instant with Z / an offset" })
+      .option('end', { type: 'string', describe: 'Window end, like --start' })
+      .option('tz', { type: 'string', describe: 'The time zone a local --start / --end is in, e.g. "Pacific Standard Time". Default: your mailbox\'s time zone (MailboxSettings.Read), never the machine\'s' })
       .option('internal-file', { type: 'string', describe: 'The reply sent inside the organization (.html / .htm as HTML, else text)' })
       .option('external-file', { type: 'string', describe: 'The reply sent outside the organization (.html / .htm as HTML, else text)' })
       .option('audience', { type: 'string', describe: `Who outside the organization gets the external reply: ${MSGRAPH_CLI_AUTO_REPLY_AUDIENCES.join(' | ')}` })
-      .example([['$0 mail auto-reply set --start 2026-12-22T00:00 --end 2027-01-02T00:00 --tz "Pacific Standard Time" --internal-file away.html --audience none --yes', 'Scheduled replies over the holidays, internal only']]),
+      .example([
+        ['$0 mail auto-reply set --start 2026-12-22T17:00 --end 2027-01-02T08:00 --internal-file away.html --audience none --yes', "Scheduled replies over the holidays in your mailbox's time zone, internal only"],
+        ['$0 mail auto-reply set --start 2026-12-22T00:00 --end 2027-01-02T00:00 --tz "Pacific Standard Time" --internal-file away.html --yes', 'The same window in a given zone']
+      ]),
   handler: msGraphCommandHandler(async (argv: any, { graphContext }) => {
-    const setting = await msGraphCliAutoReplySetSetting(argv);
+    // a zone-less window is read in the mailbox's time zone, not the machine's (a cloud sandbox runs in UTC)
+    const mailboxTz = !argv.tz && (isMsGraphCliZonelessDateTime(argv.start) || isMsGraphCliZonelessDateTime(argv.end)) ? await readMsGraphCliMailboxTimeZone({ graphContext, option: 'tz' }) : undefined;
+    const setting = await msGraphCliAutoReplySetSetting({ ...argv, mailboxTz });
     await runChange({ argv, graphContext, setting, action: 'turn on automatic replies' });
   })
 };

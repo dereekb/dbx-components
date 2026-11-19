@@ -384,7 +384,7 @@ function renderText(output: CliTokenToolOutput): string {
     lines.push(`- **credential:** ${credentialDescription}`);
   }
 
-  lines.push(`- **credential expires:** ${output.expiresAt}`, `- **scopes:** \`${output.scope}\``, '', '_The claim code is single-use and short-lived; the credential it unwraps is capped at one hour. Re-run this tool for a fresh one rather than trying to extend either._');
+  lines.push(`- **credential expires:** ${output.expiresAt}`, `- **scopes:** \`${output.scope}\``, '', '_The claim code is single-use and short-lived; the credential it unwraps lapses at the time above (the app caps it, one hour by default). Re-run this tool for a fresh one rather than trying to extend either._');
 
   return lines.join('\n');
 }
@@ -409,7 +409,7 @@ function pushInstallLines(lines: string[], input: PushInstallLinesInput): void {
 
 // MARK: Schemas
 const CLI_TOKEN_TOOL_DESCRIPTION =
-  'Mints a short-lived CLI login credential for YOU (the calling session) and returns a one-time claim code plus, when available, a signed download URL for the CLI binary. The credential is capped at one hour, carries no more privilege than this session (never `token.cli` or `token.service`), and expires with this session if that is sooner. By default it is a bearer access token the CLI uses directly; it cannot be refreshed, so re-mint rather than refresh when it lapses. The credential itself is never returned here — redeem the claim code with `<cli> auth handoff <code>` within two minutes. Download with `installCommand`: it saves the CLI under its own name, and Node will not run the single-file ES-module CLI under an unrecognized extension.';
+  'Mints a short-lived CLI login credential for YOU (the calling session) and returns a one-time claim code plus, when available, a signed download URL for the CLI binary. The credential is capped by the app (one hour by default), carries no more privilege than this session (never `token.cli` or `token.service`), and expires with this session if that is sooner. By default it is a bearer access token the CLI uses directly; it cannot be refreshed, so re-mint rather than refresh when it lapses. The credential itself is never returned here — redeem the claim code with `<cli> auth handoff <code>` within two minutes. Download with `installCommand`: it saves the CLI under its own name, and Node will not run the single-file ES-module CLI under an unrecognized extension.';
 
 const CLI_TOKEN_INPUT_SCHEMA = {
   type: 'object',
@@ -428,7 +428,7 @@ const CLI_TOKEN_INPUT_SCHEMA = {
     },
     ttlSeconds: {
       type: 'integer',
-      description: 'Optional requested lifetime in seconds. Clamped to one hour and to the remaining life of this session.'
+      description: "Optional requested lifetime in seconds. Clamped to the app's ceiling (one hour by default) and to the remaining life of this session."
     },
     includeDownloadUrl: {
       type: 'boolean',

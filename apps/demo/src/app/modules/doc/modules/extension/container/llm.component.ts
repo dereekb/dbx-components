@@ -3,7 +3,20 @@ import { JsonPipe } from '@angular/common';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { dbxForgeNumberField } from '@dereekb/dbx-form';
 import { DbxButtonComponent, DbxButtonSpacerDirective, DbxContentContainerDirective, DbxContentPitDirective, DbxFlexGroupDirective, DbxFlexSizeDirective } from '@dereekb/dbx-web';
-import { type DbxLlmFlowConfig, DbxLlmFlowComponent, DbxLlmFlowDirective, type DbxLlmFlowRun, type DbxLlmFlowRunId, DbxLlmFlowSectionComponent, type DbxLlmFlowSectionConfig, type DbxLlmFlowState, defaultDbxLlmFlowToRawInput } from '@dereekb/dbx-form/llm';
+import {
+  type DbxLlmFlowConfig,
+  DbxLlmFlowComponent,
+  DbxLlmFlowDirective,
+  type DbxLlmFlowRun,
+  type DbxLlmFlowRunId,
+  DbxLlmFlowSectionComponent,
+  type DbxLlmFlowSectionConfig,
+  type DbxLlmFlowSectionStatusChip,
+  DbxLlmFlowSectionValueDirective,
+  type DbxLlmFlowState,
+  dbxLlmFlowLineageRun,
+  defaultDbxLlmFlowToRawInput
+} from '@dereekb/dbx-form/llm';
 import { type Maybe } from '@dereekb/util';
 import { map, of, switchMap } from 'rxjs';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
@@ -229,15 +242,101 @@ export const DOC_EXTENSION_LLM_RENDER_SECTION: DbxLlmFlowSectionConfig<unknown, 
   ]
 };
 
+// MARK: View-only Configs
+export type DocExtensionLlmLook = 'noir' | 'pastel';
+
+/**
+ * State of the view-only Setup section. JSON-compatible: it is recorded in the run tree.
+ */
+export interface DocExtensionLlmSetupState {
+  readonly hosted?: boolean;
+  readonly look?: Maybe<DocExtensionLlmLook>;
+}
+
+/**
+ * Returns the messages that keep the setup from being recorded, or undefined once it is ready.
+ *
+ * @param state - The setup state.
+ * @returns The messages, if any.
+ */
+export function docExtensionLlmSetupIssues(state: Maybe<DocExtensionLlmSetupState>): Maybe<string[]> {
+  const issues: string[] = [];
+
+  if (!state?.hosted) {
+    issues.push('Host the world.');
+  }
+
+  if (!state?.look) {
+    issues.push('Pick a Look.');
+  }
+
+  return issues.length ? issues : undefined;
+}
+
+/**
+ * A view-only setup step numbered 0: a bench with no runs whose state (hosted, Look) is recorded in the run tree. The Scene step below
+ * requires it, and each scene carries the setup it was composed with.
+ */
+export const DOC_EXTENSION_LLM_SETUP_SECTION: DbxLlmFlowSectionConfig<DocExtensionLlmSetupState> = {
+  key: 'setup',
+  label: 'Setup',
+  hint: "Host the world and pick a Look. The setup is this step's state: it is recorded in the run tree, so every scene below carries it. It collapses itself once ready.",
+  viewOnly: true,
+  stepNumber: 0,
+  initialDraft: { formValue: { hosted: false } },
+  validateInput: (input) => docExtensionLlmSetupIssues(input.formValue)
+};
+
+/**
+ * The Scene step below the setup. It can't run until the setup is ready, and its handler reads the setup from the run's lineage.
+ */
+export const DOC_EXTENSION_LLM_SCENE_SECTION: DbxLlmFlowSectionConfig<DocExtensionLlmMoodValue, string> = {
+  key: 'scene',
+  parentKey: 'setup',
+  label: 'Scene',
+  hint: 'Compose a scene, switch the Look, then compose again. Load the first scene with its parents (the tree button in the history) and the setup switches back. Switching the Look back to one with scenes restores its latest scene.',
+  formComponent: DocExtensionLlmMoodInputComponent,
+  initialDraft: { formValue: { moods: ['calm'] } },
+  validateInput: (input) => (input.formValue?.moods?.length ? undefined : 'Pick at least one mood.'),
+  requireParentRun: true,
+  formPopout: false,
+  kinds: [
+    {
+      kind: 'run',
+      text: 'Compose',
+      handler: docExtensionLlmFakeHandler((value) => {
+        const setup = dbxLlmFlowLineageRun<DocExtensionLlmSetupState>(value.lineage, 'setup')?.output;
+        return `A ${(value.input.formValue?.moods ?? []).join(', ')} scene in the ${setup?.look ?? 'plain'} Look.`;
+      })
+    }
+  ],
+  describeRun: (run) => ({ title: String(run.output ?? run.id) })
+};
+
 export type DocExtensionLlmWorld = 'north' | 'south';
 
 @Component({
   templateUrl: './llm.component.html',
-  imports: [DbxContentContainerDirective, DbxContentPitDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxFlexGroupDirective, DbxFlexSizeDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxLlmFlowComponent, DbxLlmFlowDirective, DbxLlmFlowSectionComponent, JsonPipe]
+  imports: [
+    DbxContentContainerDirective,
+    DbxContentPitDirective,
+    DbxButtonComponent,
+    DbxButtonSpacerDirective,
+    DbxFlexGroupDirective,
+    DbxFlexSizeDirective,
+    DocFeatureLayoutComponent,
+    DocFeatureExampleComponent,
+    DbxLlmFlowComponent,
+    DbxLlmFlowDirective,
+    DbxLlmFlowSectionComponent,
+    DbxLlmFlowSectionValueDirective,
+    JsonPipe
+  ]
 })
 export class DocExtensionLlmComponent {
   readonly chainFlow = viewChild(DbxLlmFlowComponent);
   readonly labFlow = viewChild('labFlow', { read: DbxLlmFlowDirective });
+  readonly viewOnlyFlow = viewChild('viewOnlyFlow', { read: DbxLlmFlowDirective });
 
   // MARK: Step Numbers
   /**
@@ -274,6 +373,38 @@ export class DocExtensionLlmComponent {
 
   readonly labStorageKeySignal = computed(() => `doc-extension-llm-lab-${this.worldSignal()}`);
 
+  // MARK: View-only
+  readonly setupConfig = DOC_EXTENSION_LLM_SETUP_SECTION;
+  readonly sceneConfig = DOC_EXTENSION_LLM_SCENE_SECTION;
+  readonly looks: DocExtensionLlmLook[] = ['noir', 'pastel'];
+
+  /**
+   * The setup state, bound two-way to the Setup section with dbxLlmFlowSectionValue. Loading a scene with its parents, or restoring the flow,
+   * writes the setup it was composed with back here.
+   */
+  readonly setupStateSignal = signal<Maybe<DocExtensionLlmSetupState>>(undefined);
+
+  readonly setupHostedSignal = computed(() => this.setupStateSignal()?.hosted === true);
+  readonly setupLookSignal = computed(() => this.setupStateSignal()?.look);
+  readonly setupReadySignal = computed(() => docExtensionLlmSetupIssues(this.setupStateSignal()) == null);
+
+  readonly setupStatusChipSignal = computed<DbxLlmFlowSectionStatusChip>(() => {
+    const ready = this.setupReadySignal();
+    const hosted = this.setupHostedSignal();
+    const look = this.setupLookSignal();
+    let chip: DbxLlmFlowSectionStatusChip;
+
+    if (ready) {
+      chip = { text: `${look} · configured`, color: 'ok' };
+    } else if (hosted) {
+      chip = { text: 'needs a Look', color: 'warn' };
+    } else {
+      chip = { text: 'not hosted', color: 'warn' };
+    }
+
+    return chip;
+  });
+
   // MARK: State
   readonly chainStateSignal = toSignal(toObservable(this.chainFlow).pipe(switchMap((flow) => (flow ? flow.flowDirective.store.state$.pipe(map((state) => ({ runTree: docExtensionLlmRunTree(state), state }))) : of(null)))));
 
@@ -291,6 +422,30 @@ export class DocExtensionLlmComponent {
 
   selectWorld(world: DocExtensionLlmWorld): void {
     this.worldSignal.set(world);
+  }
+
+  toggleSetupHosted(): void {
+    this._updateSetup((state) => ({ ...state, hosted: !state?.hosted }));
+  }
+
+  selectSetupLook(look: DocExtensionLlmLook): void {
+    this._updateSetup((state) => ({ ...state, look: state?.look === look ? undefined : look }));
+  }
+
+  /**
+   * Applies a setup change, then collapses the setup section once it becomes ready, or expands it when it no longer is. Only a change of
+   * readiness moves it, so the user's own toggle sticks.
+   *
+   * @param change - Returns the changed setup state.
+   */
+  private _updateSetup(change: (state: Maybe<DocExtensionLlmSetupState>) => DocExtensionLlmSetupState): void {
+    const wasReady = this.setupReadySignal();
+    this.setupStateSignal.update(change);
+    const ready = this.setupReadySignal();
+
+    if (ready !== wasReady) {
+      this.viewOnlyFlow()?.store.setCollapsed(DOC_EXTENSION_LLM_SETUP_SECTION.key, ready);
+    }
   }
 
   importLabHistory(): void {

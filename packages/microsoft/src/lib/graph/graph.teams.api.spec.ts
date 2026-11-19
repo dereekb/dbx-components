@@ -11,6 +11,8 @@ import {
   microsoftGraphChatRequest,
   microsoftGraphSendChannelMessageRequest,
   microsoftGraphSoftDeleteChannelMessageRequest,
+  microsoftGraphUpdateChannelMessageRequest,
+  microsoftGraphUpdateChatMessageRequest,
   microsoftGraphSoftDeleteChatMessageRequest
 } from './graph.teams.api';
 
@@ -47,6 +49,14 @@ describe('teams requests', () => {
     expect(microsoftGraphSoftDeleteChatMessageRequest({ chatId: '19:abc@thread.v2', messageId: '171' })).toEqual({ method: 'POST', path: '/me/chats/19%3Aabc%40thread.v2/messages/171/softDelete' });
     expect(microsoftGraphSoftDeleteChatMessageRequest({ chatId: 'c', messageId: 'm', undo: true }).path).toBe('/me/chats/c/messages/m/undoSoftDelete');
     expect(microsoftGraphSoftDeleteChannelMessageRequest({ teamId: 't', channelId: 'ch', messageId: 'm' }).path).toBe('/teams/t/channels/ch/messages/m/softDelete');
+  });
+
+  it('edits a chat message, a channel message and a channel reply with a PATCH of the body', () => {
+    // models: chatmessage-update — PATCH answered 204; the body replaces the old one whole
+    const body = { contentType: 'text' as const, content: 'Fixed.' };
+    expect(microsoftGraphUpdateChatMessageRequest({ chatId: '19:abc@thread.v2', messageId: '171', body })).toEqual({ method: 'PATCH', path: '/chats/19%3Aabc%40thread.v2/messages/171', body: { body } });
+    expect(microsoftGraphUpdateChannelMessageRequest({ teamId: 't', channelId: 'ch', messageId: 'm', body }).path).toBe('/teams/t/channels/ch/messages/m');
+    expect(microsoftGraphUpdateChannelMessageRequest({ teamId: 't', channelId: 'ch', messageId: 'r', replyToId: 'm', body }).path).toBe('/teams/t/channels/ch/messages/m/replies/r');
   });
 
   it('orders chat messages by lastModifiedDateTime and filters --since on the same property, top capped at 50', () => {

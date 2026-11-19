@@ -95,7 +95,7 @@ export class DbxLlmFlowSectionFormPanelComponent {
   readonly labelSignal = computed(() => this.configSignal()?.label ?? 'Input');
   readonly displaySignal = computed(() => {
     const config = this.configSignal();
-    return this.sectionDisplay?.displaySignal() ?? dbxLlmFlowSectionResolvedDisplayConfig(config?.display, undefined);
+    return this.sectionDisplay?.displaySignal() ?? dbxLlmFlowSectionResolvedDisplayConfig(config?.display, undefined, config?.viewOnly);
   });
   readonly formInjectionConfigSignal = computed(() => dbxLlmFlowSectionFormComponentInjectionConfig(this.formComponentSignal(), this.autoBindFormSignal(), this.sectionStore));
 

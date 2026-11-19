@@ -15,6 +15,7 @@ import {
   microsoftGraphDeleteDriveItemRequest,
   microsoftGraphDriveChildrenPageInput,
   microsoftGraphDriveItemSummary,
+  microsoftGraphDownloadDriveItemRequest,
   microsoftGraphDriveItemPath,
   microsoftGraphDriveUploadChunkSize,
   microsoftGraphShareIdForUrl,
@@ -47,6 +48,13 @@ describe('drive addressing', () => {
     expect(microsoftGraphDriveItemPath({ id: 'A!1' })).toBe('/me/drive/items/A!1');
     expect(microsoftGraphDriveItemPath({ driveId: 'b!x', path: '/Docs/Q1 report.xlsx' }, 'content')).toBe('/drives/b!x/root:/Docs/Q1%20report.xlsx:/content');
     expect(microsoftGraphDriveItemPath({}, 'children')).toBe('/me/drive/root/children');
+  });
+
+  it('downloads through /content by default and /contentStream when asked', () => {
+    // models: driveitem-get-content answers 302 to SharePoint; driveitem-get-contentstream is served by Graph itself
+    expect(microsoftGraphDownloadDriveItemRequest({ driveId: 'b!x', id: 'i1' })).toEqual({ method: 'GET', path: '/drives/b!x/items/i1/content' });
+    expect(microsoftGraphDownloadDriveItemRequest({ driveId: 'b!x', id: 'i1', contentStream: true })).toEqual({ method: 'GET', path: '/drives/b!x/items/i1/contentStream' });
+    expect(microsoftGraphDownloadDriveItemRequest({ path: '/Docs/a.pdf', contentStream: true }).path).toBe('/me/drive/root:/Docs/a.pdf:/contentStream');
   });
 
   it('builds the site lookup path from a site URL', () => {

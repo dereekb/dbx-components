@@ -1,7 +1,12 @@
 import { type MatSnackBarConfig } from '@angular/material/snack-bar';
 import { type DbxActionContextSourceReference } from '@dereekb/dbx-core';
 import { type LoadingState, type LoadingStateType } from '@dereekb/rxjs';
-import { type Maybe, type Milliseconds } from '@dereekb/util';
+import { type Maybe, MS_IN_SECOND, type Milliseconds } from '@dereekb/util';
+
+/**
+ * Default duration that an action snackbar offers its action (e.g. "Undo") before closing on its own.
+ */
+export const DEFAULT_SNACKBAR_UNDO_DIRECTIVE_DURATION: Milliseconds = MS_IN_SECOND * 10;
 
 /**
  * Identifies the snackbar category, used to select the appropriate default messages.
@@ -54,11 +59,13 @@ export interface DbxActionSnackbarActionConfig<T = unknown, O = unknown> {
   /**
    * Action reference to use.
    *
-   * The referred to action is used for triggering and lifecycle.
+   * The referred to action is used for triggering and lifecycle. The snackbar destroys it when it closes.
    */
   readonly reference: DbxActionContextSourceReference<T, O>;
   /**
-   * Duration to show the action.
+   * How long the action (e.g. "Undo") is offered.
+   *
+   * The snackbar only closes on its own while the action is idle, so an action that is working is never cut off.
    */
-  readonly duration?: Milliseconds;
+  readonly duration?: Maybe<Milliseconds>;
 }

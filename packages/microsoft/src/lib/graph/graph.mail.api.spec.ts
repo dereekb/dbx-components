@@ -7,9 +7,12 @@ import {
   MICROSOFT_GRAPH_MESSAGE_FILTER_EARLIEST,
   getMessageAttachmentContent,
   getMessageMime,
+  getMailFolder,
   getMessages,
   listMessages,
+  microsoftGraphGetMailFolderRequest,
   microsoftGraphGetMessageAttachmentContentRequest,
+  microsoftGraphListMessagesRequest,
   microsoftGraphMessageListFilter,
   microsoftGraphMessagesDeltaRequest,
   microsoftGraphSearchMessagesRequest
@@ -46,8 +49,35 @@ describe('microsoftGraphMessageListFilter()', () => {
     expect(microsoftGraphMessageListFilter({})).toBeUndefined();
   });
 
+  it('adds a category filter after the date terms, with quotes doubled', () => {
+    const filter = microsoftGraphMessageListFilter({ category: "Bob's tag" });
+    expect(filter).toBe(`receivedDateTime ge ${MICROSOFT_GRAPH_MESSAGE_FILTER_EARLIEST} and categories/any(c:c eq 'Bob''s tag')`);
+  });
+
   it('rejects an invalid date', () => {
     expect(() => microsoftGraphMessageListFilter({ since: new Date('nope') })).toThrow(TypeError);
+  });
+});
+
+describe('microsoftGraphListMessagesRequest()', () => {
+  it('asks for the count with $count=true only when count is set', () => {
+    const request = microsoftGraphListMessagesRequest({ folder: 'inbox', count: true, top: 1000, select: 'id' });
+    expect(request.query).toMatchObject({ $count: true, $top: 1000, $select: 'id' });
+    expect(microsoftGraphListMessagesRequest({}).query['$count']).toBeUndefined();
+  });
+});
+
+describe('getMailFolder()', () => {
+  it('reads a shared mailbox folder by well-known name with id and displayName', async () => {
+    // models: mailfolder-get — a well-known name resolves to the folder's id
+    const { graphContext, requests } = recordingGraph(() => jsonResponse({ id: 'AAMkDI', displayName: 'Deleted Items' }));
+    const folder = await getMailFolder(graphContext)({ mailbox: 'billing@hellosubs.co', folder: 'deleteditems' });
+
+    const url = new URL(requests[0].url);
+    expect(url.pathname).toBe('/v1.0/users/billing%40hellosubs.co/mailFolders/deleteditems');
+    expect(url.searchParams.get('$select')).toBe('id,displayName');
+    expect(folder).toEqual({ id: 'AAMkDI', displayName: 'Deleted Items' });
+    expect(microsoftGraphGetMailFolderRequest({ folder: 'inbox' }).path).toBe('/me/mailFolders/inbox');
   });
 });
 

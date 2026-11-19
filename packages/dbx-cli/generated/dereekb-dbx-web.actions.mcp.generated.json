@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "source": "@dereekb/dbx-web",
+  "module": "@dereekb/dbx-web",
+  "generatedAt": "1970-01-01T00:00:00.000Z",
+  "generator": "@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs",
+  "entries": [
+    {
+      "role": "directive",
+      "slug": "snackbar",
+      "selector": "[dbxActionSnackbar]",
+      "className": "DbxActionSnackbarDirective",
+      "module": "@dereekb/dbx-web",
+      "description": "Displays a Material snackbar notification when the parent action transitions between loading states\n(loading, success, error). Supports built-in message presets via `dbxActionSnackbarDefault` and\ncustom generator functions via the `dbxActionSnackbar` input.\n\nTo offer \"Undo\" after a success, bind `[dbxActionSnackbarUndoWork]` (see {@link DbxActionSnackbarUndoWorkDirective}) with the undo work,\nor pass an undo getter/config to `[dbxActionSnackbarUndo]`. An explicit `[dbxActionSnackbarUndo]` wins over `[dbxActionSnackbarUndoWork]`.\nThe snackbar destroys the undo reference when it closes.",
+      "skillRefs": [
+        "dbx__ref__dbx-component-patterns"
+      ],
+      "inputs": [
+        {
+          "alias": "dbxActionSnackbarDefault",
+          "propertyName": "dbxActionSnackbarDefault",
+          "type": "Maybe<DbxActionSnackbarType>",
+          "required": false,
+          "description": ""
+        },
+        {
+          "alias": "dbxActionSnackbarUndo",
+          "propertyName": "dbxActionSnackbarUndo",
+          "type": "Maybe<DbxActionSnackbarGeneratorUndoInput<T, O>>",
+          "required": false,
+          "description": ""
+        },
+        {
+          "alias": "dbxActionSnackbar",
+          "propertyName": "dbxActionSnackbar",
+          "type": "Maybe<DbxActionSnackbarDisplayConfigGeneratorFunction>",
+          "required": false,
+          "description": "",
+          "defaultValue": "undefined"
+        }
+      ],
+      "outputs": [],
+      "producesContext": false,
+      "consumesContext": true,
+      "stateInteraction": [
+        "WORKING",
+        "RESOLVED",
+        "REJECTED"
+      ],
+      "example": "<button [dbxAction]=\"saveAction\" [dbxActionSnackbar]=\"snackbarFn\">Save</button>"
+    },
+    {
+      "role": "directive",
+      "slug": "snackbar-undo",
+      "selector": "[dbxActionSnackbar][dbxActionSnackbarUndoWork]",
+      "className": "DbxActionSnackbarUndoWorkDirective",
+      "module": "@dereekb/dbx-web",
+      "description": "Offers \"Undo\" in the action snackbar after the action succeeds. The caller hands over only the undo work and its value.\n\nUsed beside `dbxActionSnackbar`, it is the one way a list or gallery item (or any action host) offers \"Deleted · Undo\". dbx-web owns:\n- building the one-time undo action, which keeps working after the item that offered it is destroyed;\n- the undo window (`dbxActionSnackbarUndoDuration`, defaulting to the snackbar service's `defaultUndoDuration` of 10 seconds);\n- showing a refused undo in the snackbar, where it can be retried or closed;\n- cleaning up the undo action when Undo is never clicked.\n\nThe work runs after the item may be gone, so it must not depend on the item's own injector; bind work owned by the page or a store.\nThe value is read once, when the action succeeds. Only one snackbar shows at a time, so a newer snackbar ends the offer.\n\nAn explicit `[dbxActionSnackbarUndo]` on the same element wins over this directive.",
+      "skillRefs": [
+        "dbx__ref__dbx-component-patterns"
+      ],
+      "inputs": [
+        {
+          "alias": "dbxActionSnackbarUndoWork",
+          "propertyName": "dbxActionSnackbarUndoWork",
+          "type": "Maybe<Work<V, R>>",
+          "required": false,
+          "description": "Work that runs when Undo is clicked."
+        },
+        {
+          "alias": "dbxActionSnackbarUndoValue",
+          "propertyName": "dbxActionSnackbarUndoValue",
+          "type": "Maybe<GetterOrValue<V>>",
+          "required": false,
+          "description": "Value passed to the undo work, such as the id of the deleted item. Read once, when the action succeeds."
+        },
+        {
+          "alias": "dbxActionSnackbarUndoDuration",
+          "propertyName": "dbxActionSnackbarUndoDuration",
+          "type": "Maybe<Milliseconds>",
+          "required": false,
+          "description": "How long Undo is offered."
+        }
+      ],
+      "outputs": [],
+      "producesContext": false,
+      "consumesContext": true,
+      "stateInteraction": [
+        "RESOLVED"
+      ],
+      "example": "<div dbxAction dbxActionValue [dbxActionHandler]=\"handleDelete\" dbxActionSnackbar dbxActionSnackbarDefault=\"delete\" [dbxActionSnackbarUndoWork]=\"handleRestore\" [dbxActionSnackbarUndoValue]=\"item.id\">\n  <dbx-button dbxActionButton text=\"Delete\"></dbx-button>\n</div>\n```\n\n```ts\n// on the page that owns the list, so it outlives the deleted item\nreadonly handleRestore: WorkUsingObservable<string, void> = (id) => this.store.restoreRequest(id);"
+    }
+  ]
+}

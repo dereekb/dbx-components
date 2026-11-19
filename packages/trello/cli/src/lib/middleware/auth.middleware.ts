@@ -122,7 +122,7 @@ export async function resolveTrelloCliAuth(input: ResolveTrelloCliAuthInput = {}
   let result: TrelloCliResolvedAuth;
 
   if (active) {
-    const tokenSource = createCliTokenSource({ command: active.command, tokenCachePath });
+    const tokenSource = createCliTokenSource({ command: active.command, tokenCachePath, credentialWarning: { cliName: TRELLO_CLI_NAME } });
     const accessTokenProvider: TrelloAccessTokenProvider = Object.assign(
       async () => {
         const token = await tokenSource.loadToken();

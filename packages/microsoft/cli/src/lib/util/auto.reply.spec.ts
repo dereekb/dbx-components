@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CliError } from '@dereekb/dbx-cli';
 import { microsoftGraphUpdateAutomaticRepliesRequest } from '@dereekb/microsoft';
-import { msGraphCliAutoReplyBackupPath, msGraphCliAutoReplyOutput, parseMsGraphCliDateTimeTimeZoneOption, parseMsGraphCliEnumOption, readMsGraphCliAutoReplyBackup, writeMsGraphCliAutoReplyBackup } from './auto.reply';
+import { isMsGraphCliZonelessDateTime, msGraphCliAutoReplyBackupPath, msGraphCliAutoReplyOutput, parseMsGraphCliDateTimeTimeZoneOption, parseMsGraphCliEnumOption, parseMsGraphCliMailboxDateTimeOption, readMsGraphCliAutoReplyBackup, writeMsGraphCliAutoReplyBackup } from './auto.reply';
 
 describe('auto-reply helpers', () => {
   let dir: string;
@@ -54,6 +54,18 @@ describe('auto-reply helpers', () => {
     expect(parseMsGraphCliDateTimeTimeZoneOption('start', undefined)).toBeUndefined();
     expect(() => parseMsGraphCliDateTimeTimeZoneOption('start', '2026-11-16T09:00Z', 'Pacific Standard Time')).toThrow(CliError);
     expect(() => parseMsGraphCliDateTimeTimeZoneOption('start', 'soon')).toThrow(CliError);
+  });
+
+  it('reads a zone-less value in the mailbox time zone and an instant as UTC', () => {
+    expect(isMsGraphCliZonelessDateTime('2026-11-20')).toBe(true);
+    expect(isMsGraphCliZonelessDateTime('2026-11-20T15:00')).toBe(true);
+    expect(isMsGraphCliZonelessDateTime('2026-11-20T15:00Z')).toBe(false);
+    expect(isMsGraphCliZonelessDateTime('2026-11-20T15:00-06:00')).toBe(false);
+    expect(parseMsGraphCliMailboxDateTimeOption('start', '2026-12-22T17:00', 'Central Standard Time')).toEqual({ dateTime: '2026-12-22T17:00', timeZone: 'Central Standard Time' });
+    expect(parseMsGraphCliMailboxDateTimeOption('end', '2027-01-02', 'Central Standard Time')).toEqual({ dateTime: '2027-01-02T00:00', timeZone: 'Central Standard Time' });
+    expect(parseMsGraphCliMailboxDateTimeOption('start', '2026-12-22T17:00-06:00', 'Central Standard Time')).toEqual({ dateTime: '2026-12-22T23:00:00.000', timeZone: 'UTC' });
+    expect(parseMsGraphCliMailboxDateTimeOption('start', undefined, undefined)).toBeUndefined();
+    expect(() => parseMsGraphCliMailboxDateTimeOption('start', '2026-12-22T17:00', undefined)).toThrow(CliError);
   });
 
   it('matches enum options case-insensitively and rejects others', () => {

@@ -1,7 +1,7 @@
 import { type CliActiveTokenSource, type CliTokenSource, createCliTokenSource } from '@dereekb/dbx-cli';
 import { type MicrosoftGraphContext, type MicrosoftGraphFactoryConfig, type MicrosoftGraphRateLimitedFetchHandlerConfig, type MicrosoftGraphThrottleDetails, microsoftGraphFactory } from '@dereekb/microsoft';
 import { type Maybe } from '@dereekb/util';
-import { type MsGraphCliTokenSourceConfig } from '../config/cli.config';
+import { MSGRAPH_CLI_NAME, type MsGraphCliTokenSourceConfig } from '../config/cli.config';
 
 /**
  * Everything a msgraph-cli command needs: the active token source and a Graph context authenticated by it.
@@ -68,7 +68,7 @@ export const MSGRAPH_CLI_GRAPH_RATE_LIMITER_CONFIG: MicrosoftGraphRateLimitedFet
  */
 export function createMsGraphCliContext(config: CreateMsGraphCliContextConfig): MsGraphCliContext {
   const { active, tokenCachePath } = config;
-  const tokenSource = createCliTokenSource({ command: active.command, tokenCachePath });
+  const tokenSource = createCliTokenSource({ command: active.command, tokenCachePath, credentialWarning: { cliName: MSGRAPH_CLI_NAME } });
   const { graphContext } = microsoftGraphFactory({ rateLimiterConfig: MSGRAPH_CLI_GRAPH_RATE_LIMITER_CONFIG, ...config.graphFactoryConfig })({ accessTokenGetter: async () => (await tokenSource.loadToken()).accessToken });
   return { active, tokenSource, graphContext };
 }

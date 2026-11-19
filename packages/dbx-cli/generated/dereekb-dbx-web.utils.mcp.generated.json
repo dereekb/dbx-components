@@ -204,6 +204,36 @@
         "catch-server-error-response",
         "convert-to-server-error-response"
       ]
+    },
+    {
+      "slug": "dbx-action-snackbar-undo-work",
+      "name": "dbxActionSnackbarUndoWork",
+      "kind": "factory",
+      "category": "action",
+      "module": "@dereekb/dbx-web",
+      "subpath": "action/snackbar/action.snackbar.undo",
+      "signature": "dbxActionSnackbarUndoWork(config: DbxActionSnackbarUndoWorkConfig<V, R>): DbxActionSnackbarGeneratorUndoInputConfig<unknown, R>",
+      "description": "Creates an undo config for `[dbxActionSnackbarUndo]` (or a custom snackbar generator) that runs the given work when Undo is clicked.\n\nEach success builds a fresh one-time action that does not need an injection context, so it keeps working after the item that offered it\nis destroyed. The value is read when the original action succeeds. The snackbar destroys the action when it closes, including when Undo\nis never clicked.",
+      "params": [
+        {
+          "name": "config",
+          "type": "DbxActionSnackbarUndoWorkConfig<V, R>",
+          "description": "- The undo work, its value and the undo window.",
+          "optional": false
+        }
+      ],
+      "returns": "An undo config whose `getUndoAction` builds the one-time undo action.",
+      "tags": [
+        "snackbar",
+        "undo",
+        "action",
+        "delete",
+        "restore",
+        "work",
+        "dbx",
+        "dbxactionsnackbarundowork"
+      ],
+      "example": "readonly undoDelete = dbxActionSnackbarUndoWork<string, void>({\n  work: (id) => this.store.restoreRequest(id),\n  value: () => this.item().id\n});"
     }
   ]
 }

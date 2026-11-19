@@ -4,6 +4,7 @@ import { type Maybe } from '@dereekb/util';
 import type { Argv, CommandModule } from 'yargs';
 import { msGraphCommandHandler } from '../middleware/auth.middleware';
 import { msGraphCliMailboxOptions, msGraphCliPagingOptions, parseMsGraphCliDateOption, readMsGraphCliIdsOption } from '../util/option';
+import { readMsGraphCliCategoryOption } from '../util/mail.select';
 import { DEFAULT_MSGRAPH_CLI_MAIL_DUMP_MAX_MESSAGES, MSGRAPH_CLI_MAIL_DUMP_CONCURRENCY, dumpMsGraphCliMail } from '../util/mail.dump';
 import { downloadMsGraphCliFile, msGraphCliIdleTimeoutMs, msGraphCliIdleTimeoutOption } from '../util/file.download';
 import { outputMsGraphCliResult } from '../util/output';
@@ -37,6 +38,7 @@ export const MAIL_LIST_COMMAND: CommandModule = {
       .option('from', { type: 'string', describe: "The sender's address" })
       .option('unread', { type: 'boolean', default: false, describe: 'Only unread messages' })
       .option('has-attachments', { type: 'boolean', default: false, describe: 'Only messages with file attachments' })
+      .option('category', { type: 'string', describe: 'Only messages with this Outlook category' })
       .option('select', { type: 'string', describe: 'Comma-separated fields to return instead of the default set (e.g. id,subject,receivedDateTime)' })
       .option('top', { type: 'number', describe: 'Page size (default 25)' })
       .example([
@@ -53,6 +55,7 @@ export const MAIL_LIST_COMMAND: CommandModule = {
       from: argv.from,
       unread: argv.unread,
       hasAttachments: argv.hasAttachments,
+      category: readMsGraphCliCategoryOption(argv.category),
       select: argv.select,
       top: argv.top
     });
@@ -143,12 +146,12 @@ export const MAIL_GET_MANY_COMMAND: CommandModule = {
   builder: (yargs: Argv) =>
     msGraphCliMailboxOptions(yargs)
       .positional('ids', { type: 'string', array: true, describe: 'Message ids' })
-      .option('ids-file', { type: 'string', describe: 'A file of message ids: one per line, or a JSON array' })
+      .option('ids-file', { type: 'string', describe: 'A file of message ids: one per line, a JSON array, or the saved JSON output of mail list / mail search' })
       .option('format', { type: 'string', choices: ['text', 'html'] as const, default: 'text', describe: 'Body format' })
       .option('select', { type: 'string', describe: 'Comma-separated fields to return instead of the default set plus body' })
       .example([
         ['$0 mail get-many AAMk1... AAMk2... --pick id,subject,body', 'Two messages'],
-        ['$0 mail list --since 2026-11-01 --all-pages --pick id | jq -r ".data[].id" > ids.txt && $0 mail get-many --ids-file ids.txt', 'Every message since Nov 1, with bodies']
+        ['$0 mail list --since 2026-11-01 --all-pages --pick id > ids.json && $0 mail get-many --ids-file ids.json', 'Every message since Nov 1, with bodies (the list output is a valid --ids-file)']
       ]),
   handler: msGraphCommandHandler(async (argv: any, { graphContext }) => {
     const ids = await readMsGraphCliIdsOption({ ids: argv.ids, idsFile: argv.idsFile });
@@ -223,8 +226,8 @@ export const MAIL_DUMP_COMMAND: CommandModule = {
 
 /**
  * The `mail` command: reads (`list`, `search`, `get`, `get-many`, `dump`) and writes (`draft`, `send`,
- * `send-bulk`, `reply`, `forward`, `move`, `copy`, `delete`), `mailboxes check` for shared mailboxes, and
- * `auto-reply` for automatic replies.
+ * `send-bulk`, `reply`, `forward`, `move`, `copy`, `delete`, `tag`, `untag`, `undo`), `mailboxes check` for shared
+ * mailboxes, and `auto-reply` for automatic replies.
  */
 export const MAIL_COMMAND: CommandModule = {
   command: 'mail',

@@ -395,6 +395,43 @@ export function microsoftGraphSoftDeleteChatMessageRequest(input: { readonly cha
 }
 
 /**
+ * Builds the PATCH that edits one of the user's chat messages: its body is replaced (Graph answers 204).
+ * `Chat.ReadWrite`. Only the sender can edit a message, and only in a chat whose members all use Teams. The new
+ * body replaces the old one whole: @mentions and inline images of the original are not carried over.
+ *
+ * @param input - The chat, message and new body.
+ * @param input.chatId - The chat id.
+ * @param input.messageId - The message id.
+ * @param input.body - The new body.
+ * @returns The request.
+ *
+ * @see https://learn.microsoft.com/en-us/graph/api/chatmessage-update
+ */
+export function microsoftGraphUpdateChatMessageRequest(input: { readonly chatId: string; readonly messageId: string; readonly body: MicrosoftGraphItemBody }): MicrosoftGraphRequestInput {
+  return { method: 'PATCH', path: `${microsoftGraphChatMessagesPath(input.chatId)}/${enc(input.messageId)}`, body: { body: input.body } };
+}
+
+/**
+ * Builds the PATCH that edits one of the user's channel messages, or a reply when `replyToId` names its parent
+ * (Graph answers 204). Admin-consent only: needs {@link MICROSOFT_GRAPH_CHANNEL_MESSAGE_WRITE_SCOPE}, even for the
+ * user's own post. The new body replaces the old one whole.
+ *
+ * @param input - The team, channel, message, its parent when it is a reply, and the new body.
+ * @param input.teamId - The team id.
+ * @param input.channelId - The channel id.
+ * @param input.messageId - The message (or reply) id.
+ * @param input.replyToId - The parent message, when `messageId` is a reply.
+ * @param input.body - The new body.
+ * @returns The request.
+ *
+ * @see https://learn.microsoft.com/en-us/graph/api/chatmessage-update
+ */
+export function microsoftGraphUpdateChannelMessageRequest(input: { readonly teamId: string; readonly channelId: string; readonly messageId: string; readonly replyToId?: Maybe<string>; readonly body: MicrosoftGraphItemBody }): MicrosoftGraphRequestInput {
+  const path = microsoftGraphChannelMessagesPath(input.teamId, input.channelId);
+  return { method: 'PATCH', path: input.replyToId ? `${path}/${enc(input.replyToId)}/replies/${enc(input.messageId)}` : `${path}/${enc(input.messageId)}`, body: { body: input.body } };
+}
+
+/**
  * Builds the POST that posts to a channel, or replies to a channel message when `replyToId` is set
  * (Graph answers 201). `ChannelMessage.Send`.
  *

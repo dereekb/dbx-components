@@ -17,8 +17,8 @@ import { msGraphCliConfigSetUpdate } from './commands/config.command';
 import { MAIL_MAILBOXES_CHECK_COMMAND } from './commands/mail.mailboxes.command';
 import { CALENDAR_CREATE_COMMAND, CALENDAR_DELETE_COMMAND } from './commands/calendar.command';
 import { FILES_DELETE_COMMAND, FILES_MOVE_COMMAND, FILES_UPLOAD_COMMAND } from './commands/files.command';
-import { MAIL_AUTO_REPLY_OFF_COMMAND, MAIL_AUTO_REPLY_RESTORE_COMMAND } from './commands/mail.auto.reply.command';
-import { TEAMS_CHAT_SEARCH_COMMAND, isMsGraphCliTeamsChatArchiveSearch } from './commands/teams.command';
+import { MAIL_AUTO_REPLY_OFF_COMMAND, MAIL_AUTO_REPLY_RESTORE_COMMAND, MAIL_AUTO_REPLY_SET_COMMAND } from './commands/mail.auto.reply.command';
+import { TEAMS_CHANNEL_EDIT_COMMAND, TEAMS_CHAT_EDIT_COMMAND, TEAMS_CHAT_SEARCH_COMMAND, isMsGraphCliTeamsChatArchiveSearch } from './commands/teams.command';
 
 // what the entry point does at startup
 configureMsGraphCliOutput();
@@ -338,6 +338,17 @@ describe('msgraph-cli', () => {
       expect(parseMsGraphCliIdsFileContent('["a","b"]')).toEqual(['a', 'b']);
     });
 
+    it('should read the saved JSON output of mail list / mail search as an ids file', () => {
+      // mail list --all-pages --pick id > ids.json: one array under data
+      expect(parseMsGraphCliIdsFileContent(JSON.stringify({ ok: true, data: [{ id: 'a' }, { id: 'b' }] }))).toEqual(['a', 'b']);
+      // mail list without --all-pages: a Graph page under data
+      expect(parseMsGraphCliIdsFileContent(JSON.stringify({ ok: true, data: { '@odata.context': 'x', value: [{ id: 'a', subject: 's' }] } }))).toEqual(['a']);
+      expect(parseMsGraphCliIdsFileContent(JSON.stringify([{ id: 'a' }, 'b']))).toEqual(['a', 'b']);
+      expect(() => parseMsGraphCliIdsFileContent(JSON.stringify({ ok: true, data: { id: 'a' } }))).toThrow(CliError);
+      expect(() => parseMsGraphCliIdsFileContent(JSON.stringify([{ subject: 'no id' }]))).toThrow(CliError);
+      expect(() => parseMsGraphCliIdsFileContent('{ not json')).toThrow(CliError);
+    });
+
     it('should stop mail list --all-pages at --max-pages and print one array', async () => {
       // models: T-c / M-k — each page carries @odata.nextLink until the last
       const urls: string[] = [];
@@ -415,6 +426,15 @@ describe('msgraph-cli', () => {
   });
 
   describe('mail write commands', () => {
+    beforeEach(() => {
+      // a move or delete writes an undo journal to <configDir>/undo; keep it out of the real ~/.msgraph-cli
+      vi.stubEnv(MSGRAPH_CLI_CONFIG_DIR_ENV_VAR, join(dir, 'config'));
+    });
+
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
     async function connect(fetchHandler: FetchHandler) {
       await createMsGraphCliAuthMiddleware({ skipCommands: new Set(), env: { ...env, MSGRAPH_CLI_TOKEN_COMMAND: source.command }, graphFactoryConfig: { fetchHandler } })({ _: ['mail'], $0: 'msgraph-cli' });
     }
@@ -558,6 +578,136 @@ describe('msgraph-cli', () => {
       expect(data.total).toBe(2);
       expect(data.failed).toBe(1);
       expect(data.results[1]).toEqual({ id: 'b', ok: false, status: 404, code: 'ErrorItemNotFound', message: 'Not found.' });
+    });
+
+    it('should delete a large selection in groups with progress, printing only the failed rows', async () => {
+      const ids = Array.from({ length: 230 }, (_, i) => `id${i}`);
+      const idsFile = join(dir, 'ids.json');
+      // the saved output of mail list --all-pages --pick id
+      writeFileSync(idsFile, JSON.stringify({ ok: true, data: ids.map((id) => ({ id })) }));
+      let batchCalls = 0;
+      await connect(async (request: Request) => {
+        batchCalls += 1;
+        const body = (await request.json()) as { requests: { id: string; url: string }[] };
+        const responses = body.requests.map((x) => (x.url.includes('/id7/') ? { id: x.id, status: 404, body: { error: { code: 'ErrorItemNotFound' } } } : { id: x.id, status: 201, body: { id: 'moved' } }));
+        return new Response(JSON.stringify({ responses }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      });
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+      const stderr = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+
+      await runCommand(MAIL_DELETE_COMMAND, { idsFile, yes: true });
+
+      // 230 ids: 12 $batch calls of up to 20, in three progress groups of up to 100
+      expect(batchCalls).toBe(12);
+      expect(stderr.mock.calls.map((x) => String(x[0]))).toEqual(['mail delete: 100/230 done, 1 failed\n', 'mail delete: 200/230 done, 1 failed\n', 'mail delete: 230/230 done, 1 failed\n']);
+      const data = printed(log).data;
+      expect(data).toEqual({ total: 230, ok: 229, failed: 1, omitted: 229, results: [{ id: 'id7', ok: false, status: 404, code: 'ErrorItemNotFound' }], undo: { file: expect.stringContaining(join(dir, 'config', 'undo')), command: expect.stringMatching(/^msgraph-cli mail undo /) } });
+    });
+
+    it('should print every row of a large delete with --all-results', async () => {
+      await connect(async (request: Request) => {
+        const body = (await request.json()) as { requests: { id: string }[] };
+        return new Response(JSON.stringify({ responses: body.requests.map((x) => ({ id: x.id, status: 201, body: { id: 'moved' } })) }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      });
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+      await runCommand(MAIL_DELETE_COMMAND, { ids: Array.from({ length: 60 }, (_, i) => `id${i}`), yes: true, allResults: true });
+
+      const data = printed(log).data;
+      expect(data.results).toHaveLength(60);
+      expect(data.omitted).toBeUndefined();
+    });
+
+    describe('attachments on a reply', () => {
+      interface RecordedCall {
+        readonly method: string;
+        readonly path: string;
+        readonly body: unknown;
+      }
+
+      async function connectRecording(answer: (method: string, path: string) => Response) {
+        const calls: RecordedCall[] = [];
+        await connect(async (request: Request) => {
+          const url = new URL(request.url);
+          const path = url.pathname.replace(/^\/v1\.0/, '');
+          const text = request.method === 'GET' ? '' : await request.text();
+          calls.push({ method: request.method, path, body: text ? JSON.parse(text) : undefined });
+          return answer(request.method, path);
+        });
+        return calls;
+      }
+
+      function json(body: unknown, status = 200) {
+        return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+      }
+
+      it('should attach a local file to a reply through its draft, then send it', async () => {
+        const file = join(dir, 'signed.pdf');
+        writeFileSync(file, 'pdf-bytes');
+        const calls = await connectRecording((method, path) => (path.endsWith('/createReply') ? json({ id: 'd1', isDraft: true }, 201) : path.endsWith('/attachments') ? json({ id: 'att1' }, 201) : new Response(null, { status: 202 })));
+        const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+        await runCommand(MAIL_REPLY_COMMAND, { id: 'm1', comment: 'Signed copy attached.', attach: [file], yes: true });
+
+        expect(calls.map((x) => `${x.method} ${x.path}`)).toEqual(['POST /me/messages/m1/createReply', 'POST /me/messages/d1/attachments', 'POST /me/messages/d1/send']);
+        expect((calls[0].body as { comment: string }).comment).toBe('Signed copy attached.');
+        expect(calls[1].body).toMatchObject({ '@odata.type': '#microsoft.graph.fileAttachment', name: 'signed.pdf', contentBytes: Buffer.from('pdf-bytes').toString('base64') });
+        expect(printed(log).data).toEqual({ sent: true, id: 'm1', attachments: 1 });
+      });
+
+      it('should download a OneDrive file by path and attach it to a reply draft', async () => {
+        const calls = await connectRecording((method, path) => {
+          let response: Response;
+
+          if (path.endsWith('/contentStream')) {
+            response = new Response('coi-pdf', { status: 200, headers: { 'Content-Type': 'application/pdf', 'Content-Length': '7' } });
+          } else if (method === 'GET') {
+            response = json({ id: 'item1', name: 'COI 2026.pdf', size: 7, file: { mimeType: 'application/pdf' } });
+          } else if (path.endsWith('/createReplyAll')) {
+            response = json({ id: 'd1', isDraft: true, webLink: 'https://outlook/d1' }, 201);
+          } else {
+            response = json({ id: 'att1' }, 201);
+          }
+
+          return response;
+        });
+        const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+        await runCommand(MAIL_REPLY_COMMAND, { id: 'm1', all: true, comment: 'COI attached.', attachItem: ['/Insurance/COI 2026.pdf'], draft: true });
+
+        expect(calls.map((x) => `${x.method} ${x.path}`)).toEqual(['GET /me/drive/root:/Insurance/COI%202026.pdf', 'GET /me/drive/items/item1/contentStream', 'POST /me/messages/m1/createReplyAll', 'POST /me/messages/d1/attachments']);
+        expect(calls[3].body).toMatchObject({ name: 'COI 2026.pdf', contentType: 'application/pdf', contentBytes: Buffer.from('coi-pdf').toString('base64') });
+        // --draft: no send, and the draft is printed
+        expect(printed(log).data).toEqual({ id: 'd1', isDraft: true, webLink: 'https://outlook/d1' });
+      });
+
+      it('should read a drive file only for its details on --dry-run, and refuse a folder', async () => {
+        const calls = await connectRecording((method, path) => (path.includes('folder1') ? json({ id: 'folder1', name: 'Insurance', folder: { childCount: 2 } }) : json({ id: 'item1', name: 'COI.pdf', size: 1234, file: { mimeType: 'application/pdf' } })));
+        const exit = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+        const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+        await runCommand(MAIL_REPLY_COMMAND, { id: 'm1', comment: 'Attached.', attachItem: ['item1'], drive: 'b!drive', dryRun: true });
+        await runCommand(MAIL_REPLY_COMMAND, { id: 'm1', comment: 'Attached.', attachItem: ['folder1'], yes: true });
+
+        expect(calls.map((x) => `${x.method} ${x.path}`)).toEqual(['GET /drives/b!drive/items/item1', 'GET /me/drive/items/folder1']);
+        const dryRun = printed(log).data;
+        expect(dryRun.requests.map((x: { method: string; url: string }) => `${x.method} ${x.url.split('?')[0]}`)).toEqual(['POST /me/messages/m1/createReply', 'POST /me/messages/%7BdraftId%7D/send']);
+        expect(dryRun.note).toContain('COI.pdf (1234 bytes)');
+        expect(exit).toHaveBeenCalledWith(1);
+        expect(JSON.parse(log.mock.calls[1][0] as string).code).toBe('INVALID_ARGUMENT');
+      });
+
+      it('should refuse --drive without --attach-item', async () => {
+        const calls = await connectRecording(() => json({}));
+        const exit = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+        const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+        await runCommand(MAIL_REPLY_COMMAND, { id: 'm1', comment: 'x', drive: 'b!drive', yes: true });
+
+        expect(exit).toHaveBeenCalledWith(1);
+        expect(printed(log).code).toBe('INVALID_ARGUMENT');
+        expect(calls).toHaveLength(0);
+      });
     });
 
     it('should append the saved signature-file to a new draft unless --no-signature', async () => {
@@ -740,9 +890,43 @@ describe('msgraph-cli', () => {
 
       expect(calls).toHaveLength(1);
       expect(calls[0].body).toEqual({ subject: 'Sync', start: { dateTime: '2026-11-16T17:00:00.000', timeZone: 'UTC' }, end: { dateTime: '2026-11-16T17:30:00.000', timeZone: 'UTC' } });
-      expect(JSON.parse(log.mock.calls[0][0] as string).data).toEqual({ id: 'e1', webLink: 'https://outlook/e1', invitationsSent: 0 });
+      expect(JSON.parse(log.mock.calls[0][0] as string).data).toEqual({ id: 'e1', webLink: 'https://outlook/e1', invitationsSent: 0, start: { dateTime: '2026-11-16T17:00:00.000', timeZone: 'UTC' }, end: { dateTime: '2026-11-16T17:30:00.000', timeZone: 'UTC' } });
       expect(exit).toHaveBeenCalledWith(1);
       expect(JSON.parse(log.mock.calls[1][0] as string).code).toBe('CONFIRMATION_REQUIRED');
+    });
+
+    it("should read a local --start in the mailbox's time zone, not the machine's, and end it after --duration", async () => {
+      // models: user-get-mailboxsettings — GET /me/mailboxSettings/timeZone answers { value }
+      const calls = await connectRecording((method, path) => (path === '/me/mailboxSettings/timeZone' ? { status: 200, body: { value: 'Pacific Standard Time' } } : { status: 201, body: { id: 'e1' } }));
+      vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+      await run(CALENDAR_CREATE_COMMAND, { subject: 'Call', start: '2026-11-20T15:00', duration: '1h30m' });
+
+      expect(calls.map((x) => `${x.method} ${x.path}`)).toEqual(['GET /me/mailboxSettings/timeZone', 'POST /me/events']);
+      expect(calls[1].body).toEqual({ subject: 'Call', start: { dateTime: '2026-11-20T15:00', timeZone: 'Pacific Standard Time' }, end: { dateTime: '2026-11-20T16:30:00', timeZone: 'Pacific Standard Time' } });
+    });
+
+    it('should create an all-day event over inclusive days in --event-tz without reading the mailbox', async () => {
+      const calls = await connectRecording(() => ({ status: 201, body: { id: 'e1' } }));
+      vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+      await run(CALENDAR_CREATE_COMMAND, { subject: 'Conference', allDay: true, start: '2026-12-31', end: '2027-01-01', eventTz: 'America/Denver', showAs: 'oof' });
+
+      expect(calls.map((x) => `${x.method} ${x.path}`)).toEqual(['POST /me/events']);
+      expect(calls[0].body).toEqual({ subject: 'Conference', start: { dateTime: '2026-12-31T00:00:00', timeZone: 'America/Denver' }, end: { dateTime: '2027-01-02T00:00:00', timeZone: 'America/Denver' }, showAs: 'oof', isAllDay: true });
+    });
+
+    it('should refuse a zone-less start when the mailbox time zone cannot be read, naming --event-tz', async () => {
+      const calls = await connectRecording(() => ({ status: 403, body: { error: { code: 'ErrorAccessDenied', message: 'Access is denied.' } } }));
+      vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+      await run(CALENDAR_CREATE_COMMAND, { subject: 'Call', start: '2026-11-20T15:00', duration: 30 });
+
+      const refused = JSON.parse(log.mock.calls[0][0] as string);
+      expect(refused.code).toBe('INVALID_ARGUMENT');
+      expect(refused.suggestion).toContain('--event-tz');
+      expect(calls.map((x) => x.method)).toEqual(['GET']);
     });
 
     it('should name the cancellations when deleting a meeting the user organizes, and delete with --yes', async () => {
@@ -770,6 +954,24 @@ describe('msgraph-cli', () => {
 
       expect(JSON.parse(log.mock.calls[0][0] as string).code).toBe('INVALID_ARGUMENT');
       expect(calls.map((x) => x.method)).toEqual(['GET']);
+    });
+
+    it("should read a zone-less auto-reply window in the mailbox's time zone, and an explicit --tz without asking", async () => {
+      const calls = await connectRecording(() => ({ status: 200, body: { value: 'Central Standard Time' } }));
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+      const internalFile = join(dir, 'away.txt');
+      writeFileSync(internalFile, 'Away until January.');
+
+      await run(MAIL_AUTO_REPLY_SET_COMMAND, { start: '2026-12-22T17:00', end: '2027-01-02', internalFile, dryRun: true });
+      await run(MAIL_AUTO_REPLY_SET_COMMAND, { start: '2026-12-22T17:00', end: '2027-01-02T08:00', tz: 'Pacific Standard Time', internalFile, dryRun: true });
+
+      // only the first run reads the mailbox zone; a dry run sends nothing else
+      expect(calls.map((x) => `${x.method} ${x.path}`)).toEqual(['GET /me/mailboxSettings/timeZone']);
+      const first = JSON.parse(log.mock.calls[0][0] as string).data.requests[1].body.automaticRepliesSetting;
+      expect(first.scheduledStartDateTime).toEqual({ dateTime: '2026-12-22T17:00', timeZone: 'Central Standard Time' });
+      expect(first.scheduledEndDateTime).toEqual({ dateTime: '2027-01-02T00:00', timeZone: 'Central Standard Time' });
+      const second = JSON.parse(log.mock.calls[1][0] as string).data.requests[1].body.automaticRepliesSetting;
+      expect(second.scheduledStartDateTime).toEqual({ dateTime: '2026-12-22T17:00', timeZone: 'Pacific Standard Time' });
     });
 
     it('should back up the setting before auto-reply off, and restore it exactly', async () => {
@@ -839,6 +1041,85 @@ describe('msgraph-cli', () => {
       expect(data.requests[0]).toEqual({ method: 'POST', url: '/me/drive/root:/Docs/big.bin:/createUploadSession', body: { item: { '@microsoft.graph.conflictBehavior': 'rename' } } });
       expect(data.note).toContain('1 chunk PUT(s)');
       expect(calls).toHaveLength(0);
+    });
+  });
+
+  describe('teams message edits', () => {
+    async function connect(fetchHandler: FetchHandler, scopes?: string[]) {
+      const tokenSource = scopes ? fakeTokenSourceCommand(join(dir, 'scoped'), { scopes }) : source;
+      await createMsGraphCliAuthMiddleware({ skipCommands: new Set(), env: { ...env, MSGRAPH_CLI_TOKEN_COMMAND: tokenSource.command }, graphFactoryConfig: { fetchHandler } })({ _: ['teams'], $0: 'msgraph-cli' });
+    }
+
+    function run(command: { handler: unknown }, argv: Record<string, unknown>): Promise<void> {
+      return (command.handler as (argv: unknown) => Promise<void>)({ _: ['teams'], $0: 'msgraph-cli', ...argv });
+    }
+
+    function recordingHandler() {
+      const calls: { method: string; path: string; body: unknown }[] = [];
+      const fetchHandler: FetchHandler = async (request: Request) => {
+        const text = await request.text();
+        calls.push({ method: request.method, path: new URL(request.url).pathname.replace(/^\/v1\.0/, ''), body: text ? JSON.parse(text) : undefined });
+        return new Response(null, { status: 204 });
+      };
+      return { calls, fetchHandler };
+    }
+
+    it('should PATCH a chat message with the new body after --yes, and refuse without it', async () => {
+      vi.stubEnv(MSGRAPH_CLI_CONFIG_DIR_ENV_VAR, join(dir, 'config'));
+      const graph = recordingHandler();
+      await connect(graph.fetchHandler);
+      const exit = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+      await run(TEAMS_CHAT_EDIT_COMMAND, { chat: '19:abc@thread.v2', message: '171', text: 'Corrected.' });
+      await run(TEAMS_CHAT_EDIT_COMMAND, { chat: '19:abc@thread.v2', message: '171', text: 'Corrected.', yes: true });
+
+      expect(exit).toHaveBeenCalledWith(1);
+      expect(JSON.parse(log.mock.calls[0][0] as string).code).toBe('CONFIRMATION_REQUIRED');
+      expect(graph.calls).toEqual([{ method: 'PATCH', path: '/chats/19%3Aabc%40thread.v2/messages/171', body: { body: { contentType: 'text', content: 'Corrected.' } } }]);
+      expect(JSON.parse(log.mock.calls[1][0] as string).data).toEqual({ id: '171', edited: true });
+      vi.unstubAllEnvs();
+    });
+
+    it('should print the PATCH on --dry-run with a note that the body is replaced whole', async () => {
+      const graph = recordingHandler();
+      await connect(graph.fetchHandler);
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+      await run(TEAMS_CHAT_EDIT_COMMAND, { chat: 'c1', message: 'm1', html: '<p>New</p>', dryRun: true });
+
+      const data = JSON.parse(log.mock.calls[0][0] as string).data;
+      expect(data.requests).toEqual([{ method: 'PATCH', url: '/chats/c1/messages/m1', body: { body: { contentType: 'html', content: '<p>New</p>' } } }]);
+      expect(data.note).toContain('replaces the old one whole');
+      expect(graph.calls).toHaveLength(0);
+    });
+
+    it('should refuse a channel edit before any Graph call when the token lacks ChannelMessage.ReadWrite', async () => {
+      mkdirSync(join(dir, 'scoped'));
+      const graph = recordingHandler();
+      await connect(graph.fetchHandler, ['User.Read', 'Chat.ReadWrite', 'ChannelMessage.Send']);
+      const exit = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+      await run(TEAMS_CHANNEL_EDIT_COMMAND, { team: 't', channel: 'ch', message: 'r1', replyTo: 'm1', text: 'Fixed.', yes: true });
+
+      expect(exit).toHaveBeenCalledWith(1);
+      expect(JSON.parse(log.mock.calls[0][0] as string).code).toBe('ADMIN_CONSENT_REQUIRED');
+      expect(graph.calls).toHaveLength(0);
+    });
+
+    it('should PATCH a channel reply under its parent when the token carries ChannelMessage.ReadWrite', async () => {
+      vi.stubEnv(MSGRAPH_CLI_CONFIG_DIR_ENV_VAR, join(dir, 'config'));
+      mkdirSync(join(dir, 'scoped'));
+      const graph = recordingHandler();
+      await connect(graph.fetchHandler, ['User.Read', 'ChannelMessage.ReadWrite']);
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+      await run(TEAMS_CHANNEL_EDIT_COMMAND, { team: 't', channel: 'ch', message: 'r1', replyTo: 'm1', text: 'Fixed.', yes: true });
+
+      expect(graph.calls.map((x) => `${x.method} ${x.path}`)).toEqual(['PATCH /teams/t/channels/ch/messages/m1/replies/r1']);
+      expect(JSON.parse(log.mock.calls[0][0] as string).data).toEqual({ id: 'r1', edited: true });
+      vi.unstubAllEnvs();
     });
   });
 

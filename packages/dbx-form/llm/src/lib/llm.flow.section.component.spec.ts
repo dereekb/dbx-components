@@ -1,12 +1,14 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Component, inject, signal, viewChild, viewChildren } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { type FormConfig, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
 import { AbstractSyncForgeFormDirective, DbxForgeFormComponent, dbxForgeNumberField, dbxForgeTextField, provideDbxForgeFormContext, provideDbxForgeFormFieldDeclarations, provideDbxFormConfiguration } from '@dereekb/dbx-form';
 import { type Maybe, waitForMs } from '@dereekb/util';
 import { EMPTY, firstValueFrom, of } from 'rxjs';
 import { DbxRouterTransitionService } from '@dereekb/dbx-core';
-import { type DbxLlmFlowSectionConfig } from './llm.flow';
+import { DbxChipDirective, type DbxColorInput } from '@dereekb/dbx-web';
+import { type DbxLlmFlowSectionConfig, type DbxLlmFlowSectionDisplayConfig, type DbxLlmFlowSectionStatusChip } from './llm.flow';
 import { defaultDbxLlmFlowToRawInput } from './llm.flow.state';
 import { DbxLlmFlowDirective } from './llm.flow.directive';
 import { DbxLlmFlowSectionStore } from './llm.flow.section.store';
@@ -57,7 +59,7 @@ const OUTLINE: DbxLlmFlowSectionConfig = { key: 'outline', label: 'Outline', fol
 @Component({
   template: `
     <div [dbxLlmFlow]="{}">
-      <dbx-llm-flow-section class="test-brief" [config]="briefConfig" [display]="{ stepNumber: stepNumber() }"></dbx-llm-flow-section>
+      <dbx-llm-flow-section class="test-brief" [config]="briefConfig" [display]="{ stepNumber: stepNumber(), status: status() }" [statusChip]="statusChip()"></dbx-llm-flow-section>
       <dbx-llm-flow-section class="test-outline" [config]="outlineConfig" parentKey="brief" [display]="{ stepNumber: stepNumber() }">
         <dbx-test-llm-section-output dbxLlmFlowSectionOutput></dbx-test-llm-section-output>
       </dbx-llm-flow-section>
@@ -69,9 +71,47 @@ class TestLlmSectionHostComponent {
   readonly briefConfig = BRIEF;
   readonly outlineConfig = OUTLINE;
   readonly stepNumber = signal<Maybe<boolean>>(undefined);
+  readonly status = signal<Maybe<boolean>>(undefined);
+  readonly statusChip = signal<Maybe<DbxLlmFlowSectionStatusChip>>(undefined);
 
   readonly sections = viewChildren(DbxLlmFlowSectionComponent);
   readonly outputs = viewChildren(TestLlmSectionOutputComponent);
+}
+
+const SETUP: DbxLlmFlowSectionConfig = { key: 'setup', label: 'Setup', hint: 'Host the world first.', viewOnly: true, stepNumber: 0 };
+
+const PROMPT: DbxLlmFlowSectionConfig<unknown, string> = { key: 'prompt', label: 'Prompt', kinds: [{ kind: 'run', text: 'Write', handler: () => of('written') }] };
+
+@Component({
+  template: `
+    <div [dbxLlmFlow]="{}">
+      <dbx-llm-flow-section class="test-setup" [config]="setupConfig" [statusChip]="statusChip()" [display]="display()">
+        <div class="test-bench">bench</div>
+        <dbx-test-llm-section-output></dbx-test-llm-section-output>
+      </dbx-llm-flow-section>
+      <dbx-llm-flow-section class="test-prompt" [config]="promptConfig"></dbx-llm-flow-section>
+    </div>
+  `,
+  imports: [DbxLlmFlowDirective, DbxLlmFlowSectionComponent, TestLlmSectionOutputComponent]
+})
+class TestLlmViewOnlySectionHostComponent {
+  readonly setupConfig = SETUP;
+  readonly promptConfig = PROMPT;
+  readonly statusChip = signal<Maybe<DbxLlmFlowSectionStatusChip>>(undefined);
+  readonly display = signal<Maybe<DbxLlmFlowSectionDisplayConfig>>(undefined);
+
+  readonly flow = viewChild.required(DbxLlmFlowDirective);
+  readonly sections = viewChildren(DbxLlmFlowSectionComponent);
+  readonly outputs = viewChildren(TestLlmSectionOutputComponent);
+}
+
+function sectionStatusChipText(element: HTMLElement): Maybe<string> {
+  return element.querySelector('.dbx-llm-flow-section-header-label > dbx-chip.dbx-llm-flow-section-status')?.textContent?.trim();
+}
+
+function sectionStatusChipColor(fixture: ComponentFixture<unknown>, sectionSelector: string): Maybe<DbxColorInput> {
+  const chip = fixture.debugElement.query(By.css(`${sectionSelector} dbx-chip.dbx-llm-flow-section-status`));
+  return chip?.injector.get(DbxChipDirective).colorSignal();
 }
 
 interface TestDraftValue {
@@ -263,6 +303,38 @@ describe('DbxLlmFlowSectionComponent', () => {
     expect(briefElement().querySelector('dbx-llm-flow-section-output')).not.toBeNull();
   });
 
+  describe('status chip', () => {
+    it('should show the run status by default', () => {
+      expect(sectionStatusChipText(briefElement())).toBe('Ready');
+      expect(sectionStatusChipColor(fixture, '.test-brief')).toBe('grey');
+      expect(sectionStatusChipText(outlineElement())).toBe('Ready');
+    });
+
+    it('should replace the run status with the page chip', async () => {
+      host.statusChip.set({ text: 'hosted', color: 'ok' });
+      await settle();
+
+      expect(sectionStatusChipText(briefElement())).toBe('hosted');
+      expect(sectionStatusChipColor(fixture, '.test-brief')).toBe('ok');
+      expect(sectionStatusChipText(outlineElement())).toBe('Ready'); // per section
+    });
+
+    it('should hide the chip when the display status option is off', async () => {
+      host.status.set(false);
+      await settle();
+      expect(briefElement().querySelector('dbx-chip.dbx-llm-flow-section-status')).toBeNull();
+
+      host.statusChip.set({ text: 'hosted', color: 'ok' });
+      await settle();
+      expect(briefElement().querySelector('dbx-chip.dbx-llm-flow-section-status')).toBeNull();
+    });
+
+    it('should not mark a run section as view-only', () => {
+      expect(briefElement().classList.contains('dbx-llm-flow-section-view-only')).toBe(false);
+      expect(outlineElement().classList.contains('dbx-llm-flow-section-view-only')).toBe(false);
+    });
+  });
+
   describe('step number', () => {
     it('should hide the step number when turned off', async () => {
       await setStepNumber(false);
@@ -393,5 +465,124 @@ describe('DbxLlmFlowSectionComponent with option fields', () => {
     const sectionStore = fixture.componentInstance.section().sectionStore;
     const description = sectionStore.describeRun({ id: 'r1', sectionKey: 'draft', kind: 'run', input: { formValue: { count: 3 }, rawInput: 'x', rawInputOverridden: false }, state: 'success', startedAt: new Date() } as never);
     expect(description.detail).toBe('Count: 3');
+  });
+});
+
+describe('DbxLlmFlowSectionComponent view-only', () => {
+  let fixture: ComponentFixture<TestLlmViewOnlySectionHostComponent>;
+  let host: TestLlmViewOnlySectionHostComponent;
+
+  async function settle(): Promise<void> {
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await waitForMs(50);
+    fixture.detectChanges();
+    await fixture.whenStable();
+  }
+
+  function setupElement(): HTMLElement {
+    return (fixture.nativeElement as HTMLElement).querySelector('.test-setup') as HTMLElement;
+  }
+
+  function promptElement(): HTMLElement {
+    return (fixture.nativeElement as HTMLElement).querySelector('.test-prompt') as HTMLElement;
+  }
+
+  function setup(): DbxLlmFlowSectionComponent {
+    return host.sections()[0];
+  }
+
+  function headerStepNumber(element: HTMLElement): Maybe<string> {
+    return element.querySelector('.dbx-llm-flow-section-header-label > dbx-icon-tile.dbx-llm-flow-section-step-number')?.textContent?.trim();
+  }
+
+  function collapseButton(element: HTMLElement): Maybe<HTMLButtonElement> {
+    return element.querySelector('.dbx-llm-flow-section-header-actions > dbx-button.dbx-llm-flow-section-collapse-button button');
+  }
+
+  function isCollapsed(element: HTMLElement): boolean {
+    return element.classList.contains('dbx-llm-flow-section-collapsed');
+  }
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [TestLlmViewOnlySectionHostComponent], providers: TEST_PROVIDERS }).compileComponents();
+    fixture = TestBed.createComponent(TestLlmViewOnlySectionHostComponent);
+    host = fixture.componentInstance;
+    await settle();
+  });
+
+  afterEach(() => {
+    fixture?.destroy();
+  });
+
+  it('should show the header: the fixed step number, label, hint and collapse button', () => {
+    expect(headerStepNumber(setupElement())).toBe('0');
+    expect(setupElement().querySelector('.dbx-llm-flow-section-header-label > .dbx-llm-flow-section-label')?.textContent?.trim()).toBe('Setup');
+    expect(setupElement().querySelector(':scope > .dbx-llm-flow-section-hint')?.textContent?.trim()).toBe('Host the world first.');
+    expect(collapseButton(setupElement())).not.toBeNull();
+    expect(headerStepNumber(promptElement())).toBe('1');
+  });
+
+  it('should show the projected content as its body, with none of the run parts', () => {
+    const body = setupElement().querySelector('.dbx-llm-flow-section-body') as HTMLElement;
+    expect(body.querySelector('.test-bench')).not.toBeNull();
+    expect(host.outputs()[0].sectionStore.keyValue).toBe('setup'); // projected content can inject the section store
+
+    for (const selector of ['.dbx-llm-flow-section-form', 'dbx-llm-flow-section-raw-input', 'dbx-llm-flow-section-run-buttons', 'dbx-llm-flow-section-history-button', 'dbx-llm-flow-section-output', '.dbx-llm-flow-section-actions', 'dbx-error']) {
+      expect(setupElement().querySelector(selector)).toBeNull();
+    }
+
+    expect(promptElement().querySelector('dbx-llm-flow-section-run-buttons')).not.toBeNull();
+  });
+
+  it('should show no status chip by default, only the page chip', async () => {
+    expect(setupElement().querySelector('dbx-chip.dbx-llm-flow-section-status')).toBeNull(); // never "Ready"
+    expect(sectionStatusChipText(promptElement())).toBe('Ready');
+
+    host.statusChip.set({ text: 'not hosted', color: 'warn' });
+    await settle();
+    expect(sectionStatusChipText(setupElement())).toBe('not hosted');
+    expect(sectionStatusChipColor(fixture, '.test-setup')).toBe('warn');
+
+    host.statusChip.set({ text: 'hosted', color: 'ok' });
+    await settle();
+    expect(sectionStatusChipText(setupElement())).toBe('hosted');
+    expect(sectionStatusChipColor(fixture, '.test-setup')).toBe('ok');
+
+    host.display.set({ status: false });
+    await settle();
+    expect(setupElement().querySelector('dbx-chip.dbx-llm-flow-section-status')).toBeNull();
+    expect(sectionStatusChipText(promptElement())).toBe('Ready');
+  });
+
+  it('should mark only the view-only section with the view-only class', () => {
+    expect(setupElement().classList.contains('dbx-llm-flow-section-view-only')).toBe(true);
+    expect(promptElement().classList.contains('dbx-llm-flow-section-view-only')).toBe(false);
+  });
+
+  it('should collapse, keeping the body rendered and the collapsed state in the flow state, and follow the flow store', async () => {
+    collapseButton(setupElement())?.click();
+    await settle();
+
+    expect(isCollapsed(setupElement())).toBe(true);
+    expect(setupElement().querySelector('.test-bench')).not.toBeNull(); // hidden, not destroyed
+    expect(setup().sectionStore.section?.collapsed).toBe(true); // kept in the flow state, so it is persisted
+    expect(isCollapsed(promptElement())).toBe(false);
+
+    host.flow().store.setCollapsed('setup', false);
+    await settle();
+    expect(isCollapsed(setupElement())).toBe(false);
+
+    host.flow().store.setCollapsed('setup', true);
+    await settle();
+    expect(isCollapsed(setupElement())).toBe(true);
+  });
+
+  it('should let the display turn a run part back on', async () => {
+    expect(setupElement().querySelector('dbx-llm-flow-section-output')).toBeNull();
+
+    host.display.set({ output: true });
+    await settle();
+    expect(setupElement().querySelector('dbx-llm-flow-section-output')).not.toBeNull();
   });
 });

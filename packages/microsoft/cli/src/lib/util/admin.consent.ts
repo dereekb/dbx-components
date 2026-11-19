@@ -34,12 +34,13 @@ export const MSGRAPH_CLI_TEAMS_CHAT_SEARCH_ADMIN_CONSENT: MsGraphCliAdminConsent
 };
 export const MSGRAPH_CLI_TEAMS_CHANNEL_MESSAGES_ADMIN_CONSENT: MsGraphCliAdminConsentCommand = { command: 'teams channel messages', scope: MICROSOFT_GRAPH_CHANNEL_MESSAGE_READ_SCOPE };
 export const MSGRAPH_CLI_TEAMS_CHANNEL_DELETE_ADMIN_CONSENT: MsGraphCliAdminConsentCommand = { command: 'teams channel delete', scope: MICROSOFT_GRAPH_CHANNEL_MESSAGE_WRITE_SCOPE };
+export const MSGRAPH_CLI_TEAMS_CHANNEL_EDIT_ADMIN_CONSENT: MsGraphCliAdminConsentCommand = { command: 'teams channel edit', scope: MICROSOFT_GRAPH_CHANNEL_MESSAGE_WRITE_SCOPE };
 
 /**
  * Every msgraph-cli command that needs organization (admin) consent. `auth show` reports which of them the active
  * token can run.
  */
-export const MSGRAPH_CLI_ADMIN_CONSENT_COMMANDS: readonly MsGraphCliAdminConsentCommand[] = [MSGRAPH_CLI_TEAMS_CHAT_SEARCH_ADMIN_CONSENT, MSGRAPH_CLI_TEAMS_CHANNEL_MESSAGES_ADMIN_CONSENT, MSGRAPH_CLI_TEAMS_CHANNEL_DELETE_ADMIN_CONSENT];
+export const MSGRAPH_CLI_ADMIN_CONSENT_COMMANDS: readonly MsGraphCliAdminConsentCommand[] = [MSGRAPH_CLI_TEAMS_CHAT_SEARCH_ADMIN_CONSENT, MSGRAPH_CLI_TEAMS_CHANNEL_MESSAGES_ADMIN_CONSENT, MSGRAPH_CLI_TEAMS_CHANNEL_DELETE_ADMIN_CONSENT, MSGRAPH_CLI_TEAMS_CHANNEL_EDIT_ADMIN_CONSENT];
 
 /**
  * The tag a command's help carries when it needs organization consent.

@@ -70,7 +70,8 @@ describe('admin consent', () => {
     expect(status).toEqual([
       { command: 'teams chat search', scope: 'ChannelMessage.Read.All', available: true },
       { command: 'teams channel messages', scope: 'ChannelMessage.Read.All', available: true },
-      { command: 'teams channel delete', scope: 'ChannelMessage.ReadWrite', available: false }
+      { command: 'teams channel delete', scope: 'ChannelMessage.ReadWrite', available: false },
+      { command: 'teams channel edit', scope: 'ChannelMessage.ReadWrite', available: false }
     ]);
   });
 });

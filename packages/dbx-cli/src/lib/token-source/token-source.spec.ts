@@ -7,7 +7,19 @@ import { MS_IN_HOUR, MS_IN_MINUTE } from '@dereekb/util';
 import { buildCliPaths, type CliPaths } from '../config/paths';
 import { DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR } from '../util/credential-process';
 import { CliError } from '../util/output';
-import { type CliTokenSourceBundle, CLI_TOKEN_SOURCE_FAILED_ERROR_CODE, cliTokenSourceCacheKey, cliTokenSourceReport, cliTokenSourceStatusError, cliTokenSourceTokenFromBundle, createCliTokenSource, loadCliTokenSourceStatus, readCliTokenSourceToken } from './token-source';
+import {
+  type CliTokenSourceBundle,
+  CLI_TOKEN_SOURCE_FAILED_ERROR_CODE,
+  cliTokenSourceCacheKey,
+  cliTokenSourceCredentialReport,
+  cliTokenSourceCredentialWarning,
+  cliTokenSourceReport,
+  cliTokenSourceStatusError,
+  cliTokenSourceTokenFromBundle,
+  createCliTokenSource,
+  loadCliTokenSourceStatus,
+  readCliTokenSourceToken
+} from './token-source';
 import { type CliTokenSourceConfig, CLI_TOKEN_SOURCE_UNKNOWN_ERROR_CODE, cliTokenSourceEnvVarNames, cliTokenSourceResolver, DEFAULT_CLI_TOKEN_SOURCE_NAME } from './token-source.config';
 import { buildCliTokenSourceShowResult, clearCliTokenSource, cliTokenSourceJsonConfigStore, type CliTokenSourceCommandConfig, refreshCliTokenSource, setCliTokenSource, useCliTokenSource } from './token-source.command';
 
@@ -220,6 +232,82 @@ describe('dbx-cli token source', () => {
       const base = { uid: 'u', providerType: 'microsoft', accessToken: 'a', tokenType: 'Bearer', scopes: [], expiresAt: new Date(Date.now() + MS_IN_HOUR).toISOString() };
       expect(cliTokenSourceTokenFromBundle({ bundle: { ...base, settings: {} } }).token.settings).toBeUndefined();
       expect(cliTokenSourceTokenFromBundle({ bundle: { ...base, settings: ['x'] as never } }).token.settings).toBeUndefined();
+    });
+  });
+
+  describe('source credential expiry', () => {
+    const RENEWAL = "Mint a fresh claim code with the MCP server's CLI token tool (`<prefix>_cli_token`) and run `demo-cli auth handoff <code> --env msgraph-admin`.";
+    const now = new Date('2030-01-01T00:00:00.000Z');
+    const tokenExpiresAt = '2030-01-01T01:00:00.000Z';
+
+    it('keeps the credential expiry and renewal from bundle to token to file and back', async () => {
+      const credentialExpiresAt = new Date(Date.now() + 30 * MS_IN_MINUTE).toISOString();
+      const { command } = bundleCommand(join(home, 'bin'), { credentialExpiresAt, credentialRenewal: RENEWAL });
+      const token = await createCliTokenSource({ command, tokenCachePath: paths.tokenCachePath }).loadToken();
+      expect(token.credentialExpiresAt).toBe(credentialExpiresAt);
+      expect(token.credentialRenewal).toBe(RENEWAL);
+
+      const reloaded = await createCliTokenSource({ command, tokenCachePath: paths.tokenCachePath }).loadToken();
+      expect(reloaded.credentialExpiresAt).toBe(credentialExpiresAt);
+      expect(reloaded.credentialRenewal).toBe(RENEWAL);
+    });
+
+    it('drops an invalid expiry, and a renewal without an expiry', () => {
+      const base = { uid: 'u', providerType: 'microsoft', accessToken: 'a', tokenType: 'Bearer', scopes: [], expiresAt: tokenExpiresAt };
+      const { token } = cliTokenSourceTokenFromBundle({ bundle: { ...base, credentialExpiresAt: 'not-a-date', credentialRenewal: RENEWAL } });
+      expect(token.credentialExpiresAt).toBeUndefined();
+      expect(token.credentialRenewal).toBeUndefined();
+    });
+
+    it('reports the credential with the minutes left', () => {
+      expect(cliTokenSourceCredentialReport({ credentialExpiresAt: '2030-01-01T00:07:30.000Z', credentialRenewal: RENEWAL }, now)).toEqual({ expiresAt: '2030-01-01T00:07:30.000Z', refreshable: false, minutesLeft: 7, lapsed: false, renewal: RENEWAL });
+      expect(cliTokenSourceCredentialReport({ credentialExpiresAt: '2029-12-31T23:59:00.000Z' }, now)).toEqual({ expiresAt: '2029-12-31T23:59:00.000Z', refreshable: false, minutesLeft: 0, lapsed: true });
+      expect(cliTokenSourceCredentialReport({}, now)).toBeUndefined();
+    });
+
+    it('warns within ten minutes of the credential lapsing, naming how to renew it', () => {
+      const warning = cliTokenSourceCredentialWarning({ token: { expiresAt: tokenExpiresAt, credentialExpiresAt: '2030-01-01T00:07:30.000Z', credentialRenewal: RENEWAL }, cliName: 'msgraph-cli', now });
+      expect(warning).toBe(`msgraph-cli: the app CLI login behind this token source lapses in 7 min (2030-01-01T00:07:30.000Z) and cannot be refreshed. Renew it now, between steps, rather than mid-task. ${RENEWAL} Then run \`msgraph-cli auth token-source refresh\` so the next command mints through it.`);
+    });
+
+    it('warns once the credential lapsed while the cached token still works', () => {
+      const warning = cliTokenSourceCredentialWarning({ token: { expiresAt: tokenExpiresAt, credentialExpiresAt: '2029-12-31T23:50:00.000Z' }, cliName: 'zoho-cli', now });
+      expect(warning).toContain('zoho-cli: the app CLI login behind this token source lapsed at 2029-12-31T23:50:00.000Z');
+      expect(warning).toContain(`The cached token works until ${tokenExpiresAt}`);
+      expect(warning).toContain('Renew the app CLI login behind the token source. Then run `zoho-cli auth token-source refresh`');
+    });
+
+    it('does not warn with time to spare, or for a refreshable credential', () => {
+      expect(cliTokenSourceCredentialWarning({ token: { expiresAt: tokenExpiresAt, credentialExpiresAt: '2030-01-01T00:30:00.000Z' }, cliName: 'msgraph-cli', now })).toBeUndefined();
+      expect(cliTokenSourceCredentialWarning({ token: { expiresAt: tokenExpiresAt }, cliName: 'msgraph-cli', now })).toBeUndefined();
+    });
+
+    it('writes the warning once per source when credentialWarning is set', async () => {
+      const credentialExpiresAt = new Date(Date.now() + 5 * MS_IN_MINUTE).toISOString();
+      const { command } = bundleCommand(join(home, 'bin'), { credentialExpiresAt, credentialRenewal: RENEWAL });
+      const lines: string[] = [];
+      const source = createCliTokenSource({ command, tokenCachePath: paths.tokenCachePath, credentialWarning: { cliName: 'msgraph-cli', write: (line) => lines.push(line) } });
+      await source.loadToken();
+      await source.loadToken();
+
+      expect(lines).toHaveLength(1);
+      expect(lines[0]).toContain('msgraph-cli: the app CLI login behind this token source lapses in');
+      expect(lines[0]).not.toContain(MINTED_ACCESS_TOKEN);
+    });
+
+    it('writes nothing without credentialWarning', async () => {
+      const credentialExpiresAt = new Date(Date.now() + 5 * MS_IN_MINUTE).toISOString();
+      const { command } = bundleCommand(join(home, 'bin'), { credentialExpiresAt });
+      const token = await createCliTokenSource({ command, tokenCachePath: paths.tokenCachePath }).loadToken();
+      expect(token.credentialExpiresAt).toBe(credentialExpiresAt);
+    });
+
+    it('reports the credential in cliTokenSourceReport', async () => {
+      const credentialExpiresAt = new Date(Date.now() + 30 * MS_IN_MINUTE).toISOString();
+      const { command } = bundleCommand(join(home, 'bin'), { credentialExpiresAt });
+      const resolver = cliTokenSourceResolver({ cliName: 'test-cli', env: {} });
+      const status = await loadCliTokenSourceStatus({ resolver, fileConfig: { tokenSource: { command } }, tokenCachePath: paths.tokenCachePath });
+      expect(cliTokenSourceReport(status!).credential).toMatchObject({ expiresAt: credentialExpiresAt, refreshable: false, lapsed: false });
     });
   });
 

@@ -62,7 +62,8 @@ export interface MintCliTokenParams {
    */
   readonly scopes?: Maybe<readonly OidcScope[]>;
   /**
-   * An optional requested lifetime in seconds. Clamped to one hour and to the remaining life of the
+   * An optional requested lifetime in seconds. Clamped to the app's ceiling
+   * ({@link CliTokenApiModuleConfig.maxTtlSeconds}, one hour by default) and to the remaining life of the
    * caller's own grant.
    */
   readonly ttlSeconds?: Maybe<Seconds>;
@@ -144,7 +145,8 @@ export interface CliTokenRequestContext {
  *
  * The minted credential is never MORE privileged than the session that minted it: its scopes are the
  * caller's own, minus `token.cli` / `token.service` (see {@link resolveCliTokenScopes}), and its TTL
- * is capped at one hour AND at the remaining life of the caller's own grant. Narrowing with `scopes`
+ * is capped at the app's ceiling ({@link CliTokenApiModuleConfig.maxTtlSeconds}, one hour by default) AND at
+ * the remaining life of the caller's own grant. Narrowing with `scopes`
  * keeps the caller's identity scopes (see {@link CliTokenApiModuleConfig.retainedScopes}), so a
  * narrowed credential still carries the caller's role claims.
  *
@@ -261,6 +263,7 @@ export class OidcCliTokenService {
     const ttlSeconds = resolveCliTokenTtlSeconds({
       requestedTtlSeconds: params.ttlSeconds,
       defaultTtlSeconds: this.config?.defaultTtlSeconds,
+      maxTtlSeconds: this.config?.maxTtlSeconds,
       parentRemainingSeconds: parentGrantRemainingSeconds(auth)
     });
 
@@ -491,7 +494,7 @@ function parentGrantId(auth: Maybe<FirebaseServerAuthData>): Maybe<string> {
  * baked onto the access token at issuance.
  *
  * Returns `undefined` when the claim is absent (a non-OIDC caller, or a token issued before the
- * claim existed) — the TTL resolver then falls back to the one-hour ceiling alone.
+ * claim existed) — the TTL resolver then falls back to the app's ceiling alone.
  *
  * @param auth - The request auth data.
  * @returns Remaining seconds on the parent grant, or `undefined`.

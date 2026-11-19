@@ -28,6 +28,29 @@
       "scope": "component-class"
     },
     {
+      "slug": "action-snackbar-error",
+      "selector": ".dbx-action-snackbar-error",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/action/snackbar/_snackbar.scss",
+      "line": 22,
+      "declarations": [
+        {
+          "property": "color",
+          "value": "var(--mat-snack-bar-supporting-text-color, var(--mat-sys-inverse-on-surface))"
+        }
+      ],
+      "role": "text-color",
+      "intent": "action-snackbar refused-undo state — draws the `<dbx-error>` icon and message in the snackbar's supporting text color, since the warn color does not read on the inverse snackbar surface in light or dark themes",
+      "selectorContext": ".dbx-action-snackbar-error .dbx-warn",
+      "component": "DbxActionSnackbarComponent",
+      "scope": "component-class",
+      "tokensRead": [
+        "--mat-snack-bar-supporting-text-color",
+        "--mat-sys-inverse-on-surface"
+      ]
+    },
+    {
       "slug": "avatar-large",
       "selector": ".dbx-avatar-large",
       "source": "@dereekb/dbx-web",

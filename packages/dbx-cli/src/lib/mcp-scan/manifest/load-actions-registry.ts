@@ -32,7 +32,7 @@ export interface LoadActionRegistryResult {
 }
 
 // MARK: Defaults
-const DEFAULT_BUNDLED_FILENAMES = ['dereekb-dbx-core.actions.mcp.generated.json'] as const;
+const DEFAULT_BUNDLED_FILENAMES = ['dereekb-dbx-core.actions.mcp.generated.json', 'dereekb-dbx-web.actions.mcp.generated.json'] as const;
 
 const DEFAULT_BUNDLED_PATHS: BundledActionManifestPathsFactory = () => {
   const packageRoot = findPackageRoot(import.meta.url);

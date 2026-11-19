@@ -2,9 +2,8 @@ import { Injectable, type OnDestroy } from '@angular/core';
 import { ComponentStore } from '@ngrx/component-store';
 import { type Observable, distinctUntilChanged, filter, map, shareReplay, switchMap, startWith, of } from 'rxjs';
 import { type BooleanStringKeyArray, BooleanStringKeyArrayUtility, type DestroyFunction, type Maybe, type ReadableError } from '@dereekb/util';
-import { type LoadingStateType, idleLoadingState, errorResult, filterMaybe, type LoadingState, scanCount, successResult, beginLoading } from '@dereekb/rxjs';
+import { type LoadingStateType, idleLoadingState, errorResult, filterMaybe, type LoadingState, scanCount, successResult, beginLoading, LockSet } from '@dereekb/rxjs';
 import { type DbxActionDisabledKey, type DbxActionRejectedPair, DbxActionState, type DbxActionSuccessPair, type DbxActionWorkOrWorkProgress, type DbxActionWorkProgress, DEFAULT_ACTION_DISABLED_KEY, isIdleActionState, loadingStateTypeForActionState } from './action';
-import { cleanLockSet } from '../rxjs';
 import { type DbxActionValueGetterResult } from './directive/state/action.value.trigger.instance';
 
 /**
@@ -238,9 +237,10 @@ export type DbxActionValueSnapshotFunction<T> = () => Maybe<DbxActionValueGetter
  * of an action from idle through trigger, value preparation, work execution, and resolution
  * or rejection. Multiple selectors expose derived reactive streams for each phase.
  *
- * The store uses a {@link LockSet} for cleanup coordination: it delays its own destruction
- * until all in-flight work completes (e.g., a working action finishes), preventing
- * premature teardown of subscriptions.
+ * The store does not need an injection context and is not bound to any `DestroyRef`: whoever creates it
+ * destroys it by calling {@link ActionContextStore.ngOnDestroy}. Teardown is coordinated through a {@link LockSet},
+ * so it waits until all in-flight work completes (e.g., a working action finishes), preventing premature teardown
+ * of subscriptions.
  *
  * State transitions follow this flow:
  * ```
@@ -262,18 +262,18 @@ export type DbxActionValueSnapshotFunction<T> = () => Maybe<DbxActionValueGetter
  */
 @Injectable()
 export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore<ActionContextState<T, O>> implements OnDestroy {
-  readonly lockSet = cleanLockSet({
-    onLockSetDestroy: () => super.ngOnDestroy(),
-    destroyLocksetTiming: {
-      delayTime: ACTION_CONTEXT_STORE_LOCKSET_DESTROY_DELAY_TIME
-    }
-  });
+  /**
+   * Lock set that holds the store open while work is in flight. Destroying the lock set tears down the store.
+   */
+  readonly lockSet = new LockSet();
 
+  private _destroyQueued = false;
   private _valueSnapshotFunction: Maybe<DbxActionValueSnapshotFunction<T>>;
 
   constructor() {
     super({ ...INITIAL_STATE } as ActionContextState<T, O>);
     this.lockSet.addLock('working', this.isWorking$);
+    this.lockSet.onDestroy$.subscribe(() => super.ngOnDestroy());
   }
 
   // MARK: Accessors
@@ -609,10 +609,17 @@ export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore
   }
 
   // MARK: Cleanup
-  // eslint-disable-next-line @angular-eslint/no-empty-lifecycle-method
+  /**
+   * Queues the teardown of this store. This is the single teardown entry point and is safe to call more than once.
+   *
+   * The store is torn down once no work is in flight, after {@link ACTION_CONTEXT_STORE_LOCKSET_DESTROY_DELAY_TIME},
+   * so an action that is working finishes before its subscriptions are completed.
+   */
   override ngOnDestroy(): void {
-    // do not call super.destroy here, to keep the component store from destroying itself.
-    // the lockset is configured to cleanup the component store.
+    if (!this._destroyQueued) {
+      this._destroyQueued = true;
+      this.lockSet.destroyOnNextUnlock({ delayTime: ACTION_CONTEXT_STORE_LOCKSET_DESTROY_DELAY_TIME });
+    }
   }
 }
 

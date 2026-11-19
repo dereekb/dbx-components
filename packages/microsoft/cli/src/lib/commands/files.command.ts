@@ -230,11 +230,12 @@ export interface MsGraphCliDownloadOutput {
 
 const FILES_DOWNLOAD_COMMAND: CommandModule = {
   command: 'download [id]',
-  describe: "Download a file's bytes to --out, streamed to disk as they arrive",
+  describe: "Download a file's bytes to --out, streamed to disk as they arrive (through Graph's /contentStream, so only graph.microsoft.com must be reachable)",
   builder: (yargs: Argv) => msGraphCliIdleTimeoutOption(itemOptions(yargs).option('out', { type: 'string', demandOption: true, describe: 'The file to write (mode 0600). It appears only once the download is complete' })),
   handler: msGraphCommandHandler(async (argv: any, { graphContext }) => {
     const ref = await resolveMsGraphCliItemRef(graphContext, argv);
-    const output: MsGraphCliDownloadOutput = await downloadMsGraphCliFile({ graphContext, request: microsoftGraphDownloadDriveItemRequest(ref), out: argv.out, idleTimeout: msGraphCliIdleTimeoutMs(argv.idleTimeout) });
+    // contentStream: Graph serves the bytes itself, where /content redirects to SharePoint, a host a sandbox may block
+    const output: MsGraphCliDownloadOutput = await downloadMsGraphCliFile({ graphContext, request: microsoftGraphDownloadDriveItemRequest({ ...ref, contentStream: true }), out: argv.out, idleTimeout: msGraphCliIdleTimeoutMs(argv.idleTimeout) });
     outputMsGraphCliResult(output);
   })
 };

@@ -22,7 +22,7 @@ import {
   type DbxLlmFlowSectionKey,
   type DbxLlmFlowSectionState
 } from './llm.flow';
-import { dbxLlmFlowSectionAncestorKeys, dbxLlmFlowSectionInputSource, dbxLlmFlowSectionOptionsDescription, dbxLlmFlowSectionRawInputFollowsForm, dbxLlmFlowSectionRawInputMode, dbxLlmFlowSectionSelectedRuns } from './llm.flow.state';
+import { dbxLlmFlowSectionInputSource, dbxLlmFlowSectionOptionsDescription, dbxLlmFlowSectionRawInputFollowsForm, dbxLlmFlowSectionRawInputMode, dbxLlmFlowSectionSelectedRuns, dbxLlmFlowSectionStepNumber } from './llm.flow.state';
 import { DbxLlmFlowStore, type DbxLlmFlowStoreStartRunResult } from './llm.flow.store';
 
 /**
@@ -97,6 +97,14 @@ export class DbxLlmFlowSectionStore<F = unknown, O = unknown> extends DbxLlmFlow
     distinctUntilChanged()
   );
 
+  /**
+   * The draft's form value. For a view-only section, its state. See DbxLlmFlowSectionConfig.viewOnly.
+   */
+  readonly formValue$: Observable<Maybe<F>> = this.draft$.pipe(
+    map((x) => x?.formValue),
+    distinctUntilChanged()
+  );
+
   readonly rawInput$: Observable<string> = this.draft$.pipe(
     map((x) => x?.rawInput ?? ''),
     distinctUntilChanged()
@@ -135,10 +143,11 @@ export class DbxLlmFlowSectionStore<F = unknown, O = unknown> extends DbxLlmFlow
   );
 
   /**
-   * The section's step number in its chain: 1 for a root section, plus one per registered ancestor.
+   * The section's step number in its chain: 1 for a root section, plus one per registered ancestor, re-based by the nearest fixed stepNumber
+   * in the chain.
    */
-  readonly stepNumber$: Observable<number> = combineLatest([this.key$, this.flowStore.sections$]).pipe(
-    map(([key, sections]) => dbxLlmFlowSectionAncestorKeys({ sections }, key).length + 1),
+  readonly stepNumber$: Observable<number> = combineLatest([this.key$, this.flowStore.sections$, this.flowStore.sectionConfigs$]).pipe(
+    map(([key, sections, configs]) => dbxLlmFlowSectionStepNumber({ sections }, key, { sectionConfig: (x) => configs[x] })),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -368,6 +377,16 @@ export class DbxLlmFlowSectionStore<F = unknown, O = unknown> extends DbxLlmFlow
   // MARK: Draft
   loadDraft(input: Partial<DbxLlmFlowSectionInput<F>>): void {
     this.flowStore.loadDraft(this.key, input);
+  }
+
+  /**
+   * Sets the form value from the store, such as a view-only section's state, and seeds the bound forms. A value deep-equal to the current one is
+   * ignored. See DbxLlmFlowStore.setFormValue().
+   *
+   * @param formValue - The form value. Must be JSON-compatible.
+   */
+  setFormValue(formValue: Maybe<F>): void {
+    this.flowStore.setFormValue(this.key, formValue);
   }
 
   pasteRawInput(rawInput: string): void {
