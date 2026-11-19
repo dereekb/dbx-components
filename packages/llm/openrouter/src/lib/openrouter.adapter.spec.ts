@@ -100,7 +100,7 @@ describe('the root resolution with LLM_OPENROUTER_ADAPTERS', () => {
     expect(strategies).toHaveLength(1);
     expect(strategies[0]?.id).toBe('router-a');
     expect(strategies[0]?.kind).toBe('openrouter-decisions');
-    expect(strategies[0]?.describe).toBe('OpenRouter decisions at https://openrouter.ai/api/v1');
+    expect(strategies[0]?.describe).toBe('OpenRouter System One at https://openrouter.ai/api/v1/systemone');
   });
 
   it('leaves an openai-transport provider with no declared decision route undecided', () => {

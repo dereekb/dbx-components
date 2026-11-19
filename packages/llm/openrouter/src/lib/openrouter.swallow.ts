@@ -10,7 +10,5 @@ import { makeLlmSwallowSiteRegistry, type LlmSwallowSiteRegistry } from '@dereek
  */
 export const LLM_OPENROUTER_SWALLOW_SITES: LlmSwallowSiteRegistry = makeLlmSwallowSiteRegistry([
   // `makeLlmOpenRouterStrategy`'s healthCheck — the verdict carries the construction failure.
-  { id: 'llm/openrouter-strategy.client', protects: 'a client that cannot be constructed reports unready rather than throwing out of a health check', onError: 'report', expectation: 'fault', channel: 'health' },
-  // `makeLlmOpenRouterDecisionStrategy`'s healthCheck — the verdict carries the construction failure.
-  { id: 'llm/openrouter-decision.client', protects: 'a decisions client that cannot be constructed reports unready rather than throwing out of a health check', onError: 'report', expectation: 'fault', channel: 'health' }
+  { id: 'llm/openrouter-strategy.client', protects: 'a client that cannot be constructed reports unready rather than throwing out of a health check', onError: 'report', expectation: 'fault', channel: 'health' }
 ]);

@@ -13,7 +13,7 @@ function stripComments(code: string): string {
 
 describe('LLM_OPENROUTER_SWALLOW_SITES', () => {
   it('declares exactly the entry sites', () => {
-    expect(Object.keys(LLM_OPENROUTER_SWALLOW_SITES)).toEqual(['llm/openrouter-strategy.client', 'llm/openrouter-decision.client']);
+    expect(Object.keys(LLM_OPENROUTER_SWALLOW_SITES)).toEqual(['llm/openrouter-strategy.client']);
   });
 
   it('keys every site by an llm/ id of the root pattern', () => {

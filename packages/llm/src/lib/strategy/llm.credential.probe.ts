@@ -11,7 +11,7 @@
  * The probe is opt-in, never on the dispatch path, and never throws.
  */
 
-import { errorMessageOf, makeTimeoutAbortSignal, type Milliseconds, type WebsiteUrlWithPrefix } from '@dereekb/util';
+import { errorMessageOf, makeTimeoutAbortSignal, type Maybe, type Milliseconds, type WebsiteUrlWithPrefix } from '@dereekb/util';
 import { type LlmStrategyId } from '../model/llm.value';
 import { type LlmStrategyHealth, type LlmStrategyHealthSeverity } from './llm.strategy.health';
 
@@ -39,6 +39,11 @@ export interface LlmCredentialProbeResponse {
    * The HTTP status code — `401` is the revoked/rejected credential this probe exists to catch.
    */
   readonly status: number;
+  /**
+   * The response headers. The System One decision transport reads a gateway's generation-id header off them; a fake
+   * may omit them.
+   */
+  readonly headers?: Maybe<{ get(name: string): Maybe<string> }>;
   /**
    * The raw body text, from which the provider's own error message is extracted.
    *

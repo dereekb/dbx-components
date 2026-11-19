@@ -13,12 +13,12 @@ dependency, and its browser entries run unchanged in a browser, a worker or Node
 | Entry | Node | SDK | Purpose |
 |---|---|---|---|
 | `@dereekb/llm` | no | none | The strategy contract, call records, model and provider configuration, adapters, prompt assembly, reply repair and validation, the dispatcher and retry ladder, usage accounting, and utilities. |
-| `@dereekb/llm/decision` | no | none | The decision lane: questions, the wire format and answer reader, confidence, and the decision strategy contract. Re-exported by the root entry from the same modules, so both share one copy. |
+| `@dereekb/llm/decision` | no | none | The decision lane: questions, the wire format and answer reader, confidence, the decision strategy contract and the System One transport (`makeLlmSystemOneDecisionStrategy`). Re-exported by the root entry from the same modules, so both share one copy. |
 | `@dereekb/llm/openai` | no | `openai` (optional, lazy) | The OpenAI-compatible chat base (`makeLlmOpenAiCompatibleChatStrategy`), the OpenAI-compatible chat strategy (OpenAI, ZenMux chat, a local vLLM) and its completion adapter. |
-| `@dereekb/llm/openrouter` | no | `openai` (through `/openai`) + `@openrouter/sdk` (optional, lazy) | The OpenRouter chat strategy (`cache_control`, strict `response_format`, usage accounting), the OpenRouter decision strategy and their adapters. |
-| `@dereekb/llm/zenmux` | no | none (`fetch`) | ZenMux constants and cost basis, the decision strategy, the quota-status source and the bill reader. |
+| `@dereekb/llm/openrouter` | no | `openai` (through `/openai`) | The OpenRouter chat strategy (`cache_control`, strict `response_format`, usage accounting), the OpenRouter decision strategy and their adapters. |
+| `@dereekb/llm/zenmux` | no | none (`fetch`) | ZenMux constants and cost basis, the decision route on the core System One transport, the quota-status source and the bill reader. |
 | `@dereekb/llm/node` | yes | none | Model-config file IO, environment variables to provider configs, the craft-notes folder loader and the craft markdown to TypeScript compiler. |
-| `@dereekb/llm/test` | test infra | none | Tape replay, scripted completion and decision strategies, and the billed-lane test factories. |
+| `@dereekb/llm/test` | test infra | none | Tape replay, scripted completion and decision strategies, the `/systemone` wire fake, and the billed-lane test factories. |
 
 ## Browser safety
 
@@ -27,10 +27,10 @@ The root, `/decision`, `/openai`, `/openrouter` and `/zenmux` entries are browse
 - They import no `node:` module or Node builtin and never read `process`. Hosts pass configuration (API keys, base
   URLs, model lists) in; nothing is read from the environment. Reading the environment or the file system is the job
   of `/node`.
-- `openai` and `@openrouter/sdk` are **optional** peers. Each is loaded lazily from exactly one boundary module, so
-  importing an entry never loads an SDK. Install an SDK only for the strategy that uses it. `openai` is loaded from
-  `/openai`'s single boundary module; `/openrouter` reaches it by importing `/openai`, and loads `@openrouter/sdk` from
-  its own boundary.
+- `openai` is the only SDK peer, and it is **optional**: it is loaded lazily from `/openai`'s single boundary module,
+  so importing an entry never loads it. Install it only for a chat strategy that uses it. `/openrouter` loads no SDK
+  of its own: its chat strategy reaches `openai` by importing `/openai`, and its decision strategy is a plain `fetch`
+  over the core System One transport.
 - The browser entries have one sibling edge, `/openrouter` → `/openai`, and it is one-way: `/openai` imports no other
   provider entry. The isolation specs pin both directions.
 - The required peers are `@dereekb/util`, `@dereekb/model` (the JSON-Schema export; framework-free and browser-safe)
@@ -909,8 +909,12 @@ could need in one map.
 ### On the wire
 
 - `llmDecisionRequestBody({ model, state, questions })` builds exactly `{ model, state, questions }`, in that order,
-  field by field — ZenMux answers 400 to any other key, so a host-extended request cannot leak one. The bytes equal
-  OpenRouter's `/systemone` body for the same input.
+  field by field — ZenMux answers 400 to any other key, so a host-extended request cannot leak one. These are the
+  bytes the System One transport sends on every gateway.
+- `LlmDecisionWireReply` (`id`, `model`, `provider`, `answers`, `usage`, every field optional) and
+  `LlmDecisionWireUsage` (`input_tokens`, `output_tokens`, `cost`) are the reply side of the wire.
+  `llmUsageFromDecisionUsage(usage, { costBasis })` is the one decision usage fold: input ⇒ prompt, output ⇒
+  completion, their sum ⇒ total, and the cost (omitted when unreadable; the basis stamped only beside a cost).
 - `llmDecisionWireQuestion` is the per-question mapping (an undescribed option is an explicit `null`; a Noul with no
   `means` omits `criteria`).
 - `isLlmDecisionModelId` is the routing guard: decision models are not in a gateway's `/models` catalog, so the id
@@ -921,7 +925,12 @@ could need in one map.
 - `readLlmDecisionAnswers({ questions, raw })` membership-checks every answer against the question that asked it and
   returns the typed answers or EVERY fault (`answer-missing`, `answer-mistyped`, `choice-off-option`,
   `value-out-of-range`). Past it, a `choice` is a declared option, a `score` is in range and a `noul` is a
-  probability — no consumer re-checks. A transport throws `LlmDecisionAnswerFaultError` with the faults.
+  probability — no consumer re-checks. `raw` takes any shape (the reader is the judge of what an answer is), and the
+  value types are checked too: a non-number `noul`, `score` or distribution entry is `value-out-of-range`.
+  `laxAnswerTypes: true` gives an answer that arrived with NO `type` its declared question's type first (a present
+  `type` is never overwritten).
+- `requireLlmDecisionAnswers(config)` is the throwing read: the answers, or `LlmDecisionAnswerFaultError` with every
+  fault. The System One transport and the scripted decision strategy both call it.
 - `asLlmDecisionConfidenceBand`, `llmDecisionChoiceRanking`, `mapLlmDecisionChoiceRows` and
   `llmChoiceCertaintyOf` (sure / nested / split / diffuse / unread, with site-owned floors) read a Choice's answer.
 
@@ -938,9 +947,20 @@ could need in one map.
   `LlmDecisionStrategyRegistry` and return the same `LlmStrategiesHealthReport`: verify throws one aggregated error,
   probe reports and never throws, a strategy without the seam counts as ready, and a throwing seam is recorded as an
   error issue. Issues and errors name a "decision strategy".
-- `DEFAULT_LLM_DECISION_TIMEOUT_MS` (10s) is declared here and enforced by each transport.
+- `DEFAULT_LLM_DECISION_TIMEOUT_MS` (10s) is declared here and enforced by the System One transport.
 - `LlmDecisionTransportError` (`status`, `body`) and `isRetryableLlmDecisionError` (429 / 5xx / socket failures,
   never an abort) — the completion lane's retry posture; no retry loop lives here.
+- `makeLlmSystemOneDecisionStrategy(config, hooks)` is the ONE decision transport, a plain `fetch` to
+  `POST {baseUrl}/systemone` for every gateway that serves the route. The hooks define the gateway: `kind`, `label`,
+  `defaultBaseUrl`, `generationIdHeader` (read when the body has no `id`), `costBasis`, `laxAnswerTypes` and
+  `credentialProbe`. The config is the host's: `id`, `apiKey`, `apiKeyEnv` (a label for messages), `baseUrl`,
+  `timeoutMs`, `decisionFetch` and `probeFetch`.
+  - Failures: a timeout or abort rejects with the signal's reason (never wrapped); a socket failure is an
+    `LlmDecisionTransportError` with the native error as its `cause`; a non-2xx carries `status` and the raw `body`;
+    a 2xx whose body is not a JSON object is a transport error with `status` and `body`; an answer fault throws
+    `LlmDecisionAnswerFaultError`; a missing key throws a status-less (never retried) transport error.
+  - `healthCheck` is network-free. An injected `decisionFetch` makes a keyless fake (ready, no key needed). The global
+    `fetch` is read at call time.
 - `defineLlmDecision(descriptor)` declares a decision over one typed input: `state(input)` and `questions(input)`.
   Validation is lazy — `asRequest({ input, model })` validates and throws `LlmDecisionDeclarationError` naming the
   decision — and `decide({ strategy, input, model, options })` runs it.
@@ -993,9 +1013,9 @@ names remain as `@deprecated` aliases of the same values and classes.
 What stays in `@dereekb/openrouter`: `openRouterDecisionRequest`, `openRouterDecisionRequestBody` (the SDK's
 `DecisionsRequest`, with OpenRouter's session id and trace), `splitOpenRouterDecisionModelConfig`,
 `validateOpenRouterDecisionRequest`, `openRouterRunUsageFromDecisionsUsage`, the `OPENROUTER_JEV_*` ids,
-`DEFAULT_OPENROUTER_SYSTEM_ONE_MODEL_ID` and the `openRouterDecision` transport. `@dereekb/llm/openrouter`
-carries its own decision transport (`makeLlmOpenRouterDecisionStrategy`) and usage flattening
-(`llmUsageFromOpenRouterDecisionsUsage`) and never imports `@dereekb/openrouter`.
+`DEFAULT_OPENROUTER_SYSTEM_ONE_MODEL_ID` and the `openRouterDecision` transport, which keeps its own SDK transport.
+`@dereekb/llm/openrouter`'s decision strategy (`makeLlmOpenRouterDecisionStrategy`) is a hook set over the core System
+One transport and never imports `@dereekb/openrouter`.
 
 ## OpenAI-compatible chat (`@dereekb/llm/openai`)
 
@@ -1083,16 +1103,17 @@ already normalized by `normalizeLlmReasoningConfig`, and the attachments that ri
   `costBasis` / `providerStatusSource` / `credentialProbeSource` facets as `/openai`; the generic credential probe is
   `GET {baseUrl}/key`, and a 404 there is an error.
 
-**Decisions** — `makeLlmOpenRouterDecisionStrategy(config)` posts to `{baseUrl}/systemone` through the optional
-`@openrouter/sdk` peer, loaded lazily (the core client plus `systemOneCreate`, `retries: none`):
+**Decisions** — `makeLlmOpenRouterDecisionStrategy(config)` posts to `{baseUrl}/systemone` with a plain `fetch`: it is
+OpenRouter's hook set over `makeLlmSystemOneDecisionStrategy`, with no SDK.
 
-- The body is `llmDecisionRequestBody`; answers are membership-checked (`LlmDecisionAnswerFaultError`); usage comes from
-  `llmUsageFromOpenRouterDecisionsUsage` and carries the gateway's exact, synchronous `cost`.
+- The body is `llmDecisionRequestBody`. Answer types are read strictly (a type-less answer faults as
+  `answer-mistyped`). Usage comes from `llmUsageFromDecisionUsage` and carries the gateway's exact, synchronous `cost`
+  (no `costBasis`); the generation id is the body `id`.
 - The per-call timeout (`DEFAULT_LLM_DECISION_TIMEOUT_MS` unless set) holds even when you pass a signal.
-- Failures: a timeout or abort rejects with the native reason (`isAbortError`), a socket failure with the native fetch
-  error (retryable), an HTTP answer with `LlmDecisionTransportError` (`status`, `body`).
-- Seams: `decisionsCreate` (replaces the SDK call), `decisionsFetch` (a fake socket under the real SDK) and
-  `probeFetch`.
+- Failures follow the System One transport: a timeout or abort rejects with its reason (`isAbortError`), a socket
+  failure is an `LlmDecisionTransportError` with the native error as its `cause` (retryable), and an HTTP answer is an
+  `LlmDecisionTransportError` (`status`, `body`).
+- Seams: `decisionFetch` (a keyless fake of the route) and `probeFetch`; the credential probe is `GET {baseUrl}/key`.
 
 `LLM_OPENROUTER_ADAPTERS` registers the completion transport `openrouter` (default `https://openrouter.ai/api/v1`) and
 the decision route `openrouter` (`strategyKind: 'openrouter-decisions'`, derived for every `openrouter`-transport
@@ -1132,11 +1153,12 @@ plain `fetch`, so it needs no SDK, and never reads the environment: the host pas
 - **Credential probe.** `GET /models` answers 200 to any bearer, so `probeZenmuxCredential` asks two auth-gated,
   never-billed questions instead: a chat completion naming a model no gateway serves (a live subscription key gets
   `404`), then, only if refused, a bill lookup of a made-up id (a live pay-as-you-go key gets `404`).
-- **Decisions.** `makeZenmuxDecisionStrategy` (`kind: 'zenmux-systemone'`) sends exactly `{ model, state, questions }`
-  via `llmDecisionRequestBody` — ZenMux answers `400` to any other key. The generation id comes from the
-  `X-ZenMux-RequestId` header. Two lax reads: a type-less answer takes its question's declared type, and `usage` is read
-  field by field. A socket failure wraps as `LlmDecisionTransportError` with the failure as its `cause`, so a reset
-  retries under `isRetryableLlmDecisionError`.
+- **Decisions.** `makeZenmuxDecisionStrategy` (`kind: 'zenmux-systemone'`) is the core System One transport with the
+  ZenMux hooks. It sends exactly `{ model, state, questions }` via `llmDecisionRequestBody` — ZenMux answers `400` to any
+  other key. The generation id comes from the `X-ZenMux-RequestId` header, a type-less answer takes its question's
+  declared type (`laxAnswerTypes`), and a reported `cost` carries `costBasis: 'list'`. Failures follow the transport's
+  contract: a socket failure wraps as `LlmDecisionTransportError` with the failure as its `cause`, so a reset retries
+  under `isRetryableLlmDecisionError`.
 
 `makeZenmuxLlmAdapters(config)` returns the decision route `zenmux`, plus the `zenmux` metering, bill and
 credential-probe adapters. The decision route is never derived: a provider declares `decision: 'zenmux'`. Register the
@@ -1271,10 +1293,15 @@ scripts make no network call, and the lane's helpers answer `undefined` while it
   call. A reply is a text, a completion spec (`{ text, usage, finishReason, … }`) or an `Error` the call throws — how a
   spec drives a transport failure. Pass `requests` to collect every request, including the ones that threw.
 - **Scripted decisions.** `makeScriptedLlmDecisionStrategy({ script })` reads the script's answers through
-  `readLlmDecisionAnswers`, so an under-answered or malformed script is refused with `LlmDecisionAnswerFaultError`
+  `requireLlmDecisionAnswers`, so an under-answered or malformed script is refused with `LlmDecisionAnswerFaultError`
   exactly as a live transport would; usage is a zero-cost reading. Build answers with the root entry's
   `llmDecisionChoiceAnswerOf` / `llmDecisionScoreAnswerOf` / `llmDecisionNoulAnswerOf`, which are well-formed by
   construction, so a script states only which option won and how surely.
+- **System One wire.** `makeLlmSystemOneWireFake({ respond })` is the one `/systemone` fake: `respond` is an answer
+  (`{ status, body, headers }`, used for every request), a function (called per request; a throw is the socket
+  failure) or `'hang'` (rejects with the signal's reason on abort). It records every request (`url`, `init`, parsed
+  `body`) in `requests`. Pass its `fetch` as a decision strategy's `decisionFetch`, or stub the global `fetch` with it
+  to drive a keyed strategy. `toLlmSystemOneWireReply(body)` is its default well-formed reply.
 - **The live lane.** `makeLlmLiveLane({ schema, adapters, … })` is the billed-spec lane as one factory. Its switch
   and verdict names (`names`, merged over `DEFAULT_LLM_LIVE_LANE_ENV_NAMES`) and provider / model names (`envNames`,
   `/node`'s `DEFAULT_LLM_ENV_NAMES`) are injected, and so is the provider resolver (`resolveProviders`, defaulting to

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LlmDecisionAnswerFaultError, readLlmDecisionAnswers } from './llm.decision.answer';
+import { LlmDecisionAnswerFaultError, readLlmDecisionAnswers, requireLlmDecisionAnswers } from './llm.decision.answer';
 import { type LlmDecisionAnswer, type LlmDecisionQuestions, llmChoiceQuestion, llmNoulQuestion, llmScoreQuestion } from './llm.decision.question';
 
 const QUESTIONS = {
@@ -176,5 +176,79 @@ describe('LlmDecisionAnswerFaultError', () => {
     expect(error.name).toBe('LlmDecisionAnswerFaultError');
     expect(error.faults).toHaveLength(2);
     expect(error.message).toBe('The decision reply did not answer its declared questions: a (answer-missing): no answer was returned; b (value-out-of-range): the noul 2 is outside 0..1');
+  });
+});
+
+describe('readLlmDecisionAnswers() value types', () => {
+  it('should fault a string noul as not a number', () => {
+    const read = readLlmDecisionAnswers({ questions: { fits: QUESTIONS.fits }, raw: { fits: { type: 'noul', noul: '0.5' } } });
+    expect(read.faults).toEqual([{ kind: 'value-out-of-range', question: 'fits', detail: 'the noul `0.5` is not a number' }]);
+  });
+
+  it('should fault a NaN noul as out of range', () => {
+    const read = readLlmDecisionAnswers({ questions: { fits: QUESTIONS.fits }, raw: { fits: { type: 'noul', noul: Number.NaN } } });
+    expect(read.faults).toEqual([{ kind: 'value-out-of-range', question: 'fits', detail: 'the noul NaN is outside 0..1' }]);
+  });
+
+  it('should fault a string score as not a number', () => {
+    const read = readLlmDecisionAnswers({ questions: { heat: QUESTIONS.heat }, raw: { heat: { type: 'score', score: '1' } } });
+    expect(read.faults).toEqual([{ kind: 'value-out-of-range', question: 'heat', detail: 'the score `1` is not a number' }]);
+  });
+
+  it('should fault a string distribution entry and skip the sum check', () => {
+    const read = readLlmDecisionAnswers({ questions: { entry: QUESTIONS.entry }, raw: { entry: { type: 'choice', choice: 'row-a', probabilities: { 'row-a': '0.9', 'row-b': 0.1 } } } });
+    expect(read.faults).toEqual([{ kind: 'value-out-of-range', question: 'entry', detail: "the distribution's `row-a` is not a number" }]);
+  });
+});
+
+describe('readLlmDecisionAnswers() laxAnswerTypes', () => {
+  const TYPELESS = { entry: { choice: 'row-b' }, heat: { score: 1 }, fits: { noul: 0.4 } };
+
+  it('should give a type-less answer its declared type', () => {
+    const read = readLlmDecisionAnswers({ questions: QUESTIONS, raw: TYPELESS, laxAnswerTypes: true });
+    expect(read.faults).toBeUndefined();
+    expect(read.answers).toEqual({ entry: { type: 'choice', choice: 'row-b' }, heat: { type: 'score', score: 1 }, fits: { type: 'noul', noul: 0.4 } });
+  });
+
+  it('should never overwrite a present type', () => {
+    const read = readLlmDecisionAnswers({ questions: { fits: QUESTIONS.fits }, raw: { fits: { type: 'choice', choice: 'row-a' } }, laxAnswerTypes: true });
+    expect(read.faults?.[0].kind).toBe('answer-mistyped');
+  });
+
+  it('should pass an undeclared id through untouched', () => {
+    const extra = { noul: 0.1 };
+    const read = readLlmDecisionAnswers({ questions: { fits: QUESTIONS.fits }, raw: { fits: { noul: 0.4 }, extra }, laxAnswerTypes: true });
+    expect((read.answers as unknown as Record<string, unknown>)['extra']).toBe(extra);
+  });
+
+  it('should still fault a non-object answer', () => {
+    const read = readLlmDecisionAnswers({ questions: { fits: QUESTIONS.fits }, raw: { fits: 0.4 }, laxAnswerTypes: true });
+    expect(read.faults?.[0].kind).toBe('answer-mistyped');
+  });
+
+  it('should be off by default, returning raw itself', () => {
+    const raw = { fits: { type: 'noul', noul: 0.4 } };
+    expect(readLlmDecisionAnswers({ questions: { fits: QUESTIONS.fits }, raw: TYPELESS }).faults?.[0].kind).toBe('answer-mistyped');
+    expect(readLlmDecisionAnswers({ questions: { fits: QUESTIONS.fits }, raw }).answers).toBe(raw);
+  });
+});
+
+describe('requireLlmDecisionAnswers()', () => {
+  it('should return the answers of a well formed reply', () => {
+    const answers = requireLlmDecisionAnswers({ questions: QUESTIONS, raw: { entry: { type: 'choice', choice: 'row-a' }, heat: { type: 'score', score: 2 }, fits: { type: 'noul', noul: 0.9 } } });
+    expect(answers.entry.choice).toBe('row-a');
+  });
+
+  it('should throw an LlmDecisionAnswerFaultError carrying every fault', () => {
+    let thrown: unknown;
+
+    try {
+      requireLlmDecisionAnswers({ questions: QUESTIONS, raw: { heat: { type: 'score', score: 9 } } });
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(LlmDecisionAnswerFaultError);
+    expect((thrown as LlmDecisionAnswerFaultError).faults.map((fault) => fault.kind)).toEqual(['answer-missing', 'value-out-of-range', 'answer-missing']);
   });
 });

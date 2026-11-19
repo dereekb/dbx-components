@@ -9,8 +9,9 @@ import { describe, expect, it, vi } from 'vitest';
  * Copied per entry from `packages/openrouter/src/decision.spec.ts`. Every project of the family guards its OWN `src`:
  * Nx file inputs are per project, so a scan of another project's folder would be replayed from cache after a change there.
  *
- * Whether an SDK was evaluated. The entries load SDKs lazily (if at all), so the probe mocks the SDK ids themselves:
- * importing an entry must never evaluate an optional peer.
+ * Whether an SDK was evaluated. This entry loads no SDK of its own (the chat strategy reaches `openai` lazily through
+ * `@dereekb/llm/openai`; the decision strategy is a plain `fetch`), so the probe mocks the SDK ids themselves: importing
+ * the entry must never evaluate an optional peer, and the `@openrouter/sdk` mock guards against that peer coming back.
  */
 const probe = vi.hoisted(() => ({ openai: false, openRouterSdk: false }));
 
@@ -20,23 +21,6 @@ vi.mock('openai', () => {
 });
 
 vi.mock('@openrouter/sdk', () => {
-  probe.openRouterSdk = true;
-  return {};
-});
-
-// The subpaths the decision boundary loads lazily: a static import of any of them would evaluate the SDK, which the
-// root-id mock alone cannot see.
-vi.mock('@openrouter/sdk/core', () => {
-  probe.openRouterSdk = true;
-  return {};
-});
-
-vi.mock('@openrouter/sdk/funcs/systemOneCreate', () => {
-  probe.openRouterSdk = true;
-  return {};
-});
-
-vi.mock('@openrouter/sdk/lib/http', () => {
   probe.openRouterSdk = true;
   return {};
 });
@@ -80,23 +64,6 @@ function isPackage(name: string): (specifier: string) => boolean {
   return (specifier) => specifier === name || specifier.startsWith(`${name}/`);
 }
 
-function escapeRegex(value: string): string {
-  return value.replaceAll(/[.*+?^${}()|[\]\\/]/g, String.raw`\$&`);
-}
-
-/**
- * The value (non-`type`) static imports and the re-exports of `sdk` (or a subpath) in the boundary file — each one
- * would evaluate the SDK when the entry loads. `import type` (erased) and `import('…')` (deferred) are the only legal
- * forms.
- */
-function staticImportsOf(files: ScannedFile[], boundary: string, sdk: string): string[] {
-  const code = files.find((file) => file.path === boundary)?.code ?? '';
-  const specifier = `['"]${escapeRegex(sdk)}(?:/[^'"]*)?['"]`;
-  const staticImport = new RegExp(String.raw`\bimport\s+(?!type\b)[^'"(]*\bfrom\s*${specifier}`, 'g');
-  const reExport = new RegExp(String.raw`\bexport\s[^'"]*\bfrom\s*${specifier}`, 'g');
-  return [...Array.from(code.matchAll(staticImport), (match) => match[0]), ...Array.from(code.matchAll(reExport), (match) => match[0])];
-}
-
 describe('@dereekb/llm/openrouter isolation', () => {
   const sources = scanSrc(false);
 
@@ -122,12 +89,8 @@ describe('@dereekb/llm/openrouter isolation', () => {
     expect(importersOf(sources, isPackage('openai'))).toEqual([]);
   });
 
-  it('should import @openrouter/sdk only from lib/openrouter.sdk.ts', () => {
-    expect(importersOf(sources, isPackage('@openrouter/sdk'))).toEqual(['lib/openrouter.sdk.ts']);
-  });
-
-  it('should reach @openrouter/sdk from its boundary only through import() or import type', () => {
-    expect(staticImportsOf(sources, 'lib/openrouter.sdk.ts', '@openrouter/sdk')).toEqual([]);
+  it('should import no @openrouter/sdk, specs included (the decision strategy is a plain fetch over the core transport)', () => {
+    expect(importersOf(scanSrc(true), isPackage('@openrouter/sdk'))).toEqual([]);
   });
 
   it('should never import @dereekb/openrouter, specs included', () => {
@@ -140,8 +103,14 @@ describe('@dereekb/llm/openrouter isolation', () => {
 
   it('should import no sibling entry but @dereekb/llm/openai, specs included', () => {
     // llm-openrouter:build-base has an edge to llm-openai:build-base only, so any other sibling import would race the build
-    const siblings = ['@dereekb/llm/zenmux', '@dereekb/llm/node', '@dereekb/llm/test'];
+    const siblings = ['@dereekb/llm/zenmux', '@dereekb/llm/node'];
     expect(importersOf(scanSrc(true), (specifier) => siblings.some((sibling) => isPackage(sibling)(specifier)))).toEqual([]);
+  });
+
+  it('should import @dereekb/llm/test from specs only', () => {
+    // A spec resolves `/test` to source through the tsconfig paths and is never built, so a spec import adds no
+    // build-base edge and cannot race the build; a SOURCE import would.
+    expect(importersOf(sources, isPackage('@dereekb/llm/test'))).toEqual([]);
   });
 
   it('should import its own modules relatively', () => {

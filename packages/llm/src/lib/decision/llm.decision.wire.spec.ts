@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { type LlmDecisionQuestions, llmChoiceQuestion, llmNoulQuestion, llmScoreQuestion } from './llm.decision.question';
 import { type LlmDecisionRequest } from './llm.decision.strategy';
-import { llmDecisionRequestBody, llmDecisionWireQuestion } from './llm.decision.wire';
+import { llmDecisionRequestBody, llmDecisionWireQuestion, llmUsageFromDecisionUsage } from './llm.decision.wire';
 
 const QUESTIONS = {
   entry: llmChoiceQuestion('Which entry means what `phrase` describes?', { 'row-a': 'the first row', 'row-b': null }),
@@ -63,5 +63,33 @@ describe('llmDecisionRequestBody()', () => {
   it('should serialize a small request to the pinned bytes', () => {
     const body = llmDecisionRequestBody({ model: 'typesafe/jev-1.13', state: { phrase: 'a b' }, questions: { fits: llmNoulQuestion('`phrase` fits.') } });
     expect(JSON.stringify(body)).toBe('{"model":"typesafe/jev-1.13","state":{"phrase":"a b"},"questions":{"fits":{"type":"noul","instructions":"`phrase` fits."}}}');
+  });
+});
+
+describe('llmUsageFromDecisionUsage()', () => {
+  it('should be undefined for an absent usage block', () => {
+    expect(llmUsageFromDecisionUsage(undefined)).toBeUndefined();
+    expect(llmUsageFromDecisionUsage(null)).toBeUndefined();
+  });
+
+  it('should flatten input / output / cost onto the completion spelling', () => {
+    expect(llmUsageFromDecisionUsage({ input_tokens: 3800, output_tokens: 0, cost: 0.000046 })).toEqual({ promptTokens: 3800, completionTokens: 0, totalTokens: 3800, cost: 0.000046 });
+  });
+
+  it('should omit cost when the reply carried none', () => {
+    expect(llmUsageFromDecisionUsage({ input_tokens: 10, output_tokens: 2 })).toEqual({ promptTokens: 10, completionTokens: 2, totalTokens: 12 });
+  });
+
+  it('should total a lone side', () => {
+    expect(llmUsageFromDecisionUsage({ input_tokens: 5 })).toEqual({ promptTokens: 5, completionTokens: 0, totalTokens: 5 });
+  });
+
+  it('should zero an empty usage block', () => {
+    expect(llmUsageFromDecisionUsage({})).toEqual({ promptTokens: 0, completionTokens: 0, totalTokens: 0 });
+  });
+
+  it('should stamp a cost basis only beside a cost', () => {
+    expect(llmUsageFromDecisionUsage({ input_tokens: 350, output_tokens: 34, cost: 0.0000147 }, { costBasis: 'list' })).toEqual({ promptTokens: 350, completionTokens: 34, totalTokens: 384, cost: 0.0000147, costBasis: 'list' });
+    expect(llmUsageFromDecisionUsage({ input_tokens: 120 }, { costBasis: 'list' })).toEqual({ promptTokens: 120, completionTokens: 0, totalTokens: 120 });
   });
 });

@@ -2,10 +2,9 @@
  * `@dereekb/llm/openrouter` — the OpenRouter chat strategy (`cache_control`, strict `response_format`, usage
  * accounting), the OpenRouter decision strategy and their adapters.
  *
- * Both SDKs are optional peers loaded lazily, so importing this entry never evaluates either: `openai` is reached
- * through `@dereekb/llm/openai` (the chat strategy is built on its OpenAI-compatible chat base, and `/openai` holds the
- * family's one `openai` boundary), and `@openrouter/sdk` is loaded from `lib/openrouter.sdk.ts` (left out of this
- * barrel).
+ * The entry loads no SDK of its own, so importing it never evaluates one: the chat strategy reaches `openai` through
+ * `@dereekb/llm/openai` (it is built on that entry's OpenAI-compatible chat base, and `/openai` holds the family's one
+ * `openai` boundary), and the decision strategy is a hook set over the core System One transport (a plain `fetch`).
  */
 export * from './openrouter.chat';
 export * from './openrouter.strategy';

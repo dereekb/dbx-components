@@ -21,7 +21,8 @@
  * **What every transport shares lives HERE**, not on one of them: the per-call ceiling
  * ({@link DEFAULT_LLM_DECISION_TIMEOUT_MS}), the transport error ({@link LlmDecisionTransportError}) and the retry
  * classifier ({@link isRetryableLlmDecisionError}). More than one gateway serves the same TypeSafe route, so a 429
- * on one is a 429 on the other and the retry posture above them must not drift.
+ * on one is a 429 on the other and the retry posture above them must not drift. The System One transport
+ * (`makeLlmSystemOneDecisionStrategy`) enforces them for every such gateway.
  */
 
 import { createKeyedRegistry, type KeyedRegistry, type Maybe, type Milliseconds } from '@dereekb/util';
@@ -176,10 +177,10 @@ export function makeLlmDecisionStrategyRegistry(seed: ReadonlyArray<LlmDecisionS
 /**
  * The per-call wall clock a decision is given, on every transport.
  *
- * The strategy contract declares the default; each transport enforces it, merging a `makeTimeoutAbortSignal` timeout with the
- * caller's signal. Generous against the documented ~114ms on purpose: a decision sits on the latency-critical
- * path, so what is worth tuning is the RETRY posture above it, not this ceiling. A call that has taken this long
- * is not slow, it is broken.
+ * The strategy contract declares the default; the System One transport (`makeLlmSystemOneDecisionStrategy`) enforces it,
+ * merging a `makeTimeoutAbortSignal` timeout with the caller's signal. Generous against the documented ~114ms on
+ * purpose: a decision sits on the latency-critical path, so what is worth tuning is the RETRY posture above it, not
+ * this ceiling. A call that has taken this long is not slow, it is broken.
  */
 export const DEFAULT_LLM_DECISION_TIMEOUT_MS: Milliseconds = 10_000;
 

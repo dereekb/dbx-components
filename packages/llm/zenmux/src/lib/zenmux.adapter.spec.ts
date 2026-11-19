@@ -16,6 +16,7 @@ import {
   type LlmCredentialProbeResponse,
   type LlmProviderConfig
 } from '@dereekb/llm';
+import { makeLlmSystemOneWireFake } from '@dereekb/llm/test';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { zenmuxCostBasisFor } from './zenmux.account';
 import { makeZenmuxLlmAdapters } from './zenmux.adapter';
@@ -231,27 +232,18 @@ describe('makeZenmuxLlmAdapters()', () => {
     });
 
     it('decides over the global fetch with the provider’s own key', async () => {
-      const sent: Array<{ readonly url: string; readonly auth?: string }> = [];
-      vi.stubGlobal('fetch', async (url: string, init: { readonly headers: Record<string, string> }) => {
-        sent.push({ url, auth: init.headers['Authorization'] });
-        return { ok: true, status: 200, headers: { get: () => null }, text: async () => JSON.stringify({ answers: { is_urgent: { type: 'noul', noul: 0.5 } } }) };
-      });
+      const fake = makeLlmSystemOneWireFake({ respond: { body: { answers: { is_urgent: { type: 'noul', noul: 0.5 } } } } });
+      vi.stubGlobal('fetch', fake.fetch);
 
       const strategy = makeLlmDecisionStrategies({ providers: [ZENMUX], adapters: ADAPTERS }).values()[0];
       const result = await strategy?.decide({ state: 'state', questions: { is_urgent: llmNoulQuestion('Urgent?') }, model: MODEL });
 
       expect(result?.answers.is_urgent.noul).toBe(0.5);
-      expect(sent).toEqual([{ url: 'https://zenmux.ai/api/v1/systemone', auth: 'Bearer sk-zen' }]);
+      expect(fake.requests.map((request) => ({ url: request.url, auth: request.init.headers['Authorization'] }))).toEqual([{ url: 'https://zenmux.ai/api/v1/systemone', auth: 'Bearer sk-zen' }]);
     });
 
     it('aborts a hanging route at the configured timeout', async () => {
-      vi.stubGlobal(
-        'fetch',
-        (_url: string, init: { readonly signal?: AbortSignal }) =>
-          new Promise((_resolve, reject) => {
-            init.signal?.addEventListener('abort', () => reject(init.signal?.reason));
-          })
-      );
+      vi.stubGlobal('fetch', makeLlmSystemOneWireFake({ respond: 'hang' }).fetch);
 
       const strategy = makeLlmDecisionStrategies({ providers: [ZENMUX], adapters: ADAPTERS, timeoutMs: 5 }).values()[0];
       const thrown = await strategy?.decide({ state: 'state', questions: { is_urgent: llmNoulQuestion('Urgent?') }, model: MODEL }).catch((error: unknown) => error);

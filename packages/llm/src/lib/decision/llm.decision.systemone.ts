@@ -1,0 +1,323 @@
+/**
+ * **The System One decision transport** — the ONE {@link LlmDecisionStrategy} implementation behind every gateway that
+ * serves TypeSafe's decision route at `POST <baseUrl>/systemone` (OpenRouter and ZenMux today). A gateway is a hook set
+ * ({@link LlmSystemOneDecisionStrategyHooks}) over it: its kind, its label, its default base URL, the header its
+ * generation id rides (if any), what its reported cost is, whether its answers arrive type-less, and its credential
+ * probe. Everything else — the body, the HTTP call, the failure mapping, the reply read, the usage fold and the result
+ * assembly — is spelt here once.
+ *
+ * **Why a raw `fetch`, not a gateway SDK.** An SDK decodes the reply through its own strict schema —
+ * `usage.input_tokens` / `usage.output_tokens` required integers, a `type` literal on every answer — and its credential
+ * probe is its own gateway's. A gateway that omits a single field the SDK requires would turn every decision into a
+ * decode error the membership check never got to see. So this transport reads the reply LAX and leaves the one
+ * judgement that matters — "is this an answer to the question that was asked?" — to {@link requireLlmDecisionAnswers},
+ * which also checks the value types an SDK decode used to guarantee (a `noul`, a `score` and each distribution entry
+ * must be numbers).
+ *
+ * The lax reads, each documented where it happens:
+ *
+ * 1. An answer that arrives WITHOUT a `type` is given the declared question's type first — only when the hooks set
+ *    `laxAnswerTypes` (a gateway whose reply lists the value fields, not the discriminator). A PRESENT `type` is never
+ *    overwritten.
+ * 2. `usage` is read field by field ({@link llmUsageFromDecisionUsage}), so a reply that reports less is recorded as
+ *    what it reported rather than refused. A non-object `usage` reads as absent; a non-object `answers` as no answers.
+ * 3. `id`, `model` and `provider` count only as non-blank strings; with no `model` echoed, the requested slug stands.
+ *
+ * **The error contract** — `decide` throws exactly one of:
+ *
+ * - the signal's own reason when the call was aborted or timed out (a `TimeoutError`, or the caller's reason) — never
+ *   wrapped, so a retry never resends a cancelled call;
+ * - {@link LlmDecisionTransportError} with no `status` for a missing key (never retried), or with the socket failure as
+ *   its `cause` for an unreachable route (`isRetryableLlmDecisionError` classifies it by that cause);
+ * - {@link LlmDecisionTransportError} with `status` and the raw `body` for a non-2xx answer, or for a 2xx whose body is
+ *   not a JSON object;
+ * - {@link LlmDecisionAnswerFaultError} for a reply that left its declared answer space.
+ *
+ * `healthCheck` is network-free; `credentialProbe` runs the hook's probe. Both report rather than throw. The global
+ * `fetch` is read at CALL time, never at import or construction, so the module stays browser-safe and a spec may stub
+ * the global after building the strategy.
+ */
+
+import { errorMessageOf, isNotNullOrEmptyString, isPlainObject, makeTimeoutAbortSignal, type Maybe, type Milliseconds, removeTrailingSlashes } from '@dereekb/util';
+import { type LlmModelId, type LlmStrategyId } from '../model/llm.value';
+import { llmProviderErrorMessage, type LlmCredentialProbeFetch, type LlmCredentialProbeRequestInit, type LlmCredentialProbeResponse } from '../strategy/llm.credential.probe';
+import { isAbortError } from '../strategy/llm.error';
+import { type LlmCredentialProbeOptions } from '../strategy/llm.strategy';
+import { type LlmStrategyHealth } from '../strategy/llm.strategy.health';
+import { type LlmCostBasis } from '../strategy/llm.usage';
+import { requireLlmDecisionAnswers } from './llm.decision.answer';
+import { type LlmDecisionQuestions } from './llm.decision.question';
+import { DEFAULT_LLM_DECISION_TIMEOUT_MS, LlmDecisionTransportError, type LlmDecideOptions, type LlmDecisionRequest, type LlmDecisionResult, type LlmDecisionStrategy } from './llm.decision.strategy';
+import { llmDecisionRequestBody, llmUsageFromDecisionUsage, type LlmDecisionWireReply } from './llm.decision.wire';
+
+/**
+ * The route path under a gateway's base URL — spelt once, for every gateway.
+ */
+export const LLM_SYSTEM_ONE_DECISION_PATH = '/systemone';
+
+/**
+ * The host / instance config of a System One decision strategy — what an adapter or a host passes. Never read from the
+ * environment, which is what lets two instances bill two accounts.
+ */
+export interface LlmSystemOneDecisionStrategyConfig {
+  /**
+   * The INSTANCE id; absent ⇒ the hooks' `kind`. A host serving decisions from a NAMED provider passes that provider's
+   * id.
+   */
+  readonly id?: Maybe<LlmStrategyId>;
+  /**
+   * The API key — the provider's own, resolved by the host. Sent as `Authorization: Bearer …`.
+   */
+  readonly apiKey?: Maybe<string>;
+  /**
+   * WHICH env var supplied {@link apiKey} — a LABEL for the readiness messages only. Absent ⇒ the messages say "pass an
+   * apiKey".
+   */
+  readonly apiKeyEnv?: Maybe<string>;
+  /**
+   * The endpoint root; absent ⇒ the hooks' `defaultBaseUrl`. Trailing slashes are trimmed. The decision goes to
+   * `<baseUrl>/systemone`; the credential probe receives the same trimmed root.
+   */
+  readonly baseUrl?: Maybe<string>;
+  /**
+   * The per-call timeout; absent ⇒ {@link DEFAULT_LLM_DECISION_TIMEOUT_MS}. A caller's `LlmDecideOptions.timeout` wins.
+   */
+  readonly timeoutMs?: Maybe<Milliseconds>;
+  /**
+   * The INJECTED decision HTTP seam — a spec's fake. The whole transport still runs over it (URL, headers, body, reply
+   * read), so a spec pins the wire with no socket. An injected seam marks the strategy as a keyless fake: `decide`,
+   * `healthCheck` and `credentialProbe` skip their key checks.
+   */
+  readonly decisionFetch?: Maybe<LlmCredentialProbeFetch>;
+  /**
+   * The HTTP seam the credential probe goes through — a spec's fake.
+   */
+  readonly probeFetch?: Maybe<LlmCredentialProbeFetch>;
+}
+
+/**
+ * What a hook set's credential probe receives.
+ */
+export interface LlmSystemOneCredentialProbeParams {
+  /**
+   * The strategy's instance id — prefixes the probe's issue messages.
+   */
+  readonly strategyId: LlmStrategyId;
+  /**
+   * The endpoint root, already trimmed of trailing slashes.
+   */
+  readonly baseUrl: string;
+  /**
+   * The credential under test.
+   */
+  readonly apiKey: string;
+  /**
+   * The config's `probeFetch`, when one was injected.
+   */
+  readonly fetch?: LlmCredentialProbeFetch;
+  /**
+   * The caller's cancellation signal, when one was passed.
+   */
+  readonly signal?: AbortSignal;
+}
+
+/**
+ * **A gateway's definition** over the System One transport — static per gateway, so each provider entry keeps one
+ * private constant of it and its factory passes the host's config through untouched.
+ */
+export interface LlmSystemOneDecisionStrategyHooks {
+  /**
+   * The TRANSPORT kind the strategy reports — what a call record reads as its `strategyKind` and what a cost fold
+   * groups on. Stable: stored call rows fold on it. Also the default instance id.
+   */
+  readonly kind: LlmStrategyId;
+  /**
+   * The gateway's display name (`'OpenRouter'`, `'ZenMux'`) — used in `describe` and every message.
+   */
+  readonly label: string;
+  /**
+   * The endpoint root used when the config names none.
+   */
+  readonly defaultBaseUrl: string;
+  /**
+   * The response header read for the generation id when the body carries no `id`. Absent ⇒ the body `id` is the only
+   * carrier.
+   */
+  readonly generationIdHeader?: Maybe<string>;
+  /**
+   * What a reported `cost` IS when it is not the bill ({@link LlmCostBasis}); stamped only beside a cost. Absent ⇒ the
+   * cost is unstamped (exact and final).
+   */
+  readonly costBasis?: Maybe<LlmCostBasis>;
+  /**
+   * Whether a type-less answer takes its declared question's type before the membership check — the reader's
+   * `laxAnswerTypes`. Absent ⇒ strict: a type-less answer faults as `answer-mistyped`.
+   */
+  readonly laxAnswerTypes?: Maybe<boolean>;
+  /**
+   * The gateway's own credential probe — one free, authenticated request. Must report, never throw.
+   *
+   * @param params - The strategy id, trimmed base URL, key and optional seam / signal.
+   * @returns The credential verdict.
+   */
+  readonly credentialProbe: (params: LlmSystemOneCredentialProbeParams) => Promise<LlmStrategyHealth>;
+}
+
+/**
+ * The input of {@link readLlmSystemOneRoute}.
+ */
+interface ReadLlmSystemOneRouteInput {
+  readonly fetch: LlmCredentialProbeFetch;
+  readonly url: string;
+  readonly init: LlmCredentialProbeRequestInit;
+  readonly signal: AbortSignal;
+  readonly label: string;
+}
+
+/**
+ * The route's answer: the response, and its body read as TEXT so a non-2xx can carry the provider's own words and a
+ * non-JSON 200 can be reported rather than thrown as a `SyntaxError`.
+ */
+interface LlmSystemOneRouteReply {
+  readonly response: LlmCredentialProbeResponse;
+  readonly text: string;
+}
+
+/**
+ * The HTTP read — the call and the body read in ONE `try`, so a failure while reading the body maps exactly like a
+ * failure to connect. An aborted signal rejects with its own reason; an abort-shaped error propagates as itself;
+ * anything else (a reset socket, DNS) is wrapped so it names the route, keeping the failure as its `cause`.
+ *
+ * @param input - The seam, the route, the request init, the signal it runs under and the gateway's label.
+ * @returns The response and its body text.
+ */
+async function readLlmSystemOneRoute(input: ReadLlmSystemOneRouteInput): Promise<LlmSystemOneRouteReply> {
+  const { url, signal } = input;
+  let reply: LlmSystemOneRouteReply;
+
+  try {
+    const response = await input.fetch(url, input.init);
+    const text = await response.text();
+    reply = { response, text };
+  } catch (error) {
+    if (signal.aborted) {
+      throw signal.reason;
+    } else if (isAbortError(error)) {
+      throw error;
+    }
+
+    throw new LlmDecisionTransportError({ message: `the ${input.label} System One route ${url} could not be reached: ${errorMessageOf(error)}`, cause: error });
+  }
+
+  return reply;
+}
+
+/**
+ * A reply field as a non-blank string, or `undefined`.
+ *
+ * @param value - The field as returned.
+ * @returns The string, or `undefined` when it is absent, blank or not a string.
+ */
+function nonBlankStringOf(value: unknown): Maybe<string> {
+  return typeof value === 'string' && value.trim().length > 0 ? value : undefined;
+}
+
+/**
+ * **Build a System One decision strategy** for one gateway: the host's config over the gateway's hooks.
+ *
+ * @param config - The key, the endpoint and the injectable seams — the host's.
+ * @param hooks - The gateway's definition.
+ * @returns The decision strategy.
+ *
+ * @example
+ * ```ts
+ * const decisions = makeLlmSystemOneDecisionStrategy({ apiKey }, { kind: 'my-gateway-systemone', label: 'MyGateway', defaultBaseUrl: 'https://gateway.example/api/v1', credentialProbe: (params) => probeMyGateway(params) });
+ * const { answers } = await decisions.decide({ model: 'typesafe/jev-1.14', state: { ticket }, questions: { spam: llmNoulQuestion('`ticket` is unsolicited marketing.') } });
+ * ```
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function makeLlmSystemOneDecisionStrategy(config: LlmSystemOneDecisionStrategyConfig, hooks: LlmSystemOneDecisionStrategyHooks): LlmDecisionStrategy {
+  const { label, generationIdHeader } = hooks;
+  const id = config.id ?? hooks.kind;
+  const baseUrl = removeTrailingSlashes(config.baseUrl ?? hooks.defaultBaseUrl);
+  const url = `${baseUrl}${LLM_SYSTEM_ONE_DECISION_PATH}`;
+  const timeoutMs = config.timeoutMs ?? DEFAULT_LLM_DECISION_TIMEOUT_MS;
+  const keyRemedy = config.apiKeyEnv == null ? 'pass an apiKey' : `set ${config.apiKeyEnv}`;
+  const injectedFetch = config.decisionFetch;
+  // The global is read INSIDE the call, so nothing touches `fetch` at import or construction.
+  const decisionFetch: LlmCredentialProbeFetch = injectedFetch ?? ((target, init) => fetch(target, init) as unknown as Promise<LlmCredentialProbeResponse>);
+  const keyless = !isNotNullOrEmptyString(config.apiKey);
+
+  const decide = async <Q extends LlmDecisionQuestions>(request: LlmDecisionRequest<Q>, options?: LlmDecideOptions): Promise<LlmDecisionResult<Q>> => {
+    if (injectedFetch == null && keyless) {
+      // No status ⇒ never retried: a missing key does not heal on a resend.
+      throw new LlmDecisionTransportError({ message: `${label} decision strategy '${id}': no apiKey configured and no decisionFetch injected (${keyRemedy}, or gate startup via the readiness check).` });
+    }
+
+    // The body is EXACTLY `{ model, state, questions }`, built field by field, so a host-extended request object can
+    // never leak a key onto the wire (ZenMux answers `400 invalid_params` to any other body key).
+    const body = llmDecisionRequestBody(request);
+    const signal = makeTimeoutAbortSignal({ timeout: options?.timeout ?? timeoutMs, signal: options?.signal });
+    const init: LlmCredentialProbeRequestInit = { method: 'POST', headers: { Authorization: `Bearer ${config.apiKey ?? ''}`, 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(body), signal };
+    const { response, text } = await readLlmSystemOneRoute({ fetch: decisionFetch, url, init, signal, label });
+    const status = response.status;
+
+    if (!response.ok) {
+      const message = llmProviderErrorMessage(text);
+      const detail = message == null ? '' : `: ${message}`;
+      throw new LlmDecisionTransportError({ message: `the ${label} System One route ${url} answered HTTP ${status}${detail}`, status, body: text });
+    }
+
+    let parsed: unknown;
+
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      // Not a swallow: a non-JSON body is refused just below, exactly like a JSON body that is not an object.
+      parsed = undefined;
+    }
+
+    if (!isPlainObject(parsed)) {
+      throw new LlmDecisionTransportError({ message: `the ${label} System One route ${url} answered HTTP ${status} with a body that is not a JSON object`, status, body: text });
+    }
+
+    const reply = parsed as LlmDecisionWireReply;
+    // A reply that left its declared answer space THROWS rather than handing back half an answer set.
+    const answers = requireLlmDecisionAnswers({ questions: request.questions, raw: isPlainObject(reply.answers) ? reply.answers : {}, laxAnswerTypes: hooks.laxAnswerTypes });
+    const usage = llmUsageFromDecisionUsage(isPlainObject(reply.usage) ? reply.usage : undefined, { costBasis: hooks.costBasis });
+    // A body `id` wins; the hooks' header is read only when the body carries none.
+    const generationId = nonBlankStringOf(reply.id) ?? (generationIdHeader == null ? undefined : nonBlankStringOf(response.headers?.get(generationIdHeader)));
+    const provider = nonBlankStringOf(reply.provider);
+    const model: LlmModelId = nonBlankStringOf(reply.model) ?? request.model;
+
+    return { model, answers, ...(usage == null ? {} : { usage }), ...(generationId == null ? {} : { generationId }), ...(provider == null ? {} : { provider }) };
+  };
+
+  return {
+    id,
+    kind: hooks.kind,
+    describe: `${label} System One at ${url}`,
+    decide,
+    async healthCheck(): Promise<LlmStrategyHealth> {
+      // Injected seam ⇒ ready WITHOUT any real check: a fake must never require a key. There is no client to construct,
+      // so a key is all a real call needs — and no request is sent.
+      return injectedFetch == null && keyless ? { ready: false, issues: [{ severity: 'error', message: `no decisions API key is configured for '${id}': ${keyRemedy}` }] } : { ready: true, issues: [] };
+    },
+    async credentialProbe(probeOptions?: LlmCredentialProbeOptions): Promise<LlmStrategyHealth> {
+      const probeFetch = config.probeFetch;
+      const apiKey = config.apiKey;
+      let health: LlmStrategyHealth;
+
+      if (probeFetch == null && injectedFetch != null) {
+        health = { ready: true, issues: [] };
+      } else if (isNotNullOrEmptyString(apiKey)) {
+        health = await hooks.credentialProbe({ strategyId: id, baseUrl, apiKey, ...(probeFetch == null ? {} : { fetch: probeFetch }), ...(probeOptions?.signal == null ? {} : { signal: probeOptions.signal }) });
+      } else {
+        health = { ready: false, issues: [{ severity: 'error', message: `no apiKey configured and no decisionFetch injected (${keyRemedy})` }] };
+      }
+
+      return health;
+    }
+  };
+}

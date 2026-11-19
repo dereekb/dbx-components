@@ -1,6 +1,13 @@
-import { isAbortError, isRetryableLlmDecisionError, llmChoiceQuestion, LlmDecisionAnswerFaultError, LlmDecisionTransportError, llmNoulQuestion, llmScoreQuestion, type LlmCredentialProbeRequestInit, type LlmDecisionRequest } from '@dereekb/llm';
+import { isRetryableLlmDecisionError, llmChoiceQuestion, LlmDecisionAnswerFaultError, LlmDecisionTransportError, llmNoulQuestion, llmScoreQuestion, type LlmCredentialProbeRequestInit, type LlmDecisionRequest } from '@dereekb/llm';
+import { makeLlmSystemOneWireFake } from '@dereekb/llm/test';
 import { describe, expect, it } from 'vitest';
-import { makeZenmuxDecisionStrategy, ZENMUX_DECISION_STRATEGY_KIND, ZENMUX_REQUEST_ID_HEADER, type ZenmuxDecisionFetch, type ZenmuxDecisionRequestInit } from './zenmux.decision.strategy';
+import { makeZenmuxDecisionStrategy, ZENMUX_DECISION_STRATEGY_KIND, ZENMUX_REQUEST_ID_HEADER } from './zenmux.decision.strategy';
+
+/**
+ * ZenMux's hooks over the core System One transport, run over the one `/systemone` wire fake. Only ZenMux's own facts are
+ * pinned here (its route, its header id, its lax answer types, its list-price cost, its probe); every shared behaviour is
+ * pinned once in the core transport's spec.
+ */
 
 const MODEL = 'typesafe/jev-1.14';
 
@@ -20,20 +27,9 @@ const TYPED_ANSWERS = {
   frustration: { type: 'score', score: 1.4 }
 };
 
-interface Sent {
-  readonly url: string;
-  readonly init: ZenmuxDecisionRequestInit;
-}
-
-function fakeSocket(status: number, body: unknown, headers?: Readonly<Record<string, string>>): { readonly sent: Sent[]; readonly decisionFetch: ZenmuxDecisionFetch } {
-  const sent: Sent[] = [];
-  return {
-    sent,
-    decisionFetch: async (url, init) => {
-      sent.push({ url, init });
-      return { ok: status >= 200 && status < 300, status, ...(headers == null ? {} : { headers: { get: (name: string) => headers[name.toLowerCase()] ?? null } }), text: async () => (typeof body === 'string' ? body : JSON.stringify(body)) };
-    }
-  };
+function fakeSocket(status: number, body: unknown, headers?: Readonly<Record<string, string>>) {
+  const fake = makeLlmSystemOneWireFake({ respond: { status, body, ...(headers == null ? {} : { headers }) } });
+  return { sent: fake.requests, decisionFetch: fake.fetch };
 }
 
 async function thrownBy(status: number, body: unknown): Promise<unknown> {
@@ -54,7 +50,7 @@ describe('makeZenmuxDecisionStrategy()', () => {
     expect(sent).toHaveLength(1);
     expect(sent[0]?.url).toBe('https://zenmux.ai/api/v1/systemone');
     expect(sent[0]?.init.method).toBe('POST');
-    expect(sent[0]?.init.headers).toEqual({ Authorization: 'Bearer sk-zen', 'Content-Type': 'application/json' });
+    expect(sent[0]?.init.headers).toEqual({ Authorization: 'Bearer sk-zen', 'Content-Type': 'application/json', Accept: 'application/json' });
     expect(JSON.parse(sent[0]?.init.body ?? '')).toEqual({
       model: MODEL,
       state: 'Help! My payouts have been failing for 3 days.',
@@ -195,63 +191,13 @@ describe('makeZenmuxDecisionStrategy()', () => {
     expect((refused as LlmDecisionTransportError).message).toContain('is not a System One model');
   });
 
-  it('reports a 200 whose body is not JSON as a transport error rather than a SyntaxError', async () => {
-    const thrown = await thrownBy(200, '<html>gateway</html>');
-
-    expect(thrown).toBeInstanceOf(LlmDecisionTransportError);
-    expect((thrown as LlmDecisionTransportError).body).toBe('<html>gateway</html>');
-  });
-
-  it('wraps a socket failure so it names the route, and lets an abort / timeout propagate as itself', async () => {
-    const refusedSocket = makeZenmuxDecisionStrategy({
-      apiKey: 'sk-zen',
-      decisionFetch: async () => {
-        throw new TypeError('fetch failed');
-      }
-    });
-    // A socket that never answers: only the signal ends it, exactly like a real `fetch`.
-    const hangingSocket: ZenmuxDecisionFetch = (_url, init) =>
-      new Promise((_resolve, reject) => {
-        init.signal?.addEventListener('abort', () => reject(init.signal?.reason));
-      });
-    const hanging = makeZenmuxDecisionStrategy({ apiKey: 'sk-zen', decisionFetch: hangingSocket });
-    const controller = new AbortController();
-    const cancelled = hanging.decide(REQUEST, { signal: controller.signal }).catch((error: unknown) => error);
-    controller.abort();
-
-    const socketError = await refusedSocket.decide(REQUEST).catch((error: unknown) => error);
-    const timedOut = await hanging.decide(REQUEST, { timeout: 5 }).catch((error: unknown) => error);
-
-    expect(socketError).toBeInstanceOf(LlmDecisionTransportError);
-    expect((socketError as LlmDecisionTransportError).message).toContain('https://zenmux.ai/api/v1/systemone');
-    expect(isAbortError(await cancelled)).toBe(true);
-    expect(isAbortError(timedOut)).toBe(true);
-    expect(isRetryableLlmDecisionError(timedOut)).toBe(false);
-  });
-
-  it('keeps a socket failure as the cause, so a transient one reads retryable', async () => {
-    const cause = new TypeError('fetch failed');
-    const wrapped = await makeZenmuxDecisionStrategy({
-      apiKey: 'sk-zen',
-      decisionFetch: async () => {
-        throw cause;
-      }
-    })
-      .decide(REQUEST)
-      .catch((error: unknown) => error);
-
-    expect(wrapped).toBeInstanceOf(LlmDecisionTransportError);
-    expect((wrapped as LlmDecisionTransportError).cause).toBe(cause);
-    expect(isRetryableLlmDecisionError(wrapped)).toBe(true);
-  });
-
   it('refuses to send with no key and no injected socket, naming the key’s env var', async () => {
     const thrown = await makeZenmuxDecisionStrategy({ apiKeyEnv: 'HOST_ZENMUX_API_KEY' })
       .decide(REQUEST)
       .catch((error: unknown) => error);
 
     expect(thrown).toBeInstanceOf(LlmDecisionTransportError);
-    expect((thrown as LlmDecisionTransportError).message).toBe('zenmux-systemone decisions strategy: no apiKey configured and no decisionFetch injected (set HOST_ZENMUX_API_KEY, or gate startup via the readiness check).');
+    expect((thrown as LlmDecisionTransportError).message).toBe("ZenMux decision strategy 'zenmux-systemone': no apiKey configured and no decisionFetch injected (set HOST_ZENMUX_API_KEY, or gate startup via the readiness check).");
   });
 
   it('registers under its provider id with the zenmux-systemone transport kind', () => {

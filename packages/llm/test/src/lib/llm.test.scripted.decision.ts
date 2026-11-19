@@ -11,7 +11,7 @@
  */
 
 import { type Maybe } from '@dereekb/util';
-import { LlmDecisionAnswerFaultError, type LlmDecisionAnswer, type LlmDecisionQuestions, type LlmDecisionRequest, type LlmDecisionResult, type LlmDecisionStrategy, type LlmStrategyId, readLlmDecisionAnswers } from '@dereekb/llm';
+import { type LlmDecisionQuestions, type LlmDecisionRequest, type LlmDecisionResult, type LlmDecisionStrategy, type LlmStrategyId, requireLlmDecisionAnswers } from '@dereekb/llm';
 
 /**
  * The default instance id AND the kind a scripted decision backend declares, so a run artifact can never mistake a
@@ -24,7 +24,7 @@ export const SCRIPTED_LLM_DECISION_STRATEGY_ID: LlmStrategyId = 'scripted-decisi
  * questions.
  *
  * @param request - The decision request.
- * @returns The raw answers, read through `readLlmDecisionAnswers` exactly as a live reply would be.
+ * @returns The raw answers, read through `requireLlmDecisionAnswers` exactly as a live reply would be.
  */
 export type ScriptedLlmDecisionScript = <Q extends LlmDecisionQuestions>(request: LlmDecisionRequest<Q>) => Readonly<Record<string, unknown>>;
 
@@ -64,15 +64,12 @@ export function makeScriptedLlmDecisionStrategy(config: ScriptedLlmDecisionStrat
   const decide = async <Q extends LlmDecisionQuestions>(request: LlmDecisionRequest<Q>): Promise<LlmDecisionResult<Q>> => {
     config.requests?.push(request as LlmDecisionRequest);
 
-    const read = readLlmDecisionAnswers({ questions: request.questions, raw: config.script(request) as Readonly<Record<string, Maybe<LlmDecisionAnswer>>> });
-
-    if (read.faults != null) {
-      throw new LlmDecisionAnswerFaultError(read.faults);
-    }
+    // The one throwing read every live transport uses, so a script is refused exactly as a live reply would be.
+    const answers = requireLlmDecisionAnswers({ questions: request.questions, raw: config.script(request) });
 
     // A ZERO usage rather than an absent one: a replayed decision genuinely cost nothing, and reporting that as a reading
     // (rather than as "unaccounted") keeps a scripted run's ledger honest.
-    return { model: request.model, answers: read.answers, usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0, cost: 0 } };
+    return { model: request.model, answers, usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0, cost: 0 } };
   };
 
   return {
