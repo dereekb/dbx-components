@@ -7,7 +7,7 @@ import {
   USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR_CODE,
   userExternalConnectionTokenApiPath
 } from '@dereekb/firebase';
-import { type Maybe } from '@dereekb/util';
+import { type ISO8601DateString, type Maybe } from '@dereekb/util';
 import { cliHandoffRemintSuggestion, describeCliAuthFailureSuggestion, MISSING_ENDPOINT_OIDC_SCOPE_ERROR_CODE } from '../auth/auth-failure.hint';
 import { type CliExternalConnectionHints } from '../config/env';
 import { type CliContextCredential } from '../context/cli.context';
@@ -33,6 +33,17 @@ export interface CliExternalConnectionTokenBundle extends UserExternalConnection
    * `CliExternalConnectionDataAdapter`. The raw stored data never rides the bundle.
    */
   readonly settings?: Maybe<CliExternalConnectionSettings>;
+  /**
+   * When the app CLI's own credential — the one that minted this token — lapses. Present only when that
+   * credential cannot be refreshed (a bearer `auth handoff` credential), so the consuming CLI can warn
+   * before minting stops, instead of failing mid-task. The provider token itself may outlive it.
+   */
+  readonly credentialExpiresAt?: Maybe<ISO8601DateString>;
+  /**
+   * How to renew the app CLI's credential once it lapses, e.g. the MCP CLI token tool plus
+   * `<cli> auth handoff <code> --env <env>`. Present with {@link credentialExpiresAt} for a handoff credential.
+   */
+  readonly credentialRenewal?: Maybe<string>;
 }
 
 /**
@@ -136,6 +147,36 @@ export function cliExternalConnectionTokenBundle(token: UserExternalConnectionAc
   const hints = externalConnectionHints?.[token.providerType];
   const hasSettings = settings != null && Object.keys(settings).length > 0;
   return { ...accessToken, ...(hints == null ? {} : { hints }), ...(hasSettings ? { settings } : {}) };
+}
+
+/**
+ * The app CLI's own credential, as {@link cliExternalConnectionTokenBundleCredentialFields} reads it to report when minting stops.
+ */
+export interface CliExternalConnectionTokenBundleCredential {
+  readonly credential?: Maybe<Pick<CliContextCredential, 'handoff' | 'refreshable' | 'expiresAt'>>;
+  readonly cliName: string;
+  readonly envName: string;
+}
+
+/**
+ * The bundle's {@link CliExternalConnectionTokenBundle.credentialExpiresAt} and
+ * {@link CliExternalConnectionTokenBundle.credentialRenewal}: set only for a credential that cannot be
+ * refreshed and has a known expiry. A refreshable login keeps minting on its own, so it reports neither.
+ *
+ * @param input - The credential in context and the CLI / env names for the renewal text.
+ * @returns The fields to spread into the bundle; empty when they do not apply.
+ * @__NO_SIDE_EFFECTS__
+ */
+export function cliExternalConnectionTokenBundleCredentialFields(input: Maybe<CliExternalConnectionTokenBundleCredential>): Pick<CliExternalConnectionTokenBundle, 'credentialExpiresAt' | 'credentialRenewal'> {
+  const credential = input?.credential;
+  let result: Pick<CliExternalConnectionTokenBundle, 'credentialExpiresAt' | 'credentialRenewal'> = {};
+
+  if (input != null && credential != null && !credential.refreshable && Number.isFinite(credential.expiresAt) && credential.expiresAt > 0) {
+    const credentialExpiresAt = new Date(credential.expiresAt).toISOString();
+    result = credential.handoff ? { credentialExpiresAt, credentialRenewal: cliHandoffRemintSuggestion({ cliName: input.cliName, envName: input.envName }) } : { credentialExpiresAt };
+  }
+
+  return result;
 }
 
 /**

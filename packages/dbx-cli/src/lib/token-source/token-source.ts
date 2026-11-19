@@ -33,6 +33,12 @@ export const CLI_TOKEN_SOURCE_EXPIRATION_MARGIN_MS: Milliseconds = 2 * MS_IN_MIN
  */
 export const DEFAULT_CLI_TOKEN_SOURCE_TTL_MS: Milliseconds = 5 * MS_IN_MINUTE;
 
+/**
+ * How long before the app CLI's non-refreshable credential lapses a consuming CLI starts warning about it
+ * (see {@link cliTokenSourceCredentialWarning}): ten minutes, enough to finish a step and re-mint between steps.
+ */
+export const CLI_TOKEN_SOURCE_CREDENTIAL_WARNING_MS: Milliseconds = 10 * MS_IN_MINUTE;
+
 // MARK: Token
 /**
  * The JSON bundle a token source command prints when run as a dbx-cli credential process.
@@ -72,6 +78,15 @@ export interface CliTokenSourceToken {
    * signatures). Cached with the token, so they share its expiry and are dropped whenever it is.
    */
   readonly settings?: Maybe<Record<string, unknown>>;
+  /**
+   * When the app CLI's own credential behind the source lapses, when it cannot be refreshed (a bearer
+   * handoff). After it, the source can mint no new token, though this one keeps working until `expiresAt`.
+   */
+  readonly credentialExpiresAt?: Maybe<ISO8601DateString>;
+  /**
+   * How to renew that credential, as the app CLI phrased it.
+   */
+  readonly credentialRenewal?: Maybe<string>;
 }
 
 /**
@@ -158,6 +173,12 @@ function validDate(value: unknown): Maybe<Date> {
   return date && !Number.isNaN(date.getTime()) ? date : undefined;
 }
 
+function credentialFields(expiresAt: unknown, renewal: unknown): Pick<CliTokenSourceToken, 'credentialExpiresAt' | 'credentialRenewal'> {
+  const credentialExpiresAt = validDate(expiresAt)?.toISOString();
+  const credentialRenewal = credentialExpiresAt ? nonEmptyString(renewal) : undefined;
+  return { ...(credentialExpiresAt ? { credentialExpiresAt } : {}), ...(credentialRenewal ? { credentialRenewal } : {}) };
+}
+
 /**
  * Input for {@link cliTokenSourceTokenFromBundle}.
  */
@@ -208,7 +229,8 @@ export function cliTokenSourceTokenFromBundle(input: CliTokenSourceTokenFromBund
     extra: objectRecord(bundle.extra),
     hints: stringRecord(bundle.hints),
     providerType: nonEmptyString(bundle.providerType),
-    settings: objectRecord(bundle.settings)
+    settings: objectRecord(bundle.settings),
+    ...credentialFields(bundle.credentialExpiresAt, bundle.credentialRenewal)
   };
 
   return { token, hasExpiry: reportedExpiresAt != null };
@@ -237,7 +259,8 @@ export function readCliTokenSourceToken(raw: unknown, parseScopes: CliTokenSourc
         extra: objectRecord(value['extra']),
         hints: stringRecord(value['hints']),
         providerType: nonEmptyString(value['providerType']),
-        settings: objectRecord(value['settings'])
+        settings: objectRecord(value['settings']),
+        ...credentialFields(value['credentialExpiresAt'], value['credentialRenewal'])
       };
     }
   }
@@ -254,6 +277,100 @@ export function readCliTokenSourceToken(raw: unknown, parseScopes: CliTokenSourc
  */
 export function isCliTokenSourceTokenReusable(token: Pick<CliTokenSourceToken, 'expiresAt'>, now: Date = new Date()): boolean {
   return new Date(token.expiresAt).getTime() - CLI_TOKEN_SOURCE_EXPIRATION_MARGIN_MS > now.getTime();
+}
+
+// MARK: Source Credential
+/**
+ * The app CLI's own non-refreshable credential behind a token source, as `auth show` reports it.
+ */
+export interface CliTokenSourceCredentialReport {
+  /**
+   * When the credential lapses; after it, the source can mint no new token.
+   */
+  readonly expiresAt: ISO8601DateString;
+  /**
+   * Always false: a refreshable credential is not reported.
+   */
+  readonly refreshable: false;
+  /**
+   * Whole minutes left, 0 once it has lapsed.
+   */
+  readonly minutesLeft: number;
+  readonly lapsed: boolean;
+  /**
+   * How to renew it, as the app CLI phrased it.
+   */
+  readonly renewal?: Maybe<string>;
+}
+
+/**
+ * Reports the app CLI's non-refreshable credential behind a token-source token, if the bundle carried one.
+ *
+ * @param token - The token-source token.
+ * @param now - The current time. Defaults to now.
+ * @returns The report, or undefined when the source's credential refreshes itself (or the app CLI is too old to say).
+ */
+export function cliTokenSourceCredentialReport(token: Pick<CliTokenSourceToken, 'credentialExpiresAt' | 'credentialRenewal'>, now: Date = new Date()): Maybe<CliTokenSourceCredentialReport> {
+  const expiresAt = validDate(token.credentialExpiresAt);
+  let result: Maybe<CliTokenSourceCredentialReport>;
+
+  if (expiresAt) {
+    const remainingMs = expiresAt.getTime() - now.getTime();
+    result = { expiresAt: expiresAt.toISOString(), refreshable: false, minutesLeft: Math.max(0, Math.floor(remainingMs / MS_IN_MINUTE)), lapsed: remainingMs <= 0, ...(token.credentialRenewal ? { renewal: token.credentialRenewal } : {}) };
+  }
+
+  return result;
+}
+
+/**
+ * Input for {@link cliTokenSourceCredentialWarning}.
+ */
+export interface CliTokenSourceCredentialWarningInput {
+  readonly token: Pick<CliTokenSourceToken, 'expiresAt' | 'credentialExpiresAt' | 'credentialRenewal'>;
+  /**
+   * The consuming CLI's name, prefixed to the line (e.g. `msgraph-cli`).
+   */
+  readonly cliName: string;
+  readonly now?: Maybe<Date>;
+  /**
+   * How far ahead to warn. Defaults to {@link CLI_TOKEN_SOURCE_CREDENTIAL_WARNING_MS}.
+   */
+  readonly warnWithinMs?: Maybe<Milliseconds>;
+  /**
+   * The command that drops the cached token so the next run mints through the renewed credential. Defaults
+   * to `<cliName> auth token-source refresh`.
+   */
+  readonly refreshCommand?: Maybe<string>;
+}
+
+/**
+ * The one stderr line a consuming CLI prints when the app CLI's non-refreshable credential behind its token
+ * source is about to lapse (or has lapsed while the cached token still works), so a model or person re-mints
+ * it between steps instead of finding out from a failed mint mid-task. Never carries a token.
+ *
+ * @param input - The token, the consuming CLI's name, the time, and the warning window.
+ * @returns The line without a trailing newline, or undefined when there is nothing to warn about.
+ */
+export function cliTokenSourceCredentialWarning(input: CliTokenSourceCredentialWarningInput): Maybe<string> {
+  const { token, cliName } = input;
+  const now = input.now ?? new Date();
+  const report = cliTokenSourceCredentialReport(token, now);
+  const warnWithinMs = input.warnWithinMs ?? CLI_TOKEN_SOURCE_CREDENTIAL_WARNING_MS;
+  let result: Maybe<string>;
+
+  if (report && new Date(report.expiresAt).getTime() - now.getTime() <= warnWithinMs) {
+    const refreshCommand = input.refreshCommand ?? `${cliName} auth token-source refresh`;
+    const renewWith = report.renewal ?? 'Renew the app CLI login behind the token source.';
+    const renewal = ` ${renewWith} Then run \`${refreshCommand}\` so the next command mints through it.`;
+
+    if (report.lapsed) {
+      result = `${cliName}: the app CLI login behind this token source lapsed at ${report.expiresAt} and cannot be refreshed. The cached token works until ${token.expiresAt}; after that every command fails until you renew it. Renew it now, between steps.${renewal}`;
+    } else {
+      result = `${cliName}: the app CLI login behind this token source lapses in ${report.minutesLeft} min (${report.expiresAt}) and cannot be refreshed. Renew it now, between steps, rather than mid-task.${renewal}`;
+    }
+  }
+
+  return result;
 }
 
 // MARK: Token File
@@ -369,6 +486,21 @@ export interface CreateCliTokenSourceInput<T extends CliTokenSourceToken = CliTo
    * Maps the normalized token to the CLI's own token type. Defaults to the token as is.
    */
   readonly mapToken?: Maybe<CliTokenSourceTokenMapper<T>>;
+  /**
+   * Prints {@link cliTokenSourceCredentialWarning} once per source when a loaded token's app-CLI credential is
+   * about to lapse. Off when absent; report commands (`auth show`) leave it off and report the credential instead.
+   */
+  readonly credentialWarning?: Maybe<CliTokenSourceCredentialWarningConfig>;
+}
+
+/**
+ * Turns on the token source's credential warning (see {@link CreateCliTokenSourceInput.credentialWarning}).
+ */
+export interface CliTokenSourceCredentialWarningConfig extends Pick<CliTokenSourceCredentialWarningInput, 'cliName' | 'refreshCommand' | 'warnWithinMs'> {
+  /**
+   * Writes the line. Defaults to stderr, so a command's JSON on stdout is unchanged.
+   */
+  readonly write?: Maybe<(line: string) => void>;
 }
 
 /**
@@ -391,8 +523,23 @@ export function createCliTokenSource<T extends CliTokenSourceToken = CliTokenSou
   const parseScopes = input.parseScopes ?? defaultCliTokenSourceScopesParser;
   const mapToken = input.mapToken ?? ((token: CliTokenSourceToken) => token as T);
   const fileInput: CliTokenSourceTokenFileInput = { command, tokenCachePath };
+  const credentialWarning = input.credentialWarning;
   let current: Maybe<T>;
   let inFlight: Maybe<Promise<T>>;
+  let warned = false;
+
+  function warnOnce(token: T): T {
+    if (credentialWarning && !warned) {
+      const line = cliTokenSourceCredentialWarning({ ...credentialWarning, token });
+
+      if (line) {
+        warned = true;
+        (credentialWarning.write ?? ((x: string) => process.stderr.write(`${x}\n`)))(line);
+      }
+    }
+
+    return token;
+  }
 
   async function fetchToken(): Promise<T> {
     let token = await loadCachedCliTokenSourceToken<T>({ ...fileInput, parseScopes, mapToken });
@@ -418,12 +565,12 @@ export function createCliTokenSource<T extends CliTokenSourceToken = CliTokenSou
     let result: Promise<T>;
 
     if (current != null && isCliTokenSourceTokenReusable(current)) {
-      result = Promise.resolve(current);
+      result = Promise.resolve(warnOnce(current));
     } else {
       inFlight ??= fetchToken()
         .then((token) => {
           current = token;
-          return token;
+          return warnOnce(token);
         })
         .finally(() => {
           inFlight = undefined;
@@ -533,6 +680,10 @@ export interface CliTokenSourceReport {
    * The keys of the app-supplied settings (e.g. `{ mail_signature: ['me'] }`). Never their values.
    */
   readonly settings?: Maybe<CliExternalConnectionSettingsSummary>;
+  /**
+   * The app CLI's own credential behind the source, when it cannot be refreshed: when minting stops.
+   */
+  readonly credential?: Maybe<CliTokenSourceCredentialReport>;
   readonly error?: string;
   readonly errorCode?: string;
   readonly serverCode?: string;
@@ -557,7 +708,8 @@ export function cliTokenSourceReport(status: CliTokenSourceStatus<CliTokenSource
 
   if (resolved) {
     const { token } = resolved;
-    result = { ...source, expiresAt: token.expiresAt, scopes: token.scopes, providerType: token.providerType, hints: token.hints, settings: summarizeCliExternalConnectionSettings(token.settings) };
+    const credential = cliTokenSourceCredentialReport(token);
+    result = { ...source, expiresAt: token.expiresAt, scopes: token.scopes, providerType: token.providerType, hints: token.hints, settings: summarizeCliExternalConnectionSettings(token.settings), ...(credential ? { credential } : {}) };
   } else {
     result = { ...source, error: error ?? 'The token source could not be loaded.', ...(errorCode ? { errorCode } : {}), ...(serverCode ? { serverCode } : {}), ...(suggestion ? { suggestion } : {}) };
   }

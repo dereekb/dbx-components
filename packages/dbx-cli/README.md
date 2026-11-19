@@ -595,6 +595,16 @@ check`) fails: it prints `{ ok: false, error, code, serverCode?, suggestion, dat
 and `serverCode` are the source command's own (for example `AUTH_FORBIDDEN` from a refused mint), and
 the full report stays under `data`.
 
+When the app CLI's own credential cannot be refreshed (a bearer `auth handoff` credential), `external-token`
+adds `credentialExpiresAt` (and, for a handoff, `credentialRenewal`: how to re-mint it) to its bundle. The
+token-source CLI caches both with the token, reports them under `auth show`'s `tokenSource.credential`
+(`{ expiresAt, refreshable: false, minutesLeft, lapsed, renewal }`), and — when it passes
+`credentialWarning: { cliName }` to `createCliTokenSource` (msgraph-cli, zoho-cli and trello-cli do) — prints
+one stderr line per run once the credential is within `CLI_TOKEN_SOURCE_CREDENTIAL_WARNING_MS` (10 minutes) of
+lapsing, so the user renews it between steps and then runs `<consumer> auth token-source refresh`. How long the
+handoff lives is the server's `CliTokenApiModuleConfig.maxTtlSeconds` (one hour by default, at most
+`HARD_MAX_CLI_TOKEN_TTL_SECONDS`, four hours).
+
 When you mint from more than one env of the app, save one source per env by name and pick one per run.
 A source can also send its calls to the Zoho sandboxes:
 

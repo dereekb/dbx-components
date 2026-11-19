@@ -441,15 +441,32 @@ export function microsoftGraphDriveItemSummary(item: MicrosoftGraphDriveItem, in
 }
 
 /**
- * Builds the GET of a file's bytes. Graph answers 302 to a pre-authenticated URL, which fetch follows.
+ * Input to {@link microsoftGraphDownloadDriveItemRequest}.
+ */
+export interface MicrosoftGraphDownloadDriveItemInput extends MicrosoftGraphDriveItemRefInput {
+  /**
+   * Read the bytes through `/contentStream`, which Graph serves itself, instead of `/content`, which Graph answers
+   * with a 302 to a pre-authenticated SharePoint URL (`<tenant>.sharepoint.com` / `<tenant>-my.sharepoint.com`).
+   *
+   * Use it where only `graph.microsoft.com` is reachable (a sandbox with an egress allow-list): `/content` then
+   * fails on the redirect. Its bytes count against Graph's throttling, so bulk copies are better served by
+   * `/content`, whose SharePoint download is not.
+   */
+  readonly contentStream?: Maybe<boolean>;
+}
+
+/**
+ * Builds the GET of a file's bytes: `/content` (Graph answers 302 to a pre-authenticated SharePoint URL, which
+ * fetch follows), or with `contentStream` the `/contentStream` that Graph serves directly.
  *
- * @param input - The drive and item.
+ * @param input - The drive and item, and whether to read through `/contentStream`.
  * @returns The raw request.
  *
  * @see https://learn.microsoft.com/en-us/graph/api/driveitem-get-content
+ * @see https://learn.microsoft.com/en-us/graph/api/driveitem-get-contentstream
  */
-export function microsoftGraphDownloadDriveItemRequest(input: MicrosoftGraphDriveItemRefInput): MicrosoftGraphRawRequestInput {
-  return { method: 'GET', path: microsoftGraphDriveItemPath(input, 'content') };
+export function microsoftGraphDownloadDriveItemRequest(input: MicrosoftGraphDownloadDriveItemInput): MicrosoftGraphRawRequestInput {
+  return { method: 'GET', path: microsoftGraphDriveItemPath(input, input.contentStream ? 'contentStream' : 'content') };
 }
 
 // MARK: Shares

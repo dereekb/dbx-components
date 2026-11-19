@@ -22,7 +22,7 @@ import {
 } from '@dereekb/dbx-cli';
 import { MS_IN_SECOND, type Maybe, type Milliseconds } from '@dereekb/util';
 import { ZOHO_OAUTH_SCOPE_DELIMITER, type ZohoAccessToken, type ZohoAccessTokenRefresher, type ZohoAccountsApiUrlKey, type ZohoApiUrlKey, type ZohoOAuthScope, zohoAccountsApiUrlKeyForToken, zohoDatacenterApiDomain, zohoProductsForOAuthScopes } from '@dereekb/zoho';
-import { getTokenCachePath, zohoCliTokenSourceConfigStore, zohoCliTokenSourceResolver, ZOHO_CLI_PRODUCTS, type ZohoCliConfig, type ZohoCliProduct, type ZohoCliTokenSourceConfig, type ZohoCliTokenSourceCoverage, type ZohoCliTokenSourceSelection } from './cli.config';
+import { getTokenCachePath, zohoCliTokenSourceConfigStore, zohoCliTokenSourceResolver, ZOHO_CLI_NAME, ZOHO_CLI_PRODUCTS, type ZohoCliConfig, type ZohoCliProduct, type ZohoCliTokenSourceConfig, type ZohoCliTokenSourceCoverage, type ZohoCliTokenSourceSelection } from './cli.config';
 
 // MARK: Token
 /**
@@ -112,7 +112,9 @@ export function zohoCliTokenSourceTokenFromCliTokenSourceToken(token: CliTokenSo
     location: nonEmptyString(extra['location']) ?? nonEmptyString(stored?.['location']),
     apiDomain: nonEmptyString(extra['apiDomain']) ?? nonEmptyString(stored?.['apiDomain']),
     hints: token.hints,
-    providerType: token.providerType
+    providerType: token.providerType,
+    ...(token.credentialExpiresAt ? { credentialExpiresAt: token.credentialExpiresAt } : {}),
+    ...(token.credentialRenewal ? { credentialRenewal: token.credentialRenewal } : {})
   };
 }
 
@@ -271,7 +273,7 @@ function zohoCliTokenSourceOptions(input: Pick<CreateZohoCliTokenSourceInput, 't
  * ```
  */
 export function createZohoCliTokenSource(input: CreateZohoCliTokenSourceInput): ZohoCliTokenSource {
-  return { ...createCliTokenSource({ ...zohoCliTokenSourceOptions(input), command: input.command }), apiMode: input.apiMode ?? 'production' };
+  return { ...createCliTokenSource({ ...zohoCliTokenSourceOptions(input), command: input.command, credentialWarning: { cliName: ZOHO_CLI_NAME } }), apiMode: input.apiMode ?? 'production' };
 }
 
 /**

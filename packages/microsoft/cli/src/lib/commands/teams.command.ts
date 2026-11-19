@@ -23,6 +23,8 @@ import {
   microsoftGraphSoftDeleteChannelMessageRequest,
   microsoftGraphSoftDeleteChatMessageRequest,
   microsoftGraphTeamChannelsRequest,
+  microsoftGraphUpdateChannelMessageRequest,
+  microsoftGraphUpdateChatMessageRequest,
   readMicrosoftGraphSearchResponsePage
 } from '@dereekb/microsoft';
 import { CliError, cliConcurrencyOption, cliConcurrencyValue, withCliInterruptSignal, wrapCommandHandler } from '@dereekb/dbx-cli';
@@ -31,7 +33,7 @@ import type { Argv, CommandModule } from 'yargs';
 import { msGraphCliPaths } from '../config/cli.config';
 import { type MsGraphCliContext } from '../context/cli.context';
 import { msGraphCommandHandler } from '../middleware/auth.middleware';
-import { MSGRAPH_CLI_TEAMS_CHANNEL_DELETE_ADMIN_CONSENT, MSGRAPH_CLI_TEAMS_CHANNEL_MESSAGES_ADMIN_CONSENT, MSGRAPH_CLI_TEAMS_CHAT_SEARCH_ADMIN_CONSENT, msGraphCliAdminConsentTag, runMsGraphCliAdminConsentCall } from '../util/admin.consent';
+import { MSGRAPH_CLI_TEAMS_CHANNEL_DELETE_ADMIN_CONSENT, MSGRAPH_CLI_TEAMS_CHANNEL_EDIT_ADMIN_CONSENT, MSGRAPH_CLI_TEAMS_CHANNEL_MESSAGES_ADMIN_CONSENT, MSGRAPH_CLI_TEAMS_CHAT_SEARCH_ADMIN_CONSENT, msGraphCliAdminConsentTag, runMsGraphCliAdminConsentCall } from '../util/admin.consent';
 import { parseMsGraphCliDateOption } from '../util/option';
 import { parseMsGraphCliEnumOption } from '../util/auto.reply';
 import { msGraphCliConfirmOptions, msGraphCliDryRunOptions, msGraphCliDryRunOutput, requireMsGraphCliConfirmation } from '../util/mail.write';
@@ -91,6 +93,63 @@ async function sendTeamsMessage({ argv, graphContext, build, action }: SendTeams
     await awaitMsGraphCliTeamsSendSlot({ configDir: msGraphCliPaths().configDir });
     const message = (await get(graphContext, request)) as { readonly id?: string; readonly createdDateTime?: string; readonly webUrl?: string };
     outputMsGraphCliResult({ sent: true, id: message?.id, createdDateTime: message?.createdDateTime, webUrl: message?.webUrl });
+  }
+}
+
+function editBodyOptions<T>(yargs: Argv<T>) {
+  return msGraphCliConfirmOptions(msGraphCliDryRunOptions(yargs), 'Confirm the edit: everyone in the conversation sees the new text, marked Edited')
+    .option('text', { type: 'string', describe: 'The new message as plain text' })
+    .option('html', { type: 'string', describe: 'The new message as HTML' })
+    .option('file', { type: 'string', describe: 'Read the new message from a file (.html / .htm as HTML)' });
+}
+
+interface EditTeamsMessageInput {
+  readonly argv: any;
+  readonly graphContext: MicrosoftGraphContext;
+  /**
+   * Builds the PATCH from the new body.
+   */
+  readonly build: (body: MicrosoftGraphItemBody) => MicrosoftGraphRequestInput;
+  /**
+   * What the edit does, for the confirmation message.
+   */
+  readonly action: string;
+  /**
+   * Sends the PATCH; a channel edit wraps it in its admin-consent check.
+   */
+  readonly run?: Maybe<(request: MicrosoftGraphRequestInput) => Promise<unknown>>;
+}
+
+/**
+ * What `teams chat edit` and `teams channel edit` print. Graph answers 204, so only the id comes back.
+ */
+export interface MsGraphCliTeamsEditOutput {
+  readonly id: string;
+  readonly edited: true;
+}
+
+/**
+ * Edits one of the user's Teams messages after `--yes` and the 1-per-second gate, or prints the PATCH on `--dry-run`.
+ * The new body replaces the old one whole.
+ *
+ * @param input - The options, Graph context, request builder, action and runner.
+ * @param input.argv - The parsed options.
+ * @param input.graphContext - The Graph context.
+ * @param input.build - Builds the PATCH from the new body.
+ * @param input.action - What the edit does, for the confirmation message.
+ * @param input.run - Sends the PATCH. Defaults to a plain Graph call.
+ */
+async function editTeamsMessage({ argv, graphContext, build, action, run }: EditTeamsMessageInput): Promise<void> {
+  const request = build(await readMsGraphCliTeamsBody({ text: argv.text, html: argv.html, file: argv.file }));
+
+  if (argv.dryRun) {
+    outputMsGraphCliResult(msGraphCliDryRunOutput([request], 'The new body replaces the old one whole: @mentions and inline images of the original are not kept.'));
+  } else {
+    requireMsGraphCliConfirmation({ yes: argv.yes, action });
+    await awaitMsGraphCliTeamsSendSlot({ configDir: msGraphCliPaths().configDir });
+    await (run ?? ((x: MicrosoftGraphRequestInput) => get(graphContext, x)))(request);
+    const output: MsGraphCliTeamsEditOutput = { id: String(argv.message), edited: true };
+    outputMsGraphCliResult(output);
   }
 }
 
@@ -159,6 +218,20 @@ export const TEAMS_CHAT_SEND_COMMAND: CommandModule = {
   describe: `Send a chat message. Needs --yes. ${MSGRAPH_CLI_TEAMS_TERMS_NOTE}`,
   builder: (yargs: Argv) => bodyOptions(yargs).positional('chat', { type: 'string', demandOption: true, describe: 'The chat id' }),
   handler: msGraphCommandHandler(async (argv: any, { graphContext }) => sendTeamsMessage({ argv, graphContext, build: (body) => microsoftGraphSendChatMessageRequest({ chatId: String(argv.chat), body }), action: 'send a Teams chat message' }))
+};
+
+export const TEAMS_CHAT_EDIT_COMMAND: CommandModule = {
+  command: 'edit <chat> <message>',
+  describe: 'Edit one of your chat messages: replace its text (Chat.ReadWrite; only the sender can edit). Needs --yes',
+  builder: (yargs: Argv) =>
+    editBodyOptions(yargs)
+      .positional('chat', { type: 'string', demandOption: true, describe: 'The chat id' })
+      .positional('message', { type: 'string', demandOption: true, describe: 'The message id (from teams chat messages)' })
+      .example([
+        ['$0 teams chat edit 19:abc@thread.v2 1731900000000 --text "Corrected: the call is at 3 pm." --yes', 'Replace the text of one of your messages'],
+        ['$0 teams chat edit 19:abc@thread.v2 1731900000000 --html "<p>Updated <b>agenda</b></p>" --dry-run', 'Print the PATCH without sending it']
+      ]),
+  handler: msGraphCommandHandler(async (argv: any, { graphContext }) => editTeamsMessage({ argv, graphContext, build: (body) => microsoftGraphUpdateChatMessageRequest({ chatId: String(argv.chat), messageId: String(argv.message), body }), action: 'edit the Teams chat message' }))
 };
 
 export const TEAMS_CHAT_DELETE_COMMAND: CommandModule = {
@@ -391,7 +464,7 @@ export function isMsGraphCliTeamsChatArchiveSearch(argv: { readonly _?: Maybe<re
 const TEAMS_CHAT_COMMAND: CommandModule = {
   command: 'chat',
   describe: 'Read, search, archive, send and delete chat messages',
-  builder: (yargs: Argv) => yargs.command(TEAMS_CHAT_MESSAGES_COMMAND).command(TEAMS_CHAT_SEARCH_COMMAND).command(TEAMS_CHAT_DUMP_COMMAND).command(TEAMS_CHAT_SEND_COMMAND).command(TEAMS_CHAT_DELETE_COMMAND).demandCommand(1, 'Please specify a chat subcommand.'),
+  builder: (yargs: Argv) => yargs.command(TEAMS_CHAT_MESSAGES_COMMAND).command(TEAMS_CHAT_SEARCH_COMMAND).command(TEAMS_CHAT_DUMP_COMMAND).command(TEAMS_CHAT_SEND_COMMAND).command(TEAMS_CHAT_EDIT_COMMAND).command(TEAMS_CHAT_DELETE_COMMAND).demandCommand(1, 'Please specify a chat subcommand.'),
   handler: () => undefined
 };
 
@@ -441,10 +514,29 @@ export const TEAMS_CHANNEL_DELETE_COMMAND: CommandModule = {
   })
 };
 
+export const TEAMS_CHANNEL_EDIT_COMMAND: CommandModule = {
+  command: 'edit <team> <channel> <message>',
+  describe: `Edit one of your channel messages, or a reply with --reply-to <parent>. ${msGraphCliAdminConsentTag(MSGRAPH_CLI_TEAMS_CHANNEL_EDIT_ADMIN_CONSENT)} Neither the Read nor the Read + Write preset grants it, even for your own post. Needs --yes`,
+  builder: (yargs: Argv) =>
+    channelPositionals(editBodyOptions(yargs))
+      .positional('message', { type: 'string', demandOption: true, describe: 'The message (or reply) id' })
+      .option('reply-to', { type: 'string', describe: 'The parent message id, when <message> is a reply' })
+      .example([['$0 teams channel edit <team> <channel> <message> --text "Fixed the link." --yes', 'Replace the text of one of your posts']]),
+  handler: msGraphCommandHandler(async (argv: any, { graphContext, tokenSource }) =>
+    editTeamsMessage({
+      argv,
+      graphContext,
+      build: (body) => microsoftGraphUpdateChannelMessageRequest({ teamId: String(argv.team), channelId: String(argv.channel), messageId: String(argv.message), replyToId: argv.replyTo, body }),
+      action: 'edit the channel message',
+      run: (request) => runMsGraphCliAdminConsentCall({ tokenSource, requirement: MSGRAPH_CLI_TEAMS_CHANNEL_EDIT_ADMIN_CONSENT, run: () => get(graphContext, request) })
+    })
+  )
+};
+
 const TEAMS_CHANNEL_COMMAND: CommandModule = {
   command: 'channel',
-  describe: 'Post and reply in channels; read and delete channel messages (admin consent only)',
-  builder: (yargs: Argv) => yargs.command(TEAMS_CHANNEL_SEND_COMMAND).command(TEAMS_CHANNEL_REPLY_COMMAND).command(TEAMS_CHANNEL_MESSAGES_COMMAND).command(TEAMS_CHANNEL_DELETE_COMMAND).demandCommand(1, 'Please specify a channel subcommand.'),
+  describe: 'Post and reply in channels; read, edit and delete channel messages (admin consent only)',
+  builder: (yargs: Argv) => yargs.command(TEAMS_CHANNEL_SEND_COMMAND).command(TEAMS_CHANNEL_REPLY_COMMAND).command(TEAMS_CHANNEL_MESSAGES_COMMAND).command(TEAMS_CHANNEL_EDIT_COMMAND).command(TEAMS_CHANNEL_DELETE_COMMAND).demandCommand(1, 'Please specify a channel subcommand.'),
   handler: () => undefined
 };
 
@@ -453,7 +545,7 @@ const TEAMS_CHANNEL_COMMAND: CommandModule = {
  */
 export const TEAMS_COMMAND: CommandModule = {
   command: 'teams',
-  describe: `Read Teams and send chat and channel messages. ${MSGRAPH_CLI_TEAMS_TERMS_NOTE}`,
+  describe: `Read Teams and send, edit and delete chat and channel messages. ${MSGRAPH_CLI_TEAMS_TERMS_NOTE}`,
   builder: (yargs: Argv) => yargs.command(TEAMS_LIST_COMMAND).command(TEAMS_CHANNELS_COMMAND).command(TEAMS_CHATS_COMMAND).command(TEAMS_PRESENCE_COMMAND).command(TEAMS_FILES_COMMAND).command(TEAMS_CHAT_COMMAND).command(TEAMS_CHANNEL_COMMAND).demandCommand(1, 'Please specify a teams subcommand.'),
   handler: () => undefined
 };

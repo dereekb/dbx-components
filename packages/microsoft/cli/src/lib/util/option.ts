@@ -28,24 +28,52 @@ export function parseMsGraphCliDateOption(name: string, value: unknown): Maybe<D
 }
 
 /**
- * Splits an ids file's content: a JSON array of strings, or ids separated by whitespace, commas or new lines.
+ * Splits an ids file's content: ids separated by whitespace, commas or new lines; a JSON array of ids, or of objects
+ * with a string `id` (e.g. messages); or msgraph-cli's own JSON output of a list or search (`{ "ok": true, "data": [...] }`,
+ * or a page `{ "data": { "value": [...] } }`), so `mail list … --all-pages --pick id > ids.json` feeds
+ * `--ids-file ids.json` with no jq.
  *
  * @param content - The file content.
  * @returns The ids, blanks dropped.
- * @throws {CliError} `INVALID_ARGUMENT` when a JSON array holds a non-string.
+ * @throws {CliError} `INVALID_ARGUMENT` when the JSON is not one of those shapes, or an item has no string id.
  */
 export function parseMsGraphCliIdsFileContent(content: string): string[] {
   const trimmed = content.trim();
   let result: string[];
 
-  if (trimmed.startsWith('[')) {
-    const parsed = JSON.parse(trimmed) as unknown[];
+  if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+    let parsed: unknown;
 
-    if (!Array.isArray(parsed) || parsed.some((x) => typeof x !== 'string')) {
-      throw new CliError({ message: 'The ids file is a JSON array but not of strings.', code: 'INVALID_ARGUMENT' });
+    try {
+      parsed = JSON.parse(trimmed);
+    } catch {
+      throw new CliError({ message: 'The ids file starts like JSON but does not parse.', code: 'INVALID_ARGUMENT', suggestion: 'Use one id per line, a JSON array of ids, or the JSON output of mail list / mail search.' });
     }
 
-    result = parsed as string[];
+    // unwrap msgraph-cli output ({ ok, data }) and a Graph page ({ value })
+    let items: unknown = parsed;
+
+    if (items != null && !Array.isArray(items) && typeof items === 'object' && 'data' in items) {
+      items = (items as { readonly data: unknown }).data;
+    }
+
+    if (items != null && !Array.isArray(items) && typeof items === 'object' && 'value' in items) {
+      items = (items as { readonly value: unknown }).value;
+    }
+
+    if (!Array.isArray(items)) {
+      throw new CliError({ message: 'The ids file is JSON but holds no array of ids.', code: 'INVALID_ARGUMENT', suggestion: 'Use a JSON array of ids or of objects with "id", or the JSON output of mail list / mail search (with --all-pages).' });
+    }
+
+    result = items.map((x) => {
+      const id = typeof x === 'string' ? x : (x as Maybe<{ readonly id?: unknown }>)?.id;
+
+      if (typeof id !== 'string') {
+        throw new CliError({ message: 'An item in the ids file is neither a string nor an object with a string "id".', code: 'INVALID_ARGUMENT' });
+      }
+
+      return id;
+    });
   } else {
     result = trimmed.split(/[\s,]+/);
   }

@@ -40,13 +40,22 @@ export const FIREBASE_SERVER_CLI_TOKEN_CLAIM_PATH = '/oidc/cli-token/claim';
 
 // MARK: TTL
 /**
- * Hard ceiling on a minted CLI credential's lifetime, in seconds (one hour).
+ * Default ceiling on a minted CLI credential's lifetime, in seconds (one hour).
  *
- * NEVER configurable upward: the credential is minted non-interactively by whatever already holds
- * the session, and the child grant does not cascade-revoke with its parent (see
- * {@link OidcCliTokenService}), so the short ceiling IS the mitigation.
+ * The credential is minted non-interactively by whatever already holds the session, and the child grant
+ * does not cascade-revoke with its parent (see {@link OidcCliTokenService}), so a short ceiling IS the
+ * mitigation. An app may raise it with {@link CliTokenApiModuleConfig.maxTtlSeconds}, never past
+ * {@link HARD_MAX_CLI_TOKEN_TTL_SECONDS}.
  */
 export const MAX_CLI_TOKEN_TTL_SECONDS: Seconds = SECONDS_IN_HOUR;
+
+/**
+ * Absolute ceiling on a minted CLI credential's lifetime, in seconds (four hours).
+ *
+ * {@link CliTokenApiModuleConfig.maxTtlSeconds} is clamped to it, so a misconfigured app can lengthen a
+ * handoff to a working session but never mint a day-long credential that outlives a revocation.
+ */
+export const HARD_MAX_CLI_TOKEN_TTL_SECONDS: Seconds = 4 * SECONDS_IN_HOUR;
 
 /**
  * Default lifetime requested for a minted CLI credential when the caller asks for none.
@@ -219,9 +228,19 @@ export abstract class CliTokenApiModuleConfig {
   readonly requiredScope?: Maybe<Maybe<OidcScopeTerm>>;
   /**
    * Lifetime requested for a minted credential when the caller names none. Clamped to
-   * {@link MAX_CLI_TOKEN_TTL_SECONDS}. Defaults to {@link DEFAULT_CLI_TOKEN_TTL_SECONDS}.
+   * {@link maxTtlSeconds}. Defaults to {@link DEFAULT_CLI_TOKEN_TTL_SECONDS}.
    */
   readonly defaultTtlSeconds?: Seconds;
+  /**
+   * The longest lifetime a minted credential may have, in seconds. Defaults to
+   * {@link MAX_CLI_TOKEN_TTL_SECONDS} (one hour) and is clamped to {@link HARD_MAX_CLI_TOKEN_TTL_SECONDS}.
+   *
+   * Raising it (e.g. to 90 minutes) lets a cloud agent finish a longer task on one handoff, at the cost of
+   * a credential that stays usable longer after its minting session is revoked. A minted credential never
+   * outlives the minting session's own grant, whatever this is set to. Raise {@link defaultTtlSeconds}
+   * with it, or callers must request the longer lifetime with `ttlSeconds`.
+   */
+  readonly maxTtlSeconds?: Seconds;
   /**
    * Whether a claim code may only be redeemed from the same IP that minted it. Defaults to FALSE.
    *
@@ -300,7 +319,8 @@ export interface CliTokenMintResult {
    */
   readonly claimExpiresAt: ISO8601DateString;
   /**
-   * When the minted CREDENTIAL itself expires — always within {@link MAX_CLI_TOKEN_TTL_SECONDS}.
+   * When the minted CREDENTIAL itself expires — always within the app's {@link CliTokenApiModuleConfig.maxTtlSeconds}
+   * ({@link MAX_CLI_TOKEN_TTL_SECONDS} by default).
    */
   readonly expiresAt: ISO8601DateString;
   /**
@@ -422,7 +442,7 @@ export interface ResolveCliTokenScopesInput {
  *
  * The intersection is what makes the mint non-amplifying: the caller may narrow, never widen, and the
  * retained scopes only keep identity the caller already holds. The deny-list is the only asymmetry,
- * and it exists so a one-hour credential cannot manufacture a longer-lived or further-minting one.
+ * and it exists so a short-lived credential cannot manufacture a longer-lived or further-minting one.
  *
  * @param input - The caller's scopes and the optional requested subset.
  * @returns The space-delimited scope string to grant.
@@ -471,6 +491,11 @@ export interface ResolveCliTokenTtlSecondsInput {
    */
   readonly defaultTtlSeconds?: Maybe<Seconds>;
   /**
+   * The app-configured ceiling ({@link CliTokenApiModuleConfig.maxTtlSeconds}). Defaults to
+   * {@link MAX_CLI_TOKEN_TTL_SECONDS}; see {@link resolveCliTokenMaxTtlSeconds}.
+   */
+  readonly maxTtlSeconds?: Maybe<Seconds>;
+  /**
    * Seconds of life remaining on the MINTING caller's own grant, when known. A child must never
    * outlive its parent.
    */
@@ -478,17 +503,31 @@ export interface ResolveCliTokenTtlSecondsInput {
 }
 
 /**
- * Resolves a minted credential's lifetime as
- * `min(requested ?? default, MAX_CLI_TOKEN_TTL_SECONDS, parentRemaining)`, floored at one second.
+ * Resolves the ceiling a minted credential's lifetime is clamped to: the app's `maxTtlSeconds`, else
+ * {@link MAX_CLI_TOKEN_TTL_SECONDS}, never above {@link HARD_MAX_CLI_TOKEN_TTL_SECONDS}. A non-positive or
+ * non-finite value falls back to the default.
  *
- * @param input - The requested/default TTL and the parent grant's remaining life.
+ * @param maxTtlSeconds - The app-configured ceiling, if any.
+ * @returns The ceiling, in seconds.
+ * @__NO_SIDE_EFFECTS__
+ */
+export function resolveCliTokenMaxTtlSeconds(maxTtlSeconds: Maybe<Seconds>): Seconds {
+  const configured = maxTtlSeconds != null && Number.isFinite(maxTtlSeconds) && maxTtlSeconds > 0 ? maxTtlSeconds : MAX_CLI_TOKEN_TTL_SECONDS;
+  return Math.min(configured, HARD_MAX_CLI_TOKEN_TTL_SECONDS);
+}
+
+/**
+ * Resolves a minted credential's lifetime as
+ * `min(requested ?? default, resolveCliTokenMaxTtlSeconds(maxTtlSeconds), parentRemaining)`, floored at one second.
+ *
+ * @param input - The requested/default TTL, the app's ceiling and the parent grant's remaining life.
  * @returns The TTL to mint with, in seconds.
  * @__NO_SIDE_EFFECTS__
  */
 export function resolveCliTokenTtlSeconds(input: ResolveCliTokenTtlSecondsInput): Seconds {
-  const { requestedTtlSeconds, defaultTtlSeconds, parentRemainingSeconds } = input;
+  const { requestedTtlSeconds, defaultTtlSeconds, maxTtlSeconds, parentRemainingSeconds } = input;
   const requested = requestedTtlSeconds != null && requestedTtlSeconds > 0 ? requestedTtlSeconds : (defaultTtlSeconds ?? DEFAULT_CLI_TOKEN_TTL_SECONDS);
-  const candidates: Seconds[] = [requested, MAX_CLI_TOKEN_TTL_SECONDS];
+  const candidates: Seconds[] = [requested, resolveCliTokenMaxTtlSeconds(maxTtlSeconds)];
 
   if (parentRemainingSeconds != null && parentRemainingSeconds > 0) {
     candidates.push(parentRemainingSeconds);

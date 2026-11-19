@@ -6,7 +6,7 @@ import { DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR, isCliCredentialProcess } from '../u
 import { wrapCommandHandler } from '../util/handler';
 import { outputResult } from '../util/output';
 import { type CliExternalConnectionDataAdapter, type CliExternalConnectionDataAdapters, type CliExternalConnectionSettings, summarizeCliExternalConnectionSettings } from './external-connection-data';
-import { type CliExternalConnectionTokenBundle, cliExternalConnectionTokenBundle, fetchExternalConnectionToken } from './external-token';
+import { type CliExternalConnectionTokenBundle, cliExternalConnectionTokenBundle, cliExternalConnectionTokenBundleCredentialFields, fetchExternalConnectionToken } from './external-token';
 
 /**
  * Default command name for the external connection access-token mint.
@@ -94,7 +94,8 @@ export function buildExternalTokenCommand(options?: Maybe<BuildExternalTokenComm
         }
       }
 
-      const bundle: CliExternalConnectionTokenBundle = cliExternalConnectionTokenBundle(token, context.env.externalConnectionHints, settings);
+      // a non-refreshable credential (a bearer handoff) reports when it lapses, so the consuming CLI can warn ahead
+      const bundle: CliExternalConnectionTokenBundle = { ...cliExternalConnectionTokenBundle(token, context.env.externalConnectionHints, settings), ...cliExternalConnectionTokenBundleCredentialFields({ credential: context.credential, cliName: context.cliName, envName: context.envName }) };
 
       if (isCliCredentialProcess()) {
         // the ONLY place the raw token is written: one line, straight to stdout, for the parent
@@ -109,6 +110,7 @@ export function buildExternalTokenCommand(options?: Maybe<BuildExternalTokenComm
             tokenType: bundle.tokenType,
             scopes: bundle.scopes,
             expiresAt: bundle.expiresAt,
+            ...(bundle.credentialExpiresAt ? { credentialExpiresAt: bundle.credentialExpiresAt } : {}),
             extra: bundle.extra,
             hints: bundle.hints,
             settings: summarizeCliExternalConnectionSettings(bundle.settings)

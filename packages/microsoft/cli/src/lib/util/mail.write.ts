@@ -630,27 +630,106 @@ export interface MsGraphCliWriteResultRow {
 }
 
 /**
- * What a move, copy or delete prints: counts plus one row per id.
+ * What a move, copy or delete prints: counts plus one row per id (only the failed ones when `omitted` is set).
  */
 export interface MsGraphCliWriteResultsOutput {
   readonly total: number;
   readonly ok: number;
   readonly failed: number;
   readonly results: MsGraphCliWriteResultRow[];
+  /**
+   * How many successful rows were left out of `results`, when the run was larger than the row limit.
+   */
+  readonly omitted?: number;
+}
+
+/**
+ * The most rows a move or delete prints before it keeps only the failed ones. `--all-results` prints every row.
+ */
+export const MSGRAPH_CLI_WRITE_RESULTS_MAX_ROWS = 50;
+
+/**
+ * Options for {@link msGraphCliWriteResultsOutput}.
+ */
+export interface MsGraphCliWriteResultsOutputOptions {
+  /**
+   * Above this many results, only the failed rows are printed and the successful ones are counted in `omitted`.
+   * Unset prints every row.
+   */
+  readonly maxRows?: Maybe<number>;
 }
 
 /**
  * Builds the per-id result table of a move, copy or delete.
  *
  * @param results - The per-id results.
+ * @param options - The row limit.
  * @returns The output.
  */
-export function msGraphCliWriteResultsOutput(results: readonly MicrosoftGraphMessageWriteResult[]): MsGraphCliWriteResultsOutput {
+export function msGraphCliWriteResultsOutput(results: readonly MicrosoftGraphMessageWriteResult[], options?: Maybe<MsGraphCliWriteResultsOutputOptions>): MsGraphCliWriteResultsOutput {
   const rows: MsGraphCliWriteResultRow[] = results.map((x) => {
     const ok = x.status >= 200 && x.status < 300;
     return { id: x.id, ok, status: x.status, ...(x.message?.id ? { newId: x.message.id } : {}), ...(x.error ? { code: x.error.code, ...(x.error.message ? { message: x.error.message } : {}) } : {}) };
   });
 
   const ok = rows.filter((x) => x.ok).length;
-  return { total: rows.length, ok, failed: rows.length - ok, results: rows };
+  const maxRows = options?.maxRows;
+  let output: MsGraphCliWriteResultsOutput;
+
+  if (maxRows != null && rows.length > maxRows) {
+    output = { total: rows.length, ok, failed: rows.length - ok, results: rows.filter((x) => !x.ok), omitted: ok };
+  } else {
+    output = { total: rows.length, ok, failed: rows.length - ok, results: rows };
+  }
+
+  return output;
+}
+
+/**
+ * How many ids a move, copy or delete sends between progress lines: five `$batch` calls of 20.
+ */
+export const MSGRAPH_CLI_MESSAGE_WRITE_PROGRESS_CHUNK = 100;
+
+/**
+ * Input to {@link runMsGraphCliMessageWrites}.
+ */
+export interface RunMsGraphCliMessageWritesInput {
+  readonly ids: readonly string[];
+  /**
+   * Sends one group of ids (a move, copy or delete through `$batch`) and resolves its per-id results.
+   */
+  readonly send: (ids: string[]) => Promise<MicrosoftGraphMessageWriteResult[]>;
+  /**
+   * The command, for the progress lines, e.g. `mail delete`.
+   */
+  readonly label: string;
+  /**
+   * Receives a progress line after each group when there is more than one group (stderr in the CLI).
+   */
+  readonly progress?: Maybe<(line: string) => void>;
+}
+
+/**
+ * Sends a move, copy or delete in groups of {@link MSGRAPH_CLI_MESSAGE_WRITE_PROGRESS_CHUNK} ids, reporting progress
+ * after each group, so a long run shows how far it got even when it is cut off.
+ *
+ * @param input - The ids, the sender, the label and the progress sink.
+ * @returns Every per-id result, in id order.
+ */
+export async function runMsGraphCliMessageWrites(input: RunMsGraphCliMessageWritesInput): Promise<MicrosoftGraphMessageWriteResult[]> {
+  const { ids, send, label, progress } = input;
+  const results: MicrosoftGraphMessageWriteResult[] = [];
+  let failed = 0;
+
+  for (let start = 0; start < ids.length; start += MSGRAPH_CLI_MESSAGE_WRITE_PROGRESS_CHUNK) {
+    const group = await send(ids.slice(start, start + MSGRAPH_CLI_MESSAGE_WRITE_PROGRESS_CHUNK));
+    results.push(...group);
+    failed += group.filter((x) => x.status < 200 || x.status >= 300).length;
+
+    if (progress && ids.length > MSGRAPH_CLI_MESSAGE_WRITE_PROGRESS_CHUNK) {
+      progress(`${label}: ${results.length}/${ids.length} done, ${failed} failed`);
+    }
+  }
+
+  return results;
 }

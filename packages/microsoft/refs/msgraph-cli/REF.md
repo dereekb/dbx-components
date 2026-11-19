@@ -1,6 +1,6 @@
 ---
 name: msgraph-cli
-description: "The `msgraph-cli` command (the `msgraph-cli` bin of `@dereekb/microsoft`, run as `npx msgraph-cli`; this doc ships with that package and prints with `npx msgraph-cli docs`) for a user's Outlook mail, shared mailboxes, automatic replies, calendar, OneDrive / SharePoint files and Teams chats and channels through Microsoft Graph, plus a raw Graph `request`. Bulk downloads: `files download-folder` copies a SharePoint / OneDrive folder to disk recursively and re-syncs it on re-run, `mail dump` dumps a folder (delta), a filtered list or a search, with `--attachments-only`, and `teams chat dump` keeps an incremental archive of Teams chats (JSON + Markdown per message, inline images and video clips, optional file attachments). `teams chat search` searches Teams messages through Graph (KQL; needs organization admin consent) or, with `--dir`, searches a `teams chat dump` archive on disk with no token or scope. It authenticates ONLY through a token source: each run borrows an access token minted from an app's Microsoft external connection by `<app>-cli external-token <providerType>` (no `auth login`). Covers setup (`auth token-source set/use/show/clear`, `auth show`), the global `--token-source` option and the `MSGRAPH_CLI_TOKEN_SOURCE` / `MSGRAPH_CLI_TOKEN_COMMAND` / `MSGRAPH_CLI_CONFIG_DIR` env vars, the Read / Read + Write presets and which commands need which scope, the commands that need organization (admin) consent and how they are flagged and refused, `--yes` / `--dry-run` on writes, the JSON output, and the error codes (`NOT_CONFIGURED`, `TOKEN_REJECTED`, `SCOPE_DENIED`, `ADMIN_CONSENT_REQUIRED`, `CONFIRMATION_REQUIRED`, `RATE_LIMITED`, `NOT_FOUND`, `ABORTED`, `INSUFFICIENT_SPACE`, …)."
+description: "The `msgraph-cli` command (the `msgraph-cli` bin of `@dereekb/microsoft`, run as `npx msgraph-cli`; this doc ships with that package and prints with `npx msgraph-cli docs`) for a user's Outlook mail, shared mailboxes, automatic replies, calendar, OneDrive / SharePoint files and Teams chats and channels (send, edit with `teams chat edit`, delete) through Microsoft Graph, plus a raw Graph `request`. Bulk mail changes: `mail move` / `mail delete` take hundreds of ids in ONE call (`--ids-file`, which also reads a saved `mail list` output) and send them through `$batch`, 20 per HTTP call. Attachments: `mail reply` / `forward` / `draft create` / `send` attach local files (`--attach`) and OneDrive / SharePoint files (`--attach-item <id or /path>` with `--site` / `--drive`) directly. Calendar: `calendar create` makes an Outlook event (`--start 2026-11-20T15:00 --duration 30m`, `--all-day`), reading local times in the mailbox's time zone. Bulk downloads: `files download-folder` copies a SharePoint / OneDrive folder to disk recursively and re-syncs it on re-run, `mail dump` dumps a folder (delta), a filtered list or a search, with `--attachments-only`, and `teams chat dump` keeps an incremental archive of Teams chats (JSON + Markdown per message, inline images and video clips, optional file attachments). `teams chat search` searches Teams messages through Graph (KQL; needs organization admin consent) or, with `--dir`, searches a `teams chat dump` archive on disk with no token or scope. It authenticates ONLY through a token source: each run borrows an access token minted from an app's Microsoft external connection by `<app>-cli external-token <providerType>` (no `auth login`). Covers setup (`auth token-source set/use/show/clear`, `auth show`), the global `--token-source` option and the `MSGRAPH_CLI_TOKEN_SOURCE` / `MSGRAPH_CLI_TOKEN_COMMAND` / `MSGRAPH_CLI_CONFIG_DIR` env vars, the Read / Read + Write presets and which commands need which scope, the commands that need organization (admin) consent and how they are flagged and refused, `--yes` / `--dry-run` on writes, the JSON output, and the error codes (`NOT_CONFIGURED`, `TOKEN_REJECTED`, `SCOPE_DENIED`, `ADMIN_CONSENT_REQUIRED`, `CONFIRMATION_REQUIRED`, `RATE_LIMITED`, `NOT_FOUND`, `ABORTED`, `INSUFFICIENT_SPACE`, …)."
 ---
 
 # Microsoft Graph CLI
@@ -29,6 +29,8 @@ token-source machinery msgraph-cli is built on is
 4. **Writes that send, delete or change settings need `--yes`.** Without it they fail with `CONFIRMATION_REQUIRED`. Mail writes also take `--dry-run`, which prints the Graph calls without running them. Run `--dry-run` first when unsure.
 5. **Never print or log tokens.** `auth show` and `auth token-source show` never print the token; don't work around that. The CLI redacts JWTs (`eyJ…`) and `Bearer …` in its error output.
 6. **The app side must exist first** (ref `external-connection-token`): a Microsoft connection made in the app with a preset, `tokenExport` on the provider's policy, a `providerScopes` ceiling for the provider, and an app-CLI env preset whose login carries `token.external` **and** the provider's ceiling scope.
+7. **Bulk changes go in ONE call, never a loop.** `mail move` / `mail delete` / `mail copy` take every id at once (as arguments, or `--ids-file`) and batch them through `$batch`, 20 per HTTP call. Deleting 450 messages is one command that takes about a minute, not 450 commands. Collect the ids with `mail list … --all-pages --pick id > ids.json` (that output is a valid `--ids-file`) and pass the file.
+8. **Attach OneDrive / SharePoint files directly.** `mail reply` / `forward` / `draft create` / `send` take `--attach-item <item id or /path>` (with `--site <url>` or `--drive <id>` for SharePoint): the CLI downloads the file and attaches it. There is no need to download it yourself first.
 
 ## Setup (one time)
 
@@ -46,6 +48,25 @@ npx msgraph-cli auth show
 `<providerType>` is `microsoft` unless the app registered the provider under another name (for
 example `ms_graph`).
 
+**A handed-off app CLI login lapses.** When the app CLI was logged in with `auth handoff` (a bearer
+credential, typical for a cloud agent), that login cannot be refreshed and lapses at its `expiresAt` (one hour
+unless the app raised its cap). Graph tokens minted before then keep working until their own expiry, but no new
+one can be minted. msgraph-cli tracks it:
+
+- `auth show` reports it under `tokenSource.credential`: `{ expiresAt, refreshable: false, minutesLeft, lapsed, renewal }`.
+- Within 10 minutes of the lapse (or after it, while the cached token still works), the first Graph call of each
+  run prints ONE line on stderr (stdout JSON is unchanged), for example:
+
+  ```text
+  msgraph-cli: the app CLI login behind this token source lapses in 7 min (2026-11-18T23:59:00.000Z) and cannot be refreshed. Renew it now, between steps, rather than mid-task. Mint a fresh claim code with the MCP server's CLI token tool (`<prefix>_cli_token`) and run `<app>-cli auth handoff <code> --env <env>`. Then run `msgraph-cli auth token-source refresh` so the next command mints through it.
+  ```
+
+- When you see it, finish the current step, renew the app CLI login as the line says, run
+  `msgraph-cli auth token-source refresh`, then go on. Don't start a long bulk command (`mail dump`,
+  `files download-folder`, a large `mail delete`) on a login with minutes left.
+
+An app CLI older than this (or a refreshable `auth login`) reports no `credential`, and nothing is printed.
+
 ## Quick Reference
 
 Run `npx msgraph-cli <command> --help` for every option.
@@ -57,8 +78,8 @@ msgraph-cli auth token-source set "<token-command>" [--name <name>]
 msgraph-cli auth token-source use <name>          # `use default` returns to the unnamed source
 msgraph-cli auth token-source show                # alias: list. Saved sources, the one in effect, env overrides (never the token)
 msgraph-cli auth token-source clear [--name <name>]
-msgraph-cli auth token-source refresh [--name <name>]  # drop the cached token: the next command mints again and re-reads the app's server defaults
-msgraph-cli auth show [--token-source <name>]     # the active source, its token's scopes and expiry, and which admin-consent commands it can run; fails when it cannot mint
+msgraph-cli auth token-source refresh [--name <name>]  # drop the cached token: the next command mints again (after renewing a handoff login, and to re-read the app's server defaults)
+msgraph-cli auth show [--token-source <name>]     # the active source, its token's scopes and expiry, when a handed-off app CLI login lapses (tokenSource.credential), and which admin-consent commands it can run; fails when it cannot mint
 msgraph-cli config set signature-file <path>      # appended to new messages, replies and forwards from your own mailbox
 msgraph-cli config set signature-file <path> --mailbox <addr>  # the signature of mail sent from / as <addr>
 msgraph-cli config set mailboxes a@x.com,b@x.com  # shared mailboxes for `mail mailboxes check`
@@ -123,18 +144,71 @@ immutable ids (`--mutable-ids` for the default ones). `mail search` cannot take 
 ### Mail (write)
 
 ```bash
-msgraph-cli mail draft create --to a@x.com --subject "…" --body "…" [--html] [--attach f.pdf]
+msgraph-cli mail draft create --to a@x.com --subject "…" --body "…" [--html] [--attach f.pdf] [--attach-item <id|/path> [--site <url> | --drive <id>]]
 msgraph-cli mail draft update <draftId> [--subject …] [--body …]
-msgraph-cli mail send <draftId> --yes                                   # or compose: --to --subject --body --yes
+msgraph-cli mail send <draftId> --yes                                   # or compose: --to --subject --body [--attach …] [--attach-item …] --yes
 msgraph-cli mail send-bulk --file rows.csv --template body.html --subject "Hi {{name}}" --yes [--limit N] [--progress-file p.json]
-msgraph-cli mail reply <id> [--all] --body "…" --yes | --draft
-msgraph-cli mail forward <id> --to a@x.com --yes | --draft
-msgraph-cli mail move <id…> --to archive     # also: copy, delete [--hard] --yes
+msgraph-cli mail reply <id> [--all] --comment "…" [--attach f.pdf] [--attach-item <id|/path> [--site <url> | --drive <id>]] --yes | --draft
+msgraph-cli mail forward <id> --to a@x.com [--comment "…"] [--attach …] [--attach-item …] --yes | --draft
+msgraph-cli mail move <id…> | --ids-file ids.json --to archive         # $batch, 20 per HTTP call; hundreds of ids in ONE call
+msgraph-cli mail delete <id…> | --ids-file ids.json [--hard] --yes     # also: copy. [--all-results] prints every row
 msgraph-cli mail mailboxes check [a@x.com …] [--no-write]            # probe shared-mailbox read / write
 msgraph-cli mail auto-reply get [--show-messages]
 msgraph-cli mail auto-reply set [--start <t> --end <t> [--tz "<zone>"]] --internal-file in.html [--external-file out.html] [--audience …] --yes
 msgraph-cli mail auto-reply off --yes | restore --yes                  # each saves the previous setting first
 ```
+
+#### Bulk move / delete
+
+`mail move`, `mail delete` and `mail copy` take any number of ids in **one** call and send them through Graph
+`$batch`, 20 per HTTP call, retrying throttled items after `Retry-After`. Never loop one id per command: a
+command per message costs a process start, a token read and a round trip each, and 450 of them outlast a tool
+call's time limit, while one `mail delete --ids-file` of 450 ids takes about a minute.
+
+```bash
+# 1. Collect the ids. The saved output is a valid --ids-file (no jq needed).
+msgraph-cli mail list --folder inbox --from noreply@example.com --all-pages --top 100 --pick id > ids.json
+# 2. Check the count, then act on all of them at once.
+msgraph-cli mail delete --ids-file ids.json --dry-run      # prints the calls; nothing changes
+msgraph-cli mail delete --ids-file ids.json --yes          # Deleted Items (recoverable); --hard is permanent
+msgraph-cli mail move --ids-file ids.json --to archive
+```
+
+- **`--ids-file`** reads ids one per line, a JSON array of ids or of objects with `id`, or the saved JSON output of
+  `mail list` / `mail search` (with or without `--all-pages`).
+- **Selecting with search.** `mail search` (`$search`) returns at most 275 messages however many pages you ask for.
+  For a larger selection use `mail list` filters (`--folder`, `--from`, `--since`, `--until`, `--unread`,
+  `--has-attachments`), or repeat search + delete until the search comes back empty.
+- **Progress.** Above 100 ids, stderr shows one line per 100: `mail delete: 200/450 done, 1 failed`. If a run is cut
+  off, re-running it is safe: a delete moves to Deleted Items again (with immutable ids, the default, the id is
+  unchanged) and a `--hard` delete answers `404` for the ids already gone.
+- **Output.** `{ total, ok, failed, results }`. Above 50 ids a move or delete lists only the failed rows in
+  `results` and counts the rest in `omitted`; `--all-results` lists every row. `copy` always lists every row,
+  because each copy's `newId` is its result.
+
+#### Attachments
+
+`--attach <file>` (repeat) attaches local files. `--attach-item <ref>` (repeat) attaches OneDrive / SharePoint files:
+the CLI reads the item, downloads it and attaches it as a file, so there is no separate `files download` step. A
+`<ref>` starting with `/` is a path from the drive root (`"/Insurance/COI 2026.pdf"`), anything else a drive item id
+(from `files list` / `files search`). The drive is `--site <url> [--library <name>]` or `--drive <id>`, the same
+options the `files` commands take, and your own OneDrive without either.
+
+```bash
+# Reply with a certificate of insurance from SharePoint attached
+msgraph-cli mail reply <id> --comment "Our COI is attached." \
+  --site https://contoso.sharepoint.com/sites/Ops --attach-item "/Insurance/COI 2026.pdf" --draft   # check it in Outlook, then:
+msgraph-cli mail send <draftId> --yes
+```
+
+- `mail reply` / `forward` with attachments go through their draft: create the reply draft, add the attachments,
+  then send it (unless `--draft`). `draft create` and `send` take both options too.
+- Up to 3 MB together the attachments go in the same requests; above that a draft uploads them in sessions (up to
+  150 MB each), and a one-shot `mail send` (no draft id) refuses them. A folder or a OneNote notebook is refused.
+- `--dry-run` reads each drive item's name and size (no download) and lists them in its `note`.
+- `--attach-item` needs `Files.Read.All` (both presets) and, for `--site`, `Sites.Read.All`.
+- `--attach-item` and `files download` read the bytes through Graph's `/contentStream`, which `graph.microsoft.com`
+  serves itself, so they work where only that host is reachable (a sandbox egress allow-list).
 
 `--send-as <address>` sends from a shared mailbox (with `--mailbox`). Graph cannot read the Outlook
 signature (no `mailboxSettings` field, no roaming-signature API): export it once from Outlook on the web
@@ -197,9 +271,28 @@ Every auto-reply change first saves the current setting to `<configDir>/auto-rep
 ```bash
 msgraph-cli calendar list [--start <iso>] [--end <iso>] [--top 50] [--tz "<zone>"]   # calendarView; start defaults to now
 msgraph-cli calendar get <id>
-msgraph-cli calendar create --subject "…" --start <t> --end <t> [--event-tz "<zone>"] [--attendee a@x.com --yes]
+msgraph-cli calendar create --subject "…" --start 2026-11-20T15:00 --duration 30m       # or --end <t>; in your mailbox's time zone
+msgraph-cli calendar create --subject "…" --all-day --start 2026-12-03 [--end 2026-12-04]   # --end is the last day (inclusive)
+   # also: [--event-tz "<zone>"] [--location …] [--body …] [--online-meeting] [--show-as free|busy|oof|…] [--no-reminder] [--attendee a@x.com --yes] [--dry-run]
 msgraph-cli calendar delete <id> [--cancel --comment "…"] --yes
 ```
+
+`calendar create` writes to the user's Outlook calendar, so use it (not a phone or device calendar tool) when the
+event must land in Outlook. It needs Read + Write (`Calendars.ReadWrite`).
+
+- **Times.** A local `--start` / `--end` (`2026-11-20T15:00`, no `Z` or offset) is read in `--event-tz`, which
+  defaults to the **mailbox's** time zone (`GET /me/mailboxSettings/timeZone`, `MailboxSettings.Read`), never the
+  machine's: a cloud sandbox runs in UTC, and 3 pm must mean 3 pm in the user's Outlook. `--event-tz` takes a
+  Windows or IANA name (`"Pacific Standard Time"`, `"America/Denver"`). A value with `Z` or an offset is an instant
+  and is sent as UTC. When the mailbox time zone cannot be read, a local time is refused (`INVALID_ARGUMENT`)
+  with a suggestion to pass `--event-tz`.
+- **Length.** `--end`, or `--duration` in minutes or hours and minutes (`30`, `45m`, `1h`, `1h30m`).
+- **All-day.** `--all-day --start <first day> [--end <last day>]`, dates only; the last day is inclusive, as Outlook
+  shows it.
+- **Invitations.** Each `--attendee` is sent an invitation when the event is created, so it needs `--yes`; with none,
+  no `--yes` is needed. `--online-meeting` adds a Teams link.
+- **Output.** `{ id, webLink, invitationsSent, start, end, isAllDay? }`: `start` / `end` as sent, so you can check
+  the zone the event landed in.
 
 ### Files (OneDrive / SharePoint)
 
@@ -208,7 +301,7 @@ msgraph-cli files search "<text>" [--top 25]
 msgraph-cli files list [<folderId> | --path Documents] [--type file|folder|package] [--all-pages] [--next <nextLink>]  # a folder's items
 msgraph-cli files get <id> | --path "/Documents/plan.docx"     # metadata
 msgraph-cli files drive                                        # the drive's details
-msgraph-cli files download <id> --out plan.docx
+msgraph-cli files download <id> --out plan.docx                # via /contentStream (graph.microsoft.com only); to email a file, use mail reply/forward/draft --attach-item <id> instead
 msgraph-cli files download-folder [<folderId> | --path "Tech talk"] --dir ./tech-talk [--dry-run]   # recursive copy; re-run to sync
    # also: [--concurrency 4 (max 8)] [--idle-timeout 60] [--max-files N] [--max-bytes N] [--prune]
 msgraph-cli files sheet <id> | --path "/Reports/roster.xlsx" --list           # an .xlsx's worksheets
@@ -288,6 +381,11 @@ polls Graph's copy monitor until the copy finishes. `delete --hard` deletes perm
   - **Privacy.** stdout and stderr carry only counts, bytes and failure codes: no names, paths, ids or URLs. The
     manifest (0600, in the 0700 `--dir`) holds item ids and relative paths. Each file is read through its `/content`
     request, so no pre-authenticated download URL is ever requested, stored or printed.
+  - **Hosts.** `/content` answers with a redirect to SharePoint (`<tenant>.sharepoint.com`, or
+    `<tenant>-my.sharepoint.com` for OneDrive), so `download-folder` (like `teams chat dump --attachments`) needs
+    those hosts reachable as well as `graph.microsoft.com`. It keeps `/content` because the SharePoint download is
+    not counted against Graph's throttling. `files download` and `--attach-item` use `/contentStream` instead, which
+    only needs `graph.microsoft.com`.
 
 `files sheet` reads an `.xlsx` through Excel on the server (no download), read-only:
 
@@ -322,11 +420,21 @@ msgraph-cli teams chat dump <chat> | --all-chats | --with "Ada,Grace" [--topic �
    # also: [--since <iso>] [--lookback 7] [--attachments] [--no-hosted-contents] [--no-markdown] [--prune]
    #       [--max-messages 5000] [--max-bytes N] [--concurrency 3 (max 4)] [--idle-timeout 60]
 msgraph-cli teams chat send <chat> --text "…" | --html "…" | --file msg.html
+msgraph-cli teams chat edit <chat> <message> --text "…" | --html "…" | --file msg.html --yes   # your own message; Chat.ReadWrite (Read + Write)
 msgraph-cli teams chat delete <chat> <message> [--undo] --yes
 msgraph-cli teams channel send <team> <channel> --text "…"      # also: reply <team> <channel> <message>
 msgraph-cli teams channel messages <team> <channel> [--replies]  # org admin consent (ChannelMessage.Read.All); no standard preset
+msgraph-cli teams channel edit <team> <channel> <message> [--reply-to <parent>] --text "…" --yes   # org admin consent (ChannelMessage.ReadWrite)
 msgraph-cli teams channel delete <team> <channel> <message> --yes  # org admin consent (ChannelMessage.ReadWrite); no standard preset
 ```
+
+**Editing a message.** `teams chat edit` replaces the text of one of **your own** chat messages (`PATCH
+/chats/{chat}/messages/{message}`, answered 204); Teams then shows it marked *Edited*. Get the message id from
+`teams chat messages <chat>`. The new `--text` / `--html` / `--file` replaces the old body whole, so @mentions and
+inline images of the original are not kept: put everything the message should say in the new body. Only the
+sender can edit (another person's message answers 403, `SCOPE_DENIED`), and Graph refuses chats with a Skype
+participant. `--dry-run` prints the PATCH. Output: `{ id, edited: true }`. `teams channel edit` does the same for a
+channel post, or with `--reply-to <parent>` a reply, but it needs the admin-consent scope `ChannelMessage.ReadWrite`.
 
 Every send (`chat send`, `channel send`, `channel reply`) needs `--yes`. Teams takes at most one message
 per second per chat or channel and per user, and Microsoft's terms forbid using Teams as a log file, so
@@ -499,6 +607,10 @@ The active source is the first of: `--token-source`, `MSGRAPH_CLI_TOKEN_SOURCE`,
 `MSGRAPH_CLI_TOKEN_COMMAND`, the saved `use` selection, the saved unnamed source. An unknown name
 fails instead of falling through. Parsing is strict, and there is no `--version`.
 
+**stderr lines.** Besides progress and throttle lines, a Graph command prints at most one
+`msgraph-cli: the app CLI login behind this token source lapses …` line per run when a handed-off app CLI login
+is within 10 minutes of lapsing (see Setup). stdout carries only the JSON result.
+
 ## Scopes
 
 The app's Microsoft presets (`MICROSOFT_USER_EXTERNAL_CONNECTION_SCOPE_PRESETS` in `@dereekb/firebase`).
@@ -512,13 +624,13 @@ Every scope in them is user-consentable, so connecting never needs an administra
 | Commands | Need |
 | --- | --- |
 | `mail list/search/get/get-many/dump`, `calendar list/get`, `files search/list/get/drive/download/download-folder/sheet` | Read |
-| `mail draft/send/send-bulk/reply/forward/move/copy/delete`, `mail auto-reply set/off/restore`, `calendar create/delete`, `files upload/mkdir/rename/move/copy/delete` | Read + Write |
+| `mail draft/send/send-bulk/reply/forward/move/copy/delete`, `mail auto-reply set/off/restore`, `calendar create/delete`, `files upload/mkdir/rename/move/copy/delete` | Read + Write. `--attach-item` also reads the drive (`Files.Read.All`, plus `Sites.Read.All` for `--site`); `calendar create` with a local time reads the mailbox time zone (`MailboxSettings.Read`) |
 | `--mailbox` / `--send-as` (shared mailboxes) | Read + Write (`*.Shared`) **and** an Exchange permission on that mailbox |
-| `teams list/channels/chats/chat …/presence`, `teams channel send/reply` | Read + Write |
+| `teams list/channels/chats/chat …/presence`, `teams chat send/edit/delete`, `teams channel send/reply` | Read + Write |
 | `teams chat dump` | Read + Write (`Chat.Read`). `--attachments` also uses `Files.Read.All`, which both presets carry |
 | `teams chat search` (Graph) | `Chat.Read` **and** `ChannelMessage.Read.All` (admin consent) |
 | `teams chat search --dir` | Nothing: it reads a dump on disk |
-| `teams channel messages/delete` | `ChannelMessage.Read.All` / `ChannelMessage.ReadWrite` (admin consent). Neither Read nor Read + Write grants them, so these run only on a connection a tenant admin consented with them for the organization |
+| `teams channel messages/edit/delete` | `ChannelMessage.Read.All` / `ChannelMessage.ReadWrite` (admin consent). Neither Read nor Read + Write grants them, so these run only on a connection a tenant admin consented with them for the organization |
 
 ### Commands that need organization (admin) consent
 
@@ -529,6 +641,7 @@ carries one, so the commands that need them run only through a token source whos
 | --- | --- | --- |
 | `teams chat search` (Graph) | `ChannelMessage.Read.All` | `teams chat dump`, then `teams chat search --dir` |
 | `teams channel messages` | `ChannelMessage.Read.All` | none |
+| `teams channel edit` | `ChannelMessage.ReadWrite` | none |
 | `teams channel delete` | `ChannelMessage.ReadWrite` | none |
 
 They are marked three ways:
@@ -560,7 +673,7 @@ The list is `MSGRAPH_CLI_ADMIN_CONSENT_COMMANDS` in `@dereekb/microsoft/cli`; th
 | `NOT_CONFIGURED` | No token source is configured (exit 4) | `msgraph-cli auth token-source set "<app>-cli external-token <providerType> --env <preset>"` |
 | `TOKEN_REJECTED` | Graph returned 401; the cached token was already cleared | Re-run; if it repeats, `msgraph-cli auth show` |
 | `SCOPE_DENIED` | Graph returned 403: the grant lacks the scope (or, with `--mailbox`, the Exchange permission) | Reconnect with Read + Write. Channel reads/deletes and Graph chat search need an admin-consented grant that no standard preset gives |
-| `ADMIN_CONSENT_REQUIRED` | An admin-consent command (`teams chat search` without `--dir`, `teams channel messages/delete`) was refused before any Graph call: the token's scopes lack the scope it needs | Use a token source whose connection a tenant admin consented with that scope; for chat search, `teams chat search --dir <dump>` instead. `auth show` lists what the token can run |
+| `ADMIN_CONSENT_REQUIRED` | An admin-consent command (`teams chat search` without `--dir`, `teams channel messages/edit/delete`) was refused before any Graph call: the token's scopes lack the scope it needs | Use a token source whose connection a tenant admin consented with that scope; for chat search, `teams chat search --dir <dump>` instead. `auth show` lists what the token can run |
 | `CONFIRMATION_REQUIRED` | A send / delete / settings change ran without `--yes` | Re-run with `--yes`, or `--dry-run` to preview |
 | `RATE_LIMITED` | Graph returned 429. It is retried automatically up to 3 times, honoring `Retry-After`; this code shows only when it persists | Wait and retry |
 | `NOT_FOUND` | No item, mailbox, library or saved auto-reply backup | Check the id / path / `--mailbox`; mutable mail ids change when a message moves |
@@ -589,15 +702,16 @@ token command fails, msgraph-cli shows the **app CLI's** code and suggestion (ex
 | --- | --- | --- |
 | `AUTH_FORBIDDEN` (server `SCOPE_FORBIDDEN`) | The app login holds no Microsoft ceiling scope | `auth login` the app CLI with an env preset carrying the ceiling scope |
 | `AUTH_FORBIDDEN` (server `SCOPE_FORBIDDEN`, with excess scopes) | The connection grants scopes this login may not mint, and its tokens cannot be narrowed | Reconnect Microsoft in the app with a narrower access level, or log the app CLI in with a preset carrying the wider ceiling scope |
-| `AUTH_HANDOFF_EXPIRED` | The app CLI's handed-off bearer credential lapsed | Re-mint it (ref `cli-handoff`); msgraph-cli needs no change |
+| `AUTH_HANDOFF_EXPIRED` | The app CLI's handed-off bearer credential lapsed (one hour by default; the stderr warning above announces it 10 minutes ahead) | Re-mint it (ref `cli-handoff`), then `msgraph-cli auth token-source refresh`; msgraph-cli needs no other change |
 | Not connected / expired (409) | The user has no Microsoft connection, or it expired | Connect (or reconnect) Microsoft in the app |
 | `CREDENTIAL_PROCESS_FAILED` / `_TIMEOUT` / `_INVALID_OUTPUT` / `_ERROR` | The token command could not run, hung (60 s), printed no JSON, or failed without a code | Run the token command by hand with `DBX_CLI_CREDENTIAL_PROCESS=1` to see its output |
 
 ## Known Rough Edges
 
 - **`auth token-source show` vs `auth show`.** `token-source show` never runs the command; `auth show` mints when nothing is cached.
+- **A handed-off app CLI login cannot be refreshed.** It lapses at its cap (one hour unless the app raised it), so a long session has to renew it once an hour. msgraph-cli warns 10 minutes ahead on stderr; renew between steps. Until the cached Graph token is re-minted after a renewal (`auth token-source refresh`), the warning keeps the old expiry.
 - **Graph cannot list the shared mailboxes a user may open.** Save them with `config set mailboxes …`, then `mail mailboxes check`.
-- **Channel reads and deletes need admin consent** (`ChannelMessage.Read.All` / `.ReadWrite`), even for the user's own posts.
+- **Channel reads, edits and deletes need admin consent** (`ChannelMessage.Read.All` / `.ReadWrite`), even for the user's own posts. Chat messages do not: `teams chat edit` / `delete` run on Read + Write.
 - **Graph's Teams message search needs admin consent too** (`ChannelMessage.Read.All`), even when it would only return 1:1 and group chat messages. Without it, search a `teams chat dump` archive with `teams chat search --dir`.
 - **Graph's `lastModifiedDateTime` filter on chat messages acts on creation time for older messages.** It returns the messages created after the instant, and edits, deletes and reactions to older ones only sometimes, so `teams chat messages --since` is not a change feed and `teams chat dump` re-reads a lookback window instead.
 - **`teams chat dump` does not see hard deletes.** A message a retention policy purged simply stops coming back; there is no delegated delta or tombstone for chats, so its archived files stay.

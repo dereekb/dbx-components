@@ -142,6 +142,11 @@ export interface MicrosoftGraphCreateEventInput extends MicrosoftGraphEventTimeZ
    * Whether Outlook reminds the user before the event. Graph's default (on) when absent.
    */
   readonly reminder?: Maybe<boolean>;
+  /**
+   * An all-day event (`isAllDay`). `start` and `end` must then be midnights in the same time zone, `end` the day
+   * after the last day.
+   */
+  readonly allDay?: Maybe<boolean>;
 }
 
 /**
@@ -179,6 +184,10 @@ export function microsoftGraphCreateEventRequest(input: MicrosoftGraphCreateEven
 
   if (input.reminder != null) {
     body['isReminderOn'] = input.reminder;
+  }
+
+  if (input.allDay) {
+    body['isAllDay'] = true;
   }
 
   return { method: 'POST', path: '/me/events', headers: microsoftGraphEventHeaders(input), body };

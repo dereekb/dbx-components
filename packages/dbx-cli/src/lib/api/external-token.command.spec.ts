@@ -153,6 +153,27 @@ describe('buildExternalTokenCommand()', () => {
     expect(JSON.parse(lines[0])).toEqual({ ...MINTED_TOKEN, hints: HINTS });
   });
 
+  it('reports when a non-refreshable handoff credential lapses, with how to renew it', async () => {
+    const credentialExpiresAt = Date.parse('2026-10-08T11:30:00.000Z');
+    setCliContext(buildStubContext({ credential: { handoff: true, refreshable: false, expiresAt: credentialExpiresAt } }));
+    process.env[DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR] = '1';
+    await runExternalToken((async () => jsonResponse(MINTED_TOKEN)) as unknown as typeof fetch);
+
+    const parsed = JSON.parse(stdout.join(''));
+    expect(parsed.credentialExpiresAt).toBe('2026-10-08T11:30:00.000Z');
+    expect(parsed.credentialRenewal).toContain('demo-cli auth handoff <code> --env local');
+  });
+
+  it('reports no credential expiry for a refreshable login', async () => {
+    setCliContext(buildStubContext({ credential: { handoff: false, refreshable: true, expiresAt: Date.now() + 60 * 1000 } }));
+    process.env[DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR] = '1';
+    await runExternalToken((async () => jsonResponse(MINTED_TOKEN)) as unknown as typeof fetch);
+
+    const parsed = JSON.parse(stdout.join(''));
+    expect(parsed.credentialExpiresAt).toBeUndefined();
+    expect(parsed.credentialRenewal).toBeUndefined();
+  });
+
   it('omits hints when the env declares none for the provider', async () => {
     process.env[DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR] = '1';
     await runExternalToken((async () => jsonResponse({ ...MINTED_TOKEN, providerType: 'calcom' })) as unknown as typeof fetch, 'calcom');

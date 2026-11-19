@@ -13,7 +13,7 @@ import { msGraphCliAdminConsentStatus } from '../util/admin.consent';
  */
 const AUTH_SHOW_COMMAND: CommandModule = {
   command: 'show',
-  describe: 'Show the active token source, the scopes and expiry of its token (never the token), and which commands needing organization admin consent it can run; fails when the source cannot produce a token',
+  describe: 'Show the active token source, the scopes and expiry of its token (never the token), when a non-refreshable app CLI login behind it lapses (tokenSource.credential), and which commands needing organization admin consent it can run; fails when the source cannot produce a token',
   builder: (yargs: Argv) =>
     yargs.example([
       ['$0 auth show', 'Mint (or reuse) a token and show its source, scopes and expiry'],

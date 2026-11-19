@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CLI_TOKEN_OIDC_SCOPE, FIRESTORE_SESSION_OIDC_SCOPE, OFFLINE_ACCESS_OIDC_SCOPE, SERVICE_TOKEN_OIDC_SCOPE, type OidcScope } from '@dereekb/firebase';
-import { CLI_TOKEN_CLAIM_TTL_SECONDS, cliTokenRetainedScopesForProviderClaims, DEFAULT_CLI_TOKEN_TTL_SECONDS, MAX_CLI_TOKEN_TTL_SECONDS, resolveCliTokenClientId, resolveCliTokenScopes, resolveCliTokenTtlSeconds } from './oidc.cli-token.config';
+import { CLI_TOKEN_CLAIM_TTL_SECONDS, cliTokenRetainedScopesForProviderClaims, DEFAULT_CLI_TOKEN_TTL_SECONDS, HARD_MAX_CLI_TOKEN_TTL_SECONDS, MAX_CLI_TOKEN_TTL_SECONDS, resolveCliTokenClientId, resolveCliTokenMaxTtlSeconds, resolveCliTokenScopes, resolveCliTokenTtlSeconds } from './oidc.cli-token.config';
 
 function scopeSet(...scopes: string[]): ReadonlySet<OidcScope> {
   return new Set(scopes);
@@ -119,7 +119,7 @@ describe('resolveCliTokenTtlSeconds()', () => {
     expect(resolveCliTokenTtlSeconds({ defaultTtlSeconds: 900 })).toBe(900);
   });
 
-  it('clamps a request above the one-hour ceiling', () => {
+  it('clamps a request above the default one-hour ceiling', () => {
     expect(resolveCliTokenTtlSeconds({ requestedTtlSeconds: 60 * 60 * 24 })).toBe(MAX_CLI_TOKEN_TTL_SECONDS);
   });
 
@@ -141,6 +141,57 @@ describe('resolveCliTokenTtlSeconds()', () => {
 
   it('never returns less than one second', () => {
     expect(resolveCliTokenTtlSeconds({ requestedTtlSeconds: 300, parentRemainingSeconds: 0.2 })).toBe(1);
+  });
+
+  describe('with an app-configured maxTtlSeconds', () => {
+    const ninetyMinutes = 90 * 60;
+
+    it('allows a request up to the raised ceiling', () => {
+      expect(resolveCliTokenTtlSeconds({ requestedTtlSeconds: ninetyMinutes, maxTtlSeconds: ninetyMinutes })).toBe(ninetyMinutes);
+      expect(resolveCliTokenTtlSeconds({ requestedTtlSeconds: 60 * 60 * 24, maxTtlSeconds: ninetyMinutes })).toBe(ninetyMinutes);
+    });
+
+    it('uses a raised default when nothing is requested', () => {
+      expect(resolveCliTokenTtlSeconds({ defaultTtlSeconds: ninetyMinutes, maxTtlSeconds: ninetyMinutes })).toBe(ninetyMinutes);
+    });
+
+    it('keeps the default ceiling when only the default is raised', () => {
+      expect(resolveCliTokenTtlSeconds({ defaultTtlSeconds: ninetyMinutes })).toBe(MAX_CLI_TOKEN_TTL_SECONDS);
+    });
+
+    it('may lower the ceiling', () => {
+      expect(resolveCliTokenTtlSeconds({ requestedTtlSeconds: MAX_CLI_TOKEN_TTL_SECONDS, maxTtlSeconds: 600 })).toBe(600);
+    });
+
+    it('still clamps to the parent grant’s remaining life', () => {
+      expect(resolveCliTokenTtlSeconds({ requestedTtlSeconds: ninetyMinutes, maxTtlSeconds: ninetyMinutes, parentRemainingSeconds: 1200 })).toBe(1200);
+    });
+
+    it('never exceeds the hard ceiling', () => {
+      expect(resolveCliTokenTtlSeconds({ requestedTtlSeconds: 60 * 60 * 24, maxTtlSeconds: 60 * 60 * 24 })).toBe(HARD_MAX_CLI_TOKEN_TTL_SECONDS);
+    });
+  });
+});
+
+describe('resolveCliTokenMaxTtlSeconds()', () => {
+  it('defaults to one hour', () => {
+    expect(resolveCliTokenMaxTtlSeconds(undefined)).toBe(MAX_CLI_TOKEN_TTL_SECONDS);
+    expect(MAX_CLI_TOKEN_TTL_SECONDS).toBe(60 * 60);
+  });
+
+  it('returns a configured ceiling', () => {
+    expect(resolveCliTokenMaxTtlSeconds(90 * 60)).toBe(90 * 60);
+  });
+
+  it('clamps to the hard ceiling', () => {
+    expect(resolveCliTokenMaxTtlSeconds(60 * 60 * 24)).toBe(HARD_MAX_CLI_TOKEN_TTL_SECONDS);
+    expect(HARD_MAX_CLI_TOKEN_TTL_SECONDS).toBe(4 * 60 * 60);
+  });
+
+  it('ignores a non-positive or non-finite value', () => {
+    expect(resolveCliTokenMaxTtlSeconds(0)).toBe(MAX_CLI_TOKEN_TTL_SECONDS);
+    expect(resolveCliTokenMaxTtlSeconds(-5)).toBe(MAX_CLI_TOKEN_TTL_SECONDS);
+    expect(resolveCliTokenMaxTtlSeconds(Number.POSITIVE_INFINITY)).toBe(MAX_CLI_TOKEN_TTL_SECONDS);
   });
 });
 

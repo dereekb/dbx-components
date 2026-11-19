@@ -143,12 +143,12 @@ export const MAIL_GET_MANY_COMMAND: CommandModule = {
   builder: (yargs: Argv) =>
     msGraphCliMailboxOptions(yargs)
       .positional('ids', { type: 'string', array: true, describe: 'Message ids' })
-      .option('ids-file', { type: 'string', describe: 'A file of message ids: one per line, or a JSON array' })
+      .option('ids-file', { type: 'string', describe: 'A file of message ids: one per line, a JSON array, or the saved JSON output of mail list / mail search' })
       .option('format', { type: 'string', choices: ['text', 'html'] as const, default: 'text', describe: 'Body format' })
       .option('select', { type: 'string', describe: 'Comma-separated fields to return instead of the default set plus body' })
       .example([
         ['$0 mail get-many AAMk1... AAMk2... --pick id,subject,body', 'Two messages'],
-        ['$0 mail list --since 2026-11-01 --all-pages --pick id | jq -r ".data[].id" > ids.txt && $0 mail get-many --ids-file ids.txt', 'Every message since Nov 1, with bodies']
+        ['$0 mail list --since 2026-11-01 --all-pages --pick id > ids.json && $0 mail get-many --ids-file ids.json', 'Every message since Nov 1, with bodies (the list output is a valid --ids-file)']
       ]),
   handler: msGraphCommandHandler(async (argv: any, { graphContext }) => {
     const ids = await readMsGraphCliIdsOption({ ids: argv.ids, idsFile: argv.idsFile });
