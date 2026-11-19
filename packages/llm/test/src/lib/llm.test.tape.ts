@@ -24,7 +24,7 @@
  */
 
 import { type Maybe } from '@dereekb/util';
-import { type LlmCapabilityKey, type LlmCompletion, type LlmModelId, type LlmRequest, type LlmStrategy, type LlmStrategyHealth, type LlmStrategyId, type LlmUsage, sha256Hex } from '@dereekb/llm';
+import { isDecisionLlmCallRow, type LlmCapabilityKey, type LlmCompletion, type LlmModelId, type LlmRequest, type LlmStrategy, type LlmStrategyHealth, type LlmStrategyId, type LlmUsage, readLlmCallPrompt, sha256Hex } from '@dereekb/llm';
 
 /**
  * The registry id (and kind) of the tape strategy. A host pins it programmatically as the default strategy of a replay
@@ -341,4 +341,79 @@ export function makeLlmTapeStrategy(config: LlmTapeStrategyConfig): LlmTapeStrat
       return failures;
     }
   };
+}
+
+/**
+ * Config for {@link llmTapeTurnOf}.
+ */
+export interface LlmTapeTurnOfConfig {
+  /**
+   * The decision transports' strategy kinds (`llmDecisionStrategyKinds(adapters)`), so a decision row written before a
+   * host recorded decision ids is still skipped. See `isDecisionLlmCallRow`.
+   */
+  readonly decisionStrategyKinds?: Maybe<ReadonlySet<LlmStrategyId>>;
+  /**
+   * The prompt digest. MUST be the same function the tape strategy matches with ({@link LlmTapeStrategyConfig.hash});
+   * defaults to {@link hashLlmTapePrompt}.
+   */
+  readonly hash?: Maybe<(text: string) => string>;
+}
+
+/**
+ * The string form of a logged field — a row may carry a key as a number on one build and a string on another.
+ *
+ * @param value - The raw field value.
+ * @returns The string form, or `undefined` when the field was absent.
+ */
+function stringOf(value: unknown): Maybe<string> {
+  return value == null ? undefined : String(value);
+}
+
+/**
+ * Turn one PERSISTED `llm_call` payload into a {@link LlmTapeTurn} — the per-row half of a host's tape reader.
+ *
+ * A row becomes a turn only when it carries a prompt (`readLlmCallPrompt`, so a segments-only row answers too), a
+ * string `text` and a `capability`, and is not a decision-lane row (`isDecisionLlmCallRow`): a decision row carries a
+ * prompt and a JSON `text` too, and a text tape would otherwise serve its answer set to whichever completion hashed
+ * next.
+ *
+ * It reads a persisted payload (`LlmCallLogPayload`): an in-memory `LlmCallRecord` has no top-level `text`, so a host
+ * maps it to its persisted shape first. A host keeps its own extras by spreading, e.g.
+ * `{ ...turn, prompt: readLlmCallPrompt(payload) }`.
+ *
+ * @param payload - The `llm_call` payload (or anything).
+ * @param config - The decision kinds and the prompt digest.
+ * @returns The turn, or `undefined` for a row with no captured prompt or reply, a decision row, or a non-object.
+ *
+ * @example
+ * ```ts
+ * const turns = payloads.map((payload) => llmTapeTurnOf(payload, { decisionStrategyKinds })).filter((turn) => turn != null);
+ * const tape = makeLlmTapeStrategy({ turns });
+ * ```
+ */
+export function llmTapeTurnOf(payload: unknown, config?: Maybe<LlmTapeTurnOfConfig>): Maybe<LlmTapeTurn> {
+  let turn: Maybe<LlmTapeTurn>;
+
+  if (payload != null && typeof payload === 'object') {
+    const record = payload as Readonly<Record<string, unknown>>;
+    const prompt = readLlmCallPrompt(payload);
+    const text = record['text'];
+    const capability = stringOf(record['capability']);
+
+    if (prompt != null && typeof text === 'string' && capability != null && !isDecisionLlmCallRow(payload, config?.decisionStrategyKinds)) {
+      const model = stringOf(record['model']);
+      const finishReason = stringOf(record['finishReason']);
+      const hash = config?.hash ?? hashLlmTapePrompt;
+      turn = {
+        capability,
+        promptSha: hash(prompt),
+        text,
+        ...(model == null ? {} : { model }),
+        ...(record['usage'] == null ? {} : { usage: record['usage'] as LlmUsage }),
+        ...(finishReason == null ? {} : { finishReason })
+      };
+    }
+  }
+
+  return turn;
 }

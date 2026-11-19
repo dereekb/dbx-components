@@ -60,7 +60,8 @@ so several instances of one transport can be registered side by side.
   default) and fails open whenever nothing is measured.
 - **Usage and bills.** `llmUsageFrom(raw, { costBasis })` folds a provider usage block: token counts default to `0`,
   every other field is omitted when not reported (absent is not zero), and numeric-string costs are parsed. An
-  `LlmCallBillReader` reads what a call billed, later, by its generation id.
+  `LlmCallBillReader` reads what a call billed, later, by its generation id; `reconcileLlmCallBills` folds those reads
+  against the logged cost (see [Readers, ledger and reconcile](#readers-ledger-and-reconcile)).
 - **Prompt segments.** An `LlmPromptSegment` carries its exact bytes (trailing separator included) and an open
   `origin`. `joinLlmPromptSegments` builds the sent string, `llmPromptCacheSegmentsOf` splits it for provider caching
   (the prefix is everything before the first volatile segment), `llmPromptSegmentSpans` derives highlight spans, and
@@ -102,6 +103,8 @@ What a dispatcher records about each call, and the seams a host observes it thro
   low, structured output off, or nothing, with the reason); `applyLlmRetryLever` applies it.
 - **Call records.** `LlmCallRecord`, `LlmCallStartRecord`, `LlmDecodeFailureRecord` and their event-type tags. A host's
   own fields sit at the top level: pass them as `H`. `llmCallTelemetry` projects the per-call telemetry block.
+  `LlmCallLogPayload` is the persisted read-side view of a record (see
+  [Readers, ledger and reconcile](#readers-ledger-and-reconcile)).
 - **Call context.** `makeLlmCallContext` records spans, marks, children and detached roots into a nested profile;
   gaps, breadcrumbs and swallows go to the host's callbacks with the context's attribution, timing on or off.
   `noopLlmCallContext()` is the shared do-nothing context.
@@ -143,6 +146,95 @@ try {
 
   throw error;
 }
+```
+
+## Readers, ledger and reconcile
+
+What a host persists for each call, the readers that read it back, and the math that turns the rows into spend.
+
+- **Persisted payload.** `LlmCallLogPayload<H>` is what a host's recorder writes for each `LlmCallRecord`: flat, every
+  field optional except `capability`, host fields (`H`) beside the library's, never nested. `decodeOutcome` and
+  `decodeStatus` are plain strings, since an old row may name a value a later build added. `text` is the MODEL's own
+  bytes (the pre-repair text), so a tape replays what the model said and the deterministic repair re-runs on replay.
+
+  | payload key(s) | from the `LlmCallRecord` |
+  |---|---|
+  | `capability`, `tier`, `decision`, `supplements` (only when non-empty), `reasoningOff`, `estimatedPromptTokens`, `phases` | the record's own fields |
+  | `strategyId`, `strategyKind`, `model`, `provider`, `usage`, `latencyMs`, `generationId`, `finishReason`, `repair` | `llmCallTelemetry(record.result)` |
+  | `attempts`, `validationErrors`, `decodeStatus`, `decodeOutcome`, `lengthCapped` | `record.result` |
+  | `promptSegments` (heavy; persisting it is the host's choice) | `record.segments` |
+  | `text` (heavy) | `record.result.repair?.originalText ?? record.result.text` |
+  | `failedAttempts` (heavy; only when non-empty) | `record.failedAttempts` |
+  | host fields | beside the library's, never nested |
+
+- **Readers.** `readLlmCallPrompt`, `readLlmCallPromptSegments` and `readLlmCallFailedAttempts` take `unknown` and
+  answer on a persisted payload, a legacy flat-`prompt` one, or an in-memory `LlmCallRecord`; a malformed field reads
+  as `undefined`, never a throw. Never dereference `promptSegments` yourself — a legacy row has only `prompt`, and the
+  prompt reader joins the segments when that is all there is.
+  - `formatLlmCallAttempts(event, { repliesPointer })` returns the one-line retry summary of an `llm_call` event
+    (`attempts 2 retried · #1 schema-validation: … → reasoning-low`, with ` (<repliesPointer>)` appended when given),
+    or `undefined` for a clean call and for any other event.
+  - `isDecisionLlmCallRow(payload, kinds)` marks a decision-lane row: its lane (`strategyKind`, else `strategyId`) is
+    in `kinds`, or it carries a `decision` id. Build `kinds` once with `llmDecisionStrategyKinds(adapters)`; rows this
+    library's dispatcher wrote always carry `decision`, so `kinds` only matters for older rows.
+- **Usage cells.** `LlmUsageCell` (calls, prompt / completion / cached / reasoning tokens, cost, and
+  `uncacheablePromptTokens` when above zero), with `llmUsageCellOf(usage, uncacheable)`, `addLlmUsageCells`,
+  `accumulateLlmUsageCell(map, key, cell)` and `llmKeyedUsageCellsOf(map)` (sorted by key). Cells are plain JSON: a
+  cell persisted before a field existed adds as `0`, never `NaN`, and a re-fold of persisted cells is byte-stable.
+- **Cost honesty.** `formatLlmUsageCost({ cost, calls, partial, listed })` renders `n/a` when no call priced itself,
+  `>=$x` when some call did not (a lower bound), `<=$x` for list prices (an upper bound on the bill), `~$x` when both
+  hold, and `$x` otherwise. A zero-call row is an exact `$0`. `llmUsageCostMarkerOf` takes custom spellings (`≥`,
+  `≤`), and `llmUsageCostFlagsOf` maps a fold's `costPartial` / `costListed` flags onto a read.
+- **Rates.** `llmCacheHitRateOf` (cached over CACHEABLE prompt tokens, so decision-lane calls, which have no prompt
+  cache, do not dilute it), `llmReasoningShareOf`, `isUncacheableLlmCall(payload, kinds)` (a `decision` id, or a
+  `strategyKind` in `kinds` — no `strategyId` fallback, unlike `isDecisionLlmCallRow`), `llmCapabilityCacheRowsOf`,
+  `renderLlmCacheHitLine({ cell, cachePartial, reasoningPartial })` and `formatLlmUsageRate`. `undefined` means
+  "nothing to divide by", never 0%.
+- **Bill reconcile.** `reconcileLlmCallBills({ calls, reader, concurrency?, signal? })` reads each call's bill through
+  any `LlmCallBillReader` (e.g. `/zenmux`'s `makeZenmuxGenerationBillReader`) and folds billed against logged cost per
+  model. Pending and failed reads are counted and kept as details, never folded as zero; once `signal` aborts, no new
+  read starts and each unread call is pending. `llmBilledShareOf` gives billed / logged, and
+  `renderLlmBillReconciliationMarkdown(reconciliation, sessionId)` renders the result.
+
+```ts
+import {
+  accumulateLlmUsageCell,
+  addLlmUsageCells,
+  emptyLlmUsageCell,
+  formatLlmUsageCost,
+  isUncacheableLlmCall,
+  llmDecisionStrategyKinds,
+  llmKeyedUsageCellsOf,
+  llmUsageCellOf,
+  reconcileLlmCallBills,
+  renderLlmBillReconciliationMarkdown,
+  renderLlmCacheHitLine,
+  type LlmCallLogPayload,
+  type LlmUsageCell
+} from '@dereekb/llm';
+
+declare const rows: ReadonlyArray<LlmCallLogPayload>; // read back from the host's log
+
+const decisionKinds = llmDecisionStrategyKinds(adapters);
+const byModel = new Map<string, LlmUsageCell>();
+let total = emptyLlmUsageCell();
+let costPartial = false;
+
+for (const row of rows) {
+  const cell = llmUsageCellOf(row.usage, isUncacheableLlmCall(row, decisionKinds));
+  total = addLlmUsageCells(total, cell);
+  accumulateLlmUsageCell(byModel, row.model ?? '(unknown model)', cell);
+  costPartial ||= row.usage?.cost == null;
+}
+
+for (const { key, cell } of llmKeyedUsageCellsOf(byModel)) {
+  console.log(`${key}: ${cell.calls} call(s) ${formatLlmUsageCost({ cost: cell.cost, calls: cell.calls, partial: costPartial })}`);
+}
+
+console.log(renderLlmCacheHitLine({ cell: total })); // cache 73.2% hit (6,000/8,200 prompt tok) · reasoning …
+
+const reconciliation = await reconcileLlmCallBills({ calls: rows, reader: billReader });
+console.log(renderLlmBillReconciliationMarkdown(reconciliation, 'session-1'));
 ```
 
 ## Model configuration
@@ -1095,6 +1187,9 @@ scripts make no network call, and the lane's helpers answer `undefined` while it
   readable, nothing past it ran. A served completion keeps the recorded tokens and forces `cost` to `0`. After the run,
   `matches()` (with each request's prompt and digest, for diffs), `unconsumed()` and `failures()` (recorded even when
   a host swallows the throw) feed a report; `isLlmTapeStrategyError` checks the shape, not the prototype.
+  `llmTapeTurnOf(payload, { decisionStrategyKinds, hash })` turns one persisted `llm_call` payload into a turn (pass
+  the same `hash` the tape strategy uses), and answers `undefined` for a capture-off row, a decision row or a
+  non-object.
 - **Scripted completions.** `makeScriptedLlmStrategy` answers each call from `respond(request, call)`, else
   `byCapability[capability]` (a reply or a list with its own counter), else `replies` (in order). A list repeats its
   last entry once spent; an empty list is no reply, and a call nothing answers throws, naming the id, capability and
