@@ -1,26 +1,40 @@
 /**
- * The dispatcher's DECISION LANE — `decide` and its per-run counters. A decision runs one `strategy.decide` (no retry
- * loop: a decision strategy owns its own transport policy), parked on the host pause gate, and is recorded as one start
- * record plus one call record whose prompt is the decision's state and questions. No taps fire.
+ * The dispatcher's DECISION LANE — `decide` and its per-run counters. A decision rides the dispatcher's shared record
+ * path: its context comes from the dispatcher's `callContextOf` (nested under the request's `callContext`, else the
+ * recorder's root), its host fields from `recordFieldsOf` (`lane: 'decision'`), and it writes one start record (and
+ * fires `onDispatch`) through `recordLlmDispatchStart`, then one call record (and `onDispatchComplete`) whose prompt is
+ * the decision's state and questions. It never fires `onDecodeFailure`.
+ *
+ * The model is the decision's own: a per-call override, a capability route that names a decision model, the
+ * descriptor's `model` / `tier`, else `decisions.defaultModel` — a capability's COMPLETION route never serves its
+ * decisions, and a slug that is not a decision model throws before anything is sent. A send that fails with a
+ * retryable transport error is resent after the dispatcher's `transportBackoff`, up to `decisions.maxAttempts` sends.
  */
 
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, waitForMsUnlessAborted } from '@dereekb/util';
 import { type LlmDecision, type LlmDecisionDispatchRequest } from '../decision/llm.decision.descriptor';
-import { llmDecisionModelIssue } from '../decision/llm.decision.model';
+import { isLlmDecisionModelId, llmDecisionModelIssue } from '../decision/llm.decision.model';
 import { type LlmDecisionQuestions } from '../decision/llm.decision.question';
-import { type LlmDecisionResult, type LlmDecisionStrategy } from '../decision/llm.decision.strategy';
+import { isRetryableLlmDecisionError, type LlmDecideOptions, type LlmDecisionRequest, type LlmDecisionResult, type LlmDecisionStrategy } from '../decision/llm.decision.strategy';
 import { resolveLlmCapabilityModel } from '../model/llm.model.precedence';
 import { type LlmCompiledModelRouting } from '../model/llm.model.routing';
 import { type LlmModelTierMap } from '../model/llm.model.tier';
 import { type LlmModelId, type LlmModelTierKey } from '../model/llm.value';
+import { estimateLlmTokens } from '../prompt/llm.prompt.budget';
 import { type LlmPromptSlotId } from '../prompt/llm.prompt.layout';
 import { joinLlmPromptSegments, type LlmPromptSegment, type LlmPromptSegmentOrigin } from '../prompt/llm.prompt.segment';
-import { type LlmCallHostFields, type LlmCallRecord, type LlmCallStartRecord } from '../record/llm.call.record';
-import { type LlmSwallowSink, type LlmSwallowSiteId } from '../record/llm.swallow';
+import { type LlmCallContext } from '../record/llm.call.context';
+import { type LlmCallFailedAttempt, type LlmCallHostFields, type LlmCallRecord } from '../record/llm.call.record';
+import { type LlmSwallowSiteId } from '../record/llm.swallow';
+import { llmErrorSummaryOf } from '../strategy/llm.error';
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
 import { llmStrategyKind } from '../strategy/llm.strategy.registry';
-import { type LlmDispatchPauseSignal, llmDispatchFallbackCallContextOf, llmDispatchSignalOf, parkLlmDispatchWhilePaused } from './llm.dispatch.control';
-import { type LlmDispatcherDecisionConfig } from './llm.dispatcher.config';
+import { type LlmDispatchPauseSignal, type LlmDispatchTransportBackoff, llmDispatchSignalOf, parkLlmDispatchWhilePaused } from './llm.dispatch.control';
+import { llmFailedAttemptOf, llmTransportResultOf } from './llm.dispatch.outcome';
+import { isLlmDispatchTapsActive, llmDispatchRecordFieldsOf, type LlmDispatchRecordSinks, recordLlmDispatchStart } from './llm.dispatch.record';
+import { type LlmDispatchRequest } from './llm.dispatch.request';
+import { llmDispatchMaxAttemptsOf } from './llm.dispatch.run';
+import { type LlmDispatcherDecisionConfig, type LlmDispatchRecordFieldsParams } from './llm.dispatcher.config';
 
 /**
  * The swallow site of a decision consumer's `stamp` that threw — the answers still return, recorded without a stamp.
@@ -43,24 +57,6 @@ export interface LlmPromptDecisionSegmentOrigin extends LlmPromptSegmentOrigin {
 }
 
 /**
- * The record writer the decision lane needs.
- */
-export interface LlmDispatchDecisionRecorder<H extends LlmCallHostFields = LlmCallHostFields> {
-  /**
-   * Record the send.
-   *
-   * @param record - The start record.
-   */
-  recordCallStart?(record: LlmCallStartRecord<H>): void;
-  /**
-   * Record the call.
-   *
-   * @param record - The call record.
-   */
-  recordCall(record: LlmCallRecord<H>): void;
-}
-
-/**
  * The decision lane a dispatcher exposes — {@link decide} and its per-run counters, all present together.
  */
 export interface LlmDispatchDecisionLane {
@@ -72,7 +68,8 @@ export interface LlmDispatchDecisionLane {
    */
   decide<I, Q extends LlmDecisionQuestions>(request: LlmDecisionDispatchRequest<I, Q>): Promise<LlmDecisionResult<Q>>;
   /**
-   * How many decisions reached the wire since construction or the last reset (a throw still spends).
+   * How many decision SENDS reached the wire since construction or the last reset — every send, a resend included (a
+   * throw still spends).
    *
    * @returns The count.
    */
@@ -90,13 +87,18 @@ export interface LlmDispatchDecisionLane {
 }
 
 /**
- * The inputs of {@link makeLlmDispatchDecisionLane}.
+ * The inputs of {@link makeLlmDispatchDecisionLane} — the dispatcher's decision block and the pieces of the dispatcher
+ * it shares.
+ *
+ * @typeParam R - The host's request type.
+ * @typeParam H - The host's top-level record fields.
+ * @typeParam A - The call-context attribution type.
  */
-export interface LlmDispatchDecisionLaneConfig<H extends LlmCallHostFields = LlmCallHostFields, A extends object = object> {
+export interface LlmDispatchDecisionLaneConfig<R extends LlmDispatchRequest = LlmDispatchRequest, H extends LlmCallHostFields = LlmCallHostFields, A extends object = object> {
   /**
    * The dispatcher's decision block — absent ⇒ no lane.
    */
-  readonly decisions?: Maybe<LlmDispatcherDecisionConfig<H, A>>;
+  readonly decisions?: Maybe<LlmDispatcherDecisionConfig>;
   /**
    * The dispatcher's tier map.
    */
@@ -106,13 +108,22 @@ export interface LlmDispatchDecisionLaneConfig<H extends LlmCallHostFields = Llm
    */
   readonly defaultTier: LlmModelTierKey;
   /**
-   * The compiled capability routes.
+   * The compiled capability routes — only a route that names a decision model serves a decision.
    */
   readonly capabilityRoutes?: Maybe<LlmCompiledModelRouting>;
   /**
-   * The record writer.
+   * The dispatcher's recorder and taps.
    */
-  readonly recorder?: Maybe<LlmDispatchDecisionRecorder<H>>;
+  readonly sinks: Pick<LlmDispatchRecordSinks<R, H, A>, 'recorder' | 'taps'>;
+  /**
+   * The dispatcher's host-field hook (handed `lane: 'decision'`).
+   */
+  readonly recordFieldsOf?: Maybe<(params: LlmDispatchRecordFieldsParams<R, A>) => H>;
+  /**
+   * The dispatcher's context minting — nested under the request's `callContext`, else the recorder's root, else a
+   * context that does not time.
+   */
+  readonly callContextOf: (request: LlmDecisionDispatchRequest) => LlmCallContext<A>;
   /**
    * The host pause gate.
    */
@@ -122,9 +133,9 @@ export interface LlmDispatchDecisionLaneConfig<H extends LlmCallHostFields = Llm
    */
   readonly cancellationSignal?: Maybe<AbortSignal>;
   /**
-   * Where a fallback context reports its swallows.
+   * The wait before a decision resend.
    */
-  readonly swallow?: Maybe<LlmSwallowSink>;
+  readonly transportBackoff: LlmDispatchTransportBackoff;
   /**
    * The layout's `live` slot id — the id the decision's segments record under.
    */
@@ -140,6 +151,35 @@ interface LlmDispatchDecisionModel {
 }
 
 /**
+ * What one decision's send loop returned.
+ */
+interface LlmDispatchDecisionSent<Q extends LlmDecisionQuestions> {
+  readonly answer: LlmDecisionResult<Q>;
+  /**
+   * The wall clock of the successful send.
+   */
+  readonly latencyMs: number;
+  /**
+   * How many sends were made (the first plus resends).
+   */
+  readonly attempts: number;
+  /**
+   * One row per failed (resent) send.
+   */
+  readonly failedAttempts: ReadonlyArray<LlmCallFailedAttempt>;
+}
+
+/**
+ * The inputs of one decision's send loop.
+ */
+interface LlmDispatchDecisionSendParams<Q extends LlmDecisionQuestions, A extends object> {
+  readonly request: LlmDecisionDispatchRequest;
+  readonly decisionRequest: LlmDecisionRequest<Q>;
+  readonly callContext: LlmCallContext<A>;
+  readonly signal: Maybe<AbortSignal>;
+}
+
+/**
  * Build a dispatcher's decision lane.
  *
  * Construction refuses a `defaultModel` that is not a decision model, and resolves the strategy: the pinned one, else
@@ -151,8 +191,8 @@ interface LlmDispatchDecisionModel {
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function makeLlmDispatchDecisionLane<H extends LlmCallHostFields = LlmCallHostFields, A extends object = object>(config: LlmDispatchDecisionLaneConfig<H, A>): Maybe<LlmDispatchDecisionLane> {
-  const { decisions, modelTiers, defaultTier, capabilityRoutes, recorder, pause, cancellationSignal, swallow, liveSlotId } = config;
+export function makeLlmDispatchDecisionLane<R extends LlmDispatchRequest = LlmDispatchRequest, H extends LlmCallHostFields = LlmCallHostFields, A extends object = object>(config: LlmDispatchDecisionLaneConfig<R, H, A>): Maybe<LlmDispatchDecisionLane> {
+  const { decisions, modelTiers, defaultTier, capabilityRoutes, sinks, recordFieldsOf, callContextOf, pause, cancellationSignal, transportBackoff, liveSlotId } = config;
   let lane: Maybe<LlmDispatchDecisionLane>;
 
   if (decisions != null) {
@@ -162,25 +202,27 @@ export function makeLlmDispatchDecisionLane<H extends LlmCallHostFields = LlmCal
       throw new Error(`llm dispatcher: ${issue}.`);
     }
 
-    const { strategies, strategyId: pinnedStrategyId, defaultModel, newCallContext, recordFieldsOf } = decisions;
+    const { strategies, strategyId: pinnedStrategyId, defaultModel } = decisions;
     const strategy: Maybe<LlmDecisionStrategy> = pinnedStrategyId == null ? strategies.values()[0] : strategies.get(pinnedStrategyId);
 
     if (strategy != null) {
       const strategyId = strategy.id;
       const strategyKind = llmStrategyKind(strategy);
+      const maxAttempts = llmDispatchMaxAttemptsOf(decisions.maxAttempts);
       let served = 0;
       let warned = false;
 
-      const modelOf = (request: LlmDecisionDispatchRequest): LlmDispatchDecisionModel => {
-        const override = { ...(request.model == null ? {} : { model: request.model }), ...(request.tier == null ? {} : { tier: request.tier }) };
-        const resolved = resolveLlmCapabilityModel({ override, descriptor: request.decision.descriptor, route: capabilityRoutes?.get(request.capability), tiers: modelTiers, defaultTier });
-        let decisionModel: LlmDispatchDecisionModel;
+      const decisionModelOf = (request: LlmDecisionDispatchRequest): LlmDispatchDecisionModel => {
+        const capabilityRoute = capabilityRoutes?.get(request.capability);
+        // a capability's COMPLETION route never serves its decisions; a route that names a decision model does
+        const route = capabilityRoute != null && isLlmDecisionModelId(capabilityRoute.model) ? capabilityRoute : undefined;
+        const resolved = resolveLlmCapabilityModel({ override: request, descriptor: request.decision.descriptor, route, tiers: modelTiers, defaultTier });
+        // the default-tier rung is the decision default model, never the text tier map's slug
+        const decisionModel: LlmDispatchDecisionModel = resolved.source === 'default-tier' ? { model: defaultModel } : { model: resolved.model, ...(resolved.tier == null ? {} : { tier: resolved.tier }) };
+        const modelIssue = llmDecisionModelIssue(decisionModel.model);
 
-        // a text tier's slug never reaches a decision strategy: the default-tier rung is the decision default model
-        if (resolved.source === 'default-tier') {
-          decisionModel = { model: defaultModel };
-        } else {
-          decisionModel = { model: resolved.model, ...(resolved.tier == null ? {} : { tier: resolved.tier }) };
+        if (modelIssue != null) {
+          throw new Error(`llm dispatcher: decision '${request.decision.descriptor.decision}' for '${request.capability}' (the ${resolved.source} rung): ${modelIssue}.`);
         }
 
         return decisionModel;
@@ -195,24 +237,73 @@ export function makeLlmDispatchDecisionLane<H extends LlmCallHostFields = LlmCal
         ];
       };
 
+      const sendDecision = async <Q extends LlmDecisionQuestions>(params: LlmDispatchDecisionSendParams<Q, A>): Promise<LlmDispatchDecisionSent<Q>> => {
+        const { request, decisionRequest, callContext, signal } = params;
+        const { capability } = request;
+        const decision = request.decision.descriptor.decision;
+        const options: Maybe<LlmDecideOptions> = signal == null ? undefined : { signal };
+        // read through a function: the signal can fire across an await, which a narrowed property read would miss
+        const cancelled = (): boolean => signal?.aborted === true;
+        const failedAttempts: LlmCallFailedAttempt[] = [];
+        let attempt = 0;
+        let sent: Maybe<LlmDispatchDecisionSent<Q>>;
+
+        while (sent == null) {
+          attempt += 1;
+
+          if (attempt > 1) {
+            await parkLlmDispatchWhilePaused({ pause, signal, callContext });
+          }
+
+          // the counter bounds what is SENT, a resend included
+          served += 1;
+          const start = Date.now();
+
+          try {
+            const answer = await callContext.timeAsync('decide', () => strategy.decide(decisionRequest, options));
+            sent = { answer, latencyMs: Date.now() - start, attempts: attempt, failedAttempts };
+          } catch (error) {
+            // the decision lane's ONE retry predicate: only a known-transient transport failure is resent
+            const resend = attempt < maxAttempts && !cancelled() && isRetryableLlmDecisionError(error);
+
+            if (!resend) {
+              throw error;
+            }
+
+            const summary = llmErrorSummaryOf(error);
+            failedAttempts.push(llmFailedAttemptOf({ attempt, cause: 'transport', result: llmTransportResultOf({ capability, meta: request.meta }, strategyId), error: summary }));
+            const delayMs = transportBackoff(attempt);
+            callContext.diag({ level: 'warn', code: 'transport-backoff', fields: { capability, decision, attempt, delayMs, error: summary }, message: 'a decision send failed before reaching the model; backing off before an identical resend' });
+            await callContext.timeAsync('transport-backoff', () => waitForMsUnlessAborted(delayMs, signal));
+
+            // a decision cancelled during the backoff is never resent
+            if (cancelled()) {
+              throw error;
+            }
+          }
+        }
+
+        return sent;
+      };
+
       const decide = async <I, Q extends LlmDecisionQuestions>(request: LlmDecisionDispatchRequest<I, Q>): Promise<LlmDecisionResult<Q>> => {
         // the hooks see the library request: `stamp` is contravariant in `Q`, so the widening needs one cast
         const widened = request as unknown as LlmDecisionDispatchRequest;
         const { capability } = request;
-        const { model, tier } = modelOf(widened);
+        // throws before anything is minted, parked, recorded or sent
+        const { model, tier } = decisionModelOf(widened);
         const decision: LlmDecision<I, Q> = request.decision;
+        const key = decision.descriptor.decision;
         const decisionRequest = decision.asRequest({ input: request.input, model });
-        const callContext = newCallContext?.({ label: capability, request: widened }) ?? llmDispatchFallbackCallContextOf<A>({ label: capability, swallow });
-        const fields = (kind: 'start' | 'call'): H => recordFieldsOf?.({ kind, request: widened, callContext }) ?? ({} as H);
+        const callContext = callContextOf(widened);
+        const fields = llmDispatchRecordFieldsOf<R, H, A>({ recordFieldsOf, call: { lane: 'decision', request: widened }, callContext });
         const signal = llmDispatchSignalOf({ cancellationSignal, request });
         await parkLlmDispatchWhilePaused({ pause, signal, callContext });
-        recorder?.recordCallStart?.({ capability, model, ...(tier == null ? {} : { tier }), strategyId, strategyKind, ...fields('start') });
+        const segments = segmentsOf(key, decisionRequest.state, decisionRequest.questions);
+        const prompt = joinLlmPromptSegments(segments);
+        recordLlmDispatchStart<R, H, A>({ sinks, capability, model, tier, strategy, prompt, estimatedPromptTokens: estimateLlmTokens(prompt), decision: key, fields });
 
-        const start = Date.now();
-        served += 1;
-        const answer = await callContext.timeAsync('decide', () => strategy.decide(decisionRequest, signal == null ? undefined : { signal }));
-        const latencyMs = Date.now() - start;
-        const segments = segmentsOf(decision.descriptor.decision, decisionRequest.state, decisionRequest.questions);
+        const { answer, latencyMs, attempts, failedAttempts } = await sendDecision({ request: widened, decisionRequest, callContext, signal });
         let stamp: Maybe<Readonly<Record<string, unknown>>>;
 
         try {
@@ -231,20 +322,27 @@ export function makeLlmDispatchDecisionLane<H extends LlmCallHostFields = LlmCal
           ...(answer.provider == null ? {} : { provider: answer.provider }),
           ...(answer.usage == null ? {} : { usage: answer.usage }),
           latencyMs,
-          ...(answer.generationId == null ? {} : { generationId: answer.generationId })
+          ...(answer.generationId == null ? {} : { generationId: answer.generationId }),
+          ...(attempts > 1 ? { attempts } : {})
         };
 
-        recorder?.recordCall({
+        const callRecord: LlmCallRecord<H> = {
           capability,
-          prompt: joinLlmPromptSegments(segments),
+          prompt,
           segments,
           result,
           ...(tier == null ? {} : { tier }),
-          decision: decision.descriptor.decision,
+          decision: key,
           ...(request.stage == null ? {} : { stage: request.stage }),
           ...(stamp == null ? {} : { stamp }),
+          ...(failedAttempts.length === 0 ? {} : { failedAttempts }),
           ...fields('call')
-        });
+        };
+        sinks.recorder?.recordCall(callRecord);
+
+        if (isLlmDispatchTapsActive(sinks.taps)) {
+          sinks.taps.emitDispatchComplete({ ...callRecord });
+        }
 
         return answer;
       };

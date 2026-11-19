@@ -32,25 +32,55 @@ import { type LlmDispatchCorrectionTextOverrides } from './llm.dispatch.correcti
 import { type LlmDispatchRequest } from './llm.dispatch.request';
 
 /**
- * The inputs of {@link LlmDispatchRecorder.newCallContext}.
+ * Which lane of a dispatcher a call runs on: a capability `completion` (`dispatch`) or a `decision` (`decide`).
+ */
+export type LlmDispatchLane = 'completion' | 'decision';
+
+/**
+ * The call a host hook is handed — the host's `R` on the completion lane, the decision request on the decision lane.
+ * Narrow on `lane` before reading a lane-only request field; both requests share `LlmDispatchRequestBase`.
+ *
+ * @typeParam R - The host's request type.
+ */
+export type LlmDispatchLaneRequest<R extends LlmDispatchRequest = LlmDispatchRequest> =
+  | {
+      /**
+       * The completion lane.
+       */
+      readonly lane: 'completion';
+      /**
+       * The request being dispatched.
+       */
+      readonly request: R;
+    }
+  | {
+      /**
+       * The decision lane.
+       */
+      readonly lane: 'decision';
+      /**
+       * The decision request, widened to the library type.
+       */
+      readonly request: LlmDecisionDispatchRequest;
+    };
+
+/**
+ * The inputs of {@link LlmDispatchRecorder.newCallContext} — the lane and its request, plus the label and the
+ * attribution override.
  *
  * @typeParam R - The host's request type.
  * @typeParam A - The call-context attribution type.
  */
-export interface LlmDispatchCallContextParams<R extends LlmDispatchRequest = LlmDispatchRequest, A extends object = object> {
+export type LlmDispatchCallContextParams<R extends LlmDispatchRequest = LlmDispatchRequest, A extends object = object> = LlmDispatchLaneRequest<R> & {
   /**
-   * The context's label — the capability.
+   * The context's label — the capability (on a decision, the consuming capability).
    */
   readonly label: string;
-  /**
-   * The request being dispatched.
-   */
-  readonly request: R;
   /**
    * The attribution override {@link LlmDispatcherConfig.callAttributionOf} returned, when it returned one.
    */
   readonly attribution?: Maybe<Partial<A>>;
-}
+};
 
 /**
  * The host's call-record writer. Method syntax on purpose, so a host's narrower recorder stays assignable. The writer
@@ -62,21 +92,21 @@ export interface LlmDispatchCallContextParams<R extends LlmDispatchRequest = Llm
  */
 export interface LlmDispatchRecorder<R extends LlmDispatchRequest = LlmDispatchRequest, H extends LlmCallHostFields = LlmCallHostFields, A extends object = object> {
   /**
-   * Mint the ROOT call context of a dispatch that has no parent context of its own. Absent (or no recorder) ⇒ a
-   * context that does not time.
+   * Mint the ROOT call context of a call (a dispatch or a decision) that has no parent context of its own. Absent (or
+   * no recorder) ⇒ a context that does not time.
    *
-   * @param params - The label, the request and the attribution override.
+   * @param params - The lane and its request, the label and the attribution override.
    * @returns The dispatch's root call context.
    */
   newCallContext?(params: LlmDispatchCallContextParams<R, A>): LlmCallContext<A>;
   /**
-   * Record that a call is about to be sent (before the first `strategy.complete`).
+   * Record that a call is about to be sent (before the first `strategy.complete` / `strategy.decide`).
    *
    * @param record - The start record.
    */
   recordCallStart?(record: LlmCallStartRecord<H>): void;
   /**
-   * Record one completed call — one per execution, root or follow-up.
+   * Record one completed call — one per execution, root or follow-up, and one per answered decision.
    *
    * @param record - The call record.
    */
@@ -153,41 +183,12 @@ export interface LlmDispatchCritiqueFailGap {
 export type LlmDispatchGap = LlmDispatchRawJsonGap | LlmDispatchOverBudgetGap | LlmDispatchCritiqueFailGap;
 
 /**
- * The inputs of {@link LlmDispatcherDecisionConfig.newCallContext}.
- */
-export interface LlmDispatchDecisionCallContextParams {
-  /**
-   * The context label (the consuming capability).
-   */
-  readonly label: string;
-  /**
-   * The decision request, widened to the library type.
-   */
-  readonly request: LlmDecisionDispatchRequest;
-}
-
-/**
- * The inputs of {@link LlmDispatcherDecisionConfig.recordFieldsOf}.
- */
-export interface LlmDispatchDecisionRecordFieldsParams<A extends object = object> {
-  /**
-   * Which record the fields are for.
-   */
-  readonly kind: 'start' | 'call';
-  /**
-   * The decision request, widened to the library type.
-   */
-  readonly request: LlmDecisionDispatchRequest;
-  /**
-   * The decision's call context.
-   */
-  readonly callContext: LlmCallContext<A>;
-}
-
-/**
  * The decision lane of a dispatcher — absent (or an empty registry) ⇒ the dispatcher has no `decide`.
+ *
+ * A decision shares the dispatcher's host hooks: its context is minted by `recorder.newCallContext` (or nests under
+ * the request's `callContext`), and `callAttributionOf` / `recordFieldsOf` see it as `lane: 'decision'`.
  */
-export interface LlmDispatcherDecisionConfig<H extends LlmCallHostFields = LlmCallHostFields, A extends object = object> {
+export interface LlmDispatcherDecisionConfig {
   /**
    * The decision strategies.
    */
@@ -197,19 +198,19 @@ export interface LlmDispatcherDecisionConfig<H extends LlmCallHostFields = LlmCa
    */
   readonly strategyId?: Maybe<LlmStrategyId>;
   /**
-   * The decision model that replaces ONLY the default-tier rung (a text tier's slug never reaches a decision strategy).
+   * The decision model that replaces the default-tier rung — the model of a decision no per-call override, decision
+   * route or descriptor names. A capability's COMPLETION route never serves its decisions (only a route that names a
+   * decision model does), and a slug from any rung that is not a decision model throws before the decision is sent.
    * Refused at construction unless it is a decision model.
    */
   readonly defaultModel: LlmModelId;
   /**
-   * Mints a decision's root call context. Absent ⇒ a context that does not time (reporting its swallows to the
-   * dispatcher's `swallow` sink).
+   * Total sends one decision may make (the first plus resends). A send that fails with a retryable transport error
+   * (`isRetryableLlmDecisionError`: a 429, a 5xx, a dropped socket — never an abort, a timeout or an answer fault) is
+   * resent after the dispatcher's `transportBackoff`. Absent ⇒ `DEFAULT_LLM_DISPATCH_MAX_ATTEMPTS` (2: one resend);
+   * clamped to at least 1 (`1` never resends).
    */
-  readonly newCallContext?: Maybe<(params: LlmDispatchDecisionCallContextParams) => LlmCallContext<A>>;
-  /**
-   * The host's top-level fields of a decision's start / call record.
-   */
-  readonly recordFieldsOf?: Maybe<(params: LlmDispatchDecisionRecordFieldsParams<A>) => H>;
+  readonly maxAttempts?: Maybe<number>;
 }
 
 /**
@@ -269,16 +270,11 @@ export interface LlmDispatchStrategySelection<R extends LlmDispatchRequest = Llm
 export type LlmDispatchStrategySelector<R extends LlmDispatchRequest = LlmDispatchRequest> = (selection: LlmDispatchStrategySelection<R>) => LlmStrategyId;
 
 /**
- * The inputs of {@link LlmDispatcherConfig.callAttributionOf}.
+ * The inputs of {@link LlmDispatcherConfig.callAttributionOf} — the lane and its request.
  *
  * @typeParam R - The host's request type.
  */
-export interface LlmDispatchCallAttributionParams<R extends LlmDispatchRequest = LlmDispatchRequest> {
-  /**
-   * The request being dispatched.
-   */
-  readonly request: R;
-}
+export type LlmDispatchCallAttributionParams<R extends LlmDispatchRequest = LlmDispatchRequest> = LlmDispatchLaneRequest<R>;
 
 /**
  * The record a host-field read is for.
@@ -286,25 +282,22 @@ export interface LlmDispatchCallAttributionParams<R extends LlmDispatchRequest =
 export type LlmDispatchRecordKind = 'start' | 'call' | 'decode-failure';
 
 /**
- * The inputs of {@link LlmDispatcherConfig.recordFieldsOf}.
+ * The inputs of {@link LlmDispatcherConfig.recordFieldsOf} — the lane and its request, plus the record kind and the
+ * call context. A decision only ever asks for `kind: 'start' | 'call'`.
  *
  * @typeParam R - The host's request type.
  * @typeParam A - The call-context attribution type.
  */
-export interface LlmDispatchRecordFieldsParams<R extends LlmDispatchRequest = LlmDispatchRequest, A extends object = object> {
+export type LlmDispatchRecordFieldsParams<R extends LlmDispatchRequest = LlmDispatchRequest, A extends object = object> = LlmDispatchLaneRequest<R> & {
   /**
    * The record kind the fields are for.
    */
   readonly kind: LlmDispatchRecordKind;
   /**
-   * The request being dispatched.
-   */
-  readonly request: R;
-  /**
-   * The dispatch's call context.
+   * The call's context.
    */
   readonly callContext: LlmCallContext<A>;
-}
+};
 
 /**
  * The inputs of {@link LlmDispatcherConfig.resultOf}.
@@ -372,7 +365,8 @@ export interface LlmDispatcherConfig<R extends LlmDispatchRequest = LlmDispatchR
    */
   readonly providerByModel?: Maybe<LlmModelProviderBindingMap>;
   /**
-   * Replaces the default strategy policy entirely.
+   * Replaces the default strategy policy entirely. Completion lane only: a decision is served by the decision block's
+   * own strategy.
    */
   readonly selectStrategy?: Maybe<LlmDispatchStrategySelector<R>>;
   /**
@@ -436,32 +430,34 @@ export interface LlmDispatcherConfig<R extends LlmDispatchRequest = LlmDispatchR
   readonly threadTurnMaxChars?: Maybe<number>;
   // MARK: Record
   /**
-   * The host's call-record writer.
+   * The host's call-record writer — serves both lanes: a decision writes its start and call records here too.
    */
   readonly recorder?: Maybe<LlmDispatchRecorder<R, H, A>>;
   /**
-   * The live taps — held by reference, so a tap attached after construction is seen.
+   * The live taps — held by reference, so a tap attached after construction is seen. A decision fires `onDispatch`
+   * and `onDispatchComplete` too (never `onDecodeFailure`).
    */
   readonly taps?: Maybe<LlmDispatchTapRegistry<H>>;
   /**
-   * Receives every gap the dispatcher notices.
+   * Receives every gap the dispatcher notices. Completion lane only.
    */
   readonly onGap?: Maybe<(params: LlmDispatchGapParams<R, A>) => void>;
   /**
-   * Where a dispatch with no call context of its own reports its swallows.
+   * Where a call (a dispatch or a decision) with no call context of its own reports its swallows.
    */
   readonly swallow?: Maybe<LlmSwallowSink>;
   /**
-   * The attribution override of a dispatch's call context — called once per dispatch.
+   * The attribution override of a call's context — called once per dispatch and once per decision, with the lane.
    */
   readonly callAttributionOf?: Maybe<(params: LlmDispatchCallAttributionParams<R>) => Maybe<Partial<A>>>;
   /**
-   * The host's top-level fields of each record kind — called at most once per kind per dispatch. Absent ⇒ none.
+   * The host's top-level fields of each record kind — called at most once per kind per dispatch or decision, with the
+   * lane. Absent ⇒ none.
    */
   readonly recordFieldsOf?: Maybe<(params: LlmDispatchRecordFieldsParams<R, A>) => H>;
   /**
    * Builds the returned result. Absent ⇒ the library result as `X` — a host whose `X` adds required fields passes
-   * this. Must keep `text` (a chained follow-up replays it).
+   * this. Must keep `text` (a chained follow-up replays it). Completion lane only: a decision returns its answers.
    */
   readonly resultOf?: Maybe<(params: LlmDispatchResultParams<R, A>) => X>;
   // MARK: Retry
@@ -476,7 +472,8 @@ export interface LlmDispatcherConfig<R extends LlmDispatchRequest = LlmDispatchR
    */
   readonly correctionTexts?: Maybe<LlmDispatchCorrectionTextOverrides>;
   /**
-   * The wait before a transport resend. Defaults to `llmTransportBackoffMs`.
+   * The wait before a transport resend, on either lane (a completion's or a decision's). Defaults to
+   * `llmTransportBackoffMs`.
    */
   readonly transportBackoff?: Maybe<LlmDispatchTransportBackoff>;
   // MARK: Lanes
@@ -492,7 +489,7 @@ export interface LlmDispatcherConfig<R extends LlmDispatchRequest = LlmDispatchR
   /**
    * The decision lane. Absent (or an empty registry) ⇒ no `decide`.
    */
-  readonly decisions?: Maybe<LlmDispatcherDecisionConfig<H, A>>;
+  readonly decisions?: Maybe<LlmDispatcherDecisionConfig>;
   // MARK: Control
   /**
    * The host pause gate.

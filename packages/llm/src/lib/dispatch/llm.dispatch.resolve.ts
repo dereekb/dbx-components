@@ -156,8 +156,8 @@ export function resolveLlmDispatch<R extends LlmDispatchRequest = LlmDispatchReq
   const capability = request.capability;
   const descriptor = setup.descriptorOf(capability);
   const route = setup.capabilityRoutes?.get(capability);
-  const override = { ...(request.model == null ? {} : { model: request.model }), ...(request.tier == null ? {} : { tier: request.tier }) };
-  const resolved = resolveLlmCapabilityModel({ override, descriptor, route, tiers, defaultTier });
+  // the request itself is the per-call override: it carries `model?` / `tier?` (the decision lane passes its request too)
+  const resolved = resolveLlmCapabilityModel({ override: request, descriptor, route, tiers, defaultTier });
   const { model: resolvedModel, tier, source: modelSource } = resolved;
   callContext.diag({ level: 'debug', code: 'model-route', fields: { capability, model: resolvedModel, ...(tier == null ? {} : { tier }), source: modelSource }, message: 'capability model resolved by the precedence ladder', once: `model-route:${capability}` });
 

@@ -35,8 +35,9 @@
  */
 
 import type { Maybe } from '@dereekb/util';
-import type { LlmCapabilityKey, LlmCapabilityTag, LlmModelId, LlmModelTierKey } from '../model/llm.value';
-import type { LlmCallMeta } from '../strategy/llm.strategy';
+import type { LlmDispatchRequestBase } from '../dispatch/llm.dispatch.request';
+import type { LlmCapabilityModelRef } from '../model/llm.model.precedence';
+import type { LlmModelId } from '../model/llm.value';
 import { type LlmDecisionAnswers, type LlmDecisionKey, type LlmDecisionQuestions, type LlmDecisionState, LlmDecisionDeclarationError, validateLlmDecisionQuestions } from './llm.decision.question';
 import type { LlmDecideOptions, LlmDecisionRequest, LlmDecisionResult, LlmDecisionStrategy } from './llm.decision.strategy';
 
@@ -46,8 +47,13 @@ import type { LlmDecideOptions, LlmDecisionRequest, LlmDecisionResult, LlmDecisi
  *
  * A host that declares more per decision (what its decisions consume, say) extends this interface; the descriptor
  * is handed back by identity on {@link LlmDecision.descriptor}, so the extension survives.
+ *
+ * Its OPTIONAL `model` (a raw decision-model id, the one-off escape hatch that wins over `tier`) and `tier` (a tier key
+ * whose slug is a decision model) are the descriptor rungs of the dispatcher's model precedence, below a per-call
+ * override and a capability route that names a decision model, above the dispatcher's `decisions.defaultModel`. A
+ * slug that is not a decision model throws before the decision is sent.
  */
-export interface LlmDecisionDescriptor<I, Q extends LlmDecisionQuestions> {
+export interface LlmDecisionDescriptor<I, Q extends LlmDecisionQuestions> extends Pick<LlmCapabilityModelRef, 'tier' | 'model'> {
   /**
    * The key this decision is reported under.
    */
@@ -56,19 +62,6 @@ export interface LlmDecisionDescriptor<I, Q extends LlmDecisionQuestions> {
    * A one-line description of the judgement — what a reader of a catalog or a diagnostic sees.
    */
   readonly describe: string;
-  /**
-   * The OPTIONAL model tier this decision resolves through. Unset ⇒ the host's default decision tier.
-   */
-  readonly tier?: LlmModelTierKey;
-  /**
-   * An OPTIONAL raw model id — the one-off escape hatch that bypasses the tier. Wins over {@link tier}.
-   */
-  readonly model?: LlmModelId;
-  /**
-   * OPTIONAL routing tags, so a host may point a whole family of decisions at one model with a single rule instead
-   * of enumerating keys.
-   */
-  readonly tags?: ReadonlyArray<LlmCapabilityTag>;
   /**
    * Build the state to judge.
    *
@@ -156,15 +149,15 @@ export interface LlmDecision<I, Q extends LlmDecisionQuestions> {
  * It carries the DECLARED decision rather than the bare descriptor because the projection
  * ({@link LlmDecision.asRequest}) is the seam: the dispatcher never re-derives a state or a question set, it asks
  * the declaration for one. The descriptor rides along inside it and is what the dispatcher's model precedence reads.
+ *
+ * It shares {@link LlmDispatchRequestBase} with a completion request. `capability` is the CONSUMING capability this
+ * decision is being made for — the caller's capability, not the decision key. Telemetry records under it, so a
+ * decision arm and the text arm it replaces land in the SAME capability cell and an A/B reads off the strategy split;
+ * that is why the decision lane needs no new capability key and no ledger change. `model` / `tier` are the per-call
+ * rungs of the model precedence (each must name a decision model), `callContext` is the parent the decision's context
+ * nests under, and `meta` is host data the library never reads, carried to the host's own record hooks.
  */
-export interface LlmDecisionDispatchRequest<I = unknown, Q extends LlmDecisionQuestions = LlmDecisionQuestions> {
-  /**
-   * The CONSUMING capability this decision is being made for — the caller's capability, not the decision key.
-   * Telemetry records under it, so a decision arm and the text arm it replaces land in the SAME capability cell and
-   * an A/B reads off the strategy split. That is why the decision lane needs no new capability key and no ledger
-   * change.
-   */
-  readonly capability: LlmCapabilityKey;
+export interface LlmDecisionDispatchRequest<I = unknown, Q extends LlmDecisionQuestions = LlmDecisionQuestions> extends LlmDispatchRequestBase {
   /**
    * The declared decision to run.
    */
@@ -173,23 +166,6 @@ export interface LlmDecisionDispatchRequest<I = unknown, Q extends LlmDecisionQu
    * The decision's input — what {@link LlmDecisionDescriptor.state} and `.questions` are projected from.
    */
   readonly input: I;
-  /**
-   * Host data the library never reads — who or what the decision is on behalf of, the moment it was asked at —
-   * carried through to the host's own call-record hooks.
-   */
-  readonly meta?: LlmCallMeta;
-  /**
-   * A PER-INVOCATION raw model override — the top rung of the model precedence.
-   */
-  readonly model?: LlmModelId;
-  /**
-   * A PER-INVOCATION tier override.
-   */
-  readonly tier?: LlmModelTierKey;
-  /**
-   * The caller's cancellation signal.
-   */
-  readonly signal?: AbortSignal;
   /**
    * Which STAGE of a multi-stage decision this call is (1 = a thin Choice over a cut, 2 = the shortlist re-read).
    * Recorded on the call record beside the decision key, so a stage-2 answer can be read back apart from its

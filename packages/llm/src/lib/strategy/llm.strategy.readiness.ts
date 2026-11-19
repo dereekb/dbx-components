@@ -1,6 +1,6 @@
 /**
- * The readiness aggregators over an {@link LlmStrategyRegistry}: run one optional seam across a set of required
- * strategies and report.
+ * The readiness aggregators over a strategy registry of either lane ({@link LlmStrategyRegistry}): run one optional
+ * seam across a set of required strategies and report.
  *
  * - {@link verifyLlmStrategies} — `healthCheck` (no network). Throws when a required strategy is missing or not
  *   ready; the startup gate.
@@ -8,18 +8,17 @@
  * - {@link readLlmProviderStatus} — `providerStatus` (account windows and balance, one read per account). Reports,
  *   never throws.
  *
- * The first two are thin wrappers over a lane-agnostic core ({@link verifyLlmReadiness} /
- * {@link probeLlmReadinessCredentials}) that reads any registry of strategies carrying the two shared seams, so the
- * decision lane's siblings (`verifyLlmDecisionStrategies` / `probeLlmDecisionCredentials` in `/decision`) reuse the
- * same per-strategy verdict logic without this module importing the decision contract.
+ * The first two read any registry of {@link LlmStrategyBase}s, so they serve either lane: a host gates its decision
+ * backends with the same call, passing `lane: LLM_DECISION_STRATEGY_READINESS_LANE` (from `/decision`) to word the
+ * report for decision strategies. This module never imports the decision contract.
  *
  * And the quota gate, {@link evaluateLlmQuotaGate}, which draws the throttle line over a provider-status report.
  */
 
-import { errorMessageOf, type KeyedRegistry, type Maybe, type PercentDecimal, runAsyncTasksForValues } from '@dereekb/util';
+import { errorMessageOf, type Maybe, type PercentDecimal, runAsyncTasksForValues } from '@dereekb/util';
 import { type LlmStrategyId } from '../model/llm.value';
 import { type LlmProviderStatus, type LlmProviderStatusProviderId, type LlmQuotaWindow, tightestLlmQuotaWindow } from './llm.provider.status';
-import { type LlmCredentialProbeOptions, type LlmStrategy } from './llm.strategy';
+import { type LlmCredentialProbeOptions, type LlmStrategyBase } from './llm.strategy';
 import { type LlmStrategyHealth } from './llm.strategy.health';
 import { type LlmStrategyRegistry } from './llm.strategy.registry';
 
@@ -56,18 +55,11 @@ export interface LlmStrategiesHealthReport {
 }
 
 /**
- * The two readiness seams the aggregators run, as one strategy declares them. `LlmStrategy` and the decision lane's
- * `LlmDecisionStrategy` declare both with the same signatures and the same {@link LlmStrategyHealth} verdict, so one
- * aggregator serves either lane.
+ * The read side of a strategy registry the readiness aggregators need: the id lookup over {@link LlmStrategyBase}s,
+ * which carries both readiness seams. A registry of either lane satisfies it — {@link LlmStrategyRegistry} and the
+ * decision lane's `LlmDecisionStrategyRegistry` alike.
  */
-export type LlmReadinessCheckedStrategy = Pick<LlmStrategy, 'healthCheck' | 'credentialProbe'>;
-
-/**
- * The read side of a strategy registry the readiness aggregators need: the id lookup. Both
- * {@link LlmStrategyRegistry} and the decision lane's `LlmDecisionStrategyRegistry` satisfy it, so this module never
- * imports the decision contract.
- */
-export type LlmReadinessStrategyRegistry = Pick<KeyedRegistry<LlmReadinessCheckedStrategy, LlmStrategyId>, 'get'>;
+export type LlmReadinessStrategyRegistry = Pick<LlmStrategyRegistry<LlmStrategyBase>, 'get'>;
 
 /**
  * The wording a readiness aggregator uses for the strategies it checks, in the issues it synthesizes and the error
@@ -97,8 +89,8 @@ export interface VerifyLlmStrategiesConfig {
    * The registry to check. REQUIRED: there is no shared default to fall back to, and a verify that silently
    * checked an empty table would report a keyless host as ready.
    *
-   * Typed structurally, so a decision registry is accepted too; `verifyLlmDecisionStrategies` (in `/decision`) is
-   * the decision lane's named entry and words its report for that lane.
+   * Any registry of {@link LlmStrategyBase}s, so a decision registry is accepted too; pass
+   * `lane: LLM_DECISION_STRATEGY_READINESS_LANE` (from `/decision`) to word the report for decision strategies.
    */
   readonly strategies: LlmReadinessStrategyRegistry;
   /**
@@ -131,7 +123,7 @@ interface LlmReadinessSeamCheck {
    * @param strategy - The registered strategy.
    * @returns The pending verdict, or `undefined` when the strategy does not declare the seam.
    */
-  readonly run: (strategy: LlmReadinessCheckedStrategy) => Maybe<Promise<LlmStrategyHealth>>;
+  readonly run: (strategy: LlmStrategyBase) => Maybe<Promise<LlmStrategyHealth>>;
 }
 
 /**
@@ -184,7 +176,7 @@ async function checkLlmReadinessSeam(config: CheckLlmReadinessSeamConfig): Promi
 }
 
 /**
- * Run each REQUIRED strategy's `LlmStrategy.healthCheck` and FAIL LOUDLY (throw one aggregated error)
+ * Run each REQUIRED strategy's `LlmStrategyBase.healthCheck` and FAIL LOUDLY (throw one aggregated error)
  * when any required backend is missing or not ready — a startup gate, instead of a lazy throw mid-run.
  * A required id that is unregistered, or whose healthCheck returns `ready:false`, blocks; a strategy with no
  * healthCheck is treated as ready (the seam is opt-in). Defensive: a contract-violating healthCheck throw is
@@ -224,8 +216,8 @@ export async function verifyLlmStrategies(config: VerifyLlmStrategiesConfig): Pr
  */
 export interface ProbeLlmCredentialsConfig {
   /**
-   * The registry to probe. REQUIRED, for {@link VerifyLlmStrategiesConfig.strategies}' reason; typed structurally
-   * for the same reason too (`probeLlmDecisionCredentials` is the decision lane's named entry).
+   * The registry to probe. REQUIRED, for {@link VerifyLlmStrategiesConfig.strategies}' reason. Any registry of
+   * {@link LlmStrategyBase}s, so a decision registry is accepted too (pass `lane: LLM_DECISION_STRATEGY_READINESS_LANE`).
    */
   readonly strategies: LlmReadinessStrategyRegistry;
   /**
@@ -249,7 +241,7 @@ export interface ProbeLlmCredentialsConfig {
 }
 
 /**
- * Run each named strategy's `LlmStrategy.credentialProbe` and aggregate the verdicts — the LIVE-credential
+ * Run each named strategy's `LlmStrategyBase.credentialProbe` and aggregate the verdicts — the LIVE-credential
  * sibling of {@link verifyLlmStrategies}, in the same {@link LlmStrategiesHealthReport} shape.
  *
  * Two deliberate differences from `verifyLlmStrategies`:

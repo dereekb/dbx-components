@@ -6,11 +6,12 @@
  * `(state, questions) -> answers` with no prompt string and no reply text anywhere in it. So this is a second
  * transport KIND registered alongside the first, not a mode on it — the data genuinely diverges.
  *
- * Everything ELSE is deliberately shared. Usage is reported as {@link LlmUsage}, so a decision call folds into the
- * same cost ledger as every completion with no new counting site. Ids are {@link LlmStrategyId} and the registry is
- * the same `createKeyedRegistry` shape, so an instance/transport split (`id` = the configured backend, `kind` = the
- * wire protocol) reads identically on both seams. Readiness is the same {@link LlmStrategyHealth} verdict, so one
- * aggregator serves both.
+ * Everything ELSE is deliberately shared. Both contracts extend {@link LlmStrategyBase} — identity (`id` / `kind`),
+ * a description, and the two readiness seams — so one registry factory (`makeLlmStrategyRegistry`) builds a decision
+ * registry too, an instance/transport split (`id` = the configured backend, `kind` = the wire protocol) reads
+ * identically on both seams, and the readiness aggregators (`verifyLlmStrategies` / `probeLlmCredentials`, worded by
+ * {@link LLM_DECISION_STRATEGY_READINESS_LANE}) serve both. Usage is reported as {@link LlmUsage}, so a decision call
+ * folds into the same cost ledger as every completion with no new counting site.
  *
  * **The guarantee this seam carries:** an answer that left its declared answer space is a FAULT, not a value. The
  * vendor constrains the output, but a network response is still a network response — `readLlmDecisionAnswers`
@@ -20,16 +21,17 @@
  *
  * **What every transport shares lives HERE**, not on one of them: the per-call ceiling
  * ({@link DEFAULT_LLM_DECISION_TIMEOUT_MS}), the transport error ({@link LlmDecisionTransportError}) and the retry
- * classifier ({@link isRetryableLlmDecisionError}). More than one gateway serves the same TypeSafe route, so a 429
- * on one is a 429 on the other and the retry posture above them must not drift. The System One transport
- * (`makeLlmSystemOneDecisionStrategy`) enforces them for every such gateway.
+ * classifier ({@link isRetryableLlmDecisionError}) the dispatcher's decision lane resends by. More than one gateway
+ * serves the same TypeSafe route, so a 429 on one is a 429 on the other and the retry posture above them must not
+ * drift. The System One transport (`makeLlmSystemOneDecisionStrategy`) enforces them for every such gateway.
  */
 
-import { createKeyedRegistry, type KeyedRegistry, type Maybe, type Milliseconds } from '@dereekb/util';
-import { type LlmModelId, type LlmStrategyId } from '../model/llm.value';
+import { type Maybe, type Milliseconds } from '@dereekb/util';
+import { type LlmModelId } from '../model/llm.value';
 import { isAbortError, isRetryableLlmError } from '../strategy/llm.error';
-import type { LlmCredentialProbeOptions, LlmStrategy } from '../strategy/llm.strategy';
-import type { LlmStrategyHealth } from '../strategy/llm.strategy.health';
+import type { LlmCompleteOptions, LlmStrategyBase } from '../strategy/llm.strategy';
+import type { LlmStrategyRegistry } from '../strategy/llm.strategy.registry';
+import type { LlmReadinessLane } from '../strategy/llm.strategy.readiness';
 import type { LlmUsage } from '../strategy/llm.usage';
 import type { LlmDecisionAnswers, LlmDecisionQuestions, LlmDecisionState } from './llm.decision.question';
 
@@ -55,18 +57,15 @@ export interface LlmDecisionRequest<Q extends LlmDecisionQuestions = LlmDecision
 }
 
 /**
- * Per-call options for {@link LlmDecisionStrategy.decide} — non-request concerns, the `LlmCompleteOptions`
- * precedent.
+ * Per-call options for {@link LlmDecisionStrategy.decide} — the completion lane's non-request concerns
+ * ({@link LlmCompleteOptions}: the external cancellation `signal`, which a transport combines with its own per-call
+ * timeout), plus the decision wall clock.
  */
-export interface LlmDecideOptions {
+export interface LlmDecideOptions extends LlmCompleteOptions {
   /**
-   * An EXTERNAL cancellation signal. A transport combines it with its own per-call timeout.
+   * The per-call wall clock. Omitted ⇒ the transport's own (by default {@link DEFAULT_LLM_DECISION_TIMEOUT_MS}).
    */
-  readonly signal?: AbortSignal;
-  /**
-   * The per-call wall clock. Omitted ⇒ {@link DEFAULT_LLM_DECISION_TIMEOUT_MS}.
-   */
-  readonly timeout?: Milliseconds;
+  readonly timeoutMs?: Milliseconds;
 }
 
 /**
@@ -102,22 +101,11 @@ export interface LlmDecisionResult<Q extends LlmDecisionQuestions = LlmDecisionQ
 }
 
 /**
- * A backend that answers declared questions — one configured instance of one decision transport.
+ * A backend that answers declared questions — one configured instance of one decision transport. Its identity and
+ * its two readiness seams (`healthCheck`, network-free; `credentialProbe`, networked) are {@link LlmStrategyBase}'s,
+ * with the same contracts as on a completion strategy.
  */
-export interface LlmDecisionStrategy {
-  /**
-   * The INSTANCE id the registry keys on and a provider binding names.
-   */
-  readonly id: LlmStrategyId;
-  /**
-   * The TRANSPORT this instance is served by (the wire protocol). Absent means {@link id} is also the kind, which
-   * is true of a single-instance strategy and of every hand-built fake.
-   */
-  readonly kind?: LlmStrategyId;
-  /**
-   * A one-line description, surfaced when listing strategies and on an unknown-id error.
-   */
-  readonly describe: string;
+export interface LlmDecisionStrategy extends LlmStrategyBase {
   /**
    * Run the call. Declared questions in, typed answers out.
    *
@@ -130,57 +118,27 @@ export interface LlmDecisionStrategy {
    * @returns The answers and the usage.
    */
   decide<Q extends LlmDecisionQuestions>(request: LlmDecisionRequest<Q>, options?: LlmDecideOptions): Promise<LlmDecisionResult<Q>>;
-  /**
-   * OPTIONAL startup readiness probe — does THIS backend have what it needs to serve a real call? Each strategy
-   * checks its OWN deps, so the caller never learns a transport's configuration rules.
-   *
-   * NETWORK-FREE by contract, exactly as its completion twin ({@link LlmStrategy.healthCheck}) is: it answers "is
-   * this constructible", never "is this key live", and it reports rather than throws. The verdict is the same
-   * {@link LlmStrategyHealth} shape, so one readiness aggregator serves completion and decision strategies alike.
-   *
-   * @returns This backend's readiness verdict.
-   */
-  healthCheck?(): Promise<LlmStrategyHealth>;
-  /**
-   * OPTIONAL live CREDENTIAL probe — the deliberately-NETWORKED other half of {@link healthCheck}, and the one gate
-   * that catches a well-formed-but-REVOKED key before it degrades a whole armed run. Reports rather than throws,
-   * the {@link LlmStrategy.credentialProbe} contract.
-   *
-   * @param options - The optional cancellation signal.
-   * @returns The credential verdict.
-   */
-  credentialProbe?(options?: LlmCredentialProbeOptions): Promise<LlmStrategyHealth>;
 }
 
 /**
- * A {@link KeyedRegistry} of {@link LlmDecisionStrategy}, keyed by its instance `id`.
+ * A registry of {@link LlmDecisionStrategy}, keyed by its instance `id` — the decision lane's
+ * {@link LlmStrategyRegistry}. Build one with `makeLlmStrategyRegistry(decisionStrategies)`.
  */
-export type LlmDecisionStrategyRegistry = KeyedRegistry<LlmDecisionStrategy, LlmStrategyId>;
+export type LlmDecisionStrategyRegistry = LlmStrategyRegistry<LlmDecisionStrategy>;
 
 /**
- * Build an {@link LlmDecisionStrategyRegistry} — the same id-keyed, last-wins shape as `makeLlmStrategyRegistry`, so an
- * id lookup reads identically on both seams.
- *
- * "Every instance of a transport" is `values().filter((strategy) => llmStrategyKind(strategy) === kind)`, and its
- * `.at(-1)` is the LAST registered instance of that kind. A host whose default is "the first configured strategy"
- * reads `values()[0]` instead.
- *
- * @param seed - The strategies to seed the registry with.
- * @returns The strategy registry.
- *
- * @__NO_SIDE_EFFECTS__
+ * The decision lane's wording for the readiness aggregators — pass it as `lane` to `verifyLlmStrategies` /
+ * `probeLlmCredentials` over an {@link LlmDecisionStrategyRegistry}, so the report names a "decision strategy".
  */
-export function makeLlmDecisionStrategyRegistry(seed: ReadonlyArray<LlmDecisionStrategy>): LlmDecisionStrategyRegistry {
-  return createKeyedRegistry<LlmDecisionStrategy, LlmStrategyId>({ readKey: (strategy) => strategy.id, seed });
-}
+export const LLM_DECISION_STRATEGY_READINESS_LANE: LlmReadinessLane = { singular: 'LLM decision strategy', plural: 'LLM decision strategies' };
 
 /**
  * The per-call wall clock a decision is given, on every transport.
  *
  * The strategy contract declares the default; the System One transport (`makeLlmSystemOneDecisionStrategy`) enforces it,
  * merging a `makeTimeoutAbortSignal` timeout with the caller's signal. Generous against the documented ~114ms on
- * purpose: a decision sits on the latency-critical path, so what is worth tuning is the RETRY posture above it, not
- * this ceiling. A call that has taken this long is not slow, it is broken.
+ * purpose: a decision sits on the latency-critical path, so what is worth tuning is the RETRY posture above it (the
+ * dispatcher's bounded decision resend), not this ceiling. A call that has taken this long is not slow, it is broken.
  */
 export const DEFAULT_LLM_DECISION_TIMEOUT_MS: Milliseconds = 10_000;
 
@@ -242,7 +200,8 @@ export class LlmDecisionTransportError extends Error {
  * A STATUS-LESS {@link LlmDecisionTransportError} (the route was never reached) is classified by its `cause`: a
  * retryable socket failure (a reset, a `fetch failed`) retries, an abort cause never does.
  *
- * No retry loop lives here; a caller or dispatcher decides whether to resend.
+ * The classifier the dispatcher's decision lane resends by (one bounded resend by default, `decisions.maxAttempts`).
+ * No retry loop lives here: a direct `strategy.decide()` / `decision.decide()` is never retried.
  *
  * @param error - The thrown value.
  * @returns Whether to retry.

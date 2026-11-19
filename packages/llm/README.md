@@ -47,7 +47,9 @@ These rules are enforced, not just documented:
 
 A **strategy** is one configured backend: an `LlmRequest` goes in, an `LlmCompletion` comes out, and it never parses
 the reply. `id` names the instance; `kind` names the transport (it defaults to `id`; read it with `llmStrategyKind`),
-so several instances of one transport can be registered side by side.
+so several instances of one transport can be registered side by side. Those two, `describe` and the `healthCheck` /
+`credentialProbe` seams are `LlmStrategyBase`, which the completion `LlmStrategy` and the decision lane's
+`LlmDecisionStrategy` both extend.
 
 - **Call types.** `LlmRequest` carries the prompt and capability, the per-call model, output cap and reasoning, the
   cache split, the prompt segments, a prior thread and image attachments. `LlmCompletion` carries the text, which
@@ -56,14 +58,15 @@ so several instances of one transport can be registered side by side.
   and strategies echo it. `toLlmThreadChatMessages` maps a replayed thread onto plain chat messages and
   `toLlmAttachmentDataUrl` builds an attachment's `data:` URL. The stock transports default to
   `DEFAULT_LLM_MAX_OUTPUT_TOKENS` (8,192) and a `DEFAULT_LLM_COMPLETION_TIMEOUT_MS` (60 s) timeout floor.
-- **Registry.** `makeLlmStrategyRegistry(seed)` answers `get(id)`; `llmStrategyInstancesOfKind` lists every instance
-  of a transport in registry order (`values().filter(...)`), and its `.at(-1)` is the last registered one. It is built
-  on `@dereekb/util`'s `createKeyedRegistry`.
+- **Registry.** `makeLlmStrategyRegistry(seed)` serves either lane (`LlmStrategyRegistry<S>`; a registry of decision
+  strategies is an `LlmDecisionStrategyRegistry`) and answers `get(id)`; `llmStrategyInstancesOfKind` lists every
+  instance of a transport in registry order (`values().filter(...)`), and its `.at(-1)` is the last registered one. It
+  is built on `@dereekb/util`'s `createKeyedRegistry`.
 - **Readiness.** Three optional seams: `healthCheck` (no network), `credentialProbe` (one free authenticated request)
   and `providerStatus` (account windows and balance). `verifyLlmStrategies` throws when a required strategy is
   missing or not ready; `probeLlmCredentials` and `readLlmProviderStatus` report and never throw (one status read per
-  account). The first two read any registry whose strategies carry the two seams; the decision lane's siblings live
-  in `/decision` (see [Strategies](#strategies)).
+  account). The first two read any registry of `LlmStrategyBase`s; pass `lane: LLM_DECISION_STRATEGY_READINESS_LANE`
+  to word the report for decision strategies (see [Strategies](#strategies)).
 - **Quota gate.** `evaluateLlmQuotaGate({ report })` refuses only when a measured window is above the ceiling (90% by
   default) and fails open whenever nothing is measured. A window's `unit` is an `LlmQuotaUnit`: one of the library's
   own (`flow`, `request`, `token`, `usd`) or a host's own string for a provider it meters itself.
@@ -786,12 +789,16 @@ replay. Hosts swap their own pieces in through hooks; the dispatcher has no host
 - **Records and taps.** `recorder.recordCallStart` fires before the send, `recordCall` once per execution, and
   `recordDecodeFailure` once when any decode row exists. The recorder gets the full record and owns any capture gate.
   `taps` (held by reference) get `onDispatch`, `onDecodeFailure` and `onDispatchComplete` with the same record object.
-  `onGap` gets `prompt-raw-json`, `critique-fail` and `prompt-over-budget` (the call is still sent).
-- **Host data.** `callAttributionOf` overrides the per-call context's attribution, `recordFieldsOf({ kind })` adds the
-  host's top-level fields to the `start` / `call` / `decode-failure` records and their tap events, and `resultOf`
-  builds the returned `X` from the library result and the `callProfile` snapshot (present when the context times).
-- **Call context.** A dispatch nests under `request.callContext`, else under `recorder.newCallContext`, else under a
-  context that does not time and sends its swallows to `swallow`.
+  A decision records through the same recorder and fires `onDispatch` / `onDispatchComplete` (never
+  `onDecodeFailure`); `event.decision` marks it on both events. `onGap` gets `prompt-raw-json`, `critique-fail` and
+  `prompt-over-budget` (the call is still sent).
+- **Host data.** Every hook that receives a request gets `{ lane, request }` — `lane: 'completion'` with the host's
+  `R`, or `lane: 'decision'` with the decision request; narrow on `lane`. `callAttributionOf` overrides the per-call
+  context's attribution, `recordFieldsOf({ lane, kind })` adds the host's top-level fields to the `start` / `call` /
+  `decode-failure` records and their tap events, and `resultOf` (completion only) builds the returned `X` from the
+  library result and the `callProfile` snapshot (present when the context times).
+- **Call context.** A dispatch or a decision nests under `request.callContext`, else under `recorder.newCallContext`,
+  else under a context that does not time and sends its swallows to `swallow`.
 - **Pause and cancellation.** `pause` (`isPaused` / `waitUntilResumed`) parks a dispatch before it sends (`paused`
   span, `llm-call-parked` diag). `cancellationSignal` and `request.signal` are combined and forwarded to the strategy;
   either one aborting counts as a cancellation.
@@ -849,21 +856,29 @@ one retry lever, and a mangled JSON reply gets one cheap fast fix before any re-
   `critique` failed row, never a decode row. A rejection on the last attempt ships the reply and files the
   `critique-fail` gap. A `line` reply is lifted to a lever under `lineLeverField` (default `line`) so the critic can read
   it.
-- **Decision lane.** The optional `decisions` block (`strategies`, `strategyId`, `defaultModel`, `newCallContext`,
-  `recordFieldsOf`) adds `decide`, `decisionsSpent`, `resetDecisionsSpent` and the once-per-reset
-  `claimDecisionBudgetWarning`; no block, an empty registry or an unregistered pin leaves all four absent. A
-  `defaultModel` that is not a decision model throws at construction, and it replaces the default-tier rung of the model
-  ladder. Each decision records one start and one call record, its state and questions as two `live`-slot segments.
-  A throwing `stamp` is swallowed at `llm/decide.stamp`. Decision calls fire no taps and never retry.
+- **Decision lane.** The optional `decisions` block (`strategies`, `strategyId`, `defaultModel`, `maxAttempts`) adds
+  `decide`, `decisionsSpent`, `resetDecisionsSpent` and the once-per-reset `claimDecisionBudgetWarning`; no block, an
+  empty registry or an unregistered pin leaves all four absent.
+  - **Model.** A per-call `model` / `tier`, then a capability route that names a decision model, then the descriptor's
+    `model` / `tier`, then `defaultModel` (which replaces the default-tier rung). A capability's completion route never
+    serves its decisions. A `defaultModel` that is not a decision model throws at construction; a slug from any other
+    rung that is not a decision model throws per call, before anything is sent.
+  - **Records and taps.** Each decision goes through the shared hooks (`lane: 'decision'`) and records one start and one
+    call record, its state and questions as two `live`-slot segments, firing `onDispatch` / `onDispatchComplete`. A
+    throwing `stamp` is swallowed at `llm/decide.stamp`.
+  - **Resend.** A send that fails with an error `isRetryableLlmDecisionError` accepts (a 429, a 5xx, a dropped socket;
+    never an abort, a timeout or an answer fault) is resent after `transportBackoff`, up to `maxAttempts` sends
+    (default 2). Each failed send is a `failedAttempts` row and `result.attempts` counts the sends; `decisionsSpent`
+    counts every send. A decision cancelled during the backoff is not resent.
 
 ```ts
-import { llmCriticFor, llmSchemaLeverValidator, makeLlmDecisionStrategyRegistry, makeLlmDispatcher, makeLlmReplyFastFixer } from '@dereekb/llm';
+import { llmCriticFor, llmSchemaLeverValidator, makeLlmDispatcher, makeLlmReplyFastFixer, makeLlmStrategyRegistry } from '@dereekb/llm';
 
 const dispatcher = makeLlmDispatcher({
   ...config, // strategies, tiers, descriptors and templates as above
   replyFastFix: makeLlmReplyFastFixer(),
   decodeRetryTier: 'strong',
-  decisions: { strategies: makeLlmDecisionStrategyRegistry([decisionStrategy]), defaultModel: 'typesafe/jev-1.14' }
+  decisions: { strategies: makeLlmStrategyRegistry([decisionStrategy]), defaultModel: 'typesafe/jev-1.14' }
 });
 
 const result = await dispatcher.dispatch({
@@ -936,20 +951,22 @@ could need in one map.
 
 ### Strategies
 
-- `LlmDecisionStrategy` is the decision sibling of `LlmStrategy`: `decide(request, options?)` takes
-  `LlmDecisionRequest` (`{ state, questions, model }`) and returns `LlmDecisionResult` (the answering versioned
+- `LlmDecisionStrategy extends LlmStrategyBase`, the decision sibling of `LlmStrategy`: `decide(request, options?)`
+  takes `LlmDecisionRequest` (`{ state, questions, model }`) and returns `LlmDecisionResult` (the answering versioned
   `model`, `answers`, `usage`, `provider`, `generationId`). It throws rather than returning partial answers. Its
-  `healthCheck` / `credentialProbe` report `LlmStrategyHealth`, the completion lane's verdict.
-- `makeLlmDecisionStrategyRegistry(seed)` — the same id-keyed registry; `values().filter(...)` by `llmStrategyKind`
-  lists a kind's instances (`.at(-1)` the LAST registered), `values()[0]` the first.
-- `verifyLlmDecisionStrategies({ strategies, required })` and `probeLlmDecisionCredentials({ strategies, required,
-  signal })` gate launch on the decision backends. They run the completion aggregators over an
-  `LlmDecisionStrategyRegistry` and return the same `LlmStrategiesHealthReport`: verify throws one aggregated error,
-  probe reports and never throws, a strategy without the seam counts as ready, and a throwing seam is recorded as an
-  error issue. Issues and errors name a "decision strategy".
+  `healthCheck` / `credentialProbe` are the base's, reporting `LlmStrategyHealth`. `LlmDecideOptions` extends
+  `LlmCompleteOptions` (`signal`) with `timeoutMs`.
+- A decision registry is `makeLlmStrategyRegistry(seed)` over decision strategies (an `LlmDecisionStrategyRegistry`);
+  `llmStrategyInstancesOfKind` lists a kind's instances (`.at(-1)` the LAST registered), `values()[0]` the first.
+- `verifyLlmStrategies({ strategies, required, lane: LLM_DECISION_STRATEGY_READINESS_LANE })` and
+  `probeLlmCredentials({ strategies, required, signal, lane: LLM_DECISION_STRATEGY_READINESS_LANE })` gate launch on
+  the decision backends and return the same `LlmStrategiesHealthReport`: verify throws one aggregated error, probe
+  reports and never throws, a strategy without the seam counts as ready, and a throwing seam is recorded as an error
+  issue. With that `lane`, issues and errors name a "decision strategy".
 - `DEFAULT_LLM_DECISION_TIMEOUT_MS` (10s) is declared here and enforced by the System One transport.
 - `LlmDecisionTransportError` (`status`, `body`) and `isRetryableLlmDecisionError` (429 / 5xx / socket failures,
-  never an abort) — the completion lane's retry posture; no retry loop lives here.
+  never an abort or a timeout) — the completion lane's retry posture, and what the dispatcher's decision lane resends
+  by (see [Decision lane](#retry-and-lanes)); a direct `strategy.decide()` / `decision.decide()` is never retried.
 - `makeLlmSystemOneDecisionStrategy(config, hooks)` is the ONE decision transport, a plain `fetch` to
   `POST {baseUrl}/systemone` for every gateway that serves the route. The hooks define the gateway: `kind`, `label`,
   `defaultBaseUrl`, `generationIdHeader` (read when the body has no `id`), `costBasis`, `laxAnswerTypes` and
@@ -964,9 +981,10 @@ could need in one map.
 - `defineLlmDecision(descriptor)` declares a decision over one typed input: `state(input)` and `questions(input)`.
   Validation is lazy — `asRequest({ input, model })` validates and throws `LlmDecisionDeclarationError` naming the
   decision — and `decide({ strategy, input, model, options })` runs it.
-- `LlmDecisionDispatchRequest` is what `makeLlmDispatcher`'s decision lane (its `decisions` block) takes: the
-  consuming `capability`, the declared `decision`, its `input`, host `meta`, model / tier overrides, `stage` and an
-  optional `stamp`.
+- `LlmDecisionDispatchRequest` is what `makeLlmDispatcher`'s decision lane (its `decisions` block) takes. It shares
+  `LlmDispatchRequestBase` with a completion request — the consuming `capability`, host `meta`, model / tier
+  overrides, the parent `callContext` and the `signal` — and adds the declared `decision`, its `input`, `stage` and an
+  optional `stamp`. A descriptor's own `model` / `tier` are `Pick<LlmCapabilityModelRef, 'tier' | 'model'>`.
 
 ```ts
 import { llmChoiceQuestion, llmDecisionRequestBody, llmNoulQuestion, readLlmDecisionAnswers } from '@dereekb/llm/decision';
@@ -1111,8 +1129,8 @@ OpenRouter's hook set over `makeLlmSystemOneDecisionStrategy`, with no SDK.
   (no `costBasis`); the generation id is the body `id`.
 - The per-call timeout (`DEFAULT_LLM_DECISION_TIMEOUT_MS` unless set) holds even when you pass a signal.
 - Failures follow the System One transport: a timeout or abort rejects with its reason (`isAbortError`), a socket
-  failure is an `LlmDecisionTransportError` with the native error as its `cause` (retryable), and an HTTP answer is an
-  `LlmDecisionTransportError` (`status`, `body`).
+  failure is an `LlmDecisionTransportError` with the native error as its `cause` (the dispatcher's decision lane
+  resends it), and an HTTP answer is an `LlmDecisionTransportError` (`status`, `body`).
 - Seams: `decisionFetch` (a keyless fake of the route) and `probeFetch`; the credential probe is `GET {baseUrl}/key`.
 
 `LLM_OPENROUTER_ADAPTERS` registers the completion transport `openrouter` (default `https://openrouter.ai/api/v1`) and
@@ -1157,8 +1175,8 @@ plain `fetch`, so it needs no SDK, and never reads the environment: the host pas
   ZenMux hooks. It sends exactly `{ model, state, questions }` via `llmDecisionRequestBody` — ZenMux answers `400` to any
   other key. The generation id comes from the `X-ZenMux-RequestId` header, a type-less answer takes its question's
   declared type (`laxAnswerTypes`), and a reported `cost` carries `costBasis: 'list'`. Failures follow the transport's
-  contract: a socket failure wraps as `LlmDecisionTransportError` with the failure as its `cause`, so a reset retries
-  under `isRetryableLlmDecisionError`.
+  contract: a socket failure wraps as `LlmDecisionTransportError` with the failure as its `cause`, so the dispatcher's
+  decision lane resends a reset (`isRetryableLlmDecisionError`).
 
 `makeZenmuxLlmAdapters(config)` returns the decision route `zenmux`, plus the `zenmux` metering, bill and
 credential-probe adapters. The decision route is never derived: a provider declares `decision: 'zenmux'`. Register the

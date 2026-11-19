@@ -917,6 +917,22 @@ describe('makeLlmDispatcher()', () => {
       expect(sites).toContain('llm/reply-envelope.decode');
     });
 
+    it("should hand every host hook the completion lane and the host's request", async () => {
+      const seen: string[] = [];
+      const recorder: LlmDispatchRecorder<LlmDispatchRequest, HostFields> = { newCallContext: ({ lane, request: given, label }) => (seen.push(`newCallContext:${lane}:${given.capability}`), makeLlmCallContext({ label })), recordCall: () => undefined };
+      const sent = request();
+      const requests: unknown[] = [];
+      await setup({
+        replies: ['x'],
+        recorder,
+        callAttributionOf: ({ lane, request: given }) => (seen.push(`callAttributionOf:${lane}`), requests.push(given), undefined),
+        recordFieldsOf: ({ lane, kind, request: given }) => (seen.push(`recordFieldsOf:${lane}:${kind}`), requests.push(given), {})
+      }).dispatcher.dispatch(sent);
+
+      expect(seen).toEqual(['callAttributionOf:completion', 'newCallContext:completion:TestCap', 'recordFieldsOf:completion:start', 'recordFieldsOf:completion:call']);
+      expect(requests.every((given) => given === sent)).toBe(true);
+    });
+
     it('should serve the root by prompt HASH through a tape, and a chained follow-up by order', async () => {
       const expectedRoot = 'A-PROTOCOL\n\nB-CAP\n\nC-CTX\nD-LIVE';
       const tape = makeLlmTapeStrategy({

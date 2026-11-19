@@ -1,6 +1,8 @@
 /**
  * The **dispatch tap seam** — an explicitly NON-MUTATING registry a benchmark, a live debug feed or a probe attaches
- * to so it can watch EVERY LLM call (send, reply, and each failed decode attempt) from outside the dispatcher.
+ * to so it can watch EVERY LLM call — each capability dispatch and each decision (send, reply, and each failed decode
+ * attempt) — from outside the dispatcher. A decision fires `onDispatch` / `onDispatchComplete` and never
+ * `onDecodeFailure`; `event.decision != null` tells a decision apart on both events.
  * {@link LlmDispatchTapRegistry.addTap} returns an IDEMPOTENT cleanup, so a probe detaches cleanly and a double-detach
  * is a no-op. {@link makeLlmDispatchCollector} is the reference accumulate-everything tap.
  *
@@ -50,7 +52,7 @@ export type LlmDispatchTapId = string;
 export interface LlmDispatchStartTapEventBase extends LlmCallStartRecordBase {
   /**
    * The prompt this call newly sends — the fully assembled prompt on a root dispatch, the follow-up message on a
-   * chained turn (its replayed history rides `LlmRequest.thread`).
+   * chained turn (its replayed history rides `LlmRequest.thread`), a decision's state and questions JSON.
    */
   readonly prompt: string;
   /**
@@ -62,10 +64,16 @@ export interface LlmDispatchStartTapEventBase extends LlmCallStartRecordBase {
    * `true` on a CHAINED follow-up execution; omitted on a root dispatch.
    */
   readonly followUp?: true;
+  /**
+   * The declared decision key, on a DECISION send; omitted on a capability dispatch. Tap-only: it mirrors the call
+   * record's `decision` (which the completion event already carries), so `event.decision != null` identifies a
+   * decision on both events while the start record stays unchanged.
+   */
+  readonly decision?: string;
 }
 
 /**
- * Fired the instant a request is about to be sent — BEFORE `strategy.complete`.
+ * Fired the instant a request is about to be sent — BEFORE `strategy.complete` / `strategy.decide`.
  */
 export type LlmDispatchStartTapEvent<H extends LlmCallHostFields = LlmCallHostFields> = LlmDispatchStartTapEventBase & H;
 
@@ -142,7 +150,7 @@ export interface LlmDispatchTap<H extends LlmCallHostFields = LlmCallHostFields>
    */
   readonly id: LlmDispatchTapId;
   /**
-   * Observe a request about to be SENT (before `strategy.complete`).
+   * Observe a request about to be SENT (before `strategy.complete` / `strategy.decide`).
    *
    * @param event - The send-time event.
    */
@@ -154,7 +162,7 @@ export interface LlmDispatchTap<H extends LlmCallHostFields = LlmCallHostFields>
    */
   onDispatchComplete?(event: LlmDispatchCompleteTapEvent<H>): void | PromiseLike<void>;
   /**
-   * Observe one FAILED decode attempt, before the retry is issued.
+   * Observe one FAILED decode attempt, before the retry is issued. Never fired by a decision.
    *
    * @param event - The failed-attempt event.
    */

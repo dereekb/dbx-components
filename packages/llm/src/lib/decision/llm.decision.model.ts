@@ -47,7 +47,8 @@ export function isLlmDecisionModelId(model: Maybe<LlmModelId>): boolean {
  * The model slug is the ONLY thing that says which inference surface a request belongs to ({@link isLlmDecisionModelId}),
  * and a wrong guess fails at the provider rather than with an error anyone can read: a completion slug sent to a
  * gateway's decision route is refused by the route. So a host checks its configured decision model FREE — at readiness,
- * or when it builds its dispatcher — instead of on every billed call.
+ * or when it builds its dispatcher — instead of on every billed call. The dispatcher's decision lane also runs it per
+ * call, free, on the model its precedence picked, and throws before sending.
  *
  * @param model - The configured decision model; absent ⇒ the host's default applies (the library ships no default
  *   decision slug).

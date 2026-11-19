@@ -1,15 +1,20 @@
 /**
  * The craft JUDGE: one decision call per dispatch over the judged notes, scripted — kept / cut at the floor, an
  * unavailable lane, no `decide`, a fault, a transport throw, the judge cap, and a state of only the referenced inputs.
+ * One case runs a real dispatcher whose consuming capability has a completion route (the craft-judge path of B4).
  */
 
 import { describe, expect, it } from 'vitest';
+import { makeScriptedLlmDecisionStrategy, makeScriptedLlmStrategy } from '@dereekb/llm/test';
 import { LlmDecisionAnswerFaultError } from '../decision/llm.decision.answer';
 import { type LlmDecisionDispatchRequest } from '../decision/llm.decision.descriptor';
+import { isLlmDecisionModelId } from '../decision/llm.decision.model';
 import { type LlmDecisionAnswers, type LlmDecisionQuestions } from '../decision/llm.decision.question';
 import { type LlmDecisionRequest, type LlmDecisionResult } from '../decision/llm.decision.strategy';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { type LlmDispatcher } from '../dispatch/llm.dispatcher';
+import { makeLlmDispatcher } from '../dispatch/llm.dispatcher.pipeline';
+import { makeLlmStrategyRegistry } from '../strategy/llm.strategy.registry';
 import { composeLlmCapabilityPrompt } from '../prompt/llm.prompt.assembly';
 import { type LlmPromptSite } from '../prompt/llm.prompt.site';
 import { tieredLlmPromptTemplateResolver } from '../prompt/llm.prompt.template';
@@ -119,6 +124,37 @@ describe('makeLlmCraftJudge() through the craft contributor', () => {
     expect(decided[0].stamp?.({ n0: noul(0.6), n1: noul(0.59) } as never)).toEqual({ craft: { asked: ['kept', 'dropped'], kept: ['kept'] } });
     expect(composed.contributions.filter((row) => row.origin.kind === 'craft').map((row) => [row.key, row.by, row.p])).toEqual([['kept', 'judge', 0.6]]);
     expect(composed.cut.map((row) => [row.key, row.cut, row.p])).toEqual([['dropped', 'floor', 0.59]]);
+  });
+
+  it('is served by the decision default model when the consuming capability has a COMPLETION route (a real dispatcher)', async () => {
+    const requests: LlmDecisionRequest[] = [];
+    const decisionStrategy = makeScriptedLlmDecisionStrategy({
+      requests,
+      script: (request) => {
+        // the gateway's decision route refuses a completion model's slug
+        if (!isLlmDecisionModelId(request.model)) {
+          throw new Error(`the decision route refused '${request.model}'`);
+        }
+
+        return Object.fromEntries(Object.keys(request.questions).map((key) => [key, noul(0.9)]));
+      }
+    });
+    const dispatcher = makeLlmDispatcher({
+      strategies: makeLlmStrategyRegistry([makeScriptedLlmStrategy({ id: 'cap', replies: [] })]),
+      defaultStrategyId: 'cap',
+      defaultMaxOutputTokens: 1024,
+      modelTiers: { fast: 'vendor/fast-text-model' },
+      capabilityRoutes: new Map([['summarize', { model: 'vendor/routed-text-model' }]]),
+      descriptorOf: () => undefined,
+      templateResolver: tieredLlmPromptTemplateResolver({ tiers: [] }),
+      decisions: { strategies: makeLlmStrategyRegistry([decisionStrategy]), defaultModel: 'typesafe/jev-1.14' }
+    });
+    const swallowed: string[] = [];
+    const composed = await composeWith([note('kept', { ask: ASK_BRIEF })], { ...PAGE, judge: makeLlmCraftJudge({ sites: SITES, dispatcher, swallow: (site) => swallowed.push(site) }) });
+
+    expect(requests.map((request) => request.model)).toEqual(['typesafe/jev-1.14']);
+    expect(swallowed).toEqual([]);
+    expect(composed.contributions.filter((row) => row.origin.kind === 'craft').map((row) => [row.key, row.by])).toEqual([['kept', 'judge']]);
   });
 
   it('asks nothing when unavailable: onUnavailable fires once and every judged note takes its unserved posture', async () => {

@@ -4,6 +4,9 @@
  *
  * A host carries its own fields by extension (`interface HostRequest extends LlmDispatchRequest { … }`), including a
  * narrower `site` with a typed supply, and passes the extended type as a dispatcher's `R`.
+ *
+ * {@link LlmDispatchRequestBase} is what a completion shares with a decision (`LlmDecisionDispatchRequest`): the
+ * capability, host meta, the per-call model overrides, the parent call context and the cancellation signal.
  */
 
 import { type LlmCapabilityKey, type LlmModelId, type LlmModelTierKey, type LlmReasoningConfig } from '../model/llm.value';
@@ -16,22 +19,24 @@ import { type LlmLeverValidator } from '../reply/llm.reply.validator';
 import { type LlmAttachment, type LlmCallMeta } from '../strategy/llm.strategy';
 
 /**
- * One capability call, as a dispatcher receives it.
+ * What every dispatcher call carries, on either lane — a capability completion ({@link LlmDispatchRequest}) or a
+ * decision (`LlmDecisionDispatchRequest`). The host hooks that receive a request see these fields on both lanes.
  */
-export interface LlmDispatchRequest {
+export interface LlmDispatchRequestBase {
   /**
-   * The capability being invoked — the template, descriptor and strategy-selection key.
+   * The capability the call is made for — on a completion, the template, descriptor and strategy-selection key; on a
+   * decision, the CONSUMING capability (the caller's, not the decision key), whose cell the decision records under.
    */
   readonly capability: LlmCapabilityKey;
   /**
    * Host data about the call (its subject, its correlation ids) — opaque to the library, forwarded to the call record
-   * and the reply checks.
+   * and the host hooks.
    */
   readonly meta?: LlmCallMeta;
   /**
    * A PER-INVOCATION model TIER override — a tier key the dispatcher resolves against the active tier map, WINNING over
-   * the capability descriptor's `tier` / `model`. Lets a single dispatch route to a stronger tier without editing its
-   * descriptor. Omitted ⇒ fall through to the descriptor's tier / the default tier.
+   * the descriptor's `tier` / `model`. Lets a single call route to a stronger tier without editing its descriptor.
+   * Omitted ⇒ fall through to the descriptor's tier / the default.
    */
   readonly tier?: LlmModelTierKey;
   /**
@@ -40,6 +45,21 @@ export interface LlmDispatchRequest {
    * through the tier precedence.
    */
   readonly model?: LlmModelId;
+  /**
+   * The PARENT call context this call nests under — threaded by the caller (a turn / phase scope) so the per-call
+   * timing profile nests under whatever phase spawned it. Omitted ⇒ the call profiles standalone.
+   */
+  readonly callContext?: LlmCallContext;
+  /**
+   * Aborts the call — forwarded to every strategy call it makes, and re-checked before any resend.
+   */
+  readonly signal?: AbortSignal;
+}
+
+/**
+ * One capability call, as a dispatcher receives it.
+ */
+export interface LlmDispatchRequest extends LlmDispatchRequestBase {
   /**
    * A PER-INVOCATION reasoning override — the HIGHEST-precedence reasoning input, winning over the capability
    * descriptor, the resolved tier config AND the host floor (precedence `request > descriptor > tier > floor`,
@@ -114,11 +134,6 @@ export interface LlmDispatchRequest {
    */
   readonly maxAttempts?: number;
   /**
-   * The PARENT call context this dispatch nests under — threaded by the caller (a turn / phase scope) so the per-call
-   * timing profile nests under whatever phase spawned it. Omitted ⇒ the call profiles standalone.
-   */
-  readonly callContext?: LlmCallContext;
-  /**
    * The token budget this call's live context was rendered against. When set AND the fully-assembled prompt's
    * estimated tokens exceed it, the dispatcher reports an over-budget gap and SENDS ANYWAY (never blocks). Omitted ⇒
    * no over-budget gap.
@@ -129,8 +144,4 @@ export interface LlmDispatchRequest {
    * prompt contributors match against. Read ONLY by contributors; changes no byte by itself.
    */
   readonly site?: LlmPromptSite;
-  /**
-   * Aborts the dispatch — forwarded to every strategy call it makes.
-   */
-  readonly signal?: AbortSignal;
 }

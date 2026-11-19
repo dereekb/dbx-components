@@ -80,7 +80,7 @@ export interface LlmSystemOneDecisionStrategyConfig {
    */
   readonly baseUrl?: Maybe<string>;
   /**
-   * The per-call timeout; absent ⇒ {@link DEFAULT_LLM_DECISION_TIMEOUT_MS}. A caller's `LlmDecideOptions.timeout` wins.
+   * The per-call timeout; absent ⇒ {@link DEFAULT_LLM_DECISION_TIMEOUT_MS}. A caller's `LlmDecideOptions.timeoutMs` wins.
    */
   readonly timeoutMs?: Maybe<Milliseconds>;
   /**
@@ -258,7 +258,7 @@ export function makeLlmSystemOneDecisionStrategy(config: LlmSystemOneDecisionStr
     // The body is EXACTLY `{ model, state, questions }`, built field by field, so a host-extended request object can
     // never leak a key onto the wire (ZenMux answers `400 invalid_params` to any other body key).
     const body = llmDecisionRequestBody(request);
-    const signal = makeTimeoutAbortSignal({ timeout: options?.timeout ?? timeoutMs, signal: options?.signal });
+    const signal = makeTimeoutAbortSignal({ timeout: options?.timeoutMs ?? timeoutMs, signal: options?.signal });
     const init: LlmCredentialProbeRequestInit = { method: 'POST', headers: { Authorization: `Bearer ${config.apiKey ?? ''}`, 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(body), signal };
     const { response, text } = await readLlmSystemOneRoute({ fetch: decisionFetch, url, init, signal, label });
     const status = response.status;

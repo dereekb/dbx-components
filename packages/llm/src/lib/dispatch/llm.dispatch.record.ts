@@ -1,23 +1,25 @@
 /**
  * The dispatcher's record stage — the send-time start record, the completed call record, the one decode-failure
- * record, their fan-out to the host recorder and the live taps, and the over-budget gap.
+ * record, their fan-out to the host recorder and the live taps, and the over-budget gap. The host-field reader and
+ * the start record serve both lanes (a completion and a decision).
  */
 
 import { type Maybe } from '@dereekb/util';
-import { type LlmModelTierKey } from '../model/llm.value';
+import { type LlmCapabilityKey, type LlmModelId, type LlmModelTierKey } from '../model/llm.value';
 import { type LlmCallContext, type LlmCallProfile } from '../record/llm.call.context';
 import { type LlmCallHostFields, type LlmCallRecord, type LlmCallStartRecord } from '../record/llm.call.record';
 import { llmDecodeContextExcerpt, llmDecodePromptId } from '../record/llm.decode.failure';
 import { type LlmDispatchTapRegistry } from '../record/llm.dispatch.tap';
+import { type LlmStrategyBase } from '../strategy/llm.strategy';
 import { llmStrategyKind } from '../strategy/llm.strategy.registry';
 import { type LlmComposedDispatch } from './llm.dispatch.compose';
 import { llmCallPhasesOf, type LlmDispatchOutcome } from './llm.dispatch.outcome';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
 import { type LlmResolvedDispatch } from './llm.dispatch.resolve';
-import { type LlmDispatchGap, type LlmDispatchRecorder, type LlmDispatchRecordFieldsParams, type LlmDispatchRecordKind } from './llm.dispatcher.config';
+import { type LlmDispatchGap, type LlmDispatchLaneRequest, type LlmDispatchRecorder, type LlmDispatchRecordFieldsParams, type LlmDispatchRecordKind } from './llm.dispatcher.config';
 
 /**
- * The host's top-level fields of each record kind for ONE dispatch.
+ * The host's top-level fields of each record kind for ONE dispatch or decision.
  *
  * @typeParam H - The host's top-level record fields.
  */
@@ -35,18 +37,22 @@ export interface LlmDispatchRecordFieldsConfig<R extends LlmDispatchRequest = Ll
    * The host hook — absent ⇒ no host fields.
    */
   readonly recordFieldsOf?: Maybe<(params: LlmDispatchRecordFieldsParams<R, A>) => H>;
-  readonly request: R;
+  /**
+   * The lane and its request, handed to the hook as-is.
+   */
+  readonly call: LlmDispatchLaneRequest<R>;
   readonly callContext: LlmCallContext<A>;
 }
 
 /**
- * One dispatch's host-field reader — the hook called AT MOST ONCE per record kind (memoized), `{}` when absent.
+ * One dispatch's (or decision's) host-field reader — the hook called AT MOST ONCE per record kind (memoized), `{}`
+ * when absent.
  *
- * @param config - The hook, the request and the call context.
+ * @param config - The hook, the lane and its request, and the call context.
  * @returns The reader.
  */
 export function llmDispatchRecordFieldsOf<R extends LlmDispatchRequest = LlmDispatchRequest, H extends LlmCallHostFields = LlmCallHostFields, A extends object = object>(config: LlmDispatchRecordFieldsConfig<R, H, A>): LlmDispatchRecordFields<H> {
-  const { recordFieldsOf, request, callContext } = config;
+  const { recordFieldsOf, call, callContext } = config;
   const read = new Map<LlmDispatchRecordKind, H>();
 
   return (kind) => {
@@ -54,7 +60,7 @@ export function llmDispatchRecordFieldsOf<R extends LlmDispatchRequest = LlmDisp
     let fields: H;
 
     if (cached == null) {
-      fields = recordFieldsOf == null ? ({} as H) : recordFieldsOf({ kind, request, callContext });
+      fields = recordFieldsOf == null ? ({} as H) : recordFieldsOf({ ...call, kind, callContext });
       read.set(kind, fields);
     } else {
       fields = cached;
@@ -101,29 +107,56 @@ export function isLlmDispatchTapsActive<H extends LlmCallHostFields>(taps: Maybe
  * @typeParam A - The call-context attribution type.
  */
 export interface RecordLlmDispatchStartConfig<R extends LlmDispatchRequest = LlmDispatchRequest, H extends LlmCallHostFields = LlmCallHostFields, A extends object = object> {
-  readonly sinks: LlmDispatchRecordSinks<R, H, A>;
-  readonly request: R;
-  readonly resolved: LlmResolvedDispatch;
-  readonly composed: LlmComposedDispatch;
-  readonly followUp: boolean;
+  readonly sinks: Pick<LlmDispatchRecordSinks<R, H, A>, 'recorder' | 'taps'>;
+  /**
+   * The capability the call records under (on a decision, the consuming capability).
+   */
+  readonly capability: LlmCapabilityKey;
+  /**
+   * The concrete model slug the call is sent to.
+   */
+  readonly model: LlmModelId;
+  /**
+   * The tier the model came from, when one did.
+   */
+  readonly tier?: Maybe<LlmModelTierKey>;
+  /**
+   * The strategy the call is sent through.
+   */
+  readonly strategy: Pick<LlmStrategyBase, 'id' | 'kind'>;
+  /**
+   * Tap-only: what the call newly sends (a decision's state and questions JSON).
+   */
+  readonly prompt: string;
+  /**
+   * Tap-only: the prompt's estimated tokens.
+   */
+  readonly estimatedPromptTokens: number;
+  /**
+   * Tap-only: whether the call is a chained follow-up.
+   */
+  readonly followUp?: Maybe<boolean>;
+  /**
+   * Tap-only: the declared decision a decision-lane send answers.
+   */
+  readonly decision?: Maybe<string>;
   readonly fields: LlmDispatchRecordFields<H>;
 }
 
 /**
- * Record that a call is about to be sent — the start record to the recorder, and (with taps attached) the
- * `onDispatch` tap event with the prompt and its estimate.
+ * Record that a call (a dispatch or a decision) is about to be sent — the start record to the recorder, and (with
+ * taps attached) the `onDispatch` tap event with the prompt, its estimate and, on a decision, the decision key.
  *
- * @param config - The sinks, the request, the resolved / composed dispatch and the host fields.
+ * @param config - The sinks, the capability, model, tier and strategy, the tap-only prompt facts and the host fields.
  * @returns The start record.
  */
 export function recordLlmDispatchStart<R extends LlmDispatchRequest = LlmDispatchRequest, H extends LlmCallHostFields = LlmCallHostFields, A extends object = object>(config: RecordLlmDispatchStartConfig<R, H, A>): LlmCallStartRecord<H> {
-  const { sinks, request, resolved, composed, followUp, fields } = config;
-  const { tier, strategy } = resolved;
-  const startRecord: LlmCallStartRecord<H> = { capability: request.capability, model: resolved.resolvedModel, ...(tier == null ? {} : { tier }), strategyId: resolved.strategyId, strategyKind: llmStrategyKind(strategy), ...fields('start') };
+  const { sinks, capability, model, tier, strategy, prompt, estimatedPromptTokens, followUp, decision, fields } = config;
+  const startRecord: LlmCallStartRecord<H> = { capability, model, ...(tier == null ? {} : { tier }), strategyId: strategy.id, strategyKind: llmStrategyKind(strategy), ...fields('start') };
   sinks.recorder?.recordCallStart?.(startRecord);
 
   if (isLlmDispatchTapsActive(sinks.taps)) {
-    sinks.taps.emitDispatch({ ...startRecord, prompt: composed.baseRequest.prompt, estimatedPromptTokens: composed.estimatedPromptTokens, ...(followUp ? { followUp: true } : {}) });
+    sinks.taps.emitDispatch({ ...startRecord, prompt, estimatedPromptTokens, ...(followUp === true ? { followUp: true } : {}), ...(decision == null ? {} : { decision }) });
   }
 
   return startRecord;

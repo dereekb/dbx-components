@@ -4,6 +4,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { type LlmDecisionStrategy, type LlmDecisionStrategyRegistry } from '../decision/llm.decision.strategy';
 import { type LlmCompletion, type LlmRequest, type LlmStrategy } from './llm.strategy';
 import { llmStrategyInstancesOfKind, llmStrategyKind, makeLlmStrategyRegistry } from './llm.strategy.registry';
 
@@ -108,5 +109,16 @@ describe('llmStrategyInstancesOfKind', () => {
   it('returns an empty list for an unknown kind', () => {
     const strategies = makeLlmStrategyRegistry([fakeStrategy('a')]);
     expect(llmStrategyInstancesOfKind({ strategies, kind: 'nope' })).toEqual([]);
+  });
+});
+
+describe('makeLlmStrategyRegistry() over the decision lane', () => {
+  it('infers a decision registry from a decision seed, and llmStrategyInstancesOfKind reads it', () => {
+    const decisionStrategy = (id: string): LlmDecisionStrategy => ({ id, kind: 'decisions-wire', describe: id, decide: async () => ({ model: 'm', answers: {} as never }) });
+    const strategies: LlmDecisionStrategyRegistry = makeLlmStrategyRegistry([decisionStrategy('a'), decisionStrategy('b')]);
+    const instances: ReadonlyArray<LlmDecisionStrategy> = llmStrategyInstancesOfKind({ strategies, kind: 'decisions-wire' });
+
+    expect(instances.map((strategy) => strategy.id)).toEqual(['a', 'b']);
+    expect(typeof strategies.get('a')?.decide).toBe('function');
   });
 });

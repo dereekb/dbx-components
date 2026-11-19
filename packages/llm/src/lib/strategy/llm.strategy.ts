@@ -302,7 +302,8 @@ export interface LlmDispatchResult extends LlmCompletion {
   readonly text: string;
   /**
    * How many `strategy.complete` calls the dispatcher's bounded validate-and-retry made (initial + retries). Present
-   * IFF the loop ran (a validator was supplied); a single-shot call leaves it unset.
+   * IFF the loop ran (a validator was supplied); a single-shot call leaves it unset. On a DECISION's call record it
+   * counts the `strategy.decide` sends, and is present only when a retryable transport failure was resent.
    */
   readonly attempts?: number;
   /**
@@ -467,10 +468,13 @@ export interface LlmCredentialProbeOptions {
 export type LlmCredentialProbe = (options?: LlmCredentialProbeOptions) => Promise<LlmStrategyHealth>;
 
 /**
- * A pluggable LLM backend, keyed by a stable {@link id}. Hides subprocess vs in-process SDK vs HTTP behind one async
- * text-in / envelope-out call.
+ * What every configured backend shares, on either lane — the completion {@link LlmStrategy} and the decision lane's
+ * `LlmDecisionStrategy` both extend it: identity (`id` / `kind`), a description, and the two readiness seams.
+ *
+ * The strategy registry (`makeLlmStrategyRegistry`), the readiness aggregators (`verifyLlmStrategies` /
+ * `probeLlmCredentials`) and `llmStrategyKind` read only this base, so each serves both lanes.
  */
-export interface LlmStrategy {
+export interface LlmStrategyBase {
   /**
    * The INSTANCE id — the name of this one configured backend (the dispatcher routes to it; the registry keys on
    * it), e.g. `'openrouter'`, or `'local'` / `'gateway-payg'` for two separately-configured `openai` transports.
@@ -492,6 +496,46 @@ export interface LlmStrategy {
    * A one-line description (surfaced when listing strategies / on an unknown-id error).
    */
   readonly describe: string;
+  /**
+   * OPTIONAL startup readiness probe — does THIS backend have what it needs to serve a real call? Provider-agnostic:
+   * each strategy checks ITS OWN deps (a key is present, its client is constructible, a client was injected). MUST be
+   * cheap and side-effect-light — construct/validate, do NOT make a billable network round-trip — and MUST NEVER
+   * throw (report unreadiness as `ready:false` + an `'error'` issue). MUST no-op to `{ ready:true }` when an
+   * injection seam (an injected client) is present, so a fake never triggers a real key/SDK check. A
+   * strategy that omits this member is treated as ready by `verifyLlmStrategies` (the seam is opt-in). Invoked once
+   * at bootstrap by the host via `verifyLlmStrategies` — the dispatcher NEVER calls it.
+   *
+   * @returns This backend's readiness verdict.
+   */
+  healthCheck?(): Promise<LlmStrategyHealth>;
+  /**
+   * OPTIONAL live CREDENTIAL probe — the deliberately-NETWORKED sibling of {@link healthCheck}. It answers the one
+   * question `healthCheck` structurally cannot: does the configured key still WORK? A well-formed but REVOKED key
+   * passes every non-network check and every constructibility check, then fails at the provider on the first real
+   * call — which, behind a fail-open host, silently degrades a whole run to fallbacks instead of failing it.
+   *
+   * Contract, mirroring {@link healthCheck} except on the network axis:
+   * - It MAKES A REAL NETWORK ROUND-TRIP, against a FREE, non-billable auth-scoped endpoint (e.g. OpenRouter
+   *   `GET /key`; an OpenAI-compatible `GET /models`). Never a completion or a decision.
+   * - It is OPT-IN and is NEVER called by the dispatcher nor by `verifyLlmStrategies` — a caller that wants it asks
+   *   for it (`probeLlmCredentials`, a launch gate).
+   * - It MUST NEVER throw: an unreachable provider / a rejected key is reported as `ready:false` + an `'error'`
+   *   issue carrying the provider's OWN message verbatim.
+   * - It MUST no-op to `{ ready:true }` when an injection seam (e.g. an injected client) is present, so a fake
+   *   never opens a socket — unless the host supplied an explicit credential probe source, which outranks the
+   *   injected seam and is always delegated to.
+   *
+   * @param options - Optional external cancellation.
+   * @returns This backend's credential verdict.
+   */
+  credentialProbe?(options?: LlmCredentialProbeOptions): Promise<LlmStrategyHealth>;
+}
+
+/**
+ * A pluggable LLM backend, keyed by a stable {@link LlmStrategyBase.id}. Hides subprocess vs in-process SDK vs HTTP
+ * behind one async text-in / envelope-out call.
+ */
+export interface LlmStrategy extends LlmStrategyBase {
   /**
    * How this strategy caches the stable preamble ({@link LlmCacheMode}) — self-documentation / telemetry; a
    * dispatcher's behaviour does not branch on it.
@@ -530,39 +574,6 @@ export interface LlmStrategy {
    */
   warm?(request: LlmRequest): Promise<void>;
   /**
-   * OPTIONAL startup readiness probe — does THIS backend have what it needs to serve a real call? Provider-agnostic:
-   * each strategy checks ITS OWN deps (a key is present, its client is constructible, a client was injected). MUST be
-   * cheap and side-effect-light — construct/validate, do NOT make a billable network round-trip — and MUST NEVER
-   * throw (report unreadiness as `ready:false` + an `'error'` issue). MUST no-op to `{ ready:true }` when an
-   * injection seam (an injected client) is present, so a fake never triggers a real key/SDK check. A
-   * strategy that omits this member is treated as ready by `verifyLlmStrategies` (the seam is opt-in). Invoked once
-   * at bootstrap by the host via `verifyLlmStrategies` — the dispatcher NEVER calls it.
-   *
-   * @returns This backend's readiness verdict.
-   */
-  healthCheck?(): Promise<LlmStrategyHealth>;
-  /**
-   * OPTIONAL live CREDENTIAL probe — the deliberately-NETWORKED sibling of {@link healthCheck}. It answers the one
-   * question `healthCheck` structurally cannot: does the configured key still WORK? A well-formed but REVOKED key
-   * passes every non-network check and every constructibility check, then fails at the provider on the first real
-   * call — which, behind a fail-open host, silently degrades a whole run to fallbacks instead of failing it.
-   *
-   * Contract, mirroring {@link healthCheck} except on the network axis:
-   * - It MAKES A REAL NETWORK ROUND-TRIP, against a FREE, non-billable auth-scoped endpoint (OpenRouter `GET /key`;
-   *   an OpenAI-compatible `GET /models`). Never a completion.
-   * - It is OPT-IN and is NEVER called by the dispatcher nor by `verifyLlmStrategies` — a caller that wants it asks
-   *   for it (`probeLlmCredentials`, a launch gate).
-   * - It MUST NEVER throw: an unreachable provider / a rejected key is reported as `ready:false` + an `'error'`
-   *   issue carrying the provider's OWN message verbatim.
-   * - It MUST no-op to `{ ready:true }` when an injection seam (an injected client) is present, so a fake
-   *   never opens a socket — unless the host supplied an explicit credential probe source, which outranks the
-   *   injected seam and is always delegated to.
-   *
-   * @param options - Optional external cancellation.
-   * @returns This backend's credential verdict.
-   */
-  credentialProbe?(options?: LlmCredentialProbeOptions): Promise<LlmStrategyHealth>;
-  /**
    * OPTIONAL live ACCOUNT-STATUS read — the THIRD networked sibling, answering the question the other two cannot: how
    * much of the current period's entitlement is already spent?
    *
@@ -571,7 +582,7 @@ export interface LlmStrategy {
    * refusal carries a remaining-quota or `retry-after` field, so the only way to know before spending is to ask the
    * provider's account endpoints, which is what this does.
    *
-   * Contract, mirroring {@link credentialProbe}:
+   * Contract, mirroring {@link LlmStrategyBase.credentialProbe}:
    * - It MAKES REAL NETWORK ROUND-TRIPS against free, non-billable account endpoints. Never a completion.
    * - It is OPT-IN, and is NEVER called by the dispatcher, `verifyLlmStrategies`, or `probeLlmCredentials` — a
    *   caller that wants it asks (`readLlmProviderStatus`).

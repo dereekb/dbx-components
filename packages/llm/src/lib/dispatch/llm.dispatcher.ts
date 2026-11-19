@@ -46,7 +46,10 @@ export interface LlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequest
   preparePrompt(request: R): LlmPrompt<R, X>;
   /**
    * Run one DECISION — declared questions over a state, typed answers back, recorded in the same ledger as every
-   * completion. The decision-lane sibling of {@link dispatch}.
+   * completion. The decision-lane sibling of {@link dispatch}: it shares the dispatcher's recorder, host hooks
+   * (`lane: 'decision'`) and taps (`onDispatch` / `onDispatchComplete`), and nests under `request.callContext`. A send
+   * that fails with a retryable transport error is resent after the transport backoff — one bounded resend by default
+   * (`decisions.maxAttempts`); any other throw propagates. A model that is not a decision model throws before sending.
    *
    * OPTIONAL, and that is the contract rather than an oversight. It is implemented only when the dispatcher was built
    * with a decision registry, so every hand-rolled fake dispatcher keeps compiling untouched, and a consumer reads
@@ -68,8 +71,9 @@ export interface LlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequest
    */
   capabilityVision?(capability: LlmCapabilityKey, override?: Maybe<LlmCapabilityModelOverride>): LlmCapabilityVision;
   /**
-   * How many decision calls THIS dispatcher has served (counted at the wire, whether or not the reply was usable) —
-   * the per-run counter a host's decision budget is enforced against. Present exactly when {@link decide} is.
+   * How many decision SENDS THIS dispatcher has made (counted at the wire, every send a resend included, whether or not
+   * the reply was usable) — the per-run counter a host's decision budget is enforced against. Present exactly when
+   * {@link decide} is.
    *
    * @returns The served decision-call count.
    */

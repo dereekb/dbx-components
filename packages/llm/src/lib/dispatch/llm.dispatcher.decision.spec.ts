@@ -1,31 +1,35 @@
 /**
  * The dispatcher's DECISION LANE — the only path a decision reaches the recorder by. `decide` is left undefined when no
  * decision backend is registered (how a consumer branches back onto its text arm rather than throwing); one decision
- * records exactly one start and one call record under the CONSUMING capability and the decision strategy; the model
- * ladder is the capability ladder with only its bottom rung swapped for the decision default model.
+ * records exactly one start and one call record under the CONSUMING capability and the decision strategy, through the
+ * dispatcher's shared hooks (`lane: 'decision'`) and taps; the model ladder is the capability ladder with its bottom
+ * rung swapped for the decision default model, a completion route skipped, and every slug checked per call; a
+ * retryable transport failure is resent up to `decisions.maxAttempts` sends.
  *
  * Not ported: the host's ledger fold of a decision call, and the host consumers that read the decision arm.
  */
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { makeScriptedLlmDecisionStrategy, makeScriptedLlmStrategy, type ScriptedLlmDecisionScript } from '@dereekb/llm/test';
+import { LlmDecisionAnswerFaultError } from '../decision/llm.decision.answer';
 import { llmDecisionChoiceAnswerOf, llmDecisionNoulAnswerOf } from '../decision/llm.decision.answer.builder';
 import { defineLlmDecision } from '../decision/llm.decision.descriptor';
 import { llmDecisionModelIssue } from '../decision/llm.decision.model';
 import { llmChoiceQuestion, llmNoulQuestion } from '../decision/llm.decision.question';
-import { type LlmDecisionRequest, type LlmDecisionStrategy, makeLlmDecisionStrategyRegistry } from '../decision/llm.decision.strategy';
+import { type LlmDecisionRequest, type LlmDecisionStrategy, LlmDecisionTransportError } from '../decision/llm.decision.strategy';
 import { type LlmModelTierMap } from '../model/llm.model.tier';
+import { estimateLlmTokens } from '../prompt/llm.prompt.budget';
 import { DEFAULT_LLM_PROMPT_LAYOUT } from '../prompt/llm.prompt.layout';
 import { type LlmPromptTemplate, tieredLlmPromptTemplateResolver } from '../prompt/llm.prompt.template';
 import { type LlmCallContext, makeLlmCallContext } from '../record/llm.call.context';
 import { type LlmCallRecord, type LlmCallStartRecord } from '../record/llm.call.record';
-import { makeLlmDispatchTapRegistry } from '../record/llm.dispatch.tap';
+import { type LlmDispatchCompleteTapEvent, type LlmDispatchStartTapEvent, makeLlmDispatchTapRegistry } from '../record/llm.dispatch.tap';
 import { type LlmSwallowSiteId } from '../record/llm.swallow';
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
 import { makeLlmStrategyRegistry } from '../strategy/llm.strategy.registry';
 import { LLM_DECIDE_STAMP_SWALLOW_SITE } from './llm.dispatch.decision';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
-import { type LlmDispatcherConfig, type LlmDispatcherDecisionConfig, type LlmDispatchRecorder } from './llm.dispatcher.config';
+import { type LlmDispatcherConfig, type LlmDispatcherDecisionConfig, type LlmDispatchLane, type LlmDispatchRecorder } from './llm.dispatcher.config';
 import { makeLlmDispatcher } from './llm.dispatcher.pipeline';
 
 // MARK: Fixtures
@@ -36,7 +40,7 @@ const TEMPLATES: ReadonlyArray<LlmPromptTemplate> = [
 
 const RESOLVER = tieredLlmPromptTemplateResolver({ tiers: [{ source: 'defaults', templates: TEMPLATES }] });
 
-const TIERS: LlmModelTierMap = { fast: 'some/fast-text-model', strong: 'some/strong-text-model' };
+const TIERS: LlmModelTierMap = { fast: 'some/fast-text-model', strong: 'some/strong-text-model', judge: 'typesafe/jev-judge' };
 
 const DECISION_MODEL = 'typesafe/jev-1.14';
 
@@ -61,15 +65,19 @@ interface SetupConfig extends Partial<LlmDispatcherConfig<LlmDispatchRequest, Ll
   /**
    * Overrides of the `decisions` block.
    */
-  readonly decisionsConfig?: Partial<LlmDispatcherDecisionConfig<HostFields>>;
+  readonly decisionsConfig?: Partial<LlmDispatcherDecisionConfig>;
+  /**
+   * The recorder's root-context minting.
+   */
+  readonly newCallContext?: LlmDispatchRecorder<LlmDispatchRequest, HostFields>['newCallContext'];
 }
 
 function setup(config: SetupConfig = {}) {
-  const { backends, decisionsConfig, ...rest } = config;
+  const { backends, decisionsConfig, newCallContext, ...rest } = config;
   const requests: LlmDecisionRequest[] = [];
   const starts: LlmCallStartRecord<HostFields>[] = [];
   const calls: LlmCallRecord<HostFields>[] = [];
-  const recorder: LlmDispatchRecorder<LlmDispatchRequest, HostFields> = { recordCallStart: (record) => starts.push(record), recordCall: (record) => calls.push(record) };
+  const recorder: LlmDispatchRecorder<LlmDispatchRequest, HostFields> = { recordCallStart: (record) => starts.push(record), recordCall: (record) => calls.push(record), ...(newCallContext == null ? {} : { newCallContext }) };
   const strategies = backends === undefined ? [makeScriptedLlmDecisionStrategy({ id: 'account-a', requests, script: SCRIPT })] : backends;
   const dispatcher = makeLlmDispatcher<LlmDispatchRequest, LlmDispatchResult, HostFields>({
     strategies: makeLlmStrategyRegistry([makeScriptedLlmStrategy({ id: 'cap', replies: [] })]),
@@ -80,11 +88,34 @@ function setup(config: SetupConfig = {}) {
     templateResolver: RESOLVER,
     transportBackoff: () => 0,
     recorder,
-    ...(strategies == null ? {} : { decisions: { strategies: makeLlmDecisionStrategyRegistry(strategies), defaultModel: DECISION_MODEL, ...decisionsConfig } }),
+    ...(strategies == null ? {} : { decisions: { strategies: makeLlmStrategyRegistry(strategies), defaultModel: DECISION_MODEL, ...decisionsConfig } }),
     ...rest
   });
   return { dispatcher, requests, starts, calls };
 }
+
+/**
+ * A scripted backend whose `n`th send (1-based) rejects with `errorAt(n)` when that returns one, else answers.
+ *
+ * @param errorAt - The error of a send, by its ordinal; `undefined` ⇒ that send answers.
+ * @param requests - Receives every request sent.
+ * @returns The backend.
+ */
+function flakyBackend(errorAt: (send: number) => unknown, requests: LlmDecisionRequest[]): LlmDecisionStrategy {
+  const inner = makeScriptedLlmDecisionStrategy({ id: 'account-a', script: SCRIPT });
+  let sends = 0;
+  return {
+    ...inner,
+    decide: (request, options) => {
+      requests.push(request as LlmDecisionRequest);
+      sends += 1;
+      const error = errorAt(sends);
+      return error === undefined ? inner.decide(request, options) : Promise.reject(error);
+    }
+  };
+}
+
+const HTTP_503 = () => new LlmDecisionTransportError({ message: 'HTTP 503', status: 503 });
 
 /**
  * A scripted backend that records which instance served each call.
@@ -192,10 +223,139 @@ describe('makeLlmDispatcher() decision lane', () => {
       const pinnedModel = defineLlmDecision({ ...PICK_ROW.descriptor, model: 'typesafe/jev-pinned' });
 
       await dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' }, model: 'typesafe/jev-next' });
-      await dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' }, tier: 'strong' });
+      await dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' }, tier: 'judge' });
       await dispatcher.decide?.({ capability: 'PickCap', decision: pinnedModel, input: { phrase: 'x' } });
 
-      expect(requests.map((request) => request.model)).toEqual(['typesafe/jev-next', 'some/strong-text-model', 'typesafe/jev-pinned']);
+      expect(requests.map((request) => request.model)).toEqual(['typesafe/jev-next', 'typesafe/jev-judge', 'typesafe/jev-pinned']);
+    });
+  });
+
+  describe('model', () => {
+    it("should never take the consuming capability's COMPLETION route: the descriptor, then the default model, answers", async () => {
+      const { dispatcher, requests, starts } = setup({ capabilityRoutes: new Map([['PickCap', { model: 'some/routed-text-model' }]]) });
+      const pinnedModel = defineLlmDecision({ ...PICK_ROW.descriptor, model: 'typesafe/jev-pinned' });
+
+      await dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' } });
+      await dispatcher.decide?.({ capability: 'PickCap', decision: pinnedModel, input: { phrase: 'x' } });
+
+      expect(requests.map((request) => request.model)).toEqual([DECISION_MODEL, 'typesafe/jev-pinned']);
+      expect(starts.map((record) => record.model)).toEqual([DECISION_MODEL, 'typesafe/jev-pinned']);
+    });
+
+    it('should take a capability route that names a decision model, over the descriptor', async () => {
+      const { dispatcher, requests, starts } = setup({ capabilityRoutes: new Map([['PickCap', { model: 'typesafe/jev-routed', tier: 'judge' }]]) });
+      const pinnedModel = defineLlmDecision({ ...PICK_ROW.descriptor, model: 'typesafe/jev-pinned' });
+
+      await dispatcher.decide?.({ capability: 'PickCap', decision: pinnedModel, input: { phrase: 'x' } });
+
+      expect(requests.map((request) => request.model)).toEqual(['typesafe/jev-routed']);
+      expect(starts[0]).toMatchObject({ model: 'typesafe/jev-routed', tier: 'judge' });
+    });
+
+    it('should refuse a per-call or descriptor slug that is not a decision model, before anything is sent', async () => {
+      const { dispatcher, requests, starts } = setup();
+      const fastTier = defineLlmDecision({ ...PICK_ROW.descriptor, tier: 'fast' });
+
+      await expect(dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' }, tier: 'strong' })).rejects.toThrow(llmDecisionModelIssue('some/strong-text-model') as string);
+      await expect(dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' }, model: 'openai/gpt-5.1' })).rejects.toThrow(llmDecisionModelIssue('openai/gpt-5.1') as string);
+      await expect(dispatcher.decide?.({ capability: 'PickCap', decision: fastTier, input: { phrase: 'x' } })).rejects.toThrow(llmDecisionModelIssue('some/fast-text-model') as string);
+
+      expect(requests).toHaveLength(0);
+      expect(starts).toHaveLength(0);
+      expect(dispatcher.decisionsSpent?.()).toBe(0);
+    });
+
+    it('should name the decision, the capability and the rung in the refusal', async () => {
+      const { dispatcher } = setup();
+
+      await expect(dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' }, tier: 'strong' })).rejects.toThrow("llm dispatcher: decision 'PickRow' for 'PickCap' (the request-tier rung): ");
+    });
+  });
+
+  describe('retry', () => {
+    it('should resend a retryable transport failure once, after the transport backoff, and record the failed send', async () => {
+      const requests: LlmDecisionRequest[] = [];
+      const transportBackoff = vi.fn((_attempt: number) => 0);
+      const { dispatcher, starts, calls } = setup({ backends: [flakyBackend((send) => (send === 1 ? HTTP_503() : undefined), requests)], transportBackoff });
+      const result = await dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' } });
+
+      expect(result?.answers.row.choice).toBe('row-b');
+      expect(requests).toHaveLength(2);
+      expect(transportBackoff.mock.calls.map(([attempt]) => attempt)).toEqual([1]);
+      expect(starts).toHaveLength(1);
+      expect(calls).toHaveLength(1);
+      expect(calls[0].failedAttempts).toHaveLength(1);
+      expect(calls[0].failedAttempts?.[0]).toMatchObject({ attempt: 1, cause: 'transport', text: '' });
+      expect(calls[0].failedAttempts?.[0]?.error).toContain('503');
+      expect(calls[0].result.attempts).toBe(2);
+      expect(dispatcher.decisionsSpent?.()).toBe(2);
+    });
+
+    it('should resend a status-less transport failure whose cause is a dropped socket', async () => {
+      const requests: LlmDecisionRequest[] = [];
+      const dropped = () => new LlmDecisionTransportError({ message: 'the route could not be reached', cause: new TypeError('fetch failed') });
+      const { dispatcher } = setup({ backends: [flakyBackend((send) => (send === 1 ? dropped() : undefined), requests)] });
+
+      await dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' } });
+
+      expect(requests).toHaveLength(2);
+    });
+
+    it('should never resend a non-retryable failure', async () => {
+      const failures: ReadonlyArray<unknown> = [
+        new LlmDecisionTransportError({ message: 'HTTP 400', status: 400 }),
+        new LlmDecisionTransportError({ message: 'no API key configured' }),
+        new LlmDecisionAnswerFaultError([{ question: 'row', kind: 'answer-missing', detail: 'no answer' }]),
+        new DOMException('stopped', 'AbortError'),
+        new DOMException('too slow', 'TimeoutError'),
+        new Error('transport down')
+      ];
+
+      for (const failure of failures) {
+        const requests: LlmDecisionRequest[] = [];
+        const { dispatcher, starts, calls } = setup({ backends: [flakyBackend(() => failure, requests)] });
+
+        await expect(dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' } })).rejects.toBe(failure);
+        expect(requests).toHaveLength(1);
+        expect(starts).toHaveLength(1);
+        expect(calls).toHaveLength(0);
+      }
+    });
+
+    it('should respect decisions.maxAttempts, clamped to at least one send', async () => {
+      const always = (maxAttempts: number) => {
+        const requests: LlmDecisionRequest[] = [];
+        const transportBackoff = vi.fn((_attempt: number) => 0);
+        const error = HTTP_503();
+        const { dispatcher } = setup({ backends: [flakyBackend(() => error, requests)], transportBackoff, decisionsConfig: { maxAttempts } });
+        return { dispatcher, requests, transportBackoff, error };
+      };
+
+      const three = always(3);
+      await expect(three.dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' } })).rejects.toBe(three.error);
+      expect(three.requests).toHaveLength(3);
+      expect(three.transportBackoff.mock.calls.map(([attempt]) => attempt)).toEqual([1, 2]);
+      expect(three.dispatcher.decisionsSpent?.()).toBe(3);
+
+      for (const single of [always(1), always(0)]) {
+        await expect(single.dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' } })).rejects.toBe(single.error);
+        expect(single.requests).toHaveLength(1);
+        expect(single.transportBackoff).not.toHaveBeenCalled();
+      }
+    });
+
+    it('should not resend a decision cancelled during the backoff', async () => {
+      const requests: LlmDecisionRequest[] = [];
+      const error = HTTP_503();
+      const controller = new AbortController();
+      const transportBackoff = (_attempt: number) => {
+        controller.abort();
+        return 0;
+      };
+      const { dispatcher } = setup({ backends: [flakyBackend((send) => (send === 1 ? error : undefined), requests)], transportBackoff });
+
+      await expect(dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' }, signal: controller.signal })).rejects.toBe(error);
+      expect(requests).toHaveLength(1);
     });
   });
 
@@ -209,6 +369,8 @@ describe('makeLlmDispatcher() decision lane', () => {
       expect(starts[0]).toMatchObject({ capability: 'PickCap', model: DECISION_MODEL, strategyId: 'account-a', strategyKind: 'scripted-decision' });
       expect(calls[0].capability).toBe('PickCap');
       expect(calls[0].result).toMatchObject({ capability: 'PickCap', strategyId: 'account-a', strategyKind: 'scripted-decision', usage: { cost: 0 } });
+      expect(calls[0]).not.toHaveProperty('failedAttempts');
+      expect(calls[0].result).not.toHaveProperty('attempts');
     });
 
     it('should record the decision STATE and its QUESTIONS as two live-slot segments, and the decision key', async () => {
@@ -238,14 +400,14 @@ describe('makeLlmDispatcher() decision lane', () => {
       expect(calls[0].segments?.map((segment) => segment.id)).toEqual(['D', 'D']);
     });
 
-    it("should land the host's record fields on both records, and the stage on the call record", async () => {
-      const { dispatcher, starts, calls } = setup({ decisionsConfig: { recordFieldsOf: ({ kind, request }) => ({ host: `${kind}:${request.capability}` }) } });
+    it("should land the dispatcher's host record fields on both records (lane: 'decision'), and the stage on the call record", async () => {
+      const { dispatcher, starts, calls } = setup({ recordFieldsOf: ({ lane, kind, request }) => ({ host: `${lane}:${kind}:${request.capability}` }) });
 
       await dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' }, stage: 2 });
       await dispatcher.decide?.({ capability: 'OtherCap', decision: PICK_ROW, input: { phrase: 'x' } });
 
-      expect(starts.map((record) => record.host)).toEqual(['start:PickCap', 'start:OtherCap']);
-      expect(calls.map((record) => record.host)).toEqual(['call:PickCap', 'call:OtherCap']);
+      expect(starts.map((record) => record.host)).toEqual(['decision:start:PickCap', 'decision:start:OtherCap']);
+      expect(calls.map((record) => record.host)).toEqual(['decision:call:PickCap', 'decision:call:OtherCap']);
       expect(calls.map((record) => record.stage)).toEqual([2, undefined]);
     });
 
@@ -274,34 +436,70 @@ describe('makeLlmDispatcher() decision lane', () => {
       expect(calls[0]).not.toHaveProperty('stamp');
     });
 
-    it('should mint the context through decisions.newCallContext and time the decide span on it', async () => {
+    it("should mint the context through the recorder's newCallContext (lane: 'decision') and time the decide span on it", async () => {
       const contexts: LlmCallContext[] = [];
-      const labels: string[] = [];
+      const seen: { readonly lane: LlmDispatchLane; readonly label: string }[] = [];
       const { dispatcher } = setup({
-        decisionsConfig: {
-          newCallContext: ({ label }) => {
-            labels.push(label);
-            const context = makeLlmCallContext({ label, timing: true });
-            contexts.push(context);
-            return context;
-          }
+        newCallContext: ({ lane, label }) => {
+          seen.push({ lane, label });
+          const context = makeLlmCallContext({ label, timing: true });
+          contexts.push(context);
+          return context;
         }
       });
       await dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' } });
 
-      expect(labels).toEqual(['PickCap']);
+      expect(seen).toEqual([{ lane: 'decision', label: 'PickCap' }]);
       expect(spanNamesOf(contexts[0])).toContain('decide');
     });
 
-    it('should fire no tap', async () => {
-      const fired: string[] = [];
-      const taps = makeLlmDispatchTapRegistry<HostFields>();
-      taps.addTap({ id: 't', onDispatch: () => void fired.push('dispatch'), onDecodeFailure: () => void fired.push('decode-failure'), onDispatchComplete: () => void fired.push('complete') });
-      const { dispatcher, calls } = setup({ taps });
+    it("should nest under the request's callContext instead of minting a root", async () => {
+      const newCallContext = vi.fn(({ label }: { readonly label: string }) => makeLlmCallContext({ label, timing: true }));
+      const { dispatcher } = setup({ newCallContext });
+      const parent = makeLlmCallContext({ label: 'turn', timing: true });
+      await dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' }, callContext: parent });
+      const profile = parent.profile();
+
+      expect(newCallContext).not.toHaveBeenCalled();
+      expect(profile.children.map((child) => child.label)).toEqual(['PickCap']);
+      expect(profile.children[0].spans.map((span) => span.name)).toContain('decide');
+    });
+
+    it('should hand callAttributionOf the decision lane, and its attribution to the context', async () => {
+      const lanes: LlmDispatchLane[] = [];
+      const attributions: unknown[] = [];
+      const attribution = { who: 'judge' };
+      const { dispatcher } = setup({
+        callAttributionOf: ({ lane }) => {
+          lanes.push(lane);
+          return attribution;
+        },
+        newCallContext: ({ label, attribution: given }) => {
+          attributions.push(given);
+          return makeLlmCallContext({ label, timing: true });
+        }
+      });
       await dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' } });
 
-      expect(calls).toHaveLength(1);
-      expect(fired).toEqual([]);
+      expect(lanes).toEqual(['decision']);
+      expect(attributions).toEqual([attribution]);
+    });
+
+    it('should fire onDispatch and onDispatchComplete with the records (never onDecodeFailure)', async () => {
+      const dispatched: LlmDispatchStartTapEvent<HostFields>[] = [];
+      const completed: LlmDispatchCompleteTapEvent<HostFields>[] = [];
+      const decodeFailures: unknown[] = [];
+      const taps = makeLlmDispatchTapRegistry<HostFields>();
+      taps.addTap({ id: 't', onDispatch: (event) => void dispatched.push(event), onDecodeFailure: (event) => void decodeFailures.push(event), onDispatchComplete: (event) => void completed.push(event) });
+      const requests: LlmDecisionRequest[] = [];
+      const { dispatcher, starts, calls } = setup({ taps, backends: [flakyBackend((send) => (send === 1 ? HTTP_503() : undefined), requests)] });
+      await dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' } });
+
+      expect(dispatched).toHaveLength(1);
+      expect(dispatched[0]).toEqual({ ...starts[0], prompt: calls[0].prompt, estimatedPromptTokens: estimateLlmTokens(calls[0].prompt), decision: 'PickRow' });
+      expect(starts[0]).not.toHaveProperty('decision');
+      expect(completed).toEqual([calls[0]]);
+      expect(decodeFailures).toEqual([]);
     });
   });
 

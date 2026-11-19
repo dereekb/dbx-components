@@ -20,8 +20,8 @@ import { isNotBlankString, type Maybe, type Milliseconds } from '@dereekb/util';
 import { type LlmStrategyId } from '../model/llm.value';
 import { LLM_PROVIDER_FACET_NONE, type LlmCompletionProviderEntry } from '../model/config/llm.model.config.schema';
 import { type LlmProviderConfig } from '../model/config/llm.model.config.resolve';
-import { makeLlmDecisionStrategyRegistry, type LlmDecisionStrategy, type LlmDecisionStrategyRegistry } from '../decision/llm.decision.strategy';
-import { llmStrategyKind } from '../strategy/llm.strategy.registry';
+import { type LlmDecisionStrategy, type LlmDecisionStrategyRegistry } from '../decision/llm.decision.strategy';
+import { llmStrategyKind, makeLlmStrategyRegistry } from '../strategy/llm.strategy.registry';
 import { type LlmCredentialProbeFetch } from '../strategy/llm.credential.probe';
 import { llmAdaptersOf, resolveLlmAdapter, type LlmAdapterRegistry } from './llm.adapter.registry';
 import { llmProviderBaseUrlOf, type LlmProviderAdaptersConfig } from './llm.adapter.provider';
@@ -129,7 +129,7 @@ export function makeLlmDecisionStrategies(config: MakeLlmDecisionStrategiesConfi
     return strategy;
   });
 
-  return makeLlmDecisionStrategyRegistry(built);
+  return makeLlmStrategyRegistry(built);
 }
 
 /**

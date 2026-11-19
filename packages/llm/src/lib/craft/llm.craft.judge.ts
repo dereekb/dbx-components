@@ -114,7 +114,8 @@ export function llmCraftJudgeQuestionKeyOf(at: number): string {
 
 /**
  * The declared decision: the clipped inputs as the state, one Noul per asked note (its `ask` verbatim). It sets no
- * tier or model, so the dispatcher's model precedence picks the model.
+ * tier or model, so the dispatcher's model precedence picks the model; a completion route on the consuming capability
+ * is ignored (only a route that names a decision model serves a decision), so it falls to `decisions.defaultModel`.
  */
 export const LLM_CRAFT_NOTE_SELECT_DECISION = /*#__PURE__*/ defineLlmDecision({
   decision: LLM_CRAFT_NOTE_SELECT_DECISION_ID,

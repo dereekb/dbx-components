@@ -28,7 +28,7 @@ import { llmDispatchRecordFieldsOf, type LlmDispatchRecordSinks, isLlmDispatchTa
 import { llmDispatchStrategySelectorOf, type LlmDispatchResolveSetup, resolveLlmDispatch } from './llm.dispatch.resolve';
 import { type LlmDispatchAttemptsConfig, llmDispatchMaxAttemptsOf, runLlmDispatchAttempts, runSingleShotLlmDispatch } from './llm.dispatch.run';
 import { type LlmDispatcher } from './llm.dispatcher';
-import { type LlmDispatcherConfig, type LlmDispatchGap } from './llm.dispatcher.config';
+import { type LlmDispatcherConfig, type LlmDispatchGap, type LlmDispatchLaneRequest } from './llm.dispatcher.config';
 
 /**
  * The id of a layout's first slot of `role`, else `fallback`.
@@ -53,7 +53,13 @@ function llmPromptSlotIdOfRole(layout: LlmPromptLayout, role: LlmPromptSlotRole,
  * Attempts: a call with neither `validate` nor `critique` is single-shot (the result returned unchanged); a call with
  * either runs the BOUNDED retry loop — up to `maxAttempts` (default 2) attempts, each rejection re-asking with a
  * correction and one lever of the retry ladder, the fast-fix tier of the reply-repair lane when `replyFastFix` is
- * configured, and the request's critic after `validate` passes (root calls only).
+ * configured, and the request's critic after `validate` passes (root calls only). A decision (`decide`) is sent once,
+ * and resent after `transportBackoff` while its send fails with a retryable transport error, up to
+ * `decisions.maxAttempts` sends (default 2).
+ *
+ * Both lanes share the host hooks and the record path: the call context (`recorder.newCallContext`, or nested under
+ * the request's `callContext`), `callAttributionOf` and `recordFieldsOf` (each handed `{ lane, request }`), the start
+ * record and `onDispatch`, the call record and `onDispatchComplete`.
  *
  * @param config - The strategies, model routing, prompt pieces and host hooks.
  * @returns The dispatcher.
@@ -112,20 +118,20 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
   const transportBackoff = config.transportBackoff ?? llmTransportBackoffMs;
   // the fast fixer reaches the dispatcher through this holder, so a fixer call is an ordinary, recorded dispatch
   const selfDispatch: { dispatch: (request: R) => Promise<X> } = { dispatch: () => Promise.reject(new Error('llm dispatcher: dispatched before construction completed')) };
-  const decisionLane = makeLlmDispatchDecisionLane<H, A>({ decisions: config.decisions, modelTiers, defaultTier, capabilityRoutes, recorder, pause, cancellationSignal, swallow, liveSlotId: llmPromptSlotIdOfRole(layout, 'live', 'live') });
 
   /**
-   * Mint one dispatch's call context — nested under the request's parent, else the recorder's root, else a context
-   * that does not time (reporting its swallows to the host sink when one is configured).
+   * Mint one call's context, on either lane — nested under the request's parent, else the recorder's root, else a
+   * context that does not time (reporting its swallows to the host sink when one is configured).
    *
-   * @param request - The request.
+   * @param call - The lane and its request.
    * @returns The call context.
    */
-  function callContextOf(request: R): LlmCallContext<A> {
+  function callContextOf(call: LlmDispatchLaneRequest<R>): LlmCallContext<A> {
+    const { request } = call;
     const label = request.capability;
-    const attribution = config.callAttributionOf?.({ request }) ?? undefined;
+    const attribution = config.callAttributionOf?.(call) ?? undefined;
     const parented = request.callContext?.child(label, attribution == null ? undefined : { attribution }) as Maybe<LlmCallContext<A>>;
-    let callContext: Maybe<LlmCallContext<A>> = parented ?? recorder?.newCallContext?.({ label, request, attribution });
+    let callContext: Maybe<LlmCallContext<A>> = parented ?? recorder?.newCallContext?.({ ...call, label, attribution });
 
     if (callContext == null) {
       callContext = llmDispatchFallbackCallContextOf<A>({ label, swallow, attribution: attribution as Maybe<A> });
@@ -134,10 +140,25 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
     return callContext;
   }
 
+  const decisionLane = makeLlmDispatchDecisionLane<R, H, A>({
+    decisions: config.decisions,
+    modelTiers,
+    defaultTier,
+    capabilityRoutes,
+    sinks: { recorder, taps },
+    recordFieldsOf: config.recordFieldsOf,
+    callContextOf: (request) => callContextOf({ lane: 'decision', request }),
+    pause,
+    cancellationSignal,
+    transportBackoff,
+    liveSlotId: llmPromptSlotIdOfRole(layout, 'live', 'live')
+  });
+
   const runPromptRequest = async (params: LlmPromptRunParams<R>): Promise<LlmPromptRunResult<X>> => {
     const { request, thread, followUp } = params;
     const capability = request.capability;
-    const callContext = callContextOf(request);
+    const call: LlmDispatchLaneRequest<R> = { lane: 'completion', request };
+    const callContext = callContextOf(call);
     const partition = config.cachePartitionOf?.(request) ?? undefined;
     const signals = { cancellationSignal, request };
     const signal = llmDispatchSignalOf(signals);
@@ -149,12 +170,12 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
 
     const resolved = resolveLlmDispatch<R, D>({ setup: resolveSetup, request, callContext });
     const composed = await composeLlmDispatch<R, D>({ setup: composeSetup, request, followUp, thread, resolved, callContext, partition, onRawJsonGap: onGap });
-    const fields = llmDispatchRecordFieldsOf<R, H, A>({ recordFieldsOf: config.recordFieldsOf, request, callContext });
+    const fields = llmDispatchRecordFieldsOf<R, H, A>({ recordFieldsOf: config.recordFieldsOf, call, callContext });
     const sinks: LlmDispatchRecordSinks<R, H, A> = { recorder, taps, onGap };
     const isFollowUp = followUp != null;
-    recordLlmDispatchStart<R, H, A>({ sinks, request, resolved, composed, followUp: isFollowUp, fields });
-
     const { tier } = resolved;
+    recordLlmDispatchStart<R, H, A>({ sinks, capability, model: resolved.resolvedModel, tier, strategy: resolved.strategy, prompt: composed.baseRequest.prompt, estimatedPromptTokens: composed.estimatedPromptTokens, followUp: isFollowUp, fields });
+
     const critique = followUp == null ? request.critique : undefined;
     const { fastFix, fastFixUnavailable } = llmBoundReplyFastFixOf<R, X>({ replyFastFix: config.replyFastFix, request, protocol: composed.protocol, schemaHint: composed.baseRequest.responseSchemaHint, dispatch: (fixRequest) => selfDispatch.dispatch(fixRequest) });
     const attemptsConfig: LlmDispatchAttemptsConfig = {

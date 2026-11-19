@@ -290,7 +290,7 @@ describe('makeLlmSystemOneDecisionStrategy()', () => {
     });
 
     it('times out with a TimeoutError, with or without a caller signal, and never retries it', async () => {
-      const alone = await thrownBy(hanging().decide(REQUEST, { timeout: 5 }));
+      const alone = await thrownBy(hanging().decide(REQUEST, { timeoutMs: 5 }));
       const withSignal = await thrownBy(hanging({ timeoutMs: 5 }).decide(REQUEST, { signal: new AbortController().signal }));
 
       for (const thrown of [alone, withSignal]) {
@@ -304,7 +304,7 @@ describe('makeLlmSystemOneDecisionStrategy()', () => {
       const timeout = vi.spyOn(AbortSignal, 'timeout');
       await strategyAnswering({}).strategy.decide(REQUEST);
       await strategyAnswering({}, HOOKS, { timeoutMs: 4_000 }).strategy.decide(REQUEST);
-      await strategyAnswering({}, HOOKS, { timeoutMs: 4_000 }).strategy.decide(REQUEST, { timeout: 1_500 });
+      await strategyAnswering({}, HOOKS, { timeoutMs: 4_000 }).strategy.decide(REQUEST, { timeoutMs: 1_500 });
 
       expect(timeout.mock.calls.map((call) => call[0])).toEqual([DEFAULT_LLM_DECISION_TIMEOUT_MS, 4_000, 1_500]);
     });
