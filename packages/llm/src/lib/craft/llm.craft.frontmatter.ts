@@ -1,18 +1,16 @@
 /**
- * The craft-note PARSER — a markdown file with a small frontmatter block, read into an {@link LlmCraftNote}. Pure, and
- * deliberately a SUBSET of YAML (a note needs no more, and the library carries no YAML dependency):
+ * The craft-note PARSER — a markdown file with a small frontmatter block, read into an {@link LlmCraftNote}. Pure. The
+ * frontmatter is read by `@dereekb/util` `parseMarkdownFrontmatter` (a YAML subset: bare, double-quoted JSON and
+ * single-quoted scalars, `[flow]` and `- item` lists, ONE level of nesting, `# comments`, CRLF and a BOM normalized),
+ * which names each refusal's 1-based file line.
  *
- * - `key: scalar` — a bare word, a JSON-quoted string, `true` / `false`, or a number;
- * - `key: [flow, list]` — of scalars;
- * - ONE level of nesting — a key with no value opens a map of indented `key: value` rows (`where`);
- * - `# comments`, whole-line or after a value; CRLF and a leading BOM are normalized.
- *
- * Every refusal names its 1-based file line. The shape is then validated by an arktype schema that rejects an
- * unknown key, and the cross-field rules (sites, `where` facts, the `ask` inputs, the body budget) are checked last,
- * against the host's site registry.
+ * Craft adds its rules on top: the opening `---` fence is required, an empty `key:` reads as an empty map (`where`),
+ * and the body is trimmed. The shape is then validated by an arktype schema that rejects an unknown key, and the
+ * cross-field rules (sites, `where` facts, the `ask` inputs, the body budget) are checked last, against the host's site
+ * registry.
  */
 
-import { compareStrings, isNotBlankString, type Maybe } from '@dereekb/util';
+import { compareStrings, isNotBlankString, type MarkdownFrontmatterLeaf, type MarkdownFrontmatterMap, type Maybe, parseMarkdownFrontmatter } from '@dereekb/util';
 import { type } from 'arktype';
 import { type LlmPromptSiteFactValue } from '../prompt/llm.prompt.site';
 import { type LlmCraftNoteTier } from './llm.craft.identity';
@@ -55,16 +53,6 @@ export interface ParseLlmCraftNoteConfig {
 }
 
 /**
- * One frontmatter scalar or flow list.
- */
-type LlmCraftFrontmatterScalarOrList = LlmPromptSiteFactValue | ReadonlyArray<LlmPromptSiteFactValue>;
-
-/**
- * One frontmatter value — a scalar, a flow list, or a one-level map of either.
- */
-type LlmCraftFrontmatterValue = LlmCraftFrontmatterScalarOrList | Readonly<Record<string, LlmCraftFrontmatterScalarOrList>>;
-
-/**
  * The frontmatter schema — every key a note may carry; an unknown key is refused.
  */
 export const llmCraftNoteFrontmatterSchema = /*#__PURE__*/ type({
@@ -85,344 +73,31 @@ export const llmCraftNoteFrontmatterSchema = /*#__PURE__*/ type({
  */
 type LlmCraftNoteFrontmatter = typeof llmCraftNoteFrontmatterSchema.infer;
 
-const KEY_PATTERN = /^([A-Za-z][A-Za-z0-9_-]*):(.*)$/;
-
 /**
- * The byte-order mark a note file may open with.
- */
-const BYTE_ORDER_MARK = String.fromCodePoint(0xfeff);
-
-/**
- * The end index of a JSON string literal opening at `start` (the closing quote's index), or -1.
- *
- * @param text - The text.
- * @param start - The opening quote's index.
- * @returns The closing quote's index, or -1 when unterminated.
- */
-function jsonStringEnd(text: string, start: number): number {
-  let index = start + 1;
-  let end = -1;
-
-  while (index < text.length && end < 0) {
-    const char = text[index];
-
-    if (char === '\\') {
-      index += 2;
-    } else if (char === '"') {
-      end = index;
-    } else {
-      index += 1;
-    }
-  }
-
-  return end;
-}
-
-/**
- * Read one bare scalar: `true` / `false`, a number, else the string itself.
- *
- * @param bare - The trimmed bare text.
- * @returns The scalar.
- */
-function bareScalar(bare: string): LlmPromptSiteFactValue {
-  let value: LlmPromptSiteFactValue = bare;
-
-  if (bare === 'true' || bare === 'false') {
-    value = bare === 'true';
-  } else if (/^-?\d+(\.\d+)?$/.test(bare)) {
-    value = Number(bare);
-  }
-
-  return value;
-}
-
-/**
- * Whether what follows a value is legal — nothing, or a `#` comment.
- *
- * @param rest - The text after the value.
- * @returns Whether it is empty or a comment.
- */
-function isTrailingComment(rest: string): boolean {
-  const trimmed = rest.trim();
-  return trimmed === '' || trimmed.startsWith('#');
-}
-
-/**
- * Parse one JSON-quoted string at the start of `raw`.
- *
- * @param raw - The text, opening with `"`.
- * @returns The string and the text after it, or a refusal message.
- */
-function quotedOf(raw: string): { readonly value: string; readonly rest: string } | { readonly error: string } {
-  const end = jsonStringEnd(raw, 0);
-  let result: { readonly value: string; readonly rest: string } | { readonly error: string };
-
-  if (end < 0) {
-    result = { error: 'an unterminated quoted string' };
-  } else {
-    try {
-      result = { value: JSON.parse(raw.slice(0, end + 1)) as string, rest: raw.slice(end + 1) };
-    } catch {
-      result = { error: 'a quoted string that is not valid JSON' };
-    }
-  }
-
-  return result;
-}
-
-/**
- * Read one flow-list item at `index`: a quoted string or a bare scalar.
- *
- * @param raw - The list text.
- * @param index - The item's first index.
- * @returns The item and the index after it, or a refusal message.
- */
-function flowListItemOf(raw: string, index: number): { readonly item: LlmPromptSiteFactValue; readonly next: number } | { readonly error: string } {
-  let result: { readonly item: LlmPromptSiteFactValue; readonly next: number } | { readonly error: string };
-
-  if (raw[index] === '"') {
-    const quoted = quotedOf(raw.slice(index));
-    result = 'error' in quoted ? quoted : { item: quoted.value, next: raw.length - quoted.rest.length };
-  } else {
-    const stop = raw.slice(index).search(/[,\]]/);
-    const bare = stop < 0 ? '' : raw.slice(index, index + stop).trim();
-
-    if (stop < 0) {
-      result = { error: 'an unclosed `[` list' };
-    } else if (bare === '') {
-      result = { error: 'an empty list item' };
-    } else {
-      result = { item: bareScalar(bare), next: index + stop };
-    }
-  }
-
-  return result;
-}
-
-/**
- * Parse a flow list `[a, "b", 3]`.
- *
- * @param raw - The text, opening with `[`.
- * @returns The items and the text after the list, or a refusal message.
- */
-function flowListOf(raw: string): { readonly value: ReadonlyArray<LlmPromptSiteFactValue>; readonly rest: string } | { readonly error: string } {
-  const items: LlmPromptSiteFactValue[] = [];
-  let index = 1;
-  let result: { readonly value: ReadonlyArray<LlmPromptSiteFactValue>; readonly rest: string } | { readonly error: string } | undefined;
-
-  while (result == null) {
-    while (raw[index] === ' ') {
-      index += 1;
-    }
-
-    if (index >= raw.length) {
-      result = { error: 'an unclosed `[` list' };
-    } else if (raw[index] === ']' && items.length === 0) {
-      result = { value: items, rest: raw.slice(index + 1) };
-    } else {
-      const read = flowListItemOf(raw, index);
-
-      if ('error' in read) {
-        result = read;
-      } else {
-        items.push(read.item);
-        index = read.next;
-
-        while (raw[index] === ' ') {
-          index += 1;
-        }
-
-        if (raw[index] === ',') {
-          index += 1;
-        } else if (raw[index] === ']') {
-          result = { value: items, rest: raw.slice(index + 1) };
-        } else {
-          result = { error: 'a list item followed by something other than `,` or `]`' };
-        }
-      }
-    }
-  }
-
-  return result;
-}
-
-/**
- * Parse one value: a quoted string, a flow list, or a bare scalar (a trailing ` # comment` dropped).
- *
- * @param raw - The trimmed text after `key:`.
- * @returns The value, or a refusal message.
- */
-function valueOf(raw: string): { readonly value: LlmCraftFrontmatterScalarOrList } | { readonly error: string } {
-  let result: { readonly value: LlmCraftFrontmatterScalarOrList } | { readonly error: string };
-
-  if (raw.startsWith('"') || raw.startsWith('[')) {
-    const parsed = raw.startsWith('"') ? quotedOf(raw) : flowListOf(raw);
-
-    if ('error' in parsed) {
-      result = parsed;
-    } else if (isTrailingComment(parsed.rest)) {
-      result = { value: parsed.value };
-    } else {
-      result = { error: 'unexpected text after the value (quote a value that holds `"` or `[`)' };
-    }
-  } else {
-    const comment = raw.search(/\s#/);
-    result = { value: bareScalar((comment < 0 ? raw : raw.slice(0, comment)).trim()) };
-  }
-
-  return result;
-}
-
-/**
- * The raw frontmatter rows plus the body, or every refusal.
+ * The frontmatter values, their lines, the trimmed body, and every refusal.
  */
 interface LlmCraftNoteSplit {
-  readonly fields: Readonly<Record<string, LlmCraftFrontmatterValue>>;
+  readonly fields: Readonly<Record<string, MarkdownFrontmatterLeaf | MarkdownFrontmatterMap>>;
   readonly lines: ReadonlyMap<string, number>;
   readonly body: string;
   readonly errors: ReadonlyArray<LlmCraftNoteParseError>;
 }
 
 /**
- * What the frontmatter rows are read into.
- */
-interface LlmCraftNoteSplitAccumulator {
-  readonly fields: Record<string, LlmCraftFrontmatterValue>;
-  readonly keyLines: Map<string, number>;
-  readonly errors: LlmCraftNoteParseError[];
-}
-
-/**
- * The map an un-valued key opened, which the indented rows below it fill.
- */
-interface LlmCraftFrontmatterNestedMap {
-  readonly key: string;
-  readonly map: Record<string, LlmCraftFrontmatterScalarOrList>;
-}
-
-/**
- * One `key: value` frontmatter row.
- */
-interface LlmCraftFrontmatterRow {
-  readonly key: string;
-  readonly raw: string;
-  readonly lineNo: number;
-}
-
-/**
- * Read one INDENTED row into the map the key above it opened.
- *
- * @param acc - The accumulator.
- * @param nested - The open map, if any.
- * @param row - The row.
- */
-function readIndentedFrontmatterRow(acc: LlmCraftNoteSplitAccumulator, nested: Maybe<LlmCraftFrontmatterNestedMap>, row: LlmCraftFrontmatterRow): void {
-  const { key, raw, lineNo } = row;
-
-  if (nested == null) {
-    acc.errors.push({ line: lineNo, message: `\`${key}\` is indented, but no key above it opens a map` });
-  } else if (raw === '' || raw.startsWith('#')) {
-    acc.errors.push({ line: lineNo, message: `\`${nested.key}.${key}\` has no value (only one level of nesting)` });
-  } else if (Object.hasOwn(nested.map, key)) {
-    acc.errors.push({ line: lineNo, message: `\`${nested.key}.${key}\` is set twice` });
-  } else {
-    const parsed = valueOf(raw);
-
-    if ('error' in parsed) {
-      acc.errors.push({ line: lineNo, message: `\`${nested.key}.${key}\`: ${parsed.error}` });
-    } else {
-      nested.map[key] = parsed.value;
-      acc.keyLines.set(`${nested.key}.${key}`, lineNo);
-    }
-  }
-}
-
-/**
- * Read one TOP-LEVEL row.
- *
- * @param acc - The accumulator.
- * @param row - The row.
- * @returns The map it opened (an un-valued key), else `undefined` (any open map is closed).
- */
-function readTopLevelFrontmatterRow(acc: LlmCraftNoteSplitAccumulator, row: LlmCraftFrontmatterRow): Maybe<LlmCraftFrontmatterNestedMap> {
-  const { key, raw, lineNo } = row;
-  let nested: Maybe<LlmCraftFrontmatterNestedMap>;
-
-  if (Object.hasOwn(acc.fields, key)) {
-    acc.errors.push({ line: lineNo, message: `\`${key}\` is set twice` });
-  } else if (raw === '' || raw.startsWith('#')) {
-    const map: Record<string, LlmCraftFrontmatterScalarOrList> = {};
-    acc.fields[key] = map;
-    acc.keyLines.set(key, lineNo);
-    nested = { key, map };
-  } else {
-    const parsed = valueOf(raw);
-
-    if ('error' in parsed) {
-      acc.errors.push({ line: lineNo, message: `\`${key}\`: ${parsed.error}` });
-    } else {
-      acc.fields[key] = parsed.value;
-      acc.keyLines.set(key, lineNo);
-    }
-  }
-
-  return nested;
-}
-
-/**
- * Split a note into its frontmatter rows (with their lines) and its body.
+ * Split a note into its frontmatter values (with their lines) and its body, through `@dereekb/util`'s reader plus the
+ * craft rules: the opening fence is required, an empty `key:` reads as an empty map, and the body drops its blank lead
+ * lines and trailing space.
  *
  * @param text - The whole file's text.
  * @returns The split.
  */
 function splitLlmCraftNote(text: string): LlmCraftNoteSplit {
-  const lines = (text.startsWith(BYTE_ORDER_MARK) ? text.slice(1) : text).replaceAll(/\r\n?/g, '\n').split('\n');
-  const acc: LlmCraftNoteSplitAccumulator = { fields: {}, keyLines: new Map<string, number>(), errors: [] };
-  const close = lines.findIndex((line, index) => index > 0 && line.trimEnd() === '---');
-  let body = '';
-
-  if (lines[0]?.trimEnd() !== '---') {
-    acc.errors.push({ line: 1, message: 'a craft note opens with a `---` frontmatter fence' });
-  } else if (close < 0) {
-    acc.errors.push({ line: 1, message: 'the frontmatter is never closed with a `---` line' });
-  } else {
-    let nested: Maybe<LlmCraftFrontmatterNestedMap>;
-
-    for (let index = 1; index < close; index += 1) {
-      const line = lines[index];
-      const lineNo = index + 1;
-      const trimmed = line.trim();
-
-      if (trimmed === '' || trimmed.startsWith('#')) {
-        continue;
-      }
-
-      const indent = line.length - line.trimStart().length;
-      const match = KEY_PATTERN.exec(trimmed);
-
-      if (/^\s*\t/.test(line)) {
-        acc.errors.push({ line: lineNo, message: 'indent with spaces, not tabs' });
-      } else if (match == null) {
-        acc.errors.push({ line: lineNo, message: 'expected `key: value`' });
-      } else {
-        const row: LlmCraftFrontmatterRow = { key: match[1], raw: match[2].trim(), lineNo };
-
-        if (indent > 0) {
-          readIndentedFrontmatterRow(acc, nested, row);
-        } else {
-          nested = readTopLevelFrontmatterRow(acc, row);
-        }
-      }
-    }
-
-    body = lines
-      .slice(close + 1)
-      .join('\n')
-      .replace(/^(?:[ \t]*\n)+/, '')
-      .trimEnd();
-  }
-
-  return { fields: acc.fields, lines: acc.keyLines, body, errors: acc.errors };
+  const parsed = parseMarkdownFrontmatter(text);
+  const opened = parsed.hasFrontmatter || parsed.unclosed;
+  const errors: ReadonlyArray<LlmCraftNoteParseError> = opened ? parsed.problems : [{ line: 1, message: 'a craft note opens with a `---` frontmatter fence' }];
+  const fields = Object.fromEntries(Object.entries(parsed.values).map(([key, value]) => [key, value ?? {}]));
+  const body = parsed.hasFrontmatter ? parsed.body.replace(/^(?:[ \t]*\n)+/, '').trimEnd() : '';
+  return { fields, lines: parsed.lines, body, errors };
 }
 
 /**
@@ -442,7 +117,7 @@ interface LlmCraftNoteRuleErrorsConfig {
  * @param knownSites - The note's registered sites.
  * @param refuse - Records one refusal at a key's line.
  */
-function refuseLlmCraftNoteWhere(where: Readonly<Record<string, LlmCraftFrontmatterScalarOrList>>, knownSites: ReadonlyArray<LlmCraftSite>, refuse: (key: string, message: string) => void): void {
+function refuseLlmCraftNoteWhere(where: Readonly<Record<string, MarkdownFrontmatterLeaf>>, knownSites: ReadonlyArray<LlmCraftSite>, refuse: (key: string, message: string) => void): void {
   const knownKinds = knownSites.map((site) => site.kind);
 
   for (const [fact, raw] of Object.entries(where)) {

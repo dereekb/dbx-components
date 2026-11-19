@@ -80,6 +80,17 @@ describe('parseLlmCraftNote()', () => {
     expect(parseLlmCraftNote({ text, tier: 'workspace', sites: SITES }).note?.body).toBe('  Line one.\nLine two.');
   });
 
+  it('reads `sites` written as a `- item` block list', () => {
+    const parsed = parseLlmCraftNote({ text: noteText(['id: apparel-plain', 'title: t', 'sites:', '  - product-page', '  - "release-notes"']), tier: 'machine', sites: SITES });
+    expect(parsed.errors).toBeUndefined();
+    expect(parsed.note?.sites).toEqual(['product-page', 'release-notes']);
+  });
+
+  it("reads a single-quoted title without its quotes, '' as '", () => {
+    const parsed = parseLlmCraftNote({ text: noteText(['id: apparel-plain', "title: 'Plain apparel: it''s plain'", 'sites: [product-page]']), tier: 'machine', sites: SITES });
+    expect(parsed.note?.title).toBe("Plain apparel: it's plain");
+  });
+
   it('reads a tombstone with nothing but its id', () => {
     const parsed = parseLlmCraftNote({ text: noteText(['id: apparel-no-logo', 'enabled: false'], ''), tier: 'workspace', sites: SITES });
     expect(parsed.note).toMatchObject({ id: 'apparel-no-logo', enabled: false, sites: [], body: '', tier: 'workspace' });

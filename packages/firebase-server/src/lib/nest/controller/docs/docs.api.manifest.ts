@@ -1,4 +1,4 @@
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, splitMarkdownFrontmatter } from '@dereekb/util';
 import { type DocsManifestSection } from '@dereekb/firebase';
 import { type DocsAudience } from './docs.api.config';
 
@@ -158,21 +158,14 @@ export function splitDocsMarkdownSections(content: string, sections: readonly Do
 }
 
 /**
- * Splits a doc into lines, dropping a leading `---` ... `---` frontmatter block.
+ * Splits a doc into lines, dropping a leading `---` ... `---` frontmatter block. Uses `@dereekb/util`
+ * `splitMarkdownFrontmatter`, the same fence rule `dbx-cli` applies when it computes the manifest's section ids.
  *
  * @param content - The raw doc content.
  * @returns The body lines.
  */
 function docsMarkdownBodyLines(content: string): string[] {
-  const lines = content.split(/\r?\n/);
-  let start = 0;
-
-  if (lines[0]?.trim() === '---') {
-    const close = lines.findIndex((line, i) => i > 0 && line.trim() === '---');
-    start = close === -1 ? 0 : close + 1;
-  }
-
-  return lines.slice(start);
+  return splitMarkdownFrontmatter(content).body.split('\n');
 }
 
 /**

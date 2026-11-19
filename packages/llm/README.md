@@ -613,8 +613,10 @@ are matched against the request's site, are optionally judged by one decision ca
 
 - **Notes.** A markdown file with a frontmatter block: `id` (`^[a-z0-9][a-z0-9-]{1,63}$`), `title`, `sites`, `where`,
   `ask`, `floor` (default 0.6), `unserved` (default `omit`), `priority` (default 4, 0–8) and `enabled`. The body is at
-  most 1,500 chars and is never truncated. The frontmatter is a YAML subset (scalars, flow lists, one level of nesting,
-  comments), and every refusal names its line. `parseLlmCraftNote` / `parseLlmCraftNoteSet`.
+  most 1,500 chars and is never truncated. The frontmatter is read by `@dereekb/util` `parseMarkdownFrontmatter`: bare,
+  double-quoted (JSON) and single-quoted scalars, `[a, b]` and `- item` lists, one level of nesting, and comments, and
+  every refusal names its line. Craft adds the required fence, the schema and the cross-field rules.
+  `parseLlmCraftNote` / `parseLlmCraftNoteSet`.
 - **Sites.** `makeLlmCraftSiteRegistry({ sites })` declares each kind's facts (`closed` / `open` / `boolean`), its
   free-text inputs and its limits: 4 notes, 3,000 body chars, 8 judged notes and 600 chars per judged input, each
   overridable per registry and per site. `llmCraftNoteUnknownWhereValues` names a `where` value your vocabulary cannot
