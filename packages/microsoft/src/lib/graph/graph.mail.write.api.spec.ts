@@ -12,8 +12,10 @@ import {
   microsoftGraphOutgoingMessage,
   microsoftGraphRespondToMessageRequest,
   microsoftGraphSendMailRequest,
+  microsoftGraphUpdateMessageCategoriesRequest,
   moveMessages,
   updateDraftMessage,
+  updateMessagesCategories,
   uploadMessageAttachment
 } from './graph.mail.write.api';
 import { microsoftGraphUploadChunkRanges, microsoftGraphUploadContentRange } from './graph.upload.api';
@@ -203,6 +205,45 @@ describe('moveMessages()', () => {
 
     expect(new URL(requests[0].url).pathname).toBe('/v1.0/me/messages/a/move');
     expect(results).toEqual([{ id: 'a', status: 201, message: { id: 'a' } }]);
+  });
+});
+
+describe('microsoftGraphUpdateMessageCategoriesRequest()', () => {
+  it('builds a PATCH of the whole category list on the message path, with the immutable-id Prefer', () => {
+    const request = microsoftGraphUpdateMessageCategoriesRequest({ mailbox: 'billing@hellosubs.co', id: 'AAMk1', categories: ['Vendors', 'msgraph-cli: delete'] });
+
+    expect(request).toEqual({ method: 'PATCH', path: '/users/billing%40hellosubs.co/messages/AAMk1', headers: { Prefer: 'IdType="ImmutableId"' }, body: { categories: ['Vendors', 'msgraph-cli: delete'] } });
+  });
+});
+
+describe('updateMessagesCategories()', () => {
+  it('sends one PATCH per message through $batch with its own category list', async () => {
+    const { graphContext, requests } = recordingGraph(() =>
+      jsonResponse({
+        // models: message-update — 200 with the updated message
+        responses: [
+          { id: '0', status: 200, body: { id: 'a', categories: ['x'] } },
+          { id: '1', status: 200, body: { id: 'b', categories: [] } }
+        ]
+      })
+    );
+
+    const results = await updateMessagesCategories(graphContext)({
+      items: [
+        { id: 'a', categories: ['x'] },
+        { id: 'b', categories: [] }
+      ]
+    });
+    const sent = (await requests[0].json()) as { requests: { method: string; url: string; body: unknown }[] };
+
+    expect(sent.requests.map((x) => [x.method, x.url, x.body])).toEqual([
+      ['PATCH', '/me/messages/a', { categories: ['x'] }],
+      ['PATCH', '/me/messages/b', { categories: [] }]
+    ]);
+    expect(results.map((x) => [x.id, x.status])).toEqual([
+      ['a', 200],
+      ['b', 200]
+    ]);
   });
 });
 

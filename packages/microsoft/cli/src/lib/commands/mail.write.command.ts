@@ -6,6 +6,7 @@ import {
   type MicrosoftGraphOutgoingMessageInput,
   type MicrosoftGraphRequestInput,
   type MicrosoftGraphRespondToMessageInput,
+  MICROSOFT_GRAPH_DELETED_ITEMS_FOLDER,
   MICROSOFT_GRAPH_MESSAGE_INLINE_ATTACHMENT_MAX_BYTES,
   addMessageAttachment,
   createDraftMessage,
@@ -28,7 +29,9 @@ import {
 } from '@dereekb/microsoft';
 import { type Maybe } from '@dereekb/util';
 import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import type { Argv, CommandModule } from 'yargs';
+import { msGraphCliPaths } from '../config/cli.config';
 import { msGraphCommandHandler } from '../middleware/auth.middleware';
 import { type MsGraphCliConnectionSettings, type MsGraphCliServerSettingsSource, msGraphCliServerDefaults } from '../util/connection.settings';
 import { type MsGraphCliDriveAttachmentInfo, msGraphCliAttachFileOptions, msGraphCliAttachItemOptions, msGraphCliDriveAttachmentsNote, readMsGraphCliMessageAttachments } from '../util/mail.attach';
@@ -52,7 +55,32 @@ import {
   runMsGraphCliMessageWrites,
   splitMsGraphCliAttachments
 } from '../util/mail.write';
-import { DEFAULT_MSGRAPH_CLI_SELECTION_FOLDER, MSGRAPH_CLI_MAIL_SELECTION_SUGGESTION, checkMsGraphCliMailSelectionFolders, msGraphCliMailSelectionOptions, msGraphCliMailTargetMode, readMsGraphCliMailSelection, runMsGraphCliMailSelectionWrite } from '../util/mail.select';
+import {
+  DEFAULT_MSGRAPH_CLI_SELECTION_FOLDER,
+  MSGRAPH_CLI_MAIL_SELECTION_SUGGESTION,
+  checkMsGraphCliMailSelectionFolders,
+  msGraphCliMailSelectionOptions,
+  msGraphCliMailTargetMode,
+  msGraphCliMaxSecondsOption,
+  readMsGraphCliCategoryOption,
+  readMsGraphCliMailSelection,
+  readMsGraphCliWholeNumberOption,
+  runMsGraphCliMailSelectionWrite
+} from '../util/mail.select';
+import { type MsGraphCliMailTagMode, runMsGraphCliMailTag } from '../util/mail.tag';
+import {
+  type MsGraphCliUndoJournalKind,
+  type MsGraphCliUndoJournalWriter,
+  MSGRAPH_CLI_UNDO_LIST_MAX,
+  MSGRAPH_CLI_UNDO_MAX_JOURNALS,
+  findMsGraphCliPendingUndoJournal,
+  listMsGraphCliUndoJournals,
+  msGraphCliUndoListRows,
+  msGraphCliUndoOutput,
+  openMsGraphCliUndoJournal,
+  readMsGraphCliUndoJournal,
+  undoMsGraphCliJournal
+} from '../util/mail.undo';
 import { msGraphCliMailboxOptions, readMsGraphCliIdsOption } from '../util/option';
 import { outputMsGraphCliResult } from '../util/output';
 
@@ -481,6 +509,51 @@ function idsOrSelectionOptions(yargs: Argv) {
   return msGraphCliMailSelectionOptions(idsOptions(yargs, `${IDS_POSITIONAL_DESCRIBE}. Or pass no ids and select by filter in the same call: --folder, --from, --since, --until, --unread, --has-attachments, --category, --search`));
 }
 
+/**
+ * Adds `--undo-file` and `--no-undo` to `mail move` / `mail delete`.
+ *
+ * @param yargs - The command's yargs.
+ * @returns The yargs, with the options added.
+ */
+function undoOptions(yargs: Argv) {
+  return yargs
+    .option('undo', { type: 'boolean', default: true, describe: `Save an undo journal (<configDir>/undo, newest ${MSGRAPH_CLI_UNDO_MAX_JOURNALS} kept) and print undo.command; mail undo moves the messages back. --no-undo skips it` })
+    .option('undo-file', { type: 'string', describe: 'Write the undo journal to this file instead (never pruned)' });
+}
+
+/**
+ * Prepares the run's undo journal before anything is changed, unless `--no-undo`.
+ *
+ * @param argv - The parsed arguments.
+ * @param kind - The journal kind.
+ * @returns The writer, or undefined with `--no-undo`.
+ */
+async function openUndoJournal(argv: any, kind: MsGraphCliUndoJournalKind): Promise<Maybe<MsGraphCliUndoJournalWriter>> {
+  let result: Maybe<MsGraphCliUndoJournalWriter>;
+
+  if (argv.undo === false) {
+    if (argv.undoFile) {
+      throw new CliError({ message: '--undo-file and --no-undo contradict each other.', code: 'INVALID_ARGUMENT', suggestion: 'Drop one of them.' });
+    }
+  } else {
+    result = await openMsGraphCliUndoJournal({ configDir: msGraphCliPaths().configDir, kind, file: argv.undoFile ? resolve(String(argv.undoFile)) : undefined });
+  }
+
+  return result;
+}
+
+/**
+ * Adds `undo: { file, command }` to an output when the run wrote a journal.
+ *
+ * @param output - The run's output.
+ * @param journal - The run's journal.
+ * @param argv - The parsed arguments (`tokenSource`).
+ * @returns The output.
+ */
+function withUndoOutput<T extends object>(output: T, journal: Maybe<MsGraphCliUndoJournalWriter>, argv: any): T {
+  return journal?.written() ? { ...output, undo: msGraphCliUndoOutput(journal.file, typeof argv.tokenSource === 'string' ? argv.tokenSource : undefined) } : output;
+}
+
 function hasIdsArgument(argv: any): boolean {
   return (argv.ids ?? []).some((x: unknown) => String(x).length > 0) || Boolean(argv.idsFile);
 }
@@ -502,6 +575,7 @@ async function moveOrCopyHandler(argv: any, graphContext: MicrosoftGraphContext,
 
   if (selection && mode !== 'ids') {
     checkMsGraphCliMailSelectionFolders({ command: 'move', folder: selection.folder, to: input.destination });
+    const journal = argv.dryRun ? undefined : await openUndoJournal(argv, 'move');
     const output = await runMsGraphCliMailSelectionWrite({
       graphContext,
       command: 'move',
@@ -517,9 +591,10 @@ async function moveOrCopyHandler(argv: any, graphContext: MicrosoftGraphContext,
       writeRequest: (id) => microsoftGraphMoveMessageRequest({ ...input, id }),
       send: (ids, maxRetryAfterSeconds) => moveMessages(graphContext)({ ...input, ids, maxRetryAfterSeconds }),
       progress: progressLine,
-      maxRows: writeResultsMaxRows(argv)
+      maxRows: writeResultsMaxRows(argv),
+      journal
     });
-    outputMsGraphCliResult(output);
+    outputMsGraphCliResult(withUndoOutput(output, journal, argv));
   } else {
     const ids = await readMsGraphCliIdsOption({ ids: argv.ids, idsFile: argv.idsFile, suggestion: copy ? undefined : MSGRAPH_CLI_MAIL_SELECTION_SUGGESTION });
 
@@ -531,8 +606,12 @@ async function moveOrCopyHandler(argv: any, graphContext: MicrosoftGraphContext,
         )
       );
     } else {
-      const results = await runMsGraphCliMessageWrites({ ids, label: copy ? 'mail copy' : 'mail move', progress: progressLine, send: (group) => moveMessages(graphContext)({ ...input, ids: group }) });
-      outputMsGraphCliResult(msGraphCliWriteResultsOutput(results, { maxRows: writeResultsMaxRows(argv, copy) }));
+      const journal = copy ? undefined : await openUndoJournal(argv, 'move');
+      // an ids run does not know the messages' folders, so mail undo needs --to
+      await journal?.begin({ mailbox: input.mailbox, immutableIds: input.immutableIds, source: null, destination: { given: input.destination } });
+      const results = await runMsGraphCliMessageWrites({ ids, label: copy ? 'mail copy' : 'mail move', progress: progressLine, send: (group) => moveMessages(graphContext)({ ...input, ids: group }), afterGroup: journal?.append });
+      await journal?.finish();
+      outputMsGraphCliResult(withUndoOutput(msGraphCliWriteResultsOutput(results, { maxRows: writeResultsMaxRows(argv, copy) }), journal, argv));
     }
   }
 }
@@ -541,10 +620,11 @@ export const MAIL_MOVE_COMMAND: CommandModule = {
   command: 'move [ids..]',
   describe: `Move messages to a folder: selected by filter in the same call (--folder, default ${DEFAULT_MSGRAPH_CLI_SELECTION_FOLDER}, plus --from/--since/…/--search), or by ids. Many at once through $batch (20 per HTTP call), with a per-id result. Immutable ids stay the same`,
   builder: (yargs: Argv) =>
-    idsOrSelectionOptions(yargs)
+    undoOptions(idsOrSelectionOptions(yargs))
       .option('to', { type: 'string', demandOption: true, describe: 'The destination folder id or well-known name (inbox, archive, deleteditems, junkemail)' })
       .example([
-        ['$0 mail move --folder inbox --from alerts@example.com --to archive', 'Archive every inbox message from one sender in one call (re-run while complete is false)'],
+        ['$0 mail move --folder inbox --from alerts@example.com --to archive', 'Archive every inbox message from one sender in one call (re-run while complete is false; mail undo moves them back)'],
+        ['$0 mail move --folder deleteditems --category "msgraph-cli: delete" --to inbox', 'Restore tagged messages from Deleted Items, from any later session'],
         ['$0 mail move --mailbox shared@example.com --folder AAMk... --since 2026-01-01 --to AAMk... --dry-run', 'Count and preview a move between two folders of a shared mailbox'],
         ['$0 mail move AAMk1... AAMk2... --to archive', 'Archive two messages by id']
       ]),
@@ -565,7 +645,7 @@ export const MAIL_DELETE_COMMAND: CommandModule = {
   command: 'delete [ids..]',
   describe: `Delete messages: moved to Deleted Items (recoverable), or --hard to delete permanently. Selected by filter in the same call (--folder, default ${DEFAULT_MSGRAPH_CLI_SELECTION_FOLDER}, plus --from/--since/…/--search), or by ids. Many at once through $batch (20 per HTTP call), with a per-id result. Needs --yes`,
   builder: (yargs: Argv) =>
-    msGraphCliConfirmOptions(idsOrSelectionOptions(yargs))
+    msGraphCliConfirmOptions(undoOptions(idsOrSelectionOptions(yargs)))
       .option('hard', {
         type: 'boolean',
         default: false,
@@ -575,7 +655,8 @@ export const MAIL_DELETE_COMMAND: CommandModule = {
         ['$0 mail delete --mailbox billing@example.com --folder inbox --from noreply@vendor.com --yes', 'Delete every inbox message from one sender in one call (hundreds are fine; re-run while complete is false)'],
         ['$0 mail delete --folder inbox --from noreply@vendor.com --dry-run', 'Count the matches and print a sample of the calls, writing nothing'],
         ['$0 mail delete --folder inbox --search "subject:invoice from:ramp.com" --yes', 'Delete the inbox hits of a KQL search'],
-        ['$0 mail delete AAMk1... AAMk2... --yes', 'Move two messages to Deleted Items by id'],
+        ['$0 mail delete --folder inbox --category "msgraph-cli: delete" --yes', 'Delete exactly the messages mail tag marked (review them first with mail list --category)'],
+        ['$0 mail delete AAMk1... AAMk2... --yes', 'Move two messages to Deleted Items by id (mail undo --to inbox moves them back)'],
         ['$0 mail delete --folder deleteditems --from noreply@vendor.com --hard --yes', 'Purge them from Deleted Items (permanent)']
       ]),
   handler: msGraphCommandHandler(async (argv: any, { graphContext }) => {
@@ -593,8 +674,12 @@ export const MAIL_DELETE_COMMAND: CommandModule = {
         outputMsGraphCliResult(msGraphCliDryRunOutput(requests, ids.length > 1 ? 'Sent through $batch, 20 per HTTP call.' : undefined));
       } else {
         requireMsGraphCliConfirmation({ yes: argv.yes, action: `${action} ${ids.length} message(s)` });
-        const results = await runMsGraphCliMessageWrites({ ids, label: 'mail delete', progress: progressLine, send: (group) => deleteMessages(graphContext)({ ...input, ids: group }) });
-        outputMsGraphCliResult(msGraphCliWriteResultsOutput(results, { maxRows: writeResultsMaxRows(argv) }));
+        // a --hard delete cannot be undone, so it writes no journal
+        const journal = input.hard ? undefined : await openUndoJournal(argv, 'delete');
+        await journal?.begin({ mailbox: input.mailbox, immutableIds: input.immutableIds, source: null, destination: { given: MICROSOFT_GRAPH_DELETED_ITEMS_FOLDER } });
+        const results = await runMsGraphCliMessageWrites({ ids, label: 'mail delete', progress: progressLine, send: (group) => deleteMessages(graphContext)({ ...input, ids: group }), afterGroup: journal?.append });
+        await journal?.finish();
+        outputMsGraphCliResult(withUndoOutput(msGraphCliWriteResultsOutput(results, { maxRows: writeResultsMaxRows(argv) }), journal, argv));
       }
     } else {
       checkMsGraphCliMailSelectionFolders({ command: 'delete', folder: selection.folder, hard: input.hard });
@@ -603,6 +688,7 @@ export const MAIL_DELETE_COMMAND: CommandModule = {
         requireMsGraphCliConfirmation({ yes: argv.yes, action: `${action} the selected messages` });
       }
 
+      const journal = argv.dryRun || input.hard ? undefined : await openUndoJournal(argv, 'delete');
       const output = await runMsGraphCliMailSelectionWrite({
         graphContext,
         command: 'delete',
@@ -618,6 +704,49 @@ export const MAIL_DELETE_COMMAND: CommandModule = {
         writeRequest: (id) => microsoftGraphDeleteMessagesRequests({ ...input, ids: [id] })[0],
         send: (ids, maxRetryAfterSeconds) => deleteMessages(graphContext)({ ...input, ids, maxRetryAfterSeconds }),
         progress: progressLine,
+        maxRows: writeResultsMaxRows(argv),
+        journal
+      });
+      outputMsGraphCliResult(withUndoOutput(output, journal, argv));
+    }
+  })
+};
+
+// MARK: Undo
+export const MAIL_UNDO_COMMAND: CommandModule = {
+  command: 'undo [journal]',
+  describe: 'Move the messages of a mail move or mail delete (not --hard) back where they came from, using its undo journal (default: the newest one with anything left to undo). Re-run while complete is false',
+  builder: (yargs: Argv) =>
+    msGraphCliMaxSecondsOption(msGraphCliDryRunOptions(yargs))
+      .positional('journal', { type: 'string', describe: "The journal file: the run's undo.file. Default: the newest journal with anything left to undo" })
+      .option('mailbox', { type: 'string', describe: "Only this mailbox's journals (the journal's own mailbox is always used; a different one is refused)" })
+      .option('to', { type: 'string', describe: 'Move them here instead (folder id or well-known name). Required for a journal of an ids run, whose source folders are unknown' })
+      .option('list', { type: 'boolean', default: false, describe: `List the newest ${MSGRAPH_CLI_UNDO_LIST_MAX} journals and exit` })
+      .option('all-results', { type: 'boolean', default: false, describe: `Print a row for every id. Default: above ${MSGRAPH_CLI_WRITE_RESULTS_MAX_ROWS} ids only the failed rows` })
+      .example([
+        ['$0 mail undo', 'Move the last move or delete back'],
+        ['$0 mail undo ~/.msgraph-cli/undo/20261119T020301Z-delete-3fa9c2d1.json', "Undo one run (its output's undo.command)"],
+        ['$0 mail undo --list', 'List the saved journals'],
+        ['$0 mail undo <journal> --to inbox', 'Undo an ids run (its folders are unknown) into the inbox']
+      ]),
+  handler: msGraphCommandHandler(async (argv: any, { graphContext }) => {
+    const startedAt = Date.now();
+    const configDir = msGraphCliPaths().configDir;
+
+    if (argv.list) {
+      outputMsGraphCliResult(msGraphCliUndoListRows(await listMsGraphCliUndoJournals(configDir), argv.mailbox));
+    } else {
+      const maxSeconds = readMsGraphCliWholeNumberOption('max-seconds', argv.maxSeconds, 0);
+      const entry = argv.journal ? { file: resolve(String(argv.journal)), journal: await readMsGraphCliUndoJournal(resolve(String(argv.journal))) } : await findMsGraphCliPendingUndoJournal(configDir, argv.mailbox);
+      const output = await undoMsGraphCliJournal({
+        graphContext,
+        ...entry,
+        to: argv.to,
+        mailbox: argv.mailbox,
+        dryRun: argv.dryRun,
+        maxSeconds,
+        startedAt,
+        progress: progressLine,
         maxRows: writeResultsMaxRows(argv)
       });
       outputMsGraphCliResult(output);
@@ -625,7 +754,63 @@ export const MAIL_DELETE_COMMAND: CommandModule = {
   })
 };
 
+// MARK: Tag
+async function tagHandler(argv: any, graphContext: MicrosoftGraphContext, mode: MsGraphCliMailTagMode): Promise<void> {
+  const startedAt = Date.now();
+  const name = readMsGraphCliCategoryOption(argv.category) as string;
+  // the category is what a tag adds (not a filter), and what an untag always filters by
+  const selection = { ...readMsGraphCliMailSelection({ ...argv, category: undefined }) };
+  const target = msGraphCliMailTargetMode({ hasIds: hasIdsArgument(argv), selection, command: mode });
+  const ids = target === 'ids' ? await readMsGraphCliIdsOption({ ids: argv.ids, idsFile: argv.idsFile, suggestion: mode === 'tag' ? MSGRAPH_CLI_MAIL_SELECTION_SUGGESTION : undefined }) : undefined;
+
+  const output = await runMsGraphCliMailTag({
+    graphContext,
+    mode,
+    name,
+    target,
+    ids,
+    selection,
+    mailbox: argv.mailbox,
+    immutableIds: !argv.mutableIds,
+    dryRun: argv.dryRun,
+    startedAt,
+    progress: progressLine,
+    maxRows: writeResultsMaxRows(argv)
+  });
+
+  outputMsGraphCliResult(output);
+}
+
+const TAG_CATEGORY_DESCRIBE = 'The Outlook category. Use a dedicated name, e.g. "msgraph-cli: delete", so mail untag removes only what mail tag added';
+
+export const MAIL_TAG_COMMAND: CommandModule = {
+  command: 'tag [ids..]',
+  describe: `Mark messages with an Outlook --category, to review them (in Outlook, or mail list --category) before acting on exactly them with mail delete / mail move --category. Selected by filter in the same call (--folder, default ${DEFAULT_MSGRAPH_CLI_SELECTION_FOLDER}, plus --from/--since/…/--search) or by ids; skips messages already tagged. Reverse with mail untag`,
+  builder: (yargs: Argv) =>
+    msGraphCliMailSelectionOptions(idsOptions(yargs, `${IDS_POSITIONAL_DESCRIBE}. Or pass no ids and select by filter in the same call: --folder, --from, --since, --until, --unread, --has-attachments, --search`))
+      .option('category', { type: 'string', demandOption: true, describe: TAG_CATEGORY_DESCRIBE })
+      .example([
+        ['$0 mail tag --mailbox billing@example.com --folder inbox --from noreply@vendor.com --category "msgraph-cli: delete"', 'Mark every inbox message from one sender'],
+        ['$0 mail list --mailbox billing@example.com --folder inbox --category "msgraph-cli: delete" --all-pages --pick id,subject,from', 'Review what was marked'],
+        ['$0 mail delete --mailbox billing@example.com --folder inbox --category "msgraph-cli: delete" --yes', 'Then delete exactly those']
+      ]),
+  handler: msGraphCommandHandler(async (argv: any, { graphContext }) => tagHandler(argv, graphContext, 'tag'))
+};
+
+export const MAIL_UNTAG_COMMAND: CommandModule = {
+  command: 'untag [ids..]',
+  describe: 'Remove an Outlook --category from messages: every message that carries it, in every folder (or --folder, plus --from/--since/… filters), or by ids. Re-run while complete is false',
+  builder: (yargs: Argv) =>
+    msGraphCliMailSelectionOptions(idsOptions(yargs, `${IDS_POSITIONAL_DESCRIBE}. Or pass no ids: every message with the category is selected`), 'untag')
+      .option('category', { type: 'string', demandOption: true, describe: TAG_CATEGORY_DESCRIBE })
+      .example([
+        ['$0 mail untag --mailbox billing@example.com --category "msgraph-cli: delete"', 'Drop the tag everywhere, including on deleted or moved messages'],
+        ['$0 mail untag --folder inbox --category "msgraph-cli: delete" --dry-run', 'Count the inbox messages that carry it']
+      ]),
+  handler: msGraphCommandHandler(async (argv: any, { graphContext }) => tagHandler(argv, graphContext, 'untag'))
+};
+
 /**
  * The mail write subcommands, registered on `mail` next to the read commands.
  */
-export const MAIL_WRITE_COMMANDS: readonly CommandModule[] = [MAIL_DRAFT_COMMAND, MAIL_SEND_COMMAND, MAIL_SEND_BULK_COMMAND, MAIL_REPLY_COMMAND, MAIL_FORWARD_COMMAND, MAIL_MOVE_COMMAND, MAIL_COPY_COMMAND, MAIL_DELETE_COMMAND];
+export const MAIL_WRITE_COMMANDS: readonly CommandModule[] = [MAIL_DRAFT_COMMAND, MAIL_SEND_COMMAND, MAIL_SEND_BULK_COMMAND, MAIL_REPLY_COMMAND, MAIL_FORWARD_COMMAND, MAIL_MOVE_COMMAND, MAIL_COPY_COMMAND, MAIL_DELETE_COMMAND, MAIL_TAG_COMMAND, MAIL_UNTAG_COMMAND, MAIL_UNDO_COMMAND];

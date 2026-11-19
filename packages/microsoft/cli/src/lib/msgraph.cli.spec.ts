@@ -426,6 +426,15 @@ describe('msgraph-cli', () => {
   });
 
   describe('mail write commands', () => {
+    beforeEach(() => {
+      // a move or delete writes an undo journal to <configDir>/undo; keep it out of the real ~/.msgraph-cli
+      vi.stubEnv(MSGRAPH_CLI_CONFIG_DIR_ENV_VAR, join(dir, 'config'));
+    });
+
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
     async function connect(fetchHandler: FetchHandler) {
       await createMsGraphCliAuthMiddleware({ skipCommands: new Set(), env: { ...env, MSGRAPH_CLI_TOKEN_COMMAND: source.command }, graphFactoryConfig: { fetchHandler } })({ _: ['mail'], $0: 'msgraph-cli' });
     }
@@ -592,7 +601,7 @@ describe('msgraph-cli', () => {
       expect(batchCalls).toBe(12);
       expect(stderr.mock.calls.map((x) => String(x[0]))).toEqual(['mail delete: 100/230 done, 1 failed\n', 'mail delete: 200/230 done, 1 failed\n', 'mail delete: 230/230 done, 1 failed\n']);
       const data = printed(log).data;
-      expect(data).toEqual({ total: 230, ok: 229, failed: 1, omitted: 229, results: [{ id: 'id7', ok: false, status: 404, code: 'ErrorItemNotFound' }] });
+      expect(data).toEqual({ total: 230, ok: 229, failed: 1, omitted: 229, results: [{ id: 'id7', ok: false, status: 404, code: 'ErrorItemNotFound' }], undo: { file: expect.stringContaining(join(dir, 'config', 'undo')), command: expect.stringMatching(/^msgraph-cli mail undo /) } });
     });
 
     it('should print every row of a large delete with --all-results', async () => {

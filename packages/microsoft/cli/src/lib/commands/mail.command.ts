@@ -226,8 +226,8 @@ export const MAIL_DUMP_COMMAND: CommandModule = {
 
 /**
  * The `mail` command: reads (`list`, `search`, `get`, `get-many`, `dump`) and writes (`draft`, `send`,
- * `send-bulk`, `reply`, `forward`, `move`, `copy`, `delete`), `mailboxes check` for shared mailboxes, and
- * `auto-reply` for automatic replies.
+ * `send-bulk`, `reply`, `forward`, `move`, `copy`, `delete`, `tag`, `untag`, `undo`), `mailboxes check` for shared
+ * mailboxes, and `auto-reply` for automatic replies.
  */
 export const MAIL_COMMAND: CommandModule = {
   command: 'mail',

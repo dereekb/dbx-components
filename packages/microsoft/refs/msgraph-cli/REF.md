@@ -1,6 +1,6 @@
 ---
 name: msgraph-cli
-description: "The `msgraph-cli` command (the `msgraph-cli` bin of `@dereekb/microsoft`, run as `npx msgraph-cli`; this doc ships with that package and prints with `npx msgraph-cli docs`) for a user's Outlook mail, shared mailboxes, automatic replies, calendar, OneDrive / SharePoint files and Teams chats and channels (send, edit with `teams chat edit`, delete) through Microsoft Graph, plus a raw Graph `request`. Bulk mail changes: `mail delete` / `mail move` select by filter in the same command (`--folder inbox --from <addr>`, `--since`, `--category`, or `--search`), capped per run (`--max-messages`, `--max-seconds`) and re-runnable until `complete: true`, or take hundreds of ids in ONE call (`--ids-file`, which also reads a saved `mail list` output); either way the writes go through `$batch`, 20 per HTTP call. Attachments: `mail reply` / `forward` / `draft create` / `send` attach local files (`--attach`) and OneDrive / SharePoint files (`--attach-item <id or /path>` with `--site` / `--drive`) directly. Calendar: `calendar create` makes an Outlook event (`--start 2026-11-20T15:00 --duration 30m`, `--all-day`), reading local times in the mailbox's time zone. Bulk downloads: `files download-folder` copies a SharePoint / OneDrive folder to disk recursively and re-syncs it on re-run, `mail dump` dumps a folder (delta), a filtered list or a search, with `--attachments-only`, and `teams chat dump` keeps an incremental archive of Teams chats (JSON + Markdown per message, inline images and video clips, optional file attachments). `teams chat search` searches Teams messages through Graph (KQL; needs organization admin consent) or, with `--dir`, searches a `teams chat dump` archive on disk with no token or scope. It authenticates ONLY through a token source: each run borrows an access token minted from an app's Microsoft external connection by `<app>-cli external-token <providerType>` (no `auth login`). Covers setup (`auth token-source set/use/show/clear`, `auth show`), the global `--token-source` option and the `MSGRAPH_CLI_TOKEN_SOURCE` / `MSGRAPH_CLI_TOKEN_COMMAND` / `MSGRAPH_CLI_CONFIG_DIR` env vars, the Read / Read + Write presets and which commands need which scope, the commands that need organization (admin) consent and how they are flagged and refused, `--yes` / `--dry-run` on writes, the JSON output, and the error codes (`NOT_CONFIGURED`, `TOKEN_REJECTED`, `SCOPE_DENIED`, `ADMIN_CONSENT_REQUIRED`, `CONFIRMATION_REQUIRED`, `RATE_LIMITED`, `NOT_FOUND`, `ABORTED`, `INSUFFICIENT_SPACE`, …)."
+description: "The `msgraph-cli` command (the `msgraph-cli` bin of `@dereekb/microsoft`, run as `npx msgraph-cli`; this doc ships with that package and prints with `npx msgraph-cli docs`) for a user's Outlook mail, shared mailboxes, automatic replies, calendar, OneDrive / SharePoint files and Teams chats and channels (send, edit with `teams chat edit`, delete) through Microsoft Graph, plus a raw Graph `request`. Bulk mail changes: `mail delete` / `mail move` select by filter in the same command (`--folder inbox --from <addr>`, `--since`, `--category`, or `--search`), capped per run (`--max-messages`, `--max-seconds`) and re-runnable until `complete: true`, or take hundreds of ids in ONE call (`--ids-file`, which also reads a saved `mail list` output); either way the writes go through `$batch`, 20 per HTTP call. `mail tag` marks a selection with an Outlook category to review before acting on exactly it (`mail delete --category <name>`; `mail untag` removes the tag), and `mail undo` moves the last move or delete back from its undo journal. Attachments: `mail reply` / `forward` / `draft create` / `send` attach local files (`--attach`) and OneDrive / SharePoint files (`--attach-item <id or /path>` with `--site` / `--drive`) directly. Calendar: `calendar create` makes an Outlook event (`--start 2026-11-20T15:00 --duration 30m`, `--all-day`), reading local times in the mailbox's time zone. Bulk downloads: `files download-folder` copies a SharePoint / OneDrive folder to disk recursively and re-syncs it on re-run, `mail dump` dumps a folder (delta), a filtered list or a search, with `--attachments-only`, and `teams chat dump` keeps an incremental archive of Teams chats (JSON + Markdown per message, inline images and video clips, optional file attachments). `teams chat search` searches Teams messages through Graph (KQL; needs organization admin consent) or, with `--dir`, searches a `teams chat dump` archive on disk with no token or scope. It authenticates ONLY through a token source: each run borrows an access token minted from an app's Microsoft external connection by `<app>-cli external-token <providerType>` (no `auth login`). Covers setup (`auth token-source set/use/show/clear`, `auth show`), the global `--token-source` option and the `MSGRAPH_CLI_TOKEN_SOURCE` / `MSGRAPH_CLI_TOKEN_COMMAND` / `MSGRAPH_CLI_CONFIG_DIR` env vars, the Read / Read + Write presets and which commands need which scope, the commands that need organization (admin) consent and how they are flagged and refused, `--yes` / `--dry-run` on writes, the JSON output, and the error codes (`NOT_CONFIGURED`, `TOKEN_REJECTED`, `SCOPE_DENIED`, `ADMIN_CONSENT_REQUIRED`, `CONFIRMATION_REQUIRED`, `RATE_LIMITED`, `NOT_FOUND`, `ABORTED`, `INSUFFICIENT_SPACE`, …)."
 ---
 
 # Microsoft Graph CLI
@@ -31,6 +31,7 @@ token-source machinery msgraph-cli is built on is
 6. **The app side must exist first** (ref `external-connection-token`): a Microsoft connection made in the app with a preset, `tokenExport` on the provider's policy, a `providerScopes` ceiling for the provider, and an app-CLI env preset whose login carries `token.external` **and** the provider's ceiling scope.
 7. **Bulk changes go in ONE command, never a loop.** Select by filter in the same command: `mail delete --mailbox billing@example.com --folder inbox --from noreply@vendor.com --yes` (or `mail move … --to archive`) lists the matching ids itself and sends the writes through `$batch`, 20 per HTTP call. A run acts on at most 1000 messages and stops starting new batches after 90 s. When either cuts it short, the output says `complete: false` with `remaining`: re-run the same command (moved and deleted messages leave the folder). Ids still work (arguments or `--ids-file`), passed all at once. Deleting 450 messages is one command, not 450.
 8. **Attach OneDrive / SharePoint files directly.** `mail reply` / `forward` / `draft create` / `send` take `--attach-item <item id or /path>` (with `--site <url>` or `--drive <id>` for SharePoint): the CLI downloads the file and attaches it. There is no need to download it yourself first.
+9. **Moves and deletes can be undone.** `mail move` and `mail delete` (not `--hard`) save an undo journal and print `undo.command`; `mail undo` moves those messages back. For a selection you are unsure of, tag it first (`mail tag --category <name> …`), review it (`mail list --category <name>`, or in Outlook), then act with `--category <name>`.
 
 ## Setup (one time)
 
@@ -154,6 +155,8 @@ msgraph-cli mail delete --folder inbox --from <addr> [--since …] [--until …]
 msgraph-cli mail delete --folder inbox --search "<KQL>" --yes          # search selection (re-run while complete is false)
 msgraph-cli mail move   --folder <id|name> --from <addr> --to archive  # also --whole-folder; [--max-messages 1000] [--max-seconds 90]
 msgraph-cli mail move   <id…> | --ids-file ids.json --to archive        # ids still work; also: copy (ids only)
+msgraph-cli mail tag    --category "<name>" --folder inbox --from <addr> # mark for review; mail untag --category "<name>" removes it
+msgraph-cli mail undo   [<journal>] [--list] [--to <folder>] [--dry-run] # move the last move/delete's messages back
 msgraph-cli mail delete <id…> | --ids-file ids.json [--hard] --yes      # [--all-results] prints every row
 msgraph-cli mail mailboxes check [a@x.com …] [--no-write]            # probe shared-mailbox read / write
 msgraph-cli mail auto-reply get [--show-messages]
@@ -216,11 +219,69 @@ msgraph-cli mail delete --folder deleteditems --from noreply@vendor.com --hard -
   cut off, re-running it is safe: a delete moves to Deleted Items again (with immutable ids, the default, the id is
   unchanged) and a `--hard` delete answers `404` for the ids already gone.
 - **Output.** `{ total, ok, failed, results }`, plus for a selection `matched`, `complete`, `folder` (and `to` for a
-  move; `stopped`, `remaining`, `stale` when they apply). Above 50 messages a move or delete lists only the failed rows
+  move; `stopped`, `remaining`, `stale` when they apply), and `undo: { file, command }` when an undo journal was
+  written (see Undo). Above 50 messages a move or delete lists only the failed rows
   in `results` and counts the rest in `omitted`; `--all-results` lists every row. `copy` always lists every row,
   because each copy's `newId` is its result.
 - **`--hard`** sends `permanentDelete`: it skips Deleted Items and you can't recover it (it sits in Recoverable Items ›
-  Purges until the retention period ends).
+  Purges until the retention period ends). It writes no undo journal.
+
+#### Tag, review, then act
+
+For a large or uncertain selection, mark it first, look at it, then act on exactly what was marked. `mail tag` adds
+an Outlook category (visible in Outlook, and to `mail list --category`). It selects like `mail delete` (ids, or
+`--folder` default `inbox` plus filters or `--search`, `--max-messages`, `--max-seconds`), reads each message's
+categories, and PATCHes only the messages that lack it (skipped ones are counted in `alreadyTagged`; a high count
+on the first run means the name is already in use). The category travels with the message, so a tagged delete can be
+undone from any later session.
+
+```bash
+msgraph-cli mail tag    --mailbox billing@example.com --folder inbox --from noreply@vendor.com --category "msgraph-cli: delete"
+msgraph-cli mail list   --mailbox billing@example.com --folder inbox --category "msgraph-cli: delete" --all-pages --top 100 --pick id,subject,from   # or look in Outlook
+msgraph-cli mail delete --mailbox billing@example.com --folder inbox --category "msgraph-cli: delete" --yes
+# wrong? same session: mail undo; any time later:
+msgraph-cli mail move   --mailbox billing@example.com --folder deleteditems --category "msgraph-cli: delete" --to inbox
+# done reviewing: drop the tag everywhere
+msgraph-cli mail untag  --mailbox billing@example.com --category "msgraph-cli: delete"
+```
+
+- Use a dedicated name, e.g. `"msgraph-cli: delete"`, so `mail untag` removes only what `mail tag` added. Outlook
+  shows a category that is not in its master list without a color; that is fine.
+- `mail untag --category <name>` selects every message that carries it, in **every folder** by default (so tags left
+  on deleted or moved messages go too); `--folder` and the list filters narrow it, `--search` is refused. With ids it
+  skips those without the category (`notTagged`).
+- Neither needs `--yes` (metadata only, and each reverses the other); both take `--dry-run` (the reads run, a sample
+  of the PATCH bodies is printed). A PATCH replaces the whole category list, so each message's other categories are
+  read first and kept. Re-run while `complete` is false: a tag skips what it already tagged and keeps paging.
+
+#### Undo
+
+Every `mail move` and soft `mail delete` (ids or selection; not `--hard`, `copy`, `tag`/`untag` or `--dry-run`) saves
+an undo journal and prints `undo: { file, command }`. `mail undo` moves those messages back where they came from.
+
+```bash
+msgraph-cli mail undo                                   # the newest journal with anything left to undo
+msgraph-cli mail undo ~/.msgraph-cli/undo/20261119T020301Z-delete-3fa9c2d1.json   # one run: its undo.command
+msgraph-cli mail undo --list [--mailbox billing@example.com]                        # the newest 20 journals
+msgraph-cli mail undo <journal> --to inbox              # a journal of an ids run (its folders are unknown)
+```
+
+- **Where.** `<configDir>/undo/` (`~/.msgraph-cli/undo`, mode 0700; each journal 0600), newest 50 kept.
+  `--undo-file <path>` writes it elsewhere (never pruned); `--no-undo` skips it. If the journal cannot be written the
+  run fails **before acting** (`UNDO_JOURNAL_UNWRITABLE`). The journal holds the mailbox, folders and message ids
+  only: no filter, search text or subject. It is written as the run goes, so a run that was cut off still leaves a
+  journal of what it moved.
+- **How.** `mail undo` moves the journal's ids back to its source folder (or `--to`) through `$batch`, within
+  `--max-seconds` (default 90), using the journal's mailbox (a different `--mailbox` is refused). It records what it
+  moved back, so a re-run continues and a fully undone journal answers `alreadyUndone: true`. Output: the per-id
+  results plus `file`, `restoredTo`, `remaining` and `complete`. No `--yes` needed; `--dry-run` prints the first 3
+  moves.
+- **Ids runs.** A move or delete given ids does not know their folders, so its journal has no source and `mail undo`
+  needs `--to inbox` (or another folder).
+- **Limits.** Messages purged from Deleted Items since the run (a `--hard` delete, emptying the folder, retention)
+  can't come back: they fail with `404` rows. A journal lives on the machine that ran the command. From another session
+  or sandbox, restore by filter or tag instead: `mail move --folder deleteditems --from noreply@vendor.com --to inbox`,
+  or exactly with `… --category <name> --to inbox`.
 
 #### Attachments
 
@@ -660,7 +721,7 @@ Every scope in them is user-consentable, so connecting never needs an administra
 | Commands | Need |
 | --- | --- |
 | `mail list/search/get/get-many/dump`, `calendar list/get`, `files search/list/get/drive/download/download-folder/sheet` | Read |
-| `mail draft/send/send-bulk/reply/forward/move/copy/delete`, `mail auto-reply set/off/restore`, `calendar create/delete`, `files upload/mkdir/rename/move/copy/delete` | Read + Write. `--attach-item` also reads the drive (`Files.Read.All`, plus `Sites.Read.All` for `--site`); `calendar create` with a local time reads the mailbox time zone (`MailboxSettings.Read`) |
+| `mail draft/send/send-bulk/reply/forward/move/copy/delete/tag/untag/undo`, `mail auto-reply set/off/restore`, `calendar create/delete`, `files upload/mkdir/rename/move/copy/delete` | Read + Write. `--attach-item` also reads the drive (`Files.Read.All`, plus `Sites.Read.All` for `--site`); `calendar create` with a local time reads the mailbox time zone (`MailboxSettings.Read`) |
 | `--mailbox` / `--send-as` (shared mailboxes) | Read + Write (`*.Shared`) **and** an Exchange permission on that mailbox |
 | `teams list/channels/chats/chat …/presence`, `teams chat send/edit/delete`, `teams channel send/reply` | Read + Write |
 | `teams chat dump` | Read + Write (`Chat.Read`). `--attachments` also uses `Files.Read.All`, which both presets carry |
@@ -712,7 +773,8 @@ The list is `MSGRAPH_CLI_ADMIN_CONSENT_COMMANDS` in `@dereekb/microsoft/cli`; th
 | `ADMIN_CONSENT_REQUIRED` | An admin-consent command (`teams chat search` without `--dir`, `teams channel messages/edit/delete`) was refused before any Graph call: the token's scopes lack the scope it needs | Use a token source whose connection a tenant admin consented with that scope; for chat search, `teams chat search --dir <dump>` instead. `auth show` lists what the token can run |
 | `CONFIRMATION_REQUIRED` | A send / delete / settings change ran without `--yes` | Re-run with `--yes`, or `--dry-run` to preview |
 | `RATE_LIMITED` | Graph returned 429. It is retried automatically up to 3 times, honoring `Retry-After`; this code shows only when it persists | Wait and retry |
-| `NOT_FOUND` | No item, mail folder, mailbox, library or saved auto-reply backup | Check the id / path / `--mailbox`; mutable mail ids change when a message moves |
+| `NOT_FOUND` | No item, mail folder, mailbox, library, saved auto-reply backup, or undo journal (left to undo) | Check the id / path / `--mailbox`; mutable mail ids change when a message moves. `mail undo --list` shows the journals |
+| `UNDO_JOURNAL_UNWRITABLE` | A move or delete could not write its undo journal; nothing was changed | `--undo-file <path>` to write it elsewhere, or `--no-undo` |
 | `SERVICE_UNAVAILABLE` / `TIMEOUT` | Graph is down or did not answer in time. `TIMEOUT` also covers a download that stalled for `--idle-timeout` seconds | Retry; check the Microsoft service status. On a slow connection raise `--idle-timeout` |
 | `DOWNLOAD_INCOMPLETE` | A download ended before its `Content-Length`; no partial file is left | Retry (a bulk download re-run resumes) |
 | `ABORTED` | A download or bulk download was stopped (Ctrl+C); finished files are kept and the manifest saved | Re-run the same command to resume |

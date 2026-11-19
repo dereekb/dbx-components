@@ -718,17 +718,21 @@ export interface RunMsGraphCliMessageWritesInput {
    * the ids are not sent; they are `ids.slice(results.length)`.
    */
   readonly shouldStop?: Maybe<() => boolean>;
+  /**
+   * Called with each group's results before the next group is sent, e.g. to record the moved ids in an undo journal.
+   */
+  readonly afterGroup?: Maybe<(results: MicrosoftGraphMessageWriteResult[]) => Promise<void>>;
 }
 
 /**
  * Sends a move, copy or delete in groups, reporting progress as it goes, so a long run shows how far it got even
  * when it is cut off.
  *
- * @param input - The ids, the sender, the label, the progress sink, the group size and the stop check.
+ * @param input - The ids, the sender, the label, the progress sink, the group size, the stop check and the per-group hook.
  * @returns The per-id results of every id sent, in id order.
  */
 export async function runMsGraphCliMessageWrites(input: RunMsGraphCliMessageWritesInput): Promise<MicrosoftGraphMessageWriteResult[]> {
-  const { ids, send, label, progress, shouldStop } = input;
+  const { ids, send, label, progress, shouldStop, afterGroup } = input;
   const groupSize = input.groupSize ?? MSGRAPH_CLI_MESSAGE_WRITE_PROGRESS_CHUNK;
   const report = progress && ids.length > MSGRAPH_CLI_MESSAGE_WRITE_PROGRESS_CHUNK ? progress : undefined;
   const results: MicrosoftGraphMessageWriteResult[] = [];
@@ -737,6 +741,11 @@ export async function runMsGraphCliMessageWrites(input: RunMsGraphCliMessageWrit
 
   for (let start = 0; start < ids.length && (start === 0 || !shouldStop?.()); start += groupSize) {
     const group = await send(ids.slice(start, start + groupSize));
+
+    if (afterGroup) {
+      await afterGroup(group);
+    }
+
     const before = results.length;
     results.push(...group);
     failed += group.filter((x) => x.status < 200 || x.status >= 300).length;

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR } from '@dereekb/dbx-cli';
@@ -8,7 +8,7 @@ import { MSGRAPH_CLI_CONFIG_DIR_ENV_VAR } from '../config/cli.config';
 import { createMsGraphCliAuthMiddleware } from '../middleware/auth.middleware';
 import { configureMsGraphCliOutput } from '../util/output';
 import { MAIL_LIST_COMMAND } from './mail.command';
-import { MAIL_DELETE_COMMAND, MAIL_MOVE_COMMAND } from './mail.write.command';
+import { MAIL_DELETE_COMMAND, MAIL_MOVE_COMMAND, MAIL_TAG_COMMAND, MAIL_UNDO_COMMAND, MAIL_UNTAG_COMMAND } from './mail.write.command';
 
 // what the entry point does at startup
 configureMsGraphCliOutput();
@@ -53,7 +53,11 @@ interface FakeMailbox {
   /**
    * The listing pages, in order; each answers one listing GET.
    */
-  readonly pages: { readonly value: { readonly id: string; readonly parentFolderId?: string }[]; readonly '@odata.count'?: number; readonly '@odata.nextLink'?: string }[];
+  readonly pages: { readonly value: { readonly id: string; readonly parentFolderId?: string; readonly categories?: string[] }[]; readonly '@odata.count'?: number; readonly '@odata.nextLink'?: string }[];
+  /**
+   * The categories a `$batch` GET of a message answers (tag / untag by ids).
+   */
+  readonly categories?: Record<string, string[]>;
 }
 
 const GRAPH = 'https://graph.microsoft.com/v1.0';
@@ -97,7 +101,25 @@ describe('mail delete / mail move selection', () => {
           let status = 200;
 
           if (path === '/$batch') {
-            answer = { responses: body.requests.map((x: { id: string; url: string }) => ({ id: x.id, status: 201, body: { id: x.url.split('/')[4] } })) };
+            answer = {
+              responses: body.requests.map((x: { id: string; method: string; url: string; body?: object }) => {
+                const parts = x.url.split('?')[0].split('/');
+                const id = parts[parts.indexOf('messages') + 1];
+                let item: unknown;
+
+                if (x.method === 'GET') {
+                  item = { id: x.id, status: 200, body: { id, categories: mailbox.categories?.[id] ?? [] } };
+                } else if (x.method === 'PATCH') {
+                  item = { id: x.id, status: 200, body: { id, ...x.body } };
+                } else {
+                  item = { id: x.id, status: 201, body: { id } };
+                }
+
+                return item;
+              })
+            };
+          } else if (request.method === 'PATCH') {
+            answer = { id: path.split('/').pop(), ...body };
           } else if (path.endsWith('/messages')) {
             answer = mailbox.pages[page] ?? { value: [] };
             page += 1;
@@ -158,7 +180,8 @@ describe('mail delete / mail move selection', () => {
       results: ['m0', 'm1', 'm2'].map((id) => ({ id, ok: true, status: 201, newId: id })),
       matched: 3,
       complete: true,
-      folder: { id: 'INBOX', name: 'Inbox' }
+      folder: { id: 'INBOX', name: 'Inbox' },
+      undo: { file: expect.stringContaining(join(dir, 'config', 'undo')), command: expect.stringMatching(/^msgraph-cli mail undo \S+-delete-[0-9a-f]{8}\.json$/) }
     });
   });
 
@@ -307,5 +330,151 @@ describe('mail delete / mail move selection', () => {
     await run(MAIL_LIST_COMMAND, { folder: 'drafts', category: 'msgraph-cli: delete' });
 
     expect(calls[0].query.get('$filter')).toBe("receivedDateTime ge 1900-01-01T00:00:00Z and categories/any(c:c eq 'msgraph-cli: delete')");
+  });
+  function undoFiles(): string[] {
+    return readdirSync(join(dir, 'config', 'undo')).map((x) => join(dir, 'config', 'undo', x));
+  }
+
+  it('writes an undo journal for a filter delete, and mail undo moves the messages back to the source folder once', async () => {
+    const calls = await connect({ folders: FOLDERS, pages: [{ '@odata.count': 3, value: messages('m', 3) }] });
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    await run(MAIL_DELETE_COMMAND, { mailbox: 'billing@hellosubs.co', from: 'noreply@bill.com', yes: true, tokenSource: 'admin' });
+
+    const [file] = undoFiles();
+    expect(statSync(file).mode & 0o777).toBe(0o600);
+    expect(statSync(join(dir, 'config', 'undo')).mode & 0o777).toBe(0o700);
+    const journal = JSON.parse(readFileSync(file, 'utf8'));
+    expect(journal).toMatchObject({ version: 1, kind: 'delete', mailbox: 'billing@hellosubs.co', immutableIds: true, source: { id: 'INBOX', name: 'Inbox' }, destination: { given: 'deleteditems', id: 'DELETED' }, ids: ['m0', 'm1', 'm2'], undone: [], complete: true });
+    expect(printed(log).data.undo).toEqual({ file, command: `msgraph-cli mail undo ${file} --token-source admin` });
+
+    const before = calls.length;
+    await run(MAIL_UNDO_COMMAND, {});
+
+    const undoCalls = calls.slice(before);
+    expect(undoCalls.map((x) => `${x.method} ${x.path}`)).toEqual(['POST /$batch']);
+    expect(undoCalls[0].body.requests.map((x: { url: string; body: unknown }) => [x.url, x.body])).toEqual(['m0', 'm1', 'm2'].map((id) => [`${SHARED}/messages/${id}/move`, { destinationId: 'INBOX' }]));
+    expect(JSON.parse(log.mock.calls[1][0] as string).data).toMatchObject({ total: 3, ok: 3, file, restoredTo: { id: 'INBOX', name: 'Inbox' }, remaining: 0, complete: true });
+    expect(JSON.parse(readFileSync(file, 'utf8'))).toMatchObject({ undone: ['m0', 'm1', 'm2'], undoneAt: expect.any(String) });
+
+    // undoing again is a no-op
+    await run(MAIL_UNDO_COMMAND, { journal: file });
+    expect(calls).toHaveLength(before + 1);
+    expect(JSON.parse(log.mock.calls[2][0] as string).data).toEqual({ total: 0, ok: 0, failed: 0, results: [], file, alreadyUndone: true });
+  });
+
+  it('writes a journal without a source for an ids delete, so mail undo needs --to', async () => {
+    const calls = await connect({ folders: FOLDERS, pages: [] });
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    const exit = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+
+    await run(MAIL_DELETE_COMMAND, { ids: ['a', 'b'], yes: true });
+    const [file] = undoFiles();
+    expect(JSON.parse(readFileSync(file, 'utf8'))).toMatchObject({ kind: 'delete', source: null, ids: ['a', 'b'] });
+
+    await run(MAIL_UNDO_COMMAND, {});
+    expect(exit).toHaveBeenCalledWith(1);
+    expect(JSON.parse(log.mock.calls[1][0] as string).code).toBe('INVALID_ARGUMENT');
+
+    await run(MAIL_UNDO_COMMAND, { to: 'inbox' });
+    expect(calls[calls.length - 1].body.requests.map((x: { body: unknown }) => x.body)).toEqual([{ destinationId: 'inbox' }, { destinationId: 'inbox' }]);
+    expect(JSON.parse(log.mock.calls[2][0] as string).data).toMatchObject({ ok: 2, restoredTo: { id: 'inbox' }, remaining: 0 });
+  });
+
+  it('writes no journal with --no-undo, --hard or --dry-run, and refuses --no-undo with --undo-file', async () => {
+    await connect({ folders: FOLDERS, pages: [{ '@odata.count': 1, value: messages('m', 1) }] });
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+
+    await run(MAIL_DELETE_COMMAND, { ids: ['a'], yes: true, undo: false });
+    await run(MAIL_DELETE_COMMAND, { ids: ['a'], yes: true, hard: true });
+    await run(MAIL_MOVE_COMMAND, { ids: ['a'], to: 'archive', dryRun: true });
+    expect(() => undoFiles()).toThrow();
+    expect(log.mock.calls.map((x) => JSON.parse(x[0] as string).data.undo)).toEqual([undefined, undefined, undefined]);
+
+    await run(MAIL_DELETE_COMMAND, { ids: ['a'], yes: true, undo: false, undoFile: join(dir, 'x.json') });
+    expect(JSON.parse(log.mock.calls[3][0] as string).code).toBe('INVALID_ARGUMENT');
+  });
+
+  it('records the resolved source folder id in a filter move journal, at --undo-file', async () => {
+    await connect({ folders: FOLDERS, pages: [{ '@odata.count': 2, value: messages('m', 2) }] });
+    vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    const undoFile = join(dir, 'move-undo.json');
+
+    await run(MAIL_MOVE_COMMAND, { folder: 'AAMkCustom', from: 'x@y.com', to: 'archive', undoFile });
+
+    expect(JSON.parse(readFileSync(undoFile, 'utf8'))).toMatchObject({ kind: 'move', source: { id: 'CUSTOM', name: 'Vendors' }, destination: { given: 'archive', id: 'ARCHIVE', name: 'Archive' }, ids: ['m0', 'm1'], complete: true });
+  });
+
+  it('tags a selection: reads id and categories, skips the already tagged, and PATCHes the union', async () => {
+    const calls = await connect({
+      folders: FOLDERS,
+      pages: [
+        {
+          '@odata.count': 3,
+          value: [
+            { id: 'm0', categories: ['Vendors'] },
+            { id: 'm1', categories: ['MSGRAPH-CLI: DELETE'] },
+            { id: 'm2', categories: [] }
+          ]
+        }
+      ]
+    });
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    await run(MAIL_TAG_COMMAND, { mailbox: 'billing@hellosubs.co', from: 'noreply@bill.com', category: 'msgraph-cli: delete', maxMessages: 5 });
+
+    const listing = calls[0];
+    expect(listing.path).toBe(`${SHARED}/mailFolders/inbox/messages`);
+    expect(listing.query.get('$select')).toBe('id,categories');
+    expect(listing.query.get('$top')).toBe('1000');
+    // the category to add is not a filter
+    expect(listing.query.get('$filter')).toBe("receivedDateTime ge 1900-01-01T00:00:00Z and from/emailAddress/address eq 'noreply@bill.com'");
+    expect(calls[1].body.requests.map((x: { method: string; url: string; body: unknown }) => [x.method, x.url, x.body])).toEqual([
+      ['PATCH', `${SHARED}/messages/m0`, { categories: ['Vendors', 'msgraph-cli: delete'] }],
+      ['PATCH', `${SHARED}/messages/m2`, { categories: ['msgraph-cli: delete'] }]
+    ]);
+    expect(printed(log).data).toEqual({ total: 2, ok: 2, failed: 0, results: ['m0', 'm2'].map((id) => ({ id, ok: true, status: 200 })), matched: 3, complete: true, folder: { id: 'inbox' }, alreadyTagged: 1 });
+  });
+
+  it('tags ids after reading their categories through $batch', async () => {
+    const calls = await connect({ folders: FOLDERS, pages: [], categories: { a: ['x'], b: ['Tag'] } });
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    await run(MAIL_TAG_COMMAND, { ids: ['a', 'b'], category: 'tag' });
+
+    expect(calls[0].body.requests.map((x: { method: string; url: string }) => [x.method, x.url.split('?')[0]])).toEqual([
+      ['GET', '/me/messages/a'],
+      ['GET', '/me/messages/b']
+    ]);
+    // one message to change: a single PATCH, no $batch
+    expect(calls[1]).toMatchObject({ method: 'PATCH', path: '/me/messages/a', body: { categories: ['x', 'tag'] } });
+    expect(printed(log).data).toMatchObject({ total: 1, ok: 1, alreadyTagged: 1 });
+  });
+
+  it('untags every folder by default: filters by the category on /messages and PATCHes it away', async () => {
+    const calls = await connect({ folders: FOLDERS, pages: [{ value: [{ id: 'm0', categories: ['Vendors', 'msgraph-cli: delete'] }] }] });
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    await run(MAIL_UNTAG_COMMAND, { category: 'msgraph-cli: delete' });
+
+    expect(calls[0].path).toBe('/me/messages');
+    expect(calls[0].query.get('$filter')).toBe("receivedDateTime ge 1900-01-01T00:00:00Z and categories/any(c:c eq 'msgraph-cli: delete')");
+    expect(calls[0].query.has('$count')).toBe(false);
+    expect(calls[1]).toMatchObject({ method: 'PATCH', path: '/me/messages/m0', body: { categories: ['Vendors'] } });
+    const data = printed(log).data;
+    expect(data).toMatchObject({ total: 1, ok: 1, matched: 1, complete: true });
+    expect(data.folder).toBeUndefined();
+  });
+
+  it('refuses --search on mail untag before any Graph call', async () => {
+    const calls = await connect({ folders: FOLDERS, pages: [] });
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+
+    await run(MAIL_UNTAG_COMMAND, { category: 'x', search: 'invoice' });
+
+    expect(printed(log).code).toBe('INVALID_ARGUMENT');
+    expect(calls).toHaveLength(0);
   });
 });

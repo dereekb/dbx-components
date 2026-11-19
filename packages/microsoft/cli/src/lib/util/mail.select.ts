@@ -20,6 +20,7 @@ import { type EmailAddress, type Maybe, type Milliseconds, type Seconds, MS_IN_S
 import type { Argv } from 'yargs';
 import { type MsGraphCliDryRunOutput, type MsGraphCliWriteResultsOutput, msGraphCliDryRunOutput, msGraphCliWriteResultsOutput, runMsGraphCliMessageWrites } from './mail.write';
 import { parseMsGraphCliDateOption } from './option';
+import type { MsGraphCliUndoJournalWriter } from './mail.undo';
 
 // MARK: Constants
 /**
@@ -104,6 +105,12 @@ export const MSGRAPH_CLI_WELL_KNOWN_MAIL_FOLDERS: ReadonlySet<string> = new Set(
 export type MsGraphCliMailSelectionCommand = 'delete' | 'move';
 
 /**
+ * Every command that picks its messages by ids or by a selection: the folder-moving ones plus `mail tag` and
+ * `mail untag`.
+ */
+export type MsGraphCliMailTargetCommand = MsGraphCliMailSelectionCommand | 'tag' | 'untag';
+
+/**
  * How a command picks its messages: the ids it was given, a filtered list, or a `$search`.
  */
 export type MsGraphCliMailTargetMode = 'ids' | 'list' | 'search';
@@ -168,30 +175,56 @@ export interface MsGraphCliMailSelection {
 }
 
 /**
- * Adds the selection options of `mail delete` / `mail move`: the source folder, the list filters, `--search`,
- * `--whole-folder` and the run budget (`--max-messages`, `--max-seconds`).
+ * Adds the `--max-seconds` time budget option (no yargs default, so passing it with ids can be refused).
+ *
+ * @param yargs - The command's yargs.
+ * @returns The yargs, with the option added.
+ */
+export function msGraphCliMaxSecondsOption<T>(yargs: Argv<T>) {
+  return yargs.option('max-seconds', { type: 'number', describe: `Stop starting new $batch calls after this many seconds (default ${DEFAULT_MSGRAPH_CLI_SELECTION_MAX_SECONDS}; 0 = no limit). Re-run to continue` });
+}
+
+/**
+ * Adds the selection options of `mail delete` / `mail move` / `mail tag`: the source folder, the list filters,
+ * `--search`, `--whole-folder` and the run budget (`--max-messages`, `--max-seconds`). The `untag` variant has no
+ * `--search` / `--whole-folder` / `--category` (the command adds its own) and defaults to every folder.
  *
  * The budget options have no yargs default, so passing one with ids can be refused.
  *
  * @param yargs - The command's yargs.
+ * @param variant - `untag` for the `mail untag` variant.
  * @returns The yargs, with the options added.
  */
-export function msGraphCliMailSelectionOptions<T>(yargs: Argv<T>) {
-  return yargs
-    .option('folder', { type: 'string', describe: `Select from this folder (id or well-known name). Default: ${DEFAULT_MSGRAPH_CLI_SELECTION_FOLDER}. Needs a filter, --search or --whole-folder` })
+export function msGraphCliMailSelectionOptions<T>(yargs: Argv<T>, variant?: Maybe<'untag'>) {
+  const untag = variant === 'untag';
+  let result = yargs
+    .option('folder', { type: 'string', describe: untag ? 'Select from this folder only (id or well-known name). Default: every folder' : `Select from this folder (id or well-known name). Default: ${DEFAULT_MSGRAPH_CLI_SELECTION_FOLDER}. Needs a filter, --search or --whole-folder` })
     .option('from', { type: 'string', describe: "Select: the sender's address" })
     .option('since', { type: 'string', describe: 'Select: received at or after this date/instant (ISO 8601)' })
     .option('until', { type: 'string', describe: 'Select: received before this date/instant (ISO 8601)' })
     .option('unread', { type: 'boolean', describe: 'Select: only unread messages' })
-    .option('has-attachments', { type: 'boolean', describe: 'Select: only messages with file attachments' })
-    .option('category', { type: 'string', describe: 'Select: only messages with this Outlook category' })
-    .option('search', { type: 'string', describe: 'Select by a KQL query ($search) in --folder instead of the filters (Graph cannot combine the two). Re-run while complete is false' })
-    .option('whole-folder', { type: 'boolean', describe: 'Select every message in the explicit --folder, with no filter' })
-    .option('max-messages', { type: 'number', alias: 'limit', describe: `With a selection: the most messages this run acts on (default ${DEFAULT_MSGRAPH_CLI_SELECTION_MAX_MESSAGES}). When more match, the output says complete: false and remaining; re-run to continue` })
-    .option('max-seconds', { type: 'number', describe: `With a selection: stop starting new $batch calls after this many seconds (default ${DEFAULT_MSGRAPH_CLI_SELECTION_MAX_SECONDS}; 0 = no limit). Re-run to continue` });
+    .option('has-attachments', { type: 'boolean', describe: 'Select: only messages with file attachments' });
+
+  if (!untag) {
+    result = result
+      .option('category', { type: 'string', describe: 'Select: only messages with this Outlook category' })
+      .option('search', { type: 'string', describe: 'Select by a KQL query ($search) in --folder instead of the filters (Graph cannot combine the two). Re-run while complete is false' })
+      .option('whole-folder', { type: 'boolean', describe: 'Select every message in the explicit --folder, with no filter' });
+  }
+
+  return msGraphCliMaxSecondsOption(result.option('max-messages', { type: 'number', alias: 'limit', describe: `With a selection: the most messages this run acts on (default ${DEFAULT_MSGRAPH_CLI_SELECTION_MAX_MESSAGES}). When more match, the output says complete: false and remaining; re-run to continue` }));
 }
 
-function readIntegerOption(name: string, value: unknown, min: number): Maybe<number> {
+/**
+ * Reads a whole-number option, e.g. `--max-seconds`.
+ *
+ * @param name - The option's flag name, for the message.
+ * @param value - The raw value.
+ * @param min - The smallest value allowed.
+ * @returns The number, or undefined when the option is not set.
+ * @throws {CliError} `INVALID_ARGUMENT` when the value is not a whole number of at least `min`.
+ */
+export function readMsGraphCliWholeNumberOption(name: string, value: unknown, min: number): Maybe<number> {
   let result: Maybe<number>;
 
   if (value != null) {
@@ -249,8 +282,8 @@ export function readMsGraphCliMailSelection(argv: Record<string, unknown>): MsGr
     category: readMsGraphCliCategoryOption(argv['category']),
     search: argv['search'] == null ? undefined : String(argv['search']),
     wholeFolder: argv['wholeFolder'] === true ? true : undefined,
-    maxMessages: readIntegerOption('max-messages', argv['maxMessages'], 1),
-    maxSeconds: readIntegerOption('max-seconds', argv['maxSeconds'], 0)
+    maxMessages: readMsGraphCliWholeNumberOption('max-messages', argv['maxMessages'], 1),
+    maxSeconds: readMsGraphCliWholeNumberOption('max-seconds', argv['maxSeconds'], 0)
   };
 }
 
@@ -262,7 +295,16 @@ export interface MsGraphCliMailTargetModeInput {
    * Whether ids were given: positional ids, or `--ids-file` (not read yet).
    */
   readonly hasIds: boolean;
+  /**
+   * For `tag`, pass the selection without its `category` (the category to add is not a filter). For `untag`, the
+   * category is implied and not passed here either.
+   */
   readonly selection: MsGraphCliMailSelection;
+  /**
+   * The command. Defaults to a delete/move. `untag` always selects (by its category, every folder by default) and
+   * takes no `--search`.
+   */
+  readonly command?: Maybe<MsGraphCliMailTargetCommand>;
 }
 
 function hasListFilter(selection: MsGraphCliMailSelection): boolean {
@@ -300,6 +342,12 @@ export function msGraphCliMailTargetMode(input: MsGraphCliMailTargetModeInput): 
     }
 
     result = 'ids';
+  } else if (input.command === 'untag') {
+    if (selection.search != null) {
+      throw new CliError({ message: 'mail untag selects by its --category and takes no --search.', code: 'INVALID_ARGUMENT', suggestion: 'Narrow it with --folder, --from, --since, --until, --unread or --has-attachments instead.' });
+    }
+
+    result = 'list';
   } else if (selection.search != null) {
     if (!selection.search.trim()) {
       throw new CliError({ message: '--search needs a query.', code: 'INVALID_ARGUMENT', suggestion: 'e.g. --search "invoice" or --search "from:ada@example.com"' });
@@ -550,6 +598,43 @@ export interface CollectMsGraphCliMailSelectionInput {
    * Checked between pages; the first page is always read.
    */
   readonly shouldStop?: Maybe<() => boolean>;
+  /**
+   * List every folder (`/messages`) when no `folder` is given, instead of the inbox: `mail untag` only.
+   */
+  readonly allFolders?: Maybe<boolean>;
+  /**
+   * `mail tag` / `mail untag`: also read each message's categories (returned in `items`). A tag skips the messages
+   * that already carry `name`: they do not count toward `maxMessages`, and paging continues past them.
+   */
+  readonly categories?: Maybe<MsGraphCliMailSelectionCategories>;
+}
+
+/**
+ * The category a `mail tag` / `mail untag` selection adds or removes.
+ */
+export interface MsGraphCliMailSelectionCategories {
+  readonly name: string;
+  readonly mode: 'tag' | 'untag';
+}
+
+/**
+ * A collected message and its categories (tag / untag only).
+ */
+export interface MsGraphCliMailSelectionItem {
+  readonly id: string;
+  readonly categories: readonly string[];
+}
+
+/**
+ * Whether a category list carries a category, compared case-insensitively as Outlook does.
+ *
+ * @param categories - The message's categories.
+ * @param name - The category.
+ * @returns True when present.
+ */
+export function msGraphCliHasCategory(categories: Maybe<readonly string[]>, name: string): boolean {
+  const lower = name.toLowerCase();
+  return (categories ?? []).some((x) => x.toLowerCase() === lower);
 }
 
 /**
@@ -580,6 +665,14 @@ export interface MsGraphCliMailSelectionCollected {
    * Search hits dropped because they are no longer in the source folder.
    */
   readonly stale: number;
+  /**
+   * Tag / untag: the collected messages with their categories, in `ids` order.
+   */
+  readonly items?: Maybe<MsGraphCliMailSelectionItem[]>;
+  /**
+   * Tag: messages skipped because they already carry the category.
+   */
+  readonly alreadyTagged: number;
 }
 
 /**
@@ -589,13 +682,14 @@ export interface MsGraphCliMailSelectionCollected {
  * @param input - The mode, selection, mailbox and cap.
  * @returns The first page's request.
  */
-export function msGraphCliMailSelectionListingRequest(input: Pick<CollectMsGraphCliMailSelectionInput, 'mode' | 'selection' | 'mailbox' | 'immutableIds' | 'maxMessages'>): MicrosoftGraphMailRequest {
+export function msGraphCliMailSelectionListingRequest(input: Pick<CollectMsGraphCliMailSelectionInput, 'mode' | 'selection' | 'mailbox' | 'immutableIds' | 'maxMessages' | 'allFolders' | 'categories'>): MicrosoftGraphMailRequest {
   const { selection, mailbox, immutableIds } = input;
-  const folder = selection.folder ?? DEFAULT_MSGRAPH_CLI_SELECTION_FOLDER;
+  const folder = selection.folder ?? (input.allFolders ? undefined : DEFAULT_MSGRAPH_CLI_SELECTION_FOLDER);
+  const categories = input.categories ? ',categories' : '';
   let result: MicrosoftGraphMailRequest;
 
   if (input.mode === 'search') {
-    result = microsoftGraphSearchMessagesRequest({ query: selection.search ?? '', folder, mailbox, immutableIds, select: 'id,parentFolderId', top: MSGRAPH_CLI_SELECTION_SEARCH_PAGE_SIZE });
+    result = microsoftGraphSearchMessagesRequest({ query: selection.search ?? '', folder, mailbox, immutableIds, select: `id,parentFolderId${categories}`, top: MSGRAPH_CLI_SELECTION_SEARCH_PAGE_SIZE });
   } else {
     result = microsoftGraphListMessagesRequest({
       mailbox,
@@ -607,10 +701,33 @@ export function msGraphCliMailSelectionListingRequest(input: Pick<CollectMsGraph
       unread: selection.unread,
       hasAttachments: selection.hasAttachments,
       category: selection.category,
-      select: 'id',
-      top: Math.min(MICROSOFT_GRAPH_MESSAGE_MAX_PAGE_SIZE, input.maxMessages),
-      count: true
+      select: `id${categories}`,
+      // a tag may skip already-tagged messages, so it reads full pages
+      top: input.categories?.mode === 'tag' ? MICROSOFT_GRAPH_MESSAGE_MAX_PAGE_SIZE : Math.min(MICROSOFT_GRAPH_MESSAGE_MAX_PAGE_SIZE, input.maxMessages),
+      // a count over every folder (/messages) may be inflated
+      count: folder != null
     });
+  }
+
+  return result;
+}
+
+/**
+ * How the collector counts one listed message: a search hit that left the source folder (`stale`), a message a tag
+ * skips because it already carries the category (`tagged`), or one to act on (`act`).
+ *
+ * @param input - The collection input.
+ * @param message - The listed message.
+ * @param tag - The category a tag adds, if tagging.
+ * @returns The classification.
+ */
+function classifySelectionMessage(input: Pick<CollectMsGraphCliMailSelectionInput, 'mode' | 'sourceFolderId'>, message: Pick<MicrosoftGraphMessage, 'parentFolderId' | 'categories'>, tag: Maybe<string>): 'stale' | 'tagged' | 'act' {
+  let result: 'stale' | 'tagged' | 'act' = 'act';
+
+  if (input.mode === 'search' && input.sourceFolderId && message.parentFolderId && message.parentFolderId !== input.sourceFolderId) {
+    result = 'stale';
+  } else if (tag != null && msGraphCliHasCategory(message.categories, tag)) {
+    result = 'tagged';
   }
 
   return result;
@@ -631,16 +748,19 @@ export async function collectMsGraphCliMailSelection(input: CollectMsGraphCliMai
   const request = msGraphCliMailSelectionListingRequest(input);
   const get = microsoftGraphRequest(input.graphContext);
   const ids: string[] = [];
+  const items: MsGraphCliMailSelectionItem[] = [];
+  const tag = input.categories?.mode === 'tag' ? input.categories.name : undefined;
   let count: Maybe<number>;
   let found = 0;
   let hits = 0;
   let stale = 0;
+  let alreadyTagged = 0;
   let link: Maybe<string>;
   let first = true;
   let stopped: Maybe<MsGraphCliMailSelectionStop>;
 
   while (first || link) {
-    const page: MicrosoftGraphPage<Pick<MicrosoftGraphMessage, 'id' | 'parentFolderId'>> = first ? await get({ method: 'GET', ...request }) : await get({ method: 'GET', path: link as string, headers: request.headers });
+    const page: MicrosoftGraphPage<Pick<MicrosoftGraphMessage, 'id' | 'parentFolderId' | 'categories'>> = first ? await get({ method: 'GET', ...request }) : await get({ method: 'GET', path: link as string, headers: request.headers });
 
     if (first && page['@odata.count'] != null) {
       count = page['@odata.count'];
@@ -651,13 +771,21 @@ export async function collectMsGraphCliMailSelection(input: CollectMsGraphCliMai
     for (const message of page.value ?? []) {
       hits += 1;
 
-      if (input.mode === 'search' && input.sourceFolderId && message.parentFolderId && message.parentFolderId !== input.sourceFolderId) {
+      const kind = classifySelectionMessage(input, message, tag);
+
+      if (kind === 'stale') {
         stale += 1;
+      } else if (kind === 'tagged') {
+        alreadyTagged += 1;
       } else {
         found += 1;
 
         if (ids.length < input.maxMessages) {
           ids.push(message.id);
+
+          if (input.categories) {
+            items.push({ id: message.id, categories: message.categories ?? [] });
+          }
         }
       }
     }
@@ -677,7 +805,9 @@ export async function collectMsGraphCliMailSelection(input: CollectMsGraphCliMai
     stopped = 'search-cap';
   }
 
-  return { request, ids, matched: count ?? found, counted: count != null, ...(stopped ? { stopped } : {}), stale };
+  // a tag's count includes the already-tagged messages it skips, so its remaining is unknown
+  const counted = count != null && tag == null;
+  return { request, ids, matched: count ?? found + alreadyTagged, counted, ...(stopped ? { stopped } : {}), stale, ...(input.categories ? { items } : {}), alreadyTagged };
 }
 
 // MARK: Output
@@ -710,9 +840,9 @@ export interface MsGraphCliMailSelectionSummary {
    */
   readonly remaining?: number;
   /**
-   * The source folder.
+   * The source folder. Absent for a `mail untag` over every folder.
    */
-  readonly folder: MsGraphCliMailSelectionFolderOutput;
+  readonly folder?: MsGraphCliMailSelectionFolderOutput;
   /**
    * A move's destination.
    */
@@ -721,6 +851,14 @@ export interface MsGraphCliMailSelectionSummary {
    * Search hits dropped because they had left the source folder; only when above 0.
    */
   readonly stale?: number;
+  /**
+   * Tag: messages skipped because they already carry the category; only when above 0.
+   */
+  readonly alreadyTagged?: number;
+  /**
+   * Untag (ids): messages skipped because they do not carry the category; only when above 0.
+   */
+  readonly notTagged?: number;
 }
 
 /**
@@ -743,9 +881,16 @@ export type MsGraphCliMailSelectionDryRunOutput = MsGraphCliDryRunOutput &
  * Input to {@link msGraphCliMailSelectionSummary}.
  */
 export interface MsGraphCliMailSelectionSummaryInput {
-  readonly collected: Pick<MsGraphCliMailSelectionCollected, 'matched' | 'counted' | 'stopped' | 'stale'>;
-  readonly folders: MsGraphCliMailSelectionFolders;
-  readonly command: MsGraphCliMailSelectionCommand;
+  readonly collected: Pick<MsGraphCliMailSelectionCollected, 'matched' | 'counted' | 'stopped' | 'stale'> & Partial<Pick<MsGraphCliMailSelectionCollected, 'alreadyTagged'>>;
+  /**
+   * The pre-flight's folders (delete / move).
+   */
+  readonly folders?: Maybe<MsGraphCliMailSelectionFolders>;
+  /**
+   * The source folder when there was no pre-flight (tag / untag); absent for every folder.
+   */
+  readonly folder?: Maybe<MsGraphCliMailSelectionFolderOutput>;
+  readonly command: MsGraphCliMailTargetCommand;
   /**
    * How many messages were attempted (sent, ok or not).
    */
@@ -771,15 +916,17 @@ export function msGraphCliMailSelectionSummary(input: MsGraphCliMailSelectionSum
   const { collected, folders, attempted, collectedCount } = input;
   const stopped: Maybe<MsGraphCliMailSelectionStop> = collected.stopped ?? (attempted < collectedCount ? 'max-seconds' : undefined);
   const complete = stopped == null;
+  const folder = folders ? folderOutput(folders.source) : input.folder;
 
   return {
     matched: collected.matched,
     complete,
     ...(stopped ? { stopped } : {}),
     ...(!complete && collected.counted ? { remaining: Math.max(0, collected.matched - attempted) } : {}),
-    folder: folderOutput(folders.source),
-    ...(input.command === 'move' ? { to: folderOutput(folders.target) } : {}),
-    ...(collected.stale > 0 ? { stale: collected.stale } : {})
+    ...(folder ? { folder } : {}),
+    ...(input.command === 'move' && folders ? { to: folderOutput(folders.target) } : {}),
+    ...(collected.stale > 0 ? { stale: collected.stale } : {}),
+    ...(collected.alreadyTagged ? { alreadyTagged: collected.alreadyTagged } : {})
   };
 }
 
@@ -875,12 +1022,17 @@ export interface RunMsGraphCliMailSelectionWriteInput extends Pick<MsGraphCliMai
    * Above this many results only the failed rows are listed; unset lists every row.
    */
   readonly maxRows?: Maybe<number>;
+  /**
+   * The run's undo journal (move and soft delete). Its header is written before the first group (not when nothing
+   * matched), each group's ok ids are appended, and it is marked complete at the end.
+   */
+  readonly journal?: Maybe<MsGraphCliUndoJournalWriter>;
 }
 
 /**
  * Runs a selected move or delete: the folder pre-flight, the collection of ids (before acting), then the writes in
- * `$batch` calls of {@link MSGRAPH_CLI_SELECTION_WRITE_GROUP_SIZE}, within `--max-messages` and `--max-seconds`.
- * With `dryRun`, only the reads run.
+ * `$batch` calls of {@link MSGRAPH_CLI_SELECTION_WRITE_GROUP_SIZE}, within `--max-messages` and `--max-seconds`,
+ * recording the moved ids in the undo journal when one is given. With `dryRun`, only the reads run.
  *
  * @param input - The selection, the Graph context and the write sender.
  * @returns The output to print.
@@ -896,14 +1048,24 @@ export async function runMsGraphCliMailSelectionWrite(input: RunMsGraphCliMailSe
   if (input.dryRun) {
     result = msGraphCliMailSelectionDryRunOutput({ collected, folders, command, writeRequest: input.writeRequest, verb: input.verb, maxMessages });
   } else {
+    const journal = collected.ids.length > 0 ? input.journal : undefined;
+
+    if (journal) {
+      const given = command === 'delete' ? MICROSOFT_GRAPH_DELETED_ITEMS_FOLDER : String(input.to);
+      await journal.begin({ mailbox, immutableIds, source: { id: folders.source.id, name: folders.source.displayName }, destination: { given, id: folders.target.id, name: folders.target.displayName } });
+    }
+
     const results = await runMsGraphCliMessageWrites({
       ids: collected.ids,
       label: input.label,
       progress: input.progress,
       groupSize: MSGRAPH_CLI_SELECTION_WRITE_GROUP_SIZE,
       shouldStop: deadline.shouldStop,
-      send: (group) => input.send(group, msGraphCliSelectionMaxRetryAfterSeconds(deadline))
+      send: (group) => input.send(group, msGraphCliSelectionMaxRetryAfterSeconds(deadline)),
+      afterGroup: journal?.append
     });
+
+    await journal?.finish();
 
     const summary = msGraphCliMailSelectionSummary({ collected, folders, command, attempted: results.length, collectedCount: collected.ids.length });
     result = msGraphCliMailSelectionWriteOutput(results, summary, input.maxRows);

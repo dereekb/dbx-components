@@ -264,4 +264,80 @@ describe('runMsGraphCliMessageWrites() with groups of 20', () => {
     expect(results).toHaveLength(20);
     expect(lines).toEqual(['mail move: 20/230 done, 0 failed']);
   });
+
+  it('calls afterGroup with each group before sending the next', async () => {
+    const events: string[] = [];
+    await runMsGraphCliMessageWrites({
+      ids: all.slice(0, 45),
+      label: 'mail move',
+      groupSize: 20,
+      send: (group) => {
+        events.push(`send ${group.length}`);
+        return send(group);
+      },
+      afterGroup: async (results) => {
+        events.push(`after ${results.length}`);
+      }
+    });
+
+    expect(events).toEqual(['send 20', 'after 20', 'send 20', 'after 20', 'send 5', 'after 5']);
+  });
+});
+
+describe('collectMsGraphCliMailSelection() for mail tag / mail untag', () => {
+  it('reads categories, skips messages already tagged without counting them toward the cap, and keeps paging', async () => {
+    let page = 0;
+    const { graphContext, urls } = fakeGraph(() => {
+      page += 1;
+      return page === 1
+        ? {
+            '@odata.count': 4,
+            value: [
+              { id: 'a', categories: ['Tag'] },
+              { id: 'b', categories: [] }
+            ],
+            '@odata.nextLink': 'https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages?$skip=2'
+          }
+        : { value: [{ id: 'c', categories: ['tag'] }, { id: 'd' }] };
+    });
+
+    const collected = await collectMsGraphCliMailSelection({ graphContext, mode: 'list', selection: { from: 'x@example.com' }, immutableIds: true, maxMessages: 2, categories: { name: 'tag', mode: 'tag' } });
+
+    expect(urls).toHaveLength(2);
+    expect(urls[0].searchParams.get('$select')).toBe('id,categories');
+    expect(urls[0].searchParams.get('$top')).toBe('1000');
+    expect(collected.ids).toEqual(['b', 'd']);
+    expect(collected.items).toEqual([
+      { id: 'b', categories: [] },
+      { id: 'd', categories: [] }
+    ]);
+    expect(collected.alreadyTagged).toBe(2);
+    expect(collected.stopped).toBeUndefined();
+    // the count includes the skipped messages, so the remaining count is unknown
+    expect(collected.counted).toBe(false);
+  });
+
+  it('lists every folder for an untag with no --folder, with no $count', async () => {
+    const { graphContext, urls } = fakeGraph(() => ({ value: [{ id: 'a', categories: ['tag'] }] }));
+
+    await collectMsGraphCliMailSelection({ graphContext, mode: 'list', selection: { category: 'tag' }, immutableIds: true, maxMessages: 10, allFolders: true, categories: { name: 'tag', mode: 'untag' } });
+
+    expect(urls[0].pathname).toBe('/v1.0/me/messages');
+    expect(urls[0].searchParams.has('$count')).toBe(false);
+  });
+});
+
+describe('msGraphCliMailTargetMode() for mail tag / mail untag', () => {
+  it('selects by the category alone for an untag, and refuses --search there', () => {
+    expect(msGraphCliMailTargetMode({ hasIds: false, selection: {}, command: 'untag' })).toBe('list');
+    expect(msGraphCliMailTargetMode({ hasIds: true, selection: {}, command: 'untag' })).toBe('ids');
+    invalidArgument(() => msGraphCliMailTargetMode({ hasIds: false, selection: { search: 'x' }, command: 'untag' }));
+    invalidArgument(() => msGraphCliMailTargetMode({ hasIds: true, selection: { folder: 'inbox' }, command: 'untag' }));
+  });
+
+  it('applies the delete/move rules to a tag (its category is not a filter)', () => {
+    invalidArgument(() => msGraphCliMailTargetMode({ hasIds: false, selection: { folder: 'inbox' }, command: 'tag' }));
+    invalidArgument(() => msGraphCliMailTargetMode({ hasIds: false, selection: {}, command: 'tag' }));
+    expect(msGraphCliMailTargetMode({ hasIds: false, selection: { from: 'a@example.com' }, command: 'tag' })).toBe('list');
+  });
 });
