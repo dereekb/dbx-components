@@ -1,5 +1,5 @@
 import { CliError } from '@dereekb/dbx-cli';
-import { type MicrosoftGraphAutomaticRepliesSetting, type MicrosoftGraphAutomaticRepliesStatus, type MicrosoftGraphDateTimeTimeZone, type MicrosoftGraphExternalAudienceScope, microsoftGraphAutomaticRepliesSettingFields } from '@dereekb/microsoft';
+import { type MicrosoftGraphAutomaticRepliesSetting, type MicrosoftGraphAutomaticRepliesStatus, type MicrosoftGraphContext, type MicrosoftGraphDateTimeTimeZone, type MicrosoftGraphExternalAudienceScope, getMailboxTimeZone, microsoftGraphAutomaticRepliesSettingFields } from '@dereekb/microsoft';
 import { type ISO8601DateString, type Maybe } from '@dereekb/util';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -85,6 +85,82 @@ export interface MsGraphCliAutoReplyOutput extends Omit<MicrosoftGraphAutomaticR
 export function msGraphCliAutoReplyOutput(setting: MicrosoftGraphAutomaticRepliesSetting, showMessages: boolean): MsGraphCliAutoReplyOutput {
   const { internalReplyMessage, externalReplyMessage, ...rest } = microsoftGraphAutomaticRepliesSettingFields(setting);
   return showMessages ? { ...rest, internalReplyMessage, externalReplyMessage } : { ...rest, internalReplyMessageChars: internalReplyMessage?.length ?? 0, externalReplyMessageChars: externalReplyMessage?.length ?? 0 };
+}
+
+/**
+ * A date with no time, e.g. `2026-11-20`.
+ */
+export const MSGRAPH_CLI_LOCAL_DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * A wall-clock date-time with no `Z` and no offset, e.g. `2026-11-20T15:00`.
+ */
+export const MSGRAPH_CLI_LOCAL_DATE_TIME_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/;
+
+/**
+ * Returns whether a `--start` / `--end` value names no zone: a date (`2026-11-20`) or a wall-clock date-time
+ * (`2026-11-20T15:00`) with no `Z` and no offset. Such a value is read in the mailbox's time zone unless a zone
+ * option names one, never in the machine's (a cloud sandbox runs in UTC).
+ *
+ * @param value - The option value.
+ * @returns True for a zone-less value.
+ */
+export function isMsGraphCliZonelessDateTime(value: unknown): boolean {
+  const text = value == null ? '' : String(value);
+  return MSGRAPH_CLI_LOCAL_DATE_ONLY_PATTERN.test(text) || MSGRAPH_CLI_LOCAL_DATE_TIME_PATTERN.test(text);
+}
+
+/**
+ * Reads the mailbox's time zone for a zone-less `--start` / `--end`, failing with what to pass instead.
+ *
+ * @param input - The Graph context and the zone option the command takes, for the suggestion.
+ * @param input.graphContext - The Graph context.
+ * @param input.option - The command's zone option, e.g. `tz` or `event-tz`.
+ * @returns The zone name, e.g. `Central Standard Time`.
+ * @throws {CliError} `INVALID_ARGUMENT` when the mailbox time zone cannot be read (it needs `MailboxSettings.Read`) or is not set.
+ */
+export async function readMsGraphCliMailboxTimeZone(input: { readonly graphContext: MicrosoftGraphContext; readonly option: string }): Promise<string> {
+  let zone: Maybe<string>;
+
+  try {
+    zone = await getMailboxTimeZone(input.graphContext)();
+  } catch {
+    zone = undefined;
+  }
+
+  if (!zone) {
+    throw new CliError({ message: "The start / end name no time zone, and the mailbox's time zone could not be read (it needs MailboxSettings.Read).", code: 'INVALID_ARGUMENT', suggestion: `Pass --${input.option} "<zone>" (e.g. "Pacific Standard Time"), or instants with an offset (2026-11-20T15:00-08:00).` });
+  }
+
+  return zone;
+}
+
+/**
+ * Turns an auto-reply window value into a Graph `dateTimeTimeZone` when no `--tz` was given: a zone-less value (a
+ * date reads as its midnight) is a wall-clock time in the mailbox's time zone; a value with `Z` or an offset is an
+ * instant, sent as UTC.
+ *
+ * @param name - The option name, for the error.
+ * @param value - The option value.
+ * @param mailboxTimeZone - The mailbox's time zone, read when a value is zone-less.
+ * @returns The date-time and zone, or undefined when the option is not set.
+ * @throws {CliError} `INVALID_ARGUMENT` when a zone-less value has no mailbox time zone to be read in, or a value does not parse.
+ */
+export function parseMsGraphCliMailboxDateTimeOption(name: string, value: unknown, mailboxTimeZone: Maybe<string>): Maybe<MicrosoftGraphDateTimeTimeZone> {
+  let result: Maybe<MicrosoftGraphDateTimeTimeZone>;
+
+  if (isMsGraphCliZonelessDateTime(value)) {
+    if (!mailboxTimeZone) {
+      throw new CliError({ message: `--${name} "${String(value)}" has no time zone.`, code: 'INVALID_ARGUMENT', suggestion: 'Pass --tz "<zone>", or an instant with an offset (2026-12-22T17:00-06:00).' });
+    }
+
+    const text = String(value);
+    result = parseMsGraphCliDateTimeTimeZoneOption(name, MSGRAPH_CLI_LOCAL_DATE_ONLY_PATTERN.test(text) ? `${text}T00:00` : text, mailboxTimeZone);
+  } else {
+    result = parseMsGraphCliDateTimeTimeZoneOption(name, value);
+  }
+
+  return result;
 }
 
 /**

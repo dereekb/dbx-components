@@ -30,7 +30,7 @@
       "selector": "[dbxLlmFlow]",
       "className": "DbxLlmFlowDirective",
       "module": "@dereekb/dbx-form/llm",
-      "description": "Provides a DbxLlmFlowStore for the sections within it, and keeps it in sync with storage when a storage key is set.\n\nPersistence needs a SimpleStorageAccessorFactory (see provideDbxStorage()). Without one, the flow is not persisted.",
+      "description": "Provides a DbxLlmFlowStore for the sections within it, and keeps it in sync with storage when a storage key is set.\n\nPersistence needs a SimpleStorageAccessorFactory (see provideDbxStorage()). Without one, the flow is not persisted.\n\nThe directive adds no layout, so the sections can sit in any layout (columns, a grid). To stack them with the flow's gap, as dbx-llm-flow does,\nadd the dbx-llm-flow class.",
       "inputs": [
         {
           "name": "dbxLlmFlow",
@@ -50,7 +50,7 @@
         "llm-flow-section",
         "llm-flow"
       ],
-      "example": "<div [dbxLlmFlow]=\"flowConfig\" [storageKey]=\"worldKey()\">\n  <dbx-llm-flow-section [config]=\"briefConfig\"></dbx-llm-flow-section>\n</div>",
+      "example": "<div class=\"dbx-llm-flow\" [dbxLlmFlow]=\"flowConfig\" [storageKey]=\"worldKey()\">\n  <dbx-llm-flow-section [config]=\"setupConfig\"></dbx-llm-flow-section>\n  <dbx-llm-flow-section [config]=\"briefConfig\" parentKey=\"setup\"></dbx-llm-flow-section>\n</div>",
       "minimalExample": "<div [dbxLlmFlow]=\"flowConfig\" [storageKey]=\"worldKey()\">\n<dbx-llm-flow-section [config]=\"briefConfig\"></dbx-llm-flow-section>\n</div>"
     },
     {

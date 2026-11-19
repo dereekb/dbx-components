@@ -160,7 +160,7 @@ msgraph-cli mail undo   [<journal>] [--list] [--to <folder>] [--dry-run] # move 
 msgraph-cli mail delete <id…> | --ids-file ids.json [--hard] --yes      # [--all-results] prints every row
 msgraph-cli mail mailboxes check [a@x.com …] [--no-write]            # probe shared-mailbox read / write
 msgraph-cli mail auto-reply get [--show-messages]
-msgraph-cli mail auto-reply set [--start <t> --end <t> [--tz "<zone>"]] --internal-file in.html [--external-file out.html] [--audience …] --yes
+msgraph-cli mail auto-reply set [--start 2026-12-22T17:00 --end 2027-01-02T08:00 [--tz "<zone>"]] --internal-file in.html [--external-file out.html] [--audience …] --yes   # local times: mailbox time zone unless --tz
 msgraph-cli mail auto-reply off --yes | restore --yes                  # each saves the previous setting first
 ```
 
@@ -359,7 +359,9 @@ from `@dereekb/dbx-cli`), which makes `external-token` mint with `?include=data`
 to the local signature files.
 
 Every auto-reply change first saves the current setting to `<configDir>/auto-reply.backup.json`.
-`restore` swaps the saved and current settings, so a second `restore` undoes the first. `set` takes
+`restore` swaps the saved and current settings, so a second `restore` undoes the first. A local `--start` / `--end` (no `Z` or offset; a bare date means its midnight) is read in `--tz`, which
+defaults to the mailbox's time zone (`MailboxSettings.Read`), never the machine's; a value with `Z` or an offset is an
+instant, sent as UTC. `set` takes
 `--status disabled|alwaysEnabled|scheduled` (default: `scheduled` with `--start`/`--end`, else
 `alwaysEnabled`) and `--audience none|contactsOnly|all` for external senders.
 

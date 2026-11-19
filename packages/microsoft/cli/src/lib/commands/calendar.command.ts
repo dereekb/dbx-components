@@ -8,7 +8,6 @@ import {
   MICROSOFT_GRAPH_EVENT_ORGANIZER_SELECT,
   createEvent,
   getEvent,
-  getMailboxTimeZone,
   listCalendarView,
   microsoftGraphCalendarViewRequest,
   microsoftGraphCancelEventRequest,
@@ -23,7 +22,7 @@ import {
 import { MS_IN_DAY, MS_IN_MINUTE, type Maybe, type Minutes } from '@dereekb/util';
 import type { Argv, CommandModule } from 'yargs';
 import { msGraphCommandHandler } from '../middleware/auth.middleware';
-import { parseMsGraphCliDateTimeTimeZoneOption, parseMsGraphCliEnumOption } from '../util/auto.reply';
+import { MSGRAPH_CLI_LOCAL_DATE_ONLY_PATTERN, MSGRAPH_CLI_LOCAL_DATE_TIME_PATTERN, isMsGraphCliZonelessDateTime, parseMsGraphCliDateTimeTimeZoneOption, parseMsGraphCliEnumOption, readMsGraphCliMailboxTimeZone } from '../util/auto.reply';
 import { msGraphCliPagingOptions } from '../util/option';
 import { msGraphCliConfirmOptions, msGraphCliDryRunOptions, msGraphCliDryRunOutput, parseMsGraphCliAddressesOption, readMsGraphCliBodyOption, requireMsGraphCliConfirmation } from '../util/mail.write';
 import { outputMsGraphCliResult } from '../util/output';
@@ -70,21 +69,6 @@ const CALENDAR_GET_COMMAND: CommandModule = {
     outputMsGraphCliResult(await getEvent(graphContext)({ id: String(argv.id), select: argv.select, timeZone: argv.tz }));
   })
 };
-
-const MSGRAPH_CLI_LOCAL_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-const MSGRAPH_CLI_LOCAL_DATE_TIME_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/;
-
-/**
- * Returns whether a `--start` / `--end` value names no zone: a date (`2026-11-20`) or a wall-clock date-time
- * (`2026-11-20T15:00`) with no `Z` and no offset. Such a value is read in the event's time zone.
- *
- * @param value - The option value.
- * @returns True for a zone-less value.
- */
-export function isMsGraphCliZonelessDateTime(value: unknown): boolean {
-  const text = value == null ? '' : String(value);
-  return MSGRAPH_CLI_LOCAL_DATE_PATTERN.test(text) || MSGRAPH_CLI_LOCAL_DATE_TIME_PATTERN.test(text);
-}
 
 /**
  * Returns whether `calendar create` needs a time zone it was not given: `--all-day`, or a zone-less `--start` /
@@ -147,7 +131,7 @@ export function parseMsGraphCliEventTimeOption(name: string, value: unknown, tim
   if (value != null && value !== '') {
     const text = String(value);
 
-    if (MSGRAPH_CLI_LOCAL_DATE_PATTERN.test(text)) {
+    if (MSGRAPH_CLI_LOCAL_DATE_ONLY_PATTERN.test(text)) {
       throw new CliError({ message: `--${name} "${text}" is a date with no time.`, code: 'INVALID_ARGUMENT', suggestion: `Add a time (--${name} ${text}T09:00), or pass --all-day for a whole-day event.` });
     } else if (MSGRAPH_CLI_LOCAL_DATE_TIME_PATTERN.test(text)) {
       if (!timeZone) {
@@ -176,7 +160,7 @@ function msGraphCliAllDayEventRange(argv: any, timeZone: string): { readonly sta
   const first = String(argv.start ?? '');
   const last = argv.end == null || argv.end === '' ? first : String(argv.end);
 
-  if (!MSGRAPH_CLI_LOCAL_DATE_PATTERN.test(first) || !MSGRAPH_CLI_LOCAL_DATE_PATTERN.test(last)) {
+  if (!MSGRAPH_CLI_LOCAL_DATE_ONLY_PATTERN.test(first) || !MSGRAPH_CLI_LOCAL_DATE_ONLY_PATTERN.test(last)) {
     throw new CliError({ message: '--all-day takes dates: --start <first day> [--end <last day>], e.g. --start 2026-11-20 --end 2026-11-21.', code: 'INVALID_ARGUMENT' });
   } else if (argv.duration != null) {
     throw new CliError({ message: '--all-day does not take --duration; use --end <last day>.', code: 'INVALID_ARGUMENT' });
@@ -245,29 +229,6 @@ export async function msGraphCliCreateEventInput(argv: any): Promise<MicrosoftGr
 }
 
 /**
- * Reads the mailbox's time zone for an event that needs one, failing with what to pass instead.
- *
- * @param graphContext - The Graph context.
- * @returns The zone name.
- * @throws {CliError} `INVALID_ARGUMENT` when the mailbox time zone cannot be read or is not set.
- */
-async function readMsGraphCliMailboxTimeZone(graphContext: MicrosoftGraphContext): Promise<string> {
-  let zone: Maybe<string>;
-
-  try {
-    zone = await getMailboxTimeZone(graphContext)();
-  } catch {
-    zone = undefined;
-  }
-
-  if (!zone) {
-    throw new CliError({ message: "The start / end name no time zone, and the mailbox's time zone could not be read (it needs MailboxSettings.Read).", code: 'INVALID_ARGUMENT', suggestion: 'Pass --event-tz "<zone>" (e.g. "Pacific Standard Time"), or instants with an offset (2026-11-20T15:00-08:00).' });
-  }
-
-  return zone;
-}
-
-/**
  * What `calendar create` prints: the event without its attendee addresses.
  */
 export interface MsGraphCliCreateEventOutput {
@@ -309,7 +270,7 @@ export const CALENDAR_CREATE_COMMAND: CommandModule = {
       ]),
   handler: msGraphCommandHandler(async (argv: any, { graphContext }) => {
     const zoneNeeded = isMsGraphCliEventTimeZoneNeeded(argv);
-    const eventTz: Maybe<string> = zoneNeeded ? await readMsGraphCliMailboxTimeZone(graphContext) : argv.eventTz;
+    const eventTz: Maybe<string> = zoneNeeded ? await readMsGraphCliMailboxTimeZone({ graphContext, option: 'event-tz' }) : argv.eventTz;
     const input = await msGraphCliCreateEventInput({ ...argv, eventTz });
     const attendees = input.attendees?.length ?? 0;
 

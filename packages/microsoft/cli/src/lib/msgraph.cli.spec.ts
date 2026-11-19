@@ -17,7 +17,7 @@ import { msGraphCliConfigSetUpdate } from './commands/config.command';
 import { MAIL_MAILBOXES_CHECK_COMMAND } from './commands/mail.mailboxes.command';
 import { CALENDAR_CREATE_COMMAND, CALENDAR_DELETE_COMMAND } from './commands/calendar.command';
 import { FILES_DELETE_COMMAND, FILES_MOVE_COMMAND, FILES_UPLOAD_COMMAND } from './commands/files.command';
-import { MAIL_AUTO_REPLY_OFF_COMMAND, MAIL_AUTO_REPLY_RESTORE_COMMAND } from './commands/mail.auto.reply.command';
+import { MAIL_AUTO_REPLY_OFF_COMMAND, MAIL_AUTO_REPLY_RESTORE_COMMAND, MAIL_AUTO_REPLY_SET_COMMAND } from './commands/mail.auto.reply.command';
 import { TEAMS_CHANNEL_EDIT_COMMAND, TEAMS_CHAT_EDIT_COMMAND, TEAMS_CHAT_SEARCH_COMMAND, isMsGraphCliTeamsChatArchiveSearch } from './commands/teams.command';
 
 // what the entry point does at startup
@@ -954,6 +954,24 @@ describe('msgraph-cli', () => {
 
       expect(JSON.parse(log.mock.calls[0][0] as string).code).toBe('INVALID_ARGUMENT');
       expect(calls.map((x) => x.method)).toEqual(['GET']);
+    });
+
+    it("should read a zone-less auto-reply window in the mailbox's time zone, and an explicit --tz without asking", async () => {
+      const calls = await connectRecording(() => ({ status: 200, body: { value: 'Central Standard Time' } }));
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+      const internalFile = join(dir, 'away.txt');
+      writeFileSync(internalFile, 'Away until January.');
+
+      await run(MAIL_AUTO_REPLY_SET_COMMAND, { start: '2026-12-22T17:00', end: '2027-01-02', internalFile, dryRun: true });
+      await run(MAIL_AUTO_REPLY_SET_COMMAND, { start: '2026-12-22T17:00', end: '2027-01-02T08:00', tz: 'Pacific Standard Time', internalFile, dryRun: true });
+
+      // only the first run reads the mailbox zone; a dry run sends nothing else
+      expect(calls.map((x) => `${x.method} ${x.path}`)).toEqual(['GET /me/mailboxSettings/timeZone']);
+      const first = JSON.parse(log.mock.calls[0][0] as string).data.requests[1].body.automaticRepliesSetting;
+      expect(first.scheduledStartDateTime).toEqual({ dateTime: '2026-12-22T17:00', timeZone: 'Central Standard Time' });
+      expect(first.scheduledEndDateTime).toEqual({ dateTime: '2027-01-02T00:00', timeZone: 'Central Standard Time' });
+      const second = JSON.parse(log.mock.calls[1][0] as string).data.requests[1].body.automaticRepliesSetting;
+      expect(second.scheduledStartDateTime).toEqual({ dateTime: '2026-12-22T17:00', timeZone: 'Pacific Standard Time' });
     });
 
     it('should back up the setting before auto-reply off, and restore it exactly', async () => {
