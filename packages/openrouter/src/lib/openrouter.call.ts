@@ -1,5 +1,5 @@
 import { isLlmDecisionModelId } from '@dereekb/llm';
-import { type Maybe, filterUndefinedValues } from '@dereekb/util';
+import { type Maybe, filterUndefinedValues, parseJsonObjectOrUndefined } from '@dereekb/util';
 import { type CallModelInput, type OpenResponsesResult, type OpenRouterCore, type RequestOptions, type ResponsesRequest, type StateAccessor, type Tool, ModelResult, callModel, convertToolsToAPIFormat, responsesSend, stepCountIs } from './openrouter.sdk';
 import { type OpenRouterHostedToolConfig, type OpenRouterModelConfig } from './openrouter.config';
 import { type OpenRouterPromptRequest } from './openrouter.request';
@@ -481,19 +481,5 @@ export function openRouterRunErrorFromResponseError(error: NonNullable<OpenRespo
  * @returns The parsed object, or undefined when the output is not a JSON object.
  */
 export function parseOpenRouterJsonOutput(outputText: Maybe<string>): Maybe<Record<string, unknown>> {
-  let result: Maybe<Record<string, unknown>>;
-
-  if (outputText) {
-    try {
-      const parsed = JSON.parse(outputText);
-
-      if (parsed != null && typeof parsed === 'object' && !Array.isArray(parsed)) {
-        result = parsed as Record<string, unknown>;
-      }
-    } catch {
-      // not JSON — leave undefined
-    }
-  }
-
-  return result;
+  return parseJsonObjectOrUndefined(outputText);
 }

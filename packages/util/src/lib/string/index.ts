@@ -4,6 +4,7 @@ export * from './dencoder';
 export * from './factory';
 export * from './html';
 export * from './json';
+export * from './json.repair';
 export * from './markdown';
 export * from './jsdoc';
 export * from './mimetype';

@@ -3,10 +3,10 @@
  * and the thin lever / rationale / line readers a capability parser calls. Every capability validates the resulting
  * lever against its OWN wire schema; this module only finds and unwraps it.
  *
- * The block read is LAYERED: the greedy first-`{`-to-last-`}` slice first (so every reply the greedy slice reads keeps
- * its reading byte for byte), then a string-aware BALANCED scan for the replies that greedy slice DROPS. A model that
- * emits a complete object followed by one stray `}` is a measured, common cause of lost replies, and its payload is
- * perfectly good.
+ * The block read is `@dereekb/util` `readJsonObjectFromText`, LAYERED: the greedy first-`{`-to-last-`}` slice first (so
+ * every reply the greedy slice reads keeps its reading byte for byte), then a string-aware BALANCED scan for the
+ * replies that greedy slice DROPS. A model that emits a complete object followed by one stray `}` is a measured, common
+ * cause of lost replies, and its payload is perfectly good.
  *
  * Non-goal: nothing here ever repairs a missing brace. The deterministic repair tier (`repairLlmReplyJson`) and the
  * dispatcher's length-truncation output-budget raise own a reply that never closes.
@@ -23,7 +23,7 @@
  * Only `json-envelope` declines.
  */
 
-import { type Maybe, stripMarkdownCodeFence } from '@dereekb/util';
+import { type JsonObjectInText, type Maybe, readJsonObjectFromText, stripMarkdownCodeFence } from '@dereekb/util';
 import { type LlmSwallowSink, type LlmSwallowSiteId, NOOP_LLM_SWALLOW_SINK } from '../record/llm.swallow';
 
 /**
@@ -71,83 +71,8 @@ export function isLlmReplyObject(value: unknown): value is Record<string, unknow
 }
 
 /**
- * `JSON.parse` that yields `undefined` instead of throwing on malformed input.
- *
- * @param text - The candidate JSON text.
- * @param swallow - The sink the decode failure is counted on.
- * @returns The parsed value, or `undefined` when it is not valid JSON.
- */
-function parseJsonOrUndefined(text: string, swallow: LlmSwallowSink): unknown {
-  let value: unknown;
-
-  try {
-    value = JSON.parse(text);
-  } catch (error) {
-    value = undefined;
-    swallow(LLM_REPLY_ENVELOPE_DECODE_SWALLOW_SITE, error);
-  }
-
-  return value;
-}
-
-/**
- * The BALANCED `{…}` slice starting at an opening brace — a depth counter that is STRING-AWARE (a `"` opens / closes a
- * JSON string, a `\` escapes the next character), so a brace inside a string literal never moves the depth. Returns
- * `undefined` when the object never closes: a mid-object truncation is not this function's business, and nothing here
- * ever repairs a missing brace.
- *
- * @param raw - The reply text.
- * @param start - The index of the opening `{`.
- * @returns The balanced slice, or `undefined` when the object never closes.
- */
-function balancedObjectSlice(raw: string, start: number): Maybe<string> {
-  let depth = 0;
-  let inString = false;
-  let escaped = false;
-  let end = -1;
-
-  for (let index = start; index < raw.length && end < 0; index += 1) {
-    const character = raw[index];
-
-    if (escaped) {
-      escaped = false;
-    } else if (inString) {
-      if (character === '\\') {
-        escaped = true;
-      } else if (character === '"') {
-        inString = false;
-      }
-    } else if (character === '"') {
-      inString = true;
-    } else if (character === '{') {
-      depth += 1;
-    } else if (character === '}') {
-      depth -= 1;
-      end = depth === 0 ? index + 1 : end;
-    }
-  }
-
-  return end < 0 ? undefined : raw.slice(start, end);
-}
-
-/**
- * The raw JSON reading behind every reader — whether a `{…}` block was present at all (the `no-json` vs `parse-error`
- * discrimination) and the object it parsed to.
- */
-interface LlmReplyJsonReading {
-  /**
-   * Whether the reply carried a `{…}` block at all (a `{` with a `}` somewhere after it).
-   */
-  readonly found: boolean;
-  /**
-   * The parsed object, absent when no candidate slice parsed into one.
-   */
-  readonly value?: Record<string, unknown>;
-}
-
-/**
- * Find + parse the reply's JSON object. The ONE slicer every reader shares, LAYERED so the balanced pass is strictly
- * additive.
+ * Find + parse the reply's JSON object. The ONE slicer every reader shares: `@dereekb/util` `readJsonObjectFromText`,
+ * LAYERED so the balanced pass is strictly additive.
  *
  * 1. The GREEDY slice (first `{` → LAST `}`). Parses to an object ⇒ that object wins.
  * 2. Otherwise each TOP-LEVEL `{…}` object in order (each candidate's balanced slice, then the next `{` AFTER that
@@ -157,42 +82,21 @@ interface LlmReplyJsonReading {
  * that never closes ENDS the scan (everything after it is inside it), so a completion cut mid-object stays degenerate
  * rather than resolving to whichever inner `{…}` happened to close before the cut.
  *
- * The decode failure is counted on `swallow` exactly once, and ONLY when no candidate parsed — a reply the balanced
- * pass rescues is a successful read, not a swallowed one.
+ * The decode failure is counted on `swallow` exactly once, with the first parse failure, and ONLY when no candidate
+ * parsed — a reply the balanced pass rescues is a successful read, not a swallowed one.
  *
  * @param raw - The model's raw reply text.
  * @param swallow - The sink a malformed-JSON decode is counted on.
  * @returns The reading (block found? / the parsed object).
  */
-function readLlmReplyJson(raw: string, swallow: LlmSwallowSink): LlmReplyJsonReading {
-  const greedy = raw.match(/\{[\s\S]*\}/);
-  let failure: unknown;
-  const capture: LlmSwallowSink = (_site, cause) => {
-    failure = failure ?? cause;
-  };
-  let value: Maybe<Record<string, unknown>>;
+function readLlmReplyJson(raw: string, swallow: LlmSwallowSink): JsonObjectInText {
+  const reading = readJsonObjectFromText(raw);
 
-  if (greedy != null) {
-    const parsed = parseJsonOrUndefined(greedy[0], capture);
-    value = isLlmReplyObject(parsed) ? parsed : undefined;
-
-    let index = value == null ? raw.indexOf('{') : -1;
-
-    while (index >= 0) {
-      const slice = balancedObjectSlice(raw, index);
-      const candidate = slice == null ? undefined : parseJsonOrUndefined(slice, capture);
-      value = isLlmReplyObject(candidate) ? candidate : undefined;
-      // A slice that never closes ends the scan: everything past it is NESTED inside it, so there is no further
-      // top-level candidate — the truncation non-goal, enforced structurally.
-      index = value != null || slice == null ? -1 : raw.indexOf('{', index + slice.length);
-    }
-
-    if (value == null) {
-      swallow(LLM_REPLY_ENVELOPE_DECODE_SWALLOW_SITE, failure);
-    }
+  if (reading.found && reading.value == null) {
+    swallow(LLM_REPLY_ENVELOPE_DECODE_SWALLOW_SITE, reading.error);
   }
 
-  return { found: greedy != null, ...(value == null ? {} : { value }) };
+  return reading;
 }
 
 /**

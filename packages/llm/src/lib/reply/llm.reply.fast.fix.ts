@@ -3,14 +3,14 @@
  * is `makeLlmReplyFastFixer` (`capability/llm.capability.repair.reply.json.ts`). The fast fix is one cheap model call
  * that repairs a mangled JSON reply the deterministic tier (`repairLlmReplyJson`) could not. A host injects an
  * {@link LlmReplyFastFixer} into its dispatcher's config; the dispatcher hands it the broken reply, the scorer's
- * {@link LlmReplyJsonShape} of it, and its own dispatch.
+ * `JsonRepairShape` (`@dereekb/util`) of it, and its own dispatch.
  */
 
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { type LlmCapabilityKey } from '../model/llm.value';
 import { type LlmCallContext } from '../record/llm.call.context';
 import { type LlmCallMeta, type LlmDispatchResult } from '../strategy/llm.strategy';
-import { type LlmReplyJsonShape } from './llm.reply.json.shape';
+import { type JsonRepairShape } from '@dereekb/util';
 
 /**
  * The fast-fix capability's key. Unchanged from the source because call records, tapes and censuses key on it; declared
@@ -66,7 +66,7 @@ export interface LlmReplyFastFixInput<R extends LlmDispatchRequest = LlmDispatch
   /**
    * The scorer's shape of it.
    */
-  readonly shape: LlmReplyJsonShape;
+  readonly shape: JsonRepairShape;
   /**
    * The subject's resolved lever schema — the fixer's per-invocation `responseSchemaHint`.
    */

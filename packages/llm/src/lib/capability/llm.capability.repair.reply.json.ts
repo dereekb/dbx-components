@@ -12,7 +12,7 @@
  * ordinary re-ask or drop.
  */
 
-import { filterMaybeArrayValues, isPlainObject, type Maybe } from '@dereekb/util';
+import { filterMaybeArrayValues, isPlainObject, type JsonRepairShape, type Maybe } from '@dereekb/util';
 import { type } from 'arktype';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { llmLiveContextBlock, type LlmLiveContextBlock } from '../prompt/llm.prompt.live.context';
@@ -20,7 +20,6 @@ import { type LlmPromptTemplate } from '../prompt/llm.prompt.template';
 import { type LlmSwallowSiteId } from '../record/llm.swallow';
 import { type LlmReplyEnvelopeKeys, readLlmReplyLever } from '../reply/llm.reply.envelope';
 import { LLM_REPAIR_REPLY_JSON_CAPABILITY, type LlmReplyFastFixer, type LlmReplyFastFixOutcome } from '../reply/llm.reply.fast.fix';
-import { type LlmReplyJsonShape } from '../reply/llm.reply.json.shape';
 import { llmReplyRepairDiagnosis, llmReplyRepairFidelity } from '../reply/llm.reply.repair';
 import { type LlmLeverValidator } from '../reply/llm.reply.validator';
 import { type LlmCallMeta, type LlmDispatchResult } from '../strategy/llm.strategy';
@@ -76,7 +75,7 @@ export interface RenderLlmRepairReplyJsonContextConfig {
   /**
    * The scorer's shape of it.
    */
-  readonly shape: LlmReplyJsonShape;
+  readonly shape: JsonRepairShape;
 }
 
 /**

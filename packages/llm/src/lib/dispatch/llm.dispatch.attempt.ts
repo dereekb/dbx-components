@@ -3,13 +3,12 @@
  * the reply-repair lane on a degenerate JSON reading) and validate (the request's lever validator).
  */
 
-import { type Maybe, roundToPrecision } from '@dereekb/util';
+import { type JsonRepairShape, type Maybe, roundToPrecision } from '@dereekb/util';
 import { LLM_REPLY_REPAIR_FAST_FIX_SWALLOW_SITE } from '../capability/llm.capability.repair.reply.json';
 import { type LlmCallContext } from '../record/llm.call.context';
 import { isLlmCleanStopFinish } from '../record/llm.decode.failure';
 import { DEFAULT_LLM_REPLY_ENVELOPE_KEYS, type LlmReplyEnvelopeKeys, type LlmReplyLeverReading, readLlmReplyLever } from '../reply/llm.reply.envelope';
 import { DEFAULT_LLM_REPLY_FAST_FIX_LIMITS, LLM_REPAIR_REPLY_JSON_CAPABILITY, type LlmReplyFastFixer, type LlmReplyFastFixLimits, type LlmReplyFastFixMissReason, type LlmReplyFastFixOutcome } from '../reply/llm.reply.fast.fix';
-import { type LlmReplyJsonShape } from '../reply/llm.reply.json.shape';
 import { type LlmReplyProtocol } from '../reply/llm.reply.protocol';
 import { repairLlmReplyJson } from '../reply/llm.reply.repair';
 import { type LlmLeverValidator } from '../reply/llm.reply.validator';
@@ -208,7 +207,7 @@ export interface LlmBoundReplyFastFixInput {
   /**
    * The scorer's read of it.
    */
-  readonly shape: LlmReplyJsonShape;
+  readonly shape: JsonRepairShape;
   /**
    * The 1-based subject attempt.
    */
@@ -343,7 +342,7 @@ export function withRepairedLlmReply(served: LlmDispatchResult, summary: LlmRepl
  * @param shape - The scorer's read of the served reply.
  * @returns The lane outcome.
  */
-async function runLlmReplyFastFixTier(config: RunLlmReplyRepairLaneConfig & { readonly fastFix: LlmBoundReplyFastFix }, shape: LlmReplyJsonShape): Promise<LlmReplyRepairLaneResult> {
+async function runLlmReplyFastFixTier(config: RunLlmReplyRepairLaneConfig & { readonly fastFix: LlmBoundReplyFastFix }, shape: JsonRepairShape): Promise<LlmReplyRepairLaneResult> {
   const { served, attempt, attemptContext, read, fastFix } = config;
   const capability = served.capability;
   let fixed: LlmReplyFastFixOutcome;

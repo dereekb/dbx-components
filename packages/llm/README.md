@@ -417,7 +417,8 @@ scopes, prompt handles and chains, a live-context token budget, a cache-prefix w
   prepares an `LlmPrompt`, which executes once and chains follow-ups onto the same thread (`ExecutedLlmPrompt`). Hosts
   extend the request and result types and pass them as `R` and `X`.
 - **Reply checks.** `LlmLeverValidator` (sync: is it well-formed?), `LlmCritic` (async and billed: is it good? never
-  throws) and `LlmReplyFastFixer` (one cheap call that repairs a mangled JSON reply from the scorer's `LlmReplyJsonShape`).
+  throws) and `LlmReplyFastFixer` (one cheap call that repairs a mangled JSON reply from the scorer's `JsonRepairShape`,
+  from `@dereekb/util`).
   Reading, repair, schema projection and the critique policy have their own section, Replies.
 - **Layout.** `LlmPromptLayout` is an ordered array of slots `{ id, role, occupancy, separator, lastSeparator? }`. The
   array is the prompt order; a role only says what fills a slot. `makeLlmPromptLayout` validates one, and
@@ -679,14 +680,16 @@ descriptor also carries the two schema projections the request and the prompt re
   `json-envelope`: `LlmReplyEnvelopeKeys` (default `lever` / `answerable` / `rationale`); `answerable: false` declines,
   a hedged decline keeps its lever, and a bare object reads as the lever. `line`: `llmLineReplyLeverOf` lifts the bare
   line into `{ line }`. `readLlmReplyLever` classifies `lever` / `declined` / `no-json` / `parse-error`; `llmReplyLeverOf`
-  is the thin wrapper and `llmReplyRationaleOf` reads the rationale. The slicer tries the greedy `{…}` slice, then each
-  balanced top-level object, and never invents a brace. An envelope host passes `llmReplyEnvelopeContractIntro(keys)` as
-  its contract intro.
+  is the thin wrapper and `llmReplyRationaleOf` reads the rationale. The slicer is `@dereekb/util`
+  `readJsonObjectFromText`: it tries the greedy `{…}` slice, then each balanced top-level object, and never invents a
+  brace. An envelope host passes `llmReplyEnvelopeContractIntro(keys)` as its contract intro.
 - **Repair.** `repairLlmReplyJson` / `scoreLlmReplyJson` walk a reply once and give one of four verdicts: `near-miss`
   (repaired), `mangled`, `truncated-looking` or `not-json` (below a score of 0.2). Ten deterministic ops (closers,
   commas, stray closers, control escapes, trailing prose, fences; a second pass escapes inner quotes). A reply that ends
   inside a string or after `:` / `,` / a key / an opener is never repaired. `llmReplyRepairFidelity` gates every repair:
-  nothing invented, and at least 90% of the 12+-char content literals kept.
+  nothing invented, and at least 90% of the 12+-char content literals kept. The three are thin wrappers over
+  `@dereekb/util` `repairJsonObjectText` / `scoreJsonObjectText` / `checkJsonRepairFidelity`, with the coverage check
+  starting at the `lever` key; the shape types are util's `JsonRepair*`.
 - **Fast fix.** `makeLlmReplyFastFixer({ requestOf, metaOf, envelope })` makes one `RepairReplyJson` call
   (`maxAttempts: 1`), handed only the broken reply, the subject's schema and a one-line diagnosis. It answers `fixed`, or
   `missed` with `truncated` / `declined` / `unusable` / `fidelity` / `error`, and never throws.
