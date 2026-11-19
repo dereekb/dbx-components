@@ -11,28 +11,21 @@
  * cap bills a run at the wrong ceiling and nothing says so.
  */
 
-import { type LlmModelTierConfig, type LlmModelTierKey, type LlmModelTierValue, type LlmReasoningConfig } from './llm.value';
-import { isPlainObject } from '@dereekb/util';
-
-/**
- * The keys a rich tier CONFIG value (the object arm of a tier entry) may carry — an unknown key fails loud.
- */
-const LLM_MODEL_TIER_CONFIG_KEYS: ReadonlySet<string> = new Set(['model', 'maxOutputTokens', 'reasoning']);
-
-/**
- * The keys a tier config's `reasoning` block may carry (unknown ⇒ fail loud).
- */
-const LLM_REASONING_CONFIG_KEYS: ReadonlySet<string> = new Set(['effort', 'maxTokens', 'exclude', 'enabled']);
-
-/**
- * The allowed `reasoning.effort` bands.
- */
-const LLM_REASONING_EFFORT_BANDS: ReadonlySet<string> = new Set(['low', 'medium', 'high']);
+import { isPlainObject, type Maybe } from '@dereekb/util';
+import { ArkErrors } from 'arktype';
+import { assertLlmModelConfigKeys, LLM_MODEL_TIER_CONFIG_FIELD_RULES, LLM_MODEL_TIER_CONFIG_KEYS, llmModelConfigMessagePrefix, llmModelOutputControlsOf, parseLlmModelConfigFields } from './llm.model.field';
+import { llmModelSlugType, llmModelTierConfigType } from './llm.model.type';
+import { type LlmModelTierConfig, type LlmModelTierKey, type LlmModelTierValue } from './llm.value';
 
 /**
  * Config for {@link parseLlmModelTierValue}.
  */
 export interface ParseLlmModelTierValueConfig {
+  /**
+   * The schema label every message is prefixed with (`llm models: …`) — set when the value sits inside a labelled
+   * config file. Omitted ⇒ no prefix (an env var name is its own surface).
+   */
+  readonly schemaLabel?: Maybe<string>;
   /**
    * What the error messages name as the SURFACE the bad value came from — an env var name, or a file and profile
    * (`models.json profiles['free']`), so an operator is told which thing to go edit.
@@ -49,116 +42,36 @@ export interface ParseLlmModelTierValueConfig {
 }
 
 /**
- * Input to {@link parseLlmTierReasoning}.
- */
-interface ParseLlmTierReasoningInput {
-  readonly label: string;
-  readonly tierKey: LlmModelTierKey;
-  readonly raw: Readonly<Record<string, unknown>>;
-}
-
-/**
- * Parse and validate a tier config's `reasoning` block — FAIL-LOUD on an unknown key, a bad `effort` band, a
- * non-positive `maxTokens`, or a non-boolean `exclude` / `enabled`.
- *
- * @param input - The label and tier key for the error message, and the candidate reasoning object.
- * @returns The validated {@link LlmReasoningConfig}.
- * @throws {Error} When any field is malformed.
- */
-function parseLlmTierReasoning(input: ParseLlmTierReasoningInput): LlmReasoningConfig {
-  const { label, tierKey, raw } = input;
-  const at = `${label}['${tierKey}'].reasoning`;
-
-  for (const key of Object.keys(raw)) {
-    if (!LLM_REASONING_CONFIG_KEYS.has(key)) {
-      throw new Error(`${at} has unknown key '${key}' (allowed: ${Array.from(LLM_REASONING_CONFIG_KEYS).join(', ')}).`);
-    }
-  }
-
-  const effort = raw['effort'];
-
-  if (effort !== undefined && (typeof effort !== 'string' || !LLM_REASONING_EFFORT_BANDS.has(effort))) {
-    throw new Error(`${at}.effort must be one of ${Array.from(LLM_REASONING_EFFORT_BANDS).join(' | ')}.`);
-  }
-
-  const maxTokens = raw['maxTokens'];
-
-  if (maxTokens !== undefined && (typeof maxTokens !== 'number' || !Number.isFinite(maxTokens) || maxTokens <= 0)) {
-    throw new Error(`${at}.maxTokens must be a positive number.`);
-  }
-
-  const exclude = raw['exclude'];
-
-  if (exclude !== undefined && typeof exclude !== 'boolean') {
-    throw new Error(`${at}.exclude must be a boolean.`);
-  }
-
-  const enabled = raw['enabled'];
-
-  if (enabled !== undefined && typeof enabled !== 'boolean') {
-    throw new Error(`${at}.enabled must be a boolean.`);
-  }
-
-  return {
-    ...(effort === undefined ? {} : { effort: effort as LlmReasoningConfig['effort'] }),
-    ...(maxTokens === undefined ? {} : { maxTokens }),
-    ...(exclude === undefined ? {} : { exclude }),
-    ...(enabled === undefined ? {} : { enabled })
-  };
-}
-
-/**
  * Parse and validate ONE tier value — a bare model-slug string OR a rich `{ model, maxOutputTokens?, reasoning? }`
- * config. FAIL-LOUD on an empty slug, an unknown config key, a missing / empty `model`, a non-positive
- * `maxOutputTokens`, or a malformed `reasoning` block.
+ * config. FAIL-LOUD on a blank or untrimmed slug (a slug is matched exactly, never trimmed), an unknown config key, a
+ * missing `model`, a token cap that is not a positive integer (`maxOutputTokens`, `reasoning.maxTokens`), or a
+ * malformed `reasoning` block.
  *
- * @param config - The label and tier key for the error message, and the candidate value.
- * @returns The parsed {@link LlmModelTierValue}.
+ * @param config - The labels and tier key for the error message, and the candidate value.
+ * @returns The parsed {@link LlmModelTierValue}; a config value is re-assembled in canonical key order.
  * @throws {Error} When the value shape is invalid.
  */
 export function parseLlmModelTierValue(config: ParseLlmModelTierValueConfig): LlmModelTierValue {
-  const { label, tierKey, value } = config;
+  const { schemaLabel, label, tierKey, value } = config;
   const at = `${label}['${tierKey}']`;
+  const prefix = llmModelConfigMessagePrefix(schemaLabel);
   let out: LlmModelTierValue;
 
   if (typeof value === 'string') {
-    if (value.length === 0) {
-      throw new Error(`${at} must be a non-empty model-slug string.`);
+    const slug = llmModelSlugType(value);
+
+    if (slug instanceof ArkErrors) {
+      throw new Error(`${prefix}${at} must be a non-empty, trimmed model slug (got ${JSON.stringify(value)}).`);
     }
 
-    out = value;
+    out = slug;
   } else if (isPlainObject(value)) {
-    const obj = value;
-
-    for (const key of Object.keys(obj)) {
-      if (!LLM_MODEL_TIER_CONFIG_KEYS.has(key)) {
-        throw new Error(`${at} has unknown key '${key}' (allowed: ${Array.from(LLM_MODEL_TIER_CONFIG_KEYS).join(', ')}).`);
-      }
-    }
-
-    const model = obj['model'];
-
-    if (typeof model !== 'string' || model.length === 0) {
-      throw new Error(`${at}.model must be a non-empty model-slug string.`);
-    }
-
-    const maxOutputTokens = obj['maxOutputTokens'];
-
-    if (maxOutputTokens !== undefined && (typeof maxOutputTokens !== 'number' || !Number.isFinite(maxOutputTokens) || maxOutputTokens <= 0)) {
-      throw new Error(`${at}.maxOutputTokens must be a positive number.`);
-    }
-
-    const rawReasoning = obj['reasoning'];
-
-    if (rawReasoning !== undefined && !isPlainObject(rawReasoning)) {
-      throw new Error(`${at}.reasoning must be an object.`);
-    }
-
-    const reasoning = rawReasoning === undefined ? undefined : parseLlmTierReasoning({ label, tierKey, raw: rawReasoning as Record<string, unknown> });
-    const tierConfig: LlmModelTierConfig = { model, ...(maxOutputTokens === undefined ? {} : { maxOutputTokens }), ...(reasoning === undefined ? {} : { reasoning }) };
+    assertLlmModelConfigKeys({ schemaLabel, label: at, entry: value, allowed: LLM_MODEL_TIER_CONFIG_KEYS });
+    const parsed = parseLlmModelConfigFields({ schemaLabel, label: at, value, type: llmModelTierConfigType, keys: LLM_MODEL_TIER_CONFIG_KEYS, rules: LLM_MODEL_TIER_CONFIG_FIELD_RULES });
+    const tierConfig: LlmModelTierConfig = { model: parsed.model, ...llmModelOutputControlsOf(parsed) };
     out = tierConfig;
   } else {
-    throw new Error(`${at} must be a non-empty model-slug string or a { model, maxOutputTokens?, reasoning? } object.`);
+    throw new Error(`${prefix}${at} must be a non-empty, trimmed model slug or a { model, maxOutputTokens?, reasoning? } object (got ${JSON.stringify(value)}).`);
   }
 
   return out;
@@ -168,6 +81,10 @@ export function parseLlmModelTierValue(config: ParseLlmModelTierValueConfig): Ll
  * Config for {@link parseLlmModelTierMap}.
  */
 export interface ParseLlmModelTierMapConfig {
+  /**
+   * The schema label every message is prefixed with ({@link ParseLlmModelTierValueConfig.schemaLabel}).
+   */
+  readonly schemaLabel?: Maybe<string>;
   /**
    * What the error messages name as the surface the map came from ({@link ParseLlmModelTierValueConfig.label}).
    */
@@ -187,16 +104,16 @@ export interface ParseLlmModelTierMapConfig {
  * @throws {Error} When the top level is not a JSON object, or any value is malformed.
  */
 export function parseLlmModelTierMap(config: ParseLlmModelTierMapConfig): Record<LlmModelTierKey, LlmModelTierValue> {
-  const { label, value } = config;
+  const { schemaLabel, label, value } = config;
 
   if (!isPlainObject(value)) {
-    throw new Error(`${label} must be a JSON object of { tierKey: modelSlug | { model, maxOutputTokens?, reasoning? } }.`);
+    throw new Error(`${llmModelConfigMessagePrefix(schemaLabel)}${label} must be a JSON object of { tierKey: modelSlug | { model, maxOutputTokens?, reasoning? } }.`);
   }
 
   const out: Record<LlmModelTierKey, LlmModelTierValue> = {};
 
   for (const [tierKey, entry] of Object.entries(value)) {
-    out[tierKey] = parseLlmModelTierValue({ label, tierKey, value: entry });
+    out[tierKey] = parseLlmModelTierValue({ schemaLabel, label, tierKey, value: entry });
   }
 
   return out;

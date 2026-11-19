@@ -4,7 +4,12 @@
  *
  * Every alias is a plain, open `string`: hosts declare their own capabilities, strategies, models and tiers, and the
  * library never narrows the sets.
+ *
+ * RUNTIME-FREE: the structured value types are derived from the arktype declarations in `llm.model.type.ts`, which
+ * this module only `import type`s.
  */
+
+import type { llmModelOutputControlsType, llmModelProviderRefType, llmModelSelectionType, llmModelTierConfigType, llmReasoningConfigType } from './llm.model.type';
 
 /**
  * A capability key: the name of the job a call does (`'summarize'`, `'classify-intent'`, …). It is the join key
@@ -47,51 +52,36 @@ export type LlmCapabilityTag = string;
  *
  * NEVER sent unconfigured: a strategy stamps it onto the wire only when a config resolves (some providers reject an
  * unknown `reasoning` param), so the no-reasoning wire body stays byte-identical.
+ *
+ * Derived from {@link llmReasoningConfigType}.
  */
-export interface LlmReasoningConfig {
-  /**
-   * The reasoning effort budget band — `'low'` / `'medium'` / `'high'`. Omitted ⇒ the provider's default.
-   */
-  readonly effort?: 'low' | 'medium' | 'high';
-  /**
-   * A hard cap on reasoning tokens (an alternative to {@link effort} for providers that take a token budget).
-   * Omitted ⇒ the provider's default.
-   */
-  readonly maxTokens?: number;
-  /**
-   * Whether to EXCLUDE the reasoning trace from the returned completion (reason internally, omit the trace from
-   * the reply). Omitted ⇒ the provider's default.
-   */
-  readonly exclude?: boolean;
-  /**
-   * Whether reasoning is enabled at all — `false` disables it on a model that reasons by default. Omitted ⇒ the
-   * provider's default.
-   */
-  readonly enabled?: boolean;
-}
+export interface LlmReasoningConfig extends Readonly<typeof llmReasoningConfigType.infer> {}
+
+/**
+ * The output-length and reasoning controls one layer (a tier, a capability, a routing rule) may set:
+ * `{ maxOutputTokens?, reasoning? }`. Derived from {@link llmModelOutputControlsType}.
+ */
+export interface LlmModelOutputControls extends Readonly<typeof llmModelOutputControlsType.infer> {}
+
+/**
+ * How a declaration picks its model: a concrete `model` slug ({@link LlmModelId}), a named `tier`
+ * ({@link LlmModelTierKey}), or both. Derived from {@link llmModelSelectionType}.
+ */
+export interface LlmModelSelection extends Readonly<typeof llmModelSelectionType.infer> {}
+
+/**
+ * Which declared provider ({@link LlmStrategyId}) serves a call: `{ provider? }`. Derived from
+ * {@link llmModelProviderRefType}.
+ */
+export interface LlmModelProviderRef extends Readonly<typeof llmModelProviderRefType.infer> {}
 
 /**
  * A per-tier config — the rich {@link LlmModelTierValue} arm: a model slug plus the optional output-length and
- * reasoning controls intrinsic to that tier. A hybrid-reasoning tier that bills reasoning against `max_tokens`
- * declares a larger {@link maxOutputTokens} and a {@link reasoning} band here, once, for every capability that
- * routes to it.
+ * reasoning controls intrinsic to that tier ({@link LlmModelOutputControls}). A hybrid-reasoning tier that bills
+ * reasoning against `max_tokens` declares a larger `maxOutputTokens` and a `reasoning` band here, once, for every
+ * capability that routes to it. Derived from {@link llmModelTierConfigType}.
  */
-export interface LlmModelTierConfig {
-  /**
-   * The concrete model slug this tier resolves to.
-   */
-  readonly model: LlmModelId;
-  /**
-   * The tier's default completion-length cap (the `max_tokens` a call routed here is sent with, unless the
-   * capability overrides it). Omitted ⇒ the strategy's own default cap.
-   */
-  readonly maxOutputTokens?: number;
-  /**
-   * The tier's default reasoning controls ({@link LlmReasoningConfig}). Omitted ⇒ no reasoning param sent (the
-   * byte-stable default).
-   */
-  readonly reasoning?: LlmReasoningConfig;
-}
+export interface LlmModelTierConfig extends Readonly<typeof llmModelTierConfigType.infer> {}
 
 /**
  * A tier's value — what an {@link LlmModelTierKey} resolves to. Either a bare {@link LlmModelId} slug or a rich
@@ -100,3 +90,9 @@ export interface LlmModelTierConfig {
  * every call site.
  */
 export type LlmModelTierValue = LlmModelId | LlmModelTierConfig;
+
+/**
+ * A per-slug map: one value per model slug ({@link LlmModelId}), a slug absent when it has none. The shape of every
+ * per-slug projection of a model config file (reasoning-off encodings, vision, prompt addenda, provider bindings).
+ */
+export type LlmModelSlugMap<V> = Readonly<Partial<Record<LlmModelId, V>>>;

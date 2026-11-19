@@ -51,6 +51,8 @@ describe('resolveLlmModelProfile()', () => {
     expect(resolveLlmModelProfile({ file: parse({ profiles: FILE.profiles }), schema })).toBeUndefined();
     expect(resolveLlmModelProfile({ file, override: 'off', schema })).toBeUndefined();
     expect(resolveLlmModelProfile({ file, override: 'NONE', schema })).toBeUndefined();
+    expect(resolveLlmModelProfile({ file, override: 'OFF', schema })).toBeUndefined();
+    expect(resolveLlmModelProfile({ file, override: ' None ', schema })).toBeUndefined();
   });
 
   it('FAILS LOUD when a selection names a profile the file does not define', () => {

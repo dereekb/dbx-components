@@ -8,13 +8,12 @@
  */
 
 import { type Maybe } from '@dereekb/util';
-import { DEFAULT_LLM_MODEL_TIER, type LlmPartialModelTierMap, llmTierModelOf } from '../llm.model.tier';
+import { isLlmOffValue, type LlmPartialModelTierMap, llmTierModelOf, resolveLlmDefaultModelTierKey } from '../llm.model.tier';
 import { type LlmModelReasoningOffMap, type LlmModelVisionMap } from '../llm.model.wire';
 import { type LlmModelId, type LlmModelTierKey, type LlmStrategyId } from '../llm.value';
 import {
   DEFAULT_LLM_MODEL_CONFIG_SOURCE,
   llmCompletionProviderEntries,
-  LLM_MODEL_PROFILE_OFF,
   type LlmCompletionProviderEntry,
   type LlmCompletionProviderEntryOf,
   type LlmModelConfigBaseTypes,
@@ -79,7 +78,8 @@ export interface LlmResolvedModelProfile {
 /**
  * Resolve the ACTIVE profile — the override over the file's own `active` key.
  *
- * Returns `undefined` when nothing selects a profile (no file, no `active`, or an {@link LLM_MODEL_PROFILE_OFF} value),
+ * Returns `undefined` when nothing selects a profile (no file, a blank `active`, or an off value — `off` / `none` in any
+ * case, `LLM_OFF_VALUES`),
  * so a host's "no profile" path is a null check. FAILS LOUD when a selection names a profile the file does not define,
  * listing the ones it does: a run that silently fell back to the host's defaults because `active` was misspelled is the
  * billed surprise this layer exists to prevent.
@@ -93,11 +93,11 @@ export function resolveLlmModelProfile<X extends LlmModelConfigTypes = LlmModelC
   const source = config.source ?? DEFAULT_LLM_MODEL_CONFIG_SOURCE;
   const fromOverride = (config.override ?? '').trim();
   const selectedBy: LlmModelProfileSelectedBy = fromOverride.length > 0 ? 'override' : 'file';
-  const requested = fromOverride.length > 0 ? fromOverride : (file?.active ?? '');
+  const requested = fromOverride.length > 0 ? fromOverride : (file?.active ?? '').trim();
   const profiles = file?.profiles ?? {};
   let resolved: Maybe<LlmResolvedModelProfile>;
 
-  if (!LLM_MODEL_PROFILE_OFF.has(requested.toLowerCase())) {
+  if (requested.length > 0 && !isLlmOffValue(requested)) {
     const entry = Object.hasOwn(profiles, requested) ? profiles[requested] : undefined;
 
     if (entry == null) {
@@ -121,7 +121,7 @@ export interface LlmModelProfileDefaultModelConfig {
    */
   readonly profile: Maybe<LlmResolvedModelProfile>;
   /**
-   * The host's default-tier setting. Trimmed; blank ⇒ {@link DEFAULT_LLM_MODEL_TIER}.
+   * The host's default-tier setting. Trimmed; blank ⇒ `DEFAULT_LLM_MODEL_TIER` (`resolveLlmDefaultModelTierKey`).
    */
   readonly defaultTier?: Maybe<LlmModelTierKey>;
 }
@@ -135,8 +135,7 @@ export interface LlmModelProfileDefaultModelConfig {
  * @returns The default tier's slug, or `undefined` when the profile declares no such tier.
  */
 export function llmModelProfileDefaultModel(config: LlmModelProfileDefaultModelConfig): Maybe<LlmModelId> {
-  const requestedTier = (config.defaultTier ?? '').trim();
-  const tierKey = requestedTier.length > 0 ? requestedTier : DEFAULT_LLM_MODEL_TIER;
+  const tierKey = resolveLlmDefaultModelTierKey(config.defaultTier);
   const value = config.profile?.tiers[tierKey];
   return value == null ? undefined : llmTierModelOf(value);
 }

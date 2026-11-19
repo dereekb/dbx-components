@@ -22,7 +22,7 @@
  * {@link tightestLlmQuotaWindow} for the throttle signal and renders whatever else is present.
  */
 
-import { type DollarAmount, type ISO8601DateString, type PercentDecimal, roundToPrecision } from '@dereekb/util';
+import { type DollarAmount, type ISO8601DateString, type PercentDecimal, roundToPrecision, type SuggestedString } from '@dereekb/util';
 import { type LlmStrategyHealthIssue } from './llm.strategy.health';
 
 /**
@@ -36,11 +36,17 @@ import { type LlmStrategyHealthIssue } from './llm.strategy.health';
 export type LlmProviderStatusProviderId = string;
 
 /**
- * The unit an {@link LlmQuotaWindow} meters in. `'flow'` is ZenMux's synthetic composite unit (tokens + request
- * overhead, at a floating USD rate); a provider that meters raw requests or tokens says so. `'character'` is a TTS
- * vendor's synthesized-character allowance (ElevenLabs).
+ * The quota units the library's own adapters report. `'flow'` is ZenMux's synthetic composite unit (tokens + request
+ * overhead, at a floating USD rate); a provider that meters raw requests or tokens says so.
  */
-export type LlmQuotaUnit = 'flow' | 'request' | 'token' | 'usd' | 'character';
+export type LlmKnownQuotaUnit = 'flow' | 'request' | 'token' | 'usd';
+
+/**
+ * The unit an {@link LlmQuotaWindow} meters in — one of the {@link LlmKnownQuotaUnit}s, or a host's own unit for a
+ * provider it meters itself (a TTS vendor's synthesized-character allowance is the host's `'character'`). Open, with
+ * the known units kept for autocomplete; the report prints the unit as written.
+ */
+export type LlmQuotaUnit = SuggestedString<LlmKnownQuotaUnit>;
 
 /**
  * ONE metered consumption window — the unit of the self-throttle decision.

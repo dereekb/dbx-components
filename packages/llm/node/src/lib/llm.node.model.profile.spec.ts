@@ -107,8 +107,13 @@ describe('resolveLlmModelTierEnv()', () => {
     expect(() => resolveLlmModelTierEnv({ env: { LLM_MODEL_TIERS: '["vendor/a"]' } })).toThrow(/LLM_MODEL_TIERS must be a JSON object/);
   });
 
+  it('should prefix a malformed tier with the schema label when one is passed', () => {
+    expect(() => resolveLlmModelTierEnv({ env: { LLM_MODEL_TIERS: '{"fast":{"model":"vendor/a","maxOutputTokens":1.5}}' }, schemaLabel: 'llm models' })).toThrow(`llm models: LLM_MODEL_TIERS['fast'].maxOutputTokens must be a positive integer (got 1.5).`);
+  });
+
   it('should pass the default and decode-retry tiers through trimmed', () => {
     expect(resolveLlmModelTierEnv({ env: { LLM_DEFAULT_TIER: ' strong ', LLM_DECODE_RETRY_TIER: 'off' } })).toEqual({ defaultTier: 'strong', decodeRetryTier: 'off' });
+    expect(resolveLlmModelTierEnv({ env: { LLM_DECODE_RETRY_TIER: 'OFF' } })).toEqual({ decodeRetryTier: 'OFF' });
   });
 
   it('should honour custom names, including an added tier', () => {

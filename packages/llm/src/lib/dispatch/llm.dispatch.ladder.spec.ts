@@ -18,6 +18,10 @@ describe('llmDecodeRetryModelOf()', () => {
 
   it('should resolve off, explicit and implicit tiers', () => {
     expect(llmDecodeRetryModelOf({ modelTiers, decodeRetryTier: 'off' })).toBeUndefined();
+    expect(llmDecodeRetryModelOf({ modelTiers, decodeRetryTier: 'OFF' })).toBeUndefined();
+    expect(llmDecodeRetryModelOf({ modelTiers, decodeRetryTier: ' none ' })).toBeUndefined();
+    expect(llmDecodeRetryModelOf({ modelTiers, decodeRetryTier: '' })).toBe('m/strong');
+    expect(llmDecodeRetryModelOf({ modelTiers, decodeRetryTier: ' fast ' })).toBe('m/fast');
     expect(llmDecodeRetryModelOf({ modelTiers, decodeRetryTier: 'fast' })).toBe('m/fast');
     expect(llmDecodeRetryModelOf({ modelTiers })).toBe('m/strong');
     expect(llmDecodeRetryModelOf({ modelTiers: { fast: 'm/fast' } })).toBeUndefined();

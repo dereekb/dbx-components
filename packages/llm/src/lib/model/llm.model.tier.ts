@@ -53,10 +53,46 @@ export const DEFAULT_LLM_MODEL_TIER: LlmModelTierKey = 'fast';
 export const DEFAULT_LLM_DECODE_RETRY_TIER: LlmModelTierKey = 'strong';
 
 /**
- * The sentinel a host writes as its decode-retry tier to pin decode escalation OFF. Without it, defaulting the tier
- * would leave no way to say "re-ask the same model, on purpose".
+ * The values that switch a selection OFF — the ONE set every switchable selection reads: the decode-retry tier (pins
+ * decode escalation off; without it, defaulting the tier would leave no way to say "re-ask the same model, on
+ * purpose"), a model-profile override and a model config file's `active`. Matched trimmed and case-insensitively by
+ * {@link isLlmOffValue}, so `OFF`, ` none ` and `None` all switch off.
+ *
+ * A blank value is NOT "off" — it stays "unset" at each reader (the decode-retry tier falls back to its default; a
+ * blank profile override falls through to the file's `active`).
  */
-export const LLM_DECODE_RETRY_TIER_OFF = 'off';
+export const LLM_OFF_VALUES = ['off', 'none'] as const;
+
+/**
+ * One of {@link LLM_OFF_VALUES}.
+ */
+export type LlmOffValue = (typeof LLM_OFF_VALUES)[number];
+
+/**
+ * Whether a selection value switches its selection off — one of {@link LLM_OFF_VALUES}, trimmed and in any case.
+ *
+ * @param value - The raw selection value (an env var, an override, a file's `active`).
+ * @returns `true` for an off value; `false` for anything else, including blank and absent.
+ */
+export function isLlmOffValue(value: Maybe<string>): boolean {
+  const normalized = value?.trim().toLowerCase();
+  return normalized != null && LLM_OFF_VALUES.some((offValue) => offValue === normalized);
+}
+
+/**
+ * Resolve a host's default-tier setting to a tier key — the ONE default-tier resolver every reader shares (the tier
+ * merge, the dispatcher, the profile reader and the test lane). Trimmed; blank or absent ⇒ {@link DEFAULT_LLM_MODEL_TIER}.
+ *
+ * It only names the key: whether the key resolves stays the reader's call ({@link resolveLlmModelTiers} fails loud on a
+ * missing default; a profile reader returns `undefined`).
+ *
+ * @param defaultTier - The raw default-tier setting.
+ * @returns The default tier key.
+ */
+export function resolveLlmDefaultModelTierKey(defaultTier: Maybe<string>): LlmModelTierKey {
+  const trimmed = defaultTier?.trim() ?? '';
+  return trimmed.length > 0 ? trimmed : DEFAULT_LLM_MODEL_TIER;
+}
 
 /**
  * Normalize a tier VALUE → the concrete model slug — the single reader the value type hides behind. A bare slug is
@@ -129,8 +165,8 @@ export interface ResolveLlmModelTiersConfig {
    */
   readonly modelTiers?: Maybe<LlmPartialModelTierMap>;
   /**
-   * Which tier is the default (the model a tier-less / model-less call routes to); omitted ⇒
-   * {@link DEFAULT_LLM_MODEL_TIER} (`fast`).
+   * Which tier is the default (the model a tier-less / model-less call routes to). Trimmed; blank or omitted ⇒
+   * {@link DEFAULT_LLM_MODEL_TIER} (`fast`), via {@link resolveLlmDefaultModelTierKey}.
    */
   readonly defaultTier?: Maybe<LlmModelTierKey>;
 }
@@ -162,7 +198,7 @@ export function resolveLlmModelTiers(config: ResolveLlmModelTiersConfig): LlmRes
   // mergeObjects with the NULL filter (not a spread): a nullish tier value never overwrites a base tier, and the leading
   // `{}` is the complete (empty) map, so the result is a complete map whose values are never `undefined`.
   const tiers: LlmModelTierMap = mergeObjects<LlmModelTierMap>([{}, config.base, config.modelTiers], KeyValueTypleValueFilter.NULL);
-  const defaultTier = config.defaultTier ?? DEFAULT_LLM_MODEL_TIER;
+  const defaultTier = resolveLlmDefaultModelTierKey(config.defaultTier);
   resolveLlmModelTier(tiers, defaultTier);
   return { tiers, defaultTier };
 }

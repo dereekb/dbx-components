@@ -46,6 +46,17 @@ export type LlmReasoningOffEncoding = (typeof LLM_REASONING_OFF_ENCODINGS)[numbe
 export const DEFAULT_LLM_REASONING_OFF_ENCODING: LlmReasoningOffEncoding = 'effort-none';
 
 /**
+ * Every legal reasoning-effort band, in ascending order — the one list behind {@link LlmReasoningEffort}, the tier
+ * parser's check and its error message. A transport maps each band onto its own wire value.
+ */
+export const LLM_REASONING_EFFORTS = ['low', 'medium', 'high'] as const;
+
+/**
+ * A reasoning-effort band ({@link LLM_REASONING_EFFORTS}).
+ */
+export type LlmReasoningEffort = (typeof LLM_REASONING_EFFORTS)[number];
+
+/**
  * Every legal {@link LlmTokenLimitParam}, for the fail-loud parse of a declared provider's `tokenLimitParam` and the
  * error message that lists the legal values.
  */

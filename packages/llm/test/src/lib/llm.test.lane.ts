@@ -11,7 +11,6 @@
 
 import { type Maybe, mergeObjects, type Milliseconds } from '@dereekb/util';
 import {
-  DEFAULT_LLM_MODEL_TIER,
   evaluateLlmQuotaGate,
   type LlmAdapterRegistry,
   type LlmCredentialProbeFetch,
@@ -35,7 +34,8 @@ import {
   makeLlmProviderStrategy,
   makeLlmStrategyRegistry,
   probeLlmCredentials,
-  readLlmProviderStatus
+  readLlmProviderStatus,
+  resolveLlmDefaultModelTierKey
 } from '@dereekb/llm';
 import {
   DEFAULT_LLM_ENV_NAMES,
@@ -424,7 +424,7 @@ export function makeLlmLiveLane<X extends LlmModelConfigTypes = LlmModelConfigBa
     const provider = providers.defaultProvider;
     const baseUrl = provider == null ? undefined : llmProviderBaseUrlOf({ provider, adapters });
     const tiers = resolveLlmModelTierEnv({ env, names: envNames });
-    const tierValue = tiers.modelTiers?.[tiers.defaultTier ?? DEFAULT_LLM_MODEL_TIER];
+    const tierValue = tiers.modelTiers?.[resolveLlmDefaultModelTierKey(tiers.defaultTier)];
     const profile = resolveLlmModelProfileFromEnv({ env, names: envNames, file, source: modelConfigPath, schema });
     let model: Maybe<LlmModelId> = tierValue == null ? undefined : llmTierModelOf(tierValue);
     let modelSource: Maybe<LlmLiveLaneModelSource> = model == null ? undefined : 'env';
@@ -467,7 +467,7 @@ export function makeLlmLiveLane<X extends LlmModelConfigTypes = LlmModelConfigBa
         } else if (model == null) {
           // Keyed, but nothing pins a model and the host has no safe default for this provider. Skipping is right;
           // skipping QUIETLY is not.
-          const tier = resolveLlmModelTierEnv({ env: view, names: envNames }).defaultTier ?? DEFAULT_LLM_MODEL_TIER;
+          const tier = resolveLlmDefaultModelTierKey(resolveLlmModelTierEnv({ env: view, names: envNames }).defaultTier);
           log(`[${label}] live specs skipped: the '${provider.id}' provider is keyed via ${apiKeyEnv} but no model is pinned. Set ${firstNameOf(envNames.tierModels[tier])} or select a model profile (${firstNameOf(envNames.modelProfile)}) to run them.`);
         } else {
           const file = resolution.modelConfig;
@@ -499,7 +499,7 @@ export function makeLlmLiveLane<X extends LlmModelConfigTypes = LlmModelConfigBa
     const live = liveStrategyFromEnv(env);
 
     if (live == null) {
-      const modelVar = firstNameOf(envNames.tierModels[DEFAULT_LLM_MODEL_TIER]);
+      const modelVar = firstNameOf(envNames.tierModels[resolveLlmDefaultModelTierKey(resolveLlmModelTierEnv({ env: env ?? process.env, names: envNames }).defaultTier)]);
       throw new Error(`${label} live specs: no live LLM provider resolved from the environment; a describe.skipIf gate should have skipped this block. Set ${names.unlock}=1 and a provider key (and ${modelVar} when the provider has no default model).`);
     }
 

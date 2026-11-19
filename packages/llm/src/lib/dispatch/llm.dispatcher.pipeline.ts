@@ -9,7 +9,7 @@
 import { type Maybe, mergeObjects } from '@dereekb/util';
 import { type LlmCapabilityDescriptor } from '../capability/llm.capability.descriptor';
 import { llmCapabilityVisionOf, LLM_REASONING_OFF } from '../model/llm.model.precedence';
-import { DEFAULT_LLM_MODEL_TIER, resolveLlmModelTier } from '../model/llm.model.tier';
+import { resolveLlmDefaultModelTierKey, resolveLlmModelTier } from '../model/llm.model.tier';
 import { DEFAULT_LLM_PROMPT_LAYOUT, type LlmPromptSlotRole, llmPromptSlotsOfRole, type LlmPromptLayout, type LlmPromptSlotId } from '../prompt/llm.prompt.layout';
 import { makeLlmPromptCachePrefixWatch } from '../prompt/llm.prompt.cache.watch';
 import { type LlmPromptRunParams, type LlmPromptRunResult, makeLlmPromptFactory } from '../prompt/llm.prompt.thread';
@@ -79,7 +79,7 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
   config: LlmDispatcherConfig<R, X, H, D, A>
 ): LlmDispatcher<R, X> {
   const { strategies, modelTiers, capabilityRoutes, descriptorOf, recorder, taps, pause, cancellationSignal, swallow, visionByModel } = config;
-  const defaultTier = config.defaultTier ?? DEFAULT_LLM_MODEL_TIER;
+  const defaultTier = resolveLlmDefaultModelTierKey(config.defaultTier);
   const defaultTierModel = resolveLlmModelTier(modelTiers, defaultTier);
   const layout = config.layout ?? DEFAULT_LLM_PROMPT_LAYOUT;
   const resolveSetup: LlmDispatchResolveSetup<R, D> = {

@@ -360,7 +360,7 @@ export interface LlmDispatcherConfig<R extends LlmDispatchRequest = LlmDispatchR
    */
   readonly modelTiers: LlmModelTierMap;
   /**
-   * The default tier. Defaults to `DEFAULT_LLM_MODEL_TIER`.
+   * The default tier. Trimmed; blank or absent ⇒ `DEFAULT_LLM_MODEL_TIER` (`resolveLlmDefaultModelTierKey`).
    */
   readonly defaultTier?: Maybe<LlmModelTierKey>;
   /**
@@ -466,9 +466,9 @@ export interface LlmDispatcherConfig<R extends LlmDispatchRequest = LlmDispatchR
   readonly resultOf?: Maybe<(params: LlmDispatchResultParams<R, A>) => X>;
   // MARK: Retry
   /**
-   * The tier a decode-class retry escalates the model to. Absent ⇒ `DEFAULT_LLM_DECODE_RETRY_TIER` when the tier map
-   * holds it; `LLM_DECODE_RETRY_TIER_OFF` pins the model rung off; an explicit key missing from the map throws at
-   * construction.
+   * The tier a decode-class retry escalates the model to. Absent or blank ⇒ `DEFAULT_LLM_DECODE_RETRY_TIER` when the
+   * tier map holds it; an off value (`off` / `none`, any case — `LLM_OFF_VALUES`) pins the model rung off; an explicit
+   * key missing from the map throws at construction.
    */
   readonly decodeRetryTier?: Maybe<LlmModelTierKey>;
   /**

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_LLM_DECODE_RETRY_TIER, DEFAULT_LLM_MODEL_TIER, LLM_DECODE_RETRY_TIER_OFF, type LlmModelTierMap, llmTierConfigOf, llmTierModelOf, resolveLlmModelTier, resolveLlmModelTiers, resolveLlmModelTierValue } from './llm.model.tier';
+import { DEFAULT_LLM_DECODE_RETRY_TIER, DEFAULT_LLM_MODEL_TIER, isLlmOffValue, LLM_OFF_VALUES, type LlmModelTierMap, llmTierConfigOf, llmTierModelOf, resolveLlmDefaultModelTierKey, resolveLlmModelTier, resolveLlmModelTiers, resolveLlmModelTierValue } from './llm.model.tier';
 import { type LlmModelTierConfig } from './llm.value';
 
 const FAST_MODEL = 'vendor/model-fast';
@@ -10,7 +10,38 @@ describe('tier key defaults', () => {
   it('ships keys, never slugs', () => {
     expect(DEFAULT_LLM_MODEL_TIER).toBe('fast');
     expect(DEFAULT_LLM_DECODE_RETRY_TIER).toBe('strong');
-    expect(LLM_DECODE_RETRY_TIER_OFF).toBe('off');
+  });
+});
+
+describe('isLlmOffValue()', () => {
+  it('matches every off value, trimmed and in any case', () => {
+    expect(LLM_OFF_VALUES).toEqual(['off', 'none']);
+    expect(isLlmOffValue('off')).toBe(true);
+    expect(isLlmOffValue('OFF')).toBe(true);
+    expect(isLlmOffValue(' None ')).toBe(true);
+  });
+
+  it('treats blank, absent and other values as not off', () => {
+    expect(isLlmOffValue('')).toBe(false);
+    expect(isLlmOffValue('  ')).toBe(false);
+    expect(isLlmOffValue(undefined)).toBe(false);
+    expect(isLlmOffValue(null)).toBe(false);
+    expect(isLlmOffValue('strong')).toBe(false);
+    expect(isLlmOffValue('offline')).toBe(false);
+  });
+});
+
+describe('resolveLlmDefaultModelTierKey()', () => {
+  it('trims the setting and falls back to the default tier when blank or absent', () => {
+    expect(resolveLlmDefaultModelTierKey(' strong ')).toBe('strong');
+    expect(resolveLlmDefaultModelTierKey('')).toBe(DEFAULT_LLM_MODEL_TIER);
+    expect(resolveLlmDefaultModelTierKey('  ')).toBe(DEFAULT_LLM_MODEL_TIER);
+    expect(resolveLlmDefaultModelTierKey(undefined)).toBe(DEFAULT_LLM_MODEL_TIER);
+  });
+
+  it('is what resolveLlmModelTiers() resolves a padded or blank default tier with', () => {
+    expect(resolveLlmModelTiers({ base: BASE, defaultTier: ' strong ' }).defaultTier).toBe('strong');
+    expect(resolveLlmModelTiers({ base: BASE, defaultTier: '' }).defaultTier).toBe('fast');
   });
 });
 

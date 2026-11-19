@@ -33,12 +33,6 @@ export const DEFAULT_LLM_MODEL_CONFIG_LABEL = 'llm models';
 export const DEFAULT_LLM_MODEL_CONFIG_SOURCE = 'models.json';
 
 /**
- * The profile names that select NO profile (compared lower-cased), so an operator can switch profiles off with a
- * per-run override without editing the file.
- */
-export const LLM_MODEL_PROFILE_OFF: ReadonlySet<string> = new Set(['off', 'none', '']);
-
-/**
  * The value a provider's `metering` / `decision` key uses to say "this provider has no such facet" (meters nothing /
  * serves no decisions). Always legal, and always listed last in an error message.
  */
@@ -229,8 +223,8 @@ export type LlmModelSettingsMap<X extends LlmModelConfigTypes = LlmModelConfigBa
  */
 export interface LlmModelConfigFile<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes> {
   /**
-   * WHICH profile is live: a name in {@link profiles}, or an {@link LLM_MODEL_PROFILE_OFF} value / absent for none.
-   * A host's per-run override wins over it.
+   * WHICH profile is live: a name in {@link profiles}, or an off value (`off` / `none`, any case — `LLM_OFF_VALUES`),
+   * blank or absent for none. A host's per-run override wins over it.
    */
   readonly active?: string;
   /**

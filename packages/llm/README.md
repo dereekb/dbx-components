@@ -63,7 +63,8 @@ so several instances of one transport can be registered side by side.
   account). The first two read any registry whose strategies carry the two seams; the decision lane's siblings live
   in `/decision` (see [Strategies](#strategies)).
 - **Quota gate.** `evaluateLlmQuotaGate({ report })` refuses only when a measured window is above the ceiling (90% by
-  default) and fails open whenever nothing is measured.
+  default) and fails open whenever nothing is measured. A window's `unit` is an `LlmQuotaUnit`: one of the library's
+  own (`flow`, `request`, `token`, `usd`) or a host's own string for a provider it meters itself.
 - **Usage and bills.** `llmUsageFrom(raw, { costBasis })` folds a provider usage block: token counts default to `0`,
   every other field is omitted when not reported (absent is not zero), and numeric-string costs are parsed. An
   `LlmCallBillReader` reads what a call billed, later, by its generation id; `reconcileLlmCallBills` folds those reads
@@ -252,9 +253,17 @@ environment variable and no file: `/node` does that, and a browser host passes t
 
 - **Tiers.** A capability names a tier (`fast`, `strong`, or any key a host adds), never a slug.
   `resolveLlmModelTiers({ base, modelTiers, defaultTier })` merges the host's declaration over its own base map and
-  fails loud when the default tier (`fast` unless set) is missing; `resolveLlmModelTier` fails loud on an unknown key.
-  A tier value is a slug or `{ model, maxOutputTokens?, reasoning? }` — read it with `llmTierModelOf` /
-  `llmTierConfigOf`. The library ships no slugs.
+  fails loud when the default tier is missing; `resolveLlmModelTier` fails loud on an unknown key. Every reader names
+  the default tier through `resolveLlmDefaultModelTierKey` (trimmed; blank or unset ⇒ `fast`). A tier value is a slug
+  or `{ model, maxOutputTokens?, reasoning? }` — read it with `llmTierModelOf` / `llmTierConfigOf`. The library ships
+  no slugs.
+- **Tier values are strict.** `parseLlmModelTierValue` / `parseLlmModelTierMap` (and the env tier reader) reject a
+  blank or untrimmed slug and a token cap (`maxOutputTokens`, `reasoning.maxTokens`) that is not a positive integer,
+  and report `<label>.<field> must … (got <value>).`, prefixed with the schema label when one is passed
+  (`schemaLabel`). The value types are derived from arktype declarations (`llmModelTierValueType`,
+  `llmReasoningConfigType`, … in `llm.model.type.ts`); `LLM_REASONING_EFFORTS` is the effort list.
+  `parseLlmModelConfigFields` and `assertLlmModelConfigKeys` are the same field and key checks, exported so a host's
+  own extension keys report in the same format.
 - **The file.** `parseLlmModelConfigFile({ raw, source, schema })` validates a `models.json`-shaped object: named
   `providers`, `profiles` (complete tier maps), per-slug `models` facts, `active`, and the unread `notes` / `$schema`.
   An unknown key, an illegal value or a malformed tier throws an error naming the file and the entry, so a typo
@@ -269,7 +278,8 @@ environment variable and no file: `/node` does that, and a browser host passes t
   provider, profile or per-slug entry the file names replaces the built-in whole — a half-replaced provider would bill
   one account at another's endpoint — and every `models[slug].provider` is then checked against the merged providers.
 - **Resolution.** `resolveLlmModelProfile({ file, override, schema })` picks the active profile: the override wins,
-  `off` / `none` select nothing, and a name the file lacks throws. `llmModelReasoningOffEncodings`,
+  an off value (`off` / `none` in any case, `LLM_OFF_VALUES` / `isLlmOffValue`) or a blank `active` selects nothing,
+  and a name the file lacks throws. `llmModelReasoningOffEncodings`,
   `llmModelVisionCapabilities`, `llmModelPromptAddenda` and `llmModelProviderBindings` project the per-slug facts.
   `resolveLlmProviderConfigs({ providers, schema, apiKeyOf })` turns declared providers into `LlmProviderConfig`s that
   carry the key value, and lists the declared providers whose key is missing.
@@ -792,7 +802,8 @@ one retry lever, and a mangled JSON reply gets one cheap fast fix before any re-
   the words (merged over `DEFAULT_LLM_DISPATCH_CORRECTION_TEXTS`, `decode` per class).
 - **Lever ladder.** One lever per retry, chosen by `chooseLlmRetryLever` for the failure's cause: the output budget ×4
   up to `LLM_RETRY_OUTPUT_BUDGET_CEILING` (it persists for the remaining attempts), the model to `decodeRetryTier`
-  (default `strong` when the tier map has it; `'off'` pins it off; an unknown key throws at construction), reasoning
+  (default `strong` when the tier map has it; `off` / `none` in any case pins it off; an unknown key throws at
+  construction), reasoning
   off / low, or structured output off. Each retry files a `retry-lever` diag and stamps `phases.attempts[].retry` and
   `failedAttempts[].retry`.
 - **Transport lane.** A timeout resends identical bytes at once; a retryable transport error (429, 5xx, a dropped
@@ -1132,11 +1143,11 @@ how a spec stays hermetic.
   | `providers[openrouter]` | `OPENROUTER_API_KEY` | The fallback env default: serves only when nothing else is keyed, or when selected. |
   | `defaultProvider` | `LLM_PROVIDER` | The explicit default-provider selection. |
   | `modelsFile` | `LLM_MODELS_FILE` | The model config file path; a path set here that does not exist fails loud. |
-  | `modelProfile` | `LLM_MODEL_PROFILE` | The per-run profile override (wins over the file's `active`; `off` selects none). |
+  | `modelProfile` | `LLM_MODEL_PROFILE` | The per-run profile override (wins over the file's `active`; `off` / `none`, any case, selects none). |
   | `modelTiers` | `LLM_MODEL_TIERS` | The bulk tier map, as JSON. |
   | `tierModels` | `LLM_MODEL` (`fast`), `LLM_MODEL_STRONG` (`strong`) | One slug per tier; wins over the same key in `modelTiers`. |
   | `defaultTier` | `LLM_DEFAULT_TIER` | Which tier is the default. |
-  | `decodeRetryTier` | `LLM_DECODE_RETRY_TIER` | Which tier a malformed reply retries on (`off` keeps the same model). |
+  | `decodeRetryTier` | `LLM_DECODE_RETRY_TIER` | Which tier a malformed reply retries on (`off` / `none`, any case, keeps the same model). |
   | `decisionProvider` | `LLM_DECISION_PROVIDER` | The decision-lane provider pin (a provider id). |
   | `craftNotesDir` | `LLM_CRAFT_NOTES_DIR` | The machine craft-notes folder. |
 

@@ -5,7 +5,7 @@
  */
 
 import { type Maybe } from '@dereekb/util';
-import { DEFAULT_LLM_DECODE_RETRY_TIER, LLM_DECODE_RETRY_TIER_OFF, type LlmModelTierMap, resolveLlmModelTier } from '../model/llm.model.tier';
+import { DEFAULT_LLM_DECODE_RETRY_TIER, isLlmOffValue, type LlmModelTierMap, resolveLlmModelTier } from '../model/llm.model.tier';
 import { type LlmCapabilityKey, type LlmModelId, type LlmModelTierKey } from '../model/llm.value';
 import { type LlmCallContext } from '../record/llm.call.context';
 import { type LlmCallAttemptRetry } from '../record/llm.call.record';
@@ -233,14 +233,14 @@ export interface LlmDecodeRetryModelConfig {
    */
   readonly modelTiers: LlmModelTierMap;
   /**
-   * The configured decode-retry tier — absent ⇒ {@link DEFAULT_LLM_DECODE_RETRY_TIER}; {@link LLM_DECODE_RETRY_TIER_OFF}
-   * pins the model rung off.
+   * The configured decode-retry tier (trimmed) — absent or blank ⇒ {@link DEFAULT_LLM_DECODE_RETRY_TIER}; an off value
+   * (`off` / `none`, any case — `LLM_OFF_VALUES`) pins the model rung off.
    */
   readonly decodeRetryTier?: Maybe<LlmModelTierKey>;
 }
 
 /**
- * Resolve the decode-retry tier's slug at construction. `off` ⇒ none; an explicit key FAILS LOUD on a typo; the
+ * Resolve the decode-retry tier's slug at construction. `off` / `none` (any case) ⇒ none; an explicit key FAILS LOUD on a typo; the
  * implicit default resolves only when the map holds it (never throws). A same-slug tier needs no special case: the
  * chooser refuses an inert model rung.
  *
@@ -249,12 +249,13 @@ export interface LlmDecodeRetryModelConfig {
  * @throws {Error} When an explicit tier key is not in the map.
  */
 export function llmDecodeRetryModelOf(config: LlmDecodeRetryModelConfig): Maybe<LlmModelId> {
-  const { modelTiers, decodeRetryTier } = config;
+  const { modelTiers } = config;
+  const decodeRetryTier = config.decodeRetryTier?.trim() ?? '';
   let model: Maybe<LlmModelId>;
 
-  if (decodeRetryTier === LLM_DECODE_RETRY_TIER_OFF) {
+  if (isLlmOffValue(decodeRetryTier)) {
     model = undefined;
-  } else if (decodeRetryTier != null) {
+  } else if (decodeRetryTier.length > 0) {
     model = resolveLlmModelTier(modelTiers, decodeRetryTier);
   } else if (modelTiers[DEFAULT_LLM_DECODE_RETRY_TIER] != null) {
     model = resolveLlmModelTier(modelTiers, DEFAULT_LLM_DECODE_RETRY_TIER);

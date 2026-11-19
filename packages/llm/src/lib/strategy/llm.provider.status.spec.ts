@@ -71,6 +71,11 @@ describe('formatLlmProviderStatusLines', () => {
     expect(lines[0]).toBe('rolling 5 hours: 7.1% used (57.2/800 flow) ≈ $1.88/$26.27, resets 2026-08-25T08:35:09.000Z');
   });
 
+  it('renders a host-defined quota unit as written', () => {
+    const status = statusOf([makeLlmQuotaWindow({ id: 'monthly', label: 'monthly', usedFraction: 0.25, usedUnits: 2500, maxUnits: 10000, unit: 'character' })]);
+    expect(formatLlmProviderStatusLines(status)[0]).toContain('(2500/10000 character)');
+  });
+
   it('renders a balance with its provenance parts', () => {
     const status: LlmProviderStatus = {
       providerId: 'zenmux',

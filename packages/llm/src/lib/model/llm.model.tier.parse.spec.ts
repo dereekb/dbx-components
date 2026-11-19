@@ -21,13 +21,28 @@ describe('parseLlmModelTierValue()', () => {
     expect(parseValue({ model: 'vendor/model-fast' })).toEqual({ model: 'vendor/model-fast' });
   });
 
-  it('throws on an empty slug', () => {
-    expect(() => parseValue('')).toThrow(`MODEL_TIERS['fast'] must be a non-empty model-slug string.`);
+  it('throws on an empty or untrimmed slug', () => {
+    expect(() => parseValue('')).toThrow(`MODEL_TIERS['fast'] must be a non-empty, trimmed model slug (got "").`);
+    expect(() => parseValue(' vendor/x')).toThrow(`MODEL_TIERS['fast'] must be a non-empty, trimmed model slug (got " vendor/x").`);
+    expect(() => parseValue('vendor/x ')).toThrow(/must be a non-empty, trimmed model slug/);
+  });
+
+  it('prefixes every message with the schema label when one is given', () => {
+    expect(() => parseLlmModelTierValue({ schemaLabel: 'llm models', label: LABEL, tierKey: 'fast', value: '' })).toThrow(`llm models: MODEL_TIERS['fast'] must be a non-empty, trimmed model slug (got "").`);
+    expect(() => parseLlmModelTierValue({ schemaLabel: 'llm models', label: LABEL, tierKey: 'fast', value: { model: 'm', x: 1 } })).toThrow(`llm models: MODEL_TIERS['fast'] has unknown key 'x'`);
+    expect(() => parseLlmModelTierValue({ schemaLabel: 'llm models', label: LABEL, tierKey: 'fast', value: { model: 'm', maxOutputTokens: 1.5 } })).toThrow(`llm models: MODEL_TIERS['fast'].maxOutputTokens must be a positive integer (got 1.5).`);
+  });
+
+  it('treats an undefined field as absent and re-assembles in canonical key order', () => {
+    const parsed = parseValue({ reasoning: { enabled: false, effort: 'low', exclude: undefined }, maxOutputTokens: undefined, model: 'm' });
+    expect(parsed).toEqual({ model: 'm', reasoning: { effort: 'low', enabled: false } });
+    expect(Object.keys(parsed)).toEqual(['model', 'reasoning']);
+    expect(Object.keys(typeof parsed === 'string' ? {} : (parsed.reasoning ?? {}))).toEqual(['effort', 'enabled']);
   });
 
   it('throws on a value that is neither a string nor an object', () => {
     for (const value of [7, ['vendor/model-fast'], null]) {
-      expect(() => parseValue(value)).toThrow(`MODEL_TIERS['fast'] must be a non-empty model-slug string or a { model, maxOutputTokens?, reasoning? } object.`);
+      expect(() => parseValue(value)).toThrow(`MODEL_TIERS['fast'] must be a non-empty, trimmed model slug or a { model, maxOutputTokens?, reasoning? } object (got ${JSON.stringify(value)}).`);
     }
   });
 
@@ -36,19 +51,34 @@ describe('parseLlmModelTierValue()', () => {
   });
 
   it('throws on a missing or empty model', () => {
-    expect(() => parseValue({ maxOutputTokens: 10 })).toThrow(`MODEL_TIERS['fast'].model must be a non-empty model-slug string.`);
-    expect(() => parseValue({ model: '' })).toThrow(`MODEL_TIERS['fast'].model must be a non-empty model-slug string.`);
+    expect(() => parseValue({ maxOutputTokens: 10 })).toThrow(`MODEL_TIERS['fast'].model must be a non-empty, trimmed model slug (got undefined).`);
+    expect(() => parseValue({ model: '' })).toThrow(`MODEL_TIERS['fast'].model must be a non-empty, trimmed model slug (got "").`);
+    expect(() => parseValue({ model: 'm ' })).toThrow(`MODEL_TIERS['fast'].model must be a non-empty, trimmed model slug (got "m ").`);
   });
 
-  it('throws on a non-positive or non-finite maxOutputTokens', () => {
-    for (const maxOutputTokens of [0, -1, Number.POSITIVE_INFINITY, '10']) {
-      expect(() => parseValue({ model: 'm', maxOutputTokens })).toThrow(`MODEL_TIERS['fast'].maxOutputTokens must be a positive number.`);
+  it('throws on a maxOutputTokens that is not a positive integer', () => {
+    const cases: ReadonlyArray<readonly [unknown, string]> = [
+      [0, '0'],
+      [-1, '-1'],
+      [1.5, '1.5'],
+      [Number.POSITIVE_INFINITY, 'Infinity'],
+      ['10', '"10"']
+    ];
+
+    for (const [maxOutputTokens, got] of cases) {
+      expect(() => parseValue({ model: 'm', maxOutputTokens })).toThrow(`MODEL_TIERS['fast'].maxOutputTokens must be a positive integer (got ${got}).`);
     }
+  });
+
+  it('reports the first failing field in key order', () => {
+    expect(() => parseValue({ reasoning: { effort: 'max' }, maxOutputTokens: 0 })).toThrow(`MODEL_TIERS['fast'].model must be a non-empty, trimmed model slug (got undefined).`);
+    expect(() => parseValue({ model: 'm', reasoning: { enabled: 1, effort: 'max' }, maxOutputTokens: 0 })).toThrow(`MODEL_TIERS['fast'].maxOutputTokens must be a positive integer (got 0).`);
+    expect(() => parseValue({ model: 'm', reasoning: { enabled: 1, effort: 'max' } })).toThrow(`MODEL_TIERS['fast'].reasoning.effort must be one of low, medium, high (got "max").`);
   });
 
   it('throws when reasoning is not an object', () => {
     for (const reasoning of ['high', null, []]) {
-      expect(() => parseValue({ model: 'm', reasoning })).toThrow(`MODEL_TIERS['fast'].reasoning must be an object.`);
+      expect(() => parseValue({ model: 'm', reasoning })).toThrow(`MODEL_TIERS['fast'].reasoning must be an object (got ${JSON.stringify(reasoning)}).`);
     }
   });
 
@@ -57,16 +87,17 @@ describe('parseLlmModelTierValue()', () => {
   });
 
   it('throws on a bad effort band', () => {
-    expect(() => parseValue({ model: 'm', reasoning: { effort: 'max' } })).toThrow(`MODEL_TIERS['fast'].reasoning.effort must be one of low | medium | high.`);
+    expect(() => parseValue({ model: 'm', reasoning: { effort: 'max' } })).toThrow(`MODEL_TIERS['fast'].reasoning.effort must be one of low, medium, high (got "max").`);
   });
 
   it('throws on a bad reasoning maxTokens', () => {
-    expect(() => parseValue({ model: 'm', reasoning: { maxTokens: 0 } })).toThrow(`MODEL_TIERS['fast'].reasoning.maxTokens must be a positive number.`);
+    expect(() => parseValue({ model: 'm', reasoning: { maxTokens: 0 } })).toThrow(`MODEL_TIERS['fast'].reasoning.maxTokens must be a positive integer (got 0).`);
+    expect(() => parseValue({ model: 'm', reasoning: { maxTokens: 2.5 } })).toThrow(`MODEL_TIERS['fast'].reasoning.maxTokens must be a positive integer (got 2.5).`);
   });
 
   it('throws on a non-boolean exclude or enabled', () => {
-    expect(() => parseValue({ model: 'm', reasoning: { exclude: 'yes' } })).toThrow(`MODEL_TIERS['fast'].reasoning.exclude must be a boolean.`);
-    expect(() => parseValue({ model: 'm', reasoning: { enabled: 1 } })).toThrow(`MODEL_TIERS['fast'].reasoning.enabled must be a boolean.`);
+    expect(() => parseValue({ model: 'm', reasoning: { exclude: 'yes' } })).toThrow(`MODEL_TIERS['fast'].reasoning.exclude must be a boolean (got "yes").`);
+    expect(() => parseValue({ model: 'm', reasoning: { enabled: 1 } })).toThrow(`MODEL_TIERS['fast'].reasoning.enabled must be a boolean (got 1).`);
   });
 });
 
@@ -86,6 +117,6 @@ describe('parseLlmModelTierMap()', () => {
   });
 
   it('names the tier key of a bad entry', () => {
-    expect(() => parseLlmModelTierMap({ label: LABEL, value: { fast: 'a/b', strong: '' } })).toThrow(`MODEL_TIERS['strong'] must be a non-empty model-slug string.`);
+    expect(() => parseLlmModelTierMap({ label: LABEL, value: { fast: 'a/b', strong: '' } })).toThrow(`MODEL_TIERS['strong'] must be a non-empty, trimmed model slug (got "").`);
   });
 });

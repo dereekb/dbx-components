@@ -124,6 +124,10 @@ export interface ResolveLlmModelTierEnvConfig {
    * The env names. Default {@link DEFAULT_LLM_ENV_NAMES}.
    */
   readonly names?: Maybe<LlmEnvNames>;
+  /**
+   * The schema label a malformed tier JSON's message is prefixed with (`llm models`). Omitted ⇒ no prefix.
+   */
+  readonly schemaLabel?: Maybe<string>;
 }
 
 /**
@@ -140,8 +144,8 @@ export interface LlmModelTierEnvSettings {
    */
   readonly defaultTier?: LlmModelTierKey;
   /**
-   * The decode-retry tier. `off` passes through unvalidated — the dispatcher reads it as the off sentinel, and the tier
-   * map stays the only validator.
+   * The decode-retry tier. An off value (`off` / `none`, any case) passes through unvalidated — the dispatcher reads it
+   * with `isLlmOffValue`, and the tier map stays the only validator.
    */
   readonly decodeRetryTier?: LlmModelTierKey;
 }
@@ -173,7 +177,7 @@ export function resolveLlmModelTierEnv(config?: Maybe<ResolveLlmModelTierEnvConf
       throw new Error(`${bulk.name} is not valid JSON: ${errorMessageOf(e)}`, { cause: e });
     }
 
-    Object.assign(tiers, parseLlmModelTierMap({ label: bulk.name, value: parsed }));
+    Object.assign(tiers, parseLlmModelTierMap({ schemaLabel: config?.schemaLabel, label: bulk.name, value: parsed }));
   }
 
   for (const [tier, tierNames] of Object.entries(names.tierModels)) {
