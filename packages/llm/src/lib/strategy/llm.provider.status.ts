@@ -43,7 +43,7 @@ export type LlmKnownQuotaUnit = 'flow' | 'request' | 'token' | 'usd';
 
 /**
  * The unit an {@link LlmQuotaWindow} meters in — one of the {@link LlmKnownQuotaUnit}s, or a host's own unit for a
- * provider it meters itself (a TTS vendor's synthesized-character allowance is the host's `'character'`). Open, with
+ * provider it meters itself (a TTS vendor's synthesized-character allowance is metered in the host's own unit). Open, with
  * the known units kept for autocomplete; the report prints the unit as written.
  */
 export type LlmQuotaUnit = SuggestedString<LlmKnownQuotaUnit>;

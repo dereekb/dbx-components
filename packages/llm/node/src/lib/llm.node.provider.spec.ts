@@ -107,7 +107,7 @@ describe('resolveLlmProvidersFromEnv()', () => {
 
     it('should skip an env default whose transport has no completion adapter', () => {
       const openAiOnly = makeLlmAdapterRegistry([fakeCompletionAdapter('openai', OPENAI_URL).adapter]);
-      const result = resolveLlmProvidersFromEnv({ env: { OPENROUTER_API_KEY: 'or', LLM_PROVIDER: 'openrouter' }, schema, adapters: openAiOnly });
+      const result = resolveLlmProvidersFromEnv({ env: { OPENROUTER_API_KEY: 'or' }, schema, adapters: openAiOnly });
       expect(result).toEqual({ providers: [], gaps: [] });
     });
 
@@ -151,7 +151,7 @@ describe('resolveLlmProvidersFromEnv()', () => {
     });
 
     it('should neither resolve nor gap an extension-owned entry', () => {
-      const file: LlmModelConfigFile<TestTypes> = { providers: { speaker: { transport: 'media', baseUrl: LOCAL_URL, apiKeyEnv: 'SPEAKER_KEY' } } };
+      const file: LlmModelConfigFile<TestTypes> = { extensionProviders: { speaker: { transport: 'media', baseUrl: LOCAL_URL, apiKeyEnv: 'SPEAKER_KEY' } } };
       expect(resolveLlmProvidersFromEnv({ env: { SPEAKER_KEY: 's' }, file, schema, adapters })).toEqual({ providers: [], gaps: [], defaultProviderId: 'openrouter' });
       expect(resolveLlmProvidersFromEnv({ env: {}, file, schema, adapters }).gaps).toEqual([]);
     });
@@ -193,15 +193,26 @@ describe('resolveLlmProvidersFromEnv()', () => {
     it('should match a declared name case-sensitively', () => {
       const env = { OPENAI_API_KEY: 'oa', LOCAL_API_KEY: 'lo' };
       expect(resolveLlmProvidersFromEnv({ env: { ...env, LLM_PROVIDER: 'local' }, file: FILE, schema, adapters }).defaultProviderId).toBe('local');
-      const mismatched = resolveLlmProvidersFromEnv({ env: { ...env, LLM_PROVIDER: 'Local' }, file: FILE, schema, adapters });
-      expect(mismatched.explicitProviderId).toBeUndefined();
-      expect(mismatched.defaultProviderId).toBe('openai');
+      expect(() => resolveLlmProvidersFromEnv({ env: { ...env, LLM_PROVIDER: 'Local' }, file: FILE, schema, adapters })).toThrow("test models: LLM_PROVIDER names provider 'Local', which this environment does not resolve (have: openai, openrouter, gateway, local).");
     });
 
-    it('should fall through to inference on an unrecognized selection', () => {
-      const result = resolveLlmProvidersFromEnv({ env: { OPENROUTER_API_KEY: 'or', LLM_PROVIDER: 'nope' }, schema, adapters });
-      expect(result.explicitProviderId).toBeUndefined();
-      expect(result.defaultProviderId).toBe('openrouter');
+    it('should throw on an unrecognized selection, naming the variable and the selectable ids', () => {
+      expect(() => resolveLlmProvidersFromEnv({ env: { OPENROUTER_API_KEY: 'or', LLM_PROVIDER: 'nope' }, schema, adapters })).toThrow("test models: LLM_PROVIDER names provider 'nope', which this environment does not resolve (have: openai, openrouter).");
+    });
+
+    it('should throw on a selection naming an env default whose adapter is not registered', () => {
+      const openAiOnly = makeLlmAdapterRegistry([fakeCompletionAdapter('openai', OPENAI_URL).adapter]);
+      expect(() => resolveLlmProvidersFromEnv({ env: { OPENROUTER_API_KEY: 'or', LLM_PROVIDER: 'openrouter' }, schema, adapters: openAiOnly })).toThrow("test models: LLM_PROVIDER names provider 'openrouter', which this environment does not resolve (have: openai).");
+    });
+
+    it('should throw on a selection naming an extension-owned provider', () => {
+      const file: LlmModelConfigFile<TestTypes> = { extensionProviders: { speaker: { transport: 'media', baseUrl: LOCAL_URL, apiKeyEnv: 'SPEAKER_KEY' } } };
+      expect(() => resolveLlmProvidersFromEnv({ env: { SPEAKER_KEY: 's', LLM_PROVIDER: 'speaker' }, file, schema, adapters })).toThrow("test models: LLM_PROVIDER names provider 'speaker', which this environment does not resolve (have: openai, openrouter).");
+    });
+
+    it('should list (none) when nothing is selectable', () => {
+      const none = makeLlmAdapterRegistry([]);
+      expect(() => resolveLlmProvidersFromEnv({ env: { LLM_PROVIDER: 'openai' }, schema, adapters: none })).toThrow("test models: LLM_PROVIDER names provider 'openai', which this environment does not resolve (have: (none)).");
     });
 
     it('should keep an unkeyed explicit declared selection as the default id while the default provider is the first keyed', () => {

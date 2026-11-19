@@ -8,53 +8,30 @@
  * provider it does not itself declare.
  */
 
-import { isPlainObject, type Maybe } from '@dereekb/util';
+import { filterUndefinedValues, isPlainObject, type Maybe } from '@dereekb/util';
+import { assertLlmModelConfigKeys, parseLlmModelConfigFields } from '../llm.model.field';
 import { parseLlmModelTierMap } from '../llm.model.tier.parse';
-import { isLlmReasoningOffEncoding, isLlmTokenLimitParam, LLM_REASONING_OFF_ENCODINGS, LLM_TOKEN_LIMIT_PARAMS } from '../llm.model.wire';
 import { type LlmModelTierKey, type LlmModelTierValue, type LlmStrategyId } from '../llm.value';
-import { type LlmCompletionProviderEntryOf, LLM_MODEL_CONFIG_FILE_KEYS, LLM_PROVIDER_IDENTITY_KEYS, type LlmModelConfigBaseTypes, type LlmModelConfigFile, type LlmModelConfigSchema, type LlmModelConfigTypes, type LlmModelProfile, type LlmModelSettingsOf, type LlmProviderEntryOf } from './llm.model.config.schema';
-
-/**
- * Input to {@link assertLlmModelConfigKeys}.
- */
-interface AssertLlmModelConfigKeysInput {
-  readonly schemaLabel: string;
-  readonly label: string;
-  readonly entry: Readonly<Record<string, unknown>>;
-  readonly retired: ReadonlyMap<string, string>;
-  /**
-   * The allowed keys; absent ⇒ only the retired keys are checked.
-   */
-  readonly allowed?: Maybe<ReadonlyArray<string>>;
-}
-
-/**
- * Check one object's keys at one level: every RETIRED key throws its remedy first, then any key not allowed throws
- * unknown — so an operator who kept an old key is told what replaced it rather than that it is unknown.
- *
- * @param input - The labels, the entry, the retired keys and the allowed keys.
- * @throws {Error} When the entry carries a retired or an unknown key.
- */
-function assertLlmModelConfigKeys(input: AssertLlmModelConfigKeysInput): void {
-  const { schemaLabel, label, entry, retired, allowed } = input;
-  const keys = Object.keys(entry);
-
-  for (const key of keys) {
-    const remedy = retired.get(key);
-
-    if (remedy != null) {
-      throw new Error(`${schemaLabel}: ${label} has retired key '${key}'. ${remedy}`);
-    }
-  }
-
-  if (allowed != null) {
-    for (const key of keys) {
-      if (!allowed.includes(key)) {
-        throw new Error(`${schemaLabel}: ${label} has unknown key '${key}' (allowed: ${allowed.join(', ')}).`);
-      }
-    }
-  }
-}
+import {
+  LLM_MODEL_CONFIG_FILE_KEYS,
+  LLM_MODEL_SETTINGS_FIELD_RULES,
+  LLM_MODEL_SETTINGS_KEYS,
+  LLM_PROVIDER_ENTRY_KEYS,
+  LLM_PROVIDER_IDENTITY_KEYS,
+  LLM_PROVIDER_ROUTING_KEYS,
+  type LlmCompletionProviderEntryOf,
+  type LlmModelConfigBaseTypes,
+  type LlmModelConfigFile,
+  type LlmModelConfigFileFields,
+  type LlmModelConfigFileJson,
+  type LlmModelConfigFileKey,
+  type LlmModelConfigSchema,
+  type LlmModelConfigTypes,
+  type LlmModelProfile,
+  type LlmModelSettingsOf,
+  type LlmParsedProviderEntry
+} from './llm.model.config.schema';
+import { llmModelSettingsType } from './llm.model.config.type';
 
 /**
  * Config for the per-entry parsers ({@link parseLlmProviderEntry}, {@link parseLlmModelSettings},
@@ -76,82 +53,6 @@ export interface ParseLlmModelConfigEntryConfig<X extends LlmModelConfigTypes = 
 }
 
 /**
- * Input to {@link parseLlmCompletionProviderEntry}.
- */
-interface ParseLlmCompletionProviderEntryInput<X extends LlmModelConfigTypes> {
-  readonly schema: LlmModelConfigSchema<X>;
-  readonly label: string;
-  readonly entry: Readonly<Record<string, unknown>>;
-  readonly rawTransport: unknown;
-  readonly rawBaseUrl: unknown;
-  readonly fields: X['providerFields'];
-}
-
-/**
- * The completion arm of {@link parseLlmProviderEntry}: the entry's keys, transport and base URL are already checked.
- *
- * @param input - The schema, the label, the raw entry, its raw transport and base URL, and the extension fields.
- * @returns The parsed completion provider entry.
- * @throws {Error} When `apiKeyEnv` is missing or a completion key names an illegal value.
- */
-function parseLlmCompletionProviderEntry<X extends LlmModelConfigTypes>(input: ParseLlmCompletionProviderEntryInput<X>): LlmCompletionProviderEntryOf<X> {
-  const { schema, label, entry, rawTransport, rawBaseUrl, fields } = input;
-  const schemaLabel = schema.label;
-  const rawApiKeyEnv = entry['apiKeyEnv'];
-
-  // REQUIRED, and a blank one is rejected rather than read as absent: a declared provider that silently inherited
-  // the default key bills the wrong account.
-  if (typeof rawApiKeyEnv !== 'string' || rawApiKeyEnv.trim().length === 0) {
-    const patchHint = schema.extension?.parseProviderPatch == null ? '' : ` To extend a built-in provider with ${schema.patchKeysNoun} keys only, carry those keys alone.`;
-    throw new Error(`${schemaLabel}: ${label}.apiKeyEnv must name the env var supplying this provider's key (got ${JSON.stringify(rawApiKeyEnv)}). A declared provider is never billed on another provider's key.${patchHint}`);
-  }
-
-  const rawReasoningOff = entry['reasoningOff'];
-
-  if (rawReasoningOff !== undefined && !isLlmReasoningOffEncoding(rawReasoningOff)) {
-    throw new Error(`${schemaLabel}: ${label}.reasoningOff must be one of ${LLM_REASONING_OFF_ENCODINGS.join(', ')} (got ${JSON.stringify(rawReasoningOff)}).`);
-  }
-
-  const rawTokenLimitParam = entry['tokenLimitParam'];
-
-  if (rawTokenLimitParam !== undefined && !isLlmTokenLimitParam(rawTokenLimitParam)) {
-    throw new Error(`${schemaLabel}: ${label}.tokenLimitParam must be one of ${LLM_TOKEN_LIMIT_PARAMS.join(', ')} (got ${JSON.stringify(rawTokenLimitParam)}).`);
-  }
-
-  const rawUsageAccounting = entry['usageAccounting'];
-
-  if (rawUsageAccounting !== undefined && typeof rawUsageAccounting !== 'boolean') {
-    throw new Error(`${schemaLabel}: ${label}.usageAccounting must be a boolean (got ${JSON.stringify(rawUsageAccounting)}).`);
-  }
-
-  const rawMetering = entry['metering'];
-
-  if (rawMetering !== undefined && (typeof rawMetering !== 'string' || !schema.meterings.includes(rawMetering))) {
-    throw new Error(`${schemaLabel}: ${label}.metering must be one of ${schema.meterings.join(', ')} (got ${JSON.stringify(rawMetering)}).`);
-  }
-
-  const rawDecision = entry['decision'];
-
-  if (rawDecision !== undefined && (typeof rawDecision !== 'string' || !schema.decisionRoutes.includes(rawDecision))) {
-    throw new Error(`${schemaLabel}: ${label}.decision must be one of ${schema.decisionRoutes.join(', ')} (got ${JSON.stringify(rawDecision)}).`);
-  }
-
-  const completionEntry = {
-    transport: (rawTransport as Maybe<LlmStrategyId>) ?? schema.defaultTransport,
-    ...(rawBaseUrl === undefined ? {} : { baseUrl: (rawBaseUrl as string).trim() }),
-    apiKeyEnv: rawApiKeyEnv.trim(),
-    ...(rawReasoningOff === undefined ? {} : { reasoningOff: rawReasoningOff }),
-    ...(rawTokenLimitParam === undefined ? {} : { tokenLimitParam: rawTokenLimitParam }),
-    ...(rawUsageAccounting === undefined ? {} : { usageAccounting: rawUsageAccounting }),
-    ...(rawMetering === undefined ? {} : { metering: rawMetering as string }),
-    ...(rawDecision === undefined ? {} : { decision: rawDecision as string }),
-    ...fields
-  };
-
-  return completionEntry as LlmCompletionProviderEntryOf<X>;
-}
-
-/**
  * Parse and validate ONE entry of the `providers` block.
  *
  * FAILS LOUD on a retired or unknown key, an unrecognized `transport` / `metering` / `decision` / `reasoningOff` /
@@ -159,11 +60,14 @@ function parseLlmCompletionProviderEntry<X extends LlmModelConfigTypes>(input: P
  * key would bill the wrong account. An entry of a transport the schema's extension owns is parsed whole by the
  * extension.
  *
+ * Checks run in a fixed order, and the first failure is reported: `transport`, `baseUrl`, the extension's provider
+ * fields, then the completion keys in {@link LLM_PROVIDER_ENTRY_KEYS} order.
+ *
  * @param config - The label, the raw entry and the schema.
- * @returns The parsed provider entry.
+ * @returns The parsed entry, tagged `completion` or `extension`.
  * @throws {Error} When the entry is not an object, carries a retired / unknown key, or names an illegal value.
  */
-export function parseLlmProviderEntry<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes>(config: ParseLlmModelConfigEntryConfig<X>): LlmProviderEntryOf<X> {
+export function parseLlmProviderEntry<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes>(config: ParseLlmModelConfigEntryConfig<X>): LlmParsedProviderEntry<X> {
   const { label, value, schema } = config;
   const schemaLabel = schema.label;
 
@@ -174,27 +78,31 @@ export function parseLlmProviderEntry<X extends LlmModelConfigTypes = LlmModelCo
   const entry = value;
   assertLlmModelConfigKeys({ schemaLabel, label, entry, retired: schema.retiredKeys.provider, allowed: schema.providerKeys });
 
-  const rawTransport = entry['transport'];
-
-  if (rawTransport !== undefined && (typeof rawTransport !== 'string' || !schema.entryTransports.includes(rawTransport))) {
-    throw new Error(`${schemaLabel}: ${label}.transport must be one of ${schema.entryTransports.join(', ')} (got ${JSON.stringify(rawTransport)}).`);
-  }
-
-  const rawBaseUrl = entry['baseUrl'];
-
-  if (rawBaseUrl !== undefined && (typeof rawBaseUrl !== 'string' || rawBaseUrl.trim().length === 0)) {
-    throw new Error(`${schemaLabel}: ${label}.baseUrl must be a non-empty endpoint URL (got ${JSON.stringify(rawBaseUrl)}). Remove the key to use the transport's default.`);
-  }
-
+  const routing = parseLlmModelConfigFields({ schemaLabel, label, value: entry, type: schema.providerEntryBaseType, keys: LLM_PROVIDER_ROUTING_KEYS, rules: schema.providerEntryBaseRules });
   const extension = schema.extension;
-  const fields = (extension?.parseProviderFields?.({ schemaLabel, label, entry }) ?? {}) as X['providerFields'];
-  const parseExtensionEntry = rawTransport !== undefined && schema.extensionTransports.includes(rawTransport) ? extension?.parseProviderEntry : undefined;
-  let result: LlmProviderEntryOf<X>;
+  const fields: Partial<X['providerFields']> = extension?.parseProviderFields?.({ schemaLabel, label, entry }) ?? {};
+  const transport = routing.transport;
+  const parseExtensionEntry = transport != null && schema.extensionTransports.includes(transport) ? extension?.parseProviderEntry : undefined;
+  let result: LlmParsedProviderEntry<X>;
 
-  if (parseExtensionEntry == null) {
-    result = parseLlmCompletionProviderEntry({ schema, label, entry, rawTransport, rawBaseUrl, fields });
+  if (parseExtensionEntry != null && transport != null) {
+    result = { kind: 'extension', entry: parseExtensionEntry({ schemaLabel, label, entry, transport, baseUrl: routing.baseUrl, fields, meterings: schema.meterings }) };
   } else {
-    result = parseExtensionEntry({ schemaLabel, label, entry, transport: rawTransport as LlmStrategyId, baseUrl: rawBaseUrl as Maybe<string>, fields, meterings: schema.meterings });
+    const checked = parseLlmModelConfigFields({ schemaLabel, label, value: entry, type: schema.completionProviderEntryType, keys: LLM_PROVIDER_ENTRY_KEYS, rules: schema.completionProviderEntryRules });
+    const { baseUrl, reasoningOff, tokenLimitParam, usageAccounting, metering, decision } = checked;
+    // Base keys in LLM_PROVIDER_ENTRY_KEYS order, then the extension's — the pinned key order of a parsed entry.
+    const completionEntry: LlmCompletionProviderEntryOf<X> = {
+      transport: checked.transport ?? schema.defaultTransport,
+      ...(baseUrl == null ? {} : { baseUrl: baseUrl.trim() }),
+      apiKeyEnv: checked.apiKeyEnv.trim(),
+      ...(reasoningOff == null ? {} : { reasoningOff }),
+      ...(tokenLimitParam == null ? {} : { tokenLimitParam }),
+      ...(usageAccounting == null ? {} : { usageAccounting }),
+      ...(metering == null ? {} : { metering }),
+      ...(decision == null ? {} : { decision }),
+      ...fields
+    };
+    result = { kind: 'completion', entry: completionEntry };
   }
 
   return result;
@@ -222,43 +130,22 @@ export function parseLlmModelSettings<X extends LlmModelConfigTypes = LlmModelCo
   const entry = value;
   assertLlmModelConfigKeys({ schemaLabel, label, entry, retired: schema.retiredKeys.model, allowed: schema.modelKeys });
 
-  const rawProvider = entry['provider'];
-
-  // Shape only — that the NAME resolves is a cross-reference checked over the MERGED file, where a binding to a
-  // built-in provider this file does not declare is finally visible.
-  if (rawProvider !== undefined && (typeof rawProvider !== 'string' || rawProvider.trim().length === 0)) {
-    throw new Error(`${schemaLabel}: ${label}.provider must be a declared provider name (got ${JSON.stringify(rawProvider)}). Remove the key to use the default provider.`);
-  }
-
-  const rawReasoningOff = entry['reasoningOff'];
-
-  if (rawReasoningOff !== undefined && !isLlmReasoningOffEncoding(rawReasoningOff)) {
-    throw new Error(`${schemaLabel}: ${label}.reasoningOff must be one of ${LLM_REASONING_OFF_ENCODINGS.join(', ')} (got ${JSON.stringify(rawReasoningOff)}).`);
-  }
-
-  const rawVision = entry['vision'];
-
-  if (rawVision !== undefined && typeof rawVision !== 'boolean') {
-    throw new Error(`${schemaLabel}: ${label}.vision must be a boolean (got ${JSON.stringify(rawVision)}).`);
-  }
-
-  const rawPromptAddendum = entry['promptAddendum'];
-
-  // A BLANK addendum is REJECTED rather than dropped: an operator who cleared the text but left the key meant to say
-  // something to this model. Clearing is removing the key, never an empty string.
-  if (rawPromptAddendum !== undefined && (typeof rawPromptAddendum !== 'string' || rawPromptAddendum.trim().length === 0)) {
-    throw new Error(`${schemaLabel}: ${label}.promptAddendum must be a non-empty string of prompt text (got ${JSON.stringify(rawPromptAddendum)}). Remove the key to declare no addendum.`);
-  }
-
-  const fields = schema.extension?.parseModelFields?.({ schemaLabel, label, entry });
-
-  return {
-    ...(rawProvider === undefined ? {} : { provider: (rawProvider as string).trim() }),
-    ...(rawReasoningOff === undefined ? {} : { reasoningOff: rawReasoningOff }),
-    ...(rawVision === undefined ? {} : { vision: rawVision }),
-    ...(rawPromptAddendum === undefined ? {} : { promptAddendum: rawPromptAddendum as string }),
+  // `provider` is shape only — that the NAME resolves is a cross-reference checked over the MERGED file, where a
+  // binding to a built-in provider this file does not declare is finally visible. A BLANK `promptAddendum` is REJECTED
+  // rather than dropped: an operator who cleared the text but left the key meant to say something to this model.
+  const checked = parseLlmModelConfigFields({ schemaLabel, label, value: entry, type: llmModelSettingsType, keys: LLM_MODEL_SETTINGS_KEYS, rules: LLM_MODEL_SETTINGS_FIELD_RULES });
+  const { provider, reasoningOff, vision, promptAddendum } = checked;
+  const fields: Partial<X['modelFields']> = schema.extension?.parseModelFields?.({ schemaLabel, label, entry }) ?? {};
+  const settings: LlmModelSettingsOf<X> = {
+    ...(provider == null ? {} : { provider: provider.trim() }),
+    ...(reasoningOff == null ? {} : { reasoningOff }),
+    ...(vision == null ? {} : { vision }),
+    // Never trimmed: the addendum is prompt text, byte for byte.
+    ...(promptAddendum == null ? {} : { promptAddendum }),
     ...fields
-  } as LlmModelSettingsOf<X>;
+  };
+
+  return settings;
 }
 
 /**
@@ -278,7 +165,7 @@ export function parseLlmModelProfile<X extends LlmModelConfigTypes = LlmModelCon
     assertLlmModelConfigKeys({ schemaLabel: schema.label, label, entry: value, retired: schema.retiredKeys.profile });
   }
 
-  return { tiers: parseLlmModelTierMap({ label, value }) };
+  return { tiers: parseLlmModelTierMap({ label, value, schemaLabel: schema.label }) };
 }
 
 /**
@@ -291,6 +178,35 @@ export function parseLlmModelProfile<X extends LlmModelConfigTypes = LlmModelCon
  */
 export function flattenLlmModelProfile(profile: LlmModelProfile): Readonly<Record<LlmModelTierKey, Maybe<LlmModelTierValue>>> {
   return { ...profile.tiers };
+}
+
+/**
+ * Flatten a parsed {@link LlmModelConfigFile} back to its ON-DISK shape — the one object a writer serializes.
+ *
+ * - Top-level keys in {@link LLM_MODEL_CONFIG_FILE_KEYS} order (the prose before the data, the endpoints before the
+ *   maps that use them, the per-slug appendix last), every one carried: a key the writer forgot would delete it from
+ *   disk the next time any command wrote the file.
+ * - `providers` is ONE block again: the completion entries, then the extension-owned entries, then the patches.
+ * - Profiles are flattened ({@link flattenLlmModelProfile}).
+ * - `$schema` / `notes` are kept unless `undefined`; `active` and the maps are dropped when absent.
+ *
+ * Pure — a browser host (a stored settings document) can use it as well as the node writer.
+ *
+ * @param file - The parsed file.
+ * @returns The plain on-disk object.
+ */
+export function flattenLlmModelConfigFile<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes>(file: LlmModelConfigFile<X>): LlmModelConfigFileJson<X> {
+  const { providers, extensionProviders, providerPatches, profiles } = file;
+  const onDisk: { readonly [K in LlmModelConfigFileKey]: LlmModelConfigFileJson<X>[K] } = {
+    $schema: file.$schema,
+    notes: file.notes,
+    active: file.active ?? undefined,
+    providers: providers == null && extensionProviders == null && providerPatches == null ? undefined : { ...providers, ...extensionProviders, ...providerPatches },
+    profiles: profiles == null ? undefined : Object.fromEntries(Object.entries(profiles).map(([name, profile]) => [name, flattenLlmModelProfile(profile)])),
+    models: file.models ?? undefined
+  };
+
+  return filterUndefinedValues(onDisk);
 }
 
 /**
@@ -314,27 +230,29 @@ interface ParseLlmModelConfigProvidersInput<X extends LlmModelConfigTypes> {
 }
 
 /**
- * The parsed `providers` block, split into full entries and patches.
+ * The parsed `providers` block, split into completion entries, extension-owned entries and patches.
  */
 interface LlmModelConfigProvidersParse<X extends LlmModelConfigTypes> {
-  readonly providers: Record<LlmStrategyId, LlmProviderEntryOf<X>>;
-  readonly providerPatches: Record<LlmStrategyId, X['providerFields']>;
+  readonly providers: Record<LlmStrategyId, LlmCompletionProviderEntryOf<X>>;
+  readonly extensionProviders: Record<LlmStrategyId, X['extensionProviderEntry']>;
+  readonly providerPatches: Record<LlmStrategyId, Partial<X['providerFields']>>;
 }
 
 /**
- * Parse the raw `providers` block of a file. A patch is split off here so no consumer of the effective file ever meets
- * an identity-less entry.
+ * Parse the raw `providers` block of a file. A patch and an extension-owned entry are split off here, so no consumer
+ * of the effective file ever meets an identity-less entry, and no completion reader meets an entry it cannot serve.
  *
  * @param input - The raw block (already known to be an object, or absent), the source label and the schema.
- * @returns The full entries and the patches.
+ * @returns The completion entries, the extension-owned entries and the patches.
  * @throws {Error} When an entry or a patch is malformed.
  */
 function parseLlmModelConfigProviders<X extends LlmModelConfigTypes>(input: ParseLlmModelConfigProvidersInput<X>): LlmModelConfigProvidersParse<X> {
   const { rawProviders, source, schema } = input;
   const schemaLabel = schema.label;
   const parseProviderPatch = schema.extension?.parseProviderPatch;
-  const providers: Record<LlmStrategyId, LlmProviderEntryOf<X>> = {};
-  const providerPatches: Record<LlmStrategyId, X['providerFields']> = {};
+  const providers: Record<LlmStrategyId, LlmCompletionProviderEntryOf<X>> = {};
+  const extensionProviders: Record<LlmStrategyId, X['extensionProviderEntry']> = {};
+  const providerPatches: Record<LlmStrategyId, Partial<X['providerFields']>> = {};
 
   for (const [providerName, rawEntry] of Object.entries(rawProviders ?? {})) {
     const label = `${source} providers['${providerName}']`;
@@ -343,11 +261,17 @@ function parseLlmModelConfigProviders<X extends LlmModelConfigTypes>(input: Pars
       assertLlmModelConfigKeys({ schemaLabel, label, entry: rawEntry, retired: schema.retiredKeys.provider });
       providerPatches[providerName] = parseProviderPatch({ schemaLabel, label, entry: rawEntry });
     } else {
-      providers[providerName] = parseLlmProviderEntry({ label, value: rawEntry, schema });
+      const parsed = parseLlmProviderEntry({ label, value: rawEntry, schema });
+
+      if (parsed.kind === 'completion') {
+        providers[providerName] = parsed.entry;
+      } else {
+        extensionProviders[providerName] = parsed.entry;
+      }
     }
   }
 
-  return { providers, providerPatches };
+  return { providers, extensionProviders, providerPatches };
 }
 
 /**
@@ -374,7 +298,11 @@ export interface ParseLlmModelConfigFileConfig<X extends LlmModelConfigTypes = L
  * entry.
  *
  * A `providers` entry with no identity key becomes a PATCH (`providerPatches`) when the schema's extension parses
- * patches; otherwise it parses as an ordinary entry (and fails on its missing `apiKeyEnv`).
+ * patches; otherwise it parses as an ordinary entry (and fails on its missing `apiKeyEnv`). An entry of a transport the
+ * extension owns lands in `extensionProviders`, never in `providers`.
+ *
+ * The result's keys follow {@link LLM_MODEL_CONFIG_FILE_KEYS}, with the in-memory keys after `providers`; each map is
+ * present only when it has entries, except that a declared empty `providers: {}` round-trips.
  *
  * @param config - The raw file, its source label and the schema.
  * @returns The validated file.
@@ -416,7 +344,7 @@ export function parseLlmModelConfigFile<X extends LlmModelConfigTypes = LlmModel
     throw new Error(`${schemaLabel}: ${source}.providers must be a JSON object of { providerName: { transport?, baseUrl?, apiKeyEnv, … } }.`);
   }
 
-  const { providers, providerPatches } = parseLlmModelConfigProviders({ rawProviders, source, schema });
+  const { providers, extensionProviders, providerPatches } = parseLlmModelConfigProviders({ rawProviders, source, schema });
 
   const models: Record<string, LlmModelSettingsOf<X>> = {};
 
@@ -434,16 +362,20 @@ export function parseLlmModelConfigFile<X extends LlmModelConfigTypes = LlmModel
     }
   }
 
-  const active = typeof rawActive === 'string' ? rawActive.trim() : undefined;
+  const hasCompletion = Object.keys(providers).length > 0;
+  const hasExtension = Object.keys(extensionProviders).length > 0;
   const hasPatches = Object.keys(providerPatches).length > 0;
-
-  return {
-    ...(active == null ? {} : { active }),
-    ...(rawProviders == null || (Object.keys(providers).length === 0 && hasPatches) ? {} : { providers }),
-    ...(hasPatches ? { providerPatches } : {}),
-    ...(rawProfiles == null ? {} : { profiles }),
-    ...(rawModels == null ? {} : { models }),
-    ...(obj['notes'] === undefined ? {} : { notes: obj['notes'] }),
-    ...(obj['$schema'] === undefined ? {} : { $schema: obj['$schema'] })
+  const fields: LlmModelConfigFileFields<X> = {
+    $schema: obj['$schema'],
+    notes: obj['notes'],
+    active: typeof rawActive === 'string' ? rawActive.trim() : undefined,
+    // A declared EMPTY block round-trips; a block of only patches / owned entries yields no completion map.
+    providers: rawProviders != null && (hasCompletion || (!hasExtension && !hasPatches)) ? providers : undefined,
+    extensionProviders: hasExtension ? extensionProviders : undefined,
+    providerPatches: hasPatches ? providerPatches : undefined,
+    profiles: rawProfiles == null ? undefined : profiles,
+    models: rawModels == null ? undefined : models
   };
+
+  return filterUndefinedValues(fields);
 }

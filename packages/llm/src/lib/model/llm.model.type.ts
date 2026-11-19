@@ -126,3 +126,26 @@ export const llmModelTierConfigType = /*#__PURE__*/ llmModelOutputControlsType
  * A tier's value — a bare model slug or a rich tier config (`LlmModelTierValue`).
  */
 export const llmModelTierValueType = /*#__PURE__*/ llmModelSlugType.or(llmModelTierConfigType);
+
+// MARK: Routing rule
+/**
+ * What a routing rule targets — capabilities by key and/or by tag.
+ */
+export const llmModelRoutingRuleTargetsType = /*#__PURE__*/ type({
+  /**
+   * The exact capability keys (`LlmCapabilityKey`) this rule targets (e.g. `["reply-line"]`). A capability-key match
+   * beats any tag match, regardless of rule order.
+   */
+  'capabilities?': type.string.array().readonly(),
+  /**
+   * The capability tags (`LlmCapabilityTag`) this rule targets (e.g. `["dialog"]` for a whole family). Within the tag
+   * level, the FIRST matching rule wins (array order = priority).
+   */
+  'tags?': type.string.array().readonly()
+}).readonly();
+
+/**
+ * One host-declared routing rule (`LlmModelRoutingRule`): its targets, the route (a selection), the provider it is
+ * served by, and per-rule output controls.
+ */
+export const llmModelRoutingRuleType = /*#__PURE__*/ llmModelRoutingRuleTargetsType.merge(llmModelSelectionType).merge(llmModelProviderRefType).merge(llmModelOutputControlsType).readonly();

@@ -233,6 +233,13 @@ describe('makeLlmLiveLane()', () => {
       expect(lane.liveDecisionStrategyFromEnv({ ...both, LLM_DECISION_PROVIDER: 'beta' })?.strategyId).toBe('beta');
     });
 
+    it('should throw on a decision pin naming a strategy that is not registered', () => {
+      const { lane } = laneOf();
+      const keyed = { ...UNLOCKED, ALPHA_API_KEY: 'sk-fake-alpha', BETA_API_KEY: 'sk-fake-beta' };
+      expect(() => lane.liveDecisionStrategyFromEnv({ ...keyed, LLM_DECISION_PROVIDER: 'gamma' })).toThrow("llm live specs: LLM_DECISION_PROVIDER names decision strategy 'gamma', which is not registered (have: alpha, beta).");
+      expect(() => lane.liveDecisionStrategyFromEnv({ ...UNLOCKED, LLM_DECISION_PROVIDER: 'alpha' })).toThrow("llm live specs: LLM_DECISION_PROVIDER names decision strategy 'alpha', which is not registered (have: (none)).");
+    });
+
     it('should serve a base-declared provider through its declared decision route', () => {
       const { lane } = laneOf({ modelConfig: { base: { providers: { gamma: { transport: 'plain', decision: 'fake-decision', apiKeyEnv: 'GAMMA_API_KEY' } } } } });
       expect(lane.liveDecisionStrategyFromEnv({ ...UNLOCKED, GAMMA_API_KEY: 'sk-fake-gamma' })?.strategyId).toBe('gamma');

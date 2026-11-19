@@ -18,7 +18,6 @@ import { concatArraysUnique, type Maybe } from '@dereekb/util';
 import {
   isLlmTokenLimitParam,
   llmAdapterOf,
-  llmCompletionProviderEntries,
   type LlmAdapterRegistry,
   type LlmModelConfigBaseTypes,
   type LlmModelConfigFile,
@@ -113,14 +112,16 @@ export interface LlmProvidersFromEnv<X extends LlmModelConfigTypes = LlmModelCon
  * - **Declared providers** resolve through `resolveLlmProviderConfigs`, keyed by their `apiKeyEnv`. A declared provider
  *   sharing an env default's id REPLACES it — keyed, it takes the slot; unkeyed, the slot stays empty and the provider
  *   is a gap. The env default never stands in for it.
- * - **The default**: an explicit selection (an exact match among the env-default and declared ids, else a
- *   case-insensitive match among the env-default ids; anything else falls through to inference), else the first keyed
+ * - **The default**: an explicit selection (an exact match among the env-default and declared completion ids, else a
+ *   case-insensitive match among the env-default ids; anything else THROWS — a typo, an env default whose adapter is
+ *   not registered, a provider that serves no completions), else the first keyed
  *   non-fallback provider, else the fallback. An explicit selection adds no provider: when it names an unkeyed one,
  *   {@link LlmProvidersFromEnv.defaultProviderId} keeps it (a binding-less call fails loud at the credential) while
  *   {@link LlmProvidersFromEnv.defaultProvider} is the first keyed one.
  *
  * @param config - The environment, the env names, the effective file, the schema, the adapters and the stored keys.
  * @returns The keyed providers, the gaps and the default.
+ * @throws {Error} When the default-provider variable names a provider this environment does not resolve.
  */
 export function resolveLlmProvidersFromEnv<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes>(config: ResolveLlmProvidersFromEnvConfig<X>): LlmProvidersFromEnv<X> {
   const { env, file, schema, adapters, fallbackKeys } = config;
@@ -129,8 +130,10 @@ export function resolveLlmProvidersFromEnv<X extends LlmModelConfigTypes = LlmMo
 
   const envDefaults = names.providers.filter((provider) => llmAdapterOf({ adapters, facet: 'completion', kind: provider.transport ?? provider.id }) != null);
   const envDefaultIds = new Set(envDefaults.map((provider) => provider.id));
-  const declaredIds = new Set(Object.keys(llmCompletionProviderEntries({ providers: file?.providers, schema })));
-  const declared = resolveLlmProviderConfigs({ providers: file?.providers, schema, apiKeyOf: ({ entry }) => keyOf([entry.apiKeyEnv])?.value });
+  const declaredIds = new Set(Object.keys(file?.providers ?? {}));
+  const declared = resolveLlmProviderConfigs({ providers: file?.providers, apiKeyOf: ({ entry }) => keyOf([entry.apiKeyEnv])?.value });
+  // An env default carries none of the extension's provider fields — stated by spreading an empty `Partial` of them.
+  const noExtensionFields: Partial<X['providerFields']> = {};
 
   const slotOf = (provider: LlmEnvProviderNames): Maybe<LlmProviderConfigOf<X>> => {
     let slot: Maybe<LlmProviderConfigOf<X>>;
@@ -154,8 +157,9 @@ export function resolveLlmProvidersFromEnv<X extends LlmModelConfigTypes = LlmMo
           ...(baseUrl == null ? {} : { baseUrl }),
           ...(isLlmTokenLimitParam(tokenLimitParam) ? { tokenLimitParam } : {}),
           ...(reasoningOff == null ? {} : { reasoningOff }),
-          ...(usageAccounting === '1' || usageAccounting === 'true' ? { usageAccounting: true } : {})
-        } as LlmProviderConfigOf<X>;
+          ...(usageAccounting === '1' || usageAccounting === 'true' ? { usageAccounting: true } : {}),
+          ...noExtensionFields
+        };
       }
     }
 
@@ -168,12 +172,20 @@ export function resolveLlmProvidersFromEnv<X extends LlmModelConfigTypes = LlmMo
   const declaredRest = declared.providers.filter((provider) => !envDefaultIds.has(provider.id));
   const providers = [...primarySlots, ...declaredRest, ...fallbackSlots];
 
-  const requested = firstLlmEnvValue({ env, names: names.defaultProvider });
+  const requested = firstLlmEnvEntry({ env, names: names.defaultProvider });
   let explicitProviderId: Maybe<LlmStrategyId>;
 
   if (requested != null) {
-    const lowered = requested.toLowerCase();
-    explicitProviderId = envDefaultIds.has(requested) || declaredIds.has(requested) ? requested : envDefaults.find((provider) => provider.id.toLowerCase() === lowered)?.id;
+    const { name, value } = requested;
+    const lowered = value.toLowerCase();
+    explicitProviderId = envDefaultIds.has(value) || declaredIds.has(value) ? value : envDefaults.find((provider) => provider.id.toLowerCase() === lowered)?.id;
+
+    // A typo here would otherwise route every binding-less call to an inferred default — billing an account the
+    // operator just tried to switch away from.
+    if (explicitProviderId == null) {
+      const ids = [...new Set([...envDefaultIds, ...declaredIds])];
+      throw new Error(`${schema.label}: ${name} names provider '${value}', which this environment does not resolve (have: ${ids.length === 0 ? '(none)' : ids.join(', ')}).`);
+    }
   }
 
   const defaultProviderId = explicitProviderId ?? [...primarySlots, ...declaredRest][0]?.id ?? fallbackSlots[0]?.id ?? envDefaults.find((provider) => provider.fallback === true)?.id;

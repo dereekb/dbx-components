@@ -3,8 +3,29 @@
  * binding against the merged result — the first point at which the set of reachable provider names is complete.
  */
 
-import { type Maybe } from '@dereekb/util';
-import { DEFAULT_LLM_MODEL_CONFIG_SOURCE, type LlmModelConfigBaseTypes, type LlmModelConfigFile, type LlmModelConfigSchema, type LlmModelConfigTypes, type LlmModelProfile, type LlmModelSettingsOf, type LlmProviderEntryOf } from './llm.model.config.schema';
+import { filterUndefinedValues, type Maybe } from '@dereekb/util';
+import { DEFAULT_LLM_MODEL_CONFIG_SOURCE, type LlmCompletionProviderEntryOf, type LlmModelConfigBaseTypes, type LlmModelConfigFile, type LlmModelConfigFileFields, type LlmModelConfigSchema, type LlmModelConfigTypes, type LlmModelProfile, type LlmModelSettingsOf } from './llm.model.config.schema';
+
+/**
+ * A copy of `record` without the entries named in `names`, in its own order.
+ *
+ * @param record - The record (absent ⇒ none).
+ * @param names - The names to drop.
+ * @returns The filtered copy.
+ */
+function omitLlmModelConfigNames<T>(record: Maybe<Readonly<Record<string, T>>>, names: Maybe<Readonly<Record<string, unknown>>>): Record<string, T> {
+  return Object.fromEntries(Object.entries(record ?? {}).filter(([name]) => names == null || !Object.hasOwn(names, name)));
+}
+
+/**
+ * `record` when it has entries, else `undefined`.
+ *
+ * @param record - The record.
+ * @returns The record, or `undefined` when empty.
+ */
+function nonEmptyLlmModelConfigMap<T extends object>(record: T): T | undefined {
+  return Object.keys(record).length === 0 ? undefined : record;
+}
 
 /**
  * Config for {@link mergeLlmModelConfigFiles}.
@@ -28,8 +49,9 @@ export interface MergeLlmModelConfigFilesConfig<X extends LlmModelConfigTypes = 
  * Layer one parsed file OVER another — the merge that lets a host's built-ins sit under its file without either one
  * having to know about the other.
  *
- * `providers`, `profiles` and `models` merge BY KEY, and an overlay entry replaces the base entry WHOLESALE rather than
- * merging into it. That is the important half: a profile whose `fast` came from the overlay and whose `strong` was
+ * `providers` (with `extensionProviders`), `profiles` and `models` merge BY KEY, and an overlay entry replaces the base
+ * entry WHOLESALE rather than merging into it — across BOTH provider maps: an overlay name in either one removes the
+ * base entry of that name from the other, so a name never lives in both. That is the important half: a profile whose `fast` came from the overlay and whose `strong` was
  * inherited from the base is the half-swapped map ("`fast` moved, `strong` kept billing the paid slug") this layer
  * exists to prevent, and a provider whose `apiKeyEnv` came from the overlay and whose `baseUrl` was inherited bills one
  * account at another's endpoint. Naming a provider or a profile therefore means "this, entirely".
@@ -39,7 +61,8 @@ export interface MergeLlmModelConfigFilesConfig<X extends LlmModelConfigTypes = 
  * var on a built-in still reaches every host that only ever patched it. Patch fields never change which account bills,
  * which is why they alone may merge. The merged file carries no `providerPatches`.
  *
- * The scalar keys (`active`, `notes`, `$schema`) are the overlay's when it declares them, else the base's.
+ * The scalar keys (`active`, `notes`, `$schema`) are the overlay's when it declares them, else the base's. The result's
+ * keys follow `LLM_MODEL_CONFIG_FILE_KEYS`, with `extensionProviders` after `providers`.
  *
  * @param config - The base, the overlay and the schema.
  * @returns The merged file.
@@ -47,30 +70,33 @@ export interface MergeLlmModelConfigFilesConfig<X extends LlmModelConfigTypes = 
  */
 export function mergeLlmModelConfigFiles<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes>(config: MergeLlmModelConfigFilesConfig<X>): LlmModelConfigFile<X> {
   const { base, overlay, schema } = config;
-  const providers: Record<string, LlmProviderEntryOf<X>> = { ...base?.providers, ...overlay?.providers };
+  const providers: Record<string, LlmCompletionProviderEntryOf<X>> = { ...omitLlmModelConfigNames(base?.providers, overlay?.extensionProviders), ...overlay?.providers };
+  const extensionProviders: Record<string, X['extensionProviderEntry']> = { ...omitLlmModelConfigNames(base?.extensionProviders, overlay?.providers), ...overlay?.extensionProviders };
 
   for (const [name, patch] of Object.entries(overlay?.providerPatches ?? {})) {
-    if (!Object.hasOwn(providers, name)) {
+    if (Object.hasOwn(providers, name)) {
+      providers[name] = { ...providers[name], ...patch };
+    } else if (Object.hasOwn(extensionProviders, name)) {
+      extensionProviders[name] = { ...extensionProviders[name], ...patch };
+    } else {
       throw new Error(`${schema.label}: providers['${name}'] carries only ${schema.patchKeysNoun} keys, which extends an existing provider, but none is named '${name}'.`);
     }
-
-    providers[name] = { ...providers[name], ...patch };
   }
 
   const profiles: Record<string, LlmModelProfile> = { ...base?.profiles, ...overlay?.profiles };
-  const models: Record<string, Maybe<LlmModelSettingsOf<X>>> = { ...base?.models, ...overlay?.models };
-  const active = overlay?.active ?? base?.active;
-  const notes = overlay?.notes === undefined ? base?.notes : overlay.notes;
-  const $schema = overlay?.$schema === undefined ? base?.$schema : overlay.$schema;
-
-  return {
-    ...(active == null ? {} : { active }),
-    ...(Object.keys(providers).length === 0 ? {} : { providers }),
-    ...(Object.keys(profiles).length === 0 ? {} : { profiles }),
-    ...(Object.keys(models).length === 0 ? {} : { models: models as LlmModelConfigFile<X>['models'] }),
-    ...(notes === undefined ? {} : { notes }),
-    ...($schema === undefined ? {} : { $schema })
+  const models: Partial<Record<string, LlmModelSettingsOf<X>>> = { ...base?.models, ...overlay?.models };
+  const fields: LlmModelConfigFileFields<X> = {
+    $schema: overlay?.$schema === undefined ? base?.$schema : overlay.$schema,
+    notes: overlay?.notes === undefined ? base?.notes : overlay.notes,
+    active: overlay?.active ?? base?.active ?? undefined,
+    providers: nonEmptyLlmModelConfigMap(providers),
+    extensionProviders: nonEmptyLlmModelConfigMap(extensionProviders),
+    providerPatches: undefined,
+    profiles: nonEmptyLlmModelConfigMap(profiles),
+    models: nonEmptyLlmModelConfigMap(models)
   };
+
+  return filterUndefinedValues(fields);
 }
 
 /**
@@ -98,8 +124,8 @@ export interface AssertLlmModelProviderBindingsConfig<X extends LlmModelConfigTy
  *
  * FAILS LOUD, listing the declared names. A typo'd binding is always an operator error, and the alternative — silently
  * serving the slug from the default provider — is the "billed the wrong account" surprise the providers block exists to
- * end. A binding to a provider of a transport the extension owns fails too, unless the extension says that entry is
- * bindable.
+ * end. A binding to a provider of a transport the extension owns (`extensionProviders`) fails too, unless the
+ * extension says that entry is bindable.
  *
  * @param config - The merged file, its source label and the schema.
  * @throws {Error} When a slug binds a provider that serves no completions, or a name nothing declares.
@@ -108,7 +134,8 @@ export function assertLlmModelProviderBindings<X extends LlmModelConfigTypes = L
   const { file, schema } = config;
   const source = config.source ?? DEFAULT_LLM_MODEL_CONFIG_SOURCE;
   const providers = file?.providers ?? {};
-  const declared = Object.keys(providers);
+  const extensionProviders = file?.extensionProviders ?? {};
+  const declared = [...Object.keys(providers), ...Object.keys(extensionProviders)];
   const implicit = schema.implicitProviders;
   // The host's default instances are reachable by name even though no `providers` entry declares them: they are
   // minted from the host's own environment, and naming one is how a slug says "the ordinary one".
@@ -116,10 +143,10 @@ export function assertLlmModelProviderBindings<X extends LlmModelConfigTypes = L
 
   for (const [model, settings] of Object.entries(file?.models ?? {})) {
     const provider = settings?.provider;
-    const entry = provider != null && Object.hasOwn(providers, provider) ? providers[provider] : undefined;
+    const extensionEntry = provider != null && !Object.hasOwn(providers, provider) && Object.hasOwn(extensionProviders, provider) ? extensionProviders[provider] : undefined;
 
-    if (entry != null && schema.extensionTransports.includes(entry.transport) && schema.extension?.isProviderBindable?.(entry as X['extensionProviderEntry']) !== true) {
-      throw new Error(`${schema.label}: ${source} models['${model}'].provider names provider '${provider}', which serves no completions (transport '${entry.transport}').`);
+    if (extensionEntry != null && schema.extension?.isProviderBindable?.(extensionEntry) !== true) {
+      throw new Error(`${schema.label}: ${source} models['${model}'].provider names provider '${provider}', which serves no completions (transport '${extensionEntry.transport}').`);
     }
 
     if (provider != null && !known.has(provider)) {
@@ -166,11 +193,11 @@ export interface OverlayLlmModelConfigFileConfig<X extends LlmModelConfigTypes =
 export function overlayLlmModelConfigFile<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes>(config: OverlayLlmModelConfigFileConfig<X>): LlmModelConfigFile<X> {
   const { base, file, schema } = config;
   const source = config.source ?? DEFAULT_LLM_MODEL_CONFIG_SOURCE;
-  const builtIns = base.providers ?? {};
+  const builtIns = [...Object.keys(base.providers ?? {}), ...Object.keys(base.extensionProviders ?? {})];
 
   for (const name of Object.keys(file?.providerPatches ?? {})) {
-    if (!Object.hasOwn(builtIns, name)) {
-      const names = Object.keys(builtIns);
+    if (!builtIns.includes(name)) {
+      const names = builtIns;
       throw new Error(`${schema.label}: ${source} providers['${name}'] carries only ${schema.patchKeysNoun} keys, which extends a BUILT-IN provider, but no built-in is named '${name}' (built-ins: ${names.length === 0 ? '(none)' : names.join(', ')}). Declare it in full (transport / baseUrl / apiKeyEnv).`);
     }
   }

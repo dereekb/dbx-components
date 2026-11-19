@@ -268,21 +268,34 @@ environment variable and no file: `/node` does that, and a browser host passes t
   `providers`, `profiles` (complete tier maps), per-slug `models` facts, `active`, and the unread `notes` / `$schema`.
   An unknown key, an illegal value or a malformed tier throws an error naming the file and the entry, so a typo
   reddens startup instead of billing the model you meant to leave. A provider names the env var holding its key
-  (`apiKeyEnv`), never the key.
+  (`apiKeyEnv`), never the key. An unknown top-level key lists the allowed ones in the one key order,
+  `LLM_MODEL_CONFIG_FILE_KEYS` (`$schema`, `notes`, `active`, `providers`, `profiles`, `models`), and a tier error
+  inside the file carries the schema label (`my-app models: models.json profiles['free']['fast'] …`). The parsed file
+  splits the on-disk `providers` block three ways: `providers` (completion providers — the only ones a completion
+  reader mints strategies for), `extensionProviders` (entries of a transport the extension owns) and `providerPatches`
+  (an extension's fields declared alone). `parseLlmProviderEntry` answers which (`{ kind: 'completion' | 'extension',
+  entry }`). `flattenLlmModelConfigFile(file)` is the reverse: the plain on-disk object, keys in the constant's order,
+  profiles flattened, and `providers` written as completion entries, then owned entries, then patches.
 - **Schema and extensions.** `makeLlmModelConfigSchema({ label, transports, meterings, decisionRoutes,
   implicitProviders, retiredKeys, extension })` sets the legal values and the error label. An extension adds provider
   and model keys with their parsers, transports it owns (providers that serve no completions), patch entries (an entry
   with no transport, base URL or key var that extends the built-in provider of the same name) and metering sources. A
-  retired key fails with the remedy you register.
+  retired key fails with the remedy you register. The entry and per-slug types are derived from arktype declarations
+  (`llmCompletionProviderEntryType`, `llmModelSettingsType`, … in `llm.model.config.type.ts`), and an extension's
+  fields are typed `Partial<…>` on every entry, patch and resolved config — a provider that leaves them out is still
+  well-typed, so the extension seam needs no cast. Declare an extension's fields the same way: an arktype type with
+  `'+': 'delete'`, read through `parseLlmModelConfigFields`.
 - **Overlay.** `overlayLlmModelConfigFile({ base, file, source, schema })` lays a host's file over its built-ins. A
   provider, profile or per-slug entry the file names replaces the built-in whole — a half-replaced provider would bill
   one account at another's endpoint — and every `models[slug].provider` is then checked against the merged providers.
 - **Resolution.** `resolveLlmModelProfile({ file, override, schema })` picks the active profile: the override wins,
   an off value (`off` / `none` in any case, `LLM_OFF_VALUES` / `isLlmOffValue`) or a blank `active` selects nothing,
   and a name the file lacks throws. `llmModelReasoningOffEncodings`,
-  `llmModelVisionCapabilities`, `llmModelPromptAddenda` and `llmModelProviderBindings` project the per-slug facts.
-  `resolveLlmProviderConfigs({ providers, schema, apiKeyOf })` turns declared providers into `LlmProviderConfig`s that
-  carry the key value, and lists the declared providers whose key is missing.
+  `llmModelVisionCapabilities`, `llmModelPromptAddenda` and `llmModelProviderBindings` project the per-slug facts,
+  each a one-line `mapLlmModelSettings({ file, read })` — the generic projector a host uses for its own per-slug
+  fields (only the slugs `read` answers for are kept; `undefined` when none is).
+  `resolveLlmProviderConfigs({ providers, apiKeyOf })` turns the declared completion providers into
+  `LlmProviderConfig`s that carry the key value, and lists the declared providers whose key is missing.
 - **Wire vocabulary.** `LLM_REASONING_OFF_ENCODINGS` (how an OpenAI-compatible wire says "reasoning off":
   `effort-none`, `effort-minimal`, `nested-disabled`, `omit`), `llmReasoningOffEncodingFor` (the slug's own, then the
   fallback, then `effort-none`), `LLM_TOKEN_LIMIT_PARAMS`, and the per-slug `LlmModelReasoningOffMap` /
@@ -306,7 +319,7 @@ const file = parseLlmModelConfigFile({ raw: JSON.parse(text), source: 'models.js
 const effective = overlayLlmModelConfigFile({ base: BUILT_IN_MODEL_CONFIG, file, source: 'models.json', schema });
 const profile = resolveLlmModelProfile({ file: effective, override: requestedProfile, schema });
 const { tiers, defaultTier } = resolveLlmModelTiers({ base: BUILT_IN_TIERS, modelTiers: profile?.tiers });
-const { providers, gaps } = resolveLlmProviderConfigs({ providers: effective.providers, schema, apiKeyOf: ({ entry }) => keys[entry.apiKeyEnv] });
+const { providers, gaps } = resolveLlmProviderConfigs({ providers: effective.providers, apiKeyOf: ({ entry }) => keys[entry.apiKeyEnv] });
 ```
 
 ## Model routing
@@ -315,6 +328,10 @@ A host moves a capability to another model without touching code. Routing rules 
 onto a tier or a slug, and one precedence ladder decides what each call runs on, so a dispatcher and a report that
 explains the choice read the same answer.
 
+- **Parse.** `parseLlmModelRoutingConfig({ raw, source, label? })` validates a routing block read from JSON (or an env
+  var) into an `LlmModelRoutingConfig` and fails loud naming the field — an unknown key, a non-array `rules`, a
+  `"tags": "dialog"` string, a `"maxOutputTokens": "9000"` string or a non-integer cap, a bad `reasoning`, or a bad
+  `tiers` value (the tier parser's own message). It checks shapes only; `compileLlmModelRouting` checks names.
 - **Rules.** `compileLlmModelRouting({ routing, capabilities, tiers, providers, label })` compiles an
   `LlmModelRoutingConfig` (`{ tiers?, defaultTier?, rules? }`) into an `LlmCompiledModelRouting`: capability →
   `LlmCapabilityRoute` (`{ model, tier?, provider?, maxOutputTokens?, reasoning? }`). A rule targets `capabilities`
@@ -333,8 +350,9 @@ explains the choice read the same answer.
 - **Vision.** `llmCapabilityVisionOf({ …, visionByModel })` — the slug a capability bills and whether it accepts images.
 
 ```ts
-import { compileLlmModelRouting, llmModelProviderBindings, resolveLlmCapabilityModel, resolveLlmCapabilityProvider, resolveLlmModelTiers } from '@dereekb/llm';
+import { compileLlmModelRouting, llmModelProviderBindings, parseLlmModelRoutingConfig, resolveLlmCapabilityModel, resolveLlmCapabilityProvider, resolveLlmModelTiers } from '@dereekb/llm';
 
+const routing = parseLlmModelRoutingConfig({ raw: JSON.parse(routingText), source: 'routing.json' });
 const { tiers, defaultTier } = resolveLlmModelTiers({ base: BUILT_IN_TIERS, modelTiers: { ...routing.tiers, ...profile?.tiers }, defaultTier: routing.defaultTier });
 const routes = compileLlmModelRouting({ routing, capabilities: [{ capability: 'reply-line', tags: ['dialog'] }, { capability: 'summarize' }], tiers, providers: ['local', 'openrouter'] });
 
@@ -376,7 +394,7 @@ import { llmModelConfigListsOf, makeLlmAdapterRegistry, makeLlmDecisionStrategie
 
 const adapters = makeLlmAdapterRegistry(PROVIDER_ADAPTERS); // the adapters your provider entries export
 const schema = makeLlmModelConfigSchema({ ...llmModelConfigListsOf(adapters), label: 'my-app models' });
-const { providers } = resolveLlmProviderConfigs({ providers: effective.providers, schema, apiKeyOf: ({ entry }) => keys[entry.apiKeyEnv] });
+const { providers } = resolveLlmProviderConfigs({ providers: effective.providers, apiKeyOf: ({ entry }) => keys[entry.apiKeyEnv] });
 
 const strategies = makeLlmStrategyRegistry(makeLlmProviderStrategies({ providers, adapters, defaultModel, timeoutMs: 60_000 }));
 const decisions = makeLlmDecisionStrategies({ providers, adapters, routePreference: ['zenmux', 'openrouter'] });
@@ -1141,14 +1159,14 @@ how a spec stays hermetic.
   |---|---|---|
   | `providers[openai]` | `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `LLM_OPENAI_TOKEN_LIMIT_PARAM`, `LLM_OPENAI_REASONING_OFF`, `LLM_OPENAI_USAGE_ACCOUNTING` | The OpenAI env default: key, endpoint and wire knobs. |
   | `providers[openrouter]` | `OPENROUTER_API_KEY` | The fallback env default: serves only when nothing else is keyed, or when selected. |
-  | `defaultProvider` | `LLM_PROVIDER` | The explicit default-provider selection. |
+  | `defaultProvider` | `LLM_PROVIDER` | The explicit default-provider selection. A value naming no env default with a registered adapter and no declared completion provider throws, listing the selectable ids. |
   | `modelsFile` | `LLM_MODELS_FILE` | The model config file path; a path set here that does not exist fails loud. |
   | `modelProfile` | `LLM_MODEL_PROFILE` | The per-run profile override (wins over the file's `active`; `off` / `none`, any case, selects none). |
   | `modelTiers` | `LLM_MODEL_TIERS` | The bulk tier map, as JSON. |
   | `tierModels` | `LLM_MODEL` (`fast`), `LLM_MODEL_STRONG` (`strong`) | One slug per tier; wins over the same key in `modelTiers`. |
   | `defaultTier` | `LLM_DEFAULT_TIER` | Which tier is the default. |
   | `decodeRetryTier` | `LLM_DECODE_RETRY_TIER` | Which tier a malformed reply retries on (`off` / `none`, any case, keeps the same model). |
-  | `decisionProvider` | `LLM_DECISION_PROVIDER` | The decision-lane provider pin (a provider id). |
+  | `decisionProvider` | `LLM_DECISION_PROVIDER` | The decision-lane provider pin (a provider id; the test lane throws on one that is not registered). |
   | `craftNotesDir` | `LLM_CRAFT_NOTES_DIR` | The machine craft-notes folder. |
 
 - **The file.** `loadEffectiveLlmModelConfigFile({ schema, base, defaultPath })` reads the path the env names, else
@@ -1156,7 +1174,8 @@ how a spec stays hermetic.
   and returns `{ file, userFile, filePath, fileExists }`: `file` (your `base` with the operator's file laid over it)
   is what every read resolves against. `writeLlmModelConfigFile` persists a whole file: transform `userFile`, never
   the effective `file`, or a copy of the built-ins freezes onto the machine. The bytes are parsed back and `active`
-  resolved before they land, keys are written in a fixed order, and the write is atomic (a temp file, then a rename).
+  resolved before they land, the shape is `flattenLlmModelConfigFile`'s (every key, in `LLM_MODEL_CONFIG_FILE_KEYS`
+  order — none is silently dropped), and the write is atomic (a temp file, then a rename).
 - **Profile and tiers.** `resolveLlmModelProfileFromEnv({ file, source, schema })` picks the active profile with the
   env override over the file's `active` (`overrideEnv` names the var that chose it). `resolveLlmModelTierEnv()`
   returns the env's tier map, default tier and decode-retry tier. Precedence is env over profile over the host's
@@ -1166,7 +1185,9 @@ how a spec stays hermetic.
   its transport has a registered completion adapter. A declared provider is keyed by its own `apiKeyEnv`, and it
   replaces an env default of the same id even when unkeyed — it is never silently re-pointed at another key. The
   default is the explicit selection, else the first keyed non-fallback provider, else the fallback, keyed or not, so a
-  missing key fails loud at the call. `gaps` lists every declared provider without a key; scope it to the slugs a run
+  missing key fails loud at the call. An explicit selection (`LLM_PROVIDER`) that names neither an env default with a
+  registered adapter (case-insensitively) nor a declared completion provider (exactly) throws, naming the variable and
+  the selectable ids — a typo never silently routes to the inferred default. `gaps` lists every declared provider without a key; scope it to the slugs a run
   can reach with `llmReachableProviderGapsOf`.
 - **Craft notes.** `resolveLlmCraftNotesDir({ defaultDir })` answers the folder the env names, else yours.
   `loadLlmCraftNotes({ dir, tier, sites, warn })` drops and warns about a bad note, never throws, and reads an absent
@@ -1253,8 +1274,9 @@ scripts make no network call, and the lane's helpers answer `undefined` while it
   answers `undefined` for a provider with no safe default). Verdicts fail open: an absent or unrecognized one reads
   `unchecked` and never vetoes. Every skip past the lock is logged. `makeLiveStrategy()` /
   `liveStrategyBinding()` build inside an open gate (and throw when nothing resolves — the gate is wrong);
-  `liveDecisionStrategyFromEnv()` answers the decision backend, pinned by `LLM_DECISION_PROVIDER`, with no veto of its
-  own (pair it with `liveStrategyFromEnv` in the gate). The built strategy is wrapped by
+  `liveDecisionStrategyFromEnv()` answers the decision backend, pinned by `LLM_DECISION_PROVIDER` (a pin naming a
+  strategy that is not registered throws, listing the registered ones), with no veto of its own (pair it with
+  `liveStrategyFromEnv` in the gate). The built strategy is wrapped by
   `decorateLlmLiveStrategyAuthFailures`: a `401` / `403` is rethrown naming the key's variable, never the key.
 
   | Field | Default var | Meaning |

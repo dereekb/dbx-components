@@ -1,5 +1,20 @@
-import { describe, expect, it } from 'vitest';
-import { DEFAULT_LLM_MODEL_CONFIG_LABEL, LLM_MODEL_SETTINGS_KEYS, LLM_PROVIDER_ENTRY_KEYS, llmCompletionProviderEntries, type LlmModelConfigTypes, type LlmProviderEntryBase, type LlmProviderEntryMap, makeLlmModelConfigSchema } from './llm.model.config.schema';
+import { ArkErrors } from 'arktype';
+import { describe, expect, expectTypeOf, it } from 'vitest';
+import { type LlmModelConfigFieldRules } from '../llm.model.field';
+import {
+  DEFAULT_LLM_MODEL_CONFIG_LABEL,
+  LLM_MODEL_CONFIG_FILE_KEYS,
+  LLM_MODEL_SETTINGS_FIELD_RULES,
+  LLM_MODEL_SETTINGS_KEYS,
+  LLM_PROVIDER_ENTRY_KEYS,
+  type LlmCompletionProviderEntry,
+  type LlmModelConfigFile,
+  type LlmModelConfigFileKey,
+  type LlmModelConfigTypes,
+  type LlmModelSettings,
+  type LlmProviderEntryBase,
+  makeLlmModelConfigSchema
+} from './llm.model.config.schema';
 
 interface MinimalTypes extends LlmModelConfigTypes {
   readonly providerFields: object;
@@ -75,20 +90,36 @@ describe('makeLlmModelConfigSchema()', () => {
   });
 });
 
-describe('llmCompletionProviderEntries()', () => {
-  const schema = makeLlmModelConfigSchema<MinimalTypes>({ transports: ['openai', 'openrouter'], extension: { providerTransports: ['none'], parseProviderEntry: (input) => ({ transport: input.transport, baseUrl: input.baseUrl ?? '' }) } });
+describe('the per-schema entry checks', () => {
+  const schema = makeLlmModelConfigSchema({ transports: ['openai', 'openrouter'], meterings: ['zenmux'], decisionRoutes: ['zenmux'] });
 
-  it('keeps the completion entries in declaration order and drops the extension-owned ones', () => {
-    const providers: LlmProviderEntryMap<MinimalTypes> = {
-      b: { transport: 'openrouter', apiKeyEnv: 'B' },
-      media: { transport: 'none', baseUrl: 'https://media.example.com' },
-      a: { transport: 'openai', apiKeyEnv: 'A' }
-    };
-
-    expect(Object.keys(llmCompletionProviderEntries({ providers, schema }))).toEqual(['b', 'a']);
+  it('reject an unlisted transport, metering or decision', () => {
+    expect(schema.providerEntryBaseType({ transport: 'vllm' })).toBeInstanceOf(ArkErrors);
+    expect(schema.completionProviderEntryType({ apiKeyEnv: 'K', metering: 'other' })).toBeInstanceOf(ArkErrors);
+    expect(schema.completionProviderEntryType({ apiKeyEnv: 'K', decision: 'openrouter' })).toBeInstanceOf(ArkErrors);
   });
 
-  it('returns an empty map for absent providers', () => {
-    expect(llmCompletionProviderEntries({ providers: undefined, schema })).toEqual({});
+  it('accept the listed values, and an absent transport', () => {
+    expect(schema.providerEntryBaseType({ transport: 'openrouter' })).not.toBeInstanceOf(ArkErrors);
+    expect(schema.completionProviderEntryType({ apiKeyEnv: 'K', metering: 'none', decision: 'zenmux' })).not.toBeInstanceOf(ArkErrors);
+  });
+
+  it('has a rule for every key, in key order', () => {
+    const rules: LlmModelConfigFieldRules<LlmCompletionProviderEntry> = schema.completionProviderEntryRules;
+    expect(Object.keys(rules)).toEqual([...LLM_PROVIDER_ENTRY_KEYS]);
+    expect(Object.keys(LLM_MODEL_SETTINGS_FIELD_RULES)).toEqual([...LLM_MODEL_SETTINGS_KEYS]);
+  });
+});
+
+describe('the key constants', () => {
+  it('classify every key of a parsed file as on-disk or in-memory', () => {
+    expectTypeOf<keyof LlmModelConfigFile>().toEqualTypeOf<LlmModelConfigFileKey | 'extensionProviders' | 'providerPatches'>();
+    expect(LLM_MODEL_CONFIG_FILE_KEYS).toEqual(['$schema', 'notes', 'active', 'providers', 'profiles', 'models']);
+  });
+
+  it('cover the entry types exactly', () => {
+    expectTypeOf<(typeof LLM_PROVIDER_ENTRY_KEYS)[number]>().toEqualTypeOf<keyof LlmCompletionProviderEntry>();
+    expectTypeOf<(typeof LLM_MODEL_SETTINGS_KEYS)[number]>().toEqualTypeOf<keyof LlmModelSettings>();
+    expectTypeOf<LlmProviderEntryBase>().toMatchTypeOf<{ readonly transport: string }>();
   });
 });

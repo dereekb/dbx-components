@@ -13,7 +13,7 @@
  */
 
 import { type Maybe } from '@dereekb/util';
-import { type LlmModelId, type LlmModelTierKey, type LlmReasoningConfig, type LlmStrategyId } from './llm.value';
+import { type LlmModelId, type LlmModelOutputControls, type LlmModelSelection, type LlmModelTierKey, type LlmReasoningConfig, type LlmStrategyId } from './llm.value';
 import { llmTierConfigOf, resolveLlmModelTier, type LlmModelTierMap } from './llm.model.tier';
 import { type LlmCapabilityRoute } from './llm.model.routing';
 import { type LlmModelVisionMap } from './llm.model.wire';
@@ -29,25 +29,12 @@ export const LLM_REASONING_OFF: LlmReasoningConfig = { enabled: false };
 /**
  * The capability fields the precedence reads — STRUCTURAL, so this leaf never imports a capability registry. A full
  * capability descriptor satisfies it as-is; an execute-only declaration satisfies it with just its `model`.
+ *
+ * Its `tier` is the preferred axis field (unset ⇒ the default tier) and its raw `model` slug the escape hatch (wins over
+ * `tier`); its `maxOutputTokens` / `reasoning` win over the tier's. Composed of {@link LlmModelSelection} and
+ * {@link LlmModelOutputControls}.
  */
-export interface LlmCapabilityModelRef {
-  /**
-   * The capability's declared model TIER (the preferred axis field); unset ⇒ fall through to the default tier.
-   */
-  readonly tier?: LlmModelTierKey;
-  /**
-   * The capability's declared RAW model slug (the escape hatch); wins over {@link tier} when both are set.
-   */
-  readonly model?: LlmModelId;
-  /**
-   * The capability's declared completion-length cap; unset ⇒ the tier / strategy cap.
-   */
-  readonly maxOutputTokens?: number;
-  /**
-   * The capability's declared reasoning controls; unset ⇒ the tier's reasoning / the host floor.
-   */
-  readonly reasoning?: LlmReasoningConfig;
-}
+export interface LlmCapabilityModelRef extends LlmModelSelection, LlmModelOutputControls {}
 
 /**
  * Which rung of the model ladder WON — the attribution a report renders (`route` says a host routing rule overrode the
@@ -68,32 +55,21 @@ export type LlmCapabilityOutputBudgetSource = 'route' | 'descriptor' | 'tier';
 export type LlmCapabilityReasoningSource = 'request' | 'route' | 'descriptor' | 'tier' | 'default';
 
 /**
- * The per-call model override — the highest-precedence rungs of the model ladder.
+ * The per-call model override — the highest-precedence rungs of the model ladder: a per-call raw `model` slug wins over
+ * everything, a per-call `tier` over everything but that. A {@link LlmModelSelection}.
  */
-export interface LlmCapabilityModelOverride {
-  /**
-   * A per-call raw slug; wins over everything.
-   */
-  readonly model?: LlmModelId;
-  /**
-   * A per-call tier; wins over everything but {@link model}.
-   */
-  readonly tier?: LlmModelTierKey;
-}
+export interface LlmCapabilityModelOverride extends LlmModelSelection {}
 
 /**
  * The resolved MODEL axis for one capability — the CONCRETE model a call would burn plus the rung that chose it. Its
- * `model` is always the real slug, because a reporting surface must name the model rather than imply it.
+ * `model` is always the real slug, because a reporting surface must name the model rather than imply it. `tier` is the
+ * named-tier key it resolved from, absent for a raw-slug resolution (a slug carries no tier).
  */
-export interface LlmResolvedCapabilityModel {
+export interface LlmResolvedCapabilityModel extends Pick<LlmModelSelection, 'tier'> {
   /**
    * The concrete model slug the precedence resolved.
    */
   readonly model: LlmModelId;
-  /**
-   * The named-tier key {@link model} resolved from; absent for a raw-slug resolution (a slug carries no tier).
-   */
-  readonly tier?: LlmModelTierKey;
   /**
    * Which rung won.
    */

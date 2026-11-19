@@ -10,19 +10,8 @@
 import { type Maybe } from '@dereekb/util';
 import { isLlmOffValue, type LlmPartialModelTierMap, llmTierModelOf, resolveLlmDefaultModelTierKey } from '../llm.model.tier';
 import { type LlmModelReasoningOffMap, type LlmModelVisionMap } from '../llm.model.wire';
-import { type LlmModelId, type LlmModelTierKey, type LlmStrategyId } from '../llm.value';
-import {
-  DEFAULT_LLM_MODEL_CONFIG_SOURCE,
-  llmCompletionProviderEntries,
-  type LlmCompletionProviderEntry,
-  type LlmCompletionProviderEntryOf,
-  type LlmModelConfigBaseTypes,
-  type LlmModelConfigFile,
-  type LlmModelConfigSchema,
-  type LlmModelConfigTypes,
-  type LlmModelSettings,
-  type LlmProviderEntryMap
-} from './llm.model.config.schema';
+import { type LlmModelId, type LlmModelSlugMap, type LlmModelTierKey, type LlmStrategyId } from '../llm.value';
+import { DEFAULT_LLM_MODEL_CONFIG_SOURCE, type LlmCompletionProviderEntry, type LlmCompletionProviderEntryMap, type LlmCompletionProviderEntryOf, type LlmModelConfigBaseTypes, type LlmModelConfigFile, type LlmModelConfigSchema, type LlmModelConfigTypes, type LlmModelSettings } from './llm.model.config.schema';
 
 // MARK: Profile
 /**
@@ -144,67 +133,96 @@ export function llmModelProfileDefaultModel(config: LlmModelProfileDefaultModelC
 /**
  * The per-model PROVIDER bindings: model slug → the provider name that serves it.
  */
-export type LlmModelProviderBindingMap = Readonly<Partial<Record<LlmModelId, LlmStrategyId>>>;
+export type LlmModelProviderBindingMap = LlmModelSlugMap<LlmStrategyId>;
 
 /**
  * The per-model PROMPT ADDENDUM map: model slug → the text prepended to every dispatch that resolves to that slug.
  * Keyed by SLUG rather than by tier or capability, because the need belongs to the model however it was selected.
  */
-export type LlmModelPromptAddendumMap = Readonly<Partial<Record<LlmModelId, string>>>;
+export type LlmModelPromptAddendumMap = LlmModelSlugMap<string>;
 
 /**
  * What the projections read: any object with a `models` block (a parsed or merged file).
  */
 export interface LlmModelSettingsSource {
-  readonly models?: Maybe<Readonly<Partial<Record<LlmModelId, LlmModelSettings>>>>;
+  readonly models?: Maybe<LlmModelSlugMap<LlmModelSettings>>;
 }
 
 /**
- * Project the `models` block onto the per-model reasoning-OFF map the transport takes — only the slugs that declare
- * one, and `undefined` (never `{}`) when none does, so a host's spread of it stays absent.
+ * Config for {@link mapLlmModelSettings}.
+ */
+export interface MapLlmModelSettingsConfig<V> {
+  /**
+   * The file (absent ⇒ none).
+   */
+  readonly file: Maybe<LlmModelSettingsSource>;
+  /**
+   * Reads one slug's value; `null` / `undefined` ⇒ the slug is left out.
+   */
+  readonly read: (settings: LlmModelSettings) => Maybe<V>;
+}
+
+/**
+ * Project the `models` block onto a per-slug map — THE one projector behind every per-slug map a host hands its
+ * transports and dispatcher. Only the slugs `read` returns a value for are kept, in declaration order, and the result
+ * is `undefined` (never `{}`) when none does, so a host's spread of it stays absent.
+ *
+ * @param config - The file and the per-slug reader.
+ * @returns The slug → value map, or `undefined`.
+ */
+export function mapLlmModelSettings<V>(config: MapLlmModelSettingsConfig<V>): Maybe<LlmModelSlugMap<V>> {
+  const { file, read } = config;
+  const entries: [LlmModelId, V][] = [];
+
+  for (const [model, settings] of Object.entries(file?.models ?? {})) {
+    const value = settings == null ? undefined : read(settings);
+
+    if (value != null) {
+      entries.push([model, value]);
+    }
+  }
+
+  return entries.length === 0 ? undefined : Object.fromEntries(entries);
+}
+
+/**
+ * The per-model reasoning-OFF map the transport takes ({@link mapLlmModelSettings}).
  *
  * @param file - The file (absent ⇒ none).
  * @returns The slug → encoding map, or `undefined`.
  */
 export function llmModelReasoningOffEncodings(file: Maybe<LlmModelSettingsSource>): Maybe<LlmModelReasoningOffMap> {
-  const entries = Object.entries(file?.models ?? {}).flatMap(([model, settings]) => (settings?.reasoningOff == null ? [] : [[model, settings.reasoningOff] as const]));
-  return entries.length === 0 ? undefined : Object.fromEntries(entries);
+  return mapLlmModelSettings({ file, read: (settings) => settings.reasoningOff });
 }
 
 /**
- * Project the `models` block onto the per-model VISION map the transports take — only the slugs that declare
- * `vision: true`, and `undefined` when none does.
+ * The per-model VISION map the transports take — only the slugs that declare `vision: true`.
  *
  * @param file - The file (absent ⇒ none).
  * @returns The slug → `true` map, or `undefined`.
  */
 export function llmModelVisionCapabilities(file: Maybe<LlmModelSettingsSource>): Maybe<LlmModelVisionMap> {
-  const entries = Object.entries(file?.models ?? {}).flatMap(([model, settings]) => (settings?.vision === true ? [[model, true] as const] : []));
-  return entries.length === 0 ? undefined : Object.fromEntries(entries);
+  return mapLlmModelSettings({ file, read: (settings) => (settings.vision === true ? true : undefined) });
 }
 
 /**
- * Project the `models` block onto the per-model PROMPT ADDENDUM map the dispatcher takes — only the slugs that declare
- * one, and `undefined` when none does.
+ * The per-model PROMPT ADDENDUM map the dispatcher takes ({@link mapLlmModelSettings}).
  *
  * @param file - The file (absent ⇒ none).
  * @returns The slug → addendum map, or `undefined`.
  */
 export function llmModelPromptAddenda(file: Maybe<LlmModelSettingsSource>): Maybe<LlmModelPromptAddendumMap> {
-  const entries = Object.entries(file?.models ?? {}).flatMap(([model, settings]) => (settings?.promptAddendum == null ? [] : [[model, settings.promptAddendum] as const]));
-  return entries.length === 0 ? undefined : Object.fromEntries(entries);
+  return mapLlmModelSettings({ file, read: (settings) => settings.promptAddendum });
 }
 
 /**
- * Project the `models` block onto the per-model PROVIDER bindings the host and dispatcher take — only the slugs that
- * name one, and `undefined` when none does.
+ * The per-model PROVIDER bindings the host and dispatcher take ({@link mapLlmModelSettings}).
  *
  * @param file - The file (absent ⇒ none).
  * @returns The slug → provider-name map, or `undefined`.
  */
 export function llmModelProviderBindings(file: Maybe<LlmModelSettingsSource>): Maybe<LlmModelProviderBindingMap> {
-  const entries = Object.entries(file?.models ?? {}).flatMap(([model, settings]) => (settings?.provider == null ? [] : [[model, settings.provider] as const]));
-  return entries.length === 0 ? undefined : Object.fromEntries(entries);
+  return mapLlmModelSettings({ file, read: (settings) => settings.provider });
 }
 
 // MARK: Provider configs
@@ -223,9 +241,10 @@ export interface LlmProviderConfig extends LlmCompletionProviderEntry {
 }
 
 /**
- * A resolved provider config with the extension's provider fields.
+ * A resolved provider config with the extension's provider fields (`Partial`, as on the entry it came from — a host's
+ * env-default instance carries none).
  */
-export type LlmProviderConfigOf<X extends LlmModelConfigTypes> = LlmProviderConfig & X['providerFields'];
+export type LlmProviderConfigOf<X extends LlmModelConfigTypes> = LlmProviderConfig & Partial<X['providerFields']>;
 
 /**
  * A declared provider whose key is missing.
@@ -265,13 +284,9 @@ export type LlmProviderApiKeyReader<X extends LlmModelConfigTypes = LlmModelConf
  */
 export interface ResolveLlmProviderConfigsConfig<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes> {
   /**
-   * The effective `providers` block.
+   * The effective completion `providers` (`file.providers` — extension-owned entries live apart and are never read).
    */
-  readonly providers: Maybe<LlmProviderEntryMap<X>>;
-  /**
-   * The schema (drops the extension-owned entries).
-   */
-  readonly schema: LlmModelConfigSchema<X>;
+  readonly providers: Maybe<LlmCompletionProviderEntryMap<X>>;
   /**
    * Reads each provider's key value.
    */
@@ -298,24 +313,25 @@ export interface LlmProviderConfigResolution<X extends LlmModelConfigTypes = Llm
  * user's stored key.
  *
  * A provider whose key is blank or absent becomes a gap, never a config: a declared provider is never silently
- * substituted by another. Entries of transports the extension owns are skipped. Default instances, base-URL defaults
+ * substituted by another. Only completion entries are read (the extension-owned entries live in
+ * `file.extensionProviders`). Default instances, base-URL defaults
  * and model pins are the host's (or the adapter's) concern.
  *
- * @param config - The providers, the schema and the key reader.
+ * @param config - The completion providers and the key reader.
  * @returns The keyed providers and the gaps.
  */
 export function resolveLlmProviderConfigs<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes>(config: ResolveLlmProviderConfigsConfig<X>): LlmProviderConfigResolution<X> {
-  const { providers, schema, apiKeyOf } = config;
+  const { providers, apiKeyOf } = config;
   const configs: LlmProviderConfigOf<X>[] = [];
   const gaps: LlmProviderConfigGap[] = [];
 
-  for (const [id, entry] of Object.entries(llmCompletionProviderEntries({ providers, schema }))) {
+  for (const [id, entry] of Object.entries(providers ?? {})) {
     const apiKey = (apiKeyOf({ id, entry }) ?? '').trim();
 
     if (apiKey.length === 0) {
       gaps.push({ id, apiKeyEnv: entry.apiKeyEnv });
     } else {
-      configs.push({ id, ...entry, apiKey } as LlmProviderConfigOf<X>);
+      configs.push({ id, ...entry, apiKey });
     }
   }
 

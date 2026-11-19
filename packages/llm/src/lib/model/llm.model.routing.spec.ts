@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { compileLlmModelRouting, type CompileLlmModelRoutingConfig, type LlmModelRoutingCapabilityRef, type LlmModelRoutingConfig } from './llm.model.routing';
+import { compileLlmModelRouting, type CompileLlmModelRoutingConfig, LLM_MODEL_ROUTING_RULE_FIELD_RULES, LLM_MODEL_ROUTING_RULE_KEYS, type LlmModelRoutingCapabilityRef, type LlmModelRoutingConfig, parseLlmModelRoutingConfig } from './llm.model.routing';
 import { type LlmModelTierMap } from './llm.model.tier';
 
 const TIERS: LlmModelTierMap = { fast: 'vendor/model-fast', strong: 'vendor/model-strong', dialog: { model: 'vendor/character-voice', maxOutputTokens: 2048 } };
@@ -95,5 +95,56 @@ describe('compileLlmModelRouting()', () => {
     };
 
     expect(() => compile(routing, { label: 'my-app routing' })).toThrow("my-app routing rule #2: declares no route; set 'tier' or 'model'.");
+  });
+});
+
+describe('parseLlmModelRoutingConfig()', () => {
+  function parseRouting(raw: unknown) {
+    return parseLlmModelRoutingConfig({ raw, source: 'soul.json routing' });
+  }
+
+  it('round-trips a good block in canonical key order, and the result compiles', () => {
+    const raw = {
+      rules: [
+        { reasoning: { enabled: false }, maxOutputTokens: 900, tier: ' dialog ', tags: ['dialog'] },
+        { model: 'vendor/x', capabilities: ['plan-steps'], provider: 'local' }
+      ],
+      defaultTier: ' strong ',
+      tiers: { dialog: 'vendor/character-voice' }
+    };
+    const routing = parseRouting(raw);
+
+    expect(routing).toEqual({
+      tiers: { dialog: 'vendor/character-voice' },
+      defaultTier: 'strong',
+      rules: [
+        { tags: ['dialog'], tier: 'dialog', maxOutputTokens: 900, reasoning: { enabled: false } },
+        { capabilities: ['plan-steps'], model: 'vendor/x', provider: 'local' }
+      ]
+    });
+    expect(Object.keys(routing.rules?.[0] ?? {})).toEqual(['tags', 'tier', 'maxOutputTokens', 'reasoning']);
+    expect(compile({ rules: routing.rules }, { providers: ['local'] }).get('voice-line')).toEqual({ model: 'vendor/character-voice', tier: 'dialog', maxOutputTokens: 900, reasoning: { enabled: false } });
+  });
+
+  it('FAILS LOUD on a rule field of the wrong shape, naming the rule and field', () => {
+    expect(() => parseRouting({ rules: [{ tags: 'dialog', tier: 'dialog' }] })).toThrow(`llm model routing: soul.json routing rules[0].tags must be an array of capability tags (got "dialog").`);
+    expect(() => parseRouting({ rules: [{ tags: ['dialog'], tier: 'dialog', maxOutputTokens: '9000' }] })).toThrow(`llm model routing: soul.json routing rules[0].maxOutputTokens must be a positive integer (got "9000").`);
+    expect(() => parseRouting({ rules: [{ tags: ['dialog'], model: 'vendor/x', maxOutputTokens: 1.5 }] })).toThrow(/rules\[0\]\.maxOutputTokens must be a positive integer \(got 1\.5\)/);
+    expect(() => parseRouting({ rules: [{}, { tags: ['dialog'], tier: 'dialog', reasoning: { effort: 'max' } }] })).toThrow(`llm model routing: soul.json routing rules[1].reasoning.effort must be one of low, medium, high (got "max").`);
+    expect(() => parseRouting({ rules: [{ tags: ['dialog'], tier: 'dialog', reasoning: 'high' }] })).toThrow(/rules\[0\]\.reasoning must be an object \(got "high"\)/);
+  });
+
+  it('FAILS LOUD on unknown keys, a non-array rules list, a bad tier value and a blank default tier', () => {
+    expect(() => parseRouting({ rules: [{ tag: ['dialog'] }] })).toThrow(`llm model routing: soul.json routing rules[0] has unknown key 'tag' (allowed: capabilities, tags, model, tier, provider, maxOutputTokens, reasoning).`);
+    expect(() => parseRouting({ rule: [] })).toThrow(`llm model routing: soul.json routing has unknown key 'rule' (allowed: tiers, defaultTier, rules).`);
+    expect(() => parseRouting({ rules: { tags: ['dialog'] } })).toThrow(/soul\.json routing\.rules must be an array of routing rules/);
+    expect(() => parseRouting({ rules: ['dialog'] })).toThrow(/soul\.json routing rules\[0\] must be a JSON object/);
+    expect(() => parseRouting({ tiers: { dialog: 7 } })).toThrow(`llm model routing: soul.json routing.tiers['dialog'] must be a non-empty, trimmed model slug or a { model, maxOutputTokens?, reasoning? } object (got 7).`);
+    expect(() => parseRouting({ defaultTier: ' ' })).toThrow(`llm model routing: soul.json routing.defaultTier must be a non-blank tier key (got " ").`);
+    expect(() => parseRouting([])).toThrow(/soul\.json routing must be a JSON object/);
+  });
+
+  it('has a rule for every rule key, in key order', () => {
+    expect(Object.keys(LLM_MODEL_ROUTING_RULE_FIELD_RULES)).toEqual([...LLM_MODEL_ROUTING_RULE_KEYS]);
   });
 });

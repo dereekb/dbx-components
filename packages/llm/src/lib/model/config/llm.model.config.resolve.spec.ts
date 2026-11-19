@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { parseLlmModelConfigFile } from './llm.model.config.parse';
-import { llmModelProfileDefaultModel, llmModelPromptAddenda, llmModelProviderBindings, llmModelReasoningOffEncodings, llmModelVisionCapabilities, resolveLlmModelProfile, resolveLlmProviderConfigs } from './llm.model.config.resolve';
-import { type LlmProviderEntryMap, makeLlmModelConfigSchema } from './llm.model.config.schema';
+import { llmModelProfileDefaultModel, mapLlmModelSettings, llmModelPromptAddenda, llmModelProviderBindings, llmModelReasoningOffEncodings, llmModelVisionCapabilities, resolveLlmModelProfile, resolveLlmProviderConfigs } from './llm.model.config.resolve';
+import { type LlmCompletionProviderEntryMap, makeLlmModelConfigSchema } from './llm.model.config.schema';
 
 const schema = makeLlmModelConfigSchema({
   transports: ['openai', 'openrouter'],
@@ -94,6 +94,16 @@ describe('the per-slug projections', () => {
     expect(llmModelProviderBindings(file)).toEqual({ 'c/d': 'local' });
   });
 
+  it('share one projector, keeping only the slugs the reader returns a value for, in declaration order', () => {
+    expect(mapLlmModelSettings({ file, read: (settings) => (settings.vision == null ? undefined : String(settings.vision)) })).toEqual({ 'c/d': 'true', 'e/f': 'false' });
+    expect(Object.keys(mapLlmModelSettings({ file, read: () => 1 }) ?? {})).toEqual(['a/b', 'c/d', 'e/f']);
+    expect(mapLlmModelSettings({ file, read: () => null })).toBeUndefined();
+  });
+
+  it('keep the prompt addendum byte-for-byte (never trimmed)', () => {
+    expect(llmModelPromptAddenda(parse({ models: { 'a/b': { promptAddendum: '  Lead line.\n' } } }))).toEqual({ 'a/b': '  Lead line.\n' });
+  });
+
   it('return undefined (never {}) when no slug declares the fact', () => {
     for (const source of [empty, parse(FILE), undefined]) {
       expect(llmModelReasoningOffEncodings(source)).toBeUndefined();
@@ -105,7 +115,7 @@ describe('the per-slug projections', () => {
 });
 
 describe('resolveLlmProviderConfigs()', () => {
-  const providers: LlmProviderEntryMap = {
+  const providers: LlmCompletionProviderEntryMap = {
     local: { transport: 'openai', baseUrl: 'http://192.168.1.50:8000/v1', apiKeyEnv: 'LOCAL_API_KEY', reasoningOff: 'omit' },
     gateway: { transport: 'openai', apiKeyEnv: 'GATEWAY_API_KEY' },
     'gateway-payg': { transport: 'openrouter', apiKeyEnv: 'GATEWAY_PAYG_API_KEY' }
@@ -113,7 +123,7 @@ describe('resolveLlmProviderConfigs()', () => {
 
   it('resolves the keyed providers in declaration order, trimming the key', () => {
     const keys: Record<string, string> = { LOCAL_API_KEY: ' local-key ', GATEWAY_API_KEY: 'gateway-key', GATEWAY_PAYG_API_KEY: 'payg-key' };
-    const result = resolveLlmProviderConfigs({ providers, schema, apiKeyOf: ({ entry }) => keys[entry.apiKeyEnv] });
+    const result = resolveLlmProviderConfigs({ providers, apiKeyOf: ({ entry }) => keys[entry.apiKeyEnv] });
 
     expect(result.gaps).toEqual([]);
     expect(result.providers).toEqual([
@@ -125,7 +135,7 @@ describe('resolveLlmProviderConfigs()', () => {
 
   it('lists a blank or missing key as a gap, never a config', () => {
     const keys: Record<string, string> = { LOCAL_API_KEY: '   ', GATEWAY_PAYG_API_KEY: 'payg-key' };
-    const result = resolveLlmProviderConfigs({ providers, schema, apiKeyOf: ({ entry }) => keys[entry.apiKeyEnv] });
+    const result = resolveLlmProviderConfigs({ providers, apiKeyOf: ({ entry }) => keys[entry.apiKeyEnv] });
 
     expect(result.providers.map((x) => x.id)).toEqual(['gateway-payg']);
     expect(result.gaps).toEqual([
@@ -138,7 +148,6 @@ describe('resolveLlmProviderConfigs()', () => {
     const seen: string[] = [];
     resolveLlmProviderConfigs({
       providers,
-      schema,
       apiKeyOf: ({ id, entry }) => {
         seen.push(`${id}:${entry.apiKeyEnv}`);
         return undefined;
@@ -149,6 +158,6 @@ describe('resolveLlmProviderConfigs()', () => {
   });
 
   it('resolves nothing from absent providers', () => {
-    expect(resolveLlmProviderConfigs({ providers: undefined, schema, apiKeyOf: () => 'k' })).toEqual({ providers: [], gaps: [] });
+    expect(resolveLlmProviderConfigs({ providers: undefined, apiKeyOf: () => 'k' })).toEqual({ providers: [], gaps: [] });
   });
 });

@@ -17,9 +17,11 @@
 
 import { type Maybe, unique } from '@dereekb/util';
 import { type LlmProviderStatusProviderId } from '../../strategy/llm.provider.status';
+import { type LlmModelConfigFieldRule, type LlmModelConfigFieldRules } from '../llm.model.field';
 import { type LlmPartialModelTierMap } from '../llm.model.tier';
-import { type LlmReasoningOffEncoding, type LlmTokenLimitParam } from '../llm.model.wire';
-import { type LlmModelId, type LlmStrategyId } from '../llm.value';
+import { LLM_REASONING_OFF_ENCODINGS, LLM_TOKEN_LIMIT_PARAMS } from '../llm.model.wire';
+import { type LlmModelSlugMap, type LlmModelTierKey, type LlmModelTierValue, type LlmStrategyId } from '../llm.value';
+import { type LlmModelConfigEntryTypes, type llmCompletionProviderEntryType, type llmModelSettingsType, type llmProviderEntryBaseType, makeLlmModelConfigEntryTypes } from './llm.model.config.type';
 
 // MARK: Constants
 /**
@@ -39,120 +41,65 @@ export const DEFAULT_LLM_MODEL_CONFIG_SOURCE = 'models.json';
 export const LLM_PROVIDER_FACET_NONE = 'none';
 
 /**
- * The top-level keys a model config file may carry — an unknown one fails loud.
+ * The top-level keys a model config file may carry, in THE one order: the parse's allowed list (an unknown key fails
+ * loud), the merge's output order and the on-disk order a writer emits (`flattenLlmModelConfigFile`) — the prose
+ * before the data, the endpoints before the maps that use them, the per-slug appendix last.
+ *
+ * The in-memory-only keys of a parsed file (`extensionProviders`, `providerPatches`) are not listed: they are never
+ * on-disk keys.
  */
-export const LLM_MODEL_CONFIG_FILE_KEYS: ReadonlyArray<string> = ['active', 'providers', 'profiles', 'models', 'notes', '$schema'];
+export const LLM_MODEL_CONFIG_FILE_KEYS = ['$schema', 'notes', 'active', 'providers', 'profiles', 'models'] as const satisfies ReadonlyArray<keyof LlmModelConfigFile>;
 
 /**
- * The keys a completion provider entry may carry; an extension appends its own ({@link LlmModelConfigSchema.providerKeys}).
+ * One on-disk top-level key of a model config file.
  */
-export const LLM_PROVIDER_ENTRY_KEYS: ReadonlyArray<string> = ['transport', 'baseUrl', 'apiKeyEnv', 'reasoningOff', 'tokenLimitParam', 'usageAccounting', 'metering', 'decision'];
+export type LlmModelConfigFileKey = (typeof LLM_MODEL_CONFIG_FILE_KEYS)[number];
+
+/**
+ * The keys a completion provider entry may carry, in canonical (output and message) order; an extension appends its
+ * own ({@link LlmModelConfigSchema.providerKeys}).
+ */
+export const LLM_PROVIDER_ENTRY_KEYS = ['transport', 'baseUrl', 'apiKeyEnv', 'reasoningOff', 'tokenLimitParam', 'usageAccounting', 'metering', 'decision'] as const satisfies ReadonlyArray<keyof LlmCompletionProviderEntry>;
 
 /**
  * The keys that say WHICH backend and account an entry is. An entry carrying none of them is a PATCH
  * ({@link isLlmProviderPatchValue}) when the schema's extension parses patches.
  */
-export const LLM_PROVIDER_IDENTITY_KEYS: ReadonlyArray<string> = ['transport', 'baseUrl', 'apiKeyEnv'];
+export const LLM_PROVIDER_IDENTITY_KEYS = ['transport', 'baseUrl', 'apiKeyEnv'] as const satisfies ReadonlyArray<keyof LlmProviderEntryBase>;
 
 /**
- * The keys that only mean something on a provider that serves completions — an extension's entry parser refuses them
- * on the provider kinds it owns.
+ * The keys every entry is checked on before it is routed to the completion or the extension parse.
  */
-export const LLM_PROVIDER_COMPLETION_ONLY_KEYS: ReadonlyArray<string> = ['reasoningOff', 'tokenLimitParam', 'usageAccounting', 'decision'];
+export const LLM_PROVIDER_ROUTING_KEYS = ['transport', 'baseUrl'] as const satisfies ReadonlyArray<keyof LlmProviderEntryBase>;
 
 /**
- * The keys a per-slug `models` entry may carry; an extension appends its own ({@link LlmModelConfigSchema.modelKeys}).
+ * The keys a per-slug `models` entry may carry, in canonical order; an extension appends its own
+ * ({@link LlmModelConfigSchema.modelKeys}).
  */
-export const LLM_MODEL_SETTINGS_KEYS: ReadonlyArray<string> = ['provider', 'reasoningOff', 'vision', 'promptAddendum'];
+export const LLM_MODEL_SETTINGS_KEYS = ['provider', 'reasoningOff', 'vision', 'promptAddendum'] as const satisfies ReadonlyArray<keyof LlmModelSettings>;
 
 // MARK: Entries
 /**
- * What every `providers` entry carries, whichever kind it is.
+ * What every `providers` entry carries, whichever kind it is: `{ transport, baseUrl?, apiKeyEnv? }`. Derived from
+ * {@link llmProviderEntryBaseType}.
  */
-export interface LlmProviderEntryBase {
-  /**
-   * The transport (the strategy KIND) this provider is served by. The entry's NAME is the strategy instance id a slug
-   * or routing rule binds to. Absent on disk ⇒ the schema's default transport.
-   */
-  readonly transport: LlmStrategyId;
-  /**
-   * The endpoint base URL. Absent ⇒ the transport's own default.
-   */
-  readonly baseUrl?: string;
-  /**
-   * WHICH env var supplies this provider's key — the var NAME, never the secret.
-   */
-  readonly apiKeyEnv?: string;
-}
+export interface LlmProviderEntryBase extends Readonly<typeof llmProviderEntryBaseType.infer> {}
 
 /**
  * ONE declared completion provider — a NAMED, separately-configured backend instance. Several may share one transport;
- * that is the point (a LAN-served local model beside a remote gateway, two keys against one gateway).
+ * that is the point (a LAN-served local model beside a remote gateway, two keys against one gateway). `apiKeyEnv` is
+ * REQUIRED here. Derived from {@link llmCompletionProviderEntryType}.
  *
  * A binding belongs on the SLUG ({@link LlmModelSettings.provider}), not on a profile: which key may bill a slug is a
  * fact about the model (a free slug may be entitled on only one account) and must hold however the slug was selected.
  */
-export interface LlmCompletionProviderEntry extends LlmProviderEntryBase {
-  /**
-   * REQUIRED on a completion provider, and deliberately so: the usual reason a second provider exists is that it bills
-   * a different key, and a provider that silently inherited the default one would bill the wrong account.
-   */
-  readonly apiKeyEnv: string;
-  /**
-   * The PROVIDER-level reasoning-OFF wire encoding — the default for every slug this provider serves. Two-level by
-   * necessity: the same slug served by two providers can differ (a local build that rejects `reasoning_effort`
-   * beside a gateway that honours it), so the per-slug {@link LlmModelSettings.reasoningOff} still wins over this.
-   */
-  readonly reasoningOff?: LlmReasoningOffEncoding;
-  /**
-   * Which request key carries the completion-length cap — a property of the ENDPOINT, so it belongs here rather than
-   * in a global setting every provider would share.
-   */
-  readonly tokenLimitParam?: LlmTokenLimitParam;
-  /**
-   * Opt into aggregator usage accounting so the reply carries a cost. OFF by default because a strict
-   * OpenAI-compatible endpoint (a local vLLM) may reject the unknown param.
-   */
-  readonly usageAccounting?: boolean;
-  /**
-   * The account-metering source for this provider's quota reads — one of the schema's meterings, or
-   * {@link LLM_PROVIDER_FACET_NONE}. Absent ⇒ inferred from the provider's base URL by a registered metering adapter
-   * (`llmProviderMeteringOf`); a provider that meters nothing should say `'none'`.
-   */
-  readonly metering?: LlmProviderStatusProviderId;
-  /**
-   * The decision route this provider serves decisions through — one of the schema's decision routes, or
-   * {@link LLM_PROVIDER_FACET_NONE}. Absent ⇒ the route a registered decision adapter serves for the transport
-   * (`llmProviderDecisionRouteOf`), else `'none'`.
-   */
-  readonly decision?: LlmStrategyId;
-}
+export interface LlmCompletionProviderEntry extends Readonly<typeof llmCompletionProviderEntryType.infer> {}
 
 /**
  * The per-SLUG facts of a `models` entry. They apply to a slug however it was selected, so they are not scoped to (or
- * overridden by) the active profile.
+ * overridden by) the active profile. Derived from {@link llmModelSettingsType}.
  */
-export interface LlmModelSettings {
-  /**
-   * The provider NAME that serves this slug. Shape-checked by the parse; that the name resolves is checked over the
-   * MERGED file ({@link LlmModelConfigFile}), where a binding to a built-in provider is finally visible.
-   */
-  readonly provider?: LlmStrategyId;
-  /**
-   * This slug's reasoning-OFF encoding — wins over the provider's and the host's.
-   */
-  readonly reasoningOff?: LlmReasoningOffEncoding;
-  /**
-   * Whether this slug accepts image content parts. Default OFF: a text-only model answers a multimodal body with a
-   * `400`, while a vision model called with plain text just answers from the descriptions.
-   */
-  readonly vision?: boolean;
-  /**
-   * Text PREPENDED to every dispatch that resolves to this slug, so it rides in the cacheable prefix. A blank one is
-   * rejected rather than read as absent — an operator who cleared the text but kept the key meant to say something.
-   */
-  readonly promptAddendum?: string;
-}
+export interface LlmModelSettings extends Readonly<typeof llmModelSettingsType.infer> {}
 
 /**
  * ONE named profile: the complete tier map it declares. The on-disk shape is FLAT (`{ "fast": "…", "strong": "…" }`);
@@ -194,29 +141,41 @@ export interface LlmModelConfigBaseTypes extends LlmModelConfigTypes {
 }
 
 /**
- * A completion provider entry with the extension's provider fields.
+ * A completion provider entry with the extension's provider fields. The extension fields are `Partial`: they are
+ * optional on disk by nature (a host never owns every provider entry), and a library-built entry (an env default)
+ * carries none of them.
  */
-export type LlmCompletionProviderEntryOf<X extends LlmModelConfigTypes> = LlmCompletionProviderEntry & X['providerFields'];
+export type LlmCompletionProviderEntryOf<X extends LlmModelConfigTypes> = LlmCompletionProviderEntry & Partial<X['providerFields']>;
 
 /**
- * Any parsed `providers` entry: a completion provider, or an entry of a transport the extension owns.
+ * A per-slug `models` entry with the extension's model fields (`Partial`, as for {@link LlmCompletionProviderEntryOf}).
  */
-export type LlmProviderEntryOf<X extends LlmModelConfigTypes> = LlmCompletionProviderEntryOf<X> | X['extensionProviderEntry'];
+export type LlmModelSettingsOf<X extends LlmModelConfigTypes> = LlmModelSettings & Partial<X['modelFields']>;
 
 /**
- * A per-slug `models` entry with the extension's model fields.
+ * The completion `providers`, keyed by provider name.
  */
-export type LlmModelSettingsOf<X extends LlmModelConfigTypes> = LlmModelSettings & X['modelFields'];
+export type LlmCompletionProviderEntryMap<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes> = Readonly<Record<LlmStrategyId, LlmCompletionProviderEntryOf<X>>>;
 
 /**
- * The `providers` block, keyed by provider name.
+ * The entries of the transports the extension owns, keyed by provider name.
  */
-export type LlmProviderEntryMap<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes> = Readonly<Record<LlmStrategyId, LlmProviderEntryOf<X>>>;
+export type LlmExtensionProviderEntryMap<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes> = Readonly<Record<LlmStrategyId, X['extensionProviderEntry']>>;
+
+/**
+ * The provider PATCHES, keyed by the name of the provider each extends.
+ */
+export type LlmProviderPatchMap<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes> = Readonly<Record<LlmStrategyId, Partial<X['providerFields']>>>;
 
 /**
  * The `models` block, keyed by model slug.
  */
-export type LlmModelSettingsMap<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes> = Readonly<Partial<Record<LlmModelId, LlmModelSettingsOf<X>>>>;
+export type LlmModelSettingsMap<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes> = LlmModelSlugMap<LlmModelSettingsOf<X>>;
+
+/**
+ * One parsed `providers` entry, tagged with its kind so a caller routes it without re-checking the transport.
+ */
+export type LlmParsedProviderEntry<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes> = { readonly kind: 'completion'; readonly entry: LlmCompletionProviderEntryOf<X> } | { readonly kind: 'extension'; readonly entry: X['extensionProviderEntry'] };
 
 /**
  * The parsed shape of a model config file.
@@ -228,9 +187,15 @@ export interface LlmModelConfigFile<X extends LlmModelConfigTypes = LlmModelConf
    */
   readonly active?: string;
   /**
-   * The declared providers, keyed by name.
+   * The declared COMPLETION providers, keyed by name — the only providers a completion reader may mint a strategy for.
    */
-  readonly providers?: LlmProviderEntryMap<X>;
+  readonly providers?: LlmCompletionProviderEntryMap<X>;
+  /**
+   * The declared entries of the transports the extension owns (providers that serve no completions), keyed by name.
+   * Split off the on-disk `providers` block at parse time; a name never lives in both maps. A writer folds them back
+   * into `providers` after the completion entries.
+   */
+  readonly extensionProviders?: LlmExtensionProviderEntryMap<X>;
   /**
    * The named profiles, each a complete tier map for one cost posture.
    */
@@ -252,7 +217,27 @@ export interface LlmModelConfigFile<X extends LlmModelConfigTypes = LlmModelConf
    * parsed host file: the merge lays each over the base provider of the same name and the merged file carries none. A
    * writer folds them back into `providers`; this is never an on-disk key.
    */
-  readonly providerPatches?: Readonly<Record<LlmStrategyId, X['providerFields']>>;
+  readonly providerPatches?: LlmProviderPatchMap<X>;
+}
+
+/**
+ * Every key of a parsed {@link LlmModelConfigFile}, each REQUIRED (its value may be `undefined`) — what a parse or
+ * merge fills in before dropping the `undefined` keys, so a key added to the file type fails to compile until every
+ * builder handles it. The literal's key order is the output order.
+ */
+export type LlmModelConfigFileFields<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes> = { readonly [K in LlmModelConfigFileKey | 'extensionProviders' | 'providerPatches']: LlmModelConfigFile<X>[K] };
+
+/**
+ * The ON-DISK shape of a model config file (`flattenLlmModelConfigFile`): profiles flat, and ONE `providers` block
+ * holding completion entries, extension-owned entries and patches alike.
+ */
+export interface LlmModelConfigFileJson<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes> {
+  readonly $schema?: unknown;
+  readonly notes?: unknown;
+  readonly active?: string;
+  readonly providers?: Readonly<Record<LlmStrategyId, LlmCompletionProviderEntryOf<X> | X['extensionProviderEntry'] | Partial<X['providerFields']>>>;
+  readonly profiles?: Readonly<Record<string, Readonly<Record<LlmModelTierKey, Maybe<LlmModelTierValue>>>>>;
+  readonly models?: LlmModelSettingsMap<X>;
 }
 
 // MARK: Schema
@@ -308,9 +293,9 @@ export interface LlmModelConfigExtensionEntryInput<F extends object = object> ex
    */
   readonly baseUrl: Maybe<string>;
   /**
-   * What {@link LlmModelConfigExtension.parseProviderFields} returned for this entry.
+   * What {@link LlmModelConfigExtension.parseProviderFields} returned for this entry (`{}` without that parser).
    */
-  readonly fields: F;
+  readonly fields: Partial<F>;
   /**
    * The schema's full metering list, for a `metering` check.
    */
@@ -321,7 +306,8 @@ export interface LlmModelConfigExtensionEntryInput<F extends object = object> ex
  * The extension seam: what a host adds to the model config.
  *
  * A provider entry naming an owned transport serves no completions — no completion reader mints a strategy for it,
- * and a slug may bind it only when {@link isProviderBindable} says so. A PATCH is a `providers` entry carrying none of
+ * and a slug may bind it only when {@link isProviderBindable} says so. A parsed file keeps those entries apart
+ * ({@link LlmModelConfigFile.extensionProviders}). A PATCH is a `providers` entry carrying none of
  * {@link LLM_PROVIDER_IDENTITY_KEYS}; it extends the BASE provider of the same name at overlay. Patch fields never
  * change which account bills, which is why they alone may merge into a base entry instead of replacing it.
  */
@@ -333,7 +319,7 @@ export interface LlmModelConfigExtension<X extends LlmModelConfigTypes = LlmMode
   /**
    * Parses the extra provider keys of any entry. Required with {@link providerKeys}.
    */
-  readonly parseProviderFields?: Maybe<(input: LlmModelConfigExtensionInput) => X['providerFields']>;
+  readonly parseProviderFields?: Maybe<(input: LlmModelConfigExtensionInput) => Partial<X['providerFields']>>;
   /**
    * Transports the extension owns: their entries serve no completions.
    */
@@ -350,7 +336,7 @@ export interface LlmModelConfigExtension<X extends LlmModelConfigTypes = LlmMode
   /**
    * Parses a patch entry. Absent ⇒ an identity-less entry parses as an ordinary entry (and fails on `apiKeyEnv`).
    */
-  readonly parseProviderPatch?: Maybe<(input: LlmModelConfigExtensionInput) => X['providerFields']>;
+  readonly parseProviderPatch?: Maybe<(input: LlmModelConfigExtensionInput) => Partial<X['providerFields']>>;
   /**
    * What a patch's keys are called in messages (`media route` ⇒ "carries only media route keys"). Default `patch`.
    */
@@ -366,7 +352,7 @@ export interface LlmModelConfigExtension<X extends LlmModelConfigTypes = LlmMode
   /**
    * Parses the extra model keys. Required with {@link modelKeys}.
    */
-  readonly parseModelFields?: Maybe<(input: LlmModelConfigExtensionInput) => X['modelFields']>;
+  readonly parseModelFields?: Maybe<(input: LlmModelConfigExtensionInput) => Partial<X['modelFields']>>;
 }
 
 /**
@@ -464,14 +450,53 @@ export interface LlmModelConfigSchema<X extends LlmModelConfigTypes = LlmModelCo
    * The host's extension.
    */
   readonly extension?: Maybe<LlmModelConfigExtension<X>>;
+  /**
+   * INTERNAL (read by the parse): the check every `providers` entry passes before it is routed —
+   * `{ transport?, baseUrl? }` against {@link entryTransports}.
+   */
+  readonly providerEntryBaseType: LlmModelConfigEntryTypes['providerEntryBaseType'];
+  /**
+   * INTERNAL: the messages for {@link providerEntryBaseType}.
+   */
+  readonly providerEntryBaseRules: LlmModelConfigFieldRules<Pick<LlmProviderEntryBase, 'transport' | 'baseUrl'>>;
+  /**
+   * INTERNAL: the check of a completion entry against this schema's transports, meterings and decision routes.
+   */
+  readonly completionProviderEntryType: LlmModelConfigEntryTypes['completionProviderEntryType'];
+  /**
+   * INTERNAL: the messages for {@link completionProviderEntryType} (the `apiKeyEnv` remedy carries the patch hint when
+   * the extension parses patches).
+   */
+  readonly completionProviderEntryRules: LlmModelConfigFieldRules<LlmCompletionProviderEntry>;
 }
+
+// MARK: Field rules
+/**
+ * The message rule of an entry's `baseUrl`.
+ */
+const LLM_PROVIDER_BASE_URL_FIELD_RULE: LlmModelConfigFieldRule = { must: 'be a non-empty endpoint URL', remedy: "Remove the key to use the transport's default." };
+
+/**
+ * The message rule of a `reasoningOff` encoding (a provider's or a slug's).
+ */
+const LLM_REASONING_OFF_FIELD_RULE: LlmModelConfigFieldRule = { must: `be one of ${LLM_REASONING_OFF_ENCODINGS.join(', ')}` };
+
+/**
+ * The messages for a per-slug `models` entry's built-in fields.
+ */
+export const LLM_MODEL_SETTINGS_FIELD_RULES: LlmModelConfigFieldRules<LlmModelSettings> = {
+  provider: { must: 'be a declared provider name', remedy: 'Remove the key to use the default provider.' },
+  reasoningOff: LLM_REASONING_OFF_FIELD_RULE,
+  vision: { must: 'be a boolean' },
+  promptAddendum: { must: 'be a non-empty string of prompt text', remedy: 'Remove the key to declare no addendum.' }
+};
 
 function uniqueLlmModelConfigList<T extends string>(values: Maybe<ReadonlyArray<T>>): T[] {
   return unique(values ?? []);
 }
 
-function withLlmProviderFacetNone<T extends string>(values: ReadonlyArray<T>): T[] {
-  return [...uniqueLlmModelConfigList(values).filter((value) => value !== LLM_PROVIDER_FACET_NONE), LLM_PROVIDER_FACET_NONE as T];
+function withLlmProviderFacetNone(values: ReadonlyArray<string>): string[] {
+  return [...uniqueLlmModelConfigList(values).filter((value) => value !== LLM_PROVIDER_FACET_NONE), LLM_PROVIDER_FACET_NONE];
 }
 
 /**
@@ -507,14 +532,17 @@ export function makeLlmModelConfigSchema<X extends LlmModelConfigTypes = LlmMode
   const extensionModelKeys = uniqueLlmModelConfigList(extension?.modelKeys);
   const extensionTransports = uniqueLlmModelConfigList(extension?.providerTransports);
 
+  const builtInProviderKeys: ReadonlyArray<string> = LLM_PROVIDER_ENTRY_KEYS;
+  const builtInModelKeys: ReadonlyArray<string> = LLM_MODEL_SETTINGS_KEYS;
+
   for (const key of extensionProviderKeys) {
-    if (LLM_PROVIDER_ENTRY_KEYS.includes(key)) {
+    if (builtInProviderKeys.includes(key)) {
       throw new Error(`${label}: extension provider key '${key}' collides with a built-in provider key.`);
     }
   }
 
   for (const key of extensionModelKeys) {
-    if (LLM_MODEL_SETTINGS_KEYS.includes(key)) {
+    if (builtInModelKeys.includes(key)) {
       throw new Error(`${label}: extension model key '${key}' collides with a built-in model key.`);
     }
   }
@@ -538,15 +566,22 @@ export function makeLlmModelConfigSchema<X extends LlmModelConfigTypes = LlmMode
   }
 
   const retiredKeys = config.retiredKeys;
+  const entryTransports = [...transports, ...extensionTransports];
+  const meterings = withLlmProviderFacetNone([...(config.meterings ?? []), ...(extension?.meterings ?? [])]);
+  const decisionRoutes = withLlmProviderFacetNone(config.decisionRoutes ?? []);
+  const patchKeysNoun = extension?.patchKeysNoun ?? 'patch';
+  const { providerEntryBaseType, completionProviderEntryType } = makeLlmModelConfigEntryTypes({ entryTransports, meterings, decisionRoutes });
+  const transportRule: LlmModelConfigFieldRule = { must: `be one of ${entryTransports.join(', ')}` };
+  const patchHint = extension?.parseProviderPatch == null ? '' : ` To extend a built-in provider with ${patchKeysNoun} keys only, carry those keys alone.`;
 
   return {
     label,
     transports,
     defaultTransport,
     extensionTransports,
-    entryTransports: [...transports, ...extensionTransports],
-    meterings: withLlmProviderFacetNone([...(config.meterings ?? []), ...(extension?.meterings ?? [])]),
-    decisionRoutes: withLlmProviderFacetNone(config.decisionRoutes ?? []),
+    entryTransports,
+    meterings,
+    decisionRoutes,
     providerKeys: [...LLM_PROVIDER_ENTRY_KEYS, ...extensionProviderKeys],
     modelKeys: [...LLM_MODEL_SETTINGS_KEYS, ...extensionModelKeys],
     implicitProviders: uniqueLlmModelConfigList(config.implicitProviders),
@@ -556,34 +591,22 @@ export function makeLlmModelConfigSchema<X extends LlmModelConfigTypes = LlmMode
       model: retiredKeys?.model ?? new Map(),
       profile: retiredKeys?.profile ?? new Map()
     },
-    patchKeysNoun: extension?.patchKeysNoun ?? 'patch',
-    ...(extension == null ? {} : { extension })
+    patchKeysNoun,
+    ...(extension == null ? {} : { extension }),
+    providerEntryBaseType,
+    providerEntryBaseRules: { transport: transportRule, baseUrl: LLM_PROVIDER_BASE_URL_FIELD_RULE },
+    completionProviderEntryType,
+    completionProviderEntryRules: {
+      transport: transportRule,
+      baseUrl: LLM_PROVIDER_BASE_URL_FIELD_RULE,
+      // REQUIRED, and a blank one is rejected rather than read as absent: a declared provider that silently inherited
+      // the default key bills the wrong account.
+      apiKeyEnv: { must: "name the env var supplying this provider's key", remedy: `A declared provider is never billed on another provider's key.${patchHint}` },
+      reasoningOff: LLM_REASONING_OFF_FIELD_RULE,
+      tokenLimitParam: { must: `be one of ${LLM_TOKEN_LIMIT_PARAMS.join(', ')}` },
+      usageAccounting: { must: 'be a boolean' },
+      metering: { must: `be one of ${meterings.join(', ')}` },
+      decision: { must: `be one of ${decisionRoutes.join(', ')}` }
+    }
   };
-}
-
-/**
- * Config for {@link llmCompletionProviderEntries}.
- */
-export interface LlmCompletionProviderEntriesConfig<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes> {
-  /**
-   * The `providers` block (absent ⇒ none).
-   */
-  readonly providers: Maybe<LlmProviderEntryMap<X>>;
-  /**
-   * The schema naming the transports the extension owns.
-   */
-  readonly schema: LlmModelConfigSchema<X>;
-}
-
-/**
- * The providers that serve completions — every entry whose transport the extension does not own, in declaration
- * order. The only providers a completion reader may mint a strategy for.
- *
- * @param config - The providers and the schema.
- * @returns The completion providers, keyed by name.
- */
-export function llmCompletionProviderEntries<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes>(config: LlmCompletionProviderEntriesConfig<X>): Readonly<Record<LlmStrategyId, LlmCompletionProviderEntryOf<X>>> {
-  const { providers, schema } = config;
-  const entries = Object.entries(providers ?? {}).filter(([, entry]) => !schema.extensionTransports.includes(entry.transport));
-  return Object.fromEntries(entries) as Record<LlmStrategyId, LlmCompletionProviderEntryOf<X>>;
 }

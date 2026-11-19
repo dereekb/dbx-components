@@ -8,11 +8,12 @@
  * Hosts conventionally name the output `*.generated.ts`.
  */
 
-import { existsSync, mkdirSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { existsSync, statSync } from 'node:fs';
+import { join } from 'node:path';
 import { type Maybe } from '@dereekb/util';
 import { llmCraftNoteParseErrorLines, parseLlmCraftNoteSet, type LlmCraftNote, type LlmCraftNoteSet, type LlmCraftNoteTier, type LlmCraftSiteRegistry } from '@dereekb/llm';
 import { readLlmCraftNoteFiles } from './llm.node.craft.notes';
+import { writeLlmFileAtomic } from './llm.node.file';
 
 /**
  * The default doc-comment lines atop a compiled module.
@@ -159,16 +160,6 @@ export function writeLlmCraftNotesModule(config: WriteLlmCraftNotesModuleConfig)
     throw new Error(`craft notes: ${compiled.refused.length} file(s) refused; nothing was written:\n${lines.join('\n')}`);
   }
 
-  mkdirSync(dirname(out), { recursive: true });
-  const tempPath = `${out}.${process.pid}.writing`;
-
-  try {
-    writeFileSync(tempPath, compiled.text, 'utf8');
-    renameSync(tempPath, out);
-  } catch (e) {
-    rmSync(tempPath, { force: true });
-    throw e;
-  }
-
+  writeLlmFileAtomic({ filePath: out, text: compiled.text });
   return compiled;
 }

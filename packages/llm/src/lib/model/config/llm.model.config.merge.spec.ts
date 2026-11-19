@@ -122,3 +122,12 @@ describe('mergeLlmModelConfigFiles()', () => {
     expect(mergeLlmModelConfigFiles({ schema })).toEqual({});
   });
 });
+
+describe('mergeLlmModelConfigFiles() output', () => {
+  it('orders the merged keys by LLM_MODEL_CONFIG_FILE_KEYS and carries no patches', () => {
+    const merged = mergeLlmModelConfigFiles({ base: BASE, overlay: { models: { 'a/b': { vision: true } }, active: 'free', $schema: 's', notes: 'n' }, schema });
+
+    expect(Object.keys(merged)).toEqual(['$schema', 'notes', 'active', 'providers', 'profiles', 'models']);
+    expect(merged).not.toHaveProperty('providerPatches');
+  });
+});

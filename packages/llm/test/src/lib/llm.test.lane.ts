@@ -33,13 +33,14 @@ import {
   makeLlmProviderStrategies,
   makeLlmProviderStrategy,
   makeLlmStrategyRegistry,
+  type LlmDecisionStrategy,
   probeLlmCredentials,
   readLlmProviderStatus,
   resolveLlmDefaultModelTierKey
 } from '@dereekb/llm';
 import {
   DEFAULT_LLM_ENV_NAMES,
-  firstLlmEnvValue,
+  firstLlmEnvEntry,
   type LlmEnvNames,
   type LlmEnvVarNames,
   type LlmEnvView,
@@ -515,8 +516,19 @@ export function makeLlmLiveLane<X extends LlmModelConfigTypes = LlmModelConfigBa
     if (isUnlocked(view)) {
       const resolution = resolve({ env: view });
       const registry = makeLlmDecisionStrategies({ providers: resolution.providers, adapters, routePreference: decisionRoutePreference, timeoutMs: decisionTimeoutMs });
-      const pinned = firstLlmEnvValue({ env: view, names: envNames.decisionProvider ?? [] });
-      const strategy = (pinned == null ? undefined : registry.get(pinned)) ?? registry.values()[0];
+      const pinned = firstLlmEnvEntry({ env: view, names: envNames.decisionProvider ?? [] });
+      let strategy: Maybe<LlmDecisionStrategy> = registry.values()[0];
+
+      if (pinned != null) {
+        strategy = registry.get(pinned.value);
+
+        // A typo'd pin would otherwise run the decision specs against whichever strategy happened to register first.
+        if (strategy == null) {
+          const ids = registry.values().map((candidate) => candidate.id);
+          throw new Error(`${label} live specs: ${pinned.name} names decision strategy '${pinned.value}', which is not registered (have: ${ids.length === 0 ? '(none)' : ids.join(', ')}).`);
+        }
+      }
+
       result = strategy == null ? undefined : { strategyId: strategy.id, strategy };
     }
 
@@ -540,10 +552,9 @@ export function makeLlmLiveLane<X extends LlmModelConfigTypes = LlmModelConfigBa
   };
 
   const providerKeyNames = (): LlmEnvVarNames => {
-    const baseKeyNames = Object.values(modelConfig?.base?.providers ?? {}).flatMap((entry) => {
-      const apiKeyEnv = (entry as Maybe<{ readonly apiKeyEnv?: unknown }>)?.apiKeyEnv;
-      return typeof apiKeyEnv === 'string' && apiKeyEnv.length > 0 ? [apiKeyEnv] : [];
-    });
+    const base = modelConfig?.base;
+    const baseEntries = [...Object.values(base?.providers ?? {}), ...Object.values(base?.extensionProviders ?? {})];
+    const baseKeyNames = baseEntries.flatMap((entry) => (entry.apiKeyEnv == null || entry.apiKeyEnv.length === 0 ? [] : [entry.apiKeyEnv]));
     return Array.from(new Set([...llmEnvApiKeyNamesOf(envNames), ...baseKeyNames, ...(extraProviderKeyNames ?? [])]));
   };
 

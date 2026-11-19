@@ -1,22 +1,44 @@
+import { type } from 'arktype';
 import { describe, expect, it } from 'vitest';
+import { assertLlmModelConfigKeys, type LlmModelConfigFieldRules, parseLlmModelConfigFields } from '../llm.model.field';
+import { llmNonBlankStringType } from '../llm.model.type';
 import { mergeLlmModelConfigFiles, overlayLlmModelConfigFile } from './llm.model.config.merge';
 import { parseLlmModelConfigFile } from './llm.model.config.parse';
 import { llmModelProviderBindings, llmModelPromptAddenda, llmModelReasoningOffEncodings, llmModelVisionCapabilities, resolveLlmProviderConfigs } from './llm.model.config.resolve';
-import { LLM_PROVIDER_COMPLETION_ONLY_KEYS, llmCompletionProviderEntries, type LlmModelConfigExtensionInput, type LlmModelConfigFile, type LlmModelConfigTypes, makeLlmModelConfigSchema } from './llm.model.config.schema';
+import { type LlmModelConfigExtensionInput, type LlmModelConfigFile, type LlmModelConfigTypes, makeLlmModelConfigSchema } from './llm.model.config.schema';
 
 /**
  * A media-like test extension: speech routes on any provider, a `none` transport for speech-only providers, speech
  * patches over a built-in provider, a `voice-vendor` metering source, and a `voice` per-slug fact.
+ *
+ * Its fields are declared the host-validated way — an arktype type with `'+': 'delete'` (so the result carries only its
+ * own keys), a key list and a rule table through `parseLlmModelConfigFields` — and the seam needs no casts.
  */
-type SpeechRoute = 'vendor-a' | 'vendor-b' | 'none';
+const testSpeechRouteType = type.enumerated('vendor-a', 'vendor-b', 'none');
 
-const SPEECH_ROUTES: ReadonlyArray<string> = ['vendor-a', 'vendor-b', 'none'];
-const SPEECH_KEYS: ReadonlyArray<string> = ['speech', 'speechModel'];
+/**
+ * The host's own list of the keys only a completion provider may carry (the library keeps none).
+ */
+const COMPLETION_ONLY_KEYS: ReadonlyArray<string> = ['reasoningOff', 'tokenLimitParam', 'usageAccounting', 'decision'];
 
-interface TestSpeechFields {
-  readonly speech?: SpeechRoute;
-  readonly speechModel?: string;
-}
+const testSpeechFieldsType = type({
+  '+': 'delete',
+  'speech?': testSpeechRouteType,
+  'speechModel?': llmNonBlankStringType
+}).readonly();
+
+type TestSpeechFields = typeof testSpeechFieldsType.infer;
+
+const SPEECH_KEYS: ReadonlyArray<keyof TestSpeechFields> = ['speech', 'speechModel'];
+
+const SPEECH_FIELD_RULES: LlmModelConfigFieldRules<TestSpeechFields> = {
+  speech: { must: 'be one of vendor-a, vendor-b, none' },
+  speechModel: { must: 'be a non-empty string' }
+};
+
+const testVoiceFieldsType = type({ '+': 'delete', 'voice?': 'boolean' }).readonly();
+
+type TestVoiceFields = typeof testVoiceFieldsType.infer;
 
 interface TestSpeechProviderEntry extends TestSpeechFields {
   readonly transport: 'none';
@@ -28,26 +50,15 @@ interface TestSpeechProviderEntry extends TestSpeechFields {
 interface TestMediaTypes extends LlmModelConfigTypes {
   readonly providerFields: TestSpeechFields;
   readonly extensionProviderEntry: TestSpeechProviderEntry;
-  readonly modelFields: { readonly voice?: boolean };
+  readonly modelFields: TestVoiceFields;
 }
 
 function parseSpeechFields(input: LlmModelConfigExtensionInput): TestSpeechFields {
   const { schemaLabel, label, entry } = input;
-  const speech = entry['speech'];
-  const speechModel = entry['speechModel'];
-
-  if (speech !== undefined && (typeof speech !== 'string' || !SPEECH_ROUTES.includes(speech))) {
-    throw new Error(`${schemaLabel}: ${label}.speech must be one of ${SPEECH_ROUTES.join(', ')}.`);
-  }
-
-  if (speechModel !== undefined && (typeof speechModel !== 'string' || speechModel.trim().length === 0)) {
-    throw new Error(`${schemaLabel}: ${label}.speechModel must be a non-empty string.`);
-  }
-
-  return { ...(speech === undefined ? {} : { speech: speech as SpeechRoute }), ...(speechModel === undefined ? {} : { speechModel: speechModel as string }) };
+  return parseLlmModelConfigFields({ schemaLabel, label, value: entry, type: testSpeechFieldsType, keys: SPEECH_KEYS, rules: SPEECH_FIELD_RULES });
 }
 
-function servesSpeech(fields: TestSpeechFields): boolean {
+function servesSpeech(fields: Partial<TestSpeechFields>): boolean {
   return fields.speech != null && fields.speech !== 'none';
 }
 
@@ -69,7 +80,7 @@ const schema = makeLlmModelConfigSchema<TestMediaTypes>({
         throw new Error(`${schemaLabel}: ${label}.baseUrl is required on a speech-only provider.`);
       }
 
-      for (const key of LLM_PROVIDER_COMPLETION_ONLY_KEYS) {
+      for (const key of COMPLETION_ONLY_KEYS) {
         if (entry[key] !== undefined) {
           throw new Error(`${schemaLabel}: ${label}.${key} does not apply to a speech-only provider.`);
         }
@@ -90,12 +101,7 @@ const schema = makeLlmModelConfigSchema<TestMediaTypes>({
     },
     isProviderBindable: (entry) => entry.speech === 'vendor-b',
     parseProviderPatch: (input) => {
-      for (const key of Object.keys(input.entry)) {
-        if (!SPEECH_KEYS.includes(key)) {
-          throw new Error(`${input.schemaLabel}: ${input.label} is a speech patch, but '${key}' is not a speech key.`);
-        }
-      }
-
+      assertLlmModelConfigKeys({ schemaLabel: input.schemaLabel, label: input.label, entry: input.entry, allowed: SPEECH_KEYS });
       const fields = parseSpeechFields(input);
 
       if (!servesSpeech(fields)) {
@@ -107,15 +113,7 @@ const schema = makeLlmModelConfigSchema<TestMediaTypes>({
     patchKeysNoun: 'speech route',
     meterings: ['voice-vendor'],
     modelKeys: ['voice'],
-    parseModelFields: (input) => {
-      const voice = input.entry['voice'];
-
-      if (voice !== undefined && typeof voice !== 'boolean') {
-        throw new Error(`${input.schemaLabel}: ${input.label}.voice must be a boolean.`);
-      }
-
-      return voice === undefined ? {} : { voice };
-    }
+    parseModelFields: (input) => parseLlmModelConfigFields({ schemaLabel: input.schemaLabel, label: input.label, value: input.entry, type: testVoiceFieldsType, keys: ['voice'], rules: { voice: { must: 'be a boolean' } } })
   }
 });
 
@@ -142,11 +140,15 @@ describe('the model config extension seam', () => {
 
     expect(file.providers?.['local']).toEqual({ transport: 'openai', apiKeyEnv: 'LOCAL_API_KEY', speech: 'vendor-a', speechModel: 'voice-1' });
     expect(Object.keys(file.providers?.['local'] ?? {})).toEqual(['transport', 'apiKeyEnv', 'speech', 'speechModel']);
-    expect(() => parse({ providers: { local: { apiKeyEnv: 'K', speech: 'vendor-z' } } })).toThrow(`test models: models.json providers['local'].speech must be one of vendor-a, vendor-b, none.`);
+    expect(() => parse({ providers: { local: { apiKeyEnv: 'K', speech: 'vendor-z' } } })).toThrow(`test models: models.json providers['local'].speech must be one of vendor-a, vendor-b, none (got "vendor-z").`);
+    expect(() => parse({ providers: { local: { apiKeyEnv: 'K', speechModel: ' ' } } })).toThrow(`test models: models.json providers['local'].speechModel must be a non-empty string (got " ").`);
   });
 
-  it('hands an entry of an owned transport to the extension, whole', () => {
-    expect(parse({ providers: { speech: SPEECH_PROVIDER } }).providers?.['speech']).toEqual(SPEECH_PROVIDER);
+  it('hands an entry of an owned transport to the extension, whole, and keeps it apart from the completion providers', () => {
+    const file = parse({ providers: { speech: SPEECH_PROVIDER } });
+
+    expect(file.extensionProviders?.['speech']).toEqual(SPEECH_PROVIDER);
+    expect(file.providers).toBeUndefined();
     expect(() => parse({ providers: { speech: { ...SPEECH_PROVIDER, reasoningOff: 'omit' } } })).toThrow(/reasoningOff does not apply to a speech-only provider/);
     expect(() => parse({ providers: { speech: { ...SPEECH_PROVIDER, metering: 'zenmux-x' } } })).toThrow(`test models: models.json providers['speech'].metering must be one of zenmux, voice-vendor, none.`);
     expect(() => parse({ providers: { local: { apiKeyEnv: 'K', transport: 'vllm' } } })).toThrow(/transport must be one of openai, openrouter, none \(got "vllm"\)/);
@@ -157,9 +159,10 @@ describe('the model config extension seam', () => {
     expect(() => parse({ providers: { local: { apiKeyEnv: 'K', metering: 'other' } } })).toThrow(/metering must be one of zenmux, voice-vendor, none/);
   });
 
-  it('drops the owned-transport entries from the completion providers', () => {
-    expect(Object.keys(llmCompletionProviderEntries({ providers: BASE.providers, schema }))).toEqual(['gateway']);
-    expect(resolveLlmProviderConfigs({ providers: BASE.providers, schema, apiKeyOf: () => 'k' }).providers.map((x) => x.id)).toEqual(['gateway']);
+  it('splits the owned-transport entries off the completion providers', () => {
+    expect(Object.keys(BASE.providers ?? {})).toEqual(['gateway']);
+    expect(Object.keys(BASE.extensionProviders ?? {})).toEqual(['speech']);
+    expect(resolveLlmProviderConfigs({ providers: BASE.providers, apiKeyOf: () => 'k' }).providers.map((x) => x.id)).toEqual(['gateway']);
   });
 
   it('refuses a slug bound to an owned-transport entry unless the extension says it is bindable', () => {
@@ -169,7 +172,7 @@ describe('the model config extension seam', () => {
     expect(() => overlayLlmModelConfigFile({ base: BASE, file: bindable, schema })).not.toThrow();
   });
 
-  it('splits an identity-less entry off as a patch, never a provider', () => {
+  it('splits an identity-less entry off into a patch, never a provider', () => {
     const file = parse({ providers: { gateway: { speech: 'vendor-b' } } });
 
     expect(file.providers).toBeUndefined();
@@ -192,6 +195,27 @@ describe('the model config extension seam', () => {
 
     expect(merged.providers?.['gateway']).toEqual({ transport: 'openai', baseUrl: 'https://gateway.example.com/v1', apiKeyEnv: 'GATEWAY_API_KEY', speech: 'vendor-b', speechModel: 'voice-2' });
     expect(merged).not.toHaveProperty('providerPatches');
+  });
+
+  it('lays a patch over an owned built-in entry, which may make it bindable', () => {
+    const file = parse({ providers: { speech: { speech: 'vendor-b' } }, models: { 'vendor/x': { provider: 'speech' } } });
+    const merged = overlayLlmModelConfigFile({ base: BASE, file, schema });
+
+    expect(merged.extensionProviders?.['speech']).toEqual({ ...SPEECH_PROVIDER, speech: 'vendor-b' });
+    expect(merged.providers?.['speech']).toBeUndefined();
+    expect(merged).not.toHaveProperty('providerPatches');
+  });
+
+  it('lets an overlay move a name between the two provider maps', () => {
+    const toCompletion = mergeLlmModelConfigFiles({ base: BASE, overlay: parse({ providers: { speech: { apiKeyEnv: 'SPEECH_GATEWAY_KEY' } } }), schema });
+
+    expect(Object.keys(toCompletion.providers ?? {})).toEqual(['gateway', 'speech']);
+    expect(toCompletion.extensionProviders).toBeUndefined();
+
+    const toOwned = mergeLlmModelConfigFiles({ base: BASE, overlay: parse({ providers: { gateway: { ...SPEECH_PROVIDER, speech: 'vendor-b' } } }), schema });
+
+    expect(toOwned.providers).toBeUndefined();
+    expect(Object.keys(toOwned.extensionProviders ?? {})).toEqual(['speech', 'gateway']);
   });
 
   it('fails a patch that names no provider at merge, and no BUILT-IN at overlay', () => {

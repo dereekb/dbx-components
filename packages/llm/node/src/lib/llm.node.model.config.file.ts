@@ -20,11 +20,11 @@
  * File IO is synchronous: hosts read the file once, at boot, from synchronous config resolvers.
  */
 
-import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { existsSync, readFileSync } from 'node:fs';
 import { errorMessageOf, type Maybe } from '@dereekb/util';
-import { flattenLlmModelProfile, type LlmModelConfigBaseTypes, type LlmModelConfigFile, type LlmModelConfigSchema, type LlmModelConfigTypes, overlayLlmModelConfigFile, parseLlmModelConfigFile, resolveLlmModelProfile } from '@dereekb/llm';
+import { flattenLlmModelConfigFile, type LlmModelConfigBaseTypes, type LlmModelConfigFile, type LlmModelConfigSchema, type LlmModelConfigTypes, overlayLlmModelConfigFile, parseLlmModelConfigFile, resolveLlmModelProfile } from '@dereekb/llm';
 import { DEFAULT_LLM_ENV_NAMES, firstLlmEnvEntry, type LlmEnvNames, type LlmEnvView } from './llm.node.env';
+import { writeLlmFileAtomic } from './llm.node.file';
 
 // MARK: Location
 /**
@@ -221,12 +221,13 @@ export interface WriteLlmModelConfigFileConfig<X extends LlmModelConfigTypes = L
  * 2. **Atomic.** Written to a sibling temp file and renamed, so an interrupted write cannot leave a truncated file —
  *    exactly the malformed file the read side fails loud on, for every host, until someone repairs it by hand. A failed
  *    write or rename removes the temp file.
- * 3. **Formatted for the hand-editor.** 2-space JSON, a trailing newline, and keys in a fixed order (`$schema`, `notes`,
- *    `active`, `providers`, `profiles`, `models` — the prose before the data, the endpoints before the maps that use
- *    them, the per-slug appendix last). The order is an ALLOWLIST: a top-level key missing from it is dropped.
+ * 3. **Formatted for the hand-editor.** 2-space JSON, a trailing newline, and the on-disk shape
+ *    `flattenLlmModelConfigFile` builds: every key, in `LLM_MODEL_CONFIG_FILE_KEYS` order (`$schema`, `notes`,
+ *    `active`, `providers`, `profiles`, `models`).
  *
- * Profiles are flattened back to their on-disk shape, and the parsed-side `providerPatches` fold back into
- * `providers` after the full entries — no `providerPatches` key ever reaches disk.
+ * Profiles are flattened back to their on-disk shape, and the parsed-side `extensionProviders` and `providerPatches`
+ * fold back into `providers` after the completion entries (completion, then extension-owned, then patches) — neither
+ * in-memory key ever reaches disk.
  *
  * @param config - The file, its path, the schema and the built-ins.
  * @returns The re-parsed file exactly as it now exists on disk.
@@ -235,32 +236,9 @@ export interface WriteLlmModelConfigFileConfig<X extends LlmModelConfigTypes = L
  */
 export function writeLlmModelConfigFile<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes>(config: WriteLlmModelConfigFileConfig<X>): LlmModelConfigFile<X> {
   const { file, filePath, schema } = config;
-  // `providers` and `models` are already their on-disk shape but both need CARRYING: dropping either would delete every
-  // declared provider / per-slug fact the next time any command wrote the file.
-  const providers = file.providers == null && file.providerPatches == null ? undefined : { ...file.providers, ...file.providerPatches };
-  const profiles = file.profiles == null ? undefined : Object.fromEntries(Object.entries(file.profiles).map(([name, profile]) => [name, flattenLlmModelProfile(profile)]));
-  const ordered = {
-    ...(file.$schema === undefined ? {} : { $schema: file.$schema }),
-    ...(file.notes === undefined ? {} : { notes: file.notes }),
-    ...(file.active == null ? {} : { active: file.active }),
-    ...(providers == null ? {} : { providers }),
-    ...(profiles == null ? {} : { profiles }),
-    ...(file.models == null ? {} : { models: file.models })
-  };
-  const body = `${JSON.stringify(ordered, null, 2)}\n`;
+  const body = `${JSON.stringify(flattenLlmModelConfigFile(file), null, 2)}\n`;
   const parsed = parseLlmModelConfigFile({ raw: JSON.parse(body), source: filePath, schema });
   resolveLlmModelProfile({ file: overlayLlmModelConfigFile({ base: config.base ?? {}, file: parsed, source: filePath, schema }), source: filePath, schema });
-
-  mkdirSync(dirname(filePath), { recursive: true });
-  const tempPath = `${filePath}.${process.pid}.writing`;
-
-  try {
-    writeFileSync(tempPath, body, 'utf8');
-    renameSync(tempPath, filePath);
-  } catch (e) {
-    rmSync(tempPath, { force: true });
-    throw e;
-  }
-
+  writeLlmFileAtomic({ filePath, text: body });
   return parsed;
 }

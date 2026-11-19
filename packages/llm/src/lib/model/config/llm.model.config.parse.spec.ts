@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { flattenLlmModelProfile, isLlmProviderPatchValue, parseLlmModelConfigFile, parseLlmModelSettings, parseLlmProviderEntry } from './llm.model.config.parse';
+import { flattenLlmModelConfigFile, flattenLlmModelProfile, isLlmProviderPatchValue, parseLlmModelConfigFile, parseLlmModelSettings, parseLlmProviderEntry } from './llm.model.config.parse';
 import { llmModelProviderBindings } from './llm.model.config.resolve';
 import { makeLlmModelConfigSchema } from './llm.model.config.schema';
 
@@ -39,10 +39,12 @@ describe('parseLlmModelConfigFile()', () => {
 
   it('FAILS LOUD on a non-object root, an unknown top-level key, or a malformed tier value', () => {
     expect(() => parse(['nope'])).toThrow('llm models: models.json must contain a JSON object.');
-    expect(() => parse({ profile: {} })).toThrow(`llm models: models.json has unknown key 'profile' (allowed: active, providers, profiles, models, notes, $schema).`);
+    expect(() => parse({ profile: {} })).toThrow(`llm models: models.json has unknown key 'profile' (allowed: $schema, notes, active, providers, profiles, models).`);
     expect(() => parse({ profiles: { free: { fast: 7 } } })).toThrow(/must be a non-empty, trimmed model slug or a \{ model, maxOutputTokens\?, reasoning\? \} object \(got 7\)\./);
     expect(() => parse({ profiles: { free: { fast: { model: 'm', maxTokens: 10 } } } })).toThrow(/unknown key 'maxTokens'/);
     expect(() => parse({ profiles: { free: { fast: '' } } }, '/home/x/models.json')).toThrow(/\/home\/x\/models\.json profiles\['free'\]\['fast'\]/);
+    expect(() => parse({ profiles: { free: { fast: ' vendor/x' } } })).toThrow(`llm models: models.json profiles['free']['fast'] must be a non-empty, trimmed model slug (got " vendor/x").`);
+    expect(() => parse({ profiles: { free: { fast: { model: 'm', maxOutputTokens: 1.5 } } } })).toThrow(`llm models: models.json profiles['free']['fast'].maxOutputTokens must be a positive integer (got 1.5).`);
     expect(() => parse({ active: 3 })).toThrow('llm models: models.json.active must be a profile-name string.');
     expect(() => parse({ profiles: [] })).toThrow('llm models: models.json.profiles must be a JSON object of { profileName: { tierKey: modelSlug } }.');
   });
@@ -86,7 +88,10 @@ describe('the `providers` block', () => {
   });
 
   it('parses every completion key in order and trims the base URL and key var', () => {
-    const entry = parseLlmProviderEntry({ label: 'p', value: { decision: 'none', metering: 'zenmux', usageAccounting: true, tokenLimitParam: 'max_completion_tokens', reasoningOff: 'effort-minimal', apiKeyEnv: ' K ', baseUrl: ' http://x/v1 ', transport: 'openrouter' }, schema });
+    const parsed = parseLlmProviderEntry({ label: 'p', value: { decision: 'none', metering: 'zenmux', usageAccounting: true, tokenLimitParam: 'max_completion_tokens', reasoningOff: 'effort-minimal', apiKeyEnv: ' K ', baseUrl: ' http://x/v1 ', transport: 'openrouter' }, schema });
+    const entry = parsed.entry;
+
+    expect(parsed.kind).toBe('completion');
 
     expect(entry).toEqual({ transport: 'openrouter', baseUrl: 'http://x/v1', apiKeyEnv: 'K', reasoningOff: 'effort-minimal', tokenLimitParam: 'max_completion_tokens', usageAccounting: true, metering: 'zenmux', decision: 'none' });
     expect(Object.keys(entry)).toEqual(['transport', 'baseUrl', 'apiKeyEnv', 'reasoningOff', 'tokenLimitParam', 'usageAccounting', 'metering', 'decision']);
@@ -139,6 +144,34 @@ describe('isLlmProviderPatchValue()', () => {
     expect(isLlmProviderPatchValue({ transport: 'openai' })).toBe(false);
     expect(isLlmProviderPatchValue(null)).toBe(false);
     expect(isLlmProviderPatchValue([])).toBe(false);
+  });
+});
+
+describe('the parsed file shape', () => {
+  it('orders the keys by LLM_MODEL_CONFIG_FILE_KEYS', () => {
+    const file = parse({ models: { 'a/b': { vision: true } }, profiles: FILE.profiles, providers: { local: { apiKeyEnv: 'K' } }, active: 'free', notes: 'n', $schema: 's' });
+    expect(Object.keys(file)).toEqual(['$schema', 'notes', 'active', 'providers', 'profiles', 'models']);
+  });
+
+  it('round-trips a declared EMPTY providers block', () => {
+    expect(parse({ providers: {} })).toEqual({ providers: {} });
+    expect(Object.keys(parse({ providers: {} }))).toEqual(['providers']);
+  });
+});
+
+describe('flattenLlmModelConfigFile()', () => {
+  it('writes the on-disk shape: key order, flat profiles, carried prose', () => {
+    const parsed = parse({ models: { 'a/b': { vision: true } }, profiles: { free: { fast: 'z-ai/glm-5.3-free' } }, providers: { local: { apiKeyEnv: 'K' } }, active: 'free', notes: null, $schema: 's' });
+    const flat = flattenLlmModelConfigFile(parsed);
+
+    expect(Object.keys(flat)).toEqual(['$schema', 'notes', 'active', 'providers', 'profiles', 'models']);
+    expect(flat.notes).toBeNull();
+    expect(flat.profiles).toEqual({ free: { fast: 'z-ai/glm-5.3-free' } });
+    expect(parse(JSON.parse(JSON.stringify(flat)))).toEqual(parsed);
+  });
+
+  it('drops absent keys', () => {
+    expect(flattenLlmModelConfigFile({})).toEqual({});
   });
 });
 

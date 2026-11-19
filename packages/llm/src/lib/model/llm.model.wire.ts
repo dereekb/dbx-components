@@ -14,7 +14,7 @@
  */
 
 import { type Maybe } from '@dereekb/util';
-import { type LlmModelId, type LlmReasoningConfig } from './llm.value';
+import { type LlmModelId, type LlmModelSlugMap, type LlmReasoningConfig } from './llm.value';
 
 /**
  * Every legal {@link LlmReasoningOffEncoding}, in the order error messages print them — the ONE list every parser,
@@ -78,7 +78,7 @@ export const DEFAULT_LLM_TOKEN_LIMIT_PARAM: LlmTokenLimitParam = 'max_tokens';
  * `models` block of its model config and the transport consumes. `Partial` because {@link LlmModelId} is an open
  * string: every key is optional, and an absent slug falls back to the provider / global encoding.
  */
-export type LlmModelReasoningOffMap = Readonly<Partial<Record<LlmModelId, LlmReasoningOffEncoding>>>;
+export type LlmModelReasoningOffMap = LlmModelSlugMap<LlmReasoningOffEncoding>;
 
 /**
  * PER-MODEL vision capability, keyed by the exact slug sent on the wire — the {@link LlmModelReasoningOffMap} twin.
@@ -89,7 +89,7 @@ export type LlmModelReasoningOffMap = Readonly<Partial<Record<LlmModelId, LlmRea
  * vision-capable model called with plain text just answers from the descriptions. So an operator opts a slug IN
  * rather than out.
  */
-export type LlmModelVisionMap = Readonly<Partial<Record<LlmModelId, boolean>>>;
+export type LlmModelVisionMap = LlmModelSlugMap<boolean>;
 
 /**
  * Whether a value is one of the {@link LLM_REASONING_OFF_ENCODINGS}.

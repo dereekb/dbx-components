@@ -27,6 +27,16 @@ function parseRegion(input: LlmModelConfigExtensionInput): TestFields {
   return region === undefined ? {} : { region };
 }
 
+function parseRegionPatch(input: LlmModelConfigExtensionInput): TestFields {
+  for (const key of Object.keys(input.entry)) {
+    if (key !== 'region') {
+      throw new Error(`${input.schemaLabel}: ${input.label} is a region patch, but '${key}' is not a region key.`);
+    }
+  }
+
+  return parseRegion(input);
+}
+
 const schema = makeLlmModelConfigSchema<TestTypes>({
   label: 'test models',
   transports: ['openai', 'openrouter'],
@@ -34,15 +44,37 @@ const schema = makeLlmModelConfigSchema<TestTypes>({
   extension: {
     providerKeys: ['region'],
     parseProviderFields: parseRegion,
-    parseProviderPatch: (input) => {
-      for (const key of Object.keys(input.entry)) {
-        if (key !== 'region') {
-          throw new Error(`${input.schemaLabel}: ${input.label} is a region patch, but '${key}' is not a region key.`);
-        }
-      }
+    parseProviderPatch: parseRegionPatch
+  }
+});
 
-      return parseRegion(input);
-    }
+/**
+ * An entry of the `media` transport the second test extension owns — a provider that serves no completions.
+ */
+interface TestMediaEntry extends TestFields {
+  readonly transport: 'media';
+  readonly baseUrl: string;
+}
+
+interface TestMediaTypes extends LlmModelConfigTypes {
+  readonly providerFields: TestFields;
+  readonly extensionProviderEntry: TestMediaEntry;
+  readonly modelFields: object;
+}
+
+/**
+ * The region extension plus an owned `media` transport, so one file carries completion entries, owned entries and
+ * patches.
+ */
+const mediaSchema = makeLlmModelConfigSchema<TestMediaTypes>({
+  label: 'test models',
+  transports: ['openai'],
+  extension: {
+    providerKeys: ['region'],
+    parseProviderFields: parseRegion,
+    providerTransports: ['media'],
+    parseProviderEntry: (input) => ({ transport: 'media', baseUrl: input.baseUrl ?? '', ...input.fields }),
+    parseProviderPatch: parseRegionPatch
   }
 });
 
@@ -222,7 +254,8 @@ describe('model config file', () => {
     });
 
     it('should refuse a payload the schema rejects and write nothing', () => {
-      const file = { providers: { broken: { transport: 'openai', baseUrl: 'http://x/v1' } } } as unknown as LlmModelConfigFile<TestTypes>;
+      // A blank key var type-checks (a string) but the schema rejects it — the payload is well-typed and still refused.
+      const file: LlmModelConfigFile<TestTypes> = { providers: { broken: { transport: 'openai', baseUrl: 'http://x/v1', apiKeyEnv: '' } } };
       expect(() => writeLlmModelConfigFile({ file, filePath: defaultPath, schema })).toThrow(/apiKeyEnv/);
       expect(readdirSync(dir)).toEqual([]);
     });
@@ -253,7 +286,7 @@ describe('model config file', () => {
     it('should carry providers and models through a profile-only write', () => {
       writeJson(defaultPath, OPERATOR_FILE);
       const loaded = loadEffectiveLlmModelConfigFile({ env: {}, defaultPath, schema, base: BASE });
-      const userFile = loaded.userFile as LlmModelConfigFile<TestTypes>;
+      const userFile = loaded.userFile ?? {};
       writeLlmModelConfigFile({ file: { ...userFile, profiles: { ...userFile.profiles, mixed: { tiers: { fast: 'local/qwen', strong: 'vendor/wider' } } } }, filePath: loaded.filePath, schema, base: BASE });
       const reread = loadLlmModelConfigFile({ env: {}, defaultPath, schema });
       expect(reread?.file.providers).toEqual(OPERATOR_FILE.providers);
@@ -264,7 +297,7 @@ describe('model config file', () => {
     it('should keep a binding through an active-only write over a provider-bearing file', () => {
       writeJson(defaultPath, OPERATOR_FILE);
       const loaded = loadEffectiveLlmModelConfigFile({ env: {}, defaultPath, schema, base: BASE });
-      writeLlmModelConfigFile({ file: { ...(loaded.userFile as LlmModelConfigFile<TestTypes>), active: 'cheap' }, filePath: loaded.filePath, schema, base: BASE });
+      writeLlmModelConfigFile({ file: { ...loaded.userFile, active: 'cheap' }, filePath: loaded.filePath, schema, base: BASE });
       const effective = loadEffectiveLlmModelConfigFile({ env: {}, defaultPath, schema, base: BASE });
       expect(effective.file.models?.['local/qwen']).toEqual({ provider: 'local' });
       expect(effective.file.providers?.['local']).toEqual(OPERATOR_FILE.providers.local);
@@ -285,6 +318,22 @@ describe('model config file', () => {
       expect('providerPatches' in onDisk).toBe(false);
       expect(written.providerPatches).toEqual({ gateway: { region: 'eu' } });
       expect(loadEffectiveLlmModelConfigFile({ env: {}, defaultPath, schema, base: BASE }).file.providers?.['gateway']).toEqual({ ...BASE.providers?.['gateway'], region: 'eu' });
+    });
+
+    it('should write completion entries, then extension-owned entries, then patches', () => {
+      const speaker = { transport: 'media', baseUrl: 'http://192.168.1.60:9000' };
+      writeJson(defaultPath, { providers: { gateway: { region: 'eu' }, speaker, local: OPERATOR_FILE.providers.local } });
+      const mediaBase: LlmModelConfigFile<TestMediaTypes> = { providers: { gateway: { transport: 'openai', baseUrl: 'https://gateway.example/v1', apiKeyEnv: 'GATEWAY_API_KEY' } } };
+      const loaded = loadLlmModelConfigFile({ env: {}, defaultPath, schema: mediaSchema });
+      expect(Object.keys(loaded?.file.providers ?? {})).toEqual(['local']);
+      expect(loaded?.file.extensionProviders).toEqual({ speaker });
+      expect(loaded?.file.providerPatches).toEqual({ gateway: { region: 'eu' } });
+
+      const written = writeLlmModelConfigFile({ file: loaded?.file ?? {}, filePath: defaultPath, schema: mediaSchema, base: mediaBase });
+      const onDisk = JSON.parse(readFileSync(defaultPath, 'utf8')) as { providers: Record<string, unknown> };
+      expect(Object.keys(onDisk.providers)).toEqual(['local', 'speaker', 'gateway']);
+      expect(onDisk.providers).toEqual({ local: OPERATOR_FILE.providers.local, speaker, gateway: { region: 'eu' } });
+      expect(written).toEqual(loaded?.file);
     });
 
     it('should leave no temp file behind', () => {
