@@ -57,7 +57,7 @@ export type LlmCostBasis = 'list';
  * Token usage (plus the optional provider dollar cost) for one LLM call — the cost-attribution telemetry. Read from
  * the provider completion's `usage` block (an OpenRouter transport sets `usage:{include:true}` on the request so
  * `cost` rides through). Counts are always present when a real completion was read; `cost` only when the provider
- * returned it. Absent entirely on an injected text-in / text-out runner (no completion exists there).
+ * returned it. Absent entirely on a strategy with no provider completion to read (a scripted or tape strategy).
  */
 export interface LlmUsage {
   /**

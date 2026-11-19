@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_LLM_REASONING_OFF_ENCODING, DEFAULT_LLM_TOKEN_LIMIT_PARAM, isLlmReasoningOffEncoding, isLlmTokenLimitParam, LLM_REASONING_OFF_ENCODINGS, LLM_TOKEN_LIMIT_PARAMS, llmReasoningOffEncodingFor, parseLlmReasoningOffEncoding } from './llm.model.wire';
+import { DEFAULT_LLM_REASONING_OFF_ENCODING, DEFAULT_LLM_TOKEN_LIMIT_PARAM, isLlmReasoningOffEncoding, isLlmTokenLimitParam, LLM_REASONING_OFF_ENCODINGS, LLM_TOKEN_LIMIT_PARAMS, llmReasoningOffEncodingFor, normalizeLlmReasoningConfig, parseLlmReasoningOffEncoding } from './llm.model.wire';
 
 describe('LLM_REASONING_OFF_ENCODINGS', () => {
   it('lists every encoding in message order', () => {
@@ -59,5 +59,24 @@ describe('llmReasoningOffEncodingFor()', () => {
     expect(llmReasoningOffEncodingFor({ model: 'c/d' })).toBe(DEFAULT_LLM_REASONING_OFF_ENCODING);
     // A model-less call cannot consult the map, and must not inherit an unrelated slug's exception.
     expect(llmReasoningOffEncodingFor({ byModel: { 'a/b': 'effort-minimal' } })).toBe(DEFAULT_LLM_REASONING_OFF_ENCODING);
+  });
+});
+
+describe('normalizeLlmReasoningConfig()', () => {
+  it('keeps an absent config absent', () => {
+    expect(normalizeLlmReasoningConfig(undefined)).toBeUndefined();
+    expect(normalizeLlmReasoningConfig(null)).toBeUndefined();
+  });
+
+  it('reduces an OFF config to { enabled: false } alone', () => {
+    expect(normalizeLlmReasoningConfig({ enabled: false, effort: 'high', maxTokens: 1, exclude: true })).toEqual({ enabled: false });
+  });
+
+  it('passes any other config through by reference', () => {
+    const effortOnly = { effort: 'low' as const };
+    const enabledWithEffort = { enabled: true, effort: 'high' as const };
+
+    expect(normalizeLlmReasoningConfig(effortOnly)).toBe(effortOnly);
+    expect(normalizeLlmReasoningConfig(enabledWithEffort)).toBe(enabledWithEffort);
   });
 });

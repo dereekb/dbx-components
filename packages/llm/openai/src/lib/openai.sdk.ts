@@ -1,7 +1,8 @@
 /**
- * The single boundary between `@dereekb/llm/openai` and the `openai` SDK. It is reached only through `import type`
- * and `import()`, so importing the entry never evaluates the SDK, and every export here is typed with local
- * structural types, so no emitted declaration names the SDK.
+ * The single boundary between the `@dereekb/llm` family and the `openai` SDK — `/openrouter` reaches it only through
+ * `@dereekb/llm/openai`'s chat base. It is reached only through `import type` and `import()`, so importing the entry
+ * never evaluates the SDK, and every export here is typed with local structural types, so no emitted declaration names
+ * the SDK.
  */
 import { type Maybe, type Milliseconds } from '@dereekb/util';
 import { type LlmOpenAiChatClient } from './openai.chat';

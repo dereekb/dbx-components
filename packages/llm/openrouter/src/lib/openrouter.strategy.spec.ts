@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { type LlmCredentialProbeFetch, type LlmRequest } from '@dereekb/llm';
-import { DEFAULT_LLM_OPENROUTER_MAX_OUTPUT_TOKENS, LLM_OPENROUTER_STRATEGY_KIND, makeLlmOpenRouterStrategy } from './openrouter.strategy';
-import { llmOpenRouterCallTimeoutMs, type LlmOpenRouterChatClient, type LlmOpenRouterRequestOptions } from './openrouter.chat';
+import { DEFAULT_LLM_COMPLETION_TIMEOUT_MS, DEFAULT_LLM_MAX_OUTPUT_TOKENS, type LlmCredentialProbeFetch, type LlmRequest } from '@dereekb/llm';
+import { llmOpenAiCallTimeoutMs, type LlmOpenAiChatClient, type LlmOpenAiRequestOptions } from '@dereekb/llm/openai';
+import { LLM_OPENROUTER_STRATEGY_KIND, makeLlmOpenRouterStrategy } from './openrouter.strategy';
 
 /**
- * The `openrouter` chat strategy. Proves it (1) bypasses the client via the injected text runner seam and threads the
- * request's model, (2) builds a strict `response_format` from the schema hint named by the capability and omits it
+ * The `openrouter` chat strategy — OpenRouter's hooks over the OpenAI-compatible chat base. Proves it (1) reaches an
+ * injected client network-free, with the default timeout floor, (2) builds a strict `response_format` from the schema hint named by the capability and omits it
  * when there is none, (3) honours the per-call model + the default-model fallback and fails loud when neither is set,
  * (4) sends `usage: { include: true }` and the max_tokens runaway guard on every call, (5) maps the reasoning config
  * onto the nested `reasoning` param, (6) places the Anthropic `cache_control` breakpoints, (7) echoes the served model,
@@ -61,9 +61,9 @@ const DEFAULT_FAKE_USAGE: FakeUsage = { prompt_tokens: 1200, completion_tokens: 
  * @returns The fake client + the recorded bodies.
  */
 function makeFakeClient(opts: { readonly reply?: string; readonly model?: string; readonly provider?: string; readonly usage?: FakeUsage; readonly includeModel?: boolean; readonly includeUsage?: boolean; readonly id?: string; readonly finishReason?: string; readonly nativeFinishReason?: string } = {}): {
-  readonly client: LlmOpenRouterChatClient;
+  readonly client: LlmOpenAiChatClient;
   readonly bodies: RecordedBody[];
-  readonly options: LlmOpenRouterRequestOptions[];
+  readonly options: LlmOpenAiRequestOptions[];
 } {
   const reply = opts.reply ?? 'fake-reply';
   const includeModel = opts.includeModel ?? true;
@@ -71,8 +71,8 @@ function makeFakeClient(opts: { readonly reply?: string; readonly model?: string
   const model = opts.model ?? DEFAULT_FAKE_MODEL;
   const usage = opts.usage ?? DEFAULT_FAKE_USAGE;
   const bodies: RecordedBody[] = [];
-  const options: LlmOpenRouterRequestOptions[] = [];
-  const client: LlmOpenRouterChatClient = {
+  const options: LlmOpenAiRequestOptions[] = [];
+  const client: LlmOpenAiChatClient = {
     chat: {
       completions: {
         create: async (body, requestOptions) => {
@@ -95,32 +95,6 @@ function makeFakeClient(opts: { readonly reply?: string; readonly model?: string
 }
 
 describe('makeLlmOpenRouterStrategy()', () => {
-  it("uses the injected runner seam (no client / response_format) and threads the request's model", async () => {
-    const calls: Array<{ readonly prompt: string; readonly model?: string }> = [];
-    const strategy = makeLlmOpenRouterStrategy({
-      run: async (prompt, model) => {
-        calls.push({ prompt, ...(model == null ? {} : { model }) });
-        return `echo:${prompt}`;
-      }
-    });
-
-    const withModel = await strategy.complete({ prompt: 'p1', capability: 'X', model: 'anthropic/claude-opus-4.8', meta: { requestId: 'r-7' } });
-    const without = await strategy.complete({ prompt: 'p2', capability: 'X' });
-
-    // The injected runner seam never sends `response_format`, so schemaEnforced is false on both. It also reads
-    // no completion, so the cost-telemetry fields are OMITTED entirely (byte-stable with the pre-telemetry seam).
-    // `strategyKind` rides beside `strategyId` on EVERY result: the id is the provider INSTANCE (attribution),
-    // the kind is the LANE (the A/B axis a ledger folds `byStrategy` on). A completion strategy with no distinct
-    // lane stamps its own id as the kind, which is what keeps an old row folding unchanged.
-    expect(withModel).toEqual({ text: 'echo:p1', strategyId: LLM_OPENROUTER_STRATEGY_KIND, strategyKind: LLM_OPENROUTER_STRATEGY_KIND, capability: 'X', meta: { requestId: 'r-7' }, schemaEnforced: false });
-    expect(without).toEqual({ text: 'echo:p2', strategyId: LLM_OPENROUTER_STRATEGY_KIND, strategyKind: LLM_OPENROUTER_STRATEGY_KIND, capability: 'X', schemaEnforced: false });
-    expect(withModel).not.toHaveProperty('model');
-    expect(withModel).not.toHaveProperty('usage');
-    expect(withModel).not.toHaveProperty('latencyMs');
-    expect(calls[0]).toEqual({ prompt: 'p1', model: 'anthropic/claude-opus-4.8' });
-    expect(calls[1]).toEqual({ prompt: 'p2' });
-  });
-
   it('builds a strict json_schema response_format from the hint, named by the capability', async () => {
     const { client, bodies } = makeFakeClient();
     const strategy = makeLlmOpenRouterStrategy({ client, defaultModel: 'anthropic/claude-sonnet-4.6' });
@@ -184,7 +158,7 @@ describe('makeLlmOpenRouterStrategy()', () => {
     // The default cap rides on every body so a degenerate generation is aborted, not billed to completion.
     // Asserted against the exported constant: the VALUE is a calibration that has moved (4 k ⇒ 8 k) and will
     // move again; what this pins is that a cap is always sent, which is what makes the guard a guard.
-    expect(bodies[0]?.max_tokens).toBe(DEFAULT_LLM_OPENROUTER_MAX_OUTPUT_TOKENS);
+    expect(bodies[0]?.max_tokens).toBe(DEFAULT_LLM_MAX_OUTPUT_TOKENS);
   });
 
   it('honours a configured maxOutputTokens override on the body', async () => {
@@ -215,6 +189,15 @@ describe('makeLlmOpenRouterStrategy()', () => {
     // The transport-agnostic LlmReasoningConfig maps onto OpenRouter's `reasoning` param; the only rename is
     // camelCase `maxTokens` → snake_case `max_tokens`, every other field verbatim.
     expect(bodies[0]?.reasoning).toEqual({ effort: 'high', max_tokens: 2048, exclude: true, enabled: true });
+  });
+
+  it('sends an OFF config as { enabled: false } alone, dropping every co-present knob (B15)', async () => {
+    const { client, bodies } = makeFakeClient();
+    const strategy = makeLlmOpenRouterStrategy({ client, defaultModel: 'anthropic/claude-sonnet-4.6' });
+
+    await strategy.complete({ prompt: 'hi', capability: 'X', reasoning: { effort: 'high', maxTokens: 512, exclude: true, enabled: false } });
+
+    expect(bodies[0]?.reasoning).toEqual({ enabled: false });
   });
 
   it('conditionally spreads each reasoning field; an unset knob never lands on the wire', async () => {
@@ -404,9 +387,9 @@ describe('makeLlmOpenRouterStrategy()', () => {
 
     expect(options.length).toBe(1);
     expect(options[0]?.signal).toBeInstanceOf(AbortSignal);
-    // The per-request timeout mirrors the abort window so the SDK's client-level timeout floor never fires first.
-    expect(typeof options[0]?.timeout).toBe('number');
-    expect(options[0]?.timeout).toBe(options[0]?.signal == null ? undefined : options[0]!.timeout);
+    // The per-request timeout mirrors the abort window (the default floor scaled by the default cap) so the SDK's
+    // client-level timeout floor never fires first.
+    expect(options[0]?.timeout).toBe(llmOpenAiCallTimeoutMs(DEFAULT_LLM_COMPLETION_TIMEOUT_MS, DEFAULT_LLM_MAX_OUTPUT_TOKENS));
   });
 
   it("the abort window SCALES with the call's completion budget (a big-budget lever gets a longer wall)", async () => {
@@ -417,8 +400,8 @@ describe('makeLlmOpenRouterStrategy()', () => {
     await strategy.complete({ prompt: 'small', capability: 'X', maxOutputTokens: 100 });
     await strategy.complete({ prompt: 'big', capability: 'X', maxOutputTokens: 16_384 });
 
-    expect(options[0]?.timeout).toBe(llmOpenRouterCallTimeoutMs(60_000, 100));
-    expect(options[1]?.timeout).toBe(llmOpenRouterCallTimeoutMs(60_000, 16_384));
+    expect(options[0]?.timeout).toBe(llmOpenAiCallTimeoutMs(60_000, 100));
+    expect(options[1]?.timeout).toBe(llmOpenAiCallTimeoutMs(60_000, 16_384));
     expect(options[1]!.timeout!).toBeGreaterThan(options[0]!.timeout!);
   });
 
@@ -510,29 +493,6 @@ describe('makeLlmOpenRouterStrategy()', () => {
     ]);
   });
 
-  it('flattens a thread into one role-tagged prompt on the injected runner seam (thread-less calls pass through unchanged)', async () => {
-    const prompts: string[] = [];
-    const strategy = makeLlmOpenRouterStrategy({
-      run: async (prompt) => {
-        prompts.push(prompt);
-        return 'ok';
-      }
-    });
-
-    await strategy.complete({
-      prompt: 'FOLLOW',
-      capability: 'X',
-      thread: [
-        { role: 'user', content: 'ROOT' },
-        { role: 'assistant', content: 'REPLY' }
-      ]
-    });
-    await strategy.complete({ prompt: 'SINGLE', capability: 'X' });
-
-    expect(prompts[0]).toBe('[user]\nROOT\n\n[assistant]\nREPLY\n\n[user]\nFOLLOW');
-    expect(prompts[1]).toBe('SINGLE');
-  });
-
   it('declares breakpoint caching, the openrouter id, and no warm seam', () => {
     const strategy = makeLlmOpenRouterStrategy();
     expect(strategy.id).toBe(LLM_OPENROUTER_STRATEGY_KIND);
@@ -541,12 +501,6 @@ describe('makeLlmOpenRouterStrategy()', () => {
   });
 
   describe('healthCheck', () => {
-    it('is ready WITHOUT any check when a runner seam is injected (no key needed)', async () => {
-      const strategy = makeLlmOpenRouterStrategy({ run: async (prompt) => `echo:${prompt}` });
-
-      await expect(strategy.healthCheck?.()).resolves.toEqual({ ready: true, issues: [] });
-    });
-
     it('is ready WITHOUT touching an injected client (network-free; create is never called)', async () => {
       const { client, bodies } = makeFakeClient();
       const strategy = makeLlmOpenRouterStrategy({ defaultModel: DEFAULT_MODEL, client });
@@ -565,7 +519,7 @@ describe('makeLlmOpenRouterStrategy()', () => {
   });
 
   describe('with no apiKey configured', () => {
-    it('fails loud (no network) when neither a client nor a runner is injected', async () => {
+    it('fails loud (no network) when no client is injected', async () => {
       const strategy = makeLlmOpenRouterStrategy();
       const request: LlmRequest = { prompt: 'hi', capability: 'X' };
 
@@ -608,14 +562,28 @@ describe('makeLlmOpenRouterStrategy()', () => {
       expect(health?.issues[0]?.message).toContain('User not found.');
     });
 
-    it('is ready WITHOUT a socket when an injection seam is present', async () => {
-      const runner = makeLlmOpenRouterStrategy({ run: async (prompt) => `echo:${prompt}` });
+    it('is ready WITHOUT a socket when a client is injected', async () => {
       const { client, bodies } = makeFakeClient();
       const injected = makeLlmOpenRouterStrategy({ defaultModel: DEFAULT_MODEL, client });
 
-      await expect(runner.credentialProbe?.()).resolves.toEqual({ ready: true, issues: [] });
       await expect(injected.credentialProbe?.()).resolves.toEqual({ ready: true, issues: [] });
       expect(bodies).toHaveLength(0);
+    });
+
+    it('grades a 404 from GET /key as an error (OpenRouter always implements it)', async () => {
+      const probeFetch: LlmCredentialProbeFetch = async () => ({ ok: false, status: 404, text: async () => '' });
+      const health = await makeLlmOpenRouterStrategy({ apiKey: 'sk-or-live', probeFetch }).credentialProbe?.();
+
+      expect(health?.ready).toBe(false);
+      expect(health?.issues[0]?.severity).toBe('error');
+    });
+
+    it('delegates to a credentialProbeSource even when a client is injected (B15)', async () => {
+      const { client } = makeFakeClient();
+      const verdict = { ready: false, issues: [{ severity: 'error' as const, message: 'the account rejected the credential' }] };
+      const strategy = makeLlmOpenRouterStrategy({ client, credentialProbeSource: async () => verdict });
+
+      await expect(strategy.credentialProbe?.()).resolves.toEqual(verdict);
     });
 
     it('reports not-ready (never throws) with no apiKey and no seam', async () => {
@@ -633,11 +601,6 @@ describe('makeLlmOpenRouterStrategy() model, wire shape and account facets', () 
     await expect(strategy.complete({ prompt: 'hi', capability: 'X' })).rejects.toThrow(/llm openrouter strategy 'router-a': no model configured/);
   });
 
-  it('still runs model-less on the runner seam', async () => {
-    const strategy = makeLlmOpenRouterStrategy({ run: async (prompt) => `echo:${prompt}` });
-    await expect(strategy.complete({ prompt: 'hi', capability: 'X' })).resolves.toMatchObject({ text: 'echo:hi' });
-  });
-
   it('names the instance id in the no-key error', async () => {
     await expect(makeLlmOpenRouterStrategy({ id: 'router-a', defaultModel: DEFAULT_MODEL }).complete({ prompt: 'hi', capability: 'X' })).rejects.toThrow(/llm openrouter strategy 'router-a': no apiKey configured/);
   });
@@ -653,7 +616,7 @@ describe('makeLlmOpenRouterStrategy() model, wire shape and account facets', () 
     const { client, bodies } = makeFakeClient();
     await makeLlmOpenRouterStrategy({ client, defaultModel: DEFAULT_MODEL }).complete({ prompt: 'hi', capability: 'X', reasoning: { effort: 'low' }, responseSchemaHint: { type: 'object' } });
 
-    expect(Object.keys(bodies[0] ?? {})).toEqual(['model', 'messages', 'max_tokens', 'reasoning', 'usage', 'response_format']);
+    expect(Object.keys(bodies[0] ?? {})).toEqual(['model', 'messages', 'max_tokens', 'reasoning', 'response_format', 'usage']);
   });
 
   it('returns a fully echoed result with its keys in order', async () => {

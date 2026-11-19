@@ -4,6 +4,7 @@ export * from './llm.error';
 export * from './llm.provider.status';
 export * from './llm.strategy';
 export * from './llm.strategy.health';
+export * from './llm.strategy.message';
 export * from './llm.strategy.readiness';
 export * from './llm.strategy.registry';
 export * from './llm.usage';

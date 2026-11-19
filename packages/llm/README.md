@@ -12,10 +12,10 @@ dependency, and its browser entries run unchanged in a browser, a worker or Node
 
 | Entry | Node | SDK | Purpose |
 |---|---|---|---|
-| `@dereekb/llm` | no | none | The strategy contract and runner, call records, model and provider configuration, adapters, prompt assembly, reply repair and validation, the dispatcher and retry ladder, usage accounting, and utilities. |
+| `@dereekb/llm` | no | none | The strategy contract, call records, model and provider configuration, adapters, prompt assembly, reply repair and validation, the dispatcher and retry ladder, usage accounting, and utilities. |
 | `@dereekb/llm/decision` | no | none | The decision lane: questions, the wire format and answer reader, confidence, and the decision strategy contract. Re-exported by the root entry from the same modules, so both share one copy. |
-| `@dereekb/llm/openai` | no | `openai` (optional, lazy) | The OpenAI-compatible chat strategy (OpenAI, ZenMux chat, a local vLLM) and its completion adapter. |
-| `@dereekb/llm/openrouter` | no | `openai` + `@openrouter/sdk` (optional, lazy) | The OpenRouter chat strategy (`cache_control`, strict `response_format`, usage accounting), the OpenRouter decision strategy and their adapters. |
+| `@dereekb/llm/openai` | no | `openai` (optional, lazy) | The OpenAI-compatible chat base (`makeLlmOpenAiCompatibleChatStrategy`), the OpenAI-compatible chat strategy (OpenAI, ZenMux chat, a local vLLM) and its completion adapter. |
+| `@dereekb/llm/openrouter` | no | `openai` (through `/openai`) + `@openrouter/sdk` (optional, lazy) | The OpenRouter chat strategy (`cache_control`, strict `response_format`, usage accounting), the OpenRouter decision strategy and their adapters. |
 | `@dereekb/llm/zenmux` | no | none (`fetch`) | ZenMux constants and cost basis, the decision strategy, the quota-status source and the bill reader. |
 | `@dereekb/llm/node` | yes | none | Model-config file IO, environment variables to provider configs, the craft-notes folder loader and the craft markdown to TypeScript compiler. |
 | `@dereekb/llm/test` | test infra | none | Tape replay, scripted completion and decision strategies, and the billed-lane test factories. |
@@ -27,8 +27,12 @@ The root, `/decision`, `/openai`, `/openrouter` and `/zenmux` entries are browse
 - They import no `node:` module or Node builtin and never read `process`. Hosts pass configuration (API keys, base
   URLs, model lists) in; nothing is read from the environment. Reading the environment or the file system is the job
   of `/node`.
-- `openai` and `@openrouter/sdk` are **optional** peers. Each is loaded lazily from exactly one boundary module of the
-  entry that needs it, so importing an entry never loads an SDK. Install an SDK only for the strategy that uses it.
+- `openai` and `@openrouter/sdk` are **optional** peers. Each is loaded lazily from exactly one boundary module, so
+  importing an entry never loads an SDK. Install an SDK only for the strategy that uses it. `openai` is loaded from
+  `/openai`'s single boundary module; `/openrouter` reaches it by importing `/openai`, and loads `@openrouter/sdk` from
+  its own boundary.
+- The browser entries have one sibling edge, `/openrouter` → `/openai`, and it is one-way: `/openai` imports no other
+  provider entry. The isolation specs pin both directions.
 
 These rules are enforced, not just documented:
 
@@ -47,7 +51,9 @@ so several instances of one transport can be registered side by side.
   cache split, the prompt segments, a prior thread and image attachments. `LlmCompletion` carries the text, which
   strategy and model served it, usage and timing. `LlmDispatchResult` is a completion plus what a dispatcher adds:
   attempts, validation errors, decode status and the reply repair. Host data rides `meta`: the library never reads it
-  and strategies echo it. `LlmRunner` is the text-in / text-out seam a strategy can call instead of its transport.
+  and strategies echo it. `toLlmThreadChatMessages` maps a replayed thread onto plain chat messages and
+  `toLlmAttachmentDataUrl` builds an attachment's `data:` URL. The stock transports default to
+  `DEFAULT_LLM_MAX_OUTPUT_TOKENS` (8,192) and a `DEFAULT_LLM_COMPLETION_TIMEOUT_MS` (60 s) timeout floor.
 - **Registry.** `makeLlmStrategyRegistry(seed)` answers `get(id)`; `llmStrategyInstancesOfKind` lists every instance
   of a transport in registry order (`values().filter(...)`), and its `.at(-1)` is the last registered one. It is built
   on `@dereekb/util`'s `createKeyedRegistry`.
@@ -270,7 +276,8 @@ environment variable and no file: `/node` does that, and a browser host passes t
 - **Wire vocabulary.** `LLM_REASONING_OFF_ENCODINGS` (how an OpenAI-compatible wire says "reasoning off":
   `effort-none`, `effort-minimal`, `nested-disabled`, `omit`), `llmReasoningOffEncodingFor` (the slug's own, then the
   fallback, then `effort-none`), `LLM_TOKEN_LIMIT_PARAMS`, and the per-slug `LlmModelReasoningOffMap` /
-  `LlmModelVisionMap` the transports read.
+  `LlmModelVisionMap` the transports read. `normalizeLlmReasoningConfig` applies the one OFF rule: an explicit
+  `enabled: false` drops every other knob (`effort`, `maxTokens`, `exclude`) before any transport maps the config.
 
 ```json
 {
@@ -754,12 +761,12 @@ replay. Hosts swap their own pieces in through hooks; the dispatcher has no host
   the next section.
 
 ```ts
-import { llmSchemaLeverValidator, makeLlmDispatcher, makeLlmStrategyRegistry, tieredLlmPromptTemplateResolver } from '@dereekb/llm';
+import { DEFAULT_LLM_MAX_OUTPUT_TOKENS, llmSchemaLeverValidator, makeLlmDispatcher, makeLlmStrategyRegistry, tieredLlmPromptTemplateResolver } from '@dereekb/llm';
 
 const dispatcher = makeLlmDispatcher({
   strategies: makeLlmStrategyRegistry([strategy]),
   defaultStrategyId: strategy.id,
-  defaultMaxOutputTokens: 4096,
+  defaultMaxOutputTokens: DEFAULT_LLM_MAX_OUTPUT_TOKENS,
   modelTiers: { fast: 'acme/fast', strong: 'acme/strong' },
   descriptorOf: (capability) => DESCRIPTORS[capability],
   templateResolver: tieredLlmPromptTemplateResolver({ tiers: [{ source: 'app', templates }] }),
@@ -964,12 +971,15 @@ vLLM — over the optional `openai` peer.
   opt-in (`usageAccounting`); a volunteered `usage.cost` is read either way and stamped with `costBasis` when set.
 - Images ride only for slugs `visionByModel` marks; `attachmentsSent` on the result says what rode.
 - There is no built-in model: set `defaultModel` or pass `request.model`, else the call fails loud.
-- Seams: `run` (an `LlmRunner`), `client` (an `LlmOpenAiChatClient` — a fake, or your own SDK client) and
-  `probeFetch`. The real client is built lazily with `maxRetries: 0` (the dispatcher retries) and never reads
+- Defaults: the cap is `DEFAULT_LLM_MAX_OUTPUT_TOKENS` (8,192) and the abort window is a 60 s floor
+  (`DEFAULT_LLM_COMPLETION_TIMEOUT_MS`) scaled up with the call's budget by `llmOpenAiCallTimeoutMs`. An older or
+  small-context model needs its `maxOutputTokens` set.
+- Seams: `client` (an `LlmOpenAiChatClient` — a fake, or your own SDK client) and `probeFetch`. The real client is built lazily with `maxRetries: 0` (the dispatcher retries) and never reads
   `OPENAI_ORG_ID` / `OPENAI_PROJECT_ID`. In a browser pass `dangerouslyAllowBrowser: true` or inject a client — with
   user-held keys only.
 - Credentials: `credentialProbe` GETs `{baseUrl}/models` (a 404 is a ready warning); `credentialProbeSource` replaces
-  it; `providerStatus` / `providerStatusId` exist only with a `providerStatusSource`.
+  it, even when a `client` is injected; `providerStatus` / `providerStatusId` exist only with a
+  `providerStatusSource`.
 
 `LLM_OPENAI_ADAPTERS` registers the completion transport `openai` (default base URL `https://api.openai.com/v1`).
 `llmOpenAiStrategyConfigOf` is its mapping, exported so a host can extend it in its own adapter:
@@ -998,18 +1008,40 @@ const adapters = makeLlmAdapterRegistry([...LLM_OPENAI_ADAPTERS, ...LLM_OPENROUT
 const strategies = makeLlmStrategyRegistry(makeLlmProviderStrategies({ providers, adapters, defaultModel: 'vendor/model-flash' }));
 ```
 
+**Building another OpenAI-compatible transport.** `makeLlmOpenAiCompatibleChatStrategy(config, hooks)` is the base:
+it owns the lazy client, the model guard, the vision filter, `response_format`, the budget-scaled timeout, usage and
+result assembly, `healthCheck`, the credential ladder and `providerStatus`. `config` is what a host configures
+(`LlmOpenAiCompatibleChatStrategyConfig`); `hooks` is what makes one transport differ from another. Both stock
+transports are one set of hooks each:
+
+| Hook | openai | openrouter |
+|---|---|---|
+| `kind`, `describe`, `caching`, `defaultBaseUrl` | `'openai'`, `'auto-prefix'`, OpenAI | `'openrouter'`, `'breakpoint'`, OpenRouter |
+| `tokenLimitParam` | from `tokenLimitParam` | `max_tokens` |
+| `messages` | default: plain strings, image parts after the prompt | `anthropic/` routes: `cache_control` blocks; else default |
+| `reasoningParams` | flat `reasoning_effort` + OFF encodings | nested `reasoning` |
+| `bodyExtras` | `usage: { include: true }` with `usageAccounting` | `usage: { include: true }` always |
+| `completionExtras` | — | `provider`, `native_finish_reason` fallback |
+| `credentialProbe` | `GET /models`, 404 → ready + warning | `GET /key`, 404 → error |
+
+The per-call hooks receive `LlmOpenAiCompatibleCallParams`: the request, the slug being sent, the reasoning config
+already normalized by `normalizeLlmReasoningConfig`, and the attachments that ride. The body is sent as
+`model, messages, <cap>, <reasoning>, response_format, <extras>`.
+
 ## OpenRouter (`@dereekb/llm/openrouter`)
 
-**Chat** — `makeLlmOpenRouterStrategy(config)`, over the optional `openai` peer pointed at OpenRouter:
+**Chat** — `makeLlmOpenRouterStrategy(config)`, built on `/openai`'s `makeLlmOpenAiCompatibleChatStrategy` (the
+`openai` peer is reached through `@dereekb/llm/openai`, pointed at OpenRouter):
 
 - An `anthropic/` route sends the prompt's stable prefix as a `cache_control: { type: 'ephemeral' }` block, and a
   chained follow-up adds a history breakpoint on the last replayed turn; other routes get the plain prompt
   (`caching: 'breakpoint'`).
 - `usage: { include: true }` rides every call, so the reply carries `cost`; the request's reasoning config rides as
-  OpenRouter's nested `reasoning` object; the served upstream `provider` is echoed; `native_finish_reason` is the
-  finish-reason fallback.
-- No built-in model. The same seams, browser rule, `costBasis` / `providerStatusSource` / `credentialProbeSource`
-  facets as `/openai`; the generic credential probe is `GET {baseUrl}/key`.
+  OpenRouter's nested `reasoning` object (an OFF config is sent as `reasoning: { enabled: false }` alone); the served
+  upstream `provider` is echoed; `native_finish_reason` is the finish-reason fallback.
+- No built-in model, and the same defaults as `/openai`. The same seams (`client`, `probeFetch`), browser rule,
+  `costBasis` / `providerStatusSource` / `credentialProbeSource` facets as `/openai`; the generic credential probe is
+  `GET {baseUrl}/key`, and a 404 there is an error.
 
 **Decisions** — `makeLlmOpenRouterDecisionStrategy(config)` posts to `{baseUrl}/systemone` through the optional
 `@openrouter/sdk` peer, loaded lazily (the core client plus `systemOneCreate`, `retries: none`):

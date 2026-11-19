@@ -118,16 +118,12 @@ describe('@dereekb/llm/openrouter isolation', () => {
     expect(sources.filter((file) => PROCESS_READ_REGEX.test(file.code)).map((file) => file.path)).toEqual([]);
   });
 
-  it('should import openai only from lib/openrouter.openai.sdk.ts', () => {
-    expect(importersOf(sources, isPackage('openai'))).toEqual(['lib/openrouter.openai.sdk.ts']);
+  it('should import no openai SDK (it reaches openai through @dereekb/llm/openai)', () => {
+    expect(importersOf(sources, isPackage('openai'))).toEqual([]);
   });
 
   it('should import @openrouter/sdk only from lib/openrouter.sdk.ts', () => {
     expect(importersOf(sources, isPackage('@openrouter/sdk'))).toEqual(['lib/openrouter.sdk.ts']);
-  });
-
-  it('should reach openai from its boundary only through import() or import type', () => {
-    expect(staticImportsOf(sources, 'lib/openrouter.openai.sdk.ts', 'openai')).toEqual([]);
   });
 
   it('should reach @openrouter/sdk from its boundary only through import() or import type', () => {
@@ -140,6 +136,12 @@ describe('@dereekb/llm/openrouter isolation', () => {
 
   it('should import decision symbols from @dereekb/llm, never the /decision subpath', () => {
     expect(importersOf(sources, isPackage('@dereekb/llm/decision'))).toEqual([]);
+  });
+
+  it('should import no sibling entry but @dereekb/llm/openai, specs included', () => {
+    // llm-openrouter:build-base has an edge to llm-openai:build-base only, so any other sibling import would race the build
+    const siblings = ['@dereekb/llm/zenmux', '@dereekb/llm/node', '@dereekb/llm/test'];
+    expect(importersOf(scanSrc(true), (specifier) => siblings.some((sibling) => isPackage(sibling)(specifier)))).toEqual([]);
   });
 
   it('should import its own modules relatively', () => {

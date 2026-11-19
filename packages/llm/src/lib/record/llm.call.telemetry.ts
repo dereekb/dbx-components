@@ -17,7 +17,7 @@ import type { LlmUsage } from '../strategy/llm.usage';
 /**
  * The uniform LLM-call telemetry block spread into a record's payload — `strategyId` always, plus the cost and tier
  * fields ({@link LlmDispatchResult.model} / {@link LlmDispatchResult.usage} / {@link LlmDispatchResult.latencyMs})
- * when the producing call captured them (a client strategy does; an injected runner carries none).
+ * when the producing call captured them (a client strategy does; a scripted or tape strategy carries none).
  */
 export interface LlmCallTelemetry {
   /**
@@ -31,30 +31,32 @@ export interface LlmCallTelemetry {
    */
   readonly strategyKind?: LlmStrategyId;
   /**
-   * The model that actually served the call; absent on an injected runner.
+   * The model that actually served the call; absent on a strategy with no provider completion to read.
    */
   readonly model?: LlmModelId;
   /**
    * The upstream endpoint that served the call ({@link LlmDispatchResult.provider}) — the routing evidence a later
-   * "which endpoints honour the reasoning floor" decision needs. Absent on an injected runner or when not echoed.
+   * "which endpoints honour the reasoning floor" decision needs. Absent on a strategy with no provider completion to
+   * read, or when not echoed.
    */
   readonly provider?: string;
   /**
-   * Token usage (+ optional provider dollar cost) for the call; absent on an injected runner.
+   * Token usage (+ optional provider dollar cost) for the call; absent on a strategy with no provider completion to
+   * read.
    */
   readonly usage?: LlmUsage;
   /**
-   * Wall-clock time around the model call; absent on an injected runner.
+   * Wall-clock time around the model call; absent on a strategy with no provider completion to read.
    */
   readonly latencyMs?: Milliseconds;
   /**
-   * The provider's generation id ({@link LlmDispatchResult.generationId}); absent on an injected runner or when not
-   * echoed.
+   * The provider's generation id ({@link LlmDispatchResult.generationId}); absent on a strategy with no provider
+   * completion to read, or when not echoed.
    */
   readonly generationId?: string;
   /**
-   * Why generation stopped ({@link LlmDispatchResult.finishReason}, e.g. `'stop'` / `'length'`); absent on an
-   * injected runner or when not echoed.
+   * Why generation stopped ({@link LlmDispatchResult.finishReason}, e.g. `'stop'` / `'length'`); absent on a
+   * strategy with no provider completion to read, or when not echoed.
    */
   readonly finishReason?: string;
   /**

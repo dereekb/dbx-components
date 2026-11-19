@@ -6,7 +6,6 @@
   "peerDependencies": {
     "@dereekb/llm": "14.26.0",
     "@dereekb/util": "14.26.0",
-    "@openrouter/sdk": "^1.3.8",
-    "openai": "^7.8.0"
+    "@openrouter/sdk": "^1.3.8"
   }
 }

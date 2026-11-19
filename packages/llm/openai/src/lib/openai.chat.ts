@@ -1,18 +1,50 @@
 import { type Maybe, type Milliseconds } from '@dereekb/util';
-import { type LlmReasoningConfig, type LlmReasoningOffEncoding } from '@dereekb/llm';
+import { toLlmAttachmentDataUrl, toLlmThreadChatMessages, type LlmAttachment, type LlmReasoningConfig, type LlmReasoningOffEncoding, type LlmThreadRole, type LlmThreadTurn, type RawLlmUsage } from '@dereekb/llm';
 
 /**
- * The OpenAI-compatible chat wire: the request / response shapes the OpenAI-compatible strategy sends and reads, and
- * the pure helpers that build their parts. Modeled locally (a structural subset of the `openai` SDK's types) so a
- * spec fake can stand in for the client and no emitted declaration names the SDK.
+ * The OpenAI-compatible chat wire: the request / response shapes every OpenAI-compatible transport sends and reads
+ * (`/openai` and `/openrouter` alike), and the pure helpers that build their parts. Modeled locally (a structural
+ * subset of the `openai` SDK's types) so a spec fake can stand in for the client and no emitted declaration names the
+ * SDK.
+ *
+ * It is ONE superset wire: the fields only OpenRouter sets (`cache_control`, the full nested `reasoning`) or reads
+ * (`provider`, `native_finish_reason`) are optional and documented as such; the `openai` transport never sets them.
  */
 
 // MARK: Reasoning
 /**
- * The reasoning-effort bands this transport can emit — the OpenAI / OpenRouter effort enum plus the two
- * no-reasoning bands (`'none'` / `'minimal'`) the OFF encodings use.
+ * The two no-reasoning effort bands the OFF encodings use (`'effort-none'` / `'effort-minimal'`).
  */
-export type LlmOpenAiReasoningEffort = 'none' | 'minimal' | 'low' | 'medium' | 'high';
+export type LlmOpenAiReasoningOffEffort = 'none' | 'minimal';
+
+/**
+ * The reasoning-effort bands this transport can emit — the OFF bands plus the {@link LlmReasoningConfig} effort enum.
+ */
+export type LlmOpenAiReasoningEffort = LlmOpenAiReasoningOffEffort | NonNullable<LlmReasoningConfig['effort']>;
+
+/**
+ * The nested `reasoning` request param — OpenRouter's spelling of {@link LlmReasoningConfig} (the camelCase
+ * `maxTokens` becomes the snake_case `max_tokens`). OpenRouter sends the full object; the `openai` transport sends
+ * only its `{ enabled: false }` subset, for the `'nested-disabled'` OFF encoding.
+ */
+export interface LlmOpenAiNestedReasoning {
+  /**
+   * The effort band.
+   */
+  readonly effort?: LlmReasoningConfig['effort'];
+  /**
+   * A hard reasoning-token budget.
+   */
+  readonly max_tokens?: number;
+  /**
+   * Whether to exclude the reasoning trace from the reply.
+   */
+  readonly exclude?: boolean;
+  /**
+   * Whether reasoning is enabled at all.
+   */
+  readonly enabled?: boolean;
+}
 
 /**
  * The reasoning params one call contributes to the request body — exactly one shape is populated (or neither, for
@@ -24,9 +56,10 @@ export interface LlmOpenAiReasoningParams {
    */
   readonly reasoning_effort?: LlmOpenAiReasoningEffort;
   /**
-   * The nested OFF object (an aggregator proxying OpenRouter semantics behind an OpenAI-compatible path).
+   * The nested object — OpenRouter's full spelling, or the `openai` transport's `{ enabled: false }` OFF encoding (an
+   * aggregator proxying OpenRouter semantics behind an OpenAI-compatible path).
    */
-  readonly reasoning?: { readonly enabled: false };
+  readonly reasoning?: LlmOpenAiNestedReasoning;
 }
 
 /**
@@ -62,6 +95,9 @@ export interface LlmOpenAiReasoningParamsConfig {
  * `false`, and saying nothing about thinking is not the same assertion as "do not think" on a hybrid-reasoning
  * model, which would bill every call for invisible reasoning. An unset config still contributes nothing, so an
  * un-reasoned body stays byte-identical.
+ *
+ * The OpenAI-compatible chat base hands it an already-normalized config (`normalizeLlmReasoningConfig`); the OFF-first
+ * branch stays for direct callers.
  *
  * @param config - The resolved reasoning config (absent ⇒ no params) plus the OFF encoding.
  * @returns The reasoning params to spread onto the request body.
@@ -107,8 +143,8 @@ export const LLM_OPENAI_MAX_CALL_TIMEOUT_MS: Milliseconds = 600_000;
 /**
  * Resolve one call's per-request abort window — `max(baseTimeoutMs, maxOutputTokens / LLM_OPENAI_TOKENS_PER_SEC ×
  * 1000)`, hard-capped at {@link LLM_OPENAI_MAX_CALL_TIMEOUT_MS}. The base (the strategy `timeoutMs`) stays the floor; a
- * big-budget call scales its window up so its budgeted tokens have time to stream. (The OpenRouter entry keeps its
- * own copy, so the two transports stay independently tunable.)
+ * big-budget call scales its window up so its budgeted tokens have time to stream. Shared by every OpenAI-compatible
+ * transport, `/openrouter` included.
  *
  * @param baseTimeoutMs - The strategy's base per-request timeout (the floor).
  * @param maxOutputTokens - The completion budget this call was sent with.
@@ -116,7 +152,7 @@ export const LLM_OPENAI_MAX_CALL_TIMEOUT_MS: Milliseconds = 600_000;
  *
  * @example
  * ```ts
- * llmOpenAiCallTimeoutMs(60_000, 4_096); // 136_534
+ * llmOpenAiCallTimeoutMs(60_000, 8_192); // 273_067
  * ```
  * @__NO_SIDE_EFFECTS__
  */
@@ -154,26 +190,154 @@ export interface LlmOpenAiResponseFormat {
 }
 
 /**
- * One CONTENT PART of a multimodal user message — the plain assembled prompt as a `text` part, and one `image_url`
- * part per attachment carrying a `data:` URL. Sent ONLY when the slug being called is declared vision-capable;
- * otherwise the message keeps its plain-string content.
+ * The inputs {@link toLlmOpenAiResponseFormat} maps.
  */
-export type LlmOpenAiContentPart = { readonly type: 'text'; readonly text: string } | { readonly type: 'image_url'; readonly image_url: { readonly url: string } };
+export interface LlmOpenAiResponseFormatConfig {
+  /**
+   * A stable schema name (the capability key).
+   */
+  readonly name: string;
+  /**
+   * The JSON-Schema object (the request's `responseSchemaHint`).
+   */
+  readonly schema: unknown;
+}
+
+/**
+ * Build the strict `json_schema` {@link LlmOpenAiResponseFormat} for a request's schema hint.
+ *
+ * @param config - The schema name and the JSON-Schema object.
+ * @returns The `response_format` to send.
+ *
+ * @example
+ * ```ts
+ * toLlmOpenAiResponseFormat({ name: 'summarize', schema: { type: 'object' } });
+ * // { type: 'json_schema', json_schema: { name: 'summarize', schema: { type: 'object' }, strict: true } }
+ * ```
+ * @__NO_SIDE_EFFECTS__
+ */
+export function toLlmOpenAiResponseFormat(config: LlmOpenAiResponseFormatConfig): LlmOpenAiResponseFormat {
+  return { type: 'json_schema', json_schema: { name: config.name, schema: config.schema, strict: true } };
+}
+
+/**
+ * The Anthropic prompt-cache breakpoint marker a text part may carry.
+ */
+export interface LlmOpenAiCacheControl {
+  /**
+   * The cache lifetime class — always `'ephemeral'`.
+   */
+  readonly type: 'ephemeral';
+}
+
+/**
+ * One TEXT content part — the plain assembled prompt, or one segment of it.
+ */
+export interface LlmOpenAiTextPart {
+  /**
+   * The part kind.
+   */
+  readonly type: 'text';
+  /**
+   * The text.
+   */
+  readonly text: string;
+  /**
+   * The Anthropic prompt-cache breakpoint. Set ONLY by OpenRouter's `anthropic/` route (OpenRouter forwards it to
+   * Anthropic); the SDK forwards the unknown nested field verbatim.
+   */
+  readonly cache_control?: LlmOpenAiCacheControl;
+}
+
+/**
+ * One IMAGE content part — an {@link LlmAttachment} as an `image_url` part carrying a `data:` URL.
+ */
+export interface LlmOpenAiImagePart {
+  /**
+   * The part kind.
+   */
+  readonly type: 'image_url';
+  /**
+   * The inline image, as a `data:<mime>;base64,<data>` URL.
+   */
+  readonly image_url: { readonly url: string };
+}
+
+/**
+ * One CONTENT PART of a multimodal or block-structured message — a text part or an inline image. Image parts ride
+ * ONLY when the slug being called is declared vision-capable, and always AFTER the text parts.
+ */
+export type LlmOpenAiContentPart = LlmOpenAiTextPart | LlmOpenAiImagePart;
+
+/**
+ * Build the `image_url` content part of one attachment.
+ *
+ * @param attachment - The attachment.
+ * @returns The image part, carrying the attachment's `data:` URL.
+ *
+ * @example
+ * ```ts
+ * toLlmOpenAiImagePart({ kind: 'image', mime: 'image/png', dataBase64: 'QUJD' });
+ * // { type: 'image_url', image_url: { url: 'data:image/png;base64,QUJD' } }
+ * ```
+ * @__NO_SIDE_EFFECTS__
+ */
+export function toLlmOpenAiImagePart(attachment: LlmAttachment): LlmOpenAiImagePart {
+  return { type: 'image_url', image_url: { url: toLlmAttachmentDataUrl(attachment) } };
+}
 
 /**
  * One chat message the strategy sends — a replayed prior thread turn or the current user prompt. Plain string
- * content on every ordinary call (this transport sends no `cache_control` content blocks); an ARRAY of
- * {@link LlmOpenAiContentPart}s only for a vision call carrying attachments.
+ * content on an ordinary call; an ARRAY of {@link LlmOpenAiContentPart}s for a vision call carrying attachments, or
+ * for OpenRouter's `cache_control` blocks.
  */
 export interface LlmOpenAiChatMessage {
   /**
    * The message role — `'assistant'` only for a replayed prior reply turn.
    */
-  readonly role: 'user' | 'assistant';
+  readonly role: LlmThreadRole;
   /**
-   * The message content — a plain string, or the multimodal content-part array of a vision call.
+   * The message content — a plain string, or the content-part array.
    */
   readonly content: string | ReadonlyArray<LlmOpenAiContentPart>;
+}
+
+/**
+ * The inputs {@link toLlmOpenAiChatMessages} maps.
+ */
+export interface LlmOpenAiChatMessagesConfig {
+  /**
+   * The current assembled prompt.
+   */
+  readonly prompt: string;
+  /**
+   * The replayed prior turns, oldest first; absent ⇒ a single-shot call.
+   */
+  readonly thread?: Maybe<ReadonlyArray<LlmThreadTurn>>;
+  /**
+   * The attachments that RIDE (already filtered by the slug's vision fact); empty ⇒ plain-string content.
+   */
+  readonly attachments: ReadonlyArray<LlmAttachment>;
+}
+
+/**
+ * Build the plain chat messages of one call: the replayed thread as plain strings (cache splits dropped), then the
+ * current user message. Its content is the plain prompt, or — when attachments ride — the prompt as a text part
+ * followed by one image part per attachment, in order.
+ *
+ * @param config - The prompt, the optional thread and the attachments that ride.
+ * @returns The chat messages, oldest first.
+ *
+ * @example
+ * ```ts
+ * toLlmOpenAiChatMessages({ prompt: 'Describe it', attachments: [] }); // [{ role: 'user', content: 'Describe it' }]
+ * ```
+ * @__NO_SIDE_EFFECTS__
+ */
+export function toLlmOpenAiChatMessages(config: LlmOpenAiChatMessagesConfig): LlmOpenAiChatMessage[] {
+  const { prompt, thread, attachments } = config;
+  const content: string | ReadonlyArray<LlmOpenAiContentPart> = attachments.length === 0 ? prompt : [{ type: 'text', text: prompt }, ...attachments.map(toLlmOpenAiImagePart)];
+  return [...toLlmThreadChatMessages(thread ?? []), { role: 'user', content }];
 }
 
 /**
@@ -212,13 +376,14 @@ export interface LlmOpenAiChatCompletionBody {
    */
   readonly reasoning_effort?: LlmOpenAiReasoningEffort;
   /**
-   * The OpenRouter-flavoured nested reasoning object — emitted ONLY for the `'nested-disabled'` OFF encoding. Never
-   * sent otherwise, so a bare OpenAI gateway sees no unknown param.
+   * The OpenRouter-flavoured nested reasoning object. OpenRouter sends the full object whenever the request carries a
+   * reasoning config; the `openai` transport sends it ONLY for the `'nested-disabled'` OFF encoding, so a bare OpenAI
+   * gateway sees no unknown param.
    */
-  readonly reasoning?: { readonly enabled: false };
+  readonly reasoning?: LlmOpenAiNestedReasoning;
   /**
-   * The OpenRouter-flavoured usage-accounting opt-in, emitted ONLY under the strategy's `usageAccounting` (default
-   * OFF) — it asks an AGGREGATOR gateway to return `usage.cost`. Never sent otherwise.
+   * The OpenRouter-flavoured usage-accounting opt-in — it asks the gateway to return `usage.cost`. OpenRouter sends it
+   * on every call; the `openai` transport only under its `usageAccounting` (default OFF).
    */
   readonly usage?: { readonly include: true };
 }
@@ -235,29 +400,27 @@ export interface LlmOpenAiChatCompletion {
    */
   readonly id?: string;
   /**
-   * The completion choices; the strategy reads `choices[0].message.content` + the finish reason.
+   * The completion choices; the strategy reads `choices[0].message.content` + the finish reason. The provider-native
+   * `native_finish_reason` is OpenRouter's, read only by the transport that asks for it.
    */
-  readonly choices: ReadonlyArray<{ readonly message?: { readonly content?: Maybe<string> }; readonly finish_reason?: Maybe<string> }>;
+  readonly choices: ReadonlyArray<{ readonly message?: { readonly content?: Maybe<string> }; readonly finish_reason?: Maybe<string>; readonly native_finish_reason?: Maybe<string> }>;
   /**
    * The model the provider actually served (may resolve the routed id to a concrete provider/version).
    */
   readonly model?: string;
   /**
+   * The upstream endpoint that served the call — OpenRouter's routing echo, read only by the transport that asks for
+   * it.
+   */
+  readonly provider?: Maybe<string>;
+  /**
    * Native token counts plus the cache-hit (`prompt_tokens_details.cached_tokens`) and hidden-reasoning
    * (`completion_tokens_details.reasoning_tokens`) observability fields when the provider returns them, plus the
    * OpenRouter-flavoured `cost` / `cost_details` an AGGREGATOR gateway may volunteer (absent on a bare endpoint; a
    * list-price figure on some gateways — see the strategy's `costBasis`). Some gateways send those two costs as
-   * numeric STRINGS; `llmUsageFrom` folds them to numbers.
+   * numeric STRINGS; `llmUsageFrom` folds them to numbers. The core {@link RawLlmUsage} shape.
    */
-  readonly usage?: {
-    readonly prompt_tokens?: number;
-    readonly completion_tokens?: number;
-    readonly total_tokens?: number;
-    readonly prompt_tokens_details?: { readonly cached_tokens?: number };
-    readonly completion_tokens_details?: { readonly reasoning_tokens?: number };
-    readonly cost?: number | string;
-    readonly cost_details?: { readonly upstream_inference_cost?: number | string };
-  };
+  readonly usage?: Maybe<RawLlmUsage>;
 }
 
 /**

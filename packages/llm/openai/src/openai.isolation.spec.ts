@@ -121,6 +121,12 @@ describe('@dereekb/llm/openai isolation', () => {
     expect(importersOf(sources, isPackage('@dereekb/llm/decision'))).toEqual([]);
   });
 
+  it('should import no sibling entry, specs included', () => {
+    // the one sibling edge is /openrouter -> /openai; this keeps it one-way (and llm-openai:build-base has no sibling edge)
+    const siblings = ['@dereekb/llm/openrouter', '@dereekb/llm/zenmux', '@dereekb/llm/node', '@dereekb/llm/test'];
+    expect(importersOf(scanSrc(true), (specifier) => siblings.some((sibling) => isPackage(sibling)(specifier)))).toEqual([]);
+  });
+
   it('should import its own modules relatively', () => {
     expect(importersOf(sources, isPackage('@dereekb/llm/openai'))).toEqual([]);
   });

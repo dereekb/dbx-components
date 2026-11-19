@@ -195,7 +195,7 @@ export interface LlmDecodeFailurePayload {
    */
   readonly model?: LlmModelId;
   /**
-   * The resolved tier key, when the dispatch resolved one (absent for a raw-slug override or an injected runner).
+   * The resolved tier key, when the dispatch resolved one (absent for a raw-slug override or a scripted strategy).
    */
   readonly tier?: LlmModelTierKey;
   /**
@@ -353,10 +353,10 @@ export function isLlmLengthCappedFinish(result: Pick<LlmCompletion, 'finishReaso
 }
 
 /**
- * Whether the model ended this reply ITSELF — a clean-stop `finishReason`, or none at all (an injected runner or a
- * fake). The reply-repair gate: a truncation (`length` / `max_tokens`), a `repetition_truncation`, an `error`, a
- * synthetic transport / timeout sentinel or anything else is never repaired, because repairing cut content would
- * invent the end of a value.
+ * Whether the model ended this reply ITSELF — a clean-stop `finishReason`, or none at all (a scripted or tape strategy,
+ * or a provider that echoed none). The reply-repair gate: a truncation (`length` / `max_tokens`), a
+ * `repetition_truncation`, an `error`, a synthetic transport / timeout sentinel or anything else is never repaired,
+ * because repairing cut content would invent the end of a value.
  *
  * @param result - The completion (only its `finishReason` is read).
  * @returns True when the reply ended on a clean stop.

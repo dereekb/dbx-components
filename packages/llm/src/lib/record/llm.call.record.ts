@@ -316,7 +316,7 @@ export interface LlmCallRecordBase {
   readonly result: LlmDispatchResult;
   /**
    * The resolved model-tier KEY this call routed to, so a usage report attributes spend by tier NAME (not just the
-   * served model id). Absent for a raw-slug override or an injected runner that resolves no tier.
+   * served model id). Absent for a raw-slug override or a scripted strategy that resolves no tier.
    */
   readonly tier?: LlmModelTierKey;
   /**

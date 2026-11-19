@@ -292,12 +292,12 @@ export function makeZenmuxDecisionStrategy(config: ZenmuxDecisionStrategyConfig 
 
       if (probeFetch == null && injectedFetch != null) {
         health = { ready: true, issues: [] };
-      } else if (!isNotNullOrEmptyString(apiKey)) {
-        health = { ready: false, issues: [{ severity: 'error', message: `no apiKey configured and no decisionFetch injected (${keyRemedy})` }] };
-      } else {
+      } else if (isNotNullOrEmptyString(apiKey)) {
         // The SAME probe the ZenMux completion lane runs, because it is the same account and the same key. Not `GET /models`:
         // ZenMux answers that 200 to any bearer, so it could never report a revoked key.
         health = await probeZenmuxCredential({ strategyId: id, baseUrl, apiKey, ...(probeFetch == null ? {} : { fetch: probeFetch }), ...(probeOptions?.signal == null ? {} : { signal: probeOptions.signal }) });
+      } else {
+        health = { ready: false, issues: [{ severity: 'error', message: `no apiKey configured and no decisionFetch injected (${keyRemedy})` }] };
       }
 
       return health;

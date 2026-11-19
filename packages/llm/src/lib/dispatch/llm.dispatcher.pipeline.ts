@@ -65,7 +65,7 @@ function llmPromptSlotIdOfRole(layout: LlmPromptLayout, role: LlmPromptSlotRole,
  * const dispatcher = makeLlmDispatcher({
  *   strategies: makeLlmStrategyRegistry([strategy]),
  *   defaultStrategyId: strategy.id,
- *   defaultMaxOutputTokens: 4096,
+ *   defaultMaxOutputTokens: DEFAULT_LLM_MAX_OUTPUT_TOKENS,
  *   modelTiers: { fast: 'acme/fast', strong: 'acme/strong' },
  *   descriptorOf: (capability) => DESCRIPTORS[capability],
  *   templateResolver: tieredLlmPromptTemplateResolver({ tiers: [{ source: 'defaults', templates }] })

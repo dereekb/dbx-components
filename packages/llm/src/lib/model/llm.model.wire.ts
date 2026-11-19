@@ -14,7 +14,7 @@
  */
 
 import { type Maybe } from '@dereekb/util';
-import { type LlmModelId } from './llm.value';
+import { type LlmModelId, type LlmReasoningConfig } from './llm.value';
 
 /**
  * Every legal {@link LlmReasoningOffEncoding}, in the order error messages print them — the ONE list every parser,
@@ -156,4 +156,37 @@ export interface LlmReasoningOffEncodingForConfig {
 export function llmReasoningOffEncodingFor(config: LlmReasoningOffEncodingForConfig): LlmReasoningOffEncoding {
   const { model, byModel, fallback } = config;
   return (model == null ? undefined : byModel?.[model]) ?? fallback ?? DEFAULT_LLM_REASONING_OFF_ENCODING;
+}
+
+/**
+ * Normalize the reasoning-OFF precedence ONCE, before any wire mapper reads the config: an explicit `enabled: false`
+ * outranks every co-present knob (`effort`, `maxTokens`, `exclude`), so an OFF config reaches every transport as
+ * `{ enabled: false }` alone. Any other config passes through unchanged (the same reference); an absent one stays
+ * absent. The OpenAI-compatible chat base calls it before its `reasoningParams` hook, so the mappers stay pure.
+ *
+ * @param reasoning - The resolved reasoning config, if any.
+ * @returns The normalized config — `{ enabled: false }` for an OFF config, the input otherwise.
+ *
+ * @example
+ * ```ts
+ * normalizeLlmReasoningConfig({ enabled: false, effort: 'high' }); // { enabled: false }
+ * normalizeLlmReasoningConfig({ effort: 'low' }); // the same object
+ * ```
+ * @__NO_SIDE_EFFECTS__
+ */
+export function normalizeLlmReasoningConfig(reasoning: LlmReasoningConfig): LlmReasoningConfig;
+export function normalizeLlmReasoningConfig(reasoning: Maybe<LlmReasoningConfig>): Maybe<LlmReasoningConfig>;
+// @__NO_SIDE_EFFECTS__
+export function normalizeLlmReasoningConfig(reasoning: Maybe<LlmReasoningConfig>): Maybe<LlmReasoningConfig> {
+  let normalized: Maybe<LlmReasoningConfig>;
+
+  if (reasoning == null) {
+    normalized = undefined;
+  } else if (reasoning.enabled === false) {
+    normalized = { enabled: false };
+  } else {
+    normalized = reasoning;
+  }
+
+  return normalized;
 }

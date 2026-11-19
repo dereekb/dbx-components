@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_LLM_REASONING_OFF_ENCODING, type LlmCredentialProbeFetch, type LlmRequest } from '@dereekb/llm';
+import { DEFAULT_LLM_COMPLETION_TIMEOUT_MS, DEFAULT_LLM_MAX_OUTPUT_TOKENS, DEFAULT_LLM_REASONING_OFF_ENCODING, type LlmCredentialProbeFetch, type LlmRequest } from '@dereekb/llm';
 import { LLM_OPENAI_STRATEGY_KIND, makeLlmOpenAiStrategy } from './openai.strategy';
 import { llmOpenAiCallTimeoutMs, type LlmOpenAiChatClient, type LlmOpenAiRequestOptions } from './openai.chat';
 
 /**
- * The `openai` strategy — the provider-neutral sibling of the `openrouter` transport. Proves it (1) bypasses the
- * client via the injected text runner seam and threads the request's model, (2) builds a strict `response_format`
+ * The `openai` strategy — the provider-neutral hook set over the OpenAI-compatible chat base. Proves it (1) reaches
+ * an injected client network-free, with the default cap + timeout floor and an external signal threaded, (2) builds a strict `response_format`
  * from the schema hint named by the capability and omits it when there is none, (3) honours the per-call model + the
  * default-model fallback AND fails loud when neither is set (no built-in model default), (4) ALWAYS sends
  * plain-string messages — no `cache_control` anywhere, even when `cacheSegments` is set, (5) sends NO OpenRouter-only
@@ -98,28 +98,6 @@ function makeFakeClient(opts: { readonly reply?: string; readonly model?: string
 }
 
 describe('makeLlmOpenAiStrategy()', () => {
-  it("uses the injected runner seam (no client / response_format) and threads the request's model", async () => {
-    const calls: Array<{ readonly prompt: string; readonly model?: string }> = [];
-    const strategy = makeLlmOpenAiStrategy({
-      run: async (prompt, model) => {
-        calls.push({ prompt, ...(model == null ? {} : { model }) });
-        return `echo:${prompt}`;
-      }
-    });
-
-    const withModel = await strategy.complete({ prompt: 'p1', capability: 'X', model: 'gpt-4o', meta: { requestId: 'r-7' } });
-    const without = await strategy.complete({ prompt: 'p2', capability: 'X' });
-
-    // The injected runner seam never sends `response_format`, so schemaEnforced is false on both. It reads no
-    // completion, so the cost-telemetry fields are OMITTED entirely.
-    expect(withModel).toEqual({ text: 'echo:p1', strategyId: LLM_OPENAI_STRATEGY_KIND, strategyKind: LLM_OPENAI_STRATEGY_KIND, capability: 'X', meta: { requestId: 'r-7' }, schemaEnforced: false });
-    expect(without).toEqual({ text: 'echo:p2', strategyId: LLM_OPENAI_STRATEGY_KIND, strategyKind: LLM_OPENAI_STRATEGY_KIND, capability: 'X', schemaEnforced: false });
-    expect(withModel).not.toHaveProperty('model');
-    expect(withModel).not.toHaveProperty('usage');
-    expect(calls[0]).toEqual({ prompt: 'p1', model: 'gpt-4o' });
-    expect(calls[1]).toEqual({ prompt: 'p2' });
-  });
-
   it('builds a strict json_schema response_format from the hint, named by the capability', async () => {
     const { client, bodies } = makeFakeClient();
     const strategy = makeLlmOpenAiStrategy({ client, defaultModel: 'gpt-4o' });
@@ -181,7 +159,7 @@ describe('makeLlmOpenAiStrategy()', () => {
 
     await strategy.complete({ prompt: 'hi', capability: 'X' });
 
-    expect(bodies[0]?.max_tokens).toBe(4096);
+    expect(bodies[0]?.max_tokens).toBe(DEFAULT_LLM_MAX_OUTPUT_TOKENS);
     expect(bodies[0]).not.toHaveProperty('max_completion_tokens');
   });
 
@@ -191,7 +169,7 @@ describe('makeLlmOpenAiStrategy()', () => {
 
     await strategy.complete({ prompt: 'hi', capability: 'X' });
 
-    expect(bodies[0]?.max_completion_tokens).toBe(4096);
+    expect(bodies[0]?.max_completion_tokens).toBe(DEFAULT_LLM_MAX_OUTPUT_TOKENS);
     expect(bodies[0]).not.toHaveProperty('max_tokens');
   });
 
@@ -317,29 +295,6 @@ describe('makeLlmOpenAiStrategy()', () => {
       { role: 'user', content: 'FOLLOW' }
     ]);
     expect(JSON.stringify(bodies[0])).not.toContain('cache_control');
-  });
-
-  it('flattens a thread into one role-tagged prompt on the injected runner seam (thread-less calls pass through)', async () => {
-    const prompts: string[] = [];
-    const strategy = makeLlmOpenAiStrategy({
-      run: async (prompt) => {
-        prompts.push(prompt);
-        return 'ok';
-      }
-    });
-
-    await strategy.complete({
-      prompt: 'FOLLOW',
-      capability: 'X',
-      thread: [
-        { role: 'user', content: 'ROOT' },
-        { role: 'assistant', content: 'REPLY' }
-      ]
-    });
-    await strategy.complete({ prompt: 'SINGLE', capability: 'X' });
-
-    expect(prompts[0]).toBe('[user]\nROOT\n\n[assistant]\nREPLY\n\n[user]\nFOLLOW');
-    expect(prompts[1]).toBe('SINGLE');
   });
 
   it('normalizes usage snake_case→camelCase incl. cached + reasoning tokens; omits them when absent', async () => {
@@ -472,6 +427,26 @@ describe('makeLlmOpenAiStrategy()', () => {
     expect(options[1]!.timeout!).toBeGreaterThan(options[0]!.timeout!);
   });
 
+  it('floors the abort window at the default timeout, scaled by the default cap', async () => {
+    const { client, options } = makeFakeClient();
+    const strategy = makeLlmOpenAiStrategy({ client, defaultModel: 'gpt-4o' });
+
+    await strategy.complete({ prompt: 'hi', capability: 'X' });
+
+    expect(options[0]?.timeout).toBe(llmOpenAiCallTimeoutMs(DEFAULT_LLM_COMPLETION_TIMEOUT_MS, DEFAULT_LLM_MAX_OUTPUT_TOKENS));
+  });
+
+  it('OR-merges an external cancellation signal into the per-request signal', async () => {
+    const { client, options } = makeFakeClient();
+    const strategy = makeLlmOpenAiStrategy({ client, defaultModel: 'gpt-4o' });
+    const controller = new AbortController();
+    controller.abort();
+
+    await strategy.complete({ prompt: 'hi', capability: 'X' }, { signal: controller.signal });
+
+    expect(options[0]?.signal?.aborted).toBe(true);
+  });
+
   it('declares auto-prefix caching, the openai id, and no warm seam', () => {
     const strategy = makeLlmOpenAiStrategy();
     expect(strategy.id).toBe(LLM_OPENAI_STRATEGY_KIND);
@@ -480,11 +455,6 @@ describe('makeLlmOpenAiStrategy()', () => {
   });
 
   describe('healthCheck', () => {
-    it('is ready WITHOUT any check when a runner seam is injected (no key needed)', async () => {
-      const strategy = makeLlmOpenAiStrategy({ run: async (prompt) => `echo:${prompt}` });
-      await expect(strategy.healthCheck?.()).resolves.toEqual({ ready: true, issues: [] });
-    });
-
     it('is ready WITHOUT touching an injected client (network-free; create is never called)', async () => {
       const { client, bodies } = makeFakeClient();
       const strategy = makeLlmOpenAiStrategy({ client });
@@ -502,7 +472,7 @@ describe('makeLlmOpenAiStrategy()', () => {
   });
 
   describe('with no apiKey configured', () => {
-    it('fails loud (no network) when neither a client nor a runner is injected', async () => {
+    it('fails loud (no network) when no client is injected', async () => {
       const strategy = makeLlmOpenAiStrategy();
       const request: LlmRequest = { prompt: 'hi', capability: 'X' };
 
@@ -566,13 +536,19 @@ describe('makeLlmOpenAiStrategy()', () => {
       expect(health?.issues[0]?.severity).toBe('warning');
     });
 
-    it('is ready WITHOUT a socket when an injection seam is present', async () => {
-      const runner = makeLlmOpenAiStrategy({ run: async (prompt) => `echo:${prompt}` });
+    it('is ready WITHOUT a socket when a client is injected', async () => {
       const { client } = makeFakeClient();
       const injected = makeLlmOpenAiStrategy({ client });
 
-      await expect(runner.credentialProbe?.()).resolves.toEqual({ ready: true, issues: [] });
       await expect(injected.credentialProbe?.()).resolves.toEqual({ ready: true, issues: [] });
+    });
+
+    it('delegates to a credentialProbeSource even when a client is injected (B15)', async () => {
+      const { client } = makeFakeClient();
+      const verdict = { ready: false, issues: [{ severity: 'error' as const, message: 'gateway rejected the configured credential' }] };
+      const strategy = makeLlmOpenAiStrategy({ client, credentialProbeSource: async () => verdict });
+
+      await expect(strategy.credentialProbe?.()).resolves.toEqual(verdict);
     });
 
     it('reports not-ready (never throws) with no apiKey and no seam', async () => {

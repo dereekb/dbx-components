@@ -25,12 +25,7 @@ describe('makeLlmDecisionStrategyRegistry()', () => {
   it('should answer the LAST registered instance by kind and the first configured by values()[0]', () => {
     const registry = makeLlmDecisionStrategyRegistry([fake('account-a', 'decisions-wire'), fake('account-b', 'decisions-wire')]);
 
-    expect(
-      registry
-        .values()
-        .filter((strategy) => llmStrategyKind(strategy) === 'decisions-wire')
-        .at(-1)?.id
-    ).toBe('account-b');
+    expect(registry.values().findLast((strategy) => llmStrategyKind(strategy) === 'decisions-wire')?.id).toBe('account-b');
     expect(registry.values()[0]?.id).toBe('account-a');
   });
 

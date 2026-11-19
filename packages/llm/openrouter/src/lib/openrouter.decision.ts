@@ -324,9 +324,7 @@ export function makeLlmOpenRouterDecisionStrategy(config: LlmOpenRouterDecisionS
 
       if (config.decisionsCreate != null) {
         health = { ready: true, issues: [] };
-      } else if (!isNotNullOrEmptyString(config.apiKey)) {
-        health = { ready: false, issues: [{ severity: 'error', message: 'no apiKey configured and no decisionsCreate injected' }] };
-      } else {
+      } else if (isNotNullOrEmptyString(config.apiKey)) {
         try {
           await resolveCreate();
           health = { ready: true, issues: [] };
@@ -334,6 +332,8 @@ export function makeLlmOpenRouterDecisionStrategy(config: LlmOpenRouterDecisionS
           // swallow site 'llm/openrouter-decision.client' — the verdict carries the failure.
           health = { ready: false, issues: [{ severity: 'error', message: `the '${id}' decisions client could not be constructed: ${errorMessageOf(error)}` }] };
         }
+      } else {
+        health = { ready: false, issues: [{ severity: 'error', message: 'no apiKey configured and no decisionsCreate injected' }] };
       }
 
       return health;
@@ -344,9 +344,7 @@ export function makeLlmOpenRouterDecisionStrategy(config: LlmOpenRouterDecisionS
 
       if (probeFetch == null && config.decisionsCreate != null) {
         health = { ready: true, issues: [] };
-      } else if (!isNotNullOrEmptyString(config.apiKey)) {
-        health = { ready: false, issues: [{ severity: 'error', message: 'no apiKey configured and no decisionsCreate injected' }] };
-      } else {
+      } else if (isNotNullOrEmptyString(config.apiKey)) {
         // `GET /key` is OpenRouter's free key-metadata endpoint — the SAME probe the completion sibling runs, because it
         // is the same account. A revoked key answers `401 "User not found."` verbatim.
         health = await probeLlmCredentialEndpoint({
@@ -356,6 +354,8 @@ export function makeLlmOpenRouterDecisionStrategy(config: LlmOpenRouterDecisionS
           ...(probeFetch == null ? {} : { fetch: probeFetch }),
           ...(options?.signal == null ? {} : { signal: options.signal })
         });
+      } else {
+        health = { ready: false, issues: [{ severity: 'error', message: 'no apiKey configured and no decisionsCreate injected' }] };
       }
 
       return health;

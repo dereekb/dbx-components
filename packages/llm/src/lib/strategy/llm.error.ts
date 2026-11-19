@@ -22,7 +22,7 @@ import { joinStrings, type Maybe } from '@dereekb/util';
  * WHY NOT `instanceof`: strategies deliberately keep the SDK behind one lazy boundary module (an
  * `await import('openai')` plus an injectable structural client), so a classifier must not statically import it — a
  * top-level `import { APIConnectionError } from 'openai'` would drag the whole SDK in for hosts that only ever run a
- * scripted runner or an injected client, and a lazy import is unavailable inside a synchronous predicate.
+ * scripted strategy or an injected client, and a lazy import is unavailable inside a synchronous predicate.
  *
  * WHY THE WHOLE CHAIN, not just `error.constructor.name`: `APIConnectionTimeoutError` EXTENDS `APIConnectionError`,
  * and the leaf name alone is precisely what let the PARENT fall through while its own subclass was caught, the first

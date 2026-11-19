@@ -2,7 +2,7 @@
  * The **LLM strategy contract** — the one seam every model backend implements.
  *
  * An {@link LlmStrategy} turns a fully assembled prompt into raw model text. It deliberately hides HOW the model is
- * reached (an HTTP API, an in-process SDK, a canned runner in a spec), so a dispatcher can route to any of them
+ * reached (an HTTP API, an in-process SDK, a scripted strategy in a spec), so a dispatcher can route to any of them
  * without knowing the transport.
  *
  * A call moves through three layers:
@@ -140,9 +140,9 @@ export interface LlmRequest {
   /**
    * The per-call completion-length cap (the output-budget axis) — the `max_tokens` the strategy sends, resolved
    * from the capability / the resolved tier's config. A strategy honours it (`max_tokens: request.maxOutputTokens ??
-   * <its default cap>`) or ignores it. Unset ⇒ the strategy's own default cap, so the no-budget wire body is
-   * byte-identical. A dispatcher's bounded retry may raise it on a length-truncation decode failure (a truncated
-   * reply is re-asked with a larger cap).
+   * <its default cap>`) or ignores it. Unset ⇒ the strategy's own default cap (`DEFAULT_LLM_MAX_OUTPUT_TOKENS` for
+   * the stock transports), so the no-budget wire body is byte-identical. A dispatcher's bounded retry may raise it on
+   * a length-truncation decode failure (a truncated reply is re-asked with a larger cap).
    */
   readonly maxOutputTokens?: number;
   /**
@@ -230,49 +230,50 @@ export interface LlmCompletion {
   /**
    * The model that actually SERVED this call (the completion's `model`), falling back to the SENT model id
    * (`request.model ?? defaultModel`) when the provider echoes none. The cost / tier attribution telemetry. Absent on
-   * an injected {@link LlmRunner} (no completion exists there).
+   * a strategy with no provider completion to read (a scripted or tape strategy).
    */
   readonly model?: LlmModelId;
   /**
    * The UPSTREAM endpoint that served this call, when the transport reported one (OpenRouter's response
    * `provider`). Telemetry-only — no code branches on it. Recorded because a model slug is served by many endpoints
    * whose wire behaviour differs (some silently ignore `reasoning.enabled: false`), and without it an endpoint
-   * allowlist has no evidence to stand on. Absent on an injected runner, on a transport that reports none, and when
-   * the provider echoed none.
+   * allowlist has no evidence to stand on. Absent on a strategy with no provider completion to read (a scripted or
+   * tape strategy), on a transport that reports none, and when the provider echoed none.
    */
   readonly provider?: string;
   /**
-   * Token usage (plus the optional dollar cost) for this call ({@link LlmUsage}). Absent on an injected runner and
-   * when the provider returned no `usage`.
+   * Token usage (plus the optional dollar cost) for this call ({@link LlmUsage}). Absent on a strategy with no
+   * provider completion to read (a scripted or tape strategy), and when the provider returned no `usage`.
    */
   readonly usage?: LlmUsage;
   /**
-   * Wall-clock time around the model call. Telemetry-only — absent on an injected runner.
+   * Wall-clock time around the model call. Telemetry-only — absent on a strategy with no provider completion to read
+   * (a scripted or tape strategy).
    */
   readonly latencyMs?: Milliseconds;
   /**
    * The provider's generation id for this call (OpenRouter's completion `id`) — the stable handle a later
-   * generation-metadata lookup, bill read (`LlmCallBillReader`) or support ticket keys off. Absent on an
-   * injected runner and when the provider echoed none.
+   * generation-metadata lookup, bill read (`LlmCallBillReader`) or support ticket keys off. Absent on a
+   * strategy with no provider completion to read (a scripted or tape strategy), and when the provider echoed none.
    */
   readonly generationId?: string;
   /**
    * Why generation stopped (the completion choice's `finish_reason`, falling back to `native_finish_reason`) —
-   * `'stop'` for a clean end, `'length'` when the output cap truncated it (the runaway-guard signal). Absent on an
-   * injected runner and when the provider echoed none.
+   * `'stop'` for a clean end, `'length'` when the output cap truncated it (the runaway-guard signal). Absent on a
+   * strategy with no provider completion to read (a scripted or tape strategy), and when the provider echoed none.
    */
   readonly finishReason?: string;
   /**
    * How many image parts the transport actually put ON THE WIRE for this call's {@link LlmRequest.attachments} — the
    * transport's own fact, so a picture the strategy dropped (a model not known to accept images, a retry that
    * resolved to another model) is never mistaken for one that was sent. `0` means the request carried attachments
-   * and none rode. Present only when the request carried attachments; absent on a text call and on an injected
-   * runner (byte-stable). Read it before trusting any reply that claims to describe an image.
+   * and none rode. Present only when the request carried attachments; absent on a text call and on a strategy
+   * with no provider completion to read (byte-stable). Read it before trusting any reply that claims to describe an image.
    */
   readonly attachmentsSent?: number;
   /**
    * Whether this call SENT `response_format` json_schema/strict (generation-time enforcement was REQUESTED). The
-   * strategy sets it: `true` when a schema hint was threaded, `false` on an injected runner or a text-only path. NOT
+   * strategy sets it: `true` when a schema hint was threaded, `false` on a scripted strategy or a text-only path. NOT
    * a claim the provider honoured it — a partial-`strict` model that silently ignores it still reads `true`; a
    * reader infers "ignored" from `schemaEnforced && attempts > 1` (enforcement was requested but did not hold on the
    * first try).
@@ -432,6 +433,22 @@ export interface LlmCompleteOptions {
 }
 
 /**
+ * The per-request timeout FLOOR of a completion transport. The stock OpenAI-compatible transports scale each call's
+ * abort window up from it with the call's completion budget (`llmOpenAiCallTimeoutMs`, capped at 10 minutes).
+ */
+export const DEFAULT_LLM_COMPLETION_TIMEOUT_MS: Milliseconds = 60_000;
+
+/**
+ * The completion-length cap of a call that names none (`LlmRequest.maxOutputTokens` unset, no strategy override).
+ *
+ * Deliberately HIGH: a truncated reply is billed in full, decodes to nothing and buys a retry that bills again, and a
+ * hybrid-reasoning model spends part of the cap thinking. A model with a smaller output limit (an older OpenAI model,
+ * a small-context local model) needs its cap configured (`maxOutputTokens` on the strategy, provider or tier). A
+ * dispatcher's `defaultMaxOutputTokens` is normally this value.
+ */
+export const DEFAULT_LLM_MAX_OUTPUT_TOKENS = 8_192;
+
+/**
  * Per-call options for {@link LlmStrategy.credentialProbe} — the external cancellation seam, mirroring
  * {@link LlmCompleteOptions.signal}. A probe combines it with its own short internal timeout.
  */
@@ -448,15 +465,6 @@ export interface LlmCredentialProbeOptions {
  * running its own generic one. Same contract: free, never on the dispatch path, never throws.
  */
 export type LlmCredentialProbe = (options?: LlmCredentialProbeOptions) => Promise<LlmStrategyHealth>;
-
-/**
- * A raw prompt-in / text-out runner — the injectable text seam a strategy calls instead of its transport: canned
- * replies in a spec, or a host-provided completion function. The optional `model` is the per-call
- * {@link LlmRequest.model}; a runner may ignore it.
- *
- * A completion made through a runner carries no usage, latency or generation id (no provider completion exists).
- */
-export type LlmRunner = (prompt: string, model?: LlmModelId) => Promise<string>;
 
 /**
  * A pluggable LLM backend, keyed by a stable {@link id}. Hides subprocess vs in-process SDK vs HTTP behind one async
@@ -523,10 +531,10 @@ export interface LlmStrategy {
   warm?(request: LlmRequest): Promise<void>;
   /**
    * OPTIONAL startup readiness probe — does THIS backend have what it needs to serve a real call? Provider-agnostic:
-   * each strategy checks ITS OWN deps (a key is present, its client is constructible, a runner was injected). MUST be
+   * each strategy checks ITS OWN deps (a key is present, its client is constructible, a client was injected). MUST be
    * cheap and side-effect-light — construct/validate, do NOT make a billable network round-trip — and MUST NEVER
    * throw (report unreadiness as `ready:false` + an `'error'` issue). MUST no-op to `{ ready:true }` when an
-   * injection seam (a runner / injected client) is present, so a fake never triggers a real key/SDK check. A
+   * injection seam (an injected client) is present, so a fake never triggers a real key/SDK check. A
    * strategy that omits this member is treated as ready by `verifyLlmStrategies` (the seam is opt-in). Invoked once
    * at bootstrap by the host via `verifyLlmStrategies` — the dispatcher NEVER calls it.
    *
@@ -546,8 +554,9 @@ export interface LlmStrategy {
    *   for it (`probeLlmCredentials`, a launch gate).
    * - It MUST NEVER throw: an unreachable provider / a rejected key is reported as `ready:false` + an `'error'`
    *   issue carrying the provider's OWN message verbatim.
-   * - It MUST no-op to `{ ready:true }` when an injection seam (a runner / injected client) is present, so a fake
-   *   never opens a socket.
+   * - It MUST no-op to `{ ready:true }` when an injection seam (an injected client) is present, so a fake
+   *   never opens a socket — unless the host supplied an explicit credential probe source, which outranks the
+   *   injected seam and is always delegated to.
    *
    * @param options - Optional external cancellation.
    * @returns This backend's credential verdict.
