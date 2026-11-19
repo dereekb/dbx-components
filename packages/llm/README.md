@@ -704,11 +704,12 @@ descriptor also carries the two schema projections the request and the prompt re
   `responseSchema`. Each exports through `@dereekb/model` `arktypeToJsonSchemaForExport(schema, { strict: true })`: a
   `.narrow`ed or morphed schema projects its JSON base, and a type with no JSON form (`Date`, `symbol`, `bigint`, an
   `undefined` union arm) throws on first projection. Then `@dereekb/model` `toStrictJsonSchema`: `$schema` dropped,
-  `additionalProperties: false` on every object, described literal unions folded back to `enum`, union arm prose
-  hoisted, and descriptions stripped from the `response_format` payload (they ride the output contract). Both hints are
-  lazy and memoized; a projection that throws is not cached. `describeResponseSchemaHint` keeps the prose in the
-  payload, per descriptor, default off. `hardenLlmResponseSchemaHint` (over `toStrictJsonSchema`) serves
-  request-supplied hints; other projections, such as a tool's input schema, call `toStrictJsonSchema` directly.
+  `additionalProperties: false` on every object, including inside tuples, `$defs` and records, described literal unions
+  folded back to `enum`, union arm prose hoisted, and descriptions stripped from the `response_format` payload (they
+  ride the output contract). Both hints are lazy and memoized; a projection that throws is not cached.
+  `describeResponseSchemaHint` keeps the prose in the payload, per descriptor, default off.
+  `hardenLlmResponseSchemaHint` (over `toStrictJsonSchema`) serves request-supplied hints; other projections, such as
+  a tool's input schema, call `toStrictJsonSchema` directly.
 - **Critique.** `compileLlmCritiquePolicy` is fail-loud (unknown capability or tag, no target, or the judge itself);
   a key match beats a tag match, and the first match wins. `llmCriticFor` gives `{}` unless a rule matches, so off is
   free. `makeLlmSemanticCritic` fails open with `critique-unusable` / `critique-error` breadcrumbs. `composeLlmCritics`

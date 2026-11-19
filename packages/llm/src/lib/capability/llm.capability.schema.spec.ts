@@ -151,6 +151,47 @@ describe('projectLlmResponseSchema()', () => {
   it('throws on a type with no JSON form (Date)', () => {
     expect(() => projectLlmResponseSchema(type({ at: 'Date' }))).toThrow();
   });
+
+  it('closes the objects inside a tuple (prefixItems)', () => {
+    expect(projectLlmResponseSchema(type({ pair: [{ a: 'string' }, { b: 'number' }] }))).toEqual({
+      type: 'object',
+      properties: {
+        pair: {
+          type: 'array',
+          minItems: 2,
+          prefixItems: [
+            { type: 'object', properties: { a: { type: 'string' } }, required: ['a'], additionalProperties: false },
+            { type: 'object', properties: { b: { type: 'number' } }, required: ['b'], additionalProperties: false }
+          ],
+          items: false
+        }
+      },
+      required: ['pair'],
+      additionalProperties: false
+    });
+  });
+
+  it('strips the descriptions inside a tuple and keeps them in the contract projection', () => {
+    const schema = type({ pair: [type({ a: type('string').describe('the a') }).describe('the first'), { b: 'number' }] });
+
+    expect(JSON.stringify(projectLlmResponseSchema(schema))).not.toContain('description');
+    expect(projectLlmResponseSchema(schema)).toEqual(projectLlmResponseSchema(type({ pair: [{ a: 'string' }, { b: 'number' }] })));
+    expect(JSON.stringify(projectLlmContractSchema(schema))).toContain('the first');
+  });
+
+  it('closes the objects inside $defs for a cyclic scope and strips their descriptions', () => {
+    const tree = type.scope({ node: { name: type('string').describe('the node name'), 'children?': 'node[]' } }).export();
+    const schema = type({ tree: tree.node });
+    const projected = projectLlmResponseSchema(schema);
+    const defs = Object.values(projected['$defs'] as Record<string, Record<string, unknown>>);
+    const objects = defs.filter((def) => def['type'] === 'object');
+
+    expect(projected['$ref']).toEqual(expect.any(String));
+    expect(objects.length, 'the root object and the node object').toBe(2);
+    expect(objects.map((def) => def['additionalProperties'])).toEqual([false, false]);
+    expect(JSON.stringify(projected)).not.toContain('description');
+    expect(JSON.stringify(projectLlmContractSchema(schema))).toContain('the node name');
+  });
 });
 
 describe('projectLlmContractSchema()', () => {

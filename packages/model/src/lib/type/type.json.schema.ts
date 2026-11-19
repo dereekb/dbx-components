@@ -137,6 +137,67 @@ export function readJsonSchemaRequired(node: JsonSchemaNode): ReadonlyArray<stri
   return Array.isArray(required) ? required.filter((key): key is string => typeof key === 'string') : [];
 }
 
+/**
+ * The keywords whose value maps names to subschemas.
+ */
+const JSON_SCHEMA_SUBSCHEMA_MAP_KEYWORDS: ReadonlyArray<string> = ['properties', 'patternProperties', '$defs', 'definitions'];
+
+/**
+ * The keywords whose value is one subschema.
+ */
+const JSON_SCHEMA_SUBSCHEMA_KEYWORDS: ReadonlyArray<string> = ['additionalProperties', 'items'];
+
+/**
+ * The keywords whose value is a list of subschemas.
+ */
+const JSON_SCHEMA_SUBSCHEMA_LIST_KEYWORDS: ReadonlyArray<string> = ['items', 'prefixItems', 'anyOf', 'oneOf', 'allOf'];
+
+/**
+ * Whether a JSON Schema value is an object node. A boolean subschema, `null` and a list are not.
+ *
+ * @param value - The JSON Schema value.
+ * @returns True when the value is a non-list object.
+ */
+function isJsonSchemaNode(value: unknown): value is JsonSchemaNode {
+  return value != null && typeof value === 'object' && !Array.isArray(value);
+}
+
+/**
+ * A node's object-valued subschemas, at the positions that describe an instance value or hold a `$ref` target.
+ *
+ * These are the `properties` and `patternProperties` values, a schema-valued `additionalProperties`, `items` (one
+ * object, or each element of the list form), the `prefixItems` elements, the `anyOf` / `oneOf` / `allOf` arms, and the
+ * `$defs` / `definitions` values.
+ *
+ * `not`, `if` / `then` / `else`, `propertyNames`, `dependentSchemas` and the data keywords (`const`, `default`, `enum`,
+ * `examples`) are not read, so a value inside them is never mistaken for structure. A boolean subschema
+ * (`items: false`, `additionalProperties: false`) is not a node and is skipped.
+ *
+ * @param node - The JSON Schema node.
+ * @returns The child nodes.
+ *
+ * @example
+ * ```ts
+ * readJsonSchemaSubschemas({ type: 'array', prefixItems: [{ type: 'string' }, { type: 'object' }], items: false });
+ * // [{ type: 'string' }, { type: 'object' }]
+ * ```
+ */
+export function readJsonSchemaSubschemas(node: JsonSchemaNode): ReadonlyArray<JsonSchemaNode> {
+  const candidates: ReadonlyArray<unknown> = [
+    ...JSON_SCHEMA_SUBSCHEMA_MAP_KEYWORDS.flatMap((key) => {
+      const map = node[key];
+      return isJsonSchemaNode(map) ? Object.values(map) : [];
+    }),
+    ...JSON_SCHEMA_SUBSCHEMA_KEYWORDS.map((key) => node[key]),
+    ...JSON_SCHEMA_SUBSCHEMA_LIST_KEYWORDS.flatMap((key) => {
+      const list = node[key];
+      return Array.isArray(list) ? list : [];
+    })
+  ];
+
+  return candidates.filter(isJsonSchemaNode);
+}
+
 // MARK: Strict JSON Schema
 /**
  * Config for {@link toStrictJsonSchema}.
@@ -282,9 +343,13 @@ function hoistArmDescriptions(schema: Record<string, unknown>): void {
 }
 
 /**
- * Normalize one already-cloned schema node in place, then recurse into its real child positions (`properties` values,
- * array `items`, and the `anyOf` / `oneOf` / `allOf` arms) — deliberately NOT every object value, so a field NAMED
- * `properties` / `items` / `anyOf` is never mistaken for schema structure.
+ * Normalize one already-cloned schema node in place, children first.
+ *
+ * An open `type: 'object'` node is stamped `additionalProperties: false`, then every child
+ * {@link readJsonSchemaSubschemas} returns is normalized, then the node's arm prose is hoisted, its const runs folded
+ * and, when asked, its description stripped. The stamp writes a boolean, which is not a node, so it never adds a child.
+ * Children are read from the schema positions only, so a field NAMED `properties` / `items` / `anyOf` is never
+ * mistaken for schema structure.
  *
  * @param node - The schema node.
  * @param stripDescriptions - Whether to drop `description` at this node.
@@ -297,22 +362,7 @@ function normalizeNode(node: unknown, stripDescriptions: boolean): void {
       schema['additionalProperties'] = false;
     }
 
-    const properties = schema['properties'];
-    if (properties != null && typeof properties === 'object') {
-      Object.values(properties as Record<string, unknown>).forEach((child) => normalizeNode(child, stripDescriptions));
-    }
-
-    if (schema['items'] != null) {
-      normalizeNode(schema['items'], stripDescriptions);
-    }
-
-    ['anyOf', 'oneOf', 'allOf'].forEach((branch) => {
-      const arms = schema[branch];
-      if (Array.isArray(arms)) {
-        arms.forEach((arm) => normalizeNode(arm, stripDescriptions));
-      }
-    });
-
+    readJsonSchemaSubschemas(schema).forEach((child) => normalizeNode(child, stripDescriptions));
     hoistArmDescriptions(schema);
     foldConstUnion(schema);
 
@@ -329,6 +379,10 @@ function normalizeNode(node: unknown, stripDescriptions: boolean): void {
  * per-arm description hoisted onto the union node, every `const` run in an `anyOf` / `oneOf` folded back to `enum` —
  * onto the node when every arm is a const, into a single arm when only some are — and, when asked, every `description`
  * removed.
+ *
+ * Every node {@link readJsonSchemaSubschemas} reaches is normalized, so objects inside tuples (`prefixItems`, list-form
+ * `items`), `$defs` / `definitions` and records (a schema-valued `additionalProperties`, `patternProperties`) are
+ * closed, hoisted, folded and stripped too: a strict structured-output backend rejects a schema with any open object.
  *
  * The source object is untouched (a JSON round-trip deep clone; the result is pure JSON). IDEMPOTENT, so a caller may
  * normalize a schema without knowing whether it was normalized already.

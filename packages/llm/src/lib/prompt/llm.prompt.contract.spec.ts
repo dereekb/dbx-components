@@ -1,4 +1,6 @@
+import { type } from 'arktype';
 import { describe, expect, it } from 'vitest';
+import { projectLlmContractSchema } from '../capability/llm.capability.schema';
 import { DEFAULT_LLM_OUTPUT_CONTRACT_FOOTER, renderLlmOutputContract } from './llm.prompt.contract';
 
 const DEFAULT_HEAD = '## Output contract\n\nReturn a JSON object with these fields:\n';
@@ -158,6 +160,11 @@ describe('renderLlmOutputContract()', () => {
     expect(fieldLinesOf(renderLlmOutputContract({ schema: { type: 'object' } }))).toEqual([]);
     expect(renderLlmOutputContract({ schema: 'not a schema' })).toBe(`${DEFAULT_HEAD}${DEFAULT_TAIL.slice(1)}`);
     expect(renderLlmOutputContract({ schema: null })).toBe(renderLlmOutputContract({ schema: {} }));
+  });
+
+  it('should still label a tuple-of-objects field unknown[] after the projection closes its objects', () => {
+    const schema = projectLlmContractSchema(type({ pair: [{ a: 'string' }, { b: 'number' }] }));
+    expect(fieldLinesOf(renderLlmOutputContract({ schema }))).toEqual(['- `pair` (unknown[], required)']);
   });
 
   it('should add no tail for an empty, blank or non-string description', () => {

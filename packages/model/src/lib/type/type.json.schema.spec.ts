@@ -1,7 +1,7 @@
 import { type, type Type } from 'arktype';
 import { describe, expect, it } from 'vitest';
 import { clearable } from './type';
-import { arktypeToJsonSchemaForExport, asJsonSchemaNode, pruneFalseUnionBranches, readJsonSchemaProperties, readJsonSchemaRequired, toStrictJsonSchema } from './type.json.schema';
+import { arktypeToJsonSchemaForExport, asJsonSchemaNode, type JsonSchemaNode, pruneFalseUnionBranches, readJsonSchemaProperties, readJsonSchemaRequired, readJsonSchemaSubschemas, toStrictJsonSchema } from './type.json.schema';
 
 describe('pruneFalseUnionBranches()', () => {
   it('drops `false` entries from anyOf', () => {
@@ -270,5 +270,150 @@ describe('readJsonSchemaRequired()', () => {
   it('returns none when required is absent or not an array', () => {
     expect(readJsonSchemaRequired({})).toEqual([]);
     expect(readJsonSchemaRequired({ required: 'a' })).toEqual([]);
+  });
+});
+
+describe('readJsonSchemaSubschemas()', () => {
+  const OBJECT_A = { type: 'object', properties: { a: { type: 'string' } } };
+  const OBJECT_B = { type: 'object', properties: { b: { type: 'number' } } };
+
+  it('returns the properties values', () => {
+    expect(readJsonSchemaSubschemas({ type: 'object', properties: { a: OBJECT_A, b: OBJECT_B } })).toEqual([OBJECT_A, OBJECT_B]);
+  });
+
+  it('returns the patternProperties values', () => {
+    expect(readJsonSchemaSubschemas({ type: 'object', patternProperties: { '^a': OBJECT_A } })).toEqual([OBJECT_A]);
+  });
+
+  it('returns a schema-valued additionalProperties', () => {
+    expect(readJsonSchemaSubschemas({ type: 'object', additionalProperties: OBJECT_A })).toEqual([OBJECT_A]);
+  });
+
+  it('returns an object-form items', () => {
+    expect(readJsonSchemaSubschemas({ type: 'array', items: OBJECT_A })).toEqual([OBJECT_A]);
+  });
+
+  it('returns each element of a list-form items', () => {
+    expect(readJsonSchemaSubschemas({ type: 'array', items: [OBJECT_A, OBJECT_B] })).toEqual([OBJECT_A, OBJECT_B]);
+  });
+
+  it('returns the prefixItems elements', () => {
+    expect(readJsonSchemaSubschemas({ type: 'array', prefixItems: [OBJECT_A, OBJECT_B] })).toEqual([OBJECT_A, OBJECT_B]);
+  });
+
+  it('returns the anyOf, oneOf and allOf arms', () => {
+    expect(readJsonSchemaSubschemas({ anyOf: [OBJECT_A] })).toEqual([OBJECT_A]);
+    expect(readJsonSchemaSubschemas({ oneOf: [OBJECT_B] })).toEqual([OBJECT_B]);
+    expect(readJsonSchemaSubschemas({ allOf: [OBJECT_A, OBJECT_B] })).toEqual([OBJECT_A, OBJECT_B]);
+  });
+
+  it('returns the $defs and definitions values', () => {
+    expect(readJsonSchemaSubschemas({ $ref: '#/$defs/a', $defs: { a: OBJECT_A } })).toEqual([OBJECT_A]);
+    expect(readJsonSchemaSubschemas({ $ref: '#/definitions/b', definitions: { b: OBJECT_B } })).toEqual([OBJECT_B]);
+  });
+
+  it('does not read not, if, then, else, propertyNames or dependentSchemas', () => {
+    // oxlint-disable-next-line unicorn/no-thenable -- `then` here is the JSON Schema conditional keyword under test, not a thenable
+    const node = { not: OBJECT_A, if: OBJECT_A, then: OBJECT_B, else: OBJECT_B, propertyNames: { pattern: '^a' }, dependentSchemas: { a: OBJECT_B } };
+    expect(readJsonSchemaSubschemas(node)).toEqual([]);
+  });
+
+  it('does not read the data keywords const, default, enum or examples', () => {
+    expect(readJsonSchemaSubschemas({ const: OBJECT_A, default: OBJECT_A, enum: [OBJECT_A, OBJECT_B], examples: [OBJECT_B] })).toEqual([]);
+  });
+
+  it('skips boolean subschemas', () => {
+    expect(readJsonSchemaSubschemas({ type: 'array', prefixItems: [true, OBJECT_A], items: false })).toEqual([OBJECT_A]);
+    expect(readJsonSchemaSubschemas({ type: 'object', properties: { never: false }, additionalProperties: false })).toEqual([]);
+    expect(readJsonSchemaSubschemas({ anyOf: [false, OBJECT_B] })).toEqual([OBJECT_B]);
+  });
+
+  it('returns none for a leaf node', () => {
+    expect(readJsonSchemaSubschemas({ type: 'string' })).toEqual([]);
+  });
+});
+
+describe('toStrictJsonSchema() past properties and items', () => {
+  /**
+   * Every node a strict pass reaches, walked through the subschema positions.
+   *
+   * @param node - The root node.
+   * @returns The root and every node below it.
+   */
+  function allNodes(node: JsonSchemaNode): ReadonlyArray<JsonSchemaNode> {
+    return [node, ...readJsonSchemaSubschemas(node).flatMap(allNodes)];
+  }
+
+  it('closes objects inside prefixItems and strips descriptions there', () => {
+    const schema = type({ pair: [type({ a: type('string').describe('the a') }).describe('first'), { b: 'number' }] });
+    const described = toStrictJsonSchema(schema.toJsonSchema());
+    const stripped = toStrictJsonSchema(schema.toJsonSchema(), { stripDescriptions: true });
+    const pair = (stripped['properties'] as Record<string, Record<string, unknown>>)['pair'];
+    const prefixItems = pair?.['prefixItems'] as ReadonlyArray<Record<string, unknown>>;
+
+    expect(prefixItems.map((item) => item['additionalProperties'])).toEqual([false, false]);
+    expect(pair?.['items']).toBe(false);
+    expect(JSON.stringify(stripped)).not.toContain('description');
+    expect(JSON.stringify(described)).toContain('the a');
+  });
+
+  it('closes objects inside a list-form items', () => {
+    const normalized = toStrictJsonSchema({ type: 'array', items: [{ type: 'object', properties: { a: { type: 'string', description: 'the a' } } }] }, { stripDescriptions: true });
+    const items = normalized['items'] as ReadonlyArray<Record<string, unknown>>;
+
+    expect(items[0]?.['additionalProperties']).toBe(false);
+    expect(JSON.stringify(normalized)).not.toContain('description');
+  });
+
+  it('closes objects inside $defs and strips descriptions there', () => {
+    const scope = type.scope({ node: { name: type('string').describe('the name'), 'children?': 'node[]' } }).export();
+    const generated = type({ tree: scope.node }).toJsonSchema();
+    const stripped = toStrictJsonSchema(generated, { stripDescriptions: true });
+    const defs = Object.values(stripped['$defs'] as Record<string, Record<string, unknown>>);
+    const objects = defs.filter((def) => def['type'] === 'object');
+
+    expect(objects.length).toBeGreaterThan(0);
+    expect(objects.every((def) => def['additionalProperties'] === false)).toBe(true);
+    expect(JSON.stringify(stripped)).not.toContain('description');
+    expect(JSON.stringify(toStrictJsonSchema(generated))).toContain('the name');
+  });
+
+  it('closes objects inside definitions', () => {
+    const normalized = toStrictJsonSchema({ $ref: '#/definitions/a', definitions: { a: { type: 'object', properties: { k: { type: 'string' } } } } });
+    expect((normalized['definitions'] as Record<string, Record<string, unknown>>)['a']?.['additionalProperties']).toBe(false);
+  });
+
+  it("closes a record's value schema and keeps the record's schema-valued additionalProperties", () => {
+    const normalized = toStrictJsonSchema(type({ m: type.Record('string', { v: type('number').describe('the v') }) }).toJsonSchema(), { stripDescriptions: true });
+    const record = (normalized['properties'] as Record<string, Record<string, unknown>>)['m'];
+    const value = record?.['additionalProperties'] as Record<string, unknown>;
+
+    expect(value['type']).toBe('object');
+    expect(value['additionalProperties']).toBe(false);
+    expect(JSON.stringify(normalized)).not.toContain('description');
+  });
+
+  it('closes objects inside patternProperties and strips descriptions there', () => {
+    const normalized = toStrictJsonSchema(type({ '[/^x/]': { v: type('number').describe('the v') } }).toJsonSchema(), { stripDescriptions: true });
+    const value = (normalized['patternProperties'] as Record<string, Record<string, unknown>>)['^x'];
+
+    expect(value?.['additionalProperties']).toBe(false);
+    expect(JSON.stringify(normalized)).not.toContain('description');
+  });
+
+  it('folds a described literal union inside a tuple', () => {
+    const normalized = toStrictJsonSchema(type({ pair: [type("'a'|'b'|'c'").describe('K'), 'number'] }).toJsonSchema());
+    const pair = (normalized['properties'] as Record<string, Record<string, unknown>>)['pair'];
+
+    expect(pair?.['prefixItems']).toEqual([{ enum: ['a', 'b', 'c'], description: 'K' }, { type: 'number' }]);
+  });
+
+  it('closes every object node it reaches and stays idempotent', () => {
+    const scope = type.scope({ node: { name: 'string', 'children?': 'node[]' } }).export();
+    const generated = type({ tree: scope.node, pair: [{ a: 'string' }, { b: 'number' }], m: type.Record('string', { v: 'number' }) }).toJsonSchema();
+    const once = toStrictJsonSchema(generated);
+
+    expect(allNodes(once).filter((node) => node['type'] === 'object' && node['additionalProperties'] !== false && typeof node['additionalProperties'] !== 'object')).toEqual([]);
+    expect(toStrictJsonSchema(once)).toEqual(once);
   });
 });
