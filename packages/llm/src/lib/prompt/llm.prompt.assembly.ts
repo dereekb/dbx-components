@@ -9,7 +9,7 @@
  * live context, look the descriptor up, resolve the templates and the contributors, assemble).
  */
 
-import { type Maybe } from '@dereekb/util';
+import { KeyValueTypleValueFilter, type Maybe, mergeObjects, splitJoinRemainder } from '@dereekb/util';
 import { type LlmCapabilityDescriptor, type LlmCapabilityDescriptorOf } from '../capability/llm.capability.descriptor';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { type LlmCapabilityKey, type LlmModelId } from '../model/llm.value';
@@ -86,14 +86,8 @@ export const DEFAULT_LLM_PROMPT_ASSEMBLY_TEXTS: LlmPromptAssemblyTexts = {
  * @returns The complete texts.
  */
 function llmPromptAssemblyTextsOf(texts: Maybe<Partial<LlmPromptAssemblyTexts>>): LlmPromptAssemblyTexts {
-  const defaults = DEFAULT_LLM_PROMPT_ASSEMBLY_TEXTS;
-  return {
-    lineReplyProtocol: texts?.lineReplyProtocol ?? defaults.lineReplyProtocol,
-    mustResolveClause: texts?.mustResolveClause ?? defaults.mustResolveClause,
-    lineMannerClause: texts?.lineMannerClause ?? defaults.lineMannerClause,
-    outputContractIntro: texts?.outputContractIntro ?? defaults.outputContractIntro,
-    outputContractFooter: texts?.outputContractFooter ?? defaults.outputContractFooter
-  };
+  // The NULL filter keeps the `??` treatment: a `null` field also falls back to the default.
+  return mergeObjects<LlmPromptAssemblyTexts>([DEFAULT_LLM_PROMPT_ASSEMBLY_TEXTS, texts], KeyValueTypleValueFilter.NULL);
 }
 
 // MARK: Origins
@@ -405,15 +399,15 @@ function llmPromptContextPiecesOf(template: Maybe<LlmResolvedPromptTemplate>): L
 
   if (template != null) {
     const marker = LLM_PROMPT_LIVE_CONTEXT_MARKER;
-    const index = template.text.indexOf(marker);
+    // Only the FIRST marker splits; `post === undefined` ⇒ no marker. An empty pre is kept.
+    const [pre, post] = splitJoinRemainder(template.text, marker, 2);
 
-    if (index < 0) {
+    if (post === undefined) {
       pieces = { 'context-pre': { text: template.text, origin: llmPromptTemplateSegmentOrigin(template), key: template.key, reason: 'the whole context template: it carries no live-context marker, so the live context follows it' } };
     } else {
       const origin = llmPromptTemplateSegmentOrigin(template, [marker]);
-      const post = template.text.slice(index + marker.length);
       pieces = {
-        'context-pre': { text: template.text.slice(0, index), origin, key: template.key, reason: 'the context template before the live-context marker', raw: true },
+        'context-pre': { text: pre, origin, key: template.key, reason: 'the context template before the live-context marker', raw: true },
         ...(post.length === 0 ? {} : { 'context-post': { text: post, origin, key: template.key, reason: 'the context template after the live-context marker' } })
       };
     }

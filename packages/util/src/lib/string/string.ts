@@ -1,4 +1,4 @@
-import { type ArrayOrValue, asArray } from '../array/array';
+import { type ArrayOrValue, type ReadonlyArrayOrValue } from '../array/array';
 import { type Configurable } from '../type';
 import { type MapFunction } from '../value/map';
 import { type MaybeNot, type Maybe } from '../value/maybe.type';
@@ -62,19 +62,14 @@ export const SPACE_JOINER = ' ';
  * @returns joined string, or null/undefined if the input is null/undefined
  */
 export function joinStrings(input: MaybeNot, joiner?: string, trim?: boolean): MaybeNot;
-export function joinStrings(input: ArrayOrValue<Maybe<string>>, joiner?: string, trim?: boolean): string;
-export function joinStrings(input: Maybe<ArrayOrValue<Maybe<string>>>, joiner: string = COMMA_JOINER, trim: boolean = false): Maybe<string> {
+export function joinStrings(input: ReadonlyArrayOrValue<Maybe<string>>, joiner?: string, trim?: boolean): string;
+export function joinStrings(input: Maybe<ReadonlyArrayOrValue<Maybe<string>>>, joiner: string = COMMA_JOINER, trim: boolean = false): Maybe<string> {
   if (input == null) {
     return input;
   }
 
-  let array: Maybe<string>[] = asArray(input);
-
-  if (trim) {
-    array = array.map((x) => x?.trim());
-  }
-
-  return array.filter(Boolean).join(joiner);
+  const array: ReadonlyArray<Maybe<string>> = typeof input === 'string' ? [input] : input;
+  return (trim ? array.map((x) => x?.trim()) : array).filter(Boolean).join(joiner);
 }
 
 /**

@@ -6,7 +6,7 @@
  * measured 0% and is never rendered as one.
  */
 
-import { type Maybe } from '@dereekb/util';
+import { compareStrings, type Maybe } from '@dereekb/util';
 import type { LlmCapabilityKey, LlmStrategyId } from '../model/llm.value';
 import type { LlmCallLogPayloadBase } from '../record/llm.call.payload';
 import type { LlmKeyedUsageCell, LlmUsageCell } from './llm.usage.cell';
@@ -155,7 +155,7 @@ export interface LlmCapabilityCacheRow {
  */
 export function llmCapabilityCacheRowsOf(cells: ReadonlyArray<LlmKeyedUsageCell<LlmCapabilityKey>>): ReadonlyArray<LlmCapabilityCacheRow> {
   return [...cells]
-    .sort((a, b) => llmCacheablePromptTokensOf(b.cell) - llmCacheablePromptTokensOf(a.cell) || a.key.localeCompare(b.key))
+    .sort((a, b) => llmCacheablePromptTokensOf(b.cell) - llmCacheablePromptTokensOf(a.cell) || compareStrings(a.key, b.key))
     .map((entry) => {
       const hitRate = llmCacheHitRateOf(entry.cell);
       const share = llmReasoningShareOf(entry.cell);

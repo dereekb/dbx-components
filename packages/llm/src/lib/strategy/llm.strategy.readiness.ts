@@ -16,13 +16,12 @@
  * And the quota gate, {@link evaluateLlmQuotaGate}, which draws the throttle line over a provider-status report.
  */
 
-import { type Maybe, type PercentDecimal } from '@dereekb/util';
+import { errorMessageOf, type KeyedRegistry, type Maybe, type PercentDecimal, runAsyncTasksForValues } from '@dereekb/util';
 import { type LlmStrategyId } from '../model/llm.value';
 import { type LlmProviderStatus, type LlmProviderStatusProviderId, type LlmQuotaWindow, tightestLlmQuotaWindow } from './llm.provider.status';
 import { type LlmCredentialProbeOptions, type LlmStrategy } from './llm.strategy';
 import { type LlmStrategyHealth } from './llm.strategy.health';
 import { type LlmStrategyRegistry } from './llm.strategy.registry';
-import { type KeyedRegistry } from '../util/keyed.registry';
 
 /**
  * Per-strategy entry in the aggregated readiness report.
@@ -119,17 +118,6 @@ export interface VerifyLlmStrategiesConfig {
 }
 
 /**
- * The message of an unknown thrown value — the contract says an `LlmStrategy.healthCheck` never throws,
- * but the aggregator records a contract violation as an error issue rather than propagate it raw.
- *
- * @param error - The thrown value.
- * @returns The message string.
- */
-function errorText(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
-
-/**
  * One readiness seam, as {@link checkLlmReadinessSeam} runs it.
  */
 interface LlmReadinessSeamCheck {
@@ -166,9 +154,8 @@ interface CheckLlmReadinessSeamConfig {
  */
 async function checkLlmReadinessSeam(config: CheckLlmReadinessSeamConfig): Promise<ReadonlyArray<LlmStrategyHealthReport>> {
   const { strategies, required, lane, seam } = config;
-  const checked: LlmStrategyHealthReport[] = [];
 
-  for (const id of required) {
+  async function checkOne(id: LlmStrategyId): Promise<LlmStrategyHealthReport> {
     const strategy = strategies.get(id);
     let entry: LlmStrategyHealthReport;
 
@@ -183,16 +170,17 @@ async function checkLlmReadinessSeam(config: CheckLlmReadinessSeamConfig): Promi
       } catch (error) {
         // The contract says neither seam throws; be robust anyway and record the violation as an error. The verdict
         // IS the report, so a caller sees the violation instead of a raw rejection.
-        health = { ready: false, issues: [{ severity: 'error', message: `${seam.name} threw: ${errorText(error)}` }] };
+        health = { ready: false, issues: [{ severity: 'error', message: `${seam.name} threw: ${errorMessageOf(error)}` }] };
       }
 
       entry = { id, registered: true, health };
     }
 
-    checked.push(entry);
+    return entry;
   }
 
-  return checked;
+  // Sequential: one probe (one network round-trip) at a time, results in required-id order. checkOne never rejects.
+  return runAsyncTasksForValues([...required], checkOne, { sequential: true });
 }
 
 /**
@@ -407,7 +395,7 @@ export async function readLlmProviderStatus(config: ReadLlmProviderStatusConfig)
         } catch (error) {
           // The contract says providerStatus never throws; be robust anyway and record the violation as an issue
           // on an UNAVAILABLE status. Report channel: this function never propagates.
-          status = { providerId: id, available: false, windows: [], issues: [{ severity: 'error', message: `providerStatus threw: ${errorText(error)}` }] };
+          status = { providerId: id, available: false, windows: [], issues: [{ severity: 'error', message: `providerStatus threw: ${errorMessageOf(error)}` }] };
         }
 
         if (account != null) {

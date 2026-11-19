@@ -12,13 +12,13 @@
  * ordinary re-ask or drop.
  */
 
-import { filterMaybeArrayValues, type Maybe } from '@dereekb/util';
+import { filterMaybeArrayValues, isPlainObject, type Maybe } from '@dereekb/util';
 import { type } from 'arktype';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { llmLiveContextBlock, type LlmLiveContextBlock } from '../prompt/llm.prompt.live.context';
 import { type LlmPromptTemplate } from '../prompt/llm.prompt.template';
 import { type LlmSwallowSiteId } from '../record/llm.swallow';
-import { isLlmReplyObject, type LlmReplyEnvelopeKeys, readLlmReplyLever } from '../reply/llm.reply.envelope';
+import { type LlmReplyEnvelopeKeys, readLlmReplyLever } from '../reply/llm.reply.envelope';
 import { LLM_REPAIR_REPLY_JSON_CAPABILITY, type LlmReplyFastFixer, type LlmReplyFastFixOutcome } from '../reply/llm.reply.fast.fix';
 import { type LlmReplyJsonShape } from '../reply/llm.reply.json.shape';
 import { llmReplyRepairDiagnosis, llmReplyRepairFidelity } from '../reply/llm.reply.repair';
@@ -54,7 +54,7 @@ const REPLY_FENCE = 'REPLY';
  * @returns The lever, or `undefined` when it is not a plain object.
  */
 export function parseLlmRepairReplyJsonLever(lever: unknown): Maybe<Record<string, unknown>> {
-  return isLlmReplyObject(lever) && !Array.isArray(lever) ? lever : undefined;
+  return isPlainObject(lever) ? lever : undefined;
 }
 
 /**

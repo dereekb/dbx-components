@@ -13,7 +13,7 @@
  * only names the site and forwards the cause.
  */
 
-import type { Maybe } from '@dereekb/util';
+import { arrayToObject, errorMessageOf, type Maybe } from '@dereekb/util';
 
 /**
  * A declared swallow site's stable id — `<area>/<module>.<reason>`, kebab-case throughout (e.g.
@@ -141,14 +141,7 @@ export const LLM_SWALLOW_CAUSE_MAX_LENGTH = 200;
  * @returns The cut cause text, or `undefined` when there is nothing to report.
  */
 export function llmSwallowCauseText(cause: unknown): Maybe<string> {
-  let text: Maybe<string>;
-
-  if (cause instanceof Error) {
-    text = cause.message;
-  } else if (cause != null) {
-    text = String(cause);
-  }
-
+  const text = cause == null ? undefined : errorMessageOf(cause);
   return text == null || text.length === 0 ? undefined : text.slice(0, LLM_SWALLOW_CAUSE_MAX_LENGTH);
 }
 
@@ -170,19 +163,7 @@ export function llmSwallowCauseText(cause: unknown): Maybe<string> {
  * @__NO_SIDE_EFFECTS__
  */
 export function makeLlmSwallowSiteRegistry(declarations: ReadonlyArray<LlmSwallowSiteDeclaration>): LlmSwallowSiteRegistry {
-  const registry: Record<LlmSwallowSiteId, LlmSwallowSiteDeclaration> = {};
-
-  for (const declaration of declarations) {
-    const { id } = declaration;
-
-    if (Object.hasOwn(registry, id)) {
-      throw new Error(`llm-swallow-sites: duplicate site id '${id}'`);
-    }
-
-    registry[id] = declaration;
-  }
-
-  return registry;
+  return arrayToObject(declarations, { readKey: (declaration) => declaration.id, throwOnDuplicateKey: (id) => new Error(`llm-swallow-sites: duplicate site id '${id}'`) });
 }
 
 /**

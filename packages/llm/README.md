@@ -48,9 +48,9 @@ so several instances of one transport can be registered side by side.
   strategy and model served it, usage and timing. `LlmDispatchResult` is a completion plus what a dispatcher adds:
   attempts, validation errors, decode status and the reply repair. Host data rides `meta`: the library never reads it
   and strategies echo it. `LlmRunner` is the text-in / text-out seam a strategy can call instead of its transport.
-- **Registry.** `makeLlmStrategyRegistry(seed)` answers `get(id)` and `getBy('kind', kind)` (the last registered
-  instance of that transport); `llmStrategyInstancesOfKind` lists them all. It is built on `createKeyedRegistry`, a
-  generic multi-index registry.
+- **Registry.** `makeLlmStrategyRegistry(seed)` answers `get(id)`; `llmStrategyInstancesOfKind` lists every instance
+  of a transport in registry order (`values().filter(...)`), and its `.at(-1)` is the last registered one. It is built
+  on `@dereekb/util`'s `createKeyedRegistry`.
 - **Readiness.** Three optional seams: `healthCheck` (no network), `credentialProbe` (one free authenticated request)
   and `providerStatus` (account windows and balance). `verifyLlmStrategies` throws when a required strategy is
   missing or not ready; `probeLlmCredentials` and `readLlmProviderStatus` report and never throw (one status read per
@@ -109,7 +109,7 @@ What a dispatcher records about each call, and the seams a host observes it thro
   gaps, breadcrumbs and swallows go to the host's callbacks with the context's attribution, timing on or off.
   `noopLlmCallContext()` is the shared do-nothing context.
 - **Taps.** `makeLlmDispatchTapRegistry` is a read-only observation seam: a tap that throws is counted in `health()`,
-  never propagated. `makeLlmDispatchCollector` keeps every event.
+  never propagated. A tap may return any thenable; its rejection counts as an async failure. `makeLlmDispatchCollector` keeps every event.
 - **Swallow sites.** `LlmSwallowSink`, the declaration vocabulary, `LLM_SWALLOW_SITES` (the library's declared
   fail-open catches) and `makeLlmSwallowSiteRegistry` to merge them with a host's own.
 
@@ -789,7 +789,7 @@ one retry lever, and a mangled JSON reply gets one cheap fast fix before any re-
   off / low, or structured output off. Each retry files a `retry-lever` diag and stamps `phases.attempts[].retry` and
   `failedAttempts[].retry`.
 - **Transport lane.** A timeout resends identical bytes at once; a retryable transport error (429, 5xx, a dropped
-  socket) resends them after `transportBackoff` (default `llmTransportBackoffMs`: 500 ms doubling to 8 s, half jitter,
+  socket) resends them after `transportBackoff` (default `llmTransportBackoffMs`, util `exponentialBackoffDelay`: 500 ms doubling to 8 s, equal jitter,
   with a `transport-backoff` diag). A cancelled dispatch never retries.
 - **Truncation.** A length-capped reply is not parsed while budget remains; `lengthCapped` is sticky on the result. A
   truncation a lever induced on the last attempt earns one bonus attempt (`LLM_RETRY_INDUCED_BONUS_ATTEMPTS`).
@@ -884,8 +884,8 @@ could need in one map.
   `LlmDecisionRequest` (`{ state, questions, model }`) and returns `LlmDecisionResult` (the answering versioned
   `model`, `answers`, `usage`, `provider`, `generationId`). It throws rather than returning partial answers. Its
   `healthCheck` / `credentialProbe` report `LlmStrategyHealth`, the completion lane's verdict.
-- `makeLlmDecisionStrategyRegistry(seed)` — the same id / kind registry; `getBy('kind', k)` is the LAST registered
-  instance, `values()[0]` the first.
+- `makeLlmDecisionStrategyRegistry(seed)` — the same id-keyed registry; `values().filter(...)` by `llmStrategyKind`
+  lists a kind's instances (`.at(-1)` the LAST registered), `values()[0]` the first.
 - `verifyLlmDecisionStrategies({ strategies, required })` and `probeLlmDecisionCredentials({ strategies, required,
   signal })` gate launch on the decision backends. They run the completion aggregators over an
   `LlmDecisionStrategyRegistry` and return the same `LlmStrategiesHealthReport`: verify throws one aggregated error,
@@ -1179,7 +1179,7 @@ harness (a benchmark CLI) can use it too. Nothing in it bills unless a live lane
 scripts make no network call, and the lane's helpers answer `undefined` while it is locked.
 
 - **Tape replay.** `makeLlmTapeStrategy({ turns })` serves recorded completions. A turn matches on its capability plus
-  `hashLlmTapePrompt(prompt)` (the first 12 hex chars of `sha256Hex`, byte-equal to a `node:crypto` digest): hash
+  `hashLlmTapePrompt(prompt)` (`sha256HexPrefix(text, 12)` from `@dereekb/util`, byte-equal to a `node:crypto` digest): hash
   first, so a byte-identical replay consumes the tape in exact order whatever the dispatch order, then the next
   unconsumed turn of the same capability (an `order` match — the prompt drifted, the run still completes). With nothing
   left to serve it throws `LlmTapeStrategyError` — `tape-exhausted` (more calls than the recording) or
@@ -1268,17 +1268,6 @@ describe.skipIf(LIVE == null)('summarize (live)', () => {
 
 ## Utilities
 
-### sha256Hex
-
-`sha256Hex(text)` returns the SHA-256 of a string's UTF-8 bytes as 64 lowercase hex characters. It is synchronous and
-dependency-free, so it runs anywhere — no `node:crypto`, no WebCrypto promise.
-
-It is byte-identical to `createHash('sha256').update(text, 'utf8').digest('hex')` from `node:crypto` for every
-JavaScript string, including strings with lone surrogates: those are encoded as U+FFFD, the same WHATWG UTF-8 rule
-Node applies, instead of throwing.
-
-```ts
-import { sha256Hex } from '@dereekb/llm';
-
-const shortDigest = sha256Hex(promptText).slice(0, 16);
-```
+The SHA-256 helpers live in `@dereekb/util`: `sha256Hex(text)` and `sha256HexPrefix(text, length)`. They are
+synchronous and byte-identical to `node:crypto`'s `createHash('sha256').update(text, 'utf8').digest('hex')`. llm uses 16
+hex chars for cache / census / supplement hashes (`llmPromptCacheHash`) and 12 for tapes (`hashLlmTapePrompt`).

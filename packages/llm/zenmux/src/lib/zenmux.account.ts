@@ -5,7 +5,7 @@
  */
 
 import { type LlmCostBasis, type LlmProviderStatusProviderId } from '@dereekb/llm';
-import { type Maybe } from '@dereekb/util';
+import { isNotBlankString, type Maybe } from '@dereekb/util';
 import { DEFAULT_ZENMUX_BASE_URL, ZENMUX_PROVIDER_ID } from './zenmux.constants';
 
 /**
@@ -36,7 +36,7 @@ export const ZENMUX_SYNC_COST_BASIS: LlmCostBasis = 'list';
 export function isZenmuxBaseUrl(baseUrl: Maybe<string>): boolean {
   let zenmux = false;
 
-  if (baseUrl != null && baseUrl.trim().length > 0) {
+  if (isNotBlankString(baseUrl)) {
     try {
       const { hostname } = new URL(baseUrl);
       zenmux = hostname === ZENMUX_HOST || hostname.endsWith(`.${ZENMUX_HOST}`);

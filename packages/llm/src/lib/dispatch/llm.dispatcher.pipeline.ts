@@ -6,7 +6,7 @@
  * the validated path when the call sets a `validate` / `critique`), record the call, and report the thread turn.
  */
 
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, mergeObjects } from '@dereekb/util';
 import { type LlmCapabilityDescriptor } from '../capability/llm.capability.descriptor';
 import { llmCapabilityVisionOf, LLM_REASONING_OFF } from '../model/llm.model.precedence';
 import { DEFAULT_LLM_MODEL_TIER, resolveLlmModelTier } from '../model/llm.model.tier';
@@ -107,7 +107,8 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
   const escalateModel = llmDecodeRetryModelOf({ modelTiers, decodeRetryTier: config.decodeRetryTier });
   const corrections = llmDispatchCorrectionTextsOf(config.correctionTexts);
   const correctionSlotId = llmPromptSlotIdOfRole(layout, 'correction', 'correction');
-  const fastFixLimits: LlmReplyFastFixLimits = { ...DEFAULT_LLM_REPLY_FAST_FIX_LIMITS, ...config.fastFixLimits };
+  // mergeObjects: an explicit `undefined` override keeps its default (a spread would erase it).
+  const fastFixLimits = mergeObjects<LlmReplyFastFixLimits>([DEFAULT_LLM_REPLY_FAST_FIX_LIMITS, config.fastFixLimits]);
   const transportBackoff = config.transportBackoff ?? llmTransportBackoffMs;
   // the fast fixer reaches the dispatcher through this holder, so a fixer call is an ordinary, recorded dispatch
   const selfDispatch: { dispatch: (request: R) => Promise<X> } = { dispatch: () => Promise.reject(new Error('llm dispatcher: dispatched before construction completed')) };

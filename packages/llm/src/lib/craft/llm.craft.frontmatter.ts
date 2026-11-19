@@ -12,7 +12,7 @@
  * against the host's site registry.
  */
 
-import { type Maybe } from '@dereekb/util';
+import { compareStrings, isNotBlankString, type Maybe } from '@dereekb/util';
 import { type } from 'arktype';
 import { type LlmPromptSiteFactValue } from '../prompt/llm.prompt.site';
 import { type LlmCraftNoteTier } from './llm.craft.identity';
@@ -505,7 +505,7 @@ function llmCraftNoteRuleErrors(config: LlmCraftNoteRuleErrorsConfig): ReadonlyA
   }
 
   if (enabled) {
-    if ((frontmatter.title ?? '').trim() === '') {
+    if (!isNotBlankString(frontmatter.title)) {
       refuse('title', 'an enabled note needs a `title`');
     }
 
@@ -689,7 +689,7 @@ export function parseLlmCraftNoteSet(config: ParseLlmCraftNoteSetConfig): LlmCra
   const notes = new Map<string, LlmCraftNote>();
   const refused: LlmCraftNoteRefusal[] = [];
 
-  for (const file of [...config.files].sort((a, b) => a.source.localeCompare(b.source))) {
+  for (const file of [...config.files].sort((a, b) => compareStrings(a.source, b.source))) {
     const parsed = parseLlmCraftNote({ text: file.text, tier, source: file.source, sites });
 
     if (parsed.errors != null) {
@@ -701,5 +701,5 @@ export function parseLlmCraftNoteSet(config: ParseLlmCraftNoteSetConfig): LlmCra
     }
   }
 
-  return { tier, notes: Array.from(notes.values()).sort((a, b) => a.id.localeCompare(b.id)), refused };
+  return { tier, notes: Array.from(notes.values()).sort((a, b) => compareStrings(a.id, b.id)), refused };
 }

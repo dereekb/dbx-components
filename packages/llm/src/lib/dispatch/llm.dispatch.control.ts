@@ -3,7 +3,7 @@
  * signal it forwards to every strategy call (the dispatcher's own signal combined with the request's).
  */
 
-import { type Maybe, type Milliseconds } from '@dereekb/util';
+import { exponentialBackoffDelay, type Maybe, mergeAbortSignals, type Milliseconds, waitForPromiseUnlessAborted } from '@dereekb/util';
 import { type LlmCallContext, makeLlmCallContext, noopLlmCallContext } from '../record/llm.call.context';
 import { type LlmSwallowSink } from '../record/llm.swallow';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
@@ -47,47 +47,6 @@ export interface ParkLlmDispatchWhilePausedConfig {
 }
 
 /**
- * Wait for an abort on `signal`, returning the wait and a release that detaches its listener.
- *
- * @param signal - The signal to watch.
- * @returns The abort wait and its release.
- */
-function abortWaitOf(signal: AbortSignal): { readonly wait: Promise<void>; readonly release: () => void } {
-  let release: () => void = () => undefined;
-  const wait = new Promise<void>((resolve) => {
-    const onAbort = () => resolve();
-    signal.addEventListener('abort', onAbort, { once: true });
-    release = () => signal.removeEventListener('abort', onAbort);
-  });
-  return { wait, release };
-}
-
-/**
- * Wait for the host to resume, ending early on an abort. A rejection from the host gate while the signal is aborted
- * reads as an ended park (the send then sees the aborted signal); any other rejection propagates.
- *
- * @param pause - The host gate.
- * @param signal - The cancellation signal, when there is one.
- */
-async function waitForResumeOrAbort(pause: LlmDispatchPauseSignal, signal: Maybe<AbortSignal>): Promise<void> {
-  if (signal == null) {
-    await pause.waitUntilResumed();
-  } else if (!signal.aborted) {
-    const aborted = abortWaitOf(signal);
-
-    try {
-      await Promise.race([pause.waitUntilResumed(signal), aborted.wait]);
-    } catch (error) {
-      if (!signal.aborted) {
-        throw error;
-      }
-    } finally {
-      aborted.release();
-    }
-  }
-}
-
-/**
  * Park a dispatch on the host pause gate. Records a `paused` span on the call context ONLY when it actually parks, and
  * resolves on resume OR abort.
  *
@@ -100,7 +59,9 @@ export async function parkLlmDispatchWhilePaused(config: ParkLlmDispatchWhilePau
 
   if (pause?.isPaused() === true) {
     parked = true;
-    await callContext.timeAsync('paused', () => waitForResumeOrAbort(pause, signal));
+    // Ends early on an abort. A rejection from the host gate while the signal is aborted reads as an ended park (the
+    // send then sees the aborted signal); any other rejection propagates.
+    await callContext.timeAsync('paused', () => waitForPromiseUnlessAborted(() => pause.waitUntilResumed(signal ?? undefined), signal));
   }
 
   return parked;
@@ -122,23 +83,13 @@ export interface LlmDispatchSignalsConfig {
 
 /**
  * The signal a dispatch forwards to its strategy calls — the dispatcher's and the request's combined
- * (`AbortSignal.any`) when both exist, else whichever exists.
+ * (`@dereekb/util` `mergeAbortSignals`) when both exist, else whichever exists (the same instance).
  *
  * @param config - The dispatcher signal and the request.
  * @returns The forwarded signal, or `undefined` when neither exists.
  */
 export function llmDispatchSignalOf(config: LlmDispatchSignalsConfig): Maybe<AbortSignal> {
-  const { cancellationSignal, request } = config;
-  const requestSignal = request.signal;
-  let signal: Maybe<AbortSignal>;
-
-  if (cancellationSignal != null && requestSignal != null) {
-    signal = AbortSignal.any([cancellationSignal, requestSignal]);
-  } else {
-    signal = cancellationSignal ?? requestSignal;
-  }
-
-  return signal;
+  return mergeAbortSignals([config.cancellationSignal, config.request.signal]);
 }
 
 /**
@@ -169,41 +120,16 @@ export const LLM_TRANSPORT_RETRY_MAX_DELAY_MS: Milliseconds = 8_000;
 export type LlmDispatchTransportBackoff = (attempt: number) => Milliseconds;
 
 /**
- * The default transport backoff — exponential from {@link LLM_TRANSPORT_RETRY_BASE_DELAY_MS}, capped at
- * {@link LLM_TRANSPORT_RETRY_MAX_DELAY_MS}, with half-jitter (the wait lands in `[½, 1] ×` the exponential step).
+ * The default transport backoff — `@dereekb/util` `exponentialBackoffDelay` from
+ * {@link LLM_TRANSPORT_RETRY_BASE_DELAY_MS}, capped at {@link LLM_TRANSPORT_RETRY_MAX_DELAY_MS}, with equal jitter (the
+ * wait lands in `[½, 1] ×` the exponential step).
  *
  * @param attempt - The 1-based ordinal of the attempt whose transport failed.
  * @param random - The jitter source (`[0, 1)`).
  * @returns The wait.
  */
 export function llmTransportBackoffMs(attempt: number, random: () => number = Math.random): Milliseconds {
-  const exponential = Math.min(LLM_TRANSPORT_RETRY_MAX_DELAY_MS, LLM_TRANSPORT_RETRY_BASE_DELAY_MS * 2 ** Math.max(0, attempt - 1));
-  return Math.round(exponential * (0.5 + random() * 0.5));
-}
-
-/**
- * Wait `ms`, waking EARLY (never rejecting) on an abort. Returns at once for `ms <= 0` or a pre-aborted signal. Each path
- * tears the other down, so neither a fired timer nor an abort leaves a listener attached.
- *
- * @param ms - The wait.
- * @param signal - The cancellation signal.
- */
-export async function delayLlmDispatch(ms: Milliseconds, signal?: Maybe<AbortSignal>): Promise<void> {
-  if (ms > 0 && signal?.aborted !== true) {
-    await new Promise<void>((resolve) => {
-      const handle: { timer?: ReturnType<typeof setTimeout> } = {};
-      const onAbort = (): void => {
-        clearTimeout(handle.timer);
-        resolve();
-      };
-
-      handle.timer = setTimeout(() => {
-        signal?.removeEventListener('abort', onAbort);
-        resolve();
-      }, ms);
-      signal?.addEventListener('abort', onAbort, { once: true });
-    });
-  }
+  return exponentialBackoffDelay({ attempt, initialDelay: LLM_TRANSPORT_RETRY_BASE_DELAY_MS, maxDelay: LLM_TRANSPORT_RETRY_MAX_DELAY_MS, random });
 }
 
 // MARK: Fallback context

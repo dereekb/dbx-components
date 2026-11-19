@@ -11,7 +11,7 @@
  * The probe is opt-in, never on the dispatch path, and never throws.
  */
 
-import { type Milliseconds, type WebsiteUrlWithPrefix } from '@dereekb/util';
+import { errorMessageOf, makeTimeoutAbortSignal, type Milliseconds, type WebsiteUrlWithPrefix } from '@dereekb/util';
 import { type LlmStrategyId } from '../model/llm.value';
 import { type LlmStrategyHealth, type LlmStrategyHealthSeverity } from './llm.strategy.health';
 
@@ -153,16 +153,6 @@ export function llmProviderErrorMessage(body: string): string | undefined {
 }
 
 /**
- * The message of an unknown thrown value — the probe never propagates a transport throw, it reports it.
- *
- * @param error - The thrown value.
- * @returns The message string.
- */
-function errorText(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
-
-/**
  * Run ONE authenticated, free request against a provider and map the outcome onto an {@link LlmStrategyHealth}.
  * NEVER throws: an unreachable host, a timeout, and a rejected key all come back as `ready:false` + an
  * `'error'` issue carrying whatever the provider said.
@@ -177,10 +167,9 @@ export async function probeLlmCredentialEndpoint(config: ProbeLlmCredentialEndpo
   let health: LlmStrategyHealth;
 
   try {
-    // Built INSIDE the try: an engine without `AbortSignal.timeout` / `AbortSignal.any` (an older browser) throws
-    // here, and the catch below turns that into the usual unready verdict instead of breaking "never throws".
-    const timeoutSignal = AbortSignal.timeout(timeoutMs);
-    const signal = config.signal == null ? timeoutSignal : AbortSignal.any([timeoutSignal, config.signal]);
+    // Built INSIDE the try: should the runtime's abort-signal API throw, the catch below turns that into the usual
+    // unready verdict instead of breaking "never throws" (`makeTimeoutAbortSignal` feature-detects a missing API itself).
+    const signal = makeTimeoutAbortSignal({ timeout: timeoutMs, signal: config.signal });
     const init: LlmCredentialProbeRequestInit = config.postBody == null ? { method: 'GET', headers: { Authorization: `Bearer ${config.apiKey}` }, signal } : { method: 'POST', headers: { Authorization: `Bearer ${config.apiKey}`, 'Content-Type': 'application/json' }, body: config.postBody, signal };
     const response = await fetchImpl(config.url, init);
 
@@ -204,7 +193,7 @@ export async function probeLlmCredentialEndpoint(config: ProbeLlmCredentialEndpo
   } catch (error) {
     // The whole point of the probe is to report, never to propagate — a launch gate calling it must be able to
     // print a verdict rather than crash. Health channel: the verdict IS the report.
-    health = { ready: false, issues: [{ severity: 'error', message: `${config.strategyId} credential probe could not reach ${config.url}: ${errorText(error)}` }] };
+    health = { ready: false, issues: [{ severity: 'error', message: `${config.strategyId} credential probe could not reach ${config.url}: ${errorMessageOf(error)}` }] };
   }
 
   return health;

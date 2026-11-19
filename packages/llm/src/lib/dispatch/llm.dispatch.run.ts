@@ -4,7 +4,7 @@
  * attempt, the fast-fix tier of the reply-repair lane and the critique pass).
  */
 
-import { type Maybe } from '@dereekb/util';
+import { isNotBlankString, type Maybe, waitForMsUnlessAborted } from '@dereekb/util';
 import { type LlmModelId } from '../model/llm.value';
 import { type LlmPromptSlotId } from '../prompt/llm.prompt.layout';
 import { type LlmCallContext } from '../record/llm.call.context';
@@ -17,7 +17,7 @@ import { type LlmReplyProtocol } from '../reply/llm.reply.protocol';
 import { type LlmLeverValidator } from '../reply/llm.reply.validator';
 import { type LlmDecodeStatus, type LlmDispatchResult, type LlmReplyRepairSummary, type LlmRequest, type LlmStrategy } from '../strategy/llm.strategy';
 import { isDegenerateLlmReplyReading, type LlmBoundReplyFastFix, type LlmDispatchAttemptFault, type LlmDispatchAttemptSend, type LlmReplyRepairRefusal, readLlmDispatchReply, runLlmReplyRepairLane, sendLlmDispatchAttempt, validateLlmDispatchLever } from './llm.dispatch.attempt';
-import { delayLlmDispatch, type LlmDispatchPauseSignal, type LlmDispatchTransportBackoff, llmTransportBackoffMs } from './llm.dispatch.control';
+import { type LlmDispatchPauseSignal, type LlmDispatchTransportBackoff, llmTransportBackoffMs } from './llm.dispatch.control';
 import { DEFAULT_LLM_DISPATCH_CORRECTION_TEXTS, type LlmCorrectionKind, type LlmDispatchCorrectionTexts, llmDispatchCorrectionTextOf, withLlmDispatchCorrection } from './llm.dispatch.correction';
 import { type LlmDispatchRetryLadder, makeLlmDispatchRetryLadder } from './llm.dispatch.ladder';
 import { llmAttemptPhaseOf, llmDecodeFailureAttemptOf, type LlmDispatchOutcome, llmFailedAttemptOf, llmRepairedDecodeAttemptOf } from './llm.dispatch.outcome';
@@ -281,7 +281,7 @@ async function runLlmDispatchFaultStep(config: LlmDispatchAttemptsConfig, loop: 
   if (willRetry && fault === 'transport') {
     const delayMs = (config.transportBackoff ?? llmTransportBackoffMs)(attempt);
     config.callContext.diag({ level: 'warn', code: 'transport-backoff', fields: { capability: config.baseRequest.capability, attempt, delayMs, ...(transportError == null ? {} : { error: transportError }) }, message: 'transport failed before reaching the model, backing off before an identical resend' });
-    await sent.attemptContext.timeAsync('transport-backoff', () => delayLlmDispatch(delayMs, config.signal));
+    await sent.attemptContext.timeAsync('transport-backoff', () => waitForMsUnlessAborted(delayMs, config.signal));
   }
 
   return willRetry ? 'retry' : 'settle';
@@ -297,7 +297,7 @@ async function runLlmDispatchFaultStep(config: LlmDispatchAttemptsConfig, loop: 
  */
 function runLlmDispatchTruncatedStep(loop: LlmDispatchLoopState, step: LlmDispatchLoopStep & { readonly bonus: boolean }): LlmDispatchLoopNext {
   const { attempt, bonus } = step;
-  const failureClass: LlmDecodeFailureClass = loop.result.text.trim() === '' ? 'empty-result' : 'length-truncation';
+  const failureClass: LlmDecodeFailureClass = isNotBlankString(loop.result.text) ? 'length-truncation' : 'empty-result';
   loop.lastFailureClass = failureClass;
   let lever: LlmRetryLever;
 

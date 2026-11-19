@@ -29,7 +29,7 @@
  */
 
 import { llmProviderErrorMessage, makeLlmQuotaWindow, type LlmCredentialProbeFetch, type LlmCredentialProbeResponse, type LlmProviderBalance, type LlmProviderStatus, type LlmProviderStatusOptions, type LlmProviderStatusSource, type LlmQuotaWindow, type LlmStrategyHealthIssue } from '@dereekb/llm';
-import { type Maybe, type Milliseconds } from '@dereekb/util';
+import { errorMessageOf, makeTimeoutAbortSignal, type Maybe, type Milliseconds, removeTrailingSlashes } from '@dereekb/util';
 import { DEFAULT_ZENMUX_BASE_URL, ZENMUX_MANAGEMENT_API_KEY_ENV, ZENMUX_PROVIDER_ID } from './zenmux.constants';
 
 /**
@@ -143,7 +143,7 @@ interface ZenmuxReadResult<T> {
  * @__NO_SIDE_EFFECTS__
  */
 export function makeZenmuxProviderStatusSource(config: ZenmuxProviderStatusSourceConfig): LlmProviderStatusSource {
-  const baseUrl = (config.baseUrl ?? DEFAULT_ZENMUX_BASE_URL).replace(/\/+$/, '');
+  const baseUrl = removeTrailingSlashes(config.baseUrl ?? DEFAULT_ZENMUX_BASE_URL);
   const apiKey = config.managementApiKey?.trim() ?? '';
   const managementApiKeyEnv = config.managementApiKeyEnv ?? ZENMUX_MANAGEMENT_API_KEY_ENV;
   const timeoutMs = config.timeoutMs ?? DEFAULT_ZENMUX_PROVIDER_STATUS_TIMEOUT_MS;
@@ -161,10 +161,9 @@ export function makeZenmuxProviderStatusSource(config: ZenmuxProviderStatusSourc
     let result: ZenmuxReadResult<T>;
 
     try {
-      // Built INSIDE the try: an engine without `AbortSignal.timeout` / `AbortSignal.any` (an older browser) throws here, and
-      // the catch below turns that into this read's warning instead of breaking "never throws".
-      const timeoutSignal = AbortSignal.timeout(timeoutMs);
-      const signal = options?.signal == null ? timeoutSignal : AbortSignal.any([timeoutSignal, options.signal]);
+      // Built INSIDE the try: should the runtime's abort-signal API throw, the catch below turns that into this read's
+      // warning instead of breaking "never throws" (`makeTimeoutAbortSignal` feature-detects a missing API itself).
+      const signal = makeTimeoutAbortSignal({ timeout: timeoutMs, signal: options?.signal });
       const response = await fetchImpl(url, { method: 'GET', headers: { Authorization: `Bearer ${apiKey}` }, signal });
       const body = await response.text();
 
@@ -196,7 +195,7 @@ export function makeZenmuxProviderStatusSource(config: ZenmuxProviderStatusSourc
       }
     } catch (error) {
       // Swallow site `llm/zenmux-provider-status.transport`. An unreachable endpoint is this read's warning, never a throw.
-      result = { error: `${path}: ${error instanceof Error ? error.message : String(error)}` };
+      result = { error: `${path}: ${errorMessageOf(error)}` };
     }
 
     return result;

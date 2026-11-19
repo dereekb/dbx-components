@@ -1,6 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { makeLlmCallContext } from '../record/llm.call.context';
-import { delayLlmDispatch, isLlmDispatchCancelled, LLM_TRANSPORT_RETRY_MAX_DELAY_MS, type LlmDispatchPauseSignal, llmDispatchSignalOf, llmTransportBackoffMs, parkLlmDispatchWhilePaused } from './llm.dispatch.control';
+import { isLlmDispatchCancelled, LLM_TRANSPORT_RETRY_MAX_DELAY_MS, type LlmDispatchPauseSignal, llmDispatchSignalOf, llmTransportBackoffMs, parkLlmDispatchWhilePaused } from './llm.dispatch.control';
 
 function gate(paused: boolean): LlmDispatchPauseSignal & { readonly resume: () => void } {
   let resolveWait: () => void = () => undefined;
@@ -98,36 +98,5 @@ describe('llmTransportBackoffMs()', () => {
     expect(llmTransportBackoffMs(2, () => 1)).toBe(1000);
     expect(llmTransportBackoffMs(20, () => 1)).toBe(LLM_TRANSPORT_RETRY_MAX_DELAY_MS);
     expect(llmTransportBackoffMs(20, () => 0)).toBe(4000);
-  });
-});
-
-describe('delayLlmDispatch()', () => {
-  it('should resolve after its timer and leave no listener attached', async () => {
-    vi.useFakeTimers();
-
-    try {
-      const controller = new AbortController();
-      const remove = vi.spyOn(controller.signal, 'removeEventListener');
-      let done = false;
-      const delayed = delayLlmDispatch(100, controller.signal).then(() => (done = true));
-      await vi.advanceTimersByTimeAsync(99);
-      expect(done).toBe(false);
-      await vi.advanceTimersByTimeAsync(1);
-      await delayed;
-      expect(done).toBe(true);
-      expect(remove).toHaveBeenCalledTimes(1);
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  it('should wake early on an abort, and return at once for <= 0 or a pre-aborted signal', async () => {
-    const controller = new AbortController();
-    const delayed = delayLlmDispatch(60_000, controller.signal);
-    controller.abort();
-    await delayed;
-    await delayLlmDispatch(0);
-    await delayLlmDispatch(60_000, AbortSignal.abort());
-    expect(controller.signal.aborted).toBe(true);
   });
 });

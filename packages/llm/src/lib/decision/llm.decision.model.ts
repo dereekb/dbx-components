@@ -1,4 +1,4 @@
-import { type Maybe } from '@dereekb/util';
+import { isNotNullOrEmptyString, type Maybe } from '@dereekb/util';
 import { type LlmModelId } from '../model/llm.value';
 
 /**
@@ -38,7 +38,7 @@ const LLM_BARE_DECISION_MODEL_REGEX = /^jev(-|$)/;
  */
 export function isLlmDecisionModelId(model: Maybe<LlmModelId>): boolean {
   const slug = model?.trim().toLowerCase();
-  return slug == null || slug === '' ? false : slug.startsWith(`${LLM_DECISION_MODEL_NAMESPACE}/`) || LLM_BARE_DECISION_MODEL_REGEX.test(slug);
+  return isNotNullOrEmptyString(slug) ? slug.startsWith(`${LLM_DECISION_MODEL_NAMESPACE}/`) || LLM_BARE_DECISION_MODEL_REGEX.test(slug) : false;
 }
 
 /**

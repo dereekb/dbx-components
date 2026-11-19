@@ -16,7 +16,7 @@
  * registry is built from the subset that qualifies.
  */
 
-import { type Maybe, type Milliseconds } from '@dereekb/util';
+import { isNotBlankString, type Maybe, type Milliseconds } from '@dereekb/util';
 import { type LlmStrategyId } from '../model/llm.value';
 import { LLM_PROVIDER_FACET_NONE, type LlmCompletionProviderEntry } from '../model/config/llm.model.config.schema';
 import { type LlmProviderConfig } from '../model/config/llm.model.config.resolve';
@@ -68,7 +68,7 @@ export interface LlmDecisionCapableProvidersConfig<P extends LlmProviderConfig =
 export function llmDecisionCapableProviders<P extends LlmProviderConfig>(config: LlmDecisionCapableProvidersConfig<P>): ReadonlyArray<P> {
   const { providers, adapters, routePreference } = config;
   const preference = routePreference ?? llmAdaptersOf({ adapters, facet: 'decision' }).map((adapter) => adapter.kind);
-  const routed = (providers ?? []).map((provider) => ({ provider, route: llmProviderDecisionRouteOf({ provider, adapters }) })).filter(({ provider, route }) => route !== LLM_PROVIDER_FACET_NONE && provider.apiKey.trim() !== '');
+  const routed = (providers ?? []).map((provider) => ({ provider, route: llmProviderDecisionRouteOf({ provider, adapters }) })).filter(({ provider, route }) => route !== LLM_PROVIDER_FACET_NONE && isNotBlankString(provider.apiKey));
   const rank = (route: LlmStrategyId): number => {
     const index = preference.indexOf(route);
     return index === -1 ? preference.length : index;

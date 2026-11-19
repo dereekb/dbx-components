@@ -33,19 +33,19 @@ describe('makeLlmStrategyRegistry', () => {
     expect(strategies.get('missing')).toBeUndefined();
   });
 
-  it("answers getBy('kind') with the LAST registered instance of the kind", () => {
+  it('answers the LAST registered instance of a kind with llmStrategyInstancesOfKind(...).at(-1)', () => {
     const local = fakeStrategy('local', 'openai');
     const gateway = fakeStrategy('gateway', 'openai');
     const strategies = makeLlmStrategyRegistry([local, gateway]);
 
-    expect(strategies.getBy('kind', 'openai')).toBe(gateway);
+    expect(llmStrategyInstancesOfKind({ strategies, kind: 'openai' }).at(-1)).toBe(gateway);
   });
 
-  it('indexes a kind-less strategy under its id', () => {
+  it('matches a kind-less strategy by its id', () => {
     const openrouter = fakeStrategy('openrouter');
     const strategies = makeLlmStrategyRegistry([openrouter]);
 
-    expect(strategies.getBy('kind', 'openrouter')).toBe(openrouter);
+    expect(llmStrategyInstancesOfKind({ strategies, kind: 'openrouter' })).toEqual([openrouter]);
   });
 
   it('replaces a re-registered id in place, keeping its position', () => {
@@ -59,13 +59,13 @@ describe('makeLlmStrategyRegistry', () => {
     expect(strategies.get('a')).toBe(a2);
   });
 
-  it('falls back to the remaining instance when the kind holder is unregistered', () => {
+  it('leaves the remaining instance of a kind when one is unregistered', () => {
     const local = fakeStrategy('local', 'openai');
     const gateway = fakeStrategy('gateway', 'openai');
     const strategies = makeLlmStrategyRegistry([local, gateway]);
 
     strategies.unregister('gateway');
-    expect(strategies.getBy('kind', 'openai')).toBe(local);
+    expect(llmStrategyInstancesOfKind({ strategies, kind: 'openai' }).at(-1)).toBe(local);
   });
 
   it('carries host meta from the request onto the completion', async () => {

@@ -8,7 +8,7 @@
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { type Maybe } from '@dereekb/util';
+import { compareStrings, errorMessageOf, type Maybe } from '@dereekb/util';
 import { llmCraftNoteParseErrorLines, parseLlmCraftNoteSet, type LlmCraftNoteFile, type LlmCraftNoteSet, type LlmCraftNoteTier, type LlmCraftSiteRegistry, type LlmSwallowSink } from '@dereekb/llm';
 import { DEFAULT_LLM_ENV_NAMES, firstLlmEnvEntry, type LlmEnvNames, type LlmEnvView } from './llm.node.env';
 
@@ -69,7 +69,7 @@ export function readLlmCraftNoteFiles(dir: string): ReadonlyArray<LlmCraftNoteFi
   return isDir
     ? readdirSync(dir)
         .filter((name) => name.endsWith('.md') && name !== LLM_CRAFT_NOTES_README)
-        .sort((a, b) => a.localeCompare(b))
+        .sort(compareStrings)
         .map((name) => ({ source: name, text: readFileSync(join(dir, name), 'utf8') }))
     : [];
 }
@@ -120,7 +120,7 @@ export function loadLlmCraftNotes(config: LoadLlmCraftNotesConfig): LlmCraftNote
     files = readLlmCraftNoteFiles(dir);
   } catch (error) {
     swallow?.(LLM_CRAFT_NOTES_FOLDER_READ_SWALLOW_SITE, error);
-    warn?.(`craft notes: could not read ${dir}: ${error instanceof Error ? error.message : String(error)}\n`);
+    warn?.(`craft notes: could not read ${dir}: ${errorMessageOf(error)}\n`);
   }
 
   const set = parseLlmCraftNoteSet({ files, tier, sites });

@@ -15,7 +15,7 @@
  * own base tier map ({@link ResolveLlmModelTiersConfig.base}).
  */
 
-import { type Maybe } from '@dereekb/util';
+import { KeyValueTypleValueFilter, type Maybe, mergeObjects } from '@dereekb/util';
 import { type LlmModelId, type LlmModelTierConfig, type LlmModelTierKey, type LlmModelTierValue } from './llm.value';
 
 /**
@@ -159,20 +159,9 @@ export interface LlmResolvedModelTiers {
  * @throws {Error} When the resolved default tier is not present in the merged map.
  */
 export function resolveLlmModelTiers(config: ResolveLlmModelTiersConfig): LlmResolvedModelTiers {
-  // Merge explicitly (not a spread) so an OPTIONAL key never poisons the complete map's value type with `undefined`.
-  const merged: Record<LlmModelTierKey, LlmModelTierValue> = {};
-
-  for (const layer of [config.base, config.modelTiers]) {
-    if (layer != null) {
-      for (const [key, value] of Object.entries(layer)) {
-        if (value != null) {
-          merged[key] = value;
-        }
-      }
-    }
-  }
-
-  const tiers: LlmModelTierMap = merged;
+  // mergeObjects with the NULL filter (not a spread): a nullish tier value never overwrites a base tier, and the leading
+  // `{}` is the complete (empty) map, so the result is a complete map whose values are never `undefined`.
+  const tiers: LlmModelTierMap = mergeObjects<LlmModelTierMap>([{}, config.base, config.modelTiers], KeyValueTypleValueFilter.NULL);
   const defaultTier = config.defaultTier ?? DEFAULT_LLM_MODEL_TIER;
   resolveLlmModelTier(tiers, defaultTier);
   return { tiers, defaultTier };

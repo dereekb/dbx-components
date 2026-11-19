@@ -425,7 +425,7 @@ export type LlmCacheMode =
 export interface LlmCompleteOptions {
   /**
    * An EXTERNAL cancellation signal (a user's stop). A transport combines it with its own per-call timeout
-   * (`AbortSignal.any`) so an in-flight call aborts the instant it fires. Omitted ⇒ only the transport's internal
+   * (`@dereekb/util` `makeTimeoutAbortSignal`) so an in-flight call aborts the instant it fires. Omitted ⇒ only the transport's internal
    * timeout applies.
    */
   readonly signal?: AbortSignal;

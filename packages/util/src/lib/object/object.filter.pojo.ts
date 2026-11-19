@@ -217,6 +217,10 @@ export function overrideInObjectFunctionFactory<T extends object>({ filter, copy
  * By default, `undefined` values within each source object are excluded from the merge,
  * meaning an `undefined` value will not overwrite a previously set value.
  *
+ * When the first element is a complete, non-null `T` and the filter only drops nullish values (`UNDEFINED` or `NULL`),
+ * the result is typed as a complete `T`: the "merge config over defaults" shape. Under `KeyValueTypleValueFilter.NULL`,
+ * a default whose value is `null` is dropped from the result too.
+ *
  * @param objects - Array of objects (or null/undefined) to merge together.
  * @param filter - Optional filter controlling which key/value pairs are included. Defaults to filtering out `undefined` values (`KeyValueTypleValueFilter.UNDEFINED`).
  * @returns A new object containing the merged result.
@@ -229,17 +233,30 @@ export function overrideInObjectFunctionFactory<T extends object>({ filter, copy
  * // undefined values in sources do not override:
  * const result2 = mergeObjects([{ a: 1 }, { a: undefined, b: 2 }]);
  * // result2 is { a: 1, b: 2 }
+ *
+ * // a complete default first returns a complete T (UNDEFINED or NULL filter only). Pass <T> explicitly so an
+ * // override whose type is narrower than Partial<T> (e.g. the rest of a destructure) cannot bind the Partial overload:
+ * const limits = mergeObjects<Limits>([DEFAULT_LIMITS, config.limits]);
+ * // limits is Limits; an explicit `undefined` in config.limits keeps the default
  * ```
  */
-export function mergeObjects<T extends object>(objects: Maybe<PartialWithUndefined<T>>[], filter?: FilterKeyValueTuplesInput<T>): Partial<T> {
+export function mergeObjects<T extends object>(objects: readonly [T, ...ReadonlyArray<Maybe<PartialWithUndefined<NoInfer<T>>>>], filter?: MergeObjectsCompleteFilter): T;
+export function mergeObjects<T extends object>(objects: ReadonlyArray<Maybe<PartialWithUndefined<T>>>, filter?: FilterKeyValueTuplesInput<T>): Partial<T>;
+export function mergeObjects<T extends object>(objects: ReadonlyArray<Maybe<PartialWithUndefined<T>>>, filter?: FilterKeyValueTuplesInput<T>): Partial<T> {
   return mergeObjectsFunction(filter)(objects);
 }
+
+/**
+ * The {@link mergeObjects} filters that only drop nullish values, so merging partial overrides over a complete default
+ * object keeps every default key.
+ */
+export type MergeObjectsCompleteFilter = KeyValueTypleValueFilter.UNDEFINED | KeyValueTypleValueFilter.NULL;
 
 /**
  * Function that merges an array of partial objects into a single object.
  * Objects are applied left-to-right, so the last item in the array has the highest priority.
  */
-export type MergeObjectsFunction<T extends object> = (objects: Maybe<PartialWithUndefined<T>>[]) => Partial<T>;
+export type MergeObjectsFunction<T extends object> = (objects: ReadonlyArray<Maybe<PartialWithUndefined<T>>>) => Partial<T>;
 
 /**
  * Creates a reusable {@link MergeObjectsFunction} with a pre-configured filter.
@@ -275,7 +292,7 @@ export function mergeObjectsFunction<T extends object>(filter?: FilterKeyValueTu
     dynamic: true // no need to use cache, as cache won't be used.
   });
 
-  return (objects: Maybe<PartialWithUndefined<T>>[]) => overrideFn(filterMaybeArrayValues(objects))({});
+  return (objects: ReadonlyArray<Maybe<PartialWithUndefined<T>>>) => overrideFn(filterMaybeArrayValues(objects))({});
 }
 
 // MARK: POJO

@@ -4,7 +4,7 @@
  * it and bind it.
  */
 
-import { type Maybe } from '@dereekb/util';
+import { errorMessageOf, type Maybe } from '@dereekb/util';
 import { type LlmCompleteOptions, type LlmCompletion, type LlmDecisionStrategy, type LlmModelId, type LlmRequest, type LlmStrategy, type LlmStrategyId, type LlmStrategyRegistry, makeLlmStrategyRegistry } from '@dereekb/llm';
 
 /**
@@ -151,7 +151,7 @@ export function decorateLlmLiveStrategyAuthFailures(config: DecorateLlmLiveStrat
         result = await strategy.complete(request, options);
       } catch (error) {
         if (isLlmAuthFailure(error)) {
-          const message = error instanceof Error ? error.message : String(error);
+          const message = errorMessageOf(error);
           const hint = selectEnv == null ? '' : ` (or repoint ${selectEnv} / ${apiKeyEnv})`;
           throw new Error(`${label} live spec: the '${providerId}' provider at ${baseUrl ?? 'its default endpoint'} REJECTED the credential from ${apiKeyEnv} while calling ${model ?? request.model ?? 'its default model'}. The provider said: ${message}. Rotate that key${hint}.`, { cause: error });
         }

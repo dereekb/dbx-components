@@ -24,14 +24,12 @@
  * on one is a 429 on the other and the retry posture above them must not drift.
  */
 
-import type { Maybe, Milliseconds } from '@dereekb/util';
+import { createKeyedRegistry, type KeyedRegistry, type Maybe, type Milliseconds } from '@dereekb/util';
 import { type LlmModelId, type LlmStrategyId } from '../model/llm.value';
 import { isAbortError, isRetryableLlmError } from '../strategy/llm.error';
 import type { LlmCredentialProbeOptions, LlmStrategy } from '../strategy/llm.strategy';
 import type { LlmStrategyHealth } from '../strategy/llm.strategy.health';
-import { llmStrategyKind } from '../strategy/llm.strategy.registry';
 import type { LlmUsage } from '../strategy/llm.usage';
-import { createKeyedRegistry, type KeyedRegistry } from '../util/keyed.registry';
 import type { LlmDecisionAnswers, LlmDecisionQuestions, LlmDecisionState } from './llm.decision.question';
 
 /**
@@ -154,17 +152,17 @@ export interface LlmDecisionStrategy {
 }
 
 /**
- * A {@link KeyedRegistry} of {@link LlmDecisionStrategy}, with an `'id'` primary index and a `'kind'` secondary
- * index.
+ * A {@link KeyedRegistry} of {@link LlmDecisionStrategy}, keyed by its instance `id`.
  */
 export type LlmDecisionStrategyRegistry = KeyedRegistry<LlmDecisionStrategy, LlmStrategyId>;
 
 /**
- * Build an {@link LlmDecisionStrategyRegistry} — the same two-index, last-wins shape as `makeLlmStrategyRegistry`,
- * so an id lookup and a "give me *an* instance of this transport" lookup read identically on both seams.
+ * Build an {@link LlmDecisionStrategyRegistry} — the same id-keyed, last-wins shape as `makeLlmStrategyRegistry`, so an
+ * id lookup reads identically on both seams.
  *
- * `getBy('kind', kind)` answers the LAST registered instance of that kind. A host whose default is "the first
- * configured strategy" reads `values()[0]` instead.
+ * "Every instance of a transport" is `values().filter((strategy) => llmStrategyKind(strategy) === kind)`, and its
+ * `.at(-1)` is the LAST registered instance of that kind. A host whose default is "the first configured strategy"
+ * reads `values()[0]` instead.
  *
  * @param seed - The strategies to seed the registry with.
  * @returns The strategy registry.
@@ -172,20 +170,13 @@ export type LlmDecisionStrategyRegistry = KeyedRegistry<LlmDecisionStrategy, Llm
  * @__NO_SIDE_EFFECTS__
  */
 export function makeLlmDecisionStrategyRegistry(seed: ReadonlyArray<LlmDecisionStrategy>): LlmDecisionStrategyRegistry {
-  return createKeyedRegistry<LlmDecisionStrategy, LlmStrategyId>({
-    indexes: [
-      { name: 'id', keyOf: (strategy) => strategy.id },
-      { name: 'kind', keyOf: llmStrategyKind }
-    ],
-    collision: 'replace',
-    seed
-  });
+  return createKeyedRegistry<LlmDecisionStrategy, LlmStrategyId>({ readKey: (strategy) => strategy.id, seed });
 }
 
 /**
  * The per-call wall clock a decision is given, on every transport.
  *
- * The strategy contract declares the default; each transport enforces it, merging `AbortSignal.timeout` with the
+ * The strategy contract declares the default; each transport enforces it, merging a `makeTimeoutAbortSignal` timeout with the
  * caller's signal. Generous against the documented ~114ms on purpose: a decision sits on the latency-critical
  * path, so what is worth tuning is the RETRY posture above it, not this ceiling. A call that has taken this long
  * is not slow, it is broken.

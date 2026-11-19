@@ -100,6 +100,13 @@ describe('makeLlmLiveLane()', () => {
       expect(logged).toEqual([]);
     });
 
+    it('should keep the default unlock name when names passes an explicit undefined (B5)', () => {
+      const { lane } = laneOf({ names: { unlock: undefined } });
+
+      expect(lane.isUnlocked(UNLOCKED)).toBe(true);
+      expect(lane.isUnlocked({ undefined: '1' })).toBe(false);
+    });
+
     it('should answer undefined on an unlocked keyless environment: the gate skips cleanly', () => {
       const { lane, logged } = laneOf();
       expect(lane.liveStrategyFromEnv(UNLOCKED)).toBeUndefined();

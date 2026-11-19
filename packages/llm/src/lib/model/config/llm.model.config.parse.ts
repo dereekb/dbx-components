@@ -8,7 +8,7 @@
  * provider it does not itself declare.
  */
 
-import { type Maybe } from '@dereekb/util';
+import { isPlainObject, type Maybe } from '@dereekb/util';
 import { parseLlmModelTierMap } from '../llm.model.tier.parse';
 import { isLlmReasoningOffEncoding, isLlmTokenLimitParam, LLM_REASONING_OFF_ENCODINGS, LLM_TOKEN_LIMIT_PARAMS } from '../llm.model.wire';
 import { type LlmModelTierKey, type LlmModelTierValue, type LlmStrategyId } from '../llm.value';
@@ -54,10 +54,6 @@ function assertLlmModelConfigKeys(input: AssertLlmModelConfigKeysInput): void {
       }
     }
   }
-}
-
-function isLlmModelConfigObject(value: unknown): value is Record<string, unknown> {
-  return value != null && typeof value === 'object' && !Array.isArray(value);
 }
 
 /**
@@ -171,7 +167,7 @@ export function parseLlmProviderEntry<X extends LlmModelConfigTypes = LlmModelCo
   const { label, value, schema } = config;
   const schemaLabel = schema.label;
 
-  if (!isLlmModelConfigObject(value)) {
+  if (!isPlainObject(value)) {
     throw new Error(`${schemaLabel}: ${label} must be a JSON object of { ${schema.providerKeys.join(', ')} }.`);
   }
 
@@ -219,7 +215,7 @@ export function parseLlmModelSettings<X extends LlmModelConfigTypes = LlmModelCo
   const { label, value, schema } = config;
   const schemaLabel = schema.label;
 
-  if (!isLlmModelConfigObject(value)) {
+  if (!isPlainObject(value)) {
     throw new Error(`${schemaLabel}: ${label} must be a JSON object of { ${schema.modelKeys.join(', ')} }.`);
   }
 
@@ -278,7 +274,7 @@ export function parseLlmModelSettings<X extends LlmModelConfigTypes = LlmModelCo
 export function parseLlmModelProfile<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes>(config: ParseLlmModelConfigEntryConfig<X>): LlmModelProfile {
   const { label, value, schema } = config;
 
-  if (isLlmModelConfigObject(value)) {
+  if (isPlainObject(value)) {
     assertLlmModelConfigKeys({ schemaLabel: schema.label, label, entry: value, retired: schema.retiredKeys.profile });
   }
 
@@ -305,7 +301,7 @@ export function flattenLlmModelProfile(profile: LlmModelProfile): Readonly<Recor
  * @returns `true` when the entry declares no transport, base URL or key var.
  */
 export function isLlmProviderPatchValue(value: unknown): boolean {
-  return isLlmModelConfigObject(value) && LLM_PROVIDER_IDENTITY_KEYS.every((key) => value[key] === undefined);
+  return isPlainObject(value) && LLM_PROVIDER_IDENTITY_KEYS.every((key) => value[key] === undefined);
 }
 
 /**
@@ -343,7 +339,7 @@ function parseLlmModelConfigProviders<X extends LlmModelConfigTypes>(input: Pars
   for (const [providerName, rawEntry] of Object.entries(rawProviders ?? {})) {
     const label = `${source} providers['${providerName}']`;
 
-    if (parseProviderPatch != null && isLlmModelConfigObject(rawEntry) && isLlmProviderPatchValue(rawEntry)) {
+    if (parseProviderPatch != null && isPlainObject(rawEntry) && isLlmProviderPatchValue(rawEntry)) {
       assertLlmModelConfigKeys({ schemaLabel, label, entry: rawEntry, retired: schema.retiredKeys.provider });
       providerPatches[providerName] = parseProviderPatch({ schemaLabel, label, entry: rawEntry });
     } else {
@@ -388,7 +384,7 @@ export function parseLlmModelConfigFile<X extends LlmModelConfigTypes = LlmModel
   const { raw, source, schema } = config;
   const schemaLabel = schema.label;
 
-  if (!isLlmModelConfigObject(raw)) {
+  if (!isPlainObject(raw)) {
     throw new Error(`${schemaLabel}: ${source} must contain a JSON object.`);
   }
 
@@ -403,20 +399,20 @@ export function parseLlmModelConfigFile<X extends LlmModelConfigTypes = LlmModel
 
   const rawProfiles = obj['profiles'];
 
-  if (rawProfiles !== undefined && !isLlmModelConfigObject(rawProfiles)) {
+  if (rawProfiles !== undefined && !isPlainObject(rawProfiles)) {
     throw new Error(`${schemaLabel}: ${source}.profiles must be a JSON object of { profileName: { tierKey: modelSlug } }.`);
   }
 
   const rawModels = obj['models'];
 
-  if (rawModels !== undefined && !isLlmModelConfigObject(rawModels)) {
+  if (rawModels !== undefined && !isPlainObject(rawModels)) {
     const modelShape = schema.modelKeys.map((key) => `${key}?`).join(', ');
     throw new Error(`${schemaLabel}: ${source}.models must be a JSON object of { modelSlug: { ${modelShape} } }.`);
   }
 
   const rawProviders = obj['providers'];
 
-  if (rawProviders !== undefined && !isLlmModelConfigObject(rawProviders)) {
+  if (rawProviders !== undefined && !isPlainObject(rawProviders)) {
     throw new Error(`${schemaLabel}: ${source}.providers must be a JSON object of { providerName: { transport?, baseUrl?, apiKeyEnv, … } }.`);
   }
 

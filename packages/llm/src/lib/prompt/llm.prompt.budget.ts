@@ -11,7 +11,7 @@
  * the report with {@link llmBudgetTrimSummaryOf} and records it its own way.
  */
 
-import { type Maybe } from '@dereekb/util';
+import { joinStrings, type Maybe } from '@dereekb/util';
 import { type LlmThreadTurn } from '../strategy/llm.strategy';
 import { joinLlmLiveContextBlocks, LLM_LIVE_CONTEXT_BLOCK_SEPARATOR, type LlmLiveContextBlock } from './llm.prompt.live.context';
 
@@ -250,11 +250,7 @@ export function budgetLlmLiveContextBlocks(config: BudgetLlmLiveContextBlocksCon
   const working: ReadonlyArray<WorkingBlock> = config.blocks.map((block) => ({ block, variantIndex: 0, dropped: false }));
   const trimmed: LlmBudgetTrimReport[] = [];
 
-  const join = (): string =>
-    working
-      .map(currentText)
-      .filter((text) => text.length > 0)
-      .join(LLM_LIVE_CONTEXT_BLOCK_SEPARATOR);
+  const join = (): string => joinStrings(working.map(currentText), LLM_LIVE_CONTEXT_BLOCK_SEPARATOR);
   const overBudget = (): boolean => reserved + estimateLlmTokens(join()) > budget;
 
   // The trim order — ascending priority (least important first), stable by array index; `required` blocks are

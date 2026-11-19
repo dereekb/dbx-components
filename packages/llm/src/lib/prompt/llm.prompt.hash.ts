@@ -1,10 +1,9 @@
 /**
- * The short prompt hash — the 16-hex-char `sha256Hex` prefix a call record stores in place of prompt bytes (census
+ * The short prompt hash — the 16-hex-char `@dereekb/util` `sha256HexPrefix` a call record stores in place of prompt bytes (census
  * rows, supplement rows, cache-prefix hashes). Tape keys use a different, 12-char prefix.
  */
 
-import { type HexString } from '@dereekb/util';
-import { sha256Hex } from '../util/sha256';
+import { type HexString, sha256HexPrefix } from '@dereekb/util';
 
 /**
  * The length of a recorded prompt hash, in hex characters.
@@ -24,5 +23,5 @@ export const LLM_PROMPT_CACHE_HASH_LENGTH = 16;
  * ```
  */
 export function llmPromptCacheHash(text: string): HexString {
-  return sha256Hex(text).slice(0, LLM_PROMPT_CACHE_HASH_LENGTH);
+  return sha256HexPrefix(text, LLM_PROMPT_CACHE_HASH_LENGTH);
 }

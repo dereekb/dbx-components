@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { makeLlmCallContext, noopLlmCallContext, type LlmCallProfile } from '../record/llm.call.context';
 import { LLM_FAILED_ATTEMPT_TEXT_MAX_LENGTH, LLM_TIMEOUT_FINISH_REASON, LLM_TRANSPORT_FINISH_REASON, llmDecodeFailureTailExcerpt } from '../record/llm.decode.failure';
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
-import { llmAttemptPhaseOf, llmCallPhasesOf, llmDecodeFailureAttemptOf, llmFailedAttemptOf, llmRepairedDecodeAttemptOf, llmTimeoutResultOf, llmTransportResultOf, roundLlmReplyRepairScore } from './llm.dispatch.outcome';
+import { LLM_REPLY_REPAIR_SCORE_PRECISION, llmAttemptPhaseOf, llmCallPhasesOf, llmDecodeFailureAttemptOf, llmFailedAttemptOf, llmRepairedDecodeAttemptOf, llmTimeoutResultOf, llmTransportResultOf } from './llm.dispatch.outcome';
+import { scoreLlmReplyJson } from '../reply/llm.reply.repair';
+import { roundToPrecision } from '@dereekb/util';
 
 function result(extra: Partial<LlmDispatchResult> = {}): LlmDispatchResult {
   return { text: '{"a":1', strategyId: 's', capability: 'cap', ...extra };
@@ -24,8 +26,13 @@ describe('llmDecodeFailureAttemptOf()', () => {
     expect(row).toEqual({ attempt: 2, class: 'schema-validation', excerpt: '{"a":1}', rawLength: 7, validatorError: 'bad', lever: 'budget', transportError: 't' });
   });
 
-  it('should round scores to 3 places', () => {
-    expect(roundLlmReplyRepairScore(0.123_456)).toBe(0.123);
+  it('should round a parse-error row score to LLM_REPLY_REPAIR_SCORE_PRECISION (3) places', () => {
+    const text = '{"a": [1, 2, {"b": "unterminated';
+    const row = llmDecodeFailureAttemptOf({ attempt: 1, failureClass: 'parse-error', result: result({ text }) });
+
+    expect(LLM_REPLY_REPAIR_SCORE_PRECISION).toBe(3);
+    expect(row.shape?.score).toBe(roundToPrecision(scoreLlmReplyJson(text).score, 3));
+    expect(String(row.shape?.score).split('.')[1]?.length ?? 0).toBeLessThanOrEqual(3);
   });
 });
 

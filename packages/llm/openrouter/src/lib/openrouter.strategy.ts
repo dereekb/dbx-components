@@ -16,7 +16,7 @@
  *
  * The library reads NO environment: the host resolves the key / base URL / model and passes them in.
  */
-import { type Maybe, type Milliseconds } from '@dereekb/util';
+import { errorMessageOf, isNotNullOrEmptyString, makeTimeoutAbortSignal, type Maybe, type Milliseconds, removeTrailingSlashes } from '@dereekb/util';
 import {
   llmUsageFrom,
   probeLlmCredentialEndpoint,
@@ -152,17 +152,6 @@ export interface LlmOpenRouterStrategyConfig {
    * is built (an injected client / runner ignores it). Only set it for a browser app that holds the user's OWN key.
    */
   readonly dangerouslyAllowBrowser?: boolean;
-}
-
-/**
- * The message of an unknown thrown value — for the never-throw {@link LlmStrategy.healthCheck} to report a
- * client-construction failure as an `'error'` issue rather than propagate it.
- *
- * @param error - The thrown value.
- * @returns The message string.
- */
-function errorText(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
 }
 
 /**
@@ -303,7 +292,7 @@ export function makeLlmOpenRouterStrategy(config: LlmOpenRouterStrategyConfig = 
     if (client == null) {
       const apiKey = config.apiKey;
 
-      if (apiKey == null || apiKey === '') {
+      if (!isNotNullOrEmptyString(apiKey)) {
         // Backstop — a host that gates startup with verifyLlmStrategies + healthCheck fails LOUD at bootstrap; this
         // still fires for a host that does not (or a strategy registered after bootstrap) on the first real call.
         throw new Error(`llm openrouter strategy '${id}': no apiKey configured and no client/runner injected (the host must supply apiKey, inject a client/runner, or gate startup via verifyLlmStrategies).`);
@@ -345,7 +334,7 @@ export function makeLlmOpenRouterStrategy(config: LlmOpenRouterStrategyConfig = 
         // (below) needs no model.
         const sentModel = request.model ?? config.defaultModel;
 
-        if (sentModel == null || sentModel === '') {
+        if (!isNotNullOrEmptyString(sentModel)) {
           throw new Error(`llm openrouter strategy '${id}': no model configured; set defaultModel on the strategy or pass request.model. There is no built-in model default.`);
         }
 
@@ -382,10 +371,9 @@ export function makeLlmOpenRouterStrategy(config: LlmOpenRouterStrategyConfig = 
         // re-tried by the SDK.
         const callTimeoutMs = llmOpenRouterCallTimeoutMs(timeoutMs, body.max_tokens ?? maxOutputTokens);
         // The EXTERNAL cancellation signal, when threaded, is OR-combined with the timeout: whichever fires first
-        // aborts the in-flight call. `AbortSignal.any` also returns an already-aborted signal if cancellation latched
+        // aborts the in-flight call. `makeTimeoutAbortSignal` also returns an already-aborted signal if cancellation latched
         // before the call, so the call rejects immediately.
-        const timeoutSignal = AbortSignal.timeout(callTimeoutMs);
-        const callSignal = options?.signal == null ? timeoutSignal : AbortSignal.any([timeoutSignal, options.signal]);
+        const callSignal = makeTimeoutAbortSignal({ timeout: callTimeoutMs, signal: options?.signal });
         const start = Date.now();
         const completion = await client.chat.completions.create(body, { signal: callSignal, timeout: callTimeoutMs });
         latencyMs = Date.now() - start;
@@ -436,7 +424,7 @@ export function makeLlmOpenRouterStrategy(config: LlmOpenRouterStrategyConfig = 
 
       const apiKey = config.apiKey;
 
-      if (apiKey == null || apiKey === '') {
+      if (!isNotNullOrEmptyString(apiKey)) {
         return { ready: false, issues: [{ severity: 'error', message: `no apiKey configured and no client/runner injected` }] };
       }
 
@@ -449,7 +437,7 @@ export function makeLlmOpenRouterStrategy(config: LlmOpenRouterStrategyConfig = 
         health = { ready: true, issues: [] };
       } catch (error) {
         // swallow site 'llm/openrouter-strategy.client' — the verdict carries the failure.
-        health = { ready: false, issues: [{ severity: 'error', message: `openrouter client could not be constructed: ${errorText(error)}` }] };
+        health = { ready: false, issues: [{ severity: 'error', message: `openrouter client could not be constructed: ${errorMessageOf(error)}` }] };
       }
 
       return health;
@@ -465,7 +453,7 @@ export function makeLlmOpenRouterStrategy(config: LlmOpenRouterStrategyConfig = 
 
       const apiKey = config.apiKey;
 
-      if (apiKey == null || apiKey === '') {
+      if (!isNotNullOrEmptyString(apiKey)) {
         return { ready: false, issues: [{ severity: 'error', message: `no apiKey configured and no client/runner injected` }] };
       }
 
@@ -478,7 +466,7 @@ export function makeLlmOpenRouterStrategy(config: LlmOpenRouterStrategyConfig = 
       // the default `'error'` policy rather than the openai transport's lenient one.
       return probeLlmCredentialEndpoint({
         strategyId: id,
-        url: `${baseUrl.replace(/\/+$/, '')}/key`,
+        url: `${removeTrailingSlashes(baseUrl)}/key`,
         apiKey,
         ...(probeFetch == null ? {} : { fetch: probeFetch }),
         ...(options?.signal == null ? {} : { signal: options.signal })

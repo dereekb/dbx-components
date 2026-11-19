@@ -4,7 +4,7 @@
  * timeout / transport envelopes a failed send is recorded as.
  */
 
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type NumberPrecision, roundToPrecision } from '@dereekb/util';
 import { type LlmStrategyId } from '../model/llm.value';
 import { type LlmCallContext, type LlmCallProfile } from '../record/llm.call.context';
 import { type LlmCallAttemptPhase, type LlmCallAttemptRetry, type LlmCallFailedAttempt, type LlmCallPhases } from '../record/llm.call.record';
@@ -54,14 +54,9 @@ export interface LlmDispatchOutcome {
 }
 
 /**
- * A repair score rounded to 3 places — bounded bytes on every row that carries one.
- *
- * @param score - The scorer's score.
- * @returns The rounded score.
+ * The decimal places a repair score is rounded to (`roundToPrecision`) — bounded bytes on every row that carries one.
  */
-export function roundLlmReplyRepairScore(score: number): number {
-  return Math.round(score * 1000) / 1000;
-}
+export const LLM_REPLY_REPAIR_SCORE_PRECISION: NumberPrecision = 3;
 
 /**
  * The inputs of {@link llmDecodeFailureAttemptOf}.
@@ -115,7 +110,7 @@ export function llmDecodeFailureAttemptOf(config: LlmDecodeFailureAttemptConfig)
     excerpt: llmDecodeFailureExcerpt(result.text),
     ...(tailExcerpt == null ? {} : { tailExcerpt }),
     rawLength: result.text.length,
-    ...(shape == null ? {} : { shape: { verdict: shape.verdict, score: roundLlmReplyRepairScore(shape.score) } }),
+    ...(shape == null ? {} : { shape: { verdict: shape.verdict, score: roundToPrecision(shape.score, LLM_REPLY_REPAIR_SCORE_PRECISION) } }),
     ...(result.finishReason == null ? {} : { finishReason: result.finishReason }),
     ...(result.usage?.completionTokens == null ? {} : { completionTokens: result.usage.completionTokens }),
     ...(result.latencyMs == null ? {} : { latencyMs: result.latencyMs }),

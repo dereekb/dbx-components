@@ -1,6 +1,6 @@
 /**
  * The **adapter registry** — every {@link LlmAdapter} a host registered, in ONE registry keyed `facet:kind` on the
- * shared {@link KeyedRegistry} primitive, so a host registers a provider entry's adapters in one call and gets
+ * `@dereekb/util` {@link KeyedRegistry} primitive, so a host registers a provider entry's adapters in one call and gets
  * `register` / `unregister` / `values` for free.
  *
  * Lookups are typed per facet ({@link llmAdapterOf}, {@link resolveLlmAdapter}), and the fail-loud one names the kinds
@@ -8,8 +8,7 @@
  * silent fallback.
  */
 
-import { type Maybe } from '@dereekb/util';
-import { createKeyedRegistry, type KeyedRegistry } from '../util/keyed.registry';
+import { createKeyedRegistry, type KeyedRegistry, type Maybe } from '@dereekb/util';
 import { type LlmModelConfigSchemaConfig } from '../model/config/llm.model.config.schema';
 import { type LlmAdapter, type LlmAdapterFacet, type LlmAdapterKind, type LlmAdapterOf } from './llm.adapter';
 
@@ -34,7 +33,7 @@ export function llmAdapterKey(adapter: Pick<LlmAdapter, 'facet' | 'kind'>): LlmA
 }
 
 /**
- * Build an {@link LlmAdapterRegistry} on the shared {@link createKeyedRegistry} primitive.
+ * Build an {@link LlmAdapterRegistry} on the `@dereekb/util` {@link createKeyedRegistry} primitive.
  *
  * Collisions THROW: two provider entries claiming one transport would otherwise route it to whichever registered last.
  * Re-registering the same adapter instance stays an idempotent no-op.
@@ -47,10 +46,9 @@ export function llmAdapterKey(adapter: Pick<LlmAdapter, 'facet' | 'kind'>): LlmA
  */
 export function makeLlmAdapterRegistry(seed: ReadonlyArray<LlmAdapter>): LlmAdapterRegistry {
   return createKeyedRegistry<LlmAdapter, LlmAdapterKey>({
-    indexes: [{ name: 'key', keyOf: llmAdapterKey }],
-    collision: 'throw',
-    seed,
-    collisionMessage: ({ value }) => `a ${value.facet} adapter is already registered for '${value.kind}'; register each facet and kind once.`
+    readKey: llmAdapterKey,
+    throwOnDuplicateKey: (_key, value) => new Error(`a ${value.facet} adapter is already registered for '${value.kind}'; register each facet and kind once.`),
+    seed
   });
 }
 

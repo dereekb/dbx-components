@@ -13,7 +13,7 @@
  * derives from the attempt-1 request, so a resolved set never changes mid-dispatch.
  */
 
-import { type Maybe, type PromiseOrValue } from '@dereekb/util';
+import { type Maybe, multiValueMapBuilder, type PromiseOrValue } from '@dereekb/util';
 import { type LlmCapabilityDescriptor } from '../capability/llm.capability.descriptor';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { type LlmModelId } from '../model/llm.value';
@@ -353,19 +353,8 @@ export function mergeLlmLiveContextContributions(config: MergeLlmLiveContextCont
     const keys = new Set(blocks.map((block) => block.key));
     const front: LlmLiveContextBlock[] = [];
     const end: LlmLiveContextBlock[] = [];
-    const after = new Map<string, LlmLiveContextBlock[]>();
-    const before = new Map<string, LlmLiveContextBlock[]>();
-
-    /**
-     * Push a block onto a keyed anchor list.
-     *
-     * @param map - The anchor lists.
-     * @param key - The anchor key.
-     * @param block - The block.
-     */
-    const pushAt = (map: Map<string, LlmLiveContextBlock[]>, key: string, block: LlmLiveContextBlock): void => {
-      map.set(key, [...(map.get(key) ?? []), block]);
-    };
+    const after = multiValueMapBuilder<LlmLiveContextBlock, string>();
+    const before = multiValueMapBuilder<LlmLiveContextBlock, string>();
 
     /**
      * The first key an anchor names that the capability rendered.
@@ -387,7 +376,7 @@ export function mergeLlmLiveContextContributions(config: MergeLlmLiveContextCont
         if (key == null) {
           front.push(block);
         } else {
-          pushAt(after, key, block);
+          after.add(key, block);
         }
       } else {
         const key = renderedKeyOf(anchor.before);
@@ -395,7 +384,7 @@ export function mergeLlmLiveContextContributions(config: MergeLlmLiveContextCont
         if (key == null) {
           end.push(block);
         } else {
-          pushAt(before, key, block);
+          before.add(key, block);
         }
       }
     }
@@ -406,7 +395,7 @@ export function mergeLlmLiveContextContributions(config: MergeLlmLiveContextCont
     for (const block of blocks) {
       const first = !placedAnchors.has(block.key);
       placedAnchors.add(block.key);
-      placed.push(...(first ? (before.get(block.key) ?? []) : []), block, ...(first ? (after.get(block.key) ?? []) : []));
+      placed.push(...(first ? before.get(block.key) : []), block, ...(first ? after.get(block.key) : []));
     }
 
     merged = [...placed, ...end];

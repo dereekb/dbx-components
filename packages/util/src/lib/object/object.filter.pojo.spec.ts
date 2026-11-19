@@ -130,6 +130,42 @@ describe('mergeObjects', () => {
     expect(result[2]).toBeDefined();
     expect(result[2]).toBe(2);
   });
+
+  describe('with a complete first object', () => {
+    interface TestLimits {
+      readonly a: number;
+      readonly b: number;
+    }
+
+    const defaults: TestLimits = { a: 1, b: 2 };
+
+    it('should keep a default when an override is explicitly undefined', () => {
+      const override: Partial<TestLimits> = { a: undefined };
+      const result: TestLimits = mergeObjects<TestLimits>([defaults, override]);
+      expect(result).toEqual({ a: 1, b: 2 });
+    });
+
+    it('should apply overrides over the defaults', () => {
+      const result: TestLimits = mergeObjects<TestLimits>([defaults, { b: 5 }, undefined]);
+      expect(result).toEqual({ a: 1, b: 5 });
+    });
+
+    it('should drop a null override with the NULL filter', () => {
+      const result = mergeObjects<{ a: Maybe<number> }>([{ a: 1 }, { a: null }], KeyValueTypleValueFilter.NULL);
+      expect(result).toEqual({ a: 1 });
+    });
+
+    it('should keep a null override with the UNDEFINED filter', () => {
+      const result = mergeObjects<{ a: Maybe<number> }>([{ a: 1 }, { a: null }], KeyValueTypleValueFilter.UNDEFINED);
+      expect(result).toEqual({ a: null });
+    });
+
+    it('should accept a readonly input array', () => {
+      const inputs: readonly [TestLimits, Partial<TestLimits>] = [defaults, { a: 3 }];
+      const result: TestLimits = mergeObjects<TestLimits>(inputs);
+      expect(result).toEqual({ a: 3, b: 2 });
+    });
+  });
 });
 
 describe('findPOJOKeys()', () => {

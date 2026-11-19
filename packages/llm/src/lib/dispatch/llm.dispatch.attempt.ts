@@ -3,7 +3,7 @@
  * the reply-repair lane on a degenerate JSON reading) and validate (the request's lever validator).
  */
 
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, roundToPrecision } from '@dereekb/util';
 import { LLM_REPLY_REPAIR_FAST_FIX_SWALLOW_SITE } from '../capability/llm.capability.repair.reply.json';
 import { type LlmCallContext } from '../record/llm.call.context';
 import { isLlmCleanStopFinish } from '../record/llm.decode.failure';
@@ -17,7 +17,7 @@ import { type LlmSwallowSink } from '../record/llm.swallow';
 import { isAbortError, isRetryableLlmError, llmErrorSummaryOf } from '../strategy/llm.error';
 import { type LlmDispatchResult, type LlmReplyRepairSummary, type LlmRequest, type LlmStrategy } from '../strategy/llm.strategy';
 import { type LlmDispatchPauseSignal, parkLlmDispatchWhilePaused } from './llm.dispatch.control';
-import { llmTimeoutResultOf, llmTransportResultOf, roundLlmReplyRepairScore } from './llm.dispatch.outcome';
+import { LLM_REPLY_REPAIR_SCORE_PRECISION, llmTimeoutResultOf, llmTransportResultOf } from './llm.dispatch.outcome';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
 
 /**
@@ -357,7 +357,7 @@ async function runLlmReplyFastFixTier(config: RunLlmReplyRepairLaneConfig & { re
   }
 
   if (fixed.kind === 'fixed') {
-    const score = roundLlmReplyRepairScore(shape.score);
+    const score = roundToPrecision(shape.score, LLM_REPLY_REPAIR_SCORE_PRECISION);
     const summary: LlmReplyRepairSummary = { tier: 'fast-fix', attempt, verdict: shape.verdict, score, ...(fixed.meta == null ? {} : { meta: fixed.meta }) };
     const result = withRepairedLlmReply(served, summary, fixed.text);
     attemptContext.diag({ level: 'info', code: 'reply-repaired', fields: { capability, attempt, tier: 'fast-fix', verdict: shape.verdict, score }, message: 'mangled JSON reply repaired by one fast-fix call before any re-ask' });
@@ -392,7 +392,7 @@ export async function runLlmReplyRepairLane(config: RunLlmReplyRepairLaneConfig)
   const fastFixLimits = config.fastFixLimits ?? DEFAULT_LLM_REPLY_FAST_FIX_LIMITS;
   const { shape, repaired } = repairLlmReplyJson(served.text);
   const capability = served.capability;
-  const score = roundLlmReplyRepairScore(shape.score);
+  const score = roundToPrecision(shape.score, LLM_REPLY_REPAIR_SCORE_PRECISION);
   let refusal: Maybe<LlmReplyRepairRefusal>;
   let outcome: LlmReplyRepairLaneResult = { fastFixCalled: false };
 

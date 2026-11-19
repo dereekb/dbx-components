@@ -104,7 +104,8 @@ describe('@dereekb/llm/openrouter isolation', () => {
     expect(sources.map((file) => file.path)).toEqual(expect.arrayContaining(['index.ts']));
   });
 
-  it('should load without evaluating an SDK', async () => {
+  // The first import transforms this entry and the whole @dereekb/llm root entry from source, which can outrun the 5s default under a parallel run.
+  it('should load without evaluating an SDK', { timeout: 30_000 }, async () => {
     await import('./index');
     expect(probe).toEqual({ openai: false, openRouterSdk: false });
   });

@@ -259,6 +259,13 @@ describe('makeLlmDispatcher() reply repair', () => {
       expect(reasonsOf(lowScore.diags, 'reply-repair-refused')).toEqual(['low-score']);
     });
 
+    it('should keep the default maxPerDispatch (1) when fastFixLimits passes an explicit undefined (B5)', async () => {
+      const { fixerCalls, diags } = await run({ subject: [MANGLED], fixer: ['{"say":"changed words entirely"}'], replyFastFix: makeLlmReplyFastFixer(), fastFixLimits: { maxPerDispatch: undefined } });
+
+      expect(fixerCalls).toHaveLength(1);
+      expect(reasonsOf(diags, 'reply-repair-refused')[0]).toBe('fast-fix-spent');
+    });
+
     it('should never bind on a line call or a schema-less call', async () => {
       const line = await run({ subject: [MANGLED], replyFastFix: makeLlmReplyFastFixer(), request: { capability: 'LineCap', maxAttempts: 1 } });
       expect(line.fixerCalls).toHaveLength(0);

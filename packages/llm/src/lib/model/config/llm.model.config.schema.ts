@@ -15,7 +15,7 @@
  * provider / model keys, provider kinds that serve no completions, and patch entries.
  */
 
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, unique } from '@dereekb/util';
 import { type LlmProviderStatusProviderId } from '../../strategy/llm.provider.status';
 import { type LlmPartialModelTierMap } from '../llm.model.tier';
 import { type LlmReasoningOffEncoding, type LlmTokenLimitParam } from '../llm.model.wire';
@@ -473,7 +473,7 @@ export interface LlmModelConfigSchema<X extends LlmModelConfigTypes = LlmModelCo
 }
 
 function uniqueLlmModelConfigList<T extends string>(values: Maybe<ReadonlyArray<T>>): T[] {
-  return Array.from(new Set(values ?? []));
+  return unique(values ?? []);
 }
 
 function withLlmProviderFacetNone<T extends string>(values: ReadonlyArray<T>): T[] {

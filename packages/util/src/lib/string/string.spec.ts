@@ -17,6 +17,7 @@ import {
   splitJoinRemainder,
   stringSplitJoinInstance
 } from './string';
+import { type Maybe } from '../value/maybe.type';
 
 describe('nameToInitials()', () => {
   it('should use the first letter of the first two words for a multi-word name', () => {
@@ -85,6 +86,11 @@ describe('nameToInitialsFactory()', () => {
 });
 
 describe('joinStrings()', () => {
+  it('should accept a readonly input array', () => {
+    const input: ReadonlyArray<Maybe<string>> = ['a', null, '', 'b'];
+    expect(joinStrings(input, '-')).toBe('a-b');
+  });
+
   it('should join the strings', () => {
     const values = ['a', 'b', 'c'];
     const string = values.join(',');

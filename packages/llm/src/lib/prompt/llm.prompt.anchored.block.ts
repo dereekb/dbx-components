@@ -9,7 +9,7 @@
  * volatile blocks.
  */
 
-import { type Maybe } from '@dereekb/util';
+import { isNotBlankString, type Maybe } from '@dereekb/util';
 import { type LlmCapabilityDescriptor } from '../capability/llm.capability.descriptor';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { type LlmPromptLiveContextSegmentOrigin } from './llm.prompt.assembly';
@@ -109,7 +109,7 @@ export function llmAnchoredBlockPromptContributor<R extends LlmDispatchRequest =
       const block = blockOf(input);
       let contributions: ReadonlyArray<LlmPromptContribution> = [];
 
-      if (block != null && block.text.trim() !== '') {
+      if (block != null && isNotBlankString(block.text)) {
         const origin: LlmPromptLiveContextSegmentOrigin = { kind: 'live-context', capability: input.request.capability, block: key };
         contributions = [{ contributor: id, slot, id: slot, key, text: block.text, origin, reason, ...(block.anchor == null ? {} : { anchor: block.anchor }), ...(block.volatile == null ? {} : { volatile: block.volatile }) }];
       }

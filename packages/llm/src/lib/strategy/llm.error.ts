@@ -7,7 +7,7 @@
  * so it needs no SDK import and works on whatever a strategy throws.
  */
 
-import type { Maybe } from '@dereekb/util';
+import { joinStrings, type Maybe } from '@dereekb/util';
 
 /**
  * Every constructor NAME on a thrown value's prototype chain, leaf first — the STRUCTURAL identity the `openai`
@@ -92,7 +92,7 @@ function isRawFetchTransportError(error: object): boolean {
 }
 
 /**
- * Whether a thrown value is an ABORT / timeout error — the per-request {@link AbortSignal.timeout} firing (the SDK's
+ * Whether a thrown value is an ABORT / timeout error — the per-request timeout signal (`makeTimeoutAbortSignal`) firing (the SDK's
  * `APIUserAbortError` / `APIConnectionTimeoutError`, or the raw `AbortError` / `TimeoutError` DOMException). A
  * dispatcher classifies a match as a retryable `'timeout'` decode failure; any other throw propagates unchanged.
  *
@@ -178,7 +178,7 @@ export function llmErrorSummaryOf(error: unknown): string {
     const { status, message } = error as { readonly status?: unknown; readonly message?: unknown };
     const [leafClass] = errorClassNames(error);
     const statusText = typeof status === 'number' ? String(status) : undefined;
-    const head = [leafClass ?? 'Error', statusText].filter((part) => part != null).join(' ');
+    const head = joinStrings([leafClass ?? 'Error', statusText], ' ');
     // The SDK's `APIError.makeMessage` already prefixes `message` with the status (`"429 Rate limit exceeded"`);
     // it is in the head, so it is not repeated in the tail.
     const rawText = typeof message === 'string' ? message.trim() : '';

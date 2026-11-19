@@ -8,7 +8,7 @@
  * callback, for an authoring check — never on the dispatch path.
  */
 
-import { type Maybe } from '@dereekb/util';
+import { KeyValueTypleValueFilter, type Maybe, mergeObjects } from '@dereekb/util';
 import { DEFAULT_LLM_CRAFT_NOTE_MAX_BYTES, type LlmCraftNote } from './llm.craft.note';
 import { type LlmCraftSiteKind } from './llm.craft.identity';
 
@@ -127,12 +127,7 @@ export interface LlmCraftSiteRegistry {
  * @returns The resolved limits.
  */
 function resolveLlmCraftSiteLimits(site: Maybe<Partial<LlmCraftSiteLimits>>, registry: Maybe<Partial<LlmCraftSiteLimits>>): LlmCraftSiteLimits {
-  return {
-    maxNotes: site?.maxNotes ?? registry?.maxNotes ?? DEFAULT_LLM_CRAFT_SITE_LIMITS.maxNotes,
-    maxBytes: site?.maxBytes ?? registry?.maxBytes ?? DEFAULT_LLM_CRAFT_SITE_LIMITS.maxBytes,
-    judgeMax: site?.judgeMax ?? registry?.judgeMax ?? DEFAULT_LLM_CRAFT_SITE_LIMITS.judgeMax,
-    judgeInputMax: site?.judgeInputMax ?? registry?.judgeInputMax ?? DEFAULT_LLM_CRAFT_SITE_LIMITS.judgeInputMax
-  };
+  return mergeObjects<LlmCraftSiteLimits>([DEFAULT_LLM_CRAFT_SITE_LIMITS, registry, site], KeyValueTypleValueFilter.NULL);
 }
 
 /**

@@ -14,7 +14,7 @@
  * run can reach with {@link llmReachableProviderGapsOf}.
  */
 
-import { type Maybe } from '@dereekb/util';
+import { concatArraysUnique, type Maybe } from '@dereekb/util';
 import {
   isLlmTokenLimitParam,
   llmAdapterOf,
@@ -253,7 +253,7 @@ export function llmReachableModelsOf(config: LlmReachableModelsOfConfig): Readon
   const tierValues = [...Object.values(config.modelTiers ?? {}), ...Object.values(config.routing?.tiers ?? {})];
   const fromTiers = tierValues.flatMap((value) => (value == null ? [] : [llmTierModelOf(value)]));
   const fromRules = (config.routing?.rules ?? []).flatMap((rule) => (rule.model == null ? [] : [rule.model]));
-  return Array.from(new Set([...fromTiers, ...fromRules]));
+  return concatArraysUnique(fromTiers, fromRules);
 }
 
 /**

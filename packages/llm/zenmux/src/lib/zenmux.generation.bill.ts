@@ -14,7 +14,7 @@
  */
 
 import { llmCostOf, llmProviderErrorMessage, type LlmCallBill, type LlmCallBillRead, type LlmCallBillReader, type LlmCallBillReadOptions, type LlmCredentialProbeFetch, type LlmCredentialProbeResponse } from '@dereekb/llm';
-import { type Maybe, type Milliseconds } from '@dereekb/util';
+import { errorMessageOf, makeTimeoutAbortSignal, type Maybe, type Milliseconds, removeTrailingSlashes } from '@dereekb/util';
 import { DEFAULT_ZENMUX_BASE_URL, ZENMUX_PROVIDER_ID } from './zenmux.constants';
 
 /**
@@ -88,7 +88,7 @@ function zenmuxBillReadOf(generationId: string, envelope: ZenmuxGenerationEnvelo
  * @__NO_SIDE_EFFECTS__
  */
 export function makeZenmuxGenerationBillReader(config: ZenmuxGenerationBillReaderConfig): LlmCallBillReader {
-  const baseUrl = (config.baseUrl ?? DEFAULT_ZENMUX_BASE_URL).replace(/\/+$/, '');
+  const baseUrl = removeTrailingSlashes(config.baseUrl ?? DEFAULT_ZENMUX_BASE_URL);
   const apiKey = config.apiKey.trim();
   const timeoutMs = config.timeoutMs ?? DEFAULT_ZENMUX_BILL_READ_TIMEOUT_MS;
   const fetchImpl: LlmCredentialProbeFetch = config.fetch ?? ((url, init) => fetch(url, init) as unknown as Promise<LlmCredentialProbeResponse>);
@@ -100,9 +100,8 @@ export function makeZenmuxGenerationBillReader(config: ZenmuxGenerationBillReade
       let read: LlmCallBillRead;
 
       try {
-        // Built INSIDE the try: an engine without `AbortSignal.timeout` / `AbortSignal.any` reads as a failed bill, not a throw.
-        const timeoutSignal = AbortSignal.timeout(timeoutMs);
-        const signal = options?.signal == null ? timeoutSignal : AbortSignal.any([timeoutSignal, options.signal]);
+        // Built INSIDE the try: should the runtime's abort-signal API throw, it reads as a failed bill, not a throw.
+        const signal = makeTimeoutAbortSignal({ timeout: timeoutMs, signal: options?.signal });
         const response = await fetchImpl(url, { method: 'GET', headers: { Authorization: `Bearer ${apiKey}` }, signal });
         const body = await response.text();
 
@@ -128,7 +127,7 @@ export function makeZenmuxGenerationBillReader(config: ZenmuxGenerationBillReade
         }
       } catch (error) {
         // Swallow site `llm/zenmux-generation-bill.transport`. An unreachable bill endpoint is a FAILED read, never a throw.
-        read = { status: 'failed', generationId, detail: error instanceof Error ? error.message : String(error) };
+        read = { status: 'failed', generationId, detail: errorMessageOf(error) };
       }
 
       return read;

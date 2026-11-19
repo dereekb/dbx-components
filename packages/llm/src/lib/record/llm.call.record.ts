@@ -227,7 +227,7 @@ export interface LlmCallPhases {
    */
   readonly cachePrefixChars?: number;
   /**
-   * The HASH of that stable cache prefix (the 16-hex-char `sha256Hex` prefix), when the call was segmented — the
+   * The HASH of that stable cache prefix (the 16-hex-char `sha256HexPrefix` from `@dereekb/util`), when the call was segmented — the
    * identity two consecutive records of the same call site are compared on. Stamped on EVERY segmented dispatch, not
    * only on a changed one: a reader diffing two call records must be able to conclude "unchanged" from the record
    * rather than from the ABSENCE of a breadcrumb (which a level gate can swallow).
@@ -259,7 +259,7 @@ export interface LlmCallSupplement {
    */
   readonly key?: string;
   /**
-   * The 16-hex-char `sha256Hex` prefix of the contributed bytes (separator excluded).
+   * The 16-hex-char `sha256HexPrefix` (`@dereekb/util`) of the contributed bytes (separator excluded).
    */
   readonly hash: string;
   /**

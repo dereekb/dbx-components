@@ -174,3 +174,47 @@ export function errorMessageContainsStringFunction(target: string): ErrorMessage
 export function messageFromError(input: Maybe<ErrorInput | string>): Maybe<string> {
   return (typeof input === 'object' ? (input as ReadableError).message : input) ?? (input as Maybe<string>);
 }
+
+/**
+ * Reads a human-readable message from any thrown value, never throwing.
+ *
+ * - An `Error` (including `DOMException`) yields its `message`.
+ * - Any other non-null object whose `message` is a string (a {@link ReadableError}-like or cross-realm error) yields that message.
+ * - Anything else yields `String(error)`; when `String()` itself throws (a null-prototype object or a throwing `toString`),
+ *   it falls back to `Object.prototype.toString.call(error)`.
+ *
+ * This is the `unknown → string` sibling of {@link messageFromError}, for catch blocks whose caught value is `unknown`.
+ *
+ * @param error - The caught value to read a message from.
+ * @returns The message text; never null or undefined.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory error
+ * @dbxUtilTags error, message, unknown, catch, text, string
+ * @dbxUtilRelated message-from-error
+ *
+ * @example
+ * ```ts
+ * errorMessageOf(new Error('boom')); // 'boom'
+ * errorMessageOf({ message: 'readable' }); // 'readable'
+ * errorMessageOf('plain'); // 'plain'
+ * errorMessageOf(undefined); // 'undefined'
+ * ```
+ */
+export function errorMessageOf(error: unknown): string {
+  let message: string;
+
+  if (error instanceof Error) {
+    message = error.message;
+  } else if (error != null && typeof error === 'object' && typeof (error as { message?: unknown }).message === 'string') {
+    message = (error as { message: string }).message;
+  } else {
+    try {
+      message = String(error);
+    } catch {
+      message = Object.prototype.toString.call(error);
+    }
+  }
+
+  return message;
+}

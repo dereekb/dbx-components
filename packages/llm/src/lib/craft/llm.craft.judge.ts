@@ -14,7 +14,7 @@
  *   record. A fault or a transport throw is swallowed ({@link LLM_CRAFT_JUDGE_DECIDE_SWALLOW_SITE}): nothing answered.
  */
 
-import { type Maybe } from '@dereekb/util';
+import { isNotBlankString, type Maybe } from '@dereekb/util';
 import { defineLlmDecision } from '../decision/llm.decision.descriptor';
 import { llmNoulQuestion, type LlmDecisionAnswer, type LlmDecisionAnswers, type LlmDecisionQuestions } from '../decision/llm.decision.question';
 import { type LlmDispatcher } from '../dispatch/llm.dispatcher';
@@ -90,7 +90,7 @@ export function llmCraftJudgeInputOf(config: LlmCraftJudgeInputOfConfig): Maybe<
 
   if (site != null) {
     for (const note of request.asked) {
-      const present = llmCraftAskInputsOf(note.ask ?? '', [site]).filter((name) => (request.inputs[name] ?? '').trim() !== '');
+      const present = llmCraftAskInputsOf(note.ask ?? '', [site]).filter((name) => isNotBlankString(request.inputs[name]));
 
       if (note.ask != null && present.length > 0) {
         notes.push({ id: note.id, ask: note.ask, floor: note.floor });

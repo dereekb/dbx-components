@@ -23,7 +23,7 @@
  * Only `json-envelope` declines.
  */
 
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, stripMarkdownCodeFence } from '@dereekb/util';
 import { type LlmSwallowSink, type LlmSwallowSiteId, NOOP_LLM_SWALLOW_SINK } from '../record/llm.swallow';
 
 /**
@@ -350,18 +350,6 @@ export function llmReplyRationaleOf(text: string, config?: Maybe<LlmReplyReadCon
 }
 
 /**
- * Strip a single wrapping markdown code fence (with an optional language tag) from a reply — a model occasionally wraps
- * a bare-prose reply in a fence despite the `line` contract.
- *
- * @param raw - The raw reply text.
- * @returns The reply with one surrounding fence removed, or the original text unchanged.
- */
-function stripCodeFence(raw: string): string {
-  const fenced = raw.trim().match(/^```[^\n]*\n([\s\S]*?)\n?```$/);
-  return fenced == null ? raw : fenced[1];
-}
-
-/**
  * How a `line` reply is lifted into a lever.
  */
 export interface LlmLineReplyLeverConfig extends LlmReplyReadConfig {
@@ -385,7 +373,8 @@ export interface LlmLineReplyLeverConfig extends LlmReplyReadConfig {
  */
 export function llmLineReplyLeverOf(text: string, config?: Maybe<LlmLineReplyLeverConfig>): Maybe<Record<string, unknown>> {
   const field = config?.field ?? DEFAULT_LLM_LINE_LEVER_FIELD;
-  const cleaned = stripCodeFence(text).trim();
+  // A model occasionally wraps a bare-prose reply in a fence despite the `line` contract.
+  const cleaned = stripMarkdownCodeFence(text).trim();
   let result: Maybe<Record<string, unknown>>;
 
   if (cleaned.startsWith('{')) {

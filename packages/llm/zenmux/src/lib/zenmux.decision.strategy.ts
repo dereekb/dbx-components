@@ -53,7 +53,7 @@ import {
   type LlmStrategyHealth,
   type LlmStrategyId
 } from '@dereekb/llm';
-import { type Maybe, type Milliseconds } from '@dereekb/util';
+import { errorMessageOf, isNotNullOrEmptyString, makeTimeoutAbortSignal, type Maybe, type Milliseconds, removeTrailingSlashes } from '@dereekb/util';
 import { ZENMUX_SYNC_COST_BASIS } from './zenmux.account';
 import { DEFAULT_ZENMUX_BASE_URL } from './zenmux.constants';
 import { probeZenmuxCredential } from './zenmux.credential.probe';
@@ -203,13 +203,13 @@ function withDeclaredAnswerTypes(questions: LlmDecisionQuestions, raw: Readonly<
  */
 export function makeZenmuxDecisionStrategy(config: ZenmuxDecisionStrategyConfig = {}): LlmDecisionStrategy {
   const id = config.id ?? ZENMUX_DECISION_STRATEGY_KIND;
-  const baseUrl = (config.baseUrl ?? DEFAULT_ZENMUX_BASE_URL).replace(/\/+$/, '');
+  const baseUrl = removeTrailingSlashes(config.baseUrl ?? DEFAULT_ZENMUX_BASE_URL);
   const url = `${baseUrl}${ZENMUX_DECISION_PATH}`;
   const timeoutMs = config.timeoutMs ?? DEFAULT_LLM_DECISION_TIMEOUT_MS;
   const keyRemedy = config.apiKeyEnv == null ? 'pass an apiKey' : `set ${config.apiKeyEnv}`;
   const injectedFetch = config.decisionFetch;
   const decisionFetch: ZenmuxDecisionFetch = injectedFetch ?? ((target, init) => fetch(target, init) as unknown as Promise<ZenmuxDecisionResponse>);
-  const keyless = config.apiKey == null || config.apiKey === '';
+  const keyless = !isNotNullOrEmptyString(config.apiKey);
 
   const decide = async <Q extends LlmDecisionQuestions>(request: LlmDecisionRequest<Q>, options?: LlmDecideOptions): Promise<LlmDecisionResult<Q>> => {
     if (injectedFetch == null && keyless) {
@@ -219,8 +219,7 @@ export function makeZenmuxDecisionStrategy(config: ZenmuxDecisionStrategyConfig 
     // The body is EXACTLY `{ model, state, questions }`, built field by field, so a host-extended request object can never
     // leak a key onto the wire: the route answers `400 invalid_params` to any other body key (the module docblock's probe).
     const body = llmDecisionRequestBody(request);
-    const timeoutSignal = AbortSignal.timeout(options?.timeout ?? timeoutMs);
-    const signal = options?.signal == null ? timeoutSignal : AbortSignal.any([timeoutSignal, options.signal]);
+    const signal = makeTimeoutAbortSignal({ timeout: options?.timeout ?? timeoutMs, signal: options?.signal });
     let response: ZenmuxDecisionResponse;
 
     try {
@@ -233,7 +232,7 @@ export function makeZenmuxDecisionStrategy(config: ZenmuxDecisionStrategyConfig 
         throw error;
       }
 
-      throw new LlmDecisionTransportError({ message: `the ZenMux System One route ${url} could not be reached: ${error instanceof Error ? error.message : String(error)}`, cause: error });
+      throw new LlmDecisionTransportError({ message: `the ZenMux System One route ${url} could not be reached: ${errorMessageOf(error)}`, cause: error });
     }
 
     const text = await response.text();
@@ -273,7 +272,7 @@ export function makeZenmuxDecisionStrategy(config: ZenmuxDecisionStrategyConfig 
     // A body `id` wins when a later gateway version starts sending one; today the header is the only carrier.
     const generationId = reply.id ?? response.headers?.get(ZENMUX_REQUEST_ID_HEADER) ?? undefined;
 
-    return { model: reply.model ?? request.model, answers: read.answers, ...(usage == null ? {} : { usage }), ...(generationId == null || generationId === '' ? {} : { generationId }), ...(reply.provider == null ? {} : { provider: reply.provider }) };
+    return { model: reply.model ?? request.model, answers: read.answers, ...(usage == null ? {} : { usage }), ...(isNotNullOrEmptyString(generationId) ? { generationId } : {}), ...(reply.provider == null ? {} : { provider: reply.provider }) };
   };
 
   return {
@@ -293,7 +292,7 @@ export function makeZenmuxDecisionStrategy(config: ZenmuxDecisionStrategyConfig 
 
       if (probeFetch == null && injectedFetch != null) {
         health = { ready: true, issues: [] };
-      } else if (apiKey == null || apiKey === '') {
+      } else if (!isNotNullOrEmptyString(apiKey)) {
         health = { ready: false, issues: [{ severity: 'error', message: `no apiKey configured and no decisionFetch injected (${keyRemedy})` }] };
       } else {
         // The SAME probe the ZenMux completion lane runs, because it is the same account and the same key. Not `GET /models`:

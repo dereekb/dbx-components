@@ -12,6 +12,7 @@
  */
 
 import { type LlmModelTierConfig, type LlmModelTierKey, type LlmModelTierValue, type LlmReasoningConfig } from './llm.value';
+import { isPlainObject } from '@dereekb/util';
 
 /**
  * The keys a rich tier CONFIG value (the object arm of a tier entry) may carry — an unknown key fails loud.
@@ -126,8 +127,8 @@ export function parseLlmModelTierValue(config: ParseLlmModelTierValueConfig): Ll
     }
 
     out = value;
-  } else if (value != null && typeof value === 'object' && !Array.isArray(value)) {
-    const obj = value as Record<string, unknown>;
+  } else if (isPlainObject(value)) {
+    const obj = value;
 
     for (const key of Object.keys(obj)) {
       if (!LLM_MODEL_TIER_CONFIG_KEYS.has(key)) {
@@ -149,7 +150,7 @@ export function parseLlmModelTierValue(config: ParseLlmModelTierValueConfig): Ll
 
     const rawReasoning = obj['reasoning'];
 
-    if (rawReasoning !== undefined && (rawReasoning == null || typeof rawReasoning !== 'object' || Array.isArray(rawReasoning))) {
+    if (rawReasoning !== undefined && !isPlainObject(rawReasoning)) {
       throw new Error(`${at}.reasoning must be an object.`);
     }
 
@@ -188,13 +189,13 @@ export interface ParseLlmModelTierMapConfig {
 export function parseLlmModelTierMap(config: ParseLlmModelTierMapConfig): Record<LlmModelTierKey, LlmModelTierValue> {
   const { label, value } = config;
 
-  if (value == null || typeof value !== 'object' || Array.isArray(value)) {
+  if (!isPlainObject(value)) {
     throw new Error(`${label} must be a JSON object of { tierKey: modelSlug | { model, maxOutputTokens?, reasoning? } }.`);
   }
 
   const out: Record<LlmModelTierKey, LlmModelTierValue> = {};
 
-  for (const [tierKey, entry] of Object.entries(value as Record<string, unknown>)) {
+  for (const [tierKey, entry] of Object.entries(value)) {
     out[tierKey] = parseLlmModelTierValue({ label, tierKey, value: entry });
   }
 

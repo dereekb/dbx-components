@@ -1,25 +1,22 @@
 /**
- * The strategy registry: every configured {@link LlmStrategy}, keyed by its instance `id` and indexed by its
- * transport `kind`.
+ * The strategy registry: every configured {@link LlmStrategy}, keyed by its instance `id`.
  */
 
+import { createKeyedRegistry, type KeyedRegistry } from '@dereekb/util';
 import { type LlmStrategyId } from '../model/llm.value';
-import { createKeyedRegistry, type KeyedRegistry } from '../util/keyed.registry';
 import { type LlmStrategy } from './llm.strategy';
 
 /**
- * A {@link KeyedRegistry} of {@link LlmStrategy}, with an `'id'` primary index and a `'kind'` secondary index.
+ * A {@link KeyedRegistry} of {@link LlmStrategy}, keyed by its instance `id`.
  */
 export type LlmStrategyRegistry = KeyedRegistry<LlmStrategy, LlmStrategyId>;
 
 /**
- * Build an {@link LlmStrategyRegistry} keyed by id with a last-wins (`'replace'`) policy, on the shared
- * {@link createKeyedRegistry} primitive.
+ * Build an {@link LlmStrategyRegistry} keyed by id with a last-wins policy (a re-registered id replaces the value in its
+ * original slot), on the `@dereekb/util` {@link createKeyedRegistry} primitive.
  *
- * Besides `get(id)`, the registry answers `getBy('kind', kind)`: "give me AN instance of this transport" — the last
- * registered live one (a kind-shaped lookup, such as a default strategy configured by transport name, means exactly
- * that). It can never answer "all of them"; a caller that needs every instance of a kind reads
- * {@link llmStrategyInstancesOfKind}.
+ * The registry answers `get(id)`. "Every instance of a transport" is {@link llmStrategyInstancesOfKind}
+ * (`values().filter(...)` in registry order); "the last registered instance of a kind" is its `.at(-1)`.
  *
  * @param seed - The strategies to seed the registry with.
  * @returns The strategy registry.
@@ -27,17 +24,7 @@ export type LlmStrategyRegistry = KeyedRegistry<LlmStrategy, LlmStrategyId>;
  * @__NO_SIDE_EFFECTS__
  */
 export function makeLlmStrategyRegistry(seed: ReadonlyArray<LlmStrategy>): LlmStrategyRegistry {
-  return createKeyedRegistry<LlmStrategy, LlmStrategyId>({
-    indexes: [
-      { name: 'id', keyOf: (strategy) => strategy.id },
-      // The secondary TRANSPORT index. Deliberately LAST-WINS (`collision: 'replace'` applies to every index): its
-      // entry points at the last registered instance of the kind, and falls back to the remaining ones when that
-      // instance is replaced or removed.
-      { name: 'kind', keyOf: llmStrategyKind }
-    ],
-    collision: 'replace',
-    seed
-  });
+  return createKeyedRegistry<LlmStrategy, LlmStrategyId>({ readKey: (strategy) => strategy.id, seed });
 }
 
 /**
@@ -69,8 +56,8 @@ export interface LlmStrategyInstancesOfKindConfig {
 }
 
 /**
- * Every registered INSTANCE of one transport kind, in registry order — the "all of them" answer the last-wins
- * `'kind'` index structurally cannot give.
+ * Every registered INSTANCE of one transport kind, in registry order. Its `.at(-1)` is the last registered instance
+ * of the kind.
  *
  * @param config - The registry to scan and the kind to match.
  * @returns The matching instances (empty when none is registered).

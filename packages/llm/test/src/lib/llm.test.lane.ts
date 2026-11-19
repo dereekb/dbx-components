@@ -9,7 +9,7 @@
  * is a complete gate.
  */
 
-import { type Maybe, type Milliseconds } from '@dereekb/util';
+import { type Maybe, mergeObjects, type Milliseconds } from '@dereekb/util';
 import {
   DEFAULT_LLM_MODEL_TIER,
   evaluateLlmQuotaGate,
@@ -398,7 +398,8 @@ function firstNameOf(names: Maybe<LlmEnvVarNames>): string {
  */
 export function makeLlmLiveLane<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes>(config: LlmLiveLaneConfig<X>): LlmLiveLane<X> {
   const { schema, adapters, modelConfig, fallbackKeys, defaultModel, strategyOptions, decisionRoutePreference, decisionTimeoutMs, extraProviderKeyNames } = config;
-  const names: LlmLiveLaneEnvNames = { ...DEFAULT_LLM_LIVE_LANE_ENV_NAMES, ...config.names };
+  // mergeObjects: an explicit `undefined` name keeps its default env name (a spread would read `env['undefined']`).
+  const names = mergeObjects<LlmLiveLaneEnvNames>([DEFAULT_LLM_LIVE_LANE_ENV_NAMES, config.names]);
   const envNames = config.envNames ?? DEFAULT_LLM_ENV_NAMES;
   const resolveProviders: LlmLiveLaneProviderResolver<X> = config.resolveProviders ?? resolveLlmProvidersFromEnv;
   const label = config.label ?? 'llm';

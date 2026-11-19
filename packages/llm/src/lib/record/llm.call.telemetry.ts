@@ -9,7 +9,7 @@
  * payload and a logged payload can never become two hand-maintained projections of one call.
  */
 
-import type { Milliseconds } from '@dereekb/util';
+import { filterUndefinedValues, type Milliseconds } from '@dereekb/util';
 import type { LlmModelId, LlmStrategyId } from '../model/llm.value';
 import type { LlmDispatchResult, LlmReplyRepair, LlmReplyRepairSummary } from '../strategy/llm.strategy';
 import type { LlmUsage } from '../strategy/llm.usage';
@@ -71,7 +71,7 @@ export interface LlmCallTelemetry {
  * @returns Its bounded summary.
  */
 function llmReplyRepairSummaryOf(repair: LlmReplyRepair): LlmReplyRepairSummary {
-  return { tier: repair.tier, attempt: repair.attempt, verdict: repair.verdict, score: repair.score, ...(repair.ops == null ? {} : { ops: repair.ops }) };
+  return filterUndefinedValues({ tier: repair.tier, attempt: repair.attempt, verdict: repair.verdict, score: repair.score, ops: repair.ops }, true);
 }
 
 /**
@@ -83,15 +83,7 @@ function llmReplyRepairSummaryOf(repair: LlmReplyRepair): LlmReplyRepairSummary 
  * @returns The uniform telemetry block to spread into a record's payload.
  */
 export function llmCallTelemetry(raw: LlmDispatchResult): LlmCallTelemetry {
-  return {
-    strategyId: raw.strategyId,
-    ...(raw.strategyKind == null ? {} : { strategyKind: raw.strategyKind }),
-    ...(raw.model == null ? {} : { model: raw.model }),
-    ...(raw.provider == null ? {} : { provider: raw.provider }),
-    ...(raw.usage == null ? {} : { usage: raw.usage }),
-    ...(raw.latencyMs == null ? {} : { latencyMs: raw.latencyMs }),
-    ...(raw.generationId == null ? {} : { generationId: raw.generationId }),
-    ...(raw.finishReason == null ? {} : { finishReason: raw.finishReason }),
-    ...(raw.repair == null ? {} : { repair: llmReplyRepairSummaryOf(raw.repair) })
-  };
+  const { strategyId, strategyKind, model, provider, usage, latencyMs, generationId, finishReason } = raw;
+  // `true` also drops a wire `null`, as the `== null` checks did; key order is kept.
+  return filterUndefinedValues({ strategyId, strategyKind, model, provider, usage, latencyMs, generationId, finishReason, repair: raw.repair == null ? undefined : llmReplyRepairSummaryOf(raw.repair) }, true);
 }

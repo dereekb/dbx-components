@@ -5,7 +5,7 @@
  */
 
 import { type LlmAdapter, type LlmBillAdapter, type LlmCredentialProbeAdapter, type LlmDecisionAdapter, type LlmMeteringAdapter } from '@dereekb/llm';
-import { type Maybe } from '@dereekb/util';
+import { isNotBlankString, isNotNullOrEmptyString, type Maybe } from '@dereekb/util';
 import { isZenmuxBaseUrl, zenmuxAccountBaseUrlOf, ZENMUX_SYNC_COST_BASIS } from './zenmux.account';
 import { ZENMUX_DECISION_ROUTE, ZENMUX_PROVIDER_ID } from './zenmux.constants';
 import { probeZenmuxCredential } from './zenmux.credential.probe';
@@ -65,7 +65,7 @@ export const ZENMUX_CREDENTIAL_PROBE_ADAPTER: LlmCredentialProbeAdapter = {
     ({ provider, baseUrl, fetch }) =>
     async (options) => {
       const apiKey = provider.apiKey;
-      return apiKey == null || apiKey.trim() === '' ? { ready: false, issues: [{ severity: 'error', message: 'no apiKey configured' }] } : probeZenmuxCredential({ strategyId: provider.id, apiKey, baseUrl, ...(fetch == null ? {} : { fetch }), ...(options?.signal == null ? {} : { signal: options.signal }) });
+      return isNotBlankString(apiKey) ? probeZenmuxCredential({ strategyId: provider.id, apiKey, baseUrl, ...(fetch == null ? {} : { fetch }), ...(options?.signal == null ? {} : { signal: options.signal }) }) : { ready: false, issues: [{ severity: 'error', message: 'no apiKey configured' }] };
     }
 };
 
@@ -107,7 +107,7 @@ export function makeZenmuxBillAdapter(config: ZenmuxLlmAdaptersConfig = {}): Llm
   return {
     facet: 'bill',
     kind: ZENMUX_PROVIDER_ID,
-    make: ({ provider, baseUrl, fetch }) => makeZenmuxGenerationBillReader({ apiKey: billApiKey == null || billApiKey === '' ? provider.apiKey : billApiKey, baseUrl: zenmuxAccountBaseUrlOf(baseUrl), ...(fetch == null ? {} : { fetch }) })
+    make: ({ provider, baseUrl, fetch }) => makeZenmuxGenerationBillReader({ apiKey: isNotNullOrEmptyString(billApiKey) ? billApiKey : provider.apiKey, baseUrl: zenmuxAccountBaseUrlOf(baseUrl), ...(fetch == null ? {} : { fetch }) })
   };
 }
 

@@ -21,7 +21,7 @@
  * **The one thing this lane has that a completion cannot get.** OpenRouter returns `usage.cost` SYNCHRONOUSLY on a
  * decision reply, so a decision call carries an EXACT, final cost.
  */
-import { type Maybe, type Milliseconds } from '@dereekb/util';
+import { errorMessageOf, isNotNullOrEmptyString, makeTimeoutAbortSignal, type Maybe, type Milliseconds, removeTrailingSlashes } from '@dereekb/util';
 import {
   DEFAULT_LLM_DECISION_TIMEOUT_MS,
   LlmDecisionAnswerFaultError,
@@ -184,16 +184,6 @@ export function llmUsageFromOpenRouterDecisionsUsage(usage: Maybe<LlmOpenRouterD
 const SDK_HTTP_CLIENT_WRAPPER_NAMES: ReadonlySet<string> = new Set(['RequestAbortedError', 'RequestTimeoutError', 'ConnectionError']);
 
 /**
- * The message of an unknown thrown value.
- *
- * @param error - The thrown value.
- * @returns The message string.
- */
-function errorText(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
-
-/**
  * The HTTP status carried by an SDK error, when it carries one.
  *
  * @param error - The SDK error.
@@ -227,7 +217,7 @@ function llmOpenRouterDecisionsFailureOf(error: unknown, signal: AbortSignal): u
   } else if (wrapper != null && typeof wrapper.name === 'string' && SDK_HTTP_CLIENT_WRAPPER_NAMES.has(wrapper.name) && wrapper.cause != null) {
     failure = wrapper.cause;
   } else {
-    failure = new LlmDecisionTransportError({ message: `the OpenRouter decisions endpoint failed: ${errorText(error)}`, status: statusOf(error), body: errorText(error) });
+    failure = new LlmDecisionTransportError({ message: `the OpenRouter decisions endpoint failed: ${errorMessageOf(error)}`, status: statusOf(error), body: errorMessageOf(error) });
   }
 
   return failure;
@@ -244,7 +234,7 @@ interface LlmOpenRouterRealDecisionsCreateConfig {
 }
 
 /**
- * Build the REAL create over the SDK boundary. It enforces the timeout ITSELF — `AbortSignal.timeout` merged with the
+ * Build the REAL create over the SDK boundary. It enforces the timeout ITSELF — `@dereekb/util` `makeTimeoutAbortSignal`, merged with the
  * caller's signal — because the SDK drops its own `timeoutMs` whenever a request carries a `signal`, so a per-call
  * timeout set on the SDK would silently vanish whenever a caller passed a cancellation signal.
  *
@@ -256,8 +246,7 @@ async function llmOpenRouterRealDecisionsCreate(config: LlmOpenRouterRealDecisio
   const call = await loadLlmOpenRouterSdkDecisionsCall({ apiKey, baseUrl, fetch: decisionsFetch });
 
   return async (body, options) => {
-    const timeoutSignal = AbortSignal.timeout(options?.timeoutMs ?? timeoutMs);
-    const signal = options?.signal == null ? timeoutSignal : AbortSignal.any([timeoutSignal, options.signal]);
+    const signal = makeTimeoutAbortSignal({ timeout: options?.timeoutMs ?? timeoutMs, signal: options?.signal });
     const result: LlmOpenRouterSdkDecisionsResult = await call(body, signal);
 
     if (!result.ok) {
@@ -283,7 +272,7 @@ async function llmOpenRouterRealDecisionsCreate(config: LlmOpenRouterRealDecisio
  */
 export function makeLlmOpenRouterDecisionStrategy(config: LlmOpenRouterDecisionStrategyConfig = {}): LlmDecisionStrategy {
   const id = config.id ?? LLM_OPENROUTER_DECISION_STRATEGY_KIND;
-  const baseUrl = (config.baseUrl ?? LLM_OPENROUTER_BASE_URL).replace(/\/+$/, '');
+  const baseUrl = removeTrailingSlashes(config.baseUrl ?? LLM_OPENROUTER_BASE_URL);
   const timeoutMs = config.timeoutMs ?? DEFAULT_LLM_DECISION_TIMEOUT_MS;
   // The real create is built once on first need and reused; an injected `decisionsCreate` never triggers it, which is
   // what keeps the SDK off every seam spec's import graph.
@@ -295,7 +284,7 @@ export function makeLlmOpenRouterDecisionStrategy(config: LlmOpenRouterDecisionS
     if (create == null) {
       const apiKey = config.apiKey;
 
-      if (apiKey == null || apiKey === '') {
+      if (!isNotNullOrEmptyString(apiKey)) {
         // No status ⇒ never retried: a missing key does not heal on a resend.
         throw new LlmDecisionTransportError({ message: `llm openrouter decision strategy '${id}': no apiKey configured and no decisionsCreate injected (the host must supply apiKey or gate startup with a readiness check).` });
       }
@@ -335,7 +324,7 @@ export function makeLlmOpenRouterDecisionStrategy(config: LlmOpenRouterDecisionS
 
       if (config.decisionsCreate != null) {
         health = { ready: true, issues: [] };
-      } else if (config.apiKey == null || config.apiKey === '') {
+      } else if (!isNotNullOrEmptyString(config.apiKey)) {
         health = { ready: false, issues: [{ severity: 'error', message: 'no apiKey configured and no decisionsCreate injected' }] };
       } else {
         try {
@@ -343,7 +332,7 @@ export function makeLlmOpenRouterDecisionStrategy(config: LlmOpenRouterDecisionS
           health = { ready: true, issues: [] };
         } catch (error) {
           // swallow site 'llm/openrouter-decision.client' — the verdict carries the failure.
-          health = { ready: false, issues: [{ severity: 'error', message: `the '${id}' decisions client could not be constructed: ${errorText(error)}` }] };
+          health = { ready: false, issues: [{ severity: 'error', message: `the '${id}' decisions client could not be constructed: ${errorMessageOf(error)}` }] };
         }
       }
 
@@ -355,7 +344,7 @@ export function makeLlmOpenRouterDecisionStrategy(config: LlmOpenRouterDecisionS
 
       if (probeFetch == null && config.decisionsCreate != null) {
         health = { ready: true, issues: [] };
-      } else if (config.apiKey == null || config.apiKey === '') {
+      } else if (!isNotNullOrEmptyString(config.apiKey)) {
         health = { ready: false, issues: [{ severity: 'error', message: 'no apiKey configured and no decisionsCreate injected' }] };
       } else {
         // `GET /key` is OpenRouter's free key-metadata endpoint — the SAME probe the completion sibling runs, because it

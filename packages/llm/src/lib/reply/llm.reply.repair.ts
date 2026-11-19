@@ -19,7 +19,7 @@
  * literals, unquoted keys, comments and single quotes are left to the fast fix (`makeLlmReplyFastFixer`).
  */
 
-import { type Maybe } from '@dereekb/util';
+import { isPlainObject, type Maybe } from '@dereekb/util';
 import { isLlmReplyObject } from './llm.reply.envelope';
 import { type LlmReplyJsonFault, type LlmReplyJsonFaultKind, type LlmReplyJsonShape, type LlmReplyJsonVerdict } from './llm.reply.json.shape';
 
@@ -510,7 +510,7 @@ function parseObjectOrUndefined(text: string): Maybe<Record<string, unknown>> {
     value = undefined;
   }
 
-  return isLlmReplyObject(value) && !Array.isArray(value) ? value : undefined;
+  return isPlainObject(value) ? value : undefined;
 }
 
 /**

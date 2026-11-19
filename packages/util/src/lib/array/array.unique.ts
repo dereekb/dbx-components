@@ -18,7 +18,7 @@ import { type DecisionFunction } from '../value/decision';
  * @dbxUtilTags array, unique, concat, distinct, dedupe, deduplicate
  * @dbxUtilRelated unique, flatten-array-unique, concat-arrays
  */
-export function concatArraysUnique<T extends PrimativeKey = PrimativeKey>(...arrays: Maybe<T[]>[]): T[] {
+export function concatArraysUnique<T extends PrimativeKey = PrimativeKey>(...arrays: Maybe<ReadonlyArray<T>>[]): T[] {
   return unique(concatArrays(...arrays));
 }
 
@@ -49,7 +49,7 @@ export function flattenArrayUnique<T extends PrimativeKey = PrimativeKey>(array:
  * @dbxUtilTags array, unique, distinct, dedupe, deduplicate, set
  * @dbxUtilRelated filter-unique-values, filter-unique-function, concat-arrays-unique
  */
-export function unique<T extends PrimativeKey = PrimativeKey>(values: T[], excludeInput?: FilterUniqueFunctionExcludeKeysInput<T, T>): T[] {
+export function unique<T extends PrimativeKey = PrimativeKey>(values: ReadonlyArray<T>, excludeInput?: FilterUniqueFunctionExcludeKeysInput<T, T>): T[] {
   const unique = new Set(values);
   const exclude = readKeysFromFilterUniqueFunctionAdditionalKeysInput<T>(excludeInput, (x) => x) as T[];
 

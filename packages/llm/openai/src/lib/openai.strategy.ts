@@ -29,7 +29,7 @@
  * The library reads NO environment: the host resolves the key / base URL / token-limit param / model from its own
  * configuration and passes them in.
  */
-import { type Maybe, type Milliseconds } from '@dereekb/util';
+import { errorMessageOf, isNotNullOrEmptyString, makeTimeoutAbortSignal, type Maybe, type Milliseconds, removeTrailingSlashes } from '@dereekb/util';
 import {
   DEFAULT_LLM_REASONING_OFF_ENCODING,
   DEFAULT_LLM_TOKEN_LIMIT_PARAM,
@@ -197,17 +197,6 @@ export interface LlmOpenAiStrategyConfig {
 }
 
 /**
- * The message of an unknown thrown value — for the never-throw {@link LlmStrategy.healthCheck} to report a
- * client-construction failure as an `'error'` issue rather than propagate it.
- *
- * @param error - The thrown value.
- * @returns The message string.
- */
-function errorText(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
-
-/**
  * Map the replayed thread turns onto plain-string chat messages (cache splits ignored — this transport sends no
  * `cache_control` blocks and leans on the provider's implicit auto-prefix caching).
  *
@@ -293,7 +282,7 @@ export function makeLlmOpenAiStrategy(config: LlmOpenAiStrategyConfig = {}): Llm
     if (client == null) {
       const apiKey = config.apiKey;
 
-      if (apiKey == null || apiKey === '') {
+      if (!isNotNullOrEmptyString(apiKey)) {
         // Backstop — a host that gates startup with verifyLlmStrategies + healthCheck fails LOUD at bootstrap; this
         // still fires for a host that does not, on the first real call.
         throw new Error(`llm openai strategy '${id}': no apiKey configured and no client/runner injected (the host must supply apiKey, inject a client/runner, or gate startup via verifyLlmStrategies).`);
@@ -331,7 +320,7 @@ export function makeLlmOpenAiStrategy(config: LlmOpenAiStrategyConfig = {}): Llm
         // would 404 against an unknown gateway). The readiness surface warns earlier; this is the call-time backstop.
         const sentModel = request.model ?? config.defaultModel;
 
-        if (sentModel == null || sentModel === '') {
+        if (!isNotNullOrEmptyString(sentModel)) {
           throw new Error(`llm openai strategy '${id}': no model configured; set defaultModel on the strategy or pass request.model. There is no built-in model default.`);
         }
 
@@ -369,8 +358,7 @@ export function makeLlmOpenAiStrategy(config: LlmOpenAiStrategyConfig = {}): Llm
         const callTimeoutMs = llmOpenAiCallTimeoutMs(timeoutMs, tokenLimit);
         // The EXTERNAL cancellation signal, when threaded, is OR-combined with the timeout: whichever fires first
         // aborts the in-flight call.
-        const timeoutSignal = AbortSignal.timeout(callTimeoutMs);
-        const callSignal = options?.signal == null ? timeoutSignal : AbortSignal.any([timeoutSignal, options.signal]);
+        const callSignal = makeTimeoutAbortSignal({ timeout: callTimeoutMs, signal: options?.signal });
         const start = Date.now();
         const completion = await client.chat.completions.create(body, { signal: callSignal, timeout: callTimeoutMs });
         latencyMs = Date.now() - start;
@@ -420,7 +408,7 @@ export function makeLlmOpenAiStrategy(config: LlmOpenAiStrategyConfig = {}): Llm
 
       const apiKey = config.apiKey;
 
-      if (apiKey == null || apiKey === '') {
+      if (!isNotNullOrEmptyString(apiKey)) {
         return { ready: false, issues: [{ severity: 'error', message: `no apiKey configured and no client/runner injected` }] };
       }
 
@@ -433,7 +421,7 @@ export function makeLlmOpenAiStrategy(config: LlmOpenAiStrategyConfig = {}): Llm
         health = { ready: true, issues: [] };
       } catch (error) {
         // swallow site 'llm/openai-strategy.client' — the verdict carries the failure.
-        health = { ready: false, issues: [{ severity: 'error', message: `openai client could not be constructed: ${errorText(error)}` }] };
+        health = { ready: false, issues: [{ severity: 'error', message: `openai client could not be constructed: ${errorMessageOf(error)}` }] };
       }
 
       return health;
@@ -449,7 +437,7 @@ export function makeLlmOpenAiStrategy(config: LlmOpenAiStrategyConfig = {}): Llm
 
       const apiKey = config.apiKey;
 
-      if (apiKey == null || apiKey === '') {
+      if (!isNotNullOrEmptyString(apiKey)) {
         return { ready: false, issues: [{ severity: 'error', message: `no apiKey configured and no client/runner injected` }] };
       }
 
@@ -463,7 +451,7 @@ export function makeLlmOpenAiStrategy(config: LlmOpenAiStrategyConfig = {}): Llm
       // a hard error carrying the provider's own words.
       return probeLlmCredentialEndpoint({
         strategyId: id,
-        url: `${baseUrl.replace(/\/+$/, '')}/models`,
+        url: `${removeTrailingSlashes(baseUrl)}/models`,
         apiKey,
         notFoundSeverity: 'warning',
         ...(probeFetch == null ? {} : { fetch: probeFetch }),

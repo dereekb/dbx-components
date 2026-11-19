@@ -12,7 +12,7 @@
  * and size stay visible.
  */
 
-import { cutString, hashStringToNumber, type Milliseconds } from '@dereekb/util';
+import { cutString, hashStringToNumber, isNotBlankString, type Milliseconds } from '@dereekb/util';
 import type { LlmCapabilityKey, LlmModelId, LlmModelTierKey } from '../model/llm.value';
 import type { LlmCompletion, LlmReplyOutcomeClass, LlmReplyRepairTier } from '../strategy/llm.strategy';
 
@@ -389,7 +389,7 @@ export function classifyLlmDecodeFailure(reading: LlmDecodeReadingKind, result: 
     // gateway 5xx). Distinct from `'timeout'`: a deadline means the model was too SLOW, this means it was never
     // ASKED, and conflating them would attribute a provider outage to model latency in the record.
     failureClass = 'transport';
-  } else if (reading === 'no-json' && result.text.trim().length === 0) {
+  } else if (reading === 'no-json' && !isNotBlankString(result.text)) {
     failureClass = 'empty-result';
   } else if (isLlmLengthCappedFinish(result)) {
     failureClass = 'length-truncation';
@@ -411,7 +411,7 @@ export function classifyLlmDecodeFailure(reading: LlmDecodeReadingKind, result: 
  * @returns True when the reply is blank and reasoning tokens were billed.
  */
 export function isLlmReasoningOnlyReply(result: Pick<LlmCompletion, 'text' | 'usage'>): boolean {
-  return result.text.trim().length === 0 && (result.usage?.reasoningTokens ?? 0) > 0;
+  return !isNotBlankString(result.text) && (result.usage?.reasoningTokens ?? 0) > 0;
 }
 
 /**

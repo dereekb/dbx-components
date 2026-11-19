@@ -14,7 +14,7 @@
  * builds on {@link llmChainedFollowUpBody} and {@link mergeLlmChainedFollowUpBase}.
  */
 
-import { type Maybe } from '@dereekb/util';
+import { compareStrings, isNotBlankString, joinStrings, type Maybe } from '@dereekb/util';
 
 /**
  * ONE keyed section of a capability's live context.
@@ -165,7 +165,7 @@ export interface LlmLiveContextBlockConfig {
 export function llmLiveContextBlock(config: LlmLiveContextBlockConfig): Maybe<LlmLiveContextBlock> {
   const { key, lines, reason } = config;
   const text = typeof lines === 'string' ? lines : lines.filter((line): line is string => line != null).join('\n');
-  return text.trim() === '' ? undefined : { key, text, ...(reason == null ? {} : { reason }) };
+  return isNotBlankString(text) ? { key, text, ...(reason == null ? {} : { reason }) } : undefined;
 }
 
 /**
@@ -201,10 +201,10 @@ export function llmFactRowOf(pairs: ReadonlyArray<readonly [string, Maybe<string
  * ```
  */
 export function joinLlmLiveContextBlocks(blocks: ReadonlyArray<LlmLiveContextBlock>): string {
-  return blocks
-    .map((block) => block.text)
-    .filter((text) => text.length > 0)
-    .join(LLM_LIVE_CONTEXT_BLOCK_SEPARATOR);
+  return joinStrings(
+    blocks.map((block) => block.text),
+    LLM_LIVE_CONTEXT_BLOCK_SEPARATOR
+  );
 }
 
 /**
@@ -254,7 +254,7 @@ export type LlmLiveContextBlockOrder = Readonly<Record<string, number>>;
  * Ties are broken by key NAME rather than by input position, so the result is a TOTAL order and therefore invariant
  * under any permutation of the input — two valid compositions of the same block set can never produce different
  * request bytes. (Block keys are unique within one live context, so `(rank, key)` is total.) The key comparison is
- * `localeCompare` without a locale argument.
+ * `@dereekb/util` `compareStrings` (`localeCompare` without a locale argument).
  *
  * @param blocks - The blocks, in whatever order the capability assembled them.
  * @param order - The sparse key → rank table.
@@ -268,7 +268,7 @@ export type LlmLiveContextBlockOrder = Readonly<Record<string, number>>;
  */
 export function orderLlmLiveContextBlocks<T extends Pick<LlmLiveContextBlock, 'key'>>(blocks: ReadonlyArray<T>, order: LlmLiveContextBlockOrder, defaultOrder: number): ReadonlyArray<T> {
   const rankOf = (block: T): number => order[block.key] ?? defaultOrder;
-  return blocks.toSorted((a, b) => rankOf(a) - rankOf(b) || a.key.localeCompare(b.key));
+  return blocks.toSorted((a, b) => rankOf(a) - rankOf(b) || compareStrings(a.key, b.key));
 }
 
 /**
@@ -327,7 +327,7 @@ export function llmLiveContextRowsText(head: Maybe<string>, rows: ReadonlyArray<
  */
 export function llmLiveContextRowsBlock(config: LlmLiveContextRowsBlockConfig): Maybe<LlmLiveContextBlock> {
   const { key, head, rows, reason, volatile } = config;
-  const cleanHead = head == null || head.trim() === '' ? undefined : head;
+  const cleanHead = isNotBlankString(head) ? head : undefined;
   return rows.length === 0
     ? undefined
     : {
@@ -434,8 +434,8 @@ function rowsDeltaOf(block: LlmLiveContextBlock, held: Maybe<LlmLiveContextBlock
  * @returns The block's follow-up text.
  */
 function rowsDeltaText(block: LlmLiveContextBlock, delta: RowsDelta): string {
-  const notes = [delta.unchangedKeys.length === 0 ? undefined : `${LLM_CHAINED_FOLLOW_UP_UNCHANGED_ROWS_LEAD} ${delta.unchangedKeys.join(', ')}.`, delta.droppedKeys.length === 0 ? undefined : `${LLM_CHAINED_FOLLOW_UP_DROPPED_ROWS_LEAD} ${delta.droppedKeys.join(', ')}.`].filter((note): note is string => note != null);
-  return [llmLiveContextRowsText(block.head, delta.changed), notes.join(' ')].filter((part) => part.length > 0).join('\n');
+  const notes = [delta.unchangedKeys.length === 0 ? undefined : `${LLM_CHAINED_FOLLOW_UP_UNCHANGED_ROWS_LEAD} ${delta.unchangedKeys.join(', ')}.`, delta.droppedKeys.length === 0 ? undefined : `${LLM_CHAINED_FOLLOW_UP_DROPPED_ROWS_LEAD} ${delta.droppedKeys.join(', ')}.`];
+  return joinStrings([llmLiveContextRowsText(block.head, delta.changed), joinStrings(notes, ' ')], '\n');
 }
 
 /**
@@ -510,7 +510,7 @@ export function llmChainedFollowUpBody(blocks: ReadonlyArray<LlmLiveContextBlock
     const dropped = droppedLlmLiveContextBlockKeys(blocks, previous);
     const named = unchangedKeys.length === 0 ? '' : `${LLM_CHAINED_FOLLOW_UP_UNCHANGED_LEAD} ${unchangedKeys.join(', ')}.`;
     const gone = dropped.length === 0 ? '' : `${LLM_CHAINED_FOLLOW_UP_DROPPED_LEAD} ${dropped.join(', ')}.`;
-    body = [...sentTexts, named, gone].filter((part) => part.length > 0).join(LLM_LIVE_CONTEXT_BLOCK_SEPARATOR);
+    body = joinStrings([...sentTexts, named, gone], LLM_LIVE_CONTEXT_BLOCK_SEPARATOR);
   }
 
   return body;

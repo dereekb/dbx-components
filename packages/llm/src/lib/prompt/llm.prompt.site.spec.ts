@@ -37,6 +37,11 @@ describe('mergeLlmPromptSite()', () => {
     expect(merged).toEqual({ facts: { a: 1, b: 2 }, inputs: { idea: 'outer', brief: 'inner' }, supply: { x: 1, y: 2 } });
   });
 
+  it('keeps an outer key when the inner record sets it to undefined (B5)', () => {
+    const innerFacts = { tone: undefined } as unknown as NonNullable<LlmPromptSite['facts']>;
+    expect(mergeLlmPromptSite({ facts: { tone: 'plain' } }, { facts: innerFacts })?.facts).toEqual({ tone: 'plain' });
+  });
+
   it('omits a field absent on both sides, in the order kind, facts, inputs, judge, supply', () => {
     expect(Object.keys(mergeLlmPromptSite({ kind: 'report' }, { facts: { a: 1 } }) ?? {})).toEqual(['kind', 'facts']);
     expect(Object.keys(mergeLlmPromptSite({ supply: { x: 1 }, kind: 'report' }, { judge: judgeA, inputs: { idea: 'i' } }) ?? {})).toEqual(['kind', 'inputs', 'judge', 'supply']);

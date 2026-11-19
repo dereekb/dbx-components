@@ -1,4 +1,4 @@
-import { isDefaultReadableError, DEFAULT_READABLE_ERROR_CODE } from './error';
+import { isDefaultReadableError, DEFAULT_READABLE_ERROR_CODE, errorMessageOf } from './error';
 
 describe('isDefaultReadableError()', () => {
   it('should return true for null/undefined', () => {
@@ -28,5 +28,45 @@ describe('isDefaultReadableError()', () => {
 
   it('should return false for a non-empty readable error that is not the default', () => {
     expect(isDefaultReadableError({ code: 'NOT_THE_DEFAULT' })).toBe(false);
+  });
+});
+
+describe('errorMessageOf()', () => {
+  it('should return the message of an Error', () => {
+    expect(errorMessageOf(new Error('boom'))).toBe('boom');
+  });
+
+  it('should return the message of a DOMException', () => {
+    expect(errorMessageOf(new DOMException('timed out', 'TimeoutError'))).toBe('timed out');
+  });
+
+  it('should return a string message from a plain object', () => {
+    expect(errorMessageOf({ message: 'x' })).toBe('x');
+  });
+
+  it('should stringify an object whose message is not a string', () => {
+    expect(errorMessageOf({ message: 42 })).toBe('[object Object]');
+  });
+
+  it('should stringify primitives', () => {
+    expect(errorMessageOf('plain')).toBe('plain');
+    expect(errorMessageOf(42)).toBe('42');
+    expect(errorMessageOf(null)).toBe('null');
+    expect(errorMessageOf(undefined)).toBe('undefined');
+    expect(errorMessageOf(Symbol('s'))).toBe('Symbol(s)');
+  });
+
+  it('should not throw for a null-prototype object', () => {
+    expect(errorMessageOf(Object.create(null))).toBe('[object Object]');
+  });
+
+  it('should not throw for an object whose toString throws', () => {
+    const value = {
+      toString(): string {
+        throw new Error('no');
+      }
+    };
+
+    expect(errorMessageOf(value)).toBe('[object Object]');
   });
 });

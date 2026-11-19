@@ -14,18 +14,23 @@ function fake(id: string, kind?: string): LlmDecisionStrategy {
 }
 
 describe('makeLlmDecisionStrategyRegistry()', () => {
-  it("should index by INSTANCE id and by TRANSPORT kind, the completion registry's own split", () => {
+  it("should key by INSTANCE id and filter by TRANSPORT kind, the completion registry's own split", () => {
     const registry = makeLlmDecisionStrategyRegistry([fake('account-a', 'decisions-wire'), fake('account-b', 'decisions-wire')]);
 
     expect(registry.get('account-a')?.id).toBe('account-a');
     expect(registry.get('account-b')?.id).toBe('account-b');
-    expect(registry.getBy('kind', 'decisions-wire')).toBeDefined();
+    expect(registry.values().filter((strategy) => llmStrategyKind(strategy) === 'decisions-wire')).toHaveLength(2);
   });
 
   it('should answer the LAST registered instance by kind and the first configured by values()[0]', () => {
     const registry = makeLlmDecisionStrategyRegistry([fake('account-a', 'decisions-wire'), fake('account-b', 'decisions-wire')]);
 
-    expect(registry.getBy('kind', 'decisions-wire')?.id).toBe('account-b');
+    expect(
+      registry
+        .values()
+        .filter((strategy) => llmStrategyKind(strategy) === 'decisions-wire')
+        .at(-1)?.id
+    ).toBe('account-b');
     expect(registry.values()[0]?.id).toBe('account-a');
   });
 

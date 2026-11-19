@@ -1,4 +1,4 @@
-import { type Maybe } from '@dereekb/util';
+import { isNotBlankString, type Maybe } from '@dereekb/util';
 
 /**
  * Identifier a caller gives one question inside a decision.
@@ -285,7 +285,7 @@ export function isBlankLlmDecisionEntry(entry: Maybe<LlmDecisionEntry>): boolean
   if (entry == null) {
     result = true;
   } else if (typeof entry === 'string') {
-    result = entry.trim() === '';
+    result = !isNotBlankString(entry);
   } else if (Array.isArray(entry)) {
     result = entry.length === 0;
   } else {

@@ -23,7 +23,7 @@
  *    subject dispatch — bounded and known before the call.
  */
 
-import { filterMaybeArrayValues, type Maybe } from '@dereekb/util';
+import { errorMessageOf, filterMaybeArrayValues, isNotBlankString, type Maybe } from '@dereekb/util';
 import { type } from 'arktype';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { type LlmCapabilityKey, type LlmModelTierKey } from '../model/llm.value';
@@ -141,7 +141,7 @@ export interface RenderLlmCritiqueContextConfig {
  */
 export function renderLlmCritiqueContext(config: RenderLlmCritiqueContextConfig): ReadonlyArray<LlmLiveContextBlock> {
   const { goal, evidence, liveContext, replyText } = config;
-  const evidenceLines = evidence == null || evidence.trim() === '' ? [] : ['## Evidence', '', evidence.trim(), ''];
+  const evidenceLines = isNotBlankString(evidence) ? ['## Evidence', '', evidence.trim(), ''] : [];
 
   return filterMaybeArrayValues([
     llmLiveContextBlock({
@@ -270,7 +270,7 @@ export function makeLlmSemanticCritic(config: MakeLlmSemanticCriticConfig): LlmC
         dispatch: binding.dispatch,
         envelope: binding.envelope,
         goal,
-        ...(evidence == null || evidence.trim() === '' ? {} : { evidence }),
+        ...(isNotBlankString(evidence) ? { evidence } : {}),
         liveContext: input.liveContext,
         replyText: input.replyText,
         subjectCapability: input.capability,
@@ -290,7 +290,7 @@ export function makeLlmSemanticCritic(config: MakeLlmSemanticCriticConfig): LlmC
       // The judge dispatch threw (transport / abort / misconfiguration). A critic must NEVER take the subject dispatch
       // down with it, so this is fail-open too, and declared as such.
       input.callContext.swallow(LLM_CRITIQUE_REPLY_JUDGE_SWALLOW_SITE, error);
-      input.callContext.diag({ level: 'warn', code: LLM_CRITIQUE_ERROR_DIAG_CODE, fields: { capability: input.capability, attempt: input.attempt, error: error instanceof Error ? error.message : String(error) }, message: 'the semantic critic threw; accepting the reply unjudged' });
+      input.callContext.diag({ level: 'warn', code: LLM_CRITIQUE_ERROR_DIAG_CODE, fields: { capability: input.capability, attempt: input.attempt, error: errorMessageOf(error) }, message: 'the semantic critic threw; accepting the reply unjudged' });
     }
 
     return verdict;

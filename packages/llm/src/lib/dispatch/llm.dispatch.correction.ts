@@ -4,7 +4,7 @@
  * prompt unboundedly), and the text tables a host may override.
  */
 
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, mergeObjects } from '@dereekb/util';
 import { joinLlmPromptSegments, llmPromptCacheSegmentsOf, type LlmPromptSegment, type LlmPromptSegmentOrigin } from '../prompt/llm.prompt.segment';
 import { type LlmPromptSlotId } from '../prompt/llm.prompt.layout';
 import { type LlmDecodeFailureClass } from '../record/llm.decode.failure';
@@ -87,7 +87,8 @@ export type LlmDispatchCorrectionTextOverrides = Partial<Omit<LlmDispatchCorrect
 };
 
 /**
- * Merge a host's overrides over the defaults — the scalar fields shallowly, `decode` per class.
+ * Merge a host's overrides over the defaults — the scalar fields shallowly, `decode` per class. An explicit
+ * `undefined` override keeps its default.
  *
  * @param overrides - The host's overrides.
  * @returns The merged texts.
@@ -97,7 +98,7 @@ export function llmDispatchCorrectionTextsOf(overrides?: Maybe<LlmDispatchCorrec
 
   if (overrides != null) {
     const { decode, ...scalars } = overrides;
-    texts = { ...texts, ...scalars, decode: { ...texts.decode, ...decode } };
+    texts = { ...mergeObjects<LlmDispatchCorrectionTexts>([texts, scalars]), decode: mergeObjects<LlmDispatchCorrectionTexts['decode']>([texts.decode, decode]) };
   }
 
   return texts;

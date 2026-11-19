@@ -3,7 +3,7 @@
  */
 
 import { probeLlmCredentialEndpoint, type LlmCredentialProbeFetch, type LlmStrategyHealth, type LlmStrategyId } from '@dereekb/llm';
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, removeTrailingSlashes } from '@dereekb/util';
 import { DEFAULT_ZENMUX_BASE_URL } from './zenmux.constants';
 
 /**
@@ -70,7 +70,7 @@ export interface ProbeZenmuxCredentialConfig {
  * @returns The credential verdict; a dead key carries both refusals in the provider's own words.
  */
 export async function probeZenmuxCredential(config: ProbeZenmuxCredentialConfig): Promise<LlmStrategyHealth> {
-  const baseUrl = (config.baseUrl ?? DEFAULT_ZENMUX_BASE_URL).replace(/\/+$/, '');
+  const baseUrl = removeTrailingSlashes(config.baseUrl ?? DEFAULT_ZENMUX_BASE_URL);
   const shared = { strategyId: config.strategyId, apiKey: config.apiKey, rejectedStatuses: ZENMUX_REJECTED_CREDENTIAL_STATUSES, ...(config.fetch == null ? {} : { fetch: config.fetch }), ...(config.signal == null ? {} : { signal: config.signal }) };
   const completions = await probeLlmCredentialEndpoint({ ...shared, url: `${baseUrl}/chat/completions`, postBody: JSON.stringify({ model: ZENMUX_CREDENTIAL_PROBE_MODEL, messages: [{ role: 'user', content: '.' }], max_tokens: 1 }) });
   let health: LlmStrategyHealth = completions;

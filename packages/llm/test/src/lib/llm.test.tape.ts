@@ -23,8 +23,8 @@
  * @see LlmStrategy (the contract this implements).
  */
 
-import { type Maybe } from '@dereekb/util';
-import { isDecisionLlmCallRow, type LlmCapabilityKey, type LlmCompletion, type LlmModelId, type LlmRequest, type LlmStrategy, type LlmStrategyHealth, type LlmStrategyId, type LlmUsage, readLlmCallPrompt, sha256Hex } from '@dereekb/llm';
+import { type Maybe, sha256HexPrefix } from '@dereekb/util';
+import { isDecisionLlmCallRow, type LlmCapabilityKey, type LlmCompletion, type LlmModelId, type LlmRequest, type LlmStrategy, type LlmStrategyHealth, type LlmStrategyId, type LlmUsage, readLlmCallPrompt } from '@dereekb/llm';
 
 /**
  * The registry id (and kind) of the tape strategy. A host pins it programmatically as the default strategy of a replay
@@ -227,7 +227,7 @@ export interface LlmTapeStrategyConfig {
  * @returns The digest.
  */
 export function hashLlmTapePrompt(text: string): string {
-  return sha256Hex(text).slice(0, LLM_TAPE_PROMPT_SHA_LENGTH);
+  return sha256HexPrefix(text, LLM_TAPE_PROMPT_SHA_LENGTH);
 }
 
 /**

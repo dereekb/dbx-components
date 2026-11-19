@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { sha256Hex } from '../util/sha256';
+import { sha256Hex } from '@dereekb/util';
 import { LLM_PROMPT_CACHE_HASH_LENGTH, llmPromptCacheHash } from './llm.prompt.hash';
 
 describe('llmPromptCacheHash()', () => {

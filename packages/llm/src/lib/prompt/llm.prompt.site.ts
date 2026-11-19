@@ -8,7 +8,7 @@
  * narrower one winning, keyed) and {@link withLlmPromptSite} scopes a whole dispatcher to one site.
  */
 
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, mergeObjects } from '@dereekb/util';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { type LlmDispatcher } from '../dispatch/llm.dispatcher';
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
@@ -118,14 +118,15 @@ export interface LlmPromptSite<S extends object = object> {
 }
 
 /**
- * Merge two keyed records — the inner's keys win; either side absent ⇒ the other unchanged.
+ * Merge two keyed records — the inner's keys win (an explicit `undefined` inner key keeps the outer value); either side
+ * absent ⇒ the other unchanged.
  *
  * @param outer - The wider scope's record.
  * @param inner - The narrower scope's record.
  * @returns The merged record, or `undefined` when both are absent.
  */
 function mergeKeyed<T extends object>(outer: Maybe<T>, inner: Maybe<T>): Maybe<T> {
-  return outer == null || inner == null ? (inner ?? outer) : { ...outer, ...inner };
+  return outer == null || inner == null ? (inner ?? outer) : mergeObjects<T>([outer, inner]);
 }
 
 /**

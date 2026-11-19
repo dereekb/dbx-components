@@ -31,7 +31,7 @@
  *    ({@link LlmDispatchStartTapEventBase.estimatedPromptTokens}, `followUp`, …) ride the tap event ONLY.
  */
 
-import type { Maybe } from '@dereekb/util';
+import { errorMessageOf, isPromiseLike, type Maybe } from '@dereekb/util';
 import type { LlmCapabilityKey, LlmModelTierKey } from '../model/llm.value';
 import type { LlmCallHostFields, LlmCallRecordBase, LlmCallStartRecordBase } from './llm.call.record';
 import type { LlmDecodeFailureAttempt } from './llm.decode.failure';
@@ -132,8 +132,8 @@ export type LlmDecodeFailureTapEvent<H extends LlmCallHostFields = LlmCallHostFi
  * A registered probe. EVERY callback is optional and STRICTLY READ-ONLY — a return value is ignored, and nothing a
  * callback does can change the request, the reply, or the recorded events.
  *
- * A callback may be async (`Promise<void>`); both a synchronous throw and a promise rejection are swallowed and
- * counted. A tap runs INLINE on the dispatch path, so a tap doing real work should be async or queue — the registry
+ * A callback may be async (it may return any thenable, not only a native `Promise`); both a synchronous throw and a
+ * rejection are swallowed and counted. A tap runs INLINE on the dispatch path, so a tap doing real work should be async or queue — the registry
  * does not enforce a budget, a probe owns its own cost.
  */
 export interface LlmDispatchTap<H extends LlmCallHostFields = LlmCallHostFields> {
@@ -146,19 +146,19 @@ export interface LlmDispatchTap<H extends LlmCallHostFields = LlmCallHostFields>
    *
    * @param event - The send-time event.
    */
-  onDispatch?(event: LlmDispatchStartTapEvent<H>): void | Promise<void>;
+  onDispatch?(event: LlmDispatchStartTapEvent<H>): void | PromiseLike<void>;
   /**
    * Observe a completed dispatch (the reply + the retry outcome).
    *
    * @param event - The completion event.
    */
-  onDispatchComplete?(event: LlmDispatchCompleteTapEvent<H>): void | Promise<void>;
+  onDispatchComplete?(event: LlmDispatchCompleteTapEvent<H>): void | PromiseLike<void>;
   /**
    * Observe one FAILED decode attempt, before the retry is issued.
    *
    * @param event - The failed-attempt event.
    */
-  onDecodeFailure?(event: LlmDecodeFailureTapEvent<H>): void | Promise<void>;
+  onDecodeFailure?(event: LlmDecodeFailureTapEvent<H>): void | PromiseLike<void>;
 }
 
 /**
@@ -235,16 +235,6 @@ export interface LlmDispatchTapRegistry<H extends LlmCallHostFields = LlmCallHos
 }
 
 /**
- * Whether a callback's return value is a promise whose rejection must be caught.
- *
- * @param value - The returned value.
- * @returns `true` when it is thenable.
- */
-function isThenable(value: unknown): value is Promise<void> {
-  return value != null && typeof (value as Promise<void>).then === 'function';
-}
-
-/**
  * Build an {@link LlmDispatchTapRegistry} — a `Set` of taps (O(1) detach, identity dedupe, iterated LIVE so a tap that
  * detaches itself mid-fan-out is simply skipped) plus the swallow-and-count tally.
  *
@@ -267,19 +257,19 @@ export function makeLlmDispatchTapRegistry<H extends LlmCallHostFields = LlmCall
   // NOTHING is written to the console — `health()` is the entire surface.
   const tally = (tap: LlmDispatchTap<H>, error: unknown): void => {
     failures += 1;
-    lastError = error instanceof Error ? error.message : String(error);
+    lastError = errorMessageOf(error);
     byTap[tap.id] = (byTap[tap.id] ?? 0) + 1;
   };
 
   // One tap, one callback — a sync throw is caught here (`llm/dispatch-taps.sync-throw`), an async rejection through
-  // the attached `.catch` (`llm/dispatch-taps.async-reject`), so neither can abort the fan-out to the remaining taps
-  // nor reach the dispatcher.
-  const deliver = (tap: LlmDispatchTap<H>, run: () => void | Promise<void>): void => {
+  // the attached rejection handler (`llm/dispatch-taps.async-reject`), so neither can abort the fan-out to the remaining
+  // taps nor reach the dispatcher. Any thenable counts, not only a native Promise (a bare thenable has no `.catch`).
+  const deliver = (tap: LlmDispatchTap<H>, run: () => void | PromiseLike<void>): void => {
     try {
       const result = run();
 
-      if (isThenable(result)) {
-        result.catch((error: unknown) => tally(tap, error));
+      if (isPromiseLike(result)) {
+        result.then(undefined, (error: unknown) => tally(tap, error));
       }
     } catch (error) {
       tally(tap, error);
@@ -288,7 +278,7 @@ export function makeLlmDispatchTapRegistry<H extends LlmCallHostFields = LlmCall
 
   // The shared fan-out: pick this seam's callback off each live tap, skip the taps that do not declare it, and route
   // the rest through `deliver`.
-  const fanOut = <E>(event: E, callbackOf: (tap: LlmDispatchTap<H>) => Maybe<(event: E) => void | Promise<void>>): void => {
+  const fanOut = <E>(event: E, callbackOf: (tap: LlmDispatchTap<H>) => Maybe<(event: E) => void | PromiseLike<void>>): void => {
     for (const tap of taps) {
       const callback = callbackOf(tap);
 

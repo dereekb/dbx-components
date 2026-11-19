@@ -22,7 +22,7 @@
  * {@link tightestLlmQuotaWindow} for the throttle signal and renders whatever else is present.
  */
 
-import { type DollarAmount, type ISO8601DateString, type PercentDecimal } from '@dereekb/util';
+import { type DollarAmount, type ISO8601DateString, type PercentDecimal, roundToPrecision } from '@dereekb/util';
 import { type LlmStrategyHealthIssue } from './llm.strategy.health';
 
 /**
@@ -255,8 +255,8 @@ export function formatLlmProviderStatusLines(status: LlmProviderStatus): Readonl
     status.windows.forEach((window) => {
       const percent = window.usedFraction == null ? '?' : `${(window.usedFraction * 100).toFixed(1)}%`;
       const unitSuffix = window.unit == null ? '' : ` ${window.unit}`;
-      const units = window.usedUnits == null || window.maxUnits == null ? '' : ` (${round2(window.usedUnits)}/${round2(window.maxUnits)}${unitSuffix})`;
-      const usd = window.usedUsd == null || window.maxUsd == null ? '' : ` ≈ $${round2(window.usedUsd)}/$${round2(window.maxUsd)}`;
+      const units = window.usedUnits == null || window.maxUnits == null ? '' : ` (${roundToPrecision(window.usedUnits, 2)}/${roundToPrecision(window.maxUnits, 2)}${unitSuffix})`;
+      const usd = window.usedUsd == null || window.maxUsd == null ? '' : ` ≈ $${roundToPrecision(window.usedUsd, 2)}/$${roundToPrecision(window.maxUsd, 2)}`;
       const resets = window.resetsAt == null ? '' : `, resets ${window.resetsAt}`;
       lines.push(`${window.label}: ${percent} used${units}${usd}${resets}`);
     });
@@ -264,9 +264,9 @@ export function formatLlmProviderStatusLines(status: LlmProviderStatus): Readonl
     const balance = status.balance;
 
     if (balance != null) {
-      const partList = balance.parts == null ? [] : balance.parts.map((part) => `${part.label} ${round2(part.amount)}`);
+      const partList = balance.parts == null ? [] : balance.parts.map((part) => `${part.label} ${roundToPrecision(part.amount, 2)}`);
       const parts = partList.length === 0 ? '' : ` (${partList.join(', ')})`;
-      lines.push(`balance: ${round2(balance.total)} ${balance.currency}${parts}`);
+      lines.push(`balance: ${roundToPrecision(balance.total, 2)} ${balance.currency}${parts}`);
     }
   } else {
     lines.push(`${status.providerId}: no account usage available`);
@@ -274,15 +274,4 @@ export function formatLlmProviderStatusLines(status: LlmProviderStatus): Readonl
 
   status.issues.forEach((issue) => lines.push(`[${issue.severity}] ${issue.message}`));
   return lines;
-}
-
-/**
- * Two-decimal rounding for a report line — the numbers here are dollars and synthetic units whose provider
- * reports 6+ decimals, none of which a human reading a quota line wants.
- *
- * @param value - The raw value.
- * @returns The rounded value.
- */
-function round2(value: number): number {
-  return Math.round(value * 100) / 100;
 }
