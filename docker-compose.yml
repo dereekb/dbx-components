@@ -30,6 +30,12 @@ services:
       # `CI` is normally unset here (docker compose run does not inherit host env), so this is a
       # guard for the case where it leaks in. Same reason .circleci/config.yml pins NX_DAEMON.
       - NX_DAEMON=true
+      # Seconds the Functions emulator waits for dist/apps/demo-api/main.js to report its function
+      # definitions (firebase-tools defaults to 10s). On a loaded machine the bundle can miss that
+      # window, and the emulator then comes up "ready" with ZERO functions: every hosting rewrite
+      # (/mcp, /.well-known/*, /oidc) 404s and MCP OAuth discovery falls back to a bogus
+      # <appUrl>/authorize. The only sign is one "Failed to load function definition" log line.
+      - FUNCTIONS_DISCOVERY_TIMEOUT=60
     # extra_hosts:    # uncomment for enabling local development. Don't forget to start the offline nginx server!
     # - "firebase-public.firebaseio.com:0.0.0.0"
     networks:
