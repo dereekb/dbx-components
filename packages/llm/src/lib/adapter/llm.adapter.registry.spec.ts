@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { makeLlmModelConfigSchema } from '../model/config/llm.model.config.schema';
-import { type LlmCompletionAdapter, type LlmDecisionAdapter, type LlmMeteringAdapter, LLM_ADAPTER_FACETS } from './llm.adapter';
+import { type LlmCompletionAdapter, type LlmDecisionAdapter, type LlmMeteringAdapter } from './llm.adapter';
 import { llmAdapterKey, llmAdapterKindsOf, llmAdapterOf, llmAdaptersOf, llmModelConfigListsOf, makeLlmAdapterRegistry, resolveLlmAdapter } from './llm.adapter.registry';
 
 function notCalled(): never {
@@ -28,10 +28,6 @@ const ZENMUX_METERING = meteringAdapter('zenmux');
 describe('llmAdapterKey()', () => {
   it('should key an adapter by facet and kind', () => {
     expect(llmAdapterKey({ facet: 'completion', kind: 'openai' })).toBe('completion:openai');
-  });
-
-  it('should list the five facets', () => {
-    expect(LLM_ADAPTER_FACETS).toEqual(['completion', 'decision', 'metering', 'bill', 'credentialProbe']);
   });
 });
 

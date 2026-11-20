@@ -1,12 +1,13 @@
 /**
  * The strategy registry — `id` is the primary key, `kind` a last-wins secondary index that falls back to a remaining
- * instance when its holder leaves, and `llmStrategyInstancesOfKind` answers "all of them" in registry order.
+ * instance when its holder leaves, and `values().filter(...)` over {@link llmStrategyKind} answers "all of them" in
+ * registry order.
  */
 
 import { describe, it, expect } from 'vitest';
 import { type LlmDecisionStrategy, type LlmDecisionStrategyRegistry } from '../decision/llm.decision.strategy';
 import { type LlmCompletion, type LlmRequest, type LlmStrategy } from './llm.strategy';
-import { llmStrategyInstancesOfKind, llmStrategyKind, makeLlmStrategyRegistry } from './llm.strategy.registry';
+import { llmStrategyKind, type LlmStrategyRegistry, makeLlmStrategyRegistry } from './llm.strategy.registry';
 
 /**
  * Build a tiny fake {@link LlmStrategy}; `complete` echoes the prompt.
@@ -25,6 +26,18 @@ function fakeStrategy(id: string, kind?: string): LlmStrategy {
   };
 }
 
+/**
+ * Every registered instance of one transport kind, in registry order — the `values().filter(...)` idiom the registry
+ * documents for "every instance of a kind".
+ *
+ * @param strategies - The registry to scan.
+ * @param kind - The transport kind to match.
+ * @returns The matching instances.
+ */
+function filterStrategiesByKind<S extends LlmStrategy | LlmDecisionStrategy>(strategies: LlmStrategyRegistry<S>, kind: string): ReadonlyArray<S> {
+  return strategies.values().filter((strategy) => llmStrategyKind(strategy) === kind);
+}
+
 describe('makeLlmStrategyRegistry', () => {
   it('reads a strategy by its id', () => {
     const a = fakeStrategy('a');
@@ -34,19 +47,19 @@ describe('makeLlmStrategyRegistry', () => {
     expect(strategies.get('missing')).toBeUndefined();
   });
 
-  it('answers the LAST registered instance of a kind with llmStrategyInstancesOfKind(...).at(-1)', () => {
+  it('answers the LAST registered instance of a kind with values().filter(...).at(-1)', () => {
     const local = fakeStrategy('local', 'openai');
     const gateway = fakeStrategy('gateway', 'openai');
     const strategies = makeLlmStrategyRegistry([local, gateway]);
 
-    expect(llmStrategyInstancesOfKind({ strategies, kind: 'openai' }).at(-1)).toBe(gateway);
+    expect(filterStrategiesByKind(strategies, 'openai').at(-1)).toBe(gateway);
   });
 
   it('matches a kind-less strategy by its id', () => {
     const openrouter = fakeStrategy('openrouter');
     const strategies = makeLlmStrategyRegistry([openrouter]);
 
-    expect(llmStrategyInstancesOfKind({ strategies, kind: 'openrouter' })).toEqual([openrouter]);
+    expect(filterStrategiesByKind(strategies, 'openrouter')).toEqual([openrouter]);
   });
 
   it('replaces a re-registered id in place, keeping its position', () => {
@@ -66,7 +79,7 @@ describe('makeLlmStrategyRegistry', () => {
     const strategies = makeLlmStrategyRegistry([local, gateway]);
 
     strategies.unregister('gateway');
-    expect(llmStrategyInstancesOfKind({ strategies, kind: 'openai' }).at(-1)).toBe(local);
+    expect(filterStrategiesByKind(strategies, 'openai').at(-1)).toBe(local);
   });
 
   it('carries host meta from the request onto the completion', async () => {
@@ -96,27 +109,27 @@ describe('llmStrategyKind', () => {
   });
 });
 
-describe('llmStrategyInstancesOfKind', () => {
+describe('values().filter(...) by kind', () => {
   it('returns every instance of the kind in registry order', () => {
     const local = fakeStrategy('local', 'openai');
     const openrouter = fakeStrategy('openrouter');
     const gateway = fakeStrategy('gateway', 'openai');
     const strategies = makeLlmStrategyRegistry([local, openrouter, gateway]);
 
-    expect(llmStrategyInstancesOfKind({ strategies, kind: 'openai' })).toEqual([local, gateway]);
+    expect(filterStrategiesByKind(strategies, 'openai')).toEqual([local, gateway]);
   });
 
   it('returns an empty list for an unknown kind', () => {
     const strategies = makeLlmStrategyRegistry([fakeStrategy('a')]);
-    expect(llmStrategyInstancesOfKind({ strategies, kind: 'nope' })).toEqual([]);
+    expect(filterStrategiesByKind(strategies, 'nope')).toEqual([]);
   });
 });
 
 describe('makeLlmStrategyRegistry() over the decision lane', () => {
-  it('infers a decision registry from a decision seed, and llmStrategyInstancesOfKind reads it', () => {
+  it('infers a decision registry from a decision seed, and a kind filter reads it', () => {
     const decisionStrategy = (id: string): LlmDecisionStrategy => ({ id, kind: 'decisions-wire', describe: id, decide: async () => ({ model: 'm', answers: {} as never }) });
     const strategies: LlmDecisionStrategyRegistry = makeLlmStrategyRegistry([decisionStrategy('a'), decisionStrategy('b')]);
-    const instances: ReadonlyArray<LlmDecisionStrategy> = llmStrategyInstancesOfKind({ strategies, kind: 'decisions-wire' });
+    const instances: ReadonlyArray<LlmDecisionStrategy> = filterStrategiesByKind(strategies, 'decisions-wire');
 
     expect(instances.map((strategy) => strategy.id)).toEqual(['a', 'b']);
     expect(typeof strategies.get('a')?.decide).toBe('function');

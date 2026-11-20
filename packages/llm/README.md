@@ -63,9 +63,9 @@ so several instances of one transport can be registered side by side. Those two,
   `toLlmAttachmentDataUrl` builds an attachment's `data:` URL. The stock transports default to
   `DEFAULT_LLM_MAX_OUTPUT_TOKENS` (8,192) and a `DEFAULT_LLM_COMPLETION_TIMEOUT_MS` (60 s) timeout floor.
 - **Registry.** `makeLlmStrategyRegistry(seed)` serves either lane (`LlmStrategyRegistry<S>`; a registry of decision
-  strategies is an `LlmDecisionStrategyRegistry`) and answers `get(id)`; `llmStrategyInstancesOfKind` lists every
-  instance of a transport in registry order (`values().filter(...)`), and its `.at(-1)` is the last registered one. It
-  is built on `@dereekb/util`'s `createKeyedRegistry`.
+  strategies is an `LlmDecisionStrategyRegistry`) and answers `get(id)`. Every instance of a transport is
+  `strategies.values().filter((s) => llmStrategyKind(s) === kind)`, in registry order, and its `.at(-1)` is the last
+  registered one. It is built on `@dereekb/util`'s `createKeyedRegistry`.
 - **Readiness.** Three optional seams: `healthCheck` (no network), `credentialProbe` (one free authenticated request)
   and `providerStatus` (account windows and balance). `verifyLlmStrategies` throws when a required strategy is
   missing or not ready; `probeLlmCredentials` and `readLlmProviderStatus` report and never throw (one status read per
@@ -1012,7 +1012,8 @@ could need in one map.
   `healthCheck` / `credentialProbe` are the base's, reporting `LlmStrategyHealth`. `LlmDecideOptions` extends
   `LlmCompleteOptions` (`signal`) with `timeoutMs`.
 - A decision registry is `makeLlmStrategyRegistry(seed)` over decision strategies (an `LlmDecisionStrategyRegistry`);
-  `llmStrategyInstancesOfKind` lists a kind's instances (`.at(-1)` the LAST registered), `values()[0]` the first.
+  a kind's instances are `values().filter((s) => llmStrategyKind(s) === kind)` (`.at(-1)` the LAST registered),
+  `values()[0]` the first.
 - `verifyLlmStrategies({ strategies, required, lane: LLM_DECISION_STRATEGY_READINESS_LANE })` and
   `probeLlmCredentials({ strategies, required, signal, lane: LLM_DECISION_STRATEGY_READINESS_LANE })` gate launch on
   the decision backends and return the same `LlmStrategiesHealthReport`: verify throws one aggregated error, probe

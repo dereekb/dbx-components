@@ -94,7 +94,7 @@ export function makeZenmuxBillAdapter(config: ZenmuxLlmAdaptersConfig = {}): Llm
 }
 
 /**
- * Build every ZenMux adapter, in `LLM_ADAPTER_FACETS` order: decision, metering, bill, credential probe.
+ * Build every ZenMux adapter, in facet order: decision, metering, bill, credential probe.
  *
  * Register this array BEFORE `/openrouter`'s (or pass a `routePreference`) when ZenMux should be the default decision route.
  *

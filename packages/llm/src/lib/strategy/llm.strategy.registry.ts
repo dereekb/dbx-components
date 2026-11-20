@@ -21,9 +21,9 @@ export type LlmStrategyRegistry<S extends LlmStrategyBase = LlmStrategy> = Keyed
  * type picks the lane: completion strategies build an `LlmStrategyRegistry`, decision strategies an
  * `LlmDecisionStrategyRegistry`.
  *
- * The registry answers `get(id)`. "Every instance of a transport" is {@link llmStrategyInstancesOfKind}
- * (`values().filter(...)` in registry order); "the last registered instance of a kind" is its `.at(-1)`. A host whose
- * default is "the first configured strategy" reads `values()[0]`.
+ * The registry answers `get(id)`. "Every instance of a transport" is
+ * `strategies.values().filter((s) => llmStrategyKind(s) === kind)`, in registry order; "the last registered instance of
+ * a kind" is its `.at(-1)`. A host whose default is "the first configured strategy" reads `values()[0]`.
  *
  * @param seed - The strategies to seed the registry with.
  * @returns The strategy registry.
@@ -45,32 +45,4 @@ export function makeLlmStrategyRegistry<S extends LlmStrategyBase = LlmStrategy>
  */
 export function llmStrategyKind(strategy: Pick<LlmStrategyBase, 'id' | 'kind'>): LlmStrategyId {
   return strategy.kind ?? strategy.id;
-}
-
-/**
- * Config for {@link llmStrategyInstancesOfKind}.
- *
- * @typeParam S - The strategy type of the registry.
- */
-export interface LlmStrategyInstancesOfKindConfig<S extends LlmStrategyBase = LlmStrategy> {
-  /**
-   * The registry to scan — of either lane.
-   */
-  readonly strategies: LlmStrategyRegistry<S>;
-  /**
-   * The transport kind to match.
-   */
-  readonly kind: LlmStrategyId;
-}
-
-/**
- * Every registered INSTANCE of one transport kind, in registry order, on either lane. Its `.at(-1)` is the last
- * registered instance of the kind.
- *
- * @param config - The registry to scan and the kind to match.
- * @returns The matching instances (empty when none is registered).
- */
-export function llmStrategyInstancesOfKind<S extends LlmStrategyBase = LlmStrategy>(config: LlmStrategyInstancesOfKindConfig<S>): ReadonlyArray<S> {
-  const { strategies, kind } = config;
-  return strategies.values().filter((strategy) => llmStrategyKind(strategy) === kind);
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { type LlmProviderConfig } from '../model/config/llm.model.config.resolve';
 import { type ConfiguredFetch } from '@dereekb/util/fetch';
-import { llmStrategyInstancesOfKind, makeLlmStrategyRegistry } from '../strategy/llm.strategy.registry';
+import { llmStrategyKind, makeLlmStrategyRegistry } from '../strategy/llm.strategy.registry';
 import { type LlmAdapter, type LlmAdapterInput, type LlmBillAdapter, type LlmCompletionAdapter, type LlmCompletionAdapterConfig, type LlmCredentialProbeAdapter, type LlmMeteringAdapter } from './llm.adapter';
 import { makeLlmAdapterRegistry } from './llm.adapter.registry';
 import { llmProviderBaseUrlOf, llmProviderMeteringOf, makeLlmProviderStrategies, makeLlmProviderStrategy, resolveLlmProviderAccount } from './llm.adapter.provider';
@@ -222,7 +222,7 @@ describe('makeLlmProviderStrategy()', () => {
     const strategies = makeLlmStrategyRegistry(makeLlmProviderStrategies({ providers: [ZENMUX, LOCAL], adapters }));
 
     expect(strategies.size).toBe(2);
-    expect(llmStrategyInstancesOfKind({ strategies, kind: 'openai' }).at(-1)?.id).toBe('local');
+    expect(strategies.values().findLast((strategy) => llmStrategyKind(strategy) === 'openai')?.id).toBe('local');
   });
 
   it('should hand the shared options to the adapter only when set', () => {

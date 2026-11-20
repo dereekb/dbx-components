@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { classifyLlmDecodeFailure } from '../record/llm.decode.failure';
-import { DEFAULT_LLM_REPLY_ENVELOPE_KEYS, isLlmReplyObject, llmLineReplyLeverOf, llmReplyEnvelopeContractIntro, llmReplyLeverOf, llmReplyRationaleOf, type LlmReplyEnvelopeKeys, readLlmDispatchResultLever, readLlmReplyLever, resolveLlmReplyReadingEnvelope } from './llm.reply.envelope';
+import { DEFAULT_LLM_REPLY_ENVELOPE_KEYS, llmLineReplyLeverOf, llmReplyEnvelopeContractIntro, llmReplyLeverOf, llmReplyRationaleOf, type LlmReplyEnvelopeKeys, readLlmDispatchResultLever, readLlmReplyLever, resolveLlmReplyReadingEnvelope } from './llm.reply.envelope';
 
 const ENVELOPE = { envelope: DEFAULT_LLM_REPLY_ENVELOPE_KEYS };
 
@@ -252,16 +252,6 @@ describe('llmLineReplyLeverOf()', () => {
     expect(llmLineReplyLeverOf('{"answerable":false}', ENVELOPE)).toBeUndefined();
     expect(llmLineReplyLeverOf('{"lever":{"line":"x"}}', ENVELOPE)).toEqual({ line: 'x' });
     expect(llmLineReplyLeverOf('{"lever":{"line":"x"}}')).toBeUndefined();
-  });
-});
-
-describe('isLlmReplyObject()', () => {
-  it('accepts objects and arrays and rejects everything else', () => {
-    expect(isLlmReplyObject({})).toBe(true);
-    expect(isLlmReplyObject([])).toBe(true);
-    expect(isLlmReplyObject(null)).toBe(false);
-    expect(isLlmReplyObject('x')).toBe(false);
-    expect(isLlmReplyObject(1)).toBe(false);
   });
 });
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_LLM_REASONING_OFF_ENCODING, DEFAULT_LLM_TOKEN_LIMIT_PARAM, isLlmReasoningOffEncoding, isLlmTokenLimitParam, LLM_REASONING_OFF_ENCODINGS, LLM_TOKEN_LIMIT_PARAMS, llmReasoningOffEncodingFor, normalizeLlmReasoningConfig, parseLlmReasoningOffEncoding } from './llm.model.wire';
+import { DEFAULT_LLM_REASONING_OFF_ENCODING, DEFAULT_LLM_TOKEN_LIMIT_PARAM, isLlmTokenLimitParam, LLM_REASONING_OFF_ENCODINGS, LLM_TOKEN_LIMIT_PARAMS, llmReasoningOffEncodingFor, normalizeLlmReasoningConfig, parseLlmReasoningOffEncoding } from './llm.model.wire';
 
 describe('LLM_REASONING_OFF_ENCODINGS', () => {
   it('lists every encoding in message order', () => {
@@ -8,19 +8,6 @@ describe('LLM_REASONING_OFF_ENCODINGS', () => {
 
   it('defaults to effort-none', () => {
     expect(DEFAULT_LLM_REASONING_OFF_ENCODING).toBe('effort-none');
-  });
-});
-
-describe('isLlmReasoningOffEncoding()', () => {
-  it('accepts every member', () => {
-    for (const encoding of LLM_REASONING_OFF_ENCODINGS) {
-      expect(isLlmReasoningOffEncoding(encoding)).toBe(true);
-    }
-  });
-
-  it('rejects a non-member string and a non-string', () => {
-    expect(isLlmReasoningOffEncoding('minimal')).toBe(false);
-    expect(isLlmReasoningOffEncoding(1)).toBe(false);
   });
 });
 

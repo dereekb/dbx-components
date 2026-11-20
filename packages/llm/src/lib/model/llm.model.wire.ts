@@ -92,16 +92,6 @@ export type LlmModelReasoningOffMap = LlmModelSlugMap<LlmReasoningOffEncoding>;
 export type LlmModelVisionMap = LlmModelSlugMap<boolean>;
 
 /**
- * Whether a value is one of the {@link LLM_REASONING_OFF_ENCODINGS}.
- *
- * @param value - The candidate value.
- * @returns `true` when the value is a legal encoding.
- */
-export function isLlmReasoningOffEncoding(value: unknown): value is LlmReasoningOffEncoding {
-  return typeof value === 'string' && (LLM_REASONING_OFF_ENCODINGS as ReadonlyArray<string>).includes(value);
-}
-
-/**
  * Whether a value is one of the {@link LLM_TOKEN_LIMIT_PARAMS}.
  *
  * @param value - The candidate value.

@@ -26,6 +26,7 @@
 import { type JsonObjectInText, type Maybe, parseJsonObjectOrUndefined, readJsonObjectFromText, stripMarkdownCodeFence } from '@dereekb/util';
 import { type LlmSwallowSink, type LlmSwallowSiteId, NOOP_LLM_SWALLOW_SINK } from '../record/llm.swallow';
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
+import { isLlmReplyObject } from './llm.reply.object';
 import { type LlmReplyProtocol } from './llm.reply.protocol';
 
 /**
@@ -61,16 +62,6 @@ export const DEFAULT_LLM_REPLY_ENVELOPE_KEYS: LlmReplyEnvelopeKeys = { lever: 'l
  * The default single lever field a `line` reply lifts into.
  */
 export const DEFAULT_LLM_LINE_LEVER_FIELD = 'line';
-
-/**
- * Whether a value is a non-null object (the lever / envelope guard). Arrays pass too.
- *
- * @param value - The value to test.
- * @returns `true` when it is a non-null object.
- */
-export function isLlmReplyObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value != null;
-}
 
 /**
  * Find + parse the reply's JSON object. The ONE slicer every reader shares: `@dereekb/util` `readJsonObjectFromText`,

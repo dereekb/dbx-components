@@ -34,11 +34,6 @@ import { type LlmDecisionStrategy } from '../decision/llm.decision.strategy';
 export type LlmAdapterFacet = 'completion' | 'decision' | 'metering' | 'bill' | 'credentialProbe';
 
 /**
- * Every {@link LlmAdapterFacet}, in declaration order.
- */
-export const LLM_ADAPTER_FACETS: ReadonlyArray<LlmAdapterFacet> = ['completion', 'decision', 'metering', 'bill', 'credentialProbe'];
-
-/**
  * The value a provider entry names: a transport (completion), a decision route (decision) or a metering id (metering,
  * bill, credentialProbe). Never `'none'` (`LLM_PROVIDER_FACET_NONE`), which means "no such facet".
  */
