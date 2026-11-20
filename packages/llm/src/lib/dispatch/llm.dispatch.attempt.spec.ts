@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { type LlmCallContext, makeLlmCallContext } from '../record/llm.call.context';
-import { LLM_TIMEOUT_FINISH_REASON, LLM_TRANSPORT_FINISH_REASON } from '../record/llm.decode.failure';
+import { LLM_TIMEOUT_FINISH_REASON, LLM_TRANSPORT_FINISH_REASON, LLM_UNRETRYABLE_FINISH_REASON } from '../record/llm.decode.failure';
 import { type LlmCompletion, type LlmDispatchResult, type LlmRequest, type LlmStrategy } from '../strategy/llm.strategy';
 import { type LlmReplyFastFixOutcome } from '../reply/llm.reply.fast.fix';
 import { isDegenerateLlmReplyReading, type LlmBoundReplyFastFix, llmBoundReplyFastFixOf, readLlmDispatchReply, type LlmReplyRepairRefusal, runLlmReplyRepairLane, sendLlmDispatchAttempt, validateLlmDispatchLever } from './llm.dispatch.attempt';
@@ -46,8 +46,36 @@ describe('sendLlmDispatchAttempt()', () => {
     expect(sent).toMatchObject({ fault: 'transport', transportError: expect.any(String), result: { finishReason: LLM_TRANSPORT_FINISH_REASON } });
   });
 
-  it('should rethrow any other error', async () => {
-    await expect(sendLlmDispatchAttempt({ strategy: strategyOf(() => Promise.reject(new Error('503'))), request: REQUEST, attempt: 1, callContext: makeLlmCallContext({ label: 'cap' }) })).rejects.toThrow('503');
+  describe('the unretryable fault', () => {
+    async function sendThrowing(error: unknown, isRetryableUnknownError?: (error: unknown) => boolean | undefined) {
+      return sendLlmDispatchAttempt({ strategy: strategyOf(() => Promise.reject(error)), request: REQUEST, attempt: 1, callContext: makeLlmCallContext({ label: 'cap' }), isRetryableUnknownError });
+    }
+
+    it('should read an abort as a timeout with no classification', async () => {
+      const sent = await sendThrowing(new DOMException('stop', 'AbortError'));
+      expect(sent.fault).toBe('timeout');
+      expect(sent.classification).toBeUndefined();
+    });
+
+    it('should read a 503 as a transient transport fault', async () => {
+      const sent = await sendThrowing(Object.assign(new Error('x'), { status: 503 }));
+      expect(sent).toMatchObject({ fault: 'transport', classification: 'transient', transportError: 'Error 503: x' });
+    });
+
+    it('should read a 401 as a permanent unretryable fault without asking the host', async () => {
+      const isRetryableUnknownError = vi.fn(() => true);
+      const sent = await sendThrowing(Object.assign(new Error('x'), { status: 401 }), isRetryableUnknownError);
+      expect(sent).toMatchObject({ fault: 'unretryable', classification: 'permanent', result: { finishReason: LLM_UNRETRYABLE_FINISH_REASON } });
+      expect(isRetryableUnknownError).not.toHaveBeenCalled();
+    });
+
+    it('should read an unknown error as unretryable unless the host answers true', async () => {
+      const error = new Error('boom');
+      expect(await sendThrowing(error)).toMatchObject({ fault: 'unretryable', classification: 'unknown', error });
+      expect(await sendThrowing(error, () => false)).toMatchObject({ fault: 'unretryable', classification: 'unknown' });
+      expect(await sendThrowing(error, () => undefined)).toMatchObject({ fault: 'unretryable', classification: 'unknown' });
+      expect(await sendThrowing(error, () => true)).toMatchObject({ fault: 'transport', classification: 'unknown', result: { finishReason: LLM_TRANSPORT_FINISH_REASON } });
+    });
   });
 });
 

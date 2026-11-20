@@ -9,7 +9,7 @@
  */
 
 import { type } from 'arktype';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { makeLlmTapeStrategy, makeScriptedLlmStrategy, type ScriptedLlmReplies, hashLlmTapePrompt } from '@dereekb/llm/test';
 import { defineLlmCapability, type LlmCapabilityDescriptor } from '../capability/llm.capability.descriptor';
 import { type LlmCompiledModelRouting } from '../model/llm.model.routing';
@@ -29,6 +29,8 @@ import { makeLlmStrategyRegistry } from '../strategy/llm.strategy.registry';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
 import { type LlmDispatchGapParams, type LlmDispatcherConfig, type LlmDispatchRecorder } from './llm.dispatcher.config';
 import { makeLlmDispatcher } from './llm.dispatcher.pipeline';
+import { isLlmDispatchFaultError, type LlmDispatchFaultError } from './llm.dispatch.fault';
+import { llmErrorSummaryOf } from '../strategy/llm.error';
 
 // MARK: Fixtures
 const TEMPLATES: ReadonlyArray<LlmPromptTemplate> = [
@@ -563,10 +565,21 @@ describe('makeLlmDispatcher()', () => {
   });
 
   describe('aborts and transport', () => {
-    it('should propagate a 400-shaped error on both paths', async () => {
-      const { dispatcher } = setup({ replies: [badRequest()] });
-      await expect(dispatcher.dispatch(request())).rejects.toThrow('bad request');
-      await expect(dispatcher.dispatch(request({ validate: VALID }))).rejects.toThrow('bad request');
+    it('should record a 400-shaped error, then reject with LlmDispatchFaultError on both paths', async () => {
+      for (const extra of [{}, { validate: VALID }]) {
+        const { calls, recorder } = recording();
+        const thrown = badRequest();
+        const { dispatcher } = setup({ replies: [thrown], recorder });
+        const caught = await dispatcher.dispatch(request(extra)).then(
+          () => undefined,
+          (e: unknown) => e
+        );
+
+        expect(isLlmDispatchFaultError(caught)).toBe(true);
+        expect((caught as LlmDispatchFaultError).cause).toBe(thrown);
+        expect((caught as LlmDispatchFaultError).message).toContain('bad request');
+        expect(calls).toHaveLength(1);
+      }
     });
 
     it('should drop the beat on an abort on the validated path (timeout row, attempts 1)', async () => {
@@ -962,6 +975,121 @@ describe('makeLlmDispatcher()', () => {
       expect(requests[1].prompt).toContain('v2');
       expect(requests[1].prompt).not.toContain('same');
       expect(requests[1].thread?.[0].content).toBe(requests[0].prompt);
+    });
+  });
+
+  describe('unretryable send errors', () => {
+    async function caughtOf(promise: Promise<unknown>): Promise<unknown> {
+      return promise.then(
+        () => undefined,
+        (e: unknown) => e
+      );
+    }
+
+    function statusError(status: number): Error {
+      return Object.assign(new Error(`http ${status}`), { status });
+    }
+
+    it('(a) should record a 401 on attempt 1, then reject with the structured fault', async () => {
+      const { starts, calls, decodeFailures, recorder } = recording();
+      const completes: LlmDispatchCompleteTapEvent<HostFields>[] = [];
+      const taps = makeLlmDispatchTapRegistry<HostFields>();
+      taps.addTap({ id: 't', onDispatchComplete: (event) => void completes.push(event) });
+      const isRetryableUnknownError = vi.fn(() => true);
+      const backoff = vi.fn(() => 0);
+      const thrown = statusError(401);
+      const { dispatcher } = setup({ replies: [thrown], recorder, taps, isRetryableUnknownError, transportBackoff: backoff });
+      const caught = await caughtOf(dispatcher.dispatch(request({ validate: VALID })));
+
+      expect(isLlmDispatchFaultError(caught)).toBe(true);
+      expect(caught).toMatchObject({ fault: 'unretryable', classification: 'permanent', attempt: 1, summary: llmErrorSummaryOf(thrown) });
+      expect((caught as LlmDispatchFaultError).cause).toBe(thrown);
+      expect(isRetryableUnknownError).not.toHaveBeenCalled();
+      expect(backoff).not.toHaveBeenCalled();
+      expect(starts).toHaveLength(1);
+      expect(calls).toHaveLength(1);
+      expect(calls[0].result).toMatchObject({ decodeStatus: 'dropped', decodeOutcome: 'transport', finishReason: '__unretryable__' });
+      expect(calls[0].failedAttempts).toEqual([expect.objectContaining({ cause: 'unretryable', error: llmErrorSummaryOf(thrown), errorClassification: 'permanent' })]);
+      expect(decodeFailures).toHaveLength(1);
+      expect(decodeFailures[0].payload.failures).toEqual([expect.objectContaining({ class: 'unretryable', errorClassification: 'permanent' })]);
+      expect(completes).toHaveLength(1);
+    });
+
+    it('(b) should resend a 503, then reject on a 400 at attempt 2', async () => {
+      const { calls, recorder } = recording();
+      const backoff = vi.fn(() => 0);
+      const { dispatcher } = setup({ replies: [statusError(503), statusError(400)], recorder, transportBackoff: backoff });
+      const caught = await caughtOf(dispatcher.dispatch(request({ validate: VALID, maxAttempts: 3 })));
+
+      expect(caught).toMatchObject({ classification: 'permanent', attempt: 2 });
+      expect(backoff).toHaveBeenCalledTimes(1);
+      const [first, second] = calls[0].failedAttempts ?? [];
+      expect(first).toMatchObject({ cause: 'transport' });
+      expect(first).not.toHaveProperty('errorClassification');
+      expect(second).toMatchObject({ cause: 'unretryable', errorClassification: 'permanent' });
+    });
+
+    it('(c) should resend a host-approved 409 like a transient error, resolving dropped once the budget is spent', async () => {
+      const { calls, recorder } = recording();
+      const backoff = vi.fn(() => 0);
+      const isRetryableUnknownError = vi.fn(() => true);
+      const { dispatcher, requests } = setup({ replies: [statusError(409), statusError(409)], recorder, transportBackoff: backoff, isRetryableUnknownError });
+      const result = await dispatcher.dispatch(request({ validate: VALID, maxAttempts: 2 }));
+
+      expect(result.decodeStatus).toBe('dropped');
+      expect(requests).toHaveLength(2);
+      expect(backoff).toHaveBeenCalledTimes(1);
+      expect(isRetryableUnknownError).toHaveBeenCalledTimes(2);
+      expect(calls[0].failedAttempts).toEqual([expect.objectContaining({ cause: 'transport', errorClassification: 'unknown' }), expect.objectContaining({ cause: 'transport', errorClassification: 'unknown' })]);
+    });
+
+    it('(c) should reject a 409 the host does not vouch for', async () => {
+      for (const isRetryableUnknownError of [undefined, () => false, () => undefined]) {
+        const { dispatcher, requests } = setup({ replies: [statusError(409)], isRetryableUnknownError, transportBackoff: () => 0 });
+        const caught = await caughtOf(dispatcher.dispatch(request({ validate: VALID, maxAttempts: 2 })));
+
+        expect(caught).toMatchObject({ fault: 'unretryable', classification: 'unknown' });
+        expect(requests).toHaveLength(1);
+      }
+    });
+
+    it('(d) should resend a 408', async () => {
+      const { dispatcher, requests } = setup({ replies: [statusError(408), '{"answer":"ok"}'], transportBackoff: () => 0 });
+      const result = await dispatcher.dispatch(request({ validate: VALID, maxAttempts: 2 }));
+
+      expect(result.decodeStatus).toBe('retried');
+      expect(requests).toHaveLength(2);
+    });
+
+    it('(e) should drop a 503 on a cancelled dispatch, not reject', async () => {
+      const controller = new AbortController();
+      controller.abort();
+      const { dispatcher } = setup({ replies: [statusError(503)], cancellationSignal: controller.signal, transportBackoff: () => 0 });
+      const result = await dispatcher.dispatch(request({ validate: VALID, maxAttempts: 2 }));
+
+      expect(result.decodeStatus).toBe('dropped');
+    });
+
+    it('should never consult the host function on the single-shot path, and record the call', async () => {
+      const { calls, recorder } = recording();
+      const isRetryableUnknownError = vi.fn(() => true);
+      const { dispatcher } = setup({ replies: [new Error('boom')], recorder, isRetryableUnknownError });
+      const caught = await caughtOf(dispatcher.dispatch(request()));
+
+      expect(caught).toMatchObject({ fault: 'unretryable', classification: 'unknown', attempt: 1 });
+      expect(isRetryableUnknownError).not.toHaveBeenCalled();
+      expect(calls).toHaveLength(1);
+      expect(calls[0].failedAttempts).toEqual([expect.objectContaining({ cause: 'unretryable', errorClassification: 'unknown' })]);
+    });
+
+    it('should still rethrow a transient error raw on the single-shot path, recording no call', async () => {
+      const { calls, recorder } = recording();
+      const thrown = statusError(503);
+      const { dispatcher } = setup({ replies: [thrown], recorder });
+      const caught = await caughtOf(dispatcher.dispatch(request()));
+
+      expect(caught).toBe(thrown);
+      expect(calls).toHaveLength(0);
     });
   });
 });

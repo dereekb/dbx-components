@@ -1,3 +1,4 @@
+import { type IsRetryableUnknownErrorFunction } from '@dereekb/util/fetch';
 import { llmChoiceQuestion, type LlmDecisionQuestions, llmNoulQuestion } from '@dereekb/llm';
 import { beforeEach, describe, expect, it } from 'vitest';
 import * as z from 'zod/v4';
@@ -142,6 +143,10 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
        * What the fake System One model should answer a DECISION request with.
        */
       readonly decisionReply?: FakeOpenRouterDecisionReply;
+      /**
+       * The host's call on an `unknown` failure.
+       */
+      readonly isRetryableUnknownError?: IsRetryableUnknownErrorFunction;
     }
 
     async function buildStack(config?: BuildStackConfig): Promise<TestStack> {
@@ -177,6 +182,7 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
         fileAttachmentMode: config?.fileAttachmentMode,
         tools: config?.tools,
         maxAttempts: config?.maxAttempts,
+        isRetryableUnknownError: config?.isRetryableUnknownError,
         onTerminalState: async (_document, result) => {
           terminal.push(result);
         }
@@ -918,6 +924,30 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
         expect(stack.fake.callCount).toBe(3);
         expect(task?.e?.message).toBe('nope');
       });
+
+      it('should fail an unknown failure at once when the host refuses it', async () => {
+        const stack = await buildStack({ maxAttempts: 3, reply: { throws: new Error('unrecognised') }, isRetryableUnknownError: () => false });
+
+        await stack.service.enqueueRunTask({ key: 'unknown_refused', promptKey: TEST_PROMPT_KEY, input: 'go' });
+        await openRouterRunTaskSweep({ service: stack.service, pageSize: 5 });
+
+        const task = await stack.taskData('unknown_refused');
+        expect(task?.s).toBe(OpenRouterRunTaskState.FAILED);
+        expect(task?.at).toBe(1);
+        // the SDK wraps a thrown fetch error as its `UnexpectedClientError`, which the classifier reads as `unknown`
+        expect(task?.e?.message).toContain('unrecognised');
+      });
+
+      it('should requeue an unknown failure by default', async () => {
+        const stack = await buildStack({ maxAttempts: 3, reply: { throws: new Error('unrecognised') } });
+
+        await stack.service.enqueueRunTask({ key: 'unknown_default', promptKey: TEST_PROMPT_KEY, input: 'go' });
+        await openRouterRunTaskSweep({ service: stack.service, pageSize: 5, maxPages: 1 });
+
+        const task = await stack.taskData('unknown_default');
+        expect(task?.s).toBe(OpenRouterRunTaskState.QUEUED);
+        expect(task?.at).toBe(1);
+      });
     });
 
     describe('decision runs', () => {
@@ -961,6 +991,7 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
 
         const task = await stack.taskData('decide_fault');
         expect(task?.s).toBe(OpenRouterRunTaskState.FAILED);
+        expect(task?.at).toBe(1);
         expect(task?.e?.message).toContain('choice-off-option');
       });
     });

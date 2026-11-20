@@ -13,6 +13,7 @@
  */
 
 import { cutString, hashStringToNumber, isNotBlankString, type Milliseconds } from '@dereekb/util';
+import type { FetchErrorClassification } from '@dereekb/util/fetch';
 import type { LlmCapabilityKey, LlmModelId, LlmModelTierKey } from '../model/llm.value';
 import type { LlmCompletion, LlmReplyOutcomeClass, LlmReplyRepairTier } from '../strategy/llm.strategy';
 
@@ -38,13 +39,24 @@ export const LLM_TIMEOUT_FINISH_REASON = '__timeout__';
 export const LLM_TRANSPORT_FINISH_REASON = '__transport__';
 
 /**
+ * The synthetic `finishReason` stamped on an UNRETRYABLE send failure — the send threw an error the retry policy does
+ * not resend (a `permanent` one, or an `unknown` one the host did not vouch for), so the call fails at once. Like
+ * {@link LLM_TRANSPORT_FINISH_REASON}, no reply came back.
+ *
+ * The value is persisted as a record's `finishReason`, so it never changes.
+ */
+export const LLM_UNRETRYABLE_FINISH_REASON = '__unretryable__';
+
+/**
  * The family of decode failure one attempt hit — `parse-error` (a `{…}` block that would not parse, or a reply with
  * no JSON object at all), `length-truncation` (the completion hit the `max_tokens` cap mid-object),
  * `schema-validation` (a parsed-but-invalid answer the capability validator rejected), `empty-result` (a blank
  * completion), `timeout` (the per-request abort signal fired — the call exceeded its wall and never returned, now
- * caught and retried instead of hanging), or `transport` (the call never reached the model).
+ * caught and retried instead of hanging), `transport` (the call never reached the model), or `unretryable` (the send
+ * threw an error the retry policy does not resend — a `permanent` one, or an `unknown` one the host did not vouch
+ * for; the call fails at once).
  */
-export type LlmDecodeFailureClass = 'parse-error' | 'length-truncation' | 'schema-validation' | 'empty-result' | 'timeout' | 'transport';
+export type LlmDecodeFailureClass = 'parse-error' | 'length-truncation' | 'schema-validation' | 'empty-result' | 'timeout' | 'transport' | 'unretryable';
 
 /**
  * WHY a retry was needed — a decode-failure class, or `'critique'` (the reply decoded, but a judge rejected it).
@@ -133,10 +145,16 @@ export interface LlmDecodeFailureAttempt {
   readonly validatorError?: string;
   /**
    * WHAT the transport threw — `"<class> <status>: <message>"` (e.g. `RateLimitError 429: Rate limit exceeded`),
-   * present only on a `transport` attempt. The reply envelope is synthesized EMPTY on that lane, so without this the
-   * record cannot tell an exhausted key (429) from a network outage from a gateway 5xx.
+   * present on a `transport` or `unretryable` attempt. The reply envelope is synthesized EMPTY on that lane, so
+   * without this the record cannot tell an exhausted key (429) from a network outage from a gateway 5xx.
    */
   readonly transportError?: string;
+  /**
+   * The send error's classification when it was NOT transient — present on every `unretryable` attempt
+   * (`permanent` / `unknown`), and on a `transport` attempt only when the host approved an `unknown` error. Absent
+   * means transient, so an ordinary transport row and every timeout row stay byte-identical.
+   */
+  readonly errorClassification?: Exclude<FetchErrorClassification, 'transient'>;
   /**
    * WHICH RETRY LEVER this failure BOUGHT — the rung the ladder moved for the attempt that followed (an
    * `LlmRetryLeverKind`), or `'none'` when nothing could change a sent byte. Absent on the FINAL failed attempt
@@ -389,6 +407,9 @@ export function classifyLlmDecodeFailure(reading: LlmDecodeReadingKind, result: 
     // gateway 5xx). Distinct from `'timeout'`: a deadline means the model was too SLOW, this means it was never
     // ASKED, and conflating them would attribute a provider outage to model latency in the record.
     failureClass = 'transport';
+  } else if (finishReason === LLM_UNRETRYABLE_FINISH_REASON) {
+    // The synthesized unretryable envelope — the send threw an error the retry policy does not resend.
+    failureClass = 'unretryable';
   } else if (reading === 'no-json' && !isNotBlankString(result.text)) {
     failureClass = 'empty-result';
   } else if (isLlmLengthCappedFinish(result)) {
@@ -431,7 +452,7 @@ export function classifyLlmReplyOutcome(result: Pick<LlmCompletion, 'text' | 'fi
   const finishReason = result.finishReason ?? '';
   let outcome: LlmReplyOutcomeClass;
 
-  if (finishReason === LLM_TIMEOUT_FINISH_REASON || finishReason === LLM_TRANSPORT_FINISH_REASON || failureClass === 'timeout' || failureClass === 'transport') {
+  if (finishReason === LLM_TIMEOUT_FINISH_REASON || finishReason === LLM_TRANSPORT_FINISH_REASON || finishReason === LLM_UNRETRYABLE_FINISH_REASON || failureClass === 'timeout' || failureClass === 'transport' || failureClass === 'unretryable') {
     outcome = 'transport';
   } else if (isLlmLengthCappedFinish(result)) {
     outcome = 'length-capped';

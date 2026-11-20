@@ -322,6 +322,43 @@ describe('makeLlmDispatcher() decision lane', () => {
       }
     });
 
+    it('should resend a 408', async () => {
+      const requests: LlmDecisionRequest[] = [];
+      const { dispatcher } = setup({ backends: [flakyBackend((send) => (send === 1 ? new LlmDecisionTransportError({ message: 'HTTP 408', status: 408 }) : undefined), requests)] });
+
+      await dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' } });
+
+      expect(requests).toHaveLength(2);
+    });
+
+    it('should resend a 409 only when isRetryableUnknownError vouches for it, handing it the thrown error', async () => {
+      const conflict = new LlmDecisionTransportError({ message: 'HTTP 409', status: 409 });
+      const requests: LlmDecisionRequest[] = [];
+      const isRetryableUnknownError = vi.fn((_error: unknown) => true);
+      const { dispatcher } = setup({ backends: [flakyBackend((send) => (send === 1 ? conflict : undefined), requests)], isRetryableUnknownError });
+
+      await dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' } });
+
+      expect(requests).toHaveLength(2);
+      expect(isRetryableUnknownError).toHaveBeenCalledWith(conflict);
+
+      const refusedRequests: LlmDecisionRequest[] = [];
+      const refused = setup({ backends: [flakyBackend(() => conflict, refusedRequests)] });
+      await expect(refused.dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' } })).rejects.toBe(conflict);
+      expect(refusedRequests).toHaveLength(1);
+      expect(refused.starts).toHaveLength(1);
+      expect(refused.calls).toHaveLength(0);
+    });
+
+    it('should never offer an answer fault to isRetryableUnknownError', async () => {
+      const fault = new LlmDecisionAnswerFaultError([{ question: 'row', kind: 'answer-missing', detail: 'no answer' }]);
+      const isRetryableUnknownError = vi.fn((_error: unknown) => true);
+      const { dispatcher } = setup({ backends: [flakyBackend(() => fault, [])], isRetryableUnknownError });
+
+      await expect(dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' } })).rejects.toBe(fault);
+      expect(isRetryableUnknownError).not.toHaveBeenCalled();
+    });
+
     it('should respect decisions.maxAttempts, clamped to at least one send', async () => {
       const always = (maxAttempts: number) => {
         const requests: LlmDecisionRequest[] = [];

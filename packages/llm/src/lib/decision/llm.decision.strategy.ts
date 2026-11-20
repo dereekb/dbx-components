@@ -28,12 +28,14 @@
 
 import { type Maybe, type Milliseconds } from '@dereekb/util';
 import { type LlmModelId } from '../model/llm.value';
-import { isAbortError, isRetryableLlmError } from '../strategy/llm.error';
+import { type IsRetryableUnknownErrorFunction } from '@dereekb/util/fetch';
+import { classifyLlmError, isLlmAbortError, isRetryableLlmErrorClassification } from '../strategy/llm.error';
+import { LlmDecisionAnswerFaultError } from './llm.decision.answer';
 import type { LlmCompleteOptions, LlmStrategyBase } from '../strategy/llm.strategy';
 import type { LlmStrategyRegistry } from '../strategy/llm.strategy.registry';
 import type { LlmReadinessLane } from '../strategy/llm.strategy.readiness';
 import type { LlmUsage } from '../strategy/llm.usage';
-import type { LlmDecisionAnswers, LlmDecisionQuestions, LlmDecisionState } from './llm.decision.question';
+import { type LlmDecisionAnswers, LlmDecisionDeclarationError, type LlmDecisionQuestions, type LlmDecisionState } from './llm.decision.question';
 
 /**
  * One decision call: a state, the questions to evaluate against it, and which model answers.
@@ -167,8 +169,8 @@ export interface LlmDecisionTransportErrorConfig {
 /**
  * A non-2xx answer from a decision route, or a transport-level failure reaching it — whichever gateway served it.
  *
- * It carries `status` so the SHARED {@link isRetryableLlmError} can classify it — that classifier already tolerates
- * a raw `{status}`, so the decision lane inherits the completion lane's retry posture (429 and the 5xx range retry;
+ * It carries `status` so the SHARED {@link classifyLlmError} can classify it — that classifier already reads a raw
+ * `{status}`, so the decision lane inherits the completion lane's retry posture (408, 429 and the 5xx range retry;
  * a 400 never does) rather than declaring a second, drifting one.
  *
  * A transport-level failure has no status, so a transport wraps it with the socket error as its `cause` (the ES2022
@@ -194,18 +196,31 @@ export class LlmDecisionTransportError extends Error {
 }
 
 /**
- * Whether a decision throw is worth another attempt — the SHARED classifier, so this lane and the completion lane
- * cannot drift apart on what "retryable" means. An abort is never retryable here: the caller cancelled.
+ * Whether a decision throw is worth another attempt — the SHARED classifier ({@link classifyLlmError}) and resend rule
+ * ({@link isRetryableLlmErrorClassification}), so this lane and the completion lane cannot drift apart on what
+ * "retryable" means: `transient` resends, `permanent` never does, and `unknown` resends only on the host's `true`.
+ *
+ * An abort or timeout, an answer fault ({@link LlmDecisionAnswerFaultError}) and a declaration fault
+ * ({@link LlmDecisionDeclarationError}) are NEVER resent here and never reach `isRetryableUnknownError`.
  *
  * A STATUS-LESS {@link LlmDecisionTransportError} (the route was never reached) is classified by its `cause`: a
- * retryable socket failure (a reset, a `fetch failed`) retries, an abort cause never does.
+ * network failure (a reset, a `fetch failed`) retries, an abort cause never does. The host function receives the
+ * THROWN error (the wrapper, which carries the cause).
  *
- * The classifier the dispatcher's decision lane resends by (one bounded resend by default, `decisions.maxAttempts`).
- * No retry loop lives here: a direct `strategy.decide()` / `decision.decide()` is never retried.
+ * The rule the dispatcher's decision lane resends by (one bounded resend by default, `decisions.maxAttempts`). No
+ * retry loop lives here: a direct `strategy.decide()` / `decision.decide()` is never retried.
  *
  * @param error - The thrown value.
+ * @param isRetryableUnknownError - The host's call on an `unknown` error (`LlmDispatcherConfig.isRetryableUnknownError`).
  * @returns Whether to retry.
  */
-export function isRetryableLlmDecisionError(error: unknown): boolean {
-  return !isAbortError(error) && (isRetryableLlmError(error) || (error instanceof LlmDecisionTransportError && error.status == null && error.cause != null && !isAbortError(error.cause) && isRetryableLlmError(error.cause)));
+export function isRetryableLlmDecisionError(error: unknown, isRetryableUnknownError?: Maybe<IsRetryableUnknownErrorFunction>): boolean {
+  const subject = error instanceof LlmDecisionTransportError && error.status == null && error.cause != null ? error.cause : error;
+  let retryable = false;
+
+  if (!isLlmAbortError(error) && !isLlmAbortError(subject) && !(error instanceof LlmDecisionAnswerFaultError) && !(error instanceof LlmDecisionDeclarationError)) {
+    retryable = isRetryableLlmErrorClassification(classifyLlmError(subject), error, isRetryableUnknownError);
+  }
+
+  return retryable;
 }

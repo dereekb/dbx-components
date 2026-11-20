@@ -12,6 +12,7 @@
  */
 
 import { type Maybe, waitForMsUnlessAborted } from '@dereekb/util';
+import { type IsRetryableUnknownErrorFunction } from '@dereekb/util/fetch';
 import { type LlmDecision, type LlmDecisionDispatchRequest } from '../decision/llm.decision.descriptor';
 import { isLlmDecisionModelId, llmDecisionModelIssue } from '../decision/llm.decision.model';
 import { type LlmDecisionQuestions } from '../decision/llm.decision.question';
@@ -137,6 +138,10 @@ export interface LlmDispatchDecisionLaneConfig<R extends LlmDispatchRequest = Ll
    */
   readonly transportBackoff: LlmDispatchTransportBackoff;
   /**
+   * The dispatcher's call on an error the classifier reads as `unknown` (`LlmDispatcherConfig.isRetryableUnknownError`).
+   */
+  readonly isRetryableUnknownError?: Maybe<IsRetryableUnknownErrorFunction>;
+  /**
    * The layout's `live` slot id — the id the decision's segments record under.
    */
   readonly liveSlotId: LlmPromptSlotId;
@@ -192,7 +197,7 @@ interface LlmDispatchDecisionSendParams<Q extends LlmDecisionQuestions, A extend
  * @__NO_SIDE_EFFECTS__
  */
 export function makeLlmDispatchDecisionLane<R extends LlmDispatchRequest = LlmDispatchRequest, H extends LlmCallHostFields = LlmCallHostFields, A extends object = object>(config: LlmDispatchDecisionLaneConfig<R, H, A>): Maybe<LlmDispatchDecisionLane> {
-  const { decisions, modelTiers, defaultTier, capabilityRoutes, sinks, recordFieldsOf, callContextOf, pause, cancellationSignal, transportBackoff, liveSlotId } = config;
+  const { decisions, modelTiers, defaultTier, capabilityRoutes, sinks, recordFieldsOf, callContextOf, pause, cancellationSignal, transportBackoff, isRetryableUnknownError, liveSlotId } = config;
   let lane: Maybe<LlmDispatchDecisionLane>;
 
   if (decisions != null) {
@@ -263,8 +268,8 @@ export function makeLlmDispatchDecisionLane<R extends LlmDispatchRequest = LlmDi
             const answer = await callContext.timeAsync('decide', () => strategy.decide(decisionRequest, options));
             sent = { answer, latencyMs: Date.now() - start, attempts: attempt, failedAttempts };
           } catch (error) {
-            // the decision lane's ONE retry predicate: only a known-transient transport failure is resent
-            const resend = attempt < maxAttempts && !cancelled() && isRetryableLlmDecisionError(error);
+            // the decision lane's ONE retry predicate: a transient failure, or an unknown one the host vouched for
+            const resend = attempt < maxAttempts && !cancelled() && isRetryableLlmDecisionError(error, isRetryableUnknownError);
 
             if (!resend) {
               throw error;

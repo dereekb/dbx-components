@@ -3,6 +3,7 @@ export * from './llm.dispatch.compose';
 export * from './llm.dispatch.control';
 export * from './llm.dispatch.correction';
 export * from './llm.dispatch.decision';
+export * from './llm.dispatch.fault';
 export * from './llm.dispatch.ladder';
 export * from './llm.dispatch.outcome';
 export * from './llm.dispatch.record';

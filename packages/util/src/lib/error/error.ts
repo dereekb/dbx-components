@@ -218,3 +218,51 @@ export function errorMessageOf(error: unknown): string {
 
   return message;
 }
+
+/**
+ * Every constructor NAME on a thrown value's prototype chain, leaf first, stopping at `Object.prototype` — a STRUCTURAL
+ * identity for error classes that never set `.name` (the `openai` SDK's, whose every instance reads
+ * `.name === 'Error'`), matched without importing them.
+ *
+ * Matching an ANCESTOR's name makes a future subclass match by inheritance, the way `instanceof` would, with zero
+ * imports. The leaf name alone is not enough: a subclass such as `APIConnectionTimeoutError` extends
+ * `APIConnectionError`, and a leaf-only check lets the parent's other subclasses fall through.
+ *
+ * Minified bundles that mangle class names defeat it; a `.name` the class sets itself survives minification, so a
+ * classifier usually checks `.name` too.
+ *
+ * @param error - The thrown value.
+ * @returns The chain's constructor names, leaf first. Empty for a non-object or a null-prototype object.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory error
+ * @dbxUtilTags error, class, name, prototype, instanceof, structural, constructor
+ *
+ * @example
+ * ```ts
+ * class HttpError extends Error {}
+ * class RateLimitError extends HttpError {}
+ *
+ * errorClassNames(new RateLimitError()); // ['RateLimitError', 'HttpError', 'Error']
+ * errorClassNames('boom'); // []
+ * ```
+ */
+export function errorClassNames(error: unknown): string[] {
+  const names: string[] = [];
+
+  if (error != null && typeof error === 'object') {
+    let proto: Maybe<object> = Object.getPrototypeOf(error) as Maybe<object>;
+
+    while (proto != null && proto !== Object.prototype) {
+      const className = (proto as { readonly constructor?: { readonly name?: unknown } }).constructor?.name;
+
+      if (typeof className === 'string' && className !== '') {
+        names.push(className);
+      }
+
+      proto = Object.getPrototypeOf(proto) as Maybe<object>;
+    }
+  }
+
+  return names;
+}

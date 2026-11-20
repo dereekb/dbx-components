@@ -16,6 +16,7 @@
  * fields by intersection, never by redeclaring a record field. The library never reads or names a host field.
  */
 
+import type { FetchErrorClassification } from '@dereekb/util/fetch';
 import type { Milliseconds } from '@dereekb/util';
 import type { LlmCapabilityKey, LlmModelId, LlmModelTierKey, LlmStrategyId } from '../model/llm.value';
 import type { LlmPromptSegment } from '../prompt/llm.prompt.segment';
@@ -153,10 +154,16 @@ export interface LlmCallFailedAttempt extends LlmCallTelemetry {
   readonly cause: LlmRetryCause;
   /**
    * The words of the rejection — the validator's error (`schema-validation`), the judge's feedback (`critique`), or
-   * the transport summary (`transport`). Absent for `parse-error` / `empty-result` / `length-truncation` /
-   * `timeout`, whose {@link cause} + `finishReason` + full {@link text} are the whole story.
+   * the transport summary (`transport` / `unretryable`). Absent for `parse-error` / `empty-result` /
+   * `length-truncation` / `timeout`, whose {@link cause} + `finishReason` + full {@link text} are the whole story.
    */
   readonly error?: string;
+  /**
+   * The send error's classification when it was NOT transient — present on every `unretryable` row
+   * (`permanent` / `unknown`), and on a `transport` row only when the host approved an `unknown` error. Absent means
+   * transient, so an ordinary transport row and every timeout row stay byte-identical.
+   */
+  readonly errorClassification?: Exclude<FetchErrorClassification, 'transient'>;
   /**
    * The MODEL's reply — verbatim up to `LLM_FAILED_ATTEMPT_TEXT_MAX_LENGTH`, collapsed + cut past it
    * ({@link clipped}). The model's own bytes even when the reply-repair lane substituted a repaired reply (the

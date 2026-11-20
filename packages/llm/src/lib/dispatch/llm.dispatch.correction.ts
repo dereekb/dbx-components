@@ -52,7 +52,7 @@ export interface LlmDispatchCorrectionTexts {
   readonly critiqueLineInstruction: string;
   /**
    * The error text of a decode-class retry, per class. `schema-validation` retries reuse the validator's own error, and
-   * `transport` / `timeout` resends carry no correction; every class still says something, so a new class never
+   * `transport` / `timeout` resends carry no correction (and an `unretryable` fault is never resent); every class still says something, so a new class never
    * silently inherits a neighbour's words.
    */
   readonly decode: Readonly<Record<LlmDecodeFailureClass, string>>;
@@ -75,7 +75,8 @@ export const DEFAULT_LLM_DISPATCH_CORRECTION_TEXTS: LlmDispatchCorrectionTexts =
     'empty-result': 'the reply was empty. Return the single JSON object the contract asks for.',
     'schema-validation': 'the reply did not match the required shape. Return a single JSON object that conforms exactly to the contract.',
     timeout: 'the previous attempt took too long and was aborted before it returned. Reply IMMEDIATELY with a single, COMPLETE, COMPACT JSON object; no reasoning preamble, no filler.',
-    transport: 'the previous attempt never reached the model (a transport failure). Nothing about the reply was wrong.'
+    transport: 'the previous attempt never reached the model (a transport failure). Nothing about the reply was wrong.',
+    unretryable: 'the previous attempt failed with an error that is not retried.'
   }
 };
 

@@ -1,7 +1,8 @@
 import { LlmDecisionAnswerFaultError, LlmDecisionDeclarationError, type LlmDecisionQuestions, type LlmStorableDecisionState } from '@dereekb/llm';
 import { type FirebaseStorageContext } from '@dereekb/firebase';
 import { type FirebaseServerEnvService } from '@dereekb/firebase-server';
-import { type Maybe, type Milliseconds, MS_IN_MINUTE, addMilliseconds, concatArraysUnique, filterMaybeArrayValues, filterUndefinedValues, filterUniqueValues, mergeArrays, randomNumberFactory } from '@dereekb/util';
+import { type Maybe, type Milliseconds, MS_IN_MINUTE, addMilliseconds, concatArraysUnique, errorMessageOf, filterMaybeArrayValues, filterUndefinedValues, filterUniqueValues, mergeArrays, randomNumberFactory } from '@dereekb/util';
+import { classifyFetchError, DEFAULT_FETCH_ABORT_ERROR_NAMES, type FetchErrorClassification, type FetchErrorClassificationConfig, isRetryableFetchErrorClassification, type IsRetryableUnknownErrorFunction } from '@dereekb/util/fetch';
 import {
   type OpenRouterAttachedFileReference,
   type OpenRouterCallResult,
@@ -374,6 +375,14 @@ export interface OpenRouterRunTaskServiceConfig {
    * Default lease duration. Defaults to {@link DEFAULT_OPENROUTER_LEASE_DURATION}.
    */
   readonly leaseDuration?: Maybe<Milliseconds>;
+  /**
+   * Decides a failure {@link classifyOpenRouterError} reads as `unknown`: `true` requeues it (under
+   * {@link maxAttempts}); `false` fails the task now; no answer keeps the default, which requeues. A permanent
+   * failure always fails at once and a transient one always requeues, whatever this says.
+   *
+   * Wiring-time code: nothing about it is stored on the task document or anywhere in Firestore.
+   */
+  readonly isRetryableUnknownError?: Maybe<IsRetryableUnknownErrorFunction>;
 }
 
 /**
@@ -383,7 +392,7 @@ export interface OpenRouterRunTaskServiceConfig {
  * @returns The service.
  */
 export function openRouterRunTaskService(config: OpenRouterRunTaskServiceConfig): OpenRouterRunTaskService {
-  const { collections, promptService, client, storageContext, envService, fileAttachmentMode, maxInlineFileSizeBytes, tools, onTerminalState, signedUrlTtl, maxAttempts: inputMaxAttempts, leaseDuration: inputLeaseDuration } = config;
+  const { collections, promptService, client, storageContext, envService, fileAttachmentMode, maxInlineFileSizeBytes, tools, onTerminalState, signedUrlTtl, maxAttempts: inputMaxAttempts, leaseDuration: inputLeaseDuration, isRetryableUnknownError } = config;
   const { openRouterRunTaskCollection } = collections;
 
   const attachFilesForAttempt = openRouterFileAttachmentResolver({ storageContext, envService, mode: fileAttachmentMode, signedUrlTtl, maxInlineFileSizeBytes });
@@ -634,9 +643,9 @@ export function openRouterRunTaskService(config: OpenRouterRunTaskServiceConfig)
       });
       executionResult = { key, state: OpenRouterRunTaskState.COMPLETE, decision };
     } catch (e) {
-      // A malformed declaration and an off-shape reply both land here, and both are correctly
-      // classified as PERMANENT by `isRetryableOpenRouterError` — neither carries a retryable status, so
-      // neither spends the attempt budget reaching the same answer three times.
+      // A malformed declaration and an off-shape reply both land here, and both are classified PERMANENT
+      // by class (`classifyOpenRouterError`), so neither spends the attempt budget reaching the same
+      // answer three times.
       const failure = await recordFailure({ document, task, error: { code: openRouterErrorCode(e), message: openRouterErrorMessage(e) }, cause: e, at: new Date() });
       executionResult = { ...failure, error: e };
     }
@@ -753,7 +762,7 @@ export function openRouterRunTaskService(config: OpenRouterRunTaskServiceConfig)
 
     // A deterministic failure — a bad key, a 402, a model id that does not exist — cannot succeed on a
     // second attempt, so it spends none of the budget and goes straight to FAILED.
-    const retryable = isRetryableOpenRouterError(cause);
+    const retryable = isRetryableOpenRouterError(cause, isRetryableUnknownError);
     // The attempt counter was already incremented by the claim, so `task.at` is the number of attempts made
     // INCLUDING this one — which is why nothing is added to it here. Adding one would spend the budget a
     // tick early and mark a task FAILED with a retry still owed to it.
@@ -935,7 +944,7 @@ export function openRouterErrorCode(e: unknown): Maybe<string> {
  * @__NO_SIDE_EFFECTS__
  */
 export function openRouterErrorMessage(e: unknown): string {
-  return e instanceof Error ? e.message : String(e);
+  return errorMessageOf(e);
 }
 
 /**
@@ -949,7 +958,47 @@ export function openRouterErrorMessage(e: unknown): string {
 export const OPENROUTER_PERMANENT_ERROR_STATUSES: readonly number[] = [400, 401, 402, 403, 404];
 
 /**
- * Whether a failure is worth another attempt.
+ * The run task's classification config: util/fetch's defaults with OpenRouter's permanent statuses, its
+ * `status` / `statusCode` / `code` reader, and the `@openrouter/sdk` HTTP-client error names (which set `.name`).
+ */
+const OPENROUTER_ERROR_CLASSIFICATION_CONFIG: FetchErrorClassificationConfig = {
+  permanentStatuses: new Set(OPENROUTER_PERMANENT_ERROR_STATUSES),
+  readStatus: openRouterErrorStatus,
+  abortErrorNames: new Set([...Array.from(DEFAULT_FETCH_ABORT_ERROR_NAMES), 'RequestAbortedError', 'RequestTimeoutError']),
+  transientClassNames: new Set(['ConnectionError'])
+};
+
+/**
+ * Classifies a run failure as `transient`, `permanent` or `unknown`.
+ *
+ * The in-workspace deterministic failures are permanent by class: an {@link OpenRouterPromptResolutionError} (the
+ * prompt either exists at that version or it never will), an `LlmDecisionAnswerFaultError` (an off-shape decision
+ * answer) and an `LlmDecisionDeclarationError` (a malformed decision declaration). Everything else goes through
+ * `@dereekb/util/fetch`'s `classifyFetchError`, with {@link OPENROUTER_PERMANENT_ERROR_STATUSES} as the permanent
+ * statuses, the status read off `status` / `statusCode` / `code`, and the `@openrouter/sdk` connection, timeout and
+ * abort errors recognised by name.
+ *
+ * @param e - The thrown value, or the error reported on a response.
+ * @returns The classification.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function classifyOpenRouterError(e: unknown): FetchErrorClassification {
+  let classification: FetchErrorClassification;
+
+  if (e instanceof OpenRouterPromptResolutionError || e instanceof LlmDecisionAnswerFaultError || e instanceof LlmDecisionDeclarationError) {
+    classification = 'permanent';
+  } else {
+    classification = classifyFetchError(e, OPENROUTER_ERROR_CLASSIFICATION_CONFIG);
+  }
+
+  return classification;
+}
+
+/**
+ * Whether a failure is worth another attempt — {@link classifyOpenRouterError}'s classification under the run
+ * task's own policy: `transient` requeues, `permanent` fails now, and `unknown` asks `isRetryableUnknownError`,
+ * requeueing when it is absent or answers nothing.
  *
  * What this encodes is a whitelist of the KNOWN-PERMANENT, not a whitelist of the retryable: anything
  * unrecognized defaults to RETRYABLE. An unknown failure is far more likely to be a transient upstream blip
@@ -963,18 +1012,20 @@ export const OPENROUTER_PERMANENT_ERROR_STATUSES: readonly number[] = [400, 401,
  *
  * Permanent is two cases. {@link OPENROUTER_PERMANENT_ERROR_STATUSES}, read off `status` / `statusCode` /
  * `code` — which covers both routes into `recordFailure`: a thrown SDK/HTTP error, and the numeric
- * `error.code` OpenRouter reports in a response body without throwing at all. And an
- * {@link OpenRouterPromptResolutionError}, which is deterministic by construction: the prompt either exists
- * at that version or it never will, so re-resolving it is guaranteed to fail identically.
+ * `error.code` OpenRouter reports in a response body without throwing at all. And the in-workspace
+ * deterministic classes {@link classifyOpenRouterError} lists, which fail identically on every attempt.
+ *
+ * A host narrows the `unknown` default with `isRetryableUnknownError` (`OpenRouterRunTaskServiceConfig`): `false`
+ * fails the task now. It is never asked about a transient or permanent failure.
  *
  * @param e - The thrown value, or the error reported on a response.
+ * @param isRetryableUnknownError - The host's call on an `unknown` failure.
  * @returns True when another attempt could plausibly succeed.
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function isRetryableOpenRouterError(e: unknown): boolean {
-  const status = openRouterErrorStatus(e);
-  return !(e instanceof OpenRouterPromptResolutionError) && (status == null || !OPENROUTER_PERMANENT_ERROR_STATUSES.includes(status));
+export function isRetryableOpenRouterError(e: unknown, isRetryableUnknownError?: Maybe<IsRetryableUnknownErrorFunction>): boolean {
+  return isRetryableFetchErrorClassification({ classification: classifyOpenRouterError(e), error: e, isRetryableUnknownError, retryUnknownByDefault: true });
 }
 
 /**

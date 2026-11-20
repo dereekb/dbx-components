@@ -2,7 +2,7 @@ import { LlmDecisionAnswerFaultError, LlmDecisionDeclarationError } from '@deree
 import { describe, expect, it } from 'vitest';
 import { type OpenRouterRunTask, OpenRouterRunTaskState, openRouterRunTasksReclaimableQuery, openRouterRunTasksRunnableQuery } from '@dereekb/openrouter/firebase';
 import { OpenRouterPromptResolutionError } from './openrouter.prompt.service';
-import { hasUnresolvedOpenRouterPendingToolCalls, isOpenRouterRunTaskClaimable, isRetryableOpenRouterError, openRouterDeferredToolResolutionsForRunTask, openRouterErrorCode, openRouterErrorMessage } from './openrouter.runtask.service';
+import { classifyOpenRouterError, hasUnresolvedOpenRouterPendingToolCalls, isOpenRouterRunTaskClaimable, isRetryableOpenRouterError, openRouterDeferredToolResolutionsForRunTask, openRouterErrorCode, openRouterErrorMessage } from './openrouter.runtask.service';
 
 function task(overrides: Partial<OpenRouterRunTask>): OpenRouterRunTask {
   return { s: OpenRouterRunTaskState.QUEUED, qat: new Date(), at: 0, pk: 'p', pv: 1, in: [], ...overrides };
@@ -133,6 +133,53 @@ describe('isRetryableOpenRouterError()', () => {
     expect(isRetryableOpenRouterError('boom')).toBe(true);
     expect(isRetryableOpenRouterError(null)).toBe(true);
   });
+
+  it('should NOT retry a decision answer or declaration fault', () => {
+    // Deterministic: the same declaration and the same off-shape answer fail identically on every attempt.
+    expect(isRetryableOpenRouterError(new LlmDecisionAnswerFaultError([{ kind: 'answer-missing', question: 'a', detail: 'no answer was returned' }]))).toBe(false);
+    expect(isRetryableOpenRouterError(new LlmDecisionDeclarationError(['x']))).toBe(false);
+  });
+
+  describe('with isRetryableUnknownError', () => {
+    it('should fail an unknown failure the host refuses', () => {
+      expect(isRetryableOpenRouterError(new Error('boom'), () => false)).toBe(false);
+    });
+
+    it('should keep the requeue default when the host answers nothing', () => {
+      expect(isRetryableOpenRouterError(new Error('boom'), () => undefined)).toBe(true);
+    });
+
+    it('should requeue a transient failure whatever the host says', () => {
+      expect(isRetryableOpenRouterError({ status: 503 }, () => false)).toBe(true);
+    });
+
+    it('should fail a permanent failure whatever the host says', () => {
+      expect(isRetryableOpenRouterError({ status: 400 }, () => true)).toBe(false);
+    });
+  });
+});
+
+describe('classifyOpenRouterError()', () => {
+  it('should classify an SDK-shaped statusCode', () => {
+    expect(classifyOpenRouterError({ statusCode: 402 })).toBe('permanent');
+  });
+
+  it('should read a three-digit string code as a status', () => {
+    expect(classifyOpenRouterError({ code: '503' })).toBe('transient');
+  });
+
+  it('should leave a non-HTTP numeric code unknown', () => {
+    expect(classifyOpenRouterError({ code: 14 })).toBe('unknown');
+  });
+
+  it('should classify the @openrouter/sdk ConnectionError by name', () => {
+    expect(classifyOpenRouterError(Object.assign(new Error('x'), { name: 'ConnectionError' }))).toBe('transient');
+  });
+
+  it('should classify the in-workspace deterministic failures as permanent', () => {
+    expect(classifyOpenRouterError(new OpenRouterPromptResolutionError('p', 'does not exist.', 3))).toBe('permanent');
+    expect(classifyOpenRouterError(new LlmDecisionDeclarationError(['x']))).toBe('permanent');
+  });
 });
 
 describe('openRouterDeferredToolResolutionsForRunTask()', () => {
@@ -201,5 +248,9 @@ describe('error extraction', () => {
   it('should read a message off an Error and stringify anything else', () => {
     expect(openRouterErrorMessage(new Error('boom'))).toBe('boom');
     expect(openRouterErrorMessage('boom')).toBe('boom');
+  });
+
+  it('should read the message of a non-Error object', () => {
+    expect(openRouterErrorMessage({ message: 'readable' })).toBe('readable');
   });
 });

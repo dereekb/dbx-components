@@ -39,8 +39,12 @@ The raw OpenRouter client (`OpenRouterApi`) and the OTLP broadcast webhook live 
 
 Retries are classified rather than uniform: a transient failure (429, 5xx, `ECONNRESET`, a Firestore
 `UNAVAILABLE`) spends the `maxAttempts` budget, while a deterministic one (400, 401, 402, 403, 404, a
-prompt that does not resolve) reaches `FAILED` on its first attempt instead of burning three sweep ticks
-to reach the same answer. Anything unrecognized is treated as transient.
+prompt that does not resolve, a decision answer or declaration fault) reaches `FAILED` on its first attempt
+instead of burning three sweep ticks to reach the same answer. The classification is
+`classifyOpenRouterError`, built on `@dereekb/util/fetch`'s `classifyFetchError`. Anything unrecognized
+(`unknown`) is treated as transient by default; a host narrows that with the run-task service config's
+`isRetryableUnknownError` (`false` fails the task now). That function is wiring-time code: nothing about it
+is stored on the task document.
 
 There is no replay. `enqueueRunTask({ key, …, restart: true })` re-runs a key, and `continueFrom` chains
 one run onto another's history.

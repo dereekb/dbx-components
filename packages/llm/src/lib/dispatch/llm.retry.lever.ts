@@ -210,7 +210,9 @@ const RETRY_LADDER: Readonly<Record<LlmRetryCause, ReadonlyArray<LlmRetryLeverKi
   // NO rung applies — every lever here changes what we ASK, and nothing was asked. The only useful response is
   // to wait and resend the identical, cache-hot bytes, which a dispatcher's backoff does before this returns
   // `lever: 'none'`. Moving a lever would additionally destroy the prompt-cache hit on the re-ask for nothing.
-  transport: []
+  transport: [],
+  // UNRETRYABLE: never consulted — no retry follows an unretryable fault, so no lever is ever bought for it.
+  unretryable: []
 };
 
 /**

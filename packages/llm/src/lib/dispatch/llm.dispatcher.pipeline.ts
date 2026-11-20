@@ -20,6 +20,7 @@ import { type LlmDispatchResult } from '../strategy/llm.strategy';
 import { llmBoundReplyFastFixOf } from './llm.dispatch.attempt';
 import { llmDispatchCorrectionTextsOf } from './llm.dispatch.correction';
 import { makeLlmDispatchDecisionLane } from './llm.dispatch.decision';
+import { LlmDispatchFaultError } from './llm.dispatch.fault';
 import { llmDecodeRetryModelOf } from './llm.dispatch.ladder';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
 import { composeLlmDispatch, type LlmDispatchComposeSetup } from './llm.dispatch.compose';
@@ -55,7 +56,9 @@ function llmPromptSlotIdOfRole(layout: LlmPromptLayout, role: LlmPromptSlotRole,
  * correction and one lever of the retry ladder, the fast-fix tier of the reply-repair lane when `replyFastFix` is
  * configured, and the request's critic after `validate` passes (root calls only). A decision (`decide`) is sent once,
  * and resent after `transportBackoff` while its send fails with a retryable transport error, up to
- * `decisions.maxAttempts` sends (default 2).
+ * `decisions.maxAttempts` sends (default 2). On either lane an `unknown` send error is resent only when
+ * `isRetryableUnknownError` answers `true`; a completion send error that is not resent is recorded, then rejects as
+ * `LlmDispatchFaultError`.
  *
  * Both lanes share the host hooks and the record path: the call context (`recorder.newCallContext`, or nested under
  * the request's `callContext`), `callAttributionOf` and `recordFieldsOf` (each handed `{ lane, request }`), the start
@@ -151,6 +154,7 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
     pause,
     cancellationSignal,
     transportBackoff,
+    isRetryableUnknownError: config.isRetryableUnknownError,
     liveSlotId: llmPromptSlotIdOfRole(layout, 'live', 'live')
   });
 
@@ -201,10 +205,16 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
       fastFixLimits,
       corrections,
       correctionSlotId,
-      transportBackoff
+      transportBackoff,
+      isRetryableUnknownError: config.isRetryableUnknownError
     };
     const outcome = composed.validate == null && critique == null ? await runSingleShotLlmDispatch(attemptsConfig) : await runLlmDispatchAttempts(attemptsConfig);
     const { callProfile } = recordLlmDispatch<R, H, A>({ sinks, request, followUp: isFollowUp, callContext, resolved, composed, outcome, fields });
+
+    // the call is recorded like any other fault; an unretryable send then rejects as the structured fault
+    if (outcome.fault != null) {
+      throw new LlmDispatchFaultError({ capability, ...outcome.fault });
+    }
     const degenerate = outcome.decodeFailures.length > 0 && !outcome.recovered;
     const result = config.resultOf?.({ result: outcome.result, request, callContext, callProfile }) ?? (outcome.result as X);
     const { finalRequest } = outcome;

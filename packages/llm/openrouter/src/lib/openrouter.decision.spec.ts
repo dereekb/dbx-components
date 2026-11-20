@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isAbortError, isRetryableLlmDecisionError, LlmDecisionAnswerFaultError, LlmDecisionTransportError, llmChoiceQuestion, llmNoulQuestion, llmScoreQuestion } from '@dereekb/llm';
+import { isLlmAbortError, isRetryableLlmDecisionError, LlmDecisionAnswerFaultError, LlmDecisionTransportError, llmChoiceQuestion, llmNoulQuestion, llmScoreQuestion } from '@dereekb/llm';
 import { makeLlmSystemOneWireFake, type LlmSystemOneWireFakeConfig } from '@dereekb/llm/test';
 import { LLM_OPENROUTER_DECISION_STRATEGY_KIND, makeLlmOpenRouterDecisionStrategy } from './openrouter.decision';
 
@@ -104,7 +104,7 @@ describe('makeLlmOpenRouterDecisionStrategy()', () => {
     const thrown = await pending;
 
     expect(thrown).not.toBeInstanceOf(LlmDecisionTransportError);
-    expect(isAbortError(thrown)).toBe(true);
+    expect(isLlmAbortError(thrown)).toBe(true);
   });
 
   it('wraps a socket failure in a transport error that keeps the native cause, and still reads retryable', async () => {

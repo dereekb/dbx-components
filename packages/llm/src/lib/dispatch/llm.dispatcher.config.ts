@@ -5,6 +5,7 @@
  */
 
 import { type Maybe } from '@dereekb/util';
+import { type IsRetryableUnknownErrorFunction } from '@dereekb/util/fetch';
 import { type LlmCapabilityDescriptor, type LlmCapabilityDescriptorOf } from '../capability/llm.capability.descriptor';
 import { type LlmDecisionDispatchRequest } from '../decision/llm.decision.descriptor';
 import { type LlmDecisionStrategyRegistry } from '../decision/llm.decision.strategy';
@@ -206,8 +207,9 @@ export interface LlmDispatcherDecisionConfig {
   readonly defaultModel: LlmModelId;
   /**
    * Total sends one decision may make (the first plus resends). A send that fails with a retryable transport error
-   * (`isRetryableLlmDecisionError`: a 429, a 5xx, a dropped socket — never an abort, a timeout or an answer fault) is
-   * resent after the dispatcher's `transportBackoff`. Absent ⇒ `DEFAULT_LLM_DISPATCH_MAX_ATTEMPTS` (2: one resend);
+   * (`isRetryableLlmDecisionError`: a 408, a 429, a 5xx, a dropped socket, or an `unknown` error the dispatcher's
+   * `isRetryableUnknownError` approved — never an abort, a timeout or an answer fault) is resent after the
+   * dispatcher's `transportBackoff`. Absent ⇒ `DEFAULT_LLM_DISPATCH_MAX_ATTEMPTS` (2: one resend);
    * clamped to at least 1 (`1` never resends).
    */
   readonly maxAttempts?: Maybe<number>;
@@ -476,6 +478,14 @@ export interface LlmDispatcherConfig<R extends LlmDispatchRequest = LlmDispatchR
    * `llmTransportBackoffMs`.
    */
   readonly transportBackoff?: Maybe<LlmDispatchTransportBackoff>;
+  /**
+   * Decides a send error the classifier (`classifyLlmError`) reads as `unknown` — on either lane. `true` resends it as
+   * a transport failure under the attempt budget; `false` or no answer fails the call at once (a completion rejects
+   * with `LlmDispatchFaultError` after the call is recorded; a decision rethrows its error). Never asked about a
+   * `transient` error (always resent) or a `permanent` one (never resent), nor on the single-shot path (which never
+   * resends). Must not throw: a throw propagates unchanged.
+   */
+  readonly isRetryableUnknownError?: Maybe<IsRetryableUnknownErrorFunction>;
   // MARK: Lanes
   /**
    * The fast-fix tier of the reply-repair lane — one cheap repair call on a mangled JSON reply before any re-ask.

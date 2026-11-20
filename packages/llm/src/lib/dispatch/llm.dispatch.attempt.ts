@@ -13,16 +13,19 @@ import { type LlmReplyProtocol } from '../reply/llm.reply.protocol';
 import { repairLlmReplyJson } from '../reply/llm.reply.repair';
 import { type LlmLeverValidator } from '../reply/llm.reply.validator';
 import { type LlmSwallowSink } from '../record/llm.swallow';
-import { isAbortError, isRetryableLlmError, llmErrorSummaryOf } from '../strategy/llm.error';
+import { type FetchErrorClassification, type IsRetryableUnknownErrorFunction } from '@dereekb/util/fetch';
+import { classifyLlmError, isLlmAbortError, isRetryableLlmErrorClassification, llmErrorSummaryOf } from '../strategy/llm.error';
 import { type LlmDispatchResult, type LlmReplyRepairSummary, type LlmRequest, type LlmStrategy } from '../strategy/llm.strategy';
 import { type LlmDispatchPauseSignal, parkLlmDispatchWhilePaused } from './llm.dispatch.control';
-import { LLM_REPLY_REPAIR_SCORE_PRECISION, llmTimeoutResultOf, llmTransportResultOf } from './llm.dispatch.outcome';
+import { LLM_REPLY_REPAIR_SCORE_PRECISION, llmTimeoutResultOf, llmTransportResultOf, llmUnretryableResultOf } from './llm.dispatch.outcome';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
 
 /**
- * Why a send did not reach a reply: the call was aborted (`timeout`) or its transport failed retryably (`transport`).
+ * Why a send did not reach a reply: the call was aborted (`timeout`), its transport failed retryably (`transport`), or
+ * it threw an error the retry policy does not resend (`unretryable` — a `permanent` error, or an `unknown` one the
+ * host did not vouch for). Always a subset of `LlmDecodeFailureClass`.
  */
-export type LlmDispatchAttemptFault = 'timeout' | 'transport';
+export type LlmDispatchAttemptFault = 'timeout' | 'transport' | 'unretryable';
 
 /**
  * The inputs of {@link sendLlmDispatchAttempt}.
@@ -52,6 +55,11 @@ export interface SendLlmDispatchAttemptConfig {
    * The host pause gate — parked on QUIETLY (span only) before the send.
    */
   readonly pause?: Maybe<LlmDispatchPauseSignal>;
+  /**
+   * The host's call on an error {@link classifyLlmError} reads as `unknown`: `true` makes it a resendable `transport`
+   * fault; `false`, no answer or no function makes it `unretryable`. A throw from it propagates unchanged.
+   */
+  readonly isRetryableUnknownError?: Maybe<IsRetryableUnknownErrorFunction>;
 }
 
 /**
@@ -75,21 +83,27 @@ export interface LlmDispatchAttemptSend {
    */
   readonly error?: unknown;
   /**
-   * The bounded summary of a transport error.
+   * The bounded summary ({@link llmErrorSummaryOf}) of a `transport` or `unretryable` error.
    */
   readonly transportError?: string;
+  /**
+   * The error's {@link classifyLlmError} classification — set on a `transport` or `unretryable` fault.
+   */
+  readonly classification?: FetchErrorClassification;
 }
 
 /**
  * Send one attempt: park quietly on the host gate, then run `strategy.complete` inside a `complete` span on a fresh
  * `attempt-N` child context. An abort (tested FIRST, so an error matching both reads as an abort) becomes a `timeout`
- * fault; a retryable transport error a `transport` fault; any other throw propagates.
+ * fault. Any other throw is classified ({@link classifyLlmError}) and becomes a `transport` fault when the resend rule
+ * ({@link isRetryableLlmErrorClassification}) resends it, else an `unretryable` fault. The send never throws, apart
+ * from a throwing `isRetryableUnknownError`, which propagates as is.
  *
  * @param config - The strategy, the request, the attempt ordinal, the contexts and the control signals.
  * @returns The send's envelope (or fault).
  */
 export async function sendLlmDispatchAttempt(config: SendLlmDispatchAttemptConfig): Promise<LlmDispatchAttemptSend> {
-  const { strategy, request, attempt, callContext, signal, pause } = config;
+  const { strategy, request, attempt, callContext, signal, pause, isRetryableUnknownError } = config;
   await parkLlmDispatchWhilePaused({ pause, signal, callContext });
   const attemptContext = callContext.child(`attempt-${attempt}`);
   let send: LlmDispatchAttemptSend;
@@ -98,12 +112,15 @@ export async function sendLlmDispatchAttempt(config: SendLlmDispatchAttemptConfi
     const result = await attemptContext.timeAsync('complete', () => strategy.complete(request, signal == null ? undefined : { signal }));
     send = { attemptContext, result };
   } catch (error) {
-    if (isAbortError(error)) {
+    if (isLlmAbortError(error)) {
       send = { attemptContext, result: llmTimeoutResultOf(request, strategy.id), fault: 'timeout', error };
-    } else if (isRetryableLlmError(error)) {
-      send = { attemptContext, result: llmTransportResultOf(request, strategy.id), fault: 'transport', error, transportError: llmErrorSummaryOf(error) };
     } else {
-      throw error;
+      const classification = classifyLlmError(error);
+      const transportError = llmErrorSummaryOf(error);
+      const resend = isRetryableLlmErrorClassification(classification, error, isRetryableUnknownError);
+      const fault: LlmDispatchAttemptFault = resend ? 'transport' : 'unretryable';
+      const result = resend ? llmTransportResultOf(request, strategy.id) : llmUnretryableResultOf(request, strategy.id);
+      send = { attemptContext, result, fault, error, transportError, classification };
     }
   }
 

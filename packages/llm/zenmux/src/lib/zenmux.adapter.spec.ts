@@ -1,5 +1,5 @@
 import {
-  isAbortError,
+  isLlmAbortError,
   llmDecisionStrategyKinds,
   llmModelConfigListsOf,
   llmNoulQuestion,
@@ -256,7 +256,7 @@ describe('makeZenmuxLlmAdapters()', () => {
       const strategy = makeLlmDecisionStrategies({ providers: [ZENMUX], adapters: ADAPTERS, timeoutMs: 5 }).values()[0];
       const thrown = await strategy?.decide({ state: 'state', questions: { is_urgent: llmNoulQuestion('Urgent?') }, model: MODEL }).catch((error: unknown) => error);
 
-      expect(isAbortError(thrown)).toBe(true);
+      expect(isLlmAbortError(thrown)).toBe(true);
     });
   });
 });

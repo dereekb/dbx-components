@@ -3,6 +3,7 @@ import { type LlmCredentialProbeOptions } from '../strategy/llm.strategy';
 import { type LlmStrategyHealth } from '../strategy/llm.strategy.health';
 import { probeLlmCredentials, verifyLlmStrategies } from '../strategy/llm.strategy.readiness';
 import { llmStrategyKind, makeLlmStrategyRegistry } from '../strategy/llm.strategy.registry';
+import { LlmDecisionAnswerFaultError } from './llm.decision.answer';
 import { DEFAULT_LLM_DECISION_TIMEOUT_MS, LLM_DECISION_STRATEGY_READINESS_LANE, LlmDecisionTransportError, type LlmDecisionStrategy, isRetryableLlmDecisionError } from './llm.decision.strategy';
 
 /**
@@ -71,6 +72,31 @@ describe('isRetryableLlmDecisionError()', () => {
 
   it.each(['AbortError', 'TimeoutError'])('should not retry a %s', (name) => {
     expect(isRetryableLlmDecisionError(new DOMException('stopped', name))).toBe(false);
+  });
+
+  it('should resend a 408', () => {
+    expect(isRetryableLlmDecisionError(new LlmDecisionTransportError({ message: 'x', status: 408 }))).toBe(true);
+  });
+
+  it('should leave a status-less, cause-less transport error unknown: not resent unless the host vouches for it', () => {
+    const error = new LlmDecisionTransportError({ message: 'no key' });
+    expect(isRetryableLlmDecisionError(error)).toBe(false);
+    expect(isRetryableLlmDecisionError(error, () => undefined)).toBe(false);
+    expect(isRetryableLlmDecisionError(error, () => true)).toBe(true);
+  });
+
+  it('should hand the host the thrown error for an unknown status', () => {
+    const error = new LlmDecisionTransportError({ message: 'x', status: 409 });
+    const isRetryableUnknownError = vi.fn(() => true);
+    expect(isRetryableLlmDecisionError(error, isRetryableUnknownError)).toBe(true);
+    expect(isRetryableUnknownError).toHaveBeenCalledWith(error);
+  });
+
+  it('should never ask the host about an answer fault or an abort', () => {
+    const isRetryableUnknownError = vi.fn(() => true);
+    expect(isRetryableLlmDecisionError(new LlmDecisionAnswerFaultError([{ kind: 'answer-missing', question: 'a', detail: 'none' }]), isRetryableUnknownError)).toBe(false);
+    expect(isRetryableLlmDecisionError(new DOMException('stop', 'AbortError'), isRetryableUnknownError)).toBe(false);
+    expect(isRetryableUnknownError).not.toHaveBeenCalled();
   });
 });
 

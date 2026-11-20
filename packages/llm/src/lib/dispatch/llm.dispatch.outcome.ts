@@ -5,11 +5,12 @@
  */
 
 import { type Maybe, type NumberPrecision, roundToPrecision } from '@dereekb/util';
+import { type FetchErrorClassification } from '@dereekb/util/fetch';
 import { type LlmStrategyId } from '../model/llm.value';
 import { type LlmCallContext, type LlmCallProfile } from '../record/llm.call.context';
 import { type LlmCallAttemptPhase, type LlmCallAttemptRetry, type LlmCallFailedAttempt, type LlmCallPhases } from '../record/llm.call.record';
 import { llmCallTelemetry } from '../record/llm.call.telemetry';
-import { clipLlmFailedAttemptReply, LLM_TIMEOUT_FINISH_REASON, LLM_TRANSPORT_FINISH_REASON, type LlmDecodeFailureAttempt, type LlmDecodeFailureClass, llmDecodeFailureExcerpt, llmDecodeFailureTailExcerpt, type LlmRetryCause } from '../record/llm.decode.failure';
+import { clipLlmFailedAttemptReply, LLM_TIMEOUT_FINISH_REASON, LLM_TRANSPORT_FINISH_REASON, LLM_UNRETRYABLE_FINISH_REASON, type LlmDecodeFailureAttempt, type LlmDecodeFailureClass, llmDecodeFailureExcerpt, llmDecodeFailureTailExcerpt, type LlmRetryCause } from '../record/llm.decode.failure';
 import { scoreLlmReplyJson } from '../reply/llm.reply.repair';
 import { type LlmDispatchResult, type LlmReplyRepairSummary, type LlmRequest } from '../strategy/llm.strategy';
 import { type LlmRetryLever } from './llm.retry.lever';
@@ -51,6 +52,33 @@ export interface LlmDispatchOutcome {
    * `critique-fail` gap. Absent otherwise.
    */
   readonly critiqueFailure?: string;
+  /**
+   * The send error that ended the dispatch with no resend — set only when the final attempt was an `unretryable`
+   * fault. The pipeline records the call as usual, then rejects with an `LlmDispatchFaultError` built from it.
+   */
+  readonly fault?: LlmDispatchTerminalFault;
+}
+
+/**
+ * The send error that ended a dispatch with no resend — the pipeline records the call, then rejects with it.
+ */
+export interface LlmDispatchTerminalFault {
+  /**
+   * The 1-based attempt that failed.
+   */
+  readonly attempt: number;
+  /**
+   * The thrown value.
+   */
+  readonly error: unknown;
+  /**
+   * Its bounded summary (`llmErrorSummaryOf`).
+   */
+  readonly summary: string;
+  /**
+   * Its classification — never `transient`, which is always resent.
+   */
+  readonly classification: Exclude<FetchErrorClassification, 'transient'>;
 }
 
 /**
@@ -87,9 +115,13 @@ export interface LlmDecodeFailureAttemptConfig {
    */
   readonly lever?: Maybe<Pick<LlmRetryLever, 'lever'>>;
   /**
-   * The transport error summary, on a `transport` row.
+   * The transport error summary, on a `transport` / `unretryable` row.
    */
   readonly transportError?: Maybe<string>;
+  /**
+   * The send error's classification, when it was not transient.
+   */
+  readonly errorClassification?: Maybe<Exclude<FetchErrorClassification, 'transient'>>;
 }
 
 /**
@@ -100,7 +132,7 @@ export interface LlmDecodeFailureAttemptConfig {
  * @returns The decode row.
  */
 export function llmDecodeFailureAttemptOf(config: LlmDecodeFailureAttemptConfig): LlmDecodeFailureAttempt {
-  const { attempt, failureClass, result, maxOutputTokens, validatorError, lever, transportError } = config;
+  const { attempt, failureClass, result, maxOutputTokens, validatorError, lever, transportError, errorClassification } = config;
   const shape = failureClass === 'parse-error' ? scoreLlmReplyJson(result.text) : undefined;
   const tailExcerpt = failureClass === 'parse-error' || failureClass === 'length-truncation' ? llmDecodeFailureTailExcerpt(result.text) : undefined;
 
@@ -117,7 +149,8 @@ export function llmDecodeFailureAttemptOf(config: LlmDecodeFailureAttemptConfig)
     ...(maxOutputTokens == null ? {} : { maxOutputTokens }),
     ...(validatorError == null ? {} : { validatorError }),
     ...(lever == null ? {} : { lever: lever.lever }),
-    ...(transportError == null ? {} : { transportError })
+    ...(transportError == null ? {} : { transportError }),
+    ...(errorClassification == null ? {} : { errorClassification })
   };
 }
 
@@ -185,6 +218,10 @@ export interface LlmFailedAttemptConfig {
    */
   readonly error?: Maybe<string>;
   /**
+   * The send error's classification, when it was not transient.
+   */
+  readonly errorClassification?: Maybe<Exclude<FetchErrorClassification, 'transient'>>;
+  /**
    * The correction block the attempt's request carried.
    */
   readonly correction?: Maybe<string>;
@@ -202,7 +239,7 @@ export interface LlmFailedAttemptConfig {
  * @returns The failed-attempt row.
  */
 export function llmFailedAttemptOf(config: LlmFailedAttemptConfig): LlmCallFailedAttempt {
-  const { attempt, cause, result, maxOutputTokens, error, correction, retry } = config;
+  const { attempt, cause, result, maxOutputTokens, error, errorClassification, correction, retry } = config;
   const raw = result.repair?.originalText ?? result.text;
   const clip = clipLlmFailedAttemptReply(raw);
 
@@ -210,6 +247,7 @@ export function llmFailedAttemptOf(config: LlmFailedAttemptConfig): LlmCallFaile
     attempt,
     cause,
     ...(error == null ? {} : { error }),
+    ...(errorClassification == null ? {} : { errorClassification }),
     text: clip.text,
     rawLength: raw.length,
     ...(clip.clipped == null ? {} : { clipped: clip.clipped }),
@@ -340,4 +378,16 @@ export function llmTimeoutResultOf(request: Pick<LlmRequest, 'capability' | 'met
  */
 export function llmTransportResultOf(request: Pick<LlmRequest, 'capability' | 'meta'>, strategyId: LlmStrategyId): LlmDispatchResult {
   return syntheticLlmResultOf(request, { strategyId, finishReason: LLM_TRANSPORT_FINISH_REASON });
+}
+
+/**
+ * The synthetic envelope of an UNRETRYABLE send — stamped {@link LLM_UNRETRYABLE_FINISH_REASON}, so the failure is
+ * recorded as `unretryable`: the send threw an error the retry policy does not resend.
+ *
+ * @param request - The request whose capability / meta the envelope echoes.
+ * @param strategyId - The strategy whose send failed.
+ * @returns The synthetic unretryable envelope.
+ */
+export function llmUnretryableResultOf(request: Pick<LlmRequest, 'capability' | 'meta'>, strategyId: LlmStrategyId): LlmDispatchResult {
+  return syntheticLlmResultOf(request, { strategyId, finishReason: LLM_UNRETRYABLE_FINISH_REASON });
 }

@@ -41,10 +41,9 @@
 import { errorMessageOf, isNotNullOrEmptyString, isPlainObject, makeTimeoutAbortSignal, type Maybe, type Milliseconds, removeTrailingSlashes } from '@dereekb/util';
 import { type LlmDecisionAdapterConfig } from '../adapter/llm.adapter';
 import { type LlmModelId, type LlmStrategyId } from '../model/llm.value';
-import { type ConfiguredFetch, type FetchJsonTextResult, readFetchJsonText } from '@dereekb/util/fetch';
+import { type ConfiguredFetch, type FetchJsonTextResult, isFetchAbortError, readFetchJsonText } from '@dereekb/util/fetch';
 import { llmProviderErrorMessage, runLlmCredentialProbeLadder, type LlmTransportCredentialProbe } from '../strategy/llm.credential.probe';
 import { resolveLlmFetch } from '../strategy/llm.fetch';
-import { isAbortError } from '../strategy/llm.error';
 import { type LlmCredentialProbeOptions } from '../strategy/llm.strategy';
 import { type LlmStrategyHealth } from '../strategy/llm.strategy.health';
 import { type LlmCostBasis } from '../strategy/llm.usage';
@@ -168,7 +167,7 @@ async function readLlmSystemOneRoute(input: ReadLlmSystemOneRouteInput): Promise
   } catch (error) {
     if (signal.aborted) {
       throw signal.reason;
-    } else if (isAbortError(error)) {
+    } else if (isFetchAbortError(error)) {
       throw error;
     }
 

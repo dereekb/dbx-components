@@ -1,4 +1,4 @@
-import { isDefaultReadableError, DEFAULT_READABLE_ERROR_CODE, errorMessageOf } from './error';
+import { isDefaultReadableError, DEFAULT_READABLE_ERROR_CODE, errorMessageOf, errorClassNames } from './error';
 
 describe('isDefaultReadableError()', () => {
   it('should return true for null/undefined', () => {
@@ -68,5 +68,35 @@ describe('errorMessageOf()', () => {
     };
 
     expect(errorMessageOf(value)).toBe('[object Object]');
+  });
+});
+
+describe('errorClassNames()', () => {
+  it('should list every class on the chain, leaf first', () => {
+    class A extends Error {}
+    class B extends A {}
+    class C extends B {}
+
+    expect(errorClassNames(new C())).toEqual(['C', 'B', 'A', 'Error']);
+  });
+
+  it('should start a DOMException chain with DOMException', () => {
+    const names = errorClassNames(new DOMException('stop', 'AbortError'));
+    expect(names[0]).toBe('DOMException');
+  });
+
+  it('should return an empty array for a non-object', () => {
+    expect(errorClassNames('boom')).toEqual([]);
+    expect(errorClassNames(42)).toEqual([]);
+    expect(errorClassNames(null)).toEqual([]);
+    expect(errorClassNames(undefined)).toEqual([]);
+  });
+
+  it('should return an empty array for a null-prototype object', () => {
+    expect(errorClassNames(Object.create(null))).toEqual([]);
+  });
+
+  it('should return an empty array for a plain object', () => {
+    expect(errorClassNames({ message: 'x' })).toEqual([]);
   });
 });

@@ -27,6 +27,8 @@ The root, `/decision`, `/openai`, `/openrouter` and `/zenmux` entries are browse
 - They import no `node:` module or Node builtin and never read `process`. Hosts pass configuration (API keys, base
   URLs, model lists) in; nothing is read from the environment. Reading the environment or the file system is the job
   of `/node`.
+- A browser network failure (Chromium's `Failed to fetch`, Firefox's `NetworkError when attempting to fetch
+  resource.`, Safari's `Load failed`) is classified like undici's `fetch failed`: transient.
 - `openai` is the only SDK peer, and it is **optional**: it is loaded lazily from `/openai`'s single boundary module,
   so importing an entry never loads it. Install it only for a chat strategy that uses it. `/openrouter` loads no SDK
   of its own: its chat strategy reaches `openai` by importing `/openai`, and its decision strategy is a plain `fetch`
@@ -109,13 +111,18 @@ const verdict = evaluateLlmQuotaGate({ report }); // { allowed, reason, usedFrac
 
 What a dispatcher records about each call, and the seams a host observes it through.
 
-- **Errors.** `isAbortError` (a client deadline or cancel), `isRetryableLlmError` (an identical resend could succeed:
-  connection failures, 429, 5xx, raw socket failures; never another 4xx) and `llmErrorSummaryOf` (one bounded log
-  line naming what was thrown). Test `isAbortError` first: a connection timeout matches both.
-- **Decode failures.** The six `LlmDecodeFailureClass`es, `classifyLlmDecodeFailure` (the failure family) and
+- **Errors.** `isLlmAbortError` (a client deadline or cancel; test it first, since a connection timeout is also
+  transient by class), `classifyLlmError` (`transient | permanent | unknown`, through `@dereekb/util/fetch`'s
+  `classifyFetchError` with `LLM_ERROR_CLASSIFICATION_CONFIG`, the `openai` SDK's class sets),
+  `isRetryableLlmErrorClassification` (the one resend rule both lanes apply), `llmErrorSummaryOf` (one bounded log line
+  naming what was thrown) and `LlmDispatchFaultError` / `isLlmDispatchFaultError` (the structured rejection of a send
+  error the policy does not resend). The generic predicates (`isFetchAbortError`, `isFetchNetworkError`,
+  `classifyFetchError`) live in `@dereekb/util/fetch`.
+- **Decode failures.** The seven `LlmDecodeFailureClass`es, `classifyLlmDecodeFailure` (the failure family) and
   `classifyLlmReplyOutcome` (what the reply looked like), the finish-reason predicates (`isLlmLengthCappedFinish`,
   `isLlmCleanStopFinish`, `isLlmReasoningOnlyReply`), the two sentinels a dispatcher stamps on a synthesized reply
-  (`LLM_TIMEOUT_FINISH_REASON`, `LLM_TRANSPORT_FINISH_REASON`) and the bounded excerpt helpers.
+  (`LLM_TIMEOUT_FINISH_REASON`, `LLM_TRANSPORT_FINISH_REASON`, `LLM_UNRETRYABLE_FINISH_REASON`) and the bounded
+  excerpt helpers.
 - **Retry lever.** `chooseLlmRetryLever` picks the ONE thing the next attempt changes (budget, model, reasoning off /
   low, structured output off, or nothing, with the reason); `applyLlmRetryLever` applies it.
 - **Call records.** `LlmCallRecord`, `LlmCallStartRecord`, `LlmDecodeFailureRecord` and their event-type tags. A host's
@@ -152,12 +159,12 @@ const profile = context.profile(); // nested spans, marks, breadcrumbs and swall
 ```
 
 ```ts
-import { isAbortError, isRetryableLlmError, llmErrorSummaryOf } from '@dereekb/llm';
+import { classifyLlmError, llmErrorSummaryOf } from '@dereekb/llm';
 
 try {
   return await strategy.complete(request);
 } catch (error) {
-  if (isAbortError(error) || isRetryableLlmError(error)) {
+  if (classifyLlmError(error) === 'transient') {
     logger.info(`resending: ${llmErrorSummaryOf(error)}`);
   }
 
@@ -785,12 +792,15 @@ replay. Hosts swap their own pieces in through hooks; the dispatcher has no host
   under the layout's `follow-up` slot id, sent over the replayed `thread` with no cache split and no attachments.
 - **Single-shot.** With no `validate` and no `critique` the strategy result comes back unchanged. A reply that nearly
   parses is repaired for free (`reply-repaired` diag, no decode row). An abort only drops the beat when the dispatch is
-  cancelled; any other throw propagates, a retryable transport error included.
+  cancelled. A send error the policy does not resend (`permanent`, or `unknown`: no resend is possible here, so
+  `isRetryableUnknownError` is never asked) is recorded as one `unretryable` row and call record, then rejects as
+  `LlmDispatchFaultError`. A transient send error still propagates unchanged.
 - **Validated.** With a `validate` (or a `critique`) the call runs the bounded retry loop (see Retry and lanes). Each
   reply is read, repaired, validated, then critiqued, and the result is stamped `attempts`, `decodeStatus`,
   `decodeOutcome`, `lengthCapped`, `lever` and `validationErrors`. A decline, or a `line` reply that is not JSON, is
   accepted. Each rejected attempt records a decode row (critique rejections excepted), a `failedAttempts` row and an
-  `onDecodeFailure` tap event whose `willRetry` says whether another attempt follows. Other throws propagate.
+  `onDecodeFailure` tap event whose `willRetry` says whether another attempt follows. A send error the policy does not
+  resend ends the loop at once (see Transport lane).
 - **Follow-ups.** `preparePrompt(request)` returns an `LlmPrompt` whose `execute()` runs once and whose `followUp(…)`
   chains onto the same thread; `dispatch(request)` equals `preparePrompt(request).execute()` unwrapped. A degenerate
   reply replays as `degenerateThreadPlaceholder`. `makeLlmPromptChain` works over it unchanged: the root renders its
@@ -851,9 +861,15 @@ one retry lever, and a mangled JSON reply gets one cheap fast fix before any re-
   construction), reasoning
   off / low, or structured output off. Each retry files a `retry-lever` diag and stamps `phases.attempts[].retry` and
   `failedAttempts[].retry`.
-- **Transport lane.** A timeout resends identical bytes at once; a retryable transport error (429, 5xx, a dropped
-  socket) resends them after `transportBackoff` (default `llmTransportBackoffMs`, util `exponentialBackoffDelay`: 500 ms doubling to 8 s, equal jitter,
-  with a `transport-backoff` diag). A cancelled dispatch never retries.
+- **Transport lane.** A timeout resends identical bytes at once. Every other send error is classified by
+  `classifyLlmError`: 408, 429, 5xx, a Node or browser network failure and the SDK's connection / rate-limit / server
+  classes are `transient`; 400–404 are `permanent`; the rest is `unknown`. A transient error resends the bytes after
+  `transportBackoff` (default `llmTransportBackoffMs`, util `exponentialBackoffDelay`: 500 ms doubling to 8 s, equal
+  jitter, with a `transport-backoff` diag). An `unknown` error goes to the dispatcher's `isRetryableUnknownError`: a
+  `true` makes it behave exactly like a transient error (its rows carry `errorClassification: 'unknown'`). Anything not
+  resent records an `unretryable` row (with `errorClassification`), the call record, the decode-failure record and
+  `onDispatchComplete`, then the dispatch rejects with `LlmDispatchFaultError` (`cause` = the original error). A
+  cancelled dispatch never retries.
 - **Truncation.** A length-capped reply is not parsed while budget remains; `lengthCapped` is sticky on the result. A
   truncation a lever induced on the last attempt earns one bonus attempt (`LLM_RETRY_INDUCED_BONUS_ATTEMPTS`).
 - **Fast fix.** `replyFastFix` (e.g. `makeLlmReplyFastFixer()`) repairs a mangled reply with one recorded
@@ -875,8 +891,10 @@ one retry lever, and a mangled JSON reply gets one cheap fast fix before any re-
   - **Records and taps.** Each decision goes through the shared hooks (`lane: 'decision'`) and records one start and one
     call record, its state and questions as two `live`-slot segments, firing `onDispatch` / `onDispatchComplete`. A
     throwing `stamp` is swallowed at `llm/decide.stamp`.
-  - **Resend.** A send that fails with an error `isRetryableLlmDecisionError` accepts (a 429, a 5xx, a dropped socket;
-    never an abort, a timeout or an answer fault) is resent after `transportBackoff`, up to `maxAttempts` sends
+  - **Resend.** A send that fails with an error `isRetryableLlmDecisionError` accepts (the same classifier and
+    `isRetryableUnknownError` as the completion lane: a 408, a 429, a 5xx, a dropped socket, or a host-approved
+    `unknown` error; never an abort, a timeout or an answer fault) is resent after `transportBackoff`, up to
+    `maxAttempts` sends
     (default 2). Each failed send is a `failedAttempts` row and `result.attempts` counts the sends; `decisionsSpent`
     counts every send. A decision cancelled during the backoff is not resent.
 
@@ -973,8 +991,8 @@ could need in one map.
   reports and never throws, a strategy without the seam counts as ready, and a throwing seam is recorded as an error
   issue. With that `lane`, issues and errors name a "decision strategy".
 - `DEFAULT_LLM_DECISION_TIMEOUT_MS` (10s) is declared here and enforced by the System One transport.
-- `LlmDecisionTransportError` (`status`, `body`) and `isRetryableLlmDecisionError` (429 / 5xx / socket failures,
-  never an abort or a timeout) — the completion lane's retry posture, and what the dispatcher's decision lane resends
+- `LlmDecisionTransportError` (`status`, `body`) and `isRetryableLlmDecisionError(error, isRetryableUnknownError?)`
+  (408 / 429 / 5xx / socket failures, plus an `unknown` error the function approves; never an abort or a timeout) — the completion lane's retry posture, and what the dispatcher's decision lane resends
   by (see [Decision lane](#retry-and-lanes)); a direct `strategy.decide()` / `decision.decide()` is never retried.
 - `makeLlmSystemOneDecisionStrategy(config, hooks)` is the ONE decision transport, a plain `fetch` to
   `POST {baseUrl}/systemone` for every gateway that serves the route. The hooks define the gateway: `kind`, `label`,
@@ -1142,7 +1160,7 @@ OpenRouter's hook set over `makeLlmSystemOneDecisionStrategy`, with no SDK.
   `answer-mistyped`). Usage comes from `llmUsageFromDecisionUsage` and carries the gateway's exact, synchronous `cost`
   (no `costBasis`); the generation id is the body `id`.
 - The per-call timeout (`DEFAULT_LLM_DECISION_TIMEOUT_MS` unless set) holds even when you pass a signal.
-- Failures follow the System One transport: a timeout or abort rejects with its reason (`isAbortError`), a socket
+- Failures follow the System One transport: a timeout or abort rejects with its reason (`isFetchAbortError`), a socket
   failure is an `LlmDecisionTransportError` with the native error as its `cause` (the dispatcher's decision lane
   resends it), and an HTTP answer is an `LlmDecisionTransportError` (`status`, `body`).
 - Seams: `decisionFetch` (a keyless fake of the route) and `probeFetch`; the credential probe is `GET {baseUrl}/key`.

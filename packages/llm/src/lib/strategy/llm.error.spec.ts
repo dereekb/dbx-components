@@ -16,10 +16,15 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { APIConnectionError, APIConnectionTimeoutError, APIUserAbortError, BadRequestError, InternalServerError, RateLimitError } from 'openai';
-import { isAbortError, isRetryableLlmError, LLM_ERROR_SUMMARY_MAX_LENGTH, llmErrorSummaryOf } from './llm.error';
+import { APIConnectionError, APIConnectionTimeoutError, APIError, APIUserAbortError, BadRequestError, ConflictError, InternalServerError, RateLimitError } from 'openai';
+import { classifyLlmError, isLlmAbortError, isRetryableLlmErrorClassification, LLM_ERROR_SUMMARY_MAX_LENGTH, llmErrorSummaryOf } from './llm.error';
 
-describe('isAbortError / isRetryableLlmError against REAL openai SDK instances', () => {
+/*
+ * Ported from the old unprefixed abort predicate and boolean retry predicate, outcomes unchanged. The invariant every
+ * case below keeps: `classifyLlmError(e) === 'transient'` <=> the old "abort OR retryable" pair answered true.
+ */
+
+describe('isLlmAbortError / classifyLlmError against REAL openai SDK instances', () => {
   it('every SDK error instance reports `.name === "Error"`, the property the old guard read', () => {
     // NOT a test of the SDK: this is the fact that made the name-based guard dead code in production. If a future
     // `openai` starts setting `.name`, this goes red and the doc comments in `llm.error.ts` need revisiting.
@@ -32,19 +37,19 @@ describe('isAbortError / isRetryableLlmError against REAL openai SDK instances',
 
   it('APIConnectionTimeoutError is BOTH an abort and a transport error; the abort lane is tested first, so it lands in `timeout`', () => {
     // undici's `headersTimeout` firing throws this class. It EXTENDS `APIConnectionError`, so a chain walk matches
-    // both predicates; a caller's `if (isAbortError) … else if (isRetryableLlmError)` order is what puts it in the
+    // both predicates; a caller's `if (isLlmAbortError) … else classifyLlmError` order is what puts it in the
     // identical-resend `'timeout'` lane rather than the jittered-backoff `'transport'` one. That order is load-bearing.
     const error = new APIConnectionTimeoutError({ message: 'Request timed out. Node.js fetch timed out waiting for response headers;' });
 
-    expect(isAbortError(error)).toBe(true);
-    expect(isRetryableLlmError(error)).toBe(true);
+    expect(isLlmAbortError(error)).toBe(true);
+    expect(classifyLlmError(error)).toBe('transient');
   });
 
-  it('APIUserAbortError is an abort, NOT a transport failure', () => {
+  it('APIUserAbortError is an abort (transient, taken by the abort lane first)', () => {
     const error = new APIUserAbortError({});
 
-    expect(isAbortError(error)).toBe(true);
-    expect(isRetryableLlmError(error)).toBe(false);
+    expect(isLlmAbortError(error)).toBe(true);
+    expect(classifyLlmError(error)).toBe('transient');
   });
 
   it('APIConnectionError is a TRANSPORT failure, not an abort', () => {
@@ -52,29 +57,29 @@ describe('isAbortError / isRetryableLlmError against REAL openai SDK instances',
     // half of the guard cannot see it — this case is the one the fix exists for.
     const error = new APIConnectionError({ message: 'Connection error.' });
 
-    expect(isAbortError(error)).toBe(false);
-    expect(isRetryableLlmError(error)).toBe(true);
+    expect(isLlmAbortError(error)).toBe(false);
+    expect(classifyLlmError(error)).toBe('transient');
   });
 
   it('RateLimitError is a transport failure by CLASS, not only by its 429 status', () => {
     const error = new RateLimitError(429, { message: 'rate limited' }, undefined, new Headers());
 
-    expect(isAbortError(error)).toBe(false);
-    expect(isRetryableLlmError(error)).toBe(true);
+    expect(isLlmAbortError(error)).toBe(false);
+    expect(classifyLlmError(error)).toBe('transient');
   });
 
   it('InternalServerError is a transport failure by CLASS, not only by its 5xx status', () => {
     const error = new InternalServerError(503, { message: 'bad gateway' }, undefined, new Headers());
 
-    expect(isAbortError(error)).toBe(false);
-    expect(isRetryableLlmError(error)).toBe(true);
+    expect(isLlmAbortError(error)).toBe(false);
+    expect(classifyLlmError(error)).toBe('transient');
   });
 
-  it('BadRequestError is NEITHER: a non-429 4xx propagates, because resending identical bytes cannot fix it', () => {
+  it('BadRequestError is PERMANENT: a 400 is not resent, because resending identical bytes cannot fix it', () => {
     const error = new BadRequestError(400, { message: 'bad request' }, undefined, new Headers());
 
-    expect(isAbortError(error)).toBe(false);
-    expect(isRetryableLlmError(error)).toBe(false);
+    expect(isLlmAbortError(error)).toBe(false);
+    expect(classifyLlmError(error)).toBe('permanent');
   });
 
   it('a HYPOTHETICAL future APIConnectionError subclass is retryable by INHERITANCE', () => {
@@ -82,11 +87,11 @@ describe('isAbortError / isRetryableLlmError against REAL openai SDK instances',
     // is exactly what let `APIConnectionError` fall through while its own subclass was caught, the first time.
     class APIConnectionResetError extends APIConnectionError {}
 
-    expect(isRetryableLlmError(new APIConnectionResetError({ message: 'reset' }))).toBe(true);
+    expect(classifyLlmError(new APIConnectionResetError({ message: 'reset' }))).toBe('transient');
   });
 });
 
-describe('isAbortError / isRetryableLlmError on the NON-SDK shapes that already worked', () => {
+describe('isLlmAbortError / classifyLlmError on the NON-SDK shapes that already worked', () => {
   it('an aborted AbortController reason (DOMException `AbortError`) is an abort', () => {
     // A plain `AbortSignal` rejection DOES set `.name` correctly — its `constructor.name` is only `DOMException`,
     // so `.name` is the ONLY thing that distinguishes it. This is why the `.name` branch must survive the fix.
@@ -95,8 +100,8 @@ describe('isAbortError / isRetryableLlmError on the NON-SDK shapes that already 
     const reason = controller.signal.reason as unknown;
 
     expect((reason as { readonly constructor: { readonly name: string } }).constructor.name).toBe('DOMException');
-    expect(isAbortError(reason)).toBe(true);
-    expect(isRetryableLlmError(reason)).toBe(false);
+    expect(isLlmAbortError(reason)).toBe(true);
+    expect(classifyLlmError(reason)).toBe('transient');
   });
 
   it('an AbortSignal.timeout reason (DOMException `TimeoutError`) is an abort', async () => {
@@ -107,37 +112,80 @@ describe('isAbortError / isRetryableLlmError on the NON-SDK shapes that already 
     const reason = signal.reason as unknown;
 
     expect((reason as { readonly name: string }).name).toBe('TimeoutError');
-    expect(isAbortError(reason)).toBe(true);
-    expect(isRetryableLlmError(reason)).toBe(false);
+    expect(isLlmAbortError(reason)).toBe(true);
+    expect(classifyLlmError(reason)).toBe('transient');
   });
 
   it('a bare status-bearing error still retries on `byStatus`, the half of the guard that always worked', () => {
-    expect(isRetryableLlmError(Object.assign(new Error('http 429'), { status: 429 }))).toBe(true);
-    expect(isRetryableLlmError(Object.assign(new Error('http 503'), { status: 503 }))).toBe(true);
-    expect(isRetryableLlmError(Object.assign(new Error('http 400'), { status: 400 }))).toBe(false);
+    expect(classifyLlmError(Object.assign(new Error('http 429'), { status: 429 }))).toBe('transient');
+    expect(classifyLlmError(Object.assign(new Error('http 503'), { status: 503 }))).toBe('transient');
+    expect(classifyLlmError(Object.assign(new Error('http 400'), { status: 400 }))).toBe('permanent');
   });
 
   it("a RAW fetch socket failure (undici's `fetch failed`, a socket code on the error or its cause) is a transport failure; a DNS miss is not", () => {
-    expect(isRetryableLlmError(new TypeError('fetch failed', { cause: Object.assign(new Error('connect ECONNREFUSED 127.0.0.1:8080'), { code: 'ECONNREFUSED' }) }))).toBe(true);
-    expect(isRetryableLlmError(new TypeError('fetch failed'))).toBe(true);
-    expect(isRetryableLlmError(Object.assign(new Error('socket hang up'), { code: 'ECONNRESET' }))).toBe(true);
-    expect(isRetryableLlmError(new TypeError('other', { cause: { code: 'UND_ERR_CONNECT_TIMEOUT' } }))).toBe(true);
-    expect(isRetryableLlmError(Object.assign(new Error('getaddrinfo ENOTFOUND box'), { code: 'ENOTFOUND' }))).toBe(false);
-    expect(isRetryableLlmError(new TypeError('x is not a function'))).toBe(false);
-    expect(isAbortError(new TypeError('fetch failed'))).toBe(false);
+    expect(classifyLlmError(new TypeError('fetch failed', { cause: Object.assign(new Error('connect ECONNREFUSED 127.0.0.1:8080'), { code: 'ECONNREFUSED' }) }))).toBe('transient');
+    expect(classifyLlmError(new TypeError('fetch failed'))).toBe('transient');
+    expect(classifyLlmError(Object.assign(new Error('socket hang up'), { code: 'ECONNRESET' }))).toBe('transient');
+    expect(classifyLlmError(new TypeError('other', { cause: { code: 'UND_ERR_CONNECT_TIMEOUT' } }))).toBe('transient');
+    expect(classifyLlmError(Object.assign(new Error('getaddrinfo ENOTFOUND box'), { code: 'ENOTFOUND' }))).toBe('unknown');
+    expect(classifyLlmError(new TypeError('x is not a function'))).toBe('unknown');
+    expect(isLlmAbortError(new TypeError('fetch failed'))).toBe(false);
   });
 
   it('a gateway wrapper that DOES set `.name` still matches: the `.name` branch is kept for both predicates', () => {
-    expect(isAbortError(Object.assign(new Error('x'), { name: 'AbortError' }))).toBe(true);
-    expect(isAbortError(Object.assign(new Error('x'), { name: 'APIUserAbortError' }))).toBe(true);
-    expect(isRetryableLlmError(Object.assign(new Error('x'), { name: 'APIConnectionError' }))).toBe(true);
+    expect(isLlmAbortError(Object.assign(new Error('x'), { name: 'AbortError' }))).toBe(true);
+    expect(isLlmAbortError(Object.assign(new Error('x'), { name: 'APIUserAbortError' }))).toBe(true);
+    expect(classifyLlmError(Object.assign(new Error('x'), { name: 'APIConnectionError' }))).toBe('transient');
   });
 
-  it('an ordinary error and a non-object throw are NEITHER: they propagate unchanged', () => {
+  it('an ordinary error and a non-object throw are NEITHER an abort nor transient: they classify as unknown', () => {
     for (const value of [new Error('boom'), null, undefined, 'string', 42]) {
-      expect(isAbortError(value)).toBe(false);
-      expect(isRetryableLlmError(value)).toBe(false);
+      expect(isLlmAbortError(value)).toBe(false);
+      expect(classifyLlmError(value)).toBe('unknown');
     }
+  });
+});
+
+describe('classifyLlmError: rules added with the util/fetch classifier', () => {
+  it('HTTP 408 is transient', () => {
+    expect(classifyLlmError(new APIError(408, { message: 'request timeout' }, undefined, new Headers()))).toBe('transient');
+  });
+
+  it('HTTP 409 is unknown', () => {
+    expect(classifyLlmError(new ConflictError(409, { message: 'conflict' }, undefined, new Headers()))).toBe('unknown');
+  });
+
+  it('a browser network failure is transient', () => {
+    expect(classifyLlmError(new TypeError('Failed to fetch'))).toBe('transient');
+  });
+
+  it("undici's fetch failed with an ENOTFOUND cause is unknown: the code decides", () => {
+    expect(classifyLlmError(new TypeError('fetch failed', { cause: { code: 'ENOTFOUND' } }))).toBe('unknown');
+  });
+});
+
+describe('isRetryableLlmErrorClassification', () => {
+  const error = new Error('boom');
+
+  it('resends an unknown error only when the host answers true', () => {
+    expect(isRetryableLlmErrorClassification('unknown', error, () => true)).toBe(true);
+    expect(isRetryableLlmErrorClassification('unknown', error, () => undefined)).toBe(false);
+    expect(isRetryableLlmErrorClassification('unknown', error)).toBe(false);
+  });
+
+  it('never resends a permanent error and never asks the host about it', () => {
+    let called = false;
+    expect(
+      isRetryableLlmErrorClassification('permanent', error, () => {
+        called = true;
+        return true;
+      })
+    ).toBe(false);
+    expect(called).toBe(false);
+  });
+
+  it('always resends a transient error', () => {
+    expect(isRetryableLlmErrorClassification('transient', error, () => false)).toBe(true);
   });
 });
 

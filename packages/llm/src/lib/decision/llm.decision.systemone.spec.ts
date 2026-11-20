@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { makeLlmSystemOneWireFake, type LlmSystemOneWireFakeAnswer } from '@dereekb/llm/test';
-import { isAbortError } from '../strategy/llm.error';
+import { isLlmAbortError } from '../strategy/llm.error';
 import { LlmDecisionAnswerFaultError } from './llm.decision.answer';
 import { llmChoiceQuestion, llmNoulQuestion, llmScoreQuestion } from './llm.decision.question';
 import { DEFAULT_LLM_DECISION_TIMEOUT_MS, isRetryableLlmDecisionError, LlmDecisionTransportError, type LlmDecisionRequest } from './llm.decision.strategy';
@@ -277,7 +277,7 @@ describe('makeLlmSystemOneDecisionStrategy()', () => {
 
       expect(thrown).not.toBeInstanceOf(LlmDecisionTransportError);
       expect((thrown as Error).name).toBe('AbortError');
-      expect(isAbortError(thrown)).toBe(true);
+      expect(isLlmAbortError(thrown)).toBe(true);
     });
 
     it('surfaces a custom abort reason as itself', async () => {
@@ -295,7 +295,7 @@ describe('makeLlmSystemOneDecisionStrategy()', () => {
 
       for (const thrown of [alone, withSignal]) {
         expect((thrown as Error).name).toBe('TimeoutError');
-        expect(isAbortError(thrown)).toBe(true);
+        expect(isLlmAbortError(thrown)).toBe(true);
         expect(isRetryableLlmDecisionError(thrown)).toBe(false);
       }
     });
