@@ -488,6 +488,54 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     archetypes: ['composite-key-root']
   },
   {
+    name: 'NotificationRedirectEntry',
+    identityConst: 'notificationRedirectEntryIdentity',
+    modelType: 'notificationRedirectEntry',
+    collectionPrefix: 'nre',
+    sourcePackage: '@dereekb/firebase',
+    sourceFile: 'packages/firebase/src/lib/model/notification/notification.redirect.ts',
+    fields: [
+      {
+        name: 'cat',
+        longName: 'createdAt',
+        converter: 'firestoreDate()',
+        tsType: 'Date',
+        optional: false,
+        description: 'Creation date of this entry.'
+      },
+      {
+        name: 'xat',
+        longName: 'expiresAt',
+        converter: 'firestoreDate()',
+        tsType: 'Date',
+        optional: false,
+        description: 'When this entry expires. An expired entry no longer redirects to its target, even before it is deleted.'
+      },
+      {
+        name: 'o',
+        longName: 'ownerKey',
+        converter: 'optionalFirestoreString()',
+        tsType: 'Maybe<FirebaseAuthOwnershipKey>',
+        optional: true,
+        description: "Ownership key of the only person who may open this entry (e.g. `'pr/<uid>'`)."
+      },
+      {
+        name: 'm',
+        longName: 'targetModelKey',
+        converter: 'optionalFirestoreString()',
+        tsType: 'Maybe<FirestoreModelKey>',
+        optional: true,
+        description: "Model key of the model the link opens. With no target, the link opens its prefix's fallback page."
+      }
+    ],
+    enums: [],
+    detectionHints: ['xat', 'm'],
+    description: 'The record behind a notification short link. The document id is the {@link NotificationRedirectEntryId} in the link.',
+    collectionKind: 'root',
+    archetypes: ['root-entity'],
+    modelGroup: 'Notification'
+  },
+  {
     name: 'NotificationSummary',
     identityConst: 'notificationSummaryIdentity',
     modelType: 'notificationSummary',
@@ -1655,7 +1703,7 @@ export const FIREBASE_MODEL_GROUPS: readonly FirebaseModelGroup[] = [
     sourcePackage: '@dereekb/firebase',
     sourceFile: 'packages/firebase/src/lib/model/notification/notification.ts',
     description: 'Abstract class providing access to all notification-related Firestore collections.',
-    modelNames: ['Notification', 'NotificationBox', 'NotificationLoggedEventDay', 'NotificationLoggedEventDayPage', 'NotificationLoggedEventDayPagedItems', 'NotificationSummary', 'NotificationTaskBot', 'NotificationUser', 'NotificationWeek']
+    modelNames: ['Notification', 'NotificationBox', 'NotificationLoggedEventDay', 'NotificationLoggedEventDayPage', 'NotificationLoggedEventDayPagedItems', 'NotificationRedirectEntry', 'NotificationSummary', 'NotificationTaskBot', 'NotificationUser', 'NotificationWeek']
   },
   {
     name: 'OidcModel',

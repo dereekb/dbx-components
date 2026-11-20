@@ -6,6 +6,7 @@ export * from './notification.create.run';
 export * from './notification.healthcheck';
 export * from './notification.healthcheck.service';
 export * from './notification.module';
+export * from './notification.redirect';
 export * from './notification.send.service.notificationsummary';
 export * from './notification.send.service.text';
 export * from './notification.send.service';

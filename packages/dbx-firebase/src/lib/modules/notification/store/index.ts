@@ -7,6 +7,7 @@ export * from './notificationbox.document.store.directive';
 export * from './notificationbox.document.store';
 export * from './notificationbox.collection.store.directive';
 export * from './notificationbox.collection.store';
+export * from './notificationredirectentry.document.store';
 export * from './notificationsummary.collection.store.directive';
 export * from './notificationsummary.collection.store';
 export * from './notificationsummary.document.store.directive';

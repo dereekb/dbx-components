@@ -1,5 +1,5 @@
 import { distinctUntilChanged, map, type Observable, shareReplay, switchMap, combineLatest, of, catchError } from 'rxjs';
-import { type FirestoreCollectionType, type FirestoreDocument, type FirestoreDocumentData, type FirestoreModelIdentity, type FirestoreModelKey } from '@dereekb/firebase';
+import { type FirestoreCollectionType, type FirestoreDocument, type FirestoreDocumentData, type FirestoreModelIdentity, type FirestoreModelKey, firestoreModelKeyCollectionType } from '@dereekb/firebase';
 import { type DbxModelTypeInfo, type DbxModelTypesMap, DbxModelTypesService } from '@dereekb/dbx-web';
 import { type ArrayOrValue, asArray, type Configurable, type FactoryWithRequiredInput, type Maybe } from '@dereekb/util';
 import { type ClickableAnchorLinkSegueRef, type IconAndTitle, type SegueRef } from '@dereekb/dbx-core';
@@ -102,6 +102,31 @@ export class DbxFirebaseModelTypesService {
         return x;
       })
     );
+  }
+
+  /**
+   * Returns the type info for the model the input key points at, or undefined when its type is not registered.
+   *
+   * Reads only the key and the registered types, so it never loads the model.
+   *
+   * @param key - Key of the model.
+   * @returns Observable of the type info, if registered.
+   */
+  currentInfoForKey(key: FirestoreModelKey): Observable<Maybe<DbxFirebaseModelTypeInfo>> {
+    const collectionType = firestoreModelKeyCollectionType(key);
+    return this.dbxModelTypesService.typesMap$.pipe(map((x) => (collectionType ? Object.values(x).find((y) => y.identity.collectionType === collectionType) : undefined)));
+  }
+
+  /**
+   * Returns the segue ref to the page that shows the model the input key points at, using its type's `sref`.
+   *
+   * Emits undefined when the type is not registered or has no `sref`. Never loads the model.
+   *
+   * @param key - Key of the model.
+   * @returns Observable of the segue ref, if any.
+   */
+  segueRefForKey(key: FirestoreModelKey): Observable<Maybe<SegueRef>> {
+    return this.currentInfoForKey(key).pipe(map((x) => (x?.sref ? x.sref(key) : undefined)));
   }
 
   instanceForKey<D extends FirestoreDocument<any> = any, R extends GrantedRole = GrantedRole>(key$: ObservableOrValue<FirestoreModelKey>): DbxFirebaseModelTypesServiceInstance<D, R> {

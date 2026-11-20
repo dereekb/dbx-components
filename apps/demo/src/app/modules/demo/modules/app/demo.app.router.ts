@@ -4,6 +4,7 @@ import { DemoAppHistoryComponent } from './container/history.component';
 import { DemoAppHomeComponent } from './container/home.component';
 import { DemoAppLayoutComponent } from './container/layout.component';
 import { DEMO_APP_STATE_DATA } from './demo.app.router.auth';
+import { DbxFirebaseNotificationRedirectComponent } from '@dereekb/dbx-firebase';
 
 export const DEMO_APP_STATE: Ng2StateDeclaration = {
   url: '/app?imp',
@@ -34,6 +35,17 @@ export const SETTINGS_STATE: Ng2StateDeclaration = {
   url: '/settings',
   name: 'demo.app.settings',
   component: DemoAppSettingsComponent
+};
+
+/**
+ * The notification short link page. demo-api puts `<clientUrl>/demo/app/s/<id>` links in notification texts.
+ *
+ * Inside demo.app, so a signed-out person signs in first.
+ */
+export const SHORT_LINK_STATE: Ng2StateDeclaration = {
+  url: '/s/:key',
+  name: 'demo.app.s',
+  component: DbxFirebaseNotificationRedirectComponent
 };
 
 export const NOTIFICATION_STATE: Ng2StateDeclaration = {
@@ -78,6 +90,7 @@ export const DEMO_APP_STATES: Ng2StateDeclaration[] = [
   HOME_STATE,
   HISTORY_STATE,
   SETTINGS_STATE,
+  SHORT_LINK_STATE,
   NOTIFICATION_STATE,
   DEMO_CALENDAR_FUTURE_STATE,
   DEMO_GUESTBOOK_FUTURE_STATE,

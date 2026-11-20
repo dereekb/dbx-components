@@ -56,6 +56,9 @@ import {
   DEMO_API_AUTH_CLAIMS_ONBOARDED_TOKEN,
   type Guestbook,
   guestbookIdentity,
+  guestbookEntryIdentity,
+  DEMO_GUESTBOOK_NOTIFICATION_REDIRECT_ENTRY_PREFIX,
+  DEMO_GUESTBOOK_ENTRY_NOTIFICATION_REDIRECT_ENTRY_PREFIX,
   DEMO_FIREBASE_FUNCTIONS_CONFIG,
   DemoFirebaseFunctionsGetter,
   DemoFirestoreCollections,
@@ -81,7 +84,7 @@ import {
   DEMO_FORM_SPACE_TYPE_CONFIG_SERVICE,
   ProfileFunctions
 } from 'demo-firebase';
-import { type FirestoreContext, type FirestoreModelKey, appNotificationTemplateTypeInfoRecordService, firestoreModelId } from '@dereekb/firebase';
+import { type FirestoreContext, type FirestoreModelKey, appNotificationTemplateTypeInfoRecordService, firestoreModelId, firestoreModelKeyCollectionType, firestoreModelKeyParentKey } from '@dereekb/firebase';
 import { DemoFirebaseContextService, demoSetupDevelopmentWidget } from 'demo-components';
 import { provideDbxFormConfiguration, provideDbxForgeFormFieldDeclarations } from '@dereekb/dbx-form';
 import { DBX_FORGE_CALENDAR_FIELD_TYPES } from '@dereekb/dbx-form/calendar';
@@ -476,6 +479,22 @@ export const APP_CONFIG: ApplicationConfig = {
           settingsAnchor: { ref: 'demo.app.notification.settings' },
           // the default: per-type settings are global, and each guestbook only gets an on/off switch
           notificationBoxSettingsMode: 'global'
+        },
+        // the short link page (demo.app.s). demo-api puts these links in notification texts.
+        redirect: {
+          defaultFallback: { ref: 'demo.app.notification' },
+          prefixes: {
+            [DEMO_GUESTBOOK_NOTIFICATION_REDIRECT_ENTRY_PREFIX]: {
+              fallback: { ref: 'demo.app.guestbook.list' },
+              expiredMessage: 'This notification has expired, but you can still view the other guestbooks.'
+            },
+            [DEMO_GUESTBOOK_ENTRY_NOTIFICATION_REDIRECT_ENTRY_PREFIX]: {
+              fallback: { ref: 'demo.app.guestbook.list' },
+              expiredMessage: 'This notification has expired, but you can still view the other guestbooks.'
+            }
+          },
+          // guestbook entries have no page of their own, so a link to one opens its guestbook. Other targets use their registered sref.
+          segueRefForEntry: (entry) => (entry.m != null && firestoreModelKeyCollectionType(entry.m) === guestbookEntryIdentity.collectionType ? { ref: 'demo.app.guestbook.list.guestbook', refParams: { id: firestoreModelId(firestoreModelKeyParentKey(entry.m) as FirestoreModelKey) } } : undefined)
         }
       },
       provideAnalyticsUserEventsListener: true,

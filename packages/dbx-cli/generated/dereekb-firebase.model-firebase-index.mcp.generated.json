@@ -1164,6 +1164,63 @@
       "derivedFieldOverrides": []
     },
     {
+      "slug": "notification-redirect-entries-expired-query",
+      "name": "notificationRedirectEntriesExpiredQuery",
+      "module": "@dereekb/firebase",
+      "subpath": "model/notification/notification.query",
+      "signature": "notificationRedirectEntriesExpiredQuery(now?: Date): FirestoreQueryConstraint[]",
+      "description": "Query constraints for finding {@link NotificationRedirectEntry} documents that expired at or before the given time.\n\nUsed by `cleanupSentNotifications` to delete expired short link entries. Firestore's automatic single-field index covers it.",
+      "model": "NotificationRedirectEntry",
+      "collection": "nre",
+      "isNested": false,
+      "scope": "COLLECTION",
+      "manual": false,
+      "skip": false,
+      "category": "cleanup",
+      "params": [
+        {
+          "name": "now",
+          "type": "Date",
+          "description": "- Entries with an `xat` at or before this time are returned. Defaults to now.",
+          "optional": true
+        }
+      ],
+      "returns": "Array of Firestore query constraints filtering for expired entries.",
+      "tags": [
+        "cleanup",
+        "notificationredirectentry",
+        "notification",
+        "redirect",
+        "entries",
+        "expired",
+        "query",
+        "notificationredirectentriesexpiredquery",
+        "entry",
+        "constraints",
+        "finding",
+        "link",
+        "documents",
+        "before",
+        "given",
+        "time",
+        "used"
+      ],
+      "constraintSequences": [
+        {
+          "pathLabel": "all",
+          "entries": [
+            {
+              "kind": "where",
+              "fieldPath": "xat",
+              "operator": "<="
+            }
+          ]
+        }
+      ],
+      "derivedComposites": [],
+      "derivedFieldOverrides": []
+    },
+    {
       "slug": "oidc-entries-with-type-query",
       "name": "oidcEntriesWithTypeQuery",
       "module": "@dereekb/firebase",

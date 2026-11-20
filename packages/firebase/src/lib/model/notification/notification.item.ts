@@ -7,6 +7,7 @@
 import { separateValues, type Maybe } from '@dereekb/util';
 import { type FirebaseAuthUserId, type FirestoreModelKey, firestoreSubObject, firestoreModelIdString, firestoreDate, optionalFirestoreUID, firestoreString, optionalFirestoreString, firestorePassThroughField, optionalFirestoreBoolean, type SavedToFirestoreIfTrue } from '../../common';
 import { type NotificationTaskType, type NotificationId, type NotificationTemplateType } from './notification.id';
+import { type NotificationRedirectEntryId } from './notification.redirect';
 import { isAfter } from 'date-fns';
 import { sortByDateFunction } from '@dereekb/date';
 
@@ -42,6 +43,7 @@ export interface NotificationItemSubjectMessagePair<D extends NotificationItemMe
  * - `g` — message override
  * - `d` — metadata payload
  * - `v` — viewed/read flag
+ * - `l` — short link redirect entry id
  */
 export interface NotificationItem<D extends NotificationItemMetadata = {}> {
   /**
@@ -81,6 +83,12 @@ export interface NotificationItem<D extends NotificationItemMetadata = {}> {
    * Read/viewed flag. True if the recipient has seen this notification item.
    */
   v?: Maybe<SavedToFirestoreIfTrue>;
+  /**
+   * Id of the {@link NotificationRedirectEntry} created alongside this notification, if one was requested.
+   *
+   * Message factories build the short link from it with `notificationRedirectEntryShortLinkUrl()`.
+   */
+  l?: Maybe<NotificationRedirectEntryId>;
 }
 
 /**
@@ -97,7 +105,8 @@ export const firestoreNotificationItem = firestoreSubObject<NotificationItem>({
       s: optionalFirestoreString(),
       g: optionalFirestoreString(),
       d: firestorePassThroughField(),
-      v: optionalFirestoreBoolean({ dontStoreIf: false })
+      v: optionalFirestoreBoolean({ dontStoreIf: false }),
+      l: optionalFirestoreString()
     }
   }
 });

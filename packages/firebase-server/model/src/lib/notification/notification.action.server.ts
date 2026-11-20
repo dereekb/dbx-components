@@ -153,6 +153,7 @@ import {
 import { type InjectionToken } from '@nestjs/common';
 import { addHours, addMinutes, addSeconds, hoursToMilliseconds, isFuture } from 'date-fns';
 import { type NotificationTemplateServiceInstance, type NotificationTemplateServiceRef } from './notification.config.service';
+import { deleteExpiredNotificationRedirectEntries } from './notification.redirect';
 import { notificationBoxDoesNotExist, notificationBoxExclusionTargetInvalidError, notificationBoxRecipientDoesNotExistsError, notificationUserInvalidUidForCreateError } from './notification.error';
 import { type NotificationSendMessagesInstance } from './notification.send';
 import { type NotificationSendServiceRef } from './notification.send.service';
@@ -2344,11 +2345,13 @@ export function sendQueuedNotificationsFactory(context: NotificationServerAction
  * past the retention window) and deletes them in batches. Continues until no more
  * cleanup-eligible notifications are found.
  *
+ * Also deletes every expired {@link NotificationRedirectEntry} (short link).
+ *
  * @param context - The notification server actions context with Firestore and collection access.
  * @returns A transform-and-validate function that cleans up sent notification documents and returns aggregate results.
  */
 export function cleanupSentNotificationsFactory(context: NotificationServerActionsContext) {
-  const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationCollectionGroup, notificationBoxCollection, notificationWeekCollectionFactory, notificationLoggedEventDayCollectionFactory, notificationLoggedEventDayPagedItemsCollectionFactory } = context;
+  const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationCollectionGroup, notificationBoxCollection, notificationWeekCollectionFactory, notificationLoggedEventDayCollectionFactory, notificationLoggedEventDayPagedItemsCollectionFactory, notificationRedirectEntryCollection } = context;
 
   return firebaseServerActionTransformFunctionFactory(cleanupSentNotificationsParamsType, async () => {
     return async () => {
@@ -2538,13 +2541,16 @@ export function cleanupSentNotificationsFactory(context: NotificationServerActio
         );
       }
 
+      const notificationRedirectEntriesDeleted = await deleteExpiredNotificationRedirectEntries({ firestoreContext, notificationRedirectEntryCollection });
+
       const result: CleanupSentNotificationsResult = {
         notificationBoxesUpdatesCount,
         notificationTasksDeletedCount,
         notificationsDeleted,
         notificationWeeksCreated,
         notificationWeeksUpdated,
-        notificationLoggedEventsCleanedUp
+        notificationLoggedEventsCleanedUp,
+        notificationRedirectEntriesDeleted
       };
 
       return result;

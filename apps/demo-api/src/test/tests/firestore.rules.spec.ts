@@ -498,6 +498,50 @@ describe('firestore.rules', () => {
       });
     });
 
+    describe('nre (NotificationRedirectEntry)', () => {
+      const OWNED_ENTRY_ID = 'j-ownedEnt';
+      const UNOWNED_ENTRY_ID = 'g-unownedE';
+      const MISSING_ENTRY_ID = 'j-missingE';
+
+      beforeEach(async () => {
+        await f.withSecurityRulesDisabled(async (firestore) => {
+          const cat = new Date().toISOString();
+          const xat = new Date(Date.now() + 60_000).toISOString();
+          await setDoc(doc(firestore, 'nre', OWNED_ENTRY_ID), { cat, xat, o: `pr/${OWNER_UID}`, m: 'gb/rulestestguestbook' });
+          await setDoc(doc(firestore, 'nre', UNOWNED_ENTRY_ID), { cat, xat });
+        });
+      });
+
+      it('should allow the owner to read their entry', async () => {
+        await assertSucceeds(getDoc(doc(f.firestoreForUser(OWNER_UID), 'nre', OWNED_ENTRY_ID)));
+      });
+
+      it("should deny another user reading the owner's entry", async () => {
+        await assertFails(getDoc(doc(f.firestoreForUser(OTHER_UID), 'nre', OWNED_ENTRY_ID)));
+      });
+
+      it('should allow any signed-in user to read an entry with no owner', async () => {
+        await assertSucceeds(getDoc(doc(f.firestoreForUser(OTHER_UID), 'nre', UNOWNED_ENTRY_ID)));
+      });
+
+      it('should allow a signed-in user to read a missing entry, which reads as missing', async () => {
+        const snapshot = await assertSucceeds(getDoc(doc(f.firestoreForUser(OTHER_UID), 'nre', MISSING_ENTRY_ID)));
+        expect(snapshot.exists()).toBe(false);
+      });
+
+      it('should deny an unauthenticated read', async () => {
+        await assertFails(getDoc(doc(f.unauthenticatedFirestore(), 'nre', UNOWNED_ENTRY_ID)));
+      });
+
+      it('should deny listing entries, even your own', async () => {
+        await assertFails(getDocs(query(collection(f.firestoreForUser(OWNER_UID), 'nre'), where('o', '==', `pr/${OWNER_UID}`))));
+      });
+
+      it('should deny the owner writing their entry', async () => {
+        await assertFails(setDoc(doc(f.firestoreForUser(OWNER_UID), 'nre', OWNED_ENTRY_ID), { cat: new Date().toISOString(), xat: new Date().toISOString(), o: `pr/${OWNER_UID}` }));
+      });
+    });
+
     /**
      * The DYNAMIC oracle for the CLI query catalog's `reachability` verdict.
      *

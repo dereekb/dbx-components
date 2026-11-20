@@ -11,6 +11,7 @@
  * - {@link Notification} — Individual notification or async task, child of NotificationBox (subcollection)
  * - {@link NotificationWeek} — Weekly archive of sent notification items, child of NotificationBox (subcollection)
  * - {@link NotificationTaskBot} — Generic per-model bot holding script entries that run as NotificationTasks (top-level collection)
+ * - {@link NotificationRedirectEntry} — The record behind a notification short link, kept after its notification is cleaned up (top-level collection)
  *
  * Server-side processing is handled by the `NotificationServerActions` service in `@dereekb/firebase-server/model`.
  *
@@ -68,6 +69,7 @@ import {
 import { type NotificationHealthCheck, optionalFirestoreNotificationHealthCheck } from './notification.healthcheck';
 import { type NotificationItem, firestoreNotificationItem } from './notification.item';
 import { type NotificationTaskBotFirestoreCollection, type notificationTaskBotIdentity } from './notification.taskbot';
+import { type NotificationRedirectEntryFirestoreCollection, type notificationRedirectEntryIdentity } from './notification.redirect';
 
 /**
  * Abstract class providing access to all notification-related Firestore collections.
@@ -92,6 +94,7 @@ export abstract class NotificationFirestoreCollections {
   abstract readonly notificationLoggedEventDayPagedItemsCollectionFactory: NotificationLoggedEventDayPagedItemsFirestoreCollectionFactory;
   abstract readonly notificationLoggedEventDayPageCollectionGroup: NotificationLoggedEventDayPageFirestoreCollectionGroup;
   abstract readonly notificationTaskBotCollection: NotificationTaskBotFirestoreCollection;
+  abstract readonly notificationRedirectEntryCollection: NotificationRedirectEntryFirestoreCollection;
 }
 
 /**
@@ -105,7 +108,8 @@ export type NotificationTypes =
   | typeof notificationWeekIdentity
   | typeof notificationLoggedEventDayIdentity
   | typeof notificationLoggedEventDayPageIdentity
-  | typeof notificationTaskBotIdentity;
+  | typeof notificationTaskBotIdentity
+  | typeof notificationRedirectEntryIdentity;
 
 /**
  * Notification-related model that is initialized asynchronously at a later time.

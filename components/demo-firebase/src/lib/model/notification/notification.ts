@@ -15,6 +15,7 @@ import {
   type CalendarEventId,
   calendarIdentity,
   type NotificationTemplateTypeInfoGroup,
+  type NotificationRedirectEntryPrefix,
   NotificationDeliveryMethod
 } from '@dereekb/firebase';
 import { openRouterTemplateTextNotificationTemplateTypeInfo } from '@dereekb/openrouter/firebase';
@@ -142,6 +143,22 @@ export function exampleNotificationTemplate(input: ExampleNotificationInput): Cr
   });
 }
 
+// MARK: Short Links
+/**
+ * Path of the demo app's short link page, relative to the client url. A short link is `<clientUrl><path>/<id>`.
+ */
+export const DEMO_NOTIFICATION_SHORT_LINK_PATH = '/demo/app/s';
+
+/**
+ * Short link prefix for guestbook notifications. An expired link falls back to the guestbook list.
+ */
+export const DEMO_GUESTBOOK_NOTIFICATION_REDIRECT_ENTRY_PREFIX: NotificationRedirectEntryPrefix = 'gb';
+
+/**
+ * Short link prefix for guestbook entry notifications. An expired link falls back to the guestbook list.
+ */
+export const DEMO_GUESTBOOK_ENTRY_NOTIFICATION_REDIRECT_ENTRY_PREFIX: NotificationRedirectEntryPrefix = 'gbe';
+
 // MARK: Guestbook Notifications
 export const GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE: NotificationTemplateType = 'GBE_C';
 
@@ -174,7 +191,9 @@ export function guestbookEntryCreatedNotificationTemplate(input: GuestbookEntryC
   return createNotificationTemplate({
     type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE,
     notificationModel: guestbookKey,
-    targetModel: guestbookKey
+    targetModel: guestbookKey,
+    // one short link shared by every subscriber, so it has no owner. It opens the guestbook (the target model).
+    redirectEntry: { prefix: DEMO_GUESTBOOK_NOTIFICATION_REDIRECT_ENTRY_PREFIX }
   });
 }
 
@@ -225,7 +244,9 @@ export function guestbookEntryLikedNotificationTemplate(input: GuestbookEntryLik
         se: false,
         st: false
       }
-    ]
+    ],
+    // the notification only goes to the entry's creator, so the short link is theirs alone
+    redirectEntry: { prefix: DEMO_GUESTBOOK_ENTRY_NOTIFICATION_REDIRECT_ENTRY_PREFIX, o: firestoreModelKey(profileIdentity, creatorUid) }
   });
 }
 

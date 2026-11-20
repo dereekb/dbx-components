@@ -51,6 +51,11 @@ import {
   type NotificationTaskBot,
   type NotificationTaskBotDocument,
   type NotificationTaskBotRoles,
+  type NotificationRedirectEntryFirestoreCollection,
+  notificationRedirectEntryFirestoreCollection,
+  type NotificationRedirectEntry,
+  type NotificationRedirectEntryDocument,
+  type NotificationRedirectEntryRoles,
   type NotificationLoggedEventDayPageFirestoreCollectionGroup,
   type SystemState,
   type SystemStateDocument,
@@ -209,6 +214,7 @@ export abstract class DemoFirestoreCollections
   abstract readonly notificationLoggedEventDayPagedItemsCollectionFactory: NotificationLoggedEventDayPagedItemsFirestoreCollectionFactory;
   abstract readonly notificationLoggedEventDayPageCollectionGroup: NotificationLoggedEventDayPageFirestoreCollectionGroup;
   abstract readonly notificationTaskBotCollection: NotificationTaskBotFirestoreCollection;
+  abstract readonly notificationRedirectEntryCollection: NotificationRedirectEntryFirestoreCollection;
   abstract readonly storageFileCollection: StorageFileFirestoreCollection;
   abstract readonly storageFileGroupCollection: StorageFileGroupFirestoreCollection;
   abstract readonly calendarCollection: CalendarFirestoreCollection;
@@ -252,6 +258,7 @@ export function makeDemoFirestoreCollections(firestoreContext: FirestoreContext)
     notificationLoggedEventDayPagedItemsCollectionFactory: notificationLoggedEventDayPagedItemsCollectionFactory(firestoreContext),
     notificationLoggedEventDayPageCollectionGroup: notificationLoggedEventDayPageFirestoreCollectionGroup(firestoreContext),
     notificationTaskBotCollection: notificationTaskBotFirestoreCollection(firestoreContext),
+    notificationRedirectEntryCollection: notificationRedirectEntryFirestoreCollection(firestoreContext),
     storageFileCollection: storageFileFirestoreCollection(firestoreContext),
     storageFileGroupCollection: storageFileGroupFirestoreCollection(firestoreContext),
     calendarCollection: calendarFirestoreCollection(firestoreContext),
@@ -449,6 +456,21 @@ export const notificationTaskBotFirebaseModelServiceFactory = firebaseModelServi
     );
   },
   getFirestoreCollection: (c) => c.app.notificationTaskBotCollection
+});
+
+/**
+ * @dbxModelServiceFactory notificationRedirectEntry
+ */
+export const notificationRedirectEntryFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, NotificationRedirectEntry, NotificationRedirectEntryDocument, NotificationRedirectEntryRoles>({
+  roleMapForModel: function (output: FirebasePermissionServiceModel<NotificationRedirectEntry, NotificationRedirectEntryDocument>, context: DemoFirebaseContext, _model: NotificationRedirectEntryDocument): PromiseOrValue<GrantedRoleMap<NotificationRedirectEntryRoles>> {
+    // the owner (`o`, the same 'pr/<uid>' key firestore.rules compares) can read their link. A link with no owner can be read by anyone with it.
+    const uid = context.auth?.uid;
+    const ownerKey = output.data?.o;
+    const canRead = ownerKey == null || (uid != null && ownerKey === firestoreModelKey(profileIdentity, uid));
+
+    return grantModelRolesIfAdmin(context, fullAccessRoleMap(), () => grantedRoleKeysMapFromArray<NotificationRedirectEntryRoles>(canRead ? ['read'] : []));
+  },
+  getFirestoreCollection: (c) => c.app.notificationRedirectEntryCollection
 });
 
 /**
@@ -691,6 +713,7 @@ export const DEMO_FIREBASE_MODEL_SERVICE_FACTORIES = {
   notificationLoggedEventDay: notificationLoggedEventDayFirebaseModelServiceFactory,
   notificationLoggedEventDayPage: notificationLoggedEventDayPageFirebaseModelServiceFactory,
   notificationTaskBot: notificationTaskBotFirebaseModelServiceFactory,
+  notificationRedirectEntry: notificationRedirectEntryFirebaseModelServiceFactory,
   storageFile: storageFileFirebaseModelServiceFactory,
   storageFileGroup: storageFileGroupFirebaseModelServiceFactory,
   calendar: calendarFirebaseModelServiceFactory,

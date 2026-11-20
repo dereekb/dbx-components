@@ -50,6 +50,11 @@ import {
   type NotificationTaskBot,
   type NotificationTaskBotDocument,
   type NotificationTaskBotRoles,
+  type NotificationRedirectEntryFirestoreCollection,
+  notificationRedirectEntryFirestoreCollection,
+  type NotificationRedirectEntry,
+  type NotificationRedirectEntryDocument,
+  type NotificationRedirectEntryRoles,
   type NotificationLoggedEventDayPageFirestoreCollectionGroup,
   type SystemState,
   type SystemStateDocument,
@@ -119,6 +124,7 @@ export abstract class APP_CODE_PREFIXFirestoreCollections implements FirestoreCo
   abstract readonly notificationLoggedEventDayPagedItemsCollectionFactory: NotificationLoggedEventDayPagedItemsFirestoreCollectionFactory;
   abstract readonly notificationLoggedEventDayPageCollectionGroup: NotificationLoggedEventDayPageFirestoreCollectionGroup;
   abstract readonly notificationTaskBotCollection: NotificationTaskBotFirestoreCollection;
+  abstract readonly notificationRedirectEntryCollection: NotificationRedirectEntryFirestoreCollection;
   abstract readonly storageFileCollection: StorageFileFirestoreCollection;
   abstract readonly storageFileGroupCollection: StorageFileGroupFirestoreCollection;
   // @dbx-addon:oidc:fb-service:abstract
@@ -144,6 +150,7 @@ export function makeAPP_CODE_PREFIXFirestoreCollections(firestoreContext: Firest
     notificationLoggedEventDayPagedItemsCollectionFactory: notificationLoggedEventDayPagedItemsCollectionFactory(firestoreContext),
     notificationLoggedEventDayPageCollectionGroup: notificationLoggedEventDayPageFirestoreCollectionGroup(firestoreContext),
     notificationTaskBotCollection: notificationTaskBotFirestoreCollection(firestoreContext),
+    notificationRedirectEntryCollection: notificationRedirectEntryFirestoreCollection(firestoreContext),
     storageFileCollection: storageFileFirestoreCollection(firestoreContext),
     storageFileGroupCollection: storageFileGroupFirestoreCollection(firestoreContext)
     // @dbx-addon:oidc:fb-service:factory
@@ -251,6 +258,13 @@ export const notificationTaskBotFirebaseModelServiceFactory = firebaseModelServi
   getFirestoreCollection: (c) => c.app.notificationTaskBotCollection
 });
 
+export const notificationRedirectEntryFirebaseModelServiceFactory = firebaseModelServiceFactory<APP_CODE_PREFIXFirebaseContext, NotificationRedirectEntry, NotificationRedirectEntryDocument, NotificationRedirectEntryRoles>({
+  roleMapForModel: function (output: FirebasePermissionServiceModel<NotificationRedirectEntry, NotificationRedirectEntryDocument>, context: APP_CODE_PREFIXFirebaseContext, model: NotificationRedirectEntryDocument): PromiseOrValue<GrantedRoleMap<NotificationRedirectEntryRoles>> {
+    return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only. The short link page reads the entry directly from firestore, so its owner needs a rule there.
+  },
+  getFirestoreCollection: (c) => c.app.notificationRedirectEntryCollection
+});
+
 export const storageFileFirebaseModelServiceFactory = firebaseModelServiceFactory<APP_CODE_PREFIXFirebaseContext, StorageFile, StorageFileDocument, StorageFileRoles>({
   roleMapForModel: function (output: FirebasePermissionServiceModel<StorageFile, StorageFileDocument>, context: APP_CODE_PREFIXFirebaseContext, model: StorageFileDocument): PromiseOrValue<GrantedRoleMap<StorageFileRoles>> {
     return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only
@@ -288,6 +302,7 @@ export const APP_CODE_PREFIX_FIREBASE_MODEL_SERVICE_FACTORIES = {
   notificationLoggedEventDay: notificationLoggedEventDayFirebaseModelServiceFactory,
   notificationLoggedEventDayPage: notificationLoggedEventDayPageFirebaseModelServiceFactory,
   notificationTaskBot: notificationTaskBotFirebaseModelServiceFactory,
+  notificationRedirectEntry: notificationRedirectEntryFirebaseModelServiceFactory,
   storageFile: storageFileFirebaseModelServiceFactory,
   storageFileGroup: storageFileGroupFirebaseModelServiceFactory
   // @dbx-addon:oidc:fb-service:factories-map
