@@ -177,7 +177,7 @@ live once in `@dereekb/llm`, so a class has one identity whichever entry it was 
 The protocol-level decision names moved to `@dereekb/llm/decision` under neutral names — the pattern is
 `OpenRouterDecision…` → `LlmDecision…`, `openRouter{Choice,Score,Noul}Question` → `llm{Choice,Score,Noul}Question`,
 `OPENROUTER_DECISION_…` → `LLM_DECISION_…`, `OpenRouterSystemOneModelId` / `isOpenRouterSystemOneModelId` →
-`LlmDecisionModelId` / `isLlmDecisionModelId` (the full table is in the `@dereekb/llm` README, "Coming from
+`LlmDecisionModelId` / `isLlmDecisionModelId` (the full table is in `@dereekb/llm`'s `docs/decision.md`, "Coming from
 `@dereekb/openrouter`").
 
 - Every old name is still exported from `@dereekb/openrouter` and `@dereekb/openrouter/decision`, marked

@@ -24,6 +24,8 @@ const options = {
   extractLicenses: true,
   assets: [
     { glob: 'packages/llm/README.md', input: '.', output: '.' },
+    // the per-entry guides the README links to (docs/*.md)
+    { glob: '**/*.md', input: 'packages/llm/docs', output: 'docs' },
     { glob: 'LICENSE', input: '.', output: '.' }
   ]
 };
