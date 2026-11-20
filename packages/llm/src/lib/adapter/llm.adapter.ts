@@ -17,8 +17,8 @@
  * built.
  */
 
-import { type Milliseconds } from '@dereekb/util';
-import { type LlmModelId, type LlmStrategyId } from '../model/llm.value';
+import { type Milliseconds, type WebsiteUrlWithPrefix, type WebsiteUrl } from '@dereekb/util';
+import { type LlmModelId, type LlmStrategyId, type LlmTokenCount } from '../model/llm.value';
 import { type LlmModelReasoningOffMap, type LlmModelVisionMap } from '../model/llm.model.wire';
 import { type LlmProviderConfig } from '../model/config/llm.model.config.resolve';
 import { type LlmCredentialProbe, type LlmStrategy } from '../strategy/llm.strategy';
@@ -51,7 +51,7 @@ export interface LlmAdapterConfig {
    * The EFFECTIVE endpoint: the provider's own `baseUrl`, else its transport adapter's
    * {@link LlmCompletionAdapter.defaultBaseUrl}. Absent when neither declares one.
    */
-  readonly baseUrl?: string;
+  readonly baseUrl?: WebsiteUrl;
   /**
    * The HTTP seam for probes, account reads and bill reads — a spec's fake. Absent ⇒ the adapter's own default.
    */
@@ -70,7 +70,7 @@ export interface LlmCompletionAdapterConfig extends LlmAdapterConfig {
   /**
    * The strategy's default completion-length cap.
    */
-  readonly maxOutputTokens?: number;
+  readonly maxOutputTokens?: LlmTokenCount;
   /**
    * The per-call timeout.
    */
@@ -133,7 +133,7 @@ export interface LlmCompletionAdapter extends LlmAdapterBase<'completion'> {
    * The transport's endpoint when a provider names none. Metering inference reads it, so a provider with no base URL
    * still resolves to the account its transport's default endpoint bills.
    */
-  readonly defaultBaseUrl?: string;
+  readonly defaultBaseUrl?: WebsiteUrlWithPrefix;
   /**
    * Mint the strategy for one provider. Inert: no I/O.
    *
@@ -185,7 +185,7 @@ export interface LlmMeteringAdapter extends LlmAdapterBase<'metering'> {
    * @param baseUrl - The provider's effective base URL.
    * @returns True when the URL is this account's endpoint.
    */
-  isAccountBaseUrl?(baseUrl: string): boolean;
+  isAccountBaseUrl?(baseUrl: WebsiteUrl): boolean;
   /**
    * Mint the account status source for one provider. Inert, and never throws: a source missing a host secret (a
    * management key) reports itself unavailable when read. Host secrets are closed over when the host builds the

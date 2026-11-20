@@ -10,7 +10,7 @@
  */
 
 import { type ConfiguredFetch } from '@dereekb/util/fetch';
-import { type Maybe, mergeObjects, type Milliseconds } from '@dereekb/util';
+import { type Maybe, mergeObjects, type Milliseconds, type WebsiteUrl } from '@dereekb/util';
 import {
   evaluateLlmQuotaGate,
   type LlmAdapterRegistry,
@@ -76,7 +76,7 @@ export interface LlmLiveLaneDefaultModelParams {
   /**
    * The provider's effective base URL.
    */
-  readonly baseUrl?: Maybe<string>;
+  readonly baseUrl?: Maybe<WebsiteUrl>;
 }
 
 /**
@@ -185,7 +185,7 @@ export interface LlmLiveLaneResolution<X extends LlmModelConfigTypes = LlmModelC
   /**
    * The default provider's effective base URL.
    */
-  readonly baseUrl?: Maybe<string>;
+  readonly baseUrl?: Maybe<WebsiteUrl>;
   /**
    * The model the lane bills.
    */

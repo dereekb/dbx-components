@@ -13,7 +13,7 @@
  * derives from the attempt-1 request, so a resolved set never changes mid-dispatch.
  */
 
-import { type Maybe, multiValueMapBuilder, type PromiseOrValue } from '@dereekb/util';
+import { type Maybe, multiValueMapBuilder, type PromiseOrValue, type PercentDecimal } from '@dereekb/util';
 import { type LlmCapabilityDescriptor } from '../capability/llm.capability.descriptor';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { type LlmModelId } from '../model/llm.value';
@@ -98,7 +98,7 @@ export interface LlmPromptContribution {
   /**
    * A judge's probability for a judged supplement; recorded on the supplement row.
    */
-  readonly p?: number;
+  readonly p?: PercentDecimal;
 }
 
 /**
@@ -138,7 +138,7 @@ export interface LlmPromptContributionCut {
   /**
    * The judge's probability, when it answered.
    */
-  readonly p?: number;
+  readonly p?: PercentDecimal;
 }
 
 /**

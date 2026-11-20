@@ -8,7 +8,7 @@
  * narrower one winning, keyed) and {@link withLlmPromptSite} scopes a whole dispatcher to one site.
  */
 
-import { type Maybe, mergeObjects } from '@dereekb/util';
+import { type Maybe, mergeObjects, type PercentDecimal } from '@dereekb/util';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { type LlmDispatcher } from '../dispatch/llm.dispatcher';
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
@@ -49,7 +49,7 @@ export interface LlmPromptSiteJudgedNote {
   /**
    * The probability at or above which the note applies.
    */
-  readonly floor: number;
+  readonly floor: PercentDecimal;
 }
 
 /**
@@ -77,7 +77,7 @@ export interface LlmPromptSiteJudgeRequest {
 /**
  * A judge's answer — note id → the probability the note applies to the site.
  */
-export type LlmPromptSiteJudgeVerdicts = ReadonlyMap<LlmCraftNoteId, number>;
+export type LlmPromptSiteJudgeVerdicts = ReadonlyMap<LlmCraftNoteId, PercentDecimal>;
 
 /**
  * A site's judge: one decision pass over the asked notes, answering note id → the probability it applies, or nothing

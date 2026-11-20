@@ -26,7 +26,7 @@
 import { readErrorMessage, filterMaybeArrayValues, isNotBlankString, type Maybe } from '@dereekb/util';
 import { type } from 'arktype';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
-import { type LlmCapabilityKey, type LlmModelTierKey } from '../model/llm.value';
+import { type LlmCapabilityKey, type LlmModelTierKey, type LlmTokenCount } from '../model/llm.value';
 import { llmLiveContextBlock, type LlmLiveContextBlock } from '../prompt/llm.prompt.live.context';
 import { type LlmPromptTemplate } from '../prompt/llm.prompt.template';
 import { type LlmCallContext } from '../record/llm.call.context';
@@ -39,7 +39,7 @@ import { defineLlmCapability, type LlmCapabilityDescriptor } from './llm.capabil
 /**
  * The completion cap for a judge call — a verdict plus at most one paragraph of feedback.
  */
-export const LLM_CRITIQUE_REPLY_MAX_OUTPUT_TOKENS = 1024;
+export const LLM_CRITIQUE_REPLY_MAX_OUTPUT_TOKENS: LlmTokenCount = 1024;
 
 /**
  * The swallow site the critic's catch reports a throwing judge dispatch on.

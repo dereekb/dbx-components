@@ -23,7 +23,7 @@
  * @see LlmStrategy (the contract this implements).
  */
 
-import { type Maybe, sha256HexPrefix } from '@dereekb/util';
+import { type Maybe, sha256HexPrefix, type IndexNumber, type HexString } from '@dereekb/util';
 import { isDecisionLlmCallRow, type LlmCapabilityKey, type LlmCompletion, type LlmModelId, type LlmRequest, type LlmStrategy, type LlmStrategyHealth, type LlmStrategyId, type LlmUsage, readLlmCallPrompt } from '@dereekb/llm';
 
 /**
@@ -51,7 +51,7 @@ export interface LlmTapeTurn {
   /**
    * The digest of the recorded prompt ({@link hashLlmTapePrompt}) — the hash half of the match key.
    */
-  readonly promptSha: string;
+  readonly promptSha: HexString;
   /**
    * The recorded completion text, served back verbatim.
    */
@@ -84,7 +84,7 @@ export interface LlmTapeMatch {
   /**
    * The index of the consumed turn in the tape.
    */
-  readonly turnIndex: number;
+  readonly turnIndex: IndexNumber;
   /**
    * How the turn was matched.
    */
@@ -96,11 +96,11 @@ export interface LlmTapeMatch {
   /**
    * The tape turn's recorded prompt digest.
    */
-  readonly tapePromptSha: string;
+  readonly tapePromptSha: HexString;
   /**
    * The digest of the prompt the REPLAY actually assembled. Equal to {@link tapePromptSha} on a `hash` match.
    */
-  readonly requestPromptSha: string;
+  readonly requestPromptSha: HexString;
   /**
    * The prompt the replay assembled, kept verbatim so a reporter can diff it against the tape's without a second
    * dispatch. (The tape's own prompt text lives in the host's tape reader, not here.)
@@ -170,7 +170,7 @@ export interface LlmTapeFailure {
   /**
    * The digest of the refused request's prompt.
    */
-  readonly requestPromptSha: string;
+  readonly requestPromptSha: HexString;
 }
 
 /**
@@ -188,7 +188,7 @@ export interface LlmTapeStrategy extends LlmStrategy {
    *
    * @returns The unconsumed turn indices, ascending.
    */
-  unconsumed(): ReadonlyArray<number>;
+  unconsumed(): ReadonlyArray<IndexNumber>;
   /**
    * Every request the tape refused, in order — see {@link LlmTapeFailure}.
    *
@@ -214,7 +214,7 @@ export interface LlmTapeStrategyConfig {
    * The prompt digest. Defaults to {@link hashLlmTapePrompt}; injected by specs so a fixture can pin readable digests.
    * MUST be the same function the tape's {@link LlmTapeTurn.promptSha} values were computed with.
    */
-  readonly hash?: Maybe<(text: string) => string>;
+  readonly hash?: Maybe<(text: string) => HexString>;
 }
 
 /**
@@ -226,7 +226,7 @@ export interface LlmTapeStrategyConfig {
  * @param text - The prompt text.
  * @returns The digest.
  */
-export function hashLlmTapePrompt(text: string): string {
+export function hashLlmTapePrompt(text: string): HexString {
   return sha256HexPrefix(text, LLM_TAPE_PROMPT_SHA_LENGTH);
 }
 
@@ -334,7 +334,7 @@ export function makeLlmTapeStrategy(config: LlmTapeStrategyConfig): LlmTapeStrat
     matches(): ReadonlyArray<LlmTapeMatch> {
       return matches;
     },
-    unconsumed(): ReadonlyArray<number> {
+    unconsumed(): ReadonlyArray<IndexNumber> {
       return turns.map((_, index) => index).filter((index) => !consumed.has(index));
     },
     failures(): ReadonlyArray<LlmTapeFailure> {
@@ -356,7 +356,7 @@ export interface ReadLlmTapeTurnConfig {
    * The prompt digest. MUST be the same function the tape strategy matches with ({@link LlmTapeStrategyConfig.hash});
    * defaults to {@link hashLlmTapePrompt}.
    */
-  readonly hash?: Maybe<(text: string) => string>;
+  readonly hash?: Maybe<(text: string) => HexString>;
 }
 
 /**

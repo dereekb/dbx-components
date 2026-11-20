@@ -17,7 +17,7 @@
  * every confidence-less reply a lax gateway returns.
  */
 
-import type { Maybe } from '@dereekb/util';
+import type { Maybe, Count, PercentDecimal } from '@dereekb/util';
 import { toLlmDecisionConfidenceBand, llmDecisionChoiceRanking, type LlmDecisionChoiceAnswer, type LlmDecisionConfidenceBand } from './llm.decision.question';
 
 /**
@@ -35,19 +35,19 @@ export interface LlmChoiceCertaintyFloors {
   /**
    * The confidence a sure read must reach.
    */
-  readonly sureConfidence: number;
+  readonly sureConfidence: PercentDecimal;
   /**
    * The winner-minus-runner-up margin a sure read must reach (when a distribution is present).
    */
-  readonly sureMargin: number;
+  readonly sureMargin: PercentDecimal;
   /**
    * The summed share the contenders of an unsure read stop at.
    */
-  readonly contenderMass: number;
+  readonly contenderMass: PercentDecimal;
   /**
    * The most contenders an unsure read names.
    */
-  readonly contendersMax: number;
+  readonly contendersMax: Count;
 }
 
 /**
@@ -55,7 +55,7 @@ export interface LlmChoiceCertaintyFloors {
  */
 export interface LlmChoiceContender<O extends string = string> {
   readonly option: O;
-  readonly probability: number;
+  readonly probability: PercentDecimal;
 }
 
 /**
@@ -70,11 +70,11 @@ export interface LlmChoiceCertainty<O extends string = string> {
   /**
    * The Choice's own confidence; the winner's share when absent. Absent only on an `unread` answer.
    */
-  readonly confidence?: number;
+  readonly confidence?: PercentDecimal;
   /**
    * The winner's share minus the runner-up's. Absent when the answer carries no distribution.
    */
-  readonly margin?: number;
+  readonly margin?: PercentDecimal;
   /**
    * The leading options, most probable first — just the winner on a sure read.
    */
@@ -82,7 +82,7 @@ export interface LlmChoiceCertainty<O extends string = string> {
   /**
    * The contenders' summed share. Absent when the answer carries no distribution.
    */
-  readonly mass?: number;
+  readonly mass?: PercentDecimal;
 }
 
 /**
@@ -107,7 +107,7 @@ export interface LlmChoiceCertaintyConfig<O extends string = string> {
  * @param input.coherent - The caller's coherence test, if any.
  * @returns The unsure class.
  */
-function llmUnsureChoiceCertaintyKind<O extends string>(input: { readonly contenders: ReadonlyArray<LlmChoiceContender<O>>; readonly mass: number; readonly floors: LlmChoiceCertaintyFloors; readonly coherent?: LlmChoiceCertaintyConfig<O>['coherent'] }): LlmChoiceCertaintyKind {
+function llmUnsureChoiceCertaintyKind<O extends string>(input: { readonly contenders: ReadonlyArray<LlmChoiceContender<O>>; readonly mass: PercentDecimal; readonly floors: LlmChoiceCertaintyFloors; readonly coherent?: LlmChoiceCertaintyConfig<O>['coherent'] }): LlmChoiceCertaintyKind {
   const { contenders, mass, floors, coherent } = input;
   let certainty: LlmChoiceCertaintyKind;
 

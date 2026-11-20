@@ -12,6 +12,7 @@
 
 import { type LlmPromptSiteFactValue } from '../prompt/llm.prompt.site';
 import { type LlmCraftNoteId, type LlmCraftNoteTier, type LlmCraftSiteKind } from './llm.craft.identity';
+import { type PercentDecimal } from '@dereekb/util';
 
 /**
  * The legal shape of a {@link LlmCraftNoteId} — kebab-case, 2..64 chars.
@@ -19,16 +20,16 @@ import { type LlmCraftNoteId, type LlmCraftNoteTier, type LlmCraftSiteKind } fro
 export const LLM_CRAFT_NOTE_ID_PATTERN = /^[a-z0-9][a-z0-9-]{1,63}$/;
 
 /**
- * The default largest note BODY a tier may load (in the seam's `bytes` unit, UTF-16 `.length`). A larger note is a
+ * The default largest note BODY a tier may load, in characters (UTF-16 code units, `.length`). A larger note is a
  * load refusal, never truncated: a cut sentence of know-how is worse than none. A site registry may override it
- * (`LlmCraftSiteRegistryConfig.noteMaxBytes`).
+ * (`LlmCraftSiteRegistryConfig.noteMaxChars`).
  */
-export const DEFAULT_LLM_CRAFT_NOTE_MAX_BYTES = 1500;
+export const DEFAULT_LLM_CRAFT_NOTE_MAX_CHARS = 1500;
 
 /**
  * The default `floor` a judged note's decision probability must reach to be kept.
  */
-export const DEFAULT_LLM_CRAFT_JUDGE_FLOOR = 0.6;
+export const DEFAULT_LLM_CRAFT_JUDGE_FLOOR: PercentDecimal = 0.6;
 
 /**
  * The default `priority` of a note.
@@ -69,7 +70,8 @@ export type LlmCraftNoteSelectedBy = (typeof LLM_CRAFT_NOTE_SELECTED_BY)[number]
  * - `floor` — the judge answered below the note's floor.
  * - `unserved` — no judge answered and the note's posture is `omit`.
  * - `max-notes` — past the site's `maxNotes`.
- * - `max-bytes` — it would pass the site's `maxBytes` budget.
+ * - `max-bytes` — it would pass the site's `maxChars` budget, counted in UTF-16 code units (the stored reason keeps
+ *   its persisted name).
  *
  * A host guard adds its own reason ({@link DEFAULT_LLM_CRAFT_GUARD_CUT_REASON}).
  */
@@ -131,7 +133,7 @@ export interface LlmCraftNote {
   /**
    * The judged keep floor (0..1).
    */
-  readonly floor: number;
+  readonly floor: PercentDecimal;
   /**
    * The unserved posture.
    */

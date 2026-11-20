@@ -3,8 +3,8 @@
  * status source, the bill reader and the credential probe share.
  */
 
-import { resolveLlmFetch } from '@dereekb/llm';
-import { type AbortSignalRef, makeTimeoutAbortSignal, type Maybe, type Milliseconds } from '@dereekb/util';
+import { resolveLlmFetch, type LlmGenerationId } from '@dereekb/llm';
+import { type AbortSignalRef, makeTimeoutAbortSignal, type Maybe, type Milliseconds, type WebsiteUrl } from '@dereekb/util';
 import { type ConfiguredFetch, type FetchJsonTextResult, readFetchJsonText } from '@dereekb/util/fetch';
 
 /**
@@ -23,7 +23,7 @@ export interface LlmZenmuxManagementReadConfig {
   /**
    * The API base URL; defaults to `DEFAULT_LLM_ZENMUX_BASE_URL`. Trailing slashes are stripped.
    */
-  readonly baseUrl?: Maybe<string>;
+  readonly baseUrl?: Maybe<WebsiteUrl>;
   /**
    * The HTTP seam — a spec's fake. Absent ⇒ the global `fetch`, read at call time.
    */
@@ -41,7 +41,7 @@ export interface LlmZenmuxManagementReadConfig {
  * @param path - The path below `/management`, e.g. `subscription/detail`.
  * @returns `{baseUrl}/management/{path}`.
  */
-export function llmZenmuxManagementUrl(baseUrl: string, path: string): string {
+export function llmZenmuxManagementUrl(baseUrl: WebsiteUrl, path: string): string {
   return `${baseUrl}/management/${path}`;
 }
 
@@ -52,7 +52,7 @@ export function llmZenmuxManagementUrl(baseUrl: string, path: string): string {
  * @param generationId - The generation to look up.
  * @returns `{baseUrl}/management/generation?id={generationId}`.
  */
-export function llmZenmuxGenerationUrl(baseUrl: string, generationId: string): string {
+export function llmZenmuxGenerationUrl(baseUrl: WebsiteUrl, generationId: LlmGenerationId): string {
   return llmZenmuxManagementUrl(baseUrl, `generation?id=${encodeURIComponent(generationId)}`);
 }
 
@@ -61,7 +61,7 @@ export function llmZenmuxGenerationUrl(baseUrl: string, generationId: string): s
  */
 export interface ReadLlmZenmuxManagementConfig extends AbortSignalRef {
   readonly fetch: Maybe<ConfiguredFetch>;
-  readonly url: string;
+  readonly url: WebsiteUrl;
   readonly apiKey: string;
   readonly timeoutMs: Milliseconds;
 }

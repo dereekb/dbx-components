@@ -4,7 +4,7 @@
  * so the code under test reads status, headers and body exactly as it would off the wire. Plain JS: no vitest, no Node API.
  */
 
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type WebsiteUrl } from '@dereekb/util';
 import { type ConfiguredFetch, headersToHeadersTuple } from '@dereekb/util/fetch';
 
 /**
@@ -25,7 +25,7 @@ export interface LlmFetchFakeRequest {
   /**
    * The absolute URL the request was sent to.
    */
-  readonly url: string;
+  readonly url: WebsiteUrl;
   readonly init: LlmFetchFakeRequestInit;
 }
 
@@ -71,7 +71,7 @@ export interface LlmFetchFake {
  * @returns The recorded request.
  */
 export function toLlmFetchFakeRequest(input: Parameters<ConfiguredFetch>[0], init?: Maybe<RequestInit>): LlmFetchFakeRequest {
-  let url: string;
+  let url: WebsiteUrl;
 
   if (typeof input === 'string') {
     url = input;

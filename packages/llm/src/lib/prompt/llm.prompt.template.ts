@@ -10,7 +10,7 @@
  * (first-by-layer, per-user tiers, a role keyed by a host trait) supplies its own.
  */
 
-import { type Maybe, type PromiseOrValue } from '@dereekb/util';
+import { type Maybe, type PromiseOrValue, type IndexNumber } from '@dereekb/util';
 import { type LlmCapabilityDescriptor } from '../capability/llm.capability.descriptor';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { type LlmCapabilityKey } from '../model/llm.value';
@@ -153,8 +153,8 @@ export interface LlmTieredPromptTemplateResolverConfig {
 interface LlmMergedPromptTemplate {
   readonly template: LlmPromptTemplate;
   readonly source: string;
-  readonly tierIndex: number;
-  readonly position: number;
+  readonly tierIndex: IndexNumber;
+  readonly position: IndexNumber;
 }
 
 /**

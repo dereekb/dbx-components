@@ -81,6 +81,22 @@ describe('reconcileLlmCallBills', () => {
     expect(reconciliation.byModel.map((entry) => entry.model)).toEqual(['Vendor-B/model', 'vendor-a/model']);
   });
 
+  it('folds calls with no recorded model into one bucket whose row reads model undefined and renders as (unknown model)', async () => {
+    const { reader } = tableReader({
+      u1: { status: 'billed', bill: { generationId: 'u1', billed: 0.1, listed: 0.1 } },
+      u2: { status: 'billed', bill: { generationId: 'u2', billed: 0.1, listed: 0.1 } },
+      k1: { status: 'billed', bill: { generationId: 'k1', billed: 0.2, listed: 0.2 } }
+    });
+    const noModel = (generationId: string): LlmCallLogPayload => ({ ...call(generationId, 'unused', 0.1), model: undefined });
+    const reconciliation = await reconcileLlmCallBills({ calls: [call('k1', 'vendor-a/model', 0.2), noModel('u1'), noModel('u2')], reader });
+
+    expect(reconciliation.byModel.map((entry) => entry.model)).toEqual([undefined, 'vendor-a/model']);
+    expect(reconciliation.byModel[0].cell.calls).toBe(2);
+
+    const markdown = renderLlmBillReconciliationMarkdown(reconciliation, 'sess-3');
+    expect(markdown).toMatch(/\| \(unknown model\) \| 2 \| 2 \| [^\n]*\n\| vendor-a\/model \| 1 \| 1 \|/);
+  });
+
   it('counts failed reads apart from pending ones', async () => {
     const { reader } = tableReader({ g: { status: 'failed', generationId: 'g', detail: 'HTTP 403: Invalid API key' } });
     const reconciliation = await reconcileLlmCallBills({ calls: [call('g', 'm', 0.1)], reader });

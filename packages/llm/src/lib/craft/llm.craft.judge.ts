@@ -14,7 +14,7 @@
  *   record. A fault or a transport throw is swallowed ({@link LLM_CRAFT_JUDGE_DECIDE_SWALLOW_SITE}): nothing answered.
  */
 
-import { isNotBlankString, type Maybe } from '@dereekb/util';
+import { isNotBlankString, type Maybe, type IndexNumber, type PercentDecimal } from '@dereekb/util';
 import { defineLlmDecision } from '../decision/llm.decision.descriptor';
 import { llmNoulQuestion, type LlmDecisionAnswer, type LlmDecisionAnswers, type LlmDecisionQuestions } from '../decision/llm.decision.question';
 import { type LlmDispatcher } from '../dispatch/llm.dispatcher';
@@ -35,7 +35,7 @@ export const LLM_CRAFT_JUDGE_DECIDE_SWALLOW_SITE: LlmSwallowSiteId = 'llm/craft-
 export interface LlmCraftJudgeNote {
   readonly id: LlmCraftNoteId;
   readonly ask: string;
-  readonly floor: number;
+  readonly floor: PercentDecimal;
 }
 
 /**
@@ -108,7 +108,7 @@ export function toLlmCraftJudgeInput(config: ToLlmCraftJudgeInputConfig): Maybe<
  * @param at - The note's index in {@link LlmCraftJudgeInput.notes}.
  * @returns `n<at>`.
  */
-export function toLlmCraftJudgeQuestionKey(at: number): string {
+export function toLlmCraftJudgeQuestionKey(at: IndexNumber): string {
   return `n${at}`;
 }
 
@@ -133,7 +133,7 @@ export const LLM_CRAFT_NOTE_SELECT_DECISION = /*#__PURE__*/ defineLlmDecision({
  * @returns The verdicts.
  */
 export function readLlmCraftJudgeVerdicts(answers: LlmDecisionAnswers<LlmDecisionQuestions>, input: LlmCraftJudgeInput): LlmPromptSiteJudgeVerdicts {
-  const verdicts = new Map<LlmCraftNoteId, number>();
+  const verdicts = new Map<LlmCraftNoteId, PercentDecimal>();
 
   input.notes.forEach((note, at) => {
     const answer = (answers as Readonly<Record<string, Maybe<LlmDecisionAnswer>>>)[toLlmCraftJudgeQuestionKey(at)];

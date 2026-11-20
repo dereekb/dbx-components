@@ -5,7 +5,7 @@
  */
 
 import { type Maybe } from '@dereekb/util';
-import { type LlmCapabilityKey, type LlmModelId, type LlmModelTierKey } from '../model/llm.value';
+import { type LlmCapabilityKey, type LlmModelId, type LlmModelTierKey, type LlmTokenCount } from '../model/llm.value';
 import { type LlmCallContext, type LlmCallProfile } from '../record/llm.call.context';
 import { type LlmCallHostFields, type LlmCallRecord, type LlmCallStartRecord } from '../record/llm.call.record';
 import { llmDecodeContextExcerpt, llmDecodePromptId } from '../record/llm.decode.failure';
@@ -131,7 +131,7 @@ export interface RecordLlmDispatchStartConfig<R extends LlmDispatchRequest = Llm
   /**
    * Tap-only: the prompt's estimated tokens.
    */
-  readonly estimatedPromptTokens: number;
+  readonly estimatedPromptTokens: LlmTokenCount;
   /**
    * Tap-only: whether the call is a chained follow-up.
    */

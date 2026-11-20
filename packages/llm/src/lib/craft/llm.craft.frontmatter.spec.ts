@@ -4,14 +4,14 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_LLM_CRAFT_JUDGE_FLOOR, DEFAULT_LLM_CRAFT_NOTE_MAX_BYTES, DEFAULT_LLM_CRAFT_NOTE_PRIORITY } from './llm.craft.note';
+import { DEFAULT_LLM_CRAFT_JUDGE_FLOOR, DEFAULT_LLM_CRAFT_NOTE_MAX_CHARS, DEFAULT_LLM_CRAFT_NOTE_PRIORITY } from './llm.craft.note';
 import { llmCraftNoteParseErrorLines, parseLlmCraftNote, parseLlmCraftNoteSet } from './llm.craft.frontmatter';
 import { makeLlmCraftSiteRegistry } from './llm.craft.site';
 
 const SITES = makeLlmCraftSiteRegistry({
   sites: {
     'product-page': { facts: { category: 'closed', brand: 'open', bundle: 'boolean' }, inputs: ['brief', 'notes'] },
-    'support-reply': { facts: { channel: 'closed', tags: 'open' }, inputs: ['message'], limits: { maxBytes: 2400 } },
+    'support-reply': { facts: { channel: 'closed', tags: 'open' }, inputs: ['message'], limits: { maxChars: 2400 } },
     'release-notes': { facts: { audience: 'closed' }, inputs: ['summary'] }
   }
 });
@@ -132,12 +132,12 @@ describe('parseLlmCraftNote()', () => {
     expect(refusalsOf(noteText(['id: abc', 'sites: [product-page]']))).toEqual(['an enabled note needs a `title`']);
     expect(refusalsOf(noteText(['id: abc', 'title: t']))).toEqual(['an enabled note needs at least one site']);
     expect(refusalsOf(noteText(VALID, ''))).toEqual(['an enabled note needs a body']);
-    expect(refusalsOf(noteText(VALID, 'x'.repeat(DEFAULT_LLM_CRAFT_NOTE_MAX_BYTES + 1)))).toEqual([`the body is ${DEFAULT_LLM_CRAFT_NOTE_MAX_BYTES + 1} bytes; a note holds at most ${DEFAULT_LLM_CRAFT_NOTE_MAX_BYTES} (it is never truncated)`]);
+    expect(refusalsOf(noteText(VALID, 'x'.repeat(DEFAULT_LLM_CRAFT_NOTE_MAX_CHARS + 1)))).toEqual([`the body is ${DEFAULT_LLM_CRAFT_NOTE_MAX_CHARS + 1} characters; a note holds at most ${DEFAULT_LLM_CRAFT_NOTE_MAX_CHARS} (it is never truncated)`]);
   });
 
-  it("refuses a body over the registry's own noteMaxBytes with that number", () => {
-    const small = makeLlmCraftSiteRegistry({ sites: { 'product-page': { facts: {}, inputs: [] } }, noteMaxBytes: 20 });
-    expect(refusalsOf(noteText(['id: abc', 'title: t', 'sites: [product-page]'], 'x'.repeat(21)), small)).toEqual(['the body is 21 bytes; a note holds at most 20 (it is never truncated)']);
+  it("refuses a body over the registry's own noteMaxChars with that number", () => {
+    const small = makeLlmCraftSiteRegistry({ sites: { 'product-page': { facts: {}, inputs: [] } }, noteMaxChars: 20 });
+    expect(refusalsOf(noteText(['id: abc', 'title: t', 'sites: [product-page]'], 'x'.repeat(21)), small)).toEqual(['the body is 21 characters; a note holds at most 20 (it is never truncated)']);
   });
 
   it('refuses a where fact none of its sites carries, a value of the wrong shape, and an empty list', () => {

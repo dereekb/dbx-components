@@ -6,7 +6,7 @@
  * (`X`) types; both default to the library's.
  */
 
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type Count } from '@dereekb/util';
 import { type LlmDecisionDispatchRequest } from '../decision/llm.decision.descriptor';
 import { type LlmDecisionQuestions } from '../decision/llm.decision.question';
 import { type LlmDecisionResult } from '../decision/llm.decision.strategy';
@@ -77,7 +77,7 @@ export interface LlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequest
    *
    * @returns The served decision-call count.
    */
-  decisionsSpent?(): number;
+  decisionsSpent?(): Count;
   /**
    * Zero {@link decisionsSpent} — the per-run refill a host calls at the start of every run, so a budget that promises
    * "one run" holds even when one dispatcher serves several runs. Present exactly when {@link decide} is.

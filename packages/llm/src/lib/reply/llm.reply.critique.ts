@@ -6,7 +6,7 @@
  * live here; the judge capability itself lives in `capability/llm.capability.critique.reply.ts`.
  */
 
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type Count } from '@dereekb/util';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { compileLlmCapabilityRules, type LlmCapabilityRuleTarget, type LlmModelRoutingCapabilityRef } from '../model/llm.capability.rule';
 import { type LlmCapabilityKey, type LlmCapabilityTag, type LlmModelTierKey } from '../model/llm.value';
@@ -151,7 +151,7 @@ export interface LlmCritiqueRule extends LlmCapabilityRuleTarget {
    * TOTAL SUBJECT attempts while this critic is attached — the reprompt budget a failing verdict spends against.
    * Omitted ⇒ the dispatcher default; clamped `>= 1` by the dispatcher.
    */
-  readonly maxAttempts?: number;
+  readonly maxAttempts?: Count;
 }
 
 /**

@@ -22,13 +22,13 @@
  * equivalent"*.
  */
 
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type Count, type PercentDecimal } from '@dereekb/util';
 
 /**
  * The alpha {@link computeLlmAbRegressionVerdict} defaults to. One-sided; discreteness at these table sizes makes the realised
  * false-positive rate materially lower than the nominal number.
  */
-export const LLM_AB_REGRESSION_ALPHA = 0.05;
+export const LLM_AB_REGRESSION_ALPHA: PercentDecimal = 0.05;
 
 /**
  * The 2x2 table both exports read: a CONTROL arm and a TREATMENT arm, each a hit count over a trial count.
@@ -41,19 +41,19 @@ export interface LlmAbCountsConfig {
   /**
    * Hits in the control arm (before the change).
    */
-  readonly controlHits: number;
+  readonly controlHits: Count;
   /**
    * Trials in the control arm.
    */
-  readonly controlTrials: number;
+  readonly controlTrials: Count;
   /**
    * Hits in the treatment arm (after the change).
    */
-  readonly treatmentHits: number;
+  readonly treatmentHits: Count;
   /**
    * Trials in the treatment arm.
    */
-  readonly treatmentTrials: number;
+  readonly treatmentTrials: Count;
 }
 
 /**
@@ -63,7 +63,7 @@ export interface LlmAbRegressionConfig extends LlmAbCountsConfig {
   /**
    * The one-sided significance bar; defaults to {@link LLM_AB_REGRESSION_ALPHA}.
    */
-  readonly alpha?: Maybe<number>;
+  readonly alpha?: Maybe<PercentDecimal>;
 }
 
 /**
@@ -73,7 +73,7 @@ export interface LlmAbRegressionVerdict {
   /**
    * The one-sided exact p-value: the probability of the treatment arm scoring AT LEAST this many hits under the null.
    */
-  readonly p: number;
+  readonly p: PercentDecimal;
   /**
    * Whether the treatment arm is shown to be worse at the configured alpha. `false` is *"not shown to regress"*.
    */
@@ -81,11 +81,11 @@ export interface LlmAbRegressionVerdict {
   /**
    * The control arm's observed hit rate, or `0` over an empty arm.
    */
-  readonly controlRate: number;
+  readonly controlRate: PercentDecimal;
   /**
    * The treatment arm's observed hit rate, or `0` over an empty arm.
    */
-  readonly treatmentRate: number;
+  readonly treatmentRate: PercentDecimal;
 }
 
 /**
@@ -126,7 +126,7 @@ function chooseOf(config: ChooseOfConfig): number {
  * @param config - The 2x2 table.
  * @returns The upper-tail probability, in `[0, 1]`.
  */
-export function computeLlmFisherOneSidedP(config: LlmAbCountsConfig): number {
+export function computeLlmFisherOneSidedP(config: LlmAbCountsConfig): PercentDecimal {
   const { controlHits, controlTrials, treatmentHits, treatmentTrials } = config;
   const hits = controlHits + treatmentHits;
   const trials = controlTrials + treatmentTrials;

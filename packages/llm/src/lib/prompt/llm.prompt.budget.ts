@@ -11,9 +11,10 @@
  * the report with {@link toLlmBudgetTrimSummary} and records it its own way.
  */
 
-import { joinStrings, type Maybe } from '@dereekb/util';
+import { joinStrings, type Maybe, type Count } from '@dereekb/util';
 import { type LlmThreadTurn } from '../strategy/llm.strategy';
 import { joinLlmLiveContextBlocks, LLM_LIVE_CONTEXT_BLOCK_SEPARATOR, type LlmLiveContextBlock } from './llm.prompt.live.context';
+import { type LlmTokenCount } from '../model/llm.value';
 
 /**
  * Estimate the token count of a text — the deterministic `ceil(len / 4)` heuristic (≈ 4 chars per token). Cheap,
@@ -30,7 +31,7 @@ import { joinLlmLiveContextBlocks, LLM_LIVE_CONTEXT_BLOCK_SEPARATOR, type LlmLiv
  * estimateLlmTokens('abcde'); // 2
  * ```
  */
-export function estimateLlmTokens(text: string): number {
+export function estimateLlmTokens(text: string): LlmTokenCount {
   return Math.ceil(text.length / 4);
 }
 
@@ -38,7 +39,7 @@ export function estimateLlmTokens(text: string): number {
  * The per-message overhead a chat API adds around every message (the role wrapper and separators). Small, flat and
  * provider-shaped — here so a threaded estimate is not systematically one message short, never as a precision claim.
  */
-export const LLM_ESTIMATE_MESSAGE_ENVELOPE_TOKENS = 4;
+export const LLM_ESTIMATE_MESSAGE_ENVELOPE_TOKENS: LlmTokenCount = 4;
 
 /**
  * ONE request's billable prompt, as the provider will count it.
@@ -75,7 +76,7 @@ export interface EstimateLlmRequestPromptTokensConfig {
  * estimateLlmRequestPromptTokens({ prompt: 'say one line' }); // 7 — 3 for the text, 4 for its envelope
  * ```
  */
-export function estimateLlmRequestPromptTokens(input: EstimateLlmRequestPromptTokensConfig): number {
+export function estimateLlmRequestPromptTokens(input: EstimateLlmRequestPromptTokensConfig): LlmTokenCount {
   const thread = input.thread ?? [];
   const schema = input.responseSchemaHint == null ? 0 : estimateLlmTokens(JSON.stringify(input.responseSchemaHint));
   const replayed = thread.reduce((total, turn) => total + estimateLlmTokens(turn.content) + LLM_ESTIMATE_MESSAGE_ENVELOPE_TOKENS, 0);
@@ -85,7 +86,7 @@ export function estimateLlmRequestPromptTokens(input: EstimateLlmRequestPromptTo
 /**
  * The default live-context token budget.
  */
-export const DEFAULT_LLM_PROMPT_TOKEN_BUDGET = 12_000;
+export const DEFAULT_LLM_PROMPT_TOKEN_BUDGET: LlmTokenCount = 12_000;
 
 /**
  * The tokens a host reserves for the STATIC prompt prefix and the response schema beside it when it budgets the live
@@ -93,7 +94,7 @@ export const DEFAULT_LLM_PROMPT_TOKEN_BUDGET = 12_000;
  * context 10,000. Pass it as {@link BudgetLlmLiveContextBlocksConfig.reservedPrefixTokens}; the budgeter's own default
  * reserve is `0`.
  */
-export const LLM_PROMPT_PREFIX_RESERVE_TOKENS = 2_000;
+export const LLM_PROMPT_PREFIX_RESERVE_TOKENS: LlmTokenCount = 2_000;
 
 /**
  * One priority-ranked block of a live context. Blocks render in ARRAY order; when the budget is exceeded they are
@@ -145,12 +146,12 @@ export interface BudgetLlmLiveContextBlocksConfig {
    * The token ceiling for the joined live context PLUS {@link reservedPrefixTokens}; nullish ⇒
    * {@link DEFAULT_LLM_PROMPT_TOKEN_BUDGET}.
    */
-  readonly budget?: Maybe<number>;
+  readonly budget?: Maybe<LlmTokenCount>;
   /**
    * The estimated tokens the static prefix already consumes — reserved against the budget so the live context fits
    * under the whole-prompt ceiling ({@link LLM_PROMPT_PREFIX_RESERVE_TOKENS}); nullish ⇒ `0`.
    */
-  readonly reservedPrefixTokens?: Maybe<number>;
+  readonly reservedPrefixTokens?: Maybe<LlmTokenCount>;
 }
 
 /**
@@ -168,7 +169,7 @@ export interface LlmBudgetTrimReport {
   /**
    * The estimated tokens the action saved.
    */
-  readonly savedTokens: number;
+  readonly savedTokens: LlmTokenCount;
 }
 
 /**
@@ -317,19 +318,19 @@ export interface LlmBudgetTrimSummary {
   /**
    * How many blocks were trimmed (shrunk or dropped); `0` ⇒ nothing to record.
    */
-  readonly blocks: number;
+  readonly blocks: Count;
   /**
    * How many were dropped.
    */
-  readonly dropped: number;
+  readonly dropped: Count;
   /**
    * How many were shrunk.
    */
-  readonly shrunk: number;
+  readonly shrunk: Count;
   /**
    * The estimated tokens every action saved, summed.
    */
-  readonly savedTokens: number;
+  readonly savedTokens: LlmTokenCount;
 }
 
 /**

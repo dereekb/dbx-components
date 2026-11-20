@@ -11,7 +11,7 @@
  *
  * The library reads NO environment: the host resolves the key / base URL / model and passes them in.
  */
-import { readErrorMessage, isNotNullOrEmptyString, makeTimeoutAbortSignal, type Maybe, type Milliseconds, removeTrailingSlashes } from '@dereekb/util';
+import { readErrorMessage, isNotNullOrEmptyString, makeTimeoutAbortSignal, type Maybe, type Milliseconds, removeTrailingSlashes, type WebsiteUrlWithPrefix, type WebsiteUrl } from '@dereekb/util';
 import {
   resolveLlmCompletionCallTimeoutMs,
   DEFAULT_LLM_COMPLETION_TIMEOUT_MS,
@@ -38,7 +38,8 @@ import {
   type LlmStrategyHealth,
   type LlmStrategyId,
   type LlmTokenLimitParam,
-  type LlmTransportCredentialProbe
+  type LlmTransportCredentialProbe,
+  type LlmTokenCount
 } from '@dereekb/llm';
 import { type ConfiguredFetch } from '@dereekb/util/fetch';
 import { toLlmOpenAiChatMessages, toLlmOpenAiResponseFormat, type LlmOpenAiChatClient, type LlmOpenAiChatCompletion, type LlmOpenAiChatCompletionBody, type LlmOpenAiChatMessage, type LlmOpenAiReasoningParams } from './openai.chat';
@@ -78,7 +79,7 @@ export interface LlmOpenAiCompatibleChatStrategyConfig {
    * The OpenAI-compatible base URL the real client and the generic credential probe are pointed at; defaults to the
    * transport's {@link LlmOpenAiCompatibleChatStrategyHooks.defaultBaseUrl}.
    */
-  readonly baseUrl?: string;
+  readonly baseUrl?: WebsiteUrl;
   /**
    * The request timeout floor; defaults to `DEFAULT_LLM_COMPLETION_TIMEOUT_MS` (60 s). Each call's abort window scales
    * up from it with the call's completion budget ({@link resolveLlmCompletionCallTimeoutMs}).
@@ -89,7 +90,7 @@ export interface LlmOpenAiCompatibleChatStrategyConfig {
    * completion. A per-call `LlmRequest.maxOutputTokens` overrides it. A model with a smaller output limit (an older
    * OpenAI model, a small-context local model) needs it set.
    */
-  readonly maxOutputTokens?: number;
+  readonly maxOutputTokens?: LlmTokenCount;
   /**
    * PER-MODEL VISION capability, keyed by the exact slug sent on the wire. A slug this map does not mark `true` is
    * sent the text-only message even when the request carries attachments, so an absent map sends no image parts. The
@@ -188,7 +189,7 @@ export interface LlmOpenAiCompatibleChatStrategyHooks {
   /**
    * The base URL used when the host sets none.
    */
-  readonly defaultBaseUrl: string;
+  readonly defaultBaseUrl: WebsiteUrlWithPrefix;
   /**
    * Which request key carries the completion-length cap; defaults to `DEFAULT_LLM_TOKEN_LIMIT_PARAM` (`max_tokens`).
    */

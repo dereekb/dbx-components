@@ -193,8 +193,8 @@ function llmCraftNoteRuleErrors(config: LlmCraftNoteRuleErrorsConfig): ReadonlyA
     }
   }
 
-  if (body.length > registry.noteMaxBytes) {
-    refuse('body', `the body is ${body.length} bytes; a note holds at most ${registry.noteMaxBytes} (it is never truncated)`);
+  if (body.length > registry.noteMaxChars) {
+    refuse('body', `the body is ${body.length} characters; a note holds at most ${registry.noteMaxChars} (it is never truncated)`);
   }
 
   refuseLlmCraftNoteWhere(frontmatter.where ?? {}, knownSites, refuse);

@@ -9,8 +9,8 @@
  * capability, host meta, the per-call model overrides, the parent call context and the cancellation signal.
  */
 
-import { type AbortSignalRef } from '@dereekb/util';
-import { type LlmCapabilityKey, type LlmModelId, type LlmModelTierKey, type LlmReasoningConfig } from '../model/llm.value';
+import { type AbortSignalRef, type Count } from '@dereekb/util';
+import { type LlmCapabilityKey, type LlmModelId, type LlmModelTierKey, type LlmReasoningConfig, type LlmTokenCount } from '../model/llm.value';
 import { type LlmPromptSite } from '../prompt/llm.prompt.site';
 import { type LlmLiveContextBlock } from '../prompt/llm.prompt.live.context';
 import { type LlmCallContext } from '../record/llm.call.context';
@@ -129,13 +129,13 @@ export interface LlmDispatchRequest extends LlmDispatchRequestBase {
    * Total strategy attempts (initial + retries) the {@link validate} / {@link critique} loop may make; default 2
    * (1 initial + 1 retry), clamped to `>= 1`. Ignored when both are unset.
    */
-  readonly maxAttempts?: number;
+  readonly maxAttempts?: Count;
   /**
    * The token budget this call's live context was rendered against. When set AND the fully-assembled prompt's
    * estimated tokens exceed it, the dispatcher reports an over-budget gap and SENDS ANYWAY (never blocks). Omitted ⇒
    * no over-budget gap.
    */
-  readonly maxPromptTokens?: number;
+  readonly maxPromptTokens?: LlmTokenCount;
   /**
    * WHERE this prompt is being built ({@link LlmPromptSite}) — the typed facts, free-text inputs and supplies the
    * prompt contributors match against. Read ONLY by contributors; changes no byte by itself.

@@ -9,14 +9,14 @@
  * 4. Rank: priority desc, then specificity (`where` key count) desc, then id.
  * 5. The judged notes (an `ask`): at most the site's `judgeMax` are asked; the rest are cut `judge-cap`. A verdict at
  *    or above the note's floor keeps it; below it is cut `floor`; no verdict ⇒ the note's `unserved` posture.
- * 6. Budget, in rank order: at most the site's `maxNotes` notes and `maxBytes` body bytes. A note is never truncated;
+ * 6. Budget, in rank order: at most the site's `maxNotes` notes and `maxChars` body characters. A note is never truncated;
  *    one that does not fit is cut.
  *
  * Split in two so the judge (one decision call per dispatch) sits between them: {@link resolveLlmCraftCandidates} (the
  * asking set) and {@link settleLlmCraftNotes} (the verdicts, then the budget).
  */
 
-import { compareStringsByCodeUnit, type Maybe } from '@dereekb/util';
+import { compareStringsByCodeUnit, type Maybe, type PercentDecimal } from '@dereekb/util';
 import { type LlmPromptSite, type LlmPromptSiteFactValue, type LlmPromptSiteJudgeVerdicts } from '../prompt/llm.prompt.site';
 import { type LlmCraftNoteId, type LlmCraftSiteKind } from './llm.craft.identity';
 import { type LlmCraftNote, type LlmCraftNoteCutReason, type LlmCraftNoteSelectedBy } from './llm.craft.note';
@@ -87,7 +87,7 @@ export interface LlmCraftNoteCut {
   /**
    * The judge's probability, when it answered.
    */
-  readonly p?: number;
+  readonly p?: PercentDecimal;
 }
 
 /**
@@ -99,7 +99,7 @@ export interface LlmCraftNotePlacement {
   /**
    * The judge's probability, when it answered.
    */
-  readonly p?: number;
+  readonly p?: PercentDecimal;
 }
 
 /**
@@ -225,19 +225,19 @@ export function settleLlmCraftNotes(candidates: LlmCraftCandidates, verdicts?: M
   survivors.sort((a, b) => compareLlmCraftNotes(a.note, b.note));
   const placed: LlmCraftNotePlacement[] = [];
   const maxNotes = limits?.maxNotes ?? 0;
-  const maxBytes = limits?.maxBytes ?? 0;
-  let bytes = 0;
+  const maxChars = limits?.maxChars ?? 0;
+  let chars = 0;
 
   for (const survivor of survivors) {
     const p = survivor.p == null ? {} : { p: survivor.p };
 
     if (placed.length >= maxNotes) {
       cut.push({ note: survivor.note, reason: 'max-notes', ...p });
-    } else if (bytes + survivor.note.body.length > maxBytes) {
+    } else if (chars + survivor.note.body.length > maxChars) {
       cut.push({ note: survivor.note, reason: 'max-bytes', ...p });
     } else {
       placed.push(survivor);
-      bytes += survivor.note.body.length;
+      chars += survivor.note.body.length;
     }
   }
 

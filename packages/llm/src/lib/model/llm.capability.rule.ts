@@ -4,7 +4,7 @@
  * (`compileLlmCritiquePolicy`) are thin callers of it.
  */
 
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type IndexNumber } from '@dereekb/util';
 import { type LlmCapabilityKey, type LlmCapabilityTag } from './llm.value';
 
 /**
@@ -48,7 +48,7 @@ export interface LlmCapabilityRuleContext {
   /**
    * The rule's index in the array.
    */
-  readonly index: number;
+  readonly index: IndexNumber;
 }
 
 /**

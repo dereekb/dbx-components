@@ -10,7 +10,7 @@
  */
 
 import { filterUndefinedValues, type Milliseconds } from '@dereekb/util';
-import type { LlmModelId, LlmStrategyId } from '../model/llm.value';
+import type { LlmModelId, LlmStrategyId, LlmGenerationId } from '../model/llm.value';
 import type { LlmDispatchResult, LlmReplyRepair, LlmReplyRepairSummary } from '../strategy/llm.strategy';
 import type { LlmUsage } from '../strategy/llm.usage';
 
@@ -53,7 +53,7 @@ export interface LlmCallTelemetry {
    * The provider's generation id ({@link LlmDispatchResult.generationId}); absent on a strategy with no provider
    * completion to read, or when not echoed.
    */
-  readonly generationId?: string;
+  readonly generationId?: LlmGenerationId;
   /**
    * Why generation stopped ({@link LlmDispatchResult.finishReason}, e.g. `'stop'` / `'length'`); absent on a
    * strategy with no provider completion to read, or when not echoed.

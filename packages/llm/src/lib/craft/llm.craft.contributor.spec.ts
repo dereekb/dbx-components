@@ -22,7 +22,7 @@ import { makeLlmCraftSiteRegistry } from './llm.craft.site';
 const SITES = makeLlmCraftSiteRegistry({
   sites: {
     'product-page': { facts: { category: 'closed', brand: 'open', bundle: 'boolean' }, inputs: ['brief', 'notes'] },
-    'support-reply': { facts: { channel: 'closed', tags: 'open' }, inputs: ['message'], limits: { maxBytes: 2400 } },
+    'support-reply': { facts: { channel: 'closed', tags: 'open' }, inputs: ['message'], limits: { maxChars: 2400 } },
     'release-notes': { facts: { audience: 'closed' }, inputs: ['summary'] }
   }
 });

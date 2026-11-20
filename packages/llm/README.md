@@ -128,7 +128,9 @@ What a dispatcher records about each call, and the seams a host observes it thro
 - **Call records.** `LlmCallRecord`, `LlmCallStartRecord`, `LlmDecodeFailureRecord` and their event-type tags. A host's
   own fields sit at the top level: pass them as `H`. `llmCallTelemetry` projects the per-call telemetry block.
   `LlmCallLogPayload` is the persisted read-side view of a record (see
-  [Readers, ledger and reconcile](#readers-ledger-and-reconcile)).
+  [Readers, ledger and reconcile](#readers-ledger-and-reconcile)). Each placed or cut supplement row
+  (`LlmCallSupplement`) carries a `hash` and a `bytes` size; `bytes` counts UTF-16 code units (`.length`), not bytes,
+  and keeps its name because the row is persisted (as does the craft cut reason `'max-bytes'`).
 - **Call context.** `makeLlmCallContext` records spans, marks, children and detached roots into a nested profile;
   gaps, breadcrumbs and swallows go to the host's callbacks with the context's attribution, timing on or off.
   `noopLlmCallContext()` is the shared do-nothing context.
@@ -217,8 +219,9 @@ What a host persists for each call, the readers that read it back, and the math 
 - **Bill reconcile.** `reconcileLlmCallBills({ calls, reader, concurrency?, signal? })` reads each call's bill through
   any `LlmCallBillReader` (e.g. `/zenmux`'s `makeLlmZenmuxGenerationBillReader`) and folds billed against logged cost per
   model. Pending and failed reads are counted and kept as details, never folded as zero; once `signal` aborts, no new
-  read starts and each unread call is pending. `computeLlmBilledShare` gives billed / logged, and
-  `renderLlmBillReconciliationMarkdown(reconciliation, sessionId)` renders the result.
+  read starts and each unread call is pending. `computeLlmBilledShare` gives billed / logged (a `PercentDecimal` that
+  may exceed 1), and `renderLlmBillReconciliationMarkdown(reconciliation, sessionId)` renders the result. Calls with no
+  recorded model fold into one `byModel` row whose `model` is `undefined`; the markdown labels it `(unknown model)`.
 
 ```ts
 import {
@@ -639,13 +642,15 @@ are matched against the request's site, are optionally judged by one decision ca
 
 - **Notes.** A markdown file with a frontmatter block: `id` (`^[a-z0-9][a-z0-9-]{1,63}$`), `title`, `sites`, `where`,
   `ask`, `floor` (default 0.6), `unserved` (default `omit`), `priority` (default 4, 0–8) and `enabled`. The body is at
-  most 1,500 chars and is never truncated. The frontmatter is read by `@dereekb/util` `parseMarkdownFrontmatter`: bare,
+  most 1,500 characters (UTF-16 code units; `DEFAULT_LLM_CRAFT_NOTE_MAX_CHARS`, overridable by the registry's
+  `noteMaxChars`) and is never truncated. The frontmatter is read by `@dereekb/util` `parseMarkdownFrontmatter`: bare,
   double-quoted (JSON) and single-quoted scalars, `[a, b]` and `- item` lists, one level of nesting, and comments, and
   every refusal names its line. Craft adds the required fence, the schema and the cross-field rules.
   `parseLlmCraftNote` / `parseLlmCraftNoteSet`.
 - **Sites.** `makeLlmCraftSiteRegistry({ sites })` declares each kind's facts (`closed` / `open` / `boolean`), its
-  free-text inputs and its limits: 4 notes, 3,000 body chars, 8 judged notes and 600 chars per judged input, each
-  overridable per registry and per site. `llmCraftNoteUnknownWhereValues` names a `where` value your vocabulary cannot
+  free-text inputs and its limits (`LlmCraftSiteLimits`): `maxNotes` 4 notes, `maxChars` 3,000 body characters,
+  `judgeMax` 8 judged notes and `judgeInputMax` 600 characters per judged input, each overridable per registry and per
+  site. Characters are UTF-16 code units; a note past `maxChars` is cut `max-bytes` (the stored reason's name). `llmCraftNoteUnknownWhereValues` names a `where` value your vocabulary cannot
   produce, for an authoring check.
 - **Tiers.** Lowest precedence first; a higher tier shadows by id, and `enabled: false` is a tombstone. A tier is a
   static array or a per-request reader. `makeLlmCraftNoteRowReader` parses stored rows, memoized, and a tombstone row
@@ -684,7 +689,7 @@ import { makeLlmCraftPromptContributor, makeLlmCraftJudge, makeLlmCraftNoteRowRe
 const sites = makeLlmCraftSiteRegistry({
   sites: {
     'product-page': { facts: { category: 'closed', brand: 'open' }, inputs: ['brief'] },
-    'support-reply': { facts: { channel: 'closed' }, inputs: ['message'], limits: { maxBytes: 2400 } }
+    'support-reply': { facts: { channel: 'closed' }, inputs: ['message'], limits: { maxChars: 2400 } }
   }
 });
 const readRows = makeLlmCraftNoteRowReader({ tier: 'workspace', sites });
@@ -1467,6 +1472,15 @@ describe.skipIf(LIVE == null)('summarize (live)', () => {
 ```
 
 ## Utilities
+
+**Semantic types.** The public API types its numbers and strings with `@dereekb/util` semantic aliases where one
+fits: `PercentDecimal` (decision probabilities and confidences, judge floors and verdicts, cache-hit and billed
+shares), `Count` (calls, attempts, caps on counts), `IndexNumber` (0-based positions), `HexString` (prompt and
+supplement hashes), `WebsiteUrl` / `WebsiteUrlWithPrefix` (base URLs), `MimeTypeWithoutParameters` (`LlmAttachment.mime`),
+`Milliseconds`, `DollarAmount` and `DestroyFunction` (the detach `addTap` returns). llm adds two of its own in
+`llm.value.ts`: `LlmTokenCount` (every token count and token cap) and `LlmGenerationId` (a provider's per-generation
+id, the key a bill reader looks a call up by). They are aliases of `number` / `string`, so no value changes; 1-based
+ordinals (`attempt`, `stage`) and UTF-16 lengths whose name carries the unit (`rawLength`, `promptChars`) stay `number`.
 
 The SHA-256 helpers live in `@dereekb/util`: `sha256Hex(text)` and `sha256HexPrefix(text, length)`. They are
 synchronous and byte-identical to `node:crypto`'s `createHash('sha256').update(text, 'utf8').digest('hex')`. llm uses 16

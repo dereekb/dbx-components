@@ -24,11 +24,12 @@ import { llmReplyRepairDiagnosis, llmReplyRepairFidelity } from '../reply/llm.re
 import { type LlmValueValidator } from '../reply/llm.reply.validator';
 import { type LlmCallMeta, type LlmDispatchResult } from '../strategy/llm.strategy';
 import { defineLlmCapability, type LlmCapabilityDescriptor } from './llm.capability.descriptor';
+import { type LlmTokenCount } from '../model/llm.value';
 
 /**
  * The completion cap for a fix call — room for a whole repaired reply.
  */
-export const LLM_REPAIR_REPLY_JSON_MAX_OUTPUT_TOKENS = 8192;
+export const LLM_REPAIR_REPLY_JSON_MAX_OUTPUT_TOKENS: LlmTokenCount = 8192;
 
 /**
  * The swallow site the fixer's catch reports a throwing fix dispatch on.

@@ -7,7 +7,7 @@
  * (`n/a`). These helpers make that ONE decision for every surface that prints a cost.
  */
 
-import { type DollarAmount, type Maybe } from '@dereekb/util';
+import { type DollarAmount, type Maybe, type Count } from '@dereekb/util';
 import { readLlmCost } from '../strategy/llm.usage';
 
 /**
@@ -27,7 +27,7 @@ export interface LlmUsageCostRead {
   /**
    * The calls the sum is over (`LlmUsageCell.calls`) — a zero-call slice is free, not unknown.
    */
-  readonly calls: number;
+  readonly calls: Count;
   /**
    * The enclosing fold's `costPartial` flag — >=1 counted call reported no provider cost.
    */

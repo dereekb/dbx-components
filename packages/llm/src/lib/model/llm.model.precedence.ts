@@ -13,7 +13,7 @@
  */
 
 import { type Maybe } from '@dereekb/util';
-import { type LlmModelId, type LlmModelOutputControls, type LlmModelSelection, type LlmModelTierKey, type LlmReasoningConfig, type LlmStrategyId } from './llm.value';
+import { type LlmModelId, type LlmModelOutputControls, type LlmModelSelection, type LlmModelTierKey, type LlmReasoningConfig, type LlmStrategyId, type LlmTokenCount } from './llm.value';
 import { toLlmTierConfig, resolveLlmModelTier, type LlmModelTierMap } from './llm.model.tier';
 import { type LlmCapabilityRoute } from './llm.model.routing';
 import { type LlmModelVisionMap } from './llm.model.wire';
@@ -199,7 +199,7 @@ export interface LlmResolvedCapabilityOutputControls {
   /**
    * The completion-length cap; absent ⇒ nothing configured one, so the strategy's own default cap applies.
    */
-  readonly maxOutputTokens?: number;
+  readonly maxOutputTokens?: LlmTokenCount;
   /**
    * Which rung supplied {@link maxOutputTokens}; absent exactly when it is.
    */
@@ -261,7 +261,7 @@ export function resolveLlmCapabilityOutputControls(config: ResolveLlmCapabilityO
   const tierConfig = tierValue == null ? undefined : toLlmTierConfig(tierValue);
   // A host routing rule's explicit output controls slot ABOVE the descriptor's (the rule is the more specific host
   // intent) but below a per-call reasoning override; a rule without them changes nothing here.
-  let maxOutputTokens: Maybe<number>;
+  let maxOutputTokens: Maybe<LlmTokenCount>;
   let maxOutputTokensSource: Maybe<LlmCapabilityOutputBudgetSource>;
 
   if (route?.maxOutputTokens != null) {

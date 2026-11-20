@@ -15,7 +15,7 @@
  * provider / model keys, provider kinds that serve no completions, and patch entries.
  */
 
-import { type Maybe, unique } from '@dereekb/util';
+import { type Maybe, unique, type WebsiteUrl } from '@dereekb/util';
 import { type LlmProviderStatusProviderId } from '../../strategy/llm.provider.status';
 import { type LlmModelConfigFieldRule, type LlmModelConfigFieldRules } from '../llm.model.field';
 import { type LlmPartialModelTierMap } from '../llm.model.tier';
@@ -291,7 +291,7 @@ export interface LlmModelConfigExtensionEntryParams<F extends object = object> e
   /**
    * The raw `baseUrl` — already shape-checked (absent or non-blank), untrimmed.
    */
-  readonly baseUrl: Maybe<string>;
+  readonly baseUrl: Maybe<WebsiteUrl>;
   /**
    * What {@link LlmModelConfigExtension.parseProviderFields} returned for this entry (`{}` without that parser).
    */

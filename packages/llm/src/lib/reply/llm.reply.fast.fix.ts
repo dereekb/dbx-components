@@ -10,7 +10,7 @@ import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { type LlmCapabilityKey } from '../model/llm.value';
 import { type LlmCallContext } from '../record/llm.call.context';
 import { type LlmCallMeta, type LlmDispatchResult } from '../strategy/llm.strategy';
-import { type JsonRepairShape, type Maybe } from '@dereekb/util';
+import { type JsonRepairShape, type Maybe, type Count, type PercentDecimal } from '@dereekb/util';
 import { type LlmReplyEnvelopeKeys } from './llm.reply.envelope';
 
 /**
@@ -27,7 +27,7 @@ export interface LlmReplyFastFixLimits {
    * The lowest score a `mangled` reply may carry and still be handed to the fast fix — at least half the object is valid
    * JSON before the first fault, so the fixer corrects a slip rather than reconstructing a reply.
    */
-  readonly minScore: number;
+  readonly minScore: PercentDecimal;
   /**
    * The longest reply the fast fix is handed (chars).
    */
@@ -35,7 +35,7 @@ export interface LlmReplyFastFixLimits {
   /**
    * How many fast-fix calls one subject dispatch may make.
    */
-  readonly maxPerDispatch: number;
+  readonly maxPerDispatch: Count;
 }
 
 /**

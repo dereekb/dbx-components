@@ -1,4 +1,4 @@
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type PercentDecimal } from '@dereekb/util';
 import { type LlmDecisionAnswer, type LlmDecisionAnswers, type LlmDecisionChoiceAnswer, type LlmDecisionChoiceQuestion, type LlmDecisionQuestion, type LlmDecisionQuestionId, type LlmDecisionQuestions, llmDecisionChoiceOptionNames } from './llm.decision.question';
 
 /**
@@ -7,7 +7,7 @@ import { type LlmDecisionAnswer, type LlmDecisionAnswers, type LlmDecisionChoice
  * Wide enough to absorb the float rounding a JSON round-trip introduces, narrow enough that a
  * distribution missing an option does not pass.
  */
-export const LLM_DECISION_DISTRIBUTION_SUM_TOLERANCE = 0.05;
+export const LLM_DECISION_DISTRIBUTION_SUM_TOLERANCE: PercentDecimal = 0.05;
 
 /**
  * What is wrong with one answer in a reply.

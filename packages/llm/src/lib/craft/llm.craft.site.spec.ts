@@ -4,7 +4,7 @@ import { DEFAULT_LLM_CRAFT_SITE_LIMITS, readLlmCraftAskInputs, llmCraftNoteUnkno
 const SITES = makeLlmCraftSiteRegistry({
   sites: {
     'product-page': { facts: { category: 'closed', brand: 'open', bundle: 'boolean' }, inputs: ['brief', 'notes'] },
-    'support-reply': { facts: { channel: 'closed', tags: 'open' }, inputs: ['message'], limits: { maxBytes: 2400 } },
+    'support-reply': { facts: { channel: 'closed', tags: 'open' }, inputs: ['message'], limits: { maxChars: 2400 } },
     'release-notes': { facts: { audience: 'closed' }, inputs: ['summary'] }
   }
 });
@@ -35,16 +35,16 @@ describe('makeLlmCraftSiteRegistry()', () => {
   it('resolves each limit per field: the site, else the registry, else the default', () => {
     const registry = makeLlmCraftSiteRegistry({
       sites: {
-        a: { facts: {}, inputs: [], limits: { maxBytes: 2400, judgeMax: undefined } },
+        a: { facts: {}, inputs: [], limits: { maxChars: 2400, judgeMax: undefined } },
         b: { facts: {}, inputs: [] }
       },
       limits: { maxNotes: 2, judgeInputMax: undefined }
     });
 
-    expect(registry.siteOf('a')?.limits).toEqual({ maxNotes: 2, maxBytes: 2400, judgeMax: DEFAULT_LLM_CRAFT_SITE_LIMITS.judgeMax, judgeInputMax: DEFAULT_LLM_CRAFT_SITE_LIMITS.judgeInputMax });
+    expect(registry.siteOf('a')?.limits).toEqual({ maxNotes: 2, maxChars: 2400, judgeMax: DEFAULT_LLM_CRAFT_SITE_LIMITS.judgeMax, judgeInputMax: DEFAULT_LLM_CRAFT_SITE_LIMITS.judgeInputMax });
     expect(registry.siteOf('b')?.limits).toEqual({ ...DEFAULT_LLM_CRAFT_SITE_LIMITS, maxNotes: 2 });
-    expect(siteOf('product-page').limits).toEqual({ maxNotes: 4, maxBytes: 3000, judgeMax: 8, judgeInputMax: 600 });
-    expect(siteOf('support-reply').limits.maxBytes).toBe(2400);
+    expect(siteOf('product-page').limits).toEqual({ maxNotes: 4, maxChars: 3000, judgeMax: 8, judgeInputMax: 600 });
+    expect(siteOf('support-reply').limits.maxChars).toBe(2400);
   });
 
   it('answers no site for an unknown kind, a prototype key, null or undefined', () => {
@@ -54,9 +54,9 @@ describe('makeLlmCraftSiteRegistry()', () => {
     expect(SITES.siteOf(undefined)).toBeUndefined();
   });
 
-  it('defaults noteMaxBytes to 1500 and takes an override', () => {
-    expect(SITES.noteMaxBytes).toBe(1500);
-    expect(makeLlmCraftSiteRegistry({ sites: {}, noteMaxBytes: 800 }).noteMaxBytes).toBe(800);
+  it('defaults noteMaxChars to 1500 and takes an override', () => {
+    expect(SITES.noteMaxChars).toBe(1500);
+    expect(makeLlmCraftSiteRegistry({ sites: {}, noteMaxChars: 800 }).noteMaxChars).toBe(800);
   });
 
   it('throws on an input name no ask could name, naming the kind', () => {

@@ -12,9 +12,9 @@
  * and size stay visible.
  */
 
-import { cutString, hashStringToNumber, isNotBlankString, type Milliseconds } from '@dereekb/util';
+import { cutString, hashStringToNumber, isNotBlankString, type Milliseconds, type HexString, type PercentDecimal, type Count } from '@dereekb/util';
 import type { FetchErrorClassification } from '@dereekb/util/fetch';
-import type { LlmCapabilityKey, LlmModelId, LlmModelTierKey } from '../model/llm.value';
+import type { LlmCapabilityKey, LlmModelId, LlmModelTierKey, LlmTokenCount } from '../model/llm.value';
 import type { LlmCompletion, LlmReplyOutcomeClass, LlmReplyRepairTier } from '../strategy/llm.strategy';
 
 /**
@@ -82,12 +82,12 @@ export const LLM_DECODE_FAILURE_EXCERPT_MAX_LENGTH = 500;
  * The shortest repeated-character run {@link collapseDegenerateRuns} collapses — a run of one char strictly LONGER
  * than this is replaced with the first {@link DEGENERATE_RUN_KEEP} chars plus a `«×N»` count annotation.
  */
-export const DEGENERATE_RUN_THRESHOLD = 8;
+export const DEGENERATE_RUN_THRESHOLD: Count = 8;
 
 /**
  * How many chars of a collapsed degenerate run are kept before the `«×N»` annotation.
  */
-export const DEGENERATE_RUN_KEEP = 8;
+export const DEGENERATE_RUN_KEEP: Count = 8;
 
 /**
  * The most chars one failed attempt's reply keeps as a failed-attempt row's `text` — far above any real reply, so a
@@ -128,7 +128,7 @@ export interface LlmDecodeFailureAttempt {
   /**
    * The completion token count for this attempt, when the provider reported usage.
    */
-  readonly completionTokens?: number;
+  readonly completionTokens?: LlmTokenCount;
   /**
    * The provider latency for this attempt, when reported.
    */
@@ -139,7 +139,7 @@ export interface LlmDecodeFailureAttempt {
    * so every dispatcher row has it; omitted only for a request that named none (a row built outside a dispatcher, or
    * a record written before the dispatcher always sent its cap).
    */
-  readonly maxOutputTokens?: number;
+  readonly maxOutputTokens?: LlmTokenCount;
   /**
    * The capability validator's error summary — present only on a `schema-validation` attempt.
    */
@@ -177,12 +177,12 @@ export interface LlmDecodeFailureAttempt {
   /**
    * The deterministic repair ops applied (deterministic tier only).
    */
-  readonly repairOps?: Readonly<Record<string, number>>;
+  readonly repairOps?: Readonly<Record<string, Count>>;
   /**
    * The reply-repair scorer's reading of a `parse-error` reply — its verdict and JSON-likeness score — so a census
    * reads verdicts without re-parsing. Present on every `parse-error` attempt.
    */
-  readonly shape?: { readonly verdict: string; readonly score: number };
+  readonly shape?: { readonly verdict: string; readonly score: PercentDecimal };
   /**
    * `'missed'` when the fast fix was called for this attempt and produced no usable answer.
    */
@@ -225,7 +225,7 @@ export interface LlmDecodeFailurePayload {
    * A stable hex fingerprint ({@link llmDecodePromptId}) of the dispatch's stable cache prefix (or the whole prompt
    * when un-segmented) — groups repeat failures of the SAME prompt without recording the (heavy) prompt itself.
    */
-  readonly promptId: string;
+  readonly promptId: HexString;
   /**
    * The prompt length (chars) sent.
    */
@@ -239,7 +239,7 @@ export interface LlmDecodeFailurePayload {
   /**
    * How many `strategy.complete` attempts the bounded retry made.
    */
-  readonly attempts: number;
+  readonly attempts: Count;
   /**
    * Whether a LATER attempt recovered into a usable, valid answer (`true`) or the dispatch dropped it (`false`).
    */
@@ -337,7 +337,7 @@ export function llmDecodeContextExcerpt(suffix: string): string {
  * @param text - The prompt text (the stable cache prefix when segmented, else the whole prompt).
  * @returns The hex fingerprint.
  */
-export function llmDecodePromptId(text: string): string {
+export function llmDecodePromptId(text: string): HexString {
   return hashStringToNumber(text).toString(16);
 }
 

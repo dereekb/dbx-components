@@ -4,9 +4,9 @@
  * attempt, the fast-fix tier of the reply-repair lane and the critique pass).
  */
 
-import { isNotBlankString, type Maybe, waitForMsUnlessAborted } from '@dereekb/util';
+import { isNotBlankString, type Maybe, waitForMsUnlessAborted, type Count } from '@dereekb/util';
 import { type FetchErrorClassification, type IsRetryableUnknownErrorFunction } from '@dereekb/util/fetch';
-import { type LlmModelId } from '../model/llm.value';
+import { type LlmModelId, type LlmTokenCount } from '../model/llm.value';
 import { type LlmPromptSlotId } from '../prompt/llm.prompt.layout';
 import { type LlmCallContext } from '../record/llm.call.context';
 import { type LlmCallAttemptPhase, type LlmCallFailedAttempt } from '../record/llm.call.record';
@@ -28,7 +28,7 @@ import { type LlmRetryLever } from './llm.retry.lever';
 /**
  * The attempt budget of a validated dispatch that does not set `maxAttempts` — one initial attempt and one retry.
  */
-export const DEFAULT_LLM_DISPATCH_MAX_ATTEMPTS = 2;
+export const DEFAULT_LLM_DISPATCH_MAX_ATTEMPTS: Count = 2;
 
 /**
  * Clamp a requested attempt budget — absent ⇒ {@link DEFAULT_LLM_DISPATCH_MAX_ATTEMPTS}, never below 1.
@@ -36,7 +36,7 @@ export const DEFAULT_LLM_DISPATCH_MAX_ATTEMPTS = 2;
  * @param requested - The request's (or follow-up's) `maxAttempts`.
  * @returns The budget.
  */
-export function resolveLlmDispatchMaxAttempts(requested?: Maybe<number>): number {
+export function resolveLlmDispatchMaxAttempts(requested?: Maybe<Count>): Count {
   return Math.max(1, requested ?? DEFAULT_LLM_DISPATCH_MAX_ATTEMPTS);
 }
 
@@ -96,7 +96,7 @@ export interface LlmDispatchAttemptsConfig {
   /**
    * The completion budget a raised-budget retry climbs from — the resolved cap the first attempt sends.
    */
-  readonly baseOutputBudget: number;
+  readonly baseOutputBudget: LlmTokenCount;
   /**
    * Receives every decode row as it is recorded.
    */
@@ -104,7 +104,7 @@ export interface LlmDispatchAttemptsConfig {
   /**
    * The attempt budget, already clamped ({@link resolveLlmDispatchMaxAttempts}).
    */
-  readonly maxAttempts: number;
+  readonly maxAttempts: Count;
   /**
    * The concrete slug the dispatch resolved to.
    */

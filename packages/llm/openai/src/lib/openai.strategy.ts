@@ -35,6 +35,7 @@
 import { DEFAULT_LLM_REASONING_OFF_ENCODING, resolveLlmReasoningOffEncoding, probeLlmCredentialEndpoint, type LlmModelReasoningOffMap, type LlmTransportCredentialProbe, type LlmReasoningOffEncoding, type LlmStrategy, type LlmStrategyId, type LlmTokenLimitParam } from '@dereekb/llm';
 import { toLlmOpenAiReasoningParams } from './openai.chat';
 import { makeLlmOpenAiCompatibleChatStrategy, type LlmOpenAiCompatibleChatStrategyConfig, type LlmOpenAiCompatibleChatStrategyHooks } from './openai.compatible.strategy';
+import { type WebsiteUrlWithPrefix } from '@dereekb/util';
 
 /**
  * The strategy KIND of the OpenAI-compatible transport ({@link LlmStrategy.kind}) and the default instance id.
@@ -44,7 +45,7 @@ export const LLM_OPENAI_STRATEGY_KIND: LlmStrategyId = 'openai';
 /**
  * The default OpenAI-compatible base URL — bare OpenAI.
  */
-export const DEFAULT_LLM_OPENAI_BASE_URL = 'https://api.openai.com/v1';
+export const DEFAULT_LLM_OPENAI_BASE_URL: WebsiteUrlWithPrefix = 'https://api.openai.com/v1';
 
 /**
  * Config for {@link makeLlmOpenAiStrategy} — the shared OpenAI-compatible host config plus this transport's wire

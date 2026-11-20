@@ -6,7 +6,7 @@
  * (and a dispatcher's retry ladder) without a transport.
  */
 
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type IndexNumber } from '@dereekb/util';
 import { type LlmCapabilityKey, type LlmCompletion, type LlmRequest, type LlmStrategy, type LlmStrategyId } from '@dereekb/llm';
 
 /**
@@ -36,7 +36,7 @@ export type LlmScriptedReplies = ReadonlyArray<LlmScriptedReply>;
  * @param call - The 0-based index of this call over EVERY call the strategy received.
  * @returns The reply, or `undefined` to fall through.
  */
-export type LlmScriptedRespondFunction = (request: LlmRequest, call: number) => Maybe<LlmScriptedReply>;
+export type LlmScriptedRespondFunction = (request: LlmRequest, call: IndexNumber) => Maybe<LlmScriptedReply>;
 
 /**
  * Config for {@link makeLlmScriptedStrategy}. Per call, the first source that answers wins:
@@ -81,7 +81,7 @@ export interface LlmScriptedStrategyConfig {
  * @param index - The 0-based position.
  * @returns The reply, or `undefined` for an empty list.
  */
-function scriptedReplyAt(replies: LlmScriptedReplies, index: number): Maybe<LlmScriptedReply> {
+function scriptedReplyAt(replies: LlmScriptedReplies, index: IndexNumber): Maybe<LlmScriptedReply> {
   return replies.length === 0 ? undefined : replies[Math.min(index, replies.length - 1)];
 }
 
@@ -108,7 +108,7 @@ export function makeLlmScriptedStrategy(config: LlmScriptedStrategyConfig): LlmS
   let calls = 0;
   let fallthroughCalls = 0;
 
-  const replyOf = (request: LlmRequest, call: number): Maybe<LlmScriptedReply> => {
+  const replyOf = (request: LlmRequest, call: IndexNumber): Maybe<LlmScriptedReply> => {
     let reply = config.respond?.(request, call);
 
     if (reply == null) {

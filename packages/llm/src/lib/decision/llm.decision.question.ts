@@ -1,4 +1,4 @@
-import { isNotBlankString, type Maybe } from '@dereekb/util';
+import { isNotBlankString, type Maybe, type Count, type PercentDecimal } from '@dereekb/util';
 
 /**
  * Identifier a caller gives one question inside a decision.
@@ -179,8 +179,8 @@ export type LlmStorableDecisionState = Exclude<LlmDecisionState, string>;
 export interface LlmDecisionChoiceAnswer<O extends string = string> {
   readonly type: 'choice';
   readonly choice: O;
-  readonly probabilities?: Maybe<Readonly<Record<O, number>>>;
-  readonly confidence?: Maybe<number>;
+  readonly probabilities?: Maybe<Readonly<Record<O, PercentDecimal>>>;
+  readonly confidence?: Maybe<PercentDecimal>;
 }
 
 /**
@@ -192,8 +192,8 @@ export interface LlmDecisionScoreAnswer {
   readonly type: 'score';
   readonly score: number;
   readonly legend?: Maybe<Readonly<Record<string, LlmDecisionEntry>>>;
-  readonly probabilities?: Maybe<Readonly<Record<string, number>>>;
-  readonly confidence?: Maybe<number>;
+  readonly probabilities?: Maybe<Readonly<Record<string, PercentDecimal>>>;
+  readonly confidence?: Maybe<PercentDecimal>;
 }
 
 /**
@@ -201,7 +201,7 @@ export interface LlmDecisionScoreAnswer {
  */
 export interface LlmDecisionNoulAnswer {
   readonly type: 'noul';
-  readonly noul: number;
+  readonly noul: PercentDecimal;
 }
 
 /**
@@ -234,14 +234,14 @@ export type LlmDecisionConfidenceBand = 'high' | 'medium' | 'low';
  * confidence answer different questions and are not comparable, so a threshold calibrated for one may
  * not be carried over to the other.
  */
-export const LLM_DECISION_CONFIDENCE_HIGH = 0.75;
+export const LLM_DECISION_CONFIDENCE_HIGH: PercentDecimal = 0.75;
 
 /**
  * Confidence at or above which {@link toLlmDecisionConfidenceBand} reads `medium`.
  *
  * See the note on {@link LLM_DECISION_CONFIDENCE_HIGH}.
  */
-export const LLM_DECISION_CONFIDENCE_MEDIUM = 0.5;
+export const LLM_DECISION_CONFIDENCE_MEDIUM: PercentDecimal = 0.5;
 
 /**
  * Most options a single Choice may declare.
@@ -251,12 +251,12 @@ export const LLM_DECISION_CONFIDENCE_MEDIUM = 0.5;
  * rather than truncating the set, because an option that was truncated away is one the model can never pick
  * and nothing reports that it was missing.
  */
-export const LLM_DECISION_CHOICE_OPTIONS_MAX = 255;
+export const LLM_DECISION_CHOICE_OPTIONS_MAX: Count = 255;
 
 /**
  * Fewest levels a Score may declare.
  */
-export const LLM_DECISION_SCORE_LEVELS_MIN = 2;
+export const LLM_DECISION_SCORE_LEVELS_MIN: Count = 2;
 
 /**
  * Most levels a Score may declare.
@@ -266,7 +266,7 @@ export const LLM_DECISION_SCORE_LEVELS_MIN = 2;
  * that serves it. Past the ceiling, MERGE the levels that cannot be told apart — never truncate
  * the top, which silently removes the extreme the threshold usually cares about.
  */
-export const LLM_DECISION_SCORE_LEVELS_MAX = 10;
+export const LLM_DECISION_SCORE_LEVELS_MAX: Count = 10;
 
 /**
  * Whether a declaration entry says nothing at all.
@@ -320,7 +320,7 @@ export function llmDecisionChoiceOptionNames<O extends string = string>(question
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function toLlmDecisionConfidenceBand(confidence: Maybe<number>): LlmDecisionConfidenceBand {
+export function toLlmDecisionConfidenceBand(confidence: Maybe<PercentDecimal>): LlmDecisionConfidenceBand {
   let result: LlmDecisionConfidenceBand;
 
   if (confidence == null || !Number.isFinite(confidence) || confidence < LLM_DECISION_CONFIDENCE_MEDIUM) {
@@ -339,7 +339,7 @@ export function toLlmDecisionConfidenceBand(confidence: Maybe<number>): LlmDecis
  */
 export interface LlmDecisionChoiceRankingRow<O extends string = string> {
   readonly option: O;
-  readonly probability: number;
+  readonly probability: PercentDecimal;
 }
 
 /**
@@ -384,7 +384,7 @@ export interface MapLlmDecisionChoiceRowsConfig<Q extends LlmDecisionQuestions, 
  */
 export interface LlmDecisionChoiceRow<R> {
   readonly row: R;
-  readonly probability: number;
+  readonly probability: PercentDecimal;
 }
 
 /**

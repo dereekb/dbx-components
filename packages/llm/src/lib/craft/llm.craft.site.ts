@@ -8,8 +8,8 @@
  * callback, for an authoring check — never on the dispatch path.
  */
 
-import { KeyValueTypleValueFilter, type Maybe, mergeObjects } from '@dereekb/util';
-import { DEFAULT_LLM_CRAFT_NOTE_MAX_BYTES, type LlmCraftNote } from './llm.craft.note';
+import { KeyValueTypleValueFilter, type Maybe, mergeObjects, type Count } from '@dereekb/util';
+import { DEFAULT_LLM_CRAFT_NOTE_MAX_CHARS, type LlmCraftNote } from './llm.craft.note';
 import { type LlmCraftSiteKind } from './llm.craft.identity';
 
 /**
@@ -26,16 +26,16 @@ export interface LlmCraftSiteLimits {
   /**
    * The most notes ONE prompt places; the rest are cut `max-notes`.
    */
-  readonly maxNotes: number;
+  readonly maxNotes: Count;
   /**
-   * The placed bodies' budget, in the seam's `bytes` unit (UTF-16 `.length`); a note that does not fit is cut
+   * The placed bodies' budget, in characters (UTF-16 code units, `.length`); a note that does not fit is cut
    * `max-bytes`.
    */
-  readonly maxBytes: number;
+  readonly maxChars: number;
   /**
    * The most judged notes ONE dispatch asks the judge about; the rest are cut `judge-cap`.
    */
-  readonly judgeMax: number;
+  readonly judgeMax: Count;
   /**
    * The most chars of ONE site input the judge's state carries; a longer input is clipped (with an ellipsis).
    */
@@ -45,7 +45,7 @@ export interface LlmCraftSiteLimits {
 /**
  * The library's default {@link LlmCraftSiteLimits}.
  */
-export const DEFAULT_LLM_CRAFT_SITE_LIMITS: LlmCraftSiteLimits = { maxNotes: 4, maxBytes: 3000, judgeMax: 8, judgeInputMax: 600 };
+export const DEFAULT_LLM_CRAFT_SITE_LIMITS: LlmCraftSiteLimits = { maxNotes: 4, maxChars: 3000, judgeMax: 8, judgeInputMax: 600 };
 
 /**
  * The legal shape of a site input name — what a judged `ask` can name in backticks.
@@ -93,9 +93,10 @@ export interface LlmCraftSiteRegistryConfig {
    */
   readonly limits?: Maybe<Partial<LlmCraftSiteLimits>>;
   /**
-   * The largest note body a tier may load. Defaults to {@link DEFAULT_LLM_CRAFT_NOTE_MAX_BYTES}.
+   * The largest note body a tier may load, in characters (UTF-16 code units). Defaults to
+   * {@link DEFAULT_LLM_CRAFT_NOTE_MAX_CHARS}.
    */
-  readonly noteMaxBytes?: Maybe<number>;
+  readonly noteMaxChars?: Maybe<number>;
 }
 
 /**
@@ -107,9 +108,9 @@ export interface LlmCraftSiteRegistry {
    */
   readonly kinds: ReadonlyArray<LlmCraftSiteKind>;
   /**
-   * The largest note body a tier may load.
+   * The largest note body a tier may load, in characters (UTF-16 code units).
    */
-  readonly noteMaxBytes: number;
+  readonly noteMaxChars: number;
   /**
    * The resolved site of a kind.
    *
@@ -160,7 +161,7 @@ export function makeLlmCraftSiteRegistry(config: LlmCraftSiteRegistryConfig): Ll
 
   return {
     kinds: Array.from(byKind.keys()),
-    noteMaxBytes: config.noteMaxBytes ?? DEFAULT_LLM_CRAFT_NOTE_MAX_BYTES,
+    noteMaxChars: config.noteMaxChars ?? DEFAULT_LLM_CRAFT_NOTE_MAX_CHARS,
     siteOf: (kind) => (kind == null ? undefined : byKind.get(kind))
   };
 }

@@ -29,6 +29,7 @@
  */
 
 import { type DollarAmount, type Maybe } from '@dereekb/util';
+import { type LlmTokenCount } from '../model/llm.value';
 
 /**
  * The provider cost breakdown (`usage.cost_details`) — the meaningful sub-fields OpenRouter returns alongside the
@@ -63,15 +64,15 @@ export interface LlmUsage {
   /**
    * Prompt (input) tokens billed for this call.
    */
-  readonly promptTokens: number;
+  readonly promptTokens: LlmTokenCount;
   /**
    * Completion (output) tokens billed for this call.
    */
-  readonly completionTokens: number;
+  readonly completionTokens: LlmTokenCount;
   /**
    * Total tokens billed (prompt + completion), as the provider reports it.
    */
-  readonly totalTokens: number;
+  readonly totalTokens: LlmTokenCount;
   /**
    * Provider-reported cost (OpenRouter credits/USD; ZenMux's list amount). Present only when the provider returned a
    * `cost`; omitted otherwise. What the figure IS rides {@link costBasis}.
@@ -89,14 +90,14 @@ export interface LlmUsage {
    * means the stable preamble is being reused (cheap), a low one means every call re-billed the prefix. Present only
    * when the provider reported it; omitted otherwise (byte-stable absence).
    */
-  readonly cachedTokens?: number;
+  readonly cachedTokens?: LlmTokenCount;
   /**
    * Prompt tokens the provider WROTE into its cache on this call (`prompt_tokens_details.cache_write_tokens`,
    * OpenRouter-normalized) — the cache-population cost signal, billed at a premium by explicit-caching providers
    * (e.g. Anthropic 1.25×). Implicit-caching providers (DeepSeek, OpenAI) do not report it. Present only when the
    * provider reported it; omitted otherwise (byte-stable absence).
    */
-  readonly cacheWriteTokens?: number;
+  readonly cacheWriteTokens?: LlmTokenCount;
   /**
    * Hidden REASONING tokens the provider billed as part of {@link completionTokens} on a hybrid-reasoning model
    * (`completion_tokens_details.reasoning_tokens`). Reasoning can be most of a call's billed completion tokens while
@@ -104,14 +105,14 @@ export interface LlmUsage {
    * Present only when the provider reported it; omitted otherwise (byte-stable absence — a non-reasoning call
    * carries none).
    */
-  readonly reasoningTokens?: number;
+  readonly reasoningTokens?: LlmTokenCount;
   /**
    * The prompt tokens the provider says the attached PICTURES cost (`prompt_tokens_details.image_tokens`), a subset
    * of {@link promptTokens}. Only some models report it. When present it is the strongest proof a picture arrived at
    * the model. Present only when the provider reported it; omitted otherwise (byte-stable absence; a text call
    * carries none).
    */
-  readonly imageTokens?: number;
+  readonly imageTokens?: LlmTokenCount;
   /**
    * The provider cost breakdown ({@link LlmCostDetails}), when the provider returned `usage.cost_details`. Omitted
    * otherwise. Read alongside the flat {@link cost}.
@@ -127,11 +128,11 @@ export interface LlmUsage {
  * a vendor widening its own type cannot silently change what we fold.
  */
 export interface RawLlmUsage {
-  readonly prompt_tokens?: Maybe<number>;
-  readonly completion_tokens?: Maybe<number>;
-  readonly total_tokens?: Maybe<number>;
-  readonly prompt_tokens_details?: Maybe<{ readonly cached_tokens?: Maybe<number>; readonly cache_write_tokens?: Maybe<number>; readonly image_tokens?: Maybe<number> }>;
-  readonly completion_tokens_details?: Maybe<{ readonly reasoning_tokens?: Maybe<number> }>;
+  readonly prompt_tokens?: Maybe<LlmTokenCount>;
+  readonly completion_tokens?: Maybe<LlmTokenCount>;
+  readonly total_tokens?: Maybe<LlmTokenCount>;
+  readonly prompt_tokens_details?: Maybe<{ readonly cached_tokens?: Maybe<LlmTokenCount>; readonly cache_write_tokens?: Maybe<LlmTokenCount>; readonly image_tokens?: Maybe<LlmTokenCount> }>;
+  readonly completion_tokens_details?: Maybe<{ readonly reasoning_tokens?: Maybe<LlmTokenCount> }>;
   /**
    * A number on a well-behaved gateway; a numeric string on some OpenAI-compatible ones — {@link readLlmCost} folds
    * both.

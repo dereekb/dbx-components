@@ -11,7 +11,7 @@
  * retryable transport error is resent after the dispatcher's `transportBackoff`, up to `decisions.maxAttempts` sends.
  */
 
-import { type Maybe, waitForMsUnlessAborted } from '@dereekb/util';
+import { type Maybe, waitForMsUnlessAborted, type Milliseconds } from '@dereekb/util';
 import { type IsRetryableUnknownErrorFunction } from '@dereekb/util/fetch';
 import { type LlmDecision, type LlmDecisionDispatchRequest } from '../decision/llm.decision.descriptor';
 import { isLlmDecisionModelId, llmDecisionModelIssue } from '../decision/llm.decision.model';
@@ -163,7 +163,7 @@ interface LlmDispatchDecisionSent<Q extends LlmDecisionQuestions> {
   /**
    * The wall clock of the successful send.
    */
-  readonly latencyMs: number;
+  readonly latencyMs: Milliseconds;
   /**
    * How many sends were made (the first plus resends).
    */

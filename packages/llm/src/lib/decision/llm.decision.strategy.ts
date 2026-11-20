@@ -27,7 +27,7 @@
  */
 
 import { type Maybe, type Milliseconds } from '@dereekb/util';
-import { type LlmModelId } from '../model/llm.value';
+import { type LlmModelId, type LlmGenerationId } from '../model/llm.value';
 import { type IsRetryableUnknownErrorFunction } from '@dereekb/util/fetch';
 import { classifyLlmError, isLlmAbortError, isRetryableLlmErrorClassification } from '../strategy/llm.error';
 import { LlmDecisionAnswerFaultError } from './llm.decision.answer';
@@ -99,7 +99,7 @@ export interface LlmDecisionResult<Q extends LlmDecisionQuestions = LlmDecisionQ
    * The gateway's own id for this call, when it returned one — what a telemetry row records as its
    * `generationId`, and the handle a cost reconciliation is looked up by.
    */
-  readonly generationId?: string;
+  readonly generationId?: LlmGenerationId;
 }
 
 /**

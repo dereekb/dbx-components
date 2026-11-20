@@ -4,7 +4,7 @@
  * estimate every call is recorded with.
  */
 
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type HexString } from '@dereekb/util';
 import { hardenLlmResponseSchemaHint } from '../capability/llm.capability.schema';
 import { type LlmCapabilityDescriptor, type LlmCapabilityDescriptorReader } from '../capability/llm.capability.descriptor';
 import { composeLlmCapabilityPrompt, type LlmPromptAssemblyTexts, type LlmPromptLiveContextSegmentOrigin } from '../prompt/llm.prompt.assembly';
@@ -24,6 +24,7 @@ import { type LlmRequest, type LlmThreadTurn } from '../strategy/llm.strategy';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
 import { type LlmResolvedDispatch } from './llm.dispatch.resolve';
 import { type LlmDispatchRawJsonGap } from './llm.dispatcher.config';
+import { type LlmTokenCount } from '../model/llm.value';
 
 /**
  * The per-dispatcher inputs of the compose stage, fixed at construction.
@@ -111,11 +112,11 @@ export interface LlmComposedDispatch {
   /**
    * The cache watch's hash of the root's cache prefix (absent on a follow-up).
    */
-  readonly cachePrefixHash?: string;
+  readonly cachePrefixHash?: HexString;
   /**
    * The estimated prompt tokens — the replayed thread and the billed schema included.
    */
-  readonly estimatedPromptTokens: number;
+  readonly estimatedPromptTokens: LlmTokenCount;
   /**
    * The value validator of this call — the request's on the root, the follow-up's on a follow-up.
    */

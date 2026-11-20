@@ -21,7 +21,7 @@
  * runaway garbage turn.
  */
 
-import { type CachedGetter, cachedGetter, type Maybe } from '@dereekb/util';
+import { type CachedGetter, cachedGetter, type Maybe, type Count } from '@dereekb/util';
 import { type LlmValueValidator } from '../reply/llm.reply.validator';
 import { type LlmDispatchResult, type LlmThreadTurn } from '../strategy/llm.strategy';
 
@@ -44,7 +44,7 @@ export interface LlmPromptFollowUp {
   /**
    * Total attempts the {@link validate} loop may make for this turn (the request's `maxAttempts` contract).
    */
-  readonly maxAttempts?: number;
+  readonly maxAttempts?: Count;
   /**
    * An advisory reply-shape hint for THIS turn. Unset ⇒ the root request's resolved hint is inherited (a JSON chain
    * keeps enforcing its schema on every turn).

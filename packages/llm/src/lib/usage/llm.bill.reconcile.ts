@@ -10,25 +10,28 @@
  * minutes) and failed ones are COUNTED, never folded as zero, so a half-reconciled run says so.
  */
 
-import { type AbortSignalRef, compareStringsByCodeUnit, type DollarAmount, type Maybe } from '@dereekb/util';
+import { type AbortSignalRef, compareStringsByCodeUnit, type DollarAmount, type Maybe, type PercentDecimal, type Count } from '@dereekb/util';
 import type { LlmCallLogPayloadBase } from '../record/llm.call.payload';
 import type { LlmCallBillRead, LlmCallBillReader } from '../strategy/llm.call.bill';
 import { readLlmCost } from '../strategy/llm.usage';
 import { formatLlmUsageCost } from './llm.usage.cost';
+import { type LlmProviderStatusProviderId } from '../strategy/llm.provider.status';
+import { type LlmGenerationId, type LlmModelId } from '../model/llm.value';
 
 /**
  * How many bill reads run at once by default — a small pool, because a gateway's limit on these reads is unknown and a
  * reconciliation is never in a hurry.
  */
-export const DEFAULT_LLM_BILL_RECONCILE_CONCURRENCY = 4;
+export const DEFAULT_LLM_BILL_RECONCILE_CONCURRENCY: Count = 4;
 
 /**
  * The most failure / pending details a reconciliation keeps (the counts stay exact).
  */
-export const LLM_BILL_RECONCILE_MAX_DETAILS = 10;
+export const LLM_BILL_RECONCILE_MAX_DETAILS: Count = 10;
 
 /**
- * The model bucket a call with no recorded model folds under.
+ * The label the markdown renders for the bucket of calls with no recorded model (the row whose `model` is
+ * `undefined`). The rows sort by this label, so the bucket keeps its place among the rendered rows.
  */
 const UNKNOWN_MODEL_BUCKET = '(unknown model)';
 
@@ -39,11 +42,11 @@ export interface LlmBillReconcileCell {
   /**
    * Calls with a generation id that were asked about.
    */
-  readonly calls: number;
+  readonly calls: Count;
   /**
    * Calls whose bill was read.
    */
-  readonly billedCalls: number;
+  readonly billedCalls: Count;
   /**
    * The logged (synchronous) cost summed over the BILLED calls — the figure the bill is compared against.
    */
@@ -59,9 +62,10 @@ export interface LlmBillReconcileCell {
  */
 export interface LlmBillReconcileModelRow {
   /**
-   * The served model, or `'(unknown model)'` for calls that recorded none.
+   * The served model, or `undefined` for the one bucket of calls that recorded none (rendered as `'(unknown model)'`
+   * by {@link renderLlmBillReconciliationMarkdown}).
    */
-  readonly model: string;
+  readonly model: Maybe<LlmModelId>;
   /**
    * The model's reconciled slice.
    */
@@ -75,7 +79,7 @@ export interface LlmBillReconcileDetail {
   /**
    * The generation id that was asked about.
    */
-  readonly generationId: string;
+  readonly generationId: LlmGenerationId;
   /**
    * `pending` (re-run later) or `failed` (waiting will not fix it).
    */
@@ -93,7 +97,7 @@ export interface LlmBillReconciliation {
   /**
    * The billing provider asked ({@link LlmCallBillReader.providerId}).
    */
-  readonly providerId: string;
+  readonly providerId: LlmProviderStatusProviderId;
   /**
    * The run total.
    */
@@ -105,15 +109,15 @@ export interface LlmBillReconciliation {
   /**
    * Calls whose bill is not there YET (re-run in a few minutes).
    */
-  readonly pending: number;
+  readonly pending: Count;
   /**
    * Calls whose read failed for a reason waiting will not fix.
    */
-  readonly failed: number;
+  readonly failed: Count;
   /**
    * Calls in scope that carried no generation id, so could not be asked about at all.
    */
-  readonly withoutGenerationId: number;
+  readonly withoutGenerationId: Count;
   /**
    * The first few pending / failed reads ({@link LLM_BILL_RECONCILE_MAX_DETAILS}), verbatim.
    */
@@ -135,15 +139,15 @@ export interface ReconcileLlmCallBillsConfig extends AbortSignalRef {
   /**
    * How many reads run at once; defaults to {@link DEFAULT_LLM_BILL_RECONCILE_CONCURRENCY}.
    */
-  readonly concurrency?: number;
+  readonly concurrency?: Count;
 }
 
 /**
  * A mutable cell accumulator.
  */
 interface MutableCell {
-  calls: number;
-  billedCalls: number;
+  calls: Count;
+  billedCalls: Count;
   logged: number;
   billed: number;
 }
@@ -181,13 +185,13 @@ export async function reconcileLlmCallBills(config: ReconcileLlmCallBillsConfig)
   await Promise.all(Array.from({ length: Math.min(concurrency, asked.length) }, () => worker()));
 
   const total: MutableCell = { calls: 0, billedCalls: 0, logged: 0, billed: 0 };
-  const byModel = new Map<string, MutableCell>();
+  const byModel = new Map<Maybe<LlmModelId>, MutableCell>();
   const details: LlmBillReconcileDetail[] = [];
   let pending = 0;
   let failed = 0;
 
   asked.forEach((call, index) => {
-    const model = call.model ?? UNKNOWN_MODEL_BUCKET;
+    const model = call.model ?? undefined;
     const cell = byModel.get(model) ?? { calls: 0, billedCalls: 0, logged: 0, billed: 0 };
     byModel.set(model, cell);
     cell.calls += 1;
@@ -220,7 +224,7 @@ export async function reconcileLlmCallBills(config: ReconcileLlmCallBillsConfig)
     providerId: config.reader.providerId,
     total: { ...total },
     byModel: Array.from(byModel.entries())
-      .sort(([a], [b]) => compareStringsByCodeUnit(a, b))
+      .sort(([a], [b]) => compareStringsByCodeUnit(a ?? UNKNOWN_MODEL_BUCKET, b ?? UNKNOWN_MODEL_BUCKET))
       .map(([model, cell]) => ({ model, cell: { ...cell } })),
     pending,
     failed,
@@ -230,7 +234,8 @@ export async function reconcileLlmCallBills(config: ReconcileLlmCallBillsConfig)
 }
 
 /**
- * The billed share of the logged figure (`billed / logged`), or `undefined` when nothing logged was billed.
+ * The billed share of the logged figure (`billed / logged`), or `undefined` when nothing logged was billed. It may
+ * exceed 1: a billed call with no logged cost adds to `billed` but nothing to `logged`.
  *
  * @param cell - The reconciled slice.
  * @returns The ratio.
@@ -240,7 +245,7 @@ export async function reconcileLlmCallBills(config: ReconcileLlmCallBillsConfig)
  * computeLlmBilledShare(reconciliation.total); // e.g. 0.5 when the bill is half the list figure
  * ```
  */
-export function computeLlmBilledShare(cell: LlmBillReconcileCell): Maybe<number> {
+export function computeLlmBilledShare(cell: LlmBillReconcileCell): Maybe<PercentDecimal> {
   return cell.billedCalls > 0 && cell.logged > 0 ? cell.billed / cell.logged : undefined;
 }
 
@@ -273,7 +278,7 @@ export function renderLlmBillReconciliationMarkdown(reconciliation: LlmBillRecon
       '',
       '| model | calls | billed calls | logged | billed | billed share |',
       '|---|---|---|---|---|---|',
-      ...reconciliation.byModel.map(({ model, cell }) => `| ${model} | ${cell.calls} | ${cell.billedCalls} | ${money(cell.logged)} | ${money(cell.billed)} | ${share(cell)} |`)
+      ...reconciliation.byModel.map(({ model, cell }) => `| ${model ?? UNKNOWN_MODEL_BUCKET} | ${cell.calls} | ${cell.billedCalls} | ${money(cell.logged)} | ${money(cell.billed)} | ${share(cell)} |`)
     );
   }
 

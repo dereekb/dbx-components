@@ -31,7 +31,8 @@ export const llmModelSlugType = /*#__PURE__*/ type('string.trim.preformatted').a
 export const llmModelTierKeyType = llmNonBlankStringType;
 
 /**
- * A token count — a positive integer. A fractional cap is a typo, never a budget.
+ * A token count — a positive integer. A fractional cap is a typo, never a budget. It validates an `LlmTokenCount`
+ * (`llm.value.ts`); a field it types keeps the inferred `number`, because a primitive alias does not survive `.infer`.
  */
 export const llmTokenCountType = /*#__PURE__*/ type('number.integer > 0');
 

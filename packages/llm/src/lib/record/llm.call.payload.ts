@@ -21,12 +21,13 @@
  * and the deterministic repair re-runs on replay.
  */
 
-import type { Milliseconds } from '@dereekb/util';
-import type { LlmCapabilityKey, LlmModelId, LlmModelTierKey, LlmStrategyId } from '../model/llm.value';
+import type { Milliseconds, Count } from '@dereekb/util';
+import type { LlmCapabilityKey, LlmModelId, LlmModelTierKey, LlmStrategyId, LlmTokenCount, LlmGenerationId } from '../model/llm.value';
 import type { LlmPromptSegment } from '../prompt/llm.prompt.segment';
 import type { LlmReplyRepairSummary } from '../strategy/llm.strategy';
 import type { LlmUsage } from '../strategy/llm.usage';
 import type { LlmCallFailedAttempt, LlmCallHostFields, LlmCallPhases, LlmCallSupplement } from './llm.call.record';
+import { type LlmDecisionKey } from '../decision/llm.decision.question';
 
 /**
  * The library's fields of a persisted call payload ({@link LlmCallLogPayload}). Every field is optional except the
@@ -54,7 +55,7 @@ export interface LlmCallLogPayloadBase {
    * every completion. Its presence is what `isUncacheableLlmCall` keys on: the decision lane has no prompt cache, so
    * its prompt tokens are cache-NOT-APPLICABLE rather than a miss.
    */
-  readonly decision?: string;
+  readonly decision?: LlmDecisionKey;
   /**
    * Every supplement the prompt seam placed on the call ({@link LlmCallSupplement}), then every one it matched and
    * CUT (`cut` set) — written ungated (whether or not the host keeps the prompt) on every root dispatch that placed or
@@ -90,7 +91,7 @@ export interface LlmCallLogPayloadBase {
    * The provider's generation id for the call — read-side only (a full log dump surfaces it, and the bill reconcile
    * asks the provider about it); a usage fold never folds it. Absent on an injected seam.
    */
-  readonly generationId?: string;
+  readonly generationId?: LlmGenerationId;
   /**
    * Why generation stopped (e.g. `'length'` when the runaway cap truncated) — read-side only. Absent on an injected
    * seam.
@@ -101,7 +102,7 @@ export interface LlmCallLogPayloadBase {
    * read as `1` everywhere a fold uses it — the single-shot (no validator) path stamps none, and every row written
    * before the retry loop existed was single-shot. Do NOT "fix" that into an omission.
    */
-  readonly attempts?: number;
+  readonly attempts?: Count;
   /**
    * The schema summaries of each schema-invalid attempt (present when any attempt was invalid).
    */
@@ -143,7 +144,7 @@ export interface LlmCallLogPayloadBase {
    * ledger can report estimate-vs-served drift against the served {@link LlmUsage.promptTokens}. Absent for every
    * call without a pinned prompt-token budget (byte-identical to a row written before the estimator existed).
    */
-  readonly estimatedPromptTokens?: number;
+  readonly estimatedPromptTokens?: LlmTokenCount;
   /**
    * The prompt as its provenance-tagged {@link LlmPromptSegment}s — the ONLY prompt key a new row carries, and only
    * when the host keeps prompts. NEVER dereference it directly: go through `readLlmCallPrompt` /

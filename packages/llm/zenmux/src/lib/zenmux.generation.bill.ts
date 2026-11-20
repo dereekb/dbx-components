@@ -13,7 +13,7 @@
  *   after it is made, so that reads as PENDING, never as a failure: re-reading later is the remedy.
  */
 
-import { readLlmCost, llmProviderErrorMessage, type LlmCallBill, type LlmCallBillRead, type LlmCallBillReader, type LlmCallBillReadOptions } from '@dereekb/llm';
+import { readLlmCost, llmProviderErrorMessage, type LlmCallBill, type LlmCallBillRead, type LlmCallBillReader, type LlmCallBillReadOptions, type LlmGenerationId } from '@dereekb/llm';
 import { readErrorMessage, type Maybe, type Milliseconds, removeTrailingSlashes } from '@dereekb/util';
 import { DEFAULT_LLM_ZENMUX_BASE_URL, LLM_ZENMUX_PROVIDER_ID } from './zenmux.constants';
 import { readLlmZenmuxManagement, llmZenmuxGenerationUrl, type LlmZenmuxEnvelope, type LlmZenmuxManagementReadConfig } from './zenmux.management';
@@ -48,7 +48,7 @@ interface ZenmuxGenerationData {
  * @param envelope - The parsed body.
  * @returns The outcome.
  */
-function zenmuxBillReadOf(generationId: string, envelope: LlmZenmuxEnvelope<ZenmuxGenerationData>): LlmCallBillRead {
+function zenmuxBillReadOf(generationId: LlmGenerationId, envelope: LlmZenmuxEnvelope<ZenmuxGenerationData>): LlmCallBillRead {
   const rating = envelope.data?.ratingResponses;
   const billed = readLlmCost(rating?.billAmount);
   let read: LlmCallBillRead;
@@ -81,7 +81,7 @@ export function makeLlmZenmuxGenerationBillReader(config: LlmZenmuxGenerationBil
 
   return {
     providerId: LLM_ZENMUX_PROVIDER_ID,
-    async read(generationId: string, options?: LlmCallBillReadOptions): Promise<LlmCallBillRead> {
+    async read(generationId: LlmGenerationId, options?: LlmCallBillReadOptions): Promise<LlmCallBillRead> {
       const url = llmZenmuxGenerationUrl(baseUrl, generationId);
       let read: LlmCallBillRead;
 

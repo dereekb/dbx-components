@@ -4,7 +4,7 @@
  */
 
 import { probeLlmCredentialEndpoint, type LlmCredentialProbeParams, type LlmStrategyHealth } from '@dereekb/llm';
-import { type Maybe, removeTrailingSlashes } from '@dereekb/util';
+import { type Maybe, removeTrailingSlashes, type WebsiteUrl } from '@dereekb/util';
 import { DEFAULT_LLM_OPENROUTER_BASE_URL } from './openrouter.constants';
 
 /**
@@ -14,7 +14,7 @@ export interface ProbeLlmOpenRouterCredentialParams extends Omit<LlmCredentialPr
   /**
    * The endpoint root; defaults to {@link DEFAULT_LLM_OPENROUTER_BASE_URL}. Trailing slashes are removed.
    */
-  readonly baseUrl?: Maybe<string>;
+  readonly baseUrl?: Maybe<WebsiteUrl>;
 }
 
 /**

@@ -39,7 +39,7 @@
  * the global after building the strategy.
  */
 
-import { readErrorMessage, isNotNullOrEmptyString, isPlainObject, makeTimeoutAbortSignal, type Maybe, type Milliseconds, removeTrailingSlashes } from '@dereekb/util';
+import { readErrorMessage, isNotNullOrEmptyString, isPlainObject, makeTimeoutAbortSignal, type Maybe, type Milliseconds, removeTrailingSlashes, type WebsiteUrlWithPrefix, type WebsiteUrl } from '@dereekb/util';
 import { type LlmDecisionAdapterConfig } from '../adapter/llm.adapter';
 import { type LlmModelId, type LlmStrategyId } from '../model/llm.value';
 import { type ConfiguredFetch, type FetchJsonTextResult, isFetchAbortError, readFetchJsonText } from '@dereekb/util/fetch';
@@ -81,7 +81,7 @@ export interface LlmSystemOneDecisionStrategyConfig {
    * The endpoint root; absent ⇒ the hooks' `defaultBaseUrl`. Trailing slashes are trimmed. The decision goes to
    * `<baseUrl>/systemone`; the credential probe receives the same trimmed root.
    */
-  readonly baseUrl?: Maybe<string>;
+  readonly baseUrl?: Maybe<WebsiteUrl>;
   /**
    * The per-call timeout; absent ⇒ {@link DEFAULT_LLM_DECISION_TIMEOUT_MS}. A caller's `LlmDecideOptions.timeoutMs` wins.
    */
@@ -115,7 +115,7 @@ export interface LlmSystemOneDecisionStrategyHooks {
   /**
    * The endpoint root used when the config names none.
    */
-  readonly defaultBaseUrl: string;
+  readonly defaultBaseUrl: WebsiteUrlWithPrefix;
   /**
    * The response header read for the generation id when the body carries no `id`. Absent ⇒ the body `id` is the only
    * carrier.
@@ -145,7 +145,7 @@ export interface LlmSystemOneDecisionStrategyHooks {
  */
 interface ReadLlmSystemOneRouteInput {
   readonly fetch: ConfiguredFetch;
-  readonly url: string;
+  readonly url: WebsiteUrl;
   readonly init: RequestInit;
   readonly signal: AbortSignal;
   readonly label: string;

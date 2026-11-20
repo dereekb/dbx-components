@@ -6,8 +6,8 @@
  * measured 0% and is never rendered as one.
  */
 
-import { compareStringsByCodeUnit, type Maybe } from '@dereekb/util';
-import type { LlmCapabilityKey, LlmStrategyId } from '../model/llm.value';
+import { compareStringsByCodeUnit, type Maybe, type Count, type PercentDecimal } from '@dereekb/util';
+import type { LlmCapabilityKey, LlmStrategyId, LlmTokenCount } from '../model/llm.value';
 import type { LlmCallLogPayloadBase } from '../record/llm.call.payload';
 import type { LlmKeyedUsageCell, LlmUsageCell } from './llm.usage.cell';
 
@@ -49,7 +49,7 @@ export function isUncacheableLlmCall(payload: Pick<LlmCallLogPayloadBase, 'decis
  * computeLlmCacheablePromptTokens({ promptTokens: 5000, uncacheablePromptTokens: 1000 }); // 4000
  * ```
  */
-export function computeLlmCacheablePromptTokens(cell: Pick<LlmUsageCell, 'promptTokens' | 'uncacheablePromptTokens'>): number {
+export function computeLlmCacheablePromptTokens(cell: Pick<LlmUsageCell, 'promptTokens' | 'uncacheablePromptTokens'>): LlmTokenCount {
   return cell.promptTokens - (cell.uncacheablePromptTokens ?? 0);
 }
 
@@ -70,7 +70,7 @@ export function computeLlmCacheablePromptTokens(cell: Pick<LlmUsageCell, 'prompt
  * computeLlmCacheHitRate({ promptTokens: 8000, cachedTokens: 6000 }); // 0.75
  * ```
  */
-export function computeLlmCacheHitRate(cell: Pick<LlmUsageCell, 'promptTokens' | 'cachedTokens' | 'uncacheablePromptTokens'>): Maybe<number> {
+export function computeLlmCacheHitRate(cell: Pick<LlmUsageCell, 'promptTokens' | 'cachedTokens' | 'uncacheablePromptTokens'>): Maybe<PercentDecimal> {
   const cacheable = computeLlmCacheablePromptTokens(cell);
   return cacheable > 0 ? (cell.cachedTokens ?? 0) / cacheable : undefined;
 }
@@ -89,7 +89,7 @@ export function computeLlmCacheHitRate(cell: Pick<LlmUsageCell, 'promptTokens' |
  * computeLlmReasoningShare(total); // e.g. 0.2083 for 100 reasoning of 480 completion tokens
  * ```
  */
-export function computeLlmReasoningShare(cell: LlmUsageCell): Maybe<number> {
+export function computeLlmReasoningShare(cell: LlmUsageCell): Maybe<PercentDecimal> {
   return cell.completionTokens > 0 ? (cell.reasoningTokens ?? 0) / cell.completionTokens : undefined;
 }
 
@@ -107,36 +107,36 @@ export interface LlmCapabilityCacheRow {
   /**
    * How many calls the row folds.
    */
-  readonly calls: number;
+  readonly calls: Count;
   /**
    * Billed prompt tokens (minus {@link uncacheablePromptTokens}, the {@link cacheHitRate} denominator).
    */
-  readonly promptTokens: number;
+  readonly promptTokens: LlmTokenCount;
   /**
    * Prompt tokens served warm.
    */
-  readonly cachedTokens: number;
+  readonly cachedTokens: LlmTokenCount;
   /**
    * Prompt tokens of the row's decision-lane calls, which have no prompt cache
    * ({@link LlmUsageCell.uncacheablePromptTokens}); omitted when 0.
    */
-  readonly uncacheablePromptTokens?: number;
+  readonly uncacheablePromptTokens?: LlmTokenCount;
   /**
    * `cachedTokens / (promptTokens − uncacheablePromptTokens)`; absent when the row billed no cacheable prompt tokens.
    */
-  readonly cacheHitRate?: number;
+  readonly cacheHitRate?: PercentDecimal;
   /**
    * Billed completion tokens (the {@link reasoningShare} denominator).
    */
-  readonly completionTokens: number;
+  readonly completionTokens: LlmTokenCount;
   /**
    * Completion tokens billed as hidden reasoning.
    */
-  readonly reasoningTokens: number;
+  readonly reasoningTokens: LlmTokenCount;
   /**
    * `reasoningTokens / completionTokens`; absent when the row billed no completion tokens.
    */
-  readonly reasoningShare?: number;
+  readonly reasoningShare?: PercentDecimal;
 }
 
 /**
@@ -187,7 +187,7 @@ export function toLlmCapabilityCacheRows(cells: ReadonlyArray<LlmKeyedUsageCell<
  * formatLlmUsageRate(undefined); // 'n/a'
  * ```
  */
-export function formatLlmUsageRate(rate: Maybe<number>): string {
+export function formatLlmUsageRate(rate: Maybe<PercentDecimal>): string {
   return rate == null ? 'n/a' : `${(rate * 100).toFixed(1)}%`;
 }
 

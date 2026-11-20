@@ -17,12 +17,13 @@
  */
 
 import type { FetchErrorClassification } from '@dereekb/util/fetch';
-import type { Milliseconds } from '@dereekb/util';
-import type { LlmCapabilityKey, LlmModelId, LlmModelTierKey, LlmStrategyId } from '../model/llm.value';
+import type { Milliseconds, PercentDecimal, HexString } from '@dereekb/util';
+import type { LlmCapabilityKey, LlmModelId, LlmModelTierKey, LlmStrategyId, LlmTokenCount } from '../model/llm.value';
 import type { LlmPromptSegment } from '../prompt/llm.prompt.segment';
 import type { LlmDispatchResult, LlmReplyRepairSummary } from '../strategy/llm.strategy';
 import type { LlmCallTelemetry } from './llm.call.telemetry';
 import type { LlmDecodeFailurePayload, LlmRetryCause } from './llm.decode.failure';
+import { type LlmDecisionKey } from '../decision/llm.decision.question';
 
 /**
  * The event type a host records a completed call ({@link LlmCallRecord}) under.
@@ -79,7 +80,7 @@ export interface LlmCallAttemptRetry {
    * reasoning tokens come out of `maxOutputTokens` and which would otherwise ask for less answer than the attempt
    * that just failed had. Omit-when-absent, so every other rung's phase is byte-identical.
    */
-  readonly headroom?: number;
+  readonly headroom?: LlmTokenCount;
   /**
    * `true` when this attempt is the ONE bonus attempt a dispatcher grants past its attempt cap — the final attempt
    * was cap-ended by the `reasoning-low` rung the ladder had just taken, and the bonus undoes it (`induced` names
@@ -182,7 +183,7 @@ export interface LlmCallFailedAttempt extends LlmCallTelemetry {
   /**
    * The completion cap this attempt was SENT with (after its levers), when the request carried one.
    */
-  readonly maxOutputTokens?: number;
+  readonly maxOutputTokens?: LlmTokenCount;
   /**
    * The correction block this attempt's request CARRIED — the bytes, not a re-derivation (the wording is
    * code-versioned). Attempt N ≥ 2 was sent the attempt-1 segments plus this block, with its levers applied. Absent
@@ -239,7 +240,7 @@ export interface LlmCallPhases {
    * only on a changed one: a reader diffing two call records must be able to conclude "unchanged" from the record
    * rather than from the ABSENCE of a breadcrumb (which a level gate can swallow).
    */
-  readonly cachePrefixHash?: string;
+  readonly cachePrefixHash?: HexString;
 }
 
 /**
@@ -268,9 +269,10 @@ export interface LlmCallSupplement {
   /**
    * The 16-hex-char `sha256HexPrefix` (`@dereekb/util`) of the contributed bytes (separator excluded).
    */
-  readonly hash: string;
+  readonly hash: HexString;
   /**
-   * The contributed bytes' length (separator excluded).
+   * The contributed text's length in UTF-16 code units (`.length`, separator excluded). The persisted key keeps its
+   * name, `bytes`, although the unit is code units, not bytes.
    */
   readonly bytes: number;
   /**
@@ -284,10 +286,11 @@ export interface LlmCallSupplement {
   /**
    * A judge's probability for a judged supplement.
    */
-  readonly p?: number;
+  readonly p?: PercentDecimal;
   /**
    * Present ⇒ the supplement was MATCHED but NOT placed, and why. `hash` / `bytes` are of the bytes it would have
-   * placed.
+   * placed. A craft cut is one of `LLM_CRAFT_NOTE_CUT_REASONS`; its `'max-bytes'` keeps its persisted name although
+   * the budget it names counts UTF-16 code units.
    */
   readonly cut?: string;
 }
@@ -337,10 +340,10 @@ export interface LlmCallRecordBase {
    * CONSUMER's and so cannot say which of its decisions this was. Absent on every completion, so their payload is
    * byte-identical.
    */
-  readonly decision?: string;
+  readonly decision?: LlmDecisionKey;
   /**
-   * Which stage of a multi-stage decision this call was (the stage the caller stated). Absent on a completion and on
-   * a single-stage decision.
+   * Which stage (1-based) of a multi-stage decision this call was (the stage the caller stated). Absent on a
+   * completion and on a single-stage decision.
    */
   readonly stage?: number;
   /**
@@ -365,7 +368,7 @@ export interface LlmCallRecordBase {
    * usage ledger can show estimate-vs-actual drift against the served `usage.promptTokens`. Absent for every call
    * with no budget (byte-identical).
    */
-  readonly estimatedPromptTokens?: number;
+  readonly estimatedPromptTokens?: LlmTokenCount;
   /**
    * The per-dispatch phase timing block ({@link LlmCallPhases}). Collected on every dispatch; persisting it is the
    * host's choice.

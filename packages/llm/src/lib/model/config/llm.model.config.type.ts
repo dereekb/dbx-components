@@ -26,7 +26,8 @@ export const llmProviderEntryBaseType = /*#__PURE__*/ type({
    */
   transport: llmNonBlankStringType,
   /**
-   * The endpoint base URL. Absent ⇒ the transport's own default.
+   * The endpoint base URL, a `WebsiteUrl` (`@dereekb/util`); the inferred field stays `string`. Absent ⇒ the
+   * transport's own default.
    */
   'baseUrl?': llmNonBlankStringType,
   /**

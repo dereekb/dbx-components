@@ -4,9 +4,9 @@
  * timeout / transport envelopes a failed send is recorded as.
  */
 
-import { type Maybe, type NumberPrecision, roundToPrecision } from '@dereekb/util';
+import { type Maybe, type NumberPrecision, roundToPrecision, type HexString } from '@dereekb/util';
 import { type FetchErrorClassification } from '@dereekb/util/fetch';
-import { type LlmStrategyId } from '../model/llm.value';
+import { type LlmStrategyId, type LlmTokenCount } from '../model/llm.value';
 import { type LlmCallContext, type LlmCallProfile } from '../record/llm.call.context';
 import { type LlmCallAttemptPhase, type LlmCallAttemptRetry, type LlmCallFailedAttempt, type LlmCallPhases } from '../record/llm.call.record';
 import { llmCallTelemetry } from '../record/llm.call.telemetry';
@@ -123,7 +123,7 @@ export interface LlmDecodeFailureAttemptConfig {
   /**
    * The completion budget the attempt was sent with, when it carried one.
    */
-  readonly maxOutputTokens?: Maybe<number>;
+  readonly maxOutputTokens?: Maybe<LlmTokenCount>;
   /**
    * The reply's reading envelope (`resolveLlmReplyReadingEnvelope`) — a `parse-error` row's `shape` is scored with the
    * fidelity coverage over its value key's object. `undefined` ⇒ the whole reply is the payload.
@@ -200,7 +200,7 @@ export interface LlmRepairedDecodeAttemptConfig {
   /**
    * The completion budget the attempt was sent with, when it carried one.
    */
-  readonly maxOutputTokens?: Maybe<number>;
+  readonly maxOutputTokens?: Maybe<LlmTokenCount>;
   /**
    * The retry lever this attempt bought, when a retry followed it.
    */
@@ -239,7 +239,7 @@ export interface LlmFailedAttemptConfig {
   /**
    * The completion budget the attempt was sent with, when it carried one.
    */
-  readonly maxOutputTokens?: Maybe<number>;
+  readonly maxOutputTokens?: Maybe<LlmTokenCount>;
   /**
    * The words of the rejection — validator error, critic feedback or transport summary.
    */
@@ -342,7 +342,7 @@ export interface LlmCallPhasesConfig {
   /**
    * The cache watch's hash of that prefix, when the dispatch was segmented.
    */
-  readonly cachePrefixHash?: Maybe<string>;
+  readonly cachePrefixHash?: Maybe<HexString>;
 }
 
 /**

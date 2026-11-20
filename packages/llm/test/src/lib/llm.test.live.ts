@@ -4,7 +4,7 @@
  * it and bind it.
  */
 
-import { readErrorMessage, type Maybe } from '@dereekb/util';
+import { readErrorMessage, type Maybe, type WebsiteUrl } from '@dereekb/util';
 import { type LlmCompleteOptions, type LlmCompletion, type LlmDecisionStrategy, type LlmModelId, type LlmRequest, type LlmStrategy, type LlmStrategyId, type LlmStrategyRegistry, makeLlmStrategyRegistry } from '@dereekb/llm';
 
 /**
@@ -26,7 +26,7 @@ export interface LlmLiveStrategyFromEnv {
   /**
    * The effective base URL of the provider.
    */
-  readonly baseUrl?: Maybe<string>;
+  readonly baseUrl?: Maybe<WebsiteUrl>;
   /**
    * Build a FRESH decorated strategy instance. Per call rather than shared: a fresh instance keeps each block's client
    * cache its own.
@@ -95,7 +95,7 @@ export interface DecorateLlmLiveStrategyAuthFailuresConfig {
   /**
    * The provider's effective base URL.
    */
-  readonly baseUrl?: Maybe<string>;
+  readonly baseUrl?: Maybe<WebsiteUrl>;
   /**
    * The model the lane bills; falls back to the request's model.
    */

@@ -26,7 +26,7 @@ import { DEFAULT_LLM_CRAFT_SITE_LIMITS, makeLlmCraftSiteRegistry } from './llm.c
 const SITES = makeLlmCraftSiteRegistry({
   sites: {
     'product-page': { facts: { category: 'closed', brand: 'open', bundle: 'boolean' }, inputs: ['brief', 'notes'] },
-    'support-reply': { facts: { channel: 'closed', tags: 'open' }, inputs: ['message'], limits: { maxBytes: 2400, judgeInputMax: 20 } },
+    'support-reply': { facts: { channel: 'closed', tags: 'open' }, inputs: ['message'], limits: { maxChars: 2400, judgeInputMax: 20 } },
     'release-notes': { facts: { audience: 'closed' }, inputs: ['summary'] }
   }
 });

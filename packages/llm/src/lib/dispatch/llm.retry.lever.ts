@@ -30,9 +30,10 @@
  */
 
 import { LLM_REASONING_OFF } from '../model/llm.model.precedence';
-import type { LlmModelId, LlmReasoningConfig } from '../model/llm.value';
+import type { LlmModelId, LlmReasoningConfig, LlmTokenCount } from '../model/llm.value';
 import type { LlmRetryCause } from '../record/llm.decode.failure';
 import type { LlmRequest } from '../strategy/llm.strategy';
+import { type Count } from '@dereekb/util';
 
 /**
  * WHICH lever a retry moves — the closed set of things a dispatcher can change between two attempts of one dispatch,
@@ -79,7 +80,7 @@ export interface LlmRetryLever {
    * `reasoning-low` and only when the failed attempt's budget was below the ceiling; omitted otherwise, so every
    * other rung's rendered lever and persisted phase are byte-identical.
    */
-  readonly headroom?: number;
+  readonly headroom?: LlmTokenCount;
   /**
    * The rung whose OWN failure this lever undoes — set only on the BONUS attempt a dispatcher grants when the final
    * attempt was cap-ended by the `reasoning-low` rung it had just taken (`induced: 'reasoning-low'`,
@@ -135,11 +136,11 @@ export interface ChooseLlmRetryLeverConfig {
   /**
    * The completion budget the failed attempt was sent with.
    */
-  readonly outputBudget: number;
+  readonly outputBudget: LlmTokenCount;
   /**
    * The absolute ceiling the budget rung may raise to.
    */
-  readonly budgetCeiling: number;
+  readonly budgetCeiling: LlmTokenCount;
   /**
    * The rungs already SPENT earlier in this dispatch — never re-picked, so a host that raised its attempt cap walks
    * DOWN the ladder instead of repeating one move. `budget` is deliberately exempt (see {@link LlmRetryLeverKind}):
@@ -156,13 +157,13 @@ export const LLM_RETRY_BUDGET_RAISE_FACTOR = 4;
 /**
  * The absolute ceiling the `budget` rung raises a dispatch's completion cap to (the chooser's `budgetCeiling` input).
  */
-export const LLM_RETRY_OUTPUT_BUDGET_CEILING = 32_768;
+export const LLM_RETRY_OUTPUT_BUDGET_CEILING: LlmTokenCount = 32_768;
 
 /**
  * How many BONUS attempts a dispatcher grants past its attempt cap — when the final attempt was cap-ended by the
  * `reasoning-low` rung the ladder had just taken, one extra attempt undoes it (`reasoning-off`).
  */
-export const LLM_RETRY_INDUCED_BONUS_ATTEMPTS = 1;
+export const LLM_RETRY_INDUCED_BONUS_ATTEMPTS: Count = 1;
 
 /**
  * The reasoning band the `reasoning-low` rung flips a reasoning-OFF dispatch to — deliberately the LOWEST band,
@@ -234,8 +235,8 @@ const REASONING_ONLY_LADDER: ReadonlyArray<LlmRetryLeverKind> = ['reasoning-off'
  * @param input - The failed attempt's facts.
  * @returns The rendered move, or `undefined` when the rung is unavailable.
  */
-function priceRung(rung: LlmRetryLeverKind, input: ChooseLlmRetryLeverConfig): { readonly from: string; readonly to: string; readonly reason: string; readonly headroom?: number } | undefined {
-  let priced: { readonly from: string; readonly to: string; readonly reason: string; readonly headroom?: number } | undefined;
+function priceRung(rung: LlmRetryLeverKind, input: ChooseLlmRetryLeverConfig): { readonly from: string; readonly to: string; readonly reason: string; readonly headroom?: LlmTokenCount } | undefined {
+  let priced: { readonly from: string; readonly to: string; readonly reason: string; readonly headroom?: LlmTokenCount } | undefined;
 
   switch (rung) {
     case 'budget': {

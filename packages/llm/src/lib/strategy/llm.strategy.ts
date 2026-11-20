@@ -28,8 +28,8 @@
  * handle — it is a derived view of the same prompt bytes, and a non-caching strategy ignores it entirely.
  */
 
-import { type AbortSignalRef, type Milliseconds } from '@dereekb/util';
-import { type LlmCapabilityKey, type LlmModelId, type LlmReasoningConfig, type LlmStrategyId } from '../model/llm.value';
+import { type AbortSignalRef, type Milliseconds, type PercentDecimal, type Count, type MimeTypeWithoutParameters } from '@dereekb/util';
+import { type LlmCapabilityKey, type LlmModelId, type LlmReasoningConfig, type LlmStrategyId, type LlmGenerationId, type LlmTokenCount } from '../model/llm.value';
 import { type LlmPromptCacheSegments, type LlmPromptSegment } from '../prompt/llm.prompt.segment';
 import { type LlmProviderStatus, type LlmProviderStatusOptions, type LlmProviderStatusProviderId } from './llm.provider.status';
 import { type LlmStrategyHealth } from './llm.strategy.health';
@@ -93,7 +93,7 @@ export interface LlmAttachment {
   /**
    * The image MIME type (`image/png` / `image/jpeg` / `image/webp`).
    */
-  readonly mime: string;
+  readonly mime: MimeTypeWithoutParameters;
   /**
    * The raw bytes, base64-encoded (no data-URL prefix; a backend adds whatever envelope it needs).
    */
@@ -146,7 +146,7 @@ export interface LlmRequest {
    * strategy call reaches. A dispatcher's bounded retry may raise it on a length-truncation decode failure (a
    * truncated reply is re-asked with a larger cap).
    */
-  readonly maxOutputTokens?: number;
+  readonly maxOutputTokens?: LlmTokenCount;
   /**
    * The per-call reasoning controls ({@link LlmReasoningConfig}), resolved from the resolved tier's config. A
    * strategy maps it onto its transport (OpenRouter's `reasoning` param) and sends it ONLY when set (some providers
@@ -258,7 +258,7 @@ export interface LlmCompletion {
    * generation-metadata lookup, bill read (`LlmCallBillReader`) or support ticket keys off. Absent on a
    * strategy with no provider completion to read (a scripted or tape strategy), and when the provider echoed none.
    */
-  readonly generationId?: string;
+  readonly generationId?: LlmGenerationId;
   /**
    * Why generation stopped (the completion choice's `finish_reason`, falling back to `native_finish_reason`) —
    * `'stop'` for a clean end, `'length'` when the output cap truncated it (the runaway-guard signal). Absent on a
@@ -272,7 +272,7 @@ export interface LlmCompletion {
    * and none rode. Present only when the request carried attachments; absent on a text call and on a strategy
    * with no provider completion to read (byte-stable). Read it before trusting any reply that claims to describe an image.
    */
-  readonly attachmentsSent?: number;
+  readonly attachmentsSent?: Count;
   /**
    * Whether this call SENT `response_format` json_schema/strict (generation-time enforcement was REQUESTED). The
    * strategy sets it: `true` when a schema hint was threaded, `false` on a scripted strategy or a text-only path. NOT
@@ -307,7 +307,7 @@ export interface LlmDispatchResult extends LlmCompletion {
    * IFF the loop ran (a validator was supplied); a single-shot call leaves it unset. On a DECISION's call record it
    * counts the `strategy.decide` sends, and is present only when a retryable transport failure was resent.
    */
-  readonly attempts?: number;
+  readonly attempts?: Count;
   /**
    * The validator summary of EACH schema-invalid attempt, in attempt order (incl. the final one when the loop
    * exhausted on an invalid reply). Absent when every attempt was valid / short-circuited.
@@ -378,11 +378,11 @@ export interface LlmReplyRepairSummary {
   /**
    * The scorer's JSON-likeness score of the original reply (0..1).
    */
-  readonly score: number;
+  readonly score: PercentDecimal;
   /**
    * The deterministic repair ops applied, by kind (deterministic tier only).
    */
-  readonly ops?: Readonly<Record<string, number>>;
+  readonly ops?: Readonly<Record<string, Count>>;
   /**
    * Host data of the fast-fix call that produced the repair (the fixer's own `meta`, e.g. its correlation id) — set on
    * the `fast-fix` tier only, when the fixer returned one.
@@ -459,7 +459,7 @@ export interface ResolveLlmCompletionCallTimeoutMsConfig {
   /**
    * The completion budget this call was sent with.
    */
-  readonly maxOutputTokens: number;
+  readonly maxOutputTokens: LlmTokenCount;
 }
 
 /**
@@ -491,7 +491,7 @@ export function resolveLlmCompletionCallTimeoutMs(config: ResolveLlmCompletionCa
  * a small-context local model) needs its cap configured (`maxOutputTokens` on the strategy, provider or tier). A
  * dispatcher's `defaultMaxOutputTokens` is normally this value.
  */
-export const DEFAULT_LLM_MAX_OUTPUT_TOKENS = 8_192;
+export const DEFAULT_LLM_MAX_OUTPUT_TOKENS: LlmTokenCount = 8_192;
 
 /**
  * Per-call options for {@link LlmStrategy.credentialProbe} — the external cancellation seam, mirroring

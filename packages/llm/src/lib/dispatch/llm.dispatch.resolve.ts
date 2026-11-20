@@ -9,7 +9,7 @@ import { type LlmModelProviderBindingMap } from '../model/config/llm.model.confi
 import { type LlmCapabilityModelSource, type LlmCapabilityReasoningSource, resolveLlmCapabilityModel, resolveLlmCapabilityOutputControls, resolveLlmCapabilityProvider } from '../model/llm.model.precedence';
 import { type LlmCapabilityRoute, type LlmCompiledModelRouting } from '../model/llm.model.routing';
 import { type LlmModelTierMap } from '../model/llm.model.tier';
-import { type LlmModelId, type LlmModelTierKey, type LlmReasoningConfig, type LlmStrategyId } from '../model/llm.value';
+import { type LlmModelId, type LlmModelTierKey, type LlmReasoningConfig, type LlmStrategyId, type LlmTokenCount } from '../model/llm.value';
 import { type LlmCallContext } from '../record/llm.call.context';
 import { type LlmStrategy } from '../strategy/llm.strategy';
 import { type LlmStrategyRegistry } from '../strategy/llm.strategy.registry';
@@ -64,7 +64,7 @@ export interface LlmDispatchResolveSetup<R extends LlmDispatchRequest = LlmDispa
   /**
    * The cap a dispatch sends when no route, descriptor or tier names one.
    */
-  readonly defaultMaxOutputTokens: number;
+  readonly defaultMaxOutputTokens: LlmTokenCount;
   readonly reasoningDefault: LlmReasoningConfig;
 }
 
@@ -119,7 +119,7 @@ export interface LlmResolvedDispatch<D extends LlmCapabilityDescriptor = LlmCapa
    * The completion cap every request of the dispatch sends — the route › descriptor › tier cap, else the setup's
    * `defaultMaxOutputTokens`. The retry ladder raises from it.
    */
-  readonly maxOutputTokens: number;
+  readonly maxOutputTokens: LlmTokenCount;
   /**
    * The resolved reasoning.
    */

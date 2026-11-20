@@ -1,5 +1,5 @@
 import { type Maybe, type Milliseconds } from '@dereekb/util';
-import { toLlmAttachmentDataUrl, toLlmThreadChatMessages, type LlmAttachment, type LlmReasoningConfig, type LlmReasoningOffEncoding, type LlmThreadRole, type LlmThreadTurn, type RawLlmUsage } from '@dereekb/llm';
+import { toLlmAttachmentDataUrl, toLlmThreadChatMessages, type LlmAttachment, type LlmReasoningConfig, type LlmReasoningOffEncoding, type LlmThreadRole, type LlmThreadTurn, type RawLlmUsage, type LlmGenerationId, type LlmTokenCount } from '@dereekb/llm';
 
 /**
  * The OpenAI-compatible chat wire: the request / response shapes every OpenAI-compatible transport sends and reads
@@ -35,7 +35,7 @@ export interface LlmOpenAiNestedReasoning {
   /**
    * A hard reasoning-token budget.
    */
-  readonly max_tokens?: number;
+  readonly max_tokens?: LlmTokenCount;
   /**
    * Whether to exclude the reasoning trace from the reply.
    */
@@ -328,12 +328,12 @@ export interface LlmOpenAiChatCompletionBody {
    * The generation-length cap under the historical `max_tokens` key — present when the token-limit param is
    * `'max_tokens'` (the default).
    */
-  readonly max_tokens?: number;
+  readonly max_tokens?: LlmTokenCount;
   /**
    * The generation-length cap under the newer `max_completion_tokens` key — present when the token-limit param is
    * `'max_completion_tokens'`.
    */
-  readonly max_completion_tokens?: number;
+  readonly max_completion_tokens?: LlmTokenCount;
   /**
    * The reasoning-effort band (the request's reasoning config mapped to OpenAI's flat `reasoning_effort`) — the
    * resolved `effort` when reasoning is on, or the OFF band (`'none'` / `'minimal'`) when the dispatcher's
@@ -364,7 +364,7 @@ export interface LlmOpenAiChatCompletion {
   /**
    * The provider's generation id for this completion.
    */
-  readonly id?: string;
+  readonly id?: LlmGenerationId;
   /**
    * The completion choices; the strategy reads `choices[0].message.content` + the finish reason. The provider-native
    * `native_finish_reason` is OpenRouter's, read only by the transport that asks for it.

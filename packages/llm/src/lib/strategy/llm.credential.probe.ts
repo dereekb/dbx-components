@@ -11,7 +11,7 @@
  * The probe is opt-in, never on the dispatch path, and never throws.
  */
 
-import { type AbortSignalRef, readErrorMessage, isNotNullOrEmptyString, isPlainObject, makeTimeoutAbortSignal, type Maybe, type Milliseconds, type WebsiteUrlWithPrefix } from '@dereekb/util';
+import { type AbortSignalRef, readErrorMessage, isNotNullOrEmptyString, isPlainObject, makeTimeoutAbortSignal, type Maybe, type Milliseconds, type WebsiteUrlWithPrefix, type WebsiteUrl } from '@dereekb/util';
 import { type ConfiguredFetch, type FetchJsonTextResult, readFetchJsonText } from '@dereekb/util/fetch';
 import { type LlmStrategyId } from '../model/llm.value';
 import { resolveLlmFetch } from './llm.fetch';
@@ -175,7 +175,7 @@ export interface LlmCredentialProbeParams extends AbortSignalRef {
   /**
    * The strategy's base URL, trailing slashes removed.
    */
-  readonly baseUrl: string;
+  readonly baseUrl: WebsiteUrl;
   /**
    * The credential under test.
    */
@@ -200,7 +200,7 @@ export interface RunLlmCredentialProbeLadderConfig {
   /**
    * The strategy's base URL, trailing slashes removed.
    */
-  readonly baseUrl: string;
+  readonly baseUrl: WebsiteUrl;
   readonly apiKey: Maybe<string>;
   /**
    * Whether a fake transport seam (a chat `client`, a `decisionFetch`) was injected.

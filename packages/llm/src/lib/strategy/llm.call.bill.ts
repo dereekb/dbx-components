@@ -13,6 +13,8 @@
  */
 
 import { type AbortSignalRef, type DollarAmount } from '@dereekb/util';
+import { type LlmProviderStatusProviderId } from './llm.provider.status';
+import { type LlmGenerationId } from '../model/llm.value';
 
 /**
  * One call's bill, in USD.
@@ -21,7 +23,7 @@ export interface LlmCallBill {
   /**
    * The provider generation id the bill was read for (`LlmCompletion.generationId`).
    */
-  readonly generationId: string;
+  readonly generationId: LlmGenerationId;
   /**
    * What the call BILLED — the truth the synchronous figure approximates.
    */
@@ -41,7 +43,7 @@ export interface LlmCallBill {
  * generation id reads as not-yet-there, and re-reading later is the remedy. `failed` is a read that cannot succeed by
  * waiting (a refused credential, an unreachable gateway, an unreadable body).
  */
-export type LlmCallBillRead = { readonly status: 'billed'; readonly bill: LlmCallBill } | { readonly status: 'pending'; readonly generationId: string; readonly detail: string } | { readonly status: 'failed'; readonly generationId: string; readonly detail: string };
+export type LlmCallBillRead = { readonly status: 'billed'; readonly bill: LlmCallBill } | { readonly status: 'pending'; readonly generationId: LlmGenerationId; readonly detail: string } | { readonly status: 'failed'; readonly generationId: LlmGenerationId; readonly detail: string };
 
 /**
  * Optional external cancellation for a bill read.
@@ -56,7 +58,7 @@ export interface LlmCallBillReader {
   /**
    * The billing provider the reads come from (`'zenmux'`) — display + attribution only.
    */
-  readonly providerId: string;
+  readonly providerId: LlmProviderStatusProviderId;
   /**
    * Read one call's bill.
    *
@@ -64,5 +66,5 @@ export interface LlmCallBillReader {
    * @param options - Optional external cancellation.
    * @returns The outcome.
    */
-  read(generationId: string, options?: LlmCallBillReadOptions): Promise<LlmCallBillRead>;
+  read(generationId: LlmGenerationId, options?: LlmCallBillReadOptions): Promise<LlmCallBillRead>;
 }

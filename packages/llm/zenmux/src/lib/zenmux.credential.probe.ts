@@ -2,8 +2,8 @@
  * The ZenMux credential probe — the only module that knows how to tell a live ZenMux INFERENCE key from a dead one for free.
  */
 
-import { probeLlmCredentialEndpoint, type LlmCredentialProbeParams, type LlmStrategyHealth } from '@dereekb/llm';
-import { type Maybe, removeTrailingSlashes } from '@dereekb/util';
+import { probeLlmCredentialEndpoint, type LlmCredentialProbeParams, type LlmStrategyHealth, type LlmGenerationId } from '@dereekb/llm';
+import { type Maybe, removeTrailingSlashes, type WebsiteUrl } from '@dereekb/util';
 import { resolveLlmZenmuxAccountBaseUrl } from './zenmux.account';
 import { DEFAULT_LLM_ZENMUX_BASE_URL } from './zenmux.constants';
 import { llmZenmuxGenerationUrl } from './zenmux.management';
@@ -18,7 +18,7 @@ export const LLM_ZENMUX_CREDENTIAL_PROBE_MODEL = 'llm-credential-probe/no-such-m
  * The generation id the second (pay-as-you-go) probe looks up — never a real one, so a live key reads "not found" and
  * nothing bills.
  */
-export const LLM_ZENMUX_CREDENTIAL_PROBE_GENERATION_ID = 'llm-credential-probe';
+export const LLM_ZENMUX_CREDENTIAL_PROBE_GENERATION_ID: LlmGenerationId = 'llm-credential-probe';
 
 /**
  * The statuses ZenMux answers a REJECTED inference key with (`403 access_denied` on the completion endpoint, `401` /
@@ -34,7 +34,7 @@ export interface ProbeLlmZenmuxCredentialParams extends Omit<LlmCredentialProbeP
    * The ZenMux API base (or a LAN proxy in front of it); defaults to {@link DEFAULT_LLM_ZENMUX_BASE_URL}. Trailing slashes are
    * stripped. The `management/generation` lookup always goes to the ZenMux account base ({@link resolveLlmZenmuxAccountBaseUrl}).
    */
-  readonly baseUrl?: Maybe<string>;
+  readonly baseUrl?: Maybe<WebsiteUrl>;
 }
 
 /**

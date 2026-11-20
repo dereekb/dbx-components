@@ -4,7 +4,7 @@
  * never evaluates the SDK, and every export here is typed with local structural types, so no emitted declaration names
  * the SDK.
  */
-import { type Maybe, type Milliseconds } from '@dereekb/util';
+import { type Maybe, type Milliseconds, type WebsiteUrl } from '@dereekb/util';
 import { type LlmOpenAiChatClient } from './openai.chat';
 
 /**
@@ -18,7 +18,7 @@ export interface LlmOpenAiChatClientConfig {
   /**
    * The OpenAI-compatible base URL the client is pointed at.
    */
-  readonly baseUrl: string;
+  readonly baseUrl: WebsiteUrl;
   /**
    * The client-level request timeout.
    */

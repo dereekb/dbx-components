@@ -4,7 +4,7 @@
  * cancellation) that replace a host's internals.
  */
 
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type Count } from '@dereekb/util';
 import { type IsRetryableUnknownErrorFunction } from '@dereekb/util/fetch';
 import { type LlmCapabilityDescriptor, type LlmCapabilityDescriptorReader } from '../capability/llm.capability.descriptor';
 import { type LlmDecisionDispatchRequest } from '../decision/llm.decision.descriptor';
@@ -12,7 +12,7 @@ import { type LlmDecisionStrategyRegistry } from '../decision/llm.decision.strat
 import { type LlmModelProviderBindingMap } from '../model/config/llm.model.config.resolve';
 import { type LlmCapabilityRoute, type LlmCompiledModelRouting } from '../model/llm.model.routing';
 import { type LlmModelTierMap } from '../model/llm.model.tier';
-import { type LlmCapabilityKey, type LlmModelId, type LlmModelTierKey, type LlmReasoningConfig, type LlmStrategyId } from '../model/llm.value';
+import { type LlmCapabilityKey, type LlmModelId, type LlmModelTierKey, type LlmReasoningConfig, type LlmStrategyId, type LlmTokenCount } from '../model/llm.value';
 import { type LlmModelVisionMap } from '../model/llm.model.wire';
 import { type LlmPromptAssemblyTexts } from '../prompt/llm.prompt.assembly';
 import { type LlmPromptCachePrefixWatch } from '../prompt/llm.prompt.cache.watch';
@@ -137,7 +137,7 @@ export interface LlmDispatchRawJsonGap {
   /**
    * How many live blocks looked like raw JSON.
    */
-  readonly blocks: number;
+  readonly blocks: Count;
 }
 
 /**
@@ -152,11 +152,11 @@ export interface LlmDispatchOverBudgetGap {
   /**
    * The estimated prompt tokens (thread and schema included).
    */
-  readonly estimatedPromptTokens: number;
+  readonly estimatedPromptTokens: LlmTokenCount;
   /**
    * The budget it ran over.
    */
-  readonly maxPromptTokens: number;
+  readonly maxPromptTokens: LlmTokenCount;
 }
 
 /**
@@ -212,7 +212,7 @@ export interface LlmDispatcherDecisionConfig {
    * dispatcher's `transportBackoff`. Absent ⇒ `DEFAULT_LLM_DISPATCH_MAX_ATTEMPTS` (2: one resend);
    * clamped to at least 1 (`1` never resends).
    */
-  readonly maxAttempts?: Maybe<number>;
+  readonly maxAttempts?: Maybe<Count>;
 }
 
 /**
@@ -351,7 +351,7 @@ export interface LlmDispatcherConfig<R extends LlmDispatchRequest = LlmDispatchR
    * cap), so pass the cap the strategy would otherwise use (normally `DEFAULT_LLM_MAX_OUTPUT_TOKENS`) to send the
    * same `max_tokens` a direct strategy call sends.
    */
-  readonly defaultMaxOutputTokens: number;
+  readonly defaultMaxOutputTokens: LlmTokenCount;
   /**
    * The tier map. Must hold {@link defaultTier} — checked at construction.
    */

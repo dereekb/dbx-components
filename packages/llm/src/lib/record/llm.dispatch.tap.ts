@@ -33,10 +33,11 @@
  *    ({@link LlmDispatchStartTapEventBase.estimatedPromptTokens}, `followUp`, …) ride the tap event ONLY.
  */
 
-import { readErrorMessage, isPromiseLike, type Maybe } from '@dereekb/util';
-import type { LlmCapabilityKey, LlmModelTierKey } from '../model/llm.value';
+import { readErrorMessage, isPromiseLike, type Maybe, type Count, type DestroyFunction } from '@dereekb/util';
+import type { LlmCapabilityKey, LlmModelTierKey, LlmTokenCount } from '../model/llm.value';
 import type { LlmCallHostFields, LlmCallRecordBase, LlmCallStartRecordBase } from './llm.call.record';
 import type { LlmDecodeFailureAttempt } from './llm.decode.failure';
+import { type LlmDecisionKey } from '../decision/llm.decision.question';
 
 /**
  * A dispatch-tap id — the probe handle an {@link LlmDispatchTap} registers under, so
@@ -59,7 +60,7 @@ export interface LlmDispatchStartTapEventBase extends LlmCallStartRecordBase {
    * A cheap token estimate of {@link prompt}. Tap-only: the start record never carries it, so attaching a probe
    * provably changes zero bytes of the log.
    */
-  readonly estimatedPromptTokens: number;
+  readonly estimatedPromptTokens: LlmTokenCount;
   /**
    * `true` on a CHAINED follow-up execution; omitted on a root dispatch.
    */
@@ -69,7 +70,7 @@ export interface LlmDispatchStartTapEventBase extends LlmCallStartRecordBase {
    * record's `decision` (which the completion event already carries), so `event.decision != null` identifies a
    * decision on both events while the start record stays unchanged.
    */
-  readonly decision?: string;
+  readonly decision?: LlmDecisionKey;
 }
 
 /**
@@ -170,12 +171,6 @@ export interface LlmDispatchTap<H extends LlmCallHostFields = LlmCallHostFields>
 }
 
 /**
- * Detach a registered {@link LlmDispatchTap}. IDEMPOTENT — a second call is a no-op, and (because the cleanup closes
- * over its own `detached` flag) a stale cleanup can never remove a LATER re-registration of the same tap object.
- */
-export type LlmDispatchTapCleanup = () => void;
-
-/**
  * The registry's swallowed-throw tally — `failures: 0` is clean, with a per-probe breakdown so a broken tap is NAMED
  * rather than merely counted.
  */
@@ -183,11 +178,11 @@ export interface LlmDispatchTapHealth {
   /**
    * How many taps are currently attached.
    */
-  readonly taps: number;
+  readonly taps: Count;
   /**
    * How many callback invocations threw / rejected (and were swallowed) over this registry's lifetime.
    */
-  readonly failures: number;
+  readonly failures: Count;
   /**
    * The message of the most recent swallowed failure. Omitted when nothing has failed.
    */
@@ -196,7 +191,7 @@ export interface LlmDispatchTapHealth {
    * The swallowed-failure count per {@link LlmDispatchTap.id} — a key appears only once that probe has failed at least
    * once, so an all-clean registry reports `{}`.
    */
-  readonly byTap: Readonly<Partial<Record<LlmDispatchTapId, number>>>;
+  readonly byTap: Readonly<Partial<Record<LlmDispatchTapId, Count>>>;
 }
 
 /**
@@ -208,14 +203,15 @@ export interface LlmDispatchTapRegistry<H extends LlmCallHostFields = LlmCallHos
    * The live tap count — a dispatcher's `> 0` guard, so a tap-less dispatch allocates nothing and an EMPTY registry is
    * indistinguishable from no registry at all.
    */
-  readonly size: number;
+  readonly size: Count;
   /**
    * Attach a tap.
    *
    * @param tap - The probe to attach (identity-keyed: attaching the same object twice counts once).
-   * @returns The idempotent detach.
+   * @returns The detach. IDEMPOTENT: a second call is a no-op, and (because the detach closes over its own `detached`
+   * flag) a stale detach can never remove a LATER re-registration of the same tap object.
    */
-  addTap(tap: LlmDispatchTap<H>): LlmDispatchTapCleanup;
+  addTap(tap: LlmDispatchTap<H>): DestroyFunction;
   /**
    * The current swallowed-throw tally.
    *
@@ -257,7 +253,7 @@ export interface LlmDispatchTapRegistry<H extends LlmCallHostFields = LlmCallHos
  */
 export function makeLlmDispatchTapRegistry<H extends LlmCallHostFields = LlmCallHostFields>(): LlmDispatchTapRegistry<H> {
   const taps = new Set<LlmDispatchTap<H>>();
-  const byTap: Record<string, number> = {};
+  const byTap: Record<string, Count> = {};
   let failures = 0;
   let lastError: Maybe<string>;
 
@@ -297,10 +293,10 @@ export function makeLlmDispatchTapRegistry<H extends LlmCallHostFields = LlmCall
   };
 
   return {
-    get size(): number {
+    get size(): Count {
       return taps.size;
     },
-    addTap(tap: LlmDispatchTap<H>): LlmDispatchTapCleanup {
+    addTap(tap: LlmDispatchTap<H>): DestroyFunction {
       // The `detached` flag is what makes a double-detach SAFE rather than merely idempotent: a stale cleanup cannot
       // silently remove a later re-registration of the same tap object.
       let detached = false;

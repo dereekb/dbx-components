@@ -17,7 +17,7 @@
  * Readers treat an origin kind they do not know as opaque, so a new kind never breaks an old reader.
  */
 
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type IndexNumber } from '@dereekb/util';
 
 /**
  * The stable→volatile split of an assembled prompt for provider prompt caching — a DERIVED view of the same bytes
@@ -112,11 +112,11 @@ export interface LlmPromptSegmentSpan<S extends LlmPromptSegment = LlmPromptSegm
   /**
    * The offset of {@link LlmPromptSegment.promptSegment} within the joined prompt.
    */
-  readonly start: number;
+  readonly start: IndexNumber;
   /**
    * The end offset (exclusive).
    */
-  readonly end: number;
+  readonly end: IndexNumber;
 }
 
 /**

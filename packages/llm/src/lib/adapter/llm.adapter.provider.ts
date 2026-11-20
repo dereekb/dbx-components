@@ -8,7 +8,7 @@
  * says it meters nothing gets none. Construction is inert: nothing here does I/O.
  */
 
-import { type Maybe, type MaybeMap } from '@dereekb/util';
+import { type Maybe, type MaybeMap, type WebsiteUrl } from '@dereekb/util';
 import { LLM_PROVIDER_FACET_NONE, type LlmCompletionProviderEntry } from '../model/config/llm.model.config.schema';
 import { type LlmProviderConfig } from '../model/config/llm.model.config.resolve';
 import { type LlmCredentialProbe, type LlmStrategy } from '../strategy/llm.strategy';
@@ -38,7 +38,7 @@ export interface LlmProviderAdaptersConfig<P> {
  * @param config - The provider (its `transport` and `baseUrl`) and the registry.
  * @returns The effective base URL, or `undefined` when neither declares one (or the transport is not registered).
  */
-export function resolveLlmProviderBaseUrl(config: LlmProviderAdaptersConfig<Pick<LlmCompletionProviderEntry, 'transport' | 'baseUrl'>>): Maybe<string> {
+export function resolveLlmProviderBaseUrl(config: LlmProviderAdaptersConfig<Pick<LlmCompletionProviderEntry, 'transport' | 'baseUrl'>>): Maybe<WebsiteUrl> {
   const { provider, adapters } = config;
   return provider.baseUrl ?? findLlmAdapter({ adapters, facet: 'completion', kind: provider.transport })?.defaultBaseUrl;
 }
@@ -86,7 +86,7 @@ export interface LlmProviderAccount {
   /**
    * The provider's effective base URL.
    */
-  readonly baseUrl?: string;
+  readonly baseUrl?: WebsiteUrl;
   /**
    * What the provider's synchronous `cost` is, from the metering adapter.
    */

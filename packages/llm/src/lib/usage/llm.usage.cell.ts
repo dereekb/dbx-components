@@ -8,8 +8,9 @@
  * byte-stable.
  */
 
-import { compareStringsByCodeUnit, type DollarAmount, type Maybe } from '@dereekb/util';
+import { compareStringsByCodeUnit, type DollarAmount, type Maybe, type Count } from '@dereekb/util';
 import { readLlmCost, type LlmUsage } from '../strategy/llm.usage';
+import { type LlmTokenCount } from '../model/llm.value';
 
 /**
  * One aggregated usage cell — the calls / tokens / cost summed over some (model, capability, …) slice.
@@ -18,21 +19,21 @@ export interface LlmUsageCell {
   /**
    * How many calls the cell folds.
    */
-  readonly calls: number;
+  readonly calls: Count;
   /**
    * Summed billed prompt tokens.
    */
-  readonly promptTokens: number;
+  readonly promptTokens: LlmTokenCount;
   /**
    * Summed billed completion tokens.
    */
-  readonly completionTokens: number;
+  readonly completionTokens: LlmTokenCount;
   /**
    * Summed prompt tokens served from a warm provider cache ({@link LlmUsage.cachedTokens}) — a subset of
    * {@link promptTokens}. `0` when no call in the slice reported one: read it alongside the enclosing fold's
    * `cachePartial` flag, which says whether `0` means "none" or "unknown" (absence is not a 0% hit rate).
    */
-  readonly cachedTokens: number;
+  readonly cachedTokens: LlmTokenCount;
   /**
    * Summed prompt tokens of calls on a lane with NO prompt cache (the decision lane, `isUncacheableLlmCall`) — a
    * subset of {@link promptTokens}, exactly as {@link cachedTokens} is. They stay in every spend figure but leave every
@@ -40,14 +41,14 @@ export interface LlmUsageCell {
    * OMITTED when 0, so a cell with no decision calls (and every persisted cell from before the field existed)
    * serializes byte-identically; read it with `?? 0`.
    */
-  readonly uncacheablePromptTokens?: number;
+  readonly uncacheablePromptTokens?: LlmTokenCount;
   /**
    * Summed HIDDEN reasoning tokens ({@link LlmUsage.reasoningTokens}) a hybrid-reasoning model billed — a subset of
    * {@link completionTokens}, exactly as {@link cachedTokens} is a subset of {@link promptTokens}. `0` when no call in
    * the slice reported one: read it alongside the enclosing fold's `reasoningPartial` flag (absence is not "no
    * reasoning").
    */
-  readonly reasoningTokens: number;
+  readonly reasoningTokens: LlmTokenCount;
   /**
    * Summed provider cost. `0` when no call in the slice reported one: read it alongside the enclosing fold's
    * `costPartial` flag.

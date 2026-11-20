@@ -1,5 +1,5 @@
 import { type Maybe, mapObjectMap } from '@dereekb/util';
-import { type LlmModelId } from '../model/llm.value';
+import { type LlmModelId, type LlmGenerationId, type LlmTokenCount } from '../model/llm.value';
 import { toLlmUsage, type LlmUsage, type LlmUsageFromOptions } from '../strategy/llm.usage';
 import { type LlmDecisionModelId } from './llm.decision.model';
 import { type LlmDecisionEntry, type LlmDecisionQuestion, type LlmDecisionQuestionId, type LlmDecisionState, llmDecisionChoiceOptionNames } from './llm.decision.question';
@@ -112,11 +112,11 @@ export interface LlmDecisionWireUsage {
   /**
    * Input tokens billed.
    */
-  readonly input_tokens?: Maybe<number>;
+  readonly input_tokens?: Maybe<LlmTokenCount>;
   /**
    * Output tokens (reported, not billed).
    */
-  readonly output_tokens?: Maybe<number>;
+  readonly output_tokens?: Maybe<LlmTokenCount>;
   /**
    * The gateway's synchronous cost in USD. A numeric string is tolerated, as {@link toLlmUsage} tolerates it.
    */
@@ -132,7 +132,7 @@ export interface LlmDecisionWireReply {
   /**
    * The gateway's generation id, when the body carries one.
    */
-  readonly id?: Maybe<string>;
+  readonly id?: Maybe<LlmGenerationId>;
   /**
    * The model that answered; absent ⇒ the requested slug stands.
    */

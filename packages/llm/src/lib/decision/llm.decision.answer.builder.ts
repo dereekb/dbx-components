@@ -6,7 +6,7 @@
  * that are well-formed by construction, so a spec or a replay script states only which option won and how surely.
  */
 
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type PercentDecimal } from '@dereekb/util';
 import { type LlmDecisionChoiceAnswer, type LlmDecisionEntry, type LlmDecisionNoulAnswer, type LlmDecisionScoreAnswer, type LlmDecisionScoreLevels } from './llm.decision.question';
 
 /**
@@ -34,7 +34,7 @@ export interface MakeLlmDecisionChoiceAnswerConfig<O extends string> {
   /**
    * The mass on the winner, 0 to 1; absent ⇒ {@link DEFAULT_LLM_DECISION_CHOICE_ANSWER_CONFIDENCE}.
    */
-  readonly confidence?: Maybe<number>;
+  readonly confidence?: Maybe<PercentDecimal>;
 }
 
 /**
@@ -76,7 +76,7 @@ export interface MakeLlmDecisionScoreAnswerConfig {
   /**
    * The mass on the nearest level, 0 to 1; absent ⇒ {@link DEFAULT_LLM_DECISION_SCORE_ANSWER_CONFIDENCE}.
    */
-  readonly confidence?: Maybe<number>;
+  readonly confidence?: Maybe<PercentDecimal>;
 }
 
 /**
@@ -114,6 +114,6 @@ export function makeLlmDecisionScoreAnswer(config: MakeLlmDecisionScoreAnswerCon
  * const answer = makeLlmDecisionNoulAnswer(0.3); // { type: 'noul', noul: 0.3 }
  * ```
  */
-export function makeLlmDecisionNoulAnswer(noul: number): LlmDecisionNoulAnswer {
+export function makeLlmDecisionNoulAnswer(noul: PercentDecimal): LlmDecisionNoulAnswer {
   return { type: 'noul', noul };
 }

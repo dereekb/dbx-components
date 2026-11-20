@@ -11,7 +11,7 @@ import { DEFAULT_LLM_CRAFT_SITE_LIMITS, makeLlmCraftSiteRegistry } from './llm.c
 const SITES = makeLlmCraftSiteRegistry({
   sites: {
     'product-page': { facts: { category: 'closed', brand: 'open', bundle: 'boolean' }, inputs: ['brief', 'notes'] },
-    'support-reply': { facts: { channel: 'closed', tags: 'open' }, inputs: ['message'], limits: { maxBytes: 2400, judgeMax: 1 } },
+    'support-reply': { facts: { channel: 'closed', tags: 'open' }, inputs: ['message'], limits: { maxChars: 2400, judgeMax: 1 } },
     'release-notes': { facts: { audience: 'closed' }, inputs: ['summary'] }
   }
 });
@@ -143,8 +143,8 @@ describe('selectLlmCraftNotes()', () => {
     expect(reply.cut.map((cut) => `${cut.note.id}:${cut.reason}`)).toEqual(['r2:judge-cap']);
   });
 
-  it('caps the notes and the bytes, skipping a note that does not fit and never truncating one', () => {
-    const budget = DEFAULT_LLM_CRAFT_SITE_LIMITS.maxBytes;
+  it('caps the notes and the characters, skipping a note that does not fit and never truncating one', () => {
+    const budget = DEFAULT_LLM_CRAFT_SITE_LIMITS.maxChars;
     const big = note('a-big', { priority: 8, body: 'x'.repeat(budget - 10) });
     const tooBig = note('b-too-big', { priority: 7, body: 'y'.repeat(20) });
     const fits = note('c-fits', { priority: 6, body: 'z'.repeat(10) });
@@ -155,7 +155,7 @@ describe('selectLlmCraftNotes()', () => {
     expect(DEFAULT_LLM_CRAFT_SITE_LIMITS.maxNotes).toBe(4);
   });
 
-  it("reads a site's own maxBytes", () => {
+  it("reads a site's own maxChars", () => {
     const reply = (id: string, length: number) => note(id, { sites: ['support-reply'], body: 'r'.repeat(length) });
     const selection = selectLlmCraftNotes({ notes: [reply('a', 2000), reply('b', 500)], site: { kind: 'support-reply' }, sites: SITES });
 

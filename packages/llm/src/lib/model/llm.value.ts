@@ -30,6 +30,22 @@ export type LlmStrategyId = string;
 export type LlmModelId = string;
 
 /**
+ * A count of model tokens: prompt, completion, reasoning or cached tokens, or a cap on them.
+ *
+ * @semanticType
+ * @semanticTopic numeric
+ */
+export type LlmTokenCount = number;
+
+/**
+ * A provider's id for one generation (completion), the key a bill reader looks a call up by.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ */
+export type LlmGenerationId = string;
+
+/**
  * A named model tier key: the config handle a capability or prompt routes to instead of a raw {@link LlmModelId}
  * slug (`tier: 'strong'`). An open set: a host declares any number of keys (`fast`, `strong`, `cheap`, `vision`, …)
  * and maps each to a model. Tiers are resolved to a concrete slug above the transport, so a strategy always
