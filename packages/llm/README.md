@@ -28,7 +28,7 @@ The root, `/decision`, `/craft`, `/openai`, `/openrouter` and `/zenmux` entries 
 - They import no `node:` module or Node builtin and never read `process`. Hosts pass configuration (API keys, base
   URLs, model lists) in; nothing is read from the environment. Reading the environment or the file system is the job
   of `/node`.
-- No core module imports craft (an isolation spec pins it), so a host that never imports `/craft` never loads it.
+- No core module imports craft (lint pins it), so a host that never imports `/craft` never loads it.
 - A browser network failure (Chromium's `Failed to fetch`, Firefox's `NetworkError when attempting to fetch
   resource.`, Safari's `Load failed`) is classified like undici's `fetch failed`: transient.
 - `openai` is the only SDK peer, and it is **optional**: it is loaded lazily from `/openai`'s single boundary module,
@@ -36,7 +36,7 @@ The root, `/decision`, `/craft`, `/openai`, `/openrouter` and `/zenmux` entries 
   of its own: its chat strategy reaches `openai` by importing `/openai`, and its decision strategy is a plain `fetch`
   over the core System One transport.
 - The browser entries have one sibling edge, `/openrouter` → `/openai`, and it is one-way: `/openai` imports no other
-  provider entry. The isolation specs pin both directions.
+  provider entry. Lint pins both directions.
 - The required peers are `@dereekb/util` (its `/fetch` entry included), `@dereekb/model` (the JSON-Schema export;
   framework-free and browser-safe) and `arktype`.
 - Every network read takes `@dereekb/util/fetch`'s `ConfiguredFetch` (default: the global `fetch`, read at call time,
@@ -44,10 +44,15 @@ The root, `/decision`, `/craft`, `/openai`, `/openrouter` and `/zenmux` entries 
 
 These rules are enforced, not just documented:
 
-- Each entry has an `*.isolation.spec.ts` that scans its own source for `node:` imports, `process` reads and SDK
-  imports outside the boundary module, and loads the entry with the SDKs mocked to prove neither is evaluated. No
-  entry may import `@dereekb/openrouter`.
-- The browser entries compile with `types: []`, so a Node API or `process` reference fails the build's typecheck.
+- Lint: `llmEntryBoundaryConfig` in `packages/llm/eslint.config.mjs`, applied per entry. Node builtins are banned by
+  `import-x/no-nodejs-modules` and `process` by `no-restricted-globals` in every browser entry's sources; the `openai`
+  SDK is legal only in `/openai`'s boundary module, and there only as `import type` or a lazy `import()`; no entry
+  (specs included) imports `@dereekb/openrouter`; each entry carries its own sibling and `/decision` rules; no library
+  source imports a test runner; and craft is a leaf (no core module imports it).
+- One runtime spec per entry (`*.isolation.spec.ts`) loads it with the SDK ids watched and fails if either is
+  evaluated (`itShouldLoadWithoutEvaluating` from `@dereekb/util/test`).
+- The browser entries compile with `types: []`, so a Node API or `process` reference fails the build's typecheck;
+  `/test` compiles with `types: ["node"]`, so a vitest global in its sources fails its typecheck.
 
 ## Strategy contract
 

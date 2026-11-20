@@ -1,98 +1,11 @@
-import { readdirSync, readFileSync } from 'node:fs';
-import { join, sep } from 'node:path';
-import { describe, expect, it, vi } from 'vitest';
+import { describe } from 'vitest';
+import { itShouldLoadWithoutEvaluating } from '@dereekb/util/test';
 
 /**
- * Isolation guards for `@dereekb/llm/node`.
+ * The runtime half of the `@dereekb/llm/node` entry boundary: loading the entry evaluates no SDK.
  *
- * Copied per entry from `packages/openrouter/src/decision.spec.ts`. Every project of the family guards its OWN `src`:
- * Nx file inputs are per project, so a scan of another project's folder would be replayed from cache after a change there.
- *
- * Whether an SDK was evaluated. The entries load SDKs lazily (if at all), so the probe mocks the SDK ids themselves:
- * importing an entry must never evaluate an optional peer.
+ * The static half is lint (`llmEntryBoundaryConfig` in `../eslint.config.mjs`).
  */
-const probe = vi.hoisted(() => ({ openai: false, openRouterSdk: false }));
-
-vi.mock('openai', () => {
-  probe.openai = true;
-  return {};
-});
-
-vi.mock('@openrouter/sdk', () => {
-  probe.openRouterSdk = true;
-  return {};
-});
-
-const SRC_DIR = import.meta.dirname;
-const SPECIFIER_REGEX = /(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s+|\brequire\s*\(\s*)(['"])([^'"\n]+)\1/g;
-
-interface ScannedFile {
-  /**
-   * Path relative to `SRC_DIR`, `/`-separated.
-   */
-  readonly path: string;
-  /**
-   * The file's code with comments stripped.
-   */
-  readonly code: string;
-}
-
-function stripComments(code: string): string {
-  return code.replaceAll(/\/\*[\s\S]*?\*\//g, '').replaceAll(/(^|[^:])\/\/.*$/gm, '$1');
-}
-
-function scanSrc(includeSpecs: boolean): ScannedFile[] {
-  return readdirSync(SRC_DIR, { recursive: true, encoding: 'utf8' })
-    .filter((path) => path.endsWith('.ts') && !path.endsWith('.d.ts') && (includeSpecs || !path.endsWith('.spec.ts')))
-    .sort()
-    .map((path) => ({ path: path.split(sep).join('/'), code: stripComments(readFileSync(join(SRC_DIR, path), 'utf8')) }));
-}
-
-function importersOf(files: ScannedFile[], isMatch: (specifier: string) => boolean): string[] {
-  return files.filter((file) => Array.from(file.code.matchAll(SPECIFIER_REGEX), (match) => match[2]).some(isMatch)).map((file) => file.path);
-}
-
-function isPackage(name: string): (specifier: string) => boolean {
-  return (specifier) => specifier === name || specifier.startsWith(`${name}/`);
-}
-
-describe('@dereekb/llm/node isolation', () => {
-  const sources = scanSrc(false);
-
-  it('should scan the entry module', () => {
-    expect(sources.map((file) => file.path)).toEqual(expect.arrayContaining(['index.ts']));
-  });
-
-  // The first import transforms this entry and the whole @dereekb/llm root entry from source, which can outrun the 5s default under a parallel run.
-  it('should load without evaluating an SDK', { timeout: 30_000 }, async () => {
-    await import('./index');
-    expect(probe).toEqual({ openai: false, openRouterSdk: false });
-  });
-
-  it('should import no openai', () => {
-    expect(importersOf(sources, isPackage('openai'))).toEqual([]);
-  });
-
-  it('should import no @openrouter/sdk', () => {
-    expect(importersOf(sources, isPackage('@openrouter/sdk'))).toEqual([]);
-  });
-
-  it('should never import @dereekb/openrouter, specs included', () => {
-    expect(importersOf(scanSrc(true), isPackage('@dereekb/openrouter'))).toEqual([]);
-  });
-
-  it('should import decision symbols from @dereekb/llm, never the /decision subpath', () => {
-    expect(importersOf(sources, isPackage('@dereekb/llm/decision'))).toEqual([]);
-  });
-
-  it('should import no sibling entry, specs included', () => {
-    // llm-node:build-base has no edge to a sibling entry's build, so such an import would race the build.
-    // `@dereekb/llm/craft` is not a sibling: it is an input of llm:build-base (which llm-node already depends on), so it races no build.
-    const siblings = ['@dereekb/llm/openai', '@dereekb/llm/openrouter', '@dereekb/llm/zenmux', '@dereekb/llm/test'];
-    expect(importersOf(scanSrc(true), (specifier) => siblings.some((sibling) => isPackage(sibling)(specifier)))).toEqual([]);
-  });
-
-  it('should import its own modules relatively', () => {
-    expect(importersOf(sources, isPackage('@dereekb/llm/node'))).toEqual([]);
-  });
+describe('@dereekb/llm/node entry', () => {
+  itShouldLoadWithoutEvaluating({ modules: ['openai', '@openrouter/sdk'], load: () => import('./index') });
 });
