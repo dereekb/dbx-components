@@ -13,6 +13,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { makeLlmTapeStrategy, makeScriptedLlmStrategy, type ScriptedLlmReplies, hashLlmTapePrompt } from '@dereekb/llm/test';
 import { defineLlmCapability, type LlmCapabilityDescriptor } from '../capability/llm.capability.descriptor';
 import { type LlmCompiledModelRouting } from '../model/llm.model.routing';
+import { DEFAULT_LLM_PROMPT_LAYOUT } from '../prompt/llm.prompt.layout';
 import { llmModelAddendumPromptContributor } from '../prompt/llm.prompt.model.addendum';
 import { makeLlmPromptChain } from '../prompt/llm.prompt.chain';
 import { type LlmPromptContributor } from '../prompt/llm.prompt.contributor';
@@ -553,6 +554,17 @@ describe('makeLlmDispatcher()', () => {
       expect((requests[2].responseSchemaHint as Record<string, unknown>)['additionalProperties']).toBe(false);
       expect(calls).toHaveLength(3);
       expect(calls[1].segments).toEqual([expect.objectContaining({ id: 'follow-up', promptSegment: 'next item', volatile: true })]);
+    });
+
+    it("should append the layout's follow-up separator after the follow-up content", async () => {
+      const layout = DEFAULT_LLM_PROMPT_LAYOUT.map((slot) => (slot.role === 'follow-up' ? { ...slot, separator: '\n' } : slot));
+      const { calls, recorder } = recording();
+      const { dispatcher, requests } = setup({ replies: ['{"answer":"one"}', '{"answer":"two"}'], recorder, layout });
+      const executed = await dispatcher.preparePrompt(request({ capability: 'StrongCap' })).execute();
+      await executed.followUp({ content: 'next item' }).execute();
+
+      expect(requests[1].prompt).toBe('next item\n');
+      expect(calls[1].segments).toEqual([expect.objectContaining({ id: 'follow-up', promptSegment: 'next item\n', volatile: true })]);
     });
   });
 

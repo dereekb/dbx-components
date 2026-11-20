@@ -10,7 +10,7 @@
  * minutes) and failed ones are COUNTED, never folded as zero, so a half-reconciled run says so.
  */
 
-import { type AbortSignalRef, compareStrings, type DollarAmount, type Maybe } from '@dereekb/util';
+import { type AbortSignalRef, compareStringsByCodeUnit, type DollarAmount, type Maybe } from '@dereekb/util';
 import type { LlmCallLogPayloadBase } from '../record/llm.call.payload';
 import type { LlmCallBillRead, LlmCallBillReader } from '../strategy/llm.call.bill';
 import { llmCostOf } from '../strategy/llm.usage';
@@ -220,7 +220,7 @@ export async function reconcileLlmCallBills(config: ReconcileLlmCallBillsConfig)
     providerId: config.reader.providerId,
     total: { ...total },
     byModel: Array.from(byModel.entries())
-      .sort(([a], [b]) => compareStrings(a, b))
+      .sort(([a], [b]) => compareStringsByCodeUnit(a, b))
       .map(([model, cell]) => ({ model, cell: { ...cell } })),
     pending,
     failed,

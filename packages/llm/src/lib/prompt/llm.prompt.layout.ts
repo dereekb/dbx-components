@@ -38,9 +38,10 @@ export const LLM_PROMPT_SLOT_ROLES = ['model-addendum', 'frame', 'reply-protocol
  * - `context-post` — assembly: the `context` template after the marker, only when non-empty (later markers stay
  *   literal), closed by the slot's separator (`''` in the default layout, so the template's bytes end as written).
  * - `correction` — dispatcher: a retry's correction appended to the sent prompt. The assembly skips it; declaring it
- *   names its segment id and separator.
+ *   names its segment id and the separator appended after the piece (`lastSeparator ?? separator`; the correction
+ *   text keeps its own leading blank line).
  * - `follow-up` — dispatcher: a chained turn's whole message. The assembly skips it; declaring it names its segment id
- *   and separator.
+ *   and the separator appended after the piece (`lastSeparator ?? separator`).
  *
  * Bytes the assembly has for a role the layout does not declare fail loud.
  */
@@ -260,4 +261,37 @@ export function llmPromptSlotOf(layout: LlmPromptLayout, id: LlmPromptSlotId): M
  */
 export function llmPromptSlotsOfRole(layout: LlmPromptLayout, role: LlmPromptSlotRole): ReadonlyArray<LlmPromptSlot> {
   return layout.filter((slot) => slot.role === role);
+}
+
+/**
+ * The layout's first slot of one role, when it declares one.
+ *
+ * @param layout - The layout.
+ * @param role - The role.
+ * @returns The first slot of the role in layout order, or `undefined`.
+ *
+ * @example
+ * ```ts
+ * findLlmPromptSlotByRole(DEFAULT_LLM_PROMPT_LAYOUT, 'correction')?.id; // 'correction'
+ * ```
+ */
+export function findLlmPromptSlotByRole(layout: LlmPromptLayout, role: LlmPromptSlotRole): Maybe<LlmPromptSlot> {
+  return layout.find((slot) => slot.role === role);
+}
+
+/**
+ * The separator closing a piece placed in a slot — the slot's `lastSeparator ?? separator` for its last piece, else
+ * its `separator`.
+ *
+ * @param slot - The slot.
+ * @param last - Whether the piece is the slot's last.
+ * @returns The separator.
+ *
+ * @example
+ * ```ts
+ * readLlmPromptSlotSeparator({ id: 'live', role: 'live', occupancy: 'many', separator: '\n\n', lastSeparator: '' }, true); // ''
+ * ```
+ */
+export function readLlmPromptSlotSeparator(slot: LlmPromptSlot, last: boolean): string {
+  return last ? (slot.lastSeparator ?? slot.separator) : slot.separator;
 }

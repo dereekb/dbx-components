@@ -171,4 +171,18 @@ describe('parseLlmCraftNoteSet()', () => {
     expect(set.notes.map((note) => `${note.id}@${note.source ?? ''}`)).toEqual(['alpha-note@a.md', 'zeta-note@b.md']);
     expect(set.refused.flatMap((refusal) => llmCraftNoteParseErrorLines(refusal.errors, refusal.source))).toEqual(['c.md: id `alpha-note` is already loaded from a.md in the machine tier', 'd.md: line 1: a craft note opens with a `---` frontmatter fence']);
   });
+
+  it('gives a duplicate id to the first file in code-unit source order — an uppercase source before a lowercase one', () => {
+    const set = parseLlmCraftNoteSet({
+      tier: 'machine',
+      sites: SITES,
+      files: [
+        { source: 'a.md', text: noteText(['id: shared-note', 'title: t', 'sites: [release-notes]']) },
+        { source: 'B.md', text: noteText(['id: shared-note', 'title: t', 'sites: [release-notes]']) }
+      ]
+    });
+
+    expect(set.notes.map((note) => `${note.id}@${note.source ?? ''}`)).toEqual(['shared-note@B.md']);
+    expect(set.refused.map((refusal) => refusal.source)).toEqual(['a.md']);
+  });
 });

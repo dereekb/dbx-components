@@ -8,7 +8,7 @@
  * byte-stable.
  */
 
-import { type DollarAmount, type Maybe } from '@dereekb/util';
+import { compareStringsByCodeUnit, type DollarAmount, type Maybe } from '@dereekb/util';
 import { llmCostOf, type LlmUsage } from '../strategy/llm.usage';
 
 /**
@@ -153,7 +153,7 @@ export function accumulateLlmUsageCell<K extends string>(map: Map<K, LlmUsageCel
 
 /**
  * Project a keyed-cell `Map` to a stable, key-sorted array (so renders and goldens are deterministic). Keys compare
- * with `<` / `>`, never a locale.
+ * by UTF-16 code unit (`@dereekb/util` `compareStringsByCodeUnit`), never a locale.
  *
  * @param map - The keyed cells.
  * @returns The sorted array of keyed cells.
@@ -166,24 +166,5 @@ export function accumulateLlmUsageCell<K extends string>(map: Map<K, LlmUsageCel
 export function llmKeyedUsageCellsOf<K extends string>(map: ReadonlyMap<K, LlmUsageCell>): ReadonlyArray<LlmKeyedUsageCell<K>> {
   return Array.from(map.entries())
     .map(([key, cell]) => ({ key, cell }))
-    .sort((a, b) => compareLlmUsageCellKeys(a.key, b.key));
-}
-
-/**
- * Compare two cell keys by code-unit order (`<` / `>`), never a locale.
- *
- * @param a - The first key.
- * @param b - The second key.
- * @returns A negative, zero or positive sort result.
- */
-function compareLlmUsageCellKeys(a: string, b: string): number {
-  let result = 0;
-
-  if (a < b) {
-    result = -1;
-  } else if (a > b) {
-    result = 1;
-  }
-
-  return result;
+    .sort((a, b) => compareStringsByCodeUnit(a.key, b.key));
 }

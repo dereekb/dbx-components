@@ -71,6 +71,16 @@ describe('reconcileLlmCallBills', () => {
     expect(reconciliation.details).toEqual([{ generationId: 'fresh', status: 'pending', detail: 'Not Found' }]);
   });
 
+  it('orders the per-model rows by code unit — an uppercase vendor before a lowercase one', async () => {
+    const { reader } = tableReader({
+      a: { status: 'billed', bill: { generationId: 'a', billed: 0.1, listed: 0.1 } },
+      b: { status: 'billed', bill: { generationId: 'b', billed: 0.1, listed: 0.1 } }
+    });
+    const reconciliation = await reconcileLlmCallBills({ calls: [call('a', 'vendor-a/model', 0.1), call('b', 'Vendor-B/model', 0.1)], reader });
+
+    expect(reconciliation.byModel.map((entry) => entry.model)).toEqual(['Vendor-B/model', 'vendor-a/model']);
+  });
+
   it('counts failed reads apart from pending ones', async () => {
     const { reader } = tableReader({ g: { status: 'failed', generationId: 'g', detail: 'HTTP 403: Invalid API key' } });
     const reconciliation = await reconcileLlmCallBills({ calls: [call('g', 'm', 0.1)], reader });

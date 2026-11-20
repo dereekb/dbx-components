@@ -442,7 +442,10 @@ scopes, prompt handles and chains, a live-context token budget, a cache-prefix w
   Reading, repair, schema projection and the critique policy have their own section, Replies.
 - **Layout.** `LlmPromptLayout` is an ordered array of slots `{ id, role, occupancy, separator, lastSeparator? }`. The
   array is the prompt order; a role only says what fills a slot. `makeLlmPromptLayout` validates one, and
-  `DEFAULT_LLM_PROMPT_LAYOUT` names every slot after its role.
+  `DEFAULT_LLM_PROMPT_LAYOUT` names every slot after its role. The dispatcher's `correction` and `follow-up` roles are
+  declared like any other: the slot names the segment id, and its `lastSeparator ?? separator` is appended after the
+  piece (`''` in the default layout). `findLlmPromptSlotByRole` and `readLlmPromptSlotSeparator` read a layout the same
+  way the assembly does.
 - **Contributors.** An `LlmPromptContributor` reads the request, descriptor, model and templates once per dispatch and
   offers contributions for the slots it declares. `resolveLlmPromptContributions` runs contributors in registry order;
   `assertLlmPromptContributionOccupancy` fails loud on an undeclared slot, an assembly-owned slot or a second
@@ -450,7 +453,9 @@ scopes, prompt handles and chains, a live-context token budget, a cache-prefix w
   capability's blocks at their anchors; `llmPromptSupplementsOf` builds a call record's `supplements` rows.
 - **Live context.** `LlmLiveContextBlock`s are keyed sections (`llmLiveContextBlock`, rows blocks, fact rows).
   `orderLlmLiveContextBlocks` sorts by a sparse rank table with a key tiebreak, so any input order sends the same
-  bytes. `llmChainedFollowUpBody` re-sends only what changed since the thread's last turn.
+  bytes. The tiebreak compares keys by UTF-16 code unit (`@dereekb/util` `compareStringsByCodeUnit`), never the host's
+  locale, so every host sends the same bytes (`Beta` before `alpha`). Craft-note selection, usage rows and the bill
+  reconciliation order by code unit too. `llmChainedFollowUpBody` re-sends only what changed since the thread's last turn.
 - **Templates.** An `LlmPromptTemplateResolver` returns a dispatch's templates per role (`reply-protocol`,
   `instructions`, `context`, the last split at `{{liveContext}}`) with their `source`, plus a by-key lookup for
   contributors. `tieredLlmPromptTemplateResolver` is the library's: tiers lowest first, the last definition of a key
@@ -494,7 +499,8 @@ scopes, prompt handles and chains, a live-context token budget, a cache-prefix w
   key — that moved, or the first one appended. It keeps digests, never prompt bytes.
 - **Library contributors.** `llmModelAddendumPromptContributor({ promptAddendumByModel })` places the resolved model's
   `promptAddendum` (from `llmModelPromptAddenda(config)`) in the `model-addendum` slot; `llmModelAddendumSegment` mints
-  the same segment, and `restampLlmModelAddendum` swaps a captured prompt's addendum for another model's.
+  the same segment, and `restampLlmModelAddendum` swaps a captured prompt's addendum for another model's, placing it
+  where the layout puts the addendum slot (before the first captured segment whose slot comes later, else last).
   `llmAnchoredBlockPromptContributor({ id, reason, blockOf })` places one block a scope supplied among the capability's
   live blocks, at its anchor. The craft contributor has its own section, [Craft notes](#craft-notes).
 

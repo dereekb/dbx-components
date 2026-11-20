@@ -14,7 +14,7 @@
  * builds on {@link llmChainedFollowUpBody} and {@link mergeLlmChainedFollowUpBase}.
  */
 
-import { compareStrings, isNotBlankString, joinStrings, type Maybe } from '@dereekb/util';
+import { compareStringsByCodeUnit, isNotBlankString, joinStrings, type Maybe } from '@dereekb/util';
 
 /**
  * ONE keyed section of a capability's live context.
@@ -254,7 +254,8 @@ export type LlmLiveContextBlockOrder = Readonly<Record<string, number>>;
  * Ties are broken by key NAME rather than by input position, so the result is a TOTAL order and therefore invariant
  * under any permutation of the input — two valid compositions of the same block set can never produce different
  * request bytes. (Block keys are unique within one live context, so `(rank, key)` is total.) The key comparison is
- * `@dereekb/util` `compareStrings` (`localeCompare` without a locale argument).
+ * `@dereekb/util` `compareStringsByCodeUnit` (UTF-16 code-unit order, never the host's locale), so the bytes are the
+ * same on every host: `Beta` sorts before `alpha`.
  *
  * @param blocks - The blocks, in whatever order the capability assembled them.
  * @param order - The sparse key → rank table.
@@ -268,7 +269,7 @@ export type LlmLiveContextBlockOrder = Readonly<Record<string, number>>;
  */
 export function orderLlmLiveContextBlocks<T extends Pick<LlmLiveContextBlock, 'key'>>(blocks: ReadonlyArray<T>, order: LlmLiveContextBlockOrder, defaultOrder: number): ReadonlyArray<T> {
   const rankOf = (block: T): number => order[block.key] ?? defaultOrder;
-  return blocks.toSorted((a, b) => rankOf(a) - rankOf(b) || compareStrings(a.key, b.key));
+  return blocks.toSorted((a, b) => rankOf(a) - rankOf(b) || compareStringsByCodeUnit(a.key, b.key));
 }
 
 /**

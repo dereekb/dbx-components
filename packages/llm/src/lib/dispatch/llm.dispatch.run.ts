@@ -147,6 +147,11 @@ export interface LlmDispatchAttemptsConfig {
    */
   readonly correctionSlotId: LlmPromptSlotId;
   /**
+   * The separator appended after a correction — the layout's `correction` slot's `lastSeparator ?? separator` (`''`
+   * when the layout declares none).
+   */
+  readonly correctionSeparator: string;
+  /**
    * The wait before a transport resend (the host's, else `llmTransportBackoffMs`).
    */
   readonly transportBackoff: LlmDispatchTransportBackoff;
@@ -681,7 +686,7 @@ async function sendLlmDispatchLoopAttempt(config: LlmDispatchAttemptsConfig, loo
 
   if (nextCorrection != null) {
     loop.sentCorrection = llmDispatchCorrectionTextOf({ ...nextCorrection, protocol, texts: loop.texts });
-    request = withLlmDispatchCorrection(baseRequest, { text: loop.sentCorrection, kind: nextCorrection.kind, protocol, attempt, slotId: config.correctionSlotId });
+    request = withLlmDispatchCorrection(baseRequest, { text: loop.sentCorrection, kind: nextCorrection.kind, protocol, attempt, slotId: config.correctionSlotId, separator: config.correctionSeparator });
   }
 
   loop.request = ladder.apply(request);

@@ -8,7 +8,7 @@
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { compareStrings, errorMessageOf, type Maybe } from '@dereekb/util';
+import { compareStringsByCodeUnit, errorMessageOf, type Maybe } from '@dereekb/util';
 import { llmCraftNoteParseErrorLines, parseLlmCraftNoteSet, type LlmCraftNoteFile, type LlmCraftNoteSet, type LlmCraftNoteTier, type LlmCraftSiteRegistry, type LlmSwallowSink } from '@dereekb/llm';
 import { DEFAULT_LLM_ENV_NAMES, firstLlmEnvEntry, type LlmEnvNames, type LlmEnvView } from './llm.node.env';
 
@@ -58,8 +58,9 @@ export function resolveLlmCraftNotesDir(config: ResolveLlmCraftNotesDirConfig): 
 }
 
 /**
- * The note files in a craft folder (`*.md`, its README excepted, not recursive), sorted by name. An absent folder, or
- * a path that is not a folder, reads as none. Synchronous: hosts read at boot.
+ * The note files in a craft folder (`*.md`, its README excepted, not recursive), sorted by name in code-unit order
+ * (never the host's locale). An absent folder, or a path that is not a folder, reads as none. Synchronous: hosts read
+ * at boot.
  *
  * @param dir - The folder.
  * @returns The files.
@@ -69,7 +70,7 @@ export function readLlmCraftNoteFiles(dir: string): ReadonlyArray<LlmCraftNoteFi
   return isDir
     ? readdirSync(dir)
         .filter((name) => name.endsWith('.md') && name !== LLM_CRAFT_NOTES_README)
-        .sort(compareStrings)
+        .sort(compareStringsByCodeUnit)
         .map((name) => ({ source: name, text: readFileSync(join(dir, name), 'utf8') }))
     : [];
 }

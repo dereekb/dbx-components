@@ -17,7 +17,7 @@ import { type LlmCallContext, noopLlmCallContext } from '../record/llm.call.cont
 import { type LlmReplyProtocol, resolveLlmReplyProtocol } from '../reply/llm.reply.protocol';
 import { renderLlmOutputContract, DEFAULT_LLM_OUTPUT_CONTRACT_FOOTER, DEFAULT_LLM_OUTPUT_CONTRACT_INTRO } from './llm.prompt.contract';
 import { assertLlmPromptContributionOccupancy, type LlmPromptContribution, type LlmPromptContributionCut, type LlmPromptContributor, llmPromptContributionsInSlot, mergeLlmLiveContextContributions, resolveLlmPromptContributions } from './llm.prompt.contributor';
-import { DEFAULT_LLM_PROMPT_LAYOUT, type LlmPromptLayout, type LlmPromptSlot, type LlmPromptSlotRole, llmPromptSlotsOfRole } from './llm.prompt.layout';
+import { DEFAULT_LLM_PROMPT_LAYOUT, findLlmPromptSlotByRole, type LlmPromptLayout, type LlmPromptSlot, type LlmPromptSlotRole, llmPromptSlotsOfRole, readLlmPromptSlotSeparator } from './llm.prompt.layout';
 import { type LlmLiveContextBlock, type LlmLiveContextInput, toLlmLiveContextBlocks } from './llm.prompt.live.context';
 import { joinLlmPromptSegments, type LlmPromptCacheSegments, llmPromptCacheSegmentsOf, type LlmPromptSegment, type LlmPromptSegmentOrigin } from './llm.prompt.segment';
 import { LLM_PROMPT_LIVE_CONTEXT_MARKER, type LlmPromptTemplateResolver, type LlmResolvedPromptTemplate, type LlmResolvedPromptTemplates } from './llm.prompt.template';
@@ -309,24 +309,13 @@ const LLM_PROMPT_EMPTY_LIVE_REASON = 'the capability rendered an empty live cont
  * @throws {Error} When the layout declares no live slot.
  */
 function llmPromptLiveSlotOf(layout: LlmPromptLayout): LlmPromptSlot {
-  const slot = llmPromptSlotsOfRole(layout, 'live')[0];
+  const slot = findLlmPromptSlotByRole(layout, 'live');
 
   if (slot == null) {
     throw new Error(`${LLM_PROMPT_ASSEMBLY_ERROR_PREFIX} the layout declares no live slot.`);
   }
 
   return slot;
-}
-
-/**
- * The separator closing a piece in a slot.
- *
- * @param slot - The slot.
- * @param last - Whether the piece is the slot's last.
- * @returns The separator.
- */
-function llmPromptSlotSeparatorOf(slot: LlmPromptSlot, last: boolean): string {
-  return last ? (slot.lastSeparator ?? slot.separator) : slot.separator;
 }
 
 /**
@@ -482,7 +471,7 @@ function llmPromptLiveSegmentsOf(slot: LlmPromptSlot, capability: LlmCapabilityK
       const forced = allStable && last;
       const reason = forced ? LLM_PROMPT_FORCED_VOLATILE_REASON : block.reason;
       const origin: LlmPromptLiveContextSegmentOrigin = { kind: 'live-context', capability, block: block.key };
-      return { id: slot.id, promptSegment: block.text + llmPromptSlotSeparatorOf(slot, last), origin, key: block.key, ...(reason == null ? {} : { reason }), volatile: forced || block.volatile !== false };
+      return { id: slot.id, promptSegment: block.text + readLlmPromptSlotSeparator(slot, last), origin, key: block.key, ...(reason == null ? {} : { reason }), volatile: forced || block.volatile !== false };
     });
   }
 
@@ -499,7 +488,7 @@ function llmPromptLiveSegmentsOf(slot: LlmPromptSlot, capability: LlmCapabilityK
 function llmPromptContributionSegmentsOf(slot: LlmPromptSlot, contributions: ReadonlyArray<LlmPromptContribution>): ReadonlyArray<LlmPromptSegment> {
   return contributions.map((contribution, index) => ({
     id: contribution.id,
-    promptSegment: contribution.text + llmPromptSlotSeparatorOf(slot, index === contributions.length - 1),
+    promptSegment: contribution.text + readLlmPromptSlotSeparator(slot, index === contributions.length - 1),
     origin: contribution.origin,
     ...(contribution.key == null ? {} : { key: contribution.key }),
     reason: contribution.reason,
@@ -515,7 +504,7 @@ function llmPromptContributionSegmentsOf(slot: LlmPromptSlot, contributions: Rea
  * @returns The piece's segment, or none.
  */
 function llmPromptPieceSegmentsOf(slot: LlmPromptSlot, piece: Maybe<LlmPromptAssemblyPiece>): ReadonlyArray<LlmPromptSegment> {
-  return piece == null ? [] : [{ id: slot.id, promptSegment: piece.raw === true ? piece.text : piece.text + llmPromptSlotSeparatorOf(slot, true), origin: piece.origin, ...(piece.key == null ? {} : { key: piece.key }), reason: piece.reason }];
+  return piece == null ? [] : [{ id: slot.id, promptSegment: piece.raw === true ? piece.text : piece.text + readLlmPromptSlotSeparator(slot, true), origin: piece.origin, ...(piece.key == null ? {} : { key: piece.key }), reason: piece.reason }];
 }
 
 /**

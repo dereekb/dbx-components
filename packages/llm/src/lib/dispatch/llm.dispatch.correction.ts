@@ -194,6 +194,11 @@ export interface WithLlmDispatchCorrectionConfig {
    * The layout's `correction` slot id.
    */
   readonly slotId: LlmPromptSlotId;
+  /**
+   * The separator appended after the correction text — the layout's `correction` slot's `lastSeparator ?? separator`,
+   * `''` when the layout declares no such slot.
+   */
+  readonly separator: string;
 }
 
 /**
@@ -202,14 +207,16 @@ export interface WithLlmDispatchCorrectionConfig {
  *
  * A segment-bearing request gets the block as its own trailing `volatile` segment and re-derives `prompt` (and the
  * cache split, ONLY when the base carried one — a follow-up turn has none) from the extended list. A segment-less
- * request falls back to string arithmetic.
+ * request falls back to string arithmetic. Both paths append `text + separator` (the block keeps its own leading blank
+ * line; the default layout's separator is `''`).
  *
  * @param base - The request to correct.
- * @param config - The block, its kind, the protocol, the attempt and the slot id.
+ * @param config - The block, its kind, the protocol, the attempt, the slot id and the slot's separator.
  * @returns A copy of `base` with the correction appended.
  */
 export function withLlmDispatchCorrection(base: LlmRequest, config: WithLlmDispatchCorrectionConfig): LlmRequest {
-  const { text, kind, protocol, attempt, slotId } = config;
+  const { kind, protocol, attempt, slotId } = config;
+  const text = config.text + config.separator;
   let corrected: LlmRequest;
 
   if (base.segments == null) {

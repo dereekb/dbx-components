@@ -13,6 +13,7 @@ import { makeScriptedLlmStrategy, type ScriptedLlmCompletion, type ScriptedLlmRe
 import { defineLlmCapability, type LlmCapabilityDescriptor } from '../capability/llm.capability.descriptor';
 import { type LlmModelTierMap } from '../model/llm.model.tier';
 import { type LlmLiveContextBlock } from '../prompt/llm.prompt.live.context';
+import { DEFAULT_LLM_PROMPT_LAYOUT } from '../prompt/llm.prompt.layout';
 import { llmModelAddendumPromptContributor } from '../prompt/llm.prompt.model.addendum';
 import { DEFAULT_LLM_DEGENERATE_THREAD_PLACEHOLDER } from '../prompt/llm.prompt.thread';
 import { type LlmPromptTemplate, tieredLlmPromptTemplateResolver } from '../prompt/llm.prompt.template';
@@ -845,6 +846,15 @@ describe('makeLlmDispatcher() retry', () => {
       await dispatcher.dispatch(request({ validate: VALID }));
 
       expect(requests[1].prompt).toBe(`${requests[0].prompt}${JSON_CONTRACT_CORRECTION}`);
+    });
+
+    it("should append the layout's correction separator after the correction", async () => {
+      const layout = DEFAULT_LLM_PROMPT_LAYOUT.map((slot) => (slot.role === 'correction' ? { ...slot, separator: '\n' } : slot));
+      const { dispatcher, requests } = setup({ replies: [INVALID, OK], layout });
+      await dispatcher.dispatch(request({ validate: VALID }));
+
+      expect(requests[1].prompt).toBe(`${requests[0].prompt}${JSON_CONTRACT_CORRECTION}\n`);
+      expect(requests[1].segments?.at(-1)).toEqual(expect.objectContaining({ id: 'correction', promptSegment: `${JSON_CONTRACT_CORRECTION}\n` }));
     });
 
     it('should append the line contract correction', async () => {

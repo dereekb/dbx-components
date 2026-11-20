@@ -16,7 +16,7 @@
  * asking set) and {@link settleLlmCraftNotes} (the verdicts, then the budget).
  */
 
-import { compareStrings, type Maybe } from '@dereekb/util';
+import { compareStringsByCodeUnit, type Maybe } from '@dereekb/util';
 import { type LlmPromptSite, type LlmPromptSiteFactValue, type LlmPromptSiteJudgeVerdicts } from '../prompt/llm.prompt.site';
 import { type LlmCraftNoteId, type LlmCraftSiteKind } from './llm.craft.identity';
 import { type LlmCraftNote, type LlmCraftNoteCutReason, type LlmCraftNoteSelectedBy } from './llm.craft.note';
@@ -43,7 +43,7 @@ export function mergeLlmCraftNoteTiers(tiers: LlmCraftNoteTiers): ReadonlyArray<
 
   return Array.from(byId.values())
     .filter((note) => note.enabled)
-    .sort((a, b) => compareStrings(a.id, b.id));
+    .sort((a, b) => compareStringsByCodeUnit(a.id, b.id));
 }
 
 /**
@@ -75,7 +75,7 @@ export function llmCraftNoteMatchesSite(note: LlmCraftNote, site: LlmPromptSite)
  * @returns The comparison.
  */
 export function compareLlmCraftNotes(a: LlmCraftNote, b: LlmCraftNote): number {
-  return b.priority - a.priority || Object.keys(b.where).length - Object.keys(a.where).length || compareStrings(a.id, b.id);
+  return b.priority - a.priority || Object.keys(b.where).length - Object.keys(a.where).length || compareStringsByCodeUnit(a.id, b.id);
 }
 
 /**

@@ -109,4 +109,20 @@ describe('restampLlmModelAddendum()', () => {
     const restamped = restampLlmModelAddendum({ segments: captured, model: 'new/slug', promptAddendum: 'NEW', slot: 'addendum', layout });
     expect(restamped.map((segment) => `${segment.id}:${segment.promptSegment}`)).toEqual(['addendum:NEW\n\n', 'reply-protocol:A\n\n']);
   });
+
+  it('places the addendum where the layout puts its slot — after a frame slot that precedes it', () => {
+    const layout: LlmPromptLayout = [{ id: 'frame', role: 'frame', occupancy: 'single', separator: '\n\n' }, ...DEFAULT_LLM_PROMPT_LAYOUT];
+    const frame: LlmPromptSegment = { id: 'frame', promptSegment: 'FRAME\n\n', origin: { kind: 'generated' } };
+    const captured = [frame, llmModelAddendumSegment({ model: 'old/slug', promptAddendum: 'OLD', layout }), body];
+    const restamped = restampLlmModelAddendum({ segments: captured, model: 'new/slug', promptAddendum: 'NEW', layout });
+    expect(restamped.map((segment) => `${segment.id}:${segment.promptSegment}`)).toEqual(['frame:FRAME\n\n', 'model-addendum:NEW\n\n', 'reply-protocol:A\n\n']);
+  });
+
+  it('never anchors on an undeclared segment id, and appends when no later slot is captured', () => {
+    const layout: LlmPromptLayout = [{ id: 'frame', role: 'frame', occupancy: 'single', separator: '\n\n' }, ...DEFAULT_LLM_PROMPT_LAYOUT];
+    const frame: LlmPromptSegment = { id: 'frame', promptSegment: 'FRAME\n\n', origin: { kind: 'generated' } };
+    const stray: LlmPromptSegment = { id: 'stray', promptSegment: 'STRAY', origin: { kind: 'generated' } };
+    const restamped = restampLlmModelAddendum({ segments: [stray, frame], model: 'new/slug', promptAddendum: 'NEW', layout });
+    expect(restamped.map((segment) => segment.id)).toEqual(['stray', 'frame', 'model-addendum']);
+  });
 });

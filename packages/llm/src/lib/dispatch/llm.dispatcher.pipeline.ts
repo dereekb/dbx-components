@@ -10,7 +10,7 @@ import { type Maybe, mergeObjects } from '@dereekb/util';
 import { type LlmCapabilityDescriptor } from '../capability/llm.capability.descriptor';
 import { llmCapabilityVisionOf, LLM_REASONING_OFF } from '../model/llm.model.precedence';
 import { resolveLlmDefaultModelTierKey, resolveLlmModelTier } from '../model/llm.model.tier';
-import { DEFAULT_LLM_PROMPT_LAYOUT, type LlmPromptSlotRole, llmPromptSlotsOfRole, type LlmPromptLayout, type LlmPromptSlotId } from '../prompt/llm.prompt.layout';
+import { DEFAULT_LLM_PROMPT_LAYOUT, findLlmPromptSlotByRole, readLlmPromptSlotSeparator } from '../prompt/llm.prompt.layout';
 import { makeLlmPromptCachePrefixWatch } from '../prompt/llm.prompt.cache.watch';
 import { type LlmPromptRunParams, type LlmPromptRunResult, makeLlmPromptFactory } from '../prompt/llm.prompt.thread';
 import { type LlmCallContext } from '../record/llm.call.context';
@@ -31,18 +31,6 @@ import { llmDispatchStrategySelectorOf, type LlmDispatchResolveSetup, resolveLlm
 import { type LlmDispatchAttemptsConfig, llmDispatchMaxAttemptsOf, runLlmDispatchAttempts, runSingleShotLlmDispatch } from './llm.dispatch.run';
 import { type LlmDispatcher } from './llm.dispatcher';
 import { type LlmDispatcherConfig, type LlmDispatchGap, type LlmDispatchLaneRequest } from './llm.dispatcher.config';
-
-/**
- * The id of a layout's first slot of `role`, else `fallback`.
- *
- * @param layout - The layout.
- * @param role - The slot role.
- * @param fallback - The id when the layout declares no such slot.
- * @returns The slot id.
- */
-function llmPromptSlotIdOfRole(layout: LlmPromptLayout, role: LlmPromptSlotRole, fallback: LlmPromptSlotId): LlmPromptSlotId {
-  return llmPromptSlotsOfRole(layout, role)[0]?.id ?? fallback;
-}
 
 /**
  * Build the library dispatcher.
@@ -103,6 +91,7 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
     defaultMaxOutputTokens: config.defaultMaxOutputTokens,
     reasoningDefault: config.reasoningDefault ?? LLM_REASONING_OFF
   };
+  const followUpSlot = findLlmPromptSlotByRole(layout, 'follow-up');
   const composeSetup: LlmDispatchComposeSetup<R, D> = {
     descriptorOf,
     templateResolver: config.templateResolver,
@@ -110,14 +99,17 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
     contributors: config.contributors,
     texts: config.texts,
     defaultReplyProtocol: config.defaultReplyProtocol,
-    followUpSlotId: llmPromptSlotIdOfRole(layout, 'follow-up', 'follow-up'),
-    modelAddendumSlotId: llmPromptSlotIdOfRole(layout, 'model-addendum', 'model-addendum'),
+    followUpSlotId: followUpSlot?.id ?? 'follow-up',
+    followUpSeparator: followUpSlot == null ? '' : readLlmPromptSlotSeparator(followUpSlot, true),
+    modelAddendumSlotId: findLlmPromptSlotByRole(layout, 'model-addendum')?.id ?? 'model-addendum',
     promptCacheWatch: config.promptCacheWatch ?? makeLlmPromptCachePrefixWatch(),
     isRawJsonBlock: config.isRawJsonBlock
   };
   const escalateModel = llmDecodeRetryModelOf({ modelTiers, decodeRetryTier: config.decodeRetryTier });
   const corrections = llmDispatchCorrectionTextsOf(config.correctionTexts);
-  const correctionSlotId = llmPromptSlotIdOfRole(layout, 'correction', 'correction');
+  const correctionSlot = findLlmPromptSlotByRole(layout, 'correction');
+  const correctionSlotId = correctionSlot?.id ?? 'correction';
+  const correctionSeparator = correctionSlot == null ? '' : readLlmPromptSlotSeparator(correctionSlot, true);
   // mergeObjects: an explicit `undefined` override keeps its default (a spread would erase it).
   const fastFixLimits = mergeObjects<LlmReplyFastFixLimits>([DEFAULT_LLM_REPLY_FAST_FIX_LIMITS, config.fastFixLimits]);
   const transportBackoff = config.transportBackoff ?? llmTransportBackoffMs;
@@ -157,7 +149,7 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
     cancellationSignal,
     transportBackoff,
     isRetryableUnknownError: config.isRetryableUnknownError,
-    liveSlotId: llmPromptSlotIdOfRole(layout, 'live', 'live')
+    liveSlotId: findLlmPromptSlotByRole(layout, 'live')?.id ?? 'live'
   });
 
   const runPromptRequest = async (params: LlmPromptRunParams<R>): Promise<LlmPromptRunResult<X>> => {
@@ -209,6 +201,7 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
       fastFixLimits,
       corrections,
       correctionSlotId,
+      correctionSeparator,
       transportBackoff,
       isRetryableUnknownError: config.isRetryableUnknownError
     };

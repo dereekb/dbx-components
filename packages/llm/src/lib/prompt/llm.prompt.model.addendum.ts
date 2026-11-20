@@ -18,7 +18,7 @@ import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { type LlmModelPromptAddendumMap } from '../model/config/llm.model.config.resolve';
 import { type LlmModelId } from '../model/llm.value';
 import { type LlmPromptContribution, type LlmPromptContributor } from './llm.prompt.contributor';
-import { DEFAULT_LLM_PROMPT_LAYOUT, llmPromptSlotOf, type LlmPromptLayout, type LlmPromptSlotId } from './llm.prompt.layout';
+import { DEFAULT_LLM_PROMPT_LAYOUT, llmPromptSlotOf, type LlmPromptLayout, type LlmPromptSlotId, readLlmPromptSlotSeparator } from './llm.prompt.layout';
 import { type LlmPromptSegment, type LlmPromptSegmentOrigin } from './llm.prompt.segment';
 
 /**
@@ -98,7 +98,8 @@ export function llmModelAddendumContribution(config: LlmModelAddendumContributio
  */
 export interface LlmModelAddendumSegmentConfig extends LlmModelAddendumContributionConfig {
   /**
-   * The layout whose addendum slot supplies the separator; nullish ⇒ {@link DEFAULT_LLM_PROMPT_LAYOUT}.
+   * The layout whose addendum slot supplies the separator (and, for {@link restampLlmModelAddendum}, the position);
+   * nullish ⇒ {@link DEFAULT_LLM_PROMPT_LAYOUT}.
    */
   readonly layout?: Maybe<LlmPromptLayout>;
 }
@@ -127,7 +128,7 @@ export function llmModelAddendumSegment(config: LlmModelAddendumSegmentConfig): 
     throw new Error(`llm prompt model addendum: the layout declares no '${slotId}' slot.`);
   }
 
-  return { id: slot.id, promptSegment: promptAddendum + (slot.lastSeparator ?? slot.separator), origin: { kind: 'model', model, setting: 'promptAddendum' }, key: model, reason: LLM_MODEL_ADDENDUM_REASON };
+  return { id: slot.id, promptSegment: promptAddendum + readLlmPromptSlotSeparator(slot, true), origin: { kind: 'model', model, setting: 'promptAddendum' }, key: model, reason: LLM_MODEL_ADDENDUM_REASON };
 }
 
 /**
@@ -186,11 +187,16 @@ export interface RestampLlmModelAddendumConfig extends LlmModelAddendumSegmentCo
 }
 
 /**
- * RESTAMP a captured prompt's addendum for another model — drop every addendum segment the capture carries and lead
- * with the new one, so the addenda are never stacked. The model-lab path: a captured call re-run against another
- * model's candidate addendum measures exactly what landing that addendum in the model config would send. It always
- * leads (the default layout, and any layout that opens with its addendum slot); the caller re-derives the prompt and
- * its cache split with `joinLlmPromptSegments` / `llmPromptCacheSegmentsOf`.
+ * RESTAMP a captured prompt's addendum for another model — drop every segment of the addendum slot the capture carries,
+ * then place the new one where the layout puts that slot, so the addenda are never stacked. The model-lab path: a
+ * captured call re-run against another model's candidate addendum measures exactly what landing that addendum in the
+ * model config would send.
+ *
+ * The new segment goes immediately before the first captured segment whose slot sits AFTER the addendum's slot in the
+ * layout, else last. A segment whose id the layout does not declare never anchors. Under the default layout (and any
+ * layout that opens with its addendum slot) the addendum leads; a layout with a frame slot before it lands the addendum
+ * after the frame. The caller re-derives the prompt and its cache split with `joinLlmPromptSegments` /
+ * `llmPromptCacheSegmentsOf`.
  *
  * @param config - The captured segments, the new slug and addendum, the slot and the layout.
  * @returns The restamped segments.
@@ -204,5 +210,11 @@ export interface RestampLlmModelAddendumConfig extends LlmModelAddendumSegmentCo
  */
 export function restampLlmModelAddendum(config: RestampLlmModelAddendumConfig): ReadonlyArray<LlmPromptSegment> {
   const slotId = config.slot ?? DEFAULT_LLM_MODEL_ADDENDUM_SLOT_ID;
-  return [llmModelAddendumSegment(config), ...config.segments.filter((segment) => segment.id !== slotId)];
+  const layout = config.layout ?? DEFAULT_LLM_PROMPT_LAYOUT;
+  const addendum = llmModelAddendumSegment(config);
+  const slotIndexById = new Map(layout.map((slot, index) => [slot.id, index]));
+  const addendumIndex = slotIndexById.get(slotId) ?? -1;
+  const kept = config.segments.filter((segment) => segment.id !== slotId);
+  const anchor = kept.findIndex((segment) => (slotIndexById.get(segment.id) ?? -1) > addendumIndex);
+  return anchor === -1 ? [...kept, addendum] : [...kept.slice(0, anchor), addendum, ...kept.slice(anchor)];
 }

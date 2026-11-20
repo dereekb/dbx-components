@@ -49,6 +49,18 @@ describe('llmCapabilityCacheRowsOf / renderLlmCacheHitLine', () => {
     expect(rows[1].cacheHitRate).toBe(0);
   });
 
+  it('breaks a tie on the capability key by code unit — the same order llmKeyedUsageCellsOf gives', () => {
+    const byCapability = new Map<string, LlmUsageCell>([
+      ['summarize', CLASSIFY],
+      ['CritiqueReply', CLASSIFY]
+    ]);
+    const keyed = llmKeyedUsageCellsOf(byCapability);
+    const rows = llmCapabilityCacheRowsOf(keyed);
+
+    expect(keyed.map((entry) => entry.key)).toEqual(['CritiqueReply', 'summarize']);
+    expect(rows.map((row) => row.capability)).toEqual(['CritiqueReply', 'summarize']);
+  });
+
   it('renders one shared cache line, marking a partial fold a LOWER bound', () => {
     const total: LlmUsageCell = { calls: 2, promptTokens: 8200, completionTokens: 480, cachedTokens: 6000, reasoningTokens: 100, cost: 0.0011 };
 

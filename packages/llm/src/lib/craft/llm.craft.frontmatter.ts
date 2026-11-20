@@ -10,7 +10,7 @@
  * registry.
  */
 
-import { compareStrings, isNotBlankString, type MarkdownFrontmatterLeaf, type MarkdownFrontmatterMap, type Maybe, parseMarkdownFrontmatter } from '@dereekb/util';
+import { compareStringsByCodeUnit, isNotBlankString, type MarkdownFrontmatterLeaf, type MarkdownFrontmatterMap, type Maybe, parseMarkdownFrontmatter } from '@dereekb/util';
 import { type } from 'arktype';
 import { type LlmPromptSiteFactValue } from '../prompt/llm.prompt.site';
 import { type LlmCraftNoteTier } from './llm.craft.identity';
@@ -364,7 +364,7 @@ export function parseLlmCraftNoteSet(config: ParseLlmCraftNoteSetConfig): LlmCra
   const notes = new Map<string, LlmCraftNote>();
   const refused: LlmCraftNoteRefusal[] = [];
 
-  for (const file of [...config.files].sort((a, b) => compareStrings(a.source, b.source))) {
+  for (const file of [...config.files].sort((a, b) => compareStringsByCodeUnit(a.source, b.source))) {
     const parsed = parseLlmCraftNote({ text: file.text, tier, source: file.source, sites });
 
     if (parsed.errors != null) {
@@ -376,5 +376,5 @@ export function parseLlmCraftNoteSet(config: ParseLlmCraftNoteSetConfig): LlmCra
     }
   }
 
-  return { tier, notes: Array.from(notes.values()).sort((a, b) => compareStrings(a.id, b.id)), refused };
+  return { tier, notes: Array.from(notes.values()).sort((a, b) => compareStringsByCodeUnit(a.id, b.id)), refused };
 }

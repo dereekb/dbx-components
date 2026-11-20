@@ -43,6 +43,11 @@ export interface LlmDispatchComposeSetup<R extends LlmDispatchRequest = LlmDispa
    */
   readonly followUpSlotId: LlmPromptSlotId;
   /**
+   * The separator appended after a follow-up turn's content — the layout's `follow-up` slot's `lastSeparator ??
+   * separator` (`''` when the layout declares none).
+   */
+  readonly followUpSeparator: string;
+  /**
    * The segment id the model addendum lands under — the layout's `model-addendum` slot id.
    */
   readonly modelAddendumSlotId: LlmPromptSlotId;
@@ -293,10 +298,11 @@ function composeLlmFollowUpDispatch<R extends LlmDispatchRequest, D extends LlmC
   const capability = request.capability;
   const responseSchemaHint = followUp.responseSchemaHint == null ? llmDispatchSchemaHintsOf(request, resolved.descriptor, protocol).responseSchemaHint : hardenLlmResponseSchemaHint(followUp.responseSchemaHint);
   const origin = { kind: 'follow-up', capability };
-  const segments: ReadonlyArray<LlmPromptSegment> = [{ id: setup.followUpSlotId, promptSegment: followUp.content, origin, reason: 'a chained follow-up turn over the already-exchanged thread', volatile: true }];
+  const content = followUp.content + setup.followUpSeparator;
+  const segments: ReadonlyArray<LlmPromptSegment> = [{ id: setup.followUpSlotId, promptSegment: content, origin, reason: 'a chained follow-up turn over the already-exchanged thread', volatile: true }];
   const baseRequest: LlmRequest = {
     segments,
-    prompt: followUp.content,
+    prompt: content,
     thread,
     ...llmDispatchWireFieldsOf(request, resolved),
     ...(responseSchemaHint == null ? {} : { responseSchemaHint })

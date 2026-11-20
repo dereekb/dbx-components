@@ -40,6 +40,10 @@ describe('mergeLlmCraftNoteTiers()', () => {
     expect(merged.map((entry) => `${entry.id}:${entry.tier}`)).toEqual(['a:workspace', 'd:workspace']);
   });
 
+  it('orders the merged notes by code unit — an uppercase id before a lowercase one', () => {
+    expect(mergeLlmCraftNoteTiers([[note('b'), note('a'), note('B')]]).map((entry) => entry.id)).toEqual(['B', 'a', 'b']);
+  });
+
   it('lets a higher tier re-enable an id a lower tier tombstoned', () => {
     expect(mergeLlmCraftNoteTiers([undefined, [note('a', { enabled: false })], [note('a', { tier: 'workspace' })]]).map((entry) => entry.tier)).toEqual(['workspace']);
   });
@@ -93,6 +97,13 @@ describe('selectLlmCraftNotes()', () => {
 
     expect(selection.placed.map((placement) => placement.note.id)).toEqual(['y-high', 'z-specific', 'b-plain', 'c-plain']);
     expect(selection.cut.map((cut) => `${cut.note.id}:${cut.reason}`)).toEqual(['a-low:max-notes']);
+  });
+
+  it('breaks a rank tie by code-unit id, so ids differing by case place the same on every host', () => {
+    const notes = [note('b-plain'), note('a-plain'), note('B-plain')];
+    const selection = selectLlmCraftNotes({ notes, site: PAGE, sites: SITES });
+
+    expect(selection.placed.map((placement) => placement.note.id)).toEqual(['B-plain', 'a-plain', 'b-plain']);
   });
 
   it('places a stable note by match; a judged note by its verdict, its floor and its unserved posture', () => {

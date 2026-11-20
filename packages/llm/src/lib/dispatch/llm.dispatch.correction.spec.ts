@@ -45,7 +45,7 @@ describe('withLlmDispatchCorrection()', () => {
     { id: 'S', promptSegment: 'stable\n', origin: { kind: 'template' } },
     { id: 'D', promptSegment: 'live', origin: { kind: 'live-context' }, volatile: true }
   ];
-  const config = { text: '\n\nFIX', kind: 'contract' as const, protocol: 'json' as const, attempt: 2, slotId: 'C' };
+  const config = { text: '\n\nFIX', kind: 'contract' as const, protocol: 'json' as const, attempt: 2, slotId: 'C', separator: '' };
 
   it('should append a volatile correction segment and re-derive the prompt and cache split', () => {
     const base: LlmRequest = { capability: 'c', prompt: joinLlmPromptSegments(segments), segments, cacheSegments: llmPromptCacheSegmentsOf(segments) };
@@ -67,5 +67,20 @@ describe('withLlmDispatchCorrection()', () => {
 
     expect(corrected).toEqual({ capability: 'c', prompt: 'ab\n\nFIX', cacheSegments: { cachePrefix: 'a', volatileSuffix: 'b\n\nFIX' } });
     expect(withLlmDispatchCorrection({ capability: 'c', prompt: 'ab' }, config)).toEqual({ capability: 'c', prompt: 'ab\n\nFIX' });
+  });
+
+  it("should append the correction slot's separator after the text on the segment path", () => {
+    const base: LlmRequest = { capability: 'c', prompt: joinLlmPromptSegments(segments), segments, cacheSegments: llmPromptCacheSegmentsOf(segments) };
+    const corrected = withLlmDispatchCorrection(base, { ...config, separator: '\n' });
+
+    expect(corrected.segments?.[2]?.promptSegment).toBe('\n\nFIX\n');
+    expect(corrected.prompt).toBe('stable\nlive\n\nFIX\n');
+    expect(corrected.cacheSegments).toEqual({ cachePrefix: 'stable\n', volatileSuffix: 'live\n\nFIX\n' });
+  });
+
+  it("should append the correction slot's separator after the text on the segment-less path", () => {
+    const corrected = withLlmDispatchCorrection({ capability: 'c', prompt: 'ab', cacheSegments: { cachePrefix: 'a', volatileSuffix: 'b' } }, { ...config, separator: '\n' });
+
+    expect(corrected).toEqual({ capability: 'c', prompt: 'ab\n\nFIX\n', cacheSegments: { cachePrefix: 'a', volatileSuffix: 'b\n\nFIX\n' } });
   });
 });

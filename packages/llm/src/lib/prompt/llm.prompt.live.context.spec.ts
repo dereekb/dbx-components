@@ -126,6 +126,11 @@ describe('orderLlmLiveContextBlocks()', () => {
     expect(ordered(['footer', 'zeta-unknown', 'alpha-unknown', 'heading'])).toEqual(['heading', 'alpha-unknown', 'zeta-unknown', 'footer']);
   });
 
+  it('should tie-break by code unit, never the host locale — uppercase before lowercase', () => {
+    expect(ordered(['alpha', 'Beta'])).toEqual(['Beta', 'alpha']);
+    expect(ordered(['Beta', 'alpha'])).toEqual(['Beta', 'alpha']);
+  });
+
   it('should preserve the blocks themselves, not just their keys', () => {
     const blocks = [
       { key: 'history', text: 'S' },
