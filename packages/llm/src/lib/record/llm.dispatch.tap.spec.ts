@@ -111,7 +111,7 @@ describe('makeLlmDispatchTapRegistry', () => {
   it('a tap returning a BARE thenable that rejects is tallied once with ITS message (no unhandled rejection)', async () => {
     const registry = makeLlmDispatchTapRegistry();
     const thenable: PromiseLike<void> = {
-      // oxlint-disable-next-line unicorn/no-thenable -- a bare (non-Promise) thenable is exactly what B9 covers
+      // oxlint-disable-next-line unicorn/no-thenable -- a bare (non-Promise) thenable is exactly the case under test
       then: (_onFulfilled, onRejected) => {
         onRejected?.(new Error('bare thenable failed'));
         return Promise.resolve() as never;
@@ -128,7 +128,7 @@ describe('makeLlmDispatchTapRegistry', () => {
   it('a tap returning a BARE thenable that resolves is not a failure', async () => {
     const registry = makeLlmDispatchTapRegistry();
     const thenable: PromiseLike<void> = {
-      // oxlint-disable-next-line unicorn/no-thenable -- a bare (non-Promise) thenable is exactly what B9 covers
+      // oxlint-disable-next-line unicorn/no-thenable -- a bare (non-Promise) thenable is exactly the case under test
       then: (onFulfilled) => {
         onFulfilled?.(undefined);
         return Promise.resolve() as never;

@@ -1,5 +1,5 @@
 /**
- * Decision answer builders — the inverse of {@link readLlmDecisionAnswers}' membership check.
+ * Decision answer builders (test infrastructure) — the inverse of `readLlmDecisionAnswers`' membership check.
  *
  * A hand-written Choice distribution over forty options is unreadable and easy to get subtly wrong, and a malformed one
  * is refused by the reader, which is correct but makes a spec fail for the wrong reason. These builders produce answers
@@ -7,7 +7,7 @@
  */
 
 import { type Maybe, type PercentDecimal } from '@dereekb/util';
-import { type LlmDecisionChoiceAnswer, type LlmDecisionEntry, type LlmDecisionNoulAnswer, type LlmDecisionScoreAnswer, type LlmDecisionScoreLevels } from './llm.decision.question';
+import { type LlmDecisionChoiceAnswer, type LlmDecisionEntry, type LlmDecisionNoulAnswer, type LlmDecisionScoreAnswer, type LlmDecisionScoreLevels } from '@dereekb/llm';
 
 /**
  * The mass {@link makeLlmDecisionChoiceAnswer} puts on the winning option when no confidence is given.

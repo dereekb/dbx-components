@@ -87,7 +87,7 @@ export interface LlmPromptSegment<O extends LlmPromptSegmentOrigin = LlmPromptSe
    */
   readonly origin: O;
   /**
-   * WHY it was admitted — the gate, in one sentence (e.g. `"the capability speaks and the speech block is not
+   * WHY it was admitted — the gate, in one sentence (e.g. `"a glossary was supplied and is not
    * blank"`). The half of provenance a type cannot carry: a reader looking at a prompt that is MISSING a layer
    * needs to know what would have admitted it.
    */
@@ -172,7 +172,7 @@ export function llmPromptSegmentSpans<S extends LlmPromptSegment>(segments: Read
 
 /**
  * Whether an untyped value is an {@link LlmPromptSegment} — the guard a reader of a PERSISTED payload needs (a log
- * record is `unknown`, and a record written before segments existed carries none).
+ * record is `unknown`, and a flat-`prompt` record carries none).
  *
  * Deliberately structural and shallow: it checks the fields every reader dereferences (a string `id`, the
  * `promptSegment` bytes and an `origin.kind`), not the origin's arm. A payload that passes is safe to join and safe

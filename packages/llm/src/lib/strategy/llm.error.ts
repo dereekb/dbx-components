@@ -16,9 +16,8 @@ import { classifyFetchError, DEFAULT_FETCH_ABORT_ERROR_NAMES, type FetchErrorCla
  *
  * WHY BY CLASS, NOT `error.name`: the SDK never assigns `this.name` on ANY of its error classes (the constructors set
  * `status` / `headers` / `requestID` / `code` and nothing else), so every instance inherits `Error.prototype.name ===
- * 'Error'`. Classifying on `.name` matched exactly NONE of them in production, and a connection blip fell through to
- * `throw` and killed whole billed runs — while the specs stayed green, because they hand-fabricated `.name` on a plain
- * `Error`, a shape production never produces.
+ * 'Error'`; classifying on `.name` would match none of them. A spec that hand-fabricates `.name` on a plain `Error`
+ * tests a shape the SDK never produces.
  *
  * WHY NOT `instanceof`: strategies deliberately keep the SDK behind one lazy boundary module (an
  * `await import('openai')` plus an injectable structural client), so a classifier must not statically import it — a
@@ -64,12 +63,11 @@ export function isLlmAbortError(error: unknown): boolean {
  * - `permanent`: HTTP 400–404 — a fact about the request or the credential that resending cannot change;
  * - `unknown`: anything else (409, a plain `Error`, a non-object throw).
  *
- * `classifyLlmError(e) === 'transient'` is exactly the old "abort OR retryable" predicate pair, plus
- * HTTP 408 and the browser network messages.
+ * `classifyLlmError(e) === 'transient'` covers aborts and every retryable class, plus HTTP 408 and the browser network
+ * messages.
  *
  * WHY THIS EXISTS: strategies deliberately set `maxRetries: 0` (the DISPATCHER owns retries), so a transport blip the
- * dispatcher does not classify kills the whole run. A rate-limited batch lost entire billed runs that way, which is
- * how this was found.
+ * dispatcher does not classify kills the whole run.
  *
  * @param error - The thrown value.
  * @returns The classification.

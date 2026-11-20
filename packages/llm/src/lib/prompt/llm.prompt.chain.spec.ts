@@ -32,7 +32,7 @@ function fakeDispatcherOf(reply: string) {
 
 const blocksRequest = (capability: string, blocks: ReadonlyArray<LlmLiveContextBlock>, extra: Partial<LlmDispatchRequest> = {}): LlmDispatchRequest => ({ capability, renderLiveContext: () => blocks, ...extra });
 
-describe('makeLlmPromptChain(); ported', () => {
+describe('makeLlmPromptChain()', () => {
   it('dispatches a fresh root when there is no previous', async () => {
     const { dispatcher, dispatched } = fakeDispatcherOf('root-reply');
     const chain = makeLlmPromptChain();

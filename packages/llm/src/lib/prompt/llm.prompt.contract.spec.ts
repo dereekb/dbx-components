@@ -92,7 +92,7 @@ describe('renderLlmOutputContract()', () => {
   it("should describe an expanded array's item fields, and lead the header with the array's own sentence", () => {
     const items = { type: 'object', properties: { id: { type: 'number', description: 'The id.' } }, required: ['id'] };
     expect(hostRender({ type: 'object', properties: { rows: { type: 'array', items } } })).toBe(`${H}- \`rows\` (object[], optional): an array where each item is an object with:\n    - \`id\` (number, required): The id.${F}`);
-    expect(hostRender({ type: 'object', properties: { rows: { type: 'array', description: 'One row per beat.', items } } })).toBe(`${H}- \`rows\` (object[], optional): One row per beat. Each item is an object with:\n    - \`id\` (number, required): The id.${F}`);
+    expect(hostRender({ type: 'object', properties: { rows: { type: 'array', description: 'One row per item.', items } } })).toBe(`${H}- \`rows\` (object[], optional): One row per item. Each item is an object with:\n    - \`id\` (number, required): The id.${F}`);
   });
 
   it('should expand nested arrays of objects wherever prose waits, at indents 4, 8 and 12', () => {

@@ -101,7 +101,7 @@ describe('makeLlmZenmuxDecisionStrategy()', () => {
     expect(result.provider).toBe('TypeSafe');
   });
 
-  it('reads the RECORDED live reply (2026-10-01, subscription key): typed answers with extra fields, token usage, no cost / id / provider', async () => {
+  it('reads a recorded reply (subscription key): typed answers with extra fields, token usage, no cost / id / provider', async () => {
     const live = {
       model: MODEL,
       answers: {
@@ -123,7 +123,7 @@ describe('makeLlmZenmuxDecisionStrategy()', () => {
     expect(result.provider).toBeUndefined();
   });
 
-  it('reads the generation id off the X-ZenMux-RequestId header: the RECORDED live reply (2026-10-02) carries none in its body', async () => {
+  it('reads the generation id off the X-ZenMux-RequestId header: a recorded reply carries none in its body', async () => {
     const live = { model: MODEL, answers: { is_urgent: { type: 'noul', noul: 0.99 } }, usage: { input_tokens: 278, output_tokens: 20 } };
     const { decisionFetch } = fakeSocket(200, live, { [LLM_ZENMUX_REQUEST_ID_HEADER]: '95acf10d7cc040d9bdbfe5d3b9f5037b' });
     const result = await makeLlmZenmuxDecisionStrategy({ apiKey: 'sk-zen', decisionFetch }).decide({ state: STATE, questions: { is_urgent: QUESTIONS.is_urgent }, model: MODEL });

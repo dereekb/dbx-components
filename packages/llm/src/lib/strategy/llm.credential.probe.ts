@@ -108,7 +108,7 @@ export function llmProviderErrorMessage(read: Pick<FetchJsonTextResult, 'text' |
     } else {
       // Swallow site `llm/credential-probe.error-body`. A body with no message (an HTML error page from a proxy in front of the gateway) is not a fault — the raw text is
       // still the most informative thing available. Health channel: the verdict carries it.
-      // B3: switch to cutStringFunction({ maxLength, maxLengthIncludesEndText: false, endText: '…' }) once feat/llm carries develop's cutString endText fix.
+      // TODO: cut with util cutString once its cutStringFunction keeps a custom endText ({ maxLength, maxLengthIncludesEndText: false, endText: '…' }).
       message = trimmed.length > MAX_PROVIDER_MESSAGE_LENGTH ? `${trimmed.slice(0, MAX_PROVIDER_MESSAGE_LENGTH)}…` : trimmed;
     }
   }

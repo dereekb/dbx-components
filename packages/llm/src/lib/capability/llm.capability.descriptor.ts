@@ -69,8 +69,8 @@ export interface LlmCapabilityDescriptor<T = unknown, H extends object = object>
    */
   readonly frames?: LlmCapabilityFramePolicy;
   /**
-   * The host's own traits — the flags and keys its contributors and its template resolver read (a voice, a
-   * reader-facing flag). The library never reads them.
+   * The host's own traits — the flags and keys its contributors and its template resolver read (a persona key, an
+   * audience flag). The library never reads them.
    */
   readonly traits?: H;
   /**

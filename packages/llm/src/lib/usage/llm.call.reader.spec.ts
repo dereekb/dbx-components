@@ -1,10 +1,8 @@
 /**
  * The call-record readers — `readLlmCallPrompt`, `readLlmCallPromptSegments`, `readLlmCallFailedAttempts`,
- * `formatLlmCallAttempts` and `isDecisionLlmCallRow` — on persisted payloads, legacy flat-prompt payloads, and the
- * in-memory records the dispatcher hands its recorder (a retried and a dropped dispatch).
- *
- * Not ported here: the host's writer object (its envelope columns, correlation ids and call-context factory) stays
- * with the host that owns the log.
+ * `formatLlmCallAttempts` and `isDecisionLlmCallRow` — on persisted payloads, flat-prompt payloads (no segments), and
+ * the in-memory records the dispatcher hands its recorder (a retried and a dropped dispatch). The host's writer object
+ * (its envelope columns, correlation ids and call-context factory) is the host's, and out of scope.
  */
 
 import { type } from 'arktype';
@@ -37,7 +35,7 @@ describe('readLlmCallPrompt()', () => {
     expect(readLlmCallPrompt({ capability: 'summarize', promptSegments: [...segmentsOf('A\n\n'), { id: 'tail', promptSegment: 'B', origin: { kind: 'generated' } }] })).toBe('A\n\nB');
   });
 
-  it('should prefer a legacy flat prompt over segments', () => {
+  it('should prefer a flat prompt over segments', () => {
     expect(readLlmCallPrompt({ capability: 'summarize', prompt: 'FLAT', promptSegments: segmentsOf('SEGMENTED') })).toBe('FLAT');
   });
 
@@ -69,7 +67,7 @@ describe('readLlmCallPromptSegments()', () => {
     expect(readLlmCallPromptSegments({ promptSegments, segments: segmentsOf('R') })).toBe(promptSegments);
   });
 
-  it('should answer undefined for an empty, malformed or legacy flat-only payload', () => {
+  it('should answer undefined for an empty, malformed or flat-only payload', () => {
     expect(readLlmCallPromptSegments({ promptSegments: [] })).toBeUndefined();
     expect(readLlmCallPromptSegments({ promptSegments: [{ id: 'x' }] })).toBeUndefined();
     expect(readLlmCallPromptSegments({ prompt: 'FLAT' })).toBeUndefined();

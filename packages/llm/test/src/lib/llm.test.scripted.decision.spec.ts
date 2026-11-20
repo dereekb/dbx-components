@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { llmChoiceQuestion, LlmDecisionAnswerFaultError, type LlmDecisionRequest, makeLlmDecisionChoiceAnswer, makeLlmDecisionNoulAnswer, llmNoulQuestion } from '@dereekb/llm';
+import { llmChoiceQuestion, LlmDecisionAnswerFaultError, type LlmDecisionRequest, llmNoulQuestion } from '@dereekb/llm';
+import { makeLlmDecisionChoiceAnswer, makeLlmDecisionNoulAnswer } from './llm.test.decision.answer';
 import { makeLlmScriptedDecisionStrategy, LLM_SCRIPTED_DECISION_STRATEGY_ID } from './llm.test.scripted.decision';
 
 describe('makeLlmScriptedDecisionStrategy()', () => {

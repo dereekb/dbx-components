@@ -38,8 +38,8 @@ export interface LlmUsageCell {
    * Summed prompt tokens of calls on a lane with NO prompt cache (the decision lane, `isUncacheableLlmCall`) — a
    * subset of {@link promptTokens}, exactly as {@link cachedTokens} is. They stay in every spend figure but leave every
    * cache-hit DENOMINATOR (`computeLlmCacheablePromptTokens`): a decision call's `0` cached is "not applicable", not a miss.
-   * OMITTED when 0, so a cell with no decision calls (and every persisted cell from before the field existed)
-   * serializes byte-identically; read it with `?? 0`.
+   * OMITTED when 0, so a cell with no decision calls (and a persisted cell without the field) serializes
+   * byte-identically; read it with `?? 0`.
    */
   readonly uncacheablePromptTokens?: LlmTokenCount;
   /**
@@ -89,7 +89,7 @@ export function emptyLlmUsageCell(): LlmUsageCell {
  * Add two usage cells component-wise.
  *
  * `cachedTokens`, `reasoningTokens` and `uncacheablePromptTokens` are read with `?? 0`, so folding a persisted cell
- * written before one of those fields existed can never NaN-poison the running totals. The uncacheable count is omitted
+ * missing one of those fields can never NaN-poison the running totals. The uncacheable count is omitted
  * at 0, so a fold with no decision calls serializes byte-identically.
  *
  * @param a - The first cell.
@@ -117,8 +117,8 @@ export function addLlmUsageCells(a: LlmUsageCell, b: LlmUsageCell): LlmUsageCell
 /**
  * The cell contribution of one call's usage (a call always counts as one, tokens/cost when present).
  *
- * The cost is read through {@link readLlmCost} because the usage comes out of a LOGGED row: a row written before the
- * entry-side coercion can hold a gateway's string cost, which a plain `+` would concatenate.
+ * The cost is read through {@link readLlmCost} because the usage comes out of a LOGGED row: a logged row can hold a
+ * gateway's string cost, which a plain `+` would concatenate.
  *
  * @param usage - The call's usage block (absent on an injected seam).
  * @param uncacheable - Whether the call rode a lane with no prompt cache (`isUncacheableLlmCall`); its prompt tokens

@@ -425,6 +425,9 @@ const LLM_DECISION_STATE_PATH_REGEX = /`([A-Za-z_$][\w$]*((\.[A-Za-z_$][\w$]*)|(
  * or a literal, so a spec may pin that a declaration points at keys its state has, while the transport
  * never refuses one that does not.
  *
+ * A dotted STATE PATH, unlike a craft note's backticked `ask`, which names a flat site input
+ * (`LLM_CRAFT_SITE_INPUT_NAME_PATTERN`): the grammars differ on purpose and are not shared.
+ *
  * @param entry - The entry to read. Objects and arrays are walked.
  * @returns The paths, deduplicated, in the order they first appear.
  */

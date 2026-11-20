@@ -190,7 +190,7 @@ describe('makeLlmZenmuxAdapters()', () => {
       expect(named?.issues[0]?.message).toContain('HOST_ZENMUX_MANAGEMENT_KEY');
     });
 
-    // Ported from the retired registry-free `zenmuxCostBasisFor`: the core resolver is the one cost-basis answer.
+    // The core resolver is the one cost-basis answer.
     it("costs a provider that DECLARES zenmux metering at ZenMux's list basis, whatever its URL", () => {
       expect(resolveLlmProviderAccount({ provider: ZENMUX, adapters: ADAPTERS }).costBasis).toBe('list');
       expect(resolveLlmProviderAccount({ provider: PROXY, adapters: ADAPTERS }).costBasis).toBe('list');

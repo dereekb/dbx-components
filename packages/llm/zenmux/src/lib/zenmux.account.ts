@@ -16,10 +16,9 @@ export const LLM_ZENMUX_HOST = 'zenmux.ai';
 /**
  * What ZenMux's SYNCHRONOUS `usage.cost` is: the pre-discount LIST (origin) amount, not the bill ({@link LlmCostBasis}).
  *
- * Every completion carries it (a numeric string, with `cost_details`). Measured 2026-10-21 against `management/generation`'s
- * `ratingResponses.billAmount` over 406 calls: 14 of 17 slugs billed exactly that figure, and three
- * (`deepseek/deepseek-v4.1-flash`, `google/gemini-3.8-flash`, `google/gemini-4-argon`) billed exactly half
- * (`discountAmount = originAmount / 2`). Every provider metered by ZenMux reports its cost with this basis, so a reader should
+ * Every completion carries it (a numeric string, with `cost_details`). Against `management/generation`'s
+ * `ratingResponses.billAmount`, most slugs bill exactly that figure, and some bill a discount (e.g. half,
+ * `discountAmount = originAmount / 2`). Every provider metered by ZenMux reports its cost with this basis, so a reader should
  * treat the figure as an upper bound instead of a measured bill.
  */
 export const LLM_ZENMUX_SYNC_COST_BASIS: LlmCostBasis = 'list';

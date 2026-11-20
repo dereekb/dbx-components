@@ -31,7 +31,7 @@ export interface HardenLlmResponseSchemaHintConfig {
  * **Why the strip.** `response_format` wants the STRUCTURE; the prose a model reads already rides the output contract
  * (rendered off the described sibling projection, {@link projectLlmContractSchema}), inside the cache prefix, while
  * `response_format` is an API parameter outside it. A grammar-constrained structured-output backend may discard a
- * schema's `description` anyway. A billed A/B found the prose helps in the contract and not in the payload.
+ * schema's `description` anyway, so the prose belongs in the contract, not the payload.
  *
  * IDEMPOTENT (re-hardening an already-hardened hint is a no-op), so a dispatcher can harden a request-supplied hint
  * without knowing whether the caller already did. The source object is untouched, so the result is safely memoizable.

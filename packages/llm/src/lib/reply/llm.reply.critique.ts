@@ -16,8 +16,7 @@ import { type LlmReplyProtocol } from './llm.reply.protocol';
 import { type LlmReplyVerdict } from './llm.reply.validator';
 
 /**
- * The judge capability's key. Unchanged from the source because call records, tapes and censuses key on it; declared
- * here so the critique compile can exclude it without importing a capability.
+ * The judge capability's key. Stable: call records and tapes key on it; declared here so the critique compile can exclude it without importing a capability.
  */
 export const LLM_CRITIQUE_REPLY_CAPABILITY: LlmCapabilityKey = 'CritiqueReply';
 

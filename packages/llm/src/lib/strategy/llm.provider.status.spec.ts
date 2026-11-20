@@ -72,8 +72,8 @@ describe('formatLlmProviderStatusLines', () => {
   });
 
   it('renders a host-defined quota unit as written', () => {
-    const status = statusOf([makeLlmQuotaWindow({ id: 'monthly', label: 'monthly', usedFraction: 0.25, usedUnits: 2500, maxUnits: 10000, unit: 'character' })]);
-    expect(formatLlmProviderStatusLines(status)[0]).toContain('(2500/10000 character)');
+    const status = statusOf([makeLlmQuotaWindow({ id: 'monthly', label: 'monthly', usedFraction: 0.25, usedUnits: 2500, maxUnits: 10000, unit: 'image' })]);
+    expect(formatLlmProviderStatusLines(status)[0]).toContain('(2500/10000 image)');
   });
 
   it('renders a balance with its provenance parts', () => {

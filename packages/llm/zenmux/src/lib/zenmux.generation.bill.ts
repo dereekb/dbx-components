@@ -2,11 +2,11 @@
  * The ZenMux per-call BILL reader ({@link LlmCallBillReader}) — `GET <base>/management/generation?id=<id>`, the one place
  * ZenMux states what a call actually billed. The only module that knows that endpoint's shape.
  *
- * Facts it encodes (probed 2026-10-21):
+ * Facts it encodes:
  *
  * - The bill is `data.ratingResponses.billAmount` (USD); `originAmount` is the pre-discount list amount (= the synchronous
- *   `usage.cost`) and `discountAmount` the difference. On `deepseek/deepseek-v4.1-flash`, `google/gemini-3.8-flash` and
- *   `google/gemini-4-argon` the bill is half the list; on the other 14 measured slugs they are equal.
+ *   `usage.cost`) and `discountAmount` the difference. Some slugs bill a discount (e.g. half the list); on most the two
+ *   are equal.
  * - It accepts the PAY-AS-YOU-GO inference key and reads subscription-key calls too; the subscription key answers
  *   `403 {"success":false,"message":"Invalid API key"}`, and so does the management key per the docs.
  * - An id it has no record of answers `404 {"success":false,"message":"Not Found","data":null}`. A call bills 3–5 minutes

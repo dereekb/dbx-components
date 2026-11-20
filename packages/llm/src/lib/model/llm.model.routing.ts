@@ -1,7 +1,7 @@
 /**
  * The **per-capability model routing** block — the host-facing configuration that maps capabilities (by key or by
- * {@link LlmCapabilityTag}) onto named tiers or raw model slugs, so a host mixes models per task ("route the `dialog`
- * family to `vendor/character-voice`") without touching code. It generalizes a capability's compiled-in defaults
+ * {@link LlmCapabilityTag}) onto named tiers or raw model slugs, so a host mixes models per task ("route the `support`
+ * family to `vendor/model-chat`") without touching code. It generalizes a capability's compiled-in defaults
  * (its own `tier` / `model`): a matched rule wins OVER those defaults but stays BELOW a per-call override (intentional
  * call-site logic).
  *
@@ -53,7 +53,7 @@ export const DEFAULT_LLM_MODEL_ROUTING_LABEL = 'llm model routing';
  * `provider` names the declared PROVIDER this rule's calls are served by (validated fail-loud by
  * {@link compileLlmModelRouting} against the names the host passes). It is NARROWER than a slug's provider binding, and
  * deliberately so: the binding states an entitlement ("this slug is only reachable on that key"), while a rule states a
- * POLICY ("send the dialog family to the local box"). Omitted ⇒ the slug's binding, else the host's default provider.
+ * POLICY ("send the support family to the local box"). Omitted ⇒ the slug's binding, else the host's default provider.
  *
  * `maxOutputTokens` / `reasoning` win over the capability's own (which win over the routed tier's); a per-call
  * reasoning override still wins over everything.
@@ -69,7 +69,7 @@ export interface LlmModelRoutingRule extends Readonly<typeof llmModelRoutingRule
 export interface LlmModelRoutingConfig {
   /**
    * Extra named tiers merged OVER the host's tier map (a bare slug or a rich `{ model, maxOutputTokens?, reasoning? }`
-   * config), so a rule can name a tier declared right beside it (`{ "dialog": "vendor/character-voice" }`). The
+   * config), so a rule can name a tier declared right beside it (`{ "support": "vendor/model-chat" }`). The
    * CALLER merges them (`resolveLlmModelTiers`) before compiling.
    */
   readonly tiers?: LlmPartialModelTierMap;
@@ -114,7 +114,7 @@ export interface ParseLlmModelRoutingConfigConfig {
    */
   readonly raw: unknown;
   /**
-   * What the messages name as the block's surface (a file name, `soul.json routing`).
+   * What the messages name as the block's surface (a file name, `routing.json`).
    */
   readonly source: string;
   /**
@@ -154,8 +154,8 @@ function parseLlmModelRoutingRule(input: { readonly schemaLabel: string; readonl
 /**
  * Parse and validate a raw routing block (already JSON-decoded by the host) — the SHAPE half of the fail-loud routing
  * check: an unknown key at any level, a `tiers` value the tier parser rejects, a blank `defaultTier`, a non-array
- * `rules`, and a rule field of the wrong shape (`"tags": "dialog"`, `"maxOutputTokens": "9000"` or `1.5`, a malformed
- * `reasoning`) each throw, naming the field (`llm model routing: soul.json routing rules[2].tags must …`).
+ * `rules`, and a rule field of the wrong shape (`"tags": "support"`, `"maxOutputTokens": "9000"` or `1.5`, a malformed
+ * `reasoning`) each throw, naming the field (`llm model routing: models.json routing rules[2].tags must …`).
  *
  * The NAME half — unknown capability keys, tags, tiers and providers, and a rule with no target or no route — stays
  * with {@link compileLlmModelRouting}, which knows the host's capabilities, tiers and providers.

@@ -136,8 +136,7 @@ export interface LlmDecodeFailureAttempt {
   /**
    * The completion budget (`max_tokens`) this attempt was SENT with — the raised cap on a `length-truncation`
    * re-ask, so a ledger shows the budget being raised across attempts. A dispatched request always carries its cap,
-   * so every dispatcher row has it; omitted only for a request that named none (a row built outside a dispatcher, or
-   * a record written before the dispatcher always sent its cap).
+   * so every dispatcher row has it; omitted only for a request that named none (a row built outside a dispatcher).
    */
   readonly maxOutputTokens?: LlmTokenCount;
   /**
@@ -179,7 +178,7 @@ export interface LlmDecodeFailureAttempt {
    */
   readonly repairOps?: Readonly<Record<string, Count>>;
   /**
-   * The reply-repair scorer's reading of a `parse-error` reply — its verdict and JSON-likeness score — so a census
+   * The reply-repair scorer's reading of a `parse-error` reply — its verdict and JSON-likeness score — so a log reader
    * reads verdicts without re-parsing. Present on every `parse-error` attempt.
    */
   readonly shape?: { readonly verdict: string; readonly score: PercentDecimal };
@@ -351,7 +350,7 @@ const LENGTH_CAPPED_FINISH_REASON = /^(length|max_tokens)$/i;
 /**
  * The provider `finishReason` values that mean the MODEL chose to stop — `stop` (OpenAI-shaped), `end_turn` /
  * `stop_sequence` (Anthropic-shaped). Named because two callers must agree on it: a dispatcher's reply-repair lane
- * runs only on a clean stop, and a census over archived records applies the same gate.
+ * runs only on a clean stop, and an offline pass over archived records applies the same gate.
  */
 const CLEAN_STOP_FINISH_REASON = /^(stop|end_turn|stop_sequence)$/i;
 

@@ -1,9 +1,7 @@
 /**
- * The dispatcher pipeline — the ported dispatcher cases (single-attempt halves, pinned to `maxAttempts: 1`) plus the
- * library's own.
- *
- * Not ported: the cases that rely on a host's shipped default tier map (the library ships no default slug) and the
- * host-writer capture gates (they belong to the host's recorder). The retry-ladder / lever / correction / backoff /
+ * The dispatcher pipeline — the single-attempt cases (pinned to `maxAttempts: 1`). A host's default tier map (the
+ * library ships no default slug) and the host-writer capture gates (they belong to the host's recorder) are out of
+ * scope. The retry-ladder / lever / correction / backoff /
  * bonus / critique cases live in `llm.dispatcher.retry.spec.ts`, the fast-fix cases in
  * `llm.dispatcher.reply.repair.spec.ts`, and the decision lane in `llm.dispatcher.decision.spec.ts`.
  */
@@ -604,7 +602,7 @@ describe('makeLlmDispatcher()', () => {
       }
     });
 
-    it('should drop the beat on an abort on the validated path (timeout row, attempts 1)', async () => {
+    it('should drop the dispatch on an abort on the validated path (timeout row, attempts 1)', async () => {
       const { decodeFailures, recorder } = recording();
       const { dispatcher } = setup({ replies: [new APIUserAbortError('aborted')], recorder });
       const result = await dispatcher.dispatch(request({ validate: VALID, maxAttempts: 1 }));
@@ -628,7 +626,7 @@ describe('makeLlmDispatcher()', () => {
       await expect(dispatcher.dispatch(request())).rejects.toThrow('aborted');
     });
 
-    it('should drop the beat on a cancelled dispatch on both paths, with no retry', async () => {
+    it('should drop the dispatch when cancelled, on both paths, with no retry', async () => {
       const controller = new AbortController();
       const { dispatcher, requests } = setup({ replies: [new APIUserAbortError('aborted')], cancellationSignal: controller.signal });
       controller.abort();
@@ -685,7 +683,7 @@ describe('makeLlmDispatcher()', () => {
       expect(diagsOf(parent).find((diag) => diag.code === 'llm-call-parked')?.fields).toEqual({ capability: 'TestCap', partition: 'seat-1' });
     });
 
-    it('should drop the beat when aborted while parked (one call, abort-shaped)', async () => {
+    it('should drop the dispatch when aborted while parked (one call, abort-shaped)', async () => {
       const controller = new AbortController();
       const { gate } = pauseGate(true);
       const { dispatcher, requests } = setup({ strategy: observingStrategy((_, signal) => (signal?.aborted ? new APIUserAbortError('aborted') : 'x')), pause: gate, cancellationSignal: controller.signal });
@@ -1131,7 +1129,7 @@ describe('makeLlmDispatcher()', () => {
       }
     });
 
-    it('should drop the beat on a cancelled single-shot transient failure, recording the call', async () => {
+    it('should drop the dispatch on a cancelled single-shot transient failure, recording the call', async () => {
       const controller = new AbortController();
       controller.abort();
       const { calls, decodeFailures, recorder } = recording();

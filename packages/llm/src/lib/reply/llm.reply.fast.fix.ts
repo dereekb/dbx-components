@@ -14,8 +14,7 @@ import { type JsonRepairShape, type Maybe, type Count, type PercentDecimal } fro
 import { type LlmReplyEnvelopeKeys } from './llm.reply.envelope';
 
 /**
- * The fast-fix capability's key. Unchanged from the source because call records, tapes and censuses key on it; declared
- * here so a dispatcher's recursion guard (never fast-fix the fixer) imports no capability.
+ * The fast-fix capability's key. Stable: call records and tapes key on it; declared here so a dispatcher's recursion guard (never fast-fix the fixer) imports no capability.
  */
 export const LLM_REPAIR_REPLY_JSON_CAPABILITY: LlmCapabilityKey = 'RepairReplyJson';
 

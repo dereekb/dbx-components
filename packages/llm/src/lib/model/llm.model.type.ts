@@ -134,12 +134,12 @@ export const llmModelTierValueType = /*#__PURE__*/ llmModelSlugType.or(llmModelT
  */
 export const llmModelRoutingRuleTargetsType = /*#__PURE__*/ type({
   /**
-   * The exact capability keys (`LlmCapabilityKey`) this rule targets (e.g. `["reply-line"]`). A capability-key match
+   * The exact capability keys (`LlmCapabilityKey`) this rule targets (e.g. `["summarize"]`). A capability-key match
    * beats any tag match, regardless of rule order.
    */
   'capabilities?': type.string.array().readonly(),
   /**
-   * The capability tags (`LlmCapabilityTag`) this rule targets (e.g. `["dialog"]` for a whole family). Within the tag
+   * The capability tags (`LlmCapabilityTag`) this rule targets (e.g. `["support"]` for a whole family). Within the tag
    * level, the FIRST matching rule wins (array order = priority).
    */
   'tags?': type.string.array().readonly()

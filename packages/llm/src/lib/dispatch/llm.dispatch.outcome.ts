@@ -46,7 +46,7 @@ export interface LlmDispatchOutcome {
   readonly failedAttempts: ReadonlyArray<LlmCallFailedAttempt>;
   /**
    * Whether a decode failure occurred and a usable value still came back. `false` when nothing failed, or when the
-   * dispatch dropped the beat.
+   * cancelled dispatch was dropped.
    */
   readonly recovered: boolean;
   /**

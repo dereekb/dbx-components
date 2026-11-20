@@ -1,5 +1,5 @@
 /**
- * The short prompt hash — the 16-hex-char `@dereekb/util` `sha256HexPrefix` a call record stores in place of prompt bytes (census
+ * The short prompt hash — the 16-hex-char `@dereekb/util` `sha256HexPrefix` a call record stores in place of prompt bytes (call
  * rows, supplement rows, cache-prefix hashes). Tape keys use a different, 12-char prefix.
  */
 

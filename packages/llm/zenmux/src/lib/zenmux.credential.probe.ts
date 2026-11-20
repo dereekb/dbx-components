@@ -40,7 +40,7 @@ export interface ProbeLlmZenmuxCredentialParams extends Omit<LlmCredentialProbeP
 /**
  * Probe a ZenMux INFERENCE key for liveness, free, in at most two requests.
  *
- * ZenMux's `GET /models` answers 200 to ANY bearer (a made-up key included, measured 2026-11-14), so the generic probe an
+ * ZenMux's `GET /models` answers 200 to ANY bearer (a made-up key included), so the generic probe an
  * OpenAI-compatible transport runs could never report a revoked key here. ZenMux has no free GET that tells a live key from a
  * dead one, and its two key types are accepted at DIFFERENT places, so this asks two auth-gated questions and the key is live
  * when EITHER says so:
@@ -49,7 +49,7 @@ export interface ProbeLlmZenmuxCredentialParams extends Omit<LlmCredentialProbeP
  *    a dead or fake one gets `403 access_denied`.
  * 2. Only when that refused: `GET /management/generation?id=…`, the one endpoint that accepts the PAY-AS-YOU-GO key (a
  *    pay-as-you-go key also 403s the first probe, because its allow-list holds no unknown model). A disabled legacy key is
- *    told apart here: ZenMux's 403 says the legacy keys were disabled on 2026-11-10 and to create a new one.
+ *    told apart here: ZenMux's 403 says the legacy keys were disabled and to create a new one.
  *
  * Neither request runs a model or bills. Never throws.
  *

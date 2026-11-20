@@ -2,8 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { type ConfiguredFetch } from '@dereekb/util/fetch';
 import { probeLlmZenmuxCredential, LLM_ZENMUX_CREDENTIAL_PROBE_GENERATION_ID, LLM_ZENMUX_CREDENTIAL_PROBE_MODEL } from './zenmux.credential.probe';
 
-// ZenMux's literal answers, measured 2026-11-14 against the live gateway, EXCEPT `NOT_FOUND`: a live pay-as-you-go key's answer
-// to an unknown generation id was not measurable; it is the shape the bill reader reads.
+// ZenMux's literal answers, EXCEPT `NOT_FOUND`: the shape the bill reader reads for an unknown generation id.
 const INVALID_MODEL = '{"error":{"code":"404","type":"invalid_model","message":"Requested model is not valid"}}';
 const ACCESS_DENIED = '{"error":{"code":"403","type":"access_denied","message":"You have no permission to access this resource (api_key_source: payg)"}}';
 const LEGACY_DISABLED = '{"success":false,"message":"The API key upgrade window (October 22–November 10, 2026) has ended. Legacy keys have been disabled since November 10, 2026, at 00:00 UTC."}';

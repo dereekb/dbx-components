@@ -45,9 +45,8 @@ export interface LlmCallLogPayloadBase {
   readonly strategyId?: LlmStrategyId;
   /**
    * The transport LANE the call rode (`LlmStrategy.kind ?? id`, e.g. `'openrouter-systemone'`) — the A/B axis a
-   * per-strategy fold keys on. ABSENT on every row written before this column existed, which is why such a fold falls
-   * back to {@link strategyId}: an old row keeps folding exactly as it always did, and a new one separates the lane
-   * from the account that served it.
+   * per-strategy fold keys on. A row without it folds by {@link strategyId}; a row with it separates the lane from the
+   * account that served it.
    */
   readonly strategyKind?: LlmStrategyId;
   /**
@@ -75,8 +74,8 @@ export interface LlmCallLogPayloadBase {
   readonly model?: LlmModelId;
   /**
    * The model-tier KEY the dispatcher resolved this call to (`fast` / `strong` / …) — the NAMED axis a by-tier report
-   * attributes spend against (distinct from the served {@link model} id). Absent for a raw-model override and for a
-   * row written before tiers existed; a by-tier fold counts those under a host-chosen bucket.
+   * attributes spend against (distinct from the served {@link model} id). Absent for a raw-model override and on a row
+   * without a tier; a by-tier fold counts those under a host-chosen bucket.
    */
   readonly tier?: LlmModelTierKey;
   /**
@@ -99,8 +98,8 @@ export interface LlmCallLogPayloadBase {
   readonly finishReason?: string;
   /**
    * How many `strategy.complete` attempts the bounded validate-and-retry made (present iff the loop ran). ABSENT is
-   * read as `1` everywhere a fold uses it — the single-shot (no validator) path stamps none, and every row written
-   * before the retry loop existed was single-shot. Do NOT "fix" that into an omission.
+   * read as `1` everywhere a fold uses it — the single-shot (no validator) path stamps none, and a row without it
+   * was single-shot. Do NOT "fix" that into an omission.
    */
   readonly attempts?: Count;
   /**
@@ -136,24 +135,24 @@ export interface LlmCallLogPayloadBase {
   /**
    * Whether the dispatcher's RESOLVED reasoning config for this call was OFF (`{ enabled: false }`) — the denominator
    * of a reasoning-floor check. Threaded so a capability that legitimately opts INTO reasoning per invocation is not
-   * counted as a floor violation. A legacy row omitting it is read as OFF (`!== false`).
+   * counted as a floor violation. A row omitting it is read as OFF (`!== false`).
    */
   readonly reasoningOff?: boolean;
   /**
    * The dispatcher's ESTIMATED prompt-token count — written only when the caller pinned a prompt-token budget, so a
    * ledger can report estimate-vs-served drift against the served {@link LlmUsage.promptTokens}. Absent for every
-   * call without a pinned prompt-token budget (byte-identical to a row written before the estimator existed).
+   * call without a pinned prompt-token budget.
    */
   readonly estimatedPromptTokens?: LlmTokenCount;
   /**
    * The prompt as its provenance-tagged {@link LlmPromptSegment}s — the ONLY prompt key a new row carries, and only
    * when the host keeps prompts. NEVER dereference it directly: go through `readLlmCallPrompt` /
-   * `readLlmCallPromptSegments`, which also answer for the legacy shape below.
+   * `readLlmCallPromptSegments`, which also answer for the flat shape below.
    */
   readonly promptSegments?: ReadonlyArray<LlmPromptSegment>;
   /**
-   * The flat assembled prompt — the LEGACY shape, written by every row from before prompts became segments. New rows
-   * carry {@link promptSegments} instead; `readLlmCallPrompt` reads whichever is there.
+   * The flat assembled prompt — a row with only `prompt` (no `promptSegments`). The dispatcher writes
+   * {@link promptSegments} instead; `readLlmCallPrompt` reads whichever is there.
    */
   readonly prompt?: string;
   /**
@@ -165,7 +164,7 @@ export interface LlmCallLogPayloadBase {
    * beside {@link text} when the host keeps prompts, and only when the loop rejected one. {@link text} is still the
    * FINAL reply (a dropped dispatch's last row repeats it) and {@link promptSegments} still attempt 1's. Read it
    * through `readLlmCallFailedAttempts`, which drops a malformed row and answers `undefined` for a clean call, a host
-   * that keeps no prompts, or a row written before the rows existed.
+   * that keeps no prompts, or a row without attempt rows.
    */
   readonly failedAttempts?: ReadonlyArray<LlmCallFailedAttempt>;
 }

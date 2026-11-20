@@ -5,7 +5,7 @@ import { compileLlmModelRouting } from '../model/llm.model.routing';
 import { defineLlmCapability, type LlmCapabilityDescriptor, type LlmCapabilityDescriptorReader } from './llm.capability.descriptor';
 
 interface HostTraits {
-  readonly voice: string;
+  readonly audience: string;
   readonly readerFacing?: boolean;
 }
 
@@ -17,7 +17,7 @@ const SUMMARIZE: LlmCapabilityDescriptor<{ readonly summary: string }, HostTrait
   tier: 'strong',
   replyProtocol: 'json',
   frames: { 'brand-voice': 'context', disclaimer: 'off' },
-  traits: { voice: 'narrator', readerFacing: true },
+  traits: { audience: 'staff', readerFacing: true },
   responseSchema: SUMMARY_SCHEMA,
   parseValue: (value) => {
     const parsed = SUMMARY_SCHEMA(value);
@@ -50,9 +50,9 @@ describe('LlmCapabilityDescriptor', () => {
 
   it('should carry typed traits and a slot-keyed frames policy', () => {
     const descriptorOf: LlmCapabilityDescriptorReader<LlmCapabilityDescriptor<unknown, HostTraits>> = (capability) => [SUMMARIZE, CLASSIFY].find((x) => x.capability === capability);
-    const voice: string | undefined = descriptorOf('summarize')?.traits?.voice;
+    const audience: string | undefined = descriptorOf('summarize')?.traits?.audience;
 
-    expect(voice).toBe('narrator');
+    expect(audience).toBe('staff');
     expect(descriptorOf('summarize')?.frames?.['brand-voice']).toBe('context');
     expect(descriptorOf('summarize')?.frames?.['disclaimer']).toBe('off');
     expect(descriptorOf('extract')).toBeUndefined();
@@ -121,12 +121,12 @@ describe('defineLlmCapability()', () => {
       mustResolve: true,
       rawJsonContext: true,
       frames: { 'brand-voice': 'context' },
-      traits: { voice: 'narrator' },
+      traits: { audience: 'staff' },
       responseSchema: DESCRIBED_SCHEMA,
       parseValue
     });
 
-    expect(descriptor).toMatchObject({ capability: 'summarize', tags: ['writing'], tier: 'strong', replyProtocol: 'json-envelope', mustResolve: true, rawJsonContext: true, frames: { 'brand-voice': 'context' }, traits: { voice: 'narrator' } });
+    expect(descriptor).toMatchObject({ capability: 'summarize', tags: ['writing'], tier: 'strong', replyProtocol: 'json-envelope', mustResolve: true, rawJsonContext: true, frames: { 'brand-voice': 'context' }, traits: { audience: 'staff' } });
     expect(descriptor.parseValue).toBe(parseValue);
     expect(descriptor.responseSchema).toBe(DESCRIBED_SCHEMA);
     expect('describeResponseSchemaHint' in descriptor).toBe(false);

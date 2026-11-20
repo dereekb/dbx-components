@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { readLlmDecisionAnswers } from './llm.decision.answer';
-import { makeLlmDecisionChoiceAnswer, makeLlmDecisionNoulAnswer, makeLlmDecisionScoreAnswer } from './llm.decision.answer.builder';
-import { llmChoiceQuestion, llmNoulQuestion, llmScoreQuestion } from './llm.decision.question';
+import { llmChoiceQuestion, llmNoulQuestion, llmScoreQuestion, readLlmDecisionAnswers } from '@dereekb/llm';
+import { makeLlmDecisionChoiceAnswer, makeLlmDecisionNoulAnswer, makeLlmDecisionScoreAnswer } from './llm.test.decision.answer';
 
 const OPTIONS = ['alpha', 'beta', 'gamma', 'delta'] as const;
 

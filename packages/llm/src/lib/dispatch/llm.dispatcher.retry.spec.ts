@@ -1,10 +1,7 @@
 /**
- * The dispatcher's BOUNDED retry loop — the ported validate-and-retry, lever-ladder, correction, transport, bonus,
- * truncation, critique and failed-attempt cases, plus the library's own.
- *
- * Not ported: a host-only validator that duplicated the validate-and-retry case; the case that relied on a host's
- * shipped same-slug default tier map (folded into the same-slug tiers case below); and the host writer's capture
- * gate (it belongs to the host's recorder).
+ * The dispatcher's BOUNDED retry loop — the validate-and-retry, lever-ladder, correction, transport, bonus,
+ * truncation, critique and failed-attempt cases, and same-slug tiers. A host writer's capture gate belongs to the
+ * host's recorder, and is out of scope.
  */
 
 import { type } from 'arktype';

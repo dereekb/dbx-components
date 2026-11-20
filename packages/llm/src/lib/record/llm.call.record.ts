@@ -406,13 +406,13 @@ export interface LlmCallStartRecordBase {
    * The PROVIDER INSTANCE this call was sent to — the strategy `id`.
    *
    * Carried so the dispatch stream is attributable on its own: on a run that mixes providers, a call that never came
-   * back must still say WHERE it had gone, which is the exact run that needs the answer. Optional so a hand-rolled
-   * fake keeps compiling.
+   * back must still say WHERE it had gone, which is the exact run that needs the answer. Optional: a record built
+   * outside a dispatcher may omit it.
    */
   readonly strategyId?: LlmStrategyId;
   /**
    * The transport LANE this call was sent on (`LlmStrategy.kind ?? id`) — the sibling of {@link strategyId}, and the
-   * axis a usage ledger folds by strategy on. Optional for the same reason {@link strategyId} is.
+   * axis a usage ledger folds by strategy on. Optional: a record built outside a dispatcher may omit it.
    */
   readonly strategyKind?: LlmStrategyId;
 }

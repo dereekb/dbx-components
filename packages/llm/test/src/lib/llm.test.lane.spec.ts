@@ -102,7 +102,7 @@ describe('makeLlmLiveLane()', () => {
       expect(logged).toEqual([]);
     });
 
-    it('should keep the default unlock name when names passes an explicit undefined (B5)', () => {
+    it('should keep the default unlock name when names passes an explicit undefined', () => {
       const { lane } = laneOf({ names: { unlock: undefined } });
 
       expect(lane.isUnlocked(UNLOCKED)).toBe(true);

@@ -72,7 +72,7 @@ const FRAMED_LAYOUT = defineLlmPromptLayout([
   defaultSlot('instructions'),
   defaultSlot('context-pre'),
   defaultSlot('contract'),
-  frameSlot('speaker'),
+  frameSlot('persona'),
   defaultSlot('craft'),
   defaultSlot('live'),
   defaultSlot('context-post'),
@@ -204,15 +204,15 @@ describe('assembleLlmCapabilityPrompt()', () => {
   });
 
   describe('live', () => {
-    const BLOCKS: ReadonlyArray<LlmLiveContextBlock> = [llmLiveContextHeadingBlock(), { key: 'directive', text: 'Directive: hold.', reason: 'the standing directive' }, { key: 'cast', text: 'Cast:\n- Ben' }];
+    const BLOCKS: ReadonlyArray<LlmLiveContextBlock> = [llmLiveContextHeadingBlock(), { key: 'status', text: 'Status: open.', reason: 'the standing status' }, { key: 'items', text: 'Items:\n- A' }];
 
     it('should place one volatile segment per block, closing the last with the last separator', () => {
       const live = liveOf(assemble('test', { liveContext: BLOCKS }));
-      expect(live.map((segment) => segment.key)).toEqual(['heading', 'directive', 'cast']);
+      expect(live.map((segment) => segment.key)).toEqual(['heading', 'status', 'items']);
       expect(live.every((segment) => segment.volatile === true)).toBe(true);
       expect(live[0].promptSegment).toBe('## Live context\n\n');
-      expect(live[2].promptSegment).toBe('Cast:\n- Ben');
-      expect(live[1].reason).toBe('the standing directive');
+      expect(live[2].promptSegment).toBe('Items:\n- A');
+      expect(live[1].reason).toBe('the standing status');
     });
 
     it('should send the same bytes for the blocks and their joined string', () => {
@@ -257,7 +257,7 @@ describe('assembleLlmCapabilityPrompt()', () => {
         layout: FRAMED_LAYOUT,
         liveContext: [
           { ...llmLiveContextHeadingBlock(), volatile: false },
-          { key: 'cast', text: 'CAST' }
+          { key: 'items', text: 'ITEMS' }
         ],
         contributions: [contribution('tone', 'TONE'), contribution('craft', 'JUDGED', { volatile: true })]
       });
@@ -290,11 +290,11 @@ describe('assembleLlmCapabilityPrompt()', () => {
     });
 
     it('should place a frame declared after the contract after it, sharing every segment before it', () => {
-      const speaker = (text: string) => assemble('nomarker', { layout: FRAMED_LAYOUT, descriptor: DESCRIPTORS['summarize'], contributions: [contribution('speaker', text)] });
-      const first = speaker('SPEAKER-1');
-      expect(idsOf(first)).toEqual(['reply-protocol', 'instructions', 'context-pre', 'contract', 'speaker', 'live']);
-      expect(first.segments.slice(0, 4)).toEqual(speaker('SPEAKER-2').segments.slice(0, 4));
-      expect(first.cacheSegments.cachePrefix.endsWith('SPEAKER-1\n\n')).toBe(true);
+      const persona = (text: string) => assemble('nomarker', { layout: FRAMED_LAYOUT, descriptor: DESCRIPTORS['summarize'], contributions: [contribution('persona', text)] });
+      const first = persona('PERSONA-1');
+      expect(idsOf(first)).toEqual(['reply-protocol', 'instructions', 'context-pre', 'contract', 'persona', 'live']);
+      expect(first.segments.slice(0, 4)).toEqual(persona('PERSONA-2').segments.slice(0, 4));
+      expect(first.cacheSegments.cachePrefix.endsWith('PERSONA-1\n\n')).toBe(true);
     });
 
     it("should keep a craft slot's contributions in contribution order; the first volatile one starts the suffix", () => {
@@ -317,8 +317,8 @@ describe('assembleLlmCapabilityPrompt()', () => {
     });
 
     it("should pass a contribution's origin, key and reason through, with volatile only when set", () => {
-      const assembled = assemble('test', { layout: FRAMED_LAYOUT, contributions: [contribution('speaker', 'SPEECH', { origin: { kind: 'speech-style' }, key: 'speech', reason: 'the speaker speaks' })] });
-      expect(assembled.segments.find((segment) => segment.id === 'speaker')).toEqual({ id: 'speaker', promptSegment: 'SPEECH\n\n', origin: { kind: 'speech-style' }, key: 'speech', reason: 'the speaker speaks' });
+      const assembled = assemble('test', { layout: FRAMED_LAYOUT, contributions: [contribution('persona', 'PERSONA', { origin: { kind: 'persona' }, key: 'persona', reason: 'the persona applies' })] });
+      expect(assembled.segments.find((segment) => segment.id === 'persona')).toEqual({ id: 'persona', promptSegment: 'PERSONA\n\n', origin: { kind: 'persona' }, key: 'persona', reason: 'the persona applies' });
     });
 
     it("should close pieces with the slot's own separators", () => {
@@ -388,8 +388,8 @@ describe('assembleLlmCapabilityPrompt()', () => {
       ['summarize', 'summarize', {}],
       ['classify', 'classify', {}],
       ['line', 'summarize', { replyProtocol: 'line' }],
-      ['framed', 'summarize', { layout: FRAMED_LAYOUT, contributions: [contribution('tone', 'TONE'), contribution('speaker', 'SPEAKER')] }],
-      ['blocks', 'test', { liveContext: [llmLiveContextHeadingBlock(), { key: 'cast', text: 'CAST' }] }],
+      ['framed', 'summarize', { layout: FRAMED_LAYOUT, contributions: [contribution('tone', 'TONE'), contribution('persona', 'PERSONA')] }],
+      ['blocks', 'test', { liveContext: [llmLiveContextHeadingBlock(), { key: 'items', text: 'ITEMS' }] }],
       ['empty', 'postmarker', { liveContext: '' }],
       ['quoting', 'quoting', {}]
     ];

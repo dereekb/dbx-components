@@ -192,7 +192,7 @@ describe('makeLlmOpenRouterStrategy()', () => {
     expect(bodies[0]?.reasoning).toEqual({ effort: 'high', max_tokens: 2048, exclude: true, enabled: true });
   });
 
-  it('sends an OFF config as { enabled: false } alone, dropping every co-present knob (B15)', async () => {
+  it('sends an OFF config as { enabled: false } alone, dropping every co-present knob', async () => {
     const { client, bodies } = makeFakeClient();
     const strategy = makeLlmOpenRouterStrategy({ client, defaultModel: 'anthropic/claude-sonnet-4.6' });
 
@@ -269,8 +269,7 @@ describe('makeLlmOpenRouterStrategy()', () => {
   });
 
   it('captures the UPSTREAM provider when the completion echoes one, and omits it otherwise (byte-stable)', async () => {
-    // Read-only routing evidence: the slug's endpoints differ on whether they honour `reasoning.enabled: false`,
-    // and nothing recorded WHICH one served a call, so the decision to pin an allowlist had no data to stand on.
+    // Read-only routing evidence: a slug's endpoints may differ in behaviour, so the record names which one served the call.
     // No request-side `provider` param is sent — capturing it must not constrain routing.
     const served = makeFakeClient({ provider: 'DeepInfra' });
     const servedStrategy = makeLlmOpenRouterStrategy({ client: served.client, defaultModel: DEFAULT_MODEL });
@@ -552,8 +551,8 @@ describe('makeLlmOpenRouterStrategy()', () => {
     });
 
     it('reports NOT ready on the revoked-key 401, carrying OpenRouter’s own message', async () => {
-      // The exact wire answer the dead key in the dev environment produced. healthCheck cannot see this — it is
-      // network-free by contract — which is why every gate downstream of it went green on a revoked credential.
+      // OpenRouter's wire answer to a revoked key. healthCheck cannot see this — it is network-free by contract — so
+      // only the probe reports a revoked credential.
       const probeFetch: ConfiguredFetch = async () => new Response('{"error":{"message":"User not found.","code":401}}', { status: 401 });
       const strategy = makeLlmOpenRouterStrategy({ apiKey: 'sk-or-dead', probeFetch });
 
@@ -580,7 +579,7 @@ describe('makeLlmOpenRouterStrategy()', () => {
       expect(health?.issues[0]?.severity).toBe('error');
     });
 
-    it('delegates to a credentialProbeSource even when a client is injected (B15)', async () => {
+    it('delegates to a credentialProbeSource even when a client is injected', async () => {
       const { client } = makeFakeClient();
       const verdict = { ready: false, issues: [{ severity: 'error' as const, message: 'the account rejected the credential' }] };
       const strategy = makeLlmOpenRouterStrategy({ client, credentialProbeSource: async () => verdict });

@@ -24,7 +24,7 @@ const BALANCE_BODY = JSON.stringify({ success: true, data: { currency: 'usd', to
 const FLOW_RATE_BODY = JSON.stringify({ success: true, data: { base_usd_per_flow: 0.03283, effective_usd_per_flow: 0.03283 } });
 
 /**
- * The literal body the account endpoints answer an INFERENCE key with — verified against a live account.
+ * The literal body the account endpoints answer an INFERENCE key with.
  */
 const REJECTED_BODY = '{"success":false,"message":"Invalid API key","data":null}';
 

@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { type ConfiguredFetch } from '@dereekb/util/fetch';
 import { makeLlmZenmuxGenerationBillReader } from './zenmux.generation.bill';
 
-// Bodies recorded from `management/generation` on 2026-10-21 (trimmed to the fields read).
+// `management/generation` bodies, trimmed to the fields read.
 const DEEPSEEK_ID = '59757e87e11143d29caa2300fca28e45';
 const DEEPSEEK_BODY = JSON.stringify({ success: true, data: { generationId: DEEPSEEK_ID, model: 'deepseek/deepseek-v4.1-flash', usage: 0.000287775, ratingResponses: { billAmount: 0.000287775, discountAmount: 0.000287775, originAmount: 0.00057555 } } });
 const HAIKU_BODY = JSON.stringify({ success: true, data: { model: 'anthropic/claude-haiku-5.5', ratingResponses: { billAmount: 0.0003534, discountAmount: 0, originAmount: 0.0003534 } } });

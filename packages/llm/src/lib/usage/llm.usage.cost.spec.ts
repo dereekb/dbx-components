@@ -2,8 +2,8 @@
  * Cost honesty — `formatLlmUsageCost` / `resolveLlmUsageCostMarker` / `isLlmUsageCostUnavailable` / `readLlmUsageCostFlags`.
  * A hole must never read as free and a list price must never read as a bill.
  *
- * Not ported here: the per-run fold and its markdown renders (gate reasons, the reasoning floor, quality, the dispatch
- * axis, craft, completion samples, build stamping) stay with the host that owns the fold.
+ * The per-run fold and its markdown renders (gate reasons, the reasoning floor, quality, the dispatch axis, craft,
+ * completion samples, build stamping) are the host's, and out of scope.
  */
 
 import { describe, it, expect } from 'vitest';

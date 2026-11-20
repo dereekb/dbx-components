@@ -32,7 +32,7 @@ describe('mergeLlmDispatchCorrectionTexts()', () => {
     expect(merged.decode['empty-result']).toBe(texts.decode['empty-result']);
   });
 
-  it('should keep a default when an override passes an explicit undefined (B5)', () => {
+  it('should keep a default when an override passes an explicit undefined', () => {
     const merged = mergeLlmDispatchCorrectionTexts({ heading: undefined, decode: { 'parse-error': undefined } });
 
     expect(merged.heading).toBe(texts.heading);

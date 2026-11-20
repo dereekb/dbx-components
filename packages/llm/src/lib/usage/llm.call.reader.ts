@@ -3,8 +3,8 @@
  * row, the one-line retry summary a log line prints, and the decision-row test.
  *
  * Every reader takes `unknown` on purpose: a caller holds a log payload (or an in-memory {@link LlmCallRecord}), not a
- * typed row. Each answers on a persisted payload ({@link LlmCallLogPayload}), on a legacy flat-prompt payload, and on
- * an in-memory record, so no caller needs to know which era — or which side of the recorder — a row is from.
+ * typed row. Each answers on a persisted payload ({@link LlmCallLogPayload}), on a flat-`prompt` payload (no segments),
+ * and on an in-memory record, so no caller needs to know which shape — or which side of the recorder — a row is from.
  */
 
 import { cutString, type Maybe } from '@dereekb/util';
@@ -15,9 +15,9 @@ import { LLM_CALL_EVENT_TYPE, type LlmCallFailedAttempt } from '../record/llm.ca
 /**
  * Read the PROMPT out of a call row — the ONE way to do it.
  *
- * A row written while the host keeps prompts carries `promptSegments`; a row written before segments existed carries
- * a flat `prompt` string; an in-memory {@link LlmCallRecord} carries both `prompt` and `segments`. All answer here, so
- * no reader needs to know which era a log is from — and, critically, no reader keeps a
+ * A row written while the host keeps prompts carries `promptSegments`; a flat-`prompt` row carries only a `prompt`
+ * string; an in-memory {@link LlmCallRecord} carries both `prompt` and `segments`. All answer here, so no reader needs
+ * to know which shape a row has — and, critically, no reader keeps a
  * `typeof payload.prompt === 'string'` gate that would read "no prompt" from a segments-only row and silently report a
  * tape with ZERO turns or a lab with no captured calls.
  *
@@ -47,7 +47,7 @@ export function readLlmCallPrompt(payload: unknown): Maybe<string> {
 
 /**
  * Read the prompt SEGMENTS out of a call row: a persisted payload's `promptSegments`, else an in-memory record's
- * `segments`. `undefined` on a legacy (flat-`prompt`) row, which is a real and permanent answer: those bytes have no
+ * `segments`. `undefined` on a flat-`prompt` row (no segments), which is a real and permanent answer: those bytes have no
  * recoverable breakdown, and a reader that needs one must report drift rather than invent spans.
  *
  * @param payload - The `llm_call` payload or record (or anything).
@@ -92,7 +92,7 @@ function isLlmCallFailedAttemptRow(row: unknown): row is LlmCallFailedAttempt {
  *
  * @param payload - The `llm_call` payload or record (or anything).
  * @returns The well-formed rows, or `undefined` when the row carries none (a clean call, a host that keeps no prompts,
- *   or a row written before the attempt rows existed).
+ *   or a row without attempt rows).
  *
  * @example
  * ```ts
@@ -144,7 +144,7 @@ export interface FormatLlmCallAttemptsConfig {
  *
  *   `attempts 2 dropped · #1 schema-validation: summary.title must be … → reasoning-low · #2 parse-error (replies: …)`
  *
- * A row with no attempt rows (the host kept no prompts, or the row was written before the rows existed) says so
+ * A row with no attempt rows (the host kept no prompts, or the row carries none) says so
  * instead: `attempts 2 retried · 1 failed reply not captured`.
  *
  * An absent `attempts` is read as `1`, so a single-shot call stays silent.
@@ -192,15 +192,14 @@ export function formatLlmCallAttempts(event: LlmCallLogEvent, config?: Maybe<For
  *
  * A decision row carries a prompt and a `text` too (its state / questions segments and its JSON answers), so a naive
  * read turns every one into a turn; a text tape would then serve a decision's JSON answer set to whichever completion
- * hashed next. The row is read on BOTH axes: the LANE — `strategyKind` when it is a string, which is what a current row
- * names, else `strategyId` on a row from before the two were split — and the declared `decision` id, which a row
- * written since decisions were recorded carries whatever its lane is called.
+ * hashed next. The row is read on BOTH axes: the LANE — `strategyKind` when it is a string, else `strategyId` on a row
+ * without a `strategyKind` — and the declared `decision` id, which a row carries whatever its lane is called.
  *
  * Unlike `isUncacheableLlmCall`, which reads `strategyKind` only, the lane here falls back to `strategyId`.
  *
  * Build `decisionStrategyKinds` once with `readLlmDecisionStrategyKinds(adapters)`. It can be omitted when every row came
  * from this library's dispatcher, because its decision lane stamps `decision` on every row; the set only matters for
- * rows written before a host recorded decision ids.
+ * rows without a `decision` id.
  *
  * @param payload - The `llm_call` payload (or anything; a non-object answers `false`).
  * @param decisionStrategyKinds - The decision transports' strategy kinds.

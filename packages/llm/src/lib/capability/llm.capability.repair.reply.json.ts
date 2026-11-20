@@ -194,7 +194,7 @@ export function makeLlmReplyFastFixer<R extends LlmDispatchRequest, X extends Ll
 }
 
 /**
- * The fixer's default instructions (D15) — a host overrides them with a higher template tier or its own resolver.
+ * The fixer's default instructions — a host overrides them with a higher template tier or its own resolver.
  */
 export const DEFAULT_LLM_REPAIR_REPLY_JSON_INSTRUCTIONS = [
   "## Repair the reply's JSON",

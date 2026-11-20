@@ -55,7 +55,7 @@ export type LlmModelTierKey = string;
 
 /**
  * A capability tag: a coarse grouping handle stamped on a capability so a model-routing rule can target a whole
- * family of capabilities at once (`{ tags: ['dialog'], tier: 'dialog' }`) instead of enumerating each key. An open
+ * family of capabilities at once (`{ tags: ['support'], tier: 'fast' }`) instead of enumerating each key. An open
  * set: a capability may carry any string a host wants to route on.
  */
 export type LlmCapabilityTag = string;

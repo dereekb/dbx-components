@@ -1,9 +1,8 @@
 /**
  * The usage-cell primitives — `emptyLlmUsageCell`, `addLlmUsageCells`, `toLlmUsageCell`, `accumulateLlmUsageCell` and
- * `toLlmKeyedUsageCells`. These cases re-express a per-run fold's assertions against the primitives, with its numbers.
- *
- * Not ported here: the per-run fold itself (gate reasons, the reasoning floor, quality, the dispatch axis, craft,
- * completion samples, build stamping and every markdown render) stays with the host that owns the fold.
+ * `toLlmKeyedUsageCells`, with a per-run fold's numbers. The fold itself (gate reasons, the reasoning floor, quality,
+ * the dispatch axis, craft, completion samples, build stamping and every markdown render) is the host's, and out of
+ * scope.
  */
 
 import { describe, it, expect } from 'vitest';
@@ -104,7 +103,7 @@ describe('accumulateLlmUsageCell / toLlmKeyedUsageCells', () => {
 });
 
 describe('addLlmUsageCells', () => {
-  it('reads a legacy cell missing the cache / reasoning fields as zero, never NaN', () => {
+  it('reads a cell missing the cache / reasoning fields as zero, never NaN', () => {
     const sum = addLlmUsageCells(emptyLlmUsageCell(), { calls: 1, promptTokens: 10, completionTokens: 2, cost: 0.1 } as unknown as LlmUsageCell);
 
     expect(sum.cachedTokens).toBe(0);

@@ -169,12 +169,11 @@ export interface LlmEnvNames {
   readonly decodeRetryTier: LlmEnvVarNames;
   /**
    * The decision-lane provider pin (a provider id). Read by hosts that pick a decision backend, and by the `/test` live
-   * lane. Optional so existing literals stay valid; absent ⇒ never read.
+   * lane. Optional; absent ⇒ never read.
    */
   readonly decisionProvider?: Maybe<LlmEnvVarNames>;
   /**
-   * The machine craft-notes folder (`resolveLlmCraftNotesDir`). Optional so existing literals stay valid; absent ⇒
-   * never read.
+   * The machine craft-notes folder (`resolveLlmCraftNotesDir`). Optional; absent ⇒ never read.
    */
   readonly craftNotesDir?: Maybe<LlmEnvVarNames>;
 }

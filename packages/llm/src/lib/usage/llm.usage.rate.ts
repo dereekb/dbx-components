@@ -16,11 +16,11 @@ import type { LlmKeyedUsageCell, LlmUsageCell } from './llm.usage.cell';
  * {@link LlmCallLogPayloadBase.decision} id (every dispatcher-recorded decision does, the scripted backend included) or
  * rode a decision transport (its `strategyKind` is in `decisionStrategyKinds`). Such a call never reports
  * `cachedTokens` by design, so its prompt tokens are cache-not-applicable: out of every hit-rate denominator, and never
- * a `cachePartial` trip. Old rows already carry `decision`, so a re-fold over old logs corrects past runs too.
+ * a `cachePartial` trip. A logged row with a `decision` id is read the same way, so a re-fold over logs agrees.
  *
  * The lane read here is `strategyKind` ONLY — unlike `isDecisionLlmCallRow`, there is no `strategyId` fallback. A row
- * written before `strategyKind` existed counts as uncacheable only through its `decision` id. The difference is kept
- * on purpose: it moves ledger numbers on old rows.
+ * without a `strategyKind` counts as uncacheable only through its `decision` id. The difference is kept on purpose:
+ * a fallback would move ledger numbers on such rows.
  *
  * @param payload - The call payload.
  * @param decisionStrategyKinds - The decision transports' strategy kinds, built once with

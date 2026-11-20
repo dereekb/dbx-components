@@ -1,7 +1,6 @@
 /**
- * The strategy registry — `id` is the primary key, `kind` a last-wins secondary index that falls back to a remaining
- * instance when its holder leaves, and `values().filter(...)` over {@link llmStrategyKind} answers "all of them" in
- * registry order.
+ * The strategy registry — `id` is the key; `values().filter(…)` over the kind ({@link llmStrategyKind}) answers by
+ * kind, in registry order.
  */
 
 import { describe, it, expect } from 'vitest';

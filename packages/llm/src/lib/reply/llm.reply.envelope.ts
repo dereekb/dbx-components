@@ -1,12 +1,12 @@
 /**
- * The D10 reply reader — the tolerant `{…}`-block read behind both JSON reply protocols, the `json-envelope` unwrap,
+ * The reply reader — the tolerant `{…}`-block read behind both JSON reply protocols, the `json-envelope` unwrap,
  * and the thin value / rationale / line readers a capability parser calls. Every capability validates the resulting
  * value against its OWN wire schema; this module only finds and unwraps it.
  *
- * The block read is `@dereekb/util` `readJsonObjectFromText`, LAYERED: the greedy first-`{`-to-last-`}` slice first (so
- * every reply the greedy slice reads keeps its reading byte for byte), then a string-aware BALANCED scan for the
- * replies that greedy slice DROPS. A model that emits a complete object followed by one stray `}` is a measured, common
- * cause of lost replies, and its payload is perfectly good.
+ * The block read is `@dereekb/util` `readJsonObjectFromText`, LAYERED: the greedy first-`{`-to-last-`}` slice first (the
+ * greedy reading wins whenever it parses), then a string-aware BALANCED scan for the replies that greedy slice DROPS. A
+ * model that emits a complete object followed by one stray `}` is a common cause of lost replies, and its payload is
+ * perfectly good.
  *
  * Non-goal: nothing here ever repairs a missing brace. The deterministic repair tier (`repairLlmReplyJson`) and the
  * dispatcher's length-truncation output-budget raise own a reply that never closes.
@@ -54,8 +54,8 @@ export interface LlmReplyEnvelopeKeys {
 }
 
 /**
- * The default envelope keys — `value`, `answerable` and `rationale`. A host that kept the old `lever` key passes
- * `{ value: 'lever', answerable: 'answerable', rationale: 'rationale' }` as its own keys.
+ * The default envelope keys — `value`, `answerable` and `rationale`. A host with its own value key passes it, e.g.
+ * `{ value: 'result', answerable: 'answerable', rationale: 'rationale' }`.
  */
 export const DEFAULT_LLM_REPLY_ENVELOPE_KEYS: LlmReplyEnvelopeKeys = { value: 'value', answerable: 'answerable', rationale: 'rationale' };
 

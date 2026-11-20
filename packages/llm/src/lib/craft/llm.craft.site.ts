@@ -49,6 +49,10 @@ export const DEFAULT_LLM_CRAFT_SITE_LIMITS: LlmCraftSiteLimits = { maxNotes: 4, 
 
 /**
  * The legal shape of a site input name — what a judged `ask` can name in backticks.
+ *
+ * A backticked craft `ask` names a flat site INPUT (lowercase kebab, no dots); a decision question's backticks name a
+ * dotted STATE PATH (`llmDecisionStatePaths`). The two grammars differ on purpose and are not shared: one would loosen
+ * the other.
  */
 export const LLM_CRAFT_SITE_INPUT_NAME_PATTERN = /^[a-z][a-z0-9-]*$/;
 
@@ -180,7 +184,7 @@ export function readLlmCraftSiteFactShape(site: LlmCraftSite, fact: string): May
 /**
  * The inputs a judged `ask` names — every backticked word that is an input of one of the given sites, in
  * first-mention order, each once. ONE reader: the parser's "an ask names ≥1 input" refusal and the judge's state both
- * read it.
+ * read it. The grammar is the site-input one ({@link LLM_CRAFT_SITE_INPUT_NAME_PATTERN}), not a decision's state path.
  *
  * @param ask - The note's ask.
  * @param sites - The resolved sites whose inputs count.

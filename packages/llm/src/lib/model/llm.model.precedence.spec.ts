@@ -32,14 +32,14 @@ describe('resolveLlmCapabilityModel()', () => {
   });
 
   it('should let a compiled host route win over the descriptor', () => {
-    expect(resolveLlmCapabilityModel({ ...BASE, descriptor: { tier: 'strong' }, route: { model: 'vendor/dialog', tier: 'dialog' } })).toEqual({ model: 'vendor/dialog', tier: 'dialog', source: 'route' });
+    expect(resolveLlmCapabilityModel({ ...BASE, descriptor: { tier: 'strong' }, route: { model: 'vendor/chat', tier: 'chat' } })).toEqual({ model: 'vendor/chat', tier: 'chat', source: 'route' });
   });
 
   it('should let a per-call tier win over a route, and a per-call slug win over everything', () => {
-    const byTier = resolveLlmCapabilityModel({ ...BASE, override: { tier: 'strong' }, descriptor: { model: 'vendor/one-off' }, route: { model: 'vendor/dialog' } });
+    const byTier = resolveLlmCapabilityModel({ ...BASE, override: { tier: 'strong' }, descriptor: { model: 'vendor/one-off' }, route: { model: 'vendor/chat' } });
     expect(byTier).toEqual({ model: STRONG, tier: 'strong', source: 'request-tier' });
 
-    const bySlug = resolveLlmCapabilityModel({ ...BASE, override: { model: 'vendor/pinned', tier: 'strong' }, route: { model: 'vendor/dialog' } });
+    const bySlug = resolveLlmCapabilityModel({ ...BASE, override: { model: 'vendor/pinned', tier: 'strong' }, route: { model: 'vendor/chat' } });
     expect(bySlug).toEqual({ model: 'vendor/pinned', source: 'request-model' });
   });
 

@@ -155,7 +155,7 @@ export function formatLlmUsageCost(config: FormatLlmUsageCostConfig): string {
   if (isLlmUsageCostUnavailable(config)) {
     rendered = LLM_USAGE_COST_UNAVAILABLE_CELL;
   } else {
-    // Coerced, never trusted: a cost folded from an old row can still be a string, and a render must never throw on
+    // Coerced, never trusted: a cost folded from a logged row can still be a string, and a render must never throw on
     // one. An unreadable figure renders as the unavailable cell rather than as a made-up number.
     const cost = readLlmCost(config.cost);
     rendered = cost == null ? LLM_USAGE_COST_UNAVAILABLE_CELL : `${marker}$${cost.toFixed(digits)}`;

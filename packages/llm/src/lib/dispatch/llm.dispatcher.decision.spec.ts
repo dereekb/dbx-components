@@ -4,15 +4,13 @@
  * records exactly one start and one call record under the CONSUMING capability and the decision strategy, through the
  * dispatcher's shared hooks (`lane: 'decision'`) and taps; the model ladder is the capability ladder with its bottom
  * rung swapped for the decision default model, a completion route skipped, and every slug checked per call; a
- * retryable transport failure is resent up to `decisions.maxAttempts` sends.
- *
- * Not ported: the host's ledger fold of a decision call, and the host consumers that read the decision arm.
+ * retryable transport failure is resent up to `decisions.maxAttempts` sends. The host's ledger fold of a decision
+ * call and the host consumers that read the decision arm are out of scope.
  */
 
 import { describe, expect, it, vi } from 'vitest';
-import { makeLlmScriptedDecisionStrategy, makeLlmScriptedStrategy, type LlmScriptedDecisionScript } from '@dereekb/llm/test';
+import { makeLlmDecisionChoiceAnswer, makeLlmDecisionNoulAnswer, makeLlmScriptedDecisionStrategy, makeLlmScriptedStrategy, type LlmScriptedDecisionScript } from '@dereekb/llm/test';
 import { LlmDecisionAnswerFaultError } from '../decision/llm.decision.answer';
-import { makeLlmDecisionChoiceAnswer, makeLlmDecisionNoulAnswer } from '../decision/llm.decision.answer.builder';
 import { defineLlmDecision } from '../decision/llm.decision.descriptor';
 import { llmDecisionModelIssue } from '../decision/llm.decision.model';
 import { llmChoiceQuestion, llmNoulQuestion } from '../decision/llm.decision.question';

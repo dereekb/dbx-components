@@ -546,7 +546,7 @@ describe('makeLlmOpenAiStrategy()', () => {
       await expect(injected.credentialProbe?.()).resolves.toEqual({ ready: true, issues: [] });
     });
 
-    it('delegates to a credentialProbeSource even when a client is injected (B15)', async () => {
+    it('delegates to a credentialProbeSource even when a client is injected', async () => {
       const { client } = makeFakeClient();
       const verdict = { ready: false, issues: [{ severity: 'error' as const, message: 'gateway rejected the configured credential' }] };
       const strategy = makeLlmOpenAiStrategy({ client, credentialProbeSource: async () => verdict });

@@ -20,13 +20,13 @@ import { APIConnectionError, APIConnectionTimeoutError, APIError, APIUserAbortEr
 import { classifyLlmError, isLlmAbortError, isRetryableLlmErrorClassification, LLM_ERROR_SUMMARY_MAX_LENGTH, formatLlmErrorSummary } from './llm.error';
 
 /*
- * Ported from the old unprefixed abort predicate and boolean retry predicate, outcomes unchanged. The invariant every
- * case below keeps: `classifyLlmError(e) === 'transient'` <=> the old "abort OR retryable" pair answered true.
+ * The invariant every case below keeps: `classifyLlmError(e) === 'transient'` <=> the error is an abort or a retryable
+ * class.
  */
 
 describe('isLlmAbortError / classifyLlmError against REAL openai SDK instances', () => {
-  it('every SDK error instance reports `.name === "Error"`, the property the old guard read', () => {
-    // NOT a test of the SDK: this is the fact that made the name-based guard dead code in production. If a future
+  it('every SDK error instance reports `.name === "Error"`, the property a name-based guard would read', () => {
+    // NOT a test of the SDK: this is the fact that makes a name-based guard dead code. If a future
     // `openai` starts setting `.name`, this goes red and the doc comments in `llm.error.ts` need revisiting.
     expect(new APIConnectionError({ message: 'Connection error.' }).name).toBe('Error');
     expect(new APIConnectionTimeoutError({}).name).toBe('Error');

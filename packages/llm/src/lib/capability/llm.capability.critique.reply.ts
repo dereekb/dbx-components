@@ -337,7 +337,7 @@ export function resolveLlmCritiqueFields(config: ResolveLlmCritiqueFieldsConfig)
 }
 
 /**
- * The judge's default instructions (D15) — a host overrides them with a higher template tier or its own resolver.
+ * The judge's default instructions — a host overrides them with a higher template tier or its own resolver.
  */
 export const DEFAULT_LLM_CRITIQUE_REPLY_INSTRUCTIONS = [
   '## Judge the reply',

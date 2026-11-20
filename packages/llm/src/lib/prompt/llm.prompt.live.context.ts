@@ -40,7 +40,7 @@ export interface LlmLiveContextBlock {
    * thought about the question must not claim stability it does not have.
    *
    * `false` is a CLAIM, made by a capability that has ordered its live context SLOW→FAST and can say which leading
-   * blocks are the slow ones (an identity brief; the heading). The claim is what lets `splitLlmPromptCacheSegments` put
+   * blocks are the slow ones (a persona or glossary block; the heading). The claim is what lets `splitLlmPromptCacheSegments` put
    * the cache split where the reorder actually created it, instead of pinning it at the first live-context byte —
    * without which a cache-prefix hash cannot see a live-context reorder AT ALL, and only the provider's own counter
    * can.

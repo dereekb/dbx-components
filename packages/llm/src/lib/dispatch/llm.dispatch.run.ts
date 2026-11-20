@@ -283,7 +283,7 @@ function llmDecodeStatusOf(accepted: boolean, attempts: number): LlmDecodeStatus
  * never the fast fix, and never the line lift.
  *
  * A send that faulted:
- * - `timeout` / `transport` on a CANCELLED dispatch drops the beat — the synthetic envelope, unstamped and recorded.
+ * - `timeout` / `transport` on a CANCELLED dispatch is dropped quietly — the synthetic envelope, unstamped and recorded.
  * - `timeout` / `transport` otherwise is recorded as one row of that class with the envelope stamped `dropped`, and
  *   carries {@link LlmDispatchOutcome.rethrow}: the pipeline records the call, then rethrows the original error.
  * - `unretryable` (a `permanent` error, or an `unknown` one — the host function is never consulted here, since no
@@ -314,7 +314,7 @@ export async function runSingleShotLlmDispatch(config: LlmDispatchAttemptsConfig
 
     outcome = { result, finalRequest: baseRequest, attemptPhases: [toLlmCallAttemptPhase({ attempt: 1, attemptContext, result, repair })], decodeFailures: [], failedAttempts: [], recovered: false };
   } else {
-    // a cancelled dispatch's timeout / transport fault drops the beat: the synthetic envelope, unstamped
+    // a cancelled dispatch's timeout / transport fault is dropped quietly: the synthetic envelope, unstamped
     outcome = { result: sent.result, finalRequest: baseRequest, attemptPhases: [toLlmCallAttemptPhase({ attempt: 1, attemptContext, result: sent.result })], decodeFailures: [], failedAttempts: [], recovered: false };
   }
 

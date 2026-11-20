@@ -177,7 +177,7 @@ describe('makeLlmPromptCachePrefixWatch(); a prefix carrying stable live blocks'
   });
 });
 
-describe('makeLlmPromptCachePrefixWatch(); D6', () => {
+describe('makeLlmPromptCachePrefixWatch() hash', () => {
   it('hashes the prefix with the library hash', () => {
     const observation = makeLlmPromptCachePrefixWatch().observe({ capability: 'summarize', segments: [stable('A0', 'abc')] });
     expect(observation.hash).toBe('ba7816bf8f01cfea');

@@ -19,7 +19,7 @@ dependency, and its browser entries run unchanged in a browser, a worker or Node
 | `@dereekb/llm/openrouter` | no | `openai` (through `/openai`) | The OpenRouter chat strategy (`cache_control`, strict `response_format`, usage accounting), the OpenRouter decision strategy and their adapters. |
 | `@dereekb/llm/zenmux` | no | none (`fetch`) | ZenMux constants and cost basis, the decision route on the core System One transport, the quota-status source and the bill reader. |
 | `@dereekb/llm/node` | yes | none | Model-config file IO, environment variables to provider configs, the craft-notes folder loader and the craft markdown to TypeScript compiler. |
-| `@dereekb/llm/test` | test infra | none | Tape replay, scripted completion and decision strategies, the `/systemone` wire fake, and the billed-lane test factories. |
+| `@dereekb/llm/test` | test infra | none | Tape replay, scripted completion and decision strategies, the decision answer builders (`makeLlmDecisionChoiceAnswer`, …), the `/systemone` wire fake, and the billed-lane test factories. |
 
 ## Browser safety
 
@@ -182,7 +182,7 @@ What a host persists for each call, the readers that read it back, and the math 
 
 - **Persisted payload.** `LlmCallLogPayload<H>` is what a host's recorder writes for each `LlmCallRecord`: flat, every
   field optional except `capability`, host fields (`H`) beside the library's, never nested. `decodeOutcome` and
-  `decodeStatus` are plain strings, since an old row may name a value a later build added. `text` is the MODEL's own
+  `decodeStatus` are plain strings, since a logged row may name a value this build does not know. `text` is the MODEL's own
   bytes (the pre-repair text), so a tape replays what the model said and the deterministic repair re-runs on replay.
 
   | payload key(s) | from the `LlmCallRecord` |
@@ -196,19 +196,19 @@ What a host persists for each call, the readers that read it back, and the math 
   | host fields | beside the library's, never nested |
 
 - **Readers.** `readLlmCallPrompt`, `readLlmCallPromptSegments` and `readLlmCallFailedAttempts` take `unknown` and
-  answer on a persisted payload, a legacy flat-`prompt` one, or an in-memory `LlmCallRecord`; a malformed field reads
-  as `undefined`, never a throw. Never dereference `promptSegments` yourself — a legacy row has only `prompt`, and the
+  answer on a persisted payload, a flat-`prompt` one (no segments), or an in-memory `LlmCallRecord`; a malformed field reads
+  as `undefined`, never a throw. Never dereference `promptSegments` yourself — a flat row has only `prompt`, and the
   prompt reader joins the segments when that is all there is.
   - `formatLlmCallAttempts(event, { repliesPointer })` returns the one-line retry summary of an `llm_call` event
     (`attempts 2 retried · #1 schema-validation: … → reasoning-low`, with ` (<repliesPointer>)` appended when given),
     or `undefined` for a clean call and for any other event.
   - `isDecisionLlmCallRow(payload, kinds)` marks a decision-lane row: its lane (`strategyKind`, else `strategyId`) is
     in `kinds`, or it carries a `decision` id. Build `kinds` once with `readLlmDecisionStrategyKinds(adapters)`; rows this
-    library's dispatcher wrote always carry `decision`, so `kinds` only matters for older rows.
+    library's dispatcher wrote always carry `decision`, so `kinds` only matters for rows without one.
 - **Usage cells.** `LlmUsageCell` (calls, prompt / completion / cached / reasoning tokens, cost, and
   `uncacheablePromptTokens` when above zero), with `toLlmUsageCell(usage, uncacheable)`, `addLlmUsageCells`,
   `accumulateLlmUsageCell(map, key, cell)` and `toLlmKeyedUsageCells(map)` (sorted by key). Cells are plain JSON: a
-  cell persisted before a field existed adds as `0`, never `NaN`, and a re-fold of persisted cells is byte-stable.
+  persisted cell missing a field adds it as `0`, never `NaN`, and a re-fold of persisted cells is byte-stable.
 - **Cost honesty.** `formatLlmUsageCost({ cost, calls, partial, listed })` renders `n/a` when no call priced itself,
   `>=$x` when some call did not (a lower bound), `<=$x` for list prices (an upper bound on the bill), `~$x` when both
   hold, and `$x` otherwise. A zero-call row is an exact `$0`. `resolveLlmUsageCostMarker` takes custom spellings (`≥`,
@@ -352,7 +352,7 @@ explains the choice read the same answer.
 
 - **Parse.** `parseLlmModelRoutingConfig({ raw, source, label? })` validates a routing block read from JSON (or an env
   var) into an `LlmModelRoutingConfig` and fails loud naming the field — an unknown key, a non-array `rules`, a
-  `"tags": "dialog"` string, a `"maxOutputTokens": "9000"` string or a non-integer cap, a bad `reasoning`, or a bad
+  `"tags": "support"` string, a `"maxOutputTokens": "9000"` string or a non-integer cap, a bad `reasoning`, or a bad
   `tiers` value (the tier parser's own message). It checks shapes only; `compileLlmModelRouting` checks names.
 - **Rules.** `compileLlmModelRouting({ routing, capabilities, tiers, providers, label })` (a thin caller of the shared
   `compileLlmCapabilityRules`, which also compiles the critique policy; a rule is an `LlmCapabilityRuleTarget`, i.e.
@@ -378,9 +378,9 @@ import { compileLlmModelRouting, llmModelProviderBindings, parseLlmModelRoutingC
 
 const routing = parseLlmModelRoutingConfig({ raw: JSON.parse(routingText), source: 'routing.json' });
 const { tiers, defaultTier } = resolveLlmModelTiers({ base: BUILT_IN_TIERS, modelTiers: { ...routing.tiers, ...profile?.tiers }, defaultTier: routing.defaultTier });
-const routes = compileLlmModelRouting({ routing, capabilities: [{ capability: 'reply-line', tags: ['dialog'] }, { capability: 'summarize' }], tiers, providers: ['local', 'openrouter'] });
+const routes = compileLlmModelRouting({ routing, capabilities: [{ capability: 'support-reply', tags: ['support'] }, { capability: 'summarize' }], tiers, providers: ['local', 'openrouter'] });
 
-const route = routes.get('reply-line');
+const route = routes.get('support-reply');
 const { model, source } = resolveLlmCapabilityModel({ descriptor: { tier: 'fast' }, route, tiers, defaultTier });
 const { provider } = resolveLlmCapabilityProvider({ route, model, bindings: llmModelProviderBindings(effective), defaultProvider: 'openrouter' });
 ```
@@ -730,7 +730,7 @@ descriptor also carries the two schema projections the request and the prompt re
 
 - **Protocols and reading.** The decoded reply payload is the reply's **value**. `json`: the parsed object is the
   value, never unwrapped and never declined. `json-envelope`: `LlmReplyEnvelopeKeys` (default `value` /
-  `answerable` / `rationale`; a host that kept `lever` passes `{ value: 'lever', … }`); `answerable: false` declines,
+  `answerable` / `rationale`; a host with its own value key passes it, e.g. `{ value: 'result', … }`); `answerable: false` declines,
   a hedged decline keeps its value, and a bare object reads as the value. `line`: `readLlmLineReplyValue` lifts the
   bare line into `{ line }`. `readLlmReply` classifies `value` / `declined` / `no-json` / `parse-error`; `readLlmReplyValue`
   is the thin wrapper and `readLlmReplyRationale` reads the rationale. The slicer is `@dereekb/util`
@@ -836,7 +836,7 @@ correction / backoff vocabulary with its constants.
   under the layout's `follow-up` slot id, sent over the replayed `thread` with no cache split and no attachments.
 - **Single-shot.** With no `validate` and no `critique` the strategy result comes back unchanged. A reply that nearly
   parses is repaired for free (`reply-repaired` diag, no decode row); the single-shot path never calls the fast fix. A
-  timeout or transient send error on a cancelled dispatch drops the beat (the synthetic envelope, recorded). Otherwise
+  timeout or transient send error on a cancelled dispatch is dropped quietly (the synthetic envelope, recorded). Otherwise
   it is recorded as one `timeout` / `transport` row and call record, then the original error is rethrown unchanged. A
   send error the policy does not resend (`permanent`, or `unknown`: no resend is possible here, so
   `isRetryableUnknownError` is never asked) is recorded as one `unretryable` row and call record, then rejects as
@@ -1249,7 +1249,7 @@ plain `fetch`, so it needs no SDK, and never reads the environment: the host pas
   inference key covers bills, and reads every call's bill, the subscription's included. The MANAGEMENT API key
   covers quota status; both inference keys get `403 Invalid API key` there.
 - **Cost basis.** A synchronous `cost` is the pre-discount LIST amount (`LLM_ZENMUX_SYNC_COST_BASIS = 'list'`), an upper
-  bound: measured over 406 calls, three of 17 slugs billed half of it. A provider's cost basis is
+  bound: some slugs bill a discount. A provider's cost basis is
   `resolveLlmProviderAccount(…).costBasis` with these adapters registered — a declared `metering` wins, else the URL
   must parse as `zenmux.ai` or a subdomain (`isLlmZenmuxBaseUrl`, which is `@dereekb/util`'s `isWebsiteUrlOnDomain`; a
   look-alike host never qualifies).
@@ -1412,7 +1412,7 @@ scripts make no network call, and the lane's helpers answer `undefined` while it
   spec drives a transport failure. Pass `requests` to collect every request, including the ones that threw.
 - **Scripted decisions.** `makeLlmScriptedDecisionStrategy({ script })` reads the script's answers through
   `requireLlmDecisionAnswers`, so an under-answered or malformed script is refused with `LlmDecisionAnswerFaultError`
-  exactly as a live transport would; usage is a zero-cost reading. Build answers with the root entry's
+  exactly as a live transport would; usage is a zero-cost reading. Build answers with this entry's
   `makeLlmDecisionChoiceAnswer` / `makeLlmDecisionScoreAnswer` / `makeLlmDecisionNoulAnswer`, which are well-formed by
   construction, so a script states only which option won and how surely.
 - **Fetch seams.** `makeLlmFetchFake(respond)` is a `ConfiguredFetch` fake for any fetch-seam spec: it records each
@@ -1504,4 +1504,4 @@ ordinals (`attempt`) and UTF-16 lengths whose name carries the unit (`rawLength`
 
 The SHA-256 helpers live in `@dereekb/util`: `sha256Hex(text)` and `sha256HexPrefix(text, length)`. They are
 synchronous and byte-identical to `node:crypto`'s `createHash('sha256').update(text, 'utf8').digest('hex')`. llm uses 16
-hex chars for cache / census / supplement hashes (`llmPromptCacheHash`) and 12 for tapes (`hashLlmTapePrompt`).
+hex chars for cache / call-row / supplement hashes (`llmPromptCacheHash`) and 12 for tapes (`hashLlmTapePrompt`).

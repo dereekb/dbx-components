@@ -14,8 +14,8 @@
  * Only segment DIGESTS are retained, never the bytes — a watch runs for a whole session without holding every prompt
  * it has seen.
  *
- * D6: the hash is {@link llmPromptCacheHash} — pure JS, browser-safe and equal to a `node:crypto` SHA-256 prefix, so
- * hashes recorded before and after a host moves onto the library compare directly.
+ * The hash is {@link llmPromptCacheHash} — pure JS, browser-safe and equal to a `node:crypto` SHA-256 prefix, so a
+ * `node:crypto` hash computed elsewhere compares directly.
  *
  * No log, no telemetry, no environment reads: the dispatcher owns emitting the breadcrumb, the watch owns deciding
  * there is one.

@@ -2,8 +2,8 @@
  * Usage rates — the cache-hit rate over CACHEABLE prompt tokens, the reasoning share, the per-capability cache rows,
  * the decision lane's "not applicable" treatment, and the one shared cache line.
  *
- * Not ported here: the per-run fold and its markdown renders (the budget block, the ledger table and their notes)
- * stay with the host that owns the fold; these cases re-express its numbers against the primitives.
+ * These cases use a per-run fold's numbers against the primitives; the fold and its markdown renders (the budget
+ * block, the ledger table and their notes) are the host's, and out of scope.
  */
 
 import { describe, it, expect } from 'vitest';

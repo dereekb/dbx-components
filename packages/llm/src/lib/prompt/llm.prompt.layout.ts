@@ -21,7 +21,7 @@ export const LLM_PROMPT_SLOT_ROLES = ['model-addendum', 'frame', 'reply-protocol
  * layout.
  *
  * - `model-addendum` — contributed: the resolved model's prompt addendum (`makeLlmModelAddendumPromptContributor`).
- * - `frame` — contributed: a preamble a host contributor places (a tone, a perspective, a style, a speaker's block). A
+ * - `frame` — contributed: a preamble a host contributor places (a tone, a perspective, a style, a persona block). A
  *   frame may sit anywhere in the array, after the contract included.
  * - `reply-protocol` — assembly: the `reply-protocol` template, or the built-in line protocol for a `line` call.
  * - `reply-amendment` — assembly: the must-resolve clause (a JSON protocol + `mustResolve`); at most one per prompt. A

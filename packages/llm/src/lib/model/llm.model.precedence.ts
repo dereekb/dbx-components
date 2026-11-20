@@ -339,7 +339,7 @@ export interface ResolveLlmCapabilityProviderConfig {
 /**
  * Resolve the provider one call is served by: the route's provider > the resolved slug's binding > the host default.
  *
- * The route is a host POLICY ("send the dialog family to the local box") and the binding a slug ENTITLEMENT ("this
+ * The route is a host POLICY ("send the support family to the local box") and the binding a slug ENTITLEMENT ("this
  * slug is only reachable on that key"); the policy is the more specific statement about this call, so it wins. The
  * binding is read AFTER the model resolves because entitlement lives on the slug however it was selected — a per-call
  * slug, a route, a capability default or a tier.

@@ -144,13 +144,13 @@ export interface RawLlmUsage {
 /**
  * **Read one cost field as a finite dollar figure, or report it absent.**.
  *
- * A finite number passes; a numeric string (the shape some gateways put on the wire, and so the shape older logs
- * already hold) is parsed; anything else — absent, blank, `NaN`, `Infinity`, a non-numeric string, an object — is
+ * A finite number passes; a numeric string (the shape some gateways put on the wire, and so a shape logged rows
+ * may hold) is parsed; anything else — absent, blank, `NaN`, `Infinity`, a non-numeric string, an object — is
  * `undefined`, NEVER `0`. A made-up zero is exactly what makes a cost-less call read as free, so an unreadable cost
  * is spelt the same way as an unreported one.
  *
- * Exported because the READ side needs the same rule: a ledger that re-folds logged calls meets the string shape in
- * records written before the fold existed.
+ * Exported because the READ side needs the same rule: a ledger that re-folds logged calls can meet the string shape in
+ * a logged record.
  *
  * @param value - The raw cost value off the wire or out of a logged record.
  * @returns The cost as a finite number, or `undefined` when it is missing or not a number.

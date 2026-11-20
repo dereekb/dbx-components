@@ -4,8 +4,8 @@
  * request to the answers it should produce: a spec asserts the WHOLE billed surface (the state assembled, the questions
  * declared, the answers read back) with no key, no network and no spend.
  *
- * Build the script's answers with the root builders (`makeLlmDecisionChoiceAnswer`, `makeLlmDecisionScoreAnswer`,
- * `makeLlmDecisionNoulAnswer` from `@dereekb/llm`), which are well-formed by construction.
+ * Build the script's answers with the `/test` builders (`makeLlmDecisionChoiceAnswer`, `makeLlmDecisionScoreAnswer`,
+ * `makeLlmDecisionNoulAnswer`), which are well-formed by construction.
  *
  * @see LlmDecisionStrategy (the seam these answers must satisfy).
  */

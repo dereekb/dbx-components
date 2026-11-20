@@ -11,14 +11,14 @@
  * | `flow_rate` | the surcharge advisory (`effective_usd_per_flow` > `base_usd_per_flow` ⇒ flagged usage) |
  *
  * **The credential is a THIRD key, and there is no way around it.** These endpoints reject both inference keys with
- * `403 {"success":false,"message":"Invalid API key"}` — verified on 2026-08-25 for all three endpoints × both keys. ZenMux
+ * `403 {"success":false,"message":"Invalid API key"}` on all three endpoints, for both keys. ZenMux
  * issues a separate **Management API Key** (console → Management) whose only job is this. Its absence is reported as an
  * `'error'` issue on an `available: false` status rather than by throwing — an operator who has not made one yet must still
  * be able to run everything they could run before. (The `management/generation?id=` endpoint is the exception that DOES
  * accept the pay-as-you-go inference key, but it is per-call retrospective billing, not a quota: `./zenmux.generation.bill`.)
  *
  * **Flows, and why `usedUsd` is not a rate you may reuse.** ZenMux meters subscription consumption in "Flows", a composite
- * of tokens + request overhead whose USD value FLOATS (`base_usd_per_flow`, ~$0.0328 when measured). The window's
+ * of tokens + request overhead whose USD value FLOATS (`base_usd_per_flow`). The window's
  * `used_value_usd` / `max_value_usd` are the provider's own conversion AT READ TIME. They are reported because a human
  * reading "57 of 800 flows" learns less than "$1.88 of $26.27", and they are documented as non-arithmetic because
  * subtracting two reads taken at different rates is meaningless.

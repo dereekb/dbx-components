@@ -56,12 +56,12 @@ const DESCRIPTORS: Readonly<Record<string, LlmCapabilityDescriptor>> = {
   LineCap: LINE
 };
 
-const MANGLED = '{"say":"a long enough line of dialogue","n":None}';
-const FIXED = '{"say":"a long enough line of dialogue","n":null}';
+const MANGLED = '{"say":"a long enough line of feedback","n":None}';
+const FIXED = '{"say":"a long enough line of feedback","n":null}';
 /**
  * A clean-stop reply one `close-object` op repairs.
  */
-const NEAR_MISS = '{"say":"a long enough line of dialogue","n":1';
+const NEAR_MISS = '{"say":"a long enough line of feedback","n":1';
 const OK = '{"say":"ok"}';
 const SUBJECT_HINT = { type: 'object', properties: { say: { type: 'string' }, n: { type: ['null', 'number'] } } };
 const acceptAny = () => true as const;
@@ -148,7 +148,7 @@ describe('makeLlmDispatcher() reply repair', () => {
     it("should re-ask a repaired value the validator rejects with the VALIDATOR's error, not the parse-error text", async () => {
       let calls = 0;
       const rejectFirst = () => (calls++ === 0 ? { error: 'say must be longer' } : true);
-      const { subjectCalls } = await run({ subject: ['{"say":"a long enough line of dialogue"', OK], request: { validate: rejectFirst } });
+      const { subjectCalls } = await run({ subject: ['{"say":"a long enough line of feedback"', OK], request: { validate: rejectFirst } });
 
       expect(subjectCalls).toHaveLength(2);
       expect(subjectCalls[1].prompt).toContain('say must be longer');
@@ -156,7 +156,7 @@ describe('makeLlmDispatcher() reply repair', () => {
     });
 
     it('should keep the budget rung on a length-capped reply and never repair it on the final attempt either', async () => {
-      const closable = '{"say":"a long enough line of dialogue"';
+      const closable = '{"say":"a long enough line of feedback"';
       const { result, subjectCalls, diags } = await run({ subject: [{ text: closable, finishReason: 'length' }], request: { maxAttempts: 2 } });
 
       expect(subjectCalls).toHaveLength(2);
@@ -181,11 +181,11 @@ describe('makeLlmDispatcher() reply repair', () => {
       expect((fixer.responseSchemaHint as { properties?: Record<string, unknown> }).properties).toHaveProperty('say');
       expect(result.decodeStatus).toBe('clean');
       expect(result.repair).toMatchObject({ tier: 'fast-fix', attempt: 1, verdict: 'mangled', originalText: MANGLED });
-      expect(readLlmReply(result.text)).toEqual({ kind: 'value', value: { say: 'a long enough line of dialogue', n: null } });
+      expect(readLlmReply(result.text)).toEqual({ kind: 'value', value: { say: 'a long enough line of feedback', n: null } });
     });
 
     it('should miss on fidelity when the fixer changes a number, and re-ask the subject', async () => {
-      const { subjectCalls, fixerCalls, diags } = await run({ subject: [MANGLED, OK], fixer: ['{"say":"a long enough line of dialogue","n":7}'], replyFastFix: makeLlmReplyFastFixer() });
+      const { subjectCalls, fixerCalls, diags } = await run({ subject: [MANGLED, OK], fixer: ['{"say":"a long enough line of feedback","n":7}'], replyFastFix: makeLlmReplyFastFixer() });
 
       expect(fixerCalls).toHaveLength(1);
       expect(subjectCalls).toHaveLength(2);
@@ -213,8 +213,8 @@ describe('makeLlmDispatcher() reply repair', () => {
 
     it('should fix a json-envelope subject with a custom value key and a trailing rationale (fidelity over the object under the value key)', async () => {
       const replyEnvelope = { value: 'payload', answerable: 'ok', rationale: 'why' };
-      const subject = '{"ok":true,"payload":{"say":"a long enough line of dialogue","n":None},"why":"The line answers the scene prompt well."}';
-      const { result, subjectCalls, fixerCalls, diags } = await run({ subject: [subject], fixer: ['{"ok":true,"payload":{"say":"a long enough line of dialogue","n":null}}'], replyFastFix: makeLlmReplyFastFixer(), defaultReplyProtocol: 'json-envelope', replyEnvelope });
+      const subject = '{"ok":true,"payload":{"say":"a long enough line of feedback","n":None},"why":"The line answers the asked prompt well."}';
+      const { result, subjectCalls, fixerCalls, diags } = await run({ subject: [subject], fixer: ['{"ok":true,"payload":{"say":"a long enough line of feedback","n":null}}'], replyFastFix: makeLlmReplyFastFixer(), defaultReplyProtocol: 'json-envelope', replyEnvelope });
 
       expect(subjectCalls).toHaveLength(1);
       expect(fixerCalls).toHaveLength(1);
@@ -274,7 +274,7 @@ describe('makeLlmDispatcher() reply repair', () => {
       expect(reasonsOf(lowScore.diags, 'reply-repair-refused')).toEqual(['low-score']);
     });
 
-    it('should keep the default maxPerDispatch (1) when fastFixLimits passes an explicit undefined (B5)', async () => {
+    it('should keep the default maxPerDispatch (1) when fastFixLimits passes an explicit undefined', async () => {
       const { fixerCalls, diags } = await run({ subject: [MANGLED], fixer: ['{"say":"changed words entirely"}'], replyFastFix: makeLlmReplyFastFixer(), fastFixLimits: { maxPerDispatch: undefined } });
 
       expect(fixerCalls).toHaveLength(1);

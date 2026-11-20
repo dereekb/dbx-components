@@ -348,8 +348,8 @@ export function makeLlmTapeStrategy(config: LlmTapeStrategyConfig): LlmTapeStrat
  */
 export interface ReadLlmTapeTurnConfig {
   /**
-   * The decision transports' strategy kinds (`readLlmDecisionStrategyKinds(adapters)`), so a decision row written before a
-   * host recorded decision ids is still skipped. See `isDecisionLlmCallRow`.
+   * The decision transports' strategy kinds (`readLlmDecisionStrategyKinds(adapters)`), so a decision row without a
+   * `decision` id is still skipped. See `isDecisionLlmCallRow`.
    */
   readonly decisionStrategyKinds?: Maybe<ReadonlySet<LlmStrategyId>>;
   /**
