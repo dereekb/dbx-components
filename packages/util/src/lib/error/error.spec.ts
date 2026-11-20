@@ -1,4 +1,5 @@
-import { isDefaultReadableError, DEFAULT_READABLE_ERROR_CODE, readErrorMessage, errorClassNames, messageFromError, errorMessageContainsString } from './error';
+import { isDefaultReadableError, DEFAULT_READABLE_ERROR_CODE, readErrorMessage, errorClassNames, messageFromError, errorMessageContainsString, toReadableError } from './error';
+import { ServerErrorResponse } from './error.server';
 
 describe('isDefaultReadableError()', () => {
   it('should return true for null/undefined', () => {
@@ -138,5 +139,73 @@ describe('errorMessageContainsString()', () => {
 
   it('should return false for an object without a message', () => {
     expect(errorMessageContainsString({ code: 'TEST' }, 'object')).toBe(false);
+  });
+});
+
+describe('toReadableError()', () => {
+  it('should return a readable error for a string', () => {
+    expect(toReadableError('quota')).toEqual({ code: 'ERROR', message: 'quota', _error: 'quota' });
+  });
+
+  it('should return a readable error for a number', () => {
+    expect(toReadableError(404)).toEqual({ code: DEFAULT_READABLE_ERROR_CODE, message: '404', _error: 404 });
+  });
+
+  it('should return a readable error for a symbol without throwing', () => {
+    const symbol = Symbol('x');
+    expect(toReadableError(symbol)).toEqual({ code: DEFAULT_READABLE_ERROR_CODE, message: 'Symbol(x)', _error: symbol });
+  });
+
+  it('should return a readable error for falsy primitives', () => {
+    expect(toReadableError('')).toEqual({ code: DEFAULT_READABLE_ERROR_CODE, message: '', _error: '' });
+    expect(toReadableError(0)).toEqual({ code: DEFAULT_READABLE_ERROR_CODE, message: '0', _error: 0 });
+    expect(toReadableError(false)).toEqual({ code: DEFAULT_READABLE_ERROR_CODE, message: 'false', _error: false });
+  });
+
+  it('should return undefined for null and undefined', () => {
+    expect(toReadableError(null)).toBeUndefined();
+    expect(toReadableError(undefined)).toBeUndefined();
+  });
+
+  it('should not unwrap a wrapper whose data is a primitive', () => {
+    const input = { data: 'x' };
+    expect(toReadableError(input)).toEqual({ code: DEFAULT_READABLE_ERROR_CODE, message: '', _error: input });
+  });
+
+  it('should keep the message of an input whose data is an array', () => {
+    const input = { message: 'kept', data: [1] };
+    expect(toReadableError(input)).toEqual({ code: DEFAULT_READABLE_ERROR_CODE, message: 'kept', _error: input });
+  });
+
+  it('should unwrap a wrapper whose data is an object', () => {
+    expect(toReadableError({ data: { code: 'WRAPPED', message: 'inner' } })).toEqual({ code: 'WRAPPED', message: 'inner' });
+  });
+
+  it('should keep the message of a code-less ServerErrorResponse without data', () => {
+    const input = new ServerErrorResponse({ status: 409, message: 'Already exists' });
+    const result = toReadableError(input);
+    expect(result.code).toBe(DEFAULT_READABLE_ERROR_CODE);
+    expect((result as { message?: string }).message).toBe('Already exists');
+  });
+
+  it('should return a coded error as is', () => {
+    const input = { code: 'C', message: 'm' };
+    expect(toReadableError(input)).toBe(input);
+  });
+
+  it('should fall past the code branch when the code is null', () => {
+    const input = Object.assign(new Error('boom'), { code: null });
+    expect(toReadableError(input)).toEqual({ code: DEFAULT_READABLE_ERROR_CODE, message: 'boom', _error: input });
+  });
+
+  it('should not throw for a null-prototype object', () => {
+    const input = Object.create(null) as object;
+    expect(toReadableError(input)).toMatchObject({ code: DEFAULT_READABLE_ERROR_CODE, message: '' });
+  });
+
+  it('should resolve an any argument to the non-Maybe overload', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const caught: any = new Error('x');
+    expect(toReadableError(caught).code).toBe(DEFAULT_READABLE_ERROR_CODE);
   });
 });
