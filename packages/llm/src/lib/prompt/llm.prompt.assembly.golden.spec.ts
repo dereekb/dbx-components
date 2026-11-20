@@ -7,7 +7,8 @@
  * {@link composeLlmCapabilityPrompt} over that host's (lettered) layout, its contract intro and footer passed through
  * `texts`, and two of its long prose constants swapped for the marked stand-ins `LINE-PROTOCOL` and `MUST-RESOLVE`.
  * The host-side rules (voice-keyed reply protocols, first-by-layer templates, frames) run through spec-local
- * stand-ins for its resolver and contributors, proving the seam carries them.
+ * stand-ins for its resolver and contributors, proving the seam carries them; the host's line-manner clause (stand-in
+ * `LINE-MANNER`) arrives through a host contributor in its own frame slot, as segment `A-amendment`.
  *
  * A deliberate byte change must recapture these literals in a commit that says so.
  */
@@ -15,6 +16,7 @@ import { type } from 'arktype';
 import { describe, expect, it } from 'vitest';
 import { type LlmCapabilityDescriptor, type LlmCapabilityDescriptorReader } from '../capability/llm.capability.descriptor';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
+import { resolveLlmReplyProtocol } from '../reply/llm.reply.protocol';
 import { assembleLlmCapabilityPrompt, composeLlmCapabilityPrompt, type ComposeLlmCapabilityPromptConfig, type LlmAssembledPrompt, type LlmComposedCapabilityPrompt, type LlmPromptAssemblyTexts, type LlmPromptTemplateSegmentOrigin } from './llm.prompt.assembly';
 import { type LlmPromptContribution, type LlmPromptContributor, resolveLlmPromptContributions } from './llm.prompt.contributor';
 import { llmPromptCacheHash } from './llm.prompt.hash';
@@ -26,7 +28,7 @@ import { type LlmPromptTemplate, type LlmPromptTemplateResolver, type LlmPromptT
 
 // MARK: Fixture
 /**
- * The LETTERED layout, copied from `llm.prompt.layout.spec.ts`.
+ * The LETTERED layout of `llm.prompt.layout.spec.ts`, plus the host's line-manner frame slot `A-manner`.
  */
 const LETTERED_LAYOUT: LlmPromptLayout = [
   { id: 'model-addendum', role: 'model-addendum', occupancy: 'single', separator: '\n\n' },
@@ -35,6 +37,7 @@ const LETTERED_LAYOUT: LlmPromptLayout = [
   { id: 'A0.7', role: 'frame', occupancy: 'single', separator: '\n\n' },
   { id: 'A', role: 'reply-protocol', occupancy: 'single', separator: '\n\n' },
   { id: 'A-amendment', role: 'reply-amendment', occupancy: 'single', separator: '\n\n' },
+  { id: 'A-manner', role: 'frame', occupancy: 'single', separator: '\n\n' },
   { id: 'B', role: 'instructions', occupancy: 'single', separator: '\n\n' },
   { id: 'C-pre', role: 'context-pre', occupancy: 'single', separator: '\n\n' },
   { id: 'contract', role: 'contract', occupancy: 'single', separator: '\n\n' },
@@ -49,7 +52,6 @@ const LETTERED_LAYOUT: LlmPromptLayout = [
 const REPLICA_TEXTS: LlmPromptAssemblyTexts = {
   lineReplyProtocol: 'LINE-PROTOCOL',
   mustResolveClause: 'MUST-RESOLVE',
-  lineMannerClause: 'LINE-MANNER',
   outputContractIntro: 'Return the `lever` as a JSON object with these fields:',
   outputContractFooter: 'Never invent an id. Every id MUST be one shown in the live context below.'
 };
@@ -98,6 +100,7 @@ interface ReplicaRequest extends LlmDispatchRequest {
   readonly style?: string;
   readonly perspective?: ReplicaPerspective;
   readonly speech?: string;
+  readonly lineManner?: boolean;
 }
 
 const RESOLVE_CONTRACT = {
@@ -265,6 +268,19 @@ const REPLICA_FRAMES: LlmPromptContributor<ReplicaRequest, ReplicaDescriptor> = 
   }
 };
 
+/**
+ * A stand-in for the host's line-manner contributor: when the host's request asks and the effective protocol is
+ * `line`, the host's clause in its own frame slot, as segment `A-amendment`.
+ */
+const REPLICA_LINE_MANNER: LlmPromptContributor<ReplicaRequest, ReplicaDescriptor> = {
+  id: 'line-manner',
+  slots: ['A-manner'],
+  resolve: ({ request, descriptor }) => {
+    const asked = request.lineManner === true && resolveLlmReplyProtocol({ request, descriptor, defaultReplyProtocol: 'json-envelope' }) === 'line';
+    return { contributions: asked ? [{ contributor: 'line-manner', slot: 'A-manner', id: 'A-amendment', text: 'LINE-MANNER', origin: { kind: 'generated', generator: 'line-manner-amendment' }, reason: 'the host asks a line call for its delivery note' }] : [] };
+  }
+};
+
 const ADDENDA: Readonly<Record<string, string>> = { 'census/fast': 'ADDENDUM for census/fast' };
 
 /**
@@ -299,7 +315,7 @@ interface AssembleReplicaConfig {
 async function assembleReplica(request: ReplicaRequest, config: AssembleReplicaConfig = {}): Promise<LlmAssembledPrompt> {
   const descriptor = DESCRIPTOR_OF(request.capability);
   const templates = await replicaResolver(config.tiers ?? [CORPUS])({ request, descriptor });
-  const { contributions } = await resolveLlmPromptContributions([REPLICA_FRAMES], { request, descriptor, templates, liveBlockKeys: [] });
+  const { contributions } = await resolveLlmPromptContributions([REPLICA_FRAMES, REPLICA_LINE_MANNER], { request, descriptor, templates, liveBlockKeys: [] });
   return assembleLlmCapabilityPrompt({
     layout: LETTERED_LAYOUT,
     capability: request.capability,
@@ -308,7 +324,6 @@ async function assembleReplica(request: ReplicaRequest, config: AssembleReplicaC
     liveContext: config.liveContext ?? D_LIVE,
     replyProtocol: request.replyProtocol,
     defaultReplyProtocol: 'json-envelope',
-    lineManner: request.lineManner,
     contributions: [...contributions, ...(config.contributions ?? [])],
     texts: REPLICA_TEXTS
   });
@@ -322,7 +337,16 @@ async function assembleReplica(request: ReplicaRequest, config: AssembleReplicaC
  * @returns The composed prompt.
  */
 function composeReplica(request: ReplicaRequest, extra: Partial<ComposeLlmCapabilityPromptConfig<ReplicaRequest, ReplicaDescriptor>> = {}): Promise<LlmComposedCapabilityPrompt> {
-  return composeLlmCapabilityPrompt<ReplicaRequest, ReplicaDescriptor>({ request, layout: LETTERED_LAYOUT, descriptorOf: DESCRIPTOR_OF, templateResolver: replicaResolver([CORPUS]), contributors: [REPLICA_ADDENDUM, REPLICA_FRAMES], defaultReplyProtocol: 'json-envelope', texts: REPLICA_TEXTS, ...extra });
+  return composeLlmCapabilityPrompt<ReplicaRequest, ReplicaDescriptor>({
+    request,
+    layout: LETTERED_LAYOUT,
+    descriptorOf: DESCRIPTOR_OF,
+    templateResolver: replicaResolver([CORPUS]),
+    contributors: [REPLICA_ADDENDUM, REPLICA_FRAMES, REPLICA_LINE_MANNER],
+    defaultReplyProtocol: 'json-envelope',
+    texts: REPLICA_TEXTS,
+    ...extra
+  });
 }
 
 function idsOf(assembled: LlmAssembledPrompt): ReadonlyArray<string> {
@@ -553,10 +577,13 @@ describe('the golden replica', () => {
       expect(idsOf(blank)).not.toContain('A0');
     });
 
-    it('should place the line-manner clause in the same amendment slot as must-resolve', async () => {
+    it("should carry the host's line-manner clause through its own frame slot, as segment A-amendment", async () => {
       const assembled = await assembleReplica(replicaRequest('speak', { replyProtocol: 'line', lineManner: true }));
       expect(assembled.prompt.startsWith('LINE-PROTOCOL\n\nLINE-MANNER\n\nB-VOICE\n\n')).toBe(true);
       expect(idsOf(assembled).slice(0, 2)).toEqual(['A', 'A-amendment']);
+
+      const json = await assembleReplica(replicaRequest('speak', { lineManner: true }));
+      expect(idsOf(json)).not.toContain('A-amendment');
     });
   });
 

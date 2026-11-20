@@ -4,7 +4,7 @@ import { describe, expect, it, type Mock, vi } from 'vitest';
 import { type LlmCapabilityDescriptor } from '../capability/llm.capability.descriptor';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { makeLlmCallContext } from '../record/llm.call.context';
-import { assembleLlmCapabilityPrompt, composeLlmCapabilityPrompt, type ComposeLlmCapabilityPromptConfig, DEFAULT_LLM_LINE_MANNER_CLAUSE, DEFAULT_LLM_LINE_REPLY_PROTOCOL, type LlmComposedCapabilityPrompt } from './llm.prompt.assembly';
+import { assembleLlmCapabilityPrompt, composeLlmCapabilityPrompt, type ComposeLlmCapabilityPromptConfig, DEFAULT_LLM_LINE_REPLY_PROTOCOL, type LlmComposedCapabilityPrompt } from './llm.prompt.assembly';
 import { renderLlmOutputContract } from './llm.prompt.contract';
 import { type LlmPromptContribution, type LlmPromptContributor, type LlmPromptContributorParams } from './llm.prompt.contributor';
 import { DEFAULT_LLM_PROMPT_LAYOUT, type LlmPromptSlot, defineLlmPromptLayout } from './llm.prompt.layout';
@@ -168,9 +168,9 @@ describe('composeLlmCapabilityPrompt()', () => {
   });
 
   describe('forwarding', () => {
-    it("should forward the request's reply protocol and line manner", async () => {
-      const composed = await compose(fixture(), { request: request({ replyProtocol: 'line', lineManner: true }) });
-      expect(composed.prompt.startsWith(`TONE\n\n${DEFAULT_LLM_LINE_REPLY_PROTOCOL}\n\n${DEFAULT_LLM_LINE_MANNER_CLAUSE}\n\nB-SUMMARIZE`)).toBe(true);
+    it("should forward the request's reply protocol", async () => {
+      const composed = await compose(fixture(), { request: request({ replyProtocol: 'line' }) });
+      expect(composed.prompt.startsWith(`TONE\n\n${DEFAULT_LLM_LINE_REPLY_PROTOCOL}\n\nB-SUMMARIZE`)).toBe(true);
     });
 
     it("should forward the request's contract footer and the contract hint", async () => {

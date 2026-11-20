@@ -468,9 +468,10 @@ scopes, prompt handles and chains, a live-context token budget, a cache-prefix w
   registry order and assembles. `assembleLlmCapabilityPrompt` is its synchronous last step (resolved templates and
   contributions in, segments out) for previews and goldens. The layout drives it: each slot, in order, holds what its
   role says — contributions (frames, the model addendum, craft notes stable then volatile), the reply protocol (the
-  `reply-protocol` template, or the built-in line protocol for a `line` call), at most one amendment (must-resolve for a
-  JSON protocol and a `mustResolve` descriptor; line-manner for a `line` call with `lineManner`), the `instructions`
-  template, the `context` template split at its first `{{liveContext}}`, the output contract (JSON protocols with a
+  `reply-protocol` template, or the built-in line protocol for a `line` call), at most one amendment (must-resolve, for a
+  JSON protocol and a `mustResolve` descriptor; a clause only some calls carry is the host's, contributed from a `frame`
+  slot it declares next to the amendment slot — its segment id may name that slot, so the bytes read as one amendment),
+  the `instructions` template, the `context` template split at its first `{{liveContext}}`, the output contract (JSON protocols with a
   descriptor) and the live blocks with the live slot's contributions merged at their anchors. Each piece is closed by
   its slot's separator; bytes with no slot to land in fail loud. The result is `{ segments, prompt, cacheSegments }`, the
   last two derived from the segments. An empty live context still places one empty volatile segment, and an all-stable
@@ -478,9 +479,9 @@ scopes, prompt handles and chains, a live-context token budget, a cache-prefix w
 - **Output contract.** `renderLlmOutputContract` renders the contract schema (the descriptor's `contractSchemaHint()`,
   or a per-call override) as one bullet per field — name, type label, required or optional, the field's description —
   expanding an array of objects into an indented block where that delivers prose.
-- **Texts.** The line protocol, the must-resolve and line-manner amendments and the contract's intro and footer have
-  library defaults (`DEFAULT_LLM_PROMPT_ASSEMBLY_TEXTS`); a host passes its own exact text through `texts`, and one call
-  its own footer through `contractFooter`.
+- **Texts.** The line protocol, the must-resolve amendment and the contract's intro and footer have library defaults
+  (`DEFAULT_LLM_PROMPT_ASSEMBLY_TEXTS`); a host passes its own exact text through `texts`, and one call its own footer
+  through `contractFooter`.
 - **Sites.** `mergeLlmPromptSite` merges two sites, the narrower winning (its `kind` and `judge` replace; facts, inputs
   and supply merge key by key). `withLlmPromptSite({ dispatcher, site })` returns a dispatcher whose every request,
   dispatched or prepared, carries the site — the request's own site winning, a later wrapper narrower than an earlier

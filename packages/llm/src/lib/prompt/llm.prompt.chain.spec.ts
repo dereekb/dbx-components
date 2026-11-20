@@ -155,7 +155,7 @@ describe('makeLlmPromptChain(); the instance', () => {
     const validate: LlmValueValidator = () => true;
     const first = await chain.dispatch({ dispatcher, request: blocksRequest('summarize', root) });
 
-    await chain.dispatch({ dispatcher, request: blocksRequest('summarize', item, { validate, maxAttempts: 2, responseSchemaHint: { type: 'object' }, tier: 'fast', lineManner: true }), previous: first });
+    await chain.dispatch({ dispatcher, request: blocksRequest('summarize', item, { validate, maxAttempts: 2, responseSchemaHint: { type: 'object' }, tier: 'fast', contractFooter: 'FOOTER' }), previous: first });
 
     expect(Object.keys(runs[1]?.followUp ?? {}).sort()).toEqual(['content', 'maxAttempts', 'responseSchemaHint', 'validate']);
     expect(runs[1]?.followUp?.validate).toBe(validate);

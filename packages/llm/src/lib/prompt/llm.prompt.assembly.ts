@@ -36,11 +36,6 @@ export const DEFAULT_LLM_LINE_REPLY_PROTOCOL = 'Reply with ONLY the requested te
 export const DEFAULT_LLM_MUST_RESOLVE_CLAUSE = 'AMENDMENT for THIS capability: a faithful answer always exists, so never decline and never return an empty answer. When the context supports only part of the answer, return that part.';
 
 /**
- * The library's default line-manner clause — the `reply-amendment` of a `line` call that asks for its delivery note.
- */
-export const DEFAULT_LLM_LINE_MANNER_CLAUSE = 'MANNER (this reply only): instead of bare text, reply with ONE JSON object {"line": "<the text>", "manner": "<how it is delivered>"}. The line keeps every rule above; the manner is a short delivery note (pace, loudness, breath).';
-
-/**
  * The texts the assembly authors itself. Every field has a neutral library default
  * ({@link DEFAULT_LLM_PROMPT_ASSEMBLY_TEXTS}); a host passes its own exact text for any of them.
  */
@@ -53,10 +48,6 @@ export interface LlmPromptAssemblyTexts {
    * The `reply-amendment` of a JSON call whose descriptor sets `mustResolve`.
    */
   readonly mustResolveClause: string;
-  /**
-   * The `reply-amendment` of a `line` call with `lineManner`.
-   */
-  readonly lineMannerClause: string;
   /**
    * The output contract's intro line.
    */
@@ -73,7 +64,6 @@ export interface LlmPromptAssemblyTexts {
 export const DEFAULT_LLM_PROMPT_ASSEMBLY_TEXTS: LlmPromptAssemblyTexts = {
   lineReplyProtocol: DEFAULT_LLM_LINE_REPLY_PROTOCOL,
   mustResolveClause: DEFAULT_LLM_MUST_RESOLVE_CLAUSE,
-  lineMannerClause: DEFAULT_LLM_LINE_MANNER_CLAUSE,
   outputContractIntro: DEFAULT_LLM_OUTPUT_CONTRACT_INTRO,
   outputContractFooter: DEFAULT_LLM_OUTPUT_CONTRACT_FOOTER
 };
@@ -116,7 +106,7 @@ export interface LlmPromptTemplateSegmentOrigin extends LlmPromptSegmentOrigin {
 /**
  * The generators of the text the assembly authors itself.
  */
-export type LlmPromptAssemblyGenerator = 'output-contract' | 'line-reply-protocol' | 'must-resolve-amendment' | 'line-manner-amendment';
+export type LlmPromptAssemblyGenerator = 'output-contract' | 'line-reply-protocol' | 'must-resolve-amendment';
 
 /**
  * The origin of a segment the library generated (not cut from a template, not contributed).
@@ -210,10 +200,6 @@ export interface AssembleLlmCapabilityPromptConfig {
    * The host's default reply protocol.
    */
   readonly defaultReplyProtocol?: Maybe<LlmReplyProtocol>;
-  /**
-   * Ask a `line` call for its delivery note too. Ignored by the JSON protocols.
-   */
-  readonly lineManner?: Maybe<boolean>;
   /**
    * A per-call contract schema. Nullish ⇒ the descriptor's `contractSchemaHint()`.
    */
@@ -335,10 +321,6 @@ interface LlmPromptAssemblyPieceInput {
    */
   readonly json: boolean;
   /**
-   * Whether a `line` call asked for its delivery note.
-   */
-  readonly lineManner: boolean;
-  /**
    * The per-call contract schema, when given.
    */
   readonly contractSchemaHint: unknown;
@@ -359,7 +341,7 @@ interface LlmPromptAssemblyPieceInput {
  * @returns The pieces.
  */
 function llmPromptReplyPiecesOf(input: LlmPromptAssemblyPieceInput): LlmPromptAssemblyPieces {
-  const { descriptor, templates, json, lineManner, texts } = input;
+  const { descriptor, templates, json, texts } = input;
   const template = templates?.roles['reply-protocol'];
   let protocol: Maybe<LlmPromptAssemblyPiece>;
   let amendment: Maybe<LlmPromptAssemblyPiece>;
@@ -369,7 +351,6 @@ function llmPromptReplyPiecesOf(input: LlmPromptAssemblyPieceInput): LlmPromptAs
     amendment = descriptor?.mustResolve === true ? { text: texts.mustResolveClause, origin: llmPromptGeneratedSegmentOrigin('must-resolve-amendment'), reason: 'descriptor.mustResolve under a JSON protocol: the capability may not decline' } : undefined;
   } else {
     protocol = { text: texts.lineReplyProtocol, origin: llmPromptGeneratedSegmentOrigin('line-reply-protocol'), reason: "a 'line' reply: the built-in line protocol replaces the reply-protocol template" };
-    amendment = lineManner ? { text: texts.lineMannerClause, origin: llmPromptGeneratedSegmentOrigin('line-manner-amendment'), reason: "lineManner on a 'line' reply: the reply also carries its delivery note" } : undefined;
   }
 
   return { ...(protocol == null ? {} : { 'reply-protocol': protocol }), ...(amendment == null ? {} : { 'reply-amendment': amendment }) };
@@ -516,8 +497,9 @@ function llmPromptPieceSegmentsOf(slot: LlmPromptSlot, piece: Maybe<LlmPromptAss
  *   `volatile: true` only when it claims it.
  * - `reply-protocol` — under a JSON protocol the `reply-protocol` template; under `line` the built-in line protocol
  *   ({@link LlmPromptAssemblyTexts.lineReplyProtocol}), which replaces the template.
- * - `reply-amendment` — at most one: the must-resolve clause (a JSON protocol and a `mustResolve` descriptor) or the
- *   line-manner clause (`line` and `lineManner`).
+ * - `reply-amendment` — at most one: the must-resolve clause (a JSON protocol and a `mustResolve` descriptor). A clause
+ *   only some calls carry (an extra instruction for a `line` call) is the host's: a contribution in a `frame` slot it
+ *   declares beside this one, whose segment id may name this slot.
  * - `instructions` — the `instructions` template.
  * - `context-pre` / `context-post` — the `context` template split at its FIRST `{{liveContext}}`: the part before is
  *   placed raw (even when empty), the part after only when non-empty; without a marker, the whole body.
@@ -551,7 +533,7 @@ export function assembleLlmCapabilityPrompt(config: AssembleLlmCapabilityPromptC
   assertLlmPromptContributionOccupancy(contributions, layout);
 
   const liveSlot = llmPromptLiveSlotOf(layout);
-  const pieces = llmPromptAssemblyPiecesOf({ descriptor, templates, json: protocol !== 'line', lineManner: config.lineManner === true, contractSchemaHint: config.contractSchemaHint, contractFooter: config.contractFooter, texts });
+  const pieces = llmPromptAssemblyPiecesOf({ descriptor, templates, json: protocol !== 'line', contractSchemaHint: config.contractSchemaHint, contractFooter: config.contractFooter, texts });
   assertLlmPromptAssemblyPiecesPlaceable(pieces, layout, capability);
 
   const liveSegments = llmPromptLiveSegmentsOf(liveSlot, capability, mergeLlmLiveContextContributions({ blocks: toLlmLiveContextBlocks(config.liveContext), contributions, slot: liveSlot.id }));
@@ -658,8 +640,7 @@ export interface LlmComposedCapabilityPrompt extends LlmAssembledPrompt {
  * Compose a request's prompt — the one pipeline a dispatch, a preview and an explain view share: render the request's
  * live context (span `render`), look the descriptor up through the injected `descriptorOf`, await the template
  * resolver once and resolve the contributors in registry order (span `contribute`), then
- * {@link assembleLlmCapabilityPrompt} (span `assemble`) with the request's reply protocol, line manner and contract
- * footer.
+ * {@link assembleLlmCapabilityPrompt} (span `assemble`) with the request's reply protocol and contract footer.
  *
  * @param config - The request, the layout, the injected lookups and the host's defaults.
  * @returns The assembled prompt, the contributions and cuts, and the live blocks as sent.
@@ -692,7 +673,6 @@ export async function composeLlmCapabilityPrompt<R extends LlmDispatchRequest = 
       liveContext: blocks,
       replyProtocol: request.replyProtocol,
       defaultReplyProtocol: config.defaultReplyProtocol,
-      lineManner: request.lineManner,
       contractSchemaHint: config.contractSchemaHint,
       contractFooter: request.contractFooter,
       contributions,

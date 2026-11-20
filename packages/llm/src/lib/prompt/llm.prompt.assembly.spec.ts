@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { type AssembleLlmCapabilityPromptConfig, assembleLlmCapabilityPrompt, DEFAULT_LLM_LINE_MANNER_CLAUSE, DEFAULT_LLM_LINE_REPLY_PROTOCOL, DEFAULT_LLM_MUST_RESOLVE_CLAUSE, type LlmAssembledPrompt, type LlmPromptAssemblyCapabilityRef } from './llm.prompt.assembly';
+import { type AssembleLlmCapabilityPromptConfig, assembleLlmCapabilityPrompt, DEFAULT_LLM_LINE_REPLY_PROTOCOL, DEFAULT_LLM_MUST_RESOLVE_CLAUSE, type LlmAssembledPrompt, type LlmPromptAssemblyCapabilityRef } from './llm.prompt.assembly';
 import { DEFAULT_LLM_OUTPUT_CONTRACT_FOOTER, DEFAULT_LLM_OUTPUT_CONTRACT_INTRO, renderLlmOutputContract } from './llm.prompt.contract';
 import { type LlmPromptContribution } from './llm.prompt.contributor';
 import { DEFAULT_LLM_PROMPT_LAYOUT, type LlmPromptLayout, type LlmPromptSlot, type LlmPromptSlotRole, defineLlmPromptLayout } from './llm.prompt.layout';
@@ -173,11 +173,13 @@ describe('assembleLlmCapabilityPrompt()', () => {
       expect(assemble('classify', { replyProtocol: 'line' }).prompt).not.toContain(DEFAULT_LLM_MUST_RESOLVE_CLAUSE);
     });
 
-    it("should place the line-manner clause right after the line protocol, and ignore lineManner under 'json'", () => {
-      const assembled = assemble('summarize', { replyProtocol: 'line', lineManner: true });
-      expect(assembled.prompt.startsWith(`${DEFAULT_LLM_LINE_REPLY_PROTOCOL}\n\n${DEFAULT_LLM_LINE_MANNER_CLAUSE}\n\nB-SUMMARIZE`)).toBe(true);
-      expect(assembled.segments[1]).toEqual({ id: 'reply-amendment', promptSegment: `${DEFAULT_LLM_LINE_MANNER_CLAUSE}\n\n`, origin: { kind: 'generated', generator: 'line-manner-amendment' }, reason: expect.any(String) });
-      expect(assemble('summarize', { lineManner: true }).prompt).toBe(assemble('summarize').prompt);
+    it("should place no amendment under 'line', and carry a host amendment through a frame slot", () => {
+      expect(idsOf(assemble('summarize', { replyProtocol: 'line' }))).not.toContain('reply-amendment');
+
+      const layout = defineLlmPromptLayout(DEFAULT_LLM_PROMPT_LAYOUT.flatMap((slot) => (slot.role === 'reply-amendment' ? [slot, frameSlot('manner')] : [slot])));
+      const assembled = assemble('summarize', { layout, replyProtocol: 'line', contributions: [contribution('manner', 'MANNER', { id: 'reply-amendment' })] });
+      expect(assembled.prompt.startsWith(`${DEFAULT_LLM_LINE_REPLY_PROTOCOL}\n\nMANNER\n\nB-SUMMARIZE`)).toBe(true);
+      expect(assembled.segments[1]).toEqual({ id: 'reply-amendment', promptSegment: 'MANNER\n\n', origin: { kind: 'frame' }, reason: expect.any(String) });
     });
   });
 
@@ -359,7 +361,6 @@ describe('assembleLlmCapabilityPrompt()', () => {
     it('should change exactly its own bytes for each text override', () => {
       expect(assemble('summarize', { replyProtocol: 'line', texts: { lineReplyProtocol: 'MY-LINE' } }).prompt).toBe(assemble('summarize', { replyProtocol: 'line' }).prompt.replace(DEFAULT_LLM_LINE_REPLY_PROTOCOL, 'MY-LINE'));
       expect(assemble('classify', { texts: { mustResolveClause: 'MY-MUST' } }).prompt).toBe(assemble('classify').prompt.replace(DEFAULT_LLM_MUST_RESOLVE_CLAUSE, 'MY-MUST'));
-      expect(assemble('summarize', { replyProtocol: 'line', lineManner: true, texts: { lineMannerClause: 'MY-MANNER' } }).prompt).toBe(assemble('summarize', { replyProtocol: 'line', lineManner: true }).prompt.replace(DEFAULT_LLM_LINE_MANNER_CLAUSE, 'MY-MANNER'));
       expect(assemble('summarize', { texts: { outputContractIntro: 'MY-INTRO' } }).prompt).toBe(assemble('summarize').prompt.replace(DEFAULT_LLM_OUTPUT_CONTRACT_INTRO, 'MY-INTRO'));
       expect(assemble('summarize', { texts: { outputContractFooter: 'MY-FOOTER' } }).prompt).toBe(assemble('summarize').prompt.replace(DEFAULT_LLM_OUTPUT_CONTRACT_FOOTER, 'MY-FOOTER'));
     });
@@ -382,7 +383,7 @@ describe('assembleLlmCapabilityPrompt()', () => {
       ['postmarker', 'postmarker', {}],
       ['summarize', 'summarize', {}],
       ['classify', 'classify', {}],
-      ['line', 'summarize', { replyProtocol: 'line', lineManner: true }],
+      ['line', 'summarize', { replyProtocol: 'line' }],
       ['framed', 'summarize', { layout: FRAMED_LAYOUT, contributions: [contribution('tone', 'TONE'), contribution('speaker', 'SPEAKER')] }],
       ['blocks', 'test', { liveContext: [llmLiveContextHeadingBlock(), { key: 'cast', text: 'CAST' }] }],
       ['empty', 'postmarker', { liveContext: '' }],

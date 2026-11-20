@@ -24,8 +24,8 @@ export const LLM_PROMPT_SLOT_ROLES = ['model-addendum', 'frame', 'reply-protocol
  * - `frame` — contributed: a preamble a host contributor places (a tone, a perspective, a style, a speaker's block). A
  *   frame may sit anywhere in the array, after the contract included.
  * - `reply-protocol` — assembly: the `reply-protocol` template, or the built-in line protocol for a `line` call.
- * - `reply-amendment` — assembly: the must-resolve clause (a JSON protocol + `mustResolve`) or the line-manner clause
- *   (`line` + `lineManner`); at most one per prompt.
+ * - `reply-amendment` — assembly: the must-resolve clause (a JSON protocol + `mustResolve`); at most one per prompt. A
+ *   host's own amendment is a contribution in a `frame` slot it declares next to this one.
  * - `instructions` — assembly: the `instructions` template.
  * - `context-pre` — assembly: the `context` template up to the FIRST `LLM_PROMPT_LIVE_CONTEXT_MARKER`, emitted RAW (no
  *   separator — the template's own bytes meet what follows) and emitted even when empty; without a marker, the whole

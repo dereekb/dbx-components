@@ -79,10 +79,6 @@ export interface LlmDispatchRequest extends LlmDispatchRequestBase {
    */
   readonly replyProtocol?: LlmReplyProtocol;
   /**
-   * Ask a `line` call for its delivery note too (the line-manner amendment). Ignored by the JSON protocols.
-   */
-  readonly lineManner?: boolean;
-  /**
    * An advisory reply-shape hint forwarded to the strategy (a structured-output backend MAY use it).
    */
   readonly responseSchemaHint?: unknown;
