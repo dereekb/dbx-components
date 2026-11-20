@@ -357,7 +357,7 @@ describe('makeLlmOpenAiStrategy()', () => {
     expect(bareResult).not.toHaveProperty('finishReason');
   });
 
-  it('stamps a per-request abort signal + matching timeout that SCALES with the completion budget', async () => {
+  it('stamps a per-request abort signal + matching timeout that SCALES with the completion budget, and no SDK retry', async () => {
     const { client, options } = makeFakeClient();
     const strategy = makeLlmOpenAiStrategy({ client, defaultModel: 'gpt-4o', timeoutMs: 60_000 });
 
@@ -368,6 +368,7 @@ describe('makeLlmOpenAiStrategy()', () => {
     expect(options[0]?.timeout).toBe(resolveLlmCompletionCallTimeoutMs({ timeoutMs: 60_000, maxOutputTokens: 100 }));
     expect(options[1]?.timeout).toBe(resolveLlmCompletionCallTimeoutMs({ timeoutMs: 60_000, maxOutputTokens: 16_384 }));
     expect(options[1]!.timeout!).toBeGreaterThan(options[0]!.timeout!);
+    expect(options.map((option) => option.maxRetries)).toEqual([0, 0]);
   });
 
   it('floors the abort window at the default timeout, scaled by the default cap', async () => {

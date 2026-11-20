@@ -8,7 +8,7 @@
  * the compile-time check that the two still agree.
  */
 
-import { type Maybe, type Milliseconds, filterMaybeValues } from '@dereekb/util';
+import { type Count, type Maybe, type Milliseconds, filterMaybeValues } from '@dereekb/util';
 import { type LlmGenerationId, type RawLlmUsage } from '@dereekb/llm';
 
 /**
@@ -33,6 +33,7 @@ export interface LlmOpenAiChatClientFakeCompletion {
 export interface LlmOpenAiChatClientFakeRequestOptions {
   readonly signal?: AbortSignal;
   readonly timeout?: Milliseconds;
+  readonly maxRetries?: Count;
 }
 
 /**

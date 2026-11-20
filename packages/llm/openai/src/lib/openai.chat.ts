@@ -1,4 +1,4 @@
-import { type Maybe, type Milliseconds } from '@dereekb/util';
+import { type Count, type Maybe, type Milliseconds } from '@dereekb/util';
 import { toLlmAttachmentDataUrl, toLlmThreadChatMessages, type LlmAttachment, type LlmReasoningConfig, type LlmReasoningOffEncoding, type LlmThreadRole, type LlmThreadTurn, type RawLlmUsage, type LlmGenerationId, type LlmTokenCount } from '@dereekb/llm';
 
 /**
@@ -391,9 +391,9 @@ export interface LlmOpenAiChatCompletion {
 
 /**
  * The per-request options the strategy stamps on `create` — the abort {@link AbortSignal} that hard-aborts a hung call
- * at a budget-scaled wall (`resolveLlmCompletionCallTimeoutMs` from `@dereekb/llm`) plus a matching per-request `timeout` so the SDK's own
- * client-level timeout floor never fires first. Modeled locally (a subset of the SDK's `RequestOptions`) so a spec
- * fake can read it.
+ * at a budget-scaled wall (`resolveLlmCompletionCallTimeoutMs` from `@dereekb/llm`), a matching per-request `timeout`
+ * so the SDK's own client-level timeout floor never fires first, and `maxRetries: 0` so the SDK never resends the call.
+ * Modeled locally (a subset of the SDK's `RequestOptions`) so a spec fake can read it.
  */
 export interface LlmOpenAiRequestOptions {
   /**
@@ -404,6 +404,12 @@ export interface LlmOpenAiRequestOptions {
    * The per-request timeout (ms) — set to the same budget-scaled wall.
    */
   readonly timeout?: Milliseconds;
+  /**
+   * The SDK's retry count for this request; the strategy always sends `0`. It outranks the client's own `maxRetries`,
+   * so a host's injected client (SDK default: 2) sends one HTTP attempt per call, like the client llm builds, and the
+   * dispatcher owns every retry.
+   */
+  readonly maxRetries?: Count;
 }
 
 /**
@@ -423,7 +429,7 @@ export interface LlmOpenAiChatClient {
        * Send one chat-completion request and resolve its response.
        *
        * @param body - The chat-completion request body.
-       * @param options - Optional per-request options — the abort signal + timeout.
+       * @param options - Optional per-request options — the abort signal, timeout and `maxRetries`.
        * @returns The completion response.
        */
       create(body: LlmOpenAiChatCompletionBody, options?: LlmOpenAiRequestOptions): Promise<LlmOpenAiChatCompletion>;

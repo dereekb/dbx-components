@@ -18,9 +18,10 @@ vLLM — over the optional `openai` peer.
 - Defaults: the cap of a direct call is `DEFAULT_LLM_MAX_OUTPUT_TOKENS` (8,192) and the abort window is a 60 s floor
   (`DEFAULT_LLM_COMPLETION_TIMEOUT_MS`) scaled up with the call's budget by core's `resolveLlmCompletionCallTimeoutMs({ timeoutMs, maxOutputTokens })`. An older or
   small-context model needs its `maxOutputTokens` set.
-- Seams: `client` (an `LlmOpenAiChatClient` — a fake, or your own SDK client) and `probeFetch`. The real client is
-  built lazily with `maxRetries: 0` (the dispatcher retries), and with the key, the base URL, and `organization` /
-  `project` set to `null`, so it never reads `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `OPENAI_ORG_ID` or
+- Seams: `client` (an `LlmOpenAiChatClient` — a fake, or your own SDK client) and `probeFetch`. Every request sends
+  `maxRetries: 0` (the dispatcher owns retries), which outranks the client's own setting, so neither the real client
+  nor an injected one retries inside the SDK. The real client is built lazily with the key, the base URL, and
+  `organization` / `project` set to `null`, so it never reads `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `OPENAI_ORG_ID` or
   `OPENAI_PROJECT_ID`. In a browser pass `dangerouslyAllowBrowser: true` or inject a client — with user-held keys
   only.
 - What the SDK still reads (Node only). `OPENAI_CUSTOM_HEADERS`: its `Name: value` lines become default headers on
@@ -28,10 +29,8 @@ vLLM — over the optional `openai` peer.
   key + base-URL client turns that read off. `OPENAI_LOG`: the SDK's log level (this client passes no `logLevel`);
   at `debug` it logs each request, prompt included. It also reads `OPENAI_ADMIN_KEY` and `OPENAI_WEBHOOK_SECRET`,
   but a chat completion sends neither. Keep `OPENAI_CUSTOM_HEADERS` unset on a host whose llm clients reach a
-  third-party gateway. A host that needs an org or project id, or controlled headers, injects its own client: build
-  it with `maxRetries: 0`, because the dispatcher owns retries and the strategy does not switch off the SDK's own on
-  a client it did not build. On that client, explicit `defaultHeaders` win over the env's, and a header set to
-  `null` is dropped.
+  third-party gateway. A host that needs an org or project id, or controlled headers, injects its own client. On
+  that client, explicit `defaultHeaders` win over the env's, and a header set to `null` is dropped.
 - Credentials: `credentialProbe` GETs `{baseUrl}/models` (a 404 is a ready warning); `credentialProbeSource` replaces
   it, even when a `client` is injected; `providerStatus` / `providerStatusId` exist only with a
   `providerStatusSource`.

@@ -65,6 +65,19 @@ describe('makeLlmOpenAiCompatibleChatStrategy()', () => {
       expect(bodies[0]?.max_tokens).toBe(DEFAULT_LLM_MAX_OUTPUT_TOKENS);
       expect(options[0]?.timeout).toBe(resolveLlmCompletionCallTimeoutMs({ timeoutMs: DEFAULT_LLM_COMPLETION_TIMEOUT_MS, maxOutputTokens: DEFAULT_LLM_MAX_OUTPUT_TOKENS }));
     });
+
+    it('sends maxRetries: 0 beside the abort wall on every create, so the SDK never retries (an injected client too)', async () => {
+      const { client, options } = makeLlmOpenAiChatClientFake<LlmOpenAiChatCompletionBody>({ reply: 'ok' });
+      const strategy = acme({ client, defaultModel: ACME_MODEL });
+
+      await strategy.complete({ prompt: 'hi', capability: 'X' });
+      await strategy.complete({ prompt: 'hi', capability: 'X', maxOutputTokens: 16_384 }, { signal: new AbortController().signal });
+
+      expect(options).toEqual([
+        { signal: expect.any(AbortSignal), timeout: resolveLlmCompletionCallTimeoutMs({ timeoutMs: DEFAULT_LLM_COMPLETION_TIMEOUT_MS, maxOutputTokens: DEFAULT_LLM_MAX_OUTPUT_TOKENS }), maxRetries: 0 },
+        { signal: expect.any(AbortSignal), timeout: resolveLlmCompletionCallTimeoutMs({ timeoutMs: DEFAULT_LLM_COMPLETION_TIMEOUT_MS, maxOutputTokens: 16_384 }), maxRetries: 0 }
+      ]);
+    });
   });
 
   describe('hook wiring', () => {

@@ -319,7 +319,7 @@ describe('makeLlmOpenRouterStrategy()', () => {
     expect(result.usage).not.toHaveProperty('reasoningTokens');
   });
 
-  it('stamps a per-request abort signal + matching timeout on every real-client call (the hard-abort wall)', async () => {
+  it('stamps a per-request abort signal + matching timeout on every real-client call (the hard-abort wall), and no SDK retry', async () => {
     const { client, options } = makeFakeClient();
     const strategy = makeLlmOpenRouterStrategy({ defaultModel: DEFAULT_MODEL, client });
 
@@ -330,6 +330,8 @@ describe('makeLlmOpenRouterStrategy()', () => {
     // The per-request timeout mirrors the abort window (the default floor scaled by the default cap) so the SDK's
     // client-level timeout floor never fires first.
     expect(options[0]?.timeout).toBe(resolveLlmCompletionCallTimeoutMs({ timeoutMs: DEFAULT_LLM_COMPLETION_TIMEOUT_MS, maxOutputTokens: DEFAULT_LLM_MAX_OUTPUT_TOKENS }));
+    // maxRetries: 0 outranks the client's own setting: one call is one HTTP attempt.
+    expect(options[0]?.maxRetries).toBe(0);
   });
 
   it("the abort window SCALES with the call's completion budget (a large-budget call gets a longer wall)", async () => {

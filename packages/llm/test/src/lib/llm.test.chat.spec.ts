@@ -7,7 +7,7 @@ import { DEFAULT_LLM_OPENAI_CHAT_CLIENT_FAKE_REPLY, makeLlmOpenAiChatClientFake,
  * is the openai / openrouter strategy specs passing the fake where the real interface is expected.
  */
 interface ChatClientShape {
-  readonly chat: { readonly completions: { create(body: { readonly model: string }, options?: { readonly signal?: AbortSignal; readonly timeout?: number }): Promise<LlmOpenAiChatClientFakeCompletion> } };
+  readonly chat: { readonly completions: { create(body: { readonly model: string }, options?: { readonly signal?: AbortSignal; readonly timeout?: number; readonly maxRetries?: number }): Promise<LlmOpenAiChatClientFakeCompletion> } };
 }
 
 const USAGE: RawLlmUsage = { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 };
@@ -45,14 +45,14 @@ describe('makeLlmOpenAiChatClientFake()', () => {
     const fake = makeLlmOpenAiChatClientFake();
     const signal = new AbortController().signal;
 
-    await fake.client.chat.completions.create({ model: 'a', messages: [{ role: 'user', content: 'hi' }] }, { signal, timeout: 1000 });
+    await fake.client.chat.completions.create({ model: 'a', messages: [{ role: 'user', content: 'hi' }] }, { signal, timeout: 1000, maxRetries: 0 });
     await fake.client.chat.completions.create({ model: 'b', messages: [] });
 
     expect(fake.bodies).toEqual([
       { model: 'a', messages: [{ role: 'user', content: 'hi' }] },
       { model: 'b', messages: [] }
     ]);
-    expect(fake.options).toEqual([{ signal, timeout: 1000 }, {}]);
+    expect(fake.options).toEqual([{ signal, timeout: 1000, maxRetries: 0 }, {}]);
   });
 
   it('should be assignable to the chat client surface', () => {

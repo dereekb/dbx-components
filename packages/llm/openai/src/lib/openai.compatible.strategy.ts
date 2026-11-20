@@ -1,9 +1,10 @@
 /**
  * The OpenAI-compatible chat BASE — the one implementation every OpenAI-compatible chat transport is built on. It owns
- * the shared skeleton: the lazy `openai` SDK client (built once, `maxRetries: 0`) or an injected structural client,
- * the no-built-in-model guard, the per-slug vision filter and `attachmentsSent`, `response_format`, the budget-scaled
- * abort wall, usage folding through `toLlmUsage`, result assembly, `healthCheck`, the credential-probe ladder and the
- * optional `providerStatus` delegation.
+ * the shared skeleton: the lazy `openai` SDK client (built once) or an injected structural client, the no-built-in-model
+ * guard, the per-slug vision filter and `attachmentsSent`, `response_format`, the per-request options (the
+ * budget-scaled abort wall, and `maxRetries: 0` so the SDK never retries on either client), usage folding through
+ * `toLlmUsage`, result assembly, `healthCheck`, the credential-probe ladder and the optional `providerStatus`
+ * delegation.
  *
  * A transport is a set of {@link LlmOpenAiCompatibleChatStrategyHooks}: its identity, its default base URL and probe
  * path, and the few per-call places the wires differ (the messages, the reasoning params, body extras and completion
@@ -61,7 +62,9 @@ export interface LlmOpenAiCompatibleChatStrategyConfig {
   readonly id?: LlmStrategyId;
   /**
    * An injected OpenAI-compatible client (a spec fake, or the host's own SDK client) — asserts the wire with no
-   * socket. Set ⇒ used instead of building the real `openai` SDK client.
+   * socket. Set ⇒ used instead of building the real `openai` SDK client. Its requests carry the same per-request options
+   * as the built client's, `maxRetries: 0` included, so a host client built with the SDK's default of 2 retries still
+   * sends one HTTP attempt per call.
    */
   readonly client?: LlmOpenAiChatClient;
   /**
@@ -314,15 +317,16 @@ export function makeLlmOpenAiCompatibleChatStrategy(config: LlmOpenAiCompatibleC
       };
 
       // The per-request abort signal is the HARD wall against a hung / runaway call: its window scales with the
-      // completion budget but is capped at 10 min. `maxRetries: 0` on the client means the abort is never silently
-      // re-tried by the SDK.
+      // completion budget but is capped at 10 min. `maxRetries: 0` on every request outranks the client's own setting,
+      // so the SDK never re-sends the call — on the client llm builds or on an injected one — and the dispatcher owns
+      // every retry.
       const callTimeoutMs = resolveLlmCompletionCallTimeoutMs({ timeoutMs, maxOutputTokens: tokenLimit });
       // The EXTERNAL cancellation signal, when threaded, is OR-combined with the timeout: whichever fires first aborts
       // the in-flight call. `makeTimeoutAbortSignal` also returns an already-aborted signal if cancellation latched
       // before the call, so the call rejects immediately.
       const callSignal = makeTimeoutAbortSignal({ timeout: callTimeoutMs, signal: options?.signal });
       const start = Date.now();
-      const completion = await client.chat.completions.create(body, { signal: callSignal, timeout: callTimeoutMs });
+      const completion = await client.chat.completions.create(body, { signal: callSignal, timeout: callTimeoutMs, maxRetries: 0 });
       const latencyMs = Date.now() - start;
       const choice = completion.choices[0];
       const extras = hooks.completionExtras?.(completion);
