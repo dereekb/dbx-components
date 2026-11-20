@@ -20,8 +20,8 @@ import { type LlmRetryLever } from './llm.retry.lever';
  */
 export interface LlmDispatchOutcome {
   /**
-   * The final reply envelope — stamped with `attempts` / `decodeStatus` / `decodeOutcome` on the validated path,
-   * unchanged on the single-shot path.
+   * The final reply envelope — stamped with `attempts` / `decodeStatus` / `decodeOutcome` on the validated path and on
+   * a single-shot send that faulted (unless the dispatch was cancelled); otherwise unchanged on the single-shot path.
    */
   readonly result: LlmDispatchResult;
   /**
@@ -39,7 +39,8 @@ export interface LlmDispatchOutcome {
   readonly decodeFailures: ReadonlyArray<LlmDecodeFailureAttempt>;
   /**
    * Every attempt the dispatch REJECTED, with its reply in full — `failedAttempts.length === attempts − (accepted ? 1 :
-   * 0)`. Empty on the single-shot path.
+   * 0)`. On the single-shot path, one row when its send faulted (a cancelled timeout / transport fault excepted), else
+   * empty.
    */
   readonly failedAttempts: ReadonlyArray<LlmCallFailedAttempt>;
   /**
@@ -48,8 +49,9 @@ export interface LlmDispatchOutcome {
    */
   readonly recovered: boolean;
   /**
-   * The critic's LAST feedback when the attempt budget ran out on a still-rejected reply — the evidence of the
-   * `critique-fail` gap. Absent otherwise.
+   * The shipped reply's last critic feedback — set when the critic rejected the final attempt and no retry could
+   * follow (the budget was spent, or the dispatch was cancelled), so the rejected reply shipped anyway. The evidence of
+   * the `critique-fail` gap. Absent otherwise.
    */
   readonly critiqueFailure?: string;
   /**
@@ -57,6 +59,21 @@ export interface LlmDispatchOutcome {
    * fault. The pipeline records the call as usual, then rejects with an `LlmDispatchFaultError` built from it.
    */
   readonly fault?: LlmDispatchTerminalFault;
+  /**
+   * A send error the single-shot path cannot absorb — a `timeout` or `transport` fault on a dispatch that was not
+   * cancelled. The pipeline records the call as usual, then rethrows {@link LlmDispatchRethrow.error} unchanged.
+   */
+  readonly rethrow?: Maybe<LlmDispatchRethrow>;
+}
+
+/**
+ * A send error the pipeline rethrows unchanged after recording the call.
+ */
+export interface LlmDispatchRethrow {
+  /**
+   * The thrown value, as the strategy threw it.
+   */
+  readonly error: unknown;
 }
 
 /**

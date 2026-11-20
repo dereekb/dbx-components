@@ -394,6 +394,33 @@ describe('makeLlmDispatcher() decision lane', () => {
       await expect(dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' }, signal: controller.signal })).rejects.toBe(error);
       expect(requests).toHaveLength(1);
     });
+
+    it('should not resend a decision cancelled while parked before the resend', async () => {
+      const requests: LlmDecisionRequest[] = [];
+      const error = HTTP_503();
+      const controller = new AbortController();
+      let paused = false;
+      let parked = 0;
+      const pause = {
+        isPaused: () => paused,
+        waitUntilResumed: (signal?: AbortSignal) =>
+          new Promise<void>((resolve) => {
+            parked += 1;
+            signal?.addEventListener('abort', () => resolve(), { once: true });
+          })
+      };
+      // the gate closes during the backoff, so the resend parks
+      const transportBackoff = (_attempt: number) => ((paused = true), 0);
+      const { dispatcher } = setup({ backends: [flakyBackend((send) => (send === 1 ? error : undefined), requests)], transportBackoff, pause });
+      const pending = dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' }, signal: controller.signal });
+      await new Promise((resolve) => setTimeout(resolve, 5));
+
+      expect(parked).toBe(1);
+      controller.abort();
+      await expect(pending).rejects.toBe(error);
+      expect(requests).toHaveLength(1);
+      expect(dispatcher.decisionsSpent?.()).toBe(1);
+    });
   });
 
   describe('records', () => {

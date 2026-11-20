@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { type LlmCallContext, makeLlmCallContext } from '../record/llm.call.context';
 import { LLM_TIMEOUT_FINISH_REASON, LLM_TRANSPORT_FINISH_REASON, LLM_UNRETRYABLE_FINISH_REASON } from '../record/llm.decode.failure';
 import { type LlmCompletion, type LlmDispatchResult, type LlmRequest, type LlmStrategy } from '../strategy/llm.strategy';
-import { type LlmReplyFastFixOutcome } from '../reply/llm.reply.fast.fix';
+import { DEFAULT_LLM_REPLY_FAST_FIX_LIMITS, type LlmReplyFastFixOutcome } from '../reply/llm.reply.fast.fix';
 import { isDegenerateLlmReplyReading, type LlmBoundReplyFastFix, llmBoundReplyFastFixOf, readLlmDispatchReply, type LlmReplyRepairRefusal, runLlmReplyRepairLane, sendLlmDispatchAttempt, validateLlmDispatchLever } from './llm.dispatch.attempt';
 
 class APIUserAbortError extends Error {}
@@ -98,7 +98,7 @@ describe('runLlmReplyRepairLane()', () => {
 
   async function laneOf(text: string, finishReason = 'stop', unrepairedRefusal: LlmReplyRepairRefusal = 'mangled') {
     const attemptContext = makeLlmCallContext({ label: 'attempt-1', timing: true });
-    const lane = await runLlmReplyRepairLane({ served: served(text, finishReason), attempt: 1, attemptContext, read, unrepairedRefusal });
+    const lane = await runLlmReplyRepairLane({ served: served(text, finishReason), attempt: 1, attemptContext, read, unrepairedRefusal, fastFixLimits: DEFAULT_LLM_REPLY_FAST_FIX_LIMITS });
     return { lane, attemptContext };
   }
 

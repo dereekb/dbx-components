@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { makeLlmCallContext } from '../record/llm.call.context';
 import { type LlmDispatchResult, type LlmRequest } from '../strategy/llm.strategy';
 import { llmDecodeRetryModelOf, makeLlmDispatchRetryLadder } from './llm.dispatch.ladder';
+import { LLM_RETRY_BONUS_LEVER } from './llm.retry.lever';
 
 const FAILED: LlmDispatchResult = { text: 'prose', strategyId: 's', capability: 'c', finishReason: 'stop' };
 const CAPPED: LlmDispatchResult = { text: '{"a":', strategyId: 's', capability: 'c', finishReason: 'length' };
@@ -84,5 +85,29 @@ describe('makeLlmDispatchRetryLadder()', () => {
     expect(ladder.pending()).toEqual({ lever: 'reasoning-off', from: 'low', to: 'off', cause: 'empty-result', bonus: true, induced: 'reasoning-low' });
     expect(ladder.apply({ capability: 'c', prompt: 'p' }).reasoning).toEqual({ enabled: false });
     expect(diags()[0]).toMatchObject({ code: 'retry-lever', fields: { attempt: 3, bonus: true, induced: 'reasoning-low' } });
+  });
+
+  it('should read its axes off the base request as every lever taken so far moves it', () => {
+    const { ladder } = ladderOf();
+    ladder.take({ cause: 'length-truncation', failed: CAPPED, attempt: 1 });
+    const low = ladder.take({ cause: 'schema-validation', failed: FAILED, attempt: 2 });
+
+    // the reasoning-low headroom doubles the RAISED budget the second attempt sent, not the base one
+    expect(low).toMatchObject({ lever: 'reasoning-low', from: 'off', to: 'low', headroom: 8192 });
+    expect(ladder.apply({ capability: 'c', prompt: 'p' })).toMatchObject({ maxOutputTokens: 8192, reasoning: { enabled: true, effort: 'low' } });
+    expect(ladder.take({ cause: 'length-truncation', failed: CAPPED, attempt: 3 })).toMatchObject({ lever: 'budget', from: '8192', to: '32768' });
+  });
+
+  it('should owe the bonus only after a reasoning-low retry, and only once', () => {
+    const { ladder } = ladderOf();
+    const low = { lever: 'reasoning-low', from: 'off', to: 'low', cause: 'schema-validation' } as const;
+
+    expect(ladder.bonusDue(undefined)).toBe(false);
+    expect(ladder.bonusDue({ lever: 'budget', from: '1024', to: '4096', cause: 'length-truncation' })).toBe(false);
+    expect(ladder.bonusDue(low)).toBe(true);
+    expect(ladder.bonusAttempts()).toBe(0);
+    expect(ladder.takeBonus({ cause: 'empty-result', attempt: 2 })).toBe(LLM_RETRY_BONUS_LEVER);
+    expect(ladder.bonusAttempts()).toBe(1);
+    expect(ladder.bonusDue(low)).toBe(false);
   });
 });

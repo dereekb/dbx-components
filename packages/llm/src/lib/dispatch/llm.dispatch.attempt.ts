@@ -8,7 +8,7 @@ import { LLM_REPLY_REPAIR_FAST_FIX_SWALLOW_SITE } from '../capability/llm.capabi
 import { type LlmCallContext } from '../record/llm.call.context';
 import { isLlmCleanStopFinish } from '../record/llm.decode.failure';
 import { DEFAULT_LLM_REPLY_ENVELOPE_KEYS, type LlmReplyEnvelopeKeys, type LlmReplyLeverReading, readLlmReplyLever } from '../reply/llm.reply.envelope';
-import { DEFAULT_LLM_REPLY_FAST_FIX_LIMITS, LLM_REPAIR_REPLY_JSON_CAPABILITY, type LlmReplyFastFixer, type LlmReplyFastFixLimits, type LlmReplyFastFixMissReason, type LlmReplyFastFixOutcome } from '../reply/llm.reply.fast.fix';
+import { LLM_REPAIR_REPLY_JSON_CAPABILITY, type LlmReplyFastFixer, type LlmReplyFastFixLimits, type LlmReplyFastFixMissReason, type LlmReplyFastFixOutcome } from '../reply/llm.reply.fast.fix';
 import { type LlmReplyProtocol } from '../reply/llm.reply.protocol';
 import { repairLlmReplyJson } from '../reply/llm.reply.repair';
 import { type LlmLeverValidator } from '../reply/llm.reply.validator';
@@ -207,10 +207,9 @@ export interface RunLlmReplyRepairLaneConfig {
    */
   readonly fastFixSpent?: Maybe<boolean>;
   /**
-   * The fast-fix gates (`maxChars` / `minScore`), defaulting to `DEFAULT_LLM_REPLY_FAST_FIX_LIMITS`. Read only when
-   * {@link fastFix} is bound.
+   * The fast-fix gates (`maxChars` / `minScore`). Read only when {@link fastFix} is bound.
    */
-  readonly fastFixLimits?: Maybe<Pick<LlmReplyFastFixLimits, 'maxChars' | 'minScore'>>;
+  readonly fastFixLimits: Pick<LlmReplyFastFixLimits, 'maxChars' | 'minScore'>;
 }
 
 /**
@@ -404,8 +403,7 @@ async function runLlmReplyFastFixTier(config: RunLlmReplyRepairLaneConfig & { re
  * @returns The repair (when one landed) and the fast-fix accounting.
  */
 export async function runLlmReplyRepairLane(config: RunLlmReplyRepairLaneConfig): Promise<LlmReplyRepairLaneResult> {
-  const { served, attempt, attemptContext, read, unrepairedRefusal, fastFix, fastFixSpent } = config;
-  const fastFixLimits = config.fastFixLimits ?? DEFAULT_LLM_REPLY_FAST_FIX_LIMITS;
+  const { served, attempt, attemptContext, read, unrepairedRefusal, fastFix, fastFixSpent, fastFixLimits } = config;
   const { shape, repaired } = repairLlmReplyJson(served.text);
   const capability = served.capability;
   const score = roundToPrecision(shape.score, LLM_REPLY_REPAIR_SCORE_PRECISION);

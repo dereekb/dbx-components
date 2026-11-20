@@ -590,6 +590,125 @@ describe('makeLlmDispatcher() retry', () => {
     });
   });
 
+  describe('cancellation at a retry decision', () => {
+    function decodeTaps() {
+      const taps = makeLlmDispatchTapRegistry<HostFields>();
+      const events: LlmDecodeFailureTapEvent<HostFields>[] = [];
+      taps.addTap({ id: 't', onDecodeFailure: (event) => void events.push(event) });
+      return { taps, events };
+    }
+
+    it('should ship a reply the critic rejected after the dispatch was cancelled, sending nothing more', async () => {
+      const controller = new AbortController();
+      const { calls, decodeFailures, recorder } = recording(true);
+      const critique: LlmCritic = async () => (controller.abort(), { error: 'too vague' });
+      const { dispatcher, requests } = setup({ replies: [OK, OK], recorder });
+      const result = await dispatcher.dispatch(request({ critique, signal: controller.signal }));
+
+      expect(requests).toHaveLength(1);
+      expect(result).toMatchObject({ attempts: 1, decodeStatus: 'clean', decodeOutcome: 'ok', lever: OK });
+      expect(calls[0].phases?.attempts).toHaveLength(1);
+      expect(calls[0].failedAttempts ?? []).toHaveLength(0);
+      expect(decodeFailures).toHaveLength(0);
+    });
+
+    it('should not retry a schema miss judged after the dispatch was cancelled', async () => {
+      const controller = new AbortController();
+      const { taps, events } = decodeTaps();
+      const validate = () => (controller.abort(), { error: 'answer must be a string' });
+      const { dispatcher, requests } = setup({ replies: [OK, OK], taps });
+      const result = await dispatcher.dispatch(request({ validate, signal: controller.signal }));
+
+      expect(requests).toHaveLength(1);
+      expect(result).toMatchObject({ attempts: 1, decodeStatus: 'dropped', decodeOutcome: 'schema-invalid' });
+      expect(events).toEqual([expect.objectContaining({ willRetry: false, attempt: expect.objectContaining({ class: 'schema-validation' }) })]);
+    });
+
+    it('should not retry a decode failure read after the dispatch was cancelled, taking no lever', async () => {
+      const controller = new AbortController();
+      const { taps, events } = decodeTaps();
+      const requests: LlmRequest[] = [];
+      const strategy = makeScriptedLlmStrategy({ id: 's', requests, respond: () => (controller.abort(), PROSE) });
+      const { dispatcher } = setup({ strategy, taps });
+      const result = await dispatcher.dispatch(request({ validate: VALID, signal: controller.signal }));
+
+      expect(requests).toHaveLength(1);
+      expect(result).toMatchObject({ attempts: 1, decodeStatus: 'dropped' });
+      expect(events.map((event) => event.willRetry)).toEqual([false]);
+      expect(events[0].attempt).not.toHaveProperty('lever');
+    });
+
+    it('should not re-ask a length-capped reply, nor grant the bonus, once the dispatch was cancelled', async () => {
+      const truncatedController = new AbortController();
+      const truncatedRequests: LlmRequest[] = [];
+      const truncated = setup({ strategy: makeScriptedLlmStrategy({ id: 's', requests: truncatedRequests, respond: () => (truncatedController.abort(), TRUNCATED) }) });
+      const truncatedResult = await truncated.dispatcher.dispatch(request({ validate: VALID, signal: truncatedController.signal }));
+
+      expect(truncatedRequests).toHaveLength(1);
+      expect(truncatedResult).toMatchObject({ attempts: 1, decodeStatus: 'dropped', lengthCapped: true });
+
+      const bonusController = new AbortController();
+      const bonusRequests: LlmRequest[] = [];
+      const bonus = setup({ strategy: makeScriptedLlmStrategy({ id: 's', requests: bonusRequests, respond: (_, call) => (call === 0 ? INVALID : (bonusController.abort(), CAP)) }) });
+      const bonusResult = await bonus.dispatcher.dispatch(request({ validate: VALID, signal: bonusController.signal }));
+
+      // attempt 2 took reasoning-low and the cap ended it: the bonus would be due, but the dispatch is cancelled
+      expect(bonusRequests).toHaveLength(2);
+      expect(bonusResult).toMatchObject({ attempts: 2, decodeStatus: 'dropped' });
+    });
+
+    it('should settle without resending when cancelled during the transport backoff', async () => {
+      const controller = new AbortController();
+      const { taps, events } = decodeTaps();
+      const { dispatcher, requests } = setup({ replies: [new InternalServerError('unavailable'), OK], taps, transportBackoff: () => (controller.abort(), 0) });
+      const result = await dispatcher.dispatch(request({ validate: VALID, signal: controller.signal }));
+
+      expect(requests).toHaveLength(1);
+      expect(result).toMatchObject({ attempts: 1, decodeStatus: 'dropped', decodeOutcome: 'transport' });
+      // the row keeps the decision it was judged with; no timeout row follows it
+      expect(events.map((event) => [event.attempt.class, event.willRetry])).toEqual([['transport', true]]);
+    });
+
+    it('should settle without resending when cancelled while parked before a retry', async () => {
+      const controller = new AbortController();
+      const { gate, pause } = pauseGate(false);
+      const { calls, recorder } = recording(true);
+      const requests: LlmRequest[] = [];
+      const strategy = makeScriptedLlmStrategy({ id: 's', requests, respond: (_, call) => (call === 0 ? (pause(), INVALID) : OK) });
+      const { dispatcher } = setup({ strategy, pause: gate, recorder });
+      const pending = dispatcher.dispatch(request({ validate: VALID, signal: controller.signal }));
+      await new Promise((resolve) => setTimeout(resolve, 5));
+
+      expect(requests).toHaveLength(1);
+      controller.abort();
+      const result = await pending;
+
+      expect(requests).toHaveLength(1);
+      expect(result).toMatchObject({ attempts: 1, decodeStatus: 'dropped', decodeOutcome: 'schema-invalid' });
+      expect(calls[0].failedAttempts).toHaveLength(1);
+      expect(calls[0].phases?.attempts).toHaveLength(1);
+    });
+
+    it('should stamp the outcome of the last sent attempt, never an earlier one', async () => {
+      const controller = new AbortController();
+      const { gate, pause } = pauseGate(false);
+      const requests: LlmRequest[] = [];
+      const strategy = makeScriptedLlmStrategy({ id: 's', requests, respond: (_, call) => (call === 0 ? INVALID : (pause(), OK)) });
+      const { dispatcher } = setup({ strategy, pause: gate });
+      const pending = dispatcher.dispatch(request({ validate: VALID, critique: critic(99).critique, maxAttempts: 3, signal: controller.signal }));
+      await new Promise((resolve) => setTimeout(resolve, 5));
+
+      expect(requests).toHaveLength(2);
+      controller.abort();
+      const result = await pending;
+
+      expect(requests).toHaveLength(2);
+      expect(result).toMatchObject({ attempts: 2, decodeStatus: 'dropped' });
+      expect(result.decodeOutcome).not.toBe('schema-invalid');
+      expect(result.decodeOutcome).toBe('ok');
+    });
+  });
+
   describe('pause', () => {
     it('should not retry an abort while parked, even at maxAttempts 3', async () => {
       const controller = new AbortController();
@@ -824,6 +943,41 @@ describe('makeLlmDispatcher() retry', () => {
 
       expect(order).toEqual(['complete', 'critique-fail', 'prompt-over-budget']);
       expect(gaps[0]).toEqual({ kind: 'critique-fail', capability: 'TestCap', feedback: 'still vague', text: OK });
+    });
+
+    it('should ship the last reply a critic rejected once the budget is spent, stamped accepted with no row for it', async () => {
+      const { calls, decodeFailures, recorder } = recording();
+      const gaps: LlmDispatchGap[] = [];
+      let round = 0;
+      const critique: LlmCritic = async () => ({ error: `vague ${(round += 1)}` });
+      const { dispatcher, requests } = setup({ replies: [OK, '{"answer":"second"}'], recorder, onGap: ({ gap }) => void gaps.push(gap) });
+      const executed = await dispatcher.preparePrompt(request({ validate: VALID, critique })).execute();
+      const { result } = executed;
+
+      expect(requests).toHaveLength(2);
+      expect(result).toMatchObject({ attempts: 2, decodeStatus: 'retried', decodeOutcome: 'ok', lever: '{"answer":"second"}', validationErrors: ['attempt 1: vague 1', 'attempt 2: vague 2'] });
+      expect(calls[0].failedAttempts).toEqual([expect.objectContaining({ attempt: 1, cause: 'critique', error: 'vague 1' })]);
+      expect(decodeFailures).toHaveLength(0);
+      expect(gaps).toEqual([{ kind: 'critique-fail', capability: 'TestCap', feedback: 'vague 2', text: '{"answer":"second"}' }]);
+      // the shipped reply is replayed, not the degenerate placeholder
+      expect(executed.thread[1]).toEqual({ role: 'assistant', content: '{"answer":"second"}' });
+    });
+
+    it('should ship a first-attempt reply the critic rejected at maxAttempts 1 as clean', async () => {
+      const gaps: LlmDispatchGap[] = [];
+      const { dispatcher, requests } = setup({ replies: [OK], onGap: ({ gap }) => void gaps.push(gap) });
+      const result = await dispatcher.dispatch(request({ critique: critic(99).critique, maxAttempts: 1 }));
+
+      expect(requests).toHaveLength(1);
+      expect(result).toMatchObject({ attempts: 1, decodeStatus: 'clean', decodeOutcome: 'ok', lever: OK });
+      expect(gaps.map((gap) => gap.kind)).toEqual(['critique-fail']);
+    });
+
+    it('should not stamp an earlier schema miss on a shipped critique-rejected reply', async () => {
+      const { dispatcher } = setup({ replies: [INVALID, OK] });
+      const result = await dispatcher.dispatch(request({ validate: VALID, critique: critic(99).critique }));
+
+      expect(result).toMatchObject({ attempts: 2, decodeStatus: 'retried', decodeOutcome: 'ok', lever: OK });
     });
 
     it('should file no gap when the critic accepts', async () => {

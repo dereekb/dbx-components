@@ -791,16 +791,18 @@ replay. Hosts swap their own pieces in through hooks; the dispatcher has no host
   `isRawJsonBlock` turns on the raw-JSON watch (skipped for a `rawJsonContext` descriptor). A follow-up is one segment
   under the layout's `follow-up` slot id, sent over the replayed `thread` with no cache split and no attachments.
 - **Single-shot.** With no `validate` and no `critique` the strategy result comes back unchanged. A reply that nearly
-  parses is repaired for free (`reply-repaired` diag, no decode row). An abort only drops the beat when the dispatch is
-  cancelled. A send error the policy does not resend (`permanent`, or `unknown`: no resend is possible here, so
+  parses is repaired for free (`reply-repaired` diag, no decode row); the single-shot path never calls the fast fix. A
+  timeout or transient send error on a cancelled dispatch drops the beat (the synthetic envelope, recorded). Otherwise
+  it is recorded as one `timeout` / `transport` row and call record, then the original error is rethrown unchanged. A
+  send error the policy does not resend (`permanent`, or `unknown`: no resend is possible here, so
   `isRetryableUnknownError` is never asked) is recorded as one `unretryable` row and call record, then rejects as
-  `LlmDispatchFaultError`. A transient send error still propagates unchanged.
+  `LlmDispatchFaultError`.
 - **Validated.** With a `validate` (or a `critique`) the call runs the bounded retry loop (see Retry and lanes). Each
   reply is read, repaired, validated, then critiqued, and the result is stamped `attempts`, `decodeStatus`,
   `decodeOutcome`, `lengthCapped`, `lever` and `validationErrors`. A decline, or a `line` reply that is not JSON, is
   accepted. Each rejected attempt records a decode row (critique rejections excepted), a `failedAttempts` row and an
-  `onDecodeFailure` tap event whose `willRetry` says whether another attempt follows. A send error the policy does not
-  resend ends the loop at once (see Transport lane).
+  `onDecodeFailure` tap event whose `willRetry` is the retry decision made when the attempt was judged. A send error
+  the policy does not resend ends the loop at once (see Transport lane).
 - **Follow-ups.** `preparePrompt(request)` returns an `LlmPrompt` whose `execute()` runs once and whose `followUp(…)`
   chains onto the same thread; `dispatch(request)` equals `preparePrompt(request).execute()` unwrapped. A degenerate
   reply replays as `degenerateThreadPlaceholder`. `makeLlmPromptChain` works over it unchanged: the root renders its
@@ -819,8 +821,10 @@ replay. Hosts swap their own pieces in through hooks; the dispatcher has no host
 - **Call context.** A dispatch or a decision nests under `request.callContext`, else under `recorder.newCallContext`,
   else under a context that does not time and sends its swallows to `swallow`.
 - **Pause and cancellation.** `pause` (`isPaused` / `waitUntilResumed`) parks a dispatch before it sends (`paused`
-  span, `llm-call-parked` diag). `cancellationSignal` and `request.signal` are combined and forwarded to the strategy;
-  either one aborting counts as a cancellation.
+  span, `llm-call-parked` diag), and again before every retry. `cancellationSignal` and `request.signal` are combined
+  and forwarded to the strategy; either one aborting counts as a cancellation. A cancelled dispatch sends no further
+  attempt: every retry decision reads cancellation like a spent budget, and a cancel during a transport backoff or a
+  park ends the loop before the resend (the last row keeps the `willRetry: true` it was judged with).
 - **Fakes.** `llmDispatcherFromDispatch(fn)` wraps a bare dispatch function as a dispatcher whose prompts run through it.
 - **Retry and lanes.** The bounded retry ladder, the fast-fix and critique lanes and the decision lane are described in
   the next section.
@@ -861,15 +865,15 @@ one retry lever, and a mangled JSON reply gets one cheap fast fix before any re-
   construction), reasoning
   off / low, or structured output off. Each retry files a `retry-lever` diag and stamps `phases.attempts[].retry` and
   `failedAttempts[].retry`.
-- **Transport lane.** A timeout resends identical bytes at once. Every other send error is classified by
-  `classifyLlmError`: 408, 429, 5xx, a Node or browser network failure and the SDK's connection / rate-limit / server
-  classes are `transient`; 400–404 are `permanent`; the rest is `unknown`. A transient error resends the bytes after
-  `transportBackoff` (default `llmTransportBackoffMs`, util `exponentialBackoffDelay`: 500 ms doubling to 8 s, equal
-  jitter, with a `transport-backoff` diag). An `unknown` error goes to the dispatcher's `isRetryableUnknownError`: a
-  `true` makes it behave exactly like a transient error (its rows carry `errorClassification: 'unknown'`). Anything not
-  resent records an `unretryable` row (with `errorClassification`), the call record, the decode-failure record and
-  `onDispatchComplete`, then the dispatch rejects with `LlmDispatchFaultError` (`cause` = the original error). A
-  cancelled dispatch never retries.
+- **Transport lane.** A timeout re-asks at once, taking the `reasoning-off` rung when reasoning is on (otherwise the
+  same bytes). Every other send error is classified by `classifyLlmError`: 408, 429, 5xx, a Node or browser network
+  failure and the SDK's connection / rate-limit / server classes are `transient`; 400–404 are `permanent`; the rest is
+  `unknown`. A transient error resends the identical bytes after `transportBackoff` (default `llmTransportBackoffMs`,
+  util `exponentialBackoffDelay`: 500 ms doubling to 8 s, equal jitter, with a `transport-backoff` diag). An `unknown`
+  error goes to the dispatcher's `isRetryableUnknownError`: a `true` makes it behave exactly like a transient error (its
+  rows carry `errorClassification: 'unknown'`). Anything not resent records an `unretryable` row (with
+  `errorClassification`), the call record, the decode-failure record and `onDispatchComplete`, then the dispatch
+  rejects with `LlmDispatchFaultError` (`cause` = the original error). A cancelled dispatch never retries.
 - **Truncation.** A length-capped reply is not parsed while budget remains; `lengthCapped` is sticky on the result. A
   truncation a lever induced on the last attempt earns one bonus attempt (`LLM_RETRY_INDUCED_BONUS_ATTEMPTS`).
 - **Fast fix.** `replyFastFix` (e.g. `makeLlmReplyFastFixer()`) repairs a mangled reply with one recorded
@@ -878,8 +882,9 @@ one retry lever, and a mangled JSON reply gets one cheap fast fix before any re-
   the re-ask (`reply-fast-fix-miss` diag, swallow site `llm/reply-repair.fast-fix`). A fixer's `meta` lands on
   `result.repair.meta`.
 - **Critique.** Root calls only, after `validate` passes. A rejection costs a re-ask with the critic's feedback and a
-  `critique` failed row, never a decode row. A rejection on the last attempt ships the reply and files the
-  `critique-fail` gap. A `line` reply is lifted to a lever under `lineLeverField` (default `line`) so the critic can read
+  `critique` failed row, never a decode row. A rejection with no retry left (the budget is spent, or the dispatch was
+  cancelled) ships the reply: it is stamped accepted (`lever`, `clean` / `retried`), files no failed row, and its
+  feedback files the `critique-fail` gap. A `line` reply is lifted to a lever under `lineLeverField` (default `line`) so the critic can read
   it.
 - **Decision lane.** The optional `decisions` block (`strategies`, `strategyId`, `defaultModel`, `maxAttempts`) adds
   `decide`, `decisionsSpent`, `resetDecisionsSpent` and the once-per-reset `claimDecisionBudgetWarning`; no block, an
@@ -896,7 +901,7 @@ one retry lever, and a mangled JSON reply gets one cheap fast fix before any re-
     `unknown` error; never an abort, a timeout or an answer fault) is resent after `transportBackoff`, up to
     `maxAttempts` sends
     (default 2). Each failed send is a `failedAttempts` row and `result.attempts` counts the sends; `decisionsSpent`
-    counts every send. A decision cancelled during the backoff is not resent.
+    counts every send. A decision cancelled during the backoff, or while parked before the resend, is not resent.
 
 ```ts
 import { llmCriticFor, llmSchemaLeverValidator, makeLlmDispatcher, makeLlmReplyFastFixer, makeLlmStrategyRegistry } from '@dereekb/llm';

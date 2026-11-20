@@ -1082,14 +1082,42 @@ describe('makeLlmDispatcher()', () => {
       expect(calls[0].failedAttempts).toEqual([expect.objectContaining({ cause: 'unretryable', errorClassification: 'unknown' })]);
     });
 
-    it('should still rethrow a transient error raw on the single-shot path, recording no call', async () => {
-      const { calls, recorder } = recording();
-      const thrown = statusError(503);
-      const { dispatcher } = setup({ replies: [thrown], recorder });
-      const caught = await caughtOf(dispatcher.dispatch(request()));
+    it('should record a single-shot timeout or transient failure, then rethrow the original error', async () => {
+      const scenarios: ReadonlyArray<readonly [Error, string]> = [
+        [new APIUserAbortError('aborted'), 'timeout'],
+        [statusError(503), 'transport']
+      ];
 
-      expect(caught).toBe(thrown);
-      expect(calls).toHaveLength(0);
+      for (const [thrown, failureClass] of scenarios) {
+        const { calls, decodeFailures, recorder } = recording();
+        const completes: LlmDispatchCompleteTapEvent<HostFields>[] = [];
+        const taps = makeLlmDispatchTapRegistry<HostFields>();
+        taps.addTap({ id: 't', onDispatchComplete: (event) => void completes.push(event) });
+        const { dispatcher } = setup({ replies: [thrown], recorder, taps });
+        const caught = await caughtOf(dispatcher.dispatch(request()));
+
+        expect(caught).toBe(thrown);
+        expect(calls).toHaveLength(1);
+        expect(calls[0].result).toMatchObject({ attempts: 1, decodeStatus: 'dropped', decodeOutcome: 'transport' });
+        expect(calls[0].failedAttempts).toEqual([expect.objectContaining({ attempt: 1, cause: failureClass })]);
+        expect(decodeFailures).toHaveLength(1);
+        expect(decodeFailures[0].payload.failures).toEqual([expect.objectContaining({ class: failureClass })]);
+        expect(completes).toHaveLength(1);
+      }
+    });
+
+    it('should drop the beat on a cancelled single-shot transient failure, recording the call', async () => {
+      const controller = new AbortController();
+      controller.abort();
+      const { calls, decodeFailures, recorder } = recording();
+      const { dispatcher } = setup({ replies: [statusError(503)], recorder, cancellationSignal: controller.signal });
+      const result = await dispatcher.dispatch(request());
+
+      expect(result).toMatchObject({ text: '', finishReason: '__transport__' });
+      expect(result).not.toHaveProperty('decodeStatus');
+      expect(calls).toHaveLength(1);
+      expect(calls[0].failedAttempts ?? []).toHaveLength(0);
+      expect(decodeFailures).toHaveLength(0);
     });
   });
 });

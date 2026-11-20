@@ -15,6 +15,7 @@ import { makeLlmPromptCachePrefixWatch } from '../prompt/llm.prompt.cache.watch'
 import { type LlmPromptRunParams, type LlmPromptRunResult, makeLlmPromptFactory } from '../prompt/llm.prompt.thread';
 import { type LlmCallContext } from '../record/llm.call.context';
 import { type LlmCallHostFields } from '../record/llm.call.record';
+import { DEFAULT_LLM_LINE_LEVER_FIELD } from '../reply/llm.reply.envelope';
 import { DEFAULT_LLM_REPLY_FAST_FIX_LIMITS, type LlmReplyFastFixLimits } from '../reply/llm.reply.fast.fix';
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
 import { llmBoundReplyFastFixOf } from './llm.dispatch.attempt';
@@ -24,7 +25,7 @@ import { LlmDispatchFaultError } from './llm.dispatch.fault';
 import { llmDecodeRetryModelOf } from './llm.dispatch.ladder';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
 import { composeLlmDispatch, type LlmDispatchComposeSetup } from './llm.dispatch.compose';
-import { isLlmDispatchCancelled, llmDispatchFallbackCallContextOf, llmDispatchSignalOf, llmTransportBackoffMs, parkLlmDispatchWhilePaused } from './llm.dispatch.control';
+import { llmDispatchFallbackCallContextOf, llmDispatchSignalOf, llmTransportBackoffMs, parkLlmDispatchWhilePaused } from './llm.dispatch.control';
 import { llmDispatchRecordFieldsOf, type LlmDispatchRecordSinks, isLlmDispatchTapsActive, recordLlmDispatch, recordLlmDispatchStart } from './llm.dispatch.record';
 import { llmDispatchStrategySelectorOf, type LlmDispatchResolveSetup, resolveLlmDispatch } from './llm.dispatch.resolve';
 import { type LlmDispatchAttemptsConfig, llmDispatchMaxAttemptsOf, runLlmDispatchAttempts, runSingleShotLlmDispatch } from './llm.dispatch.run';
@@ -164,8 +165,7 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
     const call: LlmDispatchLaneRequest<R> = { lane: 'completion', request };
     const callContext = callContextOf(call);
     const partition = config.cachePartitionOf?.(request) ?? undefined;
-    const signals = { cancellationSignal, request };
-    const signal = llmDispatchSignalOf(signals);
+    const signal = llmDispatchSignalOf({ cancellationSignal, request });
     const onGap = (gap: LlmDispatchGap) => config.onGap?.({ gap, request, callContext });
 
     if (await parkLlmDispatchWhilePaused({ pause, signal, callContext })) {
@@ -190,7 +190,8 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
       validate: composed.validate,
       callContext,
       signal,
-      cancelled: () => isLlmDispatchCancelled(signals),
+      // the merged signal is aborted iff either source is
+      cancelled: () => signal?.aborted === true,
       pause,
       baseOutputBudget: composed.baseRequest.maxOutputTokens ?? config.defaultMaxOutputTokens,
       onDecodeAttempt: isLlmDispatchTapsActive(taps) ? (attempt, willRetry) => taps.emitDecodeFailure({ capability, ...(tier == null ? {} : { tier }), attempt, willRetry, ...fields('decode-failure') }) : undefined,
@@ -199,7 +200,7 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
       escalateModel,
       critique,
       liveContext: composed.liveContext,
-      lineLeverField: request.lineLeverField,
+      lineLeverField: request.lineLeverField ?? DEFAULT_LLM_LINE_LEVER_FIELD,
       fastFix,
       fastFixUnavailable,
       fastFixLimits,
@@ -211,10 +212,14 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
     const outcome = composed.validate == null && critique == null ? await runSingleShotLlmDispatch(attemptsConfig) : await runLlmDispatchAttempts(attemptsConfig);
     const { callProfile } = recordLlmDispatch<R, H, A>({ sinks, request, followUp: isFollowUp, callContext, resolved, composed, outcome, fields });
 
-    // the call is recorded like any other fault; an unretryable send then rejects as the structured fault
+    // the call is recorded like any other fault; an unretryable send then rejects as the structured fault, and a
+    // single-shot timeout / transport failure rethrows the strategy's own error unchanged
     if (outcome.fault != null) {
       throw new LlmDispatchFaultError({ capability, ...outcome.fault });
+    } else if (outcome.rethrow != null) {
+      throw outcome.rethrow.error;
     }
+
     const degenerate = outcome.decodeFailures.length > 0 && !outcome.recovered;
     const result = config.resultOf?.({ result: outcome.result, request, callContext, callProfile }) ?? (outcome.result as X);
     const { finalRequest } = outcome;

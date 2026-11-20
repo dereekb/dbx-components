@@ -251,6 +251,7 @@ export function makeLlmDispatchDecisionLane<R extends LlmDispatchRequest = LlmDi
         const cancelled = (): boolean => signal?.aborted === true;
         const failedAttempts: LlmCallFailedAttempt[] = [];
         let attempt = 0;
+        let lastError: unknown;
         let sent: Maybe<LlmDispatchDecisionSent<Q>>;
 
         while (sent == null) {
@@ -258,6 +259,11 @@ export function makeLlmDispatchDecisionLane<R extends LlmDispatchRequest = LlmDi
 
           if (attempt > 1) {
             await parkLlmDispatchWhilePaused({ pause, signal, callContext });
+
+            // a decision cancelled while parked is never resent
+            if (cancelled()) {
+              throw lastError;
+            }
           }
 
           // the counter bounds what is SENT, a resend included
@@ -275,6 +281,7 @@ export function makeLlmDispatchDecisionLane<R extends LlmDispatchRequest = LlmDi
               throw error;
             }
 
+            lastError = error;
             const summary = llmErrorSummaryOf(error);
             failedAttempts.push(llmFailedAttemptOf({ attempt, cause: 'transport', result: llmTransportResultOf({ capability, meta: request.meta }, strategyId), error: summary }));
             const delayMs = transportBackoff(attempt);

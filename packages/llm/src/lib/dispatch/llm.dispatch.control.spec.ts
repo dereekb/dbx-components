@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { makeLlmCallContext } from '../record/llm.call.context';
-import { isLlmDispatchCancelled, LLM_TRANSPORT_RETRY_MAX_DELAY_MS, type LlmDispatchPauseSignal, llmDispatchSignalOf, llmTransportBackoffMs, parkLlmDispatchWhilePaused } from './llm.dispatch.control';
+import { LLM_TRANSPORT_RETRY_MAX_DELAY_MS, type LlmDispatchPauseSignal, llmDispatchSignalOf, llmTransportBackoffMs, parkLlmDispatchWhilePaused } from './llm.dispatch.control';
 
 function gate(paused: boolean): LlmDispatchPauseSignal & { readonly resume: () => void } {
   let resolveWait: () => void = () => undefined;
@@ -75,19 +75,6 @@ describe('llmDispatchSignalOf()', () => {
       (which === 'dispatcher' ? dispatcher : requestController).abort();
       expect(combined?.aborted).toBe(true);
     }
-  });
-});
-
-describe('isLlmDispatchCancelled()', () => {
-  it('should read either aborted signal as a cancellation', () => {
-    const aborted = new AbortController();
-    aborted.abort();
-    const live = new AbortController().signal;
-
-    expect(isLlmDispatchCancelled({ request: {} })).toBe(false);
-    expect(isLlmDispatchCancelled({ cancellationSignal: live, request: { signal: live } })).toBe(false);
-    expect(isLlmDispatchCancelled({ cancellationSignal: aborted.signal, request: {} })).toBe(true);
-    expect(isLlmDispatchCancelled({ request: { signal: aborted.signal } })).toBe(true);
   });
 });
 

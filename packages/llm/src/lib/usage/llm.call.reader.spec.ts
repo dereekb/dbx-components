@@ -15,6 +15,7 @@ import { type LlmModelTierMap } from '../model/llm.model.tier';
 import { type LlmPromptSegment } from '../prompt/llm.prompt.segment';
 import { type LlmPromptTemplate, tieredLlmPromptTemplateResolver } from '../prompt/llm.prompt.template';
 import { LLM_CALL_EVENT_TYPE, type LlmCallFailedAttempt, type LlmCallRecord } from '../record/llm.call.record';
+import { type LlmCritic } from '../reply/llm.reply.critique';
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
 import { makeLlmStrategyRegistry } from '../strategy/llm.strategy.registry';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
@@ -221,5 +222,16 @@ describe('the readers on dispatcher-recorded calls', () => {
 
     expect(summary.startsWith('attempts 2 dropped · #1 ')).toBe(true);
     expect(summary).toContain(' · #2 ');
+  });
+
+  it('should read a critique-exhausted call record as retried, the shipped attempt filing no row', async () => {
+    const { calls, recorder } = recording();
+    const critique: LlmCritic = async () => ({ error: 'too vague' });
+    await setup([OK, OK], recorder).dispatch(request({ critique }));
+
+    const record = calls[0];
+
+    expect(record.result.decodeStatus).toBe('retried');
+    expect(formatLlmCallAttempts({ type: LLM_CALL_EVENT_TYPE, payload: { attempts: record.result.attempts, decodeStatus: record.result.decodeStatus, failedAttempts: record.failedAttempts } })).toBe('attempts 2 retried · #1 critique: too vague → reasoning-low');
   });
 });

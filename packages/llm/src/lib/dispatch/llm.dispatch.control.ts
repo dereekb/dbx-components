@@ -92,17 +92,6 @@ export function llmDispatchSignalOf(config: LlmDispatchSignalsConfig): Maybe<Abo
   return mergeAbortSignals([config.cancellationSignal, config.request.signal]);
 }
 
-/**
- * Whether a dispatch is CANCELLED — either signal aborted. A cancelled dispatch's abort drops the beat instead of
- * throwing.
- *
- * @param config - The dispatcher signal and the request.
- * @returns `true` when either signal is aborted.
- */
-export function isLlmDispatchCancelled(config: LlmDispatchSignalsConfig): boolean {
-  return config.cancellationSignal?.aborted === true || config.request.signal?.aborted === true;
-}
-
 // MARK: Transport backoff
 /**
  * The first transport-retry backoff, before jitter.

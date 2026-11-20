@@ -29,6 +29,7 @@
  * Pure: no I/O, no clock, no environment. The dispatcher's bounded retry loop is its one consumer.
  */
 
+import { LLM_REASONING_OFF } from '../model/llm.model.precedence';
 import type { LlmModelId, LlmReasoningConfig } from '../model/llm.value';
 import type { LlmRetryCause } from '../record/llm.decode.failure';
 import type { LlmRequest } from '../strategy/llm.strategy';
@@ -181,10 +182,11 @@ export const LLM_RETRY_REASONING_LOW: LlmReasoningConfig = { enabled: true, effo
 export const LLM_RETRY_REASONING_LOW_HEADROOM_FACTOR = 2;
 
 /**
- * The reasoning config the `reasoning-off` rung flips to (a dispatcher's own OFF floor, restated here so this module
- * imports nothing from the dispatcher it serves).
+ * The lever of the ONE bonus attempt a dispatcher grants past its attempt cap ({@link LLM_RETRY_INDUCED_BONUS_ATTEMPTS})
+ * — a forced `reasoning-off` that undoes a `reasoning-low` retry the completion cap ended. Never chosen by
+ * {@link chooseLlmRetryLever}; the dispatcher's retry ladder takes it directly.
  */
-export const LLM_RETRY_REASONING_OFF: LlmReasoningConfig = { enabled: false };
+export const LLM_RETRY_BONUS_LEVER: LlmRetryLever = { lever: 'reasoning-off', from: 'low', to: 'off', reason: 'the reasoning-low re-ask spent its completion on reasoning; the bonus attempt undoes it', induced: 'reasoning-low' };
 
 /**
  * The ladder each cause walks, first APPLICABLE rung wins. A `lengthCapped` reply overrides its class's ladder with
@@ -418,7 +420,7 @@ export function applyLlmRetryLever(request: LlmRequest, lever: LlmRetryLever): L
       moved = { ...request, model: lever.to };
       break;
     case 'reasoning-off':
-      moved = { ...request, reasoning: LLM_RETRY_REASONING_OFF };
+      moved = { ...request, reasoning: LLM_REASONING_OFF };
       break;
     case 'reasoning-low':
       // The band AND the room it needs, in one application — see the module doc's amendment to the one-lever

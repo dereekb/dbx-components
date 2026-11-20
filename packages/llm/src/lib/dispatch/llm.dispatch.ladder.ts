@@ -1,7 +1,9 @@
 /**
  * One dispatch's RETRY LADDER state — the levers taken so far (re-applied to every later attempt, in order), the rungs
- * already spent, the three lever axes as currently sent, and the decision the latest failure bought (stamped on the
- * next attempt's phase and on the failed-attempt row). The rung itself is chosen by {@link chooseLlmRetryLever}.
+ * already spent, the bonus attempts granted, and the decision the latest failure bought (stamped on the next attempt's
+ * phase and on the failed-attempt row). The rung itself is chosen by {@link chooseLlmRetryLever}; the three lever axes
+ * it reads (completion budget, reasoning, structured output) are read off the base request as
+ * {@link applyLlmRetryLever} moves it, so the chooser always sees what the next attempt would send.
  */
 
 import { type Maybe } from '@dereekb/util';
@@ -11,7 +13,7 @@ import { type LlmCallContext } from '../record/llm.call.context';
 import { type LlmCallAttemptRetry } from '../record/llm.call.record';
 import { isLlmLengthCappedFinish, isLlmReasoningOnlyReply, type LlmRetryCause } from '../record/llm.decode.failure';
 import { type LlmDispatchResult, type LlmRequest } from '../strategy/llm.strategy';
-import { applyLlmRetryLever, chooseLlmRetryLever, LLM_RETRY_OUTPUT_BUDGET_CEILING, type LlmRetryLever, type LlmRetryLeverKind } from './llm.retry.lever';
+import { applyLlmRetryLever, chooseLlmRetryLever, LLM_RETRY_BONUS_LEVER, LLM_RETRY_INDUCED_BONUS_ATTEMPTS, LLM_RETRY_OUTPUT_BUDGET_CEILING, type LlmRetryLever, type LlmRetryLeverKind } from './llm.retry.lever';
 
 /**
  * The inputs of {@link makeLlmDispatchRetryLadder}.
@@ -26,7 +28,8 @@ export interface LlmDispatchRetryLadderConfig {
    */
   readonly baseRequest: LlmRequest;
   /**
-   * The completion budget the first attempt was sent with.
+   * The completion budget the first attempt was sent with — read as the budget axis while no lever has set
+   * `maxOutputTokens`.
    */
   readonly baseOutputBudget: number;
   /**
@@ -77,12 +80,28 @@ export interface LlmDispatchRetryLadder {
    */
   take(params: LlmDispatchRetryLadderTakeParams): LlmRetryLever;
   /**
-   * Grant the ONE bonus attempt — a forced `reasoning-off` that undoes a cap-ended `reasoning-low` retry.
+   * Whether a cap-ended attempt earns the bonus attempt — the retry that produced it took the `reasoning-low` rung and
+   * fewer than {@link LLM_RETRY_INDUCED_BONUS_ATTEMPTS} bonuses were granted. No strategy check: the chooser only ever
+   * prices `reasoning-low` when the strategy supports reasoning.
+   *
+   * @param retry - The retry stamp of the cap-ended attempt (its phase's `retry`).
+   * @returns Whether the bonus is due.
+   */
+  bonusDue(retry: Maybe<LlmCallAttemptRetry>): boolean;
+  /**
+   * Grant the ONE bonus attempt — {@link LLM_RETRY_BONUS_LEVER}, a forced `reasoning-off` that undoes a cap-ended
+   * `reasoning-low` retry — and count it toward {@link bonusAttempts}.
    *
    * @param params - The cause and the failed attempt's ordinal.
    * @returns The forced lever.
    */
   takeBonus(params: Omit<LlmDispatchRetryLadderTakeParams, 'failed'>): LlmRetryLever;
+  /**
+   * How many bonus attempts were granted — added to the attempt budget.
+   *
+   * @returns The count.
+   */
+  bonusAttempts(): number;
   /**
    * Re-apply every lever taken so far, in order.
    *
@@ -134,53 +153,34 @@ function llmRetryLeverMessageOf(lever: LlmRetryLeverKind): string {
  * @__NO_SIDE_EFFECTS__
  */
 export function makeLlmDispatchRetryLadder(config: LlmDispatchRetryLadderConfig): LlmDispatchRetryLadder {
-  const { capability, baseRequest, resolvedModel, escalateModel, reasoningSupported, callContext } = config;
+  const { capability, baseRequest, baseOutputBudget, resolvedModel, escalateModel, reasoningSupported, callContext } = config;
   const applied: LlmRetryLever[] = [];
   const spent = new Set<LlmRetryLeverKind>();
-  let outputBudget = config.baseOutputBudget;
-  let reasoningEnabled = baseRequest.reasoning != null && baseRequest.reasoning.enabled !== false;
-  let structured = baseRequest.responseSchemaHint != null;
+  let bonusTaken = 0;
   let pendingRetry: Maybe<LlmCallAttemptRetry>;
 
-  const moveAxes = (lever: LlmRetryLever, params: Pick<LlmDispatchRetryLadderTakeParams, 'cause' | 'attempt'>) => {
-    switch (lever.lever) {
-      case 'budget': {
-        const from = outputBudget;
-        outputBudget = Number(lever.to);
-        callContext.diag({ level: 'info', code: 'output-budget-raise', fields: { capability, attempt: params.attempt, failureClass: params.cause, from, to: outputBudget }, message: 'reply was cut off, raising the completion budget for the remaining attempts' });
-        break;
-      }
-      case 'model':
-        callContext.diag({ level: 'info', code: 'decode-escalate', fields: { capability, attempt: params.attempt + 1, model: lever.to }, message: 'decode retry escalating to the configured retry tier' });
-        break;
-      case 'reasoning-off':
-        reasoningEnabled = false;
-        break;
-      case 'reasoning-low':
-        reasoningEnabled = true;
-        outputBudget = lever.headroom ?? outputBudget;
-        break;
-      case 'structured-off':
-        structured = false;
-        break;
-      case 'none':
-        break;
-    }
+  const apply = (request: LlmRequest) => applied.reduce((moved, lever) => applyLlmRetryLever(moved, lever), request);
+
+  // the axes as the next attempt sends them: the base request moved by every lever taken so far
+  const axes = () => {
+    const moved = apply(baseRequest);
+    return { outputBudget: moved.maxOutputTokens ?? baseOutputBudget, reasoningEnabled: moved.reasoning != null && moved.reasoning.enabled !== false, structured: moved.responseSchemaHint != null };
   };
 
   return {
     take(params) {
       const { cause, failed, attempt } = params;
+      const before = axes();
       const lever = chooseLlmRetryLever({
         cause,
         lengthCapped: isLlmLengthCappedFinish(failed),
         reasoningOnly: isLlmReasoningOnlyReply(failed),
         model: resolvedModel,
         ...(escalateModel == null ? {} : { escalateModel }),
-        reasoningEnabled,
+        reasoningEnabled: before.reasoningEnabled,
         reasoningSupported,
-        structured,
-        outputBudget,
+        structured: before.structured,
+        outputBudget: before.outputBudget,
         budgetCeiling: LLM_RETRY_OUTPUT_BUDGET_CEILING,
         spent
       });
@@ -188,19 +188,28 @@ export function makeLlmDispatchRetryLadder(config: LlmDispatchRetryLadderConfig)
       if (lever.lever !== 'none') {
         applied.push(lever);
         spent.add(lever.lever);
-        moveAxes(lever, params);
+      }
+
+      if (lever.lever === 'budget') {
+        callContext.diag({ level: 'info', code: 'output-budget-raise', fields: { capability, attempt, failureClass: cause, from: before.outputBudget, to: axes().outputBudget }, message: 'reply was cut off, raising the completion budget for the remaining attempts' });
+      } else if (lever.lever === 'model') {
+        callContext.diag({ level: 'info', code: 'decode-escalate', fields: { capability, attempt: attempt + 1, model: lever.to }, message: 'decode retry escalating to the configured retry tier' });
       }
 
       callContext.diag({ level: 'info', code: 'retry-lever', fields: { capability, attempt: attempt + 1, cause, lever: lever.lever, from: lever.from, to: lever.to, reason: lever.reason }, message: llmRetryLeverMessageOf(lever.lever) });
       pendingRetry = llmCallAttemptRetryOf(lever, cause);
       return lever;
     },
+    bonusDue(retry) {
+      // `reasoning-low` is only ever priced when the strategy supports reasoning, so no strategy check is needed here
+      return bonusTaken < LLM_RETRY_INDUCED_BONUS_ATTEMPTS && retry?.lever === 'reasoning-low';
+    },
     takeBonus(params) {
       const { cause, attempt } = params;
-      const lever: LlmRetryLever = { lever: 'reasoning-off', from: 'low', to: 'off', reason: 'the reasoning-low re-ask spent its completion on reasoning; the bonus attempt undoes it', induced: 'reasoning-low' };
+      const lever = LLM_RETRY_BONUS_LEVER;
+      bonusTaken += 1;
       applied.push(lever);
       spent.add(lever.lever);
-      reasoningEnabled = false;
       callContext.diag({
         level: 'info',
         code: 'retry-lever',
@@ -210,9 +219,10 @@ export function makeLlmDispatchRetryLadder(config: LlmDispatchRetryLadderConfig)
       pendingRetry = { ...llmCallAttemptRetryOf(lever, cause), bonus: true, induced: 'reasoning-low' };
       return lever;
     },
-    apply(request) {
-      return applied.reduce((moved, lever) => applyLlmRetryLever(moved, lever), request);
+    bonusAttempts() {
+      return bonusTaken;
     },
+    apply,
     pending() {
       return pendingRetry;
     },
