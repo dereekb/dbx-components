@@ -985,7 +985,25 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
         const task = await stack.taskData('decide_fault');
         expect(task?.s).toBe(OpenRouterRunTaskState.FAILED);
         expect(task?.at).toBe(1);
+        expect(stack.fake.callCount).toBe(1);
         expect(task?.e?.message).toContain('choice-off-option');
+      });
+
+      it('should fail a decision run whose 200 reply the SDK cannot decode, without spending retries on it', async () => {
+        // No `usage`, which the SDK's decision response schema requires: the SDK throws a real ResponseValidationError
+        // for a 2xx it was billed for. Asking again would bill the same call for the same undecodable answer.
+        const stack = await buildStack({ promptKey: 'decision-undecodable', questions: TEST_DECISION_QUESTIONS, maxAttempts: 3, decisionReply: { rawBody: { id: 'gen_dec_0', model: 'typesafe/jev-1.13-20260917', answers: {} } } });
+
+        await stack.service.enqueueRunTask({ key: 'decide_undecodable', promptKey: 'decision-undecodable', state: TEST_DECISION_STATE });
+        await openRouterRunTaskSweep({ service: stack.service, pageSize: 5 });
+
+        const task = await stack.taskData('decide_undecodable');
+        expect(task?.s).toBe(OpenRouterRunTaskState.FAILED);
+        expect(task?.at).toBe(1);
+        expect(stack.fake.callCount).toBe(1);
+        // The stored code and message are what the run already stored for this error; only its classification moved.
+        expect(task?.e?.code).toBe('ResponseValidationError');
+        expect(task?.e?.message).toBe('Response validation failed');
       });
     });
 

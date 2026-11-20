@@ -156,6 +156,11 @@ describe('isRetryableOpenRouterError()', () => {
     it('should fail a permanent failure whatever the host says', () => {
       expect(isRetryableOpenRouterError({ status: 400 }, () => true)).toBe(false);
     });
+
+    it('should NOT retry an undecodable 2xx reply, whatever the host says', () => {
+      const responseValidationError = Object.assign(new Error('Response validation failed'), { name: 'ResponseValidationError', statusCode: 200 });
+      expect(isRetryableOpenRouterError(responseValidationError, () => true)).toBe(false);
+    });
   });
 });
 
@@ -179,6 +184,12 @@ describe('classifyOpenRouterError()', () => {
   it('should classify the in-workspace deterministic failures as permanent', () => {
     expect(classifyOpenRouterError(new OpenRouterPromptResolutionError('p', 'does not exist.', 3))).toBe('permanent');
     expect(classifyOpenRouterError(new LlmDecisionDeclarationError(['x']))).toBe('permanent');
+  });
+
+  it("should classify an undecodable 2xx reply (the SDK's ResponseValidationError) as permanent", () => {
+    // Fabricated by shape, as the SDK sets it: `.name` and the 2xx `statusCode`. Its status alone would read `unknown`.
+    const responseValidationError = Object.assign(new Error('Response validation failed'), { name: 'ResponseValidationError', statusCode: 200 });
+    expect(classifyOpenRouterError(responseValidationError)).toBe('permanent');
   });
 });
 

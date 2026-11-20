@@ -644,8 +644,8 @@ export function openRouterRunTaskService(config: OpenRouterRunTaskServiceConfig)
       executionResult = { key, state: OpenRouterRunTaskState.COMPLETE, decision };
     } catch (e) {
       // A malformed declaration and an off-shape reply both land here, and both are classified PERMANENT
-      // by class (`classifyOpenRouterError`), so neither spends the attempt budget reaching the same
-      // answer three times.
+      // by class (`classifyOpenRouterError`), and so is a 2xx reply the SDK cannot decode
+      // (`ResponseValidationError`), so none spends the attempt budget reaching the same answer three times.
       const failure = await recordFailure({ document, task, error: { code: openRouterErrorCode(e), message: openRouterErrorMessage(e) }, cause: e, at: new Date() });
       executionResult = { ...failure, error: e };
     }
@@ -959,10 +959,14 @@ export const OPENROUTER_PERMANENT_ERROR_STATUSES: readonly number[] = [400, 401,
 
 /**
  * The run task's classification config: util/fetch's defaults with OpenRouter's permanent statuses, its
- * `status` / `statusCode` / `code` reader, and the `@openrouter/sdk` HTTP-client error names (which set `.name`).
+ * `status` / `statusCode` / `code` reader, and the `@openrouter/sdk` HTTP-client error names (which set `.name`) —
+ * including the permanent `ResponseValidationError`.
  */
 const OPENROUTER_ERROR_CLASSIFICATION_CONFIG: FetchErrorClassificationConfig = {
   permanentStatuses: new Set(OPENROUTER_PERMANENT_ERROR_STATUSES),
+  // The `@openrouter/sdk`'s error for a 2xx reply it could not decode. Asking again bills the same call for the same
+  // undecodable answer (review-2 N1, D5 §0.5).
+  permanentClassNames: new Set(['ResponseValidationError']),
   readStatus: openRouterErrorStatus,
   abortErrorNames: new Set([...Array.from(DEFAULT_FETCH_ABORT_ERROR_NAMES), 'RequestAbortedError', 'RequestTimeoutError']),
   transientClassNames: new Set(['ConnectionError'])
@@ -973,7 +977,8 @@ const OPENROUTER_ERROR_CLASSIFICATION_CONFIG: FetchErrorClassificationConfig = {
  *
  * The in-workspace deterministic failures are permanent by class: an {@link OpenRouterPromptResolutionError} (the
  * prompt either exists at that version or it never will), an `LlmDecisionAnswerFaultError` (an off-shape decision
- * answer) and an `LlmDecisionDeclarationError` (a malformed decision declaration). Everything else goes through
+ * answer) and an `LlmDecisionDeclarationError` (a malformed decision declaration). So is the SDK's
+ * `ResponseValidationError` (a 2xx reply it could not decode), recognised by name. Everything else goes through
  * `@dereekb/util/fetch`'s `classifyFetchError`, with {@link OPENROUTER_PERMANENT_ERROR_STATUSES} as the permanent
  * statuses, the status read off `status` / `statusCode` / `code`, and the `@openrouter/sdk` connection, timeout and
  * abort errors recognised by name.
@@ -1012,8 +1017,8 @@ export function classifyOpenRouterError(e: unknown): FetchErrorClassification {
  *
  * Permanent is two cases. {@link OPENROUTER_PERMANENT_ERROR_STATUSES}, read off `status` / `statusCode` /
  * `code` — which covers both routes into `recordFailure`: a thrown SDK/HTTP error, and the numeric
- * `error.code` OpenRouter reports in a response body without throwing at all. And the in-workspace
- * deterministic classes {@link classifyOpenRouterError} lists, which fail identically on every attempt.
+ * `error.code` OpenRouter reports in a response body without throwing at all. And the deterministic classes
+ * {@link classifyOpenRouterError} lists by class or by name, which fail identically on every attempt.
  *
  * A host narrows the `unknown` default with `isRetryableUnknownError` (`OpenRouterRunTaskServiceConfig`): `false`
  * fails the task now. It is never asked about a transient or permanent failure.
