@@ -11,7 +11,7 @@
  * The probe is opt-in, never on the dispatch path, and never throws.
  */
 
-import { type AbortSignalRef, readErrorMessage, isNotNullOrEmptyString, isPlainObject, makeTimeoutAbortSignal, type Maybe, type Milliseconds, type WebsiteUrlWithPrefix, type WebsiteUrl } from '@dereekb/util';
+import { type AbortSignalRef, cutStringFunction, readErrorMessage, isNotNullOrEmptyString, isPlainObject, makeTimeoutAbortSignal, type Maybe, type Milliseconds, type WebsiteUrlWithPrefix, type WebsiteUrl } from '@dereekb/util';
 import { type ConfiguredFetch, type FetchJsonTextResult, readFetchJsonText } from '@dereekb/util/fetch';
 import { type LlmStrategyId } from '../model/llm.value';
 import { resolveLlmFetch } from './llm.fetch';
@@ -28,6 +28,11 @@ export const DEFAULT_LLM_CREDENTIAL_PROBE_TIMEOUT_MS: Milliseconds = 15_000;
  * How much of an unparseable provider error body is carried into the issue message before truncation.
  */
 const MAX_PROVIDER_MESSAGE_LENGTH = 240;
+
+/**
+ * Cuts a message-less error body to {@link MAX_PROVIDER_MESSAGE_LENGTH} characters, then marks the cut with `…`.
+ */
+const cutLlmProviderMessage = cutStringFunction({ maxLength: MAX_PROVIDER_MESSAGE_LENGTH, endText: '…', maxLengthIncludesEndText: false });
 
 /**
  * Config for {@link probeLlmCredentialEndpoint}.
@@ -108,8 +113,7 @@ export function llmProviderErrorMessage(read: Pick<FetchJsonTextResult, 'text' |
     } else {
       // Swallow site `llm/credential-probe.error-body`. A body with no message (an HTML error page from a proxy in front of the gateway) is not a fault — the raw text is
       // still the most informative thing available. Health channel: the verdict carries it.
-      // TODO: cut with util cutString once its cutStringFunction keeps a custom endText ({ maxLength, maxLengthIncludesEndText: false, endText: '…' }).
-      message = trimmed.length > MAX_PROVIDER_MESSAGE_LENGTH ? `${trimmed.slice(0, MAX_PROVIDER_MESSAGE_LENGTH)}…` : trimmed;
+      message = cutLlmProviderMessage(trimmed);
     }
   }
 

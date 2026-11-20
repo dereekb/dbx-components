@@ -21,7 +21,7 @@
  * runaway garbage turn.
  */
 
-import { type CachedGetter, cachedGetter, type Maybe, type Count } from '@dereekb/util';
+import { type CachedGetter, cachedGetter, cutStringFunction, type Maybe, type Count } from '@dereekb/util';
 import { type LlmValueValidator } from '../reply/llm.reply.validator';
 import { type LlmDispatchResult, type LlmThreadTurn } from '../strategy/llm.strategy';
 
@@ -246,16 +246,15 @@ export function makeLlmPromptFactory<R, X extends LlmDispatchResult = LlmDispatc
   const { runPromptRequest } = config;
   const placeholder = config.degenerateThreadPlaceholder ?? DEFAULT_LLM_DEGENERATE_THREAD_PLACEHOLDER;
   const maxChars = config.threadTurnMaxChars ?? DEFAULT_LLM_THREAD_TURN_MAX_CHARS;
+  const cutThreadTurn = cutStringFunction({ maxLength: maxChars, endText: LLM_THREAD_TURN_TRUNCATION_MARKER, maxLengthIncludesEndText: false });
 
   function assistantTurnContentOf(ran: LlmPromptRunResult<X>): string {
     let content: string;
 
     if (ran.degenerate === true) {
       content = placeholder;
-    } else if (ran.result.text.length > maxChars) {
-      content = ran.result.text.slice(0, maxChars) + LLM_THREAD_TURN_TRUNCATION_MARKER;
     } else {
-      content = ran.result.text;
+      content = cutThreadTurn(ran.result.text);
     }
 
     return content;

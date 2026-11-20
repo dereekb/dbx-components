@@ -4,7 +4,7 @@ import { fakeOpenRouterDecisionClient, fakeOpenRouterHangUntilAborted } from '..
 import { sendOpenRouterResponsesRequest } from './openrouter.call';
 import { openRouterDecisionRequest } from './openrouter.decision';
 import { openRouterDecision } from './openrouter.decision.call';
-import { anyOpenRouterAbortSignal, openRouterRequestOptionsWithTimeout } from './openrouter.timeout';
+import { openRouterRequestOptionsWithTimeout } from './openrouter.timeout';
 import { OPENROUTER_JEV_1_13_MODEL_ID } from './openrouter.type';
 
 const QUESTIONS = {
@@ -98,50 +98,23 @@ describe('openRouterRequestOptionsWithTimeout()', () => {
       const reason = await waitForAbort(result.signal as AbortSignal);
       expect((reason as Error).name).toBe('TimeoutError');
     });
-  });
-});
 
-describe('anyOpenRouterAbortSignal()', () => {
-  describe('without AbortSignal.any', () => {
-    const abortSignalAny = AbortSignal.any;
+    describe('without AbortSignal.any', () => {
+      const abortSignalAny = AbortSignal.any;
 
-    function removeAbortSignalAny() {
-      (AbortSignal as { any?: unknown }).any = undefined;
-    }
+      afterEach(() => {
+        AbortSignal.any = abortSignalAny;
+      });
 
-    afterEach(() => {
-      AbortSignal.any = abortSignalAny;
-    });
+      it('should still abort at the timeout through the merge fallback', async () => {
+        (AbortSignal as { any?: unknown }).any = undefined;
+        const controller = new AbortController();
+        const result = openRouterRequestOptionsWithTimeout({ signal: controller.signal }, 20);
+        const reason = await waitForAbort(result.signal as AbortSignal);
 
-    it('should abort with the reason of the signal that aborted', async () => {
-      removeAbortSignalAny();
-      const a = new AbortController();
-      const b = new AbortController();
-      const merged = anyOpenRouterAbortSignal([a.signal, b.signal]);
-      const abort = waitForAbort(merged);
-
-      b.abort('b reason');
-
-      expect(await abort).toBe('b reason');
-      expect(a.signal.aborted).toBe(false);
-    });
-
-    it('should be aborted already when an input signal already aborted', () => {
-      removeAbortSignalAny();
-      const a = new AbortController();
-      a.abort('a reason');
-      const merged = anyOpenRouterAbortSignal([a.signal, new AbortController().signal]);
-
-      expect(merged.aborted).toBe(true);
-      expect(merged.reason).toBe('a reason');
-    });
-
-    it('should abort at the timeout when merged with AbortSignal.timeout()', async () => {
-      removeAbortSignalAny();
-      const merged = anyOpenRouterAbortSignal([new AbortController().signal, AbortSignal.timeout(20)]);
-      const reason = await waitForAbort(merged);
-
-      expect((reason as Error).name).toBe('TimeoutError');
+        expect((reason as Error).name).toBe('TimeoutError');
+        expect(controller.signal.aborted).toBe(false);
+      });
     });
   });
 });
