@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { llmCraftNoteParseErrorLines } from './llm.craft.frontmatter';
-import { llmCraftNoteRowSourceOf, llmCraftNoteTombstoneText, makeLlmCraftNoteRowReader, parseLlmCraftNoteRows, type LlmCraftNoteRow } from './llm.craft.row';
+import { toLlmCraftNoteRowSource, llmCraftNoteTombstoneText, makeLlmCraftNoteRowReader, parseLlmCraftNoteRows, type LlmCraftNoteRow } from './llm.craft.row';
 import { makeLlmCraftSiteRegistry } from './llm.craft.site';
 
 const SITES = makeLlmCraftSiteRegistry({
@@ -13,9 +13,9 @@ function noteText(id: string, body = 'WORKSPACE BODY'): string {
   return ['---', `id: ${id}`, 'title: t', 'sites: [product-page]', '---', body, ''].join('\n');
 }
 
-describe('llmCraftNoteRowSourceOf()', () => {
+describe('toLlmCraftNoteRowSource()', () => {
   it('reads <tier>:<id>', () => {
-    expect(llmCraftNoteRowSourceOf('workspace', 'a')).toBe('workspace:a');
+    expect(toLlmCraftNoteRowSource('workspace', 'a')).toBe('workspace:a');
   });
 });
 

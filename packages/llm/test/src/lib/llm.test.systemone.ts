@@ -12,7 +12,7 @@
 import { type Maybe } from '@dereekb/util';
 import { type LlmDecisionRequestBody, type LlmDecisionWireReply } from '@dereekb/llm';
 import { type ConfiguredFetch } from '@dereekb/util/fetch';
-import { hangLlmFetchFakeUntilAborted, llmFetchFakeRequestOf, llmFetchFakeResponse, type LlmFetchFakeRequest } from './llm.test.fetch';
+import { hangLlmFetchFakeUntilAborted, toLlmFetchFakeRequest, llmFetchFakeResponse, type LlmFetchFakeRequest } from './llm.test.fetch';
 
 /**
  * One request the fake received.
@@ -154,7 +154,7 @@ function toLlmSystemOneWireFakeResponse(answer: LlmSystemOneWireFakeAnswer, requ
  * @example
  * ```ts
  * const fake = makeLlmSystemOneWireFake({ respond: { status: 429, body: { error: { message: 'Rate limit exceeded' } } } });
- * const strategy = makeZenmuxDecisionStrategy({ decisionFetch: fake.fetch });
+ * const strategy = makeLlmZenmuxDecisionStrategy({ decisionFetch: fake.fetch });
  * await strategy.decide(request).catch((error) => error); // LlmDecisionTransportError, status 429
  * fake.requests[0]?.url; // 'https://zenmux.ai/api/v1/systemone'
  * ```
@@ -164,7 +164,7 @@ export function makeLlmSystemOneWireFake(config?: Maybe<LlmSystemOneWireFakeConf
   const respond = config?.respond;
 
   const fakeFetch: ConfiguredFetch = async (input, init) => {
-    const recorded = llmFetchFakeRequestOf(input, init);
+    const recorded = toLlmFetchFakeRequest(input, init);
     const request: LlmSystemOneWireFakeRequest = { ...recorded, body: parsedBodyOf(recorded.init.body) };
     requests.push(request);
     let response: Response;

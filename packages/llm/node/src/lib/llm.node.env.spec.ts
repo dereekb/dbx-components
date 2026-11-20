@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_LLM_ENV_NAMES, firstLlmEnvEntry, firstLlmEnvValue, hasLlmProviderKeyInEnv, type LlmEnvNames, llmEnvApiKeyNamesOf } from './llm.node.env';
+import { DEFAULT_LLM_ENV_NAMES, firstLlmEnvEntry, firstLlmEnvValue, hasLlmProviderKeyInEnv, type LlmEnvNames, readLlmEnvApiKeyNames } from './llm.node.env';
 
 describe('firstLlmEnvEntry()', () => {
   it('should return the first set name in priority order, naming it', () => {
@@ -35,9 +35,9 @@ describe('firstLlmEnvValue()', () => {
   });
 });
 
-describe('llmEnvApiKeyNamesOf()', () => {
+describe('readLlmEnvApiKeyNames()', () => {
   it('should list every env-default key name in provider then priority order', () => {
-    expect(llmEnvApiKeyNamesOf()).toEqual(['OPENAI_API_KEY', 'OPENROUTER_API_KEY']);
+    expect(readLlmEnvApiKeyNames()).toEqual(['OPENAI_API_KEY', 'OPENROUTER_API_KEY']);
   });
 
   it('should honour custom names', () => {
@@ -49,7 +49,7 @@ describe('llmEnvApiKeyNamesOf()', () => {
       ]
     };
 
-    expect(llmEnvApiKeyNamesOf(names)).toEqual(['HOST_OPENAI_KEY', 'OPENAI_API_KEY', 'HOST_OPENROUTER_KEY']);
+    expect(readLlmEnvApiKeyNames(names)).toEqual(['HOST_OPENAI_KEY', 'OPENAI_API_KEY', 'HOST_OPENROUTER_KEY']);
   });
 });
 

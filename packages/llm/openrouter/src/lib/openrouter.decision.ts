@@ -14,18 +14,19 @@
  * Answers are read strictly: a type-less answer faults as `answer-mistyped`. The generation id is the body `id`.
  */
 import { makeLlmSystemOneDecisionStrategy, type LlmDecisionStrategy, type LlmStrategyId, type LlmSystemOneDecisionStrategyConfig, type LlmSystemOneDecisionStrategyHooks } from '@dereekb/llm';
-import { LLM_OPENROUTER_BASE_URL } from './openrouter.constants';
+import { DEFAULT_LLM_OPENROUTER_BASE_URL } from './openrouter.constants';
 import { probeLlmOpenRouterCredential } from './openrouter.credential.probe';
 
 /**
- * The strategy KIND (and default instance id) of the OpenRouter decision transport — deliberately distinct from the
- * completion strategy's `'openrouter'`, so a ledger row can never confuse the two lanes.
+ * The strategy KIND (and default instance id) of the OpenRouter decision transport. Decision kinds follow
+ * `<route>-systemone` (both decision transports speak System One; ZenMux's is `'zenmux-systemone'`), distinct from the
+ * completion kind `'openrouter'`, so a ledger row can never confuse the two lanes.
  */
-export const LLM_OPENROUTER_DECISION_STRATEGY_KIND: LlmStrategyId = 'openrouter-decisions';
+export const LLM_OPENROUTER_DECISION_STRATEGY_KIND: LlmStrategyId = 'openrouter-systemone';
 
 /**
  * Config for {@link makeLlmOpenRouterDecisionStrategy} — the core System One config: the key, the endpoint root
- * (absent ⇒ {@link LLM_OPENROUTER_BASE_URL}; it governs both the decision and the `GET {baseUrl}/key` probe), the
+ * (absent ⇒ {@link DEFAULT_LLM_OPENROUTER_BASE_URL}; it governs both the decision and the `GET {baseUrl}/key` probe), the
  * timeout and the `decisionFetch` / `probeFetch` seams.
  */
 export type LlmOpenRouterDecisionStrategyConfig = LlmSystemOneDecisionStrategyConfig;
@@ -36,7 +37,7 @@ export type LlmOpenRouterDecisionStrategyConfig = LlmSystemOneDecisionStrategyCo
 const LLM_OPENROUTER_DECISION_STRATEGY_HOOKS: LlmSystemOneDecisionStrategyHooks = {
   kind: LLM_OPENROUTER_DECISION_STRATEGY_KIND,
   label: 'OpenRouter',
-  defaultBaseUrl: LLM_OPENROUTER_BASE_URL,
+  defaultBaseUrl: DEFAULT_LLM_OPENROUTER_BASE_URL,
   // `GET /key` is OpenRouter's free key-metadata endpoint — the SAME probe the completion sibling runs, because it is
   // the same account. A revoked key answers `401 "User not found."` verbatim.
   credentialProbe: (params) => probeLlmOpenRouterCredential(params)

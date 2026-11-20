@@ -106,7 +106,7 @@ export interface LlmCapabilityDescriptor<T = unknown, H extends object = object>
  *
  * @typeParam D - The host's descriptor type.
  */
-export type LlmCapabilityDescriptorOf<D extends LlmCapabilityDescriptor = LlmCapabilityDescriptor> = (capability: LlmCapabilityKey) => Maybe<D>;
+export type LlmCapabilityDescriptorReader<D extends LlmCapabilityDescriptor = LlmCapabilityDescriptor> = (capability: LlmCapabilityKey) => Maybe<D>;
 
 /**
  * The input of {@link defineLlmCapability} — every descriptor field except the two schema hints, which it builds.

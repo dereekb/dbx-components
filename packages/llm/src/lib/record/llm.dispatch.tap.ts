@@ -33,7 +33,7 @@
  *    ({@link LlmDispatchStartTapEventBase.estimatedPromptTokens}, `followUp`, …) ride the tap event ONLY.
  */
 
-import { errorMessageOf, isPromiseLike, type Maybe } from '@dereekb/util';
+import { readErrorMessage, isPromiseLike, type Maybe } from '@dereekb/util';
 import type { LlmCapabilityKey, LlmModelTierKey } from '../model/llm.value';
 import type { LlmCallHostFields, LlmCallRecordBase, LlmCallStartRecordBase } from './llm.call.record';
 import type { LlmDecodeFailureAttempt } from './llm.decode.failure';
@@ -265,7 +265,7 @@ export function makeLlmDispatchTapRegistry<H extends LlmCallHostFields = LlmCall
   // NOTHING is written to the console — `health()` is the entire surface.
   const tally = (tap: LlmDispatchTap<H>, error: unknown): void => {
     failures += 1;
-    lastError = errorMessageOf(error);
+    lastError = readErrorMessage(error);
     byTap[tap.id] = (byTap[tap.id] ?? 0) + 1;
   };
 

@@ -13,7 +13,7 @@ import { type LlmDispatchTapRegistry } from '../record/llm.dispatch.tap';
 import { type LlmStrategyBase } from '../strategy/llm.strategy';
 import { llmStrategyKind } from '../strategy/llm.strategy.registry';
 import { type LlmComposedDispatch } from './llm.dispatch.compose';
-import { llmCallPhasesOf, type LlmDispatchOutcome } from './llm.dispatch.outcome';
+import { toLlmCallPhases, type LlmDispatchOutcome } from './llm.dispatch.outcome';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
 import { type LlmResolvedDispatch } from './llm.dispatch.resolve';
 import { type LlmDispatchGap, type LlmDispatchLaneRequest, type LlmDispatchRecorder, type LlmDispatchRecordFieldsParams, type LlmDispatchRecordKind } from './llm.dispatcher.config';
@@ -26,7 +26,7 @@ import { type LlmDispatchGap, type LlmDispatchLaneRequest, type LlmDispatchRecor
 export type LlmDispatchRecordFields<H extends LlmCallHostFields = LlmCallHostFields> = (kind: LlmDispatchRecordKind) => H;
 
 /**
- * The inputs of {@link llmDispatchRecordFieldsOf}.
+ * The inputs of {@link makeLlmDispatchRecordFields}.
  *
  * @typeParam R - The host's request type.
  * @typeParam H - The host's top-level record fields.
@@ -51,7 +51,7 @@ export interface LlmDispatchRecordFieldsConfig<R extends LlmDispatchRequest = Ll
  * @param config - The hook, the lane and its request, and the call context.
  * @returns The reader.
  */
-export function llmDispatchRecordFieldsOf<R extends LlmDispatchRequest = LlmDispatchRequest, H extends LlmCallHostFields = LlmCallHostFields, A extends object = object>(config: LlmDispatchRecordFieldsConfig<R, H, A>): LlmDispatchRecordFields<H> {
+export function makeLlmDispatchRecordFields<R extends LlmDispatchRequest = LlmDispatchRequest, H extends LlmCallHostFields = LlmCallHostFields, A extends object = object>(config: LlmDispatchRecordFieldsConfig<R, H, A>): LlmDispatchRecordFields<H> {
   const { recordFieldsOf, call, callContext } = config;
   const read = new Map<LlmDispatchRecordKind, H>();
 
@@ -214,7 +214,7 @@ export function recordLlmDispatch<R extends LlmDispatchRequest = LlmDispatchRequ
   const { result, decodeFailures, failedAttempts, recovered } = outcome;
   const capability = request.capability;
   const callProfile = callContext.enabled ? callContext.profile() : undefined;
-  const phases = callProfile == null ? undefined : llmCallPhasesOf({ profile: callProfile, attemptPhases: outcome.attemptPhases, request: baseRequest, cachePrefixHash });
+  const phases = callProfile == null ? undefined : toLlmCallPhases({ profile: callProfile, attemptPhases: outcome.attemptPhases, request: baseRequest, cachePrefixHash });
   const callRecord: LlmCallRecord<H> = {
     capability,
     prompt: baseRequest.prompt,

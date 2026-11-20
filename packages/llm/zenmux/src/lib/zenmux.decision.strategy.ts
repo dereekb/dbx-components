@@ -11,48 +11,48 @@
  * `X-ZenMux-RequestId` header instead, and that value IS the `generationId` its dashboard and `management/generation?id=` key
  * the call by. Run attribution therefore lives on the host's own call record, found by that id.
  *
- * A reported `cost` is ZenMux's synchronous figure, stamped as its list price ({@link ZENMUX_SYNC_COST_BASIS}). Built from
+ * A reported `cost` is ZenMux's synchronous figure, stamped as its list price ({@link LLM_ZENMUX_SYNC_COST_BASIS}). Built from
  * an EXISTING provider — the same id and the same key its completion lane bills — so serving decisions takes no new secret.
  */
 
 import { makeLlmSystemOneDecisionStrategy, type LlmDecisionStrategy, type LlmStrategyId, type LlmSystemOneDecisionStrategyConfig, type LlmSystemOneDecisionStrategyHooks } from '@dereekb/llm';
-import { ZENMUX_SYNC_COST_BASIS } from './zenmux.account';
-import { DEFAULT_ZENMUX_BASE_URL } from './zenmux.constants';
-import { probeZenmuxCredential } from './zenmux.credential.probe';
+import { LLM_ZENMUX_SYNC_COST_BASIS } from './zenmux.account';
+import { DEFAULT_LLM_ZENMUX_BASE_URL } from './zenmux.constants';
+import { probeLlmZenmuxCredential } from './zenmux.credential.probe';
 
 /**
  * The TRANSPORT kind a ZenMux decision strategy reports — what a call record reads as its `strategyKind` and what a cost
  * fold groups on. Distinct from every completion kind, so a decision can never be confused with the OpenAI-transport
  * completion lane that shares its provider and its key. The value is stable: stored call rows fold on it.
  */
-export const ZENMUX_DECISION_STRATEGY_KIND: LlmStrategyId = 'zenmux-systemone';
+export const LLM_ZENMUX_DECISION_STRATEGY_KIND: LlmStrategyId = 'zenmux-systemone';
 
 /**
  * The response header ZenMux carries its generation id in — the id the dashboard and `management/generation?id=` look a call
  * up by. The `/systemone` body carries no `id` of its own, so this is the only handle there is.
  */
-export const ZENMUX_REQUEST_ID_HEADER = 'x-zenmux-requestid';
+export const LLM_ZENMUX_REQUEST_ID_HEADER = 'x-zenmux-requestid';
 
 /**
- * Config for {@link makeZenmuxDecisionStrategy} — the core System One config: the key (and the env var that supplied it,
- * a label for the readiness messages), the endpoint root (absent ⇒ {@link DEFAULT_ZENMUX_BASE_URL}), the timeout and the
+ * Config for {@link makeLlmZenmuxDecisionStrategy} — the core System One config: the key (and the env var that supplied it,
+ * a label for the readiness messages), the endpoint root (absent ⇒ {@link DEFAULT_LLM_ZENMUX_BASE_URL}), the timeout and the
  * `decisionFetch` / `probeFetch` seams.
  */
-export type ZenmuxDecisionStrategyConfig = LlmSystemOneDecisionStrategyConfig;
+export type LlmZenmuxDecisionStrategyConfig = LlmSystemOneDecisionStrategyConfig;
 
 /**
  * ZenMux's definition over the System One transport.
  */
 const ZENMUX_DECISION_STRATEGY_HOOKS: LlmSystemOneDecisionStrategyHooks = {
-  kind: ZENMUX_DECISION_STRATEGY_KIND,
+  kind: LLM_ZENMUX_DECISION_STRATEGY_KIND,
   label: 'ZenMux',
-  defaultBaseUrl: DEFAULT_ZENMUX_BASE_URL,
-  generationIdHeader: ZENMUX_REQUEST_ID_HEADER,
-  costBasis: ZENMUX_SYNC_COST_BASIS,
+  defaultBaseUrl: DEFAULT_LLM_ZENMUX_BASE_URL,
+  generationIdHeader: LLM_ZENMUX_REQUEST_ID_HEADER,
+  costBasis: LLM_ZENMUX_SYNC_COST_BASIS,
   laxAnswerTypes: true,
   // The SAME probe the ZenMux completion lane runs, because it is the same account and the same key. Not `GET /models`:
   // ZenMux answers that 200 to any bearer, so it could never report a revoked key.
-  credentialProbe: (params) => probeZenmuxCredential(params)
+  credentialProbe: (params) => probeLlmZenmuxCredential(params)
 };
 
 /**
@@ -63,6 +63,6 @@ const ZENMUX_DECISION_STRATEGY_HOOKS: LlmSystemOneDecisionStrategyHooks = {
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function makeZenmuxDecisionStrategy(config: ZenmuxDecisionStrategyConfig = {}): LlmDecisionStrategy {
+export function makeLlmZenmuxDecisionStrategy(config: LlmZenmuxDecisionStrategyConfig = {}): LlmDecisionStrategy {
   return makeLlmSystemOneDecisionStrategy(config, ZENMUX_DECISION_STRATEGY_HOOKS);
 }

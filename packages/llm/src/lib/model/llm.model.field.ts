@@ -17,7 +17,7 @@ import { type LlmModelOutputControls, type LlmModelProviderRef, type LlmModelSel
 /**
  * Input to {@link assertLlmModelConfigKeys}.
  */
-export interface AssertLlmModelConfigKeysInput {
+export interface AssertLlmModelConfigKeysConfig {
   /**
    * The schema label every message is prefixed with (`llm models`). Omitted ⇒ no prefix.
    */
@@ -53,12 +53,12 @@ export function llmModelConfigMessagePrefix(schemaLabel: Maybe<string>): string 
 }
 
 /**
- * Fail loud on a retired key (with its remedy), then on any key outside {@link AssertLlmModelConfigKeysInput.allowed}.
+ * Fail loud on a retired key (with its remedy), then on any key outside {@link AssertLlmModelConfigKeysConfig.allowed}.
  *
  * @param input - The labels, the object, and the retired / allowed key lists.
  * @throws {Error} On the first retired or unknown key.
  */
-export function assertLlmModelConfigKeys(input: AssertLlmModelConfigKeysInput): void {
+export function assertLlmModelConfigKeys(input: AssertLlmModelConfigKeysConfig): void {
   const { label, entry, retired, allowed } = input;
   const prefix = llmModelConfigMessagePrefix(input.schemaLabel);
   const keys = Object.keys(entry);
@@ -324,7 +324,7 @@ export const LLM_MODEL_TIER_CONFIG_FIELD_RULES: LlmModelConfigFieldRules<LlmMode
  * @param reasoning - The validated block.
  * @returns The canonical copy.
  */
-export function llmReasoningConfigOf(reasoning: LlmReasoningConfig): LlmReasoningConfig {
+export function toCanonicalLlmReasoningConfig(reasoning: LlmReasoningConfig): LlmReasoningConfig {
   const { effort, maxTokens, exclude, enabled } = reasoning;
   return {
     ...(effort == null ? {} : { effort }),
@@ -340,10 +340,10 @@ export function llmReasoningConfigOf(reasoning: LlmReasoningConfig): LlmReasonin
  * @param controls - The validated controls.
  * @returns The canonical copy.
  */
-export function llmModelOutputControlsOf(controls: LlmModelOutputControls): LlmModelOutputControls {
+export function toCanonicalLlmModelOutputControls(controls: LlmModelOutputControls): LlmModelOutputControls {
   const { maxOutputTokens, reasoning } = controls;
   return {
     ...(maxOutputTokens == null ? {} : { maxOutputTokens }),
-    ...(reasoning == null ? {} : { reasoning: llmReasoningConfigOf(reasoning) })
+    ...(reasoning == null ? {} : { reasoning: toCanonicalLlmReasoningConfig(reasoning) })
   };
 }

@@ -8,10 +8,10 @@
  */
 
 import { type Maybe } from '@dereekb/util';
-import { isLlmOffValue, type LlmPartialModelTierMap, llmTierModelOf, resolveLlmDefaultModelTierKey } from '../llm.model.tier';
+import { isLlmOffValue, type LlmPartialModelTierMap, readLlmTierModel, resolveLlmDefaultModelTierKey } from '../llm.model.tier';
 import { type LlmModelReasoningOffMap, type LlmModelVisionMap } from '../llm.model.wire';
 import { type LlmModelId, type LlmModelSlugMap, type LlmModelTierKey, type LlmStrategyId } from '../llm.value';
-import { DEFAULT_LLM_MODEL_CONFIG_SOURCE, type LlmCompletionProviderEntry, type LlmCompletionProviderEntryMap, type LlmCompletionProviderEntryOf, type LlmModelConfigBaseTypes, type LlmModelConfigFile, type LlmModelConfigSchema, type LlmModelConfigTypes, type LlmModelSettings } from './llm.model.config.schema';
+import { DEFAULT_LLM_MODEL_CONFIG_SOURCE, type LlmCompletionProviderEntry, type LlmCompletionProviderEntryMap, type LlmExtendedCompletionProviderEntry, type LlmModelConfigBaseTypes, type LlmModelConfigFile, type LlmModelConfigSchema, type LlmModelConfigTypes, type LlmModelSettings } from './llm.model.config.schema';
 
 // MARK: Profile
 /**
@@ -126,7 +126,7 @@ export interface LlmModelProfileDefaultModelConfig {
 export function llmModelProfileDefaultModel(config: LlmModelProfileDefaultModelConfig): Maybe<LlmModelId> {
   const tierKey = resolveLlmDefaultModelTierKey(config.defaultTier);
   const value = config.profile?.tiers[tierKey];
-  return value == null ? undefined : llmTierModelOf(value);
+  return value == null ? undefined : readLlmTierModel(value);
 }
 
 // MARK: Projections
@@ -244,7 +244,7 @@ export interface LlmProviderConfig extends LlmCompletionProviderEntry {
  * A resolved provider config with the extension's provider fields (`Partial`, as on the entry it came from — a host's
  * env-default instance carries none).
  */
-export type LlmProviderConfigOf<X extends LlmModelConfigTypes> = LlmProviderConfig & Partial<X['providerFields']>;
+export type LlmExtendedProviderConfig<X extends LlmModelConfigTypes> = LlmProviderConfig & Partial<X['providerFields']>;
 
 /**
  * A declared provider whose key is missing.
@@ -263,7 +263,7 @@ export interface LlmProviderConfigGap {
 /**
  * What an {@link LlmProviderApiKeyReader} receives.
  */
-export interface LlmProviderApiKeyReaderInput<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes> {
+export interface LlmProviderApiKeyReaderParams<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes> {
   /**
    * The provider name.
    */
@@ -271,13 +271,13 @@ export interface LlmProviderApiKeyReaderInput<X extends LlmModelConfigTypes = Ll
   /**
    * The declared entry (its `apiKeyEnv` names the key).
    */
-  readonly entry: LlmCompletionProviderEntryOf<X>;
+  readonly entry: LlmExtendedCompletionProviderEntry<X>;
 }
 
 /**
  * Reads one provider's key value (from the environment, or a user's stored key). Blank or absent ⇒ a gap.
  */
-export type LlmProviderApiKeyReader<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes> = (input: LlmProviderApiKeyReaderInput<X>) => Maybe<string>;
+export type LlmProviderApiKeyReader<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes> = (input: LlmProviderApiKeyReaderParams<X>) => Maybe<string>;
 
 /**
  * Config for {@link resolveLlmProviderConfigs}.
@@ -300,7 +300,7 @@ export interface LlmProviderConfigResolution<X extends LlmModelConfigTypes = Llm
   /**
    * The keyed completion providers, in declaration order.
    */
-  readonly providers: ReadonlyArray<LlmProviderConfigOf<X>>;
+  readonly providers: ReadonlyArray<LlmExtendedProviderConfig<X>>;
   /**
    * The declared completion providers whose key is missing, in declaration order.
    */
@@ -322,7 +322,7 @@ export interface LlmProviderConfigResolution<X extends LlmModelConfigTypes = Llm
  */
 export function resolveLlmProviderConfigs<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes>(config: ResolveLlmProviderConfigsConfig<X>): LlmProviderConfigResolution<X> {
   const { providers, apiKeyOf } = config;
-  const configs: LlmProviderConfigOf<X>[] = [];
+  const configs: LlmExtendedProviderConfig<X>[] = [];
   const gaps: LlmProviderConfigGap[] = [];
 
   for (const [id, entry] of Object.entries(providers ?? {})) {

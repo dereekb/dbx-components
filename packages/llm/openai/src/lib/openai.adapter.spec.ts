@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { type ConfiguredFetch } from '@dereekb/util/fetch';
-import { llmModelConfigListsOf, makeLlmAdapterRegistry, makeLlmProviderStrategy, type LlmAdapterInput, type LlmCompletionAdapterConfig, type LlmCredentialProbeAdapter, type LlmMeteringAdapter, type LlmProviderConfig } from '@dereekb/llm';
-import { LLM_OPENAI_ADAPTERS, LLM_OPENAI_COMPLETION_ADAPTER, llmOpenAiStrategyConfigOf } from './openai.adapter';
+import { readLlmModelConfigLists, makeLlmAdapterRegistry, makeLlmProviderStrategy, type LlmAdapterConfig, type LlmCompletionAdapterConfig, type LlmCredentialProbeAdapter, type LlmMeteringAdapter, type LlmProviderConfig } from '@dereekb/llm';
+import { LLM_OPENAI_ADAPTERS, LLM_OPENAI_COMPLETION_ADAPTER, toLlmOpenAiStrategyConfig } from './openai.adapter';
 
 const PROVIDER: LlmProviderConfig = { id: 'gateway-a', transport: 'openai', apiKeyEnv: 'GATEWAY_KEY', apiKey: 'k' };
 
@@ -23,13 +23,13 @@ describe('LLM_OPENAI_COMPLETION_ADAPTER', () => {
 
   it('registers through the adapter registry and lists transport openai', () => {
     const adapters = makeLlmAdapterRegistry(LLM_OPENAI_ADAPTERS);
-    expect(llmModelConfigListsOf(adapters).transports).toEqual(['openai']);
+    expect(readLlmModelConfigLists(adapters).transports).toEqual(['openai']);
   });
 });
 
-describe('llmOpenAiStrategyConfigOf()', () => {
+describe('toLlmOpenAiStrategyConfig()', () => {
   it('maps a bare provider onto exactly its id and key', () => {
-    expect(llmOpenAiStrategyConfigOf({ provider: PROVIDER })).toEqual({ id: 'gateway-a', apiKey: 'k' });
+    expect(toLlmOpenAiStrategyConfig({ provider: PROVIDER })).toEqual({ id: 'gateway-a', apiKey: 'k' });
   });
 
   it('maps every input', () => {
@@ -50,7 +50,7 @@ describe('llmOpenAiStrategyConfigOf()', () => {
       credentialProbe
     };
 
-    expect(llmOpenAiStrategyConfigOf(config)).toEqual({
+    expect(toLlmOpenAiStrategyConfig(config)).toEqual({
       id: 'gateway-a',
       apiKey: 'k',
       baseUrl: 'https://zenmux.ai/api/v1',
@@ -84,7 +84,7 @@ describe('makeLlmProviderStrategy() with LLM_OPENAI_ADAPTERS', () => {
 
   it("wires an account's metering and credential probe adapters through the openai strategy", async () => {
     const { fetch, calls } = recordingFetch();
-    const probed: LlmAdapterInput[] = [];
+    const probed: LlmAdapterConfig[] = [];
     const metering: LlmMeteringAdapter = {
       facet: 'metering',
       kind: 'zenmux',

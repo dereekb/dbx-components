@@ -9,11 +9,11 @@
 
 import { type } from 'arktype';
 import { describe, expect, it } from 'vitest';
-import { makeScriptedLlmStrategy, type ScriptedLlmReplies } from '@dereekb/llm/test';
+import { makeLlmScriptedStrategy, type LlmScriptedReplies } from '@dereekb/llm/test';
 import { defineLlmCapability, type LlmCapabilityDescriptor } from '../capability/llm.capability.descriptor';
 import { type LlmModelTierMap } from '../model/llm.model.tier';
 import { type LlmPromptSegment } from '../prompt/llm.prompt.segment';
-import { type LlmPromptTemplate, tieredLlmPromptTemplateResolver } from '../prompt/llm.prompt.template';
+import { type LlmPromptTemplate, makeLlmTieredPromptTemplateResolver } from '../prompt/llm.prompt.template';
 import { LLM_CALL_EVENT_TYPE, type LlmCallFailedAttempt, type LlmCallRecord } from '../record/llm.call.record';
 import { type LlmCritic } from '../reply/llm.reply.critique';
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
@@ -149,7 +149,7 @@ const TEMPLATES: ReadonlyArray<LlmPromptTemplate> = [
   { key: 'context', role: 'context', text: 'C-CTX\n{{liveContext}}' }
 ];
 
-const RESOLVER = tieredLlmPromptTemplateResolver({ tiers: [{ source: 'defaults', templates: TEMPLATES }] });
+const RESOLVER = makeLlmTieredPromptTemplateResolver({ tiers: [{ source: 'defaults', templates: TEMPLATES }] });
 
 const TIERS: LlmModelTierMap = { fast: 'test/fast', strong: 'test/strong' };
 
@@ -174,8 +174,8 @@ function recording() {
   return { calls, recorder };
 }
 
-function setup(replies: ScriptedLlmReplies, recorder: LlmDispatchRecorder<LlmDispatchRequest>) {
-  const strategy = makeScriptedLlmStrategy({ id: 's', replies });
+function setup(replies: LlmScriptedReplies, recorder: LlmDispatchRecorder<LlmDispatchRequest>) {
+  const strategy = makeLlmScriptedStrategy({ id: 's', replies });
   return makeLlmDispatcher<LlmDispatchRequest, LlmDispatchResult>({
     strategies: makeLlmStrategyRegistry([strategy]),
     defaultStrategyId: strategy.id,

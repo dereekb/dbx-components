@@ -8,7 +8,7 @@
  */
 
 import { type DollarAmount, type Maybe } from '@dereekb/util';
-import { llmCostOf } from '../strategy/llm.usage';
+import { readLlmCost } from '../strategy/llm.usage';
 
 /**
  * The cell every surface renders when a slice's dollar figure is UNKNOWN — the provider reported no cost at all — as
@@ -90,11 +90,11 @@ export interface LlmUsageCostMarkers {
  *
  * @example
  * ```ts
- * llmUsageCostMarkerOf({ calls: 3, partial: false, listed: true }); // '<='
- * llmUsageCostMarkerOf({ calls: 3, partial: true }, { lower: '≥' }); // '≥'
+ * resolveLlmUsageCostMarker({ calls: 3, partial: false, listed: true }); // '<='
+ * resolveLlmUsageCostMarker({ calls: 3, partial: true }, { lower: '≥' }); // '≥'
  * ```
  */
-export function llmUsageCostMarkerOf(read: Pick<LlmUsageCostRead, 'calls' | 'partial' | 'listed'>, markers?: Maybe<LlmUsageCostMarkers>): string {
+export function resolveLlmUsageCostMarker(read: Pick<LlmUsageCostRead, 'calls' | 'partial' | 'listed'>, markers?: Maybe<LlmUsageCostMarkers>): string {
   const partial = read.partial && read.calls > 0;
   const listed = read.listed === true && read.calls > 0;
   let marker = '';
@@ -131,7 +131,7 @@ export interface FormatLlmUsageCostConfig extends LlmUsageCostRead {
 /**
  * Render a summed cost with its honesty marker — `n/a` when unknown, `>=$x` when a lower bound, `<=$x` when an upper
  * bound (list-priced), `~$x` when both, `$x` when measured. The ONE place the cases are decided (through
- * {@link llmUsageCostMarkerOf}), so a reporting surface cannot render a hole as free or a list price as a bill.
+ * {@link resolveLlmUsageCostMarker}), so a reporting surface cannot render a hole as free or a list price as a bill.
  *
  * A ZERO-CALL slice takes no marker: the sum over an empty set is EXACTLY 0, so it is neither unknown nor a bound even
  * when the enclosing slice's {@link LlmUsageCostRead.partial} is set (that flag describes the run, not this row). This
@@ -149,7 +149,7 @@ export interface FormatLlmUsageCostConfig extends LlmUsageCostRead {
  */
 export function formatLlmUsageCost(config: FormatLlmUsageCostConfig): string {
   const digits = config.digits ?? 6;
-  const marker = llmUsageCostMarkerOf(config, { ...(config.boundMarker == null ? {} : { lower: config.boundMarker }), ...(config.listedMarker == null ? {} : { upper: config.listedMarker }) });
+  const marker = resolveLlmUsageCostMarker(config, { ...(config.boundMarker == null ? {} : { lower: config.boundMarker }), ...(config.listedMarker == null ? {} : { upper: config.listedMarker }) });
   let rendered: string;
 
   if (isLlmUsageCostUnavailable(config)) {
@@ -157,7 +157,7 @@ export function formatLlmUsageCost(config: FormatLlmUsageCostConfig): string {
   } else {
     // Coerced, never trusted: a cost folded from an old row can still be a string, and a render must never throw on
     // one. An unreadable figure renders as the unavailable cell rather than as a made-up number.
-    const cost = llmCostOf(config.cost);
+    const cost = readLlmCost(config.cost);
     rendered = cost == null ? LLM_USAGE_COST_UNAVAILABLE_CELL : `${marker}$${cost.toFixed(digits)}`;
   }
 
@@ -180,9 +180,9 @@ export type LlmUsageCostFlags = Pick<LlmUsageCostRead, 'partial' | 'listed'>;
  *
  * @example
  * ```ts
- * formatLlmUsageCost({ cost: total.cost, calls: total.calls, ...llmUsageCostFlagsOf(fold) });
+ * formatLlmUsageCost({ cost: total.cost, calls: total.calls, ...readLlmUsageCostFlags(fold) });
  * ```
  */
-export function llmUsageCostFlagsOf(usage: { readonly costPartial: boolean; readonly costListed?: boolean }): LlmUsageCostFlags {
+export function readLlmUsageCostFlags(usage: { readonly costPartial: boolean; readonly costListed?: boolean }): LlmUsageCostFlags {
   return { partial: usage.costPartial, ...(usage.costListed === true ? { listed: true } : {}) };
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { type ConfiguredFetch } from '@dereekb/util/fetch';
-import { DEFAULT_LLM_COMPLETION_TIMEOUT_MS, DEFAULT_LLM_MAX_OUTPUT_TOKENS, makeLlmDispatcher, makeLlmStrategyRegistry, probeLlmCredentialEndpoint, tieredLlmPromptTemplateResolver, type LlmReasoningConfig } from '@dereekb/llm';
-import { llmOpenAiCallTimeoutMs, type LlmOpenAiChatClient, type LlmOpenAiChatCompletion, type LlmOpenAiChatCompletionBody, type LlmOpenAiRequestOptions } from './openai.chat';
+import { DEFAULT_LLM_COMPLETION_TIMEOUT_MS, DEFAULT_LLM_MAX_OUTPUT_TOKENS, makeLlmDispatcher, makeLlmStrategyRegistry, probeLlmCredentialEndpoint, makeLlmTieredPromptTemplateResolver, resolveLlmCompletionCallTimeoutMs, type LlmReasoningConfig } from '@dereekb/llm';
+import { type LlmOpenAiChatClient, type LlmOpenAiChatCompletion, type LlmOpenAiChatCompletionBody, type LlmOpenAiRequestOptions } from './openai.chat';
 import { makeLlmOpenAiCompatibleChatStrategy, type LlmOpenAiCompatibleCallParams, type LlmOpenAiCompatibleChatStrategyConfig, type LlmOpenAiCompatibleChatStrategyHooks } from './openai.compatible.strategy';
 
 /**
@@ -85,7 +85,7 @@ describe('makeLlmOpenAiCompatibleChatStrategy()', () => {
       expect(DEFAULT_LLM_MAX_OUTPUT_TOKENS).toBe(8_192);
       expect(DEFAULT_LLM_COMPLETION_TIMEOUT_MS).toBe(60_000);
       expect(bodies[0]?.max_tokens).toBe(DEFAULT_LLM_MAX_OUTPUT_TOKENS);
-      expect(options[0]?.timeout).toBe(llmOpenAiCallTimeoutMs(DEFAULT_LLM_COMPLETION_TIMEOUT_MS, DEFAULT_LLM_MAX_OUTPUT_TOKENS));
+      expect(options[0]?.timeout).toBe(resolveLlmCompletionCallTimeoutMs({ timeoutMs: DEFAULT_LLM_COMPLETION_TIMEOUT_MS, maxOutputTokens: DEFAULT_LLM_MAX_OUTPUT_TOKENS }));
     });
   });
 
@@ -272,7 +272,7 @@ describe('makeLlmDispatcher() over makeLlmOpenAiCompatibleChatStrategy()', () =>
       defaultMaxOutputTokens: 1024,
       modelTiers: { fast: 'acme/fast', strong: 'acme/strong' },
       descriptorOf: () => undefined,
-      templateResolver: tieredLlmPromptTemplateResolver({ tiers: [{ source: 'defaults', templates: [{ key: 'instructions', role: 'instructions', text: 'Answer.' }] }] })
+      templateResolver: makeLlmTieredPromptTemplateResolver({ tiers: [{ source: 'defaults', templates: [{ key: 'instructions', role: 'instructions', text: 'Answer.' }] }] })
     });
     const result = await dispatcher.dispatch({ capability: 'X', renderLiveContext: () => [] });
 

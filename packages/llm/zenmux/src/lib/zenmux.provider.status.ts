@@ -29,20 +29,20 @@
  */
 
 import { llmProviderErrorMessage, makeLlmQuotaWindow, type LlmProviderBalance, type LlmProviderStatus, type LlmProviderStatusOptions, type LlmProviderStatusSource, type LlmQuotaWindow, type LlmStrategyHealthIssue } from '@dereekb/llm';
-import { errorMessageOf, type Maybe, type Milliseconds, removeTrailingSlashes } from '@dereekb/util';
-import { DEFAULT_ZENMUX_BASE_URL, ZENMUX_MANAGEMENT_API_KEY_ENV, ZENMUX_PROVIDER_ID } from './zenmux.constants';
-import { readZenmuxManagement, zenmuxManagementUrl, type ZenmuxManagementReadConfig } from './zenmux.management';
+import { readErrorMessage, type Maybe, type Milliseconds, removeTrailingSlashes } from '@dereekb/util';
+import { DEFAULT_LLM_ZENMUX_BASE_URL, LLM_ZENMUX_MANAGEMENT_API_KEY_ENV_VAR, LLM_ZENMUX_PROVIDER_ID } from './zenmux.constants';
+import { readLlmZenmuxManagement, llmZenmuxManagementUrl, type LlmZenmuxManagementReadConfig } from './zenmux.management';
 
 /**
  * The default wall-clock budget for ONE account read. Short for the same reason the credential probe's is: this runs in
  * front of a launch gate, so a slow provider must cost seconds rather than the call timeout's minutes.
  */
-export const DEFAULT_ZENMUX_PROVIDER_STATUS_TIMEOUT_MS: Milliseconds = 15_000;
+export const DEFAULT_LLM_ZENMUX_PROVIDER_STATUS_TIMEOUT_MS: Milliseconds = 15_000;
 
 /**
- * Config for {@link makeZenmuxProviderStatusSource}.
+ * Config for {@link makeLlmZenmuxProviderStatusSource}.
  */
-export interface ZenmuxProviderStatusSourceConfig extends ZenmuxManagementReadConfig {
+export interface LlmZenmuxProviderStatusSourceConfig extends LlmZenmuxManagementReadConfig {
   /**
    * The **Management API Key**. Empty / absent ⇒ every read resolves `available: false` with an issue naming the env var to
    * set; the source is still constructible, so a host can wire it unconditionally and let the report explain itself.
@@ -50,7 +50,7 @@ export interface ZenmuxProviderStatusSourceConfig extends ZenmuxManagementReadCo
   readonly managementApiKey?: Maybe<string>;
   /**
    * WHICH env var supplied {@link managementApiKey} — named in the missing-credential issue so an operator is told what to
-   * set. Defaults to {@link ZENMUX_MANAGEMENT_API_KEY_ENV}.
+   * set. Defaults to {@link LLM_ZENMUX_MANAGEMENT_API_KEY_ENV_VAR}.
    */
   readonly managementApiKeyEnv?: Maybe<string>;
 }
@@ -121,11 +121,11 @@ interface ZenmuxReadResult<T> {
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function makeZenmuxProviderStatusSource(config: ZenmuxProviderStatusSourceConfig): LlmProviderStatusSource {
-  const baseUrl = removeTrailingSlashes(config.baseUrl ?? DEFAULT_ZENMUX_BASE_URL);
+export function makeLlmZenmuxProviderStatusSource(config: LlmZenmuxProviderStatusSourceConfig): LlmProviderStatusSource {
+  const baseUrl = removeTrailingSlashes(config.baseUrl ?? DEFAULT_LLM_ZENMUX_BASE_URL);
   const apiKey = config.managementApiKey?.trim() ?? '';
-  const managementApiKeyEnv = config.managementApiKeyEnv ?? ZENMUX_MANAGEMENT_API_KEY_ENV;
-  const timeoutMs = config.timeoutMs ?? DEFAULT_ZENMUX_PROVIDER_STATUS_TIMEOUT_MS;
+  const managementApiKeyEnv = config.managementApiKeyEnv ?? LLM_ZENMUX_MANAGEMENT_API_KEY_ENV_VAR;
+  const timeoutMs = config.timeoutMs ?? DEFAULT_LLM_ZENMUX_PROVIDER_STATUS_TIMEOUT_MS;
 
   /**
    * GET one management endpoint and unwrap its envelope. Never throws.
@@ -135,13 +135,13 @@ export function makeZenmuxProviderStatusSource(config: ZenmuxProviderStatusSourc
    * @returns The data, or the reason there is none.
    */
   async function read<T>(path: string, options?: LlmProviderStatusOptions): Promise<ZenmuxReadResult<T>> {
-    const url = zenmuxManagementUrl(baseUrl, path);
+    const url = llmZenmuxManagementUrl(baseUrl, path);
     let result: ZenmuxReadResult<T>;
 
     try {
       // Built INSIDE the try: should the runtime's abort-signal API throw, the catch below turns that into this read's
       // warning instead of breaking "never throws" (`makeTimeoutAbortSignal` feature-detects a missing API itself).
-      const read = await readZenmuxManagement<T>({ fetch: config.fetch, url, apiKey, timeoutMs, signal: options?.signal });
+      const read = await readLlmZenmuxManagement<T>({ fetch: config.fetch, url, apiKey, timeoutMs, signal: options?.signal });
       const { response, json: envelope } = read;
 
       if (response.ok) {
@@ -164,21 +164,21 @@ export function makeZenmuxProviderStatusSource(config: ZenmuxProviderStatusSourc
       }
     } catch (error) {
       // Swallow site `llm/zenmux-provider-status.transport`. An unreachable endpoint is this read's warning, never a throw.
-      result = { error: `${path}: ${errorMessageOf(error)}` };
+      result = { error: `${path}: ${readErrorMessage(error)}` };
     }
 
     return result;
   }
 
   return {
-    providerId: ZENMUX_PROVIDER_ID,
+    providerId: LLM_ZENMUX_PROVIDER_ID,
     async read(options?: LlmProviderStatusOptions): Promise<LlmProviderStatus> {
       let status: LlmProviderStatus;
 
       if (apiKey.length === 0) {
         // The expected state on a machine that has not made a management key yet. An 'error' issue (so a report shows it
         // prominently) on an `available: false` status (so no gate can read it as headroom).
-        status = { providerId: ZENMUX_PROVIDER_ID, available: false, windows: [], issues: [{ severity: 'error', message: `no ZenMux management key configured. Set ${managementApiKeyEnv} (create one at zenmux.ai/platform/management; the inference keys are rejected by the account endpoints).` }] };
+        status = { providerId: LLM_ZENMUX_PROVIDER_ID, available: false, windows: [], issues: [{ severity: 'error', message: `no ZenMux management key configured. Set ${managementApiKeyEnv} (create one at zenmux.ai/platform/management; the inference keys are rejected by the account endpoints).` }] };
       } else {
         const [subscription, balance, flowRate] = await Promise.all([read<ZenmuxSubscriptionDetail>('subscription/detail', options), read<ZenmuxPaygBalance>('payg/balance', options), read<ZenmuxFlowRate>('flow_rate', options)]);
         const windows = subscription.data == null ? [] : zenmuxQuotaWindows(subscription.data);
@@ -199,7 +199,7 @@ export function makeZenmuxProviderStatusSource(config: ZenmuxProviderStatusSourc
           issues.push(surcharge);
         }
 
-        status = { providerId: ZENMUX_PROVIDER_ID, available: windows.length > 0 || providerBalance != null, windows, ...(providerBalance == null ? {} : { balance: providerBalance }), issues };
+        status = { providerId: LLM_ZENMUX_PROVIDER_ID, available: windows.length > 0 || providerBalance != null, windows, ...(providerBalance == null ? {} : { balance: providerBalance }), issues };
       }
 
       return status;

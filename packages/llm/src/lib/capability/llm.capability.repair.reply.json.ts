@@ -94,14 +94,14 @@ export function renderLlmRepairReplyJsonContext(config: RenderLlmRepairReplyJson
  *
  * @typeParam R - The host's request type.
  */
-export type LlmReplyFastFixRequestOf<R extends LlmDispatchRequest = LlmDispatchRequest> = (base: LlmDispatchRequest, subject: R) => R;
+export type LlmReplyFastFixRequestBuilder<R extends LlmDispatchRequest = LlmDispatchRequest> = (base: LlmDispatchRequest, subject: R) => R;
 
 /**
  * Read the host data of the fixer's own call off its dispatch result (e.g. its correlation id), echoed on the outcome.
  *
  * @typeParam X - The host's dispatch result type.
  */
-export type LlmReplyFastFixMetaOf<X extends LlmDispatchResult = LlmDispatchResult> = (result: X) => Maybe<LlmCallMeta>;
+export type LlmReplyFastFixMetaReader<X extends LlmDispatchResult = LlmDispatchResult> = (result: X) => Maybe<LlmCallMeta>;
 
 /**
  * The inputs of {@link makeLlmReplyFastFixer}.
@@ -113,11 +113,11 @@ export interface MakeLlmReplyFastFixerConfig<R extends LlmDispatchRequest = LlmD
   /**
    * The fixer's request from the library base plus the subject's host fields. Required for a host request type.
    */
-  readonly requestOf?: Maybe<LlmReplyFastFixRequestOf<R>>;
+  readonly requestOf?: Maybe<LlmReplyFastFixRequestBuilder<R>>;
   /**
    * The host data of the fixer's own call, echoed as the outcome's `meta`.
    */
-  readonly metaOf?: Maybe<LlmReplyFastFixMetaOf<X>>;
+  readonly metaOf?: Maybe<LlmReplyFastFixMetaReader<X>>;
 }
 
 /**
@@ -138,7 +138,7 @@ export function makeLlmReplyFastFixer(config?: Maybe<MakeLlmReplyFastFixerConfig
  * @param config - The request and meta hooks.
  * @returns The fast fixer. It never throws.
  */
-export function makeLlmReplyFastFixer<R extends LlmDispatchRequest, X extends LlmDispatchResult>(config: MakeLlmReplyFastFixerConfig<R, X> & { readonly requestOf: LlmReplyFastFixRequestOf<R> }): LlmReplyFastFixer<R, X>;
+export function makeLlmReplyFastFixer<R extends LlmDispatchRequest, X extends LlmDispatchResult>(config: MakeLlmReplyFastFixerConfig<R, X> & { readonly requestOf: LlmReplyFastFixRequestBuilder<R> }): LlmReplyFastFixer<R, X>;
 /**
  * The implementation.
  *
@@ -149,7 +149,7 @@ export function makeLlmReplyFastFixer<R extends LlmDispatchRequest, X extends Ll
  */
 export function makeLlmReplyFastFixer<R extends LlmDispatchRequest, X extends LlmDispatchResult>(config?: Maybe<MakeLlmReplyFastFixerConfig<R, X>>): LlmReplyFastFixer<R, X> {
   // The only cast: the default is reachable only through the first overload, where R is LlmDispatchRequest.
-  const requestOf: LlmReplyFastFixRequestOf<R> = config?.requestOf ?? ((base) => base as R);
+  const requestOf: LlmReplyFastFixRequestBuilder<R> = config?.requestOf ?? ((base) => base as R);
   const metaOf = config?.metaOf;
 
   return async (input) => {

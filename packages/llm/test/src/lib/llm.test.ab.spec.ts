@@ -8,7 +8,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { type Maybe } from '@dereekb/util';
-import { LLM_AB_REGRESSION_ALPHA, llmAbRegressionVerdictOf, llmFisherOneSidedPOf } from './llm.test.ab';
+import { LLM_AB_REGRESSION_ALPHA, computeLlmAbRegressionVerdict, computeLlmFisherOneSidedP } from './llm.test.ab';
 
 /**
  * The smallest treatment hit count at which the gate fires, holding the control arm and both trial counts fixed.
@@ -23,7 +23,7 @@ function firstFiringTreatmentHitsOf(config: { readonly controlHits: number; read
   let firing: Maybe<number>;
 
   for (let treatmentHits = 0; treatmentHits <= trials && firing == null; treatmentHits += 1) {
-    if (llmAbRegressionVerdictOf({ controlHits, controlTrials: trials, treatmentHits, treatmentTrials: trials }).regressed) {
+    if (computeLlmAbRegressionVerdict({ controlHits, controlTrials: trials, treatmentHits, treatmentTrials: trials }).regressed) {
       firing = treatmentHits;
     }
   }
@@ -75,7 +75,7 @@ function nullFalsePositiveRatesOf(config: { readonly trials: number; readonly ra
         countGate += weight;
       }
 
-      if (llmAbRegressionVerdictOf({ controlHits, controlTrials: trials, treatmentHits, treatmentTrials: trials }).regressed) {
+      if (computeLlmAbRegressionVerdict({ controlHits, controlTrials: trials, treatmentHits, treatmentTrials: trials }).regressed) {
         fisherGate += weight;
       }
     }
@@ -84,20 +84,20 @@ function nullFalsePositiveRatesOf(config: { readonly trials: number; readonly ra
   return { countGate, fisherGate };
 }
 
-describe('llmFisherOneSidedPOf()', () => {
+describe('computeLlmFisherOneSidedP()', () => {
   it('should compute the hypergeometric upper tail exactly', () => {
     // A=1/6, B=3/7: 4 hits over 13 trials, so the tail is C(7,3)C(6,1)/C(13,4) + C(7,4)C(6,0)/C(13,4) = 245/715.
-    expect(llmFisherOneSidedPOf({ controlHits: 1, controlTrials: 6, treatmentHits: 3, treatmentTrials: 7 })).toBeCloseTo(588 / 1716, 6);
-    expect(llmFisherOneSidedPOf({ controlHits: 1, controlTrials: 6, treatmentHits: 3, treatmentTrials: 7 })).toBeCloseTo(0.342657, 6);
+    expect(computeLlmFisherOneSidedP({ controlHits: 1, controlTrials: 6, treatmentHits: 3, treatmentTrials: 7 })).toBeCloseTo(588 / 1716, 6);
+    expect(computeLlmFisherOneSidedP({ controlHits: 1, controlTrials: 6, treatmentHits: 3, treatmentTrials: 7 })).toBeCloseTo(0.342657, 6);
   });
 
   it('should return 1 when the treatment arm cannot be shown worse', () => {
     // Zero treatment hits is the whole support: the tail sums to 1 by construction.
-    expect(llmFisherOneSidedPOf({ controlHits: 4, controlTrials: 8, treatmentHits: 0, treatmentTrials: 8 })).toBeCloseTo(1, 12);
+    expect(computeLlmFisherOneSidedP({ controlHits: 4, controlTrials: 8, treatmentHits: 0, treatmentTrials: 8 })).toBeCloseTo(1, 12);
   });
 
   it('should be monotone in the treatment arm, holding the control arm fixed', () => {
-    const tail = Array.from({ length: 9 }, (_, treatmentHits) => llmFisherOneSidedPOf({ controlHits: 2, controlTrials: 8, treatmentHits, treatmentTrials: 8 }));
+    const tail = Array.from({ length: 9 }, (_, treatmentHits) => computeLlmFisherOneSidedP({ controlHits: 2, controlTrials: 8, treatmentHits, treatmentTrials: 8 }));
 
     for (let index = 1; index < tail.length; index += 1) {
       expect((tail[index] as number) <= (tail[index - 1] as number), `p must not rise as treatment hits do: ${JSON.stringify(tail)}`).toBe(true);
@@ -105,37 +105,37 @@ describe('llmFisherOneSidedPOf()', () => {
   });
 
   it('should treat an empty arm as no evidence rather than a rate over no denominator', () => {
-    expect(llmFisherOneSidedPOf({ controlHits: 0, controlTrials: 0, treatmentHits: 0, treatmentTrials: 0 })).toBe(1);
-    expect(llmFisherOneSidedPOf({ controlHits: 1, controlTrials: 6, treatmentHits: 0, treatmentTrials: 0 })).toBe(1);
-    expect(llmFisherOneSidedPOf({ controlHits: 0, controlTrials: 0, treatmentHits: 3, treatmentTrials: 7 })).toBe(1);
+    expect(computeLlmFisherOneSidedP({ controlHits: 0, controlTrials: 0, treatmentHits: 0, treatmentTrials: 0 })).toBe(1);
+    expect(computeLlmFisherOneSidedP({ controlHits: 1, controlTrials: 6, treatmentHits: 0, treatmentTrials: 0 })).toBe(1);
+    expect(computeLlmFisherOneSidedP({ controlHits: 0, controlTrials: 0, treatmentHits: 3, treatmentTrials: 7 })).toBe(1);
   });
 });
 
-describe('llmAbRegressionVerdictOf()', () => {
+describe('computeLlmAbRegressionVerdict()', () => {
   it('should pass two recorded takes', () => {
     // A recorded wash.
-    const first = llmAbRegressionVerdictOf({ controlHits: 3, controlTrials: 12, treatmentHits: 3, treatmentTrials: 12 });
+    const first = computeLlmAbRegressionVerdict({ controlHits: 3, controlTrials: 12, treatmentHits: 3, treatmentTrials: 12 });
     expect(first.p).toBeCloseTo(0.6798, 4);
     expect(first.regressed).toBe(false);
 
     // The table that fired the old count gate, at p = 0.34.
-    const second = llmAbRegressionVerdictOf({ controlHits: 1, controlTrials: 6, treatmentHits: 3, treatmentTrials: 7 });
+    const second = computeLlmAbRegressionVerdict({ controlHits: 1, controlTrials: 6, treatmentHits: 3, treatmentTrials: 7 });
     expect(second.p).toBeCloseTo(0.3427, 4);
     expect(second.regressed).toBe(false);
 
     // The same take read on an intention-to-treat axis (denominator fixed at 8 per arm).
-    const secondItt = llmAbRegressionVerdictOf({ controlHits: 1, controlTrials: 8, treatmentHits: 3, treatmentTrials: 8 });
+    const secondItt = computeLlmAbRegressionVerdict({ controlHits: 1, controlTrials: 8, treatmentHits: 3, treatmentTrials: 8 });
     expect(secondItt.p).toBeCloseTo(0.2846, 4);
     expect(secondItt.regressed).toBe(false);
   });
 
   it('should report both observed rates beside the verdict', () => {
-    const verdict = llmAbRegressionVerdictOf({ controlHits: 1, controlTrials: 8, treatmentHits: 3, treatmentTrials: 8 });
+    const verdict = computeLlmAbRegressionVerdict({ controlHits: 1, controlTrials: 8, treatmentHits: 3, treatmentTrials: 8 });
 
     expect(verdict.controlRate).toBeCloseTo(0.125, 6);
     expect(verdict.treatmentRate).toBeCloseTo(0.375, 6);
     // An empty arm gets a zero rate rather than a NaN, and never a verdict.
-    expect(llmAbRegressionVerdictOf({ controlHits: 0, controlTrials: 0, treatmentHits: 0, treatmentTrials: 0 })).toEqual({ p: 1, regressed: false, controlRate: 0, treatmentRate: 0 });
+    expect(computeLlmAbRegressionVerdict({ controlHits: 0, controlTrials: 0, treatmentHits: 0, treatmentTrials: 0 })).toEqual({ p: 1, regressed: false, controlRate: 0, treatmentRate: 0 });
   });
 
   it('should fire only on differences the k=4 sample can actually carry', () => {
@@ -157,9 +157,9 @@ describe('llmAbRegressionVerdictOf()', () => {
 
     expect(LLM_AB_REGRESSION_ALPHA).toBe(0.05);
     // p is just above the default bar at B=6 (B=7 is the first firing count above), so the default passes...
-    expect(llmAbRegressionVerdictOf(table).regressed).toBe(false);
+    expect(computeLlmAbRegressionVerdict(table).regressed).toBe(false);
     // ...and a slacker bar fails the same table.
-    expect(llmAbRegressionVerdictOf({ ...table, alpha: 0.1 }).regressed).toBe(true);
+    expect(computeLlmAbRegressionVerdict({ ...table, alpha: 0.1 }).regressed).toBe(true);
   });
 });
 

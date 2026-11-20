@@ -27,14 +27,14 @@ import { joinLlmPromptSegments, type LlmPromptSegment, type LlmPromptSegmentOrig
 import { type LlmCallContext } from '../record/llm.call.context';
 import { type LlmCallFailedAttempt, type LlmCallHostFields, type LlmCallRecord } from '../record/llm.call.record';
 import { type LlmSwallowSiteId } from '../record/llm.swallow';
-import { llmErrorSummaryOf } from '../strategy/llm.error';
+import { formatLlmErrorSummary } from '../strategy/llm.error';
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
 import { llmStrategyKind } from '../strategy/llm.strategy.registry';
-import { type LlmDispatchPauseSignal, type LlmDispatchTransportBackoff, llmDispatchSignalOf, parkLlmDispatchWhilePaused } from './llm.dispatch.control';
-import { llmFailedAttemptOf, llmTransportResultOf } from './llm.dispatch.outcome';
-import { isLlmDispatchTapsActive, llmDispatchRecordFieldsOf, type LlmDispatchRecordSinks, recordLlmDispatchStart } from './llm.dispatch.record';
+import { type LlmDispatchPauseSignal, type LlmDispatchTransportBackoff, mergeLlmDispatchSignals, parkLlmDispatchWhilePaused } from './llm.dispatch.control';
+import { toLlmCallFailedAttempt, makeLlmTransportResult } from './llm.dispatch.outcome';
+import { isLlmDispatchTapsActive, makeLlmDispatchRecordFields, type LlmDispatchRecordSinks, recordLlmDispatchStart } from './llm.dispatch.record';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
-import { llmDispatchMaxAttemptsOf } from './llm.dispatch.run';
+import { resolveLlmDispatchMaxAttempts } from './llm.dispatch.run';
 import { type LlmDispatcherDecisionConfig, type LlmDispatchRecordFieldsParams } from './llm.dispatcher.config';
 
 /**
@@ -213,7 +213,7 @@ export function makeLlmDispatchDecisionLane<R extends LlmDispatchRequest = LlmDi
     if (strategy != null) {
       const strategyId = strategy.id;
       const strategyKind = llmStrategyKind(strategy);
-      const maxAttempts = llmDispatchMaxAttemptsOf(decisions.maxAttempts);
+      const maxAttempts = resolveLlmDispatchMaxAttempts(decisions.maxAttempts);
       let served = 0;
       let warned = false;
 
@@ -282,8 +282,8 @@ export function makeLlmDispatchDecisionLane<R extends LlmDispatchRequest = LlmDi
             }
 
             lastError = error;
-            const summary = llmErrorSummaryOf(error);
-            failedAttempts.push(llmFailedAttemptOf({ attempt, cause: 'transport', result: llmTransportResultOf({ capability, meta: request.meta }, strategyId), error: summary }));
+            const summary = formatLlmErrorSummary(error);
+            failedAttempts.push(toLlmCallFailedAttempt({ attempt, cause: 'transport', result: makeLlmTransportResult({ capability, meta: request.meta }, strategyId), error: summary }));
             const delayMs = transportBackoff({ attempt, error });
             callContext.diag({ level: 'warn', code: 'transport-backoff', fields: { capability, decision, attempt, delayMs, error: summary }, message: 'a decision send failed before reaching the model; backing off before an identical resend' });
             await callContext.timeAsync('transport-backoff', () => waitForMsUnlessAborted(delayMs, signal));
@@ -308,8 +308,8 @@ export function makeLlmDispatchDecisionLane<R extends LlmDispatchRequest = LlmDi
         const key = decision.descriptor.decision;
         const decisionRequest = decision.asRequest({ input: request.input, model });
         const callContext = callContextOf(widened);
-        const fields = llmDispatchRecordFieldsOf<R, H, A>({ recordFieldsOf, call: { lane: 'decision', request: widened }, callContext });
-        const signal = llmDispatchSignalOf({ cancellationSignal, request });
+        const fields = makeLlmDispatchRecordFields<R, H, A>({ recordFieldsOf, call: { lane: 'decision', request: widened }, callContext });
+        const signal = mergeLlmDispatchSignals({ cancellationSignal, request });
         await parkLlmDispatchWhilePaused({ pause, signal, callContext });
         const segments = segmentsOf(key, decisionRequest.state, decisionRequest.questions);
         const prompt = joinLlmPromptSegments(segments);

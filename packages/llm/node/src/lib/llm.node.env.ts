@@ -210,7 +210,7 @@ export const DEFAULT_LLM_ENV_NAMES: LlmEnvNames = {
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function llmEnvApiKeyNamesOf(names?: Maybe<LlmEnvNames>): LlmEnvVarNames {
+export function readLlmEnvApiKeyNames(names?: Maybe<LlmEnvNames>): LlmEnvVarNames {
   return (names ?? DEFAULT_LLM_ENV_NAMES).providers.flatMap((provider) => provider.apiKey);
 }
 
@@ -236,5 +236,5 @@ export interface HasLlmProviderKeyInEnvConfig {
  * @returns `true` when at least one key var holds a non-blank value.
  */
 export function hasLlmProviderKeyInEnv(config?: Maybe<HasLlmProviderKeyInEnvConfig>): boolean {
-  return firstLlmEnvEntry({ env: config?.env, names: llmEnvApiKeyNamesOf(config?.names) }) != null;
+  return firstLlmEnvEntry({ env: config?.env, names: readLlmEnvApiKeyNames(config?.names) }) != null;
 }

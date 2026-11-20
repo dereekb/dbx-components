@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
-import { LLM_PROMPT_LIVE_CONTEXT_MARKER, LLM_PROMPT_TEMPLATE_ROLES, type LlmPromptTemplate, type LlmPromptTemplateResolver, type LlmPromptTemplateTier, type LlmResolvedPromptTemplate, type LlmResolvedPromptTemplates, tieredLlmPromptTemplateResolver } from './llm.prompt.template';
+import { LLM_PROMPT_LIVE_CONTEXT_MARKER, LLM_PROMPT_TEMPLATE_ROLES, type LlmPromptTemplate, type LlmPromptTemplateResolver, type LlmPromptTemplateTier, type LlmResolvedPromptTemplate, type LlmResolvedPromptTemplates, makeLlmTieredPromptTemplateResolver } from './llm.prompt.template';
 
 function requestFor(capability: string): LlmDispatchRequest {
   return { capability, renderLiveContext: () => [] };
@@ -46,8 +46,8 @@ function resolveNow(resolver: LlmPromptTemplateResolver, capability: string): Ll
   return result;
 }
 
-describe('tieredLlmPromptTemplateResolver()', () => {
-  const resolver = tieredLlmPromptTemplateResolver({ tiers: TIERS });
+describe('makeLlmTieredPromptTemplateResolver()', () => {
+  const resolver = makeLlmTieredPromptTemplateResolver({ tiers: TIERS });
 
   it('should prefer a capability-scoped template over a shared one', () => {
     expect(resolveNow(resolver, 'summarize').roles.instructions?.key).toBe('summarize-instructions');
@@ -74,7 +74,7 @@ describe('tieredLlmPromptTemplateResolver()', () => {
   });
 
   it('should resolve no roles from empty tiers', () => {
-    expect(resolveNow(tieredLlmPromptTemplateResolver({ tiers: [] }), 'summarize').roles).toEqual({});
+    expect(resolveNow(makeLlmTieredPromptTemplateResolver({ tiers: [] }), 'summarize').roles).toEqual({});
   });
 
   it('should throw when one tier declares a key twice', () => {
@@ -87,7 +87,7 @@ describe('tieredLlmPromptTemplateResolver()', () => {
         ]
       }
     ];
-    expect(() => tieredLlmPromptTemplateResolver({ tiers })).toThrow("llm prompt templates: tier 'app' declares key 'k' twice.");
+    expect(() => makeLlmTieredPromptTemplateResolver({ tiers })).toThrow("llm prompt templates: tier 'app' declares key 'k' twice.");
   });
 
   it('should resolve synchronously', () => {

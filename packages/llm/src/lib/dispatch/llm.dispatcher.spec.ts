@@ -4,11 +4,11 @@ import { joinLlmLiveContextBlocks } from '../prompt/llm.prompt.live.context';
 import { type ExecutedLlmPrompt, type LlmPrompt, type LlmPromptFollowUp } from '../prompt/llm.prompt.thread';
 import { type LlmPromptSite } from '../prompt/llm.prompt.site';
 import { noopLlmCallContext } from '../record/llm.call.context';
-import { type LlmCritic, type LlmCritiqueInput } from '../reply/llm.reply.critique';
-import { type LlmReplyFastFixer, type LlmReplyFastFixInput } from '../reply/llm.reply.fast.fix';
+import { type LlmCritic, type LlmCritiqueParams } from '../reply/llm.reply.critique';
+import { type LlmReplyFastFixer, type LlmReplyFastFixParams } from '../reply/llm.reply.fast.fix';
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
-import { type LlmDispatcher, llmDispatcherFromDispatch } from './llm.dispatcher';
+import { type LlmDispatcher, makeLlmDispatcherFromDispatch } from './llm.dispatcher';
 
 interface HostSupply {
   readonly glossary?: ReadonlyArray<string>;
@@ -99,7 +99,7 @@ describe('LlmDispatcher', () => {
     };
     const calls: HostRequest[] = [];
     const dispatcher = hostDispatcherOf(calls);
-    const input: LlmReplyFastFixInput<HostRequest, HostResult> = {
+    const input: LlmReplyFastFixParams<HostRequest, HostResult> = {
       request: REQUEST,
       subjectCapability: 'summarize',
       text: '{"summary": "bro',
@@ -117,7 +117,7 @@ describe('LlmDispatcher', () => {
   });
 
   it('should let a critic read the subject meta', async () => {
-    const critic: LlmCritic = (input: LlmCritiqueInput) => Promise.resolve((input.meta as HostMeta | undefined)?.subjectId === 's1' ? true : { error: 'unknown subject' });
+    const critic: LlmCritic = (input: LlmCritiqueParams) => Promise.resolve((input.meta as HostMeta | undefined)?.subjectId === 's1' ? true : { error: 'unknown subject' });
     const request: HostRequest = { ...REQUEST, critique: critic };
     const verdict = await request.critique?.({ capability: 'summarize', meta: request.meta, lever: { summary: 'x' }, replyText: '{"summary":"x"}', liveContext: '## Live context', replyProtocol: 'json', attempt: 1, callContext: noopLlmCallContext() });
 
@@ -125,7 +125,7 @@ describe('LlmDispatcher', () => {
   });
 });
 
-describe('llmDispatcherFromDispatch()', () => {
+describe('makeLlmDispatcherFromDispatch()', () => {
   const request: LlmDispatchRequest = {
     capability: 'summarize',
     renderLiveContext: () => [
@@ -136,7 +136,7 @@ describe('llmDispatcherFromDispatch()', () => {
 
   it('should dispatch through the wrapped function', async () => {
     const calls: LlmDispatchRequest[] = [];
-    const dispatcher = llmDispatcherFromDispatch(async (r: LlmDispatchRequest) => (calls.push(r), { text: 'reply', strategyId: 'fake', capability: r.capability }));
+    const dispatcher = makeLlmDispatcherFromDispatch(async (r: LlmDispatchRequest) => (calls.push(r), { text: 'reply', strategyId: 'fake', capability: r.capability }));
 
     expect((await dispatcher.dispatch(request)).text).toBe('reply');
     expect(calls).toEqual([request]);
@@ -144,7 +144,7 @@ describe('llmDispatcherFromDispatch()', () => {
 
   it('should report the root turn as the joined live context and a follow-up turn as its content', async () => {
     let reply = 0;
-    const dispatcher = llmDispatcherFromDispatch(async (r: LlmDispatchRequest) => ({ text: `reply-${(reply += 1)}`, strategyId: 'fake', capability: r.capability }));
+    const dispatcher = makeLlmDispatcherFromDispatch(async (r: LlmDispatchRequest) => ({ text: `reply-${(reply += 1)}`, strategyId: 'fake', capability: r.capability }));
     const executed = await dispatcher.preparePrompt(request).execute();
     const followed = await executed.followUp({ content: 'next' }).execute();
 

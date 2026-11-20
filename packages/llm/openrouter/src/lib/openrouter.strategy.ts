@@ -32,8 +32,8 @@ import {
   type LlmOpenAiContentPart,
   type LlmOpenAiTextPart
 } from '@dereekb/llm/openai';
-import { llmOpenRouterReasoningOf } from './openrouter.chat';
-import { LLM_OPENROUTER_BASE_URL } from './openrouter.constants';
+import { toLlmOpenRouterReasoning } from './openrouter.chat';
+import { DEFAULT_LLM_OPENROUTER_BASE_URL } from './openrouter.constants';
 import { probeLlmOpenRouterCredential } from './openrouter.credential.probe';
 
 /**
@@ -49,7 +49,7 @@ const ANTHROPIC_MODEL_PREFIX = 'anthropic/';
 
 /**
  * Config for {@link makeLlmOpenRouterStrategy} — exactly the shared OpenAI-compatible host config. The base URL
- * defaults to {@link LLM_OPENROUTER_BASE_URL}. There is no `tokenLimitParam` / `reasoningOffEncoding` /
+ * defaults to {@link DEFAULT_LLM_OPENROUTER_BASE_URL}. There is no `tokenLimitParam` / `reasoningOffEncoding` /
  * `usageAccounting`: this wire has one spelling for each (`max_tokens`, the nested `reasoning`, accounting always on).
  */
 export type LlmOpenRouterStrategyConfig = LlmOpenAiCompatibleChatStrategyConfig;
@@ -142,7 +142,7 @@ const LLM_OPENROUTER_CHAT_STRATEGY_HOOKS: LlmOpenAiCompatibleChatStrategyHooks =
   describe: "Any model over OpenRouter's OpenAI-compatible API, routed by the request's model id. Enforces the reply schema at generation via response_format (json_schema, strict) when the dispatcher threads one; parsed by the capability.",
   // Anthropic-family routes get an explicit `cache_control` breakpoint at the stable prefix end.
   caching: 'breakpoint',
-  defaultBaseUrl: LLM_OPENROUTER_BASE_URL,
+  defaultBaseUrl: DEFAULT_LLM_OPENROUTER_BASE_URL,
   // `GET /key` is OpenRouter's free key-metadata endpoint — a revoked key answers `401 "User not found."`, which is
   // carried through verbatim. A 404 here IS a real error (OpenRouter always implements it), so the probe keeps the
   // default `'error'` policy rather than the openai transport's lenient one.
@@ -151,7 +151,7 @@ const LLM_OPENROUTER_CHAT_STRATEGY_HOOKS: LlmOpenAiCompatibleChatStrategyHooks =
   messages: (params) => (params.model.startsWith(ANTHROPIC_MODEL_PREFIX) ? toLlmOpenRouterAnthropicMessages(params) : toLlmOpenAiChatMessages({ prompt: params.request.prompt, thread: params.request.thread, attachments: params.attachments })),
   // The reasoning controls — sent ONLY when the request carries a reasoning config (some providers reject an unknown
   // `reasoning` param).
-  reasoningParams: ({ reasoning }) => (reasoning == null ? {} : { reasoning: llmOpenRouterReasoningOf(reasoning) }),
+  reasoningParams: ({ reasoning }) => (reasoning == null ? {} : { reasoning: toLlmOpenRouterReasoning(reasoning) }),
   // Opt into OpenRouter usage-accounting so the response `usage` carries `cost`.
   bodyExtras: () => ({ usage: { include: true } }),
   // The upstream endpoint that served the call (the routing evidence), and the provider-native finish reason as the

@@ -10,16 +10,16 @@
  */
 
 import { KeyValueTypleValueFilter, type Maybe, mergeObjects, splitJoinRemainder } from '@dereekb/util';
-import { type LlmCapabilityDescriptor, type LlmCapabilityDescriptorOf } from '../capability/llm.capability.descriptor';
+import { type LlmCapabilityDescriptor, type LlmCapabilityDescriptorReader } from '../capability/llm.capability.descriptor';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { type LlmCapabilityKey, type LlmModelId } from '../model/llm.value';
 import { type LlmCallContext, noopLlmCallContext } from '../record/llm.call.context';
 import { type LlmReplyProtocol, resolveLlmReplyProtocol } from '../reply/llm.reply.protocol';
 import { renderLlmOutputContract, DEFAULT_LLM_OUTPUT_CONTRACT_FOOTER, DEFAULT_LLM_OUTPUT_CONTRACT_INTRO } from './llm.prompt.contract';
 import { assertLlmPromptContributionOccupancy, type LlmPromptContribution, type LlmPromptContributionCut, type LlmPromptContributor, llmPromptContributionsInSlot, mergeLlmLiveContextContributions, resolveLlmPromptContributions } from './llm.prompt.contributor';
-import { DEFAULT_LLM_PROMPT_LAYOUT, findLlmPromptSlotByRole, type LlmPromptLayout, type LlmPromptSlot, type LlmPromptSlotRole, llmPromptSlotsOfRole, readLlmPromptSlotSeparator } from './llm.prompt.layout';
+import { DEFAULT_LLM_PROMPT_LAYOUT, findLlmPromptSlotByRole, type LlmPromptLayout, type LlmPromptSlot, type LlmPromptSlotRole, filterLlmPromptSlotsByRole, readLlmPromptSlotSeparator } from './llm.prompt.layout';
 import { type LlmLiveContextBlock, type LlmLiveContextInput, toLlmLiveContextBlocks } from './llm.prompt.live.context';
-import { joinLlmPromptSegments, type LlmPromptCacheSegments, llmPromptCacheSegmentsOf, type LlmPromptSegment, type LlmPromptSegmentOrigin } from './llm.prompt.segment';
+import { joinLlmPromptSegments, type LlmPromptCacheSegments, splitLlmPromptCacheSegments, type LlmPromptSegment, type LlmPromptSegmentOrigin } from './llm.prompt.segment';
 import { LLM_PROMPT_LIVE_CONTEXT_MARKER, type LlmPromptTemplateResolver, type LlmResolvedPromptTemplate, type LlmResolvedPromptTemplates } from './llm.prompt.template';
 
 // MARK: Texts
@@ -183,7 +183,7 @@ export type LlmPromptAssemblyCapabilityRef = Pick<LlmCapabilityDescriptor, 'repl
  */
 export interface AssembleLlmCapabilityPromptConfig {
   /**
-   * The layout. Nullish ⇒ {@link DEFAULT_LLM_PROMPT_LAYOUT}. Pass one validated by `makeLlmPromptLayout`.
+   * The layout. Nullish ⇒ {@link DEFAULT_LLM_PROMPT_LAYOUT}. Pass one validated by `defineLlmPromptLayout`.
    */
   readonly layout?: Maybe<LlmPromptLayout>;
   /**
@@ -245,7 +245,7 @@ export interface LlmAssembledPrompt {
    */
   readonly prompt: string;
   /**
-   * The provider cache split — `llmPromptCacheSegmentsOf(segments)`.
+   * The provider cache split — `splitLlmPromptCacheSegments(segments)`.
    */
   readonly cacheSegments: LlmPromptCacheSegments;
 }
@@ -441,7 +441,7 @@ function llmPromptAssemblyPiecesOf(input: LlmPromptAssemblyPieceInput): LlmPromp
  */
 function assertLlmPromptAssemblyPiecesPlaceable(pieces: LlmPromptAssemblyPieces, layout: LlmPromptLayout, capability: LlmCapabilityKey): void {
   for (const role of Object.keys(pieces) as LlmPromptAssemblyPieceRole[]) {
-    if (llmPromptSlotsOfRole(layout, role).length === 0) {
+    if (filterLlmPromptSlotsByRole(layout, role).length === 0) {
       throw new Error(`${LLM_PROMPT_ASSEMBLY_ERROR_PREFIX} capability '${capability}' has ${role} bytes to place, but the layout declares no '${role}' slot.`);
     }
   }
@@ -529,7 +529,7 @@ function llmPromptPieceSegmentsOf(slot: LlmPromptSlot, piece: Maybe<LlmPromptAss
  *
  * Every piece is closed by its slot's separator (a slot's last piece by `lastSeparator ?? separator`). Bytes with no
  * slot to land in fail loud, and the layout must declare a live slot; a role with nothing to place needs no slot. The
- * layout is not re-validated: pass one validated by `makeLlmPromptLayout` (an assembly role declared twice would place
+ * layout is not re-validated: pass one validated by `defineLlmPromptLayout` (an assembly role declared twice would place
  * its piece twice).
  *
  * @param config - The layout, capability, descriptor, templates, live context, contributions and texts.
@@ -577,7 +577,7 @@ export function assembleLlmCapabilityPrompt(config: AssembleLlmCapabilityPromptC
   };
 
   const segments = layout.flatMap((slot) => handlers[slot.role](slot));
-  return { segments, prompt: joinLlmPromptSegments(segments), cacheSegments: llmPromptCacheSegmentsOf(segments) };
+  return { segments, prompt: joinLlmPromptSegments(segments), cacheSegments: splitLlmPromptCacheSegments(segments) };
 }
 
 // MARK: Compose
@@ -599,7 +599,7 @@ export interface ComposeLlmCapabilityPromptConfig<R extends LlmDispatchRequest =
   /**
    * The injected descriptor lookup.
    */
-  readonly descriptorOf: LlmCapabilityDescriptorOf<D>;
+  readonly descriptorOf: LlmCapabilityDescriptorReader<D>;
   /**
    * The caller's already looked-up descriptor. Nullish ⇒ {@link descriptorOf}.
    */

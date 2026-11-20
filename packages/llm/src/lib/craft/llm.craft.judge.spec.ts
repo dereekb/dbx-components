@@ -5,7 +5,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { makeScriptedLlmDecisionStrategy, makeScriptedLlmStrategy } from '@dereekb/llm/test';
+import { makeLlmScriptedDecisionStrategy, makeLlmScriptedStrategy } from '@dereekb/llm/test';
 import { LlmDecisionAnswerFaultError } from '../decision/llm.decision.answer';
 import { type LlmDecisionDispatchRequest } from '../decision/llm.decision.descriptor';
 import { isLlmDecisionModelId } from '../decision/llm.decision.model';
@@ -17,9 +17,9 @@ import { makeLlmDispatcher } from '../dispatch/llm.dispatcher.pipeline';
 import { makeLlmStrategyRegistry } from '../strategy/llm.strategy.registry';
 import { composeLlmCapabilityPrompt } from '../prompt/llm.prompt.assembly';
 import { type LlmPromptSite } from '../prompt/llm.prompt.site';
-import { tieredLlmPromptTemplateResolver } from '../prompt/llm.prompt.template';
-import { llmCraftPromptContributor } from './llm.craft.contributor';
-import { llmCraftJudgeInputOf, makeLlmCraftJudge } from './llm.craft.judge';
+import { makeLlmTieredPromptTemplateResolver } from '../prompt/llm.prompt.template';
+import { makeLlmCraftPromptContributor } from './llm.craft.contributor';
+import { toLlmCraftJudgeInput, makeLlmCraftJudge } from './llm.craft.judge';
 import { type LlmCraftNote } from './llm.craft.note';
 import { DEFAULT_LLM_CRAFT_SITE_LIMITS, makeLlmCraftSiteRegistry } from './llm.craft.site';
 
@@ -89,25 +89,25 @@ function fakeDispatcher(config: FakeDispatcherConfig = {}) {
  */
 function composeWith(notes: ReadonlyArray<LlmCraftNote>, site: LlmPromptSite) {
   const request: LlmDispatchRequest = { capability: 'summarize', renderLiveContext: () => [{ key: 'facts', text: 'facts: here' }], site };
-  return composeLlmCapabilityPrompt({ request, descriptorOf: () => undefined, templateResolver: tieredLlmPromptTemplateResolver({ tiers: [] }), contributors: [llmCraftPromptContributor({ sites: SITES, tiers: [notes] })] });
+  return composeLlmCapabilityPrompt({ request, descriptorOf: () => undefined, templateResolver: makeLlmTieredPromptTemplateResolver({ tiers: [] }), contributors: [makeLlmCraftPromptContributor({ sites: SITES, tiers: [notes] })] });
 }
 
-describe('llmCraftJudgeInputOf()', () => {
+describe('toLlmCraftJudgeInput()', () => {
   it('carries only the inputs an asked note names, each clipped, and skips a note whose inputs the site lacks', () => {
     const long = 'x'.repeat(DEFAULT_LLM_CRAFT_SITE_LIMITS.judgeInputMax + 50);
-    const input = llmCraftJudgeInputOf({ request: { kind: 'product-page', asked: [note('a', { ask: ASK_BRIEF }), note('b', { ask: ASK_NOTES })], inputs: { brief: long, summary: 'an input no ask names' } }, sites: SITES });
+    const input = toLlmCraftJudgeInput({ request: { kind: 'product-page', asked: [note('a', { ask: ASK_BRIEF }), note('b', { ask: ASK_NOTES })], inputs: { brief: long, summary: 'an input no ask names' } }, sites: SITES });
 
     expect(input?.notes.map((entry) => entry.id)).toEqual(['a']);
     expect(Object.keys(input?.inputs ?? {})).toEqual(['brief']);
     expect(input?.inputs['brief']).toHaveLength(DEFAULT_LLM_CRAFT_SITE_LIMITS.judgeInputMax);
     expect(input?.inputs['brief']?.endsWith('…')).toBe(true);
-    expect(llmCraftJudgeInputOf({ request: { kind: 'product-page', asked: [note('b', { ask: ASK_NOTES })], inputs: { brief: 'here' } }, sites: SITES })).toBeUndefined();
+    expect(toLlmCraftJudgeInput({ request: { kind: 'product-page', asked: [note('b', { ask: ASK_NOTES })], inputs: { brief: 'here' } }, sites: SITES })).toBeUndefined();
   });
 
   it("clips to a site's own judgeInputMax, and answers nothing for an unknown kind", () => {
-    const input = llmCraftJudgeInputOf({ request: { kind: 'support-reply', asked: [note('a', { sites: ['support-reply'], ask: '`message` is angry.' })], inputs: { message: 'my order arrived broken again' } }, sites: SITES });
+    const input = toLlmCraftJudgeInput({ request: { kind: 'support-reply', asked: [note('a', { sites: ['support-reply'], ask: '`message` is angry.' })], inputs: { message: 'my order arrived broken again' } }, sites: SITES });
     expect(input?.inputs['message']).toBe('my order arrived br…');
-    expect(llmCraftJudgeInputOf({ request: { kind: 'poster', asked: [note('a', { ask: ASK_BRIEF })], inputs: { brief: 'x' } }, sites: SITES })).toBeUndefined();
+    expect(toLlmCraftJudgeInput({ request: { kind: 'poster', asked: [note('a', { ask: ASK_BRIEF })], inputs: { brief: 'x' } }, sites: SITES })).toBeUndefined();
   });
 });
 
@@ -128,7 +128,7 @@ describe('makeLlmCraftJudge() through the craft contributor', () => {
 
   it('is served by the decision default model when the consuming capability has a COMPLETION route (a real dispatcher)', async () => {
     const requests: LlmDecisionRequest[] = [];
-    const decisionStrategy = makeScriptedLlmDecisionStrategy({
+    const decisionStrategy = makeLlmScriptedDecisionStrategy({
       requests,
       script: (request) => {
         // the gateway's decision route refuses a completion model's slug
@@ -140,13 +140,13 @@ describe('makeLlmCraftJudge() through the craft contributor', () => {
       }
     });
     const dispatcher = makeLlmDispatcher({
-      strategies: makeLlmStrategyRegistry([makeScriptedLlmStrategy({ id: 'cap', replies: [] })]),
+      strategies: makeLlmStrategyRegistry([makeLlmScriptedStrategy({ id: 'cap', replies: [] })]),
       defaultStrategyId: 'cap',
       defaultMaxOutputTokens: 1024,
       modelTiers: { fast: 'vendor/fast-text-model' },
       capabilityRoutes: new Map([['summarize', { model: 'vendor/routed-text-model' }]]),
       descriptorOf: () => undefined,
-      templateResolver: tieredLlmPromptTemplateResolver({ tiers: [] }),
+      templateResolver: makeLlmTieredPromptTemplateResolver({ tiers: [] }),
       decisions: { strategies: makeLlmStrategyRegistry([decisionStrategy]), defaultModel: 'typesafe/jev-1.14' }
     });
     const swallowed: string[] = [];

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { type LlmCompletionAdapter, type LlmCompletionAdapterConfig, type LlmModelConfigFile, type LlmModelConfigTypes, type LlmProviderEntryBase, makeLlmAdapterRegistry, makeLlmModelConfigSchema } from '@dereekb/llm';
 import { DEFAULT_LLM_ENV_NAMES, type LlmEnvNames } from './llm.node.env';
-import { llmReachableModelsOf, llmReachableProviderGapsOf, makeLlmStrategiesFromEnv, resolveLlmProvidersFromEnv } from './llm.node.provider';
+import { readLlmReachableModels, filterLlmReachableProviderGaps, makeLlmStrategiesFromEnv, resolveLlmProvidersFromEnv } from './llm.node.provider';
 
 const OPENAI_URL = 'https://api.openai.example/v1';
 const OPENROUTER_URL = 'https://openrouter.example/api/v1';
@@ -301,9 +301,9 @@ describe('makeLlmStrategiesFromEnv()', () => {
   });
 });
 
-describe('llmReachableModelsOf()', () => {
+describe('readLlmReachableModels()', () => {
   it('should list the tier and routing slugs, de-duplicated in first-seen order', () => {
-    const reachable = llmReachableModelsOf({
+    const reachable = readLlmReachableModels({
       modelTiers: { fast: 'vendor/a', strong: { model: 'vendor/b', maxOutputTokens: 512 } },
       routing: { tiers: { cheap: 'vendor/c', fast: 'vendor/a' }, rules: [{ model: 'vendor/d' }, { tier: 'fast' }, { model: 'vendor/a' }] }
     });
@@ -312,18 +312,18 @@ describe('llmReachableModelsOf()', () => {
   });
 
   it('should return nothing for nothing', () => {
-    expect(llmReachableModelsOf({})).toEqual([]);
+    expect(readLlmReachableModels({})).toEqual([]);
   });
 });
 
-describe('llmReachableProviderGapsOf()', () => {
+describe('filterLlmReachableProviderGaps()', () => {
   it('should keep one row per gap and reachable slug bound to it', () => {
     const gaps = [
       { id: 'gateway', apiKeyEnv: 'GATEWAY_API_KEY' },
       { id: 'local', apiKeyEnv: 'LOCAL_API_KEY' }
     ];
 
-    const scoped = llmReachableProviderGapsOf({ gaps, reachableModels: ['vendor/x', 'vendor/y', 'vendor/z'], providerByModel: { 'vendor/x': 'gateway', 'vendor/z': 'gateway', 'vendor/q': 'local' } });
+    const scoped = filterLlmReachableProviderGaps({ gaps, reachableModels: ['vendor/x', 'vendor/y', 'vendor/z'], providerByModel: { 'vendor/x': 'gateway', 'vendor/z': 'gateway', 'vendor/q': 'local' } });
     expect(scoped).toEqual([
       { id: 'gateway', apiKeyEnv: 'GATEWAY_API_KEY', model: 'vendor/x' },
       { id: 'gateway', apiKeyEnv: 'GATEWAY_API_KEY', model: 'vendor/z' }
@@ -331,6 +331,6 @@ describe('llmReachableProviderGapsOf()', () => {
   });
 
   it('should drop every gap with no bindings', () => {
-    expect(llmReachableProviderGapsOf({ gaps: [{ id: 'gateway', apiKeyEnv: 'GATEWAY_API_KEY' }], reachableModels: ['vendor/x'] })).toEqual([]);
+    expect(filterLlmReachableProviderGaps({ gaps: [{ id: 'gateway', apiKeyEnv: 'GATEWAY_API_KEY' }], reachableModels: ['vendor/x'] })).toEqual([]);
   });
 });

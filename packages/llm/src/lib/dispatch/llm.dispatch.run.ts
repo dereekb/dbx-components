@@ -16,13 +16,13 @@ import { llmLineReplyLeverOf, type LlmReplyEnvelopeKeys, type LlmReplyLeverReadi
 import { type LlmReplyFastFixLimits, type LlmReplyFastFixMissReason } from '../reply/llm.reply.fast.fix';
 import { type LlmReplyProtocol } from '../reply/llm.reply.protocol';
 import { type LlmLeverValidator } from '../reply/llm.reply.validator';
-import { llmErrorSummaryOf } from '../strategy/llm.error';
+import { formatLlmErrorSummary } from '../strategy/llm.error';
 import { type LlmDecodeStatus, type LlmDispatchResult, type LlmReplyRepairSummary, type LlmRequest, type LlmStrategy } from '../strategy/llm.strategy';
 import { isDegenerateLlmReplyReading, type LlmBoundReplyFastFix, type LlmDispatchAttemptFault, type LlmDispatchAttemptSend, type LlmReplyRepairRefusal, readLlmDispatchReply, runLlmReplyRepairLane, type RunLlmReplyRepairLaneConfig, sendLlmDispatchAttempt, validateLlmDispatchLever } from './llm.dispatch.attempt';
 import { type LlmDispatchPauseSignal, type LlmDispatchTransportBackoff, parkLlmDispatchWhilePaused } from './llm.dispatch.control';
-import { type LlmCorrectionKind, type LlmDispatchCorrectionTexts, llmDispatchCorrectionTextOf, withLlmDispatchCorrection } from './llm.dispatch.correction';
+import { type LlmCorrectionKind, type LlmDispatchCorrectionTexts, renderLlmDispatchCorrectionText, withLlmDispatchCorrection } from './llm.dispatch.correction';
 import { type LlmDispatchRetryLadder, makeLlmDispatchRetryLadder } from './llm.dispatch.ladder';
-import { llmAttemptPhaseOf, type LlmDecodeFailureAttemptConfig, llmDecodeFailureAttemptOf, type LlmDispatchOutcome, type LlmDispatchTerminalFault, llmFailedAttemptOf, llmRepairedDecodeAttemptOf } from './llm.dispatch.outcome';
+import { toLlmCallAttemptPhase, type LlmDecodeFailureAttemptConfig, toLlmDecodeFailureAttempt, type LlmDispatchOutcome, type LlmDispatchTerminalFault, toLlmCallFailedAttempt, toLlmRepairedDecodeAttempt } from './llm.dispatch.outcome';
 import { type LlmRetryLever } from './llm.retry.lever';
 
 /**
@@ -36,7 +36,7 @@ export const DEFAULT_LLM_DISPATCH_MAX_ATTEMPTS = 2;
  * @param requested - The request's (or follow-up's) `maxAttempts`.
  * @returns The budget.
  */
-export function llmDispatchMaxAttemptsOf(requested?: Maybe<number>): number {
+export function resolveLlmDispatchMaxAttempts(requested?: Maybe<number>): number {
   return Math.max(1, requested ?? DEFAULT_LLM_DISPATCH_MAX_ATTEMPTS);
 }
 
@@ -102,7 +102,7 @@ export interface LlmDispatchAttemptsConfig {
    */
   readonly onDecodeAttempt?: Maybe<LlmDispatchDecodeAttemptListener>;
   /**
-   * The attempt budget, already clamped ({@link llmDispatchMaxAttemptsOf}).
+   * The attempt budget, already clamped ({@link resolveLlmDispatchMaxAttempts}).
    */
   readonly maxAttempts: number;
   /**
@@ -180,7 +180,7 @@ function nonTransientLlmErrorClassificationOf(classification: Maybe<FetchErrorCl
  * @returns The terminal fault.
  */
 function llmDispatchTerminalFaultOf(attempt: number, sent: LlmDispatchAttemptSend): LlmDispatchTerminalFault {
-  return { attempt, error: sent.error, summary: sent.transportError ?? llmErrorSummaryOf(sent.error), classification: nonTransientLlmErrorClassificationOf(sent.classification) ?? 'unknown' };
+  return { attempt, error: sent.error, summary: sent.transportError ?? formatLlmErrorSummary(sent.error), classification: nonTransientLlmErrorClassificationOf(sent.classification) ?? 'unknown' };
 }
 
 /**
@@ -312,10 +312,10 @@ export async function runSingleShotLlmDispatch(config: LlmDispatchAttemptsConfig
       repair = repaired.repair;
     }
 
-    outcome = { result, finalRequest: baseRequest, attemptPhases: [llmAttemptPhaseOf({ attempt: 1, attemptContext, result, repair })], decodeFailures: [], failedAttempts: [], recovered: false };
+    outcome = { result, finalRequest: baseRequest, attemptPhases: [toLlmCallAttemptPhase({ attempt: 1, attemptContext, result, repair })], decodeFailures: [], failedAttempts: [], recovered: false };
   } else {
     // a cancelled dispatch's timeout / transport fault drops the beat: the synthetic envelope, unstamped
-    outcome = { result: sent.result, finalRequest: baseRequest, attemptPhases: [llmAttemptPhaseOf({ attempt: 1, attemptContext, result: sent.result })], decodeFailures: [], failedAttempts: [], recovered: false };
+    outcome = { result: sent.result, finalRequest: baseRequest, attemptPhases: [toLlmCallAttemptPhase({ attempt: 1, attemptContext, result: sent.result })], decodeFailures: [], failedAttempts: [], recovered: false };
   }
 
   return outcome;
@@ -338,14 +338,14 @@ function singleShotLlmFaultedOutcomeOf(config: LlmDispatchAttemptsConfig, sent: 
   const transportError = fault?.summary ?? sent.transportError;
   const errorClassification = fault?.classification ?? nonTransientLlmErrorClassificationOf(sent.classification);
   const { maxOutputTokens } = baseRequest;
-  const row = llmDecodeFailureAttemptOf({ attempt: 1, failureClass, result, maxOutputTokens, envelope: config.readingEnvelope, transportError, errorClassification });
-  const failedRow = llmFailedAttemptOf({ attempt: 1, cause: failureClass, result, maxOutputTokens, error: transportError, errorClassification });
+  const row = toLlmDecodeFailureAttempt({ attempt: 1, failureClass, result, maxOutputTokens, envelope: config.readingEnvelope, transportError, errorClassification });
+  const failedRow = toLlmCallFailedAttempt({ attempt: 1, cause: failureClass, result, maxOutputTokens, error: transportError, errorClassification });
   onDecodeAttempt?.(row, false);
 
   return {
     result: { ...result, attempts: 1, decodeStatus: llmDecodeStatusOf(false, 1), decodeOutcome: classifyLlmReplyOutcome(result, failureClass) },
     finalRequest: baseRequest,
-    attemptPhases: [llmAttemptPhaseOf({ attempt: 1, attemptContext, result })],
+    attemptPhases: [toLlmCallAttemptPhase({ attempt: 1, attemptContext, result })],
     decodeFailures: [row],
     failedAttempts: [failedRow],
     recovered: false,
@@ -434,7 +434,7 @@ type LlmDispatchLoopDecodeRowConfig = Omit<LlmDecodeFailureAttemptConfig, 'maxOu
  * @returns The row.
  */
 function loopDecodeRowOf(loop: LlmDispatchLoopState, config: LlmDispatchLoopDecodeRowConfig): LlmDecodeFailureAttempt {
-  return llmDecodeFailureAttemptOf({ ...config, maxOutputTokens: loop.request.maxOutputTokens, envelope: loop.readingEnvelope });
+  return toLlmDecodeFailureAttempt({ ...config, maxOutputTokens: loop.request.maxOutputTokens, envelope: loop.readingEnvelope });
 }
 
 /**
@@ -518,7 +518,7 @@ async function runLlmDispatchLeverStep(config: LlmDispatchAttemptsConfig, loop: 
   const { sent, attempt, served, repair, lever } = step;
   const { attemptContext } = sent;
   const { ledger, ladder } = loop;
-  const repairedRow = (retryLever?: Maybe<LlmRetryLever>) => llmRepairedDecodeAttemptOf({ attempt, served, summary: repair as LlmReplyRepairSummary, maxOutputTokens: loop.request.maxOutputTokens, envelope: loop.readingEnvelope, lever: retryLever });
+  const repairedRow = (retryLever?: Maybe<LlmRetryLever>) => toLlmRepairedDecodeAttempt({ attempt, served, summary: repair as LlmReplyRepairSummary, maxOutputTokens: loop.request.maxOutputTokens, envelope: loop.readingEnvelope, lever: retryLever });
   const accept = () => {
     if (repair != null) {
       ledger.recordDecodeAttempt(repairedRow(), false);
@@ -645,7 +645,7 @@ async function runLlmDispatchReplyStep(config: LlmDispatchAttemptsConfig, loop: 
   } else if (reading.kind === 'declined' || (config.protocol === 'line' && isDegenerateLlmReplyReading(reading))) {
     // a decline (or a `line` reply that is not JSON) is an ANSWER, never a decode failure
     if (repair != null) {
-      ledger.recordDecodeAttempt(llmRepairedDecodeAttemptOf({ attempt, served, summary: repair, maxOutputTokens: loop.request.maxOutputTokens, envelope: loop.readingEnvelope }), false);
+      ledger.recordDecodeAttempt(toLlmRepairedDecodeAttempt({ attempt, served, summary: repair, maxOutputTokens: loop.request.maxOutputTokens, envelope: loop.readingEnvelope }), false);
       loop.recovered = true;
     }
 
@@ -685,7 +685,7 @@ async function sendLlmDispatchLoopAttempt(config: LlmDispatchAttemptsConfig, loo
   loop.lastFailureClass = undefined;
 
   if (nextCorrection != null) {
-    loop.sentCorrection = llmDispatchCorrectionTextOf({ ...nextCorrection, protocol, texts: loop.texts });
+    loop.sentCorrection = renderLlmDispatchCorrectionText({ ...nextCorrection, protocol, texts: loop.texts });
     request = withLlmDispatchCorrection(baseRequest, { text: loop.sentCorrection, kind: nextCorrection.kind, protocol, attempt, slotId: config.correctionSlotId, separator: config.correctionSeparator });
   }
 
@@ -693,7 +693,7 @@ async function sendLlmDispatchLoopAttempt(config: LlmDispatchAttemptsConfig, loo
   loop.attempts = attempt;
   const sent = await sendLlmDispatchAttempt({ strategy, request: loop.request, attempt, callContext, signal, pause, isRetryableUnknownError: config.isRetryableUnknownError });
   const retry = ladder.takePending();
-  loop.attemptPhases.push(llmAttemptPhaseOf({ attempt, attemptContext: sent.attemptContext, result: sent.result, retry }));
+  loop.attemptPhases.push(toLlmCallAttemptPhase({ attempt, attemptContext: sent.attemptContext, result: sent.result, retry }));
   loop.result = sent.result;
   const lengthCapped = isLlmLengthCappedFinish(sent.result);
   loop.lengthCapped = loop.lengthCapped || lengthCapped;
@@ -782,7 +782,7 @@ export async function runLlmDispatchAttempts(config: LlmDispatchAttemptsConfig):
       },
       recordFailedAttempt(cause, error, errorClassification) {
         // reads the CURRENT attempt: its (possibly repaired) reply, the cap it was sent with, its correction, and the retry this failure bought
-        failedAttempts.push(llmFailedAttemptOf({ attempt: loop.attempts, cause, result: loop.result, maxOutputTokens: loop.request.maxOutputTokens, error, errorClassification, correction: loop.sentCorrection, retry: ladder.pending() }));
+        failedAttempts.push(toLlmCallFailedAttempt({ attempt: loop.attempts, cause, result: loop.result, maxOutputTokens: loop.request.maxOutputTokens, error, errorClassification, correction: loop.sentCorrection, retry: ladder.pending() }));
       }
     },
     attemptPhases: [],

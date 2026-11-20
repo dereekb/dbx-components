@@ -50,7 +50,7 @@ export const DEFAULT_LLM_REPLY_FAST_FIX_LIMITS: LlmReplyFastFixLimits = { minSco
  * @typeParam R - The host's request type.
  * @typeParam X - The host's dispatch result type.
  */
-export interface LlmReplyFastFixInput<R extends LlmDispatchRequest = LlmDispatchRequest, X extends LlmDispatchResult = LlmDispatchResult> {
+export interface LlmReplyFastFixParams<R extends LlmDispatchRequest = LlmDispatchRequest, X extends LlmDispatchResult = LlmDispatchResult> {
   /**
    * The SUBJECT request whose reply is broken — a host builds its fixer's own request from it (its host fields, its
    * `meta`).
@@ -143,4 +143,4 @@ export type LlmReplyFastFixOutcome =
  * @typeParam R - The host's request type.
  * @typeParam X - The host's dispatch result type.
  */
-export type LlmReplyFastFixer<R extends LlmDispatchRequest = LlmDispatchRequest, X extends LlmDispatchResult = LlmDispatchResult> = (input: LlmReplyFastFixInput<R, X>) => Promise<LlmReplyFastFixOutcome>;
+export type LlmReplyFastFixer<R extends LlmDispatchRequest = LlmDispatchRequest, X extends LlmDispatchResult = LlmDispatchResult> = (input: LlmReplyFastFixParams<R, X>) => Promise<LlmReplyFastFixOutcome>;

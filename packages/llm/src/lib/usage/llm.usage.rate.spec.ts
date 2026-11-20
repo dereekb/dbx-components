@@ -8,21 +8,21 @@
 
 import { describe, it, expect } from 'vitest';
 import type { LlmUsage } from '../strategy/llm.usage';
-import { accumulateLlmUsageCell, addLlmUsageCells, emptyLlmUsageCell, llmKeyedUsageCellsOf, llmUsageCellOf, type LlmUsageCell } from './llm.usage.cell';
-import { formatLlmUsageRate, isUncacheableLlmCall, llmCacheablePromptTokensOf, llmCacheHitRateOf, llmCapabilityCacheRowsOf, llmReasoningShareOf, renderLlmCacheHitLine } from './llm.usage.rate';
+import { accumulateLlmUsageCell, addLlmUsageCells, emptyLlmUsageCell, toLlmKeyedUsageCells, toLlmUsageCell, type LlmUsageCell } from './llm.usage.cell';
+import { formatLlmUsageRate, isUncacheableLlmCall, computeLlmCacheablePromptTokens, computeLlmCacheHitRate, toLlmCapabilityCacheRows, computeLlmReasoningShare, renderLlmCacheHitLine } from './llm.usage.rate';
 
 const KINDS: ReadonlySet<string> = new Set(['vendor-decisions']);
 
-describe('llmCacheHitRateOf / llmReasoningShareOf', () => {
+describe('computeLlmCacheHitRate / computeLlmReasoningShare', () => {
   it('answers undefined rather than 0 when a cell has no denominator', () => {
     const empty: LlmUsageCell = { calls: 0, promptTokens: 0, completionTokens: 0, cachedTokens: 0, reasoningTokens: 0, cost: 0 };
 
-    expect(llmCacheHitRateOf(empty)).toBeUndefined();
-    expect(llmReasoningShareOf(empty)).toBeUndefined();
+    expect(computeLlmCacheHitRate(empty)).toBeUndefined();
+    expect(computeLlmReasoningShare(empty)).toBeUndefined();
   });
 
   it('measures the reasoning share of completion tokens', () => {
-    expect(llmReasoningShareOf({ calls: 2, promptTokens: 8200, completionTokens: 480, cachedTokens: 6000, reasoningTokens: 100, cost: 0.0011 })).toBeCloseTo(0.2083, 4);
+    expect(computeLlmReasoningShare({ calls: 2, promptTokens: 8200, completionTokens: 480, cachedTokens: 6000, reasoningTokens: 100, cost: 0.0011 })).toBeCloseTo(0.2083, 4);
   });
 });
 
@@ -33,12 +33,12 @@ describe('formatLlmUsageRate', () => {
   });
 });
 
-describe('llmCapabilityCacheRowsOf / renderLlmCacheHitLine', () => {
+describe('toLlmCapabilityCacheRows / renderLlmCacheHitLine', () => {
   const SUMMARIZE: LlmUsageCell = { calls: 1, promptTokens: 8000, completionTokens: 400, cachedTokens: 6000, reasoningTokens: 100, cost: 0.001 };
   const CLASSIFY: LlmUsageCell = { calls: 1, promptTokens: 200, completionTokens: 80, cachedTokens: 0, reasoningTokens: 0, cost: 0.0001 };
 
   it('ranks capability rows by prompt-token denominator, heaviest first', () => {
-    const rows = llmCapabilityCacheRowsOf([
+    const rows = toLlmCapabilityCacheRows([
       { key: 'classify', cell: CLASSIFY },
       { key: 'summarize', cell: SUMMARIZE }
     ]);
@@ -49,13 +49,13 @@ describe('llmCapabilityCacheRowsOf / renderLlmCacheHitLine', () => {
     expect(rows[1].cacheHitRate).toBe(0);
   });
 
-  it('breaks a tie on the capability key by code unit — the same order llmKeyedUsageCellsOf gives', () => {
+  it('breaks a tie on the capability key by code unit — the same order toLlmKeyedUsageCells gives', () => {
     const byCapability = new Map<string, LlmUsageCell>([
       ['summarize', CLASSIFY],
       ['CritiqueReply', CLASSIFY]
     ]);
-    const keyed = llmKeyedUsageCellsOf(byCapability);
-    const rows = llmCapabilityCacheRowsOf(keyed);
+    const keyed = toLlmKeyedUsageCells(byCapability);
+    const rows = toLlmCapabilityCacheRows(keyed);
 
     expect(keyed.map((entry) => entry.key)).toEqual(['CritiqueReply', 'summarize']);
     expect(rows.map((row) => row.capability)).toEqual(['CritiqueReply', 'summarize']);
@@ -86,8 +86,8 @@ describe('the decision lane (cache NOT APPLICABLE, not a miss)', () => {
 
   // A completion that reported its cache detail, beside a decision call filed under the SAME capability that — by
   // design — reports none.
-  const completion = llmUsageCellOf(usageOf(4000, 200, { cost: 0.001, cachedTokens: 3000, reasoningTokens: 0 }), isUncacheableLlmCall({ strategyKind: 'vendor' }, KINDS));
-  const decision = llmUsageCellOf(usageOf(1000, 10, { cost: 0.0002 }), isUncacheableLlmCall({ decision: 'pick-route' }, KINDS));
+  const completion = toLlmUsageCell(usageOf(4000, 200, { cost: 0.001, cachedTokens: 3000, reasoningTokens: 0 }), isUncacheableLlmCall({ strategyKind: 'vendor' }, KINDS));
+  const decision = toLlmUsageCell(usageOf(1000, 10, { cost: 0.0002 }), isUncacheableLlmCall({ decision: 'pick-route' }, KINDS));
 
   /**
    * Fold the two calls into a total plus by-capability and by-model cells.
@@ -121,10 +121,10 @@ describe('the decision lane (cache NOT APPLICABLE, not a miss)', () => {
 
     expect(total.promptTokens).toBe(5000);
     expect(total.uncacheablePromptTokens).toBe(1000);
-    expect(llmCacheablePromptTokensOf(total)).toBe(4000);
-    expect(llmCacheHitRateOf(total)).toBeCloseTo(0.75, 5);
+    expect(computeLlmCacheablePromptTokens(total)).toBe(4000);
+    expect(computeLlmCacheHitRate(total)).toBeCloseTo(0.75, 5);
 
-    const [summarize] = llmCapabilityCacheRowsOf(llmKeyedUsageCellsOf(byCapability));
+    const [summarize] = toLlmCapabilityCacheRows(toLlmKeyedUsageCells(byCapability));
 
     expect(summarize.capability).toBe('summarize');
     expect(summarize.promptTokens).toBe(5000);
@@ -135,7 +135,7 @@ describe('the decision lane (cache NOT APPLICABLE, not a miss)', () => {
     const decisionCell = byModel.get(DECISION_MODEL);
 
     expect(decisionCell?.uncacheablePromptTokens).toBe(1000);
-    expect(decisionCell == null ? 0 : llmCacheHitRateOf(decisionCell)).toBeUndefined();
+    expect(decisionCell == null ? 0 : computeLlmCacheHitRate(decisionCell)).toBeUndefined();
   });
 
   it('names the decision lane in the shared cache line, over the cacheable denominator', () => {

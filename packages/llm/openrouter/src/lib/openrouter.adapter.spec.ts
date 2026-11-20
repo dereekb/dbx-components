@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { type ConfiguredFetch } from '@dereekb/util/fetch';
-import { llmDecisionStrategyKinds, llmModelConfigListsOf, llmSystemOneDecisionStrategyConfigOf, makeLlmAdapterRegistry, makeLlmDecisionStrategies, makeLlmProviderStrategy, type LlmCompletionAdapterConfig, type LlmProviderConfig } from '@dereekb/llm';
-import { llmOpenAiCompatibleStrategyConfigOf } from '@dereekb/llm/openai';
+import { readLlmDecisionStrategyKinds, readLlmModelConfigLists, toLlmSystemOneDecisionStrategyConfig, makeLlmAdapterRegistry, makeLlmDecisionStrategies, makeLlmProviderStrategy, type LlmCompletionAdapterConfig, type LlmProviderConfig } from '@dereekb/llm';
+import { toLlmOpenAiCompatibleChatStrategyConfig } from '@dereekb/llm/openai';
 import { LLM_OPENROUTER_ADAPTERS, LLM_OPENROUTER_COMPLETION_ADAPTER, LLM_OPENROUTER_DECISION_ADAPTER } from './openrouter.adapter';
 
 const ROUTER: LlmProviderConfig = { id: 'router-a', transport: 'openrouter', apiKeyEnv: 'ROUTER_KEY', apiKey: 'or-key' };
@@ -19,23 +19,23 @@ function recordingFetch() {
 describe('LLM_OPENROUTER_ADAPTERS', () => {
   it('declares the completion and decision adapters', () => {
     expect(LLM_OPENROUTER_COMPLETION_ADAPTER).toMatchObject({ facet: 'completion', kind: 'openrouter', defaultBaseUrl: 'https://openrouter.ai/api/v1' });
-    expect(LLM_OPENROUTER_DECISION_ADAPTER).toMatchObject({ facet: 'decision', kind: 'openrouter', strategyKind: 'openrouter-decisions', transports: ['openrouter'] });
+    expect(LLM_OPENROUTER_DECISION_ADAPTER).toMatchObject({ facet: 'decision', kind: 'openrouter', strategyKind: 'openrouter-systemone', transports: ['openrouter'] });
     expect(LLM_OPENROUTER_ADAPTERS).toEqual([LLM_OPENROUTER_COMPLETION_ADAPTER, LLM_OPENROUTER_DECISION_ADAPTER]);
   });
 
   it('registers the openrouter transport and decision route', () => {
     const adapters = makeLlmAdapterRegistry(LLM_OPENROUTER_ADAPTERS);
-    const lists = llmModelConfigListsOf(adapters);
+    const lists = readLlmModelConfigLists(adapters);
 
     expect(lists.transports).toEqual(['openrouter']);
     expect(lists.decisionRoutes).toEqual(['openrouter']);
-    expect(llmDecisionStrategyKinds(adapters).has('openrouter-decisions')).toBe(true);
+    expect(readLlmDecisionStrategyKinds(adapters).has('openrouter-systemone')).toBe(true);
   });
 });
 
-describe('llmOpenAiCompatibleStrategyConfigOf() (the OpenRouter completion mapping)', () => {
+describe('toLlmOpenAiCompatibleChatStrategyConfig() (the OpenRouter completion mapping)', () => {
   it('maps a bare provider onto exactly its id and key', () => {
-    expect(llmOpenAiCompatibleStrategyConfigOf({ provider: ROUTER })).toEqual({ id: 'router-a', apiKey: 'or-key' });
+    expect(toLlmOpenAiCompatibleChatStrategyConfig({ provider: ROUTER })).toEqual({ id: 'router-a', apiKey: 'or-key' });
   });
 
   it('maps every input and ignores the knobs the OpenRouter wire spells one way', () => {
@@ -56,7 +56,7 @@ describe('llmOpenAiCompatibleStrategyConfigOf() (the OpenRouter completion mappi
       credentialProbe
     };
 
-    expect(llmOpenAiCompatibleStrategyConfigOf(config)).toEqual({
+    expect(toLlmOpenAiCompatibleChatStrategyConfig(config)).toEqual({
       id: 'router-a',
       apiKey: 'or-key',
       baseUrl: 'https://gateway.test/api/v1',
@@ -72,14 +72,14 @@ describe('llmOpenAiCompatibleStrategyConfigOf() (the OpenRouter completion mappi
   });
 });
 
-describe('llmSystemOneDecisionStrategyConfigOf() (the OpenRouter decision mapping)', () => {
+describe('toLlmSystemOneDecisionStrategyConfig() (the OpenRouter decision mapping)', () => {
   it('maps a bare provider onto exactly its id and key', () => {
-    expect(llmSystemOneDecisionStrategyConfigOf({ provider: ROUTER })).toEqual({ id: 'router-a', apiKey: 'or-key' });
+    expect(toLlmSystemOneDecisionStrategyConfig({ provider: ROUTER })).toEqual({ id: 'router-a', apiKey: 'or-key' });
   });
 
   it('maps every input', () => {
     const { fetch } = recordingFetch();
-    expect(llmSystemOneDecisionStrategyConfigOf({ provider: ROUTER, baseUrl: 'https://gateway.test/api/v1', timeoutMs: 4_000, fetch })).toEqual({ id: 'router-a', apiKey: 'or-key', baseUrl: 'https://gateway.test/api/v1', timeoutMs: 4_000, probeFetch: fetch });
+    expect(toLlmSystemOneDecisionStrategyConfig({ provider: ROUTER, baseUrl: 'https://gateway.test/api/v1', timeoutMs: 4_000, fetch })).toEqual({ id: 'router-a', apiKey: 'or-key', baseUrl: 'https://gateway.test/api/v1', timeoutMs: 4_000, probeFetch: fetch });
   });
 });
 
@@ -102,7 +102,7 @@ describe('the root resolution with LLM_OPENROUTER_ADAPTERS', () => {
 
     expect(strategies).toHaveLength(1);
     expect(strategies[0]?.id).toBe('router-a');
-    expect(strategies[0]?.kind).toBe('openrouter-decisions');
+    expect(strategies[0]?.kind).toBe('openrouter-systemone');
     expect(strategies[0]?.describe).toBe('OpenRouter System One at https://openrouter.ai/api/v1/systemone');
   });
 

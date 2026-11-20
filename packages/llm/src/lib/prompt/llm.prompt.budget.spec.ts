@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { budgetLlmLiveContextBlocks, DEFAULT_LLM_PROMPT_TOKEN_BUDGET, estimateLlmRequestPromptTokens, estimateLlmTokens, llmBudgetTrimSummaryOf, LLM_ESTIMATE_MESSAGE_ENVELOPE_TOKENS, LLM_PROMPT_PREFIX_RESERVE_TOKENS, type LlmBudgetedBlock, type LlmBudgetTrimReport } from './llm.prompt.budget';
+import { budgetLlmLiveContextBlocks, DEFAULT_LLM_PROMPT_TOKEN_BUDGET, estimateLlmRequestPromptTokens, estimateLlmTokens, toLlmBudgetTrimSummary, LLM_ESTIMATE_MESSAGE_ENVELOPE_TOKENS, LLM_PROMPT_PREFIX_RESERVE_TOKENS, type LlmBudgetedBlock, type LlmBudgetTrimReport } from './llm.prompt.budget';
 
 // The deterministic shrink-then-drop live-context budget. Pure: hand-built blocks exercise the under-budget
 // passthrough, the ascending-priority trim order, the required-never-trimmed guard, and shrink → drop.
@@ -130,15 +130,15 @@ describe('budgetLlmLiveContextBlocks(); blocks', () => {
   });
 });
 
-describe('llmBudgetTrimSummaryOf()', () => {
+describe('toLlmBudgetTrimSummary()', () => {
   const trim = (action: LlmBudgetTrimReport['action'], savedTokens: number, priority = 1): LlmBudgetTrimReport => ({ priority, action, savedTokens });
 
   it('folds the report into flat counts', () => {
-    expect(llmBudgetTrimSummaryOf([trim('dropped', 100), trim('shrunk', 40), trim('shrunk', 20, 2)])).toEqual({ blocks: 3, dropped: 1, shrunk: 2, savedTokens: 160 });
+    expect(toLlmBudgetTrimSummary([trim('dropped', 100), trim('shrunk', 40), trim('shrunk', 20, 2)])).toEqual({ blocks: 3, dropped: 1, shrunk: 2, savedTokens: 160 });
   });
 
   it('sums an empty report to zeros', () => {
-    expect(llmBudgetTrimSummaryOf([])).toEqual({ blocks: 0, dropped: 0, shrunk: 0, savedTokens: 0 });
+    expect(toLlmBudgetTrimSummary([])).toEqual({ blocks: 0, dropped: 0, shrunk: 0, savedTokens: 0 });
   });
 });
 

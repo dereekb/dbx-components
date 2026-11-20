@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { makeLlmFetchFake } from '@dereekb/llm/test';
-import { LLM_OPENROUTER_BASE_URL } from './openrouter.constants';
+import { DEFAULT_LLM_OPENROUTER_BASE_URL } from './openrouter.constants';
 import { probeLlmOpenRouterCredential } from './openrouter.credential.probe';
 
 describe('probeLlmOpenRouterCredential()', () => {
@@ -9,7 +9,7 @@ describe('probeLlmOpenRouterCredential()', () => {
     const health = await probeLlmOpenRouterCredential({ strategyId: 'openrouter', apiKey: 'sk-or', fetch: fake.fetch });
 
     expect(health).toEqual({ ready: true, issues: [] });
-    expect(fake.requests.map((request) => `${request.init.method} ${request.url}`)).toEqual([`GET ${LLM_OPENROUTER_BASE_URL}/key`]);
+    expect(fake.requests.map((request) => `${request.init.method} ${request.url}`)).toEqual([`GET ${DEFAULT_LLM_OPENROUTER_BASE_URL}/key`]);
     expect(fake.requests[0]?.init.headers['Authorization']).toBe('Bearer sk-or');
   });
 

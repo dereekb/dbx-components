@@ -120,9 +120,9 @@ export function parseLlmReasoningOffEncoding(raw: Maybe<string>): Maybe<LlmReaso
 }
 
 /**
- * Config for {@link llmReasoningOffEncodingFor}.
+ * Config for {@link resolveLlmReasoningOffEncoding}.
  */
-export interface LlmReasoningOffEncodingForConfig {
+export interface ResolveLlmReasoningOffEncodingConfig {
   /**
    * The slug being sent; absent ⇒ the per-model map cannot apply.
    */
@@ -154,7 +154,7 @@ export interface LlmReasoningOffEncodingForConfig {
  * @param config - The slug being sent, the per-model map, and the fallback.
  * @returns The encoding to send.
  */
-export function llmReasoningOffEncodingFor(config: LlmReasoningOffEncodingForConfig): LlmReasoningOffEncoding {
+export function resolveLlmReasoningOffEncoding(config: ResolveLlmReasoningOffEncodingConfig): LlmReasoningOffEncoding {
   const { model, byModel, fallback } = config;
   return (model == null ? undefined : byModel?.[model]) ?? fallback ?? DEFAULT_LLM_REASONING_OFF_ENCODING;
 }

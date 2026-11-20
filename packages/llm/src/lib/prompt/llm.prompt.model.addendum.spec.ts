@@ -1,28 +1,28 @@
 import { describe, expect, it } from 'vitest';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { composeLlmCapabilityPrompt } from './llm.prompt.assembly';
-import { llmPromptSupplementsOf, type LlmPromptContributorInput } from './llm.prompt.contributor';
+import { toLlmPromptSupplements, type LlmPromptContributorParams } from './llm.prompt.contributor';
 import { llmPromptCacheHash } from './llm.prompt.hash';
 import { DEFAULT_LLM_PROMPT_LAYOUT, type LlmPromptLayout } from './llm.prompt.layout';
 import { llmLiveContextHeadingBlock } from './llm.prompt.live.context';
-import { LLM_MODEL_ADDENDUM_REASON, llmModelAddendumContribution, llmModelAddendumPromptContributor, llmModelAddendumSegment, restampLlmModelAddendum } from './llm.prompt.model.addendum';
+import { LLM_MODEL_ADDENDUM_REASON, llmModelAddendumContribution, makeLlmModelAddendumPromptContributor, llmModelAddendumSegment, restampLlmModelAddendum } from './llm.prompt.model.addendum';
 import { type LlmPromptSegment } from './llm.prompt.segment';
-import { tieredLlmPromptTemplateResolver } from './llm.prompt.template';
+import { makeLlmTieredPromptTemplateResolver } from './llm.prompt.template';
 
 const ADDENDA = { 'm/x': 'ADDENDUM' };
 
 const request: LlmDispatchRequest = { capability: 'summarize', renderLiveContext: () => [llmLiveContextHeadingBlock()] };
 
-function inputOf(model?: string): LlmPromptContributorInput {
+function inputOf(model?: string): LlmPromptContributorParams {
   return { request, descriptor: undefined, templates: { roles: {}, byKey: () => undefined }, liveBlockKeys: ['heading'], ...(model == null ? {} : { model }) };
 }
 
 function compose(model?: string) {
-  return composeLlmCapabilityPrompt({ request, descriptorOf: () => undefined, templateResolver: tieredLlmPromptTemplateResolver({ tiers: [] }), contributors: [llmModelAddendumPromptContributor({ promptAddendumByModel: ADDENDA })], ...(model == null ? {} : { model }) });
+  return composeLlmCapabilityPrompt({ request, descriptorOf: () => undefined, templateResolver: makeLlmTieredPromptTemplateResolver({ tiers: [] }), contributors: [makeLlmModelAddendumPromptContributor({ promptAddendumByModel: ADDENDA })], ...(model == null ? {} : { model }) });
 }
 
-describe('llmModelAddendumPromptContributor()', () => {
-  const contributor = llmModelAddendumPromptContributor({ promptAddendumByModel: ADDENDA });
+describe('makeLlmModelAddendumPromptContributor()', () => {
+  const contributor = makeLlmModelAddendumPromptContributor({ promptAddendumByModel: ADDENDA });
 
   it('contributes nothing without a model', async () => {
     expect((await contributor.resolve(inputOf())).contributions).toEqual([]);
@@ -33,7 +33,7 @@ describe('llmModelAddendumPromptContributor()', () => {
   });
 
   it('contributes nothing without a map', async () => {
-    expect((await llmModelAddendumPromptContributor({ promptAddendumByModel: undefined }).resolve(inputOf('m/x'))).contributions).toEqual([]);
+    expect((await makeLlmModelAddendumPromptContributor({ promptAddendumByModel: undefined }).resolve(inputOf('m/x'))).contributions).toEqual([]);
   });
 
   it("contributes the named model's addendum", async () => {
@@ -43,14 +43,14 @@ describe('llmModelAddendumPromptContributor()', () => {
   });
 
   it('occupies a configured slot', async () => {
-    const custom = llmModelAddendumPromptContributor({ promptAddendumByModel: ADDENDA, slot: 'addendum' });
+    const custom = makeLlmModelAddendumPromptContributor({ promptAddendumByModel: ADDENDA, slot: 'addendum' });
     const { contributions } = await custom.resolve(inputOf('m/x'));
     expect(custom.slots).toEqual(['addendum']);
     expect(contributions[0]).toMatchObject({ slot: 'addendum', id: 'addendum' });
   });
 });
 
-describe('llmModelAddendumPromptContributor(); through composeLlmCapabilityPrompt', () => {
+describe('makeLlmModelAddendumPromptContributor(); through composeLlmCapabilityPrompt', () => {
   it('leads the prompt with the one mint', async () => {
     const composed = await compose('m/x');
     expect(composed.prompt.startsWith('ADDENDUM\n\n')).toBe(true);
@@ -59,7 +59,7 @@ describe('llmModelAddendumPromptContributor(); through composeLlmCapabilityPromp
 
   it('records the supplement row', async () => {
     const composed = await compose('m/x');
-    expect(llmPromptSupplementsOf(composed.contributions, composed.cut)).toEqual([{ contributor: 'model-addendum', slot: 'model-addendum', id: 'model-addendum', key: 'm/x', hash: llmPromptCacheHash('ADDENDUM'), bytes: 8 }]);
+    expect(toLlmPromptSupplements(composed.contributions, composed.cut)).toEqual([{ contributor: 'model-addendum', slot: 'model-addendum', id: 'model-addendum', key: 'm/x', hash: llmPromptCacheHash('ADDENDUM'), bytes: 8 }]);
   });
 
   it('places no addendum segment without a model', async () => {

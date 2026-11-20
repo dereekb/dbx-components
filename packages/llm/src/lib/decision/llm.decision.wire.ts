@@ -1,6 +1,6 @@
 import { type Maybe, mapObjectMap } from '@dereekb/util';
 import { type LlmModelId } from '../model/llm.value';
-import { llmUsageFrom, type LlmUsage, type LlmUsageFromOptions } from '../strategy/llm.usage';
+import { toLlmUsage, type LlmUsage, type LlmUsageFromOptions } from '../strategy/llm.usage';
 import { type LlmDecisionModelId } from './llm.decision.model';
 import { type LlmDecisionEntry, type LlmDecisionQuestion, type LlmDecisionQuestionId, type LlmDecisionState, llmDecisionChoiceOptionNames } from './llm.decision.question';
 import { type LlmDecisionRequest } from './llm.decision.strategy';
@@ -118,7 +118,7 @@ export interface LlmDecisionWireUsage {
    */
   readonly output_tokens?: Maybe<number>;
   /**
-   * The gateway's synchronous cost in USD. A numeric string is tolerated, as {@link llmUsageFrom} tolerates it.
+   * The gateway's synchronous cost in USD. A numeric string is tolerated, as {@link toLlmUsage} tolerates it.
    */
   readonly cost?: Maybe<number | string>;
 }
@@ -158,7 +158,7 @@ export interface LlmDecisionWireReply {
  *
  * @param usage - The reply's usage block.
  * @param options - What the transport knows about its gateway's cost figure (`{ costBasis }`), passed straight to
- *   {@link llmUsageFrom}.
+ *   {@link toLlmUsage}.
  * @returns The usage, or `undefined` when the reply carried none.
  *
  * @example
@@ -175,7 +175,7 @@ export function llmUsageFromDecisionUsage(usage: Maybe<LlmDecisionWireUsage>, op
 
   return usage == null
     ? undefined
-    : llmUsageFrom(
+    : toLlmUsage(
         {
           prompt_tokens: inputTokens,
           completion_tokens: outputTokens,

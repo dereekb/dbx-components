@@ -145,17 +145,17 @@ export interface LlmModelConfigBaseTypes extends LlmModelConfigTypes {
  * optional on disk by nature (a host never owns every provider entry), and a library-built entry (an env default)
  * carries none of them.
  */
-export type LlmCompletionProviderEntryOf<X extends LlmModelConfigTypes> = LlmCompletionProviderEntry & Partial<X['providerFields']>;
+export type LlmExtendedCompletionProviderEntry<X extends LlmModelConfigTypes> = LlmCompletionProviderEntry & Partial<X['providerFields']>;
 
 /**
- * A per-slug `models` entry with the extension's model fields (`Partial`, as for {@link LlmCompletionProviderEntryOf}).
+ * A per-slug `models` entry with the extension's model fields (`Partial`, as for {@link LlmExtendedCompletionProviderEntry}).
  */
-export type LlmModelSettingsOf<X extends LlmModelConfigTypes> = LlmModelSettings & Partial<X['modelFields']>;
+export type LlmExtendedModelSettings<X extends LlmModelConfigTypes> = LlmModelSettings & Partial<X['modelFields']>;
 
 /**
  * The completion `providers`, keyed by provider name.
  */
-export type LlmCompletionProviderEntryMap<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes> = Readonly<Record<LlmStrategyId, LlmCompletionProviderEntryOf<X>>>;
+export type LlmCompletionProviderEntryMap<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes> = Readonly<Record<LlmStrategyId, LlmExtendedCompletionProviderEntry<X>>>;
 
 /**
  * The entries of the transports the extension owns, keyed by provider name.
@@ -170,12 +170,12 @@ export type LlmProviderPatchMap<X extends LlmModelConfigTypes = LlmModelConfigBa
 /**
  * The `models` block, keyed by model slug.
  */
-export type LlmModelSettingsMap<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes> = LlmModelSlugMap<LlmModelSettingsOf<X>>;
+export type LlmModelSettingsMap<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes> = LlmModelSlugMap<LlmExtendedModelSettings<X>>;
 
 /**
  * One parsed `providers` entry, tagged with its kind so a caller routes it without re-checking the transport.
  */
-export type LlmParsedProviderEntry<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes> = { readonly kind: 'completion'; readonly entry: LlmCompletionProviderEntryOf<X> } | { readonly kind: 'extension'; readonly entry: X['extensionProviderEntry'] };
+export type LlmParsedProviderEntry<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes> = { readonly kind: 'completion'; readonly entry: LlmExtendedCompletionProviderEntry<X> } | { readonly kind: 'extension'; readonly entry: X['extensionProviderEntry'] };
 
 /**
  * The parsed shape of a model config file.
@@ -235,7 +235,7 @@ export interface LlmModelConfigFileJson<X extends LlmModelConfigTypes = LlmModel
   readonly $schema?: unknown;
   readonly notes?: unknown;
   readonly active?: string;
-  readonly providers?: Readonly<Record<LlmStrategyId, LlmCompletionProviderEntryOf<X> | X['extensionProviderEntry'] | Partial<X['providerFields']>>>;
+  readonly providers?: Readonly<Record<LlmStrategyId, LlmExtendedCompletionProviderEntry<X> | X['extensionProviderEntry'] | Partial<X['providerFields']>>>;
   readonly profiles?: Readonly<Record<string, Readonly<Record<LlmModelTierKey, Maybe<LlmModelTierValue>>>>>;
   readonly models?: LlmModelSettingsMap<X>;
 }
@@ -265,7 +265,7 @@ export interface LlmModelConfigSchemaRetiredKeys {
 /**
  * What an extension parser receives.
  */
-export interface LlmModelConfigExtensionInput {
+export interface LlmModelConfigExtensionParams {
   /**
    * The schema label; prefix every message with `${schemaLabel}: `.
    */
@@ -283,7 +283,7 @@ export interface LlmModelConfigExtensionInput {
 /**
  * What {@link LlmModelConfigExtension.parseProviderEntry} receives for an entry of a transport the extension owns.
  */
-export interface LlmModelConfigExtensionEntryInput<F extends object = object> extends LlmModelConfigExtensionInput {
+export interface LlmModelConfigExtensionEntryParams<F extends object = object> extends LlmModelConfigExtensionParams {
   /**
    * The entry's transport (one of the extension's).
    */
@@ -319,7 +319,7 @@ export interface LlmModelConfigExtension<X extends LlmModelConfigTypes = LlmMode
   /**
    * Parses the extra provider keys of any entry. Required with {@link providerKeys}.
    */
-  readonly parseProviderFields?: Maybe<(input: LlmModelConfigExtensionInput) => Partial<X['providerFields']>>;
+  readonly parseProviderFields?: Maybe<(input: LlmModelConfigExtensionParams) => Partial<X['providerFields']>>;
   /**
    * Transports the extension owns: their entries serve no completions.
    */
@@ -327,7 +327,7 @@ export interface LlmModelConfigExtension<X extends LlmModelConfigTypes = LlmMode
   /**
    * Parses an entry of an owned transport, whole. Required with {@link providerTransports}.
    */
-  readonly parseProviderEntry?: Maybe<(input: LlmModelConfigExtensionEntryInput<X['providerFields']>) => X['extensionProviderEntry']>;
+  readonly parseProviderEntry?: Maybe<(input: LlmModelConfigExtensionEntryParams<X['providerFields']>) => X['extensionProviderEntry']>;
   /**
    * Whether a slug may bind an owned-transport entry (e.g. as an entitlement read by a non-completion surface).
    * Absent ⇒ never.
@@ -336,7 +336,7 @@ export interface LlmModelConfigExtension<X extends LlmModelConfigTypes = LlmMode
   /**
    * Parses a patch entry. Absent ⇒ an identity-less entry parses as an ordinary entry (and fails on `apiKeyEnv`).
    */
-  readonly parseProviderPatch?: Maybe<(input: LlmModelConfigExtensionInput) => Partial<X['providerFields']>>;
+  readonly parseProviderPatch?: Maybe<(input: LlmModelConfigExtensionParams) => Partial<X['providerFields']>>;
   /**
    * What a patch's keys are called in messages (`media route` ⇒ "carries only media route keys"). Default `patch`.
    */
@@ -352,7 +352,7 @@ export interface LlmModelConfigExtension<X extends LlmModelConfigTypes = LlmMode
   /**
    * Parses the extra model keys. Required with {@link modelKeys}.
    */
-  readonly parseModelFields?: Maybe<(input: LlmModelConfigExtensionInput) => Partial<X['modelFields']>>;
+  readonly parseModelFields?: Maybe<(input: LlmModelConfigExtensionParams) => Partial<X['modelFields']>>;
 }
 
 /**

@@ -4,8 +4,8 @@
  * request to the answers it should produce: a spec asserts the WHOLE billed surface (the state assembled, the questions
  * declared, the answers read back) with no key, no network and no spend.
  *
- * Build the script's answers with the root builders (`llmDecisionChoiceAnswerOf`, `llmDecisionScoreAnswerOf`,
- * `llmDecisionNoulAnswerOf` from `@dereekb/llm`), which are well-formed by construction.
+ * Build the script's answers with the root builders (`makeLlmDecisionChoiceAnswer`, `makeLlmDecisionScoreAnswer`,
+ * `makeLlmDecisionNoulAnswer` from `@dereekb/llm`), which are well-formed by construction.
  *
  * @see LlmDecisionStrategy (the seam these answers must satisfy).
  */
@@ -17,7 +17,7 @@ import { type LlmDecisionQuestions, type LlmDecisionRequest, type LlmDecisionRes
  * The default instance id AND the kind a scripted decision backend declares, so a run artifact can never mistake a
  * replayed decision for a billed one.
  */
-export const SCRIPTED_LLM_DECISION_STRATEGY_ID: LlmStrategyId = 'scripted-decision';
+export const LLM_SCRIPTED_DECISION_STRATEGY_ID: LlmStrategyId = 'scripted-decision';
 
 /**
  * What a scripted backend answers one request with — the whole answer map, keyed the way the request declared its
@@ -26,19 +26,19 @@ export const SCRIPTED_LLM_DECISION_STRATEGY_ID: LlmStrategyId = 'scripted-decisi
  * @param request - The decision request.
  * @returns The raw answers, read through `requireLlmDecisionAnswers` exactly as a live reply would be.
  */
-export type ScriptedLlmDecisionScript = <Q extends LlmDecisionQuestions>(request: LlmDecisionRequest<Q>) => Readonly<Record<string, unknown>>;
+export type LlmScriptedDecisionScript = <Q extends LlmDecisionQuestions>(request: LlmDecisionRequest<Q>) => Readonly<Record<string, unknown>>;
 
 /**
- * Config for {@link makeScriptedLlmDecisionStrategy}.
+ * Config for {@link makeLlmScriptedDecisionStrategy}.
  */
-export interface ScriptedLlmDecisionStrategyConfig {
+export interface LlmScriptedDecisionStrategyConfig {
   /**
    * Answer one request. Every declared question must be answered, or the strategy refuses the reply exactly as a live
    * transport would — a spec cannot accidentally assert against a half-read answer set.
    */
-  readonly script: ScriptedLlmDecisionScript;
+  readonly script: LlmScriptedDecisionScript;
   /**
-   * The INSTANCE id; absent ⇒ {@link SCRIPTED_LLM_DECISION_STRATEGY_ID}.
+   * The INSTANCE id; absent ⇒ {@link LLM_SCRIPTED_DECISION_STRATEGY_ID}.
    */
   readonly id?: Maybe<LlmStrategyId>;
   /**
@@ -57,10 +57,10 @@ export interface ScriptedLlmDecisionStrategyConfig {
  *
  * @example
  * ```ts
- * const strategy = makeScriptedLlmDecisionStrategy({ script: () => ({ pick: llmDecisionChoiceAnswerOf({ options: ['a', 'b'], choice: 'b' }) }) });
+ * const strategy = makeLlmScriptedDecisionStrategy({ script: () => ({ pick: makeLlmDecisionChoiceAnswer({ options: ['a', 'b'], choice: 'b' }) }) });
  * ```
  */
-export function makeScriptedLlmDecisionStrategy(config: ScriptedLlmDecisionStrategyConfig): LlmDecisionStrategy {
+export function makeLlmScriptedDecisionStrategy(config: LlmScriptedDecisionStrategyConfig): LlmDecisionStrategy {
   const decide = async <Q extends LlmDecisionQuestions>(request: LlmDecisionRequest<Q>): Promise<LlmDecisionResult<Q>> => {
     config.requests?.push(request as LlmDecisionRequest);
 
@@ -73,8 +73,8 @@ export function makeScriptedLlmDecisionStrategy(config: ScriptedLlmDecisionStrat
   };
 
   return {
-    id: config.id ?? SCRIPTED_LLM_DECISION_STRATEGY_ID,
-    kind: SCRIPTED_LLM_DECISION_STRATEGY_ID,
+    id: config.id ?? LLM_SCRIPTED_DECISION_STRATEGY_ID,
+    kind: LLM_SCRIPTED_DECISION_STRATEGY_ID,
     describe: 'a scripted decision backend: replayed answers, never billed',
     decide
   };

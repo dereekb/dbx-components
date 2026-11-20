@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { type LlmRequest } from '@dereekb/llm';
-import { hashLlmTapePrompt, isLlmTapeStrategyError, LLM_TAPE_STRATEGY_ID, LlmTapeStrategyError, type LlmTapeTurn, llmTapeTurnOf, makeLlmTapeStrategy } from './llm.test.tape';
+import { hashLlmTapePrompt, isLlmTapeStrategyError, LLM_TAPE_STRATEGY_ID, LlmTapeStrategyError, type LlmTapeTurn, readLlmTapeTurn, makeLlmTapeStrategy } from './llm.test.tape';
 
 /**
  * Build a request for a capability + prompt (the two halves of the tape match key).
@@ -192,13 +192,13 @@ describe('makeLlmTapeStrategy()', () => {
   });
 });
 
-describe('llmTapeTurnOf()', () => {
+describe('readLlmTapeTurn()', () => {
   const KINDS: ReadonlySet<string> = new Set(['vendor-decisions']);
   const USAGE = { promptTokens: 120, completionTokens: 8, totalTokens: 128, cost: 0.0004 };
   const FLAT = { capability: 'summarize', prompt: 'PROMPT ONE', text: 'It washes clean.', model: 'vendor/model-flash', usage: USAGE, finishReason: 'stop' };
 
   it('should turn an I/O-carrying flat payload into a turn, keys in order', () => {
-    const turn = llmTapeTurnOf(FLAT);
+    const turn = readLlmTapeTurn(FLAT);
 
     expect(turn).toEqual({ capability: 'summarize', promptSha: hashLlmTapePrompt('PROMPT ONE'), text: 'It washes clean.', model: 'vendor/model-flash', usage: USAGE, finishReason: 'stop' });
     expect(Object.keys(turn ?? {})).toEqual(['capability', 'promptSha', 'text', 'model', 'usage', 'finishReason']);
@@ -209,28 +209,28 @@ describe('llmTapeTurnOf()', () => {
       { id: 'instructions', promptSegment: 'B-CAP\n\n', origin: { kind: 'template' } },
       { id: 'live', promptSegment: 'LIVE-D', origin: { kind: 'generated' } }
     ];
-    const turn = llmTapeTurnOf({ capability: 'summarize', promptSegments, text: 'reply' });
+    const turn = readLlmTapeTurn({ capability: 'summarize', promptSegments, text: 'reply' });
 
     expect(turn?.promptSha).toBe(hashLlmTapePrompt('B-CAP\n\nLIVE-D'));
     expect(Object.keys(turn ?? {})).toEqual(['capability', 'promptSha', 'text']);
   });
 
   it('should not turn a capture-off row, a non-string text or a non-object into a turn', () => {
-    expect(llmTapeTurnOf({ capability: 'summarize', model: 'vendor/model-flash', usage: USAGE })).toBeUndefined();
-    expect(llmTapeTurnOf({ ...FLAT, text: 42 })).toBeUndefined();
-    expect(llmTapeTurnOf(undefined)).toBeUndefined();
-    expect(llmTapeTurnOf('PROMPT ONE')).toBeUndefined();
+    expect(readLlmTapeTurn({ capability: 'summarize', model: 'vendor/model-flash', usage: USAGE })).toBeUndefined();
+    expect(readLlmTapeTurn({ ...FLAT, text: 42 })).toBeUndefined();
+    expect(readLlmTapeTurn(undefined)).toBeUndefined();
+    expect(readLlmTapeTurn('PROMPT ONE')).toBeUndefined();
   });
 
   it('should skip decision rows', () => {
-    expect(llmTapeTurnOf({ ...FLAT, strategyKind: 'vendor-decisions' }, { decisionStrategyKinds: KINDS })).toBeUndefined();
-    expect(llmTapeTurnOf({ ...FLAT, strategyId: 'vendor-decisions' }, { decisionStrategyKinds: KINDS })).toBeUndefined();
-    expect(llmTapeTurnOf({ ...FLAT, decision: 'pick-route' })).toBeUndefined();
-    expect(llmTapeTurnOf({ ...FLAT, strategyKind: 'vendor' }, { decisionStrategyKinds: KINDS })).toBeDefined();
+    expect(readLlmTapeTurn({ ...FLAT, strategyKind: 'vendor-decisions' }, { decisionStrategyKinds: KINDS })).toBeUndefined();
+    expect(readLlmTapeTurn({ ...FLAT, strategyId: 'vendor-decisions' }, { decisionStrategyKinds: KINDS })).toBeUndefined();
+    expect(readLlmTapeTurn({ ...FLAT, decision: 'pick-route' })).toBeUndefined();
+    expect(readLlmTapeTurn({ ...FLAT, strategyKind: 'vendor' }, { decisionStrategyKinds: KINDS })).toBeDefined();
   });
 
   it('should round-trip through the tape strategy as a hash match', async () => {
-    const turn = llmTapeTurnOf(FLAT) as LlmTapeTurn;
+    const turn = readLlmTapeTurn(FLAT) as LlmTapeTurn;
     const strategy = makeLlmTapeStrategy({ turns: [turn] });
     const result = await strategy.complete(requestOf('summarize', 'PROMPT ONE'));
 
@@ -240,7 +240,7 @@ describe('llmTapeTurnOf()', () => {
 
   it('should round-trip with a custom hash passed to both sides', async () => {
     const hash = (text: string) => `len-${text.length}`;
-    const turn = llmTapeTurnOf(FLAT, { hash }) as LlmTapeTurn;
+    const turn = readLlmTapeTurn(FLAT, { hash }) as LlmTapeTurn;
     const strategy = makeLlmTapeStrategy({ turns: [turn], hash });
     const result = await strategy.complete(requestOf('summarize', 'PROMPT ONE'));
 

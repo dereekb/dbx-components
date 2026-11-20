@@ -172,7 +172,7 @@ export function makeLlmCraftSiteRegistry(config: LlmCraftSiteRegistryConfig): Ll
  * @param fact - The fact name.
  * @returns Its shape, or `undefined` when the site carries no such fact.
  */
-export function llmCraftSiteFactShapeOf(site: LlmCraftSite, fact: string): Maybe<LlmCraftSiteFactShape> {
+export function readLlmCraftSiteFactShape(site: LlmCraftSite, fact: string): Maybe<LlmCraftSiteFactShape> {
   return Object.hasOwn(site.facts, fact) ? site.facts[fact] : undefined;
 }
 
@@ -185,7 +185,7 @@ export function llmCraftSiteFactShapeOf(site: LlmCraftSite, fact: string): Maybe
  * @param sites - The resolved sites whose inputs count.
  * @returns The named inputs.
  */
-export function llmCraftAskInputsOf(ask: string, sites: ReadonlyArray<LlmCraftSite>): ReadonlyArray<string> {
+export function readLlmCraftAskInputs(ask: string, sites: ReadonlyArray<LlmCraftSite>): ReadonlyArray<string> {
   const known = new Set(sites.flatMap((site) => site.inputs));
   const named: string[] = [];
 
@@ -204,7 +204,7 @@ export function llmCraftAskInputsOf(ask: string, sites: ReadonlyArray<LlmCraftSi
  * The host's closed vocabulary of one fact at one site kind — the values a site of that kind can carry, or nothing
  * for an open, boolean or unknown fact (never checked).
  */
-export type LlmCraftSiteFactValuesOf = (kind: LlmCraftSiteKind, fact: string) => Maybe<ReadonlyArray<string>>;
+export type LlmCraftSiteFactValuesReader = (kind: LlmCraftSiteKind, fact: string) => Maybe<ReadonlyArray<string>>;
 
 /**
  * One `where` value a note names that no site it targets can produce.
@@ -229,7 +229,7 @@ export interface LlmCraftNoteUnknownWhereValuesConfig {
   /**
    * The host's closed vocabularies.
    */
-  readonly valuesOf: LlmCraftSiteFactValuesOf;
+  readonly valuesOf: LlmCraftSiteFactValuesReader;
 }
 
 /**

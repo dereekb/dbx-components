@@ -198,7 +198,7 @@ export function formatLlmCallAttempts(event: LlmCallLogEvent, config?: Maybe<For
  *
  * Unlike `isUncacheableLlmCall`, which reads `strategyKind` only, the lane here falls back to `strategyId`.
  *
- * Build `decisionStrategyKinds` once with `llmDecisionStrategyKinds(adapters)`. It can be omitted when every row came
+ * Build `decisionStrategyKinds` once with `readLlmDecisionStrategyKinds(adapters)`. It can be omitted when every row came
  * from this library's dispatcher, because its decision lane stamps `decision` on every row; the set only matters for
  * rows written before a host recorded decision ids.
  *
@@ -208,7 +208,7 @@ export function formatLlmCallAttempts(event: LlmCallLogEvent, config?: Maybe<For
  *
  * @example
  * ```ts
- * const kinds = llmDecisionStrategyKinds(adapters);
+ * const kinds = readLlmDecisionStrategyKinds(adapters);
  * const completions = rows.filter((row) => !isDecisionLlmCallRow(row, kinds));
  * ```
  */

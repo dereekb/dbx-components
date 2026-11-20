@@ -9,7 +9,7 @@
  */
 
 import { compareStringsByCodeUnit, type DollarAmount, type Maybe } from '@dereekb/util';
-import { llmCostOf, type LlmUsage } from '../strategy/llm.usage';
+import { readLlmCost, type LlmUsage } from '../strategy/llm.usage';
 
 /**
  * One aggregated usage cell — the calls / tokens / cost summed over some (model, capability, …) slice.
@@ -36,7 +36,7 @@ export interface LlmUsageCell {
   /**
    * Summed prompt tokens of calls on a lane with NO prompt cache (the decision lane, `isUncacheableLlmCall`) — a
    * subset of {@link promptTokens}, exactly as {@link cachedTokens} is. They stay in every spend figure but leave every
-   * cache-hit DENOMINATOR (`llmCacheablePromptTokensOf`): a decision call's `0` cached is "not applicable", not a miss.
+   * cache-hit DENOMINATOR (`computeLlmCacheablePromptTokens`): a decision call's `0` cached is "not applicable", not a miss.
    * OMITTED when 0, so a cell with no decision calls (and every persisted cell from before the field existed)
    * serializes byte-identically; read it with `?? 0`.
    */
@@ -97,7 +97,7 @@ export function emptyLlmUsageCell(): LlmUsageCell {
  *
  * @example
  * ```ts
- * const total = addLlmUsageCells(emptyLlmUsageCell(), llmUsageCellOf({ promptTokens: 100, completionTokens: 20 }));
+ * const total = addLlmUsageCells(emptyLlmUsageCell(), toLlmUsageCell({ promptTokens: 100, completionTokens: 20 }));
  * ```
  */
 export function addLlmUsageCells(a: LlmUsageCell, b: LlmUsageCell): LlmUsageCell {
@@ -116,7 +116,7 @@ export function addLlmUsageCells(a: LlmUsageCell, b: LlmUsageCell): LlmUsageCell
 /**
  * The cell contribution of one call's usage (a call always counts as one, tokens/cost when present).
  *
- * The cost is read through {@link llmCostOf} because the usage comes out of a LOGGED row: a row written before the
+ * The cost is read through {@link readLlmCost} because the usage comes out of a LOGGED row: a row written before the
  * entry-side coercion can hold a gateway's string cost, which a plain `+` would concatenate.
  *
  * @param usage - The call's usage block (absent on an injected seam).
@@ -126,12 +126,12 @@ export function addLlmUsageCells(a: LlmUsageCell, b: LlmUsageCell): LlmUsageCell
  *
  * @example
  * ```ts
- * const cell = llmUsageCellOf(payload.usage, isUncacheableLlmCall(payload, decisionStrategyKinds));
+ * const cell = toLlmUsageCell(payload.usage, isUncacheableLlmCall(payload, decisionStrategyKinds));
  * ```
  */
-export function llmUsageCellOf(usage: Maybe<LlmUsage>, uncacheable = false): LlmUsageCell {
+export function toLlmUsageCell(usage: Maybe<LlmUsage>, uncacheable = false): LlmUsageCell {
   const promptTokens = usage?.promptTokens ?? 0;
-  return { calls: 1, promptTokens, completionTokens: usage?.completionTokens ?? 0, cachedTokens: usage?.cachedTokens ?? 0, ...(uncacheable && promptTokens > 0 ? { uncacheablePromptTokens: promptTokens } : {}), reasoningTokens: usage?.reasoningTokens ?? 0, cost: llmCostOf(usage?.cost) ?? 0 };
+  return { calls: 1, promptTokens, completionTokens: usage?.completionTokens ?? 0, cachedTokens: usage?.cachedTokens ?? 0, ...(uncacheable && promptTokens > 0 ? { uncacheablePromptTokens: promptTokens } : {}), reasoningTokens: usage?.reasoningTokens ?? 0, cost: readLlmCost(usage?.cost) ?? 0 };
 }
 
 /**
@@ -144,7 +144,7 @@ export function llmUsageCellOf(usage: Maybe<LlmUsage>, uncacheable = false): Llm
  * @example
  * ```ts
  * const byModel = new Map<string, LlmUsageCell>();
- * accumulateLlmUsageCell(byModel, payload.model ?? '(unknown model)', llmUsageCellOf(payload.usage));
+ * accumulateLlmUsageCell(byModel, payload.model ?? '(unknown model)', toLlmUsageCell(payload.usage));
  * ```
  */
 export function accumulateLlmUsageCell<K extends string>(map: Map<K, LlmUsageCell>, key: K, cell: LlmUsageCell): void {
@@ -160,10 +160,10 @@ export function accumulateLlmUsageCell<K extends string>(map: Map<K, LlmUsageCel
  *
  * @example
  * ```ts
- * const rows = llmKeyedUsageCellsOf(byModel); // [{ key: 'vendor-a/model-small', cell }, …]
+ * const rows = toLlmKeyedUsageCells(byModel); // [{ key: 'vendor-a/model-small', cell }, …]
  * ```
  */
-export function llmKeyedUsageCellsOf<K extends string>(map: ReadonlyMap<K, LlmUsageCell>): ReadonlyArray<LlmKeyedUsageCell<K>> {
+export function toLlmKeyedUsageCells<K extends string>(map: ReadonlyMap<K, LlmUsageCell>): ReadonlyArray<LlmKeyedUsageCell<K>> {
   return Array.from(map.entries())
     .map(([key, cell]) => ({ key, cell }))
     .sort((a, b) => compareStringsByCodeUnit(a.key, b.key));

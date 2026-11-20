@@ -22,7 +22,7 @@
  *
  * The two COST fields are also where a wire type lies: some OpenAI-compatible gateways send `usage.cost` as a numeric
  * STRING (`"cost":"0.00065716"`). Passed through, every downstream `total + cost` concatenates instead of adding and
- * the first `cost.toFixed` throws. So both cost fields go through {@link llmCostOf} here, at the point they enter,
+ * the first `cost.toFixed` throws. So both cost fields go through {@link readLlmCost} here, at the point they enter,
  * and anything that is not a finite number stays ABSENT under the same rule as above.
  *
  * Absence is spelt `| undefined`, not `Maybe`: one spelling keeps a conditional spread of the result byte-stable.
@@ -133,7 +133,7 @@ export interface RawLlmUsage {
   readonly prompt_tokens_details?: Maybe<{ readonly cached_tokens?: Maybe<number>; readonly cache_write_tokens?: Maybe<number>; readonly image_tokens?: Maybe<number> }>;
   readonly completion_tokens_details?: Maybe<{ readonly reasoning_tokens?: Maybe<number> }>;
   /**
-   * A number on a well-behaved gateway; a numeric string on some OpenAI-compatible ones — {@link llmCostOf} folds
+   * A number on a well-behaved gateway; a numeric string on some OpenAI-compatible ones — {@link readLlmCost} folds
    * both.
    */
   readonly cost?: Maybe<number | string>;
@@ -154,7 +154,7 @@ export interface RawLlmUsage {
  * @param value - The raw cost value off the wire or out of a logged record.
  * @returns The cost as a finite number, or `undefined` when it is missing or not a number.
  */
-export function llmCostOf(value: unknown): DollarAmount | undefined {
+export function readLlmCost(value: unknown): DollarAmount | undefined {
   let cost: DollarAmount | undefined;
 
   if (typeof value === 'number') {
@@ -168,7 +168,7 @@ export function llmCostOf(value: unknown): DollarAmount | undefined {
 }
 
 /**
- * The options {@link llmUsageFrom} reads beside the raw block — what the TRANSPORT knows about its provider that the
+ * The options {@link toLlmUsage} reads beside the raw block — what the TRANSPORT knows about its provider that the
  * wire does not say.
  */
 export interface LlmUsageFromOptions {
@@ -188,14 +188,14 @@ export interface LlmUsageFromOptions {
  *   never accounted", which is not the same as a call that cost zero. Never `null`: the absence is spelt ONE way so a
  *   conditional spread of it stays byte-stable.
  */
-export function llmUsageFrom(raw: Maybe<RawLlmUsage>, options?: LlmUsageFromOptions): LlmUsage | undefined {
+export function toLlmUsage(raw: Maybe<RawLlmUsage>, options?: LlmUsageFromOptions): LlmUsage | undefined {
   const cachedTokens = raw?.prompt_tokens_details?.cached_tokens;
   const cacheWriteTokens = raw?.prompt_tokens_details?.cache_write_tokens;
   const reasoningTokens = raw?.completion_tokens_details?.reasoning_tokens;
   const imageTokens = raw?.prompt_tokens_details?.image_tokens;
-  const cost = llmCostOf(raw?.cost);
+  const cost = readLlmCost(raw?.cost);
   const costBasis = cost == null ? undefined : (options?.costBasis ?? undefined);
-  const upstreamInferenceCost = llmCostOf(raw?.cost_details?.upstream_inference_cost);
+  const upstreamInferenceCost = readLlmCost(raw?.cost_details?.upstream_inference_cost);
 
   return raw == null
     ? undefined

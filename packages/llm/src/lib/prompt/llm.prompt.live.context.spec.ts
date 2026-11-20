@@ -8,7 +8,7 @@ import {
   LLM_CHAINED_FOLLOW_UP_UNCHANGED_ROWS_LEAD,
   LLM_LIVE_CONTEXT_HEADING,
   llmChainedFollowUpBody,
-  llmFactRowOf,
+  formatLlmFactRow,
   llmLiveContextBlock,
   llmLiveContextHeadingBlock,
   type LlmLiveContextBlock,
@@ -175,10 +175,10 @@ describe('llmLiveContextHeadingBlock()', () => {
   });
 });
 
-describe('llmFactRowOf()', () => {
+describe('formatLlmFactRow()', () => {
   it('should keep 0 and drop empty and nullish values', () => {
     expect(
-      llmFactRowOf([
+      formatLlmFactRow([
         ['a', 'x'],
         ['b', 0],
         ['c', ''],

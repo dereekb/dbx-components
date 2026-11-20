@@ -11,13 +11,13 @@
  *
  * Reporting a gap rather than throwing keeps a missing key inert instead of failing a config read that runs on every
  * boot; a host makes the gap loud where loudness belongs (a readiness check, a startup line), scoped to the slugs the
- * run can reach with {@link llmReachableProviderGapsOf}.
+ * run can reach with {@link filterLlmReachableProviderGaps}.
  */
 
 import { concatArraysUnique, type Maybe } from '@dereekb/util';
 import {
   isLlmTokenLimitParam,
-  llmAdapterOf,
+  findLlmAdapter,
   type LlmAdapterRegistry,
   type LlmModelConfigBaseTypes,
   type LlmModelConfigFile,
@@ -28,11 +28,11 @@ import {
   type LlmModelRoutingConfig,
   type LlmPartialModelTierMap,
   type LlmProviderConfigGap,
-  type LlmProviderConfigOf,
+  type LlmExtendedProviderConfig,
   type LlmProviderStrategyOptions,
   type LlmStrategyId,
   type LlmStrategyRegistry,
-  llmTierModelOf,
+  readLlmTierModel,
   makeLlmProviderStrategies,
   makeLlmStrategyRegistry,
   parseLlmReasoningOffEncoding,
@@ -81,10 +81,10 @@ export interface LlmProvidersFromEnv<X extends LlmModelConfigTypes = LlmModelCon
    * The keyed providers, in resolution order: the non-fallback env defaults, the declared providers in declaration
    * order, then the fallback env defaults.
    */
-  readonly providers: ReadonlyArray<LlmProviderConfigOf<X>>;
+  readonly providers: ReadonlyArray<LlmExtendedProviderConfig<X>>;
   /**
    * EVERY declared completion provider with no key, in declaration order. Unscoped: scope them to the slugs a run can
-   * reach with {@link llmReachableProviderGapsOf}.
+   * reach with {@link filterLlmReachableProviderGaps}.
    */
   readonly gaps: ReadonlyArray<LlmProviderConfigGap>;
   /**
@@ -100,7 +100,7 @@ export interface LlmProvidersFromEnv<X extends LlmModelConfigTypes = LlmModelCon
    * The keyed provider a single-provider caller (a test lane, a probe) uses: the default when it is keyed, else the
    * first keyed provider.
    */
-  readonly defaultProvider?: LlmProviderConfigOf<X>;
+  readonly defaultProvider?: LlmExtendedProviderConfig<X>;
 }
 
 /**
@@ -128,15 +128,15 @@ export function resolveLlmProvidersFromEnv<X extends LlmModelConfigTypes = LlmMo
   const names = config.names ?? DEFAULT_LLM_ENV_NAMES;
   const keyOf = (keyNames: LlmEnvVarNames): Maybe<LlmEnvEntry> => firstLlmEnvEntry({ env, names: keyNames }) ?? (fallbackKeys == null ? undefined : firstLlmEnvEntry({ env: fallbackKeys, names: keyNames }));
 
-  const envDefaults = names.providers.filter((provider) => llmAdapterOf({ adapters, facet: 'completion', kind: provider.transport ?? provider.id }) != null);
+  const envDefaults = names.providers.filter((provider) => findLlmAdapter({ adapters, facet: 'completion', kind: provider.transport ?? provider.id }) != null);
   const envDefaultIds = new Set(envDefaults.map((provider) => provider.id));
   const declaredIds = new Set(Object.keys(file?.providers ?? {}));
   const declared = resolveLlmProviderConfigs({ providers: file?.providers, apiKeyOf: ({ entry }) => keyOf([entry.apiKeyEnv])?.value });
   // An env default carries none of the extension's provider fields — stated by spreading an empty `Partial` of them.
   const noExtensionFields: Partial<X['providerFields']> = {};
 
-  const slotOf = (provider: LlmEnvProviderNames): Maybe<LlmProviderConfigOf<X>> => {
-    let slot: Maybe<LlmProviderConfigOf<X>>;
+  const slotOf = (provider: LlmEnvProviderNames): Maybe<LlmExtendedProviderConfig<X>> => {
+    let slot: Maybe<LlmExtendedProviderConfig<X>>;
 
     if (declaredIds.has(provider.id)) {
       slot = declared.providers.find((candidate) => candidate.id === provider.id);
@@ -166,7 +166,7 @@ export function resolveLlmProvidersFromEnv<X extends LlmModelConfigTypes = LlmMo
     return slot;
   };
 
-  const slotsOf = (fallback: boolean): LlmProviderConfigOf<X>[] => envDefaults.filter((provider) => (provider.fallback === true) === fallback).flatMap((provider) => slotOf(provider) ?? []);
+  const slotsOf = (fallback: boolean): LlmExtendedProviderConfig<X>[] => envDefaults.filter((provider) => (provider.fallback === true) === fallback).flatMap((provider) => slotOf(provider) ?? []);
   const primarySlots = slotsOf(false);
   const fallbackSlots = slotsOf(true);
   const declaredRest = declared.providers.filter((provider) => !envDefaultIds.has(provider.id));
@@ -238,9 +238,9 @@ export function makeLlmStrategiesFromEnv<X extends LlmModelConfigTypes = LlmMode
 
 // MARK: Reachability
 /**
- * Config for {@link llmReachableModelsOf}.
+ * Config for {@link readLlmReachableModels}.
  */
-export interface LlmReachableModelsOfConfig {
+export interface ReadLlmReachableModelsConfig {
   /**
    * The resolved (possibly partial) tier map.
    */
@@ -261,9 +261,9 @@ export interface LlmReachableModelsOfConfig {
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function llmReachableModelsOf(config: LlmReachableModelsOfConfig): ReadonlyArray<LlmModelId> {
+export function readLlmReachableModels(config: ReadLlmReachableModelsConfig): ReadonlyArray<LlmModelId> {
   const tierValues = [...Object.values(config.modelTiers ?? {}), ...Object.values(config.routing?.tiers ?? {})];
-  const fromTiers = tierValues.flatMap((value) => (value == null ? [] : [llmTierModelOf(value)]));
+  const fromTiers = tierValues.flatMap((value) => (value == null ? [] : [readLlmTierModel(value)]));
   const fromRules = (config.routing?.rules ?? []).flatMap((rule) => (rule.model == null ? [] : [rule.model]));
   return concatArraysUnique(fromTiers, fromRules);
 }
@@ -279,15 +279,15 @@ export interface LlmReachableProviderGap extends LlmProviderConfigGap {
 }
 
 /**
- * Config for {@link llmReachableProviderGapsOf}.
+ * Config for {@link filterLlmReachableProviderGaps}.
  */
-export interface LlmReachableProviderGapsOfConfig {
+export interface FilterLlmReachableProviderGapsConfig {
   /**
    * The unscoped gaps ({@link LlmProvidersFromEnv.gaps}).
    */
   readonly gaps: ReadonlyArray<LlmProviderConfigGap>;
   /**
-   * The slugs the run can reach ({@link llmReachableModelsOf}).
+   * The slugs the run can reach ({@link readLlmReachableModels}).
    */
   readonly reachableModels: ReadonlyArray<LlmModelId>;
   /**
@@ -305,7 +305,7 @@ export interface LlmReachableProviderGapsOfConfig {
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function llmReachableProviderGapsOf(config: LlmReachableProviderGapsOfConfig): ReadonlyArray<LlmReachableProviderGap> {
+export function filterLlmReachableProviderGaps(config: FilterLlmReachableProviderGapsConfig): ReadonlyArray<LlmReachableProviderGap> {
   const { gaps, reachableModels, providerByModel } = config;
   return gaps.flatMap((gap) => reachableModels.filter((model) => providerByModel?.[model] === gap.id).map((model) => ({ ...gap, model })));
 }

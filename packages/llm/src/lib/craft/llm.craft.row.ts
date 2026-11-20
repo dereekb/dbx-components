@@ -40,7 +40,7 @@ export interface LlmCraftNoteRow {
  * @param id - The row id.
  * @returns The source.
  */
-export function llmCraftNoteRowSourceOf(tier: LlmCraftNoteTier, id: LlmCraftNoteId): string {
+export function toLlmCraftNoteRowSource(tier: LlmCraftNoteTier, id: LlmCraftNoteId): string {
   return `${tier}:${id}`;
 }
 
@@ -55,9 +55,9 @@ export function llmCraftNoteTombstoneText(id: LlmCraftNoteId): string {
 }
 
 /**
- * Config for {@link llmCraftNoteRowFilesOf}.
+ * Config for {@link toLlmCraftNoteRowFiles}.
  */
-export interface LlmCraftNoteRowFilesOfConfig {
+export interface ToLlmCraftNoteRowFilesConfig {
   /**
    * The stored rows.
    */
@@ -74,15 +74,15 @@ export interface LlmCraftNoteRowFilesOfConfig {
  * @param config - The rows and their tier.
  * @returns The files.
  */
-export function llmCraftNoteRowFilesOf(config: LlmCraftNoteRowFilesOfConfig): ReadonlyArray<LlmCraftNoteFile> {
+export function toLlmCraftNoteRowFiles(config: ToLlmCraftNoteRowFilesConfig): ReadonlyArray<LlmCraftNoteFile> {
   const { rows, tier } = config;
-  return rows.map((row) => ({ source: llmCraftNoteRowSourceOf(tier, row.id), text: row.enabled === false ? llmCraftNoteTombstoneText(row.id) : (row.text ?? '') }));
+  return rows.map((row) => ({ source: toLlmCraftNoteRowSource(tier, row.id), text: row.enabled === false ? llmCraftNoteTombstoneText(row.id) : (row.text ?? '') }));
 }
 
 /**
  * Config for {@link parseLlmCraftNoteRows}.
  */
-export interface ParseLlmCraftNoteRowsConfig extends LlmCraftNoteRowFilesOfConfig {
+export interface ParseLlmCraftNoteRowsConfig extends ToLlmCraftNoteRowFilesConfig {
   /**
    * The host's craft sites.
    */
@@ -97,10 +97,10 @@ export interface ParseLlmCraftNoteRowsConfig extends LlmCraftNoteRowFilesOfConfi
  */
 export function parseLlmCraftNoteRows(config: ParseLlmCraftNoteRowsConfig): LlmCraftNoteSet {
   const { tier, sites } = config;
-  const parsed = parseLlmCraftNoteSet({ files: llmCraftNoteRowFilesOf(config), tier, sites });
+  const parsed = parseLlmCraftNoteSet({ files: toLlmCraftNoteRowFiles(config), tier, sites });
   const mismatched: LlmCraftNoteRefusal[] = [];
   const notes = parsed.notes.filter((note) => {
-    const ok = note.source === llmCraftNoteRowSourceOf(tier, note.id);
+    const ok = note.source === toLlmCraftNoteRowSource(tier, note.id);
 
     if (!ok) {
       mismatched.push({ source: note.source ?? tier, errors: [{ message: `the note id \`${note.id}\` is not its row id` }] });

@@ -29,7 +29,7 @@ export interface LlmDispatchFaultErrorConfig {
    */
   readonly error: unknown;
   /**
-   * The thrown value's bounded summary (`llmErrorSummaryOf`).
+   * The thrown value's bounded summary (`formatLlmErrorSummary`).
    */
   readonly summary: string;
   /**

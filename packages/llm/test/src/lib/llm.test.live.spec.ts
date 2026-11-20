@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { type LlmCompletion, type LlmRequest, type LlmStrategy } from '@dereekb/llm';
-import { decorateLlmLiveStrategyAuthFailures, llmLiveStrategyBindingOf } from './llm.test.live';
+import { decorateLlmLiveStrategyAuthFailures, toLlmLiveStrategyBinding } from './llm.test.live';
 
 const PROVIDER_ID = 'alpha';
 const BASE_URL = 'https://fake.example/v1';
@@ -72,9 +72,9 @@ describe('decorateLlmLiveStrategyAuthFailures()', () => {
     await expect(decorate(makeFakeStrategy()).complete(REQUEST)).resolves.toMatchObject({ text: 'ok' });
   });
 
-  it('should preserve `id`, so llmLiveStrategyBindingOf still routes at the decorated strategy', () => {
+  it('should preserve `id`, so toLlmLiveStrategyBinding still routes at the decorated strategy', () => {
     const decorated = decorate(makeFakeStrategy());
-    const binding = llmLiveStrategyBindingOf(decorated);
+    const binding = toLlmLiveStrategyBinding(decorated);
 
     expect(binding.defaultStrategyId).toBe(PROVIDER_ID);
     expect(binding.strategies.get(PROVIDER_ID)).toBe(decorated);

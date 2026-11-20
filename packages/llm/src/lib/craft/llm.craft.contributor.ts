@@ -23,14 +23,14 @@ import { type Maybe, type PromiseOrValue } from '@dereekb/util';
 import { type LlmCapabilityDescriptor } from '../capability/llm.capability.descriptor';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { type LlmPromptGeneratedSegmentOrigin } from '../prompt/llm.prompt.assembly';
-import { type LlmPromptContribution, type LlmPromptContributionCut, type LlmPromptContributor, type LlmPromptContributorInput, type LlmPromptContributorResult } from '../prompt/llm.prompt.contributor';
+import { type LlmPromptContribution, type LlmPromptContributionCut, type LlmPromptContributor, type LlmPromptContributorParams, type LlmPromptContributorResult } from '../prompt/llm.prompt.contributor';
 import { type LlmPromptSlotId } from '../prompt/llm.prompt.layout';
 import { type LlmPromptSegmentOrigin } from '../prompt/llm.prompt.segment';
 import { type LlmPromptSiteJudgeVerdicts } from '../prompt/llm.prompt.site';
 import { llmCraftNoteParseErrorLines, type LlmCraftNoteSet } from './llm.craft.frontmatter';
 import { type LlmCraftNoteId, type LlmCraftNoteTier } from './llm.craft.identity';
 import { DEFAULT_LLM_CRAFT_GUARD_CUT_REASON, type LlmCraftNote, type LlmCraftNoteCutReason, type LlmCraftNoteSelectedBy } from './llm.craft.note';
-import { llmCraftCandidatesOf, mergeLlmCraftNoteTiers, settleLlmCraftNotes, type LlmCraftNotePlacement, type LlmCraftSelection } from './llm.craft.select';
+import { resolveLlmCraftCandidates, mergeLlmCraftNoteTiers, settleLlmCraftNotes, type LlmCraftNotePlacement, type LlmCraftSelection } from './llm.craft.select';
 import { type LlmCraftSiteRegistry } from './llm.craft.site';
 
 /**
@@ -92,12 +92,12 @@ export interface LlmPromptCraftSegmentOrigin extends LlmPromptSegmentOrigin {
  * @param placement - The placed note.
  * @returns Its group.
  */
-export function llmCraftNoteGroupOf(placement: LlmCraftNotePlacement): LlmCraftNoteGroup {
+export function readLlmCraftNoteGroup(placement: LlmCraftNotePlacement): LlmCraftNoteGroup {
   return placement.by === 'match' ? 'stable' : 'judged';
 }
 
 /**
- * Config for {@link llmCraftContributionsOf}.
+ * Config for {@link toLlmCraftContributions}.
  */
 export interface LlmCraftContributionsConfig {
   /**
@@ -120,7 +120,7 @@ export interface LlmCraftContributionsConfig {
  * @param config - The selection, the slot and the headings.
  * @returns The contributions and the cuts.
  */
-export function llmCraftContributionsOf(config: LlmCraftContributionsConfig): Required<LlmPromptContributorResult> {
+export function toLlmCraftContributions(config: LlmCraftContributionsConfig): Required<LlmPromptContributorResult> {
   const { selection } = config;
   const slot = config.slot ?? DEFAULT_LLM_CRAFT_SLOT_ID;
   const headings = config.headings ?? DEFAULT_LLM_CRAFT_NOTE_HEADINGS;
@@ -129,7 +129,7 @@ export function llmCraftContributionsOf(config: LlmCraftContributionsConfig): Re
   const contributions: LlmPromptContribution[] = [];
 
   for (const group of LLM_CRAFT_NOTE_GROUPS) {
-    const placed = selection.placed.filter((placement) => llmCraftNoteGroupOf(placement) === group);
+    const placed = selection.placed.filter((placement) => readLlmCraftNoteGroup(placement) === group);
     const volatile = group === 'judged' ? { volatile: true } : {};
 
     if (placed.length > 0) {
@@ -176,7 +176,7 @@ export function llmCraftContributionsOf(config: LlmCraftContributionsConfig): Re
  * A per-request tier — the tier's parsed set for one dispatch (a stored-row reader over a host request field).
  * Synchronous: a host holding rows elsewhere keeps them in memory.
  */
-export type LlmCraftNoteTierReader<R extends LlmDispatchRequest = LlmDispatchRequest, D extends LlmCapabilityDescriptor = LlmCapabilityDescriptor> = (input: LlmPromptContributorInput<R, D>) => Maybe<LlmCraftNoteSet>;
+export type LlmCraftNoteTierReader<R extends LlmDispatchRequest = LlmDispatchRequest, D extends LlmCapabilityDescriptor = LlmCapabilityDescriptor> = (input: LlmPromptContributorParams<R, D>) => Maybe<LlmCraftNoteSet>;
 
 /**
  * One tier source — a static note array, or a per-request reader.
@@ -186,10 +186,10 @@ export type LlmCraftNoteTierSource<R extends LlmDispatchRequest = LlmDispatchReq
 /**
  * The host's craft guard — `true` ⇒ craft may not reach this capability (every match is cut).
  */
-export type LlmCraftGuard<R extends LlmDispatchRequest = LlmDispatchRequest, D extends LlmCapabilityDescriptor = LlmCapabilityDescriptor> = (input: LlmPromptContributorInput<R, D>) => boolean;
+export type LlmCraftGuard<R extends LlmDispatchRequest = LlmDispatchRequest, D extends LlmCapabilityDescriptor = LlmCapabilityDescriptor> = (input: LlmPromptContributorParams<R, D>) => boolean;
 
 /**
- * Config for {@link llmCraftPromptContributor}.
+ * Config for {@link makeLlmCraftPromptContributor}.
  */
 export interface LlmCraftPromptContributorConfig<R extends LlmDispatchRequest = LlmDispatchRequest, D extends LlmCapabilityDescriptor = LlmCapabilityDescriptor> {
   /**
@@ -229,7 +229,7 @@ export interface LlmCraftPromptContributorConfig<R extends LlmDispatchRequest = 
  * @param input - The contributor input.
  * @returns The tier's notes.
  */
-function readLlmCraftNoteTier<R extends LlmDispatchRequest, D extends LlmCapabilityDescriptor>(reader: LlmCraftNoteTierReader<R, D>, input: LlmPromptContributorInput<R, D>): Maybe<ReadonlyArray<LlmCraftNote>> {
+function readLlmCraftNoteTier<R extends LlmDispatchRequest, D extends LlmCapabilityDescriptor>(reader: LlmCraftNoteTierReader<R, D>, input: LlmPromptContributorParams<R, D>): Maybe<ReadonlyArray<LlmCraftNote>> {
   const set = reader(input);
 
   for (const refusal of set?.refused ?? []) {
@@ -258,13 +258,13 @@ function readLlmCraftNoteTier<R extends LlmDispatchRequest, D extends LlmCapabil
  *
  * @example
  * ```ts
- * const craft = llmCraftPromptContributor({ sites, tiers: [BUILTIN_CRAFT_NOTES, machine.notes] });
+ * const craft = makeLlmCraftPromptContributor({ sites, tiers: [BUILTIN_CRAFT_NOTES, machine.notes] });
  * const dispatcher = makeLlmDispatcher({ …, contributors: [craft] });
  * ```
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function llmCraftPromptContributor<R extends LlmDispatchRequest = LlmDispatchRequest, D extends LlmCapabilityDescriptor = LlmCapabilityDescriptor>(config: LlmCraftPromptContributorConfig<R, D>): LlmPromptContributor<R, D> {
+export function makeLlmCraftPromptContributor<R extends LlmDispatchRequest = LlmDispatchRequest, D extends LlmCapabilityDescriptor = LlmCapabilityDescriptor>(config: LlmCraftPromptContributorConfig<R, D>): LlmPromptContributor<R, D> {
   const { sites, tiers, guard, headings, enabled } = config;
   const slot = config.slot ?? DEFAULT_LLM_CRAFT_SLOT_ID;
   const guardCutReason = config.guardCutReason ?? DEFAULT_LLM_CRAFT_GUARD_CUT_REASON;
@@ -282,8 +282,8 @@ export function llmCraftPromptContributor<R extends LlmDispatchRequest = LlmDisp
         const notes = base ?? mergeLlmCraftNoteTiers(tiers.map((tier) => (typeof tier === 'function' ? readLlmCraftNoteTier(tier, input) : tier)));
 
         if (notes.length > 0) {
-          const candidates = llmCraftCandidatesOf({ notes, site, sites, guardCut: guard?.(input) === true ? guardCutReason : undefined });
-          const settle = (verdicts: Maybe<LlmPromptSiteJudgeVerdicts>) => llmCraftContributionsOf({ selection: settleLlmCraftNotes(candidates, verdicts), slot, headings });
+          const candidates = resolveLlmCraftCandidates({ notes, site, sites, guardCut: guard?.(input) === true ? guardCutReason : undefined });
+          const settle = (verdicts: Maybe<LlmPromptSiteJudgeVerdicts>) => toLlmCraftContributions({ selection: settleLlmCraftNotes(candidates, verdicts), slot, headings });
           // The ONE judge call of this dispatch: resolve runs once, at the root. Only a site that asks resolves
           // asynchronously; every other prompt resolves synchronously.
           result = candidates.kind == null || candidates.asked.length === 0 || site.judge == null ? settle(undefined) : site.judge({ capability: input.request.capability, kind: candidates.kind, asked: candidates.asked, inputs: site.inputs ?? {} }).then(settle);

@@ -10,19 +10,19 @@ import { type Maybe } from '@dereekb/util';
 import { type LlmDecisionChoiceAnswer, type LlmDecisionEntry, type LlmDecisionNoulAnswer, type LlmDecisionScoreAnswer, type LlmDecisionScoreLevels } from './llm.decision.question';
 
 /**
- * The mass {@link llmDecisionChoiceAnswerOf} puts on the winning option when no confidence is given.
+ * The mass {@link makeLlmDecisionChoiceAnswer} puts on the winning option when no confidence is given.
  */
 export const DEFAULT_LLM_DECISION_CHOICE_ANSWER_CONFIDENCE = 0.9;
 
 /**
- * The mass {@link llmDecisionScoreAnswerOf} puts on the nearest level when no confidence is given.
+ * The mass {@link makeLlmDecisionScoreAnswer} puts on the nearest level when no confidence is given.
  */
 export const DEFAULT_LLM_DECISION_SCORE_ANSWER_CONFIDENCE = 0.8;
 
 /**
- * Config for {@link llmDecisionChoiceAnswerOf}.
+ * Config for {@link makeLlmDecisionChoiceAnswer}.
  */
-export interface LlmDecisionChoiceAnswerOfConfig<O extends string> {
+export interface MakeLlmDecisionChoiceAnswerConfig<O extends string> {
   /**
    * Every declared option name.
    */
@@ -47,11 +47,11 @@ export interface LlmDecisionChoiceAnswerOfConfig<O extends string> {
  *
  * @example
  * ```ts
- * const answer = llmDecisionChoiceAnswerOf({ options: ['alpha', 'beta'], choice: 'beta', confidence: 0.7 });
+ * const answer = makeLlmDecisionChoiceAnswer({ options: ['alpha', 'beta'], choice: 'beta', confidence: 0.7 });
  * // { type: 'choice', choice: 'beta', probabilities: { alpha: 0.3, beta: 0.7 }, confidence: 0.7 }
  * ```
  */
-export function llmDecisionChoiceAnswerOf<O extends string>(config: LlmDecisionChoiceAnswerOfConfig<O>): LlmDecisionChoiceAnswer<O> {
+export function makeLlmDecisionChoiceAnswer<O extends string>(config: MakeLlmDecisionChoiceAnswerConfig<O>): LlmDecisionChoiceAnswer<O> {
   const confidence = config.confidence ?? DEFAULT_LLM_DECISION_CHOICE_ANSWER_CONFIDENCE;
   const others = config.options.filter((option) => option !== config.choice);
   const spread = others.length === 0 ? 0 : (1 - confidence) / others.length;
@@ -62,9 +62,9 @@ export function llmDecisionChoiceAnswerOf<O extends string>(config: LlmDecisionC
 }
 
 /**
- * Config for {@link llmDecisionScoreAnswerOf}.
+ * Config for {@link makeLlmDecisionScoreAnswer}.
  */
-export interface LlmDecisionScoreAnswerOfConfig {
+export interface MakeLlmDecisionScoreAnswerConfig {
   /**
    * The declared ordered levels.
    */
@@ -89,10 +89,10 @@ export interface LlmDecisionScoreAnswerOfConfig {
  *
  * @example
  * ```ts
- * const answer = llmDecisionScoreAnswerOf({ levels: ['cold', 'warm', 'hot'], score: 1.6 }); // mass 0.8 on '2'
+ * const answer = makeLlmDecisionScoreAnswer({ levels: ['cold', 'warm', 'hot'], score: 1.6 }); // mass 0.8 on '2'
  * ```
  */
-export function llmDecisionScoreAnswerOf(config: LlmDecisionScoreAnswerOfConfig): LlmDecisionScoreAnswer {
+export function makeLlmDecisionScoreAnswer(config: MakeLlmDecisionScoreAnswerConfig): LlmDecisionScoreAnswer {
   const confidence = config.confidence ?? DEFAULT_LLM_DECISION_SCORE_ANSWER_CONFIDENCE;
   const nearest = Math.min(config.levels.length - 1, Math.max(0, Math.round(config.score)));
   const others = config.levels.length - 1;
@@ -111,9 +111,9 @@ export function llmDecisionScoreAnswerOf(config: LlmDecisionScoreAnswerOfConfig)
  *
  * @example
  * ```ts
- * const answer = llmDecisionNoulAnswerOf(0.3); // { type: 'noul', noul: 0.3 }
+ * const answer = makeLlmDecisionNoulAnswer(0.3); // { type: 'noul', noul: 0.3 }
  * ```
  */
-export function llmDecisionNoulAnswerOf(noul: number): LlmDecisionNoulAnswer {
+export function makeLlmDecisionNoulAnswer(noul: number): LlmDecisionNoulAnswer {
   return { type: 'noul', noul };
 }

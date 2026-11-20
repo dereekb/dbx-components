@@ -1,4 +1,4 @@
-import { isDefaultReadableError, DEFAULT_READABLE_ERROR_CODE, errorMessageOf, errorClassNames } from './error';
+import { isDefaultReadableError, DEFAULT_READABLE_ERROR_CODE, readErrorMessage, errorClassNames } from './error';
 
 describe('isDefaultReadableError()', () => {
   it('should return true for null/undefined', () => {
@@ -31,33 +31,33 @@ describe('isDefaultReadableError()', () => {
   });
 });
 
-describe('errorMessageOf()', () => {
+describe('readErrorMessage()', () => {
   it('should return the message of an Error', () => {
-    expect(errorMessageOf(new Error('boom'))).toBe('boom');
+    expect(readErrorMessage(new Error('boom'))).toBe('boom');
   });
 
   it('should return the message of a DOMException', () => {
-    expect(errorMessageOf(new DOMException('timed out', 'TimeoutError'))).toBe('timed out');
+    expect(readErrorMessage(new DOMException('timed out', 'TimeoutError'))).toBe('timed out');
   });
 
   it('should return a string message from a plain object', () => {
-    expect(errorMessageOf({ message: 'x' })).toBe('x');
+    expect(readErrorMessage({ message: 'x' })).toBe('x');
   });
 
   it('should stringify an object whose message is not a string', () => {
-    expect(errorMessageOf({ message: 42 })).toBe('[object Object]');
+    expect(readErrorMessage({ message: 42 })).toBe('[object Object]');
   });
 
   it('should stringify primitives', () => {
-    expect(errorMessageOf('plain')).toBe('plain');
-    expect(errorMessageOf(42)).toBe('42');
-    expect(errorMessageOf(null)).toBe('null');
-    expect(errorMessageOf(undefined)).toBe('undefined');
-    expect(errorMessageOf(Symbol('s'))).toBe('Symbol(s)');
+    expect(readErrorMessage('plain')).toBe('plain');
+    expect(readErrorMessage(42)).toBe('42');
+    expect(readErrorMessage(null)).toBe('null');
+    expect(readErrorMessage(undefined)).toBe('undefined');
+    expect(readErrorMessage(Symbol('s'))).toBe('Symbol(s)');
   });
 
   it('should not throw for a null-prototype object', () => {
-    expect(errorMessageOf(Object.create(null))).toBe('[object Object]');
+    expect(readErrorMessage(Object.create(null))).toBe('[object Object]');
   });
 
   it('should not throw for an object whose toString throws', () => {
@@ -67,7 +67,7 @@ describe('errorMessageOf()', () => {
       }
     };
 
-    expect(errorMessageOf(value)).toBe('[object Object]');
+    expect(readErrorMessage(value)).toBe('[object Object]');
   });
 });
 

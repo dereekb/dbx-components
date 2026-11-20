@@ -90,7 +90,7 @@ export interface LlmDispatchTerminalFault {
    */
   readonly error: unknown;
   /**
-   * Its bounded summary (`llmErrorSummaryOf`).
+   * Its bounded summary (`formatLlmErrorSummary`).
    */
   readonly summary: string;
   /**
@@ -105,7 +105,7 @@ export interface LlmDispatchTerminalFault {
 export const LLM_REPLY_REPAIR_SCORE_PRECISION: NumberPrecision = 3;
 
 /**
- * The inputs of {@link llmDecodeFailureAttemptOf}.
+ * The inputs of {@link toLlmDecodeFailureAttempt}.
  */
 export interface LlmDecodeFailureAttemptConfig {
   /**
@@ -154,7 +154,7 @@ export interface LlmDecodeFailureAttemptConfig {
  * @param config - The attempt, its class, its envelope and what it was sent with / bought.
  * @returns The decode row.
  */
-export function llmDecodeFailureAttemptOf(config: LlmDecodeFailureAttemptConfig): LlmDecodeFailureAttempt {
+export function toLlmDecodeFailureAttempt(config: LlmDecodeFailureAttemptConfig): LlmDecodeFailureAttempt {
   const { attempt, failureClass, result, maxOutputTokens, envelope, validatorError, lever, transportError, errorClassification } = config;
   const shape = failureClass === 'parse-error' ? scoreLlmReplyJson(result.text, { envelope }) : undefined;
   const tailExcerpt = failureClass === 'parse-error' || failureClass === 'length-truncation' ? llmDecodeFailureTailExcerpt(result.text) : undefined;
@@ -178,7 +178,7 @@ export function llmDecodeFailureAttemptOf(config: LlmDecodeFailureAttemptConfig)
 }
 
 /**
- * The inputs of {@link llmRepairedDecodeAttemptOf}.
+ * The inputs of {@link toLlmRepairedDecodeAttempt}.
  */
 export interface LlmRepairedDecodeAttemptConfig {
   /**
@@ -214,13 +214,13 @@ export interface LlmRepairedDecodeAttemptConfig {
  * @param config - The attempt, the served reply and the repair summary.
  * @returns The decode row.
  */
-export function llmRepairedDecodeAttemptOf(config: LlmRepairedDecodeAttemptConfig): LlmDecodeFailureAttempt {
+export function toLlmRepairedDecodeAttempt(config: LlmRepairedDecodeAttemptConfig): LlmDecodeFailureAttempt {
   const { attempt, served, summary, maxOutputTokens, envelope, lever } = config;
-  return { ...llmDecodeFailureAttemptOf({ attempt, failureClass: 'parse-error', result: served, maxOutputTokens, envelope, lever }), repaired: summary.tier, ...(summary.ops == null ? {} : { repairOps: summary.ops }) };
+  return { ...toLlmDecodeFailureAttempt({ attempt, failureClass: 'parse-error', result: served, maxOutputTokens, envelope, lever }), repaired: summary.tier, ...(summary.ops == null ? {} : { repairOps: summary.ops }) };
 }
 
 /**
- * The inputs of {@link llmFailedAttemptOf}.
+ * The inputs of {@link toLlmCallFailedAttempt}.
  */
 export interface LlmFailedAttemptConfig {
   /**
@@ -265,7 +265,7 @@ export interface LlmFailedAttemptConfig {
  * @param config - The attempt, its cause, its envelope and what it was sent with / bought.
  * @returns The failed-attempt row.
  */
-export function llmFailedAttemptOf(config: LlmFailedAttemptConfig): LlmCallFailedAttempt {
+export function toLlmCallFailedAttempt(config: LlmFailedAttemptConfig): LlmCallFailedAttempt {
   const { attempt, cause, result, maxOutputTokens, error, errorClassification, correction, retry } = config;
   const raw = result.repair?.originalText ?? result.text;
   const clip = clipLlmFailedAttemptReply(raw);
@@ -286,7 +286,7 @@ export function llmFailedAttemptOf(config: LlmFailedAttemptConfig): LlmCallFaile
 }
 
 /**
- * The inputs of {@link llmAttemptPhaseOf}.
+ * The inputs of {@link toLlmCallAttemptPhase}.
  */
 export interface LlmAttemptPhaseConfig {
   /**
@@ -317,14 +317,14 @@ export interface LlmAttemptPhaseConfig {
  * @param config - The attempt, its context, its envelope and its retry / repair stamps.
  * @returns The attempt phase.
  */
-export function llmAttemptPhaseOf(config: LlmAttemptPhaseConfig): LlmCallAttemptPhase {
+export function toLlmCallAttemptPhase(config: LlmAttemptPhaseConfig): LlmCallAttemptPhase {
   const { attempt, attemptContext, result, retry, repair } = config;
   const wallMs = attemptContext.profile().spans.find((span) => span.name === 'complete')?.durationMs ?? 0;
   return { attempt, wallMs, ...(result.latencyMs == null ? {} : { latencyMs: result.latencyMs }), ...(retry == null ? {} : { retry }), ...(repair == null ? {} : { repair }) };
 }
 
 /**
- * The inputs of {@link llmCallPhasesOf}.
+ * The inputs of {@link toLlmCallPhases}.
  */
 export interface LlmCallPhasesConfig {
   /**
@@ -352,7 +352,7 @@ export interface LlmCallPhasesConfig {
  * @param config - The snapshot, the attempt phases, the sent request and the prefix hash.
  * @returns The phase block.
  */
-export function llmCallPhasesOf(config: LlmCallPhasesConfig): LlmCallPhases {
+export function toLlmCallPhases(config: LlmCallPhasesConfig): LlmCallPhases {
   const { profile, attemptPhases, request, cachePrefixHash } = config;
   const renderMs = profile.spans.find((span) => span.name === 'render')?.durationMs;
   const assembleMs = profile.spans.find((span) => span.name === 'assemble')?.durationMs;
@@ -391,7 +391,7 @@ function syntheticLlmResultOf(request: Pick<LlmRequest, 'capability' | 'meta'>, 
  * @param strategyId - The strategy that was aborted.
  * @returns The synthetic timeout envelope.
  */
-export function llmTimeoutResultOf(request: Pick<LlmRequest, 'capability' | 'meta'>, strategyId: LlmStrategyId): LlmDispatchResult {
+export function makeLlmTimeoutResult(request: Pick<LlmRequest, 'capability' | 'meta'>, strategyId: LlmStrategyId): LlmDispatchResult {
   return syntheticLlmResultOf(request, { strategyId, finishReason: LLM_TIMEOUT_FINISH_REASON });
 }
 
@@ -403,7 +403,7 @@ export function llmTimeoutResultOf(request: Pick<LlmRequest, 'capability' | 'met
  * @param strategyId - The strategy whose transport failed.
  * @returns The synthetic transport envelope.
  */
-export function llmTransportResultOf(request: Pick<LlmRequest, 'capability' | 'meta'>, strategyId: LlmStrategyId): LlmDispatchResult {
+export function makeLlmTransportResult(request: Pick<LlmRequest, 'capability' | 'meta'>, strategyId: LlmStrategyId): LlmDispatchResult {
   return syntheticLlmResultOf(request, { strategyId, finishReason: LLM_TRANSPORT_FINISH_REASON });
 }
 
@@ -415,6 +415,6 @@ export function llmTransportResultOf(request: Pick<LlmRequest, 'capability' | 'm
  * @param strategyId - The strategy whose send failed.
  * @returns The synthetic unretryable envelope.
  */
-export function llmUnretryableResultOf(request: Pick<LlmRequest, 'capability' | 'meta'>, strategyId: LlmStrategyId): LlmDispatchResult {
+export function makeLlmUnretryableResult(request: Pick<LlmRequest, 'capability' | 'meta'>, strategyId: LlmStrategyId): LlmDispatchResult {
   return syntheticLlmResultOf(request, { strategyId, finishReason: LLM_UNRETRYABLE_FINISH_REASON });
 }

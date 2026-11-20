@@ -6,7 +6,7 @@ import { type ConfiguredFetch } from '@dereekb/util/fetch';
 import { type LlmAdapter, type LlmCompletionAdapterConfig, type LlmModelConfigFile, type LlmProviderStatus, type LlmStrategy, makeLlmAdapterRegistry, makeLlmModelConfigSchema, makeLlmQuotaWindow, probeLlmCredentialEndpoint } from '@dereekb/llm';
 import { DEFAULT_LLM_ENV_NAMES, type LlmEnvNames, resolveLlmProvidersFromEnv } from '@dereekb/llm/node';
 import { type LlmLiveLaneConfig, makeLlmLiveLane } from './llm.test.lane';
-import { makeScriptedLlmDecisionStrategy, SCRIPTED_LLM_DECISION_STRATEGY_ID } from './llm.test.scripted.decision';
+import { makeLlmScriptedDecisionStrategy, LLM_SCRIPTED_DECISION_STRATEGY_ID } from './llm.test.scripted.decision';
 
 const FAKE_URL = 'https://fake.example/v1';
 const METERED_URL = 'https://metered.example/v1';
@@ -55,7 +55,7 @@ function fakeAdaptersOf(usedFraction = 0.3) {
     completionAdapter('plain', 'https://plain.example/v1'),
     { facet: 'metering', kind: 'meter', isAccountBaseUrl: (url) => new URL(url).host === 'metered.example', make: () => ({ providerId: 'meter', read: async () => status }) },
     { facet: 'credentialProbe', kind: 'meter', make: (input) => (options) => probeLlmCredentialEndpoint({ strategyId: input.provider.id, url: `${input.baseUrl}/account/auth`, apiKey: input.provider.apiKey, fetch: input.fetch, signal: options?.signal }) },
-    { facet: 'decision', kind: 'fake-decision', strategyKind: SCRIPTED_LLM_DECISION_STRATEGY_ID, transports: ['fake'], make: ({ provider }) => makeScriptedLlmDecisionStrategy({ id: provider.id, script: () => ({}) }) }
+    { facet: 'decision', kind: 'fake-decision', strategyKind: LLM_SCRIPTED_DECISION_STRATEGY_ID, transports: ['fake'], make: ({ provider }) => makeLlmScriptedDecisionStrategy({ id: provider.id, script: () => ({}) }) }
   ]);
   return { adapters, received };
 }
@@ -230,7 +230,7 @@ describe('makeLlmLiveLane()', () => {
       const { lane } = laneOf();
       const both = { ...UNLOCKED, ALPHA_API_KEY: 'sk-fake-alpha', BETA_API_KEY: 'sk-fake-beta' };
 
-      expect(lane.liveDecisionStrategyFromEnv({ ...UNLOCKED, ALPHA_API_KEY: 'sk-fake-alpha' })?.strategy.kind).toBe(SCRIPTED_LLM_DECISION_STRATEGY_ID);
+      expect(lane.liveDecisionStrategyFromEnv({ ...UNLOCKED, ALPHA_API_KEY: 'sk-fake-alpha' })?.strategy.kind).toBe(LLM_SCRIPTED_DECISION_STRATEGY_ID);
       expect(lane.liveDecisionStrategyFromEnv(both)?.strategyId).toBe('alpha');
       expect(lane.liveDecisionStrategyFromEnv({ ...both, LLM_DECISION_PROVIDER: 'beta' })?.strategyId).toBe('beta');
     });

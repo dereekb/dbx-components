@@ -65,13 +65,13 @@ export const llmCompletionProviderEntryType = /*#__PURE__*/ llmProviderEntryBase
     /**
      * The account-metering source for this provider's quota reads (`LlmProviderStatusProviderId`) — one of the schema's
      * meterings, or `'none'` (`LLM_PROVIDER_FACET_NONE`). Absent ⇒ inferred from the provider's base URL by a
-     * registered metering adapter (`llmProviderMeteringOf`); a provider that meters nothing should say `'none'`.
+     * registered metering adapter (`resolveLlmProviderMetering`); a provider that meters nothing should say `'none'`.
      */
     'metering?': 'string',
     /**
      * The decision route this provider serves decisions through (`LlmStrategyId`) — one of the schema's decision
      * routes, or `'none'`. Absent ⇒ the route a registered decision adapter serves for the transport
-     * (`llmProviderDecisionRouteOf`), else `'none'`.
+     * (`resolveLlmProviderDecisionRoute`), else `'none'`.
      */
     'decision?': 'string'
   })

@@ -1,7 +1,7 @@
 /**
  * The decision lane: questions, the wire format and answer reader, the fault error, confidence, the
  * `LlmDecisionStrategy` contract (an `LlmStrategyBase`), the `LlmDecisionStrategyRegistry` alias and the readiness
- * lane wording, `defineLlmDecision`, `llmChoiceCertaintyOf` and the System One transport
+ * lane wording, `defineLlmDecision`, `readLlmChoiceCertainty` and the System One transport
  * (`makeLlmSystemOneDecisionStrategy`). A decision registry is built with the root's `makeLlmStrategyRegistry`.
  *
  * Exported by both `@dereekb/llm` and `@dereekb/llm/decision`.

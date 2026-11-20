@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { llmPromptCachePrefixSegments, makeLlmPromptCachePrefixWatch } from './llm.prompt.cache.watch';
 import { LLM_PROMPT_CACHE_HASH_LENGTH, llmPromptCacheHash } from './llm.prompt.hash';
-import { joinLlmPromptSegments, llmPromptCacheSegmentsOf, type LlmPromptSegment, type LlmPromptSegmentId } from './llm.prompt.segment';
+import { joinLlmPromptSegments, splitLlmPromptCacheSegments, type LlmPromptSegment, type LlmPromptSegmentId } from './llm.prompt.segment';
 
 /**
  * A stable prompt segment.
@@ -37,11 +37,11 @@ describe('llmPromptCachePrefixSegments()', () => {
 });
 
 describe('llmPromptCachePrefixSegments(); the cache split', () => {
-  it('joins to exactly the cachePrefix llmPromptCacheSegmentsOf derives', () => {
+  it('joins to exactly the cachePrefix splitLlmPromptCacheSegments derives', () => {
     const shapes: ReadonlyArray<ReadonlyArray<LlmPromptSegment>> = [[stable('A0', 'A'), stable('B', 'B')], [volatileSegment('D', 'D'), stable('C-post', 'POST')], [stable('A0', 'A'), volatileSegment('D', 'D'), stable('C-post', 'POST')], []];
 
     for (const segments of shapes) {
-      expect(joinLlmPromptSegments(llmPromptCachePrefixSegments(segments))).toBe(llmPromptCacheSegmentsOf(segments).cachePrefix);
+      expect(joinLlmPromptSegments(llmPromptCachePrefixSegments(segments))).toBe(splitLlmPromptCacheSegments(segments).cachePrefix);
     }
   });
 });

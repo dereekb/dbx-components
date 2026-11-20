@@ -98,7 +98,7 @@ const VALUE_ALIASES: ReadonlyArray<readonly [string, string]> = [
   ['OPENROUTER_DECISION_DISTRIBUTION_SUM_TOLERANCE', 'LLM_DECISION_DISTRIBUTION_SUM_TOLERANCE'],
   ['OPENROUTER_SYSTEM_ONE_MODEL_NAMESPACE', 'LLM_DECISION_MODEL_NAMESPACE'],
   ['isBlankOpenRouterDecisionEntry', 'isBlankLlmDecisionEntry'],
-  ['asOpenRouterDecisionConfidenceBand', 'asLlmDecisionConfidenceBand'],
+  ['asOpenRouterDecisionConfidenceBand', 'toLlmDecisionConfidenceBand'],
   ['mapOpenRouterDecisionChoiceRows', 'mapLlmDecisionChoiceRows'],
   ['validateOpenRouterDecisionQuestions', 'validateLlmDecisionQuestions'],
   ['readOpenRouterDecisionAnswers', 'readLlmDecisionAnswers'],

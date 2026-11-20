@@ -13,7 +13,7 @@ import { isNotBlankString, type Maybe } from '@dereekb/util';
 import { type LlmCapabilityDescriptor } from '../capability/llm.capability.descriptor';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { type LlmPromptLiveContextSegmentOrigin } from './llm.prompt.assembly';
-import { type LlmPromptContribution, type LlmPromptContributionAnchor, type LlmPromptContributor, type LlmPromptContributorId, type LlmPromptContributorInput } from './llm.prompt.contributor';
+import { type LlmPromptContribution, type LlmPromptContributionAnchor, type LlmPromptContributor, type LlmPromptContributorId, type LlmPromptContributorParams } from './llm.prompt.contributor';
 import { type LlmPromptSlotId } from './llm.prompt.layout';
 
 /**
@@ -40,7 +40,7 @@ export interface LlmAnchoredBlock {
 }
 
 /**
- * Config for {@link llmAnchoredBlockPromptContributor}.
+ * Config for {@link makeLlmAnchoredBlockPromptContributor}.
  *
  * @typeParam R - The host's request type.
  * @typeParam D - The host's descriptor type.
@@ -66,7 +66,7 @@ export interface LlmAnchoredBlockPromptContributorConfig<R extends LlmDispatchRe
    * Read the block off the contributor input — usually `request.site?.supply?.<name>`, but anything the input holds
    * (the site's kind, the descriptor) may pick it or its anchor. Nullish ⇒ nothing is placed.
    */
-  readonly blockOf: (input: LlmPromptContributorInput<R, D>) => Maybe<LlmAnchoredBlock>;
+  readonly blockOf: (input: LlmPromptContributorParams<R, D>) => Maybe<LlmAnchoredBlock>;
 }
 
 /**
@@ -88,7 +88,7 @@ export interface LlmAnchoredBlockPromptContributorConfig<R extends LlmDispatchRe
  * interface HostSupply { readonly research?: LlmAnchoredBlock }
  * interface HostRequest extends LlmDispatchRequest { readonly site?: LlmPromptSite<HostSupply> }
  *
- * const research = llmAnchoredBlockPromptContributor<HostRequest>({
+ * const research = makeLlmAnchoredBlockPromptContributor<HostRequest>({
  *   id: 'research',
  *   reason: 'present only when the run read resources',
  *   blockOf: ({ request }) => request.site?.supply?.research
@@ -97,7 +97,7 @@ export interface LlmAnchoredBlockPromptContributorConfig<R extends LlmDispatchRe
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function llmAnchoredBlockPromptContributor<R extends LlmDispatchRequest = LlmDispatchRequest, D extends LlmCapabilityDescriptor = LlmCapabilityDescriptor>(config: LlmAnchoredBlockPromptContributorConfig<R, D>): LlmPromptContributor<R, D> {
+export function makeLlmAnchoredBlockPromptContributor<R extends LlmDispatchRequest = LlmDispatchRequest, D extends LlmCapabilityDescriptor = LlmCapabilityDescriptor>(config: LlmAnchoredBlockPromptContributorConfig<R, D>): LlmPromptContributor<R, D> {
   const { id, reason, blockOf } = config;
   const key = config.key ?? id;
   const slot = config.slot ?? DEFAULT_LLM_ANCHORED_BLOCK_SLOT_ID;

@@ -6,7 +6,7 @@ import { makeLlmCallContext, type LlmCallDiagRecord } from '../record/llm.call.c
 import { type LlmStrategy } from '../strategy/llm.strategy';
 import { makeLlmStrategyRegistry } from '../strategy/llm.strategy.registry';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
-import { llmDispatchStrategySelectorOf, type LlmDispatchResolveSetup, resolveLlmDispatch } from './llm.dispatch.resolve';
+import { resolveLlmDispatchStrategySelector, type LlmDispatchResolveSetup, resolveLlmDispatch } from './llm.dispatch.resolve';
 import { type LlmDispatchStrategySelector } from './llm.dispatcher.config';
 
 function strategy(id: string): LlmStrategy {
@@ -20,7 +20,7 @@ const DESCRIPTORS: Readonly<Record<string, LlmCapabilityDescriptor>> = {
 function setupOf(extra: Partial<LlmDispatchResolveSetup> = {}): LlmDispatchResolveSetup {
   return {
     strategies: makeLlmStrategyRegistry([strategy('a'), strategy('b')]),
-    selectStrategy: llmDispatchStrategySelectorOf({ defaultStrategyId: 'a' }),
+    selectStrategy: resolveLlmDispatchStrategySelector({ defaultStrategyId: 'a' }),
     descriptorOf: (capability) => DESCRIPTORS[capability],
     modelTiers: { fast: 'x/fast', strong: 'x/strong' },
     defaultTier: 'fast',
@@ -56,7 +56,7 @@ describe('resolveLlmDispatch()', () => {
     const { callContext } = recordingContext();
     const tiers = { fast: { model: 'x/fast', maxOutputTokens: 2048 }, strong: 'x/strong' };
     const routes: LlmCompiledModelRouting = new Map([['Routed', { model: 'x/route', maxOutputTokens: 4096 }]]);
-    const capped = { ...DESCRIPTORS, Capped: defineLlmCapability({ capability: 'Capped', tier: 'strong', maxOutputTokens: 3000, responseSchema: type({ a: 'string' }), parseLever: (lever) => lever }) };
+    const capped: Readonly<Record<string, LlmCapabilityDescriptor>> = { ...DESCRIPTORS, Capped: defineLlmCapability({ capability: 'Capped', tier: 'strong', maxOutputTokens: 3000, responseSchema: type({ a: 'string' }), parseLever: (lever) => lever }) };
 
     expect(resolveLlmDispatch({ setup: setupOf(), request: request(), callContext }).maxOutputTokens).toBe(1024);
     expect(resolveLlmDispatch({ setup: setupOf(), request: request({ capability: 'StrongCap' }), callContext }).maxOutputTokens).toBe(1024);
@@ -68,7 +68,7 @@ describe('resolveLlmDispatch()', () => {
   it('should pick the provider by route › per-slug binding › default', () => {
     const { callContext } = recordingContext();
     const routes: LlmCompiledModelRouting = new Map([['Routed', { model: 'x/route', provider: 'b' }]]);
-    const selectStrategy = llmDispatchStrategySelectorOf({ defaultStrategyId: 'a', providerByModel: { 'x/strong': 'b' } });
+    const selectStrategy = resolveLlmDispatchStrategySelector({ defaultStrategyId: 'a', providerByModel: { 'x/strong': 'b' } });
 
     expect(resolveLlmDispatch({ setup: setupOf({ capabilityRoutes: routes }), request: request({ capability: 'Routed' }), callContext }).strategyId).toBe('b');
     expect(resolveLlmDispatch({ setup: setupOf({ selectStrategy }), request: request({ capability: 'StrongCap' }), callContext }).strategyId).toBe('b');
@@ -79,7 +79,7 @@ describe('resolveLlmDispatch()', () => {
     const { callContext } = recordingContext();
     const seen: unknown[] = [];
     const host: LlmDispatchStrategySelector = (selection) => (seen.push(selection.request), 'b');
-    const selectStrategy = llmDispatchStrategySelectorOf({ selectStrategy: host, defaultStrategyId: 'a', providerByModel: { 'x/fast': 'a' } });
+    const selectStrategy = resolveLlmDispatchStrategySelector({ selectStrategy: host, defaultStrategyId: 'a', providerByModel: { 'x/fast': 'a' } });
     const r = request();
 
     expect(resolveLlmDispatch({ setup: setupOf({ selectStrategy }), request: r, callContext }).strategyId).toBe('b');

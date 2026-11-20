@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, sep } from 'node:path';
 import { describe, it, expect } from 'vitest';
-import { LLM_SWALLOW_CAUSE_MAX_LENGTH, LLM_SWALLOW_SITE_ID_PATTERN, LLM_SWALLOW_SITES, llmSwallowCauseText, makeLlmSwallowSiteRegistry, NOOP_LLM_SWALLOW_SINK, type LlmSwallowSiteDeclaration } from './llm.swallow';
+import { LLM_SWALLOW_CAUSE_MAX_LENGTH, LLM_SWALLOW_SITE_ID_PATTERN, LLM_SWALLOW_SITES, llmSwallowCauseText, makeLlmSwallowSiteRegistry, noopLlmSwallowSink, type LlmSwallowSiteDeclaration } from './llm.swallow';
 
 /**
  * The swallow vocabulary: the cause text, the registry builder, the library's published sites, and a CONFORMANCE scan
@@ -109,8 +109,8 @@ describe('LLM_SWALLOW_SITES', () => {
   });
 });
 
-describe('NOOP_LLM_SWALLOW_SINK', () => {
+describe('noopLlmSwallowSink', () => {
   it('accepts a site and a cause and does nothing', () => {
-    expect(NOOP_LLM_SWALLOW_SINK('llm/example.site', new Error('x'))).toBeUndefined();
+    expect(noopLlmSwallowSink('llm/example.site', new Error('x'))).toBeUndefined();
   });
 });

@@ -92,7 +92,7 @@ export function isRetryableLlmErrorClassification(classification: FetchErrorClas
 }
 
 /**
- * The longest a {@link llmErrorSummaryOf} summary is kept at — one log line's worth, so a provider body echoed into
+ * The longest a {@link formatLlmErrorSummary} summary is kept at — one log line's worth, so a provider body echoed into
  * `message` cannot bloat the event.
  */
 export const LLM_ERROR_SUMMARY_MAX_LENGTH = 200;
@@ -112,7 +112,7 @@ const cutLlmErrorSummary = cutStringFunction({ maxLength: LLM_ERROR_SUMMARY_MAX_
  * @param error - The thrown value.
  * @returns The bounded summary; `'unknown'` for a non-object throw with no usable message.
  */
-export function llmErrorSummaryOf(error: unknown): string {
+export function formatLlmErrorSummary(error: unknown): string {
   let summary: string;
 
   if (error == null || typeof error !== 'object') {

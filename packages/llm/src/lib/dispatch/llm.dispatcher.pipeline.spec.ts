@@ -10,16 +10,16 @@
 
 import { type } from 'arktype';
 import { describe, expect, it, vi } from 'vitest';
-import { makeLlmTapeStrategy, makeScriptedLlmStrategy, type ScriptedLlmReplies, hashLlmTapePrompt } from '@dereekb/llm/test';
+import { makeLlmTapeStrategy, makeLlmScriptedStrategy, type LlmScriptedReplies, hashLlmTapePrompt } from '@dereekb/llm/test';
 import { defineLlmCapability, type LlmCapabilityDescriptor } from '../capability/llm.capability.descriptor';
 import { type LlmCompiledModelRouting } from '../model/llm.model.routing';
 import { DEFAULT_LLM_PROMPT_LAYOUT } from '../prompt/llm.prompt.layout';
-import { llmModelAddendumPromptContributor } from '../prompt/llm.prompt.model.addendum';
+import { makeLlmModelAddendumPromptContributor } from '../prompt/llm.prompt.model.addendum';
 import { makeLlmPromptChain } from '../prompt/llm.prompt.chain';
 import { type LlmPromptContributor } from '../prompt/llm.prompt.contributor';
 import { type LlmLiveContextBlock } from '../prompt/llm.prompt.live.context';
 import { DEFAULT_LLM_DEGENERATE_THREAD_PLACEHOLDER } from '../prompt/llm.prompt.thread';
-import { type LlmPromptTemplate, tieredLlmPromptTemplateResolver } from '../prompt/llm.prompt.template';
+import { type LlmPromptTemplate, makeLlmTieredPromptTemplateResolver } from '../prompt/llm.prompt.template';
 import { type LlmCallContext, type LlmCallDiag, makeLlmCallContext } from '../record/llm.call.context';
 import { type LlmCallRecord, type LlmCallStartRecord, type LlmDecodeFailureRecord } from '../record/llm.call.record';
 import { llmDecodeFailureExcerpt } from '../record/llm.decode.failure';
@@ -28,11 +28,11 @@ import { repairLlmReplyJson } from '../reply/llm.reply.repair';
 import { type LlmDispatchResult, type LlmRequest, type LlmStrategy } from '../strategy/llm.strategy';
 import { makeLlmStrategyRegistry } from '../strategy/llm.strategy.registry';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
-import { type LlmDispatchTransportBackoffInput } from './llm.dispatch.control';
+import { type LlmDispatchTransportBackoffParams } from './llm.dispatch.control';
 import { type LlmDispatchGapParams, type LlmDispatcherConfig, type LlmDispatchRecorder } from './llm.dispatcher.config';
 import { makeLlmDispatcher } from './llm.dispatcher.pipeline';
 import { isLlmDispatchFaultError, type LlmDispatchFaultError } from './llm.dispatch.fault';
-import { llmErrorSummaryOf } from '../strategy/llm.error';
+import { formatLlmErrorSummary } from '../strategy/llm.error';
 
 // MARK: Fixtures
 const TEMPLATES: ReadonlyArray<LlmPromptTemplate> = [
@@ -41,7 +41,7 @@ const TEMPLATES: ReadonlyArray<LlmPromptTemplate> = [
   { key: 'context', role: 'context', text: 'C-CTX\n{{liveContext}}' }
 ];
 
-const RESOLVER = tieredLlmPromptTemplateResolver({ tiers: [{ source: 'defaults', templates: TEMPLATES }] });
+const RESOLVER = makeLlmTieredPromptTemplateResolver({ tiers: [{ source: 'defaults', templates: TEMPLATES }] });
 
 const TIERS = { fast: 'test/fast', strong: 'test/strong' };
 
@@ -96,12 +96,12 @@ function recording(timing?: boolean): Recording {
   return { starts, calls, decodeFailures, recorder };
 }
 
-type SetupConfig = Partial<LlmDispatcherConfig<LlmDispatchRequest, LlmDispatchResult, HostFields>> & { readonly replies?: ScriptedLlmReplies; readonly strategy?: LlmStrategy };
+type SetupConfig = Partial<LlmDispatcherConfig<LlmDispatchRequest, LlmDispatchResult, HostFields>> & { readonly replies?: LlmScriptedReplies; readonly strategy?: LlmStrategy };
 
 function setup(config: SetupConfig = {}) {
   const requests: LlmRequest[] = [];
   const { replies, strategy, ...rest } = config;
-  const used = strategy ?? makeScriptedLlmStrategy({ id: 's', replies: replies ?? ['{"answer":"ok"}'], requests });
+  const used = strategy ?? makeLlmScriptedStrategy({ id: 's', replies: replies ?? ['{"answer":"ok"}'], requests });
   const dispatcher = makeLlmDispatcher<LlmDispatchRequest, LlmDispatchResult, HostFields>({
     strategies: makeLlmStrategyRegistry([used]),
     defaultStrategyId: used.id,
@@ -193,8 +193,8 @@ describe('makeLlmDispatcher()', () => {
     });
 
     it('should route to the strategy selectStrategy picks', async () => {
-      const a = makeScriptedLlmStrategy({ id: 'a', replies: ['a'] });
-      const b = makeScriptedLlmStrategy({ id: 'b', replies: ['b'] });
+      const a = makeLlmScriptedStrategy({ id: 'a', replies: ['a'] });
+      const b = makeLlmScriptedStrategy({ id: 'b', replies: ['b'] });
       const { dispatcher } = setup({ strategies: makeLlmStrategyRegistry([a, b]), defaultStrategyId: 'a', selectStrategy: ({ capability }) => (capability === 'TestCap' ? 'b' : 'a') });
 
       expect((await dispatcher.dispatch(request())).strategyId).toBe('b');
@@ -296,7 +296,7 @@ describe('makeLlmDispatcher()', () => {
 
   describe('model addendum', () => {
     it('should prepend a named slug addendum onto the prompt and the cache prefix, and leave an unnamed slug byte-identical', async () => {
-      const contributors: ReadonlyArray<LlmPromptContributor> = [llmModelAddendumPromptContributor({ promptAddendumByModel: { 'test/strong': 'ADDENDUM' } })];
+      const contributors: ReadonlyArray<LlmPromptContributor> = [makeLlmModelAddendumPromptContributor({ promptAddendumByModel: { 'test/strong': 'ADDENDUM' } })];
       const { dispatcher, requests } = setup({ replies: ['x'], contributors });
       const diagContext = makeLlmCallContext({ label: 'root', timing: true });
       await dispatcher.dispatch(request({ capability: 'StrongCap', callContext: diagContext }));
@@ -315,9 +315,9 @@ describe('makeLlmDispatcher()', () => {
     }
 
     it('should route a capability to its route model, provider and budget', async () => {
-      const a = makeScriptedLlmStrategy({ id: 's', replies: ['a'] });
+      const a = makeLlmScriptedStrategy({ id: 's', replies: ['a'] });
       const bRequests: LlmRequest[] = [];
-      const b = makeScriptedLlmStrategy({ id: 'b', replies: ['b'], requests: bRequests });
+      const b = makeLlmScriptedStrategy({ id: 'b', replies: ['b'], requests: bRequests });
       const { dispatcher } = setup({ strategies: makeLlmStrategyRegistry([a, b]), capabilityRoutes: routed() });
       const result = await dispatcher.dispatch(request());
 
@@ -327,8 +327,8 @@ describe('makeLlmDispatcher()', () => {
     });
 
     it('should let a per-slug provider binding pick the strategy when no route names one', async () => {
-      const a = makeScriptedLlmStrategy({ id: 's', replies: ['a'] });
-      const b = makeScriptedLlmStrategy({ id: 'b', replies: ['b'] });
+      const a = makeLlmScriptedStrategy({ id: 's', replies: ['a'] });
+      const b = makeLlmScriptedStrategy({ id: 'b', replies: ['b'] });
       const { dispatcher } = setup({ strategies: makeLlmStrategyRegistry([a, b]), providerByModel: { 'test/strong': 'b' } });
 
       expect((await dispatcher.dispatch(request({ capability: 'StrongCap' }))).strategyId).toBe('b');
@@ -851,7 +851,7 @@ describe('makeLlmDispatcher()', () => {
     });
 
     it('should hold failedAttempts.length === attempts − (accepted ? 1 : 0)', async () => {
-      const scenarios: ScriptedLlmReplies = ['{"answer":"ok"}', '{"answer":1}', 'prose', new APIUserAbortError('a'), rateLimited()];
+      const scenarios: LlmScriptedReplies = ['{"answer":"ok"}', '{"answer":1}', 'prose', new APIUserAbortError('a'), rateLimited()];
 
       for (const reply of scenarios) {
         const { calls, recorder } = recording();
@@ -919,7 +919,7 @@ describe('makeLlmDispatcher()', () => {
     it('should file prefix-changed naming the first differing segment, per partition', async () => {
       const context = makeLlmCallContext({ label: 'root', timing: true });
       const addenda: Record<string, string> = { 'test/fast': 'ADD-1' };
-      const contributors: ReadonlyArray<LlmPromptContributor> = [llmModelAddendumPromptContributor({ promptAddendumByModel: addenda })];
+      const contributors: ReadonlyArray<LlmPromptContributor> = [makeLlmModelAddendumPromptContributor({ promptAddendumByModel: addenda })];
       const { dispatcher } = setup({ replies: ['x'], contributors, cachePartitionOf: (r) => (r.meta as { seat?: string } | undefined)?.seat });
       await dispatcher.dispatch(request({ meta: { seat: 'a' }, callContext: context }));
       await dispatcher.dispatch(request({ meta: { seat: 'b' }, callContext: context }));
@@ -1024,14 +1024,14 @@ describe('makeLlmDispatcher()', () => {
       const caught = await caughtOf(dispatcher.dispatch(request({ validate: VALID })));
 
       expect(isLlmDispatchFaultError(caught)).toBe(true);
-      expect(caught).toMatchObject({ fault: 'unretryable', classification: 'permanent', attempt: 1, summary: llmErrorSummaryOf(thrown) });
+      expect(caught).toMatchObject({ fault: 'unretryable', classification: 'permanent', attempt: 1, summary: formatLlmErrorSummary(thrown) });
       expect((caught as LlmDispatchFaultError).cause).toBe(thrown);
       expect(isRetryableUnknownError).not.toHaveBeenCalled();
       expect(backoff).not.toHaveBeenCalled();
       expect(starts).toHaveLength(1);
       expect(calls).toHaveLength(1);
       expect(calls[0].result).toMatchObject({ decodeStatus: 'dropped', decodeOutcome: 'transport', finishReason: '__unretryable__' });
-      expect(calls[0].failedAttempts).toEqual([expect.objectContaining({ cause: 'unretryable', error: llmErrorSummaryOf(thrown), errorClassification: 'permanent' })]);
+      expect(calls[0].failedAttempts).toEqual([expect.objectContaining({ cause: 'unretryable', error: formatLlmErrorSummary(thrown), errorClassification: 'permanent' })]);
       expect(decodeFailures).toHaveLength(1);
       expect(decodeFailures[0].payload.failures).toEqual([expect.objectContaining({ class: 'unretryable', errorClassification: 'permanent' })]);
       expect(completes).toHaveLength(1);
@@ -1039,7 +1039,7 @@ describe('makeLlmDispatcher()', () => {
 
     it('(b) should resend a 503, then reject on a 400 at attempt 2', async () => {
       const { calls, recorder } = recording();
-      const backoff = vi.fn((_input: LlmDispatchTransportBackoffInput) => 0);
+      const backoff = vi.fn((_input: LlmDispatchTransportBackoffParams) => 0);
       const unavailable = statusError(503);
       const { dispatcher } = setup({ replies: [unavailable, statusError(400)], recorder, transportBackoff: backoff });
       const caught = await caughtOf(dispatcher.dispatch(request({ validate: VALID, maxAttempts: 3 })));

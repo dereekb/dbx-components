@@ -13,7 +13,7 @@
 import { type AbortSignalRef, compareStringsByCodeUnit, type DollarAmount, type Maybe } from '@dereekb/util';
 import type { LlmCallLogPayloadBase } from '../record/llm.call.payload';
 import type { LlmCallBillRead, LlmCallBillReader } from '../strategy/llm.call.bill';
-import { llmCostOf } from '../strategy/llm.usage';
+import { readLlmCost } from '../strategy/llm.usage';
 import { formatLlmUsageCost } from './llm.usage.cost';
 
 /**
@@ -196,7 +196,7 @@ export async function reconcileLlmCallBills(config: ReconcileLlmCallBillsConfig)
     const read: LlmCallBillRead = reads[index] ?? { status: 'pending', generationId: call.generationId as string, detail: 'not read (cancelled)' };
 
     if (read.status === 'billed') {
-      const logged = llmCostOf(call.usage?.cost) ?? 0;
+      const logged = readLlmCost(call.usage?.cost) ?? 0;
       cell.billedCalls += 1;
       cell.logged += logged;
       cell.billed += read.bill.billed;
@@ -237,10 +237,10 @@ export async function reconcileLlmCallBills(config: ReconcileLlmCallBillsConfig)
  *
  * @example
  * ```ts
- * llmBilledShareOf(reconciliation.total); // e.g. 0.5 when the bill is half the list figure
+ * computeLlmBilledShare(reconciliation.total); // e.g. 0.5 when the bill is half the list figure
  * ```
  */
-export function llmBilledShareOf(cell: LlmBillReconcileCell): Maybe<number> {
+export function computeLlmBilledShare(cell: LlmBillReconcileCell): Maybe<number> {
   return cell.billedCalls > 0 && cell.logged > 0 ? cell.billed / cell.logged : undefined;
 }
 
@@ -259,7 +259,7 @@ export function llmBilledShareOf(cell: LlmBillReconcileCell): Maybe<number> {
 export function renderLlmBillReconciliationMarkdown(reconciliation: LlmBillReconciliation, sessionId: string): string {
   const money = (value: DollarAmount): string => formatLlmUsageCost({ cost: value, calls: 1, partial: false });
   const share = (cell: LlmBillReconcileCell): string => {
-    const ratio = llmBilledShareOf(cell);
+    const ratio = computeLlmBilledShare(cell);
     return ratio == null ? 'n/a' : `${(ratio * 100).toFixed(1)}%`;
   };
   const { total } = reconciliation;

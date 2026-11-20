@@ -4,7 +4,7 @@
  */
 
 import { filterUndefinedValues, type Maybe } from '@dereekb/util';
-import { DEFAULT_LLM_MODEL_CONFIG_SOURCE, type LlmCompletionProviderEntryOf, type LlmModelConfigBaseTypes, type LlmModelConfigFile, type LlmModelConfigFileFields, type LlmModelConfigSchema, type LlmModelConfigTypes, type LlmModelProfile, type LlmModelSettingsOf } from './llm.model.config.schema';
+import { DEFAULT_LLM_MODEL_CONFIG_SOURCE, type LlmExtendedCompletionProviderEntry, type LlmModelConfigBaseTypes, type LlmModelConfigFile, type LlmModelConfigFileFields, type LlmModelConfigSchema, type LlmModelConfigTypes, type LlmModelProfile, type LlmExtendedModelSettings } from './llm.model.config.schema';
 
 /**
  * A copy of `record` without the entries named in `names`, in its own order.
@@ -70,7 +70,7 @@ export interface MergeLlmModelConfigFilesConfig<X extends LlmModelConfigTypes = 
  */
 export function mergeLlmModelConfigFiles<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes>(config: MergeLlmModelConfigFilesConfig<X>): LlmModelConfigFile<X> {
   const { base, overlay, schema } = config;
-  const providers: Record<string, LlmCompletionProviderEntryOf<X>> = { ...omitLlmModelConfigNames(base?.providers, overlay?.extensionProviders), ...overlay?.providers };
+  const providers: Record<string, LlmExtendedCompletionProviderEntry<X>> = { ...omitLlmModelConfigNames(base?.providers, overlay?.extensionProviders), ...overlay?.providers };
   const extensionProviders: Record<string, X['extensionProviderEntry']> = { ...omitLlmModelConfigNames(base?.extensionProviders, overlay?.providers), ...overlay?.extensionProviders };
 
   for (const [name, patch] of Object.entries(overlay?.providerPatches ?? {})) {
@@ -84,7 +84,7 @@ export function mergeLlmModelConfigFiles<X extends LlmModelConfigTypes = LlmMode
   }
 
   const profiles: Record<string, LlmModelProfile> = { ...base?.profiles, ...overlay?.profiles };
-  const models: Partial<Record<string, LlmModelSettingsOf<X>>> = { ...base?.models, ...overlay?.models };
+  const models: Partial<Record<string, LlmExtendedModelSettings<X>>> = { ...base?.models, ...overlay?.models };
   const fields: LlmModelConfigFileFields<X> = {
     $schema: overlay?.$schema === undefined ? base?.$schema : overlay.$schema,
     notes: overlay?.notes === undefined ? base?.notes : overlay.notes,

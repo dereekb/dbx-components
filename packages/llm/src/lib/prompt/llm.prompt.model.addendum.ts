@@ -18,7 +18,7 @@ import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { type LlmModelPromptAddendumMap } from '../model/config/llm.model.config.resolve';
 import { type LlmModelId } from '../model/llm.value';
 import { type LlmPromptContribution, type LlmPromptContributor } from './llm.prompt.contributor';
-import { DEFAULT_LLM_PROMPT_LAYOUT, llmPromptSlotOf, type LlmPromptLayout, type LlmPromptSlotId, readLlmPromptSlotSeparator } from './llm.prompt.layout';
+import { DEFAULT_LLM_PROMPT_LAYOUT, findLlmPromptSlotById, type LlmPromptLayout, type LlmPromptSlotId, readLlmPromptSlotSeparator } from './llm.prompt.layout';
 import { type LlmPromptSegment, type LlmPromptSegmentOrigin } from './llm.prompt.segment';
 
 /**
@@ -122,7 +122,7 @@ export interface LlmModelAddendumSegmentConfig extends LlmModelAddendumContribut
 export function llmModelAddendumSegment(config: LlmModelAddendumSegmentConfig): LlmPromptSegment<LlmPromptModelSegmentOrigin> {
   const { model, promptAddendum } = config;
   const slotId = config.slot ?? DEFAULT_LLM_MODEL_ADDENDUM_SLOT_ID;
-  const slot = llmPromptSlotOf(config.layout ?? DEFAULT_LLM_PROMPT_LAYOUT, slotId);
+  const slot = findLlmPromptSlotById(config.layout ?? DEFAULT_LLM_PROMPT_LAYOUT, slotId);
 
   if (slot == null) {
     throw new Error(`llm prompt model addendum: the layout declares no '${slotId}' slot.`);
@@ -132,7 +132,7 @@ export function llmModelAddendumSegment(config: LlmModelAddendumSegmentConfig): 
 }
 
 /**
- * Config for {@link llmModelAddendumPromptContributor}.
+ * Config for {@link makeLlmModelAddendumPromptContributor}.
  */
 export interface LlmModelAddendumPromptContributorConfig {
   /**
@@ -157,12 +157,12 @@ export interface LlmModelAddendumPromptContributorConfig {
  *
  * @example
  * ```ts
- * const contributors = [llmModelAddendumPromptContributor({ promptAddendumByModel: llmModelPromptAddenda(modelConfig) })];
+ * const contributors = [makeLlmModelAddendumPromptContributor({ promptAddendumByModel: llmModelPromptAddenda(modelConfig) })];
  * ```
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function llmModelAddendumPromptContributor<R extends LlmDispatchRequest = LlmDispatchRequest, D extends LlmCapabilityDescriptor = LlmCapabilityDescriptor>(config: LlmModelAddendumPromptContributorConfig): LlmPromptContributor<R, D> {
+export function makeLlmModelAddendumPromptContributor<R extends LlmDispatchRequest = LlmDispatchRequest, D extends LlmCapabilityDescriptor = LlmCapabilityDescriptor>(config: LlmModelAddendumPromptContributorConfig): LlmPromptContributor<R, D> {
   const { promptAddendumByModel } = config;
   const slot = config.slot ?? DEFAULT_LLM_MODEL_ADDENDUM_SLOT_ID;
 
@@ -196,7 +196,7 @@ export interface RestampLlmModelAddendumConfig extends LlmModelAddendumSegmentCo
  * layout, else last. A segment whose id the layout does not declare never anchors. Under the default layout (and any
  * layout that opens with its addendum slot) the addendum leads; a layout with a frame slot before it lands the addendum
  * after the frame. The caller re-derives the prompt and its cache split with `joinLlmPromptSegments` /
- * `llmPromptCacheSegmentsOf`.
+ * `splitLlmPromptCacheSegments`.
  *
  * @param config - The captured segments, the new slug and addendum, the slot and the layout.
  * @returns The restamped segments.

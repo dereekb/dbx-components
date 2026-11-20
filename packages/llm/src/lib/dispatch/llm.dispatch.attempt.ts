@@ -14,10 +14,10 @@ import { repairLlmReplyJson } from '../reply/llm.reply.repair';
 import { type LlmLeverValidator } from '../reply/llm.reply.validator';
 import { type LlmSwallowSink } from '../record/llm.swallow';
 import { type FetchErrorClassification, type IsRetryableUnknownErrorFunction } from '@dereekb/util/fetch';
-import { classifyLlmError, isLlmAbortError, isRetryableLlmErrorClassification, llmErrorSummaryOf } from '../strategy/llm.error';
+import { classifyLlmError, isLlmAbortError, isRetryableLlmErrorClassification, formatLlmErrorSummary } from '../strategy/llm.error';
 import { type LlmDispatchResult, type LlmReplyRepairSummary, type LlmRequest, type LlmStrategy } from '../strategy/llm.strategy';
 import { type LlmDispatchPauseSignal, parkLlmDispatchWhilePaused } from './llm.dispatch.control';
-import { LLM_REPLY_REPAIR_SCORE_PRECISION, llmTimeoutResultOf, llmTransportResultOf, llmUnretryableResultOf } from './llm.dispatch.outcome';
+import { LLM_REPLY_REPAIR_SCORE_PRECISION, makeLlmTimeoutResult, makeLlmTransportResult, makeLlmUnretryableResult } from './llm.dispatch.outcome';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
 
 /**
@@ -83,7 +83,7 @@ export interface LlmDispatchAttemptSend {
    */
   readonly error?: unknown;
   /**
-   * The bounded summary ({@link llmErrorSummaryOf}) of a `transport` or `unretryable` error.
+   * The bounded summary ({@link formatLlmErrorSummary}) of a `transport` or `unretryable` error.
    */
   readonly transportError?: string;
   /**
@@ -113,13 +113,13 @@ export async function sendLlmDispatchAttempt(config: SendLlmDispatchAttemptConfi
     send = { attemptContext, result };
   } catch (error) {
     if (isLlmAbortError(error)) {
-      send = { attemptContext, result: llmTimeoutResultOf(request, strategy.id), fault: 'timeout', error };
+      send = { attemptContext, result: makeLlmTimeoutResult(request, strategy.id), fault: 'timeout', error };
     } else {
       const classification = classifyLlmError(error);
-      const transportError = llmErrorSummaryOf(error);
+      const transportError = formatLlmErrorSummary(error);
       const resend = isRetryableLlmErrorClassification(classification, error, isRetryableUnknownError);
       const fault: LlmDispatchAttemptFault = resend ? 'transport' : 'unretryable';
-      const result = resend ? llmTransportResultOf(request, strategy.id) : llmUnretryableResultOf(request, strategy.id);
+      const result = resend ? makeLlmTransportResult(request, strategy.id) : makeLlmUnretryableResult(request, strategy.id);
       send = { attemptContext, result, fault, error, transportError, classification };
     }
   }
@@ -220,7 +220,7 @@ export interface RunLlmReplyRepairLaneConfig {
 /**
  * The inputs of one bound fast-fix call — the subject reply, its shape, its attempt and the attempt's context.
  */
-export interface LlmBoundReplyFastFixInput {
+export interface LlmBoundReplyFastFixParams {
   /**
    * The subject's served reply text.
    */
@@ -242,10 +242,10 @@ export interface LlmBoundReplyFastFixInput {
 /**
  * A fast fix BOUND to one dispatch (its request, schema hint and self-dispatch already applied).
  */
-export type LlmBoundReplyFastFix = (input: LlmBoundReplyFastFixInput) => Promise<LlmReplyFastFixOutcome>;
+export type LlmBoundReplyFastFix = (input: LlmBoundReplyFastFixParams) => Promise<LlmReplyFastFixOutcome>;
 
 /**
- * The inputs of {@link llmBoundReplyFastFixOf}.
+ * The inputs of {@link makeLlmBoundReplyFastFix}.
  */
 export interface LlmBoundReplyFastFixConfig<R extends LlmDispatchRequest = LlmDispatchRequest, X extends LlmDispatchResult = LlmDispatchResult> {
   /**
@@ -297,7 +297,7 @@ export interface LlmBoundReplyFastFixBinding {
  * @param config - The fixer, the request, the resolved protocol, the schema hint and the self-dispatch.
  * @returns The binding.
  */
-export function llmBoundReplyFastFixOf<R extends LlmDispatchRequest = LlmDispatchRequest, X extends LlmDispatchResult = LlmDispatchResult>(config: LlmBoundReplyFastFixConfig<R, X>): LlmBoundReplyFastFixBinding {
+export function makeLlmBoundReplyFastFix<R extends LlmDispatchRequest = LlmDispatchRequest, X extends LlmDispatchResult = LlmDispatchResult>(config: LlmBoundReplyFastFixConfig<R, X>): LlmBoundReplyFastFixBinding {
   const { replyFastFix, request, protocol, schemaHint, envelope, dispatch } = config;
   const bindable = replyFastFix != null && request.capability !== LLM_REPAIR_REPLY_JSON_CAPABILITY && protocol !== 'line';
   let binding: LlmBoundReplyFastFixBinding;

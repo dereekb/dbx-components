@@ -6,7 +6,7 @@
 
 import { type Maybe } from '@dereekb/util';
 import { type IsRetryableUnknownErrorFunction } from '@dereekb/util/fetch';
-import { type LlmCapabilityDescriptor, type LlmCapabilityDescriptorOf } from '../capability/llm.capability.descriptor';
+import { type LlmCapabilityDescriptor, type LlmCapabilityDescriptorReader } from '../capability/llm.capability.descriptor';
 import { type LlmDecisionDispatchRequest } from '../decision/llm.decision.descriptor';
 import { type LlmDecisionStrategyRegistry } from '../decision/llm.decision.strategy';
 import { type LlmModelProviderBindingMap } from '../model/config/llm.model.config.resolve';
@@ -241,7 +241,7 @@ export interface LlmDispatchGapParams<R extends LlmDispatchRequest = LlmDispatch
  *
  * @typeParam R - The host's request type.
  */
-export interface LlmDispatchStrategySelection<R extends LlmDispatchRequest = LlmDispatchRequest> {
+export interface LlmDispatchStrategySelectorParams<R extends LlmDispatchRequest = LlmDispatchRequest> {
   /**
    * The request being dispatched.
    */
@@ -269,7 +269,7 @@ export interface LlmDispatchStrategySelection<R extends LlmDispatchRequest = Llm
  *
  * @typeParam R - The host's request type.
  */
-export type LlmDispatchStrategySelector<R extends LlmDispatchRequest = LlmDispatchRequest> = (selection: LlmDispatchStrategySelection<R>) => LlmStrategyId;
+export type LlmDispatchStrategySelector<R extends LlmDispatchRequest = LlmDispatchRequest> = (selection: LlmDispatchStrategySelectorParams<R>) => LlmStrategyId;
 
 /**
  * The inputs of {@link LlmDispatcherConfig.callAttributionOf} — the lane and its request.
@@ -385,7 +385,7 @@ export interface LlmDispatcherConfig<R extends LlmDispatchRequest = LlmDispatchR
   /**
    * Looks up a capability's descriptor (absent ⇒ an unregistered capability).
    */
-  readonly descriptorOf: LlmCapabilityDescriptorOf<D>;
+  readonly descriptorOf: LlmCapabilityDescriptorReader<D>;
   /**
    * Resolves the prompt templates of a call.
    */

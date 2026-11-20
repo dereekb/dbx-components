@@ -21,7 +21,7 @@
  */
 
 import { existsSync, readFileSync } from 'node:fs';
-import { errorMessageOf, type Maybe } from '@dereekb/util';
+import { readErrorMessage, type Maybe } from '@dereekb/util';
 import { flattenLlmModelConfigFile, type LlmModelConfigBaseTypes, type LlmModelConfigFile, type LlmModelConfigSchema, type LlmModelConfigTypes, overlayLlmModelConfigFile, parseLlmModelConfigFile, resolveLlmModelProfile } from '@dereekb/llm';
 import { DEFAULT_LLM_ENV_NAMES, firstLlmEnvEntry, type LlmEnvNames, type LlmEnvView } from './llm.node.env';
 import { writeLlmFileAtomic } from './llm.node.file';
@@ -119,7 +119,7 @@ export function loadLlmModelConfigFile<X extends LlmModelConfigTypes = LlmModelC
     try {
       raw = JSON.parse(readFileSync(filePath, 'utf8'));
     } catch (e) {
-      throw new Error(`${schema.label}: failed to parse ${filePath}: ${errorMessageOf(e)}`, { cause: e });
+      throw new Error(`${schema.label}: failed to parse ${filePath}: ${readErrorMessage(e)}`, { cause: e });
     }
 
     loaded = { file: parseLlmModelConfigFile({ raw, source: filePath, schema }), filePath };

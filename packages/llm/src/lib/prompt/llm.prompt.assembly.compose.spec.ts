@@ -6,10 +6,10 @@ import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { makeLlmCallContext } from '../record/llm.call.context';
 import { assembleLlmCapabilityPrompt, composeLlmCapabilityPrompt, type ComposeLlmCapabilityPromptConfig, DEFAULT_LLM_LINE_MANNER_CLAUSE, DEFAULT_LLM_LINE_REPLY_PROTOCOL, type LlmComposedCapabilityPrompt } from './llm.prompt.assembly';
 import { renderLlmOutputContract } from './llm.prompt.contract';
-import { type LlmPromptContribution, type LlmPromptContributor, type LlmPromptContributorInput } from './llm.prompt.contributor';
-import { DEFAULT_LLM_PROMPT_LAYOUT, type LlmPromptSlot, makeLlmPromptLayout } from './llm.prompt.layout';
+import { type LlmPromptContribution, type LlmPromptContributor, type LlmPromptContributorParams } from './llm.prompt.contributor';
+import { DEFAULT_LLM_PROMPT_LAYOUT, type LlmPromptSlot, defineLlmPromptLayout } from './llm.prompt.layout';
 import { type LlmLiveContextBlock } from './llm.prompt.live.context';
-import { type LlmPromptTemplate, type LlmPromptTemplateResolver, type LlmResolvedPromptTemplates, tieredLlmPromptTemplateResolver } from './llm.prompt.template';
+import { type LlmPromptTemplate, type LlmPromptTemplateResolver, type LlmResolvedPromptTemplates, makeLlmTieredPromptTemplateResolver } from './llm.prompt.template';
 
 const TEMPLATES: ReadonlyArray<LlmPromptTemplate> = [
   { key: 'reply-protocol', role: 'reply-protocol', text: 'A-PROTOCOL' },
@@ -17,7 +17,7 @@ const TEMPLATES: ReadonlyArray<LlmPromptTemplate> = [
   { key: 'summarize:context', role: 'context', capability: 'summarize', text: 'C-SUMMARIZE\n{{liveContext}}' }
 ];
 
-const SYNC_RESOLVER = tieredLlmPromptTemplateResolver({ tiers: [{ source: 'defaults', templates: TEMPLATES }] });
+const SYNC_RESOLVER = makeLlmTieredPromptTemplateResolver({ tiers: [{ source: 'defaults', templates: TEMPLATES }] });
 
 const SUMMARY_CONTRACT = { type: 'object', properties: { summary: { type: 'string' } }, required: ['summary'] };
 const OVERRIDE_CONTRACT = { type: 'object', properties: { verdict: { type: 'string' } }, required: ['verdict'] };
@@ -36,7 +36,7 @@ const RENDERED: ReadonlyArray<LlmLiveContextBlock> = [
 
 const TONE_SLOT: LlmPromptSlot = { id: 'tone', role: 'frame', occupancy: 'single', separator: '\n\n' };
 
-const LAYOUT = makeLlmPromptLayout([DEFAULT_LLM_PROMPT_LAYOUT[0], TONE_SLOT, ...DEFAULT_LLM_PROMPT_LAYOUT.slice(1)]);
+const LAYOUT = defineLlmPromptLayout([DEFAULT_LLM_PROMPT_LAYOUT[0], TONE_SLOT, ...DEFAULT_LLM_PROMPT_LAYOUT.slice(1)]);
 
 function request(extra: Partial<LlmDispatchRequest> = {}): LlmDispatchRequest {
   return { capability: 'summarize', renderLiveContext: () => RENDERED, ...extra };
@@ -46,14 +46,14 @@ interface Fixture {
   readonly resolver: LlmPromptTemplateResolver;
   readonly resolverCalls: () => number;
   readonly descriptorOf: Mock<(capability: string) => Maybe<LlmCapabilityDescriptor>>;
-  readonly inputs: LlmPromptContributorInput[];
+  readonly inputs: LlmPromptContributorParams[];
   readonly alpha: LlmPromptContributor;
   readonly notes: LlmPromptContributor;
 }
 
 function fixture(): Fixture {
   let calls = 0;
-  const inputs: LlmPromptContributorInput[] = [];
+  const inputs: LlmPromptContributorParams[] = [];
   const resolver: LlmPromptTemplateResolver = (input) => {
     calls += 1;
     return Promise.resolve(SYNC_RESOLVER(input) as LlmResolvedPromptTemplates);

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { type LlmModelRoutingCapabilityRef } from '../model/llm.capability.rule';
 import { noopLlmCallContext } from '../record/llm.call.context';
-import { compileLlmCritiquePolicy, composeLlmCritics, LLM_CRITIQUE_REPLY_CAPABILITY, type LlmCritic, type LlmCritiqueInput } from './llm.reply.critique';
+import { compileLlmCritiquePolicy, composeLlmCritics, LLM_CRITIQUE_REPLY_CAPABILITY, type LlmCritic, type LlmCritiqueParams } from './llm.reply.critique';
 
 const CAPABILITIES: ReadonlyArray<LlmModelRoutingCapabilityRef> = [
   { capability: 'summarize', tags: ['copy'] },
@@ -88,7 +88,7 @@ describe('compileLlmCritiquePolicy()', () => {
 });
 
 describe('composeLlmCritics()', () => {
-  const input: LlmCritiqueInput = { capability: 'summarize', lever: {}, replyText: '{}', liveContext: '', replyProtocol: 'json', attempt: 1, callContext: noopLlmCallContext() };
+  const input: LlmCritiqueParams = { capability: 'summarize', lever: {}, replyText: '{}', liveContext: '', replyProtocol: 'json', attempt: 1, callContext: noopLlmCallContext() };
 
   it('returns undefined for nothing, or for only absent critics', () => {
     expect(composeLlmCritics()).toBeUndefined();

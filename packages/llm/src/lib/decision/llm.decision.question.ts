@@ -228,7 +228,7 @@ export type LlmDecisionAnswers<Q extends LlmDecisionQuestions = LlmDecisionQuest
 export type LlmDecisionConfidenceBand = 'high' | 'medium' | 'low';
 
 /**
- * Confidence at or above which {@link asLlmDecisionConfidenceBand} reads `high`.
+ * Confidence at or above which {@link toLlmDecisionConfidenceBand} reads `high`.
  *
  * A documented STARTING POINT, not a tuned threshold. Note also that a Noul probability and a Choice
  * confidence answer different questions and are not comparable, so a threshold calibrated for one may
@@ -237,7 +237,7 @@ export type LlmDecisionConfidenceBand = 'high' | 'medium' | 'low';
 export const LLM_DECISION_CONFIDENCE_HIGH = 0.75;
 
 /**
- * Confidence at or above which {@link asLlmDecisionConfidenceBand} reads `medium`.
+ * Confidence at or above which {@link toLlmDecisionConfidenceBand} reads `medium`.
  *
  * See the note on {@link LLM_DECISION_CONFIDENCE_HIGH}.
  */
@@ -320,7 +320,7 @@ export function llmDecisionChoiceOptionNames<O extends string = string>(question
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function asLlmDecisionConfidenceBand(confidence: Maybe<number>): LlmDecisionConfidenceBand {
+export function toLlmDecisionConfidenceBand(confidence: Maybe<number>): LlmDecisionConfidenceBand {
   let result: LlmDecisionConfidenceBand;
 
   if (confidence == null || !Number.isFinite(confidence) || confidence < LLM_DECISION_CONFIDENCE_MEDIUM) {

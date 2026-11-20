@@ -194,8 +194,6 @@ export function sha256Hex(text: string): HexString {
 /**
  * The first `length` characters of {@link sha256Hex} — a short, stable fingerprint of a string's UTF-8 bytes.
  *
- * `@dereekb/llm` keeps 16 characters for its prompt-cache, census and supplement hashes and 12 for its tape keys.
- *
  * @param text - The text to hash.
  * @param length - How many leading hex characters to keep (at most 64).
  * @returns The lowercase hex digest prefix.

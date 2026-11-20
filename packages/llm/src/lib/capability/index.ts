@@ -14,9 +14,9 @@ export {
   LLM_CRITIQUE_REPLY_MAX_OUTPUT_TOKENS,
   LLM_CRITIQUE_REPLY_TEMPLATE,
   LLM_CRITIQUE_UNUSABLE_DIAG_CODE,
-  llmCriticFor,
+  resolveLlmCritiqueFields,
   makeLlmSemanticCritic
 } from './llm.capability.critique.reply';
-export type { CritiqueLlmReplyConfig, LlmCriticForConfig, LlmCritiqueOutcome, MakeLlmSemanticCriticConfig, RenderLlmCritiqueContextConfig } from './llm.capability.critique.reply';
+export type { CritiqueLlmReplyConfig, ResolveLlmCritiqueFieldsConfig, LlmCritiqueOutcome, MakeLlmSemanticCriticConfig, RenderLlmCritiqueContextConfig } from './llm.capability.critique.reply';
 export { DEFAULT_LLM_REPAIR_REPLY_JSON_INSTRUCTIONS, LLM_REPAIR_REPLY_JSON_DESCRIPTOR, LLM_REPAIR_REPLY_JSON_MAX_OUTPUT_TOKENS, LLM_REPAIR_REPLY_JSON_TEMPLATE, LLM_REPLY_REPAIR_FAST_FIX_SWALLOW_SITE, makeLlmReplyFastFixer } from './llm.capability.repair.reply.json';
-export type { LlmReplyFastFixMetaOf, LlmReplyFastFixRequestOf, MakeLlmReplyFastFixerConfig } from './llm.capability.repair.reply.json';
+export type { LlmReplyFastFixMetaReader, LlmReplyFastFixRequestBuilder, MakeLlmReplyFastFixerConfig } from './llm.capability.repair.reply.json';

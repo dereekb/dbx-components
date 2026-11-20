@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { type ConfiguredFetch } from '@dereekb/util/fetch';
-import { DEFAULT_LLM_COMPLETION_TIMEOUT_MS, DEFAULT_LLM_MAX_OUTPUT_TOKENS, DEFAULT_LLM_REASONING_OFF_ENCODING, type LlmRequest } from '@dereekb/llm';
+import { DEFAULT_LLM_COMPLETION_TIMEOUT_MS, DEFAULT_LLM_MAX_OUTPUT_TOKENS, DEFAULT_LLM_REASONING_OFF_ENCODING, resolveLlmCompletionCallTimeoutMs, type LlmRequest } from '@dereekb/llm';
 import { LLM_OPENAI_STRATEGY_KIND, makeLlmOpenAiStrategy } from './openai.strategy';
-import { llmOpenAiCallTimeoutMs, type LlmOpenAiChatClient, type LlmOpenAiRequestOptions } from './openai.chat';
+import { type LlmOpenAiChatClient, type LlmOpenAiRequestOptions } from './openai.chat';
 
 /**
  * The `openai` strategy — the provider-neutral hook set over the OpenAI-compatible chat base. Proves it (1) reaches
@@ -423,8 +423,8 @@ describe('makeLlmOpenAiStrategy()', () => {
     await strategy.complete({ prompt: 'big', capability: 'X', maxOutputTokens: 16_384 });
 
     expect(options[0]?.signal).toBeInstanceOf(AbortSignal);
-    expect(options[0]?.timeout).toBe(llmOpenAiCallTimeoutMs(60_000, 100));
-    expect(options[1]?.timeout).toBe(llmOpenAiCallTimeoutMs(60_000, 16_384));
+    expect(options[0]?.timeout).toBe(resolveLlmCompletionCallTimeoutMs({ timeoutMs: 60_000, maxOutputTokens: 100 }));
+    expect(options[1]?.timeout).toBe(resolveLlmCompletionCallTimeoutMs({ timeoutMs: 60_000, maxOutputTokens: 16_384 }));
     expect(options[1]!.timeout!).toBeGreaterThan(options[0]!.timeout!);
   });
 
@@ -434,7 +434,7 @@ describe('makeLlmOpenAiStrategy()', () => {
 
     await strategy.complete({ prompt: 'hi', capability: 'X' });
 
-    expect(options[0]?.timeout).toBe(llmOpenAiCallTimeoutMs(DEFAULT_LLM_COMPLETION_TIMEOUT_MS, DEFAULT_LLM_MAX_OUTPUT_TOKENS));
+    expect(options[0]?.timeout).toBe(resolveLlmCompletionCallTimeoutMs({ timeoutMs: DEFAULT_LLM_COMPLETION_TIMEOUT_MS, maxOutputTokens: DEFAULT_LLM_MAX_OUTPUT_TOKENS }));
   });
 
   it('OR-merges an external cancellation signal into the per-request signal', async () => {

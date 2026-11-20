@@ -70,7 +70,7 @@ export interface LlmFetchFake {
  * @param init - The `fetch` init.
  * @returns The recorded request.
  */
-export function llmFetchFakeRequestOf(input: Parameters<ConfiguredFetch>[0], init?: Maybe<RequestInit>): LlmFetchFakeRequest {
+export function toLlmFetchFakeRequest(input: Parameters<ConfiguredFetch>[0], init?: Maybe<RequestInit>): LlmFetchFakeRequest {
   let url: string;
 
   if (typeof input === 'string') {
@@ -139,7 +139,7 @@ export function makeLlmFetchFake(respond: LlmFetchFakeRespond | LlmFetchFakeAnsw
   const requests: LlmFetchFakeRequest[] = [];
 
   const fakeFetch: ConfiguredFetch = async (input, init) => {
-    const request = llmFetchFakeRequestOf(input, init);
+    const request = toLlmFetchFakeRequest(input, init);
     requests.push(request);
     let response: Response;
 

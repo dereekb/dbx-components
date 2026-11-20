@@ -4,7 +4,7 @@
  */
 
 import { type Maybe } from '@dereekb/util';
-import { type LlmCapabilityDescriptor, type LlmCapabilityDescriptorOf } from '../capability/llm.capability.descriptor';
+import { type LlmCapabilityDescriptor, type LlmCapabilityDescriptorReader } from '../capability/llm.capability.descriptor';
 import { type LlmModelProviderBindingMap } from '../model/config/llm.model.config.resolve';
 import { type LlmCapabilityModelSource, type LlmCapabilityReasoningSource, resolveLlmCapabilityModel, resolveLlmCapabilityOutputControls, resolveLlmCapabilityProvider } from '../model/llm.model.precedence';
 import { type LlmCapabilityRoute, type LlmCompiledModelRouting } from '../model/llm.model.routing';
@@ -17,7 +17,7 @@ import { type LlmDispatchRequest } from './llm.dispatch.request';
 import { type LlmDispatchStrategySelector } from './llm.dispatcher.config';
 
 /**
- * The inputs of {@link llmDispatchStrategySelectorOf}.
+ * The inputs of {@link resolveLlmDispatchStrategySelector}.
  *
  * @typeParam R - The host's request type.
  */
@@ -43,7 +43,7 @@ export interface LlmDispatchStrategySelectorConfig<R extends LlmDispatchRequest 
  * @param config - The host selector, the bindings and the default strategy id.
  * @returns The selector.
  */
-export function llmDispatchStrategySelectorOf<R extends LlmDispatchRequest = LlmDispatchRequest>(config: LlmDispatchStrategySelectorConfig<R>): LlmDispatchStrategySelector<R> {
+export function resolveLlmDispatchStrategySelector<R extends LlmDispatchRequest = LlmDispatchRequest>(config: LlmDispatchStrategySelectorConfig<R>): LlmDispatchStrategySelector<R> {
   const { selectStrategy, providerByModel, defaultStrategyId } = config;
   return selectStrategy ?? ((selection) => resolveLlmCapabilityProvider({ route: selection.route, model: selection.model, bindings: providerByModel, defaultProvider: defaultStrategyId }).provider);
 }
@@ -57,7 +57,7 @@ export function llmDispatchStrategySelectorOf<R extends LlmDispatchRequest = Llm
 export interface LlmDispatchResolveSetup<R extends LlmDispatchRequest = LlmDispatchRequest, D extends LlmCapabilityDescriptor = LlmCapabilityDescriptor> {
   readonly strategies: LlmStrategyRegistry;
   readonly selectStrategy: LlmDispatchStrategySelector<R>;
-  readonly descriptorOf: LlmCapabilityDescriptorOf<D>;
+  readonly descriptorOf: LlmCapabilityDescriptorReader<D>;
   readonly capabilityRoutes?: Maybe<LlmCompiledModelRouting>;
   readonly modelTiers: LlmModelTierMap;
   readonly defaultTier: LlmModelTierKey;

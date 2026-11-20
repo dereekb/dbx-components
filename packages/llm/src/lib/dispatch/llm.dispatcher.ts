@@ -103,12 +103,12 @@ export interface LlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequest
  *
  * @example
  * ```ts
- * const fake = llmDispatcherFromDispatch(async (request) => ({ text: '{}', strategyId: 'fake', capability: request.capability }));
+ * const fake = makeLlmDispatcherFromDispatch(async (request) => ({ text: '{}', strategyId: 'fake', capability: request.capability }));
  * ```
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function llmDispatcherFromDispatch<R extends LlmDispatchRequest = LlmDispatchRequest, X extends LlmDispatchResult = LlmDispatchResult>(dispatch: (request: R) => Promise<X>): LlmDispatcher<R, X> {
+export function makeLlmDispatcherFromDispatch<R extends LlmDispatchRequest = LlmDispatchRequest, X extends LlmDispatchResult = LlmDispatchResult>(dispatch: (request: R) => Promise<X>): LlmDispatcher<R, X> {
   return {
     dispatch,
     preparePrompt: makeLlmPromptFactory<R, X>({

@@ -23,8 +23,8 @@ import { type LlmProviderConfig } from '../model/config/llm.model.config.resolve
 import { type LlmDecisionStrategy, type LlmDecisionStrategyRegistry } from '../decision/llm.decision.strategy';
 import { makeLlmStrategyRegistry } from '../strategy/llm.strategy.registry';
 import { type LlmDecisionAdapterConfig } from './llm.adapter';
-import { checkLlmAdapterStrategy, llmAdaptersOf, resolveLlmAdapter, type LlmAdapterRegistry } from './llm.adapter.registry';
-import { llmProviderBaseUrlOf, type LlmProviderAdaptersConfig } from './llm.adapter.provider';
+import { checkLlmAdapterStrategy, filterLlmAdaptersByFacet, resolveLlmAdapter, type LlmAdapterRegistry } from './llm.adapter.registry';
+import { resolveLlmProviderBaseUrl, type LlmProviderAdaptersConfig } from './llm.adapter.provider';
 
 /**
  * The decision route one provider serves — its DECLARED `decision`, else the kind of the first registered decision
@@ -34,9 +34,9 @@ import { llmProviderBaseUrlOf, type LlmProviderAdaptersConfig } from './llm.adap
  * @param config - The provider (its `transport` and `decision`) and the registry.
  * @returns The route, `'none'` when the provider cannot serve a decision.
  */
-export function llmProviderDecisionRouteOf(config: LlmProviderAdaptersConfig<Pick<LlmCompletionProviderEntry, 'transport' | 'decision'>>): LlmStrategyId {
+export function resolveLlmProviderDecisionRoute(config: LlmProviderAdaptersConfig<Pick<LlmCompletionProviderEntry, 'transport' | 'decision'>>): LlmStrategyId {
   const { provider, adapters } = config;
-  return provider.decision ?? llmAdaptersOf({ adapters, facet: 'decision' }).find((adapter) => adapter.transports?.includes(provider.transport))?.kind ?? LLM_PROVIDER_FACET_NONE;
+  return provider.decision ?? filterLlmAdaptersByFacet({ adapters, facet: 'decision' }).find((adapter) => adapter.transports?.includes(provider.transport))?.kind ?? LLM_PROVIDER_FACET_NONE;
 }
 
 /**
@@ -59,7 +59,7 @@ export interface LlmDecisionCapableProvidersConfig<P extends LlmProviderConfig =
 }
 
 /**
- * The providers that CAN serve a decision — a decision route ({@link llmProviderDecisionRouteOf}) and a non-empty key
+ * The providers that CAN serve a decision — a decision route ({@link resolveLlmProviderDecisionRoute}) and a non-empty key
  * — ordered by route preference, provider order within a route (a STABLE sort). The FIRST entry is the lane's default.
  *
  * @param config - The providers, the registry and the optional route preference.
@@ -67,8 +67,8 @@ export interface LlmDecisionCapableProvidersConfig<P extends LlmProviderConfig =
  */
 export function llmDecisionCapableProviders<P extends LlmProviderConfig>(config: LlmDecisionCapableProvidersConfig<P>): ReadonlyArray<P> {
   const { providers, adapters, routePreference } = config;
-  const preference = routePreference ?? llmAdaptersOf({ adapters, facet: 'decision' }).map((adapter) => adapter.kind);
-  const routed = (providers ?? []).map((provider) => ({ provider, route: llmProviderDecisionRouteOf({ provider, adapters }) })).filter(({ provider, route }) => route !== LLM_PROVIDER_FACET_NONE && isNotBlankString(provider.apiKey));
+  const preference = routePreference ?? filterLlmAdaptersByFacet({ adapters, facet: 'decision' }).map((adapter) => adapter.kind);
+  const routed = (providers ?? []).map((provider) => ({ provider, route: resolveLlmProviderDecisionRoute({ provider, adapters }) })).filter(({ provider, route }) => route !== LLM_PROVIDER_FACET_NONE && isNotBlankString(provider.apiKey));
   const rank = (route: LlmStrategyId): number => {
     const index = preference.indexOf(route);
     return index === -1 ? preference.length : index;
@@ -102,9 +102,9 @@ export function makeLlmDecisionStrategies(config: MakeLlmDecisionStrategiesConfi
 
   const built = llmDecisionCapableProviders(config).map((provider): LlmDecisionStrategy => {
     const label = `provider '${provider.id}'`;
-    const route = llmProviderDecisionRouteOf({ provider, adapters });
+    const route = resolveLlmProviderDecisionRoute({ provider, adapters });
     const adapter = resolveLlmAdapter({ adapters, facet: 'decision', kind: route, label });
-    const baseUrl = llmProviderBaseUrlOf({ provider, adapters });
+    const baseUrl = resolveLlmProviderBaseUrl({ provider, adapters });
     const strategy = adapter.make({ provider, ...(baseUrl == null ? {} : { baseUrl }), ...(fetch == null ? {} : { fetch }), ...(timeoutMs == null ? {} : { timeoutMs }) });
     return checkLlmAdapterStrategy({ label, adapter, providerId: provider.id, strategy });
   });
@@ -120,6 +120,6 @@ export function makeLlmDecisionStrategies(config: MakeLlmDecisionStrategiesConfi
  * @param adapters - The adapter registry.
  * @returns The decision strategy kinds.
  */
-export function llmDecisionStrategyKinds(adapters: LlmAdapterRegistry): ReadonlySet<LlmStrategyId> {
-  return new Set(llmAdaptersOf({ adapters, facet: 'decision' }).map((adapter) => adapter.strategyKind));
+export function readLlmDecisionStrategyKinds(adapters: LlmAdapterRegistry): ReadonlySet<LlmStrategyId> {
+  return new Set(filterLlmAdaptersByFacet({ adapters, facet: 'decision' }).map((adapter) => adapter.strategyKind));
 }

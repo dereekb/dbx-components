@@ -92,7 +92,7 @@ export interface LlmRetryLever {
  * The inputs {@link chooseLlmRetryLever} decides from — everything about the FAILED attempt that a rung's
  * availability depends on. Pure data: the chooser reads no strategy, no config and no clock.
  */
-export interface ChooseLlmRetryLeverInput {
+export interface ChooseLlmRetryLeverConfig {
   /**
    * Why the attempt is being retried.
    */
@@ -234,7 +234,7 @@ const REASONING_ONLY_LADDER: ReadonlyArray<LlmRetryLeverKind> = ['reasoning-off'
  * @param input - The failed attempt's facts.
  * @returns The rendered move, or `undefined` when the rung is unavailable.
  */
-function priceRung(rung: LlmRetryLeverKind, input: ChooseLlmRetryLeverInput): { readonly from: string; readonly to: string; readonly reason: string; readonly headroom?: number } | undefined {
+function priceRung(rung: LlmRetryLeverKind, input: ChooseLlmRetryLeverConfig): { readonly from: string; readonly to: string; readonly reason: string; readonly headroom?: number } | undefined {
   let priced: { readonly from: string; readonly to: string; readonly reason: string; readonly headroom?: number } | undefined;
 
   switch (rung) {
@@ -303,7 +303,7 @@ function priceRung(rung: LlmRetryLeverKind, input: ChooseLlmRetryLeverInput): { 
  * @param input - The failed attempt's facts.
  * @returns The clause.
  */
-function unavailableBecause(rung: LlmRetryLeverKind, input: ChooseLlmRetryLeverInput): string {
+function unavailableBecause(rung: LlmRetryLeverKind, input: ChooseLlmRetryLeverConfig): string {
   let clause: string;
 
   switch (rung) {
@@ -362,7 +362,7 @@ function unavailableBecause(rung: LlmRetryLeverKind, input: ChooseLlmRetryLeverI
  * @param input - The failed attempt's facts.
  * @returns The chosen lever.
  */
-export function chooseLlmRetryLever(input: ChooseLlmRetryLeverInput): LlmRetryLever {
+export function chooseLlmRetryLever(input: ChooseLlmRetryLeverConfig): LlmRetryLever {
   // REASONING-ONLY outranks LENGTH-CAPPED: a reply that spent its whole completion on invisible thinking is
   // length-capped too, and raising the cap just buys more thinking. Turn the thinking off first; the truncation
   // ladder is the right answer for every other cap-ended reply.

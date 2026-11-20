@@ -130,7 +130,7 @@ export interface LlmDispatchRetryLadder {
  * @param cause - The failure class it answers.
  * @returns The stamp.
  */
-export function llmCallAttemptRetryOf(lever: LlmRetryLever, cause: LlmRetryCause): LlmCallAttemptRetry {
+export function toLlmCallAttemptRetry(lever: LlmRetryLever, cause: LlmRetryCause): LlmCallAttemptRetry {
   return { lever: lever.lever, from: lever.from, to: lever.to, cause, ...(lever.headroom == null ? {} : { headroom: lever.headroom }) };
 }
 
@@ -197,7 +197,7 @@ export function makeLlmDispatchRetryLadder(config: LlmDispatchRetryLadderConfig)
       }
 
       callContext.diag({ level: 'info', code: 'retry-lever', fields: { capability, attempt: attempt + 1, cause, lever: lever.lever, from: lever.from, to: lever.to, reason: lever.reason }, message: llmRetryLeverMessageOf(lever.lever) });
-      pendingRetry = llmCallAttemptRetryOf(lever, cause);
+      pendingRetry = toLlmCallAttemptRetry(lever, cause);
       return lever;
     },
     bonusDue(retry) {
@@ -216,7 +216,7 @@ export function makeLlmDispatchRetryLadder(config: LlmDispatchRetryLadderConfig)
         fields: { capability, attempt: attempt + 1, cause, lever: lever.lever, from: lever.from, to: lever.to, reason: lever.reason, bonus: true, induced: 'reasoning-low' },
         message: 'the reasoning-low re-ask was cut off by the completion cap; one bonus attempt with reasoning off'
       });
-      pendingRetry = { ...llmCallAttemptRetryOf(lever, cause), bonus: true, induced: 'reasoning-low' };
+      pendingRetry = { ...toLlmCallAttemptRetry(lever, cause), bonus: true, induced: 'reasoning-low' };
       return lever;
     },
     bonusAttempts() {
@@ -235,7 +235,7 @@ export function makeLlmDispatchRetryLadder(config: LlmDispatchRetryLadderConfig)
 }
 
 /**
- * The inputs of {@link llmDecodeRetryModelOf}.
+ * The inputs of {@link resolveLlmDecodeRetryModel}.
  */
 export interface LlmDecodeRetryModelConfig {
   /**
@@ -258,7 +258,7 @@ export interface LlmDecodeRetryModelConfig {
  * @returns The escalation slug, or `undefined` when there is none.
  * @throws {Error} When an explicit tier key is not in the map.
  */
-export function llmDecodeRetryModelOf(config: LlmDecodeRetryModelConfig): Maybe<LlmModelId> {
+export function resolveLlmDecodeRetryModel(config: LlmDecodeRetryModelConfig): Maybe<LlmModelId> {
   const { modelTiers } = config;
   const decodeRetryTier = config.decodeRetryTier?.trim() ?? '';
   let model: Maybe<LlmModelId>;

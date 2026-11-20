@@ -10,7 +10,7 @@
  * class, so `instanceof` holds whichever name was imported. These names will be removed in a future major release.
  */
 import {
-  asLlmDecisionConfidenceBand,
+  toLlmDecisionConfidenceBand,
   isBlankLlmDecisionEntry,
   isLlmDecisionModelId,
   LLM_DECISION_CHOICE_OPTIONS_MAX,
@@ -100,9 +100,9 @@ export const OPENROUTER_SYSTEM_ONE_MODEL_NAMESPACE = LLM_DECISION_MODEL_NAMESPAC
  */
 export const isBlankOpenRouterDecisionEntry = isBlankLlmDecisionEntry;
 /**
- * @deprecated Use {@link asLlmDecisionConfidenceBand} from `@dereekb/llm/decision`; this is the same function.
+ * @deprecated Use {@link toLlmDecisionConfidenceBand} from `@dereekb/llm/decision`; this is the same function.
  */
-export const asOpenRouterDecisionConfidenceBand = asLlmDecisionConfidenceBand;
+export const asOpenRouterDecisionConfidenceBand = toLlmDecisionConfidenceBand;
 /**
  * @deprecated Use {@link mapLlmDecisionChoiceRows} from `@dereekb/llm/decision`; this is the same function.
  */

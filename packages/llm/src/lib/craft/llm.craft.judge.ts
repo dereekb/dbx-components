@@ -1,10 +1,10 @@
 /**
  * The CRAFT JUDGE — the decision pass that decides, per dispatch, whether each JUDGED craft note (one carrying an
  * `ask`) applies to this request. It is a site's `LlmPromptSite.judge`: the craft contributor
- * (`llmCraftPromptContributor`) calls it once, at the root of a dispatch, between `llmCraftCandidatesOf` and
+ * (`makeLlmCraftPromptContributor`) calls it once, at the root of a dispatch, between `resolveLlmCraftCandidates` and
  * `settleLlmCraftNotes`.
  *
- * - **The state** is only the site inputs some asked note names in backticks (`llmCraftAskInputsOf` over the site),
+ * - **The state** is only the site inputs some asked note names in backticks (`readLlmCraftAskInputs` over the site),
  *   each clipped to the site's `judgeInputMax` chars. A note none of whose named inputs the site carries is not asked
  *   (it takes its `unserved` posture), and no asked note means no call at all.
  * - **The questions:** one Noul `n<i>` per asked note, its `ask` VERBATIM (the note's own words; code composes none).
@@ -22,7 +22,7 @@ import { type LlmPromptSiteInputs, type LlmPromptSiteJudge, type LlmPromptSiteJu
 import { type LlmSwallowSink, type LlmSwallowSiteId } from '../record/llm.swallow';
 import { type LlmCraftNoteId } from './llm.craft.identity';
 import { LLM_CRAFT_NOTE_SELECT_DECISION_ID } from './llm.craft.note';
-import { llmCraftAskInputsOf, type LlmCraftSiteRegistry } from './llm.craft.site';
+import { readLlmCraftAskInputs, type LlmCraftSiteRegistry } from './llm.craft.site';
 
 /**
  * The swallow site a faulted or thrown judge call reports.
@@ -62,9 +62,9 @@ function clipLlmCraftJudgeInput(text: string, max: number): string {
 }
 
 /**
- * Config for {@link llmCraftJudgeInputOf}.
+ * Config for {@link toLlmCraftJudgeInput}.
  */
-export interface LlmCraftJudgeInputOfConfig {
+export interface ToLlmCraftJudgeInputConfig {
   /**
    * The site kind, the asked notes and the site inputs.
    */
@@ -82,7 +82,7 @@ export interface LlmCraftJudgeInputOfConfig {
  * @param config - The judge request and the host's craft sites.
  * @returns The input, or `undefined`.
  */
-export function llmCraftJudgeInputOf(config: LlmCraftJudgeInputOfConfig): Maybe<LlmCraftJudgeInput> {
+export function toLlmCraftJudgeInput(config: ToLlmCraftJudgeInputConfig): Maybe<LlmCraftJudgeInput> {
   const { request, sites } = config;
   const site = sites.siteOf(request.kind);
   const notes: LlmCraftJudgeNote[] = [];
@@ -90,7 +90,7 @@ export function llmCraftJudgeInputOf(config: LlmCraftJudgeInputOfConfig): Maybe<
 
   if (site != null) {
     for (const note of request.asked) {
-      const present = llmCraftAskInputsOf(note.ask ?? '', [site]).filter((name) => isNotBlankString(request.inputs[name]));
+      const present = readLlmCraftAskInputs(note.ask ?? '', [site]).filter((name) => isNotBlankString(request.inputs[name]));
 
       if (note.ask != null && present.length > 0) {
         notes.push({ id: note.id, ask: note.ask, floor: note.floor });
@@ -108,7 +108,7 @@ export function llmCraftJudgeInputOf(config: LlmCraftJudgeInputOfConfig): Maybe<
  * @param at - The note's index in {@link LlmCraftJudgeInput.notes}.
  * @returns `n<at>`.
  */
-export function llmCraftJudgeQuestionKeyOf(at: number): string {
+export function toLlmCraftJudgeQuestionKey(at: number): string {
   return `n${at}`;
 }
 
@@ -121,7 +121,7 @@ export const LLM_CRAFT_NOTE_SELECT_DECISION = /*#__PURE__*/ defineLlmDecision({
   decision: LLM_CRAFT_NOTE_SELECT_DECISION_ID,
   describe: 'whether each judged craft note applies to this request',
   state: (input: LlmCraftJudgeInput) => ({ ...input.inputs }),
-  questions: (input: LlmCraftJudgeInput): LlmDecisionQuestions => Object.fromEntries(input.notes.map((note, at) => [llmCraftJudgeQuestionKeyOf(at), llmNoulQuestion(note.ask)]))
+  questions: (input: LlmCraftJudgeInput): LlmDecisionQuestions => Object.fromEntries(input.notes.map((note, at) => [toLlmCraftJudgeQuestionKey(at), llmNoulQuestion(note.ask)]))
 });
 
 /**
@@ -136,7 +136,7 @@ export function readLlmCraftJudgeVerdicts(answers: LlmDecisionAnswers<LlmDecisio
   const verdicts = new Map<LlmCraftNoteId, number>();
 
   input.notes.forEach((note, at) => {
-    const answer = (answers as Readonly<Record<string, Maybe<LlmDecisionAnswer>>>)[llmCraftJudgeQuestionKeyOf(at)];
+    const answer = (answers as Readonly<Record<string, Maybe<LlmDecisionAnswer>>>)[toLlmCraftJudgeQuestionKey(at)];
 
     if (answer?.type === 'noul' && typeof answer.noul === 'number') {
       verdicts.set(note.id, answer.noul);
@@ -153,7 +153,7 @@ export function readLlmCraftJudgeVerdicts(answers: LlmDecisionAnswers<LlmDecisio
  * @param input - The input.
  * @returns `{ craft: { asked, kept } }`.
  */
-export function llmCraftJudgeStampOf(verdicts: LlmPromptSiteJudgeVerdicts, input: LlmCraftJudgeInput): { readonly craft: { readonly asked: ReadonlyArray<LlmCraftNoteId>; readonly kept: ReadonlyArray<LlmCraftNoteId> } } {
+export function toLlmCraftJudgeStamp(verdicts: LlmPromptSiteJudgeVerdicts, input: LlmCraftJudgeInput): { readonly craft: { readonly asked: ReadonlyArray<LlmCraftNoteId>; readonly kept: ReadonlyArray<LlmCraftNoteId> } } {
   return { craft: { asked: input.notes.map((note) => note.id), kept: input.notes.filter((note) => (verdicts.get(note.id) ?? -1) >= note.floor).map((note) => note.id) } };
 }
 
@@ -202,13 +202,13 @@ export function makeLlmCraftJudge(config: MakeLlmCraftJudgeConfig): LlmPromptSit
   const { sites, dispatcher, available, onUnavailable, swallow } = config;
 
   return async (request) => {
-    const input = llmCraftJudgeInputOf({ request, sites });
+    const input = toLlmCraftJudgeInput({ request, sites });
     let verdicts: Maybe<LlmPromptSiteJudgeVerdicts>;
 
     if (input != null) {
       if (dispatcher?.decide != null && (available?.() ?? true)) {
         try {
-          const result = await dispatcher.decide({ capability: request.capability, decision: LLM_CRAFT_NOTE_SELECT_DECISION, input, stamp: (answers) => llmCraftJudgeStampOf(readLlmCraftJudgeVerdicts(answers, input), input) });
+          const result = await dispatcher.decide({ capability: request.capability, decision: LLM_CRAFT_NOTE_SELECT_DECISION, input, stamp: (answers) => toLlmCraftJudgeStamp(readLlmCraftJudgeVerdicts(answers, input), input) });
           verdicts = readLlmCraftJudgeVerdicts(result.answers, input);
         } catch (error) {
           swallow?.(LLM_CRAFT_JUDGE_DECIDE_SWALLOW_SITE, error);

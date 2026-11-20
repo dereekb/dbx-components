@@ -8,7 +8,7 @@
  * bad default-tier setting reddens a build or test rather than silently downgrading to the default model.
  *
  * **Growable value type.** A tier value is a bare slug OR a rich {@link LlmModelTierConfig} (`{ model,
- * maxOutputTokens?, reasoning? }`), and every reader goes through {@link llmTierModelOf} / {@link llmTierConfigOf}
+ * maxOutputTokens?, reasoning? }`), and every reader goes through {@link readLlmTierModel} / {@link toLlmTierConfig}
  * (never the value directly), so widening the value touches only this module and the output-control reader.
  *
  * **No slugs.** The default KEYS (`fast`, `strong`, `off`) are library vocabulary; a slug never is. A host brings its
@@ -101,7 +101,7 @@ export function resolveLlmDefaultModelTierKey(defaultTier: Maybe<string>): LlmMo
  * @param value - The tier value (a bare slug or a rich config).
  * @returns The concrete model slug.
  */
-export function llmTierModelOf(value: LlmModelTierValue): LlmModelId {
+export function readLlmTierModel(value: LlmModelTierValue): LlmModelId {
   return typeof value === 'string' ? value : value.model;
 }
 
@@ -113,7 +113,7 @@ export function llmTierModelOf(value: LlmModelTierValue): LlmModelId {
  * @param value - The tier value (a bare slug or a rich config).
  * @returns The tier config.
  */
-export function llmTierConfigOf(value: LlmModelTierValue): LlmModelTierConfig {
+export function toLlmTierConfig(value: LlmModelTierValue): LlmModelTierConfig {
   return typeof value === 'string' ? { model: value } : value;
 }
 
@@ -127,7 +127,7 @@ export function llmTierConfigOf(value: LlmModelTierValue): LlmModelTierConfig {
  * @throws {Error} When `key` is not present in `tiers`.
  */
 export function resolveLlmModelTier(tiers: LlmModelTierMap, key: LlmModelTierKey): LlmModelId {
-  return llmTierModelOf(resolveLlmModelTierValue(tiers, key));
+  return readLlmTierModel(resolveLlmModelTierValue(tiers, key));
 }
 
 /**

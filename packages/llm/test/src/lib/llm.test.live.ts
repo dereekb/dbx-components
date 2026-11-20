@@ -4,7 +4,7 @@
  * it and bind it.
  */
 
-import { errorMessageOf, type Maybe } from '@dereekb/util';
+import { readErrorMessage, type Maybe } from '@dereekb/util';
 import { type LlmCompleteOptions, type LlmCompletion, type LlmDecisionStrategy, type LlmModelId, type LlmRequest, type LlmStrategy, type LlmStrategyId, type LlmStrategyRegistry, makeLlmStrategyRegistry } from '@dereekb/llm';
 
 /**
@@ -58,7 +58,7 @@ export interface LlmLiveStrategyBinding {
  * @param strategy - The live (or wrapped) strategy.
  * @returns The registry + the default strategy id, ready to spread into a dispatcher config.
  */
-export function llmLiveStrategyBindingOf(strategy: LlmStrategy): LlmLiveStrategyBinding {
+export function toLlmLiveStrategyBinding(strategy: LlmStrategy): LlmLiveStrategyBinding {
   return { strategies: makeLlmStrategyRegistry([strategy]), defaultStrategyId: strategy.id };
 }
 
@@ -133,7 +133,7 @@ function isLlmAuthFailure(error: unknown): boolean {
  *
  * Not a swallow: every error is rethrown, an auth one re-dressed with `cause` set so the original stays reachable, any
  * other one untouched. The key itself is never printed — only the NAME of the variable holding it. Every other member
- * of the strategy is spread through unchanged (`id` is load-bearing for {@link llmLiveStrategyBindingOf}).
+ * of the strategy is spread through unchanged (`id` is load-bearing for {@link toLlmLiveStrategyBinding}).
  *
  * @param config - The strategy and what to name in the message.
  * @returns A strategy identical to the input except that an auth failure carries the operator's next step.
@@ -151,7 +151,7 @@ export function decorateLlmLiveStrategyAuthFailures(config: DecorateLlmLiveStrat
         result = await strategy.complete(request, options);
       } catch (error) {
         if (isLlmAuthFailure(error)) {
-          const message = errorMessageOf(error);
+          const message = readErrorMessage(error);
           const hint = selectEnv == null ? '' : ` (or repoint ${selectEnv} / ${apiKeyEnv})`;
           throw new Error(`${label} live spec: the '${providerId}' provider at ${baseUrl ?? 'its default endpoint'} REJECTED the credential from ${apiKeyEnv} while calling ${model ?? request.model ?? 'its default model'}. The provider said: ${message}. Rotate that key${hint}.`, { cause: error });
         }

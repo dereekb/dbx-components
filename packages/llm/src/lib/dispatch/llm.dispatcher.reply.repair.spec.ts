@@ -9,13 +9,13 @@
 
 import { type } from 'arktype';
 import { describe, expect, it } from 'vitest';
-import { makeScriptedLlmStrategy, type ScriptedLlmReplies } from '@dereekb/llm/test';
+import { makeLlmScriptedStrategy, type LlmScriptedReplies } from '@dereekb/llm/test';
 import { LLM_CRITIQUE_REPLY_DESCRIPTOR, LLM_CRITIQUE_REPLY_TEMPLATE, makeLlmSemanticCritic } from '../capability/llm.capability.critique.reply';
 import { LLM_REPAIR_REPLY_JSON_DESCRIPTOR, LLM_REPAIR_REPLY_JSON_TEMPLATE, LLM_REPLY_REPAIR_FAST_FIX_SWALLOW_SITE, makeLlmReplyFastFixer, renderLlmRepairReplyJsonContext } from '../capability/llm.capability.repair.reply.json';
 import { defineLlmCapability, type LlmCapabilityDescriptor } from '../capability/llm.capability.descriptor';
 import { type LlmModelTierMap } from '../model/llm.model.tier';
 import { type LlmLiveContextBlock } from '../prompt/llm.prompt.live.context';
-import { type LlmPromptTemplate, tieredLlmPromptTemplateResolver } from '../prompt/llm.prompt.template';
+import { type LlmPromptTemplate, makeLlmTieredPromptTemplateResolver } from '../prompt/llm.prompt.template';
 import { type LlmCallContext, type LlmCallDiag, makeLlmCallContext } from '../record/llm.call.context';
 import { type LlmCallRecord, type LlmDecodeFailureRecord } from '../record/llm.call.record';
 import { type LlmSwallowSiteId } from '../record/llm.swallow';
@@ -40,7 +40,7 @@ const TEMPLATES: ReadonlyArray<LlmPromptTemplate> = [
  * The fixer's built-in template is the LOWEST tier; the app's shared templates sit above it, and the fixer's
  * capability-scoped instructions still beat the shared `B-CAP`.
  */
-const RESOLVER = tieredLlmPromptTemplateResolver({
+const RESOLVER = makeLlmTieredPromptTemplateResolver({
   tiers: [
     { source: 'llm', templates: [LLM_REPAIR_REPLY_JSON_TEMPLATE] },
     { source: 'defaults', templates: TEMPLATES }
@@ -71,15 +71,15 @@ function liveContext(): ReadonlyArray<LlmLiveContextBlock> {
 }
 
 interface SetupConfig extends Partial<LlmDispatcherConfig<LlmDispatchRequest, LlmDispatchResult>> {
-  readonly subject?: ScriptedLlmReplies;
-  readonly fixer?: ScriptedLlmReplies;
+  readonly subject?: LlmScriptedReplies;
+  readonly fixer?: LlmScriptedReplies;
 }
 
 function setup(config: SetupConfig = {}) {
   const requests: LlmRequest[] = [];
   const decodeFailures: LlmDecodeFailureRecord[] = [];
   const { subject, fixer, ...rest } = config;
-  const strategy = makeScriptedLlmStrategy({ id: 's', byCapability: { TestCap: subject ?? [OK], LineCap: subject ?? [OK], [LLM_REPAIR_REPLY_JSON_CAPABILITY]: fixer ?? [FIXED] }, requests });
+  const strategy = makeLlmScriptedStrategy({ id: 's', byCapability: { TestCap: subject ?? [OK], LineCap: subject ?? [OK], [LLM_REPAIR_REPLY_JSON_CAPABILITY]: fixer ?? [FIXED] }, requests });
   const recorder: LlmDispatchRecorder<LlmDispatchRequest> = { recordCall: () => undefined, recordDecodeFailure: (record) => decodeFailures.push(record) };
   const dispatcher = makeLlmDispatcher<LlmDispatchRequest, LlmDispatchResult>({
     strategies: makeLlmStrategyRegistry([strategy]),
@@ -315,7 +315,7 @@ describe('makeLlmDispatcher() reply repair', () => {
   describe('critique on a json-envelope host', () => {
     it('should read the judge decoded payload with no binding envelope, so a rejecting judge re-asks', async () => {
       const requests: LlmRequest[] = [];
-      const strategy = makeScriptedLlmStrategy({
+      const strategy = makeLlmScriptedStrategy({
         id: 's',
         byCapability: {
           TestCap: ['{"answerable":true,"lever":{"say":"first"}}', '{"answerable":true,"lever":{"say":"second"}}'],
@@ -330,7 +330,7 @@ describe('makeLlmDispatcher() reply repair', () => {
         modelTiers: TIERS,
         defaultReplyProtocol: 'json-envelope',
         descriptorOf: (capability) => (capability === LLM_CRITIQUE_REPLY_CAPABILITY ? LLM_CRITIQUE_REPLY_DESCRIPTOR : DESCRIPTORS[capability]),
-        templateResolver: tieredLlmPromptTemplateResolver({
+        templateResolver: makeLlmTieredPromptTemplateResolver({
           tiers: [
             { source: 'llm', templates: [LLM_CRITIQUE_REPLY_TEMPLATE] },
             { source: 'defaults', templates: TEMPLATES }

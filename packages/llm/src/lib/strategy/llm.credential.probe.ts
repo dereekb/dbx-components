@@ -11,7 +11,7 @@
  * The probe is opt-in, never on the dispatch path, and never throws.
  */
 
-import { type AbortSignalRef, errorMessageOf, isNotNullOrEmptyString, isPlainObject, makeTimeoutAbortSignal, type Maybe, type Milliseconds, type WebsiteUrlWithPrefix } from '@dereekb/util';
+import { type AbortSignalRef, readErrorMessage, isNotNullOrEmptyString, isPlainObject, makeTimeoutAbortSignal, type Maybe, type Milliseconds, type WebsiteUrlWithPrefix } from '@dereekb/util';
 import { type ConfiguredFetch, type FetchJsonTextResult, readFetchJsonText } from '@dereekb/util/fetch';
 import { type LlmStrategyId } from '../model/llm.value';
 import { resolveLlmFetch } from './llm.fetch';
@@ -158,7 +158,7 @@ export async function probeLlmCredentialEndpoint(config: ProbeLlmCredentialEndpo
   } catch (error) {
     // The whole point of the probe is to report, never to propagate — a launch gate calling it must be able to
     // print a verdict rather than crash. Health channel: the verdict IS the report.
-    health = { ready: false, issues: [{ severity: 'error', message: `${config.strategyId} credential probe could not reach ${config.url}: ${errorMessageOf(error)}` }] };
+    health = { ready: false, issues: [{ severity: 'error', message: `${config.strategyId} credential probe could not reach ${config.url}: ${readErrorMessage(error)}` }] };
   }
 
   return health;

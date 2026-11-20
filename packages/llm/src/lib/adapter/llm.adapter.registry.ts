@@ -3,7 +3,7 @@
  * `@dereekb/util` {@link KeyedRegistry} primitive, so a host registers a provider entry's adapters in one call and gets
  * `register` / `unregister` / `values` for free.
  *
- * Lookups are typed per facet ({@link llmAdapterOf}, {@link resolveLlmAdapter}), and the fail-loud one names the kinds
+ * Lookups are typed per facet ({@link findLlmAdapter}, {@link resolveLlmAdapter}), and the fail-loud one names the kinds
  * that ARE registered, so a provider naming an adapter nobody registered reads as a configuration error rather than a
  * silent fallback.
  */
@@ -13,7 +13,7 @@ import { type LlmModelConfigSchemaConfig } from '../model/config/llm.model.confi
 import { type LlmStrategyId } from '../model/llm.value';
 import { type LlmStrategyBase } from '../strategy/llm.strategy';
 import { llmStrategyKind } from '../strategy/llm.strategy.registry';
-import { type LlmAdapter, type LlmAdapterFacet, type LlmAdapterKind, type LlmAdapterOf, type LlmCompletionAdapter, type LlmDecisionAdapter } from './llm.adapter';
+import { type LlmAdapter, type LlmAdapterFacet, type LlmAdapterKind, type LlmAdapterForFacet, type LlmCompletionAdapter, type LlmDecisionAdapter } from './llm.adapter';
 
 /**
  * The registry key of one adapter: `${facet}:${kind}`.
@@ -70,7 +70,7 @@ export interface LlmAdapterFacetConfig<F extends LlmAdapterFacet = LlmAdapterFac
 }
 
 /**
- * Config for {@link llmAdapterOf}.
+ * Config for {@link findLlmAdapter}.
  */
 export interface LlmAdapterLookupConfig<F extends LlmAdapterFacet = LlmAdapterFacet> extends LlmAdapterFacetConfig<F> {
   /**
@@ -95,10 +95,10 @@ export interface ResolveLlmAdapterConfig<F extends LlmAdapterFacet = LlmAdapterF
  * @param config - The registry, facet and kind.
  * @returns The adapter, or `undefined` when none is registered.
  */
-export function llmAdapterOf<F extends LlmAdapterFacet>(config: LlmAdapterLookupConfig<F>): Maybe<LlmAdapterOf<F>> {
+export function findLlmAdapter<F extends LlmAdapterFacet>(config: LlmAdapterLookupConfig<F>): Maybe<LlmAdapterForFacet<F>> {
   const { adapters, facet, kind } = config;
   // Safe: the key embeds the facet, so whatever is registered under it is an adapter of that facet.
-  return adapters.get(llmAdapterKey({ facet, kind })) as Maybe<LlmAdapterOf<F>>;
+  return adapters.get(llmAdapterKey({ facet, kind })) as Maybe<LlmAdapterForFacet<F>>;
 }
 
 /**
@@ -108,12 +108,12 @@ export function llmAdapterOf<F extends LlmAdapterFacet>(config: LlmAdapterLookup
  * @returns The adapter.
  * @throws {Error} When no adapter is registered for the facet and kind.
  */
-export function resolveLlmAdapter<F extends LlmAdapterFacet>(config: ResolveLlmAdapterConfig<F>): LlmAdapterOf<F> {
-  const adapter = llmAdapterOf(config);
+export function resolveLlmAdapter<F extends LlmAdapterFacet>(config: ResolveLlmAdapterConfig<F>): LlmAdapterForFacet<F> {
+  const adapter = findLlmAdapter(config);
 
   if (adapter == null) {
     const { adapters, facet, kind, label } = config;
-    const kinds = llmAdapterKindsOf({ adapters, facet });
+    const kinds = readLlmAdapterKinds({ adapters, facet });
     const prefix = label == null ? '' : `${label}: `;
     throw new Error(`${prefix}no ${facet} adapter is registered for '${kind}' (registered: ${kinds.join(', ') || 'none'}).`);
   }
@@ -176,9 +176,9 @@ export function checkLlmAdapterStrategy<S extends LlmStrategyBase>(config: Check
  * @param config - The registry and facet.
  * @returns The adapters (empty when none is registered).
  */
-export function llmAdaptersOf<F extends LlmAdapterFacet>(config: LlmAdapterFacetConfig<F>): ReadonlyArray<LlmAdapterOf<F>> {
+export function filterLlmAdaptersByFacet<F extends LlmAdapterFacet>(config: LlmAdapterFacetConfig<F>): ReadonlyArray<LlmAdapterForFacet<F>> {
   const { adapters, facet } = config;
-  return adapters.values().filter((adapter): adapter is LlmAdapterOf<F> => adapter.facet === facet);
+  return adapters.values().filter((adapter): adapter is LlmAdapterForFacet<F> => adapter.facet === facet);
 }
 
 /**
@@ -187,8 +187,8 @@ export function llmAdaptersOf<F extends LlmAdapterFacet>(config: LlmAdapterFacet
  * @param config - The registry and facet.
  * @returns The kinds (empty when none is registered).
  */
-export function llmAdapterKindsOf(config: LlmAdapterFacetConfig): ReadonlyArray<LlmAdapterKind> {
-  return llmAdaptersOf(config).map((adapter) => adapter.kind);
+export function readLlmAdapterKinds(config: LlmAdapterFacetConfig): ReadonlyArray<LlmAdapterKind> {
+  return filterLlmAdaptersByFacet(config).map((adapter) => adapter.kind);
 }
 
 /**
@@ -207,10 +207,10 @@ export type LlmModelConfigLists = Pick<LlmModelConfigSchemaConfig, 'transports' 
  * @param adapters - The adapter registry.
  * @returns The three lists.
  */
-export function llmModelConfigListsOf(adapters: LlmAdapterRegistry): LlmModelConfigLists {
+export function readLlmModelConfigLists(adapters: LlmAdapterRegistry): LlmModelConfigLists {
   return {
-    transports: llmAdapterKindsOf({ adapters, facet: 'completion' }),
-    meterings: llmAdapterKindsOf({ adapters, facet: 'metering' }),
-    decisionRoutes: llmAdapterKindsOf({ adapters, facet: 'decision' })
+    transports: readLlmAdapterKinds({ adapters, facet: 'completion' }),
+    meterings: readLlmAdapterKinds({ adapters, facet: 'metering' }),
+    decisionRoutes: readLlmAdapterKinds({ adapters, facet: 'decision' })
   };
 }

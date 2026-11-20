@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { type LlmModelConfigExtensionInput, type LlmModelConfigFile, type LlmModelConfigTypes, llmModelReasoningOffEncodings, makeLlmModelConfigSchema, resolveLlmModelProfile } from '@dereekb/llm';
+import { type LlmModelConfigExtensionParams, type LlmModelConfigFile, type LlmModelConfigTypes, llmModelReasoningOffEncodings, makeLlmModelConfigSchema, resolveLlmModelProfile } from '@dereekb/llm';
 import { DEFAULT_LLM_ENV_NAMES, type LlmEnvNames } from './llm.node.env';
 import { loadEffectiveLlmModelConfigFile, loadLlmModelConfigFile, resolveLlmModelConfigFilePath, writeLlmModelConfigFile } from './llm.node.model.config.file';
 import { resolveLlmModelProfileFromEnv } from './llm.node.model.profile';
@@ -17,7 +17,7 @@ interface TestTypes extends LlmModelConfigTypes {
   readonly modelFields: object;
 }
 
-function parseRegion(input: LlmModelConfigExtensionInput): TestFields {
+function parseRegion(input: LlmModelConfigExtensionParams): TestFields {
   const region = input.entry['region'];
 
   if (region !== undefined && (typeof region !== 'string' || region.trim().length === 0)) {
@@ -27,7 +27,7 @@ function parseRegion(input: LlmModelConfigExtensionInput): TestFields {
   return region === undefined ? {} : { region };
 }
 
-function parseRegionPatch(input: LlmModelConfigExtensionInput): TestFields {
+function parseRegionPatch(input: LlmModelConfigExtensionParams): TestFields {
   for (const key of Object.keys(input.entry)) {
     if (key !== 'region') {
       throw new Error(`${input.schemaLabel}: ${input.label} is a region patch, but '${key}' is not a region key.`);

@@ -9,19 +9,19 @@
 
 import { type } from 'arktype';
 import { describe, expect, it } from 'vitest';
-import { makeScriptedLlmStrategy, type ScriptedLlmCompletion, type ScriptedLlmReplies } from '@dereekb/llm/test';
+import { makeLlmScriptedStrategy, type LlmScriptedCompletion, type LlmScriptedReplies } from '@dereekb/llm/test';
 import { defineLlmCapability, type LlmCapabilityDescriptor } from '../capability/llm.capability.descriptor';
 import { type LlmModelTierMap } from '../model/llm.model.tier';
 import { type LlmLiveContextBlock } from '../prompt/llm.prompt.live.context';
 import { DEFAULT_LLM_PROMPT_LAYOUT } from '../prompt/llm.prompt.layout';
-import { llmModelAddendumPromptContributor } from '../prompt/llm.prompt.model.addendum';
+import { makeLlmModelAddendumPromptContributor } from '../prompt/llm.prompt.model.addendum';
 import { DEFAULT_LLM_DEGENERATE_THREAD_PLACEHOLDER } from '../prompt/llm.prompt.thread';
-import { type LlmPromptTemplate, tieredLlmPromptTemplateResolver } from '../prompt/llm.prompt.template';
+import { type LlmPromptTemplate, makeLlmTieredPromptTemplateResolver } from '../prompt/llm.prompt.template';
 import { type LlmCallContext, type LlmCallDiag, makeLlmCallContext } from '../record/llm.call.context';
 import { type LlmCallRecord, type LlmCallStartRecord, type LlmDecodeFailureRecord } from '../record/llm.call.record';
 import { makeLlmDispatchTapRegistry, type LlmDecodeFailureTapEvent, type LlmDispatchCompleteTapEvent } from '../record/llm.dispatch.tap';
 import { type LlmCritic } from '../reply/llm.reply.critique';
-import { llmErrorSummaryOf } from '../strategy/llm.error';
+import { formatLlmErrorSummary } from '../strategy/llm.error';
 import { type LlmDispatchResult, type LlmRequest, type LlmStrategy } from '../strategy/llm.strategy';
 import { makeLlmStrategyRegistry } from '../strategy/llm.strategy.registry';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
@@ -35,7 +35,7 @@ const TEMPLATES: ReadonlyArray<LlmPromptTemplate> = [
   { key: 'context', role: 'context', text: 'C-CTX\n{{liveContext}}' }
 ];
 
-const RESOLVER = tieredLlmPromptTemplateResolver({ tiers: [{ source: 'defaults', templates: TEMPLATES }] });
+const RESOLVER = makeLlmTieredPromptTemplateResolver({ tiers: [{ source: 'defaults', templates: TEMPLATES }] });
 
 const TIERS: LlmModelTierMap = { fast: 'test/fast', strong: 'test/strong' };
 
@@ -60,9 +60,9 @@ const PROSE = 'just prose';
 /**
  * A completion the cap ended, with no text and every completion token spent reasoning.
  */
-const CAP: ScriptedLlmCompletion = { text: '', finishReason: 'length', usage: { promptTokens: 10, completionTokens: 2048, totalTokens: 2058, reasoningTokens: 2048 } };
+const CAP: LlmScriptedCompletion = { text: '', finishReason: 'length', usage: { promptTokens: 10, completionTokens: 2048, totalTokens: 2058, reasoningTokens: 2048 } };
 
-const TRUNCATED: ScriptedLlmCompletion = { text: '{"answer":"cut off mid', finishReason: 'length' };
+const TRUNCATED: LlmScriptedCompletion = { text: '{"answer":"cut off mid', finishReason: 'length' };
 
 function blocks(text: string, key = 'facts'): ReadonlyArray<LlmLiveContextBlock> {
   return [{ key, text }];
@@ -96,12 +96,12 @@ function recording(timing?: boolean): Recording {
   return { starts, calls, decodeFailures, recorder };
 }
 
-type SetupConfig = Partial<LlmDispatcherConfig<LlmDispatchRequest, LlmDispatchResult, HostFields>> & { readonly replies?: ScriptedLlmReplies; readonly strategy?: LlmStrategy };
+type SetupConfig = Partial<LlmDispatcherConfig<LlmDispatchRequest, LlmDispatchResult, HostFields>> & { readonly replies?: LlmScriptedReplies; readonly strategy?: LlmStrategy };
 
 function setup(config: SetupConfig = {}) {
   const requests: LlmRequest[] = [];
   const { replies, strategy, ...rest } = config;
-  const used = strategy ?? makeScriptedLlmStrategy({ id: 's', replies: replies ?? [OK], requests });
+  const used = strategy ?? makeLlmScriptedStrategy({ id: 's', replies: replies ?? [OK], requests });
   const dispatcher = makeLlmDispatcher<LlmDispatchRequest, LlmDispatchResult, HostFields>({
     strategies: makeLlmStrategyRegistry([used]),
     defaultStrategyId: used.id,
@@ -204,7 +204,7 @@ describe('makeLlmDispatcher() retry', () => {
     it('should land the correction in the volatile suffix with the addendum still prefixed, without moving the model', async () => {
       const { dispatcher, requests } = setup({
         replies: [INVALID, OK],
-        contributors: [llmModelAddendumPromptContributor({ promptAddendumByModel: { 'test/strong': 'STRONG-ADDENDUM' } })]
+        contributors: [makeLlmModelAddendumPromptContributor({ promptAddendumByModel: { 'test/strong': 'STRONG-ADDENDUM' } })]
       });
       await dispatcher.dispatch(request({ capability: 'StrongCap', validate: VALID }));
 
@@ -360,7 +360,7 @@ describe('makeLlmDispatcher() retry', () => {
 
     it('should take no reasoning rung on a strategy that does not accept the reasoning parameter', async () => {
       const requests: LlmRequest[] = [];
-      const strategy: LlmStrategy = { ...makeScriptedLlmStrategy({ id: 's', replies: [{ text: '', usage: CAP.usage }, OK], requests }), supportsReasoningParam: false };
+      const strategy: LlmStrategy = { ...makeLlmScriptedStrategy({ id: 's', replies: [{ text: '', usage: CAP.usage }, OK], requests }), supportsReasoningParam: false };
       const { dispatcher } = setup({ strategy, reasoningDefault: { enabled: true, effort: 'medium' } });
       await dispatcher.dispatch(request({ validate: VALID }));
 
@@ -407,7 +407,7 @@ describe('makeLlmDispatcher() retry', () => {
 
     it('should grant no bonus when the capped retry was not reasoning-low, the strategy refuses reasoning, or nothing capped', async () => {
       const unsupported: LlmRequest[] = [];
-      const scenarios: ReadonlyArray<SetupConfig> = [{ replies: [PROSE, CAP] }, { strategy: { ...makeScriptedLlmStrategy({ id: 's', replies: [INVALID, CAP], requests: unsupported }), supportsReasoningParam: false } }, { replies: [INVALID, ''] }];
+      const scenarios: ReadonlyArray<SetupConfig> = [{ replies: [PROSE, CAP] }, { strategy: { ...makeLlmScriptedStrategy({ id: 's', replies: [INVALID, CAP], requests: unsupported }), supportsReasoningParam: false } }, { replies: [INVALID, ''] }];
 
       for (const scenario of scenarios) {
         const { dispatcher, requests } = setup(scenario);
@@ -544,7 +544,7 @@ describe('makeLlmDispatcher() retry', () => {
         expect(decodeFailures[0].payload.failures[0].class).toBe(failureClass);
 
         if (failureClass === 'transport') {
-          expect(decodeFailures[0].payload.failures[0].transportError).toBe(llmErrorSummaryOf(error));
+          expect(decodeFailures[0].payload.failures[0].transportError).toBe(formatLlmErrorSummary(error));
         }
       }
     });
@@ -633,7 +633,7 @@ describe('makeLlmDispatcher() retry', () => {
       const controller = new AbortController();
       const { taps, events } = decodeTaps();
       const requests: LlmRequest[] = [];
-      const strategy = makeScriptedLlmStrategy({ id: 's', requests, respond: () => (controller.abort(), PROSE) });
+      const strategy = makeLlmScriptedStrategy({ id: 's', requests, respond: () => (controller.abort(), PROSE) });
       const { dispatcher } = setup({ strategy, taps });
       const result = await dispatcher.dispatch(request({ validate: VALID, signal: controller.signal }));
 
@@ -646,7 +646,7 @@ describe('makeLlmDispatcher() retry', () => {
     it('should not re-ask a length-capped reply, nor grant the bonus, once the dispatch was cancelled', async () => {
       const truncatedController = new AbortController();
       const truncatedRequests: LlmRequest[] = [];
-      const truncated = setup({ strategy: makeScriptedLlmStrategy({ id: 's', requests: truncatedRequests, respond: () => (truncatedController.abort(), TRUNCATED) }) });
+      const truncated = setup({ strategy: makeLlmScriptedStrategy({ id: 's', requests: truncatedRequests, respond: () => (truncatedController.abort(), TRUNCATED) }) });
       const truncatedResult = await truncated.dispatcher.dispatch(request({ validate: VALID, signal: truncatedController.signal }));
 
       expect(truncatedRequests).toHaveLength(1);
@@ -654,7 +654,7 @@ describe('makeLlmDispatcher() retry', () => {
 
       const bonusController = new AbortController();
       const bonusRequests: LlmRequest[] = [];
-      const bonus = setup({ strategy: makeScriptedLlmStrategy({ id: 's', requests: bonusRequests, respond: (_, call) => (call === 0 ? INVALID : (bonusController.abort(), CAP)) }) });
+      const bonus = setup({ strategy: makeLlmScriptedStrategy({ id: 's', requests: bonusRequests, respond: (_, call) => (call === 0 ? INVALID : (bonusController.abort(), CAP)) }) });
       const bonusResult = await bonus.dispatcher.dispatch(request({ validate: VALID, signal: bonusController.signal }));
 
       // attempt 2 took reasoning-low and the cap ended it: the bonus would be due, but the dispatch is cancelled
@@ -679,7 +679,7 @@ describe('makeLlmDispatcher() retry', () => {
       const { gate, pause } = pauseGate(false);
       const { calls, recorder } = recording(true);
       const requests: LlmRequest[] = [];
-      const strategy = makeScriptedLlmStrategy({ id: 's', requests, respond: (_, call) => (call === 0 ? (pause(), INVALID) : OK) });
+      const strategy = makeLlmScriptedStrategy({ id: 's', requests, respond: (_, call) => (call === 0 ? (pause(), INVALID) : OK) });
       const { dispatcher } = setup({ strategy, pause: gate, recorder });
       const pending = dispatcher.dispatch(request({ validate: VALID, signal: controller.signal }));
       await new Promise((resolve) => setTimeout(resolve, 5));
@@ -698,7 +698,7 @@ describe('makeLlmDispatcher() retry', () => {
       const controller = new AbortController();
       const { gate, pause } = pauseGate(false);
       const requests: LlmRequest[] = [];
-      const strategy = makeScriptedLlmStrategy({ id: 's', requests, respond: (_, call) => (call === 0 ? INVALID : (pause(), OK)) });
+      const strategy = makeLlmScriptedStrategy({ id: 's', requests, respond: (_, call) => (call === 0 ? INVALID : (pause(), OK)) });
       const { dispatcher } = setup({ strategy, pause: gate });
       const pending = dispatcher.dispatch(request({ validate: VALID, critique: critic(99).critique, maxAttempts: 3, signal: controller.signal }));
       await new Promise((resolve) => setTimeout(resolve, 5));
@@ -751,7 +751,7 @@ describe('makeLlmDispatcher() retry', () => {
     it('should hold attempt 2 while paused between attempts', async () => {
       const { gate, pause, resume } = pauseGate(false);
       const requests: LlmRequest[] = [];
-      const strategy = makeScriptedLlmStrategy({ id: 's', requests, respond: (_, call) => (call === 0 ? (pause(), INVALID) : OK) });
+      const strategy = makeLlmScriptedStrategy({ id: 's', requests, respond: (_, call) => (call === 0 ? (pause(), INVALID) : OK) });
       const { dispatcher } = setup({ strategy, pause: gate });
       const pending = dispatcher.dispatch(request({ validate: VALID }));
       await new Promise((resolve) => setTimeout(resolve, 5));
@@ -1059,7 +1059,7 @@ describe('makeLlmDispatcher() retry', () => {
       const error = new RateLimitError('rate limited');
       const transport = recording();
       await setup({ replies: [error, OK], recorder: transport.recorder }).dispatcher.dispatch(request({ validate: VALID }));
-      expect(transport.calls[0].failedAttempts?.[0]).toMatchObject({ cause: 'transport', error: llmErrorSummaryOf(error), text: '' });
+      expect(transport.calls[0].failedAttempts?.[0]).toMatchObject({ cause: 'transport', error: formatLlmErrorSummary(error), text: '' });
 
       const timeout = recording();
       await setup({ replies: [new APIUserAbortError('aborted'), OK], recorder: timeout.recorder }).dispatcher.dispatch(request({ validate: VALID }));
@@ -1104,7 +1104,7 @@ describe('makeLlmDispatcher() retry', () => {
     });
 
     it('should hold failedAttempts.length === attempts − (accepted ? 1 : 0) over every scenario', async () => {
-      const scenarios: ReadonlyArray<ScriptedLlmReplies> = [[OK], [INVALID], [INVALID, OK], [PROSE], [PROSE, OK], ['', OK], [TRUNCATED], [TRUNCATED, OK], [new APIUserAbortError('a')], [new APIUserAbortError('a'), OK], [new RateLimitError('r')], [new RateLimitError('r'), OK], [INVALID, CAP, OK], [INVALID, CAP, CAP]];
+      const scenarios: ReadonlyArray<LlmScriptedReplies> = [[OK], [INVALID], [INVALID, OK], [PROSE], [PROSE, OK], ['', OK], [TRUNCATED], [TRUNCATED, OK], [new APIUserAbortError('a')], [new APIUserAbortError('a'), OK], [new RateLimitError('r')], [new RateLimitError('r'), OK], [INVALID, CAP, OK], [INVALID, CAP, CAP]];
 
       for (const replies of scenarios) {
         const { calls, recorder } = recording();

@@ -10,9 +10,9 @@
  */
 
 import { describe, expect, it, vi } from 'vitest';
-import { makeScriptedLlmDecisionStrategy, makeScriptedLlmStrategy, type ScriptedLlmDecisionScript } from '@dereekb/llm/test';
+import { makeLlmScriptedDecisionStrategy, makeLlmScriptedStrategy, type LlmScriptedDecisionScript } from '@dereekb/llm/test';
 import { LlmDecisionAnswerFaultError } from '../decision/llm.decision.answer';
-import { llmDecisionChoiceAnswerOf, llmDecisionNoulAnswerOf } from '../decision/llm.decision.answer.builder';
+import { makeLlmDecisionChoiceAnswer, makeLlmDecisionNoulAnswer } from '../decision/llm.decision.answer.builder';
 import { defineLlmDecision } from '../decision/llm.decision.descriptor';
 import { llmDecisionModelIssue } from '../decision/llm.decision.model';
 import { llmChoiceQuestion, llmNoulQuestion } from '../decision/llm.decision.question';
@@ -20,14 +20,14 @@ import { type LlmDecisionRequest, type LlmDecisionStrategy, LlmDecisionTransport
 import { type LlmModelTierMap } from '../model/llm.model.tier';
 import { estimateLlmTokens } from '../prompt/llm.prompt.budget';
 import { DEFAULT_LLM_PROMPT_LAYOUT } from '../prompt/llm.prompt.layout';
-import { type LlmPromptTemplate, tieredLlmPromptTemplateResolver } from '../prompt/llm.prompt.template';
+import { type LlmPromptTemplate, makeLlmTieredPromptTemplateResolver } from '../prompt/llm.prompt.template';
 import { type LlmCallContext, makeLlmCallContext } from '../record/llm.call.context';
 import { type LlmCallRecord, type LlmCallStartRecord } from '../record/llm.call.record';
 import { type LlmDispatchCompleteTapEvent, type LlmDispatchStartTapEvent, makeLlmDispatchTapRegistry } from '../record/llm.dispatch.tap';
 import { type LlmSwallowSiteId } from '../record/llm.swallow';
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
 import { makeLlmStrategyRegistry } from '../strategy/llm.strategy.registry';
-import { type LlmDispatchTransportBackoffInput, llmTransportBackoffMs } from './llm.dispatch.control';
+import { type LlmDispatchTransportBackoffParams, llmTransportBackoffMs } from './llm.dispatch.control';
 import { LLM_DECIDE_STAMP_SWALLOW_SITE } from './llm.dispatch.decision';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
 import { type LlmDispatcherConfig, type LlmDispatcherDecisionConfig, type LlmDispatchLane, type LlmDispatchRecorder } from './llm.dispatcher.config';
@@ -39,7 +39,7 @@ const TEMPLATES: ReadonlyArray<LlmPromptTemplate> = [
   { key: 'context', role: 'context', text: 'C-CTX\n{{liveContext}}' }
 ];
 
-const RESOLVER = tieredLlmPromptTemplateResolver({ tiers: [{ source: 'defaults', templates: TEMPLATES }] });
+const RESOLVER = makeLlmTieredPromptTemplateResolver({ tiers: [{ source: 'defaults', templates: TEMPLATES }] });
 
 const TIERS: LlmModelTierMap = { fast: 'some/fast-text-model', strong: 'some/strong-text-model', judge: 'typesafe/jev-judge' };
 
@@ -52,7 +52,7 @@ const PICK_ROW = defineLlmDecision({
   questions: () => ({ row: llmChoiceQuestion('which row?', { 'row-a': null, 'row-b': null }), any: llmNoulQuestion('does any row fit?') })
 });
 
-const SCRIPT: ScriptedLlmDecisionScript = () => ({ row: llmDecisionChoiceAnswerOf({ options: ['row-a', 'row-b'], choice: 'row-b', confidence: 0.82 }), any: llmDecisionNoulAnswerOf(0.93) });
+const SCRIPT: LlmScriptedDecisionScript = () => ({ row: makeLlmDecisionChoiceAnswer({ options: ['row-a', 'row-b'], choice: 'row-b', confidence: 0.82 }), any: makeLlmDecisionNoulAnswer(0.93) });
 
 interface HostFields {
   readonly host?: string;
@@ -79,9 +79,9 @@ function setup(config: SetupConfig = {}) {
   const starts: LlmCallStartRecord<HostFields>[] = [];
   const calls: LlmCallRecord<HostFields>[] = [];
   const recorder: LlmDispatchRecorder<LlmDispatchRequest, HostFields> = { recordCallStart: (record) => starts.push(record), recordCall: (record) => calls.push(record), ...(newCallContext == null ? {} : { newCallContext }) };
-  const strategies = backends === undefined ? [makeScriptedLlmDecisionStrategy({ id: 'account-a', requests, script: SCRIPT })] : backends;
+  const strategies = backends === undefined ? [makeLlmScriptedDecisionStrategy({ id: 'account-a', requests, script: SCRIPT })] : backends;
   const dispatcher = makeLlmDispatcher<LlmDispatchRequest, LlmDispatchResult, HostFields>({
-    strategies: makeLlmStrategyRegistry([makeScriptedLlmStrategy({ id: 'cap', replies: [] })]),
+    strategies: makeLlmStrategyRegistry([makeLlmScriptedStrategy({ id: 'cap', replies: [] })]),
     defaultStrategyId: 'cap',
     defaultMaxOutputTokens: 1024,
     modelTiers: TIERS,
@@ -103,7 +103,7 @@ function setup(config: SetupConfig = {}) {
  * @returns The backend.
  */
 function flakyBackend(errorAt: (send: number) => unknown, requests: LlmDecisionRequest[]): LlmDecisionStrategy {
-  const inner = makeScriptedLlmDecisionStrategy({ id: 'account-a', script: SCRIPT });
+  const inner = makeLlmScriptedDecisionStrategy({ id: 'account-a', script: SCRIPT });
   let sends = 0;
   return {
     ...inner,
@@ -122,7 +122,7 @@ const HTTP_503 = () => new LlmDecisionTransportError({ message: 'HTTP 503', stat
  * A scripted backend that records which instance served each call.
  */
 function namedBackend(id: string, servedBy: string[]): LlmDecisionStrategy {
-  return makeScriptedLlmDecisionStrategy({
+  return makeLlmScriptedDecisionStrategy({
     id,
     script: (request) => {
       servedBy.push(id);
@@ -278,7 +278,7 @@ describe('makeLlmDispatcher() decision lane', () => {
       const requests: LlmDecisionRequest[] = [];
       const waits: number[] = [];
       const limited = new LlmDecisionTransportError({ message: 'HTTP 429', status: 429, headers: new Headers({ 'retry-after': '1' }) });
-      const transportBackoff = (input: LlmDispatchTransportBackoffInput) => (waits.push(llmTransportBackoffMs(input)), 0);
+      const transportBackoff = (input: LlmDispatchTransportBackoffParams) => (waits.push(llmTransportBackoffMs(input)), 0);
       const { dispatcher } = setup({ backends: [flakyBackend((send) => (send === 1 ? limited : undefined), requests)], transportBackoff });
       await dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' } });
 
@@ -288,7 +288,7 @@ describe('makeLlmDispatcher() decision lane', () => {
 
     it('should resend a retryable transport failure once, after the transport backoff, and record the failed send', async () => {
       const requests: LlmDecisionRequest[] = [];
-      const transportBackoff = vi.fn((_input: LlmDispatchTransportBackoffInput) => 0);
+      const transportBackoff = vi.fn((_input: LlmDispatchTransportBackoffParams) => 0);
       const unavailable = HTTP_503();
       const { dispatcher, starts, calls } = setup({ backends: [flakyBackend((send) => (send === 1 ? unavailable : undefined), requests)], transportBackoff });
       const result = await dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' } });
@@ -377,7 +377,7 @@ describe('makeLlmDispatcher() decision lane', () => {
     it('should respect decisions.maxAttempts, clamped to at least one send', async () => {
       const always = (maxAttempts: number) => {
         const requests: LlmDecisionRequest[] = [];
-        const transportBackoff = vi.fn((_input: LlmDispatchTransportBackoffInput) => 0);
+        const transportBackoff = vi.fn((_input: LlmDispatchTransportBackoffParams) => 0);
         const error = HTTP_503();
         const { dispatcher } = setup({ backends: [flakyBackend(() => error, requests)], transportBackoff, decisionsConfig: { maxAttempts } });
         return { dispatcher, requests, transportBackoff, error };
@@ -400,7 +400,7 @@ describe('makeLlmDispatcher() decision lane', () => {
       const requests: LlmDecisionRequest[] = [];
       const error = HTTP_503();
       const controller = new AbortController();
-      const transportBackoff = (_input: LlmDispatchTransportBackoffInput) => {
+      const transportBackoff = (_input: LlmDispatchTransportBackoffParams) => {
         controller.abort();
         return 0;
       };
@@ -425,7 +425,7 @@ describe('makeLlmDispatcher() decision lane', () => {
           })
       };
       // the gate closes during the backoff, so the resend parks
-      const transportBackoff = (_input: LlmDispatchTransportBackoffInput) => ((paused = true), 0);
+      const transportBackoff = (_input: LlmDispatchTransportBackoffParams) => ((paused = true), 0);
       const { dispatcher } = setup({ backends: [flakyBackend((send) => (send === 1 ? error : undefined), requests)], transportBackoff, pause });
       const pending = dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' }, signal: controller.signal });
       await new Promise((resolve) => setTimeout(resolve, 5));
@@ -602,7 +602,7 @@ describe('makeLlmDispatcher() decision lane', () => {
 
     it('should forward the cancellation signal COMBINED with the request signal to strategy.decide', async () => {
       const signals: AbortSignal[] = [];
-      const inner = makeScriptedLlmDecisionStrategy({ id: 'observer', script: SCRIPT });
+      const inner = makeLlmScriptedDecisionStrategy({ id: 'observer', script: SCRIPT });
       const observer: LlmDecisionStrategy = {
         ...inner,
         decide: (request, options) => {
@@ -644,7 +644,7 @@ describe('makeLlmDispatcher() decision lane', () => {
     });
 
     it('should spend the budget on a transport throw too: the counter bounds what is SENT', async () => {
-      const throwing = makeScriptedLlmDecisionStrategy({
+      const throwing = makeLlmScriptedDecisionStrategy({
         id: 'account-a',
         script: () => {
           throw new Error('transport down');

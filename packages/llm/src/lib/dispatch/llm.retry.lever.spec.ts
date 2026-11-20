@@ -7,7 +7,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { applyLlmRetryLever, chooseLlmRetryLever, LLM_RETRY_REASONING_LOW_HEADROOM_FACTOR, type ChooseLlmRetryLeverInput, type LlmRetryLever, type LlmRetryLeverKind } from './llm.retry.lever';
+import { applyLlmRetryLever, chooseLlmRetryLever, LLM_RETRY_REASONING_LOW_HEADROOM_FACTOR, type ChooseLlmRetryLeverConfig, type LlmRetryLever, type LlmRetryLeverKind } from './llm.retry.lever';
 import type { LlmRequest } from '../strategy/llm.strategy';
 
 /**
@@ -17,7 +17,7 @@ import type { LlmRequest } from '../strategy/llm.strategy';
  * @param overrides - The fields this case changes.
  * @returns The chooser input.
  */
-function input(overrides: Partial<ChooseLlmRetryLeverInput> = {}): ChooseLlmRetryLeverInput {
+function input(overrides: Partial<ChooseLlmRetryLeverConfig> = {}): ChooseLlmRetryLeverConfig {
   return {
     cause: 'parse-error',
     lengthCapped: false,

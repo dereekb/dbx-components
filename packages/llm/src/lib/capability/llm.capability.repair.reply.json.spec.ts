@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { type LlmCallContext, makeLlmCallContext, noopLlmCallContext } from '../record/llm.call.context';
-import { DEFAULT_LLM_REPLY_FAST_FIX_LIMITS, LLM_REPAIR_REPLY_JSON_CAPABILITY, type LlmReplyFastFixInput } from '../reply/llm.reply.fast.fix';
+import { DEFAULT_LLM_REPLY_FAST_FIX_LIMITS, LLM_REPAIR_REPLY_JSON_CAPABILITY, type LlmReplyFastFixParams } from '../reply/llm.reply.fast.fix';
 import { llmReplyRepairFidelity, repairLlmReplyJson, scoreLlmReplyJson } from '../reply/llm.reply.repair';
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
 import { DEFAULT_LLM_REPAIR_REPLY_JSON_INSTRUCTIONS, LLM_REPAIR_REPLY_JSON_DESCRIPTOR, LLM_REPAIR_REPLY_JSON_TEMPLATE, makeLlmReplyFastFixer, renderLlmRepairReplyJsonContext } from './llm.capability.repair.reply.json';
@@ -81,7 +81,7 @@ const SCHEMA_HINT = { type: 'object', properties: { title: { type: 'string' } } 
  * @param subject - Extra subject request fields.
  * @returns The fixer input.
  */
-function fixInput(dispatch: FakeFixDispatch['dispatch'], callContext: LlmCallContext = noopLlmCallContext(), subject: Partial<LlmDispatchRequest> = {}): LlmReplyFastFixInput {
+function fixInput(dispatch: FakeFixDispatch['dispatch'], callContext: LlmCallContext = noopLlmCallContext(), subject: Partial<LlmDispatchRequest> = {}): LlmReplyFastFixParams {
   return { request: { capability: 'summarize', renderLiveContext: () => [], ...subject }, subjectCapability: 'summarize', text: BROKEN.text, shape: scoreLlmReplyJson(BROKEN.text), schemaHint: SCHEMA_HINT, attempt: 1, callContext, dispatch };
 }
 

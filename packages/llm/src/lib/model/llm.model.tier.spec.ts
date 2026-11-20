@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_LLM_DECODE_RETRY_TIER, DEFAULT_LLM_MODEL_TIER, isLlmOffValue, LLM_OFF_VALUES, type LlmModelTierMap, llmTierConfigOf, llmTierModelOf, resolveLlmDefaultModelTierKey, resolveLlmModelTier, resolveLlmModelTiers, resolveLlmModelTierValue } from './llm.model.tier';
+import { DEFAULT_LLM_DECODE_RETRY_TIER, DEFAULT_LLM_MODEL_TIER, isLlmOffValue, LLM_OFF_VALUES, type LlmModelTierMap, toLlmTierConfig, readLlmTierModel, resolveLlmDefaultModelTierKey, resolveLlmModelTier, resolveLlmModelTiers, resolveLlmModelTierValue } from './llm.model.tier';
 import { type LlmModelTierConfig } from './llm.value';
 
 const FAST_MODEL = 'vendor/model-fast';
@@ -45,25 +45,25 @@ describe('resolveLlmDefaultModelTierKey()', () => {
   });
 });
 
-describe('llmTierModelOf()', () => {
+describe('readLlmTierModel()', () => {
   it('reads a bare-slug tier value to itself', () => {
-    expect(llmTierModelOf(STRONG_MODEL)).toBe(STRONG_MODEL);
+    expect(readLlmTierModel(STRONG_MODEL)).toBe(STRONG_MODEL);
   });
 
   it('reads a rich tier config to its `model` slug (the output-control fields do not affect model resolution)', () => {
     const config: LlmModelTierConfig = { model: FAST_MODEL, maxOutputTokens: 16_384, reasoning: { effort: 'high' } };
-    expect(llmTierModelOf(config)).toBe(FAST_MODEL);
+    expect(readLlmTierModel(config)).toBe(FAST_MODEL);
   });
 });
 
-describe('llmTierConfigOf()', () => {
+describe('toLlmTierConfig()', () => {
   it('normalizes a bare-slug tier value to `{ model }` (no output controls)', () => {
-    expect(llmTierConfigOf('x/slug')).toEqual({ model: 'x/slug' });
+    expect(toLlmTierConfig('x/slug')).toEqual({ model: 'x/slug' });
   });
 
   it('passes a rich tier config through unchanged (identity)', () => {
     const config: LlmModelTierConfig = { model: 'x/slug', maxOutputTokens: 8_192, reasoning: { maxTokens: 2048, exclude: true } };
-    expect(llmTierConfigOf(config)).toBe(config);
+    expect(toLlmTierConfig(config)).toBe(config);
   });
 });
 

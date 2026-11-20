@@ -24,7 +24,7 @@
 import { type HexString, type Maybe } from '@dereekb/util';
 import { type LlmCapabilityKey } from '../model/llm.value';
 import { llmPromptCacheHash } from './llm.prompt.hash';
-import { llmPromptCacheSegmentsOf, type LlmPromptSegment, type LlmPromptSegmentId } from './llm.prompt.segment';
+import { splitLlmPromptCacheSegments, type LlmPromptSegment, type LlmPromptSegmentId } from './llm.prompt.segment';
 
 /**
  * ONE retained prefix segment — its id, the digest of its bytes and its diffing key. Not to be confused with
@@ -105,7 +105,7 @@ export interface LlmPromptCachePrefixObserveParams {
   readonly partition?: Maybe<string | number>;
   /**
    * The dispatch's assembled segments, in send order — the cacheable half is derived here through
-   * {@link llmPromptCacheSegmentsOf}, so it never disagrees with the bytes the transport splits on.
+   * {@link splitLlmPromptCacheSegments}, so it never disagrees with the bytes the transport splits on.
    */
   readonly segments: ReadonlyArray<LlmPromptSegment>;
 }
@@ -152,7 +152,7 @@ function digestSegments(segments: ReadonlyArray<LlmPromptSegment>): ReadonlyArra
 
 /**
  * The SEGMENTS of a dispatch's cacheable prefix — everything before the first `volatile` segment (all of them when
- * none is), the same split {@link llmPromptCacheSegmentsOf} derives its joined `cachePrefix` from. The watch needs
+ * none is), the same split {@link splitLlmPromptCacheSegments} derives its joined `cachePrefix` from. The watch needs
  * the segments themselves so it can name the one that moved.
  *
  * @param segments - The dispatch's segments, in send order.
@@ -163,7 +163,7 @@ function digestSegments(segments: ReadonlyArray<LlmPromptSegment>): ReadonlyArra
  * @example
  * ```ts
  * const prefix = llmPromptCachePrefixSegments(composed.segments);
- * joinLlmPromptSegments(prefix) === llmPromptCacheSegmentsOf(composed.segments).cachePrefix; // true
+ * joinLlmPromptSegments(prefix) === splitLlmPromptCacheSegments(composed.segments).cachePrefix; // true
  * ```
  */
 export function llmPromptCachePrefixSegments<S extends LlmPromptSegment>(segments: ReadonlyArray<S>): ReadonlyArray<S> {
@@ -225,7 +225,7 @@ export function makeLlmPromptCachePrefixWatch(): LlmPromptCachePrefixWatch {
     observe(params: LlmPromptCachePrefixObserveParams): LlmPromptCachePrefixObservation {
       const { capability, partition, segments } = params;
       const prefixSegments = llmPromptCachePrefixSegments(segments);
-      const hash = llmPromptCacheHash(llmPromptCacheSegmentsOf(segments).cachePrefix);
+      const hash = llmPromptCacheHash(splitLlmPromptCacheSegments(segments).cachePrefix);
       const digests = digestSegments(prefixSegments);
       const key = partitionKey(capability, partition);
       const previous = baselines.get(key);

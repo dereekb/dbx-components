@@ -8,12 +8,12 @@ import { describe, expect, it } from 'vitest';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { type LlmCallDiagRecord } from '../record/llm.call.context';
 import { composeLlmCapabilityPrompt } from '../prompt/llm.prompt.assembly';
-import { llmPromptSupplementsOf, type LlmPromptContributor, type LlmPromptContributorInput } from '../prompt/llm.prompt.contributor';
+import { toLlmPromptSupplements, type LlmPromptContributor, type LlmPromptContributorParams } from '../prompt/llm.prompt.contributor';
 import { llmPromptCacheHash } from '../prompt/llm.prompt.hash';
-import { DEFAULT_LLM_PROMPT_LAYOUT, makeLlmPromptLayout, type LlmPromptLayout } from '../prompt/llm.prompt.layout';
+import { DEFAULT_LLM_PROMPT_LAYOUT, defineLlmPromptLayout, type LlmPromptLayout } from '../prompt/llm.prompt.layout';
 import { type LlmPromptSite } from '../prompt/llm.prompt.site';
-import { tieredLlmPromptTemplateResolver } from '../prompt/llm.prompt.template';
-import { DEFAULT_LLM_CRAFT_NOTE_HEADINGS, llmCraftPromptContributor } from './llm.craft.contributor';
+import { makeLlmTieredPromptTemplateResolver } from '../prompt/llm.prompt.template';
+import { DEFAULT_LLM_CRAFT_NOTE_HEADINGS, makeLlmCraftPromptContributor } from './llm.craft.contributor';
 import { type LlmCraftNoteSet } from './llm.craft.frontmatter';
 import { type LlmCraftNote } from './llm.craft.note';
 import { makeLlmCraftNoteRowReader, type LlmCraftNoteRow } from './llm.craft.row';
@@ -50,18 +50,18 @@ function requestOf(site: LlmPromptSite | undefined, extra: Partial<HostRequest> 
 }
 
 function compose(request: HostRequest, contributors: ReadonlyArray<LlmPromptContributor<HostRequest>>, layout?: LlmPromptLayout) {
-  return composeLlmCapabilityPrompt<HostRequest>({ request, descriptorOf: () => undefined, templateResolver: tieredLlmPromptTemplateResolver({ tiers: [] }), contributors, ...(layout == null ? {} : { layout }) });
+  return composeLlmCapabilityPrompt<HostRequest>({ request, descriptorOf: () => undefined, templateResolver: makeLlmTieredPromptTemplateResolver({ tiers: [] }), contributors, ...(layout == null ? {} : { layout }) });
 }
 
-function inputOf(request: HostRequest, diags: LlmCallDiagRecord[]): LlmPromptContributorInput<HostRequest> {
+function inputOf(request: HostRequest, diags: LlmCallDiagRecord[]): LlmPromptContributorParams<HostRequest> {
   return { request, descriptor: undefined, templates: { roles: {}, byKey: () => undefined }, liveBlockKeys: [], diag: (record) => diags.push(record) };
 }
 
 const NOTES: ReadonlyArray<LlmCraftNote> = [note('stable-a', { priority: 6 }), note('stable-b'), note('judged-include', { ask: '`brief` is a plain garment', unserved: 'include' }), note('judged-omit', { ask: '`brief` is a plain garment' })];
 
-describe('llmCraftPromptContributor()', () => {
+describe('makeLlmCraftPromptContributor()', () => {
   it('places one heading per group, the stable group on the cache prefix and the unserved-include note volatile', async () => {
-    const composed = await compose(requestOf(PAGE), [llmCraftPromptContributor({ sites: SITES, tiers: [NOTES] })]);
+    const composed = await compose(requestOf(PAGE), [makeLlmCraftPromptContributor({ sites: SITES, tiers: [NOTES] })]);
     const craft = composed.segments.filter((segment) => segment.id === 'craft');
 
     expect(craft.map((segment) => `${segment.key ?? ''}${segment.volatile === true ? ' (volatile)' : ''}`)).toEqual(['heading:stable', 'stable-a', 'stable-b', 'heading:judged (volatile)', 'judged-include (volatile)']);
@@ -75,8 +75,8 @@ describe('llmCraftPromptContributor()', () => {
   });
 
   it('records every placed note and every cut on the supplements rows', async () => {
-    const composed = await compose(requestOf(PAGE), [llmCraftPromptContributor({ sites: SITES, tiers: [NOTES] })]);
-    const rows = llmPromptSupplementsOf(composed.contributions, composed.cut);
+    const composed = await compose(requestOf(PAGE), [makeLlmCraftPromptContributor({ sites: SITES, tiers: [NOTES] })]);
+    const rows = toLlmPromptSupplements(composed.contributions, composed.cut);
 
     expect(rows.find((row) => row.key === 'stable-a')).toEqual({ contributor: 'craft', slot: 'craft', id: 'craft', key: 'stable-a', hash: llmPromptCacheHash('STABLE-A BODY'), bytes: 'STABLE-A BODY'.length, tier: 'builtin', by: 'match' });
     expect(rows.find((row) => row.key === 'judged-include')?.by).toBe('unserved');
@@ -87,10 +87,10 @@ describe('llmCraftPromptContributor()', () => {
     const bare = await compose(requestOf(undefined), []);
 
     for (const [request, contributor] of [
-      [requestOf(undefined), llmCraftPromptContributor<HostRequest>({ sites: SITES, tiers: [NOTES] })],
-      [requestOf({ kind: 'product-page', facts: { category: 'shoes' } }), llmCraftPromptContributor<HostRequest>({ sites: SITES, tiers: [NOTES] })],
-      [requestOf(PAGE), llmCraftPromptContributor<HostRequest>({ sites: SITES, tiers: [[]] })],
-      [requestOf(PAGE), llmCraftPromptContributor<HostRequest>({ sites: SITES, tiers: [NOTES], enabled: false })]
+      [requestOf(undefined), makeLlmCraftPromptContributor<HostRequest>({ sites: SITES, tiers: [NOTES] })],
+      [requestOf({ kind: 'product-page', facts: { category: 'shoes' } }), makeLlmCraftPromptContributor<HostRequest>({ sites: SITES, tiers: [NOTES] })],
+      [requestOf(PAGE), makeLlmCraftPromptContributor<HostRequest>({ sites: SITES, tiers: [[]] })],
+      [requestOf(PAGE), makeLlmCraftPromptContributor<HostRequest>({ sites: SITES, tiers: [NOTES], enabled: false })]
     ] as const) {
       const composed = await compose(request, [contributor]);
       expect(composed.segments).toEqual(bare.segments);
@@ -99,7 +99,7 @@ describe('llmCraftPromptContributor()', () => {
   });
 
   it('lets a later tier shadow an earlier one of the same id', async () => {
-    const composed = await compose(requestOf(PAGE), [llmCraftPromptContributor({ sites: SITES, tiers: [[note('shared')], [note('shared', { tier: 'machine', body: 'MACHINE BODY' })]] })]);
+    const composed = await compose(requestOf(PAGE), [makeLlmCraftPromptContributor({ sites: SITES, tiers: [[note('shared')], [note('shared', { tier: 'machine', body: 'MACHINE BODY' })]] })]);
     expect(composed.segments.filter((segment) => segment.id === 'craft').map((segment) => segment.promptSegment)).toEqual([`${H.stable}\n\n`, 'MACHINE BODY\n\n']);
   });
 
@@ -108,7 +108,7 @@ describe('llmCraftPromptContributor()', () => {
       [undefined, 'guard'],
       ['audience-guard', 'audience-guard']
     ] as const) {
-      const contributor = llmCraftPromptContributor<HostRequest>({ sites: SITES, tiers: [NOTES], guard: ({ request }) => request.capability === 'speak', guardCutReason });
+      const contributor = makeLlmCraftPromptContributor<HostRequest>({ sites: SITES, tiers: [NOTES], guard: ({ request }) => request.capability === 'speak', guardCutReason });
       const composed = await compose(requestOf(PAGE, { capability: 'speak' }), [contributor]);
 
       expect(composed.segments.some((segment) => segment.id === 'craft')).toBe(false);
@@ -124,7 +124,7 @@ describe('llmCraftPromptContributor()', () => {
       { id: 'renamed', text: '---\nid: other-id\ntitle: Mismatch\nsites: [product-page]\n---\nX\n' }
     ];
     const readRows = makeLlmCraftNoteRowReader({ tier: 'workspace', sites: SITES });
-    const contributor = llmCraftPromptContributor<HostRequest>({ sites: SITES, tiers: [[note('shared'), note('stable-b')], [note('shared', { tier: 'machine', body: 'MACHINE BODY' })], ({ request }) => readRows(request.craftRows)] });
+    const contributor = makeLlmCraftPromptContributor<HostRequest>({ sites: SITES, tiers: [[note('shared'), note('stable-b')], [note('shared', { tier: 'machine', body: 'MACHINE BODY' })], ({ request }) => readRows(request.craftRows)] });
     const diags: LlmCallDiagRecord[] = [];
     const input = inputOf(requestOf(PAGE, { craftRows: rows }), diags);
     const first = await contributor.resolve(input);
@@ -145,7 +145,7 @@ describe('llmCraftPromptContributor()', () => {
   it('a row tombstone alone empties a site: byte-identical to no notes', async () => {
     const bare = await compose(requestOf(PAGE), []);
     const readRows = makeLlmCraftNoteRowReader({ tier: 'workspace', sites: SITES });
-    const contributor = llmCraftPromptContributor<HostRequest>({ sites: SITES, tiers: [[note('only')], ({ request }) => readRows(request.craftRows)] });
+    const contributor = makeLlmCraftPromptContributor<HostRequest>({ sites: SITES, tiers: [[note('only')], ({ request }) => readRows(request.craftRows)] });
     const composed = await compose(requestOf(PAGE, { craftRows: [{ id: 'only', enabled: false }] }), [contributor]);
     expect(composed.segments).toEqual(bare.segments);
   });
@@ -156,7 +156,7 @@ describe('llmCraftPromptContributor()', () => {
       reads += 1;
       return { tier: 'workspace', notes: [], refused: [] };
     };
-    const contributor = llmCraftPromptContributor<HostRequest>({ sites: SITES, tiers: [NOTES, reader] });
+    const contributor = makeLlmCraftPromptContributor<HostRequest>({ sites: SITES, tiers: [NOTES, reader] });
 
     await compose(requestOf(undefined), [contributor]);
     await compose(requestOf({ facts: { category: 'apparel' } }), [contributor]);
@@ -167,11 +167,11 @@ describe('llmCraftPromptContributor()', () => {
   });
 
   it('places into a custom slot, with custom headings, and omits a blank heading', async () => {
-    const layout = makeLlmPromptLayout(DEFAULT_LLM_PROMPT_LAYOUT.map((slot) => (slot.id === 'craft' ? { ...slot, id: 'notes' } : slot)));
-    const custom = await compose(requestOf(PAGE), [llmCraftPromptContributor<HostRequest>({ sites: SITES, tiers: [[note('stable-a')]], slot: 'notes', headings: { stable: '## Know-how', judged: '## Know-how for now' } })], layout);
+    const layout = defineLlmPromptLayout(DEFAULT_LLM_PROMPT_LAYOUT.map((slot) => (slot.id === 'craft' ? { ...slot, id: 'notes' } : slot)));
+    const custom = await compose(requestOf(PAGE), [makeLlmCraftPromptContributor<HostRequest>({ sites: SITES, tiers: [[note('stable-a')]], slot: 'notes', headings: { stable: '## Know-how', judged: '## Know-how for now' } })], layout);
     expect(custom.segments.filter((segment) => segment.id === 'notes').map((segment) => segment.promptSegment)).toEqual(['## Know-how\n\n', 'STABLE-A BODY\n\n']);
 
-    const blank = await compose(requestOf(PAGE), [llmCraftPromptContributor<HostRequest>({ sites: SITES, tiers: [[note('stable-a')]], headings: { stable: '', judged: H.judged } })]);
+    const blank = await compose(requestOf(PAGE), [makeLlmCraftPromptContributor<HostRequest>({ sites: SITES, tiers: [[note('stable-a')]], headings: { stable: '', judged: H.judged } })]);
     expect(blank.segments.filter((segment) => segment.id === 'craft').map((segment) => segment.key)).toEqual(['stable-a']);
   });
 });

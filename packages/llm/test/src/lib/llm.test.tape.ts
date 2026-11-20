@@ -344,11 +344,11 @@ export function makeLlmTapeStrategy(config: LlmTapeStrategyConfig): LlmTapeStrat
 }
 
 /**
- * Config for {@link llmTapeTurnOf}.
+ * Config for {@link readLlmTapeTurn}.
  */
-export interface LlmTapeTurnOfConfig {
+export interface ReadLlmTapeTurnConfig {
   /**
-   * The decision transports' strategy kinds (`llmDecisionStrategyKinds(adapters)`), so a decision row written before a
+   * The decision transports' strategy kinds (`readLlmDecisionStrategyKinds(adapters)`), so a decision row written before a
    * host recorded decision ids is still skipped. See `isDecisionLlmCallRow`.
    */
   readonly decisionStrategyKinds?: Maybe<ReadonlySet<LlmStrategyId>>;
@@ -387,11 +387,11 @@ function stringOf(value: unknown): Maybe<string> {
  *
  * @example
  * ```ts
- * const turns = payloads.map((payload) => llmTapeTurnOf(payload, { decisionStrategyKinds })).filter((turn) => turn != null);
+ * const turns = payloads.map((payload) => readLlmTapeTurn(payload, { decisionStrategyKinds })).filter((turn) => turn != null);
  * const tape = makeLlmTapeStrategy({ turns });
  * ```
  */
-export function llmTapeTurnOf(payload: unknown, config?: Maybe<LlmTapeTurnOfConfig>): Maybe<LlmTapeTurn> {
+export function readLlmTapeTurn(payload: unknown, config?: Maybe<ReadLlmTapeTurnConfig>): Maybe<LlmTapeTurn> {
   let turn: Maybe<LlmTapeTurn>;
 
   if (payload != null && typeof payload === 'object') {

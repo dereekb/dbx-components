@@ -12,7 +12,7 @@
  * 6. Budget, in rank order: at most the site's `maxNotes` notes and `maxBytes` body bytes. A note is never truncated;
  *    one that does not fit is cut.
  *
- * Split in two so the judge (one decision call per dispatch) sits between them: {@link llmCraftCandidatesOf} (the
+ * Split in two so the judge (one decision call per dispatch) sits between them: {@link resolveLlmCraftCandidates} (the
  * asking set) and {@link settleLlmCraftNotes} (the verdicts, then the budget).
  */
 
@@ -129,7 +129,7 @@ export interface LlmCraftCandidates {
 }
 
 /**
- * Input to {@link llmCraftCandidatesOf}.
+ * Input to {@link resolveLlmCraftCandidates}.
  */
 export interface LlmCraftCandidatesConfig {
   /**
@@ -156,7 +156,7 @@ export interface LlmCraftCandidatesConfig {
  * @param config - The notes, the site, the craft sites and the guard's verdict.
  * @returns The candidates.
  */
-export function llmCraftCandidatesOf(config: LlmCraftCandidatesConfig): LlmCraftCandidates {
+export function resolveLlmCraftCandidates(config: LlmCraftCandidatesConfig): LlmCraftCandidates {
   const { notes, site, sites, guardCut } = config;
   const resolved = sites.siteOf(site?.kind);
   let candidates: LlmCraftCandidates = { stable: [], asked: [], cut: [] };
@@ -197,7 +197,7 @@ export interface LlmCraftSelection {
 /**
  * Settle the candidates — apply the verdicts (floor / unserved), then the budget in rank order.
  *
- * @param candidates - The candidates ({@link llmCraftCandidatesOf}).
+ * @param candidates - The candidates ({@link resolveLlmCraftCandidates}).
  * @param verdicts - The judge's verdicts; absent ⇒ every asked note is unserved.
  * @returns The selection.
  */
@@ -267,5 +267,5 @@ export interface SelectLlmCraftNotesConfig extends LlmCraftCandidatesConfig {
  * ```
  */
 export function selectLlmCraftNotes(config: SelectLlmCraftNotesConfig): LlmCraftSelection {
-  return settleLlmCraftNotes(llmCraftCandidatesOf(config), config.verdicts);
+  return settleLlmCraftNotes(resolveLlmCraftCandidates(config), config.verdicts);
 }

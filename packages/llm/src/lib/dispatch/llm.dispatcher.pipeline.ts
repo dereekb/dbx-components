@@ -8,7 +8,7 @@
 
 import { type Maybe, mergeObjects } from '@dereekb/util';
 import { type LlmCapabilityDescriptor } from '../capability/llm.capability.descriptor';
-import { llmCapabilityVisionOf, LLM_REASONING_OFF } from '../model/llm.model.precedence';
+import { resolveLlmCapabilityVision, LLM_REASONING_OFF } from '../model/llm.model.precedence';
 import { resolveLlmDefaultModelTierKey, resolveLlmModelTier } from '../model/llm.model.tier';
 import { DEFAULT_LLM_PROMPT_LAYOUT, findLlmPromptSlotByRole, readLlmPromptSlotSeparator } from '../prompt/llm.prompt.layout';
 import { makeLlmPromptCachePrefixWatch } from '../prompt/llm.prompt.cache.watch';
@@ -18,17 +18,17 @@ import { type LlmCallHostFields } from '../record/llm.call.record';
 import { DEFAULT_LLM_LINE_LEVER_FIELD, resolveLlmReplyReadingEnvelope } from '../reply/llm.reply.envelope';
 import { DEFAULT_LLM_REPLY_FAST_FIX_LIMITS, type LlmReplyFastFixLimits } from '../reply/llm.reply.fast.fix';
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
-import { llmBoundReplyFastFixOf } from './llm.dispatch.attempt';
-import { llmDispatchCorrectionTextsOf } from './llm.dispatch.correction';
+import { makeLlmBoundReplyFastFix } from './llm.dispatch.attempt';
+import { mergeLlmDispatchCorrectionTexts } from './llm.dispatch.correction';
 import { makeLlmDispatchDecisionLane } from './llm.dispatch.decision';
 import { LlmDispatchFaultError } from './llm.dispatch.fault';
-import { llmDecodeRetryModelOf } from './llm.dispatch.ladder';
+import { resolveLlmDecodeRetryModel } from './llm.dispatch.ladder';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
 import { composeLlmDispatch, type LlmDispatchComposeSetup } from './llm.dispatch.compose';
-import { llmDispatchFallbackCallContextOf, llmDispatchSignalOf, llmTransportBackoffMs, parkLlmDispatchWhilePaused } from './llm.dispatch.control';
-import { llmDispatchRecordFieldsOf, type LlmDispatchRecordSinks, isLlmDispatchTapsActive, recordLlmDispatch, recordLlmDispatchStart } from './llm.dispatch.record';
-import { llmDispatchStrategySelectorOf, type LlmDispatchResolveSetup, resolveLlmDispatch } from './llm.dispatch.resolve';
-import { type LlmDispatchAttemptsConfig, llmDispatchMaxAttemptsOf, runLlmDispatchAttempts, runSingleShotLlmDispatch } from './llm.dispatch.run';
+import { makeLlmDispatchFallbackCallContext, mergeLlmDispatchSignals, llmTransportBackoffMs, parkLlmDispatchWhilePaused } from './llm.dispatch.control';
+import { makeLlmDispatchRecordFields, type LlmDispatchRecordSinks, isLlmDispatchTapsActive, recordLlmDispatch, recordLlmDispatchStart } from './llm.dispatch.record';
+import { resolveLlmDispatchStrategySelector, type LlmDispatchResolveSetup, resolveLlmDispatch } from './llm.dispatch.resolve';
+import { type LlmDispatchAttemptsConfig, resolveLlmDispatchMaxAttempts, runLlmDispatchAttempts, runSingleShotLlmDispatch } from './llm.dispatch.run';
 import { type LlmDispatcher } from './llm.dispatcher';
 import { type LlmDispatcherConfig, type LlmDispatchGap, type LlmDispatchLaneRequest } from './llm.dispatcher.config';
 
@@ -66,7 +66,7 @@ import { type LlmDispatcherConfig, type LlmDispatchGap, type LlmDispatchLaneRequ
  *   defaultMaxOutputTokens: DEFAULT_LLM_MAX_OUTPUT_TOKENS,
  *   modelTiers: { fast: 'acme/fast', strong: 'acme/strong' },
  *   descriptorOf: (capability) => DESCRIPTORS[capability],
- *   templateResolver: tieredLlmPromptTemplateResolver({ tiers: [{ source: 'defaults', templates }] })
+ *   templateResolver: makeLlmTieredPromptTemplateResolver({ tiers: [{ source: 'defaults', templates }] })
  * });
  * const result = await dispatcher.dispatch({ capability: 'summarize', renderLiveContext: () => blocks });
  * ```
@@ -83,7 +83,7 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
   const layout = config.layout ?? DEFAULT_LLM_PROMPT_LAYOUT;
   const resolveSetup: LlmDispatchResolveSetup<R, D> = {
     strategies,
-    selectStrategy: llmDispatchStrategySelectorOf<R>({ selectStrategy: config.selectStrategy, providerByModel: config.providerByModel, defaultStrategyId: config.defaultStrategyId }),
+    selectStrategy: resolveLlmDispatchStrategySelector<R>({ selectStrategy: config.selectStrategy, providerByModel: config.providerByModel, defaultStrategyId: config.defaultStrategyId }),
     descriptorOf,
     capabilityRoutes,
     modelTiers,
@@ -105,8 +105,8 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
     promptCacheWatch: config.promptCacheWatch ?? makeLlmPromptCachePrefixWatch(),
     isRawJsonBlock: config.isRawJsonBlock
   };
-  const escalateModel = llmDecodeRetryModelOf({ modelTiers, decodeRetryTier: config.decodeRetryTier });
-  const corrections = llmDispatchCorrectionTextsOf(config.correctionTexts);
+  const escalateModel = resolveLlmDecodeRetryModel({ modelTiers, decodeRetryTier: config.decodeRetryTier });
+  const corrections = mergeLlmDispatchCorrectionTexts(config.correctionTexts);
   const correctionSlot = findLlmPromptSlotByRole(layout, 'correction');
   const correctionSlotId = correctionSlot?.id ?? 'correction';
   const correctionSeparator = correctionSlot == null ? '' : readLlmPromptSlotSeparator(correctionSlot, true);
@@ -131,7 +131,7 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
     let callContext: Maybe<LlmCallContext<A>> = parented ?? recorder?.newCallContext?.({ ...call, label, attribution });
 
     if (callContext == null) {
-      callContext = llmDispatchFallbackCallContextOf<A>({ label, swallow, attribution: attribution as Maybe<A> });
+      callContext = makeLlmDispatchFallbackCallContext<A>({ label, swallow, attribution: attribution as Maybe<A> });
     }
 
     return callContext;
@@ -158,7 +158,7 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
     const call: LlmDispatchLaneRequest<R> = { lane: 'completion', request };
     const callContext = callContextOf(call);
     const partition = config.cachePartitionOf?.(request) ?? undefined;
-    const signal = llmDispatchSignalOf({ cancellationSignal, request });
+    const signal = mergeLlmDispatchSignals({ cancellationSignal, request });
     const onGap = (gap: LlmDispatchGap) => config.onGap?.({ gap, request, callContext });
 
     if (await parkLlmDispatchWhilePaused({ pause, signal, callContext })) {
@@ -167,7 +167,7 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
 
     const resolved = resolveLlmDispatch<R, D>({ setup: resolveSetup, request, callContext });
     const composed = await composeLlmDispatch<R, D>({ setup: composeSetup, request, followUp, thread, resolved, callContext, partition, onRawJsonGap: onGap });
-    const fields = llmDispatchRecordFieldsOf<R, H, A>({ recordFieldsOf: config.recordFieldsOf, call, callContext });
+    const fields = makeLlmDispatchRecordFields<R, H, A>({ recordFieldsOf: config.recordFieldsOf, call, callContext });
     const sinks: LlmDispatchRecordSinks<R, H, A> = { recorder, taps, onGap };
     const isFollowUp = followUp != null;
     const { tier } = resolved;
@@ -175,7 +175,7 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
 
     const critique = followUp == null ? request.critique : undefined;
     const readingEnvelope = resolveLlmReplyReadingEnvelope(composed.protocol, config.replyEnvelope);
-    const { fastFix, fastFixUnavailable } = llmBoundReplyFastFixOf<R, X>({ replyFastFix: config.replyFastFix, request, protocol: composed.protocol, schemaHint: composed.baseRequest.responseSchemaHint, envelope: readingEnvelope, dispatch: (fixRequest) => selfDispatch.dispatch(fixRequest) });
+    const { fastFix, fastFixUnavailable } = makeLlmBoundReplyFastFix<R, X>({ replyFastFix: config.replyFastFix, request, protocol: composed.protocol, schemaHint: composed.baseRequest.responseSchemaHint, envelope: readingEnvelope, dispatch: (fixRequest) => selfDispatch.dispatch(fixRequest) });
     const attemptsConfig: LlmDispatchAttemptsConfig = {
       strategy: resolved.strategy,
       baseRequest: composed.baseRequest,
@@ -190,7 +190,7 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
       pause,
       baseOutputBudget: resolved.maxOutputTokens,
       onDecodeAttempt: isLlmDispatchTapsActive(taps) ? (attempt, willRetry) => taps.emitDecodeFailure({ capability, ...(tier == null ? {} : { tier }), attempt, willRetry, ...fields('decode-failure') }) : undefined,
-      maxAttempts: llmDispatchMaxAttemptsOf(composed.maxAttempts),
+      maxAttempts: resolveLlmDispatchMaxAttempts(composed.maxAttempts),
       resolvedModel: resolved.resolvedModel,
       escalateModel,
       critique,
@@ -231,7 +231,7 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
   return {
     dispatch,
     preparePrompt,
-    capabilityVision: (capability, override) => llmCapabilityVisionOf({ override, descriptor: descriptorOf(capability), route: capabilityRoutes?.get(capability), tiers: modelTiers, defaultTier, visionByModel }),
+    capabilityVision: (capability, override) => resolveLlmCapabilityVision({ override, descriptor: descriptorOf(capability), route: capabilityRoutes?.get(capability), tiers: modelTiers, defaultTier, visionByModel }),
     ...decisionLane
   };
 }

@@ -5,7 +5,7 @@
  * templates per role ({@link LLM_PROMPT_TEMPLATE_ROLES}) plus a by-key lookup for contributors (a frame contributor
  * reads its frame text by key). It may be async; the assembly awaits it once and then works on the resolved set.
  *
- * It is an interface because cascades differ: {@link tieredLlmPromptTemplateResolver} is the library's (last
+ * It is an interface because cascades differ: {@link makeLlmTieredPromptTemplateResolver} is the library's (last
  * definition of a key wins, a capability-scoped template beats a shared one); a host whose cascade differs
  * (first-by-layer, per-user tiers, a role keyed by a host trait) supplies its own.
  */
@@ -82,7 +82,7 @@ export interface LlmResolvedPromptTemplates {
  * @typeParam R - The host's request type.
  * @typeParam D - The host's descriptor type.
  */
-export interface LlmPromptTemplateResolverInput<R extends LlmDispatchRequest = LlmDispatchRequest, D extends LlmCapabilityDescriptor = LlmCapabilityDescriptor> {
+export interface LlmPromptTemplateResolverParams<R extends LlmDispatchRequest = LlmDispatchRequest, D extends LlmCapabilityDescriptor = LlmCapabilityDescriptor> {
   /**
    * The request being dispatched.
    */
@@ -99,7 +99,7 @@ export interface LlmPromptTemplateResolverInput<R extends LlmDispatchRequest = L
  * @typeParam R - The host's request type.
  * @typeParam D - The host's descriptor type.
  */
-export type LlmPromptTemplateResolver<R extends LlmDispatchRequest = LlmDispatchRequest, D extends LlmCapabilityDescriptor = LlmCapabilityDescriptor> = (input: LlmPromptTemplateResolverInput<R, D>) => PromiseOrValue<LlmResolvedPromptTemplates>;
+export type LlmPromptTemplateResolver<R extends LlmDispatchRequest = LlmDispatchRequest, D extends LlmCapabilityDescriptor = LlmCapabilityDescriptor> = (input: LlmPromptTemplateResolverParams<R, D>) => PromiseOrValue<LlmResolvedPromptTemplates>;
 
 /**
  * One authored template.
@@ -138,9 +138,9 @@ export interface LlmPromptTemplateTier {
 }
 
 /**
- * Config for {@link tieredLlmPromptTemplateResolver}.
+ * Config for {@link makeLlmTieredPromptTemplateResolver}.
  */
-export interface TieredLlmPromptTemplateResolverConfig {
+export interface LlmTieredPromptTemplateResolverConfig {
   /**
    * The tiers, LOWEST precedence first.
    */
@@ -186,7 +186,7 @@ function outranks(a: LlmMergedPromptTemplate, b: LlmMergedPromptTemplate): boole
  *
  * @example
  * ```ts
- * const resolver = tieredLlmPromptTemplateResolver({
+ * const resolver = makeLlmTieredPromptTemplateResolver({
  *   tiers: [
  *     { source: 'defaults', templates: [{ key: 'instructions', role: 'instructions', text: 'Summarize the input.' }] },
  *     { source: 'app', templates: [{ key: 'summarize-instructions', role: 'instructions', capability: 'summarize', text: 'Summarize in two sentences.' }] }
@@ -195,7 +195,7 @@ function outranks(a: LlmMergedPromptTemplate, b: LlmMergedPromptTemplate): boole
  * ```
  * @__NO_SIDE_EFFECTS__
  */
-export function tieredLlmPromptTemplateResolver(config: TieredLlmPromptTemplateResolverConfig): LlmPromptTemplateResolver {
+export function makeLlmTieredPromptTemplateResolver(config: LlmTieredPromptTemplateResolverConfig): LlmPromptTemplateResolver {
   const merged = new Map<string, LlmMergedPromptTemplate>();
 
   config.tiers.forEach((tier, tierIndex) => {

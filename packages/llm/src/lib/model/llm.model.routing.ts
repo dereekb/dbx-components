@@ -30,7 +30,7 @@ import {
   LLM_MODEL_SELECTION_KEYS,
   type LlmModelConfigFieldRules,
   llmModelConfigMessagePrefix,
-  llmModelOutputControlsOf,
+  toCanonicalLlmModelOutputControls,
   parseLlmModelConfigFields
 } from './llm.model.field';
 import { compileLlmCapabilityRules, type LlmModelRoutingCapabilityRef } from './llm.capability.rule';
@@ -147,7 +147,7 @@ function parseLlmModelRoutingRule(input: { readonly schemaLabel: string; readonl
     ...(model == null ? {} : { model }),
     ...(tier == null ? {} : { tier: tier.trim() }),
     ...(provider == null ? {} : { provider: provider.trim() }),
-    ...llmModelOutputControlsOf(parsed)
+    ...toCanonicalLlmModelOutputControls(parsed)
   };
 }
 
@@ -273,7 +273,7 @@ export function compileLlmModelRouting(config: CompileLlmModelRoutingConfig): Ll
         throw new Error(`${label}: declares no route; set 'tier' or 'model'.`);
       }
     },
-    valueOf: (rule, { label }) => {
+    readValue: (rule, { label }) => {
       // A provider name is validated only when the caller declared the provider set — see
       // `CompileLlmModelRoutingConfig.providers` for why an ABSENT set skips rather than rejects. Fail-loud when it is
       // declared: a typo'd provider silently served from the default one is a run billing the wrong account.

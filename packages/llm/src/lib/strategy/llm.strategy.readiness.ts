@@ -15,7 +15,7 @@
  * And the quota gate, {@link evaluateLlmQuotaGate}, which draws the throttle line over a provider-status report.
  */
 
-import { type AbortSignalRef, errorMessageOf, type Maybe, type PercentDecimal, runAsyncTasksForValues } from '@dereekb/util';
+import { type AbortSignalRef, readErrorMessage, type Maybe, type PercentDecimal, runAsyncTasksForValues } from '@dereekb/util';
 import { type LlmStrategyId } from '../model/llm.value';
 import { type LlmProviderStatus, type LlmProviderStatusProviderId, type LlmQuotaWindow, tightestLlmQuotaWindow } from './llm.provider.status';
 import { type LlmCredentialProbeOptions, type LlmStrategyBase } from './llm.strategy';
@@ -162,7 +162,7 @@ async function checkLlmReadinessSeam(config: CheckLlmReadinessSeamConfig): Promi
       } catch (error) {
         // The contract says neither seam throws; be robust anyway and record the violation as an error. The verdict
         // IS the report, so a caller sees the violation instead of a raw rejection.
-        health = { ready: false, issues: [{ severity: 'error', message: `${seam.name} threw: ${errorMessageOf(error)}` }] };
+        health = { ready: false, issues: [{ severity: 'error', message: `${seam.name} threw: ${readErrorMessage(error)}` }] };
       }
 
       entry = { id, registered: true, health };
@@ -379,7 +379,7 @@ export async function readLlmProviderStatus(config: ReadLlmProviderStatusConfig)
         } catch (error) {
           // The contract says providerStatus never throws; be robust anyway and record the violation as an issue
           // on an UNAVAILABLE status. Report channel: this function never propagates.
-          status = { providerId: id, available: false, windows: [], issues: [{ severity: 'error', message: `providerStatus threw: ${errorMessageOf(error)}` }] };
+          status = { providerId: id, available: false, windows: [], issues: [{ severity: 'error', message: `providerStatus threw: ${readErrorMessage(error)}` }] };
         }
 
         if (account != null) {

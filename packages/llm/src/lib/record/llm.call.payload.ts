@@ -43,7 +43,7 @@ export interface LlmCallLogPayloadBase {
    */
   readonly strategyId?: LlmStrategyId;
   /**
-   * The transport LANE the call rode (`LlmStrategy.kind ?? id`, e.g. `'openrouter-decisions'`) — the A/B axis a
+   * The transport LANE the call rode (`LlmStrategy.kind ?? id`, e.g. `'openrouter-systemone'`) — the A/B axis a
    * per-strategy fold keys on. ABSENT on every row written before this column existed, which is why such a fold falls
    * back to {@link strategyId}: an old row keeps folding exactly as it always did, and a new one separates the lane
    * from the account that served it.

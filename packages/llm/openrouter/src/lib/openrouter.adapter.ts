@@ -1,6 +1,6 @@
-import { llmSystemOneDecisionStrategyConfigOf, type LlmAdapter, type LlmCompletionAdapter, type LlmDecisionAdapter } from '@dereekb/llm';
-import { llmOpenAiCompatibleStrategyConfigOf } from '@dereekb/llm/openai';
-import { LLM_OPENROUTER_BASE_URL } from './openrouter.constants';
+import { toLlmSystemOneDecisionStrategyConfig, type LlmAdapter, type LlmCompletionAdapter, type LlmDecisionAdapter } from '@dereekb/llm';
+import { toLlmOpenAiCompatibleChatStrategyConfig } from '@dereekb/llm/openai';
+import { DEFAULT_LLM_OPENROUTER_BASE_URL } from './openrouter.constants';
 import { LLM_OPENROUTER_DECISION_STRATEGY_KIND, makeLlmOpenRouterDecisionStrategy } from './openrouter.decision';
 import { LLM_OPENROUTER_STRATEGY_KIND, makeLlmOpenRouterStrategy } from './openrouter.strategy';
 
@@ -11,8 +11,8 @@ import { LLM_OPENROUTER_STRATEGY_KIND, makeLlmOpenRouterStrategy } from './openr
 export const LLM_OPENROUTER_COMPLETION_ADAPTER: LlmCompletionAdapter = {
   facet: 'completion',
   kind: LLM_OPENROUTER_STRATEGY_KIND,
-  defaultBaseUrl: LLM_OPENROUTER_BASE_URL,
-  make: (config) => makeLlmOpenRouterStrategy(llmOpenAiCompatibleStrategyConfigOf(config))
+  defaultBaseUrl: DEFAULT_LLM_OPENROUTER_BASE_URL,
+  make: (config) => makeLlmOpenRouterStrategy(toLlmOpenAiCompatibleChatStrategyConfig(config))
 };
 
 /**
@@ -25,7 +25,7 @@ export const LLM_OPENROUTER_DECISION_ADAPTER: LlmDecisionAdapter = {
   kind: LLM_OPENROUTER_STRATEGY_KIND,
   strategyKind: LLM_OPENROUTER_DECISION_STRATEGY_KIND,
   transports: [LLM_OPENROUTER_STRATEGY_KIND],
-  make: (config) => makeLlmOpenRouterDecisionStrategy(llmSystemOneDecisionStrategyConfigOf(config))
+  make: (config) => makeLlmOpenRouterDecisionStrategy(toLlmSystemOneDecisionStrategyConfig(config))
 };
 
 /**

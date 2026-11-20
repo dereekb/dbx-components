@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { classifyLlmDecodeFailure } from '../record/llm.decode.failure';
-import { DEFAULT_LLM_REPLY_ENVELOPE_KEYS, llmLineReplyLeverOf, llmReplyEnvelopeContractIntro, llmReplyLeverOf, llmReplyRationaleOf, type LlmReplyEnvelopeKeys, readLlmDispatchResultLever, readLlmReplyLever, resolveLlmReplyReadingEnvelope } from './llm.reply.envelope';
+import { DEFAULT_LLM_REPLY_ENVELOPE_KEYS, llmLineReplyLeverOf, llmReplyEnvelopeContractIntro, llmReplyLeverOf, readLlmReplyRationale, type LlmReplyEnvelopeKeys, readLlmDispatchResultLever, readLlmReplyLever, resolveLlmReplyReadingEnvelope } from './llm.reply.envelope';
 
 const ENVELOPE = { envelope: DEFAULT_LLM_REPLY_ENVELOPE_KEYS };
 
@@ -81,7 +81,7 @@ describe('readLlmReplyLever(): custom envelope keys', () => {
     const reading = readLlmReplyLever('{"ok":true,"payload":{"title":"tote"}}', { envelope: keys });
     expect(reading.kind === 'lever' && reading.lever).toEqual({ title: 'tote' });
     expect(readLlmReplyLever('{"ok":false}', { envelope: keys }).kind).toBe('declined');
-    expect(llmReplyRationaleOf('{"ok":false,"why":"  out of stock  "}', { envelope: keys })).toBe('out of stock');
+    expect(readLlmReplyRationale('{"ok":false,"why":"  out of stock  "}', { envelope: keys })).toBe('out of stock');
   });
 
   it('does not unwrap a lever key under other keys', () => {
@@ -151,7 +151,7 @@ describe('readLlmReplyLever(): the trailing-brace over-emit (the layered balance
   });
 
   it('reads the rationale off the over-emit too (every reader shares the slicer)', () => {
-    expect(llmReplyRationaleOf(TRAILING_BRACE_REPLY)).toBe('Two new products are declared with their materials; nothing else remains.');
+    expect(readLlmReplyRationale(TRAILING_BRACE_REPLY)).toBe('Two new products are declared with their materials; nothing else remains.');
   });
 });
 
@@ -209,20 +209,20 @@ describe('llmReplyLeverOf()', () => {
   });
 });
 
-describe('llmReplyRationaleOf()', () => {
+describe('readLlmReplyRationale()', () => {
   it('reads the rationale of a declining reply', () => {
-    expect(llmReplyRationaleOf('{"answerable":false,"rationale":"No product in the catalog matches \'tote\'","lever":{}}')).toBe("No product in the catalog matches 'tote'");
+    expect(readLlmReplyRationale('{"answerable":false,"rationale":"No product in the catalog matches \'tote\'","lever":{}}')).toBe("No product in the catalog matches 'tote'");
   });
 
   it('trims it, and tolerates surrounding prose / a code fence', () => {
-    expect(llmReplyRationaleOf('Sure!\n```json\n{"answerable":true,"rationale":"  a reason  ","lever":{}}\n```')).toBe('a reason');
+    expect(readLlmReplyRationale('Sure!\n```json\n{"answerable":true,"rationale":"  a reason  ","lever":{}}\n```')).toBe('a reason');
   });
 
   it('returns undefined for a bare lever, bare prose, and a blank / non-string rationale', () => {
-    expect(llmReplyRationaleOf('{"kind":"statement","tokens":[]}')).toBeUndefined();
-    expect(llmReplyRationaleOf('no json here')).toBeUndefined();
-    expect(llmReplyRationaleOf('{"rationale":"   "}')).toBeUndefined();
-    expect(llmReplyRationaleOf('{"rationale":42}')).toBeUndefined();
+    expect(readLlmReplyRationale('{"kind":"statement","tokens":[]}')).toBeUndefined();
+    expect(readLlmReplyRationale('no json here')).toBeUndefined();
+    expect(readLlmReplyRationale('{"rationale":"   "}')).toBeUndefined();
+    expect(readLlmReplyRationale('{"rationale":42}')).toBeUndefined();
   });
 });
 

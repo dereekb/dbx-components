@@ -20,7 +20,7 @@ export const LLM_PROMPT_SLOT_ROLES = ['model-addendum', 'frame', 'reply-protocol
  * What fills a slot — the contract the assembly implements. Semantics only: a slot's position is its index in the
  * layout.
  *
- * - `model-addendum` — contributed: the resolved model's prompt addendum (`llmModelAddendumPromptContributor`).
+ * - `model-addendum` — contributed: the resolved model's prompt addendum (`makeLlmModelAddendumPromptContributor`).
  * - `frame` — contributed: a preamble a host contributor places (a tone, a perspective, a style, a speaker's block). A
  *   frame may sit anywhere in the array, after the contract included.
  * - `reply-protocol` — assembly: the `reply-protocol` template, or the built-in line protocol for a `line` call.
@@ -176,7 +176,7 @@ function llmPromptSlotIssuesOf(slot: LlmPromptSlot): string[] {
  *
  * @example
  * ```ts
- * const layout = makeLlmPromptLayout([
+ * const layout = defineLlmPromptLayout([
  *   { id: 'brand-voice', role: 'frame', occupancy: 'single', separator: '\n\n' },
  *   { id: 'task', role: 'instructions', occupancy: 'single', separator: '\n\n' },
  *   { id: 'live', role: 'live', occupancy: 'many', separator: '\n\n', lastSeparator: '' }
@@ -184,7 +184,7 @@ function llmPromptSlotIssuesOf(slot: LlmPromptSlot): string[] {
  * ```
  * @__NO_SIDE_EFFECTS__
  */
-export function makeLlmPromptLayout(slots: ReadonlyArray<LlmPromptSlot>): LlmPromptLayout {
+export function defineLlmPromptLayout(slots: ReadonlyArray<LlmPromptSlot>): LlmPromptLayout {
   const issues: string[] = [];
   const ids = new Set<string>();
   const ownedRoles = new Set<LlmPromptSlotRole>();
@@ -240,10 +240,10 @@ export function makeLlmPromptLayout(slots: ReadonlyArray<LlmPromptSlot>): LlmPro
  *
  * @example
  * ```ts
- * llmPromptSlotOf(DEFAULT_LLM_PROMPT_LAYOUT, 'live')?.lastSeparator; // ''
+ * findLlmPromptSlotById(DEFAULT_LLM_PROMPT_LAYOUT, 'live')?.lastSeparator; // ''
  * ```
  */
-export function llmPromptSlotOf(layout: LlmPromptLayout, id: LlmPromptSlotId): Maybe<LlmPromptSlot> {
+export function findLlmPromptSlotById(layout: LlmPromptLayout, id: LlmPromptSlotId): Maybe<LlmPromptSlot> {
   return layout.find((slot) => slot.id === id);
 }
 
@@ -256,10 +256,10 @@ export function llmPromptSlotOf(layout: LlmPromptLayout, id: LlmPromptSlotId): M
  *
  * @example
  * ```ts
- * llmPromptSlotsOfRole(layout, 'frame').map((slot) => slot.id);
+ * filterLlmPromptSlotsByRole(layout, 'frame').map((slot) => slot.id);
  * ```
  */
-export function llmPromptSlotsOfRole(layout: LlmPromptLayout, role: LlmPromptSlotRole): ReadonlyArray<LlmPromptSlot> {
+export function filterLlmPromptSlotsByRole(layout: LlmPromptLayout, role: LlmPromptSlotRole): ReadonlyArray<LlmPromptSlot> {
   return layout.filter((slot) => slot.role === role);
 }
 

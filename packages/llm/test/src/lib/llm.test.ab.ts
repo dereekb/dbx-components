@@ -25,7 +25,7 @@
 import { type Maybe } from '@dereekb/util';
 
 /**
- * The alpha {@link llmAbRegressionVerdictOf} defaults to. One-sided; discreteness at these table sizes makes the realised
+ * The alpha {@link computeLlmAbRegressionVerdict} defaults to. One-sided; discreteness at these table sizes makes the realised
  * false-positive rate materially lower than the nominal number.
  */
 export const LLM_AB_REGRESSION_ALPHA = 0.05;
@@ -67,7 +67,7 @@ export interface LlmAbRegressionConfig extends LlmAbCountsConfig {
 }
 
 /**
- * What {@link llmAbRegressionVerdictOf} answers.
+ * What {@link computeLlmAbRegressionVerdict} answers.
  */
 export interface LlmAbRegressionVerdict {
   /**
@@ -126,7 +126,7 @@ function chooseOf(config: ChooseOfConfig): number {
  * @param config - The 2x2 table.
  * @returns The upper-tail probability, in `[0, 1]`.
  */
-export function llmFisherOneSidedPOf(config: LlmAbCountsConfig): number {
+export function computeLlmFisherOneSidedP(config: LlmAbCountsConfig): number {
   const { controlHits, controlTrials, treatmentHits, treatmentTrials } = config;
   const hits = controlHits + treatmentHits;
   const trials = controlTrials + treatmentTrials;
@@ -158,14 +158,14 @@ export function llmFisherOneSidedPOf(config: LlmAbCountsConfig): number {
  *
  * @example
  * ```ts
- * const verdict = llmAbRegressionVerdictOf({ controlHits: 1, controlTrials: 6, treatmentHits: 3, treatmentTrials: 7 });
+ * const verdict = computeLlmAbRegressionVerdict({ controlHits: 1, controlTrials: 6, treatmentHits: 3, treatmentTrials: 7 });
  * // verdict.p ≈ 0.343, verdict.regressed === false: not shown to regress
  * ```
  */
-export function llmAbRegressionVerdictOf(config: LlmAbRegressionConfig): LlmAbRegressionVerdict {
+export function computeLlmAbRegressionVerdict(config: LlmAbRegressionConfig): LlmAbRegressionVerdict {
   const { controlHits, controlTrials, treatmentHits, treatmentTrials } = config;
   const alpha = config.alpha ?? LLM_AB_REGRESSION_ALPHA;
-  const p = llmFisherOneSidedPOf(config);
+  const p = computeLlmFisherOneSidedP(config);
 
   return {
     p,

@@ -21,9 +21,9 @@ const LLM_DISPATCH_RUNTIME_EXPORTS: readonly string[] = [
   'applyLlmRetryLever',
   'chooseLlmRetryLever',
   'isLlmDispatchFaultError',
-  'llmDispatcherFromDispatch',
   'llmTransportBackoffMs',
-  'makeLlmDispatcher'
+  'makeLlmDispatcher',
+  'makeLlmDispatcherFromDispatch'
 ];
 
 describe('dispatch exports', () => {

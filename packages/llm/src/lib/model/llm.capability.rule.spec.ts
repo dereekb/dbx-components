@@ -9,19 +9,19 @@ const CAPABILITIES: ReadonlyArray<LlmModelRoutingCapabilityRef> = [{ capability:
 const EXCLUDE = [{ capability: 'judge', reason: 'the judge is excluded.' }];
 
 function compile(rules: ReadonlyArray<Rule>, extra?: Partial<Parameters<typeof compileLlmCapabilityRules<Rule, string>>[0]>) {
-  return compileLlmCapabilityRules<Rule, string>({ rules, capabilities: CAPABILITIES, label: 'test', exclude: EXCLUDE, valueOf: (rule) => rule.name, ...extra });
+  return compileLlmCapabilityRules<Rule, string>({ rules, capabilities: CAPABILITIES, label: 'test', exclude: EXCLUDE, readValue: (rule) => rule.name, ...extra });
 }
 
 describe('compileLlmCapabilityRules()', () => {
   it('returns an empty map and validates nothing when there are no rules', () => {
     const validateRule = vi.fn();
     expect(compile([], { validateRule }).size).toBe(0);
-    expect(compileLlmCapabilityRules<Rule, string>({ rules: undefined, capabilities: CAPABILITIES, label: 'test', validateRule, valueOf: (rule) => rule.name }).size).toBe(0);
+    expect(compileLlmCapabilityRules<Rule, string>({ rules: undefined, capabilities: CAPABILITIES, label: 'test', validateRule, readValue: (rule) => rule.name }).size).toBe(0);
     expect(validateRule).not.toHaveBeenCalled();
   });
 
   it('checks an exclusion before the unknown-capability check', () => {
-    expect(() => compileLlmCapabilityRules<Rule, string>({ rules: [{ name: 'a', capabilities: ['ghost'] }], capabilities: [], label: 'test', exclude: [{ capability: 'ghost', reason: 'ghosts are excluded.' }], valueOf: (rule) => rule.name })).toThrow('test rule #1: ghosts are excluded.');
+    expect(() => compileLlmCapabilityRules<Rule, string>({ rules: [{ name: 'a', capabilities: ['ghost'] }], capabilities: [], label: 'test', exclude: [{ capability: 'ghost', reason: 'ghosts are excluded.' }], readValue: (rule) => rule.name })).toThrow('test rule #1: ghosts are excluded.');
     expect(() => compile([{ name: 'a', capabilities: ['nope'] }])).toThrow("test rule #1: unknown capability 'nope'.");
   });
 
@@ -46,16 +46,16 @@ describe('compileLlmCapabilityRules()', () => {
     expect(() => compile([{ name: 'a', tags: ['ghost'] }])).toThrow("test rule #1: no capability carries the tag 'ghost' (have: text, meta).");
   });
 
-  it('calls valueOf eagerly, once per rule, even for a rule nothing matches', () => {
-    const valueOf = vi.fn((rule: Rule) => rule.name);
+  it('calls readValue eagerly, once per rule, even for a rule nothing matches', () => {
+    const readValue = vi.fn((rule: Rule) => rule.name);
     compile(
       [
         { name: 'a', capabilities: ['summarize'] },
         { name: 'b', capabilities: ['summarize'] }
       ],
-      { valueOf }
+      { readValue }
     );
-    expect(valueOf.mock.calls.map(([rule]) => rule.name)).toEqual(['a', 'b']);
+    expect(readValue.mock.calls.map(([rule]) => rule.name)).toEqual(['a', 'b']);
   });
 
   it('lets a key match beat a tag match, and the first match win within a level', () => {

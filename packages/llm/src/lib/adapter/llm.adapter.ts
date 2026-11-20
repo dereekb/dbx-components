@@ -42,7 +42,7 @@ export type LlmAdapterKind = string;
 /**
  * What every adapter's `make` receives.
  */
-export interface LlmAdapterInput {
+export interface LlmAdapterConfig {
   /**
    * The RESOLVED provider. It carries the key VALUE — never log it.
    */
@@ -62,7 +62,7 @@ export interface LlmAdapterInput {
  * What a {@link LlmCompletionAdapter}'s `make` receives: the provider plus the host's shared strategy options and the
  * provider's account facets. Each optional key is present only when set.
  */
-export interface LlmCompletionAdapterConfig extends LlmAdapterInput {
+export interface LlmCompletionAdapterConfig extends LlmAdapterConfig {
   /**
    * The model a request that names none runs on.
    */
@@ -101,7 +101,7 @@ export interface LlmCompletionAdapterConfig extends LlmAdapterInput {
 /**
  * What a {@link LlmDecisionAdapter}'s `make` receives.
  */
-export interface LlmDecisionAdapterConfig extends LlmAdapterInput {
+export interface LlmDecisionAdapterConfig extends LlmAdapterConfig {
   /**
    * The per-call timeout; absent ⇒ the strategy's own default.
    */
@@ -194,7 +194,7 @@ export interface LlmMeteringAdapter extends LlmAdapterBase<'metering'> {
    * @param input - The provider, its effective base URL and the fetch seam.
    * @returns The status source.
    */
-  make(input: LlmAdapterInput): LlmProviderStatusSource;
+  make(input: LlmAdapterConfig): LlmProviderStatusSource;
 }
 
 /**
@@ -207,7 +207,7 @@ export interface LlmBillAdapter extends LlmAdapterBase<'bill'> {
    * @param input - The provider, its effective base URL and the fetch seam.
    * @returns The bill reader.
    */
-  make(input: LlmAdapterInput): LlmCallBillReader;
+  make(input: LlmAdapterConfig): LlmCallBillReader;
 }
 
 /**
@@ -221,7 +221,7 @@ export interface LlmCredentialProbeAdapter extends LlmAdapterBase<'credentialPro
    * @param input - The provider, its effective base URL and the fetch seam.
    * @returns The credential probe.
    */
-  make(input: LlmAdapterInput): LlmCredentialProbe;
+  make(input: LlmAdapterConfig): LlmCredentialProbe;
 }
 
 /**
@@ -232,4 +232,4 @@ export type LlmAdapter = LlmCompletionAdapter | LlmDecisionAdapter | LlmMetering
 /**
  * The adapter type of one facet.
  */
-export type LlmAdapterOf<F extends LlmAdapterFacet> = Extract<LlmAdapter, { readonly facet: F }>;
+export type LlmAdapterForFacet<F extends LlmAdapterFacet> = Extract<LlmAdapter, { readonly facet: F }>;

@@ -160,7 +160,7 @@ export interface LlmRequest {
   readonly cacheSegments?: LlmPromptCacheSegments;
   /**
    * The PROVENANCE breakdown of {@link prompt} — the ordered {@link LlmPromptSegment}s joined to build it. When
-   * present, `joinLlmPromptSegments(segments) === prompt` and `llmPromptCacheSegmentsOf(segments)` equals
+   * present, `joinLlmPromptSegments(segments) === prompt` and `splitLlmPromptCacheSegments(segments)` equals
    * {@link cacheSegments} (both are DERIVED from this list, never built separately). Absent on a hand-built request.
    *
    * A transport MAY read it (a per-segment `cache_control` breakpoint is the obvious use); {@link prompt} stays the
@@ -430,9 +430,57 @@ export interface LlmCompleteOptions extends AbortSignalRef {}
 
 /**
  * The per-request timeout FLOOR of a completion transport. The stock OpenAI-compatible transports scale each call's
- * abort window up from it with the call's completion budget (`llmOpenAiCallTimeoutMs`, capped at 10 minutes).
+ * abort window up from it with the call's completion budget ({@link resolveLlmCompletionCallTimeoutMs}, capped at 10
+ * minutes).
  */
 export const DEFAULT_LLM_COMPLETION_TIMEOUT_MS: Milliseconds = 60_000;
+
+/**
+ * The assumed streaming rate (completion tokens per second) the per-call abort timeout budgets against — a generous
+ * floor so a legitimately long reply is never aborted for merely being large. A call's abort window is
+ * `maxOutputTokens / this × 1000`, floored at the base timeout and capped at {@link LLM_COMPLETION_MAX_CALL_TIMEOUT_MS}.
+ */
+export const LLM_COMPLETION_TOKENS_PER_SEC = 30;
+
+/**
+ * The hard ceiling on any single call's abort window (10 min) — even a maximal output budget can never hang a call
+ * longer than this before the per-request {@link AbortSignal} fires.
+ */
+export const LLM_COMPLETION_MAX_CALL_TIMEOUT_MS: Milliseconds = 600_000;
+
+/**
+ * Config for {@link resolveLlmCompletionCallTimeoutMs}.
+ */
+export interface ResolveLlmCompletionCallTimeoutMsConfig {
+  /**
+   * The strategy's base per-request timeout (the floor).
+   */
+  readonly timeoutMs: Milliseconds;
+  /**
+   * The completion budget this call was sent with.
+   */
+  readonly maxOutputTokens: number;
+}
+
+/**
+ * Resolve one call's per-request abort window — `max(timeoutMs, maxOutputTokens / LLM_COMPLETION_TOKENS_PER_SEC ×
+ * 1000)`, hard-capped at {@link LLM_COMPLETION_MAX_CALL_TIMEOUT_MS}. The base (the strategy `timeoutMs`) stays the floor;
+ * a big-budget call scales its window up so its budgeted tokens have time to stream. Provider-neutral: every stock
+ * OpenAI-compatible transport (`/openai`, `/openrouter`) applies it.
+ *
+ * @param config - The base timeout and the call's completion budget.
+ * @returns The abort window in ms.
+ *
+ * @example
+ * ```ts
+ * resolveLlmCompletionCallTimeoutMs({ timeoutMs: 60_000, maxOutputTokens: 8_192 }); // 273_067
+ * ```
+ * @__NO_SIDE_EFFECTS__
+ */
+export function resolveLlmCompletionCallTimeoutMs(config: ResolveLlmCompletionCallTimeoutMsConfig): Milliseconds {
+  const { timeoutMs, maxOutputTokens } = config;
+  return Math.min(LLM_COMPLETION_MAX_CALL_TIMEOUT_MS, Math.max(timeoutMs, Math.ceil((maxOutputTokens / LLM_COMPLETION_TOKENS_PER_SEC) * 1000)));
+}
 
 /**
  * The completion-length cap of a direct strategy call that names none (`LlmRequest.maxOutputTokens` unset, no

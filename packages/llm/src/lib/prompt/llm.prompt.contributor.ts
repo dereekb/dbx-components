@@ -4,7 +4,7 @@
  * capability supplied. A contributor reads the request (its site, its host fields), the capability's descriptor, the
  * resolved model and the resolved templates, and answers with {@link LlmPromptContribution}s; the assembly places them
  * by SLOT (a slot of the prompt layout, `LlmPromptLayout`) and the dispatcher records every placed one on the call
- * record's `supplements` ({@link llmPromptSupplementsOf}).
+ * record's `supplements` ({@link toLlmPromptSupplements}).
  *
  * What stays OUT of the seam: the capability's own live facts and the authored template layers. A contributor
  * supplements a prompt; it never writes the capability's subject.
@@ -147,7 +147,7 @@ export interface LlmPromptContributionCut {
  * @typeParam R - The host's request type.
  * @typeParam D - The host's descriptor type.
  */
-export interface LlmPromptContributorInput<R extends LlmDispatchRequest = LlmDispatchRequest, D extends LlmCapabilityDescriptor = LlmCapabilityDescriptor> {
+export interface LlmPromptContributorParams<R extends LlmDispatchRequest = LlmDispatchRequest, D extends LlmCapabilityDescriptor = LlmCapabilityDescriptor> {
   /**
    * The request being dispatched (its site, its host fields).
    */
@@ -210,7 +210,7 @@ export interface LlmPromptContributor<R extends LlmDispatchRequest = LlmDispatch
    * @param input - The shared per-dispatch input.
    * @returns Its contributions.
    */
-  resolve(input: LlmPromptContributorInput<R, D>): PromiseOrValue<LlmPromptContributorResult>;
+  resolve(input: LlmPromptContributorParams<R, D>): PromiseOrValue<LlmPromptContributorResult>;
 }
 
 /**
@@ -227,7 +227,7 @@ export interface LlmPromptContributor<R extends LlmDispatchRequest = LlmDispatch
  * const { contributions, cut } = await resolveLlmPromptContributions(contributors, { request, descriptor, templates, liveBlockKeys });
  * ```
  */
-export async function resolveLlmPromptContributions<R extends LlmDispatchRequest = LlmDispatchRequest, D extends LlmCapabilityDescriptor = LlmCapabilityDescriptor>(contributors: ReadonlyArray<LlmPromptContributor<R, D>>, input: LlmPromptContributorInput<R, D>): Promise<Required<LlmPromptContributorResult>> {
+export async function resolveLlmPromptContributions<R extends LlmDispatchRequest = LlmDispatchRequest, D extends LlmCapabilityDescriptor = LlmCapabilityDescriptor>(contributors: ReadonlyArray<LlmPromptContributor<R, D>>, input: LlmPromptContributorParams<R, D>): Promise<Required<LlmPromptContributorResult>> {
   const resolved: LlmPromptContribution[] = [];
   const cut: LlmPromptContributionCut[] = [];
 
@@ -416,10 +416,10 @@ export function mergeLlmLiveContextContributions(config: MergeLlmLiveContextCont
  *
  * @example
  * ```ts
- * const supplements = llmPromptSupplementsOf(resolved.contributions, resolved.cut);
+ * const supplements = toLlmPromptSupplements(resolved.contributions, resolved.cut);
  * ```
  */
-export function llmPromptSupplementsOf(contributions: ReadonlyArray<LlmPromptContribution>, cut: ReadonlyArray<LlmPromptContributionCut> = []): ReadonlyArray<LlmCallSupplement> {
+export function toLlmPromptSupplements(contributions: ReadonlyArray<LlmPromptContribution>, cut: ReadonlyArray<LlmPromptContributionCut> = []): ReadonlyArray<LlmCallSupplement> {
   const placed = contributions.map((contribution): LlmCallSupplement => ({
     contributor: contribution.contributor,
     slot: contribution.slot,

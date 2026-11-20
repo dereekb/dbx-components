@@ -4,7 +4,7 @@ import { LLM_TIMEOUT_FINISH_REASON, LLM_TRANSPORT_FINISH_REASON, LLM_UNRETRYABLE
 import { type LlmCompletion, type LlmDispatchResult, type LlmRequest, type LlmStrategy } from '../strategy/llm.strategy';
 import { DEFAULT_LLM_REPLY_FAST_FIX_LIMITS, type LlmReplyFastFixOutcome } from '../reply/llm.reply.fast.fix';
 import { DEFAULT_LLM_REPLY_ENVELOPE_KEYS } from '../reply/llm.reply.envelope';
-import { isDegenerateLlmReplyReading, type LlmBoundReplyFastFix, llmBoundReplyFastFixOf, readLlmDispatchReply, type LlmReplyRepairRefusal, runLlmReplyRepairLane, sendLlmDispatchAttempt, validateLlmDispatchLever } from './llm.dispatch.attempt';
+import { isDegenerateLlmReplyReading, type LlmBoundReplyFastFix, makeLlmBoundReplyFastFix, readLlmDispatchReply, type LlmReplyRepairRefusal, runLlmReplyRepairLane, sendLlmDispatchAttempt, validateLlmDispatchLever } from './llm.dispatch.attempt';
 
 class APIUserAbortError extends Error {}
 
@@ -192,25 +192,25 @@ describe('runLlmReplyRepairLane() fast-fix tier', () => {
   });
 });
 
-describe('llmBoundReplyFastFixOf()', () => {
+describe('makeLlmBoundReplyFastFix()', () => {
   const renderLiveContext = () => [];
   const dispatch = () => Promise.resolve(served('{}'));
   const fixer = (input: unknown) => Promise.resolve<LlmReplyFastFixOutcome>({ kind: 'missed', reason: 'unusable', meta: { input } });
 
   it('should never bind on the repair capability, on a line call or without a fixer', () => {
-    expect(llmBoundReplyFastFixOf({ replyFastFix: fixer, request: { capability: 'RepairReplyJson', renderLiveContext }, protocol: 'json', schemaHint: {}, envelope: undefined, dispatch })).toEqual({ fastFixUnavailable: 'fast-fix-off' });
-    expect(llmBoundReplyFastFixOf({ replyFastFix: fixer, request: { capability: 'cap', renderLiveContext }, protocol: 'line', schemaHint: {}, envelope: undefined, dispatch })).toEqual({ fastFixUnavailable: 'fast-fix-off' });
-    expect(llmBoundReplyFastFixOf({ request: { capability: 'cap', renderLiveContext }, protocol: 'json', schemaHint: {}, envelope: undefined, dispatch })).toEqual({ fastFixUnavailable: 'fast-fix-off' });
+    expect(makeLlmBoundReplyFastFix({ replyFastFix: fixer, request: { capability: 'RepairReplyJson', renderLiveContext }, protocol: 'json', schemaHint: {}, envelope: undefined, dispatch })).toEqual({ fastFixUnavailable: 'fast-fix-off' });
+    expect(makeLlmBoundReplyFastFix({ replyFastFix: fixer, request: { capability: 'cap', renderLiveContext }, protocol: 'line', schemaHint: {}, envelope: undefined, dispatch })).toEqual({ fastFixUnavailable: 'fast-fix-off' });
+    expect(makeLlmBoundReplyFastFix({ request: { capability: 'cap', renderLiveContext }, protocol: 'json', schemaHint: {}, envelope: undefined, dispatch })).toEqual({ fastFixUnavailable: 'fast-fix-off' });
   });
 
   it('should refuse as no-schema when eligible without a schema hint', () => {
-    expect(llmBoundReplyFastFixOf({ replyFastFix: fixer, request: { capability: 'cap', renderLiveContext }, protocol: 'json', envelope: undefined, dispatch })).toEqual({ fastFixUnavailable: 'no-schema' });
+    expect(makeLlmBoundReplyFastFix({ replyFastFix: fixer, request: { capability: 'cap', renderLiveContext }, protocol: 'json', envelope: undefined, dispatch })).toEqual({ fastFixUnavailable: 'no-schema' });
   });
 
   it('should pass the request, subject capability, subject envelope, schema hint and dispatch to a bound fixer', async () => {
     const request = { capability: 'cap', renderLiveContext };
     const schemaHint = { type: 'object' };
-    const { fastFix } = llmBoundReplyFastFixOf({ replyFastFix: fixer, request, protocol: 'json-envelope', schemaHint, envelope: DEFAULT_LLM_REPLY_ENVELOPE_KEYS, dispatch });
+    const { fastFix } = makeLlmBoundReplyFastFix({ replyFastFix: fixer, request, protocol: 'json-envelope', schemaHint, envelope: DEFAULT_LLM_REPLY_ENVELOPE_KEYS, dispatch });
     const outcome = await fastFix?.({ text: 't', shape: {} as never, attempt: 2, callContext: makeLlmCallContext({ label: 'a' }) });
 
     expect(outcome?.meta).toMatchObject({ input: { request, subjectCapability: 'cap', subjectEnvelope: DEFAULT_LLM_REPLY_ENVELOPE_KEYS, schemaHint, dispatch, text: 't', attempt: 2 } });

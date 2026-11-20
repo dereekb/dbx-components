@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { makeLlmModelConfigSchema } from '../model/config/llm.model.config.schema';
 import { type LlmCompletionAdapter, type LlmDecisionAdapter, type LlmMeteringAdapter } from './llm.adapter';
-import { llmAdapterKey, llmAdapterKindsOf, llmAdapterOf, llmAdaptersOf, llmModelConfigListsOf, makeLlmAdapterRegistry, resolveLlmAdapter } from './llm.adapter.registry';
+import { llmAdapterKey, readLlmAdapterKinds, findLlmAdapter, filterLlmAdaptersByFacet, readLlmModelConfigLists, makeLlmAdapterRegistry, resolveLlmAdapter } from './llm.adapter.registry';
 
 function notCalled(): never {
   throw new Error('not called');
@@ -21,8 +21,8 @@ function meteringAdapter(kind: string): LlmMeteringAdapter {
 
 const OPENAI = completionAdapter('openai');
 const OPENROUTER = completionAdapter('openrouter');
-const ZENMUX_DECISION = decisionAdapter('zenmux', 'zenmux-decisions');
-const OPENROUTER_DECISION = decisionAdapter('openrouter', 'openrouter-decisions');
+const ZENMUX_DECISION = decisionAdapter('zenmux', 'zenmux-systemone');
+const OPENROUTER_DECISION = decisionAdapter('openrouter', 'openrouter-systemone');
 const ZENMUX_METERING = meteringAdapter('zenmux');
 
 describe('llmAdapterKey()', () => {
@@ -36,16 +36,16 @@ describe('makeLlmAdapterRegistry()', () => {
     const adapters = makeLlmAdapterRegistry([OPENAI, OPENROUTER, ZENMUX_DECISION, ZENMUX_METERING]);
 
     expect(adapters.size).toBe(4);
-    expect(llmAdapterOf({ adapters, facet: 'completion', kind: 'openai' })).toBe(OPENAI);
-    expect(llmAdapterOf({ adapters, facet: 'decision', kind: 'zenmux' })).toBe(ZENMUX_DECISION);
-    expect(llmAdapterOf({ adapters, facet: 'metering', kind: 'zenmux' })).toBe(ZENMUX_METERING);
+    expect(findLlmAdapter({ adapters, facet: 'completion', kind: 'openai' })).toBe(OPENAI);
+    expect(findLlmAdapter({ adapters, facet: 'decision', kind: 'zenmux' })).toBe(ZENMUX_DECISION);
+    expect(findLlmAdapter({ adapters, facet: 'metering', kind: 'zenmux' })).toBe(ZENMUX_METERING);
   });
 
   it('should find nothing for an unknown kind or a kind registered only under another facet', () => {
     const adapters = makeLlmAdapterRegistry([OPENAI, ZENMUX_METERING]);
 
-    expect(llmAdapterOf({ adapters, facet: 'completion', kind: 'vllm' })).toBeUndefined();
-    expect(llmAdapterOf({ adapters, facet: 'completion', kind: 'zenmux' })).toBeUndefined();
+    expect(findLlmAdapter({ adapters, facet: 'completion', kind: 'vllm' })).toBeUndefined();
+    expect(findLlmAdapter({ adapters, facet: 'completion', kind: 'zenmux' })).toBeUndefined();
   });
 
   it('should throw on a second adapter for one facet and kind, and ignore a same-instance re-register', () => {
@@ -71,20 +71,20 @@ describe('resolveLlmAdapter()', () => {
   });
 });
 
-describe('llmAdaptersOf()', () => {
+describe('filterLlmAdaptersByFacet()', () => {
   it('should list one facet in registration order', () => {
     const adapters = makeLlmAdapterRegistry([OPENROUTER, ZENMUX_DECISION, OPENAI, OPENROUTER_DECISION]);
 
-    expect(llmAdaptersOf({ adapters, facet: 'completion' })).toEqual([OPENROUTER, OPENAI]);
-    expect(llmAdapterKindsOf({ adapters, facet: 'decision' })).toEqual(['zenmux', 'openrouter']);
-    expect(llmAdapterKindsOf({ adapters, facet: 'bill' })).toEqual([]);
+    expect(filterLlmAdaptersByFacet({ adapters, facet: 'completion' })).toEqual([OPENROUTER, OPENAI]);
+    expect(readLlmAdapterKinds({ adapters, facet: 'decision' })).toEqual(['zenmux', 'openrouter']);
+    expect(readLlmAdapterKinds({ adapters, facet: 'bill' })).toEqual([]);
   });
 });
 
-describe('llmModelConfigListsOf()', () => {
+describe('readLlmModelConfigLists()', () => {
   it('should give the model config schema its transports, meterings and decision routes', () => {
     const adapters = makeLlmAdapterRegistry([OPENAI, OPENROUTER, ZENMUX_METERING, ZENMUX_DECISION, OPENROUTER_DECISION]);
-    const lists = llmModelConfigListsOf(adapters);
+    const lists = readLlmModelConfigLists(adapters);
 
     expect(lists).toEqual({ transports: ['openai', 'openrouter'], meterings: ['zenmux'], decisionRoutes: ['zenmux', 'openrouter'] });
 
@@ -95,7 +95,7 @@ describe('llmModelConfigListsOf()', () => {
   });
 
   it('should give no transports without completion adapters, which the schema refuses', () => {
-    const lists = llmModelConfigListsOf(makeLlmAdapterRegistry([ZENMUX_METERING]));
+    const lists = readLlmModelConfigLists(makeLlmAdapterRegistry([ZENMUX_METERING]));
 
     expect(lists.transports).toEqual([]);
     expect(() => makeLlmModelConfigSchema({ ...lists })).toThrow(/needs at least one transport/);

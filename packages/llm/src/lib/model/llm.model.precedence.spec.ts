@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LLM_REASONING_OFF, llmCapabilityVisionOf, resolveLlmCapabilityModel, resolveLlmCapabilityOutputControls, resolveLlmCapabilityProvider } from './llm.model.precedence';
+import { LLM_REASONING_OFF, resolveLlmCapabilityVision, resolveLlmCapabilityModel, resolveLlmCapabilityOutputControls, resolveLlmCapabilityProvider } from './llm.model.precedence';
 import { DEFAULT_LLM_MODEL_TIER, type LlmModelTierMap } from './llm.model.tier';
 
 const FAST = 'vendor/model-fast';
@@ -90,19 +90,19 @@ describe('resolveLlmCapabilityOutputControls()', () => {
   });
 });
 
-describe('llmCapabilityVisionOf()', () => {
+describe('resolveLlmCapabilityVision()', () => {
   const base = { ...BASE, descriptor: { tier: 'strong' } };
 
   it('should read the tier path, an override, and no map as not-vision', () => {
-    expect(llmCapabilityVisionOf(base)).toEqual({ model: STRONG, vision: false, source: 'descriptor-tier' });
-    expect(llmCapabilityVisionOf({ ...base, visionByModel: { [STRONG]: true } })).toMatchObject({ model: STRONG, vision: true });
-    expect(llmCapabilityVisionOf({ ...base, override: { model: 'vendor/eyes' }, visionByModel: { 'vendor/eyes': true } })).toEqual({ model: 'vendor/eyes', vision: true, source: 'request-model' });
+    expect(resolveLlmCapabilityVision(base)).toEqual({ model: STRONG, vision: false, source: 'descriptor-tier' });
+    expect(resolveLlmCapabilityVision({ ...base, visionByModel: { [STRONG]: true } })).toMatchObject({ model: STRONG, vision: true });
+    expect(resolveLlmCapabilityVision({ ...base, override: { model: 'vendor/eyes' }, visionByModel: { 'vendor/eyes': true } })).toEqual({ model: 'vendor/eyes', vision: true, source: 'request-model' });
   });
 
   it('should check vision on the routed slug when a route wins', () => {
     const route = { model: 'vendor/blind' };
-    expect(llmCapabilityVisionOf({ ...base, route, visionByModel: { [STRONG]: true } })).toEqual({ model: 'vendor/blind', vision: false, source: 'route' });
-    expect(llmCapabilityVisionOf({ ...base, route, visionByModel: { 'vendor/blind': true } })).toMatchObject({ vision: true });
+    expect(resolveLlmCapabilityVision({ ...base, route, visionByModel: { [STRONG]: true } })).toEqual({ model: 'vendor/blind', vision: false, source: 'route' });
+    expect(resolveLlmCapabilityVision({ ...base, route, visionByModel: { 'vendor/blind': true } })).toMatchObject({ vision: true });
   });
 });
 

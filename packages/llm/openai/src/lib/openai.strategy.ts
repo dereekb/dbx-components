@@ -32,8 +32,8 @@
  * The library reads NO environment: the host resolves the key / base URL / token-limit param / model from its own
  * configuration and passes them in.
  */
-import { DEFAULT_LLM_REASONING_OFF_ENCODING, llmReasoningOffEncodingFor, probeLlmCredentialEndpoint, type LlmModelReasoningOffMap, type LlmTransportCredentialProbe, type LlmReasoningOffEncoding, type LlmStrategy, type LlmStrategyId, type LlmTokenLimitParam } from '@dereekb/llm';
-import { llmOpenAiReasoningParamsOf } from './openai.chat';
+import { DEFAULT_LLM_REASONING_OFF_ENCODING, resolveLlmReasoningOffEncoding, probeLlmCredentialEndpoint, type LlmModelReasoningOffMap, type LlmTransportCredentialProbe, type LlmReasoningOffEncoding, type LlmStrategy, type LlmStrategyId, type LlmTokenLimitParam } from '@dereekb/llm';
+import { toLlmOpenAiReasoningParams } from './openai.chat';
 import { makeLlmOpenAiCompatibleChatStrategy, type LlmOpenAiCompatibleChatStrategyConfig, type LlmOpenAiCompatibleChatStrategyHooks } from './openai.compatible.strategy';
 
 /**
@@ -90,7 +90,7 @@ export interface LlmOpenAiStrategyConfig extends LlmOpenAiCompatibleChatStrategy
  * @param params - The strategy id, trimmed base URL, key, fetch seam and signal.
  * @returns The credential verdict.
  */
-const LLM_OPENAI_CREDENTIAL_PROBE: LlmTransportCredentialProbe = (params) => probeLlmCredentialEndpoint({ ...params, url: `${params.baseUrl}/models`, notFoundSeverity: 'warning' });
+const llmOpenAiCredentialProbe: LlmTransportCredentialProbe = (params) => probeLlmCredentialEndpoint({ ...params, url: `${params.baseUrl}/models`, notFoundSeverity: 'warning' });
 
 /**
  * Build the `openai` {@link LlmStrategy} — a provider-neutral transport over any OpenAI-compatible chat-completions
@@ -118,11 +118,11 @@ export function makeLlmOpenAiStrategy(config: LlmOpenAiStrategyConfig = {}): Llm
     caching: 'auto-prefix',
     defaultBaseUrl: DEFAULT_LLM_OPENAI_BASE_URL,
     tokenLimitParam: config.tokenLimitParam,
-    credentialProbe: LLM_OPENAI_CREDENTIAL_PROBE,
+    credentialProbe: llmOpenAiCredentialProbe,
     // Reasoning maps onto the flat `reasoning_effort` (or, for the `nested-disabled` encoding, the nested object) — an
     // explicit OFF is ENCODED, never dropped; an unconfigured call still sends nothing. The OFF encoding is resolved
     // for THE SLUG being sent: whether `'none'` is accepted is a per-model fact.
-    reasoningParams: ({ reasoning, model }) => llmOpenAiReasoningParamsOf({ reasoning, offEncoding: llmReasoningOffEncodingFor({ model, byModel: reasoningOffByModel, fallback: reasoningOffEncoding }) }),
+    reasoningParams: ({ reasoning, model }) => toLlmOpenAiReasoningParams({ reasoning, offEncoding: resolveLlmReasoningOffEncoding({ model, byModel: reasoningOffByModel, fallback: reasoningOffEncoding }) }),
     // OFF by default, so a strict gateway never sees this OpenRouter param.
     ...(config.usageAccounting === true ? { bodyExtras: () => ({ usage: { include: true as const } }) } : {})
   };

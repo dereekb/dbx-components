@@ -2,7 +2,7 @@ import { type } from 'arktype';
 import { describe, expect, it } from 'vitest';
 import { resolveLlmCapabilityModel } from '../model/llm.model.precedence';
 import { compileLlmModelRouting } from '../model/llm.model.routing';
-import { defineLlmCapability, type LlmCapabilityDescriptor, type LlmCapabilityDescriptorOf } from './llm.capability.descriptor';
+import { defineLlmCapability, type LlmCapabilityDescriptor, type LlmCapabilityDescriptorReader } from './llm.capability.descriptor';
 
 interface HostTraits {
   readonly voice: string;
@@ -49,7 +49,7 @@ describe('LlmCapabilityDescriptor', () => {
   });
 
   it('should carry typed traits and a slot-keyed frames policy', () => {
-    const descriptorOf: LlmCapabilityDescriptorOf<LlmCapabilityDescriptor<unknown, HostTraits>> = (capability) => [SUMMARIZE, CLASSIFY].find((x) => x.capability === capability);
+    const descriptorOf: LlmCapabilityDescriptorReader<LlmCapabilityDescriptor<unknown, HostTraits>> = (capability) => [SUMMARIZE, CLASSIFY].find((x) => x.capability === capability);
     const voice: string | undefined = descriptorOf('summarize')?.traits?.voice;
 
     expect(voice).toBe('narrator');

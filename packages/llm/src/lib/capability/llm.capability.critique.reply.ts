@@ -1,6 +1,6 @@
 /**
  * The `CritiqueReply` capability — the OPT-IN, BILLED semantic judge behind a request's `critique` seam, plus
- * {@link llmCriticFor}, the one-line opt-in a critique-capable capability spreads onto its request.
+ * {@link resolveLlmCritiqueFields}, the one-line opt-in a critique-capable capability spreads onto its request.
  *
  * It is the only built-in capability that reads ANOTHER capability's reply. It is shown a GOAL (what a good reply must
  * contain), optional EVIDENCE the subject's live context does not carry, the subject's rendered live context verbatim,
@@ -11,7 +11,7 @@
  * is the contract the critic judges against; pasting the subject's own instructions in would let the subject prompt
  * argue its own case.
  *
- * **Off by default, and off is free.** {@link llmCriticFor} returns `{}` unless the HOST attached a rule for the
+ * **Off by default, and off is free.** {@link resolveLlmCritiqueFields} returns `{}` unless the HOST attached a rule for the
  * capability, so with no policy every prompt, dispatch count and billed call is unchanged. With a policy, a critiqued
  * capability costs `1 + attempts` calls where it cost `1`.
  *
@@ -23,7 +23,7 @@
  *    subject dispatch — bounded and known before the call.
  */
 
-import { errorMessageOf, filterMaybeArrayValues, isNotBlankString, type Maybe } from '@dereekb/util';
+import { readErrorMessage, filterMaybeArrayValues, isNotBlankString, type Maybe } from '@dereekb/util';
 import { type } from 'arktype';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { type LlmCapabilityKey, type LlmModelTierKey } from '../model/llm.value';
@@ -31,7 +31,7 @@ import { llmLiveContextBlock, type LlmLiveContextBlock } from '../prompt/llm.pro
 import { type LlmPromptTemplate } from '../prompt/llm.prompt.template';
 import { type LlmCallContext } from '../record/llm.call.context';
 import { type LlmSwallowSiteId } from '../record/llm.swallow';
-import { LLM_CRITIQUE_REPLY_CAPABILITY, type LlmCritic, type LlmCritiqueBinding, type LlmCritiqueDispatch, type LlmCritiqueInput, type LlmCritiqueRule, type LlmCritiqueVerdict } from '../reply/llm.reply.critique';
+import { LLM_CRITIQUE_REPLY_CAPABILITY, type LlmCritic, type LlmCritiqueBinding, type LlmCritiqueDispatch, type LlmCritiqueParams, type LlmCritiqueRule, type LlmCritiqueVerdict } from '../reply/llm.reply.critique';
 import { readLlmDispatchResultLever } from '../reply/llm.reply.envelope';
 import { llmSchemaLeverValidator } from '../reply/llm.reply.validator';
 import { defineLlmCapability, type LlmCapabilityDescriptor } from './llm.capability.descriptor';
@@ -257,7 +257,7 @@ export function makeLlmSemanticCritic(config: MakeLlmSemanticCriticConfig): LlmC
   const goal = rule.goal ?? config.goal;
   const evidence = config.evidence;
 
-  return async (input: LlmCritiqueInput): Promise<LlmCritiqueVerdict> => {
+  return async (input: LlmCritiqueParams): Promise<LlmCritiqueVerdict> => {
     let verdict: LlmCritiqueVerdict = true;
 
     try {
@@ -285,7 +285,7 @@ export function makeLlmSemanticCritic(config: MakeLlmSemanticCriticConfig): LlmC
       // The judge dispatch threw (transport / abort / misconfiguration). A critic must NEVER take the subject dispatch
       // down with it, so this is fail-open too, and declared as such.
       input.callContext.swallow(LLM_CRITIQUE_REPLY_JUDGE_SWALLOW_SITE, error);
-      input.callContext.diag({ level: 'warn', code: LLM_CRITIQUE_ERROR_DIAG_CODE, fields: { capability: input.capability, attempt: input.attempt, error: errorMessageOf(error) }, message: 'the semantic critic threw; accepting the reply unjudged' });
+      input.callContext.diag({ level: 'warn', code: LLM_CRITIQUE_ERROR_DIAG_CODE, fields: { capability: input.capability, attempt: input.attempt, error: readErrorMessage(error) }, message: 'the semantic critic threw; accepting the reply unjudged' });
     }
 
     return verdict;
@@ -293,9 +293,9 @@ export function makeLlmSemanticCritic(config: MakeLlmSemanticCriticConfig): LlmC
 }
 
 /**
- * The inputs of {@link llmCriticFor}.
+ * The inputs of {@link resolveLlmCritiqueFields}.
  */
-export interface LlmCriticForConfig {
+export interface ResolveLlmCritiqueFieldsConfig {
   /**
    * The host's critique binding. Absent ⇒ no critic (off is free).
    */
@@ -324,7 +324,7 @@ export interface LlmCriticForConfig {
  * @param config - The binding, the subject capability, its default goal and any extra evidence.
  * @returns The request fields to spread — `{}` when there is no binding or no matching rule.
  */
-export function llmCriticFor(config: LlmCriticForConfig): Partial<Pick<LlmDispatchRequest, 'critique' | 'maxAttempts'>> {
+export function resolveLlmCritiqueFields(config: ResolveLlmCritiqueFieldsConfig): Partial<Pick<LlmDispatchRequest, 'critique' | 'maxAttempts'>> {
   const { binding, capability, goal, evidence } = config;
   const rule = binding?.policy.get(capability);
   let fields: Partial<Pick<LlmDispatchRequest, 'critique' | 'maxAttempts'>> = {};

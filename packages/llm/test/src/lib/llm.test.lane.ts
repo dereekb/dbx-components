@@ -27,8 +27,8 @@ import {
   type LlmStrategyId,
   llmModelReasoningOffEncodings,
   llmModelVisionCapabilities,
-  llmProviderBaseUrlOf,
-  llmTierModelOf,
+  resolveLlmProviderBaseUrl,
+  readLlmTierModel,
   makeLlmDecisionStrategies,
   makeLlmProviderStrategies,
   makeLlmProviderStrategy,
@@ -44,7 +44,7 @@ import {
   type LlmEnvNames,
   type LlmEnvVarNames,
   type LlmEnvView,
-  llmEnvApiKeyNamesOf,
+  readLlmEnvApiKeyNames,
   llmModelProfileDefaultModelFromEnv,
   type LlmModelProfileFromEnv,
   type LlmProvidersFromEnv,
@@ -55,7 +55,7 @@ import {
   type ResolveLlmProvidersFromEnvConfig
 } from '@dereekb/llm/node';
 import { DEFAULT_LLM_LIVE_LANE_ENV_NAMES, isLlmEnvFlagEnabled, type LlmLiveLaneEnvNames } from './llm.test.env';
-import { decorateLlmLiveStrategyAuthFailures, type LlmLiveDecisionStrategyFromEnv, type LlmLiveStrategyBinding, llmLiveStrategyBindingOf, type LlmLiveStrategyFromEnv } from './llm.test.live';
+import { decorateLlmLiveStrategyAuthFailures, type LlmLiveDecisionStrategyFromEnv, type LlmLiveStrategyBinding, toLlmLiveStrategyBinding, type LlmLiveStrategyFromEnv } from './llm.test.live';
 import { llmCredentialVerdictFromEnv, llmCredentialVerdictFromReport, llmQuotaVerdictFromEnv, llmQuotaVerdictFromGate, parseLlmQuotaMaxUsed, toLlmCredentialVerdictEnv, toLlmQuotaVerdictEnv } from './llm.test.verdict';
 
 // MARK: Config
@@ -68,7 +68,7 @@ export type LlmLiveLaneProviderResolver<X extends LlmModelConfigTypes = LlmModel
 /**
  * What a host's `defaultModel` function receives.
  */
-export interface LlmLiveLaneDefaultModelInput {
+export interface LlmLiveLaneDefaultModelParams {
   /**
    * The provider the lane bills.
    */
@@ -83,7 +83,7 @@ export interface LlmLiveLaneDefaultModelInput {
  * The host's per-provider fallback model: a slug, or a function of the provider and its base URL. A function returning
  * `undefined` means "this provider has no safe default".
  */
-export type LlmLiveLaneDefaultModel = LlmModelId | ((input: LlmLiveLaneDefaultModelInput) => Maybe<LlmModelId>);
+export type LlmLiveLaneDefaultModel = LlmModelId | ((input: LlmLiveLaneDefaultModelParams) => Maybe<LlmModelId>);
 
 /**
  * Where the lane's model config comes from.
@@ -203,7 +203,7 @@ export interface LlmLiveLaneResolution<X extends LlmModelConfigTypes = LlmModelC
 /**
  * An environment to read; defaults to `process.env`.
  */
-export interface LlmLiveLaneEnvConfig {
+export interface LlmLiveLaneEnvParams {
   /**
    * The environment to read; defaults to `process.env`.
    */
@@ -213,7 +213,7 @@ export interface LlmLiveLaneEnvConfig {
 /**
  * Config for the lane's probes.
  */
-export interface LlmLiveLaneProbeConfig extends LlmLiveLaneEnvConfig {
+export interface LlmLiveLaneProbeParams extends LlmLiveLaneEnvParams {
   /**
    * The HTTP seam the probes go through — a spec's fake.
    */
@@ -227,7 +227,7 @@ export interface LlmLiveLaneProbeConfig extends LlmLiveLaneEnvConfig {
 /**
  * Config for {@link LlmLiveLane.liveStrategyBinding}.
  */
-export interface LlmLiveStrategyBindingConfig extends LlmLiveLaneEnvConfig {
+export interface LlmLiveStrategyBindingParams extends LlmLiveLaneEnvParams {
   /**
    * A pre-built or wrapped strategy; defaults to {@link LlmLiveLane.makeLiveStrategy}.
    */
@@ -297,7 +297,7 @@ export interface LlmLiveLane<X extends LlmModelConfigTypes = LlmModelConfigBaseT
    * @throws {Error} When the models file is malformed or an explicit path is missing, or the selected profile is not
    *   defined.
    */
-  resolve(config?: Maybe<LlmLiveLaneEnvConfig>): LlmLiveLaneResolution<X>;
+  resolve(config?: Maybe<LlmLiveLaneEnvParams>): LlmLiveLaneResolution<X>;
   /**
    * The live provider handle for a billed spec, or `undefined` when the run must skip — locked, keyless, a `dead`
    * credential verdict, an `exhausted` quota verdict, or no model. Every skip past the lock is logged.
@@ -321,7 +321,7 @@ export interface LlmLiveLane<X extends LlmModelConfigTypes = LlmModelConfigBaseT
    * @returns The binding.
    * @throws {Error} When no strategy is passed and nothing resolves.
    */
-  liveStrategyBinding(config?: Maybe<LlmLiveStrategyBindingConfig>): LlmLiveStrategyBinding;
+  liveStrategyBinding(config?: Maybe<LlmLiveStrategyBindingParams>): LlmLiveStrategyBinding;
   /**
    * The live decision backend, or `undefined` when locked or no keyed provider serves a decision. Applies NO credential
    * veto of its own: pair it with {@link liveStrategyFromEnv} in the gate.
@@ -336,14 +336,14 @@ export interface LlmLiveLane<X extends LlmModelConfigTypes = LlmModelConfigBaseT
    * @param config - The environment, the fetch seam and an abort signal.
    * @returns The report; `{ ready: true, checked: [] }` when nothing is keyed.
    */
-  probeCredentials(config?: Maybe<LlmLiveLaneProbeConfig>): Promise<LlmStrategiesHealthReport>;
+  probeCredentials(config?: Maybe<LlmLiveLaneProbeParams>): Promise<LlmStrategiesHealthReport>;
   /**
    * Read every keyed provider's quota status. Never throws for a read outcome.
    *
    * @param config - The environment, the fetch seam and an abort signal.
    * @returns The report; `{ checked: [] }` when nothing is keyed.
    */
-  readProviderStatus(config?: Maybe<LlmLiveLaneProbeConfig>): Promise<LlmProviderStatusReport>;
+  readProviderStatus(config?: Maybe<LlmLiveLaneProbeParams>): Promise<LlmProviderStatusReport>;
   /**
    * Every key variable the hermetic strip removes, unique and in order: the env-default key names, the `apiKeyEnv`s
    * declared in `modelConfig.base`, then `extraProviderKeyNames`.
@@ -408,7 +408,7 @@ export function makeLlmLiveLane<X extends LlmModelConfigTypes = LlmModelConfigBa
 
   const isUnlocked = (env?: Maybe<LlmEnvView>): boolean => isLlmEnvFlagEnabled((env ?? process.env)[names.unlock]);
 
-  const resolve = (resolveConfig?: Maybe<LlmLiveLaneEnvConfig>): LlmLiveLaneResolution<X> => {
+  const resolve = (resolveConfig?: Maybe<LlmLiveLaneEnvParams>): LlmLiveLaneResolution<X> => {
     const env = resolveConfig?.env ?? process.env;
     let file: LlmModelConfigFile<X>;
     let modelConfigPath: Maybe<string>;
@@ -423,11 +423,11 @@ export function makeLlmLiveLane<X extends LlmModelConfigTypes = LlmModelConfigBa
 
     const providers = resolveProviders({ env, names: envNames, file, schema, adapters, fallbackKeys });
     const provider = providers.defaultProvider;
-    const baseUrl = provider == null ? undefined : llmProviderBaseUrlOf({ provider, adapters });
+    const baseUrl = provider == null ? undefined : resolveLlmProviderBaseUrl({ provider, adapters });
     const tiers = resolveLlmModelTierEnv({ env, names: envNames });
     const tierValue = tiers.modelTiers?.[resolveLlmDefaultModelTierKey(tiers.defaultTier)];
     const profile = resolveLlmModelProfileFromEnv({ env, names: envNames, file, source: modelConfigPath, schema });
-    let model: Maybe<LlmModelId> = tierValue == null ? undefined : llmTierModelOf(tierValue);
+    let model: Maybe<LlmModelId> = tierValue == null ? undefined : readLlmTierModel(tierValue);
     let modelSource: Maybe<LlmLiveLaneModelSource> = model == null ? undefined : 'env';
 
     if (model == null) {
@@ -507,7 +507,7 @@ export function makeLlmLiveLane<X extends LlmModelConfigTypes = LlmModelConfigBa
     return live.makeStrategy();
   };
 
-  const liveStrategyBinding = (bindingConfig?: Maybe<LlmLiveStrategyBindingConfig>): LlmLiveStrategyBinding => llmLiveStrategyBindingOf(bindingConfig?.strategy ?? makeLiveStrategy(bindingConfig?.env));
+  const liveStrategyBinding = (bindingConfig?: Maybe<LlmLiveStrategyBindingParams>): LlmLiveStrategyBinding => toLlmLiveStrategyBinding(bindingConfig?.strategy ?? makeLiveStrategy(bindingConfig?.env));
 
   const liveDecisionStrategyFromEnv = (env?: Maybe<LlmEnvView>): Maybe<LlmLiveDecisionStrategyFromEnv> => {
     const view = env ?? process.env;
@@ -535,18 +535,18 @@ export function makeLlmLiveLane<X extends LlmModelConfigTypes = LlmModelConfigBa
     return result;
   };
 
-  const buildKeyedStrategies = (probeConfig?: Maybe<LlmLiveLaneProbeConfig>) => {
+  const buildKeyedStrategies = (probeConfig?: Maybe<LlmLiveLaneProbeParams>) => {
     const resolution = resolve({ env: probeConfig?.env });
     const built = makeLlmProviderStrategies({ providers: resolution.providers, adapters, fetch: probeConfig?.fetch, ...strategyOptions });
     return { strategies: makeLlmStrategyRegistry(built), required: built.map((strategy) => strategy.id), signal: probeConfig?.signal ?? undefined };
   };
 
-  const probeCredentials = async (probeConfig?: Maybe<LlmLiveLaneProbeConfig>): Promise<LlmStrategiesHealthReport> => {
+  const probeCredentials = async (probeConfig?: Maybe<LlmLiveLaneProbeParams>): Promise<LlmStrategiesHealthReport> => {
     const keyed = buildKeyedStrategies(probeConfig);
     return keyed.required.length === 0 ? { ready: true, checked: [] } : probeLlmCredentials(keyed);
   };
 
-  const readProviderStatus = async (probeConfig?: Maybe<LlmLiveLaneProbeConfig>): Promise<LlmProviderStatusReport> => {
+  const readProviderStatus = async (probeConfig?: Maybe<LlmLiveLaneProbeParams>): Promise<LlmProviderStatusReport> => {
     const keyed = buildKeyedStrategies(probeConfig);
     return keyed.required.length === 0 ? { checked: [] } : readLlmProviderStatus(keyed);
   };
@@ -555,7 +555,7 @@ export function makeLlmLiveLane<X extends LlmModelConfigTypes = LlmModelConfigBa
     const base = modelConfig?.base;
     const baseEntries = [...Object.values(base?.providers ?? {}), ...Object.values(base?.extensionProviders ?? {})];
     const baseKeyNames = baseEntries.flatMap((entry) => (entry.apiKeyEnv == null || entry.apiKeyEnv.length === 0 ? [] : [entry.apiKeyEnv]));
-    return Array.from(new Set([...llmEnvApiKeyNamesOf(envNames), ...baseKeyNames, ...(extraProviderKeyNames ?? [])]));
+    return Array.from(new Set([...readLlmEnvApiKeyNames(envNames), ...baseKeyNames, ...(extraProviderKeyNames ?? [])]));
   };
 
   const stripProviderKeysUnlessUnlocked = (env: LlmMutableEnv): ReadonlyArray<string> => {
@@ -602,7 +602,7 @@ export function makeLlmLiveLane<X extends LlmModelConfigTypes = LlmModelConfigBa
   const makeGlobalSetup = (setupConfig?: Maybe<LlmLiveGlobalSetupConfig>): LlmLiveGlobalSetup => {
     return async () => {
       const env = setupConfig?.env ?? process.env;
-      const probeConfig: LlmLiveLaneProbeConfig = { env, fetch: setupConfig?.fetch, signal: setupConfig?.signal };
+      const probeConfig: LlmLiveLaneProbeParams = { env, fetch: setupConfig?.fetch, signal: setupConfig?.signal };
 
       if (isUnlocked(env)) {
         // Resolve FIRST: a malformed file or an unknown profile throws here, before anything is billed.

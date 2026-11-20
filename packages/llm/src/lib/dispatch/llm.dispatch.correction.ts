@@ -5,7 +5,7 @@
  */
 
 import { type Maybe, mergeObjects } from '@dereekb/util';
-import { joinLlmPromptSegments, llmPromptCacheSegmentsOf, type LlmPromptSegment, type LlmPromptSegmentOrigin } from '../prompt/llm.prompt.segment';
+import { joinLlmPromptSegments, splitLlmPromptCacheSegments, type LlmPromptSegment, type LlmPromptSegmentOrigin } from '../prompt/llm.prompt.segment';
 import { type LlmPromptSlotId } from '../prompt/llm.prompt.layout';
 import { type LlmDecodeFailureClass } from '../record/llm.decode.failure';
 import { type LlmReplyProtocol } from '../reply/llm.reply.protocol';
@@ -94,7 +94,7 @@ export type LlmDispatchCorrectionTextOverrides = Partial<Omit<LlmDispatchCorrect
  * @param overrides - The host's overrides.
  * @returns The merged texts.
  */
-export function llmDispatchCorrectionTextsOf(overrides?: Maybe<LlmDispatchCorrectionTextOverrides>): LlmDispatchCorrectionTexts {
+export function mergeLlmDispatchCorrectionTexts(overrides?: Maybe<LlmDispatchCorrectionTextOverrides>): LlmDispatchCorrectionTexts {
   let texts = DEFAULT_LLM_DISPATCH_CORRECTION_TEXTS;
 
   if (overrides != null) {
@@ -106,7 +106,7 @@ export function llmDispatchCorrectionTextsOf(overrides?: Maybe<LlmDispatchCorrec
 }
 
 /**
- * The inputs of {@link llmDispatchCorrectionTextOf}.
+ * The inputs of {@link renderLlmDispatchCorrectionText}.
  */
 export interface LlmDispatchCorrectionTextConfig {
   /**
@@ -134,7 +134,7 @@ export interface LlmDispatchCorrectionTextConfig {
  * @param config - The error, its kind, the protocol and the texts.
  * @returns The block, leading blank line included.
  */
-export function llmDispatchCorrectionTextOf(config: LlmDispatchCorrectionTextConfig): string {
+export function renderLlmDispatchCorrectionText(config: LlmDispatchCorrectionTextConfig): string {
   const { error, kind, protocol, texts } = config;
   const line = protocol === 'line';
   let lead: string;
@@ -175,7 +175,7 @@ export interface LlmPromptCorrectionSegmentOrigin extends LlmPromptSegmentOrigin
  */
 export interface WithLlmDispatchCorrectionConfig {
   /**
-   * The rendered block ({@link llmDispatchCorrectionTextOf}).
+   * The rendered block ({@link renderLlmDispatchCorrectionText}).
    */
   readonly text: string;
   /**
@@ -225,7 +225,7 @@ export function withLlmDispatchCorrection(base: LlmRequest, config: WithLlmDispa
     const origin: LlmPromptCorrectionSegmentOrigin = { kind: 'correction', attempt, correctionKind: kind, replyProtocol: protocol };
     const segment: LlmPromptSegment = { id: slotId, promptSegment: text, origin, reason: `a ${kind}-class rejection on the previous attempt`, volatile: true };
     const segments: ReadonlyArray<LlmPromptSegment> = [...base.segments, segment];
-    corrected = { ...base, segments, prompt: joinLlmPromptSegments(segments), ...(base.cacheSegments == null ? {} : { cacheSegments: llmPromptCacheSegmentsOf(segments) }) };
+    corrected = { ...base, segments, prompt: joinLlmPromptSegments(segments), ...(base.cacheSegments == null ? {} : { cacheSegments: splitLlmPromptCacheSegments(segments) }) };
   }
 
   return corrected;

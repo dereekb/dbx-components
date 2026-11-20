@@ -13,17 +13,17 @@
  * - `unread` — no distribution and no finite confidence: nothing to read, so the caller keeps its pre-certainty rule.
  *
  * **No default floors** (thresholds are per question and per stakes): every site names its own constants. An absent
- * `confidence` reads as the winner's share — {@link asLlmDecisionConfidenceBand} reads it `low`, which would refuse
+ * `confidence` reads as the winner's share — {@link toLlmDecisionConfidenceBand} reads it `low`, which would refuse
  * every confidence-less reply a lax gateway returns.
  */
 
 import type { Maybe } from '@dereekb/util';
-import { asLlmDecisionConfidenceBand, llmDecisionChoiceRanking, type LlmDecisionChoiceAnswer, type LlmDecisionConfidenceBand } from './llm.decision.question';
+import { toLlmDecisionConfidenceBand, llmDecisionChoiceRanking, type LlmDecisionChoiceAnswer, type LlmDecisionConfidenceBand } from './llm.decision.question';
 
 /**
  * What a Choice's answer reads as — see the module doc.
  *
- * `'several'` is never produced by {@link llmChoiceCertaintyOf}: it is a reading a consumer sets itself, when it
+ * `'several'` is never produced by {@link readLlmChoiceCertainty}: it is a reading a consumer sets itself, when it
  * accepts more than one of the contenders.
  */
 export type LlmChoiceCertaintyKind = 'sure' | 'nested' | 'split' | 'diffuse' | 'unread' | 'several';
@@ -59,7 +59,7 @@ export interface LlmChoiceContender<O extends string = string> {
 }
 
 /**
- * What {@link llmChoiceCertaintyOf} read.
+ * What {@link readLlmChoiceCertainty} read.
  */
 export interface LlmChoiceCertainty<O extends string = string> {
   readonly certainty: LlmChoiceCertaintyKind;
@@ -97,7 +97,7 @@ export interface LlmChoiceCertaintyConfig<O extends string = string> {
 }
 
 /**
- * Classifies an UNSURE read (rule 6 of {@link llmChoiceCertaintyOf}): `nested` when the caller says the contenders
+ * Classifies an UNSURE read (rule 6 of {@link readLlmChoiceCertainty}): `nested` when the caller says the contenders
  * cohere, else `split` when they reached the mass, else `diffuse`.
  *
  * @param input - The contenders, their summed share, the site floors and the coherence test.
@@ -141,7 +141,7 @@ function llmUnsureChoiceCertaintyKind<O extends string>(input: { readonly conten
  * @param config - The site's floors and its coherence test.
  * @returns The read.
  */
-export function llmChoiceCertaintyOf<O extends string>(answer: LlmDecisionChoiceAnswer<O>, config: LlmChoiceCertaintyConfig<O>): LlmChoiceCertainty<O> {
+export function readLlmChoiceCertainty<O extends string>(answer: LlmDecisionChoiceAnswer<O>, config: LlmChoiceCertaintyConfig<O>): LlmChoiceCertainty<O> {
   const { floors } = config;
   const ranking = llmDecisionChoiceRanking(answer);
   const head = ranking[0];
@@ -150,9 +150,9 @@ export function llmChoiceCertaintyOf<O extends string>(answer: LlmDecisionChoice
   let read: LlmChoiceCertainty<O>;
 
   if (confidence == null || winner == null) {
-    read = { certainty: 'unread', band: asLlmDecisionConfidenceBand(undefined), contenders: [{ option: answer.choice, probability: 0 }] };
+    read = { certainty: 'unread', band: toLlmDecisionConfidenceBand(undefined), contenders: [{ option: answer.choice, probability: 0 }] };
   } else {
-    const band = asLlmDecisionConfidenceBand(confidence);
+    const band = toLlmDecisionConfidenceBand(confidence);
     const margin = head == null ? undefined : head.probability - (ranking[1]?.probability ?? 0);
     const sure = confidence >= floors.sureConfidence && (margin == null || margin >= floors.sureMargin);
     const measured = { band, confidence, ...(margin == null ? {} : { margin }) };

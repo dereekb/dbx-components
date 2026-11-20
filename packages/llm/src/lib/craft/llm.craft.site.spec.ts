@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_LLM_CRAFT_SITE_LIMITS, llmCraftAskInputsOf, llmCraftNoteUnknownWhereValues, llmCraftSiteFactShapeOf, makeLlmCraftSiteRegistry, type LlmCraftSite, type LlmCraftSiteFactValuesOf } from './llm.craft.site';
+import { DEFAULT_LLM_CRAFT_SITE_LIMITS, readLlmCraftAskInputs, llmCraftNoteUnknownWhereValues, readLlmCraftSiteFactShape, makeLlmCraftSiteRegistry, type LlmCraftSite, type LlmCraftSiteFactValuesReader } from './llm.craft.site';
 
 const SITES = makeLlmCraftSiteRegistry({
   sites: {
@@ -25,7 +25,7 @@ const VOCABULARIES: Readonly<Record<string, Readonly<Record<string, ReadonlyArra
   'release-notes': { audience: ['staff', 'customers'], category: ['apparel', 'bags'] }
 };
 
-const valuesOf: LlmCraftSiteFactValuesOf = (kind, fact) => VOCABULARIES[kind]?.[fact];
+const valuesOf: LlmCraftSiteFactValuesReader = (kind, fact) => VOCABULARIES[kind]?.[fact];
 
 describe('makeLlmCraftSiteRegistry()', () => {
   it('lists the kinds in declaration order', () => {
@@ -65,22 +65,22 @@ describe('makeLlmCraftSiteRegistry()', () => {
   });
 });
 
-describe('llmCraftSiteFactShapeOf()', () => {
+describe('readLlmCraftSiteFactShape()', () => {
   it('reads a fact shape, and nothing for an unknown or prototype key', () => {
     const page = siteOf('product-page');
-    expect(llmCraftSiteFactShapeOf(page, 'category')).toBe('closed');
-    expect(llmCraftSiteFactShapeOf(page, 'brand')).toBe('open');
-    expect(llmCraftSiteFactShapeOf(page, 'bundle')).toBe('boolean');
-    expect(llmCraftSiteFactShapeOf(page, 'channel')).toBeUndefined();
-    expect(llmCraftSiteFactShapeOf(page, 'toString')).toBeUndefined();
+    expect(readLlmCraftSiteFactShape(page, 'category')).toBe('closed');
+    expect(readLlmCraftSiteFactShape(page, 'brand')).toBe('open');
+    expect(readLlmCraftSiteFactShape(page, 'bundle')).toBe('boolean');
+    expect(readLlmCraftSiteFactShape(page, 'channel')).toBeUndefined();
+    expect(readLlmCraftSiteFactShape(page, 'toString')).toBeUndefined();
   });
 });
 
-describe('llmCraftAskInputsOf()', () => {
+describe('readLlmCraftAskInputs()', () => {
   it('reads the inputs an ask names: backticked, of the given sites, first mention once', () => {
-    expect(llmCraftAskInputsOf('`brief` and `notes` again `brief`, not `message`', [siteOf('product-page')])).toEqual(['brief', 'notes']);
-    expect(llmCraftAskInputsOf('`summary` is set', [siteOf('support-reply'), siteOf('release-notes')])).toEqual(['summary']);
-    expect(llmCraftAskInputsOf('brief, unquoted', [siteOf('product-page')])).toEqual([]);
+    expect(readLlmCraftAskInputs('`brief` and `notes` again `brief`, not `message`', [siteOf('product-page')])).toEqual(['brief', 'notes']);
+    expect(readLlmCraftAskInputs('`summary` is set', [siteOf('support-reply'), siteOf('release-notes')])).toEqual(['summary']);
+    expect(readLlmCraftAskInputs('brief, unquoted', [siteOf('product-page')])).toEqual([]);
   });
 });
 

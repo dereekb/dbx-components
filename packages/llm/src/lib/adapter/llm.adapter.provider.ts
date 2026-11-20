@@ -15,8 +15,8 @@ import { type LlmCredentialProbe, type LlmStrategy } from '../strategy/llm.strat
 import { type LlmProviderStatusProviderId, type LlmProviderStatusSource } from '../strategy/llm.provider.status';
 import { type LlmCallBillReader } from '../strategy/llm.call.bill';
 import { type LlmCostBasis } from '../strategy/llm.usage';
-import { type LlmAdapterInput, type LlmCompletionAdapterConfig } from './llm.adapter';
-import { checkLlmAdapterStrategy, llmAdapterOf, llmAdaptersOf, resolveLlmAdapter, type LlmAdapterRegistry } from './llm.adapter.registry';
+import { type LlmAdapterConfig, type LlmCompletionAdapterConfig } from './llm.adapter';
+import { checkLlmAdapterStrategy, findLlmAdapter, filterLlmAdaptersByFacet, resolveLlmAdapter, type LlmAdapterRegistry } from './llm.adapter.registry';
 
 /**
  * Config pairing one provider (or a structural view of one) with the adapter registry.
@@ -38,9 +38,9 @@ export interface LlmProviderAdaptersConfig<P> {
  * @param config - The provider (its `transport` and `baseUrl`) and the registry.
  * @returns The effective base URL, or `undefined` when neither declares one (or the transport is not registered).
  */
-export function llmProviderBaseUrlOf(config: LlmProviderAdaptersConfig<Pick<LlmCompletionProviderEntry, 'transport' | 'baseUrl'>>): Maybe<string> {
+export function resolveLlmProviderBaseUrl(config: LlmProviderAdaptersConfig<Pick<LlmCompletionProviderEntry, 'transport' | 'baseUrl'>>): Maybe<string> {
   const { provider, adapters } = config;
-  return provider.baseUrl ?? llmAdapterOf({ adapters, facet: 'completion', kind: provider.transport })?.defaultBaseUrl;
+  return provider.baseUrl ?? findLlmAdapter({ adapters, facet: 'completion', kind: provider.transport })?.defaultBaseUrl;
 }
 
 /**
@@ -54,13 +54,13 @@ export function llmProviderBaseUrlOf(config: LlmProviderAdaptersConfig<Pick<LlmC
  * @param config - The provider (its `transport`, `baseUrl` and `metering`) and the registry.
  * @returns The metering id, `'none'` when the provider meters nothing.
  */
-export function llmProviderMeteringOf(config: LlmProviderAdaptersConfig<Pick<LlmCompletionProviderEntry, 'transport' | 'baseUrl' | 'metering'>>): LlmProviderStatusProviderId {
+export function resolveLlmProviderMetering(config: LlmProviderAdaptersConfig<Pick<LlmCompletionProviderEntry, 'transport' | 'baseUrl' | 'metering'>>): LlmProviderStatusProviderId {
   const { provider, adapters } = config;
   let metering: LlmProviderStatusProviderId;
 
   if (provider.metering == null) {
-    const baseUrl = llmProviderBaseUrlOf(config);
-    const claimant = baseUrl == null ? undefined : llmAdaptersOf({ adapters, facet: 'metering' }).find((adapter) => adapter.isAccountBaseUrl?.(baseUrl) === true);
+    const baseUrl = resolveLlmProviderBaseUrl(config);
+    const claimant = baseUrl == null ? undefined : filterLlmAdaptersByFacet({ adapters, facet: 'metering' }).find((adapter) => adapter.isAccountBaseUrl?.(baseUrl) === true);
     metering = claimant?.kind ?? LLM_PROVIDER_FACET_NONE;
   } else {
     metering = provider.metering;
@@ -72,7 +72,7 @@ export function llmProviderMeteringOf(config: LlmProviderAdaptersConfig<Pick<Llm
 /**
  * Config for {@link resolveLlmProviderAccount}.
  */
-export interface ResolveLlmProviderAccountConfig extends LlmProviderAdaptersConfig<LlmProviderConfig>, Partial<MaybeMap<Pick<LlmAdapterInput, 'fetch'>>> {}
+export interface ResolveLlmProviderAccountConfig extends LlmProviderAdaptersConfig<LlmProviderConfig>, Partial<MaybeMap<Pick<LlmAdapterConfig, 'fetch'>>> {}
 
 /**
  * One provider's ACCOUNT — the metering id and every fact that follows it. Each optional key is present only when an
@@ -80,7 +80,7 @@ export interface ResolveLlmProviderAccountConfig extends LlmProviderAdaptersConf
  */
 export interface LlmProviderAccount {
   /**
-   * The metering id ({@link llmProviderMeteringOf}); `'none'` when the provider meters nothing.
+   * The metering id ({@link resolveLlmProviderMetering}); `'none'` when the provider meters nothing.
    */
   readonly metering: LlmProviderStatusProviderId;
   /**
@@ -116,8 +116,8 @@ export interface LlmProviderAccount {
  */
 export function resolveLlmProviderAccount(config: ResolveLlmProviderAccountConfig): LlmProviderAccount {
   const { provider, adapters, fetch } = config;
-  const baseUrl = llmProviderBaseUrlOf({ provider, adapters });
-  const metering = llmProviderMeteringOf({ provider, adapters });
+  const baseUrl = resolveLlmProviderBaseUrl({ provider, adapters });
+  const metering = resolveLlmProviderMetering({ provider, adapters });
   const baseUrlPart = baseUrl == null ? {} : { baseUrl };
   let account: LlmProviderAccount;
 
@@ -125,9 +125,9 @@ export function resolveLlmProviderAccount(config: ResolveLlmProviderAccountConfi
     account = { metering, ...baseUrlPart };
   } else {
     const meteringAdapter = resolveLlmAdapter({ adapters, facet: 'metering', kind: metering, label: `provider '${provider.id}'` });
-    const billAdapter = llmAdapterOf({ adapters, facet: 'bill', kind: metering });
-    const credentialProbeAdapter = llmAdapterOf({ adapters, facet: 'credentialProbe', kind: metering });
-    const input: LlmAdapterInput = { provider, ...baseUrlPart, ...(fetch == null ? {} : { fetch }) };
+    const billAdapter = findLlmAdapter({ adapters, facet: 'bill', kind: metering });
+    const credentialProbeAdapter = findLlmAdapter({ adapters, facet: 'credentialProbe', kind: metering });
+    const input: LlmAdapterConfig = { provider, ...baseUrlPart, ...(fetch == null ? {} : { fetch }) };
 
     account = {
       metering,

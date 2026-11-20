@@ -19,11 +19,11 @@ import { type LlmOpenAiNestedReasoning } from '@dereekb/llm/openai';
  *
  * @example
  * ```ts
- * llmOpenRouterReasoningOf({ effort: 'low', maxTokens: 512 }); // { effort: 'low', max_tokens: 512 }
+ * toLlmOpenRouterReasoning({ effort: 'low', maxTokens: 512 }); // { effort: 'low', max_tokens: 512 }
  * ```
  * @__NO_SIDE_EFFECTS__
  */
-export function llmOpenRouterReasoningOf(reasoning: LlmReasoningConfig): LlmOpenAiNestedReasoning {
+export function toLlmOpenRouterReasoning(reasoning: LlmReasoningConfig): LlmOpenAiNestedReasoning {
   return {
     ...(reasoning.effort == null ? {} : { effort: reasoning.effort }),
     ...(reasoning.maxTokens == null ? {} : { max_tokens: reasoning.maxTokens }),

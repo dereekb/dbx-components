@@ -76,9 +76,9 @@ export const LLM_OPENAI_REASONING_OFF_PARAMS: Readonly<Record<LlmReasoningOffEnc
 };
 
 /**
- * The inputs {@link llmOpenAiReasoningParamsOf} maps — the resolved per-call reasoning config plus the OFF encoding.
+ * The inputs {@link toLlmOpenAiReasoningParams} maps — the resolved per-call reasoning config plus the OFF encoding.
  */
-export interface LlmOpenAiReasoningParamsConfig {
+export interface ToLlmOpenAiReasoningParamsConfig {
   /**
    * The resolved {@link LlmReasoningConfig} for this call; absent ⇒ no reasoning params at all.
    */
@@ -104,12 +104,12 @@ export interface LlmOpenAiReasoningParamsConfig {
  *
  * @example
  * ```ts
- * llmOpenAiReasoningParamsOf({ reasoning: { enabled: false, effort: 'high' }, offEncoding: 'effort-none' });
+ * toLlmOpenAiReasoningParams({ reasoning: { enabled: false, effort: 'high' }, offEncoding: 'effort-none' });
  * // { reasoning_effort: 'none' }
  * ```
  * @__NO_SIDE_EFFECTS__
  */
-export function llmOpenAiReasoningParamsOf(config: LlmOpenAiReasoningParamsConfig): LlmOpenAiReasoningParams {
+export function toLlmOpenAiReasoningParams(config: ToLlmOpenAiReasoningParamsConfig): LlmOpenAiReasoningParams {
   const { reasoning, offEncoding } = config;
   let params: LlmOpenAiReasoningParams;
 
@@ -124,40 +124,6 @@ export function llmOpenAiReasoningParamsOf(config: LlmOpenAiReasoningParamsConfi
   }
 
   return params;
-}
-
-// MARK: Timeout
-/**
- * The assumed streaming rate (completion tokens per second) the per-call abort timeout budgets against — a generous
- * floor so a legitimately long reply is never aborted for merely being large. A call's abort window is
- * `maxOutputTokens / this × 1000`, floored at the base timeout and capped at {@link LLM_OPENAI_MAX_CALL_TIMEOUT_MS}.
- */
-export const LLM_OPENAI_TOKENS_PER_SEC = 30;
-
-/**
- * The hard ceiling on any single call's abort window (10 min) — even a maximal output budget can never hang a call
- * longer than this before the per-request {@link AbortSignal} fires.
- */
-export const LLM_OPENAI_MAX_CALL_TIMEOUT_MS: Milliseconds = 600_000;
-
-/**
- * Resolve one call's per-request abort window — `max(baseTimeoutMs, maxOutputTokens / LLM_OPENAI_TOKENS_PER_SEC ×
- * 1000)`, hard-capped at {@link LLM_OPENAI_MAX_CALL_TIMEOUT_MS}. The base (the strategy `timeoutMs`) stays the floor; a
- * big-budget call scales its window up so its budgeted tokens have time to stream. Shared by every OpenAI-compatible
- * transport, `/openrouter` included.
- *
- * @param baseTimeoutMs - The strategy's base per-request timeout (the floor).
- * @param maxOutputTokens - The completion budget this call was sent with.
- * @returns The abort window in ms.
- *
- * @example
- * ```ts
- * llmOpenAiCallTimeoutMs(60_000, 8_192); // 273_067
- * ```
- * @__NO_SIDE_EFFECTS__
- */
-export function llmOpenAiCallTimeoutMs(baseTimeoutMs: Milliseconds, maxOutputTokens: number): Milliseconds {
-  return Math.min(LLM_OPENAI_MAX_CALL_TIMEOUT_MS, Math.max(baseTimeoutMs, Math.ceil((maxOutputTokens / LLM_OPENAI_TOKENS_PER_SEC) * 1000)));
 }
 
 // MARK: Wire types
@@ -418,14 +384,14 @@ export interface LlmOpenAiChatCompletion {
    * (`completion_tokens_details.reasoning_tokens`) observability fields when the provider returns them, plus the
    * OpenRouter-flavoured `cost` / `cost_details` an AGGREGATOR gateway may volunteer (absent on a bare endpoint; a
    * list-price figure on some gateways — see the strategy's `costBasis`). Some gateways send those two costs as
-   * numeric STRINGS; `llmUsageFrom` folds them to numbers. The core {@link RawLlmUsage} shape.
+   * numeric STRINGS; `toLlmUsage` folds them to numbers. The core {@link RawLlmUsage} shape.
    */
   readonly usage?: Maybe<RawLlmUsage>;
 }
 
 /**
  * The per-request options the strategy stamps on `create` — the abort {@link AbortSignal} that hard-aborts a hung call
- * at a budget-scaled wall ({@link llmOpenAiCallTimeoutMs}) plus a matching per-request `timeout` so the SDK's own
+ * at a budget-scaled wall (`resolveLlmCompletionCallTimeoutMs` from `@dereekb/llm`) plus a matching per-request `timeout` so the SDK's own
  * client-level timeout floor never fires first. Modeled locally (a subset of the SDK's `RequestOptions`) so a spec
  * fake can read it.
  */

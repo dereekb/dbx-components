@@ -32,7 +32,7 @@ export const DEFAULT_LLM_CRITIQUE_POLICY_LABEL = 'llm critique';
  * Non-generic on purpose: `critique` is a REQUEST field, and a request-typed input would make a host's narrower
  * critic unassignable (function parameters are contravariant).
  */
-export interface LlmCritiqueInput {
+export interface LlmCritiqueParams {
   /**
    * The capability under review — the SUBJECT of the judgement (never the judge's own key).
    */
@@ -91,7 +91,7 @@ export type LlmCritiqueVerdict = true | { readonly error: string };
  * exception that takes the subject dispatch down with it. BILLED: every pass is an extra LLM call, so a critiqued
  * capability costs `1 + attempts` calls.
  */
-export type LlmCritic = (input: LlmCritiqueInput) => Promise<LlmCritiqueVerdict>;
+export type LlmCritic = (input: LlmCritiqueParams) => Promise<LlmCritiqueVerdict>;
 
 /**
  * Compose critics into ONE, run in order: the FIRST non-`true` verdict wins, so a later (billed) critic is never
@@ -142,7 +142,7 @@ export interface LlmCritiqueRule extends LlmCapabilityRuleTarget {
   readonly tags?: ReadonlyArray<LlmCapabilityTag>;
   /**
    * OVERRIDE the capability's own declared goal (the statement of what a good reply must contain). Omitted ⇒ the goal
-   * the capability supplied through `llmCriticFor`.
+   * the capability supplied through `resolveLlmCritiqueFields`.
    */
   readonly goal?: string;
   /**
@@ -170,7 +170,7 @@ export interface LlmCritiqueConfig {
 
 /**
  * The compiled per-capability critique lookup an {@link LlmCritiqueBinding} carries — one map lookup per
- * `llmCriticFor` call. A capability absent from the map gets NO critic.
+ * `resolveLlmCritiqueFields` call. A capability absent from the map gets NO critic.
  */
 export type LlmCompiledCritiquePolicy = ReadonlyMap<LlmCapabilityKey, LlmCritiqueRule>;
 
@@ -213,7 +213,7 @@ export function compileLlmCritiquePolicy(config: CompileLlmCritiquePolicyConfig)
     label: config.label ?? DEFAULT_LLM_CRITIQUE_POLICY_LABEL,
     // The judge can never be named, and is skipped by tag matching — the two layers of the recursion guard.
     exclude: [{ capability: LLM_CRITIQUE_REPLY_CAPABILITY, reason: `'${LLM_CRITIQUE_REPLY_CAPABILITY}' is the judge itself and can never be critiqued (a judge judging a judge is unbounded).` }],
-    valueOf: (rule) => rule
+    readValue: (rule) => rule
   });
 }
 

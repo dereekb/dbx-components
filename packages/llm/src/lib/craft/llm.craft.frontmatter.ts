@@ -15,7 +15,7 @@ import { type } from 'arktype';
 import { type LlmPromptSiteFactValue } from '../prompt/llm.prompt.site';
 import { type LlmCraftNoteTier } from './llm.craft.identity';
 import { DEFAULT_LLM_CRAFT_JUDGE_FLOOR, DEFAULT_LLM_CRAFT_NOTE_PRIORITY, LLM_CRAFT_NOTE_ID_PATTERN, LLM_CRAFT_NOTE_MAX_PRIORITY, type LlmCraftNote, type LlmCraftNoteWhere } from './llm.craft.note';
-import { llmCraftAskInputsOf, llmCraftSiteFactShapeOf, type LlmCraftSite, type LlmCraftSiteRegistry } from './llm.craft.site';
+import { readLlmCraftAskInputs, readLlmCraftSiteFactShape, type LlmCraftSite, type LlmCraftSiteRegistry } from './llm.craft.site';
 
 /**
  * One refusal — its message and, when it has one, the 1-based file line.
@@ -122,7 +122,7 @@ function refuseLlmCraftNoteWhere(where: Readonly<Record<string, MarkdownFrontmat
 
   for (const [fact, raw] of Object.entries(where)) {
     const values: ReadonlyArray<LlmPromptSiteFactValue> = Array.isArray(raw) ? raw : [raw as LlmPromptSiteFactValue];
-    const shapes = knownSites.map((site) => llmCraftSiteFactShapeOf(site, fact)).filter((shape) => shape != null);
+    const shapes = knownSites.map((site) => readLlmCraftSiteFactShape(site, fact)).filter((shape) => shape != null);
     const key = `where.${fact}`;
 
     if (values.length === 0) {
@@ -199,7 +199,7 @@ function llmCraftNoteRuleErrors(config: LlmCraftNoteRuleErrorsConfig): ReadonlyA
 
   refuseLlmCraftNoteWhere(frontmatter.where ?? {}, knownSites, refuse);
 
-  if (frontmatter.ask != null && llmCraftAskInputsOf(frontmatter.ask, knownSites).length === 0) {
+  if (frontmatter.ask != null && readLlmCraftAskInputs(frontmatter.ask, knownSites).length === 0) {
     refuse('ask', `the ask names no input of its sites in backticks (one of: ${Array.from(new Set(knownSites.flatMap((site) => site.inputs))).join(', ')})`);
   }
 

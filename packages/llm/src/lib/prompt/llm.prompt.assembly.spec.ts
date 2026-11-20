@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { type AssembleLlmCapabilityPromptConfig, assembleLlmCapabilityPrompt, DEFAULT_LLM_LINE_MANNER_CLAUSE, DEFAULT_LLM_LINE_REPLY_PROTOCOL, DEFAULT_LLM_MUST_RESOLVE_CLAUSE, type LlmAssembledPrompt, type LlmPromptAssemblyCapabilityRef } from './llm.prompt.assembly';
 import { DEFAULT_LLM_OUTPUT_CONTRACT_FOOTER, DEFAULT_LLM_OUTPUT_CONTRACT_INTRO, renderLlmOutputContract } from './llm.prompt.contract';
 import { type LlmPromptContribution } from './llm.prompt.contributor';
-import { DEFAULT_LLM_PROMPT_LAYOUT, type LlmPromptLayout, type LlmPromptSlot, type LlmPromptSlotRole, makeLlmPromptLayout } from './llm.prompt.layout';
+import { DEFAULT_LLM_PROMPT_LAYOUT, type LlmPromptLayout, type LlmPromptSlot, type LlmPromptSlotRole, defineLlmPromptLayout } from './llm.prompt.layout';
 import { joinLlmLiveContextBlocks, type LlmLiveContextBlock, llmLiveContextHeadingBlock } from './llm.prompt.live.context';
-import { isLlmPromptSegmentArray, joinLlmPromptSegments, llmPromptCacheSegmentsOf, llmPromptSegmentSpans } from './llm.prompt.segment';
-import { type LlmPromptTemplate, type LlmResolvedPromptTemplates, tieredLlmPromptTemplateResolver } from './llm.prompt.template';
+import { isLlmPromptSegmentArray, joinLlmPromptSegments, splitLlmPromptCacheSegments, llmPromptSegmentSpans } from './llm.prompt.segment';
+import { type LlmPromptTemplate, type LlmResolvedPromptTemplates, makeLlmTieredPromptTemplateResolver } from './llm.prompt.template';
 
 const CAPABILITY_TEMPLATES: Readonly<Record<string, readonly [string, string]>> = {
   test: ['B-TEST', 'C-TEST\n{{liveContext}}'],
@@ -26,7 +26,7 @@ const TEMPLATES: ReadonlyArray<LlmPromptTemplate> = [
   ])
 ];
 
-const RESOLVER = tieredLlmPromptTemplateResolver({ tiers: [{ source: 'defaults', templates: TEMPLATES }] });
+const RESOLVER = makeLlmTieredPromptTemplateResolver({ tiers: [{ source: 'defaults', templates: TEMPLATES }] });
 
 /**
  * The library resolver's (synchronous) output for one capability.
@@ -62,7 +62,7 @@ function defaultSlot(role: LlmPromptSlotRole): LlmPromptSlot {
   return DEFAULT_LLM_PROMPT_LAYOUT.find((slot) => slot.role === role) as LlmPromptSlot;
 }
 
-const FRAMED_LAYOUT = makeLlmPromptLayout([
+const FRAMED_LAYOUT = defineLlmPromptLayout([
   defaultSlot('model-addendum'),
   frameSlot('tone'),
   frameSlot('perspective'),
@@ -316,7 +316,7 @@ describe('assembleLlmCapabilityPrompt()', () => {
     });
 
     it("should close pieces with the slot's own separators", () => {
-      const layout = makeLlmPromptLayout([{ id: 'notes', role: 'frame', occupancy: 'many', separator: '\n---\n', lastSeparator: '\n\n' }, defaultSlot('reply-protocol'), { id: 'live', role: 'live', occupancy: 'many', separator: '\n', lastSeparator: '' }]);
+      const layout = defineLlmPromptLayout([{ id: 'notes', role: 'frame', occupancy: 'many', separator: '\n---\n', lastSeparator: '\n\n' }, defaultSlot('reply-protocol'), { id: 'live', role: 'live', occupancy: 'many', separator: '\n', lastSeparator: '' }]);
       const templates: LlmResolvedPromptTemplates = { roles: { 'reply-protocol': templatesFor('test').roles['reply-protocol'] }, byKey: () => undefined };
       const assembled = assembleLlmCapabilityPrompt({
         capability: 'test',
@@ -394,7 +394,7 @@ describe('assembleLlmCapabilityPrompt()', () => {
         const assembled = assemble(capability, extra);
         expect(isLlmPromptSegmentArray(assembled.segments)).toBe(true);
         expect(joinLlmPromptSegments(assembled.segments)).toBe(assembled.prompt);
-        expect(llmPromptCacheSegmentsOf(assembled.segments)).toEqual(assembled.cacheSegments);
+        expect(splitLlmPromptCacheSegments(assembled.segments)).toEqual(assembled.cacheSegments);
         expect(assembled.cacheSegments.cachePrefix + assembled.cacheSegments.volatileSuffix).toBe(assembled.prompt);
 
         const spans = llmPromptSegmentSpans(assembled.segments);

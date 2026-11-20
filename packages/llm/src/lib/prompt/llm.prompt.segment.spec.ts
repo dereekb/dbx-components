@@ -5,9 +5,9 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { type LlmPromptSegment, type LlmPromptSegmentId, isLlmPromptSegment, isLlmPromptSegmentArray, joinLlmPromptSegments, llmPromptCacheSegmentsOf, llmPromptSegmentSpans } from './llm.prompt.segment';
+import { type LlmPromptSegment, type LlmPromptSegmentId, isLlmPromptSegment, isLlmPromptSegmentArray, joinLlmPromptSegments, splitLlmPromptCacheSegments, llmPromptSegmentSpans } from './llm.prompt.segment';
 
-describe('joinLlmPromptSegments / llmPromptCacheSegmentsOf / llmPromptSegmentSpans', () => {
+describe('joinLlmPromptSegments / splitLlmPromptCacheSegments / llmPromptSegmentSpans', () => {
   const seg = (id: LlmPromptSegmentId, promptSegment: string, volatileSegment?: boolean): LlmPromptSegment => ({ id, promptSegment, origin: { kind: 'generated' }, ...(volatileSegment == null ? {} : { volatile: volatileSegment }) });
 
   it('joins by PLAIN concatenation: a segment carries its own separator', () => {
@@ -17,9 +17,9 @@ describe('joinLlmPromptSegments / llmPromptCacheSegmentsOf / llmPromptSegmentSpa
 
   it('splits the cache at the FIRST volatile segment, by position', () => {
     const segments = [seg('A', 'A\n\n'), seg('D', 'D\n\n', true), seg('C-post', 'POST')];
-    expect(llmPromptCacheSegmentsOf(segments)).toEqual({ cachePrefix: 'A\n\n', volatileSuffix: 'D\n\nPOST' });
+    expect(splitLlmPromptCacheSegments(segments)).toEqual({ cachePrefix: 'A\n\n', volatileSuffix: 'D\n\nPOST' });
     // No volatile segment at all ⇒ everything is prefix (and the invariant still holds).
-    expect(llmPromptCacheSegmentsOf([seg('A', 'A')])).toEqual({ cachePrefix: 'A', volatileSuffix: '' });
+    expect(splitLlmPromptCacheSegments([seg('A', 'A')])).toEqual({ cachePrefix: 'A', volatileSuffix: '' });
   });
 
   it('derives cumulative, gapless spans', () => {

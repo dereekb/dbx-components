@@ -195,13 +195,13 @@ export function messageFromError(input: Maybe<ErrorInput | string>): Maybe<strin
  *
  * @example
  * ```ts
- * errorMessageOf(new Error('boom')); // 'boom'
- * errorMessageOf({ message: 'readable' }); // 'readable'
- * errorMessageOf('plain'); // 'plain'
- * errorMessageOf(undefined); // 'undefined'
+ * readErrorMessage(new Error('boom')); // 'boom'
+ * readErrorMessage({ message: 'readable' }); // 'readable'
+ * readErrorMessage('plain'); // 'plain'
+ * readErrorMessage(undefined); // 'undefined'
  * ```
  */
-export function errorMessageOf(error: unknown): string {
+export function readErrorMessage(error: unknown): string {
   let message: string;
 
   if (error instanceof Error) {

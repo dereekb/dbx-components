@@ -8,7 +8,7 @@
  * the over-budget gap and sends anyway.
  *
  * No diag coupling: the budgeter returns its trim report and records nothing. A host that logs what was trimmed folds
- * the report with {@link llmBudgetTrimSummaryOf} and records it its own way.
+ * the report with {@link toLlmBudgetTrimSummary} and records it its own way.
  */
 
 import { joinStrings, type Maybe } from '@dereekb/util';
@@ -43,7 +43,7 @@ export const LLM_ESTIMATE_MESSAGE_ENVELOPE_TOKENS = 4;
 /**
  * ONE request's billable prompt, as the provider will count it.
  */
-export interface LlmRequestPromptTokenEstimateInput {
+export interface EstimateLlmRequestPromptTokensConfig {
   /**
    * The NEW user message — the request's assembled prompt.
    */
@@ -75,7 +75,7 @@ export interface LlmRequestPromptTokenEstimateInput {
  * estimateLlmRequestPromptTokens({ prompt: 'say one line' }); // 7 — 3 for the text, 4 for its envelope
  * ```
  */
-export function estimateLlmRequestPromptTokens(input: LlmRequestPromptTokenEstimateInput): number {
+export function estimateLlmRequestPromptTokens(input: EstimateLlmRequestPromptTokensConfig): number {
   const thread = input.thread ?? [];
   const schema = input.responseSchemaHint == null ? 0 : estimateLlmTokens(JSON.stringify(input.responseSchemaHint));
   const replayed = thread.reduce((total, turn) => total + estimateLlmTokens(turn.content) + LLM_ESTIMATE_MESSAGE_ENVELOPE_TOKENS, 0);
@@ -341,11 +341,11 @@ export interface LlmBudgetTrimSummary {
  *
  * @example
  * ```ts
- * const summary = llmBudgetTrimSummaryOf(budgeted.trimmed);
+ * const summary = toLlmBudgetTrimSummary(budgeted.trimmed);
  * if (summary.blocks > 0) log.debug('live context trimmed', summary);
  * ```
  */
-export function llmBudgetTrimSummaryOf(trimmed: ReadonlyArray<LlmBudgetTrimReport>): LlmBudgetTrimSummary {
+export function toLlmBudgetTrimSummary(trimmed: ReadonlyArray<LlmBudgetTrimReport>): LlmBudgetTrimSummary {
   const dropped = trimmed.filter((report) => report.action === 'dropped').length;
   const savedTokens = trimmed.reduce((total, report) => total + report.savedTokens, 0);
   return { blocks: trimmed.length, dropped, shrunk: trimmed.length - dropped, savedTokens };

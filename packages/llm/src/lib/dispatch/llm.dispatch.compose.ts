@@ -6,11 +6,11 @@
 
 import { type Maybe } from '@dereekb/util';
 import { hardenLlmResponseSchemaHint } from '../capability/llm.capability.schema';
-import { type LlmCapabilityDescriptor, type LlmCapabilityDescriptorOf } from '../capability/llm.capability.descriptor';
+import { type LlmCapabilityDescriptor, type LlmCapabilityDescriptorReader } from '../capability/llm.capability.descriptor';
 import { composeLlmCapabilityPrompt, type LlmPromptAssemblyTexts, type LlmPromptLiveContextSegmentOrigin } from '../prompt/llm.prompt.assembly';
 import { estimateLlmRequestPromptTokens } from '../prompt/llm.prompt.budget';
 import { type LlmPromptCachePrefixWatch } from '../prompt/llm.prompt.cache.watch';
-import { llmPromptSupplementsOf, type LlmPromptContributor } from '../prompt/llm.prompt.contributor';
+import { toLlmPromptSupplements, type LlmPromptContributor } from '../prompt/llm.prompt.contributor';
 import { type LlmPromptLayout, type LlmPromptSlotId } from '../prompt/llm.prompt.layout';
 import { joinLlmLiveContextBlocks, LLM_FLAT_LIVE_CONTEXT_BLOCK_KEY } from '../prompt/llm.prompt.live.context';
 import { type LlmPromptSegment } from '../prompt/llm.prompt.segment';
@@ -32,7 +32,7 @@ import { type LlmDispatchRawJsonGap } from './llm.dispatcher.config';
  * @typeParam D - The host's capability descriptor type.
  */
 export interface LlmDispatchComposeSetup<R extends LlmDispatchRequest = LlmDispatchRequest, D extends LlmCapabilityDescriptor = LlmCapabilityDescriptor> {
-  readonly descriptorOf: LlmCapabilityDescriptorOf<D>;
+  readonly descriptorOf: LlmCapabilityDescriptorReader<D>;
   readonly templateResolver: LlmPromptTemplateResolver<R, D>;
   readonly layout: LlmPromptLayout;
   readonly contributors?: Maybe<ReadonlyArray<LlmPromptContributor<R, D>>>;
@@ -276,7 +276,7 @@ async function composeLlmRootDispatch<R extends LlmDispatchRequest, D extends Ll
     protocol,
     baseRequest,
     segments,
-    supplements: llmPromptSupplementsOf(composed.contributions, composed.cut),
+    supplements: toLlmPromptSupplements(composed.contributions, composed.cut),
     liveContext: joinLlmLiveContextBlocks(composed.liveContext),
     cachePrefixHash,
     ...(request.validate == null ? {} : { validate: request.validate }),

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { type ConfiguredFetch } from '@dereekb/util/fetch';
-import { DEFAULT_LLM_COMPLETION_TIMEOUT_MS, DEFAULT_LLM_MAX_OUTPUT_TOKENS, type LlmRequest } from '@dereekb/llm';
-import { llmOpenAiCallTimeoutMs, type LlmOpenAiChatClient, type LlmOpenAiRequestOptions } from '@dereekb/llm/openai';
+import { DEFAULT_LLM_COMPLETION_TIMEOUT_MS, DEFAULT_LLM_MAX_OUTPUT_TOKENS, resolveLlmCompletionCallTimeoutMs, type LlmRequest } from '@dereekb/llm';
+import { type LlmOpenAiChatClient, type LlmOpenAiRequestOptions } from '@dereekb/llm/openai';
 import { LLM_OPENROUTER_STRATEGY_KIND, makeLlmOpenRouterStrategy } from './openrouter.strategy';
 
 /**
@@ -390,7 +390,7 @@ describe('makeLlmOpenRouterStrategy()', () => {
     expect(options[0]?.signal).toBeInstanceOf(AbortSignal);
     // The per-request timeout mirrors the abort window (the default floor scaled by the default cap) so the SDK's
     // client-level timeout floor never fires first.
-    expect(options[0]?.timeout).toBe(llmOpenAiCallTimeoutMs(DEFAULT_LLM_COMPLETION_TIMEOUT_MS, DEFAULT_LLM_MAX_OUTPUT_TOKENS));
+    expect(options[0]?.timeout).toBe(resolveLlmCompletionCallTimeoutMs({ timeoutMs: DEFAULT_LLM_COMPLETION_TIMEOUT_MS, maxOutputTokens: DEFAULT_LLM_MAX_OUTPUT_TOKENS }));
   });
 
   it("the abort window SCALES with the call's completion budget (a big-budget lever gets a longer wall)", async () => {
@@ -401,8 +401,8 @@ describe('makeLlmOpenRouterStrategy()', () => {
     await strategy.complete({ prompt: 'small', capability: 'X', maxOutputTokens: 100 });
     await strategy.complete({ prompt: 'big', capability: 'X', maxOutputTokens: 16_384 });
 
-    expect(options[0]?.timeout).toBe(llmOpenAiCallTimeoutMs(60_000, 100));
-    expect(options[1]?.timeout).toBe(llmOpenAiCallTimeoutMs(60_000, 16_384));
+    expect(options[0]?.timeout).toBe(resolveLlmCompletionCallTimeoutMs({ timeoutMs: 60_000, maxOutputTokens: 100 }));
+    expect(options[1]?.timeout).toBe(resolveLlmCompletionCallTimeoutMs({ timeoutMs: 60_000, maxOutputTokens: 16_384 }));
     expect(options[1]!.timeout!).toBeGreaterThan(options[0]!.timeout!);
   });
 

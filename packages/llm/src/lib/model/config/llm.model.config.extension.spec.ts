@@ -5,7 +5,7 @@ import { llmNonBlankStringType } from '../llm.model.type';
 import { mergeLlmModelConfigFiles, overlayLlmModelConfigFile } from './llm.model.config.merge';
 import { parseLlmModelConfigFile } from './llm.model.config.parse';
 import { llmModelProviderBindings, llmModelPromptAddenda, llmModelReasoningOffEncodings, llmModelVisionCapabilities, resolveLlmProviderConfigs } from './llm.model.config.resolve';
-import { type LlmModelConfigExtensionInput, type LlmModelConfigFile, type LlmModelConfigTypes, makeLlmModelConfigSchema } from './llm.model.config.schema';
+import { type LlmModelConfigExtensionParams, type LlmModelConfigFile, type LlmModelConfigTypes, makeLlmModelConfigSchema } from './llm.model.config.schema';
 
 /**
  * A media-like test extension: speech routes on any provider, a `none` transport for speech-only providers, speech
@@ -53,7 +53,7 @@ interface TestMediaTypes extends LlmModelConfigTypes {
   readonly modelFields: TestVoiceFields;
 }
 
-function parseSpeechFields(input: LlmModelConfigExtensionInput): TestSpeechFields {
+function parseSpeechFields(input: LlmModelConfigExtensionParams): TestSpeechFields {
   const { schemaLabel, label, entry } = input;
   return parseLlmModelConfigFields({ schemaLabel, label, value: entry, type: testSpeechFieldsType, keys: SPEECH_KEYS, rules: SPEECH_FIELD_RULES });
 }

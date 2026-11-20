@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readLlmDecisionAnswers } from './llm.decision.answer';
-import { llmDecisionChoiceAnswerOf, llmDecisionNoulAnswerOf, llmDecisionScoreAnswerOf } from './llm.decision.answer.builder';
+import { makeLlmDecisionChoiceAnswer, makeLlmDecisionNoulAnswer, makeLlmDecisionScoreAnswer } from './llm.decision.answer.builder';
 import { llmChoiceQuestion, llmNoulQuestion, llmScoreQuestion } from './llm.decision.question';
 
 const OPTIONS = ['alpha', 'beta', 'gamma', 'delta'] as const;
@@ -8,7 +8,7 @@ const OPTIONS = ['alpha', 'beta', 'gamma', 'delta'] as const;
 describe('the decision answer builders', () => {
   it('should build a Choice the reader accepts, with the named option winning', () => {
     const question = llmChoiceQuestion('which?', { alpha: null, beta: null, gamma: null, delta: null });
-    const answer = llmDecisionChoiceAnswerOf({ options: [...OPTIONS], choice: 'gamma', confidence: 0.7 });
+    const answer = makeLlmDecisionChoiceAnswer({ options: [...OPTIONS], choice: 'gamma', confidence: 0.7 });
 
     expect(answer.choice).toBe('gamma');
     expect(answer.probabilities?.gamma).toBe(0.7);
@@ -17,11 +17,11 @@ describe('the decision answer builders', () => {
   });
 
   it('should give a single-option Choice the whole mass: there was nothing to be unsure between', () => {
-    expect(llmDecisionChoiceAnswerOf({ options: ['only'], choice: 'only' }).probabilities?.only).toBe(1);
+    expect(makeLlmDecisionChoiceAnswer({ options: ['only'], choice: 'only' }).probabilities?.only).toBe(1);
   });
 
   it('should build a Score the reader accepts, with the mass on the nearest level', () => {
-    const answer = llmDecisionScoreAnswerOf({ levels: ['cold', 'warm', 'hot'], score: 1.6 });
+    const answer = makeLlmDecisionScoreAnswer({ levels: ['cold', 'warm', 'hot'], score: 1.6 });
 
     expect(answer.score).toBe(1.6);
     expect(answer.probabilities?.['2']).toBe(0.8);
@@ -30,6 +30,6 @@ describe('the decision answer builders', () => {
   });
 
   it('should build a Noul the reader accepts', () => {
-    expect(readLlmDecisionAnswers({ questions: { q: llmNoulQuestion('so?') }, raw: { q: llmDecisionNoulAnswerOf(0.3) } }).faults).toBeUndefined();
+    expect(readLlmDecisionAnswers({ questions: { q: llmNoulQuestion('so?') }, raw: { q: makeLlmDecisionNoulAnswer(0.3) } }).faults).toBeUndefined();
   });
 });

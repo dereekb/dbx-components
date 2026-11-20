@@ -3,11 +3,11 @@ import { describe, expect, it } from 'vitest';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { composeLlmCapabilityPrompt, DEFAULT_LLM_MUST_RESOLVE_CLAUSE } from '../prompt/llm.prompt.assembly';
 import { joinLlmLiveContextBlocks } from '../prompt/llm.prompt.live.context';
-import { tieredLlmPromptTemplateResolver } from '../prompt/llm.prompt.template';
+import { makeLlmTieredPromptTemplateResolver } from '../prompt/llm.prompt.template';
 import { type LlmCallDiagRecord, makeLlmCallContext, noopLlmCallContext } from '../record/llm.call.context';
-import { compileLlmCritiquePolicy, LLM_CRITIQUE_REPLY_CAPABILITY, type LlmCritiqueBinding, type LlmCritiqueInput, type LlmCritiqueRule } from '../reply/llm.reply.critique';
+import { compileLlmCritiquePolicy, LLM_CRITIQUE_REPLY_CAPABILITY, type LlmCritiqueBinding, type LlmCritiqueParams, type LlmCritiqueRule } from '../reply/llm.reply.critique';
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
-import { critiqueLlmReply, DEFAULT_LLM_CRITIQUE_REPLY_INSTRUCTIONS, LLM_CRITIQUE_REPLY_DESCRIPTOR, LLM_CRITIQUE_REPLY_TEMPLATE, llmCriticFor, llmCritiqueOutcomeSchema, makeLlmSemanticCritic, parseLlmCritiqueOutcomeLever, renderLlmCritiqueContext } from './llm.capability.critique.reply';
+import { critiqueLlmReply, DEFAULT_LLM_CRITIQUE_REPLY_INSTRUCTIONS, LLM_CRITIQUE_REPLY_DESCRIPTOR, LLM_CRITIQUE_REPLY_TEMPLATE, resolveLlmCritiqueFields, llmCritiqueOutcomeSchema, makeLlmSemanticCritic, parseLlmCritiqueOutcomeLever, renderLlmCritiqueContext } from './llm.capability.critique.reply';
 
 interface FakeDispatch {
   readonly requests: LlmDispatchRequest[];
@@ -69,7 +69,7 @@ function recordingInput() {
   const diags: LlmCallDiagRecord[] = [];
   const swallows: string[] = [];
   const callContext = makeLlmCallContext({ label: 'spec', onDiag: (record) => diags.push(record), onSwallow: (site) => swallows.push(site) });
-  const input: LlmCritiqueInput = { capability: 'summarize', lever: { summary: 'a tote' }, replyText: '{"summary":"a tote"}', liveContext: 'THE ORDER: one canvas tote', replyProtocol: 'json', attempt: 1, callContext };
+  const input: LlmCritiqueParams = { capability: 'summarize', lever: { summary: 'a tote' }, replyText: '{"summary":"a tote"}', liveContext: 'THE ORDER: one canvas tote', replyProtocol: 'json', attempt: 1, callContext };
   return { input, diags, swallows };
 }
 
@@ -107,23 +107,23 @@ describe('renderLlmCritiqueContext()', () => {
   });
 });
 
-describe('llmCriticFor()', () => {
+describe('resolveLlmCritiqueFields()', () => {
   it('returns {} without a binding', () => {
-    expect(llmCriticFor({ binding: undefined, capability: 'summarize', goal: 'G' })).toEqual({});
+    expect(resolveLlmCritiqueFields({ binding: undefined, capability: 'summarize', goal: 'G' })).toEqual({});
   });
 
   it('returns {} when the policy does not name the capability', () => {
-    expect(llmCriticFor({ binding: bindingOf(fakeDispatch('{}')), capability: 'draft-copy', goal: 'G' })).toEqual({});
+    expect(resolveLlmCritiqueFields({ binding: bindingOf(fakeDispatch('{}')), capability: 'draft-copy', goal: 'G' })).toEqual({});
   });
 
   it('returns a critic and the rule attempt budget on a match', () => {
-    const fields = llmCriticFor({ binding: bindingOf(fakeDispatch('{}')), capability: 'summarize', goal: 'G' });
+    const fields = resolveLlmCritiqueFields({ binding: bindingOf(fakeDispatch('{}')), capability: 'summarize', goal: 'G' });
     expect(typeof fields.critique).toBe('function');
     expect(fields.maxAttempts).toBe(3);
   });
 
   it('carries no maxAttempts key when the rule sets none', () => {
-    const fields = llmCriticFor({ binding: bindingOf(fakeDispatch('{}'), { capabilities: ['summarize'] }), capability: 'summarize', goal: 'G' });
+    const fields = resolveLlmCritiqueFields({ binding: bindingOf(fakeDispatch('{}'), { capabilities: ['summarize'] }), capability: 'summarize', goal: 'G' });
     expect(typeof fields.critique).toBe('function');
     expect('maxAttempts' in fields).toBe(false);
   });
@@ -250,7 +250,7 @@ describe('LLM_CRITIQUE_REPLY_DESCRIPTOR', () => {
     const composed = await composeLlmCapabilityPrompt({
       request: fake.requests[0],
       descriptorOf: () => LLM_CRITIQUE_REPLY_DESCRIPTOR,
-      templateResolver: tieredLlmPromptTemplateResolver({ tiers: [{ source: 'llm', templates: [LLM_CRITIQUE_REPLY_TEMPLATE] }] })
+      templateResolver: makeLlmTieredPromptTemplateResolver({ tiers: [{ source: 'llm', templates: [LLM_CRITIQUE_REPLY_TEMPLATE] }] })
     });
 
     expect(composed.prompt).toContain(DEFAULT_LLM_CRITIQUE_REPLY_INSTRUCTIONS);

@@ -24,7 +24,7 @@
  */
 
 import { type JsonObjectInText, type Maybe, parseJsonObjectOrUndefined, readJsonObjectFromText, stripMarkdownCodeFence } from '@dereekb/util';
-import { type LlmSwallowSink, type LlmSwallowSiteId, NOOP_LLM_SWALLOW_SINK } from '../record/llm.swallow';
+import { type LlmSwallowSink, type LlmSwallowSiteId, noopLlmSwallowSink } from '../record/llm.swallow';
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
 import { isLlmReplyObject } from './llm.reply.object';
 import { type LlmReplyProtocol } from './llm.reply.protocol';
@@ -175,7 +175,7 @@ export interface LlmReplyReadConfig {
    */
   readonly envelope?: Maybe<LlmReplyEnvelopeKeys>;
   /**
-   * Where an unparseable block is counted. Defaults to {@link NOOP_LLM_SWALLOW_SINK}.
+   * Where an unparseable block is counted. Defaults to {@link noopLlmSwallowSink}.
    */
   readonly swallow?: Maybe<LlmSwallowSink>;
 }
@@ -192,7 +192,7 @@ export interface LlmReplyReadConfig {
  */
 export function readLlmReplyLever(text: string, config?: Maybe<LlmReplyReadConfig>): LlmReplyLeverReading {
   const envelope = config?.envelope;
-  const json = readLlmReplyJson(text, config?.swallow ?? NOOP_LLM_SWALLOW_SINK);
+  const json = readLlmReplyJson(text, config?.swallow ?? noopLlmSwallowSink);
   const parsed = json.value;
   let reading: LlmReplyLeverReading;
 
@@ -290,9 +290,9 @@ export function llmReplyLeverOf(text: string, config?: Maybe<LlmReplyReadConfig>
  * @param config - The envelope keys (whose `rationale` key is read; default {@link DEFAULT_LLM_REPLY_ENVELOPE_KEYS}) and the swallow sink.
  * @returns The trimmed rationale, or `undefined` when the reply carries none.
  */
-export function llmReplyRationaleOf(text: string, config?: Maybe<LlmReplyReadConfig>): Maybe<string> {
+export function readLlmReplyRationale(text: string, config?: Maybe<LlmReplyReadConfig>): Maybe<string> {
   const key = (config?.envelope ?? DEFAULT_LLM_REPLY_ENVELOPE_KEYS).rationale;
-  const parsed = readLlmReplyJson(text, config?.swallow ?? NOOP_LLM_SWALLOW_SINK).value;
+  const parsed = readLlmReplyJson(text, config?.swallow ?? noopLlmSwallowSink).value;
   const rationale = parsed == null ? undefined : parsed[key];
   const trimmed = typeof rationale === 'string' ? rationale.trim() : '';
   return trimmed === '' ? undefined : trimmed;

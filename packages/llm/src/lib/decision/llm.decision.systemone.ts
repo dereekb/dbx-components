@@ -39,7 +39,7 @@
  * the global after building the strategy.
  */
 
-import { errorMessageOf, isNotNullOrEmptyString, isPlainObject, makeTimeoutAbortSignal, type Maybe, type Milliseconds, removeTrailingSlashes } from '@dereekb/util';
+import { readErrorMessage, isNotNullOrEmptyString, isPlainObject, makeTimeoutAbortSignal, type Maybe, type Milliseconds, removeTrailingSlashes } from '@dereekb/util';
 import { type LlmDecisionAdapterConfig } from '../adapter/llm.adapter';
 import { type LlmModelId, type LlmStrategyId } from '../model/llm.value';
 import { type ConfiguredFetch, type FetchJsonTextResult, isFetchAbortError, readFetchJsonText } from '@dereekb/util/fetch';
@@ -172,7 +172,7 @@ async function readLlmSystemOneRoute(input: ReadLlmSystemOneRouteInput): Promise
       throw error;
     }
 
-    throw new LlmDecisionTransportError({ message: `the ${input.label} System One route ${url} could not be reached: ${errorMessageOf(error)}`, cause: error });
+    throw new LlmDecisionTransportError({ message: `the ${input.label} System One route ${url} could not be reached: ${readErrorMessage(error)}`, cause: error });
   }
 
   return reply;
@@ -208,7 +208,7 @@ function nonBlankStringOf(value: unknown): Maybe<string> {
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function llmSystemOneDecisionStrategyConfigOf(config: LlmDecisionAdapterConfig): LlmSystemOneDecisionStrategyConfig {
+export function toLlmSystemOneDecisionStrategyConfig(config: LlmDecisionAdapterConfig): LlmSystemOneDecisionStrategyConfig {
   const { provider, baseUrl, timeoutMs, fetch } = config;
   return {
     id: provider.id,

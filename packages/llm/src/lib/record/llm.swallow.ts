@@ -13,7 +13,7 @@
  * only names the site and forwards the cause.
  */
 
-import { arrayToObject, errorMessageOf, type Maybe } from '@dereekb/util';
+import { arrayToObject, readErrorMessage, type Maybe } from '@dereekb/util';
 
 /**
  * A declared swallow site's stable id — `<area>/<module>.<reason>`, kebab-case throughout (e.g.
@@ -123,7 +123,7 @@ export type LlmSwallowSink = (site: LlmSwallowSiteId, cause?: unknown) => void;
  *
  * @returns Nothing; every report is dropped.
  */
-export const NOOP_LLM_SWALLOW_SINK: LlmSwallowSink = () => undefined;
+export const noopLlmSwallowSink: LlmSwallowSink = () => undefined;
 
 /**
  * The cap a swallow's cause text is cut to, so one pathological error message cannot dominate a log.
@@ -141,7 +141,7 @@ export const LLM_SWALLOW_CAUSE_MAX_LENGTH = 200;
  * @returns The cut cause text, or `undefined` when there is nothing to report.
  */
 export function llmSwallowCauseText(cause: unknown): Maybe<string> {
-  const text = cause == null ? undefined : errorMessageOf(cause);
+  const text = cause == null ? undefined : readErrorMessage(cause);
   return text == null || text.length === 0 ? undefined : text.slice(0, LLM_SWALLOW_CAUSE_MAX_LENGTH);
 }
 
@@ -186,7 +186,7 @@ export const LLM_SWALLOW_SITES: LlmSwallowSiteRegistry = makeLlmSwallowSiteRegis
   { id: 'llm/strategy-readiness.provider-status', protects: 'a `providerStatus` that threw (a contract violation) is reported as an UNAVAILABLE status, never propagated, and unavailable can never read as spare quota', onError: 'report', expectation: 'fault', channel: 'health' },
   // makeLlmCraftJudge — the decide call's catch.
   { id: 'llm/craft-judge.decide', protects: 'a faulted or unreachable craft judge answers nothing, so every asked note takes its own unserved posture rather than failing the dispatch', onError: 'degrade', expectation: 'degraded', channel: 'diag' },
-  // llmReplyLeverOf / readLlmReplyLever / llmReplyRationaleOf / llmLineReplyLeverOf — the one report when no candidate block parsed.
+  // llmReplyLeverOf / readLlmReplyLever / readLlmReplyRationale / llmLineReplyLeverOf — the one report when no candidate block parsed.
   { id: 'llm/reply-envelope.decode', protects: 'a reply whose JSON block does not parse reads as a degenerate decode (no-json / parse-error) the caller retries or drops; the reader never throws', onError: 'degrade', expectation: 'expected', channel: 'diag' },
   // repairLlmReplyJson — the parse of a rebuilt text; the verdict carries it, no sink is called.
   { id: 'llm/reply-repair.rebuilt-parse', protects: 'a rebuilt text that does not parse is never a near-miss; the shape says so and the reply falls through to the fast fix or a re-ask', onError: 'degrade', expectation: 'expected', channel: 'result' },

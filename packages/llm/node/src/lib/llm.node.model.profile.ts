@@ -6,7 +6,7 @@
  * ...profile?.tiers, ...tierEnv.modelTiers }, defaultTier: tierEnv.defaultTier })`.
  */
 
-import { errorMessageOf, type Maybe } from '@dereekb/util';
+import { readErrorMessage, type Maybe } from '@dereekb/util';
 import {
   type LlmModelConfigBaseTypes,
   type LlmModelConfigFile,
@@ -174,7 +174,7 @@ export function resolveLlmModelTierEnv(config?: Maybe<ResolveLlmModelTierEnvConf
     try {
       parsed = JSON.parse(bulk.value);
     } catch (e) {
-      throw new Error(`${bulk.name} is not valid JSON: ${errorMessageOf(e)}`, { cause: e });
+      throw new Error(`${bulk.name} is not valid JSON: ${readErrorMessage(e)}`, { cause: e });
     }
 
     Object.assign(tiers, parseLlmModelTierMap({ schemaLabel: config?.schemaLabel, label: bulk.name, value: parsed }));

@@ -1,5 +1,5 @@
 import { type LlmDecisionQuestions } from '@dereekb/llm';
-import { errorMessageOf, type Maybe, type SmsTextSegmentDetails, smsTextSegmentDetails } from '@dereekb/util';
+import { readErrorMessage, type Maybe, type SmsTextSegmentDetails, smsTextSegmentDetails } from '@dereekb/util';
 import {
   type AppOpenRouterTemplateTypeConfigService,
   type OpenRouterAttachedFileReference,
@@ -842,7 +842,7 @@ export function openRouterTemplateService(config: OpenRouterTemplateServiceConfi
         output = { text: result.text, empty: result.empty, path: result.path, openRouterInput: result.openRouterInput, modelCalled: result.modelCalled, finalized: result.finalized, length: metrics.length, encoding: metrics.encoding, segments: metrics.segments };
       }
     } catch (e) {
-      errors.push(errorMessageOf(e));
+      errors.push(readErrorMessage(e));
       const scriptErrors = (e as Maybe<{ readonly errors?: unknown }>)?.errors;
 
       if (e instanceof OpenRouterTemplateRenderError && Array.isArray(scriptErrors) && scriptErrors.every((x) => typeof x === 'object')) {

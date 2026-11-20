@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { RateLimitError } from 'openai';
 import { makeLlmCallContext } from '../record/llm.call.context';
-import { LLM_TRANSPORT_RETRY_AFTER_MAX_MS, LLM_TRANSPORT_RETRY_MAX_DELAY_MS, type LlmDispatchPauseSignal, llmDispatchSignalOf, llmTransportBackoffMs, parkLlmDispatchWhilePaused } from './llm.dispatch.control';
+import { LLM_TRANSPORT_RETRY_AFTER_MAX_MS, LLM_TRANSPORT_RETRY_MAX_DELAY_MS, type LlmDispatchPauseSignal, mergeLlmDispatchSignals, llmTransportBackoffMs, parkLlmDispatchWhilePaused } from './llm.dispatch.control';
 
 function gate(paused: boolean): LlmDispatchPauseSignal & { readonly resume: () => void } {
   let resolveWait: () => void = () => undefined;
@@ -57,20 +57,20 @@ describe('parkLlmDispatchWhilePaused()', () => {
   });
 });
 
-describe('llmDispatchSignalOf()', () => {
+describe('mergeLlmDispatchSignals()', () => {
   it('should return whichever signal exists, or none', () => {
     const signal = new AbortController().signal;
 
-    expect(llmDispatchSignalOf({ request: {} })).toBeUndefined();
-    expect(llmDispatchSignalOf({ cancellationSignal: signal, request: {} })).toBe(signal);
-    expect(llmDispatchSignalOf({ request: { signal } })).toBe(signal);
+    expect(mergeLlmDispatchSignals({ request: {} })).toBeUndefined();
+    expect(mergeLlmDispatchSignals({ cancellationSignal: signal, request: {} })).toBe(signal);
+    expect(mergeLlmDispatchSignals({ request: { signal } })).toBe(signal);
   });
 
   it('should combine both signals so either aborts the forwarded one', () => {
     for (const which of ['dispatcher', 'request'] as const) {
       const dispatcher = new AbortController();
       const requestController = new AbortController();
-      const combined = llmDispatchSignalOf({ cancellationSignal: dispatcher.signal, request: { signal: requestController.signal } });
+      const combined = mergeLlmDispatchSignals({ cancellationSignal: dispatcher.signal, request: { signal: requestController.signal } });
 
       expect(combined?.aborted).toBe(false);
       (which === 'dispatcher' ? dispatcher : requestController).abort();

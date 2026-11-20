@@ -83,7 +83,7 @@ export type LlmPromptSiteJudgeVerdicts = ReadonlyMap<LlmCraftNoteId, number>;
  * A site's judge: one decision pass over the asked notes, answering note id → the probability it applies, or nothing
  * when it could not answer (the decision lane is unavailable, the call faulted), so every asked note takes its own
  * unserved posture. Called at most once per dispatch, at the root. The library judge is `makeLlmCraftJudge`, and
- * `llmCraftPromptContributor` is its one caller.
+ * `makeLlmCraftPromptContributor` is its one caller.
  */
 export type LlmPromptSiteJudge = (request: LlmPromptSiteJudgeRequest) => Promise<Maybe<LlmPromptSiteJudgeVerdicts>>;
 
@@ -107,7 +107,7 @@ export interface LlmPromptSite<S extends object = object> {
   readonly inputs?: LlmPromptSiteInputs;
   /**
    * The judge a craft contributor asks about the site's judged notes; absent ⇒ every judged note is unserved. The
-   * library judge is `makeLlmCraftJudge`, and `llmCraftPromptContributor` is its one caller.
+   * library judge is `makeLlmCraftJudge`, and `makeLlmCraftPromptContributor` is its one caller.
    */
   readonly judge?: LlmPromptSiteJudge;
   /**

@@ -1,7 +1,7 @@
 import { isRetryableLlmDecisionError, llmChoiceQuestion, LlmDecisionAnswerFaultError, LlmDecisionTransportError, llmNoulQuestion, llmScoreQuestion, type LlmDecisionRequest } from '@dereekb/llm';
-import { makeLlmSystemOneWireFake, llmFetchFakeRequestOf, type LlmFetchFakeRequest } from '@dereekb/llm/test';
+import { makeLlmSystemOneWireFake, toLlmFetchFakeRequest, type LlmFetchFakeRequest } from '@dereekb/llm/test';
 import { describe, expect, it } from 'vitest';
-import { makeZenmuxDecisionStrategy, ZENMUX_DECISION_STRATEGY_KIND, ZENMUX_REQUEST_ID_HEADER } from './zenmux.decision.strategy';
+import { makeLlmZenmuxDecisionStrategy, LLM_ZENMUX_DECISION_STRATEGY_KIND, LLM_ZENMUX_REQUEST_ID_HEADER } from './zenmux.decision.strategy';
 
 /**
  * ZenMux's hooks over the core System One transport, run over the one `/systemone` wire fake. Only ZenMux's own facts are
@@ -34,7 +34,7 @@ function fakeSocket(status: number, body: unknown, headers?: Readonly<Record<str
 
 async function thrownBy(status: number, body: unknown): Promise<unknown> {
   const { decisionFetch } = fakeSocket(status, body);
-  return makeZenmuxDecisionStrategy({ apiKey: 'sk-zen', decisionFetch })
+  return makeLlmZenmuxDecisionStrategy({ apiKey: 'sk-zen', decisionFetch })
     .decide(REQUEST)
     .then(
       () => undefined,
@@ -42,10 +42,10 @@ async function thrownBy(status: number, body: unknown): Promise<unknown> {
     );
 }
 
-describe('makeZenmuxDecisionStrategy()', () => {
+describe('makeLlmZenmuxDecisionStrategy()', () => {
   it('sends the documented POST /systemone call: Bearer auth, a JSON body of EXACTLY {model, state, questions}', async () => {
     const { sent, decisionFetch } = fakeSocket(200, { model: MODEL, answers: TYPED_ANSWERS });
-    await makeZenmuxDecisionStrategy({ apiKey: 'sk-zen', decisionFetch }).decide(REQUEST);
+    await makeLlmZenmuxDecisionStrategy({ apiKey: 'sk-zen', decisionFetch }).decide(REQUEST);
 
     expect(sent).toHaveLength(1);
     expect(sent[0]?.url).toBe('https://zenmux.ai/api/v1/systemone');
@@ -64,7 +64,7 @@ describe('makeZenmuxDecisionStrategy()', () => {
 
   it('sends the body keys in the order model, state, questions — compared as the raw string', async () => {
     const { sent, decisionFetch } = fakeSocket(200, { answers: { is_urgent: TYPED_ANSWERS.is_urgent } });
-    await makeZenmuxDecisionStrategy({ apiKey: 'sk-zen', decisionFetch }).decide({ state: STATE, questions: { is_urgent: QUESTIONS.is_urgent }, model: MODEL });
+    await makeLlmZenmuxDecisionStrategy({ apiKey: 'sk-zen', decisionFetch }).decide({ state: STATE, questions: { is_urgent: QUESTIONS.is_urgent }, model: MODEL });
 
     expect(sent[0]?.init.body).toBe(`{"model":"${MODEL}","state":"${STATE}","questions":{"is_urgent":{"type":"noul","instructions":"Does this convey urgency?"}}}`);
   });
@@ -72,26 +72,26 @@ describe('makeZenmuxDecisionStrategy()', () => {
   it('never leaks a host-extended request field onto the wire: ZenMux answers 400 to any extra key', async () => {
     const { sent, decisionFetch } = fakeSocket(200, { answers: TYPED_ANSWERS });
     const extended = { ...REQUEST, sessionId: 's', meta: { run: 'r1' } } as LlmDecisionRequest<typeof QUESTIONS>;
-    await makeZenmuxDecisionStrategy({ apiKey: 'sk-zen', decisionFetch }).decide(extended);
+    await makeLlmZenmuxDecisionStrategy({ apiKey: 'sk-zen', decisionFetch }).decide(extended);
 
     expect(Object.keys(JSON.parse(sent[0]?.init.body ?? '{}'))).toEqual(['model', 'state', 'questions']);
   });
 
   it('describes itself by its route and keeps the stable zenmux-systemone kind', () => {
-    expect(makeZenmuxDecisionStrategy({ apiKey: 'sk-zen' }).describe).toBe('ZenMux System One at https://zenmux.ai/api/v1/systemone');
-    expect(ZENMUX_DECISION_STRATEGY_KIND).toBe('zenmux-systemone');
+    expect(makeLlmZenmuxDecisionStrategy({ apiKey: 'sk-zen' }).describe).toBe('ZenMux System One at https://zenmux.ai/api/v1/systemone');
+    expect(LLM_ZENMUX_DECISION_STRATEGY_KIND).toBe('zenmux-systemone');
   });
 
   it('honours a configured base URL, trailing slash and all', async () => {
     const { sent, decisionFetch } = fakeSocket(200, { answers: TYPED_ANSWERS });
-    await makeZenmuxDecisionStrategy({ apiKey: 'sk-zen', baseUrl: 'https://zenmux.test/api/v1/', decisionFetch }).decide(REQUEST);
+    await makeLlmZenmuxDecisionStrategy({ apiKey: 'sk-zen', baseUrl: 'https://zenmux.test/api/v1/', decisionFetch }).decide(REQUEST);
 
     expect(sent[0]?.url).toBe('https://zenmux.test/api/v1/systemone');
   });
 
   it('reads a typed reply: answers, the answering model, the generation id and the provider', async () => {
     const { decisionFetch } = fakeSocket(200, { id: 'gen-zen-1', model: 'typesafe/jev-1.14-20260901', provider: 'TypeSafe', answers: TYPED_ANSWERS });
-    const result = await makeZenmuxDecisionStrategy({ apiKey: 'sk-zen', decisionFetch }).decide(REQUEST);
+    const result = await makeLlmZenmuxDecisionStrategy({ apiKey: 'sk-zen', decisionFetch }).decide(REQUEST);
 
     expect(result.answers.is_urgent.noul).toBe(0.94);
     expect(result.answers.department.choice).toBe('billing');
@@ -112,7 +112,7 @@ describe('makeZenmuxDecisionStrategy()', () => {
       usage: { input_tokens: 402, output_tokens: 73 }
     };
     const { decisionFetch } = fakeSocket(200, live);
-    const result = await makeZenmuxDecisionStrategy({ apiKey: 'sk-zen', decisionFetch }).decide(REQUEST);
+    const result = await makeLlmZenmuxDecisionStrategy({ apiKey: 'sk-zen', decisionFetch }).decide(REQUEST);
 
     expect(result.answers.is_urgent.noul).toBe(0.95);
     expect(result.answers.department.choice).toBe('billing');
@@ -125,23 +125,23 @@ describe('makeZenmuxDecisionStrategy()', () => {
 
   it('reads the generation id off the X-ZenMux-RequestId header: the RECORDED live reply (2026-10-02) carries none in its body', async () => {
     const live = { model: MODEL, answers: { is_urgent: { type: 'noul', noul: 0.99 } }, usage: { input_tokens: 278, output_tokens: 20 } };
-    const { decisionFetch } = fakeSocket(200, live, { [ZENMUX_REQUEST_ID_HEADER]: '95acf10d7cc040d9bdbfe5d3b9f5037b' });
-    const result = await makeZenmuxDecisionStrategy({ apiKey: 'sk-zen', decisionFetch }).decide({ state: STATE, questions: { is_urgent: QUESTIONS.is_urgent }, model: MODEL });
+    const { decisionFetch } = fakeSocket(200, live, { [LLM_ZENMUX_REQUEST_ID_HEADER]: '95acf10d7cc040d9bdbfe5d3b9f5037b' });
+    const result = await makeLlmZenmuxDecisionStrategy({ apiKey: 'sk-zen', decisionFetch }).decide({ state: STATE, questions: { is_urgent: QUESTIONS.is_urgent }, model: MODEL });
 
     expect(result.generationId).toBe('95acf10d7cc040d9bdbfe5d3b9f5037b');
   });
 
   it('prefers a body id over the header, and reads a blank header as no id', async () => {
-    const both = fakeSocket(200, { id: 'gen-body', answers: TYPED_ANSWERS }, { [ZENMUX_REQUEST_ID_HEADER]: 'gen-header' });
-    const blank = fakeSocket(200, { answers: TYPED_ANSWERS }, { [ZENMUX_REQUEST_ID_HEADER]: '' });
+    const both = fakeSocket(200, { id: 'gen-body', answers: TYPED_ANSWERS }, { [LLM_ZENMUX_REQUEST_ID_HEADER]: 'gen-header' });
+    const blank = fakeSocket(200, { answers: TYPED_ANSWERS }, { [LLM_ZENMUX_REQUEST_ID_HEADER]: '' });
 
-    expect((await makeZenmuxDecisionStrategy({ apiKey: 'sk-zen', decisionFetch: both.decisionFetch }).decide(REQUEST)).generationId).toBe('gen-body');
-    expect((await makeZenmuxDecisionStrategy({ apiKey: 'sk-zen', decisionFetch: blank.decisionFetch }).decide(REQUEST)).generationId).toBeUndefined();
+    expect((await makeLlmZenmuxDecisionStrategy({ apiKey: 'sk-zen', decisionFetch: both.decisionFetch }).decide(REQUEST)).generationId).toBe('gen-body');
+    expect((await makeLlmZenmuxDecisionStrategy({ apiKey: 'sk-zen', decisionFetch: blank.decisionFetch }).decide(REQUEST)).generationId).toBeUndefined();
   });
 
   it('reads a reply whose answers carry NO `type`, typing each from the question that asked it', async () => {
     const { decisionFetch } = fakeSocket(200, { answers: { is_urgent: { noul: 0.2 }, department: { choice: 'technical' }, frustration: { score: 0.5 } } });
-    const result = await makeZenmuxDecisionStrategy({ apiKey: 'sk-zen', decisionFetch }).decide(REQUEST);
+    const result = await makeLlmZenmuxDecisionStrategy({ apiKey: 'sk-zen', decisionFetch }).decide(REQUEST);
 
     expect(result.answers.is_urgent).toEqual({ type: 'noul', noul: 0.2 });
     expect(result.answers.department).toEqual({ type: 'choice', choice: 'technical' });
@@ -162,7 +162,7 @@ describe('makeZenmuxDecisionStrategy()', () => {
 
   it('folds snake_case usage into the usage spelling, keeping a reported cost on the list basis', async () => {
     const { decisionFetch } = fakeSocket(200, { answers: TYPED_ANSWERS, usage: { input_tokens: 350, output_tokens: 34, cost: 0.0000147 } });
-    const result = await makeZenmuxDecisionStrategy({ apiKey: 'sk-zen', decisionFetch }).decide(REQUEST);
+    const result = await makeLlmZenmuxDecisionStrategy({ apiKey: 'sk-zen', decisionFetch }).decide(REQUEST);
 
     expect(result.usage).toEqual({ promptTokens: 350, completionTokens: 34, totalTokens: 384, cost: 0.0000147, costBasis: 'list' });
   });
@@ -170,8 +170,8 @@ describe('makeZenmuxDecisionStrategy()', () => {
   it('leaves an unreported cost ABSENT (unknown, never zero) and omits usage the reply did not send', async () => {
     const partial = fakeSocket(200, { answers: TYPED_ANSWERS, usage: { input_tokens: 120 } });
     const none = fakeSocket(200, { answers: TYPED_ANSWERS });
-    const withPartial = await makeZenmuxDecisionStrategy({ apiKey: 'sk-zen', decisionFetch: partial.decisionFetch }).decide(REQUEST);
-    const withNone = await makeZenmuxDecisionStrategy({ apiKey: 'sk-zen', decisionFetch: none.decisionFetch }).decide(REQUEST);
+    const withPartial = await makeLlmZenmuxDecisionStrategy({ apiKey: 'sk-zen', decisionFetch: partial.decisionFetch }).decide(REQUEST);
+    const withNone = await makeLlmZenmuxDecisionStrategy({ apiKey: 'sk-zen', decisionFetch: none.decisionFetch }).decide(REQUEST);
 
     expect(withPartial.usage).toEqual({ promptTokens: 120, completionTokens: 0, totalTokens: 120 });
     expect(withNone.usage).toBeUndefined();
@@ -192,7 +192,7 @@ describe('makeZenmuxDecisionStrategy()', () => {
   });
 
   it('refuses to send with no key and no injected socket, naming the key’s env var', async () => {
-    const thrown = await makeZenmuxDecisionStrategy({ apiKeyEnv: 'HOST_ZENMUX_API_KEY' })
+    const thrown = await makeLlmZenmuxDecisionStrategy({ apiKeyEnv: 'HOST_ZENMUX_API_KEY' })
       .decide(REQUEST)
       .catch((error: unknown) => error);
 
@@ -201,34 +201,34 @@ describe('makeZenmuxDecisionStrategy()', () => {
   });
 
   it('registers under its provider id with the zenmux-systemone transport kind', () => {
-    const named = makeZenmuxDecisionStrategy({ id: 'zenmux-payg', apiKey: 'sk-zen' });
-    const bare = makeZenmuxDecisionStrategy({ apiKey: 'sk-zen' });
+    const named = makeLlmZenmuxDecisionStrategy({ id: 'zenmux-payg', apiKey: 'sk-zen' });
+    const bare = makeLlmZenmuxDecisionStrategy({ apiKey: 'sk-zen' });
 
     expect(named.id).toBe('zenmux-payg');
-    expect(named.kind).toBe(ZENMUX_DECISION_STRATEGY_KIND);
-    expect(bare.id).toBe(ZENMUX_DECISION_STRATEGY_KIND);
+    expect(named.kind).toBe(LLM_ZENMUX_DECISION_STRATEGY_KIND);
+    expect(bare.id).toBe(LLM_ZENMUX_DECISION_STRATEGY_KIND);
   });
 });
 
-describe('makeZenmuxDecisionStrategy() readiness', () => {
+describe('makeLlmZenmuxDecisionStrategy() readiness', () => {
   it('healthCheck names the key’s env var (or asks for an apiKey) when no key is set, and is ready otherwise', async () => {
-    expect(await makeZenmuxDecisionStrategy({ id: 'zenmux', apiKeyEnv: 'HOST_ZENMUX_API_KEY' }).healthCheck?.()).toEqual({ ready: false, issues: [{ severity: 'error', message: "no decisions API key is configured for 'zenmux': set HOST_ZENMUX_API_KEY" }] });
-    expect(await makeZenmuxDecisionStrategy({ id: 'zenmux' }).healthCheck?.()).toEqual({ ready: false, issues: [{ severity: 'error', message: "no decisions API key is configured for 'zenmux': pass an apiKey" }] });
-    expect(await makeZenmuxDecisionStrategy({ apiKey: 'sk-zen' }).healthCheck?.()).toEqual({ ready: true, issues: [] });
-    expect(await makeZenmuxDecisionStrategy({ decisionFetch: fakeSocket(200, {}).decisionFetch }).healthCheck?.()).toEqual({ ready: true, issues: [] });
+    expect(await makeLlmZenmuxDecisionStrategy({ id: 'zenmux', apiKeyEnv: 'HOST_ZENMUX_API_KEY' }).healthCheck?.()).toEqual({ ready: false, issues: [{ severity: 'error', message: "no decisions API key is configured for 'zenmux': set HOST_ZENMUX_API_KEY" }] });
+    expect(await makeLlmZenmuxDecisionStrategy({ id: 'zenmux' }).healthCheck?.()).toEqual({ ready: false, issues: [{ severity: 'error', message: "no decisions API key is configured for 'zenmux': pass an apiKey" }] });
+    expect(await makeLlmZenmuxDecisionStrategy({ apiKey: 'sk-zen' }).healthCheck?.()).toEqual({ ready: true, issues: [] });
+    expect(await makeLlmZenmuxDecisionStrategy({ decisionFetch: fakeSocket(200, {}).decisionFetch }).healthCheck?.()).toEqual({ ready: true, issues: [] });
   });
 
   it('credentialProbe asks the auth-gated sentinel question (not /models, which ZenMux answers 200 to any key)', async () => {
     const probed: LlmFetchFakeRequest[] = [];
-    const live = makeZenmuxDecisionStrategy({
+    const live = makeLlmZenmuxDecisionStrategy({
       id: 'zenmux',
       apiKey: 'sk-zen',
       probeFetch: async (input, init) => {
-        probed.push(llmFetchFakeRequestOf(input, init));
+        probed.push(toLlmFetchFakeRequest(input, init));
         return new Response('{"error":{"type":"invalid_model","message":"Requested model is not valid"}}', { status: 404 });
       }
     });
-    const revoked = makeZenmuxDecisionStrategy({ id: 'zenmux', apiKey: 'sk-zen', probeFetch: async () => new Response('{"error":{"message":"Invalid API key"}}', { status: 401 }) });
+    const revoked = makeLlmZenmuxDecisionStrategy({ id: 'zenmux', apiKey: 'sk-zen', probeFetch: async () => new Response('{"error":{"message":"Invalid API key"}}', { status: 401 }) });
 
     expect(await live.credentialProbe?.()).toEqual({ ready: true, issues: [] });
     expect(probed[0]?.url).toBe('https://zenmux.ai/api/v1/chat/completions');
@@ -239,7 +239,7 @@ describe('makeZenmuxDecisionStrategy() readiness', () => {
   });
 
   it('credentialProbe is ready for an injected fake and unready, without a request, for a missing key', async () => {
-    expect(await makeZenmuxDecisionStrategy({ decisionFetch: fakeSocket(200, {}).decisionFetch }).credentialProbe?.()).toEqual({ ready: true, issues: [] });
-    expect(await makeZenmuxDecisionStrategy({ apiKeyEnv: 'HOST_ZENMUX_API_KEY' }).credentialProbe?.()).toEqual({ ready: false, issues: [{ severity: 'error', message: 'no apiKey configured and no decisionFetch injected (set HOST_ZENMUX_API_KEY)' }] });
+    expect(await makeLlmZenmuxDecisionStrategy({ decisionFetch: fakeSocket(200, {}).decisionFetch }).credentialProbe?.()).toEqual({ ready: true, issues: [] });
+    expect(await makeLlmZenmuxDecisionStrategy({ apiKeyEnv: 'HOST_ZENMUX_API_KEY' }).credentialProbe?.()).toEqual({ ready: false, issues: [{ severity: 'error', message: 'no apiKey configured and no decisionFetch injected (set HOST_ZENMUX_API_KEY)' }] });
   });
 });

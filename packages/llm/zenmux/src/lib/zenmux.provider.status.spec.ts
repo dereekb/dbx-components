@@ -1,8 +1,8 @@
 import { tightestLlmQuotaWindow } from '@dereekb/llm';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { type ConfiguredFetch } from '@dereekb/util/fetch';
-import { ZENMUX_PROVIDER_ID } from './zenmux.constants';
-import { makeZenmuxProviderStatusSource } from './zenmux.provider.status';
+import { LLM_ZENMUX_PROVIDER_ID } from './zenmux.constants';
+import { makeLlmZenmuxProviderStatusSource } from './zenmux.provider.status';
 
 /**
  * The `subscription/detail` payload shape ZenMux actually answers with (trimmed to the fields read).
@@ -54,16 +54,16 @@ function fakeFetch(routes: Readonly<Record<string, { readonly status: number; re
  */
 const HEALTHY_ROUTES = { 'subscription/detail': { status: 200, body: SUBSCRIPTION_BODY }, 'payg/balance': { status: 200, body: BALANCE_BODY }, flow_rate: { status: 200, body: FLOW_RATE_BODY } };
 
-describe('makeZenmuxProviderStatusSource()', () => {
+describe('makeLlmZenmuxProviderStatusSource()', () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
   it('maps all three endpoints onto windows + balance', async () => {
     const seam = fakeFetch(HEALTHY_ROUTES);
-    const status = await makeZenmuxProviderStatusSource({ managementApiKey: 'mgmt-key', fetch: seam.fetch }).read();
+    const status = await makeLlmZenmuxProviderStatusSource({ managementApiKey: 'mgmt-key', fetch: seam.fetch }).read();
 
-    expect(status.providerId).toBe(ZENMUX_PROVIDER_ID);
+    expect(status.providerId).toBe(LLM_ZENMUX_PROVIDER_ID);
     expect(status.available).toBe(true);
     expect(status.windows.map((window) => window.id)).toEqual(['rolling-5h', 'rolling-7d', 'monthly']);
     expect(status.windows[0]).toMatchObject({ usedFraction: 0.0715, usedUnits: 57.2, maxUnits: 800, remainingUnits: 742.8, unit: 'flow', usedUsd: 1.88, maxUsd: 26.27, resetsAt: '2026-08-25T08:35:09.000Z' });
@@ -81,25 +81,25 @@ describe('makeZenmuxProviderStatusSource()', () => {
 
   it('authenticates every GET with the management key', async () => {
     const seam = fakeFetch(HEALTHY_ROUTES);
-    await makeZenmuxProviderStatusSource({ managementApiKey: ' mgmt-key ', fetch: seam.fetch }).read();
+    await makeLlmZenmuxProviderStatusSource({ managementApiKey: ' mgmt-key ', fetch: seam.fetch }).read();
 
     expect(seam.auths).toEqual(['Bearer mgmt-key', 'Bearer mgmt-key', 'Bearer mgmt-key']);
   });
 
   it('reads the management routes under a regional base URL', async () => {
     const seam = fakeFetch(HEALTHY_ROUTES);
-    await makeZenmuxProviderStatusSource({ managementApiKey: 'mgmt-key', baseUrl: 'https://eu.zenmux.ai/api/v1/', fetch: seam.fetch }).read();
+    await makeLlmZenmuxProviderStatusSource({ managementApiKey: 'mgmt-key', baseUrl: 'https://eu.zenmux.ai/api/v1/', fetch: seam.fetch }).read();
 
     expect(seam.urls).toEqual(['https://eu.zenmux.ai/api/v1/management/subscription/detail', 'https://eu.zenmux.ai/api/v1/management/payg/balance', 'https://eu.zenmux.ai/api/v1/management/flow_rate']);
   });
 
   it('surfaces the 7-day window as the tightest: the AND across windows a gate must honour', async () => {
-    const status = await makeZenmuxProviderStatusSource({ managementApiKey: 'k', fetch: fakeFetch(HEALTHY_ROUTES).fetch }).read();
+    const status = await makeLlmZenmuxProviderStatusSource({ managementApiKey: 'k', fetch: fakeFetch(HEALTHY_ROUTES).fetch }).read();
     expect(tightestLlmQuotaWindow(status)?.id).toBe('rolling-7d');
   });
 
   it('reports the monthly ceiling WITHOUT a fraction, so an unmeasured ceiling can never be the binding constraint', async () => {
-    const status = await makeZenmuxProviderStatusSource({ managementApiKey: 'k', fetch: fakeFetch(HEALTHY_ROUTES).fetch }).read();
+    const status = await makeLlmZenmuxProviderStatusSource({ managementApiKey: 'k', fetch: fakeFetch(HEALTHY_ROUTES).fetch }).read();
     const monthly = status.windows.find((window) => window.id === 'monthly');
     expect(monthly?.maxUnits).toBe(34560);
     expect(monthly?.usedFraction).toBeUndefined();
@@ -107,7 +107,7 @@ describe('makeZenmuxProviderStatusSource()', () => {
 
   it('reports an ABSENT management key as unavailable + an error naming the default env var, and opens NO socket', async () => {
     const seam = fakeFetch(HEALTHY_ROUTES);
-    const status = await makeZenmuxProviderStatusSource({ fetch: seam.fetch }).read();
+    const status = await makeLlmZenmuxProviderStatusSource({ fetch: seam.fetch }).read();
 
     expect(status.available).toBe(false);
     expect(status.windows).toEqual([]);
@@ -117,13 +117,13 @@ describe('makeZenmuxProviderStatusSource()', () => {
   });
 
   it('names the env var the HOST resolved the key from, so an operator is told what THEY set', async () => {
-    const status = await makeZenmuxProviderStatusSource({ managementApiKeyEnv: 'HOST_ZENMUX_MANAGEMENT_KEY', fetch: fakeFetch(HEALTHY_ROUTES).fetch }).read();
+    const status = await makeLlmZenmuxProviderStatusSource({ managementApiKeyEnv: 'HOST_ZENMUX_MANAGEMENT_KEY', fetch: fakeFetch(HEALTHY_ROUTES).fetch }).read();
     expect(status.issues[0]?.message).toContain('HOST_ZENMUX_MANAGEMENT_KEY');
   });
 
   it("carries the provider's own words when the key is REJECTED (an inference key passed here)", async () => {
     const rejected = { status: 403, body: REJECTED_BODY };
-    const status = await makeZenmuxProviderStatusSource({ managementApiKey: 'inference-key', fetch: fakeFetch({ 'subscription/detail': rejected, 'payg/balance': rejected, flow_rate: rejected }).fetch }).read();
+    const status = await makeLlmZenmuxProviderStatusSource({ managementApiKey: 'inference-key', fetch: fakeFetch({ 'subscription/detail': rejected, 'payg/balance': rejected, flow_rate: rejected }).fetch }).read();
 
     expect(status.available).toBe(false);
     expect(status.issues.every((issue) => issue.severity === 'warning')).toBe(true);
@@ -131,7 +131,7 @@ describe('makeZenmuxProviderStatusSource()', () => {
   });
 
   it('stays AVAILABLE on a partial read, warning per failed endpoint', async () => {
-    const status = await makeZenmuxProviderStatusSource({ managementApiKey: 'k', fetch: fakeFetch({ 'subscription/detail': { status: 200, body: SUBSCRIPTION_BODY }, 'payg/balance': { status: 500, body: '{"message":"upstream error"}' }, flow_rate: { status: 200, body: FLOW_RATE_BODY } }).fetch }).read();
+    const status = await makeLlmZenmuxProviderStatusSource({ managementApiKey: 'k', fetch: fakeFetch({ 'subscription/detail': { status: 200, body: SUBSCRIPTION_BODY }, 'payg/balance': { status: 500, body: '{"message":"upstream error"}' }, flow_rate: { status: 200, body: FLOW_RATE_BODY } }).fetch }).read();
 
     expect(status.available).toBe(true);
     expect(status.windows).toHaveLength(3);
@@ -142,7 +142,7 @@ describe('makeZenmuxProviderStatusSource()', () => {
   });
 
   it('warns when the account is being charged ABOVE the base flow rate', async () => {
-    const status = await makeZenmuxProviderStatusSource({ managementApiKey: 'k', fetch: fakeFetch({ ...HEALTHY_ROUTES, flow_rate: { status: 200, body: JSON.stringify({ success: true, data: { base_usd_per_flow: 0.03283, effective_usd_per_flow: 0.05 } }) } }).fetch }).read();
+    const status = await makeLlmZenmuxProviderStatusSource({ managementApiKey: 'k', fetch: fakeFetch({ ...HEALTHY_ROUTES, flow_rate: { status: 200, body: JSON.stringify({ success: true, data: { base_usd_per_flow: 0.03283, effective_usd_per_flow: 0.05 } }) } }).fetch }).read();
     expect(status.issues.some((issue) => issue.message.includes('above the base rate'))).toBe(true);
   });
 
@@ -150,7 +150,7 @@ describe('makeZenmuxProviderStatusSource()', () => {
     const throwing: ConfiguredFetch = async () => {
       throw new Error('ECONNREFUSED');
     };
-    const status = await makeZenmuxProviderStatusSource({ managementApiKey: 'k', fetch: throwing }).read();
+    const status = await makeLlmZenmuxProviderStatusSource({ managementApiKey: 'k', fetch: throwing }).read();
 
     expect(status.available).toBe(false);
     expect(status.issues).toHaveLength(3);
@@ -158,7 +158,7 @@ describe('makeZenmuxProviderStatusSource()', () => {
   });
 
   it('treats a pay-as-you-go-only account (no subscription) as available on its balance alone', async () => {
-    const status = await makeZenmuxProviderStatusSource({ managementApiKey: 'k', fetch: fakeFetch({ 'subscription/detail': { status: 200, body: JSON.stringify({ success: true, data: {} }) }, 'payg/balance': { status: 200, body: BALANCE_BODY }, flow_rate: { status: 200, body: FLOW_RATE_BODY } }).fetch }).read();
+    const status = await makeLlmZenmuxProviderStatusSource({ managementApiKey: 'k', fetch: fakeFetch({ 'subscription/detail': { status: 200, body: JSON.stringify({ success: true, data: {} }) }, 'payg/balance': { status: 200, body: BALANCE_BODY }, flow_rate: { status: 200, body: FLOW_RATE_BODY } }).fetch }).read();
 
     expect(status.available).toBe(true);
     expect(status.windows).toEqual([]);
@@ -170,7 +170,7 @@ describe('makeZenmuxProviderStatusSource()', () => {
       throw new TypeError('AbortSignal.timeout is not a function');
     });
 
-    const status = await makeZenmuxProviderStatusSource({ managementApiKey: 'k', fetch: fakeFetch(HEALTHY_ROUTES).fetch }).read();
+    const status = await makeLlmZenmuxProviderStatusSource({ managementApiKey: 'k', fetch: fakeFetch(HEALTHY_ROUTES).fetch }).read();
 
     expect(status.available).toBe(false);
     expect(status.issues).toHaveLength(3);

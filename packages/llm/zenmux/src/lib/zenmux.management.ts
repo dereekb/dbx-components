@@ -10,7 +10,7 @@ import { type ConfiguredFetch, type FetchJsonTextResult, readFetchJsonText } fro
 /**
  * The envelope every ZenMux management endpoint answers in.
  */
-export interface ZenmuxEnvelope<T> {
+export interface LlmZenmuxEnvelope<T> {
   readonly success?: boolean;
   readonly message?: string;
   readonly data?: Maybe<T>;
@@ -19,9 +19,9 @@ export interface ZenmuxEnvelope<T> {
 /**
  * What every ZenMux management reader is configured with.
  */
-export interface ZenmuxManagementReadConfig {
+export interface LlmZenmuxManagementReadConfig {
   /**
-   * The API base URL; defaults to `DEFAULT_ZENMUX_BASE_URL`. Trailing slashes are stripped.
+   * The API base URL; defaults to `DEFAULT_LLM_ZENMUX_BASE_URL`. Trailing slashes are stripped.
    */
   readonly baseUrl?: Maybe<string>;
   /**
@@ -41,7 +41,7 @@ export interface ZenmuxManagementReadConfig {
  * @param path - The path below `/management`, e.g. `subscription/detail`.
  * @returns `{baseUrl}/management/{path}`.
  */
-export function zenmuxManagementUrl(baseUrl: string, path: string): string {
+export function llmZenmuxManagementUrl(baseUrl: string, path: string): string {
   return `${baseUrl}/management/${path}`;
 }
 
@@ -52,14 +52,14 @@ export function zenmuxManagementUrl(baseUrl: string, path: string): string {
  * @param generationId - The generation to look up.
  * @returns `{baseUrl}/management/generation?id={generationId}`.
  */
-export function zenmuxGenerationUrl(baseUrl: string, generationId: string): string {
-  return zenmuxManagementUrl(baseUrl, `generation?id=${encodeURIComponent(generationId)}`);
+export function llmZenmuxGenerationUrl(baseUrl: string, generationId: string): string {
+  return llmZenmuxManagementUrl(baseUrl, `generation?id=${encodeURIComponent(generationId)}`);
 }
 
 /**
- * Input of {@link readZenmuxManagement}.
+ * Input of {@link readLlmZenmuxManagement}.
  */
-export interface ReadZenmuxManagementInput extends AbortSignalRef {
+export interface ReadLlmZenmuxManagementConfig extends AbortSignalRef {
   readonly fetch: Maybe<ConfiguredFetch>;
   readonly url: string;
   readonly apiKey: string;
@@ -73,7 +73,7 @@ export interface ReadZenmuxManagementInput extends AbortSignalRef {
  * @param input - The seam, URL, key, timeout and optional caller signal.
  * @returns The response, its text and the decoded envelope.
  */
-export async function readZenmuxManagement<T>(input: ReadZenmuxManagementInput): Promise<FetchJsonTextResult<ZenmuxEnvelope<T>>> {
+export async function readLlmZenmuxManagement<T>(input: ReadLlmZenmuxManagementConfig): Promise<FetchJsonTextResult<LlmZenmuxEnvelope<T>>> {
   const signal = makeTimeoutAbortSignal({ timeout: input.timeoutMs, signal: input.signal });
-  return readFetchJsonText<ZenmuxEnvelope<T>>(resolveLlmFetch(input.fetch)(input.url, { method: 'GET', headers: { Authorization: `Bearer ${input.apiKey}` }, signal }));
+  return readFetchJsonText<LlmZenmuxEnvelope<T>>(resolveLlmFetch(input.fetch)(input.url, { method: 'GET', headers: { Authorization: `Bearer ${input.apiKey}` }, signal }));
 }

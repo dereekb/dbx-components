@@ -1,7 +1,7 @@
 import { LlmDecisionAnswerFaultError, LlmDecisionDeclarationError, type LlmDecisionQuestions, type LlmStorableDecisionState } from '@dereekb/llm';
 import { type FirebaseStorageContext } from '@dereekb/firebase';
 import { type FirebaseServerEnvService } from '@dereekb/firebase-server';
-import { type Maybe, type Milliseconds, MS_IN_MINUTE, addMilliseconds, concatArraysUnique, errorMessageOf, filterMaybeArrayValues, filterUndefinedValues, filterUniqueValues, mergeArrays, randomNumberFactory } from '@dereekb/util';
+import { type Maybe, type Milliseconds, MS_IN_MINUTE, addMilliseconds, concatArraysUnique, readErrorMessage, filterMaybeArrayValues, filterUndefinedValues, filterUniqueValues, mergeArrays, randomNumberFactory } from '@dereekb/util';
 import { classifyFetchError, DEFAULT_FETCH_ABORT_ERROR_NAMES, type FetchErrorClassification, type FetchErrorClassificationConfig, isRetryableFetchErrorClassification, type IsRetryableUnknownErrorFunction } from '@dereekb/util/fetch';
 import {
   type OpenRouterAttachedFileReference,
@@ -944,7 +944,7 @@ export function openRouterErrorCode(e: unknown): Maybe<string> {
  * @__NO_SIDE_EFFECTS__
  */
 export function openRouterErrorMessage(e: unknown): string {
-  return errorMessageOf(e);
+  return readErrorMessage(e);
 }
 
 /**

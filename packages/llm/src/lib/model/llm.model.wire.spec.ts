@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_LLM_REASONING_OFF_ENCODING, DEFAULT_LLM_TOKEN_LIMIT_PARAM, isLlmTokenLimitParam, LLM_REASONING_OFF_ENCODINGS, LLM_TOKEN_LIMIT_PARAMS, llmReasoningOffEncodingFor, normalizeLlmReasoningConfig, parseLlmReasoningOffEncoding } from './llm.model.wire';
+import { DEFAULT_LLM_REASONING_OFF_ENCODING, DEFAULT_LLM_TOKEN_LIMIT_PARAM, isLlmTokenLimitParam, LLM_REASONING_OFF_ENCODINGS, LLM_TOKEN_LIMIT_PARAMS, resolveLlmReasoningOffEncoding, normalizeLlmReasoningConfig, parseLlmReasoningOffEncoding } from './llm.model.wire';
 
 describe('LLM_REASONING_OFF_ENCODINGS', () => {
   it('lists every encoding in message order', () => {
@@ -39,13 +39,13 @@ describe('parseLlmReasoningOffEncoding()', () => {
   });
 });
 
-describe('llmReasoningOffEncodingFor()', () => {
+describe('resolveLlmReasoningOffEncoding()', () => {
   it('orders the precedence by SPECIFICITY: per-model > fallback > the default', () => {
-    expect(llmReasoningOffEncodingFor({ model: 'a/b', byModel: { 'a/b': 'effort-minimal' }, fallback: 'omit' })).toBe('effort-minimal');
-    expect(llmReasoningOffEncodingFor({ model: 'c/d', byModel: { 'a/b': 'effort-minimal' }, fallback: 'omit' })).toBe('omit');
-    expect(llmReasoningOffEncodingFor({ model: 'c/d' })).toBe(DEFAULT_LLM_REASONING_OFF_ENCODING);
+    expect(resolveLlmReasoningOffEncoding({ model: 'a/b', byModel: { 'a/b': 'effort-minimal' }, fallback: 'omit' })).toBe('effort-minimal');
+    expect(resolveLlmReasoningOffEncoding({ model: 'c/d', byModel: { 'a/b': 'effort-minimal' }, fallback: 'omit' })).toBe('omit');
+    expect(resolveLlmReasoningOffEncoding({ model: 'c/d' })).toBe(DEFAULT_LLM_REASONING_OFF_ENCODING);
     // A model-less call cannot consult the map, and must not inherit an unrelated slug's exception.
-    expect(llmReasoningOffEncodingFor({ byModel: { 'a/b': 'effort-minimal' } })).toBe(DEFAULT_LLM_REASONING_OFF_ENCODING);
+    expect(resolveLlmReasoningOffEncoding({ byModel: { 'a/b': 'effort-minimal' } })).toBe(DEFAULT_LLM_REASONING_OFF_ENCODING);
   });
 });
 

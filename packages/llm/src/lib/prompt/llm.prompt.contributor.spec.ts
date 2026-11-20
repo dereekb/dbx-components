@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { assertLlmPromptContributionOccupancy, type LlmPromptContribution, type LlmPromptContributionCut, type LlmPromptContributor, type LlmPromptContributorInput, llmPromptContributionsInSlot, llmPromptSupplementsOf, mergeLlmLiveContextContributions, resolveLlmPromptContributions } from './llm.prompt.contributor';
+import { assertLlmPromptContributionOccupancy, type LlmPromptContribution, type LlmPromptContributionCut, type LlmPromptContributor, type LlmPromptContributorParams, llmPromptContributionsInSlot, toLlmPromptSupplements, mergeLlmLiveContextContributions, resolveLlmPromptContributions } from './llm.prompt.contributor';
 import { llmPromptCacheHash } from './llm.prompt.hash';
 import { type LlmPromptLayout } from './llm.prompt.layout';
 import { type LlmLiveContextBlock } from './llm.prompt.live.context';
@@ -16,7 +16,7 @@ function contribution(slot: string, text: string, extra: Partial<LlmPromptContri
   return { contributor: 'alpha', slot, id: slot, text, origin: { kind: 'test' }, reason: `test ${slot}`, ...extra };
 }
 
-const INPUT: LlmPromptContributorInput = {
+const INPUT: LlmPromptContributorParams = {
   request: { capability: 'summarize', renderLiveContext: () => [] },
   descriptor: undefined,
   templates: { roles: {}, byKey: () => undefined },
@@ -165,9 +165,9 @@ describe('mergeLlmLiveContextContributions()', () => {
   });
 });
 
-describe('llmPromptSupplementsOf()', () => {
+describe('toLlmPromptSupplements()', () => {
   it('should build a placed row with its keys in the documented order', () => {
-    const rows = llmPromptSupplementsOf([contribution('notes', 'NOTE BODY', { key: 'note-a', tier: 'builtin', by: 'match', p: 0.8 })]);
+    const rows = toLlmPromptSupplements([contribution('notes', 'NOTE BODY', { key: 'note-a', tier: 'builtin', by: 'match', p: 0.8 })]);
     const row = rows[0];
 
     expect(row).toEqual({ contributor: 'alpha', slot: 'notes', id: 'notes', key: 'note-a', hash: llmPromptCacheHash('NOTE BODY'), bytes: 'NOTE BODY'.length, tier: 'builtin', by: 'match', p: 0.8 });
@@ -175,19 +175,19 @@ describe('llmPromptSupplementsOf()', () => {
   });
 
   it('should omit key, tier, by and p when absent', () => {
-    const row = llmPromptSupplementsOf([contribution('tone', 'T')])[0];
+    const row = toLlmPromptSupplements([contribution('tone', 'T')])[0];
     expect(Object.keys(row)).toEqual(['contributor', 'slot', 'id', 'hash', 'bytes']);
   });
 
   it('should list cut rows after placed rows with their cut reason', () => {
     const cut: LlmPromptContributionCut = { contributor: 'alpha', slot: 'notes', id: 'notes', key: 'note-b', text: 'CUT BODY', cut: 'unserved', tier: 'builtin' };
-    const rows = llmPromptSupplementsOf([contribution('tone', 'T')], [cut]);
+    const rows = toLlmPromptSupplements([contribution('tone', 'T')], [cut]);
 
     expect(rows.at(-1)).toEqual({ contributor: 'alpha', slot: 'notes', id: 'notes', key: 'note-b', hash: llmPromptCacheHash('CUT BODY'), bytes: 'CUT BODY'.length, tier: 'builtin', cut: 'unserved' });
     expect(Object.keys(rows.at(-1) ?? {})).toEqual(['contributor', 'slot', 'id', 'key', 'hash', 'bytes', 'tier', 'cut']);
   });
 
   it('should count bytes in UTF-16 code units', () => {
-    expect(llmPromptSupplementsOf([contribution('tone', 'ab🙂')])[0].bytes).toBe(4);
+    expect(toLlmPromptSupplements([contribution('tone', 'ab🙂')])[0].bytes).toBe(4);
   });
 });

@@ -21,11 +21,11 @@ const LLM_CAPABILITY_RUNTIME_EXPORTS: readonly string[] = [
   'critiqueLlmReply',
   'defineLlmCapability',
   'hardenLlmResponseSchemaHint',
-  'llmCriticFor',
   'makeLlmReplyFastFixer',
   'makeLlmSemanticCritic',
   'projectLlmContractSchema',
-  'projectLlmResponseSchema'
+  'projectLlmResponseSchema',
+  'resolveLlmCritiqueFields'
 ];
 
 describe('capability exports', () => {

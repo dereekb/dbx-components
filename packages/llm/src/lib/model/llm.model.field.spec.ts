@@ -13,8 +13,8 @@ import {
   LLM_REASONING_CONFIG_FIELD_RULES,
   LLM_REASONING_CONFIG_KEYS,
   type LlmModelConfigFieldRules,
-  llmModelOutputControlsOf,
-  llmReasoningConfigOf,
+  toCanonicalLlmModelOutputControls,
+  toCanonicalLlmReasoningConfig,
   parseLlmModelConfigFields
 } from './llm.model.field';
 import { llmModelTierConfigType } from './llm.model.type';
@@ -92,7 +92,7 @@ describe('field rule tables', () => {
 
 describe('canonical assembly', () => {
   it('re-assembles reasoning and output controls in key order, dropping absent keys', () => {
-    expect(Object.keys(llmReasoningConfigOf({ enabled: true, effort: 'low' }))).toEqual(['effort', 'enabled']);
-    expect(Object.keys(llmModelOutputControlsOf({ reasoning: { exclude: true }, maxOutputTokens: 10 }))).toEqual(['maxOutputTokens', 'reasoning']);
+    expect(Object.keys(toCanonicalLlmReasoningConfig({ enabled: true, effort: 'low' }))).toEqual(['effort', 'enabled']);
+    expect(Object.keys(toCanonicalLlmModelOutputControls({ reasoning: { exclude: true }, maxOutputTokens: 10 }))).toEqual(['maxOutputTokens', 'reasoning']);
   });
 });

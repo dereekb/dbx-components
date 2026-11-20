@@ -14,7 +14,7 @@
 
 import { type Maybe } from '@dereekb/util';
 import { type LlmModelId, type LlmModelOutputControls, type LlmModelSelection, type LlmModelTierKey, type LlmReasoningConfig, type LlmStrategyId } from './llm.value';
-import { llmTierConfigOf, resolveLlmModelTier, type LlmModelTierMap } from './llm.model.tier';
+import { toLlmTierConfig, resolveLlmModelTier, type LlmModelTierMap } from './llm.model.tier';
 import { type LlmCapabilityRoute } from './llm.model.routing';
 import { type LlmModelVisionMap } from './llm.model.wire';
 import { type LlmModelProviderBindingMap } from './config/llm.model.config.resolve';
@@ -151,7 +151,7 @@ export function resolveLlmCapabilityModel(config: ResolveLlmCapabilityModelConfi
 
 /**
  * A capability's billed slug and whether it can SEE — the ONE read of the per-slug `vision` fact
- * ({@link llmCapabilityVisionOf}); `model` / `source` are the model ladder's.
+ * ({@link resolveLlmCapabilityVision}); `model` / `source` are the model ladder's.
  */
 export interface LlmCapabilityVision {
   /**
@@ -169,7 +169,7 @@ export interface LlmCapabilityVision {
 }
 
 /**
- * Config for {@link llmCapabilityVisionOf}: the model ladder's inputs plus the per-slug vision map.
+ * Config for {@link resolveLlmCapabilityVision}: the model ladder's inputs plus the per-slug vision map.
  */
 export interface LlmCapabilityVisionConfig extends ResolveLlmCapabilityModelConfig {
   /**
@@ -186,7 +186,7 @@ export interface LlmCapabilityVisionConfig extends ResolveLlmCapabilityModelConf
  * @param config - The ladder's inputs and the vision map.
  * @returns The billed slug, whether it sees, and the rung that chose it.
  */
-export function llmCapabilityVisionOf(config: LlmCapabilityVisionConfig): LlmCapabilityVision {
+export function resolveLlmCapabilityVision(config: LlmCapabilityVisionConfig): LlmCapabilityVision {
   const { model, source } = resolveLlmCapabilityModel(config);
   return { model, vision: config.visionByModel?.[model] === true, source };
 }
@@ -258,7 +258,7 @@ export interface ResolveLlmCapabilityOutputControlsConfig {
 export function resolveLlmCapabilityOutputControls(config: ResolveLlmCapabilityOutputControlsConfig): LlmResolvedCapabilityOutputControls {
   const { descriptor, route, tier, tiers, reasoningDefault, requestReasoning } = config;
   const tierValue = tier == null ? undefined : tiers[tier];
-  const tierConfig = tierValue == null ? undefined : llmTierConfigOf(tierValue);
+  const tierConfig = tierValue == null ? undefined : toLlmTierConfig(tierValue);
   // A host routing rule's explicit output controls slot ABOVE the descriptor's (the rule is the more specific host
   // intent) but below a per-call reasoning override; a rule without them changes nothing here.
   let maxOutputTokens: Maybe<number>;

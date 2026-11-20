@@ -9,7 +9,7 @@ import {
   type LlmDecisionStructuredLevel,
   LLM_DECISION_CHOICE_OPTIONS_MAX,
   LLM_DECISION_SCORE_LEVELS_MAX,
-  asLlmDecisionConfidenceBand,
+  toLlmDecisionConfidenceBand,
   LlmDecisionDeclarationError,
   isBlankLlmDecisionEntry,
   mapLlmDecisionChoiceRows,
@@ -117,25 +117,25 @@ describe('llmNoulQuestion()', () => {
   });
 });
 
-describe('asLlmDecisionConfidenceBand()', () => {
+describe('toLlmDecisionConfidenceBand()', () => {
   it('should read an absent confidence as low rather than throwing', () => {
     // The model is not required to report one, and "did not say" is not "sure".
-    expect(asLlmDecisionConfidenceBand(null)).toBe('low');
-    expect(asLlmDecisionConfidenceBand(undefined)).toBe('low');
+    expect(toLlmDecisionConfidenceBand(null)).toBe('low');
+    expect(toLlmDecisionConfidenceBand(undefined)).toBe('low');
   });
 
   it('should band at the documented thresholds', () => {
-    expect(asLlmDecisionConfidenceBand(0.75)).toBe('high');
-    expect(asLlmDecisionConfidenceBand(0.74)).toBe('medium');
-    expect(asLlmDecisionConfidenceBand(0.5)).toBe('medium');
-    expect(asLlmDecisionConfidenceBand(0.49)).toBe('low');
+    expect(toLlmDecisionConfidenceBand(0.75)).toBe('high');
+    expect(toLlmDecisionConfidenceBand(0.74)).toBe('medium');
+    expect(toLlmDecisionConfidenceBand(0.5)).toBe('medium');
+    expect(toLlmDecisionConfidenceBand(0.49)).toBe('low');
   });
 
   it('should read a non-finite confidence as low rather than medium', () => {
     // NaN fails every threshold comparison, so without a guard it would fall through to `medium`.
-    expect(asLlmDecisionConfidenceBand(Number.NaN)).toBe('low');
-    expect(asLlmDecisionConfidenceBand(Number.POSITIVE_INFINITY)).toBe('low');
-    expect(asLlmDecisionConfidenceBand(Number.NEGATIVE_INFINITY)).toBe('low');
+    expect(toLlmDecisionConfidenceBand(Number.NaN)).toBe('low');
+    expect(toLlmDecisionConfidenceBand(Number.POSITIVE_INFINITY)).toBe('low');
+    expect(toLlmDecisionConfidenceBand(Number.NEGATIVE_INFINITY)).toBe('low');
   });
 });
 

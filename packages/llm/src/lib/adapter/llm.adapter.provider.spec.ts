@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { type LlmProviderConfig } from '../model/config/llm.model.config.resolve';
 import { type ConfiguredFetch } from '@dereekb/util/fetch';
 import { llmStrategyKind, makeLlmStrategyRegistry } from '../strategy/llm.strategy.registry';
-import { type LlmAdapter, type LlmAdapterInput, type LlmBillAdapter, type LlmCompletionAdapter, type LlmCompletionAdapterConfig, type LlmCredentialProbeAdapter, type LlmMeteringAdapter } from './llm.adapter';
+import { type LlmAdapter, type LlmAdapterConfig, type LlmBillAdapter, type LlmCompletionAdapter, type LlmCompletionAdapterConfig, type LlmCredentialProbeAdapter, type LlmMeteringAdapter } from './llm.adapter';
 import { makeLlmAdapterRegistry } from './llm.adapter.registry';
-import { llmProviderBaseUrlOf, llmProviderMeteringOf, makeLlmProviderStrategies, makeLlmProviderStrategy, resolveLlmProviderAccount } from './llm.adapter.provider';
+import { resolveLlmProviderBaseUrl, resolveLlmProviderMetering, makeLlmProviderStrategies, makeLlmProviderStrategy, resolveLlmProviderAccount } from './llm.adapter.provider';
 
 const OPENAI_URL = 'https://api.openai.com/v1';
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1';
@@ -46,7 +46,7 @@ function fakeCompletionAdapter(kind: string, defaultBaseUrl?: string, mintId?: s
 }
 
 function fakeMeteringAdapter(kind: string, hostname: string) {
-  const received: LlmAdapterInput[] = [];
+  const received: LlmAdapterConfig[] = [];
   const adapter: LlmMeteringAdapter = {
     facet: 'metering',
     kind,
@@ -62,7 +62,7 @@ function fakeMeteringAdapter(kind: string, hostname: string) {
 }
 
 function fakeCredentialProbeAdapter(kind: string) {
-  const received: LlmAdapterInput[] = [];
+  const received: LlmAdapterConfig[] = [];
   const adapter: LlmCredentialProbeAdapter = {
     facet: 'credentialProbe',
     kind,
@@ -79,7 +79,7 @@ function fakeCredentialProbeAdapter(kind: string) {
 }
 
 function fakeBillAdapter(kind: string) {
-  const received: LlmAdapterInput[] = [];
+  const received: LlmAdapterConfig[] = [];
   const adapter: LlmBillAdapter = {
     facet: 'bill',
     kind,
@@ -122,38 +122,38 @@ const LOCAL: LlmProviderConfig = { id: 'local', transport: 'openai', baseUrl: LO
 const ROUTER: LlmProviderConfig = { id: 'openrouter', transport: 'openrouter', apiKeyEnv: 'OPENROUTER_API_KEY', apiKey: 'or-key' };
 const VOICE: LlmProviderConfig = { id: 'voice', transport: 'openai', apiKeyEnv: 'VOICE_API_KEY', apiKey: 'voice-key', metering: 'voice-vendor' };
 
-describe('llmProviderBaseUrlOf()', () => {
+describe('resolveLlmProviderBaseUrl()', () => {
   const { adapters } = standardAdapters();
 
   it("should prefer the provider's own base URL, else its transport adapter's default", () => {
-    expect(llmProviderBaseUrlOf({ provider: LOCAL, adapters })).toBe(LOCAL_URL);
-    expect(llmProviderBaseUrlOf({ provider: ROUTER, adapters })).toBe(OPENROUTER_URL);
+    expect(resolveLlmProviderBaseUrl({ provider: LOCAL, adapters })).toBe(LOCAL_URL);
+    expect(resolveLlmProviderBaseUrl({ provider: ROUTER, adapters })).toBe(OPENROUTER_URL);
   });
 
   it('should be undefined for an unregistered transport with no base URL', () => {
-    expect(llmProviderBaseUrlOf({ provider: { transport: 'vllm' }, adapters })).toBeUndefined();
+    expect(resolveLlmProviderBaseUrl({ provider: { transport: 'vllm' }, adapters })).toBeUndefined();
   });
 });
 
-describe('llmProviderMeteringOf()', () => {
+describe('resolveLlmProviderMetering()', () => {
   const { adapters } = standardAdapters();
 
   it("should let a declared metering win, 'none' included", () => {
-    expect(llmProviderMeteringOf({ provider: LOCAL, adapters })).toBe('none');
-    expect(llmProviderMeteringOf({ provider: ZENMUX, adapters })).toBe('zenmux');
+    expect(resolveLlmProviderMetering({ provider: LOCAL, adapters })).toBe('none');
+    expect(resolveLlmProviderMetering({ provider: ZENMUX, adapters })).toBe('zenmux');
   });
 
   it('should infer the metering from the effective base URL when none is declared', () => {
-    expect(llmProviderMeteringOf({ provider: ENV_DEFAULT, adapters })).toBe('zenmux');
-    expect(llmProviderMeteringOf({ provider: BARE_OPENAI, adapters })).toBe('none');
-    expect(llmProviderMeteringOf({ provider: { transport: 'openai', baseUrl: ZENMUX_URL }, adapters })).toBe('zenmux');
+    expect(resolveLlmProviderMetering({ provider: ENV_DEFAULT, adapters })).toBe('zenmux');
+    expect(resolveLlmProviderMetering({ provider: BARE_OPENAI, adapters })).toBe('none');
+    expect(resolveLlmProviderMetering({ provider: { transport: 'openai', baseUrl: ZENMUX_URL }, adapters })).toBe('zenmux');
   });
 
   it("should infer from the transport's default base URL when the provider names none", () => {
     const gateway = fakeCompletionAdapter('gateway', ZENMUX_URL);
     const { adapters: withGateway } = standardAdapters([gateway.adapter]);
 
-    expect(llmProviderMeteringOf({ provider: { transport: 'gateway' }, adapters: withGateway })).toBe('zenmux');
+    expect(resolveLlmProviderMetering({ provider: { transport: 'gateway' }, adapters: withGateway })).toBe('zenmux');
   });
 
   it('should let the first registered metering adapter that claims the URL win', () => {
@@ -161,7 +161,7 @@ describe('llmProviderMeteringOf()', () => {
     const second = fakeMeteringAdapter('second-account', 'zenmux.ai');
     const twoClaimants = makeLlmAdapterRegistry([fakeCompletionAdapter('openai', OPENAI_URL).adapter, first.adapter, second.adapter]);
 
-    expect(llmProviderMeteringOf({ provider: ENV_DEFAULT, adapters: twoClaimants })).toBe('first-account');
+    expect(resolveLlmProviderMetering({ provider: ENV_DEFAULT, adapters: twoClaimants })).toBe('first-account');
   });
 });
 

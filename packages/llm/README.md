@@ -77,12 +77,12 @@ so several instances of one transport can be registered side by side. Those two,
 - **Quota gate.** `evaluateLlmQuotaGate({ report })` refuses only when a measured window is above the ceiling (90% by
   default) and fails open whenever nothing is measured. A window's `unit` is an `LlmQuotaUnit`: one of the library's
   own (`flow`, `request`, `token`, `usd`) or a host's own string for a provider it meters itself.
-- **Usage and bills.** `llmUsageFrom(raw, { costBasis })` folds a provider usage block: token counts default to `0`,
+- **Usage and bills.** `toLlmUsage(raw, { costBasis })` folds a provider usage block: token counts default to `0`,
   every other field is omitted when not reported (absent is not zero), and numeric-string costs are parsed. An
   `LlmCallBillReader` reads what a call billed, later, by its generation id; `reconcileLlmCallBills` folds those reads
   against the logged cost (see [Readers, ledger and reconcile](#readers-ledger-and-reconcile)).
 - **Prompt segments.** An `LlmPromptSegment` carries its exact bytes (trailing separator included) and an open
-  `origin`. `joinLlmPromptSegments` builds the sent string, `llmPromptCacheSegmentsOf` splits it for provider caching
+  `origin`. `joinLlmPromptSegments` builds the sent string, `splitLlmPromptCacheSegments` splits it for provider caching
   (the prefix is everything before the first volatile segment), `llmPromptSegmentSpans` derives highlight spans, and
   `isLlmPromptSegment` / `isLlmPromptSegmentArray` guard persisted payloads.
 
@@ -114,7 +114,7 @@ What a dispatcher records about each call, and the seams a host observes it thro
 - **Errors.** `isLlmAbortError` (a client deadline or cancel; test it first, since a connection timeout is also
   transient by class), `classifyLlmError` (`transient | permanent | unknown`, through `@dereekb/util/fetch`'s
   `classifyFetchError` with `LLM_ERROR_CLASSIFICATION_CONFIG`, the `openai` SDK's class sets),
-  `isRetryableLlmErrorClassification` (the one resend rule both lanes apply), `llmErrorSummaryOf` (one bounded log line
+  `isRetryableLlmErrorClassification` (the one resend rule both lanes apply), `formatLlmErrorSummary` (one bounded log line
   naming what was thrown) and `LlmDispatchFaultError` / `isLlmDispatchFaultError` (the structured rejection of a send
   error the policy does not resend). The generic predicates (`isFetchAbortError`, `isFetchNetworkError`,
   `classifyFetchError`) live in `@dereekb/util/fetch`.
@@ -159,13 +159,13 @@ const profile = context.profile(); // nested spans, marks, breadcrumbs and swall
 ```
 
 ```ts
-import { classifyLlmError, llmErrorSummaryOf } from '@dereekb/llm';
+import { classifyLlmError, formatLlmErrorSummary } from '@dereekb/llm';
 
 try {
   return await strategy.complete(request);
 } catch (error) {
   if (classifyLlmError(error) === 'transient') {
-    logger.info(`resending: ${llmErrorSummaryOf(error)}`);
+    logger.info(`resending: ${formatLlmErrorSummary(error)}`);
   }
 
   throw error;
@@ -199,25 +199,25 @@ What a host persists for each call, the readers that read it back, and the math 
     (`attempts 2 retried · #1 schema-validation: … → reasoning-low`, with ` (<repliesPointer>)` appended when given),
     or `undefined` for a clean call and for any other event.
   - `isDecisionLlmCallRow(payload, kinds)` marks a decision-lane row: its lane (`strategyKind`, else `strategyId`) is
-    in `kinds`, or it carries a `decision` id. Build `kinds` once with `llmDecisionStrategyKinds(adapters)`; rows this
+    in `kinds`, or it carries a `decision` id. Build `kinds` once with `readLlmDecisionStrategyKinds(adapters)`; rows this
     library's dispatcher wrote always carry `decision`, so `kinds` only matters for older rows.
 - **Usage cells.** `LlmUsageCell` (calls, prompt / completion / cached / reasoning tokens, cost, and
-  `uncacheablePromptTokens` when above zero), with `llmUsageCellOf(usage, uncacheable)`, `addLlmUsageCells`,
-  `accumulateLlmUsageCell(map, key, cell)` and `llmKeyedUsageCellsOf(map)` (sorted by key). Cells are plain JSON: a
+  `uncacheablePromptTokens` when above zero), with `toLlmUsageCell(usage, uncacheable)`, `addLlmUsageCells`,
+  `accumulateLlmUsageCell(map, key, cell)` and `toLlmKeyedUsageCells(map)` (sorted by key). Cells are plain JSON: a
   cell persisted before a field existed adds as `0`, never `NaN`, and a re-fold of persisted cells is byte-stable.
 - **Cost honesty.** `formatLlmUsageCost({ cost, calls, partial, listed })` renders `n/a` when no call priced itself,
   `>=$x` when some call did not (a lower bound), `<=$x` for list prices (an upper bound on the bill), `~$x` when both
-  hold, and `$x` otherwise. A zero-call row is an exact `$0`. `llmUsageCostMarkerOf` takes custom spellings (`≥`,
-  `≤`), and `llmUsageCostFlagsOf` maps a fold's `costPartial` / `costListed` flags onto a read.
-- **Rates.** `llmCacheHitRateOf` (cached over CACHEABLE prompt tokens, so decision-lane calls, which have no prompt
-  cache, do not dilute it), `llmReasoningShareOf`, `isUncacheableLlmCall(payload, kinds)` (a `decision` id, or a
-  `strategyKind` in `kinds` — no `strategyId` fallback, unlike `isDecisionLlmCallRow`), `llmCapabilityCacheRowsOf`,
+  hold, and `$x` otherwise. A zero-call row is an exact `$0`. `resolveLlmUsageCostMarker` takes custom spellings (`≥`,
+  `≤`), and `readLlmUsageCostFlags` maps a fold's `costPartial` / `costListed` flags onto a read.
+- **Rates.** `computeLlmCacheHitRate` (cached over CACHEABLE prompt tokens, so decision-lane calls, which have no prompt
+  cache, do not dilute it), `computeLlmReasoningShare`, `isUncacheableLlmCall(payload, kinds)` (a `decision` id, or a
+  `strategyKind` in `kinds` — no `strategyId` fallback, unlike `isDecisionLlmCallRow`), `toLlmCapabilityCacheRows`,
   `renderLlmCacheHitLine({ cell, cachePartial, reasoningPartial })` and `formatLlmUsageRate`. `undefined` means
   "nothing to divide by", never 0%.
 - **Bill reconcile.** `reconcileLlmCallBills({ calls, reader, concurrency?, signal? })` reads each call's bill through
-  any `LlmCallBillReader` (e.g. `/zenmux`'s `makeZenmuxGenerationBillReader`) and folds billed against logged cost per
+  any `LlmCallBillReader` (e.g. `/zenmux`'s `makeLlmZenmuxGenerationBillReader`) and folds billed against logged cost per
   model. Pending and failed reads are counted and kept as details, never folded as zero; once `signal` aborts, no new
-  read starts and each unread call is pending. `llmBilledShareOf` gives billed / logged, and
+  read starts and each unread call is pending. `computeLlmBilledShare` gives billed / logged, and
   `renderLlmBillReconciliationMarkdown(reconciliation, sessionId)` renders the result.
 
 ```ts
@@ -227,9 +227,9 @@ import {
   emptyLlmUsageCell,
   formatLlmUsageCost,
   isUncacheableLlmCall,
-  llmDecisionStrategyKinds,
-  llmKeyedUsageCellsOf,
-  llmUsageCellOf,
+  readLlmDecisionStrategyKinds,
+  toLlmKeyedUsageCells,
+  toLlmUsageCell,
   reconcileLlmCallBills,
   renderLlmBillReconciliationMarkdown,
   renderLlmCacheHitLine,
@@ -239,19 +239,19 @@ import {
 
 declare const rows: ReadonlyArray<LlmCallLogPayload>; // read back from the host's log
 
-const decisionKinds = llmDecisionStrategyKinds(adapters);
+const decisionKinds = readLlmDecisionStrategyKinds(adapters);
 const byModel = new Map<string, LlmUsageCell>();
 let total = emptyLlmUsageCell();
 let costPartial = false;
 
 for (const row of rows) {
-  const cell = llmUsageCellOf(row.usage, isUncacheableLlmCall(row, decisionKinds));
+  const cell = toLlmUsageCell(row.usage, isUncacheableLlmCall(row, decisionKinds));
   total = addLlmUsageCells(total, cell);
   accumulateLlmUsageCell(byModel, row.model ?? '(unknown model)', cell);
   costPartial ||= row.usage?.cost == null;
 }
 
-for (const { key, cell } of llmKeyedUsageCellsOf(byModel)) {
+for (const { key, cell } of toLlmKeyedUsageCells(byModel)) {
   console.log(`${key}: ${cell.calls} call(s) ${formatLlmUsageCost({ cost: cell.cost, calls: cell.calls, partial: costPartial })}`);
 }
 
@@ -272,7 +272,7 @@ environment variable and no file: `/node` does that, and a browser host passes t
   `resolveLlmModelTiers({ base, modelTiers, defaultTier })` merges the host's declaration over its own base map and
   fails loud when the default tier is missing; `resolveLlmModelTier` fails loud on an unknown key. Every reader names
   the default tier through `resolveLlmDefaultModelTierKey` (trimmed; blank or unset ⇒ `fast`). A tier value is a slug
-  or `{ model, maxOutputTokens?, reasoning? }` — read it with `llmTierModelOf` / `llmTierConfigOf`. The library ships
+  or `{ model, maxOutputTokens?, reasoning? }` — read it with `readLlmTierModel` / `toLlmTierConfig`. The library ships
   no slugs.
 - **Tier values are strict.** `parseLlmModelTierValue` / `parseLlmModelTierMap` (and the env tier reader) reject a
   blank or untrimmed slug and a token cap (`maxOutputTokens`, `reasoning.maxTokens`) that is not a positive integer,
@@ -314,7 +314,7 @@ environment variable and no file: `/node` does that, and a browser host passes t
   `resolveLlmProviderConfigs({ providers, apiKeyOf })` turns the declared completion providers into
   `LlmProviderConfig`s that carry the key value, and lists the declared providers whose key is missing.
 - **Wire vocabulary.** `LLM_REASONING_OFF_ENCODINGS` (how an OpenAI-compatible wire says "reasoning off":
-  `effort-none`, `effort-minimal`, `nested-disabled`, `omit`), `llmReasoningOffEncodingFor` (the slug's own, then the
+  `effort-none`, `effort-minimal`, `nested-disabled`, `omit`), `resolveLlmReasoningOffEncoding` (the slug's own, then the
   fallback, then `effort-none`), `LLM_TOKEN_LIMIT_PARAMS`, and the per-slug `LlmModelReasoningOffMap` /
   `LlmModelVisionMap` the transports read. `normalizeLlmReasoningConfig` applies the one OFF rule: an explicit
   `enabled: false` drops every other knob (`effort`, `maxTokens`, `exclude`) before any transport maps the config.
@@ -366,7 +366,7 @@ explains the choice read the same answer.
   (usually `LLM_REASONING_OFF`, `{ enabled: false }`).
 - **Provider.** `resolveLlmCapabilityProvider({ route, model, bindings, defaultProvider })`: the route's provider (a
   host policy) > the slug's binding (`llmModelProviderBindings`, an entitlement) > your default.
-- **Vision.** `llmCapabilityVisionOf({ …, visionByModel })` — the slug a capability bills and whether it accepts images.
+- **Vision.** `resolveLlmCapabilityVision({ …, visionByModel })` — the slug a capability bills and whether it accepts images.
 
 ```ts
 import { compileLlmModelRouting, llmModelProviderBindings, parseLlmModelRoutingConfig, resolveLlmCapabilityModel, resolveLlmCapabilityProvider, resolveLlmModelTiers } from '@dereekb/llm';
@@ -391,8 +391,8 @@ a provider naming one you did not register fails loud, listing the ones you did.
   `LlmProviderStatusSource`, plus the account's cost basis), `bill` (an `LlmCallBillReader`) and `credentialProbe` (an
   `LlmCredentialProbe` that replaces a transport's generic key check).
 - **Registry.** `makeLlmAdapterRegistry(adapters)`; a second adapter for the same facet and kind throws. Read it with
-  `llmAdapterOf`, `resolveLlmAdapter` (throws naming the registered kinds), `llmAdaptersOf` and `llmAdapterKindsOf`.
-  `llmModelConfigListsOf(adapters)` gives `makeLlmModelConfigSchema` its `transports`, `meterings` and
+  `findLlmAdapter`, `resolveLlmAdapter` (throws naming the registered kinds), `filterLlmAdaptersByFacet` and `readLlmAdapterKinds`.
+  `readLlmModelConfigLists(adapters)` gives `makeLlmModelConfigSchema` its `transports`, `meterings` and
   `decisionRoutes`.
 - **Strategies.** `makeLlmProviderStrategies({ providers, adapters, defaultModel, maxOutputTokens, timeoutMs,
   visionByModel, reasoningOffByModel })` builds one strategy per resolved provider (`resolveLlmProviderConfigs`),
@@ -400,20 +400,20 @@ a provider naming one you did not register fails loud, listing the ones you did.
   `checkLlmAdapterStrategy` (the provider's own id; a decision strategy's declared `strategyKind`).
 - **Accounts.** `resolveLlmProviderAccount({ provider, adapters })` decides which account a provider bills — its
   declared `metering`, else the metering adapter that recognizes its base URL, else `none` — and every account fact
-  follows that one answer: cost basis, status source (`providerStatusSource`), credential probe and bill reader. `llmProviderBaseUrlOf` and
-  `llmProviderMeteringOf` answer the parts for a report.
-- **Decisions.** `llmProviderDecisionRouteOf` reads a provider's declared `decision`, else the route a decision adapter
+  follows that one answer: cost basis, status source (`providerStatusSource`), credential probe and bill reader. `resolveLlmProviderBaseUrl` and
+  `resolveLlmProviderMetering` answer the parts for a report.
+- **Decisions.** `resolveLlmProviderDecisionRoute` reads a provider's declared `decision`, else the route a decision adapter
   serves for its transport, else `none` — never its base URL. `llmDecisionCapableProviders({ providers, adapters,
   routePreference })` keeps the routed, keyed providers in your route order (default: registration order), then
   provider order; the first is the lane's default. `makeLlmDecisionStrategies(…)` builds the decision registry (empty
-  when nothing can serve), `llmDecisionStrategyKinds(adapters)` tells a decision call record from a completion one, and
+  when nothing can serve), `readLlmDecisionStrategyKinds(adapters)` tells a decision call record from a completion one, and
   `llmDecisionModelIssue(model)` refuses a completion slug before any call is made.
 
 ```ts
-import { llmModelConfigListsOf, makeLlmAdapterRegistry, makeLlmDecisionStrategies, makeLlmModelConfigSchema, makeLlmProviderStrategies, makeLlmStrategyRegistry, resolveLlmProviderConfigs } from '@dereekb/llm';
+import { readLlmModelConfigLists, makeLlmAdapterRegistry, makeLlmDecisionStrategies, makeLlmModelConfigSchema, makeLlmProviderStrategies, makeLlmStrategyRegistry, resolveLlmProviderConfigs } from '@dereekb/llm';
 
 const adapters = makeLlmAdapterRegistry(PROVIDER_ADAPTERS); // the adapters your provider entries export
-const schema = makeLlmModelConfigSchema({ ...llmModelConfigListsOf(adapters), label: 'my-app models' });
+const schema = makeLlmModelConfigSchema({ ...readLlmModelConfigLists(adapters), label: 'my-app models' });
 const { providers } = resolveLlmProviderConfigs({ providers: effective.providers, apiKeyOf: ({ entry }) => keys[entry.apiKeyEnv] });
 
 const strategies = makeLlmStrategyRegistry(makeLlmProviderStrategies({ providers, adapters, defaultModel, timeoutMs: 60_000 }));
@@ -441,7 +441,7 @@ scopes, prompt handles and chains, a live-context token budget, a cache-prefix w
   from `@dereekb/util`).
   Reading, repair, schema projection and the critique policy have their own section, Replies.
 - **Layout.** `LlmPromptLayout` is an ordered array of slots `{ id, role, occupancy, separator, lastSeparator? }`. The
-  array is the prompt order; a role only says what fills a slot. `makeLlmPromptLayout` validates one, and
+  array is the prompt order; a role only says what fills a slot. `defineLlmPromptLayout` validates one, and
   `DEFAULT_LLM_PROMPT_LAYOUT` names every slot after its role. The dispatcher's `correction` and `follow-up` roles are
   declared like any other: the slot names the segment id, and its `lastSeparator ?? separator` is appended after the
   piece (`''` in the default layout). `findLlmPromptSlotByRole` and `readLlmPromptSlotSeparator` read a layout the same
@@ -450,7 +450,7 @@ scopes, prompt handles and chains, a live-context token budget, a cache-prefix w
   offers contributions for the slots it declares. `resolveLlmPromptContributions` runs contributors in registry order;
   `assertLlmPromptContributionOccupancy` fails loud on an undeclared slot, an assembly-owned slot or a second
   contribution to a single slot; `mergeLlmLiveContextContributions` places live-slot contributions among the
-  capability's blocks at their anchors; `llmPromptSupplementsOf` builds a call record's `supplements` rows.
+  capability's blocks at their anchors; `toLlmPromptSupplements` builds a call record's `supplements` rows.
 - **Live context.** `LlmLiveContextBlock`s are keyed sections (`llmLiveContextBlock`, rows blocks, fact rows).
   `orderLlmLiveContextBlocks` sorts by a sparse rank table with a key tiebreak, so any input order sends the same
   bytes. The tiebreak compares keys by UTF-16 code unit (`@dereekb/util` `compareStringsByCodeUnit`), never the host's
@@ -458,7 +458,7 @@ scopes, prompt handles and chains, a live-context token budget, a cache-prefix w
   reconciliation order by code unit too. `llmChainedFollowUpBody` re-sends only what changed since the thread's last turn.
 - **Templates.** An `LlmPromptTemplateResolver` returns a dispatch's templates per role (`reply-protocol`,
   `instructions`, `context`, the last split at `{{liveContext}}`) with their `source`, plus a by-key lookup for
-  contributors. `tieredLlmPromptTemplateResolver` is the library's: tiers lowest first, the last definition of a key
+  contributors. `makeLlmTieredPromptTemplateResolver` is the library's: tiers lowest first, the last definition of a key
   wins, a capability-scoped template beats a shared one. A host with another cascade supplies its own resolver.
 - **Assembly.** `composeLlmCapabilityPrompt` is the one prompt pipeline: it renders the request's live context, looks
   the descriptor up through the injected `descriptorOf`, awaits the template resolver once, resolves the contributors in
@@ -493,25 +493,25 @@ scopes, prompt handles and chains, a live-context token budget, a cache-prefix w
 - **Budget.** `estimateLlmTokens` is `ceil(length / 4)`; `estimateLlmRequestPromptTokens` estimates a whole request
   (prompt, replayed thread, response schema). `budgetLlmLiveContextBlocks` keeps a live context under a token budget
   (default 12,000, less `reservedPrefixTokens`) by shrinking, then dropping, the lowest-priority blocks — never a
-  `required` one, and never blocking a send. `llmBudgetTrimSummaryOf` folds the trim report for a host's log.
+  `required` one, and never blocking a send. `toLlmBudgetTrimSummary` folds the trim report for a host's log.
 - **Cache watch.** `makeLlmPromptCachePrefixWatch()` hashes each dispatch's cacheable prefix (16 hex chars of SHA-256)
   and compares it with the previous dispatch of the same capability and partition, naming the first segment — and its
   key — that moved, or the first one appended. It keeps digests, never prompt bytes.
-- **Library contributors.** `llmModelAddendumPromptContributor({ promptAddendumByModel })` places the resolved model's
+- **Library contributors.** `makeLlmModelAddendumPromptContributor({ promptAddendumByModel })` places the resolved model's
   `promptAddendum` (from `llmModelPromptAddenda(config)`) in the `model-addendum` slot; `llmModelAddendumSegment` mints
   the same segment, and `restampLlmModelAddendum` swaps a captured prompt's addendum for another model's, placing it
   where the layout puts the addendum slot (before the first captured segment whose slot comes later, else last).
-  `llmAnchoredBlockPromptContributor({ id, reason, blockOf })` places one block a scope supplied among the capability's
+  `makeLlmAnchoredBlockPromptContributor({ id, reason, blockOf })` places one block a scope supplied among the capability's
   live blocks, at its anchor. The craft contributor has its own section, [Craft notes](#craft-notes).
 
 A layout with a host frame slot, one contributor that fills it, and a live-slot contribution anchored among the
 capability's blocks:
 
 ```ts
-import { assertLlmPromptContributionOccupancy, type LlmPromptContributor, llmLiveContextBlock, llmLiveContextHeadingBlock, makeLlmPromptLayout, mergeLlmLiveContextContributions, resolveLlmPromptContributions } from '@dereekb/llm';
+import { assertLlmPromptContributionOccupancy, type LlmPromptContributor, llmLiveContextBlock, llmLiveContextHeadingBlock, defineLlmPromptLayout, mergeLlmLiveContextContributions, resolveLlmPromptContributions } from '@dereekb/llm';
 import { filterMaybeArrayValues } from '@dereekb/util';
 
-const layout = makeLlmPromptLayout([
+const layout = defineLlmPromptLayout([
   { id: 'brand-voice', role: 'frame', occupancy: 'single', separator: '\n\n' },
   { id: 'instructions', role: 'instructions', occupancy: 'single', separator: '\n\n' },
   { id: 'live', role: 'live', occupancy: 'many', separator: '\n\n', lastSeparator: '' }
@@ -538,9 +538,9 @@ const live = mergeLlmLiveContextContributions({ blocks, contributions, slot: 'li
 The library's tiered template resolver over a `defaults` and an `app` tier:
 
 ```ts
-import { tieredLlmPromptTemplateResolver } from '@dereekb/llm';
+import { makeLlmTieredPromptTemplateResolver } from '@dereekb/llm';
 
-const templateResolver = tieredLlmPromptTemplateResolver({
+const templateResolver = makeLlmTieredPromptTemplateResolver({
   tiers: [
     { source: 'defaults', templates: [{ key: 'instructions', role: 'instructions', text: 'Summarize the input.' }] },
     { source: 'app', templates: [{ key: 'summarize-instructions', role: 'instructions', capability: 'summarize', text: 'Summarize in two sentences.' }] }
@@ -555,9 +555,9 @@ A three-capability host composing a prompt: a `brand-voice` frame before the def
 a `descriptorOf` over a `Map`, and the `brandVoice` contributor from the first example:
 
 ```ts
-import { composeLlmCapabilityPrompt, DEFAULT_LLM_PROMPT_LAYOUT, type LlmCapabilityDescriptor, makeLlmPromptLayout } from '@dereekb/llm';
+import { composeLlmCapabilityPrompt, DEFAULT_LLM_PROMPT_LAYOUT, type LlmCapabilityDescriptor, defineLlmPromptLayout } from '@dereekb/llm';
 
-const layout = makeLlmPromptLayout([{ id: 'brand-voice', role: 'frame', occupancy: 'single', separator: '\n\n' }, ...DEFAULT_LLM_PROMPT_LAYOUT]);
+const layout = defineLlmPromptLayout([{ id: 'brand-voice', role: 'frame', occupancy: 'single', separator: '\n\n' }, ...DEFAULT_LLM_PROMPT_LAYOUT]);
 const descriptors = new Map<string, LlmCapabilityDescriptor>([
   ['summarize', summarizeDescriptor],
   ['classify', classifyDescriptor],
@@ -593,7 +593,7 @@ renderLlmOutputContract({ schema: { type: 'object', properties: { summary: { typ
 A run scoped to a glossary, with an anchored contributor that places it and a chain over the run's items:
 
 ```ts
-import { type LlmAnchoredBlock, llmAnchoredBlockPromptContributor, type LlmDispatchRequest, type LlmPromptSite, makeLlmPromptChain, withLlmPromptSite } from '@dereekb/llm';
+import { type LlmAnchoredBlock, makeLlmAnchoredBlockPromptContributor, type LlmDispatchRequest, type LlmPromptSite, makeLlmPromptChain, withLlmPromptSite } from '@dereekb/llm';
 
 interface RunSupply {
   readonly glossary?: LlmAnchoredBlock;
@@ -604,7 +604,7 @@ interface RunRequest extends LlmDispatchRequest {
 }
 
 // Registered with the dispatcher's contributors.
-const glossary = llmAnchoredBlockPromptContributor<RunRequest>({ id: 'glossary', reason: 'the run supplied a glossary', blockOf: ({ request }) => request.site?.supply?.glossary });
+const glossary = makeLlmAnchoredBlockPromptContributor<RunRequest>({ id: 'glossary', reason: 'the run supplied a glossary', blockOf: ({ request }) => request.site?.supply?.glossary });
 
 const scoped = withLlmPromptSite<RunRequest>({ dispatcher, site: { supply: { glossary: { text: 'Glossary: SKU = stock-keeping unit.', anchor: { after: 'heading' }, volatile: false } } } });
 const chain = makeLlmPromptChain<RunRequest>();
@@ -657,7 +657,7 @@ are matched against the request's site, are optionally judged by one decision ca
   asked note (its `ask` verbatim). Its state is only the named inputs, clipped. It makes at most one call per dispatch,
   and a fault or an unavailable lane answers nothing (each note takes its `unserved` posture). The call record is
   stamped `{ craft: { asked, kept } }` under decision `CraftNoteSelect`.
-- **Contributor.** `llmCraftPromptContributor({ sites, tiers, guard, headings, slot, enabled })` gives each group one
+- **Contributor.** `makeLlmCraftPromptContributor({ sites, tiers, guard, headings, slot, enabled })` gives each group one
   heading, puts the stable group on the cache prefix and the judged group after it as volatile, and records every cut
   on the call's `supplements`. A per-request tier that fails to parse logs one `craft-note-invalid` breadcrumb per file.
 
@@ -679,7 +679,7 @@ Name the fabric and the cut first. Never describe a logo the brief did not ask f
 The registry, the tiers and a judged site:
 
 ```ts
-import { llmCraftPromptContributor, makeLlmCraftJudge, makeLlmCraftNoteRowReader, makeLlmCraftSiteRegistry } from '@dereekb/llm';
+import { makeLlmCraftPromptContributor, makeLlmCraftJudge, makeLlmCraftNoteRowReader, makeLlmCraftSiteRegistry } from '@dereekb/llm';
 
 const sites = makeLlmCraftSiteRegistry({
   sites: {
@@ -689,7 +689,7 @@ const sites = makeLlmCraftSiteRegistry({
 });
 const readRows = makeLlmCraftNoteRowReader({ tier: 'workspace', sites });
 
-const craft = llmCraftPromptContributor<ShopRequest, ShopDescriptor>({
+const craft = makeLlmCraftPromptContributor<ShopRequest, ShopDescriptor>({
   sites,
   tiers: [BUILTIN_CRAFT_NOTES, machine.notes, ({ request }) => readRows(request.craftRows)],
   guard: ({ descriptor }) => descriptor?.traits?.customerFacing === true
@@ -708,7 +708,7 @@ descriptor also carries the two schema projections the request and the prompt re
   `json-envelope`: `LlmReplyEnvelopeKeys` (default `lever` / `answerable` / `rationale`); `answerable: false` declines,
   a hedged decline keeps its lever, and a bare object reads as the lever. `line`: `llmLineReplyLeverOf` lifts the bare
   line into `{ line }`. `readLlmReplyLever` classifies `lever` / `declined` / `no-json` / `parse-error`; `llmReplyLeverOf`
-  is the thin wrapper and `llmReplyRationaleOf` reads the rationale. The slicer is `@dereekb/util`
+  is the thin wrapper and `readLlmReplyRationale` reads the rationale. The slicer is `@dereekb/util`
   `readJsonObjectFromText`: it tries the greedy `{…}` slice, then each balanced top-level object, and never invents a
   brace. An envelope host passes `llmReplyEnvelopeContractIntro(keys)` as its contract intro.
 - **Repair.** `repairLlmReplyJson` / `scoreLlmReplyJson` walk a reply once and give one of four verdicts: `near-miss`
@@ -745,10 +745,10 @@ descriptor also carries the two schema projections the request and the prompt re
   a tool's input schema, call `toStrictJsonSchema` directly.
 - **Critique.** `compileLlmCritiquePolicy` (built on `compileLlmCapabilityRules`, with the judge excluded) is
   fail-loud (unknown capability or tag, no target, or the judge itself);
-  a key match beats a tag match, and the first match wins. `llmCriticFor` gives `{}` unless a rule matches, so off is
+  a key match beats a tag match, and the first match wins. `resolveLlmCritiqueFields` gives `{}` unless a rule matches, so off is
   free. `makeLlmSemanticCritic` fails open with `critique-unusable` / `critique-error` breadcrumbs. `composeLlmCritics`
   runs critics in order and stops at the first rejection. The judge sees the goal, optional evidence, the subject's live
-  context and the reply (both fenced as data), never the subject's instructions. `LlmCritiqueInput.signal` carries the
+  context and the reply (both fenced as data), never the subject's instructions. `LlmCritiqueParams.signal` carries the
   subject's cancellation signal, and the semantic critic puts it on the judge request. A critiqued capability costs
   `1 + attempts` calls. Three recursion guards: the judge request carries no critic, the compile refuses the judge, and
   the dispatcher clamps `maxAttempts >= 1`.
@@ -760,7 +760,7 @@ descriptor also carries the two schema projections the request and the prompt re
   `llm/critique-reply.judge`, all in `LLM_SWALLOW_SITES`.
 
 ```ts
-import { compileLlmCritiquePolicy, defineLlmCapability, LLM_CRITIQUE_REPLY_DESCRIPTOR, LLM_CRITIQUE_REPLY_TEMPLATE, LLM_REPAIR_REPLY_JSON_DESCRIPTOR, LLM_REPAIR_REPLY_JSON_TEMPLATE, llmCriticFor, llmReplyLeverOf, llmSchemaLeverValidator, type LlmCritiqueBinding } from '@dereekb/llm';
+import { compileLlmCritiquePolicy, defineLlmCapability, LLM_CRITIQUE_REPLY_DESCRIPTOR, LLM_CRITIQUE_REPLY_TEMPLATE, LLM_REPAIR_REPLY_JSON_DESCRIPTOR, LLM_REPAIR_REPLY_JSON_TEMPLATE, resolveLlmCritiqueFields, llmReplyLeverOf, llmSchemaLeverValidator, type LlmCritiqueBinding } from '@dereekb/llm';
 import { type } from 'arktype';
 
 const summarySchema = type({ summary: type('string').describe('two sentences, plain words') });
@@ -781,7 +781,7 @@ const result = await dispatcher.dispatch({
   capability: 'summarize',
   renderLiveContext,
   validate: llmSchemaLeverValidator(summarySchema),
-  ...llmCriticFor({ binding, capability: 'summarize', goal })
+  ...resolveLlmCritiqueFields({ binding, capability: 'summarize', goal })
 });
 const lever = llmReplyLeverOf(result.text);
 ```
@@ -844,12 +844,12 @@ correction / backoff vocabulary with its constants.
   and forwarded to the strategy; either one aborting counts as a cancellation. A cancelled dispatch sends no further
   attempt: every retry decision reads cancellation like a spent budget, and a cancel during a transport backoff or a
   park ends the loop before the resend (the last row keeps the `willRetry: true` it was judged with).
-- **Fakes.** `llmDispatcherFromDispatch(fn)` wraps a bare dispatch function as a dispatcher whose prompts run through it.
+- **Fakes.** `makeLlmDispatcherFromDispatch(fn)` wraps a bare dispatch function as a dispatcher whose prompts run through it.
 - **Retry and lanes.** The bounded retry ladder, the fast-fix and critique lanes and the decision lane are described in
   the next section.
 
 ```ts
-import { DEFAULT_LLM_MAX_OUTPUT_TOKENS, llmSchemaLeverValidator, makeLlmDispatcher, makeLlmStrategyRegistry, tieredLlmPromptTemplateResolver } from '@dereekb/llm';
+import { DEFAULT_LLM_MAX_OUTPUT_TOKENS, llmSchemaLeverValidator, makeLlmDispatcher, makeLlmStrategyRegistry, makeLlmTieredPromptTemplateResolver } from '@dereekb/llm';
 
 const dispatcher = makeLlmDispatcher({
   strategies: makeLlmStrategyRegistry([strategy]),
@@ -857,7 +857,7 @@ const dispatcher = makeLlmDispatcher({
   defaultMaxOutputTokens: DEFAULT_LLM_MAX_OUTPUT_TOKENS,
   modelTiers: { fast: 'acme/fast', strong: 'acme/strong' },
   descriptorOf: (capability) => DESCRIPTORS[capability],
-  templateResolver: tieredLlmPromptTemplateResolver({ tiers: [{ source: 'app', templates }] }),
+  templateResolver: makeLlmTieredPromptTemplateResolver({ tiers: [{ source: 'app', templates }] }),
   recorder: { recordCall: (record) => log.write(record) }
 });
 
@@ -927,7 +927,7 @@ one retry lever, and a mangled JSON reply gets one cheap fast fix before any re-
     counts every send. A decision cancelled during the backoff, or while parked before the resend, is not resent.
 
 ```ts
-import { llmCriticFor, llmSchemaLeverValidator, makeLlmDispatcher, makeLlmReplyFastFixer, makeLlmStrategyRegistry } from '@dereekb/llm';
+import { resolveLlmCritiqueFields, llmSchemaLeverValidator, makeLlmDispatcher, makeLlmReplyFastFixer, makeLlmStrategyRegistry } from '@dereekb/llm';
 
 const dispatcher = makeLlmDispatcher({
   ...config, // strategies, tiers, descriptors and templates as above
@@ -941,7 +941,7 @@ const result = await dispatcher.dispatch({
   renderLiveContext,
   maxAttempts: 3,
   validate: llmSchemaLeverValidator(summarySchema),
-  ...llmCriticFor({ binding, capability: 'summarize', goal })
+  ...resolveLlmCritiqueFields({ binding, capability: 'summarize', goal })
 });
 
 const routed = await dispatcher.decide?.({ capability: 'route-ticket', decision: ROUTE_TICKET, input: { ticket } });
@@ -1001,8 +1001,8 @@ could need in one map.
   `type` is never overwritten).
 - `requireLlmDecisionAnswers(config)` is the throwing read: the answers, or `LlmDecisionAnswerFaultError` with every
   fault. The System One transport and the scripted decision strategy both call it.
-- `asLlmDecisionConfidenceBand`, `llmDecisionChoiceRanking`, `mapLlmDecisionChoiceRows` and
-  `llmChoiceCertaintyOf` (sure / nested / split / diffuse / unread, with site-owned floors) read a Choice's answer.
+- `toLlmDecisionConfidenceBand`, `llmDecisionChoiceRanking`, `mapLlmDecisionChoiceRows` and
+  `readLlmChoiceCertainty` (sure / nested / split / diffuse / unread, with site-owned floors) read a Choice's answer.
 
 ### Strategies
 
@@ -1011,6 +1011,8 @@ could need in one map.
   `model`, `answers`, `usage`, `provider`, `generationId`). It throws rather than returning partial answers. Its
   `healthCheck` / `credentialProbe` are the base's, reporting `LlmStrategyHealth`. `LlmDecideOptions` extends
   `LlmCompleteOptions` (`signal`) with `timeoutMs`.
+- Decision strategy kinds follow `<route>-systemone` (`'openrouter-systemone'`, `'zenmux-systemone'`): both stock
+  transports speak System One, and the kind stays distinct from the route's completion kind (`'openrouter'`).
 - A decision registry is `makeLlmStrategyRegistry(seed)` over decision strategies (an `LlmDecisionStrategyRegistry`);
   a kind's instances are `values().filter((s) => llmStrategyKind(s) === kind)` (`.at(-1)` the LAST registered),
   `values()[0]` the first.
@@ -1027,7 +1029,7 @@ could need in one map.
   `POST {baseUrl}/systemone` for every gateway that serves the route. The hooks define the gateway: `kind`, `label`,
   `defaultBaseUrl`, `generationIdHeader` (read when the body has no `id`), `costBasis`, `laxAnswerTypes` and
   `credentialProbe`. The config is the host's: `id`, `apiKey`, `apiKeyEnv` (a label for messages), `baseUrl`,
-  `timeoutMs`, `decisionFetch` and `probeFetch` (both `ConfiguredFetch`). `llmSystemOneDecisionStrategyConfigOf` is the
+  `timeoutMs`, `decisionFetch` and `probeFetch` (both `ConfiguredFetch`). `toLlmSystemOneDecisionStrategyConfig` is the
   shared decision-adapter mapping (`id`, `apiKey`, `baseUrl`, `timeoutMs`, `fetch` → `probeFetch`); a gateway adds its
   own keys on top.
   - Failures: a timeout or abort rejects with the signal's reason (never wrapped); a socket failure is an
@@ -1103,14 +1105,14 @@ vLLM — over the optional `openai` peer.
 - A request with `responseSchemaHint` sends a strict `json_schema` `response_format` named by the capability.
 - Reasoning rides the flat `reasoning_effort`. An explicit OFF (`reasoning.enabled === false`) is encoded per
   `reasoningOffEncoding` / `reasoningOffByModel` rather than dropped; `LLM_OPENAI_REASONING_OFF_PARAMS` shows each wire
-  shape (`llmOpenAiReasoningParamsOf` builds it).
+  shape (`toLlmOpenAiReasoningParams` builds it).
 - The cap rides under `tokenLimitParam` (`max_tokens` or `max_completion_tokens`); `usage: { include: true }` is an
   opt-in (`usageAccounting`); a volunteered `usage.cost` is read either way and stamped with `costBasis` when set.
 - Images ride only for slugs `visionByModel` marks; `attachmentsSent` on the result says what rode.
 - There is no built-in model: set `defaultModel` or pass `request.model`, else the call fails loud. Behind a dispatcher
   every request names its model and cap, so `defaultModel` / `maxOutputTokens` only serve direct strategy calls.
 - Defaults: the cap of a direct call is `DEFAULT_LLM_MAX_OUTPUT_TOKENS` (8,192) and the abort window is a 60 s floor
-  (`DEFAULT_LLM_COMPLETION_TIMEOUT_MS`) scaled up with the call's budget by `llmOpenAiCallTimeoutMs`. An older or
+  (`DEFAULT_LLM_COMPLETION_TIMEOUT_MS`) scaled up with the call's budget by core's `resolveLlmCompletionCallTimeoutMs({ timeoutMs, maxOutputTokens })`. An older or
   small-context model needs its `maxOutputTokens` set.
 - Seams: `client` (an `LlmOpenAiChatClient` — a fake, or your own SDK client) and `probeFetch`. The real client is built lazily with `maxRetries: 0` (the dispatcher retries) and never reads
   `OPENAI_ORG_ID` / `OPENAI_PROJECT_ID`. In a browser pass `dangerouslyAllowBrowser: true` or inject a client — with
@@ -1120,7 +1122,7 @@ vLLM — over the optional `openai` peer.
   `providerStatusSource`.
 
 `LLM_OPENAI_ADAPTERS` registers the completion transport `openai` (default base URL `https://api.openai.com/v1`).
-`llmOpenAiStrategyConfigOf` is its mapping: the shared `llmOpenAiCompatibleStrategyConfigOf` (every OpenAI-compatible
+`toLlmOpenAiStrategyConfig` is its mapping: the shared `toLlmOpenAiCompatibleChatStrategyConfig` (every OpenAI-compatible
 completion adapter's mapping) plus the four OpenAI extras. Both are exported so a host can extend them in its own
 adapter. `probeFetch` is a `ConfiguredFetch`, and a transport's `credentialProbe` hook is a function
 (`LlmTransportCredentialProbe`):
@@ -1199,8 +1201,8 @@ OpenRouter's hook set over `makeLlmSystemOneDecisionStrategy`, with no SDK.
   (`GET {baseUrl}/key`, 404 = error), shared by the chat and decision strategies.
 
 `LLM_OPENROUTER_ADAPTERS` registers the completion transport `openrouter` (default `https://openrouter.ai/api/v1`) and
-the decision route `openrouter` (`strategyKind: 'openrouter-decisions'`, derived for every `openrouter`-transport
-provider). The completion mapping is `/openai`'s shared `llmOpenAiCompatibleStrategyConfigOf`, which ignores the provider's `reasoningOff`,
+the decision route `openrouter` (`strategyKind: 'openrouter-systemone'`, derived for every `openrouter`-transport
+provider). The completion mapping is `/openai`'s shared `toLlmOpenAiCompatibleChatStrategyConfig`, which ignores the provider's `reasoningOff`,
 `tokenLimitParam` and `usageAccounting` — this wire has one spelling for each. The entry's swallow sites are
 `LLM_OPENROUTER_SWALLOW_SITES`; register them beside the root's the same way.
 
@@ -1222,45 +1224,45 @@ plain `fetch`, so it needs no SDK, and never reads the environment: the host pas
 - **Three credentials.** The SUBSCRIPTION inference key covers chat, decisions and the probe. The PAY-AS-YOU-GO
   inference key covers bills, and reads every call's bill, the subscription's included. The MANAGEMENT API key
   covers quota status; both inference keys get `403 Invalid API key` there.
-- **Cost basis.** A synchronous `cost` is the pre-discount LIST amount (`ZENMUX_SYNC_COST_BASIS = 'list'`), an upper
+- **Cost basis.** A synchronous `cost` is the pre-discount LIST amount (`LLM_ZENMUX_SYNC_COST_BASIS = 'list'`), an upper
   bound: measured over 406 calls, three of 17 slugs billed half of it. A provider's cost basis is
   `resolveLlmProviderAccount(…).costBasis` with these adapters registered — a declared `metering` wins, else the URL
-  must parse as `zenmux.ai` or a subdomain (`isZenmuxBaseUrl`, which is `@dereekb/util`'s `isWebsiteUrlOnDomain`; a
+  must parse as `zenmux.ai` or a subdomain (`isLlmZenmuxBaseUrl`, which is `@dereekb/util`'s `isWebsiteUrlOnDomain`; a
   look-alike host never qualifies).
-- **Management API.** Every management read is one `readZenmuxManagement` (an authenticated GET read once with
-  `readFetchJsonText`) answering a `ZenmuxEnvelope<T>`; `zenmuxManagementUrl` / `zenmuxGenerationUrl` build the URLs.
-- **Bills.** `makeZenmuxGenerationBillReader` reads `management/generation?id=`. A call bills 3–5 minutes after it is
+- **Management API.** Every management read is one `readLlmZenmuxManagement` (an authenticated GET read once with
+  `readFetchJsonText`) answering a `LlmZenmuxEnvelope<T>`; `llmZenmuxManagementUrl` / `llmZenmuxGenerationUrl` build the URLs.
+- **Bills.** `makeLlmZenmuxGenerationBillReader` reads `management/generation?id=`. A call bills 3–5 minutes after it is
   made, so a `404` reads `pending`; a refused key reads `failed` in ZenMux's own words.
-- **Quota status.** `makeZenmuxProviderStatusSource` reads `subscription/detail`, `payg/balance` and `flow_rate` in
+- **Quota status.** `makeLlmZenmuxProviderStatusSource` reads `subscription/detail`, `payg/balance` and `flow_rate` in
   parallel. A partial read stays `available` with a warning per failed endpoint; a missing management key reads
   `available: false` with an error naming `ZENMUX_MANAGEMENT_API_KEY` (or your `managementApiKeyEnv`). Status and bill
-  reads go to `zenmuxAccountBaseUrlOf(baseUrl)`: a ZenMux URL keeps its host, anything else (a LAN proxy declared
-  `metering: 'zenmux'`) reads the account at `DEFAULT_ZENMUX_BASE_URL`.
-- **Credential probe.** `GET /models` answers 200 to any bearer, so `probeZenmuxCredential` asks two auth-gated,
+  reads go to `resolveLlmZenmuxAccountBaseUrl(baseUrl)`: a ZenMux URL keeps its host, anything else (a LAN proxy declared
+  `metering: 'zenmux'`) reads the account at `DEFAULT_LLM_ZENMUX_BASE_URL`.
+- **Credential probe.** `GET /models` answers 200 to any bearer, so `probeLlmZenmuxCredential` asks two auth-gated,
   never-billed questions instead: a chat completion naming a model no gateway serves (a live subscription key gets
   `404`), then, only if refused, a bill lookup of a made-up id (a live pay-as-you-go key gets `404`). The chat question
-  goes to the provider's own base; the bill lookup goes to `zenmuxAccountBaseUrlOf(baseUrl)`, so a LAN proxy's 404
+  goes to the provider's own base; the bill lookup goes to `resolveLlmZenmuxAccountBaseUrl(baseUrl)`, so a LAN proxy's 404
   never reads as a live key.
-- **Decisions.** `makeZenmuxDecisionStrategy` (`kind: 'zenmux-systemone'`) is the core System One transport with the
+- **Decisions.** `makeLlmZenmuxDecisionStrategy` (`kind: 'zenmux-systemone'`) is the core System One transport with the
   ZenMux hooks. It sends exactly `{ model, state, questions }` via `llmDecisionRequestBody` — ZenMux answers `400` to any
   other key. The generation id comes from the `X-ZenMux-RequestId` header, a type-less answer takes its question's
   declared type (`laxAnswerTypes`), and a reported `cost` carries `costBasis: 'list'`. Failures follow the transport's
   contract: a socket failure wraps as `LlmDecisionTransportError` with the failure as its `cause`, so the dispatcher's
   decision lane resends a reset (`isRetryableLlmDecisionError`).
 
-`makeZenmuxLlmAdapters(config)` returns the decision route `zenmux`, plus the `zenmux` metering, bill and
+`makeLlmZenmuxAdapters(config)` returns the decision route `zenmux`, plus the `zenmux` metering, bill and
 credential-probe adapters. The decision route is never derived: a provider declares `decision: 'zenmux'`. Register the
 array before `/openrouter`'s, or pass a `routePreference`, when ZenMux should be the default decision route. Without a
 `billApiKey`, a subscription provider's bill reads fail `403`, so pass the pay-as-you-go key. The entry's swallow sites
-are `ZENMUX_SWALLOW_SITES`.
+are `LLM_ZENMUX_SWALLOW_SITES`.
 
 ```ts
 import { makeLlmAdapterRegistry } from '@dereekb/llm';
 import { LLM_OPENAI_ADAPTERS } from '@dereekb/llm/openai';
-import { DEFAULT_ZENMUX_BASE_URL, makeZenmuxLlmAdapters } from '@dereekb/llm/zenmux';
+import { DEFAULT_LLM_ZENMUX_BASE_URL, makeLlmZenmuxAdapters } from '@dereekb/llm/zenmux';
 
-const adapters = makeLlmAdapterRegistry([...LLM_OPENAI_ADAPTERS, ...makeZenmuxLlmAdapters({ managementApiKey, managementApiKeyEnv, billApiKey })]);
-const zenmux = { transport: 'openai', baseUrl: DEFAULT_ZENMUX_BASE_URL, apiKeyEnv: 'ZENMUX_API_KEY', metering: 'zenmux', decision: 'zenmux', usageAccounting: true };
+const adapters = makeLlmAdapterRegistry([...LLM_OPENAI_ADAPTERS, ...makeLlmZenmuxAdapters({ managementApiKey, managementApiKeyEnv, billApiKey })]);
+const zenmux = { transport: 'openai', baseUrl: DEFAULT_LLM_ZENMUX_BASE_URL, apiKeyEnv: 'ZENMUX_API_KEY', metering: 'zenmux', decision: 'zenmux', usageAccounting: true };
 ```
 
 ## Node host quick start (`@dereekb/llm/node`)
@@ -1309,7 +1311,7 @@ how a spec stays hermetic.
   missing key fails loud at the call. An explicit selection (`LLM_PROVIDER`) that names neither an env default with a
   registered adapter (case-insensitively) nor a declared completion provider (exactly) throws, naming the variable and
   the selectable ids — a typo never silently routes to the inferred default. `gaps` lists every declared provider without a key; scope it to the slugs a run
-  can reach with `llmReachableProviderGapsOf`.
+  can reach with `filterLlmReachableProviderGaps`.
 - **Craft notes.** `resolveLlmCraftNotesDir({ defaultDir })` answers the folder the env names, else yours.
   `loadLlmCraftNotes({ dir, tier, sites, warn })` drops and warns about a bad note, never throws, and reads an absent
   folder as no notes. `compileLlmCraftNotes` / `writeLlmCraftNotesModule` compile a committed folder into a
@@ -1332,15 +1334,15 @@ how a spec stays hermetic.
 ```ts
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { llmModelConfigListsOf, llmModelReasoningOffEncodings, llmModelVisionCapabilities, makeLlmAdapterRegistry, makeLlmModelConfigSchema, resolveLlmModelTier, resolveLlmModelTiers } from '@dereekb/llm';
+import { readLlmModelConfigLists, llmModelReasoningOffEncodings, llmModelVisionCapabilities, makeLlmAdapterRegistry, makeLlmModelConfigSchema, resolveLlmModelTier, resolveLlmModelTiers } from '@dereekb/llm';
 import { firstLlmEnvEntry, loadEffectiveLlmModelConfigFile, makeLlmStrategiesFromEnv, resolveLlmModelProfileFromEnv, resolveLlmModelTierEnv } from '@dereekb/llm/node';
 import { LLM_OPENAI_ADAPTERS } from '@dereekb/llm/openai';
 import { LLM_OPENROUTER_ADAPTERS } from '@dereekb/llm/openrouter';
-import { makeZenmuxLlmAdapters, ZENMUX_MANAGEMENT_API_KEY_ENV } from '@dereekb/llm/zenmux';
+import { makeLlmZenmuxAdapters, LLM_ZENMUX_MANAGEMENT_API_KEY_ENV_VAR } from '@dereekb/llm/zenmux';
 
-const management = firstLlmEnvEntry({ names: [ZENMUX_MANAGEMENT_API_KEY_ENV] });
-const adapters = makeLlmAdapterRegistry([...LLM_OPENAI_ADAPTERS, ...makeZenmuxLlmAdapters({ managementApiKey: management?.value, managementApiKeyEnv: management?.name }), ...LLM_OPENROUTER_ADAPTERS]);
-const schema = makeLlmModelConfigSchema({ ...llmModelConfigListsOf(adapters), label: 'my-app models' });
+const management = firstLlmEnvEntry({ names: [LLM_ZENMUX_MANAGEMENT_API_KEY_ENV_VAR] });
+const adapters = makeLlmAdapterRegistry([...LLM_OPENAI_ADAPTERS, ...makeLlmZenmuxAdapters({ managementApiKey: management?.value, managementApiKeyEnv: management?.name }), ...LLM_OPENROUTER_ADAPTERS]);
+const schema = makeLlmModelConfigSchema({ ...readLlmModelConfigLists(adapters), label: 'my-app models' });
 
 const loaded = loadEffectiveLlmModelConfigFile({ schema, base: BUILT_IN_MODEL_CONFIG, defaultPath: join(homedir(), '.my-app', 'models.json') });
 const profile = resolveLlmModelProfileFromEnv({ file: loaded.file, source: loaded.filePath, schema });
@@ -1374,18 +1376,18 @@ scripts make no network call, and the lane's helpers answer `undefined` while it
   readable, nothing past it ran. A served completion keeps the recorded tokens and forces `cost` to `0`. After the run,
   `matches()` (with each request's prompt and digest, for diffs), `unconsumed()` and `failures()` (recorded even when
   a host swallows the throw) feed a report; `isLlmTapeStrategyError` checks the shape, not the prototype.
-  `llmTapeTurnOf(payload, { decisionStrategyKinds, hash })` turns one persisted `llm_call` payload into a turn (pass
+  `readLlmTapeTurn(payload, { decisionStrategyKinds, hash })` turns one persisted `llm_call` payload into a turn (pass
   the same `hash` the tape strategy uses), and answers `undefined` for a capture-off row, a decision row or a
   non-object.
-- **Scripted completions.** `makeScriptedLlmStrategy` answers each call from `respond(request, call)`, else
+- **Scripted completions.** `makeLlmScriptedStrategy` answers each call from `respond(request, call)`, else
   `byCapability[capability]` (a reply or a list with its own counter), else `replies` (in order). A list repeats its
   last entry once spent; an empty list is no reply, and a call nothing answers throws, naming the id, capability and
   call. A reply is a text, a completion spec (`{ text, usage, finishReason, … }`) or an `Error` the call throws — how a
   spec drives a transport failure. Pass `requests` to collect every request, including the ones that threw.
-- **Scripted decisions.** `makeScriptedLlmDecisionStrategy({ script })` reads the script's answers through
+- **Scripted decisions.** `makeLlmScriptedDecisionStrategy({ script })` reads the script's answers through
   `requireLlmDecisionAnswers`, so an under-answered or malformed script is refused with `LlmDecisionAnswerFaultError`
   exactly as a live transport would; usage is a zero-cost reading. Build answers with the root entry's
-  `llmDecisionChoiceAnswerOf` / `llmDecisionScoreAnswerOf` / `llmDecisionNoulAnswerOf`, which are well-formed by
+  `makeLlmDecisionChoiceAnswer` / `makeLlmDecisionScoreAnswer` / `makeLlmDecisionNoulAnswer`, which are well-formed by
   construction, so a script states only which option won and how surely.
 - **Fetch seams.** `makeLlmFetchFake(respond)` is a `ConfiguredFetch` fake for any fetch-seam spec: it records each
   request (`url`, and an `init` with `method`, a plain `headers` record, `body`, `signal`) and answers with a real
@@ -1430,7 +1432,7 @@ scripts make no network call, and the lane's helpers answer `undefined` while it
   stamps both verdicts. A skip flag deletes that half's stale verdict instead. `isLlmEnvFlagEnabled`, the verdict
   codecs (`llmCredentialVerdictFromEnv`, `toLlmQuotaVerdictEnv`, …) and `parseLlmQuotaMaxUsed` are exported for hosts
   that wire their own.
-- **A/B regression gate.** `llmAbRegressionVerdictOf({ controlHits, controlTrials, treatmentHits, treatmentTrials })`
+- **A/B regression gate.** `computeLlmAbRegressionVerdict({ controlHits, controlTrials, treatmentHits, treatmentTrials })`
   runs a one-sided Fisher exact test at `LLM_AB_REGRESSION_ALPHA` (0.05). A raw count comparison's false-positive rate
   climbs toward 50% as trials grow; this one stays under alpha. It only looks for the treatment arm being worse:
   `regressed: false` means "not shown to regress", never "shown equivalent".

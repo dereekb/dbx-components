@@ -13,14 +13,14 @@
  */
 import { type } from 'arktype';
 import { describe, expect, it } from 'vitest';
-import { type LlmCapabilityDescriptor, type LlmCapabilityDescriptorOf } from '../capability/llm.capability.descriptor';
+import { type LlmCapabilityDescriptor, type LlmCapabilityDescriptorReader } from '../capability/llm.capability.descriptor';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { assembleLlmCapabilityPrompt, composeLlmCapabilityPrompt, type ComposeLlmCapabilityPromptConfig, type LlmAssembledPrompt, type LlmComposedCapabilityPrompt, type LlmPromptAssemblyTexts, type LlmPromptTemplateSegmentOrigin } from './llm.prompt.assembly';
 import { type LlmPromptContribution, type LlmPromptContributor, resolveLlmPromptContributions } from './llm.prompt.contributor';
 import { llmPromptCacheHash } from './llm.prompt.hash';
 import { type LlmPromptLayout } from './llm.prompt.layout';
 import { type LlmLiveContextBlock, type LlmLiveContextInput, llmLiveContextHeadingBlock } from './llm.prompt.live.context';
-import { llmModelAddendumContribution, llmModelAddendumPromptContributor, llmModelAddendumSegment } from './llm.prompt.model.addendum';
+import { llmModelAddendumContribution, makeLlmModelAddendumPromptContributor, llmModelAddendumSegment } from './llm.prompt.model.addendum';
 import { type LlmPromptSegment, llmPromptSegmentSpans } from './llm.prompt.segment';
 import { type LlmPromptTemplate, type LlmPromptTemplateResolver, type LlmPromptTemplateTier, type LlmResolvedPromptTemplate, type LlmResolvedPromptTemplates } from './llm.prompt.template';
 
@@ -160,7 +160,7 @@ const DESCRIPTORS: Readonly<Record<string, ReplicaDescriptor>> = {
   interpret: replicaDescriptor('interpret', INTERPRET_CONTRACT, { traits: { voice: 'director' }, mustResolve: true })
 };
 
-const DESCRIPTOR_OF: LlmCapabilityDescriptorOf<ReplicaDescriptor> = (capability) => DESCRIPTORS[capability];
+const DESCRIPTOR_OF: LlmCapabilityDescriptorReader<ReplicaDescriptor> = (capability) => DESCRIPTORS[capability];
 
 interface ReplicaMergedTemplate {
   readonly template: LlmPromptTemplate;
@@ -270,7 +270,7 @@ const ADDENDA: Readonly<Record<string, string>> = { 'census/fast': 'ADDENDUM for
 /**
  * The library's model-addendum contributor: the resolved model's addendum, first.
  */
-const REPLICA_ADDENDUM: LlmPromptContributor<ReplicaRequest, ReplicaDescriptor> = llmModelAddendumPromptContributor<ReplicaRequest, ReplicaDescriptor>({ promptAddendumByModel: ADDENDA });
+const REPLICA_ADDENDUM: LlmPromptContributor<ReplicaRequest, ReplicaDescriptor> = makeLlmModelAddendumPromptContributor<ReplicaRequest, ReplicaDescriptor>({ promptAddendumByModel: ADDENDA });
 
 const D_LIVE = '## Live context\n\nDirective: hold the line.\n\nCast:\n- Ben\n- Mara';
 

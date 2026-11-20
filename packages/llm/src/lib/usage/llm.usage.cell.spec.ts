@@ -1,6 +1,6 @@
 /**
- * The usage-cell primitives — `emptyLlmUsageCell`, `addLlmUsageCells`, `llmUsageCellOf`, `accumulateLlmUsageCell` and
- * `llmKeyedUsageCellsOf`. These cases re-express a per-run fold's assertions against the primitives, with its numbers.
+ * The usage-cell primitives — `emptyLlmUsageCell`, `addLlmUsageCells`, `toLlmUsageCell`, `accumulateLlmUsageCell` and
+ * `toLlmKeyedUsageCells`. These cases re-express a per-run fold's assertions against the primitives, with its numbers.
  *
  * Not ported here: the per-run fold itself (gate reasons, the reasoning floor, quality, the dispatch axis, craft,
  * completion samples, build stamping and every markdown render) stays with the host that owns the fold.
@@ -8,7 +8,7 @@
 
 import { describe, it, expect } from 'vitest';
 import type { LlmUsage } from '../strategy/llm.usage';
-import { accumulateLlmUsageCell, addLlmUsageCells, emptyLlmUsageCell, llmKeyedUsageCellsOf, llmUsageCellOf, type LlmUsageCell } from './llm.usage.cell';
+import { accumulateLlmUsageCell, addLlmUsageCells, emptyLlmUsageCell, toLlmKeyedUsageCells, toLlmUsageCell, type LlmUsageCell } from './llm.usage.cell';
 
 const ZERO: LlmUsageCell = { calls: 0, promptTokens: 0, completionTokens: 0, cachedTokens: 0, reasoningTokens: 0, cost: 0 };
 
@@ -33,13 +33,13 @@ describe('emptyLlmUsageCell', () => {
   });
 });
 
-describe('llmUsageCellOf', () => {
+describe('toLlmUsageCell', () => {
   it('counts a call with no usage as one call of zeros', () => {
-    expect(llmUsageCellOf(undefined)).toEqual({ ...ZERO, calls: 1 });
+    expect(toLlmUsageCell(undefined)).toEqual({ ...ZERO, calls: 1 });
   });
 
   it('coerces a logged string cost so it adds instead of concatenating', () => {
-    const cells = [llmUsageCellOf({ ...usageOf(1, 1), cost: '0.25' as unknown as number }), llmUsageCellOf({ ...usageOf(1, 1), cost: '0.5' as unknown as number }), llmUsageCellOf({ ...usageOf(1, 1), cost: 'n/a' as unknown as number })];
+    const cells = [toLlmUsageCell({ ...usageOf(1, 1), cost: '0.25' as unknown as number }), toLlmUsageCell({ ...usageOf(1, 1), cost: '0.5' as unknown as number }), toLlmUsageCell({ ...usageOf(1, 1), cost: 'n/a' as unknown as number })];
     const total = cells.reduce(addLlmUsageCells, emptyLlmUsageCell());
 
     expect(total.cost).toBe(0.75);
@@ -47,18 +47,18 @@ describe('llmUsageCellOf', () => {
   });
 
   it('marks an uncacheable call’s prompt tokens, keyed between cachedTokens and reasoningTokens', () => {
-    const cell = llmUsageCellOf(usageOf(1000, 10), true);
+    const cell = toLlmUsageCell(usageOf(1000, 10), true);
 
     expect(cell.uncacheablePromptTokens).toBe(1000);
     expect(Object.keys(cell)).toEqual(['calls', 'promptTokens', 'completionTokens', 'cachedTokens', 'uncacheablePromptTokens', 'reasoningTokens', 'cost']);
   });
 
   it('leaves no uncacheable key for an uncacheable call with no prompt tokens', () => {
-    expect('uncacheablePromptTokens' in llmUsageCellOf(usageOf(0, 10), true)).toBe(false);
+    expect('uncacheablePromptTokens' in toLlmUsageCell(usageOf(0, 10), true)).toBe(false);
   });
 });
 
-describe('accumulateLlmUsageCell / llmKeyedUsageCellsOf', () => {
+describe('accumulateLlmUsageCell / toLlmKeyedUsageCells', () => {
   it('folds calls into the total and the per-capability / per-model cells, key-sorted', () => {
     const calls: ReadonlyArray<{ readonly capability: string; readonly model: string; readonly usage: LlmUsage }> = [
       { capability: 'extract', model: 'vendor/model-a', usage: usageOf(100, 20, { cost: 10, cachedTokens: 64 }) },
@@ -71,18 +71,18 @@ describe('accumulateLlmUsageCell / llmKeyedUsageCellsOf', () => {
     let total = emptyLlmUsageCell();
 
     calls.forEach((call) => {
-      const cell = llmUsageCellOf(call.usage);
+      const cell = toLlmUsageCell(call.usage);
       total = addLlmUsageCells(total, cell);
       accumulateLlmUsageCell(byCapability, call.capability, cell);
       accumulateLlmUsageCell(byModel, call.model, cell);
     });
 
     expect(total).toEqual({ calls: 3, promptTokens: 190, completionTokens: 38, cachedTokens: 64, reasoningTokens: 0, cost: 13 });
-    expect(llmKeyedUsageCellsOf(byCapability)).toEqual([
+    expect(toLlmKeyedUsageCells(byCapability)).toEqual([
       { key: 'extract', cell: { calls: 1, promptTokens: 100, completionTokens: 20, cachedTokens: 64, reasoningTokens: 0, cost: 10 } },
       { key: 'summarize', cell: { calls: 2, promptTokens: 90, completionTokens: 18, cachedTokens: 0, reasoningTokens: 0, cost: 3 } }
     ]);
-    expect(llmKeyedUsageCellsOf(byModel)).toEqual([
+    expect(toLlmKeyedUsageCells(byModel)).toEqual([
       { key: 'vendor/model-a', cell: { calls: 1, promptTokens: 100, completionTokens: 20, cachedTokens: 64, reasoningTokens: 0, cost: 10 } },
       { key: 'vendor/model-b', cell: { calls: 2, promptTokens: 90, completionTokens: 18, cachedTokens: 0, reasoningTokens: 0, cost: 3 } }
     ]);
@@ -90,12 +90,12 @@ describe('accumulateLlmUsageCell / llmKeyedUsageCellsOf', () => {
 
   it('buckets calls by tier key, a host-chosen bucket first by code-unit order', () => {
     const byTier = new Map<string, LlmUsageCell>();
-    accumulateLlmUsageCell(byTier, 'strong', llmUsageCellOf(usageOf(100, 20, { cost: 10 })));
-    accumulateLlmUsageCell(byTier, 'fast', llmUsageCellOf(usageOf(50, 10, { cost: 2 })));
-    accumulateLlmUsageCell(byTier, 'fast', llmUsageCellOf(usageOf(40, 8, { cost: 1 })));
-    accumulateLlmUsageCell(byTier, '(untiered)', llmUsageCellOf(usageOf(10, 2, { cost: 0.5 })));
+    accumulateLlmUsageCell(byTier, 'strong', toLlmUsageCell(usageOf(100, 20, { cost: 10 })));
+    accumulateLlmUsageCell(byTier, 'fast', toLlmUsageCell(usageOf(50, 10, { cost: 2 })));
+    accumulateLlmUsageCell(byTier, 'fast', toLlmUsageCell(usageOf(40, 8, { cost: 1 })));
+    accumulateLlmUsageCell(byTier, '(untiered)', toLlmUsageCell(usageOf(10, 2, { cost: 0.5 })));
 
-    expect(llmKeyedUsageCellsOf(byTier)).toEqual([
+    expect(toLlmKeyedUsageCells(byTier)).toEqual([
       { key: '(untiered)', cell: { calls: 1, promptTokens: 10, completionTokens: 2, cachedTokens: 0, reasoningTokens: 0, cost: 0.5 } },
       { key: 'fast', cell: { calls: 2, promptTokens: 90, completionTokens: 18, cachedTokens: 0, reasoningTokens: 0, cost: 3 } },
       { key: 'strong', cell: { calls: 1, promptTokens: 100, completionTokens: 20, cachedTokens: 0, reasoningTokens: 0, cost: 10 } }
@@ -114,7 +114,7 @@ describe('addLlmUsageCells', () => {
   });
 
   it('keeps a cell with no uncacheable tokens byte-stable across a JSON round trip and a re-fold', () => {
-    const cell = [llmUsageCellOf(usageOf(4000, 200, { cost: 0.001, cachedTokens: 3000 })), llmUsageCellOf(usageOf(100, 5))].reduce(addLlmUsageCells, emptyLlmUsageCell());
+    const cell = [toLlmUsageCell(usageOf(4000, 200, { cost: 0.001, cachedTokens: 3000 })), toLlmUsageCell(usageOf(100, 5))].reduce(addLlmUsageCells, emptyLlmUsageCell());
     const json = JSON.stringify(cell);
 
     expect(json).not.toContain('uncacheablePromptTokens');

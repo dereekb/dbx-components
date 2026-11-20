@@ -1,5 +1,5 @@
 /**
- * Cost honesty — `formatLlmUsageCost` / `llmUsageCostMarkerOf` / `isLlmUsageCostUnavailable` / `llmUsageCostFlagsOf`.
+ * Cost honesty — `formatLlmUsageCost` / `resolveLlmUsageCostMarker` / `isLlmUsageCostUnavailable` / `readLlmUsageCostFlags`.
  * A hole must never read as free and a list price must never read as a bill.
  *
  * Not ported here: the per-run fold and its markdown renders (gate reasons, the reasoning floor, quality, the dispatch
@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { formatLlmUsageCost, isLlmUsageCostUnavailable, LLM_USAGE_COST_UNAVAILABLE_CELL, llmUsageCostFlagsOf, llmUsageCostMarkerOf } from './llm.usage.cost';
+import { formatLlmUsageCost, isLlmUsageCostUnavailable, LLM_USAGE_COST_UNAVAILABLE_CELL, readLlmUsageCostFlags, resolveLlmUsageCostMarker } from './llm.usage.cost';
 
 describe('isLlmUsageCostUnavailable / formatLlmUsageCost', () => {
   it('never throws on a malformed cost: a numeric string renders as its number, anything else as unavailable', () => {
@@ -51,23 +51,23 @@ describe('isLlmUsageCostUnavailable / formatLlmUsageCost', () => {
     expect(formatLlmUsageCost({ cost: 0, calls: 3, partial: true, listed: true })).toBe(LLM_USAGE_COST_UNAVAILABLE_CELL);
   });
 
-  it('llmUsageCostMarkerOf decides the one marker every surface prints', () => {
-    expect(llmUsageCostMarkerOf({ calls: 2, partial: false })).toBe('');
-    expect(llmUsageCostMarkerOf({ calls: 2, partial: true })).toBe('>=');
-    expect(llmUsageCostMarkerOf({ calls: 2, partial: false, listed: true })).toBe('<=');
-    expect(llmUsageCostMarkerOf({ calls: 2, partial: true, listed: true })).toBe('~');
-    expect(llmUsageCostMarkerOf({ calls: 2, partial: false, listed: true }, { upper: '≤' })).toBe('≤');
-    expect(llmUsageCostMarkerOf({ calls: 0, partial: true, listed: true })).toBe('');
+  it('resolveLlmUsageCostMarker decides the one marker every surface prints', () => {
+    expect(resolveLlmUsageCostMarker({ calls: 2, partial: false })).toBe('');
+    expect(resolveLlmUsageCostMarker({ calls: 2, partial: true })).toBe('>=');
+    expect(resolveLlmUsageCostMarker({ calls: 2, partial: false, listed: true })).toBe('<=');
+    expect(resolveLlmUsageCostMarker({ calls: 2, partial: true, listed: true })).toBe('~');
+    expect(resolveLlmUsageCostMarker({ calls: 2, partial: false, listed: true }, { upper: '≤' })).toBe('≤');
+    expect(resolveLlmUsageCostMarker({ calls: 0, partial: true, listed: true })).toBe('');
   });
 });
 
-describe('llmUsageCostFlagsOf', () => {
+describe('readLlmUsageCostFlags', () => {
   it('threads the listed flag when set', () => {
-    expect(llmUsageCostFlagsOf({ costPartial: false, costListed: true })).toEqual({ partial: false, listed: true });
+    expect(readLlmUsageCostFlags({ costPartial: false, costListed: true })).toEqual({ partial: false, listed: true });
   });
 
   it('omits the listed key entirely when it is not set', () => {
-    const flags = llmUsageCostFlagsOf({ costPartial: true });
+    const flags = readLlmUsageCostFlags({ costPartial: true });
 
     expect(flags).toEqual({ partial: true });
     expect(Object.keys(flags)).toEqual(['partial']);

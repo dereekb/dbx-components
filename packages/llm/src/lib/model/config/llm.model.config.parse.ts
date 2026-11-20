@@ -19,7 +19,7 @@ import {
   LLM_PROVIDER_ENTRY_KEYS,
   LLM_PROVIDER_IDENTITY_KEYS,
   LLM_PROVIDER_ROUTING_KEYS,
-  type LlmCompletionProviderEntryOf,
+  type LlmExtendedCompletionProviderEntry,
   type LlmModelConfigBaseTypes,
   type LlmModelConfigFile,
   type LlmModelConfigFileFields,
@@ -28,7 +28,7 @@ import {
   type LlmModelConfigSchema,
   type LlmModelConfigTypes,
   type LlmModelProfile,
-  type LlmModelSettingsOf,
+  type LlmExtendedModelSettings,
   type LlmParsedProviderEntry
 } from './llm.model.config.schema';
 import { llmModelSettingsType } from './llm.model.config.type';
@@ -91,7 +91,7 @@ export function parseLlmProviderEntry<X extends LlmModelConfigTypes = LlmModelCo
     const checked = parseLlmModelConfigFields({ schemaLabel, label, value: entry, type: schema.completionProviderEntryType, keys: LLM_PROVIDER_ENTRY_KEYS, rules: schema.completionProviderEntryRules });
     const { baseUrl, reasoningOff, tokenLimitParam, usageAccounting, metering, decision } = checked;
     // Base keys in LLM_PROVIDER_ENTRY_KEYS order, then the extension's — the pinned key order of a parsed entry.
-    const completionEntry: LlmCompletionProviderEntryOf<X> = {
+    const completionEntry: LlmExtendedCompletionProviderEntry<X> = {
       transport: checked.transport ?? schema.defaultTransport,
       ...(baseUrl == null ? {} : { baseUrl: baseUrl.trim() }),
       apiKeyEnv: checked.apiKeyEnv.trim(),
@@ -119,7 +119,7 @@ export function parseLlmProviderEntry<X extends LlmModelConfigTypes = LlmModelCo
  * @returns The parsed settings.
  * @throws {Error} When the entry is not an object, carries a retired / unknown key, or names an illegal value.
  */
-export function parseLlmModelSettings<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes>(config: ParseLlmModelConfigEntryConfig<X>): LlmModelSettingsOf<X> {
+export function parseLlmModelSettings<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes>(config: ParseLlmModelConfigEntryConfig<X>): LlmExtendedModelSettings<X> {
   const { label, value, schema } = config;
   const schemaLabel = schema.label;
 
@@ -136,7 +136,7 @@ export function parseLlmModelSettings<X extends LlmModelConfigTypes = LlmModelCo
   const checked = parseLlmModelConfigFields({ schemaLabel, label, value: entry, type: llmModelSettingsType, keys: LLM_MODEL_SETTINGS_KEYS, rules: LLM_MODEL_SETTINGS_FIELD_RULES });
   const { provider, reasoningOff, vision, promptAddendum } = checked;
   const fields: Partial<X['modelFields']> = schema.extension?.parseModelFields?.({ schemaLabel, label, entry }) ?? {};
-  const settings: LlmModelSettingsOf<X> = {
+  const settings: LlmExtendedModelSettings<X> = {
     ...(provider == null ? {} : { provider: provider.trim() }),
     ...(reasoningOff == null ? {} : { reasoningOff }),
     ...(vision == null ? {} : { vision }),
@@ -233,7 +233,7 @@ interface ParseLlmModelConfigProvidersInput<X extends LlmModelConfigTypes> {
  * The parsed `providers` block, split into completion entries, extension-owned entries and patches.
  */
 interface LlmModelConfigProvidersParse<X extends LlmModelConfigTypes> {
-  readonly providers: Record<LlmStrategyId, LlmCompletionProviderEntryOf<X>>;
+  readonly providers: Record<LlmStrategyId, LlmExtendedCompletionProviderEntry<X>>;
   readonly extensionProviders: Record<LlmStrategyId, X['extensionProviderEntry']>;
   readonly providerPatches: Record<LlmStrategyId, Partial<X['providerFields']>>;
 }
@@ -250,7 +250,7 @@ function parseLlmModelConfigProviders<X extends LlmModelConfigTypes>(input: Pars
   const { rawProviders, source, schema } = input;
   const schemaLabel = schema.label;
   const parseProviderPatch = schema.extension?.parseProviderPatch;
-  const providers: Record<LlmStrategyId, LlmCompletionProviderEntryOf<X>> = {};
+  const providers: Record<LlmStrategyId, LlmExtendedCompletionProviderEntry<X>> = {};
   const extensionProviders: Record<LlmStrategyId, X['extensionProviderEntry']> = {};
   const providerPatches: Record<LlmStrategyId, Partial<X['providerFields']>> = {};
 
@@ -346,7 +346,7 @@ export function parseLlmModelConfigFile<X extends LlmModelConfigTypes = LlmModel
 
   const { providers, extensionProviders, providerPatches } = parseLlmModelConfigProviders({ rawProviders, source, schema });
 
-  const models: Record<string, LlmModelSettingsOf<X>> = {};
+  const models: Record<string, LlmExtendedModelSettings<X>> = {};
 
   if (rawModels != null) {
     for (const [model, rawEntry] of Object.entries(rawModels)) {

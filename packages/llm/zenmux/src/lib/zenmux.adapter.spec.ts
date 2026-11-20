@@ -1,9 +1,9 @@
 import {
   isLlmAbortError,
-  llmDecisionStrategyKinds,
-  llmModelConfigListsOf,
+  readLlmDecisionStrategyKinds,
+  readLlmModelConfigLists,
   llmNoulQuestion,
-  llmProviderDecisionRouteOf,
+  resolveLlmProviderDecisionRoute,
   makeLlmAdapterRegistry,
   makeLlmDecisionStrategies,
   makeLlmProviderStrategy,
@@ -16,16 +16,16 @@ import {
 import { makeLlmSystemOneWireFake } from '@dereekb/llm/test';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { type ConfiguredFetch } from '@dereekb/util/fetch';
-import { makeZenmuxLlmAdapters } from './zenmux.adapter';
-import { DEFAULT_ZENMUX_BASE_URL, ZENMUX_DECISION_ROUTE, ZENMUX_PROVIDER_ID } from './zenmux.constants';
+import { makeLlmZenmuxAdapters } from './zenmux.adapter';
+import { DEFAULT_LLM_ZENMUX_BASE_URL, LLM_ZENMUX_DECISION_ROUTE, LLM_ZENMUX_PROVIDER_ID } from './zenmux.constants';
 
 const MODEL = 'typesafe/jev-1.14';
 
-const ZENMUX: LlmProviderConfig = { id: 'zenmux', transport: 'openai', baseUrl: DEFAULT_ZENMUX_BASE_URL, apiKeyEnv: 'ZENMUX_API_KEY', apiKey: 'sk-zen', metering: 'zenmux', decision: 'zenmux' };
-const ZENMUX_PAYG: LlmProviderConfig = { id: 'zenmux-payg', transport: 'openai', baseUrl: DEFAULT_ZENMUX_BASE_URL, apiKeyEnv: 'ZENMUX_PAYG_API_KEY', apiKey: 'payg-key', metering: 'zenmux', decision: 'zenmux' };
-const ENV_DEFAULT: LlmProviderConfig = { id: 'env-default', transport: 'openai', baseUrl: DEFAULT_ZENMUX_BASE_URL, apiKeyEnv: 'OPENAI_API_KEY', apiKey: 'sk-env' };
+const ZENMUX: LlmProviderConfig = { id: 'zenmux', transport: 'openai', baseUrl: DEFAULT_LLM_ZENMUX_BASE_URL, apiKeyEnv: 'ZENMUX_API_KEY', apiKey: 'sk-zen', metering: 'zenmux', decision: 'zenmux' };
+const ZENMUX_PAYG: LlmProviderConfig = { id: 'zenmux-payg', transport: 'openai', baseUrl: DEFAULT_LLM_ZENMUX_BASE_URL, apiKeyEnv: 'ZENMUX_PAYG_API_KEY', apiKey: 'payg-key', metering: 'zenmux', decision: 'zenmux' };
+const ENV_DEFAULT: LlmProviderConfig = { id: 'env-default', transport: 'openai', baseUrl: DEFAULT_LLM_ZENMUX_BASE_URL, apiKeyEnv: 'OPENAI_API_KEY', apiKey: 'sk-env' };
 const PROXY: LlmProviderConfig = { id: 'proxy', transport: 'openai', baseUrl: 'http://192.168.1.50:8000/v1', apiKeyEnv: 'PROXY_API_KEY', apiKey: 'sk-proxy', metering: 'zenmux' };
-const LOCAL: LlmProviderConfig = { id: 'local', transport: 'openai', baseUrl: DEFAULT_ZENMUX_BASE_URL, apiKeyEnv: 'LOCAL_API_KEY', apiKey: 'sk-local', metering: 'none' };
+const LOCAL: LlmProviderConfig = { id: 'local', transport: 'openai', baseUrl: DEFAULT_LLM_ZENMUX_BASE_URL, apiKeyEnv: 'LOCAL_API_KEY', apiKey: 'sk-local', metering: 'none' };
 const LOOKALIKE: LlmProviderConfig = { id: 'lookalike', transport: 'openai', baseUrl: 'https://zenmux.ai.example.com/api/v1', apiKeyEnv: 'LOOKALIKE_API_KEY', apiKey: 'sk-look' };
 
 /**
@@ -76,16 +76,16 @@ function registryOf(adapters: ReadonlyArray<LlmAdapter>) {
   return makeLlmAdapterRegistry([fakeOpenAiCompletion().adapter, ...adapters]);
 }
 
-const ADAPTERS = registryOf(makeZenmuxLlmAdapters({ managementApiKey: 'mgmt-key', billApiKey: 'payg-key' }));
+const ADAPTERS = registryOf(makeLlmZenmuxAdapters({ managementApiKey: 'mgmt-key', billApiKey: 'payg-key' }));
 
-describe('makeZenmuxLlmAdapters()', () => {
+describe('makeLlmZenmuxAdapters()', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
   });
 
   describe('shape', () => {
     it('returns the four adapters in facet order', () => {
-      expect(makeZenmuxLlmAdapters().map((adapter) => [adapter.facet, adapter.kind])).toEqual([
+      expect(makeLlmZenmuxAdapters().map((adapter) => [adapter.facet, adapter.kind])).toEqual([
         ['decision', 'zenmux'],
         ['metering', 'zenmux'],
         ['bill', 'zenmux'],
@@ -95,14 +95,14 @@ describe('makeZenmuxLlmAdapters()', () => {
 
     it('registers without a collision and feeds the config schema lists', () => {
       expect(ADAPTERS.values()).toHaveLength(5);
-      expect(llmModelConfigListsOf(ADAPTERS)).toEqual({ transports: ['openai'], meterings: ['zenmux'], decisionRoutes: ['zenmux'] });
-      expect([...llmDecisionStrategyKinds(ADAPTERS)]).toEqual(['zenmux-systemone']);
+      expect(readLlmModelConfigLists(ADAPTERS)).toEqual({ transports: ['openai'], meterings: ['zenmux'], decisionRoutes: ['zenmux'] });
+      expect([...readLlmDecisionStrategyKinds(ADAPTERS)]).toEqual(['zenmux-systemone']);
     });
 
     it('pins the ZenMux constants', () => {
-      expect(ZENMUX_PROVIDER_ID).toBe('zenmux');
-      expect(ZENMUX_DECISION_ROUTE).toBe('zenmux');
-      expect(DEFAULT_ZENMUX_BASE_URL).toBe('https://zenmux.ai/api/v1');
+      expect(LLM_ZENMUX_PROVIDER_ID).toBe('zenmux');
+      expect(LLM_ZENMUX_DECISION_ROUTE).toBe('zenmux');
+      expect(DEFAULT_LLM_ZENMUX_BASE_URL).toBe('https://zenmux.ai/api/v1');
     });
   });
 
@@ -127,8 +127,8 @@ describe('makeZenmuxLlmAdapters()', () => {
       const blankBillKey = recordingFetch();
 
       await resolveLlmProviderAccount({ provider: ZENMUX, adapters: ADAPTERS, fetch: withBillKey.fetch }).billReader?.read('g1');
-      await resolveLlmProviderAccount({ provider: ZENMUX, adapters: registryOf(makeZenmuxLlmAdapters()), fetch: withoutBillKey.fetch }).billReader?.read('g1');
-      await resolveLlmProviderAccount({ provider: ZENMUX, adapters: registryOf(makeZenmuxLlmAdapters({ billApiKey: '  ' })), fetch: blankBillKey.fetch }).billReader?.read('g1');
+      await resolveLlmProviderAccount({ provider: ZENMUX, adapters: registryOf(makeLlmZenmuxAdapters()), fetch: withoutBillKey.fetch }).billReader?.read('g1');
+      await resolveLlmProviderAccount({ provider: ZENMUX, adapters: registryOf(makeLlmZenmuxAdapters({ billApiKey: '  ' })), fetch: blankBillKey.fetch }).billReader?.read('g1');
 
       expect(withBillKey.calls).toEqual([{ url: 'https://zenmux.ai/api/v1/management/generation?id=g1', method: 'GET', auth: 'Bearer payg-key' }]);
       expect(withoutBillKey.calls[0]?.auth).toBe('Bearer sk-zen');
@@ -182,8 +182,8 @@ describe('makeZenmuxLlmAdapters()', () => {
     });
 
     it('reports a missing management key as unavailable, naming the default or the host’s label', async () => {
-      const unnamed = await resolveLlmProviderAccount({ provider: ZENMUX, adapters: registryOf(makeZenmuxLlmAdapters()) }).providerStatusSource?.read();
-      const named = await resolveLlmProviderAccount({ provider: ZENMUX, adapters: registryOf(makeZenmuxLlmAdapters({ managementApiKeyEnv: 'HOST_ZENMUX_MANAGEMENT_KEY' })) }).providerStatusSource?.read();
+      const unnamed = await resolveLlmProviderAccount({ provider: ZENMUX, adapters: registryOf(makeLlmZenmuxAdapters()) }).providerStatusSource?.read();
+      const named = await resolveLlmProviderAccount({ provider: ZENMUX, adapters: registryOf(makeLlmZenmuxAdapters({ managementApiKeyEnv: 'HOST_ZENMUX_MANAGEMENT_KEY' })) }).providerStatusSource?.read();
 
       expect(unnamed?.available).toBe(false);
       expect(unnamed?.issues[0]?.message).toContain('ZENMUX_MANAGEMENT_API_KEY');
@@ -210,7 +210,7 @@ describe('makeZenmuxLlmAdapters()', () => {
   describe('completion wiring', () => {
     it('hands a ZenMux provider’s completion adapter the list basis, a status source and a probe — and a local one none', () => {
       const completion = fakeOpenAiCompletion();
-      const adapters = makeLlmAdapterRegistry([completion.adapter, ...makeZenmuxLlmAdapters({ managementApiKey: 'mgmt-key' })]);
+      const adapters = makeLlmAdapterRegistry([completion.adapter, ...makeLlmZenmuxAdapters({ managementApiKey: 'mgmt-key' })]);
 
       makeLlmProviderStrategy({ provider: ZENMUX, adapters });
       makeLlmProviderStrategy({ provider: LOCAL, adapters });
@@ -226,7 +226,7 @@ describe('makeZenmuxLlmAdapters()', () => {
 
   describe('decisions', () => {
     it('never derives the ZenMux route: a provider must declare it', () => {
-      expect(llmProviderDecisionRouteOf({ provider: ENV_DEFAULT, adapters: ADAPTERS })).toBe('none');
+      expect(resolveLlmProviderDecisionRoute({ provider: ENV_DEFAULT, adapters: ADAPTERS })).toBe('none');
     });
 
     it('builds one ready ZenMux strategy per declaring provider', async () => {

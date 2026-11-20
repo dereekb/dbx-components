@@ -89,7 +89,7 @@ export interface LlmDispatchSignalsConfig {
  * @param config - The dispatcher signal and the request.
  * @returns The forwarded signal, or `undefined` when neither exists.
  */
-export function llmDispatchSignalOf(config: LlmDispatchSignalsConfig): Maybe<AbortSignal> {
+export function mergeLlmDispatchSignals(config: LlmDispatchSignalsConfig): Maybe<AbortSignal> {
   return mergeAbortSignals([config.cancellationSignal, config.request.signal]);
 }
 
@@ -114,7 +114,7 @@ export const LLM_TRANSPORT_RETRY_AFTER_MAX_MS: Milliseconds = 60_000;
 /**
  * What a transport backoff is handed: the failed attempt and what its send threw.
  */
-export interface LlmDispatchTransportBackoffInput {
+export interface LlmDispatchTransportBackoffParams {
   /**
    * The 1-based ordinal of the attempt whose send failed.
    */
@@ -128,7 +128,7 @@ export interface LlmDispatchTransportBackoffInput {
 /**
  * The wait before the resend that follows a transport failure.
  */
-export type LlmDispatchTransportBackoff = (input: LlmDispatchTransportBackoffInput) => Milliseconds;
+export type LlmDispatchTransportBackoff = (input: LlmDispatchTransportBackoffParams) => Milliseconds;
 
 /**
  * The default transport backoff — the server's requested wait (`@dereekb/util/fetch` `readFetchErrorRetryAfter`:
@@ -147,7 +147,7 @@ export type LlmDispatchTransportBackoff = (input: LlmDispatchTransportBackoffInp
  * llmTransportBackoffMs({ attempt: 2, error: new Error('socket hang up') }, () => 0); // 500 (½ × 1000)
  * ```
  */
-export function llmTransportBackoffMs(input: LlmDispatchTransportBackoffInput, random: () => number = Math.random): Milliseconds {
+export function llmTransportBackoffMs(input: LlmDispatchTransportBackoffParams, random: () => number = Math.random): Milliseconds {
   const { attempt, error } = input;
   const requested = readFetchErrorRetryAfter(error);
   return requested != null && requested <= LLM_TRANSPORT_RETRY_AFTER_MAX_MS ? requested : exponentialBackoffDelay({ attempt, initialDelay: LLM_TRANSPORT_RETRY_BASE_DELAY_MS, maxDelay: LLM_TRANSPORT_RETRY_MAX_DELAY_MS, random });
@@ -155,7 +155,7 @@ export function llmTransportBackoffMs(input: LlmDispatchTransportBackoffInput, r
 
 // MARK: Fallback context
 /**
- * The inputs of {@link llmDispatchFallbackCallContextOf}.
+ * The inputs of {@link makeLlmDispatchFallbackCallContext}.
  */
 export interface LlmDispatchFallbackCallContextConfig<A extends object = object> {
   /**
@@ -179,7 +179,7 @@ export interface LlmDispatchFallbackCallContextConfig<A extends object = object>
  * @param config - The label, the swallow sink and the attribution.
  * @returns The context.
  */
-export function llmDispatchFallbackCallContextOf<A extends object = object>(config: LlmDispatchFallbackCallContextConfig<A>): LlmCallContext<A> {
+export function makeLlmDispatchFallbackCallContext<A extends object = object>(config: LlmDispatchFallbackCallContextConfig<A>): LlmCallContext<A> {
   const { label, swallow, attribution } = config;
   return swallow == null ? noopLlmCallContext<A>() : makeLlmCallContext<A>({ label, timing: false, attribution: attribution as A, onSwallow: (site, cause) => swallow(site, cause) });
 }

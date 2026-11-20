@@ -13,7 +13,7 @@
 
 import { isPlainObject, type Maybe } from '@dereekb/util';
 import { ArkErrors } from 'arktype';
-import { assertLlmModelConfigKeys, LLM_MODEL_TIER_CONFIG_FIELD_RULES, LLM_MODEL_TIER_CONFIG_KEYS, llmModelConfigMessagePrefix, llmModelOutputControlsOf, parseLlmModelConfigFields } from './llm.model.field';
+import { assertLlmModelConfigKeys, LLM_MODEL_TIER_CONFIG_FIELD_RULES, LLM_MODEL_TIER_CONFIG_KEYS, llmModelConfigMessagePrefix, toCanonicalLlmModelOutputControls, parseLlmModelConfigFields } from './llm.model.field';
 import { llmModelSlugType, llmModelTierConfigType } from './llm.model.type';
 import { type LlmModelTierConfig, type LlmModelTierKey, type LlmModelTierValue } from './llm.value';
 
@@ -68,7 +68,7 @@ export function parseLlmModelTierValue(config: ParseLlmModelTierValueConfig): Ll
   } else if (isPlainObject(value)) {
     assertLlmModelConfigKeys({ schemaLabel, label: at, entry: value, allowed: LLM_MODEL_TIER_CONFIG_KEYS });
     const parsed = parseLlmModelConfigFields({ schemaLabel, label: at, value, type: llmModelTierConfigType, keys: LLM_MODEL_TIER_CONFIG_KEYS, rules: LLM_MODEL_TIER_CONFIG_FIELD_RULES });
-    const tierConfig: LlmModelTierConfig = { model: parsed.model, ...llmModelOutputControlsOf(parsed) };
+    const tierConfig: LlmModelTierConfig = { model: parsed.model, ...toCanonicalLlmModelOutputControls(parsed) };
     out = tierConfig;
   } else {
     throw new Error(`${prefix}${at} must be a non-empty, trimmed model slug or a { model, maxOutputTokens?, reasoning? } object (got ${JSON.stringify(value)}).`);

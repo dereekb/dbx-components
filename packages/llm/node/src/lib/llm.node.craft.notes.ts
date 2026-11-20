@@ -8,7 +8,7 @@
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { compareStringsByCodeUnit, errorMessageOf, type Maybe } from '@dereekb/util';
+import { compareStringsByCodeUnit, readErrorMessage, type Maybe } from '@dereekb/util';
 import { llmCraftNoteParseErrorLines, parseLlmCraftNoteSet, type LlmCraftNoteFile, type LlmCraftNoteSet, type LlmCraftNoteTier, type LlmCraftSiteRegistry, type LlmSwallowSink } from '@dereekb/llm';
 import { DEFAULT_LLM_ENV_NAMES, firstLlmEnvEntry, type LlmEnvNames, type LlmEnvView } from './llm.node.env';
 
@@ -121,7 +121,7 @@ export function loadLlmCraftNotes(config: LoadLlmCraftNotesConfig): LlmCraftNote
     files = readLlmCraftNoteFiles(dir);
   } catch (error) {
     swallow?.(LLM_CRAFT_NOTES_FOLDER_READ_SWALLOW_SITE, error);
-    warn?.(`craft notes: could not read ${dir}: ${errorMessageOf(error)}\n`);
+    warn?.(`craft notes: could not read ${dir}: ${readErrorMessage(error)}\n`);
   }
 
   const set = parseLlmCraftNoteSet({ files, tier, sites });

@@ -21,7 +21,7 @@ import { type Maybe } from '@dereekb/util';
 
 /**
  * The stable→volatile split of an assembled prompt for provider prompt caching — a DERIVED view of the same bytes
- * (computed alongside the prompt, e.g. by {@link llmPromptCacheSegmentsOf}). The invariant
+ * (computed alongside the prompt, e.g. by {@link splitLlmPromptCacheSegments}). The invariant
  * `cachePrefix + volatileSuffix === prompt` always holds, so a strategy that does not cache can ignore it and read
  * the prompt unchanged.
  */
@@ -94,7 +94,7 @@ export interface LlmPromptSegment<O extends LlmPromptSegmentOrigin = LlmPromptSe
   readonly reason?: string;
   /**
    * Whether these bytes change call-to-call (live context, a correction, a follow-up). Everything BEFORE the first
-   * volatile segment is the provider cache prefix — see {@link llmPromptCacheSegmentsOf}.
+   * volatile segment is the provider cache prefix — see {@link splitLlmPromptCacheSegments}.
    */
   readonly volatile?: boolean;
 }
@@ -142,7 +142,7 @@ export function joinLlmPromptSegments(segments: ReadonlyArray<LlmPromptSegment>)
  * @param segments - The segments, in send order.
  * @returns The stable→volatile cache split.
  */
-export function llmPromptCacheSegmentsOf(segments: ReadonlyArray<LlmPromptSegment>): LlmPromptCacheSegments {
+export function splitLlmPromptCacheSegments(segments: ReadonlyArray<LlmPromptSegment>): LlmPromptCacheSegments {
   const firstVolatile = segments.findIndex((segment) => segment.volatile === true);
   const boundary = firstVolatile < 0 ? segments.length : firstVolatile;
   return { cachePrefix: joinLlmPromptSegments(segments.slice(0, boundary)), volatileSuffix: joinLlmPromptSegments(segments.slice(boundary)) };

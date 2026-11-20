@@ -12,7 +12,7 @@ import { type LlmStrategy } from './llm.strategy';
 import { type LlmStrategyHealth } from './llm.strategy.health';
 import { llmCredentialReportErrorText, probeLlmCredentials, verifyLlmStrategies } from './llm.strategy.readiness';
 import { makeLlmStrategyRegistry } from './llm.strategy.registry';
-import { errorMessageOf } from '@dereekb/util';
+import { readErrorMessage } from '@dereekb/util';
 
 /**
  * Build a tiny fake {@link LlmStrategy} — `complete` is an unused stub (the aggregator never calls it); an
@@ -147,7 +147,7 @@ describe('verifyLlmStrategies', () => {
     try {
       await verifyLlmStrategies({ strategies, required: ['a', 'b'] });
     } catch (error) {
-      message = errorMessageOf(error);
+      message = readErrorMessage(error);
     }
 
     expect(message).toContain('a: aerr');

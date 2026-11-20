@@ -2,7 +2,7 @@
  * The OpenAI-compatible chat BASE — the one implementation every OpenAI-compatible chat transport is built on. It owns
  * the shared skeleton: the lazy `openai` SDK client (built once, `maxRetries: 0`) or an injected structural client,
  * the no-built-in-model guard, the per-slug vision filter and `attachmentsSent`, `response_format`, the budget-scaled
- * abort wall, usage folding through `llmUsageFrom`, result assembly, `healthCheck`, the credential-probe ladder and the
+ * abort wall, usage folding through `toLlmUsage`, result assembly, `healthCheck`, the credential-probe ladder and the
  * optional `providerStatus` delegation.
  *
  * A transport is a set of {@link LlmOpenAiCompatibleChatStrategyHooks}: its identity, its default base URL and probe
@@ -11,12 +11,13 @@
  *
  * The library reads NO environment: the host resolves the key / base URL / model and passes them in.
  */
-import { errorMessageOf, isNotNullOrEmptyString, makeTimeoutAbortSignal, type Maybe, type Milliseconds, removeTrailingSlashes } from '@dereekb/util';
+import { readErrorMessage, isNotNullOrEmptyString, makeTimeoutAbortSignal, type Maybe, type Milliseconds, removeTrailingSlashes } from '@dereekb/util';
 import {
+  resolveLlmCompletionCallTimeoutMs,
   DEFAULT_LLM_COMPLETION_TIMEOUT_MS,
   DEFAULT_LLM_MAX_OUTPUT_TOKENS,
   DEFAULT_LLM_TOKEN_LIMIT_PARAM,
-  llmUsageFrom,
+  toLlmUsage,
   normalizeLlmReasoningConfig,
   runLlmCredentialProbeLadder,
   type LlmAttachment,
@@ -40,7 +41,7 @@ import {
   type LlmTransportCredentialProbe
 } from '@dereekb/llm';
 import { type ConfiguredFetch } from '@dereekb/util/fetch';
-import { llmOpenAiCallTimeoutMs, toLlmOpenAiChatMessages, toLlmOpenAiResponseFormat, type LlmOpenAiChatClient, type LlmOpenAiChatCompletion, type LlmOpenAiChatCompletionBody, type LlmOpenAiChatMessage, type LlmOpenAiReasoningParams } from './openai.chat';
+import { toLlmOpenAiChatMessages, toLlmOpenAiResponseFormat, type LlmOpenAiChatClient, type LlmOpenAiChatCompletion, type LlmOpenAiChatCompletionBody, type LlmOpenAiChatMessage, type LlmOpenAiReasoningParams } from './openai.chat';
 import { loadLlmOpenAiChatClient } from './openai.sdk';
 
 /**
@@ -80,7 +81,7 @@ export interface LlmOpenAiCompatibleChatStrategyConfig {
   readonly baseUrl?: string;
   /**
    * The request timeout floor; defaults to `DEFAULT_LLM_COMPLETION_TIMEOUT_MS` (60 s). Each call's abort window scales
-   * up from it with the call's completion budget ({@link llmOpenAiCallTimeoutMs}).
+   * up from it with the call's completion budget ({@link resolveLlmCompletionCallTimeoutMs}).
    */
   readonly timeoutMs?: Milliseconds;
   /**
@@ -314,7 +315,7 @@ export function makeLlmOpenAiCompatibleChatStrategy(config: LlmOpenAiCompatibleC
       // The per-request abort signal is the HARD wall against a hung / runaway call: its window scales with the
       // completion budget but is capped at 10 min. `maxRetries: 0` on the client means the abort is never silently
       // re-tried by the SDK.
-      const callTimeoutMs = llmOpenAiCallTimeoutMs(timeoutMs, tokenLimit);
+      const callTimeoutMs = resolveLlmCompletionCallTimeoutMs({ timeoutMs, maxOutputTokens: tokenLimit });
       // The EXTERNAL cancellation signal, when threaded, is OR-combined with the timeout: whichever fires first aborts
       // the in-flight call. `makeTimeoutAbortSignal` also returns an already-aborted signal if cancellation latched
       // before the call, so the call rejects immediately.
@@ -328,10 +329,10 @@ export function makeLlmOpenAiCompatibleChatStrategy(config: LlmOpenAiCompatibleC
       const model = completion.model ?? sentModel;
       // The upstream endpoint, when the transport reads one — conditional so a provider-less response stays byte-stable.
       const provider = extras?.provider ?? undefined;
-      // Normalize the provider's snake_case usage block through the ONE shared mapper (`llmUsageFrom`): a bare endpoint
+      // Normalize the provider's snake_case usage block through the ONE shared mapper (`toLlmUsage`): a bare endpoint
       // returns no `cost` and the key stays ABSENT, while one that volunteers it gets a real dollar figure — stamped
       // with the provider's cost BASIS when the figure is a list price, not the bill.
-      const usage = llmUsageFrom(completion.usage, { costBasis });
+      const usage = toLlmUsage(completion.usage, { costBasis });
       // The generation-metadata telemetry, kept conditional so an echo-less provider stays byte-stable.
       const generationId = completion.id ?? undefined;
       const finishReason = choice?.finish_reason ?? extras?.fallbackFinishReason ?? undefined;
@@ -371,7 +372,7 @@ export function makeLlmOpenAiCompatibleChatStrategy(config: LlmOpenAiCompatibleC
         } catch (error) {
           // swallow site 'llm/<kind>-strategy.client' (each transport registers its own) — the verdict carries the
           // failure.
-          health = { ready: false, issues: [{ severity: 'error', message: `${kind} client could not be constructed: ${errorMessageOf(error)}` }] };
+          health = { ready: false, issues: [{ severity: 'error', message: `${kind} client could not be constructed: ${readErrorMessage(error)}` }] };
         }
       } else {
         health = { ready: false, issues: [{ severity: 'error', message: `no apiKey configured and no client injected` }] };

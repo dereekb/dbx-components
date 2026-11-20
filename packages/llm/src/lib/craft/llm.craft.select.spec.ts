@@ -5,7 +5,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { type LlmCraftNote } from './llm.craft.note';
-import { llmCraftCandidatesOf, llmCraftNoteMatchesSite, mergeLlmCraftNoteTiers, selectLlmCraftNotes } from './llm.craft.select';
+import { resolveLlmCraftCandidates, llmCraftNoteMatchesSite, mergeLlmCraftNoteTiers, selectLlmCraftNotes } from './llm.craft.select';
 import { DEFAULT_LLM_CRAFT_SITE_LIMITS, makeLlmCraftSiteRegistry } from './llm.craft.site';
 
 const SITES = makeLlmCraftSiteRegistry({
@@ -131,14 +131,14 @@ describe('selectLlmCraftNotes()', () => {
   it("asks about at most the site's judgeMax judged notes; the rest are cut judge-cap", () => {
     const judgeMax = DEFAULT_LLM_CRAFT_SITE_LIMITS.judgeMax;
     const judged = Array.from({ length: judgeMax + 2 }, (_, index) => note(`j${String(index).padStart(2, '0')}`, { ask: '`brief` x' }));
-    const candidates = llmCraftCandidatesOf({ notes: judged, site: PAGE, sites: SITES });
+    const candidates = resolveLlmCraftCandidates({ notes: judged, site: PAGE, sites: SITES });
 
     expect(candidates.kind).toBe('product-page');
     expect(candidates.limits).toEqual(DEFAULT_LLM_CRAFT_SITE_LIMITS);
     expect(candidates.asked).toHaveLength(judgeMax);
     expect(candidates.cut.map((cut) => `${cut.note.id}:${cut.reason}`)).toEqual(['j08:judge-cap', 'j09:judge-cap']);
 
-    const reply = llmCraftCandidatesOf({ notes: [note('r1', { sites: ['support-reply'], ask: '`message` x' }), note('r2', { sites: ['support-reply'], ask: '`message` y' })], site: { kind: 'support-reply' }, sites: SITES });
+    const reply = resolveLlmCraftCandidates({ notes: [note('r1', { sites: ['support-reply'], ask: '`message` x' }), note('r2', { sites: ['support-reply'], ask: '`message` y' })], site: { kind: 'support-reply' }, sites: SITES });
     expect(reply.asked.map((entry) => entry.id)).toEqual(['r1']);
     expect(reply.cut.map((cut) => `${cut.note.id}:${cut.reason}`)).toEqual(['r2:judge-cap']);
   });

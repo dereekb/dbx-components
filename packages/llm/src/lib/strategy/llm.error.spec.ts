@@ -17,7 +17,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { APIConnectionError, APIConnectionTimeoutError, APIError, APIUserAbortError, BadRequestError, ConflictError, InternalServerError, RateLimitError } from 'openai';
-import { classifyLlmError, isLlmAbortError, isRetryableLlmErrorClassification, LLM_ERROR_SUMMARY_MAX_LENGTH, llmErrorSummaryOf } from './llm.error';
+import { classifyLlmError, isLlmAbortError, isRetryableLlmErrorClassification, LLM_ERROR_SUMMARY_MAX_LENGTH, formatLlmErrorSummary } from './llm.error';
 
 /*
  * Ported from the old unprefixed abort predicate and boolean retry predicate, outcomes unchanged. The invariant every
@@ -189,24 +189,24 @@ describe('isRetryableLlmErrorClassification', () => {
   });
 });
 
-describe('llmErrorSummaryOf', () => {
+describe('formatLlmErrorSummary', () => {
   it('names the leaf class, the status and the message for a REAL SDK error', () => {
     // `RateLimitError 429` on every breadcrumb of a run is an exhausted key; `APIConnectionError` with no status
     // is the network. The summary is what lets a log reader tell them apart without re-sending a request.
-    expect(llmErrorSummaryOf(new RateLimitError(429, { message: 'Rate limit exceeded' }, undefined, new Headers()))).toBe('RateLimitError 429: Rate limit exceeded');
-    expect(llmErrorSummaryOf(new InternalServerError(502, { message: 'bad gateway' }, undefined, new Headers()))).toBe('InternalServerError 502: bad gateway');
-    expect(llmErrorSummaryOf(new APIConnectionError({ message: 'Connection error.' }))).toBe('APIConnectionError: Connection error.');
+    expect(formatLlmErrorSummary(new RateLimitError(429, { message: 'Rate limit exceeded' }, undefined, new Headers()))).toBe('RateLimitError 429: Rate limit exceeded');
+    expect(formatLlmErrorSummary(new InternalServerError(502, { message: 'bad gateway' }, undefined, new Headers()))).toBe('InternalServerError 502: bad gateway');
+    expect(formatLlmErrorSummary(new APIConnectionError({ message: 'Connection error.' }))).toBe('APIConnectionError: Connection error.');
   });
 
   it('a status-bearing plain Error keeps its status; a bare throw degrades to `unknown`', () => {
-    expect(llmErrorSummaryOf(Object.assign(new Error('http 503'), { status: 503 }))).toBe('Error 503: http 503');
-    expect(llmErrorSummaryOf(new Error(''))).toBe('Error');
-    expect(llmErrorSummaryOf('boom')).toBe('boom');
-    expect(llmErrorSummaryOf(undefined)).toBe('unknown');
+    expect(formatLlmErrorSummary(Object.assign(new Error('http 503'), { status: 503 }))).toBe('Error 503: http 503');
+    expect(formatLlmErrorSummary(new Error(''))).toBe('Error');
+    expect(formatLlmErrorSummary('boom')).toBe('boom');
+    expect(formatLlmErrorSummary(undefined)).toBe('unknown');
   });
 
   it('is cut to one log line', () => {
-    const summary = llmErrorSummaryOf(new Error('x'.repeat(1000)));
+    const summary = formatLlmErrorSummary(new Error('x'.repeat(1000)));
     expect(summary.length).toBe(LLM_ERROR_SUMMARY_MAX_LENGTH);
   });
 });

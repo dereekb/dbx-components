@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { makeLlmCallContext } from '../record/llm.call.context';
 import { type LlmDispatchResult, type LlmRequest } from '../strategy/llm.strategy';
-import { llmDecodeRetryModelOf, makeLlmDispatchRetryLadder } from './llm.dispatch.ladder';
+import { resolveLlmDecodeRetryModel, makeLlmDispatchRetryLadder } from './llm.dispatch.ladder';
 import { LLM_RETRY_BONUS_LEVER } from './llm.retry.lever';
 
 const FAILED: LlmDispatchResult = { text: 'prose', strategyId: 's', capability: 'c', finishReason: 'stop' };
@@ -14,22 +14,22 @@ function ladderOf(baseRequest: LlmRequest = { capability: 'c', prompt: 'p' }, es
   return { ladder, diags };
 }
 
-describe('llmDecodeRetryModelOf()', () => {
+describe('resolveLlmDecodeRetryModel()', () => {
   const modelTiers = { fast: 'm/fast', strong: { model: 'm/strong' } };
 
   it('should resolve off, explicit and implicit tiers', () => {
-    expect(llmDecodeRetryModelOf({ modelTiers, decodeRetryTier: 'off' })).toBeUndefined();
-    expect(llmDecodeRetryModelOf({ modelTiers, decodeRetryTier: 'OFF' })).toBeUndefined();
-    expect(llmDecodeRetryModelOf({ modelTiers, decodeRetryTier: ' none ' })).toBeUndefined();
-    expect(llmDecodeRetryModelOf({ modelTiers, decodeRetryTier: '' })).toBe('m/strong');
-    expect(llmDecodeRetryModelOf({ modelTiers, decodeRetryTier: ' fast ' })).toBe('m/fast');
-    expect(llmDecodeRetryModelOf({ modelTiers, decodeRetryTier: 'fast' })).toBe('m/fast');
-    expect(llmDecodeRetryModelOf({ modelTiers })).toBe('m/strong');
-    expect(llmDecodeRetryModelOf({ modelTiers: { fast: 'm/fast' } })).toBeUndefined();
+    expect(resolveLlmDecodeRetryModel({ modelTiers, decodeRetryTier: 'off' })).toBeUndefined();
+    expect(resolveLlmDecodeRetryModel({ modelTiers, decodeRetryTier: 'OFF' })).toBeUndefined();
+    expect(resolveLlmDecodeRetryModel({ modelTiers, decodeRetryTier: ' none ' })).toBeUndefined();
+    expect(resolveLlmDecodeRetryModel({ modelTiers, decodeRetryTier: '' })).toBe('m/strong');
+    expect(resolveLlmDecodeRetryModel({ modelTiers, decodeRetryTier: ' fast ' })).toBe('m/fast');
+    expect(resolveLlmDecodeRetryModel({ modelTiers, decodeRetryTier: 'fast' })).toBe('m/fast');
+    expect(resolveLlmDecodeRetryModel({ modelTiers })).toBe('m/strong');
+    expect(resolveLlmDecodeRetryModel({ modelTiers: { fast: 'm/fast' } })).toBeUndefined();
   });
 
   it('should fail loud on an explicit typo', () => {
-    expect(() => llmDecodeRetryModelOf({ modelTiers, decodeRetryTier: 'strnog' })).toThrow();
+    expect(() => resolveLlmDecodeRetryModel({ modelTiers, decodeRetryTier: 'strnog' })).toThrow();
   });
 });
 

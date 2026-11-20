@@ -90,7 +90,7 @@ export interface CompileLlmCapabilityRulesConfig<R extends LlmCapabilityRuleTarg
    * The value a rule compiles to. Called eagerly, once per rule, after the rule validated — even when nothing matches it,
    * so a bad rule fails at startup.
    */
-  readonly valueOf: (rule: R, context: LlmCapabilityRuleContext) => V;
+  readonly readValue: (rule: R, context: LlmCapabilityRuleContext) => V;
 }
 
 /**
@@ -103,7 +103,7 @@ export interface CompileLlmCapabilityRulesConfig<R extends LlmCapabilityRuleTarg
  * @throws {Error} When a rule fails validation.
  */
 export function compileLlmCapabilityRules<R extends LlmCapabilityRuleTarget, V>(config: CompileLlmCapabilityRulesConfig<R, V>): ReadonlyMap<LlmCapabilityKey, V> {
-  const { capabilities, label, validateRule, valueOf } = config;
+  const { capabilities, label, validateRule, readValue } = config;
   const rules = config.rules ?? [];
   const compiled = new Map<LlmCapabilityKey, V>();
 
@@ -141,7 +141,7 @@ export function compileLlmCapabilityRules<R extends LlmCapabilityRuleTarget, V>(
         }
       }
 
-      return valueOf(rule, context);
+      return readValue(rule, context);
     });
 
     // Resolve each known capability: the capability-key level first, then the tag level. Excluded refs never match.

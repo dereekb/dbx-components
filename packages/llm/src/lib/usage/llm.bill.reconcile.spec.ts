@@ -6,7 +6,7 @@
 import { describe, it, expect } from 'vitest';
 import type { LlmCallLogPayload } from '../record/llm.call.payload';
 import type { LlmCallBillRead, LlmCallBillReader } from '../strategy/llm.call.bill';
-import { llmBilledShareOf, reconcileLlmCallBills, renderLlmBillReconciliationMarkdown } from './llm.bill.reconcile';
+import { computeLlmBilledShare, reconcileLlmCallBills, renderLlmBillReconciliationMarkdown } from './llm.bill.reconcile';
 
 /**
  * A reader answering from a fixed table (absent ⇒ pending), recording the peak number of reads in flight.
@@ -66,7 +66,7 @@ describe('reconcileLlmCallBills', () => {
 
     const flash = reconciliation.byModel.find((entry) => entry.model === 'vendor-b/model-flash')?.cell;
 
-    expect(flash == null ? undefined : llmBilledShareOf(flash)).toBeCloseTo(0.5, 9);
+    expect(flash == null ? undefined : computeLlmBilledShare(flash)).toBeCloseTo(0.5, 9);
     expect(reconciliation.byModel.map((entry) => entry.model)).toEqual(['vendor-a/model-small', 'vendor-b/model-flash']);
     expect(reconciliation.details).toEqual([{ generationId: 'fresh', status: 'pending', detail: 'Not Found' }]);
   });

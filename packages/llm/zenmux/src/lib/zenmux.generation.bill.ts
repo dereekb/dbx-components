@@ -13,20 +13,20 @@
  *   after it is made, so that reads as PENDING, never as a failure: re-reading later is the remedy.
  */
 
-import { llmCostOf, llmProviderErrorMessage, type LlmCallBill, type LlmCallBillRead, type LlmCallBillReader, type LlmCallBillReadOptions } from '@dereekb/llm';
-import { errorMessageOf, type Maybe, type Milliseconds, removeTrailingSlashes } from '@dereekb/util';
-import { DEFAULT_ZENMUX_BASE_URL, ZENMUX_PROVIDER_ID } from './zenmux.constants';
-import { readZenmuxManagement, zenmuxGenerationUrl, type ZenmuxEnvelope, type ZenmuxManagementReadConfig } from './zenmux.management';
+import { readLlmCost, llmProviderErrorMessage, type LlmCallBill, type LlmCallBillRead, type LlmCallBillReader, type LlmCallBillReadOptions } from '@dereekb/llm';
+import { readErrorMessage, type Maybe, type Milliseconds, removeTrailingSlashes } from '@dereekb/util';
+import { DEFAULT_LLM_ZENMUX_BASE_URL, LLM_ZENMUX_PROVIDER_ID } from './zenmux.constants';
+import { readLlmZenmuxManagement, llmZenmuxGenerationUrl, type LlmZenmuxEnvelope, type LlmZenmuxManagementReadConfig } from './zenmux.management';
 
 /**
  * How long one bill read may take before it is reported failed.
  */
-export const DEFAULT_ZENMUX_BILL_READ_TIMEOUT_MS: Milliseconds = 15_000;
+export const DEFAULT_LLM_ZENMUX_BILL_READ_TIMEOUT_MS: Milliseconds = 15_000;
 
 /**
- * Config for {@link makeZenmuxGenerationBillReader}.
+ * Config for {@link makeLlmZenmuxGenerationBillReader}.
  */
-export interface ZenmuxGenerationBillReaderConfig extends ZenmuxManagementReadConfig {
+export interface LlmZenmuxGenerationBillReaderConfig extends LlmZenmuxManagementReadConfig {
   /**
    * The PAY-AS-YOU-GO inference key — the one credential `management/generation` accepts. It reads subscription-key calls
    * too.
@@ -48,17 +48,17 @@ interface ZenmuxGenerationData {
  * @param envelope - The parsed body.
  * @returns The outcome.
  */
-function zenmuxBillReadOf(generationId: string, envelope: ZenmuxEnvelope<ZenmuxGenerationData>): LlmCallBillRead {
+function zenmuxBillReadOf(generationId: string, envelope: LlmZenmuxEnvelope<ZenmuxGenerationData>): LlmCallBillRead {
   const rating = envelope.data?.ratingResponses;
-  const billed = llmCostOf(rating?.billAmount);
+  const billed = readLlmCost(rating?.billAmount);
   let read: LlmCallBillRead;
 
   if (billed == null) {
     // A 200 with no rating yet is the same "not billed yet" a 404 is, said differently.
     read = { status: 'pending', generationId, detail: envelope.message ?? 'no rating on the generation yet' };
   } else {
-    const listed = llmCostOf(rating?.originAmount);
-    const discount = llmCostOf(rating?.discountAmount);
+    const listed = readLlmCost(rating?.originAmount);
+    const discount = readLlmCost(rating?.discountAmount);
     const bill: LlmCallBill = { generationId, billed, ...(listed == null ? {} : { listed }), ...(discount == null ? {} : { discount }) };
     read = { status: 'billed', bill };
   }
@@ -74,20 +74,20 @@ function zenmuxBillReadOf(generationId: string, envelope: ZenmuxEnvelope<ZenmuxG
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function makeZenmuxGenerationBillReader(config: ZenmuxGenerationBillReaderConfig): LlmCallBillReader {
-  const baseUrl = removeTrailingSlashes(config.baseUrl ?? DEFAULT_ZENMUX_BASE_URL);
+export function makeLlmZenmuxGenerationBillReader(config: LlmZenmuxGenerationBillReaderConfig): LlmCallBillReader {
+  const baseUrl = removeTrailingSlashes(config.baseUrl ?? DEFAULT_LLM_ZENMUX_BASE_URL);
   const apiKey = config.apiKey.trim();
-  const timeoutMs = config.timeoutMs ?? DEFAULT_ZENMUX_BILL_READ_TIMEOUT_MS;
+  const timeoutMs = config.timeoutMs ?? DEFAULT_LLM_ZENMUX_BILL_READ_TIMEOUT_MS;
 
   return {
-    providerId: ZENMUX_PROVIDER_ID,
+    providerId: LLM_ZENMUX_PROVIDER_ID,
     async read(generationId: string, options?: LlmCallBillReadOptions): Promise<LlmCallBillRead> {
-      const url = zenmuxGenerationUrl(baseUrl, generationId);
+      const url = llmZenmuxGenerationUrl(baseUrl, generationId);
       let read: LlmCallBillRead;
 
       try {
         // Built INSIDE the try: should the runtime's abort-signal API throw, it reads as a failed bill, not a throw.
-        const managementRead = await readZenmuxManagement<ZenmuxGenerationData>({ fetch: config.fetch, url, apiKey, timeoutMs, signal: options?.signal });
+        const managementRead = await readLlmZenmuxManagement<ZenmuxGenerationData>({ fetch: config.fetch, url, apiKey, timeoutMs, signal: options?.signal });
         const envelope = managementRead.json;
 
         if (managementRead.response.ok) {
@@ -104,7 +104,7 @@ export function makeZenmuxGenerationBillReader(config: ZenmuxGenerationBillReade
         }
       } catch (error) {
         // Swallow site `llm/zenmux-generation-bill.transport`. An unreachable bill endpoint is a FAILED read, never a throw.
-        read = { status: 'failed', generationId, detail: errorMessageOf(error) };
+        read = { status: 'failed', generationId, detail: readErrorMessage(error) };
       }
 
       return read;
