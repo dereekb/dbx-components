@@ -935,8 +935,7 @@ one retry lever, and a mangled JSON reply gets one cheap fast fix before any re-
   feedback files the `critique-fail` gap. A `line` reply is lifted to a value under `lineValueField` (default `line`) so the critic can read
   it.
 - **Decision lane.** The optional `decisions` block (`strategies`, `strategyId`, `defaultModel`, `maxAttempts`) adds
-  `decide`, `decisionsSpent`, `resetDecisionsSpent` and the once-per-reset `claimDecisionBudgetWarning`; no block, an
-  empty registry or an unregistered pin leaves all four absent.
+  `decide`; no block, an empty registry or an unregistered pin leaves it absent.
   - **Model.** A per-call `model` / `tier`, then a capability route that names a decision model, then the descriptor's
     `model` / `tier`, then `defaultModel` (which replaces the default-tier rung). A capability's completion route never
     serves its decisions. A `defaultModel` that is not a decision model throws at construction; a slug from any other
@@ -948,8 +947,8 @@ one retry lever, and a mangled JSON reply gets one cheap fast fix before any re-
     `isRetryableUnknownError` as the completion lane: a 408, a 429, a 5xx, a dropped socket, or a host-approved
     `unknown` error; never an abort, a timeout or an answer fault) is resent after `transportBackoff({ attempt, error })`
     — the same default, so a System One 429's `Retry-After` is honored (`LlmDecisionTransportError.headers`) — up to
-    `maxAttempts` sends (default 2). Each failed send is a `failedAttempts` row and `result.attempts` counts the sends; `decisionsSpent`
-    counts every send. A decision cancelled during the backoff, or while parked before the resend, is not resent.
+    `maxAttempts` sends (default 2). Each failed send is a `failedAttempts` row and `result.attempts` counts the sends.
+    A decision cancelled during the backoff, or while parked before the resend, is not resent.
 
 ```ts
 import { resolveLlmCritiqueFields, makeLlmSchemaValueValidator, makeLlmDispatcher, makeLlmReplyFastFixer, makeLlmStrategyRegistry } from '@dereekb/llm';
@@ -1069,8 +1068,8 @@ could need in one map.
   decision — and `decide({ strategy, input, model, options })` runs it.
 - `LlmDecisionDispatchRequest` is what `makeLlmDispatcher`'s decision lane (its `decisions` block) takes. It shares
   `LlmDispatchRequestBase` with a completion request — the consuming `capability`, host `meta`, model / tier
-  overrides, the parent `callContext` and the `signal` — and adds the declared `decision`, its `input`, `stage` and an
-  optional `stamp`. A descriptor's own `model` / `tier` are `Pick<LlmCapabilityModelRef, 'tier' | 'model'>`.
+  overrides, the parent `callContext` and the `signal` — and adds the declared `decision`, its `input` and an optional
+  `stamp`. A descriptor's own `model` / `tier` are `Pick<LlmCapabilityModelRef, 'tier' | 'model'>`.
 
 ```ts
 import { llmChoiceQuestion, llmDecisionRequestBody, llmNoulQuestion, readLlmDecisionAnswers } from '@dereekb/llm/decision';
@@ -1501,7 +1500,7 @@ supplement hashes), `WebsiteUrl` / `WebsiteUrlWithPrefix` (base URLs), `MimeType
 `Milliseconds`, `DollarAmount` and `DestroyFunction` (the detach `addTap` returns). llm adds two of its own in
 `llm.value.ts`: `LlmTokenCount` (every token count and token cap) and `LlmGenerationId` (a provider's per-generation
 id, the key a bill reader looks a call up by). They are aliases of `number` / `string`, so no value changes; 1-based
-ordinals (`attempt`, `stage`) and UTF-16 lengths whose name carries the unit (`rawLength`, `promptChars`) stay `number`.
+ordinals (`attempt`) and UTF-16 lengths whose name carries the unit (`rawLength`, `promptChars`) stay `number`.
 
 The SHA-256 helpers live in `@dereekb/util`: `sha256Hex(text)` and `sha256HexPrefix(text, length)`. They are
 synchronous and byte-identical to `node:crypto`'s `createHash('sha256').update(text, 'utf8').digest('hex')`. llm uses 16

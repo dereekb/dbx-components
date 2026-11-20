@@ -6,7 +6,7 @@
  * (`X`) types; both default to the library's.
  */
 
-import { type Maybe, type Count } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { type LlmDecisionDispatchRequest } from '../decision/llm.decision.descriptor';
 import { type LlmDecisionQuestions } from '../decision/llm.decision.question';
 import { type LlmDecisionResult } from '../decision/llm.decision.strategy';
@@ -52,9 +52,8 @@ export interface LlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequest
    * (`decisions.maxAttempts`); any other throw propagates. A model that is not a decision model throws before sending.
    *
    * OPTIONAL, and that is the contract rather than an oversight. It is implemented only when the dispatcher was built
-   * with a decision registry, so every hand-rolled fake dispatcher keeps compiling untouched, and a consumer reads
-   * `dispatcher.decide != null` as "this run can serve a decision at all" — the ONE check that keeps a run with no
-   * decision-capable provider on its text arm instead of throwing.
+   * with a decision registry, and a consumer reads `dispatcher.decide != null` as "this run can serve a decision at
+   * all" — the ONE check that keeps a run with no decision-capable provider on its text arm instead of throwing.
    *
    * @param request - The consuming capability, the declared decision, its input and any per-call concerns.
    * @returns The typed answers and the usage.
@@ -70,27 +69,6 @@ export interface LlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequest
    * @returns The billed slug and its vision flag.
    */
   capabilityVision?(capability: LlmCapabilityKey, override?: Maybe<LlmCapabilityModelOverride>): LlmCapabilityVision;
-  /**
-   * How many decision SENDS THIS dispatcher has made (counted at the wire, every send a resend included, whether or not
-   * the reply was usable) — the per-run counter a host's decision budget is enforced against. Present exactly when
-   * {@link decide} is.
-   *
-   * @returns The served decision-call count.
-   */
-  decisionsSpent?(): Count;
-  /**
-   * Zero {@link decisionsSpent} — the per-run refill a host calls at the start of every run, so a budget that promises
-   * "one run" holds even when one dispatcher serves several runs. Present exactly when {@link decide} is.
-   */
-  resetDecisionsSpent?(): void;
-  /**
-   * CLAIM the ONE per-run decision-budget warning — `true` the first time it is called since the last
-   * {@link resetDecisionsSpent}, `false` every time after. The latch lives here rather than at a call site so several
-   * consumers reading the same budget file one warning, not one each. Present exactly when {@link decide} is.
-   *
-   * @returns Whether this caller owns the warning.
-   */
-  claimDecisionBudgetWarning?(): boolean;
 }
 
 /**

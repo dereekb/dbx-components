@@ -1,9 +1,9 @@
 /**
- * The dispatcher's DECISION LANE — `decide` and its per-run counters. A decision rides the dispatcher's shared record
- * path: its context comes from the dispatcher's `callContextOf` (nested under the request's `callContext`, else the
- * recorder's root), its host fields from `recordFieldsOf` (`lane: 'decision'`), and it writes one start record (and
- * fires `onDispatch`) through `recordLlmDispatchStart`, then one call record (and `onDispatchComplete`) whose prompt is
- * the decision's state and questions. It never fires `onDecodeFailure`.
+ * The dispatcher's DECISION LANE — `decide`. A decision rides the dispatcher's shared record path: its context comes
+ * from the dispatcher's `callContextOf` (nested under the request's `callContext`, else the recorder's root), its host
+ * fields from `recordFieldsOf` (`lane: 'decision'`), and it writes one start record (and fires `onDispatch`) through
+ * `recordLlmDispatchStart`, then one call record (and `onDispatchComplete`) whose prompt is the decision's state and
+ * questions. It never fires `onDecodeFailure`.
  *
  * The model is the decision's own: a per-call override, a capability route that names a decision model, the
  * descriptor's `model` / `tier`, else `decisions.defaultModel` — a capability's COMPLETION route never serves its
@@ -58,7 +58,7 @@ export interface LlmPromptDecisionSegmentOrigin extends LlmPromptSegmentOrigin {
 }
 
 /**
- * The decision lane a dispatcher exposes — {@link decide} and its per-run counters, all present together.
+ * The decision lane a dispatcher exposes.
  */
 export interface LlmDispatchDecisionLane {
   /**
@@ -68,23 +68,6 @@ export interface LlmDispatchDecisionLane {
    * @returns The answers.
    */
   decide<I, Q extends LlmDecisionQuestions>(request: LlmDecisionDispatchRequest<I, Q>): Promise<LlmDecisionResult<Q>>;
-  /**
-   * How many decision SENDS reached the wire since construction or the last reset — every send, a resend included (a
-   * throw still spends).
-   *
-   * @returns The count.
-   */
-  decisionsSpent(): number;
-  /**
-   * Zero the counter and re-arm the warning latch.
-   */
-  resetDecisionsSpent(): void;
-  /**
-   * `true` the FIRST time it is called after construction or a reset, `false` every time after.
-   *
-   * @returns Whether the caller won the warning.
-   */
-  claimDecisionBudgetWarning(): boolean;
 }
 
 /**
@@ -214,8 +197,6 @@ export function makeLlmDispatchDecisionLane<R extends LlmDispatchRequest = LlmDi
       const strategyId = strategy.id;
       const strategyKind = llmStrategyKind(strategy);
       const maxAttempts = resolveLlmDispatchMaxAttempts(decisions.maxAttempts);
-      let served = 0;
-      let warned = false;
 
       const decisionModelOf = (request: LlmDecisionDispatchRequest): LlmDispatchDecisionModel => {
         const capabilityRoute = capabilityRoutes?.get(request.capability);
@@ -266,8 +247,6 @@ export function makeLlmDispatchDecisionLane<R extends LlmDispatchRequest = LlmDi
             }
           }
 
-          // the counter bounds what is SENT, a resend included
-          served += 1;
           const start = Date.now();
 
           try {
@@ -345,7 +324,6 @@ export function makeLlmDispatchDecisionLane<R extends LlmDispatchRequest = LlmDi
           result,
           ...(tier == null ? {} : { tier }),
           decision: key,
-          ...(request.stage == null ? {} : { stage: request.stage }),
           ...(stamp == null ? {} : { stamp }),
           ...(failedAttempts.length === 0 ? {} : { failedAttempts }),
           ...fields('call')
@@ -359,19 +337,7 @@ export function makeLlmDispatchDecisionLane<R extends LlmDispatchRequest = LlmDi
         return answer;
       };
 
-      lane = {
-        decide,
-        decisionsSpent: () => served,
-        resetDecisionsSpent: () => {
-          served = 0;
-          warned = false;
-        },
-        claimDecisionBudgetWarning: () => {
-          const claimed = !warned;
-          warned = true;
-          return claimed;
-        }
-      };
+      lane = { decide };
     }
   }
 

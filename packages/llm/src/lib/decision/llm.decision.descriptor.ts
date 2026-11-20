@@ -167,13 +167,7 @@ export interface LlmDecisionDispatchRequest<I = unknown, Q extends LlmDecisionQu
    */
   readonly input: I;
   /**
-   * Which STAGE of a multi-stage decision this call is (1 = a thin Choice over a cut, 2 = the shortlist re-read).
-   * Recorded on the call record beside the decision key, so a stage-2 answer can be read back apart from its
-   * stage-1 sibling. Absent on a single-stage decision.
-   */
-  readonly stage?: number;
-  /**
-   * The consumer's own READ of the answers, stamped onto the call record beside the decision key, so a log census
+   * The consumer's own READ of the answers, stamped onto the call record beside the decision key, so a log reader
    * reads what the call DECIDED off the record alone. Called once the answers are read; a throwing stamp is the
    * dispatcher's to swallow, and stamps nothing. Its keys never override the record's own fields. Absent ⇒ the
    * record is byte-identical.

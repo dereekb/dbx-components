@@ -342,11 +342,6 @@ export interface LlmCallRecordBase {
    */
   readonly decision?: LlmDecisionKey;
   /**
-   * Which stage (1-based) of a multi-stage decision this call was (the stage the caller stated). Absent on a
-   * completion and on a single-stage decision.
-   */
-  readonly stage?: number;
-  /**
    * A decision consumer's own read of its answers. A host writing a payload spreads it BEFORE every core field so it
    * can never override one. Absent on a completion and on every decision that states none, so their payload is
    * byte-identical.

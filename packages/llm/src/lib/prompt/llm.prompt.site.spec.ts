@@ -55,7 +55,7 @@ describe('mergeLlmPromptSite()', () => {
 
 /**
  * A recording dispatcher built the way a host builds one: `preparePrompt` from `makeLlmPromptFactory`, `dispatch` the
- * unwrapped `preparePrompt(request).execute()`, plus an extra decision counter.
+ * unwrapped `preparePrompt(request).execute()`, plus a `capabilityVision` reader.
  */
 function recordingDispatcherOf() {
   const seen: HostRequest[] = [];
@@ -68,7 +68,7 @@ function recordingDispatcherOf() {
   const dispatcher: LlmDispatcher<HostRequest> = {
     dispatch: async (request) => (await preparePrompt(request).execute()).result,
     preparePrompt,
-    decisionsSpent: () => 3
+    capabilityVision: () => ({ model: 'vision-model', vision: true, source: 'default-tier' })
   };
   return { dispatcher, seen };
 }
@@ -108,7 +108,7 @@ describe('withLlmPromptSite()', () => {
   it('carries the other members through the spread', () => {
     const { dispatcher } = recordingDispatcherOf();
     const scoped = withLlmPromptSite({ dispatcher, site: { kind: 'report' } });
-    expect(scoped.decisionsSpent?.()).toBe(3);
+    expect(scoped.capabilityVision?.('summarize')).toEqual({ model: 'vision-model', vision: true, source: 'default-tier' });
   });
 
   it('leaves the wrapped dispatcher untouched', async () => {

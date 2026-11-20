@@ -170,15 +170,12 @@ const flush = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 // MARK: Specs
 describe('makeLlmDispatcher() decision lane', () => {
   describe('decide', () => {
-    it('should leave decide and the counters undefined with no decisions block or an empty registry', () => {
+    it('should leave decide undefined with no decisions block or an empty registry', () => {
       const without = setup({ backends: null }).dispatcher;
       const empty = setup({ backends: [] }).dispatcher;
 
       for (const dispatcher of [without, empty]) {
         expect(dispatcher).not.toHaveProperty('decide');
-        expect(dispatcher).not.toHaveProperty('decisionsSpent');
-        expect(dispatcher).not.toHaveProperty('resetDecisionsSpent');
-        expect(dispatcher).not.toHaveProperty('claimDecisionBudgetWarning');
       }
     });
 
@@ -263,7 +260,6 @@ describe('makeLlmDispatcher() decision lane', () => {
 
       expect(requests).toHaveLength(0);
       expect(starts).toHaveLength(0);
-      expect(dispatcher.decisionsSpent?.()).toBe(0);
     });
 
     it('should name the decision, the capability and the rung in the refusal', async () => {
@@ -303,7 +299,6 @@ describe('makeLlmDispatcher() decision lane', () => {
       expect(calls[0].failedAttempts?.[0]).toMatchObject({ attempt: 1, cause: 'transport', text: '' });
       expect(calls[0].failedAttempts?.[0]?.error).toContain('503');
       expect(calls[0].result.attempts).toBe(2);
-      expect(dispatcher.decisionsSpent?.()).toBe(2);
     });
 
     it('should resend a status-less transport failure whose cause is a dropped socket', async () => {
@@ -387,7 +382,6 @@ describe('makeLlmDispatcher() decision lane', () => {
       await expect(three.dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' } })).rejects.toBe(three.error);
       expect(three.requests).toHaveLength(3);
       expect(three.transportBackoff.mock.calls.map(([input]) => input.attempt)).toEqual([1, 2]);
-      expect(three.dispatcher.decisionsSpent?.()).toBe(3);
 
       for (const single of [always(1), always(0)]) {
         await expect(single.dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' } })).rejects.toBe(single.error);
@@ -434,7 +428,21 @@ describe('makeLlmDispatcher() decision lane', () => {
       controller.abort();
       await expect(pending).rejects.toBe(error);
       expect(requests).toHaveLength(1);
-      expect(dispatcher.decisionsSpent?.()).toBe(1);
+    });
+
+    it('should record one start and no call record when a send throws', async () => {
+      const throwing = makeLlmScriptedDecisionStrategy({
+        id: 'account-a',
+        script: () => {
+          throw new Error('transport down');
+        }
+      });
+      const { dispatcher, starts, calls } = setup({ backends: [throwing] });
+
+      await expect(dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' } })).rejects.toThrow('transport down');
+
+      expect(starts).toHaveLength(1);
+      expect(calls).toHaveLength(0);
     });
   });
 
@@ -479,15 +487,14 @@ describe('makeLlmDispatcher() decision lane', () => {
       expect(calls[0].segments?.map((segment) => segment.id)).toEqual(['D', 'D']);
     });
 
-    it("should land the dispatcher's host record fields on both records (lane: 'decision'), and the stage on the call record", async () => {
+    it("should land the dispatcher's host record fields on both records (lane: 'decision')", async () => {
       const { dispatcher, starts, calls } = setup({ recordFieldsOf: ({ lane, kind, request }) => ({ host: `${lane}:${kind}:${request.capability}` }) });
 
-      await dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' }, stage: 2 });
+      await dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' } });
       await dispatcher.decide?.({ capability: 'OtherCap', decision: PICK_ROW, input: { phrase: 'x' } });
 
       expect(starts.map((record) => record.host)).toEqual(['decision:start:PickCap', 'decision:start:OtherCap']);
       expect(calls.map((record) => record.host)).toEqual(['decision:call:PickCap', 'decision:call:OtherCap']);
-      expect(calls.map((record) => record.stage)).toEqual([2, undefined]);
     });
 
     it("should record the request's stamp", async () => {
@@ -628,59 +635,6 @@ describe('makeLlmDispatcher() decision lane', () => {
 
       cancellation.abort();
       expect(signals[1].aborted).toBe(true);
-    });
-  });
-
-  describe('the one decisions counter', () => {
-    it('should count EVERY served decision, whichever capability asked', async () => {
-      const { dispatcher } = setup();
-
-      expect(dispatcher.decisionsSpent?.()).toBe(0);
-
-      await dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' } });
-      await dispatcher.decide?.({ capability: 'OtherCap', decision: PICK_ROW, input: { phrase: 'y' } });
-
-      expect(dispatcher.decisionsSpent?.()).toBe(2);
-    });
-
-    it('should spend the budget on a transport throw too: the counter bounds what is SENT', async () => {
-      const throwing = makeLlmScriptedDecisionStrategy({
-        id: 'account-a',
-        script: () => {
-          throw new Error('transport down');
-        }
-      });
-      const { dispatcher, starts, calls } = setup({ backends: [throwing] });
-
-      await expect(dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' } })).rejects.toThrow('transport down');
-
-      expect(dispatcher.decisionsSpent?.()).toBe(1);
-      expect(starts).toHaveLength(1);
-      expect(calls).toHaveLength(0);
-    });
-
-    it('should zero the counter on resetDecisionsSpent', async () => {
-      const { dispatcher } = setup();
-      await dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' } });
-
-      expect(dispatcher.decisionsSpent?.()).toBe(1);
-
-      dispatcher.resetDecisionsSpent?.();
-
-      expect(dispatcher.decisionsSpent?.()).toBe(0);
-    });
-
-    it('should claim the budget warning ONCE until a reset re-arms it', () => {
-      const { dispatcher } = setup();
-
-      expect(dispatcher.claimDecisionBudgetWarning?.()).toBe(true);
-      expect(dispatcher.claimDecisionBudgetWarning?.()).toBe(false);
-      expect(dispatcher.claimDecisionBudgetWarning?.()).toBe(false);
-
-      dispatcher.resetDecisionsSpent?.();
-
-      expect(dispatcher.claimDecisionBudgetWarning?.()).toBe(true);
-      expect(dispatcher.claimDecisionBudgetWarning?.()).toBe(false);
     });
   });
 });

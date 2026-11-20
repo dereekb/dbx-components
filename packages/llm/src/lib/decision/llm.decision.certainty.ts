@@ -22,11 +22,8 @@ import { toLlmDecisionConfidenceBand, llmDecisionChoiceRanking, type LlmDecision
 
 /**
  * What a Choice's answer reads as — see the module doc.
- *
- * `'several'` is never produced by {@link readLlmChoiceCertainty}: it is a reading a consumer sets itself, when it
- * accepts more than one of the contenders.
  */
-export type LlmChoiceCertaintyKind = 'sure' | 'nested' | 'split' | 'diffuse' | 'unread' | 'several';
+export type LlmChoiceCertaintyKind = 'sure' | 'nested' | 'split' | 'diffuse' | 'unread';
 
 /**
  * A site's floors. Each is a named, site-local constant with a stated rationale; none is derived from another.

@@ -129,8 +129,8 @@ export interface WithLlmPromptSiteConfig<R extends LlmDispatchRequest = LlmDispa
  * Derive a dispatcher whose every request carries `site` — the ONE scope wrapper over a whole run (a document
  * workflow's `{ supply: { glossary } }`). Both members are wrapped ({@link LlmDispatcher.dispatch} and
  * {@link LlmDispatcher.preparePrompt}, through which a chain root goes), so no call site is edited and every call of
- * the scope carries the site with no signature change. The other members (`decide`, `capabilityVision`, the decision
- * counters) ride the spread unchanged.
+ * the scope carries the site with no signature change. The other members (`decide`, `capabilityVision`) ride the spread
+ * unchanged.
  *
  * Wrappers compose: a dispatcher wrapped LATER is the narrower scope, so its keys win over an earlier wrapper's, and a
  * request's own site wins over both ({@link mergeLlmPromptSite}). It stamps the site and NEVER rewrites a byte; a
