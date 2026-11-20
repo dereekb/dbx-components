@@ -24,6 +24,33 @@
         "delivery": "read",
         "tone": "hint",
         "triggers": [{ "words": ["demo-api-mcp", "demo-api-mcp-dev"] }, { "toolNames": ["mcp__demo-api-mcp-dev__*"] }, { "pathContains": [".dbx-claude/offerings.json", "refs/demo-api-mcp/"], "every": 12 }]
+      },
+      {
+        "name": "llm",
+        "delivery": "read",
+        "tone": "hint",
+        "triggers": [
+          {
+            "words": [
+              "dereekb/llm",
+              "makeLlmDispatcher",
+              "defineLlmCapability",
+              "makeLlmStrategyRegistry",
+              "makeLlmAdapterRegistry",
+              "makeLlmStrategiesFromEnv",
+              "resolveLlmProvidersFromEnv",
+              "makeLlmTieredPromptTemplateResolver",
+              "composeLlmCapabilityPrompt",
+              "toLlmCallLogPayload",
+              "makeLlmScriptedStrategy",
+              "defineLlmDecision",
+              "LlmDecisionStrategy",
+              "makeLlmCraftPromptContributor"
+            ],
+            "fuzzyWords": ["llm dispatcher", "llm capability"]
+          },
+          { "pathContains": ["packages/llm/", "refs/llm/"], "every": 12 }
+        ]
       }
     ]
   },

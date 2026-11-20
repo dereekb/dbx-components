@@ -6857,6 +6857,40 @@
       ]
     },
     {
+      "slug": "as-finite-number",
+      "name": "asFiniteNumber",
+      "kind": "function",
+      "category": "number",
+      "module": "@dereekb/util",
+      "subpath": "number/number",
+      "signature": "asFiniteNumber(value: unknown): number | undefined",
+      "description": "Reads a value as a finite number, or reports it absent.\n\nA finite number passes; a non-blank string is parsed with `Number()` and passes only when the result is finite;\nanything else — absent, a blank string, `NaN`, `±Infinity`, `'Infinity'`, a non-numeric string, an object — is\n`undefined`, never `0`. Unlike {@link asNumber}, an unreadable value is never made up into a number.",
+      "params": [
+        {
+          "name": "value",
+          "type": "unknown",
+          "description": "- The raw value (off a wire, out of a stored record).",
+          "optional": false
+        }
+      ],
+      "returns": "The finite number, or `undefined` when the value is missing or not a finite number.",
+      "tags": [
+        "number",
+        "parse",
+        "finite",
+        "coerce",
+        "string",
+        "nan",
+        "infinity",
+        "as",
+        "asfinitenumber"
+      ],
+      "example": "asFiniteNumber(0.25); // 0.25\nasFiniteNumber('0.25'); // 0.25\nasFiniteNumber(' '); // undefined\nasFiniteNumber(Number.NaN); // undefined",
+      "relatedSlugs": [
+        "as-number"
+      ]
+    },
+    {
       "slug": "is-number-divisible-by",
       "name": "isNumberDivisibleBy",
       "kind": "function",
@@ -7472,6 +7506,191 @@
       "relatedSlugs": [
         "sort-numbers-ascending-function",
         "sort-by-string-function"
+      ]
+    },
+    {
+      "slug": "binomial-coefficient",
+      "name": "binomialCoefficient",
+      "kind": "function",
+      "category": "number",
+      "module": "@dereekb/util",
+      "subpath": "number/statistics",
+      "signature": "binomialCoefficient(n: number, k: number): number",
+      "description": "The binomial coefficient C(n, k), multiplicatively over `min(k, n − k)` steps (no factorials). Exact while the\nrunning product stays below 2^53; `Infinity` once the result passes `Number.MAX_VALUE` (C(1030, 515) does) — use\n{@link logBinomialCoefficient} there.",
+      "params": [
+        {
+          "name": "n",
+          "type": "number",
+          "description": "- The set size.",
+          "optional": false
+        },
+        {
+          "name": "k",
+          "type": "number",
+          "description": "- The number chosen.",
+          "optional": false
+        }
+      ],
+      "returns": "The number of combinations, or `0` when `k` is outside `[0, n]`.",
+      "tags": [
+        "number",
+        "statistics",
+        "math",
+        "combinatorics",
+        "binomial",
+        "choose",
+        "coefficient",
+        "binomialcoefficient"
+      ],
+      "example": "binomialCoefficient(13, 4); // 715\nbinomialCoefficient(5, 6); // 0",
+      "relatedSlugs": [
+        "log-binomial-coefficient"
+      ]
+    },
+    {
+      "slug": "log-binomial-coefficient",
+      "name": "logBinomialCoefficient",
+      "kind": "function",
+      "category": "number",
+      "module": "@dereekb/util",
+      "subpath": "number/statistics",
+      "signature": "logBinomialCoefficient(n: number, k: number): number",
+      "description": "The natural logarithm of the binomial coefficient C(n, k): `Σ_{i=1..k'} [ln(n − k' + i) − ln(i)]` with\n`k' = min(k, n − k)`. Never overflows, so it is the building block for probabilities over large tables.",
+      "params": [
+        {
+          "name": "n",
+          "type": "number",
+          "description": "- The set size.",
+          "optional": false
+        },
+        {
+          "name": "k",
+          "type": "number",
+          "description": "- The number chosen.",
+          "optional": false
+        }
+      ],
+      "returns": "`ln C(n, k)`, or `-Infinity` when `k` is outside `[0, n]` (C(n, k) = 0).",
+      "tags": [
+        "number",
+        "statistics",
+        "math",
+        "combinatorics",
+        "binomial",
+        "choose",
+        "logarithm",
+        "overflow",
+        "log",
+        "coefficient",
+        "logbinomialcoefficient"
+      ],
+      "example": "logBinomialCoefficient(13, 4); // Math.log(715)\nlogBinomialCoefficient(1030, 515); // ≈ 710.247 (C itself overflows a double)",
+      "relatedSlugs": [
+        "binomial-coefficient"
+      ]
+    },
+    {
+      "slug": "fisher-exact-one-sided-upper-tail",
+      "name": "fisherExactOneSidedUpperTail",
+      "kind": "function",
+      "category": "number",
+      "module": "@dereekb/util",
+      "subpath": "number/statistics",
+      "signature": "fisherExactOneSidedUpperTail(counts: AbTestCounts): PercentDecimal",
+      "description": "The ONE-SIDED Fisher exact p-value for the treatment arm scoring WORSE: the hypergeometric upper-tail probability\nP(X ≥ treatmentHits), X being the treatment arm's share of the table's hits with both margins fixed. Computed in log\nspace (one `ln P(X = treatmentHits)`, then the ratio recurrence up the tail), so large arms do not overflow. An empty\narm returns `1` rather than a rate over no denominator: an empty population is never a regression.",
+      "params": [
+        {
+          "name": "counts",
+          "type": "AbTestCounts",
+          "description": "- The 2x2 table.",
+          "optional": false
+        }
+      ],
+      "returns": "The upper-tail probability, in `[0, 1]`.",
+      "tags": [
+        "number",
+        "statistics",
+        "math",
+        "fisher",
+        "exact-test",
+        "hypergeometric",
+        "p-value",
+        "ab-test",
+        "exact",
+        "one",
+        "sided",
+        "upper",
+        "tail",
+        "fisherexactonesideduppertail"
+      ],
+      "example": "fisherExactOneSidedUpperTail({ controlHits: 1, controlTrials: 6, treatmentHits: 3, treatmentTrials: 7 }); // ≈ 0.343 (245/715)",
+      "relatedSlugs": [
+        "ab-regression-verdict",
+        "log-binomial-coefficient"
+      ]
+    },
+    {
+      "slug": "default-ab-regression-alpha",
+      "name": "DEFAULT_AB_REGRESSION_ALPHA",
+      "kind": "const",
+      "category": "number",
+      "module": "@dereekb/util",
+      "subpath": "number/statistics",
+      "signature": "const DEFAULT_AB_REGRESSION_ALPHA: PercentDecimal",
+      "description": "The alpha {@link abRegressionVerdict} defaults to. One-sided; discreteness at small table sizes makes the realised\nfalse-positive rate materially lower than the nominal number.",
+      "params": [],
+      "returns": "PercentDecimal",
+      "tags": [
+        "number",
+        "statistics",
+        "alpha",
+        "significance",
+        "ab-test",
+        "default",
+        "ab",
+        "regression",
+        "default_ab_regression_alpha"
+      ],
+      "example": "abRegressionVerdict({ ...counts, alpha: DEFAULT_AB_REGRESSION_ALPHA });",
+      "relatedSlugs": [
+        "ab-regression-verdict"
+      ]
+    },
+    {
+      "slug": "ab-regression-verdict",
+      "name": "abRegressionVerdict",
+      "kind": "function",
+      "category": "number",
+      "module": "@dereekb/util",
+      "subpath": "number/statistics",
+      "signature": "abRegressionVerdict(config: AbRegressionVerdictConfig): AbRegressionVerdict",
+      "description": "The gate itself: is the treatment arm SHOWN to be worse than the control at `alpha`. One-sided by design (see the\nmodule docblock) — it may falsify the claim that a change is harmless, and can never establish that it helped.",
+      "params": [
+        {
+          "name": "config",
+          "type": "AbRegressionVerdictConfig",
+          "description": "- The 2x2 table plus the significance bar.",
+          "optional": false
+        }
+      ],
+      "returns": "The p-value, the verdict, and both observed rates.",
+      "tags": [
+        "number",
+        "statistics",
+        "math",
+        "fisher",
+        "exact-test",
+        "p-value",
+        "ab-test",
+        "regression",
+        "gate",
+        "ab",
+        "verdict",
+        "abregressionverdict"
+      ],
+      "example": "const verdict = abRegressionVerdict({ controlHits: 1, controlTrials: 6, treatmentHits: 3, treatmentTrials: 7 });\n// verdict.p ≈ 0.343, verdict.regressed === false: not shown to regress",
+      "relatedSlugs": [
+        "fisher-exact-one-sided-upper-tail"
       ]
     },
     {
@@ -12094,6 +12313,36 @@
       ]
     },
     {
+      "slug": "to-base64-data-url",
+      "name": "toBase64DataUrl",
+      "kind": "function",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/mimetype",
+      "signature": "toBase64DataUrl(config: Base64DataUrlConfig): DataUrlString",
+      "description": "Builds the inline `data:<mimeType>;base64,<dataBase64>` URL for already-encoded bytes. Always builds: an input that\nis already a data URL is not detected.",
+      "params": [
+        {
+          "name": "config",
+          "type": "Base64DataUrlConfig",
+          "description": "- The media type and the base64 bytes.",
+          "optional": false
+        }
+      ],
+      "returns": "The data URL.",
+      "tags": [
+        "string",
+        "mime",
+        "data-url",
+        "base64",
+        "url",
+        "to",
+        "data",
+        "tobase64dataurl"
+      ],
+      "example": "toBase64DataUrl({ mimeType: 'image/png', dataBase64: 'QUJD' }); // 'data:image/png;base64,QUJD'"
+    },
+    {
       "slug": "replace-strings-function",
       "name": "replaceStringsFunction",
       "kind": "factory",
@@ -12884,6 +13133,40 @@
       ]
     },
     {
+      "slug": "join-key-value-pairs",
+      "name": "joinKeyValuePairs",
+      "kind": "function",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/string",
+      "signature": "joinKeyValuePairs(pairs: ReadonlyArray<readonly [string, Maybe<string | number>]>): string",
+      "description": "Joins `[key, value]` pairs into one `key: value; …` row, in order. A pair whose value is `null`, `undefined` or `''`\nis dropped (a `0` is kept), so a conditional pair stays one entry in the list.",
+      "params": [
+        {
+          "name": "pairs",
+          "type": "ReadonlyArray<readonly [string, Maybe<string | number>]>",
+          "description": "- The `[key, value]` pairs, in print order.",
+          "optional": false
+        }
+      ],
+      "returns": "The row, or `''` when every pair is dropped.",
+      "tags": [
+        "string",
+        "join",
+        "key-value",
+        "row",
+        "format",
+        "key",
+        "value",
+        "pairs",
+        "joinkeyvaluepairs"
+      ],
+      "example": "joinKeyValuePairs([['size', 'large'], ['count', 0], ['color', undefined]]); // 'size: large; count: 0'",
+      "relatedSlugs": [
+        "join-strings"
+      ]
+    },
+    {
       "slug": "split-join-remainder",
       "name": "splitJoinRemainder",
       "kind": "function",
@@ -13209,7 +13492,7 @@
         {
           "name": "endText",
           "type": "Maybe<string>",
-          "description": "- Text to append when truncated; defaults to \"...\".",
+          "description": "- Text to append when truncated; defaults to \"...\" when undefined. Pass null to append nothing.",
           "optional": true
         }
       ],

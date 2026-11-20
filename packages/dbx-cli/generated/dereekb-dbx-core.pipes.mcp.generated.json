@@ -19,17 +19,17 @@
         {
           "name": "maxLength",
           "type": "number",
-          "description": "Maximum allowed length before truncation.",
+          "description": "Maximum allowed length before truncation, including the end text.",
           "required": true
         },
         {
           "name": "endText",
           "type": "Maybe<string>",
-          "description": "Suffix appended when truncation occurs.",
+          "description": "Suffix appended when truncation occurs. Defaults to \"...\" when undefined; null appends nothing.",
           "required": false
         }
       ],
-      "example": "<span>{{ 'Hello World' | cutText:5 }}</span>\n<!-- Output: \"Hello...\" -->\n\n<span>{{ longText | cutText:20:'--' }}</span>\n<!-- Output: \"Some long text here--\" -->",
+      "example": "<span>{{ 'Hello World' | cutText:8 }}</span>\n<!-- Output: \"Hello...\" -->\n\n<span>{{ 'Hello World' | cutText:8:'…' }}</span>\n<!-- Output: \"Hello W…\" -->",
       "skillRefs": [
         "dbx-value-pipes"
       ]

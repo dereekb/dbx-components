@@ -416,6 +416,10 @@ keyed per generation rather than per conversation.
 A message template renders a message string (an SMS, an in-app notification) from a typed context, with no AI
 writing the text unless the template's type allows it. The core lives in `@dereekb/openrouter/template`.
 
+Not `@dereekb/llm`'s `LlmPromptTemplate` / `LlmResolvedPromptTemplate`: those are prompt text for llm's layout-driven
+prompt assembly, neither message templates nor stored prompts. The two packages share the word, not the concept, and
+are deliberately not converged.
+
 ### Template types
 
 A template TYPE is registered in code with `openRouterTemplateType()`. It declares:

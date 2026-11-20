@@ -5,8 +5,75 @@ provider configuration, prompt assembly with provenance, reply repair and valida
 ladder, usage accounting, and a decision lane for short structured answers. It has no Angular, Nest or Firebase
 dependency, and its browser entries run unchanged in a browser, a worker or Node.
 
-> **Status: under construction.** The entry points below are published now and fill in over the next releases. The
-> API may change in any release until the prompt-building layer lands — pin an exact version meanwhile.
+> **Status: new.** All eight entries below are in place. While the first hosts adopt the package, a minor release may
+> still rename an export — pin an exact version.
+
+## Quick start: define a capability and dispatch it
+
+A capability is a typed kind of LLM call; a dispatcher runs it. Nothing below touches the network: `/test`'s scripted
+strategy answers in place of a provider.
+
+```ts
+import { type } from 'arktype';
+import { DEFAULT_LLM_MAX_OUTPUT_TOKENS, defineLlmCapability, makeLlmDispatcher, makeLlmSchemaValueValidator, makeLlmStrategyRegistry, makeLlmTieredPromptTemplateResolver, readLlmReplyValue, toLlmCallLogPayload, type LlmCallLogPayloadWrite, type LlmCapabilityDescriptor } from '@dereekb/llm';
+import { makeLlmScriptedStrategy } from '@dereekb/llm/test';
+
+// 1. The capability: its key, the reply schema, and how a parsed reply becomes a typed value.
+const summarySchema = type({ summary: 'string' });
+const SUMMARIZE = defineLlmCapability({
+  capability: 'summarize',
+  responseSchema: summarySchema,
+  parseValue: (value) => {
+    const out = summarySchema(value);
+    return out instanceof type.errors ? undefined : out;
+  }
+});
+const DESCRIPTORS: Readonly<Record<string, LlmCapabilityDescriptor>> = { summarize: SUMMARIZE };
+
+// 2. Its text: templates are keyed by role and scoped by capability, apart from the descriptor.
+const templateResolver = makeLlmTieredPromptTemplateResolver({
+  tiers: [{ source: 'app', templates: [{ key: 'summarize-instructions', role: 'instructions', capability: 'summarize', text: 'Summarize the subject in one sentence.' }] }]
+});
+
+// 3. A strategy: `/test`'s scripted one here; a provider strategy in an app (docs/node.md).
+const strategy = makeLlmScriptedStrategy({ byCapability: { summarize: '{"summary":"A brass desk lamp."}' } });
+
+// 4. The dispatcher. The recorder persists the flat row, never the in-memory record.
+const rows: LlmCallLogPayloadWrite[] = [];
+const dispatcher = makeLlmDispatcher({
+  strategies: makeLlmStrategyRegistry([strategy]),
+  defaultStrategyId: strategy.id,
+  defaultMaxOutputTokens: DEFAULT_LLM_MAX_OUTPUT_TOKENS,
+  modelTiers: { fast: 'acme/fast' },
+  descriptorOf: (capability) => DESCRIPTORS[capability],
+  templateResolver,
+  recorder: {
+    recordCall: (record) => {
+      rows.push(toLlmCallLogPayload(record, { keepIo: true })); // keepIo keeps the prompt and the reply (a tape replays them)
+    }
+  }
+});
+
+// 5. Dispatch, then read the typed value.
+const result = await dispatcher.dispatch({
+  capability: 'summarize',
+  renderLiveContext: () => [{ key: 'subject', text: 'Subject: a brass desk lamp' }],
+  validate: makeLlmSchemaValueValidator(summarySchema)
+});
+
+const summary = SUMMARIZE.parseValue(readLlmReplyValue(result.text)); // { summary: 'A brass desk lamp.' }
+```
+
+- Descriptors are plain values. The host's `descriptorOf` IS the registry; there is no register call.
+- Templates live in the resolver, keyed by `capability`, and `DEFAULT_LLM_PROMPT_LAYOUT` orders the prompt
+  ([prompt](docs/prompt.md)).
+- Persist `toLlmCallLogPayload(record)` — the flat row every reader, the ledger and the tape read — never the record
+  itself ([records](docs/records.md)).
+- In an app, swap the scripted strategy for a provider strategy: `/openai`, `/openrouter`, or `/node`'s env strategies
+  in [A complete Node host](docs/node.md#a-complete-node-host). Add `validate` / `critique` for the retry ladder
+  ([dispatcher](docs/dispatcher.md)).
+
+Pinned by `src/llm.readme.example.spec.ts`.
 
 ## Entry points
 
@@ -20,6 +87,139 @@ dependency, and its browser entries run unchanged in a browser, a worker or Node
 | `@dereekb/llm/zenmux` | no | none (`fetch`) | ZenMux constants and cost basis, the decision route on the core System One transport, the quota-status source and the bill reader. | [zenmux](docs/zenmux.md) |
 | `@dereekb/llm/node` | yes | none | Model-config file IO, environment variables to provider configs, the craft-notes folder loader and the craft markdown to TypeScript compiler. | [node](docs/node.md) |
 | `@dereekb/llm/test` | test infra | none | Tape replay, scripted completion and decision strategies, the decision answer builders (`makeLlmDecisionChoiceAnswer`, …), the fakes (fetch seam, OpenAI-compatible chat client, completion adapter, dispatcher, `/systemone` wire), and the billed-lane test factories. | [test](docs/test.md) |
+
+## Entries
+
+npm installs one package, `@dereekb/llm`, and reads its peers from the root manifest: `@dereekb/util`,
+`@dereekb/model`, `arktype`, and the optional `openai`. The peers below are what each entry actually loads; each
+sub-entry's own manifest lists `@dereekb/model` as a type-only peer.
+
+### `@dereekb/llm`
+
+The core: the strategy contract and registry, model config and routing, adapters, prompt building, replies, the
+dispatcher and retry ladder, call records and usage — plus every `/decision` export, re-exported from the same
+modules.
+
+- **Browser-safe:** yes.
+- **Peers:** `@dereekb/util` (with `@dereekb/util/fetch`), `@dereekb/model` (the field checks) and `arktype`. `openai`
+  is declared here as an OPTIONAL peer for `/openai` and `/openrouter`; this entry never loads it.
+- **Main exports:**
+  - Strategies: `LlmStrategy`, `LlmRequest`, `LlmCompletion`, `makeLlmStrategyRegistry`, `verifyLlmStrategies`,
+    `DEFAULT_LLM_MAX_OUTPUT_TOKENS`.
+  - Model config: `makeLlmModelConfigSchema`, `parseLlmModelConfigFile`, `overlayLlmModelConfigFile`,
+    `resolveLlmModelTiers`, `llmModelProviderBindings`, `compileLlmModelRouting`.
+  - Adapters: `makeLlmAdapterRegistry`, `readLlmModelConfigLists`, `makeLlmProviderStrategies`.
+  - Prompts: `defineLlmCapability`, `defineLlmPromptLayout`, `DEFAULT_LLM_PROMPT_LAYOUT`,
+    `makeLlmTieredPromptTemplateResolver`, `composeLlmCapabilityPrompt`, `makeLlmPromptChain`.
+  - Replies: `readLlmReplyValue`, `makeLlmSchemaValueValidator`, `makeLlmReplyFastFixer`, `makeLlmSemanticCritic`.
+  - Dispatcher: `makeLlmDispatcher`, `LlmDispatchRequest`, `LlmDispatchFaultError`, `classifyLlmError`.
+  - Records and usage: `toLlmCallLogPayload`, `LLM_CALL_EVENT_TYPE`, `llmCallTelemetry`, `readLlmCallPrompt`,
+    `reconcileLlmCallBills`, `LLM_SWALLOW_SITES`.
+- **Guide:** [Guides](#guides) 1–8 and 13.
+
+### `@dereekb/llm/decision`
+
+Short structured answers (choice, score, noul) from decision models: declare them with `defineLlmDecision`, send them
+through an `LlmDecisionStrategy`, read typed answers.
+
+- **Browser-safe:** yes; the System One transport is plain `fetch`.
+- **Peers:** `@dereekb/util` (with `/fetch`); `@dereekb/model` and `arktype` type-only.
+- **Main exports:** `defineLlmDecision`, `llmChoiceQuestion`, `llmScoreQuestion`, `llmNoulQuestion`,
+  `LlmDecisionStrategy`, `makeLlmSystemOneDecisionStrategy`, `llmDecisionRequestBody`, `readLlmDecisionAnswers`,
+  `requireLlmDecisionAnswers`, `readLlmChoiceCertainty`, `toLlmDecisionConfidenceBand`, `LlmDecisionAnswerFaultError`,
+  `LlmDecisionTransportError`. `@dereekb/openrouter/decision`'s old names are deprecated aliases of these.
+- **Guide:** [decision](docs/decision.md).
+
+### `@dereekb/llm/craft`
+
+Opt-in: the root does not export it, and no core module imports it. Craft notes are short authored guidance, selected
+per prompt site and placed in the prompt by a contributor.
+
+- **Browser-safe:** yes.
+- **Peers:** `@dereekb/util` and `arktype` (frontmatter parsing); `@dereekb/model` type-only.
+- **Main exports:** `parseLlmCraftNote`, `parseLlmCraftNoteSet`, `makeLlmCraftSiteRegistry`, `mergeLlmCraftNoteTiers`,
+  `selectLlmCraftNotes`, `makeLlmCraftPromptContributor`, `makeLlmCraftJudge`, `makeLlmCraftNoteRowReader`,
+  `DEFAULT_LLM_CRAFT_SITE_LIMITS`. The judge rides the contributor:
+  `makeLlmCraftPromptContributor({ …, judge: makeLlmCraftJudge(…) })`.
+- **Guide:** [craft](docs/craft.md).
+
+### `@dereekb/llm/openai`
+
+The OpenAI-compatible chat strategy (OpenAI, ZenMux chat, a local vLLM) and its completion adapter.
+
+- **Browser-safe:** yes. The SDK loads lazily from one boundary module; in a browser, pass `dangerouslyAllowBrowser`
+  or inject a client. On Node the SDK itself reads `OPENAI_CUSTOM_HEADERS` and `OPENAI_LOG`.
+- **Peers:** `@dereekb/llm`, `@dereekb/util`, and `openai` (the package's optional peer; install it to use this
+  entry).
+- **Main exports:** `makeLlmOpenAiStrategy`, `makeLlmOpenAiCompatibleChatStrategy`, `toLlmOpenAiStrategyConfig`,
+  `LLM_OPENAI_ADAPTERS`, `LLM_OPENAI_COMPLETION_ADAPTER`, `LLM_OPENAI_STRATEGY_KIND`, `DEFAULT_LLM_OPENAI_BASE_URL`,
+  `LLM_OPENAI_SWALLOW_SITES`.
+- **Guide:** [openai](docs/openai.md).
+
+### `@dereekb/llm/openrouter`
+
+The OpenRouter chat strategy (`cache_control`, strict `response_format`, usage accounting), the decision strategy
+(kind `openrouter-systemone`), the credential probe and the adapters. It is not `@dereekb/openrouter`.
+
+- **Browser-safe:** yes. The chat reaches `openai` through `/openai`, the decisions are plain `fetch`, and
+  `@openrouter/sdk` is never loaded.
+- **Peers:** `@dereekb/llm` (with `/openai`), `@dereekb/util`, and `openai` for the chat strategy.
+- **Main exports:** `makeLlmOpenRouterStrategy`, `makeLlmOpenRouterDecisionStrategy`, `probeLlmOpenRouterCredential`,
+  `LLM_OPENROUTER_ADAPTERS`, `LLM_OPENROUTER_STRATEGY_KIND`, `LLM_OPENROUTER_DECISION_STRATEGY_KIND`,
+  `DEFAULT_LLM_OPENROUTER_BASE_URL`, `LLM_OPENROUTER_SWALLOW_SITES`.
+- **Guide:** [openrouter](docs/openrouter.md).
+
+### `@dereekb/llm/zenmux`
+
+ZenMux constants and cost basis, the decision strategy (kind `zenmux-systemone`), the provider-status source, the bill
+reader, the management reads and the adapters.
+
+- **Browser-safe:** yes; `fetch` only.
+- **Peers:** `@dereekb/llm` and `@dereekb/util` (with `/fetch`).
+- **Main exports:** `makeLlmZenmuxAdapters`, `makeLlmZenmuxDecisionStrategy`, `makeLlmZenmuxProviderStatusSource`,
+  `makeLlmZenmuxGenerationBillReader`, `probeLlmZenmuxCredential`, `readLlmZenmuxManagement`,
+  `LLM_ZENMUX_MANAGEMENT_API_KEY_ENV_VAR`, `DEFAULT_LLM_ZENMUX_BASE_URL`, `LLM_ZENMUX_SWALLOW_SITES`.
+- **Guide:** [zenmux](docs/zenmux.md).
+
+### `@dereekb/llm/node`
+
+Node only. It reads the machine: model-config file IO, the environment into providers and strategies, the profile and
+tier environment, and the craft-notes loader and compiler.
+
+- **Browser-safe:** no. It uses `node:fs` and `node:path`, and reads `process.env` unless a call passes `env`. It loads
+  `/craft`, and so `arktype`.
+- **Peers:** `@dereekb/llm` (with `/craft`) and `@dereekb/util`.
+- **Main exports:** `DEFAULT_LLM_ENV_NAMES`, `firstLlmEnvValue`, `firstLlmEnvEntry`, `loadEffectiveLlmModelConfigFile`,
+  `writeLlmModelConfigFile`, `resolveLlmModelProfileFromEnv`, `resolveLlmModelTierEnv`, `resolveLlmProvidersFromEnv`,
+  `makeLlmStrategiesFromEnv`, `filterLlmReachableProviderGaps`, `loadLlmCraftNotes`, `compileLlmCraftNotes`,
+  `writeLlmCraftNotesModule`, `LLM_NODE_SWALLOW_SITES`.
+- **Guide:** [node](docs/node.md), with [A complete Node host](docs/node.md#a-complete-node-host). In a Nest app,
+  pass nothing: `/node` and Nest's `ConfigService` both read `process.env` ([Nest hosts](docs/node.md#nest-hosts)).
+
+### `@dereekb/llm/test`
+
+Node-only test infrastructure: fakes and replays so a spec never bills, plus the env-gated live lane.
+
+- **Browser-safe:** no. It loads `/node`. It never imports vitest and needs no vitest peer.
+- **Peers:** `@dereekb/llm` (with `/node`) and `@dereekb/util` (with `/fetch`).
+- **Main exports:** `makeLlmScriptedStrategy`, `makeLlmScriptedDecisionStrategy`, `makeLlmTapeStrategy`,
+  `readLlmTapeTurn`, `makeLlmDecisionChoiceAnswer` / `makeLlmDecisionScoreAnswer` / `makeLlmDecisionNoulAnswer`,
+  `makeLlmCompletionAdapterFake`, `makeLlmOpenAiChatClientFake`, `makeLlmFetchFake`, `makeLlmSystemOneWireFake`,
+  `makeLlmDispatcherFake`, `makeLlmLiveLane`, `llmCredentialVerdictFromEnv`, `llmQuotaVerdictFromEnv`.
+- Live specs run only behind an env flag (for example `LLM_LIVE_SPECS`), through `isEnvFlagEnabled`
+  (`@dereekb/util`) or `describeIfEnvFlag` (`@dereekb/util/test`).
+- **Guide:** [test](docs/test.md).
+
+## Not @dereekb/openrouter's prompts
+
+The two packages share words, not concepts:
+
+- llm's `LlmPromptTemplate` (authored) and `LlmResolvedPromptTemplate` (what a resolver returns) are role-keyed prompt
+  text placed in one slot of a capability's prompt — no model config, no version.
+- `@dereekb/openrouter`'s `OpenRouterResolvedPrompt` is a whole stored, versioned request (instructions, seed messages,
+  model config, decision questions), and its `OpenRouterResolvedPromptTemplate` is the script half of a MESSAGE
+  template (an SMS or notification renderer).
+- They are different concepts and deliberately not converged; neither package maps one onto the other.
 
 ## Browser safety
 
@@ -59,6 +259,7 @@ These rules are enforced, not just documented:
 
 The guides live in `docs/` and ship with the package. In reading order:
 
+0. [Quick start](#quick-start-define-a-capability-and-dispatch-it) — above.
 1. [Strategy contract](docs/strategy.md) — the transport contract every provider strategy implements: request in, completion out, usage, quota and credential probes.
 2. [Model configuration and routing](docs/model-config.md) — the model config file shape, overlays and resolution, and the routing rules that move a capability to another model.
 3. [Adapters](docs/adapters.md) — the adapter registry that turns configured providers into strategies, decision routes, metering and bills.
@@ -69,6 +270,6 @@ The guides live in `docs/` and ship with the package. In reading order:
 8. [Call records, readers and reconcile](docs/records.md) — what a dispatcher records and a host persists, the readers, the ledger and the spend math.
 9. [Decisions](docs/decision.md) — `@dereekb/llm/decision`: questions, the wire format, answers, decision strategies, and coming from `@dereekb/openrouter`.
 10. Providers — [OpenAI-compatible chat](docs/openai.md) (`/openai`), [OpenRouter](docs/openrouter.md) (`/openrouter`) and [ZenMux](docs/zenmux.md) (`/zenmux`).
-11. [Node host quick start](docs/node.md) — `@dereekb/llm/node`: the config file and environment reads, and the craft-notes loader and compiler.
+11. [Node host quick start](docs/node.md) — `@dereekb/llm/node`: the config file and environment reads, [a complete Node host](docs/node.md#a-complete-node-host) from env to dispatcher, [Nest hosts](docs/node.md#nest-hosts), and the craft-notes loader and compiler.
 12. [Test infrastructure](docs/test.md) — `@dereekb/llm/test`: tapes, scripted strategies, the fakes and the billed-lane factories.
 13. [Utilities](docs/utilities.md) — the semantic type aliases the API is typed with, and where the SHA-256 helpers live.

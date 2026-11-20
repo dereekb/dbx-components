@@ -25,6 +25,11 @@ export interface OpenRouterPromptSeedMessage {
  * There is deliberately NO variables model. Dynamic content is passed as `input` from typed
  * TypeScript — which is what OpenRouter requires (no server-side substitution) and what OpenAI's own
  * migration guide prescribes: "Replace prompt variables with function arguments."
+ *
+ * Not `@dereekb/llm`'s `LlmPromptTemplate` / `LlmResolvedPromptTemplate`: those are role-keyed prompt text placed in
+ * one slot of llm's layout-driven prompt assembly — no model config, no version. Different concepts, not converged.
+ *
+ * @see `LlmPromptTemplate` and `LlmResolvedPromptTemplate` in `@dereekb/llm` (cited, not imported)
  */
 export interface OpenRouterResolvedPrompt {
   /**
@@ -72,7 +77,13 @@ export interface OpenRouterResolvedPrompt {
 }
 
 /**
- * The template half of a resolved prompt version.
+ * The template half of a resolved prompt version: a MESSAGE template (an SMS or notification renderer) — its type,
+ * scripts, approval and kill — never prompt text.
+ *
+ * Not `@dereekb/llm`'s `LlmPromptTemplate` / `LlmResolvedPromptTemplate`: those are role-keyed prompt text placed in
+ * one slot of llm's layout-driven prompt assembly — no model config, no version. Different concepts, not converged.
+ *
+ * @see `LlmPromptTemplate` and `LlmResolvedPromptTemplate` in `@dereekb/llm` (cited, not imported)
  */
 export interface OpenRouterResolvedPromptTemplate {
   /**

@@ -66,6 +66,8 @@ correction / backoff vocabulary with its constants.
 - **Retry and lanes.** The bounded retry ladder, the fast-fix and critique lanes and the decision lane are described in
   [Retry and lanes](#retry-and-lanes) below.
 
+A complete, runnable version is the README's [Quick start](../README.md#quick-start-define-a-capability-and-dispatch-it).
+
 ```ts
 import { DEFAULT_LLM_MAX_OUTPUT_TOKENS, LLM_CALL_EVENT_TYPE, makeLlmSchemaValueValidator, makeLlmDispatcher, makeLlmStrategyRegistry, makeLlmTieredPromptTemplateResolver, toLlmCallLogPayload } from '@dereekb/llm';
 

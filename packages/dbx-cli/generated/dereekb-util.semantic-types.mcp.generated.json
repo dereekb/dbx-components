@@ -1246,6 +1246,19 @@
       "notes": "A mime type string that may contain additional parameters.\n\nI.E. \"text/plain\", \"application/json; charset=utf-8\""
     },
     {
+      "name": "DataUrlString",
+      "package": "@dereekb/util",
+      "module": "src/lib/string/mimetype",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": [
+        "url",
+        "string"
+      ],
+      "notes": "A `data:` URL (RFC 2397) that carries its bytes inline, e.g. `data:image/png;base64,iVBOR…`."
+    },
+    {
       "name": "PasswordString",
       "package": "@dereekb/util",
       "module": "src/lib/string/password",

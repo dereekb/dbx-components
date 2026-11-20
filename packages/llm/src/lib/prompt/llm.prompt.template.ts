@@ -37,7 +37,13 @@ export const LLM_PROMPT_TEMPLATE_ROLES = ['reply-protocol', 'instructions', 'con
 export type LlmPromptTemplateRole = (typeof LLM_PROMPT_TEMPLATE_ROLES)[number];
 
 /**
- * One resolved template.
+ * One resolved template: the text one role or key resolved to for a dispatch, with its `source` provenance.
+ *
+ * Not `@dereekb/openrouter`'s `OpenRouterResolvedPrompt` (a whole stored, versioned request: instructions, seed
+ * messages, model config, decision questions) nor its `OpenRouterResolvedPromptTemplate` (a message template's script
+ * half). The packages share the words, not the concepts, and the two are deliberately not converged.
+ *
+ * @see `OpenRouterResolvedPrompt` and `OpenRouterResolvedPromptTemplate` in `@dereekb/openrouter` (cited, not imported)
  */
 export interface LlmResolvedPromptTemplate {
   /**
@@ -102,7 +108,14 @@ export interface LlmPromptTemplateResolverParams<R extends LlmDispatchRequest = 
 export type LlmPromptTemplateResolver<R extends LlmDispatchRequest = LlmDispatchRequest, D extends LlmCapabilityDescriptor = LlmCapabilityDescriptor> = (input: LlmPromptTemplateResolverParams<R, D>) => PromiseOrValue<LlmResolvedPromptTemplates>;
 
 /**
- * One authored template.
+ * One authored template: role-keyed prompt text a {@link LlmPromptTemplateResolver} serves to the layout-driven
+ * assembly — one slot's text, scoped to a capability or shared by every capability.
+ *
+ * Not `@dereekb/openrouter`'s `OpenRouterResolvedPrompt` (a whole stored, versioned request: instructions, seed
+ * messages, model config, decision questions) nor its `OpenRouterResolvedPromptTemplate` (a message template's script
+ * half). The packages share the words, not the concepts, and the two are deliberately not converged.
+ *
+ * @see `OpenRouterResolvedPrompt` and `OpenRouterResolvedPromptTemplate` in `@dereekb/openrouter` (cited, not imported)
  */
 export interface LlmPromptTemplate {
   /**

@@ -6,6 +6,100 @@
   "generator": "@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs",
   "entries": [
     {
+      "slug": "schema-label-message-prefix",
+      "name": "schemaLabelMessagePrefix",
+      "kind": "function",
+      "category": "validator",
+      "module": "@dereekb/model",
+      "subpath": "type/type.field",
+      "signature": "schemaLabelMessagePrefix(schemaLabel: Maybe<string>): string",
+      "description": "The prefix a message carries for a schema label (`'my-app config: '`), or `''`.",
+      "params": [
+        {
+          "name": "schemaLabel",
+          "type": "Maybe<string>",
+          "description": "- The schema label, if any.",
+          "optional": false
+        }
+      ],
+      "returns": "The message prefix.",
+      "tags": [
+        "validator",
+        "arktype",
+        "config",
+        "error-message",
+        "keys",
+        "schema",
+        "label",
+        "message",
+        "prefix",
+        "schemalabelmessageprefix"
+      ],
+      "example": "schemaLabelMessagePrefix('my-app config'); // 'my-app config: '\nschemaLabelMessagePrefix(undefined); // ''"
+    },
+    {
+      "slug": "assert-object-keys",
+      "name": "assertObjectKeys",
+      "kind": "function",
+      "category": "validator",
+      "module": "@dereekb/model",
+      "subpath": "type/type.field",
+      "signature": "assertObjectKeys(input: AssertObjectKeysConfig): void",
+      "description": "Fail loud on a retired key (with its remedy), then on any key outside {@link AssertObjectKeysConfig.allowed}.",
+      "params": [
+        {
+          "name": "input",
+          "type": "AssertObjectKeysConfig",
+          "description": "- The labels, the object, and the retired / allowed key lists.",
+          "optional": false
+        }
+      ],
+      "returns": "void",
+      "tags": [
+        "validator",
+        "arktype",
+        "config",
+        "error-message",
+        "keys",
+        "assert",
+        "object",
+        "assertobjectkeys"
+      ],
+      "example": "assertObjectKeys({ schemaLabel: 'my-app config', label: 'widget', entry: { nmae: 'a' }, allowed: ['name', 'size'] });\n// throws \"my-app config: widget has unknown key 'nmae' (allowed: name, size).\""
+    },
+    {
+      "slug": "parse-arktype-fields-with-messages",
+      "name": "parseArktypeFieldsWithMessages",
+      "kind": "function",
+      "category": "validator",
+      "module": "@dereekb/model",
+      "subpath": "type/type.field",
+      "signature": "parseArktypeFieldsWithMessages(config: ParseArktypeFieldsWithMessagesConfig<T>): Type<T>['infer']",
+      "description": "Validate an object's fields with an arktype type and report the FIRST failing field (by\n{@link ParseArktypeFieldsWithMessagesConfig.keys} order) as `<label>.<field> must <rule> (got <value>). <remedy>`.\nNested rule objects get their unknown keys checked first. A field set to `undefined` counts as absent.\n\nA caller that needs a canonical key order (or trimming) assembles its own result from the returned value; an\nextension can return it as-is.",
+      "params": [
+        {
+          "name": "config",
+          "type": "ParseArktypeFieldsWithMessagesConfig<T>",
+          "description": "- The labels, the object, the type, the key order and the rules.",
+          "optional": false
+        }
+      ],
+      "returns": "The validated value, typed by the arktype type.",
+      "tags": [
+        "validator",
+        "arktype",
+        "config",
+        "error-message",
+        "keys",
+        "parse",
+        "fields",
+        "with",
+        "messages",
+        "parsearktypefieldswithmessages"
+      ],
+      "example": "const widgetType = type({ name: 'string > 0', 'size?': 'number.integer > 0' });\n\nparseArktypeFieldsWithMessages({\n  schemaLabel: 'my-app config',\n  label: 'widget',\n  value: { name: 'a', size: 0 },\n  type: widgetType,\n  keys: ['name', 'size'],\n  rules: { name: { must: 'be a non-empty name' }, size: { must: 'be a positive integer', remedy: 'Remove the key to use the default size.' } }\n});\n// throws \"my-app config: widget.size must be a positive integer (got 0). Remove the key to use the default size.\""
+    },
+    {
       "slug": "merge-clearable-object-update",
       "name": "mergeClearableObjectUpdate",
       "kind": "function",
@@ -367,6 +461,33 @@
         "nonemptystringwithmaxlength"
       ],
       "example": "const userType = type({\n  displayName: nonEmptyStringWithMaxLength(64)\n});",
+      "relatedSlugs": [
+        "non-empty-string"
+      ]
+    },
+    {
+      "slug": "non-blank-string-type",
+      "name": "nonBlankStringType",
+      "kind": "const",
+      "category": "validator",
+      "module": "@dereekb/model",
+      "subpath": "validator/string",
+      "signature": "const nonBlankStringType: any",
+      "description": "A string with at least one non-whitespace character. The value is NOT trimmed by the check; a reader that wants the\ntrimmed text trims it itself. Unlike {@link NON_EMPTY_STRING}, `'   '` fails.",
+      "params": [],
+      "returns": "any",
+      "tags": [
+        "validator",
+        "arktype",
+        "string",
+        "blank",
+        "whitespace",
+        "required",
+        "non",
+        "type",
+        "nonblankstringtype"
+      ],
+      "example": "type({ name: nonBlankStringType });",
       "relatedSlugs": [
         "non-empty-string"
       ]

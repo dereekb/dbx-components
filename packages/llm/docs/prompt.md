@@ -40,7 +40,9 @@ scopes, prompt handles and chains, a live-context token budget, a cache-prefix w
 - **Templates.** An `LlmPromptTemplateResolver` returns a dispatch's templates per role (`reply-protocol`,
   `instructions`, `context`, the last split at `{{liveContext}}`) with their `source`, plus a by-key lookup for
   contributors. `makeLlmTieredPromptTemplateResolver` is the library's: tiers lowest first, the last definition of a key
-  wins, a capability-scoped template beats a shared one. A host with another cascade supplies its own resolver.
+  wins, a capability-scoped template beats a shared one. A host with another cascade supplies its own resolver. Not
+  `@dereekb/openrouter`'s resolved prompts or message templates — see the README's
+  [Not @dereekb/openrouter's prompts](../README.md#not-dereekbopenrouters-prompts).
 - **Assembly.** `composeLlmCapabilityPrompt` is the one prompt pipeline: it renders the request's live context, looks
   the descriptor up through the injected `descriptorOf`, awaits the template resolver once, resolves the contributors in
   registry order and assembles. `assembleLlmCapabilityPrompt` is its synchronous last step (resolved templates and
