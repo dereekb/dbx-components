@@ -1,6 +1,6 @@
 import { map, type Observable, combineLatest, firstValueFrom } from 'rxjs';
 import { asObservable, filterMaybe, type ObservableOrValue } from '@dereekb/rxjs';
-import { type DbxRouterService } from '../../service/router.service';
+import { type DbxRouterService, type DbxRouterServiceGoOptions } from '../../service/router.service';
 import { type DbxRouterTransitionService } from '../../service/router.transition.service';
 import { asSegueRef, type SegueRef, type SegueRefOrSegueRefRouterLink, type SegueRefRawSegueParams } from '../../../segue';
 import { type DbxRouterTransitionEvent, DbxRouterTransitionEventType } from '../../transition/transition';
@@ -13,6 +13,8 @@ import { KeyValueTypleValueFilter, type Maybe, mergeObjects } from '@dereekb/uti
  *
  * Maps Angular Router's `NavigationStart` and `NavigationEnd` events to {@link DbxRouterTransitionEvent} values
  * and provides navigation via Angular's `Router.navigate()` and `Router.navigateByUrl()` methods.
+ *
+ * `go()` maps `{ replace: true }` to `replaceUrl: true`.
  *
  * @example
  * ```ts
@@ -54,22 +56,23 @@ export class DbxAngularRouterService implements DbxRouterService, DbxRouterTrans
     filterMaybe()
   );
 
-  go(input: ObservableOrValue<SegueRefOrSegueRefRouterLink<NavigationExtras | NavigationBehaviorOptions>>): Promise<boolean> {
+  go(input: ObservableOrValue<SegueRefOrSegueRefRouterLink<NavigationExtras | NavigationBehaviorOptions>>, options?: Maybe<DbxRouterServiceGoOptions>): Promise<boolean> {
     const inputObs = asObservable(input);
     return firstValueFrom(inputObs).then((inputSegueRef) => {
       const segueRef = asSegueRef(inputSegueRef);
       const ref = segueRef.ref;
+      const extras = options?.replace ? { ...segueRef.refOptions, replaceUrl: true } : segueRef.refOptions;
 
       let result: Promise<boolean>;
 
       if (Array.isArray(ref)) {
         result = this.router.navigate(ref as unknown[], {
-          ...segueRef.refOptions,
+          ...extras,
           queryParams: segueRef.refParams
         });
       } else {
         result = this.router.navigateByUrl(ref as string | UrlTree, {
-          ...segueRef.refOptions
+          ...extras
         });
       }
 
@@ -83,17 +86,14 @@ export class DbxAngularRouterService implements DbxRouterService, DbxRouterTrans
         const refParams = mergeObjects([currentParams, params], KeyValueTypleValueFilter.UNDEFINED);
         const segueRef: SegueRef<NavigationExtras | NavigationBehaviorOptions> = {
           ref: this.activatedRoute.pathFromRoot,
-          refParams,
-          refOptions: {
-            replaceUrl: true
-          }
+          refParams
         };
 
         return segueRef;
       })
     );
 
-    return this.go(segueUpdate);
+    return this.go(segueUpdate, { replace: true });
   }
 
   isActive(_segueRef: SegueRefOrSegueRefRouterLink): boolean {

@@ -1,4 +1,4 @@
-import { type SegueRef, type SegueRefOrSegueRefRouterLink, asSegueRef } from '@dereekb/dbx-core';
+import { type SegueRefOrSegueRefRouterLink } from '@dereekb/dbx-core';
 import { type DocumentDataWithIdAndKey, type NotificationRedirectEntry, type NotificationRedirectEntryPrefix, isNotificationRedirectEntryExpired, notificationRedirectEntryIdPrefix } from '@dereekb/firebase';
 import { type Maybe, type Milliseconds, type PromiseOrValue } from '@dereekb/util';
 
@@ -174,19 +174,4 @@ export function dbxFirebaseNotificationRedirectDecision(input: DbxFirebaseNotifi
   }
 
   return decision;
-}
-
-/**
- * Returns a copy of the segue ref that replaces the current history entry instead of adding one, so the back button does
- * not return to the short link page and redirect again.
- *
- * Sets the replace option of both supported routers: UIRouter's `location: 'replace'` and Angular Router's
- * `replaceUrl: true`. Each router ignores the other's option. Options already on the segue ref take priority.
- *
- * @param segueRef - The segue ref to navigate to.
- * @returns The segue ref with replace options.
- */
-export function dbxFirebaseNotificationRedirectReplaceSegueRef(segueRef: SegueRefOrSegueRefRouterLink): SegueRef {
-  const ref = asSegueRef(segueRef);
-  return { ...ref, refOptions: { location: 'replace', replaceUrl: true, ...ref.refOptions } };
 }

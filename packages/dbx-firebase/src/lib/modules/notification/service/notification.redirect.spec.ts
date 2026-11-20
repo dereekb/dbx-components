@@ -1,14 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { addDays } from 'date-fns';
 import { type DocumentDataWithIdAndKey, type NotificationRedirectEntry } from '@dereekb/firebase';
-import {
-  DEFAULT_DBX_FIREBASE_NOTIFICATION_REDIRECT_ERROR_MESSAGE,
-  DEFAULT_DBX_FIREBASE_NOTIFICATION_REDIRECT_EXPIRED_MESSAGE,
-  DEFAULT_DBX_FIREBASE_NOTIFICATION_REDIRECT_NOT_OWNER_MESSAGE,
-  type DbxFirebaseNotificationRedirectDecisionInput,
-  dbxFirebaseNotificationRedirectDecision,
-  dbxFirebaseNotificationRedirectReplaceSegueRef
-} from './notification.redirect';
+import { DEFAULT_DBX_FIREBASE_NOTIFICATION_REDIRECT_ERROR_MESSAGE, DEFAULT_DBX_FIREBASE_NOTIFICATION_REDIRECT_EXPIRED_MESSAGE, DEFAULT_DBX_FIREBASE_NOTIFICATION_REDIRECT_NOT_OWNER_MESSAGE, type DbxFirebaseNotificationRedirectDecisionInput, dbxFirebaseNotificationRedirectDecision } from './notification.redirect';
 
 describe('dbxFirebaseNotificationRedirectDecision()', () => {
   const now = new Date('2026-01-01T00:00:00Z');
@@ -72,19 +65,5 @@ describe('dbxFirebaseNotificationRedirectDecision()', () => {
     const configWithMessages = { ...config, expiredMessage: 'Gone.', notOwnerMessage: 'Not yours.' };
     expect(dbxFirebaseNotificationRedirectDecision({ config: configWithMessages, id: 'x-a8Kd02Lm', load: { type: 'missing' }, now }).message).toBe('Gone.');
     expect(dbxFirebaseNotificationRedirectDecision({ config: configWithMessages, id: 'j-a8Kd02Lm', load: { type: 'not_owner' }, now }).message).toBe('Not yours.');
-  });
-});
-
-describe('dbxFirebaseNotificationRedirectReplaceSegueRef()', () => {
-  it('should add the replace options of both routers', () => {
-    expect(dbxFirebaseNotificationRedirectReplaceSegueRef({ ref: 'app.home' })).toEqual({ ref: 'app.home', refOptions: { location: 'replace', replaceUrl: true } });
-  });
-
-  it('should keep options already on the segue ref', () => {
-    expect(dbxFirebaseNotificationRedirectReplaceSegueRef({ ref: 'app.home', refOptions: { location: true } }).refOptions).toEqual({ location: true, replaceUrl: true });
-  });
-
-  it('should accept a ref string', () => {
-    expect(dbxFirebaseNotificationRedirectReplaceSegueRef('app.home').ref).toBe('app.home');
   });
 });

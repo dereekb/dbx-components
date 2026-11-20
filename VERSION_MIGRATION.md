@@ -1,3 +1,24 @@
+## Migration to v14.30.x — router-neutral history replace for `DbxRouterService.go()`
+
+### New
+- **`DbxRouterService.go(segueRef, options?)`** (`@dereekb/dbx-core`) takes an optional `DbxRouterServiceGoOptions`.
+  `{ replace: true }` replaces the current history entry instead of adding one, so the back button skips a page that
+  only redirects. `DbxUIRouterService` maps it to UIRouter's `location: 'replace'` and `DbxAngularRouterService` to
+  Angular Router's `replaceUrl: true`. It is applied on top of the segue ref's `refOptions` and wins over a conflicting
+  replace option there; `false` or unset leaves `refOptions` as they are. Both providers' `updateParams()` now use it,
+  with no change in behavior.
+- `goWithRouter(service)(route, options?)` passes the options to `go()`. The `GoWithRouter` type now matches what
+  `goWithRouter()` returns, so it also accepts a router link string.
+
+### Check
+- A custom `DbxRouterService` implementation or test fake still compiles, since the parameter is optional. If it
+  navigates for real, map `options.replace` to its router.
+
+### Adopt
+- Instead of putting a router's own replace option on a segue ref passed to `go()` (`refOptions: { location: 'replace' }`
+  for UIRouter, `{ replaceUrl: true }` for Angular Router), call `go(segueRef, { replace: true })`. Anchors still read
+  `refOptions` only.
+
 ## Migration to v14.30.x — notification short links (NotificationRedirectEntry)
 
 ### New
@@ -24,6 +45,9 @@
   or `segueRefForEntry`), and otherwise opens the prefix's fallback page with a snackbar message (expired / missing /
   not the owner). Configure it with `provideDbxFirebaseNotifications({ redirect: { defaultFallback, prefixes, ... } })`.
   Also `NotificationRedirectEntryDocumentStore` and `DbxFirebaseModelTypesService.segueRefForKey()` / `currentInfoForKey()`.
+  The page opens its target with `DbxRouterService.go(segueRef, { replace: true })`, so the back button skips the short
+  link. The interim `dbxFirebaseNotificationRedirectReplaceSegueRef()` helper from pre-release builds, which set both
+  routers' replace options on the segue ref, was removed.
 
 ### Required
 - **Add `notificationRedirectEntryCollection` to your app's `NotificationFirestoreCollections` implementation** (it is a new

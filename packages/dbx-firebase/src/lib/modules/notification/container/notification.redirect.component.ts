@@ -14,8 +14,7 @@ import {
   DbxFirebaseNotificationRedirectConfig,
   type DbxFirebaseNotificationRedirectDecision,
   type DbxFirebaseNotificationRedirectEntryLoadResult,
-  dbxFirebaseNotificationRedirectDecision,
-  dbxFirebaseNotificationRedirectReplaceSegueRef
+  dbxFirebaseNotificationRedirectDecision
 } from '../service/notification.redirect';
 import { NotificationRedirectEntryDocumentStore } from '../store/notificationredirectentry.document.store';
 
@@ -133,6 +132,7 @@ export class DbxFirebaseNotificationRedirectComponent {
       this._matSnackBar.open(decision.message, undefined, { duration: this._config.snackbarDuration ?? DEFAULT_DBX_FIREBASE_NOTIFICATION_REDIRECT_SNACKBAR_DURATION });
     }
 
-    void this._dbxRouterService.go(dbxFirebaseNotificationRedirectReplaceSegueRef(decision.segueRef));
+    // Replace the short link in the history, so the back button does not open it and redirect again.
+    void this._dbxRouterService.go(decision.segueRef, { replace: true });
   }
 }

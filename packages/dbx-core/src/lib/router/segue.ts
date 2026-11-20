@@ -37,7 +37,7 @@ export interface SegueRefRawSegueParams {
  * ```ts
  * const options: SegueRefOptions = {
  *   refParams: { id: '123' },
- *   refOptions: { location: 'replace' }
+ *   refOptions: { reload: true }
  * };
  * ```
  */
@@ -48,9 +48,11 @@ export interface SegueRefOptions<O = object> {
   refParams?: SegueRefRawSegueParams;
 
   /**
-   * Custom Transition Options.
+   * Router-specific options, passed straight to the router. For UIRouter this is `TransitionOptions`; for Angular Router,
+   * `NavigationExtras`.
    *
-   * For UIRouter, this is TransitionOptions.
+   * To replace the current history entry, pass `{ replace: true }` to `DbxRouterService.go()` instead of setting a
+   * router's own replace option here.
    */
   refOptions?: O;
 }
@@ -67,7 +69,7 @@ export interface SegueRefOptions<O = object> {
  * const segue: SegueRef = {
  *   ref: 'app.dashboard',
  *   refParams: { id: '123' },
- *   refOptions: { location: 'replace' }
+ *   refOptions: { reload: true }
  * };
  * ```
  *

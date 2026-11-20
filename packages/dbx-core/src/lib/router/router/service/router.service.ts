@@ -1,7 +1,24 @@
 import { type ObservableOrValue } from '@dereekb/rxjs';
+import { type Maybe } from '@dereekb/util';
 import { type Observable } from 'rxjs';
 import { type SegueRefOrSegueRefRouterLink, type SegueRefRawSegueParams } from '../../segue';
 import { DbxRouterTransitionService } from './router.transition.service';
+
+/**
+ * Router-neutral options for {@link DbxRouterService.go}.
+ *
+ * Use these instead of a router's own options in the segue ref's `refOptions`, so the caller works with any
+ * {@link DbxRouterService} implementation. Each implementation maps them to its router.
+ */
+export interface DbxRouterServiceGoOptions {
+  /**
+   * Replaces the current history entry instead of adding one, so the back button skips the page being left.
+   *
+   * Use it for pages that only redirect, such as a short link page. When true, it wins over a conflicting replace option
+   * in the segue ref's `refOptions`. False or unset leaves history handling to the router and the segue ref's `refOptions`.
+   */
+  readonly replace?: Maybe<boolean>;
+}
 
 /**
  * Abstract router service that provides navigation capabilities and routing state information.
@@ -38,16 +55,29 @@ export abstract class DbxRouterService extends DbxRouterTransitionService {
   /**
    * Navigates to the target SegueRef.
    *
-   * @param segueRef
+   * Pass `{ replace: true }` to replace the current history entry instead of adding one. UIRouter maps it to
+   * `location: 'replace'` and Angular Router to `replaceUrl: true`, on top of any `refOptions` on the segue ref.
+   * Anchors do not use these options; they only read `refOptions`.
+   *
+   * @param segueRef - The page to open, or an observable of it. Only its first value is used.
+   * @param options - Router-neutral navigation options.
+   * @returns Whether the navigation succeeded.
+   *
+   * @example
+   * ```ts
+   * // A page that only redirects, so it should not stay in the browser history
+   * await this.dbxRouterService.go({ ref: 'app.jobs' }, { replace: true });
+   * ```
    */
-  abstract go(segueRef: ObservableOrValue<SegueRefOrSegueRefRouterLink>): Promise<boolean>;
+  abstract go(segueRef: ObservableOrValue<SegueRefOrSegueRefRouterLink>, options?: Maybe<DbxRouterServiceGoOptions>): Promise<boolean>;
 
   /**
    * Navigates to the current url with updated parameters. Will be merged with the existing parameters.
    *
-   * The new state will replace the current state in the history.
+   * The new state replaces the current entry in the history, like `go()` with `{ replace: true }`.
    *
-   * @param segueRef
+   * @param params - The params to merge into the current params, or an observable of them.
+   * @returns Whether the navigation succeeded.
    */
   abstract updateParams(params: ObservableOrValue<SegueRefRawSegueParams>): Promise<boolean>;
 

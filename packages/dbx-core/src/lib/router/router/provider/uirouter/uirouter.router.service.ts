@@ -1,6 +1,6 @@
-import { KeyValueTypleValueFilter, mergeObjects } from '@dereekb/util';
+import { KeyValueTypleValueFilter, type Maybe, mergeObjects } from '@dereekb/util';
 import { Subject, BehaviorSubject, type Observable, firstValueFrom, map } from 'rxjs';
-import { type DbxRouterService } from '../../service/router.service';
+import { type DbxRouterService, type DbxRouterServiceGoOptions } from '../../service/router.service';
 import { type DbxRouterTransitionService } from '../../service/router.transition.service';
 import { asSegueRef, asSegueRefString, type SegueRef, type SegueRefOrSegueRefRouterLink, type SegueRefRawSegueParams } from '../../../segue';
 import { StateService, UIRouter, UIRouterGlobals, type TransitionOptions, TransitionService } from '@uirouter/core';
@@ -13,6 +13,8 @@ import { type ObservableOrValue, asObservable } from '@dereekb/rxjs';
  *
  * Bridges UIRouter's `TransitionService` events to {@link DbxRouterTransitionEvent} values and provides
  * navigation via UIRouter's `StateService.go()`. Supports state activity checks and route precision comparison.
+ *
+ * `go()` maps `{ replace: true }` to `location: 'replace'`.
  *
  * @example
  * ```ts
@@ -68,13 +70,15 @@ export class DbxUIRouterService implements DbxRouterService, DbxRouterTransition
     return this.uiRouterGlobals.params;
   }
 
-  go(input: ObservableOrValue<SegueRefOrSegueRefRouterLink<TransitionOptions>>): Promise<boolean> {
+  go(input: ObservableOrValue<SegueRefOrSegueRefRouterLink<TransitionOptions>>, options?: Maybe<DbxRouterServiceGoOptions>): Promise<boolean> {
     const inputObs = asObservable(input);
     return firstValueFrom(inputObs).then((inputSegueRef) => {
       const segueRef = asSegueRef(inputSegueRef);
       const params = { ...this.uiRouterGlobals.current.params, ...segueRef.refParams };
+      const transitionOptions = options?.replace ? { ...segueRef.refOptions, location: 'replace' as const } : segueRef.refOptions;
+
       return this.state
-        .go(segueRef.ref as string, params, segueRef.refOptions)
+        .go(segueRef.ref as string, params, transitionOptions)
         .then(() => true)
         .catch(() => false);
     });
@@ -90,7 +94,6 @@ export class DbxUIRouterService implements DbxRouterService, DbxRouterTransition
           ref: '.',
           refParams,
           refOptions: {
-            location: 'replace',
             inherit: true
           }
         };
@@ -99,7 +102,7 @@ export class DbxUIRouterService implements DbxRouterService, DbxRouterTransition
       })
     );
 
-    return this.go(segueUpdate);
+    return this.go(segueUpdate, { replace: true });
   }
 
   isActive(input: SegueRefOrSegueRefRouterLink): boolean {
