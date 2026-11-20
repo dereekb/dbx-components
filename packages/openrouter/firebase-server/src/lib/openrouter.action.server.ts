@@ -1,4 +1,4 @@
-import { type LlmDecisionQuestions, validateLlmDecisionQuestions } from '@dereekb/llm';
+import { type LlmDecisionQuestions, validateLlmDecisionQuestions } from '@dereekb/llm/decision';
 import { type FirebaseServerActionsContext, badRequestError, preconditionConflictError } from '@dereekb/firebase-server';
 import { type FirebaseAuthUserId, type FirestoreContextReference, type FirestoreModelKey, type OnCallCreateModelResult, firestoreModelId, firestoreModelKeyParentKey, getDocumentSnapshotDataTuples } from '@dereekb/firebase';
 import { type Maybe, range, runAsyncTasksForValues, unique } from '@dereekb/util';

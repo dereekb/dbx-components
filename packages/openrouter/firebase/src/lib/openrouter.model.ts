@@ -1,4 +1,4 @@
-import { type LlmDecisionAnswers, type LlmDecisionQuestions, type LlmStorableDecisionState } from '@dereekb/llm';
+import { type LlmDecisionAnswers, type LlmDecisionQuestions, type LlmStorableDecisionState } from '@dereekb/llm/decision';
 import { type GrantedReadRole, type GrantedUpdateRole } from '@dereekb/model';
 import { MS_IN_DAY, type Maybe, type Milliseconds } from '@dereekb/util';
 import {

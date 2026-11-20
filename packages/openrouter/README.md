@@ -185,6 +185,12 @@ The protocol-level decision names moved to `@dereekb/llm/decision` under neutral
   `instanceof LlmDecisionAnswerFaultError` agree.
 - Stored JSON is unchanged (`q`, `st`, `an` read the same), and so are stored run-task error codes: a decision
   fault still records `OpenRouterDecisionAnswerFaultError` / `OpenRouterDecisionDeclarationError`.
+- The deprecated classes ARE the `@dereekb/llm` classes, so a thrown fault's `.name` reads
+  `LlmDecisionAnswerFaultError` / `LlmDecisionDeclarationError`; branch on `instanceof` (either name works) — stored
+  run-task error codes are unchanged.
+- `@dereekb/openrouter` imports the decision vocabulary from `@dereekb/llm/decision`, never the `@dereekb/llm` root,
+  so its `/decision` and `/template` entries load neither the llm dispatcher nor (for `/decision`) arktype.
+  `OpenRouterGenerationId` is the same type as `LlmGenerationId`.
 - The aliases go away in a future major release.
 
 ### Where a decision lives

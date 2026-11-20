@@ -1,4 +1,4 @@
-import { isLlmDecisionModelId } from '@dereekb/llm';
+import { isLlmDecisionModelId } from '@dereekb/llm/decision';
 import { type Maybe, mergeObjects } from '@dereekb/util';
 import { type OpenRouterModelId } from './openrouter.type';
 

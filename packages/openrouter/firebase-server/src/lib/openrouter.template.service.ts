@@ -1,4 +1,4 @@
-import { type LlmDecisionQuestions } from '@dereekb/llm';
+import { type LlmDecisionQuestions } from '@dereekb/llm/decision';
 import { readErrorMessage, type Maybe, type SmsTextSegmentDetails, smsTextSegmentDetails } from '@dereekb/util';
 import {
   type AppOpenRouterTemplateTypeConfigService,

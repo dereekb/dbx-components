@@ -5,3 +5,8 @@
  * Children of this family import decision symbols from `@dereekb/llm`, never this subpath.
  */
 export * from './lib/decision';
+
+/**
+ * The generation-id semantic type the decision wire carries; the root exports the same type.
+ */
+export type { LlmGenerationId } from './lib/model/llm.value';

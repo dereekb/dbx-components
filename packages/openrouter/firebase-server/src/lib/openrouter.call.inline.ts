@@ -1,4 +1,4 @@
-import { type LlmDecisionQuestions, type LlmDecisionState } from '@dereekb/llm';
+import { type LlmDecisionQuestions, type LlmDecisionState } from '@dereekb/llm/decision';
 import { type Maybe } from '@dereekb/util';
 import {
   type OpenRouterAttachedFileReference,

@@ -9,6 +9,7 @@
     "build": {
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/packages/llm"],
+      "inputs": ["production", "^production", { "input": "production", "projects": ["llm-openai", "llm-openrouter", "llm-zenmux", "llm-node", "llm-test"] }],
       "options": {
         "color": true,
         "command": "node tools/scripts/finalize-esm-exports.mjs dist/packages/llm"
@@ -72,6 +73,9 @@
       "options": {
         "command": "cd ./dist/packages/llm && npm publish --access public --tag latest"
       }
+    },
+    "test": {
+      "inputs": ["...", { "input": "production", "projects": ["llm-test", "llm-node"] }]
     }
   }
 }

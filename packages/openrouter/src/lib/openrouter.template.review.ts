@@ -1,4 +1,4 @@
-import { type LlmDecisionAnswer, type LlmDecisionQuestionId, type LlmDecisionQuestions, llmNoulQuestion } from '@dereekb/llm';
+import { type LlmDecisionAnswer, type LlmDecisionQuestionId, type LlmDecisionQuestions, llmNoulQuestion } from '@dereekb/llm/decision';
 import { type Maybe } from '@dereekb/util';
 import { type OpenRouterPromptDefinition, type OpenRouterPromptSeedMessage } from './openrouter.prompt';
 import { type OpenRouterTemplateMode, isOpenRouterTemplateModeWithBody } from './openrouter.template';

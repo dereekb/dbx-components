@@ -1,4 +1,4 @@
-import { isLlmDecisionModelId } from '@dereekb/llm';
+import { isLlmDecisionModelId } from '@dereekb/llm/decision';
 import { type Maybe, filterUndefinedValues, parseJsonObjectOrUndefined } from '@dereekb/util';
 import { type CallModelInput, type OpenResponsesResult, type OpenRouterCore, type RequestOptions, type ResponsesRequest, type StateAccessor, type Tool, ModelResult, callModel, convertToolsToAPIFormat, responsesSend, stepCountIs } from './openrouter.sdk';
 import { type OpenRouterHostedToolConfig, type OpenRouterModelConfig } from './openrouter.config';

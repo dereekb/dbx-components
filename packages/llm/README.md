@@ -1111,6 +1111,11 @@ const { answers } = await pickTeam.decide({ strategy, input: { ticket }, model: 
 The vocabulary moved here from `@dereekb/openrouter` under neutral names. JSON shapes are unchanged, and the old
 names remain as `@deprecated` aliases of the same values and classes.
 
+The deprecated classes ARE the `@dereekb/llm` classes, so a thrown fault's `.name` reads `LlmDecisionAnswerFaultError` /
+`LlmDecisionDeclarationError` (not the old `OpenRouterDecision…` name); branch on `instanceof` (either name works).
+Stored run-task error codes are unchanged. `@dereekb/openrouter` imports this vocabulary from `@dereekb/llm/decision`
+(never the root), which also exports the `LlmGenerationId` type its `OpenRouterGenerationId` aliases.
+
 | `@dereekb/openrouter` | `@dereekb/llm` |
 |---|---|
 | `OpenRouterDecision…` | `LlmDecision…` |

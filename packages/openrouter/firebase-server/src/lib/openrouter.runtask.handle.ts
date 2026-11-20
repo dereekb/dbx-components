@@ -1,4 +1,4 @@
-import { type LlmDecisionAnswers, type LlmDecisionQuestions } from '@dereekb/llm';
+import { type LlmDecisionAnswers, type LlmDecisionQuestions } from '@dereekb/llm/decision';
 import { type Maybe } from '@dereekb/util';
 import { type OpenRouterRunTask, OpenRouterRunTaskState } from '@dereekb/openrouter/firebase';
 

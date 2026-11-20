@@ -9,7 +9,7 @@
  * `readLlmDecisionAnswers`, and never needs this file.
  */
 
-import { type LlmDecisionAnswer, LlmDecisionAnswerFaultError, type LlmDecisionAnswers, LlmDecisionDeclarationError, type LlmDecisionQuestions, readLlmDecisionAnswers } from '@dereekb/llm';
+import { type LlmDecisionAnswer, LlmDecisionAnswerFaultError, type LlmDecisionAnswers, LlmDecisionDeclarationError, type LlmDecisionQuestions, readLlmDecisionAnswers } from '@dereekb/llm/decision';
 import { type Maybe } from '@dereekb/util';
 import { type OpenRouterDecisionRequest, openRouterDecisionRequestBody, openRouterRunUsageFromDecisionsUsage, splitOpenRouterDecisionModelConfig, validateOpenRouterDecisionRequest } from './openrouter.decision';
 import { type DecisionsResponse, type OpenRouterCore, type RequestOptions, systemOneCreate } from './openrouter.sdk';

@@ -1,4 +1,4 @@
-import { type LlmDecisionModelId } from '@dereekb/llm';
+import { type LlmDecisionModelId, type LlmGenerationId } from '@dereekb/llm/decision';
 import { type Maybe } from '@dereekb/util';
 
 /**
@@ -41,9 +41,10 @@ export const DEFAULT_OPENROUTER_SYSTEM_ONE_MODEL_ID: LlmDecisionModelId = OPENRO
 /**
  * A generation id returned by OpenRouter for a completed request.
  *
- * See the note on {@link OpenRouterModelId} regarding the twin in `@dereekb/nestjs/openrouter`.
+ * The same type as {@link LlmGenerationId}. See the note on {@link OpenRouterModelId} regarding the twin in
+ * `@dereekb/nestjs/openrouter`.
  */
-export type OpenRouterGenerationId = string;
+export type OpenRouterGenerationId = LlmGenerationId;
 
 /**
  * The stable, human-readable key of an OpenRouterPrompt. Doubles as the prompt's Firestore document

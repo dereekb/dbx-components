@@ -1,6 +1,6 @@
 import { type Maybe, filterUndefinedValues, mapObjectMap } from '@dereekb/util';
 import { type OpenRouterModelConfig, type OpenRouterModelConfigValidation, mergeOpenRouterModelConfig } from './openrouter.config';
-import { type LlmDecisionQuestions, type LlmDecisionState, LlmDecisionDeclarationError, isLlmDecisionModelId, llmDecisionWireQuestion, validateLlmDecisionQuestions } from '@dereekb/llm';
+import { type LlmDecisionQuestions, type LlmDecisionState, LlmDecisionDeclarationError, isLlmDecisionModelId, llmDecisionWireQuestion, validateLlmDecisionQuestions } from '@dereekb/llm/decision';
 import { type OpenRouterResolvedPrompt } from './openrouter.prompt';
 import { type OpenRouterRequestTrace } from './openrouter.request';
 // TYPE-ONLY, and it must stay so: this file is the pure half of the decision layer and ships through the

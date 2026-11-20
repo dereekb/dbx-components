@@ -1,4 +1,4 @@
-import { type LlmDecisionQuestions } from '@dereekb/llm';
+import { type LlmDecisionQuestions } from '@dereekb/llm/decision';
 import { type Maybe } from '@dereekb/util';
 import { type OpenRouterModelConfig } from './openrouter.config';
 import { type OpenRouterInputRole } from './openrouter.input';

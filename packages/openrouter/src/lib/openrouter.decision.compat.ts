@@ -64,7 +64,7 @@ import {
   readLlmDecisionAnswers,
   type ReadLlmDecisionAnswersConfig,
   validateLlmDecisionQuestions
-} from '@dereekb/llm';
+} from '@dereekb/llm/decision';
 
 // COMPAT: Deprecated aliases
 /**
