@@ -669,7 +669,7 @@ export interface MicrosoftGraphUploadDriveFileInput extends MicrosoftGraphUpload
   readonly chunkSize?: Maybe<number>;
   /**
    * The timeout of each PUT (the simple upload, or one session chunk). Defaults to
-   * {@link microsoftGraphUploadTimeout} of the bytes that PUT carries, not the client's flat 30 seconds.
+   * {@link microsoftGraphUploadTimeout} of the bytes that PUT carries, not the client's flat timeout (30 seconds by default).
    */
   readonly timeout?: Maybe<Milliseconds>;
   readonly onProgress?: Maybe<(sent: number, total: number) => void>;

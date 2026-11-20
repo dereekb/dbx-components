@@ -1,4 +1,4 @@
-import { type Maybe, type Milliseconds } from '@dereekb/util';
+import { type Maybe, type Milliseconds, MS_IN_SECOND } from '@dereekb/util';
 import { type TrelloApiKey, type TrelloApiToken, type TrelloOAuthAccessTokenString } from './trello.type';
 
 /**
@@ -116,3 +116,9 @@ export function isTrelloAccessTokenConfig(config: TrelloConfig): config is Trell
 export function isTrelloAccessTokenProviderConfig(config: TrelloConfig): config is TrelloAccessTokenProviderConfig {
   return (config as TrelloAccessTokenProviderConfig).accessTokenProvider != null;
 }
+
+/**
+ * Default timeout for the requests the default Trello fetches send: the wait for the response headers. Configure it
+ * per factory with `timeout`.
+ */
+export const DEFAULT_TRELLO_FETCH_TIMEOUT: Milliseconds = 20 * MS_IN_SECOND;

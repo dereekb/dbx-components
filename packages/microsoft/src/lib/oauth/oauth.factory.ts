@@ -1,4 +1,5 @@
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type Milliseconds } from '@dereekb/util';
+import { DEFAULT_MICROSOFT_OAUTH_FETCH_TIMEOUT } from '../microsoft.config';
 import { fetchApiFetchService, fetchJsonFunction, returnNullHandleFetchJsonParseErrorFunction, type ConfiguredFetch, type FetchHandler } from '@dereekb/util/fetch';
 import { MICROSOFT_OAUTH_TOKEN_CONTENT_TYPE } from './oauth.api';
 import { assertMicrosoftSingleTenantId, type MicrosoftOAuthConfig, type MicrosoftOAuthContext, type MicrosoftOAuthContextRef, type MicrosoftOAuthFetchFactory, type MicrosoftOAuthFetchFactoryInput, microsoftOAuthTenantBaseUrl } from './oauth.config';
@@ -20,6 +21,15 @@ export interface MicrosoftOAuthFactoryConfig {
    * Custom log error function.
    */
   readonly logMicrosoftOAuthErrorFunction?: LogMicrosoftOAuthErrorFunction;
+  /**
+   * Timeout in milliseconds for each request the default fetch sends: the wait for the response headers (reading the
+   * body is not timed). `0` turns it off. A request's own `timeout`, set in its init, wins over this.
+   *
+   * Ignored when a `fetchFactory` is provided.
+   *
+   * Defaults to {@link DEFAULT_MICROSOFT_OAUTH_FETCH_TIMEOUT} (20 seconds).
+   */
+  readonly timeout?: Maybe<Milliseconds>;
 }
 
 export type MicrosoftOAuthFactory = (config: MicrosoftOAuthConfig) => MicrosoftOAuth;
@@ -31,7 +41,7 @@ export type MicrosoftOAuthFactory = (config: MicrosoftOAuthConfig) => MicrosoftO
  * The produced fetch is rooted at the tenant's `/oauth2/v2.0` base, so the token endpoint is a relative
  * path; Graph calls use absolute URLs and bypass it.
  *
- * @param factoryConfig - Optional fetch factory, fetch handler and error logging.
+ * @param factoryConfig - Optional fetch factory, fetch handler, error logging and timeout.
  * @returns A factory accepting a MicrosoftOAuthConfig and producing a MicrosoftOAuth instance.
  * @throws {Error} From the produced factory, when the client id or secret is missing or the tenant is a multi-tenant authority.
  *
@@ -52,7 +62,7 @@ export function microsoftOAuthFactory(factoryConfig: MicrosoftOAuthFactoryConfig
         // the handler stands in for the network UNDER the timeout and the ok-check, so a non-2xx answer it
         // returns is mapped exactly as a real one would be
         ...(fetchHandler ? { makeFetch: ((input: RequestInfo | URL, init?: RequestInit) => fetchHandler(new Request(input, init), fetch)) as typeof fetch } : undefined),
-        timeout: 20 * 1000, // 20 second timeout
+        timeout: factoryConfig.timeout ?? DEFAULT_MICROSOFT_OAUTH_FETCH_TIMEOUT,
         requireOkResponse: true, // enforce ok response
         useTimeout: true // use timeout
       })

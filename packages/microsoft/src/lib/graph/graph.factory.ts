@@ -1,6 +1,6 @@
-import { type Maybe, type WebsiteUrl } from '@dereekb/util';
+import { type Maybe, type Milliseconds, type WebsiteUrl } from '@dereekb/util';
 import { fetchApiFetchService, fetchJsonFunction, returnNullHandleFetchJsonParseErrorFunction, type FetchHandler } from '@dereekb/util/fetch';
-import { MICROSOFT_GRAPH_API_URL } from '../microsoft.config';
+import { DEFAULT_MICROSOFT_GRAPH_FETCH_TIMEOUT, MICROSOFT_GRAPH_API_URL } from '../microsoft.config';
 import { type MicrosoftGraphAccessTokenGetter, type MicrosoftGraphContextRef } from './graph.config';
 import { handleMicrosoftGraphErrorFetch } from './graph.error.api';
 import { type MicrosoftGraphRateLimitedFetchHandlerConfig, microsoftGraphRateLimitedFetchHandler } from './graph.limit';
@@ -21,6 +21,16 @@ export interface MicrosoftGraphFactoryConfig {
    * @see microsoftGraphRateLimitedFetchHandler
    */
   readonly rateLimiterConfig?: Maybe<MicrosoftGraphRateLimitedFetchHandlerConfig>;
+  /**
+   * Timeout in milliseconds for each request the client sends: the wait for the response headers (reading the
+   * body is not timed). `0` turns it off. A request's own `timeout`, set in its init, wins over this.
+   *
+   * With `rateLimiterConfig`, each attempt, a throttled retry included, gets the full timeout; the `Retry-After`
+   * wait between attempts is not counted.
+   *
+   * Defaults to {@link DEFAULT_MICROSOFT_GRAPH_FETCH_TIMEOUT} (30 seconds).
+   */
+  readonly timeout?: Maybe<Milliseconds>;
 }
 
 export interface MicrosoftGraphConfig {
@@ -37,7 +47,7 @@ export type MicrosoftGraphFactory = (config: MicrosoftGraphConfig) => MicrosoftG
 /**
  * Creates a {@link MicrosoftGraphFactory} producing Graph clients that act as one user.
  *
- * @param factoryConfig - Optional fetch handler, base URL and throttle handling.
+ * @param factoryConfig - Optional fetch handler, base URL, throttle handling and timeout.
  * @returns A factory accepting the access token getter.
  *
  * @example
@@ -63,7 +73,7 @@ export function microsoftGraphFactory(factoryConfig: MicrosoftGraphFactoryConfig
     // the throttle handler sits ABOVE the timeout and the ok-check: each attempt gets its own timeout, and the
     // waits between attempts are not cut short by it
     ...(rateLimiterConfig ? { fetchHandler: microsoftGraphRateLimitedFetchHandler(rateLimiterConfig) } : undefined),
-    timeout: 30 * 1000, // 30 second timeout
+    timeout: factoryConfig.timeout ?? DEFAULT_MICROSOFT_GRAPH_FETCH_TIMEOUT,
     requireOkResponse: true,
     useTimeout: true
   });

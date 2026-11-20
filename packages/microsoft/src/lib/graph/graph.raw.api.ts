@@ -46,7 +46,7 @@ export interface MicrosoftGraphRawRequestInput {
    */
   readonly authorize?: Maybe<boolean>;
   /**
-   * Overrides the client's 30-second timeout, e.g. for a large download or chunk upload.
+   * Overrides the client's timeout (30 seconds by default), e.g. for a large download or chunk upload.
    */
   readonly timeout?: Maybe<Milliseconds>;
   /**

@@ -1,6 +1,6 @@
 import { fetchJsonFunction, fetchApiFetchService, type ConfiguredFetch, type FetchHandler, returnNullHandleFetchJsonParseErrorFunction } from '@dereekb/util/fetch';
 import { CALCOM_OAUTH_API_URL, isCalcomApiKeyCredential, type CalcomAuthCredential, type CalcomOAuthConfig, type CalcomOAuthContext, type CalcomOAuthContextRef, type CalcomOAuthFetchFactory, type CalcomOAuthFetchFactoryInput, type CalcomOAuthMakeAccessTokenFactory } from './oauth.config';
-import { type CalcomApiKey, type CalcomRefreshToken } from '../calcom.config';
+import { type CalcomApiKey, type CalcomRefreshToken, DEFAULT_CALCOM_FETCH_TIMEOUT } from '../calcom.config';
 import { type LogCalcomServerErrorFunction } from '../calcom.error.api';
 import { CalcomOAuthAuthFailureError, handleCalcomOAuthErrorFetch } from './oauth.error.api';
 import { type CalcomAccessToken, type CalcomAccessTokenCache, type CalcomAccessTokenFactory, type CalcomAccessTokenRefresher } from './oauth';
@@ -82,6 +82,15 @@ export interface CalcomOAuthFactoryConfig {
    * Custom log error function.
    */
   readonly logCalcomServerErrorFunction?: LogCalcomServerErrorFunction;
+  /**
+   * Timeout in milliseconds for each request the default fetch sends: the wait for the response headers (reading the
+   * body is not timed). `0` turns it off. A request's own `timeout`, set in its init, wins over this.
+   *
+   * Ignored when a `fetchFactory` is provided.
+   *
+   * Defaults to {@link DEFAULT_CALCOM_FETCH_TIMEOUT} (20 seconds).
+   */
+  readonly timeout?: Maybe<Milliseconds>;
 }
 
 export type CalcomOAuthFactory = (config: CalcomOAuthConfig) => CalcomOAuth;
@@ -110,7 +119,7 @@ export function calcomOAuthFactory(factoryConfig: CalcomOAuthFactoryConfig): Cal
           }
         },
         fetchHandler,
-        timeout: 20 * 1000, // 20 second timeout
+        timeout: factoryConfig.timeout ?? DEFAULT_CALCOM_FETCH_TIMEOUT,
         requireOkResponse: true, // enforce ok response
         useTimeout: true // use timeout
       })

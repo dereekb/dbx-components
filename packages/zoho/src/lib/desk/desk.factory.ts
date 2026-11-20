@@ -6,7 +6,8 @@ import { type ZohoAccountsContextRef } from '../accounts/accounts.config';
 import { zohoAccessTokenStringFactory } from '../accounts/accounts';
 import { type ZohoRateLimitedFetchHandlerConfig } from '../zoho.limit';
 import { zohoDeskRateLimitedFetchHandler } from './desk.limit';
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type Milliseconds } from '@dereekb/util';
+import { DEFAULT_ZOHO_FETCH_TIMEOUT } from '../zoho.config';
 
 /**
  * Top-level Zoho Desk client instance, providing access to the authenticated {@link ZohoDeskContext}.
@@ -24,13 +25,22 @@ export interface ZohoDeskFactoryConfig extends ZohoAccountsContextRef {
   readonly rateLimiterConfig?: Maybe<ZohoRateLimitedFetchHandlerConfig>;
   /**
    * Custom fetch factory for creating the underlying HTTP client.
-   * Defaults to a standard fetch service with OAuth Bearer token and orgId headers and a 20-second timeout.
+   * Defaults to a standard fetch service with OAuth Bearer token and orgId headers and the `timeout` below.
    */
   readonly fetchFactory?: ZohoDeskFetchFactory;
   /**
    * Custom error logging function invoked when Zoho API errors are encountered.
    */
   readonly logZohoServerErrorFunction?: LogZohoServerErrorFunction;
+  /**
+   * Timeout in milliseconds for each request the default fetch sends: the wait for the response headers (reading the
+   * body is not timed). `0` turns it off. A request's own `timeout`, set in its init, wins over this.
+   *
+   * Ignored when a `fetchFactory` is provided.
+   *
+   * Defaults to {@link DEFAULT_ZOHO_FETCH_TIMEOUT} (20 seconds).
+   */
+  readonly timeout?: Maybe<Milliseconds>;
 }
 
 /**
@@ -72,7 +82,7 @@ export function zohoDeskFactory(factoryConfig: ZohoDeskFactoryConfig): ZohoDeskF
           }
         }),
         fetchHandler,
-        timeout: 20 * 1000, // 20 second timeout
+        timeout: factoryConfig.timeout ?? DEFAULT_ZOHO_FETCH_TIMEOUT,
         requireOkResponse: true, // enforce ok response
         useTimeout: true // use timeout
       })

@@ -1,6 +1,6 @@
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type Milliseconds } from '@dereekb/util';
 import { fetchApiFetchService, fetchJsonFunction, returnNullHandleFetchJsonParseErrorFunction, type ConfiguredFetch, type FetchHandler } from '@dereekb/util/fetch';
-import { DISCORD_API_URL } from '../discord.config';
+import { DEFAULT_DISCORD_FETCH_TIMEOUT, DISCORD_API_URL } from '../discord.config';
 import { discordOAuthBasicAuthorizationHeader, DISCORD_OAUTH_TOKEN_CONTENT_TYPE } from './oauth.api';
 import { type DiscordOAuthConfig, type DiscordOAuthContext, type DiscordOAuthContextRef, type DiscordOAuthFetchFactory, type DiscordOAuthFetchFactoryInput } from './oauth.config';
 import { handleDiscordOAuthErrorFetch, type LogDiscordOAuthErrorFunction } from './oauth.error.api';
@@ -23,6 +23,15 @@ export interface DiscordOAuthFactoryConfig {
    * Custom log error function.
    */
   readonly logDiscordOAuthErrorFunction?: LogDiscordOAuthErrorFunction;
+  /**
+   * Timeout in milliseconds for each request the default fetch sends: the wait for the response headers (reading the
+   * body is not timed). `0` turns it off. A request's own `timeout`, set in its init, wins over this.
+   *
+   * Ignored when a `fetchFactory` is provided.
+   *
+   * Defaults to {@link DEFAULT_DISCORD_FETCH_TIMEOUT} (20 seconds).
+   */
+  readonly timeout?: Maybe<Milliseconds>;
 }
 
 export type DiscordOAuthFactory = (config: DiscordOAuthConfig) => DiscordOAuth;
@@ -34,7 +43,7 @@ export type DiscordOAuthFactory = (config: DiscordOAuthConfig) => DiscordOAuth;
  * external-connection framework stores each user's credentials itself, so the client only ever needs
  * to make the calls it is asked to make.
  *
- * @param factoryConfig - Configuration including an optional fetch factory, fetch handler, and error logging.
+ * @param factoryConfig - Configuration including an optional fetch factory, fetch handler, error logging and timeout.
  * @returns A factory accepting a DiscordOAuthConfig and producing a DiscordOAuth instance.
  *
  * @__NO_SIDE_EFFECTS__
@@ -56,7 +65,7 @@ export function discordOAuthFactory(factoryConfig: DiscordOAuthFactoryConfig): D
           }
         },
         fetchHandler: fetchHandler ?? undefined,
-        timeout: 20 * 1000, // 20 second timeout
+        timeout: factoryConfig.timeout ?? DEFAULT_DISCORD_FETCH_TIMEOUT,
         requireOkResponse: true, // enforce ok response
         useTimeout: true // use timeout
       })
