@@ -61,6 +61,54 @@ describe('toLlmCallFailedAttempt()', () => {
   });
 });
 
+describe('decode and failed-attempt row bytes (pin)', () => {
+  const longText = `{"a":"${Array.from({ length: 150 }, (_, index) => `word${index}`).join(' ')}`;
+
+  it('keeps the maximal decode row key order and bytes', () => {
+    const row = toLlmDecodeFailureAttempt({
+      attempt: 3,
+      failureClass: 'parse-error',
+      result: result({ text: longText, finishReason: 'length', latencyMs: 41, usage: { promptTokens: 9, completionTokens: 7, totalTokens: 16 } }),
+      maxOutputTokens: 256,
+      envelope: undefined,
+      validatorError: 'v',
+      lever: { lever: 'budget' },
+      transportError: 't',
+      errorClassification: 'permanent'
+    });
+
+    expect(Object.keys(row)).toEqual(['attempt', 'class', 'excerpt', 'tailExcerpt', 'rawLength', 'shape', 'finishReason', 'completionTokens', 'latencyMs', 'maxOutputTokens', 'validatorError', 'lever', 'transportError', 'errorClassification']);
+    expect(JSON.stringify({ ...row, excerpt: row.excerpt.length, tailExcerpt: row.tailExcerpt?.length })).toBe(
+      '{"attempt":3,"class":"parse-error","excerpt":500,"tailExcerpt":200,"rawLength":1095,"shape":{"verdict":"truncated-looking","score":1},"finishReason":"length","completionTokens":7,"latencyMs":41,"maxOutputTokens":256,"validatorError":"v","lever":"budget","transportError":"t","errorClassification":"permanent"}'
+    );
+  });
+
+  it('keeps the minimal decode row key order and bytes', () => {
+    const row = toLlmDecodeFailureAttempt({ attempt: 1, failureClass: 'schema-validation', result: result({ text: '{"a":1}' }), maxOutputTokens: null, envelope: null, validatorError: null, lever: null, transportError: null, errorClassification: null });
+
+    expect(Object.keys(row)).toEqual(['attempt', 'class', 'excerpt', 'rawLength']);
+    expect(JSON.stringify(row)).toBe(String.raw`{"attempt":1,"class":"schema-validation","excerpt":"{\"a\":1}","rawLength":7}`);
+  });
+
+  it('keeps the maximal failed-attempt row key order and bytes', () => {
+    const long = 'x'.repeat(LLM_FAILED_ATTEMPT_TEXT_MAX_LENGTH + 10);
+    const served = result({ text: '{}', strategyKind: 'k', model: 'm', provider: 'p', usage: { promptTokens: 2, completionTokens: 1, totalTokens: 3 }, latencyMs: 5, generationId: 'g', finishReason: 'stop', repair: { tier: 'deterministic', attempt: 1, verdict: 'near-miss', score: 1, originalText: long } });
+    const row = toLlmCallFailedAttempt({ attempt: 2, cause: 'schema-validation', result: served, maxOutputTokens: 64, error: 'bad', errorClassification: 'permanent', correction: 'fix it', retry: { lever: 'budget', from: 'a', to: 'b', cause: 'c' } });
+
+    expect(Object.keys(row)).toEqual(['attempt', 'cause', 'error', 'errorClassification', 'text', 'rawLength', 'clipped', 'strategyId', 'strategyKind', 'model', 'provider', 'usage', 'latencyMs', 'generationId', 'finishReason', 'repair', 'maxOutputTokens', 'correction', 'retry']);
+    expect(JSON.stringify({ ...row, text: row.text.length })).toBe(
+      '{"attempt":2,"cause":"schema-validation","error":"bad","errorClassification":"permanent","text":16,"rawLength":16010,"clipped":true,"strategyId":"s","strategyKind":"k","model":"m","provider":"p","usage":{"promptTokens":2,"completionTokens":1,"totalTokens":3},"latencyMs":5,"generationId":"g","finishReason":"stop","repair":{"tier":"deterministic","attempt":1,"verdict":"near-miss","score":1},"maxOutputTokens":64,"correction":"fix it","retry":{"lever":"budget","from":"a","to":"b","cause":"c"}}'
+    );
+  });
+
+  it('keeps the minimal failed-attempt row key order and bytes', () => {
+    const row = toLlmCallFailedAttempt({ attempt: 1, cause: 'timeout', result: result({ text: '' }), maxOutputTokens: null, error: null, errorClassification: null, correction: null, retry: null });
+
+    expect(Object.keys(row)).toEqual(['attempt', 'cause', 'text', 'rawLength', 'strategyId']);
+    expect(JSON.stringify(row)).toBe('{"attempt":1,"cause":"timeout","text":"","rawLength":0,"strategyId":"s"}');
+  });
+});
+
 describe('toLlmCallAttemptPhase()', () => {
   it('should read the complete span as the wall time, 0 on a no-op context', async () => {
     const context = makeLlmCallContext({ label: 'attempt-1', timing: true });

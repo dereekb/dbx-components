@@ -39,7 +39,7 @@
  * the global after building the strategy.
  */
 
-import { readErrorMessage, isNotNullOrEmptyString, isPlainObject, makeTimeoutAbortSignal, type Maybe, type Milliseconds, removeTrailingSlashes, type WebsiteUrlWithPrefix, type WebsiteUrl } from '@dereekb/util';
+import { readErrorMessage, filterMaybeValues, isNotNullOrEmptyString, isPlainObject, makeTimeoutAbortSignal, type Maybe, type Milliseconds, removeTrailingSlashes, type WebsiteUrlWithPrefix, type WebsiteUrl } from '@dereekb/util';
 import { type LlmDecisionAdapterConfig } from '../adapter/llm.adapter';
 import { type LlmModelId, type LlmStrategyId } from '../model/llm.value';
 import { type ConfiguredFetch, type FetchJsonTextResult, isFetchAbortError, readFetchJsonText } from '@dereekb/util/fetch';
@@ -281,7 +281,8 @@ export function makeLlmSystemOneDecisionStrategy(config: LlmSystemOneDecisionStr
     const provider = nonBlankStringOf(reply.provider);
     const model: LlmModelId = nonBlankStringOf(reply.model) ?? request.model;
 
-    return { model, answers, ...(usage == null ? {} : { usage }), ...(generationId == null ? {} : { generationId }), ...(provider == null ? {} : { provider }) };
+    // `answers` is generic in Q, so only the concrete optional keys go through the filter; key order is kept.
+    return { model, answers, ...filterMaybeValues({ usage, generationId, provider }) };
   };
 
   return {

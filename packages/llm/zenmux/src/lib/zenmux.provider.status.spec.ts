@@ -79,6 +79,26 @@ describe('makeLlmZenmuxProviderStatusSource()', () => {
     expect(seam.urls).toHaveLength(3);
   });
 
+  it('keeps the maximal status and window key order and bytes (pin)', async () => {
+    const status = await makeLlmZenmuxProviderStatusSource({ managementApiKey: 'mgmt-key', fetch: fakeFetch(HEALTHY_ROUTES).fetch }).read();
+
+    expect(Object.keys(status)).toEqual(['providerId', 'available', 'windows', 'balance', 'issues']);
+    expect(Object.keys(status.windows[0])).toEqual(['id', 'label', 'unit', 'usedFraction', 'usedUnits', 'maxUnits', 'remainingUnits', 'usedUsd', 'maxUsd', 'resetsAt']);
+    expect(JSON.stringify(status)).toBe(
+      '{"providerId":"zenmux","available":true,"windows":[{"id":"rolling-5h","label":"rolling 5 hours","unit":"flow","usedFraction":0.0715,"usedUnits":57.2,"maxUnits":800,"remainingUnits":742.8,"usedUsd":1.88,"maxUsd":26.27,"resetsAt":"2026-08-25T08:35:09.000Z"},{"id":"rolling-7d","label":"rolling 7 days","unit":"flow","usedFraction":0.94,"usedUnits":5811,"maxUnits":6182,"remainingUnits":371,"usedUsd":190.78,"maxUsd":202.99,"resetsAt":"2026-08-27T02:15:05.000Z"},{"id":"monthly","label":"monthly","unit":"flow","maxUnits":34560,"maxUsd":1134.33}],"balance":{"currency":"usd","total":482.74,"parts":[{"label":"top-up","amount":35},{"label":"bonus","amount":447.74}]},"issues":[]}'
+    );
+  });
+
+  it('keeps the minimal status and window key order and bytes, dropping every wire null (pin)', async () => {
+    const nullQuota = { usage_percentage: null, used_flows: null, max_flows: null, remaining_flows: null, used_value_usd: null, max_value_usd: null, resets_at: null };
+    const routes = { 'subscription/detail': { status: 200, body: JSON.stringify({ success: true, data: { quota_5_hour: nullQuota } }) }, 'payg/balance': { status: 200, body: JSON.stringify({ success: true, data: { total_credits: null } }) }, flow_rate: { status: 200, body: FLOW_RATE_BODY } };
+    const status = await makeLlmZenmuxProviderStatusSource({ managementApiKey: 'mgmt-key', fetch: fakeFetch(routes).fetch }).read();
+
+    expect(Object.keys(status)).toEqual(['providerId', 'available', 'windows', 'issues']);
+    expect(Object.keys(status.windows[0])).toEqual(['id', 'label', 'unit']);
+    expect(JSON.stringify(status)).toBe('{"providerId":"zenmux","available":true,"windows":[{"id":"rolling-5h","label":"rolling 5 hours","unit":"flow"}],"issues":[]}');
+  });
+
   it('authenticates every GET with the management key', async () => {
     const seam = fakeFetch(HEALTHY_ROUTES);
     await makeLlmZenmuxProviderStatusSource({ managementApiKey: ' mgmt-key ', fetch: seam.fetch }).read();

@@ -125,6 +125,17 @@ describe('makeLlmSystemOneDecisionStrategy()', () => {
       expect(Object.keys(result)).toEqual(['model', 'answers', 'usage', 'generationId', 'provider']);
     });
 
+    it('keeps the maximal and minimal result key order and bytes (pin)', async () => {
+      const full = await strategyAnswering({ body: { id: 'gen-1', model: 'typesafe/jev-1.14-20260901', provider: 'TypeSafe', answers: TYPED_ANSWERS, usage: { input_tokens: 10, output_tokens: 2 } } }).strategy.decide(REQUEST);
+      const bare = await strategyAnswering({ body: { id: null, model: null, provider: null, answers: TYPED_ANSWERS, usage: null } }).strategy.decide(REQUEST);
+
+      expect(JSON.stringify(full)).toBe(
+        '{"model":"typesafe/jev-1.14-20260901","answers":{"is_urgent":{"type":"noul","noul":0.94},"department":{"type":"choice","choice":"billing","probabilities":{"billing":0.9,"technical":0.1}},"frustration":{"type":"score","score":1.4}},"usage":{"promptTokens":10,"completionTokens":2,"totalTokens":12},"generationId":"gen-1","provider":"TypeSafe"}'
+      );
+      expect(Object.keys(bare)).toEqual(['model', 'answers']);
+      expect(JSON.stringify(bare)).toBe('{"model":"typesafe/jev-1.14","answers":{"is_urgent":{"type":"noul","noul":0.94},"department":{"type":"choice","choice":"billing","probabilities":{"billing":0.9,"technical":0.1}},"frustration":{"type":"score","score":1.4}}}');
+    });
+
     it('keeps the requested slug when no model is echoed, and ignores blank or non-string id / model / provider', async () => {
       const bare = await strategyAnswering({ body: { answers: TYPED_ANSWERS } }).strategy.decide(REQUEST);
       const blank = await strategyAnswering({ body: { id: ' ', model: '', provider: 7, answers: TYPED_ANSWERS } }).strategy.decide(REQUEST);

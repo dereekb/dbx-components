@@ -4,7 +4,7 @@
  * timeout / transport envelopes a failed send is recorded as.
  */
 
-import { type Maybe, type NumberPrecision, roundToPrecision, type HexString } from '@dereekb/util';
+import { filterMaybeValues, type Maybe, type NumberPrecision, roundToPrecision, type HexString } from '@dereekb/util';
 import { type FetchErrorClassification } from '@dereekb/util/fetch';
 import { type LlmStrategyId, type LlmTokenCount } from '../model/llm.value';
 import { type LlmCallContext, type LlmCallProfile } from '../record/llm.call.context';
@@ -159,22 +159,22 @@ export function toLlmDecodeFailureAttempt(config: LlmDecodeFailureAttemptConfig)
   const shape = failureClass === 'parse-error' ? scoreLlmReplyJson(result.text, { envelope }) : undefined;
   const tailExcerpt = failureClass === 'parse-error' || failureClass === 'length-truncation' ? llmDecodeFailureTailExcerpt(result.text) : undefined;
 
-  return {
+  return filterMaybeValues({
     attempt,
     class: failureClass,
     excerpt: llmDecodeFailureExcerpt(result.text),
-    ...(tailExcerpt == null ? {} : { tailExcerpt }),
+    tailExcerpt,
     rawLength: result.text.length,
-    ...(shape == null ? {} : { shape: { verdict: shape.verdict, score: roundToPrecision(shape.score, LLM_REPLY_REPAIR_SCORE_PRECISION) } }),
-    ...(result.finishReason == null ? {} : { finishReason: result.finishReason }),
-    ...(result.usage?.completionTokens == null ? {} : { completionTokens: result.usage.completionTokens }),
-    ...(result.latencyMs == null ? {} : { latencyMs: result.latencyMs }),
-    ...(maxOutputTokens == null ? {} : { maxOutputTokens }),
-    ...(validatorError == null ? {} : { validatorError }),
-    ...(lever == null ? {} : { lever: lever.lever }),
-    ...(transportError == null ? {} : { transportError }),
-    ...(errorClassification == null ? {} : { errorClassification })
-  };
+    shape: shape == null ? undefined : { verdict: shape.verdict, score: roundToPrecision(shape.score, LLM_REPLY_REPAIR_SCORE_PRECISION) },
+    finishReason: result.finishReason,
+    completionTokens: result.usage?.completionTokens,
+    latencyMs: result.latencyMs,
+    maxOutputTokens,
+    validatorError,
+    lever: lever?.lever,
+    transportError,
+    errorClassification
+  });
 }
 
 /**
@@ -270,19 +270,19 @@ export function toLlmCallFailedAttempt(config: LlmFailedAttemptConfig): LlmCallF
   const raw = result.repair?.originalText ?? result.text;
   const clip = clipLlmFailedAttemptReply(raw);
 
-  return {
+  return filterMaybeValues({
     attempt,
     cause,
-    ...(error == null ? {} : { error }),
-    ...(errorClassification == null ? {} : { errorClassification }),
+    error,
+    errorClassification,
     text: clip.text,
     rawLength: raw.length,
-    ...(clip.clipped == null ? {} : { clipped: clip.clipped }),
+    clipped: clip.clipped,
     ...llmCallTelemetry(result),
-    ...(maxOutputTokens == null ? {} : { maxOutputTokens }),
-    ...(correction == null ? {} : { correction }),
-    ...(retry == null ? {} : { retry })
-  };
+    maxOutputTokens,
+    correction,
+    retry
+  });
 }
 
 /**

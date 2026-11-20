@@ -1,11 +1,12 @@
 import { type ArrayOrValue, asArray } from './../array/array';
 import { filterMaybeArrayValues } from '../array/array.value';
-import { type Maybe } from '../value/maybe.type';
+import { type Maybe, type MaybeSo } from '../value/maybe.type';
 import { type DefinedValues, type NonNullableValues, type PartialWithUndefined } from '../type';
 import { filterKeyValueTuplesFunction, type FilterKeyValueTuplesInput, filterKeyValueTuplesInputToFilter, type KeyValueTuple, type KeyValueTupleFilter, KeyValueTypleValueFilter } from './object.filter.tuple';
 import { cachedGetter, type Getter } from '../getter';
 import { copyObject, objectHasNoKeys } from './object';
 import { invertBooleanReturnFunction } from '../function/function.boolean';
+import { type Prettify } from 'ts-essentials';
 
 // MARK: Object Filtering
 /**
@@ -349,6 +350,66 @@ export const filterOnlyUndefinedValues: GeneralFilterFromPOJOFunction = filterFr
  * ```
  */
 export const filterNullAndUndefinedValues: GeneralFilterFromPOJOFunction = filterFromPOJOFunction({ copy: true, filter: { valueFilter: KeyValueTypleValueFilter.NULL } });
+
+/**
+ * The keys of `T` whose value may be `null` or `undefined`, optional keys included.
+ *
+ * These are the keys {@link filterMaybeValues} may drop.
+ */
+export type MaybeValueKeys<T extends object> = { [K in keyof T]-?: undefined extends T[K] ? K : null extends T[K] ? K : never }[keyof T];
+
+/**
+ * The static type of {@link filterMaybeValues}'s result.
+ *
+ * A key whose value may be `null` or `undefined` becomes optional, and its value type loses `null` and `undefined`.
+ * Every other key keeps its declared type, and stays required when it was required.
+ */
+export type FilteredMaybeValues<T extends object> = Prettify<Omit<T, MaybeValueKeys<T>> & { [K in MaybeValueKeys<T>]?: MaybeSo<T[K]> }>;
+
+/**
+ * Returns a copy of the input object with every `null` and `undefined` value removed, typed so that a nullable key
+ * becomes optional and non-nullable.
+ *
+ * Use it to shape a projection whose source carries `Maybe` values (a wire reply, a parsed row) into an object whose
+ * optional fields must be absent rather than nullish, such as a persisted row or a host-stored record. It replaces a
+ * run of `...(x == null ? {} : { x })` spreads with one plain literal, and the result fits an `x?: X` target without a
+ * cast, which {@link filterNullAndUndefinedValues} and {@link filterUndefinedValues} cannot offer since they return `T`.
+ *
+ * The runtime is {@link filterNullAndUndefinedValues}: the filter is shallow (a nested `null` is kept), it keeps the
+ * input's key order, it keeps other falsy values (`0`, `false`, `''`), and it never mutates the input.
+ *
+ * A value whose type is still a generic parameter at the call site cannot be judged nullable or not, so the result
+ * type cannot settle its key. Filter only the concrete keys and spread the result:
+ * `{ model, answers, ...filterMaybeValues({ usage, provider }) }`.
+ *
+ * @param obj - The object to filter. Every key that must survive should have a non-nullable type, since only a nullable key may be dropped.
+ * @returns A shallow copy of `obj` without its `null` and `undefined` values.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilKind function
+ * @dbxUtilTags object, pojo, filter, maybe, nullish, projection
+ * @dbxUtilRelated filter-undefined-values, merge-objects
+ *
+ * @example
+ * ```typescript
+ * interface Usage {
+ *   readonly promptTokens: number;
+ *   readonly cachedTokens?: number;
+ * }
+ *
+ * const wire: { prompt_tokens: number; cached_tokens?: Maybe<number> } = { prompt_tokens: 12, cached_tokens: null };
+ *
+ * const usage: Usage = filterMaybeValues({ promptTokens: wire.prompt_tokens, cachedTokens: wire.cached_tokens });
+ * // { promptTokens: 12 }
+ *
+ * filterMaybeValues({ a: 0, b: false, c: '', d: null, e: undefined });
+ * // { a: 0, b: false, c: '' }
+ * ```
+ */
+export function filterMaybeValues<T extends object>(obj: T): FilteredMaybeValues<T> {
+  return filterNullAndUndefinedValues(obj) as unknown as FilteredMaybeValues<T>;
+}
 
 /**
  * Pre-built filter that returns a copy of the input object with all empty values removed.

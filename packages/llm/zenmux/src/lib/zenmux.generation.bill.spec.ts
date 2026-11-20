@@ -33,6 +33,15 @@ describe('makeLlmZenmuxGenerationBillReader()', () => {
     expect(seam.calls).toEqual([{ url: `https://zenmux.ai/api/v1/management/generation?id=${DEEPSEEK_ID}`, auth: 'Bearer payg-key' }]);
   });
 
+  it('keeps the maximal and minimal bill key order and bytes (pin)', async () => {
+    const full = await makeLlmZenmuxGenerationBillReader({ apiKey: 'k', fetch: fakeFetch(200, DEEPSEEK_BODY).fetch }).read(DEEPSEEK_ID);
+    const bare = await makeLlmZenmuxGenerationBillReader({ apiKey: 'k', fetch: fakeFetch(200, JSON.stringify({ success: true, data: { ratingResponses: { billAmount: '0.0002', discountAmount: null, originAmount: null } } })).fetch }).read('b1');
+
+    expect(JSON.stringify(full)).toBe(`{"status":"billed","bill":{"generationId":"${DEEPSEEK_ID}","billed":0.000287775,"listed":0.00057555,"discount":0.000287775}}`);
+    expect(JSON.stringify(bare)).toBe('{"status":"billed","bill":{"generationId":"b1","billed":0.0002}}');
+    expect(bare.status === 'billed' ? Object.keys(bare.bill) : []).toEqual(['generationId', 'billed']);
+  });
+
   it('reads an undiscounted slug as billed == listed', async () => {
     const read = await makeLlmZenmuxGenerationBillReader({ apiKey: 'k', fetch: fakeFetch(200, HAIKU_BODY).fetch }).read('h1');
 

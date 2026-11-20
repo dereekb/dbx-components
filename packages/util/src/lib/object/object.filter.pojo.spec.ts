@@ -1,6 +1,23 @@
 import { filterUndefinedValues, type Maybe, mergeObjects } from '@dereekb/util';
 import { objectHasKey } from './object';
-import { filterFromPOJO, allNonUndefinedKeys, allMaybeSoKeys, countPOJOKeys, countPOJOKeysFunction, findPOJOKeys, overrideInObject, assignValuesToPOJOFunction, filterKeysOnPOJOFunction, mergeObjectsFunction, valuesFromPOJO, valuesFromPOJOFunction, stripObject, stripObjectFunction } from './object.filter.pojo';
+import {
+  filterFromPOJO,
+  allNonUndefinedKeys,
+  allMaybeSoKeys,
+  countPOJOKeys,
+  countPOJOKeysFunction,
+  findPOJOKeys,
+  overrideInObject,
+  assignValuesToPOJOFunction,
+  filterKeysOnPOJOFunction,
+  mergeObjectsFunction,
+  valuesFromPOJO,
+  valuesFromPOJOFunction,
+  stripObject,
+  stripObjectFunction,
+  filterMaybeValues,
+  type FilteredMaybeValues
+} from './object.filter.pojo';
 import { KeyValueTypleValueFilter } from './object.filter.tuple';
 
 describe('overrideInObject', () => {
@@ -279,6 +296,64 @@ describe('filterUndefinedValues', () => {
       expect(result).toBeDefined();
       expect(objectHasKey(result, 'y'));
     });
+  });
+});
+
+describe('filterMaybeValues()', () => {
+  it('should drop null and undefined values', () => {
+    const result = filterMaybeValues({ a: 1, b: undefined, c: null });
+    expect(result).toEqual({ a: 1 });
+    expect(Object.keys(result)).toEqual(['a']);
+  });
+
+  it('should keep the other falsy values', () => {
+    const result = filterMaybeValues({ a: 0, b: false, c: '', d: null });
+    expect(Object.keys(result)).toEqual(['a', 'b', 'c']);
+    expect(result).toEqual({ a: 0, b: false, c: '' });
+  });
+
+  it('should keep the input key order', () => {
+    const result = filterMaybeValues({ z: 1, y: null, x: 'x', w: undefined, v: 0 });
+    expect(JSON.stringify(result)).toBe('{"z":1,"x":"x","v":0}');
+  });
+
+  it('should return a copy and leave the input untouched', () => {
+    const input = { a: 1, b: null as Maybe<number> };
+    const result = filterMaybeValues(input);
+    expect(result).not.toBe(input);
+    expect(Object.keys(input)).toEqual(['a', 'b']);
+    expect(input.b).toBeNull();
+  });
+
+  it('should filter shallowly and keep a nested null', () => {
+    const result = filterMaybeValues({ a: { b: null }, c: null });
+    expect(result).toEqual({ a: { b: null } });
+  });
+
+  it('should type a Maybe value as an optional non-nullable key', () => {
+    const wire: { readonly count: number; readonly label: Maybe<string> } = { count: 2, label: null };
+    const shaped: { readonly count: number; readonly label?: string } = filterMaybeValues(wire);
+    expect(shaped).toEqual({ count: 2 });
+
+    const withLabel: FilteredMaybeValues<{ readonly count: number; readonly label: Maybe<string> }> = filterMaybeValues({ count: 3, label: 'x' as Maybe<string> });
+    expect(withLabel.label).toBe('x');
+  });
+
+  it('should keep a non-nullable key required', () => {
+    // @ts-expect-error count is required on the result, so a value without it does not fit the type
+    const missingCount: FilteredMaybeValues<{ count: number; label: Maybe<string> }> = { label: 'x' };
+    expect(missingCount.count).toBeUndefined();
+
+    const label = undefined as Maybe<string>;
+    // @ts-expect-error count was never in the input, so the result cannot satisfy a required count
+    const fromLabelOnly: { count: number } = filterMaybeValues({ label });
+    expect(fromLabelOnly).toEqual({});
+  });
+
+  it('should reject null in the result type', () => {
+    // @ts-expect-error a nullable key loses null in the result
+    const withNull: FilteredMaybeValues<{ count: number; label: Maybe<string> }> = { count: 1, label: null };
+    expect(withNull.label).toBeNull();
   });
 });
 

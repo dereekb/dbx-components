@@ -204,6 +204,15 @@ describe('readLlmTapeTurn()', () => {
     expect(Object.keys(turn ?? {})).toEqual(['capability', 'promptSha', 'text', 'model', 'usage', 'finishReason']);
   });
 
+  it('should keep the maximal and minimal turn bytes, dropping wire nulls (pin)', () => {
+    const full = readLlmTapeTurn(FLAT);
+    const bare = readLlmTapeTurn({ capability: 'summarize', prompt: 'PROMPT ONE', text: 'reply', model: null, usage: null, finishReason: null });
+
+    expect(JSON.stringify(full)).toBe(`{"capability":"summarize","promptSha":"${hashLlmTapePrompt('PROMPT ONE')}","text":"It washes clean.","model":"vendor/model-flash","usage":{"promptTokens":120,"completionTokens":8,"totalTokens":128,"cost":0.0004},"finishReason":"stop"}`);
+    expect(Object.keys(bare ?? {})).toEqual(['capability', 'promptSha', 'text']);
+    expect(JSON.stringify(bare)).toBe(`{"capability":"summarize","promptSha":"${hashLlmTapePrompt('PROMPT ONE')}","text":"reply"}`);
+  });
+
   it('should hash the joined prompt of a segments-only payload', () => {
     const promptSegments = [
       { id: 'instructions', promptSegment: 'B-CAP\n\n', origin: { kind: 'template' } },

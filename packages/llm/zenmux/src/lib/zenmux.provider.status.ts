@@ -29,7 +29,7 @@
  */
 
 import { llmProviderErrorMessage, makeLlmQuotaWindow, type LlmProviderBalance, type LlmProviderStatus, type LlmProviderStatusOptions, type LlmProviderStatusSource, type LlmQuotaWindow, type LlmStrategyHealthIssue } from '@dereekb/llm';
-import { readErrorMessage, type Maybe, type Milliseconds, removeTrailingSlashes } from '@dereekb/util';
+import { filterMaybeValues, readErrorMessage, type Maybe, type Milliseconds, removeTrailingSlashes } from '@dereekb/util';
 import { DEFAULT_LLM_ZENMUX_BASE_URL, LLM_ZENMUX_MANAGEMENT_API_KEY_ENV_VAR, LLM_ZENMUX_PROVIDER_ID } from './zenmux.constants';
 import { readLlmZenmuxManagement, llmZenmuxManagementUrl, type LlmZenmuxManagementReadConfig } from './zenmux.management';
 
@@ -199,7 +199,7 @@ export function makeLlmZenmuxProviderStatusSource(config: LlmZenmuxProviderStatu
           issues.push(surcharge);
         }
 
-        status = { providerId: LLM_ZENMUX_PROVIDER_ID, available: windows.length > 0 || providerBalance != null, windows, ...(providerBalance == null ? {} : { balance: providerBalance }), issues };
+        status = filterMaybeValues({ providerId: LLM_ZENMUX_PROVIDER_ID, available: windows.length > 0 || providerBalance != null, windows, balance: providerBalance, issues });
       }
 
       return status;
@@ -228,18 +228,20 @@ function zenmuxQuotaWindows(detail: ZenmuxSubscriptionDetail): ReadonlyArray<Llm
     quota == null
       ? []
       : [
-          makeLlmQuotaWindow({
-            id,
-            label,
-            unit: 'flow',
-            ...(quota.usage_percentage == null ? {} : { usedFraction: quota.usage_percentage }),
-            ...(quota.used_flows == null ? {} : { usedUnits: quota.used_flows }),
-            ...(quota.max_flows == null ? {} : { maxUnits: quota.max_flows }),
-            ...(quota.remaining_flows == null ? {} : { remainingUnits: quota.remaining_flows }),
-            ...(quota.used_value_usd == null ? {} : { usedUsd: quota.used_value_usd }),
-            ...(quota.max_value_usd == null ? {} : { maxUsd: quota.max_value_usd }),
-            ...(quota.resets_at == null ? {} : { resetsAt: quota.resets_at })
-          })
+          makeLlmQuotaWindow(
+            filterMaybeValues({
+              id,
+              label,
+              unit: 'flow',
+              usedFraction: quota.usage_percentage,
+              usedUnits: quota.used_flows,
+              maxUnits: quota.max_flows,
+              remainingUnits: quota.remaining_flows,
+              usedUsd: quota.used_value_usd,
+              maxUsd: quota.max_value_usd,
+              resetsAt: quota.resets_at
+            })
+          )
         ]
   );
 }

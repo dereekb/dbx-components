@@ -74,6 +74,51 @@ describe('toLlmUsage', () => {
   });
 });
 
+describe('toLlmUsage bytes (pin)', () => {
+  it('keeps the maximal usage key order and bytes', () => {
+    const usage = toLlmUsage(
+      {
+        prompt_tokens: 900,
+        completion_tokens: 300,
+        total_tokens: 1200,
+        prompt_tokens_details: { cached_tokens: 512, cache_write_tokens: 256, image_tokens: 0 },
+        completion_tokens_details: { reasoning_tokens: 180 },
+        cost: '0.0123',
+        cost_details: { upstream_inference_cost: 0.0101 }
+      },
+      { costBasis: 'list' }
+    );
+
+    expect(Object.keys(usage ?? {})).toEqual(['promptTokens', 'completionTokens', 'totalTokens', 'cachedTokens', 'cacheWriteTokens', 'reasoningTokens', 'imageTokens', 'cost', 'costBasis', 'costDetails']);
+    expect(JSON.stringify(usage)).toBe('{"promptTokens":900,"completionTokens":300,"totalTokens":1200,"cachedTokens":512,"cacheWriteTokens":256,"reasoningTokens":180,"imageTokens":0,"cost":0.0123,"costBasis":"list","costDetails":{"upstreamInferenceCost":0.0101}}');
+  });
+
+  it('keeps the minimal usage key order and bytes', () => {
+    const usage = toLlmUsage({});
+
+    expect(Object.keys(usage ?? {})).toEqual(['promptTokens', 'completionTokens', 'totalTokens']);
+    expect(JSON.stringify(usage)).toBe('{"promptTokens":0,"completionTokens":0,"totalTokens":0}');
+  });
+
+  it('omits every wire null, never carrying a null or undefined key', () => {
+    const usage = toLlmUsage(
+      {
+        prompt_tokens: null,
+        completion_tokens: 5,
+        total_tokens: null,
+        prompt_tokens_details: { cached_tokens: null, cache_write_tokens: null, image_tokens: null },
+        completion_tokens_details: { reasoning_tokens: null },
+        cost: null,
+        cost_details: { upstream_inference_cost: null }
+      },
+      { costBasis: null }
+    );
+
+    expect(Object.keys(usage ?? {})).toEqual(['promptTokens', 'completionTokens', 'totalTokens']);
+    expect(JSON.stringify(usage)).toBe('{"promptTokens":0,"completionTokens":5,"totalTokens":0}');
+  });
+});
+
 describe('readLlmCost', () => {
   it('passes a finite number and parses a numeric string', () => {
     expect(readLlmCost(0.0031)).toBe(0.0031);

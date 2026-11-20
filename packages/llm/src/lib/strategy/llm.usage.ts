@@ -7,8 +7,8 @@
  * getting them wrong is silent: a `cost` key spread as `undefined` rather than omitted reads to a ledger as a
  * reported cost of nothing, the exact opposite of "this call's cost is unknown".
  *
- * So the rule this module holds, and the reason every field below is a conditional spread rather than a nullish
- * default:
+ * So the rule this module holds, and the reason every field below is shaped through `filterMaybeValues`, which omits a
+ * nullish field, rather than given a nullish default:
  *
  * - the three TOKEN counts are always present, defaulting to `0` — a provider that answered billed something, and a
  *   zero is a reading;
@@ -28,7 +28,7 @@
  * Absence is spelt `| undefined`, not `Maybe`: one spelling keeps a conditional spread of the result byte-stable.
  */
 
-import { type DollarAmount, type Maybe } from '@dereekb/util';
+import { type DollarAmount, filterMaybeValues, type Maybe } from '@dereekb/util';
 import { type LlmTokenCount } from '../model/llm.value';
 
 /**
@@ -200,16 +200,16 @@ export function toLlmUsage(raw: Maybe<RawLlmUsage>, options?: LlmUsageFromOption
 
   return raw == null
     ? undefined
-    : {
+    : filterMaybeValues({
         promptTokens: raw.prompt_tokens ?? 0,
         completionTokens: raw.completion_tokens ?? 0,
         totalTokens: raw.total_tokens ?? 0,
-        ...(cachedTokens == null ? {} : { cachedTokens }),
-        ...(cacheWriteTokens == null ? {} : { cacheWriteTokens }),
-        ...(reasoningTokens == null ? {} : { reasoningTokens }),
-        ...(imageTokens == null ? {} : { imageTokens }),
-        ...(cost == null ? {} : { cost }),
-        ...(costBasis == null ? {} : { costBasis }),
-        ...(upstreamInferenceCost == null ? {} : { costDetails: { upstreamInferenceCost } })
-      };
+        cachedTokens,
+        cacheWriteTokens,
+        reasoningTokens,
+        imageTokens,
+        cost,
+        costBasis,
+        costDetails: upstreamInferenceCost == null ? undefined : { upstreamInferenceCost }
+      });
 }

@@ -23,7 +23,7 @@
  * @see LlmStrategy (the contract this implements).
  */
 
-import { type Maybe, sha256HexPrefix, type IndexNumber, type HexString } from '@dereekb/util';
+import { filterMaybeValues, type Maybe, sha256HexPrefix, type IndexNumber, type HexString } from '@dereekb/util';
 import { isDecisionLlmCallRow, type LlmCapabilityKey, type LlmCompletion, type LlmModelId, type LlmRequest, type LlmStrategy, type LlmStrategyHealth, type LlmStrategyId, type LlmUsage, readLlmCallPrompt } from '@dereekb/llm';
 
 /**
@@ -404,14 +404,7 @@ export function readLlmTapeTurn(payload: unknown, config?: Maybe<ReadLlmTapeTurn
       const model = stringOf(record['model']);
       const finishReason = stringOf(record['finishReason']);
       const hash = config?.hash ?? hashLlmTapePrompt;
-      turn = {
-        capability,
-        promptSha: hash(prompt),
-        text,
-        ...(model == null ? {} : { model }),
-        ...(record['usage'] == null ? {} : { usage: record['usage'] as LlmUsage }),
-        ...(finishReason == null ? {} : { finishReason })
-      };
+      turn = filterMaybeValues({ capability, promptSha: hash(prompt), text, model, usage: record['usage'] as Maybe<LlmUsage>, finishReason });
     }
   }
 

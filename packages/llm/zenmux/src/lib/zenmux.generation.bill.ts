@@ -14,7 +14,7 @@
  */
 
 import { readLlmCost, llmProviderErrorMessage, type LlmCallBill, type LlmCallBillRead, type LlmCallBillReader, type LlmCallBillReadOptions, type LlmGenerationId } from '@dereekb/llm';
-import { readErrorMessage, type Maybe, type Milliseconds, removeTrailingSlashes } from '@dereekb/util';
+import { filterMaybeValues, readErrorMessage, type Maybe, type Milliseconds, removeTrailingSlashes } from '@dereekb/util';
 import { DEFAULT_LLM_ZENMUX_BASE_URL, LLM_ZENMUX_PROVIDER_ID } from './zenmux.constants';
 import { readLlmZenmuxManagement, llmZenmuxGenerationUrl, type LlmZenmuxEnvelope, type LlmZenmuxManagementReadConfig } from './zenmux.management';
 
@@ -59,7 +59,7 @@ function zenmuxBillReadOf(generationId: LlmGenerationId, envelope: LlmZenmuxEnve
   } else {
     const listed = readLlmCost(rating?.originAmount);
     const discount = readLlmCost(rating?.discountAmount);
-    const bill: LlmCallBill = { generationId, billed, ...(listed == null ? {} : { listed }), ...(discount == null ? {} : { discount }) };
+    const bill: LlmCallBill = filterMaybeValues({ generationId, billed, listed, discount });
     read = { status: 'billed', bill };
   }
 
