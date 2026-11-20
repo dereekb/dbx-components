@@ -12,6 +12,7 @@
 import { HTTPClient } from '@openrouter/sdk';
 import { OpenRouterCore } from '@openrouter/sdk/core';
 import { type FirebaseStorageContext, type StoragePath } from '@dereekb/firebase';
+import { type RequestOptions } from '@dereekb/openrouter';
 import { type Maybe } from '@dereekb/util';
 
 /**
@@ -206,12 +207,26 @@ export function fakeOpenRouterResponseBody(reply: FakeOpenRouterReply, index: nu
 }
 
 /**
+ * Optional settings for {@link fakeOpenRouterClient}.
+ */
+export interface FakeOpenRouterClientConfig {
+  /**
+   * The client's own SDK retry policy. Defaults to `{ strategy: 'none' }`.
+   *
+   * Set a backoff to prove the run task sends no SDK retry of its own: use a fast one, so that a regression fails in
+   * milliseconds rather than retrying for the SDK's default hour.
+   */
+  readonly retryConfig?: Maybe<NonNullable<RequestOptions['retries']>>;
+}
+
+/**
  * Creates a real {@link OpenRouterCore} whose HTTP layer is answered locally.
  *
  * @param replyFactory - Decides the reply per request, or a single fixed reply.
+ * @param config - Optional client settings.
  * @returns The client and its captured requests.
  */
-export function fakeOpenRouterClient(replyFactory: FakeOpenRouterReplyFactory | FakeOpenRouterReply): FakeOpenRouterClient {
+export function fakeOpenRouterClient(replyFactory: FakeOpenRouterReplyFactory | FakeOpenRouterReply, config?: Maybe<FakeOpenRouterClientConfig>): FakeOpenRouterClient {
   const requests: Record<string, unknown>[] = [];
   const urls: string[] = [];
   const factory: FakeOpenRouterReplyFactory = typeof replyFactory === 'function' ? replyFactory : () => replyFactory;
@@ -249,7 +264,7 @@ export function fakeOpenRouterClient(replyFactory: FakeOpenRouterReplyFactory | 
     }
   });
 
-  const client = new OpenRouterCore({ apiKey: 'test-key', httpClient, retryConfig: { strategy: 'none' } });
+  const client = new OpenRouterCore({ apiKey: 'test-key', httpClient, retryConfig: config?.retryConfig ?? { strategy: 'none' } });
 
   return {
     client,

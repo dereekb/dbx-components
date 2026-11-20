@@ -8,7 +8,7 @@ import { firebaseServerActionsContext } from '@dereekb/firebase-server';
 import { adminFirestoreFactory } from '@dereekb/firebase-server/test';
 import { MS_IN_HOUR, type Maybe } from '@dereekb/util';
 import { OpenRouterWebhookController, OpenRouterWebhookService } from '@dereekb/nestjs/openrouter';
-import { type OpenRouterCore, type OpenRouterModelConfig, type OpenRouterPromptDefinition, type Tool, OPENROUTER_JEV_1_13_MODEL_ID, openRouterFileSearchTool, openRouterGeneration, tool } from '@dereekb/openrouter';
+import { type OpenRouterCore, type OpenRouterModelConfig, type OpenRouterPromptDefinition, type RequestOptions, type Tool, OPENROUTER_JEV_1_13_MODEL_ID, openRouterFileSearchTool, openRouterGeneration, tool } from '@dereekb/openrouter';
 import { OpenRouterCore as OpenRouterClient } from '@openrouter/sdk/core';
 import {
   OPENROUTER_RUN_TASK_MAX_AGE,
@@ -137,6 +137,10 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
        */
       readonly decisionReply?: FakeOpenRouterDecisionReply;
       /**
+       * The fake client's own SDK retry policy. Unset keeps the fake's `{ strategy: 'none' }`.
+       */
+      readonly sdkRetryConfig?: Maybe<NonNullable<RequestOptions['retries']>>;
+      /**
        * The host's call on an `unknown` failure.
        */
       readonly isRetryableUnknownError?: IsRetryableUnknownErrorFunction;
@@ -163,7 +167,7 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
       await publish(promptDocument);
 
       const baseReply = config?.reply ?? { text: 'ok' };
-      const fake = fakeOpenRouterClient(config?.decisionReply == null ? baseReply : typeof baseReply === 'function' ? async (body, index) => ({ ...(await baseReply(body, index)), decision: config.decisionReply }) : { ...baseReply, decision: config.decisionReply });
+      const fake = fakeOpenRouterClient(config?.decisionReply == null ? baseReply : typeof baseReply === 'function' ? async (body, index) => ({ ...(await baseReply(body, index)), decision: config.decisionReply }) : { ...baseReply, decision: config.decisionReply }, { retryConfig: config?.sdkRetryConfig });
       const storage = fakeStorageContext();
       const terminal: OpenRouterRunTaskExecutionResult[] = [];
 
@@ -1042,6 +1046,27 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
         const task = await stack.taskData('immediate_retry');
         expect(task?.s).toBe(OpenRouterRunTaskState.COMPLETE);
         expect(task?.o).toBe('recovered');
+      });
+
+      it("should leave a 503 QUEUED even when the client's own SDK retry is on", async () => {
+        // The production client sets no retryConfig, so the SDK's default backoff would absorb the 503 inside this
+        // attempt and COMPLETE with two calls. The request's own `retries: none` keeps it one attempt, so the run
+        // task's classifier sees the 503 and the sweep owns the retry. A fast backoff fails a regression in ms.
+        const fastSdkBackoff: NonNullable<RequestOptions['retries']> = { strategy: 'backoff', backoff: { initialInterval: 1, maxInterval: 5, exponent: 1, maxElapsedTime: 200 }, retryConnectionErrors: true };
+        let callIndex = 0;
+        const stack = await buildStack({
+          maxAttempts: 3,
+          sdkRetryConfig: fastSdkBackoff,
+          reply: () => {
+            callIndex += 1;
+            return callIndex === 1 ? { status: 503 } : { text: 'recovered' };
+          }
+        });
+
+        const result = await stack.service.enqueueRunTask({ key: 'immediate_sdk_retry_on', promptKey: TEST_PROMPT_KEY, input: 'go', immediate: true });
+
+        expect(result.execution?.state).toBe(OpenRouterRunTaskState.QUEUED);
+        expect(stack.fake.callCount).toBe(1);
       });
 
       it('should fail a deterministic error on the first attempt rather than queueing it', async () => {

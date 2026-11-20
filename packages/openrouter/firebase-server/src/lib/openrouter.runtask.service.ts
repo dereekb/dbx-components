@@ -46,8 +46,9 @@ import { firestoreOpenRouterStateAccessor } from './openrouter.state.accessor';
 /**
  * Default lease duration. A `RUNNING` task whose lease is older than this is reclaimable.
  *
- * Comfortably longer than any single inference plus its retries, so a healthy run is never stolen from
- * itself, and short enough that a crashed sweep's work resumes on the next tick or two.
+ * Comfortably longer than any single inference. Each request is sent once, and a retry is a new attempt on a
+ * later sweep, so a healthy run is never stolen from itself. Short enough that a crashed sweep's work resumes on
+ * the next tick or two.
  */
 export const DEFAULT_OPENROUTER_LEASE_DURATION: Milliseconds = MS_IN_MINUTE * 10;
 

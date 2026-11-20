@@ -46,6 +46,11 @@ instead of burning three sweep ticks to reach the same answer. The classificatio
 `isRetryableUnknownError` (`false` fails the task now). That function is wiring-time code: nothing about it
 is stored on the task document.
 
+Each request is one attempt. `@dereekb/openrouter` sends `retries: { strategy: 'none' }` unless the caller passes
+`retries`, so the SDK's own backoff (5xx, connection errors and timeouts, retried for up to an hour by default)
+never runs inside a run-task attempt. `requestTimeoutMs` bounds the whole call, and `maxAttempts` is the only retry.
+The raw SDK functions this package re-exports, and methods on the client itself, keep the client's own setting.
+
 There is no replay. `enqueueRunTask({ key, …, restart: true })` re-runs a key, and `continueFrom` chains
 one run onto another's history.
 

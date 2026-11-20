@@ -275,12 +275,13 @@ export interface OpenRouterModelConfig {
   /**
    * Per-request wall-clock timeout in milliseconds.
    *
-   * The one bound on a single inference. Required in practice for the run-task sweeper: without it,
+   * `@dereekb/openrouter` sends each request once (`retries: { strategy: 'none' }` unless the caller passes
+   * `retries`), so this bounds the whole call. Required in practice for the run-task sweeper: without it,
    * one unusually slow call can overrun the sweep's time budget and delay every other workload
    * sharing the runner.
    *
-   * Without a caller `signal` the SDK times each HTTP attempt with it. When the request options carry a `signal`, it
-   * becomes one deadline for the whole call instead (every attempt and, on a tool loop, every step); see
+   * Without a caller `signal` the SDK times the request with it. When the request options carry a `signal`, it
+   * becomes one deadline for the whole call instead (the request and, on a tool loop, every step); see
    * `openRouterRequestOptionsWithTimeout`.
    */
   readonly requestTimeoutMs?: Maybe<number>;

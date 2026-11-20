@@ -16,6 +16,7 @@
 import { HTTPClient } from '@openrouter/sdk';
 import { OpenRouterCore } from '@openrouter/sdk/core';
 import { type Maybe } from '@dereekb/util';
+import { type RequestOptions } from '../lib/openrouter.sdk';
 
 /**
  * One request the fake received, exactly as it went on the wire.
@@ -133,19 +134,35 @@ export function fakeOpenRouterHangUntilAborted(request: FakeOpenRouterRequest): 
 }
 
 /**
+ * Optional settings for {@link fakeOpenRouterDecisionClient}.
+ */
+export interface FakeOpenRouterDecisionClientConfig {
+  /**
+   * The client's own SDK retry policy. Defaults to `{ strategy: 'none' }`.
+   *
+   * Set a backoff to prove a request function sends no SDK retry of its own: use a fast one, so that a regression
+   * fails in milliseconds rather than retrying for the SDK's default hour.
+   */
+  readonly retryConfig?: Maybe<NonNullable<RequestOptions['retries']>>;
+}
+
+/**
  * Creates a real {@link OpenRouterCore} whose HTTP layer is answered locally.
  *
  * @param replyFactory - Decides the reply per request, or a single fixed reply.
+ * @param config - Optional client settings.
  * @returns The client and its captured requests.
  */
-export function fakeOpenRouterDecisionClient(replyFactory: FakeOpenRouterDecisionReplyFactory | FakeOpenRouterDecisionReply): FakeOpenRouterDecisionClient {
+export function fakeOpenRouterDecisionClient(replyFactory: FakeOpenRouterDecisionReplyFactory | FakeOpenRouterDecisionReply, config?: Maybe<FakeOpenRouterDecisionClientConfig>): FakeOpenRouterDecisionClient {
   const requests: FakeOpenRouterRequest[] = [];
   const factory: FakeOpenRouterDecisionReplyFactory = typeof replyFactory === 'function' ? replyFactory : () => replyFactory;
 
   const httpClient = new HTTPClient({
     fetcher: async (input) => {
       const request = input as Request;
-      const body = (await request.clone().json()) as Record<string, unknown>;
+      // A GET (the generation lookups) carries no body.
+      const bodyText = await request.clone().text();
+      const body = (bodyText ? JSON.parse(bodyText) : {}) as Record<string, unknown>;
       const record: FakeOpenRouterRequest = { url: request.url, method: request.method, body, signal: request.signal };
       const index = requests.length;
       requests.push(record);
@@ -163,7 +180,7 @@ export function fakeOpenRouterDecisionClient(replyFactory: FakeOpenRouterDecisio
     }
   });
 
-  const client = new OpenRouterCore({ apiKey: 'test-key', httpClient, retryConfig: { strategy: 'none' } });
+  const client = new OpenRouterCore({ apiKey: 'test-key', httpClient, retryConfig: config?.retryConfig ?? { strategy: 'none' } });
 
   return {
     client,

@@ -1,10 +1,13 @@
 import { llmNoulQuestion } from '@dereekb/llm/decision';
 import { afterEach, describe, expect, it } from 'vitest';
 import { fakeOpenRouterDecisionClient, fakeOpenRouterHangUntilAborted } from '../test/openrouter.fake';
-import { sendOpenRouterResponsesRequest } from './openrouter.call';
+import { callModelForOpenRouterRequest, sendOpenRouterResponsesRequest } from './openrouter.call';
 import { openRouterDecisionRequest } from './openrouter.decision';
 import { openRouterDecision } from './openrouter.decision.call';
-import { openRouterRequestOptionsWithTimeout } from './openrouter.timeout';
+import { openRouterEmbeddings } from './openrouter.embedding';
+import { openRouterGeneration, openRouterGenerationContent } from './openrouter.generation';
+import { type RequestOptions } from './openrouter.sdk';
+import { DEFAULT_OPENROUTER_REQUEST_RETRIES, openRouterRequestOptions, openRouterRequestOptionsWithTimeout } from './openrouter.timeout';
 import { OPENROUTER_JEV_1_13_MODEL_ID } from './openrouter.type';
 
 const QUESTIONS = {
@@ -33,7 +36,62 @@ function waitForAbort(signal: AbortSignal, limitMs = 2000): Promise<unknown> {
   });
 }
 
+/**
+ * A fast SDK backoff, so that a client whose own retry stays on retries in milliseconds and a regression fails fast
+ * instead of retrying for the SDK's default hour.
+ */
+const FAST_SDK_BACKOFF: NonNullable<RequestOptions['retries']> = { strategy: 'backoff', backoff: { initialInterval: 1, maxInterval: 5, exponent: 1, maxElapsedTime: 200 }, retryConnectionErrors: true };
+
+describe('openRouterRequestOptions()', () => {
+  it('should default retries to none when no options are passed', () => {
+    expect(openRouterRequestOptions(undefined).retries).toEqual({ strategy: 'none' });
+    expect(openRouterRequestOptions(null).retries).toBe(DEFAULT_OPENROUTER_REQUEST_RETRIES);
+  });
+
+  it('should keep the caller retries', () => {
+    expect(openRouterRequestOptions({ retries: FAST_SDK_BACKOFF }).retries).toBe(FAST_SDK_BACKOFF);
+  });
+
+  it('should default an explicit retries: undefined to none', () => {
+    expect(openRouterRequestOptions({ retries: undefined }).retries).toEqual({ strategy: 'none' });
+  });
+
+  it('should pass the other keys through', () => {
+    const controller = new AbortController();
+    const result = openRouterRequestOptions({ timeoutMs: 5000, retryCodes: ['503'], signal: controller.signal });
+
+    expect(result.timeoutMs).toBe(5000);
+    expect(result.retryCodes).toEqual(['503']);
+    expect(result.signal).toBe(controller.signal);
+  });
+});
+
 describe('openRouterRequestOptionsWithTimeout()', () => {
+  describe('retries', () => {
+    it('should default retries to none when no timeout is set', () => {
+      expect(openRouterRequestOptionsWithTimeout(undefined).retries).toEqual({ strategy: 'none' });
+    });
+
+    it('should default retries to none when the timeout goes to the SDK', () => {
+      const result = openRouterRequestOptionsWithTimeout({}, 1000);
+
+      expect(result.timeoutMs).toBe(1000);
+      expect(result.retries).toEqual({ strategy: 'none' });
+    });
+
+    it('should default retries to none when the timeout is merged into the caller signal', () => {
+      const controller = new AbortController();
+      const result = openRouterRequestOptionsWithTimeout({ signal: controller.signal }, 1000);
+
+      expect(result.signal).not.toBe(controller.signal);
+      expect(result.retries).toEqual({ strategy: 'none' });
+    });
+
+    it('should keep the caller retries', () => {
+      expect(openRouterRequestOptionsWithTimeout({ retries: FAST_SDK_BACKOFF }, 1000).retries).toBe(FAST_SDK_BACKOFF);
+    });
+  });
+
   it('should leave the options alone when no timeout is set', () => {
     const controller = new AbortController();
     const result = openRouterRequestOptionsWithTimeout({ signal: controller.signal });
@@ -155,5 +213,76 @@ describe('sendOpenRouterResponsesRequest() timeouts', () => {
 
     await expect(sendOpenRouterResponsesRequest({ client: fake.client, request, options: { signal: controller.signal } })).rejects.toThrow(/timed out/);
     expect(fake.requests[0].url).toBe('https://openrouter.ai/api/v1/responses');
+  });
+});
+
+describe('with an SDK client whose own retry stays on', () => {
+  const decisionRequest = openRouterDecisionRequest({ state: 'x', questions: QUESTIONS, overrides: { model: OPENROUTER_JEV_1_13_MODEL_ID } });
+  const answered = { answers: { fits: { type: 'noul', noul: 0.8 } } };
+  const unavailable = { status: 503 };
+
+  it('should retry when the caller passes retries (control)', async () => {
+    const fake = fakeOpenRouterDecisionClient((_, index) => (index === 0 ? unavailable : answered), { retryConfig: FAST_SDK_BACKOFF });
+    const result = await openRouterDecision({ client: fake.client, request: decisionRequest, options: { retries: FAST_SDK_BACKOFF } });
+
+    expect(result.answers.fits).toBeDefined();
+    expect(fake.callCount).toBe(2);
+  });
+
+  it('should send a decision once', async () => {
+    const fake = fakeOpenRouterDecisionClient((_, index) => (index === 0 ? unavailable : answered), { retryConfig: FAST_SDK_BACKOFF });
+
+    await expect(openRouterDecision({ client: fake.client, request: decisionRequest })).rejects.toThrow();
+    expect(fake.callCount).toBe(1);
+  });
+
+  it('should send a responses request once', async () => {
+    const fake = fakeOpenRouterDecisionClient(unavailable, { retryConfig: FAST_SDK_BACKOFF });
+    const request = { config: { model: 'openai/gpt-5.1' }, input: [] };
+
+    await expect(sendOpenRouterResponsesRequest({ client: fake.client, request })).rejects.toThrow();
+    expect(fake.callCount).toBe(1);
+  });
+
+  it('should send a callModel request once', async () => {
+    const fake = fakeOpenRouterDecisionClient(unavailable, { retryConfig: FAST_SDK_BACKOFF });
+    const request = { config: { model: 'openai/gpt-5.1' }, input: [] };
+
+    await expect(callModelForOpenRouterRequest({ client: fake.client, request })).rejects.toThrow();
+    expect(fake.callCount).toBe(1);
+    expect(fake.requests[0].url).toBe('https://openrouter.ai/api/v1/responses');
+  });
+
+  it('should send an embeddings request once', async () => {
+    const fake = fakeOpenRouterDecisionClient(unavailable, { retryConfig: FAST_SDK_BACKOFF });
+
+    await expect(openRouterEmbeddings({ client: fake.client, model: 'openai/text-embedding-3-small', input: 'x' })).rejects.toThrow();
+    expect(fake.callCount).toBe(1);
+    expect(fake.requests[0].url).toBe('https://openrouter.ai/api/v1/embeddings');
+  });
+
+  it('should send a generation lookup once', async () => {
+    const fake = fakeOpenRouterDecisionClient(unavailable, { retryConfig: FAST_SDK_BACKOFF });
+
+    await expect(openRouterGeneration({ client: fake.client, id: 'gen_1' })).rejects.toThrow();
+    expect(fake.callCount).toBe(1);
+  });
+
+  it('should send a generation content lookup once', async () => {
+    const fake = fakeOpenRouterDecisionClient(unavailable, { retryConfig: FAST_SDK_BACKOFF });
+
+    await expect(openRouterGenerationContent({ client: fake.client, id: 'gen_1' })).rejects.toThrow();
+    expect(fake.callCount).toBe(1);
+  });
+
+  it('should send a hung request once when the caller passes a signal and it times out', async () => {
+    const fake = fakeOpenRouterDecisionClient(fakeOpenRouterHangUntilAborted, { retryConfig: FAST_SDK_BACKOFF });
+    const controller = new AbortController();
+    const request = openRouterDecisionRequest({ state: 'x', questions: QUESTIONS, overrides: { model: OPENROUTER_JEV_1_13_MODEL_ID, requestTimeoutMs: 20 } });
+    const start = Date.now();
+
+    await expect(openRouterDecision({ client: fake.client, request, options: { signal: controller.signal } })).rejects.toThrow(/timed out/);
+    expect(fake.callCount).toBe(1);
+    expect(Date.now() - start).toBeLessThan(1000);
   });
 });
