@@ -16,10 +16,10 @@
  * asking set) and {@link settleLlmCraftNotes} (the verdicts, then the budget).
  */
 
-import { compareStringsByCodeUnit, type Maybe, type PercentDecimal } from '@dereekb/util';
-import { type LlmPromptSite, type LlmPromptSiteFactValue, type LlmPromptSiteJudgeVerdicts } from '../prompt/llm.prompt.site';
-import { type LlmCraftNoteId, type LlmCraftSiteKind } from './llm.craft.identity';
-import { type LlmCraftNote, type LlmCraftNoteCutReason, type LlmCraftNoteSelectedBy } from './llm.craft.note';
+import { arrayToMap, compareStringsByCodeUnit, type Maybe, type PercentDecimal } from '@dereekb/util';
+import { type LlmPromptSite, type LlmPromptSiteFactValue, type LlmPromptSiteKind } from '../prompt/llm.prompt.site';
+import { type LlmCraftJudgeVerdicts } from './llm.craft.judge';
+import { isLlmCraftNoteKept, type LlmCraftNote, type LlmCraftNoteCutReason, type LlmCraftNoteSelectedBy } from './llm.craft.note';
 import { type LlmCraftSiteLimits, type LlmCraftSiteRegistry } from './llm.craft.site';
 
 /**
@@ -35,13 +35,12 @@ export type LlmCraftNoteTiers = ReadonlyArray<Maybe<ReadonlyArray<LlmCraftNote>>
  * @returns The live notes.
  */
 export function mergeLlmCraftNoteTiers(tiers: LlmCraftNoteTiers): ReadonlyArray<LlmCraftNote> {
-  const byId = new Map<LlmCraftNoteId, LlmCraftNote>();
-
-  for (const note of tiers.flatMap((tier) => tier ?? [])) {
-    byId.set(note.id, note);
-  }
-
-  return Array.from(byId.values())
+  return Array.from(
+    arrayToMap(
+      tiers.flatMap((tier) => tier ?? []),
+      (note) => note.id
+    ).values()
+  )
     .filter((note) => note.enabled)
     .sort((a, b) => compareStringsByCodeUnit(a.id, b.id));
 }
@@ -109,7 +108,7 @@ export interface LlmCraftCandidates {
   /**
    * The site's kind, when it is a craft site.
    */
-  readonly kind?: LlmCraftSiteKind;
+  readonly kind?: LlmPromptSiteKind;
   /**
    * The site's limits, when it is a craft site.
    */
@@ -189,7 +188,7 @@ export interface LlmCraftSelection {
   /**
    * The site's kind, when it is a craft site.
    */
-  readonly kind?: LlmCraftSiteKind;
+  readonly kind?: LlmPromptSiteKind;
   readonly placed: ReadonlyArray<LlmCraftNotePlacement>;
   readonly cut: ReadonlyArray<LlmCraftNoteCut>;
 }
@@ -201,7 +200,7 @@ export interface LlmCraftSelection {
  * @param verdicts - The judge's verdicts; absent ⇒ every asked note is unserved.
  * @returns The selection.
  */
-export function settleLlmCraftNotes(candidates: LlmCraftCandidates, verdicts?: Maybe<LlmPromptSiteJudgeVerdicts>): LlmCraftSelection {
+export function settleLlmCraftNotes(candidates: LlmCraftCandidates, verdicts?: Maybe<LlmCraftJudgeVerdicts>): LlmCraftSelection {
   const { kind, limits } = candidates;
   const cut: LlmCraftNoteCut[] = [...candidates.cut];
   const survivors: LlmCraftNotePlacement[] = candidates.stable.map((note) => ({ note, by: 'match' as const }));
@@ -215,7 +214,7 @@ export function settleLlmCraftNotes(candidates: LlmCraftCandidates, verdicts?: M
       } else {
         cut.push({ note, reason: 'unserved' });
       }
-    } else if (p >= note.floor) {
+    } else if (isLlmCraftNoteKept(p, note.floor)) {
       survivors.push({ note, by: 'judge', p });
     } else {
       cut.push({ note, reason: 'floor', p });
@@ -251,7 +250,7 @@ export interface SelectLlmCraftNotesConfig extends LlmCraftCandidatesConfig {
   /**
    * The judge's verdicts, when already known.
    */
-  readonly verdicts?: Maybe<LlmPromptSiteJudgeVerdicts>;
+  readonly verdicts?: Maybe<LlmCraftJudgeVerdicts>;
 }
 
 /**

@@ -4,7 +4,7 @@ import { join, sep } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 
 /**
- * Isolation guards for `@dereekb/llm` and `@dereekb/llm/decision` (both compile from this `src`).
+ * Isolation guards for `@dereekb/llm`, `@dereekb/llm/decision` and `@dereekb/llm/craft` (all compile from this `src`).
  *
  * Copied per entry from `packages/openrouter/src/decision.spec.ts`. Every project of the family guards its OWN `src`:
  * Nx file inputs are per project, so a scan of another project's folder would be replayed from cache after a change there.
@@ -67,13 +67,14 @@ describe('@dereekb/llm isolation', () => {
   const sources = scanSrc(false);
 
   it('should scan the entry modules', () => {
-    expect(sources.map((file) => file.path)).toEqual(expect.arrayContaining(['decision.ts', 'index.ts']));
+    expect(sources.map((file) => file.path)).toEqual(expect.arrayContaining(['craft.ts', 'decision.ts', 'index.ts']));
   });
 
   // The first import transforms the whole root entry from source, which can outrun the 5s default under a parallel run.
-  it('should load the root and /decision entries without evaluating an SDK', { timeout: 30_000 }, async () => {
+  it('should load the root, /decision and /craft entries without evaluating an SDK', { timeout: 30_000 }, async () => {
     await import('./index');
     await import('./decision');
+    await import('./craft');
     expect(probe).toEqual({ openai: false, openRouterSdk: false });
   });
 
@@ -106,5 +107,20 @@ describe('@dereekb/llm isolation', () => {
     expect(decision.llmChoiceQuestion).toBe(root.llmChoiceQuestion);
     expect(Object.keys(decision).length).toBeGreaterThan(0);
     expect(Object.keys(root)).toEqual(expect.arrayContaining(Object.keys(decision)));
+  });
+
+  it('should keep craft a leaf: no module outside lib/craft imports it', () => {
+    const outside = sources.filter((file) => !file.path.startsWith('lib/craft/') && file.path !== 'craft.ts');
+    expect(importersOf(outside, (specifier) => /(^|\/)craft(\/|$)/.test(specifier))).toEqual([]);
+  });
+
+  it('should ship craft only from /craft', async () => {
+    const root = await import('./index');
+    const craftEntry = await import('./craft');
+
+    expect(Object.keys(root).filter((name) => name in craftEntry)).toEqual([]);
+    expect(craftEntry.makeLlmCraftPromptContributor).toBeTypeOf('function');
+    expect(craftEntry.makeLlmCraftJudge).toBeTypeOf('function');
+    expect(craftEntry.makeLlmCraftSiteRegistry).toBeTypeOf('function');
   });
 });

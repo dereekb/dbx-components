@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { makeLlmCraftSiteRegistry } from '@dereekb/llm';
+import { makeLlmCraftSiteRegistry } from '@dereekb/llm/craft';
 import { loadLlmCraftNotes, readLlmCraftNoteFiles, resolveLlmCraftNotesDir } from './llm.node.craft.notes';
 import { DEFAULT_LLM_ENV_NAMES, type LlmEnvNames } from './llm.node.env';
 

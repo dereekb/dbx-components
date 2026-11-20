@@ -6,9 +6,8 @@
  *   target and still caches);
  * - the JUDGED group (kept by the decision pass, or placed unserved) after it, volatile.
  *
- * The judged notes are asked of the site's own `judge` (`makeLlmCraftJudge`, one decision call per dispatch) between
- * the match and the budget; a site with no judge, or a judge that answers nothing, leaves each on its `unserved`
- * posture. Each group gets ONE heading ({@link DEFAULT_LLM_CRAFT_NOTE_HEADINGS}), then one segment per note (its body
+ * The judged notes are asked of the contributor's `judge` (`makeLlmCraftJudge`, one decision call per dispatch)
+ * between the match and the budget; no judge, or a judge that answers nothing, leaves each on its `unserved` posture. Each group gets ONE heading ({@link DEFAULT_LLM_CRAFT_NOTE_HEADINGS}), then one segment per note (its body
  * verbatim, keyed by the note id). Code composes no English around a note. Every matched note that was not placed is
  * returned as a cut, so the call record's `supplements` counts it.
  *
@@ -26,9 +25,9 @@ import { type LlmPromptGeneratedSegmentOrigin } from '../prompt/llm.prompt.assem
 import { type LlmPromptContribution, type LlmPromptContributionCut, type LlmPromptContributor, type LlmPromptContributorParams, type LlmPromptContributorResult } from '../prompt/llm.prompt.contributor';
 import { type LlmPromptSlotId } from '../prompt/llm.prompt.layout';
 import { type LlmPromptSegmentOrigin } from '../prompt/llm.prompt.segment';
-import { type LlmPromptSiteJudgeVerdicts } from '../prompt/llm.prompt.site';
 import { llmCraftNoteParseErrorLines, type LlmCraftNoteSet } from './llm.craft.frontmatter';
 import { type LlmCraftNoteId, type LlmCraftNoteTier } from './llm.craft.identity';
+import { type LlmCraftJudge, type LlmCraftJudgeVerdicts } from './llm.craft.judge';
 import { DEFAULT_LLM_CRAFT_GUARD_CUT_REASON, type LlmCraftNote, type LlmCraftNoteCutReason, type LlmCraftNoteSelectedBy } from './llm.craft.note';
 import { resolveLlmCraftCandidates, mergeLlmCraftNoteTiers, settleLlmCraftNotes, type LlmCraftNotePlacement, type LlmCraftSelection } from './llm.craft.select';
 import { type LlmCraftSiteRegistry } from './llm.craft.site';
@@ -217,6 +216,11 @@ export interface LlmCraftPromptContributorConfig<R extends LlmDispatchRequest = 
    */
   readonly slot?: Maybe<LlmPromptSlotId>;
   /**
+   * The judge asked about the judged notes (`makeLlmCraftJudge`); absent ⇒ every judged note takes its unserved
+   * posture.
+   */
+  readonly judge?: Maybe<LlmCraftJudge<R>>;
+  /**
    * `false` ⇒ the contributor never contributes (a byte-identical control arm).
    */
   readonly enabled?: Maybe<boolean>;
@@ -250,7 +254,7 @@ function readLlmCraftNoteTier<R extends LlmDispatchRequest, D extends LlmCapabil
  * The craft contributor over a host's tiers. When every tier is static the merge is computed once; a per-request tier
  * is read off each request (memoized by its own reader), so a stored note reaches the very next prompt.
  *
- * @param config - The craft sites, the tiers, the guard, the headings, the slot and the switch.
+ * @param config - The craft sites, the tiers, the guard, the judge, the headings, the slot and the switch.
  * @returns The contributor.
  *
  * @typeParam R - The host's request type.
@@ -258,14 +262,16 @@ function readLlmCraftNoteTier<R extends LlmDispatchRequest, D extends LlmCapabil
  *
  * @example
  * ```ts
- * const craft = makeLlmCraftPromptContributor({ sites, tiers: [BUILTIN_CRAFT_NOTES, machine.notes] });
+ * // the judge asks the very dispatcher the contributor rides, built after it — hence the getter
+ * const judge = makeLlmCraftJudge({ sites, dispatcher: () => dispatcher });
+ * const craft = makeLlmCraftPromptContributor({ sites, tiers: [BUILTIN_CRAFT_NOTES, machine.notes], judge });
  * const dispatcher = makeLlmDispatcher({ …, contributors: [craft] });
  * ```
  *
  * @__NO_SIDE_EFFECTS__
  */
 export function makeLlmCraftPromptContributor<R extends LlmDispatchRequest = LlmDispatchRequest, D extends LlmCapabilityDescriptor = LlmCapabilityDescriptor>(config: LlmCraftPromptContributorConfig<R, D>): LlmPromptContributor<R, D> {
-  const { sites, tiers, guard, headings, enabled } = config;
+  const { sites, tiers, guard, judge, headings, enabled } = config;
   const slot = config.slot ?? DEFAULT_LLM_CRAFT_SLOT_ID;
   const guardCutReason = config.guardCutReason ?? DEFAULT_LLM_CRAFT_GUARD_CUT_REASON;
   const allStatic = tiers.every((tier) => typeof tier !== 'function');
@@ -283,10 +289,10 @@ export function makeLlmCraftPromptContributor<R extends LlmDispatchRequest = Llm
 
         if (notes.length > 0) {
           const candidates = resolveLlmCraftCandidates({ notes, site, sites, guardCut: guard?.(input) === true ? guardCutReason : undefined });
-          const settle = (verdicts: Maybe<LlmPromptSiteJudgeVerdicts>) => toLlmCraftContributions({ selection: settleLlmCraftNotes(candidates, verdicts), slot, headings });
+          const settle = (verdicts: Maybe<LlmCraftJudgeVerdicts>) => toLlmCraftContributions({ selection: settleLlmCraftNotes(candidates, verdicts), slot, headings });
           // The ONE judge call of this dispatch: resolve runs once, at the root. Only a site that asks resolves
           // asynchronously; every other prompt resolves synchronously.
-          result = candidates.kind == null || candidates.asked.length === 0 || site.judge == null ? settle(undefined) : site.judge({ capability: input.request.capability, kind: candidates.kind, asked: candidates.asked, inputs: site.inputs ?? {} }).then(settle);
+          result = candidates.kind == null || candidates.asked.length === 0 || judge == null ? settle(undefined) : judge({ request: input.request, kind: candidates.kind, asked: candidates.asked, inputs: site.inputs ?? {} }).then(settle);
         }
       }
 

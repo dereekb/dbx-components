@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { type LlmDispatcher } from '../dispatch/llm.dispatcher';
-import { mergeLlmPromptSite, type LlmPromptSite, type LlmPromptSiteJudge, withLlmPromptSite } from './llm.prompt.site';
+import { mergeLlmPromptSite, type LlmPromptSite, withLlmPromptSite } from './llm.prompt.site';
 import { makeLlmPromptFactory } from './llm.prompt.thread';
 
 interface HostSupply {
@@ -12,9 +12,6 @@ interface HostSupply {
 interface HostRequest extends LlmDispatchRequest {
   readonly site?: LlmPromptSite<HostSupply>;
 }
-
-const judgeA: LlmPromptSiteJudge = async () => undefined;
-const judgeB: LlmPromptSiteJudge = async () => new Map();
 
 describe('mergeLlmPromptSite()', () => {
   it('returns undefined when both sides are nullish', () => {
@@ -27,9 +24,9 @@ describe('mergeLlmPromptSite()', () => {
     expect(mergeLlmPromptSite(undefined, site)).toBe(site);
   });
 
-  it("replaces the outer's kind and judge with the inner's, keeping the outer's when the inner has none", () => {
-    expect(mergeLlmPromptSite({ kind: 'report', judge: judgeA }, { kind: 'memo', judge: judgeB })).toEqual({ kind: 'memo', judge: judgeB });
-    expect(mergeLlmPromptSite({ kind: 'report', judge: judgeA }, { facts: { tone: 'plain' } })).toEqual({ kind: 'report', facts: { tone: 'plain' }, judge: judgeA });
+  it("replaces the outer's kind with the inner's, keeping the outer's when the inner has none", () => {
+    expect(mergeLlmPromptSite({ kind: 'report' }, { kind: 'memo' })).toEqual({ kind: 'memo' });
+    expect(mergeLlmPromptSite({ kind: 'report' }, { facts: { tone: 'plain' } })).toEqual({ kind: 'report', facts: { tone: 'plain' } });
   });
 
   it('merges facts, inputs and supply key by key, the inner winning', () => {
@@ -37,14 +34,15 @@ describe('mergeLlmPromptSite()', () => {
     expect(merged).toEqual({ facts: { a: 1, b: 2 }, inputs: { idea: 'outer', brief: 'inner' }, supply: { x: 1, y: 2 } });
   });
 
-  it('keeps an outer key when the inner record sets it to undefined (B5)', () => {
+  it('keeps an outer key when the inner record sets it to undefined', () => {
     const innerFacts = { tone: undefined } as unknown as NonNullable<LlmPromptSite['facts']>;
     expect(mergeLlmPromptSite({ facts: { tone: 'plain' } }, { facts: innerFacts })?.facts).toEqual({ tone: 'plain' });
   });
 
-  it('omits a field absent on both sides, in the order kind, facts, inputs, judge, supply', () => {
+  it('omits a field absent on both sides, in the order kind, facts, inputs, supply', () => {
     expect(Object.keys(mergeLlmPromptSite({ kind: 'report' }, { facts: { a: 1 } }) ?? {})).toEqual(['kind', 'facts']);
-    expect(Object.keys(mergeLlmPromptSite({ supply: { x: 1 }, kind: 'report' }, { judge: judgeA, inputs: { idea: 'i' } }) ?? {})).toEqual(['kind', 'inputs', 'judge', 'supply']);
+    expect(Object.keys(mergeLlmPromptSite({ supply: { x: 1 }, kind: 'report' }, { inputs: { idea: 'i' } }) ?? {})).toEqual(['kind', 'inputs', 'supply']);
+    expect(Object.keys(mergeLlmPromptSite({ supply: { x: 1 }, inputs: { idea: 'o' } }, { facts: { a: 1 }, kind: 'memo' }) ?? {})).toEqual(['kind', 'facts', 'inputs', 'supply']);
   });
 
   it('merges a typed supply', () => {

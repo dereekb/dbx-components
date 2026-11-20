@@ -14,6 +14,7 @@ dependency, and its browser entries run unchanged in a browser, a worker or Node
 |---|---|---|---|
 | `@dereekb/llm` | no | none | The strategy contract, call records, model and provider configuration, adapters, prompt assembly, reply repair and validation, the dispatcher and retry ladder, usage accounting, and utilities. |
 | `@dereekb/llm/decision` | no | none | The decision lane: questions, the wire format and answer reader, confidence, the decision strategy contract and the System One transport (`makeLlmSystemOneDecisionStrategy`). Re-exported by the root entry from the same modules, so both share one copy. |
+| `@dereekb/llm/craft` | no | none | Craft notes: the note model and markdown parser, the site registry, selection, the judge and the craft prompt contributor. Opt-in: the root does not export it. |
 | `@dereekb/llm/openai` | no | `openai` (optional, lazy) | The OpenAI-compatible chat base (`makeLlmOpenAiCompatibleChatStrategy`), the OpenAI-compatible chat strategy (OpenAI, ZenMux chat, a local vLLM) and its completion adapter. |
 | `@dereekb/llm/openrouter` | no | `openai` (through `/openai`) | The OpenRouter chat strategy (`cache_control`, strict `response_format`, usage accounting), the OpenRouter decision strategy and their adapters. |
 | `@dereekb/llm/zenmux` | no | none (`fetch`) | ZenMux constants and cost basis, the decision route on the core System One transport, the quota-status source and the bill reader. |
@@ -22,11 +23,12 @@ dependency, and its browser entries run unchanged in a browser, a worker or Node
 
 ## Browser safety
 
-The root, `/decision`, `/openai`, `/openrouter` and `/zenmux` entries are browser-safe:
+The root, `/decision`, `/craft`, `/openai`, `/openrouter` and `/zenmux` entries are browser-safe:
 
 - They import no `node:` module or Node builtin and never read `process`. Hosts pass configuration (API keys, base
   URLs, model lists) in; nothing is read from the environment. Reading the environment or the file system is the job
   of `/node`.
+- No core module imports craft (an isolation spec pins it), so a host that never imports `/craft` never loads it.
 - A browser network failure (Chromium's `Failed to fetch`, Firefox's `NetworkError when attempting to fetch
   resource.`, Safari's `Load failed`) is classified like undici's `fetch failed`: transient.
 - `openai` is the only SDK peer, and it is **optional**: it is loaded lazily from `/openai`'s single boundary module,
@@ -482,8 +484,8 @@ scopes, prompt handles and chains, a live-context token budget, a cache-prefix w
 - **Texts.** The line protocol, the must-resolve amendment and the contract's intro and footer have library defaults
   (`DEFAULT_LLM_PROMPT_ASSEMBLY_TEXTS`); a host passes its own exact text through `texts`, and one call its own footer
   through `contractFooter`.
-- **Sites.** `mergeLlmPromptSite` merges two sites, the narrower winning (its `kind` and `judge` replace; facts, inputs
-  and supply merge key by key). `withLlmPromptSite({ dispatcher, site })` returns a dispatcher whose every request,
+- **Sites.** `mergeLlmPromptSite` merges two sites, the narrower winning (its `kind` replaces; facts, inputs and supply
+  merge key by key). `withLlmPromptSite({ dispatcher, site })` returns a dispatcher whose every request,
   dispatched or prepared, carries the site — the request's own site winning, a later wrapper narrower than an earlier
   one. It never changes a byte; a contributor reading the site does.
 - **Prompt handles.** `makeLlmPromptFactory({ runPromptRequest })` builds `LlmPrompt`s that execute once (a rejected
@@ -637,6 +639,8 @@ budgeted.trimmed; // [{ priority: 1, action: 'shrunk', savedTokens: … }] when 
 
 ## Craft notes
 
+Craft is the opt-in `@dereekb/llm/craft` entry: the root does not export it.
+
 A craft note is authored know-how about a target (a page type, a reply channel) that a contributor places, verbatim, in
 the `craft` slot of the prompts written for it. Code composes no English around a note. Notes come from ordered tiers,
 are matched against the request's site, are optionally judged by one decision call, and are budgeted.
@@ -660,12 +664,20 @@ are matched against the request's site, are optionally judged by one decision ca
   (priority, then specificity, then id); `judgeMax`; the floor and the unserved posture; the budget.
   `selectLlmCraftNotes` selects in one step when the verdicts are known.
 - **Judge.** `makeLlmCraftJudge({ sites, dispatcher, available, onUnavailable, swallow })` asks one Noul question per
-  asked note (its `ask` verbatim). Its state is only the named inputs, clipped. It makes at most one call per dispatch,
-  and a fault or an unavailable lane answers nothing (each note takes its `unserved` posture). The call record is
-  stamped `{ craft: { asked, kept } }` under decision `CraftNoteSelect`.
-- **Contributor.** `makeLlmCraftPromptContributor({ sites, tiers, guard, headings, slot, enabled })` gives each group one
-  heading, puts the stable group on the cache prefix and the judged group after it as volatile, and records every cut
-  on the call's `supplements`. A per-request tier that fails to parse logs one `craft-note-invalid` breadcrumb per file.
+  asked note (its `ask` verbatim). Its state is only the named inputs, clipped. `dispatcher` is a value or a getter read
+  on every call — a getter is the usual case, since the judge rides the contributor of the very dispatcher it asks,
+  which is built after it. `available(params)` and `onUnavailable(params)` see the call's `LlmCraftJudgeParams` (the
+  dispatch `request`, the site `kind`, the `asked` notes and the `inputs`), so one judge can gate per call. It makes at
+  most one call per dispatch, under the request's capability, and a fault or a closed gate answers nothing (each note
+  takes its `unserved` posture). The call record is stamped `{ craft: { asked, kept } }` under decision
+  `CraftNoteSelect`.
+- **Contributor.** `makeLlmCraftPromptContributor({ sites, tiers, guard, judge, headings, slot, enabled })` asks its
+  `judge` about the judged notes (no judge: each takes its `unserved` posture), gives each group one heading, puts the
+  stable group on the cache prefix and the judged group after it as volatile, and records every cut on the call's
+  `supplements`. A per-request tier that fails to parse logs one `craft-note-invalid` breadcrumb per file.
+- **Building blocks.** For an explain view or an authoring tool: `mergeLlmCraftNoteTiers`, `resolveLlmCraftCandidates`
+  then `settleLlmCraftNotes` (or `selectLlmCraftNotes` with known verdicts), `toLlmCraftContributions`,
+  `readLlmCraftNoteGroup` and `isLlmCraftNoteKept` (the one keep rule: a verdict at or above the note's floor).
 
 A note file, `apparel-plain.md`:
 
@@ -682,10 +694,10 @@ unserved: include
 Name the fabric and the cut first. Never describe a logo the brief did not ask for.
 ```
 
-The registry, the tiers and a judged site:
+The registry, the tiers, the judge and a judged site:
 
 ```ts
-import { makeLlmCraftPromptContributor, makeLlmCraftJudge, makeLlmCraftNoteRowReader, makeLlmCraftSiteRegistry } from '@dereekb/llm';
+import { makeLlmCraftPromptContributor, makeLlmCraftJudge, makeLlmCraftNoteRowReader, makeLlmCraftSiteRegistry } from '@dereekb/llm/craft';
 
 const sites = makeLlmCraftSiteRegistry({
   sites: {
@@ -695,13 +707,19 @@ const sites = makeLlmCraftSiteRegistry({
 });
 const readRows = makeLlmCraftNoteRowReader({ tier: 'workspace', sites });
 
+// the judge asks the dispatcher the contributor rides, built below — hence the getter
+const judge = makeLlmCraftJudge<ShopRequest>({ sites, dispatcher: () => dispatcher, available: ({ request }) => request.craftJudge !== 'off' });
+
 const craft = makeLlmCraftPromptContributor<ShopRequest, ShopDescriptor>({
   sites,
   tiers: [BUILTIN_CRAFT_NOTES, machine.notes, ({ request }) => readRows(request.craftRows)],
-  guard: ({ descriptor }) => descriptor?.traits?.customerFacing === true
+  guard: ({ descriptor }) => descriptor?.traits?.customerFacing === true,
+  judge
 });
 
-const site = { kind: 'product-page', facts: { category: 'apparel', brand: 'acme' }, inputs: { brief }, judge: makeLlmCraftJudge({ sites, dispatcher }) };
+const dispatcher = makeLlmDispatcher({ …, contributors: [craft] });
+
+const site = { kind: 'product-page', facts: { category: 'apparel', brand: 'acme' }, inputs: { brief } };
 ```
 
 ## Replies
@@ -1322,7 +1340,9 @@ how a spec stays hermetic.
 - **Craft notes.** `resolveLlmCraftNotesDir({ defaultDir })` answers the folder the env names, else yours.
   `loadLlmCraftNotes({ dir, tier, sites, warn })` drops and warns about a bad note, never throws, and reads an absent
   folder as no notes. `compileLlmCraftNotes` / `writeLlmCraftNotesModule` compile a committed folder into a
-  `*.generated.ts` module (the write refuses on any refusal and is atomic). Register `LLM_NODE_SWALLOW_SITES` beside
+  `*.generated.ts` module that imports its note type from `@dereekb/llm/craft` (`typeFrom` overrides it). The write
+  refuses on any refusal, leaves a module that already holds the compiled text untouched (`outcome: 'unchanged'`, no
+  mtime bump), and otherwise writes atomically (`outcome: 'wrote'`). Register `LLM_NODE_SWALLOW_SITES` beside
   `LLM_SWALLOW_SITES` for the folder-read site.
 
   A freshness spec for committed built-ins compares data, and re-emits behind a flag of your own:

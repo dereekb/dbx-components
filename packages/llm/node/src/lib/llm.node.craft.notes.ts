@@ -9,7 +9,8 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { compareStringsByCodeUnit, readErrorMessage, type Maybe } from '@dereekb/util';
-import { llmCraftNoteParseErrorLines, parseLlmCraftNoteSet, type LlmCraftNoteFile, type LlmCraftNoteSet, type LlmCraftNoteTier, type LlmCraftSiteRegistry, type LlmSwallowSink } from '@dereekb/llm';
+import { type LlmSwallowSink } from '@dereekb/llm';
+import { llmCraftNoteParseErrorLines, parseLlmCraftNoteSet, type LlmCraftNoteFile, type LlmCraftNoteSet, type LlmCraftNoteTier, type LlmCraftSiteRegistry } from '@dereekb/llm/craft';
 import { DEFAULT_LLM_ENV_NAMES, firstLlmEnvEntry, type LlmEnvNames, type LlmEnvView } from './llm.node.env';
 
 /**

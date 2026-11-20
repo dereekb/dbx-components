@@ -75,6 +75,7 @@
       "@dereekb/firebase-server/zoho": ["./packages/firebase-server/zoho/src/index.ts"],
       "@dereekb/firebase/test": ["./packages/firebase/test/src/index.ts"],
       "@dereekb/llm": ["./packages/llm/src/index.ts"],
+      "@dereekb/llm/craft": ["./packages/llm/src/craft.ts"],
       "@dereekb/llm/decision": ["./packages/llm/src/decision.ts"],
       "@dereekb/llm/node": ["./packages/llm/node/src/index.ts"],
       "@dereekb/llm/openai": ["./packages/llm/openai/src/index.ts"],

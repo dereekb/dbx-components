@@ -3,15 +3,16 @@
  * exports them as data, so a host ships its built-in tier with no file IO at runtime.
  *
  * {@link compileLlmCraftNotes} parses the folder through the one tier loader and renders the module text;
- * {@link writeLlmCraftNotesModule} refuses on ANY refusal and writes atomically. A freshness spec compares the
+ * {@link writeLlmCraftNotesModule} refuses on ANY refusal, leaves an unchanged module untouched (so its mtime and the
+ * build cache stay put) and otherwise writes atomically. A freshness spec compares the
  * compile's `notes` to the committed export as DATA, so a formatter re-wrapping the emitted module changes nothing.
  * Hosts conventionally name the output `*.generated.ts`.
  */
 
-import { existsSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { type Maybe } from '@dereekb/util';
-import { llmCraftNoteParseErrorLines, parseLlmCraftNoteSet, type LlmCraftNote, type LlmCraftNoteSet, type LlmCraftNoteTier, type LlmCraftSiteRegistry } from '@dereekb/llm';
+import { llmCraftNoteParseErrorLines, parseLlmCraftNoteSet, type LlmCraftNote, type LlmCraftNoteSet, type LlmCraftNoteTier, type LlmCraftSiteRegistry } from '@dereekb/llm/craft';
 import { readLlmCraftNoteFiles } from './llm.node.craft.notes';
 import { writeLlmFileAtomic } from './llm.node.file';
 
@@ -28,7 +29,7 @@ export const DEFAULT_LLM_CRAFT_NOTES_MODULE_TYPE_NAME = 'LlmCraftNote';
 /**
  * The default module the note type is imported from.
  */
-export const DEFAULT_LLM_CRAFT_NOTES_MODULE_TYPE_FROM = '@dereekb/llm';
+export const DEFAULT_LLM_CRAFT_NOTES_MODULE_TYPE_FROM = '@dereekb/llm/craft';
 
 /**
  * The default doc comment on the compiled export.
@@ -144,14 +145,36 @@ export interface WriteLlmCraftNotesModuleConfig extends CompileLlmCraftNotesConf
 }
 
 /**
- * Compile a folder and write the module — refusing on ANY refusal (nothing is written), else writing atomically (a
- * temp file renamed over `out`).
+ * What {@link writeLlmCraftNotesModule} did with the output file — `unchanged` when it already held the compiled text.
+ */
+export type LlmCraftNotesWriteOutcome = 'wrote' | 'unchanged';
+
+/**
+ * A written compile — the compile plus what happened to the output file.
+ */
+export interface LlmWrittenCraftNotes extends LlmCompiledCraftNotes {
+  /**
+   * Whether the module was written, or left untouched because it already held the compiled text.
+   */
+  readonly outcome: LlmCraftNotesWriteOutcome;
+}
+
+/**
+ * Compile a folder and write the module — refusing on ANY refusal (nothing is written); an output that already holds
+ * the compiled text is left untouched (`outcome: 'unchanged'`, no mtime bump), else it is written atomically (a temp
+ * file renamed over `out`).
  *
  * @param config - The compile config and the output path.
- * @returns The compile.
+ * @returns The compile and its write outcome.
  * @throws {Error} When the folder is missing, or any file was refused (every refusal line is listed).
+ *
+ * @example
+ * ```ts
+ * const { outcome } = writeLlmCraftNotesModule({ dir: NOTES_DIR, out: OUT_FILE, tier: 'builtin', sites, exportName: 'BUILTIN_CRAFT_NOTES' });
+ * // a second run over the same folder: outcome === 'unchanged'
+ * ```
  */
-export function writeLlmCraftNotesModule(config: WriteLlmCraftNotesModuleConfig): LlmCompiledCraftNotes {
+export function writeLlmCraftNotesModule(config: WriteLlmCraftNotesModuleConfig): LlmWrittenCraftNotes {
   const { dir, out } = config;
   const compiled = compileLlmCraftNotes(config);
 
@@ -160,6 +183,11 @@ export function writeLlmCraftNotesModule(config: WriteLlmCraftNotesModuleConfig)
     throw new Error(`craft notes: ${compiled.refused.length} file(s) refused; nothing was written:\n${lines.join('\n')}`);
   }
 
-  writeLlmFileAtomic({ filePath: out, text: compiled.text });
-  return compiled;
+  const unchanged = existsSync(out) && readFileSync(out, 'utf8') === compiled.text;
+
+  if (!unchanged) {
+    writeLlmFileAtomic({ filePath: out, text: compiled.text });
+  }
+
+  return { ...compiled, outcome: unchanged ? 'unchanged' : 'wrote' };
 }

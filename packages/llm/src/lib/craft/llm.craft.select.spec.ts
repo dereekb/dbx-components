@@ -4,7 +4,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { type LlmCraftNote } from './llm.craft.note';
+import { isLlmCraftNoteKept, type LlmCraftNote } from './llm.craft.note';
 import { resolveLlmCraftCandidates, llmCraftNoteMatchesSite, mergeLlmCraftNoteTiers, selectLlmCraftNotes } from './llm.craft.select';
 import { DEFAULT_LLM_CRAFT_SITE_LIMITS, makeLlmCraftSiteRegistry } from './llm.craft.site';
 
@@ -161,5 +161,15 @@ describe('selectLlmCraftNotes()', () => {
 
     expect(selection.placed.map((placement) => placement.note.id)).toEqual(['a']);
     expect(selection.cut.map((cut) => `${cut.note.id}:${cut.reason}`)).toEqual(['b:max-bytes']);
+  });
+});
+
+describe('isLlmCraftNoteKept()', () => {
+  it('keeps a verdict at or above the floor, and never an absent one', () => {
+    expect(isLlmCraftNoteKept(0.6, 0.6)).toBe(true);
+    expect(isLlmCraftNoteKept(0.9, 0.6)).toBe(true);
+    expect(isLlmCraftNoteKept(0.59, 0.6)).toBe(false);
+    expect(isLlmCraftNoteKept(undefined, 0)).toBe(false);
+    expect(isLlmCraftNoteKept(null, 0.6)).toBe(false);
   });
 });

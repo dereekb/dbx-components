@@ -4,10 +4,11 @@ const applyVisualizer = require('../../rollup.visualizer.config.cjs');
 const options = {
   importPath: '@dereekb/llm',
   main: './src/index.ts',
-  // `@dereekb/llm/decision`: the decision vocabulary and strategy contract without any SDK (see src/decision.ts).
-  // A second input of THIS build rather than a child project, because the root entry re-exports the same modules —
-  // rollup emits them once, as a chunk both entries import, so there is one copy and one class identity.
-  additionalEntryPoints: ['./src/decision.ts'],
+  // Two more inputs of THIS build rather than child projects: `@dereekb/llm/decision` (the decision vocabulary without
+  // any SDK; the root re-exports the same modules, see src/decision.ts) and `@dereekb/llm/craft` (craft notes; opt-in,
+  // NOT re-exported by the root, see src/craft.ts). Rollup emits every module once, so modules several entries import
+  // become shared chunks: one copy, one class identity.
+  additionalEntryPoints: ['./src/decision.ts', './src/craft.ts'],
   outputPath: '../../dist/packages/llm',
   tsConfig: './tsconfig.lib.json',
   project: './package.json',

@@ -21,7 +21,7 @@
         }
       ],
       "metadata": {
-        "description": "The nested case. dist/packages/llm is ONE npm package with 7 entry points (root, /decision, /openai, /openrouter, /zenmux, /node, /test), not 6 packages: /decision is a second rollup input of THIS project, and llm-openai / llm-openrouter / llm-zenmux / llm-node / llm-test compile INTO this directory and are named by this package's own dist `exports`. So this target is the sole deliverable and the sole owner of the directory, and the children deliberately have no `build` of their own. The finalize stays this target's own command, so it runs after every entry point is built -- dependsOn does not order its own entries."
+        "description": "The nested case. dist/packages/llm is ONE npm package with 8 entry points (root, /decision, /craft, /openai, /openrouter, /zenmux, /node, /test), not 6 packages: /decision and /craft are rollup inputs of THIS project, and llm-openai / llm-openrouter / llm-zenmux / llm-node / llm-test compile INTO this directory and are named by this package's own dist `exports`. So this target is the sole deliverable and the sole owner of the directory, and the children deliberately have no `build` of their own. The finalize stays this target's own command, so it runs after every entry point is built -- dependsOn does not order its own entries."
       }
     },
     "build-base": {

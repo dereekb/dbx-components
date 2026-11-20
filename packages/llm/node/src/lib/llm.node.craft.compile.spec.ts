@@ -1,8 +1,8 @@
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { makeLlmCraftSiteRegistry, type LlmCraftNote } from '@dereekb/llm';
+import { makeLlmCraftSiteRegistry, type LlmCraftNote } from '@dereekb/llm/craft';
 import { compileLlmCraftNotes, renderLlmCraftNotesModule, writeLlmCraftNotesModule } from './llm.node.craft.compile';
 
 const SITES = makeLlmCraftSiteRegistry({
@@ -47,7 +47,7 @@ describe('renderLlmCraftNotesModule()', () => {
         ' * GENERATED — do not edit. Craft notes compiled from a folder of markdown files; re-emit this module instead of editing it.',
         ' */',
         '',
-        "import type { LlmCraftNote } from '@dereekb/llm';",
+        "import type { LlmCraftNote } from '@dereekb/llm/craft';",
         '',
         '/**',
         ' * The compiled craft notes.',
@@ -91,8 +91,29 @@ describe('writeLlmCraftNotesModule()', () => {
     const out = join(outDir, 'craft-notes.generated.ts');
     const compiled = writeLlmCraftNotesModule({ dir, tier: 'builtin', sites: SITES, exportName: 'BUILTIN_CRAFT_NOTES', out });
 
+    expect(compiled.outcome).toBe('wrote');
     expect(readFileSync(out, 'utf8')).toBe(compiled.text);
     expect(readdirSync(outDir).filter((name) => name.endsWith('.writing'))).toEqual([]);
+  });
+
+  it('leaves an unchanged module untouched: the second write reports unchanged and the mtime does not move', () => {
+    writeFileSync(join(dir, 'a.md'), noteText('alpha-note'));
+    const out = join(dir, 'craft-notes.generated.ts');
+    const config = { dir, tier: 'builtin', sites: SITES, exportName: 'BUILTIN_CRAFT_NOTES', out };
+    const first = writeLlmCraftNotesModule(config);
+    const past = new Date('2020-01-01T00:00:00Z');
+    utimesSync(out, past, past);
+    const before = statSync(out).mtimeMs;
+    const second = writeLlmCraftNotesModule(config);
+
+    expect(first.outcome).toBe('wrote');
+    expect(second.outcome).toBe('unchanged');
+    expect(second.text).toBe(first.text);
+    expect(statSync(out).mtimeMs).toBe(before);
+
+    writeFileSync(join(dir, 'b.md'), noteText('beta-note'));
+    expect(writeLlmCraftNotesModule(config).outcome).toBe('wrote');
+    expect(statSync(out).mtimeMs).not.toBe(before);
   });
 
   it('refuses on any refusal, listing the line, and leaves an existing module untouched', () => {

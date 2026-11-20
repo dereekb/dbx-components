@@ -8,12 +8,10 @@
  * narrower one winning, keyed) and {@link withLlmPromptSite} scopes a whole dispatcher to one site.
  */
 
-import { type Maybe, mergeObjects, type PercentDecimal } from '@dereekb/util';
+import { type Maybe, mergeObjects } from '@dereekb/util';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { type LlmDispatcher } from '../dispatch/llm.dispatcher';
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
-import { type LlmCraftNoteId, type LlmCraftSiteKind } from '../craft/llm.craft.identity';
-import { type LlmCapabilityKey } from '../model/llm.value';
 
 /**
  * One typed site fact's value — a closed scalar, so a fact match is an equality test and never a parse.
@@ -34,58 +32,10 @@ export type LlmPromptSiteFacts = Readonly<Record<string, LlmPromptSiteFactValue 
 export type LlmPromptSiteInputs = Readonly<Record<string, string>>;
 
 /**
- * The STRUCTURAL view of one note a site's judge is asked about — the fields a judge reads. A full craft note
- * satisfies it as-is.
+ * The kind of prompt site a prompt is being built at — the open vocabulary a contributor selects on (e.g.
+ * `product-page`, `support-reply`). A host declares its own kinds.
  */
-export interface LlmPromptSiteJudgedNote {
-  /**
-   * The note's id — the key its verdict comes back under.
-   */
-  readonly id: LlmCraftNoteId;
-  /**
-   * The question the judge answers about the site for this note, when the note phrases one.
-   */
-  readonly ask?: string;
-  /**
-   * The probability at or above which the note applies.
-   */
-  readonly floor: PercentDecimal;
-}
-
-/**
- * What a craft contributor hands a site's {@link LlmPromptSite.judge} — the notes it asks about and the site's inputs.
- */
-export interface LlmPromptSiteJudgeRequest {
-  /**
-   * The consuming capability (the judge's call is recorded under it).
-   */
-  readonly capability: LlmCapabilityKey;
-  /**
-   * The site's kind.
-   */
-  readonly kind: LlmCraftSiteKind;
-  /**
-   * The judged notes to ask about, ranked.
-   */
-  readonly asked: ReadonlyArray<LlmPromptSiteJudgedNote>;
-  /**
-   * The site's free-text inputs.
-   */
-  readonly inputs: LlmPromptSiteInputs;
-}
-
-/**
- * A judge's answer — note id → the probability the note applies to the site.
- */
-export type LlmPromptSiteJudgeVerdicts = ReadonlyMap<LlmCraftNoteId, PercentDecimal>;
-
-/**
- * A site's judge: one decision pass over the asked notes, answering note id → the probability it applies, or nothing
- * when it could not answer (the decision lane is unavailable, the call faulted), so every asked note takes its own
- * unserved posture. Called at most once per dispatch, at the root. The library judge is `makeLlmCraftJudge`, and
- * `makeLlmCraftPromptContributor` is its one caller.
- */
-export type LlmPromptSiteJudge = (request: LlmPromptSiteJudgeRequest) => Promise<Maybe<LlmPromptSiteJudgeVerdicts>>;
+export type LlmPromptSiteKind = string;
 
 /**
  * Where a prompt is being built. Every field is optional: a request with no site is the common case.
@@ -96,7 +46,7 @@ export interface LlmPromptSite<S extends object = object> {
   /**
    * The site's kind — the open vocabulary a contributor selects on.
    */
-  readonly kind?: LlmCraftSiteKind;
+  readonly kind?: LlmPromptSiteKind;
   /**
    * The site's typed facts.
    */
@@ -105,11 +55,6 @@ export interface LlmPromptSite<S extends object = object> {
    * The site's free-text inputs.
    */
   readonly inputs?: LlmPromptSiteInputs;
-  /**
-   * The judge a craft contributor asks about the site's judged notes; absent ⇒ every judged note is unserved. The
-   * library judge is `makeLlmCraftJudge`, and `makeLlmCraftPromptContributor` is its one caller.
-   */
-  readonly judge?: LlmPromptSiteJudge;
   /**
    * What a scope above the capability hands its contributors — a host-typed record a contributor places and the
    * capability's own renderer never sees. Merged keyed, the narrower scope winning.
@@ -131,8 +76,7 @@ function mergeKeyed<T extends object>(outer: Maybe<T>, inner: Maybe<T>): Maybe<T
 
 /**
  * Merge two sites — the INNER one (the narrower scope, stamped closer to the dispatch) wins, keyed: its `kind`
- * replaces the outer's, its facts / inputs / supply override the outer's key by key (one level deep), and its judge
- * replaces the outer's. Either side absent ⇒ the other, unchanged (the same reference).
+ * replaces the outer's, its facts / inputs / supply override the outer's key by key (one level deep). Either side absent ⇒ the other, unchanged (the same reference).
  *
  * @param outer - The wider scope's site.
  * @param inner - The narrower scope's site.
@@ -155,9 +99,8 @@ export function mergeLlmPromptSite<S extends object = object>(outer: Maybe<LlmPr
     const kind = inner.kind ?? outer.kind;
     const facts = mergeKeyed(outer.facts, inner.facts);
     const inputs = mergeKeyed(outer.inputs, inner.inputs);
-    const judge = inner.judge ?? outer.judge;
     const supply = mergeKeyed(outer.supply, inner.supply);
-    merged = { ...(kind == null ? {} : { kind }), ...(facts == null ? {} : { facts }), ...(inputs == null ? {} : { inputs }), ...(judge == null ? {} : { judge }), ...(supply == null ? {} : { supply }) };
+    merged = { ...(kind == null ? {} : { kind }), ...(facts == null ? {} : { facts }), ...(inputs == null ? {} : { inputs }), ...(supply == null ? {} : { supply }) };
   }
 
   return merged;

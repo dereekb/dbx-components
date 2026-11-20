@@ -1,14 +1,9 @@
 /**
- * Craft identity — the plain-string names a prompt site and its craft notes are keyed by. Craft notes are authored
- * prompt supplements selected per site; the note model, its loading, its selection and its judge build on these
- * names in this folder. Every name is an open `string`: a host declares its own site vocabulary and note tiers.
+ * Craft identity — the plain-string names craft notes are keyed by. Craft notes are authored prompt supplements
+ * selected per site; the note model, its loading, its selection and its judge build on these names in this folder.
+ * Every name is an open `string`: a host declares its own note tiers. A site's kind is the prompt site's own
+ * `LlmPromptSiteKind`.
  */
-
-/**
- * The kind of prompt site a prompt is being built at — the open vocabulary a contributor selects on (e.g.
- * `product-page`, `support-reply`). A host declares its own kinds.
- */
-export type LlmCraftSiteKind = string;
 
 /**
  * A craft note's id — unique within one tier; a higher tier's note of the same id shadows a lower one.

@@ -86,7 +86,8 @@ describe('@dereekb/llm/node isolation', () => {
   });
 
   it('should import no sibling entry, specs included', () => {
-    // llm-node:build-base has no edge to a sibling entry's build, so such an import would race the build
+    // llm-node:build-base has no edge to a sibling entry's build, so such an import would race the build.
+    // `@dereekb/llm/craft` is not a sibling: it is an input of llm:build-base (which llm-node already depends on), so it races no build.
     const siblings = ['@dereekb/llm/openai', '@dereekb/llm/openrouter', '@dereekb/llm/zenmux', '@dereekb/llm/test'];
     expect(importersOf(scanSrc(true), (specifier) => siblings.some((sibling) => isPackage(sibling)(specifier)))).toEqual([]);
   });

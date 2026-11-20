@@ -184,7 +184,7 @@ export const LLM_SWALLOW_SITES: LlmSwallowSiteRegistry = makeLlmSwallowSiteRegis
   { id: 'llm/strategy-readiness.health-check', protects: 'a `healthCheck` that threw (a contract violation) is reported as an issue, never propagated', onError: 'report', expectation: 'fault', channel: 'health' },
   { id: 'llm/strategy-readiness.credential-probe', protects: 'a `credentialProbe` that threw (a contract violation) is reported as an issue, never propagated', onError: 'report', expectation: 'fault', channel: 'health' },
   { id: 'llm/strategy-readiness.provider-status', protects: 'a `providerStatus` that threw (a contract violation) is reported as an UNAVAILABLE status, never propagated, and unavailable can never read as spare quota', onError: 'report', expectation: 'fault', channel: 'health' },
-  // makeLlmCraftJudge — the decide call's catch.
+  // makeLlmCraftJudge (`@dereekb/llm/craft`) — the decide call's catch.
   { id: 'llm/craft-judge.decide', protects: 'a faulted or unreachable craft judge answers nothing, so every asked note takes its own unserved posture rather than failing the dispatch', onError: 'degrade', expectation: 'degraded', channel: 'diag' },
   // readLlmReplyValue / readLlmReply / readLlmReplyRationale / readLlmLineReplyValue — the one report when no candidate block parsed.
   { id: 'llm/reply-envelope.decode', protects: 'a reply whose JSON block does not parse reads as a degenerate decode (no-json / parse-error) the caller retries or drops; the reader never throws', onError: 'degrade', expectation: 'expected', channel: 'diag' },

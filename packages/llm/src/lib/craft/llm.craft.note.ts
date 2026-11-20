@@ -7,12 +7,12 @@
  * (`./llm.craft.site`), plus (when it carries an `ask`) an optional decision pass over the site's free-text inputs
  * (`./llm.craft.judge`). Host-ordered tiers shadow by id; `enabled: false` is a tombstone over a lower tier.
  *
- * Leaf module: types and constants only.
+ * Leaf module: types, constants and the one keep rule ({@link isLlmCraftNoteKept}).
  */
 
-import { type LlmPromptSiteFactValue } from '../prompt/llm.prompt.site';
-import { type LlmCraftNoteId, type LlmCraftNoteTier, type LlmCraftSiteKind } from './llm.craft.identity';
-import { type PercentDecimal } from '@dereekb/util';
+import { type LlmPromptSiteFactValue, type LlmPromptSiteKind } from '../prompt/llm.prompt.site';
+import { type LlmCraftNoteId, type LlmCraftNoteTier } from './llm.craft.identity';
+import { type Maybe, type PercentDecimal } from '@dereekb/util';
 
 /**
  * The legal shape of a {@link LlmCraftNoteId} — kebab-case, 2..64 chars.
@@ -30,6 +30,23 @@ export const DEFAULT_LLM_CRAFT_NOTE_MAX_CHARS = 1500;
  * The default `floor` a judged note's decision probability must reach to be kept.
  */
 export const DEFAULT_LLM_CRAFT_JUDGE_FLOOR: PercentDecimal = 0.6;
+
+/**
+ * The ONE keep rule of a judged note — a verdict at or above its floor.
+ *
+ * @param p - The judge's probability; absent ⇒ not kept.
+ * @param floor - The note's floor.
+ * @returns Whether the note is kept.
+ *
+ * @example
+ * ```ts
+ * isLlmCraftNoteKept(0.7, 0.6); // true
+ * isLlmCraftNoteKept(undefined, 0.6); // false
+ * ```
+ */
+export function isLlmCraftNoteKept(p: Maybe<PercentDecimal>, floor: PercentDecimal): boolean {
+  return p != null && p >= floor;
+}
 
 /**
  * The default `priority` of a note.
@@ -106,7 +123,7 @@ export const LLM_CRAFT_NOTE_SELECT_DECISION_ID = 'CraftNoteSelect';
 export type LlmCraftNoteWhere = Readonly<Record<string, ReadonlyArray<LlmPromptSiteFactValue>>>;
 
 /**
- * ONE loaded craft note. It satisfies `LlmPromptSiteJudgedNote` structurally (`id`, `ask?`, `floor`).
+ * ONE loaded craft note.
  */
 export interface LlmCraftNote {
   /**
@@ -120,7 +137,7 @@ export interface LlmCraftNote {
   /**
    * The site kinds it may reach. Empty on a tombstone.
    */
-  readonly sites: ReadonlyArray<LlmCraftSiteKind>;
+  readonly sites: ReadonlyArray<LlmPromptSiteKind>;
   /**
    * The fact match ({@link LlmCraftNoteWhere}); empty ⇒ every site of its kinds.
    */

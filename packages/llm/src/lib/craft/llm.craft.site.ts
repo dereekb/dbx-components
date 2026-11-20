@@ -10,7 +10,7 @@
 
 import { KeyValueTypleValueFilter, type Maybe, mergeObjects, type Count } from '@dereekb/util';
 import { DEFAULT_LLM_CRAFT_NOTE_MAX_CHARS, type LlmCraftNote } from './llm.craft.note';
-import { type LlmCraftSiteKind } from './llm.craft.identity';
+import { type LlmPromptSiteKind } from '../prompt/llm.prompt.site';
 
 /**
  * The SHAPE of one site fact: `closed` (a string from a closed vocabulary), `open` (any string, e.g. a brand or a
@@ -74,7 +74,7 @@ export interface LlmCraftSiteDefinition {
  * One RESOLVED site — its kind, facts, inputs and every limit.
  */
 export interface LlmCraftSite {
-  readonly kind: LlmCraftSiteKind;
+  readonly kind: LlmPromptSiteKind;
   readonly facts: Readonly<Record<string, LlmCraftSiteFactShape>>;
   readonly inputs: ReadonlyArray<string>;
   readonly limits: LlmCraftSiteLimits;
@@ -87,7 +87,7 @@ export interface LlmCraftSiteRegistryConfig {
   /**
    * Every site kind, in the order refusal messages list them.
    */
-  readonly sites: Readonly<Record<LlmCraftSiteKind, LlmCraftSiteDefinition>>;
+  readonly sites: Readonly<Record<LlmPromptSiteKind, LlmCraftSiteDefinition>>;
   /**
    * The registry-wide limits over {@link DEFAULT_LLM_CRAFT_SITE_LIMITS}, per field.
    */
@@ -106,7 +106,7 @@ export interface LlmCraftSiteRegistry {
   /**
    * Every site kind, in declaration order — the order refusal messages list.
    */
-  readonly kinds: ReadonlyArray<LlmCraftSiteKind>;
+  readonly kinds: ReadonlyArray<LlmPromptSiteKind>;
   /**
    * The largest note body a tier may load, in characters (UTF-16 code units).
    */
@@ -147,7 +147,7 @@ function resolveLlmCraftSiteLimits(site: Maybe<Partial<LlmCraftSiteLimits>>, reg
  * @__NO_SIDE_EFFECTS__
  */
 export function makeLlmCraftSiteRegistry(config: LlmCraftSiteRegistryConfig): LlmCraftSiteRegistry {
-  const byKind = new Map<LlmCraftSiteKind, LlmCraftSite>();
+  const byKind = new Map<LlmPromptSiteKind, LlmCraftSite>();
 
   for (const [kind, definition] of Object.entries(config.sites)) {
     const badInput = definition.inputs.find((input) => !LLM_CRAFT_SITE_INPUT_NAME_PATTERN.test(input));
@@ -205,7 +205,7 @@ export function readLlmCraftAskInputs(ask: string, sites: ReadonlyArray<LlmCraft
  * The host's closed vocabulary of one fact at one site kind — the values a site of that kind can carry, or nothing
  * for an open, boolean or unknown fact (never checked).
  */
-export type LlmCraftSiteFactValuesReader = (kind: LlmCraftSiteKind, fact: string) => Maybe<ReadonlyArray<string>>;
+export type LlmCraftSiteFactValuesReader = (kind: LlmPromptSiteKind, fact: string) => Maybe<ReadonlyArray<string>>;
 
 /**
  * One `where` value a note names that no site it targets can produce.

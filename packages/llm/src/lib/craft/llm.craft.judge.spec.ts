@@ -1,7 +1,8 @@
 /**
- * The craft JUDGE: one decision call per dispatch over the judged notes, scripted — kept / cut at the floor, an
- * unavailable lane, no `decide`, a fault, a transport throw, the judge cap, and a state of only the referenced inputs.
- * One case runs a real dispatcher whose consuming capability has a completion route (the craft-judge path of B4).
+ * The craft JUDGE: one decision call per dispatch over the judged notes, scripted — kept / cut at the floor, a closed
+ * gate (asked with the call's params), no `decide`, a fault, a transport throw, the judge cap, and a state of only the
+ * referenced inputs. One case runs a real dispatcher whose consuming capability has a completion route, the judge
+ * reaching it through a lazy getter (the contributor is built before the dispatcher it rides).
  */
 
 import { describe, expect, it } from 'vitest';
@@ -11,15 +12,16 @@ import { type LlmDecisionDispatchRequest } from '../decision/llm.decision.descri
 import { isLlmDecisionModelId } from '../decision/llm.decision.model';
 import { type LlmDecisionAnswers, type LlmDecisionQuestions } from '../decision/llm.decision.question';
 import { type LlmDecisionRequest, type LlmDecisionResult } from '../decision/llm.decision.strategy';
+import { type Maybe } from '@dereekb/util';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { type LlmDispatcher } from '../dispatch/llm.dispatcher';
+import { type LlmRequest } from '../strategy/llm.strategy';
 import { makeLlmDispatcher } from '../dispatch/llm.dispatcher.pipeline';
 import { makeLlmStrategyRegistry } from '../strategy/llm.strategy.registry';
 import { composeLlmCapabilityPrompt } from '../prompt/llm.prompt.assembly';
-import { type LlmPromptSite } from '../prompt/llm.prompt.site';
 import { makeLlmTieredPromptTemplateResolver } from '../prompt/llm.prompt.template';
 import { makeLlmCraftPromptContributor } from './llm.craft.contributor';
-import { toLlmCraftJudgeInput, makeLlmCraftJudge } from './llm.craft.judge';
+import { toLlmCraftJudgeInput, makeLlmCraftJudge, type LlmCraftJudge, type LlmCraftJudgeParams } from './llm.craft.judge';
 import { type LlmCraftNote } from './llm.craft.note';
 import { DEFAULT_LLM_CRAFT_SITE_LIMITS, makeLlmCraftSiteRegistry } from './llm.craft.site';
 
@@ -32,6 +34,13 @@ const SITES = makeLlmCraftSiteRegistry({
 });
 
 const PAGE = { kind: 'product-page', facts: { category: 'apparel', brand: 'acme', bundle: true }, inputs: { brief: 'a winter coat with no logo' } } as const;
+
+/**
+ * A host request with a per-call craft posture — the field a host's `available` gate reads off `params.request`.
+ */
+interface ShopRequest extends LlmDispatchRequest {
+  readonly craftJudge?: 'on' | 'off';
+}
 
 const ASK_BRIEF = '`brief` asks for a garment with no logo.';
 const ASK_NOTES = '`notes` names a care label.';
@@ -80,34 +89,37 @@ function fakeDispatcher(config: FakeDispatcherConfig = {}) {
   return { dispatcher, decided, projected };
 }
 
+const renderLiveContext = () => [{ key: 'facts', text: 'facts: here' }];
+
 /**
- * Compose a product-page site over `notes`.
+ * Compose the product-page site over `notes`, the craft contributor carrying `judge`.
  *
  * @param notes - The notes.
- * @param site - The site (its judge set).
+ * @param judge - The contributor's judge; absent ⇒ none.
+ * @param fields - Host request fields.
  * @returns The composed prompt.
  */
-function composeWith(notes: ReadonlyArray<LlmCraftNote>, site: LlmPromptSite) {
-  const request: LlmDispatchRequest = { capability: 'summarize', renderLiveContext: () => [{ key: 'facts', text: 'facts: here' }], site };
-  return composeLlmCapabilityPrompt({ request, descriptorOf: () => undefined, templateResolver: makeLlmTieredPromptTemplateResolver({ tiers: [] }), contributors: [makeLlmCraftPromptContributor({ sites: SITES, tiers: [notes] })] });
+function composeWith(notes: ReadonlyArray<LlmCraftNote>, judge?: LlmCraftJudge<ShopRequest>, fields: Partial<ShopRequest> = {}) {
+  const request: ShopRequest = { capability: 'summarize', renderLiveContext, site: PAGE, ...fields };
+  return composeLlmCapabilityPrompt<ShopRequest>({ request, descriptorOf: () => undefined, templateResolver: makeLlmTieredPromptTemplateResolver({ tiers: [] }), contributors: [makeLlmCraftPromptContributor<ShopRequest>({ sites: SITES, tiers: [notes], judge })] });
 }
 
 describe('toLlmCraftJudgeInput()', () => {
   it('carries only the inputs an asked note names, each clipped, and skips a note whose inputs the site lacks', () => {
     const long = 'x'.repeat(DEFAULT_LLM_CRAFT_SITE_LIMITS.judgeInputMax + 50);
-    const input = toLlmCraftJudgeInput({ request: { kind: 'product-page', asked: [note('a', { ask: ASK_BRIEF }), note('b', { ask: ASK_NOTES })], inputs: { brief: long, summary: 'an input no ask names' } }, sites: SITES });
+    const input = toLlmCraftJudgeInput({ params: { kind: 'product-page', asked: [note('a', { ask: ASK_BRIEF }), note('b', { ask: ASK_NOTES })], inputs: { brief: long, summary: 'an input no ask names' } }, sites: SITES });
 
     expect(input?.notes.map((entry) => entry.id)).toEqual(['a']);
     expect(Object.keys(input?.inputs ?? {})).toEqual(['brief']);
     expect(input?.inputs['brief']).toHaveLength(DEFAULT_LLM_CRAFT_SITE_LIMITS.judgeInputMax);
     expect(input?.inputs['brief']?.endsWith('…')).toBe(true);
-    expect(toLlmCraftJudgeInput({ request: { kind: 'product-page', asked: [note('b', { ask: ASK_NOTES })], inputs: { brief: 'here' } }, sites: SITES })).toBeUndefined();
+    expect(toLlmCraftJudgeInput({ params: { kind: 'product-page', asked: [note('b', { ask: ASK_NOTES })], inputs: { brief: 'here' } }, sites: SITES })).toBeUndefined();
   });
 
   it("clips to a site's own judgeInputMax, and answers nothing for an unknown kind", () => {
-    const input = toLlmCraftJudgeInput({ request: { kind: 'support-reply', asked: [note('a', { sites: ['support-reply'], ask: '`message` is angry.' })], inputs: { message: 'my order arrived broken again' } }, sites: SITES });
+    const input = toLlmCraftJudgeInput({ params: { kind: 'support-reply', asked: [note('a', { sites: ['support-reply'], ask: '`message` is angry.' })], inputs: { message: 'my order arrived broken again' } }, sites: SITES });
     expect(input?.inputs['message']).toBe('my order arrived br…');
-    expect(toLlmCraftJudgeInput({ request: { kind: 'poster', asked: [note('a', { ask: ASK_BRIEF })], inputs: { brief: 'x' } }, sites: SITES })).toBeUndefined();
+    expect(toLlmCraftJudgeInput({ params: { kind: 'poster', asked: [note('a', { ask: ASK_BRIEF })], inputs: { brief: 'x' } }, sites: SITES })).toBeUndefined();
   });
 });
 
@@ -115,7 +127,7 @@ describe('makeLlmCraftJudge() through the craft contributor', () => {
   it('keeps a note AT its floor and cuts one under it, in ONE call with one Noul per note, stamped asked / kept', async () => {
     const { dispatcher, decided, projected } = fakeDispatcher({ answer: () => ({ n0: noul(0.6), n1: noul(0.59) }) });
     const notes = [note('kept', { ask: ASK_BRIEF, priority: 6 }), note('dropped', { ask: ASK_BRIEF })];
-    const composed = await composeWith(notes, { ...PAGE, judge: makeLlmCraftJudge({ sites: SITES, dispatcher }) });
+    const composed = await composeWith(notes, makeLlmCraftJudge({ sites: SITES, dispatcher }));
 
     expect(projected).toHaveLength(1);
     expect(Object.keys(projected[0].questions)).toEqual(['n0', 'n1']);
@@ -126,8 +138,9 @@ describe('makeLlmCraftJudge() through the craft contributor', () => {
     expect(composed.cut.map((row) => [row.key, row.cut, row.p])).toEqual([['dropped', 'floor', 0.59]]);
   });
 
-  it('is served by the decision default model when the consuming capability has a COMPLETION route (a real dispatcher)', async () => {
+  it('reaches the dispatcher it rides through a lazy getter, served by the decision default model despite a COMPLETION route', async () => {
     const requests: LlmDecisionRequest[] = [];
+    const completions: LlmRequest[] = [];
     const decisionStrategy = makeLlmScriptedDecisionStrategy({
       requests,
       script: (request) => {
@@ -139,29 +152,66 @@ describe('makeLlmCraftJudge() through the craft contributor', () => {
         return Object.fromEntries(Object.keys(request.questions).map((key) => [key, noul(0.9)]));
       }
     });
-    const dispatcher = makeLlmDispatcher({
-      strategies: makeLlmStrategyRegistry([makeLlmScriptedStrategy({ id: 'cap', replies: [] })]),
+    const swallowed: string[] = [];
+    // eslint-disable-next-line prefer-const -- assigned after the contributor that the judge rides is built
+    let dispatcher: Maybe<LlmDispatcher>;
+    const judge = makeLlmCraftJudge({ sites: SITES, dispatcher: () => dispatcher, swallow: (site) => swallowed.push(site) });
+    const craft = makeLlmCraftPromptContributor({ sites: SITES, tiers: [[note('kept', { ask: ASK_BRIEF })]], judge });
+    dispatcher = makeLlmDispatcher({
+      strategies: makeLlmStrategyRegistry([makeLlmScriptedStrategy({ id: 'cap', replies: ['ok'], requests: completions })]),
       defaultStrategyId: 'cap',
       defaultMaxOutputTokens: 1024,
       modelTiers: { fast: 'vendor/fast-text-model' },
       capabilityRoutes: new Map([['summarize', { model: 'vendor/routed-text-model' }]]),
       descriptorOf: () => undefined,
       templateResolver: makeLlmTieredPromptTemplateResolver({ tiers: [] }),
+      contributors: [craft],
       decisions: { strategies: makeLlmStrategyRegistry([decisionStrategy]), defaultModel: 'typesafe/jev-1.14' }
     });
-    const swallowed: string[] = [];
-    const composed = await composeWith([note('kept', { ask: ASK_BRIEF })], { ...PAGE, judge: makeLlmCraftJudge({ sites: SITES, dispatcher, swallow: (site) => swallowed.push(site) }) });
+
+    await dispatcher.dispatch({ capability: 'summarize', renderLiveContext, site: PAGE });
 
     expect(requests.map((request) => request.model)).toEqual(['typesafe/jev-1.14']);
     expect(swallowed).toEqual([]);
-    expect(composed.contributions.filter((row) => row.origin.kind === 'craft').map((row) => [row.key, row.by])).toEqual([['kept', 'judge']]);
+    expect(completions).toHaveLength(1);
+    expect(completions[0].prompt).toContain('KEPT BODY');
+  });
+
+  it('asks the gate with the call params, so one judge turns a call off by a host request field', async () => {
+    const { dispatcher, decided } = fakeDispatcher();
+    const gated: LlmCraftJudgeParams<ShopRequest>[] = [];
+    const judge = makeLlmCraftJudge<ShopRequest>({
+      sites: SITES,
+      dispatcher,
+      available: (params) => {
+        gated.push(params);
+        return params.request.craftJudge !== 'off';
+      }
+    });
+    const notes = [note('a', { ask: ASK_BRIEF, unserved: 'include' })];
+    const off = await composeWith(notes, judge, { craftJudge: 'off' });
+    const on = await composeWith(notes, judge, { craftJudge: 'on' });
+
+    expect(gated.map((params) => [params.request.capability, params.kind, params.request.craftJudge])).toEqual([
+      ['summarize', 'product-page', 'off'],
+      ['summarize', 'product-page', 'on']
+    ]);
+    expect(decided).toHaveLength(1);
+    expect(off.contributions.filter((row) => row.origin.kind === 'craft').map((row) => row.by)).toEqual(['unserved']);
+    expect(on.contributions.filter((row) => row.origin.kind === 'craft').map((row) => row.by)).toEqual(['judge']);
+  });
+
+  it('passes the call params to onUnavailable', async () => {
+    const seen: LlmCraftJudgeParams[] = [];
+    await composeWith([note('a', { ask: ASK_BRIEF })], makeLlmCraftJudge({ sites: SITES, dispatcher: undefined, onUnavailable: (params) => seen.push(params) }));
+    expect(seen.map((params) => [params.request.capability, params.kind, params.asked.map((entry) => entry.id), params.inputs])).toEqual([['summarize', 'product-page', ['a'], PAGE.inputs]]);
   });
 
   it('asks nothing when unavailable: onUnavailable fires once and every judged note takes its unserved posture', async () => {
     const { dispatcher, decided } = fakeDispatcher();
     let unavailable = 0;
     const judge = makeLlmCraftJudge({ sites: SITES, dispatcher, available: () => false, onUnavailable: () => (unavailable += 1) });
-    const composed = await composeWith([note('include', { ask: ASK_BRIEF, unserved: 'include' }), note('omit', { ask: ASK_BRIEF })], { ...PAGE, judge });
+    const composed = await composeWith([note('include', { ask: ASK_BRIEF, unserved: 'include' }), note('omit', { ask: ASK_BRIEF })], judge);
 
     expect(decided).toHaveLength(0);
     expect(unavailable).toBe(1);
@@ -172,7 +222,7 @@ describe('makeLlmCraftJudge() through the craft contributor', () => {
   it('asks nothing with no decide (or no dispatcher): unserved, and onUnavailable fires', async () => {
     for (const dispatcher of [{}, undefined]) {
       let unavailable = 0;
-      const composed = await composeWith([note('a', { ask: ASK_BRIEF })], { ...PAGE, judge: makeLlmCraftJudge({ sites: SITES, dispatcher, onUnavailable: () => (unavailable += 1) }) });
+      const composed = await composeWith([note('a', { ask: ASK_BRIEF })], makeLlmCraftJudge({ sites: SITES, dispatcher, onUnavailable: () => (unavailable += 1) }));
 
       expect(composed.cut.map((row) => row.cut)).toEqual(['unserved']);
       expect(unavailable).toBe(1);
@@ -183,7 +233,7 @@ describe('makeLlmCraftJudge() through the craft contributor', () => {
     for (const error of [new LlmDecisionAnswerFaultError([{ kind: 'answer-missing', question: 'n0', detail: 'scripted fault' }]), new Error('the socket went away')]) {
       const { dispatcher } = fakeDispatcher({ throws: error });
       const swallowed: string[] = [];
-      const composed = await composeWith([note('a', { ask: ASK_BRIEF, unserved: 'include' })], { ...PAGE, judge: makeLlmCraftJudge({ sites: SITES, dispatcher, swallow: (site) => swallowed.push(site) }) });
+      const composed = await composeWith([note('a', { ask: ASK_BRIEF, unserved: 'include' })], makeLlmCraftJudge({ sites: SITES, dispatcher, swallow: (site) => swallowed.push(site) }));
 
       expect(swallowed).toEqual(['llm/craft-judge.decide']);
       expect(composed.contributions.filter((row) => row.origin.kind === 'craft').map((row) => row.by)).toEqual(['unserved']);
@@ -194,7 +244,7 @@ describe('makeLlmCraftJudge() through the craft contributor', () => {
     const { dispatcher, projected } = fakeDispatcher();
     const judgeMax = DEFAULT_LLM_CRAFT_SITE_LIMITS.judgeMax;
     const notes = Array.from({ length: judgeMax + 2 }, (_, at) => note(`judged-${String(at).padStart(2, '0')}`, { ask: ASK_BRIEF, body: 'B' }));
-    const composed = await composeWith(notes, { ...PAGE, judge: makeLlmCraftJudge({ sites: SITES, dispatcher }) });
+    const composed = await composeWith(notes, makeLlmCraftJudge({ sites: SITES, dispatcher }));
 
     expect(Object.keys(projected[0].questions)).toHaveLength(judgeMax);
     expect(composed.cut.filter((row) => row.cut === 'judge-cap').map((row) => row.key)).toEqual(['judged-08', 'judged-09']);
@@ -202,8 +252,8 @@ describe('makeLlmCraftJudge() through the craft contributor', () => {
 
   it('makes no call when no note is judged, or no judged note names an input the site carries', async () => {
     const { dispatcher, decided } = fakeDispatcher();
-    await composeWith([note('stable')], { ...PAGE, judge: makeLlmCraftJudge({ sites: SITES, dispatcher }) });
-    await composeWith([note('notes', { ask: ASK_NOTES })], { ...PAGE, judge: makeLlmCraftJudge({ sites: SITES, dispatcher }) });
+    await composeWith([note('stable')], makeLlmCraftJudge({ sites: SITES, dispatcher }));
+    await composeWith([note('notes', { ask: ASK_NOTES })], makeLlmCraftJudge({ sites: SITES, dispatcher }));
     expect(decided).toHaveLength(0);
   });
 });
