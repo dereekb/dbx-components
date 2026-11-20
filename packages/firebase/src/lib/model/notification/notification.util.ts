@@ -20,7 +20,8 @@ import {
   NotificationDeliveryMethod,
   NotificationDeliveryMethodDecisionSource,
   resolveNotificationDeliveryMethodDecisions,
-  effectiveNotificationBoxRecipientTemplateConfigWithoutDeliveryMethods
+  effectiveNotificationBoxRecipientTemplateConfigWithoutDeliveryMethods,
+  hasNotificationDeliveryMethodOptIn
 } from './notification.config';
 import { type AppNotificationTemplateTypeInfoRecordService, notificationTemplateTypeInfoForcedDeliveryMethods } from './notification.details';
 import { type FirebaseAuthDetails, type FirebaseAuthUserId, type FirestoreDocumentAccessor, type FirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey } from '../../common';
@@ -50,6 +51,39 @@ export enum NotificationUserTextOptOutType {
  */
 export function isNotificationUserTextPhoneNumberStopped(notificationUser: Maybe<Pick<NotificationUser, 'tso'>>, phoneNumber: Maybe<E164PhoneNumber>): boolean {
   return phoneNumber != null && (notificationUser?.tso?.includes(phoneNumber) ?? false);
+}
+
+/**
+ * Input for {@link notificationUserTextOptInConfirmationPhoneNumber}.
+ */
+export interface NotificationUserTextOptInConfirmationPhoneNumberInput {
+  /**
+   * The NotificationUser before the update.
+   */
+  readonly previous: Pick<NotificationUser, 'gc'>;
+  /**
+   * The NotificationUser after the update, including its stopped numbers (`tso`).
+   */
+  readonly next: Pick<NotificationUser, 'gc' | 'tso'>;
+}
+
+/**
+ * Returns the number to text an opt-in confirmation to after a NotificationUser update, if one is due.
+ *
+ * Due when the update opts the global config in to texts (the change that records `gc.tcat`), or changes the texting number (`gc.t`) of a
+ * user who is opted in. Never due without a texting number, or for a stopped number (`tso`), which Twilio refuses (21610) until it texts
+ * START. A START is not an update, and Twilio already confirms it.
+ *
+ * @param input - The NotificationUser before and after the update.
+ * @returns The number to confirm, or undefined if no confirmation is due.
+ */
+export function notificationUserTextOptInConfirmationPhoneNumber(input: NotificationUserTextOptInConfirmationPhoneNumberInput): Maybe<E164PhoneNumber> {
+  const { previous, next } = input;
+  const phoneNumber = next.gc.t;
+  const optedIn = hasNotificationDeliveryMethodOptIn(next.gc, NotificationDeliveryMethod.TEXT);
+  const newlyOptedIn = optedIn && !hasNotificationDeliveryMethodOptIn(previous.gc, NotificationDeliveryMethod.TEXT);
+  const isDue = phoneNumber != null && optedIn && (newlyOptedIn || phoneNumber !== previous.gc.t) && !isNotificationUserTextPhoneNumberStopped(next, phoneNumber);
+  return isDue ? phoneNumber : undefined;
 }
 
 /**

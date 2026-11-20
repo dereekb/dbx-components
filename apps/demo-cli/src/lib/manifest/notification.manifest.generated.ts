@@ -3,7 +3,7 @@
 
 import { type CliGeneratedManifestStamp, type CliNotificationManifest } from '@dereekb/dbx-cli';
 
-export const DEMO_CLI_NOTIFICATION_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.28.0' };
+export const DEMO_CLI_NOTIFICATION_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.29.0' };
 
 export const DEMO_CLI_NOTIFICATION_MANIFEST: CliNotificationManifest = {
   tasks: [

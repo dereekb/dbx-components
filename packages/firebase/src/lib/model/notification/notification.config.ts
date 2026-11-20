@@ -597,7 +597,8 @@ export interface NotificationUserDefaultNotificationBoxRecipientConfig extends O
   /**
    * When the user last opted in to text messages, having not been opted in before. Evidence of SMS consent only; it never gates sending.
    *
-   * See {@link hasNotificationDeliveryMethodOptIn}.
+   * See {@link hasNotificationDeliveryMethodOptIn}. The update that records it also sends the opt-in confirmation text, when the app
+   * configures one. See `notificationUserTextOptInConfirmationPhoneNumber()` and the `updateNotificationUser` action.
    *
    * Server-managed and only set on the global config (`gc`). Clients cannot set it.
    *

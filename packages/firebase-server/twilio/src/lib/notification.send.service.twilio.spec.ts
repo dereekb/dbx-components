@@ -3,7 +3,7 @@ import { type E164PhoneNumber } from '@dereekb/util';
 import { type NotificationMessage, type NotificationMessageContent, type NotificationSendTextMessagesResult } from '@dereekb/firebase';
 import { type NotificationTextSendServiceHealthCheckService } from '@dereekb/firebase-server/model';
 import { type TwilioMessageStatus, type TwilioSendSmsInput, type TwilioSendSmsResult, type TwilioService } from '@dereekb/nestjs/twilio';
-import { TWILIO_NOTIFICATION_BODY_MAX_LENGTH, type TwilioNotificationTextSendServiceConfig, type TwilioNotificationTextSendServiceTemplateBuilder, twilioNotificationTextSendService } from './notification.send.service.twilio';
+import { TWILIO_NOTIFICATION_BODY_MAX_LENGTH, type TwilioNotificationTextOptInConfirmationBuilder, type TwilioNotificationTextSendServiceConfig, type TwilioNotificationTextSendServiceTemplateBuilder, twilioNotificationTextSendService } from './notification.send.service.twilio';
 
 const PHONE_A = '+15555550100' as E164PhoneNumber;
 const PHONE_B = '+15555550101' as E164PhoneNumber;
@@ -16,33 +16,40 @@ interface FakeTwilioSendResultOverride {
 }
 
 /**
- * Fake TwilioService whose sendBulkSms records every batch and returns a result per input,
+ * Fake TwilioService whose sendBulkSms records every batch and sendSms records every input, each returning a result per input,
  * optionally overridden per recipient phone number.
  *
  * @param overrides - Result overrides keyed by recipient phone number.
- * @returns The fake service and the recorded batches.
+ * @returns The fake service, the recorded batches and the recorded single sends.
  */
 function makeFakeTwilioService(overrides: Partial<Record<E164PhoneNumber, FakeTwilioSendResultOverride>> = {}) {
   const batches: TwilioSendSmsInput[][] = [];
+  const singleSends: TwilioSendSmsInput[] = [];
+
+  function resultForInput(input: TwilioSendSmsInput): TwilioSendSmsResult {
+    const override = overrides[input.to];
+
+    return {
+      sid: 'SMxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+      to: input.to,
+      status: override?.status ?? 'queued',
+      sandboxed: override?.sandboxed ?? false,
+      error: override?.error
+    };
+  }
 
   const sendBulkSms = vi.fn(async (inputs: TwilioSendSmsInput[]): Promise<TwilioSendSmsResult[]> => {
     batches.push(inputs);
-
-    return inputs.map((input) => {
-      const override = overrides[input.to];
-
-      return {
-        sid: 'SMxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-        to: input.to,
-        status: override?.status ?? 'queued',
-        sandboxed: override?.sandboxed ?? false,
-        error: override?.error
-      };
-    });
+    return inputs.map(resultForInput);
   });
 
-  const twilioService = { sendBulkSms } as unknown as TwilioService;
-  return { twilioService, sendBulkSms, batches };
+  const sendSms = vi.fn(async (input: TwilioSendSmsInput): Promise<TwilioSendSmsResult> => {
+    singleSends.push(input);
+    return resultForInput(input);
+  });
+
+  const twilioService = { sendBulkSms, sendSms } as unknown as TwilioService;
+  return { twilioService, sendBulkSms, sendSms, batches, singleSends };
 }
 
 function makeMessage(phone: E164PhoneNumber | undefined, content: Partial<NotificationMessageContent> = {}, textContent?: Partial<NotificationMessageContent>): NotificationMessage {
@@ -223,5 +230,86 @@ describe('twilioNotificationTextSendService()', () => {
 
     expect(twilioNotificationTextSendService({ twilioService, healthCheckService }).healthCheckService).toBe(healthCheckService);
     expect(twilioNotificationTextSendService({ twilioService }).healthCheckService).toBeUndefined();
+  });
+
+  describe('sendTextOptInConfirmation', () => {
+    const UID = 'uid';
+    const CONFIRMATION_BODY = 'Acme: you are now subscribed to notification texts. Msg frequency varies. Msg & data rates may apply. Reply HELP for help, STOP to opt out.';
+    const optInConfirmationBuilder: TwilioNotificationTextOptInConfirmationBuilder = ({ to }) => ({ to, body: CONFIRMATION_BODY });
+
+    it('should be undefined without an optInConfirmationBuilder', () => {
+      const { twilioService } = makeFakeTwilioService();
+      expect(twilioNotificationTextSendService({ twilioService }).sendTextOptInConfirmation).toBeUndefined();
+    });
+
+    it('should call the builder and always send to the requested number', async () => {
+      const { twilioService, singleSends } = makeFakeTwilioService();
+      const builder = vi.fn<TwilioNotificationTextOptInConfirmationBuilder>(() => ({ to: PHONE_B, body: CONFIRMATION_BODY }));
+      const service = twilioNotificationTextSendService({ twilioService, optInConfirmationBuilder: builder });
+
+      const result = await service.sendTextOptInConfirmation?.({ uid: UID, to: PHONE_A });
+
+      expect(builder).toHaveBeenCalledWith({ twilioService, to: PHONE_A, uid: UID });
+      expect(singleSends).toHaveLength(1);
+      expect(singleSends[0].to).toBe(PHONE_A);
+      expect(singleSends[0].body).toBe(CONFIRMATION_BODY);
+      expect(result).toEqual({ success: [PHONE_A], failed: [], ignored: [] });
+    });
+
+    it('should fill unset builder fields with the configured defaults', async () => {
+      const { twilioService, singleSends } = makeFakeTwilioService();
+      const service = twilioNotificationTextSendService({ twilioService, defaultFrom: PHONE_C, messagingServiceSid: 'MGxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', statusCallbackUrl: 'https://example.com/webhook/twilio/status', optInConfirmationBuilder });
+
+      await service.sendTextOptInConfirmation?.({ uid: UID, to: PHONE_A });
+
+      expect(singleSends[0].from).toBe(PHONE_C);
+      expect(singleSends[0].messagingServiceSid).toBe('MGxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx');
+      expect(singleSends[0].statusCallback).toBe('https://example.com/webhook/twilio/status');
+    });
+
+    it('should prefer the fields the builder sets over the configured defaults', async () => {
+      const { twilioService, singleSends } = makeFakeTwilioService();
+      const service = twilioNotificationTextSendService({
+        twilioService,
+        defaultFrom: PHONE_C,
+        messagingServiceSid: 'MGxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+        statusCallbackUrl: 'https://example.com/webhook/twilio/status',
+        optInConfirmationBuilder: ({ to }) => ({ to, body: CONFIRMATION_BODY, from: PHONE_B, messagingServiceSid: 'MGyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy', statusCallback: 'https://example.com/other' })
+      });
+
+      await service.sendTextOptInConfirmation?.({ uid: UID, to: PHONE_A });
+
+      expect(singleSends[0].from).toBe(PHONE_B);
+      expect(singleSends[0].messagingServiceSid).toBe('MGyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy');
+      expect(singleSends[0].statusCallback).toBe('https://example.com/other');
+    });
+
+    it('should report a sandboxed send as ignored', async () => {
+      const { twilioService } = makeFakeTwilioService({ [PHONE_A]: { sandboxed: true } });
+      const service = twilioNotificationTextSendService({ twilioService, optInConfirmationBuilder });
+
+      expect(await service.sendTextOptInConfirmation?.({ uid: UID, to: PHONE_A })).toEqual({ success: [], failed: [], ignored: [PHONE_A] });
+    });
+
+    it('should report an errored or failed send as failed', async () => {
+      const { twilioService } = makeFakeTwilioService({ [PHONE_A]: { status: 'failed', error: 'Attempt to send to unsubscribed recipient' }, [PHONE_B]: { status: 'failed' } });
+      const service = twilioNotificationTextSendService({ twilioService, optInConfirmationBuilder });
+
+      expect(await service.sendTextOptInConfirmation?.({ uid: UID, to: PHONE_A })).toEqual({ success: [], failed: [PHONE_A], ignored: [] });
+      expect(await service.sendTextOptInConfirmation?.({ uid: UID, to: PHONE_B })).toEqual({ success: [], failed: [PHONE_B], ignored: [] });
+    });
+
+    it('should reject when the builder throws', async () => {
+      const { twilioService, sendSms } = makeFakeTwilioService();
+      const service = twilioNotificationTextSendService({
+        twilioService,
+        optInConfirmationBuilder: () => {
+          throw new Error('builder failed');
+        }
+      });
+
+      await expect(service.sendTextOptInConfirmation?.({ uid: UID, to: PHONE_A })).rejects.toThrow('builder failed');
+      expect(sendSms).not.toHaveBeenCalled();
+    });
   });
 });
