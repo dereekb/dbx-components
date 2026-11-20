@@ -4,15 +4,13 @@
  * timeout / transport envelopes a failed send is recorded as.
  */
 
-import { filterMaybeValues, type Maybe, type NumberPrecision, roundToPrecision, type HexString } from '@dereekb/util';
+import { filterMaybeValues, type JsonRepairShape, type Maybe, type NumberPrecision, roundToPrecision, type HexString } from '@dereekb/util';
 import { type FetchErrorClassification } from '@dereekb/util/fetch';
 import { type LlmStrategyId, type LlmTokenCount } from '../model/llm.value';
 import { type LlmCallContext, type LlmCallProfile } from '../record/llm.call.context';
 import { type LlmCallAttemptPhase, type LlmCallAttemptRetry, type LlmCallFailedAttempt, type LlmCallPhases } from '../record/llm.call.record';
 import { llmCallTelemetry } from '../record/llm.call.telemetry';
 import { clipLlmFailedAttemptReply, LLM_TIMEOUT_FINISH_REASON, LLM_TRANSPORT_FINISH_REASON, LLM_UNRETRYABLE_FINISH_REASON, type LlmDecodeFailureAttempt, type LlmDecodeFailureClass, llmDecodeFailureExcerpt, llmDecodeFailureTailExcerpt, type LlmRetryCause } from '../record/llm.decode.failure';
-import { type LlmReplyEnvelopeKeys } from '../reply/llm.reply.envelope';
-import { scoreLlmReplyJson } from '../reply/llm.reply.repair';
 import { type LlmDispatchResult, type LlmReplyRepairSummary, type LlmRequest } from '../strategy/llm.strategy';
 import { type LlmRetryLever } from './llm.retry.lever';
 
@@ -105,6 +103,21 @@ export interface LlmDispatchTerminalFault {
 export const LLM_REPLY_REPAIR_SCORE_PRECISION: NumberPrecision = 3;
 
 /**
+ * The bounded scorer reading a `parse-error` decode row carries as `shape`.
+ */
+export type LlmDecodeRowShape = NonNullable<LlmDecodeFailureAttempt['shape']>;
+
+/**
+ * Round the scorer's reading once — the decode row, the repair summaries and the repair diags all carry this.
+ *
+ * @param shape - The scorer's reading (`repairLlmReplyJson(...).shape` / `scoreLlmReplyJson`).
+ * @returns Its verdict and its score rounded to {@link LLM_REPLY_REPAIR_SCORE_PRECISION}.
+ */
+export function toLlmDecodeRowShape(shape: Pick<JsonRepairShape, 'verdict' | 'score'>): LlmDecodeRowShape {
+  return { verdict: shape.verdict, score: roundToPrecision(shape.score, LLM_REPLY_REPAIR_SCORE_PRECISION) };
+}
+
+/**
  * The inputs of {@link toLlmDecodeFailureAttempt}.
  */
 export interface LlmDecodeFailureAttemptConfig {
@@ -125,10 +138,10 @@ export interface LlmDecodeFailureAttemptConfig {
    */
   readonly maxOutputTokens?: Maybe<LlmTokenCount>;
   /**
-   * The reply's reading envelope (`resolveLlmReplyReadingEnvelope`) — a `parse-error` row's `shape` is scored with the
-   * fidelity coverage over its value key's object. `undefined` ⇒ the whole reply is the payload.
+   * The repair lane's reading of THIS row's reply ({@link toLlmDecodeRowShape}) — written on a `parse-error` row only;
+   * ignored on every other class.
    */
-  readonly envelope: Maybe<LlmReplyEnvelopeKeys>;
+  readonly shape?: Maybe<LlmDecodeRowShape>;
   /**
    * The validator's error, on a `schema-validation` row.
    */
@@ -148,15 +161,15 @@ export interface LlmDecodeFailureAttemptConfig {
 }
 
 /**
- * Build one decode-failure row. A `parse-error` row carries the scorer's `shape`; a `parse-error` /
+ * Build one decode-failure row. A `parse-error` row carries the lane's `shape`; a `parse-error` /
  * `length-truncation` row carries the reply's tail.
  *
- * @param config - The attempt, its class, its envelope and what it was sent with / bought.
+ * @param config - The attempt, its class, its reading and what it was sent with / bought.
  * @returns The decode row.
  */
 export function toLlmDecodeFailureAttempt(config: LlmDecodeFailureAttemptConfig): LlmDecodeFailureAttempt {
-  const { attempt, failureClass, result, maxOutputTokens, envelope, validatorError, lever, transportError, errorClassification } = config;
-  const shape = failureClass === 'parse-error' ? scoreLlmReplyJson(result.text, { envelope }) : undefined;
+  const { attempt, failureClass, result, maxOutputTokens, validatorError, lever, transportError, errorClassification } = config;
+  const shape = failureClass === 'parse-error' ? config.shape : undefined;
   const tailExcerpt = failureClass === 'parse-error' || failureClass === 'length-truncation' ? llmDecodeFailureTailExcerpt(result.text) : undefined;
 
   return filterMaybeValues({
@@ -165,7 +178,7 @@ export function toLlmDecodeFailureAttempt(config: LlmDecodeFailureAttemptConfig)
     excerpt: llmDecodeFailureExcerpt(result.text),
     tailExcerpt,
     rawLength: result.text.length,
-    shape: shape == null ? undefined : { verdict: shape.verdict, score: roundToPrecision(shape.score, LLM_REPLY_REPAIR_SCORE_PRECISION) },
+    shape: shape ?? undefined,
     finishReason: result.finishReason,
     completionTokens: result.usage?.completionTokens,
     latencyMs: result.latencyMs,
@@ -194,10 +207,6 @@ export interface LlmRepairedDecodeAttemptConfig {
    */
   readonly summary: LlmReplyRepairSummary;
   /**
-   * The served reply's reading envelope — scopes the row's `shape` like {@link LlmDecodeFailureAttemptConfig.envelope}.
-   */
-  readonly envelope: Maybe<LlmReplyEnvelopeKeys>;
-  /**
    * The completion budget the attempt was sent with, when it carried one.
    */
   readonly maxOutputTokens?: Maybe<LlmTokenCount>;
@@ -209,14 +218,15 @@ export interface LlmRepairedDecodeAttemptConfig {
 
 /**
  * The decode row of an attempt the reply-repair lane REPAIRED — class `parse-error` (the model's slip stays countable),
- * built from the SERVED reply, stamped `repaired` (+ `repairOps`).
+ * built from the SERVED reply, stamped `repaired` (+ `repairOps`). Its `shape` is the summary's — the lane's rounded
+ * reading of the served reply.
  *
  * @param config - The attempt, the served reply and the repair summary.
  * @returns The decode row.
  */
 export function toLlmRepairedDecodeAttempt(config: LlmRepairedDecodeAttemptConfig): LlmDecodeFailureAttempt {
-  const { attempt, served, summary, maxOutputTokens, envelope, lever } = config;
-  return { ...toLlmDecodeFailureAttempt({ attempt, failureClass: 'parse-error', result: served, maxOutputTokens, envelope, lever }), repaired: summary.tier, ...(summary.ops == null ? {} : { repairOps: summary.ops }) };
+  const { attempt, served, summary, maxOutputTokens, lever } = config;
+  return { ...toLlmDecodeFailureAttempt({ attempt, failureClass: 'parse-error', result: served, maxOutputTokens, shape: { verdict: summary.verdict, score: summary.score }, lever }), repaired: summary.tier, ...(summary.ops == null ? {} : { repairOps: summary.ops }) };
 }
 
 /**

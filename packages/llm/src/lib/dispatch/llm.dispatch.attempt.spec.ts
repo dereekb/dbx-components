@@ -4,7 +4,9 @@ import { LLM_TIMEOUT_FINISH_REASON, LLM_TRANSPORT_FINISH_REASON, LLM_UNRETRYABLE
 import { type LlmCompletion, type LlmDispatchResult, type LlmRequest, type LlmStrategy } from '../strategy/llm.strategy';
 import { DEFAULT_LLM_REPLY_FAST_FIX_LIMITS, type LlmReplyFastFixOutcome } from '../reply/llm.reply.fast.fix';
 import { DEFAULT_LLM_REPLY_ENVELOPE_KEYS } from '../reply/llm.reply.envelope';
+import { scoreLlmReplyJson } from '../reply/llm.reply.repair';
 import { isDegenerateLlmReplyReading, type LlmBoundReplyFastFix, makeLlmBoundReplyFastFix, readLlmDispatchReply, type LlmReplyRepairRefusal, runLlmReplyRepairLane, sendLlmDispatchAttempt, validateLlmDispatchValue } from './llm.dispatch.attempt';
+import { toLlmDecodeRowShape } from './llm.dispatch.outcome';
 
 class APIUserAbortError extends Error {}
 
@@ -132,6 +134,16 @@ describe('runLlmReplyRepairLane()', () => {
     expect(refusalOf((await laneOf(mangled, 'stop', 'mangled')).attemptContext)).toBe('mangled');
     expect(refusalOf((await laneOf(mangled, 'stop', 'fast-fix-off')).attemptContext)).toBe('fast-fix-off');
   });
+
+  it('should return the rounded reading on a refused pass, the same bytes its refusal diag carries', async () => {
+    const mangled = '{"a":"a long enough value here","b":None}';
+    const { lane, attemptContext } = await laneOf(mangled);
+    const shape = toLlmDecodeRowShape(scoreLlmReplyJson(mangled));
+
+    expect(lane.repaired).toBeUndefined();
+    expect(lane.shape).toEqual(shape);
+    expect(attemptContext.profile().diags?.[0]?.fields).toMatchObject({ verdict: shape.verdict, score: shape.score, reason: 'mangled' });
+  });
 });
 
 describe('runLlmReplyRepairLane() fast-fix tier', () => {
@@ -182,12 +194,12 @@ describe('runLlmReplyRepairLane() fast-fix tier', () => {
   it('should report a miss with a warn diag, and a thrown fixer as a swallowed error miss', async () => {
     const missed = await fastLaneOf({ fastFix: () => Promise.resolve({ kind: 'missed', reason: 'fidelity' }) });
 
-    expect(missed.lane).toEqual({ fastFixCalled: true, fastFixMiss: 'fidelity' });
+    expect(missed.lane).toEqual({ fastFixCalled: true, fastFixMiss: 'fidelity', shape: toLlmDecodeRowShape(scoreLlmReplyJson(MANGLED)) });
     expect(missed.attemptContext.profile().diags?.[0]).toMatchObject({ level: 'warn', code: 'reply-fast-fix-miss', fields: { reason: 'fidelity' } });
 
     const thrown = await fastLaneOf({ fastFix: () => Promise.reject(new Error('boom')) });
 
-    expect(thrown.lane).toEqual({ fastFixCalled: true, fastFixMiss: 'error' });
+    expect(thrown.lane).toEqual({ fastFixCalled: true, fastFixMiss: 'error', shape: toLlmDecodeRowShape(scoreLlmReplyJson(MANGLED)) });
     expect(thrown.swallows).toEqual(['llm/reply-repair.fast-fix']);
   });
 });

@@ -12,7 +12,7 @@
  * and size stay visible.
  */
 
-import { cutString, hashStringToNumber, isNotBlankString, type Milliseconds, type HexString, type PercentDecimal, type Count } from '@dereekb/util';
+import { cutString, hashStringToNumber, isNotBlankString, sliceStringFunction, type Milliseconds, type HexString, type PercentDecimal, type Count } from '@dereekb/util';
 import type { FetchErrorClassification } from '@dereekb/util/fetch';
 import type { LlmCapabilityKey, LlmModelId, LlmModelTierKey, LlmTokenCount } from '../model/llm.value';
 import type { LlmCompletion, LlmReplyOutcomeClass, LlmReplyRepairTier } from '../strategy/llm.strategy';
@@ -302,6 +302,17 @@ export function clipLlmFailedAttemptReply(raw: string): LlmFailedAttemptReplyCli
 }
 
 /**
+ * Keep the last {@link LLM_DECODE_FAILURE_TAIL_EXCERPT_MAX_LENGTH} chars of a collapsed reply.
+ */
+const sliceLlmDecodeFailureTail = sliceStringFunction({ fromEnd: LLM_DECODE_FAILURE_TAIL_EXCERPT_MAX_LENGTH });
+
+/**
+ * Keep the last {@link LLM_DECODE_FAILURE_EXCERPT_MAX_LENGTH} chars of a collapsed prompt suffix — the whole suffix when
+ * it is shorter.
+ */
+const sliceLlmDecodeContextTail = sliceStringFunction({ fromEnd: LLM_DECODE_FAILURE_EXCERPT_MAX_LENGTH });
+
+/**
  * Build a degeneration-safe TAIL excerpt of a raw reply — {@link collapseDegenerateRuns} then the LAST
  * {@link LLM_DECODE_FAILURE_TAIL_EXCERPT_MAX_LENGTH} chars. `undefined` when the head {@link llmDecodeFailureExcerpt}
  * already covers the whole (collapsed) reply. JSON slips concentrate at the END of a reply, which is why the tail is
@@ -312,7 +323,7 @@ export function clipLlmFailedAttemptReply(raw: string): LlmFailedAttemptReplyCli
  */
 export function llmDecodeFailureTailExcerpt(text: string): string | undefined {
   const collapsed = collapseDegenerateRuns(text);
-  return collapsed.length <= LLM_DECODE_FAILURE_EXCERPT_MAX_LENGTH ? undefined : collapsed.slice(collapsed.length - LLM_DECODE_FAILURE_TAIL_EXCERPT_MAX_LENGTH);
+  return collapsed.length <= LLM_DECODE_FAILURE_EXCERPT_MAX_LENGTH ? undefined : sliceLlmDecodeFailureTail(collapsed);
 }
 
 /**
@@ -324,8 +335,7 @@ export function llmDecodeFailureTailExcerpt(text: string): string | undefined {
  * @returns The bounded tail excerpt.
  */
 export function llmDecodeContextExcerpt(suffix: string): string {
-  const collapsed = collapseDegenerateRuns(suffix);
-  return collapsed.length <= LLM_DECODE_FAILURE_EXCERPT_MAX_LENGTH ? collapsed : collapsed.slice(collapsed.length - LLM_DECODE_FAILURE_EXCERPT_MAX_LENGTH);
+  return sliceLlmDecodeContextTail(collapseDegenerateRuns(suffix));
 }
 
 /**

@@ -3,7 +3,7 @@
  * the reply-repair lane on a degenerate JSON reading) and validate (the request's value validator).
  */
 
-import { type JsonRepairShape, type Maybe, roundToPrecision } from '@dereekb/util';
+import { type JsonRepairShape, type Maybe } from '@dereekb/util';
 import { LLM_REPLY_REPAIR_FAST_FIX_SWALLOW_SITE } from '../capability/llm.capability.repair.reply.json';
 import { type LlmCallContext } from '../record/llm.call.context';
 import { isLlmCleanStopFinish } from '../record/llm.decode.failure';
@@ -17,7 +17,7 @@ import { type FetchErrorClassification, type IsRetryableUnknownErrorFunction } f
 import { classifyLlmError, isLlmAbortError, isRetryableLlmErrorClassification, formatLlmErrorSummary } from '../strategy/llm.error';
 import { type LlmDispatchResult, type LlmReplyRepairSummary, type LlmRequest, type LlmStrategy } from '../strategy/llm.strategy';
 import { type LlmDispatchPauseSignal, parkLlmDispatchWhilePaused } from './llm.dispatch.control';
-import { LLM_REPLY_REPAIR_SCORE_PRECISION, makeLlmTimeoutResult, makeLlmTransportResult, makeLlmUnretryableResult } from './llm.dispatch.outcome';
+import { type LlmDecodeRowShape, makeLlmTimeoutResult, makeLlmTransportResult, makeLlmUnretryableResult, toLlmDecodeRowShape } from './llm.dispatch.outcome';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
 
 /**
@@ -345,7 +345,17 @@ export interface LlmReplyRepairLaneResult {
    * Why the fast fix missed, when it was called and missed.
    */
   readonly fastFixMiss?: LlmReplyFastFixMissReason;
+  /**
+   * The scorer's rounded reading of the served reply ({@link toLlmDecodeRowShape}) — set on every pass. The repair
+   * summary, the lane's diags and a `parse-error` decode row all carry these bytes.
+   */
+  readonly shape: LlmDecodeRowShape;
 }
+
+/**
+ * A lane pass before its {@link LlmReplyRepairLaneResult.shape} is stamped.
+ */
+type LlmReplyRepairLanePass = Omit<LlmReplyRepairLaneResult, 'shape'>;
 
 /**
  * Substitute a repaired reply into the served envelope — `text` becomes the repaired JSON, and the model's own bytes
@@ -365,14 +375,15 @@ export function withRepairedLlmReply(served: LlmDispatchResult, summary: LlmRepl
  * `llm/reply-repair.fast-fix` and reads as a `error` miss.
  *
  * @param config - The lane config (with a bound {@link RunLlmReplyRepairLaneConfig.fastFix}).
- * @param shape - The scorer's read of the served reply.
+ * @param shape - The scorer's read of the served reply — handed to the fixer raw.
+ * @param stamp - The same reading rounded ({@link toLlmDecodeRowShape}) — what the summary and the diag carry.
  * @returns The lane outcome.
  */
-async function runLlmReplyFastFixTier(config: RunLlmReplyRepairLaneConfig & { readonly fastFix: LlmBoundReplyFastFix }, shape: JsonRepairShape): Promise<LlmReplyRepairLaneResult> {
+async function runLlmReplyFastFixTier(config: RunLlmReplyRepairLaneConfig & { readonly fastFix: LlmBoundReplyFastFix }, shape: JsonRepairShape, stamp: LlmDecodeRowShape): Promise<LlmReplyRepairLanePass> {
   const { served, attempt, attemptContext, read, fastFix } = config;
   const capability = served.capability;
   let fixed: LlmReplyFastFixOutcome;
-  let outcome: LlmReplyRepairLaneResult;
+  let outcome: LlmReplyRepairLanePass;
 
   try {
     fixed = await attemptContext.timeAsync('fast-fix', () => fastFix({ text: served.text, shape, attempt, callContext: attemptContext }));
@@ -382,10 +393,9 @@ async function runLlmReplyFastFixTier(config: RunLlmReplyRepairLaneConfig & { re
   }
 
   if (fixed.kind === 'fixed') {
-    const score = roundToPrecision(shape.score, LLM_REPLY_REPAIR_SCORE_PRECISION);
-    const summary: LlmReplyRepairSummary = { tier: 'fast-fix', attempt, verdict: shape.verdict, score, ...(fixed.meta == null ? {} : { meta: fixed.meta }) };
+    const summary: LlmReplyRepairSummary = { tier: 'fast-fix', attempt, verdict: stamp.verdict, score: stamp.score, ...(fixed.meta == null ? {} : { meta: fixed.meta }) };
     const result = withRepairedLlmReply(served, summary, fixed.text);
-    attemptContext.diag({ level: 'info', code: 'reply-repaired', fields: { capability, attempt, tier: 'fast-fix', verdict: shape.verdict, score }, message: 'mangled JSON reply repaired by one fast-fix call before any re-ask' });
+    attemptContext.diag({ level: 'info', code: 'reply-repaired', fields: { capability, attempt, tier: 'fast-fix', verdict: stamp.verdict, score: stamp.score }, message: 'mangled JSON reply repaired by one fast-fix call before any re-ask' });
     outcome = { repaired: { result, reading: read(result.text), summary }, fastFixCalled: true };
   } else {
     attemptContext.diag({ level: 'warn', code: 'reply-fast-fix-miss', fields: { capability, attempt, reason: fixed.reason }, message: 'the fast fix produced no usable value; falling through to the re-ask / drop' });
@@ -407,30 +417,31 @@ async function runLlmReplyFastFixTier(config: RunLlmReplyRepairLaneConfig & { re
  *    `maxChars`, `low-score` under `minScore`; else ONE fixer call — a fix substitutes the reply (`reply-repaired`), a
  *    miss files `reply-fast-fix-miss` and falls through.
  *
- * A refusal files one `reply-repair-refused` diag.
+ * A refusal files one `reply-repair-refused` diag. The served reply is scored ONCE and rounded ONCE
+ * ({@link toLlmDecodeRowShape}); every summary and diag carries that rounding, and the pass returns it as `shape`.
  *
  * @param config - The served reply, its attempt, its context, the re-read, the refusal and the fast-fix binding.
- * @returns The repair (when one landed) and the fast-fix accounting.
+ * @returns The repair (when one landed), the fast-fix accounting and the rounded reading.
  */
 export async function runLlmReplyRepairLane(config: RunLlmReplyRepairLaneConfig): Promise<LlmReplyRepairLaneResult> {
   const { served, attempt, attemptContext, read, envelope, unrepairedRefusal, fastFix, fastFixSpent, fastFixLimits } = config;
   const { shape, repaired } = repairLlmReplyJson(served.text, { envelope });
+  const stamp = toLlmDecodeRowShape(shape);
   const capability = served.capability;
-  const score = roundToPrecision(shape.score, LLM_REPLY_REPAIR_SCORE_PRECISION);
   let refusal: Maybe<LlmReplyRepairRefusal>;
-  let outcome: LlmReplyRepairLaneResult = { fastFixCalled: false };
+  let outcome: LlmReplyRepairLanePass = { fastFixCalled: false };
 
   if (!shape.objectLed) {
     // prose-led: never touched, files nothing
   } else if (!isLlmCleanStopFinish(served)) {
     refusal = 'unclean-finish';
   } else if (repaired != null) {
-    const summary: LlmReplyRepairSummary = { tier: 'deterministic', attempt, verdict: shape.verdict, score, ops: repaired.ops };
+    const summary: LlmReplyRepairSummary = { tier: 'deterministic', attempt, verdict: stamp.verdict, score: stamp.score, ops: repaired.ops };
     const result = withRepairedLlmReply(served, summary, repaired.text);
     const ops = Object.entries(repaired.ops)
       .map(([kind, count]) => `${kind}:${count}`)
       .join(',');
-    attemptContext.diag({ level: 'info', code: 'reply-repaired', fields: { capability, attempt, tier: 'deterministic', verdict: shape.verdict, score, ops }, message: 'malformed JSON reply repaired deterministically before any re-ask' });
+    attemptContext.diag({ level: 'info', code: 'reply-repaired', fields: { capability, attempt, tier: 'deterministic', verdict: stamp.verdict, score: stamp.score, ops }, message: 'malformed JSON reply repaired deterministically before any re-ask' });
     outcome = { repaired: { result, reading: read(result.text), summary }, fastFixCalled: false };
   } else if (shape.verdict === 'truncated-looking') {
     refusal = 'truncated-looking';
@@ -445,14 +456,14 @@ export async function runLlmReplyRepairLane(config: RunLlmReplyRepairLaneConfig)
   } else if (shape.score < fastFixLimits.minScore) {
     refusal = 'low-score';
   } else {
-    outcome = await runLlmReplyFastFixTier({ ...config, fastFix }, shape);
+    outcome = await runLlmReplyFastFixTier({ ...config, fastFix }, shape, stamp);
   }
 
   if (refusal != null) {
-    attemptContext.diag({ level: 'info', code: 'reply-repair-refused', fields: { capability, attempt, verdict: shape.verdict, score, reason: refusal }, message: 'malformed JSON reply left for the ordinary re-ask / drop' });
+    attemptContext.diag({ level: 'info', code: 'reply-repair-refused', fields: { capability, attempt, verdict: stamp.verdict, score: stamp.score, reason: refusal }, message: 'malformed JSON reply left for the ordinary re-ask / drop' });
   }
 
-  return outcome;
+  return { ...outcome, shape: stamp };
 }
 
 /**
