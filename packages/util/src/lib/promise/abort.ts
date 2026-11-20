@@ -159,6 +159,16 @@ function mergeAbortSignalsWithController(signals: readonly AbortSignal[]): Abort
 }
 
 /**
+ * A cancellation seam an options bag carries.
+ */
+export interface AbortSignalRef {
+  /**
+   * An external cancellation signal.
+   */
+  readonly signal?: AbortSignal;
+}
+
+/**
  * Configuration for {@link makeTimeoutAbortSignal}.
  */
 export interface MakeTimeoutAbortSignalConfig {

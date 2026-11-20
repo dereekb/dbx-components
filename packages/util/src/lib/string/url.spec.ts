@@ -22,7 +22,8 @@ import {
   hasUriScheme,
   readUriScheme,
   isCustomSchemeUri,
-  websiteUrlRelativePathFunctions
+  websiteUrlRelativePathFunctions,
+  isWebsiteUrlOnDomain
 } from './url';
 
 const domain = 'dereekb.com';
@@ -863,5 +864,39 @@ describe('websiteUrlRelativePathFunctions()', () => {
     it('should return undefined for a url on a different domain', () => {
       expect(linkedIn.toRelativePath('https://twitter.com/dereekb')).toBeUndefined();
     });
+  });
+});
+
+describe('isWebsiteUrlOnDomain()', () => {
+  it('should be true for the exact host', () => {
+    expect(isWebsiteUrlOnDomain('https://zenmux.ai/api/v1', 'zenmux.ai')).toBe(true);
+  });
+
+  it('should be true for a subdomain', () => {
+    expect(isWebsiteUrlOnDomain('https://eu.zenmux.ai/api/v1', 'zenmux.ai')).toBe(true);
+  });
+
+  it('should be false for a look-alike host that only contains the domain', () => {
+    expect(isWebsiteUrlOnDomain('https://zenmux.ai.example.com/api', 'zenmux.ai')).toBe(false);
+  });
+
+  it('should be false for a host that only ends with the domain text', () => {
+    expect(isWebsiteUrlOnDomain('https://notzenmux.ai/api', 'zenmux.ai')).toBe(false);
+  });
+
+  it('should ignore the port and path', () => {
+    expect(isWebsiteUrlOnDomain('https://zenmux.ai:8443/x', 'zenmux.ai')).toBe(true);
+  });
+
+  it('should be case-insensitive', () => {
+    expect(isWebsiteUrlOnDomain('https://EU.ZENMUX.AI/api', 'zenmux.ai')).toBe(true);
+    expect(isWebsiteUrlOnDomain('https://eu.zenmux.ai/api', 'ZenMux.AI')).toBe(true);
+  });
+
+  it('should be false for a schemeless, malformed, blank or missing value', () => {
+    expect(isWebsiteUrlOnDomain('zenmux.ai/api', 'zenmux.ai')).toBe(false);
+    expect(isWebsiteUrlOnDomain('not a url', 'zenmux.ai')).toBe(false);
+    expect(isWebsiteUrlOnDomain('', 'zenmux.ai')).toBe(false);
+    expect(isWebsiteUrlOnDomain(undefined, 'zenmux.ai')).toBe(false);
   });
 });

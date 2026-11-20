@@ -6,7 +6,7 @@ import { isolateSlashPathFunction, isValidSlashPath, mergeSlashPaths, SLASH_PATH
 import { chainMapSameFunctions, type MapFunction } from '../value/map';
 import { type Maybe } from '../value/maybe.type';
 import { escapeStringForRegex, findAllCharacterOccurences, splitStringAtFirstCharacterOccurence } from './replace';
-import { splitJoinRemainder } from './string';
+import { isNotBlankString, splitJoinRemainder } from './string';
 import { type TransformStringFunction } from './transform';
 import { replaceCharacterAtIndexWith, replaceLastCharacterIfIsFunction } from './char';
 
@@ -308,6 +308,39 @@ export function websiteUrlDetails(input: string): WebsiteUrlDetails {
   };
 
   return result;
+}
+
+/**
+ * Whether a URL's hostname is the given domain or one of its subdomains.
+ *
+ * Parsed with `new URL` rather than substring-matched, so a look-alike host (`zenmux.ai.example.com`, `notzenmux.ai`) does
+ * not qualify while a subdomain (`eu.zenmux.ai`) does. Port and path are ignored and the comparison is case-insensitive.
+ * A blank, schemeless or malformed value is simply false, never a throw.
+ *
+ * @param url - The URL to check, including its scheme.
+ * @param domain - The domain, such as `zenmux.ai`.
+ * @returns True when the URL's hostname is the domain or a subdomain of it.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilKind function
+ * @dbxUtilTags url, domain, host, hostname, subdomain, check, website
+ */
+export function isWebsiteUrlOnDomain(url: Maybe<string>, domain: WebsiteDomain): boolean {
+  let onDomain = false;
+
+  if (isNotBlankString(url)) {
+    const lowerDomain = domain.toLowerCase();
+
+    try {
+      const { hostname } = new URL(url);
+      onDomain = hostname === lowerDomain || hostname.endsWith(`.${lowerDomain}`);
+    } catch {
+      onDomain = false; // an unparseable URL is not on any domain
+    }
+  }
+
+  return onDomain;
 }
 
 /**
