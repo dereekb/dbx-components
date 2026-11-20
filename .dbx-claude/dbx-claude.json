@@ -15,6 +15,7 @@
   "builds": {
     "recovery": { "enabled": true, "target": "workspace:build-all" }
   },
+  "migrationNotes": {},
   "references": {
     "packages": { "workspace": ["packages/*"] },
     "project": [

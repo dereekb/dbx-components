@@ -9,6 +9,7 @@ import { type NotificationSummary, type Notification, type NotificationBox, type
 import { toISODateString, toISO8601DayStringForUTC } from '@dereekb/date';
 import { type NotificationBoxSendExclusion } from './notification.id';
 import { type NotificationTaskBot } from './notification.taskbot';
+import { type NotificationRedirectEntry } from './notification.redirect';
 import { addDays } from 'date-fns';
 import { type ArrayOrValue, type E164PhoneNumber } from '@dereekb/util';
 
@@ -246,4 +247,22 @@ export function notificationTaskBotsDueForRepairQuery(before: Date): FirestoreQu
  */
 export function notificationTaskBotsStalledQuery(stalledBefore: Date = new Date()): FirestoreQueryConstraint[] {
   return [where<NotificationTaskBot>('stl', '<=', toISODateString(stalledBefore))];
+}
+
+// MARK: NotificationRedirectEntry
+/**
+ * Query constraints for finding {@link NotificationRedirectEntry} documents that expired at or before the given time.
+ *
+ * Used by `cleanupSentNotifications` to delete expired short link entries. Firestore's automatic single-field index covers it.
+ *
+ * @param now - Entries with an `xat` at or before this time are returned. Defaults to now.
+ * @returns Array of Firestore query constraints filtering for expired entries.
+ *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel NotificationRedirectEntry
+ * @dbxModelFirebaseIndexScope COLLECTION
+ * @dbxModelFirebaseIndexCategory cleanup
+ */
+export function notificationRedirectEntriesExpiredQuery(now: Date = new Date()): FirestoreQueryConstraint[] {
+  return [where<NotificationRedirectEntry>('xat', '<=', toISODateString(now))];
 }

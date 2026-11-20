@@ -1,5 +1,6 @@
 import {
   CALENDAR_EVENT_INVITE_NOTIFICATION_TEMPLATE_TYPE,
+  DEMO_NOTIFICATION_SHORT_LINK_PATH,
   type CalendarEventInviteNotificationData,
   EXAMPLE_NOTIFICATION_TEMPLATE_ON_SEND_ATTEMPTED_RESULT,
   EXAMPLE_NOTIFICATION_TEMPLATE_ON_SEND_SUCCESS_RESULT,
@@ -7,7 +8,8 @@ import {
   type ExampleNotificationData,
   GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE,
   GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE,
-  TEST_NOTIFICATIONS_TEMPLATE_TYPE
+  TEST_NOTIFICATIONS_TEMPLATE_TYPE,
+  profileIdentity
 } from 'demo-firebase'; // TODO: rename to demo-firebase
 import {
   type NotificationMessageFunctionFactoryConfig,
@@ -20,13 +22,14 @@ import {
   calendarEventItemForId,
   calendarEventItemToInviteIcsString,
   firestoreModelId,
+  firestoreModelKey,
   firestoreModelKeyParentKey,
   NotificationMessageFlag,
   notificationMessageFunction
 } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { type DemoFirebaseServerActionsContext } from '../../firebase/action.context';
-import { type NotificationTemplateServiceTypeConfig } from '@dereekb/firebase-server/model';
+import { type NotificationShortLinkFactory, type NotificationTemplateServiceTypeConfig, notificationShortLinkFactory } from '@dereekb/firebase-server/model';
 import { OPENROUTER_TEMPLATE_TEXT_NOTIFICATION_TEMPLATE_TYPE } from '@dereekb/openrouter/firebase';
 import { type OpenRouterTemplateService, openRouterTemplateTextNotificationMessageFunctionFactory } from '@dereekb/openrouter/firebase-server';
 import { DEMO_CALENDAR_ICS_DOMAIN, DEMO_CALENDAR_INVITE_ORGANIZER } from '../calendar/calendar.module';
@@ -52,6 +55,22 @@ export function demoNotificationTextContent(message: string, actionUrl: string):
     title: `${DEMO_NOTIFICATION_TEXT_PREFIX}${message}`,
     actionUrl
   };
+}
+
+// MARK: Short Links
+/**
+ * Creates the demo's {@link NotificationShortLinkFactory}. Short links open the demo app's short link page
+ * (`<clientUrl>/demo/app/s/<id>`), and are owned by the recipient's profile (`pr/<uid>`), the key firestore.rules checks.
+ *
+ * @param context - Server actions context with the client url and the redirect entry collection.
+ * @returns The short link factory.
+ */
+export function demoNotificationShortLinkFactory(context: DemoFirebaseServerActionsContext): NotificationShortLinkFactory {
+  return notificationShortLinkFactory({
+    notificationRedirectEntryCollection: context.notificationRedirectEntryCollection,
+    baseUrl: `${context.mailgunService.mailgunApi.clientUrl}${DEMO_NOTIFICATION_SHORT_LINK_PATH}`,
+    ownershipKeyForUid: (uid) => firestoreModelKey(profileIdentity, uid)
+  });
 }
 
 // MARK: Test
@@ -145,6 +164,8 @@ export function demoExampleNotificationFactory(context: DemoFirebaseServerAction
  * @returns A notification template service config for the guestbook entry created type.
  */
 export function demoGuestbookEntryCreatedNotificationFactory(context: DemoFirebaseServerActionsContext): NotificationTemplateServiceTypeConfig {
+  const shortLinks = demoNotificationShortLinkFactory(context);
+
   return {
     type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE,
     factory: async (config: NotificationMessageFunctionFactoryConfig<{}>) => {
@@ -152,7 +173,8 @@ export function demoGuestbookEntryCreatedNotificationFactory(context: DemoFireba
       // the target model is the guestbook the entry was created in
       const guestbookId = firestoreModelId(item.m as string);
       const actionUrl = `${context.mailgunService.mailgunApi.clientUrl}/demo/app/guestbook/${guestbookId}`;
-      const textContent = demoNotificationTextContent('A new guestbook entry was created.', actionUrl);
+      // texts use the short link created with the notification, when it has one. Emails keep the full link.
+      const textContent = demoNotificationTextContent('A new guestbook entry was created.', item.l ? shortLinks.urlForId(item.l) : actionUrl);
 
       return notificationMessageFunction(async (inputContext: NotificationMessageInputContext) => {
         const content: NotificationMessageContent = {
@@ -182,6 +204,8 @@ export function demoGuestbookEntryCreatedNotificationFactory(context: DemoFireba
  * @returns A notification template service config for the guestbook entry liked type.
  */
 export function demoGuestbookEntryLikedNotificationFactory(context: DemoFirebaseServerActionsContext): NotificationTemplateServiceTypeConfig {
+  const shortLinks = demoNotificationShortLinkFactory(context);
+
   return {
     type: GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE,
     factory: async (config: NotificationMessageFunctionFactoryConfig<{}>) => {
@@ -189,7 +213,7 @@ export function demoGuestbookEntryLikedNotificationFactory(context: DemoFirebase
       // the target model is the liked guestbook entry, whose id is its creator's uid, so link to its parent guestbook
       const guestbookId = firestoreModelId(firestoreModelKeyParentKey(item.m as string) as string);
       const actionUrl = `${context.mailgunService.mailgunApi.clientUrl}/demo/app/guestbook/${guestbookId}`;
-      const textContent = demoNotificationTextContent('Your guestbook entry has a new like.', actionUrl);
+      const textContent = demoNotificationTextContent('Your guestbook entry has a new like.', item.l ? shortLinks.urlForId(item.l) : actionUrl);
 
       return notificationMessageFunction(async (inputContext: NotificationMessageInputContext) => {
         const content: NotificationMessageContent = {

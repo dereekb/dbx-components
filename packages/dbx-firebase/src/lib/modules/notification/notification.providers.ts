@@ -5,6 +5,7 @@ import { DbxFirebaseNotificationItemWidgetService } from './service/notification
 import { DbxFirebaseNotificationItemDefaultViewComponent } from './component/notificationitem.view.default.component';
 import { DbxFirebaseNotificationHealthCheckConfig, DbxFirebaseNotificationHealthCheckPresentationServiceConfig } from './service/healthcheck.presentation';
 import { DbxFirebaseNotificationUserSettingsConfig } from './service/notification.settings';
+import { DbxFirebaseNotificationRedirectConfig } from './service/notification.redirect';
 import { type Maybe } from '@dereekb/util';
 import { type DbxWidgetEntry } from '@dereekb/dbx-web';
 
@@ -42,6 +43,11 @@ export interface ProvideDbxFirebaseNotificationsConfig {
    * method columns and the text message disclosure.
    */
   readonly userSettings?: Maybe<DbxFirebaseNotificationUserSettingsConfig>;
+  /**
+   * Configuration for the notification short link page (`dbx-firebase-notification-redirect`), such as the fallback page
+   * for each link prefix. Required to use that page.
+   */
+  readonly redirect?: Maybe<DbxFirebaseNotificationRedirectConfig>;
 }
 
 /**
@@ -51,7 +57,7 @@ export interface ProvideDbxFirebaseNotificationsConfig {
  * @returns EnvironmentProviders.
  */
 export function provideDbxFirebaseNotifications(config: ProvideDbxFirebaseNotificationsConfig): EnvironmentProviders {
-  const { appNotificationTemplateTypeInfoRecordService, healthCheckPresentation, healthCheck, userSettings } = config;
+  const { appNotificationTemplateTypeInfoRecordService, healthCheckPresentation, healthCheck, userSettings, redirect } = config;
 
   const providers: (EnvironmentProviders | Provider)[] = [
     {
@@ -99,6 +105,13 @@ export function provideDbxFirebaseNotifications(config: ProvideDbxFirebaseNotifi
     providers.push({
       provide: DbxFirebaseNotificationUserSettingsConfig,
       useValue: userSettings
+    });
+  }
+
+  if (redirect) {
+    providers.push({
+      provide: DbxFirebaseNotificationRedirectConfig,
+      useValue: redirect
     });
   }
 

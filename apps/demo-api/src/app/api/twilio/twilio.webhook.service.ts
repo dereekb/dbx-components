@@ -1,8 +1,10 @@
 import { catchAllHandlerKey } from '@dereekb/util';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { type TwilioWebhookEvent, TwilioOptOutType, TwilioWebhookService } from '@dereekb/nestjs/twilio';
-import { NotificationServerActions } from '@dereekb/firebase-server/model';
+import { FirebaseServerAnalyticsService } from '@dereekb/firebase-server';
+import { NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN, NotificationServerActions, type NotificationServerActionsContext } from '@dereekb/firebase-server/model';
 import { type TwilioNotificationTextOptOutHandler, twilioNotificationTextOptOutHandler } from '@dereekb/firebase-server/twilio';
+import { demoTwilioTextKeywordAnalyticsHandler } from './twilio.analytics';
 
 @Injectable()
 export class DemoApiTwilioWebhookService {
@@ -11,9 +13,18 @@ export class DemoApiTwilioWebhookService {
 
   private readonly logger = new Logger('DemoApiTwilioWebhookService');
 
-  constructor(@Inject(TwilioWebhookService) twilioWebhookService: TwilioWebhookService, @Inject(NotificationServerActions) notificationServerActions: NotificationServerActions) {
+  constructor(
+    @Inject(TwilioWebhookService) twilioWebhookService: TwilioWebhookService,
+    @Inject(NotificationServerActions) notificationServerActions: NotificationServerActions,
+    @Inject(NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN) notificationServerActionsContext: NotificationServerActionsContext,
+    @Inject(FirebaseServerAnalyticsService) analyticsService: FirebaseServerAnalyticsService
+  ) {
     this._twilioWebhookService = twilioWebhookService;
-    this._handleTextOptOut = twilioNotificationTextOptOutHandler({ notificationServerActions });
+    this._handleTextOptOut = twilioNotificationTextOptOutHandler({
+      notificationServerActions,
+      // sends a "Text Keyword" analytics event per NotificationUser that texts STOP, START or HELP
+      onTextKeyword: demoTwilioTextKeywordAnalyticsHandler({ context: notificationServerActionsContext, analyticsService })
+    });
 
     twilioWebhookService.configure(this, (x) => {
       x.set(catchAllHandlerKey(), this.logHandledEvent);
@@ -29,7 +40,8 @@ export class DemoApiTwilioWebhookService {
       });
 
       x.handleIncomingMessage(async ({ payload }) => {
-        // sync STOP/START replies back to the NotificationUsers first. Twilio already confirms keywords, so never reply to them.
+        // sync STOP/START replies back to the NotificationUsers first, then report the keyword to analytics. Twilio's Advanced Opt-Out
+        // already replies to STOP, START and HELP, so never reply to them, HELP included.
         const { optOutType, applied } = await this._handleTextOptOut(payload);
 
         switch (optOutType) {

@@ -1,3 +1,70 @@
+## Migration to v14.30.x — router-neutral history replace for `DbxRouterService.go()`
+
+### New
+- **`DbxRouterService.go(segueRef, options?)`** (`@dereekb/dbx-core`) takes an optional `DbxRouterServiceGoOptions`.
+  `{ replace: true }` replaces the current history entry instead of adding one, so the back button skips a page that
+  only redirects. `DbxUIRouterService` maps it to UIRouter's `location: 'replace'` and `DbxAngularRouterService` to
+  Angular Router's `replaceUrl: true`. It is applied on top of the segue ref's `refOptions` and wins over a conflicting
+  replace option there; `false` or unset leaves `refOptions` as they are. Both providers' `updateParams()` now use it,
+  with no change in behavior.
+- `goWithRouter(service)(route, options?)` passes the options to `go()`. The `GoWithRouter` type now matches what
+  `goWithRouter()` returns, so it also accepts a router link string.
+
+### Check
+- A custom `DbxRouterService` implementation or test fake still compiles, since the parameter is optional. If it
+  navigates for real, map `options.replace` to its router.
+
+### Adopt
+- Instead of putting a router's own replace option on a segue ref passed to `go()` (`refOptions: { location: 'replace' }`
+  for UIRouter, `{ replaceUrl: true }` for Angular Router), call `go(segueRef, { replace: true })`. Anchors still read
+  `refOptions` only.
+
+## Migration to v14.30.x — notification short links (NotificationRedirectEntry)
+
+### New
+- **`NotificationRedirectEntry`** (`@dereekb/firebase`, identity `notificationRedirectEntry` / `nre`): the record behind a
+  notification short link (`<appUrl>/s/<prefix>-<code>`). Fields: `cat`, `xat` (expires at, default 60 days), `o` (the only
+  owner allowed to open it; unset means any signed-in user with the link) and `m` (target model key). It lives outside
+  the Notification, so the link keeps working after the notification is cleaned up. The id's prefix is app-defined
+  (lowercase letters and digits, e.g. `j` for job links) and stays readable after the entry is deleted, so an expired link
+  can still fall back to a page for its kind. Helpers: `notificationRedirectEntryId`, `notificationRedirectEntryIdPrefix`,
+  `isNotificationRedirectEntryId`, `isNotificationRedirectEntryExpired`, `notificationRedirectEntryShortLinkUrl`,
+  `createNotificationRedirectEntryData`, `notificationRedirectEntriesExpiredQuery`.
+- **Create a short link with a notification:** `CreateNotificationTemplate.redirectEntry` (`{ prefix?, m?, o?, xat?,
+  expiresInDays? }`) makes `createNotificationDocument` create the entry alongside the notification (in the same
+  transaction when there is one) and store its id on the item as `NotificationItem.l`. The target defaults to the item's `m`.
+  One entry is shared by all recipients; give it an owner only when the notification goes to one person. Ignored for
+  notification tasks and logged events.
+- **Create a short link per recipient:** `notificationShortLinkFactory({ notificationRedirectEntryCollection, baseUrl,
+  ownershipKeyForUid })` (`@dereekb/firebase-server/model`) returns a function a message function calls with
+  `{ prefix, m, uid: inputContext.recipient.uid, xat }` to get `{ id, url, entry }`; `urlForId(item.l)` builds the url of an
+  entry created with the notification.
+- `cleanupSentNotifications` now also deletes expired entries; `CleanupSentNotificationsResult.notificationRedirectEntriesDeleted`.
+- **Frontend** (`@dereekb/dbx-firebase`): `DbxFirebaseNotificationRedirectComponent` (`dbx-firebase-notification-redirect`),
+  the short link page. It reads the id from the `key` route param, opens the entry's target page (its model type's `sref`,
+  or `segueRefForEntry`), and otherwise opens the prefix's fallback page with a snackbar message (expired / missing /
+  not the owner). Configure it with `provideDbxFirebaseNotifications({ redirect: { defaultFallback, prefixes, ... } })`.
+  Also `NotificationRedirectEntryDocumentStore` and `DbxFirebaseModelTypesService.segueRefForKey()` / `currentInfoForKey()`.
+  The page opens its target with `DbxRouterService.go(segueRef, { replace: true })`, so the back button skips the short
+  link. The interim `dbxFirebaseNotificationRedirectReplaceSegueRef()` helper from pre-release builds, which set both
+  routers' replace options on the segue ref, was removed.
+
+### Required
+- **Add `notificationRedirectEntryCollection` to your app's `NotificationFirestoreCollections` implementation** (it is a new
+  abstract member): `notificationRedirectEntryCollection: notificationRedirectEntryFirestoreCollection(firestoreContext)`.
+- **Add a `notificationRedirectEntry` entry to your model service factories** (the `NotificationTypes` union gained
+  `notificationRedirectEntryIdentity`). See `notificationRedirectEntryFirebaseModelServiceFactory` in
+  `components/demo-firebase/src/lib/model/service.ts`.
+
+### Adopt (to use short links)
+- Add a firestore rule so the owner can open their link and a missing entry reads as missing (see `match /nre/` in
+  `firestore.rules`):
+  `allow get: if request.auth != null && (resource == null || resource.data.get('o', null) == null || <owner check>); allow list: if false;`
+- Add a signed-in route `/s/:key` with `DbxFirebaseNotificationRedirectComponent`, and the `redirect` config with a fallback
+  page per prefix (see `SHORT_LINK_STATE` in `apps/demo` and the `redirect` block of `root.app.config.ts`).
+- Request links from your notification templates (`redirectEntry`) or message functions (`notificationShortLinkFactory`), and
+  put the url in the channels you want (the demo uses short links in texts only, see `notification.factory.ts` in demo-api).
+
 ## Migration to v14.28.x — McpModuleConfig.advertisedAssignmentOnlyScopes
 
 ### New

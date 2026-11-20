@@ -634,6 +634,10 @@ export interface CleanupSentNotificationsResult {
    * Number of logged-event notifications archived to {@link NotificationLoggedEventDay} during cleanup.
    */
   readonly notificationLoggedEventsCleanedUp: number;
+  /**
+   * Number of expired {@link NotificationRedirectEntry} documents (short links) deleted during cleanup.
+   */
+  readonly notificationRedirectEntriesDeleted: number;
 }
 
 /**
@@ -976,6 +980,7 @@ export type NotificationBoxModelCrudFunctionsConfig = {
   readonly notificationWeek: null;
   readonly notificationLoggedEventDay: null;
   readonly notificationLoggedEventDayPage: null;
+  readonly notificationRedirectEntry: null;
   readonly notificationTaskBot: {
     read: {
       /**

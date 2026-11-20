@@ -151,25 +151,38 @@ Twilio blocks every text to a number after it replies STOP (send error 21610), u
 
 - STOP adds the number to `tso` on every `NotificationUser` whose texting number (`gc.t`) is that number. Texts to it then resolve to off at send time and in the health check, and the settings UI locks texts with a message on how to restart them.
 - START removes the number, and re-records text consent (`gc.tcat`) for the users that still text it.
-- HELP and other texts do nothing.
+- HELP changes nothing. It is only reported to `onTextKeyword` (below). Other texts do nothing.
 
 Setup:
 
 1. Point the Messaging Service's (or number's) **"A message comes in"** webhook at your `/webhook/twilio/incoming` route.
 2. Advanced Opt-Out is recommended. Twilio then sends the matched keyword as the `OptOutType` parameter, which wins over the body. Without it, the body is matched against Twilio's default keywords (STOP, STOPALL, UNSUBSCRIBE, CANCEL, END, QUIT, REVOKE, OPTOUT / START, YES, UNSTOP / HELP, INFO). With custom keywords, pass `optOutTypeOnly: true` so only `OptOutType` is trusted.
-3. Never reply to keyword texts. Twilio already sends the confirmation.
+3. Never reply to keyword texts from the app, HELP included. Twilio's Advanced Opt-Out already sends the STOP, START and HELP replies, so configure the HELP reply there.
 4. Opt-outs are tracked per Messaging Service or sender. A number that replied STOP to one sender can still receive texts from another.
 
 ```ts
 import { Inject, Injectable } from '@nestjs/common';
 import { TwilioWebhookService } from '@dereekb/nestjs/twilio';
-import { NotificationServerActions } from '@dereekb/firebase-server/model';
-import { twilioNotificationTextOptOutHandler } from '@dereekb/firebase-server/twilio';
+import { FirebaseServerAnalyticsService } from '@dereekb/firebase-server';
+import { NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN, NotificationServerActions, type NotificationServerActionsContext } from '@dereekb/firebase-server/model';
+import { notificationUserTwilioTextKeywordHandler, twilioNotificationTextOptOutHandler } from '@dereekb/firebase-server/twilio';
 
 @Injectable()
 export class MyTwilioHandlers {
-  constructor(@Inject(TwilioWebhookService) twilioWebhookService: TwilioWebhookService, @Inject(NotificationServerActions) notificationServerActions: NotificationServerActions) {
-    const handleTextOptOut = twilioNotificationTextOptOutHandler({ notificationServerActions });
+  constructor(
+    @Inject(TwilioWebhookService) twilioWebhookService: TwilioWebhookService,
+    @Inject(NotificationServerActions) notificationServerActions: NotificationServerActions,
+    @Inject(NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN) notificationServerActionsContext: NotificationServerActionsContext,
+    @Inject(FirebaseServerAnalyticsService) analyticsService: FirebaseServerAnalyticsService
+  ) {
+    const handleTextOptOut = twilioNotificationTextOptOutHandler({
+      notificationServerActions,
+      // optional: report each keyword to analytics, keyed by the user's uid
+      onTextKeyword: notificationUserTwilioTextKeywordHandler({
+        context: notificationServerActionsContext,
+        onNotificationUserLoaded: ({ event, uid }) => analyticsService.sendEventData(uid, 'Text Keyword', { keyword: event.type })
+      })
+    });
 
     twilioWebhookService.configure(this, (handler) => {
       handler.handleIncomingMessage(async ({ payload }) => {
@@ -184,7 +197,19 @@ export class MyTwilioHandlers {
 }
 ```
 
-The module that registers the handlers must import your notification module, so `NotificationServerActions` can be injected.
+The module that registers the handlers must import your notification module, so `NotificationServerActions` and `NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN` can be injected.
+
+#### Reacting to keywords
+
+Pass `onTextKeyword` to run your own side effects, such as analytics, for every STOP, START and HELP text. It receives `{ type, payload, applied }`, where `applied` is the applied STOP or START (unset for HELP, and for senders that are not E.164 phone numbers). It runs after the opt-out is applied and is awaited before the webhook responds. It is best-effort: an error is logged and never fails the webhook. It is not called for other texts, or when applying the opt-out throws.
+
+`notificationUserTwilioTextKeywordHandler()` builds an `onTextKeyword` that loads the matched `NotificationUser`s and calls `onNotificationUserLoaded({ event, notificationUser, uid })` once per user:
+
+- STOP and START load the users the opt-out was applied to (`applied.notificationUserIds`).
+- HELP queries, read-only, the users whose texting number (`gc.t`) is the sender.
+- Several users may share a number, and each is called. A failed call is logged and never skips the others. No match means no calls.
+
+The `NotificationUser` id is the user's uid, so key analytics by `uid` and never forward the phone number (`event.payload.From`).
 
 Known limits: only the texting number (`gc.t`) is matched on STOP, not numbers on box entries, listed recipients or `dc.t` (Twilio still blocks those, and the send pipeline skips any number a loaded user stopped). STOPs from before the sync was set up, or from missed webhooks, are not backfilled; the Twilio health check still reports them from the message history.
 
@@ -197,6 +222,28 @@ const textSendService = isUsableTwilioServiceConfig(twilioService.twilioApi.conf
 ```
 
 By default each message becomes one SMS. The body joins the `title`, `openingMessage`, `closingMessage` and `actionUrl` of the message's `textContent` (or its `content`) with newlines, truncated to 1600 characters, so give each notification template a short `textContent` with a deep link. Messages without a recipient phone number are dropped. Texts only go to a saved texting number (`gc.t`, or a box entry, `dc.t` or listed recipient `t`), never the Firebase Auth phone number, and never to a number that replied STOP. Sends suppressed by `TWILIO_SANDBOX=true` are reported as ignored. Pass `messageBuilders` to build the SMS for specific send template names yourself.
+
+### Opt-in confirmation text
+
+A2P 10DLC carriers expect a confirmation text when a user opts in. Pass `optInConfirmationBuilder` to `twilioNotificationTextSendService()` to send one:
+
+```ts
+const textSendService = twilioNotificationTextSendService({
+  twilioService,
+  optInConfirmationBuilder: ({ to }) => ({ to, body: 'Example App: you are now subscribed to notification texts. Msg frequency varies. Msg & data rates may apply. Reply HELP for help, STOP to opt out.' })
+});
+```
+
+The body must name your brand and the message frequency, say "Msg & data rates may apply", and explain how to reply HELP and STOP. The text always goes to the confirmed number, and the send service's `defaultFrom`, `messagingServiceSid` and `statusCallbackUrl` fill any fields the builder leaves unset.
+
+The `updateNotificationUser` action sends it, best-effort, after the update commits:
+
+- **Sent** when the update opts the user in to texts (the change that records `gc.tcat`), or changes the texting number (`gc.t`) of a user who is opted in. It is sent whoever saved the change.
+- **Skipped** for a number that replied STOP (`tso`, including a stop inherited from another user with the number), which Twilio would refuse with 21610 anyway.
+- **Skipped** when the user re-opts in by texting START. Twilio's Advanced Opt-Out already replies to START, so the user would get two texts.
+- **Reported ignored** under `TWILIO_SANDBOX=true`, like every other text. `ignoreSendNotificationTextSendService()`, used when Twilio is not configured and in tests, sends no confirmation.
+
+A failed confirmation is logged and never fails the save. Omit `optInConfirmationBuilder` to send no confirmation.
 
 ### Delivery health check
 

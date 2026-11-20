@@ -119,6 +119,7 @@ import {
   notificationUsersWithTextPhoneNumberQuery,
   notificationUsersWithStoppedTextPhoneNumberQuery,
   isNotificationUserTextPhoneNumberStopped,
+  notificationUserTextOptInConfirmationPhoneNumber,
   type FirebaseAuthUserId,
   NOTIFICATION_TASK_TYPE_MAX_SEND_ATTEMPTS
 } from '@dereekb/firebase';
@@ -152,6 +153,7 @@ import {
 import { type InjectionToken } from '@nestjs/common';
 import { addHours, addMinutes, addSeconds, hoursToMilliseconds, isFuture } from 'date-fns';
 import { type NotificationTemplateServiceInstance, type NotificationTemplateServiceRef } from './notification.config.service';
+import { deleteExpiredNotificationRedirectEntries } from './notification.redirect';
 import { notificationBoxDoesNotExist, notificationBoxExclusionTargetInvalidError, notificationBoxRecipientDoesNotExistsError, notificationUserInvalidUidForCreateError } from './notification.error';
 import { type NotificationSendMessagesInstance } from './notification.send';
 import { type NotificationSendServiceRef } from './notification.send.service';
@@ -416,11 +418,18 @@ export function createNotificationUserFactory(context: NotificationServerActions
  * leaves configs flagged, the user's resync runs right after the update (see {@link resyncNotificationUserDocumentFactory}). That sync is
  * best-effort: a failure is logged and the configs stay flagged for the next resync.
  *
+ * Texts an opt-in confirmation through the text send service's `sendTextOptInConfirmation`, when configured, after the update commits (and
+ * after any resync). It is sent when the update opts the global config in to texts (the change that records `gc.tcat`), or changes the
+ * texting number (`gc.t`) while opted in, regardless of who saved the change. It is skipped for a stopped number (`tso`), including a stop
+ * inherited by this update. See {@link notificationUserTextOptInConfirmationPhoneNumber}. Sending is best-effort: a failure is logged and
+ * never fails the update. A re-opt-in by texting START goes through `applyNotificationUserTextOptOut`, which sends no confirmation, since
+ * Twilio already replies to START.
+ *
  * @param context - The notification server actions context with Firestore and collection access.
  * @returns A transform-and-validate function that updates an existing notification user document.
  */
 export function updateNotificationUserFactory(context: NotificationServerActionsContext) {
-  const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationUserCollection, appNotificationTemplateTypeInfoRecordService } = context;
+  const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationUserCollection, appNotificationTemplateTypeInfoRecordService, notificationSendService } = context;
   const resyncNotificationUserDocument = resyncNotificationUserDocumentFactory(context);
 
   return firebaseServerActionTransformFunctionFactory(updateNotificationUserParamsType, async (params) => {
@@ -428,6 +437,7 @@ export function updateNotificationUserFactory(context: NotificationServerActions
 
     return async (notificationUserDocument: NotificationUserDocument) => {
       let needsSync = false;
+      let textOptInConfirmationPhoneNumber: Maybe<E164PhoneNumber>;
 
       // an opt-out belongs to the number, so check whether the new texting number was already stopped by another user
       const inputTextPhoneNumber = inputGc?.t;
@@ -500,6 +510,7 @@ export function updateNotificationUserFactory(context: NotificationServerActions
 
         // assigned on every attempt, since the transaction may retry
         needsSync = (updateTemplate.ns ?? notificationUser.ns) === true;
+        textOptInConfirmationPhoneNumber = updateTemplate.gc == null ? undefined : notificationUserTextOptInConfirmationPhoneNumber({ previous: notificationUser, next: { gc: updateTemplate.gc, tso: updateTemplate.tso ?? notificationUser.tso } });
 
         await notificationUserDocumentInTransaction.update(updateTemplate);
       });
@@ -510,6 +521,20 @@ export function updateNotificationUserFactory(context: NotificationServerActions
         } catch (e) {
           // the update is already committed; the configs stay flagged for the next resync
           console.error('updateNotificationUser(): failed to resync the notification user after the update.', e);
+        }
+      }
+
+      if (textOptInConfirmationPhoneNumber != null) {
+        // read at call time, since the text send service may be swapped at runtime
+        const sendTextOptInConfirmation = notificationSendService.textSendService?.sendTextOptInConfirmation;
+
+        if (sendTextOptInConfirmation != null) {
+          try {
+            await sendTextOptInConfirmation({ uid: notificationUserDocument.id, to: textOptInConfirmationPhoneNumber });
+          } catch (e) {
+            // the update is already committed; never log the phone number
+            console.error('updateNotificationUser(): failed to send the text opt-in confirmation.', e);
+          }
         }
       }
 
@@ -2320,11 +2345,13 @@ export function sendQueuedNotificationsFactory(context: NotificationServerAction
  * past the retention window) and deletes them in batches. Continues until no more
  * cleanup-eligible notifications are found.
  *
+ * Also deletes every expired {@link NotificationRedirectEntry} (short link).
+ *
  * @param context - The notification server actions context with Firestore and collection access.
  * @returns A transform-and-validate function that cleans up sent notification documents and returns aggregate results.
  */
 export function cleanupSentNotificationsFactory(context: NotificationServerActionsContext) {
-  const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationCollectionGroup, notificationBoxCollection, notificationWeekCollectionFactory, notificationLoggedEventDayCollectionFactory, notificationLoggedEventDayPagedItemsCollectionFactory } = context;
+  const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationCollectionGroup, notificationBoxCollection, notificationWeekCollectionFactory, notificationLoggedEventDayCollectionFactory, notificationLoggedEventDayPagedItemsCollectionFactory, notificationRedirectEntryCollection } = context;
 
   return firebaseServerActionTransformFunctionFactory(cleanupSentNotificationsParamsType, async () => {
     return async () => {
@@ -2514,13 +2541,16 @@ export function cleanupSentNotificationsFactory(context: NotificationServerActio
         );
       }
 
+      const notificationRedirectEntriesDeleted = await deleteExpiredNotificationRedirectEntries({ firestoreContext, notificationRedirectEntryCollection });
+
       const result: CleanupSentNotificationsResult = {
         notificationBoxesUpdatesCount,
         notificationTasksDeletedCount,
         notificationsDeleted,
         notificationWeeksCreated,
         notificationWeeksUpdated,
-        notificationLoggedEventsCleanedUp
+        notificationLoggedEventsCleanedUp,
+        notificationRedirectEntriesDeleted
       };
 
       return result;

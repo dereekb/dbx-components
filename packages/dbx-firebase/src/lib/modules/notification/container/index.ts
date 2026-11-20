@@ -4,6 +4,7 @@ export * from './healthcheck.view.component';
 export * from './notification.box.context.toggle.component';
 export * from './notification.item.store.popover.button.component';
 export * from './notification.item.store.popover.component';
+export * from './notification.redirect.component';
 export * from './notification.user.settings.component';
 export * from './notification.user.settings.delivery.component';
 export * from './notification.user.settings.dialog.button.component';

@@ -1,7 +1,7 @@
 import { type ArrayOrValue, type E164PhoneNumber, type Maybe, type PromiseOrValue, asArray, batch, mapObjectKeysToLowercase, multiValueMapBuilder, pushArrayItemsIntoArray, runAsyncTasksForValues } from '@dereekb/util';
-import { type NotificationMessage, type NotificationMessageContent, type NotificationSendMessageTemplateName, type NotificationSendTextMessagesResult } from '@dereekb/firebase';
-import { type NotificationSendMessagesInstance, type NotificationTextSendService, type NotificationTextSendServiceHealthCheckService } from '@dereekb/firebase-server/model';
-import { type TwilioMessagingServiceSid, type TwilioPhoneNumber, type TwilioSendSmsInput, type TwilioService, type TwilioStatusCallbackUrl } from '@dereekb/nestjs/twilio';
+import { type FirebaseAuthUserId, type NotificationMessage, type NotificationMessageContent, type NotificationSendMessageTemplateName, type NotificationSendTextMessagesResult } from '@dereekb/firebase';
+import { type NotificationSendMessagesInstance, type NotificationTextOptInConfirmationRequest, type NotificationTextSendService, type NotificationTextSendServiceHealthCheckService } from '@dereekb/firebase-server/model';
+import { type TwilioMessagingServiceSid, type TwilioPhoneNumber, type TwilioSendSmsInput, type TwilioSendSmsResult, type TwilioService, type TwilioStatusCallbackUrl } from '@dereekb/nestjs/twilio';
 
 /**
  * Default max-batch-size used by {@link twilioNotificationTextSendService}.
@@ -59,6 +59,32 @@ export interface TwilioNotificationDefaults {
 export type TwilioNotificationTextSendServiceTemplateBuilder = (input: TwilioNotificationTextSendServiceTemplateBuilderInput) => PromiseOrValue<ArrayOrValue<TwilioSendSmsInput>>;
 
 /**
+ * Input passed to a {@link TwilioNotificationTextOptInConfirmationBuilder}.
+ */
+export interface TwilioNotificationTextOptInConfirmationBuilderInput {
+  /**
+   * The Twilio service that will send the confirmation.
+   */
+  readonly twilioService: TwilioService;
+  /**
+   * The number the confirmation is sent to.
+   */
+  readonly to: E164PhoneNumber;
+  /**
+   * The NotificationUser who opted in.
+   */
+  readonly uid: FirebaseAuthUserId;
+}
+
+/**
+ * Builds the confirmation text sent when a user opts in to texts or changes their texting number. It is always sent to `to`, whatever
+ * `to` the built input has.
+ *
+ * Carriers (A2P 10DLC) expect it to name the brand, the message frequency, "Msg & data rates may apply", and how to reply HELP and STOP.
+ */
+export type TwilioNotificationTextOptInConfirmationBuilder = (input: TwilioNotificationTextOptInConfirmationBuilderInput) => PromiseOrValue<TwilioSendSmsInput>;
+
+/**
  * Configuration for {@link twilioNotificationTextSendService}.
  */
 export interface TwilioNotificationTextSendServiceConfig {
@@ -100,6 +126,13 @@ export interface TwilioNotificationTextSendServiceConfig {
    * health check can consult it for the text/SMS channel.
    */
   readonly healthCheckService?: Maybe<NotificationTextSendServiceHealthCheckService>;
+  /**
+   * Optional builder of the opt-in confirmation text. When set, the created service's `sendTextOptInConfirmation` texts it after a user opts
+   * in to texts or changes their texting number. When omitted, no confirmation is sent.
+   *
+   * The configured `defaultFrom`, `messagingServiceSid` and `statusCallbackUrl` fill fields the builder leaves unset.
+   */
+  readonly optInConfirmationBuilder?: Maybe<TwilioNotificationTextOptInConfirmationBuilder>;
 }
 
 /**
@@ -156,12 +189,18 @@ export const defaultTwilioNotificationTextSendServiceTemplateBuilder: TwilioNoti
  * since it is keyed by phone number. Sends suppressed by Twilio sandbox mode are reported as
  * `ignored`, and sends that error or report a `failed`/`undelivered` status are reported as `failed`.
  *
- * @param config - Service configuration including the Twilio service, template builders, and batch size.
+ * When `optInConfirmationBuilder` is configured, the service also texts the opt-in confirmation (`sendTextOptInConfirmation`), reported the
+ * same way. Builder errors propagate.
+ *
+ * @param config - Service configuration including the Twilio service, template builders, batch size, and the optional opt-in confirmation builder.
  * @returns A {@link NotificationTextSendService} that batches and sends SMS through Twilio.
  *
  * @example
  * ```ts
- * const textService = twilioNotificationTextSendService({ twilioService });
+ * const textService = twilioNotificationTextSendService({
+ *   twilioService,
+ *   optInConfirmationBuilder: ({ to }) => ({ to, body: 'Acme: you are now subscribed to notification texts. Msg frequency varies. Msg & data rates may apply. Reply HELP for help, STOP to opt out.' })
+ * });
  *
  * const sendInstance = await textService.buildSendInstanceForTextNotificationMessages(messages);
  * const result = await sendInstance();
@@ -169,7 +208,7 @@ export const defaultTwilioNotificationTextSendServiceTemplateBuilder: TwilioNoti
  * ```
  */
 export function twilioNotificationTextSendService(config: TwilioNotificationTextSendServiceConfig): TwilioNotificationTextSendService {
-  const { twilioService, defaultFrom, messagingServiceSid, statusCallbackUrl, maxBatchSizePerRequest: inputMaxBatchSizePerRequest, messageBuilders: inputMessageBuilders, defaultMessageBuilder: inputDefaultMessageBuilder, healthCheckService } = config;
+  const { twilioService, defaultFrom, messagingServiceSid, statusCallbackUrl, maxBatchSizePerRequest: inputMaxBatchSizePerRequest, messageBuilders: inputMessageBuilders, defaultMessageBuilder: inputDefaultMessageBuilder, healthCheckService, optInConfirmationBuilder } = config;
 
   const defaultBuilder = inputDefaultMessageBuilder ?? defaultTwilioNotificationTextSendServiceTemplateBuilder;
   const lowercaseKeysMessageBuilders = inputMessageBuilders ? mapObjectKeysToLowercase(inputMessageBuilders) : undefined;
@@ -209,42 +248,75 @@ export function twilioNotificationTextSendService(config: TwilioNotificationText
       const sendInputs: TwilioSendSmsInput[] = buildInputArrays.flatMap((x) => asArray(x));
 
       const sendFn = async () => {
-        const success: E164PhoneNumber[] = [];
-        const failed: E164PhoneNumber[] = [];
-        const ignored: E164PhoneNumber[] = [];
+        const results: TwilioSendSmsResult[] = [];
 
         await runAsyncTasksForValues(
           batch(sendInputs, maxBatchSizePerRequest),
           async (inputBatch) => {
-            const results = await twilioService.sendBulkSms(inputBatch);
-            results.forEach((result) => {
-              if (result.error || result.status === 'failed' || result.status === 'undelivered') {
-                pushArrayItemsIntoArray(failed, [result.to]);
-              } else if (result.sandboxed) {
-                pushArrayItemsIntoArray(ignored, [result.to]);
-              } else {
-                pushArrayItemsIntoArray(success, [result.to]);
-              }
-            });
+            pushArrayItemsIntoArray(results, await twilioService.sendBulkSms(inputBatch));
           },
           { maxParallelTasks: 3 }
         );
 
-        const result: NotificationSendTextMessagesResult = {
-          success,
-          failed,
-          ignored
-        };
-
-        return result;
+        return notificationSendTextMessagesResultFromTwilioSendSmsResults(results);
       };
 
       return sendFn;
     },
-    healthCheckService
+    healthCheckService,
+    sendTextOptInConfirmation:
+      optInConfirmationBuilder == null
+        ? undefined
+        : async (request: NotificationTextOptInConfirmationRequest) => {
+            const { uid, to } = request;
+            const built = await optInConfirmationBuilder({ twilioService, to, uid });
+
+            const result = await twilioService.sendSms({
+              ...built,
+              from: built.from ?? defaults.defaultFrom,
+              messagingServiceSid: built.messagingServiceSid ?? defaults.messagingServiceSid,
+              statusCallback: built.statusCallback ?? defaults.statusCallback,
+              to
+            });
+
+            return notificationSendTextMessagesResultFromTwilioSendSmsResults([result]);
+          }
   };
 
   return sendService;
+}
+
+/**
+ * Sorts Twilio send results into a {@link NotificationSendTextMessagesResult}: sends that error or report a `failed`/`undelivered` status
+ * are `failed`, sends suppressed by sandbox mode are `ignored`, and the rest are `success`.
+ *
+ * @param results - The Twilio send results.
+ * @returns The results keyed by recipient phone number.
+ */
+function notificationSendTextMessagesResultFromTwilioSendSmsResults(results: TwilioSendSmsResult[]): NotificationSendTextMessagesResult {
+  const success: E164PhoneNumber[] = [];
+  const failed: E164PhoneNumber[] = [];
+  const ignored: E164PhoneNumber[] = [];
+
+  results.forEach((result) => {
+    const { to } = result;
+
+    if (result.error || result.status === 'failed' || result.status === 'undelivered') {
+      failed.push(to);
+    } else if (result.sandboxed) {
+      ignored.push(to);
+    } else {
+      success.push(to);
+    }
+  });
+
+  const result: NotificationSendTextMessagesResult = {
+    success,
+    failed,
+    ignored
+  };
+
+  return result;
 }
 
 function bodyFromNotificationMessageContent(content: NotificationMessageContent): string {

@@ -12,6 +12,7 @@ import { type NotificationRecipientWithConfig } from './notification.config';
 import { DEFAULT_NOTIFICATION_TASK_NOTIFICATION_MODEL_KEY, notificationBoxIdForModel, type NotificationTaskKey, type NotificationTaskType, notificationTaskUniqueId, type NotificationTaskUniqueId, type NotificationTemplateType } from './notification.id';
 import { childFirestoreModelKey, type FirebaseAuthUserId, type FirestoreDocumentAccessor, firestoreModelKey, type FirestoreModelKey, type ReadFirestoreModelKeyInput, type Transaction, isFirestoreModelId, readFirestoreModelKey } from '../../common';
 import { type NotificationItem } from './notification.item';
+import { type CreateNotificationRedirectEntryTemplate, type NotificationRedirectEntry, type NotificationRedirectEntryDocument, createNotificationRedirectEntryData, notificationRedirectEntryId } from './notification.redirect';
 
 /**
  * Template for the embedded {@link NotificationItem} within a new notification.
@@ -57,6 +58,20 @@ export interface CreateNotificationTemplate extends Partial<Omit<Notification, '
    * Only used for Notification Tasks.
    */
   readonly overrideExistingTask?: Maybe<boolean>;
+  // MARK: Short Link
+  /**
+   * Creates a {@link NotificationRedirectEntry} (a short link) alongside the notification, and stores its id on the
+   * notification item (`n.l`). The entry's target model defaults to the item's target model (`n.m`).
+   *
+   * The entry is created in the same transaction as the notification, when there is one, and requires
+   * `notificationRedirectEntryCollection` on the creation context.
+   *
+   * One entry is shared by every recipient, so give it an owner (`o`) only when the notification goes to one person.
+   * Use `notificationShortLinkFactory()` from `@dereekb/firebase-server/model` to create a link per recipient instead.
+   *
+   * Ignored for notification tasks and logged events, which are never delivered.
+   */
+  readonly redirectEntry?: Maybe<CreateNotificationRedirectEntryTemplate>;
 }
 
 /**
@@ -140,6 +155,7 @@ export function createNotificationTemplate(input: CreateNotificationTemplateInpu
     type,
     unique,
     overrideExistingTask,
+    redirectEntry,
     // notification
     sendType,
     recipients,
@@ -160,6 +176,7 @@ export function createNotificationTemplate(input: CreateNotificationTemplateInpu
     s,
     m,
     g,
+    l,
     ois: inputOis,
     ots: inputOts,
     explicitOptInSendOnly,
@@ -198,12 +215,14 @@ export function createNotificationTemplate(input: CreateNotificationTemplateInpu
       m: targetModel ?? m,
       s: subject ?? s,
       g: message ?? g,
-      d
+      d,
+      l
     },
     ois,
     ots,
     unique,
-    overrideExistingTask
+    overrideExistingTask,
+    redirectEntry
   };
 
   return template;
@@ -315,8 +334,10 @@ export interface CreateNotificationDocumentPairInput extends ShouldSendCreatedNo
   readonly transaction?: Maybe<Transaction>;
   /**
    * Context to create the accessor from.
+   *
+   * Must also have `notificationRedirectEntryCollection` when the template requests a {@link CreateNotificationTemplate.redirectEntry}.
    */
-  readonly context?: Pick<NotificationFirestoreCollections, 'notificationCollectionFactory' | 'notificationBoxCollection'>;
+  readonly context?: Pick<NotificationFirestoreCollections, 'notificationCollectionFactory' | 'notificationBoxCollection'> & Partial<Pick<NotificationFirestoreCollections, 'notificationRedirectEntryCollection'>>;
   /**
    * Accessor to use directly.
    */
@@ -343,6 +364,14 @@ export interface CreateNotificationDocumentPairResult extends Pick<CreateNotific
    * Whether or not the notification is considered a task notification.
    */
   readonly isNotificationTask: boolean;
+  /**
+   * The short link entry document, when the template requested a {@link CreateNotificationTemplate.redirectEntry}.
+   */
+  readonly notificationRedirectEntryDocument?: Maybe<NotificationRedirectEntryDocument>;
+  /**
+   * The short link entry data, when the template requested a {@link CreateNotificationTemplate.redirectEntry}.
+   */
+  readonly notificationRedirectEntry?: Maybe<NotificationRedirectEntry>;
 }
 
 /**
@@ -356,12 +385,13 @@ export interface CreateNotificationDocumentPairResult extends Pick<CreateNotific
  * @returns The document reference and notification data pair, with `notificationCreated` set to false.
  * @throws {Error} When neither an accessor nor sufficient context is provided.
  * @throws {Error} When `unique=true` but no target model is specified.
+ * @throws {Error} When the template requests a redirect entry but the context has no `notificationRedirectEntryCollection`.
  *
  * @__NO_SIDE_EFFECTS__
  */
 export function createNotificationDocumentPair(input: CreateNotificationDocumentPairInput): CreateNotificationDocumentPairResult {
   const { template, accessor: inputAccessor, transaction, context, now } = input;
-  const { notificationModel, cat: inputCat, st, sat, r, rf, n, ts, es, ps, ns, ois, ots, tpr, unique: inputUnique, overrideExistingTask: inputOverrideExistingTask } = template;
+  const { notificationModel, cat: inputCat, st, sat, r, rf, n, ts, es, ps, ns, ois, ots, tpr, unique: inputUnique, overrideExistingTask: inputOverrideExistingTask, redirectEntry: redirectEntryTemplate } = template;
 
   /**
    * Use the input, or default to true if inputUnique is true.
@@ -417,6 +447,22 @@ export function createNotificationDocumentPair(input: CreateNotificationDocument
 
   const id = notificationDocument.id;
   const cat = inputCat ?? now ?? new Date();
+
+  // short link, created alongside the notification. Notification tasks and logged events are never delivered, so they get none.
+  let notificationRedirectEntryDocument: Maybe<NotificationRedirectEntryDocument>;
+  let notificationRedirectEntry: Maybe<NotificationRedirectEntry>;
+
+  if (redirectEntryTemplate && !isNotificationTask && !isLoggedEvent) {
+    const notificationRedirectEntryCollection = context?.notificationRedirectEntryCollection;
+
+    if (!notificationRedirectEntryCollection) {
+      throw new Error('createNotificationDocument() failed as a redirectEntry was requested but the context has no notificationRedirectEntryCollection.');
+    }
+
+    notificationRedirectEntryDocument = notificationRedirectEntryCollection.documentAccessorForTransaction(transaction).loadDocumentForId(notificationRedirectEntryId({ prefix: redirectEntryTemplate.prefix }));
+    notificationRedirectEntry = createNotificationRedirectEntryData({ template: redirectEntryTemplate, defaultTargetModel: n.m, now: cat });
+  }
+
   const notification: Notification = {
     cat,
     st: st ?? NotificationSendType.INIT_BOX_AND_SEND,
@@ -431,7 +477,8 @@ export function createNotificationDocumentPair(input: CreateNotificationDocument
       m: n.m,
       s: n.s,
       g: n.g,
-      d: n.d
+      d: n.d,
+      l: notificationRedirectEntryDocument?.id ?? n.l
     },
     a: 0,
     at: 0,
@@ -472,7 +519,9 @@ export function createNotificationDocumentPair(input: CreateNotificationDocument
     notification,
     isNotificationTask,
     overrideExistingTask,
-    notificationCreated: false
+    notificationCreated: false,
+    notificationRedirectEntryDocument,
+    notificationRedirectEntry
   };
 }
 
@@ -484,9 +533,14 @@ export function createNotificationDocumentPair(input: CreateNotificationDocument
  * @returns The pair with `notificationCreated` updated to reflect whether the document was saved.
  */
 export async function _createNotificationDocumentFromPair(input: Pick<CreateNotificationDocumentPairInput, 'shouldCreateNotification' | keyof ShouldSendCreatedNotificationInput>, pair: CreateNotificationDocumentPairResult): Promise<CreateNotificationDocumentPairResult> {
-  const { notification, notificationDocument, isNotificationTask, overrideExistingTask } = pair;
+  const { notification, notificationDocument, isNotificationTask, overrideExistingTask, notificationRedirectEntryDocument, notificationRedirectEntry } = pair;
 
   if (input.shouldCreateNotification !== false && shouldSendCreatedNotificationInput(input)) {
+    // created first so the notification never points at a missing entry
+    if (notificationRedirectEntryDocument && notificationRedirectEntry) {
+      await notificationRedirectEntryDocument.create(notificationRedirectEntry);
+    }
+
     if (isNotificationTask && overrideExistingTask) {
       await notificationDocument.accessor.set(notification);
     } else {

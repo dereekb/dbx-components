@@ -415,6 +415,54 @@
       "notes": "Arbitrary template name/key that is used to configure which template to use by the sending service."
     },
     {
+      "name": "NotificationRedirectEntryPrefix",
+      "package": "@dereekb/firebase",
+      "module": "src/lib/model/notification/notification.redirect",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": [
+        "identifier",
+        "string",
+        "dereekb-firebase:notification"
+      ],
+      "guards": [
+        "isNotificationRedirectEntryPrefix"
+      ],
+      "notes": "App-defined prefix of a {@link NotificationRedirectEntryId}. Names the kind of link, such as `j` for job links.\n\nLowercase letters and digits only, so it can never contain the {@link NOTIFICATION_REDIRECT_ENTRY_ID_PREFIX_SEPARATOR}."
+    },
+    {
+      "name": "NotificationRedirectEntryCode",
+      "package": "@dereekb/firebase",
+      "module": "src/lib/model/notification/notification.redirect",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": [
+        "identifier",
+        "string",
+        "dereekb-firebase:notification"
+      ],
+      "notes": "Random part of a {@link NotificationRedirectEntryId}. Letters and digits only."
+    },
+    {
+      "name": "NotificationRedirectEntryId",
+      "package": "@dereekb/firebase",
+      "module": "src/lib/model/notification/notification.redirect",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": [
+        "identifier",
+        "string",
+        "dereekb-firebase:notification"
+      ],
+      "guards": [
+        "isNotificationRedirectEntryId"
+      ],
+      "notes": "Id of a {@link NotificationRedirectEntry}, and the last path segment of its short link: `<prefix>-<code>`."
+    },
+    {
       "name": "NotificationTaskSubtaskTarget",
       "package": "@dereekb/firebase",
       "module": "src/lib/model/notification/notification.task.subtask",

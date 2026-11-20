@@ -136,6 +136,16 @@ service cloud.firestore {
       allow get, list: if userClaimsIsSysAdmin(); // system admins can read
     }
 
+    match /nre/{notificationRedirectEntry} {
+      // A short link. Opened by its id only, so list is denied.
+      // - A missing entry (expired and deleted, or never existed) reads as missing rather than permission-denied, so the
+      //   short link page can fall back to the page for the id's prefix.
+      // - An entry with no owner ("o") can be opened by any signed-in user with the link.
+      // - Otherwise only its owner can open it.
+      allow get: if request.auth != null && (resource == null || resource.data.get('o', null) == null || resourceIsOwnedByAuthOwnershipKey());
+      allow list: if false;
+    }
+
     match /nb/{notificationBox} {
       allow read: if resourceIsOwnedByAuthOwnershipKey(); // owners can read
 

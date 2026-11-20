@@ -12,7 +12,8 @@ import {
   resolveNotificationUidRecipientDelivery,
   updateNotificationUserNotificationSendExclusions,
   notificationSendExclusionCanSendFunction,
-  isNotificationUserTextPhoneNumberStopped
+  isNotificationUserTextPhoneNumberStopped,
+  notificationUserTextOptInConfirmationPhoneNumber
 } from './notification.util';
 
 describe('updateNotificationUserNotificationSendExclusions()', () => {
@@ -526,5 +527,57 @@ describe('isNotificationUserTextPhoneNumberStopped()', () => {
     expect(isNotificationUserTextPhoneNumberStopped({ tso: ['+15555550100'] }, undefined)).toBe(false);
     expect(isNotificationUserTextPhoneNumberStopped(undefined, '+15555550100')).toBe(false);
     expect(isNotificationUserTextPhoneNumberStopped({}, '+15555550100')).toBe(false);
+  });
+});
+
+describe('notificationUserTextOptInConfirmationPhoneNumber()', () => {
+  const phoneNumber = '+15555550100';
+  const otherPhoneNumber = '+15555550101';
+  const textOn: NotificationUserDefaultNotificationBoxRecipientConfig['c'] = { a: { st: true } };
+  const textOff: NotificationUserDefaultNotificationBoxRecipientConfig['c'] = { a: { st: false } };
+
+  describe('due', () => {
+    it('should return the number for the first text opt-in with a number', () => {
+      expect(notificationUserTextOptInConfirmationPhoneNumber({ previous: { gc: { c: {} } }, next: { gc: { c: textOn, t: phoneNumber } } })).toBe(phoneNumber);
+    });
+
+    it('should return the new number when the number changes while opted in', () => {
+      expect(notificationUserTextOptInConfirmationPhoneNumber({ previous: { gc: { c: textOn, t: phoneNumber } }, next: { gc: { c: textOn, t: otherPhoneNumber } } })).toBe(otherPhoneNumber);
+    });
+
+    it('should return the number when the user re-opts in after opting out of every text type', () => {
+      expect(notificationUserTextOptInConfirmationPhoneNumber({ previous: { gc: { c: textOff, t: phoneNumber } }, next: { gc: { c: textOn, t: phoneNumber } } })).toBe(phoneNumber);
+    });
+
+    it('should return the number when the user turns texts back on account-wide', () => {
+      expect(notificationUserTextOptInConfirmationPhoneNumber({ previous: { gc: { c: textOn, t: phoneNumber, dm: [NotificationDeliveryMethod.TEXT] } }, next: { gc: { c: textOn, t: phoneNumber } } })).toBe(phoneNumber);
+    });
+  });
+
+  describe('not due', () => {
+    it('should return undefined when the number changes while not opted in', () => {
+      expect(notificationUserTextOptInConfirmationPhoneNumber({ previous: { gc: { c: textOff, t: phoneNumber } }, next: { gc: { c: textOff, t: otherPhoneNumber } } })).toBeUndefined();
+    });
+
+    it('should return undefined when already opted in, the number is unchanged and another config changed', () => {
+      expect(notificationUserTextOptInConfirmationPhoneNumber({ previous: { gc: { c: textOn, t: phoneNumber } }, next: { gc: { c: { ...textOn, b: { st: true } }, t: phoneNumber } } })).toBeUndefined();
+    });
+
+    it('should return undefined when the user opts in without a number', () => {
+      expect(notificationUserTextOptInConfirmationPhoneNumber({ previous: { gc: { c: {} } }, next: { gc: { c: textOn } } })).toBeUndefined();
+    });
+
+    it('should return undefined when the number is removed', () => {
+      expect(notificationUserTextOptInConfirmationPhoneNumber({ previous: { gc: { c: textOn, t: phoneNumber } }, next: { gc: { c: textOn, t: null } } })).toBeUndefined();
+    });
+
+    it('should return undefined when the next number is stopped', () => {
+      expect(notificationUserTextOptInConfirmationPhoneNumber({ previous: { gc: { c: {} } }, next: { gc: { c: textOn, t: phoneNumber }, tso: [phoneNumber] } })).toBeUndefined();
+      expect(notificationUserTextOptInConfirmationPhoneNumber({ previous: { gc: { c: textOn, t: phoneNumber } }, next: { gc: { c: textOn, t: otherPhoneNumber }, tso: [otherPhoneNumber] } })).toBeUndefined();
+    });
+
+    it('should return undefined when texts are disabled account-wide', () => {
+      expect(notificationUserTextOptInConfirmationPhoneNumber({ previous: { gc: { c: {} } }, next: { gc: { c: textOn, t: phoneNumber, dm: [NotificationDeliveryMethod.TEXT] } } })).toBeUndefined();
+    });
   });
 });

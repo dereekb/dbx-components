@@ -1,4 +1,4 @@
-import { type TwilioNotificationHealthCheckProbeBuilderInput, type TwilioNotificationTextSendService, twilioNotificationTextSendService, twilioNotificationTextSendServiceHealthCheckService } from '@dereekb/firebase-server/twilio';
+import { type TwilioNotificationHealthCheckProbeBuilderInput, type TwilioNotificationTextOptInConfirmationBuilderInput, type TwilioNotificationTextSendService, twilioNotificationTextSendService, twilioNotificationTextSendServiceHealthCheckService } from '@dereekb/firebase-server/twilio';
 import { type TwilioSendSmsInput, type TwilioService } from '@dereekb/nestjs/twilio';
 
 /**
@@ -18,10 +18,25 @@ export function demoNotificationHealthCheckProbeText(input: TwilioNotificationHe
 }
 
 /**
+ * Builds the confirmation text sent when a user opts in to notification texts, or changes the number they are opted in with.
+ *
+ * Carriers expect it to name the brand, the message frequency, that message and data rates may apply, and how to get help or opt out.
+ *
+ * @param input - The confirmation recipient.
+ * @returns The confirmation text request.
+ */
+export function demoNotificationTextOptInConfirmationText(input: TwilioNotificationTextOptInConfirmationBuilderInput): TwilioSendSmsInput {
+  return {
+    to: input.to,
+    body: 'dbx-components demo: you are now subscribed to notification texts. Msg frequency varies. Msg & data rates may apply. Reply HELP for help, STOP to opt out.'
+  };
+}
+
+/**
  * Creates the Twilio {@link TwilioNotificationTextSendService} for the Demo app.
  *
  * @param twilioService - The Twilio service the texts are sent through.
- * @returns The send service, with the delivery health check attached.
+ * @returns The send service, with the delivery health check and the opt-in confirmation text attached.
  */
 export function demoNotificationTwilioSendService(twilioService: TwilioService): TwilioNotificationTextSendService {
   return twilioNotificationTextSendService({
@@ -29,6 +44,7 @@ export function demoNotificationTwilioSendService(twilioService: TwilioService):
     healthCheckService: twilioNotificationTextSendServiceHealthCheckService({
       twilioService,
       probeBuilder: demoNotificationHealthCheckProbeText
-    })
+    }),
+    optInConfirmationBuilder: demoNotificationTextOptInConfirmationText
   });
 }

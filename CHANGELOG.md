@@ -1,3 +1,21 @@
+# [14.30.0](https://github.com/dereekb/dbx-components/compare/v14.29.0-dev...v14.30.0) (2026-11-20)
+
+### Bug Fixes
+
+- **dbx-components-cli:** run cleanupSentNotifications in api template ([5de6b62e](https://github.com/dereekb/dbx-components/commit/5de6b62eb488f2a4ca4ed068b798f8db4cea8fa3))
+- **demo-api:** schedule cleanupSentNotifications hourly ([1f5a4174](https://github.com/dereekb/dbx-components/commit/1f5a4174dede411aed71db442904b2b901391d02))
+
+### Build System
+
+- **dbx-claude:** turn on the migration notes lever ([31618965](https://github.com/dereekb/dbx-components/commit/3161896560bb0d477e8919e6e7ea9b24cd29114f))
+- lint fix + mcp regeneration + firestore indexes + peer dep sync ([05954eb2](https://github.com/dereekb/dbx-components/commit/05954eb211b43950ee77dff63fdc2ab8596c9802))
+
+### Features
+
+- **dbx-core:** router-neutral replace option for DbxRouterService.go ([7e0e4c26](https://github.com/dereekb/dbx-components/commit/7e0e4c262dac62bfd00f9522e2d7b99ada209872))
+- **firebase:** notification short links via NotificationRedirectEntry ([a3a7f16c](https://github.com/dereekb/dbx-components/commit/a3a7f16cde20fbe9257d16b791ca281016b14779))
+- **twilio:** keyword analytics hook + opt-in confirmation text ([01acbee1](https://github.com/dereekb/dbx-components/commit/01acbee1deff69aca04e8febaf6a728ce092d578))
+
 # [14.29.0](https://github.com/dereekb/dbx-components/compare/v14.28.0-dev...v14.29.0) (2026-11-19)
 
 ### Bug Fixes

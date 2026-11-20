@@ -1,7 +1,7 @@
-import { type NotificationSummaryIdForUidFunction, type NotificationMessage, type NotificationSendEmailMessagesResult, type NotificationSendNotificationSummaryMessagesResult, type NotificationSendTextMessagesResult } from '@dereekb/firebase';
+import { type FirebaseAuthUserId, type NotificationSummaryIdForUidFunction, type NotificationMessage, type NotificationSendEmailMessagesResult, type NotificationSendNotificationSummaryMessagesResult, type NotificationSendTextMessagesResult } from '@dereekb/firebase';
 import { type NotificationSendMessagesInstance } from './notification.send';
 import { type NotificationEmailSendServiceHealthCheckService, type NotificationSummarySendServiceHealthCheckService, type NotificationTextSendServiceHealthCheckService } from './notification.healthcheck.service';
-import { type Maybe } from '@dereekb/util';
+import { type E164PhoneNumber, type Maybe } from '@dereekb/util';
 
 /**
  * Provides a reference to a NotificationSendService instance.
@@ -76,7 +76,32 @@ export interface NotificationTextSendService {
    * When absent, a health check reports only what it can determine from configuration and send history.
    */
   readonly healthCheckService?: Maybe<NotificationTextSendServiceHealthCheckService>;
+  /**
+   * Optional. Texts the opt-in confirmation after a user opts in to texts, or changes the texting number they are opted in with.
+   *
+   * Called best-effort by `updateNotificationUser` after the update commits. No confirmation is sent when absent.
+   */
+  readonly sendTextOptInConfirmation?: Maybe<NotificationTextOptInConfirmationFunction>;
 }
+
+/**
+ * Request for a {@link NotificationTextOptInConfirmationFunction}.
+ */
+export interface NotificationTextOptInConfirmationRequest {
+  /**
+   * The NotificationUser who opted in.
+   */
+  readonly uid: FirebaseAuthUserId;
+  /**
+   * The number to text the confirmation to.
+   */
+  readonly to: E164PhoneNumber;
+}
+
+/**
+ * Texts an opt-in confirmation to a NotificationUser's texting number. See {@link NotificationTextSendService.sendTextOptInConfirmation}.
+ */
+export type NotificationTextOptInConfirmationFunction = (request: NotificationTextOptInConfirmationRequest) => Promise<NotificationSendTextMessagesResult>;
 
 /**
  * Service dedicated to sending/updating NotificationSummary values in the system for the input messages.
