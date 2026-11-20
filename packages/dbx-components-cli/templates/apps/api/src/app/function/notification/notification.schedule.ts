@@ -12,4 +12,10 @@ export const notificationUpdateSchedule: APP_CODE_PREFIXScheduleFunction = async
   const sendQueuedNotificationsResult = await sendQueuedNotifications();
 
   console.log({ sendQueuedNotificationsResult });
+
+  // delete sent notifications past their retention window, and every expired NotificationRedirectEntry (short link)
+  const cleanupSentNotifications = await request.nest.notificationActions.cleanupSentNotifications({});
+  const cleanupSentNotificationsResult = await cleanupSentNotifications();
+
+  console.log({ cleanupSentNotificationsResult });
 };
