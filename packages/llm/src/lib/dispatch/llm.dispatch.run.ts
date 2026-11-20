@@ -68,6 +68,12 @@ export interface LlmDispatchAttemptsConfig {
    */
   readonly envelope?: Maybe<LlmReplyEnvelopeKeys>;
   /**
+   * The call's READING envelope — `resolveLlmReplyReadingEnvelope(protocol, envelope)`, computed once by the pipeline.
+   * Scopes the repair lane's fidelity coverage and the `shape` of every `parse-error` row. `undefined` ⇒ the whole reply
+   * is the payload.
+   */
+  readonly readingEnvelope: Maybe<LlmReplyEnvelopeKeys>;
+  /**
    * The lever validator, when the call set one.
    */
   readonly validate?: Maybe<LlmLeverValidator>;
@@ -296,7 +302,7 @@ export async function runSingleShotLlmDispatch(config: LlmDispatchAttemptsConfig
 
     if (protocol !== 'line') {
       const read = replyReaderOf(config, attemptContext);
-      const repaired = await repairLlmDispatchReading({ served: result, reading: read(result.text), lane: { attempt: 1, attemptContext, read, unrepairedRefusal: 'mangled', fastFixLimits } });
+      const repaired = await repairLlmDispatchReading({ served: result, reading: read(result.text), lane: { attempt: 1, attemptContext, read, envelope: config.readingEnvelope, unrepairedRefusal: 'mangled', fastFixLimits } });
       result = repaired.result;
       repair = repaired.repair;
     }
@@ -327,7 +333,7 @@ function singleShotLlmFaultedOutcomeOf(config: LlmDispatchAttemptsConfig, sent: 
   const transportError = fault?.summary ?? sent.transportError;
   const errorClassification = fault?.classification ?? nonTransientLlmErrorClassificationOf(sent.classification);
   const { maxOutputTokens } = baseRequest;
-  const row = llmDecodeFailureAttemptOf({ attempt: 1, failureClass, result, maxOutputTokens, transportError, errorClassification });
+  const row = llmDecodeFailureAttemptOf({ attempt: 1, failureClass, result, maxOutputTokens, envelope: config.readingEnvelope, transportError, errorClassification });
   const failedRow = llmFailedAttemptOf({ attempt: 1, cause: failureClass, result, maxOutputTokens, error: transportError, errorClassification });
   onDecodeAttempt?.(row, false);
 
@@ -369,6 +375,10 @@ interface LlmDispatchLoopState {
   readonly ledger: LlmDispatchAttemptLedger;
   readonly attemptPhases: LlmCallAttemptPhase[];
   readonly texts: LlmDispatchCorrectionTexts;
+  /**
+   * The call's reading envelope ({@link LlmDispatchAttemptsConfig.readingEnvelope}) — every loop decode row scores with it.
+   */
+  readonly readingEnvelope: Maybe<LlmReplyEnvelopeKeys>;
   attempts: number;
   fastFixCalls: number;
   request: LlmRequest;
@@ -407,9 +417,9 @@ interface LlmDispatchLoopStep {
 type LlmDispatchLoopNext = 'retry' | 'settle';
 
 /**
- * The inputs of {@link loopDecodeRowOf} — a decode row's fields, less the cap the loop supplies.
+ * The inputs of {@link loopDecodeRowOf} — a decode row's fields, less the cap and the reading envelope the loop supplies.
  */
-type LlmDispatchLoopDecodeRowConfig = Omit<LlmDecodeFailureAttemptConfig, 'maxOutputTokens'>;
+type LlmDispatchLoopDecodeRowConfig = Omit<LlmDecodeFailureAttemptConfig, 'maxOutputTokens' | 'envelope'>;
 
 /**
  * A decode row of the current attempt, at the cap it was sent with.
@@ -419,7 +429,7 @@ type LlmDispatchLoopDecodeRowConfig = Omit<LlmDecodeFailureAttemptConfig, 'maxOu
  * @returns The row.
  */
 function loopDecodeRowOf(loop: LlmDispatchLoopState, config: LlmDispatchLoopDecodeRowConfig): LlmDecodeFailureAttempt {
-  return llmDecodeFailureAttemptOf({ ...config, maxOutputTokens: loop.request.maxOutputTokens });
+  return llmDecodeFailureAttemptOf({ ...config, maxOutputTokens: loop.request.maxOutputTokens, envelope: loop.readingEnvelope });
 }
 
 /**
@@ -503,7 +513,7 @@ async function runLlmDispatchLeverStep(config: LlmDispatchAttemptsConfig, loop: 
   const { sent, attempt, served, repair, lever } = step;
   const { attemptContext } = sent;
   const { ledger, ladder } = loop;
-  const repairedRow = (retryLever?: Maybe<LlmRetryLever>) => llmRepairedDecodeAttemptOf({ attempt, served, summary: repair as LlmReplyRepairSummary, maxOutputTokens: loop.request.maxOutputTokens, lever: retryLever });
+  const repairedRow = (retryLever?: Maybe<LlmRetryLever>) => llmRepairedDecodeAttemptOf({ attempt, served, summary: repair as LlmReplyRepairSummary, maxOutputTokens: loop.request.maxOutputTokens, envelope: loop.readingEnvelope, lever: retryLever });
   const accept = () => {
     if (repair != null) {
       ledger.recordDecodeAttempt(repairedRow(), false);
@@ -518,7 +528,11 @@ async function runLlmDispatchLeverStep(config: LlmDispatchAttemptsConfig, loop: 
 
   if (valid === true) {
     const verdict =
-      critique == null ? true : await attemptContext.timeAsync('critique', () => critique({ capability: baseRequest.capability, ...(baseRequest.meta == null ? {} : { meta: baseRequest.meta }), lever, replyText: loop.result.text, liveContext, replyProtocol: protocol, attempt, callContext: attemptContext }));
+      critique == null
+        ? true
+        : await attemptContext.timeAsync('critique', () =>
+            critique({ capability: baseRequest.capability, ...(baseRequest.meta == null ? {} : { meta: baseRequest.meta }), lever, replyText: loop.result.text, liveContext, replyProtocol: protocol, attempt, callContext: attemptContext, ...(config.signal == null ? {} : { signal: config.signal }) })
+          );
 
     if (verdict === true) {
       accept();
@@ -588,7 +602,7 @@ async function readLlmDispatchLoopReply(config: LlmDispatchAttemptsConfig, loop:
   }
 
   if (protocol !== 'line') {
-    const repaired = await repairLlmDispatchReading({ served, reading, lane: { attempt, attemptContext, read, unrepairedRefusal: config.fastFixUnavailable, fastFix, fastFixSpent: loop.fastFixCalls >= fastFixLimits.maxPerDispatch, fastFixLimits } });
+    const repaired = await repairLlmDispatchReading({ served, reading, lane: { attempt, attemptContext, read, envelope: config.readingEnvelope, unrepairedRefusal: config.fastFixUnavailable, fastFix, fastFixSpent: loop.fastFixCalls >= fastFixLimits.maxPerDispatch, fastFixLimits } });
     loop.fastFixCalls += repaired.fastFixCalled ? 1 : 0;
     fastFixMiss = repaired.fastFixMiss;
 
@@ -626,7 +640,7 @@ async function runLlmDispatchReplyStep(config: LlmDispatchAttemptsConfig, loop: 
   } else if (reading.kind === 'declined' || (config.protocol === 'line' && isDegenerateLlmReplyReading(reading))) {
     // a decline (or a `line` reply that is not JSON) is an ANSWER, never a decode failure
     if (repair != null) {
-      ledger.recordDecodeAttempt(llmRepairedDecodeAttemptOf({ attempt, served, summary: repair, maxOutputTokens: loop.request.maxOutputTokens }), false);
+      ledger.recordDecodeAttempt(llmRepairedDecodeAttemptOf({ attempt, served, summary: repair, maxOutputTokens: loop.request.maxOutputTokens, envelope: loop.readingEnvelope }), false);
       loop.recovered = true;
     }
 
@@ -768,6 +782,7 @@ export async function runLlmDispatchAttempts(config: LlmDispatchAttemptsConfig):
     },
     attemptPhases: [],
     texts: config.corrections,
+    readingEnvelope: config.readingEnvelope,
     attempts: 0,
     fastFixCalls: 0,
     request: baseRequest,

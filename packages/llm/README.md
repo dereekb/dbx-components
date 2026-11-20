@@ -710,11 +710,20 @@ descriptor also carries the two schema projections the request and the prompt re
   commas, stray closers, control escapes, trailing prose, fences; a second pass escapes inner quotes). A reply that ends
   inside a string or after `:` / `,` / a key / an opener is never repaired. `llmReplyRepairFidelity` gates every repair:
   nothing invented, and at least 90% of the 12+-char content literals kept. The three are thin wrappers over
-  `@dereekb/util` `repairJsonObjectText` / `scoreJsonObjectText` / `checkJsonRepairFidelity`, with the coverage check
-  starting at the `lever` key; the shape types are util's `JsonRepair*`.
-- **Fast fix.** `makeLlmReplyFastFixer({ requestOf, metaOf, envelope })` makes one `RepairReplyJson` call
+  `@dereekb/util` `repairJsonObjectText` / `scoreJsonObjectText` / `checkJsonRepairFidelity`; their `{ envelope }`
+  option takes the coverage check over the envelope lever key's balanced value (an unclosed or non-object value keeps
+  the rest of the reply), and without it the whole reply is the payload. The dispatcher passes the call's reading
+  envelope (`resolveLlmReplyReadingEnvelope`: the host's keys on `json-envelope`, none on `json`). The shape types are
+  util's `JsonRepair*`.
+- **Fast fix.** `makeLlmReplyFastFixer({ requestOf, metaOf })` makes one `RepairReplyJson` call
   (`maxAttempts: 1`), handed only the broken reply, the subject's schema and a one-line diagnosis. It answers `fixed`, or
-  `missed` with `truncated` / `declined` / `unusable` / `fidelity` / `error`, and never throws.
+  `missed` with `truncated` / `declined` / `unusable` / `fidelity` / `error`, and never throws. Its fidelity check runs
+  over the subject's reading envelope (`subjectEnvelope` on the fixer input).
+- **Nested reads.** The critic and the fixer read their nested call's DECODED payload (`readLlmDispatchResultLever`:
+  the `lever` stamp, `declined` for an accepted result with none, `no-json` when dropped, the `json` reading of an
+  unstamped result's text), so they follow the nested call's resolved protocol and the dispatcher's `replyEnvelope`. A
+  host `resultOf` must keep `lever` / `decodeStatus`. The built-in judge and fixer descriptors set no protocol and
+  inherit the host default, so a `line`-default host must give them a JSON protocol.
   `DEFAULT_LLM_REPLY_FAST_FIX_LIMITS`: a score of at least 0.5, at most 16,000 chars, one fix per dispatch.
 - **Validation.** `llmSchemaLeverValidator(schema)` is a pure schema check: `true`, or `{ error }`, which re-asks. A
   schema-valid but unusable lever is a legitimate "no decision", not a re-ask.
@@ -733,7 +742,8 @@ descriptor also carries the two schema projections the request and the prompt re
   a key match beats a tag match, and the first match wins. `llmCriticFor` gives `{}` unless a rule matches, so off is
   free. `makeLlmSemanticCritic` fails open with `critique-unusable` / `critique-error` breadcrumbs. `composeLlmCritics`
   runs critics in order and stops at the first rejection. The judge sees the goal, optional evidence, the subject's live
-  context and the reply (both fenced as data), never the subject's instructions. A critiqued capability costs
+  context and the reply (both fenced as data), never the subject's instructions. `LlmCritiqueInput.signal` carries the
+  subject's cancellation signal, and the semantic critic puts it on the judge request. A critiqued capability costs
   `1 + attempts` calls. Three recursion guards: the judge request carries no critic, the compile refuses the judge, and
   the dispatcher clamps `maxAttempts >= 1`.
 - **Built-in capabilities.** `LLM_CRITIQUE_REPLY_DESCRIPTOR` / `LLM_REPAIR_REPLY_JSON_DESCRIPTOR` and their default
@@ -885,7 +895,7 @@ one retry lever, and a mangled JSON reply gets one cheap fast fix before any re-
   `RepairReplyJson` dispatch, bounded by `fastFixLimits` (`DEFAULT_LLM_REPLY_FAST_FIX_LIMITS`). It never binds on a
   `RepairReplyJson` call, a `line` call or a call with no schema hint. It fails open: a miss or a throw falls through to
   the re-ask (`reply-fast-fix-miss` diag, swallow site `llm/reply-repair.fast-fix`). A fixer's `meta` lands on
-  `result.repair.meta`.
+  `result.repair.meta`, on the call payload's `repair` and on the failed rows.
 - **Critique.** Root calls only, after `validate` passes. A rejection costs a re-ask with the critic's feedback and a
   `critique` failed row, never a decode row. A rejection with no retry left (the budget is spent, or the dispatch was
   cancelled) ships the reply: it is stamped accepted (`lever`, `clean` / `retried`), files no failed row, and its

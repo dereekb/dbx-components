@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { classifyLlmDecodeFailure } from '../record/llm.decode.failure';
-import { DEFAULT_LLM_REPLY_ENVELOPE_KEYS, isLlmReplyObject, llmLineReplyLeverOf, llmReplyEnvelopeContractIntro, llmReplyLeverOf, llmReplyRationaleOf, type LlmReplyEnvelopeKeys, readLlmReplyLever } from './llm.reply.envelope';
+import { DEFAULT_LLM_REPLY_ENVELOPE_KEYS, isLlmReplyObject, llmLineReplyLeverOf, llmReplyEnvelopeContractIntro, llmReplyLeverOf, llmReplyRationaleOf, type LlmReplyEnvelopeKeys, readLlmDispatchResultLever, readLlmReplyLever, resolveLlmReplyReadingEnvelope } from './llm.reply.envelope';
 
 const ENVELOPE = { envelope: DEFAULT_LLM_REPLY_ENVELOPE_KEYS };
 
@@ -152,6 +152,44 @@ describe('readLlmReplyLever(): the trailing-brace over-emit (the layered balance
 
   it('reads the rationale off the over-emit too (every reader shares the slicer)', () => {
     expect(llmReplyRationaleOf(TRAILING_BRACE_REPLY)).toBe('Two new products are declared with their materials; nothing else remains.');
+  });
+});
+
+describe('resolveLlmReplyReadingEnvelope()', () => {
+  const keys: LlmReplyEnvelopeKeys = { lever: 'payload', answerable: 'ok', rationale: 'why' };
+
+  it('reads json-envelope through the host keys, defaulting to the library keys', () => {
+    expect(resolveLlmReplyReadingEnvelope('json-envelope', keys)).toBe(keys);
+    expect(resolveLlmReplyReadingEnvelope('json-envelope', undefined)).toBe(DEFAULT_LLM_REPLY_ENVELOPE_KEYS);
+  });
+
+  it('reads every other protocol with no envelope', () => {
+    expect(resolveLlmReplyReadingEnvelope('json', keys)).toBeUndefined();
+    expect(resolveLlmReplyReadingEnvelope('line', keys)).toBeUndefined();
+  });
+});
+
+describe('readLlmDispatchResultLever()', () => {
+  it('reads a lever stamp as that object, whatever the text', () => {
+    expect(readLlmDispatchResultLever({ text: '{"ok":true,"payload":{"a":1}}', lever: '{"a":1}', decodeStatus: 'retried' })).toEqual({ kind: 'lever', lever: { a: 1 } });
+  });
+
+  it('reads an accepted result with no lever as declined', () => {
+    expect(readLlmDispatchResultLever({ text: '{"answerable":false}', decodeStatus: 'clean' })).toEqual({ kind: 'declined' });
+  });
+
+  it('reads a dropped result as no-json', () => {
+    expect(readLlmDispatchResultLever({ text: '{"a":1}', decodeStatus: 'dropped' })).toEqual({ kind: 'no-json' });
+  });
+
+  it('reads an unstamped result as the json reading of its text', () => {
+    expect(readLlmDispatchResultLever({ text: 'Sure: {"a":1}' })).toEqual({ kind: 'lever', lever: { a: 1 } });
+    expect(readLlmDispatchResultLever({ text: '{"lever":{"a":1}}' })).toEqual({ kind: 'lever', lever: { lever: { a: 1 } } });
+    expect(readLlmDispatchResultLever({ text: 'prose' })).toEqual({ kind: 'no-json' });
+  });
+
+  it('reads a lever stamp that does not parse into an object as parse-error', () => {
+    expect(readLlmDispatchResultLever({ text: '', lever: '[1]', decodeStatus: 'clean' })).toEqual({ kind: 'parse-error' });
   });
 });
 

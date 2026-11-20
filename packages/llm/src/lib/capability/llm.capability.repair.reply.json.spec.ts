@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { type LlmCallContext, makeLlmCallContext, noopLlmCallContext } from '../record/llm.call.context';
-import { DEFAULT_LLM_REPLY_ENVELOPE_KEYS } from '../reply/llm.reply.envelope';
 import { DEFAULT_LLM_REPLY_FAST_FIX_LIMITS, LLM_REPAIR_REPLY_JSON_CAPABILITY, type LlmReplyFastFixInput } from '../reply/llm.reply.fast.fix';
 import { llmReplyRepairFidelity, repairLlmReplyJson, scoreLlmReplyJson } from '../reply/llm.reply.repair';
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
@@ -128,11 +127,22 @@ describe('makeLlmReplyFastFixer()', () => {
     expect(outcome).toEqual({ kind: 'missed', reason: 'fidelity' });
   });
 
-  it('reads through the envelope: a decline misses as declined and an enveloped fix unwraps', async () => {
-    const fixer = makeLlmReplyFastFixer({ envelope: DEFAULT_LLM_REPLY_ENVELOPE_KEYS });
+  it('reads its own call decoded payload: a decline misses as declined and an enveloped fix unwraps', async () => {
+    const fixer = makeLlmReplyFastFixer();
 
-    await expect(fixer(fixInput(fakeFixDispatch({ text: '{"answerable":false}' }).dispatch))).resolves.toEqual({ kind: 'missed', reason: 'declined' });
-    await expect(fixer(fixInput(fakeFixDispatch({ text: JSON.stringify({ answerable: true, lever: BROKEN.expected }) }).dispatch))).resolves.toEqual({ kind: 'fixed', lever: BROKEN.expected, text: JSON.stringify(BROKEN.expected) });
+    await expect(fixer(fixInput(fakeFixDispatch({ text: '{"answerable":false}', decodeStatus: 'clean' }).dispatch))).resolves.toEqual({ kind: 'missed', reason: 'declined' });
+    await expect(fixer(fixInput(fakeFixDispatch({ text: JSON.stringify({ answerable: true, lever: BROKEN.expected }), lever: JSON.stringify(BROKEN.expected), decodeStatus: 'clean' }).dispatch))).resolves.toEqual({ kind: 'fixed', lever: BROKEN.expected, text: JSON.stringify(BROKEN.expected) });
+    await expect(fixer(fixInput(fakeFixDispatch({ text: '', decodeStatus: 'dropped' }).dispatch))).resolves.toEqual({ kind: 'missed', reason: 'unusable' });
+  });
+
+  it('checks fidelity over the subject envelope lever value, so a trailing envelope field does not count', async () => {
+    const keys = { lever: 'payload', answerable: 'ok', rationale: 'why' };
+    const text = '{"ok":true,"payload":{"title":"A sturdy canvas tote for daily errands","price":24,"inStock":None},"why":"The listing names a canvas tote in stock."}';
+    const dispatch = fakeFixDispatch({ text: JSON.stringify(BROKEN.expected), lever: JSON.stringify(BROKEN.expected), decodeStatus: 'clean' }).dispatch;
+    const input = { ...fixInput(dispatch), text, shape: scoreLlmReplyJson(text, { envelope: keys }) };
+
+    await expect(makeLlmReplyFastFixer()({ ...input, subjectEnvelope: keys })).resolves.toEqual({ kind: 'fixed', lever: BROKEN.expected, text: JSON.stringify(BROKEN.expected) });
+    await expect(makeLlmReplyFastFixer()(input)).resolves.toEqual({ kind: 'missed', reason: 'fidelity' });
   });
 
   it('misses as error on a throw, recording the swallow and no meta', async () => {

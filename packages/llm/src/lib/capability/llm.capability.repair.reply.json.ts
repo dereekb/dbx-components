@@ -18,7 +18,7 @@ import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { llmLiveContextBlock, type LlmLiveContextBlock } from '../prompt/llm.prompt.live.context';
 import { type LlmPromptTemplate } from '../prompt/llm.prompt.template';
 import { type LlmSwallowSiteId } from '../record/llm.swallow';
-import { type LlmReplyEnvelopeKeys, readLlmReplyLever } from '../reply/llm.reply.envelope';
+import { readLlmDispatchResultLever } from '../reply/llm.reply.envelope';
 import { LLM_REPAIR_REPLY_JSON_CAPABILITY, type LlmReplyFastFixer, type LlmReplyFastFixOutcome } from '../reply/llm.reply.fast.fix';
 import { llmReplyRepairDiagnosis, llmReplyRepairFidelity } from '../reply/llm.reply.repair';
 import { type LlmLeverValidator } from '../reply/llm.reply.validator';
@@ -118,19 +118,16 @@ export interface MakeLlmReplyFastFixerConfig<R extends LlmDispatchRequest = LlmD
    * The host data of the fixer's own call, echoed as the outcome's `meta`.
    */
   readonly metaOf?: Maybe<LlmReplyFastFixMetaOf<X>>;
-  /**
-   * How the fixer's reply is read. Unset ⇒ the `json` reading.
-   */
-  readonly envelope?: Maybe<LlmReplyEnvelopeKeys>;
 }
 
 /**
  * Mint a fast fixer — the {@link LlmReplyFastFixer} a host injects into its dispatcher's config. Each call dispatches
  * ONE `RepairReplyJson` request (`maxAttempts: 1`, no critic, the subject's schema as the hint, the subject named as
- * `subjectCapability` so the spend is attributed with no join), then gates the fixed lever on
- * `llmReplyRepairFidelity`.
+ * `subjectCapability` so the spend is attributed with no join), reads the fixed lever off that call's DECODED payload
+ * (`readLlmDispatchResultLever` — the fixer call's own resolved protocol and the dispatcher's envelope keys), then gates
+ * it on `llmReplyRepairFidelity` over the SUBJECT's reading envelope (`input.subjectEnvelope`).
  *
- * @param config - The request and meta hooks and the envelope.
+ * @param config - The request and meta hooks.
  * @returns The fast fixer. It never throws.
  */
 export function makeLlmReplyFastFixer(config?: Maybe<MakeLlmReplyFastFixerConfig>): LlmReplyFastFixer;
@@ -138,14 +135,14 @@ export function makeLlmReplyFastFixer(config?: Maybe<MakeLlmReplyFastFixerConfig
  * Mint a fast fixer for a host request type — `requestOf` is required, so a host request with required fields can never
  * be built without them.
  *
- * @param config - The request and meta hooks and the envelope.
+ * @param config - The request and meta hooks.
  * @returns The fast fixer. It never throws.
  */
 export function makeLlmReplyFastFixer<R extends LlmDispatchRequest, X extends LlmDispatchResult>(config: MakeLlmReplyFastFixerConfig<R, X> & { readonly requestOf: LlmReplyFastFixRequestOf<R> }): LlmReplyFastFixer<R, X>;
 /**
  * The implementation.
  *
- * @param config - The request and meta hooks and the envelope.
+ * @param config - The request and meta hooks.
  * @returns The fast fixer.
  *
  * @__NO_SIDE_EFFECTS__
@@ -154,7 +151,6 @@ export function makeLlmReplyFastFixer<R extends LlmDispatchRequest, X extends Ll
   // The only cast: the default is reachable only through the first overload, where R is LlmDispatchRequest.
   const requestOf: LlmReplyFastFixRequestOf<R> = config?.requestOf ?? ((base) => base as R);
   const metaOf = config?.metaOf;
-  const envelope = config?.envelope;
 
   return async (input) => {
     let outcome: LlmReplyFastFixOutcome;
@@ -173,7 +169,7 @@ export function makeLlmReplyFastFixer<R extends LlmDispatchRequest, X extends Ll
         ...(subject.signal == null ? {} : { signal: subject.signal })
       };
       const raw = await input.dispatch(requestOf(base, subject));
-      const reading = readLlmReplyLever(raw.text, { envelope });
+      const reading = readLlmDispatchResultLever(raw);
       const lever = reading.kind === 'lever' ? parseLlmRepairReplyJsonLever(reading.lever) : undefined;
       const meta = metaOf?.(raw);
       const metaField = meta == null ? {} : { meta };
@@ -182,7 +178,7 @@ export function makeLlmReplyFastFixer<R extends LlmDispatchRequest, X extends Ll
         outcome = { kind: 'missed', reason: 'truncated', ...metaField };
       } else if (lever == null) {
         outcome = { kind: 'missed', reason: reading.kind === 'declined' ? 'declined' : 'unusable', ...metaField };
-      } else if (llmReplyRepairFidelity({ original: input.text, repaired: lever }).ok) {
+      } else if (llmReplyRepairFidelity({ original: input.text, repaired: lever, envelope: input.subjectEnvelope }).ok) {
         outcome = { kind: 'fixed', lever, text: JSON.stringify(lever), ...metaField };
       } else {
         outcome = { kind: 'missed', reason: 'fidelity', ...metaField };

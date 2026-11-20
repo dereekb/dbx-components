@@ -15,7 +15,7 @@
 
 import { isPlainObject } from '../object/object';
 import { type Maybe } from '../value/maybe.type';
-import { parseJsonObjectOrUndefined, scanJsonStringLiteral } from './json';
+import { parseJsonObjectOrUndefined, scanJsonStringLiteral, sliceBalancedJsonObject } from './json';
 import { escapeStringForRegex } from './replace';
 
 /**
@@ -161,8 +161,10 @@ export interface JsonRepairFidelity {
  */
 export interface RepairJsonObjectTextConfig {
   /**
-   * Start the fidelity coverage check at the first `"<key>":` in the original (the region then runs to the end of the
-   * text). Unset ⇒ the whole text is checked.
+   * Take the fidelity coverage check over the value of the first `"<key>":` in the original: when that value is an object
+   * that closes, the region is its balanced `{…}` slice (an envelope field after it does not count); when it never closes
+   * (cut or mangled) or is not an object, the region runs to the end of the text. Unset (or the key not found) ⇒ the whole
+   * text is checked.
    */
   readonly coverageFromKey?: Maybe<string>;
 }
@@ -836,12 +838,21 @@ function collectLeaves(value: unknown, strings: string[], numbers: number[]): vo
  * The region of the original text whose content literals the coverage check counts.
  *
  * @param original - The original text.
- * @param coverageFromKey - The key the region starts after, when set.
- * @returns The whole text, or the text after the first `"<key>":`.
+ * @param coverageFromKey - The key whose value the region covers, when set.
+ * @returns The whole text when the key is unset or absent; the key's balanced object value when it opens with `{` and
+ * closes; otherwise the text after the first `"<key>":`.
  */
 function coverageRegionOf(original: string, coverageFromKey: Maybe<string>): string {
-  const keyMatch = coverageFromKey == null ? null : new RegExp(String.raw`"${escapeStringForRegex(coverageFromKey)}"\s*:`).exec(original);
-  return keyMatch == null ? original : original.slice(keyMatch.index + keyMatch[0].length);
+  const keyMatch = coverageFromKey == null ? null : new RegExp(String.raw`"${escapeStringForRegex(coverageFromKey)}"\s*:\s*`).exec(original);
+  let region = original;
+
+  if (keyMatch != null) {
+    const valueAt = keyMatch.index + keyMatch[0].length;
+    const balanced = original[valueAt] === '{' ? sliceBalancedJsonObject(original, valueAt) : undefined;
+    region = balanced ?? original.slice(valueAt);
+  }
+
+  return region;
 }
 
 /**
@@ -850,7 +861,8 @@ function coverageRegionOf(original: string, coverageFromKey: Maybe<string>): str
  * - Nothing invented: every string leaf, object key and number of the repaired value appears in the original (strings
  *   compared with whitespace, quotes and backslashes removed; numbers as numeric tokens).
  * - Nothing dropped: at least {@link JSON_REPAIR_MIN_COVERAGE} of the original's content literals (string literals of at
- *   least {@link JSON_REPAIR_CONTENT_LITERAL_MIN_CHARS} characters, taken after `coverageFromKey` when it is set and found)
+ *   least {@link JSON_REPAIR_CONTENT_LITERAL_MIN_CHARS} characters, taken over the value of `coverageFromKey` when it is set
+ *   and found — its balanced object, or the rest of the text when that value is unclosed or not an object)
  *   appear in the repaired value.
  *
  * @param config - The original text, the repaired value, and the optional coverage key.

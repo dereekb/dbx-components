@@ -675,13 +675,14 @@ function buildLlmCallContext<A extends object, B extends object, D extends LlmCa
         label,
         startedAt: startMs - rootStartMs,
         totalMs: now() - startMs,
-        spans,
-        marks,
-        gaps,
-        ...(diags.length === 0 ? {} : { diags }),
-        ...(swallows.length === 0 ? {} : { swallows }),
+        // copies: spans and marks are pushed closed, so a shallow copy is a true snapshot
+        spans: [...spans],
+        marks: [...marks],
+        gaps: [...gaps],
+        ...(diags.length === 0 ? {} : { diags: [...diags] }),
+        ...(swallows.length === 0 ? {} : { swallows: [...swallows] }),
         children: children.map((child) => child.profile()),
-        ...(links == null || links.length === 0 ? {} : { links }),
+        ...(links == null || links.length === 0 ? {} : { links: [...links] }),
         ...(detachedRoots.length === 0 ? {} : { detachedProfiles: detachedRoots.map((detachedRoot) => detachedRoot.profile()) })
       };
     }

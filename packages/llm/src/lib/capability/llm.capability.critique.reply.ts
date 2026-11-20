@@ -32,7 +32,7 @@ import { type LlmPromptTemplate } from '../prompt/llm.prompt.template';
 import { type LlmCallContext } from '../record/llm.call.context';
 import { type LlmSwallowSiteId } from '../record/llm.swallow';
 import { LLM_CRITIQUE_REPLY_CAPABILITY, type LlmCritic, type LlmCritiqueBinding, type LlmCritiqueDispatch, type LlmCritiqueInput, type LlmCritiqueRule, type LlmCritiqueVerdict } from '../reply/llm.reply.critique';
-import { llmReplyLeverOf, type LlmReplyEnvelopeKeys } from '../reply/llm.reply.envelope';
+import { readLlmDispatchResultLever } from '../reply/llm.reply.envelope';
 import { llmSchemaLeverValidator } from '../reply/llm.reply.validator';
 import { defineLlmCapability, type LlmCapabilityDescriptor } from './llm.capability.descriptor';
 
@@ -185,32 +185,35 @@ export interface CritiqueLlmReplyConfig extends RenderLlmCritiqueContextConfig {
    */
   readonly callContext: LlmCallContext;
   /**
-   * How the judge's reply is read. Unset ⇒ the `json` reading.
+   * The subject's cancellation signal — carried on the judge request.
    */
-  readonly envelope?: Maybe<LlmReplyEnvelopeKeys>;
+  readonly signal?: Maybe<AbortSignal>;
 }
 
 /**
  * Run ONE judge call and return the parsed verdict, or `undefined` when the judge produced nothing usable.
  *
  * The judge request carries its own `validate` (the narrowed schema), so a malformed verdict gets the dispatcher's
- * ordinary bounded retry. It carries NO `critique`, `meta` or `maxAttempts` — the structural recursion guard.
+ * ordinary bounded retry. It carries NO `critique`, `meta` or `maxAttempts` — the structural recursion guard. The
+ * verdict is read off the judge dispatch's DECODED payload (`readLlmDispatchResultLever`), so it follows the judge
+ * call's resolved reply protocol and the dispatcher's envelope keys.
  *
- * @param config - The goal / evidence / subject live context / reply / subject capability / tier / call context, the dispatch and the envelope.
+ * @param config - The goal / evidence / subject live context / reply / subject capability / tier / call context / signal and the dispatch.
  * @returns The parsed verdict, or `undefined` when the reply was unusable.
  */
 export async function critiqueLlmReply(config: CritiqueLlmReplyConfig): Promise<Maybe<LlmCritiqueOutcome>> {
-  const { goal, evidence, liveContext, replyText, tier } = config;
+  const { goal, evidence, liveContext, replyText, tier, signal } = config;
   const request: LlmDispatchRequest = {
     capability: LLM_CRITIQUE_REPLY_CAPABILITY,
     renderLiveContext: () => renderLlmCritiqueContext({ goal, ...(evidence == null ? {} : { evidence }), liveContext, replyText }),
     validate: llmSchemaLeverValidator(llmCritiqueOutcomeSchema),
     subjectCapability: config.subjectCapability,
     callContext: config.callContext,
-    ...(tier == null ? {} : { tier })
+    ...(tier == null ? {} : { tier }),
+    ...(signal == null ? {} : { signal })
   };
-  const raw = await config.dispatch(request);
-  return parseLlmCritiqueOutcomeLever(llmReplyLeverOf(raw.text, { envelope: config.envelope }));
+  const reading = readLlmDispatchResultLever(await config.dispatch(request));
+  return parseLlmCritiqueOutcomeLever(reading.kind === 'lever' ? reading.lever : undefined);
 }
 
 /**
@@ -218,7 +221,7 @@ export async function critiqueLlmReply(config: CritiqueLlmReplyConfig): Promise<
  */
 export interface MakeLlmSemanticCriticConfig {
   /**
-   * The host's critique binding (its dispatch and envelope).
+   * The host's critique binding (its policy and dispatch).
    */
   readonly binding: LlmCritiqueBinding;
   /**
@@ -260,13 +263,13 @@ export function makeLlmSemanticCritic(config: MakeLlmSemanticCriticConfig): LlmC
     try {
       const outcome = await critiqueLlmReply({
         dispatch: binding.dispatch,
-        envelope: binding.envelope,
         goal,
         ...(isNotBlankString(evidence) ? { evidence } : {}),
         liveContext: input.liveContext,
         replyText: input.replyText,
         subjectCapability: input.capability,
         callContext: input.callContext,
+        signal: input.signal,
         tier: rule.tier
       });
 
@@ -357,8 +360,9 @@ export const DEFAULT_LLM_CRITIQUE_REPLY_INSTRUCTIONS = [
 export const LLM_CRITIQUE_REPLY_TEMPLATE: LlmPromptTemplate = { key: 'critique-reply.instructions', role: 'instructions', capability: LLM_CRITIQUE_REPLY_CAPABILITY, text: DEFAULT_LLM_CRITIQUE_REPLY_INSTRUCTIONS };
 
 /**
- * The judge's built-in descriptor. It sets no reply protocol (the host default applies; the binding's `envelope` reads
- * the verdict) and no tags, tier or traits — a host spreads its own in, e.g.
+ * The judge's built-in descriptor. It sets no reply protocol (the host default applies, and the verdict is read off
+ * the judge dispatch's decoded payload, so a `json-envelope` host's envelope unwraps it; a `line`-default host must
+ * give it a JSON protocol) and no tags, tier or traits — a host spreads its own in, e.g.
  * `{ ...LLM_CRITIQUE_REPLY_DESCRIPTOR, tags: ['classify'] }`. `mustResolve` brings the must-resolve clause;
  * `rawJsonContext` exempts it from the raw-JSON watch, since it reads another capability's reply by design.
  */

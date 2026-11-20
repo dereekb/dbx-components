@@ -3,6 +3,7 @@ import { type LlmCallContext, makeLlmCallContext } from '../record/llm.call.cont
 import { LLM_TIMEOUT_FINISH_REASON, LLM_TRANSPORT_FINISH_REASON, LLM_UNRETRYABLE_FINISH_REASON } from '../record/llm.decode.failure';
 import { type LlmCompletion, type LlmDispatchResult, type LlmRequest, type LlmStrategy } from '../strategy/llm.strategy';
 import { DEFAULT_LLM_REPLY_FAST_FIX_LIMITS, type LlmReplyFastFixOutcome } from '../reply/llm.reply.fast.fix';
+import { DEFAULT_LLM_REPLY_ENVELOPE_KEYS } from '../reply/llm.reply.envelope';
 import { isDegenerateLlmReplyReading, type LlmBoundReplyFastFix, llmBoundReplyFastFixOf, readLlmDispatchReply, type LlmReplyRepairRefusal, runLlmReplyRepairLane, sendLlmDispatchAttempt, validateLlmDispatchLever } from './llm.dispatch.attempt';
 
 class APIUserAbortError extends Error {}
@@ -98,7 +99,7 @@ describe('runLlmReplyRepairLane()', () => {
 
   async function laneOf(text: string, finishReason = 'stop', unrepairedRefusal: LlmReplyRepairRefusal = 'mangled') {
     const attemptContext = makeLlmCallContext({ label: 'attempt-1', timing: true });
-    const lane = await runLlmReplyRepairLane({ served: served(text, finishReason), attempt: 1, attemptContext, read, unrepairedRefusal, fastFixLimits: DEFAULT_LLM_REPLY_FAST_FIX_LIMITS });
+    const lane = await runLlmReplyRepairLane({ served: served(text, finishReason), attempt: 1, attemptContext, read, envelope: undefined, unrepairedRefusal, fastFixLimits: DEFAULT_LLM_REPLY_FAST_FIX_LIMITS });
     return { lane, attemptContext };
   }
 
@@ -140,7 +141,17 @@ describe('runLlmReplyRepairLane() fast-fix tier', () => {
   async function fastLaneOf(config: { readonly text?: string; readonly fastFix?: LlmBoundReplyFastFix; readonly fastFixSpent?: boolean; readonly maxChars?: number; readonly minScore?: number }) {
     const swallows: string[] = [];
     const attemptContext = makeLlmCallContext({ label: 'attempt-1', timing: true, onSwallow: (site) => void swallows.push(site) });
-    const lane = await runLlmReplyRepairLane({ served: served(config.text ?? MANGLED), attempt: 1, attemptContext, read, unrepairedRefusal: 'no-schema', fastFix: config.fastFix, fastFixSpent: config.fastFixSpent, fastFixLimits: { maxChars: config.maxChars ?? 16_000, minScore: config.minScore ?? 0.5 } });
+    const lane = await runLlmReplyRepairLane({
+      served: served(config.text ?? MANGLED),
+      attempt: 1,
+      attemptContext,
+      read,
+      envelope: undefined,
+      unrepairedRefusal: 'no-schema',
+      fastFix: config.fastFix,
+      fastFixSpent: config.fastFixSpent,
+      fastFixLimits: { maxChars: config.maxChars ?? 16_000, minScore: config.minScore ?? 0.5 }
+    });
     return { lane, attemptContext, swallows };
   }
 
@@ -187,22 +198,22 @@ describe('llmBoundReplyFastFixOf()', () => {
   const fixer = (input: unknown) => Promise.resolve<LlmReplyFastFixOutcome>({ kind: 'missed', reason: 'unusable', meta: { input } });
 
   it('should never bind on the repair capability, on a line call or without a fixer', () => {
-    expect(llmBoundReplyFastFixOf({ replyFastFix: fixer, request: { capability: 'RepairReplyJson', renderLiveContext }, protocol: 'json', schemaHint: {}, dispatch })).toEqual({ fastFixUnavailable: 'fast-fix-off' });
-    expect(llmBoundReplyFastFixOf({ replyFastFix: fixer, request: { capability: 'cap', renderLiveContext }, protocol: 'line', schemaHint: {}, dispatch })).toEqual({ fastFixUnavailable: 'fast-fix-off' });
-    expect(llmBoundReplyFastFixOf({ request: { capability: 'cap', renderLiveContext }, protocol: 'json', schemaHint: {}, dispatch })).toEqual({ fastFixUnavailable: 'fast-fix-off' });
+    expect(llmBoundReplyFastFixOf({ replyFastFix: fixer, request: { capability: 'RepairReplyJson', renderLiveContext }, protocol: 'json', schemaHint: {}, envelope: undefined, dispatch })).toEqual({ fastFixUnavailable: 'fast-fix-off' });
+    expect(llmBoundReplyFastFixOf({ replyFastFix: fixer, request: { capability: 'cap', renderLiveContext }, protocol: 'line', schemaHint: {}, envelope: undefined, dispatch })).toEqual({ fastFixUnavailable: 'fast-fix-off' });
+    expect(llmBoundReplyFastFixOf({ request: { capability: 'cap', renderLiveContext }, protocol: 'json', schemaHint: {}, envelope: undefined, dispatch })).toEqual({ fastFixUnavailable: 'fast-fix-off' });
   });
 
   it('should refuse as no-schema when eligible without a schema hint', () => {
-    expect(llmBoundReplyFastFixOf({ replyFastFix: fixer, request: { capability: 'cap', renderLiveContext }, protocol: 'json', dispatch })).toEqual({ fastFixUnavailable: 'no-schema' });
+    expect(llmBoundReplyFastFixOf({ replyFastFix: fixer, request: { capability: 'cap', renderLiveContext }, protocol: 'json', envelope: undefined, dispatch })).toEqual({ fastFixUnavailable: 'no-schema' });
   });
 
-  it('should pass the request, subject capability, schema hint and dispatch to a bound fixer', async () => {
+  it('should pass the request, subject capability, subject envelope, schema hint and dispatch to a bound fixer', async () => {
     const request = { capability: 'cap', renderLiveContext };
     const schemaHint = { type: 'object' };
-    const { fastFix } = llmBoundReplyFastFixOf({ replyFastFix: fixer, request, protocol: 'json-envelope', schemaHint, dispatch });
+    const { fastFix } = llmBoundReplyFastFixOf({ replyFastFix: fixer, request, protocol: 'json-envelope', schemaHint, envelope: DEFAULT_LLM_REPLY_ENVELOPE_KEYS, dispatch });
     const outcome = await fastFix?.({ text: 't', shape: {} as never, attempt: 2, callContext: makeLlmCallContext({ label: 'a' }) });
 
-    expect(outcome?.meta).toMatchObject({ input: { request, subjectCapability: 'cap', schemaHint, dispatch, text: 't', attempt: 2 } });
+    expect(outcome?.meta).toMatchObject({ input: { request, subjectCapability: 'cap', subjectEnvelope: DEFAULT_LLM_REPLY_ENVELOPE_KEYS, schemaHint, dispatch, text: 't', attempt: 2 } });
   });
 });
 

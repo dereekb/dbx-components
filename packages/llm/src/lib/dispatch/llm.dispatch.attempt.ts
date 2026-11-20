@@ -7,7 +7,7 @@ import { type JsonRepairShape, type Maybe, roundToPrecision } from '@dereekb/uti
 import { LLM_REPLY_REPAIR_FAST_FIX_SWALLOW_SITE } from '../capability/llm.capability.repair.reply.json';
 import { type LlmCallContext } from '../record/llm.call.context';
 import { isLlmCleanStopFinish } from '../record/llm.decode.failure';
-import { DEFAULT_LLM_REPLY_ENVELOPE_KEYS, type LlmReplyEnvelopeKeys, type LlmReplyLeverReading, readLlmReplyLever } from '../reply/llm.reply.envelope';
+import { type LlmReplyEnvelopeKeys, type LlmReplyLeverReading, readLlmReplyLever, resolveLlmReplyReadingEnvelope } from '../reply/llm.reply.envelope';
 import { LLM_REPAIR_REPLY_JSON_CAPABILITY, type LlmReplyFastFixer, type LlmReplyFastFixLimits, type LlmReplyFastFixMissReason, type LlmReplyFastFixOutcome } from '../reply/llm.reply.fast.fix';
 import { type LlmReplyProtocol } from '../reply/llm.reply.protocol';
 import { repairLlmReplyJson } from '../reply/llm.reply.repair';
@@ -136,7 +136,7 @@ export interface ReadLlmDispatchReplyConfig {
    */
   readonly protocol: LlmReplyProtocol;
   /**
-   * The host's envelope keys. Defaults to {@link DEFAULT_LLM_REPLY_ENVELOPE_KEYS} on a `json-envelope` read.
+   * The host's envelope keys. Defaults to `DEFAULT_LLM_REPLY_ENVELOPE_KEYS` on a `json-envelope` read (`resolveLlmReplyReadingEnvelope`).
    */
   readonly envelope?: Maybe<LlmReplyEnvelopeKeys>;
   /**
@@ -154,7 +154,7 @@ export interface ReadLlmDispatchReplyConfig {
  */
 export function readLlmDispatchReply(text: string, config: ReadLlmDispatchReplyConfig): LlmReplyLeverReading {
   const { protocol, envelope, swallow } = config;
-  return readLlmReplyLever(text, { envelope: protocol === 'json-envelope' ? (envelope ?? DEFAULT_LLM_REPLY_ENVELOPE_KEYS) : undefined, swallow });
+  return readLlmReplyLever(text, { envelope: resolveLlmReplyReadingEnvelope(protocol, envelope), swallow });
 }
 
 /**
@@ -193,6 +193,11 @@ export interface RunLlmReplyRepairLaneConfig {
    * Re-reads a repaired reply (the same protocol / envelope / swallow as the first read).
    */
   readonly read: (text: string) => LlmReplyLeverReading;
+  /**
+   * The reply's reading envelope (`resolveLlmReplyReadingEnvelope`) — the deterministic tier's fidelity coverage is
+   * taken over its lever key's value. `undefined` ⇒ the whole reply is the payload.
+   */
+  readonly envelope: Maybe<LlmReplyEnvelopeKeys>;
   /**
    * The refusal when no fast fix is bound (`fast-fix-off`, `no-schema`, or the single-shot path's `mangled`) — the
    * reason an object-led, clean-stopped reply the deterministic walk could not repair is left alone.
@@ -260,6 +265,11 @@ export interface LlmBoundReplyFastFixConfig<R extends LlmDispatchRequest = LlmDi
    */
   readonly schemaHint?: unknown;
   /**
+   * The subject's reading envelope (`resolveLlmReplyReadingEnvelope`) — handed to the fixer as `subjectEnvelope` for
+   * its fidelity check.
+   */
+  readonly envelope: Maybe<LlmReplyEnvelopeKeys>;
+  /**
    * The dispatcher's own dispatch (the fixer call is an ordinary, recorded dispatch).
    */
   readonly dispatch: (request: R) => Promise<X>;
@@ -288,12 +298,12 @@ export interface LlmBoundReplyFastFixBinding {
  * @returns The binding.
  */
 export function llmBoundReplyFastFixOf<R extends LlmDispatchRequest = LlmDispatchRequest, X extends LlmDispatchResult = LlmDispatchResult>(config: LlmBoundReplyFastFixConfig<R, X>): LlmBoundReplyFastFixBinding {
-  const { replyFastFix, request, protocol, schemaHint, dispatch } = config;
+  const { replyFastFix, request, protocol, schemaHint, envelope, dispatch } = config;
   const bindable = replyFastFix != null && request.capability !== LLM_REPAIR_REPLY_JSON_CAPABILITY && protocol !== 'line';
   let binding: LlmBoundReplyFastFixBinding;
 
   if (bindable && schemaHint != null) {
-    binding = { fastFix: (input) => replyFastFix({ ...input, request, subjectCapability: request.capability, schemaHint, dispatch }), fastFixUnavailable: 'no-schema' };
+    binding = { fastFix: (input) => replyFastFix({ ...input, request, subjectCapability: request.capability, subjectEnvelope: envelope, schemaHint, dispatch }), fastFixUnavailable: 'no-schema' };
   } else {
     binding = { fastFixUnavailable: bindable ? 'no-schema' : 'fast-fix-off' };
   }
@@ -403,8 +413,8 @@ async function runLlmReplyFastFixTier(config: RunLlmReplyRepairLaneConfig & { re
  * @returns The repair (when one landed) and the fast-fix accounting.
  */
 export async function runLlmReplyRepairLane(config: RunLlmReplyRepairLaneConfig): Promise<LlmReplyRepairLaneResult> {
-  const { served, attempt, attemptContext, read, unrepairedRefusal, fastFix, fastFixSpent, fastFixLimits } = config;
-  const { shape, repaired } = repairLlmReplyJson(served.text);
+  const { served, attempt, attemptContext, read, envelope, unrepairedRefusal, fastFix, fastFixSpent, fastFixLimits } = config;
+  const { shape, repaired } = repairLlmReplyJson(served.text, { envelope });
   const capability = served.capability;
   const score = roundToPrecision(shape.score, LLM_REPLY_REPAIR_SCORE_PRECISION);
   let refusal: Maybe<LlmReplyRepairRefusal>;

@@ -169,6 +169,27 @@ describe('makeLlmCallContext', () => {
     close();
     expect(ctx.profile().spans).toHaveLength(1);
   });
+
+  it('profile() is a snapshot: later records do not reach an earlier profile, and each call copies its arrays', () => {
+    const ctx = testContext();
+    ctx.time('render', () => 1);
+    ctx.diag({ level: 'info', code: 'first', message: 'first' });
+    const before = ctx.profile();
+
+    ctx.time('send', () => 2);
+    ctx.mark('late');
+    ctx.gap(missing('RAIN'));
+    ctx.diag({ level: 'info', code: 'second', message: 'second' });
+    ctx.swallow('llm/spec.site', new Error('x'));
+
+    expect(before.spans.map((span) => span.name)).toEqual(['render']);
+    expect(before.marks).toEqual([]);
+    expect(before.gaps).toEqual([]);
+    expect(before.diags?.map((diag) => diag.code)).toEqual(['first']);
+    expect(before.swallows).toBeUndefined();
+    expect(ctx.profile().spans).not.toBe(ctx.profile().spans);
+    expect(ctx.profile().diags).not.toBe(ctx.profile().diags);
+  });
 });
 
 describe('LlmCallContext.detached', () => {

@@ -12,7 +12,6 @@ import { compileLlmCapabilityRules, type LlmCapabilityRuleTarget, type LlmModelR
 import { type LlmCapabilityKey, type LlmCapabilityTag, type LlmModelTierKey } from '../model/llm.value';
 import { type LlmCallContext } from '../record/llm.call.context';
 import { type LlmCallMeta, type LlmDispatchResult } from '../strategy/llm.strategy';
-import { type LlmReplyEnvelopeKeys } from './llm.reply.envelope';
 import { type LlmReplyProtocol } from './llm.reply.protocol';
 
 /**
@@ -71,6 +70,11 @@ export interface LlmCritiqueInput {
    * inside the subject attempt's timing profile.
    */
   readonly callContext: LlmCallContext;
+  /**
+   * The subject request's cancellation signal — a critic hands it to its judge request, so a request-level cancel
+   * reaches the judge call too.
+   */
+  readonly signal?: Maybe<AbortSignal>;
 }
 
 /**
@@ -234,8 +238,4 @@ export interface LlmCritiqueBinding {
    * The judge's dispatch. A host normally closes over its own request fields here.
    */
   readonly dispatch: LlmCritiqueDispatch;
-  /**
-   * How the judge's reply is read. Unset ⇒ the `json` reading.
-   */
-  readonly envelope?: Maybe<LlmReplyEnvelopeKeys>;
 }

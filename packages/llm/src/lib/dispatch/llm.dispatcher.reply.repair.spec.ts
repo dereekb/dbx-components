@@ -10,15 +10,17 @@
 import { type } from 'arktype';
 import { describe, expect, it } from 'vitest';
 import { makeScriptedLlmStrategy, type ScriptedLlmReplies } from '@dereekb/llm/test';
+import { LLM_CRITIQUE_REPLY_DESCRIPTOR, LLM_CRITIQUE_REPLY_TEMPLATE, makeLlmSemanticCritic } from '../capability/llm.capability.critique.reply';
 import { LLM_REPAIR_REPLY_JSON_DESCRIPTOR, LLM_REPAIR_REPLY_JSON_TEMPLATE, LLM_REPLY_REPAIR_FAST_FIX_SWALLOW_SITE, makeLlmReplyFastFixer, renderLlmRepairReplyJsonContext } from '../capability/llm.capability.repair.reply.json';
 import { defineLlmCapability, type LlmCapabilityDescriptor } from '../capability/llm.capability.descriptor';
 import { type LlmModelTierMap } from '../model/llm.model.tier';
 import { type LlmLiveContextBlock } from '../prompt/llm.prompt.live.context';
 import { type LlmPromptTemplate, tieredLlmPromptTemplateResolver } from '../prompt/llm.prompt.template';
 import { type LlmCallContext, type LlmCallDiag, makeLlmCallContext } from '../record/llm.call.context';
-import { type LlmDecodeFailureRecord } from '../record/llm.call.record';
+import { type LlmCallRecord, type LlmDecodeFailureRecord } from '../record/llm.call.record';
 import { type LlmSwallowSiteId } from '../record/llm.swallow';
-import { DEFAULT_LLM_REPLY_ENVELOPE_KEYS, readLlmReplyLever } from '../reply/llm.reply.envelope';
+import { compileLlmCritiquePolicy, LLM_CRITIQUE_REPLY_CAPABILITY } from '../reply/llm.reply.critique';
+import { readLlmReplyLever } from '../reply/llm.reply.envelope';
 import { DEFAULT_LLM_REPLY_FAST_FIX_LIMITS, LLM_REPAIR_REPLY_JSON_CAPABILITY, type LlmReplyFastFixer } from '../reply/llm.reply.fast.fix';
 import { scoreLlmReplyJson } from '../reply/llm.reply.repair';
 import { type LlmDispatchResult, type LlmRequest } from '../strategy/llm.strategy';
@@ -204,8 +206,21 @@ describe('makeLlmDispatcher() reply repair', () => {
       const truncated = await run({ subject: [MANGLED, OK], fixer: [{ text: '{"say":"a long', finishReason: 'length' }], replyFastFix: makeLlmReplyFastFixer() });
       expect(reasonsOf(truncated.diags, 'reply-fast-fix-miss')).toEqual(['truncated']);
 
-      const declined = await run({ subject: [MANGLED, OK], fixer: ['{"answerable":false,"rationale":"cannot repair"}'], replyFastFix: makeLlmReplyFastFixer({ envelope: DEFAULT_LLM_REPLY_ENVELOPE_KEYS }) });
+      // a fixer configured with no envelope reads its own nested call's decoded payload, so a json-envelope host's decline reads as one
+      const declined = await run({ subject: [MANGLED, OK], fixer: ['{"answerable":false,"rationale":"cannot repair"}'], replyFastFix: makeLlmReplyFastFixer(), defaultReplyProtocol: 'json-envelope' });
       expect(reasonsOf(declined.diags, 'reply-fast-fix-miss')).toEqual(['declined']);
+    });
+
+    it('should fix a json-envelope subject with a custom lever key and a trailing rationale (fidelity over the lever value)', async () => {
+      const replyEnvelope = { lever: 'payload', answerable: 'ok', rationale: 'why' };
+      const subject = '{"ok":true,"payload":{"say":"a long enough line of dialogue","n":None},"why":"The line answers the scene prompt well."}';
+      const { result, subjectCalls, fixerCalls, diags } = await run({ subject: [subject], fixer: ['{"ok":true,"payload":{"say":"a long enough line of dialogue","n":null}}'], replyFastFix: makeLlmReplyFastFixer(), defaultReplyProtocol: 'json-envelope', replyEnvelope });
+
+      expect(subjectCalls).toHaveLength(1);
+      expect(fixerCalls).toHaveLength(1);
+      expect(reasonsOf(diags, 'reply-fast-fix-miss')).toEqual([]);
+      expect(result.repair).toMatchObject({ tier: 'fast-fix' });
+      expect(result.lever).toBe(FIXED);
     });
 
     it('should make ONE fixer call across two mangled attempts (the second is fast-fix-spent)', async () => {
@@ -280,6 +295,57 @@ describe('makeLlmDispatcher() reply repair', () => {
       const { result } = await run({ subject: [MANGLED], replyFastFix: withMeta });
 
       expect(result.repair).toMatchObject({ tier: 'fast-fix', meta: { fixCall: 'fix-1' } });
+    });
+
+    it("should keep the fixer's meta on the failed row of a fix the validator then rejects", async () => {
+      const records: LlmCallRecord[] = [];
+      const withMeta = makeLlmReplyFastFixer({ metaOf: () => ({ fixCall: 'fix-1' }) });
+      let validated = 0;
+      const rejectFirst = () => {
+        validated += 1;
+        return validated === 1 ? { error: 'the first lever is rejected' } : (true as const);
+      };
+      await run({ subject: [MANGLED, OK], replyFastFix: withMeta, recorder: { recordCall: (record) => records.push(record) }, request: { validate: rejectFirst } });
+
+      const subjectRecord = records.find((record) => record.capability === 'TestCap');
+      expect(subjectRecord?.failedAttempts?.[0]).toMatchObject({ cause: 'schema-validation', repair: { tier: 'fast-fix', meta: { fixCall: 'fix-1' } } });
+    });
+  });
+
+  describe('critique on a json-envelope host', () => {
+    it('should read the judge decoded payload with no binding envelope, so a rejecting judge re-asks', async () => {
+      const requests: LlmRequest[] = [];
+      const strategy = makeScriptedLlmStrategy({
+        id: 's',
+        byCapability: {
+          TestCap: ['{"answerable":true,"lever":{"say":"first"}}', '{"answerable":true,"lever":{"say":"second"}}'],
+          [LLM_CRITIQUE_REPLY_CAPABILITY]: ['{"answerable":true,"lever":{"pass":false,"feedback":"name the tote"}}', '{"answerable":true,"lever":{"pass":true}}']
+        },
+        requests
+      });
+      const dispatcher = makeLlmDispatcher<LlmDispatchRequest, LlmDispatchResult>({
+        strategies: makeLlmStrategyRegistry([strategy]),
+        defaultStrategyId: 's',
+        defaultMaxOutputTokens: 1024,
+        modelTiers: TIERS,
+        defaultReplyProtocol: 'json-envelope',
+        descriptorOf: (capability) => (capability === LLM_CRITIQUE_REPLY_CAPABILITY ? LLM_CRITIQUE_REPLY_DESCRIPTOR : DESCRIPTORS[capability]),
+        templateResolver: tieredLlmPromptTemplateResolver({
+          tiers: [
+            { source: 'llm', templates: [LLM_CRITIQUE_REPLY_TEMPLATE] },
+            { source: 'defaults', templates: TEMPLATES }
+          ]
+        }),
+        transportBackoff: () => 0
+      });
+      const rule = { capabilities: ['TestCap'], maxAttempts: 2 };
+      const binding = { policy: compileLlmCritiquePolicy({ critique: { rules: [rule] }, capabilities: [{ capability: 'TestCap' }] }), dispatch: (request: LlmDispatchRequest) => dispatcher.dispatch(request) };
+      const critique = makeLlmSemanticCritic({ binding, rule, goal: 'name the product' });
+      const result = await dispatcher.dispatch({ capability: 'TestCap', renderLiveContext: liveContext, validate: acceptAny, critique, maxAttempts: 2 });
+
+      expect(requests.filter((sent) => sent.capability === 'TestCap')).toHaveLength(2);
+      expect(result.decodeStatus).toBe('retried');
+      expect(result.lever).toBe('{"say":"second"}');
     });
   });
 });

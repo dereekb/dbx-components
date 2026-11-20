@@ -67,13 +67,13 @@ export interface LlmCallTelemetry {
 }
 
 /**
- * The bounded summary of a reply repair — every field but the original text.
+ * The bounded summary of a reply repair — every field but the original text (the fixer's `meta` included, when set).
  *
  * @param repair - The repair riding a result.
  * @returns Its bounded summary.
  */
 function llmReplyRepairSummaryOf(repair: LlmReplyRepair): LlmReplyRepairSummary {
-  return filterUndefinedValues({ tier: repair.tier, attempt: repair.attempt, verdict: repair.verdict, score: repair.score, ops: repair.ops }, true);
+  return filterUndefinedValues({ tier: repair.tier, attempt: repair.attempt, verdict: repair.verdict, score: repair.score, ops: repair.ops, meta: repair.meta }, true);
 }
 
 /**

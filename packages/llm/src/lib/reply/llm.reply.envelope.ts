@@ -23,8 +23,10 @@
  * Only `json-envelope` declines.
  */
 
-import { type JsonObjectInText, type Maybe, readJsonObjectFromText, stripMarkdownCodeFence } from '@dereekb/util';
+import { type JsonObjectInText, type Maybe, parseJsonObjectOrUndefined, readJsonObjectFromText, stripMarkdownCodeFence } from '@dereekb/util';
 import { type LlmSwallowSink, type LlmSwallowSiteId, NOOP_LLM_SWALLOW_SINK } from '../record/llm.swallow';
+import { type LlmDispatchResult } from '../strategy/llm.strategy';
+import { type LlmReplyProtocol } from './llm.reply.protocol';
 
 /**
  * The swallow site a reply whose JSON block does not parse is counted on — reported exactly once per read, and only
@@ -218,6 +220,58 @@ export function readLlmReplyLever(text: string, config?: Maybe<LlmReplyReadConfi
     } else {
       reading = { kind: 'lever', lever };
     }
+  }
+
+  return reading;
+}
+
+/**
+ * The envelope keys a reply is READ with under a protocol — the one rule the dispatcher's reader, its repair tiers and
+ * its decode rows share: `json-envelope` ⇒ the host's keys (default {@link DEFAULT_LLM_REPLY_ENVELOPE_KEYS}); every
+ * other protocol ⇒ none (the whole reply is the payload).
+ *
+ * @param protocol - The call's resolved reply protocol.
+ * @param envelope - The host's envelope keys, when it set any.
+ * @returns The reading envelope, or `undefined` when the reply is not an envelope.
+ *
+ * @example
+ * ```ts
+ * resolveLlmReplyReadingEnvelope('json-envelope', undefined); // DEFAULT_LLM_REPLY_ENVELOPE_KEYS
+ * resolveLlmReplyReadingEnvelope('json', { lever: 'payload', answerable: 'ok', rationale: 'why' }); // undefined
+ * ```
+ */
+export function resolveLlmReplyReadingEnvelope(protocol: LlmReplyProtocol, envelope: Maybe<LlmReplyEnvelopeKeys>): Maybe<LlmReplyEnvelopeKeys> {
+  return protocol === 'json-envelope' ? (envelope ?? DEFAULT_LLM_REPLY_ENVELOPE_KEYS) : undefined;
+}
+
+/**
+ * Read a nested dispatch's DECODED payload — the reading its own dispatcher made with the call's resolved protocol and
+ * the host's envelope: `lever` ⇒ that object; accepted with no lever (`clean` / `retried`) ⇒ `declined`; `dropped` ⇒
+ * `no-json`; an unstamped result (a fake dispatch, or a host `resultOf` that dropped the stamp) ⇒ the `json` reading of
+ * its text. A `lever` stamp that does not parse into an object reads `parse-error`.
+ *
+ * @param result - The nested dispatch's result.
+ * @returns The classified reading.
+ *
+ * @example
+ * ```ts
+ * readLlmDispatchResultLever({ text: '{"lever":{"a":1}}', lever: '{"a":1}', decodeStatus: 'clean' }); // { kind: 'lever', lever: { a: 1 } }
+ * readLlmDispatchResultLever({ text: 'no', decodeStatus: 'dropped' }); // { kind: 'no-json' }
+ * ```
+ */
+export function readLlmDispatchResultLever(result: Pick<LlmDispatchResult, 'text' | 'lever' | 'decodeStatus'>): LlmReplyLeverReading {
+  const { text, lever, decodeStatus } = result;
+  let reading: LlmReplyLeverReading;
+
+  if (lever != null) {
+    const parsed = parseJsonObjectOrUndefined(lever);
+    reading = parsed == null ? { kind: 'parse-error' } : { kind: 'lever', lever: parsed };
+  } else if (decodeStatus === 'dropped') {
+    reading = { kind: 'no-json' };
+  } else if (decodeStatus == null) {
+    reading = readLlmReplyLever(text);
+  } else {
+    reading = { kind: 'declined' };
   }
 
   return reading;

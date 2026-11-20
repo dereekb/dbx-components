@@ -6,7 +6,6 @@ import { joinLlmLiveContextBlocks } from '../prompt/llm.prompt.live.context';
 import { tieredLlmPromptTemplateResolver } from '../prompt/llm.prompt.template';
 import { type LlmCallDiagRecord, makeLlmCallContext, noopLlmCallContext } from '../record/llm.call.context';
 import { compileLlmCritiquePolicy, LLM_CRITIQUE_REPLY_CAPABILITY, type LlmCritiqueBinding, type LlmCritiqueInput, type LlmCritiqueRule } from '../reply/llm.reply.critique';
-import { DEFAULT_LLM_REPLY_ENVELOPE_KEYS } from '../reply/llm.reply.envelope';
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
 import { critiqueLlmReply, DEFAULT_LLM_CRITIQUE_REPLY_INSTRUCTIONS, LLM_CRITIQUE_REPLY_DESCRIPTOR, LLM_CRITIQUE_REPLY_TEMPLATE, llmCriticFor, llmCritiqueOutcomeSchema, makeLlmSemanticCritic, parseLlmCritiqueOutcomeLever, renderLlmCritiqueContext } from './llm.capability.critique.reply';
 
@@ -42,8 +41,23 @@ const CAPABILITIES = [{ capability: 'summarize', tags: ['copy'] }, { capability:
  * @param envelope - Whether the judge's reply is enveloped.
  * @returns The binding.
  */
-function bindingOf(fake: FakeDispatch, rule: LlmCritiqueRule = { capabilities: ['summarize'], tier: 'fast', maxAttempts: 3 }, envelope = false): LlmCritiqueBinding {
-  return { policy: compileLlmCritiquePolicy({ critique: { rules: [rule] }, capabilities: CAPABILITIES }), dispatch: fake.dispatch, ...(envelope ? { envelope: DEFAULT_LLM_REPLY_ENVELOPE_KEYS } : {}) };
+function bindingOf(fake: FakeDispatch, rule: LlmCritiqueRule = { capabilities: ['summarize'], tier: 'fast', maxAttempts: 3 }): LlmCritiqueBinding {
+  return { policy: compileLlmCritiquePolicy({ critique: { rules: [rule] }, capabilities: CAPABILITIES }), dispatch: fake.dispatch };
+}
+
+/**
+ * A fake dispatch that answers every request with one STAMPED result — the decoded payload a real dispatcher leaves.
+ *
+ * @param stamp - The result's text and decode stamps.
+ * @returns The recorded requests and the dispatch.
+ */
+function fakeStampedDispatch(stamp: Pick<LlmDispatchResult, 'text' | 'lever' | 'decodeStatus'>): FakeDispatch {
+  const requests: LlmDispatchRequest[] = [];
+  const dispatch = async (request: LlmDispatchRequest): Promise<LlmDispatchResult> => {
+    requests.push(request);
+    return { ...stamp, strategyId: 'fake', capability: request.capability };
+  };
+  return { requests, dispatch };
 }
 
 /**
@@ -185,14 +199,25 @@ describe('makeLlmSemanticCritic()', () => {
     expect(diags[0]).toMatchObject({ code: 'critique-error', fields: { capability: 'summarize', attempt: 1, error: 'judge down' } });
   });
 
-  it('reads an enveloped verdict through the binding envelope, and a declining envelope as unusable', async () => {
-    const enveloped = makeLlmSemanticCritic({ binding: bindingOf(fakeDispatch('{"answerable":true,"lever":{"pass":false,"feedback":"name the tote"}}'), rule, true), rule, goal: 'G' });
+  it('reads the judge dispatch decoded payload, and a declined judge reply as unusable', async () => {
+    const enveloped = makeLlmSemanticCritic({ binding: bindingOf(fakeStampedDispatch({ text: '{"answerable":true,"payload":{"pass":false,"feedback":"name the tote"}}', lever: '{"pass":false,"feedback":"name the tote"}', decodeStatus: 'clean' }), rule), rule, goal: 'G' });
     await expect(enveloped(recordingInput().input)).resolves.toEqual({ error: 'name the tote' });
 
-    const declining = makeLlmSemanticCritic({ binding: bindingOf(fakeDispatch('{"answerable":false}'), rule, true), rule, goal: 'G' });
+    const declining = makeLlmSemanticCritic({ binding: bindingOf(fakeStampedDispatch({ text: '{"answerable":false}', decodeStatus: 'clean' }), rule), rule, goal: 'G' });
     const { input, diags } = recordingInput();
     await expect(declining(input)).resolves.toBe(true);
     expect(diags[0]?.code).toBe('critique-unusable');
+  });
+
+  it('carries the subject signal on the judge request', async () => {
+    const fake = fakeDispatch('{"pass":true}');
+    const controller = new AbortController();
+    const critic = makeLlmSemanticCritic({ binding: bindingOf(fake, rule), rule, goal: 'G' });
+
+    await critic({ ...recordingInput().input, signal: controller.signal });
+    await critic(recordingInput().input);
+    expect(fake.requests[0].signal).toBe(controller.signal);
+    expect('signal' in fake.requests[1]).toBe(false);
   });
 });
 

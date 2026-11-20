@@ -13,7 +13,7 @@ function result(extra: Partial<LlmDispatchResult> = {}): LlmDispatchResult {
 describe('llmDecodeFailureAttemptOf()', () => {
   it('should stamp a parse-error row with the scorer shape and the tail excerpt', () => {
     const text = `{"a":"${Array.from({ length: 150 }, (_, index) => `word${index}`).join(' ')}`;
-    const row = llmDecodeFailureAttemptOf({ attempt: 1, failureClass: 'parse-error', result: result({ text, finishReason: 'stop', latencyMs: 9, usage: { completionTokens: 3 } as never }), maxOutputTokens: 100 });
+    const row = llmDecodeFailureAttemptOf({ attempt: 1, failureClass: 'parse-error', result: result({ text, finishReason: 'stop', latencyMs: 9, usage: { completionTokens: 3 } as never }), maxOutputTokens: 100, envelope: undefined });
 
     expect(llmDecodeFailureTailExcerpt(text)).toBeDefined();
     expect(row).toMatchObject({ attempt: 1, class: 'parse-error', rawLength: text.length, finishReason: 'stop', completionTokens: 3, latencyMs: 9, maxOutputTokens: 100, tailExcerpt: llmDecodeFailureTailExcerpt(text) });
@@ -21,14 +21,14 @@ describe('llmDecodeFailureAttemptOf()', () => {
   });
 
   it('should keep a schema-validation row free of shape and tail, carrying the validator error, lever and transport error', () => {
-    const row = llmDecodeFailureAttemptOf({ attempt: 2, failureClass: 'schema-validation', result: result({ text: '{"a":1}' }), validatorError: 'bad', lever: { lever: 'budget' }, transportError: 't' });
+    const row = llmDecodeFailureAttemptOf({ attempt: 2, failureClass: 'schema-validation', result: result({ text: '{"a":1}' }), validatorError: 'bad', lever: { lever: 'budget' }, transportError: 't', envelope: undefined });
 
     expect(row).toEqual({ attempt: 2, class: 'schema-validation', excerpt: '{"a":1}', rawLength: 7, validatorError: 'bad', lever: 'budget', transportError: 't' });
   });
 
   it('should round a parse-error row score to LLM_REPLY_REPAIR_SCORE_PRECISION (3) places', () => {
     const text = '{"a": [1, 2, {"b": "unterminated';
-    const row = llmDecodeFailureAttemptOf({ attempt: 1, failureClass: 'parse-error', result: result({ text }) });
+    const row = llmDecodeFailureAttemptOf({ attempt: 1, failureClass: 'parse-error', result: result({ text }), envelope: undefined });
 
     expect(LLM_REPLY_REPAIR_SCORE_PRECISION).toBe(3);
     expect(row.shape?.score).toBe(roundToPrecision(scoreLlmReplyJson(text).score, 3));
@@ -38,7 +38,7 @@ describe('llmDecodeFailureAttemptOf()', () => {
 
 describe('llmRepairedDecodeAttemptOf()', () => {
   it('should build a parse-error row from the served reply stamped repaired + ops', () => {
-    const row = llmRepairedDecodeAttemptOf({ attempt: 1, served: result(), summary: { tier: 'deterministic', attempt: 1, verdict: 'near-miss', score: 0.9, ops: { 'close-brace': 1 } as never } });
+    const row = llmRepairedDecodeAttemptOf({ attempt: 1, served: result(), summary: { tier: 'deterministic', attempt: 1, verdict: 'near-miss', score: 0.9, ops: { 'close-brace': 1 } as never }, envelope: undefined });
 
     expect(row).toMatchObject({ class: 'parse-error', repaired: 'deterministic', repairOps: { 'close-brace': 1 }, rawLength: 6 });
   });

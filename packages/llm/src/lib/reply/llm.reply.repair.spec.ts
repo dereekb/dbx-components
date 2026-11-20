@@ -1,10 +1,11 @@
 import { type JsonRepairShape } from '@dereekb/util';
 import { describe, expect, it } from 'vitest';
+import { DEFAULT_LLM_REPLY_ENVELOPE_KEYS } from './llm.reply.envelope';
 import { DEFAULT_LLM_REPLY_FAST_FIX_LIMITS } from './llm.reply.fast.fix';
 import { llmReplyRepairDiagnosis, llmReplyRepairFidelity, repairLlmReplyJson, scoreLlmReplyJson } from './llm.reply.repair';
 
 // The lenient walk itself is specified in `@dereekb/util` (`string/json.repair.spec.ts`); these cases pin the reply
-// wrappers and the reply-only parts (the `lever` coverage cut and the diagnosis text).
+// wrappers and the reply-only parts (the envelope coverage scope and the diagnosis text).
 
 describe('repairLlmReplyJson()', () => {
   it('repairs a near miss', () => {
@@ -19,13 +20,13 @@ describe('repairLlmReplyJson()', () => {
     expect(result.repaired).toBeUndefined();
   });
 
-  it('starts the coverage check at the lever key', () => {
-    // The rationale is dropped by a lever-only repair; it sits before `lever`, so the coverage check never counts it.
+  it('takes the coverage check over the envelope lever value', () => {
+    // The rationale is dropped by a lever-only repair; it sits outside the lever value, so the coverage check never counts it.
     const text = '{"answerable":true,"rationale":"The basket holds the seventh item now.","lever":{"note":"I will put the seventh item in the bulk bin"}';
-    const result = repairLlmReplyJson(text);
+    const result = repairLlmReplyJson(text, { envelope: DEFAULT_LLM_REPLY_ENVELOPE_KEYS });
     expect(result.shape.verdict).toBe('near-miss');
-    expect(llmReplyRepairFidelity({ original: text, repaired: result.repaired!.value.lever })).toEqual({ ok: true, invented: [], coverage: 1, checked: 1 });
-    expect(scoreLlmReplyJson(text)).toEqual(result.shape);
+    expect(llmReplyRepairFidelity({ original: text, repaired: result.repaired!.value.lever, envelope: DEFAULT_LLM_REPLY_ENVELOPE_KEYS })).toEqual({ ok: true, invented: [], coverage: 1, checked: 1 });
+    expect(scoreLlmReplyJson(text, { envelope: DEFAULT_LLM_REPLY_ENVELOPE_KEYS })).toEqual(result.shape);
   });
 });
 
@@ -36,8 +37,18 @@ describe('llmReplyRepairFidelity()', () => {
     { sku: 'mug-07', qty: 1 }
   ];
 
-  it('keeps a faithful repair', () => {
-    expect(llmReplyRepairFidelity({ original, repaired: { orderId: 643, note: 'I will put the seventh item in the bulk bin', items } })).toEqual({ ok: true, invented: [], coverage: 1, checked: 1 });
+  it('keeps a faithful repair of the envelope lever', () => {
+    expect(llmReplyRepairFidelity({ original, repaired: { orderId: 643, note: 'I will put the seventh item in the bulk bin', items }, envelope: DEFAULT_LLM_REPLY_ENVELOPE_KEYS })).toEqual({ ok: true, invented: [], coverage: 1, checked: 1 });
+  });
+
+  it('scopes the coverage to a custom envelope lever key, ignoring a trailing rationale', () => {
+    const text = '{"ok":true,"payload":{"note":"I will put the seventh item in the bulk bin"},"why":"The basket holds the seventh item now."}';
+    const envelope = { lever: 'payload', answerable: 'ok', rationale: 'why' };
+    expect(llmReplyRepairFidelity({ original: text, repaired: { note: 'I will put the seventh item in the bulk bin' }, envelope })).toEqual({ ok: true, invented: [], coverage: 1, checked: 1 });
+  });
+
+  it('checks the whole reply without an envelope', () => {
+    expect(llmReplyRepairFidelity({ original, repaired: { orderId: 643, note: 'I will put the seventh item in the bulk bin', items } })).toEqual({ ok: false, invented: [], coverage: 0.5, checked: 2 });
   });
 });
 

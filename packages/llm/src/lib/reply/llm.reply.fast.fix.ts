@@ -10,7 +10,8 @@ import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { type LlmCapabilityKey } from '../model/llm.value';
 import { type LlmCallContext } from '../record/llm.call.context';
 import { type LlmCallMeta, type LlmDispatchResult } from '../strategy/llm.strategy';
-import { type JsonRepairShape } from '@dereekb/util';
+import { type JsonRepairShape, type Maybe } from '@dereekb/util';
+import { type LlmReplyEnvelopeKeys } from './llm.reply.envelope';
 
 /**
  * The fast-fix capability's key. Unchanged from the source because call records, tapes and censuses key on it; declared
@@ -67,6 +68,12 @@ export interface LlmReplyFastFixInput<R extends LlmDispatchRequest = LlmDispatch
    * The scorer's shape of it.
    */
   readonly shape: JsonRepairShape;
+  /**
+   * The SUBJECT reply's reading envelope (`resolveLlmReplyReadingEnvelope` over its resolved protocol and the host's
+   * envelope keys) — the fixer's fidelity check takes its coverage over this envelope's lever value. `undefined` ⇒ the
+   * subject is a plain `json` reply, checked whole.
+   */
+  readonly subjectEnvelope?: Maybe<LlmReplyEnvelopeKeys>;
   /**
    * The subject's resolved lever schema — the fixer's per-invocation `responseSchemaHint`.
    */

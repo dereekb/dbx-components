@@ -5,7 +5,9 @@
  *
  * The lenient walk itself lives in `@dereekb/util` (`repairJsonObjectText` / `scoreJsonObjectText` /
  * `checkJsonRepairFidelity`), as do the shape types it returns (`JsonRepairShape` and the other `JsonRepair*` types).
- * These wrappers add the one reply rule: the fidelity coverage check starts at the envelope's `lever` key.
+ * These wrappers add the one reply rule: on a `json-envelope` reply the fidelity coverage check is taken over the
+ * envelope lever key's value (its balanced object), so the envelope's bookkeeping never counts; on a `json` reply the
+ * whole reply is the payload.
  *
  * WHO CALLS IT. A dispatcher's reply-repair lane, and only on a CLEAN-STOP, object-led, JSON-protocol reply the plain
  * reader (`readLlmReplyLever`) could not read. The reader itself keeps its structural non-goal: it cannot see the
@@ -17,53 +19,61 @@
  * literals, unquoted keys, comments and single quotes are left to the fast fix (`makeLlmReplyFastFixer`).
  */
 
-import { checkJsonRepairFidelity, type CheckJsonRepairFidelityConfig, JSON_REPAIR_EOF_FAULT_KINDS, type JsonRepairFaultKind, type JsonRepairFidelity, type JsonRepairResult, type JsonRepairShape, repairJsonObjectText, type RepairJsonObjectTextConfig, scoreJsonObjectText } from '@dereekb/util';
+import { checkJsonRepairFidelity, type CheckJsonRepairFidelityConfig, JSON_REPAIR_EOF_FAULT_KINDS, type JsonRepairFaultKind, type JsonRepairFidelity, type JsonRepairResult, type JsonRepairShape, type Maybe, repairJsonObjectText, scoreJsonObjectText } from '@dereekb/util';
+import { type LlmReplyEnvelopeKeys } from './llm.reply.envelope';
 
 /**
- * The envelope key the fidelity coverage check starts at — the payload, not the envelope's bookkeeping.
+ * How a reply wrapper scopes its fidelity coverage.
  */
-const LLM_REPLY_REPAIR_COVERAGE_KEY = 'lever';
-
-/**
- * The repair settings every reply wrapper passes to `@dereekb/util`.
- */
-const LLM_REPLY_REPAIR_CONFIG: RepairJsonObjectTextConfig = { coverageFromKey: LLM_REPLY_REPAIR_COVERAGE_KEY };
+export interface LlmReplyRepairConfig {
+  /**
+   * The reply's envelope keys when it reads as `json-envelope` — coverage is taken over the `lever` key's value. Absent ⇒ the whole reply is the payload.
+   */
+  readonly envelope?: Maybe<LlmReplyEnvelopeKeys>;
+}
 
 /**
  * Score and (when it is a near miss) repair one reply — the one entry point of the deterministic tier.
  *
- * Delegates to `@dereekb/util` `repairJsonObjectText`, with the coverage check starting at the `lever` key. A rebuilt
- * text that does not parse is swallow site `llm/reply-repair.rebuilt-parse` (channel `result`): the verdict carries it,
- * so no sink is called.
+ * Delegates to `@dereekb/util` `repairJsonObjectText`, with the coverage check taken over the envelope's lever value
+ * when `config.envelope` is set. A rebuilt text that does not parse is swallow site `llm/reply-repair.rebuilt-parse`
+ * (channel `result`): the verdict carries it, so no sink is called.
  *
  * @param text - The model's reply text.
+ * @param config - The reply's reading envelope, when it is a `json-envelope` reply.
  * @returns The shape, plus the repair iff the verdict is `near-miss`.
  */
-export function repairLlmReplyJson(text: string): JsonRepairResult {
-  return repairJsonObjectText(text, LLM_REPLY_REPAIR_CONFIG);
+export function repairLlmReplyJson(text: string, config?: Maybe<LlmReplyRepairConfig>): JsonRepairResult {
+  return repairJsonObjectText(text, { coverageFromKey: config?.envelope?.lever });
 }
 
 /**
  * Score one reply without keeping the repair — the shape {@link repairLlmReplyJson} computes.
  *
  * @param text - The model's reply text.
+ * @param config - The reply's reading envelope, when it is a `json-envelope` reply.
  * @returns The shape.
  */
-export function scoreLlmReplyJson(text: string): JsonRepairShape {
-  return scoreJsonObjectText(text, LLM_REPLY_REPAIR_CONFIG);
+export function scoreLlmReplyJson(text: string, config?: Maybe<LlmReplyRepairConfig>): JsonRepairShape {
+  return scoreJsonObjectText(text, { coverageFromKey: config?.envelope?.lever });
 }
+
+/**
+ * Configures {@link llmReplyRepairFidelity}.
+ */
+export interface LlmReplyRepairFidelityConfig extends Pick<CheckJsonRepairFidelityConfig, 'original' | 'repaired'>, LlmReplyRepairConfig {}
 
 /**
  * Prove a repair invented and dropped nothing — the runtime gate on BOTH repair tiers.
  *
- * Delegates to `@dereekb/util` `checkJsonRepairFidelity`, with the coverage region taken from the `lever` key when the
- * original is an envelope.
+ * Delegates to `@dereekb/util` `checkJsonRepairFidelity`, with the coverage region taken over the envelope's lever
+ * value (its balanced object) when `config.envelope` is set; otherwise the whole original is checked.
  *
- * @param config - The original reply text and the repaired value.
+ * @param config - The original reply text, the repaired value and the original's reading envelope.
  * @returns The fidelity verdict.
  */
-export function llmReplyRepairFidelity(config: Pick<CheckJsonRepairFidelityConfig, 'original' | 'repaired'>): JsonRepairFidelity {
-  return checkJsonRepairFidelity({ original: config.original, repaired: config.repaired, coverageFromKey: LLM_REPLY_REPAIR_COVERAGE_KEY });
+export function llmReplyRepairFidelity(config: LlmReplyRepairFidelityConfig): JsonRepairFidelity {
+  return checkJsonRepairFidelity({ original: config.original, repaired: config.repaired, coverageFromKey: config.envelope?.lever });
 }
 
 /**

@@ -11,6 +11,7 @@ import { type LlmCallContext, type LlmCallProfile } from '../record/llm.call.con
 import { type LlmCallAttemptPhase, type LlmCallAttemptRetry, type LlmCallFailedAttempt, type LlmCallPhases } from '../record/llm.call.record';
 import { llmCallTelemetry } from '../record/llm.call.telemetry';
 import { clipLlmFailedAttemptReply, LLM_TIMEOUT_FINISH_REASON, LLM_TRANSPORT_FINISH_REASON, LLM_UNRETRYABLE_FINISH_REASON, type LlmDecodeFailureAttempt, type LlmDecodeFailureClass, llmDecodeFailureExcerpt, llmDecodeFailureTailExcerpt, type LlmRetryCause } from '../record/llm.decode.failure';
+import { type LlmReplyEnvelopeKeys } from '../reply/llm.reply.envelope';
 import { scoreLlmReplyJson } from '../reply/llm.reply.repair';
 import { type LlmDispatchResult, type LlmReplyRepairSummary, type LlmRequest } from '../strategy/llm.strategy';
 import { type LlmRetryLever } from './llm.retry.lever';
@@ -124,6 +125,11 @@ export interface LlmDecodeFailureAttemptConfig {
    */
   readonly maxOutputTokens?: Maybe<number>;
   /**
+   * The reply's reading envelope (`resolveLlmReplyReadingEnvelope`) — a `parse-error` row's `shape` is scored with the
+   * fidelity coverage over its lever value. `undefined` ⇒ the whole reply is the payload.
+   */
+  readonly envelope: Maybe<LlmReplyEnvelopeKeys>;
+  /**
    * The validator's error, on a `schema-validation` row.
    */
   readonly validatorError?: Maybe<string>;
@@ -149,8 +155,8 @@ export interface LlmDecodeFailureAttemptConfig {
  * @returns The decode row.
  */
 export function llmDecodeFailureAttemptOf(config: LlmDecodeFailureAttemptConfig): LlmDecodeFailureAttempt {
-  const { attempt, failureClass, result, maxOutputTokens, validatorError, lever, transportError, errorClassification } = config;
-  const shape = failureClass === 'parse-error' ? scoreLlmReplyJson(result.text) : undefined;
+  const { attempt, failureClass, result, maxOutputTokens, envelope, validatorError, lever, transportError, errorClassification } = config;
+  const shape = failureClass === 'parse-error' ? scoreLlmReplyJson(result.text, { envelope }) : undefined;
   const tailExcerpt = failureClass === 'parse-error' || failureClass === 'length-truncation' ? llmDecodeFailureTailExcerpt(result.text) : undefined;
 
   return {
@@ -188,6 +194,10 @@ export interface LlmRepairedDecodeAttemptConfig {
    */
   readonly summary: LlmReplyRepairSummary;
   /**
+   * The served reply's reading envelope — scopes the row's `shape` like {@link LlmDecodeFailureAttemptConfig.envelope}.
+   */
+  readonly envelope: Maybe<LlmReplyEnvelopeKeys>;
+  /**
    * The completion budget the attempt was sent with, when it carried one.
    */
   readonly maxOutputTokens?: Maybe<number>;
@@ -205,8 +215,8 @@ export interface LlmRepairedDecodeAttemptConfig {
  * @returns The decode row.
  */
 export function llmRepairedDecodeAttemptOf(config: LlmRepairedDecodeAttemptConfig): LlmDecodeFailureAttempt {
-  const { attempt, served, summary, maxOutputTokens, lever } = config;
-  return { ...llmDecodeFailureAttemptOf({ attempt, failureClass: 'parse-error', result: served, maxOutputTokens, lever }), repaired: summary.tier, ...(summary.ops == null ? {} : { repairOps: summary.ops }) };
+  const { attempt, served, summary, maxOutputTokens, envelope, lever } = config;
+  return { ...llmDecodeFailureAttemptOf({ attempt, failureClass: 'parse-error', result: served, maxOutputTokens, envelope, lever }), repaired: summary.tier, ...(summary.ops == null ? {} : { repairOps: summary.ops }) };
 }
 
 /**

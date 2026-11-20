@@ -15,7 +15,7 @@ import { makeLlmPromptCachePrefixWatch } from '../prompt/llm.prompt.cache.watch'
 import { type LlmPromptRunParams, type LlmPromptRunResult, makeLlmPromptFactory } from '../prompt/llm.prompt.thread';
 import { type LlmCallContext } from '../record/llm.call.context';
 import { type LlmCallHostFields } from '../record/llm.call.record';
-import { DEFAULT_LLM_LINE_LEVER_FIELD } from '../reply/llm.reply.envelope';
+import { DEFAULT_LLM_LINE_LEVER_FIELD, resolveLlmReplyReadingEnvelope } from '../reply/llm.reply.envelope';
 import { DEFAULT_LLM_REPLY_FAST_FIX_LIMITS, type LlmReplyFastFixLimits } from '../reply/llm.reply.fast.fix';
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
 import { llmBoundReplyFastFixOf } from './llm.dispatch.attempt';
@@ -182,12 +182,14 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
     recordLlmDispatchStart<R, H, A>({ sinks, capability, model: resolved.resolvedModel, tier, strategy: resolved.strategy, prompt: composed.baseRequest.prompt, estimatedPromptTokens: composed.estimatedPromptTokens, followUp: isFollowUp, fields });
 
     const critique = followUp == null ? request.critique : undefined;
-    const { fastFix, fastFixUnavailable } = llmBoundReplyFastFixOf<R, X>({ replyFastFix: config.replyFastFix, request, protocol: composed.protocol, schemaHint: composed.baseRequest.responseSchemaHint, dispatch: (fixRequest) => selfDispatch.dispatch(fixRequest) });
+    const readingEnvelope = resolveLlmReplyReadingEnvelope(composed.protocol, config.replyEnvelope);
+    const { fastFix, fastFixUnavailable } = llmBoundReplyFastFixOf<R, X>({ replyFastFix: config.replyFastFix, request, protocol: composed.protocol, schemaHint: composed.baseRequest.responseSchemaHint, envelope: readingEnvelope, dispatch: (fixRequest) => selfDispatch.dispatch(fixRequest) });
     const attemptsConfig: LlmDispatchAttemptsConfig = {
       strategy: resolved.strategy,
       baseRequest: composed.baseRequest,
       protocol: composed.protocol,
       envelope: config.replyEnvelope,
+      readingEnvelope,
       validate: composed.validate,
       callContext,
       signal,

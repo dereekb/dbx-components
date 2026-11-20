@@ -201,6 +201,21 @@ describe('checkJsonRepairFidelity', () => {
     expect(checkJsonRepairFidelity({ original: text, repaired: repairedValue, coverageFromKey: 'a.b.c.' }).checked).toBe(2);
   });
 
+  it('takes the coverage over the key value balanced object, so an envelope field after it does not count', () => {
+    const text = '{"answerable":true,"lever":{"note":"I will put the seventh item in the bulk bin"},"rationale":"A long trailing rationale the fixer does not return."}';
+    expect(checkJsonRepairFidelity({ original: text, repaired: { note: 'I will put the seventh item in the bulk bin' }, coverageFromKey: 'lever' })).toEqual({ ok: true, invented: [], coverage: 1, checked: 1 });
+  });
+
+  it('keeps the rest of the text as the region when the key value object never closes', () => {
+    const text = '{"lever":{"note":"I will put the seventh item in the bulk bin","rationale":"A long trailing rationale the fixer does not return."';
+    expect(checkJsonRepairFidelity({ original: text, repaired: { note: 'I will put the seventh item in the bulk bin' }, coverageFromKey: 'lever' })).toEqual({ ok: false, invented: [], coverage: 0.5, checked: 2 });
+  });
+
+  it('keeps the rest of the text as the region when the key value is not an object', () => {
+    const text = '{"lever":"I will put the seventh item in the bulk bin","rationale":"A long trailing rationale the fixer does not return."}';
+    expect(checkJsonRepairFidelity({ original: text, repaired: { lever: 'I will put the seventh item in the bulk bin' }, coverageFromKey: 'lever' }).checked).toBe(2);
+  });
+
   it('R20: every deterministic repair of the op rows is faithful', () => {
     ['{"a":{"b":"a value that is long"}', '{"a":1,"b":[1,2,],}', '{"a":1 "b":2}', '{"a":[1,2}', '{"a":1]}', '{"say":"first line\nsecond"}', '{"note":"the label read,"handle with care," twice"}'].forEach((text) => {
       const repair = repaired(text);

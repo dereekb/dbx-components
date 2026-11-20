@@ -68,6 +68,14 @@ describe('llmCallTelemetry', () => {
     expect(llmCallTelemetry(withOps).repair).toEqual({ tier: 'deterministic', attempt: 2, verdict: 'repairable', score: 0.9, ops: { closeBrace: 1 } });
   });
 
+  it('keeps the fixer meta on the repair summary, after ops, and is byte-identical without it', () => {
+    const withMeta: LlmDispatchResult = { text: '{"a":1}', strategyId: 'openrouter', capability: 'summarize', repair: { tier: 'fast-fix', attempt: 1, verdict: 'mangled', score: 0.8, meta: { callId: 'fix-1' }, originalText: '{"a":None}' } };
+    const withoutMeta: LlmDispatchResult = { ...withMeta, repair: { tier: 'fast-fix', attempt: 1, verdict: 'mangled', score: 0.8, originalText: '{"a":None}' } };
+
+    expect(JSON.stringify(llmCallTelemetry(withMeta).repair)).toBe('{"tier":"fast-fix","attempt":1,"verdict":"mangled","score":0.8,"meta":{"callId":"fix-1"}}');
+    expect(JSON.stringify(llmCallTelemetry(withoutMeta).repair)).toBe('{"tier":"fast-fix","attempt":1,"verdict":"mangled","score":0.8}');
+  });
+
   it('pins the full key order on a result carrying every field', () => {
     const full: LlmDispatchResult = {
       repair: { tier: 'deterministic', attempt: 1, verdict: 'repairable', score: 0.9, originalText: '{' },
