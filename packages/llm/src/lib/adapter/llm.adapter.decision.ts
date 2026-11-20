@@ -105,7 +105,7 @@ export function makeLlmDecisionStrategies(config: MakeLlmDecisionStrategiesConfi
     const route = resolveLlmProviderDecisionRoute({ provider, adapters });
     const adapter = resolveLlmAdapter({ adapters, facet: 'decision', kind: route, label });
     const baseUrl = resolveLlmProviderBaseUrl({ provider, adapters });
-    const strategy = adapter.make({ provider, ...(baseUrl == null ? {} : { baseUrl }), ...(fetch == null ? {} : { fetch }), ...(timeoutMs == null ? {} : { timeoutMs }) });
+    const strategy = adapter.make({ provider, baseUrl, fetch, timeoutMs });
     return checkLlmAdapterStrategy({ label, adapter, providerId: provider.id, strategy });
   });
 

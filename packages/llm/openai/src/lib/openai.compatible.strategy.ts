@@ -74,53 +74,53 @@ export interface LlmOpenAiCompatibleChatStrategyConfig {
    * `complete` throws (a guessed slug would 404 against an unknown gateway). A per-call `LlmRequest.model` overrides
    * it.
    */
-  readonly defaultModel?: LlmModelId;
+  readonly defaultModel?: Maybe<LlmModelId>;
   /**
    * The OpenAI-compatible base URL the real client and the generic credential probe are pointed at; defaults to the
    * transport's {@link LlmOpenAiCompatibleChatStrategyHooks.defaultBaseUrl}.
    */
-  readonly baseUrl?: WebsiteUrl;
+  readonly baseUrl?: Maybe<WebsiteUrl>;
   /**
    * The request timeout floor; defaults to `DEFAULT_LLM_COMPLETION_TIMEOUT_MS` (60 s). Each call's abort window scales
    * up from it with the call's completion budget ({@link resolveLlmCompletionCallTimeoutMs}).
    */
-  readonly timeoutMs?: Milliseconds;
+  readonly timeoutMs?: Maybe<Milliseconds>;
   /**
    * The completion-length cap (the runaway guard); defaults to `DEFAULT_LLM_MAX_OUTPUT_TOKENS` (8,192). Sent on every
    * completion. A per-call `LlmRequest.maxOutputTokens` overrides it. A model with a smaller output limit (an older
    * OpenAI model, a small-context local model) needs it set.
    */
-  readonly maxOutputTokens?: LlmTokenCount;
+  readonly maxOutputTokens?: Maybe<LlmTokenCount>;
   /**
    * PER-MODEL VISION capability, keyed by the exact slug sent on the wire. A slug this map does not mark `true` is
    * sent the text-only message even when the request carries attachments, so an absent map sends no image parts. The
    * host supplies it from its model facts.
    */
-  readonly visionByModel?: LlmModelVisionMap;
+  readonly visionByModel?: Maybe<LlmModelVisionMap>;
   /**
    * What the provider's synchronous `usage.cost` figure IS when it is not the bill ({@link LlmCostBasis}) — stamped
    * onto every result's `LlmUsage.costBasis` that carries a cost. The host derives it from the provider's DECLARED
    * metering, never from the base URL. Absent ⇒ the figure is read as the bill.
    */
-  readonly costBasis?: LlmCostBasis;
+  readonly costBasis?: Maybe<LlmCostBasis>;
   /**
    * The HTTP seam {@link LlmStrategy.credentialProbe} goes through — a spec's fake. Absent ⇒ the global `fetch`. The
    * completion path never touches it (that rides the `openai` SDK client).
    */
-  readonly probeFetch?: ConfiguredFetch;
+  readonly probeFetch?: Maybe<ConfiguredFetch>;
   /**
    * The account-metering source {@link LlmStrategy.providerStatus} delegates to — the seam that lets a
    * provider-neutral transport answer "how much of the period's quota is spent?" without knowing which gateway it is
    * pointed at. Absent ⇒ the transport omits `providerStatus` ENTIRELY, so an aggregator reads "this transport does
    * not meter an account" rather than a false all-clear.
    */
-  readonly providerStatusSource?: LlmProviderStatusSource;
+  readonly providerStatusSource?: Maybe<LlmProviderStatusSource>;
   /**
    * A gateway-SPECIFIC credential probe {@link LlmStrategy.credentialProbe} delegates to instead of the transport's
    * generic one (a gateway that answers the generic probe 200 to any key needs its own). It runs even when a `client`
    * is injected: an explicit probe outranks the injected-client no-op. Absent ⇒ the generic probe.
    */
-  readonly credentialProbeSource?: LlmCredentialProbe;
+  readonly credentialProbeSource?: Maybe<LlmCredentialProbe>;
   /**
    * Passed to the real `openai` client, which refuses to run in a browser without it. Only read when the real client
    * is built (an injected client ignores it). Only set it for a browser app that holds the user's OWN key.

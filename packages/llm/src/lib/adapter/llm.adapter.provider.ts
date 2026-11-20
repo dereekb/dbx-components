@@ -8,7 +8,7 @@
  * says it meters nothing gets none. Construction is inert: nothing here does I/O.
  */
 
-import { type Maybe, type MaybeMap, type WebsiteUrl } from '@dereekb/util';
+import { type Maybe, type WebsiteUrl } from '@dereekb/util';
 import { LLM_PROVIDER_FACET_NONE, type LlmCompletionProviderEntry } from '../model/config/llm.model.config.schema';
 import { type LlmProviderConfig } from '../model/config/llm.model.config.resolve';
 import { type LlmCredentialProbe, type LlmStrategy } from '../strategy/llm.strategy';
@@ -72,7 +72,7 @@ export function resolveLlmProviderMetering(config: LlmProviderAdaptersConfig<Pic
 /**
  * Config for {@link resolveLlmProviderAccount}.
  */
-export interface ResolveLlmProviderAccountConfig extends LlmProviderAdaptersConfig<LlmProviderConfig>, Partial<MaybeMap<Pick<LlmAdapterConfig, 'fetch'>>> {}
+export interface ResolveLlmProviderAccountConfig extends LlmProviderAdaptersConfig<LlmProviderConfig>, Pick<LlmAdapterConfig, 'fetch'> {}
 
 /**
  * One provider's ACCOUNT — the metering id and every fact that follows it. Each optional key is present only when an
@@ -127,7 +127,7 @@ export function resolveLlmProviderAccount(config: ResolveLlmProviderAccountConfi
     const meteringAdapter = resolveLlmAdapter({ adapters, facet: 'metering', kind: metering, label: `provider '${provider.id}'` });
     const billAdapter = findLlmAdapter({ adapters, facet: 'bill', kind: metering });
     const credentialProbeAdapter = findLlmAdapter({ adapters, facet: 'credentialProbe', kind: metering });
-    const input: LlmAdapterConfig = { provider, ...baseUrlPart, ...(fetch == null ? {} : { fetch }) };
+    const input: LlmAdapterConfig = { provider, baseUrl, fetch };
 
     account = {
       metering,
@@ -143,9 +143,9 @@ export function resolveLlmProviderAccount(config: ResolveLlmProviderAccountConfi
 }
 
 /**
- * The options every provider's completion strategy shares. Each reaches the adapter only when set.
+ * The options every provider's completion strategy shares. Each reaches the adapter as given (nullish when unset).
  */
-export interface LlmProviderStrategyOptions extends Pick<LlmProviderAdaptersConfig<unknown>, 'adapters'>, Partial<MaybeMap<Pick<LlmCompletionAdapterConfig, 'defaultModel' | 'maxOutputTokens' | 'timeoutMs' | 'visionByModel' | 'reasoningOffByModel' | 'fetch'>>> {}
+export interface LlmProviderStrategyOptions extends Pick<LlmProviderAdaptersConfig<unknown>, 'adapters'>, Pick<LlmCompletionAdapterConfig, 'defaultModel' | 'maxOutputTokens' | 'timeoutMs' | 'visionByModel' | 'reasoningOffByModel' | 'fetch'> {}
 
 /**
  * Config for {@link makeLlmProviderStrategy}.
@@ -191,16 +191,16 @@ export function makeLlmProviderStrategy(config: MakeLlmProviderStrategyConfig): 
 
   const minted = adapter.make({
     provider,
-    ...(account.baseUrl == null ? {} : { baseUrl: account.baseUrl }),
-    ...(fetch == null ? {} : { fetch }),
-    ...(defaultModel == null ? {} : { defaultModel }),
-    ...(maxOutputTokens == null ? {} : { maxOutputTokens }),
-    ...(timeoutMs == null ? {} : { timeoutMs }),
-    ...(visionByModel == null ? {} : { visionByModel }),
-    ...(reasoningOffByModel == null ? {} : { reasoningOffByModel }),
-    ...(account.costBasis == null ? {} : { costBasis: account.costBasis }),
-    ...(account.providerStatusSource == null ? {} : { providerStatusSource: account.providerStatusSource }),
-    ...(account.credentialProbe == null ? {} : { credentialProbe: account.credentialProbe })
+    baseUrl: account.baseUrl,
+    fetch,
+    defaultModel,
+    maxOutputTokens,
+    timeoutMs,
+    visionByModel,
+    reasoningOffByModel,
+    costBasis: account.costBasis,
+    providerStatusSource: account.providerStatusSource,
+    credentialProbe: account.credentialProbe
   });
 
   return checkLlmAdapterStrategy({ label, adapter, providerId: provider.id, strategy: minted });

@@ -225,7 +225,7 @@ describe('makeLlmProviderStrategy()', () => {
     expect(strategies.values().findLast((strategy) => llmStrategyKind(strategy) === 'openai')?.id).toBe('local');
   });
 
-  it('should hand the shared options to the adapter only when set', () => {
+  it('should hand the shared options to the adapter, an unset option unset', () => {
     const { adapters, openai } = standardAdapters();
     const visionByModel = { 'x/y-flash': true };
     const reasoningOffByModel = { 'x/y-flash': 'omit' as const };
@@ -238,8 +238,8 @@ describe('makeLlmProviderStrategy()', () => {
     const unset = openai.received[1];
     expect(unset).toEqual({ provider: LOCAL, baseUrl: LOCAL_URL });
 
-    for (const key of ['defaultModel', 'maxOutputTokens', 'timeoutMs', 'visionByModel', 'reasoningOffByModel', 'fetch']) {
-      expect(unset).not.toHaveProperty(key);
+    for (const key of ['defaultModel', 'maxOutputTokens', 'timeoutMs', 'visionByModel', 'reasoningOffByModel', 'fetch'] as const) {
+      expect(unset[key]).toBeUndefined();
     }
   });
 
@@ -253,9 +253,9 @@ describe('makeLlmProviderStrategy()', () => {
     expect(zenmuxConfig.providerStatusSource?.providerId).toBe('zenmux');
     expect(zenmuxConfig.credentialProbe).toBeTypeOf('function');
 
-    expect(localConfig).not.toHaveProperty('costBasis');
-    expect(localConfig).not.toHaveProperty('providerStatusSource');
-    expect(localConfig).not.toHaveProperty('credentialProbe');
+    expect(localConfig.costBasis).toBeUndefined();
+    expect(localConfig.providerStatusSource).toBeUndefined();
+    expect(localConfig.credentialProbe).toBeUndefined();
   });
 
   it("should route the fetch seam into the account's credential probe", async () => {

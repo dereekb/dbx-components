@@ -139,7 +139,8 @@ export interface LlmLiveLaneConfig<X extends LlmModelConfigTypes = LlmModelConfi
    */
   readonly defaultModel?: Maybe<LlmLiveLaneDefaultModel>;
   /**
-   * Shared options for every completion strategy the lane builds.
+   * Shared options for every completion strategy the lane builds. Only the two declared keys are read: a wider value's
+   * other keys (an `undefined` model or fetch included) never reach the strategy, so they cannot erase the lane's own.
    */
   readonly strategyOptions?: Maybe<Pick<LlmProviderStrategyOptions, 'maxOutputTokens' | 'timeoutMs'>>;
   /**
@@ -477,10 +478,10 @@ export function makeLlmLiveLane<X extends LlmModelConfigTypes = LlmModelConfigBa
             strategyId: provider.id,
             model,
             apiKeyEnv,
-            ...(baseUrl == null ? {} : { baseUrl }),
+            baseUrl,
             makeStrategy: () =>
               decorateLlmLiveStrategyAuthFailures({
-                strategy: makeLlmProviderStrategy({ provider, adapters, defaultModel: model, reasoningOffByModel: llmModelReasoningOffEncodings(file), visionByModel: llmModelVisionCapabilities(file), ...strategyOptions }),
+                strategy: makeLlmProviderStrategy({ provider, adapters, defaultModel: model, reasoningOffByModel: llmModelReasoningOffEncodings(file), visionByModel: llmModelVisionCapabilities(file), maxOutputTokens: strategyOptions?.maxOutputTokens, timeoutMs: strategyOptions?.timeoutMs }),
                 providerId: provider.id,
                 apiKeyEnv,
                 baseUrl,
@@ -537,7 +538,7 @@ export function makeLlmLiveLane<X extends LlmModelConfigTypes = LlmModelConfigBa
 
   const buildKeyedStrategies = (probeConfig?: Maybe<LlmLiveLaneProbeParams>) => {
     const resolution = resolve({ env: probeConfig?.env });
-    const built = makeLlmProviderStrategies({ providers: resolution.providers, adapters, fetch: probeConfig?.fetch, ...strategyOptions });
+    const built = makeLlmProviderStrategies({ providers: resolution.providers, adapters, fetch: probeConfig?.fetch, maxOutputTokens: strategyOptions?.maxOutputTokens, timeoutMs: strategyOptions?.timeoutMs });
     return { strategies: makeLlmStrategyRegistry(built), required: built.map((strategy) => strategy.id), signal: probeConfig?.signal ?? undefined };
   };
 
@@ -622,7 +623,7 @@ export function makeLlmLiveLane<X extends LlmModelConfigTypes = LlmModelConfigBa
         } else {
           const report = await readProviderStatus(probeConfig);
           const maxUsedFraction = parseLlmQuotaMaxUsed(env[names.quotaMaxUsed]);
-          const result = llmQuotaVerdictFromGate(evaluateLlmQuotaGate({ report, ...(maxUsedFraction == null ? {} : { maxUsedFraction }) }));
+          const result = llmQuotaVerdictFromGate(evaluateLlmQuotaGate({ report, maxUsedFraction }));
           Object.assign(env, toLlmQuotaVerdictEnv({ result, names }));
 
           if (result.verdict === 'ok' && result.detail != null) {

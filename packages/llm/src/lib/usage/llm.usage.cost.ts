@@ -149,7 +149,7 @@ export interface FormatLlmUsageCostConfig extends LlmUsageCostRead {
  */
 export function formatLlmUsageCost(config: FormatLlmUsageCostConfig): string {
   const digits = config.digits ?? 6;
-  const marker = resolveLlmUsageCostMarker(config, { ...(config.boundMarker == null ? {} : { lower: config.boundMarker }), ...(config.listedMarker == null ? {} : { upper: config.listedMarker }) });
+  const marker = resolveLlmUsageCostMarker(config, { lower: config.boundMarker, upper: config.listedMarker });
   let rendered: string;
 
   if (isLlmUsageCostUnavailable(config)) {

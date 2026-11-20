@@ -190,6 +190,16 @@ describe('makeLlmLiveLane()', () => {
       expect(received[0]?.reasoningOffByModel).toEqual({ 'vendor/model-pinned': 'omit' });
       expect(first?.id).toBe('alpha');
     });
+
+    it("should keep the lane's own model and encodings when a wider strategyOptions value carries undefined keys", () => {
+      const strategyOptions = { maxOutputTokens: 512, defaultModel: undefined, reasoningOffByModel: undefined };
+      const { lane, received } = laneOf({ strategyOptions, modelConfig: { base: { models: { 'vendor/model-pinned': { reasoningOff: 'omit' } } } } });
+      lane.liveStrategyFromEnv(KEYED)?.makeStrategy();
+
+      expect(received[0]?.defaultModel).toBe('vendor/model-pinned');
+      expect(received[0]?.reasoningOffByModel).toEqual({ 'vendor/model-pinned': 'omit' });
+      expect(received[0]?.maxOutputTokens).toBe(512);
+    });
   });
 
   describe('makeLiveStrategy() and liveStrategyBinding()', () => {
@@ -262,6 +272,16 @@ describe('makeLlmLiveLane()', () => {
     it('should report an accepted key as ready', async () => {
       const { lane } = laneOf();
       await expect(lane.probeCredentials({ env: KEYED, fetch: recordingFetchOf(200).fetch })).resolves.toMatchObject({ ready: true });
+    });
+
+    it("should keep the probe's fetch seam when a wider strategyOptions value carries an undefined fetch", async () => {
+      const strategyOptions = { timeoutMs: 1_000, fetch: undefined };
+      const { lane, received } = laneOf({ strategyOptions });
+      const { fetch } = recordingFetchOf();
+      await lane.readProviderStatus({ env: KEYED, fetch });
+
+      expect(received[0]?.fetch).toBe(fetch);
+      expect(received[0]?.timeoutMs).toBe(1_000);
     });
 
     it('should ask nothing on a keyless environment', async () => {

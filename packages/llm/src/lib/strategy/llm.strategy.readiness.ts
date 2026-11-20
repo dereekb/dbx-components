@@ -422,7 +422,7 @@ export interface EvaluateLlmQuotaGateConfig {
    * The fraction of the tightest window above which the gate CLOSES; defaults to
    * {@link DEFAULT_LLM_QUOTA_GATE_MAX_USED_FRACTION}.
    */
-  readonly maxUsedFraction?: PercentDecimal;
+  readonly maxUsedFraction?: Maybe<PercentDecimal>;
 }
 
 /**

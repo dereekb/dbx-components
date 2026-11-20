@@ -200,8 +200,9 @@ function nonBlankStringOf(value: unknown): Maybe<string> {
 
 /**
  * Map one decision adapter config onto {@link LlmSystemOneDecisionStrategyConfig}: `id` / `apiKey` from the provider,
- * then `baseUrl`, `timeoutMs` and `probeFetch` (from `fetch`), each a conditional spread. Every System One decision
- * adapter starts from it; a gateway adds its own keys on top (ZenMux adds `apiKeyEnv`).
+ * then `baseUrl`, `timeoutMs` and `probeFetch` (from `fetch`), each passed through (nullish when unset; the strategy
+ * defaults with `??`). Every System One decision adapter starts from it; a gateway adds its own keys on top (ZenMux
+ * adds `apiKeyEnv`).
  *
  * @param config - The resolved decision adapter config.
  * @returns The strategy config.
@@ -213,9 +214,9 @@ export function toLlmSystemOneDecisionStrategyConfig(config: LlmDecisionAdapterC
   return {
     id: provider.id,
     apiKey: provider.apiKey,
-    ...(baseUrl == null ? {} : { baseUrl }),
-    ...(timeoutMs == null ? {} : { timeoutMs }),
-    ...(fetch == null ? {} : { probeFetch: fetch })
+    baseUrl,
+    timeoutMs,
+    probeFetch: fetch
   };
 }
 

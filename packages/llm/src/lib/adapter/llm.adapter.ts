@@ -17,7 +17,7 @@
  * built.
  */
 
-import { type Milliseconds, type WebsiteUrlWithPrefix, type WebsiteUrl } from '@dereekb/util';
+import { type Maybe, type Milliseconds, type WebsiteUrlWithPrefix, type WebsiteUrl } from '@dereekb/util';
 import { type LlmModelId, type LlmStrategyId, type LlmTokenCount } from '../model/llm.value';
 import { type LlmModelReasoningOffMap, type LlmModelVisionMap } from '../model/llm.model.wire';
 import { type LlmProviderConfig } from '../model/config/llm.model.config.resolve';
@@ -51,51 +51,52 @@ export interface LlmAdapterConfig {
    * The EFFECTIVE endpoint: the provider's own `baseUrl`, else its transport adapter's
    * {@link LlmCompletionAdapter.defaultBaseUrl}. Absent when neither declares one.
    */
-  readonly baseUrl?: WebsiteUrl;
+  readonly baseUrl?: Maybe<WebsiteUrl>;
   /**
    * The HTTP seam for probes, account reads and bill reads — a spec's fake. Absent ⇒ the adapter's own default.
    */
-  readonly fetch?: ConfiguredFetch;
+  readonly fetch?: Maybe<ConfiguredFetch>;
 }
 
 /**
  * What a {@link LlmCompletionAdapter}'s `make` receives: the provider plus the host's shared strategy options and the
- * provider's account facets. Each optional key is present only when set.
+ * provider's account facets. An unset key is absent or nullish: read each with `??` / `== null`, as the stock adapters
+ * do. Never spread the config over your own defaults; `mergeObjects` keeps a default against an explicit `undefined`.
  */
 export interface LlmCompletionAdapterConfig extends LlmAdapterConfig {
   /**
    * The model a request that names none runs on.
    */
-  readonly defaultModel?: LlmModelId;
+  readonly defaultModel?: Maybe<LlmModelId>;
   /**
    * The strategy's default completion-length cap.
    */
-  readonly maxOutputTokens?: LlmTokenCount;
+  readonly maxOutputTokens?: Maybe<LlmTokenCount>;
   /**
    * The per-call timeout.
    */
-  readonly timeoutMs?: Milliseconds;
+  readonly timeoutMs?: Maybe<Milliseconds>;
   /**
    * The per-slug vision facts the strategy reads before it sends an attachment.
    */
-  readonly visionByModel?: LlmModelVisionMap;
+  readonly visionByModel?: Maybe<LlmModelVisionMap>;
   /**
    * The per-slug reasoning-OFF encodings.
    */
-  readonly reasoningOffByModel?: LlmModelReasoningOffMap;
+  readonly reasoningOffByModel?: Maybe<LlmModelReasoningOffMap>;
   /**
    * What the provider's synchronous `cost` is, from its metering adapter.
    */
-  readonly costBasis?: LlmCostBasis;
+  readonly costBasis?: Maybe<LlmCostBasis>;
   /**
    * The provider's account status source, from its metering adapter.
    */
-  readonly providerStatusSource?: LlmProviderStatusSource;
+  readonly providerStatusSource?: Maybe<LlmProviderStatusSource>;
   /**
    * The provider's credential probe, from its credentialProbe adapter. When present it REPLACES the transport's
    * generic probe (a gateway may answer a generic catalog read with 200 for any key).
    */
-  readonly credentialProbe?: LlmCredentialProbe;
+  readonly credentialProbe?: Maybe<LlmCredentialProbe>;
 }
 
 /**
@@ -105,7 +106,7 @@ export interface LlmDecisionAdapterConfig extends LlmAdapterConfig {
   /**
    * The per-call timeout; absent ⇒ the strategy's own default.
    */
-  readonly timeoutMs?: Milliseconds;
+  readonly timeoutMs?: Maybe<Milliseconds>;
 }
 
 /**

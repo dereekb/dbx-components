@@ -405,6 +405,9 @@ a provider naming one you did not register fails loud, listing the ones you did.
   visionByModel, reasoningOffByModel })` builds one strategy per resolved provider (`resolveLlmProviderConfigs`),
   registered under the provider's own name. Construction is inert. Both builders check each minted strategy with
   `checkLlmAdapterStrategy` (the provider's own id; a decision strategy's declared `strategyKind`).
+- **Config contract.** An adapter config's unset field is absent or nullish (`undefined` / `null`). Read each with `??`,
+  as the stock adapters do, and never spread a config over your own defaults: `mergeObjects` keeps a default against
+  an explicit `undefined`.
 - **Accounts.** `resolveLlmProviderAccount({ provider, adapters })` decides which account a provider bills — its
   declared `metering`, else the metering adapter that recognizes its base URL, else `none` — and every account fact
   follows that one answer: cost basis, status source (`providerStatusSource`), credential probe and bill reader. `resolveLlmProviderBaseUrl` and

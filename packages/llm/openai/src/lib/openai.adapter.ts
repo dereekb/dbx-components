@@ -5,8 +5,8 @@ import { DEFAULT_LLM_OPENAI_BASE_URL, LLM_OPENAI_STRATEGY_KIND, makeLlmOpenAiStr
 /**
  * Map one completion adapter config onto the shared {@link LlmOpenAiCompatibleChatStrategyConfig}: `id` / `apiKey` from
  * the provider, then `baseUrl`, `defaultModel`, `maxOutputTokens`, `timeoutMs`, `visionByModel`, `costBasis`,
- * `providerStatusSource`, `credentialProbeSource` (from `credentialProbe`) and `probeFetch` (from `fetch`), each a
- * conditional spread, so an absent input leaves its key absent and the strategy's own default applies.
+ * `providerStatusSource`, `credentialProbeSource` (from `credentialProbe`) and `probeFetch` (from `fetch`), each passed
+ * through, so an unset input arrives nullish and the strategy's own default applies (it reads each with `??`).
  *
  * Every OpenAI-compatible completion adapter starts from it: the OpenRouter adapter uses it as is (its wire has one
  * spelling for the reasoning OFF, the cap and accounting), and {@link toLlmOpenAiStrategyConfig} adds the OpenAI extras.
@@ -24,21 +24,21 @@ export function toLlmOpenAiCompatibleChatStrategyConfig(config: LlmCompletionAda
   return {
     id: provider.id,
     apiKey: provider.apiKey,
-    ...(baseUrl == null ? {} : { baseUrl }),
-    ...(defaultModel == null ? {} : { defaultModel }),
-    ...(maxOutputTokens == null ? {} : { maxOutputTokens }),
-    ...(timeoutMs == null ? {} : { timeoutMs }),
-    ...(visionByModel == null ? {} : { visionByModel }),
-    ...(costBasis == null ? {} : { costBasis }),
-    ...(providerStatusSource == null ? {} : { providerStatusSource }),
-    ...(credentialProbe == null ? {} : { credentialProbeSource: credentialProbe }),
-    ...(fetch == null ? {} : { probeFetch: fetch })
+    baseUrl,
+    defaultModel,
+    maxOutputTokens,
+    timeoutMs,
+    visionByModel,
+    costBasis,
+    providerStatusSource,
+    credentialProbeSource: credentialProbe,
+    probeFetch: fetch
   };
 }
 
 /**
  * Map one completion adapter config onto {@link LlmOpenAiStrategyConfig}: {@link toLlmOpenAiCompatibleChatStrategyConfig}
- * plus the OpenAI extras, each a conditional spread.
+ * plus the OpenAI extras, each passed through.
  *
  * | strategy key | from |
  * |---|---|
@@ -60,10 +60,10 @@ export function toLlmOpenAiStrategyConfig(config: LlmCompletionAdapterConfig): L
   const { provider, reasoningOffByModel } = config;
   return {
     ...toLlmOpenAiCompatibleChatStrategyConfig(config),
-    ...(provider.tokenLimitParam == null ? {} : { tokenLimitParam: provider.tokenLimitParam }),
-    ...(provider.reasoningOff == null ? {} : { reasoningOffEncoding: provider.reasoningOff }),
-    ...(reasoningOffByModel == null ? {} : { reasoningOffByModel }),
-    ...(provider.usageAccounting == null ? {} : { usageAccounting: provider.usageAccounting })
+    tokenLimitParam: provider.tokenLimitParam,
+    reasoningOffEncoding: provider.reasoningOff,
+    reasoningOffByModel,
+    usageAccounting: provider.usageAccounting
   };
 }
 

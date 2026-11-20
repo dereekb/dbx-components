@@ -35,7 +35,7 @@
 import { DEFAULT_LLM_REASONING_OFF_ENCODING, resolveLlmReasoningOffEncoding, probeLlmCredentialEndpoint, type LlmModelReasoningOffMap, type LlmTransportCredentialProbe, type LlmReasoningOffEncoding, type LlmStrategy, type LlmStrategyId, type LlmTokenLimitParam } from '@dereekb/llm';
 import { toLlmOpenAiReasoningParams } from './openai.chat';
 import { makeLlmOpenAiCompatibleChatStrategy, type LlmOpenAiCompatibleChatStrategyConfig, type LlmOpenAiCompatibleChatStrategyHooks } from './openai.compatible.strategy';
-import { type WebsiteUrlWithPrefix } from '@dereekb/util';
+import { type Maybe, type WebsiteUrlWithPrefix } from '@dereekb/util';
 
 /**
  * The strategy KIND of the OpenAI-compatible transport ({@link LlmStrategy.kind}) and the default instance id.
@@ -73,7 +73,7 @@ export interface LlmOpenAiStrategyConfig extends LlmOpenAiCompatibleChatStrategy
    * A slug this map does not name falls back to {@link reasoningOffEncoding} and then to the default, so an absent
    * map changes nothing. The host supplies it from its model facts.
    */
-  readonly reasoningOffByModel?: LlmModelReasoningOffMap;
+  readonly reasoningOffByModel?: Maybe<LlmModelReasoningOffMap>;
   /**
    * Opt into OpenRouter-style usage accounting (`usage: { include: true }` on the body) so an AGGREGATOR gateway
    * returns `usage.cost`. Defaults to `false`: a strict OpenAI-compatible endpoint may reject the unknown param. Turn

@@ -47,7 +47,7 @@ export const LLM_ZENMUX_CREDENTIAL_PROBE_ADAPTER: LlmCredentialProbeAdapter = {
     ({ provider, baseUrl, fetch }) =>
     async (options) => {
       const apiKey = provider.apiKey;
-      return isNotBlankString(apiKey) ? probeLlmZenmuxCredential({ strategyId: provider.id, apiKey, baseUrl, ...(fetch == null ? {} : { fetch }), ...(options?.signal == null ? {} : { signal: options.signal }) }) : { ready: false, issues: [{ severity: 'error', message: 'no apiKey configured' }] };
+      return isNotBlankString(apiKey) ? probeLlmZenmuxCredential({ strategyId: provider.id, apiKey, baseUrl, fetch, signal: options?.signal }) : { ready: false, issues: [{ severity: 'error', message: 'no apiKey configured' }] };
     }
 };
 
@@ -68,7 +68,7 @@ export function makeLlmZenmuxMeteringAdapter(config: LlmZenmuxAdaptersConfig = {
     kind: LLM_ZENMUX_PROVIDER_ID,
     costBasis: LLM_ZENMUX_SYNC_COST_BASIS,
     isAccountBaseUrl: isLlmZenmuxBaseUrl,
-    make: ({ baseUrl, fetch }) => makeLlmZenmuxProviderStatusSource({ managementApiKey, managementApiKeyEnv, baseUrl: resolveLlmZenmuxAccountBaseUrl(baseUrl), ...(fetch == null ? {} : { fetch }) })
+    make: ({ baseUrl, fetch }) => makeLlmZenmuxProviderStatusSource({ managementApiKey, managementApiKeyEnv, baseUrl: resolveLlmZenmuxAccountBaseUrl(baseUrl), fetch })
   };
 }
 
@@ -89,7 +89,7 @@ export function makeLlmZenmuxBillAdapter(config: LlmZenmuxAdaptersConfig = {}): 
   return {
     facet: 'bill',
     kind: LLM_ZENMUX_PROVIDER_ID,
-    make: ({ provider, baseUrl, fetch }) => makeLlmZenmuxGenerationBillReader({ apiKey: isNotNullOrEmptyString(billApiKey) ? billApiKey : provider.apiKey, baseUrl: resolveLlmZenmuxAccountBaseUrl(baseUrl), ...(fetch == null ? {} : { fetch }) })
+    make: ({ provider, baseUrl, fetch }) => makeLlmZenmuxGenerationBillReader({ apiKey: isNotNullOrEmptyString(billApiKey) ? billApiKey : provider.apiKey, baseUrl: resolveLlmZenmuxAccountBaseUrl(baseUrl), fetch })
   };
 }
 

@@ -39,7 +39,8 @@ export interface LlmOpenAiChatClientConfig {
  * - `organization` / `project` are `null` so the SDK never fills them from `OPENAI_ORG_ID` / `OPENAI_PROJECT_ID`:
  *   the library reads no environment, and those ids must not reach a third-party gateway. A host that needs them
  *   injects its own client.
- * - `dangerouslyAllowBrowser` passes through when set (the browser rule: user-held keys only).
+ * - `dangerouslyAllowBrowser` is `true` only when set `true` (the browser rule: user-held keys only); the SDK reads
+ *   it with `!`, so `false` is the same as absent.
  *
  * @param config - The key, base URL, timeout and browser flag.
  * @returns The client, cast onto the structural surface the strategy uses.
@@ -47,5 +48,5 @@ export interface LlmOpenAiChatClientConfig {
 export async function loadLlmOpenAiChatClient(config: LlmOpenAiChatClientConfig): Promise<LlmOpenAiChatClient> {
   const { apiKey, baseUrl, timeoutMs, dangerouslyAllowBrowser } = config;
   const { default: OpenAI } = await import('openai');
-  return new OpenAI({ apiKey, baseURL: baseUrl, timeout: timeoutMs, maxRetries: 0, organization: null, project: null, ...(dangerouslyAllowBrowser == null ? {} : { dangerouslyAllowBrowser }) }) as unknown as LlmOpenAiChatClient;
+  return new OpenAI({ apiKey, baseURL: baseUrl, timeout: timeoutMs, maxRetries: 0, organization: null, project: null, dangerouslyAllowBrowser: dangerouslyAllowBrowser === true }) as unknown as LlmOpenAiChatClient;
 }
