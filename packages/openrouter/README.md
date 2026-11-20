@@ -616,7 +616,8 @@ The opt-in template-text notification type sends any template by key:
   for plain prompts (additive).
 ## Live probes
 
-Four blocks make real (some billed) API calls. All are skipped unless `OPENROUTER_LIVE_SPECS` is `1` or `true`:
+Four blocks make real (some billed) API calls. All are skipped unless `OPENROUTER_LIVE_SPECS` is `1` or `true`
+(trimmed, any case — the gate is `describeIfEnvFlag` from `@dereekb/util/test`):
 
 - `openrouter.filesearch.spike.spec.ts` — the `file_search` passthrough probes. Deliberately cheap: a
   free model by default, and the file_search probe fails at the store lookup before anything is billed.
@@ -642,8 +643,7 @@ Four blocks make real (some billed) API calls. All are skipped unless `OPENROUTE
   local run, and on CI against the placeholder.
 - Keep `OPENROUTER_LIVE_SPECS` out of `.env` and `.env.local`. To force it off over a dotenv value, pass
   `0`, not an empty value.
-- `nx test` is cached without hashing env vars, so pass `--skip-nx-cache` whenever the flag changes:
-  `OPENROUTER_LIVE_SPECS=1 npx nx test openrouter --skip-nx-cache`.
+- The flag is an Nx test input (`liveSpecFlags` in `nx.json`), so toggling it never replays a cached run.
 
 | Variable | Purpose |
 |---|---|

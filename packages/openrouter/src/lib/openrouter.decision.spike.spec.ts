@@ -1,5 +1,6 @@
 import { llmChoiceQuestion, llmNoulQuestion, llmScoreQuestion } from '@dereekb/llm';
-import { describe, expect, it } from 'vitest';
+import { expect, it } from 'vitest';
+import { describeIfEnvFlag } from '@dereekb/util/test';
 import { OpenRouterCore } from '@openrouter/sdk/core';
 import { openRouterDecisionRequest } from './openrouter.decision';
 import { openRouterDecision } from './openrouter.decision.call';
@@ -31,12 +32,6 @@ import { OPENROUTER_JEV_1_13_MODEL_ID } from './openrouter.type';
  * ```
  */
 const OPENROUTER_API_KEY = process.env['OPENROUTER_API_KEY'];
-
-/**
- * Whether to run the live probes: `OPENROUTER_LIVE_SPECS` is `1` or `true`. Never inferred from the key,
- * which Nx always loads from the workspace `.env.local` / `.env` and an empty override cannot blank.
- */
-const RUN_OPENROUTER_LIVE_SPECS = process.env['OPENROUTER_LIVE_SPECS'] === '1' || process.env['OPENROUTER_LIVE_SPECS']?.toLowerCase() === 'true';
 
 const DECISION_MODEL = process.env['OPENROUTER_TEST_DECISION_MODEL_ID'] ?? OPENROUTER_JEV_1_13_MODEL_ID;
 
@@ -71,7 +66,10 @@ const PROBE_QUESTIONS = {
   refundRequested: llmNoulQuestion('`ticket` asks for money to be returned.', { true: 'the sender asks for a refund or reversal', false: 'the sender asks for anything else' })
 } as const;
 
-describe.skipIf(!RUN_OPENROUTER_LIVE_SPECS)('System One live probes', () => {
+// Whether to run the live probes: `OPENROUTER_LIVE_SPECS` is `1` / `true` (trimmed, any case: `describeIfEnvFlag`
+// from `@dereekb/util/test`). Never inferred from the key, which Nx always loads from the workspace `.env.local` /
+// `.env` and an empty override cannot blank.
+describeIfEnvFlag('OPENROUTER_LIVE_SPECS')('System One live probes', () => {
   const client = new OpenRouterCore({ apiKey: OPENROUTER_API_KEY as string });
 
   it('should answer all three primitives in one call', async () => {

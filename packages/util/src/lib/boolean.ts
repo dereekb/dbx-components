@@ -266,6 +266,34 @@ export function stringToBoolean(value: Maybe<string | boolean>, defaultValue?: M
 }
 
 /**
+ * Whether an environment flag is on: `1` or `true`, trimmed and case-insensitive. Anything else — `0`, `yes`, blank,
+ * absent — is off.
+ *
+ * Not {@link stringToBoolean}: a flag that gates billed or destructive work (a live-spec lane) must be opted into
+ * deliberately, so `yes` / `y` / `t` stay off and the conventional `1` is on.
+ *
+ * @param value - The raw environment value.
+ * @returns `true` when the flag is on.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory boolean
+ * @dbxUtilTags boolean, string, env, flag, parse, gate
+ * @dbxUtilRelated string-to-boolean
+ *
+ * @example
+ * ```ts
+ * isEnvFlagEnabled(' TRUE '); // true
+ * isEnvFlagEnabled('1');      // true
+ * isEnvFlagEnabled('yes');    // false
+ * isEnvFlagEnabled(undefined); // false
+ * ```
+ */
+export function isEnvFlagEnabled(value: Maybe<string>): boolean {
+  const normalized = (value ?? '').trim().toLowerCase();
+  return normalized === '1' || normalized === 'true';
+}
+
+/**
  * Converts a boolean to its `'true'` or `'false'` string representation.
  * Returns null/undefined if the input is nullish.
  *

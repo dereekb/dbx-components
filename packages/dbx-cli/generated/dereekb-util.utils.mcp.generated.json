@@ -224,6 +224,40 @@
       ]
     },
     {
+      "slug": "is-env-flag-enabled",
+      "name": "isEnvFlagEnabled",
+      "kind": "function",
+      "category": "boolean",
+      "module": "@dereekb/util",
+      "subpath": "boolean",
+      "signature": "isEnvFlagEnabled(value: Maybe<string>): boolean",
+      "description": "Whether an environment flag is on: `1` or `true`, trimmed and case-insensitive. Anything else — `0`, `yes`, blank,\nabsent — is off.\n\nNot {@link stringToBoolean}: a flag that gates billed or destructive work (a live-spec lane) must be opted into\ndeliberately, so `yes` / `y` / `t` stay off and the conventional `1` is on.",
+      "params": [
+        {
+          "name": "value",
+          "type": "Maybe<string>",
+          "description": "- The raw environment value.",
+          "optional": false
+        }
+      ],
+      "returns": "`true` when the flag is on.",
+      "tags": [
+        "boolean",
+        "string",
+        "env",
+        "flag",
+        "parse",
+        "gate",
+        "is",
+        "enabled",
+        "isenvflagenabled"
+      ],
+      "example": "isEnvFlagEnabled(' TRUE '); // true\nisEnvFlagEnabled('1');      // true\nisEnvFlagEnabled('yes');    // false\nisEnvFlagEnabled(undefined); // false",
+      "relatedSlugs": [
+        "string-to-boolean"
+      ]
+    },
+    {
       "slug": "true-or-false-string",
       "name": "trueOrFalseString",
       "kind": "function",
@@ -7803,6 +7837,40 @@
       "relatedSlugs": [
         "merge-objects",
         "override-in-object-function-factory"
+      ]
+    },
+    {
+      "slug": "filter-maybe-values",
+      "name": "filterMaybeValues",
+      "kind": "function",
+      "category": "object",
+      "module": "@dereekb/util",
+      "subpath": "object/object.filter.pojo",
+      "signature": "filterMaybeValues(obj: T): FilteredMaybeValues<T>",
+      "description": "Returns a copy of the input object with every `null` and `undefined` value removed, typed so that a nullable key\nbecomes optional and non-nullable.\n\nUse it to shape a projection whose source carries `Maybe` values (a wire reply, a parsed row) into an object whose\noptional fields must be absent rather than nullish, such as a persisted row or a host-stored record. It replaces a\nrun of `...(x == null ? {} : { x })` spreads with one plain literal, and the result fits an `x?: X` target without a\ncast, which {@link filterNullAndUndefinedValues} and {@link filterUndefinedValues} cannot offer since they return `T`.\n\nThe runtime is {@link filterNullAndUndefinedValues}: the filter is shallow (a nested `null` is kept), it keeps the\ninput's key order, it keeps other falsy values (`0`, `false`, `''`), and it never mutates the input.\n\nA value whose type is still a generic parameter at the call site cannot be judged nullable or not, so the result\ntype cannot settle its key. Filter only the concrete keys and spread the result:\n`{ model, answers, ...filterMaybeValues({ usage, provider }) }`.",
+      "params": [
+        {
+          "name": "obj",
+          "type": "T",
+          "description": "- The object to filter. Every key that must survive should have a non-nullable type, since only a nullable key may be dropped.",
+          "optional": false
+        }
+      ],
+      "returns": "A shallow copy of `obj` without its `null` and `undefined` values.",
+      "tags": [
+        "object",
+        "pojo",
+        "filter",
+        "maybe",
+        "nullish",
+        "projection",
+        "values",
+        "filtermaybevalues"
+      ],
+      "example": "interface Usage {\n  readonly promptTokens: number;\n  readonly cachedTokens?: number;\n}\n\nconst wire: { prompt_tokens: number; cached_tokens?: Maybe<number> } = { prompt_tokens: 12, cached_tokens: null };\n\nconst usage: Usage = filterMaybeValues({ promptTokens: wire.prompt_tokens, cachedTokens: wire.cached_tokens });\n// { promptTokens: 12 }\n\nfilterMaybeValues({ a: 0, b: false, c: '', d: null, e: undefined });\n// { a: 0, b: false, c: '' }",
+      "relatedSlugs": [
+        "filter-undefined-values",
+        "merge-objects"
       ]
     },
     {

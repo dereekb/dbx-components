@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { evaluateLlmQuotaGate, type LlmProviderStatus, type LlmProviderStatusReport, makeLlmQuotaWindow } from '@dereekb/llm';
-import { DEFAULT_LLM_LIVE_LANE_ENV_NAMES, isLlmEnvFlagEnabled, type LlmLiveLaneEnvNames } from './llm.test.env';
+import { DEFAULT_LLM_LIVE_LANE_ENV_NAMES, type LlmLiveLaneEnvNames } from './llm.test.env';
 import { type LlmCredentialVerdictResult, llmCredentialVerdictFromEnv, llmCredentialVerdictFromReport, llmQuotaVerdictFromEnv, llmQuotaVerdictFromGate, parseLlmQuotaMaxUsed, toLlmCredentialVerdictEnv, toLlmQuotaVerdictEnv } from './llm.test.verdict';
 
 function reportOf(status: LlmProviderStatus): LlmProviderStatusReport {
@@ -10,21 +10,6 @@ function reportOf(status: LlmProviderStatus): LlmProviderStatusReport {
 function spentTo(usedFraction: number): LlmProviderStatus {
   return { providerId: 'meter', available: true, windows: [makeLlmQuotaWindow({ id: 'rolling-7d', label: 'rolling 7 days', usedFraction, resetsAt: '2026-08-27T02:15:05.000Z' })], issues: [] };
 }
-
-describe('isLlmEnvFlagEnabled()', () => {
-  it('should accept 1 and true, trimmed and case-insensitive', () => {
-    expect(isLlmEnvFlagEnabled('1')).toBe(true);
-    expect(isLlmEnvFlagEnabled('true')).toBe(true);
-    expect(isLlmEnvFlagEnabled(' TRUE ')).toBe(true);
-  });
-
-  it('should reject anything else', () => {
-    expect(isLlmEnvFlagEnabled('0')).toBe(false);
-    expect(isLlmEnvFlagEnabled('yes')).toBe(false);
-    expect(isLlmEnvFlagEnabled('  ')).toBe(false);
-    expect(isLlmEnvFlagEnabled(undefined)).toBe(false);
-  });
-});
 
 describe('llmCredentialVerdictFromReport()', () => {
   it('should read an absent or empty report as unchecked: nothing was asked', () => {

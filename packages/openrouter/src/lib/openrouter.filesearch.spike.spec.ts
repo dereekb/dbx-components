@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { expect, it } from 'vitest';
+import { describeIfEnvFlag } from '@dereekb/util/test';
 import { OpenRouterCore } from '@openrouter/sdk/core';
 import { callModelForOpenRouterRequest } from './openrouter.call';
 import { openRouterFileSearchTool, openRouterProviderPinnedTo } from './openrouter.config';
@@ -56,12 +57,6 @@ import { openRouterFileSearchTool, openRouterProviderPinnedTo } from './openrout
 const OPENROUTER_API_KEY = process.env['OPENROUTER_API_KEY'];
 
 /**
- * Whether to run the live probes: `OPENROUTER_LIVE_SPECS` is `1` or `true`. Never inferred from the key,
- * which Nx always loads from the workspace `.env.local` / `.env` and an empty override cannot blank.
- */
-const RUN_OPENROUTER_LIVE_SPECS = process.env['OPENROUTER_LIVE_SPECS'] === '1' || process.env['OPENROUTER_LIVE_SPECS']?.toLowerCase() === 'true';
-
-/**
  * Model used by the live probes. Free by default — override for a specific provider.
  */
 export const OPENROUTER_SPIKE_DEFAULT_TEST_MODEL = 'nvidia/nemotron-nano-9b-v2:free';
@@ -111,7 +106,10 @@ export async function postOpenRouterResponse(apiKey: string, body: Record<string
   return { status: response.status, body: (await response.json()) as OpenRouterProbeResponse };
 }
 
-describe.skipIf(!RUN_OPENROUTER_LIVE_SPECS)('OpenRouter live probes', () => {
+// Whether to run the live probes: `OPENROUTER_LIVE_SPECS` is `1` / `true` (trimmed, any case: `describeIfEnvFlag`
+// from `@dereekb/util/test`). Never inferred from the key, which Nx always loads from the workspace `.env.local` /
+// `.env` and an empty override cannot blank.
+describeIfEnvFlag('OPENROUTER_LIVE_SPECS')('OpenRouter live probes', () => {
   it('should accept the request shape this package emits', async () => {
     const { status, body } = await postOpenRouterResponse(OPENROUTER_API_KEY as string, {
       model: TEST_MODEL,

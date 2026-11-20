@@ -1,9 +1,7 @@
 /**
  * The live lane's own environment names — the switches that opt a billed spec run in and the verdict variables its setup
- * stamps for the workers — and the one flag parse every lane switch uses.
+ * stamps for the workers. Every lane switch is parsed with `isEnvFlagEnabled` from `@dereekb/util`.
  */
-
-import { type Maybe } from '@dereekb/util';
 
 /**
  * The environment variable names a live lane reads and writes. Single names rather than lists: the verdict names are
@@ -57,21 +55,3 @@ export const DEFAULT_LLM_LIVE_LANE_ENV_NAMES: LlmLiveLaneEnvNames = {
   quotaDetail: 'LLM_QUOTA_DETAIL',
   quotaMaxUsed: 'LLM_QUOTA_MAX_USED'
 };
-
-/**
- * Whether a lane switch is on: `1` or `true`, trimmed and case-insensitive. Anything else — `0`, `yes`, blank, absent —
- * is off, so a billed lane is only ever opted into deliberately.
- *
- * @param raw - The raw environment value.
- * @returns `true` when the switch is on.
- *
- * @example
- * ```ts
- * isLlmEnvFlagEnabled(' TRUE '); // true
- * isLlmEnvFlagEnabled('yes'); // false
- * ```
- */
-export function isLlmEnvFlagEnabled(raw: Maybe<string>): boolean {
-  const value = (raw ?? '').trim().toLowerCase();
-  return value === '1' || value === 'true';
-}

@@ -10,7 +10,7 @@
  */
 
 import { type ConfiguredFetch } from '@dereekb/util/fetch';
-import { type Maybe, mergeObjects, type Milliseconds, type WebsiteUrl } from '@dereekb/util';
+import { isEnvFlagEnabled, type Maybe, mergeObjects, type Milliseconds, type WebsiteUrl } from '@dereekb/util';
 import {
   evaluateLlmQuotaGate,
   type LlmAdapterRegistry,
@@ -54,7 +54,7 @@ import {
   resolveLlmProvidersFromEnv,
   type ResolveLlmProvidersFromEnvConfig
 } from '@dereekb/llm/node';
-import { DEFAULT_LLM_LIVE_LANE_ENV_NAMES, isLlmEnvFlagEnabled, type LlmLiveLaneEnvNames } from './llm.test.env';
+import { DEFAULT_LLM_LIVE_LANE_ENV_NAMES, type LlmLiveLaneEnvNames } from './llm.test.env';
 import { decorateLlmLiveStrategyAuthFailures, type LlmLiveDecisionStrategyFromEnv, type LlmLiveStrategyBinding, toLlmLiveStrategyBinding, type LlmLiveStrategyFromEnv } from './llm.test.live';
 import { llmCredentialVerdictFromEnv, llmCredentialVerdictFromReport, llmQuotaVerdictFromEnv, llmQuotaVerdictFromGate, parseLlmQuotaMaxUsed, toLlmCredentialVerdictEnv, toLlmQuotaVerdictEnv } from './llm.test.verdict';
 
@@ -407,7 +407,7 @@ export function makeLlmLiveLane<X extends LlmModelConfigTypes = LlmModelConfigBa
   const label = config.label ?? 'llm';
   const log = config.log ?? ((message: string) => console.warn(message));
 
-  const isUnlocked = (env?: Maybe<LlmEnvView>): boolean => isLlmEnvFlagEnabled((env ?? process.env)[names.unlock]);
+  const isUnlocked = (env?: Maybe<LlmEnvView>): boolean => isEnvFlagEnabled((env ?? process.env)[names.unlock]);
 
   const resolve = (resolveConfig?: Maybe<LlmLiveLaneEnvParams>): LlmLiveLaneResolution<X> => {
     const env = resolveConfig?.env ?? process.env;
@@ -609,7 +609,7 @@ export function makeLlmLiveLane<X extends LlmModelConfigTypes = LlmModelConfigBa
         // Resolve FIRST: a malformed file or an unknown profile throws here, before anything is billed.
         logLaneOf(resolve({ env }));
 
-        if (isLlmEnvFlagEnabled(env[names.skipCredentialProbe])) {
+        if (isEnvFlagEnabled(env[names.skipCredentialProbe])) {
           // A stale verdict must not veto a run the operator forced.
           delete env[names.credentialVerdict];
           delete env[names.credentialDetail];
@@ -617,7 +617,7 @@ export function makeLlmLiveLane<X extends LlmModelConfigTypes = LlmModelConfigBa
           Object.assign(env, toLlmCredentialVerdictEnv({ result: llmCredentialVerdictFromReport(await probeCredentials(probeConfig)), names }));
         }
 
-        if (isLlmEnvFlagEnabled(env[names.skipQuotaProbe])) {
+        if (isEnvFlagEnabled(env[names.skipQuotaProbe])) {
           delete env[names.quotaVerdict];
           delete env[names.quotaDetail];
         } else {

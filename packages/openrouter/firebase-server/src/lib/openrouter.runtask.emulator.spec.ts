@@ -1,6 +1,7 @@
 import { type IsRetryableUnknownErrorFunction } from '@dereekb/util/fetch';
 import { llmChoiceQuestion, type LlmDecisionQuestions, llmNoulQuestion } from '@dereekb/llm';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { describeIfEnvFlag } from '@dereekb/util/test';
 import * as z from 'zod/v4';
 import { firestoreModelKey } from '@dereekb/firebase';
 import { firebaseServerActionsContext } from '@dereekb/firebase-server';
@@ -38,14 +39,6 @@ const TEST_DECISION_QUESTIONS: LlmDecisionQuestions = {
 };
 const TEST_DECISION_STATE = { ticket: { body: 'I was charged twice and need a refund before Friday.' } };
 const TEST_DECISION_ANSWERS = { urgent: { type: 'noul', noul: 0.9 }, team: { type: 'choice', choice: 'billing', probabilities: { billing: 0.95, access: 0.05 } } };
-
-/**
- * Whether the `live end-to-end` block runs against the real API: `OPENROUTER_LIVE_SPECS` is `1` or `true`.
- * Every other block runs against a fake client and needs no credentials. Never inferred from the key, which
- * Nx always loads from the workspace `.env.local` / `.env` and an empty override cannot blank — the same
- * gate the openrouter package's own live probes use.
- */
-const RUN_OPENROUTER_LIVE_SPECS = process.env['OPENROUTER_LIVE_SPECS'] === '1' || process.env['OPENROUTER_LIVE_SPECS']?.toLowerCase() === 'true';
 
 /**
  * The key the `live end-to-end` block calls with.
@@ -1237,7 +1230,12 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
     });
 
     // MARK: End-to-end against the live API
-    describe.skipIf(!RUN_OPENROUTER_LIVE_SPECS)('live end-to-end', () => {
+    // Whether the `live end-to-end` block runs against the real API: `OPENROUTER_LIVE_SPECS` is `1` / `true`
+    // (trimmed, any case: `describeIfEnvFlag` from `@dereekb/util/test`). Every other block runs against a fake
+    // client and needs no credentials. Never inferred from the key, which Nx always loads from the workspace
+    // `.env.local` / `.env` and an empty override cannot blank — the same gate the openrouter package's own live
+    // probes use.
+    describeIfEnvFlag('OPENROUTER_LIVE_SPECS')('live end-to-end', () => {
       it('should drain a real run and resolve its stored generation id', async () => {
         // The plan's end-to-end bullet, minus the one part this repo cannot reach: no app here consumes
         // the models, so there is no model API for the callModel MCP to drive. Everything else is the

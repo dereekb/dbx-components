@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { PDFDocument, StandardFonts } from '@cantoo/pdf-lib';
 import { assertSnapshotData } from '@dereekb/firebase-server';
 import { describeCallableRequestTest, expectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
-import { expectFail, itShouldFail } from '@dereekb/util/test';
+import { describeIfEnvFlag, expectFail, itShouldFail } from '@dereekb/util/test';
 import { type CreateStorageFileSignedUploadUrlParams, type CreateStorageFileSignedUploadUrlResult, type NotificationKey, type StorageFileDocument, StorageFileProcessingState, StorageFileState, type StoragePath, onCallCreateModelParams, storageFileIdentity } from '@dereekb/firebase';
 import { type OpenRouterPromptKey } from '@dereekb/openrouter';
 import { OpenRouterRunTaskState, openRouterPromptVersionId } from '@dereekb/openrouter/firebase';
@@ -11,13 +11,6 @@ import { DEMO_RESUME_CHECK_PROMPT_KEY, DEMO_RESUME_CHECK_PROMPT_VERSION, Profile
 import { demoResumeCheckRunTaskKey } from '../../common/model/notification/handlers/storagefile/task.handler.storagefile.resume';
 import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoProfileContext } from '../../../test/fixture';
 import { demoCallModel } from '../model/crud.functions';
-
-/**
- * Whether the `live` block runs against the real API: `OPENROUTER_LIVE_SPECS` is `1` or `true` — the same
- * gate the openrouter package's own live probes use. The app reads `OPENROUTER_API_KEY` itself. Every other
- * block runs against the emulator alone and needs no credentials.
- */
-const RUN_OPENROUTER_LIVE_SPECS = process.env['OPENROUTER_LIVE_SPECS'] === '1' || process.env['OPENROUTER_LIVE_SPECS']?.toLowerCase() === 'true';
 
 /**
  * Builds a tiny PDF in-test.
@@ -360,7 +353,11 @@ demoApiFunctionContextFactory((f) => {
           });
 
           // MARK: The live block — the only thing that proves inline base64 reaches a real model
-          describe.skipIf(!RUN_OPENROUTER_LIVE_SPECS)('live', () => {
+          // Whether the `live` block runs against the real API: `OPENROUTER_LIVE_SPECS` is `1` / `true` (trimmed, any
+          // case: `describeIfEnvFlag` from `@dereekb/util/test`) — the same gate the openrouter package's own live
+          // probes use. The app reads `OPENROUTER_API_KEY` itself. Every other block runs against the emulator alone
+          // and needs no credentials.
+          describeIfEnvFlag('OPENROUTER_LIVE_SPECS')('live', () => {
             it('should land the model verdict on the StorageFile', async () => {
               await seedPrompts();
 

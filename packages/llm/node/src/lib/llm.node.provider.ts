@@ -14,7 +14,7 @@
  * run can reach with {@link filterLlmReachableProviderGaps}.
  */
 
-import { concatArraysUnique, type Maybe } from '@dereekb/util';
+import { concatArraysUnique, isEnvFlagEnabled, type Maybe } from '@dereekb/util';
 import {
   isLlmTokenLimitParam,
   findLlmAdapter,
@@ -147,7 +147,7 @@ export function resolveLlmProvidersFromEnv<X extends LlmModelConfigTypes = LlmMo
         const baseUrl = firstLlmEnvValue({ env, names: provider.baseUrl ?? [] });
         const tokenLimitParam = firstLlmEnvValue({ env, names: provider.tokenLimitParam ?? [] })?.toLowerCase();
         const reasoningOff = parseLlmReasoningOffEncoding(firstLlmEnvValue({ env, names: provider.reasoningOff ?? [] }));
-        const usageAccounting = firstLlmEnvValue({ env, names: provider.usageAccounting ?? [] })?.toLowerCase();
+        const usageAccounting = isEnvFlagEnabled(firstLlmEnvValue({ env, names: provider.usageAccounting ?? [] }));
 
         slot = {
           id: provider.id,
@@ -157,7 +157,7 @@ export function resolveLlmProvidersFromEnv<X extends LlmModelConfigTypes = LlmMo
           ...(baseUrl == null ? {} : { baseUrl }),
           ...(isLlmTokenLimitParam(tokenLimitParam) ? { tokenLimitParam } : {}),
           ...(reasoningOff == null ? {} : { reasoningOff }),
-          ...(usageAccounting === '1' || usageAccounting === 'true' ? { usageAccounting: true } : {}),
+          ...(usageAccounting ? { usageAccounting: true } : {}),
           ...noExtensionFields
         };
       }

@@ -1,4 +1,4 @@
-import { invertMaybeBoolean, reduceBooleansWithAnd, reduceBooleansWithOr, reduceBooleansWithAndFn, reduceBooleansWithOrFn, booleanFactory, randomBoolean, stringToBoolean, type BooleanFactory } from './boolean';
+import { invertMaybeBoolean, isEnvFlagEnabled, reduceBooleansWithAnd, reduceBooleansWithOr, reduceBooleansWithAndFn, reduceBooleansWithOrFn, booleanFactory, randomBoolean, stringToBoolean, type BooleanFactory } from './boolean';
 
 describe('reduceBooleansWithAnd', () => {
   it('should return true if all values are true', () => {
@@ -285,5 +285,22 @@ describe('stringToBoolean()', () => {
       expect(stringToBoolean(undefined, true)).toBe(true);
       expect(stringToBoolean(undefined, false)).toBe(false);
     });
+  });
+});
+
+describe('isEnvFlagEnabled()', () => {
+  it('should accept 1 and true, trimmed and case-insensitive', () => {
+    expect(isEnvFlagEnabled('1')).toBe(true);
+    expect(isEnvFlagEnabled('true')).toBe(true);
+    expect(isEnvFlagEnabled(' TRUE ')).toBe(true);
+  });
+
+  it('should reject anything else', () => {
+    expect(isEnvFlagEnabled('0')).toBe(false);
+    expect(isEnvFlagEnabled('yes')).toBe(false);
+    expect(isEnvFlagEnabled('')).toBe(false);
+    expect(isEnvFlagEnabled('  ')).toBe(false);
+    expect(isEnvFlagEnabled(undefined)).toBe(false);
+    expect(isEnvFlagEnabled(null)).toBe(false);
   });
 });
