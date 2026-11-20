@@ -7,7 +7,7 @@ export class OpenRouterApi {
   readonly openRouterClient: OpenRouter;
 
   constructor(@Inject(OpenRouterServiceConfig) readonly config: OpenRouterServiceConfig) {
-    const { apiKey, serverURL } = config.openrouter;
-    this.openRouterClient = new OpenRouter({ apiKey, serverURL });
+    const { apiKey, serverURL, timeoutMs, retryConfig } = config.openrouter;
+    this.openRouterClient = new OpenRouter({ apiKey, serverURL, timeoutMs: timeoutMs ?? undefined, retryConfig: retryConfig ?? undefined });
   }
 }
