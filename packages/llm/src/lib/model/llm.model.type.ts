@@ -9,16 +9,11 @@
  * Every object type ends in `.readonly()` (arktype's readonly is shallow, so each nested object carries its own).
  */
 
+import { nonBlankStringType } from '@dereekb/model';
 import { type } from 'arktype';
 import { LLM_REASONING_EFFORTS } from './llm.model.wire';
 
 // MARK: Scalars
-/**
- * A string carrying at least one non-whitespace character. The value is NOT trimmed by the check; a reader that
- * wants the trimmed text trims it when it assembles its output.
- */
-export const llmNonBlankStringType = /*#__PURE__*/ type('string').narrow((value, ctx) => value.trim().length > 0 || ctx.mustBe('non-blank'));
-
 /**
  * A model slug: non-empty AND already trimmed. A slug is matched EXACTLY against `models[slug]` bindings and provider
  * catalogs, so a stray space is rejected rather than silently trimmed into a different key.
@@ -28,7 +23,7 @@ export const llmModelSlugType = /*#__PURE__*/ type('string.trim.preformatted').a
 /**
  * A model tier key (`fast`, `strong`, …) — any non-blank string.
  */
-export const llmModelTierKeyType = llmNonBlankStringType;
+export const llmModelTierKeyType = nonBlankStringType;
 
 /**
  * A token count — a positive integer. A fractional cap is a typo, never a budget. It validates an `LlmTokenCount`
@@ -107,7 +102,7 @@ export const llmModelProviderRefType = /*#__PURE__*/ type({
   /**
    * The declared provider name (`LlmStrategyId`) that serves the call. Omitted ⇒ the default provider.
    */
-  'provider?': llmNonBlankStringType
+  'provider?': nonBlankStringType
 }).readonly();
 
 // MARK: Tier value

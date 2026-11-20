@@ -18,21 +18,10 @@
  * (`{ capability, tags? }`), so it never imports a capability descriptor registry; the host that owns one feeds it in.
  */
 
+import { type ArktypeFieldRules, assertObjectKeys, parseArktypeFieldsWithMessages, schemaLabelMessagePrefix } from '@dereekb/model';
 import { filterUndefinedValues, isPlainObject, type Maybe } from '@dereekb/util';
 import { ArkErrors } from 'arktype';
-import {
-  assertLlmModelConfigKeys,
-  LLM_MODEL_OUTPUT_CONTROLS_FIELD_RULES,
-  LLM_MODEL_OUTPUT_CONTROLS_KEYS,
-  LLM_MODEL_PROVIDER_REF_FIELD_RULES,
-  LLM_MODEL_PROVIDER_REF_KEYS,
-  LLM_MODEL_SELECTION_FIELD_RULES,
-  LLM_MODEL_SELECTION_KEYS,
-  type LlmModelConfigFieldRules,
-  llmModelConfigMessagePrefix,
-  toCanonicalLlmModelOutputControls,
-  parseLlmModelConfigFields
-} from './llm.model.field';
+import { LLM_MODEL_OUTPUT_CONTROLS_FIELD_RULES, LLM_MODEL_OUTPUT_CONTROLS_KEYS, LLM_MODEL_PROVIDER_REF_FIELD_RULES, LLM_MODEL_PROVIDER_REF_KEYS, LLM_MODEL_SELECTION_FIELD_RULES, LLM_MODEL_SELECTION_KEYS, toCanonicalLlmModelOutputControls } from './llm.model.field';
 import { compileLlmCapabilityRules, type LlmModelRoutingCapabilityRef } from './llm.capability.rule';
 import { resolveLlmModelTier, type LlmModelTierMap, type LlmPartialModelTierMap } from './llm.model.tier';
 import { parseLlmModelTierMap } from './llm.model.tier.parse';
@@ -97,7 +86,7 @@ export const LLM_MODEL_ROUTING_RULE_KEYS = ['capabilities', 'tags', ...LLM_MODEL
 /**
  * The messages for a routing rule's fields.
  */
-export const LLM_MODEL_ROUTING_RULE_FIELD_RULES: LlmModelConfigFieldRules<LlmModelRoutingRule> = {
+export const LLM_MODEL_ROUTING_RULE_FIELD_RULES: ArktypeFieldRules<LlmModelRoutingRule> = {
   capabilities: { must: 'be an array of capability keys' },
   tags: { must: 'be an array of capability tags' },
   ...LLM_MODEL_SELECTION_FIELD_RULES,
@@ -134,11 +123,11 @@ function parseLlmModelRoutingRule(input: { readonly schemaLabel: string; readonl
   const { schemaLabel, label, value } = input;
 
   if (!isPlainObject(value)) {
-    throw new Error(`${llmModelConfigMessagePrefix(schemaLabel)}${label} must be a JSON object of { ${LLM_MODEL_ROUTING_RULE_KEYS.map((key) => `${key}?`).join(', ')} } (got ${JSON.stringify(value)}).`);
+    throw new Error(`${schemaLabelMessagePrefix(schemaLabel)}${label} must be a JSON object of { ${LLM_MODEL_ROUTING_RULE_KEYS.map((key) => `${key}?`).join(', ')} } (got ${JSON.stringify(value)}).`);
   }
 
-  assertLlmModelConfigKeys({ schemaLabel, label, entry: value, allowed: LLM_MODEL_ROUTING_RULE_KEYS });
-  const parsed = parseLlmModelConfigFields({ schemaLabel, label, value, type: llmModelRoutingRuleType, keys: LLM_MODEL_ROUTING_RULE_KEYS, rules: LLM_MODEL_ROUTING_RULE_FIELD_RULES });
+  assertObjectKeys({ schemaLabel, label, entry: value, allowed: LLM_MODEL_ROUTING_RULE_KEYS });
+  const parsed = parseArktypeFieldsWithMessages({ schemaLabel, label, value, type: llmModelRoutingRuleType, keys: LLM_MODEL_ROUTING_RULE_KEYS, rules: LLM_MODEL_ROUTING_RULE_FIELD_RULES });
   const { capabilities, tags, model, tier, provider } = parsed;
 
   return {
@@ -167,13 +156,13 @@ function parseLlmModelRoutingRule(input: { readonly schemaLabel: string; readonl
 export function parseLlmModelRoutingConfig(config: ParseLlmModelRoutingConfigConfig): LlmModelRoutingConfig {
   const { raw, source } = config;
   const schemaLabel = config.label ?? DEFAULT_LLM_MODEL_ROUTING_LABEL;
-  const prefix = llmModelConfigMessagePrefix(schemaLabel);
+  const prefix = schemaLabelMessagePrefix(schemaLabel);
 
   if (!isPlainObject(raw)) {
     throw new Error(`${prefix}${source} must be a JSON object of { ${LLM_MODEL_ROUTING_CONFIG_KEYS.map((key) => `${key}?`).join(', ')} }.`);
   }
 
-  assertLlmModelConfigKeys({ schemaLabel, label: source, entry: raw, allowed: LLM_MODEL_ROUTING_CONFIG_KEYS });
+  assertObjectKeys({ schemaLabel, label: source, entry: raw, allowed: LLM_MODEL_ROUTING_CONFIG_KEYS });
 
   const rawTiers = raw['tiers'];
   const tiers = rawTiers === undefined ? undefined : parseLlmModelTierMap({ schemaLabel, label: `${source}.tiers`, value: rawTiers });
@@ -184,7 +173,7 @@ export function parseLlmModelRoutingConfig(config: ParseLlmModelRoutingConfigCon
     const checked = llmModelTierKeyType(rawDefaultTier);
 
     if (checked instanceof ArkErrors) {
-      throw new Error(`${prefix}${source}.defaultTier must be a non-blank tier key (got ${JSON.stringify(rawDefaultTier)}).`);
+      throw new TypeError(`${prefix}${source}.defaultTier must be a non-blank tier key (got ${JSON.stringify(rawDefaultTier)}).`);
     }
 
     defaultTier = checked.trim();

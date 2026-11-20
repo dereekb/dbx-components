@@ -15,9 +15,9 @@
  * provider / model keys, provider kinds that serve no completions, and patch entries.
  */
 
+import { type ArktypeFieldRule, type ArktypeFieldRules } from '@dereekb/model';
 import { type Maybe, unique, type WebsiteUrl } from '@dereekb/util';
 import { type LlmProviderStatusProviderId } from '../../strategy/llm.provider.status';
-import { type LlmModelConfigFieldRule, type LlmModelConfigFieldRules } from '../llm.model.field';
 import { type LlmPartialModelTierMap } from '../llm.model.tier';
 import { LLM_REASONING_OFF_ENCODINGS, LLM_TOKEN_LIMIT_PARAMS } from '../llm.model.wire';
 import { type LlmModelSlugMap, type LlmModelTierKey, type LlmModelTierValue, type LlmStrategyId } from '../llm.value';
@@ -458,7 +458,7 @@ export interface LlmModelConfigSchema<X extends LlmModelConfigTypes = LlmModelCo
   /**
    * INTERNAL: the messages for {@link providerEntryBaseType}.
    */
-  readonly providerEntryBaseRules: LlmModelConfigFieldRules<Pick<LlmProviderEntryBase, 'transport' | 'baseUrl'>>;
+  readonly providerEntryBaseRules: ArktypeFieldRules<Pick<LlmProviderEntryBase, 'transport' | 'baseUrl'>>;
   /**
    * INTERNAL: the check of a completion entry against this schema's transports, meterings and decision routes.
    */
@@ -467,24 +467,24 @@ export interface LlmModelConfigSchema<X extends LlmModelConfigTypes = LlmModelCo
    * INTERNAL: the messages for {@link completionProviderEntryType} (the `apiKeyEnv` remedy carries the patch hint when
    * the extension parses patches).
    */
-  readonly completionProviderEntryRules: LlmModelConfigFieldRules<LlmCompletionProviderEntry>;
+  readonly completionProviderEntryRules: ArktypeFieldRules<LlmCompletionProviderEntry>;
 }
 
 // MARK: Field rules
 /**
  * The message rule of an entry's `baseUrl`.
  */
-const LLM_PROVIDER_BASE_URL_FIELD_RULE: LlmModelConfigFieldRule = { must: 'be a non-empty endpoint URL', remedy: "Remove the key to use the transport's default." };
+const LLM_PROVIDER_BASE_URL_FIELD_RULE: ArktypeFieldRule = { must: 'be a non-empty endpoint URL', remedy: "Remove the key to use the transport's default." };
 
 /**
  * The message rule of a `reasoningOff` encoding (a provider's or a slug's).
  */
-const LLM_REASONING_OFF_FIELD_RULE: LlmModelConfigFieldRule = { must: `be one of ${LLM_REASONING_OFF_ENCODINGS.join(', ')}` };
+const LLM_REASONING_OFF_FIELD_RULE: ArktypeFieldRule = { must: `be one of ${LLM_REASONING_OFF_ENCODINGS.join(', ')}` };
 
 /**
  * The messages for a per-slug `models` entry's built-in fields.
  */
-export const LLM_MODEL_SETTINGS_FIELD_RULES: LlmModelConfigFieldRules<LlmModelSettings> = {
+export const LLM_MODEL_SETTINGS_FIELD_RULES: ArktypeFieldRules<LlmModelSettings> = {
   provider: { must: 'be a declared provider name', remedy: 'Remove the key to use the default provider.' },
   reasoningOff: LLM_REASONING_OFF_FIELD_RULE,
   vision: { must: 'be a boolean' },
@@ -571,7 +571,7 @@ export function makeLlmModelConfigSchema<X extends LlmModelConfigTypes = LlmMode
   const decisionRoutes = withLlmProviderFacetNone(config.decisionRoutes ?? []);
   const patchKeysNoun = extension?.patchKeysNoun ?? 'patch';
   const { providerEntryBaseType, completionProviderEntryType } = makeLlmModelConfigEntryTypes({ entryTransports, meterings, decisionRoutes });
-  const transportRule: LlmModelConfigFieldRule = { must: `be one of ${entryTransports.join(', ')}` };
+  const transportRule: ArktypeFieldRule = { must: `be one of ${entryTransports.join(', ')}` };
   const patchHint = extension?.parseProviderPatch == null ? '' : ` To extend a built-in provider with ${patchKeysNoun} keys only, carry those keys alone.`;
 
   return {

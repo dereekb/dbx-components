@@ -1,6 +1,6 @@
 import { ArkErrors } from 'arktype';
 import { describe, expect, expectTypeOf, it } from 'vitest';
-import { llmModelSlugType, llmModelTierValueType, llmNonBlankStringType, llmReasoningConfigType, llmReasoningEffortType, llmTokenCountType } from './llm.model.type';
+import { llmModelSlugType, llmModelTierKeyType, llmModelTierValueType, llmReasoningConfigType, llmReasoningEffortType, llmTokenCountType } from './llm.model.type';
 import { LLM_REASONING_EFFORTS, type LlmReasoningEffort } from './llm.model.wire';
 import { type LlmModelTierConfig, type LlmReasoningConfig } from './llm.value';
 
@@ -20,10 +20,10 @@ describe('llmModelSlugType', () => {
   });
 });
 
-describe('llmNonBlankStringType', () => {
+describe('llmModelTierKeyType', () => {
   it('rejects a blank string but does not require trimming', () => {
-    expect(isValid(llmNonBlankStringType('   '))).toBe(false);
-    expect(isValid(llmNonBlankStringType(' strong '))).toBe(true);
+    expect(isValid(llmModelTierKeyType('   '))).toBe(false);
+    expect(isValid(llmModelTierKeyType(' strong '))).toBe(true);
   });
 });
 

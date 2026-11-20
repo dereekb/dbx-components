@@ -9,8 +9,8 @@
  * values are the host's, so {@link makeLlmModelConfigEntryTypes} narrows them once per schema.
  */
 
+import { nonBlankStringType } from '@dereekb/model';
 import { type } from 'arktype';
-import { llmNonBlankStringType } from '../llm.model.type';
 import { LLM_REASONING_OFF_ENCODINGS, LLM_TOKEN_LIMIT_PARAMS } from '../llm.model.wire';
 import { type LlmStrategyId } from '../llm.value';
 import { type LlmProviderStatusProviderId } from '../../strategy/llm.provider.status';
@@ -24,16 +24,16 @@ export const llmProviderEntryBaseType = /*#__PURE__*/ type({
    * The transport (the strategy KIND, `LlmStrategyId`) this provider is served by. The entry's NAME is the strategy
    * instance id a slug or routing rule binds to. Absent on disk ⇒ the schema's default transport.
    */
-  transport: llmNonBlankStringType,
+  transport: nonBlankStringType,
   /**
    * The endpoint base URL, a `WebsiteUrl` (`@dereekb/util`); the inferred field stays `string`. Absent ⇒ the
    * transport's own default.
    */
-  'baseUrl?': llmNonBlankStringType,
+  'baseUrl?': nonBlankStringType,
   /**
    * WHICH env var supplies this provider's key — the var NAME, never the secret.
    */
-  'apiKeyEnv?': llmNonBlankStringType
+  'apiKeyEnv?': nonBlankStringType
 }).readonly();
 
 /**
@@ -46,7 +46,7 @@ export const llmCompletionProviderEntryType = /*#__PURE__*/ llmProviderEntryBase
      * reason a second provider exists is that it bills a different key, and a provider that silently inherited the
      * default one would bill the wrong account.
      */
-    apiKeyEnv: llmNonBlankStringType,
+    apiKeyEnv: nonBlankStringType,
     /**
      * The PROVIDER-level reasoning-OFF wire encoding (`LlmReasoningOffEncoding`) — the default for every slug this
      * provider serves. Two-level by necessity: the same slug served by two providers can differ (a local build that
@@ -86,7 +86,7 @@ export const llmModelSettingsType = /*#__PURE__*/ type({
    * The provider NAME (`LlmStrategyId`) that serves this slug. Shape-checked by the parse; that the name resolves is
    * checked over the MERGED file, where a binding to a built-in provider is finally visible.
    */
-  'provider?': llmNonBlankStringType,
+  'provider?': nonBlankStringType,
   /**
    * This slug's reasoning-OFF encoding (`LlmReasoningOffEncoding`) — wins over the provider's and the host's.
    */
@@ -100,7 +100,7 @@ export const llmModelSettingsType = /*#__PURE__*/ type({
    * Text PREPENDED to every dispatch that resolves to this slug, so it rides in the cacheable prefix. A blank one is
    * rejected rather than read as absent — an operator who cleared the text but kept the key meant to say something.
    */
-  'promptAddendum?': llmNonBlankStringType
+  'promptAddendum?': nonBlankStringType
 }).readonly();
 
 // MARK: Per-schema types

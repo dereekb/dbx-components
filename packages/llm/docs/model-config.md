@@ -20,8 +20,8 @@ environment variable and no file: `/node` does that, and a browser host passes t
   and report `<label>.<field> must … (got <value>).`, prefixed with the schema label when one is passed
   (`schemaLabel`). The value types are derived from arktype declarations (`llmModelTierValueType`,
   `llmReasoningConfigType`, … in `llm.model.type.ts`); `LLM_REASONING_EFFORTS` is the effort list.
-  `parseLlmModelConfigFields` and `assertLlmModelConfigKeys` are the same field and key checks, exported so a host's
-  own extension keys report in the same format.
+  The field and key checks themselves are `@dereekb/model`'s `parseArktypeFieldsWithMessages` and `assertObjectKeys`
+  (typed by its `ArktypeFieldRules`); a host's own extension keys call them so they report in the same format.
 - **The file.** `parseLlmModelConfigFile({ raw, source, schema })` validates a `models.json`-shaped object: named
   `providers`, `profiles` (complete tier maps), per-slug `models` facts, `active`, and the unread `notes` / `$schema`.
   An unknown key, an illegal value or a malformed tier throws an error naming the file and the entry, so a typo
@@ -42,7 +42,7 @@ environment variable and no file: `/node` does that, and a browser host passes t
   (`llmCompletionProviderEntryType`, `llmModelSettingsType`, … in `llm.model.config.type.ts`), and an extension's
   fields are typed `Partial<…>` on every entry, patch and resolved config — a provider that leaves them out is still
   well-typed, so the extension seam needs no cast. Declare an extension's fields the same way: an arktype type with
-  `'+': 'delete'`, read through `parseLlmModelConfigFields`.
+  `'+': 'delete'`, read through `@dereekb/model`'s `parseArktypeFieldsWithMessages`.
 - **Overlay.** `overlayLlmModelConfigFile({ base, file, source, schema })` lays a host's file over its built-ins. A
   provider, profile or per-slug entry the file names replaces the built-in whole — a half-replaced provider would bill
   one account at another's endpoint — and every `models[slug].provider` is then checked against the merged providers.

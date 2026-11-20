@@ -38,8 +38,8 @@ The root, `/decision`, `/craft`, `/openai`, `/openrouter` and `/zenmux` entries 
   over the core System One transport.
 - The browser entries have one sibling edge, `/openrouter` → `/openai`, and it is one-way: `/openai` imports no other
   provider entry. Lint pins both directions.
-- The required peers are `@dereekb/util` (its `/fetch` entry included), `@dereekb/model` (the JSON-Schema export;
-  framework-free and browser-safe) and `arktype`.
+- The required peers are `@dereekb/util` (its `/fetch` entry included), `@dereekb/model` (the JSON-Schema export and
+  the field checks the model config parses with; framework-free and browser-safe) and `arktype`.
 - Every network read takes `@dereekb/util/fetch`'s `ConfiguredFetch` (default: the global `fetch`, read at call time,
   via `resolveLlmFetch`) and reads each body once with `readFetchJsonText`.
 

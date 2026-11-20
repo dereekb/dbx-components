@@ -5,6 +5,7 @@
   "type": "module",
   "peerDependencies": {
     "@dereekb/llm": "14.29.0",
+    "@dereekb/model": "14.29.0",
     "@dereekb/util": "14.29.0"
   }
 }

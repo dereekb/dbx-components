@@ -11,9 +11,10 @@
  * cap bills a run at the wrong ceiling and nothing says so.
  */
 
+import { assertObjectKeys, parseArktypeFieldsWithMessages, schemaLabelMessagePrefix } from '@dereekb/model';
 import { isPlainObject, type Maybe } from '@dereekb/util';
 import { ArkErrors } from 'arktype';
-import { assertLlmModelConfigKeys, LLM_MODEL_TIER_CONFIG_FIELD_RULES, LLM_MODEL_TIER_CONFIG_KEYS, llmModelConfigMessagePrefix, toCanonicalLlmModelOutputControls, parseLlmModelConfigFields } from './llm.model.field';
+import { LLM_MODEL_TIER_CONFIG_FIELD_RULES, LLM_MODEL_TIER_CONFIG_KEYS, toCanonicalLlmModelOutputControls } from './llm.model.field';
 import { llmModelSlugType, llmModelTierConfigType } from './llm.model.type';
 import { type LlmModelTierConfig, type LlmModelTierKey, type LlmModelTierValue } from './llm.value';
 
@@ -54,20 +55,20 @@ export interface ParseLlmModelTierValueConfig {
 export function parseLlmModelTierValue(config: ParseLlmModelTierValueConfig): LlmModelTierValue {
   const { schemaLabel, label, tierKey, value } = config;
   const at = `${label}['${tierKey}']`;
-  const prefix = llmModelConfigMessagePrefix(schemaLabel);
+  const prefix = schemaLabelMessagePrefix(schemaLabel);
   let out: LlmModelTierValue;
 
   if (typeof value === 'string') {
     const slug = llmModelSlugType(value);
 
     if (slug instanceof ArkErrors) {
-      throw new Error(`${prefix}${at} must be a non-empty, trimmed model slug (got ${JSON.stringify(value)}).`);
+      throw new TypeError(`${prefix}${at} must be a non-empty, trimmed model slug (got ${JSON.stringify(value)}).`);
     }
 
     out = slug;
   } else if (isPlainObject(value)) {
-    assertLlmModelConfigKeys({ schemaLabel, label: at, entry: value, allowed: LLM_MODEL_TIER_CONFIG_KEYS });
-    const parsed = parseLlmModelConfigFields({ schemaLabel, label: at, value, type: llmModelTierConfigType, keys: LLM_MODEL_TIER_CONFIG_KEYS, rules: LLM_MODEL_TIER_CONFIG_FIELD_RULES });
+    assertObjectKeys({ schemaLabel, label: at, entry: value, allowed: LLM_MODEL_TIER_CONFIG_KEYS });
+    const parsed = parseArktypeFieldsWithMessages({ schemaLabel, label: at, value, type: llmModelTierConfigType, keys: LLM_MODEL_TIER_CONFIG_KEYS, rules: LLM_MODEL_TIER_CONFIG_FIELD_RULES });
     const tierConfig: LlmModelTierConfig = { model: parsed.model, ...toCanonicalLlmModelOutputControls(parsed) };
     out = tierConfig;
   } else {
@@ -107,7 +108,7 @@ export function parseLlmModelTierMap(config: ParseLlmModelTierMapConfig): Record
   const { schemaLabel, label, value } = config;
 
   if (!isPlainObject(value)) {
-    throw new Error(`${llmModelConfigMessagePrefix(schemaLabel)}${label} must be a JSON object of { tierKey: modelSlug | { model, maxOutputTokens?, reasoning? } }.`);
+    throw new Error(`${schemaLabelMessagePrefix(schemaLabel)}${label} must be a JSON object of { tierKey: modelSlug | { model, maxOutputTokens?, reasoning? } }.`);
   }
 
   const out: Record<LlmModelTierKey, LlmModelTierValue> = {};

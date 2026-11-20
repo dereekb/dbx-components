@@ -1,7 +1,6 @@
+import { assertObjectKeys, type ArktypeFieldRules, nonBlankStringType, parseArktypeFieldsWithMessages } from '@dereekb/model';
 import { type } from 'arktype';
 import { describe, expect, it } from 'vitest';
-import { assertLlmModelConfigKeys, type LlmModelConfigFieldRules, parseLlmModelConfigFields } from '../llm.model.field';
-import { llmNonBlankStringType } from '../llm.model.type';
 import { mergeLlmModelConfigFiles, overlayLlmModelConfigFile } from './llm.model.config.merge';
 import { parseLlmModelConfigFile } from './llm.model.config.parse';
 import { llmModelProviderBindings, llmModelPromptAddenda, llmModelReasoningOffEncodings, llmModelVisionCapabilities, resolveLlmProviderConfigs } from './llm.model.config.resolve';
@@ -12,7 +11,7 @@ import { type LlmModelConfigExtensionParams, type LlmModelConfigFile, type LlmMo
  * patches over a built-in provider, a `voice-vendor` metering source, and a `voice` per-slug fact.
  *
  * Its fields are declared the host-validated way — an arktype type with `'+': 'delete'` (so the result carries only its
- * own keys), a key list and a rule table through `parseLlmModelConfigFields` — and the seam needs no casts.
+ * own keys), a key list and a rule table through `parseArktypeFieldsWithMessages` — and the seam needs no casts.
  */
 const testSpeechRouteType = type.enumerated('vendor-a', 'vendor-b', 'none');
 
@@ -24,14 +23,14 @@ const COMPLETION_ONLY_KEYS: ReadonlyArray<string> = ['reasoningOff', 'tokenLimit
 const testSpeechFieldsType = type({
   '+': 'delete',
   'speech?': testSpeechRouteType,
-  'speechModel?': llmNonBlankStringType
+  'speechModel?': nonBlankStringType
 }).readonly();
 
 type TestSpeechFields = typeof testSpeechFieldsType.infer;
 
 const SPEECH_KEYS: ReadonlyArray<keyof TestSpeechFields> = ['speech', 'speechModel'];
 
-const SPEECH_FIELD_RULES: LlmModelConfigFieldRules<TestSpeechFields> = {
+const SPEECH_FIELD_RULES: ArktypeFieldRules<TestSpeechFields> = {
   speech: { must: 'be one of vendor-a, vendor-b, none' },
   speechModel: { must: 'be a non-empty string' }
 };
@@ -55,7 +54,7 @@ interface TestMediaTypes extends LlmModelConfigTypes {
 
 function parseSpeechFields(input: LlmModelConfigExtensionParams): TestSpeechFields {
   const { schemaLabel, label, entry } = input;
-  return parseLlmModelConfigFields({ schemaLabel, label, value: entry, type: testSpeechFieldsType, keys: SPEECH_KEYS, rules: SPEECH_FIELD_RULES });
+  return parseArktypeFieldsWithMessages({ schemaLabel, label, value: entry, type: testSpeechFieldsType, keys: SPEECH_KEYS, rules: SPEECH_FIELD_RULES });
 }
 
 function servesSpeech(fields: Partial<TestSpeechFields>): boolean {
@@ -101,7 +100,7 @@ const schema = makeLlmModelConfigSchema<TestMediaTypes>({
     },
     isProviderBindable: (entry) => entry.speech === 'vendor-b',
     parseProviderPatch: (input) => {
-      assertLlmModelConfigKeys({ schemaLabel: input.schemaLabel, label: input.label, entry: input.entry, allowed: SPEECH_KEYS });
+      assertObjectKeys({ schemaLabel: input.schemaLabel, label: input.label, entry: input.entry, allowed: SPEECH_KEYS });
       const fields = parseSpeechFields(input);
 
       if (!servesSpeech(fields)) {
@@ -113,7 +112,7 @@ const schema = makeLlmModelConfigSchema<TestMediaTypes>({
     patchKeysNoun: 'speech route',
     meterings: ['voice-vendor'],
     modelKeys: ['voice'],
-    parseModelFields: (input) => parseLlmModelConfigFields({ schemaLabel: input.schemaLabel, label: input.label, value: input.entry, type: testVoiceFieldsType, keys: ['voice'], rules: { voice: { must: 'be a boolean' } } })
+    parseModelFields: (input) => parseArktypeFieldsWithMessages({ schemaLabel: input.schemaLabel, label: input.label, value: input.entry, type: testVoiceFieldsType, keys: ['voice'], rules: { voice: { must: 'be a boolean' } } })
   }
 });
 

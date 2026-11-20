@@ -1,6 +1,6 @@
 import { ArkErrors } from 'arktype';
 import { describe, expect, expectTypeOf, it } from 'vitest';
-import { type LlmModelConfigFieldRules } from '../llm.model.field';
+import { type ArktypeFieldRules } from '@dereekb/model';
 import {
   DEFAULT_LLM_MODEL_CONFIG_LABEL,
   LLM_MODEL_CONFIG_FILE_KEYS,
@@ -105,7 +105,7 @@ describe('the per-schema entry checks', () => {
   });
 
   it('has a rule for every key, in key order', () => {
-    const rules: LlmModelConfigFieldRules<LlmCompletionProviderEntry> = schema.completionProviderEntryRules;
+    const rules: ArktypeFieldRules<LlmCompletionProviderEntry> = schema.completionProviderEntryRules;
     expect(Object.keys(rules)).toEqual([...LLM_PROVIDER_ENTRY_KEYS]);
     expect(Object.keys(LLM_MODEL_SETTINGS_FIELD_RULES)).toEqual([...LLM_MODEL_SETTINGS_KEYS]);
   });

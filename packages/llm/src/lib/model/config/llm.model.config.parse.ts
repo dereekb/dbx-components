@@ -8,8 +8,8 @@
  * provider it does not itself declare.
  */
 
+import { assertObjectKeys, parseArktypeFieldsWithMessages } from '@dereekb/model';
 import { filterUndefinedValues, isPlainObject, type Maybe } from '@dereekb/util';
-import { assertLlmModelConfigKeys, parseLlmModelConfigFields } from '../llm.model.field';
 import { parseLlmModelTierMap } from '../llm.model.tier.parse';
 import { type LlmModelTierKey, type LlmModelTierValue, type LlmStrategyId } from '../llm.value';
 import {
@@ -76,9 +76,9 @@ export function parseLlmProviderEntry<X extends LlmModelConfigTypes = LlmModelCo
   }
 
   const entry = value;
-  assertLlmModelConfigKeys({ schemaLabel, label, entry, retired: schema.retiredKeys.provider, allowed: schema.providerKeys });
+  assertObjectKeys({ schemaLabel, label, entry, retired: schema.retiredKeys.provider, allowed: schema.providerKeys });
 
-  const routing = parseLlmModelConfigFields({ schemaLabel, label, value: entry, type: schema.providerEntryBaseType, keys: LLM_PROVIDER_ROUTING_KEYS, rules: schema.providerEntryBaseRules });
+  const routing = parseArktypeFieldsWithMessages({ schemaLabel, label, value: entry, type: schema.providerEntryBaseType, keys: LLM_PROVIDER_ROUTING_KEYS, rules: schema.providerEntryBaseRules });
   const extension = schema.extension;
   const fields: Partial<X['providerFields']> = extension?.parseProviderFields?.({ schemaLabel, label, entry }) ?? {};
   const transport = routing.transport;
@@ -88,7 +88,7 @@ export function parseLlmProviderEntry<X extends LlmModelConfigTypes = LlmModelCo
   if (parseExtensionEntry != null && transport != null) {
     result = { kind: 'extension', entry: parseExtensionEntry({ schemaLabel, label, entry, transport, baseUrl: routing.baseUrl, fields, meterings: schema.meterings }) };
   } else {
-    const checked = parseLlmModelConfigFields({ schemaLabel, label, value: entry, type: schema.completionProviderEntryType, keys: LLM_PROVIDER_ENTRY_KEYS, rules: schema.completionProviderEntryRules });
+    const checked = parseArktypeFieldsWithMessages({ schemaLabel, label, value: entry, type: schema.completionProviderEntryType, keys: LLM_PROVIDER_ENTRY_KEYS, rules: schema.completionProviderEntryRules });
     const { baseUrl, reasoningOff, tokenLimitParam, usageAccounting, metering, decision } = checked;
     // Base keys in LLM_PROVIDER_ENTRY_KEYS order, then the extension's — the pinned key order of a parsed entry.
     const completionEntry: LlmExtendedCompletionProviderEntry<X> = {
@@ -128,12 +128,12 @@ export function parseLlmModelSettings<X extends LlmModelConfigTypes = LlmModelCo
   }
 
   const entry = value;
-  assertLlmModelConfigKeys({ schemaLabel, label, entry, retired: schema.retiredKeys.model, allowed: schema.modelKeys });
+  assertObjectKeys({ schemaLabel, label, entry, retired: schema.retiredKeys.model, allowed: schema.modelKeys });
 
   // `provider` is shape only — that the NAME resolves is a cross-reference checked over the MERGED file, where a
   // binding to a built-in provider this file does not declare is finally visible. A BLANK `promptAddendum` is REJECTED
   // rather than dropped: an operator who cleared the text but left the key meant to say something to this model.
-  const checked = parseLlmModelConfigFields({ schemaLabel, label, value: entry, type: llmModelSettingsType, keys: LLM_MODEL_SETTINGS_KEYS, rules: LLM_MODEL_SETTINGS_FIELD_RULES });
+  const checked = parseArktypeFieldsWithMessages({ schemaLabel, label, value: entry, type: llmModelSettingsType, keys: LLM_MODEL_SETTINGS_KEYS, rules: LLM_MODEL_SETTINGS_FIELD_RULES });
   const { provider, reasoningOff, vision, promptAddendum } = checked;
   const fields: Partial<X['modelFields']> = schema.extension?.parseModelFields?.({ schemaLabel, label, entry }) ?? {};
   const settings: LlmExtendedModelSettings<X> = {
@@ -162,7 +162,7 @@ export function parseLlmModelProfile<X extends LlmModelConfigTypes = LlmModelCon
   const { label, value, schema } = config;
 
   if (isPlainObject(value)) {
-    assertLlmModelConfigKeys({ schemaLabel: schema.label, label, entry: value, retired: schema.retiredKeys.profile });
+    assertObjectKeys({ schemaLabel: schema.label, label, entry: value, retired: schema.retiredKeys.profile });
   }
 
   return { tiers: parseLlmModelTierMap({ label, value, schemaLabel: schema.label }) };
@@ -258,7 +258,7 @@ function parseLlmModelConfigProviders<X extends LlmModelConfigTypes>(input: Pars
     const label = `${source} providers['${providerName}']`;
 
     if (parseProviderPatch != null && isPlainObject(rawEntry) && isLlmProviderPatchValue(rawEntry)) {
-      assertLlmModelConfigKeys({ schemaLabel, label, entry: rawEntry, retired: schema.retiredKeys.provider });
+      assertObjectKeys({ schemaLabel, label, entry: rawEntry, retired: schema.retiredKeys.provider });
       providerPatches[providerName] = parseProviderPatch({ schemaLabel, label, entry: rawEntry });
     } else {
       const parsed = parseLlmProviderEntry({ label, value: rawEntry, schema });
@@ -317,7 +317,7 @@ export function parseLlmModelConfigFile<X extends LlmModelConfigTypes = LlmModel
   }
 
   const obj = raw;
-  assertLlmModelConfigKeys({ schemaLabel, label: source, entry: obj, retired: schema.retiredKeys.file, allowed: LLM_MODEL_CONFIG_FILE_KEYS });
+  assertObjectKeys({ schemaLabel, label: source, entry: obj, retired: schema.retiredKeys.file, allowed: LLM_MODEL_CONFIG_FILE_KEYS });
 
   const rawActive = obj['active'];
 
