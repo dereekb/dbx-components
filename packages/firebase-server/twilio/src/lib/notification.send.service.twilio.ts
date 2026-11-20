@@ -265,8 +265,9 @@ export function twilioNotificationTextSendService(config: TwilioNotificationText
     },
     healthCheckService,
     sendTextOptInConfirmation:
-      optInConfirmationBuilder != null
-        ? async (request: NotificationTextOptInConfirmationRequest) => {
+      optInConfirmationBuilder == null
+        ? undefined
+        : async (request: NotificationTextOptInConfirmationRequest) => {
             const { uid, to } = request;
             const built = await optInConfirmationBuilder({ twilioService, to, uid });
 
@@ -280,7 +281,6 @@ export function twilioNotificationTextSendService(config: TwilioNotificationText
 
             return notificationSendTextMessagesResultFromTwilioSendSmsResults([result]);
           }
-        : undefined
   };
 
   return sendService;
