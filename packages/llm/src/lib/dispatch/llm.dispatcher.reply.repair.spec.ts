@@ -20,7 +20,7 @@ import { type LlmCallContext, type LlmCallDiag, makeLlmCallContext } from '../re
 import { type LlmCallRecord, type LlmDecodeFailureRecord } from '../record/llm.call.record';
 import { type LlmSwallowSiteId } from '../record/llm.swallow';
 import { compileLlmCritiquePolicy, LLM_CRITIQUE_REPLY_CAPABILITY } from '../reply/llm.reply.critique';
-import { readLlmReplyLever } from '../reply/llm.reply.envelope';
+import { readLlmReply } from '../reply/llm.reply.envelope';
 import { DEFAULT_LLM_REPLY_FAST_FIX_LIMITS, LLM_REPAIR_REPLY_JSON_CAPABILITY, type LlmReplyFastFixer } from '../reply/llm.reply.fast.fix';
 import { scoreLlmReplyJson } from '../reply/llm.reply.repair';
 import { type LlmDispatchResult, type LlmRequest } from '../strategy/llm.strategy';
@@ -49,7 +49,7 @@ const RESOLVER = makeLlmTieredPromptTemplateResolver({
 
 const TIERS: LlmModelTierMap = { fast: 'test/fast', strong: 'test/strong' };
 
-const LINE: LlmCapabilityDescriptor = defineLlmCapability({ capability: 'LineCap', replyProtocol: 'line', responseSchema: type({ line: 'string' }), parseLever: (lever) => lever as { line: string } });
+const LINE: LlmCapabilityDescriptor = defineLlmCapability({ capability: 'LineCap', replyProtocol: 'line', responseSchema: type({ line: 'string' }), parseValue: (value) => value as { line: string } });
 
 const DESCRIPTORS: Readonly<Record<string, LlmCapabilityDescriptor>> = {
   [LLM_REPAIR_REPLY_JSON_CAPABILITY]: LLM_REPAIR_REPLY_JSON_DESCRIPTOR,
@@ -145,7 +145,7 @@ describe('makeLlmDispatcher() reply repair', () => {
       expect(result.repair).toMatchObject({ tier: 'deterministic', attempt: 2 });
     });
 
-    it("should re-ask a repaired lever the validator rejects with the VALIDATOR's error, not the parse-error text", async () => {
+    it("should re-ask a repaired value the validator rejects with the VALIDATOR's error, not the parse-error text", async () => {
       let calls = 0;
       const rejectFirst = () => (calls++ === 0 ? { error: 'say must be longer' } : true);
       const { subjectCalls } = await run({ subject: ['{"say":"a long enough line of dialogue"', OK], request: { validate: rejectFirst } });
@@ -181,7 +181,7 @@ describe('makeLlmDispatcher() reply repair', () => {
       expect((fixer.responseSchemaHint as { properties?: Record<string, unknown> }).properties).toHaveProperty('say');
       expect(result.decodeStatus).toBe('clean');
       expect(result.repair).toMatchObject({ tier: 'fast-fix', attempt: 1, verdict: 'mangled', originalText: MANGLED });
-      expect(readLlmReplyLever(result.text)).toEqual({ kind: 'lever', lever: { say: 'a long enough line of dialogue', n: null } });
+      expect(readLlmReply(result.text)).toEqual({ kind: 'value', value: { say: 'a long enough line of dialogue', n: null } });
     });
 
     it('should miss on fidelity when the fixer changes a number, and re-ask the subject', async () => {
@@ -211,8 +211,8 @@ describe('makeLlmDispatcher() reply repair', () => {
       expect(reasonsOf(declined.diags, 'reply-fast-fix-miss')).toEqual(['declined']);
     });
 
-    it('should fix a json-envelope subject with a custom lever key and a trailing rationale (fidelity over the lever value)', async () => {
-      const replyEnvelope = { lever: 'payload', answerable: 'ok', rationale: 'why' };
+    it('should fix a json-envelope subject with a custom value key and a trailing rationale (fidelity over the object under the value key)', async () => {
+      const replyEnvelope = { value: 'payload', answerable: 'ok', rationale: 'why' };
       const subject = '{"ok":true,"payload":{"say":"a long enough line of dialogue","n":None},"why":"The line answers the scene prompt well."}';
       const { result, subjectCalls, fixerCalls, diags } = await run({ subject: [subject], fixer: ['{"ok":true,"payload":{"say":"a long enough line of dialogue","n":null}}'], replyFastFix: makeLlmReplyFastFixer(), defaultReplyProtocol: 'json-envelope', replyEnvelope });
 
@@ -220,7 +220,7 @@ describe('makeLlmDispatcher() reply repair', () => {
       expect(fixerCalls).toHaveLength(1);
       expect(reasonsOf(diags, 'reply-fast-fix-miss')).toEqual([]);
       expect(result.repair).toMatchObject({ tier: 'fast-fix' });
-      expect(result.lever).toBe(FIXED);
+      expect(result.valueJson).toBe(FIXED);
     });
 
     it('should make ONE fixer call across two mangled attempts (the second is fast-fix-spent)', async () => {
@@ -303,7 +303,7 @@ describe('makeLlmDispatcher() reply repair', () => {
       let validated = 0;
       const rejectFirst = () => {
         validated += 1;
-        return validated === 1 ? { error: 'the first lever is rejected' } : (true as const);
+        return validated === 1 ? { error: 'the first value is rejected' } : (true as const);
       };
       await run({ subject: [MANGLED, OK], replyFastFix: withMeta, recorder: { recordCall: (record) => records.push(record) }, request: { validate: rejectFirst } });
 
@@ -345,7 +345,7 @@ describe('makeLlmDispatcher() reply repair', () => {
 
       expect(requests.filter((sent) => sent.capability === 'TestCap')).toHaveLength(2);
       expect(result.decodeStatus).toBe('retried');
-      expect(result.lever).toBe('{"say":"second"}');
+      expect(result.valueJson).toBe('{"say":"second"}');
     });
   });
 });

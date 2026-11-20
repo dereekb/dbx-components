@@ -202,12 +202,12 @@ describe('makeLlmPromptFactory; degenerate / oversize thread recording', () => {
   });
 });
 
-describe('makeLlmPromptFactory; recording levers', () => {
+describe('makeLlmPromptFactory; recording settings', () => {
   function makeOneReplyFactory(text: string, extra: { readonly degenerate?: boolean; readonly degenerateThreadPlaceholder?: string; readonly threadTurnMaxChars?: number } = {}) {
-    const { degenerate, ...levers } = extra;
+    const { degenerate, ...settings } = extra;
     return makeLlmPromptFactory<TestRequest>({
       runPromptRequest: async () => ({ result: { text, strategyId: 'fake', capability: 'summarize' }, sentTurn: { role: 'user', content: 'sent:root' }, ...(degenerate == null ? {} : { degenerate }) }),
-      ...levers
+      ...settings
     });
   }
 

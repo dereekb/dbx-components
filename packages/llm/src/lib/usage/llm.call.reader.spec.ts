@@ -156,10 +156,10 @@ const TIERS: LlmModelTierMap = { fast: 'test/fast', strong: 'test/strong' };
 const ANSWER = type({ answer: 'string' });
 
 const DESCRIPTORS: Readonly<Record<string, LlmCapabilityDescriptor>> = {
-  TestCap: defineLlmCapability({ capability: 'TestCap', responseSchema: ANSWER, parseLever: (lever) => lever })
+  TestCap: defineLlmCapability({ capability: 'TestCap', responseSchema: ANSWER, parseValue: (value) => value })
 };
 
-const VALID = (lever: unknown) => (typeof (lever as { answer?: unknown }).answer === 'string' ? true : { error: 'answer must be a string' });
+const VALID = (value: unknown) => (typeof (value as { answer?: unknown }).answer === 'string' ? true : { error: 'answer must be a string' });
 
 const OK = '{"answer":"ok"}';
 const INVALID = '{"answer":1}';

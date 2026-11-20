@@ -14,7 +14,7 @@ function strategy(id: string): LlmStrategy {
 }
 
 const DESCRIPTORS: Readonly<Record<string, LlmCapabilityDescriptor>> = {
-  StrongCap: defineLlmCapability({ capability: 'StrongCap', tier: 'strong', responseSchema: type({ a: 'string' }), parseLever: (lever) => lever })
+  StrongCap: defineLlmCapability({ capability: 'StrongCap', tier: 'strong', responseSchema: type({ a: 'string' }), parseValue: (value) => value })
 };
 
 function setupOf(extra: Partial<LlmDispatchResolveSetup> = {}): LlmDispatchResolveSetup {
@@ -56,7 +56,7 @@ describe('resolveLlmDispatch()', () => {
     const { callContext } = recordingContext();
     const tiers = { fast: { model: 'x/fast', maxOutputTokens: 2048 }, strong: 'x/strong' };
     const routes: LlmCompiledModelRouting = new Map([['Routed', { model: 'x/route', maxOutputTokens: 4096 }]]);
-    const capped: Readonly<Record<string, LlmCapabilityDescriptor>> = { ...DESCRIPTORS, Capped: defineLlmCapability({ capability: 'Capped', tier: 'strong', maxOutputTokens: 3000, responseSchema: type({ a: 'string' }), parseLever: (lever) => lever }) };
+    const capped: Readonly<Record<string, LlmCapabilityDescriptor>> = { ...DESCRIPTORS, Capped: defineLlmCapability({ capability: 'Capped', tier: 'strong', maxOutputTokens: 3000, responseSchema: type({ a: 'string' }), parseValue: (value) => value }) };
 
     expect(resolveLlmDispatch({ setup: setupOf(), request: request(), callContext }).maxOutputTokens).toBe(1024);
     expect(resolveLlmDispatch({ setup: setupOf(), request: request({ capability: 'StrongCap' }), callContext }).maxOutputTokens).toBe(1024);

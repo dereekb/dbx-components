@@ -9,10 +9,10 @@ import { type Maybe } from '@dereekb/util';
 /**
  * Every reply protocol the library reads, in no particular order.
  *
- * - `json` — the reply is the JSON object itself (the lever), described by the prompt's output contract.
- * - `json-envelope` — the reply is a JSON envelope whose configured key carries the lever (`LlmReplyEnvelopeKeys`),
+ * - `json` — the reply is the JSON object itself (the value), described by the prompt's output contract.
+ * - `json-envelope` — the reply is a JSON envelope whose configured key carries the value (`LlmReplyEnvelopeKeys`),
  *   and which can decline — the only protocol that does.
- * - `line` — the reply is one bare line of prose: no JSON and no output contract; the lever is synthesized from it.
+ * - `line` — the reply is one bare line of prose: no JSON and no output contract; the value is synthesized from it.
  */
 export const LLM_REPLY_PROTOCOLS = ['json', 'json-envelope', 'line'] as const;
 

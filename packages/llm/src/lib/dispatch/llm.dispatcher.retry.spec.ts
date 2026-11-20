@@ -41,8 +41,8 @@ const TIERS: LlmModelTierMap = { fast: 'test/fast', strong: 'test/strong' };
 
 const ANSWER = type({ answer: 'string' });
 
-function descriptorOf(config: Omit<Parameters<typeof defineLlmCapability>[0], 'responseSchema' | 'parseLever'>): LlmCapabilityDescriptor {
-  return defineLlmCapability({ responseSchema: ANSWER, parseLever: (lever) => lever, ...config });
+function descriptorOf(config: Omit<Parameters<typeof defineLlmCapability>[0], 'responseSchema' | 'parseValue'>): LlmCapabilityDescriptor {
+  return defineLlmCapability({ responseSchema: ANSWER, parseValue: (value) => value, ...config });
 }
 
 const DESCRIPTORS: Readonly<Record<string, LlmCapabilityDescriptor>> = {
@@ -51,7 +51,7 @@ const DESCRIPTORS: Readonly<Record<string, LlmCapabilityDescriptor>> = {
   EnvelopeCap: descriptorOf({ capability: 'EnvelopeCap', replyProtocol: 'json-envelope' })
 };
 
-const VALID = (lever: unknown) => (typeof (lever as { answer?: unknown }).answer === 'string' ? true : { error: 'answer must be a string' });
+const VALID = (value: unknown) => (typeof (value as { answer?: unknown }).answer === 'string' ? true : { error: 'answer must be a string' });
 
 const OK = '{"answer":"ok"}';
 const INVALID = '{"answer":1}';
@@ -611,7 +611,7 @@ describe('makeLlmDispatcher() retry', () => {
       const result = await dispatcher.dispatch(request({ critique, signal: controller.signal }));
 
       expect(requests).toHaveLength(1);
-      expect(result).toMatchObject({ attempts: 1, decodeStatus: 'clean', decodeOutcome: 'ok', lever: OK });
+      expect(result).toMatchObject({ attempts: 1, decodeStatus: 'clean', decodeOutcome: 'ok', valueJson: OK });
       expect(calls[0].phases?.attempts).toHaveLength(1);
       expect(calls[0].failedAttempts ?? []).toHaveLength(0);
       expect(decodeFailures).toHaveLength(0);
@@ -936,7 +936,7 @@ describe('makeLlmDispatcher() retry', () => {
       const { dispatcher } = setup({ replies: [OK] });
       await dispatcher.dispatch(request({ critique, meta: { trace: 't-1' } }));
 
-      expect(inputs[0]).toMatchObject({ capability: 'TestCap', liveContext: 'D-LIVE', replyText: OK, replyProtocol: 'json', attempt: 1, meta: { trace: 't-1' }, lever: { answer: 'ok' } });
+      expect(inputs[0]).toMatchObject({ capability: 'TestCap', liveContext: 'D-LIVE', replyText: OK, replyProtocol: 'json', attempt: 1, meta: { trace: 't-1' }, value: { answer: 'ok' } });
     });
 
     it('should file no decode rows for a critique retry', async () => {
@@ -969,7 +969,7 @@ describe('makeLlmDispatcher() retry', () => {
       const { result } = executed;
 
       expect(requests).toHaveLength(2);
-      expect(result).toMatchObject({ attempts: 2, decodeStatus: 'retried', decodeOutcome: 'ok', lever: '{"answer":"second"}', validationErrors: ['attempt 1: vague 1', 'attempt 2: vague 2'] });
+      expect(result).toMatchObject({ attempts: 2, decodeStatus: 'retried', decodeOutcome: 'ok', valueJson: '{"answer":"second"}', validationErrors: ['attempt 1: vague 1', 'attempt 2: vague 2'] });
       expect(calls[0].failedAttempts).toEqual([expect.objectContaining({ attempt: 1, cause: 'critique', error: 'vague 1' })]);
       expect(decodeFailures).toHaveLength(0);
       expect(gaps).toEqual([{ kind: 'critique-fail', capability: 'TestCap', feedback: 'vague 2', text: '{"answer":"second"}' }]);
@@ -983,7 +983,7 @@ describe('makeLlmDispatcher() retry', () => {
       const result = await dispatcher.dispatch(request({ critique: critic(99).critique, maxAttempts: 1 }));
 
       expect(requests).toHaveLength(1);
-      expect(result).toMatchObject({ attempts: 1, decodeStatus: 'clean', decodeOutcome: 'ok', lever: OK });
+      expect(result).toMatchObject({ attempts: 1, decodeStatus: 'clean', decodeOutcome: 'ok', valueJson: OK });
       expect(gaps.map((gap) => gap.kind)).toEqual(['critique-fail']);
     });
 
@@ -991,7 +991,7 @@ describe('makeLlmDispatcher() retry', () => {
       const { dispatcher } = setup({ replies: [INVALID, OK] });
       const result = await dispatcher.dispatch(request({ validate: VALID, critique: critic(99).critique }));
 
-      expect(result).toMatchObject({ attempts: 2, decodeStatus: 'retried', decodeOutcome: 'ok', lever: OK });
+      expect(result).toMatchObject({ attempts: 2, decodeStatus: 'retried', decodeOutcome: 'ok', valueJson: OK });
     });
 
     it('should file no gap when the critic accepts', async () => {
@@ -1009,15 +1009,15 @@ describe('makeLlmDispatcher() retry', () => {
       const { dispatcher } = setup({ replies: ['a plain line'] });
       await dispatcher.dispatch(request({ capability: 'LineCap', critique }));
 
-      expect(inputs[0].lever).toEqual({ line: 'a plain line' });
+      expect(inputs[0].value).toEqual({ line: 'a plain line' });
     });
 
-    it('should lift to the lineLeverField', async () => {
+    it('should lift to the lineValueField', async () => {
       const { critique, inputs } = critic(0);
       const { dispatcher } = setup({ replies: ['a plain line'] });
-      await dispatcher.dispatch(request({ capability: 'LineCap', critique, lineLeverField: 'say' }));
+      await dispatcher.dispatch(request({ capability: 'LineCap', critique, lineValueField: 'say' }));
 
-      expect(inputs[0].lever).toEqual({ say: 'a plain line' });
+      expect(inputs[0].value).toEqual({ say: 'a plain line' });
     });
 
     it('should not lift nor retry a line reply without a critic', async () => {

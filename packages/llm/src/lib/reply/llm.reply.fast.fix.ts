@@ -70,12 +70,12 @@ export interface LlmReplyFastFixParams<R extends LlmDispatchRequest = LlmDispatc
   readonly shape: JsonRepairShape;
   /**
    * The SUBJECT reply's reading envelope (`resolveLlmReplyReadingEnvelope` over its resolved protocol and the host's
-   * envelope keys) — the fixer's fidelity check takes its coverage over this envelope's lever value. `undefined` ⇒ the
+   * envelope keys) — the fixer's fidelity check takes its coverage over the object under this envelope's value key. `undefined` ⇒ the
    * subject is a plain `json` reply, checked whole.
    */
   readonly subjectEnvelope?: Maybe<LlmReplyEnvelopeKeys>;
   /**
-   * The subject's resolved lever schema — the fixer's per-invocation `responseSchemaHint`.
+   * The subject's resolved value schema — the fixer's per-invocation `responseSchemaHint`.
    */
   readonly schemaHint: unknown;
   /**
@@ -93,7 +93,7 @@ export interface LlmReplyFastFixParams<R extends LlmDispatchRequest = LlmDispatc
 }
 
 /**
- * Why a fast fix did not produce a usable lever.
+ * Why a fast fix did not produce a usable value.
  */
 export type LlmReplyFastFixMissReason = 'unusable' | 'fidelity' | 'truncated' | 'declined' | 'error';
 
@@ -106,15 +106,15 @@ export type LlmReplyFastFixMissReason = 'unusable' | 'fidelity' | 'truncated' | 
 export type LlmReplyFastFixOutcome =
   | {
       /**
-       * The fix produced a usable lever.
+       * The fix produced a usable value.
        */
       readonly kind: 'fixed';
       /**
-       * The corrected lever.
+       * The corrected value.
        */
-      readonly lever: Readonly<Record<string, unknown>>;
+      readonly value: Readonly<Record<string, unknown>>;
       /**
-       * The corrected lever as JSON text (what substitutes into the dispatch result's `text`).
+       * The corrected value as JSON text (what substitutes into the dispatch result's `text`).
        */
       readonly text: string;
       /**
@@ -124,7 +124,7 @@ export type LlmReplyFastFixOutcome =
     }
   | {
       /**
-       * The fix did not produce a usable lever.
+       * The fix did not produce a usable value.
        */
       readonly kind: 'missed';
       /**

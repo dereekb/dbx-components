@@ -22,11 +22,11 @@
  */
 
 import { type CachedGetter, cachedGetter, type Maybe } from '@dereekb/util';
-import { type LlmLeverValidator } from '../reply/llm.reply.validator';
+import { type LlmValueValidator } from '../reply/llm.reply.validator';
 import { type LlmDispatchResult, type LlmThreadTurn } from '../strategy/llm.strategy';
 
 /**
- * The input of one chained follow-up message — the new user content plus the per-turn levers a follow-up may
+ * The input of one chained follow-up message — the new user content plus the per-turn settings a follow-up may
  * override. Everything else (capability, model, strategy, host fields) is inherited from the chain's root request:
  * cache reuse requires the same model + provider anyway, and the reply protocol already governing the thread came
  * from the root's assembly.
@@ -40,7 +40,7 @@ export interface LlmPromptFollowUp {
    * OPT-IN bounded-retry validator for THIS turn's reply (the same contract as the request's `validate`). Unset ⇒
    * single-shot.
    */
-  readonly validate?: LlmLeverValidator;
+  readonly validate?: LlmValueValidator;
   /**
    * Total attempts the {@link validate} loop may make for this turn (the request's `maxAttempts` contract).
    */
@@ -109,7 +109,7 @@ export interface ExecutedLlmPrompt<R, X extends LlmDispatchResult = LlmDispatchR
    * Chain a follow-up prompt onto this exchange — a new not-yet-executed {@link LlmPrompt} whose execution replays
    * {@link thread} ahead of the follow-up content. Chaining never re-fires this (or any prior) call.
    *
-   * @param followUp - The follow-up message + its per-turn levers.
+   * @param followUp - The follow-up message + its per-turn settings.
    * @returns The chained, not-yet-executed prompt.
    */
   readonly followUp: (followUp: LlmPromptFollowUp) => LlmPrompt<R, X>;
@@ -227,7 +227,7 @@ export type LlmPromptFactory<R, X extends LlmDispatchResult = LlmDispatchResult>
  * else `result.text` capped at the turn limit (a dispatcher that repaired a reply reports the repaired text, which is
  * what a follow-up replays). A clean, in-bounds reply is recorded byte-identically.
  *
- * @param config - The run seam and the recording levers.
+ * @param config - The run seam and the recording settings.
  * @returns The factory.
  *
  * @typeParam R - The request type the chain roots on.

@@ -12,13 +12,13 @@ import { type LlmCallContext } from '../record/llm.call.context';
 import { type LlmCallAttemptPhase, type LlmCallFailedAttempt } from '../record/llm.call.record';
 import { classifyLlmDecodeFailure, classifyLlmReplyOutcome, isLlmLengthCappedFinish, type LlmDecodeFailureAttempt, type LlmDecodeFailureClass, type LlmRetryCause } from '../record/llm.decode.failure';
 import { type LlmCritic } from '../reply/llm.reply.critique';
-import { llmLineReplyLeverOf, type LlmReplyEnvelopeKeys, type LlmReplyLeverReading } from '../reply/llm.reply.envelope';
+import { readLlmLineReplyValue, type LlmReplyEnvelopeKeys, type LlmReplyReading } from '../reply/llm.reply.envelope';
 import { type LlmReplyFastFixLimits, type LlmReplyFastFixMissReason } from '../reply/llm.reply.fast.fix';
 import { type LlmReplyProtocol } from '../reply/llm.reply.protocol';
-import { type LlmLeverValidator } from '../reply/llm.reply.validator';
+import { type LlmValueValidator } from '../reply/llm.reply.validator';
 import { formatLlmErrorSummary } from '../strategy/llm.error';
 import { type LlmDecodeStatus, type LlmDispatchResult, type LlmReplyRepairSummary, type LlmRequest, type LlmStrategy } from '../strategy/llm.strategy';
-import { isDegenerateLlmReplyReading, type LlmBoundReplyFastFix, type LlmDispatchAttemptFault, type LlmDispatchAttemptSend, type LlmReplyRepairRefusal, readLlmDispatchReply, runLlmReplyRepairLane, type RunLlmReplyRepairLaneConfig, sendLlmDispatchAttempt, validateLlmDispatchLever } from './llm.dispatch.attempt';
+import { isDegenerateLlmReplyReading, type LlmBoundReplyFastFix, type LlmDispatchAttemptFault, type LlmDispatchAttemptSend, type LlmReplyRepairRefusal, readLlmDispatchReply, runLlmReplyRepairLane, type RunLlmReplyRepairLaneConfig, sendLlmDispatchAttempt, validateLlmDispatchValue } from './llm.dispatch.attempt';
 import { type LlmDispatchPauseSignal, type LlmDispatchTransportBackoff, parkLlmDispatchWhilePaused } from './llm.dispatch.control';
 import { type LlmCorrectionKind, type LlmDispatchCorrectionTexts, renderLlmDispatchCorrectionText, withLlmDispatchCorrection } from './llm.dispatch.correction';
 import { type LlmDispatchRetryLadder, makeLlmDispatchRetryLadder } from './llm.dispatch.ladder';
@@ -74,9 +74,9 @@ export interface LlmDispatchAttemptsConfig {
    */
   readonly readingEnvelope: Maybe<LlmReplyEnvelopeKeys>;
   /**
-   * The lever validator, when the call set one.
+   * The value validator, when the call set one.
    */
-  readonly validate?: Maybe<LlmLeverValidator>;
+  readonly validate?: Maybe<LlmValueValidator>;
   /**
    * The dispatch's call context.
    */
@@ -122,10 +122,10 @@ export interface LlmDispatchAttemptsConfig {
    */
   readonly liveContext: string;
   /**
-   * The field a `line` reply's lifted lever names (the pipeline resolves the request's, else
-   * `DEFAULT_LLM_LINE_LEVER_FIELD`).
+   * The field a `line` reply's lifted value names (the pipeline resolves the request's, else
+   * `DEFAULT_LLM_LINE_VALUE_FIELD`).
    */
-  readonly lineLeverField: string;
+  readonly lineValueField: string;
   /**
    * The bound fast fix, when one is.
    */
@@ -190,7 +190,7 @@ function llmDispatchTerminalFaultOf(attempt: number, sent: LlmDispatchAttemptSen
  * @param attemptContext - The attempt's context.
  * @returns The reader.
  */
-function replyReaderOf(config: Pick<LlmDispatchAttemptsConfig, 'protocol' | 'envelope'>, attemptContext: LlmCallContext): (text: string) => LlmReplyLeverReading {
+function replyReaderOf(config: Pick<LlmDispatchAttemptsConfig, 'protocol' | 'envelope'>, attemptContext: LlmCallContext): (text: string) => LlmReplyReading {
   const { protocol, envelope } = config;
   return (text) => readLlmDispatchReply(text, { protocol, envelope, swallow: (site, cause) => attemptContext.swallow(site, cause) });
 }
@@ -206,7 +206,7 @@ interface LlmDispatchRepairedReading {
   /**
    * The reading of {@link result}.
    */
-  readonly reading: LlmReplyLeverReading;
+  readonly reading: LlmReplyReading;
   /**
    * The repair summary — present iff the reply was repaired.
    */
@@ -232,7 +232,7 @@ interface RepairLlmDispatchReadingConfig {
   /**
    * Its reading.
    */
-  readonly reading: LlmReplyLeverReading;
+  readonly reading: LlmReplyReading;
   /**
    * The repair lane's inputs, less the served reply.
    */
@@ -399,7 +399,7 @@ interface LlmDispatchLoopState {
   terminalFault?: Maybe<LlmDispatchTerminalFault>;
   accepted: boolean;
   recovered: boolean;
-  acceptedLever?: unknown;
+  acceptedValue?: unknown;
 }
 
 /**
@@ -493,19 +493,19 @@ function runLlmDispatchTruncatedStep(loop: LlmDispatchLoopState, step: LlmDispat
 }
 
 /**
- * The read lever of one attempt, with what the repair lane did to it.
+ * The read value of one attempt, with what the repair lane did to it.
  */
 interface LlmDispatchJudgedReading {
   readonly served: LlmDispatchResult;
-  readonly reading: LlmReplyLeverReading;
+  readonly reading: LlmReplyReading;
   readonly repair?: Maybe<LlmReplyRepairSummary>;
   readonly fastFixMiss?: Maybe<LlmReplyFastFixMissReason>;
 }
 
 /**
- * A read lever — validate, then critique. A valid, accepted lever settles; a critic's rejection re-asks with a
+ * A read value — validate, then critique. A valid, accepted value settles; a critic's rejection re-asks with a
  * critique correction (no decode row) while a retry can follow, else the rejected reply SHIPS (accepted, its feedback
- * on {@link LlmDispatchOutcome.critiqueFailure}, no failed row); an invalid lever re-asks with the validator's error (a
+ * on {@link LlmDispatchOutcome.critiqueFailure}, no failed row); an invalid value re-asks with the validator's error (a
  * decode row only when no retry follows, or when the reply was repaired).
  *
  * @param config - The attempt-stage config.
@@ -513,9 +513,9 @@ interface LlmDispatchJudgedReading {
  * @param step - The attempt's send and its judged reading.
  * @returns Whether to retry.
  */
-async function runLlmDispatchLeverStep(config: LlmDispatchAttemptsConfig, loop: LlmDispatchLoopState, step: LlmDispatchLoopStep & LlmDispatchJudgedReading & { readonly lever: Record<string, unknown> }): Promise<LlmDispatchLoopNext> {
+async function runLlmDispatchValueStep(config: LlmDispatchAttemptsConfig, loop: LlmDispatchLoopState, step: LlmDispatchLoopStep & LlmDispatchJudgedReading & { readonly value: Record<string, unknown> }): Promise<LlmDispatchLoopNext> {
   const { validate, critique, baseRequest, protocol, liveContext } = config;
-  const { sent, attempt, served, repair, lever } = step;
+  const { sent, attempt, served, repair, value } = step;
   const { attemptContext } = sent;
   const { ledger, ladder } = loop;
   const repairedRow = (retryLever?: Maybe<LlmRetryLever>) => toLlmRepairedDecodeAttempt({ attempt, served, summary: repair as LlmReplyRepairSummary, maxOutputTokens: loop.request.maxOutputTokens, envelope: loop.readingEnvelope, lever: retryLever });
@@ -526,9 +526,9 @@ async function runLlmDispatchLeverStep(config: LlmDispatchAttemptsConfig, loop: 
 
     loop.recovered = ledger.decodeFailures.length > 0;
     loop.accepted = true;
-    loop.acceptedLever = lever;
+    loop.acceptedValue = value;
   };
-  const valid = validateLlmDispatchLever({ validate, lever, attemptContext });
+  const valid = validateLlmDispatchValue({ validate, value, attemptContext });
   let next: LlmDispatchLoopNext = 'settle';
 
   if (valid === true) {
@@ -536,7 +536,7 @@ async function runLlmDispatchLeverStep(config: LlmDispatchAttemptsConfig, loop: 
       critique == null
         ? true
         : await attemptContext.timeAsync('critique', () =>
-            critique({ capability: baseRequest.capability, ...(baseRequest.meta == null ? {} : { meta: baseRequest.meta }), lever, replyText: loop.result.text, liveContext, replyProtocol: protocol, attempt, callContext: attemptContext, ...(config.signal == null ? {} : { signal: config.signal }) })
+            critique({ capability: baseRequest.capability, ...(baseRequest.meta == null ? {} : { meta: baseRequest.meta }), value, replyText: loop.result.text, liveContext, replyProtocol: protocol, attempt, callContext: attemptContext, ...(config.signal == null ? {} : { signal: config.signal }) })
           );
 
     if (verdict === true) {
@@ -580,7 +580,7 @@ async function runLlmDispatchLeverStep(config: LlmDispatchAttemptsConfig, loop: 
 }
 
 /**
- * Read one delivered reply — the protocol read, the line lift (a `line` + critique call reads a bare line as a lever)
+ * Read one delivered reply — the protocol read, the line lift (a `line` + critique call reads a bare line as a value)
  * and the reply-repair lane (non-`line`, degenerate). A repair substitutes the reply and patches the attempt's phase.
  *
  * @param config - The attempt-stage config.
@@ -599,10 +599,10 @@ async function readLlmDispatchLoopReply(config: LlmDispatchAttemptsConfig, loop:
   let fastFixMiss: Maybe<LlmReplyFastFixMissReason>;
 
   if (critique != null && protocol === 'line' && reading.kind === 'no-json') {
-    const lifted = llmLineReplyLeverOf(served.text, { field: config.lineLeverField, envelope });
+    const lifted = readLlmLineReplyValue(served.text, { field: config.lineValueField, envelope });
 
     if (lifted != null) {
-      reading = { kind: 'lever', lever: lifted };
+      reading = { kind: 'value', value: lifted };
     }
   }
 
@@ -624,7 +624,7 @@ async function readLlmDispatchLoopReply(config: LlmDispatchAttemptsConfig, loop:
 }
 
 /**
- * Judge one delivered reply: read (line lift + repair lane), then a lever is validated / critiqued; a decline (or a
+ * Judge one delivered reply: read (line lift + repair lane), then a value is validated / critiqued; a decline (or a
  * `line` reply that is not JSON) is ACCEPTED; any other degenerate reading records its classified row and re-asks
  * while a retry can follow.
  *
@@ -640,8 +640,8 @@ async function runLlmDispatchReplyStep(config: LlmDispatchAttemptsConfig, loop: 
   const { ledger } = loop;
   let next: LlmDispatchLoopNext = 'settle';
 
-  if (reading.kind === 'lever') {
-    next = await runLlmDispatchLeverStep(config, loop, { ...step, ...judged, lever: reading.lever });
+  if (reading.kind === 'value') {
+    next = await runLlmDispatchValueStep(config, loop, { ...step, ...judged, value: reading.value });
   } else if (reading.kind === 'declined' || (config.protocol === 'line' && isDegenerateLlmReplyReading(reading))) {
     // a decline (or a `line` reply that is not JSON) is an ANSWER, never a decode failure
     if (repair != null) {
@@ -759,7 +759,7 @@ async function runLlmDispatchLoopPass(config: LlmDispatchAttemptsConfig, loop: L
  *
  * Every rejected attempt records its failed-attempt row (with the correction it was sent with and the retry it
  * bought); decode rows follow the decode-failure population rules. The result is stamped `attempts`, `decodeStatus`,
- * `decodeOutcome` (of the last SENT attempt), `lengthCapped?`, `lever?` and `validationErrors?`.
+ * `decodeOutcome` (of the last SENT attempt), `lengthCapped?`, `valueJson?` and `validationErrors?`.
  *
  * @param config - The attempt-stage config.
  * @returns The outcome.
@@ -801,13 +801,13 @@ export async function runLlmDispatchAttempts(config: LlmDispatchAttemptsConfig):
     // each pass sends at most one attempt
   }
 
-  const { result, accepted, recovered, acceptedLever, attempts, lengthCapped, critiqueFailure, terminalFault, attemptPhases } = loop;
+  const { result, accepted, recovered, acceptedValue, attempts, lengthCapped, critiqueFailure, terminalFault, attemptPhases } = loop;
   const decodeStatus = llmDecodeStatusOf(accepted, attempts);
   const decodeOutcome = classifyLlmReplyOutcome(result, accepted ? undefined : loop.lastFailureClass);
-  const lever = acceptedLever === undefined ? undefined : JSON.stringify(acceptedLever);
+  const valueJson = acceptedValue === undefined ? undefined : JSON.stringify(acceptedValue);
 
   return {
-    result: { ...result, attempts, decodeStatus, decodeOutcome, ...(lengthCapped ? { lengthCapped: true } : {}), ...(lever == null ? {} : { lever }), ...(validationErrors.length > 0 ? { validationErrors } : {}) },
+    result: { ...result, attempts, decodeStatus, decodeOutcome, ...(lengthCapped ? { lengthCapped: true } : {}), ...(valueJson == null ? {} : { valueJson }), ...(validationErrors.length > 0 ? { validationErrors } : {}) },
     finalRequest: loop.request,
     attemptPhases,
     decodeFailures,

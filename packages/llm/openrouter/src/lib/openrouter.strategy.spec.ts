@@ -172,7 +172,7 @@ describe('makeLlmOpenRouterStrategy()', () => {
   });
 
   it('a per-call request.maxOutputTokens WINS over the strategy default cap (the per-call budget / retry-raise seam)', async () => {
-    // Config caps at 512; the per-call budget (a big staging lever, or a truncation-retry raise) is threaded higher.
+    // Config caps at 512; the per-call budget (a large-budget staging call, or a truncation-retry raise) is threaded higher.
     const { client, bodies } = makeFakeClient();
     const strategy = makeLlmOpenRouterStrategy({ client, defaultModel: 'anthropic/claude-sonnet-4.6', maxOutputTokens: 512 });
 
@@ -393,11 +393,11 @@ describe('makeLlmOpenRouterStrategy()', () => {
     expect(options[0]?.timeout).toBe(resolveLlmCompletionCallTimeoutMs({ timeoutMs: DEFAULT_LLM_COMPLETION_TIMEOUT_MS, maxOutputTokens: DEFAULT_LLM_MAX_OUTPUT_TOKENS }));
   });
 
-  it("the abort window SCALES with the call's completion budget (a big-budget lever gets a longer wall)", async () => {
+  it("the abort window SCALES with the call's completion budget (a large-budget call gets a longer wall)", async () => {
     const { client, options } = makeFakeClient();
     const strategy = makeLlmOpenRouterStrategy({ defaultModel: DEFAULT_MODEL, client, timeoutMs: 60_000 });
 
-    // A small default-budget call floors at the base timeout; a 16k-token setup lever scales its window up.
+    // A small default-budget call floors at the base timeout; a 16k-token setup call scales its window up.
     await strategy.complete({ prompt: 'small', capability: 'X', maxOutputTokens: 100 });
     await strategy.complete({ prompt: 'big', capability: 'X', maxOutputTokens: 16_384 });
 

@@ -95,7 +95,7 @@ describe('LlmDispatcher', () => {
   it('should let a fast fixer build its own request from the subject request', async () => {
     const fixer: LlmReplyFastFixer<HostRequest, HostResult> = async (input) => {
       const result = await input.dispatch({ capability: 'repair-json', workspaceId: input.request.workspaceId, meta: input.request.meta, subjectCapability: input.subjectCapability, responseSchemaHint: input.schemaHint, renderLiveContext: () => [] });
-      return { kind: 'fixed', lever: { summary: 'fixed' }, text: result.text, meta: { callId: result.callId } };
+      return { kind: 'fixed', value: { summary: 'fixed' }, text: result.text, meta: { callId: result.callId } };
     };
     const calls: HostRequest[] = [];
     const dispatcher = hostDispatcherOf(calls);
@@ -111,7 +111,7 @@ describe('LlmDispatcher', () => {
     };
     const outcome = await fixer(input);
 
-    expect(outcome).toEqual({ kind: 'fixed', lever: { summary: 'fixed' }, text: 'root', meta: { callId: 'call-w1' } });
+    expect(outcome).toEqual({ kind: 'fixed', value: { summary: 'fixed' }, text: 'root', meta: { callId: 'call-w1' } });
     expect(calls[0].subjectCapability).toBe('summarize');
     expect(calls[0].meta?.subjectId).toBe('s1');
   });
@@ -119,7 +119,7 @@ describe('LlmDispatcher', () => {
   it('should let a critic read the subject meta', async () => {
     const critic: LlmCritic = (input: LlmCritiqueParams) => Promise.resolve((input.meta as HostMeta | undefined)?.subjectId === 's1' ? true : { error: 'unknown subject' });
     const request: HostRequest = { ...REQUEST, critique: critic };
-    const verdict = await request.critique?.({ capability: 'summarize', meta: request.meta, lever: { summary: 'x' }, replyText: '{"summary":"x"}', liveContext: '## Live context', replyProtocol: 'json', attempt: 1, callContext: noopLlmCallContext() });
+    const verdict = await request.critique?.({ capability: 'summarize', meta: request.meta, value: { summary: 'x' }, replyText: '{"summary":"x"}', liveContext: '## Live context', replyProtocol: 'json', attempt: 1, callContext: noopLlmCallContext() });
 
     expect(verdict).toBe(true);
   });

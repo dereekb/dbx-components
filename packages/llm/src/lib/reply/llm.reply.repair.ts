@@ -6,11 +6,11 @@
  * The lenient walk itself lives in `@dereekb/util` (`repairJsonObjectText` / `scoreJsonObjectText` /
  * `checkJsonRepairFidelity`), as do the shape types it returns (`JsonRepairShape` and the other `JsonRepair*` types).
  * These wrappers add the one reply rule: on a `json-envelope` reply the fidelity coverage check is taken over the
- * envelope lever key's value (its balanced object), so the envelope's bookkeeping never counts; on a `json` reply the
+ * object under the envelope's value key (its balanced slice), so the envelope's bookkeeping never counts; on a `json` reply the
  * whole reply is the payload.
  *
  * WHO CALLS IT. A dispatcher's reply-repair lane, and only on a CLEAN-STOP, object-led, JSON-protocol reply the plain
- * reader (`readLlmReplyLever`) could not read. The reader itself keeps its structural non-goal: it cannot see the
+ * reader (`readLlmReply`) could not read. The reader itself keeps its structural non-goal: it cannot see the
  * finish reason, so it can never tell a model that forgot its last `}` from a completion the token cap cut off. The
  * dispatcher can, which is why the decision to repair lives there.
  *
@@ -27,7 +27,7 @@ import { type LlmReplyEnvelopeKeys } from './llm.reply.envelope';
  */
 export interface LlmReplyRepairConfig {
   /**
-   * The reply's envelope keys when it reads as `json-envelope` — coverage is taken over the `lever` key's value. Absent ⇒ the whole reply is the payload.
+   * The reply's envelope keys when it reads as `json-envelope` — coverage is taken over the object under the `value` key. Absent ⇒ the whole reply is the payload.
    */
   readonly envelope?: Maybe<LlmReplyEnvelopeKeys>;
 }
@@ -35,7 +35,7 @@ export interface LlmReplyRepairConfig {
 /**
  * Score and (when it is a near miss) repair one reply — the one entry point of the deterministic tier.
  *
- * Delegates to `@dereekb/util` `repairJsonObjectText`, with the coverage check taken over the envelope's lever value
+ * Delegates to `@dereekb/util` `repairJsonObjectText`, with the coverage check taken over the object under the envelope's value key
  * when `config.envelope` is set. A rebuilt text that does not parse is swallow site `llm/reply-repair.rebuilt-parse`
  * (channel `result`): the verdict carries it, so no sink is called.
  *
@@ -44,7 +44,7 @@ export interface LlmReplyRepairConfig {
  * @returns The shape, plus the repair iff the verdict is `near-miss`.
  */
 export function repairLlmReplyJson(text: string, config?: Maybe<LlmReplyRepairConfig>): JsonRepairResult {
-  return repairJsonObjectText(text, { coverageFromKey: config?.envelope?.lever });
+  return repairJsonObjectText(text, { coverageFromKey: config?.envelope?.value });
 }
 
 /**
@@ -55,7 +55,7 @@ export function repairLlmReplyJson(text: string, config?: Maybe<LlmReplyRepairCo
  * @returns The shape.
  */
 export function scoreLlmReplyJson(text: string, config?: Maybe<LlmReplyRepairConfig>): JsonRepairShape {
-  return scoreJsonObjectText(text, { coverageFromKey: config?.envelope?.lever });
+  return scoreJsonObjectText(text, { coverageFromKey: config?.envelope?.value });
 }
 
 /**
@@ -66,14 +66,14 @@ export interface LlmReplyRepairFidelityConfig extends Pick<CheckJsonRepairFideli
 /**
  * Prove a repair invented and dropped nothing — the runtime gate on BOTH repair tiers.
  *
- * Delegates to `@dereekb/util` `checkJsonRepairFidelity`, with the coverage region taken over the envelope's lever
- * value (its balanced object) when `config.envelope` is set; otherwise the whole original is checked.
+ * Delegates to `@dereekb/util` `checkJsonRepairFidelity`, with the coverage region taken over the object under
+ * the envelope's value key (its balanced slice) when `config.envelope` is set; otherwise the whole original is checked.
  *
  * @param config - The original reply text, the repaired value and the original's reading envelope.
  * @returns The fidelity verdict.
  */
 export function llmReplyRepairFidelity(config: LlmReplyRepairFidelityConfig): JsonRepairFidelity {
-  return checkJsonRepairFidelity({ original: config.original, repaired: config.repaired, coverageFromKey: config.envelope?.lever });
+  return checkJsonRepairFidelity({ original: config.original, repaired: config.repaired, coverageFromKey: config.envelope?.value });
 }
 
 /**

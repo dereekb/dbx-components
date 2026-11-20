@@ -36,7 +36,7 @@ describe('capability exports', () => {
 
   it('does not export the capability internals', async () => {
     const barrel: Record<string, unknown> = await import('./index');
-    const internals = ['llmCritiqueOutcomeSchema', 'parseLlmCritiqueOutcomeLever', 'renderLlmCritiqueContext', 'llmRepairReplyJsonSchema', 'parseLlmRepairReplyJsonLever', 'renderLlmRepairReplyJsonContext'];
+    const internals = ['llmCritiqueOutcomeSchema', 'parseLlmCritiqueOutcomeValue', 'renderLlmCritiqueContext', 'llmRepairReplyJsonSchema', 'parseLlmRepairReplyJsonValue', 'renderLlmRepairReplyJsonContext'];
     expect(internals.filter((name) => name in barrel)).toEqual([]);
   });
 });

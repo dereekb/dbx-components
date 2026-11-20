@@ -1,17 +1,17 @@
 /**
  * ONE attempt's stages — send (one `strategy.complete` in an `attempt-N` child context), decode (read the reply, then
- * the reply-repair lane on a degenerate JSON reading) and validate (the request's lever validator).
+ * the reply-repair lane on a degenerate JSON reading) and validate (the request's value validator).
  */
 
 import { type JsonRepairShape, type Maybe, roundToPrecision } from '@dereekb/util';
 import { LLM_REPLY_REPAIR_FAST_FIX_SWALLOW_SITE } from '../capability/llm.capability.repair.reply.json';
 import { type LlmCallContext } from '../record/llm.call.context';
 import { isLlmCleanStopFinish } from '../record/llm.decode.failure';
-import { type LlmReplyEnvelopeKeys, type LlmReplyLeverReading, readLlmReplyLever, resolveLlmReplyReadingEnvelope } from '../reply/llm.reply.envelope';
+import { type LlmReplyEnvelopeKeys, type LlmReplyReading, readLlmReply, resolveLlmReplyReadingEnvelope } from '../reply/llm.reply.envelope';
 import { LLM_REPAIR_REPLY_JSON_CAPABILITY, type LlmReplyFastFixer, type LlmReplyFastFixLimits, type LlmReplyFastFixMissReason, type LlmReplyFastFixOutcome } from '../reply/llm.reply.fast.fix';
 import { type LlmReplyProtocol } from '../reply/llm.reply.protocol';
 import { repairLlmReplyJson } from '../reply/llm.reply.repair';
-import { type LlmLeverValidator } from '../reply/llm.reply.validator';
+import { type LlmReplyVerdict, type LlmValueValidator } from '../reply/llm.reply.validator';
 import { type LlmSwallowSink } from '../record/llm.swallow';
 import { type FetchErrorClassification, type IsRetryableUnknownErrorFunction } from '@dereekb/util/fetch';
 import { classifyLlmError, isLlmAbortError, isRetryableLlmErrorClassification, formatLlmErrorSummary } from '../strategy/llm.error';
@@ -146,15 +146,15 @@ export interface ReadLlmDispatchReplyConfig {
 }
 
 /**
- * Read a reply's lever by the call's protocol.
+ * Read a reply's value by the call's protocol.
  *
  * @param text - The reply text.
  * @param config - The protocol, the envelope keys and the swallow sink.
  * @returns The reading.
  */
-export function readLlmDispatchReply(text: string, config: ReadLlmDispatchReplyConfig): LlmReplyLeverReading {
+export function readLlmDispatchReply(text: string, config: ReadLlmDispatchReplyConfig): LlmReplyReading {
   const { protocol, envelope, swallow } = config;
-  return readLlmReplyLever(text, { envelope: resolveLlmReplyReadingEnvelope(protocol, envelope), swallow });
+  return readLlmReply(text, { envelope: resolveLlmReplyReadingEnvelope(protocol, envelope), swallow });
 }
 
 /**
@@ -163,7 +163,7 @@ export function readLlmDispatchReply(text: string, config: ReadLlmDispatchReplyC
  * @param reading - The reading.
  * @returns `true` for `no-json` / `parse-error`.
  */
-export function isDegenerateLlmReplyReading(reading: LlmReplyLeverReading): boolean {
+export function isDegenerateLlmReplyReading(reading: LlmReplyReading): boolean {
   return reading.kind === 'no-json' || reading.kind === 'parse-error';
 }
 
@@ -192,10 +192,10 @@ export interface RunLlmReplyRepairLaneConfig {
   /**
    * Re-reads a repaired reply (the same protocol / envelope / swallow as the first read).
    */
-  readonly read: (text: string) => LlmReplyLeverReading;
+  readonly read: (text: string) => LlmReplyReading;
   /**
    * The reply's reading envelope (`resolveLlmReplyReadingEnvelope`) — the deterministic tier's fidelity coverage is
-   * taken over its lever key's value. `undefined` ⇒ the whole reply is the payload.
+   * taken over the object under its value key. `undefined` ⇒ the whole reply is the payload.
    */
   readonly envelope: Maybe<LlmReplyEnvelopeKeys>;
   /**
@@ -322,7 +322,7 @@ export interface LlmRepairedReply {
   /**
    * The re-read of the repaired text.
    */
-  readonly reading: LlmReplyLeverReading;
+  readonly reading: LlmReplyReading;
   /**
    * The bounded repair summary.
    */
@@ -388,7 +388,7 @@ async function runLlmReplyFastFixTier(config: RunLlmReplyRepairLaneConfig & { re
     attemptContext.diag({ level: 'info', code: 'reply-repaired', fields: { capability, attempt, tier: 'fast-fix', verdict: shape.verdict, score }, message: 'mangled JSON reply repaired by one fast-fix call before any re-ask' });
     outcome = { repaired: { result, reading: read(result.text), summary }, fastFixCalled: true };
   } else {
-    attemptContext.diag({ level: 'warn', code: 'reply-fast-fix-miss', fields: { capability, attempt, reason: fixed.reason }, message: 'the fast fix produced no usable lever; falling through to the re-ask / drop' });
+    attemptContext.diag({ level: 'warn', code: 'reply-fast-fix-miss', fields: { capability, attempt, reason: fixed.reason }, message: 'the fast fix produced no usable value; falling through to the re-ask / drop' });
     outcome = { fastFixCalled: true, fastFixMiss: fixed.reason };
   }
 
@@ -456,17 +456,17 @@ export async function runLlmReplyRepairLane(config: RunLlmReplyRepairLaneConfig)
 }
 
 /**
- * The inputs of {@link validateLlmDispatchLever}.
+ * The inputs of {@link validateLlmDispatchValue}.
  */
-export interface ValidateLlmDispatchLeverConfig {
+export interface ValidateLlmDispatchValueConfig {
   /**
-   * The validator — absent ⇒ every lever is valid.
+   * The validator — absent ⇒ every value is valid.
    */
-  readonly validate?: Maybe<LlmLeverValidator>;
+  readonly validate?: Maybe<LlmValueValidator>;
   /**
-   * The read lever.
+   * The read value.
    */
-  readonly lever: unknown;
+  readonly value: unknown;
   /**
    * The attempt's context — the `validate` span lands here.
    */
@@ -474,12 +474,12 @@ export interface ValidateLlmDispatchLeverConfig {
 }
 
 /**
- * Validate a read lever inside a `validate` span.
+ * Validate a read value inside a `validate` span.
  *
- * @param config - The validator, the lever and the attempt context.
+ * @param config - The validator, the value and the attempt context.
  * @returns `true`, or the validator's `{ error }`.
  */
-export function validateLlmDispatchLever(config: ValidateLlmDispatchLeverConfig): true | { readonly error: string } {
-  const { validate, lever, attemptContext } = config;
-  return validate == null ? true : attemptContext.time('validate', () => validate(lever));
+export function validateLlmDispatchValue(config: ValidateLlmDispatchValueConfig): LlmReplyVerdict {
+  const { validate, value, attemptContext } = config;
+  return validate == null ? true : attemptContext.time('validate', () => validate(value));
 }

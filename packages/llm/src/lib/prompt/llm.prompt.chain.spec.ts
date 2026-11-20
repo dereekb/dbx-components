@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { type LlmDispatcher } from '../dispatch/llm.dispatcher';
-import { type LlmLeverValidator } from '../reply/llm.reply.validator';
+import { type LlmValueValidator } from '../reply/llm.reply.validator';
 import { DEFAULT_LLM_PROMPT_CHAIN_LEAD, makeLlmPromptChain } from './llm.prompt.chain';
 import { joinLlmLiveContextBlocks, LLM_CHAINED_FOLLOW_UP_DROPPED_LEAD, LLM_CHAINED_FOLLOW_UP_UNCHANGED_LEAD, type LlmLiveContextBlock } from './llm.prompt.live.context';
 import { withLlmPromptSite } from './llm.prompt.site';
@@ -152,7 +152,7 @@ describe('makeLlmPromptChain(); the instance', () => {
   it('carries exactly validate, maxAttempts and responseSchemaHint onto a follow-up', async () => {
     const { dispatcher, runs } = fakeDispatcherOf('reply');
     const chain = makeLlmPromptChain();
-    const validate: LlmLeverValidator = () => true;
+    const validate: LlmValueValidator = () => true;
     const first = await chain.dispatch({ dispatcher, request: blocksRequest('summarize', root) });
 
     await chain.dispatch({ dispatcher, request: blocksRequest('summarize', item, { validate, maxAttempts: 2, responseSchemaHint: { type: 'object' }, tier: 'fast', lineManner: true }), previous: first });

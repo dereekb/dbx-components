@@ -19,8 +19,8 @@ const SUMMARIZE: LlmCapabilityDescriptor<{ readonly summary: string }, HostTrait
   frames: { 'brand-voice': 'context', disclaimer: 'off' },
   traits: { voice: 'narrator', readerFacing: true },
   responseSchema: SUMMARY_SCHEMA,
-  parseLever: (lever) => {
-    const parsed = SUMMARY_SCHEMA(lever);
+  parseValue: (value) => {
+    const parsed = SUMMARY_SCHEMA(value);
     return parsed instanceof type.errors ? undefined : parsed;
   },
   responseSchemaHint: () => ({ type: 'object' }),
@@ -30,7 +30,7 @@ const SUMMARIZE: LlmCapabilityDescriptor<{ readonly summary: string }, HostTrait
 const CLASSIFY: LlmCapabilityDescriptor<unknown, HostTraits> = {
   capability: 'classify',
   responseSchema: type({ label: 'string' }),
-  parseLever: (lever) => lever,
+  parseValue: (value) => value,
   responseSchemaHint: () => ({}),
   contractSchemaHint: () => ({})
 };
@@ -56,20 +56,20 @@ describe('LlmCapabilityDescriptor', () => {
     expect(descriptorOf('summarize')?.frames?.['brand-voice']).toBe('context');
     expect(descriptorOf('summarize')?.frames?.['disclaimer']).toBe('off');
     expect(descriptorOf('extract')).toBeUndefined();
-    expect(SUMMARIZE.parseLever({ summary: 'ok' })).toEqual({ summary: 'ok' });
-    expect(SUMMARIZE.parseLever({ summary: 1 })).toBeUndefined();
+    expect(SUMMARIZE.parseValue({ summary: 'ok' })).toEqual({ summary: 'ok' });
+    expect(SUMMARIZE.parseValue({ summary: 1 })).toBeUndefined();
   });
 });
 
 describe('defineLlmCapability()', () => {
   const DESCRIBED_SCHEMA = type({ title: type('string').describe('the product title'), 'tags?': type("'new'|'sale'").describe('a merchandising tag').array() });
-  const parseLever = (lever: unknown) => {
-    const parsed = DESCRIBED_SCHEMA(lever);
+  const parseValue = (value: unknown) => {
+    const parsed = DESCRIBED_SCHEMA(value);
     return parsed instanceof type.errors ? undefined : parsed;
   };
 
   it('projects a hardened, undescribed responseSchemaHint and a described contractSchemaHint from responseSchema', () => {
-    const descriptor = defineLlmCapability({ capability: 'draft-copy', responseSchema: DESCRIBED_SCHEMA, parseLever });
+    const descriptor = defineLlmCapability({ capability: 'draft-copy', responseSchema: DESCRIBED_SCHEMA, parseValue });
     const response = descriptor.responseSchemaHint() as Record<string, unknown>;
     const contract = descriptor.contractSchemaHint() as Record<string, unknown>;
 
@@ -80,14 +80,14 @@ describe('defineLlmCapability()', () => {
   });
 
   it('memoizes each hint', () => {
-    const descriptor = defineLlmCapability({ capability: 'draft-copy', responseSchema: DESCRIBED_SCHEMA, parseLever });
+    const descriptor = defineLlmCapability({ capability: 'draft-copy', responseSchema: DESCRIBED_SCHEMA, parseValue });
 
     expect(descriptor.responseSchemaHint()).toBe(descriptor.responseSchemaHint());
     expect(descriptor.contractSchemaHint()).toBe(descriptor.contractSchemaHint());
   });
 
   it('keeps the prose in responseSchemaHint when describeResponseSchemaHint is set', () => {
-    const descriptor = defineLlmCapability({ capability: 'draft-copy', responseSchema: DESCRIBED_SCHEMA, parseLever, describeResponseSchemaHint: true });
+    const descriptor = defineLlmCapability({ capability: 'draft-copy', responseSchema: DESCRIBED_SCHEMA, parseValue, describeResponseSchemaHint: true });
     expect(descriptor.responseSchemaHint()).toEqual(descriptor.contractSchemaHint());
   });
 
@@ -96,15 +96,15 @@ describe('defineLlmCapability()', () => {
     const narrowed = base.narrow((value) => value.pass || value.feedback != null);
 
     it('projects both hints of a narrowed responseSchema from its JSON base', () => {
-      const descriptor = defineLlmCapability({ capability: 'classify-intent', responseSchema: narrowed, parseLever: (lever) => lever });
+      const descriptor = defineLlmCapability({ capability: 'classify-intent', responseSchema: narrowed, parseValue: (value) => value });
 
       expect(descriptor.responseSchemaHint()).toEqual({ type: 'object', properties: { pass: { type: 'boolean' }, feedback: { type: 'string' } }, required: ['pass'], additionalProperties: false });
       expect(descriptor.contractSchemaHint()).toEqual(descriptor.responseSchemaHint());
-      expect(descriptor.responseSchemaHint()).toEqual(defineLlmCapability({ capability: 'classify-intent', responseSchema: base, parseLever: (lever) => lever }).responseSchemaHint());
+      expect(descriptor.responseSchemaHint()).toEqual(defineLlmCapability({ capability: 'classify-intent', responseSchema: base, parseValue: (value) => value }).responseSchemaHint());
     });
 
     it('throws on the first projection of a type with no JSON form, and again on the next (not cached)', () => {
-      const descriptor = defineLlmCapability({ capability: 'classify-intent', responseSchema: type({ at: 'Date' }), parseLever: (lever) => lever });
+      const descriptor = defineLlmCapability({ capability: 'classify-intent', responseSchema: type({ at: 'Date' }), parseValue: (value) => value });
 
       expect(() => descriptor.responseSchemaHint()).toThrow();
       expect(() => descriptor.responseSchemaHint()).toThrow();
@@ -123,11 +123,11 @@ describe('defineLlmCapability()', () => {
       frames: { 'brand-voice': 'context' },
       traits: { voice: 'narrator' },
       responseSchema: DESCRIBED_SCHEMA,
-      parseLever
+      parseValue
     });
 
     expect(descriptor).toMatchObject({ capability: 'summarize', tags: ['writing'], tier: 'strong', replyProtocol: 'json-envelope', mustResolve: true, rawJsonContext: true, frames: { 'brand-voice': 'context' }, traits: { voice: 'narrator' } });
-    expect(descriptor.parseLever).toBe(parseLever);
+    expect(descriptor.parseValue).toBe(parseValue);
     expect(descriptor.responseSchema).toBe(DESCRIBED_SCHEMA);
     expect('describeResponseSchemaHint' in descriptor).toBe(false);
 

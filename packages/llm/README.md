@@ -436,7 +436,7 @@ scopes, prompt handles and chains, a live-context token budget, a cache-prefix w
   validator, a critic, a site, the parent call context, `meta`, an abort `signal`). `LlmDispatcher` dispatches it or
   prepares an `LlmPrompt`, which executes once and chains follow-ups onto the same thread (`ExecutedLlmPrompt`). Hosts
   extend the request and result types and pass them as `R` and `X`.
-- **Reply checks.** `LlmLeverValidator` (sync: is it well-formed?), `LlmCritic` (async and billed: is it good? never
+- **Reply checks.** `LlmValueValidator` (sync: is it well-formed?), `LlmCritic` (async and billed: is it good? never
   throws) and `LlmReplyFastFixer` (one cheap call that repairs a mangled JSON reply from the scorer's `JsonRepairShape`,
   from `@dereekb/util`).
   Reading, repair, schema projection and the critique policy have their own section, Replies.
@@ -704,10 +704,11 @@ What happens to a reply between the strategy and the capability: it is read per 
 nearly parses, validated against the capability's schema, and optionally judged by a billed critic. A capability
 descriptor also carries the two schema projections the request and the prompt read.
 
-- **Protocols and reading.** `json`: the parsed object is the lever, never unwrapped and never declined.
-  `json-envelope`: `LlmReplyEnvelopeKeys` (default `lever` / `answerable` / `rationale`); `answerable: false` declines,
-  a hedged decline keeps its lever, and a bare object reads as the lever. `line`: `llmLineReplyLeverOf` lifts the bare
-  line into `{ line }`. `readLlmReplyLever` classifies `lever` / `declined` / `no-json` / `parse-error`; `llmReplyLeverOf`
+- **Protocols and reading.** The decoded reply payload is the reply's **value**. `json`: the parsed object is the
+  value, never unwrapped and never declined. `json-envelope`: `LlmReplyEnvelopeKeys` (`value` / `answerable` /
+  `rationale`; the default value key is `lever`); `answerable: false` declines, a hedged decline keeps its value, and a
+  bare object reads as the value. `line`: `readLlmLineReplyValue` lifts the bare
+  line into `{ line }`. `readLlmReply` classifies `value` / `declined` / `no-json` / `parse-error`; `readLlmReplyValue`
   is the thin wrapper and `readLlmReplyRationale` reads the rationale. The slicer is `@dereekb/util`
   `readJsonObjectFromText`: it tries the greedy `{…}` slice, then each balanced top-level object, and never invents a
   brace. An envelope host passes `llmReplyEnvelopeContractIntro(keys)` as its contract intro.
@@ -717,7 +718,7 @@ descriptor also carries the two schema projections the request and the prompt re
   inside a string or after `:` / `,` / a key / an opener is never repaired. `llmReplyRepairFidelity` gates every repair:
   nothing invented, and at least 90% of the 12+-char content literals kept. The three are thin wrappers over
   `@dereekb/util` `repairJsonObjectText` / `scoreJsonObjectText` / `checkJsonRepairFidelity`; their `{ envelope }`
-  option takes the coverage check over the envelope lever key's balanced value (an unclosed or non-object value keeps
+  option takes the coverage check over the balanced object under the envelope's value key (an unclosed or non-object one keeps
   the rest of the reply), and without it the whole reply is the payload. The dispatcher passes the call's reading
   envelope (`resolveLlmReplyReadingEnvelope`: the host's keys on `json-envelope`, none on `json`). The shape types are
   util's `JsonRepair*`.
@@ -725,14 +726,14 @@ descriptor also carries the two schema projections the request and the prompt re
   (`maxAttempts: 1`), handed only the broken reply, the subject's schema and a one-line diagnosis. It answers `fixed`, or
   `missed` with `truncated` / `declined` / `unusable` / `fidelity` / `error`, and never throws. Its fidelity check runs
   over the subject's reading envelope (`subjectEnvelope` on the fixer input).
-- **Nested reads.** The critic and the fixer read their nested call's DECODED payload (`readLlmDispatchResultLever`:
-  the `lever` stamp, `declined` for an accepted result with none, `no-json` when dropped, the `json` reading of an
+- **Nested reads.** The critic and the fixer read their nested call's DECODED payload (`readLlmDispatchResultReply`:
+  the `valueJson` stamp, `declined` for an accepted result with none, `no-json` when dropped, the `json` reading of an
   unstamped result's text), so they follow the nested call's resolved protocol and the dispatcher's `replyEnvelope`. A
-  host `resultOf` must keep `lever` / `decodeStatus`. The built-in judge and fixer descriptors set no protocol and
+  host `resultOf` must keep `valueJson` / `decodeStatus`. The built-in judge and fixer descriptors set no protocol and
   inherit the host default, so a `line`-default host must give them a JSON protocol.
   `DEFAULT_LLM_REPLY_FAST_FIX_LIMITS`: a score of at least 0.5, at most 16,000 chars, one fix per dispatch.
-- **Validation.** `llmSchemaLeverValidator(schema)` is a pure schema check: `true`, or `{ error }`, which re-asks. A
-  schema-valid but unusable lever is a legitimate "no decision", not a re-ask.
+- **Validation.** `makeLlmSchemaValueValidator(schema)` is a pure schema check: `true`, or `{ error }`, which re-asks. A
+  schema-valid but unusable value is a legitimate "no decision", not a re-ask.
 - **Schema projection.** `defineLlmCapability` builds `responseSchemaHint()` and `contractSchemaHint()` from
   `responseSchema`. Each exports through `@dereekb/model` `arktypeToJsonSchemaForExport(schema, { strict: true })`: a
   `.narrow`ed or morphed schema projects its JSON base, and a type with no JSON form (`Date`, `symbol`, `bigint`, an
@@ -760,12 +761,12 @@ descriptor also carries the two schema projections the request and the prompt re
   `llm/critique-reply.judge`, all in `LLM_SWALLOW_SITES`.
 
 ```ts
-import { compileLlmCritiquePolicy, defineLlmCapability, LLM_CRITIQUE_REPLY_DESCRIPTOR, LLM_CRITIQUE_REPLY_TEMPLATE, LLM_REPAIR_REPLY_JSON_DESCRIPTOR, LLM_REPAIR_REPLY_JSON_TEMPLATE, resolveLlmCritiqueFields, llmReplyLeverOf, llmSchemaLeverValidator, type LlmCritiqueBinding } from '@dereekb/llm';
+import { compileLlmCritiquePolicy, defineLlmCapability, LLM_CRITIQUE_REPLY_DESCRIPTOR, LLM_CRITIQUE_REPLY_TEMPLATE, LLM_REPAIR_REPLY_JSON_DESCRIPTOR, LLM_REPAIR_REPLY_JSON_TEMPLATE, resolveLlmCritiqueFields, readLlmReplyValue, makeLlmSchemaValueValidator, type LlmCritiqueBinding } from '@dereekb/llm';
 import { type } from 'arktype';
 
 const summarySchema = type({ summary: type('string').describe('two sentences, plain words') });
-const SUMMARIZE = defineLlmCapability({ capability: 'summarize', tags: ['copy'], responseSchema: summarySchema, parseLever: (lever) => {
-  const out = summarySchema(lever);
+const SUMMARIZE = defineLlmCapability({ capability: 'summarize', tags: ['copy'], responseSchema: summarySchema, parseValue: (value) => {
+  const out = summarySchema(value);
   return out instanceof type.errors ? undefined : out;
 } });
 const DESCRIPTORS = [SUMMARIZE, LLM_CRITIQUE_REPLY_DESCRIPTOR, { ...LLM_REPAIR_REPLY_JSON_DESCRIPTOR, tier: 'fast' }];
@@ -780,10 +781,10 @@ const goal = 'The summary MUST name the product and its price.';
 const result = await dispatcher.dispatch({
   capability: 'summarize',
   renderLiveContext,
-  validate: llmSchemaLeverValidator(summarySchema),
+  validate: makeLlmSchemaValueValidator(summarySchema),
   ...resolveLlmCritiqueFields({ binding, capability: 'summarize', goal })
 });
-const lever = llmReplyLeverOf(result.text);
+const value = readLlmReplyValue(result.text);
 ```
 
 ## Dispatcher
@@ -818,7 +819,7 @@ correction / backoff vocabulary with its constants.
   `LlmDispatchFaultError`.
 - **Validated.** With a `validate` (or a `critique`) the call runs the bounded retry loop (see Retry and lanes). Each
   reply is read, repaired, validated, then critiqued, and the result is stamped `attempts`, `decodeStatus`,
-  `decodeOutcome`, `lengthCapped`, `lever` and `validationErrors`. A decline, or a `line` reply that is not JSON, is
+  `decodeOutcome`, `lengthCapped`, `valueJson` and `validationErrors`. A decline, or a `line` reply that is not JSON, is
   accepted. Each rejected attempt records a decode row (critique rejections excepted), a `failedAttempts` row and an
   `onDecodeFailure` tap event whose `willRetry` is the retry decision made when the attempt was judged. A send error
   the policy does not resend ends the loop at once (see Transport lane).
@@ -849,7 +850,7 @@ correction / backoff vocabulary with its constants.
   the next section.
 
 ```ts
-import { DEFAULT_LLM_MAX_OUTPUT_TOKENS, llmSchemaLeverValidator, makeLlmDispatcher, makeLlmStrategyRegistry, makeLlmTieredPromptTemplateResolver } from '@dereekb/llm';
+import { DEFAULT_LLM_MAX_OUTPUT_TOKENS, makeLlmSchemaValueValidator, makeLlmDispatcher, makeLlmStrategyRegistry, makeLlmTieredPromptTemplateResolver } from '@dereekb/llm';
 
 const dispatcher = makeLlmDispatcher({
   strategies: makeLlmStrategyRegistry([strategy]),
@@ -861,7 +862,7 @@ const dispatcher = makeLlmDispatcher({
   recorder: { recordCall: (record) => log.write(record) }
 });
 
-const result = await dispatcher.dispatch({ capability: 'summarize', renderLiveContext, validate: llmSchemaLeverValidator(summarySchema) });
+const result = await dispatcher.dispatch({ capability: 'summarize', renderLiveContext, validate: makeLlmSchemaValueValidator(summarySchema) });
 
 const first = await dispatcher.preparePrompt({ capability: 'summarize', renderLiveContext }).execute();
 const next = await first.followUp({ content: 'Now the second item.' }).execute();
@@ -906,8 +907,8 @@ one retry lever, and a mangled JSON reply gets one cheap fast fix before any re-
   `result.repair.meta`, on the call payload's `repair` and on the failed rows.
 - **Critique.** Root calls only, after `validate` passes. A rejection costs a re-ask with the critic's feedback and a
   `critique` failed row, never a decode row. A rejection with no retry left (the budget is spent, or the dispatch was
-  cancelled) ships the reply: it is stamped accepted (`lever`, `clean` / `retried`), files no failed row, and its
-  feedback files the `critique-fail` gap. A `line` reply is lifted to a lever under `lineLeverField` (default `line`) so the critic can read
+  cancelled) ships the reply: it is stamped accepted (`valueJson`, `clean` / `retried`), files no failed row, and its
+  feedback files the `critique-fail` gap. A `line` reply is lifted to a value under `lineValueField` (default `line`) so the critic can read
   it.
 - **Decision lane.** The optional `decisions` block (`strategies`, `strategyId`, `defaultModel`, `maxAttempts`) adds
   `decide`, `decisionsSpent`, `resetDecisionsSpent` and the once-per-reset `claimDecisionBudgetWarning`; no block, an
@@ -927,7 +928,7 @@ one retry lever, and a mangled JSON reply gets one cheap fast fix before any re-
     counts every send. A decision cancelled during the backoff, or while parked before the resend, is not resent.
 
 ```ts
-import { resolveLlmCritiqueFields, llmSchemaLeverValidator, makeLlmDispatcher, makeLlmReplyFastFixer, makeLlmStrategyRegistry } from '@dereekb/llm';
+import { resolveLlmCritiqueFields, makeLlmSchemaValueValidator, makeLlmDispatcher, makeLlmReplyFastFixer, makeLlmStrategyRegistry } from '@dereekb/llm';
 
 const dispatcher = makeLlmDispatcher({
   ...config, // strategies, tiers, descriptors and templates as above
@@ -940,7 +941,7 @@ const result = await dispatcher.dispatch({
   capability: 'summarize',
   renderLiveContext,
   maxAttempts: 3,
-  validate: llmSchemaLeverValidator(summarySchema),
+  validate: makeLlmSchemaValueValidator(summarySchema),
   ...resolveLlmCritiqueFields({ binding, capability: 'summarize', goal })
 });
 

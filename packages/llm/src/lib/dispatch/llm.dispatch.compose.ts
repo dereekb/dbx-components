@@ -19,7 +19,7 @@ import { type LlmPromptFollowUp } from '../prompt/llm.prompt.thread';
 import { type LlmCallContext } from '../record/llm.call.context';
 import { type LlmCallSupplement } from '../record/llm.call.record';
 import { type LlmReplyProtocol, resolveLlmReplyProtocol } from '../reply/llm.reply.protocol';
-import { type LlmLeverValidator } from '../reply/llm.reply.validator';
+import { type LlmValueValidator } from '../reply/llm.reply.validator';
 import { type LlmRequest, type LlmThreadTurn } from '../strategy/llm.strategy';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
 import { type LlmResolvedDispatch } from './llm.dispatch.resolve';
@@ -117,9 +117,9 @@ export interface LlmComposedDispatch {
    */
   readonly estimatedPromptTokens: number;
   /**
-   * The lever validator of this call — the request's on the root, the follow-up's on a follow-up.
+   * The value validator of this call — the request's on the root, the follow-up's on a follow-up.
    */
-  readonly validate?: LlmLeverValidator;
+  readonly validate?: LlmValueValidator;
   /**
    * The attempt budget of this call, as asked — the request's on the root, the follow-up's on a follow-up (clamped by
    * the attempt stage).

@@ -45,7 +45,7 @@ export interface LlmDispatchOutcome {
    */
   readonly failedAttempts: ReadonlyArray<LlmCallFailedAttempt>;
   /**
-   * Whether a decode failure occurred and a usable lever still came back. `false` when nothing failed, or when the
+   * Whether a decode failure occurred and a usable value still came back. `false` when nothing failed, or when the
    * dispatch dropped the beat.
    */
   readonly recovered: boolean;
@@ -126,7 +126,7 @@ export interface LlmDecodeFailureAttemptConfig {
   readonly maxOutputTokens?: Maybe<number>;
   /**
    * The reply's reading envelope (`resolveLlmReplyReadingEnvelope`) — a `parse-error` row's `shape` is scored with the
-   * fidelity coverage over its lever value. `undefined` ⇒ the whole reply is the payload.
+   * fidelity coverage over its value key's object. `undefined` ⇒ the whole reply is the payload.
    */
   readonly envelope: Maybe<LlmReplyEnvelopeKeys>;
   /**

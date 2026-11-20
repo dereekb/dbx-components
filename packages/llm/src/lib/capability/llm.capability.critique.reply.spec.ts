@@ -7,7 +7,7 @@ import { makeLlmTieredPromptTemplateResolver } from '../prompt/llm.prompt.templa
 import { type LlmCallDiagRecord, makeLlmCallContext, noopLlmCallContext } from '../record/llm.call.context';
 import { compileLlmCritiquePolicy, LLM_CRITIQUE_REPLY_CAPABILITY, type LlmCritiqueBinding, type LlmCritiqueParams, type LlmCritiqueRule } from '../reply/llm.reply.critique';
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
-import { critiqueLlmReply, DEFAULT_LLM_CRITIQUE_REPLY_INSTRUCTIONS, LLM_CRITIQUE_REPLY_DESCRIPTOR, LLM_CRITIQUE_REPLY_TEMPLATE, resolveLlmCritiqueFields, llmCritiqueOutcomeSchema, makeLlmSemanticCritic, parseLlmCritiqueOutcomeLever, renderLlmCritiqueContext } from './llm.capability.critique.reply';
+import { critiqueLlmReply, DEFAULT_LLM_CRITIQUE_REPLY_INSTRUCTIONS, LLM_CRITIQUE_REPLY_DESCRIPTOR, LLM_CRITIQUE_REPLY_TEMPLATE, resolveLlmCritiqueFields, llmCritiqueOutcomeSchema, makeLlmSemanticCritic, parseLlmCritiqueOutcomeValue, renderLlmCritiqueContext } from './llm.capability.critique.reply';
 
 interface FakeDispatch {
   readonly requests: LlmDispatchRequest[];
@@ -51,7 +51,7 @@ function bindingOf(fake: FakeDispatch, rule: LlmCritiqueRule = { capabilities: [
  * @param stamp - The result's text and decode stamps.
  * @returns The recorded requests and the dispatch.
  */
-function fakeStampedDispatch(stamp: Pick<LlmDispatchResult, 'text' | 'lever' | 'decodeStatus'>): FakeDispatch {
+function fakeStampedDispatch(stamp: Pick<LlmDispatchResult, 'text' | 'valueJson' | 'decodeStatus'>): FakeDispatch {
   const requests: LlmDispatchRequest[] = [];
   const dispatch = async (request: LlmDispatchRequest): Promise<LlmDispatchResult> => {
     requests.push(request);
@@ -69,21 +69,21 @@ function recordingInput() {
   const diags: LlmCallDiagRecord[] = [];
   const swallows: string[] = [];
   const callContext = makeLlmCallContext({ label: 'spec', onDiag: (record) => diags.push(record), onSwallow: (site) => swallows.push(site) });
-  const input: LlmCritiqueParams = { capability: 'summarize', lever: { summary: 'a tote' }, replyText: '{"summary":"a tote"}', liveContext: 'THE ORDER: one canvas tote', replyProtocol: 'json', attempt: 1, callContext };
+  const input: LlmCritiqueParams = { capability: 'summarize', value: { summary: 'a tote' }, replyText: '{"summary":"a tote"}', liveContext: 'THE ORDER: one canvas tote', replyProtocol: 'json', attempt: 1, callContext };
   return { input, diags, swallows };
 }
 
-describe('llmCritiqueOutcomeSchema / parseLlmCritiqueOutcomeLever()', () => {
+describe('llmCritiqueOutcomeSchema / parseLlmCritiqueOutcomeValue()', () => {
   it('accepts a pass and a fail with feedback', () => {
     expect(llmCritiqueOutcomeSchema({ pass: true })).toEqual({ pass: true });
-    expect(parseLlmCritiqueOutcomeLever({ pass: false, feedback: 'name the tote' })).toEqual({ pass: false, feedback: 'name the tote' });
+    expect(parseLlmCritiqueOutcomeValue({ pass: false, feedback: 'name the tote' })).toEqual({ pass: false, feedback: 'name the tote' });
   });
 
   it('rejects a fail without feedback, or with blank feedback', () => {
     expect(llmCritiqueOutcomeSchema({ pass: false })).toBeInstanceOf(type.errors);
     expect(llmCritiqueOutcomeSchema({ pass: false, feedback: '   ' })).toBeInstanceOf(type.errors);
-    expect(parseLlmCritiqueOutcomeLever({ pass: false })).toBeUndefined();
-    expect(parseLlmCritiqueOutcomeLever({ pass: false, feedback: '   ' })).toBeUndefined();
+    expect(parseLlmCritiqueOutcomeValue({ pass: false })).toBeUndefined();
+    expect(parseLlmCritiqueOutcomeValue({ pass: false, feedback: '   ' })).toBeUndefined();
   });
 });
 
@@ -200,7 +200,7 @@ describe('makeLlmSemanticCritic()', () => {
   });
 
   it('reads the judge dispatch decoded payload, and a declined judge reply as unusable', async () => {
-    const enveloped = makeLlmSemanticCritic({ binding: bindingOf(fakeStampedDispatch({ text: '{"answerable":true,"payload":{"pass":false,"feedback":"name the tote"}}', lever: '{"pass":false,"feedback":"name the tote"}', decodeStatus: 'clean' }), rule), rule, goal: 'G' });
+    const enveloped = makeLlmSemanticCritic({ binding: bindingOf(fakeStampedDispatch({ text: '{"answerable":true,"payload":{"pass":false,"feedback":"name the tote"}}', valueJson: '{"pass":false,"feedback":"name the tote"}', decodeStatus: 'clean' }), rule), rule, goal: 'G' });
     await expect(enveloped(recordingInput().input)).resolves.toEqual({ error: 'name the tote' });
 
     const declining = makeLlmSemanticCritic({ binding: bindingOf(fakeStampedDispatch({ text: '{"answerable":false}', decodeStatus: 'clean' }), rule), rule, goal: 'G' });

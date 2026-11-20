@@ -88,7 +88,7 @@ describe('compileLlmCritiquePolicy()', () => {
 });
 
 describe('composeLlmCritics()', () => {
-  const input: LlmCritiqueParams = { capability: 'summarize', lever: {}, replyText: '{}', liveContext: '', replyProtocol: 'json', attempt: 1, callContext: noopLlmCallContext() };
+  const input: LlmCritiqueParams = { capability: 'summarize', value: {}, replyText: '{}', liveContext: '', replyProtocol: 'json', attempt: 1, callContext: noopLlmCallContext() };
 
   it('returns undefined for nothing, or for only absent critics', () => {
     expect(composeLlmCritics()).toBeUndefined();

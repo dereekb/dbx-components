@@ -16,7 +16,7 @@ import { type LlmLiveContextBlock } from '../prompt/llm.prompt.live.context';
 import { type LlmCallContext } from '../record/llm.call.context';
 import { type LlmCritic } from '../reply/llm.reply.critique';
 import { type LlmReplyProtocol } from '../reply/llm.reply.protocol';
-import { type LlmLeverValidator } from '../reply/llm.reply.validator';
+import { type LlmValueValidator } from '../reply/llm.reply.validator';
 import { type LlmAttachment, type LlmCallMeta } from '../strategy/llm.strategy';
 
 /**
@@ -99,12 +99,12 @@ export interface LlmDispatchRequest extends LlmDispatchRequestBase {
    */
   readonly attachments?: ReadonlyArray<LlmAttachment>;
   /**
-   * OPT-IN bounded-retry validator. When set, the dispatcher unwraps the reply; a `null` lever (no JSON / a decline)
-   * short-circuits with NO retry; a non-`null` lever is handed to this opaque closure, and a `{ error }` verdict
+   * OPT-IN bounded-retry validator. When set, the dispatcher unwraps the reply; a `null` value (no JSON / a decline)
+   * short-circuits with NO retry; a non-`null` value is handed to this opaque closure, and a `{ error }` verdict
    * reprompts (the error appended to the volatile suffix only, so the cache prefix stays byte-stable), capped at
    * {@link maxAttempts}. Unset ⇒ single-shot.
    */
-  readonly validate?: LlmLeverValidator;
+  readonly validate?: LlmValueValidator;
   /**
    * OPT-IN SEMANTIC critic — the billed, ASYNC sibling of {@link validate}. It runs AFTER `validate` passes (a
    * malformed reply is never sent to a judge), on the SAME bounded-retry budget: a `{ error }` verdict reprompts with
@@ -121,10 +121,10 @@ export interface LlmDispatchRequest extends LlmDispatchRequestBase {
    */
   readonly subjectCapability?: LlmCapabilityKey;
   /**
-   * The single lever FIELD a `line` reply lifts into when the bounded-retry loop synthesizes a lever for a
+   * The single value FIELD a `line` reply lifts into when the bounded-retry loop synthesizes a value for a
    * {@link critique} pass; default `'line'`. Consulted ONLY on the `line` + `critique` path.
    */
-  readonly lineLeverField?: string;
+  readonly lineValueField?: string;
   /**
    * Total strategy attempts (initial + retries) the {@link validate} / {@link critique} loop may make; default 2
    * (1 initial + 1 retry), clamped to `>= 1`. Ignored when both are unset.

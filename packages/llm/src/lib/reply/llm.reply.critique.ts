@@ -1,5 +1,5 @@
 /**
- * The semantic critic — the billed, asynchronous sibling of the lever validator. A request opts into one; the
+ * The semantic critic — the billed, asynchronous sibling of the value validator. A request opts into one; the
  * dispatcher awaits it after the validator passes and reprompts on a `{ error }` verdict within the same bounded
  * retry budget. The critic composition ({@link composeLlmCritics}), the host critique policy
  * ({@link compileLlmCritiquePolicy}) and the binding a critic dispatches its judge through ({@link LlmCritiqueBinding})
@@ -13,6 +13,7 @@ import { type LlmCapabilityKey, type LlmCapabilityTag, type LlmModelTierKey } fr
 import { type LlmCallContext } from '../record/llm.call.context';
 import { type LlmCallMeta, type LlmDispatchResult } from '../strategy/llm.strategy';
 import { type LlmReplyProtocol } from './llm.reply.protocol';
+import { type LlmReplyVerdict } from './llm.reply.validator';
 
 /**
  * The judge capability's key. Unchanged from the source because call records, tapes and censuses key on it; declared
@@ -43,12 +44,12 @@ export interface LlmCritiqueParams {
    */
   readonly meta?: LlmCallMeta;
   /**
-   * The unwrapped lever the subject reply produced — already past the subject's validator, so a critic may quote its
+   * The unwrapped value the subject reply produced — already past the subject's validator, so a critic may quote its
    * structured fields without re-checking their shape.
    */
-  readonly lever: Readonly<Record<string, unknown>>;
+  readonly value: Readonly<Record<string, unknown>>;
   /**
-   * The RAW reply text of the attempt under review — the only faithful view of a `line` reply (whose lever is
+   * The RAW reply text of the attempt under review — the only faithful view of a `line` reply (whose value is
    * synthesized from it).
    */
   readonly replyText: string;
@@ -78,20 +79,16 @@ export interface LlmCritiqueParams {
 }
 
 /**
- * A critic's verdict — `true` ⇒ accept the reply as-is; `{ error }` ⇒ reprompt the SUBJECT with that feedback (a
- * critique correction on the volatile suffix), within the subject's remaining attempt budget.
- */
-export type LlmCritiqueVerdict = true | { readonly error: string };
-
-/**
- * The opaque ASYNC critic the dispatcher awaits after the validator passes. The dispatcher never builds one and never
- * inspects what it checks — exactly as it never inspects what an `LlmLeverValidator` checks.
+ * The opaque ASYNC critic the dispatcher awaits after the validator passes. Its {@link LlmReplyVerdict}: `true` ⇒ accept
+ * the reply as-is; `{ error }` ⇒ reprompt the SUBJECT with that feedback (a critique correction on the volatile
+ * suffix), within the subject's remaining attempt budget. The dispatcher never builds one and never
+ * inspects what it checks — exactly as it never inspects what an `LlmValueValidator` checks.
  *
  * A critic MUST NOT throw: an unreachable / broken judge is a fail-OPEN `true` (an unjudged reply ships), never an
  * exception that takes the subject dispatch down with it. BILLED: every pass is an extra LLM call, so a critiqued
  * capability costs `1 + attempts` calls.
  */
-export type LlmCritic = (input: LlmCritiqueParams) => Promise<LlmCritiqueVerdict>;
+export type LlmCritic = (input: LlmCritiqueParams) => Promise<LlmReplyVerdict>;
 
 /**
  * Compose critics into ONE, run in order: the FIRST non-`true` verdict wins, so a later (billed) critic is never
@@ -110,7 +107,7 @@ export function composeLlmCritics(...critics: ReadonlyArray<Maybe<LlmCritic>>): 
     composed = present[0];
   } else if (present.length > 1) {
     composed = async (input) => {
-      let verdict: LlmCritiqueVerdict = true;
+      let verdict: LlmReplyVerdict = true;
 
       for (const critic of present) {
         if (verdict === true) {

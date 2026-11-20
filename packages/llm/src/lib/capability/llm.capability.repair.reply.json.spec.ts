@@ -107,9 +107,9 @@ describe('makeLlmReplyFastFixer()', () => {
     expect(request.renderLiveContext().map((block) => block.key)).toEqual(['diagnosis', 'reply']);
   });
 
-  it('returns the fixed lever and its JSON text', async () => {
+  it('returns the fixed value and its JSON text', async () => {
     const outcome = await makeLlmReplyFastFixer()(fixInput(fakeFixDispatch({ text: JSON.stringify(BROKEN.expected) }).dispatch));
-    expect(outcome).toEqual({ kind: 'fixed', lever: BROKEN.expected, text: JSON.stringify(BROKEN.expected) });
+    expect(outcome).toEqual({ kind: 'fixed', value: BROKEN.expected, text: JSON.stringify(BROKEN.expected) });
   });
 
   it('misses as truncated on a length-capped fix', async () => {
@@ -131,17 +131,17 @@ describe('makeLlmReplyFastFixer()', () => {
     const fixer = makeLlmReplyFastFixer();
 
     await expect(fixer(fixInput(fakeFixDispatch({ text: '{"answerable":false}', decodeStatus: 'clean' }).dispatch))).resolves.toEqual({ kind: 'missed', reason: 'declined' });
-    await expect(fixer(fixInput(fakeFixDispatch({ text: JSON.stringify({ answerable: true, lever: BROKEN.expected }), lever: JSON.stringify(BROKEN.expected), decodeStatus: 'clean' }).dispatch))).resolves.toEqual({ kind: 'fixed', lever: BROKEN.expected, text: JSON.stringify(BROKEN.expected) });
+    await expect(fixer(fixInput(fakeFixDispatch({ text: JSON.stringify({ answerable: true, lever: BROKEN.expected }), valueJson: JSON.stringify(BROKEN.expected), decodeStatus: 'clean' }).dispatch))).resolves.toEqual({ kind: 'fixed', value: BROKEN.expected, text: JSON.stringify(BROKEN.expected) });
     await expect(fixer(fixInput(fakeFixDispatch({ text: '', decodeStatus: 'dropped' }).dispatch))).resolves.toEqual({ kind: 'missed', reason: 'unusable' });
   });
 
-  it('checks fidelity over the subject envelope lever value, so a trailing envelope field does not count', async () => {
-    const keys = { lever: 'payload', answerable: 'ok', rationale: 'why' };
+  it('checks fidelity over the object under the subject envelope value key, so a trailing envelope field does not count', async () => {
+    const keys = { value: 'payload', answerable: 'ok', rationale: 'why' };
     const text = '{"ok":true,"payload":{"title":"A sturdy canvas tote for daily errands","price":24,"inStock":None},"why":"The listing names a canvas tote in stock."}';
-    const dispatch = fakeFixDispatch({ text: JSON.stringify(BROKEN.expected), lever: JSON.stringify(BROKEN.expected), decodeStatus: 'clean' }).dispatch;
+    const dispatch = fakeFixDispatch({ text: JSON.stringify(BROKEN.expected), valueJson: JSON.stringify(BROKEN.expected), decodeStatus: 'clean' }).dispatch;
     const input = { ...fixInput(dispatch), text, shape: scoreLlmReplyJson(text, { envelope: keys }) };
 
-    await expect(makeLlmReplyFastFixer()({ ...input, subjectEnvelope: keys })).resolves.toEqual({ kind: 'fixed', lever: BROKEN.expected, text: JSON.stringify(BROKEN.expected) });
+    await expect(makeLlmReplyFastFixer()({ ...input, subjectEnvelope: keys })).resolves.toEqual({ kind: 'fixed', value: BROKEN.expected, text: JSON.stringify(BROKEN.expected) });
     await expect(makeLlmReplyFastFixer()(input)).resolves.toEqual({ kind: 'missed', reason: 'fidelity' });
   });
 

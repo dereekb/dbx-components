@@ -20,8 +20,8 @@ describe('repairLlmReplyJson()', () => {
     expect(result.repaired).toBeUndefined();
   });
 
-  it('takes the coverage check over the envelope lever value', () => {
-    // The rationale is dropped by a lever-only repair; it sits outside the lever value, so the coverage check never counts it.
+  it('takes the coverage check over the object under the envelope value key', () => {
+    // The rationale is dropped by a value-only repair; it sits outside the object under the value key, so the coverage check never counts it.
     const text = '{"answerable":true,"rationale":"The basket holds the seventh item now.","lever":{"note":"I will put the seventh item in the bulk bin"}';
     const result = repairLlmReplyJson(text, { envelope: DEFAULT_LLM_REPLY_ENVELOPE_KEYS });
     expect(result.shape.verdict).toBe('near-miss');
@@ -37,13 +37,13 @@ describe('llmReplyRepairFidelity()', () => {
     { sku: 'mug-07', qty: 1 }
   ];
 
-  it('keeps a faithful repair of the envelope lever', () => {
+  it('keeps a faithful repair of the envelope value', () => {
     expect(llmReplyRepairFidelity({ original, repaired: { orderId: 643, note: 'I will put the seventh item in the bulk bin', items }, envelope: DEFAULT_LLM_REPLY_ENVELOPE_KEYS })).toEqual({ ok: true, invented: [], coverage: 1, checked: 1 });
   });
 
-  it('scopes the coverage to a custom envelope lever key, ignoring a trailing rationale', () => {
+  it('scopes the coverage to a custom envelope value key, ignoring a trailing rationale', () => {
     const text = '{"ok":true,"payload":{"note":"I will put the seventh item in the bulk bin"},"why":"The basket holds the seventh item now."}';
-    const envelope = { lever: 'payload', answerable: 'ok', rationale: 'why' };
+    const envelope = { value: 'payload', answerable: 'ok', rationale: 'why' };
     expect(llmReplyRepairFidelity({ original: text, repaired: { note: 'I will put the seventh item in the bulk bin' }, envelope })).toEqual({ ok: true, invented: [], coverage: 1, checked: 1 });
   });
 

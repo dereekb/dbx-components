@@ -150,7 +150,7 @@ const INTERPRET_CONTRACT = {
 };
 
 function replicaDescriptor(capability: string, contract: object, extra: Partial<ReplicaDescriptor> = {}): ReplicaDescriptor {
-  return { capability, responseSchema: type('object'), parseLever: (lever) => lever, responseSchemaHint: () => contract, contractSchemaHint: () => contract, ...extra };
+  return { capability, responseSchema: type('object'), parseValue: (value) => value, responseSchemaHint: () => contract, contractSchemaHint: () => contract, ...extra };
 }
 
 const DESCRIPTORS: Readonly<Record<string, ReplicaDescriptor>> = {

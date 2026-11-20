@@ -15,7 +15,7 @@ import { makeLlmPromptCachePrefixWatch } from '../prompt/llm.prompt.cache.watch'
 import { type LlmPromptRunParams, type LlmPromptRunResult, makeLlmPromptFactory } from '../prompt/llm.prompt.thread';
 import { type LlmCallContext } from '../record/llm.call.context';
 import { type LlmCallHostFields } from '../record/llm.call.record';
-import { DEFAULT_LLM_LINE_LEVER_FIELD, resolveLlmReplyReadingEnvelope } from '../reply/llm.reply.envelope';
+import { DEFAULT_LLM_LINE_VALUE_FIELD, resolveLlmReplyReadingEnvelope } from '../reply/llm.reply.envelope';
 import { DEFAULT_LLM_REPLY_FAST_FIX_LIMITS, type LlmReplyFastFixLimits } from '../reply/llm.reply.fast.fix';
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
 import { makeLlmBoundReplyFastFix } from './llm.dispatch.attempt';
@@ -195,7 +195,7 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
       escalateModel,
       critique,
       liveContext: composed.liveContext,
-      lineLeverField: request.lineLeverField ?? DEFAULT_LLM_LINE_LEVER_FIELD,
+      lineValueField: request.lineValueField ?? DEFAULT_LLM_LINE_VALUE_FIELD,
       fastFix,
       fastFixUnavailable,
       fastFixLimits,

@@ -4,7 +4,7 @@ import { LLM_TIMEOUT_FINISH_REASON, LLM_TRANSPORT_FINISH_REASON, LLM_UNRETRYABLE
 import { type LlmCompletion, type LlmDispatchResult, type LlmRequest, type LlmStrategy } from '../strategy/llm.strategy';
 import { DEFAULT_LLM_REPLY_FAST_FIX_LIMITS, type LlmReplyFastFixOutcome } from '../reply/llm.reply.fast.fix';
 import { DEFAULT_LLM_REPLY_ENVELOPE_KEYS } from '../reply/llm.reply.envelope';
-import { isDegenerateLlmReplyReading, type LlmBoundReplyFastFix, makeLlmBoundReplyFastFix, readLlmDispatchReply, type LlmReplyRepairRefusal, runLlmReplyRepairLane, sendLlmDispatchAttempt, validateLlmDispatchLever } from './llm.dispatch.attempt';
+import { isDegenerateLlmReplyReading, type LlmBoundReplyFastFix, makeLlmBoundReplyFastFix, readLlmDispatchReply, type LlmReplyRepairRefusal, runLlmReplyRepairLane, sendLlmDispatchAttempt, validateLlmDispatchValue } from './llm.dispatch.attempt';
 
 class APIUserAbortError extends Error {}
 
@@ -81,10 +81,10 @@ describe('sendLlmDispatchAttempt()', () => {
 });
 
 describe('readLlmDispatchReply()', () => {
-  it('should read json as the lever, and json-envelope through the envelope keys', () => {
-    expect(readLlmDispatchReply('{"answerable":false}', { protocol: 'json' }).kind).toBe('lever');
+  it('should read json as the value, and json-envelope through the envelope keys', () => {
+    expect(readLlmDispatchReply('{"answerable":false}', { protocol: 'json' }).kind).toBe('value');
     expect(readLlmDispatchReply('{"answerable":false}', { protocol: 'json-envelope' }).kind).toBe('declined');
-    expect(readLlmDispatchReply('{"ok":false}', { protocol: 'json-envelope', envelope: { lever: 'lever', answerable: 'ok', rationale: 'why' } }).kind).toBe('declined');
+    expect(readLlmDispatchReply('{"ok":false}', { protocol: 'json-envelope', envelope: { value: 'lever', answerable: 'ok', rationale: 'why' } }).kind).toBe('declined');
   });
 
   it('should flag no-json and parse-error readings as degenerate', () => {
@@ -122,7 +122,7 @@ describe('runLlmReplyRepairLane()', () => {
 
     expect(lane.repaired?.result.text).toBe('{"a":[1,2]}');
     expect(lane.repaired?.result.repair).toMatchObject({ tier: 'deterministic', attempt: 1, originalText: '{"a":[1,2,],}' });
-    expect(lane.repaired?.reading.kind).toBe('lever');
+    expect(lane.repaired?.reading.kind).toBe('value');
     expect(attemptContext.profile().diags?.[0]).toMatchObject({ code: 'reply-repaired', fields: { ops: 'drop-trailing-comma:2' } });
   });
 
@@ -158,7 +158,7 @@ describe('runLlmReplyRepairLane() fast-fix tier', () => {
   const fixed =
     (meta?: object): LlmBoundReplyFastFix =>
     () =>
-      Promise.resolve<LlmReplyFastFixOutcome>({ kind: 'fixed', lever: { a: 'a long enough value here', b: null }, text: '{"a":"a long enough value here","b":null}', ...(meta == null ? {} : { meta }) });
+      Promise.resolve<LlmReplyFastFixOutcome>({ kind: 'fixed', value: { a: 'a long enough value here', b: null }, text: '{"a":"a long enough value here","b":null}', ...(meta == null ? {} : { meta }) });
 
   it('should refuse with the unrepaired refusal when unbound, and with fast-fix-spent / too-long / low-score when gated', async () => {
     expect(refusalOf((await fastLaneOf({})).attemptContext)).toBe('no-schema');
@@ -172,7 +172,7 @@ describe('runLlmReplyRepairLane() fast-fix tier', () => {
     const { lane, attemptContext } = await fastLaneOf({ fastFix: fixed({ fixCallId: 'f1' }) });
 
     expect(lane.fastFixCalled).toBe(true);
-    expect(lane.repaired?.reading.kind).toBe('lever');
+    expect(lane.repaired?.reading.kind).toBe('value');
     expect(lane.repaired?.summary).toMatchObject({ tier: 'fast-fix', attempt: 1, verdict: 'mangled', meta: { fixCallId: 'f1' } });
     expect(lane.repaired?.result.repair).toMatchObject({ tier: 'fast-fix', originalText: MANGLED });
     expect(attemptContext.profile().diags?.[0]).toMatchObject({ level: 'info', code: 'reply-repaired', fields: { tier: 'fast-fix', verdict: 'mangled' } });
@@ -217,12 +217,12 @@ describe('makeLlmBoundReplyFastFix()', () => {
   });
 });
 
-describe('validateLlmDispatchLever()', () => {
-  it('should accept every lever with no validator, and time a validator', () => {
+describe('validateLlmDispatchValue()', () => {
+  it('should accept every value with no validator, and time a validator', () => {
     const attemptContext = makeLlmCallContext({ label: 'attempt-1', timing: true });
 
-    expect(validateLlmDispatchLever({ lever: {}, attemptContext })).toBe(true);
-    expect(validateLlmDispatchLever({ validate: () => ({ error: 'bad' }), lever: {}, attemptContext })).toEqual({ error: 'bad' });
+    expect(validateLlmDispatchValue({ value: {}, attemptContext })).toBe(true);
+    expect(validateLlmDispatchValue({ validate: () => ({ error: 'bad' }), value: {}, attemptContext })).toEqual({ error: 'bad' });
     expect(attemptContext.profile().spans.map((span) => span.name)).toEqual(['validate']);
   });
 });

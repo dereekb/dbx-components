@@ -23,7 +23,7 @@ const SUMMARY_CONTRACT = { type: 'object', properties: { summary: { type: 'strin
 const OVERRIDE_CONTRACT = { type: 'object', properties: { verdict: { type: 'string' } }, required: ['verdict'] };
 
 function descriptor(capability: string): LlmCapabilityDescriptor {
-  return { capability, responseSchema: type({ summary: 'string' }), parseLever: (lever) => lever, responseSchemaHint: () => SUMMARY_CONTRACT, contractSchemaHint: () => SUMMARY_CONTRACT };
+  return { capability, responseSchema: type({ summary: 'string' }), parseValue: (value) => value, responseSchemaHint: () => SUMMARY_CONTRACT, contractSchemaHint: () => SUMMARY_CONTRACT };
 }
 
 const DESCRIPTORS: Readonly<Record<string, LlmCapabilityDescriptor>> = { summarize: descriptor('summarize') };

@@ -342,7 +342,7 @@ export interface LlmDispatchResult extends LlmCompletion {
    * after any envelope unwrap. Recorded beside the raw `text` so a log analysis never has to re-implement the
    * unwrap. Absent on a dropped / in-band-declined decode.
    */
-  readonly lever?: string;
+  readonly valueJson?: string;
   /**
    * How the dispatcher REPAIRED the reply this dispatch ended on ({@link LlmReplyRepair}) — present only when the
    * final attempt's reply was a malformed JSON object the reply-repair lane fixed before any re-ask. {@link text} is

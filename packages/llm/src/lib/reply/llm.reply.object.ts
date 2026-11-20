@@ -4,7 +4,7 @@
  */
 
 /**
- * Whether a value is a non-null object (the lever / envelope guard). Arrays pass too.
+ * Whether a value is a non-null object (the value / envelope guard). Arrays pass too.
  *
  * @param value - The value to test.
  * @returns `true` when it is a non-null object.

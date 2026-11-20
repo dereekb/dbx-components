@@ -186,7 +186,7 @@ export const LLM_SWALLOW_SITES: LlmSwallowSiteRegistry = makeLlmSwallowSiteRegis
   { id: 'llm/strategy-readiness.provider-status', protects: 'a `providerStatus` that threw (a contract violation) is reported as an UNAVAILABLE status, never propagated, and unavailable can never read as spare quota', onError: 'report', expectation: 'fault', channel: 'health' },
   // makeLlmCraftJudge — the decide call's catch.
   { id: 'llm/craft-judge.decide', protects: 'a faulted or unreachable craft judge answers nothing, so every asked note takes its own unserved posture rather than failing the dispatch', onError: 'degrade', expectation: 'degraded', channel: 'diag' },
-  // llmReplyLeverOf / readLlmReplyLever / readLlmReplyRationale / llmLineReplyLeverOf — the one report when no candidate block parsed.
+  // readLlmReplyValue / readLlmReply / readLlmReplyRationale / readLlmLineReplyValue — the one report when no candidate block parsed.
   { id: 'llm/reply-envelope.decode', protects: 'a reply whose JSON block does not parse reads as a degenerate decode (no-json / parse-error) the caller retries or drops; the reader never throws', onError: 'degrade', expectation: 'expected', channel: 'diag' },
   // repairLlmReplyJson — the parse of a rebuilt text; the verdict carries it, no sink is called.
   { id: 'llm/reply-repair.rebuilt-parse', protects: 'a rebuilt text that does not parse is never a near-miss; the shape says so and the reply falls through to the fast fix or a re-ask', onError: 'degrade', expectation: 'expected', channel: 'result' },

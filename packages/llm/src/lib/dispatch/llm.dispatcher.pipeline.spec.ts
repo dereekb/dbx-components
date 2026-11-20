@@ -47,8 +47,8 @@ const TIERS = { fast: 'test/fast', strong: 'test/strong' };
 
 const ANSWER = type({ answer: 'string' });
 
-function descriptorOf(config: Omit<Parameters<typeof defineLlmCapability>[0], 'responseSchema' | 'parseLever'>): LlmCapabilityDescriptor {
-  return defineLlmCapability({ responseSchema: ANSWER, parseLever: (lever) => lever, ...config });
+function descriptorOf(config: Omit<Parameters<typeof defineLlmCapability>[0], 'responseSchema' | 'parseValue'>): LlmCapabilityDescriptor {
+  return defineLlmCapability({ responseSchema: ANSWER, parseValue: (value) => value, ...config });
 }
 
 const DESCRIPTORS: Readonly<Record<string, LlmCapabilityDescriptor>> = {
@@ -62,7 +62,7 @@ const DESCRIPTORS: Readonly<Record<string, LlmCapabilityDescriptor>> = {
 const NEAR_MISS = '{"answer":"ok","tags":[1,2,],}';
 const MANGLED = '{"a":"a long enough value here","b":None}';
 
-const VALID = (lever: unknown) => (typeof (lever as { answer?: unknown }).answer === 'string' ? true : { error: 'answer must be a string' });
+const VALID = (value: unknown) => (typeof (value as { answer?: unknown }).answer === 'string' ? true : { error: 'answer must be a string' });
 
 function blocks(text: string, key = 'facts'): ReadonlyArray<LlmLiveContextBlock> {
   return [{ key, text }];
@@ -384,7 +384,7 @@ describe('makeLlmDispatcher()', () => {
       const { dispatcher } = setup({ replies: ['{"answer":"ok"}'] });
       const result = await dispatcher.dispatch(request({ validate: VALID }));
 
-      expect(result).toMatchObject({ attempts: 1, decodeStatus: 'clean', decodeOutcome: 'ok', lever: '{"answer":"ok"}' });
+      expect(result).toMatchObject({ attempts: 1, decodeStatus: 'clean', decodeOutcome: 'ok', valueJson: '{"answer":"ok"}' });
     });
 
     it('should accept a declined envelope in one call', async () => {

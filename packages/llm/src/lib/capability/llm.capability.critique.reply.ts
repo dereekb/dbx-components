@@ -31,9 +31,9 @@ import { llmLiveContextBlock, type LlmLiveContextBlock } from '../prompt/llm.pro
 import { type LlmPromptTemplate } from '../prompt/llm.prompt.template';
 import { type LlmCallContext } from '../record/llm.call.context';
 import { type LlmSwallowSiteId } from '../record/llm.swallow';
-import { LLM_CRITIQUE_REPLY_CAPABILITY, type LlmCritic, type LlmCritiqueBinding, type LlmCritiqueDispatch, type LlmCritiqueParams, type LlmCritiqueRule, type LlmCritiqueVerdict } from '../reply/llm.reply.critique';
-import { readLlmDispatchResultLever } from '../reply/llm.reply.envelope';
-import { llmSchemaLeverValidator } from '../reply/llm.reply.validator';
+import { LLM_CRITIQUE_REPLY_CAPABILITY, type LlmCritic, type LlmCritiqueBinding, type LlmCritiqueDispatch, type LlmCritiqueParams, type LlmCritiqueRule } from '../reply/llm.reply.critique';
+import { readLlmDispatchResultReply } from '../reply/llm.reply.envelope';
+import { type LlmReplyVerdict, makeLlmSchemaValueValidator } from '../reply/llm.reply.validator';
 import { defineLlmCapability, type LlmCapabilityDescriptor } from './llm.capability.descriptor';
 
 /**
@@ -80,13 +80,13 @@ export interface LlmCritiqueOutcome {
 }
 
 /**
- * Validate and map an already-unwrapped reply lever into an {@link LlmCritiqueOutcome} — the descriptor's `parseLever`.
+ * Validate and map an already-unwrapped reply value into an {@link LlmCritiqueOutcome} — the descriptor's `parseValue`.
  *
- * @param lever - The unwrapped reply lever (or any unvalidated value).
+ * @param value - The unwrapped reply value (or any unvalidated value).
  * @returns The parsed verdict, or `undefined` on a bad shape (including a fail with no feedback).
  */
-export function parseLlmCritiqueOutcomeLever(lever: unknown): Maybe<LlmCritiqueOutcome> {
-  const validated = llmCritiqueOutcomeSchema(lever);
+export function parseLlmCritiqueOutcomeValue(value: unknown): Maybe<LlmCritiqueOutcome> {
+  const validated = llmCritiqueOutcomeSchema(value);
   let outcome: Maybe<LlmCritiqueOutcome>;
 
   if (!(validated instanceof type.errors)) {
@@ -195,7 +195,7 @@ export interface CritiqueLlmReplyConfig extends RenderLlmCritiqueContextConfig {
  *
  * The judge request carries its own `validate` (the narrowed schema), so a malformed verdict gets the dispatcher's
  * ordinary bounded retry. It carries NO `critique`, `meta` or `maxAttempts` — the structural recursion guard. The
- * verdict is read off the judge dispatch's DECODED payload (`readLlmDispatchResultLever`), so it follows the judge
+ * verdict is read off the judge dispatch's DECODED payload (`readLlmDispatchResultReply`), so it follows the judge
  * call's resolved reply protocol and the dispatcher's envelope keys.
  *
  * @param config - The goal / evidence / subject live context / reply / subject capability / tier / call context / signal and the dispatch.
@@ -206,14 +206,14 @@ export async function critiqueLlmReply(config: CritiqueLlmReplyConfig): Promise<
   const request: LlmDispatchRequest = {
     capability: LLM_CRITIQUE_REPLY_CAPABILITY,
     renderLiveContext: () => renderLlmCritiqueContext({ goal, ...(evidence == null ? {} : { evidence }), liveContext, replyText }),
-    validate: llmSchemaLeverValidator(llmCritiqueOutcomeSchema),
+    validate: makeLlmSchemaValueValidator(llmCritiqueOutcomeSchema),
     subjectCapability: config.subjectCapability,
     callContext: config.callContext,
     ...(tier == null ? {} : { tier }),
     ...(signal == null ? {} : { signal })
   };
-  const reading = readLlmDispatchResultLever(await config.dispatch(request));
-  return parseLlmCritiqueOutcomeLever(reading.kind === 'lever' ? reading.lever : undefined);
+  const reading = readLlmDispatchResultReply(await config.dispatch(request));
+  return parseLlmCritiqueOutcomeValue(reading.kind === 'value' ? reading.value : undefined);
 }
 
 /**
@@ -257,8 +257,8 @@ export function makeLlmSemanticCritic(config: MakeLlmSemanticCriticConfig): LlmC
   const goal = rule.goal ?? config.goal;
   const evidence = config.evidence;
 
-  return async (input: LlmCritiqueParams): Promise<LlmCritiqueVerdict> => {
-    let verdict: LlmCritiqueVerdict = true;
+  return async (input: LlmCritiqueParams): Promise<LlmReplyVerdict> => {
+    let verdict: LlmReplyVerdict = true;
 
     try {
       const outcome = await critiqueLlmReply({
@@ -369,7 +369,7 @@ export const LLM_CRITIQUE_REPLY_TEMPLATE: LlmPromptTemplate = { key: 'critique-r
 export const LLM_CRITIQUE_REPLY_DESCRIPTOR: LlmCapabilityDescriptor<LlmCritiqueOutcome> = /*#__PURE__*/ defineLlmCapability({
   capability: LLM_CRITIQUE_REPLY_CAPABILITY,
   responseSchema: llmCritiqueOutcomeSchema,
-  parseLever: parseLlmCritiqueOutcomeLever,
+  parseValue: parseLlmCritiqueOutcomeValue,
   mustResolve: true,
   rawJsonContext: true,
   maxOutputTokens: LLM_CRITIQUE_REPLY_MAX_OUTPUT_TOKENS

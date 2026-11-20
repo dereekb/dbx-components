@@ -1,6 +1,6 @@
 /**
  * The capability descriptor — one capability's reply contract: its key, its reply protocol, its routing and output
- * controls, its arktype wire schema and lever parser, the memoized schema projections the output contract and
+ * controls, its arktype wire schema and value parser, the memoized schema projections the output contract and
  * `response_format` read, a frames policy keyed by slot id, and the host's own `traits`.
  *
  * A descriptor EXTENDS the routing ref (`LlmModelRoutingCapabilityRef`) and the model-precedence ref
@@ -74,13 +74,13 @@ export interface LlmCapabilityDescriptor<T = unknown, H extends object = object>
    */
   readonly traits?: H;
   /**
-   * The enforced arktype wire schema a reply lever is validated against.
+   * The enforced arktype wire schema a reply value is validated against.
    */
   readonly responseSchema: Type;
   /**
-   * Validate + map an already-unwrapped reply lever; `undefined` ⇒ unusable.
+   * Validate + map an already-unwrapped reply value; `undefined` ⇒ unusable.
    */
-  readonly parseLever: (lever: unknown) => Maybe<T>;
+  readonly parseValue: (value: unknown) => Maybe<T>;
   /**
    * The memoized JSON-Schema projection of {@link responseSchema} (hardened with `additionalProperties: false`,
    * `$schema` dropped) — computed on first call, then cached. What `response_format` carries. {@link defineLlmCapability}
@@ -141,7 +141,7 @@ export interface DefineLlmCapabilityConfig<T = unknown, H extends object = objec
  * const SUMMARIZE = defineLlmCapability({
  *   capability: 'summarize',
  *   responseSchema: summarySchema,
- *   parseLever: (lever) => { const out = summarySchema(lever); return out instanceof type.errors ? undefined : out; }
+ *   parseValue: (value) => { const out = summarySchema(value); return out instanceof type.errors ? undefined : out; }
  * });
  * ```
  *

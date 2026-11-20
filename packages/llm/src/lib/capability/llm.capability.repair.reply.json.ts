@@ -3,9 +3,9 @@
  * repairs a mangled JSON reply the deterministic tier (`repairLlmReplyJson`) could not, in place of a re-ask of the
  * whole (often large) subject prompt.
  *
- * The fixer is handed ONLY the broken reply, the subject's lever schema (its per-invocation `responseSchemaHint`, which
+ * The fixer is handed ONLY the broken reply, the subject's value schema (its per-invocation `responseSchemaHint`, which
  * also renders the fixer's output contract) and a one-line diagnosis of where parsing fails — never the subject's
- * prompt. Its fixed lever must pass `llmReplyRepairFidelity` (nothing invented, nothing dropped) to be used.
+ * prompt. Its fixed value must pass `llmReplyRepairFidelity` (nothing invented, nothing dropped) to be used.
  *
  * It is an ordinary capability call, so routing, pause, telemetry, taps and tape replay apply unchanged. It fails
  * OPEN: a fix that misses or throws costs the subject nothing but the call, and the subject falls through to its
@@ -18,10 +18,10 @@ import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { llmLiveContextBlock, type LlmLiveContextBlock } from '../prompt/llm.prompt.live.context';
 import { type LlmPromptTemplate } from '../prompt/llm.prompt.template';
 import { type LlmSwallowSiteId } from '../record/llm.swallow';
-import { readLlmDispatchResultLever } from '../reply/llm.reply.envelope';
+import { readLlmDispatchResultReply } from '../reply/llm.reply.envelope';
 import { LLM_REPAIR_REPLY_JSON_CAPABILITY, type LlmReplyFastFixer, type LlmReplyFastFixOutcome } from '../reply/llm.reply.fast.fix';
 import { llmReplyRepairDiagnosis, llmReplyRepairFidelity } from '../reply/llm.reply.repair';
-import { type LlmLeverValidator } from '../reply/llm.reply.validator';
+import { type LlmValueValidator } from '../reply/llm.reply.validator';
 import { type LlmCallMeta, type LlmDispatchResult } from '../strategy/llm.strategy';
 import { defineLlmCapability, type LlmCapabilityDescriptor } from './llm.capability.descriptor';
 
@@ -36,7 +36,7 @@ export const LLM_REPAIR_REPLY_JSON_MAX_OUTPUT_TOKENS = 8192;
 export const LLM_REPLY_REPAIR_FAST_FIX_SWALLOW_SITE: LlmSwallowSiteId = 'llm/reply-repair.fast-fix';
 
 /**
- * The fixer's descriptor schema — PERMISSIVE (any object). The real contract is the SUBJECT's lever schema, passed per
+ * The fixer's descriptor schema — PERMISSIVE (any object). The real contract is the SUBJECT's value schema, passed per
  * invocation as the `responseSchemaHint`; this descriptor's own hint is never sent.
  */
 export const llmRepairReplyJsonSchema = /*#__PURE__*/ type('object');
@@ -47,22 +47,22 @@ export const llmRepairReplyJsonSchema = /*#__PURE__*/ type('object');
 const REPLY_FENCE = 'REPLY';
 
 /**
- * Read the fixer's lever — any object, not an array.
+ * Read the fixer's value — any object, not an array.
  *
- * @param lever - The unwrapped lever.
- * @returns The lever, or `undefined` when it is not a plain object.
+ * @param value - The unwrapped value.
+ * @returns The value, or `undefined` when it is not a plain object.
  */
-export function parseLlmRepairReplyJsonLever(lever: unknown): Maybe<Record<string, unknown>> {
-  return isPlainObject(lever) ? lever : undefined;
+export function parseLlmRepairReplyJsonValue(value: unknown): Maybe<Record<string, unknown>> {
+  return isPlainObject(value) ? value : undefined;
 }
 
 /**
  * The fixer's validator — one object, nothing more (the fidelity gate and the subject's own validator do the rest).
  *
- * @param lever - The unwrapped lever.
+ * @param value - The unwrapped value.
  * @returns `true`, or the one-object error.
  */
-const objectLeverValidator: LlmLeverValidator = (lever) => (parseLlmRepairReplyJsonLever(lever) == null ? { error: 'the reply must be one JSON object' } : true);
+const objectValueValidator: LlmValueValidator = (value) => (parseLlmRepairReplyJsonValue(value) == null ? { error: 'the reply must be one JSON object' } : true);
 
 /**
  * The inputs of the fixer's live context.
@@ -123,8 +123,8 @@ export interface MakeLlmReplyFastFixerConfig<R extends LlmDispatchRequest = LlmD
 /**
  * Mint a fast fixer — the {@link LlmReplyFastFixer} a host injects into its dispatcher's config. Each call dispatches
  * ONE `RepairReplyJson` request (`maxAttempts: 1`, no critic, the subject's schema as the hint, the subject named as
- * `subjectCapability` so the spend is attributed with no join), reads the fixed lever off that call's DECODED payload
- * (`readLlmDispatchResultLever` — the fixer call's own resolved protocol and the dispatcher's envelope keys), then gates
+ * `subjectCapability` so the spend is attributed with no join), reads the fixed value off that call's DECODED payload
+ * (`readLlmDispatchResultReply` — the fixer call's own resolved protocol and the dispatcher's envelope keys), then gates
  * it on `llmReplyRepairFidelity` over the SUBJECT's reading envelope (`input.subjectEnvelope`).
  *
  * @param config - The request and meta hooks.
@@ -162,24 +162,24 @@ export function makeLlmReplyFastFixer<R extends LlmDispatchRequest, X extends Ll
         ...(subject.meta == null ? {} : { meta: subject.meta }),
         renderLiveContext: () => renderLlmRepairReplyJsonContext({ text: input.text, shape: input.shape }),
         responseSchemaHint: input.schemaHint,
-        validate: objectLeverValidator,
+        validate: objectValueValidator,
         maxAttempts: 1,
         subjectCapability: input.subjectCapability,
         callContext: input.callContext,
         ...(subject.signal == null ? {} : { signal: subject.signal })
       };
       const raw = await input.dispatch(requestOf(base, subject));
-      const reading = readLlmDispatchResultLever(raw);
-      const lever = reading.kind === 'lever' ? parseLlmRepairReplyJsonLever(reading.lever) : undefined;
+      const reading = readLlmDispatchResultReply(raw);
+      const value = reading.kind === 'value' ? parseLlmRepairReplyJsonValue(reading.value) : undefined;
       const meta = metaOf?.(raw);
       const metaField = meta == null ? {} : { meta };
 
       if (raw.lengthCapped === true) {
         outcome = { kind: 'missed', reason: 'truncated', ...metaField };
-      } else if (lever == null) {
+      } else if (value == null) {
         outcome = { kind: 'missed', reason: reading.kind === 'declined' ? 'declined' : 'unusable', ...metaField };
-      } else if (llmReplyRepairFidelity({ original: input.text, repaired: lever, envelope: input.subjectEnvelope }).ok) {
-        outcome = { kind: 'fixed', lever, text: JSON.stringify(lever), ...metaField };
+      } else if (llmReplyRepairFidelity({ original: input.text, repaired: value, envelope: input.subjectEnvelope }).ok) {
+        outcome = { kind: 'fixed', value, text: JSON.stringify(value), ...metaField };
       } else {
         outcome = { kind: 'missed', reason: 'fidelity', ...metaField };
       }
@@ -219,7 +219,7 @@ export const LLM_REPAIR_REPLY_JSON_TEMPLATE: LlmPromptTemplate = { key: 'repair-
 export const LLM_REPAIR_REPLY_JSON_DESCRIPTOR: LlmCapabilityDescriptor<Record<string, unknown>> = /*#__PURE__*/ defineLlmCapability({
   capability: LLM_REPAIR_REPLY_JSON_CAPABILITY,
   responseSchema: llmRepairReplyJsonSchema,
-  parseLever: parseLlmRepairReplyJsonLever,
+  parseValue: parseLlmRepairReplyJsonValue,
   rawJsonContext: true,
   maxOutputTokens: LLM_REPAIR_REPLY_JSON_MAX_OUTPUT_TOKENS,
   reasoning: { enabled: false }
