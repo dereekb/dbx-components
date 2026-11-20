@@ -123,6 +123,43 @@ export function asNumber(input: AsNumberInput): number {
 }
 
 /**
+ * Reads a value as a finite number, or reports it absent.
+ *
+ * A finite number passes; a non-blank string is parsed with `Number()` and passes only when the result is finite;
+ * anything else — absent, a blank string, `NaN`, `±Infinity`, `'Infinity'`, a non-numeric string, an object — is
+ * `undefined`, never `0`. Unlike {@link asNumber}, an unreadable value is never made up into a number.
+ *
+ * @param value - The raw value (off a wire, out of a stored record).
+ * @returns The finite number, or `undefined` when the value is missing or not a finite number.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory number
+ * @dbxUtilKind function
+ * @dbxUtilTags number, parse, finite, coerce, string, nan, infinity
+ * @dbxUtilRelated as-number
+ *
+ * @example
+ * ```ts
+ * asFiniteNumber(0.25); // 0.25
+ * asFiniteNumber('0.25'); // 0.25
+ * asFiniteNumber(' '); // undefined
+ * asFiniteNumber(Number.NaN); // undefined
+ * ```
+ */
+export function asFiniteNumber(value: unknown): number | undefined {
+  let result: number | undefined;
+
+  if (typeof value === 'number') {
+    result = Number.isFinite(value) ? value : undefined;
+  } else if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value);
+    result = Number.isFinite(parsed) ? parsed : undefined;
+  }
+
+  return result;
+}
+
+/**
  * Checks whether the input value is evenly divisible by the divisor.
  *
  * Treats null/undefined as 0.

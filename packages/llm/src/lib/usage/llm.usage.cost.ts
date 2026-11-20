@@ -7,8 +7,7 @@
  * (`n/a`). These helpers make that ONE decision for every surface that prints a cost.
  */
 
-import { type DollarAmount, type Maybe, type Count } from '@dereekb/util';
-import { readLlmCost } from '../strategy/llm.usage';
+import { asFiniteNumber, type DollarAmount, type Maybe, type Count } from '@dereekb/util';
 
 /**
  * The cell every surface renders when a slice's dollar figure is UNKNOWN — the provider reported no cost at all — as
@@ -157,7 +156,7 @@ export function formatLlmUsageCost(config: FormatLlmUsageCostConfig): string {
   } else {
     // Coerced, never trusted: a cost folded from a logged row can still be a string, and a render must never throw on
     // one. An unreadable figure renders as the unavailable cell rather than as a made-up number.
-    const cost = readLlmCost(config.cost);
+    const cost = asFiniteNumber(config.cost);
     rendered = cost == null ? LLM_USAGE_COST_UNAVAILABLE_CELL : `${marker}$${cost.toFixed(digits)}`;
   }
 

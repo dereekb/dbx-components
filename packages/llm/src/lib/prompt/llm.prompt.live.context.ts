@@ -169,25 +169,6 @@ export function llmLiveContextBlock(config: LlmLiveContextBlockConfig): Maybe<Ll
 }
 
 /**
- * One `key: value; …` FACT ROW — the terse register a block only a model reads prints. An absent or empty value drops
- * its pair (a `0` is kept), so a conditional cell stays one entry.
- *
- * @param pairs - The `[key, value]` pairs, in print order.
- * @returns The row.
- *
- * @example
- * ```ts
- * formatLlmFactRow([['size', 'large'], ['count', 0], ['color', undefined]]); // 'size: large; count: 0'
- * ```
- */
-export function formatLlmFactRow(pairs: ReadonlyArray<readonly [string, Maybe<string | number>]>): string {
-  return pairs
-    .filter((pair): pair is readonly [string, string | number] => pair[1] != null && pair[1] !== '')
-    .map(([key, value]) => `${key}: ${value}`)
-    .join('; ');
-}
-
-/**
  * Join live-context blocks into the rendered live-context string — non-empty texts joined by
  * {@link LLM_LIVE_CONTEXT_BLOCK_SEPARATOR}. Empty texts are FILTERED first so an interior empty block can never inject
  * a stray blank line.

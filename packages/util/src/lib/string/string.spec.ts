@@ -1,4 +1,5 @@
 import {
+  joinKeyValuePairs,
   COMMA_STRING_SPLIT_JOIN,
   DEFAULT_CUT_STRING_END_TEXT,
   SPACE_STRING_SPLIT_JOIN,
@@ -569,5 +570,24 @@ describe('stringSplitJoinInstance()', () => {
         expect(result).toEqual(new Set(['a', 'b']));
       });
     });
+  });
+});
+
+describe('joinKeyValuePairs()', () => {
+  it('should keep 0 and drop empty and nullish values', () => {
+    expect(
+      joinKeyValuePairs([
+        ['a', 'x'],
+        ['b', 0],
+        ['c', ''],
+        ['d', undefined],
+        ['e', null],
+        ['f', 2]
+      ])
+    ).toBe('a: x; b: 0; f: 2');
+  });
+
+  it('should return an empty string for no pairs', () => {
+    expect(joinKeyValuePairs([])).toBe('');
   });
 });

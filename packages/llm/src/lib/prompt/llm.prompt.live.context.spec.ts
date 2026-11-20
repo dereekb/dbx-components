@@ -8,7 +8,6 @@ import {
   LLM_CHAINED_FOLLOW_UP_UNCHANGED_ROWS_LEAD,
   LLM_LIVE_CONTEXT_HEADING,
   llmChainedFollowUpBody,
-  formatLlmFactRow,
   llmLiveContextBlock,
   llmLiveContextHeadingBlock,
   type LlmLiveContextBlock,
@@ -172,21 +171,6 @@ describe('llmLiveContextBlock()', () => {
 describe('llmLiveContextHeadingBlock()', () => {
   it('should return the heading block', () => {
     expect(llmLiveContextHeadingBlock()).toEqual({ key: 'heading', text: LLM_LIVE_CONTEXT_HEADING });
-  });
-});
-
-describe('formatLlmFactRow()', () => {
-  it('should keep 0 and drop empty and nullish values', () => {
-    expect(
-      formatLlmFactRow([
-        ['a', 'x'],
-        ['b', 0],
-        ['c', ''],
-        ['d', undefined],
-        ['e', null],
-        ['f', 2]
-      ])
-    ).toBe('a: x; b: 0; f: 2');
   });
 });
 

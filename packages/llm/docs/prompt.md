@@ -31,7 +31,8 @@ scopes, prompt handles and chains, a live-context token budget, a cache-prefix w
   `assertLlmPromptContributionOccupancy` fails loud on an undeclared slot, an assembly-owned slot or a second
   contribution to a single slot; `mergeLlmLiveContextContributions` places live-slot contributions among the
   capability's blocks at their anchors; `toLlmPromptSupplements` builds a call record's `supplements` rows.
-- **Live context.** `LlmLiveContextBlock`s are keyed sections (`llmLiveContextBlock`, rows blocks, fact rows).
+- **Live context.** `LlmLiveContextBlock`s are keyed sections (`llmLiveContextBlock`, rows blocks; a fact row is
+  `@dereekb/util`'s `joinKeyValuePairs`).
   `orderLlmLiveContextBlocks` sorts by a sparse rank table with a key tiebreak, so any input order sends the same
   bytes. The tiebreak compares keys by UTF-16 code unit (`@dereekb/util` `compareStringsByCodeUnit`), never the host's
   locale, so every host sends the same bytes (`Beta` before `alpha`). Craft-note selection, usage rows and the bill

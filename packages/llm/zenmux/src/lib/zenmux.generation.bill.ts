@@ -13,8 +13,8 @@
  *   after it is made, so that reads as PENDING, never as a failure: re-reading later is the remedy.
  */
 
-import { readLlmCost, llmProviderErrorMessage, type LlmCallBill, type LlmCallBillRead, type LlmCallBillReader, type LlmCallBillReadOptions, type LlmGenerationId } from '@dereekb/llm';
-import { filterMaybeValues, readErrorMessage, type Maybe, type Milliseconds, removeTrailingSlashes } from '@dereekb/util';
+import { llmProviderErrorMessage, type LlmCallBill, type LlmCallBillRead, type LlmCallBillReader, type LlmCallBillReadOptions, type LlmGenerationId } from '@dereekb/llm';
+import { asFiniteNumber, filterMaybeValues, readErrorMessage, type Maybe, type Milliseconds, removeTrailingSlashes } from '@dereekb/util';
 import { DEFAULT_LLM_ZENMUX_BASE_URL, LLM_ZENMUX_PROVIDER_ID } from './zenmux.constants';
 import { readLlmZenmuxManagement, llmZenmuxGenerationUrl, type LlmZenmuxEnvelope, type LlmZenmuxManagementReadConfig } from './zenmux.management';
 
@@ -50,15 +50,15 @@ interface ZenmuxGenerationData {
  */
 function zenmuxBillReadOf(generationId: LlmGenerationId, envelope: LlmZenmuxEnvelope<ZenmuxGenerationData>): LlmCallBillRead {
   const rating = envelope.data?.ratingResponses;
-  const billed = readLlmCost(rating?.billAmount);
+  const billed = asFiniteNumber(rating?.billAmount);
   let read: LlmCallBillRead;
 
   if (billed == null) {
     // A 200 with no rating yet is the same "not billed yet" a 404 is, said differently.
     read = { status: 'pending', generationId, detail: envelope.message ?? 'no rating on the generation yet' };
   } else {
-    const listed = readLlmCost(rating?.originAmount);
-    const discount = readLlmCost(rating?.discountAmount);
+    const listed = asFiniteNumber(rating?.originAmount);
+    const discount = asFiniteNumber(rating?.discountAmount);
     const bill: LlmCallBill = filterMaybeValues({ generationId, billed, listed, discount });
     read = { status: 'billed', bill };
   }

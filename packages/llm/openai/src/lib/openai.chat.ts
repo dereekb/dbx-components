@@ -1,5 +1,5 @@
-import { type Count, type Maybe, type Milliseconds } from '@dereekb/util';
-import { toLlmAttachmentDataUrl, toLlmThreadChatMessages, type LlmAttachment, type LlmReasoningConfig, type LlmReasoningOffEncoding, type LlmThreadRole, type LlmThreadTurn, type RawLlmUsage, type LlmGenerationId, type LlmTokenCount } from '@dereekb/llm';
+import { type Count, type Maybe, type Milliseconds, toBase64DataUrl } from '@dereekb/util';
+import { toLlmThreadChatMessages, type LlmAttachment, type LlmReasoningConfig, type LlmReasoningOffEncoding, type LlmThreadRole, type LlmThreadTurn, type RawLlmUsage, type LlmGenerationId, type LlmTokenCount } from '@dereekb/llm';
 
 /**
  * The OpenAI-compatible chat wire: the request / response shapes every OpenAI-compatible transport sends and reads
@@ -249,7 +249,7 @@ export type LlmOpenAiContentPart = LlmOpenAiTextPart | LlmOpenAiImagePart;
  * @__NO_SIDE_EFFECTS__
  */
 export function toLlmOpenAiImagePart(attachment: LlmAttachment): LlmOpenAiImagePart {
-  return { type: 'image_url', image_url: { url: toLlmAttachmentDataUrl(attachment) } };
+  return { type: 'image_url', image_url: { url: toBase64DataUrl({ mimeType: attachment.mime, dataBase64: attachment.dataBase64 }) } };
 }
 
 /**

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { toLlmAttachmentDataUrl, toLlmThreadChatMessages } from './llm.strategy.message';
+import { toLlmThreadChatMessages } from './llm.strategy.message';
 
 describe('toLlmThreadChatMessages()', () => {
   it('maps an empty thread onto no messages', () => {
@@ -19,11 +19,5 @@ describe('toLlmThreadChatMessages()', () => {
       { role: 'user', content: 'follow-up' }
     ]);
     expect(Object.keys(messages[0])).toEqual(['role', 'content']);
-  });
-});
-
-describe('toLlmAttachmentDataUrl()', () => {
-  it('builds the inline data URL', () => {
-    expect(toLlmAttachmentDataUrl({ mime: 'image/png', dataBase64: 'QUJD' })).toBe('data:image/png;base64,QUJD');
   });
 });

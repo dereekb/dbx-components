@@ -1,8 +1,9 @@
 /**
- * Provider-neutral helpers that turn the strategy contract's thread and attachment shapes into the parts every chat
- * wire accepts. A transport that needs more (breakpoint blocks, a provider's own envelope) builds that itself on top.
+ * Provider-neutral helpers that turn the strategy contract's thread shape into the parts every chat wire accepts. A
+ * transport that needs more (breakpoint blocks, a provider's own envelope) builds that itself on top; an attachment's
+ * `data:` URL is `@dereekb/util`'s `toBase64DataUrl`.
  */
-import { type LlmAttachment, type LlmThreadRole, type LlmThreadTurn } from './llm.strategy';
+import { type LlmThreadRole, type LlmThreadTurn } from './llm.strategy';
 
 /**
  * One replayed thread turn as a plain-text chat message — the provider-neutral shape every chat wire accepts.
@@ -34,20 +35,4 @@ export interface LlmThreadChatMessage {
  */
 export function toLlmThreadChatMessages(thread: ReadonlyArray<LlmThreadTurn>): LlmThreadChatMessage[] {
   return thread.map((turn) => ({ role: turn.role, content: turn.content }));
-}
-
-/**
- * Build the inline `data:<mime>;base64,<dataBase64>` URL an image part carries.
- *
- * @param attachment - The attachment's MIME type and base64 bytes.
- * @returns The data URL.
- *
- * @example
- * ```ts
- * toLlmAttachmentDataUrl({ mime: 'image/png', dataBase64: 'QUJD' }); // 'data:image/png;base64,QUJD'
- * ```
- * @__NO_SIDE_EFFECTS__
- */
-export function toLlmAttachmentDataUrl(attachment: Pick<LlmAttachment, 'mime' | 'dataBase64'>): string {
-  return `data:${attachment.mime};base64,${attachment.dataBase64}`;
 }

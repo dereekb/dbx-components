@@ -73,6 +73,31 @@ export function joinStrings(input: Maybe<ReadonlyArrayOrValue<Maybe<string>>>, j
 }
 
 /**
+ * Joins `[key, value]` pairs into one `key: value; …` row, in order. A pair whose value is `null`, `undefined` or `''`
+ * is dropped (a `0` is kept), so a conditional pair stays one entry in the list.
+ *
+ * @param pairs - The `[key, value]` pairs, in print order.
+ * @returns The row, or `''` when every pair is dropped.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilKind function
+ * @dbxUtilTags string, join, key-value, row, format
+ * @dbxUtilRelated join-strings
+ *
+ * @example
+ * ```ts
+ * joinKeyValuePairs([['size', 'large'], ['count', 0], ['color', undefined]]); // 'size: large; count: 0'
+ * ```
+ */
+export function joinKeyValuePairs(pairs: ReadonlyArray<readonly [string, Maybe<string | number>]>): string {
+  return pairs
+    .filter((pair): pair is readonly [string, string | number] => pair[1] != null && pair[1] !== '')
+    .map(([key, value]) => `${key}: ${value}`)
+    .join('; ');
+}
+
+/**
  * Splits a string like {@link String.prototype.split}, but joins overflow segments back together
  * instead of discarding them. Useful when you only want to split on the first N-1 occurrences.
  *

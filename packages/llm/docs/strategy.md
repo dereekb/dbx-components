@@ -13,7 +13,7 @@ so several instances of one transport can be registered side by side. Those two,
   strategy and model served it, usage and timing. `LlmDispatchResult` is a completion plus what a dispatcher adds:
   attempts, validation errors, decode status and the reply repair. Host data rides `meta`: the library never reads it
   and strategies echo it. `toLlmThreadChatMessages` maps a replayed thread onto plain chat messages and
-  `toLlmAttachmentDataUrl` builds an attachment's `data:` URL. The stock transports default to
+  `@dereekb/util`'s `toBase64DataUrl` builds an attachment's `data:` URL. The stock transports default to
   `DEFAULT_LLM_MAX_OUTPUT_TOKENS` (8,192) and a `DEFAULT_LLM_COMPLETION_TIMEOUT_MS` (60 s) timeout floor.
 - **Registry.** `makeLlmStrategyRegistry(seed)` serves either lane (`LlmStrategyRegistry<S>`; a registry of decision
   strategies is an `LlmDecisionStrategyRegistry`) and answers `get(id)`. Every instance of a transport is
@@ -31,9 +31,9 @@ so several instances of one transport can be registered side by side. Those two,
   default) and fails open whenever nothing is measured. A window's `unit` is an `LlmQuotaUnit`: one of the library's
   own (`flow`, `request`, `token`, `usd`) or a host's own string for a provider it meters itself.
 - **Usage and bills.** `toLlmUsage(raw, { costBasis })` folds a provider usage block: token counts default to `0`,
-  every other field is omitted when not reported (absent is not zero), and numeric-string costs are parsed. An
-  `LlmCallBillReader` reads what a call billed, later, by its generation id; `reconcileLlmCallBills` folds those reads
-  against the logged cost (see [Readers, ledger and reconcile](records.md#readers-ledger-and-reconcile)).
+  every other field is omitted when not reported (absent is not zero), and numeric-string costs are parsed with
+  `@dereekb/util`'s `asFiniteNumber`. An `LlmCallBillReader` reads what a call billed, later, by its generation id;
+  `reconcileLlmCallBills` folds those reads against the logged cost (see [Readers, ledger and reconcile](records.md#readers-ledger-and-reconcile)).
 - **Prompt segments.** An `LlmPromptSegment` carries its exact bytes (trailing separator included) and an open
   `origin`. `joinLlmPromptSegments` builds the sent string, `splitLlmPromptCacheSegments` splits it for provider caching
   (the prefix is everything before the first volatile segment), `llmPromptSegmentSpans` derives highlight spans, and

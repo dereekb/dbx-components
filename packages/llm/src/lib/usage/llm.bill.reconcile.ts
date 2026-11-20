@@ -10,10 +10,9 @@
  * minutes) and failed ones are COUNTED, never folded as zero, so a half-reconciled run says so.
  */
 
-import { type AbortSignalRef, compareStringsByCodeUnit, type DollarAmount, type Maybe, type PercentDecimal, type Count } from '@dereekb/util';
+import { type AbortSignalRef, asFiniteNumber, compareStringsByCodeUnit, type DollarAmount, type Maybe, type PercentDecimal, type Count } from '@dereekb/util';
 import type { LlmCallLogPayloadBase } from '../record/llm.call.payload';
 import type { LlmCallBillRead, LlmCallBillReader } from '../strategy/llm.call.bill';
-import { readLlmCost } from '../strategy/llm.usage';
 import { formatLlmUsageCost } from './llm.usage.cost';
 import { type LlmProviderStatusProviderId } from '../strategy/llm.provider.status';
 import { type LlmGenerationId, type LlmModelId } from '../model/llm.value';
@@ -200,7 +199,7 @@ export async function reconcileLlmCallBills(config: ReconcileLlmCallBillsConfig)
     const read: LlmCallBillRead = reads[index] ?? { status: 'pending', generationId: call.generationId as string, detail: 'not read (cancelled)' };
 
     if (read.status === 'billed') {
-      const logged = readLlmCost(call.usage?.cost) ?? 0;
+      const logged = asFiniteNumber(call.usage?.cost) ?? 0;
       cell.billedCalls += 1;
       cell.logged += logged;
       cell.billed += read.bill.billed;

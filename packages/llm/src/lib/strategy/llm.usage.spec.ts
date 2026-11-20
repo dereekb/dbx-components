@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { readLlmCost, toLlmUsage } from './llm.usage';
+import { toLlmUsage } from './llm.usage';
 
 describe('toLlmUsage', () => {
   it('reports NO usage at all when the provider returned none: not a zeroed one', () => {
@@ -116,26 +116,6 @@ describe('toLlmUsage bytes (pin)', () => {
 
     expect(Object.keys(usage ?? {})).toEqual(['promptTokens', 'completionTokens', 'totalTokens']);
     expect(JSON.stringify(usage)).toBe('{"promptTokens":0,"completionTokens":5,"totalTokens":0}');
-  });
-});
-
-describe('readLlmCost', () => {
-  it('passes a finite number and parses a numeric string', () => {
-    expect(readLlmCost(0.0031)).toBe(0.0031);
-    expect(readLlmCost(0)).toBe(0);
-    expect(readLlmCost('0.00065716')).toBe(0.00065716);
-    expect(readLlmCost(' 0.5 ')).toBe(0.5);
-  });
-
-  it('reads anything else as ABSENT, never as a made-up 0', () => {
-    expect(readLlmCost(undefined)).toBeUndefined();
-    expect(readLlmCost(null)).toBeUndefined();
-    expect(readLlmCost('')).toBeUndefined();
-    expect(readLlmCost('   ')).toBeUndefined();
-    expect(readLlmCost('n/a')).toBeUndefined();
-    expect(readLlmCost(Number.NaN)).toBeUndefined();
-    expect(readLlmCost(Number.POSITIVE_INFINITY)).toBeUndefined();
-    expect(readLlmCost({ amount: 1 })).toBeUndefined();
   });
 });
 

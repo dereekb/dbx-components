@@ -8,8 +8,8 @@
  * byte-stable.
  */
 
-import { compareStringsByCodeUnit, type DollarAmount, type Maybe, type Count } from '@dereekb/util';
-import { readLlmCost, type LlmUsage } from '../strategy/llm.usage';
+import { asFiniteNumber, compareStringsByCodeUnit, type DollarAmount, type Maybe, type Count } from '@dereekb/util';
+import { type LlmUsage } from '../strategy/llm.usage';
 import { type LlmTokenCount } from '../model/llm.value';
 
 /**
@@ -117,7 +117,7 @@ export function addLlmUsageCells(a: LlmUsageCell, b: LlmUsageCell): LlmUsageCell
 /**
  * The cell contribution of one call's usage (a call always counts as one, tokens/cost when present).
  *
- * The cost is read through {@link readLlmCost} because the usage comes out of a LOGGED row: a logged row can hold a
+ * The cost is read through `@dereekb/util`'s `asFiniteNumber` because the usage comes out of a LOGGED row: a logged row can hold a
  * gateway's string cost, which a plain `+` would concatenate.
  *
  * @param usage - The call's usage block (absent on an injected seam).
@@ -132,7 +132,7 @@ export function addLlmUsageCells(a: LlmUsageCell, b: LlmUsageCell): LlmUsageCell
  */
 export function toLlmUsageCell(usage: Maybe<LlmUsage>, uncacheable = false): LlmUsageCell {
   const promptTokens = usage?.promptTokens ?? 0;
-  return { calls: 1, promptTokens, completionTokens: usage?.completionTokens ?? 0, cachedTokens: usage?.cachedTokens ?? 0, ...(uncacheable && promptTokens > 0 ? { uncacheablePromptTokens: promptTokens } : {}), reasoningTokens: usage?.reasoningTokens ?? 0, cost: readLlmCost(usage?.cost) ?? 0 };
+  return { calls: 1, promptTokens, completionTokens: usage?.completionTokens ?? 0, cachedTokens: usage?.cachedTokens ?? 0, ...(uncacheable && promptTokens > 0 ? { uncacheablePromptTokens: promptTokens } : {}), reasoningTokens: usage?.reasoningTokens ?? 0, cost: asFiniteNumber(usage?.cost) ?? 0 };
 }
 
 /**

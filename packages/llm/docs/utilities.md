@@ -20,4 +20,6 @@ calls them: `@dereekb/model`'s `assertObjectKeys` and `parseArktypeFieldsWithMes
 `schemaLabelMessagePrefix`) are the key and field checks behind every model declaration's messages, and its
 `nonBlankStringType` is the non-blank string check the provider, tier-key and config fields use. A billed A/B's
 regression gate is `@dereekb/util`'s `abRegressionVerdict` (with `fisherExactOneSidedUpperTail`, `binomialCoefficient`
-and `logBinomialCoefficient`), exact and summed in log space.
+and `logBinomialCoefficient`), exact and summed in log space. `@dereekb/util` also builds an attachment's `data:` URL
+(`toBase64DataUrl`), reads a cost field as a finite number or absent (`asFiniteNumber`, never a made-up `0`), and joins
+a `key: value; …` fact row (`joinKeyValuePairs`).
