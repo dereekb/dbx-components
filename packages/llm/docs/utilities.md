@@ -18,4 +18,6 @@ hex chars for cache / call-row / supplement hashes (`llmPromptCacheHash`) and 12
 **Generic helpers in util and model.** Helpers whose body carries no LLM concept live in the shared packages, and llm
 calls them: `@dereekb/model`'s `assertObjectKeys` and `parseArktypeFieldsWithMessages` (with `ArktypeFieldRule(s)` and
 `schemaLabelMessagePrefix`) are the key and field checks behind every model declaration's messages, and its
-`nonBlankStringType` is the non-blank string check the provider, tier-key and config fields use.
+`nonBlankStringType` is the non-blank string check the provider, tier-key and config fields use. A billed A/B's
+regression gate is `@dereekb/util`'s `abRegressionVerdict` (with `fisherExactOneSidedUpperTail`, `binomialCoefficient`
+and `logBinomialCoefficient`), exact and summed in log space.

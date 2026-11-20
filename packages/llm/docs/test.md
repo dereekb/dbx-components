@@ -85,10 +85,11 @@ scripts make no network call, and the lane's helpers answer `undefined` while it
   blank variable is unset. In this repo `LLM_LIVE_SPECS` is an Nx test input (`liveSpecFlags` in `nx.json`), so toggling it never replays a cached run; a host repo declares its own. The verdict
   codecs (`llmCredentialVerdictFromEnv`, `toLlmQuotaVerdictEnv`, …) and `parseLlmQuotaMaxUsed` are exported for hosts
   that wire their own.
-- **A/B regression gate.** `computeLlmAbRegressionVerdict({ controlHits, controlTrials, treatmentHits, treatmentTrials })`
-  runs a one-sided Fisher exact test at `LLM_AB_REGRESSION_ALPHA` (0.05). A raw count comparison's false-positive rate
-  climbs toward 50% as trials grow; this one stays under alpha. It only looks for the treatment arm being worse:
-  `regressed: false` means "not shown to regress", never "shown equivalent".
+- **A/B regression gate.** The gate lives in `@dereekb/util`: `abRegressionVerdict({ controlHits, controlTrials,
+  treatmentHits, treatmentTrials })` runs a one-sided Fisher exact test (`fisherExactOneSidedUpperTail`) at
+  `DEFAULT_AB_REGRESSION_ALPHA` (0.05), computed in log space so large arms do not overflow. A raw count comparison's
+  false-positive rate climbs toward 50% as trials grow; this one stays under alpha. It only looks for the treatment arm
+  being worse: `regressed: false` means "not shown to regress", never "shown equivalent".
 
 ```ts
 // llm.live.lane.ts — the host's one lane

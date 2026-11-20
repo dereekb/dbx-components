@@ -3,10 +3,10 @@
  * answer builders (`makeLlmDecisionChoiceAnswer`, `makeLlmDecisionScoreAnswer`, `makeLlmDecisionNoulAnswer`), the fakes
  * (`makeLlmFetchFake` + `readLlmFetchFakeHeader` for the fetch seam, `makeLlmOpenAiChatClientFake` for the
  * OpenAI-compatible chat client, `makeLlmCompletionAdapterFake`, `makeLlmDispatcherFake`, the `/systemone` wire fake),
- * and the billed live lane (live strategy, credential / quota gate setup, verdict codecs, A/B gate).
+ * and the billed live lane (live strategy, credential / quota gate setup, verdict codecs). The A/B regression gate a
+ * billed instrument fails on lives in `@dereekb/util` (`abRegressionVerdict`).
  * Node-only, and free of any vitest import, so a plain Node harness (a benchmark CLI) can use it too.
  */
-export * from './llm.test.ab';
 export * from './llm.test.adapter';
 export * from './llm.test.chat';
 export * from './llm.test.decision.answer';
