@@ -36,9 +36,13 @@ export interface LlmOpenAiChatClientConfig {
  *
  * - `maxRetries: 0` — the DISPATCHER owns retries; the SDK's default of 2 silent retries would triple the worst-case
  *   wall time of a hung call before the dispatcher ever saw it. The per-request abort signal is the hard wall.
- * - `organization` / `project` are `null` so the SDK never fills them from `OPENAI_ORG_ID` / `OPENAI_PROJECT_ID`:
- *   the library reads no environment, and those ids must not reach a third-party gateway. A host that needs them
- *   injects its own client.
+ * - `apiKey` and `baseURL` are always passed and `organization` / `project` are `null`, so the SDK never fills them from
+ *   `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `OPENAI_ORG_ID` or `OPENAI_PROJECT_ID`: the key and endpoint are the host's, and
+ *   those ids must not reach a third-party gateway.
+ * - The SDK still reads two variables on Node. `OPENAI_CUSTOM_HEADERS` becomes default headers on every request this
+ *   client sends, to whatever gateway `baseUrl` names; no option of a key + base-URL client turns that read off.
+ *   `OPENAI_LOG` sets the SDK's log level (this client passes no `logLevel`). A host that needs org / project ids or
+ *   controlled headers injects its own client, built with `maxRetries: 0`.
  * - `dangerouslyAllowBrowser` is `true` only when set `true` (the browser rule: user-held keys only); the SDK reads
  *   it with `!`, so `false` is the same as absent.
  *

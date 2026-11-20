@@ -26,8 +26,9 @@ dependency, and its browser entries run unchanged in a browser, a worker or Node
 The root, `/decision`, `/craft`, `/openai`, `/openrouter` and `/zenmux` entries are browser-safe:
 
 - They import no `node:` module or Node builtin and never read `process`. Hosts pass configuration (API keys, base
-  URLs, model lists) in; nothing is read from the environment. Reading the environment or the file system is the job
-  of `/node`.
+  URLs, model lists) in, and llm's own code reads nothing from the environment; reading the environment or the file
+  system is the job of `/node`. The one read llm cannot switch off is the `openai` SDK's own: on Node it reads
+  `OPENAI_CUSTOM_HEADERS` and `OPENAI_LOG` for every client `/openai` builds (see [openai](docs/openai.md)).
 - No core module imports craft (lint pins it), so a host that never imports `/craft` never loads it.
 - A browser network failure (Chromium's `Failed to fetch`, Firefox's `NetworkError when attempting to fetch
   resource.`, Safari's `Load failed`) is classified like undici's `fetch failed`: transient.

@@ -4,7 +4,8 @@ Entry: `@dereekb/llm/zenmux` · [← @dereekb/llm](../README.md)
 
 ZenMux is a gateway: its chat rides the `/openai` transport, and this entry holds everything else — the account (cost
 basis, quota status, per-call bills, the credential probe) and the decision route `POST {baseUrl}/systemone`. It talks
-plain `fetch`, so it needs no SDK, and never reads the environment: the host passes every key in.
+plain `fetch`, so it needs no SDK, and never reads the environment: the host passes every key in. ZenMux chat is
+`/openai`'s transport pointed at ZenMux, so the `openai` SDK's own environment reads apply to it ([openai](openai.md)).
 
 - **Three credentials.** The SUBSCRIPTION inference key covers chat, decisions and the probe. The PAY-AS-YOU-GO
   inference key covers bills, and reads every call's bill, the subscription's included. The MANAGEMENT API key
