@@ -43,7 +43,9 @@ correction / backoff vocabulary with its constants.
   reply replays as `degenerateThreadPlaceholder`. `makeLlmPromptChain` works over it unchanged: the root renders its
   live context once, and each follow-up sends only the lead and the changed blocks.
 - **Records and taps.** `recorder.recordCallStart` fires before the send, `recordCall` once per execution, and
-  `recordDecodeFailure` once when any decode row exists. The recorder gets the full record and owns any capture gate.
+  `recordDecodeFailure` once when any decode row exists. The recorder gets the full in-memory record and owns any
+  capture gate: persist `toLlmCallLogPayload(record, { keepIo, keepPhases })` (the flat row every reader and the tape
+  read). A raw record nests its result, so it folds to zero usage and an empty tape.
   `taps` (held by reference) get `onDispatch`, `onDecodeFailure` and `onDispatchComplete` with the same record object.
   A decision records through the same recorder and fires `onDispatch` / `onDispatchComplete` (never
   `onDecodeFailure`); `event.decision` marks it on both events. `onGap` gets `prompt-raw-json`, `critique-fail` and
@@ -65,7 +67,7 @@ correction / backoff vocabulary with its constants.
   [Retry and lanes](#retry-and-lanes) below.
 
 ```ts
-import { DEFAULT_LLM_MAX_OUTPUT_TOKENS, makeLlmSchemaValueValidator, makeLlmDispatcher, makeLlmStrategyRegistry, makeLlmTieredPromptTemplateResolver } from '@dereekb/llm';
+import { DEFAULT_LLM_MAX_OUTPUT_TOKENS, LLM_CALL_EVENT_TYPE, makeLlmSchemaValueValidator, makeLlmDispatcher, makeLlmStrategyRegistry, makeLlmTieredPromptTemplateResolver, toLlmCallLogPayload } from '@dereekb/llm';
 
 const dispatcher = makeLlmDispatcher({
   strategies: makeLlmStrategyRegistry([strategy]),
@@ -74,7 +76,10 @@ const dispatcher = makeLlmDispatcher({
   modelTiers: { fast: 'acme/fast', strong: 'acme/strong' },
   descriptorOf: (capability) => DESCRIPTORS[capability],
   templateResolver: makeLlmTieredPromptTemplateResolver({ tiers: [{ source: 'app', templates }] }),
-  recorder: { recordCall: (record) => log.write(record) }
+  recorder: {
+    // persist the flat row, never the record; keepIo also keeps the prompt and the reply, which a tape replays
+    recordCall: (record) => log.write({ type: LLM_CALL_EVENT_TYPE, payload: toLlmCallLogPayload(record, { keepIo: true }) })
+  }
 });
 
 const result = await dispatcher.dispatch({ capability: 'summarize', renderLiveContext, validate: makeLlmSchemaValueValidator(summarySchema) });

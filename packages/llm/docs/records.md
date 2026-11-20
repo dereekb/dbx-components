@@ -22,7 +22,7 @@ What a dispatcher records about each call, and the seams a host observes it thro
   low, structured output off, or nothing, with the reason); `applyLlmRetryLever` applies it.
 - **Call records.** `LlmCallRecord`, `LlmCallStartRecord`, `LlmDecodeFailureRecord` and their event-type tags. A host's
   own fields sit at the top level: pass them as `H`. `llmCallTelemetry` projects the per-call telemetry block.
-  `LlmCallLogPayload` is the persisted read-side view of a record (see
+  `LlmCallLogPayload` is the persisted read-side view of a record, and `toLlmCallLogPayload` writes it (see
   [Readers, ledger and reconcile](#readers-ledger-and-reconcile)). Each placed or cut supplement row
   (`LlmCallSupplement`) carries a `hash` and a `bytes` size; `bytes` counts UTF-16 code units (`.length`), not bytes,
   and keeps its name because the row is persisted (as does the craft cut reason `'max-bytes'`).
@@ -77,25 +77,34 @@ try {
 
 What a host persists for each call, the readers that read it back, and the math that turns the rows into spend.
 
-- **Persisted payload.** `LlmCallLogPayload<H>` is what a host's recorder writes for each `LlmCallRecord`: flat, every
-  field optional except `capability`, host fields (`H`) beside the library's, never nested. `decodeOutcome` and
-  `decodeStatus` are plain strings, since a logged row may name a value this build does not know. `text` is the MODEL's own
-  bytes (the pre-repair text), so a tape replays what the model said and the deterministic repair re-runs on replay.
+- **Persisted payload.** `toLlmCallLogPayload(record, { keepIo, keepPhases })` writes `LlmCallLogPayload` for each
+  `LlmCallRecord`: flat, every field optional except `capability`. It writes the library's keys only; a host places its
+  own (`H`) beside them in the payload, or on its event envelope. `decodeOutcome` and `decodeStatus` are plain strings,
+  since a logged row may name a value this build does not know. `text` is the MODEL's own bytes (the pre-repair text),
+  so a tape replays what the model said and the deterministic repair re-runs on replay. What it writes, in order, and
+  when (each key only when its value is present; a decision record's `stamp` keys lead):
 
-  | payload key(s) | from the `LlmCallRecord` |
-  |---|---|
-  | `capability`, `tier`, `decision`, `supplements` (only when non-empty), `reasoningOff`, `estimatedPromptTokens`, `phases` | the record's own fields |
-  | `strategyId`, `strategyKind`, `model`, `provider`, `usage`, `latencyMs`, `generationId`, `finishReason`, `repair` | `llmCallTelemetry(record.result)` |
-  | `attempts`, `validationErrors`, `decodeStatus`, `decodeOutcome`, `lengthCapped` | `record.result` |
-  | `promptSegments` (heavy; persisting it is the host's choice) | `record.segments` |
-  | `text` (heavy) | `record.result.repair?.originalText ?? record.result.text` |
-  | `failedAttempts` (heavy; only when non-empty) | `record.failedAttempts` |
-  | host fields | beside the library's, never nested |
+  | payload key(s) | from the `LlmCallRecord` | kept when |
+  |---|---|---|
+  | `capability` | `record.capability` | always |
+  | `promptSegments` | `record.segments` | `keepIo` |
+  | `text` | `record.result.repair?.originalText ?? record.result.text` | `keepIo` |
+  | `failedAttempts` | `record.failedAttempts` | `keepIo`, only when non-empty |
+  | `strategyId`, `strategyKind`, `model`, `provider`, `usage`, `latencyMs`, `generationId`, `finishReason`, `repair` | `llmCallTelemetry(record.result)` | always |
+  | `tier` | `record.tier` | always |
+  | `schemaEnforced`, `attempts`, `decodeStatus`, `decodeOutcome`, `lengthCapped` | `record.result` | always |
+  | `lever` | `record.result.valueJson` (the accepted reply value) | `keepIo` |
+  | `validationErrors` | `record.result` | always |
+  | `subject`, `decision` | the record's own fields | always |
+  | `supplements` | `record.supplements` | only when non-empty |
+  | `reasoningOff`, `estimatedPromptTokens` | the record's own fields | always |
+  | `phases` | `record.phases` | `keepPhases` |
 
 - **Readers.** `readLlmCallPrompt`, `readLlmCallPromptSegments` and `readLlmCallFailedAttempts` take `unknown` and
   answer on a persisted payload, a flat-`prompt` one (no segments), or an in-memory `LlmCallRecord`; a malformed field reads
   as `undefined`, never a throw. Never dereference `promptSegments` yourself — a flat row has only `prompt`, and the
-  prompt reader joins the segments when that is all there is.
+  prompt reader joins the segments when that is all there is. Every other reader, and the tape, reads the ROW: project
+  a record with `toLlmCallLogPayload` first.
   - `formatLlmCallAttempts(event, { repliesPointer })` returns the one-line retry summary of an `llm_call` event
     (`attempts 2 retried · #1 schema-validation: … → reasoning-low`, with ` (<repliesPointer>)` appended when given),
     or `undefined` for a clean call and for any other event.

@@ -5,28 +5,39 @@
  * choice to keep. Every reader in the library (`readLlmCallPrompt`, `readLlmCallFailedAttempts`, the bill reconcile,
  * the tape) reads this shape, so the write side and the read side cannot drift.
  *
- * THE MAPPING a recorder follows when it persists an {@link LlmCallRecord}:
+ * {@link toLlmCallLogPayload}`(record, { keepIo, keepPhases })` writes the row, in this key order (a decision record's
+ * `stamp` keys lead it):
  *
- * | payload key(s) | from the record |
- * |---|---|
- * | `capability`, `tier`, `decision`, `supplements` (only when non-empty), `reasoningOff`, `estimatedPromptTokens`, `phases` | the record's own fields |
- * | `strategyId`, `strategyKind`, `model`, `provider`, `usage`, `latencyMs`, `generationId`, `finishReason`, `repair` | `llmCallTelemetry(record.result)` |
- * | `attempts`, `validationErrors`, `decodeStatus`, `decodeOutcome`, `lengthCapped` | `record.result` |
- * | `promptSegments` (heavy; persisting it is the host's choice) | `record.segments` |
- * | `text` (heavy) | `record.result.repair?.originalText ?? record.result.text` — the MODEL's bytes |
- * | `failedAttempts` (heavy; only when non-empty) | `record.failedAttempts` |
- * | host fields | beside the library's, never nested |
+ * | payload key(s) | from the record | kept when |
+ * |---|---|---|
+ * | `capability` | `record.capability` | always |
+ * | `promptSegments` | `record.segments` | `keepIo` |
+ * | `text` | `record.result.repair?.originalText ?? record.result.text` — the MODEL's bytes | `keepIo` |
+ * | `failedAttempts` | `record.failedAttempts` | `keepIo`, and only when non-empty |
+ * | `strategyId`, `strategyKind`, `model`, `provider`, `usage`, `latencyMs`, `generationId`, `finishReason`, `repair` | `llmCallTelemetry(record.result)` | always |
+ * | `tier` | `record.tier` | always |
+ * | `schemaEnforced`, `attempts`, `decodeStatus`, `decodeOutcome`, `lengthCapped` | `record.result` | always |
+ * | `lever` | `record.result.valueJson` — the accepted reply value | `keepIo` |
+ * | `validationErrors` | `record.result` | always |
+ * | `subject`, `decision` | the record's own fields | always |
+ * | `supplements` | `record.supplements` | only when non-empty |
+ * | `reasoningOff`, `estimatedPromptTokens` | the record's own fields | always |
+ * | `phases` | `record.phases` | `keepPhases` |
+ *
+ * Every key is written only when its value is present. The projector writes no host field: a host places its own,
+ * either in the payload (the `H` of {@link LlmCallLogPayload}) or on its event envelope.
  *
  * `text` is the model's own bytes, not the repaired reply: a tape built from the row then replays what the model said,
  * and the deterministic repair re-runs on replay.
  */
 
-import type { Milliseconds, Count } from '@dereekb/util';
+import { filterMaybeValues, type Maybe, type Milliseconds, type Count } from '@dereekb/util';
 import type { LlmCapabilityKey, LlmModelId, LlmModelTierKey, LlmStrategyId, LlmTokenCount, LlmGenerationId } from '../model/llm.value';
 import type { LlmPromptSegment } from '../prompt/llm.prompt.segment';
-import type { LlmReplyRepairSummary } from '../strategy/llm.strategy';
+import type { LlmDispatchResult, LlmReplyRepairSummary } from '../strategy/llm.strategy';
 import type { LlmUsage } from '../strategy/llm.usage';
-import type { LlmCallFailedAttempt, LlmCallHostFields, LlmCallPhases, LlmCallSupplement } from './llm.call.record';
+import type { LlmCallFailedAttempt, LlmCallHostFields, LlmCallPhases, LlmCallRecordBase, LlmCallSupplement } from './llm.call.record';
+import { llmCallTelemetry, type LlmCallTelemetry } from './llm.call.telemetry';
 import { type LlmDecisionKey } from '../decision/llm.decision.question';
 
 /**
@@ -172,5 +183,104 @@ export interface LlmCallLogPayloadBase {
 /**
  * A persisted call payload: the library's fields ({@link LlmCallLogPayloadBase}) beside the host's own fields `H`
  * (attribution, correlation ids, a routing reason), never nested — the same extension rule as {@link LlmCallRecord}.
+ * The host fields are the host's to place: {@link toLlmCallLogPayload} writes the library's keys only.
  */
 export type LlmCallLogPayload<H extends LlmCallHostFields = LlmCallHostFields> = LlmCallLogPayloadBase & H;
+
+/**
+ * What {@link toLlmCallLogPayload} keeps of a completed call beyond its always-on telemetry.
+ */
+export interface LlmCallLogPayloadConfig {
+  /**
+   * Keep the heavy I/O — `promptSegments`, `text` (the MODEL's own bytes), a non-empty `failedAttempts` and the accepted
+   * reply value (`lever`). Default false: the row keeps only the bounded telemetry.
+   */
+  readonly keepIo?: Maybe<boolean>;
+  /**
+   * Keep the `phases` block (it exists only when the dispatch's call context timed). Default false.
+   */
+  readonly keepPhases?: Maybe<boolean>;
+}
+
+/**
+ * Exactly what {@link toLlmCallLogPayload} writes: the library's keys, composed from the record, the telemetry block
+ * and the result, so a renamed or retyped source field fails here. A decision record's `stamp` keys ride in front at
+ * runtime and are not typed. The read side is {@link LlmCallLogPayloadBase}; `llm.call.payload.spec.ts` checks the two.
+ */
+export type LlmCallLogPayloadWrite = Pick<LlmCallRecordBase, 'capability' | 'tier' | 'subject' | 'decision' | 'supplements' | 'reasoningOff' | 'estimatedPromptTokens' | 'phases' | 'failedAttempts'> &
+  LlmCallTelemetry &
+  Pick<LlmDispatchResult, 'schemaEnforced' | 'attempts' | 'decodeStatus' | 'decodeOutcome' | 'lengthCapped' | 'validationErrors'> & {
+    /**
+     * The prompt as its provenance-tagged segments ({@link LlmCallRecordBase.segments}) — written under `keepIo`.
+     */
+    readonly promptSegments?: LlmCallRecordBase['segments'];
+    /**
+     * The MODEL's own reply bytes (`result.repair?.originalText ?? result.text`) — written under `keepIo`.
+     */
+    readonly text?: LlmDispatchResult['text'];
+    /**
+     * The accepted reply value ({@link LlmDispatchResult.valueJson}), under the row key existing logs already carry —
+     * written under `keepIo`.
+     */
+    readonly lever?: LlmDispatchResult['valueJson'];
+  };
+
+/**
+ * Project a completed call's in-memory {@link LlmCallRecord} into the flat row a host persists under
+ * {@link LLM_CALL_EVENT_TYPE}. Persist this, never the record: every `usage/` reader (the usage cell, the bill
+ * reconcile, the attempt summary) and the tape read the flat row, so a raw record — whose result is nested — folds to
+ * zero usage and replays as an empty tape.
+ *
+ * The bounded telemetry is always kept. `keepIo` adds the heavy I/O (`promptSegments`, `text`, a non-empty
+ * `failedAttempts`, and the accepted reply value as `lever`); `keepPhases` adds the `phases` timing block. Every key
+ * is written only when its value is present (`false` and `0` are kept), `supplements` only when non-empty, and in the
+ * order the module table lists. A decision record's `stamp` keys lead the row and never override a library key.
+ *
+ * `text` is the MODEL's own bytes, not the repaired reply, so a tape built from the row replays what the model said
+ * and the deterministic repair re-runs on replay.
+ *
+ * The row carries the library's keys only: a host field of an `LlmCallRecord<H>` is never copied. The host places its
+ * own, either in the payload (the `H` of {@link LlmCallLogPayload}) or on its event envelope.
+ *
+ * @param record - The completed call, as the dispatcher hands it to `recorder.recordCall`.
+ * @param config - What to keep beyond the bounded telemetry; both gates default to off.
+ * @returns The flat row to persist.
+ *
+ * @example
+ * ```ts
+ * recorder: {
+ *   recordCall: (record) => log.write({ type: LLM_CALL_EVENT_TYPE, payload: toLlmCallLogPayload(record, { keepIo: true }) })
+ * }
+ * ```
+ */
+export function toLlmCallLogPayload(record: LlmCallRecordBase, config?: Maybe<LlmCallLogPayloadConfig>): LlmCallLogPayloadWrite {
+  const { result, failedAttempts, supplements } = record;
+  const keepIo = config?.keepIo === true;
+  const keepPhases = config?.keepPhases === true;
+  // the stamp spreads FIRST so it can never override a library key; every library key is picked by name, so a host
+  // field of an `LlmCallRecord<H>` never leaks into the row
+  return {
+    ...record.stamp,
+    ...filterMaybeValues({
+      capability: record.capability,
+      promptSegments: keepIo ? record.segments : undefined,
+      text: keepIo ? (result.repair?.originalText ?? result.text) : undefined,
+      failedAttempts: keepIo && failedAttempts != null && failedAttempts.length > 0 ? failedAttempts : undefined,
+      ...llmCallTelemetry(result),
+      tier: record.tier,
+      schemaEnforced: result.schemaEnforced,
+      attempts: result.attempts,
+      decodeStatus: result.decodeStatus,
+      decodeOutcome: result.decodeOutcome,
+      lengthCapped: result.lengthCapped,
+      lever: keepIo ? result.valueJson : undefined,
+      validationErrors: result.validationErrors,
+      subject: record.subject,
+      decision: record.decision,
+      supplements: supplements != null && supplements.length > 0 ? supplements : undefined,
+      reasoningOff: record.reasoningOff,
+      estimatedPromptTokens: record.estimatedPromptTokens,
+      phases: keepPhases ? record.phases : undefined
+    })
+  };
+}

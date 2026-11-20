@@ -377,8 +377,8 @@ function stringOf(value: unknown): Maybe<string> {
  * prompt and a JSON `text` too, and a text tape would otherwise serve its answer set to whichever completion hashed
  * next.
  *
- * It reads a persisted payload (`LlmCallLogPayload`): an in-memory `LlmCallRecord` has no top-level `text`, so a host
- * maps it to its persisted shape first. A host keeps its own extras by spreading, e.g.
+ * It reads a persisted payload (`LlmCallLogPayload`): an in-memory `LlmCallRecord` has no top-level `text`, so project
+ * it with `toLlmCallLogPayload(record, { keepIo: true })` first. A host keeps its own extras by spreading, e.g.
  * `{ ...turn, prompt: readLlmCallPrompt(payload) }`.
  *
  * @param payload - The `llm_call` payload (or anything).

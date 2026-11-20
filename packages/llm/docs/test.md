@@ -17,7 +17,8 @@ scripts make no network call, and the lane's helpers answer `undefined` while it
   a host swallows the throw) feed a report; `isLlmTapeStrategyError` checks the shape, not the prototype.
   `readLlmTapeTurn(payload, { decisionStrategyKinds, hash })` turns one persisted `llm_call` payload into a turn (pass
   the same `hash` the tape strategy uses), and answers `undefined` for a capture-off row, a decision row or a
-  non-object.
+  non-object. It reads a row written with `toLlmCallLogPayload(record, { keepIo: true })`; a row without I/O has no
+  prompt or text and reads as `undefined`.
 - **Scripted completions.** `makeLlmScriptedStrategy` answers each call from `respond(request, call)`, else
   `byCapability[capability]` (a reply or a list with its own counter), else `replies` (in order). A list repeats its
   last entry once spent; an empty list is no reply, and a call nothing answers throws, naming the id, capability and
