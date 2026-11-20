@@ -166,19 +166,19 @@ export interface ZoomRateLimitHeaderDetails {
   /**
    * Total limit in a given period.
    */
-  readonly limit?: number;
+  readonly limit?: number | undefined;
   /**
    * Total number of remaining allowed requests.
    */
-  readonly remaining?: number;
+  readonly remaining?: number | undefined;
   /**
    * The time at which the rate limit will reset.
    */
-  readonly retryAfter?: UnixDateTimeMillisecondsNumber;
+  readonly retryAfter?: UnixDateTimeMillisecondsNumber | undefined;
   /**
    * The time at which the rate limit will reset.
    */
-  readonly retryAfterAt?: Date;
+  readonly retryAfterAt?: Date | undefined;
 }
 
 /**

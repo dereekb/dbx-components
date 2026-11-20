@@ -13,7 +13,7 @@ export interface DbxListTitleGroupData<O extends PrimativeKey> {
   /**
    * Optional icon to show at the left.
    */
-  readonly icon?: string;
+  readonly icon?: string | undefined;
   readonly title: string;
   readonly hint?: string;
   /**

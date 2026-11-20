@@ -100,8 +100,8 @@ export function firebaseStorageClientAccessorFile(storage: ClientFirebaseStorage
   const ref = firebaseStorageRefForStorageFilePath(storage, storagePath);
 
   interface ConfigureMetadataOptions {
-    readonly metadata?: ConfigurableStorageMetadata;
-    readonly customMetadata?: StorageCustomMetadata;
+    readonly metadata?: ConfigurableStorageMetadata | undefined;
+    readonly customMetadata?: StorageCustomMetadata | undefined;
   }
 
   function _configureMetadata(options: ConfigureMetadataOptions): UploadMetadata {
@@ -218,7 +218,7 @@ export type FirebaseStorageClientAccessorFolder = FirebaseStorageAccessorFolder<
  */
 export interface FirebaseStorageClientListResult {
   listResult: ListResult;
-  options?: StorageListFilesOptions;
+  options?: StorageListFilesOptions | undefined;
 }
 
 /**
@@ -283,7 +283,7 @@ export function firebaseStorageClientAccessorFolder(storage: ClientFirebaseStora
     storagePath,
     exists: () => folder.list({ maxResults: 1 }).then((x) => x.hasItems()),
     list: async (options?: StorageListFilesOptions) => {
-      const rootResults = await list(ref, options).then((listResult) => firebaseStorageClientListFilesResultFactory({ storage, folder, options }, { options, listResult }));
+      const rootResults = await list(ref, options ? filterUndefinedValues({ maxResults: options.maxResults, pageToken: options.pageToken }) : undefined).then((listResult) => firebaseStorageClientListFilesResultFactory({ storage, folder, options }, { options, listResult }));
       let result: StorageListFilesResult;
 
       if (options?.includeNestedResults) {

@@ -172,7 +172,7 @@ export interface ReadUserExternalConnectionDataResult {
   /**
    * The values, keyed provider type → data type → item key. Absent with `keysOnly`.
    */
-  readonly data?: UserExternalConnectionDataMap;
+  readonly data?: UserExternalConnectionDataMap | undefined;
   /**
    * A summary of every matching item.
    */

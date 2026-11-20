@@ -425,7 +425,7 @@ export interface IterateFirestoreDocumentSnapshotCheckpointsConfig<T, R> {
    * Set explicitly to override the default — e.g., `false` to cache a function's result,
    * or `true` to force re-evaluation of a memoized getter.
    */
-  readonly dynamicConstraints?: boolean;
+  readonly dynamicConstraints?: boolean | undefined;
   /**
    * Maximum number of documents to fetch per checkpoint (Firestore query `limit`).
    *
@@ -451,7 +451,7 @@ export interface IterateFirestoreDocumentSnapshotCheckpointsConfig<T, R> {
    * (via `iterateCheckpoint`) can overlap, though checkpoint *fetching* remains
    * sequential since each query depends on the previous checkpoint's cursor.
    */
-  readonly maxParallelCheckpoints?: number;
+  readonly maxParallelCheckpoints?: number | undefined;
   /**
    * Minimum delay in milliseconds between initiating consecutive checkpoint queries.
    *
@@ -459,7 +459,7 @@ export interface IterateFirestoreDocumentSnapshotCheckpointsConfig<T, R> {
    * in parallel, this ensures at least this much time passes between starting each
    * new query.
    */
-  readonly waitBetweenCheckpoints?: Milliseconds;
+  readonly waitBetweenCheckpoints?: Milliseconds | undefined;
   /**
    * Strategy for handling repeat cursor documents, which can indicate an infinite loop.
    *
@@ -483,7 +483,7 @@ export interface IterateFirestoreDocumentSnapshotCheckpointsConfig<T, R> {
    * in multiple checkpoints. Combine with `handleRepeatCursor` to properly terminate
    * iteration when filtering causes repeated cursors.
    */
-  readonly filterCheckpointSnapshots?: IterateFirestoreDocumentSnapshotCheckpointsFilterCheckpointSnapshotsFunction<T>;
+  readonly filterCheckpointSnapshots?: IterateFirestoreDocumentSnapshotCheckpointsFilterCheckpointSnapshotsFunction<T> | undefined;
   /**
    * Core callback invoked once per checkpoint with the (optionally filtered) document snapshots.
    *
@@ -783,7 +783,7 @@ export async function iterateFirestoreDocumentSnapshotCheckpoints<T, R>(config: 
 
   const performTaskFn = performTasksFromFactoryInParallelFunction({
     maxParallelTasks: maxParallelCheckpoints,
-    waitBetweenTasks: waitBetweenCheckpoints,
+    ...(waitBetweenCheckpoints != null ? { waitBetweenTasks: waitBetweenCheckpoints } : {}),
     taskFactory: async ({ i, docQuerySnapshot }: { i: IndexNumber; docQuerySnapshot: QuerySnapshot<T> }) => {
       const docSnapshots = await filterCheckpointSnapshot(docQuerySnapshot.docs);
       const results = await iterateCheckpoint(docSnapshots, docQuerySnapshot);

@@ -87,7 +87,7 @@ export interface CreateOidcClientResult extends OnCallCreateModelResult {
    * secret-less methods `private_key_jwt` and `none` (public PKCE client) — those clients never
    * have a secret to return.
    */
-  readonly client_secret?: string;
+  readonly client_secret?: string | undefined;
 }
 
 // MARK: Update

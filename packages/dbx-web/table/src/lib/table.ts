@@ -143,7 +143,7 @@ export interface DbxTableViewDelegate<I = unknown, C = unknown, T = unknown, G =
    *
    * @param item
    */
-  columnFooter?(column: DbxTableColumn<C>): Maybe<DbxInjectionComponentConfig<any>>;
+  columnFooter?: ((column: DbxTableColumn<C>) => Maybe<DbxInjectionComponentConfig<any>>) | undefined;
   /**
    * Item header view (left-most column for an item row) configuration for a specific item.
    *

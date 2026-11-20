@@ -311,14 +311,14 @@ export interface OptionalFirestoreFieldConfig<V, D> {
    * This check occurs **before** the value is transformed to Firestore data format.
    * Can be a specific value (compared with `===`) or a decision function.
    */
-  readonly dontStoreValueIf?: V | DecisionFunction<V>;
+  readonly dontStoreValueIf?: V | DecisionFunction<V> | undefined;
   /**
    * Removes the value from the object if the decision returns true.
    *
    * This check occurs **after** the value is transformed to Firestore data format.
    * Can be a specific value (compared with `===`) or a decision function.
    */
-  readonly dontStoreIf?: D | DecisionFunction<D>;
+  readonly dontStoreIf?: D | DecisionFunction<D> | undefined;
   /**
    * Default data value to return when the field is missing from the Firestore document.
    *
@@ -327,7 +327,7 @@ export interface OptionalFirestoreFieldConfig<V, D> {
    *
    * If using a getter, the getter is invoked each time to ensure fresh copies.
    */
-  readonly defaultReadValue?: GetterOrValue<D>;
+  readonly defaultReadValue?: GetterOrValue<D> | undefined;
 }
 
 /**
@@ -341,7 +341,7 @@ export interface OptionalOneTypeFirestoreFieldConfig<T> extends OptionalFirestor
    *
    * This is ignored if defaultReadValue is not set or if dontStoreIf is provided.
    */
-  readonly dontStoreDefaultReadValue?: boolean;
+  readonly dontStoreDefaultReadValue?: boolean | undefined;
 }
 
 /**
@@ -358,7 +358,7 @@ export interface OptionalFirestoreFieldConfigWithTwoTypeTransform<V, D> extends 
    *
    * Overrides transformData.
    */
-  readonly transformFromData?: MapFunction<D, V>;
+  readonly transformFromData?: MapFunction<D, V> | undefined;
   /**
    * (Optional) Transform function that is only used before the data is stored to Firestore.
    *
@@ -366,7 +366,7 @@ export interface OptionalFirestoreFieldConfigWithTwoTypeTransform<V, D> extends 
    *
    * Overrides transformData.
    */
-  readonly transformToData?: MapFunction<V, Maybe<D>>;
+  readonly transformToData?: MapFunction<V, Maybe<D>> | undefined;
 }
 
 /**
@@ -380,7 +380,7 @@ export interface OptionalFirestoreFieldConfigWithOneTypeTransform<T> extends Opt
    *
    * This is used as the default for transformToData, and transformToData.
    */
-  readonly transformData?: MapFunction<T, T>;
+  readonly transformData?: MapFunction<T, T> | undefined;
 }
 
 /**
@@ -436,7 +436,7 @@ export function optionalFirestoreField<V, D = V>(config?: unknown): FirestoreMod
   if (config) {
     const inputConfig = config as OptionalFirestoreFieldConfigWithOneTypeTransform<V>;
     const { dontStoreDefaultReadValue, dontStoreValueIf: inputDontStoreValueIf, transformData: inputTransformData } = inputConfig; // might be defined.
-    const { defaultReadValue: inputDefaultReadValue, dontStoreIf: inputDontStoreIf, transformFromData, transformToData } = inputConfig as OptionalFirestoreFieldConfigWithTwoTypeTransform<V, D>;
+    const { defaultReadValue: inputDefaultReadValue, dontStoreIf: inputDontStoreIf, transformFromData, transformToData } = config as OptionalFirestoreFieldConfigWithTwoTypeTransform<V, D>;
 
     const transformData = inputTransformData ?? passThrough;
     const transformFrom = (transformFromData ?? transformData) as MapFunction<D, V>;
@@ -2450,7 +2450,7 @@ export function firestoreDateCellRange() {
  */
 export function firestoreDateCellRangeArray(sort: boolean = true) {
   return firestoreObjectArray({
-    sortWith: sort ? sortAscendingIndexNumberRefFunction() : undefined,
+    ...(sort ? { sortWith: sortAscendingIndexNumberRefFunction() } : {}),
     firestoreField: firestoreDateCellRange()
   });
 }

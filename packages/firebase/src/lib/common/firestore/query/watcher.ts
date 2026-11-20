@@ -194,7 +194,7 @@ export function iterationQueryDocChangeWatcher<T = unknown>(config: IterationQue
       const changes = event.docChanges();
 
       return build({
-        base: groupValues(changes, (x) => x.type) as Building<IterationQueryDocChangeWatcherEvent<T>>,
+        base: groupValues<DocumentChange<T>, IterationQueryDocChangeWatcherChangeGroup<T>, DocumentChange<T>['type']>(changes, (x) => x.type) as Building<IterationQueryDocChangeWatcherEvent<T>>,
         build: (x) => {
           x.time = new Date();
           x.changes = changes;

@@ -106,8 +106,12 @@ export interface MapboxFitBounds {
   eventData?: MapboxEventData;
 }
 
-export interface MapboxJumpToPositionOptions extends Omit<MapboxGl.CameraOptions, 'center'> {
+export interface MapboxJumpToPositionOptions extends Omit<MapboxGl.CameraOptions, 'center' | 'zoom'> {
   center: LatLngPointInput;
+  /**
+   * Target zoom level. An undefined zoom keeps the current zoom.
+   */
+  zoom?: MapboxGl.CameraOptions['zoom'] | undefined;
 }
 
 export interface MapboxJumpTo {
@@ -116,7 +120,7 @@ export interface MapboxJumpTo {
   eventData?: MapboxEventData;
 }
 
-export interface MapboxEaseToPositionOptions extends Omit<MapboxEaseToOptions, 'center'>, MapboxJumpToPositionOptions {}
+export interface MapboxEaseToPositionOptions extends Omit<MapboxEaseToOptions, 'center' | 'zoom'>, MapboxJumpToPositionOptions {}
 
 export interface MapboxEaseTo {
   center?: LatLngPointInput;
@@ -124,7 +128,7 @@ export interface MapboxEaseTo {
   eventData?: MapboxEventData;
 }
 
-export interface MapboxFlyToPositionOptions extends Omit<MapboxFlyToOptions, 'center'>, MapboxJumpToPositionOptions {}
+export interface MapboxFlyToPositionOptions extends Omit<MapboxFlyToOptions, 'center' | 'zoom'>, MapboxJumpToPositionOptions {}
 
 export interface MapboxFlyTo {
   center?: LatLngPointInput;

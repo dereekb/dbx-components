@@ -177,7 +177,7 @@ export interface DiscoverOidcMetadataInput {
    * — e.g. when the issuer is reached via a different host than the API and the origin-rooted
    * candidate would target the wrong host.
    */
-  readonly fallbackBaseUrl?: string;
+  readonly fallbackBaseUrl?: string | undefined;
 }
 
 export interface ExchangeAuthorizationCodeInput extends OidcClientAuthInput {
@@ -202,7 +202,7 @@ export interface RefreshAccessTokenInput extends OidcClientAuthInput {
 export interface RevokeTokenInput extends OidcClientAuthInput {
   readonly revocationEndpoint: string;
   readonly token: string;
-  readonly tokenTypeHint?: 'access_token' | 'refresh_token';
+  readonly tokenTypeHint?: 'access_token' | 'refresh_token' | undefined;
 }
 
 export interface FetchUserInfoInput {
@@ -310,7 +310,7 @@ export interface BuildAuthorizationUrlInput {
   /**
    * Space-separated scope list. Defaults to {@link DEFAULT_OIDC_RELYING_PARTY_SCOPE}.
    */
-  readonly scopes?: string;
+  readonly scopes?: string | undefined;
   readonly state: string;
   readonly codeChallenge: string;
   /**
@@ -507,12 +507,12 @@ export interface ParseAuthorizationRedirectInput {
   /**
    * Optional state value to assert against the redirect's `state` when present.
    */
-  readonly expectedState?: string;
+  readonly expectedState?: string | undefined;
 }
 
 export interface ParsedAuthorizationRedirect {
   readonly code: string;
-  readonly state?: string;
+  readonly state?: string | undefined;
 }
 
 /**

@@ -90,7 +90,7 @@ export interface StorageSignedDownloadUrlConfig {
   readonly contentType?: ContentTypeMimeType;
   readonly extensionHeaders?: Record<string, ArrayOrValue<string>>;
   readonly promptSaveAs?: string;
-  readonly responseDisposition?: ContentDispositionString;
+  readonly responseDisposition?: ContentDispositionString | undefined;
   readonly responseType?: ContentTypeMimeType;
   readonly queryParams?: Record<string, string>;
 }
@@ -318,27 +318,27 @@ export interface ConfigurableStorageMetadata {
   /**
    * Served as the 'Cache-Control' header on object download.
    */
-  readonly cacheControl?: string;
+  readonly cacheControl?: string | undefined;
   /**
    * Served as the 'Content-Disposition' header on object download.
    */
-  readonly contentDisposition?: string;
+  readonly contentDisposition?: string | undefined;
   /**
    * Served as the 'Content-Encoding' header on object download.
    */
-  readonly contentEncoding?: string;
+  readonly contentEncoding?: string | undefined;
   /**
    * Served as the 'Content-Language' header on object download.
    */
-  readonly contentLanguage?: string;
+  readonly contentLanguage?: string | undefined;
   /**
    * Served as the 'Content-Type' header on object download.
    */
-  readonly contentType?: string;
+  readonly contentType?: string | undefined;
   /**
    * Any user-specified custom metdata.
    */
-  readonly customMetadata?: StorageCustomMetadata;
+  readonly customMetadata?: StorageCustomMetadata | undefined;
 }
 
 /**
@@ -387,7 +387,7 @@ export interface StorageMetadata extends ConfigurableStorageMetadata {
   /**
    * A Base64-encoded MD5 hash of the object being uploaded.
    */
-  readonly md5Hash?: string;
+  readonly md5Hash?: string | undefined;
 }
 
 /**

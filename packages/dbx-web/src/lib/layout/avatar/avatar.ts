@@ -64,7 +64,7 @@ export interface DbxAvatarContext {
   /**
    * The avatar style.
    */
-  readonly style?: DbxAvatarStyle;
+  readonly style?: Maybe<DbxAvatarStyle>;
   /**
    * Icon name to use for the fallback avatar when no image is provided.
    */

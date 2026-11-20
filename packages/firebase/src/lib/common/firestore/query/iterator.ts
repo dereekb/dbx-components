@@ -62,7 +62,7 @@ export interface FirestoreItemPageIterationBaseConfig<T> extends QueryLikeRefere
    *
    * @default 50
    */
-  readonly itemsPerPage?: number;
+  readonly itemsPerPage?: number | undefined;
 }
 
 /**

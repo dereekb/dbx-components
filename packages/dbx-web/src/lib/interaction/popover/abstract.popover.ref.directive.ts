@@ -10,7 +10,7 @@ import { type NgPopoverCloseEvent, type NgPopoverRef } from 'ng-overlay-containe
  */
 @Directive()
 export abstract class AbstractPopoverRefDirective<T = unknown, R = unknown> {
-  private _popoverRef?: NgPopoverRef<T, R>;
+  private _popoverRef?: NgPopoverRef<T, R> | undefined;
 
   protected readonly _popoverSub = cleanSubscription();
 

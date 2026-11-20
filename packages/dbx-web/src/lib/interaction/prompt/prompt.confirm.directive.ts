@@ -16,8 +16,8 @@ import { DbxPromptConfirmDialogComponent } from './prompt.confirm.dialog.compone
 export abstract class AbstractPromptConfirmDirective implements DbxPromptConfirm {
   protected readonly matDialog = inject(MatDialog);
 
-  private _currentDialogRef?: MatDialogRef<DbxPromptConfirmDialogComponent, boolean>;
-  private _currentDialogPromise?: Promise<boolean>;
+  private _currentDialogRef?: MatDialogRef<DbxPromptConfirmDialogComponent, boolean> | undefined;
+  private _currentDialogPromise?: Promise<boolean> | undefined;
 
   protected abstract getDefaultDialogConfig(): Maybe<DbxPromptConfirmConfig>;
 

@@ -76,11 +76,11 @@ export interface DbxFilterComponentConfig<F extends object = object, P extends s
   /**
    * Custom filter component to initialize.
    */
-  readonly customFilterComponentClass?: Type<CF>;
+  readonly customFilterComponentClass?: Type<CF> | undefined;
   /**
    * Preset filter component to initialize.
    */
-  readonly presetFilterComponentClass?: Type<PF>;
+  readonly presetFilterComponentClass?: Type<PF> | undefined;
   /**
    * DbxInjectionComponentConfig for the custom filter component to initialize.
    */

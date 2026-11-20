@@ -10,7 +10,7 @@ export interface VapiApiWebhookEventVerificationConfig {
    *
    * If not defined, defaults to an empty string.
    */
-  readonly secret?: VapiAiWebhookSecretToken;
+  readonly secret?: Maybe<VapiAiWebhookSecretToken>;
   /**
    * Secret token to use for HMAC verification.
    *

@@ -18,10 +18,10 @@ export type DbxDialogContentConfig = Omit<MatDialogConfig, 'viewContainerRef' | 
  * ```
  */
 export function sanitizeDbxDialogContentConfig(input: Maybe<DbxDialogContentConfig>): DbxDialogContentConfig {
-  const panelClass = input?.panelClass;
+  const { panelClass, ...config } = input ?? {};
 
   return {
-    ...input,
-    panelClass: panelClass ? Array.from(cssClassesSet(input?.panelClass)) : undefined
+    ...config,
+    ...(panelClass ? { panelClass: Array.from(cssClassesSet(panelClass)) } : {})
   };
 }

@@ -22,7 +22,7 @@ import { type DocumentReference, type CollectionReference, type Transaction, typ
 import { type FirestoreAccessorIncrementUpdate, dataFromSnapshotStream, type FirestoreDocumentDataAccessor, type FirestoreDocumentUpdateParams, updateWithAccessorUpdateAndConverterFunction, type FirestoreAccessorStreamMode, snapshotStreamForAccessor, type FirestoreAccessorArrayUpdate } from './accessor';
 import { type CollectionReferenceRef, type DocumentReferenceRef, type FirestoreContextReference, type FirestoreDataConverterRef } from '../reference';
 import { type FirestoreDocumentContext } from './context';
-import { build, type Building, type Maybe } from '@dereekb/util';
+import { build, type Building, type Maybe, type PartialWithUndefined } from '@dereekb/util';
 import { type InterceptAccessorFactoryFunction } from './accessor.wrap';
 import { incrementUpdateWithAccessorFunction } from './increment';
 import { type FirestoreDataConverterFactory, type FirestoreDataConverterFactoryRef, type InterceptFirestoreDataConverterFactory } from './converter';
@@ -56,7 +56,7 @@ export interface FirestoreDocument<T, I extends FirestoreModelIdentity = Firesto
   snapshotData(options?: SnapshotOptions): Promise<Maybe<T>>;
   exists(): Promise<boolean>;
   create(data: T): Promise<WriteResult | void>;
-  update(data: Partial<T>): Promise<WriteResult | void>;
+  update(data: PartialWithUndefined<T>): Promise<WriteResult | void>;
   increment(data: FirestoreAccessorIncrementUpdate<T>): Promise<WriteResult | void>;
   arrayUpdate(data: FirestoreAccessorArrayUpdate<T>): Promise<WriteResult | void>;
 }
@@ -244,7 +244,7 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
    * @param params - Overrides applied to the update operation, if any.
    * @returns Resolves when the update completes.
    */
-  update(data: Partial<T>, params?: FirestoreDocumentUpdateParams): Promise<WriteResult | void> {
+  update(data: PartialWithUndefined<T>, params?: FirestoreDocumentUpdateParams): Promise<WriteResult | void> {
     return updateWithAccessorUpdateAndConverterFunction(this.accessor, this.converter)(data, params).then((result) => {
       this._cache.invalidate();
       return result;

@@ -53,7 +53,7 @@ export class DbxActionTransitionSafetyDirective<T, O> implements OnInit, OnDestr
 
   protected readonly _dbxActionTransitionSafetyUpdateEffect = effect(() => this._safetyType.next(this.dbxActionTransitionSafety()));
 
-  private _currentDialogRef?: MatDialogRef<DbxActionUIRouterTransitionSafetyDialogComponent, DbxActionTransitionSafetyDialogResult>;
+  private _currentDialogRef?: MatDialogRef<DbxActionUIRouterTransitionSafetyDialogComponent, DbxActionTransitionSafetyDialogResult> | undefined;
   private stopWatchingTransition?: () => void;
 
   private checkIsDestroyed(): boolean {

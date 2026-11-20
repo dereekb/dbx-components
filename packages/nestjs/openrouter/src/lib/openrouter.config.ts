@@ -21,7 +21,7 @@ export interface OpenRouterServiceApiConfig {
    * Maps to the SDK's `serverURL` option. When omitted the SDK's default
    * production server (`https://openrouter.ai/api/v1`) is used.
    */
-  readonly serverURL?: OpenRouterServerUrl;
+  readonly serverURL?: OpenRouterServerUrl | undefined;
 }
 
 /**

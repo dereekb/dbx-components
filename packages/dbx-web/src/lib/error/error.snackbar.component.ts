@@ -96,7 +96,7 @@ export class DbxErrorSnackbarComponent {
   static showErrorSnackbar(matSnackbar: MatSnackBar, error: ErrorInput, config?: DbxErrorSnackbarConfig) {
     matSnackbar.openFromComponent(DbxErrorSnackbarComponent, {
       ...config,
-      duration: undefined,
+      duration: 0, // never auto-dismiss; MatSnackBar only starts its timer for a duration above 0
       panelClass: [...asArray(config?.panelClass), 'dbx-error-snackbar'],
       data: {
         error,

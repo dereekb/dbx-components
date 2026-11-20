@@ -7,7 +7,7 @@ import { AbstractPopoverDirective } from '../popover/abstract.popover.directive'
 import { type DbxPopoverService } from '../popover/popover.service';
 import { type FilterSource, filterMaybe } from '@dereekb/rxjs';
 import { type DbxPopoverKey } from '../popover/popover';
-import { type DestroyFunction, type Maybe } from '@dereekb/util';
+import { type DestroyFunction, filterUndefinedValues, type Maybe } from '@dereekb/util';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { type DbxFilterComponentConfig } from './filter.config';
 import { DbxPopoverInteractionModule } from '../popover';
@@ -218,9 +218,7 @@ export class DbxFilterPopoverComponent<F extends object> extends AbstractPopover
       key: popoverKey ?? DEFAULT_FILTER_POPOVER_KEY,
       origin,
       componentClass: DbxFilterPopoverComponent,
-      width,
-      height,
-      isResizable,
+      ...filterUndefinedValues({ width, height, isResizable }),
       closeOnTransition: closeOnTransition ?? closesOnEveryFilterChange,
       data: {
         header,

@@ -118,7 +118,7 @@ export function mergeZoomOAuthAccessTokenCacheServices(inputServicesToMerge: Zoo
 
   const service: ZoomOAuthAccessTokenCacheService = {
     loadZoomAccessTokenCache: () => mergeCachesForService(allServiceAccessTokenCaches),
-    cacheForRefreshToken
+    ...(cacheForRefreshToken != null ? { cacheForRefreshToken } : {})
   };
 
   return service;

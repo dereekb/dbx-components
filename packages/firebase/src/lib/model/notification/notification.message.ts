@@ -261,7 +261,7 @@ export interface NotificationMessage<D extends NotificationItemMetadata = {}> {
   /**
    * Delivery control flag. When set to `NO_CONTENT` or `DO_NOT_SEND`, this message is skipped.
    */
-  readonly flag?: NotificationMessageFlag;
+  readonly flag?: NotificationMessageFlag | undefined;
   /**
    * Associated item used to generate the content.
    *
@@ -283,7 +283,7 @@ export interface NotificationMessage<D extends NotificationItemMetadata = {}> {
   /**
    * Content specific for a text.
    */
-  readonly textContent?: NotificationMessageContent;
+  readonly textContent?: NotificationMessageContent | undefined;
   /**
    * Content specific for notification summaries.
    */

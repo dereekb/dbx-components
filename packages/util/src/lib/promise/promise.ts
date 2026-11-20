@@ -142,7 +142,7 @@ export interface PerformAsyncTaskConfig<I = unknown> {
   /**
    * Optional function to use before a retry.
    */
-  readonly beforeRetry?: (value: I, tryNumber?: number) => void | Promise<void>;
+  readonly beforeRetry?: ((value: I, tryNumber?: number) => void | Promise<void>) | undefined;
 }
 
 /**

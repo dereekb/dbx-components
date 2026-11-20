@@ -1,6 +1,6 @@
 import { Service, inject } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { type ErrorInput, type Maybe, mergeObjects } from '@dereekb/util';
+import { type ErrorInput, type Maybe, mergeObjects, type PartialWithUndefined } from '@dereekb/util';
 import { DbxErrorSnackbarComponent, type DbxErrorSnackbarConfig } from './error.snackbar.component';
 
 /**
@@ -66,7 +66,7 @@ export class DbxErrorSnackbarService {
    * @param inputConfig - Optional per-call config. Its defined values override the default config.
    * @returns The opened snackbar reference.
    */
-  showSnackbarError(error: ErrorInput, inputConfig?: Maybe<DbxErrorSnackbarConfig>) {
+  showSnackbarError(error: ErrorInput, inputConfig?: Maybe<PartialWithUndefined<DbxErrorSnackbarConfig>>) {
     const config: DbxErrorSnackbarConfig = mergeObjects<DbxErrorSnackbarConfig>([this._defaultConfig, inputConfig]);
 
     return DbxErrorSnackbarComponent.showErrorSnackbar(this.matSnackbar, error, config);

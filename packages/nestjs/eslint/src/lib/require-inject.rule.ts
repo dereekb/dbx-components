@@ -377,7 +377,7 @@ export const NESTJS_REQUIRE_INJECT_RULE: NestjsRequireInjectRuleDefinition = {
           name: getParamName(param),
           classDecorator: classDecoratorName
         },
-        fix: tokenName ? (fixer: AstNode) => buildMissingInjectFix(fixer, param, tokenName) : undefined
+        ...(tokenName ? { fix: (fixer: AstNode) => buildMissingInjectFix(fixer, param, tokenName) } : {})
       });
     }
 

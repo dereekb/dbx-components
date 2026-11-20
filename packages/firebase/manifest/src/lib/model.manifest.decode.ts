@@ -128,7 +128,7 @@ export class ModelManifestKeyDecodeError extends BaseError implements CodedError
   readonly reason: ModelManifestKeyDecodeErrorReason;
   readonly key: string;
   readonly segmentCount: number;
-  readonly suggestion?: string;
+  readonly suggestion?: string | undefined;
 
   constructor(input: ModelManifestKeyDecodeErrorInput) {
     const isEmpty = input.reason === 'empty';

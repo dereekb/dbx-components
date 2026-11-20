@@ -178,8 +178,8 @@ export function mergeCalcomOAuthAccessTokenCacheServices(inputServicesToMerge: C
 
   const service: CalcomOAuthAccessTokenCacheService = {
     loadCalcomAccessTokenCache: () => mergeCachesForService(allServiceAccessTokenCaches),
-    cacheForKey,
-    cacheForRefreshToken
+    ...(cacheForKey != null ? { cacheForKey } : {}),
+    ...(cacheForRefreshToken != null ? { cacheForRefreshToken } : {})
   };
 
   return service;

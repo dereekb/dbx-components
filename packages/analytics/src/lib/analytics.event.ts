@@ -44,9 +44,9 @@ export interface AnalyticsEventData {
  * This is the core event shape emitted through analytics services and consumed by listeners like Segment.
  */
 export interface AnalyticsEvent {
-  readonly name?: AnalyticsEventName;
-  readonly value?: number;
-  readonly data?: AnalyticsEventData;
+  readonly name?: AnalyticsEventName | undefined;
+  readonly value?: number | undefined;
+  readonly data?: AnalyticsEventData | undefined;
 }
 
 /**

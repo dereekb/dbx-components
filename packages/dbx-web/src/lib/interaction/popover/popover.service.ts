@@ -43,8 +43,8 @@ export class DbxPopoverService {
       originX: config.originX ?? 'start',
       originY: config.originY ?? 'top',
       // TODO: Resize height/width.
-      minHeight: config.minHeight,
-      minWidth: config.minWidth,
+      ...(config.minHeight != null ? { minHeight: config.minHeight } : {}),
+      ...(config.minWidth != null ? { minWidth: config.minWidth } : {}),
       height: config.height ?? '500px',
       width: config.width ?? '400px',
       hasBackdrop: true,

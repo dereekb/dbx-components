@@ -47,7 +47,7 @@ export interface ParsedHasAuthRoleStateRoleConfig {
    *
    * @see {@link HasAuthRoleStateRoleConfig.authRolesMode}
    */
-  readonly authRolesMode?: SetIncludesMode;
+  readonly authRolesMode?: SetIncludesMode | undefined;
 }
 
 /**

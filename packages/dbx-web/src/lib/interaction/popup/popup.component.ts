@@ -150,7 +150,7 @@ export class DbxPopupComponent<O = unknown, I = unknown, T = unknown> extends Ab
   }
 
   normalscreen(): void {
-    this.popoverRef.isDraggable = this.config.isDraggable ?? undefined;
+    this.popoverRef.isDraggable = this.config.isDraggable ?? false;
     this.popoverRef.resize(APP_POPUP_NORMAL_WIDTH, APP_POPUP_NORMAL_HEIGHT);
     this.popoverRef.overlay.updatePosition();
     this._windowState.next(DbxPopupWindowState.NORMAL);

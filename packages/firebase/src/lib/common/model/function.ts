@@ -31,7 +31,7 @@ export interface OnCallTypedModelParams<T = unknown> extends FirestoreModelTypeR
   /**
    * Sub-function specifier for distinguishing different operations within the same call type.
    */
-  readonly specifier?: string;
+  readonly specifier?: string | undefined;
   /**
    * The call payload data.
    */
@@ -186,7 +186,7 @@ export interface OnCallQueryModelRequestParams {
    * When provided, the query resumes after the document at this key.
    * Obtained from {@link OnCallQueryModelResult.cursorDocumentKey}.
    */
-  readonly cursorDocumentKey?: FirestoreModelKey;
+  readonly cursorDocumentKey?: FirestoreModelKey | undefined;
 }
 
 /**
@@ -215,7 +215,7 @@ export interface OnCallQueryModelResult<T = unknown> {
    * Pass this value as the `cursorDocumentKey` field in the next query request to fetch the next page.
    * Undefined when there are no more results.
    */
-  readonly cursorDocumentKey?: FirestoreModelKey;
+  readonly cursorDocumentKey?: FirestoreModelKey | undefined;
   /**
    * Whether there are more results after this page.
    */

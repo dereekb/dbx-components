@@ -16,7 +16,7 @@ export interface FlattenObjectConfig {
    *
    * @defaultValue Infinity (unlimited)
    */
-  readonly maxDepth?: number;
+  readonly maxDepth?: number | undefined;
 }
 
 /**

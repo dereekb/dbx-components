@@ -16,7 +16,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
   selector: 'dbx-flag',
   template: `
     <div class="dbx-flag">
-      <mat-toolbar [color]="color()">
+      <mat-toolbar [color]="color() ?? null">
         <ng-content></ng-content>
       </mat-toolbar>
     </div>
