@@ -235,10 +235,12 @@ export interface LlmCallPhases {
    */
   readonly cachePrefixChars?: number;
   /**
-   * The HASH of that stable cache prefix (the 16-hex-char `sha256HexPrefix` from `@dereekb/util`), when the call was segmented — the
-   * identity two consecutive records of the same call site are compared on. Stamped on EVERY segmented dispatch, not
-   * only on a changed one: a reader diffing two call records must be able to conclude "unchanged" from the record
-   * rather than from the ABSENCE of a breadcrumb (which a level gate can swallow).
+   * The HASH of that stable cache prefix (the 16-hex-char `sha256HexPrefix` from `@dereekb/util`) — the identity two
+   * consecutive records of the same call site are compared on. It rides this `phases` block, so it exists only when
+   * the dispatch's call context timed; a root dispatch then always carries it (the prompt cache watch hashes every
+   * root), and a follow-up never does. Stamped on EVERY timed root dispatch, not only on a changed one: a reader
+   * diffing two call records must be able to conclude "unchanged" from the record rather than from the ABSENCE of a
+   * breadcrumb (which a level gate can swallow).
    */
   readonly cachePrefixHash?: HexString;
 }
@@ -359,14 +361,14 @@ export interface LlmCallRecordBase {
    */
   readonly reasoningOff?: boolean;
   /**
-   * The dispatcher's estimated prompt-token count — recorded only when the caller pinned a prompt-token budget, so a
-   * usage ledger can show estimate-vs-actual drift against the served `usage.promptTokens`. Absent for every call
-   * with no budget (byte-identical).
+   * The dispatcher's estimate of the attempt-1 prompt (the replayed thread and the billed schema included), stamped
+   * on every completion record so a usage ledger can show estimate-vs-served drift against the served
+   * `usage.promptTokens`. Absent on a decision-lane record and on a record built outside a dispatcher.
    */
   readonly estimatedPromptTokens?: LlmTokenCount;
   /**
-   * The per-dispatch phase timing block ({@link LlmCallPhases}). Collected on every dispatch; persisting it is the
-   * host's choice.
+   * The per-dispatch phase timing block ({@link LlmCallPhases}). Present only when the dispatch's call context times
+   * (`callContext.enabled`); persisting it is the host's choice (`toLlmCallLogPayload`'s `keepPhases`).
    */
   readonly phases?: LlmCallPhases;
   /**

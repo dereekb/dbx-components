@@ -12,6 +12,7 @@ import { defineLlmCapability, type LlmCapabilityDescriptor } from '../capability
 import { type LlmModelTierMap } from '../model/llm.model.tier';
 import { type LlmPromptSegment } from '../prompt/llm.prompt.segment';
 import { type LlmPromptTemplate, makeLlmTieredPromptTemplateResolver } from '../prompt/llm.prompt.template';
+import { toLlmCallLogPayload } from '../record/llm.call.payload';
 import { LLM_CALL_EVENT_TYPE, type LlmCallFailedAttempt, type LlmCallRecord } from '../record/llm.call.record';
 import { type LlmCritic } from '../reply/llm.reply.critique';
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
@@ -204,7 +205,7 @@ describe('the readers on dispatcher-recorded calls', () => {
     const row = (record.failedAttempts ?? [])[0];
     const expected = `attempts 2 retried · #1 ${row.cause}${row.error == null ? '' : `: ${row.error}`}${row.retry == null ? '' : ` → ${row.retry.lever}`}`;
 
-    expect(formatLlmCallAttempts({ type: LLM_CALL_EVENT_TYPE, payload: { attempts: record.result.attempts, decodeStatus: record.result.decodeStatus, failedAttempts: record.failedAttempts } })).toBe(expected);
+    expect(formatLlmCallAttempts({ type: LLM_CALL_EVENT_TYPE, payload: toLlmCallLogPayload(record, { keepIo: true }) })).toBe(expected);
   });
 
   it('should read a dropped call record', async () => {
@@ -216,7 +217,7 @@ describe('the readers on dispatcher-recorded calls', () => {
     expect(record.result.decodeStatus).toBe('dropped');
     expect(readLlmCallFailedAttempts(record)).toHaveLength(2);
 
-    const summary = formatLlmCallAttempts({ type: LLM_CALL_EVENT_TYPE, payload: { attempts: record.result.attempts, decodeStatus: record.result.decodeStatus, failedAttempts: record.failedAttempts } }) ?? '';
+    const summary = formatLlmCallAttempts({ type: LLM_CALL_EVENT_TYPE, payload: toLlmCallLogPayload(record, { keepIo: true }) }) ?? '';
 
     expect(summary.startsWith('attempts 2 dropped · #1 ')).toBe(true);
     expect(summary).toContain(' · #2 ');
@@ -230,6 +231,6 @@ describe('the readers on dispatcher-recorded calls', () => {
     const record = calls[0];
 
     expect(record.result.decodeStatus).toBe('retried');
-    expect(formatLlmCallAttempts({ type: LLM_CALL_EVENT_TYPE, payload: { attempts: record.result.attempts, decodeStatus: record.result.decodeStatus, failedAttempts: record.failedAttempts } })).toBe('attempts 2 retried · #1 critique: too vague → reasoning-low');
+    expect(formatLlmCallAttempts({ type: LLM_CALL_EVENT_TYPE, payload: toLlmCallLogPayload(record, { keepIo: true }) })).toBe('attempts 2 retried · #1 critique: too vague → reasoning-low');
   });
 });

@@ -3,7 +3,9 @@
  * ({@link LlmCallRecord}) under {@link LLM_CALL_EVENT_TYPE}. The in-memory record nests its result and always carries
  * the prompt; a persisted row is flat, and its heavy keys (the prompt, the reply, the failed attempts) are the host's
  * choice to keep. Every reader in the library (`readLlmCallPrompt`, `readLlmCallFailedAttempts`, the bill reconcile,
- * the tape) reads this shape, so the write side and the read side cannot drift.
+ * the tape) reads this shape. The write side and the read side cannot drift: {@link toLlmCallLogPayload} is the one
+ * writer, and the type-level spec in `llm.call.payload.spec.ts` (run by `llm:typecheck`) fails when its
+ * {@link LlmCallLogPayloadWrite} writes a key this read type does not declare.
  *
  * {@link toLlmCallLogPayload}`(record, { keepIo, keepPhases })` writes the row, in this key order (a decision record's
  * `stamp` keys lead it):
@@ -67,6 +69,10 @@ export interface LlmCallLogPayloadBase {
    */
   readonly decision?: LlmDecisionKey;
   /**
+   * The capability this call was a JUDGEMENT of — present only on a critique dispatch's row.
+   */
+  readonly subject?: LlmCapabilityKey;
+  /**
    * Every supplement the prompt seam placed on the call ({@link LlmCallSupplement}), then every one it matched and
    * CUT (`cut` set) — written ungated (whether or not the host keeps the prompt) on every root dispatch that placed or
    * cut one; absent on a follow-up, a decision-lane row and a prompt that placed and cut nothing.
@@ -89,6 +95,11 @@ export interface LlmCallLogPayloadBase {
    * without a tier; a by-tier fold counts those under a host-chosen bucket.
    */
   readonly tier?: LlmModelTierKey;
+  /**
+   * Whether the call SENT `response_format` json_schema/strict ({@link LlmDispatchResult.schemaEnforced}) — a request,
+   * not a claim the provider honoured it. Absent on a row from a strategy that states none.
+   */
+  readonly schemaEnforced?: boolean;
   /**
    * Token usage (+ optional provider cost) for the call.
    */
@@ -140,7 +151,8 @@ export interface LlmCallLogPayloadBase {
   readonly repair?: LlmReplyRepairSummary;
   /**
    * The per-dispatch phase timing block ({@link LlmCallPhases}) — the render / assemble / per-attempt breakdown a
-   * timing panel reads. Present only when the dispatcher captured timing; absent otherwise (byte-stable absence).
+   * timing panel reads. Present only when the dispatch's call context timed (`callContext.enabled`) and the host kept
+   * it (`keepPhases`); absent otherwise (byte-stable absence).
    */
   readonly phases?: LlmCallPhases;
   /**
@@ -150,9 +162,9 @@ export interface LlmCallLogPayloadBase {
    */
   readonly reasoningOff?: boolean;
   /**
-   * The dispatcher's ESTIMATED prompt-token count — written only when the caller pinned a prompt-token budget, so a
-   * ledger can report estimate-vs-served drift against the served {@link LlmUsage.promptTokens}. Absent for every
-   * call without a pinned prompt-token budget.
+   * The dispatcher's ESTIMATE of the attempt-1 prompt (the replayed thread and the billed schema included), on every
+   * completion row so a ledger can report estimate-vs-served drift against the served {@link LlmUsage.promptTokens}.
+   * Absent on a decision-lane row and on a row projected from a record built outside a dispatcher.
    */
   readonly estimatedPromptTokens?: LlmTokenCount;
   /**
@@ -171,13 +183,44 @@ export interface LlmCallLogPayloadBase {
    */
   readonly text?: string;
   /**
-   * Every attempt the bounded retry loop REJECTED, with its reply in full ({@link LlmCallFailedAttempt}) — written
+   * The ACCEPTED reply value, JSON-encoded ({@link LlmDispatchResult.valueJson}) — the reply as the caller read it,
+   * written beside {@link text} when the host keeps I/O; absent on a dropped or declined decode. The key is `lever`,
+   * the name existing rows already carry.
+   */
+  readonly lever?: string;
+  /**
+   * Every attempt the bounded retry loop REJECTED, with its reply in full ({@link LlmCallFailedAttemptRow}) — written
    * beside {@link text} when the host keeps prompts, and only when the loop rejected one. {@link text} is still the
    * FINAL reply (a dropped dispatch's last row repeats it) and {@link promptSegments} still attempt 1's. Read it
    * through `readLlmCallFailedAttempts`, which drops a malformed row and answers `undefined` for a clean call, a host
    * that keeps no prompts, or a row without attempt rows.
    */
-  readonly failedAttempts?: ReadonlyArray<LlmCallFailedAttempt>;
+  readonly failedAttempts?: ReadonlyArray<LlmCallFailedAttemptRow>;
+}
+
+/**
+ * One `failedAttempts` row as a READER receives it — {@link LlmCallFailedAttempt} with read-side typing: only the three
+ * fields `readLlmCallFailedAttempts` checks are promised; `cause` and `errorClassification` are plain strings (a later
+ * build may add a value), and the telemetry block and every other field may be absent on an older or foreign row.
+ */
+export interface LlmCallFailedAttemptRow extends Partial<Omit<LlmCallFailedAttempt, 'attempt' | 'cause' | 'text' | 'errorClassification'>> {
+  /**
+   * The 1-based attempt number the retry loop rejected.
+   */
+  readonly attempt: number;
+  /**
+   * Why the attempt was rejected — a plain `string` on the read side, because a persisted row may name a cause a later
+   * build added.
+   */
+  readonly cause: string;
+  /**
+   * The rejected reply, in full.
+   */
+  readonly text: string;
+  /**
+   * How the failure was classified, when it was — a plain `string` for {@link cause}'s reason.
+   */
+  readonly errorClassification?: string;
 }
 
 /**

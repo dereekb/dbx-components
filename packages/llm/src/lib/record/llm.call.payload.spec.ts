@@ -8,7 +8,7 @@
  */
 
 import { type } from 'arktype';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 import { makeLlmDecisionChoiceAnswer, makeLlmDecisionNoulAnswer, makeLlmScriptedDecisionStrategy, makeLlmScriptedStrategy, type LlmScriptedDecisionScript, type LlmScriptedReplies } from '@dereekb/llm/test';
 import { defineLlmCapability, type LlmCapabilityDescriptor } from '../capability/llm.capability.descriptor';
 import { defineLlmDecision } from '../decision/llm.decision.descriptor';
@@ -22,7 +22,7 @@ import { type LlmPromptTemplate, makeLlmTieredPromptTemplateResolver } from '../
 import { type LlmDispatchResult, type LlmStrategy } from '../strategy/llm.strategy';
 import { makeLlmStrategyRegistry } from '../strategy/llm.strategy.registry';
 import { makeLlmCallContext } from './llm.call.context';
-import { type LlmCallLogPayloadConfig, toLlmCallLogPayload } from './llm.call.payload';
+import { type LlmCallFailedAttemptRow, type LlmCallLogPayloadBase, type LlmCallLogPayloadConfig, type LlmCallLogPayloadWrite, toLlmCallLogPayload } from './llm.call.payload';
 import { type LlmCallFailedAttempt, type LlmCallPhases, type LlmCallRecord, type LlmCallRecordBase, type LlmCallSupplement } from './llm.call.record';
 import { llmCallTelemetry } from './llm.call.telemetry';
 
@@ -474,5 +474,20 @@ describe('toLlmCallLogPayload()', () => {
         String.raw`{"capability":"TestCap","promptSegments":4,"text":"{\"answer\":\"ok\"","strategyId":"s","strategyKind":"scripted","model":"test/fast","finishReason":"stop","repair":{"tier":"deterministic","attempt":1,"verdict":"near-miss","score":1,"ops":{"close-object":1}},"tier":"fast","attempts":1,"decodeStatus":"clean","decodeOutcome":"ok","lever":"{\"answer\":\"ok\"}","reasoningOff":true,"estimatedPromptTokens":12}`
       );
     });
+  });
+});
+
+describe('the call row: write vs read (type-level)', () => {
+  it('declares on the read type every key the projector writes, and writes every key but the legacy prompt', () => {
+    expectTypeOf<LlmCallLogPayloadWrite>().toExtend<LlmCallLogPayloadBase>();
+    expectTypeOf<Exclude<keyof LlmCallLogPayloadWrite, keyof LlmCallLogPayloadBase>>().toEqualTypeOf<never>();
+    expectTypeOf<Exclude<keyof LlmCallLogPayloadBase, keyof LlmCallLogPayloadWrite>>().toEqualTypeOf<'prompt'>();
+    expectTypeOf<LlmCallFailedAttempt>().toExtend<LlmCallFailedAttemptRow>();
+  });
+
+  // a new record or result field fails here until it is projected (and declared) or named as unprojected
+  it('projects or names every record and result field', () => {
+    expectTypeOf<Exclude<keyof LlmCallRecordBase, keyof LlmCallLogPayloadWrite>>().toEqualTypeOf<'prompt' | 'segments' | 'result' | 'stamp'>();
+    expectTypeOf<Exclude<keyof LlmDispatchResult, keyof LlmCallLogPayloadWrite>>().toEqualTypeOf<'meta' | 'attachmentsSent' | 'valueJson'>();
   });
 });

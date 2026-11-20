@@ -1,23 +1,27 @@
 /**
- * **Call-record readers**: the ONE way to read the prompt, the prompt segments and the failed attempts out of a call
+ * **Call-row readers**: the ONE way to read the prompt, the prompt segments and the failed attempts out of a call
  * row, the one-line retry summary a log line prints, and the decision-row test.
  *
- * Every reader takes `unknown` on purpose: a caller holds a log payload (or an in-memory {@link LlmCallRecord}), not a
- * typed row. Each answers on a persisted payload ({@link LlmCallLogPayload}), on a flat-`prompt` payload (no segments),
- * and on an in-memory record, so no caller needs to know which shape — or which side of the recorder — a row is from.
+ * Every reader reads the persisted ROW ({@link LlmCallLogPayload}), a flat-`prompt` row (no segments) included. Project
+ * an in-memory {@link LlmCallRecord} with `toLlmCallLogPayload` first: its result is nested, so a row-only reader
+ * reads it wrong. Only the prompt, segments and failed-attempt readers also answer on a raw record, because those keys
+ * are top-level there. {@link formatLlmCallAttempts} takes the event wrapping a row ({@link LlmCallLogEvent}).
+ *
+ * Every reader takes `unknown` on purpose: a caller holds a log payload, not a typed row.
  */
 
 import { cutString, type Maybe } from '@dereekb/util';
 import type { LlmStrategyId } from '../model/llm.value';
 import { isLlmPromptSegmentArray, joinLlmPromptSegments, type LlmPromptSegment } from '../prompt/llm.prompt.segment';
-import { LLM_CALL_EVENT_TYPE, type LlmCallFailedAttempt } from '../record/llm.call.record';
+import { LLM_CALL_EVENT_TYPE } from '../record/llm.call.record';
+import type { LlmCallFailedAttemptRow } from '../record/llm.call.payload';
 
 /**
  * Read the PROMPT out of a call row — the ONE way to do it.
  *
  * A row written while the host keeps prompts carries `promptSegments`; a flat-`prompt` row carries only a `prompt`
- * string; an in-memory {@link LlmCallRecord} carries both `prompt` and `segments`. All answer here, so no reader needs
- * to know which shape a row has — and, critically, no reader keeps a
+ * string; a raw in-memory {@link LlmCallRecord} (its keys are top-level) carries both `prompt` and `segments`. All
+ * answer here, so no reader needs to know which shape a row has — and, critically, no reader keeps a
  * `typeof payload.prompt === 'string'` gate that would read "no prompt" from a segments-only row and silently report a
  * tape with ZERO turns or a lab with no captured calls.
  *
@@ -46,8 +50,8 @@ export function readLlmCallPrompt(payload: unknown): Maybe<string> {
 }
 
 /**
- * Read the prompt SEGMENTS out of a call row: a persisted payload's `promptSegments`, else an in-memory record's
- * `segments`. `undefined` on a flat-`prompt` row (no segments), which is a real and permanent answer: those bytes have no
+ * Read the prompt SEGMENTS out of a call row: a persisted row's `promptSegments`, else a raw in-memory record's
+ * top-level `segments`. `undefined` on a flat-`prompt` row (no segments), which is a real and permanent answer: those bytes have no
  * recoverable breakdown, and a reader that needs one must report drift rather than invent spans.
  *
  * @param payload - The `llm_call` payload or record (or anything).
@@ -80,15 +84,16 @@ export function readLlmCallPromptSegments(payload: unknown): Maybe<ReadonlyArray
  * @param row - One array element off the payload.
  * @returns `true` when it carries a numeric `attempt`, a string `cause`, and a string `text`.
  */
-function isLlmCallFailedAttemptRow(row: unknown): row is LlmCallFailedAttempt {
+function isLlmCallFailedAttemptRow(row: unknown): row is LlmCallFailedAttemptRow {
   const record = row as Maybe<Record<string, unknown>>;
   return record != null && typeof record === 'object' && typeof record['attempt'] === 'number' && typeof record['cause'] === 'string' && typeof record['text'] === 'string';
 }
 
 /**
  * Read the FAILED attempts out of a call row — the {@link readLlmCallPrompt} neighbour for the replies the retry loop
- * rejected. A log is an open best-effort sink, so a malformed row is dropped rather than trusted. The key is the same
- * on a persisted payload and on an in-memory record.
+ * rejected. A log is an open best-effort sink, so a malformed row is dropped rather than trusted, and a kept row is
+ * typed read-side ({@link LlmCallFailedAttemptRow}: only `attempt`, `cause` and `text` are promised). The key is
+ * top-level on a persisted row and on a raw in-memory record alike, so both answer here.
  *
  * @param payload - The `llm_call` payload or record (or anything).
  * @returns The well-formed rows, or `undefined` when the row carries none (a clean call, a host that keeps no prompts,
@@ -100,7 +105,7 @@ function isLlmCallFailedAttemptRow(row: unknown): row is LlmCallFailedAttempt {
  * rows.forEach((row) => console.log(row.attempt, row.cause, row.text));
  * ```
  */
-export function readLlmCallFailedAttempts(payload: unknown): Maybe<ReadonlyArray<LlmCallFailedAttempt>> {
+export function readLlmCallFailedAttempts(payload: unknown): Maybe<ReadonlyArray<LlmCallFailedAttemptRow>> {
   const record = payload as Maybe<Record<string, unknown>>;
   const rows = record?.['failedAttempts'];
   const wellFormed = Array.isArray(rows) ? rows.filter(isLlmCallFailedAttemptRow) : [];

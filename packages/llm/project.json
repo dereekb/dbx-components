@@ -76,6 +76,19 @@
     },
     "test": {
       "inputs": ["...", { "input": "production", "projects": ["llm-test", "llm-node"] }]
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["default", "^production", { "input": "production", "projects": ["llm-test", "llm-node"] }],
+      "outputs": [],
+      "options": {
+        "command": "npx tsc -p packages/llm/tsconfig.spec.json --noEmit",
+        "cwd": "{workspaceRoot}"
+      },
+      "metadata": {
+        "description": "Type-checks the llm specs, including the expectTypeOf conformance specs (the call row write vs read). Run by the dbx-claude test and commit gate; never part of build. The lib config is left out: util's Node-typed sources do not compile under the browser entries' types: []."
+      }
     }
   }
 }
