@@ -3,6 +3,7 @@ import { type Maybe, filterUndefinedValues, parseJsonObjectOrUndefined } from '@
 import { type CallModelInput, type OpenResponsesResult, type OpenRouterCore, type RequestOptions, type ResponsesRequest, type StateAccessor, type Tool, ModelResult, callModel, convertToolsToAPIFormat, responsesSend, stepCountIs } from './openrouter.sdk';
 import { type OpenRouterHostedToolConfig, type OpenRouterModelConfig } from './openrouter.config';
 import { type OpenRouterPromptRequest } from './openrouter.request';
+import { openRouterRequestOptionsWithTimeout } from './openrouter.timeout';
 import { type OpenRouterGenerationId, type OpenRouterModelId, type OpenRouterRunError, type OpenRouterRunUsage } from './openrouter.type';
 
 /**
@@ -221,6 +222,8 @@ export interface CallModelForOpenRouterRequestParams<TTools extends readonly Too
   readonly client: OpenRouterCore;
   /**
    * Additional request options, merged under the config's `requestTimeoutMs`.
+   *
+   * A `signal` here does not cancel the timeout: the two are merged by {@link openRouterRequestOptionsWithTimeout}.
    */
   readonly options?: Maybe<RequestOptions>;
 }
@@ -231,17 +234,6 @@ export interface CallModelForOpenRouterRequestParams<TTools extends readonly Too
  * everything but the entry point.
  */
 export const OPENROUTER_CALL_MODEL_HEADER = 'x-openrouter-callmodel';
-
-/**
- * Builds the request options for a call, folding in the config's `requestTimeoutMs`.
- *
- * @param options - Caller-supplied options.
- * @param requestTimeoutMs - The per-request timeout from the config, when it set one.
- * @returns The merged options.
- */
-function openRouterRequestOptions(options: Maybe<RequestOptions>, requestTimeoutMs: Maybe<number>): RequestOptions {
-  return { ...options, ...(requestTimeoutMs == null ? undefined : { timeoutMs: requestTimeoutMs }) };
-}
 
 /**
  * Copies request options and stamps the `x-openrouter-callmodel` header onto them.
@@ -275,6 +267,8 @@ export interface SendOpenRouterResponsesRequestParams {
   readonly request: OpenRouterPromptRequest;
   /**
    * Additional request options, merged under the config's `requestTimeoutMs`.
+   *
+   * A `signal` here does not cancel the timeout: the two are merged by {@link openRouterRequestOptionsWithTimeout}.
    */
   readonly options?: Maybe<RequestOptions>;
 }
@@ -298,7 +292,7 @@ export async function sendOpenRouterResponsesRequest(params: SendOpenRouterRespo
   const { requestTimeoutMs } = splitOpenRouterModelConfig(request.config);
   const responsesRequest = { ...openRouterResponsesRequestBody(request), stream: false } as unknown as ResponsesRequest & { stream?: false };
 
-  const result = await responsesSend(client, { responsesRequest }, openRouterRequestOptions(options, requestTimeoutMs));
+  const result = await responsesSend(client, { responsesRequest }, openRouterRequestOptionsWithTimeout(options, requestTimeoutMs));
 
   if (!result.ok) {
     throw result.error;
@@ -333,7 +327,7 @@ export async function sendOpenRouterResponsesRequest(params: SendOpenRouterRespo
 export function openRouterModelResultForRequest<TTools extends readonly Tool[] = readonly Tool[]>(params: CallModelForOpenRouterRequestParams<TTools>): ModelResult<TTools> {
   const { client, request, tools, state, options } = params;
   const { maxSteps, requestTimeoutMs } = splitOpenRouterModelConfig(request.config);
-  const requestOptions = openRouterRequestOptions(options, requestTimeoutMs);
+  const requestOptions = openRouterRequestOptionsWithTimeout(options, requestTimeoutMs);
   const hostedTools = openRouterHostedTools(request.config);
   let result: ModelResult<TTools>;
 

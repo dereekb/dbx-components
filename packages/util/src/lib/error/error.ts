@@ -168,11 +168,21 @@ export function errorMessageContainsStringFunction(target: string): ErrorMessage
 /**
  * Extracts the message string from an error or returns the input if it's already a string.
  *
+ * A `null` or `undefined` input is returned as-is, and an error object without a message returns `undefined`.
+ *
  * @param input - The error or string to extract a message from.
  * @returns The error message string, or null/undefined if not available.
  */
 export function messageFromError(input: Maybe<ErrorInput | string>): Maybe<string> {
-  return (typeof input === 'object' ? (input as ReadableError).message : input) ?? (input as Maybe<string>);
+  let message: Maybe<string>;
+
+  if (input != null && typeof input === 'object') {
+    message = (input as ReadableError).message;
+  } else {
+    message = input;
+  }
+
+  return message;
 }
 
 /**

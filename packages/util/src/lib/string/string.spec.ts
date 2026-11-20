@@ -2,6 +2,7 @@ import {
   COMMA_STRING_SPLIT_JOIN,
   DEFAULT_CUT_STRING_END_TEXT,
   SPACE_STRING_SPLIT_JOIN,
+  cutString,
   cutStringFunction,
   flattenWhitespace,
   isNotBlankString,
@@ -237,6 +238,83 @@ describe('cutStringFunction()', () => {
         expect(result).toBe(`abcd${DEFAULT_CUT_STRING_END_TEXT}`);
       });
     });
+
+    describe('custom endText', () => {
+      it('should cut the string and append the custom end text', () => {
+        const testString = 'abcdefgh';
+        const fn = cutStringFunction({ maxLength: 4, endText: '…' });
+
+        const result = fn(testString);
+        expect(result).toBe('abc…');
+        expect(result.length).toBe(4);
+      });
+
+      it('should not append the custom end text if the string is not cut', () => {
+        const testString = 'abcd';
+        const fn = cutStringFunction({ maxLength: 4, endText: '…' });
+
+        const result = fn(testString);
+        expect(result).toBe(testString);
+      });
+
+      describe('maxLengthIncludesEndText=true', () => {
+        it('should include the custom end text in the max length', () => {
+          const testString = 'abcdefgh';
+          const fn = cutStringFunction({ maxLength: 6, endText: '--', maxLengthIncludesEndText: true });
+
+          const result = fn(testString);
+          expect(result).toBe('abcd--');
+        });
+      });
+
+      describe('maxLengthIncludesEndText=false', () => {
+        it('should cut the string at the max length and then append the custom end text', () => {
+          const testString = 'abcdefgh';
+          const fn = cutStringFunction({ maxLength: 6, endText: '--', maxLengthIncludesEndText: false });
+
+          const result = fn(testString);
+          expect(result).toBe('abcdef--');
+        });
+      });
+    });
+
+    describe('endText=null', () => {
+      it('should cut the string without any end text', () => {
+        const testString = 'abcdefgh';
+        const fn = cutStringFunction({ maxLength: 4, endText: null });
+
+        const result = fn(testString);
+        expect(result).toBe('abcd');
+      });
+
+      describe('maxLengthIncludesEndText=false', () => {
+        it('should cut the string at the max length without any end text', () => {
+          const testString = 'abcdefgh';
+          const fn = cutStringFunction({ maxLength: 4, endText: null, maxLengthIncludesEndText: false });
+
+          const result = fn(testString);
+          expect(result).toBe('abcd');
+        });
+      });
+    });
+  });
+});
+
+describe('cutString()', () => {
+  it('should use the default end text when endText is undefined', () => {
+    expect(cutString('abcdefgh', 5)).toBe(`ab${DEFAULT_CUT_STRING_END_TEXT}`);
+  });
+
+  it('should use the custom end text', () => {
+    expect(cutString('abcdefgh', 5, '…')).toBe('abcd…');
+  });
+
+  it('should use no end text when endText is null', () => {
+    expect(cutString('abcdefgh', 5, null)).toBe('abcde');
+  });
+
+  it('should return null for a null input', () => {
+    expect(cutString(null, 5)).toBeNull();
   });
 });
 

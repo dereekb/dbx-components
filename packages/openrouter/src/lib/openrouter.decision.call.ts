@@ -13,6 +13,7 @@ import { type LlmDecisionAnswer, LlmDecisionAnswerFaultError, type LlmDecisionAn
 import { type Maybe } from '@dereekb/util';
 import { type OpenRouterDecisionRequest, openRouterDecisionRequestBody, openRouterRunUsageFromDecisionsUsage, splitOpenRouterDecisionModelConfig, validateOpenRouterDecisionRequest } from './openrouter.decision';
 import { type DecisionsResponse, type OpenRouterCore, type RequestOptions, systemOneCreate } from './openrouter.sdk';
+import { openRouterRequestOptionsWithTimeout } from './openrouter.timeout';
 import { type OpenRouterGenerationId, type OpenRouterModelId, type OpenRouterRunUsage } from './openrouter.type';
 
 /**
@@ -65,6 +66,8 @@ export interface OpenRouterDecisionParams<Q extends LlmDecisionQuestions = LlmDe
   readonly request: OpenRouterDecisionRequest<Q>;
   /**
    * Additional request options, merged under the config's `requestTimeoutMs`.
+   *
+   * A `signal` here does not cancel the timeout: the two are merged by {@link openRouterRequestOptionsWithTimeout}.
    */
   readonly options?: Maybe<RequestOptions>;
 }
@@ -92,7 +95,7 @@ export async function openRouterDecision<Q extends LlmDecisionQuestions = LlmDec
 
   const { requestTimeoutMs } = splitOpenRouterDecisionModelConfig(request.config);
   const decisionsRequest = openRouterDecisionRequestBody(request);
-  const result = await systemOneCreate(client, { decisionsRequest }, { ...options, ...(requestTimeoutMs == null ? undefined : { timeoutMs: requestTimeoutMs }) });
+  const result = await systemOneCreate(client, { decisionsRequest }, openRouterRequestOptionsWithTimeout(options, requestTimeoutMs));
 
   if (!result.ok) {
     throw result.error;

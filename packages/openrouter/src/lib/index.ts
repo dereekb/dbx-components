@@ -16,5 +16,6 @@ export * from './openrouter.template.review';
 export * from './openrouter.template.script';
 export * from './openrouter.template.script.run';
 export * from './openrouter.template.type';
+export * from './openrouter.timeout';
 export * from './openrouter.tool';
 export * from './openrouter.type';

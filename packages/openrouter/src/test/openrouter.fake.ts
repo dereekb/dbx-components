@@ -30,6 +30,10 @@ export interface FakeOpenRouterRequest {
    * The parsed request body.
    */
   readonly body: Record<string, unknown>;
+  /**
+   * The abort signal the request went out with, for a reply that should hang until the request is aborted.
+   */
+  readonly signal: AbortSignal;
 }
 
 /**
@@ -109,6 +113,26 @@ export function fakeOpenRouterDecisionResponseBody(reply: FakeOpenRouterDecision
 }
 
 /**
+ * Never answers, and rejects with the signal's reason once the request is aborted — the way `fetch` itself rejects.
+ *
+ * Use it as a reply factory to exercise timeouts and caller cancellation.
+ *
+ * @param request - The request to hang.
+ * @returns A promise that only settles by rejecting when the request's signal aborts.
+ */
+export function fakeOpenRouterHangUntilAborted(request: FakeOpenRouterRequest): Promise<never> {
+  const { signal } = request;
+
+  return new Promise<never>((_, reject) => {
+    if (signal.aborted) {
+      reject(signal.reason as Error);
+    } else {
+      signal.addEventListener('abort', () => reject(signal.reason as Error), { once: true });
+    }
+  });
+}
+
+/**
  * Creates a real {@link OpenRouterCore} whose HTTP layer is answered locally.
  *
  * @param replyFactory - Decides the reply per request, or a single fixed reply.
@@ -122,7 +146,7 @@ export function fakeOpenRouterDecisionClient(replyFactory: FakeOpenRouterDecisio
     fetcher: async (input) => {
       const request = input as Request;
       const body = (await request.clone().json()) as Record<string, unknown>;
-      const record: FakeOpenRouterRequest = { url: request.url, method: request.method, body };
+      const record: FakeOpenRouterRequest = { url: request.url, method: request.method, body, signal: request.signal };
       const index = requests.length;
       requests.push(record);
 

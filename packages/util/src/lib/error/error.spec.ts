@@ -1,4 +1,4 @@
-import { isDefaultReadableError, DEFAULT_READABLE_ERROR_CODE, readErrorMessage, errorClassNames } from './error';
+import { isDefaultReadableError, DEFAULT_READABLE_ERROR_CODE, readErrorMessage, errorClassNames, messageFromError, errorMessageContainsString } from './error';
 
 describe('isDefaultReadableError()', () => {
   it('should return true for null/undefined', () => {
@@ -98,5 +98,45 @@ describe('errorClassNames()', () => {
 
   it('should return an empty array for a plain object', () => {
     expect(errorClassNames({ message: 'x' })).toEqual([]);
+  });
+});
+
+describe('messageFromError()', () => {
+  it('should return null for null', () => {
+    expect(messageFromError(null)).toBeNull();
+  });
+
+  it('should return undefined for undefined', () => {
+    expect(messageFromError(undefined)).toBeUndefined();
+  });
+
+  it('should return the string for a string', () => {
+    expect(messageFromError('test message')).toBe('test message');
+  });
+
+  it('should return the message of an Error', () => {
+    expect(messageFromError(new Error('error message'))).toBe('error message');
+  });
+
+  it('should return the message of a readable error', () => {
+    expect(messageFromError({ code: 'TEST', message: 'readable message' })).toBe('readable message');
+  });
+
+  it('should return undefined for an object without a message', () => {
+    expect(messageFromError({ code: 'TEST' })).toBeUndefined();
+  });
+});
+
+describe('errorMessageContainsString()', () => {
+  it('should return false for null', () => {
+    expect(errorMessageContainsString(null, 'test')).toBe(false);
+  });
+
+  it('should return true when the error message contains the target', () => {
+    expect(errorMessageContainsString(new Error('a test message'), 'test')).toBe(true);
+  });
+
+  it('should return false for an object without a message', () => {
+    expect(errorMessageContainsString({ code: 'TEST' }, 'object')).toBe(false);
   });
 });

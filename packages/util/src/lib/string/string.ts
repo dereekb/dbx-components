@@ -520,7 +520,7 @@ export interface CutStringFunctionConfig {
   /**
    * The end text to add to the cut string.
    *
-   * Defaults to "...".
+   * Defaults to "..." when undefined. Pass null to add no end text.
    */
   readonly endText?: Maybe<string>;
 }
@@ -550,7 +550,7 @@ export type CutStringFunction = ((input: string) => string) & ((input: Maybe<str
  */
 export function cutStringFunction(config: CutStringFunctionConfig): CutStringFunction {
   const { maxLength: inputMaxLength, maxLengthIncludesEndText, endText: inputEndText } = config;
-  const endText = inputEndText === undefined ? DEFAULT_CUT_STRING_END_TEXT : '';
+  const endText = inputEndText === undefined ? DEFAULT_CUT_STRING_END_TEXT : (inputEndText ?? '');
   const maxLength = maxLengthIncludesEndText === false ? inputMaxLength : inputMaxLength - endText.length;
 
   return ((input: Maybe<string>) => {
@@ -575,7 +575,7 @@ export function cutStringFunction(config: CutStringFunctionConfig): CutStringFun
  *
  * @param input - The string to truncate, or null/undefined.
  * @param maxLength - Maximum allowed length for the output string.
- * @param endText - Text to append when truncated; defaults to "...".
+ * @param endText - Text to append when truncated; defaults to "..." when undefined. Pass null to append nothing.
  * @returns The truncated string, or null/undefined if the input is null/undefined.
  *
  * @dbxUtil
