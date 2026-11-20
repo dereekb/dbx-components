@@ -790,7 +790,9 @@ const lever = llmReplyLeverOf(result.text);
 
 `makeLlmDispatcher` is the library implementation of `LlmDispatcher`. Every call, root or chained follow-up, runs the
 same stages in order: resolve, compose, send, decode, validate, record, then report the thread turn the follow-ups
-replay. Hosts swap their own pieces in through hooks; the dispatcher has no host types of its own.
+replay. Hosts swap their own pieces in through hooks; the dispatcher has no host types of its own. The stage functions
+are internal: `@dereekb/llm` exports the factory, its config and hooks, the request, the fault and the retry /
+correction / backoff vocabulary with its constants.
 
 - **Required config.** `strategies` (an `LlmStrategyRegistry`), `defaultStrategyId`, `defaultMaxOutputTokens`,
   `modelTiers`, `descriptorOf` and `templateResolver`. The default tier's slug is resolved at construction, so a tier map
