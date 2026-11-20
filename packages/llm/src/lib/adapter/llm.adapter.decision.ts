@@ -16,14 +16,14 @@
  * registry is built from the subset that qualifies.
  */
 
-import { isNotBlankString, type Maybe, type Milliseconds } from '@dereekb/util';
+import { isNotBlankString, type Maybe, type MaybeMap } from '@dereekb/util';
 import { type LlmStrategyId } from '../model/llm.value';
 import { LLM_PROVIDER_FACET_NONE, type LlmCompletionProviderEntry } from '../model/config/llm.model.config.schema';
 import { type LlmProviderConfig } from '../model/config/llm.model.config.resolve';
 import { type LlmDecisionStrategy, type LlmDecisionStrategyRegistry } from '../decision/llm.decision.strategy';
-import { llmStrategyKind, makeLlmStrategyRegistry } from '../strategy/llm.strategy.registry';
-import { type LlmCredentialProbeFetch } from '../strategy/llm.credential.probe';
-import { llmAdaptersOf, resolveLlmAdapter, type LlmAdapterRegistry } from './llm.adapter.registry';
+import { makeLlmStrategyRegistry } from '../strategy/llm.strategy.registry';
+import { type LlmDecisionAdapterConfig } from './llm.adapter';
+import { checkLlmAdapterStrategy, llmAdaptersOf, resolveLlmAdapter, type LlmAdapterRegistry } from './llm.adapter.registry';
 import { llmProviderBaseUrlOf, type LlmProviderAdaptersConfig } from './llm.adapter.provider';
 
 /**
@@ -80,16 +80,7 @@ export function llmDecisionCapableProviders<P extends LlmProviderConfig>(config:
 /**
  * Config for {@link makeLlmDecisionStrategies}.
  */
-export interface MakeLlmDecisionStrategiesConfig extends LlmDecisionCapableProvidersConfig {
-  /**
-   * The per-call timeout every built strategy takes; absent ⇒ the strategy's own default.
-   */
-  readonly timeoutMs?: Maybe<Milliseconds>;
-  /**
-   * The HTTP seam every built strategy's probe goes through — a spec's fake.
-   */
-  readonly fetch?: Maybe<LlmCredentialProbeFetch>;
-}
+export interface MakeLlmDecisionStrategiesConfig extends LlmDecisionCapableProvidersConfig, Partial<MaybeMap<Pick<LlmDecisionAdapterConfig, 'timeoutMs' | 'fetch'>>> {}
 
 /**
  * Build the decision-strategy registry from the providers a host already resolved.
@@ -115,18 +106,7 @@ export function makeLlmDecisionStrategies(config: MakeLlmDecisionStrategiesConfi
     const adapter = resolveLlmAdapter({ adapters, facet: 'decision', kind: route, label });
     const baseUrl = llmProviderBaseUrlOf({ provider, adapters });
     const strategy = adapter.make({ provider, ...(baseUrl == null ? {} : { baseUrl }), ...(fetch == null ? {} : { fetch }), ...(timeoutMs == null ? {} : { timeoutMs }) });
-
-    if (strategy.id !== provider.id) {
-      throw new Error(`${label}: the '${route}' decision adapter minted strategy id '${strategy.id}'; an adapter must register each provider under the provider's own id.`);
-    }
-
-    const kind = llmStrategyKind(strategy);
-
-    if (kind !== adapter.strategyKind) {
-      throw new Error(`${label}: the '${route}' decision adapter minted a strategy of kind '${kind}' but declares strategyKind '${adapter.strategyKind}'.`);
-    }
-
-    return strategy;
+    return checkLlmAdapterStrategy({ label, adapter, providerId: provider.id, strategy });
   });
 
   return makeLlmStrategyRegistry(built);

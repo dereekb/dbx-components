@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { type LlmProviderConfig } from '../model/config/llm.model.config.resolve';
-import { type LlmCredentialProbeFetch } from '../strategy/llm.credential.probe';
+import { type ConfiguredFetch } from '@dereekb/util/fetch';
 import { llmStrategyInstancesOfKind, makeLlmStrategyRegistry } from '../strategy/llm.strategy.registry';
 import { type LlmAdapter, type LlmAdapterInput, type LlmBillAdapter, type LlmCompletionAdapter, type LlmCompletionAdapterConfig, type LlmCredentialProbeAdapter, type LlmMeteringAdapter } from './llm.adapter';
 import { makeLlmAdapterRegistry } from './llm.adapter.registry';
@@ -94,9 +94,9 @@ function fakeBillAdapter(kind: string) {
 
 function fakeFetch() {
   const urls: string[] = [];
-  const fetch: LlmCredentialProbeFetch = (url) => {
-    urls.push(url);
-    return Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve('{}') });
+  const fetch: ConfiguredFetch = (input) => {
+    urls.push(String(input));
+    return Promise.resolve(new Response('{}', { status: 200 }));
   };
 
   return { fetch, urls };
@@ -178,7 +178,7 @@ describe('resolveLlmProviderAccount()', () => {
     expect(account.metering).toBe('zenmux');
     expect(account.baseUrl).toBe(ZENMUX_URL);
     expect(account.costBasis).toBe('list');
-    expect(account.statusSource?.providerId).toBe('zenmux');
+    expect(account.providerStatusSource?.providerId).toBe('zenmux');
     expect(account.credentialProbe).toBeTypeOf('function');
     expect(account.billReader?.providerId).toBe('zenmux');
 
@@ -199,7 +199,7 @@ describe('resolveLlmProviderAccount()', () => {
     const adapters = makeLlmAdapterRegistry([fakeCompletionAdapter('openai', OPENAI_URL).adapter, fakeMeteringAdapter('zenmux', 'zenmux.ai').adapter]);
     const account = resolveLlmProviderAccount({ provider: ZENMUX, adapters });
 
-    expect(Object.keys(account).sort((a, b) => a.localeCompare(b))).toEqual(['baseUrl', 'costBasis', 'metering', 'statusSource']);
+    expect(Object.keys(account).sort((a, b) => a.localeCompare(b))).toEqual(['baseUrl', 'costBasis', 'metering', 'providerStatusSource']);
   });
 
   it('should fail loud on a declared metering with no registered metering adapter', () => {

@@ -147,7 +147,7 @@ describe('makeLlmOpenRouterDecisionStrategy()', () => {
       apiKey: 'k',
       probeFetch: async (url) => {
         urls.push(url);
-        return { ok: true, status: 200, text: async () => '{}' };
+        return new Response('{}', { status: 200 });
       }
     });
     const health = await strategy.credentialProbe?.();

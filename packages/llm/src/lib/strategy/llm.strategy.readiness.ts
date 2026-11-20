@@ -15,7 +15,7 @@
  * And the quota gate, {@link evaluateLlmQuotaGate}, which draws the throttle line over a provider-status report.
  */
 
-import { errorMessageOf, type Maybe, type PercentDecimal, runAsyncTasksForValues } from '@dereekb/util';
+import { type AbortSignalRef, errorMessageOf, type Maybe, type PercentDecimal, runAsyncTasksForValues } from '@dereekb/util';
 import { type LlmStrategyId } from '../model/llm.value';
 import { type LlmProviderStatus, type LlmProviderStatusProviderId, type LlmQuotaWindow, tightestLlmQuotaWindow } from './llm.provider.status';
 import { type LlmCredentialProbeOptions, type LlmStrategyBase } from './llm.strategy';
@@ -214,7 +214,7 @@ export async function verifyLlmStrategies(config: VerifyLlmStrategiesConfig): Pr
 /**
  * Config for {@link probeLlmCredentials}.
  */
-export interface ProbeLlmCredentialsConfig {
+export interface ProbeLlmCredentialsConfig extends AbortSignalRef {
   /**
    * The registry to probe. REQUIRED, for {@link VerifyLlmStrategiesConfig.strategies}' reason. Any registry of
    * {@link LlmStrategyBase}s, so a decision registry is accepted too (pass `lane: LLM_DECISION_STRATEGY_READINESS_LANE`).
@@ -228,10 +228,6 @@ export interface ProbeLlmCredentialsConfig {
    * The wording for the synthesized issues. Defaults to {@link LLM_STRATEGY_READINESS_LANE}.
    */
   readonly lane?: LlmReadinessLane;
-  /**
-   * An EXTERNAL cancellation signal threaded to every probe.
-   */
-  readonly signal?: AbortSignal;
   /**
    * Optional hook handed the FULL report — the logging seam, mirroring {@link VerifyLlmStrategiesConfig.onReport}.
    *
@@ -281,7 +277,7 @@ export function llmCredentialReportErrorText(report: LlmStrategiesHealthReport):
 /**
  * Config for {@link readLlmProviderStatus}.
  */
-export interface ReadLlmProviderStatusConfig {
+export interface ReadLlmProviderStatusConfig extends AbortSignalRef {
   /**
    * The registry to read. REQUIRED, for {@link VerifyLlmStrategiesConfig.strategies}' reason.
    */
@@ -290,10 +286,6 @@ export interface ReadLlmProviderStatusConfig {
    * The ids whose ACCOUNT STATUS to read. Empty ⇒ no-op (resolves an empty report; opens no socket).
    */
   readonly required: ReadonlyArray<LlmStrategyId>;
-  /**
-   * An EXTERNAL cancellation signal threaded to every read.
-   */
-  readonly signal?: AbortSignal;
   /**
    * Optional hook handed the FULL report — the logging seam, mirroring {@link ProbeLlmCredentialsConfig.onReport}.
    *

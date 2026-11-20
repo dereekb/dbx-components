@@ -13,9 +13,10 @@
  *   after it is made, so that reads as PENDING, never as a failure: re-reading later is the remedy.
  */
 
-import { llmCostOf, llmProviderErrorMessage, type LlmCallBill, type LlmCallBillRead, type LlmCallBillReader, type LlmCallBillReadOptions, type LlmCredentialProbeFetch, type LlmCredentialProbeResponse } from '@dereekb/llm';
-import { errorMessageOf, makeTimeoutAbortSignal, type Maybe, type Milliseconds, removeTrailingSlashes } from '@dereekb/util';
+import { llmCostOf, llmProviderErrorMessage, type LlmCallBill, type LlmCallBillRead, type LlmCallBillReader, type LlmCallBillReadOptions } from '@dereekb/llm';
+import { errorMessageOf, type Maybe, type Milliseconds, removeTrailingSlashes } from '@dereekb/util';
 import { DEFAULT_ZENMUX_BASE_URL, ZENMUX_PROVIDER_ID } from './zenmux.constants';
+import { readZenmuxManagement, zenmuxGenerationUrl, type ZenmuxEnvelope, type ZenmuxManagementReadConfig } from './zenmux.management';
 
 /**
  * How long one bill read may take before it is reported failed.
@@ -25,33 +26,19 @@ export const DEFAULT_ZENMUX_BILL_READ_TIMEOUT_MS: Milliseconds = 15_000;
 /**
  * Config for {@link makeZenmuxGenerationBillReader}.
  */
-export interface ZenmuxGenerationBillReaderConfig {
+export interface ZenmuxGenerationBillReaderConfig extends ZenmuxManagementReadConfig {
   /**
    * The PAY-AS-YOU-GO inference key — the one credential `management/generation` accepts. It reads subscription-key calls
    * too.
    */
   readonly apiKey: string;
-  /**
-   * The gateway base URL; defaults to {@link DEFAULT_ZENMUX_BASE_URL}. Trailing slashes are stripped.
-   */
-  readonly baseUrl?: Maybe<string>;
-  /**
-   * The HTTP seam; defaults to the global `fetch`. A spec passes a fake.
-   */
-  readonly fetch?: LlmCredentialProbeFetch;
-  /**
-   * The per-read timeout; defaults to {@link DEFAULT_ZENMUX_BILL_READ_TIMEOUT_MS}.
-   */
-  readonly timeoutMs?: Maybe<Milliseconds>;
 }
 
 /**
- * The slice of the `management/generation` reply this reader reads.
+ * The `management/generation` payload subset the bill reader reads.
  */
-interface ZenmuxGenerationEnvelope {
-  readonly success?: boolean;
-  readonly message?: string;
-  readonly data?: Maybe<{ readonly ratingResponses?: Maybe<{ readonly billAmount?: unknown; readonly originAmount?: unknown; readonly discountAmount?: unknown }> }>;
+interface ZenmuxGenerationData {
+  readonly ratingResponses?: Maybe<{ readonly billAmount?: unknown; readonly originAmount?: unknown; readonly discountAmount?: unknown }>;
 }
 
 /**
@@ -61,7 +48,7 @@ interface ZenmuxGenerationEnvelope {
  * @param envelope - The parsed body.
  * @returns The outcome.
  */
-function zenmuxBillReadOf(generationId: string, envelope: ZenmuxGenerationEnvelope): LlmCallBillRead {
+function zenmuxBillReadOf(generationId: string, envelope: ZenmuxEnvelope<ZenmuxGenerationData>): LlmCallBillRead {
   const rating = envelope.data?.ratingResponses;
   const billed = llmCostOf(rating?.billAmount);
   let read: LlmCallBillRead;
@@ -91,39 +78,29 @@ export function makeZenmuxGenerationBillReader(config: ZenmuxGenerationBillReade
   const baseUrl = removeTrailingSlashes(config.baseUrl ?? DEFAULT_ZENMUX_BASE_URL);
   const apiKey = config.apiKey.trim();
   const timeoutMs = config.timeoutMs ?? DEFAULT_ZENMUX_BILL_READ_TIMEOUT_MS;
-  const fetchImpl: LlmCredentialProbeFetch = config.fetch ?? ((url, init) => fetch(url, init) as unknown as Promise<LlmCredentialProbeResponse>);
 
   return {
     providerId: ZENMUX_PROVIDER_ID,
     async read(generationId: string, options?: LlmCallBillReadOptions): Promise<LlmCallBillRead> {
-      const url = `${baseUrl}/management/generation?id=${encodeURIComponent(generationId)}`;
+      const url = zenmuxGenerationUrl(baseUrl, generationId);
       let read: LlmCallBillRead;
 
       try {
         // Built INSIDE the try: should the runtime's abort-signal API throw, it reads as a failed bill, not a throw.
-        const signal = makeTimeoutAbortSignal({ timeout: timeoutMs, signal: options?.signal });
-        const response = await fetchImpl(url, { method: 'GET', headers: { Authorization: `Bearer ${apiKey}` }, signal });
-        const body = await response.text();
+        const managementRead = await readZenmuxManagement<ZenmuxGenerationData>({ fetch: config.fetch, url, apiKey, timeoutMs, signal: options?.signal });
+        const envelope = managementRead.json;
 
-        if (response.ok) {
-          let envelope: Maybe<ZenmuxGenerationEnvelope>;
-
-          try {
-            envelope = JSON.parse(body) as ZenmuxGenerationEnvelope;
-          } catch {
-            // Swallow site `llm/zenmux-generation-bill.envelope`. Something in front of the gateway answered (a proxy page):
-            // this read's failure, not a throw.
-            envelope = undefined;
-          }
-
+        if (managementRead.response.ok) {
+          // Swallow site `llm/zenmux-generation-bill.envelope`. A non-JSON (or JSON `null`) body means something in front
+          // of the gateway answered (a proxy page): this read's failure, not a throw.
           read = envelope == null ? { status: 'failed', generationId, detail: 'unparseable response body' } : zenmuxBillReadOf(generationId, envelope);
-        } else if (response.status === 404) {
-          read = { status: 'pending', generationId, detail: llmProviderErrorMessage(body) ?? 'Not Found' };
+        } else if (managementRead.response.status === 404) {
+          read = { status: 'pending', generationId, detail: llmProviderErrorMessage(managementRead) ?? 'Not Found' };
         } else {
           // The provider's own words: a `403 Invalid API key` means a key other than the pay-as-you-go one was passed.
-          const message = llmProviderErrorMessage(body);
+          const message = llmProviderErrorMessage(managementRead);
           const words = message == null ? '' : `: ${message}`;
-          read = { status: 'failed', generationId, detail: `HTTP ${response.status}${words}` };
+          read = { status: 'failed', generationId, detail: `HTTP ${managementRead.response.status}${words}` };
         }
       } catch (error) {
         // Swallow site `llm/zenmux-generation-bill.transport`. An unreachable bill endpoint is a FAILED read, never a throw.

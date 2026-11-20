@@ -8,18 +8,15 @@
  * says it meters nothing gets none. Construction is inert: nothing here does I/O.
  */
 
-import { type Maybe, type Milliseconds } from '@dereekb/util';
-import { type LlmModelId } from '../model/llm.value';
-import { type LlmModelReasoningOffMap, type LlmModelVisionMap } from '../model/llm.model.wire';
+import { type Maybe, type MaybeMap } from '@dereekb/util';
 import { LLM_PROVIDER_FACET_NONE, type LlmCompletionProviderEntry } from '../model/config/llm.model.config.schema';
 import { type LlmProviderConfig } from '../model/config/llm.model.config.resolve';
 import { type LlmCredentialProbe, type LlmStrategy } from '../strategy/llm.strategy';
 import { type LlmProviderStatusProviderId, type LlmProviderStatusSource } from '../strategy/llm.provider.status';
 import { type LlmCallBillReader } from '../strategy/llm.call.bill';
 import { type LlmCostBasis } from '../strategy/llm.usage';
-import { type LlmCredentialProbeFetch } from '../strategy/llm.credential.probe';
-import { type LlmAdapterInput } from './llm.adapter';
-import { llmAdapterOf, llmAdaptersOf, resolveLlmAdapter, type LlmAdapterRegistry } from './llm.adapter.registry';
+import { type LlmAdapterInput, type LlmCompletionAdapterConfig } from './llm.adapter';
+import { checkLlmAdapterStrategy, llmAdapterOf, llmAdaptersOf, resolveLlmAdapter, type LlmAdapterRegistry } from './llm.adapter.registry';
 
 /**
  * Config pairing one provider (or a structural view of one) with the adapter registry.
@@ -75,20 +72,7 @@ export function llmProviderMeteringOf(config: LlmProviderAdaptersConfig<Pick<Llm
 /**
  * Config for {@link resolveLlmProviderAccount}.
  */
-export interface ResolveLlmProviderAccountConfig {
-  /**
-   * The resolved provider.
-   */
-  readonly provider: LlmProviderConfig;
-  /**
-   * The registered adapters.
-   */
-  readonly adapters: LlmAdapterRegistry;
-  /**
-   * The HTTP seam handed to every account adapter — a spec's fake.
-   */
-  readonly fetch?: Maybe<LlmCredentialProbeFetch>;
-}
+export interface ResolveLlmProviderAccountConfig extends LlmProviderAdaptersConfig<LlmProviderConfig>, Partial<MaybeMap<Pick<LlmAdapterInput, 'fetch'>>> {}
 
 /**
  * One provider's ACCOUNT — the metering id and every fact that follows it. Each optional key is present only when an
@@ -110,7 +94,7 @@ export interface LlmProviderAccount {
   /**
    * The account status source, from the metering adapter.
    */
-  readonly statusSource?: LlmProviderStatusSource;
+  readonly providerStatusSource?: LlmProviderStatusSource;
   /**
    * The account's own key check, from the credentialProbe adapter of the same metering id.
    */
@@ -149,7 +133,7 @@ export function resolveLlmProviderAccount(config: ResolveLlmProviderAccountConfi
       metering,
       ...baseUrlPart,
       ...(meteringAdapter.costBasis == null ? {} : { costBasis: meteringAdapter.costBasis }),
-      statusSource: meteringAdapter.make(input),
+      providerStatusSource: meteringAdapter.make(input),
       ...(credentialProbeAdapter == null ? {} : { credentialProbe: credentialProbeAdapter.make(input) }),
       ...(billAdapter == null ? {} : { billReader: billAdapter.make(input) })
     };
@@ -161,36 +145,7 @@ export function resolveLlmProviderAccount(config: ResolveLlmProviderAccountConfi
 /**
  * The options every provider's completion strategy shares. Each reaches the adapter only when set.
  */
-export interface LlmProviderStrategyOptions {
-  /**
-   * The registered adapters.
-   */
-  readonly adapters: LlmAdapterRegistry;
-  /**
-   * The model a request that names none runs on.
-   */
-  readonly defaultModel?: Maybe<LlmModelId>;
-  /**
-   * The default completion-length cap.
-   */
-  readonly maxOutputTokens?: Maybe<number>;
-  /**
-   * The per-call timeout.
-   */
-  readonly timeoutMs?: Maybe<Milliseconds>;
-  /**
-   * The per-slug vision facts (`llmModelVisionCapabilities`).
-   */
-  readonly visionByModel?: Maybe<LlmModelVisionMap>;
-  /**
-   * The per-slug reasoning-OFF encodings (`llmModelReasoningOffEncodings`).
-   */
-  readonly reasoningOffByModel?: Maybe<LlmModelReasoningOffMap>;
-  /**
-   * The HTTP seam for probes, account reads and bill reads — a spec's fake.
-   */
-  readonly fetch?: Maybe<LlmCredentialProbeFetch>;
-}
+export interface LlmProviderStrategyOptions extends Pick<LlmProviderAdaptersConfig<unknown>, 'adapters'>, Partial<MaybeMap<Pick<LlmCompletionAdapterConfig, 'defaultModel' | 'maxOutputTokens' | 'timeoutMs' | 'visionByModel' | 'reasoningOffByModel' | 'fetch'>>> {}
 
 /**
  * Config for {@link makeLlmProviderStrategy}.
@@ -234,7 +189,7 @@ export function makeLlmProviderStrategy(config: MakeLlmProviderStrategyConfig): 
   const adapter = resolveLlmAdapter({ adapters, facet: 'completion', kind: provider.transport, label });
   const account = resolveLlmProviderAccount({ provider, adapters, fetch });
 
-  const strategy = adapter.make({
+  const minted = adapter.make({
     provider,
     ...(account.baseUrl == null ? {} : { baseUrl: account.baseUrl }),
     ...(fetch == null ? {} : { fetch }),
@@ -244,15 +199,11 @@ export function makeLlmProviderStrategy(config: MakeLlmProviderStrategyConfig): 
     ...(visionByModel == null ? {} : { visionByModel }),
     ...(reasoningOffByModel == null ? {} : { reasoningOffByModel }),
     ...(account.costBasis == null ? {} : { costBasis: account.costBasis }),
-    ...(account.statusSource == null ? {} : { providerStatusSource: account.statusSource }),
+    ...(account.providerStatusSource == null ? {} : { providerStatusSource: account.providerStatusSource }),
     ...(account.credentialProbe == null ? {} : { credentialProbe: account.credentialProbe })
   });
 
-  if (strategy.id !== provider.id) {
-    throw new Error(`${label}: the '${adapter.kind}' completion adapter minted strategy id '${strategy.id}'; an adapter must register each provider under the provider's own id.`);
-  }
-
-  return strategy;
+  return checkLlmAdapterStrategy({ label, adapter, providerId: provider.id, strategy: minted });
 }
 
 /**

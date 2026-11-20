@@ -177,7 +177,7 @@ export const LLM_SWALLOW_SITES: LlmSwallowSiteRegistry = makeLlmSwallowSiteRegis
   // The two catches of `makeLlmDispatchTapRegistry` — counted in the registry's `health()`.
   { id: 'llm/dispatch-taps.sync-throw', protects: 'a tap that throws must never abort the fan-out to the remaining taps, nor reach the dispatcher', onError: 'proceed', expectation: 'fault', channel: 'health' },
   { id: 'llm/dispatch-taps.async-reject', protects: 'a tap whose promise rejects must never reach the dispatcher', onError: 'proceed', expectation: 'fault', channel: 'health' },
-  // `llm.credential.probe.ts` — the verdict carries both.
+  // `llm.credential.probe.ts` — the verdict carries both (the body is decoded by `@dereekb/util/fetch` `readFetchJsonText`).
   { id: 'llm/credential-probe.transport', protects: 'an unreachable provider reports an unready CREDENTIAL rather than throwing out of the launch gate that asked', onError: 'report', expectation: 'degraded', channel: 'health' },
   { id: 'llm/credential-probe.error-body', protects: 'a non-JSON provider error body degrades to its raw text; the verdict still names what the provider answered', onError: 'degrade', expectation: 'expected', channel: 'health' },
   // `llm.strategy.readiness.ts` — the readiness verdict carries all three.

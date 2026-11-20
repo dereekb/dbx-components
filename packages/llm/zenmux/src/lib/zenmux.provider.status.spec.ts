@@ -1,5 +1,6 @@
-import { tightestLlmQuotaWindow, type LlmCredentialProbeFetch, type LlmCredentialProbeResponse } from '@dereekb/llm';
+import { tightestLlmQuotaWindow } from '@dereekb/llm';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { type ConfiguredFetch } from '@dereekb/util/fetch';
 import { ZENMUX_PROVIDER_ID } from './zenmux.constants';
 import { makeZenmuxProviderStatusSource } from './zenmux.provider.status';
 
@@ -33,15 +34,16 @@ const REJECTED_BODY = '{"success":false,"message":"Invalid API key","data":null}
  * @param routes - Path fragment → status + body.
  * @returns The seam plus the URLs and auth headers it was called with.
  */
-function fakeFetch(routes: Readonly<Record<string, { readonly status: number; readonly body: string }>>): { readonly fetch: LlmCredentialProbeFetch; readonly urls: string[]; readonly auths: Array<string | undefined> } {
+function fakeFetch(routes: Readonly<Record<string, { readonly status: number; readonly body: string }>>): { readonly fetch: ConfiguredFetch; readonly urls: string[]; readonly auths: Array<string | undefined> } {
   const urls: string[] = [];
   const auths: Array<string | undefined> = [];
-  const fetchImpl: LlmCredentialProbeFetch = async (url, init) => {
+  const fetchImpl: ConfiguredFetch = async (input, init) => {
+    const url = String(input);
     urls.push(url);
-    auths.push(init.headers['Authorization']);
+    auths.push(new Headers(init?.headers).get('Authorization') ?? undefined);
     const key = Object.keys(routes).find((fragment) => url.includes(fragment));
     const route = key == null ? { status: 404, body: '{"message":"not found"}' } : routes[key];
-    const answer: LlmCredentialProbeResponse = { ok: route.status >= 200 && route.status < 300, status: route.status, text: async () => route.body };
+    const answer = new Response(route.body, { status: route.status });
     return answer;
   };
   return { fetch: fetchImpl, urls, auths };
@@ -145,7 +147,7 @@ describe('makeZenmuxProviderStatusSource()', () => {
   });
 
   it('REPORTS a thrown transport rather than propagating it', async () => {
-    const throwing: LlmCredentialProbeFetch = async () => {
+    const throwing: ConfiguredFetch = async () => {
       throw new Error('ECONNREFUSED');
     };
     const status = await makeZenmuxProviderStatusSource({ managementApiKey: 'k', fetch: throwing }).read();

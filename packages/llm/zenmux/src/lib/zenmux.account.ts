@@ -1,12 +1,12 @@
 /**
- * Which URLs and providers are ZenMux, and what a ZenMux provider's synchronous cost means — the ONE place that answers
- * "is this provider on the ZenMux account?", so the cost basis, the account reads and the credential probe can never
- * disagree about which gateway a provider is on.
+ * Which URLs are ZenMux, and what a ZenMux provider's synchronous cost means. Whether a PROVIDER is on the ZenMux account
+ * (and so its cost basis) is answered by the core `resolveLlmProviderAccount` with the ZenMux adapters registered, whose
+ * metering adapter reads {@link isZenmuxBaseUrl}; the account reads and the credential probe use {@link zenmuxAccountBaseUrlOf}.
  */
 
-import { type LlmCostBasis, type LlmProviderStatusProviderId } from '@dereekb/llm';
-import { isNotBlankString, type Maybe } from '@dereekb/util';
-import { DEFAULT_ZENMUX_BASE_URL, ZENMUX_PROVIDER_ID } from './zenmux.constants';
+import { type LlmCostBasis } from '@dereekb/llm';
+import { isWebsiteUrlOnDomain, type Maybe } from '@dereekb/util';
+import { DEFAULT_ZENMUX_BASE_URL } from './zenmux.constants';
 
 /**
  * The host that identifies a base URL as ZenMux.
@@ -34,59 +34,10 @@ export const ZENMUX_SYNC_COST_BASIS: LlmCostBasis = 'list';
  * @returns True when the URL is a ZenMux origin.
  */
 export function isZenmuxBaseUrl(baseUrl: Maybe<string>): boolean {
-  let zenmux = false;
-
-  if (isNotBlankString(baseUrl)) {
-    try {
-      const { hostname } = new URL(baseUrl);
-      zenmux = hostname === ZENMUX_HOST || hostname.endsWith(`.${ZENMUX_HOST}`);
-    } catch {
-      // Swallow site `llm/zenmux-account.base-url`. An unparseable base URL is a configuration problem the transport itself
-      // will report; for THIS question it simply is not ZenMux. Never a throw — a host asks this while assembling a strategy.
-      zenmux = false;
-    }
-  }
-
-  return zenmux;
-}
-
-/**
- * The two provider facts the ZenMux metering decision reads.
- */
-export interface ZenmuxMeteringInput {
-  /**
-   * The provider's DECLARED metering id, absent when it declared none.
-   */
-  readonly metering?: Maybe<LlmProviderStatusProviderId>;
-  /**
-   * The provider's EFFECTIVE base URL — its own `baseUrl`, else its transport's default.
-   */
-  readonly baseUrl: Maybe<string>;
-}
-
-/**
- * Whether a provider is METERED BY ZenMux. A DECLARED `metering` wins (`'zenmux'` ⇒ yes; anything else ⇒ no), and only a
- * provider that declared none falls back to its base URL ({@link isZenmuxBaseUrl}).
- *
- * @param input - The provider's declared metering and its effective base URL.
- * @returns True when the provider bills the ZenMux account.
- */
-export function isZenmuxMeteredProvider(input: ZenmuxMeteringInput): boolean {
-  return input.metering == null ? isZenmuxBaseUrl(input.baseUrl) : input.metering === ZENMUX_PROVIDER_ID;
-}
-
-/**
- * The {@link LlmCostBasis} a provider's synchronous cost carries — {@link ZENMUX_SYNC_COST_BASIS} when the provider is
- * metered by ZenMux ({@link isZenmuxMeteredProvider}), else `undefined` (the figure is the bill).
- *
- * The registry-free form of `resolveLlmProviderAccount(…).costBasis` with the ZenMux adapters registered: the same two facts,
- * read in the same order, so the cost a provider reports and the account it reads agree.
- *
- * @param input - The provider's declared metering and its effective base URL.
- * @returns The cost basis, or `undefined` when the provider's figure is the bill.
- */
-export function zenmuxCostBasisFor(input: ZenmuxMeteringInput): Maybe<LlmCostBasis> {
-  return isZenmuxMeteredProvider(input) ? ZENMUX_SYNC_COST_BASIS : undefined;
+  // Swallow site `llm/zenmux-account.base-url`, now inside `@dereekb/util`'s `isWebsiteUrlOnDomain`. An unparseable base URL
+  // is a configuration problem the transport itself will report; for THIS question it simply is not ZenMux. Never a throw —
+  // a host asks this while assembling a strategy.
+  return isWebsiteUrlOnDomain(baseUrl, ZENMUX_HOST);
 }
 
 /**

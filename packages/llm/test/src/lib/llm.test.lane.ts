@@ -9,11 +9,11 @@
  * is a complete gate.
  */
 
+import { type ConfiguredFetch } from '@dereekb/util/fetch';
 import { type Maybe, mergeObjects, type Milliseconds } from '@dereekb/util';
 import {
   evaluateLlmQuotaGate,
   type LlmAdapterRegistry,
-  type LlmCredentialProbeFetch,
   type LlmModelConfigBaseTypes,
   type LlmModelConfigFile,
   type LlmModelConfigSchema,
@@ -217,7 +217,7 @@ export interface LlmLiveLaneProbeConfig extends LlmLiveLaneEnvConfig {
   /**
    * The HTTP seam the probes go through — a spec's fake.
    */
-  readonly fetch?: Maybe<LlmCredentialProbeFetch>;
+  readonly fetch?: Maybe<ConfiguredFetch>;
   /**
    * Aborts the probes.
    */
@@ -250,7 +250,7 @@ export interface LlmLiveGlobalSetupConfig {
   /**
    * The HTTP seam the probes go through.
    */
-  readonly fetch?: Maybe<LlmCredentialProbeFetch>;
+  readonly fetch?: Maybe<ConfiguredFetch>;
   /**
    * Aborts the probes.
    */

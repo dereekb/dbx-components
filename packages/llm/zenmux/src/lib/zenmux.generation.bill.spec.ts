@@ -1,5 +1,5 @@
-import { type LlmCredentialProbeFetch, type LlmCredentialProbeResponse } from '@dereekb/llm';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { type ConfiguredFetch } from '@dereekb/util/fetch';
 import { makeZenmuxGenerationBillReader } from './zenmux.generation.bill';
 
 // Bodies recorded from `management/generation` on 2026-10-21 (trimmed to the fields read).
@@ -9,11 +9,12 @@ const HAIKU_BODY = JSON.stringify({ success: true, data: { model: 'anthropic/cla
 const NOT_FOUND_BODY = '{"success":false,"message":"Not Found","data":null}';
 const REJECTED_BODY = '{"success":false,"message":"Invalid API key","data":null}';
 
-function fakeFetch(status: number, body: string): { readonly fetch: LlmCredentialProbeFetch; readonly calls: Array<{ readonly url: string; readonly auth?: string }> } {
+function fakeFetch(status: number, body: string): { readonly fetch: ConfiguredFetch; readonly calls: Array<{ readonly url: string; readonly auth?: string }> } {
   const calls: Array<{ readonly url: string; readonly auth?: string }> = [];
-  const fetchImpl: LlmCredentialProbeFetch = async (url, init) => {
-    calls.push({ url, auth: init.headers['Authorization'] });
-    const answer: LlmCredentialProbeResponse = { ok: status >= 200 && status < 300, status, text: async () => body };
+  const fetchImpl: ConfiguredFetch = async (input, init) => {
+    const url = String(input);
+    calls.push({ url, auth: new Headers(init?.headers).get('Authorization') ?? undefined });
+    const answer = new Response(body, { status: status });
     return answer;
   };
   return { fetch: fetchImpl, calls };
@@ -57,7 +58,7 @@ describe('makeZenmuxGenerationBillReader()', () => {
   });
 
   it('never throws: a transport error and an unparseable body are failed reads', async () => {
-    const throwing: LlmCredentialProbeFetch = async () => {
+    const throwing: ConfiguredFetch = async () => {
       throw new Error('fetch failed');
     };
 

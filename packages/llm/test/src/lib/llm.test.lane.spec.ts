@@ -2,7 +2,8 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { type LlmAdapter, type LlmCompletionAdapterConfig, type LlmCredentialProbeFetch, type LlmModelConfigFile, type LlmProviderStatus, type LlmStrategy, makeLlmAdapterRegistry, makeLlmModelConfigSchema, makeLlmQuotaWindow, probeLlmCredentialEndpoint } from '@dereekb/llm';
+import { type ConfiguredFetch } from '@dereekb/util/fetch';
+import { type LlmAdapter, type LlmCompletionAdapterConfig, type LlmModelConfigFile, type LlmProviderStatus, type LlmStrategy, makeLlmAdapterRegistry, makeLlmModelConfigSchema, makeLlmQuotaWindow, probeLlmCredentialEndpoint } from '@dereekb/llm';
 import { DEFAULT_LLM_ENV_NAMES, type LlmEnvNames, resolveLlmProvidersFromEnv } from '@dereekb/llm/node';
 import { type LlmLiveLaneConfig, makeLlmLiveLane } from './llm.test.lane';
 import { makeScriptedLlmDecisionStrategy, SCRIPTED_LLM_DECISION_STRATEGY_ID } from './llm.test.scripted.decision';
@@ -68,10 +69,11 @@ function fakeAdaptersOf(usedFraction = 0.3) {
 function recordingFetchOf(status = 200) {
   const urls: string[] = [];
   const keys: Array<string | undefined> = [];
-  const fetch: LlmCredentialProbeFetch = async (url, init) => {
+  const fetch: ConfiguredFetch = async (input, init) => {
+    const url = String(input);
     urls.push(url);
-    keys.push(init.headers['Authorization']);
-    return { ok: status >= 200 && status < 300, status, text: async () => (status === 401 ? REJECTED_BODY : '{}') };
+    keys.push(new Headers(init?.headers).get('Authorization') ?? undefined);
+    return new Response(status === 401 ? REJECTED_BODY : '{}', { status });
   };
   return { fetch, urls, keys };
 }

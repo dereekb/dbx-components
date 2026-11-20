@@ -33,17 +33,13 @@ import {
   type LlmOpenAiTextPart
 } from '@dereekb/llm/openai';
 import { llmOpenRouterReasoningOf } from './openrouter.chat';
+import { LLM_OPENROUTER_BASE_URL } from './openrouter.constants';
+import { probeLlmOpenRouterCredential } from './openrouter.credential.probe';
 
 /**
  * The strategy KIND of the OpenRouter chat transport ({@link LlmStrategy.kind}) and the default instance id.
  */
 export const LLM_OPENROUTER_STRATEGY_KIND: LlmStrategyId = 'openrouter';
-
-/**
- * OpenRouter's OpenAI-compatible base URL — the chat client, the decision transport and the `/key` credential probe
- * all resolve against it.
- */
-export const LLM_OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
 
 /**
  * The model-id prefix that selects the explicit `cache_control` breakpoint path (OpenRouter forwards it to
@@ -150,7 +146,7 @@ const LLM_OPENROUTER_CHAT_STRATEGY_HOOKS: LlmOpenAiCompatibleChatStrategyHooks =
   // `GET /key` is OpenRouter's free key-metadata endpoint — a revoked key answers `401 "User not found."`, which is
   // carried through verbatim. A 404 here IS a real error (OpenRouter always implements it), so the probe keeps the
   // default `'error'` policy rather than the openai transport's lenient one.
-  credentialProbe: { path: '/key' },
+  credentialProbe: probeLlmOpenRouterCredential,
   // Anthropic-family routes get the cache breakpoint blocks; every other route gets the base's plain messages.
   messages: (params) => (params.model.startsWith(ANTHROPIC_MODEL_PREFIX) ? toLlmOpenRouterAnthropicMessages(params) : toLlmOpenAiChatMessages({ prompt: params.request.prompt, thread: params.request.thread, attachments: params.attachments })),
   // The reasoning controls — sent ONLY when the request carries a reasoning config (some providers reject an unknown

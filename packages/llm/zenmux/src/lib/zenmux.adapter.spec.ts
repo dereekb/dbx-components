@@ -3,7 +3,6 @@ import {
   llmDecisionStrategyKinds,
   llmModelConfigListsOf,
   llmNoulQuestion,
-  llmProviderBaseUrlOf,
   llmProviderDecisionRouteOf,
   makeLlmAdapterRegistry,
   makeLlmDecisionStrategies,
@@ -12,13 +11,11 @@ import {
   type LlmAdapter,
   type LlmCompletionAdapter,
   type LlmCompletionAdapterConfig,
-  type LlmCredentialProbeFetch,
-  type LlmCredentialProbeResponse,
   type LlmProviderConfig
 } from '@dereekb/llm';
 import { makeLlmSystemOneWireFake } from '@dereekb/llm/test';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { zenmuxCostBasisFor } from './zenmux.account';
+import { type ConfiguredFetch } from '@dereekb/util/fetch';
 import { makeZenmuxLlmAdapters } from './zenmux.adapter';
 import { DEFAULT_ZENMUX_BASE_URL, ZENMUX_DECISION_ROUTE, ZENMUX_PROVIDER_ID } from './zenmux.constants';
 
@@ -64,11 +61,12 @@ interface Recorded {
  * @param body - The body to answer.
  * @returns The seam and its record.
  */
-function recordingFetch(status = 404, body = '{"success":false,"message":"Not Found","data":null}'): { readonly fetch: LlmCredentialProbeFetch; readonly calls: Recorded[] } {
+function recordingFetch(status = 404, body = '{"success":false,"message":"Not Found","data":null}'): { readonly fetch: ConfiguredFetch; readonly calls: Recorded[] } {
   const calls: Recorded[] = [];
-  const fetchImpl: LlmCredentialProbeFetch = async (url, init) => {
-    calls.push({ url, method: init.method, auth: init.headers['Authorization'] });
-    const response: LlmCredentialProbeResponse = { ok: status >= 200 && status < 300, status, text: async () => body };
+  const fetchImpl: ConfiguredFetch = async (input, init) => {
+    const url = String(input);
+    calls.push({ url, method: init?.method ?? 'GET', auth: new Headers(init?.headers).get('Authorization') ?? undefined });
+    const response = new Response(body, { status: status });
     return response;
   };
   return { fetch: fetchImpl, calls };
@@ -115,9 +113,9 @@ describe('makeZenmuxLlmAdapters()', () => {
 
       expect(account.metering).toBe('zenmux');
       expect(account.costBasis).toBe('list');
-      expect(account.statusSource?.providerId).toBe('zenmux');
+      expect(account.providerStatusSource?.providerId).toBe('zenmux');
 
-      await account.statusSource?.read();
+      await account.providerStatusSource?.read();
 
       expect(seam.calls.map((call) => call.url)).toEqual(['https://zenmux.ai/api/v1/management/subscription/detail', 'https://zenmux.ai/api/v1/management/payg/balance', 'https://zenmux.ai/api/v1/management/flow_rate']);
       expect(seam.calls.every((call) => call.auth === 'Bearer mgmt-key')).toBe(true);
@@ -159,7 +157,7 @@ describe('makeZenmuxLlmAdapters()', () => {
       for (const provider of [LOOKALIKE, LOCAL]) {
         const account = resolveLlmProviderAccount({ provider, adapters: ADAPTERS });
         expect(account.metering).toBe('none');
-        expect(account.statusSource).toBeUndefined();
+        expect(account.providerStatusSource).toBeUndefined();
         expect(account.billReader).toBeUndefined();
         expect(account.credentialProbe).toBeUndefined();
         expect(account.costBasis).toBeUndefined();
@@ -170,7 +168,7 @@ describe('makeZenmuxLlmAdapters()', () => {
       const seam = recordingFetch(404, '{"error":{"type":"invalid_model","message":"Requested model is not valid"}}');
       const account = resolveLlmProviderAccount({ provider: PROXY, adapters: ADAPTERS, fetch: seam.fetch });
 
-      await account.statusSource?.read();
+      await account.providerStatusSource?.read();
       await account.billReader?.read('g1');
       await account.credentialProbe?.();
 
@@ -184,18 +182,28 @@ describe('makeZenmuxLlmAdapters()', () => {
     });
 
     it('reports a missing management key as unavailable, naming the default or the host’s label', async () => {
-      const unnamed = await resolveLlmProviderAccount({ provider: ZENMUX, adapters: registryOf(makeZenmuxLlmAdapters()) }).statusSource?.read();
-      const named = await resolveLlmProviderAccount({ provider: ZENMUX, adapters: registryOf(makeZenmuxLlmAdapters({ managementApiKeyEnv: 'HOST_ZENMUX_MANAGEMENT_KEY' })) }).statusSource?.read();
+      const unnamed = await resolveLlmProviderAccount({ provider: ZENMUX, adapters: registryOf(makeZenmuxLlmAdapters()) }).providerStatusSource?.read();
+      const named = await resolveLlmProviderAccount({ provider: ZENMUX, adapters: registryOf(makeZenmuxLlmAdapters({ managementApiKeyEnv: 'HOST_ZENMUX_MANAGEMENT_KEY' })) }).providerStatusSource?.read();
 
       expect(unnamed?.available).toBe(false);
       expect(unnamed?.issues[0]?.message).toContain('ZENMUX_MANAGEMENT_API_KEY');
       expect(named?.issues[0]?.message).toContain('HOST_ZENMUX_MANAGEMENT_KEY');
     });
 
-    it('agrees with the registry-free cost-basis rule for every fixture', () => {
-      for (const provider of [ZENMUX, ZENMUX_PAYG, ENV_DEFAULT, PROXY, LOCAL, LOOKALIKE]) {
-        expect(zenmuxCostBasisFor({ metering: provider.metering, baseUrl: llmProviderBaseUrlOf({ provider, adapters: ADAPTERS }) })).toBe(resolveLlmProviderAccount({ provider, adapters: ADAPTERS }).costBasis);
-      }
+    // Ported from the retired registry-free `zenmuxCostBasisFor`: the core resolver is the one cost-basis answer.
+    it("costs a provider that DECLARES zenmux metering at ZenMux's list basis, whatever its URL", () => {
+      expect(resolveLlmProviderAccount({ provider: ZENMUX, adapters: ADAPTERS }).costBasis).toBe('list');
+      expect(resolveLlmProviderAccount({ provider: PROXY, adapters: ADAPTERS }).costBasis).toBe('list');
+    });
+
+    it('gives no cost basis to a provider that declares no metering, even at the ZenMux URL', () => {
+      expect(resolveLlmProviderAccount({ provider: LOCAL, adapters: ADAPTERS }).costBasis).toBeUndefined();
+    });
+
+    it('falls back to the URL only when nothing was declared', () => {
+      expect(resolveLlmProviderAccount({ provider: ENV_DEFAULT, adapters: ADAPTERS }).costBasis).toBe('list');
+      expect(resolveLlmProviderAccount({ provider: { ...ENV_DEFAULT, baseUrl: 'https://api.openai.com/v1' }, adapters: ADAPTERS }).costBasis).toBeUndefined();
+      expect(resolveLlmProviderAccount({ provider: LOOKALIKE, adapters: ADAPTERS }).costBasis).toBeUndefined();
     });
   });
 

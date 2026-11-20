@@ -11,7 +11,7 @@
 import { cachedGetter, type Maybe } from '@dereekb/util';
 import { type Type } from 'arktype';
 import { type LlmCapabilityModelRef } from '../model/llm.model.precedence';
-import { type LlmModelRoutingCapabilityRef } from '../model/llm.model.routing';
+import { type LlmModelRoutingCapabilityRef } from '../model/llm.capability.rule';
 import { type LlmCapabilityKey } from '../model/llm.value';
 import { type LlmPromptSlotId } from '../prompt/llm.prompt.layout';
 import { type LlmReplyProtocol } from '../reply/llm.reply.protocol';

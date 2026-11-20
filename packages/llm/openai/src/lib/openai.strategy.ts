@@ -32,7 +32,7 @@
  * The library reads NO environment: the host resolves the key / base URL / token-limit param / model from its own
  * configuration and passes them in.
  */
-import { DEFAULT_LLM_REASONING_OFF_ENCODING, llmReasoningOffEncodingFor, type LlmModelReasoningOffMap, type LlmReasoningOffEncoding, type LlmStrategy, type LlmStrategyId, type LlmTokenLimitParam } from '@dereekb/llm';
+import { DEFAULT_LLM_REASONING_OFF_ENCODING, llmReasoningOffEncodingFor, probeLlmCredentialEndpoint, type LlmModelReasoningOffMap, type LlmTransportCredentialProbe, type LlmReasoningOffEncoding, type LlmStrategy, type LlmStrategyId, type LlmTokenLimitParam } from '@dereekb/llm';
 import { llmOpenAiReasoningParamsOf } from './openai.chat';
 import { makeLlmOpenAiCompatibleChatStrategy, type LlmOpenAiCompatibleChatStrategyConfig, type LlmOpenAiCompatibleChatStrategyHooks } from './openai.compatible.strategy';
 
@@ -83,6 +83,16 @@ export interface LlmOpenAiStrategyConfig extends LlmOpenAiCompatibleChatStrategy
 }
 
 /**
+ * The OpenAI transport's own credential probe: `GET {baseUrl}/models`, the widest-compatible authenticated, no-cost
+ * endpoint across OpenAI-compatible gateways. This transport is PROVIDER-NEUTRAL, so a gateway that simply does not
+ * implement it must not be called dead: a 404 degrades to a `'warning'` on a still-`ready` verdict.
+ *
+ * @param params - The strategy id, trimmed base URL, key, fetch seam and signal.
+ * @returns The credential verdict.
+ */
+const LLM_OPENAI_CREDENTIAL_PROBE: LlmTransportCredentialProbe = (params) => probeLlmCredentialEndpoint({ ...params, url: `${params.baseUrl}/models`, notFoundSeverity: 'warning' });
+
+/**
  * Build the `openai` {@link LlmStrategy} — a provider-neutral transport over any OpenAI-compatible chat-completions
  * endpoint. With no injected client it reaches the endpoint over the `openai` SDK, enforcing the reply schema via
  * `response_format` when the dispatcher threaded one; with an injected client it stays network-free.
@@ -108,10 +118,7 @@ export function makeLlmOpenAiStrategy(config: LlmOpenAiStrategyConfig = {}): Llm
     caching: 'auto-prefix',
     defaultBaseUrl: DEFAULT_LLM_OPENAI_BASE_URL,
     tokenLimitParam: config.tokenLimitParam,
-    // `GET /models` is the widest-compatible authenticated, no-cost endpoint across OpenAI-compatible gateways. This
-    // transport is PROVIDER-NEUTRAL, so a gateway that simply does not implement it must not be called dead: a 404
-    // degrades to a `'warning'` on a still-`ready` verdict.
-    credentialProbe: { path: '/models', notFoundSeverity: 'warning' },
+    credentialProbe: LLM_OPENAI_CREDENTIAL_PROBE,
     // Reasoning maps onto the flat `reasoning_effort` (or, for the `nested-disabled` encoding, the nested object) — an
     // explicit OFF is ENCODED, never dropped; an unconfigured call still sends nothing. The OFF encoding is resolved
     // for THE SLUG being sent: whether `'none'` is accepted is a per-model fact.

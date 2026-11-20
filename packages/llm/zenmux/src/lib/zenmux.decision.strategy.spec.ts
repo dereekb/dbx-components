@@ -1,5 +1,5 @@
-import { isRetryableLlmDecisionError, llmChoiceQuestion, LlmDecisionAnswerFaultError, LlmDecisionTransportError, llmNoulQuestion, llmScoreQuestion, type LlmCredentialProbeRequestInit, type LlmDecisionRequest } from '@dereekb/llm';
-import { makeLlmSystemOneWireFake } from '@dereekb/llm/test';
+import { isRetryableLlmDecisionError, llmChoiceQuestion, LlmDecisionAnswerFaultError, LlmDecisionTransportError, llmNoulQuestion, llmScoreQuestion, type LlmDecisionRequest } from '@dereekb/llm';
+import { makeLlmSystemOneWireFake, llmFetchFakeRequestOf, type LlmFetchFakeRequest } from '@dereekb/llm/test';
 import { describe, expect, it } from 'vitest';
 import { makeZenmuxDecisionStrategy, ZENMUX_DECISION_STRATEGY_KIND, ZENMUX_REQUEST_ID_HEADER } from './zenmux.decision.strategy';
 
@@ -219,16 +219,16 @@ describe('makeZenmuxDecisionStrategy() readiness', () => {
   });
 
   it('credentialProbe asks the auth-gated sentinel question (not /models, which ZenMux answers 200 to any key)', async () => {
-    const probed: Array<{ readonly url: string; readonly init: LlmCredentialProbeRequestInit }> = [];
+    const probed: LlmFetchFakeRequest[] = [];
     const live = makeZenmuxDecisionStrategy({
       id: 'zenmux',
       apiKey: 'sk-zen',
-      probeFetch: async (url, init) => {
-        probed.push({ url, init });
-        return { ok: false, status: 404, text: async () => '{"error":{"type":"invalid_model","message":"Requested model is not valid"}}' };
+      probeFetch: async (input, init) => {
+        probed.push(llmFetchFakeRequestOf(input, init));
+        return new Response('{"error":{"type":"invalid_model","message":"Requested model is not valid"}}', { status: 404 });
       }
     });
-    const revoked = makeZenmuxDecisionStrategy({ id: 'zenmux', apiKey: 'sk-zen', probeFetch: async () => ({ ok: false, status: 401, text: async () => '{"error":{"message":"Invalid API key"}}' }) });
+    const revoked = makeZenmuxDecisionStrategy({ id: 'zenmux', apiKey: 'sk-zen', probeFetch: async () => new Response('{"error":{"message":"Invalid API key"}}', { status: 401 }) });
 
     expect(await live.credentialProbe?.()).toEqual({ ready: true, issues: [] });
     expect(probed[0]?.url).toBe('https://zenmux.ai/api/v1/chat/completions');

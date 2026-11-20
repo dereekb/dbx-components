@@ -9,6 +9,7 @@
  * capability, host meta, the per-call model overrides, the parent call context and the cancellation signal.
  */
 
+import { type AbortSignalRef } from '@dereekb/util';
 import { type LlmCapabilityKey, type LlmModelId, type LlmModelTierKey, type LlmReasoningConfig } from '../model/llm.value';
 import { type LlmPromptSite } from '../prompt/llm.prompt.site';
 import { type LlmLiveContextBlock } from '../prompt/llm.prompt.live.context';
@@ -22,7 +23,7 @@ import { type LlmAttachment, type LlmCallMeta } from '../strategy/llm.strategy';
  * What every dispatcher call carries, on either lane — a capability completion ({@link LlmDispatchRequest}) or a
  * decision (`LlmDecisionDispatchRequest`). The host hooks that receive a request see these fields on both lanes.
  */
-export interface LlmDispatchRequestBase {
+export interface LlmDispatchRequestBase extends AbortSignalRef {
   /**
    * The capability the call is made for — on a completion, the template, descriptor and strategy-selection key; on a
    * decision, the CONSUMING capability (the caller's, not the decision key), whose cell the decision records under.
@@ -50,10 +51,6 @@ export interface LlmDispatchRequestBase {
    * timing profile nests under whatever phase spawned it. Omitted ⇒ the call profiles standalone.
    */
   readonly callContext?: LlmCallContext;
-  /**
-   * Aborts the call — forwarded to every strategy call it makes, and re-checked before any resend.
-   */
-  readonly signal?: AbortSignal;
 }
 
 /**

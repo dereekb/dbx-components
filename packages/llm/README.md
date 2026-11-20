@@ -33,8 +33,10 @@ The root, `/decision`, `/openai`, `/openrouter` and `/zenmux` entries are browse
   over the core System One transport.
 - The browser entries have one sibling edge, `/openrouter` → `/openai`, and it is one-way: `/openai` imports no other
   provider entry. The isolation specs pin both directions.
-- The required peers are `@dereekb/util`, `@dereekb/model` (the JSON-Schema export; framework-free and browser-safe)
-  and `arktype`.
+- The required peers are `@dereekb/util` (its `/fetch` entry included), `@dereekb/model` (the JSON-Schema export;
+  framework-free and browser-safe) and `arktype`.
+- Every network read takes `@dereekb/util/fetch`'s `ConfiguredFetch` (default: the global `fetch`, read at call time,
+  via `resolveLlmFetch`) and reads each body once with `readFetchJsonText`.
 
 These rules are enforced, not just documented:
 
@@ -66,7 +68,10 @@ so several instances of one transport can be registered side by side. Those two,
   and `providerStatus` (account windows and balance). `verifyLlmStrategies` throws when a required strategy is
   missing or not ready; `probeLlmCredentials` and `readLlmProviderStatus` report and never throw (one status read per
   account). The first two read any registry of `LlmStrategyBase`s; pass `lane: LLM_DECISION_STRATEGY_READINESS_LANE`
-  to word the report for decision strategies (see [Strategies](#strategies)).
+  to word the report for decision strategies (see [Strategies](#strategies)). Every stock strategy's
+  `credentialProbe` runs the one ladder, `runLlmCredentialProbeLadder`: a missing key (and no injected fake) is an
+  error, a host probe source is delegated to, an injected fake is ready without a request, and otherwise the
+  transport's own `LlmTransportCredentialProbe` runs.
 - **Quota gate.** `evaluateLlmQuotaGate({ report })` refuses only when a measured window is above the ceiling (90% by
   default) and fails open whenever nothing is measured. A window's `unit` is an `LlmQuotaUnit`: one of the library's
   own (`flow`, `request`, `token`, `usd`) or a host's own string for a provider it meters itself.
@@ -337,7 +342,9 @@ explains the choice read the same answer.
   var) into an `LlmModelRoutingConfig` and fails loud naming the field — an unknown key, a non-array `rules`, a
   `"tags": "dialog"` string, a `"maxOutputTokens": "9000"` string or a non-integer cap, a bad `reasoning`, or a bad
   `tiers` value (the tier parser's own message). It checks shapes only; `compileLlmModelRouting` checks names.
-- **Rules.** `compileLlmModelRouting({ routing, capabilities, tiers, providers, label })` compiles an
+- **Rules.** `compileLlmModelRouting({ routing, capabilities, tiers, providers, label })` (a thin caller of the shared
+  `compileLlmCapabilityRules`, which also compiles the critique policy; a rule is an `LlmCapabilityRuleTarget`, i.e.
+  `capabilities` and/or `tags`) compiles an
   `LlmModelRoutingConfig` (`{ tiers?, defaultTier?, rules? }`) into an `LlmCompiledModelRouting`: capability →
   `LlmCapabilityRoute` (`{ model, tier?, provider?, maxOutputTokens?, reasoning? }`). A rule targets `capabilities`
   and/or `tags` and routes to a `tier` or a `model` slug (the slug wins when both are set). A capability-key match beats
@@ -382,10 +389,11 @@ a provider naming one you did not register fails loud, listing the ones you did.
   `decisionRoutes`.
 - **Strategies.** `makeLlmProviderStrategies({ providers, adapters, defaultModel, maxOutputTokens, timeoutMs,
   visionByModel, reasoningOffByModel })` builds one strategy per resolved provider (`resolveLlmProviderConfigs`),
-  registered under the provider's own name. Construction is inert.
+  registered under the provider's own name. Construction is inert. Both builders check each minted strategy with
+  `checkLlmAdapterStrategy` (the provider's own id; a decision strategy's declared `strategyKind`).
 - **Accounts.** `resolveLlmProviderAccount({ provider, adapters })` decides which account a provider bills — its
   declared `metering`, else the metering adapter that recognizes its base URL, else `none` — and every account fact
-  follows that one answer: cost basis, status source, credential probe and bill reader. `llmProviderBaseUrlOf` and
+  follows that one answer: cost basis, status source (`providerStatusSource`), credential probe and bill reader. `llmProviderBaseUrlOf` and
   `llmProviderMeteringOf` answer the parts for a report.
 - **Decisions.** `llmProviderDecisionRouteOf` reads a provider's declared `decision`, else the route a decision adapter
   serves for its transport, else `none` — never its base URL. `llmDecisionCapableProviders({ providers, adapters,
@@ -713,7 +721,8 @@ descriptor also carries the two schema projections the request and the prompt re
   `describeResponseSchemaHint` keeps the prose in the payload, per descriptor, default off.
   `hardenLlmResponseSchemaHint` (over `toStrictJsonSchema`) serves request-supplied hints; other projections, such as
   a tool's input schema, call `toStrictJsonSchema` directly.
-- **Critique.** `compileLlmCritiquePolicy` is fail-loud (unknown capability or tag, no target, or the judge itself);
+- **Critique.** `compileLlmCritiquePolicy` (built on `compileLlmCapabilityRules`, with the judge excluded) is
+  fail-loud (unknown capability or tag, no target, or the judge itself);
   a key match beats a tag match, and the first match wins. `llmCriticFor` gives `{}` unless a rule matches, so off is
   free. `makeLlmSemanticCritic` fails open with `critique-unusable` / `critique-error` breadcrumbs. `composeLlmCritics`
   runs critics in order and stops at the first rejection. The judge sees the goal, optional evidence, the subject's live
@@ -971,7 +980,9 @@ could need in one map.
   `POST {baseUrl}/systemone` for every gateway that serves the route. The hooks define the gateway: `kind`, `label`,
   `defaultBaseUrl`, `generationIdHeader` (read when the body has no `id`), `costBasis`, `laxAnswerTypes` and
   `credentialProbe`. The config is the host's: `id`, `apiKey`, `apiKeyEnv` (a label for messages), `baseUrl`,
-  `timeoutMs`, `decisionFetch` and `probeFetch`.
+  `timeoutMs`, `decisionFetch` and `probeFetch` (both `ConfiguredFetch`). `llmSystemOneDecisionStrategyConfigOf` is the
+  shared decision-adapter mapping (`id`, `apiKey`, `baseUrl`, `timeoutMs`, `fetch` → `probeFetch`); a gateway adds its
+  own keys on top.
   - Failures: a timeout or abort rejects with the signal's reason (never wrapped); a socket failure is an
     `LlmDecisionTransportError` with the native error as its `cause`; a non-2xx carries `status` and the raw `body`;
     a 2xx whose body is not a JSON object is a transport error with `status` and `body`; an answer fault throws
@@ -1060,7 +1071,10 @@ vLLM — over the optional `openai` peer.
   `providerStatusSource`.
 
 `LLM_OPENAI_ADAPTERS` registers the completion transport `openai` (default base URL `https://api.openai.com/v1`).
-`llmOpenAiStrategyConfigOf` is its mapping, exported so a host can extend it in its own adapter:
+`llmOpenAiStrategyConfigOf` is its mapping: the shared `llmOpenAiCompatibleStrategyConfigOf` (every OpenAI-compatible
+completion adapter's mapping) plus the four OpenAI extras. Both are exported so a host can extend them in its own
+adapter. `probeFetch` is a `ConfiguredFetch`, and a transport's `credentialProbe` hook is a function
+(`LlmTransportCredentialProbe`):
 
 | strategy config | from the adapter config |
 | --- | --- |
@@ -1132,10 +1146,12 @@ OpenRouter's hook set over `makeLlmSystemOneDecisionStrategy`, with no SDK.
   failure is an `LlmDecisionTransportError` with the native error as its `cause` (the dispatcher's decision lane
   resends it), and an HTTP answer is an `LlmDecisionTransportError` (`status`, `body`).
 - Seams: `decisionFetch` (a keyless fake of the route) and `probeFetch`; the credential probe is `GET {baseUrl}/key`.
+- `probeLlmOpenRouterCredential({ strategyId, apiKey, baseUrl?, fetch?, signal? })` is that one probe
+  (`GET {baseUrl}/key`, 404 = error), shared by the chat and decision strategies.
 
 `LLM_OPENROUTER_ADAPTERS` registers the completion transport `openrouter` (default `https://openrouter.ai/api/v1`) and
 the decision route `openrouter` (`strategyKind: 'openrouter-decisions'`, derived for every `openrouter`-transport
-provider). The completion mapping (`llmOpenRouterStrategyConfigOf`) ignores the provider's `reasoningOff`,
+provider). The completion mapping is `/openai`'s shared `llmOpenAiCompatibleStrategyConfigOf`, which ignores the provider's `reasoningOff`,
 `tokenLimitParam` and `usageAccounting` — this wire has one spelling for each. The entry's swallow sites are
 `LLM_OPENROUTER_SWALLOW_SITES`; register them beside the root's the same way.
 
@@ -1158,9 +1174,12 @@ plain `fetch`, so it needs no SDK, and never reads the environment: the host pas
   inference key covers bills, and reads every call's bill, the subscription's included. The MANAGEMENT API key
   covers quota status; both inference keys get `403 Invalid API key` there.
 - **Cost basis.** A synchronous `cost` is the pre-discount LIST amount (`ZENMUX_SYNC_COST_BASIS = 'list'`), an upper
-  bound: measured over 406 calls, three of 17 slugs billed half of it. `zenmuxCostBasisFor` / `isZenmuxMeteredProvider`
-  are the registry-free form of the rule — a declared `metering` wins, else the URL must parse as `zenmux.ai` or a
-  subdomain (`isZenmuxBaseUrl`; a look-alike host never qualifies).
+  bound: measured over 406 calls, three of 17 slugs billed half of it. A provider's cost basis is
+  `resolveLlmProviderAccount(…).costBasis` with these adapters registered — a declared `metering` wins, else the URL
+  must parse as `zenmux.ai` or a subdomain (`isZenmuxBaseUrl`, which is `@dereekb/util`'s `isWebsiteUrlOnDomain`; a
+  look-alike host never qualifies).
+- **Management API.** Every management read is one `readZenmuxManagement` (an authenticated GET read once with
+  `readFetchJsonText`) answering a `ZenmuxEnvelope<T>`; `zenmuxManagementUrl` / `zenmuxGenerationUrl` build the URLs.
 - **Bills.** `makeZenmuxGenerationBillReader` reads `management/generation?id=`. A call bills 3–5 minutes after it is
   made, so a `404` reads `pending`; a refused key reads `failed` in ZenMux's own words.
 - **Quota status.** `makeZenmuxProviderStatusSource` reads `subscription/detail`, `payg/balance` and `flow_rate` in
@@ -1170,7 +1189,9 @@ plain `fetch`, so it needs no SDK, and never reads the environment: the host pas
   `metering: 'zenmux'`) reads the account at `DEFAULT_ZENMUX_BASE_URL`.
 - **Credential probe.** `GET /models` answers 200 to any bearer, so `probeZenmuxCredential` asks two auth-gated,
   never-billed questions instead: a chat completion naming a model no gateway serves (a live subscription key gets
-  `404`), then, only if refused, a bill lookup of a made-up id (a live pay-as-you-go key gets `404`).
+  `404`), then, only if refused, a bill lookup of a made-up id (a live pay-as-you-go key gets `404`). The chat question
+  goes to the provider's own base; the bill lookup goes to `zenmuxAccountBaseUrlOf(baseUrl)`, so a LAN proxy's 404
+  never reads as a live key.
 - **Decisions.** `makeZenmuxDecisionStrategy` (`kind: 'zenmux-systemone'`) is the core System One transport with the
   ZenMux hooks. It sends exactly `{ model, state, questions }` via `llmDecisionRequestBody` — ZenMux answers `400` to any
   other key. The generation id comes from the `X-ZenMux-RequestId` header, a type-less answer takes its question's
@@ -1315,7 +1336,11 @@ scripts make no network call, and the lane's helpers answer `undefined` while it
   exactly as a live transport would; usage is a zero-cost reading. Build answers with the root entry's
   `llmDecisionChoiceAnswerOf` / `llmDecisionScoreAnswerOf` / `llmDecisionNoulAnswerOf`, which are well-formed by
   construction, so a script states only which option won and how surely.
-- **System One wire.** `makeLlmSystemOneWireFake({ respond })` is the one `/systemone` fake: `respond` is an answer
+- **Fetch seams.** `makeLlmFetchFake(respond)` is a `ConfiguredFetch` fake for any fetch-seam spec: it records each
+  request (`url`, and an `init` with `method`, a plain `headers` record, `body`, `signal`) and answers with a real
+  `Response` (`llmFetchFakeResponse({ status, body, headers })`); `respond` is an answer, a function, or `'hang'`.
+- **System One wire.** `makeLlmSystemOneWireFake({ respond })` is the one `/systemone` fake (its `fetch` is a
+  `ConfiguredFetch`): `respond` is an answer
   (`{ status, body, headers }`, used for every request), a function (called per request; a throw is the socket
   failure) or `'hang'` (rejects with the signal's reason on abort). It records every request (`url`, `init`, parsed
   `body`) in `requests`. Pass its `fetch` as a decision strategy's `decisionFetch`, or stub the global `fetch` with it

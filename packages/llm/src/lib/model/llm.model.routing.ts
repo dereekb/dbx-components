@@ -33,6 +33,7 @@ import {
   llmModelOutputControlsOf,
   parseLlmModelConfigFields
 } from './llm.model.field';
+import { compileLlmCapabilityRules, type LlmModelRoutingCapabilityRef } from './llm.capability.rule';
 import { resolveLlmModelTier, type LlmModelTierMap, type LlmPartialModelTierMap } from './llm.model.tier';
 import { parseLlmModelTierMap } from './llm.model.tier.parse';
 import { llmModelRoutingRuleType, llmModelTierKeyType } from './llm.model.type';
@@ -220,21 +221,6 @@ export interface LlmCapabilityRoute extends Pick<LlmModelSelection, 'tier'>, Llm
 export type LlmCompiledModelRouting = ReadonlyMap<LlmCapabilityKey, LlmCapabilityRoute>;
 
 /**
- * The capability view {@link compileLlmModelRouting} validates and matches against — structural (key + tags), so this
- * leaf module never imports a capability registry.
- */
-export interface LlmModelRoutingCapabilityRef {
-  /**
-   * The capability key.
-   */
-  readonly capability: LlmCapabilityKey;
-  /**
-   * The capability's declared tags, when any.
-   */
-  readonly tags?: ReadonlyArray<LlmCapabilityTag>;
-}
-
-/**
  * Config for {@link compileLlmModelRouting}.
  */
 export interface CompileLlmModelRoutingConfig {
@@ -264,14 +250,6 @@ export interface CompileLlmModelRoutingConfig {
 }
 
 /**
- * One rule, validated and pre-resolved.
- */
-interface LlmResolvedModelRoutingRule {
-  readonly rule: LlmModelRoutingRule;
-  readonly route: LlmCapabilityRoute;
-}
-
-/**
  * Compile a host routing block into the per-capability route map — validated FAIL-LOUD (an unknown capability key,
  * tag, tier key or provider, and a target-less or route-less rule each throw at startup), with the precedence
  * pre-applied: a rule that names a capability key beats any tag-matching rule; within each level the first matching
@@ -285,38 +263,17 @@ interface LlmResolvedModelRoutingRule {
  */
 export function compileLlmModelRouting(config: CompileLlmModelRoutingConfig): LlmCompiledModelRouting {
   const { routing, capabilities, tiers, providers } = config;
-  const labelPrefix = config.label ?? DEFAULT_LLM_MODEL_ROUTING_LABEL;
-  const rules = routing.rules ?? [];
-  const routes = new Map<LlmCapabilityKey, LlmCapabilityRoute>();
 
-  if (rules.length > 0) {
-    const knownCapabilities = new Set(capabilities.map((ref) => ref.capability));
-    const knownTags = new Set(capabilities.flatMap((ref) => ref.tags ?? []));
-
-    // Validate and pre-resolve every rule once (fail-loud), independent of whether anything matches it.
-    const resolvedRules = rules.map((rule, index): LlmResolvedModelRoutingRule => {
-      const label = `${labelPrefix} rule #${index + 1}`;
-
-      if ((rule.capabilities == null || rule.capabilities.length === 0) && (rule.tags == null || rule.tags.length === 0)) {
-        throw new Error(`${label}: declares no target; set 'capabilities' and/or 'tags'.`);
-      }
-
+  return compileLlmCapabilityRules<LlmModelRoutingRule, LlmCapabilityRoute>({
+    rules: routing.rules,
+    capabilities,
+    label: config.label ?? DEFAULT_LLM_MODEL_ROUTING_LABEL,
+    validateRule: (rule, { label }) => {
       if (rule.model == null && rule.tier == null) {
         throw new Error(`${label}: declares no route; set 'tier' or 'model'.`);
       }
-
-      for (const capability of rule.capabilities ?? []) {
-        if (!knownCapabilities.has(capability)) {
-          throw new Error(`${label}: unknown capability '${capability}'.`);
-        }
-      }
-
-      for (const tag of rule.tags ?? []) {
-        if (!knownTags.has(tag)) {
-          throw new Error(`${label}: no capability carries the tag '${tag}' (have: ${Array.from(knownTags).join(', ') || 'none'}).`);
-        }
-      }
-
+    },
+    valueOf: (rule, { label }) => {
       // A provider name is validated only when the caller declared the provider set — see
       // `CompileLlmModelRoutingConfig.providers` for why an ABSENT set skips rather than rejects. Fail-loud when it is
       // declared: a typo'd provider silently served from the default one is a run billing the wrong account.
@@ -327,19 +284,7 @@ export function compileLlmModelRouting(config: CompileLlmModelRoutingConfig): Ll
       // A raw slug wins over a tier (the capability-slug-over-tier precedent); a tier resolves fail-loud NOW.
       const shared = { ...(rule.provider == null ? {} : { provider: rule.provider }), ...(rule.maxOutputTokens == null ? {} : { maxOutputTokens: rule.maxOutputTokens }), ...(rule.reasoning == null ? {} : { reasoning: rule.reasoning }) };
       const route: LlmCapabilityRoute = rule.model == null ? { model: resolveLlmModelTier(tiers, rule.tier as LlmModelTierKey), tier: rule.tier as LlmModelTierKey, ...shared } : { model: rule.model, ...shared };
-      return { rule, route };
-    });
-
-    // Resolve each known capability against the rules: the capability-key level first, then the tag level.
-    for (const ref of capabilities) {
-      const byCapability = resolvedRules.find(({ rule }) => rule.capabilities?.includes(ref.capability));
-      const match = byCapability ?? (ref.tags == null || ref.tags.length === 0 ? undefined : resolvedRules.find(({ rule }) => rule.tags?.some((tag) => ref.tags?.includes(tag))));
-
-      if (match != null) {
-        routes.set(ref.capability, match.route);
-      }
+      return route;
     }
-  }
-
-  return routes;
+  });
 }

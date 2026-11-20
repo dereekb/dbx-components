@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_LLM_COMPLETION_TIMEOUT_MS, DEFAULT_LLM_MAX_OUTPUT_TOKENS, DEFAULT_LLM_REASONING_OFF_ENCODING, type LlmCredentialProbeFetch, type LlmRequest } from '@dereekb/llm';
+import { type ConfiguredFetch } from '@dereekb/util/fetch';
+import { DEFAULT_LLM_COMPLETION_TIMEOUT_MS, DEFAULT_LLM_MAX_OUTPUT_TOKENS, DEFAULT_LLM_REASONING_OFF_ENCODING, type LlmRequest } from '@dereekb/llm';
 import { LLM_OPENAI_STRATEGY_KIND, makeLlmOpenAiStrategy } from './openai.strategy';
 import { llmOpenAiCallTimeoutMs, type LlmOpenAiChatClient, type LlmOpenAiRequestOptions } from './openai.chat';
 
@@ -492,9 +493,10 @@ describe('makeLlmOpenAiStrategy()', () => {
   describe('credentialProbe', () => {
     it('GETs `{baseUrl}/models` with the credential and reports ready on a 200', async () => {
       const calls: string[] = [];
-      const probeFetch: LlmCredentialProbeFetch = async (url) => {
+      const probeFetch: ConfiguredFetch = async (input) => {
+        const url = String(input);
         calls.push(url);
-        return { ok: true, status: 200, text: async () => '{"data":[]}' };
+        return new Response('{"data":[]}', { status: 200 });
       };
       const strategy = makeLlmOpenAiStrategy({ apiKey: 'sk-live', baseUrl: 'https://zenmux.ai/api/v1', probeFetch });
 
@@ -503,7 +505,7 @@ describe('makeLlmOpenAiStrategy()', () => {
     });
 
     it('reports NOT ready on a rejected credential, carrying the provider message', async () => {
-      const probeFetch: LlmCredentialProbeFetch = async () => ({ ok: false, status: 401, text: async () => '{"error":{"message":"Invalid API key"}}' });
+      const probeFetch: ConfiguredFetch = async () => new Response('{"error":{"message":"Invalid API key"}}', { status: 401 });
       const strategy = makeLlmOpenAiStrategy({ apiKey: 'sk-dead', probeFetch });
 
       const health = await strategy.credentialProbe?.();
@@ -514,9 +516,10 @@ describe('makeLlmOpenAiStrategy()', () => {
 
     it('delegates to a host-supplied credentialProbeSource instead of GET /models', async () => {
       const calls: string[] = [];
-      const probeFetch: LlmCredentialProbeFetch = async (url) => {
+      const probeFetch: ConfiguredFetch = async (input) => {
+        const url = String(input);
         calls.push(url);
-        return { ok: true, status: 200, text: async () => '{}' };
+        return new Response('{}', { status: 200 });
       };
       const strategy = makeLlmOpenAiStrategy({ apiKey: 'sk-dead', baseUrl: 'https://zenmux.ai/api/v1', probeFetch, credentialProbeSource: async () => ({ ready: false, issues: [{ severity: 'error', message: 'zenmux rejected the configured credential' }] }) });
 
@@ -527,7 +530,7 @@ describe('makeLlmOpenAiStrategy()', () => {
     });
 
     it('degrades a gateway with no /models endpoint to a READY warning', async () => {
-      const probeFetch: LlmCredentialProbeFetch = async () => ({ ok: false, status: 404, text: async () => '' });
+      const probeFetch: ConfiguredFetch = async () => new Response('', { status: 404 });
       const strategy = makeLlmOpenAiStrategy({ apiKey: 'sk-live', probeFetch });
 
       const health = await strategy.credentialProbe?.();

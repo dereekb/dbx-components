@@ -25,7 +25,7 @@ import { type LlmCredentialProbe, type LlmStrategy } from '../strategy/llm.strat
 import { type LlmProviderStatusSource } from '../strategy/llm.provider.status';
 import { type LlmCallBillReader } from '../strategy/llm.call.bill';
 import { type LlmCostBasis } from '../strategy/llm.usage';
-import { type LlmCredentialProbeFetch } from '../strategy/llm.credential.probe';
+import { type ConfiguredFetch } from '@dereekb/util/fetch';
 import { type LlmDecisionStrategy } from '../decision/llm.decision.strategy';
 
 /**
@@ -60,7 +60,7 @@ export interface LlmAdapterInput {
   /**
    * The HTTP seam for probes, account reads and bill reads — a spec's fake. Absent ⇒ the adapter's own default.
    */
-  readonly fetch?: LlmCredentialProbeFetch;
+  readonly fetch?: ConfiguredFetch;
 }
 
 /**

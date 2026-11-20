@@ -4,29 +4,19 @@
  * `/systemone`. ZenMux CHAT is not here: it rides the OpenAI-compatible completion transport.
  */
 
-import { type LlmAdapter, type LlmBillAdapter, type LlmCredentialProbeAdapter, type LlmDecisionAdapter, type LlmMeteringAdapter } from '@dereekb/llm';
+import { llmSystemOneDecisionStrategyConfigOf, type LlmAdapter, type LlmBillAdapter, type LlmCredentialProbeAdapter, type LlmDecisionAdapter, type LlmMeteringAdapter } from '@dereekb/llm';
 import { isNotBlankString, isNotNullOrEmptyString, type Maybe } from '@dereekb/util';
 import { isZenmuxBaseUrl, zenmuxAccountBaseUrlOf, ZENMUX_SYNC_COST_BASIS } from './zenmux.account';
 import { ZENMUX_DECISION_ROUTE, ZENMUX_PROVIDER_ID } from './zenmux.constants';
 import { probeZenmuxCredential } from './zenmux.credential.probe';
 import { makeZenmuxDecisionStrategy, ZENMUX_DECISION_STRATEGY_KIND } from './zenmux.decision.strategy';
 import { makeZenmuxGenerationBillReader } from './zenmux.generation.bill';
-import { makeZenmuxProviderStatusSource } from './zenmux.provider.status';
+import { makeZenmuxProviderStatusSource, type ZenmuxProviderStatusSourceConfig } from './zenmux.provider.status';
 
 /**
  * The host secrets the ZenMux account adapters close over. None is read from the environment here.
  */
-export interface ZenmuxLlmAdaptersConfig {
-  /**
-   * The **Management API Key** the account (quota status) reads authenticate with. Absent ⇒ every status read reports
-   * `available: false` with an issue naming {@link managementApiKeyEnv}.
-   */
-  readonly managementApiKey?: Maybe<string>;
-  /**
-   * WHICH env var supplied {@link managementApiKey} — the label a missing-key report names. Absent ⇒
-   * `ZENMUX_MANAGEMENT_API_KEY`.
-   */
-  readonly managementApiKeyEnv?: Maybe<string>;
+export interface ZenmuxLlmAdaptersConfig extends Pick<ZenmuxProviderStatusSourceConfig, 'managementApiKey' | 'managementApiKeyEnv'> {
   /**
    * The PAY-AS-YOU-GO inference key bills are read with — the one key `management/generation` accepts, and it reads
    * subscription-key calls too. Blank / absent ⇒ each provider's own key.
@@ -43,15 +33,7 @@ export const ZENMUX_DECISION_ADAPTER: LlmDecisionAdapter = {
   facet: 'decision',
   kind: ZENMUX_DECISION_ROUTE,
   strategyKind: ZENMUX_DECISION_STRATEGY_KIND,
-  make: ({ provider, baseUrl, fetch, timeoutMs }) =>
-    makeZenmuxDecisionStrategy({
-      id: provider.id,
-      apiKey: provider.apiKey,
-      apiKeyEnv: provider.apiKeyEnv,
-      ...(baseUrl == null ? {} : { baseUrl }),
-      ...(timeoutMs == null ? {} : { timeoutMs }),
-      ...(fetch == null ? {} : { probeFetch: fetch })
-    })
+  make: (config) => makeZenmuxDecisionStrategy({ ...llmSystemOneDecisionStrategyConfigOf(config), apiKeyEnv: config.provider.apiKeyEnv })
 };
 
 /**

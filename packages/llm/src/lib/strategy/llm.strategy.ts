@@ -28,7 +28,7 @@
  * handle — it is a derived view of the same prompt bytes, and a non-caching strategy ignores it entirely.
  */
 
-import { type Milliseconds } from '@dereekb/util';
+import { type AbortSignalRef, type Milliseconds } from '@dereekb/util';
 import { type LlmCapabilityKey, type LlmModelId, type LlmReasoningConfig, type LlmStrategyId } from '../model/llm.value';
 import { type LlmPromptCacheSegments, type LlmPromptSegment } from '../prompt/llm.prompt.segment';
 import { type LlmProviderStatus, type LlmProviderStatusOptions, type LlmProviderStatusProviderId } from './llm.provider.status';
@@ -424,14 +424,7 @@ export type LlmCacheMode =
  * request bytes (so they never perturb the content-addressed prompt cache). Optional + additive: a strategy that
  * ignores them behaves exactly as without them.
  */
-export interface LlmCompleteOptions {
-  /**
-   * An EXTERNAL cancellation signal (a user's stop). A transport combines it with its own per-call timeout
-   * (`@dereekb/util` `makeTimeoutAbortSignal`) so an in-flight call aborts the instant it fires. Omitted ⇒ only the transport's internal
-   * timeout applies.
-   */
-  readonly signal?: AbortSignal;
-}
+export interface LlmCompleteOptions extends AbortSignalRef {}
 
 /**
  * The per-request timeout FLOOR of a completion transport. The stock OpenAI-compatible transports scale each call's
@@ -453,12 +446,7 @@ export const DEFAULT_LLM_MAX_OUTPUT_TOKENS = 8_192;
  * Per-call options for {@link LlmStrategy.credentialProbe} — the external cancellation seam, mirroring
  * {@link LlmCompleteOptions.signal}. A probe combines it with its own short internal timeout.
  */
-export interface LlmCredentialProbeOptions {
-  /**
-   * An EXTERNAL cancellation signal. Omitted ⇒ only the probe's own timeout applies.
-   */
-  readonly signal?: AbortSignal;
-}
+export interface LlmCredentialProbeOptions extends AbortSignalRef {}
 
 /**
  * A gateway-specific credential probe a HOST hands a provider-neutral transport (as it hands an

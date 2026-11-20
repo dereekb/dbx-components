@@ -1,58 +1,8 @@
-import { type LlmAdapter, type LlmCompletionAdapter, type LlmCompletionAdapterConfig, type LlmDecisionAdapter, type LlmDecisionAdapterConfig } from '@dereekb/llm';
-import { LLM_OPENROUTER_DECISION_STRATEGY_KIND, makeLlmOpenRouterDecisionStrategy, type LlmOpenRouterDecisionStrategyConfig } from './openrouter.decision';
-import { LLM_OPENROUTER_BASE_URL, LLM_OPENROUTER_STRATEGY_KIND, makeLlmOpenRouterStrategy, type LlmOpenRouterStrategyConfig } from './openrouter.strategy';
-
-/**
- * Map one completion adapter config onto {@link LlmOpenRouterStrategyConfig}: `id` / `apiKey` from the provider, then
- * `baseUrl`, `defaultModel`, `maxOutputTokens`, `timeoutMs`, `visionByModel`, `costBasis`, `providerStatusSource`,
- * `credentialProbeSource` (from `credentialProbe`) and `probeFetch` (from `fetch`), each a conditional spread.
- *
- * It deliberately IGNORES `reasoningOffByModel` and the provider's `reasoningOff`, `tokenLimitParam` and
- * `usageAccounting`: the OpenRouter wire has one spelling for each (the nested `reasoning` object carries
- * `enabled: false`; the cap is always `max_tokens`; accounting is always on).
- *
- * Exported so a host can extend an adapter-built config in its own adapter (e.g. `dangerouslyAllowBrowser: true` for a
- * browser app holding the user's own key); the stock adapter never sets it.
- *
- * @param config - The resolved completion adapter config.
- * @returns The strategy config.
- * @__NO_SIDE_EFFECTS__
- */
-export function llmOpenRouterStrategyConfigOf(config: LlmCompletionAdapterConfig): LlmOpenRouterStrategyConfig {
-  const { provider, baseUrl, defaultModel, maxOutputTokens, timeoutMs, visionByModel, costBasis, providerStatusSource, credentialProbe, fetch } = config;
-  return {
-    id: provider.id,
-    apiKey: provider.apiKey,
-    ...(baseUrl == null ? {} : { baseUrl }),
-    ...(defaultModel == null ? {} : { defaultModel }),
-    ...(maxOutputTokens == null ? {} : { maxOutputTokens }),
-    ...(timeoutMs == null ? {} : { timeoutMs }),
-    ...(visionByModel == null ? {} : { visionByModel }),
-    ...(costBasis == null ? {} : { costBasis }),
-    ...(providerStatusSource == null ? {} : { providerStatusSource }),
-    ...(credentialProbe == null ? {} : { credentialProbeSource: credentialProbe }),
-    ...(fetch == null ? {} : { probeFetch: fetch })
-  };
-}
-
-/**
- * Map one decision adapter config onto {@link LlmOpenRouterDecisionStrategyConfig}: `id` / `apiKey` from the provider,
- * then `baseUrl`, `timeoutMs` and `probeFetch` (from `fetch`), each a conditional spread.
- *
- * @param config - The resolved decision adapter config.
- * @returns The strategy config.
- * @__NO_SIDE_EFFECTS__
- */
-export function llmOpenRouterDecisionStrategyConfigOf(config: LlmDecisionAdapterConfig): LlmOpenRouterDecisionStrategyConfig {
-  const { provider, baseUrl, timeoutMs, fetch } = config;
-  return {
-    id: provider.id,
-    apiKey: provider.apiKey,
-    ...(baseUrl == null ? {} : { baseUrl }),
-    ...(timeoutMs == null ? {} : { timeoutMs }),
-    ...(fetch == null ? {} : { probeFetch: fetch })
-  };
-}
+import { llmSystemOneDecisionStrategyConfigOf, type LlmAdapter, type LlmCompletionAdapter, type LlmDecisionAdapter } from '@dereekb/llm';
+import { llmOpenAiCompatibleStrategyConfigOf } from '@dereekb/llm/openai';
+import { LLM_OPENROUTER_BASE_URL } from './openrouter.constants';
+import { LLM_OPENROUTER_DECISION_STRATEGY_KIND, makeLlmOpenRouterDecisionStrategy } from './openrouter.decision';
+import { LLM_OPENROUTER_STRATEGY_KIND, makeLlmOpenRouterStrategy } from './openrouter.strategy';
 
 /**
  * The completion adapter for the `openrouter` transport: builds {@link makeLlmOpenRouterStrategy} for every provider
@@ -62,7 +12,7 @@ export const LLM_OPENROUTER_COMPLETION_ADAPTER: LlmCompletionAdapter = {
   facet: 'completion',
   kind: LLM_OPENROUTER_STRATEGY_KIND,
   defaultBaseUrl: LLM_OPENROUTER_BASE_URL,
-  make: (config) => makeLlmOpenRouterStrategy(llmOpenRouterStrategyConfigOf(config))
+  make: (config) => makeLlmOpenRouterStrategy(llmOpenAiCompatibleStrategyConfigOf(config))
 };
 
 /**
@@ -75,7 +25,7 @@ export const LLM_OPENROUTER_DECISION_ADAPTER: LlmDecisionAdapter = {
   kind: LLM_OPENROUTER_STRATEGY_KIND,
   strategyKind: LLM_OPENROUTER_DECISION_STRATEGY_KIND,
   transports: [LLM_OPENROUTER_STRATEGY_KIND],
-  make: (config) => makeLlmOpenRouterDecisionStrategy(llmOpenRouterDecisionStrategyConfigOf(config))
+  make: (config) => makeLlmOpenRouterDecisionStrategy(llmSystemOneDecisionStrategyConfigOf(config))
 };
 
 /**

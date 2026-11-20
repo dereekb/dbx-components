@@ -4,7 +4,7 @@
   "sourceRoot": "packages/llm/src",
   "projectType": "library",
   "tags": ["publishable"],
-  "implicitDependencies": ["!llm-test"],
+  "implicitDependencies": ["util-fetch", "!llm-test"],
   "targets": {
     "build": {
       "executor": "nx:run-commands",

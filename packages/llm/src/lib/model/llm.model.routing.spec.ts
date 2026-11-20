@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { compileLlmModelRouting, type CompileLlmModelRoutingConfig, LLM_MODEL_ROUTING_RULE_FIELD_RULES, LLM_MODEL_ROUTING_RULE_KEYS, type LlmModelRoutingCapabilityRef, type LlmModelRoutingConfig, parseLlmModelRoutingConfig } from './llm.model.routing';
+import { compileLlmModelRouting, type CompileLlmModelRoutingConfig, LLM_MODEL_ROUTING_RULE_FIELD_RULES, LLM_MODEL_ROUTING_RULE_KEYS, type LlmModelRoutingConfig, parseLlmModelRoutingConfig } from './llm.model.routing';
+import { type LlmModelRoutingCapabilityRef } from './llm.capability.rule';
 import { type LlmModelTierMap } from './llm.model.tier';
 
 const TIERS: LlmModelTierMap = { fast: 'vendor/model-fast', strong: 'vendor/model-strong', dialog: { model: 'vendor/character-voice', maxOutputTokens: 2048 } };

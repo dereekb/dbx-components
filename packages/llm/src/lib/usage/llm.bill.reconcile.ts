@@ -10,7 +10,7 @@
  * minutes) and failed ones are COUNTED, never folded as zero, so a half-reconciled run says so.
  */
 
-import { compareStrings, type DollarAmount, type Maybe } from '@dereekb/util';
+import { type AbortSignalRef, compareStrings, type DollarAmount, type Maybe } from '@dereekb/util';
 import type { LlmCallLogPayloadBase } from '../record/llm.call.payload';
 import type { LlmCallBillRead, LlmCallBillReader } from '../strategy/llm.call.bill';
 import { llmCostOf } from '../strategy/llm.usage';
@@ -123,7 +123,7 @@ export interface LlmBillReconciliation {
 /**
  * Config for {@link reconcileLlmCallBills}.
  */
-export interface ReconcileLlmCallBillsConfig {
+export interface ReconcileLlmCallBillsConfig extends AbortSignalRef {
   /**
    * The logged `llm_call` payloads to reconcile (the caller has already chosen which).
    */
@@ -136,10 +136,6 @@ export interface ReconcileLlmCallBillsConfig {
    * How many reads run at once; defaults to {@link DEFAULT_LLM_BILL_RECONCILE_CONCURRENCY}.
    */
   readonly concurrency?: number;
-  /**
-   * Optional external cancellation: once aborted, no new read starts, and every unread call counts as pending.
-   */
-  readonly signal?: AbortSignal;
 }
 
 /**

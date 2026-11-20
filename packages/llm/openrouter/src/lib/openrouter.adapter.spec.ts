@@ -1,14 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { llmDecisionStrategyKinds, llmModelConfigListsOf, makeLlmAdapterRegistry, makeLlmDecisionStrategies, makeLlmProviderStrategy, type LlmCompletionAdapterConfig, type LlmCredentialProbeFetch, type LlmProviderConfig } from '@dereekb/llm';
-import { LLM_OPENROUTER_ADAPTERS, LLM_OPENROUTER_COMPLETION_ADAPTER, LLM_OPENROUTER_DECISION_ADAPTER, llmOpenRouterDecisionStrategyConfigOf, llmOpenRouterStrategyConfigOf } from './openrouter.adapter';
+import { type ConfiguredFetch } from '@dereekb/util/fetch';
+import { llmDecisionStrategyKinds, llmModelConfigListsOf, llmSystemOneDecisionStrategyConfigOf, makeLlmAdapterRegistry, makeLlmDecisionStrategies, makeLlmProviderStrategy, type LlmCompletionAdapterConfig, type LlmProviderConfig } from '@dereekb/llm';
+import { llmOpenAiCompatibleStrategyConfigOf } from '@dereekb/llm/openai';
+import { LLM_OPENROUTER_ADAPTERS, LLM_OPENROUTER_COMPLETION_ADAPTER, LLM_OPENROUTER_DECISION_ADAPTER } from './openrouter.adapter';
 
 const ROUTER: LlmProviderConfig = { id: 'router-a', transport: 'openrouter', apiKeyEnv: 'ROUTER_KEY', apiKey: 'or-key' };
 
 function recordingFetch() {
   const calls: string[] = [];
-  const fetch: LlmCredentialProbeFetch = async (url) => {
+  const fetch: ConfiguredFetch = async (input) => {
+    const url = String(input);
     calls.push(url);
-    return { ok: true, status: 200, text: async () => '{"data":{}}' };
+    return new Response('{"data":{}}', { status: 200 });
   };
   return { fetch, calls };
 }
@@ -30,9 +33,9 @@ describe('LLM_OPENROUTER_ADAPTERS', () => {
   });
 });
 
-describe('llmOpenRouterStrategyConfigOf()', () => {
+describe('llmOpenAiCompatibleStrategyConfigOf() (the OpenRouter completion mapping)', () => {
   it('maps a bare provider onto exactly its id and key', () => {
-    expect(llmOpenRouterStrategyConfigOf({ provider: ROUTER })).toEqual({ id: 'router-a', apiKey: 'or-key' });
+    expect(llmOpenAiCompatibleStrategyConfigOf({ provider: ROUTER })).toEqual({ id: 'router-a', apiKey: 'or-key' });
   });
 
   it('maps every input and ignores the knobs the OpenRouter wire spells one way', () => {
@@ -53,7 +56,7 @@ describe('llmOpenRouterStrategyConfigOf()', () => {
       credentialProbe
     };
 
-    expect(llmOpenRouterStrategyConfigOf(config)).toEqual({
+    expect(llmOpenAiCompatibleStrategyConfigOf(config)).toEqual({
       id: 'router-a',
       apiKey: 'or-key',
       baseUrl: 'https://gateway.test/api/v1',
@@ -69,14 +72,14 @@ describe('llmOpenRouterStrategyConfigOf()', () => {
   });
 });
 
-describe('llmOpenRouterDecisionStrategyConfigOf()', () => {
+describe('llmSystemOneDecisionStrategyConfigOf() (the OpenRouter decision mapping)', () => {
   it('maps a bare provider onto exactly its id and key', () => {
-    expect(llmOpenRouterDecisionStrategyConfigOf({ provider: ROUTER })).toEqual({ id: 'router-a', apiKey: 'or-key' });
+    expect(llmSystemOneDecisionStrategyConfigOf({ provider: ROUTER })).toEqual({ id: 'router-a', apiKey: 'or-key' });
   });
 
   it('maps every input', () => {
     const { fetch } = recordingFetch();
-    expect(llmOpenRouterDecisionStrategyConfigOf({ provider: ROUTER, baseUrl: 'https://gateway.test/api/v1', timeoutMs: 4_000, fetch })).toEqual({ id: 'router-a', apiKey: 'or-key', baseUrl: 'https://gateway.test/api/v1', timeoutMs: 4_000, probeFetch: fetch });
+    expect(llmSystemOneDecisionStrategyConfigOf({ provider: ROUTER, baseUrl: 'https://gateway.test/api/v1', timeoutMs: 4_000, fetch })).toEqual({ id: 'router-a', apiKey: 'or-key', baseUrl: 'https://gateway.test/api/v1', timeoutMs: 4_000, probeFetch: fetch });
   });
 });
 

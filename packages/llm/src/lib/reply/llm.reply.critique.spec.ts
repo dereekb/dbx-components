@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { type LlmModelRoutingCapabilityRef } from '../model/llm.model.routing';
+import { type LlmModelRoutingCapabilityRef } from '../model/llm.capability.rule';
 import { noopLlmCallContext } from '../record/llm.call.context';
 import { compileLlmCritiquePolicy, composeLlmCritics, LLM_CRITIQUE_REPLY_CAPABILITY, type LlmCritic, type LlmCritiqueInput } from './llm.reply.critique';
 

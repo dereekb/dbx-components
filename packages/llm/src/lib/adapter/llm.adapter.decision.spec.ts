@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { type LlmProviderConfig } from '../model/config/llm.model.config.resolve';
-import { type LlmCredentialProbeFetch } from '../strategy/llm.credential.probe';
+import { type ConfiguredFetch } from '@dereekb/util/fetch';
 import { type LlmAdapter, type LlmCompletionAdapter, type LlmDecisionAdapter, type LlmDecisionAdapterConfig } from './llm.adapter';
 import { makeLlmAdapterRegistry } from './llm.adapter.registry';
 import { llmDecisionCapableProviders, llmDecisionStrategyKinds, llmProviderDecisionRouteOf, makeLlmDecisionStrategies } from './llm.adapter.decision';
@@ -155,7 +155,7 @@ describe('makeLlmDecisionStrategies()', () => {
     expect(registry.get('openrouter')?.describe).toBe(`openrouter decisions at ${OPENROUTER_URL}`);
     expect(zenmux.received).toEqual([{ provider: ZENMUX, baseUrl: ZENMUX_URL }]);
 
-    const fetch: LlmCredentialProbeFetch = () => Promise.reject(new Error('not called'));
+    const fetch: ConfiguredFetch = () => Promise.reject(new Error('not called'));
     makeLlmDecisionStrategies({ providers: [OPENROUTER], adapters, timeoutMs: 5000, fetch });
     expect(openrouter.received[1]).toEqual({ provider: OPENROUTER, baseUrl: OPENROUTER_URL, fetch, timeoutMs: 5000 });
   });

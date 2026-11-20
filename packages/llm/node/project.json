@@ -3,6 +3,7 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/llm/node/src",
   "projectType": "library",
+  "implicitDependencies": ["util-fetch"],
   "tags": [],
   "targets": {
     "build-base": {

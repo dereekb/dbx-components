@@ -1,4 +1,5 @@
 export * from './config';
+export * from './llm.capability.rule';
 export * from './llm.model.field';
 export * from './llm.model.precedence';
 export * from './llm.model.routing';

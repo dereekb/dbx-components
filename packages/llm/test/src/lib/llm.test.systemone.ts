@@ -1,6 +1,6 @@
 /**
- * **The one `/systemone` wire fake** — a socket-free stand-in for a gateway's System One decision route, typed as the
- * core `LlmCredentialProbeFetch` seam. Pass its `fetch` as a decision strategy's `decisionFetch` (which also makes the
+ * **The one `/systemone` wire fake** — a socket-free stand-in for a gateway's System One decision route, typed as
+ * `@dereekb/util/fetch`'s `ConfiguredFetch` seam. Pass its `fetch` as a decision strategy's `decisionFetch` (which also makes the
  * strategy a keyless fake), or stub the global with it (`vi.stubGlobal('fetch', fake.fetch)`) to exercise a keyed
  * strategy's real call path. Either way the WHOLE transport runs — URL, headers, body bytes, reply read — and every
  * request is recorded for a spec to assert on.
@@ -10,20 +10,14 @@
  */
 
 import { type Maybe } from '@dereekb/util';
-import { type LlmCredentialProbeFetch, type LlmCredentialProbeRequestInit, type LlmCredentialProbeResponse, type LlmDecisionRequestBody, type LlmDecisionWireReply } from '@dereekb/llm';
+import { type LlmDecisionRequestBody, type LlmDecisionWireReply } from '@dereekb/llm';
+import { type ConfiguredFetch } from '@dereekb/util/fetch';
+import { hangLlmFetchFakeUntilAborted, llmFetchFakeRequestOf, llmFetchFakeResponse, type LlmFetchFakeRequest } from './llm.test.fetch';
 
 /**
  * One request the fake received.
  */
-export interface LlmSystemOneWireFakeRequest {
-  /**
-   * The absolute URL the request was sent to.
-   */
-  readonly url: string;
-  /**
-   * The init as sent: method, headers, the raw body string and the signal.
-   */
-  readonly init: LlmCredentialProbeRequestInit;
+export interface LlmSystemOneWireFakeRequest extends LlmFetchFakeRequest {
   /**
    * The parsed JSON body; `undefined` when absent or unparseable.
    */
@@ -76,7 +70,7 @@ export interface LlmSystemOneWireFake {
   /**
    * The seam — pass as `decisionFetch`, or stub the global `fetch` with it.
    */
-  readonly fetch: LlmCredentialProbeFetch;
+  readonly fetch: ConfiguredFetch;
   /**
    * Every request received, recorded BEFORE `respond` runs (so a throwing `respond` is still recorded).
    */
@@ -140,36 +134,15 @@ function parsedBodyOf(body: Maybe<string>): Maybe<LlmDecisionRequestBody> {
 }
 
 /**
- * Stands in for a socket that never answers: rejects with the signal's reason once the signal aborts (at once when it
- * already has), exactly like a real `fetch`. With no signal it stays pending.
- *
- * @param signal - The request's signal.
- * @returns Never resolves; rejects with the signal's reason once it aborts.
- */
-function hangUntilAborted(signal: Maybe<AbortSignal>): Promise<never> {
-  return new Promise<never>((_resolve, reject) => {
-    if (signal?.aborted) {
-      reject(signal.reason);
-    } else {
-      signal?.addEventListener('abort', () => reject(signal.reason), { once: true });
-    }
-  });
-}
-
-/**
  * Turn an answer into the response the seam returns.
  *
  * @param answer - The answer.
  * @param request - The request it answers.
  * @returns The response.
  */
-function toLlmSystemOneWireFakeResponse(answer: LlmSystemOneWireFakeAnswer, request: LlmSystemOneWireFakeRequest): LlmCredentialProbeResponse {
-  const status = answer.status ?? 200;
+function toLlmSystemOneWireFakeResponse(answer: LlmSystemOneWireFakeAnswer, request: LlmSystemOneWireFakeRequest): Response {
   const body = answer.body === undefined ? toLlmSystemOneWireReply(request.body) : answer.body;
-  const text = typeof body === 'string' ? body : JSON.stringify(body);
-  const headers = new Map(Object.entries(answer.headers ?? {}).map(([name, value]) => [name.toLowerCase(), value]));
-
-  return { ok: status >= 200 && status < 300, status, headers: { get: (name: string) => headers.get(name.toLowerCase()) ?? null }, text: async () => text };
+  return llmFetchFakeResponse({ status: answer.status, body, headers: answer.headers });
 }
 
 /**
@@ -190,13 +163,14 @@ export function makeLlmSystemOneWireFake(config?: Maybe<LlmSystemOneWireFakeConf
   const requests: LlmSystemOneWireFakeRequest[] = [];
   const respond = config?.respond;
 
-  const fakeFetch: LlmCredentialProbeFetch = async (url, init) => {
-    const request: LlmSystemOneWireFakeRequest = { url, init, body: parsedBodyOf(init.body) };
+  const fakeFetch: ConfiguredFetch = async (input, init) => {
+    const recorded = llmFetchFakeRequestOf(input, init);
+    const request: LlmSystemOneWireFakeRequest = { ...recorded, body: parsedBodyOf(recorded.init.body) };
     requests.push(request);
-    let response: LlmCredentialProbeResponse;
+    let response: Response;
 
     if (respond === 'hang') {
-      response = await hangUntilAborted(init.signal);
+      response = await hangLlmFetchFakeUntilAborted(init?.signal);
     } else {
       const answer = typeof respond === 'function' ? await respond(request) : (respond ?? {});
       response = toLlmSystemOneWireFakeResponse(answer, request);

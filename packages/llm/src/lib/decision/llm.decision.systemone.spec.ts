@@ -247,13 +247,13 @@ describe('makeLlmSystemOneDecisionStrategy()', () => {
       const strategy = makeLlmSystemOneDecisionStrategy(
         {
           apiKey: 'sk-test',
-          decisionFetch: async () => ({
-            ok: true,
-            status: 200,
-            text: async () => {
-              throw cause;
-            }
-          })
+          // A real 200 Response whose body read fails mid-stream.
+          decisionFetch: async () =>
+            Object.assign(new Response(''), {
+              text: async () => {
+                throw cause;
+              }
+            })
         },
         HOOKS
       );

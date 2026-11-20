@@ -7,6 +7,8 @@
  * `openai` boundary), and the decision strategy is a hook set over the core System One transport (a plain `fetch`).
  */
 export * from './openrouter.chat';
+export * from './openrouter.constants';
+export * from './openrouter.credential.probe';
 export * from './openrouter.strategy';
 export * from './openrouter.decision';
 export * from './openrouter.adapter';

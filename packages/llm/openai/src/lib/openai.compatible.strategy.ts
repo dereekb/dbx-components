@@ -18,14 +18,13 @@ import {
   DEFAULT_LLM_TOKEN_LIMIT_PARAM,
   llmUsageFrom,
   normalizeLlmReasoningConfig,
-  probeLlmCredentialEndpoint,
+  runLlmCredentialProbeLadder,
   type LlmAttachment,
   type LlmCacheMode,
   type LlmCompleteOptions,
   type LlmCompletion,
   type LlmCostBasis,
   type LlmCredentialProbe,
-  type LlmCredentialProbeFetch,
   type LlmCredentialProbeOptions,
   type LlmModelId,
   type LlmModelVisionMap,
@@ -36,10 +35,11 @@ import {
   type LlmRequest,
   type LlmStrategy,
   type LlmStrategyHealth,
-  type LlmStrategyHealthSeverity,
   type LlmStrategyId,
-  type LlmTokenLimitParam
+  type LlmTokenLimitParam,
+  type LlmTransportCredentialProbe
 } from '@dereekb/llm';
+import { type ConfiguredFetch } from '@dereekb/util/fetch';
 import { llmOpenAiCallTimeoutMs, toLlmOpenAiChatMessages, toLlmOpenAiResponseFormat, type LlmOpenAiChatClient, type LlmOpenAiChatCompletion, type LlmOpenAiChatCompletionBody, type LlmOpenAiChatMessage, type LlmOpenAiReasoningParams } from './openai.chat';
 import { loadLlmOpenAiChatClient } from './openai.sdk';
 
@@ -105,7 +105,7 @@ export interface LlmOpenAiCompatibleChatStrategyConfig {
    * The HTTP seam {@link LlmStrategy.credentialProbe} goes through — a spec's fake. Absent ⇒ the global `fetch`. The
    * completion path never touches it (that rides the `openai` SDK client).
    */
-  readonly probeFetch?: LlmCredentialProbeFetch;
+  readonly probeFetch?: ConfiguredFetch;
   /**
    * The account-metering source {@link LlmStrategy.providerStatus} delegates to — the seam that lets a
    * provider-neutral transport answer "how much of the period's quota is spent?" without knowing which gateway it is
@@ -169,21 +169,6 @@ export interface LlmOpenAiCompatibleCompletionExtras {
 }
 
 /**
- * The transport's generic credential probe — an authenticated, free `GET` against the base URL.
- */
-export interface LlmOpenAiCompatibleCredentialProbe {
-  /**
-   * The path appended to the trimmed base URL (`'/models'`, `'/key'`).
-   */
-  readonly path: string;
-  /**
-   * How a 404 is graded; defaults to `'error'` (`probeLlmCredentialEndpoint`'s own default). A provider-neutral
-   * transport grades it `'warning'`, since a gateway may simply not implement the path.
-   */
-  readonly notFoundSeverity?: LlmStrategyHealthSeverity;
-}
-
-/**
  * The transport definition — what makes one OpenAI-compatible transport differ from another.
  */
 export interface LlmOpenAiCompatibleChatStrategyHooks {
@@ -208,9 +193,10 @@ export interface LlmOpenAiCompatibleChatStrategyHooks {
    */
   readonly tokenLimitParam?: Maybe<LlmTokenLimitParam>;
   /**
-   * The generic credential probe.
+   * The transport's own credential probe — an authenticated, free request (e.g. `GET {baseUrl}/models`). The shared
+   * `runLlmCredentialProbeLadder` calls it once a key is present and no probe source or injected client answers first.
    */
-  readonly credentialProbe: LlmOpenAiCompatibleCredentialProbe;
+  readonly credentialProbe: LlmTransportCredentialProbe;
   /**
    * Build the call's messages. Defaults to the plain builder (`toLlmOpenAiChatMessages`).
    */
@@ -252,7 +238,7 @@ function defaultLlmOpenAiCompatibleMessages(params: LlmOpenAiCompatibleCallParam
  * ```ts
  * const strategy = makeLlmOpenAiCompatibleChatStrategy(
  *   { apiKey, defaultModel: 'acme/model-flash' },
- *   { kind: 'acme', describe: 'Acme chat.', caching: 'auto-prefix', defaultBaseUrl: 'https://acme.example/v1', credentialProbe: { path: '/models' }, reasoningParams: () => ({}) }
+ *   { kind: 'acme', describe: 'Acme chat.', caching: 'auto-prefix', defaultBaseUrl: 'https://acme.example/v1', credentialProbe: (params) => probeLlmCredentialEndpoint({ ...params, url: `${params.baseUrl}/models` }), reasoningParams: () => ({}) }
  * );
  * ```
  */
@@ -393,37 +379,20 @@ export function makeLlmOpenAiCompatibleChatStrategy(config: LlmOpenAiCompatibleC
 
       return health;
     },
-    async credentialProbe(options?: LlmCredentialProbeOptions): Promise<LlmStrategyHealth> {
-      const { client, apiKey, probeFetch } = config;
-      const hasApiKey = isNotNullOrEmptyString(apiKey);
-      let health: LlmStrategyHealth;
-
-      if (client == null && !hasApiKey) {
-        health = { ready: false, issues: [{ severity: 'error', message: `no apiKey configured and no client injected` }] };
-      } else if (credentialProbeSource != null) {
-        // An explicit host probe outranks the injected-client no-op: the host asked for THIS check.
-        health = await credentialProbeSource(options);
-      } else if (client != null && probeFetch == null) {
-        // Injected client ⇒ ready WITHOUT a socket, mirroring healthCheck. An explicit probeFetch is the spec's way to
-        // exercise the generic probe anyway, so it wins over the no-op.
-        health = { ready: true, issues: [] };
-      } else if (hasApiKey) {
-        // The generic probe — an authenticated, free GET. A 401/403 (the revoked-credential case) is a hard error
-        // carrying the provider's own words; a 404 is graded by the transport.
-        const { path, notFoundSeverity } = hooks.credentialProbe;
-        health = await probeLlmCredentialEndpoint({
-          strategyId: id,
-          url: `${removeTrailingSlashes(baseUrl)}${path}`,
-          apiKey,
-          ...(notFoundSeverity == null ? {} : { notFoundSeverity }),
-          ...(probeFetch == null ? {} : { fetch: probeFetch }),
-          ...(options?.signal == null ? {} : { signal: options.signal })
-        });
-      } else {
-        health = { ready: false, issues: [{ severity: 'error', message: `no apiKey configured for the credential probe` }] };
-      }
-
-      return health;
+    credentialProbe(options?: LlmCredentialProbeOptions): Promise<LlmStrategyHealth> {
+      // The shared ladder: missing key → host probe source (outranks an injected client) → injected-client no-op (an
+      // explicit probeFetch is the spec's way to exercise the transport probe anyway) → the transport's own probe.
+      return runLlmCredentialProbeLadder({
+        strategyId: id,
+        baseUrl: removeTrailingSlashes(baseUrl),
+        apiKey: config.apiKey,
+        injected: config.client != null,
+        missingKeyMessage: 'no apiKey configured and no client injected',
+        probeFetch: config.probeFetch,
+        probeSource: credentialProbeSource,
+        probe: hooks.credentialProbe,
+        options
+      });
     },
     // Present ONLY when the host injected a metering source. A conditional spread rather than a member that returns an
     // empty status, because an aggregator distinguishes "does not meter" (member absent) from "meters, and could not

@@ -6,7 +6,8 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { probeLlmCredentialEndpoint, llmProviderErrorMessage, type LlmCredentialProbeFetch, type LlmCredentialProbeResponse } from './llm.credential.probe';
+import { type ConfiguredFetch } from '@dereekb/util/fetch';
+import { probeLlmCredentialEndpoint, llmProviderErrorMessage, runLlmCredentialProbeLadder, type LlmTransportCredentialProbe } from './llm.credential.probe';
 
 /**
  * The literal body OpenRouter answers a revoked key with — the message an operator needs to see verbatim.
@@ -19,29 +20,54 @@ const REVOKED_BODY = '{"error":{"message":"User not found.","code":401}}';
  * @param response - The status / body to answer with.
  * @returns The seam plus the recorded calls.
  */
-function fakeFetch(response: { readonly status: number; readonly body?: string }): { readonly fetch: LlmCredentialProbeFetch; readonly calls: Array<{ readonly url: string; readonly authorization: string | undefined }> } {
+function fakeFetch(response: { readonly status: number; readonly body?: string }): { readonly fetch: ConfiguredFetch; readonly calls: Array<{ readonly url: string; readonly authorization: string | undefined }> } {
   const calls: Array<{ readonly url: string; readonly authorization: string | undefined }> = [];
-  const fetchImpl: LlmCredentialProbeFetch = async (url, init) => {
-    calls.push({ url, authorization: init.headers['Authorization'] });
-    const answer: LlmCredentialProbeResponse = { ok: response.status >= 200 && response.status < 300, status: response.status, text: async () => response.body ?? '' };
-    return answer;
+  const fetchImpl: ConfiguredFetch = async (input, init) => {
+    calls.push({ url: String(input), authorization: new Headers(init?.headers).get('Authorization') ?? undefined });
+    return new Response(response.body ?? '', { status: response.status });
   };
   return { fetch: fetchImpl, calls };
 }
 
+/**
+ * Read a body the way the probe does, for {@link llmProviderErrorMessage}.
+ *
+ * @param text - The raw body.
+ * @returns The text and its decoded JSON.
+ */
+function readOf(text: string): { readonly text: string; readonly json: unknown } {
+  let json: unknown;
+
+  try {
+    json = JSON.parse(text);
+  } catch {
+    json = undefined;
+  }
+
+  return { text, json };
+}
+
 describe('llmProviderErrorMessage', () => {
   it('extracts the nested provider message (the OpenRouter / OpenAI error envelope)', () => {
-    expect(llmProviderErrorMessage(REVOKED_BODY)).toBe('User not found.');
+    expect(llmProviderErrorMessage(readOf(REVOKED_BODY))).toBe('User not found.');
   });
 
   it('extracts a flat `message` and degrades a non-JSON body to its trimmed raw text', () => {
-    expect(llmProviderErrorMessage('{"message":"invalid api key"}')).toBe('invalid api key');
-    expect(llmProviderErrorMessage('  <html>502 Bad Gateway</html>  ')).toBe('<html>502 Bad Gateway</html>');
+    expect(llmProviderErrorMessage(readOf('{"message":"invalid api key"}'))).toBe('invalid api key');
+    expect(llmProviderErrorMessage(readOf('  <html>502 Bad Gateway</html>  '))).toBe('<html>502 Bad Gateway</html>');
+  });
+
+  it('degrades an array, a non-object and a string `error` to the raw text, and truncates a long one', () => {
+    expect(llmProviderErrorMessage(readOf('[1,2]'))).toBe('[1,2]');
+    expect(llmProviderErrorMessage(readOf('"oops"'))).toBe('"oops"');
+    expect(llmProviderErrorMessage(readOf('{"error":"bad key"}'))).toBe('{"error":"bad key"}');
+    expect(llmProviderErrorMessage(readOf('x'.repeat(241)))).toBe(`${'x'.repeat(240)}…`);
+    expect(llmProviderErrorMessage(readOf('x'.repeat(240)))).toBe('x'.repeat(240));
   });
 
   it('is undefined for an empty body', () => {
-    expect(llmProviderErrorMessage('')).toBeUndefined();
-    expect(llmProviderErrorMessage('   ')).toBeUndefined();
+    expect(llmProviderErrorMessage(readOf(''))).toBeUndefined();
+    expect(llmProviderErrorMessage(readOf('   '))).toBeUndefined();
   });
 });
 
@@ -109,7 +135,7 @@ describe('probeLlmCredentialEndpoint', () => {
       throw new Error('getaddrinfo ENOTFOUND gateway.example');
     });
 
-    const health = await probeLlmCredentialEndpoint({ strategyId: 'openai', url: 'https://gateway.example/v1/models', apiKey: 'sk-live', fetch: fetchImpl as unknown as LlmCredentialProbeFetch });
+    const health = await probeLlmCredentialEndpoint({ strategyId: 'openai', url: 'https://gateway.example/v1/models', apiKey: 'sk-live', fetch: fetchImpl });
 
     expect(health.ready).toBe(false);
     expect(health.issues[0]?.message).toContain('ENOTFOUND');
@@ -128,9 +154,9 @@ describe('probeLlmCredentialEndpoint', () => {
 describe('probeLlmCredentialEndpoint — the AUTH-GATED mode', () => {
   it('POSTs the body and reads any non-rejected 4xx as a live key (the gateway refused the request, not the key)', async () => {
     const seen: Array<{ readonly method: string; readonly body: string | undefined }> = [];
-    const fetchImpl: LlmCredentialProbeFetch = async (_url, init) => {
-      seen.push({ method: init.method, body: init.body });
-      return { ok: false, status: 404, text: async () => '{"error":{"type":"invalid_model","message":"Requested model is not valid"}}' };
+    const fetchImpl: ConfiguredFetch = async (_input, init) => {
+      seen.push({ method: init?.method ?? 'GET', body: typeof init?.body === 'string' ? init.body : undefined });
+      return new Response('{"error":{"type":"invalid_model","message":"Requested model is not valid"}}', { status: 404 });
     };
 
     const health = await probeLlmCredentialEndpoint({ strategyId: 'zenmux', url: 'https://gw.test/v1/chat/completions', apiKey: 'sk', postBody: '{"model":"x"}', rejectedStatuses: [401, 403], fetch: fetchImpl });
@@ -167,5 +193,52 @@ describe('probeLlmCredentialEndpoint — an engine without AbortSignal.any', () 
     } finally {
       anySpy.mockRestore();
     }
+  });
+});
+
+describe('runLlmCredentialProbeLadder', () => {
+  const base = { strategyId: 'gw', baseUrl: 'https://gw.test/v1', missingKeyMessage: 'no key and no seam' } as const;
+  const READY = { ready: true, issues: [] };
+
+  function probeSpy(): ReturnType<typeof vi.fn<LlmTransportCredentialProbe>> {
+    return vi.fn<LlmTransportCredentialProbe>(async () => READY);
+  }
+
+  it("rung 1: no seam and no key is the strategy's missing-key error, with no probe run", async () => {
+    const probe = probeSpy();
+    const health = await runLlmCredentialProbeLadder({ ...base, apiKey: '', injected: false, probe });
+    expect(health).toEqual({ ready: false, issues: [{ severity: 'error', message: 'no key and no seam' }] });
+    expect(probe).not.toHaveBeenCalled();
+  });
+
+  it('rung 2: a probe source outranks an injected seam', async () => {
+    const probe = probeSpy();
+    const probeSource = vi.fn(async () => ({ ready: false, issues: [{ severity: 'error' as const, message: 'source says no' }] }));
+    const signal = new AbortController().signal;
+    const health = await runLlmCredentialProbeLadder({ ...base, apiKey: undefined, injected: true, probeSource, probe, options: { signal } });
+    expect(health.issues[0]?.message).toBe('source says no');
+    expect(probeSource).toHaveBeenCalledWith({ signal });
+    expect(probe).not.toHaveBeenCalled();
+  });
+
+  it('rung 3: an injected seam with no probe fetch is ready without a request', async () => {
+    const probe = probeSpy();
+    expect(await runLlmCredentialProbeLadder({ ...base, apiKey: 'sk', injected: true, probe })).toEqual(READY);
+    expect(probe).not.toHaveBeenCalled();
+  });
+
+  it('rung 4: a key runs the transport probe with the trimmed base, the probe fetch and the signal', async () => {
+    const probe = probeSpy();
+    const probeFetch = fakeFetch({ status: 200 }).fetch;
+    const signal = new AbortController().signal;
+    await runLlmCredentialProbeLadder({ ...base, apiKey: 'sk', injected: true, probeFetch, probe, options: { signal } });
+    expect(probe).toHaveBeenCalledWith({ strategyId: 'gw', baseUrl: 'https://gw.test/v1', apiKey: 'sk', fetch: probeFetch, signal });
+  });
+
+  it('rung 5: an injected seam and a probe fetch but no key is an error', async () => {
+    const probe = probeSpy();
+    const health = await runLlmCredentialProbeLadder({ ...base, apiKey: null, injected: true, probeFetch: fakeFetch({ status: 200 }).fetch, probe });
+    expect(health).toEqual({ ready: false, issues: [{ severity: 'error', message: 'no apiKey configured for the credential probe' }] });
+    expect(probe).not.toHaveBeenCalled();
   });
 });

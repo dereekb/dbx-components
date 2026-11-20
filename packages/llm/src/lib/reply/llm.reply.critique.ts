@@ -8,7 +8,7 @@
 
 import { type Maybe } from '@dereekb/util';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
-import { type LlmModelRoutingCapabilityRef } from '../model/llm.model.routing';
+import { compileLlmCapabilityRules, type LlmCapabilityRuleTarget, type LlmModelRoutingCapabilityRef } from '../model/llm.capability.rule';
 import { type LlmCapabilityKey, type LlmCapabilityTag, type LlmModelTierKey } from '../model/llm.value';
 import { type LlmCallContext } from '../record/llm.call.context';
 import { type LlmCallMeta, type LlmDispatchResult } from '../strategy/llm.strategy';
@@ -124,7 +124,7 @@ export function composeLlmCritics(...critics: ReadonlyArray<Maybe<LlmCritic>>): 
 /**
  * One host-declared critique rule, targeting capabilities by key and/or tag exactly as a model routing rule does.
  */
-export interface LlmCritiqueRule {
+export interface LlmCritiqueRule extends LlmCapabilityRuleTarget {
   /**
    * The exact capability keys this rule attaches a critic to. A capability-key match beats any tag match, regardless of
    * rule order.
@@ -203,66 +203,14 @@ export interface CompileLlmCritiquePolicyConfig {
  * @throws {Error} When a rule references an unknown capability / tag, declares no target, or names the judge.
  */
 export function compileLlmCritiquePolicy(config: CompileLlmCritiquePolicyConfig): LlmCompiledCritiquePolicy {
-  const { critique, capabilities } = config;
-  const labelPrefix = config.label ?? DEFAULT_LLM_CRITIQUE_POLICY_LABEL;
-  const rules = critique.rules ?? [];
-  const policy = new Map<LlmCapabilityKey, LlmCritiqueRule>();
-
-  if (rules.length > 0) {
-    const knownCapabilities = new Set(capabilities.map((ref) => ref.capability));
-    const knownTags = new Set(capabilities.flatMap((ref) => ref.tags ?? []));
-
-    // Validate every rule once (fail-loud), independent of whether anything matches it.
-    rules.forEach((rule, index) => {
-      const label = `${labelPrefix} rule #${index + 1}`;
-
-      if ((rule.capabilities == null || rule.capabilities.length === 0) && (rule.tags == null || rule.tags.length === 0)) {
-        throw new Error(`${label}: declares no target; set 'capabilities' and/or 'tags'.`);
-      }
-
-      for (const capability of rule.capabilities ?? []) {
-        if (capability === LLM_CRITIQUE_REPLY_CAPABILITY) {
-          throw new Error(`${label}: '${LLM_CRITIQUE_REPLY_CAPABILITY}' is the judge itself and can never be critiqued (a judge judging a judge is unbounded).`);
-        }
-
-        if (!knownCapabilities.has(capability)) {
-          throw new Error(`${label}: unknown capability '${capability}'.`);
-        }
-      }
-
-      for (const tag of rule.tags ?? []) {
-        if (!knownTags.has(tag)) {
-          throw new Error(`${label}: no capability carries the tag '${tag}' (have: ${Array.from(knownTags).join(', ') || 'none'}).`);
-        }
-      }
-    });
-
-    // Resolve each known capability against the rules: capability-key level first, then the tag level. The judge is
-    // skipped entirely — the second layer of the recursion guard.
-    for (const ref of capabilities) {
-      if (ref.capability !== LLM_CRITIQUE_REPLY_CAPABILITY) {
-        const match = rules.find((rule) => rule.capabilities?.includes(ref.capability)) ?? tagRuleOf(rules, ref);
-
-        if (match != null) {
-          policy.set(ref.capability, match);
-        }
-      }
-    }
-  }
-
-  return policy;
-}
-
-/**
- * The first rule whose tags a capability carries, or `undefined` for an untagged capability.
- *
- * @param rules - The ordered critique rules.
- * @param ref - The capability ref.
- * @returns The first tag-matching rule.
- */
-function tagRuleOf(rules: ReadonlyArray<LlmCritiqueRule>, ref: LlmModelRoutingCapabilityRef): Maybe<LlmCritiqueRule> {
-  const tags = ref.tags;
-  return tags == null || tags.length === 0 ? undefined : rules.find((rule) => rule.tags?.some((tag) => tags.includes(tag)));
+  return compileLlmCapabilityRules<LlmCritiqueRule, LlmCritiqueRule>({
+    rules: config.critique.rules,
+    capabilities: config.capabilities,
+    label: config.label ?? DEFAULT_LLM_CRITIQUE_POLICY_LABEL,
+    // The judge can never be named, and is skipped by tag matching — the two layers of the recursion guard.
+    exclude: [{ capability: LLM_CRITIQUE_REPLY_CAPABILITY, reason: `'${LLM_CRITIQUE_REPLY_CAPABILITY}' is the judge itself and can never be critiqued (a judge judging a judge is unbounded).` }],
+    valueOf: (rule) => rule
+  });
 }
 
 /**

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_LLM_COMPLETION_TIMEOUT_MS, DEFAULT_LLM_MAX_OUTPUT_TOKENS, type LlmCredentialProbeFetch, type LlmRequest } from '@dereekb/llm';
+import { type ConfiguredFetch } from '@dereekb/util/fetch';
+import { DEFAULT_LLM_COMPLETION_TIMEOUT_MS, DEFAULT_LLM_MAX_OUTPUT_TOKENS, type LlmRequest } from '@dereekb/llm';
 import { llmOpenAiCallTimeoutMs, type LlmOpenAiChatClient, type LlmOpenAiRequestOptions } from '@dereekb/llm/openai';
 import { LLM_OPENROUTER_STRATEGY_KIND, makeLlmOpenRouterStrategy } from './openrouter.strategy';
 
@@ -539,9 +540,10 @@ describe('makeLlmOpenRouterStrategy()', () => {
   describe('credentialProbe', () => {
     it('GETs `{baseUrl}/key` with the credential and reports ready on a 200', async () => {
       const calls: string[] = [];
-      const probeFetch: LlmCredentialProbeFetch = async (url) => {
+      const probeFetch: ConfiguredFetch = async (input) => {
+        const url = String(input);
         calls.push(url);
-        return { ok: true, status: 200, text: async () => '{"data":{"label":"app"}}' };
+        return new Response('{"data":{"label":"app"}}', { status: 200 });
       };
       const strategy = makeLlmOpenRouterStrategy({ apiKey: 'sk-or-live', probeFetch });
 
@@ -552,7 +554,7 @@ describe('makeLlmOpenRouterStrategy()', () => {
     it('reports NOT ready on the revoked-key 401, carrying OpenRouter’s own message', async () => {
       // The exact wire answer the dead key in the dev environment produced. healthCheck cannot see this — it is
       // network-free by contract — which is why every gate downstream of it went green on a revoked credential.
-      const probeFetch: LlmCredentialProbeFetch = async () => ({ ok: false, status: 401, text: async () => '{"error":{"message":"User not found.","code":401}}' });
+      const probeFetch: ConfiguredFetch = async () => new Response('{"error":{"message":"User not found.","code":401}}', { status: 401 });
       const strategy = makeLlmOpenRouterStrategy({ apiKey: 'sk-or-dead', probeFetch });
 
       const health = await strategy.credentialProbe?.();
@@ -571,7 +573,7 @@ describe('makeLlmOpenRouterStrategy()', () => {
     });
 
     it('grades a 404 from GET /key as an error (OpenRouter always implements it)', async () => {
-      const probeFetch: LlmCredentialProbeFetch = async () => ({ ok: false, status: 404, text: async () => '' });
+      const probeFetch: ConfiguredFetch = async () => new Response('', { status: 404 });
       const health = await makeLlmOpenRouterStrategy({ apiKey: 'sk-or-live', probeFetch }).credentialProbe?.();
 
       expect(health?.ready).toBe(false);
@@ -650,9 +652,10 @@ describe('makeLlmOpenRouterStrategy() model, wire shape and account facets', () 
 
   it('delegates to a credentialProbeSource instead of GET /key', async () => {
     const calls: string[] = [];
-    const probeFetch: LlmCredentialProbeFetch = async (url) => {
+    const probeFetch: ConfiguredFetch = async (input) => {
+      const url = String(input);
       calls.push(url);
-      return { ok: true, status: 200, text: async () => '{}' };
+      return new Response('{}', { status: 200 });
     };
     const strategy = makeLlmOpenRouterStrategy({ apiKey: 'sk-or', probeFetch, credentialProbeSource: async () => ({ ready: false, issues: [{ severity: 'error', message: 'the account rejected the credential' }] }) });
 

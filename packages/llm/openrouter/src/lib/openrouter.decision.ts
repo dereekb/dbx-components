@@ -13,8 +13,9 @@
  * decision reply, so a decision call carries an EXACT, final cost — which is why the hooks stamp no `costBasis`.
  * Answers are read strictly: a type-less answer faults as `answer-mistyped`. The generation id is the body `id`.
  */
-import { makeLlmSystemOneDecisionStrategy, probeLlmCredentialEndpoint, type LlmDecisionStrategy, type LlmStrategyId, type LlmSystemOneDecisionStrategyConfig, type LlmSystemOneDecisionStrategyHooks } from '@dereekb/llm';
-import { LLM_OPENROUTER_BASE_URL } from './openrouter.strategy';
+import { makeLlmSystemOneDecisionStrategy, type LlmDecisionStrategy, type LlmStrategyId, type LlmSystemOneDecisionStrategyConfig, type LlmSystemOneDecisionStrategyHooks } from '@dereekb/llm';
+import { LLM_OPENROUTER_BASE_URL } from './openrouter.constants';
+import { probeLlmOpenRouterCredential } from './openrouter.credential.probe';
 
 /**
  * The strategy KIND (and default instance id) of the OpenRouter decision transport — deliberately distinct from the
@@ -38,7 +39,7 @@ const LLM_OPENROUTER_DECISION_STRATEGY_HOOKS: LlmSystemOneDecisionStrategyHooks 
   defaultBaseUrl: LLM_OPENROUTER_BASE_URL,
   // `GET /key` is OpenRouter's free key-metadata endpoint — the SAME probe the completion sibling runs, because it is
   // the same account. A revoked key answers `401 "User not found."` verbatim.
-  credentialProbe: ({ strategyId, baseUrl, apiKey, fetch, signal }) => probeLlmCredentialEndpoint({ strategyId, url: `${baseUrl}/key`, apiKey, ...(fetch == null ? {} : { fetch }), ...(signal == null ? {} : { signal }) })
+  credentialProbe: (params) => probeLlmOpenRouterCredential(params)
 };
 
 /**

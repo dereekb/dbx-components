@@ -2,9 +2,11 @@
  * The ZenMux credential probe — the only module that knows how to tell a live ZenMux INFERENCE key from a dead one for free.
  */
 
-import { probeLlmCredentialEndpoint, type LlmCredentialProbeFetch, type LlmStrategyHealth, type LlmStrategyId } from '@dereekb/llm';
+import { probeLlmCredentialEndpoint, type LlmCredentialProbeParams, type LlmStrategyHealth } from '@dereekb/llm';
 import { type Maybe, removeTrailingSlashes } from '@dereekb/util';
+import { zenmuxAccountBaseUrlOf } from './zenmux.account';
 import { DEFAULT_ZENMUX_BASE_URL } from './zenmux.constants';
+import { zenmuxGenerationUrl } from './zenmux.management';
 
 /**
  * The model id the ZenMux credential probe asks for — one no gateway serves, so a key that passes authentication is refused
@@ -27,27 +29,12 @@ export const ZENMUX_REJECTED_CREDENTIAL_STATUSES: ReadonlyArray<number> = [401, 
 /**
  * Config for {@link probeZenmuxCredential}.
  */
-export interface ProbeZenmuxCredentialConfig {
+export interface ProbeZenmuxCredentialConfig extends Omit<LlmCredentialProbeParams, 'baseUrl'> {
   /**
-   * The probing provider's id — prefixes every issue.
-   */
-  readonly strategyId: LlmStrategyId;
-  /**
-   * The inference key under test.
-   */
-  readonly apiKey: string;
-  /**
-   * The ZenMux API base; defaults to {@link DEFAULT_ZENMUX_BASE_URL}. Trailing slashes are stripped.
+   * The ZenMux API base (or a LAN proxy in front of it); defaults to {@link DEFAULT_ZENMUX_BASE_URL}. Trailing slashes are
+   * stripped. The `management/generation` lookup always goes to the ZenMux account base ({@link zenmuxAccountBaseUrlOf}).
    */
   readonly baseUrl?: Maybe<string>;
-  /**
-   * The HTTP seam; defaults to the global `fetch`.
-   */
-  readonly fetch?: LlmCredentialProbeFetch;
-  /**
-   * An external cancellation signal.
-   */
-  readonly signal?: AbortSignal;
 }
 
 /**
@@ -71,12 +58,12 @@ export interface ProbeZenmuxCredentialConfig {
  */
 export async function probeZenmuxCredential(config: ProbeZenmuxCredentialConfig): Promise<LlmStrategyHealth> {
   const baseUrl = removeTrailingSlashes(config.baseUrl ?? DEFAULT_ZENMUX_BASE_URL);
-  const shared = { strategyId: config.strategyId, apiKey: config.apiKey, rejectedStatuses: ZENMUX_REJECTED_CREDENTIAL_STATUSES, ...(config.fetch == null ? {} : { fetch: config.fetch }), ...(config.signal == null ? {} : { signal: config.signal }) };
+  const shared = { strategyId: config.strategyId, apiKey: config.apiKey, rejectedStatuses: ZENMUX_REJECTED_CREDENTIAL_STATUSES, fetch: config.fetch, signal: config.signal };
   const completions = await probeLlmCredentialEndpoint({ ...shared, url: `${baseUrl}/chat/completions`, postBody: JSON.stringify({ model: ZENMUX_CREDENTIAL_PROBE_MODEL, messages: [{ role: 'user', content: '.' }], max_tokens: 1 }) });
   let health: LlmStrategyHealth = completions;
 
   if (!completions.ready) {
-    const generation = await probeLlmCredentialEndpoint({ ...shared, url: `${baseUrl}/management/generation?id=${ZENMUX_CREDENTIAL_PROBE_GENERATION_ID}` });
+    const generation = await probeLlmCredentialEndpoint({ ...shared, url: zenmuxGenerationUrl(zenmuxAccountBaseUrlOf(baseUrl), ZENMUX_CREDENTIAL_PROBE_GENERATION_ID) });
     health = generation.ready ? generation : { ready: false, issues: [...completions.issues, ...generation.issues] };
   }
 

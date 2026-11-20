@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { llmChoiceQuestion, llmDecisionRequestBody, llmNoulQuestion, llmScoreQuestion, requireLlmDecisionAnswers, type LlmCredentialProbeRequestInit } from '@dereekb/llm';
+import { llmChoiceQuestion, llmDecisionRequestBody, llmNoulQuestion, llmScoreQuestion, requireLlmDecisionAnswers } from '@dereekb/llm';
 import { makeLlmSystemOneWireFake, toLlmSystemOneWireReply } from './llm.test.systemone';
 
 const ROUTE_URL = 'https://gateway.test/api/v1/systemone';
@@ -12,7 +12,7 @@ const QUESTIONS = {
 
 const BODY = llmDecisionRequestBody({ model: 'typesafe/jev-1.14', state: 'x', questions: QUESTIONS });
 
-function initOf(body?: string, signal?: AbortSignal): LlmCredentialProbeRequestInit {
+function initOf(body?: string, signal?: AbortSignal): RequestInit {
   return { method: 'POST', headers: { Authorization: 'Bearer k' }, ...(body == null ? {} : { body }), ...(signal == null ? {} : { signal }) };
 }
 
@@ -76,9 +76,9 @@ describe('makeLlmSystemOneWireFake()', () => {
     const fake = makeLlmSystemOneWireFake({ respond: { headers: { 'X-Request-Id': 'req-1' } } });
     const response = await fake.fetch(ROUTE_URL, initOf());
 
-    expect(response.headers?.get('x-request-id')).toBe('req-1');
-    expect(response.headers?.get('X-REQUEST-ID')).toBe('req-1');
-    expect(response.headers?.get('x-other')).toBeNull();
+    expect(response.headers.get('x-request-id')).toBe('req-1');
+    expect(response.headers.get('X-REQUEST-ID')).toBe('req-1');
+    expect(response.headers.get('x-other')).toBeNull();
   });
 
   it('rejects the fetch when respond throws, still recording the request', async () => {

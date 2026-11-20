@@ -22,7 +22,7 @@
  * {@link tightestLlmQuotaWindow} for the throttle signal and renders whatever else is present.
  */
 
-import { type DollarAmount, type ISO8601DateString, type PercentDecimal, roundToPrecision, type SuggestedString } from '@dereekb/util';
+import { type AbortSignalRef, type DollarAmount, type ISO8601DateString, type PercentDecimal, roundToPrecision, type SuggestedString } from '@dereekb/util';
 import { type LlmStrategyHealthIssue } from './llm.strategy.health';
 
 /**
@@ -182,12 +182,7 @@ export interface LlmProviderStatus {
  * Per-call options for `LlmStrategy.providerStatus` — the external cancellation seam, mirroring
  * `LlmCredentialProbeOptions`.
  */
-export interface LlmProviderStatusOptions {
-  /**
-   * An external cancellation signal, OR-combined with the read's own timeout.
-   */
-  readonly signal?: AbortSignal;
-}
+export interface LlmProviderStatusOptions extends AbortSignalRef {}
 
 /**
  * The injectable, provider-SPECIFIC half of this seam — what a host wires onto a transport so the transport

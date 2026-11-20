@@ -12,7 +12,7 @@
  * split as provider status: a consumer of the reconciliation never learns which gateway answered.
  */
 
-import { type DollarAmount } from '@dereekb/util';
+import { type AbortSignalRef, type DollarAmount } from '@dereekb/util';
 
 /**
  * One call's bill, in USD.
@@ -46,9 +46,7 @@ export type LlmCallBillRead = { readonly status: 'billed'; readonly bill: LlmCal
 /**
  * Optional external cancellation for a bill read.
  */
-export interface LlmCallBillReadOptions {
-  readonly signal?: AbortSignal;
-}
+export interface LlmCallBillReadOptions extends AbortSignalRef {}
 
 /**
  * Reads one call's bill by its generation id. Implementations never throw: every outcome is an

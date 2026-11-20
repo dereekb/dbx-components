@@ -10,7 +10,10 @@
 
 import { createKeyedRegistry, type KeyedRegistry, type Maybe } from '@dereekb/util';
 import { type LlmModelConfigSchemaConfig } from '../model/config/llm.model.config.schema';
-import { type LlmAdapter, type LlmAdapterFacet, type LlmAdapterKind, type LlmAdapterOf } from './llm.adapter';
+import { type LlmStrategyId } from '../model/llm.value';
+import { type LlmStrategyBase } from '../strategy/llm.strategy';
+import { llmStrategyKind } from '../strategy/llm.strategy.registry';
+import { type LlmAdapter, type LlmAdapterFacet, type LlmAdapterKind, type LlmAdapterOf, type LlmCompletionAdapter, type LlmDecisionAdapter } from './llm.adapter';
 
 /**
  * The registry key of one adapter: `${facet}:${kind}`.
@@ -116,6 +119,55 @@ export function resolveLlmAdapter<F extends LlmAdapterFacet>(config: ResolveLlmA
   }
 
   return adapter;
+}
+
+/**
+ * Config for {@link checkLlmAdapterStrategy}.
+ */
+export interface CheckLlmAdapterStrategyConfig<S extends LlmStrategyBase> {
+  /**
+   * The error prefix, e.g. `provider 'gateway'`.
+   */
+  readonly label: string;
+  /**
+   * The adapter that minted the strategy.
+   */
+  readonly adapter: LlmCompletionAdapter | LlmDecisionAdapter;
+  /**
+   * The provider the strategy was minted for.
+   */
+  readonly providerId: LlmStrategyId;
+  /**
+   * The minted strategy.
+   */
+  readonly strategy: S;
+}
+
+/**
+ * Check a strategy an adapter just minted. It must carry the provider's own id (a strategy minted under the transport name
+ * would make every second instance of that transport silently replace the first), and a decision adapter's strategy must
+ * be of the kind the adapter declares (`strategyKind`).
+ *
+ * @param config - The label, the adapter, the provider id and the minted strategy.
+ * @returns The strategy, unchanged.
+ * @throws {Error} When the id, or a decision strategy's kind, does not match.
+ */
+export function checkLlmAdapterStrategy<S extends LlmStrategyBase>(config: CheckLlmAdapterStrategyConfig<S>): S {
+  const { label, adapter, providerId, strategy } = config;
+
+  if (strategy.id !== providerId) {
+    throw new Error(`${label}: the '${adapter.kind}' ${adapter.facet} adapter minted strategy id '${strategy.id}'; an adapter must register each provider under the provider's own id.`);
+  }
+
+  if (adapter.facet === 'decision') {
+    const kind = llmStrategyKind(strategy);
+
+    if (kind !== adapter.strategyKind) {
+      throw new Error(`${label}: the '${adapter.kind}' decision adapter minted a strategy of kind '${kind}' but declares strategyKind '${adapter.strategyKind}'.`);
+    }
+  }
+
+  return strategy;
 }
 
 /**

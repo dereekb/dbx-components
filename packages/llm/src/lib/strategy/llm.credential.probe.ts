@@ -11,8 +11,11 @@
  * The probe is opt-in, never on the dispatch path, and never throws.
  */
 
-import { errorMessageOf, makeTimeoutAbortSignal, type Maybe, type Milliseconds, type WebsiteUrlWithPrefix } from '@dereekb/util';
+import { type AbortSignalRef, errorMessageOf, isNotNullOrEmptyString, isPlainObject, makeTimeoutAbortSignal, type Maybe, type Milliseconds, type WebsiteUrlWithPrefix } from '@dereekb/util';
+import { type ConfiguredFetch, type FetchJsonTextResult, readFetchJsonText } from '@dereekb/util/fetch';
 import { type LlmStrategyId } from '../model/llm.value';
+import { resolveLlmFetch } from './llm.fetch';
+import { type LlmCredentialProbe, type LlmCredentialProbeOptions } from './llm.strategy';
 import { type LlmStrategyHealth, type LlmStrategyHealthSeverity } from './llm.strategy.health';
 
 /**
@@ -27,56 +30,9 @@ export const DEFAULT_LLM_CREDENTIAL_PROBE_TIMEOUT_MS: Milliseconds = 15_000;
 const MAX_PROVIDER_MESSAGE_LENGTH = 240;
 
 /**
- * The response surface a credential probe reads — the `fetch` `Response` subset, modeled locally so a spec can
- * pass a fake without a socket.
- */
-export interface LlmCredentialProbeResponse {
-  /**
-   * `true` for a 2xx status.
-   */
-  readonly ok: boolean;
-  /**
-   * The HTTP status code — `401` is the revoked/rejected credential this probe exists to catch.
-   */
-  readonly status: number;
-  /**
-   * The response headers. The System One decision transport reads a gateway's generation-id header off them; a fake
-   * may omit them.
-   */
-  readonly headers?: Maybe<{ get(name: string): Maybe<string> }>;
-  /**
-   * The raw body text, from which the provider's own error message is extracted.
-   *
-   * @returns The body text.
-   */
-  text(): Promise<string>;
-}
-
-/**
- * The request shape a credential probe sends — an authenticated GET, or (for an {@link ProbeLlmCredentialEndpointConfig.rejectedStatuses}
- * AUTH-GATED probe) a POST carrying a body the gateway refuses AFTER authenticating.
- */
-export interface LlmCredentialProbeRequestInit {
-  readonly method: 'GET' | 'POST';
-  readonly headers: Readonly<Record<string, string>>;
-  readonly body?: string;
-  readonly signal?: AbortSignal;
-}
-
-/**
- * The HTTP seam a credential probe goes through — the global `fetch` in production, a fake in a spec. Injected
- * via {@link ProbeLlmCredentialEndpointConfig.fetch} so every probe test stays network-free.
- *
- * @param url - The absolute endpoint URL.
- * @param init - The authenticated GET init.
- * @returns The response.
- */
-export type LlmCredentialProbeFetch = (url: string, init: LlmCredentialProbeRequestInit) => Promise<LlmCredentialProbeResponse>;
-
-/**
  * Config for {@link probeLlmCredentialEndpoint}.
  */
-export interface ProbeLlmCredentialEndpointConfig {
+export interface ProbeLlmCredentialEndpointConfig extends AbortSignalRef {
   /**
    * The probing strategy's id — prefixes every issue message so an aggregated report names the backend.
    */
@@ -90,13 +46,9 @@ export interface ProbeLlmCredentialEndpointConfig {
    */
   readonly apiKey: string;
   /**
-   * The HTTP seam; defaults to the global `fetch`.
+   * The HTTP seam; defaults to the global `fetch`, read at call time. A spec passes a fake so the probe stays network-free.
    */
-  readonly fetch?: LlmCredentialProbeFetch;
-  /**
-   * An EXTERNAL cancellation signal, OR-combined with the probe's own timeout.
-   */
-  readonly signal?: AbortSignal;
+  readonly fetch?: Maybe<ConfiguredFetch>;
   /**
    * The probe timeout in ms; defaults to {@link DEFAULT_LLM_CREDENTIAL_PROBE_TIMEOUT_MS}.
    */
@@ -125,33 +77,40 @@ export interface ProbeLlmCredentialEndpointConfig {
 }
 
 /**
- * Extract the provider's OWN error message from a response body. Providers answer
- * `{"error":{"message":"User not found.","code":401}}` (OpenRouter / OpenAI alike); anything else degrades to the
- * trimmed, truncated raw body. Carrying the provider's words verbatim is the point — "User not found." tells an
+ * The error body a provider answers with: OpenRouter / OpenAI-compatible gateways nest it
+ * (`{"error":{"message":"User not found.","code":401}}`), ZenMux answers it flat (`{"success":false,"message":"Invalid API key"}`).
+ */
+export interface LlmProviderErrorBody {
+  readonly error?: unknown;
+  readonly message?: unknown;
+}
+
+/**
+ * Extract the provider's OWN error message from a response read. A nested or flat `message` wins; anything else degrades
+ * to the trimmed, truncated raw body. Carrying the provider's words verbatim is the point — "User not found." tells an
  * operator to reissue the key, where a synthesized "auth failed" does not.
  *
- * @param body - The raw response body text.
+ * @param read - The body text and its decoded JSON, as {@link readFetchJsonText} returns them.
  * @returns The provider's message, or `undefined` when the body carried none.
  */
-export function llmProviderErrorMessage(body: string): string | undefined {
-  const trimmed = body.trim();
+export function llmProviderErrorMessage(read: Pick<FetchJsonTextResult, 'text' | 'json'>): string | undefined {
+  const trimmed = read.text.trim();
   let message: string | undefined;
 
   if (trimmed.length > 0) {
-    let parsed: unknown;
+    const body: Maybe<LlmProviderErrorBody> = isPlainObject(read.json) ? read.json : undefined;
+    const error = body?.error;
+    const nested = isPlainObject(error) && typeof error['message'] === 'string' ? error['message'] : undefined;
+    const flat = typeof body?.message === 'string' ? body.message : undefined;
 
-    try {
-      parsed = JSON.parse(trimmed);
-    } catch {
-      // A non-JSON body (an HTML error page from a proxy in front of the gateway) is not a fault — the raw
-      // text below is still the most informative thing available. Health channel: the verdict carries it.
-      parsed = undefined;
+    if (nested != null || flat != null) {
+      message = nested ?? flat;
+    } else {
+      // Swallow site `llm/credential-probe.error-body`. A body with no message (an HTML error page from a proxy in front of the gateway) is not a fault — the raw text is
+      // still the most informative thing available. Health channel: the verdict carries it.
+      // B3: switch to cutStringFunction({ maxLength, maxLengthIncludesEndText: false, endText: '…' }) once feat/llm carries develop's cutString endText fix.
+      message = trimmed.length > MAX_PROVIDER_MESSAGE_LENGTH ? `${trimmed.slice(0, MAX_PROVIDER_MESSAGE_LENGTH)}…` : trimmed;
     }
-
-    const error = (parsed as { readonly error?: { readonly message?: unknown }; readonly message?: unknown } | undefined)?.error;
-    const nested = typeof error?.message === 'string' ? error.message : undefined;
-    const flat = typeof (parsed as { readonly message?: unknown } | undefined)?.message === 'string' ? ((parsed as { readonly message: string }).message as string) : undefined;
-    message = nested ?? flat ?? (trimmed.length > MAX_PROVIDER_MESSAGE_LENGTH ? `${trimmed.slice(0, MAX_PROVIDER_MESSAGE_LENGTH)}…` : trimmed);
   }
 
   return message;
@@ -166,7 +125,7 @@ export function llmProviderErrorMessage(body: string): string | undefined {
  * @returns The credential verdict.
  */
 export async function probeLlmCredentialEndpoint(config: ProbeLlmCredentialEndpointConfig): Promise<LlmStrategyHealth> {
-  const fetchImpl = config.fetch ?? ((url: string, init: LlmCredentialProbeRequestInit) => fetch(url, init) as unknown as Promise<LlmCredentialProbeResponse>);
+  const fetchImpl = resolveLlmFetch(config.fetch);
   const timeoutMs = config.timeoutMs ?? DEFAULT_LLM_CREDENTIAL_PROBE_TIMEOUT_MS;
   const rejectedStatuses = config.rejectedStatuses;
   let health: LlmStrategyHealth;
@@ -175,14 +134,15 @@ export async function probeLlmCredentialEndpoint(config: ProbeLlmCredentialEndpo
     // Built INSIDE the try: should the runtime's abort-signal API throw, the catch below turns that into the usual
     // unready verdict instead of breaking "never throws" (`makeTimeoutAbortSignal` feature-detects a missing API itself).
     const signal = makeTimeoutAbortSignal({ timeout: timeoutMs, signal: config.signal });
-    const init: LlmCredentialProbeRequestInit = config.postBody == null ? { method: 'GET', headers: { Authorization: `Bearer ${config.apiKey}` }, signal } : { method: 'POST', headers: { Authorization: `Bearer ${config.apiKey}`, 'Content-Type': 'application/json' }, body: config.postBody, signal };
+    const init: RequestInit = config.postBody == null ? { method: 'GET', headers: { Authorization: `Bearer ${config.apiKey}` }, signal } : { method: 'POST', headers: { Authorization: `Bearer ${config.apiKey}`, 'Content-Type': 'application/json' }, body: config.postBody, signal };
     const response = await fetchImpl(config.url, init);
 
     if (response.ok) {
       health = { ready: true, issues: [] };
     } else {
-      const body = await response.text();
-      const message = llmProviderErrorMessage(body);
+      // A liveness probe never reads an ok body (it must not download a `/models` catalog); a refusal is read once.
+      const read = await readFetchJsonText(Promise.resolve(response));
+      const message = llmProviderErrorMessage(read);
       const detail = message == null ? `HTTP ${response.status}` : `HTTP ${response.status}: ${message}`;
 
       if (rejectedStatuses != null && response.status < 500 && !rejectedStatuses.includes(response.status)) {
@@ -199,6 +159,101 @@ export async function probeLlmCredentialEndpoint(config: ProbeLlmCredentialEndpo
     // The whole point of the probe is to report, never to propagate — a launch gate calling it must be able to
     // print a verdict rather than crash. Health channel: the verdict IS the report.
     health = { ready: false, issues: [{ severity: 'error', message: `${config.strategyId} credential probe could not reach ${config.url}: ${errorMessageOf(error)}` }] };
+  }
+
+  return health;
+}
+
+/**
+ * What a transport's own credential probe receives.
+ */
+export interface LlmCredentialProbeParams extends AbortSignalRef {
+  /**
+   * The probing strategy's id.
+   */
+  readonly strategyId: LlmStrategyId;
+  /**
+   * The strategy's base URL, trailing slashes removed.
+   */
+  readonly baseUrl: string;
+  /**
+   * The credential under test.
+   */
+  readonly apiKey: string;
+  /**
+   * The HTTP seam; defaults to the global `fetch`.
+   */
+  readonly fetch?: Maybe<ConfiguredFetch>;
+}
+
+/**
+ * A transport's own credential probe, e.g. `GET {baseUrl}/models` or {@link probeLlmCredentialEndpoint} against a gateway's
+ * key endpoint. The completion and decision strategies hand theirs to {@link runLlmCredentialProbeLadder}.
+ */
+export type LlmTransportCredentialProbe = (params: LlmCredentialProbeParams) => Promise<LlmStrategyHealth>;
+
+/**
+ * Config for {@link runLlmCredentialProbeLadder}.
+ */
+export interface RunLlmCredentialProbeLadderConfig {
+  readonly strategyId: LlmStrategyId;
+  /**
+   * The strategy's base URL, trailing slashes removed.
+   */
+  readonly baseUrl: string;
+  readonly apiKey: Maybe<string>;
+  /**
+   * Whether a fake transport seam (a chat `client`, a `decisionFetch`) was injected.
+   */
+  readonly injected: boolean;
+  /**
+   * The message for a strategy with neither a key nor an injected seam; each strategy words its own.
+   */
+  readonly missingKeyMessage: string;
+  /**
+   * The fetch seam handed to the transport probe.
+   */
+  readonly probeFetch?: Maybe<ConfiguredFetch>;
+  /**
+   * A host's (or a credential-probe adapter's) own probe. Outranks an injected seam.
+   */
+  readonly probeSource?: Maybe<LlmCredentialProbe>;
+  /**
+   * The transport's own probe.
+   */
+  readonly probe: LlmTransportCredentialProbe;
+  readonly options?: Maybe<LlmCredentialProbeOptions>;
+}
+
+/**
+ * The ONE credential-probe ladder every strategy's `credentialProbe` runs, rung by rung.
+ *
+ * Rungs:
+ *
+ * 1. no injected seam and no key → an error verdict with {@link RunLlmCredentialProbeLadderConfig.missingKeyMessage};
+ * 2. a probe source → delegated to it (an explicit source outranks an injected seam);
+ * 3. an injected seam and no probe fetch → ready, no request sent (a fake transport has no credential to verify);
+ * 4. a key → the transport's own probe;
+ * 5. otherwise → an error verdict: no apiKey configured for the credential probe.
+ *
+ * @param config - The strategy's key, seams and probes.
+ * @returns The credential verdict.
+ */
+export async function runLlmCredentialProbeLadder(config: RunLlmCredentialProbeLadderConfig): Promise<LlmStrategyHealth> {
+  const { strategyId, baseUrl, apiKey, injected, probeFetch, probeSource, options } = config;
+  const hasKey = isNotNullOrEmptyString(apiKey);
+  let health: LlmStrategyHealth;
+
+  if (!injected && !hasKey) {
+    health = { ready: false, issues: [{ severity: 'error', message: config.missingKeyMessage }] };
+  } else if (probeSource != null) {
+    health = await probeSource(options ?? undefined);
+  } else if (injected && probeFetch == null) {
+    health = { ready: true, issues: [] };
+  } else if (hasKey) {
+    health = await config.probe({ strategyId, baseUrl, apiKey, fetch: probeFetch, signal: options?.signal });
+  } else {
+    health = { ready: false, issues: [{ severity: 'error', message: `no apiKey configured for the credential probe` }] };
   }
 
   return health;

@@ -1,14 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { llmModelConfigListsOf, makeLlmAdapterRegistry, makeLlmProviderStrategy, type LlmAdapterInput, type LlmCompletionAdapterConfig, type LlmCredentialProbeAdapter, type LlmCredentialProbeFetch, type LlmMeteringAdapter, type LlmProviderConfig } from '@dereekb/llm';
+import { type ConfiguredFetch } from '@dereekb/util/fetch';
+import { llmModelConfigListsOf, makeLlmAdapterRegistry, makeLlmProviderStrategy, type LlmAdapterInput, type LlmCompletionAdapterConfig, type LlmCredentialProbeAdapter, type LlmMeteringAdapter, type LlmProviderConfig } from '@dereekb/llm';
 import { LLM_OPENAI_ADAPTERS, LLM_OPENAI_COMPLETION_ADAPTER, llmOpenAiStrategyConfigOf } from './openai.adapter';
 
 const PROVIDER: LlmProviderConfig = { id: 'gateway-a', transport: 'openai', apiKeyEnv: 'GATEWAY_KEY', apiKey: 'k' };
 
 function recordingFetch() {
   const calls: string[] = [];
-  const fetch: LlmCredentialProbeFetch = async (url) => {
+  const fetch: ConfiguredFetch = async (input) => {
+    const url = String(input);
     calls.push(url);
-    return { ok: true, status: 200, text: async () => '{"data":[]}' };
+    return new Response('{"data":[]}', { status: 200 });
   };
   return { fetch, calls };
 }

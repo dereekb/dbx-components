@@ -4,7 +4,7 @@
   "sourceRoot": "packages/llm/openrouter/src",
   "projectType": "library",
   "tags": [],
-  "implicitDependencies": ["util"],
+  "implicitDependencies": ["util", "util-fetch"],
   "targets": {
     "build-base": {
       "dependsOn": [
@@ -22,7 +22,7 @@
         }
       ],
       "metadata": {
-        "description": "The @dereekb/llm/openrouter entry (rollup, inferred from rollup.config.cjs): compiles into dist/packages/llm/openrouter and is named by the parent's `./openrouter` export. An explicit edge to llm:build-base, NOT `^build`: `^build` would resolve to llm:build, which depends on this very target -- a hard cycle. The edge holds even before this entry imports @dereekb/llm, because llm:build-base deletes the dist directory this entry writes into. A sibling entry it imports adds `{ projects: [<sibling>], target: build-base }`; another family (e.g. util) adds that family's ROOT `build`. The parent's `build` aggregates this target, so the entry has no `build` of its own. This entry imports its sibling @dereekb/llm/openai, hence the llm-openai:build-base edge. No source file here imports @dereekb/util directly any more, but the @dereekb/llm declarations it compiles against do, so `implicitDependencies: [\"util\"]` keeps the util graph edge that lets withNx resolve @dereekb/util to its dist (without it the build pulls util's source and fails TS6059)."
+        "description": "The @dereekb/llm/openrouter entry (rollup, inferred from rollup.config.cjs): compiles into dist/packages/llm/openrouter and is named by the parent's `./openrouter` export. An explicit edge to llm:build-base, NOT `^build`: `^build` would resolve to llm:build, which depends on this very target -- a hard cycle. The edge holds even before this entry imports @dereekb/llm, because llm:build-base deletes the dist directory this entry writes into. A sibling entry it imports adds `{ projects: [<sibling>], target: build-base }`; another family (e.g. util) adds that family's ROOT `build`. The parent's `build` aggregates this target, so the entry has no `build` of its own. This entry imports its sibling @dereekb/llm/openai, hence the llm-openai:build-base edge. The @dereekb/llm declarations it compiles against name @dereekb/util and @dereekb/util/fetch (the ConfiguredFetch seam), so `implicitDependencies: [\"util\", \"util-fetch\"]` keeps the graph edges that let withNx resolve both to their dist (without them the build pulls their source and fails TS6059)."
       }
     },
     "lint": {

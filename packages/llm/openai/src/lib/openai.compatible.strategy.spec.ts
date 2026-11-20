@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_LLM_COMPLETION_TIMEOUT_MS, DEFAULT_LLM_MAX_OUTPUT_TOKENS, type LlmCredentialProbeFetch, type LlmReasoningConfig } from '@dereekb/llm';
+import { type ConfiguredFetch } from '@dereekb/util/fetch';
+import { DEFAULT_LLM_COMPLETION_TIMEOUT_MS, DEFAULT_LLM_MAX_OUTPUT_TOKENS, probeLlmCredentialEndpoint, type LlmReasoningConfig } from '@dereekb/llm';
 import { llmOpenAiCallTimeoutMs, type LlmOpenAiChatClient, type LlmOpenAiChatCompletion, type LlmOpenAiChatCompletionBody, type LlmOpenAiRequestOptions } from './openai.chat';
 import { makeLlmOpenAiCompatibleChatStrategy, type LlmOpenAiCompatibleCallParams, type LlmOpenAiCompatibleChatStrategyConfig, type LlmOpenAiCompatibleChatStrategyHooks } from './openai.compatible.strategy';
 
@@ -42,7 +43,7 @@ function makeRecordingClient(completion: LlmOpenAiChatCompletion = { choices: [{
  * @returns The hooks.
  */
 function acmeHooks(overrides: Partial<LlmOpenAiCompatibleChatStrategyHooks> = {}): LlmOpenAiCompatibleChatStrategyHooks {
-  return { kind: 'acme', describe: 'Acme chat.', caching: 'auto-prefix', defaultBaseUrl: ACME_BASE_URL, credentialProbe: { path: '/models' }, reasoningParams: () => ({}), ...overrides };
+  return { kind: 'acme', describe: 'Acme chat.', caching: 'auto-prefix', defaultBaseUrl: ACME_BASE_URL, credentialProbe: (params) => probeLlmCredentialEndpoint({ ...params, url: `${params.baseUrl}/models` }), reasoningParams: () => ({}), ...overrides };
 }
 
 function acme(config: LlmOpenAiCompatibleChatStrategyConfig = {}, overrides: Partial<LlmOpenAiCompatibleChatStrategyHooks> = {}) {
@@ -65,9 +66,10 @@ describe('makeLlmOpenAiCompatibleChatStrategy()', () => {
 
     it('defaults the base URL to the hooks (the generic probe URL proves it)', async () => {
       const urls: string[] = [];
-      const probeFetch: LlmCredentialProbeFetch = async (url) => {
+      const probeFetch: ConfiguredFetch = async (input) => {
+        const url = String(input);
         urls.push(url);
-        return { ok: true, status: 200, text: async () => '{}' };
+        return new Response('{}', { status: 200 });
       };
 
       await acme({ apiKey: 'k', probeFetch }).credentialProbe?.();
@@ -218,9 +220,10 @@ describe('makeLlmOpenAiCompatibleChatStrategy()', () => {
 
     it('row 4: an injected client with probeFetch but no key is an error, with no socket', async () => {
       const urls: string[] = [];
-      const probeFetch: LlmCredentialProbeFetch = async (url) => {
+      const probeFetch: ConfiguredFetch = async (input) => {
+        const url = String(input);
         urls.push(url);
-        return { ok: true, status: 200, text: async () => '{}' };
+        return new Response('{}', { status: 200 });
       };
       const health = await acme({ client: makeRecordingClient().client, probeFetch }).credentialProbe?.();
 
@@ -230,13 +233,14 @@ describe('makeLlmOpenAiCompatibleChatStrategy()', () => {
 
     it('row 5: the generic probe GETs {baseUrl}{path} and grades a 404 by notFoundSeverity', async () => {
       const urls: string[] = [];
-      const probeFetch: LlmCredentialProbeFetch = async (url) => {
+      const probeFetch: ConfiguredFetch = async (input) => {
+        const url = String(input);
         urls.push(url);
-        return { ok: false, status: 404, text: async () => '' };
+        return new Response('', { status: 404 });
       };
 
-      const lenient = await acme({ apiKey: 'k', baseUrl: 'https://gw.example/v1/', probeFetch }, { credentialProbe: { path: '/key', notFoundSeverity: 'warning' } }).credentialProbe?.();
-      const strict = await acme({ apiKey: 'k', probeFetch }, { credentialProbe: { path: '/key' } }).credentialProbe?.();
+      const lenient = await acme({ apiKey: 'k', baseUrl: 'https://gw.example/v1/', probeFetch }, { credentialProbe: (params) => probeLlmCredentialEndpoint({ ...params, url: `${params.baseUrl}/key`, notFoundSeverity: 'warning' }) }).credentialProbe?.();
+      const strict = await acme({ apiKey: 'k', probeFetch }, { credentialProbe: (params) => probeLlmCredentialEndpoint({ ...params, url: `${params.baseUrl}/key` }) }).credentialProbe?.();
 
       expect(urls).toEqual(['https://gw.example/v1/key', `${ACME_BASE_URL}/key`]);
       expect(lenient?.ready).toBe(true);

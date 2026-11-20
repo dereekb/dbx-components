@@ -60,6 +60,9 @@ export type FetchJsonDecodeResponseFunction = (response: Response) => Promise<un
 
 /**
  * The default {@link FetchJsonDecodeResponseFunction}: `response.json()`.
+ *
+ * @param response - The response to decode.
+ * @returns The decoded JSON.
  */
 export const DEFAULT_FETCH_JSON_DECODE_RESPONSE_FUNCTION: FetchJsonDecodeResponseFunction = (response) => response.json();
 
@@ -143,6 +146,8 @@ export async function readFetchJsonText<T = unknown>(responsePromise: Promise<Re
  * @dbxUtilCategory fetch
  * @dbxUtilKind factory
  * @dbxUtilTags fetch, json, decode, response, repair, factory
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function fetchJsonTextDecodeResponseFunction(config?: Maybe<ReadFetchJsonTextConfig>): FetchJsonDecodeResponseFunction {
   return (response) =>

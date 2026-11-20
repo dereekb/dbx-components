@@ -28,9 +28,10 @@
  * `available` as long as ANY of them landed.
  */
 
-import { llmProviderErrorMessage, makeLlmQuotaWindow, type LlmCredentialProbeFetch, type LlmCredentialProbeResponse, type LlmProviderBalance, type LlmProviderStatus, type LlmProviderStatusOptions, type LlmProviderStatusSource, type LlmQuotaWindow, type LlmStrategyHealthIssue } from '@dereekb/llm';
-import { errorMessageOf, makeTimeoutAbortSignal, type Maybe, type Milliseconds, removeTrailingSlashes } from '@dereekb/util';
+import { llmProviderErrorMessage, makeLlmQuotaWindow, type LlmProviderBalance, type LlmProviderStatus, type LlmProviderStatusOptions, type LlmProviderStatusSource, type LlmQuotaWindow, type LlmStrategyHealthIssue } from '@dereekb/llm';
+import { errorMessageOf, type Maybe, type Milliseconds, removeTrailingSlashes } from '@dereekb/util';
 import { DEFAULT_ZENMUX_BASE_URL, ZENMUX_MANAGEMENT_API_KEY_ENV, ZENMUX_PROVIDER_ID } from './zenmux.constants';
+import { readZenmuxManagement, zenmuxManagementUrl, type ZenmuxManagementReadConfig } from './zenmux.management';
 
 /**
  * The default wall-clock budget for ONE account read. Short for the same reason the credential probe's is: this runs in
@@ -41,25 +42,12 @@ export const DEFAULT_ZENMUX_PROVIDER_STATUS_TIMEOUT_MS: Milliseconds = 15_000;
 /**
  * Config for {@link makeZenmuxProviderStatusSource}.
  */
-export interface ZenmuxProviderStatusSourceConfig {
+export interface ZenmuxProviderStatusSourceConfig extends ZenmuxManagementReadConfig {
   /**
    * The **Management API Key**. Empty / absent ⇒ every read resolves `available: false` with an issue naming the env var to
    * set; the source is still constructible, so a host can wire it unconditionally and let the report explain itself.
    */
   readonly managementApiKey?: Maybe<string>;
-  /**
-   * The API base URL; defaults to {@link DEFAULT_ZENMUX_BASE_URL}. Trailing slashes are stripped.
-   */
-  readonly baseUrl?: Maybe<string>;
-  /**
-   * The HTTP seam — a spec's fake. Absent ⇒ the global `fetch`. Reuses the credential probe's request/response shapes: both
-   * are authenticated GETs whose body is read as text.
-   */
-  readonly fetch?: LlmCredentialProbeFetch;
-  /**
-   * The per-read timeout; defaults to {@link DEFAULT_ZENMUX_PROVIDER_STATUS_TIMEOUT_MS}.
-   */
-  readonly timeoutMs?: Maybe<Milliseconds>;
   /**
    * WHICH env var supplied {@link managementApiKey} — named in the missing-credential issue so an operator is told what to
    * set. Defaults to {@link ZENMUX_MANAGEMENT_API_KEY_ENV}.
@@ -114,15 +102,6 @@ interface ZenmuxFlowRate {
 }
 
 /**
- * The envelope every ZenMux management endpoint answers in.
- */
-interface ZenmuxEnvelope<T> {
-  readonly success?: boolean;
-  readonly message?: string;
-  readonly data?: Maybe<T>;
-}
-
-/**
  * The outcome of one GET — the data, or the reason there is none. Modeled rather than thrown so the three reads can
  * partially succeed.
  */
@@ -147,7 +126,6 @@ export function makeZenmuxProviderStatusSource(config: ZenmuxProviderStatusSourc
   const apiKey = config.managementApiKey?.trim() ?? '';
   const managementApiKeyEnv = config.managementApiKeyEnv ?? ZENMUX_MANAGEMENT_API_KEY_ENV;
   const timeoutMs = config.timeoutMs ?? DEFAULT_ZENMUX_PROVIDER_STATUS_TIMEOUT_MS;
-  const fetchImpl: LlmCredentialProbeFetch = config.fetch ?? ((url, init) => fetch(url, init) as unknown as Promise<LlmCredentialProbeResponse>);
 
   /**
    * GET one management endpoint and unwrap its envelope. Never throws.
@@ -157,31 +135,22 @@ export function makeZenmuxProviderStatusSource(config: ZenmuxProviderStatusSourc
    * @returns The data, or the reason there is none.
    */
   async function read<T>(path: string, options?: LlmProviderStatusOptions): Promise<ZenmuxReadResult<T>> {
-    const url = `${baseUrl}/management/${path}`;
+    const url = zenmuxManagementUrl(baseUrl, path);
     let result: ZenmuxReadResult<T>;
 
     try {
       // Built INSIDE the try: should the runtime's abort-signal API throw, the catch below turns that into this read's
       // warning instead of breaking "never throws" (`makeTimeoutAbortSignal` feature-detects a missing API itself).
-      const signal = makeTimeoutAbortSignal({ timeout: timeoutMs, signal: options?.signal });
-      const response = await fetchImpl(url, { method: 'GET', headers: { Authorization: `Bearer ${apiKey}` }, signal });
-      const body = await response.text();
+      const read = await readZenmuxManagement<T>({ fetch: config.fetch, url, apiKey, timeoutMs, signal: options?.signal });
+      const { response, json: envelope } = read;
 
       if (response.ok) {
-        let envelope: Maybe<ZenmuxEnvelope<T>>;
-
-        try {
-          envelope = JSON.parse(body) as ZenmuxEnvelope<T>;
-        } catch {
-          // Swallow site `llm/zenmux-provider-status.envelope`. A 200 carrying a non-JSON body means something in front of
-          // the gateway answered (a proxy error page); it becomes this read's error string.
-          envelope = undefined;
-        }
-
         const data = envelope?.data;
         const missingReason = envelope?.message ?? 'response carried no data';
 
         if (envelope == null) {
+          // Swallow site `llm/zenmux-provider-status.envelope`. A 200 carrying a non-JSON (or JSON `null`) body means
+          // something in front of the gateway answered (a proxy error page); it becomes this read's error string.
           result = { error: `${path}: unparseable response body` };
         } else {
           result = data == null ? { error: `${path}: ${missingReason}` } : { data };
@@ -189,7 +158,7 @@ export function makeZenmuxProviderStatusSource(config: ZenmuxProviderStatusSourc
       } else {
         // The provider's OWN words: a `403 Invalid API key` here means the operator passed an INFERENCE key, which is the
         // single most likely misconfiguration and needs to be quoted, not paraphrased.
-        const message = llmProviderErrorMessage(body);
+        const message = llmProviderErrorMessage(read);
         const detail = message == null ? '' : `: ${message}`;
         result = { error: `${path}: HTTP ${response.status}${detail}` };
       }
