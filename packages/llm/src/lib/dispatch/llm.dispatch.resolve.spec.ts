@@ -24,7 +24,7 @@ function setupOf(extra: Partial<LlmDispatchResolveSetup> = {}): LlmDispatchResol
     descriptorOf: (capability) => DESCRIPTORS[capability],
     modelTiers: { fast: 'x/fast', strong: 'x/strong' },
     defaultTier: 'fast',
-    defaultTierModel: 'x/fast',
+    defaultMaxOutputTokens: 1024,
     reasoningDefault: { enabled: false },
     ...extra
   };
@@ -41,14 +41,28 @@ function recordingContext() {
 }
 
 describe('resolveLlmDispatch()', () => {
-  it('should elide the wire model when it is the default tier slug, and thread it otherwise', () => {
+  it('should resolve the concrete slug for the default tier and a named tier alike', () => {
     const { callContext } = recordingContext();
     const fast = resolveLlmDispatch({ setup: setupOf(), request: request(), callContext });
     const strong = resolveLlmDispatch({ setup: setupOf(), request: request({ capability: 'StrongCap' }), callContext });
 
     expect(fast).toMatchObject({ resolvedModel: 'x/fast', tier: 'fast', modelSource: 'default-tier', strategyId: 'a' });
     expect('model' in fast).toBe(false);
-    expect(strong).toMatchObject({ model: 'x/strong', resolvedModel: 'x/strong', tier: 'strong', modelSource: 'descriptor-tier' });
+    expect(strong).toMatchObject({ resolvedModel: 'x/strong', tier: 'strong', modelSource: 'descriptor-tier' });
+    expect('model' in strong).toBe(false);
+  });
+
+  it('should resolve the cap by route › descriptor › tier, else the setup default', () => {
+    const { callContext } = recordingContext();
+    const tiers = { fast: { model: 'x/fast', maxOutputTokens: 2048 }, strong: 'x/strong' };
+    const routes: LlmCompiledModelRouting = new Map([['Routed', { model: 'x/route', maxOutputTokens: 4096 }]]);
+    const capped = { ...DESCRIPTORS, Capped: defineLlmCapability({ capability: 'Capped', tier: 'strong', maxOutputTokens: 3000, responseSchema: type({ a: 'string' }), parseLever: (lever) => lever }) };
+
+    expect(resolveLlmDispatch({ setup: setupOf(), request: request(), callContext }).maxOutputTokens).toBe(1024);
+    expect(resolveLlmDispatch({ setup: setupOf(), request: request({ capability: 'StrongCap' }), callContext }).maxOutputTokens).toBe(1024);
+    expect(resolveLlmDispatch({ setup: setupOf({ modelTiers: tiers }), request: request(), callContext }).maxOutputTokens).toBe(2048);
+    expect(resolveLlmDispatch({ setup: setupOf({ descriptorOf: (capability) => capped[capability] }), request: request({ capability: 'Capped' }), callContext }).maxOutputTokens).toBe(3000);
+    expect(resolveLlmDispatch({ setup: setupOf({ capabilityRoutes: routes }), request: request({ capability: 'Routed' }), callContext }).maxOutputTokens).toBe(4096);
   });
 
   it('should pick the provider by route › per-slug binding › default', () => {

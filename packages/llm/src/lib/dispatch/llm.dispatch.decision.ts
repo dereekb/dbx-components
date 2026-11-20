@@ -284,7 +284,7 @@ export function makeLlmDispatchDecisionLane<R extends LlmDispatchRequest = LlmDi
             lastError = error;
             const summary = llmErrorSummaryOf(error);
             failedAttempts.push(llmFailedAttemptOf({ attempt, cause: 'transport', result: llmTransportResultOf({ capability, meta: request.meta }, strategyId), error: summary }));
-            const delayMs = transportBackoff(attempt);
+            const delayMs = transportBackoff({ attempt, error });
             callContext.diag({ level: 'warn', code: 'transport-backoff', fields: { capability, decision, attempt, delayMs, error: summary }, message: 'a decision send failed before reaching the model; backing off before an identical resend' });
             await callContext.timeAsync('transport-backoff', () => waitForMsUnlessAborted(delayMs, signal));
 

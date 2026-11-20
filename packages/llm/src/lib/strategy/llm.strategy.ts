@@ -131,18 +131,20 @@ export interface LlmRequest {
   /**
    * An OPTIONAL per-call model id — the MODEL axis (orthogonal to {@link LlmStrategy.id}, the transport axis). A
    * dispatcher resolves the capability's named model tier to a concrete slug and threads it here; a strategy honours
-   * it (routes by it) or ignores it when unset. Transport-agnostic — never bound to one backend. Unset ⇒ the
-   * strategy's default model, so a default-tier call can stay byte-identical to a call made without tiers. An
-   * unknown tier key should fail loud above the strategy (no silent fallback to the default — else the
-   * stronger-model intent silently evaporates).
+   * it (routes by it). Transport-agnostic — never bound to one backend. A dispatcher ALWAYS sets it (the resolved
+   * slug, the default tier's included), so a strategy behind a dispatcher needs no default model; unset ⇒ the
+   * strategy's default model, which only a direct strategy call reaches. An unknown tier key should fail loud above
+   * the strategy (no silent fallback to the default — else the stronger-model intent silently evaporates).
    */
   readonly model?: LlmModelId;
   /**
    * The per-call completion-length cap (the output-budget axis) — the `max_tokens` the strategy sends, resolved
    * from the capability / the resolved tier's config. A strategy honours it (`max_tokens: request.maxOutputTokens ??
-   * <its default cap>`) or ignores it. Unset ⇒ the strategy's own default cap (`DEFAULT_LLM_MAX_OUTPUT_TOKENS` for
-   * the stock transports), so the no-budget wire body is byte-identical. A dispatcher's bounded retry may raise it on
-   * a length-truncation decode failure (a truncated reply is re-asked with a larger cap).
+   * <its default cap>`) or ignores it. A dispatcher ALWAYS sets it (the route › descriptor › tier cap, else its
+   * `defaultMaxOutputTokens`), so behind a dispatcher a strategy's own default cap never applies; unset ⇒ the
+   * strategy's own default cap (`DEFAULT_LLM_MAX_OUTPUT_TOKENS` for the stock transports), which only a direct
+   * strategy call reaches. A dispatcher's bounded retry may raise it on a length-truncation decode failure (a
+   * truncated reply is re-asked with a larger cap).
    */
   readonly maxOutputTokens?: number;
   /**
@@ -433,7 +435,8 @@ export interface LlmCompleteOptions extends AbortSignalRef {}
 export const DEFAULT_LLM_COMPLETION_TIMEOUT_MS: Milliseconds = 60_000;
 
 /**
- * The completion-length cap of a call that names none (`LlmRequest.maxOutputTokens` unset, no strategy override).
+ * The completion-length cap of a direct strategy call that names none (`LlmRequest.maxOutputTokens` unset, no
+ * strategy override) — a dispatched call always names its cap.
  *
  * Deliberately HIGH: a truncated reply is billed in full, decodes to nothing and buys a retry that bills again, and a
  * hybrid-reasoning model spends part of the cap thinking. A model with a smaller output limit (an older OpenAI model,

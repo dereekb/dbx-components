@@ -28,12 +28,12 @@ export interface LlmDispatchRetryLadderConfig {
    */
   readonly baseRequest: LlmRequest;
   /**
-   * The completion budget the first attempt was sent with — read as the budget axis while no lever has set
-   * `maxOutputTokens`.
+   * The completion budget the first attempt was sent with (the resolved cap) — read as the budget axis while no lever
+   * has set `maxOutputTokens`.
    */
   readonly baseOutputBudget: number;
   /**
-   * The concrete slug the dispatch resolved to (never the elided wire `model`).
+   * The concrete slug the dispatch resolved to (the wire `model` of the first attempt).
    */
   readonly resolvedModel: LlmModelId;
   /**

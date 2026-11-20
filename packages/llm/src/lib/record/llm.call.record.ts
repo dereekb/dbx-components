@@ -396,12 +396,8 @@ export interface LlmCallStartRecordBase {
    */
   readonly capability: LlmCapabilityKey;
   /**
-   * The CONCRETE slug this call asks the provider for — always present, never elided.
-   *
-   * A request-shaped `model` is deliberately ABSENT when the resolved slug equals the default tier's (a
-   * wire-byte-stability rule). Mirroring it here would mean a profile whose tiers name the same slug logs no model on
-   * ANY call, so a run that died on its first request would leave no record of what it had asked for.
-   * Byte-stability governs the REQUEST; it has no business shaping observability.
+   * The CONCRETE slug this call asks the provider for — always present, so a run that died on its first request
+   * still records what it had asked for. The dispatcher sends the same slug as the request's `model`.
    */
   readonly model: LlmModelId;
   /**

@@ -90,7 +90,8 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
 ): LlmDispatcher<R, X> {
   const { strategies, modelTiers, capabilityRoutes, descriptorOf, recorder, taps, pause, cancellationSignal, swallow, visionByModel } = config;
   const defaultTier = resolveLlmDefaultModelTierKey(config.defaultTier);
-  const defaultTierModel = resolveLlmModelTier(modelTiers, defaultTier);
+  // fail loud at construction when the default tier names no slug
+  resolveLlmModelTier(modelTiers, defaultTier);
   const layout = config.layout ?? DEFAULT_LLM_PROMPT_LAYOUT;
   const resolveSetup: LlmDispatchResolveSetup<R, D> = {
     strategies,
@@ -99,7 +100,7 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
     capabilityRoutes,
     modelTiers,
     defaultTier,
-    defaultTierModel,
+    defaultMaxOutputTokens: config.defaultMaxOutputTokens,
     reasoningDefault: config.reasoningDefault ?? LLM_REASONING_OFF
   };
   const composeSetup: LlmDispatchComposeSetup<R, D> = {
@@ -193,7 +194,7 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
       // the merged signal is aborted iff either source is
       cancelled: () => signal?.aborted === true,
       pause,
-      baseOutputBudget: composed.baseRequest.maxOutputTokens ?? config.defaultMaxOutputTokens,
+      baseOutputBudget: resolved.maxOutputTokens,
       onDecodeAttempt: isLlmDispatchTapsActive(taps) ? (attempt, willRetry) => taps.emitDecodeFailure({ capability, ...(tier == null ? {} : { tier }), attempt, willRetry, ...fields('decode-failure') }) : undefined,
       maxAttempts: llmDispatchMaxAttemptsOf(composed.maxAttempts),
       resolvedModel: resolved.resolvedModel,

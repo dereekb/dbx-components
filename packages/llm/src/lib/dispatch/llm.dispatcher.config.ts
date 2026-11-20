@@ -346,8 +346,10 @@ export interface LlmDispatcherConfig<R extends LlmDispatchRequest = LlmDispatchR
    */
   readonly defaultStrategyId: LlmStrategyId;
   /**
-   * The completion budget of a call whose descriptor / route / tier names none — the floor the retry ladder raises
-   * from.
+   * The cap a dispatch SENDS when no route, descriptor or tier names one — the floor the retry ladder raises from.
+   * Behind a dispatcher a strategy's own `maxOutputTokens` default never applies (every dispatched request names its
+   * cap), so pass the cap the strategy would otherwise use (normally `DEFAULT_LLM_MAX_OUTPUT_TOKENS`) to send the
+   * same `max_tokens` a direct strategy call sends.
    */
   readonly defaultMaxOutputTokens: number;
   /**
@@ -474,8 +476,10 @@ export interface LlmDispatcherConfig<R extends LlmDispatchRequest = LlmDispatchR
    */
   readonly correctionTexts?: Maybe<LlmDispatchCorrectionTextOverrides>;
   /**
-   * The wait before a transport resend, on either lane (a completion's or a decision's). Defaults to
-   * `llmTransportBackoffMs`.
+   * The wait before a transport resend, on either lane (a completion's or a decision's), handed the failed attempt and
+   * what its send threw (`{ attempt, error }`). Defaults to `llmTransportBackoffMs`: the server's `retry-after-ms` /
+   * `Retry-After` when the error carries one of at most `LLM_TRANSPORT_RETRY_AFTER_MAX_MS`, else a jittered
+   * exponential step.
    */
   readonly transportBackoff?: Maybe<LlmDispatchTransportBackoff>;
   /**

@@ -4,6 +4,7 @@
  */
 
 import { exponentialBackoffDelay, type Maybe, mergeAbortSignals, type Milliseconds, waitForPromiseUnlessAborted } from '@dereekb/util';
+import { readFetchErrorRetryAfter } from '@dereekb/util/fetch';
 import { type LlmCallContext, makeLlmCallContext, noopLlmCallContext } from '../record/llm.call.context';
 import { type LlmSwallowSink } from '../record/llm.swallow';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
@@ -104,21 +105,52 @@ export const LLM_TRANSPORT_RETRY_BASE_DELAY_MS: Milliseconds = 500;
 export const LLM_TRANSPORT_RETRY_MAX_DELAY_MS: Milliseconds = 8_000;
 
 /**
- * The wait before an identical resend after the transport failure of the 1-based `attempt`.
+ * The longest server-requested wait (`retry-after-ms` / `Retry-After`) the default backoff honors — the openai SDK's own
+ * ceiling. A longer wait falls back to the exponential step; a host that wants to honor it passes its own
+ * `transportBackoff`.
  */
-export type LlmDispatchTransportBackoff = (attempt: number) => Milliseconds;
+export const LLM_TRANSPORT_RETRY_AFTER_MAX_MS: Milliseconds = 60_000;
 
 /**
- * The default transport backoff — `@dereekb/util` `exponentialBackoffDelay` from
+ * What a transport backoff is handed: the failed attempt and what its send threw.
+ */
+export interface LlmDispatchTransportBackoffInput {
+  /**
+   * The 1-based ordinal of the attempt whose send failed.
+   */
+  readonly attempt: number;
+  /**
+   * The thrown value — an SDK error with `headers`, an `LlmDecisionTransportError`, …
+   */
+  readonly error: unknown;
+}
+
+/**
+ * The wait before the resend that follows a transport failure.
+ */
+export type LlmDispatchTransportBackoff = (input: LlmDispatchTransportBackoffInput) => Milliseconds;
+
+/**
+ * The default transport backoff — the server's requested wait (`@dereekb/util/fetch` `readFetchErrorRetryAfter`:
+ * `retry-after-ms`, else `Retry-After`) when one is readable off the error and at most
+ * {@link LLM_TRANSPORT_RETRY_AFTER_MAX_MS}; else `@dereekb/util` `exponentialBackoffDelay` from
  * {@link LLM_TRANSPORT_RETRY_BASE_DELAY_MS}, capped at {@link LLM_TRANSPORT_RETRY_MAX_DELAY_MS}, with equal jitter (the
  * wait lands in `[½, 1] ×` the exponential step).
  *
- * @param attempt - The 1-based ordinal of the attempt whose transport failed.
+ * @param input - The failed attempt's 1-based ordinal and what its send threw.
  * @param random - The jitter source (`[0, 1)`).
  * @returns The wait.
+ *
+ * @example
+ * ```ts
+ * llmTransportBackoffMs({ attempt: 1, error: { headers: new Headers({ 'retry-after': '2' }) } }); // 2000
+ * llmTransportBackoffMs({ attempt: 2, error: new Error('socket hang up') }, () => 0); // 500 (½ × 1000)
+ * ```
  */
-export function llmTransportBackoffMs(attempt: number, random: () => number = Math.random): Milliseconds {
-  return exponentialBackoffDelay({ attempt, initialDelay: LLM_TRANSPORT_RETRY_BASE_DELAY_MS, maxDelay: LLM_TRANSPORT_RETRY_MAX_DELAY_MS, random });
+export function llmTransportBackoffMs(input: LlmDispatchTransportBackoffInput, random: () => number = Math.random): Milliseconds {
+  const { attempt, error } = input;
+  const requested = readFetchErrorRetryAfter(error);
+  return requested != null && requested <= LLM_TRANSPORT_RETRY_AFTER_MAX_MS ? requested : exponentialBackoffDelay({ attempt, initialDelay: LLM_TRANSPORT_RETRY_BASE_DELAY_MS, maxDelay: LLM_TRANSPORT_RETRY_MAX_DELAY_MS, random });
 }
 
 // MARK: Fallback context

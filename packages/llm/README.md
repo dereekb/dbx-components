@@ -779,10 +779,11 @@ replay. Hosts swap their own pieces in through hooks; the dispatcher has no host
 - **Required config.** `strategies` (an `LlmStrategyRegistry`), `defaultStrategyId`, `defaultMaxOutputTokens`,
   `modelTiers`, `descriptorOf` and `templateResolver`. The default tier's slug is resolved at construction, so a tier map
   without it throws there. A selected strategy id that is not registered throws and names the registered ones.
-- **Resolve.** Model by `request.model` › `request.tier` › route › descriptor › default tier; the wire `model` is left
-  unset when it is the default tier's slug. The strategy comes from `selectStrategy` when set, else route provider ›
-  `providerByModel` › `defaultStrategyId`. Output controls follow `resolveLlmCapabilityOutputControls` over
-  `reasoningDefault` (off by default). Debug breadcrumbs `model-route`, `provider-route` and `reasoning-floor` fire once
+- **Resolve.** Model by `request.model` › `request.tier` › route › descriptor › default tier. The wire always names the
+  resolved slug (the default tier's included) and the cap: route › descriptor › tier, else `defaultMaxOutputTokens`. A
+  strategy behind a dispatcher therefore needs no `defaultModel`, and its own `maxOutputTokens` default never applies.
+  The strategy comes from `selectStrategy` when set, else route provider › `providerByModel` › `defaultStrategyId`.
+  Output controls follow `resolveLlmCapabilityOutputControls` over `reasoningDefault` (off by default). Debug breadcrumbs `model-route`, `provider-route` and `reasoning-floor` fire once
   per key.
 - **Compose.** The root runs `composeLlmCapabilityPrompt` over `layout` (default `DEFAULT_LLM_PROMPT_LAYOUT`),
   `contributors`, `texts` and the schema hints (none on a `line` call; an explicit request hint is hardened). It sends
@@ -868,8 +869,12 @@ one retry lever, and a mangled JSON reply gets one cheap fast fix before any re-
 - **Transport lane.** A timeout re-asks at once, taking the `reasoning-off` rung when reasoning is on (otherwise the
   same bytes). Every other send error is classified by `classifyLlmError`: 408, 429, 5xx, a Node or browser network
   failure and the SDK's connection / rate-limit / server classes are `transient`; 400–404 are `permanent`; the rest is
-  `unknown`. A transient error resends the identical bytes after `transportBackoff` (default `llmTransportBackoffMs`,
-  util `exponentialBackoffDelay`: 500 ms doubling to 8 s, equal jitter, with a `transport-backoff` diag). An `unknown`
+  `unknown`. A transient error resends the identical bytes after `transportBackoff({ attempt, error })` (with a
+  `transport-backoff` diag). The default, `llmTransportBackoffMs`, honors the server's wait when the thrown error carries
+  one (`retry-after-ms`, else `Retry-After`, read off `error.headers` or `error.response.headers` by util/fetch
+  `readFetchErrorRetryAfter`) and it is at most `LLM_TRANSPORT_RETRY_AFTER_MAX_MS` (60 s); otherwise util
+  `exponentialBackoffDelay`: 500 ms doubling to 8 s, equal jitter. A host that wants to honor a longer wait passes its
+  own `transportBackoff`. An `unknown`
   error goes to the dispatcher's `isRetryableUnknownError`: a `true` makes it behave exactly like a transient error (its
   rows carry `errorClassification: 'unknown'`). Anything not resent records an `unretryable` row (with
   `errorClassification`), the call record, the decode-failure record and `onDispatchComplete`, then the dispatch
@@ -898,9 +903,9 @@ one retry lever, and a mangled JSON reply gets one cheap fast fix before any re-
     throwing `stamp` is swallowed at `llm/decide.stamp`.
   - **Resend.** A send that fails with an error `isRetryableLlmDecisionError` accepts (the same classifier and
     `isRetryableUnknownError` as the completion lane: a 408, a 429, a 5xx, a dropped socket, or a host-approved
-    `unknown` error; never an abort, a timeout or an answer fault) is resent after `transportBackoff`, up to
-    `maxAttempts` sends
-    (default 2). Each failed send is a `failedAttempts` row and `result.attempts` counts the sends; `decisionsSpent`
+    `unknown` error; never an abort, a timeout or an answer fault) is resent after `transportBackoff({ attempt, error })`
+    — the same default, so a System One 429's `Retry-After` is honored (`LlmDecisionTransportError.headers`) — up to
+    `maxAttempts` sends (default 2). Each failed send is a `failedAttempts` row and `result.attempts` counts the sends; `decisionsSpent`
     counts every send. A decision cancelled during the backoff, or while parked before the resend, is not resent.
 
 ```ts
@@ -996,7 +1001,7 @@ could need in one map.
   reports and never throws, a strategy without the seam counts as ready, and a throwing seam is recorded as an error
   issue. With that `lane`, issues and errors name a "decision strategy".
 - `DEFAULT_LLM_DECISION_TIMEOUT_MS` (10s) is declared here and enforced by the System One transport.
-- `LlmDecisionTransportError` (`status`, `body`) and `isRetryableLlmDecisionError(error, isRetryableUnknownError?)`
+- `LlmDecisionTransportError` (`status`, `body`, and `headers` when the route answered) and `isRetryableLlmDecisionError(error, isRetryableUnknownError?)`
   (408 / 429 / 5xx / socket failures, plus an `unknown` error the function approves; never an abort or a timeout) — the completion lane's retry posture, and what the dispatcher's decision lane resends
   by (see [Decision lane](#retry-and-lanes)); a direct `strategy.decide()` / `decision.decide()` is never retried.
 - `makeLlmSystemOneDecisionStrategy(config, hooks)` is the ONE decision transport, a plain `fetch` to
@@ -1007,7 +1012,8 @@ could need in one map.
   shared decision-adapter mapping (`id`, `apiKey`, `baseUrl`, `timeoutMs`, `fetch` → `probeFetch`); a gateway adds its
   own keys on top.
   - Failures: a timeout or abort rejects with the signal's reason (never wrapped); a socket failure is an
-    `LlmDecisionTransportError` with the native error as its `cause`; a non-2xx carries `status` and the raw `body`;
+    `LlmDecisionTransportError` with the native error as its `cause`; a non-2xx carries `status`, the raw `body` and
+    the response `headers` (never persisted; the dispatcher's default backoff reads `Retry-After` off them);
     a 2xx whose body is not a JSON object is a transport error with `status` and `body`; an answer fault throws
     `LlmDecisionAnswerFaultError`; a missing key throws a status-less (never retried) transport error.
   - `healthCheck` is network-free. An injected `decisionFetch` makes a keyless fake (ready, no key needed). The global
@@ -1082,8 +1088,9 @@ vLLM — over the optional `openai` peer.
 - The cap rides under `tokenLimitParam` (`max_tokens` or `max_completion_tokens`); `usage: { include: true }` is an
   opt-in (`usageAccounting`); a volunteered `usage.cost` is read either way and stamped with `costBasis` when set.
 - Images ride only for slugs `visionByModel` marks; `attachmentsSent` on the result says what rode.
-- There is no built-in model: set `defaultModel` or pass `request.model`, else the call fails loud.
-- Defaults: the cap is `DEFAULT_LLM_MAX_OUTPUT_TOKENS` (8,192) and the abort window is a 60 s floor
+- There is no built-in model: set `defaultModel` or pass `request.model`, else the call fails loud. Behind a dispatcher
+  every request names its model and cap, so `defaultModel` / `maxOutputTokens` only serve direct strategy calls.
+- Defaults: the cap of a direct call is `DEFAULT_LLM_MAX_OUTPUT_TOKENS` (8,192) and the abort window is a 60 s floor
   (`DEFAULT_LLM_COMPLETION_TIMEOUT_MS`) scaled up with the call's budget by `llmOpenAiCallTimeoutMs`. An older or
   small-context model needs its `maxOutputTokens` set.
 - Seams: `client` (an `LlmOpenAiChatClient` — a fake, or your own SDK client) and `probeFetch`. The real client is built lazily with `maxRetries: 0` (the dispatcher retries) and never reads
@@ -1330,6 +1337,8 @@ const { strategies, defaultProviderId, gaps } = makeLlmStrategiesFromEnv({
   visionByModel: llmModelVisionCapabilities(loaded.file)
 });
 ```
+
+`defaultModel` here serves direct strategy calls only: a strategy behind a dispatcher is always sent the resolved slug.
 
 ## Test infrastructure (`@dereekb/llm/test`)
 

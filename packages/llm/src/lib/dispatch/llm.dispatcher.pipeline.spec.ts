@@ -27,6 +27,7 @@ import { repairLlmReplyJson } from '../reply/llm.reply.repair';
 import { type LlmDispatchResult, type LlmRequest, type LlmStrategy } from '../strategy/llm.strategy';
 import { makeLlmStrategyRegistry } from '../strategy/llm.strategy.registry';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
+import { type LlmDispatchTransportBackoffInput } from './llm.dispatch.control';
 import { type LlmDispatchGapParams, type LlmDispatcherConfig, type LlmDispatchRecorder } from './llm.dispatcher.config';
 import { makeLlmDispatcher } from './llm.dispatcher.pipeline';
 import { isLlmDispatchFaultError, type LlmDispatchFaultError } from './llm.dispatch.fault';
@@ -187,7 +188,7 @@ describe('makeLlmDispatcher()', () => {
       const result = await dispatcher.dispatch(request());
 
       expect(requests[0].prompt).toBe('A-PROTOCOL\n\nB-CAP\n\nC-CTX\nD-LIVE');
-      expect(result).toEqual({ text: 'reply', strategyId: 's', strategyKind: 'scripted', capability: 'TestCap' });
+      expect(result).toEqual({ text: 'reply', strategyId: 's', strategyKind: 'scripted', capability: 'TestCap', model: 'test/fast' });
     });
 
     it('should route to the strategy selectStrategy picks', async () => {
@@ -204,13 +205,22 @@ describe('makeLlmDispatcher()', () => {
       await expect(dispatcher.dispatch(request())).rejects.toThrow("llm dispatcher: no LLM strategy registered for 'missing' (routing TestCap on model 'test/fast'; registered: s).");
     });
 
-    it('should thread the descriptor model when it differs from the default tier, and leave it unset otherwise', async () => {
+    it("should send the resolved model on every request, the default tier's included", async () => {
       const { dispatcher, requests } = setup({ replies: ['{"answer":"ok"}'] });
       await dispatcher.dispatch(request({ capability: 'StrongCap' }));
       await dispatcher.dispatch(request());
 
       expect(requests[0].model).toBe('test/strong');
-      expect('model' in requests[1]).toBe(false);
+      expect(requests[1].model).toBe('test/fast');
+    });
+
+    it('should send defaultMaxOutputTokens as the cap when no route, descriptor or tier names one', async () => {
+      const { dispatcher, requests } = setup({ replies: ['first', 'second'] });
+      const executed = await dispatcher.preparePrompt(request()).execute();
+      await executed.followUp({ content: 'and then?' }).execute();
+
+      expect(requests[0]).toMatchObject({ model: 'test/fast', maxOutputTokens: 1024 });
+      expect(requests[1]).toMatchObject({ model: 'test/fast', maxOutputTokens: 1024 });
     });
 
     it('should send attachments on the root only, and omit the key when there are none', async () => {
@@ -260,7 +270,7 @@ describe('makeLlmDispatcher()', () => {
       await dispatcher.dispatch(request({ capability: 'StrongCap', model: 'raw/slug' }));
 
       expect(requests[0].model).toBe('test/strong');
-      expect('model' in requests[1]).toBe(false);
+      expect(requests[1].model).toBe('test/fast');
       expect(requests[2].model).toBe('raw/slug');
     });
 
@@ -269,7 +279,7 @@ describe('makeLlmDispatcher()', () => {
       await dispatcher.dispatch(request());
       await dispatcher.dispatch(request({ tier: 'fast' }));
 
-      expect('model' in requests[0]).toBe(false);
+      expect(requests[0].model).toBe('test/strong');
       expect(requests[1].model).toBe('test/fast');
     });
 
@@ -794,7 +804,7 @@ describe('makeLlmDispatcher()', () => {
   describe('line protocol', () => {
     it('should be single-shot with no validate', async () => {
       const { dispatcher } = setup({ replies: ['a line'] });
-      expect(await dispatcher.dispatch(request({ capability: 'LineCap' }))).toEqual({ text: 'a line', strategyId: 's', strategyKind: 'scripted', capability: 'LineCap' });
+      expect(await dispatcher.dispatch(request({ capability: 'LineCap' }))).toEqual({ text: 'a line', strategyId: 's', strategyKind: 'scripted', capability: 'LineCap', model: 'test/fast' });
     });
   });
 
@@ -1017,12 +1027,15 @@ describe('makeLlmDispatcher()', () => {
 
     it('(b) should resend a 503, then reject on a 400 at attempt 2', async () => {
       const { calls, recorder } = recording();
-      const backoff = vi.fn(() => 0);
-      const { dispatcher } = setup({ replies: [statusError(503), statusError(400)], recorder, transportBackoff: backoff });
+      const backoff = vi.fn((_input: LlmDispatchTransportBackoffInput) => 0);
+      const unavailable = statusError(503);
+      const { dispatcher } = setup({ replies: [unavailable, statusError(400)], recorder, transportBackoff: backoff });
       const caught = await caughtOf(dispatcher.dispatch(request({ validate: VALID, maxAttempts: 3 })));
 
       expect(caught).toMatchObject({ classification: 'permanent', attempt: 2 });
       expect(backoff).toHaveBeenCalledTimes(1);
+      expect(backoff.mock.calls[0][0]).toEqual({ attempt: 1, error: unavailable });
+      expect(backoff.mock.calls[0][0].error).toBe(unavailable);
       const [first, second] = calls[0].failedAttempts ?? [];
       expect(first).toMatchObject({ cause: 'transport' });
       expect(first).not.toHaveProperty('errorClassification');

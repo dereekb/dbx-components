@@ -302,15 +302,15 @@ describe('makeLlmDispatcher() retry', () => {
       const { dispatcher, requests } = setup({ replies: [PROSE, OK], decodeRetryTier: 'strong' });
       await dispatcher.dispatch(request({ validate: VALID }));
 
-      expect(requests[0].model).toBeUndefined();
+      expect(requests[0].model).toBe('test/fast');
       expect(requests[1].model).toBe('test/strong');
     });
 
-    it("should leave the model unset with decodeRetryTier 'off' and take the reasoning-low rung", async () => {
+    it("should keep the resolved model with decodeRetryTier 'off' and take the reasoning-low rung", async () => {
       const { dispatcher, requests } = setup({ replies: [PROSE, OK], decodeRetryTier: 'off' });
       await dispatcher.dispatch(request({ validate: VALID }));
 
-      expect(requests[1].model).toBeUndefined();
+      expect(requests[1].model).toBe('test/fast');
       expect(requests[1].reasoning).toEqual({ enabled: true, effort: 'low' });
     });
 
@@ -419,11 +419,11 @@ describe('makeLlmDispatcher() retry', () => {
   });
 
   describe('truncation budget', () => {
-    it('should send no cap first, then the raised one', async () => {
+    it('should send the default cap first, then the raised one', async () => {
       const { dispatcher, requests } = setup({ replies: [TRUNCATED, OK] });
       await dispatcher.dispatch(request({ validate: VALID }));
 
-      expect(requests[0].maxOutputTokens).toBeUndefined();
+      expect(requests[0].maxOutputTokens).toBe(1024);
       expect(requests[1].maxOutputTokens).toBe(4096);
     });
 
@@ -453,7 +453,7 @@ describe('makeLlmDispatcher() retry', () => {
       const { dispatcher, requests } = setup({ replies: [TRUNCATED, OK], decodeRetryTier: 'strong' });
       await dispatcher.dispatch(request({ validate: VALID }));
 
-      expect(requests[1].model).toBeUndefined();
+      expect(requests[1].model).toBe('test/fast');
       expect(requests[1].maxOutputTokens).toBe(4096);
     });
   });
@@ -578,13 +578,17 @@ describe('makeLlmDispatcher() retry', () => {
       expect(result.decodeStatus).toBe('retried');
     });
 
-    it('should hand transportBackoff the failed ordinal, and file the backoff diag and span', async () => {
+    it('should hand transportBackoff the failed ordinal and the thrown error, and file the backoff diag and span', async () => {
       const ordinals: number[] = [];
+      const errors: unknown[] = [];
+      const limited = new RateLimitError('rate limited');
       const parent = makeLlmCallContext({ label: 'turn', timing: true });
-      const { dispatcher } = setup({ replies: [new RateLimitError('rate limited'), OK], transportBackoff: (attempt) => (ordinals.push(attempt), 0) });
+      const { dispatcher } = setup({ replies: [limited, OK], transportBackoff: ({ attempt, error }) => (ordinals.push(attempt), errors.push(error), 0) });
       await dispatcher.dispatch(request({ validate: VALID, callContext: parent }));
 
       expect(ordinals).toEqual([1]);
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toBe(limited);
       expect(diagsOf(parent).find((diag) => diag.code === 'transport-backoff')).toMatchObject({ level: 'warn', fields: expect.objectContaining({ attempt: 1, delayMs: 0 }) });
       expect(spanNamesOf(parent)).toContain('transport-backoff');
     });

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { makeLlmSystemOneWireFake, type LlmSystemOneWireFakeAnswer } from '@dereekb/llm/test';
+import { llmTransportBackoffMs } from '../dispatch/llm.dispatch.control';
 import { isLlmAbortError } from '../strategy/llm.error';
 import { LlmDecisionAnswerFaultError } from './llm.decision.answer';
 import { llmChoiceQuestion, llmNoulQuestion, llmScoreQuestion } from './llm.decision.question';
@@ -213,6 +214,14 @@ describe('makeLlmSystemOneDecisionStrategy()', () => {
       expect(isRetryableLlmDecisionError(refused)).toBe(false);
       expect(isRetryableLlmDecisionError(notFound)).toBe(false);
       expect((notFound as LlmDecisionTransportError).message).toContain('Not Found');
+    });
+
+    it('carries the response headers on a non-2xx answer, so a Retry-After reaches the dispatcher backoff', async () => {
+      const limited = await thrownBy(strategyAnswering({ status: 429, body: { error: { message: 'Rate limit exceeded' } }, headers: { 'retry-after': '1' } }).strategy.decide(REQUEST));
+
+      expect(limited).toBeInstanceOf(LlmDecisionTransportError);
+      expect((limited as LlmDecisionTransportError).headers?.get('retry-after')).toBe('1');
+      expect(llmTransportBackoffMs({ attempt: 1, error: limited }, () => 1)).toBe(1000);
     });
 
     it('reports a non-JSON 200, a JSON null and a JSON array as transport errors carrying the body', async () => {

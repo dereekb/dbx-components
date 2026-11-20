@@ -29,8 +29,9 @@
  *   wrapped, so a retry never resends a cancelled call;
  * - {@link LlmDecisionTransportError} with no `status` for a missing key (never retried), or with the socket failure as
  *   its `cause` for an unreachable route (`isRetryableLlmDecisionError` classifies it by that cause);
- * - {@link LlmDecisionTransportError} with `status` and the raw `body` for a non-2xx answer, or for a 2xx whose body is
- *   not a JSON object;
+ * - {@link LlmDecisionTransportError} with `status`, the raw `body` and the response `headers` for a non-2xx answer
+ *   (the dispatcher's default backoff honors its `Retry-After`), or with `status` and `body` for a 2xx whose body is not
+ *   a JSON object;
  * - {@link LlmDecisionAnswerFaultError} for a reply that left its declared answer space.
  *
  * `healthCheck` is network-free; `credentialProbe` runs the hook's probe. Both report rather than throw. The global
@@ -263,7 +264,7 @@ export function makeLlmSystemOneDecisionStrategy(config: LlmSystemOneDecisionStr
     if (!response.ok) {
       const message = llmProviderErrorMessage(read);
       const detail = message == null ? '' : `: ${message}`;
-      throw new LlmDecisionTransportError({ message: `the ${label} System One route ${url} answered HTTP ${status}${detail}`, status, body: text });
+      throw new LlmDecisionTransportError({ message: `the ${label} System One route ${url} answered HTTP ${status}${detail}`, status, body: text, headers: response.headers });
     }
 
     // Not a swallow: a non-JSON body is refused here, exactly like a JSON body that is not an object.

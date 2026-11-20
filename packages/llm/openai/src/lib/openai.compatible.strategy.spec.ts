@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { type ConfiguredFetch } from '@dereekb/util/fetch';
-import { DEFAULT_LLM_COMPLETION_TIMEOUT_MS, DEFAULT_LLM_MAX_OUTPUT_TOKENS, probeLlmCredentialEndpoint, type LlmReasoningConfig } from '@dereekb/llm';
+import { DEFAULT_LLM_COMPLETION_TIMEOUT_MS, DEFAULT_LLM_MAX_OUTPUT_TOKENS, makeLlmDispatcher, makeLlmStrategyRegistry, probeLlmCredentialEndpoint, tieredLlmPromptTemplateResolver, type LlmReasoningConfig } from '@dereekb/llm';
 import { llmOpenAiCallTimeoutMs, type LlmOpenAiChatClient, type LlmOpenAiChatCompletion, type LlmOpenAiChatCompletionBody, type LlmOpenAiRequestOptions } from './openai.chat';
 import { makeLlmOpenAiCompatibleChatStrategy, type LlmOpenAiCompatibleCallParams, type LlmOpenAiCompatibleChatStrategyConfig, type LlmOpenAiCompatibleChatStrategyHooks } from './openai.compatible.strategy';
 
@@ -260,5 +260,24 @@ describe('makeLlmOpenAiCompatibleChatStrategy()', () => {
       await expect(acme({ id: 'acme-b', defaultModel: ACME_MODEL }).complete({ prompt: 'hi', capability: 'X' })).rejects.toThrow(/^llm acme strategy 'acme-b': no apiKey configured and no client injected/);
       await expect(acme({ id: 'acme-b', client: makeRecordingClient().client }).complete({ prompt: 'hi', capability: 'X' })).rejects.toThrow(/^llm acme strategy 'acme-b': no model configured/);
     });
+  });
+});
+
+describe('makeLlmDispatcher() over makeLlmOpenAiCompatibleChatStrategy()', () => {
+  it('serves a default-tier call with no defaultModel, sending the resolved slug and the dispatcher cap', async () => {
+    const { client, bodies } = makeRecordingClient();
+    const dispatcher = makeLlmDispatcher({
+      strategies: makeLlmStrategyRegistry([acme({ client })]),
+      defaultStrategyId: 'acme',
+      defaultMaxOutputTokens: 1024,
+      modelTiers: { fast: 'acme/fast', strong: 'acme/strong' },
+      descriptorOf: () => undefined,
+      templateResolver: tieredLlmPromptTemplateResolver({ tiers: [{ source: 'defaults', templates: [{ key: 'instructions', role: 'instructions', text: 'Answer.' }] }] })
+    });
+    const result = await dispatcher.dispatch({ capability: 'X', renderLiveContext: () => [] });
+
+    expect(result.text).toBe('ok');
+    expect(bodies[0]?.model).toBe('acme/fast');
+    expect(bodies[0]?.max_tokens).toBe(1024);
   });
 });

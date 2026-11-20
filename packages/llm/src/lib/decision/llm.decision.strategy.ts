@@ -161,6 +161,11 @@ export interface LlmDecisionTransportErrorConfig {
    */
   readonly body?: Maybe<string>;
   /**
+   * The response headers, when the route answered — the dispatcher's default transport backoff reads
+   * `retry-after-ms` / `Retry-After` off them. Never persisted.
+   */
+  readonly headers?: Maybe<Headers>;
+  /**
    * The failure this wraps (a socket error) — the ES2022 `Error.cause`.
    */
   readonly cause?: unknown;
@@ -185,6 +190,10 @@ export class LlmDecisionTransportError extends Error {
    * The response body, when one was read.
    */
   readonly body: Maybe<string>;
+  /**
+   * The response headers, when the route answered (`retry-after-ms` / `Retry-After` live here). Never persisted.
+   */
+  readonly headers: Maybe<Headers>;
 
   constructor(config: LlmDecisionTransportErrorConfig) {
     // No `cause` class field: `useDefineForClassFields` would reset it to `undefined` after `super`.
@@ -192,6 +201,7 @@ export class LlmDecisionTransportError extends Error {
     this.name = 'LlmDecisionTransportError';
     this.status = config.status;
     this.body = config.body;
+    this.headers = config.headers;
   }
 }
 

@@ -154,15 +154,15 @@ function llmDispatchSchemaHintsOf(request: LlmDispatchRequest, descriptor: Maybe
 }
 
 /**
- * The wire fields every request of a dispatch shares.
+ * The wire fields every request of a dispatch shares — always the resolved slug and the resolved cap.
  *
  * @param request - The request.
  * @param resolved - The resolved dispatch.
  * @returns The shared fields.
  */
 function llmDispatchWireFieldsOf(request: LlmDispatchRequest, resolved: LlmResolvedDispatch): Pick<LlmRequest, 'capability' | 'meta' | 'model' | 'maxOutputTokens' | 'reasoning'> {
-  const { model, maxOutputTokens, reasoning } = resolved;
-  return { capability: request.capability, ...(request.meta == null ? {} : { meta: request.meta }), ...(model == null ? {} : { model }), ...(maxOutputTokens == null ? {} : { maxOutputTokens }), reasoning };
+  const { resolvedModel, maxOutputTokens, reasoning } = resolved;
+  return { capability: request.capability, ...(request.meta == null ? {} : { meta: request.meta }), model: resolvedModel, maxOutputTokens, reasoning };
 }
 
 /**

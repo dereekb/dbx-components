@@ -141,7 +141,7 @@ export interface LlmCallLogPayloadBase {
   /**
    * The dispatcher's ESTIMATED prompt-token count — written only when the caller pinned a prompt-token budget, so a
    * ledger can report estimate-vs-served drift against the served {@link LlmUsage.promptTokens}. Absent for every
-   * budget-less call (byte-identical to a row written before the estimator existed).
+   * call without a pinned prompt-token budget (byte-identical to a row written before the estimator existed).
    */
   readonly estimatedPromptTokens?: number;
   /**

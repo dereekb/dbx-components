@@ -135,8 +135,9 @@ export interface LlmDecodeFailureAttempt {
   readonly latencyMs?: Milliseconds;
   /**
    * The completion budget (`max_tokens`) this attempt was SENT with — the raised cap on a `length-truncation`
-   * re-ask, so a ledger shows the budget being raised across attempts. Present only when the request carried an
-   * explicit budget; omitted for a budget-less call (byte-stable with existing records).
+   * re-ask, so a ledger shows the budget being raised across attempts. A dispatched request always carries its cap,
+   * so every dispatcher row has it; omitted only for a request that named none (a row built outside a dispatcher, or
+   * a record written before the dispatcher always sent its cap).
    */
   readonly maxOutputTokens?: number;
   /**

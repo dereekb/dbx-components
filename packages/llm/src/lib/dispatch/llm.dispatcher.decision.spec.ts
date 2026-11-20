@@ -27,6 +27,7 @@ import { type LlmDispatchCompleteTapEvent, type LlmDispatchStartTapEvent, makeLl
 import { type LlmSwallowSiteId } from '../record/llm.swallow';
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
 import { makeLlmStrategyRegistry } from '../strategy/llm.strategy.registry';
+import { type LlmDispatchTransportBackoffInput, llmTransportBackoffMs } from './llm.dispatch.control';
 import { LLM_DECIDE_STAMP_SWALLOW_SITE } from './llm.dispatch.decision';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
 import { type LlmDispatcherConfig, type LlmDispatcherDecisionConfig, type LlmDispatchLane, type LlmDispatchRecorder } from './llm.dispatcher.config';
@@ -273,15 +274,29 @@ describe('makeLlmDispatcher() decision lane', () => {
   });
 
   describe('retry', () => {
+    it('should honor a Retry-After the decision transport error carries through the default backoff', async () => {
+      const requests: LlmDecisionRequest[] = [];
+      const waits: number[] = [];
+      const limited = new LlmDecisionTransportError({ message: 'HTTP 429', status: 429, headers: new Headers({ 'retry-after': '1' }) });
+      const transportBackoff = (input: LlmDispatchTransportBackoffInput) => (waits.push(llmTransportBackoffMs(input)), 0);
+      const { dispatcher } = setup({ backends: [flakyBackend((send) => (send === 1 ? limited : undefined), requests)], transportBackoff });
+      await dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' } });
+
+      expect(requests).toHaveLength(2);
+      expect(waits).toEqual([1000]);
+    });
+
     it('should resend a retryable transport failure once, after the transport backoff, and record the failed send', async () => {
       const requests: LlmDecisionRequest[] = [];
-      const transportBackoff = vi.fn((_attempt: number) => 0);
-      const { dispatcher, starts, calls } = setup({ backends: [flakyBackend((send) => (send === 1 ? HTTP_503() : undefined), requests)], transportBackoff });
+      const transportBackoff = vi.fn((_input: LlmDispatchTransportBackoffInput) => 0);
+      const unavailable = HTTP_503();
+      const { dispatcher, starts, calls } = setup({ backends: [flakyBackend((send) => (send === 1 ? unavailable : undefined), requests)], transportBackoff });
       const result = await dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' } });
 
       expect(result?.answers.row.choice).toBe('row-b');
       expect(requests).toHaveLength(2);
-      expect(transportBackoff.mock.calls.map(([attempt]) => attempt)).toEqual([1]);
+      expect(transportBackoff.mock.calls.map(([input]) => input.attempt)).toEqual([1]);
+      expect(transportBackoff.mock.calls[0][0].error).toBe(unavailable);
       expect(starts).toHaveLength(1);
       expect(calls).toHaveLength(1);
       expect(calls[0].failedAttempts).toHaveLength(1);
@@ -362,7 +377,7 @@ describe('makeLlmDispatcher() decision lane', () => {
     it('should respect decisions.maxAttempts, clamped to at least one send', async () => {
       const always = (maxAttempts: number) => {
         const requests: LlmDecisionRequest[] = [];
-        const transportBackoff = vi.fn((_attempt: number) => 0);
+        const transportBackoff = vi.fn((_input: LlmDispatchTransportBackoffInput) => 0);
         const error = HTTP_503();
         const { dispatcher } = setup({ backends: [flakyBackend(() => error, requests)], transportBackoff, decisionsConfig: { maxAttempts } });
         return { dispatcher, requests, transportBackoff, error };
@@ -371,7 +386,7 @@ describe('makeLlmDispatcher() decision lane', () => {
       const three = always(3);
       await expect(three.dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' } })).rejects.toBe(three.error);
       expect(three.requests).toHaveLength(3);
-      expect(three.transportBackoff.mock.calls.map(([attempt]) => attempt)).toEqual([1, 2]);
+      expect(three.transportBackoff.mock.calls.map(([input]) => input.attempt)).toEqual([1, 2]);
       expect(three.dispatcher.decisionsSpent?.()).toBe(3);
 
       for (const single of [always(1), always(0)]) {
@@ -385,7 +400,7 @@ describe('makeLlmDispatcher() decision lane', () => {
       const requests: LlmDecisionRequest[] = [];
       const error = HTTP_503();
       const controller = new AbortController();
-      const transportBackoff = (_attempt: number) => {
+      const transportBackoff = (_input: LlmDispatchTransportBackoffInput) => {
         controller.abort();
         return 0;
       };
@@ -410,7 +425,7 @@ describe('makeLlmDispatcher() decision lane', () => {
           })
       };
       // the gate closes during the backoff, so the resend parks
-      const transportBackoff = (_attempt: number) => ((paused = true), 0);
+      const transportBackoff = (_input: LlmDispatchTransportBackoffInput) => ((paused = true), 0);
       const { dispatcher } = setup({ backends: [flakyBackend((send) => (send === 1 ? error : undefined), requests)], transportBackoff, pause });
       const pending = dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' }, signal: controller.signal });
       await new Promise((resolve) => setTimeout(resolve, 5));

@@ -109,8 +109,7 @@ export interface ChooseLlmRetryLeverInput {
    */
   readonly reasoningOnly: boolean;
   /**
-   * The concrete slug the failed attempt RESOLVED to — never the request-shaped `model`, which is elided when it
-   * equals the default tier's slug and would make every comparison read as a change.
+   * The concrete slug the failed attempt RESOLVED to (the slug its request named).
    */
   readonly model: LlmModelId;
   /**

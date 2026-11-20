@@ -88,7 +88,7 @@ export interface LlmDispatchAttemptsConfig {
    */
   readonly pause?: Maybe<LlmDispatchPauseSignal>;
   /**
-   * The completion budget a raised-budget retry climbs from (`baseRequest.maxOutputTokens ?? defaultMaxOutputTokens`).
+   * The completion budget a raised-budget retry climbs from — the resolved cap the first attempt sends.
    */
   readonly baseOutputBudget: number;
   /**
@@ -449,7 +449,7 @@ async function runLlmDispatchFaultStep(config: LlmDispatchAttemptsConfig, loop: 
   }
 
   if (willRetry && fault === 'transport') {
-    const delayMs = config.transportBackoff(attempt);
+    const delayMs = config.transportBackoff({ attempt, error: sent.error });
     config.callContext.diag({ level: 'warn', code: 'transport-backoff', fields: { capability: config.baseRequest.capability, attempt, delayMs, ...(transportError == null ? {} : { error: transportError }) }, message: 'transport failed before reaching the model, backing off before an identical resend' });
     // a cancel during the wait ends it early; the next pass then settles before sending
     await sent.attemptContext.timeAsync('transport-backoff', () => waitForMsUnlessAborted(delayMs, config.signal));

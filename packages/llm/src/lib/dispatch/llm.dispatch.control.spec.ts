@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { RateLimitError } from 'openai';
 import { makeLlmCallContext } from '../record/llm.call.context';
-import { LLM_TRANSPORT_RETRY_MAX_DELAY_MS, type LlmDispatchPauseSignal, llmDispatchSignalOf, llmTransportBackoffMs, parkLlmDispatchWhilePaused } from './llm.dispatch.control';
+import { LLM_TRANSPORT_RETRY_AFTER_MAX_MS, LLM_TRANSPORT_RETRY_MAX_DELAY_MS, type LlmDispatchPauseSignal, llmDispatchSignalOf, llmTransportBackoffMs, parkLlmDispatchWhilePaused } from './llm.dispatch.control';
 
 function gate(paused: boolean): LlmDispatchPauseSignal & { readonly resume: () => void } {
   let resolveWait: () => void = () => undefined;
@@ -80,10 +81,35 @@ describe('llmDispatchSignalOf()', () => {
 
 describe('llmTransportBackoffMs()', () => {
   it('should half-jitter an exponential step capped at the max', () => {
-    expect(llmTransportBackoffMs(1, () => 0)).toBe(250);
-    expect(llmTransportBackoffMs(1, () => 1)).toBe(500);
-    expect(llmTransportBackoffMs(2, () => 1)).toBe(1000);
-    expect(llmTransportBackoffMs(20, () => 1)).toBe(LLM_TRANSPORT_RETRY_MAX_DELAY_MS);
-    expect(llmTransportBackoffMs(20, () => 0)).toBe(4000);
+    expect(llmTransportBackoffMs({ attempt: 1, error: undefined }, () => 0)).toBe(250);
+    expect(llmTransportBackoffMs({ attempt: 1, error: undefined }, () => 1)).toBe(500);
+    expect(llmTransportBackoffMs({ attempt: 2, error: undefined }, () => 1)).toBe(1000);
+    expect(llmTransportBackoffMs({ attempt: 20, error: undefined }, () => 1)).toBe(LLM_TRANSPORT_RETRY_MAX_DELAY_MS);
+    expect(llmTransportBackoffMs({ attempt: 20, error: undefined }, () => 0)).toBe(4000);
+  });
+
+  it('should honor a Retry-After the error carries', () => {
+    expect(llmTransportBackoffMs({ attempt: 1, error: { headers: new Headers({ 'retry-after': '2' }) } }, () => 1)).toBe(2000);
+  });
+
+  it('should prefer retry-after-ms over Retry-After', () => {
+    expect(llmTransportBackoffMs({ attempt: 1, error: { headers: new Headers({ 'retry-after': '2', 'retry-after-ms': '1500' }) } }, () => 1)).toBe(1500);
+  });
+
+  it('should honor an HTTP-date Retry-After', () => {
+    const at = new Date(Date.now() + 30_000).toUTCString();
+    const wait = llmTransportBackoffMs({ attempt: 1, error: { headers: { 'Retry-After': at } } }, () => 1);
+    expect(wait).toBeGreaterThan(25_000);
+    expect(wait).toBeLessThanOrEqual(30_000);
+  });
+
+  it('should fall back to the exponential step when the server asks for more than LLM_TRANSPORT_RETRY_AFTER_MAX_MS', () => {
+    expect(LLM_TRANSPORT_RETRY_AFTER_MAX_MS).toBe(60_000);
+    expect(llmTransportBackoffMs({ attempt: 1, error: { headers: new Headers({ 'retry-after': '120' }) } }, () => 1)).toBe(500);
+  });
+
+  it('should read a real openai RateLimitError', () => {
+    const error = new RateLimitError(429, { message: 'rate limited' }, undefined, new Headers({ 'retry-after': '1' }));
+    expect(llmTransportBackoffMs({ attempt: 1, error }, () => 1)).toBe(1000);
   });
 });
