@@ -6,11 +6,11 @@ interface CleanupInternalState<T> {
   /**
    * Current instance.
    */
-  instance?: T;
+  instance?: T | undefined;
   /**
    * Promise of the previous item being cleaned up.
    */
-  cleanup?: Promise<void>;
+  cleanup?: Promise<void> | undefined;
 }
 
 /**

@@ -390,7 +390,7 @@ export interface FindValuesFromInput<T, K extends PrimativeKey = PrimativeKey> {
    *
    * For values that do not have keys, this will be used as the result. I.E. if exclude is true, and a value has no key, it will be returned in the results.
    */
-  readonly exclude?: boolean;
+  readonly exclude?: boolean | undefined;
 }
 
 /**

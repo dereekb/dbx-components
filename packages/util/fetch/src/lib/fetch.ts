@@ -27,8 +27,8 @@ export function fetchService(config: FetchServiceConfig): FetchService {
   const { makeFetch: inputMakeFetch, makeRequest, baseRequest } = config;
 
   return {
-    fetchRequestFactory: (config: FetchRequestFactoryInput) => fetchRequestFactory({ makeRequest, baseRequest, ...config }),
-    makeFetch: (config: ConfigureFetchInput = {}) => configureFetch({ makeRequest, makeFetch: inputMakeFetch, baseRequest, ...config }),
+    fetchRequestFactory: (config: FetchRequestFactoryInput) => fetchRequestFactory({ makeRequest, ...(baseRequest !== undefined ? { baseRequest } : {}), ...config }),
+    makeFetch: (config: ConfigureFetchInput = {}) => configureFetch({ makeRequest, makeFetch: inputMakeFetch, ...(baseRequest !== undefined ? { baseRequest } : {}), ...config }),
     makeRequest: config.makeRequest
   };
 }
@@ -58,7 +58,7 @@ export interface ConfigureFetchInput extends FetchRequestFactoryInput {
   /**
    * (Optional) Custom fetch handler.
    */
-  readonly fetchHandler?: FetchHandler;
+  readonly fetchHandler?: FetchHandler | undefined;
   /**
    * (Optional) MapFetchResponseFunction
    *

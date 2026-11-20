@@ -45,7 +45,7 @@ export interface UtilRequireReadonlyConfigParamsRuleDefinition {
     };
     readonly schema: readonly object[];
   };
-  create(context: { options: UtilRequireReadonlyConfigParamsRuleOptions[]; report: (descriptor: { node: AstNode; messageId: string; data?: Record<string, string>; fix?: (fixer: AstNode) => AstNode | AstNode[] }) => void; sourceCode: AstNode }): Record<string, (node: AstNode) => void>;
+  create(context: { options: UtilRequireReadonlyConfigParamsRuleOptions[]; report: (descriptor: { node: AstNode; messageId: string; data?: Record<string, string> | undefined; fix?: ((fixer: AstNode) => AstNode | AstNode[]) | undefined }) => void; sourceCode: AstNode }): Record<string, (node: AstNode) => void>;
 }
 
 /**

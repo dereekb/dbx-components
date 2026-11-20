@@ -148,7 +148,7 @@ export function fetchJsonRequestInitFunction(config: FetchJsonRequestInitFunctio
     const requestInit: RequestInit = {
       ...config,
       method: config.method,
-      body: fetchJsonBodyString(config.body)
+      body: fetchJsonBodyString(config.body) ?? null
     };
 
     return requestInit;

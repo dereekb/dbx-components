@@ -340,7 +340,7 @@ describe('stripObject()', () => {
   });
 
   it('should not mutate the input by default (copy)', () => {
-    const input: { a: number; b?: number } = { a: 1, b: undefined };
+    const input: { a: number; b?: number | undefined } = { a: 1, b: undefined };
     const result = stripObject(input);
     expect(result).not.toBe(input);
     expect(result).toEqual({ a: 1 });
@@ -348,7 +348,7 @@ describe('stripObject()', () => {
   });
 
   it('should mutate the input when copy=false', () => {
-    const input: { a: number; b?: number } = { a: 1, b: undefined };
+    const input: { a: number; b?: number | undefined } = { a: 1, b: undefined };
     const result = stripObject(input, false);
     expect(result).toBe(input);
     expect(objectHasKey(input, 'b')).toBe(false);
@@ -357,7 +357,7 @@ describe('stripObject()', () => {
 
 describe('stripObjectFunction()', () => {
   it('should produce a reusable function that strips undefined values', () => {
-    const strip = stripObjectFunction<{ a?: number; b?: number }>(KeyValueTypleValueFilter.UNDEFINED);
+    const strip = stripObjectFunction<{ a?: number | undefined; b?: number | undefined }>(KeyValueTypleValueFilter.UNDEFINED);
 
     expect(strip({ a: 1, b: undefined })).toEqual({ a: 1 });
     expect(strip({ a: undefined, b: undefined })).toBeUndefined();
@@ -372,8 +372,8 @@ describe('stripObjectFunction()', () => {
   });
 
   it('should default to copying the input (copy=true)', () => {
-    const strip = stripObjectFunction<{ a?: number; b?: number }>(KeyValueTypleValueFilter.UNDEFINED);
-    const input: { a?: number; b?: number } = { a: 1, b: undefined };
+    const strip = stripObjectFunction<{ a?: number | undefined; b?: number | undefined }>(KeyValueTypleValueFilter.UNDEFINED);
+    const input: { a?: number | undefined; b?: number | undefined } = { a: 1, b: undefined };
 
     const result = strip(input);
 
@@ -383,8 +383,8 @@ describe('stripObjectFunction()', () => {
   });
 
   it('should mutate when copy=false is configured', () => {
-    const strip = stripObjectFunction<{ a?: number; b?: number }>(KeyValueTypleValueFilter.UNDEFINED, false);
-    const input: { a?: number; b?: number } = { a: 1, b: undefined };
+    const strip = stripObjectFunction<{ a?: number | undefined; b?: number | undefined }>(KeyValueTypleValueFilter.UNDEFINED, false);
+    const input: { a?: number | undefined; b?: number | undefined } = { a: 1, b: undefined };
 
     const result = strip(input);
 
@@ -393,8 +393,8 @@ describe('stripObjectFunction()', () => {
   });
 
   it('should let copyOverride override the configured copy behavior per-call', () => {
-    const strip = stripObjectFunction<{ a?: number; b?: number }>(KeyValueTypleValueFilter.UNDEFINED, true);
-    const input: { a?: number; b?: number } = { a: 1, b: undefined };
+    const strip = stripObjectFunction<{ a?: number | undefined; b?: number | undefined }>(KeyValueTypleValueFilter.UNDEFINED, true);
+    const input: { a?: number | undefined; b?: number | undefined } = { a: 1, b: undefined };
 
     const result = strip(input, false);
 
@@ -403,14 +403,14 @@ describe('stripObjectFunction()', () => {
   });
 
   it('should return undefined for null/undefined input', () => {
-    const strip = stripObjectFunction<{ a?: number }>(KeyValueTypleValueFilter.UNDEFINED);
+    const strip = stripObjectFunction<{ a?: number | undefined }>(KeyValueTypleValueFilter.UNDEFINED);
 
     expect(strip(undefined)).toBeUndefined();
     expect(strip(null)).toBeUndefined();
   });
 
   it('should return undefined when filtering leaves an empty object', () => {
-    const strip = stripObjectFunction<{ a?: number; b?: number }>(KeyValueTypleValueFilter.UNDEFINED);
+    const strip = stripObjectFunction<{ a?: number | undefined; b?: number | undefined }>(KeyValueTypleValueFilter.UNDEFINED);
 
     expect(strip({})).toBeUndefined();
     expect(strip({ a: undefined })).toBeUndefined();

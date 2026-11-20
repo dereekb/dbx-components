@@ -6,7 +6,7 @@ import { type Maybe } from '../value/maybe.type';
  * Contains a reference to a filter object.
  */
 export interface Filter<F> {
-  filter?: F;
+  filter?: F | undefined;
 }
 
 /**

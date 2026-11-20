@@ -36,7 +36,7 @@ export interface FormatDateRangeFunctionConfig {
   /**
    * Separator string placed between the formatted start and end dates. Defaults to `'-'`.
    */
-  readonly separator?: string;
+  readonly separator?: string | undefined;
   /**
    * Whether to output a single formatted date when both dates fall on the same day.
    *

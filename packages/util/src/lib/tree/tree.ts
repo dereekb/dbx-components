@@ -21,11 +21,11 @@ export interface TreeNode<T, N extends TreeNode<T, N> = TreeNode<T, any>> {
   /**
    * A reference to the parent node, or undefined if this is the root node.
    */
-  parent?: N;
+  parent?: N | undefined;
   /**
    * An array of child nodes, or undefined if this node has no children.
    */
-  children?: N[];
+  children?: N[] | undefined;
 }
 
 /**

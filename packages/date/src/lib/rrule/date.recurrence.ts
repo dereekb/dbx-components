@@ -28,7 +28,7 @@ export interface ModelRecurrenceInfo extends DateRange {
   /**
    * Timezone the rule is a part of. Required for RRules that have timezone-sensitive implementations.
    */
-  timezone?: TimezoneString;
+  timezone?: TimezoneString | undefined;
   /**
    * RRules for this recurrence.
    */

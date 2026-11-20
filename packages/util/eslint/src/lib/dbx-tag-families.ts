@@ -315,9 +315,9 @@ export interface ReportOnLineInput {
   readonly sourceCode: AstNode;
   readonly lineIndex: number;
   readonly messageId: string;
-  readonly data?: Record<string, string>;
+  readonly data?: Record<string, string> | undefined;
   readonly report: (descriptor: { loc: AstNode; messageId: string; data?: Record<string, string>; fix?: (fixer: AstNode) => Maybe<AstNode | AstNode[]> }) => void;
-  readonly fix?: (fixer: AstNode) => Maybe<AstNode | AstNode[]>;
+  readonly fix?: ((fixer: AstNode) => Maybe<AstNode | AstNode[]>) | undefined;
 }
 
 /**
@@ -345,8 +345,8 @@ export function reportOnJsdocLine(input: ReportOnLineInput): void {
       end: sourceCode.getLocFromIndex(end)
     },
     messageId,
-    data,
-    fix
+    ...(data !== undefined ? { data } : {}),
+    ...(fix !== undefined ? { fix } : {})
   });
 }
 

@@ -1,11 +1,12 @@
-import { type Configurable } from '../type';
+import { type Configurable, type PartialWithUndefined } from '../type';
 
 /**
  * Represents a mutable partial version of a normally read-only model, used during construction/configuration.
  *
- * Combines `Partial` and `Configurable` (writable) so that properties can be set incrementally before the object is treated as complete.
+ * Combines {@link PartialWithUndefined} and `Configurable` (writable) so that properties can be set incrementally before the object is treated as complete.
+ * Every key also accepts an explicit `undefined`, so optional values can be assigned directly.
  */
-export type Building<T> = Partial<Configurable<T>>;
+export type Building<T> = PartialWithUndefined<Configurable<T>>;
 
 /**
  * Function that mutates a {@link Building} instance to populate its properties.

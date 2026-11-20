@@ -3228,18 +3228,18 @@
       "category": "date",
       "module": "@dereekb/util",
       "subpath": "date/date",
-      "signature": "hasSameTimezone(a: Maybe<Partial<TimezoneStringRef>>, b: Maybe<Partial<TimezoneStringRef>>): boolean",
+      "signature": "hasSameTimezone(a: Maybe<PartialWithUndefined<TimezoneStringRef>>, b: Maybe<PartialWithUndefined<TimezoneStringRef>>): boolean",
       "description": "Returns true only if the inputs have the same timezone, or both do not have a timezone set.",
       "params": [
         {
           "name": "a",
-          "type": "Maybe<Partial<TimezoneStringRef>>",
+          "type": "Maybe<PartialWithUndefined<TimezoneStringRef>>",
           "description": "- First object that may contain a timezone reference.",
           "optional": false
         },
         {
           "name": "b",
-          "type": "Maybe<Partial<TimezoneStringRef>>",
+          "type": "Maybe<PartialWithUndefined<TimezoneStringRef>>",
           "description": "- Second object that may contain a timezone reference.",
           "optional": false
         }

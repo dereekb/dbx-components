@@ -36,7 +36,7 @@ export interface CalendarDateConfig {
    * If defined, will apply the target timezone's offset.
    * If false, will be generated in UTC.
    */
-  readonly timezone?: TimezoneString | false;
+  readonly timezone?: TimezoneString | false | undefined;
 }
 
 /**

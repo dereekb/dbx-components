@@ -119,7 +119,7 @@ export interface IndexDeltaGroup<T> {
   /**
    * Items from previousItems that have been removed.
    */
-  readonly deletedItems?: T[];
+  readonly deletedItems?: T[] | undefined;
 }
 
 /**

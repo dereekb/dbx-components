@@ -366,7 +366,7 @@ export function dateRange(input: DateRangeType | DateRangeInput, inputRoundToMin
     end = endOfFn(preEnd);
   }
 
-  function calculateStartAndEndForBetween(config: { addFn: (date: Date, number: number) => Date; distance?: number; startOfFn: (date: Date) => Date; endOfFn: (date: Date) => Date }) {
+  function calculateStartAndEndForBetween(config: { addFn: (date: Date, number: number) => Date; distance?: number | undefined; startOfFn: (date: Date) => Date; endOfFn: (date: Date) => Date }) {
     const { addFn, distance: betweenDistance = 0, startOfFn, endOfFn } = config;
     let preStart: Date;
     let preEnd: Date;

@@ -1,6 +1,7 @@
 import { type ArrayOrValue, asArray } from './../array/array';
 import { filterMaybeArrayValues } from '../array/array.value';
 import { type Maybe } from '../value/maybe.type';
+import { type DefinedValues, type NonNullableValues, type PartialWithUndefined } from '../type';
 import { filterKeyValueTuplesFunction, type FilterKeyValueTuplesInput, filterKeyValueTuplesInputToFilter, type KeyValueTuple, type KeyValueTupleFilter, KeyValueTypleValueFilter } from './object.filter.tuple';
 import { cachedGetter, type Getter } from '../getter';
 import { copyObject, objectHasNoKeys } from './object';
@@ -97,7 +98,7 @@ export function stripObject<T extends object>(input: Maybe<T>, copy?: boolean): 
  * // target.a remains 10, target.b becomes 99
  * ```
  */
-export function overrideInObject<T extends object>(target: Partial<T>, { copy = false, from, filter }: { copy?: boolean; from: ArrayOrValue<Partial<T>>; filter?: KeyValueTupleFilter<T> }): Partial<T> {
+export function overrideInObject<T extends object>(target: Partial<T>, { copy = false, from, filter }: { copy?: boolean | undefined; from: ArrayOrValue<PartialWithUndefined<T>>; filter?: KeyValueTupleFilter<T> | undefined }): Partial<T> {
   return overrideInObjectFunctionFactory({
     copy,
     filter,
@@ -114,7 +115,7 @@ export type OverrideInObjectFunction<T> = (target: Partial<T>) => Partial<T>;
  * Factory that takes an array of source objects and produces an {@link OverrideInObjectFunction}
  * that applies the merged template to any target.
  */
-export type OverrideInObjectFunctionFactory<T> = (from: Partial<T>[]) => OverrideInObjectFunction<T>;
+export type OverrideInObjectFunctionFactory<T> = (from: PartialWithUndefined<T>[]) => OverrideInObjectFunction<T>;
 
 /**
  * Configuration for {@link overrideInObjectFunctionFactory}.
@@ -126,7 +127,7 @@ export interface OverrideInObjectFunctionFactoryConfig<T extends object> {
    * Accepts a {@link KeyValueTypleValueFilter} enum value or a {@link KeyValueTupleFilter} object.
    * When not provided, the default filter removes `undefined` values (i.e., `KeyValueTypleValueFilter.UNDEFINED`).
    */
-  readonly filter?: FilterKeyValueTuplesInput<T>;
+  readonly filter?: FilterKeyValueTuplesInput<T> | undefined;
   /**
    * Whether or not to return a copy of the input value, rather than change it directly.
    * If true, a copy of the input object will be returned.
@@ -180,7 +181,7 @@ export interface OverrideInObjectFunctionFactoryConfig<T extends object> {
 export function overrideInObjectFunctionFactory<T extends object>({ filter, copy, dynamic = false }: OverrideInObjectFunctionFactoryConfig<T>): OverrideInObjectFunctionFactory<T> {
   const filterToRelevantValuesObject = filter == null ? defaultFilterFromPOJOFunctionNoCopy : filterFromPOJOFunction({ filter, copy: false });
 
-  return (from: Partial<T>[]) => {
+  return (from: PartialWithUndefined<T>[]) => {
     const rebuildTemplate: Getter<Partial<T>> = () => {
       const template = {};
 
@@ -230,7 +231,7 @@ export function overrideInObjectFunctionFactory<T extends object>({ filter, copy
  * // result2 is { a: 1, b: 2 }
  * ```
  */
-export function mergeObjects<T extends object>(objects: Maybe<Partial<T>>[], filter?: FilterKeyValueTuplesInput<T>): Partial<T> {
+export function mergeObjects<T extends object>(objects: Maybe<PartialWithUndefined<T>>[], filter?: FilterKeyValueTuplesInput<T>): Partial<T> {
   return mergeObjectsFunction(filter)(objects);
 }
 
@@ -238,7 +239,7 @@ export function mergeObjects<T extends object>(objects: Maybe<Partial<T>>[], fil
  * Function that merges an array of partial objects into a single object.
  * Objects are applied left-to-right, so the last item in the array has the highest priority.
  */
-export type MergeObjectsFunction<T extends object> = (objects: Maybe<Partial<T>>[]) => Partial<T>;
+export type MergeObjectsFunction<T extends object> = (objects: Maybe<PartialWithUndefined<T>>[]) => Partial<T>;
 
 /**
  * Creates a reusable {@link MergeObjectsFunction} with a pre-configured filter.
@@ -274,7 +275,7 @@ export function mergeObjectsFunction<T extends object>(filter?: FilterKeyValueTu
     dynamic: true // no need to use cache, as cache won't be used.
   });
 
-  return (objects: Maybe<Partial<T>>[]) => overrideFn(filterMaybeArrayValues(objects))({});
+  return (objects: Maybe<PartialWithUndefined<T>>[]) => overrideFn(filterMaybeArrayValues(objects))({});
 }
 
 // MARK: POJO
@@ -286,6 +287,9 @@ export function mergeObjectsFunction<T extends object>(filter?: FilterKeyValueTu
  *
  * @param obj - The object to filter.
  * @param filterNull - If `true`, both `null` and `undefined` values are removed. Defaults to `false`.
+ * The result is typed as {@link DefinedValues} (or {@link NonNullableValues} when `filterNull` is `true`). A required key whose
+ * type includes `undefined` stays required in the result type, even when the filter removed it.
+ *
  * @returns A shallow copy of the object with filtered values removed.
  *
  * @example
@@ -297,9 +301,12 @@ export function mergeObjectsFunction<T extends object>(filter?: FilterKeyValueTu
  * // { a: 1 }
  * ```
  */
-export function filterUndefinedValues<T extends object>(obj: T, filterNull = false): T {
+export function filterUndefinedValues<T extends object>(obj: T): DefinedValues<T>;
+export function filterUndefinedValues<T extends object>(obj: T, filterNull: true): NonNullableValues<T>;
+export function filterUndefinedValues<T extends object>(obj: T, filterNull?: boolean): DefinedValues<T>;
+export function filterUndefinedValues<T extends object>(obj: T, filterNull = false): DefinedValues<T> {
   const filterFn = filterNull ? filterNullAndUndefinedValues : filterOnlyUndefinedValues;
-  return filterFn(obj);
+  return filterFn(obj) as DefinedValues<T>;
 }
 
 /**
@@ -554,6 +561,9 @@ export interface FilterFromPOJO<T extends object> {
  *
  * @param obj - The POJO to filter values from.
  * @param config - Configuration for filtering and copying behavior. Defaults to removing `undefined` values without copying.
+ * When called without a config, the result is typed as {@link DefinedValues}, since the default filter removes `undefined` values.
+ * A required key whose type includes `undefined` stays required in the result type, even when the filter removed it.
+ *
  * @returns The filtered object (either the mutated original or a shallow copy, depending on `config.copy`).
  *
  * @example
@@ -567,7 +577,9 @@ export interface FilterFromPOJO<T extends object> {
  * // { a: 1 }
  * ```
  */
-export function filterFromPOJO<T extends object>(obj: T, config: FilterFromPOJO<T> = {}): T {
+export function filterFromPOJO<T extends object>(obj: T): DefinedValues<T>;
+export function filterFromPOJO<T extends object>(obj: T, config: FilterFromPOJO<T>): T;
+export function filterFromPOJO<T extends object>(obj: T, config: FilterFromPOJO<T> = {}): T | DefinedValues<T> {
   return filterFromPOJOFunction<T>(config)(obj);
 }
 

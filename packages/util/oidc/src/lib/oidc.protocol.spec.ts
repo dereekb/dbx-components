@@ -9,8 +9,8 @@ function jsonResponse(body: unknown, status = 200): Response {
 /**
  * Captures the (url, init) of each call and replies with the queued responses in order.
  */
-function mockFetch(responses: Response[]): { fetch: OidcRelyingPartyFetch; calls: { url: string; init?: RequestInit }[] } {
-  const calls: { url: string; init?: RequestInit }[] = [];
+function mockFetch(responses: Response[]): { fetch: OidcRelyingPartyFetch; calls: { url: string; init?: RequestInit | undefined }[] } {
+  const calls: { url: string; init?: RequestInit | undefined }[] = [];
   let index = 0;
   const fetchFn = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     calls.push({ url: input.toString(), init });

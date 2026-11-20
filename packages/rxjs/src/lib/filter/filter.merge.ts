@@ -1,4 +1,4 @@
-import { mergeObjects, type Maybe } from '@dereekb/util';
+import { mergeObjects, type Maybe, type PartialWithUndefined } from '@dereekb/util';
 import { combineLatest, map, shareReplay, type Observable } from 'rxjs';
 import { distinctUntilObjectValuesChanged } from '../object';
 import { type FilterWithPreset } from './filter';
@@ -8,7 +8,7 @@ import { type FilterWithPreset } from './filter';
  *
  * Filters are applied left-to-right, so the last filter in the array has the highest priority.
  */
-export type MergeFiltersFunction<F> = (filters: Maybe<Partial<F>>[]) => F;
+export type MergeFiltersFunction<F> = (filters: Maybe<PartialWithUndefined<F>>[]) => F;
 
 /**
  * Merges several partial filters into a single filter.
@@ -28,7 +28,7 @@ export type MergeFiltersFunction<F> = (filters: Maybe<Partial<F>>[]) => F;
  * // { date, minPrice: 100 }
  * ```
  */
-export function mergeFilters<F extends object>(filters: Maybe<Partial<F>>[]): F {
+export function mergeFilters<F extends object>(filters: Maybe<PartialWithUndefined<F>>[]): F {
   const merged = mergeObjects<F>(filters) as Partial<F> & FilterWithPreset;
   delete merged.preset;
   return merged as F;

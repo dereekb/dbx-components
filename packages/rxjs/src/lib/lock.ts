@@ -55,13 +55,13 @@ export interface SetLockedConfig {
   /**
    * Whether or not to lock the config.
    */
-  readonly locked?: boolean;
+  readonly locked?: boolean | undefined;
   /**
    * Optional duration to set the locked state.
    *
    * Only relevant for locking.
    */
-  readonly duration?: Milliseconds;
+  readonly duration?: Milliseconds | undefined;
 }
 
 /**
@@ -106,7 +106,7 @@ export function onLockSetNextUnlock({ lockSet, fn, timeout: inputTimeout, delayT
     first()
   );
 
-  return obs.subscribe({ next: fn ?? undefined });
+  return obs.subscribe(fn ?? undefined);
 }
 
 /**

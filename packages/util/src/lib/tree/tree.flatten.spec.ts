@@ -4,12 +4,12 @@ import { breadthFirstExploreTreeTraversalFactoryFunction } from './tree.explore'
 
 interface TestNodeValue {
   id: string;
-  value?: number;
+  value?: number | undefined;
 }
 
 interface TestNode extends TreeNode<TestNodeValue, TestNode> {
   value: TestNodeValue;
-  children?: TestNode[];
+  children?: TestNode[] | undefined;
 }
 
 function createTestNode(id: string, value?: number, children?: TestNode[]): TestNode {

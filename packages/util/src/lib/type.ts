@@ -253,6 +253,35 @@ export type StringKeyPropertyKeys<T> = keyof StringKeyProperties<T>;
 export type Configurable<T> = Writable<T>;
 
 /**
+ * Like `Partial<T>`, but every key also accepts an explicit `undefined` value.
+ *
+ * Under `exactOptionalPropertyTypes`, `Partial<T>` only allows a key to be omitted, not set to `undefined`. Use this type only
+ * where the consumer drops `undefined` values at runtime (e.g. `mergeObjects()`, Firestore `update()`), so passing `undefined`
+ * behaves the same as omitting the key.
+ *
+ * Do not use it on configuration types that are spread over defaults, since an explicit `undefined` would replace the default.
+ */
+export type PartialWithUndefined<T> = { [K in keyof T]?: T[K] | undefined };
+
+/**
+ * Removes `undefined` from the value type of every key of `T`, keeping each key's optionality.
+ *
+ * This is the result type of filtering `undefined` values out of an object (e.g. `filterUndefinedValues()`).
+ *
+ * NOTE: A required key whose type includes `undefined` stays required in the result, even though the filter may have removed it.
+ */
+export type DefinedValues<T> = { [K in keyof T]: Exclude<T[K], undefined> };
+
+/**
+ * Removes `null` and `undefined` from the value type of every key of `T`, keeping each key's optionality.
+ *
+ * This is the result type of filtering `null` and `undefined` values out of an object (e.g. `filterUndefinedValues(obj, true)`).
+ *
+ * NOTE: A required key whose type includes `null` or `undefined` stays required in the result, even though the filter may have removed it.
+ */
+export type NonNullableValues<T> = { [K in keyof T]: Exclude<T[K], null | undefined> };
+
+/**
  * StringOrder of all keys of an object.
  *
  * NOTE: Intellisense may not return the correct order.

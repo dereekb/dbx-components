@@ -73,7 +73,7 @@ export function readableError(code: StringErrorCode, message?: string): Readable
  * A ReadableError that includes additional data of type T.
  */
 export interface ReadableDataError<T = unknown> extends ReadableError {
-  readonly data?: T;
+  readonly data?: T | undefined;
 }
 
 /**

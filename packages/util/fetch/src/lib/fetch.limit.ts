@@ -22,7 +22,7 @@ export interface RateLimitedFetchHandlerConfig<T extends PromiseRateLimiter> {
    *
    * Defaults to 1.
    */
-  readonly maxRetries?: number;
+  readonly maxRetries?: number | undefined;
   /**
    * Update the fetch handler with the response, ideally setting/updating the time at which the rate limiter can be reset.
    *
