@@ -41,6 +41,12 @@ describe('the credential verdict codec', () => {
     // A stale detail must never promote a non-dead verdict into carrying an explanation of nothing.
     expect(llmCredentialVerdictFromEnv({ env: { LLM_CREDENTIAL_VERDICT: 'LIVE', LLM_CREDENTIAL_DETAIL: 'stale' } })).toEqual({ verdict: 'live' });
   });
+
+  it('should read the verdict and its detail trimmed, and a blank one as absent', () => {
+    expect(llmCredentialVerdictFromEnv({ env: { LLM_CREDENTIAL_VERDICT: ' Dead\n', LLM_CREDENTIAL_DETAIL: ' alpha: HTTP 401 \n' } })).toEqual({ verdict: 'dead', detail: 'alpha: HTTP 401' });
+    expect(llmCredentialVerdictFromEnv({ env: { LLM_CREDENTIAL_VERDICT: 'dead', LLM_CREDENTIAL_DETAIL: '  ' } })).toEqual({ verdict: 'dead' });
+    expect(llmCredentialVerdictFromEnv({ env: { LLM_CREDENTIAL_VERDICT: '   ' } })).toEqual({ verdict: 'unchecked' });
+  });
 });
 
 describe('parseLlmQuotaMaxUsed()', () => {
@@ -81,6 +87,11 @@ describe('the quota verdict codec', () => {
   it('should read an ABSENT / unrecognized env verdict as unchecked, so a propagation failure is a no-op', () => {
     expect(llmQuotaVerdictFromEnv({ env: {} }).verdict).toBe('unchecked');
     expect(llmQuotaVerdictFromEnv({ env: { LLM_QUOTA_VERDICT: 'maybe' } }).verdict).toBe('unchecked');
+  });
+
+  it('should read the verdict and its detail trimmed, and a blank one as absent', () => {
+    expect(llmQuotaVerdictFromEnv({ env: { LLM_QUOTA_VERDICT: ' EXHAUSTED ', LLM_QUOTA_DETAIL: ' spent \n' } })).toEqual({ verdict: 'exhausted', detail: 'spent' });
+    expect(llmQuotaVerdictFromEnv({ env: { LLM_QUOTA_VERDICT: 'ok', LLM_QUOTA_DETAIL: '\t' } })).toEqual({ verdict: 'ok' });
   });
 });
 

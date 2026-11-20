@@ -8,7 +8,7 @@
 
 import { type Maybe, type PercentDecimal } from '@dereekb/util';
 import { llmCredentialReportErrorText, type LlmQuotaGateVerdict, type LlmStrategiesHealthReport } from '@dereekb/llm';
-import { type LlmEnvView } from '@dereekb/llm/node';
+import { firstLlmEnvValue, type LlmEnvView } from '@dereekb/llm/node';
 import { DEFAULT_LLM_LIVE_LANE_ENV_NAMES, type LlmLiveLaneEnvNames } from './llm.test.env';
 
 // MARK: Shared
@@ -24,17 +24,6 @@ export interface LlmVerdictEnvReadConfig {
    * The lane's names; defaults to {@link DEFAULT_LLM_LIVE_LANE_ENV_NAMES}.
    */
   readonly names?: Maybe<LlmLiveLaneEnvNames>;
-}
-
-/**
- * Read one trimmed value.
- *
- * @param env - The environment.
- * @param name - The variable name.
- * @returns The trimmed value, `''` when absent.
- */
-function trimmedEnvValueOf(env: LlmEnvView, name: string): string {
-  return (env[name] ?? '').trim();
 }
 
 // MARK: Credential
@@ -93,12 +82,12 @@ export function llmCredentialVerdictFromReport(report: Maybe<LlmStrategiesHealth
  * @returns The verdict a prior probe recorded, or `unchecked`.
  */
 export function llmCredentialVerdictFromEnv(config?: Maybe<LlmVerdictEnvReadConfig>): LlmCredentialVerdictResult {
-  const env = config?.env ?? process.env;
+  const env = config?.env;
   const names = config?.names ?? DEFAULT_LLM_LIVE_LANE_ENV_NAMES;
-  const raw = trimmedEnvValueOf(env, names.credentialVerdict).toLowerCase();
+  const raw = firstLlmEnvValue({ env, names: [names.credentialVerdict] })?.toLowerCase();
   const verdict: LlmCredentialVerdict = raw === 'live' || raw === 'dead' ? raw : 'unchecked';
-  const detail = trimmedEnvValueOf(env, names.credentialDetail);
-  return { verdict, ...(verdict !== 'dead' || detail.length === 0 ? {} : { detail }) };
+  const detail = firstLlmEnvValue({ env, names: [names.credentialDetail] });
+  return { verdict, ...(verdict !== 'dead' || detail == null ? {} : { detail }) };
 }
 
 /**
@@ -189,12 +178,12 @@ export function llmQuotaVerdictFromGate(verdict: LlmQuotaGateVerdict): LlmQuotaV
  * @returns The verdict a prior read recorded, or `unchecked`.
  */
 export function llmQuotaVerdictFromEnv(config?: Maybe<LlmVerdictEnvReadConfig>): LlmQuotaVerdictResult {
-  const env = config?.env ?? process.env;
+  const env = config?.env;
   const names = config?.names ?? DEFAULT_LLM_LIVE_LANE_ENV_NAMES;
-  const raw = trimmedEnvValueOf(env, names.quotaVerdict).toLowerCase();
+  const raw = firstLlmEnvValue({ env, names: [names.quotaVerdict] })?.toLowerCase();
   const verdict: LlmQuotaVerdict = raw === 'ok' || raw === 'exhausted' ? raw : 'unchecked';
-  const detail = trimmedEnvValueOf(env, names.quotaDetail);
-  return { verdict, ...(detail.length === 0 ? {} : { detail }) };
+  const detail = firstLlmEnvValue({ env, names: [names.quotaDetail] });
+  return { verdict, ...(detail == null ? {} : { detail }) };
 }
 
 /**

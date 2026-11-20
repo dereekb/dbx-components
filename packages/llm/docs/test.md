@@ -80,8 +80,9 @@ scripts make no network call, and the lane's helpers answer `undefined` while it
   `hermetic: false` to keep them. Unlocked, it resolves first (a malformed models file or an unknown profile throws
   before anything is billed), logs the lane once, probes every keyed provider's credential and reads its quota, and
   stamps both verdicts. A skip flag deletes that half's stale verdict instead. Every switch is parsed with
-  `isEnvFlagEnabled` from `@dereekb/util` (`1` / `true`, trimmed, any case). In this repo `LLM_LIVE_SPECS` is an Nx test
-  input (`liveSpecFlags` in `nx.json`), so toggling it never replays a cached run; a host repo declares its own. The verdict
+  `isEnvFlagEnabled` from `@dereekb/util` (`1` / `true`, trimmed, any case). Every lane value — the switches, the
+  stamped verdicts and details, and the quota ceiling — is read through `/node`'s `firstLlmEnvValue`: trimmed, and a
+  blank variable is unset. In this repo `LLM_LIVE_SPECS` is an Nx test input (`liveSpecFlags` in `nx.json`), so toggling it never replays a cached run; a host repo declares its own. The verdict
   codecs (`llmCredentialVerdictFromEnv`, `toLlmQuotaVerdictEnv`, …) and `parseLlmQuotaMaxUsed` are exported for hosts
   that wire their own.
 - **A/B regression gate.** `computeLlmAbRegressionVerdict({ controlHits, controlTrials, treatmentHits, treatmentTrials })`

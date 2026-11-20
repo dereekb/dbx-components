@@ -41,6 +41,7 @@ import {
 import {
   DEFAULT_LLM_ENV_NAMES,
   firstLlmEnvEntry,
+  firstLlmEnvValue,
   type LlmEnvNames,
   type LlmEnvVarNames,
   type LlmEnvView,
@@ -407,7 +408,7 @@ export function makeLlmLiveLane<X extends LlmModelConfigTypes = LlmModelConfigBa
   const label = config.label ?? 'llm';
   const log = config.log ?? ((message: string) => console.warn(message));
 
-  const isUnlocked = (env?: Maybe<LlmEnvView>): boolean => isEnvFlagEnabled((env ?? process.env)[names.unlock]);
+  const isUnlocked = (env?: Maybe<LlmEnvView>): boolean => isEnvFlagEnabled(firstLlmEnvValue({ env, names: [names.unlock] }));
 
   const resolve = (resolveConfig?: Maybe<LlmLiveLaneEnvParams>): LlmLiveLaneResolution<X> => {
     const env = resolveConfig?.env ?? process.env;
@@ -563,6 +564,7 @@ export function makeLlmLiveLane<X extends LlmModelConfigTypes = LlmModelConfigBa
     let removed: string[] = [];
 
     if (!isUnlocked(env)) {
+      // Presence, not value: a key exported blank is deleted too, so `removed` lists exactly what left the environment.
       removed = providerKeyNames().filter((name) => env[name] != null);
       removed.forEach((name) => {
         delete env[name];
@@ -609,7 +611,7 @@ export function makeLlmLiveLane<X extends LlmModelConfigTypes = LlmModelConfigBa
         // Resolve FIRST: a malformed file or an unknown profile throws here, before anything is billed.
         logLaneOf(resolve({ env }));
 
-        if (isEnvFlagEnabled(env[names.skipCredentialProbe])) {
+        if (isEnvFlagEnabled(firstLlmEnvValue({ env, names: [names.skipCredentialProbe] }))) {
           // A stale verdict must not veto a run the operator forced.
           delete env[names.credentialVerdict];
           delete env[names.credentialDetail];
@@ -617,12 +619,12 @@ export function makeLlmLiveLane<X extends LlmModelConfigTypes = LlmModelConfigBa
           Object.assign(env, toLlmCredentialVerdictEnv({ result: llmCredentialVerdictFromReport(await probeCredentials(probeConfig)), names }));
         }
 
-        if (isEnvFlagEnabled(env[names.skipQuotaProbe])) {
+        if (isEnvFlagEnabled(firstLlmEnvValue({ env, names: [names.skipQuotaProbe] }))) {
           delete env[names.quotaVerdict];
           delete env[names.quotaDetail];
         } else {
           const report = await readProviderStatus(probeConfig);
-          const maxUsedFraction = parseLlmQuotaMaxUsed(env[names.quotaMaxUsed]);
+          const maxUsedFraction = parseLlmQuotaMaxUsed(firstLlmEnvValue({ env, names: [names.quotaMaxUsed] }));
           const result = llmQuotaVerdictFromGate(evaluateLlmQuotaGate({ report, maxUsedFraction }));
           Object.assign(env, toLlmQuotaVerdictEnv({ result, names }));
 

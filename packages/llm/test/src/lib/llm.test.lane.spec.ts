@@ -127,6 +127,11 @@ describe('makeLlmLiveLane()', () => {
       expect(logged[0]).toContain('no model is pinned');
       expect(logged[0]).toContain('LLM_MODEL');
     });
+    it('should read the unlock switch trimmed, a blank one as locked', () => {
+      const { lane } = laneOf();
+      expect(lane.isUnlocked({ LLM_LIVE_SPECS: ' TRUE\n' })).toBe(true);
+      expect(lane.isUnlocked({ LLM_LIVE_SPECS: '  ' })).toBe(false);
+    });
   });
 
   describe('model precedence', () => {
@@ -350,6 +355,26 @@ describe('makeLlmLiveLane()', () => {
       expect(env['LLM_CREDENTIAL_VERDICT']).toBeUndefined();
       expect(env['LLM_QUOTA_VERDICT']).toBeUndefined();
       expect(lane.liveStrategyFromEnv(env)?.strategyId).toBe('alpha');
+    });
+
+    it('should read the skip flags and the quota ceiling trimmed', async () => {
+      const { lane } = laneOf();
+      const { fetch, requests } = makeLlmFetchFake({ body: {} });
+      const env: Record<string, string | undefined> = { ...KEYED, ALPHA_BASE_URL: METERED_URL, LLM_LIVE_SPECS_SKIP_CREDENTIAL_PROBE: ' 1 ', LLM_QUOTA_MAX_USED: ' 0.2 ' };
+
+      await lane.makeGlobalSetup({ env, fetch })();
+
+      expect(requests.map((request) => request.url)).toEqual([]); // the credential probe was skipped
+      expect(env['LLM_QUOTA_VERDICT']).toBe('exhausted'); // 0.3 used is over the 0.2 ceiling
+    });
+
+    it('should read a blank quota ceiling as unset, so the default ceiling applies', async () => {
+      const { lane } = laneOf();
+      const env: Record<string, string | undefined> = { ...KEYED, ALPHA_BASE_URL: METERED_URL, LLM_QUOTA_MAX_USED: '  ' };
+
+      await lane.makeGlobalSetup({ env, fetch: makeLlmFetchFake({ body: {} }).fetch })();
+
+      expect(env['LLM_QUOTA_VERDICT']).toBe('ok');
     });
 
     it('should throw from the setup on a malformed models file', async () => {
