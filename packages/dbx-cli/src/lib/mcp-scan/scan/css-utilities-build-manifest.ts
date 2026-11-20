@@ -32,9 +32,9 @@ export type BuildCssUtilitiesGlobber = ScanGlobber;
 export interface BuildCssUtilitiesManifestInput {
   readonly projectRoot: string;
   readonly generator: string;
-  readonly now?: () => Date;
-  readonly readFile?: BuildCssUtilitiesReadFile;
-  readonly globber?: BuildCssUtilitiesGlobber;
+  readonly now?: (() => Date) | undefined;
+  readonly readFile?: BuildCssUtilitiesReadFile | undefined;
+  readonly globber?: BuildCssUtilitiesGlobber | undefined;
 }
 
 /**

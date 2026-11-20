@@ -35,7 +35,7 @@ export type ModelFirebaseIndexLoaderWarning = ManifestLoaderWarning;
  */
 export interface LoadModelFirebaseIndexManifestsInput {
   readonly sources: readonly ModelFirebaseIndexManifestSource[];
-  readonly readFile?: ModelFirebaseIndexManifestReadFile;
+  readonly readFile?: ModelFirebaseIndexManifestReadFile | undefined;
 }
 
 /**

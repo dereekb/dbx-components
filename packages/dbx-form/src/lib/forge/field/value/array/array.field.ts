@@ -3,7 +3,7 @@ import { dbxForgeBuildFieldDef, dbxForgeFieldFunction, type DbxForgeFieldFunctio
 import type { DbxForgeField } from '../../../form/forge.form';
 import { DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME, type DbxForgeArrayFieldWrapperProps } from '../../wrapper/array-field/array-field.wrapper';
 import { DBX_FORGE_ARRAY_FIELD_ELEMENT_WRAPPER_NAME, type DbxForgeArrayFieldElementWrapperProps } from '../../wrapper/array-field/array-field.element.wrapper';
-import { type Configurable } from '@dereekb/util';
+import { type Configurable, filterUndefinedValues } from '@dereekb/util';
 
 // MARK: Config
 /**
@@ -59,11 +59,13 @@ export const dbxForgeArrayField = dbxForgeFieldFunction<DbxForgeArrayFieldConfig
     const { props, elementProps, template } = config;
 
     // Flow per-element defaults from outer wrapper props; elementProps overrides
-    const resolvedElementProps = {
-      removeText: props?.removeText,
-      allowRemove: props?.allowRemove,
-      disableRearrange: props?.disableRearrange,
-      removeButtonStyle: props?.removeButtonStyle,
+    const resolvedElementProps: DbxForgeArrayFieldElementWrapperProps = {
+      ...filterUndefinedValues({
+        removeText: props?.removeText,
+        allowRemove: props?.allowRemove,
+        disableRearrange: props?.disableRearrange,
+        removeButtonStyle: props?.removeButtonStyle
+      }),
       ...elementProps
     };
 
@@ -90,8 +92,10 @@ export const dbxForgeArrayField = dbxForgeFieldFunction<DbxForgeArrayFieldConfig
     x.addWrappers({
       type: DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME,
       props: {
-        minLength: config.minLength,
-        maxLength: config.maxLength,
+        ...filterUndefinedValues({
+          minLength: config.minLength,
+          maxLength: config.maxLength
+        }),
         ...props,
         itemTemplate
       }

@@ -44,7 +44,7 @@ export interface Violation extends TwoSideViolation {
    * emission time. `undefined` when no catalog entry exists for the
    * code (the formatter renders no nested block in that case).
    */
-  readonly remediation?: RemediationHint;
+  readonly remediation?: RemediationHint | undefined;
 }
 
 export interface ValidationResult extends TwoSideResult {
@@ -73,8 +73,8 @@ export interface InspectedWorkspaceFile {
  * Workspace-level files the NotificationTaskBot checks read. Each check is skipped when its file is absent.
  */
 export interface AppNotificationsWorkspaceFiles {
-  readonly firestoreRules?: InspectedWorkspaceFile;
-  readonly firestoreIndexes?: InspectedWorkspaceFile;
+  readonly firestoreRules?: InspectedWorkspaceFile | undefined;
+  readonly firestoreIndexes?: InspectedWorkspaceFile | undefined;
 }
 
 /**
@@ -84,7 +84,7 @@ export interface AppNotificationsInspection extends TwoSideInspectionInput {
   /**
    * When absent, the `ntb` Firestore rule and `ntb.nat` index checks are skipped.
    */
-  readonly workspace?: AppNotificationsWorkspaceFiles;
+  readonly workspace?: AppNotificationsWorkspaceFiles | undefined;
 }
 
 // MARK: Delivery methods
@@ -567,11 +567,11 @@ export interface ExtractedTaskBotScriptTypeRef {
   /**
    * The constant the reference names, when it names one.
    */
-  readonly identifier?: string;
+  readonly identifier?: string | undefined;
   /**
    * The script type's literal code, when known.
    */
-  readonly code?: string;
+  readonly code?: string | undefined;
   /**
    * Whether the reference is a string literal, a declared `NotificationTaskBotScriptType` constant, or a trust-listed
    * `@dereekb/*` import. Only declared references take part in the registry ↔ processor check.

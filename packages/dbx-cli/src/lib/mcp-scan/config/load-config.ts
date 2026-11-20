@@ -48,7 +48,7 @@ export interface FindAndLoadConfigResult {
  */
 export interface FindAndLoadConfigInput {
   readonly cwd: string;
-  readonly readFile?: ConfigReadFile;
+  readonly readFile?: ConfigReadFile | undefined;
 }
 
 const CONFIG_FILENAME = 'dbx-mcp.config.json';

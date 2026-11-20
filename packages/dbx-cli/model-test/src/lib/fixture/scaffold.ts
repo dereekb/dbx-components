@@ -22,8 +22,8 @@ import type { AppFixturesExtraction, FixtureArchetype } from './types.js';
 export interface ScaffoldParamsDependency {
   readonly field: string;
   readonly fixtureModel: string;
-  readonly optional?: boolean;
-  readonly array?: boolean;
+  readonly optional?: boolean | undefined;
+  readonly array?: boolean | undefined;
 }
 
 /**
@@ -33,13 +33,13 @@ export interface RenderFixtureScaffoldInput {
   readonly model: string;
   readonly prefix: string;
   readonly archetype: FixtureArchetype;
-  readonly parentFixture?: string;
-  readonly parentFixtureField?: string;
-  readonly paramsDependsOn?: readonly ScaffoldParamsDependency[];
-  readonly withInitDocument?: boolean;
-  readonly collectionGenericArg?: string;
-  readonly modelDocumentTypeName?: string;
-  readonly factoryNamePrefix?: string;
+  readonly parentFixture?: string | undefined;
+  readonly parentFixtureField?: string | undefined;
+  readonly paramsDependsOn?: readonly ScaffoldParamsDependency[] | undefined;
+  readonly withInitDocument?: boolean | undefined;
+  readonly collectionGenericArg?: string | undefined;
+  readonly modelDocumentTypeName?: string | undefined;
+  readonly factoryNamePrefix?: string | undefined;
 }
 
 /**
@@ -238,9 +238,9 @@ interface RenderFactoryBlockInput {
   readonly archetype: FixtureArchetype;
   readonly model: string;
   readonly modelDocumentTypeName: string;
-  readonly collectionGenericArg?: string;
-  readonly parentFixture?: string;
-  readonly parentFixtureField?: string;
+  readonly collectionGenericArg?: string | undefined;
+  readonly parentFixture?: string | undefined;
+  readonly parentFixtureField?: string | undefined;
   readonly withInitDocument: boolean;
   readonly todos: string[];
 }

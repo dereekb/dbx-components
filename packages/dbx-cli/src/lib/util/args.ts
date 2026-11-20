@@ -1,7 +1,7 @@
 import type { Argv } from 'yargs';
 
 export interface EnvOptions {
-  readonly env?: string;
+  readonly env?: string | undefined;
 }
 
 /**
@@ -18,9 +18,9 @@ export function withEnv<T>(yargs: Argv<T>): Argv<T & EnvOptions> {
 }
 
 export interface OutputOptions {
-  readonly dumpDir?: string;
-  readonly pick?: string;
-  readonly pickAll?: boolean;
+  readonly dumpDir?: string | undefined;
+  readonly pick?: string | undefined;
+  readonly pickAll?: boolean | undefined;
 }
 
 /**
@@ -120,8 +120,8 @@ export function withMultiplePages<T>(yargs: Argv<T>): Argv<T & MultiplePagesOpti
 export interface CallModelArgs {
   readonly model: string;
   readonly verb: string;
-  readonly specifier?: string;
-  readonly data?: string;
+  readonly specifier?: string | undefined;
+  readonly data?: string | undefined;
 }
 
 /**

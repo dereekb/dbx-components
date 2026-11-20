@@ -34,8 +34,8 @@ export function maskEnv(env: CliEnvConfig): Record<string, unknown> {
  * Output settings that can be applied per-command.
  */
 export interface CliCommandOutputConfig {
-  readonly dumpDir?: string;
-  readonly pick?: string;
+  readonly dumpDir?: string | undefined;
+  readonly pick?: string | undefined;
 }
 
 /**
@@ -45,16 +45,16 @@ export interface CliCommandOutputConfig {
  * (e.g. `call.profile.read`).
  */
 export interface CliOutputConfig extends CliCommandOutputConfig {
-  readonly commands?: Record<string, CliCommandOutputConfig>;
+  readonly commands?: Record<string, CliCommandOutputConfig> | undefined;
 }
 
 /**
  * The persisted shape of `<configDir>/config.json`.
  */
 export interface CliConfig {
-  readonly activeEnv?: string;
-  readonly envs?: Record<string, CliEnvConfig>;
-  readonly output?: CliOutputConfig;
+  readonly activeEnv?: string | undefined;
+  readonly envs?: Record<string, CliEnvConfig> | undefined;
+  readonly output?: CliOutputConfig | undefined;
 }
 
 export interface LoadCliConfigInput {
@@ -168,7 +168,7 @@ function mergeOutputCommandsConfig(existing: CliOutputConfig['commands'], update
 export interface ResolveOutputConfigInput {
   readonly outputConfig: Maybe<CliOutputConfig>;
   readonly commandPath: string[];
-  readonly cliFlags: { dumpDir?: string; pick?: string };
+  readonly cliFlags: { dumpDir?: string | undefined; pick?: string | undefined };
 }
 
 /**
@@ -185,7 +185,7 @@ export interface ResolveOutputConfigInput {
  * @param input.cliFlags - Per-invocation overrides parsed from argv.
  * @returns The resolved `dumpDir` / `pick` pair to apply for this command.
  */
-export function resolveOutputConfig(input: ResolveOutputConfigInput): { dumpDir?: string; pick?: string } {
+export function resolveOutputConfig(input: ResolveOutputConfigInput): { dumpDir?: string | undefined; pick?: string | undefined } {
   const commandKey = input.commandPath.join('.');
   const commandConfig = commandKey ? input.outputConfig?.commands?.[commandKey] : undefined;
 

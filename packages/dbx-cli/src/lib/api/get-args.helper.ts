@@ -41,7 +41,7 @@ export interface ParsedGetManyArgs {
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function parseGetArgs(input: { readonly modelOrKey: string | undefined; readonly key: string | undefined; readonly manifest?: CliModelManifest }): ParsedGetArgs {
+export function parseGetArgs(input: { readonly modelOrKey: string | undefined; readonly key: string | undefined; readonly manifest?: CliModelManifest | undefined }): ParsedGetArgs {
   const modelOrKey = (input.modelOrKey ?? '').trim();
 
   if (modelOrKey.length === 0) {
@@ -120,7 +120,7 @@ export function parseGetArgs(input: { readonly modelOrKey: string | undefined; r
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function parseGetManyArgs(input: { readonly firstArg: string | undefined; readonly rest: ReadonlyArray<string>; readonly manifest?: CliModelManifest }): ParsedGetManyArgs {
+export function parseGetManyArgs(input: { readonly firstArg: string | undefined; readonly rest: ReadonlyArray<string>; readonly manifest?: CliModelManifest | undefined }): ParsedGetManyArgs {
   const firstArg = (input.firstArg ?? '').trim();
   const rest = (input.rest ?? []).map((s) => s.trim()).filter((s) => s.length > 0);
 

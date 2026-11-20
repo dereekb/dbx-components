@@ -73,5 +73,5 @@ export interface ColorTemplateListAppReport {
   readonly apiDir: string;
   readonly templates: readonly ColorTemplateEntry[];
   readonly warnings: readonly ColorTemplateWarning[];
-  readonly provideCallLocation?: ColorTemplateProvideLocation;
+  readonly provideCallLocation?: ColorTemplateProvideLocation | undefined;
 }

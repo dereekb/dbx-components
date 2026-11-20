@@ -1,4 +1,4 @@
-import { type ArrayOrValue, type Building, type Maybe, type MaybeMap, type MaybeSo, type Milliseconds, NOOP_MODIFIER, asArray, filterUndefinedValues, filterUniqueValues, mapMaybeFunction, mergeArrays, objectHasNoKeys } from '@dereekb/util';
+import { type ArrayOrValue, type Building, type Maybe, type MaybeSo, type Milliseconds, NOOP_MODIFIER, type PartialWithUndefined, asArray, filterUndefinedValues, filterUniqueValues, mapMaybeFunction, mergeArrays, objectHasNoKeys } from '@dereekb/util';
 import { mergeClearableObjectUpdate } from '@dereekb/model';
 import { type AsyncCustomValidator, type CustomFnConfig, type CustomValidator, type EvaluationContext, type FieldDef, type FieldMeta, type FieldWithValidation, type LogicConfig, type ValidationMessages, type ValidatorConfig, type WrapperConfig } from '@ng-forge/dynamic-forms';
 import { type DbxForgeFieldValidation } from './field.type';
@@ -123,7 +123,7 @@ export type DbxForgeFieldFunctionFieldDefBuilder<C extends DbxForgeFieldFunction
  *
  * All undefined values are filtered out. All defined values will override the existing props.
  */
-export type DbxForgeFieldFunctionConfigPropsBuilder<C extends DbxForgeFieldFunctionDef<any>> = (input: C) => Partial<C['props']>;
+export type DbxForgeFieldFunctionConfigPropsBuilder<C extends DbxForgeFieldFunctionDef<any>> = (input: C) => PartialWithUndefined<C['props']>;
 
 /**
  * Config for dbxForgeFieldFunction().
@@ -224,7 +224,13 @@ export type DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceAddValidationInp
    * form-wide resolution. Separate from field-level `validationMessages`.
    */
   readonly formValidationMessages?: Maybe<Record<string, string>>;
-} & MaybeMap<Pick<DbxForgeFieldValidation, 'validationMessages'>>;
+  /**
+   * Field-level validation messages merged into the field's existing `validationMessages`.
+   *
+   * Undefined entries are ignored.
+   */
+  readonly validationMessages?: Maybe<PartialWithUndefined<ValidationMessages>>;
+};
 
 /**
  * Builder instance provided to {@link DbxForgeBuildFieldDefFunction} callbacks.
@@ -810,7 +816,7 @@ function _finalizeLogicEntries<C extends DbxForgeFieldFunctionDef<any>, FV = any
 
   interface RegisterCustomFunctionInput {
     isAsync: boolean;
-    functionName?: string;
+    functionName?: string | undefined;
     fn: any;
   }
 
@@ -952,7 +958,7 @@ function _finalizeLogicEntries<C extends DbxForgeFieldFunctionDef<any>, FV = any
           trigger: 'debounced',
           functionName: _registerCustomFunction({ isAsync: false, fn }),
           dependsOn: [SELF_DEPENDENCY_TOKEN],
-          debounceMs: entry.debounceMs
+          ...(entry.debounceMs != null ? { debounceMs: entry.debounceMs } : {})
         };
         break;
       default:
@@ -1134,7 +1140,7 @@ export function dbxForgeFieldFunctionConfigure<C extends DbxForgeFieldFunctionDe
  */
 export function dbxForgeFieldFunctionConfigPropsWithHintBuilder<C extends DbxForgeFieldFunctionDef<any> & DbxForgeFieldHintValueRef<any>>(makeProps?: DbxForgeFieldFunctionConfigPropsBuilder<C>): DbxForgeFieldFunctionConfigPropsBuilder<C> {
   return (input: C) => {
-    const props: Partial<C['props']> = makeProps?.(input) ?? {};
+    const props: PartialWithUndefined<C['props']> = makeProps?.(input) ?? {};
 
     if ('hint' in input) {
       (props as DbxForgeFieldHintValueRef<any>).hint = input.hint;

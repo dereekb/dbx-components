@@ -41,14 +41,14 @@ export interface CliFirestoreQueryResult {
 export interface RunCliFirestoreQueryInput {
   readonly models: CliFirestoreModels;
   readonly entry: CliFirestoreQueryManifestEntry;
-  readonly params?: string;
-  readonly rawParams?: boolean;
-  readonly parent?: FirestoreModelKey;
-  readonly limit?: number;
+  readonly params?: string | undefined;
+  readonly rawParams?: boolean | undefined;
+  readonly parent?: FirestoreModelKey | undefined;
+  readonly limit?: number | undefined;
   /**
    * Return only the count, with no rows.
    */
-  readonly count?: boolean;
+  readonly count?: boolean | undefined;
 }
 
 /**
@@ -65,7 +65,7 @@ export interface RunCliFirestoreQueryInput {
  * @returns The resolved constraints.
  * @throws {CliError} When the entry is not invocable, or the params do not fit its signature.
  */
-export function cliFirestoreQueryConstraints(input: { readonly entry: CliFirestoreQueryManifestEntry; readonly params?: string; readonly rawParams?: boolean; readonly limit?: number }): FirestoreQueryConstraint[] {
+export function cliFirestoreQueryConstraints(input: { readonly entry: CliFirestoreQueryManifestEntry; readonly params?: string | undefined; readonly rawParams?: boolean | undefined; readonly limit?: number | undefined }): FirestoreQueryConstraint[] {
   const { entry, params, rawParams, limit } = input;
   const factory = entry.factory;
 

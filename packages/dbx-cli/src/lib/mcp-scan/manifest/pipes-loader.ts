@@ -35,7 +35,7 @@ export type PipeLoaderWarning = ManifestLoaderWarning;
  */
 export interface LoadPipeManifestsInput {
   readonly sources: readonly PipeManifestSource[];
-  readonly readFile?: PipeManifestReadFile;
+  readonly readFile?: PipeManifestReadFile | undefined;
 }
 
 /**

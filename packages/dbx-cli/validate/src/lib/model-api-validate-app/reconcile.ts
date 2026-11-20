@@ -12,7 +12,7 @@ import { checkDeclaredDescription } from './description.js';
 export interface ReconcileInput {
   readonly declared: readonly DeclaredEntry[];
   readonly handlers: readonly HandlerEntry[];
-  readonly modelFilter?: string;
+  readonly modelFilter?: string | undefined;
 }
 
 export interface ReconcileResult {

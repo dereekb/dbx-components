@@ -25,11 +25,11 @@ export interface ResolveCliFirestoreQueryArgsInput {
   /**
    * The raw `--params` string, if supplied.
    */
-  readonly params?: string;
+  readonly params?: string | undefined;
   /**
    * When true, no date coercion is applied at any level.
    */
-  readonly rawParams?: boolean;
+  readonly rawParams?: boolean | undefined;
 }
 
 /**

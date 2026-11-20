@@ -19,8 +19,8 @@ import type { DetectSmellsResult, SmellMatch, SmellMatchWithExtras } from './sme
  */
 export interface SmellResultFile {
   readonly label: string;
-  readonly htmlPath?: string;
-  readonly scssPath?: string;
+  readonly htmlPath?: string | undefined;
+  readonly scssPath?: string | undefined;
   readonly result: DetectSmellsResult;
   readonly inputs: { readonly html: string; readonly scss: string };
 }

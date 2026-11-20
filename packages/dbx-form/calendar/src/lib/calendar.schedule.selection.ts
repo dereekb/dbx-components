@@ -26,8 +26,8 @@ export interface CalendarScheduleSelectionMetadata {
 }
 
 export interface CalendarScheduleSelectionCellContent {
-  readonly icon?: string;
-  readonly text?: string;
+  readonly icon?: string | undefined;
+  readonly text?: string | undefined;
 }
 
 export type CalendarScheduleSelectionCellContentFactory<M extends CalendarScheduleSelectionMetadata = CalendarScheduleSelectionMetadata> = FactoryWithRequiredInput<CalendarScheduleSelectionCellContent, CalendarMonthViewDay<M>>;

@@ -17,7 +17,7 @@ export interface CallModelOverHttpInput<T = unknown> {
   /**
    * Custom fetch implementation for tests.
    */
-  readonly fetcher?: typeof fetch;
+  readonly fetcher?: typeof fetch | undefined;
 }
 
 export interface CallModelOverHttpResponse<R = unknown> {
@@ -60,7 +60,7 @@ export interface GetModelOverHttpInput {
   /**
    * Custom fetch implementation for tests.
    */
-  readonly fetcher?: typeof fetch;
+  readonly fetcher?: typeof fetch | undefined;
 }
 
 export interface GetModelOverHttpResult<T = unknown> {
@@ -104,7 +104,7 @@ export interface GetMultipleModelsOverHttpInput {
   /**
    * Custom fetch implementation for tests.
    */
-  readonly fetcher?: typeof fetch;
+  readonly fetcher?: typeof fetch | undefined;
 }
 
 export interface GetMultipleModelsOverHttpResultEntry<T = unknown> {
@@ -115,7 +115,7 @@ export interface GetMultipleModelsOverHttpResultEntry<T = unknown> {
 export interface GetMultipleModelsOverHttpErrorEntry {
   readonly key: string;
   readonly error: string;
-  readonly code?: string;
+  readonly code?: string | undefined;
 }
 
 export interface GetMultipleModelsOverHttpResult<T = unknown> {
@@ -213,7 +213,7 @@ export interface GetApiJsonOverHttpInput {
   /**
    * Custom fetch implementation for tests.
    */
-  readonly fetcher?: typeof fetch;
+  readonly fetcher?: typeof fetch | undefined;
 }
 
 /**
@@ -240,7 +240,7 @@ interface RequestJsonInput {
   readonly url: string;
   readonly accessToken: string;
   readonly jsonBody?: unknown;
-  readonly fetcher?: typeof fetch;
+  readonly fetcher?: typeof fetch | undefined;
   readonly errorPrefix: string;
 }
 

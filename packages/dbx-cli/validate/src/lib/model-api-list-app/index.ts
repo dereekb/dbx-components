@@ -7,7 +7,7 @@ import type { ApiListReport } from './types.js';
 
 export interface ListAppModelApiOptions {
   readonly componentDir: string;
-  readonly modelFilter?: string;
+  readonly modelFilter?: string | undefined;
 }
 
 /**

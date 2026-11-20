@@ -12,7 +12,7 @@ export type ViolationCode = `${DbxAssetValidateFolderCode}`;
 
 export interface Violation extends TwoSideViolation {
   readonly code: ViolationCode;
-  readonly remediation?: RemediationHint;
+  readonly remediation?: RemediationHint | undefined;
 }
 
 export interface ValidationResult extends TwoSideResult {

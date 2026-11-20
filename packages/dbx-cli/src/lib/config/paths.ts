@@ -30,7 +30,7 @@ export interface CliPathsConfig {
    *
    * Useful for tests that want to point at a temp dir.
    */
-  readonly configDirOverride?: string;
+  readonly configDirOverride?: string | undefined;
 }
 
 /**

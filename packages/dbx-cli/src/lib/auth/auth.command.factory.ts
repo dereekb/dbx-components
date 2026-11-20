@@ -35,11 +35,11 @@ export interface CreateAuthCommandInput {
    *
    * Conventionally `<CLINAME>_ENV` (e.g. `DEMO_CLI_ENV`).
    */
-  readonly envVarName?: string;
+  readonly envVarName?: string | undefined;
   /**
    * Built-in env presets. Merged underneath the user's stored env when the env name matches.
    */
-  readonly defaultEnvs?: readonly CliEnvDefault[];
+  readonly defaultEnvs?: readonly CliEnvDefault[] | undefined;
 }
 
 interface ResolveAuthSetupPromptInput {
@@ -130,7 +130,7 @@ async function loadUserInfoSafely(input: { readonly userinfoEndpoint: string; re
  * @param input.nowMs - Current time in unix epoch milliseconds. Defaults to `Date.now()`.
  * @returns The summary line, or `undefined` when no `sessionExpiresAt` is available.
  */
-function describeSessionLifetime(input: { readonly sessionExpiresAt?: number; readonly rotationDisabled?: boolean; readonly refreshable?: boolean; readonly nowMs?: number }): string | undefined {
+function describeSessionLifetime(input: { readonly sessionExpiresAt?: number | undefined; readonly rotationDisabled?: boolean | undefined; readonly refreshable?: boolean | undefined; readonly nowMs?: number | undefined }): string | undefined {
   let result: string | undefined;
 
   if (input.sessionExpiresAt != null) {

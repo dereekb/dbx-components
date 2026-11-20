@@ -36,7 +36,7 @@ export type BundledUtilManifestPathsFactory = () => readonly string[];
 export interface LoadUtilRegistryInput {
   readonly cwd: string;
   readonly bundledManifestPaths?: BundledUtilManifestPathsFactory;
-  readonly readFile?: UtilManifestReadFile;
+  readonly readFile?: UtilManifestReadFile | undefined;
 }
 
 /**

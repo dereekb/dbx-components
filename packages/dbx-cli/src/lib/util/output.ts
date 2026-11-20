@@ -16,13 +16,13 @@ export interface CliErrorOutput {
    * The server's own error code behind the failure (e.g. `USER_EXTERNAL_CONNECTION_TOKEN_SCOPE_FORBIDDEN_ERROR`),
    * so scripts can branch on it while {@link CliErrorOutput.code} stays the CLI's stable category.
    */
-  readonly serverCode?: string;
+  readonly serverCode?: string | undefined;
   /**
    * The HTTP status of the failed upstream response, when the failure came from one (e.g. `503`), so a
    * script can tell a service outage from a bad request without parsing the message.
    */
-  readonly httpStatus?: number;
-  readonly suggestion?: string;
+  readonly httpStatus?: number | undefined;
+  readonly suggestion?: string | undefined;
   /**
    * A report the failed command still has to show (e.g. `auth show`'s token-source report when the active source fails).
    */
@@ -37,14 +37,14 @@ export type CliOutput<T = unknown> = CliSuccessOutput<T> | CliErrorOutput;
  * Set via {@link configureOutputOptions} from global CLI flags.
  */
 export interface CliOutputOptions {
-  readonly dumpDir?: string;
-  readonly pick?: string;
-  readonly commandPath?: string[];
+  readonly dumpDir?: string | undefined;
+  readonly pick?: string | undefined;
+  readonly commandPath?: string[] | undefined;
   /**
    * When true, the stdout JSON envelope is rendered with 2-space indent instead of compact.
    * Driven by the global `--pretty` flag.
    */
-  readonly pretty?: boolean;
+  readonly pretty?: boolean | undefined;
 }
 
 /**
@@ -608,8 +608,8 @@ export interface CliErrorInput {
   /**
    * The server's own error code behind the failure, printed as the envelope's `serverCode`.
    */
-  readonly serverCode?: string;
-  readonly suggestion?: string;
+  readonly serverCode?: string | undefined;
+  readonly suggestion?: string | undefined;
   /**
    * A report the failed command still has to show, printed as the envelope's `data`.
    *
@@ -625,8 +625,8 @@ export interface CliErrorInput {
  */
 export class CliError extends Error {
   readonly code: string;
-  readonly serverCode?: string;
-  readonly suggestion?: string;
+  readonly serverCode?: string | undefined;
+  readonly suggestion?: string | undefined;
   readonly data?: unknown;
 
   constructor(input: CliErrorInput) {

@@ -35,18 +35,18 @@ export interface DbxDurationPickerPopoverData {
   /**
    * Minimum total value in milliseconds. Used to disable decrement buttons.
    */
-  readonly minMs?: Milliseconds;
+  readonly minMs?: Milliseconds | undefined;
   /**
    * Maximum total value in milliseconds. Used to disable increment buttons.
    */
-  readonly maxMs?: Milliseconds;
+  readonly maxMs?: Milliseconds | undefined;
   /**
    * Whether values should carry over to the next larger unit when they overflow
    * (e.g., 60 seconds → 1 minute). Only carries into units present in `units`.
    *
    * Defaults to false.
    */
-  readonly carryOver?: boolean;
+  readonly carryOver?: boolean | undefined;
 }
 
 /**

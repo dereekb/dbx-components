@@ -18,12 +18,12 @@ export interface ListComponentModelsOptions {
    * Caller-supplied relative path to the API app, when fixture
    * cross-reference is requested.
    */
-  readonly apiDir?: string;
+  readonly apiDir?: string | undefined;
   /**
    * Absolute path to the API app root, used by `inspectAppFixtures`.
    * Required when {@link apiDir} is set.
    */
-  readonly apiAbs?: string;
+  readonly apiAbs?: string | undefined;
 }
 
 /**

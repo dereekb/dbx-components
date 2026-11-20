@@ -3,7 +3,7 @@ import { CustomProvider, initializeAppCheck } from 'firebase/app-check';
 import { type Auth, connectAuthEmulator, getAuth, signInWithCustomToken } from 'firebase/auth';
 import { type Firestore, connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
 import { type FirebaseAuthUserId, type FirestoreContext, clientFirebaseFirestoreContextFactory } from '@dereekb/firebase';
-import { type Getter, type Maybe, type Milliseconds, type UnixDateTimeMillisecondsNumber, type WebsiteUrl } from '@dereekb/util';
+import { type Getter, type Maybe, type Milliseconds, type UnixDateTimeMillisecondsNumber, type WebsiteUrl, filterUndefinedValues } from '@dereekb/util';
 import { DEFAULT_FIREBASE_CLIENT_EMULATOR_HOST, type FirebaseClientConfig, firebaseClientEmulatorsInUse, isFirebaseClientConfigComplete } from './firebase-client.config';
 import { type FirestoreSessionCredentials, type FirestoreSessionErrorFactory, defaultFirestoreSessionErrorFactory, fetchFirestoreSession } from './firestore-session.client';
 import { FIRESTORE_SESSION_MAX_CACHE_MS, type FirestoreSessionCredentialsCache, isFirestoreSessionExpired } from './firestore-session.cache';
@@ -224,7 +224,7 @@ export async function openFirebaseUserSession(input: OpenFirebaseUserSessionInpu
   }
 
   const appName = nextFreeFirebaseAppName(firebaseUserSessionAppName({ namespace, scope, uid: credentials.uid }));
-  const app = initializeApp({ apiKey: firebase.apiKey, authDomain: firebase.authDomain, projectId: firebase.projectId, appId: firebase.appId }, appName);
+  const app = initializeApp(filterUndefinedValues({ apiKey: firebase.apiKey, authDomain: firebase.authDomain, projectId: firebase.projectId, appId: firebase.appId }), appName);
   const createdAt = now();
 
   const useEmulators = firebaseClientEmulatorsInUse(firebase);

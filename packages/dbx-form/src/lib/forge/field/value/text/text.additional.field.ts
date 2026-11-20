@@ -1,5 +1,5 @@
 import type { DynamicText } from '@ng-forge/dynamic-forms';
-import { LAT_LNG_PATTERN, US_STATE_CODE_STRING_REGEX, ZIP_CODE_STRING_REGEX } from '@dereekb/util';
+import { LAT_LNG_PATTERN, US_STATE_CODE_STRING_REGEX, ZIP_CODE_STRING_REGEX, filterUndefinedValues } from '@dereekb/util';
 import { ADDRESS_CITY_MAX_LENGTH, ADDRESS_STATE_CODE_MAX_LENGTH, ADDRESS_STATE_MAX_LENGTH, ADDRESS_COUNTRY_MAX_LENGTH, ADDRESS_ZIP_MAX_LENGTH } from '@dereekb/model';
 import { type DbxForgeTextFieldConfig, dbxForgeTextField } from './text.field';
 import type { FieldAutocompleteAttributeOption } from '../../../../field/field.autocomplete';
@@ -28,16 +28,14 @@ export type DbxForgeNameFieldConfig = Partial<DbxForgeTextFieldConfig>;
  * ```
  */
 export function dbxForgeNameField(config: DbxForgeNameFieldConfig = {}) {
-  const { key = 'name', label = 'Name', placeholder = 'John Doe', required = false, minLength, maxLength } = config;
+  const { key = 'name', label = 'Name', placeholder = 'John Doe', required = false } = config;
 
   return dbxForgeTextField({
     ...config,
     key,
     label,
     placeholder,
-    required,
-    minLength,
-    maxLength
+    required
   });
 }
 
@@ -84,10 +82,12 @@ export function dbxForgeEmailField(config: DbxForgeEmailFieldConfig = {}) {
     key,
     label,
     placeholder,
-    required,
-    readonly: isReadonly,
-    hint,
-    autocomplete,
+    ...filterUndefinedValues({
+      required,
+      readonly: isReadonly,
+      hint,
+      autocomplete
+    }),
     inputType: 'email'
   });
 }
@@ -165,7 +165,7 @@ export function dbxForgeStateField(config: DbxForgeStateFieldConfig = {}) {
     key,
     placeholder,
     label,
-    pattern,
+    ...(pattern != null ? { pattern } : {}),
     required,
     maxLength,
     idempotentTransform: {
@@ -235,12 +235,11 @@ export type DbxForgeZipCodeFieldConfig = Partial<DbxForgeTextFieldConfig>;
  * ```
  */
 export function dbxForgeZipCodeField(config: DbxForgeZipCodeFieldConfig = {}) {
-  const { key = 'zip', placeholder, label = 'Zip Code', pattern = ZIP_CODE_STRING_REGEX, maxLength = ADDRESS_ZIP_MAX_LENGTH, required = false } = config;
+  const { key = 'zip', label = 'Zip Code', pattern = ZIP_CODE_STRING_REGEX, maxLength = ADDRESS_ZIP_MAX_LENGTH, required = false } = config;
 
   return dbxForgeTextField({
     ...config,
     key,
-    placeholder,
     label,
     pattern,
     required,

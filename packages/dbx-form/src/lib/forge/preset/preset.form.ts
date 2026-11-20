@@ -1,4 +1,4 @@
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, filterUndefinedValues } from '@dereekb/util';
 import { type MatInputField, type MatInputProps } from '@ng-forge/dynamic-forms-material';
 import { dbxForgeTextField } from '../field';
 import { type DbxForgeField } from '../form';
@@ -9,7 +9,7 @@ export interface DbxForgePresetSearchFormFieldsValue {
 
 export interface DbxForgePresetSearchFormFieldsConfig {
   readonly key?: string;
-  readonly label?: string;
+  readonly label?: string | undefined;
   readonly placeholder?: string;
   /**
    * Escape hatch for Material form field styling (appearance, floatLabel, hideRequiredMarker, subscriptSizing, etc.).
@@ -29,10 +29,9 @@ export function dbxForgePresetSearchFormFields(config: Maybe<DbxForgePresetSearc
 
   const field: DbxForgeField<MatInputField> = dbxForgeTextField({
     key,
-    label,
     placeholder,
     autocomplete: false,
-    props
+    ...filterUndefinedValues({ label, props })
   });
 
   return [field];

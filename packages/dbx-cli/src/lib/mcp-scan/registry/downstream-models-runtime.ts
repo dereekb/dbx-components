@@ -84,7 +84,7 @@ export interface GetDownstreamCatalogInput {
    * supplied, discovery is skipped and only these directories are scanned.
    * When omitted, `components/*-firebase` is auto-discovered.
    */
-  readonly componentDirs?: readonly string[];
+  readonly componentDirs?: readonly string[] | undefined;
 }
 
 const cache = new Map<string, Promise<DownstreamCatalog>>();

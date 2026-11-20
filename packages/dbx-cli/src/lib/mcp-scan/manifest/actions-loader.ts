@@ -31,7 +31,7 @@ export type ActionLoaderWarning = ManifestLoaderWarning;
  */
 export interface LoadActionManifestsInput {
   readonly sources: readonly ActionManifestSource[];
-  readonly readFile?: ActionManifestReadFile;
+  readonly readFile?: ActionManifestReadFile | undefined;
 }
 
 /**

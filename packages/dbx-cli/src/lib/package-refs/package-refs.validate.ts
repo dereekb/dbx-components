@@ -60,7 +60,7 @@ export interface ValidatePackageRefsConfig {
   /**
    * The refs the package's CLI embeds. When given, they must match the files on disk exactly.
    */
-  readonly embedded?: EmbeddedPackageRefs;
+  readonly embedded?: EmbeddedPackageRefs | undefined;
 }
 
 interface PackageRefsFiles {

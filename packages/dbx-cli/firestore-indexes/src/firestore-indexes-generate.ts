@@ -93,7 +93,7 @@ export interface GenerateFirestoreIndexesJsonInput {
    * The current on-disk `firestore.indexes.json` if any, used to preserve
    * user-authored content the generator can't reproduce.
    */
-  readonly existingJson?: FirestoreIndexesJson;
+  readonly existingJson?: FirestoreIndexesJson | undefined;
 }
 
 /**
@@ -307,7 +307,7 @@ function variantJsonEqual(a: FirestoreFieldOverrideJsonVariant, b: FirestoreFiel
 
 // MARK: Internals - preservation
 interface PickPreservedFieldOverridesInput {
-  readonly existingJson?: FirestoreIndexesJson;
+  readonly existingJson?: FirestoreIndexesJson | undefined;
   readonly generatedFieldOverrides: readonly FirestoreFieldOverrideJsonEntry[];
 }
 
@@ -327,7 +327,7 @@ function pickPreservedFieldOverrides(input: PickPreservedFieldOverridesInput): F
 }
 
 interface PickPreservedCompositesInput {
-  readonly existingJson?: FirestoreIndexesJson;
+  readonly existingJson?: FirestoreIndexesJson | undefined;
   readonly generatedComposites: readonly FirestoreIndexJsonEntry[];
 }
 
@@ -372,7 +372,7 @@ function compareFieldOverrides(a: FirestoreFieldOverrideJsonEntry, b: FirestoreF
 
 // MARK: Internals - diff
 interface ComputeDiffInput {
-  readonly existingJson?: FirestoreIndexesJson;
+  readonly existingJson?: FirestoreIndexesJson | undefined;
   readonly json: FirestoreIndexesJson;
 }
 

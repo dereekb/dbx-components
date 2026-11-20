@@ -88,12 +88,12 @@ export interface RenderDocsManifestInput {
   readonly docsDir: string;
   readonly app: string;
   readonly audiences: readonly string[];
-  readonly defaultAudience?: readonly string[];
+  readonly defaultAudience?: readonly string[] | undefined;
   /**
    * Allows a folder with no docs (a pipeline set up before content exists). Otherwise an empty folder is an error.
    */
-  readonly allowEmpty?: boolean;
-  readonly generatedAt?: Date;
+  readonly allowEmpty?: boolean | undefined;
+  readonly generatedAt?: Date | undefined;
 }
 
 /**

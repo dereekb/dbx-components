@@ -36,7 +36,7 @@ export type TokenLoaderWarning = ManifestLoaderWarning;
  */
 export interface LoadTokenManifestsInput {
   readonly sources: readonly TokenManifestSource[];
-  readonly readFile?: TokenManifestReadFile;
+  readonly readFile?: TokenManifestReadFile | undefined;
 }
 
 /**

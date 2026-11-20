@@ -13,18 +13,18 @@ export interface CreateEnvCommandInput {
    * Built-in env presets. Resolved by env name and merged underneath the user's stored config so
    * `env list` / `env show` / `env add` reflect the effective config.
    */
-  readonly defaultEnvs?: readonly CliEnvDefault[];
+  readonly defaultEnvs?: readonly CliEnvDefault[] | undefined;
 }
 
 interface ResolveEnvWithDefaultInput {
   readonly name: string;
-  readonly storedEnv?: CliEnvConfig;
-  readonly defaultEnvs?: readonly CliEnvDefault[];
+  readonly storedEnv?: CliEnvConfig | undefined;
+  readonly defaultEnvs?: readonly CliEnvDefault[] | undefined;
 }
 
 interface ResolvedEnvWithDefault {
   readonly env: CliEnvConfig;
-  readonly defaultName?: string;
+  readonly defaultName?: string | undefined;
 }
 
 /**

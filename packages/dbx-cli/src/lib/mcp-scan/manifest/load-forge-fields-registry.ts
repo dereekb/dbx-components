@@ -35,7 +35,7 @@ export type BundledForgeFieldManifestPathsFactory = () => readonly string[];
 export interface LoadForgeFieldRegistryInput {
   readonly cwd: string;
   readonly bundledManifestPaths?: BundledForgeFieldManifestPathsFactory;
-  readonly readFile?: ForgeFieldManifestReadFile;
+  readonly readFile?: ForgeFieldManifestReadFile | undefined;
 }
 
 /**

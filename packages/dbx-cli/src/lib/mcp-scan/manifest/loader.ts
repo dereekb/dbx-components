@@ -42,7 +42,7 @@ import { SemanticTypeManifest, type SemanticTypeEntry } from './semantic-types-s
 export interface ManifestSource {
   readonly origin: 'bundled' | 'external';
   readonly path: string;
-  readonly strict?: boolean;
+  readonly strict?: boolean | undefined;
 }
 
 /**
@@ -58,7 +58,7 @@ export type ManifestReadFile = (absolutePath: string) => Promise<string>;
  */
 export interface LoadSemanticTypeManifestsInput {
   readonly sources: readonly ManifestSource[];
-  readonly readFile?: ManifestReadFile;
+  readonly readFile?: ManifestReadFile | undefined;
 }
 
 /**

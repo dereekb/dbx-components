@@ -89,15 +89,15 @@ export interface DbxForgeWebsiteUrlValidatorConfig extends IsWebsiteUrlValidator
   /**
    * Optional override for the "is not a valid website url" error message.
    */
-  readonly notWebsiteUrlMessage?: DynamicText;
+  readonly notWebsiteUrlMessage?: DynamicText | undefined;
   /**
    * Optional override for the "is not a valid website url with an http/https prefix" error message.
    */
-  readonly notWebsiteUrlWithPrefixMessage?: DynamicText;
+  readonly notWebsiteUrlWithPrefixMessage?: DynamicText | undefined;
   /**
    * Optional override for the "is not a valid website url with an expected domain" error message.
    */
-  readonly notWebsiteUrlWithExpectedDomainMessage?: DynamicText;
+  readonly notWebsiteUrlWithExpectedDomainMessage?: DynamicText | undefined;
 }
 
 function buildPortNumbersMessagePart(allowPorts: boolean): string {
@@ -197,7 +197,7 @@ export interface DbxForgeWebsiteUrlWithBaseUrlValidatorConfig extends WebsiteUrl
   /**
    * Optional override for the "is not a website url with the expected base url" error message.
    */
-  readonly notWebsiteUrlWithExpectedBaseUrlMessage?: DynamicText;
+  readonly notWebsiteUrlWithExpectedBaseUrlMessage?: DynamicText | undefined;
 }
 
 /**

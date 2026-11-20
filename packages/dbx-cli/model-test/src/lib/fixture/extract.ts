@@ -474,7 +474,7 @@ function readFactoryArgInfo(args: readonly Node[]): FactoryArgInfo {
  * @returns The resolved kind plus a `nonModelFamily` indicator surfaced in
  *   lookup/list output.
  */
-function classifyFixtureKind(input: { fixtureClass: ClassDeclaration; instanceClass: ClassDeclaration; nonModelFamily: FrameworkNonModelFixtureFamily | undefined }): { kind: FixtureKind; nonModelFamily?: 'authorized-user' | 'jsdoc-tag' } {
+function classifyFixtureKind(input: { fixtureClass: ClassDeclaration; instanceClass: ClassDeclaration; nonModelFamily: FrameworkNonModelFixtureFamily | undefined }): { kind: FixtureKind; nonModelFamily?: 'authorized-user' | 'jsdoc-tag' | undefined } {
   if (hasNonModelJsDoc(input.fixtureClass) || hasNonModelJsDoc(input.instanceClass)) {
     return { kind: 'non-model', nonModelFamily: 'jsdoc-tag' };
   }

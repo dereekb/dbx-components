@@ -41,36 +41,36 @@ export interface SpecNode {
    * string title (e.g. `beforeEach`) or when the title is a non-trivial
    * expression — see {@link titleIsTemplate}.
    */
-  readonly title?: string;
+  readonly title?: string | undefined;
   /**
    * `true` when the title was a template literal or non-string-literal
    * expression and the value reported in {@link title} is a textual
    * approximation. Callers can use this flag to avoid asserting against the
    * value.
    */
-  readonly titleIsTemplate?: boolean;
+  readonly titleIsTemplate?: boolean | undefined;
   /**
    * Bare PascalCase model name for `fixture` nodes (e.g. `Country`).
    * `undefined` when the prefix could not be resolved.
    */
-  readonly model?: string;
+  readonly model?: string | undefined;
   /**
    * The variable name bound by the fixture's callback parameter
    * (e.g. `(rc) => ...` → `rc`). Only populated for `fixture` nodes.
    */
-  readonly varName?: string;
+  readonly varName?: string | undefined;
   /**
    * Identifier names that appear as values in the fixture's first-arg object
    * (e.g. `{ f, sg, rd, bgb }` → `['f','sg','rd','bgb']`). These map to
    * parent-fixture variables — the dependency hint that lets callers see
    * which contexts a fixture relies on.
    */
-  readonly parentVars?: readonly string[];
+  readonly parentVars?: readonly string[] | undefined;
   /**
    * Identifier name for `wrapper` and `helperCall` nodes (the function being
    * called).
    */
-  readonly callee?: string;
+  readonly callee?: string | undefined;
   /**
    * 1-based line number of the call expression's first character.
    */
@@ -119,7 +119,7 @@ export type PrefixSource = 'apiDir' | 'imports' | 'unknown';
  */
 export interface SpecFileTree {
   readonly specPath: string;
-  readonly prefix?: string;
+  readonly prefix?: string | undefined;
   readonly prefixSource: PrefixSource;
   readonly knownFixtureNames: readonly string[];
   readonly root: SpecNode;
@@ -138,8 +138,8 @@ export type SpecTreeView = 'all' | 'describes' | 'fixtures' | 'its' | 'helpers';
  * Optional filters accepted by `dbx_model_test_tree`.
  */
 export interface SpecTreeFilters {
-  readonly filterByModel?: string;
-  readonly filterByDescribePath?: string;
+  readonly filterByModel?: string | undefined;
+  readonly filterByDescribePath?: string | undefined;
 }
 
 /**
@@ -159,9 +159,9 @@ export type SpecSearchQuery = { readonly mode: 'model'; readonly value: string }
  */
 export interface SpecSearchHit {
   readonly kind: SpecNodeKind;
-  readonly title?: string;
-  readonly model?: string;
-  readonly callee?: string;
+  readonly title?: string | undefined;
+  readonly model?: string | undefined;
+  readonly callee?: string | undefined;
   readonly line: number;
   readonly endLine: number;
   readonly describePath: readonly string[];

@@ -46,8 +46,8 @@ export interface ParsedRouteModel {
    * The verbatim key template (`:uid`, `{authUid}`, `gb/:id/gbe/{authUid}`).
    * Absent for `list` entries.
    */
-  readonly keyTemplate?: string;
-  readonly description?: string;
+  readonly keyTemplate?: string | undefined;
+  readonly description?: string | undefined;
   /**
    * Route param names (`:name` → `name`) referenced by the key template, for
    * `unknown-route-param` validation against the state's URL params.

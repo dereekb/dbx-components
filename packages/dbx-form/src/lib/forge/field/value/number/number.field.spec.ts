@@ -324,7 +324,6 @@ describe('scenarios', () => {
         key: 'pma',
         label: 'Maximum School Automatic Job Day Allocations Per Day',
         hint: 'The maximum number of job days allocated per day for each school in this school group. Is a hard cap that takes priority over all other allocation configurations.',
-        placeholder: undefined,
         step: 1,
         enforceStep: true,
         min: 1,

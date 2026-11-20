@@ -32,9 +32,9 @@ export type BuildForgeFieldsGlobber = ScanGlobber;
 export interface BuildForgeFieldsManifestInput {
   readonly projectRoot: string;
   readonly generator: string;
-  readonly now?: () => Date;
-  readonly readFile?: BuildForgeFieldsReadFile;
-  readonly globber?: BuildForgeFieldsGlobber;
+  readonly now?: (() => Date) | undefined;
+  readonly readFile?: BuildForgeFieldsReadFile | undefined;
+  readonly globber?: BuildForgeFieldsGlobber | undefined;
 }
 
 /**

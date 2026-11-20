@@ -138,7 +138,7 @@ function renderEntry({ entry, validatorName }: CollectedEntry): string {
   return `  { ${fields.filter(Boolean).join(', ')} }`;
 }
 
-function renderDocFields(fields: readonly { readonly name: string; readonly typeText: string; readonly description?: string }[]): string {
+function renderDocFields(fields: readonly { readonly name: string; readonly typeText: string; readonly description?: string | undefined }[]): string {
   const items = fields.map((field) => {
     const parts: string[] = [`name: ${JSON.stringify(field.name)}`, `typeText: ${JSON.stringify(field.typeText)}`];
     if (field.description) parts.push(`description: ${JSON.stringify(field.description)}`);

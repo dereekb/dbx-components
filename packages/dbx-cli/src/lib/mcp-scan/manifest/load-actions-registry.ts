@@ -20,7 +20,7 @@ export type BundledActionManifestPathsFactory = () => readonly string[];
 export interface LoadActionRegistryInput {
   readonly cwd: string;
   readonly bundledManifestPaths?: BundledActionManifestPathsFactory;
-  readonly readFile?: ActionManifestReadFile;
+  readonly readFile?: ActionManifestReadFile | undefined;
 }
 
 export interface LoadActionRegistryResult {

@@ -294,8 +294,8 @@ interface RunFirestoreSessionProbeInput {
   readonly envName: string;
   readonly env: CliEnvConfig;
   readonly accessToken: string;
-  readonly probe?: FirestoreSessionDoctorProbe;
-  readonly probeName?: string;
+  readonly probe?: FirestoreSessionDoctorProbe | undefined;
+  readonly probeName?: string | undefined;
 }
 
 async function runFirestoreSessionProbe(input: RunFirestoreSessionProbeInput): Promise<DoctorCheckResult> {

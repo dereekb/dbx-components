@@ -103,17 +103,17 @@ export interface ExtractedCssUtilityEntry {
   readonly file: string;
   readonly line: number;
   readonly declarations: readonly ExtractedCssDeclaration[];
-  readonly role?: CssUtilityRoleValue;
-  readonly intent?: string;
-  readonly seeAlso?: readonly string[];
-  readonly antiUse?: string;
-  readonly since?: string;
-  readonly parent?: string;
-  readonly selectorContext?: string;
-  readonly component?: string;
-  readonly scope?: CssUtilityScopeValue;
-  readonly tokensRead?: readonly string[];
-  readonly tokensSet?: readonly string[];
+  readonly role?: CssUtilityRoleValue | undefined;
+  readonly intent?: string | undefined;
+  readonly seeAlso?: readonly string[] | undefined;
+  readonly antiUse?: string | undefined;
+  readonly since?: string | undefined;
+  readonly parent?: string | undefined;
+  readonly selectorContext?: string | undefined;
+  readonly component?: string | undefined;
+  readonly scope?: CssUtilityScopeValue | undefined;
+  readonly tokensRead?: readonly string[] | undefined;
+  readonly tokensSet?: readonly string[] | undefined;
 }
 
 /**
@@ -147,14 +147,14 @@ export interface ExtractCssUtilityEntriesResult {
 // MARK: Annotation parsing
 interface ParsedAnnotation {
   readonly utilitySlug: Maybe<string>;
-  readonly intent?: string;
-  readonly role?: string;
-  readonly seeAlso?: readonly string[];
-  readonly antiUse?: string;
-  readonly since?: string;
-  readonly parent?: string;
-  readonly component?: string;
-  readonly scope?: string;
+  readonly intent?: string | undefined;
+  readonly role?: string | undefined;
+  readonly seeAlso?: readonly string[] | undefined;
+  readonly antiUse?: string | undefined;
+  readonly since?: string | undefined;
+  readonly parent?: string | undefined;
+  readonly component?: string | undefined;
+  readonly scope?: string | undefined;
 }
 
 interface MutableAnnotationState {

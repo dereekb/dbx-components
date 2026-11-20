@@ -1,4 +1,4 @@
-import { type Maybe, type PortNumber } from '@dereekb/util';
+import { type DefinedValues, type Maybe, type PortNumber } from '@dereekb/util';
 
 /**
  * Local Firebase emulator targets for a Firebase client config.
@@ -14,19 +14,19 @@ export interface FirebaseClientEmulatorsConfig {
   /**
    * Set `false` to keep the emulator targets configured but inactive. Defaults to `true`.
    */
-  readonly useEmulators?: boolean;
+  readonly useEmulators?: boolean | undefined;
   /**
    * Host the emulators are reachable at. Defaults to {@link DEFAULT_FIREBASE_CLIENT_EMULATOR_HOST}.
    */
-  readonly host?: string;
+  readonly host?: string | undefined;
   /**
    * Port of the Auth emulator. When unset, Auth is not redirected to an emulator.
    */
-  readonly authPort?: PortNumber;
+  readonly authPort?: PortNumber | undefined;
   /**
    * Port of the Firestore emulator. When unset, Firestore is not redirected to an emulator.
    */
-  readonly firestorePort?: PortNumber;
+  readonly firestorePort?: PortNumber | undefined;
 }
 
 /**
@@ -40,29 +40,29 @@ export interface FirebaseClientConfig {
   /**
    * The Firebase web API key.
    */
-  readonly apiKey?: string;
+  readonly apiKey?: string | undefined;
   /**
    * The project's auth domain (e.g. `my-project.firebaseapp.com`).
    */
-  readonly authDomain?: string;
+  readonly authDomain?: string | undefined;
   /**
    * The Firebase project id.
    */
-  readonly projectId?: string;
+  readonly projectId?: string | undefined;
   /**
    * The registered **web** app id (e.g. `1:1234567890:web:abcdef`).
    */
-  readonly appId?: string;
+  readonly appId?: string | undefined;
   /**
    * Optional emulator targets for local development.
    */
-  readonly emulators?: FirebaseClientEmulatorsConfig;
+  readonly emulators?: FirebaseClientEmulatorsConfig | undefined;
 }
 
 /**
  * A {@link FirebaseClientConfig} carrying everything a session needs to initialize an app.
  */
-export type CompleteFirebaseClientConfig = Required<Pick<FirebaseClientConfig, 'apiKey' | 'projectId' | 'appId'>> & FirebaseClientConfig;
+export type CompleteFirebaseClientConfig = DefinedValues<Required<Pick<FirebaseClientConfig, 'apiKey' | 'projectId' | 'appId'>>> & FirebaseClientConfig;
 
 /**
  * Default host used for Firebase emulator connections when a {@link FirebaseClientEmulatorsConfig}

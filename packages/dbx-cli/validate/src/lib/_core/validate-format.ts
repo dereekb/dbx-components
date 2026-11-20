@@ -40,7 +40,7 @@ export interface ViolationLine<TCode extends string = string> {
   readonly severity: ViolationSeverity;
   readonly code: TCode;
   readonly message: string;
-  readonly remediation?: RemediationHint;
+  readonly remediation?: RemediationHint | undefined;
 }
 
 /**

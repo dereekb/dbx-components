@@ -34,7 +34,7 @@ export type BundledCssUtilityManifestPathsFactory = () => readonly string[];
 export interface LoadCssUtilityRegistryInput {
   readonly cwd: string;
   readonly bundledManifestPaths?: BundledCssUtilityManifestPathsFactory;
-  readonly readFile?: CssUtilityManifestReadFile;
+  readonly readFile?: CssUtilityManifestReadFile | undefined;
 }
 
 /**

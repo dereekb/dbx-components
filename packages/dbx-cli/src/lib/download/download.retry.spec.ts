@@ -4,7 +4,7 @@ import { CliDownloadAbortedError, CliDownloadIncompleteError, CliDownloadStalled
 import { type CliDownloadFailure, CliDownloadTaskFailedError, composeCliDownloadFailureClassifiers, defaultCliDownloadFailureClassifier, runCliTaskWithRetry } from './download.retry';
 
 function responseError(status: number, headers?: Record<string, string>): FetchResponseError {
-  return new FetchResponseError(new Response(null, { status, headers }));
+  return new FetchResponseError(new Response(null, { status, ...(headers != null ? { headers } : {}) }));
 }
 
 function errnoError(code: string): Error {

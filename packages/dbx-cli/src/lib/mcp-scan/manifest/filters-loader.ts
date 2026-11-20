@@ -41,7 +41,7 @@ export type FilterLoaderWarning = ManifestLoaderWarning;
  */
 export interface LoadFilterManifestsInput {
   readonly sources: readonly FilterManifestSource[];
-  readonly readFile?: FilterManifestReadFile;
+  readonly readFile?: FilterManifestReadFile | undefined;
 }
 
 /**

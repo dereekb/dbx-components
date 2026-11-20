@@ -25,12 +25,12 @@ export function buildAuthorizationUrl(input: BuildAuthorizationUrlInput): string
 
 export interface ParsePastedRedirectInput {
   readonly pasted: string;
-  readonly expectedState?: string;
+  readonly expectedState?: string | undefined;
 }
 
 export interface ParsedRedirect {
   readonly code: string;
-  readonly state?: string;
+  readonly state?: string | undefined;
 }
 
 /**

@@ -36,7 +36,7 @@ export type CssUtilityLoaderWarning = ManifestLoaderWarning;
  */
 export interface LoadCssUtilityManifestsInput {
   readonly sources: readonly CssUtilityManifestSource[];
-  readonly readFile?: CssUtilityManifestReadFile;
+  readonly readFile?: CssUtilityManifestReadFile | undefined;
 }
 
 /**

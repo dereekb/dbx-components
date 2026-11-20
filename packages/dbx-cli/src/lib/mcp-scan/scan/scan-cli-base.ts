@@ -128,12 +128,12 @@ export interface RunScanCliBaseInput<TGlobber> {
   readonly argv: readonly string[];
   readonly cwd: string;
   readonly generator: string;
-  readonly readFile?: ScanCliBaseReadFile;
-  readonly writeFile?: ScanCliBaseWriteFile;
-  readonly globber?: TGlobber;
-  readonly now?: () => Date;
-  readonly log?: ScanCliBaseLogger;
-  readonly errorLog?: ScanCliBaseLogger;
+  readonly readFile?: ScanCliBaseReadFile | undefined;
+  readonly writeFile?: ScanCliBaseWriteFile | undefined;
+  readonly globber?: TGlobber | undefined;
+  readonly now?: (() => Date) | undefined;
+  readonly log?: ScanCliBaseLogger | undefined;
+  readonly errorLog?: ScanCliBaseLogger | undefined;
 }
 
 const DEFAULT_READ_FILE: ScanCliBaseReadFile = (path) => nodeReadFile(path, 'utf-8');
@@ -159,7 +159,7 @@ export async function runScanCliBase<TManifest extends ScanCliManifestLike, TWar
   }
 
   const projectRoot = resolve(cwd, validation.project);
-  const outcome = await config.buildManifest({ projectRoot, generator, readFile, globber, now });
+  const outcome = await config.buildManifest({ projectRoot, generator, readFile, ...(globber != null ? { globber } : {}), ...(now != null ? { now } : {}) });
   return handleOutcome({ outcome, args: validation.args, projectArg: validation.project, readFile, writeFile, log, errorLog, config });
 }
 

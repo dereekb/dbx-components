@@ -13,7 +13,7 @@ export interface ValidateAppOptions {
   readonly componentDir: string;
   readonly apiAbs: string;
   readonly apiDir: string;
-  readonly modelFilter?: string;
+  readonly modelFilter?: string | undefined;
 }
 
 /**

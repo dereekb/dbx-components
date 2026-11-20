@@ -72,7 +72,8 @@ import {
   firstValueFromIterable,
   isIterable,
   removeFromSet,
-  type Configurable
+  type Configurable,
+  filterUndefinedValues
 } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { startOfDay, endOfDay, isBefore } from 'date-fns';
@@ -262,10 +263,10 @@ function calendarScheduleMinAndMaxDateRangeRelativeToFilter(x: Pick<CalendarSche
 
     input = {
       filter: x.filter,
-      minMaxDateRange: {
+      minMaxDateRange: filterUndefinedValues({
         start: x.minMaxDateRange.start ? transformFn(x.minMaxDateRange.start) : undefined,
         end: x.minMaxDateRange.end ? transformFn(x.minMaxDateRange.end) : undefined
-      }
+      })
     };
   }
 
@@ -279,10 +280,10 @@ function calendarScheduleMinAndMaxDateRangeRelativeToFilter(x: Pick<CalendarSche
  * @returns A partial date range with the effective start and end boundaries.
  */
 export function calendarScheduleMinAndMaxDateRange(x: Pick<CalendarScheduleSelectionState, 'filter' | 'minMaxDateRange'>): Partial<DateRange> {
-  return {
+  return filterUndefinedValues({
     start: calendarScheduleMinDate(x) || undefined,
     end: calendarScheduleMaxDate(x) || undefined
-  };
+  });
 }
 
 /**
@@ -694,10 +695,10 @@ export function updateStateWithMinMaxDateRange(state: CalendarScheduleSelectionS
   if (minMaxDateRange != null && !isInfiniteDateRange(minMaxDateRange)) {
     state = {
       ...state,
-      minMaxDateRange: {
+      minMaxDateRange: filterUndefinedValues({
         start: minMaxDateRange.start == null ? undefined : startOfDay(minMaxDateRange.start),
         end: minMaxDateRange.end == null ? undefined : endOfDay(minMaxDateRange.end)
-      }
+      })
     };
   } else {
     state = { ...state, minMaxDateRange: undefined };
@@ -1252,12 +1253,13 @@ export function noSelectionCalendarScheduleSelectionState(state: CalendarSchedul
  */
 export function updateStateWithChangedRange(state: CalendarScheduleSelectionState, change: CalendarScheduleSelectionInputDateRange): CalendarScheduleSelectionState {
   const { inputStart: currentInputStart, inputEnd: currentInputEnd, indexFactory } = state;
-  const { start: minDate, end: maxDate } = calendarScheduleMinAndMaxDateRange(state);
+  const minMaxDateRange = calendarScheduleMinAndMaxDateRange(state);
+  const { start: minDate, end: maxDate } = minMaxDateRange;
 
   const inputStart: Date = startOfDay(change.inputStart);
   const inputEnd: Date = startOfDay(change.inputEnd); // midnight of the last day
 
-  const isValidRange = minDate != null || maxDate != null ? isDateInDateRangeFunction({ start: minDate ?? undefined, end: maxDate ?? undefined }) : () => true;
+  const isValidRange = minDate != null || maxDate != null ? isDateInDateRangeFunction(minMaxDateRange) : () => true;
   let result: CalendarScheduleSelectionState;
 
   if (!isValidRange(inputStart) || !isValidRange(inputEnd) || (isSameDateDay(inputStart, currentInputStart) && isSameDateDay(inputEnd, currentInputEnd))) {

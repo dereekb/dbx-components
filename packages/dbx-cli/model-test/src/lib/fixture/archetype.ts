@@ -13,8 +13,8 @@ import type { FactoryCall, FixtureArchetype, FixtureParamsType } from './types.j
  * Inputs accepted by `classifyFixtureArchetype()`.
  */
 export interface ClassifyFixtureArchetypeInput {
-  readonly factory?: FactoryCall;
-  readonly params?: FixtureParamsType;
+  readonly factory?: FactoryCall | undefined;
+  readonly params?: FixtureParamsType | undefined;
 }
 
 /**

@@ -21,9 +21,9 @@ export type BuildActionsGlobber = ScanGlobber;
 export interface BuildActionsManifestInput {
   readonly projectRoot: string;
   readonly generator: string;
-  readonly now?: () => Date;
-  readonly readFile?: BuildActionsReadFile;
-  readonly globber?: BuildActionsGlobber;
+  readonly now?: (() => Date) | undefined;
+  readonly readFile?: BuildActionsReadFile | undefined;
+  readonly globber?: BuildActionsGlobber | undefined;
 }
 
 export type BuildActionsManifestOutcome =

@@ -1,5 +1,5 @@
 import type { Argv, CommandModule } from 'yargs';
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type PartialWithUndefined } from '@dereekb/util';
 import { readJsonFile, writeJsonFile } from '@dereekb/nestjs';
 import { CLI_CONFIG_FILE_MODE } from '../config/cli.config';
 import { summarizeCliExternalConnectionSettings } from '../api/external-connection-data';
@@ -33,7 +33,7 @@ export interface CliTokenSourceConfigStore<C extends CliTokenSourceConfig = CliT
    * Replaces the top-level keys present in the update (a key present as `undefined` removes it) and
    * leaves every other key of the file untouched.
    */
-  updateConfigFile(update: Partial<F>): Promise<unknown>;
+  updateConfigFile(update: PartialWithUndefined<F>): Promise<unknown>;
 }
 
 /**
@@ -43,7 +43,7 @@ export interface CliTokenSourceJsonConfigStore<C extends CliTokenSourceConfig = 
   /**
    * Replaces the top-level keys present in the update and resolves the saved config, or undefined when nothing was written.
    */
-  updateConfigFile(update: Partial<F>): Promise<Maybe<F>>;
+  updateConfigFile(update: PartialWithUndefined<F>): Promise<Maybe<F>>;
 }
 
 /**
@@ -62,7 +62,7 @@ export interface CliTokenSourceJsonConfigStore<C extends CliTokenSourceConfig = 
 export function cliTokenSourceJsonConfigStore<C extends CliTokenSourceConfig = CliTokenSourceConfig, F extends CliTokenSourceConfigFile<C> = CliTokenSourceConfigFile<C>>(paths: Pick<CliPaths, 'configDir' | 'configFilePath'>): CliTokenSourceJsonConfigStore<C, F> {
   const loadConfigFile = () => readJsonFile<F>(paths.configFilePath);
 
-  async function updateConfigFile(update: Partial<F>): Promise<Maybe<F>> {
+  async function updateConfigFile(update: PartialWithUndefined<F>): Promise<Maybe<F>> {
     const existing = await loadConfigFile();
     let result: Maybe<F>;
 

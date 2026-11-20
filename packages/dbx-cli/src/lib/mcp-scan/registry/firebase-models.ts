@@ -166,7 +166,7 @@ export interface FirebaseModel {
    * business-purpose narrative ("A Worker represents a substitute teacher…") so consumers
    * don't have to open the source file. Absent when the interface has no leading JSDoc.
    */
-  readonly description?: string;
+  readonly description?: string | undefined;
   /**
    * Identity constant name (e.g. `'storageFileIdentity'`).
    */
@@ -182,7 +182,7 @@ export interface FirebaseModel {
   /**
    * Identity const of the parent model for subcollections. Absent for root collections.
    */
-  readonly parentIdentityConst?: string;
+  readonly parentIdentityConst?: string | undefined;
   /**
    * Package the model lives in (`'@dereekb/firebase'` for upstream, downstream
    * package name like `'demo-firebase'` for component packages discovered at
@@ -212,7 +212,7 @@ export interface FirebaseModel {
    *
    * Absent when the file declares no model-group container.
    */
-  readonly modelGroup?: string;
+  readonly modelGroup?: string | undefined;
   /**
    * Firestore-collection shape, derived by inspecting the model's
    * `<modelType>FirestoreCollection` / `<modelType>FirestoreCollectionFactory`
@@ -221,7 +221,7 @@ export interface FirebaseModel {
    * `'sub-collection'`, `'singleton-sub'`. Absent when the scanner cannot
    * locate a recognised call (e.g. exotic factory shapes).
    */
-  readonly collectionKind?: FirestoreCollectionKind;
+  readonly collectionKind?: FirestoreCollectionKind | undefined;
   /**
    * `true` when the model's interface (or one of its same-file ancestors)
    * extends `UserRelatedById` from `@dereekb/firebase` — meaning the
@@ -230,7 +230,7 @@ export interface FirebaseModel {
    * and the `dbx://model/firebase/user-keyed-by-id` resource so consumers
    * can quickly enumerate the per-user document set.
    */
-  readonly userKeyedById?: boolean;
+  readonly userKeyedById?: boolean | undefined;
   /**
    * `true` when the model's interface (or one of its same-file ancestors)
    * extends `UserRelated` (alias of `FirebaseAuthUserIdRef`) from
@@ -238,7 +238,7 @@ export interface FirebaseModel {
    * field referencing the Firebase Auth user. Independent of
    * {@link userKeyedById}: a model can have either, both, or neither.
    */
-  readonly hasUserUidField?: boolean;
+  readonly hasUserUidField?: boolean | undefined;
   /**
    * `true` when the model's interface (or one of its same-file ancestors)
    * extends `RegionRelatedById` — i.e. the Firestore document id IS the
@@ -246,12 +246,12 @@ export interface FirebaseModel {
    * archetype recommender and by the `dbx://model/firebase/region-keyed-by-id`
    * resource.
    */
-  readonly regionKeyedById?: boolean;
+  readonly regionKeyedById?: boolean | undefined;
   /**
    * `true` when the model's interface extends `DistrictRelatedById` — doc id
    * IS the district key. Parallel signal to {@link regionKeyedById}.
    */
-  readonly districtKeyedById?: boolean;
+  readonly districtKeyedById?: boolean | undefined;
   /**
    * `true` when the model's interface (or one of its same-file ancestors)
    * extends the `ExternalRelatedById` marker — meaning the Firestore document
@@ -259,7 +259,7 @@ export interface FirebaseModel {
    * archetype recommender to disambiguate `external-id-keyed-entity-root` from
    * `external-mirror`.
    */
-  readonly externalIdKeyedById?: boolean;
+  readonly externalIdKeyedById?: boolean | undefined;
   /**
    * `true` when the model's interface (or one of its same-file ancestors)
    * extends a `*BucketKeyRelatedById` / `*YearWeekRelatedById` marker — i.e.
@@ -267,7 +267,7 @@ export interface FirebaseModel {
    * …). Drives the `denormalised-aggregate.keying = bucket-code` axis on the
    * archetype recommender.
    */
-  readonly bucketKeyedById?: boolean;
+  readonly bucketKeyedById?: boolean | undefined;
   /**
    * Archetype slugs for this model. Multiple slugs are emitted when one model
    * legitimately belongs to several catalog entries simultaneously (e.g. a
@@ -283,7 +283,7 @@ export interface FirebaseModel {
    * `dbx_model_lookup` and consumed by `dbx_model_archetype_search` peer
    * search.
    */
-  readonly archetypes?: readonly string[];
+  readonly archetypes?: readonly string[] | undefined;
   /**
    * Optional axis refinements keyed by archetype slug — e.g.
    * `{ 'single-item-sub': { subPurpose: 'private' } }` or
@@ -292,27 +292,27 @@ export interface FirebaseModel {
    * {@link archetypes}. Slugs without refinements are simply absent from the
    * map.
    */
-  readonly archetypeAxesBySlug?: { readonly [slug: string]: { readonly [axisName: string]: string } };
+  readonly archetypeAxesBySlug?: { readonly [slug: string]: { readonly [axisName: string]: string } } | undefined;
   /**
    * Names of upstream models this model aggregates from. Populated from
    * `@dbxModelAggregatesFrom <ModelName>` JSDoc tags on the model interface
    * (repeatable). Used by the archetype recommender to derive
    * `aggregatesFromNonEmpty` and `siblingAggregatesFrom` signals.
    */
-  readonly aggregatesFrom?: readonly string[];
+  readonly aggregatesFrom?: readonly string[] | undefined;
   /**
    * `true` when every name in {@link aggregatesFrom} resolves to a model in
    * the same {@link modelGroup}. Derived by the extractor's post-pass so the
    * recommender can decisively boost `root-singleton-aggregate`.
    */
-  readonly siblingAggregatesFrom?: boolean;
+  readonly siblingAggregatesFrom?: boolean | undefined;
   /**
    * `true` when the interface carries the `@dbxModelOrganizationalGroupRoot`
    * tag — i.e. the root collection serves as an organizational / tenant
    * boundary that owns subordinate models. Surfaced through the recommender
    * as a signal for the `group-root` archetype.
    */
-  readonly organizationalGroupRoot?: boolean;
+  readonly organizationalGroupRoot?: boolean | undefined;
   /**
    * Parsed `@dbxModelCompositeKey from=<ModelA>,<ModelB> encoding=<two-way|one-way>`
    * tag — present when the interface declares one. Records which source models
@@ -334,7 +334,7 @@ export interface FirebaseModel {
    * Absent when the model interface omits the tag — surfaced as `undefined` to MCP catalog
    * consumers so they can distinguish "not declared" from "declared as permissions".
    */
-  readonly read?: 'system' | 'owner' | 'admin-only' | 'permissions';
+  readonly read?: 'system' | 'owner' | 'admin-only' | 'permissions' | undefined;
   /**
    * Joined entry from the `@dbxModelServiceFactory <modelType>`-tagged export that implements
    * this model. Populated by the model extractor's post-pass when a factory with a matching

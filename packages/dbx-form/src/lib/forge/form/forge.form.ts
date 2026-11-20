@@ -106,7 +106,15 @@ function mergeCustomFnConfigInto(target: FormConfig['customFnConfig'], source: F
 }
 
 // MARK: Form Config
-export interface DbxForgeGlobalFormConfigDefaults extends Pick<FormConfig, 'defaultValidationMessages'> {}
+/**
+ * Workspace-wide defaults applied to every dbx-forge form config.
+ */
+export interface DbxForgeGlobalFormConfigDefaults {
+  /**
+   * Default validation messages. Undefined means no global defaults are set.
+   */
+  defaultValidationMessages?: FormConfig['defaultValidationMessages'] | undefined;
+}
 
 export interface DbxForgeFinalizeFormConfigResult {
   /**
@@ -213,8 +221,9 @@ export function dbxForgeFinalizeFormConfig(input: FormConfig, globalDefaults?: D
    */
   const extractedFieldFormConfigs: DbxForgeFieldFormConfig[] = filterMaybeArrayValues(allFields.map((x) => x._formConfig));
 
-  const globalDefaultsLayer: DbxForgeFieldFormConfig = globalDefaults ? { defaultValidationMessages: globalDefaults.defaultValidationMessages } : {};
-  const merged = mergeDbxForgeFieldFormConfig(globalDefaultsLayer, { schemas: input.schemas, externalData: input.externalData, customFnConfig: copyFormConfigCustomFnConfig(input.customFnConfig ?? {}), defaultValidationMessages: input.defaultValidationMessages }, ...extractedFieldFormConfigs);
+  const globalDefaultsLayer: DbxForgeFieldFormConfig = globalDefaults ? filterUndefinedValues({ defaultValidationMessages: globalDefaults.defaultValidationMessages }) : {};
+  const inputLayer: DbxForgeFieldFormConfig = filterUndefinedValues({ schemas: input.schemas, externalData: input.externalData, customFnConfig: copyFormConfigCustomFnConfig(input.customFnConfig ?? {}), defaultValidationMessages: input.defaultValidationMessages });
+  const merged = mergeDbxForgeFieldFormConfig(globalDefaultsLayer, inputLayer, ...extractedFieldFormConfigs);
 
   // Extract hidden fields from field-level _hiddenFields and _formConfig._hiddenFields
   const hiddenFields: RegisteredFieldTypes[] = [];
@@ -230,10 +239,12 @@ export function dbxForgeFinalizeFormConfig(input: FormConfig, globalDefaults?: D
   const config = {
     ...input,
     fields: hiddenFields.length > 0 ? [...fields, ...hiddenFields] : fields,
-    schemas: merged.schemas ? filterUniqueValues(merged.schemas, (x) => x.name) : input.schemas,
-    externalData: merged.externalData ?? input.externalData,
-    customFnConfig: merged.customFnConfig ?? input.customFnConfig,
-    defaultValidationMessages: merged.defaultValidationMessages ?? input.defaultValidationMessages
+    ...filterUndefinedValues({
+      schemas: merged.schemas ? filterUniqueValues(merged.schemas, (x) => x.name) : input.schemas,
+      externalData: merged.externalData ?? input.externalData,
+      customFnConfig: merged.customFnConfig ?? input.customFnConfig,
+      defaultValidationMessages: merged.defaultValidationMessages ?? input.defaultValidationMessages
+    })
   };
 
   return {

@@ -82,6 +82,6 @@ export interface RuleEntry {
  */
 export interface RemediationHint {
   readonly fix: string;
-  readonly template?: string;
-  readonly seeAlso?: readonly RuleSeeAlso[];
+  readonly template?: string | undefined;
+  readonly seeAlso?: readonly RuleSeeAlso[] | undefined;
 }

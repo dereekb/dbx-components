@@ -138,7 +138,7 @@ interface ParsedArgs {
   readonly check: boolean;
   readonly json: boolean;
   readonly help: boolean;
-  readonly error?: string;
+  readonly error?: string | undefined;
 }
 
 // MARK: Entry point

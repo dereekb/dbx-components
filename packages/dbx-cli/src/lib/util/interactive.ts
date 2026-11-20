@@ -3,7 +3,7 @@ import { CliError } from './output';
 
 export interface PromptInput {
   readonly question: string;
-  readonly mask?: boolean;
+  readonly mask?: boolean | undefined;
   /**
    * Optional signal that cancels the prompt, rejecting it with {@link PROMPT_CANCELLED_ERROR_CODE}
    * and releasing stdin.
@@ -11,7 +11,7 @@ export interface PromptInput {
    * Lets a prompt race another source of the same answer — `auth login` offers the paste prompt
    * while its loopback listener waits, and aborts the prompt the moment the redirect lands.
    */
-  readonly signal?: AbortSignal;
+  readonly signal?: AbortSignal | undefined;
 }
 
 /**

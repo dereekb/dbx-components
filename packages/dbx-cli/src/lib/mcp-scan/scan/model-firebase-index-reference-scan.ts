@@ -71,8 +71,8 @@ export interface ScanFactoryReferencesInput {
   readonly entries: readonly Pick<ExtractedModelFirebaseIndexEntry, 'slug' | 'name' | 'filePath'>[];
   readonly include?: readonly string[];
   readonly exclude?: readonly string[];
-  readonly readFile?: ScanReadFile;
-  readonly globber?: ScanGlobber;
+  readonly readFile?: ScanReadFile | undefined;
+  readonly globber?: ScanGlobber | undefined;
 }
 
 // MARK: Defaults

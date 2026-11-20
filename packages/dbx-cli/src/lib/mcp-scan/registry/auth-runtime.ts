@@ -192,12 +192,12 @@ export interface AuthScopeInfo {
    * Conventional prefix shared by a family of scopes
    * (e.g. `'model.'` for the callModel CRUD scopes).
    */
-  readonly prefix?: string;
+  readonly prefix?: string | undefined;
   /**
    * Logical CRUD verb associated with the scope. `undefined` for app-
    * specific or non-CRUD scopes.
    */
-  readonly callType?: string;
+  readonly callType?: string | undefined;
   /**
    * One-line description.
    */
@@ -209,7 +209,7 @@ export interface AuthScopeInfo {
   /**
    * Error code thrown when the gate rejects a request. Optional.
    */
-  readonly errorCode?: string;
+  readonly errorCode?: string | undefined;
   /**
    * Origin of the entry.
    */
@@ -219,11 +219,11 @@ export interface AuthScopeInfo {
    * or scope catalog. Optional for app-defined scopes that don't have a
    * single canonical declaration.
    */
-  readonly sourcePath?: string;
+  readonly sourcePath?: string | undefined;
   /**
    * 1-based line number of the scope declaration. Optional.
    */
-  readonly sourceLine?: number;
+  readonly sourceLine?: number | undefined;
   /**
    * Apps that surface this scope to callers (subset of the claim catalog
    * apps). Empty for system scopes that aren't tied to a specific app.
@@ -248,7 +248,7 @@ export interface AuthAppInfo {
    * Constant exported by the app's `claims.ts` for the
    * {@link authRoleClaimsService} return value (e.g. `'DEMO_AUTH_CLAIMS_SERVICE'`).
    */
-  readonly serviceConstName?: string;
+  readonly serviceConstName?: string | undefined;
   /**
    * Workspace-relative path to the app's `claims.ts` (or equivalent).
    */
@@ -264,7 +264,7 @@ export interface AuthAppInfo {
   /**
    * Optional one-line summary of what the app's auth surface gates.
    */
-  readonly description?: string;
+  readonly description?: string | undefined;
 }
 
 /**

@@ -563,8 +563,8 @@ function readFieldEntries(fields: ObjectLiteralExpression): readonly ModelExtrac
 }
 
 interface NestedConverterMatch {
-  readonly ref?: string;
-  readonly inline?: ModelExtractionConverter;
+  readonly ref?: string | undefined;
+  readonly inline?: ModelExtractionConverter | undefined;
   readonly isArray: boolean;
 }
 

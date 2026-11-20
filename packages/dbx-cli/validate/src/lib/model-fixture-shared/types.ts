@@ -33,14 +33,14 @@ export interface FixtureDiagnostic {
   readonly code: FixtureDiagnosticCode;
   readonly severity: FixtureDiagnosticSeverity;
   readonly message: string;
-  readonly model?: string;
-  readonly line?: number;
+  readonly model?: string | undefined;
+  readonly line?: number | undefined;
   /**
    * Auto-attached remediation hint pulled from the rule catalog at
    * emission time. `undefined` when no catalog entry exists for the
    * code (the formatter renders no nested block in that case).
    */
-  readonly remediation?: RemediationHint;
+  readonly remediation?: RemediationHint | undefined;
 }
 
 /**

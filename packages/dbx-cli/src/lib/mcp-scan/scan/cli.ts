@@ -43,12 +43,12 @@ export interface RunScanCliInput {
   readonly argv: readonly string[];
   readonly cwd: string;
   readonly generator: string;
-  readonly readFile?: ScanCliReadFile;
-  readonly writeFile?: ScanCliWriteFile;
-  readonly globber?: BuildManifestGlobber;
-  readonly now?: () => Date;
-  readonly log?: ScanCliLogger;
-  readonly errorLog?: ScanCliLogger;
+  readonly readFile?: ScanCliReadFile | undefined;
+  readonly writeFile?: ScanCliWriteFile | undefined;
+  readonly globber?: BuildManifestGlobber | undefined;
+  readonly now?: (() => Date) | undefined;
+  readonly log?: ScanCliLogger | undefined;
+  readonly errorLog?: ScanCliLogger | undefined;
 }
 
 /**
