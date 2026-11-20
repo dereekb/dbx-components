@@ -118,6 +118,13 @@ describe('mergeLlmModelConfigFiles()', () => {
     expect(mergeLlmModelConfigFiles({ base: { active: 'a', $schema: './s.json' }, overlay: {}, schema })).toEqual({ active: 'a', $schema: './s.json' });
   });
 
+  it("keeps a base slug's settings when a host-built overlay sets that slug to undefined", () => {
+    const merged = mergeLlmModelConfigFiles({ base: BASE, overlay: { models: { [FREE_MODEL]: undefined, 'a/b': { vision: true } } }, schema });
+
+    expect(merged.models?.[FREE_MODEL]).toEqual({ provider: 'gateway-payg', reasoningOff: 'effort-minimal' });
+    expect(merged.models?.['a/b']).toEqual({ vision: true });
+  });
+
   it('omits empty blocks, so merging two bare files stays a bare file', () => {
     expect(mergeLlmModelConfigFiles({ schema })).toEqual({});
   });

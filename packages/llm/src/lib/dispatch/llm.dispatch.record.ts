@@ -192,7 +192,7 @@ export interface LlmDispatchRecorded<H extends LlmCallHostFields = LlmCallHostFi
    */
   readonly callRecord: LlmCallRecord<H>;
   /**
-   * The profile snapshot — present iff the call context times.
+   * The profile snapshot — set iff the call context times.
    */
   readonly callProfile?: LlmCallProfile<A>;
 }
@@ -265,5 +265,5 @@ export function recordLlmDispatch<R extends LlmDispatchRequest = LlmDispatchRequ
     onGap?.({ kind: 'prompt-over-budget', capability, estimatedPromptTokens, maxPromptTokens });
   }
 
-  return { callRecord, ...(callProfile == null ? {} : { callProfile }) };
+  return { callRecord, callProfile };
 }

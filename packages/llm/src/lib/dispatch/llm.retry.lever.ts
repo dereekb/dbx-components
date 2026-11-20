@@ -33,7 +33,7 @@ import { LLM_REASONING_OFF } from '../model/llm.model.precedence';
 import type { LlmModelId, LlmReasoningConfig, LlmTokenCount } from '../model/llm.value';
 import type { LlmRetryCause } from '../record/llm.decode.failure';
 import type { LlmRequest } from '../strategy/llm.strategy';
-import { type Count } from '@dereekb/util';
+import { type Count, type Maybe } from '@dereekb/util';
 
 /**
  * WHICH lever a retry moves — the closed set of things a dispatcher can change between two attempts of one dispatch,
@@ -114,11 +114,11 @@ export interface ChooseLlmRetryLeverConfig {
    */
   readonly model: LlmModelId;
   /**
-   * The concrete slug the decode-retry tier resolves to. Omitted ⇒ no escalation is configured at all; EQUAL to
+   * The concrete slug the decode-retry tier resolves to. Nullish ⇒ no escalation is configured at all; EQUAL to
    * {@link model} ⇒ configured but inert (a tier map that pins two tiers to one slug), which is exactly the case the
    * `model` rung must refuse rather than announce.
    */
-  readonly escalateModel?: LlmModelId;
+  readonly escalateModel?: Maybe<LlmModelId>;
   /**
    * Whether the failed attempt's RESOLVED reasoning was ON (`reasoning.enabled !== false`).
    */

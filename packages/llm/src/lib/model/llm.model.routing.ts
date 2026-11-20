@@ -282,7 +282,7 @@ export function compileLlmModelRouting(config: CompileLlmModelRoutingConfig): Ll
       }
 
       // A raw slug wins over a tier (the capability-slug-over-tier precedent); a tier resolves fail-loud NOW.
-      const shared = { ...(rule.provider == null ? {} : { provider: rule.provider }), ...(rule.maxOutputTokens == null ? {} : { maxOutputTokens: rule.maxOutputTokens }), ...(rule.reasoning == null ? {} : { reasoning: rule.reasoning }) };
+      const shared = { provider: rule.provider, maxOutputTokens: rule.maxOutputTokens, reasoning: rule.reasoning };
       const route: LlmCapabilityRoute = rule.model == null ? { model: resolveLlmModelTier(tiers, rule.tier as LlmModelTierKey), tier: rule.tier as LlmModelTierKey, ...shared } : { model: rule.model, ...shared };
       return route;
     }

@@ -54,10 +54,11 @@ export interface MergeLlmModelConfigFilesConfig<X extends LlmModelConfigTypes = 
  * base entry of that name from the other, so a name never lives in both. That is the important half: a profile whose `fast` came from the overlay and whose `strong` was
  * inherited from the base is the half-swapped map ("`fast` moved, `strong` kept billing the paid slug") this layer
  * exists to prevent, and a provider whose `apiKeyEnv` came from the overlay and whose `baseUrl` was inherited bills one
- * account at another's endpoint. Naming a provider or a profile therefore means "this, entirely".
+ * account at another's endpoint. Naming a provider or a profile therefore means "this, entirely". A host-built overlay
+whose `models` maps a slug to `undefined` keeps the base slug's settings.
  *
  * The ONE exception is `overlay.providerPatches`: a patch lays its extension fields over the merged entry of the same
- * name (a field the patch sets replaces the base's; one it does not mention is kept), so a corrected gateway URL or key
+ * name (a field the patch sets replaces the base's; one it does not mention, or sets to `undefined`, is kept), so a corrected gateway URL or key
  * var on a built-in still reaches every host that only ever patched it. Patch fields never change which account bills,
  * which is why they alone may merge. The merged file carries no `providerPatches`.
  *
@@ -75,16 +76,16 @@ export function mergeLlmModelConfigFiles<X extends LlmModelConfigTypes = LlmMode
 
   for (const [name, patch] of Object.entries(overlay?.providerPatches ?? {})) {
     if (Object.hasOwn(providers, name)) {
-      providers[name] = { ...providers[name], ...patch };
+      providers[name] = { ...providers[name], ...filterUndefinedValues(patch) };
     } else if (Object.hasOwn(extensionProviders, name)) {
-      extensionProviders[name] = { ...extensionProviders[name], ...patch };
+      extensionProviders[name] = { ...extensionProviders[name], ...filterUndefinedValues(patch) };
     } else {
       throw new Error(`${schema.label}: providers['${name}'] carries only ${schema.patchKeysNoun} keys, which extends an existing provider, but none is named '${name}'.`);
     }
   }
 
   const profiles: Record<string, LlmModelProfile> = { ...base?.profiles, ...overlay?.profiles };
-  const models: Partial<Record<string, LlmExtendedModelSettings<X>>> = { ...base?.models, ...overlay?.models };
+  const models: Partial<Record<string, LlmExtendedModelSettings<X>>> = { ...base?.models, ...filterUndefinedValues(overlay?.models ?? {}) };
   const fields: LlmModelConfigFileFields<X> = {
     $schema: overlay?.$schema === undefined ? base?.$schema : overlay.$schema,
     notes: overlay?.notes === undefined ? base?.notes : overlay.notes,

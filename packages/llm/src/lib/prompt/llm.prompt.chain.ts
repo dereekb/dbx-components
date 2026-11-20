@@ -154,9 +154,9 @@ export function makeLlmPromptChain<R extends LlmDispatchRequest = LlmDispatchReq
         executed = await previous
           .followUp({
             content: lead === '' ? body : `${lead}\n\n${body}`,
-            ...(request.validate == null ? {} : { validate: request.validate }),
-            ...(request.maxAttempts == null ? {} : { maxAttempts: request.maxAttempts }),
-            ...(request.responseSchemaHint == null ? {} : { responseSchemaHint: request.responseSchemaHint })
+            validate: request.validate,
+            maxAttempts: request.maxAttempts,
+            responseSchemaHint: request.responseSchemaHint
           })
           .execute();
       }

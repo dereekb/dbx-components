@@ -218,6 +218,16 @@ describe('the model config extension seam', () => {
     expect(Object.keys(toOwned.extensionProviders ?? {})).toEqual(['speech', 'gateway']);
   });
 
+  it('keeps a base field that a host-built patch sets to undefined, on both provider maps', () => {
+    const base = mergeLlmModelConfigFiles({ base: BASE, overlay: parse({ providers: { gateway: { speech: 'vendor-b', speechModel: 'voice-2' } } }), schema });
+    const merged = mergeLlmModelConfigFiles({ base, overlay: { providerPatches: { gateway: { speech: undefined, speechModel: 'voice-3' }, speech: { speech: undefined, speechModel: 'voice-4' } } }, schema });
+
+    expect(merged.providers?.['gateway']?.speech).toBe('vendor-b');
+    expect(merged.providers?.['gateway']?.speechModel).toBe('voice-3');
+    expect(merged.extensionProviders?.['speech']?.speech).toBe('vendor-a');
+    expect(merged.extensionProviders?.['speech']?.speechModel).toBe('voice-4');
+  });
+
   it('fails a patch that names no provider at merge, and no BUILT-IN at overlay', () => {
     const patch = parse({ providers: { nowhere: { speech: 'vendor-a' } } });
 

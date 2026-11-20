@@ -532,12 +532,7 @@ async function runLlmDispatchValueStep(config: LlmDispatchAttemptsConfig, loop: 
   let next: LlmDispatchLoopNext = 'settle';
 
   if (valid === true) {
-    const verdict =
-      critique == null
-        ? true
-        : await attemptContext.timeAsync('critique', () =>
-            critique({ capability: baseRequest.capability, ...(baseRequest.meta == null ? {} : { meta: baseRequest.meta }), value, replyText: loop.result.text, liveContext, replyProtocol: protocol, attempt, callContext: attemptContext, ...(config.signal == null ? {} : { signal: config.signal }) })
-          );
+    const verdict = critique == null ? true : await attemptContext.timeAsync('critique', () => critique({ capability: baseRequest.capability, meta: baseRequest.meta, value, replyText: loop.result.text, liveContext, replyProtocol: protocol, attempt, callContext: attemptContext, signal: config.signal }));
 
     if (verdict === true) {
       accept();
@@ -813,7 +808,7 @@ export async function runLlmDispatchAttempts(config: LlmDispatchAttemptsConfig):
     decodeFailures,
     failedAttempts,
     recovered,
-    ...(critiqueFailure == null ? {} : { critiqueFailure }),
-    ...(terminalFault == null ? {} : { fault: terminalFault })
+    critiqueFailure,
+    fault: terminalFault
   };
 }

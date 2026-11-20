@@ -280,8 +280,8 @@ async function composeLlmRootDispatch<R extends LlmDispatchRequest, D extends Ll
     supplements: toLlmPromptSupplements(composed.contributions, composed.cut),
     liveContext: joinLlmLiveContextBlocks(composed.liveContext),
     cachePrefixHash,
-    ...(request.validate == null ? {} : { validate: request.validate }),
-    ...(request.maxAttempts == null ? {} : { maxAttempts: request.maxAttempts })
+    validate: request.validate,
+    maxAttempts: request.maxAttempts
   };
 }
 
@@ -309,7 +309,7 @@ function composeLlmFollowUpDispatch<R extends LlmDispatchRequest, D extends LlmC
     ...(responseSchemaHint == null ? {} : { responseSchemaHint })
   };
 
-  return { protocol, baseRequest, segments, supplements: [], liveContext: '', ...(followUp.validate == null ? {} : { validate: followUp.validate }), ...(followUp.maxAttempts == null ? {} : { maxAttempts: followUp.maxAttempts }) };
+  return { protocol, baseRequest, segments, supplements: [], liveContext: '', validate: followUp.validate, maxAttempts: followUp.maxAttempts };
 }
 
 /**
@@ -325,11 +325,7 @@ export async function composeLlmDispatch<R extends LlmDispatchRequest = LlmDispa
   const protocol = resolveLlmReplyProtocol({ request, descriptor: resolved.descriptor, defaultReplyProtocol: setup.defaultReplyProtocol });
   const composed = followUp == null ? await composeLlmRootDispatch(config, protocol) : composeLlmFollowUpDispatch(config, followUp, protocol);
   const { baseRequest } = composed;
-  const estimatedPromptTokens = estimateLlmRequestPromptTokens({
-    prompt: baseRequest.prompt,
-    ...(baseRequest.thread == null ? {} : { thread: baseRequest.thread }),
-    ...(baseRequest.responseSchemaHint == null ? {} : { responseSchemaHint: baseRequest.responseSchemaHint })
-  });
+  const estimatedPromptTokens = estimateLlmRequestPromptTokens({ prompt: baseRequest.prompt, thread: baseRequest.thread, responseSchemaHint: baseRequest.responseSchemaHint });
 
   return { ...composed, estimatedPromptTokens };
 }

@@ -592,7 +592,7 @@ export function makeLlmModelConfigSchema<X extends LlmModelConfigTypes = LlmMode
       profile: retiredKeys?.profile ?? new Map()
     },
     patchKeysNoun,
-    ...(extension == null ? {} : { extension }),
+    extension,
     providerEntryBaseType,
     providerEntryBaseRules: { transport: transportRule, baseUrl: LLM_PROVIDER_BASE_URL_FIELD_RULE },
     completionProviderEntryType,

@@ -147,7 +147,7 @@ function partitionKey(capability: LlmCapabilityKey, partition: Maybe<string | nu
  * @returns One digest per segment.
  */
 function digestSegments(segments: ReadonlyArray<LlmPromptSegment>): ReadonlyArray<LlmPromptCacheSegmentDigest> {
-  return segments.map((segment) => ({ id: segment.id, hash: llmPromptCacheHash(segment.promptSegment), ...(segment.key == null ? {} : { key: segment.key }) }));
+  return segments.map((segment) => ({ id: segment.id, hash: llmPromptCacheHash(segment.promptSegment), key: segment.key }));
 }
 
 /**

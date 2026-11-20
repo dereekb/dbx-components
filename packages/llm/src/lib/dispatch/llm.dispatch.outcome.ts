@@ -52,14 +52,14 @@ export interface LlmDispatchOutcome {
   /**
    * The shipped reply's last critic feedback — set when the critic rejected the final attempt and no retry could
    * follow (the budget was spent, or the dispatch was cancelled), so the rejected reply shipped anyway. The evidence of
-   * the `critique-fail` gap. Absent otherwise.
+   * the `critique-fail` gap. Nullish otherwise.
    */
-  readonly critiqueFailure?: string;
+  readonly critiqueFailure?: Maybe<string>;
   /**
    * The send error that ended the dispatch with no resend — set only when the final attempt was an `unretryable`
    * fault. The pipeline records the call as usual, then rejects with an `LlmDispatchFaultError` built from it.
    */
-  readonly fault?: LlmDispatchTerminalFault;
+  readonly fault?: Maybe<LlmDispatchTerminalFault>;
   /**
    * A send error the single-shot path cannot absorb — a `timeout` or `transport` fault on a dispatch that was not
    * cancelled. The pipeline records the call as usual, then rethrows {@link LlmDispatchRethrow.error} unchanged.

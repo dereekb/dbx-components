@@ -260,6 +260,23 @@ describe('LlmCallContext attribution', () => {
     expect(root.attribution).toEqual({ source: 'auto', sessionId: 't1' });
   });
 
+  it('lets an undefined override field inherit the parent value, in the attribution, the onDiag stamp and a detached link', () => {
+    const onDiag = vi.fn();
+    const root = testContext({ attribution: { source: 'auto', sessionId: 't1', requestId: 'r1' }, onDiag, linkAttributionOf: linkIds });
+    const run = root.child('run', { attribution: { requestId: undefined, capability: 'summarize' } });
+
+    expect(run.attribution.requestId).toBe('r1');
+    expect(run.attribution).toEqual({ source: 'auto', sessionId: 't1', requestId: 'r1', capability: 'summarize' });
+
+    run.diag({ level: 'info', code: 'llm.test', message: 'm' });
+    expect(onDiag.mock.calls[0][1].requestId).toBe('r1');
+
+    const job = run.detached('job', { attribution: { sessionId: undefined } });
+    expect(job.attribution.sessionId).toBe('t1');
+    expect(job.attribution.requestId).toBe('r1');
+    expect(job.profile().links).toEqual([{ path: ['request', 'run'], sessionId: 't1', requestId: 'r1' }]);
+  });
+
   it('is an empty object when none was ever set', () => {
     expect(makeLlmCallContext({ label: 'request', now: fakeClock() }).attribution).toEqual({});
     expect(makeLlmCallContext({ label: 'summarize', timing: false }).attribution).toEqual({});

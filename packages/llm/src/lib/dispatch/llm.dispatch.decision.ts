@@ -204,7 +204,7 @@ export function makeLlmDispatchDecisionLane<R extends LlmDispatchRequest = LlmDi
         const route = capabilityRoute != null && isLlmDecisionModelId(capabilityRoute.model) ? capabilityRoute : undefined;
         const resolved = resolveLlmCapabilityModel({ override: request, descriptor: request.decision.descriptor, route, tiers: modelTiers, defaultTier });
         // the default-tier rung is the decision default model, never the text tier map's slug
-        const decisionModel: LlmDispatchDecisionModel = resolved.source === 'default-tier' ? { model: defaultModel } : { model: resolved.model, ...(resolved.tier == null ? {} : { tier: resolved.tier }) };
+        const decisionModel: LlmDispatchDecisionModel = resolved.source === 'default-tier' ? { model: defaultModel } : { model: resolved.model, tier: resolved.tier };
         const modelIssue = llmDecisionModelIssue(decisionModel.model);
 
         if (modelIssue != null) {

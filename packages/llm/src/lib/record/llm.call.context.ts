@@ -36,7 +36,7 @@
  * A dispatch reports its gaps through the dispatcher's typed `onGap`, not through the context.
  */
 
-import type { Milliseconds, UnixDateTimeMillisecondsNumber } from '@dereekb/util';
+import { filterUndefinedValues, type Milliseconds, type UnixDateTimeMillisecondsNumber } from '@dereekb/util';
 import { llmSwallowCauseText, type LlmSwallowSiteId } from './llm.swallow';
 
 /**
@@ -191,7 +191,8 @@ export interface LlmCallProfile<A extends object = object> {
  */
 export interface LlmCallContextChildParams<A extends object = object> {
   /**
-   * The attribution override, merged OVER the parent's.
+   * The attribution override, merged OVER the parent's. An `undefined` field inherits the parent's value; a `null`
+   * overrides it.
    */
   readonly attribution?: Partial<A>;
 }
@@ -402,12 +403,7 @@ function buildLlmCallContext<A extends object, D extends LlmCallDiagRecord>(inte
   };
 
   // The shared callbacks every child and detached root inherits from the root.
-  const sinks = {
-    now,
-    ...(onDiag == null ? {} : { onDiag }),
-    ...(onSwallow == null ? {} : { onSwallow }),
-    ...(linkAttributionOf == null ? {} : { linkAttributionOf })
-  };
+  const sinks = { now, onDiag, onSwallow, linkAttributionOf };
 
   return {
     enabled,
@@ -453,7 +449,7 @@ function buildLlmCallContext<A extends object, D extends LlmCallDiagRecord>(inte
         path: [...path, childLabel],
         rootStartMs,
         ...sinks,
-        attribution: { ...attribution, ...params?.attribution }
+        attribution: { ...attribution, ...filterUndefinedValues(params?.attribution ?? {}) }
       });
       children.push(child);
       return child;
@@ -468,7 +464,7 @@ function buildLlmCallContext<A extends object, D extends LlmCallDiagRecord>(inte
         // NO `rootStartMs` — the detached root anchors its OWN timeline through the root rule above, so its offsets
         // read from when the off-request work actually began.
         ...sinks,
-        attribution: { ...attribution, ...params?.attribution },
+        attribution: { ...attribution, ...filterUndefinedValues(params?.attribution ?? {}) },
         links: [selfLink]
       });
       detachedRoots.push(detachedRoot);
@@ -540,9 +536,9 @@ export function makeLlmCallContext<A extends object = object, D extends LlmCallD
     label: config.label,
     path: [config.label],
     now: config.now ?? (() => Date.now()),
-    ...(config.onDiag == null ? {} : { onDiag: config.onDiag }),
-    ...(config.onSwallow == null ? {} : { onSwallow: config.onSwallow }),
-    ...(config.linkAttributionOf == null ? {} : { linkAttributionOf: config.linkAttributionOf }),
+    onDiag: config.onDiag,
+    onSwallow: config.onSwallow,
+    linkAttributionOf: config.linkAttributionOf,
     attribution: config.attribution ?? ({} as A)
   });
 }

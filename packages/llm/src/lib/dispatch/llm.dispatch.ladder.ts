@@ -176,7 +176,7 @@ export function makeLlmDispatchRetryLadder(config: LlmDispatchRetryLadderConfig)
         lengthCapped: isLlmLengthCappedFinish(failed),
         reasoningOnly: isLlmReasoningOnlyReply(failed),
         model: resolvedModel,
-        ...(escalateModel == null ? {} : { escalateModel }),
+        escalateModel,
         reasoningEnabled: before.reasoningEnabled,
         reasoningSupported,
         structured: before.structured,

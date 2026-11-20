@@ -205,7 +205,7 @@ export async function critiqueLlmReply(config: CritiqueLlmReplyConfig): Promise<
   const { goal, evidence, liveContext, replyText, tier, signal } = config;
   const request: LlmDispatchRequest = {
     capability: LLM_CRITIQUE_REPLY_CAPABILITY,
-    renderLiveContext: () => renderLlmCritiqueContext({ goal, ...(evidence == null ? {} : { evidence }), liveContext, replyText }),
+    renderLiveContext: () => renderLlmCritiqueContext({ goal, evidence, liveContext, replyText }),
     validate: makeLlmSchemaValueValidator(llmCritiqueOutcomeSchema),
     subjectCapability: config.subjectCapability,
     callContext: config.callContext,

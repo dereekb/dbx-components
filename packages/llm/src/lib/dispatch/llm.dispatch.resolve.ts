@@ -7,7 +7,7 @@ import { type Maybe } from '@dereekb/util';
 import { type LlmCapabilityDescriptor, type LlmCapabilityDescriptorReader } from '../capability/llm.capability.descriptor';
 import { type LlmModelProviderBindingMap } from '../model/config/llm.model.config.resolve';
 import { type LlmCapabilityModelSource, type LlmCapabilityReasoningSource, resolveLlmCapabilityModel, resolveLlmCapabilityOutputControls, resolveLlmCapabilityProvider } from '../model/llm.model.precedence';
-import { type LlmCapabilityRoute, type LlmCompiledModelRouting } from '../model/llm.model.routing';
+import { type LlmCompiledModelRouting } from '../model/llm.model.routing';
 import { type LlmModelTierMap } from '../model/llm.model.tier';
 import { type LlmModelId, type LlmModelTierKey, type LlmReasoningConfig, type LlmStrategyId, type LlmTokenCount } from '../model/llm.value';
 import { type LlmCallContext } from '../record/llm.call.context';
@@ -100,10 +100,6 @@ export interface LlmResolvedDispatch<D extends LlmCapabilityDescriptor = LlmCapa
    */
   readonly descriptor: Maybe<D>;
   /**
-   * The capability's route, when configured.
-   */
-  readonly route?: LlmCapabilityRoute;
-  /**
    * The resolved tier, when the model came from one.
    */
   readonly tier?: LlmModelTierKey;
@@ -158,7 +154,7 @@ export function resolveLlmDispatch<R extends LlmDispatchRequest = LlmDispatchReq
   const { model: resolvedModel, tier, source: modelSource } = resolved;
   callContext.diag({ level: 'debug', code: 'model-route', fields: { capability, model: resolvedModel, ...(tier == null ? {} : { tier }), source: modelSource }, message: 'capability model resolved by the precedence ladder', once: `model-route:${capability}` });
 
-  const strategyId = selectStrategy({ request, capability, model: resolvedModel, ...(tier == null ? {} : { tier }), ...(route == null ? {} : { route }) });
+  const strategyId = selectStrategy({ request, capability, model: resolvedModel, tier, route });
   const strategy = strategies.get(strategyId);
 
   if (strategy == null) {
@@ -174,8 +170,7 @@ export function resolveLlmDispatch<R extends LlmDispatchRequest = LlmDispatchReq
 
   return {
     descriptor,
-    ...(route == null ? {} : { route }),
-    ...(tier == null ? {} : { tier }),
+    tier,
     resolvedModel,
     modelSource,
     maxOutputTokens: namedMaxOutputTokens ?? defaultMaxOutputTokens,

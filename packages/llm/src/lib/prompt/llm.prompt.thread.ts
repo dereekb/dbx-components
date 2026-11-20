@@ -66,12 +66,12 @@ export interface LlmPrompt<R, X extends LlmDispatchResult = LlmDispatchResult> {
    */
   readonly request: R;
   /**
-   * The follow-up input this prompt was chained with — set on a chained prompt, absent on the root.
+   * The follow-up input this prompt was chained with — set on a chained prompt, nullish on the root.
    */
   readonly followUp?: Maybe<LlmPromptFollowUp>;
   /**
    * The executed parent this prompt chains from — its {@link ExecutedLlmPrompt.thread} is replayed ahead of this
-   * prompt's message. Absent on the root.
+   * prompt's message. Nullish on the root.
    */
   readonly previous?: Maybe<ExecutedLlmPrompt<R, X>>;
   /**
@@ -131,7 +131,7 @@ export interface LlmPromptRunParams<R> {
    */
   readonly thread: ReadonlyArray<LlmThreadTurn>;
   /**
-   * The follow-up input when this execution is a chained turn; absent on the root execution.
+   * The follow-up input when this execution is a chained turn; nullish on the root execution.
    */
   readonly followUp?: Maybe<LlmPromptFollowUp>;
 }
@@ -264,11 +264,11 @@ export function makeLlmPromptFactory<R, X extends LlmDispatchResult = LlmDispatc
   function buildPrompt(request: R, previous: Maybe<ExecutedLlmPrompt<R, X>>, followUp: Maybe<LlmPromptFollowUp>): LlmPrompt<R, X> {
     const prompt: LlmPrompt<R, X> = {
       request,
-      ...(followUp == null ? {} : { followUp }),
-      ...(previous == null ? {} : { previous }),
+      followUp,
+      previous,
       execute: cachedGetter(async (): Promise<ExecutedLlmPrompt<R, X>> => {
         const priorThread = previous?.thread ?? [];
-        const ran = await runPromptRequest({ request, thread: priorThread, ...(followUp == null ? {} : { followUp }) });
+        const ran = await runPromptRequest({ request, thread: priorThread, followUp });
         // Record the assistant turn as a REPLAY-SAFE substitution: a degenerate reply becomes the placeholder (never the
         // poisoned raw text), an over-long clean reply is capped.
         const thread: ReadonlyArray<LlmThreadTurn> = [...priorThread, ran.sentTurn, { role: 'assistant', content: assistantTurnContentOf(ran) }];

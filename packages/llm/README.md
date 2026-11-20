@@ -136,8 +136,10 @@ What a dispatcher records about each call, and the seams a host observes it thro
 - **Call context.** `makeLlmCallContext` times spans (`time` / `timeAsync`) into a nested profile of `child`
   contexts; `detached` starts a new root for work a context schedules but does not contain (it records one link to
   its origin and lands in the origin's `detachedProfiles`, never in `children`). Breadcrumbs (`diag`) and swallows go
-  to the host's `onDiag` / `onSwallow` with the context's attribution, timing on or off. A dispatch reports its gaps
-  through the dispatcher's `onGap`, not through the context. `noopLlmCallContext()` is the shared do-nothing context.
+  to the host's `onDiag` / `onSwallow` with the context's attribution, timing on or off. A child or detached
+  attribution override merges over the parent's: an `undefined` field inherits the parent's value, a `null` overrides
+  it. A dispatch reports its gaps through the dispatcher's `onGap`, not through the context. `noopLlmCallContext()` is
+  the shared do-nothing context.
 - **Taps.** `makeLlmDispatchTapRegistry` is a read-only observation seam: a tap that throws is counted in `health()`,
   never propagated. A tap may return any thenable; its rejection counts as an async failure. `makeLlmDispatchCollector` keeps every event.
 - **Swallow sites.** `LlmSwallowSink`, the declaration vocabulary, `LLM_SWALLOW_SITES` (the library's declared
@@ -312,6 +314,7 @@ environment variable and no file: `/node` does that, and a browser host passes t
 - **Overlay.** `overlayLlmModelConfigFile({ base, file, source, schema })` lays a host's file over its built-ins. A
   provider, profile or per-slug entry the file names replaces the built-in whole — a half-replaced provider would bill
   one account at another's endpoint — and every `models[slug].provider` is then checked against the merged providers.
+  A patch's `undefined` field and a host-built overlay's `undefined` slug keep the base's value.
 - **Resolution.** `resolveLlmModelProfile({ file, override, schema })` picks the active profile: the override wins,
   an off value (`off` / `none` in any case, `LLM_OFF_VALUES` / `isLlmOffValue`) or a blank `active` selects nothing,
   and a name the file lacks throws. `llmModelReasoningOffEncodings`,
