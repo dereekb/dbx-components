@@ -10,6 +10,8 @@ export const OPENROUTER_API_KEY_ENV_VAR = 'OPENROUTER_API_KEY';
  * Optional environment variable for overriding the OpenRouter server/base URL.
  *
  * This workspace's name, read first.
+ *
+ * @see `DEFAULT_LLM_ENV_NAMES` in `@dereekb/llm/node`, whose OpenRouter row reads this name, then `OPENROUTER_BASE_URL`
  */
 export const OPENROUTER_SERVER_URL_ENV_VAR = 'OPENROUTER_SERVER_URL';
 
@@ -17,6 +19,8 @@ export const OPENROUTER_SERVER_URL_ENV_VAR = 'OPENROUTER_SERVER_URL';
  * `@openrouter/sdk`'s own variable for the server/base URL, read after `OPENROUTER_SERVER_URL_ENV_VAR`.
  *
  * The SDK already falls back to it when no `serverURL` is passed; reading it here makes that order explicit.
+ *
+ * @see `DEFAULT_LLM_ENV_NAMES` in `@dereekb/llm/node`, which reads both names in this order
  */
 export const OPENROUTER_BASE_URL_ENV_VAR = 'OPENROUTER_BASE_URL';
 

@@ -75,10 +75,19 @@ describe('hasLlmProviderKeyInEnv()', () => {
 });
 
 describe('DEFAULT_LLM_ENV_NAMES', () => {
-  it('should use vendor or LLM_-prefixed names only', () => {
+  it('should use vendor-prefixed (OPENAI_, OPENROUTER_) or LLM_-prefixed names only', () => {
     const varNames = [...JSON.stringify(DEFAULT_LLM_ENV_NAMES).matchAll(/"([A-Z][A-Z0-9_]+)"/g)].map((match) => match[1]);
     expect(varNames.length).toBeGreaterThan(0);
     expect(varNames.filter((name) => !/^(OPENAI|OPENROUTER|LLM)_/.test(name))).toEqual([]);
+  });
+
+  it('should read the OpenRouter base URL from the @dereekb/nestjs/openrouter name first, then the SDK name', () => {
+    const openrouter = DEFAULT_LLM_ENV_NAMES.providers.find((provider) => provider.id === 'openrouter');
+    expect(openrouter?.baseUrl).toEqual(['OPENROUTER_SERVER_URL', 'OPENROUTER_BASE_URL']);
+  });
+
+  it('should never read the OpenAI organization or project ids', () => {
+    expect(JSON.stringify(DEFAULT_LLM_ENV_NAMES)).not.toMatch(/OPENAI_ORG_ID|OPENAI_PROJECT_ID/);
   });
 
   it('should rank openai first and openrouter as the fallback', () => {

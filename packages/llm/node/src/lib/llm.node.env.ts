@@ -2,9 +2,10 @@
  * The **environment vocabulary** of `@dereekb/llm/node` — which variable NAMES a host reads, and the two primitives
  * every reader here goes through.
  *
- * Every name is a parameter. {@link DEFAULT_LLM_ENV_NAMES} holds conventional defaults (the vendors' own key names, and
- * `LLM_`-prefixed names for the rest); a host with its own prefix spreads the defaults and lists its names first, so
- * `MYAPP_OPENAI_API_KEY` wins over `OPENAI_API_KEY` without the library knowing either.
+ * Every name is a parameter. {@link DEFAULT_LLM_ENV_NAMES} holds conventional defaults (the vendors' own key and
+ * base-URL names, `@dereekb/nestjs/openrouter`'s base-URL name, and `LLM_`-prefixed names for the rest); a host with its
+ * own prefix spreads the defaults and lists its names first, so `MYAPP_OPENAI_API_KEY` wins over `OPENAI_API_KEY`
+ * without the library knowing either.
  */
 
 import { type Maybe } from '@dereekb/util';
@@ -179,15 +180,29 @@ export interface LlmEnvNames {
 }
 
 /**
- * The default env var names: the vendors' own key and base-URL names, and `LLM_`-prefixed names for the rest.
+ * The default env var names: the vendor SDKs' own key and base-URL names, `@dereekb/nestjs/openrouter`'s base-URL
+ * name, and `LLM_`-prefixed names for the rest.
  *
  * OpenAI is the keyed default; OpenRouter is the fallback, so it serves only when nothing else is keyed (or is
  * selected explicitly).
+ *
+ * Whose names these are:
+ * - **The vendors'.** `OPENAI_API_KEY` and `OPENAI_BASE_URL` are the `openai` SDK's; `OPENROUTER_API_KEY` and
+ *   `OPENROUTER_BASE_URL` are `@openrouter/sdk`'s. Each SDK reads its own from `process.env` when no option is passed,
+ *   so a machine set up for the SDK is set up for llm.
+ * - **`@dereekb/nestjs/openrouter`'s.** `OPENROUTER_SERVER_URL` is the name that module gave the same endpoint. The
+ *   OpenRouter row reads it FIRST, then `OPENROUTER_BASE_URL` — the module's own order — so a host that runs both
+ *   clients sends both to one endpoint.
+ * - **Left out on purpose:** `OPENAI_ORG_ID` and `OPENAI_PROJECT_ID`. The `openai` transport serves any
+ *   OpenAI-compatible gateway (ZenMux, OpenRouter, a LAN vLLM), and those ids would reach it, so
+ *   `@dereekb/llm/openai` builds its client with both `null`. A host that needs them injects its own client.
+ *
+ * @see `OPENROUTER_SERVER_URL_ENV_VAR` and `OPENROUTER_BASE_URL_ENV_VAR` in `@dereekb/nestjs/openrouter` (cited, not imported)
  */
 export const DEFAULT_LLM_ENV_NAMES: LlmEnvNames = {
   providers: [
     { id: 'openai', apiKey: ['OPENAI_API_KEY'], baseUrl: ['OPENAI_BASE_URL'], tokenLimitParam: ['LLM_OPENAI_TOKEN_LIMIT_PARAM'], reasoningOff: ['LLM_OPENAI_REASONING_OFF'], usageAccounting: ['LLM_OPENAI_USAGE_ACCOUNTING'] },
-    { id: 'openrouter', apiKey: ['OPENROUTER_API_KEY'], fallback: true }
+    { id: 'openrouter', apiKey: ['OPENROUTER_API_KEY'], baseUrl: ['OPENROUTER_SERVER_URL', 'OPENROUTER_BASE_URL'], fallback: true }
   ],
   defaultProvider: ['LLM_PROVIDER'],
   modelsFile: ['LLM_MODELS_FILE'],

@@ -119,6 +119,21 @@ describe('resolveLlmProvidersFromEnv()', () => {
       const result = resolveLlmProvidersFromEnv({ env: { PROXY_KEY: 'p', PROXY_URL: GATEWAY_URL }, names, schema, adapters });
       expect(result.providers).toEqual([{ id: 'proxy', transport: 'openai', apiKey: 'p', apiKeyEnv: 'PROXY_KEY', baseUrl: GATEWAY_URL }]);
     });
+
+    it('should point the OpenRouter env default at OPENROUTER_SERVER_URL, else OPENROUTER_BASE_URL, skipping a blank one', () => {
+      const resolve = (env: Record<string, string>) => resolveLlmProvidersFromEnv({ env: { OPENROUTER_API_KEY: 'or', ...env }, schema, adapters }).defaultProvider;
+
+      expect(resolve({ OPENROUTER_SERVER_URL: ` ${GATEWAY_URL}\n`, OPENROUTER_BASE_URL: LOCAL_URL })).toEqual({ id: 'openrouter', transport: 'openrouter', apiKey: 'or', apiKeyEnv: 'OPENROUTER_API_KEY', baseUrl: GATEWAY_URL });
+      expect(resolve({ OPENROUTER_BASE_URL: LOCAL_URL })?.baseUrl).toBe(LOCAL_URL);
+      // An exported-but-empty alias never shadows the SDK's name.
+      expect(resolve({ OPENROUTER_SERVER_URL: '  ', OPENROUTER_BASE_URL: LOCAL_URL })?.baseUrl).toBe(LOCAL_URL);
+    });
+
+    it('should leave a declared openrouter provider on its own endpoint, whatever the base-URL variables say', () => {
+      const file: LlmModelConfigFile<TestTypes> = { providers: { openrouter: { transport: 'openrouter', apiKeyEnv: 'OPENROUTER_API_KEY' } } };
+      const result = resolveLlmProvidersFromEnv({ env: { OPENROUTER_API_KEY: 'or', OPENROUTER_SERVER_URL: GATEWAY_URL }, file, schema, adapters });
+      expect(result.providers.find((provider) => provider.id === 'openrouter')?.baseUrl).toBeUndefined();
+    });
   });
 
   describe('declared providers', () => {
@@ -301,6 +316,15 @@ describe('makeLlmStrategiesFromEnv()', () => {
     const result = makeLlmStrategiesFromEnv({ env: {}, schema, adapters });
     expect(result.ids).toEqual([]);
     expect(result.defaultProviderId).toBe('openrouter');
+  });
+
+  it('should build the OpenRouter env default against the endpoint its base-URL variables name', () => {
+    const openrouter = fakeCompletionAdapter('openrouter', OPENROUTER_URL);
+    const registry = makeLlmAdapterRegistry([openrouter.adapter]);
+    const result = makeLlmStrategiesFromEnv({ env: { OPENROUTER_API_KEY: 'or', OPENROUTER_BASE_URL: GATEWAY_URL }, schema, adapters: registry });
+
+    expect(result.strategies.get('openrouter')?.describe).toBe(`openrouter at ${GATEWAY_URL}`);
+    expect(openrouter.received.map((config) => config.baseUrl)).toEqual([GATEWAY_URL]);
   });
 });
 

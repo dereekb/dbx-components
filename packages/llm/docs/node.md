@@ -16,7 +16,7 @@ how a spec stays hermetic.
   | Field | Default var | Meaning |
   |---|---|---|
   | `providers[openai]` | `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `LLM_OPENAI_TOKEN_LIMIT_PARAM`, `LLM_OPENAI_REASONING_OFF`, `LLM_OPENAI_USAGE_ACCOUNTING` | The OpenAI env default: key, endpoint and wire knobs. |
-  | `providers[openrouter]` | `OPENROUTER_API_KEY` | The fallback env default: serves only when nothing else is keyed, or when selected. |
+  | `providers[openrouter]` | `OPENROUTER_API_KEY`, `OPENROUTER_SERVER_URL`, `OPENROUTER_BASE_URL` | The fallback env default: key and endpoint (first set wins). Serves only when nothing else is keyed, or when selected. |
   | `defaultProvider` | `LLM_PROVIDER` | The explicit default-provider selection. A value naming no env default with a registered adapter and no declared completion provider throws, listing the selectable ids. |
   | `modelsFile` | `LLM_MODELS_FILE` | The model config file path; a path set here that does not exist fails loud. |
   | `modelProfile` | `LLM_MODEL_PROFILE` | The per-run profile override (wins over the file's `active`; `off` / `none`, any case, selects none). |
@@ -26,6 +26,15 @@ how a spec stays hermetic.
   | `decodeRetryTier` | `LLM_DECODE_RETRY_TIER` | Which tier a malformed reply retries on (`off` / `none`, any case, keeps the same model). |
   | `decisionProvider` | `LLM_DECISION_PROVIDER` | The decision-lane provider pin (a provider id; the test lane throws on one that is not registered). |
   | `craftNotesDir` | `LLM_CRAFT_NOTES_DIR` | The machine craft-notes folder. |
+
+  Whose names these are: `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `OPENROUTER_API_KEY` and `OPENROUTER_BASE_URL` are the
+  vendor SDKs' own; `OPENROUTER_SERVER_URL` is `@dereekb/nestjs/openrouter`'s. The OpenRouter row reads
+  `OPENROUTER_SERVER_URL`, then `OPENROUTER_BASE_URL`, else the adapter default (`https://openrouter.ai/api/v1`) — the
+  Nest module's names in the Nest module's order (`OPENROUTER_SERVER_URL_ENV_VAR`, `OPENROUTER_BASE_URL_ENV_VAR`), so
+  a host running both clients sends both to one endpoint: chat, the `/key` probe and decisions. A `models.json`
+  provider with the same id replaces the env default, endpoint included. `OPENAI_ORG_ID` / `OPENAI_PROJECT_ID` are
+  never read: the `openai` transport serves any OpenAI-compatible gateway, and those ids would reach it (see
+  [openai](openai.md) for injecting your own client).
 
 - **The file.** `loadEffectiveLlmModelConfigFile({ schema, base, defaultPath })` reads the path the env names, else
   `defaultPath` — the explicit path fails loud when missing, while a missing `defaultPath` just means the built-ins —

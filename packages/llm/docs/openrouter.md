@@ -29,7 +29,8 @@ OpenRouter's hook set over `makeLlmSystemOneDecisionStrategy`, with no SDK.
 - `probeLlmOpenRouterCredential({ strategyId, apiKey, baseUrl?, fetch?, signal? })` is that one probe
   (`GET {baseUrl}/key`, 404 = error), shared by the chat and decision strategies.
 
-`LLM_OPENROUTER_ADAPTERS` registers the completion transport `openrouter` (default `https://openrouter.ai/api/v1`) and
+`LLM_OPENROUTER_ADAPTERS` registers the completion transport `openrouter` (default `https://openrouter.ai/api/v1`; `/node`'s env default reads
+`OPENROUTER_SERVER_URL`, then `OPENROUTER_BASE_URL`, first) and
 the decision route `openrouter` (`strategyKind: 'openrouter-systemone'`, derived for every `openrouter`-transport
 provider). The completion mapping is `/openai`'s shared `toLlmOpenAiCompatibleChatStrategyConfig`, which ignores the provider's `reasoningOff`,
 `tokenLimitParam` and `usageAccounting` — this wire has one spelling for each. The entry's swallow sites are
