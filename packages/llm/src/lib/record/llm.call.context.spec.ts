@@ -1,7 +1,7 @@
 /**
- * The call context — spans / marks / gaps captured against an injected clock, recursive child contexts that nest in
- * the parent profile, the DETACHED "link, don't parent" root for causally-related but not temporally-contained work, the attribution merge, the host callbacks for gaps / breadcrumbs / swallows, and
- * the timing-off and no-op paths.
+ * The call context — spans captured against an injected clock, recursive child contexts that nest in the parent
+ * profile, the DETACHED "link, don't parent" root for causally-related but not temporally-contained work, the
+ * attribution merge, the host callbacks for breadcrumbs / swallows, and the timing-off and no-op paths.
  */
 
 import { describe, it, expect, vi } from 'vitest';
@@ -19,29 +19,9 @@ interface TestAttribution {
 }
 
 /**
- * The spec host's gap body.
- */
-interface TestGapBody {
-  readonly kind: 'missing';
-  readonly requested: string;
-}
-
-/**
  * The spec host's breadcrumb record — one host column beside the library's.
  */
 type TestDiagRecord = LlmCallDiagRecord & { readonly region?: string };
-
-type TestGap = TestAttribution & TestGapBody;
-
-/**
- * Build a gap body naming a missing thing.
- *
- * @param requested - What was asked for.
- * @returns The gap body.
- */
-function missing(requested: string): TestGapBody {
-  return { kind: 'missing', requested };
-}
 
 /**
  * Keep the join ids on a link, as a host would.
@@ -75,26 +55,19 @@ function fakeClock(step = 1): () => number {
  * @param config - The extra config.
  * @returns The context.
  */
-function testContext(config: Partial<LlmCallContextConfig<TestAttribution, TestGapBody, TestDiagRecord>> = {}): LlmCallContext<TestAttribution, TestGapBody, TestDiagRecord> {
-  return makeLlmCallContext<TestAttribution, TestGapBody, TestDiagRecord>({ label: 'request', now: fakeClock(), ...config });
+function testContext(config: Partial<LlmCallContextConfig<TestAttribution, TestDiagRecord>> = {}): LlmCallContext<TestAttribution, TestDiagRecord> {
+  return makeLlmCallContext<TestAttribution, TestDiagRecord>({ label: 'request', now: fakeClock(), ...config });
 }
 
 describe('makeLlmCallContext', () => {
-  it('records spans, marks, and gaps with root-relative offsets', () => {
+  it('records spans with root-relative offsets', () => {
     const ctx = testContext({ attribution: { source: 'auto' } });
-    ctx.mark('start');
     ctx.time('render', () => 42);
-    ctx.gap(missing('RAIN'));
 
     const profile = ctx.profile();
     expect(profile.label).toBe('request');
     expect(profile.startedAt).toBe(0);
-    expect(profile.marks).toEqual([{ name: 'start', atMs: 1 }]);
-    expect(profile.spans).toHaveLength(1);
-    expect(profile.spans[0].name).toBe('render');
-    expect(profile.spans[0].durationMs).toBeGreaterThan(0);
-    expect(profile.gaps).toHaveLength(1);
-    expect(profile.gaps[0].kind).toBe('missing');
+    expect(profile.spans).toEqual([{ name: 'render', startMs: 1, durationMs: 1 }]);
   });
 
   it('time returns the run value and records the span even on throw', () => {
@@ -135,14 +108,14 @@ describe('makeLlmCallContext', () => {
     expect(profile.children[0].spans.map((span) => span.name)).toEqual(['summarize']);
   });
 
-  it('forwards a child gap to the root onGap with merged attribution', () => {
-    const gaps: TestGap[] = [];
-    const ctx = testContext({ attribution: { source: 'auto', capability: 'summarize' }, onGap: (gap) => gaps.push(gap) });
+  it('forwards a child diag to the root onDiag with merged attribution', () => {
+    const onDiag = vi.fn();
+    const ctx = testContext({ attribution: { source: 'auto', capability: 'summarize' }, onDiag });
     const build = ctx.child('build', { attribution: { capability: 'classify', region: 'eu' } });
-    build.gap(missing('RAIN'));
+    build.diag({ level: 'info', code: 'child', message: 'from the child' });
 
-    expect(gaps).toHaveLength(1);
-    expect(gaps[0]).toMatchObject({ kind: 'missing', requested: 'RAIN', capability: 'classify', region: 'eu' });
+    expect(onDiag).toHaveBeenCalledTimes(1);
+    expect(onDiag.mock.calls[0][1]).toEqual({ source: 'auto', capability: 'classify', region: 'eu' });
   });
 
   it('profile() is a snapshot: later records do not reach an earlier profile, and each call copies its arrays', () => {
@@ -152,14 +125,10 @@ describe('makeLlmCallContext', () => {
     const before = ctx.profile();
 
     ctx.time('send', () => 2);
-    ctx.mark('late');
-    ctx.gap(missing('RAIN'));
     ctx.diag({ level: 'info', code: 'second', message: 'second' });
     ctx.swallow('llm/spec.site', new Error('x'));
 
     expect(before.spans.map((span) => span.name)).toEqual(['render']);
-    expect(before.marks).toEqual([]);
-    expect(before.gaps).toEqual([]);
     expect(before.diags?.map((diag) => diag.code)).toEqual(['first']);
     expect(before.swallows).toBeUndefined();
     expect(ctx.profile().spans).not.toBe(ctx.profile().spans);
@@ -216,22 +185,22 @@ describe('LlmCallContext.detached', () => {
     expect(root.attribution).toEqual({ source: 'auto', sessionId: 't1' });
   });
 
-  it('still forwards gaps to the ROOT sink with merged attribution, on the timing-on and the timing-off arm alike', () => {
-    const onGap = vi.fn();
-    const root = testContext({ attribution: { source: 'auto', sessionId: 't1' }, onGap });
-    root.detached('bg', { attribution: { capability: 'summarize', region: 'eu' } }).gap(missing('RAIN'));
+  it('still forwards diags to the ROOT sink with merged attribution, on the timing-on and the timing-off arm alike', () => {
+    const onDiag = vi.fn();
+    const root = testContext({ attribution: { source: 'auto', sessionId: 't1' }, onDiag });
+    root.detached('bg', { attribution: { capability: 'summarize', region: 'eu' } }).diag({ level: 'info', code: 'bg', message: 'background' });
 
-    expect(onGap).toHaveBeenCalledTimes(1);
-    expect(onGap.mock.calls[0][0]).toMatchObject({ requested: 'RAIN', sessionId: 't1', capability: 'summarize', region: 'eu' });
+    expect(onDiag).toHaveBeenCalledTimes(1);
+    expect(onDiag.mock.calls[0][1]).toEqual({ source: 'auto', sessionId: 't1', capability: 'summarize', region: 'eu' });
 
-    // Gap forwarding is NOT timing-gated: a timing-off origin yields a timing-off detached root that still forwards.
-    const gapOnlyOnGap = vi.fn();
-    const gapOnly = makeLlmCallContext<TestAttribution, TestGapBody>({ label: 'summarize', timing: false, attribution: { source: 'auto', sessionId: 't2' }, onGap: gapOnlyOnGap });
-    const gapOnlyDetached = gapOnly.detached('bg');
-    expect(gapOnlyDetached.enabled).toBe(false);
-    gapOnlyDetached.gap(missing('FOG'));
-    expect(gapOnlyOnGap).toHaveBeenCalledTimes(1);
-    expect(gapOnlyOnGap.mock.calls[0][0]).toMatchObject({ requested: 'FOG', sessionId: 't2' });
+    // Breadcrumb forwarding is NOT timing-gated: a timing-off origin yields a timing-off detached root that still forwards.
+    const timingOffOnDiag = vi.fn();
+    const timingOff = makeLlmCallContext<TestAttribution, TestDiagRecord>({ label: 'summarize', timing: false, attribution: { source: 'auto', sessionId: 't2' }, onDiag: timingOffOnDiag });
+    const timingOffDetached = timingOff.detached('bg');
+    expect(timingOffDetached.enabled).toBe(false);
+    timingOffDetached.diag({ level: 'info', code: 'bg', message: 'background' });
+    expect(timingOffOnDiag).toHaveBeenCalledTimes(1);
+    expect(timingOffOnDiag.mock.calls[0][1]).toEqual({ source: 'auto', sessionId: 't2' });
   });
 
   it('omits BOTH new profile keys when nothing was linked or detached (byte-stable absence)', () => {
@@ -250,16 +219,13 @@ describe('LlmCallContext.detached', () => {
 });
 
 describe('noopLlmCallContext', () => {
-  it('is disabled, runs work, records nothing, and forwards no gap', () => {
-    const ctx = noopLlmCallContext<TestAttribution, TestGapBody>();
+  it('is disabled, runs work and records nothing', () => {
+    const ctx = noopLlmCallContext<TestAttribution, TestDiagRecord>();
     expect(ctx.enabled).toBe(false);
     expect(ctx.time('x', () => 3)).toBe(3);
-    ctx.mark('m');
-    ctx.gap(missing('RAIN'));
     const child = ctx.child('build');
     expect(child).toBe(ctx);
-    expect(ctx.profile().spans).toEqual([]);
-    expect(ctx.profile().gaps).toEqual([]);
+    expect(JSON.stringify(ctx.profile())).toBe('{"label":"(noop)","startedAt":0,"totalMs":0,"spans":[],"children":[]}');
   });
 
   it('detaches to ITSELF', () => {
@@ -268,7 +234,7 @@ describe('noopLlmCallContext', () => {
   });
 
   it('returns the SAME instance on every call, whatever type parameters it is asked for', () => {
-    expect(noopLlmCallContext()).toBe(noopLlmCallContext<TestAttribution, TestGapBody, TestDiagRecord>());
+    expect(noopLlmCallContext()).toBe(noopLlmCallContext<TestAttribution, TestDiagRecord>());
   });
 });
 
@@ -281,17 +247,6 @@ describe('LlmCallContext attribution', () => {
     expect(dispatch.attribution).toEqual({ source: 'auto', sessionId: 't1', requestId: 'c1' });
     // The dispatch's own children (the per-attempt contexts) inherit BOTH.
     expect(dispatch.child('attempt-1').attribution).toEqual({ source: 'auto', sessionId: 't1', requestId: 'c1' });
-  });
-
-  it('stamps the attribution onto every gap the context records', () => {
-    const onGap = vi.fn();
-    const root = testContext({ attribution: { source: 'auto', sessionId: 't1' }, onGap });
-    const dispatch = root.child('summarize', { attribution: { requestId: 'c1' } });
-    dispatch.gap(missing('RAIN'));
-
-    expect(onGap).toHaveBeenCalledTimes(1);
-    expect(onGap.mock.calls[0][0]).toMatchObject({ requested: 'RAIN', sessionId: 't1', requestId: 'c1' });
-    expect(dispatch.profile().gaps[0]).toMatchObject({ sessionId: 't1', requestId: 'c1' });
   });
 
   it('keeps two sibling dispatches separable (their overrides never leak)', () => {
@@ -313,25 +268,11 @@ describe('LlmCallContext attribution', () => {
 });
 
 describe('makeLlmCallContext with timing: false', () => {
-  it('is disabled and records no timing but still forwards gaps to onGap', () => {
-    const onGap = vi.fn();
-    const ctx = makeLlmCallContext<TestAttribution, TestGapBody>({ label: 'summarize', timing: false, attribution: { source: 'auto', capability: 'summarize' }, onGap });
+  it('is disabled and records no timing', () => {
+    const ctx = makeLlmCallContext<TestAttribution>({ label: 'summarize', timing: false, attribution: { source: 'auto', capability: 'summarize' } });
     expect(ctx.enabled).toBe(false);
     ctx.time('complete', () => undefined);
     expect(ctx.profile().spans).toEqual([]);
-
-    ctx.gap(missing('RAIN'));
-    expect(onGap).toHaveBeenCalledTimes(1);
-    expect(onGap.mock.calls[0][0]).toMatchObject({ requested: 'RAIN', capability: 'summarize' });
-  });
-
-  it('yields a timing-off child whose gap still forwards', () => {
-    const onGap = vi.fn();
-    const ctx = makeLlmCallContext<TestAttribution, TestGapBody>({ label: 'summarize', timing: false, attribution: { source: 'auto' }, onGap });
-    const child = ctx.child('attempt-1');
-    expect(child.enabled).toBe(false);
-    child.gap(missing('FOG'));
-    expect(onGap).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -369,7 +310,7 @@ describe('LlmCallContext.diag', () => {
 
   it('is NOT timing-gated: a timing-off / noop context still forwards (or safely no-ops)', () => {
     const onDiag = vi.fn();
-    const ctx = makeLlmCallContext<TestAttribution, TestGapBody, TestDiagRecord>({ label: 'summarize', timing: false, attribution: { source: 'auto' }, onDiag });
+    const ctx = makeLlmCallContext<TestAttribution, TestDiagRecord>({ label: 'summarize', timing: false, attribution: { source: 'auto' }, onDiag });
     expect(ctx.enabled).toBe(false);
     ctx.diag({ level: 'warn', code: 'decode-escalate-unset', message: 'no tier' });
     ctx.child('attempt-1').diag({ level: 'warn', code: 'decode-escalate-unset', message: 'no tier' });
@@ -439,14 +380,14 @@ describe('LlmCallContext profile bytes', () => {
     run.detached('bg').time('author', () => undefined);
 
     expect(JSON.stringify(root.profile())).toBe(
-      '{"label":"request","startedAt":0,"totalMs":7,"spans":[{"name":"render","startMs":1,"durationMs":1}],"marks":[],"gaps":[],"children":[{"label":"run","startedAt":3,"totalMs":5,"spans":[],"marks":[],"gaps":[],"diags":[{"level":"info","code":"pin","fields":{"n":1},"message":"pinned"}],"swallows":[{"site":"llm/spec.pin","cause":"x"}],"children":[],"detachedProfiles":[{"label":"bg","startedAt":0,"totalMs":5,"spans":[{"name":"author","startMs":1,"durationMs":1}],"marks":[],"gaps":[],"children":[],"links":[{"path":["request","run"],"sessionId":"t1","requestId":"c1"}]}]}]}'
+      '{"label":"request","startedAt":0,"totalMs":7,"spans":[{"name":"render","startMs":1,"durationMs":1}],"children":[{"label":"run","startedAt":3,"totalMs":5,"spans":[],"diags":[{"level":"info","code":"pin","fields":{"n":1},"message":"pinned"}],"swallows":[{"site":"llm/spec.pin","cause":"x"}],"children":[],"detachedProfiles":[{"label":"bg","startedAt":0,"totalMs":5,"spans":[{"name":"author","startMs":1,"durationMs":1}],"children":[],"links":[{"path":["request","run"],"sessionId":"t1","requestId":"c1"}]}]}]}'
     );
   });
 });
 
 describe('LlmCallContext typing', () => {
   it('a host-typed context is assignable to the defaulted LlmCallContext library code is typed against', () => {
-    const hostContext: LlmCallContext<TestAttribution, TestGapBody, TestDiagRecord> = testContext({ attribution: { source: 'auto' } });
+    const hostContext: LlmCallContext<TestAttribution, TestDiagRecord> = testContext({ attribution: { source: 'auto' } });
     const libraryView: LlmCallContext = hostContext;
 
     expect(libraryView.child('attempt-1').enabled).toBe(true);

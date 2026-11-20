@@ -1,17 +1,16 @@
 /**
  * The **call context** — a request-scoped recorder minted per dispatch (or per larger unit of work) that captures
- * phase timings (spans and marks) as they occur, and forwards three side channels — gaps, breadcrumbs and swallows —
- * to the host's callbacks together with the context's attribution.
+ * phase timings (spans) as they occur, and forwards two side channels — breadcrumbs and swallows — to the host's
+ * callbacks together with the context's attribution.
  *
  * **Recursive by construction.** A context spawns CHILD contexts ({@link LlmCallContext.child}) — request → phase →
  * dispatch → attempt — and each child's {@link LlmCallProfile} nests under its parent's `children`, so a caller reads
- * one nested tree rather than re-basing a flat list. Every span and mark offset is relative to the ROOT start, so a
- * flattened timeline needs no re-basing.
+ * one nested tree rather than re-basing a flat list. Every span offset is relative to the ROOT start, so a flattened
+ * timeline needs no re-basing.
  *
- * **Timing is gated; side channels are not.** A context built with `timing: false` records no spans or marks (its
- * {@link LlmCallContext.enabled} is `false`), yet its {@link LlmCallContext.gap}, {@link LlmCallContext.diag} and
- * {@link LlmCallContext.swallow} still forward to the host's callbacks. The shared {@link noopLlmCallContext} forwards
- * nothing.
+ * **Timing is gated; side channels are not.** A context built with `timing: false` records no spans (its
+ * {@link LlmCallContext.enabled} is `false`), yet its {@link LlmCallContext.diag} and {@link LlmCallContext.swallow}
+ * still forward to the host's callbacks. The shared {@link noopLlmCallContext} forwards nothing.
  *
  * **Three relationships, not one — link, don't parent.** Beside "is the root" and "is a child of" there is
  * {@link LlmCallContext.detached}: a NEW ROOT for work that is CAUSED by a context but NOT temporally contained by it
@@ -27,25 +26,22 @@
  * cross-talk. A detached context is likewise created EXPLICITLY at the scheduling site and handed to the background
  * work — never resolved from ambient context at the point of use.
  *
- * **Host-typed side channels.** Three defaulted type parameters let a host alias its trio once:
+ * **Host-typed side channels.** Two defaulted type parameters let a host alias its pair once:
  *
- * - `A` — the host's ATTRIBUTION (a request id, a tenant, a capability…): merged parent → child, stamped under every
- *   gap, handed to `onDiag` / `onSwallow`, and readable as {@link LlmCallContext.attribution}.
- * - `B` — the host's GAP BODY; a recorded gap is `A & B`.
+ * - `A` — the host's ATTRIBUTION (a request id, a tenant, a capability…): merged parent → child, handed to
+ *   `onDiag` / `onSwallow`, copied onto links by `linkAttributionOf`, and readable as
+ *   {@link LlmCallContext.attribution}.
  * - `D` — the host's breadcrumb record ({@link LlmCallDiagRecord} plus any columns of its own).
+ *
+ * A dispatch reports its gaps through the dispatcher's typed `onGap`, not through the context.
  */
 
 import type { Milliseconds, UnixDateTimeMillisecondsNumber } from '@dereekb/util';
 import { llmSwallowCauseText, type LlmSwallowSiteId } from './llm.swallow';
 
 /**
- * The scalar attributes a span or mark may carry (attempt number, char counts, …).
- */
-export type LlmCallSpanMeta = Readonly<Record<string, string | number | boolean>>;
-
-/**
  * One timed span in an {@link LlmCallProfile} — a named interval with its start OFFSET (relative to the root context's
- * start) and duration, plus optional scalar meta.
+ * start) and duration.
  */
 export interface LlmCallSpan {
   /**
@@ -60,28 +56,6 @@ export interface LlmCallSpan {
    * The span's wall-clock duration.
    */
   readonly durationMs: Milliseconds;
-  /**
-   * Optional scalar attributes.
-   */
-  readonly meta?: LlmCallSpanMeta;
-}
-
-/**
- * One instantaneous mark in an {@link LlmCallProfile} — a named point in time (relative to the root start).
- */
-export interface LlmCallMark {
-  /**
-   * The mark name.
-   */
-  readonly name: string;
-  /**
-   * The mark time, relative to the ROOT context's start.
-   */
-  readonly atMs: Milliseconds;
-  /**
-   * Optional scalar attributes.
-   */
-  readonly meta?: LlmCallSpanMeta;
 }
 
 /**
@@ -164,7 +138,7 @@ export type LlmCallLink<A extends object = object> = {
  * The nested profile of one {@link LlmCallContext} — RECURSIVE: a context's profile nests its children's profiles
  * under {@link children} (offsets relative to the ROOT start, so a flattened timeline needs no re-basing).
  */
-export interface LlmCallProfile<A extends object = object, B extends object = object> {
+export interface LlmCallProfile<A extends object = object> {
   /**
    * The context label.
    */
@@ -182,17 +156,9 @@ export interface LlmCallProfile<A extends object = object, B extends object = ob
    */
   readonly spans: ReadonlyArray<LlmCallSpan>;
   /**
-   * The marks recorded directly on this context.
-   */
-  readonly marks: ReadonlyArray<LlmCallMark>;
-  /**
-   * The gaps recorded directly on this context (via {@link LlmCallContext.gap}).
-   */
-  readonly gaps: ReadonlyArray<A & B>;
-  /**
    * The breadcrumbs recorded directly on this context (via {@link LlmCallContext.diag}) — the in-process read-back of
-   * what a dispatch decided, beside {@link gaps}. OMITTED when none were recorded, so a run that emitted no breadcrumb
-   * keeps a byte-identical profile. Recorded whatever level the host log writes.
+   * what a dispatch decided. OMITTED when none were recorded, so a run that emitted no breadcrumb keeps a
+   * byte-identical profile. Recorded whatever level the host log writes.
    */
   readonly diags?: ReadonlyArray<LlmCallDiag>;
   /**
@@ -204,7 +170,7 @@ export interface LlmCallProfile<A extends object = object, B extends object = ob
   /**
    * The nested profiles of this context's children, in creation order.
    */
-  readonly children: ReadonlyArray<LlmCallProfile<A, B>>;
+  readonly children: ReadonlyArray<LlmCallProfile<A>>;
   /**
    * The CAUSAL links to the context(s) that scheduled this work — present only on a {@link LlmCallContext.detached}
    * root. OMITTED when empty, so a profile that detached nothing stays byte-identical.
@@ -216,7 +182,7 @@ export interface LlmCallProfile<A extends object = object, B extends object = ob
    * falsely nested under this node's timeline. OMITTED when empty, so a profile that detached nothing stays
    * byte-identical.
    */
-  readonly detachedProfiles?: ReadonlyArray<LlmCallProfile<A, B>>;
+  readonly detachedProfiles?: ReadonlyArray<LlmCallProfile<A>>;
 }
 
 /**
@@ -234,13 +200,13 @@ export interface LlmCallContextChildParams<A extends object = object> {
  * Config for {@link makeLlmCallContext}. The callbacks are ROOT callbacks: every child and detached root forwards to
  * them.
  */
-export interface LlmCallContextConfig<A extends object = object, B extends object = object, D extends LlmCallDiagRecord = LlmCallDiagRecord> {
+export interface LlmCallContextConfig<A extends object = object, D extends LlmCallDiagRecord = LlmCallDiagRecord> {
   /**
    * The root context's label (e.g. `'request'`, or the capability for a per-call context).
    */
   readonly label: string;
   /**
-   * Whether spans and marks are recorded. Defaults to `true`; `false` builds a context whose side channels still
+   * Whether spans are recorded. Defaults to `true`; `false` builds a context whose side channels still
    * forward while timing records nothing (its {@link LlmCallContext.enabled} is `false`).
    */
   readonly timing?: boolean;
@@ -252,10 +218,6 @@ export interface LlmCallContextConfig<A extends object = object, B extends objec
    * The root attribution; defaults to `{}`. Children and detached roots merge their own override over it.
    */
   readonly attribution?: A;
-  /**
-   * The root gap sink — receives every recorded gap (attribution merged under the body).
-   */
-  readonly onGap?: (gap: A & B) => void;
   /**
    * The root breadcrumb sink — receives the record untouched plus the context's attribution, so the host stamps its
    * own columns (and applies its own level gate). Absent ⇒ breadcrumbs are recorded into the profile but never
@@ -276,13 +238,13 @@ export interface LlmCallContextConfig<A extends object = object, B extends objec
 }
 
 /**
- * A request-scoped call context — captures spans / marks / gaps / breadcrumbs / swallows and spawns recursive child
- * contexts (see the module doc).
+ * A request-scoped call context — captures spans / breadcrumbs / swallows and spawns recursive child contexts (see
+ * the module doc).
  *
  * The members are METHODS, so a host's narrower context stays assignable to the defaulted `LlmCallContext` that
  * library code is typed against.
  */
-export interface LlmCallContext<A extends object = object, B extends object = object, D extends LlmCallDiagRecord = LlmCallDiagRecord> {
+export interface LlmCallContext<A extends object = object, D extends LlmCallDiagRecord = LlmCallDiagRecord> {
   /**
    * `false` on the shared no-op and on a `timing: false` context — callers gate payload emission on it, never by
    * branching call sites.
@@ -294,32 +256,23 @@ export interface LlmCallContext<A extends object = object, B extends object = ob
    */
   readonly attribution: A;
   /**
-   * Record an instantaneous mark (no-op when timing is off).
-   *
-   * @param name - The mark name.
-   * @param meta - Optional scalar attributes.
-   */
-  mark(name: string, meta?: LlmCallSpanMeta): void;
-  /**
    * Time a synchronous `run`, recording a span around it (the value is returned unchanged; the span is still recorded
    * on throw). When timing is off, `run` is executed with no recording.
    *
    * @param name - The span name.
    * @param run - The synchronous work.
-   * @param meta - Optional scalar attributes.
    * @returns The value `run` returned.
    */
-  time<T>(name: string, run: () => T, meta?: LlmCallSpanMeta): T;
+  time<T>(name: string, run: () => T): T;
   /**
    * Time an async `run`, recording a span around it (the span closes on both resolve AND reject). When timing is off,
    * `run` is awaited with no recording.
    *
    * @param name - The span name.
    * @param run - The async work.
-   * @param meta - Optional scalar attributes.
    * @returns The value `run` resolved to.
    */
-  timeAsync<T>(name: string, run: () => Promise<T>, meta?: LlmCallSpanMeta): Promise<T>;
+  timeAsync<T>(name: string, run: () => Promise<T>): Promise<T>;
   /**
    * RECURSIVELY create a child context whose profile nests under this one's {@link LlmCallProfile.children} and whose
    * side channels forward to the ROOT callbacks. Inherits the clock, the timing flag and the attribution (the child's
@@ -329,14 +282,14 @@ export interface LlmCallContext<A extends object = object, B extends object = ob
    * @param params - The optional attribution override.
    * @returns The child context.
    */
-  child(label: string, params?: LlmCallContextChildParams<A>): LlmCallContext<A, B, D>;
+  child(label: string, params?: LlmCallContextChildParams<A>): LlmCallContext<A, D>;
   /**
    * Create a DETACHED context — a NEW ROOT for work that is CAUSED by this context but NOT temporally contained by it.
    *
    * Unlike {@link child}: it anchors its OWN start (so offsets are meaningful for work that begins after the scheduling
    * work ended) and it is NOT nested under {@link LlmCallProfile.children}. Like {@link child}: it inherits the clock,
-   * the timing flag, the ROOT callbacks and the merged attribution — so the detached work's gaps are never lost and its
-   * ids still join the origin on read.
+   * the timing flag, the ROOT callbacks and the merged attribution — so the detached work's breadcrumbs and swallows
+   * are never lost and its ids still join the origin on read.
    *
    * It records exactly ONE {@link LlmCallLink}, naming THIS context (its label path plus what `linkAttributionOf`
    * copies from its attribution). Reachable from here via the sibling {@link LlmCallProfile.detachedProfiles} bucket,
@@ -347,16 +300,7 @@ export interface LlmCallContext<A extends object = object, B extends object = ob
    * @param params - The optional attribution override.
    * @returns The detached root context.
    */
-  detached(label: string, params?: LlmCallContextChildParams<A>): LlmCallContext<A, B, D>;
-  /**
-   * THE gap call — record something the work came up short on. Stamps the context's attribution UNDER the partial
-   * `attribution` override and the body (`{ ...attribution, ...override, ...body }`), records it into the profile,
-   * and forwards it to the root `onGap`. ALWAYS forwards, even when {@link enabled} is `false`.
-   *
-   * @param body - The gap body.
-   * @param attribution - The partial attribution override (merged OVER the context's).
-   */
-  gap(body: B, attribution?: Partial<A>): void;
+  detached(label: string, params?: LlmCallContextChildParams<A>): LlmCallContext<A, D>;
   /**
    * THE breadcrumb call — record one leveled breadcrumb. Records its {@link LlmCallDiag} payload into the profile,
    * then forwards the record UNTOUCHED to the root `onDiag` with the context's attribution, so a host joins the
@@ -382,16 +326,16 @@ export interface LlmCallContext<A extends object = object, B extends object = ob
    *
    * @returns The nested profile.
    */
-  profile(): LlmCallProfile<A, B>;
+  profile(): LlmCallProfile<A>;
 }
 
 /**
  * The internal build inputs — the public config resolved into the recursive-tree vocabulary (clock, root start, path,
  * timing flag) child contexts thread down.
  */
-interface LlmCallContextInternal<A extends object, B extends object, D extends LlmCallDiagRecord> {
+interface LlmCallContextInternal<A extends object, D extends LlmCallDiagRecord> {
   /**
-   * Whether timing is captured (spans / marks recorded).
+   * Whether timing is captured (spans recorded).
    */
   readonly enabled: boolean;
   /**
@@ -410,10 +354,6 @@ interface LlmCallContextInternal<A extends object, B extends object, D extends L
    * The ROOT context's start (absolute) — omitted on a root itself (it uses its own start).
    */
   readonly rootStartMs?: UnixDateTimeMillisecondsNumber;
-  /**
-   * The shared root gap sink.
-   */
-  readonly onGap?: (gap: A & B) => void;
   /**
    * The shared root breadcrumb sink.
    */
@@ -444,29 +384,26 @@ interface LlmCallContextInternal<A extends object, B extends object, D extends L
  * @param internal - The resolved build inputs.
  * @returns The context node.
  */
-function buildLlmCallContext<A extends object, B extends object, D extends LlmCallDiagRecord>(internal: LlmCallContextInternal<A, B, D>): LlmCallContext<A, B, D> {
-  const { enabled, label, path, now, onGap, onDiag, onSwallow, linkAttributionOf, attribution, links } = internal;
+function buildLlmCallContext<A extends object, D extends LlmCallDiagRecord>(internal: LlmCallContextInternal<A, D>): LlmCallContext<A, D> {
+  const { enabled, label, path, now, onDiag, onSwallow, linkAttributionOf, attribution, links } = internal;
   const startMs = now();
   const rootStartMs = internal.rootStartMs ?? startMs;
   const spans: LlmCallSpan[] = [];
-  const marks: LlmCallMark[] = [];
-  const gaps: (A & B)[] = [];
   const diags: LlmCallDiag[] = [];
   const swallows: LlmCallSwallow[] = [];
-  const children: LlmCallContext<A, B, D>[] = [];
+  const children: LlmCallContext<A, D>[] = [];
   // The DETACHED roots this node scheduled — held apart from `children` so they stay reachable from here without
   // being nested into anyone's timeline (see the module doc's third relationship).
-  const detachedRoots: LlmCallContext<A, B, D>[] = [];
+  const detachedRoots: LlmCallContext<A, D>[] = [];
 
-  const closeSpan = (name: string, start: UnixDateTimeMillisecondsNumber, meta?: LlmCallSpanMeta): void => {
-    const span: LlmCallSpan = { name, startMs: start - rootStartMs, durationMs: now() - start, ...(meta == null ? {} : { meta }) };
+  const closeSpan = (name: string, start: UnixDateTimeMillisecondsNumber): void => {
+    const span: LlmCallSpan = { name, startMs: start - rootStartMs, durationMs: now() - start };
     spans.push(span);
   };
 
   // The shared callbacks every child and detached root inherits from the root.
   const sinks = {
     now,
-    ...(onGap == null ? {} : { onGap }),
     ...(onDiag == null ? {} : { onDiag }),
     ...(onSwallow == null ? {} : { onSwallow }),
     ...(linkAttributionOf == null ? {} : { linkAttributionOf })
@@ -475,13 +412,7 @@ function buildLlmCallContext<A extends object, B extends object, D extends LlmCa
   return {
     enabled,
     attribution,
-    mark(name, meta) {
-      if (enabled) {
-        const mark: LlmCallMark = { name, atMs: now() - rootStartMs, ...(meta == null ? {} : { meta }) };
-        marks.push(mark);
-      }
-    },
-    time(name, run, meta) {
+    time(name, run) {
       let result: ReturnType<typeof run>;
 
       if (enabled) {
@@ -490,7 +421,7 @@ function buildLlmCallContext<A extends object, B extends object, D extends LlmCa
         try {
           result = run();
         } finally {
-          closeSpan(name, start, meta);
+          closeSpan(name, start);
         }
       } else {
         result = run();
@@ -498,7 +429,7 @@ function buildLlmCallContext<A extends object, B extends object, D extends LlmCa
 
       return result;
     },
-    async timeAsync(name, run, meta) {
+    async timeAsync(name, run) {
       let result: Awaited<ReturnType<typeof run>>;
 
       if (enabled) {
@@ -507,7 +438,7 @@ function buildLlmCallContext<A extends object, B extends object, D extends LlmCa
         try {
           result = await run();
         } finally {
-          closeSpan(name, start, meta);
+          closeSpan(name, start);
         }
       } else {
         result = await run();
@@ -516,7 +447,7 @@ function buildLlmCallContext<A extends object, B extends object, D extends LlmCa
       return result;
     },
     child(childLabel, params) {
-      const child = buildLlmCallContext<A, B, D>({
+      const child = buildLlmCallContext<A, D>({
         enabled,
         label: childLabel,
         path: [...path, childLabel],
@@ -530,7 +461,7 @@ function buildLlmCallContext<A extends object, B extends object, D extends LlmCa
     detached(detachedLabel, params) {
       // The one link: THIS context's path plus the ids the host keeps for joining back.
       const selfLink = { path, ...linkAttributionOf?.(attribution) } as LlmCallLink<A>;
-      const detachedRoot = buildLlmCallContext<A, B, D>({
+      const detachedRoot = buildLlmCallContext<A, D>({
         enabled,
         label: detachedLabel,
         path: [detachedLabel],
@@ -542,11 +473,6 @@ function buildLlmCallContext<A extends object, B extends object, D extends LlmCa
       });
       detachedRoots.push(detachedRoot);
       return detachedRoot;
-    },
-    gap(body, override) {
-      const gap = { ...attribution, ...override, ...body } as A & B;
-      gaps.push(gap);
-      onGap?.(gap);
     },
     diag(record) {
       // The PAYLOAD half (what the profile reads) is projected apart from the record, so the in-process
@@ -574,10 +500,8 @@ function buildLlmCallContext<A extends object, B extends object, D extends LlmCa
         label,
         startedAt: startMs - rootStartMs,
         totalMs: now() - startMs,
-        // copies: spans and marks are pushed closed, so a shallow copy is a true snapshot
+        // copies: spans are pushed closed, so a shallow copy is a true snapshot
         spans: [...spans],
-        marks: [...marks],
-        gaps: [...gaps],
         ...(diags.length === 0 ? {} : { diags: [...diags] }),
         ...(swallows.length === 0 ? {} : { swallows: [...swallows] }),
         children: children.map((child) => child.profile()),
@@ -589,9 +513,9 @@ function buildLlmCallContext<A extends object, B extends object, D extends LlmCa
 }
 
 /**
- * Build a call context. With timing on (the default) it records spans and marks into a nested profile; with
- * `timing: false` its {@link LlmCallContext.enabled} is `false` and timing records nothing, while its gaps,
- * breadcrumbs and swallows still forward to the host's callbacks. Children and detached roots inherit the clock, the
+ * Build a call context. With timing on (the default) it records spans into a nested profile; with `timing: false` its
+ * {@link LlmCallContext.enabled} is `false` and timing records nothing, while its breadcrumbs and swallows still
+ * forward to the host's callbacks. Children and detached roots inherit the clock, the
  * timing flag and the callbacks.
  *
  * @param config - The label, timing flag, clock, root attribution and the host's callbacks.
@@ -610,13 +534,12 @@ function buildLlmCallContext<A extends object, B extends object, D extends LlmCa
  * ```
  * @__NO_SIDE_EFFECTS__
  */
-export function makeLlmCallContext<A extends object = object, B extends object = object, D extends LlmCallDiagRecord = LlmCallDiagRecord>(config: LlmCallContextConfig<A, B, D>): LlmCallContext<A, B, D> {
-  return buildLlmCallContext<A, B, D>({
+export function makeLlmCallContext<A extends object = object, D extends LlmCallDiagRecord = LlmCallDiagRecord>(config: LlmCallContextConfig<A, D>): LlmCallContext<A, D> {
+  return buildLlmCallContext<A, D>({
     enabled: config.timing ?? true,
     label: config.label,
     path: [config.label],
     now: config.now ?? (() => Date.now()),
-    ...(config.onGap == null ? {} : { onGap: config.onGap }),
     ...(config.onDiag == null ? {} : { onDiag: config.onDiag }),
     ...(config.onSwallow == null ? {} : { onSwallow: config.onSwallow }),
     ...(config.linkAttributionOf == null ? {} : { linkAttributionOf: config.linkAttributionOf }),
@@ -630,9 +553,6 @@ export function makeLlmCallContext<A extends object = object, B extends object =
 const NOOP_LLM_CALL_CONTEXT: LlmCallContext = {
   enabled: false,
   attribution: {},
-  mark() {
-    // no-op
-  },
   time(_name, run) {
     return run();
   },
@@ -645,9 +565,6 @@ const NOOP_LLM_CALL_CONTEXT: LlmCallContext = {
   detached() {
     return NOOP_LLM_CALL_CONTEXT;
   },
-  gap() {
-    // no-op — the no-op context has no gap sink
-  },
   diag() {
     // no-op — the no-op context has no breadcrumb sink
   },
@@ -655,7 +572,7 @@ const NOOP_LLM_CALL_CONTEXT: LlmCallContext = {
     // no-op — the no-op context has no swallow sink
   },
   profile() {
-    return { label: '(noop)', startedAt: 0, totalMs: 0, spans: [], marks: [], gaps: [], children: [] };
+    return { label: '(noop)', startedAt: 0, totalMs: 0, spans: [], children: [] };
   }
 };
 
@@ -669,6 +586,6 @@ const NOOP_LLM_CALL_CONTEXT: LlmCallContext = {
  *
  * @returns The shared no-op context.
  */
-export function noopLlmCallContext<A extends object = object, B extends object = object, D extends LlmCallDiagRecord = LlmCallDiagRecord>(): LlmCallContext<A, B, D> {
-  return NOOP_LLM_CALL_CONTEXT as unknown as LlmCallContext<A, B, D>;
+export function noopLlmCallContext<A extends object = object, D extends LlmCallDiagRecord = LlmCallDiagRecord>(): LlmCallContext<A, D> {
+  return NOOP_LLM_CALL_CONTEXT as unknown as LlmCallContext<A, D>;
 }

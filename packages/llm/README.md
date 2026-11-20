@@ -133,9 +133,11 @@ What a dispatcher records about each call, and the seams a host observes it thro
   [Readers, ledger and reconcile](#readers-ledger-and-reconcile)). Each placed or cut supplement row
   (`LlmCallSupplement`) carries a `hash` and a `bytes` size; `bytes` counts UTF-16 code units (`.length`), not bytes,
   and keeps its name because the row is persisted (as does the craft cut reason `'max-bytes'`).
-- **Call context.** `makeLlmCallContext` records spans, marks, children and detached roots into a nested profile;
-  gaps, breadcrumbs and swallows go to the host's callbacks with the context's attribution, timing on or off.
-  `noopLlmCallContext()` is the shared do-nothing context.
+- **Call context.** `makeLlmCallContext` times spans (`time` / `timeAsync`) into a nested profile of `child`
+  contexts; `detached` starts a new root for work a context schedules but does not contain (it records one link to
+  its origin and lands in the origin's `detachedProfiles`, never in `children`). Breadcrumbs (`diag`) and swallows go
+  to the host's `onDiag` / `onSwallow` with the context's attribution, timing on or off. A dispatch reports its gaps
+  through the dispatcher's `onGap`, not through the context. `noopLlmCallContext()` is the shared do-nothing context.
 - **Taps.** `makeLlmDispatchTapRegistry` is a read-only observation seam: a tap that throws is counted in `health()`,
   never propagated. A tap may return any thenable; its rejection counts as an async failure. `makeLlmDispatchCollector` keeps every event.
 - **Swallow sites.** `LlmSwallowSink`, the declaration vocabulary, `LLM_SWALLOW_SITES` (the library's declared
@@ -159,7 +161,7 @@ const context = makeLlmCallContext<RequestAttribution>({
 });
 
 await context.child('attempt-1').timeAsync('complete', () => strategy.complete(request));
-const profile = context.profile(); // nested spans, marks, breadcrumbs and swallows
+const profile = context.profile(); // nested spans, breadcrumbs and swallows
 ```
 
 ```ts

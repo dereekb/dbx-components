@@ -81,8 +81,6 @@ describe('toLlmCallPhases()', () => {
         { name: 'render', startMs: 0, durationMs: 2 },
         { name: 'assemble', startMs: 2, durationMs: 3 }
       ],
-      marks: [],
-      gaps: [],
       children: []
     };
     const phases = toLlmCallPhases({ profile, attemptPhases: [{ attempt: 1, wallMs: 20 }], request: { prompt: 'abcdef', cacheSegments: { cachePrefix: 'abc', volatileSuffix: 'def' } as never }, cachePrefixHash: 'h' });
