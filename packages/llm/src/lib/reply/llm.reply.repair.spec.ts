@@ -22,16 +22,16 @@ describe('repairLlmReplyJson()', () => {
 
   it('takes the coverage check over the object under the envelope value key', () => {
     // The rationale is dropped by a value-only repair; it sits outside the object under the value key, so the coverage check never counts it.
-    const text = '{"answerable":true,"rationale":"The basket holds the seventh item now.","lever":{"note":"I will put the seventh item in the bulk bin"}';
+    const text = '{"answerable":true,"rationale":"The basket holds the seventh item now.","value":{"note":"I will put the seventh item in the bulk bin"}';
     const result = repairLlmReplyJson(text, { envelope: DEFAULT_LLM_REPLY_ENVELOPE_KEYS });
     expect(result.shape.verdict).toBe('near-miss');
-    expect(llmReplyRepairFidelity({ original: text, repaired: result.repaired!.value.lever, envelope: DEFAULT_LLM_REPLY_ENVELOPE_KEYS })).toEqual({ ok: true, invented: [], coverage: 1, checked: 1 });
+    expect(llmReplyRepairFidelity({ original: text, repaired: result.repaired!.value['value'], envelope: DEFAULT_LLM_REPLY_ENVELOPE_KEYS })).toEqual({ ok: true, invented: [], coverage: 1, checked: 1 });
     expect(scoreLlmReplyJson(text, { envelope: DEFAULT_LLM_REPLY_ENVELOPE_KEYS })).toEqual(result.shape);
   });
 });
 
 describe('llmReplyRepairFidelity()', () => {
-  const original = '{"answerable":true,"rationale":"The basket holds the seventh item now.","lever":{"orderId":643,"note":"I will put the seventh item in the bulk bin","items":[{"sku":"tote-01","qty":2},{"sku":"mug-07","qty":1}]}}';
+  const original = '{"answerable":true,"rationale":"The basket holds the seventh item now.","value":{"orderId":643,"note":"I will put the seventh item in the bulk bin","items":[{"sku":"tote-01","qty":2},{"sku":"mug-07","qty":1}]}}';
   const items = [
     { sku: 'tote-01', qty: 2 },
     { sku: 'mug-07', qty: 1 }

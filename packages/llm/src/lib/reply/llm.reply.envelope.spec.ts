@@ -12,8 +12,8 @@ describe('readLlmReply(): the json reading (no envelope)', () => {
   });
 
   it('never unwraps an envelope-shaped reply and never declines', () => {
-    const reading = readLlmReply('{"answerable":true,"lever":{"ok":true}}');
-    expect(reading.kind === 'value' && reading.value).toEqual({ answerable: true, lever: { ok: true } });
+    const reading = readLlmReply('{"answerable":true,"value":{"ok":true}}');
+    expect(reading.kind === 'value' && reading.value).toEqual({ answerable: true, value: { ok: true } });
 
     const declining = readLlmReply('{"answerable":false}');
     expect(declining.kind === 'value' && declining.value).toEqual({ answerable: false });
@@ -42,7 +42,7 @@ describe('readLlmReply(): the json reading (no envelope)', () => {
 
 describe('readLlmReply(): the envelope reading', () => {
   it('unwraps the value key', () => {
-    const reading = readLlmReply('{"answerable":true,"lever":{"ok":true}}', ENVELOPE);
+    const reading = readLlmReply('{"answerable":true,"value":{"ok":true}}', ENVELOPE);
     expect(reading.kind === 'value' && reading.value).toEqual({ ok: true });
   });
 
@@ -55,7 +55,7 @@ describe('readLlmReply(): the envelope reading', () => {
   });
 
   it('keeps the value of a hedged decline', () => {
-    const reading = readLlmReply('{"answerable":false,"rationale":"no matching product","lever":{"kind":"question","tokens":[]}}', ENVELOPE);
+    const reading = readLlmReply('{"answerable":false,"rationale":"no matching product","value":{"kind":"question","tokens":[]}}', ENVELOPE);
     expect(reading.kind).toBe('declined');
     expect(reading.kind === 'declined' && reading.value).toEqual({ kind: 'question', tokens: [] });
   });
@@ -64,7 +64,7 @@ describe('readLlmReply(): the envelope reading', () => {
     const reading = readLlmReply('{"answerable": false}', ENVELOPE);
     expect(reading.kind === 'declined' && reading.value).toBeUndefined();
 
-    const nonObject = readLlmReply('{"answerable": false, "lever": "none"}', ENVELOPE);
+    const nonObject = readLlmReply('{"answerable": false, "value": "none"}', ENVELOPE);
     expect(nonObject.kind === 'declined' && nonObject.value).toBeUndefined();
   });
 
@@ -85,8 +85,8 @@ describe('readLlmReply(): custom envelope keys', () => {
   });
 
   it('does not unwrap a value key under other keys', () => {
-    const reading = readLlmReply('{"lever":{"title":"tote"}}', { envelope: keys });
-    expect(reading.kind === 'value' && reading.value).toEqual({ lever: { title: 'tote' } });
+    const reading = readLlmReply('{"value":{"title":"tote"}}', { envelope: keys });
+    expect(reading.kind === 'value' && reading.value).toEqual({ value: { title: 'tote' } });
   });
 });
 
@@ -96,7 +96,7 @@ describe('readLlmReply(): the trailing-brace over-emit (the layered balanced fal
    * parse; the balanced scan rescues the object.
    */
   const TRAILING_BRACE_REPLY =
-    '{"answerable":true,"rationale":"Two new products are declared with their materials; nothing else remains.","lever":{"products":[{"mode":"create","name":"alpha","parts":[{"aspect":"material","fragment":"waxed canvas"},{"aspect":"price","fragment":"24 dollars"}]},{"mode":"create","name":"beta","parts":[{"aspect":"material","fragment":"recycled nylon"}]}],"leftovers":[]}}}';
+    '{"answerable":true,"rationale":"Two new products are declared with their materials; nothing else remains.","value":{"products":[{"mode":"create","name":"alpha","parts":[{"aspect":"material","fragment":"waxed canvas"},{"aspect":"price","fragment":"24 dollars"}]},{"mode":"create","name":"beta","parts":[{"aspect":"material","fragment":"recycled nylon"}]}],"leftovers":[]}}}';
 
   it('reads the over-emit as a value with both products intact', () => {
     const reading = readLlmReply(TRAILING_BRACE_REPLY, ENVELOPE);
@@ -137,11 +137,11 @@ describe('readLlmReply(): the trailing-brace over-emit (the layered balanced fal
   });
 
   it('keeps every greedy-readable shape on its greedy reading', () => {
-    expect(readLlmReply('{"answerable":true,"lever":{"ok":true}}', ENVELOPE).kind).toBe('value');
+    expect(readLlmReply('{"answerable":true,"value":{"ok":true}}', ENVELOPE).kind).toBe('value');
     expect(readLlmReply('{"items":[]}', ENVELOPE).kind).toBe('value');
     expect(readLlmReply('Sure!\n```json\n{"ok": true}\n```', ENVELOPE).kind).toBe('value');
     expect(readLlmReply('{"answerable": false}', ENVELOPE).kind).toBe('declined');
-    expect(readLlmReply('{"answerable":false,"lever":{"kind":"question"}}', ENVELOPE).kind).toBe('declined');
+    expect(readLlmReply('{"answerable":false,"value":{"kind":"question"}}', ENVELOPE).kind).toBe('declined');
     expect(readLlmReply('here is only prose, no json', ENVELOPE).kind).toBe('no-json');
     expect(readLlmReply(`{"products": ["${'\t'.repeat(200)}`, ENVELOPE).kind).toBe('no-json');
     expect(readLlmReply('{"a": 1,}', ENVELOPE).kind).toBe('parse-error');
@@ -184,7 +184,7 @@ describe('readLlmDispatchResultReply()', () => {
 
   it('reads an unstamped result as the json reading of its text', () => {
     expect(readLlmDispatchResultReply({ text: 'Sure: {"a":1}' })).toEqual({ kind: 'value', value: { a: 1 } });
-    expect(readLlmDispatchResultReply({ text: '{"lever":{"a":1}}' })).toEqual({ kind: 'value', value: { lever: { a: 1 } } });
+    expect(readLlmDispatchResultReply({ text: '{"value":{"a":1}}' })).toEqual({ kind: 'value', value: { value: { a: 1 } } });
     expect(readLlmDispatchResultReply({ text: 'prose' })).toEqual({ kind: 'no-json' });
   });
 
@@ -205,17 +205,17 @@ describe('readLlmReplyValue()', () => {
   });
 
   it('returns undefined for a hedged decline', () => {
-    expect(readLlmReplyValue('{"answerable":false,"lever":{"kind":"question","tokens":[]}}', ENVELOPE)).toBeUndefined();
+    expect(readLlmReplyValue('{"answerable":false,"value":{"kind":"question","tokens":[]}}', ENVELOPE)).toBeUndefined();
   });
 });
 
 describe('readLlmReplyRationale()', () => {
   it('reads the rationale of a declining reply', () => {
-    expect(readLlmReplyRationale('{"answerable":false,"rationale":"No product in the catalog matches \'tote\'","lever":{}}')).toBe("No product in the catalog matches 'tote'");
+    expect(readLlmReplyRationale('{"answerable":false,"rationale":"No product in the catalog matches \'tote\'","value":{}}')).toBe("No product in the catalog matches 'tote'");
   });
 
   it('trims it, and tolerates surrounding prose / a code fence', () => {
-    expect(readLlmReplyRationale('Sure!\n```json\n{"answerable":true,"rationale":"  a reason  ","lever":{}}\n```')).toBe('a reason');
+    expect(readLlmReplyRationale('Sure!\n```json\n{"answerable":true,"rationale":"  a reason  ","value":{}}\n```')).toBe('a reason');
   });
 
   it('returns undefined for a bare value, bare prose, and a blank / non-string rationale', () => {
@@ -250,14 +250,14 @@ describe('readLlmLineReplyValue()', () => {
 
   it('unwraps and declines only with an envelope', () => {
     expect(readLlmLineReplyValue('{"answerable":false}', ENVELOPE)).toBeUndefined();
-    expect(readLlmLineReplyValue('{"lever":{"line":"x"}}', ENVELOPE)).toEqual({ line: 'x' });
-    expect(readLlmLineReplyValue('{"lever":{"line":"x"}}')).toBeUndefined();
+    expect(readLlmLineReplyValue('{"value":{"line":"x"}}', ENVELOPE)).toEqual({ line: 'x' });
+    expect(readLlmLineReplyValue('{"value":{"line":"x"}}')).toBeUndefined();
   });
 });
 
 describe('llmReplyEnvelopeContractIntro()', () => {
   it('names the default value key', () => {
-    expect(llmReplyEnvelopeContractIntro()).toBe('Return the `lever` as a JSON object with these fields:');
+    expect(llmReplyEnvelopeContractIntro()).toBe('Return the `value` as a JSON object with these fields:');
   });
 
   it('names a custom value key', () => {

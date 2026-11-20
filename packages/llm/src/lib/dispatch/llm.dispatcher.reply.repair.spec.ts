@@ -318,8 +318,8 @@ describe('makeLlmDispatcher() reply repair', () => {
       const strategy = makeLlmScriptedStrategy({
         id: 's',
         byCapability: {
-          TestCap: ['{"answerable":true,"lever":{"say":"first"}}', '{"answerable":true,"lever":{"say":"second"}}'],
-          [LLM_CRITIQUE_REPLY_CAPABILITY]: ['{"answerable":true,"lever":{"pass":false,"feedback":"name the tote"}}', '{"answerable":true,"lever":{"pass":true}}']
+          TestCap: ['{"answerable":true,"value":{"say":"first"}}', '{"answerable":true,"value":{"say":"second"}}'],
+          [LLM_CRITIQUE_REPLY_CAPABILITY]: ['{"answerable":true,"value":{"pass":false,"feedback":"name the tote"}}', '{"answerable":true,"value":{"pass":true}}']
         },
         requests
       });

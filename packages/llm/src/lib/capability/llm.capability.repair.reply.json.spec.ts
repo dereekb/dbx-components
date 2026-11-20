@@ -131,7 +131,7 @@ describe('makeLlmReplyFastFixer()', () => {
     const fixer = makeLlmReplyFastFixer();
 
     await expect(fixer(fixInput(fakeFixDispatch({ text: '{"answerable":false}', decodeStatus: 'clean' }).dispatch))).resolves.toEqual({ kind: 'missed', reason: 'declined' });
-    await expect(fixer(fixInput(fakeFixDispatch({ text: JSON.stringify({ answerable: true, lever: BROKEN.expected }), valueJson: JSON.stringify(BROKEN.expected), decodeStatus: 'clean' }).dispatch))).resolves.toEqual({ kind: 'fixed', value: BROKEN.expected, text: JSON.stringify(BROKEN.expected) });
+    await expect(fixer(fixInput(fakeFixDispatch({ text: JSON.stringify({ answerable: true, value: BROKEN.expected }), valueJson: JSON.stringify(BROKEN.expected), decodeStatus: 'clean' }).dispatch))).resolves.toEqual({ kind: 'fixed', value: BROKEN.expected, text: JSON.stringify(BROKEN.expected) });
     await expect(fixer(fixInput(fakeFixDispatch({ text: '', decodeStatus: 'dropped' }).dispatch))).resolves.toEqual({ kind: 'missed', reason: 'unusable' });
   });
 

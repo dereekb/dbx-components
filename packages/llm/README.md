@@ -705,10 +705,10 @@ nearly parses, validated against the capability's schema, and optionally judged 
 descriptor also carries the two schema projections the request and the prompt read.
 
 - **Protocols and reading.** The decoded reply payload is the reply's **value**. `json`: the parsed object is the
-  value, never unwrapped and never declined. `json-envelope`: `LlmReplyEnvelopeKeys` (`value` / `answerable` /
-  `rationale`; the default value key is `lever`); `answerable: false` declines, a hedged decline keeps its value, and a
-  bare object reads as the value. `line`: `readLlmLineReplyValue` lifts the bare
-  line into `{ line }`. `readLlmReply` classifies `value` / `declined` / `no-json` / `parse-error`; `readLlmReplyValue`
+  value, never unwrapped and never declined. `json-envelope`: `LlmReplyEnvelopeKeys` (default `value` /
+  `answerable` / `rationale`; a host that kept `lever` passes `{ value: 'lever', … }`); `answerable: false` declines,
+  a hedged decline keeps its value, and a bare object reads as the value. `line`: `readLlmLineReplyValue` lifts the
+  bare line into `{ line }`. `readLlmReply` classifies `value` / `declined` / `no-json` / `parse-error`; `readLlmReplyValue`
   is the thin wrapper and `readLlmReplyRationale` reads the rationale. The slicer is `@dereekb/util`
   `readJsonObjectFromText`: it tries the greedy `{…}` slice, then each balanced top-level object, and never invents a
   brace. An envelope host passes `llmReplyEnvelopeContractIntro(keys)` as its contract intro.

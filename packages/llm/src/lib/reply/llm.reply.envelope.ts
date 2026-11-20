@@ -54,9 +54,10 @@ export interface LlmReplyEnvelopeKeys {
 }
 
 /**
- * The default envelope keys — `lever`, `answerable` and `rationale`.
+ * The default envelope keys — `value`, `answerable` and `rationale`. A host that kept the old `lever` key passes
+ * `{ value: 'lever', answerable: 'answerable', rationale: 'rationale' }` as its own keys.
  */
-export const DEFAULT_LLM_REPLY_ENVELOPE_KEYS: LlmReplyEnvelopeKeys = { value: 'lever', answerable: 'answerable', rationale: 'rationale' };
+export const DEFAULT_LLM_REPLY_ENVELOPE_KEYS: LlmReplyEnvelopeKeys = { value: 'value', answerable: 'answerable', rationale: 'rationale' };
 
 /**
  * The default single value field a `line` reply lifts into.
@@ -246,7 +247,7 @@ export function resolveLlmReplyReadingEnvelope(protocol: LlmReplyProtocol, envel
  *
  * @example
  * ```ts
- * readLlmDispatchResultReply({ text: '{"lever":{"a":1}}', valueJson: '{"a":1}', decodeStatus: 'clean' }); // { kind: 'value', value: { a: 1 } }
+ * readLlmDispatchResultReply({ text: '{"value":{"a":1}}', valueJson: '{"a":1}', decodeStatus: 'clean' }); // { kind: 'value', value: { a: 1 } }
  * readLlmDispatchResultReply({ text: 'no', decodeStatus: 'dropped' }); // { kind: 'no-json' }
  * ```
  */
