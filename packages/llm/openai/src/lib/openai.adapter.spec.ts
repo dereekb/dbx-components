@@ -1,19 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { type ConfiguredFetch } from '@dereekb/util/fetch';
+import { makeLlmFetchFake } from '@dereekb/llm/test';
 import { readLlmModelConfigLists, makeLlmAdapterRegistry, makeLlmProviderStrategy, type LlmAdapterConfig, type LlmCompletionAdapterConfig, type LlmCredentialProbeAdapter, type LlmMeteringAdapter, type LlmProviderConfig } from '@dereekb/llm';
 import { LLM_OPENAI_ADAPTERS, LLM_OPENAI_COMPLETION_ADAPTER, toLlmOpenAiStrategyConfig } from './openai.adapter';
 
 const PROVIDER: LlmProviderConfig = { id: 'gateway-a', transport: 'openai', apiKeyEnv: 'GATEWAY_KEY', apiKey: 'k' };
-
-function recordingFetch() {
-  const calls: string[] = [];
-  const fetch: ConfiguredFetch = async (input) => {
-    const url = String(input);
-    calls.push(url);
-    return new Response('{"data":[]}', { status: 200 });
-  };
-  return { fetch, calls };
-}
 
 describe('LLM_OPENAI_COMPLETION_ADAPTER', () => {
   it('declares the openai completion transport and its default base URL', () => {
@@ -33,7 +23,7 @@ describe('toLlmOpenAiStrategyConfig()', () => {
   });
 
   it('maps every input', () => {
-    const { fetch } = recordingFetch();
+    const { fetch } = makeLlmFetchFake({ body: '{"data":[]}' });
     const providerStatusSource = { providerId: 'meter', read: async () => ({ providerId: 'meter', available: true, windows: [], issues: [] }) };
     const credentialProbe = async () => ({ ready: true, issues: [] });
     const config: LlmCompletionAdapterConfig = {
@@ -72,18 +62,18 @@ describe('toLlmOpenAiStrategyConfig()', () => {
 
 describe('makeLlmProviderStrategy() with LLM_OPENAI_ADAPTERS', () => {
   it('builds the openai strategy under the provider id', async () => {
-    const { fetch, calls } = recordingFetch();
+    const { fetch, requests } = makeLlmFetchFake({ body: '{"data":[]}' });
     const strategy = makeLlmProviderStrategy({ provider: PROVIDER, adapters: makeLlmAdapterRegistry(LLM_OPENAI_ADAPTERS), defaultModel: 'vendor/model-flash', fetch });
 
     expect(strategy.id).toBe('gateway-a');
     expect(strategy.kind).toBe('openai');
     expect(strategy.caching).toBe('auto-prefix');
     await expect(strategy.credentialProbe?.()).resolves.toEqual({ ready: true, issues: [] });
-    expect(calls).toEqual(['https://api.openai.com/v1/models']);
+    expect(requests.map((request) => request.url)).toEqual(['https://api.openai.com/v1/models']);
   });
 
   it("wires an account's metering and credential probe adapters through the openai strategy", async () => {
-    const { fetch, calls } = recordingFetch();
+    const { fetch, requests } = makeLlmFetchFake({ body: '{"data":[]}' });
     const probed: LlmAdapterConfig[] = [];
     const metering: LlmMeteringAdapter = {
       facet: 'metering',
@@ -106,6 +96,6 @@ describe('makeLlmProviderStrategy() with LLM_OPENAI_ADAPTERS', () => {
     await expect(strategy.providerStatus?.()).resolves.toMatchObject({ providerId: 'zenmux', available: true });
     await expect(strategy.credentialProbe?.()).resolves.toEqual({ ready: true, issues: [{ severity: 'warning', message: 'probed by the account' }] });
     expect(probed).toHaveLength(1);
-    expect(calls).toEqual([]);
+    expect(requests.map((request) => request.url)).toEqual([]);
   });
 });

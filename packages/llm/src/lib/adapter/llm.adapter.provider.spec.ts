@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { makeLlmCompletionAdapterFake, makeLlmFetchFake } from '@dereekb/llm/test';
 import { type LlmProviderConfig } from '../model/config/llm.model.config.resolve';
-import { type ConfiguredFetch } from '@dereekb/util/fetch';
 import { llmStrategyKind, makeLlmStrategyRegistry } from '../strategy/llm.strategy.registry';
-import { type LlmAdapter, type LlmAdapterConfig, type LlmBillAdapter, type LlmCompletionAdapter, type LlmCompletionAdapterConfig, type LlmCredentialProbeAdapter, type LlmMeteringAdapter } from './llm.adapter';
+import { type LlmAdapter, type LlmAdapterConfig, type LlmBillAdapter, type LlmCredentialProbeAdapter, type LlmMeteringAdapter } from './llm.adapter';
 import { makeLlmAdapterRegistry } from './llm.adapter.registry';
 import { resolveLlmProviderBaseUrl, resolveLlmProviderMetering, makeLlmProviderStrategies, makeLlmProviderStrategy, resolveLlmProviderAccount } from './llm.adapter.provider';
 
@@ -10,40 +10,6 @@ const OPENAI_URL = 'https://api.openai.com/v1';
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1';
 const ZENMUX_URL = 'https://zenmux.ai/api/v1';
 const LOCAL_URL = 'http://192.168.1.50:8000/v1';
-
-interface FakeCalls {
-  complete: number;
-}
-
-/**
- * A completion adapter that records every config it receives and mints a strategy under the provider's id (or under
- * `mintId` when given, to exercise the id check).
- */
-function fakeCompletionAdapter(kind: string, defaultBaseUrl?: string, mintId?: string) {
-  const received: LlmCompletionAdapterConfig[] = [];
-  const calls: FakeCalls = { complete: 0 };
-  const adapter: LlmCompletionAdapter = {
-    facet: 'completion',
-    kind,
-    ...(defaultBaseUrl == null ? {} : { defaultBaseUrl }),
-    make: (config) => {
-      received.push(config);
-      return {
-        id: mintId ?? config.provider.id,
-        kind,
-        describe: `${kind} at ${config.baseUrl ?? '(default)'}`,
-        caching: 'none',
-        complete: () => {
-          calls.complete += 1;
-          return Promise.reject(new Error('not called'));
-        },
-        ...(config.credentialProbe == null ? {} : { credentialProbe: config.credentialProbe })
-      };
-    }
-  };
-
-  return { adapter, received, calls };
-}
 
 function fakeMeteringAdapter(kind: string, hostname: string) {
   const received: LlmAdapterConfig[] = [];
@@ -92,22 +58,12 @@ function fakeBillAdapter(kind: string) {
   return { adapter, received };
 }
 
-function fakeFetch() {
-  const urls: string[] = [];
-  const fetch: ConfiguredFetch = (input) => {
-    urls.push(String(input));
-    return Promise.resolve(new Response('{}', { status: 200 }));
-  };
-
-  return { fetch, urls };
-}
-
 /**
  * The standard set: completion `openai` + `openrouter`, and a full `zenmux` account (metering, credential probe, bill).
  */
 function standardAdapters(extra: ReadonlyArray<LlmAdapter> = []) {
-  const openai = fakeCompletionAdapter('openai', OPENAI_URL);
-  const openrouter = fakeCompletionAdapter('openrouter', OPENROUTER_URL);
+  const openai = makeLlmCompletionAdapterFake({ kind: 'openai', defaultBaseUrl: OPENAI_URL });
+  const openrouter = makeLlmCompletionAdapterFake({ kind: 'openrouter', defaultBaseUrl: OPENROUTER_URL });
   const metering = fakeMeteringAdapter('zenmux', 'zenmux.ai');
   const probe = fakeCredentialProbeAdapter('zenmux');
   const bill = fakeBillAdapter('zenmux');
@@ -150,7 +106,7 @@ describe('resolveLlmProviderMetering()', () => {
   });
 
   it("should infer from the transport's default base URL when the provider names none", () => {
-    const gateway = fakeCompletionAdapter('gateway', ZENMUX_URL);
+    const gateway = makeLlmCompletionAdapterFake({ kind: 'gateway', defaultBaseUrl: ZENMUX_URL });
     const { adapters: withGateway } = standardAdapters([gateway.adapter]);
 
     expect(resolveLlmProviderMetering({ provider: { transport: 'gateway' }, adapters: withGateway })).toBe('zenmux');
@@ -159,7 +115,7 @@ describe('resolveLlmProviderMetering()', () => {
   it('should let the first registered metering adapter that claims the URL win', () => {
     const first = fakeMeteringAdapter('first-account', 'zenmux.ai');
     const second = fakeMeteringAdapter('second-account', 'zenmux.ai');
-    const twoClaimants = makeLlmAdapterRegistry([fakeCompletionAdapter('openai', OPENAI_URL).adapter, first.adapter, second.adapter]);
+    const twoClaimants = makeLlmAdapterRegistry([makeLlmCompletionAdapterFake({ kind: 'openai', defaultBaseUrl: OPENAI_URL }).adapter, first.adapter, second.adapter]);
 
     expect(resolveLlmProviderMetering({ provider: ENV_DEFAULT, adapters: twoClaimants })).toBe('first-account');
   });
@@ -189,14 +145,14 @@ describe('resolveLlmProviderAccount()', () => {
 
   it('should hand the fetch seam to every account adapter only when one is passed', () => {
     const { adapters, metering } = standardAdapters();
-    const { fetch } = fakeFetch();
+    const { fetch } = makeLlmFetchFake({ body: {} });
     resolveLlmProviderAccount({ provider: ZENMUX, adapters, fetch });
 
     expect(metering.received).toEqual([{ provider: ZENMUX, baseUrl: ZENMUX_URL, fetch }]);
   });
 
   it('should treat the bill and credential probe adapters as optional', () => {
-    const adapters = makeLlmAdapterRegistry([fakeCompletionAdapter('openai', OPENAI_URL).adapter, fakeMeteringAdapter('zenmux', 'zenmux.ai').adapter]);
+    const adapters = makeLlmAdapterRegistry([makeLlmCompletionAdapterFake({ kind: 'openai', defaultBaseUrl: OPENAI_URL }).adapter, fakeMeteringAdapter('zenmux', 'zenmux.ai').adapter]);
     const account = resolveLlmProviderAccount({ provider: ZENMUX, adapters });
 
     expect(Object.keys(account).sort((a, b) => a.localeCompare(b))).toEqual(['baseUrl', 'costBasis', 'metering', 'providerStatusSource']);
@@ -260,20 +216,20 @@ describe('makeLlmProviderStrategy()', () => {
 
   it("should route the fetch seam into the account's credential probe", async () => {
     const { adapters } = standardAdapters();
-    const { fetch, urls } = fakeFetch();
+    const { fetch, requests } = makeLlmFetchFake({ body: {} });
     const strategy = makeLlmProviderStrategy({ provider: ZENMUX, adapters, fetch });
 
     await strategy.credentialProbe?.();
-    expect(urls).toEqual([`${ZENMUX_URL}/chat/completions`]);
+    expect(requests.map((request) => request.url)).toEqual([`${ZENMUX_URL}/chat/completions`]);
   });
 
   it('should be inert: building makes no fetch call and no completion call', () => {
     const { adapters, openai, openrouter } = standardAdapters();
-    const { fetch, urls } = fakeFetch();
+    const { fetch, requests } = makeLlmFetchFake({ body: {} });
 
     makeLlmProviderStrategies({ providers: [ZENMUX, ENV_DEFAULT, BARE_OPENAI, LOCAL, ROUTER], adapters, fetch });
 
-    expect(urls).toEqual([]);
+    expect(requests.map((request) => request.url)).toEqual([]);
     expect(openai.calls.complete).toBe(0);
     expect(openrouter.calls.complete).toBe(0);
   });
@@ -284,7 +240,7 @@ describe('makeLlmProviderStrategy()', () => {
   });
 
   it('should fail loud when an adapter mints the strategy under another id', () => {
-    const adapters = makeLlmAdapterRegistry([fakeCompletionAdapter('openai', OPENAI_URL, 'openai').adapter]);
+    const adapters = makeLlmAdapterRegistry([makeLlmCompletionAdapterFake({ kind: 'openai', defaultBaseUrl: OPENAI_URL, mintId: 'openai' }).adapter]);
     expect(() => makeLlmProviderStrategy({ provider: LOCAL, adapters })).toThrow(/minted strategy id 'openai'/);
   });
 });

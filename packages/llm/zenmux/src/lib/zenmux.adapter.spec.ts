@@ -1,21 +1,6 @@
-import {
-  isLlmAbortError,
-  readLlmDecisionStrategyKinds,
-  readLlmModelConfigLists,
-  llmNoulQuestion,
-  resolveLlmProviderDecisionRoute,
-  makeLlmAdapterRegistry,
-  makeLlmDecisionStrategies,
-  makeLlmProviderStrategy,
-  resolveLlmProviderAccount,
-  type LlmAdapter,
-  type LlmCompletionAdapter,
-  type LlmCompletionAdapterConfig,
-  type LlmProviderConfig
-} from '@dereekb/llm';
-import { makeLlmSystemOneWireFake } from '@dereekb/llm/test';
+import { isLlmAbortError, readLlmDecisionStrategyKinds, readLlmModelConfigLists, llmNoulQuestion, resolveLlmProviderDecisionRoute, makeLlmAdapterRegistry, makeLlmDecisionStrategies, makeLlmProviderStrategy, resolveLlmProviderAccount, type LlmAdapter, type LlmProviderConfig } from '@dereekb/llm';
+import { makeLlmCompletionAdapterFake, makeLlmFetchFake, makeLlmSystemOneWireFake, readLlmFetchFakeHeader, type LlmFetchFake } from '@dereekb/llm/test';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { type ConfiguredFetch } from '@dereekb/util/fetch';
 import { makeLlmZenmuxAdapters } from './zenmux.adapter';
 import { DEFAULT_LLM_ZENMUX_BASE_URL, LLM_ZENMUX_DECISION_ROUTE, LLM_ZENMUX_PROVIDER_ID } from './zenmux.constants';
 
@@ -29,51 +14,22 @@ const LOCAL: LlmProviderConfig = { id: 'local', transport: 'openai', baseUrl: DE
 const LOOKALIKE: LlmProviderConfig = { id: 'lookalike', transport: 'openai', baseUrl: 'https://zenmux.ai.example.com/api/v1', apiKeyEnv: 'LOOKALIKE_API_KEY', apiKey: 'sk-look' };
 
 /**
- * A completion adapter that records every config it receives and mints a strategy under the provider's id.
- *
- * @returns The adapter and the configs it received.
+ * The answer every seam gives unless a case names its own: ZenMux's not-found envelope.
  */
-function fakeOpenAiCompletion() {
-  const received: LlmCompletionAdapterConfig[] = [];
-  const adapter: LlmCompletionAdapter = {
-    facet: 'completion',
-    kind: 'openai',
-    defaultBaseUrl: 'https://api.openai.com/v1',
-    make: (config) => {
-      received.push(config);
-      return { id: config.provider.id, kind: 'openai', describe: `openai at ${config.baseUrl ?? '(default)'}`, caching: 'none', complete: () => Promise.reject(new Error('not called')) };
-    }
-  };
-
-  return { adapter, received };
-}
-
-interface Recorded {
-  readonly url: string;
-  readonly method: string;
-  readonly auth?: string;
-}
+const NOT_FOUND = { status: 404, body: '{"success":false,"message":"Not Found","data":null}' };
 
 /**
- * A fetch seam that records every request and answers each with the given status and body.
+ * The url, method and bearer of every request a seam received.
  *
- * @param status - The status to answer.
- * @param body - The body to answer.
- * @returns The seam and its record.
+ * @param seam - The fetch fake.
+ * @returns One entry per request.
  */
-function recordingFetch(status = 404, body = '{"success":false,"message":"Not Found","data":null}'): { readonly fetch: ConfiguredFetch; readonly calls: Recorded[] } {
-  const calls: Recorded[] = [];
-  const fetchImpl: ConfiguredFetch = async (input, init) => {
-    const url = String(input);
-    calls.push({ url, method: init?.method ?? 'GET', auth: new Headers(init?.headers).get('Authorization') ?? undefined });
-    const response = new Response(body, { status: status });
-    return response;
-  };
-  return { fetch: fetchImpl, calls };
+function recordedOf(seam: LlmFetchFake) {
+  return seam.requests.map((request) => ({ url: request.url, method: request.init.method, auth: readLlmFetchFakeHeader(request, 'Authorization') }));
 }
 
 function registryOf(adapters: ReadonlyArray<LlmAdapter>) {
-  return makeLlmAdapterRegistry([fakeOpenAiCompletion().adapter, ...adapters]);
+  return makeLlmAdapterRegistry([makeLlmCompletionAdapterFake({ kind: 'openai', defaultBaseUrl: 'https://api.openai.com/v1' }).adapter, ...adapters]);
 }
 
 const ADAPTERS = registryOf(makeLlmZenmuxAdapters({ managementApiKey: 'mgmt-key', billApiKey: 'payg-key' }));
@@ -108,7 +64,7 @@ describe('makeLlmZenmuxAdapters()', () => {
 
   describe('account', () => {
     it('resolves a declared ZenMux provider onto the list basis and the ZenMux status source', async () => {
-      const seam = recordingFetch(200, '{"success":true,"data":{}}');
+      const seam = makeLlmFetchFake({ status: 200, body: '{"success":true,"data":{}}' });
       const account = resolveLlmProviderAccount({ provider: ZENMUX, adapters: ADAPTERS, fetch: seam.fetch });
 
       expect(account.metering).toBe('zenmux');
@@ -117,38 +73,38 @@ describe('makeLlmZenmuxAdapters()', () => {
 
       await account.providerStatusSource?.read();
 
-      expect(seam.calls.map((call) => call.url)).toEqual(['https://zenmux.ai/api/v1/management/subscription/detail', 'https://zenmux.ai/api/v1/management/payg/balance', 'https://zenmux.ai/api/v1/management/flow_rate']);
-      expect(seam.calls.every((call) => call.auth === 'Bearer mgmt-key')).toBe(true);
+      expect(recordedOf(seam).map((call) => call.url)).toEqual(['https://zenmux.ai/api/v1/management/subscription/detail', 'https://zenmux.ai/api/v1/management/payg/balance', 'https://zenmux.ai/api/v1/management/flow_rate']);
+      expect(recordedOf(seam).every((call) => call.auth === 'Bearer mgmt-key')).toBe(true);
     });
 
     it('reads bills with the pay-as-you-go key, else the provider’s own key', async () => {
-      const withBillKey = recordingFetch();
-      const withoutBillKey = recordingFetch();
-      const blankBillKey = recordingFetch();
+      const withBillKey = makeLlmFetchFake(NOT_FOUND);
+      const withoutBillKey = makeLlmFetchFake(NOT_FOUND);
+      const blankBillKey = makeLlmFetchFake(NOT_FOUND);
 
       await resolveLlmProviderAccount({ provider: ZENMUX, adapters: ADAPTERS, fetch: withBillKey.fetch }).billReader?.read('g1');
       await resolveLlmProviderAccount({ provider: ZENMUX, adapters: registryOf(makeLlmZenmuxAdapters()), fetch: withoutBillKey.fetch }).billReader?.read('g1');
       await resolveLlmProviderAccount({ provider: ZENMUX, adapters: registryOf(makeLlmZenmuxAdapters({ billApiKey: '  ' })), fetch: blankBillKey.fetch }).billReader?.read('g1');
 
-      expect(withBillKey.calls).toEqual([{ url: 'https://zenmux.ai/api/v1/management/generation?id=g1', method: 'GET', auth: 'Bearer payg-key' }]);
-      expect(withoutBillKey.calls[0]?.auth).toBe('Bearer sk-zen');
-      expect(blankBillKey.calls[0]?.auth).toBe('Bearer sk-zen');
+      expect(recordedOf(withBillKey)).toEqual([{ url: 'https://zenmux.ai/api/v1/management/generation?id=g1', method: 'GET', auth: 'Bearer payg-key' }]);
+      expect(recordedOf(withoutBillKey)[0]?.auth).toBe('Bearer sk-zen');
+      expect(recordedOf(blankBillKey)[0]?.auth).toBe('Bearer sk-zen');
     });
 
     it('probes the provider’s own key at its inference URL', async () => {
-      const seam = recordingFetch(404, '{"error":{"type":"invalid_model","message":"Requested model is not valid"}}');
+      const seam = makeLlmFetchFake({ status: 404, body: '{"error":{"type":"invalid_model","message":"Requested model is not valid"}}' });
       const health = await resolveLlmProviderAccount({ provider: ZENMUX, adapters: ADAPTERS, fetch: seam.fetch }).credentialProbe?.();
 
       expect(health).toEqual({ ready: true, issues: [] });
-      expect(seam.calls).toEqual([{ url: 'https://zenmux.ai/api/v1/chat/completions', method: 'POST', auth: 'Bearer sk-zen' }]);
+      expect(recordedOf(seam)).toEqual([{ url: 'https://zenmux.ai/api/v1/chat/completions', method: 'POST', auth: 'Bearer sk-zen' }]);
     });
 
     it('reports a keyless provider unready without a request', async () => {
-      const seam = recordingFetch();
+      const seam = makeLlmFetchFake(NOT_FOUND);
       const health = await resolveLlmProviderAccount({ provider: { ...ZENMUX, apiKey: '' }, adapters: ADAPTERS, fetch: seam.fetch }).credentialProbe?.();
 
       expect(health).toEqual({ ready: false, issues: [{ severity: 'error', message: 'no apiKey configured' }] });
-      expect(seam.calls).toEqual([]);
+      expect(recordedOf(seam)).toEqual([]);
     });
 
     it('infers ZenMux for an undeclared provider at the ZenMux URL, and nothing for a look-alike or a declared none', () => {
@@ -165,14 +121,14 @@ describe('makeLlmZenmuxAdapters()', () => {
     });
 
     it('reads a proxied provider’s account at ZenMux while probing the proxy', async () => {
-      const seam = recordingFetch(404, '{"error":{"type":"invalid_model","message":"Requested model is not valid"}}');
+      const seam = makeLlmFetchFake({ status: 404, body: '{"error":{"type":"invalid_model","message":"Requested model is not valid"}}' });
       const account = resolveLlmProviderAccount({ provider: PROXY, adapters: ADAPTERS, fetch: seam.fetch });
 
       await account.providerStatusSource?.read();
       await account.billReader?.read('g1');
       await account.credentialProbe?.();
 
-      expect(seam.calls.map((call) => call.url)).toEqual([
+      expect(recordedOf(seam).map((call) => call.url)).toEqual([
         'https://zenmux.ai/api/v1/management/subscription/detail',
         'https://zenmux.ai/api/v1/management/payg/balance',
         'https://zenmux.ai/api/v1/management/flow_rate',
@@ -209,7 +165,7 @@ describe('makeLlmZenmuxAdapters()', () => {
 
   describe('completion wiring', () => {
     it('hands a ZenMux provider’s completion adapter the list basis, a status source and a probe — and a local one none', () => {
-      const completion = fakeOpenAiCompletion();
+      const completion = makeLlmCompletionAdapterFake({ kind: 'openai', defaultBaseUrl: 'https://api.openai.com/v1' });
       const adapters = makeLlmAdapterRegistry([completion.adapter, ...makeLlmZenmuxAdapters({ managementApiKey: 'mgmt-key' })]);
 
       makeLlmProviderStrategy({ provider: ZENMUX, adapters });

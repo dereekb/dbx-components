@@ -34,6 +34,9 @@ const schema = makeLlmModelConfigSchema<TestTypes>({
 /**
  * A completion adapter that records every config it receives and mints a strategy under the provider's id.
  *
+ * Local copy of `makeLlmCompletionAdapterFake` (`@dereekb/llm/test`): `@dereekb/llm/test` depends on `@dereekb/llm/node`,
+ * so a `/node` spec importing it would close a project cycle.
+ *
  * @param kind - The transport.
  * @param defaultBaseUrl - The transport's default endpoint.
  * @returns The adapter, what it received, and how often a strategy was called.

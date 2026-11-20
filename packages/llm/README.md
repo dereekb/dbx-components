@@ -19,7 +19,7 @@ dependency, and its browser entries run unchanged in a browser, a worker or Node
 | `@dereekb/llm/openrouter` | no | `openai` (through `/openai`) | The OpenRouter chat strategy (`cache_control`, strict `response_format`, usage accounting), the OpenRouter decision strategy and their adapters. |
 | `@dereekb/llm/zenmux` | no | none (`fetch`) | ZenMux constants and cost basis, the decision route on the core System One transport, the quota-status source and the bill reader. |
 | `@dereekb/llm/node` | yes | none | Model-config file IO, environment variables to provider configs, the craft-notes folder loader and the craft markdown to TypeScript compiler. |
-| `@dereekb/llm/test` | test infra | none | Tape replay, scripted completion and decision strategies, the decision answer builders (`makeLlmDecisionChoiceAnswer`, …), the `/systemone` wire fake, and the billed-lane test factories. |
+| `@dereekb/llm/test` | test infra | none | Tape replay, scripted completion and decision strategies, the decision answer builders (`makeLlmDecisionChoiceAnswer`, …), the fakes (fetch seam, OpenAI-compatible chat client, completion adapter, dispatcher, `/systemone` wire), and the billed-lane test factories. |
 
 ## Browser safety
 
@@ -882,7 +882,7 @@ correction / backoff vocabulary with its constants.
   and forwarded to the strategy; either one aborting counts as a cancellation. A cancelled dispatch sends no further
   attempt: every retry decision reads cancellation like a spent budget, and a cancel during a transport backoff or a
   park ends the loop before the resend (the last row keeps the `willRetry: true` it was judged with).
-- **Fakes.** `makeLlmDispatcherFromDispatch(fn)` wraps a bare dispatch function as a dispatcher whose prompts run through it.
+- **Fakes.** `makeLlmDispatcherFake(fn)` (`@dereekb/llm/test`) wraps a bare dispatch function as a dispatcher whose prompts run through it.
 - **Retry and lanes.** The bounded retry ladder, the fast-fix and critique lanes and the decision lane are described in
   the next section.
 
@@ -1436,6 +1436,16 @@ scripts make no network call, and the lane's helpers answer `undefined` while it
 - **Fetch seams.** `makeLlmFetchFake(respond)` is a `ConfiguredFetch` fake for any fetch-seam spec: it records each
   request (`url`, and an `init` with `method`, a plain `headers` record, `body`, `signal`) and answers with a real
   `Response` (`llmFetchFakeResponse({ status, body, headers })`); `respond` is an answer, a function, or `'hang'`.
+  `readLlmFetchFakeHeader(request, name)` reads a recorded header in any case.
+- **Chat client.** `makeLlmOpenAiChatClientFake(config)` is a fake OpenAI-compatible chat client for the `/openai` and
+  `/openrouter` strategy specs: it records each body and its request options and answers one canned completion (the
+  `reply`, plus whichever of `id` / `model` / `provider` / `usage` / finish reasons are set, or a whole `completion`
+  verbatim). Its client is a structural mirror of `LlmOpenAiChatClient` built from root types, since this entry imports
+  no provider entry; passing it where the real client is expected is the check that the two agree.
+- **Completion adapter.** `makeLlmCompletionAdapterFake({ kind, defaultBaseUrl?, mintId? })` records every config it is
+  asked to `make` a strategy from; its strategies count `complete` calls and reject them.
+- **Dispatcher.** `makeLlmDispatcherFake(fn)` wraps a bare dispatch function as a dispatcher whose prompts run through
+  it.
 - **System One wire.** `makeLlmSystemOneWireFake({ respond })` is the one `/systemone` fake (its `fetch` is a
   `ConfiguredFetch`): `respond` is an answer
   (`{ status, body, headers }`, used for every request), a function (called per request; a throw is the socket

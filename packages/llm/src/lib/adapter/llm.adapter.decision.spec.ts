@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { makeLlmCompletionAdapterFake } from '@dereekb/llm/test';
 import { type LlmProviderConfig } from '../model/config/llm.model.config.resolve';
 import { type ConfiguredFetch } from '@dereekb/util/fetch';
-import { type LlmAdapter, type LlmCompletionAdapter, type LlmDecisionAdapter, type LlmDecisionAdapterConfig } from './llm.adapter';
+import { type LlmAdapter, type LlmDecisionAdapter, type LlmDecisionAdapterConfig } from './llm.adapter';
 import { makeLlmAdapterRegistry } from './llm.adapter.registry';
 import { llmDecisionCapableProviders, readLlmDecisionStrategyKinds, resolveLlmProviderDecisionRoute, makeLlmDecisionStrategies } from './llm.adapter.decision';
 
@@ -42,18 +43,7 @@ function fakeDecisionAdapter(config: FakeDecisionAdapterConfig) {
   return { adapter, received };
 }
 
-function fakeCompletionAdapter(kind: string, defaultBaseUrl: string): LlmCompletionAdapter {
-  return {
-    facet: 'completion',
-    kind,
-    defaultBaseUrl,
-    make: () => {
-      throw new Error('not called');
-    }
-  };
-}
-
-const COMPLETION: ReadonlyArray<LlmAdapter> = [fakeCompletionAdapter('openai', OPENAI_URL), fakeCompletionAdapter('openrouter', OPENROUTER_URL)];
+const COMPLETION: ReadonlyArray<LlmAdapter> = [makeLlmCompletionAdapterFake({ kind: 'openai', defaultBaseUrl: OPENAI_URL }).adapter, makeLlmCompletionAdapterFake({ kind: 'openrouter', defaultBaseUrl: OPENROUTER_URL }).adapter];
 
 /**
  * Decision `zenmux` (declared only) then decision `openrouter` (derived from the `openrouter` transport), then the

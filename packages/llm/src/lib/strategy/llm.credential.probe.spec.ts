@@ -7,27 +7,13 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { type ConfiguredFetch } from '@dereekb/util/fetch';
+import { makeLlmFetchFake, readLlmFetchFakeHeader } from '@dereekb/llm/test';
 import { probeLlmCredentialEndpoint, llmProviderErrorMessage, runLlmCredentialProbeLadder, type LlmTransportCredentialProbe } from './llm.credential.probe';
 
 /**
  * The literal body OpenRouter answers a revoked key with — the message an operator needs to see verbatim.
  */
 const REVOKED_BODY = '{"error":{"message":"User not found.","code":401}}';
-
-/**
- * Build a fetch seam that answers ONE canned response and records the calls it received.
- *
- * @param response - The status / body to answer with.
- * @returns The seam plus the recorded calls.
- */
-function fakeFetch(response: { readonly status: number; readonly body?: string }): { readonly fetch: ConfiguredFetch; readonly calls: Array<{ readonly url: string; readonly authorization: string | undefined }> } {
-  const calls: Array<{ readonly url: string; readonly authorization: string | undefined }> = [];
-  const fetchImpl: ConfiguredFetch = async (input, init) => {
-    calls.push({ url: String(input), authorization: new Headers(init?.headers).get('Authorization') ?? undefined });
-    return new Response(response.body ?? '', { status: response.status });
-  };
-  return { fetch: fetchImpl, calls };
-}
 
 /**
  * Read a body the way the probe does, for {@link llmProviderErrorMessage}.
@@ -73,18 +59,18 @@ describe('llmProviderErrorMessage', () => {
 
 describe('probeLlmCredentialEndpoint', () => {
   it('sends an authenticated GET at the named url and reports ready on a 200', async () => {
-    const { fetch, calls } = fakeFetch({ status: 200, body: '{"data":{"label":"test"}}' });
+    const { fetch, requests } = makeLlmFetchFake({ status: 200, body: '{"data":{"label":"test"}}' });
 
     const health = await probeLlmCredentialEndpoint({ strategyId: 'openrouter', url: 'https://openrouter.ai/api/v1/key', apiKey: 'sk-live', fetch });
 
     expect(health).toEqual({ ready: true, issues: [] });
-    expect(calls).toEqual([{ url: 'https://openrouter.ai/api/v1/key', authorization: 'Bearer sk-live' }]);
+    expect(requests.map((request) => ({ url: request.url, authorization: readLlmFetchFakeHeader(request, 'Authorization') }))).toEqual([{ url: 'https://openrouter.ai/api/v1/key', authorization: 'Bearer sk-live' }]);
   });
 
   it('reports NOT ready on a 401, carrying the provider message verbatim', async () => {
     // The reason the probe exists, in one assertion: the key is well-formed, every non-network check passed, and
     // only this probe can tell the operator the provider itself says "User not found."
-    const { fetch } = fakeFetch({ status: 401, body: REVOKED_BODY });
+    const { fetch } = makeLlmFetchFake({ status: 401, body: REVOKED_BODY });
 
     const health = await probeLlmCredentialEndpoint({ strategyId: 'openrouter', url: 'https://openrouter.ai/api/v1/key', apiKey: 'sk-dead', fetch });
 
@@ -97,7 +83,7 @@ describe('probeLlmCredentialEndpoint', () => {
   });
 
   it('never leaks the credential into the issue message', async () => {
-    const { fetch } = fakeFetch({ status: 401, body: REVOKED_BODY });
+    const { fetch } = makeLlmFetchFake({ status: 401, body: REVOKED_BODY });
 
     const health = await probeLlmCredentialEndpoint({ strategyId: 'openrouter', url: 'https://openrouter.ai/api/v1/key', apiKey: 'sk-super-secret', fetch });
 
@@ -105,7 +91,7 @@ describe('probeLlmCredentialEndpoint', () => {
   });
 
   it('treats a 404 as a hard error by default', async () => {
-    const { fetch } = fakeFetch({ status: 404, body: '{"error":{"message":"Not found"}}' });
+    const { fetch } = makeLlmFetchFake({ status: 404, body: '{"error":{"message":"Not found"}}' });
 
     const health = await probeLlmCredentialEndpoint({ strategyId: 'openrouter', url: 'https://openrouter.ai/api/v1/key', apiKey: 'sk-live', fetch });
 
@@ -113,7 +99,7 @@ describe('probeLlmCredentialEndpoint', () => {
   });
 
   it('degrades a 404 to a READY warning under the lenient policy (an unknown-but-working gateway stays launchable)', async () => {
-    const { fetch } = fakeFetch({ status: 404, body: '' });
+    const { fetch } = makeLlmFetchFake({ status: 404, body: '' });
 
     const health = await probeLlmCredentialEndpoint({ strategyId: 'openai', url: 'https://gateway.example/v1/models', apiKey: 'sk-live', fetch, notFoundSeverity: 'warning' });
 
@@ -122,7 +108,7 @@ describe('probeLlmCredentialEndpoint', () => {
   });
 
   it('a 401 under the lenient 404 policy is STILL a hard error (not-implemented ≠ not-authorized)', async () => {
-    const { fetch } = fakeFetch({ status: 401, body: REVOKED_BODY });
+    const { fetch } = makeLlmFetchFake({ status: 401, body: REVOKED_BODY });
 
     const health = await probeLlmCredentialEndpoint({ strategyId: 'openai', url: 'https://gateway.example/v1/models', apiKey: 'sk-dead', fetch, notFoundSeverity: 'warning' });
 
@@ -142,7 +128,7 @@ describe('probeLlmCredentialEndpoint', () => {
   });
 
   it('reports a status-only failure when the provider answered no body', async () => {
-    const { fetch } = fakeFetch({ status: 500 });
+    const { fetch } = makeLlmFetchFake({ status: 500 });
 
     const health = await probeLlmCredentialEndpoint({ strategyId: 'openrouter', url: 'https://openrouter.ai/api/v1/key', apiKey: 'sk-live', fetch });
 
@@ -166,8 +152,8 @@ describe('probeLlmCredentialEndpoint — the AUTH-GATED mode', () => {
   });
 
   it('reads a listed status as a rejected key, and a 5xx as unverified (never live)', async () => {
-    const rejected = await probeLlmCredentialEndpoint({ strategyId: 'zenmux', url: 'https://gw.test/v1/x', apiKey: 'sk', rejectedStatuses: [401, 403], fetch: fakeFetch({ status: 403, body: '{"error":{"message":"You have no permission"}}' }).fetch });
-    const failed = await probeLlmCredentialEndpoint({ strategyId: 'zenmux', url: 'https://gw.test/v1/x', apiKey: 'sk', rejectedStatuses: [401, 403], fetch: fakeFetch({ status: 502 }).fetch });
+    const rejected = await probeLlmCredentialEndpoint({ strategyId: 'zenmux', url: 'https://gw.test/v1/x', apiKey: 'sk', rejectedStatuses: [401, 403], fetch: makeLlmFetchFake({ status: 403, body: '{"error":{"message":"You have no permission"}}' }).fetch });
+    const failed = await probeLlmCredentialEndpoint({ strategyId: 'zenmux', url: 'https://gw.test/v1/x', apiKey: 'sk', rejectedStatuses: [401, 403], fetch: makeLlmFetchFake({ status: 502 }).fetch });
 
     expect(rejected.ready).toBe(false);
     expect(rejected.issues[0]?.message).toContain('You have no permission');
@@ -182,14 +168,14 @@ describe('probeLlmCredentialEndpoint — an engine without AbortSignal.any', () 
     });
 
     try {
-      const { fetch, calls } = fakeFetch({ status: 200 });
+      const { fetch, requests } = makeLlmFetchFake({ status: 200 });
       const health = await probeLlmCredentialEndpoint({ strategyId: 'openai', url: 'https://gateway.example/v1/models', apiKey: 'sk-live', fetch, signal: new AbortController().signal });
 
       expect(health.ready).toBe(false);
       expect(health.issues).toHaveLength(1);
       expect(health.issues[0]?.severity).toBe('error');
       expect(health.issues[0]?.message).toContain('could not reach');
-      expect(calls).toHaveLength(0);
+      expect(requests).toHaveLength(0);
     } finally {
       anySpy.mockRestore();
     }
@@ -229,7 +215,7 @@ describe('runLlmCredentialProbeLadder', () => {
 
   it('rung 4: a key runs the transport probe with the trimmed base, the probe fetch and the signal', async () => {
     const probe = probeSpy();
-    const probeFetch = fakeFetch({ status: 200 }).fetch;
+    const probeFetch = makeLlmFetchFake({ status: 200 }).fetch;
     const signal = new AbortController().signal;
     await runLlmCredentialProbeLadder({ ...base, apiKey: 'sk', injected: true, probeFetch, probe, options: { signal } });
     expect(probe).toHaveBeenCalledWith({ strategyId: 'gw', baseUrl: 'https://gw.test/v1', apiKey: 'sk', fetch: probeFetch, signal });
@@ -237,7 +223,7 @@ describe('runLlmCredentialProbeLadder', () => {
 
   it('rung 5: an injected seam and a probe fetch but no key is an error', async () => {
     const probe = probeSpy();
-    const health = await runLlmCredentialProbeLadder({ ...base, apiKey: null, injected: true, probeFetch: fakeFetch({ status: 200 }).fetch, probe });
+    const health = await runLlmCredentialProbeLadder({ ...base, apiKey: null, injected: true, probeFetch: makeLlmFetchFake({ status: 200 }).fetch, probe });
     expect(health).toEqual({ ready: false, issues: [{ severity: 'error', message: 'no apiKey configured for the credential probe' }] });
     expect(probe).not.toHaveBeenCalled();
   });

@@ -1,5 +1,6 @@
 import { tightestLlmQuotaWindow } from '@dereekb/llm';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { makeLlmFetchFake, readLlmFetchFakeHeader, type LlmFetchFakeRespond } from '@dereekb/llm/test';
 import { type ConfiguredFetch } from '@dereekb/util/fetch';
 import { LLM_ZENMUX_PROVIDER_ID } from './zenmux.constants';
 import { makeLlmZenmuxProviderStatusSource } from './zenmux.provider.status';
@@ -29,24 +30,16 @@ const FLOW_RATE_BODY = JSON.stringify({ success: true, data: { base_usd_per_flow
 const REJECTED_BODY = '{"success":false,"message":"Invalid API key","data":null}';
 
 /**
- * Build a fetch seam that answers per-endpoint canned responses, keyed by the path fragment.
+ * Answers each request by the first route whose path fragment its URL contains, else ZenMux's 404.
  *
- * @param routes - Path fragment → status + body.
- * @returns The seam plus the URLs and auth headers it was called with.
+ * @param routes - Path fragment → status and body.
+ * @returns The respond function for {@link makeLlmFetchFake}.
  */
-function fakeFetch(routes: Readonly<Record<string, { readonly status: number; readonly body: string }>>): { readonly fetch: ConfiguredFetch; readonly urls: string[]; readonly auths: Array<string | undefined> } {
-  const urls: string[] = [];
-  const auths: Array<string | undefined> = [];
-  const fetchImpl: ConfiguredFetch = async (input, init) => {
-    const url = String(input);
-    urls.push(url);
-    auths.push(new Headers(init?.headers).get('Authorization') ?? undefined);
+function answerByPath(routes: Readonly<Record<string, { readonly status: number; readonly body: string }>>): LlmFetchFakeRespond {
+  return ({ url }) => {
     const key = Object.keys(routes).find((fragment) => url.includes(fragment));
-    const route = key == null ? { status: 404, body: '{"message":"not found"}' } : routes[key];
-    const answer = new Response(route.body, { status: route.status });
-    return answer;
+    return key == null ? { status: 404, body: '{"message":"not found"}' } : routes[key];
   };
-  return { fetch: fetchImpl, urls, auths };
 }
 
 /**
@@ -60,7 +53,7 @@ describe('makeLlmZenmuxProviderStatusSource()', () => {
   });
 
   it('maps all three endpoints onto windows + balance', async () => {
-    const seam = fakeFetch(HEALTHY_ROUTES);
+    const seam = makeLlmFetchFake(answerByPath(HEALTHY_ROUTES));
     const status = await makeLlmZenmuxProviderStatusSource({ managementApiKey: 'mgmt-key', fetch: seam.fetch }).read();
 
     expect(status.providerId).toBe(LLM_ZENMUX_PROVIDER_ID);
@@ -76,11 +69,11 @@ describe('makeLlmZenmuxProviderStatusSource()', () => {
       ]
     });
     expect(status.issues).toEqual([]);
-    expect(seam.urls).toHaveLength(3);
+    expect(seam.requests.map((request) => request.url)).toHaveLength(3);
   });
 
   it('keeps the maximal status and window key order and bytes (pin)', async () => {
-    const status = await makeLlmZenmuxProviderStatusSource({ managementApiKey: 'mgmt-key', fetch: fakeFetch(HEALTHY_ROUTES).fetch }).read();
+    const status = await makeLlmZenmuxProviderStatusSource({ managementApiKey: 'mgmt-key', fetch: makeLlmFetchFake(answerByPath(HEALTHY_ROUTES)).fetch }).read();
 
     expect(Object.keys(status)).toEqual(['providerId', 'available', 'windows', 'balance', 'issues']);
     expect(Object.keys(status.windows[0])).toEqual(['id', 'label', 'unit', 'usedFraction', 'usedUnits', 'maxUnits', 'remainingUnits', 'usedUsd', 'maxUsd', 'resetsAt']);
@@ -92,7 +85,7 @@ describe('makeLlmZenmuxProviderStatusSource()', () => {
   it('keeps the minimal status and window key order and bytes, dropping every wire null (pin)', async () => {
     const nullQuota = { usage_percentage: null, used_flows: null, max_flows: null, remaining_flows: null, used_value_usd: null, max_value_usd: null, resets_at: null };
     const routes = { 'subscription/detail': { status: 200, body: JSON.stringify({ success: true, data: { quota_5_hour: nullQuota } }) }, 'payg/balance': { status: 200, body: JSON.stringify({ success: true, data: { total_credits: null } }) }, flow_rate: { status: 200, body: FLOW_RATE_BODY } };
-    const status = await makeLlmZenmuxProviderStatusSource({ managementApiKey: 'mgmt-key', fetch: fakeFetch(routes).fetch }).read();
+    const status = await makeLlmZenmuxProviderStatusSource({ managementApiKey: 'mgmt-key', fetch: makeLlmFetchFake(answerByPath(routes)).fetch }).read();
 
     expect(Object.keys(status)).toEqual(['providerId', 'available', 'windows', 'issues']);
     expect(Object.keys(status.windows[0])).toEqual(['id', 'label', 'unit']);
@@ -100,50 +93,50 @@ describe('makeLlmZenmuxProviderStatusSource()', () => {
   });
 
   it('authenticates every GET with the management key', async () => {
-    const seam = fakeFetch(HEALTHY_ROUTES);
+    const seam = makeLlmFetchFake(answerByPath(HEALTHY_ROUTES));
     await makeLlmZenmuxProviderStatusSource({ managementApiKey: ' mgmt-key ', fetch: seam.fetch }).read();
 
-    expect(seam.auths).toEqual(['Bearer mgmt-key', 'Bearer mgmt-key', 'Bearer mgmt-key']);
+    expect(seam.requests.map((request) => readLlmFetchFakeHeader(request, 'Authorization'))).toEqual(['Bearer mgmt-key', 'Bearer mgmt-key', 'Bearer mgmt-key']);
   });
 
   it('reads the management routes under a regional base URL', async () => {
-    const seam = fakeFetch(HEALTHY_ROUTES);
+    const seam = makeLlmFetchFake(answerByPath(HEALTHY_ROUTES));
     await makeLlmZenmuxProviderStatusSource({ managementApiKey: 'mgmt-key', baseUrl: 'https://eu.zenmux.ai/api/v1/', fetch: seam.fetch }).read();
 
-    expect(seam.urls).toEqual(['https://eu.zenmux.ai/api/v1/management/subscription/detail', 'https://eu.zenmux.ai/api/v1/management/payg/balance', 'https://eu.zenmux.ai/api/v1/management/flow_rate']);
+    expect(seam.requests.map((request) => request.url)).toEqual(['https://eu.zenmux.ai/api/v1/management/subscription/detail', 'https://eu.zenmux.ai/api/v1/management/payg/balance', 'https://eu.zenmux.ai/api/v1/management/flow_rate']);
   });
 
   it('surfaces the 7-day window as the tightest: the AND across windows a gate must honour', async () => {
-    const status = await makeLlmZenmuxProviderStatusSource({ managementApiKey: 'k', fetch: fakeFetch(HEALTHY_ROUTES).fetch }).read();
+    const status = await makeLlmZenmuxProviderStatusSource({ managementApiKey: 'k', fetch: makeLlmFetchFake(answerByPath(HEALTHY_ROUTES)).fetch }).read();
     expect(tightestLlmQuotaWindow(status)?.id).toBe('rolling-7d');
   });
 
   it('reports the monthly ceiling WITHOUT a fraction, so an unmeasured ceiling can never be the binding constraint', async () => {
-    const status = await makeLlmZenmuxProviderStatusSource({ managementApiKey: 'k', fetch: fakeFetch(HEALTHY_ROUTES).fetch }).read();
+    const status = await makeLlmZenmuxProviderStatusSource({ managementApiKey: 'k', fetch: makeLlmFetchFake(answerByPath(HEALTHY_ROUTES)).fetch }).read();
     const monthly = status.windows.find((window) => window.id === 'monthly');
     expect(monthly?.maxUnits).toBe(34560);
     expect(monthly?.usedFraction).toBeUndefined();
   });
 
   it('reports an ABSENT management key as unavailable + an error naming the default env var, and opens NO socket', async () => {
-    const seam = fakeFetch(HEALTHY_ROUTES);
+    const seam = makeLlmFetchFake(answerByPath(HEALTHY_ROUTES));
     const status = await makeLlmZenmuxProviderStatusSource({ fetch: seam.fetch }).read();
 
     expect(status.available).toBe(false);
     expect(status.windows).toEqual([]);
     expect(status.issues[0]?.severity).toBe('error');
     expect(status.issues[0]?.message).toContain('Set ZENMUX_MANAGEMENT_API_KEY ');
-    expect(seam.urls).toEqual([]);
+    expect(seam.requests.map((request) => request.url)).toEqual([]);
   });
 
   it('names the env var the HOST resolved the key from, so an operator is told what THEY set', async () => {
-    const status = await makeLlmZenmuxProviderStatusSource({ managementApiKeyEnv: 'HOST_ZENMUX_MANAGEMENT_KEY', fetch: fakeFetch(HEALTHY_ROUTES).fetch }).read();
+    const status = await makeLlmZenmuxProviderStatusSource({ managementApiKeyEnv: 'HOST_ZENMUX_MANAGEMENT_KEY', fetch: makeLlmFetchFake(answerByPath(HEALTHY_ROUTES)).fetch }).read();
     expect(status.issues[0]?.message).toContain('HOST_ZENMUX_MANAGEMENT_KEY');
   });
 
   it("carries the provider's own words when the key is REJECTED (an inference key passed here)", async () => {
     const rejected = { status: 403, body: REJECTED_BODY };
-    const status = await makeLlmZenmuxProviderStatusSource({ managementApiKey: 'inference-key', fetch: fakeFetch({ 'subscription/detail': rejected, 'payg/balance': rejected, flow_rate: rejected }).fetch }).read();
+    const status = await makeLlmZenmuxProviderStatusSource({ managementApiKey: 'inference-key', fetch: makeLlmFetchFake(answerByPath({ 'subscription/detail': rejected, 'payg/balance': rejected, flow_rate: rejected })).fetch }).read();
 
     expect(status.available).toBe(false);
     expect(status.issues.every((issue) => issue.severity === 'warning')).toBe(true);
@@ -151,7 +144,10 @@ describe('makeLlmZenmuxProviderStatusSource()', () => {
   });
 
   it('stays AVAILABLE on a partial read, warning per failed endpoint', async () => {
-    const status = await makeLlmZenmuxProviderStatusSource({ managementApiKey: 'k', fetch: fakeFetch({ 'subscription/detail': { status: 200, body: SUBSCRIPTION_BODY }, 'payg/balance': { status: 500, body: '{"message":"upstream error"}' }, flow_rate: { status: 200, body: FLOW_RATE_BODY } }).fetch }).read();
+    const status = await makeLlmZenmuxProviderStatusSource({
+      managementApiKey: 'k',
+      fetch: makeLlmFetchFake(answerByPath({ 'subscription/detail': { status: 200, body: SUBSCRIPTION_BODY }, 'payg/balance': { status: 500, body: '{"message":"upstream error"}' }, flow_rate: { status: 200, body: FLOW_RATE_BODY } })).fetch
+    }).read();
 
     expect(status.available).toBe(true);
     expect(status.windows).toHaveLength(3);
@@ -162,7 +158,7 @@ describe('makeLlmZenmuxProviderStatusSource()', () => {
   });
 
   it('warns when the account is being charged ABOVE the base flow rate', async () => {
-    const status = await makeLlmZenmuxProviderStatusSource({ managementApiKey: 'k', fetch: fakeFetch({ ...HEALTHY_ROUTES, flow_rate: { status: 200, body: JSON.stringify({ success: true, data: { base_usd_per_flow: 0.03283, effective_usd_per_flow: 0.05 } }) } }).fetch }).read();
+    const status = await makeLlmZenmuxProviderStatusSource({ managementApiKey: 'k', fetch: makeLlmFetchFake(answerByPath({ ...HEALTHY_ROUTES, flow_rate: { status: 200, body: JSON.stringify({ success: true, data: { base_usd_per_flow: 0.03283, effective_usd_per_flow: 0.05 } }) } })).fetch }).read();
     expect(status.issues.some((issue) => issue.message.includes('above the base rate'))).toBe(true);
   });
 
@@ -178,7 +174,10 @@ describe('makeLlmZenmuxProviderStatusSource()', () => {
   });
 
   it('treats a pay-as-you-go-only account (no subscription) as available on its balance alone', async () => {
-    const status = await makeLlmZenmuxProviderStatusSource({ managementApiKey: 'k', fetch: fakeFetch({ 'subscription/detail': { status: 200, body: JSON.stringify({ success: true, data: {} }) }, 'payg/balance': { status: 200, body: BALANCE_BODY }, flow_rate: { status: 200, body: FLOW_RATE_BODY } }).fetch }).read();
+    const status = await makeLlmZenmuxProviderStatusSource({
+      managementApiKey: 'k',
+      fetch: makeLlmFetchFake(answerByPath({ 'subscription/detail': { status: 200, body: JSON.stringify({ success: true, data: {} }) }, 'payg/balance': { status: 200, body: BALANCE_BODY }, flow_rate: { status: 200, body: FLOW_RATE_BODY } })).fetch
+    }).read();
 
     expect(status.available).toBe(true);
     expect(status.windows).toEqual([]);
@@ -190,7 +189,7 @@ describe('makeLlmZenmuxProviderStatusSource()', () => {
       throw new TypeError('AbortSignal.timeout is not a function');
     });
 
-    const status = await makeLlmZenmuxProviderStatusSource({ managementApiKey: 'k', fetch: fakeFetch(HEALTHY_ROUTES).fetch }).read();
+    const status = await makeLlmZenmuxProviderStatusSource({ managementApiKey: 'k', fetch: makeLlmFetchFake(answerByPath(HEALTHY_ROUTES)).fetch }).read();
 
     expect(status.available).toBe(false);
     expect(status.issues).toHaveLength(3);

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { type ConfiguredFetch } from '@dereekb/util/fetch';
-import { DEFAULT_LLM_COMPLETION_TIMEOUT_MS, DEFAULT_LLM_MAX_OUTPUT_TOKENS, DEFAULT_LLM_REASONING_OFF_ENCODING, resolveLlmCompletionCallTimeoutMs, type LlmRequest } from '@dereekb/llm';
+import { DEFAULT_LLM_COMPLETION_TIMEOUT_MS, DEFAULT_LLM_MAX_OUTPUT_TOKENS, DEFAULT_LLM_REASONING_OFF_ENCODING, resolveLlmCompletionCallTimeoutMs, type LlmRequest, type RawLlmUsage } from '@dereekb/llm';
 import { LLM_OPENAI_STRATEGY_KIND, makeLlmOpenAiStrategy } from './openai.strategy';
-import { type LlmOpenAiChatClient, type LlmOpenAiRequestOptions } from './openai.chat';
+import { makeLlmOpenAiChatClientFake, type LlmOpenAiChatClientFakeConfig } from '@dereekb/llm/test';
 
 /**
  * The `openai` strategy — the provider-neutral hook set over the OpenAI-compatible chat base. Proves it (1) reaches
@@ -24,79 +24,21 @@ import { type LlmOpenAiChatClient, type LlmOpenAiRequestOptions } from './openai
 const DEFAULT_MODEL = 'vendor/model-flash';
 
 /**
- * The chat-completion body shape the fake client records — the subset the assertions read.
- */
-interface RecordedBody {
-  readonly model: string;
-  readonly messages: ReadonlyArray<{ readonly role: string; readonly content: unknown }>;
-  readonly response_format?: unknown;
-  readonly max_tokens?: number;
-  readonly max_completion_tokens?: number;
-  readonly reasoning_effort?: unknown;
-  readonly reasoning?: unknown;
-  readonly usage?: unknown;
-}
-
-/**
- * The provider-shaped (snake_case) usage block the fake completion carries — the cache-hit
- * (`prompt_tokens_details.cached_tokens`) + hidden-reasoning (`completion_tokens_details.reasoning_tokens`) fields.
- */
-interface FakeUsage {
-  readonly prompt_tokens?: number;
-  readonly completion_tokens?: number;
-  readonly total_tokens?: number;
-  readonly prompt_tokens_details?: { readonly cached_tokens?: number };
-  readonly completion_tokens_details?: { readonly reasoning_tokens?: number };
-  readonly cost?: number | string;
-  readonly cost_details?: { readonly upstream_inference_cost?: number | string };
-}
-
-/**
  * The default served model + usage the fake completion returns — an OpenAI route with token counts (no cost — a
  * bare OpenAI endpoint returns none).
  */
 const DEFAULT_FAKE_MODEL = 'gpt-4o-mini';
-const DEFAULT_FAKE_USAGE: FakeUsage = { prompt_tokens: 1200, completion_tokens: 300, total_tokens: 1500 };
+const DEFAULT_FAKE_USAGE: RawLlmUsage = { prompt_tokens: 1200, completion_tokens: 300, total_tokens: 1500 };
 
 /**
- * A fake OpenAI-compatible client that records each request body and returns a canned completion — the network-free
- * seam the strategy unit tests assert the wiring through.
+ * The shared chat-client fake (`makeLlmOpenAiChatClientFake` from `@dereekb/llm/test`) with this spec's default served
+ * model + usage. Passing its client where an `LlmOpenAiChatClient` is expected is the compile-time check that the fake's
+ * structural mirror still matches the real client.
  *
  * @param opts - The canned reply text + served-model / usage overrides.
  * @returns The fake client + the recorded bodies + the recorded per-request options.
  */
-function makeFakeClient(opts: { readonly reply?: string; readonly model?: string; readonly usage?: FakeUsage; readonly includeModel?: boolean; readonly includeUsage?: boolean; readonly id?: string; readonly finishReason?: string } = {}): {
-  readonly client: LlmOpenAiChatClient;
-  readonly bodies: RecordedBody[];
-  readonly options: LlmOpenAiRequestOptions[];
-} {
-  const reply = opts.reply ?? 'fake-reply';
-  const includeModel = opts.includeModel ?? true;
-  const includeUsage = opts.includeUsage ?? true;
-  const model = opts.model ?? DEFAULT_FAKE_MODEL;
-  const usage = opts.usage ?? DEFAULT_FAKE_USAGE;
-  const bodies: RecordedBody[] = [];
-  const options: LlmOpenAiRequestOptions[] = [];
-  const client: LlmOpenAiChatClient = {
-    chat: {
-      completions: {
-        create: async (body, requestOptions) => {
-          bodies.push(body as RecordedBody);
-          if (requestOptions != null) {
-            options.push(requestOptions);
-          }
-          return {
-            choices: [{ message: { content: reply }, ...(opts.finishReason == null ? {} : { finish_reason: opts.finishReason }) }],
-            ...(opts.id == null ? {} : { id: opts.id }),
-            ...(includeModel ? { model } : {}),
-            ...(includeUsage ? { usage } : {})
-          };
-        }
-      }
-    }
-  };
-  return { client, bodies, options };
-}
+const makeFakeClient = (opts: LlmOpenAiChatClientFakeConfig = {}) => makeLlmOpenAiChatClientFake({ model: DEFAULT_FAKE_MODEL, usage: DEFAULT_FAKE_USAGE, ...opts });
 
 describe('makeLlmOpenAiStrategy()', () => {
   it('builds a strict json_schema response_format from the hint, named by the capability', async () => {

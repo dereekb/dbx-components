@@ -155,3 +155,22 @@ export function makeLlmFetchFake(respond: LlmFetchFakeRespond | LlmFetchFakeAnsw
 
   return { fetch: fakeFetch, requests };
 }
+
+/**
+ * Read one header a fake recorded, matching the name case-insensitively: a plain-object `HeadersInit` keeps its key case
+ * in {@link LlmFetchFakeRequestInit.headers}, a `Headers` instance lower-cases it.
+ *
+ * @param request - The recorded request.
+ * @param name - The header name, any case.
+ * @returns The header value, or `undefined` when the request carried none.
+ *
+ * @example
+ * ```ts
+ * readLlmFetchFakeHeader(fake.requests[0], 'authorization'); // 'Bearer …'
+ * ```
+ */
+export function readLlmFetchFakeHeader(request: LlmFetchFakeRequest, name: string): Maybe<string> {
+  const wanted = name.toLowerCase();
+  const entry = Object.entries(request.init.headers).find(([key]) => key.toLowerCase() === wanted);
+  return entry?.[1];
+}

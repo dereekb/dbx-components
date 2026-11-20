@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { type ConfiguredFetch } from '@dereekb/util/fetch';
 import { DEFAULT_LLM_COMPLETION_TIMEOUT_MS, DEFAULT_LLM_MAX_OUTPUT_TOKENS, makeLlmDispatcher, makeLlmStrategyRegistry, probeLlmCredentialEndpoint, makeLlmTieredPromptTemplateResolver, resolveLlmCompletionCallTimeoutMs, type LlmReasoningConfig } from '@dereekb/llm';
-import { type LlmOpenAiChatClient, type LlmOpenAiChatCompletion, type LlmOpenAiChatCompletionBody, type LlmOpenAiRequestOptions } from './openai.chat';
+import { makeLlmOpenAiChatClientFake } from '@dereekb/llm/test';
+import { type LlmOpenAiChatCompletion, type LlmOpenAiChatCompletionBody } from './openai.chat';
 import { makeLlmOpenAiCompatibleChatStrategy, type LlmOpenAiCompatibleCallParams, type LlmOpenAiCompatibleChatStrategyConfig, type LlmOpenAiCompatibleChatStrategyHooks } from './openai.compatible.strategy';
 
 /**
@@ -12,29 +13,6 @@ import { makeLlmOpenAiCompatibleChatStrategy, type LlmOpenAiCompatibleCallParams
 
 const ACME_MODEL = 'acme/model';
 const ACME_BASE_URL = 'https://acme.example/v1';
-
-/**
- * A minimal recording client — the bodies and request options it was sent, and a canned completion.
- *
- * @param completion - The completion every call resolves.
- * @returns The client and its recordings.
- */
-function makeRecordingClient(completion: LlmOpenAiChatCompletion = { choices: [{ message: { content: 'ok' } }] }) {
-  const bodies: LlmOpenAiChatCompletionBody[] = [];
-  const options: LlmOpenAiRequestOptions[] = [];
-  const client: LlmOpenAiChatClient = {
-    chat: {
-      completions: {
-        create: async (body, requestOptions) => {
-          bodies.push(body);
-          options.push(requestOptions ?? {});
-          return completion;
-        }
-      }
-    }
-  };
-  return { client, bodies, options };
-}
 
 /**
  * The `'acme'` hooks fixture; each case overrides what it exercises.
@@ -78,7 +56,7 @@ describe('makeLlmOpenAiCompatibleChatStrategy()', () => {
     });
 
     it('pins the core defaults and sends them when nothing is configured', async () => {
-      const { client, bodies, options } = makeRecordingClient();
+      const { client, bodies, options } = makeLlmOpenAiChatClientFake<LlmOpenAiChatCompletionBody>({ reply: 'ok' });
 
       await acme({ client, defaultModel: ACME_MODEL }).complete({ prompt: 'hi', capability: 'X' });
 
@@ -92,7 +70,7 @@ describe('makeLlmOpenAiCompatibleChatStrategy()', () => {
   describe('hook wiring', () => {
     it('hands messages the vision-filtered attachments and stamps attachmentsSent', async () => {
       const seen: Array<ReadonlyArray<unknown>> = [];
-      const { client } = makeRecordingClient();
+      const { client } = makeLlmOpenAiChatClientFake<LlmOpenAiChatCompletionBody>({ reply: 'ok' });
       const strategy = acme(
         { client, defaultModel: ACME_MODEL, visionByModel: { 'acme/eyes': true } },
         {
@@ -115,7 +93,7 @@ describe('makeLlmOpenAiCompatibleChatStrategy()', () => {
 
     it('hands reasoningParams the normalized reasoning config', async () => {
       const seen: Array<LlmOpenAiCompatibleCallParams['reasoning']> = [];
-      const { client } = makeRecordingClient();
+      const { client } = makeLlmOpenAiChatClientFake<LlmOpenAiChatCompletionBody>({ reply: 'ok' });
       const strategy = acme(
         { client, defaultModel: ACME_MODEL },
         {
@@ -137,7 +115,7 @@ describe('makeLlmOpenAiCompatibleChatStrategy()', () => {
     });
 
     it('appends bodyExtras after response_format, in the unified key order', async () => {
-      const { client, bodies } = makeRecordingClient();
+      const { client, bodies } = makeLlmOpenAiChatClientFake<LlmOpenAiChatCompletionBody>({ reply: 'ok' });
       const strategy = acme({ client, defaultModel: ACME_MODEL }, { reasoningParams: () => ({ reasoning_effort: 'low' }), bodyExtras: () => ({ usage: { include: true } }) });
 
       await strategy.complete({ prompt: 'hi', capability: 'X', responseSchemaHint: { type: 'object' } });
@@ -146,7 +124,7 @@ describe('makeLlmOpenAiCompatibleChatStrategy()', () => {
     });
 
     it('moves the cap under max_completion_tokens when the hooks say so', async () => {
-      const { client, bodies } = makeRecordingClient();
+      const { client, bodies } = makeLlmOpenAiChatClientFake<LlmOpenAiChatCompletionBody>({ reply: 'ok' });
 
       await acme({ client, defaultModel: ACME_MODEL, maxOutputTokens: 300 }, { tokenLimitParam: 'max_completion_tokens' }).complete({ prompt: 'hi', capability: 'X' });
 
@@ -155,7 +133,7 @@ describe('makeLlmOpenAiCompatibleChatStrategy()', () => {
     });
 
     it('falls back to the plain message builder when the hooks name none', async () => {
-      const { client, bodies } = makeRecordingClient();
+      const { client, bodies } = makeLlmOpenAiChatClientFake<LlmOpenAiChatCompletionBody>({ reply: 'ok' });
 
       await acme({ client, defaultModel: ACME_MODEL }).complete({ prompt: 'now', capability: 'X', thread: [{ role: 'user', content: 'then' }] });
 
@@ -171,18 +149,18 @@ describe('makeLlmOpenAiCompatibleChatStrategy()', () => {
     const extras: Partial<LlmOpenAiCompatibleChatStrategyHooks> = { completionExtras: (completion) => ({ provider: completion.provider, fallbackFinishReason: completion.choices[0]?.native_finish_reason }) };
 
     it('places provider between model and usage, and uses the fallback finish reason only when finish_reason is absent', async () => {
-      const result = await acme({ client: makeRecordingClient(echoed).client, defaultModel: ACME_MODEL }, extras).complete({ prompt: 'hi', capability: 'X' });
+      const result = await acme({ client: makeLlmOpenAiChatClientFake({ completion: echoed }).client, defaultModel: ACME_MODEL }, extras).complete({ prompt: 'hi', capability: 'X' });
 
       expect(Object.keys(result)).toEqual(['text', 'strategyId', 'strategyKind', 'capability', 'schemaEnforced', 'model', 'provider', 'usage', 'latencyMs', 'generationId', 'finishReason']);
       expect(result.provider).toBe('Upstream');
       expect(result.finishReason).toBe('end_turn');
 
-      const normalized = await acme({ client: makeRecordingClient({ ...echoed, choices: [{ message: { content: 'ok' }, finish_reason: 'stop', native_finish_reason: 'end_turn' }] }).client, defaultModel: ACME_MODEL }, extras).complete({ prompt: 'hi', capability: 'X' });
+      const normalized = await acme({ client: makeLlmOpenAiChatClientFake({ completion: { ...echoed, choices: [{ message: { content: 'ok' }, finish_reason: 'stop', native_finish_reason: 'end_turn' }] } }).client, defaultModel: ACME_MODEL }, extras).complete({ prompt: 'hi', capability: 'X' });
       expect(normalized.finishReason).toBe('stop');
     });
 
     it('reads no provider without an extras hook', async () => {
-      const result = await acme({ client: makeRecordingClient(echoed).client, defaultModel: ACME_MODEL }).complete({ prompt: 'hi', capability: 'X' });
+      const result = await acme({ client: makeLlmOpenAiChatClientFake({ completion: echoed }).client, defaultModel: ACME_MODEL }).complete({ prompt: 'hi', capability: 'X' });
 
       expect(result).not.toHaveProperty('provider');
       expect(result).not.toHaveProperty('finishReason');
@@ -206,12 +184,12 @@ describe('makeLlmOpenAiCompatibleChatStrategy()', () => {
     });
 
     it('row 2: a credentialProbeSource is delegated to, even with an injected client', async () => {
-      await expect(acme({ client: makeRecordingClient().client, credentialProbeSource: async () => verdict }).credentialProbe?.()).resolves.toEqual(verdict);
+      await expect(acme({ client: makeLlmOpenAiChatClientFake<LlmOpenAiChatCompletionBody>({ reply: 'ok' }).client, credentialProbeSource: async () => verdict }).credentialProbe?.()).resolves.toEqual(verdict);
       await expect(acme({ apiKey: 'k', credentialProbeSource: async () => verdict }).credentialProbe?.()).resolves.toEqual(verdict);
     });
 
     it('row 3: an injected client without probeFetch is ready with no socket', async () => {
-      const { client, bodies } = makeRecordingClient();
+      const { client, bodies } = makeLlmOpenAiChatClientFake<LlmOpenAiChatCompletionBody>({ reply: 'ok' });
       const health = await acme({ client }).credentialProbe?.();
 
       expect(health).toEqual({ ready: true, issues: [] });
@@ -225,7 +203,7 @@ describe('makeLlmOpenAiCompatibleChatStrategy()', () => {
         urls.push(url);
         return new Response('{}', { status: 200 });
       };
-      const health = await acme({ client: makeRecordingClient().client, probeFetch }).credentialProbe?.();
+      const health = await acme({ client: makeLlmOpenAiChatClientFake<LlmOpenAiChatCompletionBody>({ reply: 'ok' }).client, probeFetch }).credentialProbe?.();
 
       expect(health).toEqual({ ready: false, issues: [{ severity: 'error', message: 'no apiKey configured for the credential probe' }] });
       expect(urls).toEqual([]);
@@ -252,20 +230,20 @@ describe('makeLlmOpenAiCompatibleChatStrategy()', () => {
 
   describe('healthCheck', () => {
     it('is ready with an injected client and not ready with no key', async () => {
-      await expect(acme({ client: makeRecordingClient().client }).healthCheck?.()).resolves.toEqual({ ready: true, issues: [] });
+      await expect(acme({ client: makeLlmOpenAiChatClientFake<LlmOpenAiChatCompletionBody>({ reply: 'ok' }).client }).healthCheck?.()).resolves.toEqual({ ready: true, issues: [] });
       await expect(acme().healthCheck?.()).resolves.toEqual({ ready: false, issues: [{ severity: 'error', message: 'no apiKey configured and no client injected' }] });
     });
 
     it('prefixes the call-time errors with the kind and instance id', async () => {
       await expect(acme({ id: 'acme-b', defaultModel: ACME_MODEL }).complete({ prompt: 'hi', capability: 'X' })).rejects.toThrow(/^llm acme strategy 'acme-b': no apiKey configured and no client injected/);
-      await expect(acme({ id: 'acme-b', client: makeRecordingClient().client }).complete({ prompt: 'hi', capability: 'X' })).rejects.toThrow(/^llm acme strategy 'acme-b': no model configured/);
+      await expect(acme({ id: 'acme-b', client: makeLlmOpenAiChatClientFake<LlmOpenAiChatCompletionBody>({ reply: 'ok' }).client }).complete({ prompt: 'hi', capability: 'X' })).rejects.toThrow(/^llm acme strategy 'acme-b': no model configured/);
     });
   });
 });
 
 describe('makeLlmDispatcher() over makeLlmOpenAiCompatibleChatStrategy()', () => {
   it('serves a default-tier call with no defaultModel, sending the resolved slug and the dispatcher cap', async () => {
-    const { client, bodies } = makeRecordingClient();
+    const { client, bodies } = makeLlmOpenAiChatClientFake<LlmOpenAiChatCompletionBody>({ reply: 'ok' });
     const dispatcher = makeLlmDispatcher({
       strategies: makeLlmStrategyRegistry([acme({ client })]),
       defaultStrategyId: 'acme',

@@ -2,10 +2,10 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { type ConfiguredFetch } from '@dereekb/util/fetch';
 import { type LlmAdapter, type LlmCompletionAdapterConfig, type LlmModelConfigFile, type LlmProviderStatus, type LlmStrategy, makeLlmAdapterRegistry, makeLlmModelConfigSchema, makeLlmQuotaWindow, probeLlmCredentialEndpoint } from '@dereekb/llm';
 import { DEFAULT_LLM_ENV_NAMES, type LlmEnvNames, resolveLlmProvidersFromEnv } from '@dereekb/llm/node';
 import { type LlmLiveLaneConfig, makeLlmLiveLane } from './llm.test.lane';
+import { makeLlmFetchFake, readLlmFetchFakeHeader } from './llm.test.fetch';
 import { makeLlmScriptedDecisionStrategy, LLM_SCRIPTED_DECISION_STRATEGY_ID } from './llm.test.scripted.decision';
 
 const FAKE_URL = 'https://fake.example/v1';
@@ -58,24 +58,6 @@ function fakeAdaptersOf(usedFraction = 0.3) {
     { facet: 'decision', kind: 'fake-decision', strategyKind: LLM_SCRIPTED_DECISION_STRATEGY_ID, transports: ['fake'], make: ({ provider }) => makeLlmScriptedDecisionStrategy({ id: provider.id, script: () => ({}) }) }
   ]);
   return { adapters, received };
-}
-
-/**
- * A fetch seam answering one status and recording every request.
- *
- * @param status - The HTTP status to answer.
- * @returns The seam and the recorded urls / authorization headers.
- */
-function recordingFetchOf(status = 200) {
-  const urls: string[] = [];
-  const keys: Array<string | undefined> = [];
-  const fetch: ConfiguredFetch = async (input, init) => {
-    const url = String(input);
-    urls.push(url);
-    keys.push(new Headers(init?.headers).get('Authorization') ?? undefined);
-    return new Response(status === 401 ? REJECTED_BODY : '{}', { status });
-  };
-  return { fetch, urls, keys };
 }
 
 function laneOf(overrides: Partial<LlmLiveLaneConfig> = {}) {
@@ -261,23 +243,23 @@ describe('makeLlmLiveLane()', () => {
   describe('probes', () => {
     it("should report a rejected key as dead with the provider's words, at the selected provider's URL", async () => {
       const { lane } = laneOf();
-      const { fetch, urls } = recordingFetchOf(401);
+      const { fetch, requests } = makeLlmFetchFake({ status: 401, body: REJECTED_BODY });
       const report = await lane.probeCredentials({ env: KEYED, fetch });
 
       expect(report.ready).toBe(false);
-      expect(urls).toEqual([`${FAKE_URL}/key`]);
+      expect(requests.map((request) => request.url)).toEqual([`${FAKE_URL}/key`]);
       expect(JSON.stringify(report)).toContain('User not found.');
     });
 
     it('should report an accepted key as ready', async () => {
       const { lane } = laneOf();
-      await expect(lane.probeCredentials({ env: KEYED, fetch: recordingFetchOf(200).fetch })).resolves.toMatchObject({ ready: true });
+      await expect(lane.probeCredentials({ env: KEYED, fetch: makeLlmFetchFake({ body: {} }).fetch })).resolves.toMatchObject({ ready: true });
     });
 
     it("should keep the probe's fetch seam when a wider strategyOptions value carries an undefined fetch", async () => {
       const strategyOptions = { timeoutMs: 1_000, fetch: undefined };
       const { lane, received } = laneOf({ strategyOptions });
-      const { fetch } = recordingFetchOf();
+      const { fetch } = makeLlmFetchFake({ body: {} });
       await lane.readProviderStatus({ env: KEYED, fetch });
 
       expect(received[0]?.fetch).toBe(fetch);
@@ -286,28 +268,28 @@ describe('makeLlmLiveLane()', () => {
 
     it('should ask nothing on a keyless environment', async () => {
       const { lane } = laneOf();
-      const { fetch, urls } = recordingFetchOf();
+      const { fetch, requests } = makeLlmFetchFake({ body: {} });
 
       await expect(lane.probeCredentials({ env: UNLOCKED, fetch })).resolves.toEqual({ ready: true, checked: [] });
       await expect(lane.readProviderStatus({ env: UNLOCKED, fetch })).resolves.toEqual({ checked: [] });
-      expect(urls).toEqual([]);
+      expect(requests.map((request) => request.url)).toEqual([]);
     });
 
     it("should probe a metered provider through its ACCOUNT's credential probe", async () => {
       const { lane } = laneOf();
-      const { fetch, urls } = recordingFetchOf();
+      const { fetch, requests } = makeLlmFetchFake({ body: {} });
       await lane.probeCredentials({ env: { ...KEYED, ALPHA_BASE_URL: METERED_URL }, fetch });
-      expect(urls).toEqual([`${METERED_URL}/account/auth`]);
+      expect(requests.map((request) => request.url)).toEqual([`${METERED_URL}/account/auth`]);
     });
 
     it('should probe EVERY keyed provider in provider order, and a base-declared keyed one at its own endpoint, never a gap', async () => {
       const { lane } = laneOf({ modelConfig: { base: { providers: { gamma: { transport: 'fake', baseUrl: 'https://gamma.example/v1', apiKeyEnv: 'GAMMA_API_KEY' }, delta: { transport: 'fake', baseUrl: 'https://delta.example/v1', apiKeyEnv: 'DELTA_API_KEY' } } } } });
-      const { fetch, urls, keys } = recordingFetchOf();
+      const { fetch, requests } = makeLlmFetchFake({ body: {} });
       await lane.probeCredentials({ env: { ...KEYED, BETA_API_KEY: 'sk-fake-beta', GAMMA_API_KEY: 'sk-fake-gamma' }, fetch });
 
-      expect(keys.filter((key) => key?.includes('alpha') || key?.includes('beta'))).toEqual(['Bearer sk-fake-alpha', 'Bearer sk-fake-beta']);
-      expect(urls).toContain('https://gamma.example/v1/key');
-      expect(urls.some((url) => url.includes('delta'))).toBe(false);
+      expect(requests.map((request) => readLlmFetchFakeHeader(request, 'Authorization')).filter((key) => key?.includes('alpha') || key?.includes('beta'))).toEqual(['Bearer sk-fake-alpha', 'Bearer sk-fake-beta']);
+      expect(requests.map((request) => request.url)).toContain('https://gamma.example/v1/key');
+      expect(requests.map((request) => request.url).some((url) => url.includes('delta'))).toBe(false);
     });
   });
 
@@ -317,20 +299,20 @@ describe('makeLlmLiveLane()', () => {
 
     it('should strip every provider key when locked, and make no request or verdict', async () => {
       const { lane, logged } = hermeticLane();
-      const { fetch, urls } = recordingFetchOf();
+      const { fetch, requests } = makeLlmFetchFake({ body: {} });
       const env = lockedEnv();
 
       await lane.makeGlobalSetup({ env, fetch })();
 
       expect(env).toEqual({ UNRELATED: 'kept' });
-      expect(urls).toEqual([]);
+      expect(requests.map((request) => request.url)).toEqual([]);
       expect(logged).toEqual([]);
     });
 
     it('should keep the keys when hermetic is off', async () => {
       const { lane } = hermeticLane();
       const env = lockedEnv();
-      await lane.makeGlobalSetup({ env, hermetic: false, fetch: recordingFetchOf().fetch })();
+      await lane.makeGlobalSetup({ env, hermetic: false, fetch: makeLlmFetchFake({ body: {} }).fetch })();
       expect(env).toEqual(lockedEnv());
     });
 
@@ -338,7 +320,7 @@ describe('makeLlmLiveLane()', () => {
       const { lane, logged } = laneOf();
       const env: Record<string, string | undefined> = { ...KEYED, ALPHA_BASE_URL: METERED_URL };
 
-      await lane.makeGlobalSetup({ env, fetch: recordingFetchOf().fetch })();
+      await lane.makeGlobalSetup({ env, fetch: makeLlmFetchFake({ body: {} }).fetch })();
 
       expect(env['LLM_CREDENTIAL_VERDICT']).toBe('live');
       expect(env['LLM_QUOTA_VERDICT']).toBe('ok');
@@ -351,7 +333,7 @@ describe('makeLlmLiveLane()', () => {
       const { lane, logged } = laneOf();
       const env: Record<string, string | undefined> = { ...UNLOCKED };
 
-      await lane.makeGlobalSetup({ env, fetch: recordingFetchOf().fetch })();
+      await lane.makeGlobalSetup({ env, fetch: makeLlmFetchFake({ body: {} }).fetch })();
 
       expect(env['LLM_CREDENTIAL_VERDICT']).toBe('unchecked');
       expect(logged[0]).toContain('no provider is keyed (ALPHA_API_KEY, BETA_API_KEY)');
@@ -359,12 +341,12 @@ describe('makeLlmLiveLane()', () => {
 
     it('should honour the skip flags: no request for that half, and its stale verdict cleared so the lane opens', async () => {
       const { lane } = laneOf();
-      const { fetch, urls } = recordingFetchOf(401);
+      const { fetch, requests } = makeLlmFetchFake({ status: 401, body: REJECTED_BODY });
       const env: Record<string, string | undefined> = { ...KEYED, LLM_LIVE_SPECS_SKIP_CREDENTIAL_PROBE: '1', LLM_LIVE_SPECS_SKIP_QUOTA_PROBE: 'true', LLM_CREDENTIAL_VERDICT: 'dead', LLM_CREDENTIAL_DETAIL: 'stale', LLM_QUOTA_VERDICT: 'exhausted', LLM_QUOTA_DETAIL: 'stale' };
 
       await lane.makeGlobalSetup({ env, fetch })();
 
-      expect(urls).toEqual([]);
+      expect(requests.map((request) => request.url)).toEqual([]);
       expect(env['LLM_CREDENTIAL_VERDICT']).toBeUndefined();
       expect(env['LLM_QUOTA_VERDICT']).toBeUndefined();
       expect(lane.liveStrategyFromEnv(env)?.strategyId).toBe('alpha');
@@ -376,7 +358,7 @@ describe('makeLlmLiveLane()', () => {
       writeFileSync(defaultPath, '{ not json');
       const { lane } = laneOf({ modelConfig: { defaultPath } });
 
-      await expect(lane.makeGlobalSetup({ env: { ...KEYED }, fetch: recordingFetchOf().fetch })()).rejects.toThrow();
+      await expect(lane.makeGlobalSetup({ env: { ...KEYED }, fetch: makeLlmFetchFake({ body: {} }).fetch })()).rejects.toThrow();
     });
   });
 

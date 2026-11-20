@@ -1,20 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { type ConfiguredFetch } from '@dereekb/util/fetch';
+import { makeLlmFetchFake } from '@dereekb/llm/test';
 import { readLlmDecisionStrategyKinds, readLlmModelConfigLists, toLlmSystemOneDecisionStrategyConfig, makeLlmAdapterRegistry, makeLlmDecisionStrategies, makeLlmProviderStrategy, type LlmCompletionAdapterConfig, type LlmProviderConfig } from '@dereekb/llm';
 import { toLlmOpenAiCompatibleChatStrategyConfig } from '@dereekb/llm/openai';
 import { LLM_OPENROUTER_ADAPTERS, LLM_OPENROUTER_COMPLETION_ADAPTER, LLM_OPENROUTER_DECISION_ADAPTER } from './openrouter.adapter';
 
 const ROUTER: LlmProviderConfig = { id: 'router-a', transport: 'openrouter', apiKeyEnv: 'ROUTER_KEY', apiKey: 'or-key' };
-
-function recordingFetch() {
-  const calls: string[] = [];
-  const fetch: ConfiguredFetch = async (input) => {
-    const url = String(input);
-    calls.push(url);
-    return new Response('{"data":{}}', { status: 200 });
-  };
-  return { fetch, calls };
-}
 
 describe('LLM_OPENROUTER_ADAPTERS', () => {
   it('declares the completion and decision adapters', () => {
@@ -39,7 +29,7 @@ describe('toLlmOpenAiCompatibleChatStrategyConfig() (the OpenRouter completion m
   });
 
   it('maps every input and ignores the knobs the OpenRouter wire spells one way', () => {
-    const { fetch } = recordingFetch();
+    const { fetch } = makeLlmFetchFake({ body: '{"data":{}}' });
     const providerStatusSource = { providerId: 'meter', read: async () => ({ providerId: 'meter', available: true, windows: [], issues: [] }) };
     const credentialProbe = async () => ({ ready: true, issues: [] });
     const config: LlmCompletionAdapterConfig = {
@@ -78,21 +68,21 @@ describe('toLlmSystemOneDecisionStrategyConfig() (the OpenRouter decision mappin
   });
 
   it('maps every input', () => {
-    const { fetch } = recordingFetch();
+    const { fetch } = makeLlmFetchFake({ body: '{"data":{}}' });
     expect(toLlmSystemOneDecisionStrategyConfig({ provider: ROUTER, baseUrl: 'https://gateway.test/api/v1', timeoutMs: 4_000, fetch })).toEqual({ id: 'router-a', apiKey: 'or-key', baseUrl: 'https://gateway.test/api/v1', timeoutMs: 4_000, probeFetch: fetch });
   });
 });
 
 describe('the root resolution with LLM_OPENROUTER_ADAPTERS', () => {
   it('builds the openrouter chat strategy under the provider id', async () => {
-    const { fetch, calls } = recordingFetch();
+    const { fetch, requests } = makeLlmFetchFake({ body: '{"data":{}}' });
     const strategy = makeLlmProviderStrategy({ provider: ROUTER, adapters: makeLlmAdapterRegistry(LLM_OPENROUTER_ADAPTERS), defaultModel: 'vendor/model-flash', fetch });
 
     expect(strategy.id).toBe('router-a');
     expect(strategy.kind).toBe('openrouter');
     expect(strategy.caching).toBe('breakpoint');
     await expect(strategy.credentialProbe?.()).resolves.toEqual({ ready: true, issues: [] });
-    expect(calls).toEqual(['https://openrouter.ai/api/v1/key']);
+    expect(requests.map((request) => request.url)).toEqual(['https://openrouter.ai/api/v1/key']);
   });
 
   it('derives the decision strategy for an openrouter-transport provider', () => {
