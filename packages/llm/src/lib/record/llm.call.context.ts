@@ -6,8 +6,7 @@
  * **Recursive by construction.** A context spawns CHILD contexts ({@link LlmCallContext.child}) — request → phase →
  * dispatch → attempt — and each child's {@link LlmCallProfile} nests under its parent's `children`, so a caller reads
  * one nested tree rather than re-basing a flat list. Every span and mark offset is relative to the ROOT start, so a
- * flattened timeline needs no re-basing; every {@link LlmCallContextEvent} carries the label `path` from the root, so
- * the root `onEvent` tap sees WHERE in the tree it fired.
+ * flattened timeline needs no re-basing.
  *
  * **Timing is gated; side channels are not.** A context built with `timing: false` records no spans or marks (its
  * {@link LlmCallContext.enabled} is `false`), yet its {@link LlmCallContext.gap}, {@link LlmCallContext.diag} and
@@ -19,10 +18,10 @@
  * (a background job a request schedules and then finishes before). A `child()` of such an origin would report offsets
  * against a root that already finished, and would nest under a `children` array nobody reads again once the origin's
  * `profile()` was snapshotted. A detached root instead anchors its OWN start — so "this fire-and-forget write took
- * 4.1s" is readable — and records the origin as an {@link LlmCallLink} rather than a parent edge. A reader joins a
- * detached tree back to its origin through the ids `linkAttributionOf` copies onto the link, never through nesting.
- * It stays reachable from the origin via the SIBLING {@link LlmCallProfile.detachedProfiles} bucket — containment for
- * reachability, never a parent edge for timing.
+ * 4.1s" is readable — and records ONE {@link LlmCallLink} to the context it was detached from, rather than a parent
+ * edge. A reader joins a detached tree back to its origin through the ids `linkAttributionOf` copies onto the link,
+ * never through nesting. It stays reachable from the origin via the SIBLING {@link LlmCallProfile.detachedProfiles}
+ * bucket — containment for reachability, never a parent edge for timing.
  *
  * **No ambient state.** A context is minted per call and passed explicitly, so concurrent dispatchers never
  * cross-talk. A detached context is likewise created EXPLICITLY at the scheduling site and handed to the background
@@ -98,8 +97,8 @@ export type LlmCallDiagLevel = 'error' | 'warn' | 'info' | 'debug';
 export type LlmCallDiagFields = Readonly<Record<string, string | number | boolean>>;
 
 /**
- * One breadcrumb as the profile and the live tap see it — the "why did it do that" decision trace that does not
- * justify a record type of its own.
+ * One breadcrumb as the profile records it — the "why did it do that" decision trace that does not justify a record
+ * type of its own.
  */
 export interface LlmCallDiag {
   /**
@@ -135,8 +134,8 @@ export interface LlmCallDiagRecord extends LlmCallDiag {
 }
 
 /**
- * One deliberate swallow as the profile and the live tap see it — the declared site that fired, plus the caught
- * message when the `catch` bound one.
+ * One deliberate swallow as the profile records it — the declared site that fired, plus the caught message when the
+ * `catch` bound one.
  */
 export interface LlmCallSwallow {
   /**
@@ -221,42 +220,14 @@ export interface LlmCallProfile<A extends object = object, B extends object = ob
 }
 
 /**
- * One live event fired on the ROOT `onEvent` tap as it occurs anywhere in the tree, carrying the label `path` from the
- * root (e.g. `['request','build','summarize','attempt-2']`) so the tap sees WHERE in the tree it fired.
- *
- * The `detached` arm fires ONCE, at {@link LlmCallContext.detached} creation, carrying the DETACHED root's own path
- * plus the {@link LlmCallLink}s naming its origin — so a live tap reconstructs the link graph as it happens instead of
- * watching an orphan root appear.
+ * The input of {@link LlmCallContext.child} and {@link LlmCallContext.detached}: the attribution override, merged OVER
+ * the parent's.
  */
-export type LlmCallContextEvent<A extends object = object, B extends object = object> = (
-  | { readonly kind: 'mark'; readonly mark: LlmCallMark }
-  | { readonly kind: 'span'; readonly span: LlmCallSpan }
-  | { readonly kind: 'gap'; readonly gap: A & B }
-  | { readonly kind: 'diag'; readonly diag: LlmCallDiag }
-  | { readonly kind: 'swallow'; readonly swallow: LlmCallSwallow }
-  | { readonly kind: 'detached'; readonly links: ReadonlyArray<LlmCallLink<A>> }
-) & { readonly path: ReadonlyArray<string> };
-
-/**
- * Config for {@link LlmCallContext.child}.
- */
-export interface LlmCallContextChildConfig<A extends object = object> {
+export interface LlmCallContextChildParams<A extends object = object> {
   /**
    * The attribution override, merged OVER the parent's.
    */
   readonly attribution?: Partial<A>;
-}
-
-/**
- * Config for {@link LlmCallContext.detached} — the child config plus the causal origin(s) to record.
- */
-export interface LlmCallContextDetachedConfig<A extends object = object> extends LlmCallContextChildConfig<A> {
-  /**
-   * The causal origin(s) to record as this detached root's {@link LlmCallProfile.links}. Omitted ⇒ a single link
-   * naming the context {@link LlmCallContext.detached} was called on (the common case: the scheduling site detaches
-   * off its own scope). Supplied ⇒ REPLACES that implicit link.
-   */
-  readonly linkTo?: LlmCallLink<A> | ReadonlyArray<LlmCallLink<A>>;
 }
 
 /**
@@ -282,24 +253,19 @@ export interface LlmCallContextConfig<A extends object = object, B extends objec
    */
   readonly attribution?: A;
   /**
-   * A live tap on the ROOT — fires as each event occurs anywhere in the tree (path-prefixed).
-   */
-  readonly onEvent?: (event: LlmCallContextEvent<A, B>) => void;
-  /**
    * The root gap sink — receives every recorded gap (attribution merged under the body).
    */
   readonly onGap?: (gap: A & B) => void;
   /**
    * The root breadcrumb sink — receives the record untouched plus the context's attribution, so the host stamps its
-   * own columns (and applies its own level gate). Absent ⇒ breadcrumbs are recorded into the profile and the
-   * `onEvent` tap but never written.
+   * own columns (and applies its own level gate). Absent ⇒ breadcrumbs are recorded into the profile but never
+   * written.
    */
   readonly onDiag?: (record: D, attribution: A) => void;
   /**
    * The root swallow sink — receives the site, the RAW caught value and the context's attribution, so the host builds
    * its own record (e.g. from its own site registry). A sink that throws is contained (site
-   * `llm/call-context.swallow-sink`). Absent ⇒ swallows are recorded into the profile and the `onEvent` tap but never
-   * tallied.
+   * `llm/call-context.swallow-sink`). Absent ⇒ swallows are recorded into the profile but never tallied.
    */
   readonly onSwallow?: (site: LlmSwallowSiteId, cause: unknown, attribution: A) => void;
   /**
@@ -317,10 +283,6 @@ export interface LlmCallContextConfig<A extends object = object, B extends objec
  * library code is typed against.
  */
 export interface LlmCallContext<A extends object = object, B extends object = object, D extends LlmCallDiagRecord = LlmCallDiagRecord> {
-  /**
-   * This context's label (the last segment of its event `path`).
-   */
-  readonly label: string;
   /**
    * `false` on the shared no-op and on a `timing: false` context — callers gate payload emission on it, never by
    * branching call sites.
@@ -359,33 +321,15 @@ export interface LlmCallContext<A extends object = object, B extends object = ob
    */
   timeAsync<T>(name: string, run: () => Promise<T>, meta?: LlmCallSpanMeta): Promise<T>;
   /**
-   * Begin a span manually — returns a `close` thunk that records it (idempotent; a second call is a no-op). When
-   * timing is off, returns a no-op thunk.
-   *
-   * @param name - The span name.
-   * @param meta - Optional scalar attributes.
-   * @returns The close thunk.
-   */
-  beginSpan(name: string, meta?: LlmCallSpanMeta): () => void;
-  /**
-   * RECURSIVELY create a child context whose profile nests under this one's {@link LlmCallProfile.children}, whose
-   * events bubble to the ROOT `onEvent` tap (path-prefixed), and whose side channels forward to the ROOT callbacks.
-   * Inherits the clock, the timing flag and the attribution (the child's override is merged OVER the parent's). A
-   * no-op parent yields a no-op child.
+   * RECURSIVELY create a child context whose profile nests under this one's {@link LlmCallProfile.children} and whose
+   * side channels forward to the ROOT callbacks. Inherits the clock, the timing flag and the attribution (the child's
+   * override is merged OVER the parent's). A no-op parent yields a no-op child.
    *
    * @param label - The child label.
-   * @param config - The optional attribution override.
+   * @param params - The optional attribution override.
    * @returns The child context.
    */
-  child(label: string, config?: LlmCallContextChildConfig<A>): LlmCallContext<A, B, D>;
-  /**
-   * Project THIS context as an {@link LlmCallLink} — its label path plus what `linkAttributionOf` copies from its
-   * attribution. The PRODUCER side of "link, don't parent": hand it to another context's {@link detached} `linkTo`
-   * when the causal origin is not the context creating the detached root.
-   *
-   * @returns The link naming this context.
-   */
-  link(): LlmCallLink<A>;
+  child(label: string, params?: LlmCallContextChildParams<A>): LlmCallContext<A, B, D>;
   /**
    * Create a DETACHED context — a NEW ROOT for work that is CAUSED by this context but NOT temporally contained by it.
    *
@@ -394,15 +338,16 @@ export interface LlmCallContext<A extends object = object, B extends object = ob
    * the timing flag, the ROOT callbacks and the merged attribution — so the detached work's gaps are never lost and its
    * ids still join the origin on read.
    *
-   * Reachable from here via the sibling {@link LlmCallProfile.detachedProfiles} bucket, AND returned so a scheduling
-   * site that outlives this context's snapshot can profile it independently. A no-op parent yields the no-op.
+   * It records exactly ONE {@link LlmCallLink}, naming THIS context (its label path plus what `linkAttributionOf`
+   * copies from its attribution). Reachable from here via the sibling {@link LlmCallProfile.detachedProfiles} bucket,
+   * AND returned so a scheduling site that outlives this context's snapshot can profile it independently. A no-op
+   * parent yields the no-op.
    *
    * @param label - The detached root label (e.g. `'bg:index-docs'`).
-   * @param config - The attribution override and the optional explicit link target(s) — defaults to a single link
-   *   naming THIS context.
+   * @param params - The optional attribution override.
    * @returns The detached root context.
    */
-  detached(label: string, config?: LlmCallContextDetachedConfig<A>): LlmCallContext<A, B, D>;
+  detached(label: string, params?: LlmCallContextChildParams<A>): LlmCallContext<A, B, D>;
   /**
    * THE gap call — record something the work came up short on. Stamps the context's attribution UNDER the partial
    * `attribution` override and the body (`{ ...attribution, ...override, ...body }`), records it into the profile,
@@ -413,16 +358,16 @@ export interface LlmCallContext<A extends object = object, B extends object = ob
    */
   gap(body: B, attribution?: Partial<A>): void;
   /**
-   * THE breadcrumb call — record one leveled breadcrumb. Records its {@link LlmCallDiag} payload into the profile and
-   * the live tap, then forwards the record UNTOUCHED to the root `onDiag` with the context's attribution, so a host
-   * joins the breadcrumb to the work that dropped it. ALWAYS forwards, even when {@link enabled} is `false`.
+   * THE breadcrumb call — record one leveled breadcrumb. Records its {@link LlmCallDiag} payload into the profile,
+   * then forwards the record UNTOUCHED to the root `onDiag` with the context's attribution, so a host joins the
+   * breadcrumb to the work that dropped it. ALWAYS forwards, even when {@link enabled} is `false`.
    *
    * @param record - The breadcrumb (level + code + fields + message, plus any host columns or `once` key).
    */
   diag(record: D): void;
   /**
-   * THE swallow call — record that a DECLARED fail-open `catch` fired. Records it into the profile and the live tap,
-   * then forwards the site, the RAW cause and the context's attribution to the root `onSwallow`.
+   * THE swallow call — record that a DECLARED fail-open `catch` fired. Records it into the profile, then forwards the
+   * site, the RAW cause and the context's attribution to the root `onSwallow`.
    *
    * ALWAYS forwards, even when {@link enabled} is `false`. NEVER throws — a throwing host sink is contained — and NEVER
    * changes control flow, since it is called from inside `catch` blocks whose contract is "never throws". It has the
@@ -466,10 +411,6 @@ interface LlmCallContextInternal<A extends object, B extends object, D extends L
    */
   readonly rootStartMs?: UnixDateTimeMillisecondsNumber;
   /**
-   * The shared root event tap.
-   */
-  readonly onEvent?: (event: LlmCallContextEvent<A, B>) => void;
-  /**
    * The shared root gap sink.
    */
   readonly onGap?: (gap: A & B) => void;
@@ -504,7 +445,7 @@ interface LlmCallContextInternal<A extends object, B extends object, D extends L
  * @returns The context node.
  */
 function buildLlmCallContext<A extends object, B extends object, D extends LlmCallDiagRecord>(internal: LlmCallContextInternal<A, B, D>): LlmCallContext<A, B, D> {
-  const { enabled, label, path, now, onEvent, onGap, onDiag, onSwallow, linkAttributionOf, attribution, links } = internal;
+  const { enabled, label, path, now, onGap, onDiag, onSwallow, linkAttributionOf, attribution, links } = internal;
   const startMs = now();
   const rootStartMs = internal.rootStartMs ?? startMs;
   const spans: LlmCallSpan[] = [];
@@ -520,15 +461,11 @@ function buildLlmCallContext<A extends object, B extends object, D extends LlmCa
   const closeSpan = (name: string, start: UnixDateTimeMillisecondsNumber, meta?: LlmCallSpanMeta): void => {
     const span: LlmCallSpan = { name, startMs: start - rootStartMs, durationMs: now() - start, ...(meta == null ? {} : { meta }) };
     spans.push(span);
-    onEvent?.({ kind: 'span', span, path });
   };
-
-  const linkOf = (): LlmCallLink<A> => ({ path, ...linkAttributionOf?.(attribution) }) as LlmCallLink<A>;
 
   // The shared callbacks every child and detached root inherits from the root.
   const sinks = {
     now,
-    ...(onEvent == null ? {} : { onEvent }),
     ...(onGap == null ? {} : { onGap }),
     ...(onDiag == null ? {} : { onDiag }),
     ...(onSwallow == null ? {} : { onSwallow }),
@@ -536,14 +473,12 @@ function buildLlmCallContext<A extends object, B extends object, D extends LlmCa
   };
 
   return {
-    label,
     enabled,
     attribution,
     mark(name, meta) {
       if (enabled) {
         const mark: LlmCallMark = { name, atMs: now() - rootStartMs, ...(meta == null ? {} : { meta }) };
         marks.push(mark);
-        onEvent?.({ kind: 'mark', mark, path });
       }
     },
     time(name, run, meta) {
@@ -580,79 +515,44 @@ function buildLlmCallContext<A extends object, B extends object, D extends LlmCa
 
       return result;
     },
-    beginSpan(name, meta) {
-      let close: () => void;
-
-      if (enabled) {
-        const start = now();
-        let closed = false;
-        close = () => {
-          if (!closed) {
-            closed = true;
-            closeSpan(name, start, meta);
-          }
-        };
-      } else {
-        close = () => undefined;
-      }
-
-      return close;
-    },
-    child(childLabel, config) {
+    child(childLabel, params) {
       const child = buildLlmCallContext<A, B, D>({
         enabled,
         label: childLabel,
         path: [...path, childLabel],
         rootStartMs,
         ...sinks,
-        attribution: { ...attribution, ...config?.attribution }
+        attribution: { ...attribution, ...params?.attribution }
       });
       children.push(child);
       return child;
     },
-    link() {
-      return linkOf();
-    },
-    detached(detachedLabel, config) {
-      const linkTo = config?.linkTo;
-      // Omitted ⇒ the implicit link naming THIS context; supplied ⇒ it REPLACES the implicit one.
-      let detachedLinks: ReadonlyArray<LlmCallLink<A>>;
-
-      if (linkTo == null) {
-        detachedLinks = [linkOf()];
-      } else if (Array.isArray(linkTo)) {
-        detachedLinks = [...(linkTo as ReadonlyArray<LlmCallLink<A>>)];
-      } else {
-        detachedLinks = [linkTo as LlmCallLink<A>];
-      }
-
-      const detachedPath = [detachedLabel];
+    detached(detachedLabel, params) {
+      // The one link: THIS context's path plus the ids the host keeps for joining back.
+      const selfLink = { path, ...linkAttributionOf?.(attribution) } as LlmCallLink<A>;
       const detachedRoot = buildLlmCallContext<A, B, D>({
         enabled,
         label: detachedLabel,
-        path: detachedPath,
+        path: [detachedLabel],
         // NO `rootStartMs` — the detached root anchors its OWN timeline through the root rule above, so its offsets
         // read from when the off-request work actually began.
         ...sinks,
-        attribution: { ...attribution, ...config?.attribution },
-        links: detachedLinks
+        attribution: { ...attribution, ...params?.attribution },
+        links: [selfLink]
       });
       detachedRoots.push(detachedRoot);
-      onEvent?.({ kind: 'detached', links: detachedLinks, path: detachedPath });
       return detachedRoot;
     },
     gap(body, override) {
       const gap = { ...attribution, ...override, ...body } as A & B;
       gaps.push(gap);
-      onEvent?.({ kind: 'gap', gap, path });
       onGap?.(gap);
     },
     diag(record) {
-      // The PAYLOAD half (what the profile + the live tap read) is projected apart from the record, so the in-process
+      // The PAYLOAD half (what the profile reads) is projected apart from the record, so the in-process
       // read-back carries exactly the four documented keys and `fields` stays omit-when-absent.
       const diag: LlmCallDiag = { level: record.level, code: record.code, ...(record.fields == null ? {} : { fields: record.fields }), message: record.message };
       diags.push(diag);
-      onEvent?.({ kind: 'diag', diag, path });
       // The record goes to the host untouched; the host stamps its own columns from the attribution, and an explicit
       // override on the record still wins when it spreads the record last.
       onDiag?.(record, attribution);
@@ -661,7 +561,6 @@ function buildLlmCallContext<A extends object, B extends object, D extends LlmCa
       const causeText = llmSwallowCauseText(cause);
       const swallow: LlmCallSwallow = { site, ...(causeText == null ? {} : { cause: causeText }) };
       swallows.push(swallow);
-      onEvent?.({ kind: 'swallow', swallow, path });
 
       try {
         onSwallow?.(site, cause, attribution);
@@ -695,7 +594,7 @@ function buildLlmCallContext<A extends object, B extends object, D extends LlmCa
  * breadcrumbs and swallows still forward to the host's callbacks. Children and detached roots inherit the clock, the
  * timing flag and the callbacks.
  *
- * @param config - The label, timing flag, clock, root attribution, root event tap and the host's callbacks.
+ * @param config - The label, timing flag, clock, root attribution and the host's callbacks.
  * @returns The root context.
  *
  * @example
@@ -717,7 +616,6 @@ export function makeLlmCallContext<A extends object = object, B extends object =
     label: config.label,
     path: [config.label],
     now: config.now ?? (() => Date.now()),
-    ...(config.onEvent == null ? {} : { onEvent: config.onEvent }),
     ...(config.onGap == null ? {} : { onGap: config.onGap }),
     ...(config.onDiag == null ? {} : { onDiag: config.onDiag }),
     ...(config.onSwallow == null ? {} : { onSwallow: config.onSwallow }),
@@ -730,7 +628,6 @@ export function makeLlmCallContext<A extends object = object, B extends object =
  * The one shared no-op context behind {@link noopLlmCallContext}.
  */
 const NOOP_LLM_CALL_CONTEXT: LlmCallContext = {
-  label: '(noop)',
   enabled: false,
   attribution: {},
   mark() {
@@ -742,14 +639,8 @@ const NOOP_LLM_CALL_CONTEXT: LlmCallContext = {
   async timeAsync(_name, run) {
     return run();
   },
-  beginSpan() {
-    return () => undefined;
-  },
   child() {
     return NOOP_LLM_CALL_CONTEXT;
-  },
-  link() {
-    return { path: ['(noop)'] };
   },
   detached() {
     return NOOP_LLM_CALL_CONTEXT;

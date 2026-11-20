@@ -473,6 +473,24 @@ describe('makeLlmDispatcher() retry', () => {
 
       expect(labels[0]).toEqual(['attempt-1', 'attempt-2']);
     });
+
+    it('keeps the call record phases and the callProfile byte-identical over two attempts under a fixed clock (pin)', async () => {
+      let t = 0;
+      const stepClock = () => () => t++;
+      const calls: LlmCallRecord<HostFields>[] = [];
+      const profiles: unknown[] = [];
+      const recorder: LlmDispatchRecorder<LlmDispatchRequest, HostFields> = { newCallContext: ({ label }) => makeLlmCallContext({ label, now: stepClock() }), recordCall: (record) => calls.push(record) };
+      const { dispatcher } = setup({ replies: [INVALID, OK], recorder, resultOf: ({ result, callProfile }) => (profiles.push(callProfile), result) });
+      await dispatcher.dispatch(request({ validate: VALID }));
+
+      expect(JSON.stringify(calls[0].phases)).toBe(
+        '{"totalMs":19,"renderMs":1,"assembleMs":1,"completeMs":2,"attempts":[{"attempt":1,"wallMs":1},{"attempt":2,"wallMs":1,"retry":{"lever":"reasoning-low","from":"off","to":"low","cause":"schema-validation","headroom":2048}}],"promptChars":31,"cachePrefixChars":25,"cachePrefixHash":"522153e78572010f"}'
+      );
+      expect(Object.keys(calls[0])).toEqual(['capability', 'prompt', 'segments', 'result', 'tier', 'reasoningOff', 'estimatedPromptTokens', 'phases', 'failedAttempts']);
+      expect(JSON.stringify(profiles[0])).toBe(
+        '{"label":"TestCap","startedAt":0,"totalMs":19,"spans":[{"name":"render","startMs":1,"durationMs":1},{"name":"contribute","startMs":3,"durationMs":1},{"name":"assemble","startMs":5,"durationMs":1}],"marks":[],"gaps":[],"diags":[{"level":"debug","code":"model-route","fields":{"capability":"TestCap","model":"test/fast","tier":"fast","source":"default-tier"},"message":"capability model resolved by the precedence ladder"},{"level":"debug","code":"provider-route","fields":{"capability":"TestCap","model":"test/fast","provider":"s"},"message":"provider instance resolved for this dispatch"},{"level":"debug","code":"reasoning-floor","fields":{"capability":"TestCap","source":"default"},"message":"reasoning resolved off for this dispatch"},{"level":"info","code":"retry-lever","fields":{"capability":"TestCap","attempt":2,"cause":"schema-validation","lever":"reasoning-low","from":"off","to":"low","reason":"the reply decoded but got the answer wrong, so the re-ask buys a low reasoning band rather than a different model, with the completion cap raised 1024 → 2048 so the thinking does not eat the answer"},"message":"retry moves the reasoning-low lever"}],"children":[{"label":"attempt-1","startedAt":7,"totalMs":13,"spans":[{"name":"complete","startMs":8,"durationMs":1},{"name":"validate","startMs":11,"durationMs":1}],"marks":[],"gaps":[],"children":[]},{"label":"attempt-2","startedAt":13,"totalMs":8,"spans":[{"name":"complete","startMs":14,"durationMs":1},{"name":"validate","startMs":17,"durationMs":1}],"marks":[],"gaps":[],"children":[]}]}'
+      );
+    });
   });
 
   describe('prompt instances', () => {

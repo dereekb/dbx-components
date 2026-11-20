@@ -1,12 +1,11 @@
 /**
  * The call context — spans / marks / gaps captured against an injected clock, recursive child contexts that nest in
- * the parent profile and bubble events to the root tap, the DETACHED "link, don't parent" root for causally-related
- * but not temporally-contained work, the attribution merge, the host callbacks for gaps / breadcrumbs / swallows, and
+ * the parent profile, the DETACHED "link, don't parent" root for causally-related but not temporally-contained work, the attribution merge, the host callbacks for gaps / breadcrumbs / swallows, and
  * the timing-off and no-op paths.
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { makeLlmCallContext, noopLlmCallContext, type LlmCallContext, type LlmCallContextConfig, type LlmCallContextEvent, type LlmCallDiagRecord } from './llm.call.context';
+import { makeLlmCallContext, noopLlmCallContext, type LlmCallContext, type LlmCallContextConfig, type LlmCallDiagRecord } from './llm.call.context';
 
 /**
  * The spec host's attribution.
@@ -33,7 +32,6 @@ interface TestGapBody {
 type TestDiagRecord = LlmCallDiagRecord & { readonly region?: string };
 
 type TestGap = TestAttribution & TestGapBody;
-type TestEvent = LlmCallContextEvent<TestAttribution, TestGapBody>;
 
 /**
  * Build a gap body naming a missing thing.
@@ -124,21 +122,6 @@ describe('makeLlmCallContext', () => {
     expect(ctx.profile().spans.map((span) => span.name)).toEqual(['good', 'bad']);
   });
 
-  it('fires the root onEvent tap in occurrence order, path-prefixed', () => {
-    const events: TestEvent[] = [];
-    const ctx = testContext({ attribution: { source: 'auto' }, onEvent: (event) => events.push(event) });
-    ctx.mark('m');
-    const build = ctx.child('build');
-    build.time('complete', () => undefined);
-    ctx.gap(missing('FOG'));
-
-    expect(events.map((event) => [event.kind, event.path.join('/')])).toEqual([
-      ['mark', 'request'],
-      ['span', 'request/build'],
-      ['gap', 'request']
-    ]);
-  });
-
   it('nests child profiles under the parent children, root-relative', () => {
     const ctx = testContext();
     ctx.time('spawn', () => undefined);
@@ -160,14 +143,6 @@ describe('makeLlmCallContext', () => {
 
     expect(gaps).toHaveLength(1);
     expect(gaps[0]).toMatchObject({ kind: 'missing', requested: 'RAIN', capability: 'classify', region: 'eu' });
-  });
-
-  it('beginSpan is idempotent; a second close is a no-op', () => {
-    const ctx = testContext();
-    const close = ctx.beginSpan('manual');
-    close();
-    close();
-    expect(ctx.profile().spans).toHaveLength(1);
   });
 
   it('profile() is a snapshot: later records do not reach an earlier profile, and each call copies its arrays', () => {
@@ -231,16 +206,6 @@ describe('LlmCallContext.detached', () => {
     expect(run.detached('bg').profile().links).toEqual([{ path: ['request', 'run'], sessionId: 't1' }]);
   });
 
-  it('lets an explicit linkTo REPLACE the implicit self-link (the cross-context origin)', () => {
-    const root = testContext({ attribution: { source: 'auto', sessionId: 't1' }, linkAttributionOf: linkIds });
-    const a = root.child('a', { attribution: { requestId: 'c1' } });
-    const b = root.child('b', { attribution: { requestId: 'c2' } });
-
-    expect(a.detached('bg', { linkTo: b.link() }).profile().links).toEqual([{ path: ['request', 'b'], sessionId: 't1', requestId: 'c2' }]);
-    // An array of origins is accepted verbatim (fan-in causality).
-    expect(a.detached('bg2', { linkTo: [a.link(), b.link()] }).profile().links).toHaveLength(2);
-  });
-
   it('inherits the origin attribution, and an override adds its own without disturbing the origin', () => {
     const root = testContext({ attribution: { source: 'auto', sessionId: 't1' } });
     const detached = root.detached('bg');
@@ -269,18 +234,6 @@ describe('LlmCallContext.detached', () => {
     expect(gapOnlyOnGap.mock.calls[0][0]).toMatchObject({ requested: 'FOG', sessionId: 't2' });
   });
 
-  it('fires a `detached` arm on the live tap at creation, then paths subsequent events from the detached root', () => {
-    const events: TestEvent[] = [];
-    const root = testContext({ onEvent: (event) => events.push(event) });
-    const detached = root.detached('bg/index-docs');
-    detached.child('classify').time('complete', () => undefined);
-
-    expect(events.map((event) => [event.kind, event.path.join('|')])).toEqual([
-      ['detached', 'bg/index-docs'],
-      ['span', 'bg/index-docs|classify']
-    ]);
-  });
-
   it('omits BOTH new profile keys when nothing was linked or detached (byte-stable absence)', () => {
     const profile = testContext().profile();
     expect('links' in profile).toBe(false);
@@ -292,7 +245,6 @@ describe('LlmCallContext.detached', () => {
   it('a link carries only its path when no linkAttributionOf is configured', () => {
     const root = testContext({ attribution: { source: 'auto', sessionId: 't1', requestId: 'c1' } });
 
-    expect(root.link()).toEqual({ path: ['request'] });
     expect(root.child('run').detached('bg').profile().links).toEqual([{ path: ['request', 'run'] }]);
   });
 });
@@ -310,10 +262,9 @@ describe('noopLlmCallContext', () => {
     expect(ctx.profile().gaps).toEqual([]);
   });
 
-  it('detaches to ITSELF and links to its own `(noop)` path', () => {
+  it('detaches to ITSELF', () => {
     const ctx = noopLlmCallContext();
     expect(ctx.detached('bg')).toBe(ctx);
-    expect(ctx.link()).toEqual({ path: ['(noop)'] });
   });
 
   it('returns the SAME instance on every call, whatever type parameters it is asked for', () => {
@@ -416,16 +367,6 @@ describe('LlmCallContext.diag', () => {
     expect(Object.keys(noopLlmCallContext().profile())).not.toContain('diags');
   });
 
-  it('bubbles a `diag` arm to the ROOT onEvent tap with its path', () => {
-    const events: TestEvent[] = [];
-    const root = testContext({ onEvent: (event) => events.push(event) });
-    root.child('build').child('attempt-1').diag({ level: 'info', code: 'decode-escalate', message: 'escalating' });
-
-    const diagEvents = events.filter((event) => event.kind === 'diag');
-    expect(diagEvents).toHaveLength(1);
-    expect(diagEvents[0].path).toEqual(['request', 'build', 'attempt-1']);
-  });
-
   it('is NOT timing-gated: a timing-off / noop context still forwards (or safely no-ops)', () => {
     const onDiag = vi.fn();
     const ctx = makeLlmCallContext<TestAttribution, TestGapBody, TestDiagRecord>({ label: 'summarize', timing: false, attribution: { source: 'auto' }, onDiag });
@@ -448,14 +389,6 @@ describe('LlmCallContext.swallow', () => {
     ctx.swallow('llm/example.bare');
 
     expect(ctx.profile().swallows).toEqual([{ site: 'llm/example.with-cause', cause: 'boom' }, { site: 'llm/example.bare' }]);
-  });
-
-  it('bubbles a `swallow` arm to the ROOT onEvent tap with its path', () => {
-    const events: TestEvent[] = [];
-    const root = testContext({ onEvent: (event) => events.push(event) });
-    root.child('build').swallow('llm/example.site', 'why');
-
-    expect(events).toEqual([{ kind: 'swallow', swallow: { site: 'llm/example.site', cause: 'why' }, path: ['request', 'build'] }]);
   });
 
   it('forwards the site, the RAW cause and the attribution to onSwallow', () => {
@@ -493,6 +426,21 @@ describe('LlmCallContext.swallow', () => {
     const ctx = noopLlmCallContext();
     expect(() => ctx.swallow('llm/example.site', new Error('x'))).not.toThrow();
     expect(Object.keys(ctx.profile())).not.toContain('swallows');
+  });
+});
+
+describe('LlmCallContext profile bytes', () => {
+  it('keeps the profile JSON byte-identical (pin)', () => {
+    const root = testContext({ attribution: { source: 'auto', sessionId: 't1' }, linkAttributionOf: linkIds });
+    root.time('render', () => undefined);
+    const run = root.child('run', { attribution: { requestId: 'c1' } });
+    run.diag({ level: 'info', code: 'pin', fields: { n: 1 }, message: 'pinned' });
+    run.swallow('llm/spec.pin', new Error('x'));
+    run.detached('bg').time('author', () => undefined);
+
+    expect(JSON.stringify(root.profile())).toBe(
+      '{"label":"request","startedAt":0,"totalMs":7,"spans":[{"name":"render","startMs":1,"durationMs":1}],"marks":[],"gaps":[],"children":[{"label":"run","startedAt":3,"totalMs":5,"spans":[],"marks":[],"gaps":[],"diags":[{"level":"info","code":"pin","fields":{"n":1},"message":"pinned"}],"swallows":[{"site":"llm/spec.pin","cause":"x"}],"children":[],"detachedProfiles":[{"label":"bg","startedAt":0,"totalMs":5,"spans":[{"name":"author","startMs":1,"durationMs":1}],"marks":[],"gaps":[],"children":[],"links":[{"path":["request","run"],"sessionId":"t1","requestId":"c1"}]}]}]}'
+    );
   });
 });
 

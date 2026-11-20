@@ -482,6 +482,22 @@ describe('makeLlmDispatcher()', () => {
       expect(profiles).toEqual([['attempt-1']]);
     });
 
+    it('keeps the call record phases and the callProfile byte-identical under a fixed clock (pin)', async () => {
+      let t = 0;
+      const stepClock = () => () => t++;
+      const calls: LlmCallRecord<HostFields>[] = [];
+      const profiles: unknown[] = [];
+      const recorder: LlmDispatchRecorder<LlmDispatchRequest, HostFields> = { newCallContext: ({ label }) => makeLlmCallContext({ label, now: stepClock() }), recordCall: (record) => calls.push(record) };
+      const { dispatcher } = setup({ replies: ['x'], recorder, resultOf: ({ result, callProfile }) => (profiles.push(callProfile), result) });
+      await dispatcher.dispatch(request());
+
+      expect(JSON.stringify(calls[0].phases)).toBe('{"totalMs":11,"renderMs":1,"assembleMs":1,"completeMs":1,"attempts":[{"attempt":1,"wallMs":1}],"promptChars":31,"cachePrefixChars":25,"cachePrefixHash":"522153e78572010f"}');
+      expect(Object.keys(calls[0])).toEqual(['capability', 'prompt', 'segments', 'result', 'tier', 'reasoningOff', 'estimatedPromptTokens', 'phases']);
+      expect(JSON.stringify(profiles[0])).toBe(
+        '{"label":"TestCap","startedAt":0,"totalMs":11,"spans":[{"name":"render","startMs":1,"durationMs":1},{"name":"contribute","startMs":3,"durationMs":1},{"name":"assemble","startMs":5,"durationMs":1}],"marks":[],"gaps":[],"diags":[{"level":"debug","code":"model-route","fields":{"capability":"TestCap","model":"test/fast","tier":"fast","source":"default-tier"},"message":"capability model resolved by the precedence ladder"},{"level":"debug","code":"provider-route","fields":{"capability":"TestCap","model":"test/fast","provider":"s"},"message":"provider instance resolved for this dispatch"},{"level":"debug","code":"reasoning-floor","fields":{"capability":"TestCap","source":"default"},"message":"reasoning resolved off for this dispatch"}],"children":[{"label":"attempt-1","startedAt":7,"totalMs":5,"spans":[{"name":"complete","startMs":8,"durationMs":1}],"marks":[],"gaps":[],"children":[]}]}'
+      );
+    });
+
     it('should hand resultOf no callProfile when timing is off', async () => {
       const { recorder } = recording(false);
       let seen: unknown = 'unset';
