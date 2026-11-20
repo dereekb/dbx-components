@@ -34,6 +34,12 @@ export const notificationHourlyUpdateSchedule: DemoScheduleFunction = async (req
       }
 
       return { repairAllNotificationTaskBotsResult };
+    },
+    // delete sent Notifications past their retention window, and every expired NotificationRedirectEntry (short link)
+    cleanupSentNotifications: async () => {
+      const cleanupSentNotifications = await request.nest.notificationActions.cleanupSentNotifications({});
+      const cleanupSentNotificationsResult = await cleanupSentNotifications();
+      return { cleanupSentNotificationsResult };
     }
   });
 
