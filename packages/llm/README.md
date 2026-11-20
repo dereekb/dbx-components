@@ -467,7 +467,7 @@ scopes, prompt handles and chains, a live-context token budget, a cache-prefix w
   the descriptor up through the injected `descriptorOf`, awaits the template resolver once, resolves the contributors in
   registry order and assembles. `assembleLlmCapabilityPrompt` is its synchronous last step (resolved templates and
   contributions in, segments out) for previews and goldens. The layout drives it: each slot, in order, holds what its
-  role says — contributions (frames, the model addendum, craft notes stable then volatile), the reply protocol (the
+  role says — contributions (frames, the model addendum, craft notes, in contribution order), the reply protocol (the
   `reply-protocol` template, or the built-in line protocol for a `line` call), at most one amendment (must-resolve, for a
   JSON protocol and a `mustResolve` descriptor; a clause only some calls carry is the host's, contributed from a `frame`
   slot it declares next to the amendment slot — its segment id may name that slot, so the bytes read as one amendment),

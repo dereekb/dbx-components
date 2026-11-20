@@ -297,11 +297,15 @@ describe('assembleLlmCapabilityPrompt()', () => {
       expect(first.cacheSegments.cachePrefix.endsWith('SPEAKER-1\n\n')).toBe(true);
     });
 
-    it('should place stable craft notes first, the first volatile one starting the suffix', () => {
-      const assembled = assemble('test', { contributions: [contribution('craft', 'CRAFT-V1', { key: 'v1', volatile: true }), contribution('craft', 'CRAFT-S1', { key: 's1' }), contribution('craft', 'CRAFT-V2', { key: 'v2', volatile: true }), contribution('craft', 'CRAFT-S2', { key: 's2' })] });
+    it("should keep a craft slot's contributions in contribution order; the first volatile one starts the suffix", () => {
+      const assembled = assemble('test', { contributions: [contribution('craft', 'CRAFT-S1', { key: 's1' }), contribution('craft', 'CRAFT-S2', { key: 's2' }), contribution('craft', 'CRAFT-V1', { key: 'v1', volatile: true }), contribution('craft', 'CRAFT-V2', { key: 'v2', volatile: true })] });
       expect(liveOf(assembled, 'craft').map((segment) => segment.key)).toEqual(['s1', 's2', 'v1', 'v2']);
       expect(assembled.cacheSegments.cachePrefix.endsWith('CRAFT-S1\n\nCRAFT-S2\n\n')).toBe(true);
       expect(assembled.cacheSegments.volatileSuffix.startsWith('CRAFT-V1\n\n')).toBe(true);
+
+      const volatileFirst = assemble('test', { contributions: [contribution('craft', 'CRAFT-V1', { key: 'v1', volatile: true }), contribution('craft', 'CRAFT-S1', { key: 's1' })] });
+      expect(liveOf(volatileFirst, 'craft').map((segment) => segment.key)).toEqual(['v1', 's1']);
+      expect(volatileFirst.cacheSegments.volatileSuffix.startsWith('CRAFT-V1\n\n')).toBe(true);
     });
 
     it('should fail loud when a single slot is held twice', () => {

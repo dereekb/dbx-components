@@ -472,8 +472,8 @@ describe('the golden replica', () => {
       const contribution = (slot: string, text: string, extra: Partial<LlmPromptContribution> = {}): LlmPromptContribution => ({ contributor: 'host', slot, id: slot, text, origin: { kind: 'frame' }, reason: 'spec', ...extra });
       const contributions: ReadonlyArray<LlmPromptContribution> = [
         contribution('D', 'D-SUP', { key: 'sup' }),
-        contribution('craft', 'CRAFT-VOLATILE', { key: 'craft-judged', volatile: true }),
         contribution('craft', 'CRAFT-STABLE', { key: 'craft-stable' }),
+        contribution('craft', 'CRAFT-VOLATILE', { key: 'craft-judged', volatile: true }),
         contribution('B1', 'B1-SPEECH'),
         contribution('A0.7', 'A07-STYLE'),
         contribution('A0.5', 'A05-PERSPECTIVE'),

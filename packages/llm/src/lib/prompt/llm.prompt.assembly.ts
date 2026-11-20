@@ -492,9 +492,9 @@ function llmPromptPieceSegmentsOf(slot: LlmPromptSlot, piece: Maybe<LlmPromptAss
  * Assemble a capability's prompt from its resolved templates and contributions, slot by slot in the layout's order.
  *
  * Each slot holds what its role says:
- * - `model-addendum` / `frame` — the slot's contributions, in contribution order; `craft` — the stable ones first,
- *   then the volatile ones, each group in order. A contribution keeps its own id, origin, key and reason, and carries
- *   `volatile: true` only when it claims it.
+ * - `model-addendum` / `frame` / `craft` — the slot's contributions, in contribution order (the craft contributor emits
+ *   its stable group before its volatile one, so the stable notes ride the cache prefix). A contribution keeps its own
+ *   id, origin, key and reason, and carries `volatile: true` only when it claims it.
  * - `reply-protocol` — under a JSON protocol the `reply-protocol` template; under `line` the built-in line protocol
  *   ({@link LlmPromptAssemblyTexts.lineReplyProtocol}), which replaces the template.
  * - `reply-amendment` — at most one: the must-resolve clause (a JSON protocol and a `mustResolve` descriptor). A clause
@@ -543,10 +543,7 @@ export function assembleLlmCapabilityPrompt(config: AssembleLlmCapabilityPromptC
   const handlers: Readonly<Record<LlmPromptSlotRole, (slot: LlmPromptSlot) => ReadonlyArray<LlmPromptSegment>>> = {
     'model-addendum': contributed,
     frame: contributed,
-    craft: (slot) => {
-      const inSlot = llmPromptContributionsInSlot(contributions, slot.id);
-      return llmPromptContributionSegmentsOf(slot, [...inSlot.filter((contribution) => contribution.volatile !== true), ...inSlot.filter((contribution) => contribution.volatile === true)]);
-    },
+    craft: contributed,
     'reply-protocol': placed,
     'reply-amendment': placed,
     instructions: placed,

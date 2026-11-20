@@ -31,7 +31,8 @@ export const LLM_PROMPT_SLOT_ROLES = ['model-addendum', 'frame', 'reply-protocol
  *   separator — the template's own bytes meet what follows) and emitted even when empty; without a marker, the whole
  *   body plus the separator.
  * - `contract` — assembly: the output contract, JSON protocols only.
- * - `craft` — contributed: selected notes, stable ones first then volatile, each group in contribution order.
+ * - `craft` — contributed: selected supplements (craft notes), in contribution order; the craft contributor places its
+ *   stable group first.
  * - `live` — assembly + contributed: the capability's live blocks with this slot's contributions merged at their
  *   anchors (before the empty-block filter); the separator joins blocks and `lastSeparator` follows the last. Every
  *   assembled layout declares one; an empty live context still places one empty volatile segment (the cache boundary).
