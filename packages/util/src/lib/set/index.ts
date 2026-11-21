@@ -7,3 +7,4 @@ export * from './set.maybe';
 export * from './set.mode';
 export * from './set.selection';
 export * from './set';
+export * from './set.limit';
