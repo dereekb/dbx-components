@@ -7,7 +7,8 @@
  * budgeting the next billed round reads the real figure instead of a 2× one.
  *
  * Read-only by design: it returns a reconciliation and writes nothing. Pending reads (the bill lags the call by
- * minutes) and failed ones are COUNTED, never folded as zero, so a half-reconciled run says so. A billed call whose row
+ * minutes) and failed ones are COUNTED, never folded as zero, so a half-reconciled run says so — a reader that throws
+ * fails only its own read, never the run. A billed call whose row
  * logged no cost is counted the same way (`loggedMissing`), never folded as a free call.
  */
 
@@ -161,11 +162,35 @@ interface MutableCell {
 }
 
 /**
+ * Read one bill, turning a reader that breaks its never-throw contract into a counted read instead of a rejection that
+ * would sink the whole reconciliation. A throw after `signal` aborted is a cancelled read (`pending`, re-running answers
+ * it); any other throw is a `failed` read whose detail carries the thrown message.
+ *
+ * @param config - The reconcile config, for its reader and signal.
+ * @param generationId - The generation id to read.
+ * @returns The read outcome. Never rejects.
+ */
+async function readLlmCallBillIsolated(config: ReconcileLlmCallBillsConfig, generationId: LlmGenerationId): Promise<LlmCallBillRead> {
+  let read: LlmCallBillRead;
+
+  try {
+    read = await config.reader.read(generationId, config.signal == null ? undefined : { signal: config.signal });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    read = config.signal?.aborted === true ? { status: 'pending', generationId, detail: `not read (cancelled): ${message}` } : { status: 'failed', generationId, detail: `the bill reader threw: ${message}` };
+  }
+
+  return read;
+}
+
+/**
  * Read every call's bill (bounded concurrency) and fold list vs billed.
  *
  * Only calls with a non-empty generation id are asked about; the rest count toward `withoutGenerationId`. A small
  * worker pool pulls the reads in order and stops pulling once `signal` aborts; an unread slot counts as `pending` with
- * the detail `'not read (cancelled)'`. Pending and failed reads are counted but never folded into either sum. A billed
+ * the detail `'not read (cancelled)'`. A reader that throws (breaking its never-throw contract) fails only that read:
+ * it counts as `failed` with the thrown message as its detail, so the rest of the run still reconciles and the result
+ * says it is partial. Pending and failed reads are counted but never folded into either sum. A billed
  * call whose row logged no readable cost is a hole, not a free call: its bill counts, and it is counted in
  * `loggedMissing` instead of adding $0 to `logged`.
  *
@@ -188,7 +213,7 @@ export async function reconcileLlmCallBills(config: ReconcileLlmCallBillsConfig)
     while (next < asked.length && config.signal?.aborted !== true) {
       const index = next;
       next += 1;
-      reads[index] = await config.reader.read(asked[index].generationId as string, config.signal == null ? undefined : { signal: config.signal });
+      reads[index] = await readLlmCallBillIsolated(config, asked[index].generationId as string);
     }
   };
 

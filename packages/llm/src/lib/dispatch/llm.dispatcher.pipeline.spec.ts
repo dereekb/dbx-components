@@ -1145,6 +1145,25 @@ describe('makeLlmDispatcher()', () => {
       }
     });
 
+    it('should record a single-shot 429 and a socket reset before rethrowing them', async () => {
+      const socketReset = Object.assign(new Error('socket hang up'), { code: 'ECONNRESET' });
+      const scenarios: ReadonlyArray<Error> = [rateLimited(), socketReset];
+
+      for (const thrown of scenarios) {
+        const { calls, recorder } = recording();
+        const completes: LlmDispatchCompleteTapEvent<HostFields>[] = [];
+        const taps = makeLlmDispatchTapRegistry<HostFields>();
+        taps.addTap({ id: 't', onDispatchComplete: (event) => void completes.push(event) });
+        const { dispatcher } = setup({ replies: [thrown], recorder, taps });
+        const caught = await caughtOf(dispatcher.dispatch(request()));
+
+        expect(caught).toBe(thrown);
+        expect(calls).toHaveLength(1);
+        expect(calls[0].failedAttempts).toEqual([expect.objectContaining({ attempt: 1, cause: 'transport' })]);
+        expect(completes).toHaveLength(1);
+      }
+    });
+
     it('should drop the dispatch on a cancelled single-shot transient failure, recording the call', async () => {
       const controller = new AbortController();
       controller.abort();

@@ -309,24 +309,26 @@ describe('makeLlmDispatcher() decision lane', () => {
       expect(requests).toHaveLength(2);
     });
 
-    it('should never resend a non-retryable failure', async () => {
-      const failures: ReadonlyArray<unknown> = [
-        new LlmDecisionTransportError({ message: 'HTTP 400', status: 400 }),
-        new LlmDecisionTransportError({ message: 'no API key configured' }),
-        new LlmDecisionAnswerFaultError([{ question: 'row', kind: 'answer-missing', detail: 'no answer' }]),
-        new DOMException('stopped', 'AbortError'),
-        new DOMException('too slow', 'TimeoutError'),
-        new Error('transport down')
+    it('should never resend a non-retryable failure, recording the failed send before rethrowing it', async () => {
+      const failures: ReadonlyArray<readonly [unknown, string]> = [
+        [new LlmDecisionTransportError({ message: 'HTTP 400', status: 400 }), 'unretryable'],
+        [new LlmDecisionTransportError({ message: 'no API key configured' }), 'unretryable'],
+        [new LlmDecisionAnswerFaultError([{ question: 'row', kind: 'answer-missing', detail: 'no answer' }]), 'unretryable'],
+        [new DOMException('stopped', 'AbortError'), 'timeout'],
+        [new DOMException('too slow', 'TimeoutError'), 'timeout'],
+        [new Error('transport down'), 'unretryable']
       ];
 
-      for (const failure of failures) {
+      for (const [failure, cause] of failures) {
         const requests: LlmDecisionRequest[] = [];
         const { dispatcher, starts, calls } = setup({ backends: [flakyBackend(() => failure, requests)] });
 
         await expect(dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' } })).rejects.toBe(failure);
         expect(requests).toHaveLength(1);
         expect(starts).toHaveLength(1);
-        expect(calls).toHaveLength(0);
+        expect(calls).toHaveLength(1);
+        expect(calls[0].failedAttempts).toEqual([expect.objectContaining({ attempt: 1, cause })]);
+        expect(calls[0].result).toMatchObject({ decodeStatus: 'dropped', model: DECISION_MODEL });
       }
     });
 
@@ -355,7 +357,8 @@ describe('makeLlmDispatcher() decision lane', () => {
       await expect(refused.dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' } })).rejects.toBe(conflict);
       expect(refusedRequests).toHaveLength(1);
       expect(refused.starts).toHaveLength(1);
-      expect(refused.calls).toHaveLength(0);
+      expect(refused.calls).toHaveLength(1);
+      expect(refused.calls[0].failedAttempts).toEqual([expect.objectContaining({ attempt: 1, cause: 'unretryable', errorClassification: 'unknown' })]);
     });
 
     it('should never offer an answer fault to isRetryableUnknownError', async () => {
@@ -428,7 +431,7 @@ describe('makeLlmDispatcher() decision lane', () => {
       expect(requests).toHaveLength(1);
     });
 
-    it('should record one start and no call record when a send throws', async () => {
+    it('should record one start and one failed call record when a send throws, then rethrow', async () => {
       const throwing = makeLlmScriptedDecisionStrategy({
         id: 'account-a',
         script: () => {
@@ -440,7 +443,72 @@ describe('makeLlmDispatcher() decision lane', () => {
       await expect(dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' } })).rejects.toThrow('transport down');
 
       expect(starts).toHaveLength(1);
-      expect(calls).toHaveLength(0);
+      expect(calls).toHaveLength(1);
+      expect(calls[0].failedAttempts?.[0]?.error).toContain('transport down');
+    });
+  });
+
+  describe('failed decisions', () => {
+    function tapped() {
+      const completed: LlmDispatchCompleteTapEvent<HostFields>[] = [];
+      const taps = makeLlmDispatchTapRegistry<HostFields>();
+      taps.addTap({ id: 't', onDispatchComplete: (event) => void completed.push(event) });
+      return { taps, completed };
+    }
+
+    it('should record a 401 with its error summary and fire onDispatchComplete before rethrowing it', async () => {
+      const unauthorized = new LlmDecisionTransportError({ message: 'HTTP 401: invalid API key', status: 401 });
+      const { taps, completed } = tapped();
+      const requests: LlmDecisionRequest[] = [];
+      const { dispatcher, starts, calls } = setup({ taps, backends: [flakyBackend(() => unauthorized, requests)] });
+
+      await expect(dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' } })).rejects.toBe(unauthorized);
+
+      expect(requests).toHaveLength(1);
+      expect(starts).toHaveLength(1);
+      expect(calls).toHaveLength(1);
+      expect(calls[0]).toMatchObject({ capability: 'PickCap', decision: 'PickRow' });
+      expect(calls[0].result).toMatchObject({ text: '', strategyId: 'account-a', model: DECISION_MODEL, decodeStatus: 'dropped' });
+      expect(calls[0].result.attempts).toBeUndefined();
+      expect(calls[0].failedAttempts).toEqual([expect.objectContaining({ attempt: 1, cause: 'unretryable', errorClassification: 'permanent' })]);
+      expect(calls[0].failedAttempts?.[0]?.error).toContain('401');
+      expect(completed).toEqual([calls[0]]);
+    });
+
+    it('should record every billed send of a decision that exhausts its resends', async () => {
+      const error = HTTP_503();
+      const { taps, completed } = tapped();
+      const requests: LlmDecisionRequest[] = [];
+      const { dispatcher, calls } = setup({ taps, backends: [flakyBackend(() => error, requests)], decisionsConfig: { maxAttempts: 2 } });
+
+      await expect(dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' } })).rejects.toBe(error);
+
+      expect(requests).toHaveLength(2);
+      expect(calls).toHaveLength(1);
+      expect(calls[0].result).toMatchObject({ attempts: 2, decodeStatus: 'dropped', decodeOutcome: 'transport' });
+      expect(calls[0].failedAttempts).toEqual([expect.objectContaining({ attempt: 1, cause: 'transport' }), expect.objectContaining({ attempt: 2, cause: 'transport' })]);
+      expect(completed).toHaveLength(1);
+    });
+
+    it('should keep the answer fault class on the rethrow, after recording it', async () => {
+      const fault = new LlmDecisionAnswerFaultError([{ question: 'row', kind: 'value-out-of-range', detail: "the distribution's `row-a` is NaN, outside 0..1" }]);
+      const { dispatcher, calls } = setup({ backends: [flakyBackend(() => fault, [])] });
+
+      await expect(dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' } })).rejects.toBeInstanceOf(LlmDecisionAnswerFaultError);
+      expect(calls).toHaveLength(1);
+      expect(calls[0].failedAttempts?.[0]).toMatchObject({ cause: 'unretryable', errorClassification: 'permanent' });
+      expect(calls[0].failedAttempts?.[0]?.error).toContain('NaN');
+    });
+
+    it('should record the resent send of a decision cancelled during the backoff', async () => {
+      const error = HTTP_503();
+      const controller = new AbortController();
+      const transportBackoff = (_input: LlmDispatchTransportBackoffParams) => (controller.abort(), 0);
+      const { dispatcher, calls } = setup({ backends: [flakyBackend(() => error, [])], transportBackoff });
+
+      await expect(dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' }, signal: controller.signal })).rejects.toBe(error);
+      expect(calls).toHaveLength(1);
+      expect(calls[0].failedAttempts).toEqual([expect.objectContaining({ attempt: 1, cause: 'transport' })]);
     });
   });
 

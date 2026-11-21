@@ -43,7 +43,8 @@ export class LlmDecisionAnswerFaultError extends Error {
 
 /**
  * Collects everything wrong with a Choice answer: an off-option choice, and a present distribution that covers an
- * undeclared option, carries a non-number entry, or does not sum to 1.
+ * undeclared option, carries a non-number entry or a probability outside 0..1 (NaN and the infinities included), or
+ * does not sum to 1 within {@link LLM_DECISION_DISTRIBUTION_SUM_TOLERANCE}.
  *
  * @param question - The declared Choice question.
  * @param id - The question's id, for reporting.
@@ -70,17 +71,27 @@ function llmDecisionChoiceAnswerFaults(question: LlmDecisionChoiceQuestion, id: 
     }
 
     const entries = probabilities as Readonly<Record<string, unknown>>;
-    const nonNumeric = options.filter((option) => typeof entries[option] !== 'number');
+    let entriesInRange = true;
 
-    for (const option of nonNumeric) {
-      faults.push({ kind: 'value-out-of-range', question: id, detail: `the distribution's \`${option}\` is not a number` });
+    for (const option of options) {
+      const probability = entries[option];
+
+      if (typeof probability !== 'number') {
+        entriesInRange = false;
+        faults.push({ kind: 'value-out-of-range', question: id, detail: `the distribution's \`${option}\` is not a number` });
+      } else if (!(probability >= 0 && probability <= 1)) {
+        // Written as a negated range so NaN, which fails every comparison, faults here too.
+        entriesInRange = false;
+        faults.push({ kind: 'value-out-of-range', question: id, detail: `the distribution's \`${option}\` is ${probability}, outside 0..1` });
+      }
     }
 
-    // The sum is only meaningful over numbers: a string entry would concatenate rather than add.
-    if (nonNumeric.length === 0) {
+    // The sum is only meaningful over in-range numbers: a string entry would concatenate rather than add, and a
+    // NaN or a -0.2/1.2 pair is already faulted per entry (and the pair would sum to a passing 1).
+    if (entriesInRange) {
       const sum = options.reduce((total, option) => total + (entries[option] as number), 0);
 
-      if (Math.abs(sum - 1) > LLM_DECISION_DISTRIBUTION_SUM_TOLERANCE) {
+      if (!(Math.abs(sum - 1) <= LLM_DECISION_DISTRIBUTION_SUM_TOLERANCE)) {
         faults.push({ kind: 'value-out-of-range', question: id, detail: `the distribution sums to ${sum} rather than 1` });
       }
     }

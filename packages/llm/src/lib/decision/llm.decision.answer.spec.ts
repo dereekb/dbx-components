@@ -199,6 +199,28 @@ describe('readLlmDecisionAnswers() value types', () => {
     const read = readLlmDecisionAnswers({ questions: { entry: QUESTIONS.entry }, raw: { entry: { type: 'choice', choice: 'row-a', probabilities: { 'row-a': '0.9', 'row-b': 0.1 } } } });
     expect(read.faults).toEqual([{ kind: 'value-out-of-range', question: 'entry', detail: "the distribution's `row-a` is not a number" }]);
   });
+
+  it('should fault a NaN distribution entry as out of range', () => {
+    const read = readLlmDecisionAnswers({ questions: { entry: QUESTIONS.entry }, raw: { entry: { type: 'choice', choice: 'row-b', probabilities: { 'row-a': Number.NaN, 'row-b': 1 } } } });
+    expect(read.faults).toEqual([{ kind: 'value-out-of-range', question: 'entry', detail: "the distribution's `row-a` is NaN, outside 0..1" }]);
+  });
+
+  it('should fault negative and above-1 entries even when they sum to 1', () => {
+    const read = readLlmDecisionAnswers({ questions: { entry: QUESTIONS.entry }, raw: { entry: { type: 'choice', choice: 'row-b', probabilities: { 'row-a': -0.2, 'row-b': 1.2 } } } });
+    expect(read.faults).toEqual([
+      { kind: 'value-out-of-range', question: 'entry', detail: "the distribution's `row-a` is -0.2, outside 0..1" },
+      { kind: 'value-out-of-range', question: 'entry', detail: "the distribution's `row-b` is 1.2, outside 0..1" }
+    ]);
+  });
+
+  it('should fault an infinite distribution entry as out of range', () => {
+    const read = readLlmDecisionAnswers({ questions: { entry: QUESTIONS.entry }, raw: { entry: { type: 'choice', choice: 'row-a', probabilities: { 'row-a': Number.POSITIVE_INFINITY, 'row-b': 0 } } } });
+    expect(read.faults).toEqual([{ kind: 'value-out-of-range', question: 'entry', detail: "the distribution's `row-a` is Infinity, outside 0..1" }]);
+  });
+
+  it('should throw the answer fault rather than hand back a NaN distribution', () => {
+    expect(() => requireLlmDecisionAnswers({ questions: { entry: QUESTIONS.entry }, raw: { entry: { type: 'choice', choice: 'row-b', probabilities: { 'row-a': Number.NaN, 'row-b': 1 } } } })).toThrow(LlmDecisionAnswerFaultError);
+  });
 });
 
 describe('readLlmDecisionAnswers() laxAnswerTypes', () => {

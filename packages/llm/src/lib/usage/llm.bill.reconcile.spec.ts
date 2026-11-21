@@ -165,6 +165,60 @@ describe('reconcileLlmCallBills', () => {
     expect(reconciliation.total.logged).toBe(0);
   });
 
+  it('fails only the read whose reader throws, reconciling the rest and saying the run is partial', async () => {
+    const reader: LlmCallBillReader = {
+      providerId: 'zenmux',
+      async read(generationId) {
+        if (generationId === 'boom') {
+          throw new Error('socket hang up');
+        }
+
+        return billedRead(generationId, 0.05);
+      }
+    };
+    const reconciliation = await reconcileLlmCallBills({ calls: [call('a', 'm', 0.1), call('boom', 'm', 0.1), call('b', 'm', 0.1)], reader });
+
+    expect(reconciliation.total.calls).toBe(3);
+    expect(reconciliation.total.billedCalls).toBe(2);
+    expect(reconciliation.total.billed).toBeCloseTo(0.1);
+    expect(reconciliation.failed).toBe(1);
+    expect(reconciliation.details).toEqual([{ generationId: 'boom', status: 'failed', detail: 'the bill reader threw: socket hang up' }]);
+    expect(renderLlmBillReconciliationMarkdown(reconciliation, 'sess-3')).toContain('1 read(s) failed');
+  });
+
+  it('isolates a reader that throws synchronously', async () => {
+    const reader: LlmCallBillReader = {
+      providerId: 'zenmux',
+      read(generationId) {
+        if (generationId === 'boom') {
+          throw new Error('bad id');
+        }
+
+        return Promise.resolve(billedRead(generationId, 0.05));
+      }
+    };
+    const reconciliation = await reconcileLlmCallBills({ calls: [call('boom', 'm', 0.1), call('a', 'm', 0.1)], reader, concurrency: 1 });
+
+    expect(reconciliation.failed).toBe(1);
+    expect(reconciliation.total.billedCalls).toBe(1);
+  });
+
+  it('counts a read that throws after the signal aborted as a cancelled pending read', async () => {
+    const controller = new AbortController();
+    const reader: LlmCallBillReader = {
+      providerId: 'zenmux',
+      async read() {
+        controller.abort();
+        throw new Error('aborted');
+      }
+    };
+    const reconciliation = await reconcileLlmCallBills({ calls: [call('a', 'm', 0.1), call('b', 'm', 0.1)], reader, concurrency: 1, signal: controller.signal });
+
+    expect(reconciliation.failed).toBe(0);
+    expect(reconciliation.pending).toBe(2);
+    expect(reconciliation.details[0]).toEqual({ generationId: 'a', status: 'pending', detail: 'not read (cancelled): aborted' });
+  });
+
   it('bounds the reads in flight by the concurrency', async () => {
     const tracked = tableReader({});
     await reconcileLlmCallBills({ calls: Array.from({ length: 9 }, (_, index) => call(`g${index}`, 'm', 0.1)), reader: tracked.reader, concurrency: 2 });

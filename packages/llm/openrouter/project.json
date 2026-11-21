@@ -28,6 +28,19 @@
     "lint": {
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"]
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["default", "^production"],
+      "outputs": [],
+      "options": {
+        "command": "npx tsc -p packages/llm/openrouter/tsconfig.spec.json --noEmit",
+        "cwd": "{workspaceRoot}"
+      },
+      "metadata": {
+        "description": "Type-checks the llm-openrouter entry's specs and, through them and the spec config's src/**/*.ts include, every lib file of the entry. Vitest strips types, so without this target a type error in a llm-openrouter spec passes lint, tests and build. Run by the dbx-claude test and commit gate; never part of build. The lib config is left out for the same reason as llm:typecheck: util's Node-typed sources do not compile under the browser entries' types: []."
+      }
     }
   }
 }

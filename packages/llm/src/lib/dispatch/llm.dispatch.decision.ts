@@ -9,14 +9,20 @@
  * descriptor's `model` / `tier`, else `decisions.defaultModel` — a capability's COMPLETION route never serves its
  * decisions, and a slug that is not a decision model throws before anything is sent. A send that fails with a
  * retryable transport error is resent after the dispatcher's `transportBackoff`, up to `decisions.maxAttempts` sends.
+ *
+ * A decision that FAILS is recorded before it rethrows, like a failed completion: its final send gets a failed-attempt
+ * row (`timeout`, `transport` when a retryable error ran out of sends or was cancelled, else `unretryable`), the call
+ * record carries every failed send and is stamped `dropped`, `onDispatchComplete` fires, and then the ORIGINAL error
+ * is rethrown — its class unchanged, so a caller still catches `LlmDecisionAnswerFaultError` by class.
  */
 
 import { type Maybe, waitForMsUnlessAborted, type Milliseconds } from '@dereekb/util';
-import { type IsRetryableUnknownErrorFunction } from '@dereekb/util/fetch';
+import { type FetchErrorClassification, type IsRetryableUnknownErrorFunction } from '@dereekb/util/fetch';
+import { LlmDecisionAnswerFaultError } from '../decision/llm.decision.answer';
 import { type LlmDecision, type LlmDecisionDispatchRequest } from '../decision/llm.decision.descriptor';
 import { isLlmDecisionModelId, llmDecisionModelIssue } from '../decision/llm.decision.model';
-import { type LlmDecisionQuestions } from '../decision/llm.decision.question';
-import { isRetryableLlmDecisionError, type LlmDecideOptions, type LlmDecisionRequest, type LlmDecisionResult, type LlmDecisionStrategy } from '../decision/llm.decision.strategy';
+import { LlmDecisionDeclarationError, type LlmDecisionQuestions } from '../decision/llm.decision.question';
+import { isRetryableLlmDecisionError, type LlmDecideOptions, type LlmDecisionRequest, type LlmDecisionResult, type LlmDecisionStrategy, LlmDecisionTransportError } from '../decision/llm.decision.strategy';
 import { resolveLlmCapabilityModel } from '../model/llm.model.precedence';
 import { type LlmCompiledModelRouting } from '../model/llm.model.routing';
 import { type LlmModelTierMap } from '../model/llm.model.tier';
@@ -27,11 +33,12 @@ import { joinLlmPromptSegments, type LlmPromptSegment, type LlmPromptSegmentOrig
 import { type LlmCallContext } from '../record/llm.call.context';
 import { type LlmCallFailedAttempt, type LlmCallHostFields, type LlmCallRecord } from '../record/llm.call.record';
 import { type LlmSwallowSiteId } from '../record/llm.swallow';
-import { formatLlmErrorSummary } from '../strategy/llm.error';
+import { classifyLlmReplyOutcome } from '../record/llm.decode.failure';
+import { classifyLlmError, formatLlmErrorSummary, isLlmAbortError } from '../strategy/llm.error';
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
 import { llmStrategyKind } from '../strategy/llm.strategy.registry';
 import { type LlmDispatchPauseSignal, type LlmDispatchTransportBackoff, mergeLlmDispatchSignals, parkLlmDispatchWhilePaused } from './llm.dispatch.control';
-import { toLlmCallFailedAttempt, makeLlmTransportResult } from './llm.dispatch.outcome';
+import { toLlmCallFailedAttempt, makeLlmTimeoutResult, makeLlmTransportResult, makeLlmUnretryableResult } from './llm.dispatch.outcome';
 import { isLlmDispatchTapsActive, makeLlmDispatchRecordFields, type LlmDispatchRecordSinks, recordLlmDispatchStart } from './llm.dispatch.record';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
 import { resolveLlmDispatchMaxAttempts } from './llm.dispatch.run';
@@ -158,6 +165,71 @@ interface LlmDispatchDecisionSent<Q extends LlmDecisionQuestions> {
 }
 
 /**
+ * What one decision's send loop returned when its last send failed — recorded as a failed call, then rethrown.
+ */
+interface LlmDispatchDecisionFailed {
+  readonly answer?: undefined;
+  /**
+   * The error the last send threw, rethrown unchanged once the call is recorded.
+   */
+  readonly error: unknown;
+  /**
+   * The synthetic envelope of the failed send (`timeout` / `transport` / `unretryable`).
+   */
+  readonly result: LlmDispatchResult;
+  /**
+   * The wall clock of the last send.
+   */
+  readonly latencyMs: Milliseconds;
+  /**
+   * How many sends were made (the first plus resends).
+   */
+  readonly attempts: number;
+  /**
+   * One row per failed send, the last one included.
+   */
+  readonly failedAttempts: ReadonlyArray<LlmCallFailedAttempt>;
+}
+
+/**
+ * How a decision's failed send is recorded.
+ */
+interface LlmDispatchDecisionFailedSend {
+  readonly cause: 'timeout' | 'transport' | 'unretryable';
+  readonly result: LlmDispatchResult;
+  readonly errorClassification?: Exclude<FetchErrorClassification, 'transient'>;
+}
+
+/**
+ * Classifies a decision send that failed with no resend to follow, the way the completion lane classifies its sends:
+ * an abort is a `timeout`; an error the decision retry predicate would resend (it ran out of sends, or the decision was
+ * cancelled) is `transport`; anything else is `unretryable` — an answer or declaration fault as `permanent` (resending
+ * the same question cannot fix it), else the shared classifier's non-transient reading.
+ *
+ * @param request - The decision request, for the synthetic envelope's capability / meta.
+ * @param strategyId - The decision strategy that failed.
+ * @param error - The error the send threw.
+ * @param retryable - Whether the decision retry predicate reads the error as resendable.
+ * @returns The row cause, its synthetic envelope and its classification.
+ */
+function llmDispatchDecisionFailedSendOf(request: LlmDecisionDispatchRequest, strategyId: LlmDecisionStrategy['id'], error: unknown, retryable: boolean): LlmDispatchDecisionFailedSend {
+  // a cause-carrying transport error with no status is classified by its cause, as the retry predicate does
+  const subject = error instanceof LlmDecisionTransportError && error.status == null && error.cause != null ? error.cause : error;
+  let failed: LlmDispatchDecisionFailedSend;
+
+  if (isLlmAbortError(error) || isLlmAbortError(subject)) {
+    failed = { cause: 'timeout', result: makeLlmTimeoutResult(request, strategyId) };
+  } else if (retryable) {
+    failed = { cause: 'transport', result: makeLlmTransportResult(request, strategyId) };
+  } else {
+    const classification: FetchErrorClassification = error instanceof LlmDecisionAnswerFaultError || error instanceof LlmDecisionDeclarationError ? 'permanent' : classifyLlmError(subject);
+    failed = { cause: 'unretryable', result: makeLlmUnretryableResult(request, strategyId), errorClassification: classification === 'transient' ? 'unknown' : classification };
+  }
+
+  return failed;
+}
+
+/**
  * The inputs of one decision's send loop.
  */
 interface LlmDispatchDecisionSendParams<Q extends LlmDecisionQuestions, A extends object> {
@@ -223,7 +295,7 @@ export function makeLlmDispatchDecisionLane<R extends LlmDispatchRequest = LlmDi
         ];
       };
 
-      const sendDecision = async <Q extends LlmDecisionQuestions>(params: LlmDispatchDecisionSendParams<Q, A>): Promise<LlmDispatchDecisionSent<Q>> => {
+      const sendDecision = async <Q extends LlmDecisionQuestions>(params: LlmDispatchDecisionSendParams<Q, A>): Promise<LlmDispatchDecisionSent<Q> | LlmDispatchDecisionFailed> => {
         const { request, decisionRequest, callContext, signal } = params;
         const { capability } = request;
         const decision = request.decision.descriptor.decision;
@@ -233,9 +305,13 @@ export function makeLlmDispatchDecisionLane<R extends LlmDispatchRequest = LlmDi
         const failedAttempts: LlmCallFailedAttempt[] = [];
         let attempt = 0;
         let lastError: unknown;
-        let sent: Maybe<LlmDispatchDecisionSent<Q>>;
+        let lastLatencyMs: Milliseconds = 0;
+        let outcome: Maybe<LlmDispatchDecisionSent<Q> | LlmDispatchDecisionFailed>;
 
-        while (sent == null) {
+        // the resent send's row is already in failedAttempts: a cancel that stops the resend fails the decision as is
+        const cancelledAfter = (error: unknown, sends: number): LlmDispatchDecisionFailed => ({ error, result: makeLlmTransportResult(request, strategyId), latencyMs: lastLatencyMs, attempts: sends, failedAttempts });
+
+        while (outcome == null) {
           attempt += 1;
 
           if (attempt > 1) {
@@ -243,7 +319,8 @@ export function makeLlmDispatchDecisionLane<R extends LlmDispatchRequest = LlmDi
 
             // a decision cancelled while parked is never resent
             if (cancelled()) {
-              throw lastError;
+              outcome = cancelledAfter(lastError, attempt - 1);
+              break;
             }
           }
 
@@ -251,30 +328,34 @@ export function makeLlmDispatchDecisionLane<R extends LlmDispatchRequest = LlmDi
 
           try {
             const answer = await callContext.timeAsync('decide', () => strategy.decide(decisionRequest, options));
-            sent = { answer, latencyMs: Date.now() - start, attempts: attempt, failedAttempts };
+            outcome = { answer, latencyMs: Date.now() - start, attempts: attempt, failedAttempts };
           } catch (error) {
+            lastLatencyMs = Date.now() - start;
             // the decision lane's ONE retry predicate: a transient failure, or an unknown one the host vouched for
-            const resend = attempt < maxAttempts && !cancelled() && isRetryableLlmDecisionError(error, isRetryableUnknownError);
-
-            if (!resend) {
-              throw error;
-            }
-
-            lastError = error;
+            const retryable = isRetryableLlmDecisionError(error, isRetryableUnknownError);
+            const resend = attempt < maxAttempts && !cancelled() && retryable;
             const summary = formatLlmErrorSummary(error);
-            failedAttempts.push(toLlmCallFailedAttempt({ attempt, cause: 'transport', result: makeLlmTransportResult(request, strategyId), error: summary }));
-            const delayMs = transportBackoff({ attempt, error });
-            callContext.diag({ level: 'warn', code: 'transport-backoff', fields: { capability, decision, attempt, delayMs, error: summary }, message: 'a decision send failed before reaching the model; backing off before an identical resend' });
-            await callContext.timeAsync('transport-backoff', () => waitForMsUnlessAborted(delayMs, signal));
 
-            // a decision cancelled during the backoff is never resent
-            if (cancelled()) {
-              throw error;
+            if (resend) {
+              lastError = error;
+              failedAttempts.push(toLlmCallFailedAttempt({ attempt, cause: 'transport', result: makeLlmTransportResult(request, strategyId), error: summary }));
+              const delayMs = transportBackoff({ attempt, error });
+              callContext.diag({ level: 'warn', code: 'transport-backoff', fields: { capability, decision, attempt, delayMs, error: summary }, message: 'a decision send failed before reaching the model; backing off before an identical resend' });
+              await callContext.timeAsync('transport-backoff', () => waitForMsUnlessAborted(delayMs, signal));
+
+              // a decision cancelled during the backoff is never resent
+              if (cancelled()) {
+                outcome = cancelledAfter(error, attempt);
+              }
+            } else {
+              const { cause, result, errorClassification } = llmDispatchDecisionFailedSendOf(request, strategyId, error, retryable);
+              failedAttempts.push(toLlmCallFailedAttempt({ attempt, cause, result, ...(cause === 'timeout' ? {} : { error: summary }), ...(errorClassification == null ? {} : { errorClassification }) }));
+              outcome = { error, result, latencyMs: lastLatencyMs, attempts: attempt, failedAttempts };
             }
           }
         }
 
-        return sent;
+        return outcome;
       };
 
       const decide = async <I, Q extends LlmDecisionQuestions>(request: LlmDecisionDispatchRequest<I, Q>): Promise<LlmDecisionResult<Q>> => {
@@ -294,28 +375,44 @@ export function makeLlmDispatchDecisionLane<R extends LlmDispatchRequest = LlmDi
         const prompt = joinLlmPromptSegments(segments);
         recordLlmDispatchStart<R, H, A>({ sinks, capability, model, tier, strategy, prompt, estimatedPromptTokens: estimateLlmTokens(prompt), decision: key, fields });
 
-        const { answer, latencyMs, attempts, failedAttempts } = await sendDecision({ request: widened, decisionRequest, callContext, signal });
+        const sent = await sendDecision({ request: widened, decisionRequest, callContext, signal });
+        const { answer, latencyMs, attempts, failedAttempts } = sent;
         let stamp: Maybe<Readonly<Record<string, unknown>>>;
+        let result: LlmDispatchResult;
 
-        try {
-          stamp = request.stamp?.(answer.answers);
-        } catch (error) {
-          callContext.swallow(LLM_DECIDE_STAMP_SWALLOW_SITE, error);
+        if (answer == null) {
+          // a failed decision is recorded like any other call — every failed send, stamped dropped — then rethrown
+          const failureClass = failedAttempts[failedAttempts.length - 1]?.cause;
+          result = {
+            ...sent.result,
+            strategyKind,
+            model,
+            latencyMs,
+            ...(attempts > 1 ? { attempts } : {}),
+            decodeStatus: 'dropped',
+            decodeOutcome: classifyLlmReplyOutcome(sent.result, failureClass === 'critique' ? undefined : failureClass)
+          };
+        } else {
+          try {
+            stamp = request.stamp?.(answer.answers);
+          } catch (error) {
+            callContext.swallow(LLM_DECIDE_STAMP_SWALLOW_SITE, error);
+          }
+
+          result = {
+            text: JSON.stringify(answer.answers),
+            strategyId,
+            strategyKind,
+            capability,
+            ...(request.meta == null ? {} : { meta: request.meta }),
+            model: answer.model,
+            ...(answer.provider == null ? {} : { provider: answer.provider }),
+            ...(answer.usage == null ? {} : { usage: answer.usage }),
+            latencyMs,
+            ...(answer.generationId == null ? {} : { generationId: answer.generationId }),
+            ...(attempts > 1 ? { attempts } : {})
+          };
         }
-
-        const result: LlmDispatchResult = {
-          text: JSON.stringify(answer.answers),
-          strategyId,
-          strategyKind,
-          capability,
-          ...(request.meta == null ? {} : { meta: request.meta }),
-          model: answer.model,
-          ...(answer.provider == null ? {} : { provider: answer.provider }),
-          ...(answer.usage == null ? {} : { usage: answer.usage }),
-          latencyMs,
-          ...(answer.generationId == null ? {} : { generationId: answer.generationId }),
-          ...(attempts > 1 ? { attempts } : {})
-        };
 
         const callRecord: LlmCallRecord<H> = {
           capability,
@@ -332,6 +429,10 @@ export function makeLlmDispatchDecisionLane<R extends LlmDispatchRequest = LlmDi
 
         if (isLlmDispatchTapsActive(sinks.taps)) {
           sinks.taps.emitDispatchComplete({ ...callRecord });
+        }
+
+        if (answer == null) {
+          throw sent.error;
         }
 
         return answer;
