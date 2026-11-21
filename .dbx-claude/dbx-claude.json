@@ -78,7 +78,8 @@
           },
           "preLaunch": ["npx", "nx", "reset", "--onlyWorkspaceData"],
           "healthCheck": {
-            "url": "http://localhost:9900/"
+            "url": "http://localhost:9901/mcp",
+            "restartAfterSeconds": 600
           }
         }
       }

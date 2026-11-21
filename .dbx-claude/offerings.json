@@ -11,6 +11,7 @@
       "ref": "demo-api-mcp",
       "start": "dbx-claude serve server --project dbx-components",
       "doctor": { "serve": true, "url": "http://localhost:9901/mcp" },
+      "selfServe": true,
       "disruptedBy": ["implement"],
       "requires": ["Docker, with the demo-api-server container served through dbx-claude (dbx-claude serve server)", "./serve-web.sh (the demo app on :9010) for the OAuth login leg of /mcp → Authenticate"]
     }
