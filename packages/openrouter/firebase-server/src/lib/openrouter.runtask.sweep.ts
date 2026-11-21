@@ -52,9 +52,10 @@ export interface OpenRouterRunTaskSweepParams {
    * the next tick. This is a requirement rather than a tuning knob when the sweep shares a scheduled
    * runner with other work: without it, a deep queue starves every workload behind it.
    *
-   * It bounds when a new page is claimed, NOT one inference — a single call is atomic and cannot be
-   * interrupted, so an unusually slow one can overrun. Bound that with `requestTimeoutMs` in the prompt
-   * config and keep this well inside the runner's remaining share.
+   * It bounds when a new page is claimed, NOT one inference — a running call is not interrupted by this
+   * budget, so an unusually slow one can overrun. Bound the call with `requestTimeoutMs` in the prompt
+   * config. Each request is sent once, with no SDK retry, so that timeout is the whole call's bound. Keep
+   * it well inside the runner's remaining share.
    */
   readonly maxRunTimeMs?: Maybe<Milliseconds>;
   /**

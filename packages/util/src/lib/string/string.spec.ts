@@ -1,7 +1,9 @@
 import {
+  joinKeyValuePairs,
   COMMA_STRING_SPLIT_JOIN,
   DEFAULT_CUT_STRING_END_TEXT,
   SPACE_STRING_SPLIT_JOIN,
+  cutString,
   cutStringFunction,
   flattenWhitespace,
   isNotBlankString,
@@ -15,8 +17,32 @@ import {
   simplifyWhitespace,
   splitJoinNameString,
   splitJoinRemainder,
-  stringSplitJoinInstance
+  stringSplitJoinInstance,
+  toMaybeString
 } from './string';
+import { type Maybe } from '../value/maybe.type';
+
+describe('toMaybeString()', () => {
+  it('should return undefined for null and undefined', () => {
+    expect(toMaybeString(null)).toBeUndefined();
+    expect(toMaybeString(undefined)).toBeUndefined();
+  });
+
+  it('should return the String() form of a present value', () => {
+    expect(toMaybeString('abc')).toBe('abc');
+    expect(toMaybeString('')).toBe('');
+    expect(toMaybeString(429)).toBe('429');
+    expect(toMaybeString(0)).toBe('0');
+    expect(toMaybeString(false)).toBe('false');
+  });
+
+  it('should narrow by overload', () => {
+    const fromNumber: string = toMaybeString(1);
+    const fromNull: undefined = toMaybeString(null);
+    const fromUnknown: string | undefined = toMaybeString(JSON.parse('1') as unknown);
+    expect([fromNumber, fromNull, fromUnknown]).toEqual(['1', undefined, '1']);
+  });
+});
 
 describe('nameToInitials()', () => {
   it('should use the first letter of the first two words for a multi-word name', () => {
@@ -85,6 +111,11 @@ describe('nameToInitialsFactory()', () => {
 });
 
 describe('joinStrings()', () => {
+  it('should accept a readonly input array', () => {
+    const input: ReadonlyArray<Maybe<string>> = ['a', null, '', 'b'];
+    expect(joinStrings(input, '-')).toBe('a-b');
+  });
+
   it('should join the strings', () => {
     const values = ['a', 'b', 'c'];
     const string = values.join(',');
@@ -231,6 +262,83 @@ describe('cutStringFunction()', () => {
         expect(result).toBe(`abcd${DEFAULT_CUT_STRING_END_TEXT}`);
       });
     });
+
+    describe('custom endText', () => {
+      it('should cut the string and append the custom end text', () => {
+        const testString = 'abcdefgh';
+        const fn = cutStringFunction({ maxLength: 4, endText: '…' });
+
+        const result = fn(testString);
+        expect(result).toBe('abc…');
+        expect(result.length).toBe(4);
+      });
+
+      it('should not append the custom end text if the string is not cut', () => {
+        const testString = 'abcd';
+        const fn = cutStringFunction({ maxLength: 4, endText: '…' });
+
+        const result = fn(testString);
+        expect(result).toBe(testString);
+      });
+
+      describe('maxLengthIncludesEndText=true', () => {
+        it('should include the custom end text in the max length', () => {
+          const testString = 'abcdefgh';
+          const fn = cutStringFunction({ maxLength: 6, endText: '--', maxLengthIncludesEndText: true });
+
+          const result = fn(testString);
+          expect(result).toBe('abcd--');
+        });
+      });
+
+      describe('maxLengthIncludesEndText=false', () => {
+        it('should cut the string at the max length and then append the custom end text', () => {
+          const testString = 'abcdefgh';
+          const fn = cutStringFunction({ maxLength: 6, endText: '--', maxLengthIncludesEndText: false });
+
+          const result = fn(testString);
+          expect(result).toBe('abcdef--');
+        });
+      });
+    });
+
+    describe('endText=null', () => {
+      it('should cut the string without any end text', () => {
+        const testString = 'abcdefgh';
+        const fn = cutStringFunction({ maxLength: 4, endText: null });
+
+        const result = fn(testString);
+        expect(result).toBe('abcd');
+      });
+
+      describe('maxLengthIncludesEndText=false', () => {
+        it('should cut the string at the max length without any end text', () => {
+          const testString = 'abcdefgh';
+          const fn = cutStringFunction({ maxLength: 4, endText: null, maxLengthIncludesEndText: false });
+
+          const result = fn(testString);
+          expect(result).toBe('abcd');
+        });
+      });
+    });
+  });
+});
+
+describe('cutString()', () => {
+  it('should use the default end text when endText is undefined', () => {
+    expect(cutString('abcdefgh', 5)).toBe(`ab${DEFAULT_CUT_STRING_END_TEXT}`);
+  });
+
+  it('should use the custom end text', () => {
+    expect(cutString('abcdefgh', 5, '…')).toBe('abcd…');
+  });
+
+  it('should use no end text when endText is null', () => {
+    expect(cutString('abcdefgh', 5, null)).toBe('abcde');
+  });
+
+  it('should return null for a null input', () => {
+    expect(cutString(null, 5)).toBeNull();
   });
 });
 
@@ -485,5 +593,24 @@ describe('stringSplitJoinInstance()', () => {
         expect(result).toEqual(new Set(['a', 'b']));
       });
     });
+  });
+});
+
+describe('joinKeyValuePairs()', () => {
+  it('should keep 0 and drop empty and nullish values', () => {
+    expect(
+      joinKeyValuePairs([
+        ['a', 'x'],
+        ['b', 0],
+        ['c', ''],
+        ['d', undefined],
+        ['e', null],
+        ['f', 2]
+      ])
+    ).toBe('a: x; b: 0; f: 2');
+  });
+
+  it('should return an empty string for no pairs', () => {
+    expect(joinKeyValuePairs([])).toBe('');
   });
 });

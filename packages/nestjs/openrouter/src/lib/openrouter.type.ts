@@ -1,4 +1,4 @@
-import { type OpenRouter } from '@openrouter/sdk';
+import { type OpenRouter, type SDKOptions } from '@openrouter/sdk';
 
 /**
  * Api key used by OpenRouter for making requests.
@@ -22,6 +22,11 @@ export type OpenRouterWebhookSecret = string;
  * The OpenRouter SDK client type.
  */
 export type OpenRouterClient = OpenRouter;
+
+/**
+ * The SDK's client-level retry policy (the `retryConfig` option of `new OpenRouter()`).
+ */
+export type OpenRouterRetryConfig = NonNullable<SDKOptions['retryConfig']>;
 
 /**
  * A generation id returned by OpenRouter for a completed request.

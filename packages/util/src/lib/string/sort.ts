@@ -13,6 +13,10 @@ export type SortByStringFunction<T> = SortCompareFunction<T>;
  * `(a, b) => a.localeCompare(b)` everywhere, and to satisfy the no-default-sort
  * lint rule for string arrays.
  *
+ * The order follows the host's ICU locale, so two hosts can order the same strings differently
+ * (case, accents, punctuation). When the order feeds bytes that must match across hosts — a prompt,
+ * a persisted row, a cache key — use {@link compareStringsByCodeUnit} instead.
+ *
  * @param a - The first string to compare.
  * @param b - The second string to compare.
  * @returns A negative number when `a` sorts before `b`, positive when after, `0` when equal.
@@ -21,7 +25,7 @@ export type SortByStringFunction<T> = SortCompareFunction<T>;
  * @dbxUtilCategory string
  * @dbxUtilKind const
  * @dbxUtilTags string, sort, compare, alphabetical, locale
- * @dbxUtilRelated compare-strings-numeric, sort-by-string-function
+ * @dbxUtilRelated compare-strings-numeric, compare-strings-by-code-unit, sort-by-string-function
  *
  * @example
  * ```ts
@@ -29,6 +33,31 @@ export type SortByStringFunction<T> = SortCompareFunction<T>;
  * ```
  */
 export const compareStrings: SortByStringFunction<string> = (a, b) => a.localeCompare(b);
+
+/**
+ * Pre-configured comparator that sorts strings in ascending UTF-16 code-unit order (the `<` / `>` order),
+ * never a locale.
+ *
+ * The result is the same on every host and runtime, so use it whenever the order feeds bytes that must
+ * be deterministic: prompt text, a cache prefix, a persisted or rendered row, a file order. Uppercase
+ * sorts before lowercase, and accented letters sort after every ASCII letter.
+ *
+ * @param a - The first string to compare.
+ * @param b - The second string to compare.
+ * @returns `-1` when `a` sorts before `b`, `1` when after, `0` when equal.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilKind const
+ * @dbxUtilTags string, sort, compare, code-unit, ordinal, deterministic
+ * @dbxUtilRelated compare-strings
+ *
+ * @example
+ * ```ts
+ * ['b', 'B', 'a'].sort(compareStringsByCodeUnit); // ['B', 'a', 'b']
+ * ```
+ */
+export const compareStringsByCodeUnit: SortByStringFunction<string> = (a, b) => Number(a > b) - Number(a < b);
 
 /**
  * Pre-configured comparator that sorts strings in ascending order using `localeCompare`

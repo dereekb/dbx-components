@@ -502,7 +502,7 @@ export interface MicrosoftGraphUploadMessageAttachmentInput extends Pick<Microso
   readonly attachment: MicrosoftGraphFileAttachmentInput;
   /**
    * The timeout of each chunk PUT. Defaults to {@link microsoftGraphUploadTimeout} of one chunk, not the
-   * client's flat 30 seconds.
+   * client's flat timeout (30 seconds by default).
    */
   readonly timeout?: Maybe<Milliseconds>;
 }

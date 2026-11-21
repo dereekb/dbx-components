@@ -1,5 +1,5 @@
 import { type Maybe, type Milliseconds, MS_IN_SECOND, exponentialBackoffDelay, type ResetPeriodPromiseRateLimiter, resetPeriodPromiseRateLimiter } from '@dereekb/util';
-import { type FetchHandler, type RateLimitedFetchHandler, type RequestWithTimeout, parseRetryAfterHeader, rateLimitedFetchHandler } from '@dereekb/util/fetch';
+import { type RateLimitedFetchHandler, parseRetryAfterHeader, rateLimitedFetchHandler } from '@dereekb/util/fetch';
 import { MICROSOFT_GRAPH_THROTTLE_WITH_RETRY_AFTER_STATUSES } from './graph.error.api';
 
 /**
@@ -90,7 +90,8 @@ function isMicrosoftGraphReadMethod(method: string): boolean {
  * The first response that is not a throttle, once the pause is over, turns the pause off again.
  *
  * Wire it as the `fetchHandler` of the client's configured fetch, so it sits above the per-attempt timeout and
- * the ok-check: each attempt gets the full timeout, and the waits between attempts are not cut short.
+ * the ok-check: each attempt gets the full timeout, and the waits between attempts are not cut short. util/fetch's
+ * handler keeps each attempt's timeout.
  *
  * @param config - Retry limits and the throttle callback.
  * @returns The fetch handler.
@@ -141,13 +142,5 @@ export function microsoftGraphRateLimitedFetchHandler(config?: Maybe<MicrosoftGr
     }
   });
 
-  // Request.clone() drops the non-standard `timeout` the request factory puts on the request, so hand it to
-  // each attempt explicitly; otherwise the per-attempt timeout would silently turn off
-  const fetchHandler: FetchHandler = (request, makeFetch) => {
-    const timeout = (request as RequestWithTimeout).timeout;
-    const attemptFetch = timeout == null ? makeFetch : (((input: RequestInfo | URL, init?: RequestInit) => makeFetch(input, { ...init, timeout } as RequestInit)) as typeof fetch);
-    return inner(request, attemptFetch);
-  };
-
-  return Object.assign(fetchHandler, { _rateLimiter: rateLimiter });
+  return inner;
 }

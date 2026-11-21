@@ -1,11 +1,12 @@
+import { LlmDecisionAnswerFaultError, LlmDecisionDeclarationError, type LlmDecisionQuestions, type LlmStorableDecisionState } from '@dereekb/llm/decision';
 import { type FirebaseStorageContext } from '@dereekb/firebase';
 import { type FirebaseServerEnvService } from '@dereekb/firebase-server';
-import { type Maybe, type Milliseconds, MS_IN_MINUTE, addMilliseconds, concatArraysUnique, filterMaybeArrayValues, filterUndefinedValues, filterUniqueValues, mergeArrays, randomNumberFactory } from '@dereekb/util';
+import { type Maybe, type Milliseconds, MS_IN_MINUTE, addMilliseconds, concatArraysUnique, readErrorMessage, filterMaybeArrayValues, filterUndefinedValues, filterUniqueValues, mergeArrays, randomNumberFactory } from '@dereekb/util';
+import { classifyFetchError, DEFAULT_FETCH_ABORT_ERROR_NAMES, type FetchErrorClassification, type FetchErrorClassificationConfig, isRetryableFetchErrorClassification, type IsRetryableUnknownErrorFunction } from '@dereekb/util/fetch';
 import {
   type OpenRouterAttachedFileReference,
   type OpenRouterCallResult,
   type OpenRouterCore,
-  type OpenRouterDecisionQuestions,
   type OpenRouterDecisionResult,
   type OpenRouterDeferredToolResolution,
   type OpenRouterFileReference,
@@ -17,7 +18,6 @@ import {
   type OpenRouterRequestTrace,
   type OpenRouterRunError,
   type OpenRouterRunTaskKey,
-  type OpenRouterStorableDecisionState,
   type Tool,
   callModelForOpenRouterRequest,
   openRouterDecision,
@@ -46,8 +46,9 @@ import { firestoreOpenRouterStateAccessor } from './openrouter.state.accessor';
 /**
  * Default lease duration. A `RUNNING` task whose lease is older than this is reclaimable.
  *
- * Comfortably longer than any single inference plus its retries, so a healthy run is never stolen from
- * itself, and short enough that a crashed sweep's work resumes on the next tick or two.
+ * Comfortably longer than any single inference. Each request is sent once, and a retry is a new attempt on a
+ * later sweep, so a healthy run is never stolen from itself. Short enough that a crashed sweep's work resumes on
+ * the next tick or two.
  */
 export const DEFAULT_OPENROUTER_LEASE_DURATION: Milliseconds = MS_IN_MINUTE * 10;
 
@@ -122,11 +123,11 @@ export interface OpenRouterEnqueueRunTaskParams {
    * only discriminator: which surface a request needs is a property of the request, and a second field
    * declaring it is a second thing that can disagree.
    */
-  readonly state?: Maybe<OpenRouterStorableDecisionState>;
+  readonly state?: Maybe<LlmStorableDecisionState>;
   /**
    * Questions declared for THIS run, merged over the prompt version's own stored questions.
    */
-  readonly questions?: Maybe<OpenRouterDecisionQuestions>;
+  readonly questions?: Maybe<LlmDecisionQuestions>;
   /**
    * Whether to run the task immediately rather than leaving it for the next sweep.
    *
@@ -375,6 +376,14 @@ export interface OpenRouterRunTaskServiceConfig {
    * Default lease duration. Defaults to {@link DEFAULT_OPENROUTER_LEASE_DURATION}.
    */
   readonly leaseDuration?: Maybe<Milliseconds>;
+  /**
+   * Decides a failure {@link classifyOpenRouterError} reads as `unknown`: `true` requeues it (under
+   * {@link maxAttempts}); `false` fails the task now; no answer keeps the default, which requeues. A permanent
+   * failure always fails at once and a transient one always requeues, whatever this says.
+   *
+   * Wiring-time code: nothing about it is stored on the task document or anywhere in Firestore.
+   */
+  readonly isRetryableUnknownError?: Maybe<IsRetryableUnknownErrorFunction>;
 }
 
 /**
@@ -384,7 +393,7 @@ export interface OpenRouterRunTaskServiceConfig {
  * @returns The service.
  */
 export function openRouterRunTaskService(config: OpenRouterRunTaskServiceConfig): OpenRouterRunTaskService {
-  const { collections, promptService, client, storageContext, envService, fileAttachmentMode, maxInlineFileSizeBytes, tools, onTerminalState, signedUrlTtl, maxAttempts: inputMaxAttempts, leaseDuration: inputLeaseDuration } = config;
+  const { collections, promptService, client, storageContext, envService, fileAttachmentMode, maxInlineFileSizeBytes, tools, onTerminalState, signedUrlTtl, maxAttempts: inputMaxAttempts, leaseDuration: inputLeaseDuration, isRetryableUnknownError } = config;
   const { openRouterRunTaskCollection } = collections;
 
   const attachFilesForAttempt = openRouterFileAttachmentResolver({ storageContext, envService, mode: fileAttachmentMode, signedUrlTtl, maxInlineFileSizeBytes });
@@ -614,7 +623,7 @@ export function openRouterRunTaskService(config: OpenRouterRunTaskServiceConfig)
    * @param state - The content to judge.
    * @returns What the attempt did.
    */
-  async function executeDecisionRunTaskData(document: OpenRouterRunTaskDocument, task: OpenRouterRunTask, state: OpenRouterStorableDecisionState): Promise<OpenRouterRunTaskExecutionResult> {
+  async function executeDecisionRunTaskData(document: OpenRouterRunTaskDocument, task: OpenRouterRunTask, state: LlmStorableDecisionState): Promise<OpenRouterRunTaskExecutionResult> {
     const key = document.id;
     let executionResult: OpenRouterRunTaskExecutionResult;
 
@@ -635,9 +644,9 @@ export function openRouterRunTaskService(config: OpenRouterRunTaskServiceConfig)
       });
       executionResult = { key, state: OpenRouterRunTaskState.COMPLETE, decision };
     } catch (e) {
-      // A malformed declaration and an off-shape reply both land here, and both are correctly
-      // classified as PERMANENT by `isRetryableOpenRouterError` — neither carries a retryable status, so
-      // neither spends the attempt budget reaching the same answer three times.
+      // A malformed declaration and an off-shape reply both land here, and both are classified PERMANENT
+      // by class (`classifyOpenRouterError`), and so is a 2xx reply the SDK cannot decode
+      // (`ResponseValidationError`), so none spends the attempt budget reaching the same answer three times.
       const failure = await recordFailure({ document, task, error: { code: openRouterErrorCode(e), message: openRouterErrorMessage(e) }, cause: e, at: new Date() });
       executionResult = { ...failure, error: e };
     }
@@ -754,7 +763,7 @@ export function openRouterRunTaskService(config: OpenRouterRunTaskServiceConfig)
 
     // A deterministic failure — a bad key, a 402, a model id that does not exist — cannot succeed on a
     // second attempt, so it spends none of the budget and goes straight to FAILED.
-    const retryable = isRetryableOpenRouterError(cause);
+    const retryable = isRetryableOpenRouterError(cause, isRetryableUnknownError);
     // The attempt counter was already incremented by the claim, so `task.at` is the number of attempts made
     // INCLUDING this one — which is why nothing is added to it here. Adding one would spend the budget a
     // tick early and mark a task FAILED with a retry still owed to it.
@@ -887,7 +896,22 @@ export function hasUnresolvedOpenRouterPendingToolCalls(pending: Maybe<readonly 
 }
 
 /**
+ * COMPAT: the run-task error code a decision answer fault has always been stored under. The class moved to
+ * `@dereekb/llm` as `LlmDecisionAnswerFaultError`, and the stored code must not change with the rename, or a dashboard
+ * or alert keyed on it silently stops matching.
+ */
+const LEGACY_DECISION_ANSWER_FAULT_ERROR_CODE = 'OpenRouterDecisionAnswerFaultError';
+
+/**
+ * COMPAT: the run-task error code a decision declaration error has always been stored under — see
+ * {@link LEGACY_DECISION_ANSWER_FAULT_ERROR_CODE}.
+ */
+const LEGACY_DECISION_DECLARATION_ERROR_CODE = 'OpenRouterDecisionDeclarationError';
+
+/**
  * Extracts an error code from a thrown value.
+ *
+ * The two decision errors that moved to `@dereekb/llm` keep their legacy codes, so stored run tasks do not drift.
  *
  * @param e - The thrown value.
  * @returns The code, when one is discernible.
@@ -897,7 +921,11 @@ export function hasUnresolvedOpenRouterPendingToolCalls(pending: Maybe<readonly 
 export function openRouterErrorCode(e: unknown): Maybe<string> {
   let result: Maybe<string>;
 
-  if (e != null && typeof e === 'object') {
+  if (e instanceof LlmDecisionAnswerFaultError) {
+    result = LEGACY_DECISION_ANSWER_FAULT_ERROR_CODE;
+  } else if (e instanceof LlmDecisionDeclarationError) {
+    result = LEGACY_DECISION_DECLARATION_ERROR_CODE;
+  } else if (e != null && typeof e === 'object') {
     const candidate = (e as { code?: unknown; name?: unknown }).code ?? (e as { name?: unknown }).name;
 
     if (candidate != null) {
@@ -917,7 +945,7 @@ export function openRouterErrorCode(e: unknown): Maybe<string> {
  * @__NO_SIDE_EFFECTS__
  */
 export function openRouterErrorMessage(e: unknown): string {
-  return e instanceof Error ? e.message : String(e);
+  return readErrorMessage(e);
 }
 
 /**
@@ -931,7 +959,52 @@ export function openRouterErrorMessage(e: unknown): string {
 export const OPENROUTER_PERMANENT_ERROR_STATUSES: readonly number[] = [400, 401, 402, 403, 404];
 
 /**
- * Whether a failure is worth another attempt.
+ * The run task's classification config: util/fetch's defaults with OpenRouter's permanent statuses, its
+ * `status` / `statusCode` / `code` reader, and the `@openrouter/sdk` HTTP-client error names (which set `.name`) —
+ * including the permanent `ResponseValidationError`.
+ */
+const OPENROUTER_ERROR_CLASSIFICATION_CONFIG: FetchErrorClassificationConfig = {
+  permanentStatuses: new Set(OPENROUTER_PERMANENT_ERROR_STATUSES),
+  // The `@openrouter/sdk`'s error for a 2xx reply it could not decode. Asking again bills the same call for the same
+  // undecodable answer (review-2 N1, D5 §0.5).
+  permanentClassNames: new Set(['ResponseValidationError']),
+  readStatus: openRouterErrorStatus,
+  abortErrorNames: new Set([...Array.from(DEFAULT_FETCH_ABORT_ERROR_NAMES), 'RequestAbortedError', 'RequestTimeoutError']),
+  transientClassNames: new Set(['ConnectionError'])
+};
+
+/**
+ * Classifies a run failure as `transient`, `permanent` or `unknown`.
+ *
+ * The in-workspace deterministic failures are permanent by class: an {@link OpenRouterPromptResolutionError} (the
+ * prompt either exists at that version or it never will), an `LlmDecisionAnswerFaultError` (an off-shape decision
+ * answer) and an `LlmDecisionDeclarationError` (a malformed decision declaration). So is the SDK's
+ * `ResponseValidationError` (a 2xx reply it could not decode), recognised by name. Everything else goes through
+ * `@dereekb/util/fetch`'s `classifyFetchError`, with {@link OPENROUTER_PERMANENT_ERROR_STATUSES} as the permanent
+ * statuses, the status read off `status` / `statusCode` / `code`, and the `@openrouter/sdk` connection, timeout and
+ * abort errors recognised by name.
+ *
+ * @param e - The thrown value, or the error reported on a response.
+ * @returns The classification.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function classifyOpenRouterError(e: unknown): FetchErrorClassification {
+  let classification: FetchErrorClassification;
+
+  if (e instanceof OpenRouterPromptResolutionError || e instanceof LlmDecisionAnswerFaultError || e instanceof LlmDecisionDeclarationError) {
+    classification = 'permanent';
+  } else {
+    classification = classifyFetchError(e, OPENROUTER_ERROR_CLASSIFICATION_CONFIG);
+  }
+
+  return classification;
+}
+
+/**
+ * Whether a failure is worth another attempt — {@link classifyOpenRouterError}'s classification under the run
+ * task's own policy: `transient` requeues, `permanent` fails now, and `unknown` asks `isRetryableUnknownError`,
+ * requeueing when it is absent or answers nothing.
  *
  * What this encodes is a whitelist of the KNOWN-PERMANENT, not a whitelist of the retryable: anything
  * unrecognized defaults to RETRYABLE. An unknown failure is far more likely to be a transient upstream blip
@@ -945,18 +1018,20 @@ export const OPENROUTER_PERMANENT_ERROR_STATUSES: readonly number[] = [400, 401,
  *
  * Permanent is two cases. {@link OPENROUTER_PERMANENT_ERROR_STATUSES}, read off `status` / `statusCode` /
  * `code` — which covers both routes into `recordFailure`: a thrown SDK/HTTP error, and the numeric
- * `error.code` OpenRouter reports in a response body without throwing at all. And an
- * {@link OpenRouterPromptResolutionError}, which is deterministic by construction: the prompt either exists
- * at that version or it never will, so re-resolving it is guaranteed to fail identically.
+ * `error.code` OpenRouter reports in a response body without throwing at all. And the deterministic classes
+ * {@link classifyOpenRouterError} lists by class or by name, which fail identically on every attempt.
+ *
+ * A host narrows the `unknown` default with `isRetryableUnknownError` (`OpenRouterRunTaskServiceConfig`): `false`
+ * fails the task now. It is never asked about a transient or permanent failure.
  *
  * @param e - The thrown value, or the error reported on a response.
+ * @param isRetryableUnknownError - The host's call on an `unknown` failure.
  * @returns True when another attempt could plausibly succeed.
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function isRetryableOpenRouterError(e: unknown): boolean {
-  const status = openRouterErrorStatus(e);
-  return !(e instanceof OpenRouterPromptResolutionError) && (status == null || !OPENROUTER_PERMANENT_ERROR_STATUSES.includes(status));
+export function isRetryableOpenRouterError(e: unknown, isRetryableUnknownError?: Maybe<IsRetryableUnknownErrorFunction>): boolean {
+  return isRetryableFetchErrorClassification({ classification: classifyOpenRouterError(e), error: e, isRetryableUnknownError, retryUnknownByDefault: true });
 }
 
 /**

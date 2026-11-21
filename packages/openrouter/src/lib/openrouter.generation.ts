@@ -1,5 +1,6 @@
 import { type Maybe } from '@dereekb/util';
 import { type GenerationContentData, type GenerationResponseData, type OpenRouterCore, type RequestOptions, generationsGetGeneration, generationsListGenerationContent } from './openrouter.sdk';
+import { openRouterRequestOptions } from './openrouter.timeout';
 import { type OpenRouterGenerationId } from './openrouter.type';
 
 /**
@@ -36,7 +37,7 @@ export interface OpenRouterGenerationParams {
  */
 export async function openRouterGeneration(params: OpenRouterGenerationParams): Promise<GenerationResponseData> {
   const { client, id, options } = params;
-  const result = await generationsGetGeneration(client, { id }, options ?? undefined);
+  const result = await generationsGetGeneration(client, { id }, openRouterRequestOptions(options));
 
   if (!result.ok) {
     throw result.error;
@@ -57,7 +58,7 @@ export async function openRouterGeneration(params: OpenRouterGenerationParams): 
  */
 export async function openRouterGenerationContent(params: OpenRouterGenerationParams): Promise<GenerationContentData> {
   const { client, id, options } = params;
-  const result = await generationsListGenerationContent(client, { id }, options ?? undefined);
+  const result = await generationsListGenerationContent(client, { id }, openRouterRequestOptions(options));
 
   if (!result.ok) {
     throw result.error;

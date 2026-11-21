@@ -5,7 +5,7 @@ import { BaseError } from 'make-error';
  */
 export class FetchRequestFactoryError extends BaseError {
   constructor(readonly error: Error | string | unknown) {
-    super(`Fetch request failed to build due to an unexpected error: ${typeof error === 'object' ? (error as Error).message : error}`);
+    super(`Fetch request failed to build due to an unexpected error: ${error != null && typeof error === 'object' ? (error as Error).message : error}`);
   }
 }
 

@@ -12,6 +12,27 @@ export class FetchTimeoutError extends BaseError {
 }
 
 /**
+ * Clones a request and keeps its non-standard `timeout`, which `Request.clone()` drops.
+ *
+ * A fetch handler that sends a clone (the rate limiter sends one per attempt) uses this so that {@link fetchTimeout}
+ * still sees the timeout the request factory put on the request — including a per-request value, which wins over the
+ * configured default.
+ *
+ * @param request - The request to clone.
+ * @returns The clone, carrying the same `timeout` (0 included) when the request had one.
+ */
+export function cloneRequestWithTimeout(request: Request): RequestWithTimeout {
+  const clone = request.clone() as RequestWithTimeout;
+  const { timeout } = request as RequestWithTimeout;
+
+  if (timeout != null) {
+    clone.timeout = timeout;
+  }
+
+  return clone;
+}
+
+/**
  * Wraps a fetch function to add automatic timeout/abort support. If a timeout value is present on the
  * RequestInit or Request, the request is aborted after that many milliseconds without a response. A timeout
  * of 0 disables it.
@@ -21,6 +42,9 @@ export class FetchTimeoutError extends BaseError {
  *
  * The timeout covers the wait for the response (its headers). Reading the body afterwards is not timed out;
  * abort the caller's signal for that.
+ *
+ * A fetch handler that sends a clone of the request must clone it with {@link cloneRequestWithTimeout}; a plain
+ * `Request.clone()` loses the timeout.
  *
  * @param inputFetch - The fetch function to wrap with timeout behavior.
  * @returns A wrapped fetch function that enforces timeouts via AbortController.

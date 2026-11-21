@@ -210,16 +210,30 @@ export class CliDownloadTaskFailedError extends Error {
   }
 }
 
+/**
+ * Waits `ms`, or until `signal` aborts. Returns at once when `signal` is already aborted.
+ *
+ * Kept local until F21 swaps it to util's `waitForMsUnlessAborted`.
+ *
+ * @param ms - How long to wait.
+ * @param signal - Ends the wait early when it aborts.
+ * @returns Resolves when the wait ends.
+ */
 function waitUnlessAborted(ms: Milliseconds, signal: Maybe<AbortSignal>): Promise<void> {
   return new Promise<void>((resolve) => {
-    const done = () => {
-      clearTimeout(timer);
-      signal?.removeEventListener('abort', done);
+    if (signal?.aborted) {
+      // an already-aborted signal never fires `abort` again, so waiting on it would sleep the whole delay
       resolve();
-    };
+    } else {
+      const done = () => {
+        clearTimeout(timer);
+        signal?.removeEventListener('abort', done);
+        resolve();
+      };
 
-    const timer = setTimeout(done, ms);
-    signal?.addEventListener('abort', done, { once: true });
+      const timer = setTimeout(done, ms);
+      signal?.addEventListener('abort', done, { once: true });
+    }
   });
 }
 

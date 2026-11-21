@@ -1,60 +1,19 @@
+import { LlmDecisionAnswerFaultError, LlmDecisionDeclarationError, type LlmDecisionQuestions, llmChoiceQuestion, llmNoulQuestion, llmScoreQuestion } from '@dereekb/llm';
 import { describe, expect, it } from 'vitest';
 import { fakeOpenRouterDecisionClient } from '../test/openrouter.fake';
 import { validateOpenRouterModelConfig } from './openrouter.config';
 import { OpenRouterSystemOneModelOnCompletionArmError, openRouterResponsesRequestBody } from './openrouter.call';
-import {
-  OpenRouterDecisionAnswerFaultError,
-  OpenRouterDecisionDeclarationError,
-  openRouterDecisionRequest,
-  openRouterDecisionRequestBody,
-  openRouterDecisionWireQuestion,
-  openRouterRunUsageFromDecisionsUsage,
-  readOpenRouterDecisionAnswers,
-  splitOpenRouterDecisionModelConfig,
-  validateOpenRouterDecisionRequest
-} from './openrouter.decision';
+import { openRouterDecisionRequest, openRouterDecisionRequestBody, openRouterRunUsageFromDecisionsUsage, splitOpenRouterDecisionModelConfig, validateOpenRouterDecisionRequest } from './openrouter.decision';
 import { openRouterDecision } from './openrouter.decision.call';
-import { type OpenRouterDecisionAnswer, type OpenRouterDecisionQuestions, openRouterChoiceQuestion, openRouterNoulQuestion, openRouterScoreQuestion } from './openrouter.decision.question';
 import { OPENROUTER_JEV_1_13_MODEL_ID } from './openrouter.type';
 
 const JEV = OPENROUTER_JEV_1_13_MODEL_ID;
 
 const QUESTIONS = {
-  entry: openRouterChoiceQuestion('Which entry means what `phrase` describes?', { 'row-a': 'the first row', 'row-b': null }),
-  heat: openRouterScoreQuestion('How urgent is `phrase`?', ['idle', 'soon', 'now']),
-  fits: openRouterNoulQuestion('At least one row means what `phrase` describes.', { true: 'one of them fits', false: 'none of them fit' })
-} satisfies OpenRouterDecisionQuestions;
-
-describe('openRouterDecisionWireQuestion()', () => {
-  it('should spell an undescribed Choice option as an explicit null', () => {
-    // Omitting the key would remove the option from the answer space; null keeps it, undescribed.
-    const wire = openRouterDecisionWireQuestion(QUESTIONS.entry) as { criteria: Record<string, unknown> };
-    expect(wire.criteria['row-a']).toBe('the first row');
-    expect(wire.criteria['row-b']).toBeNull();
-  });
-
-  it('should carry Score levels as an ordered criteria array', () => {
-    const wire = openRouterDecisionWireQuestion(QUESTIONS.heat) as unknown as { criteria: unknown[] };
-    expect(wire.criteria).toEqual(['idle', 'soon', 'now']);
-  });
-
-  it('should carry a Noul`s two sides as criteria', () => {
-    const wire = openRouterDecisionWireQuestion(QUESTIONS.fits) as { criteria: Record<string, unknown> };
-    expect(wire.criteria).toEqual({ true: 'one of them fits', false: 'none of them fit' });
-  });
-
-  it('should omit criteria entirely for a Noul with no declared sides', () => {
-    // Not an empty object — the key is absent, which is what the wire means by "undefined condition".
-    expect('criteria' in openRouterDecisionWireQuestion(openRouterNoulQuestion('is it urgent?'))).toBe(false);
-  });
-
-  it('should pass a structured entry through by identity', () => {
-    // The wire carries declaration guidance VERBATIM, so a normalising copy here would be a silent edit.
-    const criterion = { what: 'Charges, invoices, refunds', not_for: 'Order tracking', examples: ['I was charged twice'] };
-    const wire = openRouterDecisionWireQuestion(openRouterChoiceQuestion('which?', { billing: criterion })) as { criteria: Record<string, unknown> };
-    expect(wire.criteria['billing']).toBe(criterion);
-  });
-});
+  entry: llmChoiceQuestion('Which entry means what `phrase` describes?', { 'row-a': 'the first row', 'row-b': null }),
+  heat: llmScoreQuestion('How urgent is `phrase`?', ['idle', 'soon', 'now']),
+  fits: llmNoulQuestion('At least one row means what `phrase` describes.', { true: 'one of them fits', false: 'none of them fit' })
+} satisfies LlmDecisionQuestions;
 
 describe('splitOpenRouterDecisionModelConfig()', () => {
   it('should keep only the keys the decisions route accepts', () => {
@@ -102,7 +61,7 @@ describe('validateOpenRouterDecisionRequest()', () => {
   });
 
   it('should fold question problems into the same result', () => {
-    const validation = validateOpenRouterDecisionRequest({ config: { model: JEV }, state: 'x', questions: { bad: openRouterNoulQuestion('') } });
+    const validation = validateOpenRouterDecisionRequest({ config: { model: JEV }, state: 'x', questions: { bad: llmNoulQuestion('') } });
     expect(validation.valid).toBe(false);
     expect(validation.errors[0]).toContain('`bad`');
   });
@@ -145,7 +104,7 @@ describe('openRouterDecisionRequest()', () => {
     const request = openRouterDecisionRequest({
       prompt: { promptKey: 'p', version: 1, config: { model: JEV }, questions: { fits: QUESTIONS.fits, heat: QUESTIONS.heat } },
       state: { phrase: 'on the pile' },
-      questions: { heat: openRouterScoreQuestion('overridden', ['a', 'b']) }
+      questions: { heat: llmScoreQuestion('overridden', ['a', 'b']) }
     });
 
     expect(Object.keys(request.questions).sort()).toEqual(['fits', 'heat']);
@@ -158,7 +117,7 @@ describe('openRouterDecisionRequest()', () => {
   });
 
   it('should refuse a bad declaration before a request exists', () => {
-    expect(() => openRouterDecisionRequest({ state: 'x', questions: { bad: openRouterNoulQuestion('') } })).toThrow(OpenRouterDecisionDeclarationError);
+    expect(() => openRouterDecisionRequest({ state: 'x', questions: { bad: llmNoulQuestion('') } })).toThrow(LlmDecisionDeclarationError);
   });
 });
 
@@ -166,65 +125,6 @@ describe('openRouterDecisionRequestBody()', () => {
   it('should build exactly the three keys the route needs', () => {
     const body = openRouterDecisionRequestBody({ config: { model: JEV }, state: { phrase: 'on the pile' }, questions: QUESTIONS });
     expect(Object.keys(body).sort()).toEqual(['model', 'questions', 'state']);
-  });
-});
-
-describe('readOpenRouterDecisionAnswers()', () => {
-  it('should pass a well formed reply through', () => {
-    const read = readOpenRouterDecisionAnswers({ questions: QUESTIONS, raw: { entry: { type: 'choice', choice: 'row-a' }, heat: { type: 'score', score: 2 }, fits: { type: 'noul', noul: 0.9 } } });
-    expect(read.faults).toBeUndefined();
-    expect(read.answers?.fits.noul).toBe(0.9);
-  });
-
-  it('should fault a missing answer', () => {
-    const read = readOpenRouterDecisionAnswers({ questions: { fits: QUESTIONS.fits }, raw: {} });
-    expect(read.faults?.[0].kind).toBe('answer-missing');
-  });
-
-  it('should fault an answer of the wrong type', () => {
-    const read = readOpenRouterDecisionAnswers({ questions: { fits: QUESTIONS.fits }, raw: { fits: { type: 'score', score: 1 } as OpenRouterDecisionAnswer } });
-    expect(read.faults?.[0].kind).toBe('answer-mistyped');
-  });
-
-  it('should fault a choice outside the declared options', () => {
-    const read = readOpenRouterDecisionAnswers({ questions: { entry: QUESTIONS.entry }, raw: { entry: { type: 'choice', choice: 'row-z' } } });
-    expect(read.faults?.[0].kind).toBe('choice-off-option');
-  });
-
-  it('should fault a distribution over undeclared options', () => {
-    const read = readOpenRouterDecisionAnswers({ questions: { entry: QUESTIONS.entry }, raw: { entry: { type: 'choice', choice: 'row-a', probabilities: { 'row-a': 0.5, 'row-z': 0.5 } } } });
-    expect(read.faults?.some((x) => x.kind === 'choice-off-option')).toBe(true);
-  });
-
-  it('should fault a distribution that does not sum to 1', () => {
-    const read = readOpenRouterDecisionAnswers({ questions: { entry: QUESTIONS.entry }, raw: { entry: { type: 'choice', choice: 'row-a', probabilities: { 'row-a': 0.2, 'row-b': 0.2 } } } });
-    expect(read.faults?.[0].kind).toBe('value-out-of-range');
-  });
-
-  it('should tolerate float noise in a distribution', () => {
-    const read = readOpenRouterDecisionAnswers({ questions: { entry: QUESTIONS.entry }, raw: { entry: { type: 'choice', choice: 'row-a', probabilities: { 'row-a': 0.7000001, 'row-b': 0.2999998 } } } });
-    expect(read.faults).toBeUndefined();
-  });
-
-  it('should check nothing about an absent distribution', () => {
-    // Only choice/score/noul are guaranteed on the wire; the rest absent is a real reply.
-    const read = readOpenRouterDecisionAnswers({ questions: { entry: QUESTIONS.entry }, raw: { entry: { type: 'choice', choice: 'row-a' } } });
-    expect(read.faults).toBeUndefined();
-  });
-
-  it('should fault a score outside the declared levels', () => {
-    const read = readOpenRouterDecisionAnswers({ questions: { heat: QUESTIONS.heat }, raw: { heat: { type: 'score', score: 3 } } });
-    expect(read.faults?.[0].kind).toBe('value-out-of-range');
-  });
-
-  it('should fault a noul outside 0..1', () => {
-    const read = readOpenRouterDecisionAnswers({ questions: { fits: QUESTIONS.fits }, raw: { fits: { type: 'noul', noul: 1.2 } } });
-    expect(read.faults?.[0].kind).toBe('value-out-of-range');
-  });
-
-  it('should collect every fault rather than only the first', () => {
-    const read = readOpenRouterDecisionAnswers({ questions: QUESTIONS, raw: {} });
-    expect(read.faults).toHaveLength(3);
   });
 });
 
@@ -279,14 +179,26 @@ describe('openRouterDecision()', () => {
     const fake = fakeOpenRouterDecisionClient({ answers: { entry: { type: 'choice', choice: 'row-z' } } });
     const request = openRouterDecisionRequest({ state: 'x', questions: { entry: QUESTIONS.entry }, overrides: { model: JEV } });
 
-    await expect(openRouterDecision({ client: fake.client, request })).rejects.toThrow(OpenRouterDecisionAnswerFaultError);
+    await expect(openRouterDecision({ client: fake.client, request })).rejects.toThrow(LlmDecisionAnswerFaultError);
+  });
+
+  it("should carry the billed reply's usage, model, provider and generation id on the fault", async () => {
+    const fake = fakeOpenRouterDecisionClient({ id: 'gen_faulted', provider: 'typesafe', answers: { entry: { type: 'choice', choice: 'row-z' } }, inputTokens: 272, outputTokens: 34, cost: 0.000011424 });
+    const request = openRouterDecisionRequest({ state: 'x', questions: { entry: QUESTIONS.entry }, overrides: { model: JEV } });
+    const thrown = await openRouterDecision({ client: fake.client, request }).then(
+      () => undefined,
+      (error: unknown) => error
+    );
+
+    expect(thrown).toBeInstanceOf(LlmDecisionAnswerFaultError);
+    expect(thrown).toMatchObject({ model: JEV, provider: 'typesafe', generationId: 'gen_faulted', usage: { promptTokens: 272, completionTokens: 34, totalTokens: 306, cost: 0.000011424 } });
   });
 
   it('should refuse a chat model before touching the wire', async () => {
     const fake = fakeOpenRouterDecisionClient({ answers: {} });
     const request = openRouterDecisionRequest({ state: 'x', questions: QUESTIONS, overrides: { model: 'openai/gpt-5.1' } });
 
-    await expect(openRouterDecision({ client: fake.client, request })).rejects.toThrow(OpenRouterDecisionDeclarationError);
+    await expect(openRouterDecision({ client: fake.client, request })).rejects.toThrow(LlmDecisionDeclarationError);
     expect(fake.callCount).toBe(0);
   });
 });

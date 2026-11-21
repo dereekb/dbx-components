@@ -37,8 +37,8 @@ export type TrelloAuthProbeResult =
 export interface ProbeTrelloAuthInput extends TrelloContextRef {
   /**
    * How long to wait for Trello, including any rate-limiter wait, before giving up with `TIMEOUT` and aborting the
-   * request. Defaults to {@link DEFAULT_TRELLO_AUTH_PROBE_TIMEOUT_MS}. The context's own 20s request timeout still
-   * applies, so a longer value does not extend it.
+   * request. Defaults to {@link DEFAULT_TRELLO_AUTH_PROBE_TIMEOUT_MS}. The context's own request timeout
+   * (`TrelloFactoryConfig.timeout`, 20 s by default) still applies, so a longer value does not extend it.
    */
   readonly timeoutMs?: Maybe<number>;
 }

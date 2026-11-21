@@ -1,0 +1,41 @@
+{
+  "name": "llm-zenmux",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/llm/zenmux/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build-base": {
+      "dependsOn": [
+        {
+          "projects": ["llm"],
+          "target": "build-base"
+        },
+        {
+          "projects": ["util"],
+          "target": "build"
+        }
+      ],
+      "metadata": {
+        "description": "The @dereekb/llm/zenmux entry (rollup, inferred from rollup.config.cjs): compiles into dist/packages/llm/zenmux and is named by the parent's `./zenmux` export. An explicit edge to llm:build-base, NOT `^build`: `^build` would resolve to llm:build, which depends on this very target -- a hard cycle. The edge holds even before this entry imports @dereekb/llm, because llm:build-base deletes the dist directory this entry writes into. A sibling entry it imports adds `{ projects: [<sibling>], target: build-base }`; another family (e.g. util) adds that family's ROOT `build`. The parent's `build` aggregates this target, so the entry has no `build` of its own."
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["default", "^production"],
+      "outputs": [],
+      "options": {
+        "command": "npx tsc -p packages/llm/zenmux/tsconfig.spec.json --noEmit",
+        "cwd": "{workspaceRoot}"
+      },
+      "metadata": {
+        "description": "Type-checks the llm-zenmux entry's specs and, through them and the spec config's src/**/*.ts include, every lib file of the entry. Vitest strips types, so without this target a type error in a llm-zenmux spec passes lint, tests and build. Run by the dbx-claude test and commit gate; never part of build. The lib config is left out for the same reason as llm:typecheck: util's Node-typed sources do not compile under the browser entries' types: []."
+      }
+    }
+  }
+}

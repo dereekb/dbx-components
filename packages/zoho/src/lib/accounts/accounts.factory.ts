@@ -1,6 +1,6 @@
 import { fetchJsonFunction, fetchApiFetchService, type ConfiguredFetch, type FetchHandler, returnNullHandleFetchJsonParseErrorFunction } from '@dereekb/util/fetch';
 import { type ZohoAccountsConfig, type ZohoAccountsContext, type ZohoAccountsContextRef, type ZohoAccountsFetchFactory, type ZohoAccountsFetchFactoryParams, zohoAccountsConfigApiUrl } from './accounts.config';
-import { type ZohoAuthClientIdAndSecretPair, type ZohoConfig } from '../zoho.config';
+import { DEFAULT_ZOHO_FETCH_TIMEOUT, type ZohoAuthClientIdAndSecretPair, type ZohoConfig } from '../zoho.config';
 import { type LogZohoServerErrorFunction } from '../zoho.error.api';
 import { ZohoAccountsAuthFailureError, handleZohoAccountsErrorFetch, interceptZohoAccounts200StatusWithErrorResponse } from './accounts.error.api';
 import { type ZohoAccessToken, type ZohoAccessTokenCache, type ZohoAccessTokenFactory, type ZohoAccessTokenRefresher } from './accounts';
@@ -21,13 +21,22 @@ export type ZohoAccounts = ZohoAccountsContextRef;
 export interface ZohoAccountsFactoryConfig {
   /**
    * Custom fetch factory for creating the underlying HTTP client.
-   * Defaults to a standard fetch service with JSON content headers and a 20-second timeout.
+   * Defaults to a standard fetch service with JSON content headers and the `timeout` below.
    */
   readonly fetchFactory?: ZohoAccountsFetchFactory;
   /**
    * Custom error logging function invoked when Zoho API errors are encountered.
    */
   readonly logZohoServerErrorFunction?: LogZohoServerErrorFunction;
+  /**
+   * Timeout in milliseconds for each request the default fetch sends: the wait for the response headers (reading the
+   * body is not timed). `0` turns it off. A request's own `timeout`, set in its init, wins over this.
+   *
+   * Ignored when a `fetchFactory` is provided.
+   *
+   * Defaults to {@link DEFAULT_ZOHO_FETCH_TIMEOUT} (20 seconds).
+   */
+  readonly timeout?: Maybe<Milliseconds>;
 }
 
 /**
@@ -39,11 +48,12 @@ export type ZohoAccountsFactory = (config: ZohoAccountsConfig) => ZohoAccounts;
  * Creates the {@link ZohoAccountsFetchFactory} the Zoho Accounts clients use when none is supplied.
  *
  * @param fetchHandler - The handler the produced fetches route through.
+ * @param timeout - Timeout in milliseconds for each request (the wait for the response headers); `0` turns it off. Defaults to {@link DEFAULT_ZOHO_FETCH_TIMEOUT}.
  * @returns The default Zoho Accounts fetch factory.
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function defaultZohoAccountsFetchFactory(fetchHandler: FetchHandler): ZohoAccountsFetchFactory {
+export function defaultZohoAccountsFetchFactory(fetchHandler: FetchHandler, timeout?: Maybe<Milliseconds>): ZohoAccountsFetchFactory {
   return (input: ZohoAccountsFetchFactoryParams) =>
     fetchApiFetchService.makeFetch({
       baseUrl: input.apiUrl,
@@ -53,7 +63,7 @@ export function defaultZohoAccountsFetchFactory(fetchHandler: FetchHandler): Zoh
         }
       },
       fetchHandler,
-      timeout: 20 * 1000, // 20 second timeout
+      timeout: timeout ?? DEFAULT_ZOHO_FETCH_TIMEOUT,
       requireOkResponse: true, // enforce ok response
       useTimeout: true // use timeout
     });
@@ -137,7 +147,7 @@ function zohoAccountsClientFetch(baseFetch: ConfiguredFetch, logZohoServerErrorF
 export function zohoAccountsFactory(factoryConfig: ZohoAccountsFactoryConfig): ZohoAccountsFactory {
   const fetchHandler = zohoRateLimitedFetchHandler();
 
-  const { logZohoServerErrorFunction, fetchFactory = defaultZohoAccountsFetchFactory(fetchHandler) } = factoryConfig;
+  const { logZohoServerErrorFunction, fetchFactory = defaultZohoAccountsFetchFactory(fetchHandler, factoryConfig.timeout) } = factoryConfig;
 
   return (config: ZohoAccountsConfig) => {
     const externalTokenRefresher = config.tokenRefresher;
@@ -247,6 +257,15 @@ export interface ZohoAccountsOAuthClientFactoryConfig {
    * Custom error logging function invoked when Zoho API errors are encountered.
    */
   readonly logZohoServerErrorFunction?: LogZohoServerErrorFunction;
+  /**
+   * Timeout in milliseconds for each request the default fetch sends: the wait for the response headers (reading the
+   * body is not timed). `0` turns it off. A request's own `timeout`, set in its init, wins over this.
+   *
+   * Ignored when a `fetchFactory` is provided.
+   *
+   * Defaults to {@link DEFAULT_ZOHO_FETCH_TIMEOUT} (20 seconds).
+   */
+  readonly timeout?: Maybe<Milliseconds>;
 }
 
 /**
@@ -275,7 +294,7 @@ export type ZohoAccountsOAuthClientFactory = (config: ZohoAccountsOAuthClientCon
  */
 export function zohoAccountsOAuthClientFactory(factoryConfig: ZohoAccountsOAuthClientFactoryConfig): ZohoAccountsOAuthClientFactory {
   const fetchHandler = factoryConfig.fetchHandler ?? zohoRateLimitedFetchHandler();
-  const { logZohoServerErrorFunction, fetchFactory = defaultZohoAccountsFetchFactory(fetchHandler) } = factoryConfig;
+  const { logZohoServerErrorFunction, fetchFactory = defaultZohoAccountsFetchFactory(fetchHandler, factoryConfig.timeout) } = factoryConfig;
 
   return (config: ZohoAccountsOAuthClientConfig) => {
     if (!config.clientId) {

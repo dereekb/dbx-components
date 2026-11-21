@@ -1,5 +1,5 @@
+import { type LlmDecisionAnswers, type LlmDecisionQuestions } from '@dereekb/llm/decision';
 import { type Maybe } from '@dereekb/util';
-import { type OpenRouterDecisionAnswers, type OpenRouterDecisionQuestions } from '@dereekb/openrouter';
 import { type OpenRouterRunTask, OpenRouterRunTaskState } from '@dereekb/openrouter/firebase';
 
 /**
@@ -29,8 +29,8 @@ export function isOpenRouterDecisionRunTask(task: Maybe<OpenRouterRunTask>): boo
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function openRouterRunTaskDecisionAnswers<Q extends OpenRouterDecisionQuestions = OpenRouterDecisionQuestions>(task: Maybe<OpenRouterRunTask>): Maybe<OpenRouterDecisionAnswers<Q>> {
-  return task?.an as Maybe<OpenRouterDecisionAnswers<Q>>;
+export function openRouterRunTaskDecisionAnswers<Q extends LlmDecisionQuestions = LlmDecisionQuestions>(task: Maybe<OpenRouterRunTask>): Maybe<LlmDecisionAnswers<Q>> {
+  return task?.an as Maybe<LlmDecisionAnswers<Q>>;
 }
 
 /**

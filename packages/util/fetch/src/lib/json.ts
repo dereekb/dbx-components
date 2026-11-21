@@ -1,4 +1,4 @@
-import { mapIdentityFunction, type MapSameFunction, type Maybe } from '@dereekb/util';
+import { mapIdentityFunction, parseJsonOrUndefined, type MapSameFunction, type Maybe } from '@dereekb/util';
 import { type FetchMethod, type ConfiguredFetch } from './fetch.type';
 import { fetchURL, type FetchURLInput } from './url';
 
@@ -52,6 +52,114 @@ export const throwJsonResponseParseErrorFunction: HandleFetchJsonParseErrorFunct
 
 export const returnNullHandleFetchJsonParseErrorFunction: HandleFetchJsonParseErrorFunction = (_response: Response) => null;
 
+/**
+ * Turns a {@link Response} into its decoded value. Rejects when the body cannot be decoded, which hands the response to the
+ * configured {@link HandleFetchJsonParseErrorFunction}.
+ */
+export type FetchJsonDecodeResponseFunction = (response: Response) => Promise<unknown>;
+
+/**
+ * The default {@link FetchJsonDecodeResponseFunction}: `response.json()`.
+ *
+ * @param response - The response to decode.
+ * @returns The decoded JSON.
+ */
+export const DEFAULT_FETCH_JSON_DECODE_RESPONSE_FUNCTION: FetchJsonDecodeResponseFunction = (response) => response.json();
+
+/**
+ * The result of {@link readFetchJsonText}: the response, its body text (read once) and the decoded value.
+ */
+export interface FetchJsonTextResult<T = unknown> {
+  readonly response: Response;
+  /**
+   * The raw body text. Always present; the body is read exactly once.
+   */
+  readonly text: string;
+  /**
+   * The decoded value, or undefined when the text was not JSON.
+   *
+   * `T` is the caller's claim about the body. It is never validated, exactly like {@link FetchJsonFunction}'s result type.
+   */
+  readonly json: Maybe<T>;
+  /**
+   * False when the text was not JSON. Tells a non-JSON body apart from one that decoded to `null`.
+   */
+  readonly parsed: boolean;
+}
+
+/**
+ * Decodes body text into a value. Returning undefined, or throwing, both mean "not JSON".
+ */
+export type ReadFetchJsonTextParseJsonFunction = (text: string) => unknown;
+
+export interface ReadFetchJsonTextConfig {
+  /**
+   * Text decoder. Defaults to `@dereekb/util`'s `parseJsonOrUndefined`.
+   *
+   * JSON repair is never on by default; opt in by passing a repairing decoder, such as
+   * `(text) => repairJsonObjectOrUndefined(text)`.
+   */
+  readonly parseJson?: Maybe<ReadFetchJsonTextParseJsonFunction>;
+}
+
+/**
+ * Awaits a fetch, reads its body as text once, and decodes that text as JSON.
+ *
+ * Never throws for a non-ok status or a non-JSON body: the caller reads `response.ok`, `parsed` and `text`. Rejects only
+ * when the request itself or the body read fails, with that original error, so a later classifier still sees it.
+ *
+ * @param responsePromise - The pending fetch. A caller already holding a Response passes `Promise.resolve(response)`.
+ * @param config - Optional decoder override.
+ * @returns The response, its raw text and the decoded value.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory fetch
+ * @dbxUtilKind function
+ * @dbxUtilTags fetch, json, response, text, body, parse, read
+ */
+export async function readFetchJsonText<T = unknown>(responsePromise: Promise<Response>, config?: Maybe<ReadFetchJsonTextConfig>): Promise<FetchJsonTextResult<T>> {
+  const response = await responsePromise;
+  const text = await response.text();
+  const parseJson = config?.parseJson ?? parseJsonOrUndefined;
+
+  let json: unknown;
+
+  try {
+    json = parseJson(text);
+  } catch {
+    json = undefined; // a throwing decoder (e.g. plain JSON.parse) means "not JSON"
+  }
+
+  return { response, text, json: json as Maybe<T>, parsed: json !== undefined };
+}
+
+/**
+ * Creates a {@link FetchJsonDecodeResponseFunction} built on {@link readFetchJsonText}.
+ *
+ * Rejects with a {@link JsonResponseParseError} when the text is not JSON, so the configured parse-error handler still runs.
+ * The decoder consumes the body, so the handler cannot re-read it; `response.json()` behaves the same way.
+ *
+ * @param config - Optional decoder override, e.g. a repairing `parseJson`.
+ * @returns A decoder to pass as {@link FetchJsonFunctionConfig.decodeResponse}.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory fetch
+ * @dbxUtilKind factory
+ * @dbxUtilTags fetch, json, decode, response, repair, factory
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function fetchJsonTextDecodeResponseFunction(config?: Maybe<ReadFetchJsonTextConfig>): FetchJsonDecodeResponseFunction {
+  return (response) =>
+    readFetchJsonText(Promise.resolve(response), config).then((result) => {
+      if (!result.parsed) {
+        throw new JsonResponseParseError(response);
+      }
+
+      return result.json;
+    });
+}
+
 export interface FetchJsonFunctionConfig extends FetchJsonRequestInitFunctionConfig {
   /**
    * Optional intercept function to transform all response JSON before returning the result.
@@ -63,6 +171,12 @@ export interface FetchJsonFunctionConfig extends FetchJsonRequestInitFunctionCon
    * Optional function to handle JSON parsing errors.
    */
   readonly handleFetchJsonParseErrorFunction?: HandleFetchJsonParseErrorFunction;
+  /**
+   * How a response becomes a value. Defaults to {@link DEFAULT_FETCH_JSON_DECODE_RESPONSE_FUNCTION} (`response.json()`).
+   *
+   * A rejection is handed to {@link handleFetchJsonParseErrorFunction} together with the response.
+   */
+  readonly decodeResponse?: FetchJsonDecodeResponseFunction;
 }
 
 /**
@@ -83,15 +197,12 @@ export function fetchJsonFunction(fetch: ConfiguredFetch, inputConfig?: FetchJso
     config = inputConfig ?? {};
   }
 
-  config = {
-    ...config,
-    handleFetchJsonParseErrorFunction: config.handleFetchJsonParseErrorFunction ?? throwJsonResponseParseErrorFunction
-  };
-
-  const { handleFetchJsonParseErrorFunction, interceptJsonResponse } = config;
+  const { interceptJsonResponse } = config;
+  const handleParseError = config.handleFetchJsonParseErrorFunction ?? throwJsonResponseParseErrorFunction;
+  const decodeResponse = config.decodeResponse ?? DEFAULT_FETCH_JSON_DECODE_RESPONSE_FUNCTION;
   const configuredFetchJsonRequestInit = fetchJsonRequestInitFunction(config);
 
-  return (url: FetchURLInput, methodOrInput?: string | FetchJsonInput, body?: FetchJsonBody) => {
+  return ((url: FetchURLInput, methodOrInput?: string | FetchJsonInput, body?: FetchJsonBody) => {
     const requestUrl = fetchURL(url);
     const requestInit = configuredFetchJsonRequestInit(methodOrInput, body);
 
@@ -99,11 +210,11 @@ export function fetchJsonFunction(fetch: ConfiguredFetch, inputConfig?: FetchJso
     const responsePromise = fetch(requestUrl, requestInit);
 
     return responsePromise.then((response) => {
-      const jsonPromise = response.json().catch(handleFetchJsonParseErrorFunction);
+      const jsonPromise = decodeResponse(response).catch(() => handleParseError(response));
       const interceptedJsonResponsePromise = interceptJsonResponse ? jsonPromise.then((json) => interceptJsonResponse(json, response)) : jsonPromise;
       return inputIntercept ? interceptedJsonResponsePromise.then((result) => inputIntercept(result, response)) : interceptedJsonResponsePromise;
     });
-  };
+  }) as FetchJsonFunction; // the result type R is the caller's claim, never validated
 }
 
 export interface FetchJsonRequestInitFunctionConfig {

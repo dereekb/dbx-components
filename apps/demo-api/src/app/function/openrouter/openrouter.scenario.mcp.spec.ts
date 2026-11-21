@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { describeIfEnvFlag } from '@dereekb/util/test';
 import { type Maybe } from '@dereekb/util';
 import { type OnCallQueryModelResult } from '@dereekb/firebase';
 import { mcpMethodIdForDispatch } from '@dereekb/firebase-server/mcp';
@@ -26,12 +27,6 @@ import { callMcpMethod, describeMcpMethod, searchMcpMethods } from '../../../tes
  * Everything here dispatches through `McpServerFactoryService` — the same chain `McpController` serves,
  * minus the HTTP transport.
  */
-
-/**
- * Set to run the `live` block against the real API. Everything else runs on the emulator alone and
- * needs no credentials — the same gate the openrouter package's live block uses.
- */
-const OPENROUTER_LIVE_API_KEY = process.env['OPENROUTER_API_KEY'];
 
 /**
  * Model the live block runs against. A free model by default: this asserts that a run completes with
@@ -183,7 +178,11 @@ demoApiFunctionContextFactory((f) => {
         });
 
         // MARK: The live block — the plan's end-to-end bullet, driven from the MCP side
-        describe.skipIf(!OPENROUTER_LIVE_API_KEY)('live', () => {
+        // Whether the `live` block runs against the real API: `OPENROUTER_LIVE_SPECS` is `1` / `true` (trimmed, any
+        // case: `describeIfEnvFlag` from `@dereekb/util/test`) — the same gate the openrouter package's live probes
+        // use. The app reads `OPENROUTER_API_KEY` itself. Everything else runs on the emulator alone and needs no
+        // credentials.
+        describeIfEnvFlag('OPENROUTER_LIVE_SPECS')('live', () => {
           it('should drain a run published over MCP and resolve its stored generation id', async () => {
             // The cap is generous on purpose: a hybrid reasoning model spends output tokens on reasoning
             // first, so a tight one truncates the answer away and leaves `o` empty on an otherwise fine run.

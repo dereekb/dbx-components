@@ -2,7 +2,7 @@ import { type ConfiguredFetch, type FetchHandler, type FetchJsonFunction, fetchA
 import { MS_IN_MINUTE, type Maybe, type Milliseconds, type ResetPeriodPromiseRateLimiter } from '@dereekb/util';
 import { handleTrelloErrorFetch, type LogTrelloServerErrorFunction, TrelloInvalidTokenError } from '../trello.error.api';
 import { trelloRateLimitedFetchHandler, type TrelloRateLimitedFetchHandlerConfig } from '../trello.limit';
-import { type TrelloBearerAccessToken, type TrelloConfig, isTrelloAccessTokenConfig, isTrelloAccessTokenProviderConfig, isTrelloApiKeyTokenConfig } from '../trello.config';
+import { DEFAULT_TRELLO_FETCH_TIMEOUT, type TrelloBearerAccessToken, type TrelloConfig, isTrelloAccessTokenConfig, isTrelloAccessTokenProviderConfig, isTrelloApiKeyTokenConfig } from '../trello.config';
 import { TRELLO_API_URL, TRELLO_OAUTH_API_URL } from '../trello.type';
 
 /**
@@ -67,6 +67,15 @@ export interface TrelloFactoryConfig {
    * fetch.
    */
   readonly fetchHandler?: Maybe<FetchHandler>;
+  /**
+   * Timeout in milliseconds for each request the default fetch sends: the wait for the response headers (reading the
+   * body is not timed). `0` turns it off. A request's own `timeout`, set in its init, wins over this.
+   *
+   * Each attempt the rate limiter sends, its retry of a 429 included, gets the full timeout; its waits are not timed.
+   *
+   * Defaults to {@link DEFAULT_TRELLO_FETCH_TIMEOUT} (20 seconds).
+   */
+  readonly timeout?: Maybe<Milliseconds>;
 }
 
 export type TrelloFactory = (config: TrelloConfig) => Trello;
@@ -141,7 +150,7 @@ export function trelloFactory(factoryConfig: TrelloFactoryConfig = {}): TrelloFa
       }),
       ...(fetchHandler ? { fetchHandler } : undefined),
       ...(makeFetch ? { makeFetch } : undefined),
-      timeout: 20 * 1000,
+      timeout: factoryConfig.timeout ?? DEFAULT_TRELLO_FETCH_TIMEOUT,
       requireOkResponse: true,
       useTimeout: true
     });

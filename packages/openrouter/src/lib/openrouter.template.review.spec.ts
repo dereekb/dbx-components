@@ -1,15 +1,14 @@
+import { isLlmDecisionModelId, validateLlmDecisionQuestions } from '@dereekb/llm';
 import { describe, expect, it } from 'vitest';
 import { TEST_GOOD_TEMPLATE_SCRIPTS, TEST_JOB_REMINDER_TEMPLATE_TYPE, TEST_OPENROUTER_TEMPLATE_TYPE, TEST_PROFILE_TEXT_TEMPLATE_TYPE } from '../test/openrouter.template.fixture';
 import { openRouterDecisionRequest } from './openrouter.decision';
-import { validateOpenRouterDecisionQuestions } from './openrouter.decision.question';
 import { OPENROUTER_TEMPLATE_REVIEW_QUESTIONS, openRouterTemplateReviewPromptDefinition, openRouterTemplateReviewQuestions, openRouterTemplateReviewState, readOpenRouterTemplateReviewVerdict } from './openrouter.template.review';
-import { isOpenRouterSystemOneModelId } from './openrouter.type';
 
 describe('openRouterTemplateReviewPromptDefinition()', () => {
   it('should be a valid System One decision', () => {
     const definition = openRouterTemplateReviewPromptDefinition();
-    expect(validateOpenRouterDecisionQuestions(definition.questions).valid).toBe(true);
-    expect(isOpenRouterSystemOneModelId(definition.config.model)).toBe(true);
+    expect(validateLlmDecisionQuestions(definition.questions).valid).toBe(true);
+    expect(isLlmDecisionModelId(definition.config.model)).toBe(true);
   });
 
   it('should build a request with the per-type questions', () => {

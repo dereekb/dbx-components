@@ -171,4 +171,20 @@ describe('runCliTaskWithRetry()', () => {
     expect(Date.now() - started).toBeLessThan(5000);
     expect((error as CliDownloadTaskFailedError).failure.kind).toBe('aborted');
   });
+
+  it('returns from a backoff wait at once when the signal aborted before it', async () => {
+    const controller = new AbortController();
+    const started = Date.now();
+
+    const error = await runCliTaskWithRetry({
+      task: () => Promise.reject(new CliDownloadStalledError(1)),
+      classify,
+      signal: controller.signal,
+      retry: { initialDelay: 60_000, maxDelay: 60_000 },
+      onRetry: () => controller.abort()
+    }).catch((e: unknown) => e);
+
+    expect(Date.now() - started).toBeLessThan(1000);
+    expect((error as CliDownloadTaskFailedError).failure.kind).toBe('aborted');
+  });
 });

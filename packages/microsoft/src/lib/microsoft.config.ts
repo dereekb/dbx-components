@@ -1,4 +1,4 @@
-import { type WebsiteUrl } from '@dereekb/util';
+import { type Milliseconds, MS_IN_SECOND, type WebsiteUrl } from '@dereekb/util';
 
 /**
  * A Microsoft Entra ID tenant id — a directory GUID (`72f988bf-…`) or a verified domain
@@ -28,3 +28,15 @@ export const MICROSOFT_LOGIN_URL: WebsiteUrl = 'https://login.microsoftonline.co
  * The Microsoft Graph v1.0 API base URL.
  */
 export const MICROSOFT_GRAPH_API_URL: WebsiteUrl = 'https://graph.microsoft.com/v1.0';
+
+/**
+ * Default timeout for the requests the default Microsoft OAuth fetch sends: the wait for the response headers.
+ * Configure it per factory with `timeout`.
+ */
+export const DEFAULT_MICROSOFT_OAUTH_FETCH_TIMEOUT: Milliseconds = 20 * MS_IN_SECOND;
+
+/**
+ * Default timeout for the requests the Microsoft Graph client's fetch sends: the wait for the response headers.
+ * Configure it per factory with `timeout`.
+ */
+export const DEFAULT_MICROSOFT_GRAPH_FETCH_TIMEOUT: Milliseconds = 30 * MS_IN_SECOND;

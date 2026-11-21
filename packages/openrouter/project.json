@@ -8,6 +8,7 @@
     "build": {
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/packages/openrouter"],
+      "inputs": ["production", "^production", { "input": "production", "projects": ["openrouter-firebase", "openrouter-firebase-server"] }],
       "options": {
         "color": true,
         "command": "node tools/scripts/finalize-esm-exports.mjs dist/packages/openrouter"

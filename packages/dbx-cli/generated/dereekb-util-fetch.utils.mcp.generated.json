@@ -6,6 +6,353 @@
   "generator": "@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs",
   "entries": [
     {
+      "slug": "default-fetch-abort-error-names",
+      "name": "DEFAULT_FETCH_ABORT_ERROR_NAMES",
+      "kind": "const",
+      "category": "fetch",
+      "module": "@dereekb/util/fetch",
+      "subpath": "error.classify",
+      "signature": "const DEFAULT_FETCH_ABORT_ERROR_NAMES: ReadonlySet<string>",
+      "description": "The `.name` / class names that mean \"the client gave up waiting\": the DOMException `AbortError` / `TimeoutError` an\n`AbortSignal` rejects with, and util/fetch's own `FetchTimeoutError`.",
+      "params": [],
+      "returns": "ReadonlySet<string>",
+      "tags": [
+        "fetch",
+        "error",
+        "abort",
+        "timeout",
+        "abort-error",
+        "timeout-error",
+        "cancel",
+        "default",
+        "names",
+        "default_fetch_abort_error_names"
+      ]
+    },
+    {
+      "slug": "default-fetch-network-error-codes",
+      "name": "DEFAULT_FETCH_NETWORK_ERROR_CODES",
+      "kind": "const",
+      "category": "fetch",
+      "module": "@dereekb/util/fetch",
+      "subpath": "error.classify",
+      "signature": "const DEFAULT_FETCH_NETWORK_ERROR_CODES: ReadonlySet<string>",
+      "description": "The Node / undici socket codes a `fetch` failure carries (on the error or its `cause`) when the far end never\nanswered: refused, reset, unreachable or timed out.\n\nA DNS miss (`ENOTFOUND`) is left out: a misspelled host is a fact a resend cannot change. Add it to a custom set to\ntreat it as transient.",
+      "params": [],
+      "returns": "ReadonlySet<string>",
+      "tags": [
+        "fetch",
+        "error",
+        "network",
+        "socket",
+        "econnreset",
+        "econnrefused",
+        "undici",
+        "code",
+        "default",
+        "codes",
+        "default_fetch_network_error_codes"
+      ]
+    },
+    {
+      "slug": "default-fetch-network-error-messages",
+      "name": "DEFAULT_FETCH_NETWORK_ERROR_MESSAGES",
+      "kind": "const",
+      "category": "fetch",
+      "module": "@dereekb/util/fetch",
+      "subpath": "error.classify",
+      "signature": "const DEFAULT_FETCH_NETWORK_ERROR_MESSAGES: ReadonlySet<string>",
+      "description": "The `TypeError` messages a `fetch` rejects with when the request never got an answer, by runtime:\n\n| Message | Source |\n|---|---|\n| `fetch failed` | Node / undici |\n| `Failed to fetch` | Chromium |\n| `NetworkError when attempting to fetch resource.` | Firefox |\n| `Load failed` | Safari 17+ |\n| `The Internet connection appears to be offline.` | Safari 16 |\n\nCAVEAT: a browser reports a CORS rejection, mixed content or an extension block with the same `Failed to fetch`,\nand nothing tells them apart by design. Such an error reads as transient; the caller's bounded attempt budget caps\nthe cost.",
+      "params": [],
+      "returns": "ReadonlySet<string>",
+      "tags": [
+        "fetch",
+        "error",
+        "network",
+        "browser",
+        "type-error",
+        "offline",
+        "failed-to-fetch",
+        "default",
+        "messages",
+        "default_fetch_network_error_messages"
+      ]
+    },
+    {
+      "slug": "default-fetch-transient-http-statuses",
+      "name": "DEFAULT_FETCH_TRANSIENT_HTTP_STATUSES",
+      "kind": "const",
+      "category": "fetch",
+      "module": "@dereekb/util/fetch",
+      "subpath": "error.classify",
+      "signature": "const DEFAULT_FETCH_TRANSIENT_HTTP_STATUSES: ReadonlySet<number>",
+      "description": "The HTTP statuses below 500 that are transient: 408 (Request Timeout — the request was never processed, so a resend\nis safe) and 429 (Too Many Requests). Every status `>= 500` is transient as well.",
+      "params": [],
+      "returns": "ReadonlySet<number>",
+      "tags": [
+        "fetch",
+        "error",
+        "http",
+        "status",
+        "408",
+        "429",
+        "retry",
+        "transient",
+        "default",
+        "statuses",
+        "default_fetch_transient_http_statuses"
+      ]
+    },
+    {
+      "slug": "default-fetch-permanent-http-statuses",
+      "name": "DEFAULT_FETCH_PERMANENT_HTTP_STATUSES",
+      "kind": "const",
+      "category": "fetch",
+      "module": "@dereekb/util/fetch",
+      "subpath": "error.classify",
+      "signature": "const DEFAULT_FETCH_PERMANENT_HTTP_STATUSES: ReadonlySet<number>",
+      "description": "The HTTP statuses that are permanent: 400, 401, 402, 403 and 404 — facts about the request or the credential that a\nresend cannot change.",
+      "params": [],
+      "returns": "ReadonlySet<number>",
+      "tags": [
+        "fetch",
+        "error",
+        "http",
+        "status",
+        "400",
+        "401",
+        "403",
+        "404",
+        "permanent",
+        "default",
+        "statuses",
+        "default_fetch_permanent_http_statuses"
+      ]
+    },
+    {
+      "slug": "read-fetch-error-status",
+      "name": "readFetchErrorStatus",
+      "kind": "function",
+      "category": "fetch",
+      "module": "@dereekb/util/fetch",
+      "subpath": "error.classify",
+      "signature": "readFetchErrorStatus(error: unknown): Maybe<number>",
+      "description": "Reads the HTTP status off a thrown value: its own numeric `status`, else its `response.status` (util/fetch's\n`FetchResponseError` and the `{ response }` shape a limited fetch throws).",
+      "params": [
+        {
+          "name": "error",
+          "type": "unknown",
+          "description": "- The thrown value.",
+          "optional": false
+        }
+      ],
+      "returns": "The status, or `undefined` when neither is a number.",
+      "tags": [
+        "fetch",
+        "error",
+        "http",
+        "status",
+        "response",
+        "read",
+        "readfetcherrorstatus"
+      ],
+      "example": "readFetchErrorStatus({ status: 429 }); // 429\nreadFetchErrorStatus(new FetchResponseError(new Response(null, { status: 503 }))); // 503\nreadFetchErrorStatus(new Error('boom')); // undefined"
+    },
+    {
+      "slug": "classify-fetch-error-status",
+      "name": "classifyFetchErrorStatus",
+      "kind": "function",
+      "category": "fetch",
+      "module": "@dereekb/util/fetch",
+      "subpath": "error.classify",
+      "signature": "classifyFetchErrorStatus(status: number, config?: Maybe<Pick<FetchErrorClassificationConfig, 'transientStatuses' | 'permanentStatuses'>>): FetchErrorClassification",
+      "description": "Classifies an HTTP status, in order: a `permanentStatuses` status is `permanent`; a `transientStatuses` status or\nany status `>= 500` is `transient`; anything else (409, 405, 410, 422, a 2xx with a bad body, a 3xx) is `unknown`.",
+      "params": [
+        {
+          "name": "status",
+          "type": "number",
+          "description": "- The HTTP status.",
+          "optional": false
+        },
+        {
+          "name": "config",
+          "type": "Maybe<Pick<FetchErrorClassificationConfig, 'transientStatuses' | 'permanentStatuses'>>",
+          "description": "- Optional replacement status sets.",
+          "optional": true
+        }
+      ],
+      "returns": "The classification.",
+      "tags": [
+        "fetch",
+        "error",
+        "http",
+        "status",
+        "classify",
+        "retry",
+        "transient",
+        "permanent",
+        "classifyfetcherrorstatus"
+      ],
+      "example": "classifyFetchErrorStatus(503); // 'transient'\nclassifyFetchErrorStatus(401); // 'permanent'\nclassifyFetchErrorStatus(409); // 'unknown'"
+    },
+    {
+      "slug": "is-fetch-abort-error",
+      "name": "isFetchAbortError",
+      "kind": "function",
+      "category": "fetch",
+      "module": "@dereekb/util/fetch",
+      "subpath": "error.classify",
+      "signature": "isFetchAbortError(error: unknown, config?: Maybe<Pick<FetchErrorClassificationConfig, 'abortErrorNames'>>): boolean",
+      "description": "Whether a thrown value is an ABORT / timeout error: its `.name`, or a constructor name on its chain, is in\n`abortErrorNames` (the DOMException `AbortError` / `TimeoutError`, util/fetch's `FetchTimeoutError`, plus any\nSDK class a caller adds).\n\n{@link classifyFetchError} reads an abort as `transient`, because a timer that fired is worth a resend. A caller that\ncancelled on purpose checks its own signal before resending.",
+      "params": [
+        {
+          "name": "error",
+          "type": "unknown",
+          "description": "- The thrown value.",
+          "optional": false
+        },
+        {
+          "name": "config",
+          "type": "Maybe<Pick<FetchErrorClassificationConfig, 'abortErrorNames'>>",
+          "description": "- Optional replacement name set.",
+          "optional": true
+        }
+      ],
+      "returns": "`true` for an abort / timeout error.",
+      "tags": [
+        "fetch",
+        "error",
+        "abort",
+        "timeout",
+        "abort-error",
+        "timeout-error",
+        "cancel",
+        "signal",
+        "is",
+        "isfetchaborterror"
+      ],
+      "example": "const controller = new AbortController();\ncontroller.abort();\nisFetchAbortError(controller.signal.reason); // true\nisFetchAbortError(new TypeError('fetch failed')); // false"
+    },
+    {
+      "slug": "is-fetch-network-error",
+      "name": "isFetchNetworkError",
+      "kind": "function",
+      "category": "fetch",
+      "module": "@dereekb/util/fetch",
+      "subpath": "error.classify",
+      "signature": "isFetchNetworkError(error: unknown, config?: Maybe<Pick<FetchErrorClassificationConfig, 'networkErrorCodes' | 'networkErrorMessages'>>): boolean",
+      "description": "Whether a thrown value is a NETWORK failure — the request never got an answer.\n\nThe checks run in this order.\n\n1. Gather the string `code` of the error and of its direct `cause`.\n2. Any gathered code in `networkErrorCodes` → a network failure.\n3. Codes exist but none is in the set → NOT a network failure. A specific code outranks the generic message, so\n   undici's `TypeError('fetch failed')` with a `cause.code` of `ENOTFOUND` or a TLS / certificate code is not one.\n4. No code at all: the error OR its direct cause is a `TypeError` whose message is in `networkErrorMessages`\n   (Node's `fetch failed` and the browser messages in {@link DEFAULT_FETCH_NETWORK_ERROR_MESSAGES}). The cause level\n   catches a wrapper that keeps the native failure as its cause.",
+      "params": [
+        {
+          "name": "error",
+          "type": "unknown",
+          "description": "- The thrown value.",
+          "optional": false
+        },
+        {
+          "name": "config",
+          "type": "Maybe<Pick<FetchErrorClassificationConfig, 'networkErrorCodes' | 'networkErrorMessages'>>",
+          "description": "- Optional replacement code and message sets.",
+          "optional": true
+        }
+      ],
+      "returns": "`true` for a network failure.",
+      "tags": [
+        "fetch",
+        "error",
+        "network",
+        "socket",
+        "offline",
+        "browser",
+        "undici",
+        "type-error",
+        "econnreset",
+        "is",
+        "isfetchnetworkerror"
+      ],
+      "example": "isFetchNetworkError(new TypeError('fetch failed', { cause: { code: 'ECONNREFUSED' } })); // true\nisFetchNetworkError(new TypeError('Failed to fetch')); // true (Chromium)\nisFetchNetworkError(new TypeError('fetch failed', { cause: { code: 'ENOTFOUND' } })); // false"
+    },
+    {
+      "slug": "classify-fetch-error",
+      "name": "classifyFetchError",
+      "kind": "function",
+      "category": "fetch",
+      "module": "@dereekb/util/fetch",
+      "subpath": "error.classify",
+      "signature": "classifyFetchError(error: unknown, config?: Maybe<FetchErrorClassificationConfig>): FetchErrorClassification",
+      "description": "Classifies a thrown value as `transient`, `permanent` or `unknown`.\n\nThe rules apply in this order, and the first match wins.\n\n1. not an object → `unknown`;\n2. a `permanentClassNames` match → `permanent`;\n3. {@link isFetchAbortError} → `transient`;\n4. a `transientClassNames` match → `transient`;\n5. `readStatus(error)` is a number → {@link classifyFetchErrorStatus}, returned as is (a status means the server\n   answered, so it is never a network failure);\n6. {@link isFetchNetworkError} → `transient`;\n7. otherwise → `unknown`.",
+      "params": [
+        {
+          "name": "error",
+          "type": "unknown",
+          "description": "- The thrown value.",
+          "optional": false
+        },
+        {
+          "name": "config",
+          "type": "Maybe<FetchErrorClassificationConfig>",
+          "description": "- Optional sets and status reader.",
+          "optional": true
+        }
+      ],
+      "returns": "The classification.",
+      "tags": [
+        "fetch",
+        "error",
+        "classify",
+        "retry",
+        "transient",
+        "permanent",
+        "unknown",
+        "network",
+        "status",
+        "abort",
+        "classifyfetcherror"
+      ],
+      "example": "classifyFetchError({ status: 503 }); // 'transient'\nclassifyFetchError(new TypeError('Failed to fetch')); // 'transient'\nclassifyFetchError({ status: 401 }); // 'permanent'\nclassifyFetchError(new Error('boom')); // 'unknown'",
+      "relatedSlugs": [
+        "is-retryable-fetch-error-classification"
+      ]
+    },
+    {
+      "slug": "is-retryable-fetch-error-classification",
+      "name": "isRetryableFetchErrorClassification",
+      "kind": "function",
+      "category": "fetch",
+      "module": "@dereekb/util/fetch",
+      "subpath": "error.classify",
+      "signature": "isRetryableFetchErrorClassification(config: IsRetryableFetchErrorClassificationConfig): boolean",
+      "description": "The shared resend rule: `transient` → `true`, `permanent` → `false`, `unknown` →\n`isRetryableUnknownError(error) ?? retryUnknownByDefault`. The function is never consulted for a `transient` or\n`permanent` error.",
+      "params": [
+        {
+          "name": "config",
+          "type": "IsRetryableFetchErrorClassificationConfig",
+          "description": "- The classification, the error, the host function and the caller's default.",
+          "optional": false
+        }
+      ],
+      "returns": "Whether to resend / requeue.",
+      "tags": [
+        "fetch",
+        "error",
+        "retry",
+        "policy",
+        "classify",
+        "transient",
+        "permanent",
+        "unknown",
+        "requeue",
+        "is",
+        "retryable",
+        "classification",
+        "isretryablefetcherrorclassification"
+      ],
+      "example": "isRetryableFetchErrorClassification({ classification: 'unknown', error, retryUnknownByDefault: false }); // false\nisRetryableFetchErrorClassification({ classification: 'unknown', error, isRetryableUnknownError: () => true, retryUnknownByDefault: false }); // true",
+      "relatedSlugs": [
+        "classify-fetch-error"
+      ]
+    },
+    {
       "slug": "to-bracket-notation-search-param-tuples",
       "name": "toBracketNotationSearchParamTuples",
       "kind": "function",
@@ -218,6 +565,71 @@
       ]
     },
     {
+      "slug": "read-fetch-json-text",
+      "name": "readFetchJsonText",
+      "kind": "function",
+      "category": "fetch",
+      "module": "@dereekb/util/fetch",
+      "subpath": "json",
+      "signature": "readFetchJsonText(responsePromise: Promise<Response>, config?: Maybe<ReadFetchJsonTextConfig>): Promise<FetchJsonTextResult<T>>",
+      "description": "Awaits a fetch, reads its body as text once, and decodes that text as JSON.\n\nNever throws for a non-ok status or a non-JSON body: the caller reads `response.ok`, `parsed` and `text`. Rejects only\nwhen the request itself or the body read fails, with that original error, so a later classifier still sees it.",
+      "params": [
+        {
+          "name": "responsePromise",
+          "type": "Promise<Response>",
+          "description": "- The pending fetch. A caller already holding a Response passes `Promise.resolve(response)`.",
+          "optional": false
+        },
+        {
+          "name": "config",
+          "type": "Maybe<ReadFetchJsonTextConfig>",
+          "description": "- Optional decoder override.",
+          "optional": true
+        }
+      ],
+      "returns": "The response, its raw text and the decoded value.",
+      "tags": [
+        "fetch",
+        "json",
+        "response",
+        "text",
+        "body",
+        "parse",
+        "read",
+        "readfetchjsontext"
+      ]
+    },
+    {
+      "slug": "fetch-json-text-decode-response-function",
+      "name": "fetchJsonTextDecodeResponseFunction",
+      "kind": "factory",
+      "category": "fetch",
+      "module": "@dereekb/util/fetch",
+      "subpath": "json",
+      "signature": "fetchJsonTextDecodeResponseFunction(config?: Maybe<ReadFetchJsonTextConfig>): FetchJsonDecodeResponseFunction",
+      "description": "Creates a {@link FetchJsonDecodeResponseFunction} built on {@link readFetchJsonText}.\n\nRejects with a {@link JsonResponseParseError} when the text is not JSON, so the configured parse-error handler still runs.\nThe decoder consumes the body, so the handler cannot re-read it; `response.json()` behaves the same way.",
+      "params": [
+        {
+          "name": "config",
+          "type": "Maybe<ReadFetchJsonTextConfig>",
+          "description": "- Optional decoder override, e.g. a repairing `parseJson`.",
+          "optional": true
+        }
+      ],
+      "returns": "A decoder to pass as {@link FetchJsonFunctionConfig.decodeResponse}.",
+      "tags": [
+        "fetch",
+        "json",
+        "decode",
+        "response",
+        "repair",
+        "factory",
+        "text",
+        "function",
+        "fetchjsontextdecoderesponsefunction"
+      ]
+    },
+    {
       "slug": "parse-retry-after-header",
       "name": "parseRetryAfterHeader",
       "kind": "function",
@@ -256,6 +668,49 @@
         "parseretryafterheader"
       ],
       "example": "parseRetryAfterHeader('120'); // 120000\nparseRetryAfterHeader(response.headers.get('Retry-After')); // undefined when absent"
+    },
+    {
+      "slug": "read-fetch-error-retry-after",
+      "name": "readFetchErrorRetryAfter",
+      "kind": "function",
+      "category": "fetch",
+      "module": "@dereekb/util/fetch",
+      "subpath": "retry.after",
+      "signature": "readFetchErrorRetryAfter(error: unknown, now?: Maybe<Date>): Maybe<Milliseconds>",
+      "description": "Reads a server-requested retry wait off a thrown error — `error.headers`, else `error.response.headers` (a `Headers`\nor anything with `get(name)`, or a plain record read case-insensitively). The non-standard `retry-after-ms` (OpenAI,\nAzure) wins when it reads as a finite number ≥ 0; else `Retry-After` through {@link parseRetryAfterHeader}.\n\nBrowser-safe: no Node import.",
+      "params": [
+        {
+          "name": "error",
+          "type": "unknown",
+          "description": "- The thrown value — an SDK error with `headers`, a `FetchResponseError`, anything else.",
+          "optional": false
+        },
+        {
+          "name": "now",
+          "type": "Maybe<Date>",
+          "description": "- The current time, for an HTTP-date `Retry-After`. Defaults to now.",
+          "optional": true
+        }
+      ],
+      "returns": "The milliseconds to wait, or undefined when the error carries no readable wait.",
+      "tags": [
+        "fetch",
+        "http",
+        "retry",
+        "retry-after",
+        "throttle",
+        "429",
+        "503",
+        "error",
+        "headers",
+        "read",
+        "after",
+        "readfetcherrorretryafter"
+      ],
+      "example": "readFetchErrorRetryAfter({ headers: new Headers({ 'retry-after': '2' }) }); // 2000\nreadFetchErrorRetryAfter({ headers: { 'Retry-After': '1', 'retry-after-ms': '1500' } }); // 1500\nreadFetchErrorRetryAfter(new Error('boom')); // undefined",
+      "relatedSlugs": [
+        "parse-retry-after-header"
+      ]
     }
   ]
 }

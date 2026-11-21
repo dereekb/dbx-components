@@ -1,0 +1,239 @@
+/**
+ * **Usage rates**: the prompt-cache hit rate and the hidden-reasoning share of a usage cell, the per-capability cache
+ * rows a run summary persists, and the one-line cache readout every surface prints.
+ *
+ * A rate is `undefined` when there is nothing to divide by — "nothing was asked" reads very differently from a
+ * measured 0% and is never rendered as one.
+ */
+
+import { compareStringsByCodeUnit, type Maybe, type Count, type PercentDecimal } from '@dereekb/util';
+import type { LlmCapabilityKey, LlmStrategyId, LlmTokenCount } from '../model/llm.value';
+import type { LlmCallLogPayloadBase } from '../record/llm.call.payload';
+import type { LlmKeyedUsageCell, LlmUsageCell } from './llm.usage.cell';
+
+/**
+ * Is this `llm_call` on a lane with NO prompt cache — a decision-lane call? True when the row carries a
+ * {@link LlmCallLogPayloadBase.decision} id (every dispatcher-recorded decision does, the scripted backend included) or
+ * rode a decision transport (its `strategyKind` is in `decisionStrategyKinds`). Such a call never reports
+ * `cachedTokens` by design, so its prompt tokens are cache-not-applicable: out of every hit-rate denominator, and never
+ * a `cachePartial` trip. A logged row with a `decision` id is read the same way, so a re-fold over logs agrees.
+ *
+ * The lane read here is `strategyKind` ONLY — unlike `isDecisionLlmCallRow`, there is no `strategyId` fallback. A row
+ * without a `strategyKind` counts as uncacheable only through its `decision` id. The difference is kept on purpose:
+ * a fallback would move ledger numbers on such rows.
+ *
+ * @param payload - The call payload.
+ * @param decisionStrategyKinds - The decision transports' strategy kinds, built once with
+ *   `readLlmDecisionStrategyKinds(adapters)`; absent ⇒ only a `decision` id marks the call.
+ * @returns Whether the call's prompt tokens are uncacheable.
+ *
+ * @example
+ * ```ts
+ * const kinds = readLlmDecisionStrategyKinds(adapters);
+ * const cell = toLlmUsageCell(payload.usage, isUncacheableLlmCall(payload, kinds));
+ * ```
+ */
+export function isUncacheableLlmCall(payload: Pick<LlmCallLogPayloadBase, 'decision' | 'strategyKind'>, decisionStrategyKinds?: Maybe<ReadonlySet<LlmStrategyId>>): boolean {
+  return payload.decision != null || (payload.strategyKind != null && decisionStrategyKinds?.has(payload.strategyKind) === true);
+}
+
+/**
+ * The cache-hit DENOMINATOR of one cell — its prompt tokens minus the {@link LlmUsageCell.uncacheablePromptTokens} of
+ * calls on a lane with no prompt cache. The ONE subtraction every hit rate divides by.
+ *
+ * @param cell - The usage cell.
+ * @returns The prompt tokens a prompt cache could have served.
+ *
+ * @example
+ * ```ts
+ * computeLlmCacheablePromptTokens({ promptTokens: 5000, uncacheablePromptTokens: 1000 }); // 4000
+ * ```
+ */
+export function computeLlmCacheablePromptTokens(cell: Pick<LlmUsageCell, 'promptTokens' | 'uncacheablePromptTokens'>): LlmTokenCount {
+  return cell.promptTokens - (cell.uncacheablePromptTokens ?? 0);
+}
+
+/**
+ * The prompt-cache HIT RATE of one cell — `cachedTokens / cacheable prompt tokens` ({@link computeLlmCacheablePromptTokens}),
+ * the share of cacheable input a warm provider cache served. `undefined` when the cell billed no CACHEABLE prompt
+ * tokens: a zero denominator is "nothing was asked" (or "only the decision lane, which has no cache"), which reads very
+ * differently from a measured 0% miss rate and must not be rendered as one.
+ *
+ * The rate is a LOWER BOUND wherever the enclosing fold's `cachePartial` is set — a provider that reports no cache
+ * detail is indistinguishable from one that served nothing warm, so the qualifier travels with the number.
+ *
+ * @param cell - The usage cell.
+ * @returns The hit rate in `[0, 1]`, or `undefined` when the cell has no cacheable denominator.
+ *
+ * @example
+ * ```ts
+ * computeLlmCacheHitRate({ promptTokens: 8000, cachedTokens: 6000 }); // 0.75
+ * ```
+ */
+export function computeLlmCacheHitRate(cell: Pick<LlmUsageCell, 'promptTokens' | 'cachedTokens' | 'uncacheablePromptTokens'>): Maybe<PercentDecimal> {
+  const cacheable = computeLlmCacheablePromptTokens(cell);
+  return cacheable > 0 ? (cell.cachedTokens ?? 0) / cacheable : undefined;
+}
+
+/**
+ * The hidden-REASONING share of one cell — `reasoningTokens / completionTokens`. The sibling of
+ * {@link computeLlmCacheHitRate} and rendered beside it everywhere: cache-hit is the share of INPUT nobody paid full price
+ * for, reasoning share is the share of OUTPUT nobody asked for. `undefined` on a zero denominator, for that helper's
+ * reason exactly.
+ *
+ * @param cell - The usage cell.
+ * @returns The share in `[0, 1]`, or `undefined` when the cell has no denominator.
+ *
+ * @example
+ * ```ts
+ * computeLlmReasoningShare(total); // e.g. 0.2083 for 100 reasoning of 480 completion tokens
+ * ```
+ */
+export function computeLlmReasoningShare(cell: LlmUsageCell): Maybe<PercentDecimal> {
+  return cell.completionTokens > 0 ? (cell.reasoningTokens ?? 0) / cell.completionTokens : undefined;
+}
+
+/**
+ * One capability's CACHE row — the per-capability cache-hit readout a run summary persists so a later run can be
+ * compared against it without re-reading a log. The denominators ride ALONGSIDE the rates on purpose: a rate over 300
+ * prompt tokens and a rate over 300,000 are not the same evidence, and a summary that recorded only the ratio cannot
+ * tell them apart afterwards.
+ */
+export interface LlmCapabilityCacheRow {
+  /**
+   * The capability.
+   */
+  readonly capability: LlmCapabilityKey;
+  /**
+   * How many calls the row folds.
+   */
+  readonly calls: Count;
+  /**
+   * Billed prompt tokens (minus {@link uncacheablePromptTokens}, the {@link cacheHitRate} denominator).
+   */
+  readonly promptTokens: LlmTokenCount;
+  /**
+   * Prompt tokens served warm.
+   */
+  readonly cachedTokens: LlmTokenCount;
+  /**
+   * Prompt tokens of the row's decision-lane calls, which have no prompt cache
+   * ({@link LlmUsageCell.uncacheablePromptTokens}); omitted when 0.
+   */
+  readonly uncacheablePromptTokens?: LlmTokenCount;
+  /**
+   * `cachedTokens / (promptTokens − uncacheablePromptTokens)`; absent when the row billed no cacheable prompt tokens.
+   */
+  readonly cacheHitRate?: PercentDecimal;
+  /**
+   * Billed completion tokens (the {@link reasoningShare} denominator).
+   */
+  readonly completionTokens: LlmTokenCount;
+  /**
+   * Completion tokens billed as hidden reasoning.
+   */
+  readonly reasoningTokens: LlmTokenCount;
+  /**
+   * `reasoningTokens / completionTokens`; absent when the row billed no completion tokens.
+   */
+  readonly reasoningShare?: PercentDecimal;
+}
+
+/**
+ * Project a fold's by-capability cells into {@link LlmCapabilityCacheRow}s, ranked by CACHEABLE prompt tokens
+ * descending ({@link computeLlmCacheablePromptTokens}) — the capability with the most input to cache leads, because it is the
+ * one whose prefix is worth moving (decision-lane input has no cache to move it into). Ties break on the capability
+ * key.
+ *
+ * @param cells - The by-capability cells of a fold (e.g. `toLlmKeyedUsageCells(byCapability)`).
+ * @returns The cache rows, heaviest denominator first.
+ *
+ * @example
+ * ```ts
+ * const rows = toLlmCapabilityCacheRows(toLlmKeyedUsageCells(byCapability));
+ * ```
+ */
+export function toLlmCapabilityCacheRows(cells: ReadonlyArray<LlmKeyedUsageCell<LlmCapabilityKey>>): ReadonlyArray<LlmCapabilityCacheRow> {
+  return [...cells]
+    .sort((a, b) => computeLlmCacheablePromptTokens(b.cell) - computeLlmCacheablePromptTokens(a.cell) || compareStringsByCodeUnit(a.key, b.key))
+    .map((entry) => {
+      const hitRate = computeLlmCacheHitRate(entry.cell);
+      const share = computeLlmReasoningShare(entry.cell);
+      const uncacheable = entry.cell.uncacheablePromptTokens ?? 0;
+      return {
+        capability: entry.key,
+        calls: entry.cell.calls,
+        promptTokens: entry.cell.promptTokens,
+        cachedTokens: entry.cell.cachedTokens ?? 0,
+        ...(uncacheable > 0 ? { uncacheablePromptTokens: uncacheable } : {}),
+        ...(hitRate == null ? {} : { cacheHitRate: hitRate }),
+        completionTokens: entry.cell.completionTokens,
+        reasoningTokens: entry.cell.reasoningTokens ?? 0,
+        ...(share == null ? {} : { reasoningShare: share })
+      };
+    });
+}
+
+/**
+ * Render a rate in `[0, 1]` as a one-decimal percentage, or `n/a` when there was no denominator — the ONE formatting of
+ * a cache-hit / reasoning share, so every surface that prints one prints it the same way.
+ *
+ * @param rate - The rate, or `undefined` when unmeasurable.
+ * @returns The formatted percentage.
+ *
+ * @example
+ * ```ts
+ * formatLlmUsageRate(0.7317); // '73.2%'
+ * formatLlmUsageRate(undefined); // 'n/a'
+ * ```
+ */
+export function formatLlmUsageRate(rate: Maybe<PercentDecimal>): string {
+  return rate == null ? 'n/a' : `${(rate * 100).toFixed(1)}%`;
+}
+
+/**
+ * Config for {@link renderLlmCacheHitLine}: the cell plus the fold's partiality qualifiers.
+ */
+export interface RenderLlmCacheHitLineConfig {
+  /**
+   * The folded usage cell.
+   */
+  readonly cell: LlmUsageCell;
+  /**
+   * Whether ≥1 counted call reported no cache detail (the hit rate is then a lower bound).
+   */
+  readonly cachePartial?: boolean;
+  /**
+   * Whether ≥1 counted call reported no reasoning detail (the reasoning share is then a lower bound).
+   */
+  readonly reasoningPartial?: boolean;
+}
+
+/**
+ * The compact one-line cache readout for a fold — `cache 41.2% hit (12,004/29,140 prompt tok) · reasoning 3.1% of
+ * completion (…)`, with a `≥` marker when the fold lacked cache detail on some call (the number is then a LOWER bound,
+ * not a measurement). The shared fragment a budget line, a run summary and a timing panel each print, so a reader
+ * comparing three outputs is comparing one number.
+ *
+ * The denominator is the CACHEABLE prompt tokens ({@link computeLlmCacheablePromptTokens}); when the fold carries
+ * decision-lane input a `· decision lane n/a (N prompt tok, no prompt cache)` clause names what was left out.
+ *
+ * @param config - The cell plus the fold's partiality qualifiers.
+ * @returns The rendered fragment.
+ *
+ * @example
+ * ```ts
+ * renderLlmCacheHitLine({ cell: total, cachePartial: fold.cachePartial });
+ * // 'cache 73.2% hit (6,000/8,200 prompt tok) · reasoning 20.8% of completion (100 tok)'
+ * ```
+ */
+export function renderLlmCacheHitLine(config: RenderLlmCacheHitLineConfig): string {
+  const { cell, cachePartial, reasoningPartial } = config;
+  const cacheMark = cachePartial === true ? '≥' : '';
+  const reasoningMark = reasoningPartial === true ? '≥' : '';
+  const cached = cell.cachedTokens ?? 0;
+  const uncacheable = cell.uncacheablePromptTokens ?? 0;
+  const reasoning = cell.reasoningTokens ?? 0;
+  const decisionLane = uncacheable > 0 ? ` · decision lane n/a (${uncacheable.toLocaleString('en-US')} prompt tok, no prompt cache)` : '';
+  return `cache ${cacheMark}${formatLlmUsageRate(computeLlmCacheHitRate(cell))} hit (${cached.toLocaleString('en-US')}/${computeLlmCacheablePromptTokens(cell).toLocaleString('en-US')} prompt tok)${decisionLane} · reasoning ${reasoningMark}${formatLlmUsageRate(computeLlmReasoningShare(cell))} of completion (${reasoning.toLocaleString('en-US')} tok)`;
+}

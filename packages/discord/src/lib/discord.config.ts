@@ -1,3 +1,5 @@
+import { type Milliseconds, MS_IN_SECOND } from '@dereekb/util';
+
 /**
  * OAuth2 client id of a Discord application.
  *
@@ -20,3 +22,9 @@ export type DiscordOAuthClientSecret = string;
 export const DISCORD_API_URL = 'https://discord.com/api/v10';
 
 export type DiscordApiUrl = typeof DISCORD_API_URL;
+
+/**
+ * Default timeout for the requests the default Discord fetches send: the wait for the response headers. Configure it
+ * per factory with `timeout`.
+ */
+export const DEFAULT_DISCORD_FETCH_TIMEOUT: Milliseconds = 20 * MS_IN_SECOND;

@@ -1,4 +1,5 @@
 import {
+  toBase64DataUrl,
   mimeTypeForImageFileExtension,
   imageFileExtensionForMimeType,
   mimeTypeForDocumentFileExtension,
@@ -252,5 +253,15 @@ describe('inlineContentDisposition()', () => {
 
   it('should return a bare inline disposition when unset', () => {
     expect(inlineContentDisposition(undefined)).toBe('inline');
+  });
+});
+
+describe('toBase64DataUrl()', () => {
+  it('should build the inline data URL', () => {
+    expect(toBase64DataUrl({ mimeType: 'image/png', dataBase64: 'QUJD' })).toBe('data:image/png;base64,QUJD');
+  });
+
+  it('should write a media type with parameters as given', () => {
+    expect(toBase64DataUrl({ mimeType: 'text/plain;charset=utf-8', dataBase64: 'aGk=' })).toBe('data:text/plain;charset=utf-8;base64,aGk=');
   });
 });

@@ -147,8 +147,8 @@ describe('microsoftGraphRateLimitedFetchHandler()', () => {
   it("should keep the request's timeout on every attempt", async () => {
     const handler = microsoftGraphRateLimitedFetchHandler();
     const timeouts: unknown[] = [];
-    const makeFetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
-      timeouts.push((init as { timeout?: number } | undefined)?.timeout);
+    const makeFetch = (async (input: RequestInfo | URL) => {
+      timeouts.push((input as RequestWithTimeout).timeout);
       return jsonResponse(timeouts.length === 1 ? 429 : 200, { 'Retry-After': '0' });
     }) as typeof fetch;
 

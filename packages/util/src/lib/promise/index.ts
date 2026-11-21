@@ -1,3 +1,4 @@
+export * from './abort';
 export * from './backoff';
 export * from './callback';
 export * from './is';

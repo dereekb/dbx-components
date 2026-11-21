@@ -1,0 +1,11 @@
+{
+  "name": "@dereekb/llm/node",
+  "version": "14.30.0",
+  "sideEffects": false,
+  "type": "module",
+  "peerDependencies": {
+    "@dereekb/llm": "14.30.0",
+    "@dereekb/model": "14.30.0",
+    "@dereekb/util": "14.30.0"
+  }
+}

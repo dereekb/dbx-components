@@ -35,7 +35,7 @@
  *     build — reports targets that simply do not exist yet. Hence `workspace:verify-esm-exports`,
  *     which `workspace:build-all` runs once after the whole `run-many -t build` sweep.
  *   - no flag runs both over the whole tree. This is the original single-shot behavior and what all
- *     19 per-package `build` targets use: the parent's `build` runs after every one of its entry
+ *     20 per-package `build` targets use: the parent's `build` runs after every one of its entry
  *     points, so by then the whole package directory is complete and both halves are valid on it.
  *
  * Usage: node tools/scripts/finalize-esm-exports.mjs [--mode=rewrite|verify] <distPackageDir> [...moreDirs]

@@ -358,6 +358,51 @@ export function fileExtensionForMimeType(mimeType: Maybe<MimeTypeWithoutParamete
   return result;
 }
 
+// MARK: Data URL
+/**
+ * A `data:` URL (RFC 2397) that carries its bytes inline, e.g. `data:image/png;base64,iVBOR…`.
+ *
+ * @semanticType
+ * @semanticTopic url
+ * @semanticTopic string
+ */
+export type DataUrlString = string;
+
+/**
+ * Input to {@link toBase64DataUrl}.
+ */
+export interface Base64DataUrlConfig {
+  /**
+   * The media type written after `data:` — a bare MIME type, or one carrying parameters, written as given.
+   */
+  readonly mimeType: MimeTypeWithoutParameters | ContentTypeMimeType;
+  /**
+   * The bytes, already base64-encoded, with no `data:` prefix.
+   */
+  readonly dataBase64: string;
+}
+
+/**
+ * Builds the inline `data:<mimeType>;base64,<dataBase64>` URL for already-encoded bytes. Always builds: an input that
+ * is already a data URL is not detected.
+ *
+ * @param config - The media type and the base64 bytes.
+ * @returns The data URL.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilKind function
+ * @dbxUtilTags string, mime, data-url, base64, url
+ *
+ * @example
+ * ```ts
+ * toBase64DataUrl({ mimeType: 'image/png', dataBase64: 'QUJD' }); // 'data:image/png;base64,QUJD'
+ * ```
+ */
+export function toBase64DataUrl(config: Base64DataUrlConfig): DataUrlString {
+  return `data:${config.mimeType};base64,${config.dataBase64}`;
+}
+
 // MARK: ContentDisposition
 /**
  * A content disposition string, which is used to determine how the browser should show the target content.

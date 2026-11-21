@@ -1,6 +1,7 @@
 import { type PromiseRateLimiter } from '@dereekb/util';
 import { type FetchResponseError } from './error';
 import { rateLimitedFetchHandler } from './fetch.limit';
+import { type RequestWithTimeout } from './fetch.type';
 
 function mockRateLimiter(): PromiseRateLimiter {
   return {
@@ -389,6 +390,30 @@ describe('rateLimitedFetchHandler()', () => {
       // But they should have the same URL
       expect(clonedRequests[0].url).toBe(request.url);
       expect(clonedRequests[1].url).toBe(request.url);
+    });
+
+    it("should keep the request's timeout on every cloned attempt", async () => {
+      const throttledResponse = mockResponse(429, 'Too Many Requests');
+      const successResponse = mockResponse(200);
+      let fetchCount = 0;
+
+      const clonedRequests: Request[] = [];
+      const makeFetch = vi.fn().mockImplementation(async (req: Request) => {
+        clonedRequests.push(req);
+        fetchCount += 1;
+        return fetchCount === 1 ? throttledResponse : successResponse;
+      });
+
+      const handler = rateLimitedFetchHandler({
+        rateLimiter: mockRateLimiter(),
+        updateWithResponse: (response) => response.status === 429
+      });
+
+      const request = new Request('https://example.com/test') as RequestWithTimeout;
+      request.timeout = 1234;
+      await handler(request, makeFetch);
+
+      expect(clonedRequests.map((x) => (x as RequestWithTimeout).timeout)).toEqual([1234, 1234]);
     });
   });
 });

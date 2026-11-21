@@ -1,4 +1,4 @@
-import { nearestDivisibleValues, sumOfIntegersBetween, getBaseLog } from './number';
+import { asFiniteNumber, nearestDivisibleValues, sumOfIntegersBetween, getBaseLog } from './number';
 
 describe('nearestDivisibleValues', () => {
   it('should return the nearest divisible values to 3', () => {
@@ -32,5 +32,28 @@ describe('getBaseLog()', () => {
   it('should run the example successfully', () => {
     expect(getBaseLog(2, 16)).toBe(4);
     expect(getBaseLog(10, 100)).toBe(2);
+  });
+});
+
+describe('asFiniteNumber()', () => {
+  it('passes a finite number and parses a numeric string', () => {
+    expect(asFiniteNumber(0.0031)).toBe(0.0031);
+    expect(asFiniteNumber(0)).toBe(0);
+    expect(asFiniteNumber(-0.25)).toBe(-0.25);
+    expect(asFiniteNumber('0.00065716')).toBe(0.00065716);
+    expect(asFiniteNumber(' 0.5 ')).toBe(0.5);
+    expect(asFiniteNumber('1e3')).toBe(1000);
+  });
+
+  it('reads anything else as ABSENT, never as a made-up 0', () => {
+    expect(asFiniteNumber(undefined)).toBeUndefined();
+    expect(asFiniteNumber(null)).toBeUndefined();
+    expect(asFiniteNumber('')).toBeUndefined();
+    expect(asFiniteNumber('   ')).toBeUndefined();
+    expect(asFiniteNumber('n/a')).toBeUndefined();
+    expect(asFiniteNumber('Infinity')).toBeUndefined();
+    expect(asFiniteNumber(Number.NaN)).toBeUndefined();
+    expect(asFiniteNumber(Number.POSITIVE_INFINITY)).toBeUndefined();
+    expect(asFiniteNumber({ amount: 1 })).toBeUndefined();
   });
 });
