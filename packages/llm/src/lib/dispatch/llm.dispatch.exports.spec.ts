@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import * as barrel from './index';
 
 /**
  * Pins the dispatch barrel's runtime exports. Stage modules are internal (specs import them by path), so a new public
@@ -26,13 +27,12 @@ const LLM_DISPATCH_RUNTIME_EXPORTS: readonly string[] = [
 ];
 
 describe('dispatch exports', () => {
-  it('exports exactly the documented runtime surface', async () => {
-    const exported = Object.keys(await import('./index')).sort();
+  it('exports exactly the documented runtime surface', () => {
+    const exported = Object.keys(barrel).sort();
     expect(exported).toEqual(LLM_DISPATCH_RUNTIME_EXPORTS);
   });
 
-  it('does not export the stage functions', async () => {
-    const barrel: Record<string, unknown> = await import('./index');
+  it('does not export the stage functions', () => {
     const stageFunctions = ['sendLlmDispatchAttempt', 'readLlmDispatchReply', 'runLlmReplyRepairLane', 'composeLlmDispatch', 'resolveLlmDispatch', 'runLlmDispatchAttempts', 'runSingleShotLlmDispatch', 'makeLlmDispatchRetryLadder', 'makeLlmDispatchDecisionLane', 'recordLlmDispatch'];
     expect(stageFunctions.filter((name) => name in barrel)).toEqual([]);
   });

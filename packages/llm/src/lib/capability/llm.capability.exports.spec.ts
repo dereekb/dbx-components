@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import * as barrel from './index';
 
 /**
  * Pins the capability barrel's runtime exports. The library capabilities' own schemas, value parsers and live-context
@@ -29,13 +30,12 @@ const LLM_CAPABILITY_RUNTIME_EXPORTS: readonly string[] = [
 ];
 
 describe('capability exports', () => {
-  it('exports exactly the documented runtime surface', async () => {
-    const exported = Object.keys(await import('./index')).sort();
+  it('exports exactly the documented runtime surface', () => {
+    const exported = Object.keys(barrel).sort();
     expect(exported).toEqual(LLM_CAPABILITY_RUNTIME_EXPORTS);
   });
 
-  it('does not export the capability internals', async () => {
-    const barrel: Record<string, unknown> = await import('./index');
+  it('does not export the capability internals', () => {
     const internals = ['llmCritiqueOutcomeSchema', 'parseLlmCritiqueOutcomeValue', 'renderLlmCritiqueContext', 'llmRepairReplyJsonSchema', 'parseLlmRepairReplyJsonValue', 'renderLlmRepairReplyJsonContext'];
     expect(internals.filter((name) => name in barrel)).toEqual([]);
   });

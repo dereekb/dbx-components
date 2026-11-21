@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import * as barrel from './index';
 
 /**
  * Pins the craft barrel's runtime exports — the `@dereekb/llm/craft` entry's API. The judge's internals (its input,
@@ -53,13 +54,12 @@ const LLM_CRAFT_RUNTIME_EXPORTS: readonly string[] = [
 ];
 
 describe('craft exports', () => {
-  it('exports exactly the documented runtime surface', async () => {
-    const exported = Object.keys(await import('./index')).sort();
+  it('exports exactly the documented runtime surface', () => {
+    const exported = Object.keys(barrel).sort();
     expect(exported).toEqual(LLM_CRAFT_RUNTIME_EXPORTS);
   });
 
-  it('does not export the judge internals', async () => {
-    const barrel: Record<string, unknown> = await import('./index');
+  it('does not export the judge internals', () => {
     const internals = ['toLlmCraftJudgeInput', 'toLlmCraftJudgeQuestionKey', 'LLM_CRAFT_NOTE_SELECT_DECISION', 'readLlmCraftJudgeVerdicts', 'toLlmCraftJudgeStamp'];
     expect(internals.filter((name) => name in barrel)).toEqual([]);
   });
