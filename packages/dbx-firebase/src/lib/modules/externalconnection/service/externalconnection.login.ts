@@ -1,4 +1,4 @@
-import { filterMaybeArrayValues, type Maybe } from '@dereekb/util';
+import { filterMaybeArrayValues, filterUndefinedValues, type Maybe } from '@dereekb/util';
 import { type DbxFirebaseAuthLoginProvider } from '../../../auth/login/login.service';
 import { type DbxFirebaseExternalConnectionProvider, type DbxFirebaseExternalConnectionProviderEntry } from './externalconnection';
 import { dbxFirebaseExternalConnectionProviderForEntry } from './externalconnection.default';
@@ -51,7 +51,8 @@ export function dbxFirebaseExternalConnectionLoginProvider(provider: DbxFirebase
       registrationComponentClass: DbxFirebaseLoginExternalConnectionComponent,
       allowLinking: true,
       componentData: { providerType },
-      assets: {
+      // filtered so the unset assets do not override the registered defaults when merged by updateAssetsForProvider()
+      assets: filterUndefinedValues({
         providerName: assets.providerName,
         loginText: signIn.loginText ?? `Continue with ${assets.providerName}`,
         linkText: signIn.linkText ?? `Connect ${assets.providerName}`,
@@ -61,7 +62,7 @@ export function dbxFirebaseExternalConnectionLoginProvider(provider: DbxFirebase
         logoFilter: assets.logoFilter ?? undefined,
         backgroundColor: signIn.backgroundColor ?? undefined,
         textColor: signIn.textColor ?? undefined
-      }
+      })
     };
   }
 

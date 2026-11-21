@@ -20,7 +20,7 @@ export type LookupDepth = 'brief' | 'full';
  *   caller (lowercase, deduped, no empty strings).
  */
 export interface FormatFirebaseModelEntryOptions {
-  readonly fields?: readonly string[];
+  readonly fields?: readonly string[] | undefined;
 }
 
 interface FilteredFields {

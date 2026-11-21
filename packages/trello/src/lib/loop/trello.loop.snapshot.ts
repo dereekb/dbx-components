@@ -303,12 +303,12 @@ export interface TrelloBoardChange {
    * `moved`: the list the card left. `added` / `removed`: the list it is (was) on.
    */
   readonly fromListId?: TrelloListId;
-  readonly fromListName?: string;
+  readonly fromListName?: string | undefined;
   /**
    * `moved`: the list the card arrived on.
    */
   readonly toListId?: TrelloListId;
-  readonly toListName?: string;
+  readonly toListName?: string | undefined;
   /**
    * `relabeled`: label ids added and removed.
    */

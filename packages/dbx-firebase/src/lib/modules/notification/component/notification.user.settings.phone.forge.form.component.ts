@@ -40,7 +40,7 @@ export interface DbxFirebaseNotificationUserSettingsPhoneFormConfig {
 export class DbxFirebaseNotificationUserSettingsPhoneForgeFormComponent extends AbstractConfigAsyncForgeFormDirective<DbxFirebaseNotificationUserSettingsPhoneFormValue, DbxFirebaseNotificationUserSettingsPhoneFormConfig> {
   readonly formConfig$: Observable<Maybe<FormConfig>> = this.currentConfig$.pipe(
     map((config) => ({
-      fields: [dbxForgePhoneField({ key: 'phoneNumber', label: 'Phone Number for Texts', required: true, preferredCountries: config?.preferredCountries ?? undefined, placeholder: config?.placeholder ?? undefined })]
+      fields: [dbxForgePhoneField({ key: 'phoneNumber', label: 'Phone Number for Texts', required: true, preferredCountries: config?.preferredCountries ?? undefined, ...(config?.placeholder != null ? { placeholder: config.placeholder } : {}) })]
     }))
   );
 }

@@ -128,8 +128,8 @@ function decodeJwtSegment(segment: string): Maybe<Record<string, unknown>> {
 
 interface FormatExplainInput {
   readonly registry: AuthRegistry;
-  readonly app?: string;
-  readonly expectedIssuer?: string;
+  readonly app?: string | undefined;
+  readonly expectedIssuer?: string | undefined;
   readonly header: Record<string, unknown> | undefined;
   readonly payload: Record<string, unknown>;
   readonly signaturePresent: boolean;

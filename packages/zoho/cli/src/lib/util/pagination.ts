@@ -91,7 +91,7 @@ export interface ZohoSignPageContextMeta {
  * while the adapter inspects `page_context` for cursor advancement.
  */
 export interface ZohoSignPaginatedResponse extends PaginatedResponse {
-  readonly page_context?: ZohoSignPageContextMeta;
+  readonly page_context?: ZohoSignPageContextMeta | undefined;
 }
 
 /**

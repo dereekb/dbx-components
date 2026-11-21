@@ -12,8 +12,8 @@ export const TRELLO_OAUTH_CLIENT_SECRET_CONFIG_KEY = 'TRELLO_OAUTH_CLIENT_SECRET
  * surfacing as `undefined` further down.
  */
 export interface TrelloOAuthServiceApiConfig {
-  readonly clientId?: TrelloOAuthClientId;
-  readonly clientSecret?: TrelloOAuthClientSecret;
+  readonly clientId?: TrelloOAuthClientId | undefined;
+  readonly clientSecret?: TrelloOAuthClientSecret | undefined;
 }
 
 /**

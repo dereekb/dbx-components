@@ -472,7 +472,7 @@ async function buildValidateAppReport(input: BuildValidateAppReportInput): Promi
   };
 }
 
-async function readExistingIndexesJson(indexesAbs: string): Promise<{ readonly existingJson?: FirestoreIndexesJson; readonly exists: boolean; readonly readError?: string }> {
+async function readExistingIndexesJson(indexesAbs: string): Promise<{ readonly existingJson?: FirestoreIndexesJson; readonly exists: boolean; readonly readError?: string | undefined }> {
   let text: Maybe<string> = null;
   let readError: string | undefined;
   let missing = false;
@@ -486,7 +486,7 @@ async function readExistingIndexesJson(indexesAbs: string): Promise<{ readonly e
       readError = err instanceof Error ? err.message : String(err);
     }
   }
-  let result: { readonly existingJson?: FirestoreIndexesJson; readonly exists: boolean; readonly readError?: string };
+  let result: { readonly existingJson?: FirestoreIndexesJson; readonly exists: boolean; readonly readError?: string | undefined };
   if (missing) {
     result = { exists: false };
   } else if (text === null) {

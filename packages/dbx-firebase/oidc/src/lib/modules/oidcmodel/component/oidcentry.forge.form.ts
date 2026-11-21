@@ -34,7 +34,7 @@ export interface OidcEntryClientFormFieldsConfig extends OidcEntryClientUpdateFo
    * this value for non-admin callers, so showing the field to a non-admin is harmless (their edits are
    * ignored).
    */
-  readonly providerProfiles?: OidcProviderProfileDetails[];
+  readonly providerProfiles?: OidcProviderProfileDetails[] | undefined;
 }
 
 /**

@@ -73,7 +73,7 @@ export interface CreateModelValidateToolOptions {
    * `modelValidate` block. When omitted, the validator falls back to the
    * built-in defaults (see {@link MAX_FIELD_NAME_LENGTH}).
    */
-  readonly ruleOptions?: RuleOptions;
+  readonly ruleOptions?: RuleOptions | undefined;
 }
 
 /**

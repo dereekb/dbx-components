@@ -93,11 +93,11 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
   }
   if (ensureError === undefined) {
     const specAbs = resolve(cwd, parsed.specFile);
-    const apiAbs = parsed.apiDir === undefined ? undefined : resolve(cwd, parsed.apiDir);
+    const apiInput = parsed.apiDir === undefined ? {} : { apiAbs: resolve(cwd, parsed.apiDir), apiRel: parsed.apiDir };
     let tree;
     let inspectError: string | undefined;
     try {
-      tree = await inspectSpecFile({ specAbs, specRel: parsed.specFile, apiAbs, apiRel: parsed.apiDir });
+      tree = await inspectSpecFile({ specAbs, specRel: parsed.specFile, ...apiInput });
     } catch (err) {
       inspectError = `Failed to read spec file: ${err instanceof Error ? err.message : String(err)}`;
     }

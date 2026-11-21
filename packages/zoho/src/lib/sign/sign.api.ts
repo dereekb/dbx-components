@@ -92,7 +92,7 @@ export function zohoSignGetDocument(context: ZohoSignContext): ZohoSignGetDocume
 
 // MARK: Get Documents List
 export interface ZohoSignGetDocumentsInput extends ZohoSignPageFilter {
-  readonly search_columns?: ZohoSignSearchColumns;
+  readonly search_columns?: ZohoSignSearchColumns | undefined;
 }
 
 export type ZohoSignGetDocumentsFunction = (input: ZohoSignGetDocumentsInput) => Promise<ZohoSignGetDocumentsResponse>;
@@ -457,7 +457,7 @@ export function zohoSignGetTemplate(context: ZohoSignContext): ZohoSignGetTempla
 
 // MARK: Get Templates
 export interface ZohoSignGetTemplatesInput extends ZohoSignPageFilter {
-  readonly search_columns?: ZohoSignSearchColumns;
+  readonly search_columns?: ZohoSignSearchColumns | undefined;
 }
 
 /**

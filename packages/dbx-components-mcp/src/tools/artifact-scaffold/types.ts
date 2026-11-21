@@ -46,7 +46,7 @@ export interface ScaffoldArtifactInput {
   readonly name: string;
   readonly componentDir: string;
   readonly apiDir: string;
-  readonly options?: ScaffoldArtifactOptions;
+  readonly options?: ScaffoldArtifactOptions | undefined;
 }
 
 export type EmittedFileStatus = 'new' | 'append' | 'exists-skipped';

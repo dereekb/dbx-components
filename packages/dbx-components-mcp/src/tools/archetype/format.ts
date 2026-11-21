@@ -15,7 +15,7 @@ import type { ResolvedAxes, ResolvedAxisAlternatives } from './axes.js';
  * Optional knobs for {@link formatArchetypeEntry}.
  */
 export interface FormatArchetypeEntryOptions {
-  readonly axes?: ResolvedAxes;
+  readonly axes?: ResolvedAxes | undefined;
   readonly showFullAxes?: boolean;
 }
 

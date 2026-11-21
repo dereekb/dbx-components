@@ -25,11 +25,11 @@ import { expandIntentQuery } from './synonyms.js';
  * before scoring.
  */
 export interface ResolveTokenInput {
-  readonly intent?: string;
-  readonly value?: string;
-  readonly role?: string;
-  readonly component?: string;
-  readonly category?: string;
+  readonly intent?: string | undefined;
+  readonly value?: string | undefined;
+  readonly role?: string | undefined;
+  readonly component?: string | undefined;
+  readonly category?: string | undefined;
 }
 
 /**
@@ -40,7 +40,7 @@ export interface ResolveTokenInput {
 export interface ResolveTokenResult {
   readonly matches: readonly ScoredTokenMatch[];
   readonly confident: boolean;
-  readonly category?: string;
+  readonly category?: string | undefined;
 }
 
 const CONFIDENT_THRESHOLD = 7;

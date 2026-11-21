@@ -87,7 +87,7 @@ function parseScaffoldArgs(raw: unknown): ParsedScaffoldArgs {
 interface FieldSpec {
   readonly raw: string;
   readonly slug: string;
-  readonly key?: string;
+  readonly key?: string | undefined;
   readonly field: FormFieldInfo;
 }
 

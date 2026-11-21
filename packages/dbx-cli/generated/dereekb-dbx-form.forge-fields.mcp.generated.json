@@ -70,13 +70,13 @@
       "properties": [
         {
           "name": "password",
-          "type": "DbxForgeTextPasswordFieldConfig",
+          "type": "DbxForgeTextPasswordFieldConfig | undefined",
           "description": "Optional configuration for the primary password field.",
           "required": false
         },
         {
           "name": "verifyPassword",
-          "type": "DbxForgeTextPasswordFieldConfig",
+          "type": "DbxForgeTextPasswordFieldConfig | undefined",
           "description": "Optional configuration for the verify/confirm password field.",
           "required": false
         }
@@ -172,19 +172,19 @@
         },
         {
           "name": "notWebsiteUrlMessage",
-          "type": "DynamicText",
+          "type": "DynamicText | undefined",
           "description": "Optional override for the \"is not a valid website url\" error message.",
           "required": false
         },
         {
           "name": "notWebsiteUrlWithPrefixMessage",
-          "type": "DynamicText",
+          "type": "DynamicText | undefined",
           "description": "Optional override for the \"is not a valid website url with an http/https prefix\" error message.",
           "required": false
         },
         {
           "name": "notWebsiteUrlWithExpectedDomainMessage",
-          "type": "DynamicText",
+          "type": "DynamicText | undefined",
           "description": "Optional override for the \"is not a valid website url with an expected domain\" error message.",
           "required": false
         },
@@ -1839,25 +1839,25 @@
       "properties": [
         {
           "name": "preferredCountries",
-          "type": "string[]",
+          "type": "string[] | undefined",
           "description": "Preferred countries to show at the top of the country selector.",
           "required": false
         },
         {
           "name": "onlyCountries",
-          "type": "string[]",
+          "type": "string[] | undefined",
           "description": "ISO country codes to restrict the dropdown to.",
           "required": false
         },
         {
           "name": "enableSearch",
-          "type": "boolean",
+          "type": "boolean | undefined",
           "description": "Whether or not to enable the search feature. True by default.",
           "required": false
         },
         {
           "name": "allowExtension",
-          "type": "boolean",
+          "type": "boolean | undefined",
           "description": "Whether or not to allow adding an extension. False by default.",
           "required": false
         },

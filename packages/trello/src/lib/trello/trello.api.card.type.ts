@@ -71,23 +71,23 @@ export interface CreateCardBody {
   /**
    * Card name (1-16384 characters).
    */
-  readonly name?: string;
+  readonly name?: string | undefined;
   /**
    * Card description.
    */
-  readonly desc?: string;
+  readonly desc?: string | undefined;
   /**
    * Position on the list.
    */
-  readonly pos?: TrelloPosition;
+  readonly pos?: TrelloPosition | undefined;
   /**
    * Optional comma-separated list of label ids.
    */
-  readonly idLabels?: ReadonlyArray<TrelloLabelId>;
+  readonly idLabels?: ReadonlyArray<TrelloLabelId> | undefined;
   /**
    * Optional comma-separated list of member ids.
    */
-  readonly idMembers?: ReadonlyArray<TrelloMemberId>;
+  readonly idMembers?: ReadonlyArray<TrelloMemberId> | undefined;
   /**
    * Optional due date as an ISO date string.
    */
@@ -99,24 +99,24 @@ export interface CreateCardBody {
 }
 
 export interface UpdateCardBody {
-  readonly name?: string;
-  readonly desc?: string;
-  readonly closed?: boolean;
-  readonly idList?: TrelloListId;
-  readonly idBoard?: TrelloBoardId;
-  readonly idLabels?: ReadonlyArray<TrelloLabelId>;
-  readonly idMembers?: ReadonlyArray<TrelloMemberId>;
+  readonly name?: string | undefined;
+  readonly desc?: string | undefined;
+  readonly closed?: boolean | undefined;
+  readonly idList?: TrelloListId | undefined;
+  readonly idBoard?: TrelloBoardId | undefined;
+  readonly idLabels?: ReadonlyArray<TrelloLabelId> | undefined;
+  readonly idMembers?: ReadonlyArray<TrelloMemberId> | undefined;
   /**
    * ISO date string, or `null` to clear it.
    */
   readonly due?: TrelloMaybeDateString;
-  readonly dueComplete?: boolean;
+  readonly dueComplete?: boolean | undefined;
   /**
    * ISO date string, or `null` to clear it.
    */
   readonly start?: TrelloMaybeDateString;
-  readonly pos?: TrelloPosition;
-  readonly subscribed?: boolean;
+  readonly pos?: TrelloPosition | undefined;
+  readonly subscribed?: boolean | undefined;
 }
 
 /**

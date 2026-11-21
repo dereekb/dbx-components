@@ -113,7 +113,7 @@ export function createModelFixtureValidateAppTool(config: CreateModelFixtureVali
         toolResult = toolError(inspectError ?? 'Failed to inspect fixtures.');
       } else {
         const registry = config.getRegistry ? config.getRegistry() : undefined;
-        const result = validateAppFixtures(extraction, { registry });
+        const result = validateAppFixtures(extraction, registry === undefined ? {} : { registry });
         const text = parsed.format === 'json' ? formatValidationAsJson(result) : formatValidationAsMarkdown(result);
         toolResult = {
           content: [{ type: 'text', text }],

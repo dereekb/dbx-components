@@ -54,5 +54,5 @@ export interface ZohoConfig {
    * Target API URL, either as an environment key or a full URL.
    * Each service resolves this to a concrete URL via its own config utility.
    */
-  readonly apiUrl?: ZohoConfigApiUrlInput;
+  readonly apiUrl?: ZohoConfigApiUrlInput | undefined;
 }

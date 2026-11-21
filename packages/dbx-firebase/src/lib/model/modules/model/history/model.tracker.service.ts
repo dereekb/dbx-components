@@ -23,7 +23,7 @@ export interface DbxFirebaseModelTrackerHistoryFilter {
   /**
    * Arbitrary filter function to filter individual items.
    */
-  readonly filterItem?: ObservableDecisionFunction<DbxFirebaseModelTrackerFilterItem>;
+  readonly filterItem?: ObservableDecisionFunction<DbxFirebaseModelTrackerFilterItem> | undefined;
 }
 
 @Service()

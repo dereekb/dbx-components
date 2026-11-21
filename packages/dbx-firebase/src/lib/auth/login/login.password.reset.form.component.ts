@@ -101,7 +101,7 @@ export class DbxFirebasePasswordResetFormComponent extends AbstractConfigAsyncFo
                 required: true,
                 placeholder: oobCodePlaceholder,
                 hint: oobCodeHint,
-                pattern: oobCodePattern || undefined,
+                ...(oobCodePattern ? { pattern: oobCodePattern } : {}),
                 validationMessages: { pattern: `Enter the full reset code from your email. It should look like ${oobCodePlaceholder}.` },
                 // The token is pasted from an email; stray surrounding whitespace would otherwise fail verification.
                 idempotentTransform: { trim: true },

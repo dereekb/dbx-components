@@ -9,7 +9,7 @@ import { trelloWebhookEventVerifier, type TrelloWebhookEventVerifier } from './w
 export interface UpdateForTrelloWebhookResponse {
   readonly valid: boolean;
   readonly handled: boolean;
-  readonly event?: UntypedTrelloWebhookEvent;
+  readonly event?: UntypedTrelloWebhookEvent | undefined;
 }
 
 /**

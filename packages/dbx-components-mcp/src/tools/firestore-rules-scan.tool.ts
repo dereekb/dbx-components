@@ -108,7 +108,7 @@ export interface FirestoreRulesScanReport {
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function buildFirestoreRulesScanReport(input: { readonly scan: FirestoreRulesScan; readonly rulesFile: string; readonly collection?: string; readonly serverOnly?: boolean }): FirestoreRulesScanReport {
+export function buildFirestoreRulesScanReport(input: { readonly scan: FirestoreRulesScan; readonly rulesFile: string; readonly collection?: string | undefined; readonly serverOnly?: boolean | undefined }): FirestoreRulesScanReport {
   const { scan, rulesFile, collection, serverOnly } = input;
   let collections: readonly FirestoreRulesCollectionEntry[] = scan.collections;
   let synthesized = false;

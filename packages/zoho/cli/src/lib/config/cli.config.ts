@@ -1,4 +1,4 @@
-import { filterUndefinedValues, type Maybe } from '@dereekb/util';
+import { filterUndefinedValues, type Maybe, type PartialWithUndefined } from '@dereekb/util';
 import {
   CLI_CONFIG_FILE_MODE,
   type CliActiveTokenSource,
@@ -57,18 +57,18 @@ export interface ZohoCliCredentials {
 /**
  * Per-product configuration.
  */
-export interface ZohoCliProductConfig extends Partial<ZohoCliCredentials> {
-  readonly apiUrl?: string;
-  readonly orgId?: string;
+export interface ZohoCliProductConfig extends PartialWithUndefined<ZohoCliCredentials> {
+  readonly apiUrl?: string | undefined;
+  readonly orgId?: string | undefined;
   /**
    * Accounts datacenter the product's own OAuth client lives in. Falls back to the shared region, so it
    * only needs setting for a dedicated-client product authorized in a different datacenter.
    */
-  readonly region?: string;
+  readonly region?: string | undefined;
   /**
    * Redirect URI the product's OAuth client was last authorized with by `auth login`, reused by the next one.
    */
-  readonly redirectUri?: string;
+  readonly redirectUri?: string | undefined;
 }
 
 /**
@@ -76,12 +76,12 @@ export interface ZohoCliProductConfig extends Partial<ZohoCliCredentials> {
  * {@link ZOHO_CLI_DEDICATED_CLIENT_PRODUCTS}).
  */
 export interface ZohoCliSharedConfig extends ZohoCliCredentials {
-  readonly region?: string;
-  readonly apiMode?: string;
+  readonly region?: string | undefined;
+  readonly apiMode?: string | undefined;
   /**
    * Redirect URI the shared OAuth client was last authorized with by `auth login`, reused by the next one.
    */
-  readonly redirectUri?: string;
+  readonly redirectUri?: string | undefined;
 }
 
 /**
@@ -142,12 +142,12 @@ export const DEFAULT_ZOHO_CLI_TOKEN_SOURCE_NAME: ZohoCliTokenSourceName = DEFAUL
  */
 export interface ZohoCliConfig {
   readonly shared: ZohoCliSharedConfig;
-  readonly recruit?: ZohoCliProductConfig;
-  readonly crm?: ZohoCliProductConfig;
-  readonly desk?: ZohoCliProductConfig;
-  readonly sign?: ZohoCliProductConfig;
-  readonly analytics?: ZohoCliProductConfig;
-  readonly output?: ZohoCliOutputConfig;
+  readonly recruit?: ZohoCliProductConfig | undefined;
+  readonly crm?: ZohoCliProductConfig | undefined;
+  readonly desk?: ZohoCliProductConfig | undefined;
+  readonly sign?: ZohoCliProductConfig | undefined;
+  readonly analytics?: ZohoCliProductConfig | undefined;
+  readonly output?: ZohoCliOutputConfig | undefined;
   /**
    * The token source. In a config returned by {@link loadCliConfig} this is the ACTIVE source
    * ({@link resolveZohoCliActiveTokenSource}); in the file it is the saved unnamed source, named
@@ -173,9 +173,9 @@ export interface ZohoCliConfig {
 export interface ZohoCliResolvedProductCredentials extends ZohoCliCredentials {
   readonly region: string;
   readonly apiMode: string;
-  readonly apiUrl?: string;
-  readonly orgId?: string;
-  readonly redirectUri?: string;
+  readonly apiUrl?: string | undefined;
+  readonly orgId?: string | undefined;
+  readonly redirectUri?: string | undefined;
 }
 
 /**
@@ -475,7 +475,7 @@ export type ZohoCliCredentialSource = 'config' | 'env' | 'none';
 /**
  * Credentials (and the datacenter they belong to) read for one block from either the file or the env.
  */
-interface ZohoCliCredentialBlock extends Partial<ZohoCliCredentials> {
+interface ZohoCliCredentialBlock extends PartialWithUndefined<ZohoCliCredentials> {
   readonly region?: Maybe<string>;
 }
 
@@ -687,7 +687,7 @@ export async function loadCliConfig(input?: Maybe<LoadCliConfigInput>): Promise<
       sign: productConfig('sign'),
       analytics: productConfig('analytics'),
       output: fileConfig?.output,
-      tokenSource: activeTokenSource ? { command: activeTokenSource.command, ...(activeTokenSource.apiMode ? { apiMode: activeTokenSource.apiMode } : {}) } : undefined
+      ...(activeTokenSource ? { tokenSource: { command: activeTokenSource.command, ...(activeTokenSource.apiMode ? { apiMode: activeTokenSource.apiMode } : {}) } } : {})
     };
   }
 
@@ -805,9 +805,7 @@ export async function mergeCliConfig(updates: ZohoCliConfigUpdate): Promise<Zoho
     analytics: mergeConfigBlock(existing?.analytics, updates.analytics),
     output: updates.output === undefined ? existing?.output : dbxMergeOutputConfig(existing?.output, updates.output),
     // carried over verbatim: only updateCliTokenSourceConfig() writes the token source keys
-    tokenSource: existing?.tokenSource,
-    tokenSources: existing?.tokenSources,
-    activeTokenSource: existing?.activeTokenSource
+    ...filterUndefinedValues({ tokenSource: existing?.tokenSource, tokenSources: existing?.tokenSources, activeTokenSource: existing?.activeTokenSource })
   };
 
   await saveCliConfig(merged);
@@ -817,7 +815,7 @@ export async function mergeCliConfig(updates: ZohoCliConfigUpdate): Promise<Zoho
 /**
  * The token-source keys of the config file, as updated by {@link updateCliTokenSourceConfig}.
  */
-export type ZohoCliTokenSourceConfigUpdate = Partial<Pick<ZohoCliConfig, 'tokenSource' | 'tokenSources' | 'activeTokenSource'>>;
+export type ZohoCliTokenSourceConfigUpdate = PartialWithUndefined<Pick<ZohoCliConfig, 'tokenSource' | 'tokenSources' | 'activeTokenSource'>>;
 
 /**
  * The config file as dbx-cli's token-source store, which reads it raw and writes back only the

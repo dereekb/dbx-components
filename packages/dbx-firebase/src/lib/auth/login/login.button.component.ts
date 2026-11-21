@@ -16,19 +16,19 @@ import { loginMethodTypeToFirebaseProviderId } from './login.provider.id';
  */
 export interface DbxFirebaseLoginButtonConfig {
   readonly text: string;
-  readonly iconUrl?: string;
-  readonly icon?: string;
-  readonly iconFilter?: string;
-  readonly buttonColor?: string;
-  readonly buttonTextColor?: string;
+  readonly iconUrl?: string | undefined;
+  readonly icon?: string | undefined;
+  readonly iconFilter?: string | undefined;
+  readonly buttonColor?: string | undefined;
+  readonly buttonTextColor?: string | undefined;
   /**
    * Material theme color or {@link DbxColorConfig} to apply to the underlying button (e.g., 'warn', 'primary').
    */
-  readonly color?: DbxColorInput;
+  readonly color?: DbxColorInput | undefined;
   /**
    * Optional confirmation dialog config. When set, the action will prompt the user before executing.
    */
-  readonly confirmConfig?: DbxActionConfirmConfig;
+  readonly confirmConfig?: DbxActionConfirmConfig | undefined;
   readonly handleLogin: () => Promise<unknown>;
 }
 
@@ -79,7 +79,7 @@ export class DbxFirebaseLoginButtonComponent {
     const config = this.config();
     const customTextColor = config?.buttonTextColor;
     const buttonColor = config?.buttonColor ?? (config?.color ? undefined : 'transparent');
-    const color = config?.color ?? (buttonColor ? { color: buttonColor, contrast: customTextColor } : undefined);
+    const color = config?.color ?? (buttonColor ? { color: buttonColor, ...(customTextColor != null ? { contrast: customTextColor } : {}) } : undefined);
 
     return { color, customTextColor };
   });
@@ -129,8 +129,11 @@ export const DEFAULT_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_TEMPLATE = `
 
 /**
  * Shared component configuration for OAuth-style login button components.
+ *
+ * `template` and `imports` are typed as required so they can be passed straight into a `@Component()` decorator. The
+ * value must stay a plain object literal (no `satisfies`/`as`) so the Angular compiler can evaluate it statically.
  */
-export const DBX_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_COMPONENT_CONFIGURATION: Pick<Component, 'template' | 'imports' | 'changeDetection'> = {
+export const DBX_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_COMPONENT_CONFIGURATION: Required<Pick<Component, 'template' | 'imports'>> & Pick<Component, 'changeDetection'> = {
   template: DEFAULT_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_TEMPLATE,
   imports: [DbxFirebaseLoginButtonComponent, DbxFirebaseLoginButtonContainerComponent]
 };

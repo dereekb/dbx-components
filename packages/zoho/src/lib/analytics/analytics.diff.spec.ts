@@ -7,7 +7,7 @@ import { zohoAnalyticsRowDataFromCsv } from './analytics.data';
  * Builds a column with only the fields a diff reads, keeping the tables in these cases readable.
  */
 function column(columnName: string, dataType?: ZohoAnalyticsColumnDataType, extra?: Partial<ZohoAnalyticsColumn>): ZohoAnalyticsColumn {
-  return { columnId: `id-${columnName}`, columnName, dataType, ...extra };
+  return { columnId: `id-${columnName}`, columnName, ...(dataType == null ? {} : { dataType }), ...extra };
 }
 
 /**

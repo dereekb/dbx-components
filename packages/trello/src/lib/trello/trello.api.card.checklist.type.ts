@@ -51,12 +51,12 @@ export interface TrelloChecklist {
 }
 
 export interface AddChecklistToCardBody {
-  readonly name?: string;
-  readonly pos?: TrelloPosition;
+  readonly name?: string | undefined;
+  readonly pos?: TrelloPosition | undefined;
   /**
    * An existing checklist to copy into the new one.
    */
-  readonly idChecklistSource?: TrelloChecklistId;
+  readonly idChecklistSource?: TrelloChecklistId | undefined;
 }
 
 export interface UpdateChecklistBody {
@@ -66,11 +66,11 @@ export interface UpdateChecklistBody {
 
 export interface AddCheckItemToChecklistBody {
   readonly name: string;
-  readonly pos?: TrelloPosition;
+  readonly pos?: TrelloPosition | undefined;
   /**
    * Whether the new item starts complete.
    */
-  readonly checked?: boolean;
+  readonly checked?: boolean | undefined;
   readonly due?: TrelloMaybeDateString;
   readonly dueReminder?: Maybe<number>;
   readonly idMember?: Maybe<TrelloMemberId>;

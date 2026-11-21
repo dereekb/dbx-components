@@ -86,12 +86,12 @@ export interface BuildHierarchyInput {
    * a single subtree rooted at this model. When omitted every model with no
    * `parentIdentityConst` is treated as a root.
    */
-  readonly rootModel?: FirebaseModel;
+  readonly rootModel?: FirebaseModel | undefined;
   /**
    * Optional max depth from the root (inclusive). `0` returns only the root
    * with empty children. Undefined means unlimited.
    */
-  readonly maxDepth?: number;
+  readonly maxDepth?: number | undefined;
   /**
    * Format to populate (`'tree'`, `'flat'`, or `'both'`). Defaults to
    * `'tree'`.
@@ -289,12 +289,12 @@ export interface RenderHierarchyContext {
    * The starting model identity const, when the caller restricted the tree
    * to a single subtree. Surfaced in the markdown header.
    */
-  readonly rootModel?: string;
+  readonly rootModel?: string | undefined;
   /**
    * Echoed `maxDepth` value, when the caller supplied one. Surfaced in the
    * markdown header alongside the truncation note.
    */
-  readonly maxDepth?: number;
+  readonly maxDepth?: number | undefined;
 }
 
 /**

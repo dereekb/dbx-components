@@ -113,7 +113,7 @@ export class DbxFirebaseNotificationUserSettingsDialogComponent extends Abstract
     return matDialog.open(DbxFirebaseNotificationUserSettingsDialogComponent, {
       // a long list of settings can exceed the viewport, so cap the dialog and let its surface scroll
       maxHeight: 'calc(var(--vh100) * 0.9)',
-      injector: config?.injector ?? undefined,
+      ...(config?.injector != null ? { injector: config.injector } : {}),
       data: config
     });
   }

@@ -318,73 +318,73 @@ export function createAuthClusterTools(registry: AuthRegistry): readonly DbxTool
  * exercise other tools) the dependent tools are not registered.
  */
 export interface RegisterToolsOptions {
-  readonly semanticTypeRegistry?: SemanticTypeRegistry;
-  readonly forgeFieldRegistry?: ForgeFieldRegistry;
-  readonly pipeRegistry?: PipeRegistry;
-  readonly utilRegistry?: UtilRegistry;
+  readonly semanticTypeRegistry?: SemanticTypeRegistry | undefined;
+  readonly forgeFieldRegistry?: ForgeFieldRegistry | undefined;
+  readonly pipeRegistry?: PipeRegistry | undefined;
+  readonly utilRegistry?: UtilRegistry | undefined;
   /**
    * Optional model-snapshot-fields registry. Required for the
    * `dbx_model_snapshot_field_*` cluster (lookup, search, list_app); when
    * omitted those tools are skipped.
    */
-  readonly modelSnapshotFieldRegistry?: ModelSnapshotFieldRegistry;
+  readonly modelSnapshotFieldRegistry?: ModelSnapshotFieldRegistry | undefined;
   /**
    * Optional model-firebase-index registry. Required for the
    * `dbx_model_firebase_index_*` cluster (currently: lookup); when
    * omitted those tools are skipped.
    */
-  readonly modelFirebaseIndexRegistry?: ModelFirebaseIndexRegistry;
-  readonly uiComponentRegistry?: UiComponentRegistry;
+  readonly modelFirebaseIndexRegistry?: ModelFirebaseIndexRegistry | undefined;
+  readonly uiComponentRegistry?: UiComponentRegistry | undefined;
   /**
    * Optional app-sourced UI examples registry. When supplied (or empty),
    * `dbx_ui_examples` is wired to merge curated `UI_PATTERNS` with scanned
    * entries; `dbx_ui_search` is wired to surface a "Related examples"
    * section when component hits overlap an example's `relatedSlugs`.
    */
-  readonly dbxDocsUiExamplesRegistry?: DbxDocsUiExamplesRegistry;
-  readonly actionRegistry?: ActionRegistry;
-  readonly filterRegistry?: FilterRegistry;
+  readonly dbxDocsUiExamplesRegistry?: DbxDocsUiExamplesRegistry | undefined;
+  readonly actionRegistry?: ActionRegistry | undefined;
+  readonly filterRegistry?: FilterRegistry | undefined;
   /**
    * Optional token registry. Required for `dbx_css_token_lookup` and
    * `dbx_ui_smell_check`; when omitted those tools are skipped.
    */
-  readonly tokenRegistry?: TokenRegistry;
+  readonly tokenRegistry?: TokenRegistry | undefined;
   /**
    * Optional css-utility registry. Required for `dbx_css_class_lookup`;
    * when omitted that tool is skipped.
    */
-  readonly cssUtilityRegistry?: CssUtilityRegistry;
+  readonly cssUtilityRegistry?: CssUtilityRegistry | undefined;
   /**
    * Working directory used by `dbx_ui_smell_check` to resolve
    * `dbx-mcp.config.json` for project convention overrides.
    */
-  readonly cwd?: string;
+  readonly cwd?: string | undefined;
   /**
    * Optional fixture-model registry consumed by `dbx_model_fixture_validate_app`'s
    * parent-field-naming and registry cross-reference rules. When omitted those
    * rules are skipped — the tool still validates forwarding and structural
    * concerns without it.
    */
-  readonly fixtureModelRegistry?: fixtureValidate.FixtureModelRegistry;
+  readonly fixtureModelRegistry?: fixtureValidate.FixtureModelRegistry | undefined;
   /**
    * Optional rule overrides for `dbx_model_validate`, resolved at server
    * bootstrap from the workspace's `dbx-mcp.config.json` `modelValidate`
    * block. When omitted, the validator runs with built-in defaults.
    */
-  readonly modelValidateRuleOptions?: modelValidate.RuleOptions;
+  readonly modelValidateRuleOptions?: modelValidate.RuleOptions | undefined;
   /**
    * Optional auth catalog registry consumed by the `dbx_auth_*` tool
    * cluster (claim/scope/role lookup, JWT explainer, app surface). When
    * omitted those tools are skipped.
    */
-  readonly authRegistry?: AuthRegistry;
+  readonly authRegistry?: AuthRegistry | undefined;
   /**
    * Optional `logs` block resolved from `dbx-mcp.config.json`. Provides a
    * workspace-level fallback for `dbx_log_search` when neither a per-call
    * `basePath` nor `DBX_LOG_PATH` is set. `basePath` should already be
    * absolute (the bootstrap resolves it against the config file's directory).
    */
-  readonly logSearchConfig?: LogSearchConfig;
+  readonly logSearchConfig?: LogSearchConfig | undefined;
 }
 
 /**

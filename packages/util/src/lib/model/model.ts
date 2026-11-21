@@ -50,7 +50,14 @@ export interface UniqueModel {
   id?: ModelKey | undefined;
 }
 
-export type UniqueModelWithId = Required<UniqueModel>;
+/**
+ * A {@link UniqueModel} whose "id" is always set.
+ *
+ * Declared explicitly instead of as `Required<UniqueModel>`: under `exactOptionalPropertyTypes`, `Required<>` keeps the explicit `| undefined` on `UniqueModel.id`.
+ */
+export interface UniqueModelWithId extends UniqueModel {
+  id: ModelKey;
+}
 
 export interface TypedModel<M extends ModelTypeString = ModelTypeString> {
   type: M;

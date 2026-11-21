@@ -181,7 +181,7 @@ function scoreEntryForTokens<TEntry>(input: ScoreEntryForTokensInput<TEntry>): S
  * @param config.mode - Token-match policy; defaults to `'all'`
  * @returns Hits sorted by match-count, then score, then `tieBreaker`
  */
-export function searchEntries<TEntry>(config: { readonly entries: readonly TEntry[]; readonly tokens: readonly QueryToken[]; readonly scoreFn: (entry: TEntry, token: string) => number; readonly tieBreaker: (entry: TEntry) => string; readonly mode?: TokenMatchMode }): readonly SearchHit<TEntry>[] {
+export function searchEntries<TEntry>(config: { readonly entries: readonly TEntry[]; readonly tokens: readonly QueryToken[]; readonly scoreFn: (entry: TEntry, token: string) => number; readonly tieBreaker: (entry: TEntry) => string; readonly mode?: TokenMatchMode | undefined }): readonly SearchHit<TEntry>[] {
   const { entries, tokens, scoreFn, tieBreaker, mode = 'all' } = config;
   let result: readonly SearchHit<TEntry>[] = [];
   if (tokens.length > 0) {

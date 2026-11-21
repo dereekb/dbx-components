@@ -224,7 +224,7 @@ export interface CreateUiExamplesToolInput {
    * App-sourced examples registry. When omitted (or empty), the tool
    * surfaces only the curated `UI_PATTERNS`.
    */
-  readonly examplesRegistry?: DbxDocsUiExamplesRegistry;
+  readonly examplesRegistry?: DbxDocsUiExamplesRegistry | undefined;
 }
 
 /**
