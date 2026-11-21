@@ -279,7 +279,7 @@ export interface NotificationMessage<D extends NotificationItemMetadata = {}> {
   /**
    * Content specific for an email.
    */
-  readonly emailContent?: NotificationMessageEmailContent;
+  readonly emailContent?: NotificationMessageEmailContent | undefined;
   /**
    * Content specific for a text.
    */
@@ -287,7 +287,7 @@ export interface NotificationMessage<D extends NotificationItemMetadata = {}> {
   /**
    * Content specific for notification summaries.
    */
-  readonly notificationSummaryContent?: NotificationMessageNotificationSummaryContent;
+  readonly notificationSummaryContent?: NotificationMessageNotificationSummaryContent | undefined;
 }
 
 /**

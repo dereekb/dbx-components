@@ -689,7 +689,7 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'client_id', typeText: 'OidcEntryClientId' },
       {
         name: 'client_secret',
-        typeText: 'string',
+        typeText: 'string | undefined',
         description:
           'The generated client secret in plaintext. Only returned for auth methods that require a secret\n(e.g., `client_secret_basic`, `client_secret_post`, `client_secret_jwt`). Undefined for the\nsecret-less methods `private_key_jwt` and `none` (public PKCE client) — those clients never\nhave a secret to return.'
       }
@@ -1383,7 +1383,7 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     ],
     resultTypeDescription: "Result of reading the calling user's connection data.",
     resultFields: [
-      { name: 'data', typeText: 'UserExternalConnectionDataMap', description: 'The values, keyed provider type → data type → item key. Absent with `keysOnly`.' },
+      { name: 'data', typeText: 'UserExternalConnectionDataMap | undefined', description: 'The values, keyed provider type → data type → item key. Absent with `keysOnly`.' },
       { name: 'items', typeText: 'readonly UserExternalConnectionDataItemSummary[]', description: 'A summary of every matching item.' },
       { name: 'dataTypes', typeText: 'readonly UserExternalConnectionDataTypeSummary[]', description: 'The data types the caller may store (for the matching provider), so a caller can discover what to save.' }
     ]

@@ -5,7 +5,7 @@ import { FIRESTORE_SESSION_API_PATH } from '@dereekb/firebase-server';
 import { FIRESTORE_SESSION_OIDC_SCOPE } from '@dereekb/firebase';
 import { OidcModuleConfig, OidcService, buildOidcResourceServer } from '@dereekb/firebase-server/oidc';
 import { setupAndPerformFullOAuthFlow, type OAuthTestFlowSession, type PerformFullOAuthFlowResult } from '@dereekb/firebase-server/test';
-import { type Configurable } from '@dereekb/util';
+import { type Building, type Configurable } from '@dereekb/util';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserAdminContext } from '../../../test/fixture';
 
 vi.setConfig({ hookTimeout: 40000, testTimeout: 40000 });
@@ -241,7 +241,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
         afterEach(async () => {
           const app = await f.loadInitializedNestApplication();
-          (app.get(OidcModuleConfig) as Configurable<OidcModuleConfig>).resourceServers = previousResourceServers;
+          (app.get(OidcModuleConfig) as Building<OidcModuleConfig>).resourceServers = previousResourceServers;
         });
 
         it('SURVIVES revokeGrant until exp — the documented cost of the jwt format', async () => {

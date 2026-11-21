@@ -22,6 +22,7 @@ import {
 } from 'demo-firebase';
 import { type FirestoreContextReference, type NotificationFirestoreCollections, type UpdateNotificationBoxRecipientParams, createNotificationDocument, firestoreDummyKey } from '@dereekb/firebase';
 import { type BaseNotificationServerActionsContext, updateNotificationBoxRecipientInTransactionFactory } from '@dereekb/firebase-server/model';
+import { type PartialWithUndefined } from '@dereekb/util';
 
 /**
  * FirebaseServerActionsContextt required for GuestbookServerActions.
@@ -114,7 +115,7 @@ export function guestbookEntryInsertEntryFactory(context: GuestbookServerActions
         } else if (guestbook.locked) {
           throw new Error('The guestbook has been locked.'); // TODO: Change to more concrete errors
         } else {
-          const set: Partial<GuestbookEntry> = {
+          const set: PartialWithUndefined<GuestbookEntry> = {
             message,
             signed,
             published,

@@ -183,7 +183,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
             async function setRetainedScopes(retainedScopes: string[] | undefined): Promise<void> {
               const app = await f.loadInitializedNestApplication();
-              (app.get(CliTokenApiModuleConfig) as { retainedScopes?: string[] }).retainedScopes = retainedScopes;
+              (app.get(CliTokenApiModuleConfig) as { retainedScopes?: string[] | undefined }).retainedScopes = retainedScopes;
             }
 
             afterEach(async () => {

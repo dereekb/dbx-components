@@ -10,8 +10,8 @@ import { type AllPublishedGuestbookEntriesParams, type AllPublishedGuestbookEntr
 export interface QueryGuestbookEntriesForGuestbookInput {
   readonly context: CliContext;
   readonly guestbook: GuestbookKey;
-  readonly published?: boolean;
-  readonly limit?: number;
+  readonly published?: boolean | undefined;
+  readonly limit?: number | undefined;
 }
 
 /**
@@ -87,8 +87,8 @@ export const QUERY_GUESTBOOK_ENTRIES_FOR_GUESTBOOK_ACTION: ActionCommandSpec = {
  */
 export interface QueryAllPublishedGuestbookEntriesInput {
   readonly context: CliContext;
-  readonly limit?: number;
-  readonly parallel?: number;
+  readonly limit?: number | undefined;
+  readonly parallel?: number | undefined;
 }
 
 /**
@@ -162,7 +162,7 @@ export const QUERY_ALL_PUBLISHED_GUESTBOOK_ENTRIES_ACTION: ActionCommandSpec = {
  */
 export interface AllPublishedGuestbookEntriesInput {
   readonly context: CliContext;
-  readonly limit?: number;
+  readonly limit?: number | undefined;
 }
 
 /**
